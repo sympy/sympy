@@ -197,8 +197,7 @@ class Order(Expr):
             expr = expr.subs(s)
 
             if expr.is_Add:
-                from sympy import expand_multinomial
-                expr = expand_multinomial(expr)
+                expr = expr.factor()
 
             if s:
                 args = tuple([r[0] for r in rs.items()])
@@ -212,8 +211,6 @@ class Order(Expr):
                 # x*y (wrong order term!).  That's why we want to deal with
                 # expand()'ed expr (handled in "if expr.is_Add" branch below).
                 expr = expr.expand()
-            else:
-                expr = expr.factor()
 
             old_expr = None
             while old_expr != expr:
