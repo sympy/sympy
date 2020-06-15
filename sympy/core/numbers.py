@@ -3275,7 +3275,7 @@ class NaN(Number, metaclass=Singleton):
 nan = S.NaN
 
 @dispatch(NaN, Expr)
-def _eval_Eq(a, b):
+def _eval_Eq(a, b): # noqa:F811
     return S.false
 
 class ComplexInfinity(AtomicExpr, metaclass=Singleton):

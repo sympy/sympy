@@ -1,5 +1,8 @@
+from logging import warn
+
 from mpmath.matrices.matrices import _matrix
 
+from sympy import Expr
 from sympy.core import Basic, Dict, Integer, S, Tuple
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter, _sympify
@@ -190,13 +193,10 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
     is_diagonalizable = cacheit(is_diagonalizable)
 
 
-@dispatch(ImmutableDenseMatrix, Basic)
-def _eval_Eq(lhs, rhs): # noqa:F811
-    return S.false
-
 @dispatch(ImmutableDenseMatrix, MatrixExpr)
 def _eval_Eq(lhs, rhs): # noqa:F811
     return None
+
 
 @dispatch(ImmutableDenseMatrix, ImmutableDenseMatrix)
 def _eval_Eq(lhs, rhs): # noqa:F811

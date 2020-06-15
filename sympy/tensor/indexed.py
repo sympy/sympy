@@ -106,6 +106,7 @@ See the appropriate docstrings for a detailed explanation of the output.
 
 from __future__ import print_function, division
 
+from sympy import Basic, Number
 from sympy.core.assumptions import StdFactKB
 from sympy.core import Expr, Tuple, sympify, S
 from sympy.core.symbol import _filter_assumptions, Symbol
@@ -114,6 +115,7 @@ from sympy.core.compatibility import (is_sequence, NotIterable,
 from sympy.core.logic import fuzzy_bool, fuzzy_not
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.multipledispatch import dispatch
 
 
 class IndexException(Exception):
@@ -751,30 +753,42 @@ class Idx(Expr):
     def free_symbols(self):
         return {self}
 
-    def _eval_is_ge(self, other):
-        if isinstance(other, Idx):
-            other_upper = other if other.upper is None else other.upper
-            other_lower = other if other.lower is None else other.lower
-        else:
-            other_upper = other
-            other_lower = other
 
-        if self.lower is not None and (self.lower >= other_upper) == True:
-            return True
-        if self.upper is not None and (self.upper < other_lower) == True:
-            return False
-        return None
+@dispatch(Idx, Idx)
+def _eval_is_ge(lhs, rhs): # noqa:F811
 
-    def _eval_is_gt(self, other):
-        if isinstance(other, Idx):
-            other_upper = other if other.upper is None else other.upper
-            other_lower = other if other.lower is None else other.lower
-        else:
-            other_upper = other
-            other_lower = other
+    other_upper = rhs if rhs.upper is None else rhs.upper
+    other_lower = rhs if rhs.lower is None else rhs.lower
 
-        if self.lower is not None and (self.lower > other_upper) == True:
-            return True
-        if self.upper is not None and (self.upper <= other_lower) == True:
-            return False
-        return None
+    if lhs.lower is not None and (lhs.lower >= other_upper) == True:
+        return True
+    if lhs.upper is not None and (lhs.upper < other_lower) == True:
+        return False
+    return None
+
+
+@dispatch(Idx, Number)
+def _eval_is_ge(lhs, rhs): # noqa:F811
+
+    other_upper = rhs
+    other_lower = rhs
+
+    if lhs.lower is not None and (lhs.lower >= other_upper) == True:
+        return True
+    if lhs.upper is not None and (lhs.upper < other_lower) == True:
+        return False
+    return None
+
+
+@dispatch(Number, Idx)
+def _eval_is_ge(lhs, rhs): # noqa:F811
+
+    other_upper = lhs
+    other_lower = lhs
+
+    if rhs.upper is not None and (rhs.upper <= other_lower) == True:
+        return True
+    if rhs.lower is not None and (rhs.lower > other_upper) == True:
+        return False
+    return None
+

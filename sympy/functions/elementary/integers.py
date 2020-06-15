@@ -218,7 +218,7 @@ class floor(RoundFunction):
         return Lt(self, other, evaluate=False)
 
 @dispatch(floor, Basic)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa:F811
     if (lhs.rewrite(ceiling) == rhs) or \
         (lhs.rewrite(frac) == rhs):
         return S.true
@@ -355,7 +355,7 @@ class ceiling(RoundFunction):
         return Le(self, other, evaluate=False)
 
 @dispatch(ceiling, Basic)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa:F811
     if (lhs.rewrite(floor) == rhs) or \
         (lhs.rewrite(frac) == rhs):
         return S.true
@@ -527,8 +527,9 @@ class frac(Function):
                     return S.true
             if other.is_integer and other.is_positive:
                 return S.true
+
 @dispatch(frac, Basic)
-def _eval_Eq(lhs, rhs):
+def _eval_Eq(lhs, rhs): # noqa:F811
     if (lhs.rewrite(floor) == rhs) or \
         (lhs.rewrite(ceiling) == rhs):
         return S.true
