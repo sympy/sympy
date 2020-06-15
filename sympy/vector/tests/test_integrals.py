@@ -33,6 +33,9 @@ def test_surfaceintegrals()
 
     cone = ParametricRegion((u, v), (v*cosu, v*sinu, v), {u: (0, 2*pi), v: (0, 1)})
     assert ParametricIntegral(C.x*C.i + C.y*C.z + C.z**4*C.k, cone) == pi/3
+    
+    triangle = ParametricRegion((x, y), (x, y), {x: (0, 2), y: (0, 10 - 5*x)})
+    assert ParametricIntegral(C.z, triangle) == 10*C.z
 
 def test_volumeintegrals()
 
