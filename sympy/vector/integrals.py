@@ -20,7 +20,7 @@ class ParametricIntegral(Basic):
 
     >>> ParametricIntegral(C.x, curve)
     0
-    >>> semisphere = ParametricRegion((phi, theta), (2*sin(phi)*cos(theta), 2*sin(phi)*sin(theta), 2*cos(phi))
+    >>> semisphere = ParametricRegion((theta, phi), (2*sin(phi)*cos(theta), 2*sin(phi)*sin(theta), 2*cos(phi))
                             {theta: (0, 2*pi), phi: (0, pi/2)})
     >>> ParametricIntegral(C.z, semisphere)
     8*pi
@@ -44,23 +44,23 @@ class ParametricIntegral(Basic):
             raise ValueError
         
         coord_sys = next(iter(coord_sys))
+        base_vectors = coord_sys.base_vectors()
+        base_scalars = coord_sys.base_scalars()
+
+        parametricfield = field
+
+        r = Vector.zero
+        for i in range(len(parametricregion.definition)):
+            r += base_vectors[i]*parametricregion.definition[i]
+    
+        for i in range(len(parametricregion.definition)):
+            parametricfield = parametricfield.subs(base_scalars[i], parametricregion.definition[i])
 
         if parametricregion.dimension == 1:
             parameter = parametricregion.parameters[0]
-            
-            r_diff_tuple = [diff(comp, parameter) for comp in parametricregion.definition]
-            
-            base_vectors = coord_sys.base_vectors()
-            base_scalars = coord_sys.base_scalars()
-            r_diff = Vector.zero
-            parametricfield = field
-            
-            for i in range(len(parametricregion.definition)):
-                r_diff += base_vectors[i]*r_diff_tuple[i]        
-            
-            for i in range(len(parametricregion.definition)):
-                parametricfield = parametricfield.subs(base_scalars[i], parametricregion.definition[i])
-            
+
+            r_diff = diff(r, parameter)        
+
             lower, upper = parametricregion.limits[parameter][0], parametricregion.limits[parameter][1]
             
             if isinstance(parametricfield, Vector):
@@ -68,7 +68,23 @@ class ParametricIntegral(Basic):
             else:
                 result = integrate(r_diff.magnitude()*parametricfield, (parameter, lower, upper))
                 
-            return result            
+        elif parametricregion.dimension == 2:
+            u, v = parametricregion.parameters[0], parametricregion.parameters[1]
+            
+            r_u = diff(r, u)
+            r_v = diff(r, v)
+            normal_vector = r_u.cross(r_v)
+            
+            lower_u, upper_u = parametricregion.limits[u][0], parametricregion.limits[u][1]
+            lower_v, upper_v = parametricregion.limits[v][0], parametricregion.limits[v][1]
+            
+            if isinstance(parametricfield, Vector):
+                result = integrate(parametricfield.dot(normal_vector), (u, lower_u, upper_u),\
+                            (v, lower_v, upper_v))
+            else:
+                result = integrate(parametricfield*normal_vector.magnitude(), (u, lower_u, upper_u), (v, lower_v, upper_v))
+        
+        return result   
             
     @property
     def field(self):
