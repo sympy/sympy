@@ -1,8 +1,5 @@
-from logging import warn
-
 from mpmath.matrices.matrices import _matrix
 
-from sympy import Expr
 from sympy.core import Basic, Dict, Integer, S, Tuple
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter, _sympify
