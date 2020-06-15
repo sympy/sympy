@@ -614,7 +614,7 @@ def test_c_for():
     expected = (
         '#include "test.h"\n'
         '#include <math.h>\n'
-        'void test(int n, double *y, double *x) {\n'
+        'void test(int n, double *x, double *y) {\n'
         '   for (int i = 0; i < 5; i += 1) {\n'
         '      y[i] = x[i];\n'
         '   }\n'
