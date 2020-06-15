@@ -4,7 +4,7 @@ from sympy.functions import exp, cos, sin, log
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
-                                       ODEOrderError, ODENonlinearError, simpsol)
+                                       ODEOrderError, ODENonlinearError, _simpsol)
 from sympy.testing.pytest import raises, slow, ON_TRAVIS, skip, XFAIL
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
@@ -1058,7 +1058,7 @@ def test_linear_3eq_order1_type4_skip():
     #         C3*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
 
     dsolve_sol = dsolve(eq1)
-    sol1 = [simpsol(sol) for sol in dsolve_sol]
+    sol1 = [_simpsol(sol) for sol in dsolve_sol]
     # dsolve_sol = [eq.subs(C3, -C3) for eq in dsolve_sol]
     # assert all(simplify(s1.rhs - ds1.rhs) == 0 for s1, ds1 in zip(sol1, dsolve_sol))
     assert checksysodesol(eq1, sol1) == (True, [0, 0, 0])

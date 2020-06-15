@@ -29,7 +29,7 @@ class ODENonlinearError(NonlinearError):
     pass
 
 
-def simpsol(soleq):
+def _simpsol(soleq):
     lhs = soleq.lhs
     sol = soleq.rhs
     sol = powsimp(sol)
@@ -49,6 +49,15 @@ def simpsol(soleq):
         monom = Mul(*(g ** i for g, i in zip(gens, monom)))
         terms.append(coeff * monom)
     return Eq(lhs, Add(*terms))
+
+
+def _solsimp(e, t):
+    no_t, has_t = powsimp(expand_mul(e)).as_independent(t)
+
+    no_t = ratsimp(no_t)
+    has_t = has_t.replace(exp, lambda a: exp(factor_terms(a)))
+
+    return no_t + has_t
 
 
 def linear_ode_to_matrix(eqs, funcs, t, order):
@@ -477,11 +486,17 @@ def _linear_neq_order1_type2(match_):
     P = simplify(P)
     Cvect = Matrix(list(next(constants) for _ in range(n)))
     sol_vector = P * J * (integrate(J.inv() * P.inv() * b, t) + Cvect)
-    sol_vector = sol_vector.applyfunc(powsimp)
 
+    # sol_vector = sol_vector.applyfunc(_solsimp)
+
+    # Removing the expand_mul can simplify the solutions of the ODEs
+    # with symbolic coeffs. To be addressed in the future.
     sol_vector = [collect(expand_mul(s), sol_vector.atoms(exp), exact=True) for s in sol_vector]
 
     sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
+
+    # sol_dict = [simpsol(eq) for eq in sol_dict]
+
     return sol_dict
 
 
