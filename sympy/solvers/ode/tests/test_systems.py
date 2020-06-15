@@ -826,9 +826,9 @@ def test_sysode_linear_neq_order1_type2():
 
     # Regression test case for issue #19150
     # https://github.com/sympy/sympy/issues/19150
-    eq9 = (Eq(Derivative(f(t), t), 1 / (a * b) * (-2 * f(t) + g(t) + c)),
+    eq9 = [Eq(Derivative(f(t), t), 1 / (a * b) * (-2 * f(t) + g(t) + c)),
           Eq(Derivative(g(t), t), 1 / (a * b) * (-2 * g(t) + f(t) + h(t))),
-          Eq(Derivative(h(t), t), 1 / (a * b) * (-2 * h(t) + g(t) + d)))
+          Eq(Derivative(h(t), t), 1 / (a * b) * (-2 * h(t) + g(t) + d))]
     sol9 = [Eq(f(t), -C1*exp(-2*t/(a*b)) + C2*exp(-2*t/(a*b))*exp(-sqrt(2)*t/(a*b)) + C3*exp(-2*t/(a*b))*exp(sqrt(2)*t/(a*b))\
                + c/(4*sqrt(2) + 8) + c/4 + c/(8 - 4*sqrt(2)) - d/4 + d/(4*sqrt(2) + 8) + d/(8 - 4*sqrt(2))),
              Eq(g(t), -sqrt(2)*C2*exp(-2*t/(a*b))*exp(-sqrt(2)*t/(a*b)) + sqrt(2)*C3*exp(-2*t/(a*b))*exp(sqrt(2)*t/(a*b))\
