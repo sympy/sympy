@@ -126,7 +126,7 @@ class DenseMatrix(MatrixBase):
     def __setitem__(self, key, value):
         raise NotImplementedError()
 
-    def _eval_add(self, other):
+    def _eval_matrix_add(self, other):
         # we assume both arguments are dense matrices since
         # sparse matrices have a higher priority
         mat = [a + b for a,b in zip(self._mat, other._mat)]

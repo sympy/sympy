@@ -13,6 +13,14 @@ from .utilities import (
     _iszero, _is_zero_after_expand_mul)
 
 
+def _find_pivot(col, zero):
+    """Raw method to find pivot without simplificatio function"""
+    for i, x in enumerate(col):
+        if x != zero:
+            return i, x, False, []
+    return None, zero, False, []
+
+
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     """ Find the lowest index of an item in ``col`` that is
     suitable for a pivot.  If ``col`` consists only of
@@ -831,3 +839,93 @@ def _minor_submatrix(M, i, j):
     cols = [a for a in range(M.cols) if a != j]
 
     return M.extract(rows, cols)
+
+
+def _poly_det_bareiss(M):
+    def bareiss(mat, cumm):
+        if mat.rows == 0:
+            return mat.one
+        elif mat.rows == 1:
+            return mat[0, 0]
+
+        pivot_pos, pivot_val, _, _ = _find_pivot(mat[:, 0], M.zero)
+        if pivot_pos is None:
+            return mat.zero
+
+        sign = (-1) ** (pivot_pos % 2)
+
+        rows = list(i for i in range(mat.rows) if i != pivot_pos)
+        cols = list(range(mat.cols))
+        tmp_mat = mat.extract(rows, cols)
+
+        def entry(i, j):
+            ret = (
+                pivot_val*tmp_mat[i, j + 1] -
+                mat[pivot_pos, j + 1]*tmp_mat[i, 0]) // cumm
+            return ret
+
+        return sign*bareiss(
+            M._new(mat.rows-1, mat.cols-1, entry, ring=M.ring), pivot_val)
+
+    if not M.rows:
+        return M.one
+    return bareiss(M, M.one)
+
+
+def _poly_berkowitz_toeplitz_matrix(M):
+    """Mirrored version of berkowitz_toeplitz_matrix from
+    matrices module.
+    """
+    if not M.rows and not M.cols:
+        return M._new(1, 1, [M.one], ring=M.ring)
+
+    a, R = M[0, 0], M[0, 1:]
+    C, A = M[1:, 0], M[1:,1:]
+
+    diags = [C]
+    for i in range(M.rows - 2):
+        diags.append(A * diags[i])
+    diags = [(-R * d)[0, 0] for d in diags]
+    diags = [M.one, -a] + diags
+
+    def entry(i, j):
+        if j > i:
+            return M.zero
+        return diags[i - j]
+
+    toeplitz = M._new(M.cols+1, M.rows, entry, ring=M.ring)
+    return A, toeplitz
+
+
+def _poly_berkowitz_vector(M):
+    """Mirrored version of berkowitz_vector from matrices module."""
+    if M.rows == 0 and M.cols == 0:
+        return M._new(1, 1, [M.one], ring=M.ring)
+    elif M.rows == 1 and M.cols == 1:
+        return M._new(2, 1, [M.one, -M[0, 0]], ring=M.ring)
+
+    submat, toeplitz = _poly_berkowitz_toeplitz_matrix(M)
+    return toeplitz * _poly_berkowitz_vector(submat)
+
+
+def _poly_det_berkowitz(M):
+    if not M.is_square:
+        raise NonSquareMatrixError
+
+    if not M.rows:
+        return M.one
+
+    berk_vector = _poly_berkowitz_vector(M)
+    return (-1)**(len(berk_vector) - 1) * berk_vector[-1]
+
+
+def _poly_charpoly(M, x='lambda'):
+    if not M.is_square:
+        raise NonSquareMatrixError
+
+    berk_vector = _poly_berkowitz_vector(M)
+    # XXX as_expr() had to be used because of CoercionFailed error
+    # when Poly is used directly.
+    berk_vector = [k.as_expr() for k in berk_vector]
+    x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
+    return PurePoly(berk_vector, x, domain=M.ring)

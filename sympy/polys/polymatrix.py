@@ -8,6 +8,8 @@ from sympy.polys.fields import sfield
 from sympy.polys.polytools import Poly
 from sympy.polys.domains import EX
 
+import sympy.polys.polyoptions as polyoptions
+
 
 class MutablePolyDenseMatrix(MutableDenseMatrix):
     """
@@ -47,46 +49,540 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
     # we don't want to sympify the elements of PolyMatrix
     _sympify = staticmethod(lambda x: x)
 
-    def __init__(self, *args, **kwargs):
-        # if any non-Poly element is given as input then
-        # 'ring' defaults 'EX'
-        ring = kwargs.get('ring', EX)
+    @classmethod
+    def _new(cls, *args, ring=None, **kwargs):
+        if kwargs.get('copy', True) is False:
+            if len(args) != 3:
+                raise TypeError(
+                    "copy=False requires a matrix be initialized as "
+                    "rows, cols, [list].")
+            rows, cols, flat_list = args
+        else:
+            rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
+            flat_list = list(flat_list) # create a shallow copy
+
+        self = object.__new__(cls)
+        self.rows = rows
+        self.cols = cols
+        self._mat = flat_list
+
+        if ring:
+            ring = polyoptions.Domain.preprocess(ring)
         if all(isinstance(p, Poly) for p in self._mat) and self._mat:
-            domain = tuple([p.domain[p.gens] for p in self._mat])
-            ring = domain[0]
-            for i in range(1, len(domain)):
-                ring = ring.unify(domain[i])
+            domains = set([p.domain[p.gens] for p in self._mat])
+            if not ring:
+                ring = domains.pop()
+            for dom in domains:
+                ring = ring.unify(dom)
+        if not ring:
+            ring = EX
         self.ring = ring
 
+        if isinstance(ring, PolynomialRing):
+            self.zero = Poly(0, *ring.symbols, domain=ring.domain)
+            self.one = Poly(1, *ring.symbols, domain=ring.domain)
+        elif ring == EX:
+            self.zero = S.Zero
+            self.one = S.One
+        else:
+            self.zero = ring.zero
+            self.one = ring.one
+        return self
+
+    def _eval_Abs(self):
+        raise NotImplementedError
+
+    def _eval_Mod(self, other):
+        raise NotImplementedError
+
+    def _eval_adjoint(self):
+        raise NotImplementedError
+
+    def _eval_applyfunc(self, f):
+        new_mat = [f(x) for x in self._mat]
+        return self._new(self.rows, self.cols, new_mat, ring=self.ring)
+
+    def _eval_conjugate(self):
+        raise NotImplementedError
+
+    def _eval_copy(self):
+        return self._new(self.rows, self.cols, self._mat, ring=self.ring)
+
+    def _eval_col_insert(self, pos, other):
+        def entry(i, j):
+            if j < pos:
+                return self[i, j]
+            elif pos <= j < pos + other.cols:
+                return other[i, j - pos]
+            return self[i, j - other.cols]
+        return self._new(
+            self.rows, self.cols + other.cols, entry,
+            ring=self.ring.unify(other.ring))
+
+    @classmethod
+    def _eval_companion(cls, size, poly):
+        coeffs = poly.all_coeffs()
+
+        ring = poly.domain[poly.gens]
+        zero = Poly(0, *poly.gens, domain=poly.domain)
+        one = Poly(1, *poly.gens, domain=poly.domain)
+
+        def entry(i, j):
+            if j == size - 1:
+                return Poly(-coeffs[-1 - i], *poly.gens, domain=poly.domain)
+            elif i == j + 1:
+                return one
+            return zero
+
+        return cls._new(size, size, entry, ring=ring)
+
+    def _eval_diagonal(self, k):
+        rv = []
+        r = 0 if k > 0 else -k
+        c = 0 if r else k
+        while True:
+            if r == self.rows or c == self.cols:
+                break
+            rv.append(self[r, c])
+            r += 1
+            c += 1
+        return self._new(1, len(rv), rv, ring=self.ring)
+
+    def _eval_row_insert(self, pos, other):
+        if not isinstance(other, PolyMatrix):
+            other = PolyMatrix(other)
+        entries = self._mat
+        insert_pos = pos * self.cols
+        entries[insert_pos:insert_pos] = other._mat
+        return self._new(
+            self.rows + other.rows, self.cols, entries,
+            ring=self.ring.unify(other.ring))
+
+    def _eval_col_join(self, other):
+        if not isinstance(other, PolyMatrix):
+            other = PolyMatrix(other)
+        rows = self.rows
+        def entry(i, j):
+            if i < rows:
+                return self[i, j]
+            return other[i - rows, j]
+        return self._new(
+            rows + other.rows, self.cols, entry,
+            ring=self.ring.unify(other.ring))
+
+    def _eval_as_real_imag(self):
+        raise NotImplementedError
+
+    def _eval_is_anti_symmetric(self, simpfunc):
+        for i in range(self.rows):
+            if self[i, i] != self.zero:
+                return False
+            for j in range(i+1, self.cols):
+                if self[i, j] + self[j, i] != self.zero:
+                    return False
+        return True
+
+    def _eval_is_matrix_hermitian(self, simpfunc):
+        raise NotImplementedError
+
+    def _eval_is_symmetric(self, simpfunc):
+        for i in range(self.rows):
+            for j in range(i+1, self.cols):
+                if self[i, j] != self[j, i]:
+                    return False
+        return True
+
+    def _eval_permute_cols(self, perm):
+        mapping = list(perm)
+        def entry(i, j):
+            return self[i, mapping[j]]
+        return self._new(self.rows, self.cols, entry, ring=self.ring)
+
+    def _eval_permute_rows(self, perm):
+        mapping = list(perm)
+        def entry(i, j):
+            return self[mapping[i], j]
+        return self._new(self.rows, self.cols, entry, ring=self.ring)
+
+    def _eval_row_join(self, other):
+        if not isinstance(other, PolyMatrix):
+            other = PolyMatrix(other)
+        cols = self.cols
+        def entry(i, j):
+            if j < cols:
+                return self[i, j]
+            return other[i, j - cols]
+        return self._new(
+            self.rows, cols + other.cols, entry,
+            ring=self.ring.unify(other.ring))
+
+    def _eval_reshape(self, rows, cols):
+        return self._new(
+            rows, cols, lambda i, j: self._mat[i * cols + j], ring=self.ring)
+
+    @classmethod
+    def _eval_jordan_block(cls, rows, cols, eigenvalue, band='upper'):
+        if isinstance(eigenvalue, Poly):
+            ring = eigenvalue.domain[eigenvalue.gens]
+            zero = Poly(0, *eigenvalue.gens, domain=eigenvalue.domain)
+            one = Poly(1, *eigenvalue.gens, domain=eigenvalue.domain)
+        else:
+            ring = EX
+            zero, one = S.Zero, S.One
+
+        if band == 'lower':
+            def entry(i, j):
+                if i == j:
+                    return eigenvalue
+                elif j + 1 == i:
+                    return one
+                return zero
+        else:
+            def entry(i, j):
+                if i == j:
+                    return eigenvalue
+                elif i + 1 == j:
+                    return one
+                return zero
+
+        return cls._new(rows, cols, entry, ring=ring)
+
     def _eval_matrix_mul(self, other):
+        if not isinstance(other, PolyMatrix):
+            other = PolyMatrix(other)
+        ring = self.ring.unify(other.ring)
         self_cols = self.cols
         other_rows, other_cols = other.rows, other.cols
         other_len = other_rows*other_cols
         new_mat_rows = self.rows
         new_mat_cols = other.cols
-
-        new_mat = [0]*new_mat_rows*new_mat_cols
-
-        if self.cols != 0 and other.rows != 0:
+        new_mat = [ring.zero]*new_mat_rows*new_mat_cols
+        if self.cols and other.rows:
             mat = self._mat
             other_mat = other._mat
             for i in range(len(new_mat)):
                 row, col = i // new_mat_cols, i % new_mat_cols
                 row_indices = range(self_cols*row, self_cols*(row+1))
                 col_indices = range(col, other_len, other_cols)
-                vec = (mat[a]*other_mat[b] for a,b in zip(row_indices, col_indices))
+                vec = (mat[a] * other_mat[b] for a, b in
+                       zip(row_indices, col_indices))
                 # 'Add' shouldn't be used here
                 new_mat[i] = sum(vec)
 
-        return self.__class__(new_mat_rows, new_mat_cols, new_mat, copy=False)
+        return self.__class__(
+            new_mat_rows, new_mat_cols, new_mat, ring=ring, copy=False)
+
+    def _eval_matrix_mul_elementwise(self, other):
+        if not isinstance(other, PolyMatrix):
+            other = PolyMatrix(other)
+        ring = self.ring.unify(other.ring)
+        new_mat = [x * y for x, y in zip(self._mat, other._mat)]
+        return self.__class__(
+            self.rows, self.cols, new_mat, ring=ring, copy=False)
+
+    def _eval_matrix_add(self, other):
+        if not isinstance(other, PolyMatrix):
+            other = PolyMatrix(other)
+        ring = self.ring.unify(other.ring)
+        new_mat = [x + y for x, y in zip(self._mat, other._mat)]
+        return self.__class__(
+            self.rows, self.cols, new_mat, ring=ring, copy=False)
 
     def _eval_scalar_mul(self, other):
+        ring = self.ring
+        if isinstance(other, Poly):
+            ring = ring.unify(other.domain[other.gens])
+        elif other not in self.ring:
+            ring = ring.unify(EX)
+
         mat = [Poly(a.as_expr()*other, *a.gens) if isinstance(a, Poly) else a*other for a in self._mat]
-        return self.__class__(self.rows, self.cols, mat, copy=False)
+        return self.__class__(self.rows, self.cols, mat, ring=ring, copy=False)
 
     def _eval_scalar_rmul(self, other):
+        ring = self.ring
+        if isinstance(other, Poly):
+            ring = ring.unify(other.domain[other.gens])
+        elif other not in self.ring:
+            ring = ring.unify(EX)
+
         mat = [Poly(other*a.as_expr(), *a.gens) if isinstance(a, Poly) else other*a for a in self._mat]
-        return self.__class__(self.rows, self.cols, mat, copy=False)
+        return self.__class__(self.rows, self.cols, mat, ring=ring, copy=False)
+
+    def _eval_simplify(self, *args, **kwargs):
+        return self
+
+    def _eval_trigsimp(self, *args, **kwargs):
+        return self
+
+    def __pow__(self, exp):
+        return self.pow(exp, method='multiply')
+
+    def _eval_det_bareiss(self, *args, **kwargs):
+        from sympy.matrices.determinant import _poly_det_bareiss
+        return _poly_det_bareiss(self)
+
+    def _eval_det_berkowitz(self, *args, **kwargs):
+        from sympy.matrices.determinant import _poly_det_berkowitz
+        return _poly_det_berkowitz(self)
+
+    def _eval_det_lu(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def _eval_extract(self, rowsList, colsList):
+        mat = self._mat
+        cols = self.cols
+        indices = (i * cols + j for i in rowsList for j in colsList)
+        new_mat = list(mat[i] for i in indices)
+        return self._new(
+            len(rowsList), len(colsList), new_mat, ring=self.ring, copy=False)
+
+    def _eval_pow_by_cayley(self, exp):
+        raise NotImplementedError
+
+    def _eval_pow_by_recursion_dotprodsimp(self, exp):
+        raise NotImplementedError
+
+    def _eval_pow_by_jordan_blocks(self, exp):
+        raise NotImplementedError
+
+    def _eval_transpose(self):
+        return self._new(
+            self.cols, self.rows, lambda i, j: self[j, i], ring=self.ring)
+
+    def _eval_vec(self):
+        rows = self.rows
+        def entry(n, _):
+            j = n // rows
+            i = n - j * rows
+            return self[i, j]
+
+        return self._new(len(self), 1, entry, ring=self.ring)
+
+    @property
+    def D(self):
+        raise NotImplementedError
+
+    def LDLdecomposition(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def LDLsolve(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def LUdecomposition(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def LUdecomposition_Simple(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def LUdecompositionFF(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def LUsolve(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def QRdecomposition(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def QRsolve(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def analytic_func(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def bidiagonalize(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def bidiagonal_decomposition(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def charpoly(self, x='lambda', **kwargs):
+        from sympy.matrices.determinant import _poly_charpoly
+        return _poly_charpoly(self, x)
+
+    def cholesky(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def cholesky_solve(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def condition_number(self):
+        raise NotImplementedError
+
+    def diagonal_solve(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def diff(self, *args, **kwargs):
+        if not all(isinstance(x, Poly) for x in self._mat):
+            raise NotImplementedError
+        if not all(isinstance(x, Symbol) for x in args):
+            raise NotImplementedError
+        return self.applyfunc(lambda p: p.diff(*args, **kwargs))
+
+    def echelon_form(self, with_pivots=False, **kwargs):
+        from sympy.matrices.reductions import _poly_echelon_form
+        return _poly_echelon_form(self, with_pivots=with_pivots)
+
+    def eigenvals(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def eigenvects(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def evalf(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def exp(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def expand(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def gauss_jordan_solve(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def integrate(self, *args, **kwargs):
+        if not all(isinstance(x, Poly) for x in self._mat):
+            raise NotImplementedError
+        return self.applyfunc(lambda p: p.integrate(*args, **kwargs))
+
+    def inv(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def inv_mod(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def inverse_ADJ(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def inverse_BLOCK(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def inverse_CH(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def inverse_GE(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def inverse_LDL(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def inverse_LU(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def inverse_QR(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @property
+    def is_indefinite(self):
+        raise NotImplementedError
+
+    @property
+    def is_negative_definite(self):
+        raise NotImplementedError
+
+    @property
+    def is_negative_semidefinite(self):
+        raise NotImplementedError
+
+    @property
+    def is_nilpotent(self):
+        raise NotImplementedError
+
+    @property
+    def is_positive_definite(self):
+        raise NotImplementedError
+
+    @property
+    def is_positive_semidefinite(self):
+        raise NotImplementedError
+
+    @property
+    def is_strongly_diagonally_dominant(self):
+        raise NotImplementedError
+
+    @property
+    def is_weakly_diagonally_dominant(self):
+        raise NotImplementedError
+
+    def jacobian(self, other):
+        raise NotImplementedError
+
+    def limit(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def log(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def lower_triangular_solve(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def normalized(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @classmethod
+    def orthogonalize(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def pinv(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def pinv_solve(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def rref(self, pivots=True, normalize_last=True, **kwargs):
+        from sympy.matrices.reductions import _poly_rref
+        if self.ring == EX:
+            return super().rref(
+                pivots=pivots, normalize_last=normalize_last, **kwargs)
+        return _poly_rref(
+            self, pivots=pivots, normalize_last=normalize_last)
+
+    def simplify(self, *args, **kwargs):
+        return
+
+    def solve(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def solve_least_squares(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def upper_triangular_solve(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def _to_field(self, dummy='X'):
+        """Helper function to convert all polynomials of the matrix to
+        fraction field elements such that the division is possible."""
+        from sympy.core.symbol import uniquely_named_symbol
+
+        ring = self.ring
+        if ring.is_Field:
+            return self
+
+        if not all(isinstance(x, Poly) for x in self._mat):
+            return self
+
+        if all(x.degree() <= 0 for x in self._mat):
+            ring, gens = ring.domain, ring.symbols
+            ring = ring.get_field()
+            new_mat = []
+            for x in self._mat:
+                x = Poly(x.as_expr(), *gens, domain=ring)
+                new_mat.append(x)
+            ring = ring[gens]
+            return self._new(self.rows, self.cols, new_mat, ring=ring)
+        elif all(x.degree() > 0 for x in self._mat):
+            ring = ring.get_field()
+            dummy = uniquely_named_symbol(dummy, self)
+            new_mat = []
+            for x in self._mat:
+                x = Poly(x.as_expr(), dummy, domain=ring)
+                new_mat.append(x)
+            ring = ring[dummy]
+            return self._new(self.rows, self.cols, new_mat, ring=ring)
+        else:
+            # XXX FractionField has some issues with
+            # ZZ[a, b][x].get_field()(a + b)
+            raise NotImplementedError
 
 
 MutablePolyMatrix = PolyMatrix = MutablePolyDenseMatrix

@@ -223,17 +223,17 @@ def test_power():
         [0, 0, b**n]])
 
     A = Matrix([[1, 0], [1, 7]])
-    assert A._matrix_pow_by_jordan_blocks(S(3)) == A._eval_pow_by_recursion(3)
+    assert A._eval_pow_by_jordan_blocks(S(3)) == A._eval_pow_by_recursion(3)
     A = Matrix([[2]])
-    assert A**10 == Matrix([[2**10]]) == A._matrix_pow_by_jordan_blocks(S(10)) == \
+    assert A**10 == Matrix([[2**10]]) == A._eval_pow_by_jordan_blocks(S(10)) == \
         A._eval_pow_by_recursion(10)
 
     # testing a matrix that cannot be jordan blocked issue 11766
     m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
-    raises(MatrixError, lambda: m._matrix_pow_by_jordan_blocks(S(10)))
+    raises(MatrixError, lambda: m._eval_pow_by_jordan_blocks(S(10)))
 
     # test issue 11964
-    raises(MatrixError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(S(-10)))
+    raises(MatrixError, lambda: Matrix([[1, 1], [3, 3]])._eval_pow_by_jordan_blocks(S(-10)))
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 0]])  # Nilpotent jordan block size 3
     assert A**10.0 == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     raises(ValueError, lambda: A**2.1)
@@ -283,6 +283,9 @@ def test_power():
     assert A**S.Half == A
     A = Matrix([[1, 1],[3, 3]])
     assert A**S.Half == Matrix ([[S.Half, S.Half], [3*S.Half, 3*S.Half]])
+
+    A = Matrix([[1, 2], [4, 5]])
+    assert A.pow(20, method='cayley') == A.pow(20, method='multiply')
 
 
 def test_issue_17247_expression_blowup_1():

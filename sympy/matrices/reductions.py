@@ -309,3 +309,113 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         mat = (mat, pivot_cols)
 
     return mat
+
+
+def _poly_row_reduce_list(
+    mat,
+    rows,
+    cols,
+    zero,
+    one,
+    normalize_last=True,
+    normalize=True,
+    zero_above=True):
+    from .determinant import _find_pivot
+
+    def get_col(i):
+        return mat[i::cols]
+
+    def row_swap(i, j):
+        mat[i*cols:(i + 1)*cols], mat[j*cols:(j + 1)*cols] = \
+            mat[j*cols:(j + 1)*cols], mat[i*cols:(i + 1)*cols]
+
+    def cross_cancel(a, i, b, j):
+        q = (j - i)*cols
+        for p in range(i*cols, (i + 1)*cols):
+            mat[p] = a*mat[p] - b*mat[p + q]
+
+    piv_row, piv_col = 0, 0
+    pivot_cols = []
+    swaps = []
+
+    while piv_col < cols and piv_row < rows:
+        pivot_offset, pivot_val, _, _ = \
+            _find_pivot(get_col(piv_col)[piv_row:], zero)
+
+        if pivot_offset is None:
+            piv_col += 1
+            continue
+
+        pivot_cols.append(piv_col)
+        if pivot_offset != 0:
+            row_swap(piv_row, pivot_offset + piv_row)
+            swaps.append((piv_row, pivot_offset + piv_row))
+
+        if normalize_last is False:
+            i, j = piv_row, piv_col
+            mat[i*cols + j] = one
+            for p in range(i*cols + j + 1, (i + 1)*cols):
+                mat[p] //= pivot_val
+            pivot_val = one
+
+        for row in range(rows):
+            if row == piv_row:
+                continue
+            if zero_above is False and row < piv_row:
+                continue
+            val = mat[row*cols + piv_col]
+            if val == zero:
+                continue
+            cross_cancel(pivot_val, row, val, piv_row)
+        piv_row += 1
+
+    if normalize_last is True and normalize is True:
+        for piv_i, piv_j in enumerate(pivot_cols):
+            pivot_val = mat[piv_i*cols + piv_j]
+            mat[piv_i*cols + piv_j] = one
+            for p in range(piv_i*cols + piv_j + 1, (piv_i + 1)*cols):
+                mat[p] //= pivot_val
+
+    return mat, tuple(pivot_cols), tuple(swaps)
+
+
+def _poly_row_reduce(
+    M,
+    normalize_last=True,
+    normalize=True,
+    zero_above=True):
+    mat, pivot_cols, swaps = _poly_row_reduce_list(
+        list(M._mat),
+        M.rows,
+        M.cols,
+        M.zero,
+        M.one,
+        normalize_last=True,
+        normalize=normalize,
+        zero_above=zero_above)
+    return M._new(M.rows, M.cols, mat, ring=M.ring), pivot_cols, swaps
+
+
+def _poly_rref(
+    M, pivots=True, normalize_last=True):
+    mat, pivot_cols, _ = _poly_row_reduce(
+        M,
+        normalize_last=normalize_last,
+        normalize=True,
+        zero_above=True)
+
+    if pivots:
+        return mat, pivot_cols
+    return mat
+
+
+def _poly_echelon_form(M, with_pivots=False):
+    mat, pivots, _ = _poly_row_reduce(
+        M,
+        normalize_last=True,
+        normalize=False,
+        zero_above=False)
+
+    if with_pivots:
+        return mat, pivots
+    return mat

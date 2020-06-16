@@ -305,7 +305,7 @@ class SparseMatrix(MatrixBase):
     def _eval_Abs(self):
         return self.applyfunc(lambda x: Abs(x))
 
-    def _eval_add(self, other):
+    def _eval_matrix_add(self, other):
         """If `other` is a SparseMatrix, add efficiently. Otherwise,
         do standard addition."""
         if not isinstance(other, SparseMatrix):
@@ -558,7 +558,7 @@ class SparseMatrix(MatrixBase):
         """
         return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(reversed(k)))]
 
-    def copy(self):
+    def _eval_copy(self):
         return self._new(self.rows, self.cols, self._smat)
 
     def nnz(self):

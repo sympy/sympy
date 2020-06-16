@@ -117,6 +117,18 @@ class MatrixShaping(MatrixRequired):
         return classof(self, other)._new(self.rows + other.rows, self.cols,
                                          lambda i, j: entry(i, j))
 
+    def _eval_diagonal(self, k):
+        rv = []
+        r = 0 if k > 0 else -k
+        c = 0 if r else k
+        while True:
+            if r == self.rows or c == self.cols:
+                break
+            rv.append(self[r, c])
+            r += 1
+            c += 1
+        return self._new(1, len(rv), rv)
+
     def _eval_extract(self, rowsList, colsList):
         mat = list(self)
         cols = self.cols
@@ -149,6 +161,9 @@ class MatrixShaping(MatrixRequired):
 
         recurse_sub_blocks(self)
         return sub_blocks
+
+    def _eval_reshape(self, rows, cols):
+        return self._new(rows, cols, lambda i, j: self[i * cols + j])
 
     def _eval_row_del(self, row):
         def entry(i, j):
@@ -443,7 +458,7 @@ class MatrixShaping(MatrixRequired):
         """
         if self.rows * self.cols != rows * cols:
             raise ValueError("Invalid reshape parameters %d %d" % (rows, cols))
-        return self._new(rows, cols, lambda i, j: self[i * cols + j])
+        return self._eval_reshape(rows, cols)
 
     def row_del(self, row):
         """Delete the specified row."""
@@ -558,21 +573,12 @@ class MatrixShaping(MatrixRequired):
         ========
         diag - to create a diagonal matrix
         """
-        rv = []
         k = as_int(k)
-        r = 0 if k > 0 else -k
-        c = 0 if r else k
-        while True:
-            if r == self.rows or c == self.cols:
-                break
-            rv.append(self[r, c])
-            r += 1
-            c += 1
-        if not rv:
-            raise ValueError(filldedent('''
-            The %s diagonal is out of range [%s, %s]''' % (
-            k, 1 - self.rows, self.cols - 1)))
-        return self._new(1, len(rv), rv)
+        if k > self.cols-1 or k < 1-self.rows:
+            raise ValueError(
+                "The {}'th diagonal is out of range [{}, {}]"
+                .format(k, 1-self.rows, self.cols-1))
+        return self._eval_diagonal(k)
 
     def row(self, i):
         """Elementary row selector.
@@ -759,6 +765,17 @@ class MatrixShaping(MatrixRequired):
 
 class MatrixSpecial(MatrixRequired):
     """Construction of special matrices"""
+
+    @classmethod
+    def _eval_companion(cls, size, poly):
+        coeffs = poly.all_coeffs()
+        def entry(i, j):
+            if j == size - 1:
+                return -coeffs[-1 - i]
+            elif i == j + 1:
+                return cls.one
+            return cls.zero
+        return cls._new(size, size, entry)
 
     @classmethod
     def _eval_diag(cls, rows, cols, diag_dict):
@@ -1202,14 +1219,7 @@ class MatrixSpecial(MatrixRequired):
             raise ValueError(
                 "{} must have degree not less than 1.".format(poly))
 
-        coeffs = poly.all_coeffs()
-        def entry(i, j):
-            if j == size - 1:
-                return -coeffs[-1 - i]
-            elif i == j + 1:
-                return kls.one
-            return kls.zero
-        return kls._new(size, size, entry)
+        return kls._eval_companion(size, poly)
 
 
 class MatrixProperties(MatrixRequired):
@@ -2441,7 +2451,7 @@ class MatrixArithmetic(MatrixRequired):
     def _eval_Abs(self):
         return self._new(self.rows, self.cols, lambda i, j: Abs(self[i, j]))
 
-    def _eval_add(self, other):
+    def _eval_matrix_add(self, other):
         return self._new(self.rows, self.cols,
                          lambda i, j: self[i, j] + other[i, j])
 
@@ -2547,14 +2557,14 @@ class MatrixArithmetic(MatrixRequired):
 
         # honest sympy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
-            # call the highest-priority class's _eval_add
+            # call the highest-priority class's _eval_matrix_add
             a, b = self, other
             if a.__class__ != classof(a, b):
                 b, a = a, b
-            return a._eval_add(b)
+            return a._eval_matrix_add(b)
         # Matrix-like objects can be passed to CommonMatrix routines directly.
         if getattr(other, 'is_MatrixLike', False):
-            return MatrixArithmetic._eval_add(self, other)
+            return MatrixArithmetic._eval_matrix_add(self, other)
 
         raise TypeError('cannot add %s and %s' % (type(self), type(other)))
 
@@ -2707,7 +2717,7 @@ class MatrixArithmetic(MatrixRequired):
         if self.rows != self.cols:
             raise NonSquareMatrixError()
         a = self
-        jordan_pow = getattr(a, '_matrix_pow_by_jordan_blocks', None)
+        jordan_pow = self._eval_pow_by_jordan_blocks
         exp = sympify(exp)
 
         if exp.is_zero:

@@ -784,7 +784,10 @@ class MatrixBase(MatrixDeprecated,
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
 
-    def _matrix_pow_by_jordan_blocks(self, num):
+    def _eval_copy(self):
+        return self._new(self.rows, self.cols, self._mat)
+
+    def _eval_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
 
@@ -1226,7 +1229,7 @@ class MatrixBase(MatrixDeprecated,
         [3, 4]])
 
         """
-        return self._new(self.rows, self.cols, self._mat)
+        return self._eval_copy()
 
     def cross(self, b):
         r"""
