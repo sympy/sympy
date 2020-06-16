@@ -1900,6 +1900,8 @@ def test_gcd_list():
     gcd = gcd_list([], x, polys=True)
     assert gcd.is_Poly and gcd.is_zero
 
+    assert gcd_list([sqrt(2), -sqrt(2)]) == sqrt(2)
+
     raises(ComputationFailed, lambda: gcd_list([], polys=True))
 
 
@@ -1992,6 +1994,12 @@ def test_gcd():
     assert cofactors(f, g, modulus=11, symmetric=False) == (h, s, t)
     assert gcd(f, g, modulus=11, symmetric=False) == h
     assert lcm(f, g, modulus=11, symmetric=False) == l
+
+    a, b = sqrt(2), -sqrt(2)
+    assert gcd(a, b) == a
+
+    a, b = sqrt(-2), -sqrt(-2)
+    assert gcd(a, b) == a
 
     raises(TypeError, lambda: gcd(x))
     raises(TypeError, lambda: lcm(x))
