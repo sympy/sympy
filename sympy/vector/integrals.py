@@ -1,5 +1,6 @@
 from sympy.core.basic import Basic
 from sympy.simplify import simplify
+from sympy.matrices import Matrix
 from sympy.vector import CoordSys3D, Vector
 from sympy.vector.operators import _get_coord_sys_from_expr
 from sympy.integrals import Integral, integrate
@@ -63,9 +64,6 @@ class ParametricIntegral(Basic):
                 result = integrate(r_diff.dot(parametricfield), (parameter, lower, upper))
             else:
                 result = integrate(r_diff.magnitude()*parametricfield, (parameter, lower, upper))
-            
-            if not isinstance(result, Integral):
-                return result
                 
         elif parametricregion.dimension == 2:
             u, v = parametricregion.parameters[0], parametricregion.parameters[1]
@@ -85,14 +83,22 @@ class ParametricIntegral(Basic):
             
             lower_u, upper_u = parametricregion.limits[u][0], parametricregion.limits[u][1]
             lower_v, upper_v = parametricregion.limits[v][0], parametricregion.limits[v][1]
-            
 
             result = integrate(integrand, (u, lower_u, upper_u), (v, lower_v, upper_v))    
                 
-            if not isinstance(result, Integral):
-                    return result
-                
-        return super().__new__(cls, field, parametricregion)
+        else:
+            coeff = Matrix(parametricregion.definition).jacobian(parametricregion.parameters).det()
+            integrand = simplify(parametricfield*coeff)
+            variables = cls._bounds_case(parametricregion.parameters, parametricregion.limits)
+
+            l = [(var, parametricregion.limits[var][0], parametricregion.limits[var][1]) for var in variables]
+            
+            result = integrate(integrand, *l)
+                            
+        if not isinstance(result, Integral):
+            return result     
+        else:        
+            return super().__new__(cls, field, parametricregion)
     
     @classmethod             
     def _bounds_case(cls, parameters, limits):
@@ -111,9 +117,7 @@ class ParametricIntegral(Basic):
                     continue
                 if lower_p.issuperset(set([q])) or upper_p.issuperset(set([q])):
                     E.append((p, q))   
-        r = topological_sort((V, E), key=default_sort_key)                
-        print(r)
-        return r    
+        return topological_sort((V, E), key=default_sort_key)                   
              
     @property
     def field(self):
