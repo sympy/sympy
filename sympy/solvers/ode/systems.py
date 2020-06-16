@@ -12,7 +12,7 @@ from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError
 from sympy.utilities import numbered_symbols, default_sort_key
 from sympy.utilities.iterables import ordered, uniq
-from sympy.integrals.integrals import integrate
+from sympy.integrals.integrals import Integral, integrate
 
 
 def _get_func_order(eqs, funcs):
@@ -485,7 +485,7 @@ def _linear_neq_order1_type2(match_):
     P, J = matrix_exp_jordan_form(M, t)
     P = simplify(P)
     Cvect = Matrix(list(next(constants) for _ in range(n)))
-    sol_vector = P * J * (integrate(J.inv() * P.inv() * b, t) + Cvect)
+    sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
 
     # sol_vector = sol_vector.applyfunc(_solsimp)
 
