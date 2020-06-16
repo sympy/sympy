@@ -260,14 +260,12 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     raise ValueError("Increase the bounds")
 
 
-def ecm(n, B1=10000, B2=100000, max_curve=200, increase_bound=False, seed=1234):
+def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
     """Performs factorization using Lenstra's Elliptic curve method.
 
     This function repeatedly calls `ecm_one_factor` to compute the factors
     of n. First all the small factors are taken out using trial division.
-    Then `ecm_one_factor` is used to compute one factor at a time. If the
-    current bound fails to produce a factor then the bounds are increased
-    depending on whether increase_bound is True or not.
+    Then `ecm_one_factor` is used to compute one factor at a time.
 
     Parameters:
     ===========
@@ -276,8 +274,6 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, increase_bound=False, seed=1234):
     B1 : Stage 1 Bound
     B2 : Stage 2 Bound
     max_curve : Maximum number of curves generated
-    increase_bound : If True, then the Stage 1 and 2 bounds increase
-        by a factor of 10 incase of ECM failure
     seed : Initialize pseudorandom generator
 
     Examples
@@ -300,12 +296,7 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, increase_bound=False, seed=1234):
         try:
             factor = ecm_one_factor(n, B1, B2, max_curve)
         except ValueError:
-            if increase_bound:
-                B1 *= 10
-                B2 *= 10
-            else:
-                raise ValueError("Increase the bounds")
-            continue
+            raise ValueError("Increase the bounds")
         _factors.add(factor)
         n //= factor
 
