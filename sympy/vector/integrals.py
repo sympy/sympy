@@ -4,6 +4,7 @@ from sympy.vector import CoordSys3D, Vector
 from sympy.vector.operators import _get_coord_sys_from_expr
 from sympy.integrals import Integral, integrate
 from sympy.core.function import diff
+from sympy.utilities.iterables import topological_sort, default_sort_key
 
 class ParametricIntegral(Basic):
     """
@@ -32,13 +33,7 @@ class ParametricIntegral(Basic):
     """
     
     def __new__(cls, field, parametricregion):
-        obj = super().__new__(cls, field, parametricregion)
-        return obj
-
-    def eval(self):
-        parametricregion = self.parametricregion
-        field = self.field
-        
+            
         coord_sys = _get_coord_sys_from_expr(field)
         
         if len(coord_sys) > 1:
@@ -79,9 +74,6 @@ class ParametricIntegral(Basic):
             r_v = diff(r, v)
             normal_vector = simplify(r_u.cross(r_v))
             
-            lower_u, upper_u = parametricregion.limits[u][0], parametricregion.limits[u][1]
-            lower_v, upper_v = parametricregion.limits[v][0], parametricregion.limits[v][1]
-            
             if isinstance(parametricfield, Vector):
                 integrand = parametricfield.dot(normal_vector)
             else:   
@@ -89,49 +81,40 @@ class ParametricIntegral(Basic):
             
             integrand = simplify(integrand)
             
-            case = self._bounds_case(u, v, parametricregion.limits)
+            u, v = cls._bounds_case(parametricregion.parameters, parametricregion.limits)
             
-            # Check the bounds to ascertain the order
-            # Case 1 : Both bounds are constants : can  perform integration in any order
-            # Case 2 : Bounds for u are in terms of v : integrate wrt to u first
-            # Case 3 : Bounds for v are in terms of u : integrate wrt to v first
+            lower_u, upper_u = parametricregion.limits[u][0], parametricregion.limits[u][1]
+            lower_v, upper_v = parametricregion.limits[v][0], parametricregion.limits[v][1]
             
-            if case == 1 or case == 3:
-                result = integrate(integrand, (u, lower_u, upper_u), (v, lower_v, upper_v))    
+
+            result = integrate(integrand, (u, lower_u, upper_u), (v, lower_v, upper_v))    
                 
-                if not isinstance(result, Integral):
-                    return result
-            
-            if case == 2 or case == 3:
-                result = integrate(integrand, (v, lower_v, upper_v), (u, lower_u, upper_u))
-                
-                if not isinstance(result, Integral):
+            if not isinstance(result, Integral):
                     return result
                 
-        return self
-                 
-    def _bounds_case(self, u, v, limits):
-        lower_u = limits[u][0]
-        upper_u = limits[u][1]
+        return super().__new__(cls, field, parametricregion)
+    
+    @classmethod             
+    def _bounds_case(cls, parameters, limits):
+    
+        V = list(parameters)
+        E = list()
         
-        lower_u = lower_u.atoms()
-        upper_u = upper_u.atoms()
-        
-        if lower_u.issuperset(set([v])) or upper_u.issuperset(set([v])):
-            return 1
-        
-        lower_v = limits[v][0]
-        upper_v = limits[v][1]
-        
-        lower_v = lower_v.atoms()
-        upper_v = upper_v.atoms()
-        
-        if lower_v.issuperset(set([u])) or upper_v.issuperset(set([u])):
-            return 2
+        for p in parameters:
+            lower_p = limits[p][0]
+            upper_p = limits[p][1]
             
-        return 3
-        
-            
+            lower_p = lower_p.atoms()
+            upper_p = upper_p.atoms()
+            for q in parameters:
+                if p == q:
+                    continue
+                if lower_p.issuperset(set([q])) or upper_p.issuperset(set([q])):
+                    E.append((p, q))   
+        r = topological_sort((V, E), key=default_sort_key)                
+        print(r)
+        return r    
+             
     @property
     def field(self):
         return self.args[0]
