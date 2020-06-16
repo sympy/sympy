@@ -5,6 +5,7 @@ import itertools
 from mpmath import mp, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
+from sympy import Symbol
 from sympy.core.compatibility import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.logic import fuzzy_and, fuzzy_or
@@ -700,6 +701,12 @@ def _is_positive_semidefinite(M):
     if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
         return True
 
+    if M.rows < 5 or all(a.func != Symbol for a in M.atoms()):
+        try:
+            return _is_positive_semidefinite_by_eigenvalues(M)
+        except Exception:
+            pass
+
     return _is_positive_semidefinite_by_minors(M)
 
 
@@ -750,6 +757,12 @@ def _is_positive_semidefinite_by_minors(M):
         for minor_size in range(1, M.rows+1)
         for idx in itertools.combinations(range(M.rows), minor_size)
     )
+
+
+def _is_positive_semidefinite_by_eigenvalues(M):
+    """Determines if a matrix is positive semidefinite by checking
+    if all the eigenvalues are nonnegative"""
+    return all(eigenvalue.is_nonnegative for eigenvalue in M.eigenvals())
 
 
 _doc_positive_definite = \
