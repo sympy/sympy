@@ -21,7 +21,7 @@ from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.core.sympify import _sympify
 from sympy.external import import_module
-from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
+from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain, is_random,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 
 scipy = import_module('scipy')
@@ -149,43 +149,30 @@ class ContinuousDistribution(Basic):
         return self.pdf(*args)
 
 
-class SampleExternalContinuous:
-    """Class consisting of the methods that are used to sample values of random
-    variables from external libraries."""
+class SampleContinuousScipy:
+    """Returns the sample from scipy of the given distribution"""
+    def __new__(cls, dist, size):
+        return cls._sample_scipy(dist, size)
 
+    @classmethod
+    def _sample_scipy(cls, dist, size):
+        """Sample from SciPy."""
+        # scipy does not require map as it can handle using custom distributions
+        from scipy.stats import rv_continuous
+        z = Dummy('z')
+        handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
+        class scipy_pdf(rv_continuous):
+            def _pdf(self, x):
+                return handmade_pdf(x)
+        scipy_rv = scipy_pdf(a=float(dist.set._inf),
+                    b=float(dist.set._sup), name='scipy_pdf')
+        return scipy_rv.rvs(size=size)
 
-    scipy_rv_map = {
-        'BetaDistribution': lambda dist, size: scipy.stats.beta.rvs(a=float(dist.alpha),
-            b=float(dist.beta), size=size),
-        'BetaPrimeDistribution':lambda dist, size: scipy.stats.betaprime.rvs(a=float(dist.alpha),
-            b=float(dist.beta), size=size),
-        'CauchyDistribution': lambda dist, size: scipy.stats.cauchy.rvs(loc=float(dist.x0),
-            scale=float(dist.gamma), size=size),
-        'ChiDistribution': lambda dist, size: scipy.stats.chi.rvs(df=float(dist.k),
-            size=size),
-        'ChiSquaredDistribution': lambda dist, size: scipy.stats.chi2.rvs(df=float(dist.k),
-            size=size),
-        'ExponentialDistribution': lambda dist, size: scipy.stats.expon.rvs(loc=0,
-            scale=1/float(dist.rate), size=size),
-        'GammaDistribution': lambda dist, size: scipy.stats.gamma.rvs(a=float(dist.k), loc=0,
-            scale=float(dist.theta), size=size),
-        'GammaInverseDistribution': lambda dist, size: scipy.stats.invgamma.rvs(a=float(dist.a),
-            loc=0, scale=float(dist.b), size=size),
-        'LogNormalDistribution': lambda dist, size: scipy.stats.lognorm.rvs(s=float(dist.std),
-            loc=0, scale=exp(float(dist.mean)), size=size),
-        'NormalDistribution': lambda dist, size: scipy.stats.norm.rvs(float(dist.mean),
-            float(dist.std), size=size),
-        'GaussianInverseDistribution': lambda dist, size: scipy.stats.invgauss.rvs(
-            mu=float(dist.mean)/float(dist.shape), scale=float(dist.shape), size=size),
-        'ParetoDistribution': lambda dist, size: scipy.stats.pareto.rvs(b=float(dist.alpha),
-            scale=float(dist.xm), size=size),
-        'StudentTDistribution': lambda dist, size: scipy.stats.t.rvs(df=float(dist.nu),
-            size=size),
-        'UniformDistribution': lambda dist, size: scipy.stats.uniform.rvs(loc=float(dist.left),
-            scale=float(dist.right)-float(dist.left), size=size),
-        'WeibullDistribution': lambda dist, size: scipy.stats.weibull_min.rvs(loc=0,
-            c=float(dist.beta), scale=float(dist.alpha), size=size)
-        }
+class SampleContinuousNumpy:
+    """Returns the sample from numpy of the given distribution"""
+
+    def __new__(cls, dist, size):
+        return cls._sample_numpy(dist, size)
 
     numpy_rv_map = {
         'BetaDistribution': lambda dist, size: numpy.random.beta(a=float(dist.alpha),
@@ -205,6 +192,23 @@ class SampleExternalContinuous:
         'UniformDistribution': lambda dist, size: numpy.random.uniform(
             low=float(dist.left), high=float(dist.right), size=size)
     }
+
+    @classmethod
+    def _sample_numpy(cls, dist, size):
+        """Sample from NumPy."""
+
+        dist_list = cls.numpy_rv_map.keys()
+
+        if dist.__class__.__name__ not in dist_list:
+            return None
+
+        return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
+
+class SampleContinuousPymc:
+    """Returns the sample from pymc3 of the given distribution"""
+
+    def __new__(cls, dist, size):
+        return cls._sample_pymc3(dist, size)
 
     pymc3_rv_map = {
         'BetaDistribution': lambda dist:
@@ -230,38 +234,6 @@ class SampleExternalContinuous:
     }
 
     @classmethod
-    def _sample_scipy(cls, dist, size):
-        """Sample from SciPy."""
-
-        dist_list = cls.scipy_rv_map.keys()
-
-        if dist.__class__.__name__ == 'ContinuousDistributionHandmade':
-            from scipy.stats import rv_continuous
-            z = Dummy('z')
-            handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
-            class scipy_pdf(rv_continuous):
-                def _pdf(self, x):
-                    return handmade_pdf(x)
-            scipy_rv = scipy_pdf(a=dist.set._inf, b=dist.set._sup, name='scipy_pdf')
-            return scipy_rv.rvs(size=size)
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
-
-        return cls.scipy_rv_map[dist.__class__.__name__](dist, size)
-
-    @classmethod
-    def _sample_numpy(cls, dist, size):
-        """Sample from NumPy."""
-
-        dist_list = cls.numpy_rv_map.keys()
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
-
-        return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
-
-    @classmethod
     def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
 
@@ -273,6 +245,12 @@ class SampleExternalContinuous:
         with pymc3.Model():
             cls.pymc3_rv_map[dist.__class__.__name__](dist)
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+
+_get_sample_class_crv = {
+    'scipy': SampleContinuousScipy,
+    'pymc3': SampleContinuousPymc,
+    'numpy': SampleContinuousNumpy
+}
 
 
 class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
@@ -301,7 +279,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self, size=1, library='scipy'):
+    def sample(self, size=(), library='scipy'):
         """ A random realization from the distribution """
 
         libraries = ['scipy', 'numpy', 'pymc3']
@@ -311,7 +289,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = getattr(SampleExternalContinuous, '_sample_' + library)(self, size)
+        samps = _get_sample_class_crv[library](self, size)
 
         if samps is not None:
             return samps
@@ -555,7 +533,7 @@ class ContinuousPSpace(PSpace):
         except NotImplementedError:
             from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
-            if not random_symbols(expr):
+            if not is_random(expr):
                 dens = self.density
                 comp = condition.rhs
             else:
@@ -616,7 +594,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     def domain(self):
         return SingleContinuousDomain(sympify(self.symbol), self.set)
 
-    def sample(self, size=1, library='scipy'):
+    def sample(self, size=(), library='scipy'):
         """
         Internal sample method
 

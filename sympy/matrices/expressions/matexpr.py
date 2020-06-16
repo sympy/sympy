@@ -414,7 +414,7 @@ class MatrixExpr(Expr):
         Examples
         ========
 
-        >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
+        >>> from sympy import MatrixSymbol, MatrixExpr, Sum
         >>> from sympy.abc import i, j, k, l, N
         >>> A = MatrixSymbol("A", N, N)
         >>> B = MatrixSymbol("B", N, N)
@@ -661,7 +661,7 @@ def _matrix_derivative(expr, x):
     def _get_shape(elem):
         if isinstance(elem, MatrixExpr):
             return elem.shape
-        return (1, 1)
+        return 1, 1
 
     def get_rank(parts):
         return sum([j not in (1, None) for i in parts for j in _get_shape(i)])

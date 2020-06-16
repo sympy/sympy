@@ -33,7 +33,6 @@ class PermutationGroup(Basic):
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> from sympy.combinatorics.permutations import Cycle
     >>> from sympy.combinatorics.polyhedron import Polyhedron
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
 
@@ -254,7 +253,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import CyclicGroup
         >>> G = CyclicGroup(5)
         >>> H = G*G
@@ -912,7 +910,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(4)
         >>> G = D.center()
@@ -1464,7 +1461,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation
         >>> from sympy.combinatorics import PermutationGroup
         >>> from sympy.combinatorics.polyhedron import tetrahedron
 
@@ -1957,7 +1953,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(10)
         >>> D.is_alt_sym()
@@ -2101,7 +2096,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(10)
         >>> D.is_primitive()
@@ -2516,7 +2510,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(10)
         >>> D.minimal_block([0, 5])
@@ -2801,8 +2794,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> G = AlternatingGroup(5)
         >>> G.orbit_rep(0, 4)
@@ -2843,8 +2834,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
         >>> G.orbit_transversal(0)
@@ -3429,7 +3418,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.testutil import _verify_bsgs
         >>> A = AlternatingGroup(7)
         >>> base = [2, 3]
@@ -3614,7 +3602,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.testutil import _verify_bsgs
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> S = SymmetricGroup(5)
@@ -3769,8 +3756,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
         >>> G.stabilizer(5)
@@ -3872,7 +3857,6 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
         ... AlternatingGroup)
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.testutil import _verify_bsgs
         >>> S = SymmetricGroup(7)
         >>> prop_even = lambda x: x.is_even
@@ -4598,7 +4582,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> P = DihedralGroup(4)
         >>> G = P.strong_presentation()
@@ -4949,7 +4932,7 @@ def _orbits(degree, generators):
     ========
 
     >>> from sympy.combinatorics.permutations import Permutation
-    >>> from sympy.combinatorics.perm_groups import PermutationGroup, _orbits
+    >>> from sympy.combinatorics.perm_groups import _orbits
     >>> a = Permutation([0, 2, 1])
     >>> b = Permutation([1, 0, 2])
     >>> _orbits(a.size, [a, b])
@@ -4991,7 +4974,6 @@ def _orbit_transversal(degree, generators, alpha, pairs, af=False, slp=False):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> from sympy.combinatorics.perm_groups import _orbit_transversal
     >>> G = DihedralGroup(6)
@@ -5043,7 +5025,6 @@ def _stabilizer(degree, generators, alpha):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.perm_groups import _stabilizer
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> G = DihedralGroup(6)
@@ -5119,7 +5100,7 @@ class SymmetricPermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation, SymmetricPermutationGroup
+        >>> from sympy.combinatorics import SymmetricPermutationGroup
         >>> G = SymmetricPermutationGroup(4)
         >>> G.order()
         24
@@ -5138,7 +5119,7 @@ class SymmetricPermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation, SymmetricPermutationGroup
+        >>> from sympy.combinatorics import SymmetricPermutationGroup
         >>> G = SymmetricPermutationGroup(4)
         >>> G.degree
         4
@@ -5154,7 +5135,7 @@ class SymmetricPermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation, SymmetricPermutationGroup
+        >>> from sympy.combinatorics import SymmetricPermutationGroup
         >>> G = SymmetricPermutationGroup(4)
         >>> G.identity()
         (3)

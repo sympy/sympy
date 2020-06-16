@@ -1,11 +1,12 @@
 from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
         Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
-        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor
+        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor, Poly,
+        FiniteSet
 )
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy.testing.randtest import verify_numerically
 
 
@@ -302,6 +303,21 @@ def test_ncmul():
 
     assert set((A + B + 2*(A + B)).args) == \
         {A, B, 2*(A + B)}
+
+
+def test_mul_add_identity():
+    m = Mul(1, 2)
+    assert isinstance(m, Rational) and m.p == 2 and m.q == 1
+    m = Mul(1, 2, evaluate=False)
+    assert isinstance(m, Mul) and m.args == (1, 2)
+    m = Mul(0, 1)
+    assert m is S.Zero
+    m = Mul(0, 1, evaluate=False)
+    assert isinstance(m, Mul) and m.args == (0, 1)
+    m = Add(0, 1)
+    assert m is S.One
+    m = Add(0, 1, evaluate=False)
+    assert isinstance(m, Add) and m.args == (0, 1)
 
 
 def test_ncpow():
@@ -1569,13 +1585,14 @@ def test_suppressed_evaluation():
     c = Pow(3, 2, evaluate=False)
     assert a != 6
     assert a.func is Add
-    assert a.args == (3, 2)
+    assert a.args == (0, 3, 2)
     assert b != 6
     assert b.func is Mul
-    assert b.args == (3, 2)
+    assert b.args == (1, 3, 2)
     assert c != 9
     assert c.func is Pow
     assert c.args == (3, 2)
+
 
 def test_AssocOp_doit():
     a = Add(x,x, evaluate=False)
@@ -1590,6 +1607,15 @@ def test_AssocOp_doit():
     assert d.doit(deep=False).args == (a, 2*S.One)
     assert d.doit().func == Mul
     assert d.doit().args == (4*S.One, Pow(x,2))
+
+
+def test_Add_Mul_Expr_args():
+    nonexpr = [Basic(), Poly(x, x), FiniteSet(x)]
+    for typ in [Add, Mul]:
+        for obj in nonexpr:
+            with warns_deprecated_sympy():
+                typ(obj, 1)
+
 
 def test_Add_as_coeff_mul():
     # issue 5524.  These should all be (1, self)

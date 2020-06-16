@@ -441,7 +441,7 @@ def differentiate_finite(expr, *symbols,
     Examples
     ========
 
-    >>> from sympy import cos, sin, Function, differentiate_finite
+    >>> from sympy import sin, Function, differentiate_finite
     >>> from sympy.abc import x, y, h
     >>> f, g = Function('f'), Function('g')
     >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h])

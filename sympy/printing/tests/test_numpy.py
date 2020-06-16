@@ -7,9 +7,8 @@ from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
-from sympy.codegen.array_utils import (CodegenArrayContraction,
-        CodegenArrayTensorProduct, CodegenArrayDiagonal,
-        CodegenArrayPermuteDims, CodegenArrayElementwiseAdd)
+from sympy.codegen.array_utils import (CodegenArrayTensorProduct, CodegenArrayDiagonal,
+                                       CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, parse_matrix_expression)
 from sympy.printing.lambdarepr import NumPyPrinter
 
 from sympy.testing.pytest import warns_deprecated_sympy
@@ -72,7 +71,7 @@ def test_codegen_einsum():
     M = MatrixSymbol("M", 2, 2)
     N = MatrixSymbol("N", 2, 2)
 
-    cg = CodegenArrayContraction.from_MatMul(M*N)
+    cg = parse_matrix_expression(M*N)
     f = lambdify((M, N), cg, 'numpy')
 
     ma = np.matrix([[1, 2], [3, 4]])

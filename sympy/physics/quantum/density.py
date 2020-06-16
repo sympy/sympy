@@ -228,10 +228,8 @@ def entropy(density):
     ========
 
     >>> from sympy.physics.quantum.density import Density, entropy
-    >>> from sympy.physics.quantum.represent import represent
-    >>> from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
-    >>> from sympy.physics.quantum.spin import JzKet, Jz
-    >>> from sympy import S, log
+    >>> from sympy.physics.quantum.spin import JzKet
+    >>> from sympy import S
     >>> up = JzKet(S(1)/2,S(1)/2)
     >>> down = JzKet(S(1)/2,-S(1)/2)
     >>> d = Density((up,S(1)/2),(down,S(1)/2))
@@ -275,7 +273,7 @@ def fidelity(state1, state2):
     >>> from sympy import S, sqrt
     >>> from sympy.physics.quantum.dagger import Dagger
     >>> from sympy.physics.quantum.spin import JzKet
-    >>> from sympy.physics.quantum.density import Density, fidelity
+    >>> from sympy.physics.quantum.density import fidelity
     >>> from sympy.physics.quantum.represent import represent
     >>>
     >>> up = JzKet(S(1)/2,S(1)/2)

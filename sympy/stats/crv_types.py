@@ -67,7 +67,7 @@ from sympy.matrices import MatrixBase, MatrixExpr
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
 from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.joint_rv_types import multivariate_rv
-from sympy.stats.rv import _value_check, RandomSymbol
+from sympy.stats.rv import _value_check, is_random
 
 oo = S.Infinity
 
@@ -125,13 +125,16 @@ __all__ = ['ContinuousRV',
 ]
 
 
+@is_random.register(MatrixBase)
+def _(x):
+    return any([is_random(i) for i in x])
 
 def rv(symbol, cls, args):
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
     pspace = SingleContinuousPSpace(symbol, dist)
-    if any(isinstance(arg, RandomSymbol) for arg in args):
+    if any(is_random(arg) for arg in args):
         pspace = JointPSpace(symbol, CompoundDistribution(dist))
     return pspace.value
 
@@ -249,7 +252,7 @@ def Arcsin(name, a=0, b=1):
     ========
 
     >>> from sympy.stats import Arcsin, density, cdf
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol
 
     >>> a = Symbol("a", real=True)
     >>> b = Symbol("b", real=True)
@@ -331,7 +334,7 @@ def Benini(name, alpha, beta, sigma):
     ========
 
     >>> from sympy.stats import Benini, density, cdf
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy import Symbol, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
@@ -1400,8 +1403,8 @@ def ExponentialPower(name, mu, alpha, beta):
     Examples
     ========
 
-    >>> from sympy.stats import ExponentialPower, density, E, variance, cdf
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import ExponentialPower, density, cdf
+    >>> from sympy import Symbol, pprint
     >>> z = Symbol("z")
     >>> mu = Symbol("mu")
     >>> alpha = Symbol("alpha", positive=True)
@@ -1483,7 +1486,7 @@ def FDistribution(name, d1, d2):
     ========
 
     >>> from sympy.stats import FDistribution, density
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy import Symbol, pprint
 
     >>> d1 = Symbol("d1", positive=True)
     >>> d2 = Symbol("d2", positive=True)
@@ -1558,7 +1561,7 @@ def FisherZ(name, d1, d2):
     ========
 
     >>> from sympy.stats import FisherZ, density
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy import Symbol, pprint
 
     >>> d1 = Symbol("d1", positive=True)
     >>> d2 = Symbol("d2", positive=True)
@@ -1641,8 +1644,8 @@ def Frechet(name, a, s=1, m=0):
     Examples
     ========
 
-    >>> from sympy.stats import Frechet, density, E, std, cdf
-    >>> from sympy import Symbol, simplify
+    >>> from sympy.stats import Frechet, density, cdf
+    >>> from sympy import Symbol
 
     >>> a = Symbol("a", positive=True)
     >>> s = Symbol("s", positive=True)
@@ -1825,7 +1828,7 @@ def GammaInverse(name, a, b):
     Examples
     ========
 
-    >>> from sympy.stats import GammaInverse, density, cdf, E, variance
+    >>> from sympy.stats import GammaInverse, density, cdf
     >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a", positive=True)
@@ -1930,8 +1933,8 @@ def Gumbel(name, beta, mu, minimum=False):
     Examples
     ========
 
-    >>> from sympy.stats import Gumbel, density, E, variance, cdf
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import Gumbel, density, cdf
+    >>> from sympy import Symbol
     >>> x = Symbol("x")
     >>> mu = Symbol("mu")
     >>> beta = Symbol("beta", positive=True)
@@ -2002,8 +2005,8 @@ def Gompertz(name, b, eta):
     Examples
     ========
 
-    >>> from sympy.stats import Gompertz, density, E, variance
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import Gompertz, density
+    >>> from sympy import Symbol
 
     >>> b = Symbol("b", positive=True)
     >>> eta = Symbol("eta", positive=True)
@@ -2072,8 +2075,8 @@ def Kumaraswamy(name, a, b):
     Examples
     ========
 
-    >>> from sympy.stats import Kumaraswamy, density, E, variance, cdf
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import Kumaraswamy, density, cdf
+    >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a", positive=True)
     >>> b = Symbol("b", positive=True)
@@ -2248,7 +2251,7 @@ def Levy(name, mu, c):
     ========
 
     >>> from sympy.stats import Levy, density, cdf
-    >>> from sympy import Symbol, pprint
+    >>> from sympy import Symbol
 
     >>> mu = Symbol("mu", real=True)
     >>> c = Symbol("c", positive=True)
@@ -2495,7 +2498,7 @@ def LogNormal(name, mean, std):
     ========
 
     >>> from sympy.stats import LogNormal, density
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy import Symbol, pprint
 
     >>> mu = Symbol("mu", real=True)
     >>> sigma = Symbol("sigma", positive=True)
@@ -2894,7 +2897,7 @@ def Normal(name, mean, std):
     ========
 
     >>> from sympy.stats import Normal, density, E, std, cdf, skewness, quantile
-    >>> from sympy import Symbol, simplify, pprint, factor, together, factor_terms
+    >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu")
     >>> sigma = Symbol("sigma", positive=True)
@@ -3024,7 +3027,7 @@ def GaussianInverse(name, mean, shape):
     Examples
     ========
 
-    >>> from sympy.stats import GaussianInverse, density, cdf, E, std, skewness
+    >>> from sympy.stats import GaussianInverse, density, E, std, skewness
     >>> from sympy import Symbol, pprint
 
     >>> mu = Symbol("mu", positive=True)
@@ -3199,7 +3202,7 @@ def PowerFunction(name, alpha, a, b):
     ========
 
     >>> from sympy.stats import PowerFunction, density, cdf, E, variance
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol
     >>> alpha = Symbol("alpha", positive=True)
     >>> a = Symbol("a", real=True)
     >>> b = Symbol("b", real=True)
@@ -3292,8 +3295,8 @@ def QuadraticU(name, a, b):
     Examples
     ========
 
-    >>> from sympy.stats import QuadraticU, density, E, variance
-    >>> from sympy import Symbol, simplify, factor, pprint
+    >>> from sympy.stats import QuadraticU, density
+    >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a", real=True)
     >>> b = Symbol("b", real=True)
@@ -3378,8 +3381,8 @@ def RaisedCosine(name, mu, s):
     Examples
     ========
 
-    >>> from sympy.stats import RaisedCosine, density, E, variance
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import RaisedCosine, density
+    >>> from sympy import Symbol, pprint
 
     >>> mu = Symbol("mu", real=True)
     >>> s = Symbol("s", positive=True)
@@ -3461,7 +3464,7 @@ def Rayleigh(name, sigma):
     ========
 
     >>> from sympy.stats import Rayleigh, density, E, variance
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol
 
     >>> sigma = Symbol("sigma", positive=True)
     >>> z = Symbol("z")
@@ -3587,7 +3590,7 @@ def ShiftedGompertz(name, b, eta):
 
     Examples
     ========
-    >>> from sympy.stats import ShiftedGompertz, density, E, variance
+    >>> from sympy.stats import ShiftedGompertz, density
     >>> from sympy import Symbol
 
     >>> b = Symbol("b", positive=True)
@@ -3656,8 +3659,8 @@ def StudentT(name, nu):
     Examples
     ========
 
-    >>> from sympy.stats import StudentT, density, E, variance, cdf
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import StudentT, density, cdf
+    >>> from sympy import Symbol, pprint
 
     >>> nu = Symbol("nu", positive=True)
     >>> z = Symbol("z")
@@ -3752,7 +3755,7 @@ def Trapezoidal(name, a, b, c, d):
     Examples
     ========
 
-    >>> from sympy.stats import Trapezoidal, density, E
+    >>> from sympy.stats import Trapezoidal, density
     >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a")
@@ -3851,7 +3854,7 @@ def Triangular(name, a, b, c):
     Examples
     ========
 
-    >>> from sympy.stats import Triangular, density, E
+    >>> from sympy.stats import Triangular, density
     >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a")
@@ -3963,7 +3966,7 @@ def Uniform(name, left, right):
     Examples
     ========
 
-    >>> from sympy.stats import Uniform, density, cdf, E, variance, skewness
+    >>> from sympy.stats import Uniform, density, cdf, E, variance
     >>> from sympy import Symbol, simplify
 
     >>> a = Symbol("a", negative=True)
@@ -4141,8 +4144,8 @@ def VonMises(name, mu, k):
     Examples
     ========
 
-    >>> from sympy.stats import VonMises, density, E, variance
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import VonMises, density
+    >>> from sympy import Symbol, pprint
 
     >>> mu = Symbol("mu")
     >>> k = Symbol("k", positive=True)
@@ -4294,7 +4297,7 @@ def WignerSemicircle(name, R):
     ========
 
     >>> from sympy.stats import WignerSemicircle, density, E
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol
 
     >>> R = Symbol("R", positive=True)
     >>> z = Symbol("z")

@@ -1,9 +1,10 @@
 from __future__ import print_function, division
 from sympy.sets import FiniteSet
 from sympy import sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy, piecewise_fold, solveset
-from .rv import (probability, expectation, density, where, given, pspace, cdf,
+from .rv import (probability, expectation, density, where, given, pspace, cdf, PSpace,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
-                 sampling_density, moment_generating_function, quantile)
+                 sampling_density, moment_generating_function, quantile, is_random,
+                 sample_stochastic_process)
 
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
@@ -11,7 +12,7 @@ __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
         'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'median',
         'independent', 'random_symbols', 'correlation', 'factorial_moment',
         'moment', 'cmoment', 'sampling_density', 'moment_generating_function',
-        'smoment', 'quantile']
+        'smoment', 'quantile', 'sample_stochastic_process']
 
 
 
@@ -44,7 +45,7 @@ def variance(X, condition=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy.stats import Die, E, Bernoulli, variance
+    >>> from sympy.stats import Die, Bernoulli, variance
     >>> from sympy import simplify, Symbol
 
     >>> X = Die('X', 6)
@@ -57,6 +58,10 @@ def variance(X, condition=None, **kwargs):
     >>> simplify(variance(B))
     p*(1 - p)
     """
+    if is_random(X) and pspace(X) == PSpace():
+        from sympy.stats.symbolic_probability import Variance
+        return Variance(X, condition)
+
     return cmoment(X, 2, condition, **kwargs)
 
 
@@ -148,6 +153,10 @@ def covariance(X, Y, condition=None, **kwargs):
     >>> covariance(X, Y + rate*X)
     1/lambda
     """
+    if (is_random(X) and pspace(X) == PSpace()) or (is_random(Y) and pspace(Y) == PSpace()):
+        from sympy.stats.symbolic_probability import Covariance
+        return Covariance(X, Y, condition)
+
     return expectation(
         (X - expectation(X, condition, **kwargs)) *
         (Y - expectation(Y, condition, **kwargs)),

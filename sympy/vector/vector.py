@@ -223,7 +223,6 @@ class Vector(BasisDependent):
         ========
 
         >>> from sympy.vector.coordsysrect import CoordSys3D
-        >>> from sympy.vector.vector import Vector, BaseVector
         >>> C = CoordSys3D('C')
         >>> i, j, k = C.base_vectors()
         >>> v1 = i + j + k

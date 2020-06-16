@@ -1,5 +1,6 @@
 from types import FunctionType
 from collections import Counter
+import itertools
 
 from mpmath import mp, workprec
 from mpmath.libmp.libmpf import prec_to_dps
@@ -76,7 +77,9 @@ def _eigenvects_mpmath(M):
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _eigenvals(M, error_when_incomplete=True, **flags):
+def _eigenvals(
+    M, error_when_incomplete=True, *, simplify=False, multiple=False,
+    rational=False, **flags):
     r"""Return eigenvalues using the Berkowitz agorithm to compute
     the characteristic polynomial.
 
@@ -148,14 +151,12 @@ def _eigenvals(M, error_when_incomplete=True, **flags):
     equation `\det(A - \lambda I) = 0`
     """
     if not M:
+        if multiple:
+            return []
         return {}
 
     if not M.is_square:
         raise NonSquareMatrixError("{} must be a square matrix.".format(M))
-
-    simplify = flags.pop('simplify', False)
-    multiple = flags.get('multiple', False)
-    rational = flags.pop('rational', True)
 
     if M.is_upper or M.is_lower:
         return _eigenvals_triangular(M, multiple=multiple)
@@ -167,32 +168,75 @@ def _eigenvals(M, error_when_incomplete=True, **flags):
         M = M.applyfunc(
             lambda x: nsimplify(x, rational=True) if x.has(Float) else x)
 
-    if isinstance(simplify, FunctionType):
-        eigs = roots(M.charpoly(simplify=simplify), **flags)
-    else:
-        eigs = roots(M.charpoly(), **flags)
+    if multiple:
+        return _eigenvals_list(
+            M, error_when_incomplete=error_when_incomplete, simplify=simplify,
+            **flags)
+    return _eigenvals_dict(
+        M, error_when_incomplete=error_when_incomplete, simplify=simplify,
+        **flags)
 
-    # make sure the algebraic multiplicity sums to the
-    # size of the matrix
-    if error_when_incomplete:
-        if not multiple and sum(eigs.values()) != M.rows or \
-            multiple and len(eigs) != M.cols:
-            raise MatrixError(
-                "Could not compute eigenvalues for {}".format(M))
 
-    # Since 'simplify' flag is unsupported in roots()
-    # simplify() function will be applied once at the end of the routine.
+def _eigenvals_list(
+    M, error_when_incomplete=True, simplify=False, **flags):
+    iblocks = M.connected_components()
+    all_eigs = []
+    for b in iblocks:
+        block = M[b, b]
+
+        if isinstance(simplify, FunctionType):
+            charpoly = block.charpoly(simplify=simplify)
+        else:
+            charpoly = block.charpoly()
+        eigs = roots(charpoly, multiple=True, **flags)
+
+        if error_when_incomplete:
+            if len(eigs) != block.rows:
+                raise MatrixError(
+                    "Could not compute eigenvalues for {}. if you see this "
+                    "error, please report to SymPy issue tracker."
+                    .format(block))
+
+        all_eigs += eigs
+
     if not simplify:
-        return eigs
+        return all_eigs
     if not isinstance(simplify, FunctionType):
         simplify = _simplify
+    return [simplify(value) for value in all_eigs]
 
-    # With 'multiple' flag set true, simplify() will be mapped for the list
-    # Otherwise, simplify() will be mapped for the keys of the dictionary
-    if not multiple:
-        return {simplify(key): value for key, value in eigs.items()}
-    else:
-        return [simplify(value) for value in eigs]
+
+def _eigenvals_dict(
+    M, error_when_incomplete=True, simplify=False, **flags):
+    iblocks = M.connected_components()
+    all_eigs = {}
+    for b in iblocks:
+        block = M[b, b]
+
+        if isinstance(simplify, FunctionType):
+            charpoly = block.charpoly(simplify=simplify)
+        else:
+            charpoly = block.charpoly()
+        eigs = roots(charpoly, multiple=False, **flags)
+
+        if error_when_incomplete:
+            if sum(eigs.values()) != block.rows:
+                raise MatrixError(
+                    "Could not compute eigenvalues for {}. if you see this "
+                    "error, please report to SymPy issue tracker."
+                    .format(block))
+
+        for k, v in eigs.items():
+            if k in all_eigs:
+                all_eigs[k] += v
+            else:
+                all_eigs[k] = v
+
+    if not simplify:
+        return all_eigs
+    if not isinstance(simplify, FunctionType):
+        simplify = _simplify
+    return {simplify(key): value for key, value in all_eigs.items()}
 
 
 def _eigenspace(M, eigenval, iszerofunc=_iszero, simplify=False):
@@ -656,7 +700,7 @@ def _is_positive_semidefinite(M):
     if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
         return True
 
-    return _is_positive_semidefinite_minors(M)
+    return _is_positive_semidefinite_by_minors(M)
 
 
 def _is_negative_definite(M):
@@ -698,16 +742,14 @@ def _is_positive_definite_GE(M):
     return True
 
 
-def _is_positive_semidefinite_minors(M):
+def _is_positive_semidefinite_by_minors(M):
     """A method to evaluate all principal minors for testing
-    positive-semidefiniteness."""
-    size = M.rows
-    for i in range(size):
-        minor = M[:i+1, :i+1].det(method='berkowitz')
-        is_nonnegative = minor.is_nonnegative
-        if is_nonnegative is not True:
-            return is_nonnegative
-    return True
+    positive-semidefiniteness by using Sylvestre's crieterion."""
+    return all(
+        M[idx, idx].det(method='berkowitz').is_nonnegative
+        for minor_size in range(1, M.rows+1)
+        for idx in itertools.combinations(range(M.rows), minor_size)
+    )
 
 
 _doc_positive_definite = \

@@ -631,7 +631,7 @@ def octave_code(expr, assign_to=None, **settings):
     >>> octave_code(sin(x).series(x).removeO())
     'x.^5/120 - x.^3/6 + x'
 
-    >>> from sympy import Rational, ceiling, Abs
+    >>> from sympy import Rational, ceiling
     >>> x, y, tau = symbols("x, y, tau")
     >>> octave_code((2*tau)**Rational(7, 2))
     '8*sqrt(2)*tau.^(7/2)'
@@ -712,7 +712,7 @@ def octave_code(expr, assign_to=None, **settings):
     ``contract=False`` will just print the assignment expression that should be
     looped over:
 
-    >>> from sympy import Eq, IndexedBase, Idx, ccode
+    >>> from sympy import Eq, IndexedBase, Idx
     >>> len_y = 5
     >>> y = IndexedBase('y', shape=(len_y,))
     >>> t = IndexedBase('t', shape=(len_y,))

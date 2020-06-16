@@ -432,6 +432,7 @@ if __name__ == '__main__':
                   '*.g4', 'test-examples/*.al', 'test-examples/*.py',
                   'test-examples/pydy-example-repo/*.al',
                   'test-examples/pydy-example-repo/*.py',
+                  'test-examples/README.txt',
                   ],
               'sympy.parsing.latex': ['*.txt', '*.g4'],
               'sympy.integrals.rubi.parsetools': ['header.py.txt'],

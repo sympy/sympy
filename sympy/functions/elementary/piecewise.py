@@ -75,7 +75,7 @@ class Piecewise(Function):
     Examples
     ========
 
-    >>> from sympy import Piecewise, log, ITE, piecewise_fold
+    >>> from sympy import Piecewise, log, piecewise_fold
     >>> from sympy.abc import x, y
     >>> f = x**2
     >>> g = log(x)

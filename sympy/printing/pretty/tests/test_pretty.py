@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sympy import (
-    And, Basic, Derivative, Dict, Eq, Equivalent, FF,
+    Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
     FiniteSet, Function, Ge, Gt, I, Implies, Integral, SingularityFunction,
     Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
     Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
@@ -950,6 +950,51 @@ u("""\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+    expr = Mul(0, 1, evaluate=False)
+    assert pretty(expr) == "0*1"
+    assert upretty(expr) == "0⋅1"
+    expr = Mul(1, 0, evaluate=False)
+    assert pretty(expr) == "1*0"
+    assert upretty(expr) == "1⋅0"
+    expr = Mul(1, 1, evaluate=False)
+    assert pretty(expr) == "1*1"
+    assert upretty(expr) == "1⋅1"
+    expr = Mul(1, 1, 1, evaluate=False)
+    assert pretty(expr) == "1*1*1"
+    assert upretty(expr) == "1⋅1⋅1"
+    expr = Mul(1, 2, evaluate=False)
+    assert pretty(expr) == "1*2"
+    assert upretty(expr) == "1⋅2"
+    expr = Add(0, 1, evaluate=False)
+    assert pretty(expr) == "0 + 1"
+    assert upretty(expr) == "0 + 1"
+    expr = Mul(1, 1, 2, evaluate=False)
+    assert pretty(expr) == "1*1*2"
+    assert upretty(expr) == "1⋅1⋅2"
+    expr = Add(0, 0, 1, evaluate=False)
+    assert pretty(expr) == "0 + 0 + 1"
+    assert upretty(expr) == "0 + 0 + 1"
+    expr = Mul(1, -1, evaluate=False)
+    assert pretty(expr) == "1*(-1)"
+    assert upretty(expr) == "1⋅(-1)"
+    expr = Mul(1.0, x, evaluate=False)
+    assert pretty(expr) == "1.0*x"
+    assert upretty(expr) == "1.0⋅x"
+    expr = Mul(1, 1, 2, 3, x, evaluate=False)
+    assert pretty(expr) == "1*1*2*3*x"
+    assert upretty(expr) == "1⋅1⋅2⋅3⋅x"
+    expr = Mul(-1, 1, evaluate=False)
+    assert pretty(expr) == "-1*1"
+    assert upretty(expr) == "-1⋅1"
+    expr = Mul(4, 3, 2, 1, 0, y, x, evaluate=False)
+    assert pretty(expr) == "4*3*2*1*0*y*x"
+    assert upretty(expr) == "4⋅3⋅2⋅1⋅0⋅y⋅x"
+    expr = Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)
+    assert pretty(expr) == "4*3*2*(z + 1)*0*y*x"
+    assert upretty(expr) == "4⋅3⋅2⋅(z + 1)⋅0⋅y⋅x"
+    expr = Mul(Rational(2, 3), Rational(5, 7), evaluate=False)
+    assert pretty(expr) == "2/3*5/7"
+    assert upretty(expr) == "2/3⋅5/7"
 
 def test_issue_5524():
     assert pretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
@@ -3248,13 +3293,13 @@ def test_MatrixExpressions():
     expr = (n*X).applyfunc(lamda)
     ascii_str = """\
 /     1\\      \n\
-|d -> -|.(n*X)\n\
-\\     d/      \
+|x -> -|.(n*X)\n\
+\\     x/      \
 """
     ucode_str = u("""\
 ⎛    1⎞      \n\
-⎜d ↦ ─⎟˳(n⋅X)\n\
-⎝    d⎠      \
+⎜x ↦ ─⎟˳(n⋅X)\n\
+⎝    x⎠      \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str

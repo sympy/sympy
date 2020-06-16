@@ -2583,7 +2583,7 @@ class Zero(IntegerConstant, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import S, Integer, zoo
+    >>> from sympy import S, Integer
     >>> Integer(0) is S.Zero
     True
     >>> 1/S.Zero
@@ -3290,7 +3290,7 @@ class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import zoo, oo
+    >>> from sympy import zoo
     >>> zoo + 42
     zoo
     >>> 42/zoo

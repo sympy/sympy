@@ -4484,7 +4484,7 @@ def total_degree(f, *gens):
     Examples
     ========
     >>> from sympy import total_degree, Poly
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x, y
 
     >>> total_degree(1)
     0

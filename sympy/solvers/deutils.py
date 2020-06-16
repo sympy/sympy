@@ -27,7 +27,7 @@ def _preprocess(expr, func=None, hint='_Integral'):
     function to be solved for.
 
     >>> from sympy.solvers.deutils import _preprocess
-    >>> from sympy import Derivative, Function, Integral, sin
+    >>> from sympy import Derivative, Function
     >>> from sympy.abc import x, y, z
     >>> f, g = map(Function, 'fg')
 

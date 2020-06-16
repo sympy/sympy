@@ -58,7 +58,7 @@ class DiracDelta(Function):
     Examples
     ========
 
-    >>> from sympy import DiracDelta, diff, pi, Piecewise
+    >>> from sympy import DiracDelta, diff, pi
     >>> from sympy.abc import x, y
 
     >>> DiracDelta(x)
@@ -132,6 +132,12 @@ class DiracDelta(Function):
         >>> diff(DiracDelta(x, 1)).fdiff()
         DiracDelta(x, 3)
 
+        Parameters
+        ==========
+
+        argindex : integer
+            degree of derivative
+
         """
         if argindex == 1:
             #I didn't know if there is a better way to handle default arguments
@@ -160,7 +166,7 @@ class DiracDelta(Function):
         Examples
         ========
 
-        >>> from sympy import DiracDelta, S, Subs
+        >>> from sympy import DiracDelta, S
         >>> from sympy.abc import x
 
         >>> DiracDelta(x)
@@ -192,6 +198,14 @@ class DiracDelta(Function):
 
         >>> DiracDelta(x - 100).subs(x, 100)
         DiracDelta(0)
+
+        Parameters
+        ==========
+
+        k : integer
+            order of derivative
+
+        arg : argument passed to DiracDelta
 
         """
         k = sympify(k)
@@ -335,7 +349,7 @@ class DiracDelta(Function):
         Examples
         ========
 
-        >>> from sympy import DiracDelta, Piecewise, Symbol, SingularityFunction
+        >>> from sympy import DiracDelta, Piecewise, Symbol
         >>> x = Symbol('x')
 
         >>> DiracDelta(x).rewrite(Piecewise)
@@ -465,6 +479,12 @@ class Heaviside(Function):
         >>> diff(Heaviside(x)).fdiff()
         DiracDelta(x, 1)
 
+        Parameters
+        ==========
+
+        argindex : integer
+            order of derivative
+
         """
         if argindex == 1:
             # property number 1
@@ -528,6 +548,12 @@ class Heaviside(Function):
         >>> Heaviside(x - 100).subs(x, 105)
         1
 
+        Parameters
+        ==========
+
+        arg : argument passed by HeaviSide object
+        HO : boolean flag for HeaviSide Object is set to True
+
         """
         H0 = sympify(H0)
         arg = sympify(arg)
@@ -549,7 +575,7 @@ class Heaviside(Function):
         Examples
         ========
 
-        >>> from sympy import Heaviside, Piecewise, Symbol, pprint
+        >>> from sympy import Heaviside, Piecewise, Symbol
         >>> x = Symbol('x')
 
         >>> Heaviside(x).rewrite(Piecewise)

@@ -921,7 +921,6 @@ def wigner_d(J, alpha, beta, gamma):
 
     >>> from sympy.physics.wigner import wigner_d
     >>> from sympy import Integer, symbols, pprint
-    >>> from sympy.physics.wigner import wigner_d_small
     >>> half = 1/Integer(2)
     >>> alpha, beta, gamma = symbols("alpha, beta, gamma", real=True)
     >>> pprint(wigner_d(half, alpha, beta, gamma), use_unicode=True)

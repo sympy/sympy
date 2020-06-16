@@ -95,8 +95,8 @@ def int_to_Integer(s):
     ========
 
     >>> from __future__ import division
+    >>> from sympy import Integer # noqa: F401
     >>> from sympy.interactive.session import int_to_Integer
-    >>> from sympy import Integer
     >>> s = '1.2 + 1/2 - 0x12 + a1'
     >>> int_to_Integer(s)
     '1.2 +Integer (1 )/Integer (2 )-Integer (0x12 )+a1 '

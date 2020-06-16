@@ -448,7 +448,7 @@ def kernS(s):
     ========
 
     >>> from sympy.core.sympify import kernS
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x, y
 
     The 2-arg Mul distributes a number (or minus sign) across the terms
     of an expression, but kernS will prevent that:

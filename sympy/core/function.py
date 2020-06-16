@@ -216,7 +216,6 @@ class FunctionClass(ManagedProperties):
         ========
 
         >>> from sympy.core.function import Function
-        >>> from sympy.abc import x, y
         >>> f = Function('f')
 
         If the function can take any number of arguments, the set of whole
@@ -1090,7 +1089,7 @@ class Derivative(Expr):
     automatically simplified in a fairly conservative fashion unless the
     keyword ``simplify`` is set to False.
 
-        >>> from sympy import cos, sin, sqrt, diff, Function, symbols
+        >>> from sympy import sqrt, diff, Function, symbols
         >>> from sympy.abc import x, y, z
         >>> f, g = symbols('f,g', cls=Function)
 
@@ -1524,7 +1523,7 @@ class Derivative(Expr):
         Examples
         ========
 
-        >>> from sympy import Derivative, Function, symbols, cos
+        >>> from sympy import Derivative, Function, symbols
         >>> vsort = Derivative._sort_variable_count
         >>> x, y, z = symbols('x y z')
         >>> f, g, h = symbols('f g h', cls=Function)
@@ -1918,6 +1917,9 @@ class Lambda(Expr):
     'lambda x: expr'. A function of several variables is written as
     Lambda((x, y, ...), expr).
 
+    Examples
+    ========
+
     A simple example:
 
     >>> from sympy import Lambda
@@ -2056,24 +2058,6 @@ class Lambda(Expr):
         rmatch(sig, args)
 
         return symargmap
-
-    def __eq__(self, other):
-        if not isinstance(other, Lambda):
-            return False
-        if self.nargs != other.nargs:
-            return False
-
-        try:
-            d = self._match_signature(other.signature, self.signature)
-        except BadArgumentsError:
-            return False
-        return self.args == other.xreplace(d).args
-
-    def __hash__(self):
-        return super().__hash__()
-
-    def _hashable_content(self):
-        return (self.expr.xreplace(self.canonical_variables),)
 
     @property
     def is_identity(self):
@@ -3088,7 +3072,7 @@ def count_ops(expr, visual=False):
     2*ADD + SIN
 
     """
-    from sympy import Integral, Symbol
+    from sympy import Integral, Sum, Symbol
     from sympy.core.relational import Relational
     from sympy.simplify.radsimp import fraction
     from sympy.logic.boolalg import BooleanFunction
@@ -3156,18 +3140,22 @@ def count_ops(expr, visual=False):
                 ops.append(DIV)
                 args.append(a.base)  # won't be -Mul but could be Add
                 continue
-            if (a.is_Mul or
-                a.is_Pow or
-                a.is_Function or
-                isinstance(a, Derivative) or
-                    isinstance(a, Integral)):
-
+            if a.is_Mul or isinstance(a, LatticeOp):
                 o = Symbol(a.func.__name__.upper())
                 # count the args
-                if (a.is_Mul or isinstance(a, LatticeOp)):
-                    ops.append(o*(len(a.args) - 1))
-                else:
-                    ops.append(o)
+                ops.append(o*(len(a.args) - 1))
+            elif a.args and (
+                    a.is_Pow or
+                    a.is_Function or
+                    isinstance(a, Derivative) or
+                    isinstance(a, Integral) or
+                    isinstance(a, Sum)):
+                # if it's not in the list above we don't
+                # consider a.func something to count, e.g.
+                # Tuple, MatrixSymbol, etc...
+                o = Symbol(a.func.__name__.upper())
+                ops.append(o)
+
             if not a.is_Symbol:
                 args.extend(a.args)
 

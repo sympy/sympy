@@ -90,6 +90,21 @@ def test_print_builtin_option():
                     '{\N{GREEK SMALL LETTER PI}: 3.14, n\N{LATIN SUBSCRIPT SMALL LETTER I}: 3}')
     assert latex == r'$\displaystyle \left\{ n_{i} : 3, \  \pi : 3.14\right\}$'
 
+    # Objects with an _latex overload should also be handled by our tuple
+    # printer.
+    app.run_cell("""\
+    class WithOverload:
+        def _latex(self, printer):
+            return r"\\LaTeX"
+    """)
+    app.run_cell("a = format((WithOverload(),))")
+    # Deal with API change starting at IPython 1.0
+    if int(ipython.__version__.split(".")[0]) < 1:
+        latex = app.user_ns['a']['text/latex']
+    else:
+        latex = app.user_ns['a'][0]['text/latex']
+    assert latex == r'$\displaystyle \left( \LaTeX,\right)$'
+
     app.run_cell("inst.display_formatter.formatters['text/latex'].enabled = True")
     app.run_cell("init_printing(use_latex=True, print_builtin=False)")
     app.run_cell("a = format({Symbol('pi'): 3.14, Symbol('n_i'): 3})")
@@ -134,7 +149,7 @@ def test_builtin_containers():
 ([ ],)
  [2]  \
 """
-        assert app.user_ns['c']['text/latex'] == '$\\displaystyle \\left( \\left[\\begin{matrix}1\\\\2\\end{matrix}\\right]\\right)$'
+        assert app.user_ns['c']['text/latex'] == '$\\displaystyle \\left( \\left[\\begin{matrix}1\\\\2\\end{matrix}\\right],\\right)$'
     else:
         assert app.user_ns['a'][0]['text/plain'] ==  '(True, False)'
         assert 'text/latex' not in app.user_ns['a'][0]
@@ -146,7 +161,7 @@ def test_builtin_containers():
 ([ ],)
  [2]  \
 """
-        assert app.user_ns['c'][0]['text/latex'] == '$\\displaystyle \\left( \\left[\\begin{matrix}1\\\\2\\end{matrix}\\right]\\right)$'
+        assert app.user_ns['c'][0]['text/latex'] == '$\\displaystyle \\left( \\left[\\begin{matrix}1\\\\2\\end{matrix}\\right],\\right)$'
 
 def test_matplotlib_bad_latex():
     # Initialize and setup IPython session

@@ -59,7 +59,6 @@ def _mostfunc(lhs, func, X=None):
 
     >>> from sympy.solvers.bivariate import _mostfunc
     >>> from sympy.functions.elementary.exponential import exp
-    >>> from sympy.testing.pytest import raises
     >>> from sympy.abc import x, y
     >>> _mostfunc(exp(x) + exp(exp(x) + 2), exp)
     exp(exp(x) + 2)
