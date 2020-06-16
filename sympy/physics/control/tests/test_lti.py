@@ -1,5 +1,5 @@
-from sympy import symbols, Matrix, factor, simplify, exp, pi
-from sympy.physics.control.lti import TransferFunction
+from sympy import symbols, Matrix, factor, Function, simplify, exp, pi
+from sympy.physics.control.lti import TransferFunction, Series, Parallel
 from sympy.testing.pytest import raises
 
 a, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2 = symbols('a, b, s, g, d, p, k, a0:3, b0:3')
@@ -322,3 +322,152 @@ def test_TransferFunction_is_biproper():
     assert tf2.is_biproper
     assert not tf3.is_biproper
     assert not tf4.is_biproper
+
+
+def test_Series_construction():
+    zeta, wn = symbols('zeta, wn')
+    tf = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
+    tf2 = TransferFunction(a2*p - s, a2*s + p, s)
+    tf3 = TransferFunction(a0*p + p**a1 - s, p, p)
+    tf4 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    inp = Function('X_d')(s)
+    out = Function('X')(s)
+
+    s0 = Series(tf, tf2)
+    assert s0.args == (tf, tf2)
+
+    s1 = Series(Parallel(tf, -tf2), tf2)
+    assert s1.args == (Parallel(tf, -tf2), tf2)
+
+    s2 = Series(tf, Parallel(inp, -out), tf2)
+    assert s2.args == (tf, Parallel(X_d, - X), tf2)
+
+    s3 = Series(tf, tf2, tf4)
+    assert s3.args == (tf, tf2, tf4)
+
+    s4 = Series(inp, out)
+    assert s4.args == (X_d, X)
+
+    s5 = Series(tf2, tf4, 1/Parallel(1, tf2, tf4))
+    assert s5.args == (tf2, tf4, 1/Parallel(1, tf2, tf4))
+
+    s6 = Series(tf2, tf4, Series(Parallel(tf2, -tf), tf4))
+    assert s6.args == (tf2, tf4, Series(Parallel(tf2, -tf), tf4))
+
+    s7 = Series(tf, tf2)
+    assert s0 == s7
+    assert not s0 == s2
+
+    raises(ValueError, lambda: Series(tf, tf3))
+    raises(ValueError, lambda: Series(tf, tf2, tf3, tf4))
+    raises(ValueError, lambda: Series(-tf3, tf2))
+    raises(ValueError, lambda: Series(2, tf, tf4))
+    raises(ValueError, lambda: Series(s**2 + p*s, tf3, tf2))
+    raises(ValueError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
+
+
+def test_Series_functions():
+    zeta, omega_n, wn = symbols('zeta, omega_n, wn')
+    tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    tf2 = TransferFunction(k, 1, s)
+    tf3 = TransferFunction(a2*p - s, a2*s + p, s)
+    tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
+
+    assert tf1*tf2*tf3 == Series(tf1, tf2, tf3)
+    assert tf1*(tf2 + tf3) == Series(tf1, Parallel(tf2, tf3))
+    assert tf2*tf3*(tf2 - tf1)*tf3 == Series(tf2, tf3, Series(Parallel(tf2, -tf1), tf3))
+    assert -tf1*tf2 == Series(-tf1, tf2)
+    raises(ValueError, lambda: tf1*tf2*tf4)
+    raises(ValueError, lambda: tf1*(tf2 - tf4))
+    raises(ValueError, lambda: tf3*Matrix([1, 2, 3]))
+
+    # evaluate=True -> doit()
+    assert Series(tf1, tf2, evaluate=True) == Series(tf1, tf2).doit()
+    assert Series(tf1, tf2, Parallel(tf1, -tf3), evaluate=True) == \
+        Series(tf1, tf2, Parallel(tf1, -tf3)).doit()
+    assert Series(tf2, tf1, -tf3, evaluate=True) == Series(tf2, tf1, -tf3).doit()
+    assert not Series(tf1, -tf2, evaluate=False) == Series(tf1, -tf2).doit()
+
+    assert Series(Parallel(tf1, tf2), Parallel(tf2, -tf3)).doit() == \
+        TransferFunction((k*(omega_n**2 + 2*omega_n*s*zeta + s**2) + 1)*(-a2*p + k*(a2*s + p) + s),\
+            (a2*s + p)*(omega_n**2 + 2*omega_n*s*zeta + s**2), s)
+    assert Series(-tf1, -tf2, -tf3).doit() == \
+        TransferFunction(k*(-a2*p + s), (a2*s + p)*(omega_n**2 + 2*omega_n*s*zeta + s**2), s)
+    assert Series(tf2, tf3, Series(Parallel(tf2, -tf1), tf3)).doit() == \
+        TransferFunction(k*(a2*p - s)**2*(k*(omega_n**2 + 2*omega_n*s*zeta + s**2) - 1),\
+            (a2*s + p)**2*(omega_n**2 + 2*omega_n*s*zeta + s**2), s)
+
+
+def test_Parallel_construction():
+    zeta, wn = symbols('zeta, wn')
+    tf = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
+    tf2 = TransferFunction(a2*p - s, a2*s + p, s)
+    tf3 = TransferFunction(a0*p + p**a1 - s, p, p)
+    tf4 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    inp = Function('X_d')(s)
+    out = Function('X')(s)
+
+    p0 = Parallel(tf, tf2)
+    assert p0.args == (tf, tf2)
+
+    p1 = Parallel(Series(tf, -tf2), tf2)
+    assert p1.args == (Series(tf, -tf2), tf2)
+
+    p2 = Parallel(tf, Series(inp, -out), tf2)
+    assert p2.args == (tf, Series(X_d, -X), tf2)
+
+    p3 = Parallel(tf, tf2, tf4)
+    assert p3.args == (tf, tf2, tf4)
+
+    p4 = Parallel(inp, out)
+    assert p4.args == (X_d, X)
+
+    p5 = Parallel(tf, tf2)
+    assert p0 == p5
+    assert not p0 == p1
+
+    p6 = Parallel(tf2, tf4, Series(tf2, -tf4))
+    assert p6.args == (tf2, tf4, Series(tf2, -tf4))
+
+    p7 = Parallel(tf2, tf4, Parallel(Series(tf2, -tf), tf4))
+    assert p7.args == (tf2, tf4, Parallel(Series(tf2, -tf), tf4))
+
+    raises(ValueError, lambda: Parallel(tf, tf3))
+    raises(ValueError, lambda: Parallel(tf, tf2, tf3, tf4))
+    raises(ValueError, lambda: Parallel(-tf3, tf4))
+    raises(ValueError, lambda: Parallel(2, tf, tf4))
+    raises(ValueError, lambda: Parallel(s**2 + p*s, tf3, tf2))
+    raises(ValueError, lambda: Parallel(tf3, Matrix([1, 2, 3, 4])))
+
+
+def test_Parallel_functions():
+    zeta, omega_n, wn = symbols('zeta, omega_n, wn')
+    tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    tf2 = TransferFunction(k, 1, s)
+    tf3 = TransferFunction(a2*p - s, a2*s + p, s)
+    tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
+
+    assert tf1 + tf2 + tf3 == Parallel(tf1, tf2, tf3)
+    assert tf1 + tf2*tf3 == Parallel(tf1, Series(tf2, tf3))
+    assert tf2 + tf3 + tf2*tf1 - tf3 == Parallel(tf2, tf3, Series(tf2, tf1), -tf3)
+    assert -(tf1 + tf2) == -tf1 - tf2 == Parallel(-tf1, -tf2)
+    raises(ValueError, lambda: tf1 + tf2 + tf4)
+    raises(ValueError, lambda: tf1 - tf2*tf4)
+    raises(ValueError, lambda: tf3 + Matrix([1, 2, 3]))
+
+    # evaluate=True -> doit()
+    assert Parallel(tf1, tf2, evaluate=True) == Parallel(tf1, tf2).doit()
+    assert Parallel(tf1, tf2, Series(-tf1, tf3), evaluate=True) == \
+        Parallel(tf1, tf2, Series(-tf1, tf3)).doit()
+    assert Parallel(tf2, tf1, -tf3, evaluate=True) == Parallel(tf2, tf1, -tf3).doit()
+    assert not Parallel(tf1, -tf2, evaluate=False) == Parallel(tf1, -tf2).doit()
+
+    assert Parallel(Series(tf1, tf2), Series(tf2, tf3)).doit() == \
+        TransferFunction(k*(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + k*(a2*s + p), \
+            (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Parallel(-tf1, -tf2, -tf3).doit() == \
+        TransferFunction(-(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + \
+            (a2*s + p)*(-k*(s**2 + 2*s*wn*zeta + wn**2) - 1), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Parallel(tf2, tf3, Parallel(Series(tf2, -tf1), tf3)).doit() == \
+        TransferFunction((a2*p - s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(-k*(a2*s + p) + \
+            (s**2 + 2*s*wn*zeta + wn**2)*(a2*p + k*(a2*s + p) - s)), (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2), s)

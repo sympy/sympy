@@ -38,7 +38,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
-from sympy.physics.control.lti import TransferFunction
+from sympy.physics.control.lti import TransferFunction, Series, Parallel
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
@@ -58,7 +58,7 @@ class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
 
 
-x, y, z, t, a, b, c = symbols('x y z t a b c')
+x, y, z, t, w, a, b, c = symbols('x y z t w a b c')
 k, m, n = symbols('k m n', integer=True)
 
 
@@ -2250,6 +2250,18 @@ def test_KroneckerProduct_printing():
     assert latex(KroneckerProduct(A, B)) == r'A \otimes B'
 
 
+def test_Series_printing():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert latex(Series(tf1, tf2)) == \
+        'Series\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}, \\frac{x - y}{x + y}\\right)'
+    assert latex(Series(tf1, tf2, tf3)) == \
+        'Series\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}, \\frac{x - y}{x + y}, \\frac{t x^{2} - t^{w} x + w}{t - y}\\right)'
+    assert latex(Series(-tf2, tf1)) == \
+        'Series\\left(\\frac{- x + y}{x + y}, \\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right)'
+
+
 def test_TransferFunction_printing():
     tf1 = TransferFunction(x - 1, x + 1, x)
     assert latex(tf1) == r"\frac{x - 1}{x + 1}"
@@ -2257,6 +2269,18 @@ def test_TransferFunction_printing():
     assert latex(tf2) == r"\frac{x + 1}{2 - y}"
     tf3 = TransferFunction(y, y**2 + 2*y + 3, y)
     assert latex(tf3) == r"\frac{y}{y^{2} + 2 y + 3}"
+
+
+def test_Parallel_printing():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert latex(Parallel(tf1, tf2)) == \
+        'Parallel\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}, \\frac{x - y}{x + y}\\right)'
+    assert latex(Parallel(tf1, tf2, tf3)) == \
+        'Parallel\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}, \\frac{x - y}{x + y}, \\frac{t x^{2} - t^{w} x + w}{t - y}\\right)'
+    assert latex(Parallel(-tf2, tf1)) == \
+        'Parallel\\left(\\frac{- x + y}{x + y}, \\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right)'
 
 
 def test_Quaternion_latex_printing():

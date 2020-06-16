@@ -3,7 +3,7 @@ from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify, _sympify
 
-__all__ = ['TransferFunction',]
+__all__ = ['TransferFunction', 'Series', 'Parallel']
 
 
 class TransferFunction(Basic, EvalfMixin):
@@ -436,3 +436,13 @@ class TransferFunction(Basic, EvalfMixin):
 
         """
         return degree(self.num, self.var) == degree(self.den, self.var)
+
+
+class Series(Basic):
+    def __new__(cls, *args, evaluate=False):
+        pass
+
+
+class Parallel(Basic):
+    def __new__(cls, *args, evaluate=False):
+        pass

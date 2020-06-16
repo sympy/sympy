@@ -6,7 +6,7 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
 from sympy.core import Expr, Mul
-from sympy.physics.control.lti import TransferFunction
+from sympy.physics.control.lti import TransferFunction, Series, Parallel
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
@@ -617,6 +617,18 @@ def test_tuple():
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
 
 
+def test_Series():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert str(Series(tf1, tf2)) == \
+        "Series(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y))"
+    assert str(Series(tf1, tf2, tf3)) == \
+        "Series(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y), TransferFunction(t*x**2 - t**w*x + w, t - y, y))"
+    assert str(Series(-tf2, tf1)) == \
+        "Series(TransferFunction(-x + y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y))"
+
+
 def test_TransferFunction():
     tf1 = TransferFunction(x - 1, x + 1, x)
     assert str(tf1) == "TransferFunction(x - 1, x + 1, x)"
@@ -624,6 +636,18 @@ def test_TransferFunction():
     assert str(tf2) == "TransferFunction(x + 1, 2 - y, x)"
     tf3 = TransferFunction(y, y**2 + 2*y + 3, y)
     assert str(tf3) == "TransferFunction(y, y**2 + 2*y + 3, y)"
+
+
+def test_Parallel():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert str(Parallel(tf1, tf2)) == \
+        "Parallel(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y))"
+    assert str(Parallel(tf1, tf2, tf3)) == \
+        "Parallel(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y), TransferFunction(t*x**2 - t**w*x + w, t - y, y))"
+    assert str(Parallel(-tf2, tf1)) == \
+        "Parallel(TransferFunction(-x + y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y))"
 
 
 def test_Quaternion_str_printer():
