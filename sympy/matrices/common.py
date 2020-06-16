@@ -201,7 +201,7 @@ class MatrixShaping(MatrixRequired):
         if col < 0:
             col += self.cols
         if not 0 <= col < self.cols:
-            raise ValueError("Column {} out of range.".format(col))
+            raise IndexError("Column {} is out of range.".format(col))
         return self._eval_col_del(col)
 
     def col_insert(self, pos, other):
@@ -437,7 +437,7 @@ class MatrixShaping(MatrixRequired):
         if row < 0:
             row += self.rows
         if not 0 <= row < self.rows:
-            raise ValueError("Row {} out of range.".format(row))
+            raise IndexError("Row {} is out of range.".format(row))
 
         return self._eval_row_del(row)
 
