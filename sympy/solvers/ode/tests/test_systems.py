@@ -1,12 +1,12 @@
 from sympy import (symbols, Symbol, diff, Function, Derivative, Matrix, Rational, S, I,
-                   Eq, sqrt, simplify, collect, Piecewise, Subs, Ne)
+                   Eq, sqrt)
 from sympy.functions import exp, cos, sin, log
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
                                        ODEOrderError, ODENonlinearError, _simpsol)
 from sympy.integrals.integrals import Integral
-from sympy.testing.pytest import raises, slow, ON_TRAVIS, skip, XFAIL
+from sympy.testing.pytest import raises, slow, ON_TRAVIS, skip
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 
@@ -839,7 +839,6 @@ def test_sysode_linear_neq_order1_type2():
             exp(t)*cos(2*t)*Integral(-2*sin(2*t), t)), Eq(g(t), C1*exp(t)*cos(2*t)
             - C2*exp(t)*sin(2*t) - exp(t)*sin(2*t)*Integral(-2*sin(2*t), t) +
             exp(t)*cos(2*t)*Integral(-2*sin(2*t)**2/cos(2*t) + 2/cos(2*t), t))]
-    dsolve_sol = [simplify(s) for s in dsolve(eq8, ics={f(0): 1, g(0): 1})]
     assert dsolve(eq8) == sol8
     assert checksysodesol(eq8, sol8) == (True, [0, 0])
 
