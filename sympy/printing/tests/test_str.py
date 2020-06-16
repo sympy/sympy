@@ -7,7 +7,8 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
 from sympy.core import Expr, Mul
 from sympy.physics.units import second, joule
-from sympy.polys import Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
+from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
+    ZZ_I, QQ_I, lex, grlex)
 from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
 
 from sympy.testing.pytest import raises
@@ -399,6 +400,7 @@ def test_FracField():
 def test_PolyElement():
     Ruv, u,v = ring("u,v", ZZ)
     Rxyz, x,y,z = ring("x,y,z", Ruv)
+    Rx_zzi, xz = ring("x", ZZ_I)
 
     assert str(x - x) == "0"
     assert str(x - 1) == "x - 1"
@@ -415,10 +417,14 @@ def test_PolyElement():
     assert str(-(v**2 + v + 1)*x + 3*u*v + 1) == "-(v**2 + v + 1)*x + 3*u*v + 1"
     assert str(-(v**2 + v + 1)*x - 3*u*v + 1) == "-(v**2 + v + 1)*x - 3*u*v + 1"
 
+    assert str((1+I)*xz + 2) == "(1 + 1*I)*x + (2 + 0*I)"
+
 
 def test_FracElement():
     Fuv, u,v = field("u,v", ZZ)
     Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
+    Rx_zzi, xz = field("x", QQ_I)
+    i = QQ_I(0, 1)
 
     assert str(x - x) == "0"
     assert str(x - 1) == "x - 1"
@@ -439,6 +445,28 @@ def test_FracElement():
 
     assert str(((u + 1)*x*y + 1)/((v - 1)*z - 1)) == "((u + 1)*x*y + 1)/((v - 1)*z - 1)"
     assert str(((u + 1)*x*y + 1)/((v - 1)*z - t*u*v - 1)) == "((u + 1)*x*y + 1)/((v - 1)*z - u*v*t - 1)"
+
+    assert str((1+i)/xz) == "(1 + 1*I)/x"
+    assert str(((1+i)*xz - i)/xz) == "((1 + 1*I)*x + (0 + -1*I))/x"
+
+
+def test_GaussianInteger():
+    assert str(ZZ_I(1, 0)) == "1"
+    assert str(ZZ_I(-1, 0)) == "-1"
+    assert str(ZZ_I(0, 1)) == "I"
+    assert str(ZZ_I(0, -1)) == "-I"
+    assert str(ZZ_I(0, 2)) == "2*I"
+    assert str(ZZ_I(0, -2)) == "-2*I"
+    assert str(ZZ_I(1, 1)) == "1 + I"
+    assert str(ZZ_I(-1, -1)) == "-1 - I"
+    assert str(ZZ_I(-1, -2)) == "-1 - 2*I"
+
+
+def test_GaussianRational():
+    assert str(QQ_I(1, 0)) == "1"
+    assert str(QQ_I(QQ(2, 3), 0)) == "2/3"
+    assert str(QQ_I(0, QQ(2, 3))) == "2*I/3"
+    assert str(QQ_I(QQ(1, 2), QQ(-2, 3))) == "1/2 - 2*I/3"
 
 
 def test_Pow():
