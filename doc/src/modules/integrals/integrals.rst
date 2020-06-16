@@ -165,7 +165,7 @@ API reference
 -------------
 
 .. autofunction:: sympy.integrals.integrals::integrate
-.. autofunction:: sympy.integrals.line_integrate
+.. autofunction:: sympy.integrals.integrals::line_integrate
 
 The class :class:`~.Integral` represents an unevaluated integral and has some methods that help in the integration of an expression.
 
