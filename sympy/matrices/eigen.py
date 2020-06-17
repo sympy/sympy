@@ -702,17 +702,17 @@ def _is_positive_semidefinite(M):
         return True
 
     try:
-        return _is_positive_semidefinite_by_cholesky_factorization_with_pivots(M)
+        return _is_positive_semidefinite_cholesky(M)
     except Exception:
         pass
 
     if M.rows < 5 or all(a.func != Symbol for a in M.atoms()):
         try:
-            return _is_positive_semidefinite_by_eigenvalues(M)
+            return _is_positive_semidefinite_evals(M)
         except Exception:
             pass
 
-    return _is_positive_semidefinite_by_minors(M)
+    return _is_positive_semidefinite_minors(M)
 
 
 def _is_negative_definite(M):
@@ -754,7 +754,7 @@ def _is_positive_definite_GE(M):
     return True
 
 
-def _is_positive_semidefinite_by_minors(M):
+def _is_positive_semidefinite_minors(M):
     """A method to evaluate all principal minors for testing
     positive-semidefiniteness by using Sylvestre's crieterion."""
     return all(
@@ -764,13 +764,13 @@ def _is_positive_semidefinite_by_minors(M):
     )
 
 
-def _is_positive_semidefinite_by_eigenvalues(M):
+def _is_positive_semidefinite_evals(M):
     """Determines if a matrix is positive semidefinite by checking
     if all the eigenvalues are nonnegative"""
     return all(eigenvalue.is_nonnegative for eigenvalue in M.eigenvals())
 
 
-def _is_positive_semidefinite_by_cholesky_factorization_with_pivots(M):
+def _is_positive_semidefinite_cholesky(M):
     """Determines if a matrix is positive semidefinite by computing its
     Cholesky decomposition with complete pivoting
 
