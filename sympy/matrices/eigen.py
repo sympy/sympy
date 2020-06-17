@@ -771,6 +771,24 @@ def _is_positive_semidefinite_by_eigenvalues(M):
 
 
 def _is_positive_semidefinite_by_cholesky_factorization_with_pivots(M):
+    """Determines if a matrix is positive semidefinite by computing its
+    Cholesky decomposition with complete pivoting
+
+    Any symmetric positive semidefinite matrix has a factorization
+    P.T * A * P = R.T * R, where
+
+    R = [R_11  R_22]
+        [0     0   ],
+
+    and R_11 is rxr upper triangular with positive diagonal elements,
+    rank(A) = r, and P is a permutation matrix.
+
+    An algorithm for computing R is described in [1]. If at any point in
+    the algorithm a negative diagonal term is obtained, then A is not
+    positive semidefinite, so the algorithm exits early and returns False.
+
+    [1] http://eprints.ma.man.ac.uk/1199/1/covered/MIMS_ep2008_116.pdf
+    """
     M = M.copy()
     for k in range(M.rows):
         pivot = max(range(k, M.rows), key=lambda i: M[i, i])
@@ -784,7 +802,6 @@ def _is_positive_semidefinite_by_cholesky_factorization_with_pivots(M):
             for j in range(k+1, M.rows):
                 M[(k+1):(j+1), j] = M[k, (k+1):(j+1)].T * M[k, j]
     return M[-1, -1].is_nonnegative
-
 
 
 _doc_positive_definite = \
