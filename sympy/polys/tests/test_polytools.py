@@ -2008,7 +2008,7 @@ def test_gcd():
     assert gcd(a, b) == gcd(b, a) == a
 
     a, b = sqrt(-2), -sqrt(-2)
-    assert gcd(a, b) == a
+    assert gcd(a, b) in (a, b)
 
     raises(TypeError, lambda: gcd(x))
     raises(TypeError, lambda: lcm(x))
