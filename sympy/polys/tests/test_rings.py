@@ -207,6 +207,9 @@ def test_PolyElement___eq__():
     assert ((x*y - x*y) != 1) == True
     assert (1 != (x*y - x*y)) == True
 
+    assert R.one == QQ(1, 1) == R.one
+    assert R.one == 1 == R.one
+
     Rt, t = ring("t", ZZ)
     R, x, y = ring("x,y", Rt)
 
