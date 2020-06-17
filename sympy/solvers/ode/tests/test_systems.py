@@ -993,39 +993,19 @@ def _de_lorentz_solution():
         -e3 * q + m * Derivative(v3(t), t) - q * (-b1 * v2(t) + b2 * v1(t))
     ]
 
-    return eqs, dsolve(eqs), [m, q, t, e1, e2, e3, b1, b2, b3, v1, v2, v3]
 
-
-# A very big solution is obtained for this
-# test case. To be simplified in future.
-def test_linear_new_order1_type2_de_lorentz():
-
-    eqs, dsolve_sol, symbols = _de_lorentz_solution()
-    m, q, t, e1, e2, e3, b1, b2, b3, v1, v2, v3 = symbols
-    x_1 = Integral(b1**3*b2*e2*q*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**3*b3*m +
-    2*I*b1**2*b2*m*sqrt(b1**2 + b2**2 + b3**2) + 2*b1*b2**2*b3*m + 2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2
-    + b2**2 + b3**2) + 2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2)) -
-    b1**2*b2**2*e1*q*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**3*b3*m + 2*I*b1**2*b2*m*sqrt(b1**2 +
-    b2**2 + b3**2) + 2*b1*b2**2*b3*m + 2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) +
-    2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2)) - b1**2*b3**2*e1*q*exp(q*t*sqrt(-b1**2 - b2**2 -
-    b3**2)/m)/(2*b1**3*b3*m + 2*I*b1**2*b2*m*sqrt(b1**2 + b2**2 + b3**2) + 2*b1*b2**2*b3*m +
-    2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) + 2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2))
-    - I*b1**2*b3*e2*q*sqrt(b1**2 + b2**2 + b3**2)*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**3*b3*m
-    + 2*I*b1**2*b2*m*sqrt(b1**2 + b2**2 + b3**2) + 2*b1*b2**2*b3*m + 2*b1*b3**3*m +
-    2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) + 2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2)) +
-    b1**2*e3*q*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**2*m + 2*b2**2*m + 2*b3**2*m) +
-    b1*b2**3*e2*q*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**3*b3*m + 2*I*b1**2*b2*m*sqrt(b1**2 +
-    b2**2 + b3**2) + 2*b1*b2**2*b3*m + 2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) +
-    2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2)) - b2**4*e1*q*exp(q*t*sqrt(-b1**2 - b2**2 -
-    b3**2)/m)/(2*b1**3*b3*m + 2*I*b1**2*b2*m*sqrt(b1**2 + b2**2 + b3**2) + 2*b1*b2**2*b3*m +
-    2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) + 2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2))
-    - b2**2*b3**2*e1*q*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**3*b3*m + 2*I*b1**2*b2*m*sqrt(b1**2
-    + b2**2 + b3**2) + 2*b1*b2**2*b3*m + 2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) +
-    2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2)) - I*b2**2*b3*e2*q*sqrt(b1**2 + b2**2 +
-    b3**2)*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**3*b3*m + 2*I*b1**2*b2*m*sqrt(b1**2 + b2**2 +
-    b3**2) + 2*b1*b2**2*b3*m + 2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) +
-    2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2)) + b2**2*e3*q*exp(q*t*sqrt(-b1**2 - b2**2 -
-    b3**2)/m)/(2*b1**2*m + 2*b2**2*m + 2*b3**2*m), t)
+    x_1_1 = 1 / (2 * b1 ** 3 * b3 * m + 2 * I * b1 ** 2 * b2 * m * sqrt(
+        b1 ** 2 + b2 ** 2 + b3 ** 2) + 2 * b1 * b2 ** 2 * b3 * m + 2 * b1 * b3 ** 3 * m + 2 * I * b2 ** 3 * m * sqrt(
+        b1 ** 2 + b2 ** 2 + b3 ** 2) + 2 * I * b2 * b3 ** 2 * m * sqrt(b1 ** 2 + b2 ** 2 + b3 ** 2))
+    x_1_2 = exp(q * t * sqrt(-b1 ** 2 - b2 ** 2 - b3 ** 2) / m)
+    x_1_3 = 1 / (2 * b1 ** 2 * m + 2 * b2 ** 2 * m + 2 * b3 ** 2 * m)
+    x_1_4 = sqrt(b1 ** 2 + b2 ** 2 + b3 ** 2)
+    x_1_5 = b2 ** 2
+    x_1_6 = b1 ** 2
+    x_1_7 = b3 ** 2
+    x_1 = Integral(
+        b1 ** 3 * b2 * e2 * q * x_1_1 * x_1_2 + b1 * b2 ** 3 * e2 * q * x_1_1 * x_1_2 - b2 ** 4 * e1 * q * x_1_1 * x_1_2 - I * b3 * e2 * q * x_1_1 * x_1_2 * x_1_4 * x_1_5 - I * b3 * e2 * q * x_1_1 * x_1_2 * x_1_4 * x_1_6 - e1 * q * x_1_1 * x_1_2 * x_1_5 * x_1_6 - e1 * q * x_1_1 * x_1_2 * x_1_5 * x_1_7 - e1 * q * x_1_1 * x_1_2 * x_1_6 * x_1_7 + e3 * q * x_1_2 * x_1_3 * x_1_5 + e3 * q * x_1_2 * x_1_3 * x_1_6,
+        t)
     x_2 = 1/(2*b1**2*m*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m) + 2*b2**2*m*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m) +
             2*b3**2*m*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m))
     x_3 = exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)
@@ -1049,16 +1029,24 @@ def test_linear_new_order1_type2_de_lorentz():
     x_17 = C1*b2*x_13 + C2*b1*x_10*x_9 - C2*b2*b3*x_9 - I*C3*b1*x_11*x_3*x_4 - C3*b2*b3*x_11*x_3 + b1*x_1*x_10*x_9 - \
            I*b1*x_11*x_3*x_4*x_5 - b2*b3*x_1*x_9 - b2*b3*x_11*x_3*x_5 + b2*x_13*x_6
     sol = [Eq(v1(t), x_16), Eq(v2(t), x_17), Eq(v3(t), C1 + C3*x_3 + x_3*x_5 + x_6 + (C2 + x_1)*exp(-q*t*x_10/m))]
-    assert dsolve_sol == sol
+
+    return eqs, sol
+
+
+# A very big solution is obtained for this
+# test case. To be simplified in future.
+def test_linear_new_order1_type2_de_lorentz():
+    eqs, sol = _de_lorentz_solution()
+
+    assert dsolve(eqs) == sol
 
 
 @slow
-def test_linear_new_order1_type2_de_lorentz_fail():
+def test_linear_new_order1_type2_de_lorentz_slow_check():
     if ON_TRAVIS:
         skip("Too slow for travis.")
 
-    eqs, sol, _ = _de_lorentz_solution()
-
+    eqs, sol = _de_lorentz_solution()
     assert checksysodesol(eqs, sol) == (True, [0, 0, 0])
 
 
