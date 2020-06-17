@@ -47,7 +47,7 @@ from sympy.polys.polyerrors import (
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.fields import field
-from sympy.polys.domains import FF, ZZ, QQ, RR, EX
+from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.orderings import lex, grlex, grevlex
 
@@ -1744,6 +1744,14 @@ def test_div():
     q, r = f.div(g)
     assert q.get_domain().is_Frac and r.get_domain().is_Frac
 
+    # https://github.com/sympy/sympy/issues/19579
+    p = Poly(2+3*I, x, domain=ZZ_I)
+    q = Poly(1-I, x, domain=ZZ_I)
+    assert p.div(q, auto=False) == \
+        (Poly(0, x, domain='ZZ_I'), Poly(2 + 3*I, x, domain='ZZ_I'))
+    assert p.div(q, auto=True) == \
+        (Poly(-S(1)/2 + 5*I/2, x, domain='QQ_I'), Poly(0, x, domain='QQ_I'))
+
 
 def test_issue_7864():
     q, r = div(a, .408248290463863*a)
@@ -2415,6 +2423,20 @@ def test_factor():
     assert factor(
         f, extension=sqrt(2)) == (x**2 + sqrt(2)*x + 1)*(x**2 - sqrt(2)*x + 1)
 
+    assert factor(x**2 + 4*I*x - 4) == (x + 2*I)**2
+
+    f = x**2 + 2*I*x - 4
+
+    assert factor(f) == f
+
+    f = 8192*x**2 + x*(22656 + 175232*I) - 921416 + 242313*I
+    f_zzi = I*(x*(64 - 64*I) + 773 + 596*I)**2
+    f_qqi = 8192*(x + S(177)/128 + 1369*I/128)**2
+
+    assert factor(f) == f_zzi
+    assert factor(f, domain=ZZ_I) == f_zzi
+    assert factor(f, domain=QQ_I) == f_qqi
+
     f = x**2 + 2*sqrt(2)*x + 2
 
     assert factor(f, extension=sqrt(2)) == (x + sqrt(2))**2
@@ -2994,6 +3016,9 @@ def test_cancel():
     assert cancel(M[0,0] + 7) == M[0,0] + 7
     expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
     assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
+
+    assert cancel((x**2 + 1)/(x - I)) == x + I
+
 
 def test_reduced():
     f = 2*x**4 + y**2 - x**2 + y**3
