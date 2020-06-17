@@ -1,6 +1,5 @@
 from sympy.core.basic import Basic
-from sympy.core.containers import Dict, Tuple
-from sympy.vector.coordsysrect import CoordSys3D
+from sympy.core.containers import Tuple
 
 class ParametricRegion(Basic):
     """
