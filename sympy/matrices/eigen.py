@@ -793,14 +793,14 @@ def _is_positive_semidefinite_by_cholesky_factorization_with_pivots(M):
     for k in range(M.rows):
         pivot = max(range(k, M.rows), key=lambda i: M[i, i])
         if pivot > k:
-            M[[k, pivot], :] = M[[pivot, k], :]
-            M[:, [k, pivot]] = M[:, [pivot, k]]
-            if M[k, k].is_negative:
-                return False
-            M[k, k] = sqrt(M[k, k])
-            M[k, (k+1):] /= M[k, k]
-            for j in range(k+1, M.rows):
-                M[(k+1):(j+1), j] = M[k, (k+1):(j+1)].T * M[k, j]
+            M.col_swap(k, pivot)
+            M.row_swap(k, pivot)
+        if M[k, k].is_negative:
+            return False
+        M[k, k] = sqrt(M[k, k])
+        M[k, (k+1):] /= M[k, k]
+        for j in range(k+1, M.rows):
+            M[(k+1):(j+1), j] -= M[k, (k+1):(j+1)].T * M[k, j]
     return M[-1, -1].is_nonnegative
 
 

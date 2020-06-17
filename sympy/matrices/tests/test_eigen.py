@@ -4,6 +4,11 @@ from sympy import (
 from sympy.matrices import eye, Matrix
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL
+from sympy.matrices.eigen import (
+    _is_positive_semidefinite_by_eigenvalues,
+    _is_positive_semidefinite_by_cholesky_factorization_with_pivots,
+    _is_positive_semidefinite_by_minors
+)
 from sympy.matrices.matrices import NonSquareMatrixError, MatrixError
 from sympy.simplify.simplify import simplify
 from sympy.matrices.immutable import ImmutableMatrix
@@ -493,6 +498,9 @@ def test_definite():
     m = Matrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
     assert m.is_positive_definite == True
     assert m.is_positive_semidefinite == True
+    assert _is_positive_semidefinite_by_cholesky_factorization_with_pivots(m)
+    assert _is_positive_semidefinite_by_eigenvalues(m)
+    assert _is_positive_semidefinite_by_minors(m) 
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
@@ -500,6 +508,9 @@ def test_definite():
     m = Matrix([[5, 4], [4, 5]])
     assert m.is_positive_definite == True
     assert m.is_positive_semidefinite == True
+    assert _is_positive_semidefinite_by_cholesky_factorization_with_pivots(m)
+    assert _is_positive_semidefinite_by_eigenvalues(m)
+    assert _is_positive_semidefinite_by_minors(m) 
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
@@ -508,6 +519,9 @@ def test_definite():
     m = Matrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
     assert m.is_positive_definite == False
     assert m.is_positive_semidefinite == True
+    assert _is_positive_semidefinite_by_cholesky_factorization_with_pivots(m)
+    assert _is_positive_semidefinite_by_eigenvalues(m)
+    assert _is_positive_semidefinite_by_minors(m) 
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
@@ -515,6 +529,9 @@ def test_definite():
     m = Matrix([[1, 2], [2, 4]])
     assert m.is_positive_definite == False
     assert m.is_positive_semidefinite == True
+    assert _is_positive_semidefinite_by_cholesky_factorization_with_pivots(m.T + m)
+    assert _is_positive_semidefinite_by_eigenvalues(m.T + m)
+    assert _is_positive_semidefinite_by_minors(m.T + m) 
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
@@ -524,13 +541,20 @@ def test_definite():
     m = Matrix([[2, 3], [4, 8]])
     assert m.is_positive_definite == True
     assert m.is_positive_semidefinite == True
+    assert _is_positive_semidefinite_by_cholesky_factorization_with_pivots(m.T + m)
+    assert _is_positive_semidefinite_by_eigenvalues(m.T + m)
+    assert _is_positive_semidefinite_by_minors(m.T + m) 
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
 
+    # Hermetian matrices
     m = Matrix([[1, 2*I], [-I, 4]])
     assert m.is_positive_definite == True
     assert m.is_positive_semidefinite == True
+    assert _is_positive_semidefinite_by_cholesky_factorization_with_pivots(m.H + m)
+    assert _is_positive_semidefinite_by_eigenvalues(m.H + m)
+    assert _is_positive_semidefinite_by_minors(m.H + m) 
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
@@ -541,6 +565,9 @@ def test_definite():
     m = Matrix([[a, 0, 0], [0, a, 0], [0, 0, a]])
     assert m.is_positive_definite == True
     assert m.is_positive_semidefinite == True
+    assert _is_positive_semidefinite_by_cholesky_factorization_with_pivots(m)
+    assert _is_positive_semidefinite_by_eigenvalues(m)
+    assert _is_positive_semidefinite_by_minors(m) 
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
@@ -548,6 +575,9 @@ def test_definite():
     m = Matrix([[b, 0, 0], [0, b, 0], [0, 0, b]])
     assert m.is_positive_definite == False
     assert m.is_positive_semidefinite == False
+    assert not _is_positive_semidefinite_by_cholesky_factorization_with_pivots(m)
+    assert not _is_positive_semidefinite_by_eigenvalues(m)
+    assert not _is_positive_semidefinite_by_minors(m) 
     assert m.is_negative_definite == True
     assert m.is_negative_semidefinite == True
     assert m.is_indefinite == False
@@ -555,6 +585,9 @@ def test_definite():
     m = Matrix([[a, 0], [0, b]])
     assert m.is_positive_definite == False
     assert m.is_positive_semidefinite == False
+    assert not _is_positive_semidefinite_by_cholesky_factorization_with_pivots(m)
+    assert not _is_positive_semidefinite_by_eigenvalues(m)
+    assert not _is_positive_semidefinite_by_minors(m) 
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == True
@@ -571,6 +604,9 @@ def test_definite():
     ])
     assert m.is_positive_definite == True
     assert m.is_positive_semidefinite == True
+    assert _is_positive_semidefinite_by_cholesky_factorization_with_pivots(m.T + m)
+    assert _is_positive_semidefinite_by_eigenvalues(m.T + m)
+    assert _is_positive_semidefinite_by_minors(m.T + m) 
     assert m.is_indefinite == False
 
     # test for issue 19547: https://github.com/sympy/sympy/issues/19547
@@ -581,3 +617,7 @@ def test_definite():
     ])
     assert not m.is_positive_definite
     assert not m.is_positive_semidefinite
+    assert not _is_positive_semidefinite_by_cholesky_factorization_with_pivots(m)
+    assert not _is_positive_semidefinite_by_eigenvalues(m)
+    assert not _is_positive_semidefinite_by_minors(m) 
+ 
