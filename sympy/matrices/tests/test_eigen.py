@@ -500,7 +500,7 @@ def test_definite():
     assert m.is_positive_semidefinite == True
     assert _is_positive_semidefinite_cholesky(m)
     assert _is_positive_semidefinite_evals(m)
-    assert _is_positive_semidefinite_minors(m) 
+    assert _is_positive_semidefinite_minors(m)
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
@@ -510,7 +510,7 @@ def test_definite():
     assert m.is_positive_semidefinite == True
     assert _is_positive_semidefinite_cholesky(m)
     assert _is_positive_semidefinite_evals(m)
-    assert _is_positive_semidefinite_minors(m) 
+    assert _is_positive_semidefinite_minors(m)
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
@@ -521,7 +521,7 @@ def test_definite():
     assert m.is_positive_semidefinite == True
     assert _is_positive_semidefinite_cholesky(m)
     assert _is_positive_semidefinite_evals(m)
-    assert _is_positive_semidefinite_minors(m) 
+    assert _is_positive_semidefinite_minors(m)
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
@@ -531,7 +531,7 @@ def test_definite():
     assert m.is_positive_semidefinite == True
     assert _is_positive_semidefinite_cholesky(m.T + m)
     assert _is_positive_semidefinite_evals(m.T + m)
-    assert _is_positive_semidefinite_minors(m.T + m) 
+    assert _is_positive_semidefinite_minors(m.T + m)
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
@@ -543,7 +543,7 @@ def test_definite():
     assert m.is_positive_semidefinite == True
     assert _is_positive_semidefinite_cholesky(m.T + m)
     assert _is_positive_semidefinite_evals(m.T + m)
-    assert _is_positive_semidefinite_minors(m.T + m) 
+    assert _is_positive_semidefinite_minors(m.T + m)
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
@@ -554,7 +554,7 @@ def test_definite():
     assert m.is_positive_semidefinite == True
     assert _is_positive_semidefinite_cholesky(m.H + m)
     assert _is_positive_semidefinite_evals(m.H + m)
-    assert _is_positive_semidefinite_minors(m.H + m) 
+    assert _is_positive_semidefinite_minors(m.H + m)
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
@@ -567,7 +567,7 @@ def test_definite():
     assert m.is_positive_semidefinite == True
     assert _is_positive_semidefinite_cholesky(m)
     assert _is_positive_semidefinite_evals(m)
-    assert _is_positive_semidefinite_minors(m) 
+    assert _is_positive_semidefinite_minors(m)
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
@@ -577,7 +577,7 @@ def test_definite():
     assert m.is_positive_semidefinite == False
     assert not _is_positive_semidefinite_cholesky(m)
     assert not _is_positive_semidefinite_evals(m)
-    assert not _is_positive_semidefinite_minors(m) 
+    assert not _is_positive_semidefinite_minors(m)
     assert m.is_negative_definite == True
     assert m.is_negative_semidefinite == True
     assert m.is_indefinite == False
@@ -587,7 +587,7 @@ def test_definite():
     assert m.is_positive_semidefinite == False
     assert not _is_positive_semidefinite_cholesky(m)
     assert not _is_positive_semidefinite_evals(m)
-    assert not _is_positive_semidefinite_minors(m) 
+    assert not _is_positive_semidefinite_minors(m)
     assert m.is_negative_definite == False
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == True
@@ -606,7 +606,7 @@ def test_definite():
     assert m.is_positive_semidefinite == True
     assert _is_positive_semidefinite_cholesky(m.T + m)
     assert _is_positive_semidefinite_evals(m.T + m)
-    assert _is_positive_semidefinite_minors(m.T + m) 
+    assert _is_positive_semidefinite_minors(m.T + m)
     assert m.is_indefinite == False
 
     # test for issue 19547: https://github.com/sympy/sympy/issues/19547
@@ -619,5 +619,4 @@ def test_definite():
     assert not m.is_positive_semidefinite
     assert not _is_positive_semidefinite_cholesky(m)
     assert not _is_positive_semidefinite_evals(m)
-    assert not _is_positive_semidefinite_minors(m) 
- 
+    assert not _is_positive_semidefinite_minors(m)
