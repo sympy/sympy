@@ -958,39 +958,22 @@ def test_linear_neq_order1_type2_big_test_cases():
     eq1 = r1*c1*Derivative(x1(t), t) + x1(t) - x2(t) - r1*i
     eq2 = r2*c1*Derivative(x1(t), t) + r2*c2*Derivative(x2(t), t) + x2(t) - r2*i
     eq = [eq1, eq2]
-    sol = [Eq(x1(t), -2*C1*c2*r2*exp(-t/(2*c2*r2) - t/(2*c2*r1) - t/(2*c1*r1) - t*sqrt(c1**2*r1**2 +
-            2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 + c2**2*r2**2)/(2*c1*c2*r1*r2))/(c1*r1 +
-            c1*r2 - c2*r2 + sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 +
-            c2**2*r2**2)) - 2*C2*c2*r2*exp(-t/(2*c2*r2) - t/(2*c2*r1) - t/(2*c1*r1) + t*sqrt(c1**2*r1**2 +
-            2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 + c2**2*r2**2)/(2*c1*c2*r1*r2))/(c1*r1 +
-            c1*r2 - c2*r2 - sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 +
-            c2**2*r2**2)) - 2*c2*r2*exp(-t/(2*c2*r2) - t/(2*c2*r1) - t/(2*c1*r1) - t*sqrt(c1**2*r1**2 +
-            2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 +
-            c2**2*r2**2)/(2*c1*c2*r1*r2))*Integral(-i*r2*exp(t/(2*c2*r2) + t/(2*c2*r1) + t/(2*c1*r1) +
-            t*sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 +
-            c2**2*r2**2)/(2*c1*c2*r1*r2))/sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 +
-            2*c1*c2*r2**2 + c2**2*r2**2), t)/(c1*r1 + c1*r2 - c2*r2 + sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 +
-            c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 + c2**2*r2**2)) - 2*c2*r2*exp(-t/(2*c2*r2) - t/(2*c2*r1)
-            - t/(2*c1*r1) + t*sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 +
-            c2**2*r2**2)/(2*c1*c2*r1*r2))*Integral(i*r2*exp(t/(2*c2*r2) + t/(2*c2*r1) + t/(2*c1*r1) -
-            t*sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 +
-            c2**2*r2**2)/(2*c1*c2*r1*r2))/sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 +
-            2*c1*c2*r2**2 + c2**2*r2**2), t)/(c1*r1 + c1*r2 - c2*r2 - sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 +
-            c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 + c2**2*r2**2))), Eq(x2(t), C1*exp(-t/(2*c2*r2) -
-            t/(2*c2*r1) - t/(2*c1*r1) - t*sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 +
-            2*c1*c2*r2**2 + c2**2*r2**2)/(2*c1*c2*r1*r2)) + C2*exp(-t/(2*c2*r2) - t/(2*c2*r1) - t/(2*c1*r1) +
-            t*sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 +
-            c2**2*r2**2)/(2*c1*c2*r1*r2)) + exp(-t/(2*c2*r2) - t/(2*c2*r1) - t/(2*c1*r1) - t*sqrt(c1**2*r1**2 +
-            2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 +
-            c2**2*r2**2)/(2*c1*c2*r1*r2))*Integral(-i*r2*exp(t/(2*c2*r2) + t/(2*c2*r1) + t/(2*c1*r1) +
-            t*sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 +
-            c2**2*r2**2)/(2*c1*c2*r1*r2))/sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 +
-            2*c1*c2*r2**2 + c2**2*r2**2), t) + exp(-t/(2*c2*r2) - t/(2*c2*r1) - t/(2*c1*r1) + t*sqrt(c1**2*r1**2
-            + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 +
-            c2**2*r2**2)/(2*c1*c2*r1*r2))*Integral(i*r2*exp(t/(2*c2*r2) + t/(2*c2*r1) + t/(2*c1*r1) -
-            t*sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 +
-            c2**2*r2**2)/(2*c1*c2*r1*r2))/sqrt(c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 +
-            2*c1*c2*r2**2 + c2**2*r2**2), t))]
+    x_1 = c1 ** 2 * r1 ** 2 + 2 * c1 ** 2 * r1 * r2 + c1 ** 2 * r2 ** 2 - 2 * c1 * c2 * r1 * r2 + 2 * c1 * c2 * r2 ** 2\
+          + c2 ** 2 * r2 ** 2
+    x_2 = exp(-t / (2 * c2 * r2) - t / (2 * c2 * r1) - t / (2 * c1 * r1) - t * sqrt(x_1) / (2 * c1 * c2 * r1 * r2))
+    x_3 = exp(-t / (2 * c2 * r2) - t / (2 * c2 * r1) - t / (2 * c1 * r1) + t * sqrt(x_1) / (2 * c1 * c2 * r1 * r2))
+    x_4 = Integral(-i * r2 * exp(
+        t / (2 * c2 * r2) + t / (2 * c2 * r1) + t / (2 * c1 * r1) + t * sqrt(x_1) / (2 * c1 * c2 * r1 * r2)) / sqrt(
+        x_1), t)
+    x_5 = Integral(i * r2 * exp(
+        t / (2 * c2 * r2) + t / (2 * c2 * r1) + t / (2 * c1 * r1) - t * sqrt(x_1) / (2 * c1 * c2 * r1 * r2)) / sqrt(
+        x_1), t)
+    x_6 = 1 / (c1 * r1 + c1 * r2 - c2 * r2 + sqrt(x_1))
+    x_7 = 1 / (c1 * r1 + c1 * r2 - c2 * r2 - sqrt(x_1))
+    sol = [Eq(x1(t),
+              -2 * C1 * c2 * r2 * x_2 * x_6 - 2 * C2 * c2 * r2 * x_3 * x_7 - 2 * c2 * r2 * x_2 * x_4 * x_6 - 2 * c2 *
+              r2 * x_3 * x_5 * x_7),
+           Eq(x2(t), C1 * x_2 + C2 * x_3 + x_2 * x_4 + x_3 * x_5)]
     assert dsolve(eq) == sol
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
@@ -1010,16 +993,63 @@ def _de_lorentz_solution():
         -e3 * q + m * Derivative(v3(t), t) - q * (-b1 * v2(t) + b2 * v1(t))
     ]
 
-    return eqs, dsolve(eqs)
+    return eqs, dsolve(eqs), [m, q, t, e1, e2, e3, b1, b2, b3, v1, v2, v3]
 
 
 # A very big solution is obtained for this
 # test case. To be simplified in future.
 def test_linear_new_order1_type2_de_lorentz():
 
-    # NOTE: With the current state of the solvers, the solution for this
-    # system is too complicated to be compared with the dsolve's output
-    de_lorentz_solution()
+    eqs, dsolve_sol, symbols = _de_lorentz_solution()
+    m, q, t, e1, e2, e3, b1, b2, b3, v1, v2, v3 = symbols
+    x_1 = Integral(b1**3*b2*e2*q*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**3*b3*m +
+    2*I*b1**2*b2*m*sqrt(b1**2 + b2**2 + b3**2) + 2*b1*b2**2*b3*m + 2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2
+    + b2**2 + b3**2) + 2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2)) -
+    b1**2*b2**2*e1*q*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**3*b3*m + 2*I*b1**2*b2*m*sqrt(b1**2 +
+    b2**2 + b3**2) + 2*b1*b2**2*b3*m + 2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) +
+    2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2)) - b1**2*b3**2*e1*q*exp(q*t*sqrt(-b1**2 - b2**2 -
+    b3**2)/m)/(2*b1**3*b3*m + 2*I*b1**2*b2*m*sqrt(b1**2 + b2**2 + b3**2) + 2*b1*b2**2*b3*m +
+    2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) + 2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2))
+    - I*b1**2*b3*e2*q*sqrt(b1**2 + b2**2 + b3**2)*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**3*b3*m
+    + 2*I*b1**2*b2*m*sqrt(b1**2 + b2**2 + b3**2) + 2*b1*b2**2*b3*m + 2*b1*b3**3*m +
+    2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) + 2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2)) +
+    b1**2*e3*q*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**2*m + 2*b2**2*m + 2*b3**2*m) +
+    b1*b2**3*e2*q*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**3*b3*m + 2*I*b1**2*b2*m*sqrt(b1**2 +
+    b2**2 + b3**2) + 2*b1*b2**2*b3*m + 2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) +
+    2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2)) - b2**4*e1*q*exp(q*t*sqrt(-b1**2 - b2**2 -
+    b3**2)/m)/(2*b1**3*b3*m + 2*I*b1**2*b2*m*sqrt(b1**2 + b2**2 + b3**2) + 2*b1*b2**2*b3*m +
+    2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) + 2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2))
+    - b2**2*b3**2*e1*q*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**3*b3*m + 2*I*b1**2*b2*m*sqrt(b1**2
+    + b2**2 + b3**2) + 2*b1*b2**2*b3*m + 2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) +
+    2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2)) - I*b2**2*b3*e2*q*sqrt(b1**2 + b2**2 +
+    b3**2)*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)/(2*b1**3*b3*m + 2*I*b1**2*b2*m*sqrt(b1**2 + b2**2 +
+    b3**2) + 2*b1*b2**2*b3*m + 2*b1*b3**3*m + 2*I*b2**3*m*sqrt(b1**2 + b2**2 + b3**2) +
+    2*I*b2*b3**2*m*sqrt(b1**2 + b2**2 + b3**2)) + b2**2*e3*q*exp(q*t*sqrt(-b1**2 - b2**2 -
+    b3**2)/m)/(2*b1**2*m + 2*b2**2*m + 2*b3**2*m), t)
+    x_2 = 1/(2*b1**2*m*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m) + 2*b2**2*m*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m) +
+            2*b3**2*m*exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m))
+    x_3 = exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)
+    x_4 = sqrt(b1**2 + b2**2 + b3**2)
+    x_5 = Integral(b1**2*e3*q*x_2 - b1*b3*e1*q*x_2 + I*b1*e2*q*x_2*x_4 + b2**2*e3*q*x_2 - b2*b3*e2*q*x_2 - I*b2*e1*q*x_2*x_4, t)
+    x_6 = Integral(b1*b3*e1*q/(b1**2*m + b2**2*m + b3**2*m) + b2*b3*e2*q/(b1**2*m + b2**2*m + b3**2*m) + b3**2*e3*q/
+                (b1**2*m + b2**2*m + b3**2*m), t)
+    x_7 = 1/(b1**2*x_3*x_4 + b2**2*x_3*x_4)
+    x_8 = 1/(b1**2*x_4 + b2**2*x_4)
+    x_9 = 1/(b1**2*x_3 + b2**2*x_3)
+    x_10 = sqrt(-b1**2 - b2**2 - b3**2)
+    x_11 = 1/(b1**2 + b2**2)
+    x_12 = b3**2
+    x_13 = 1/b3
+    x_14 = b2**3
+    x_15 = b1**2
+    x_16 = C1*b1*x_13 - C2*b1*b3*x_4*x_7 - I*C2*b2*x_12*x_7 - I*C2*b2*x_15*x_7 - I*C2*x_14*x_7 - C3*b1*b3*x_3*x_4*x_8 + \
+           I*C3*b2*x_12*x_3*x_8 + I*C3*b2*x_15*x_3*x_8 + I*C3*x_14*x_3*x_8 - b1*b3*x_1*x_4*x_7 - b1*b3*x_3*x_4*x_5*x_8 \
+           + b1*x_13*x_6 - I*b2*x_1*x_12*x_7 - I*b2*x_1*x_15*x_7 + I*b2*x_12*x_3*x_5*x_8 + I*b2*x_15*x_3*x_5*x_8 - \
+           I*x_1*x_14*x_7 + I*x_14*x_3*x_5*x_8
+    x_17 = C1*b2*x_13 + C2*b1*x_10*x_9 - C2*b2*b3*x_9 - I*C3*b1*x_11*x_3*x_4 - C3*b2*b3*x_11*x_3 + b1*x_1*x_10*x_9 - \
+           I*b1*x_11*x_3*x_4*x_5 - b2*b3*x_1*x_9 - b2*b3*x_11*x_3*x_5 + b2*x_13*x_6
+    sol = [Eq(v1(t), x_16), Eq(v2(t), x_17), Eq(v3(t), C1 + C3*x_3 + x_3*x_5 + x_6 + (C2 + x_1)*exp(-q*t*x_10/m))]
+    assert dsolve_sol == sol
 
 
 @slow
@@ -1027,10 +1057,8 @@ def test_linear_new_order1_type2_de_lorentz_fail():
     if ON_TRAVIS:
         skip("Too slow for travis.")
 
-    eqs, sol = de_lorentz_solution()
+    eqs, sol, _ = _de_lorentz_solution()
 
-    # NOTE: checksysodesol states the dsolve's output is
-    # incorrect
     assert checksysodesol(eqs, sol) == (True, [0, 0, 0])
 
 
@@ -1040,15 +1068,35 @@ def _neq_order1_type2_slow():
     I = Function("I")
     system = [Eq(V(t).diff(t), -1 / RC * V(t) + I(t) / C), Eq(I(t).diff(t), -R1 / L * I(t) - 1 / L * V(t) + Vs / L)]
 
-    # NOTE: With the current state of the solvers, the solution for this
-    # system is too complicated to be compared with the dsolve's output
-    return system, dsolve(system)
+    return system, dsolve(system), [RC, t, C, Vs, L, R1, V0, I0, V, I]
 
 
 # A very big solution is obtained for this
 # test case. To be simplified in future.
 def test_linear_neq_order1_type2_slow():
-    neq_order1_type2_slow()
+    system, dsolve_sol, symbols = _neq_order1_type2_slow()
+    RC, t, C, Vs, L, R1, V0, I0, V, I = symbols
+
+    x_1 = sqrt(C ** 2 * L ** 2 - 2 * C ** 2 * L * R1 * RC + C ** 2 * R1 ** 2 * RC ** 2 - 4 * C * L * RC ** 2)
+    x_2 = 1 / (
+            C * L ** 3 - 2 * C * L ** 2 * R1 * RC + C * L * R1 ** 2 * RC ** 2 - 4 * L ** 2 * RC ** 2 - L ** 2 * x_1 +
+            L * R1 * RC * x_1)
+    x_3 = exp(t / (2 * RC) + R1 * t / (2 * L) + t * x_1 / (2 * C * L * RC))
+    x_4 = exp(-t / (2 * RC) - R1 * t / (2 * L) - t * x_1 / (2 * C * L * RC))
+    x_5 = Integral(-2 * RC ** 2 * Vs * exp(t / (2 * RC) + R1 * t / (2 * L) - t * x_1 / (2 * C * L * RC)) / (
+            C * L ** 2 - 2 * C * L * R1 * RC + C * R1 ** 2 * RC ** 2 - 4 * L * RC ** 2 - L * x_1 + R1 * RC * x_1), t)
+    x_6 = Integral(
+        C * L ** 2 * Vs * x_2 * x_3 - 2 * C * L * R1 * RC * Vs * x_2 * x_3 + C * R1 ** 2 * RC ** 2 * Vs * x_2 * x_3 -
+        2 * L * RC ** 2 * Vs * x_2 * x_3 - L * Vs * x_1 * x_2 * x_3 + R1 * RC * Vs * x_1 * x_2 * x_3,
+        t)
+    x_7 = exp(-t / (2 * RC) - R1 * t / (2 * L) + t * x_1 / (2 * C * L * RC))
+    x_8 = 1 / (C * L - C * R1 * RC + x_1)
+    sol = [Eq(V(t), 2 * C1 * L * RC * x_4 / (
+            C * L - C * R1 * RC - x_1) + 2 * C2 * L * RC * x_7 * x_8 + 2 * L * RC * x_4 * x_6 / (
+                      C * L - C * R1 * RC - x_1) + 2 * L * RC * x_5 * x_7 * x_8),
+           Eq(I(t), C1 * x_4 + C2 * x_7 + x_4 * x_6 + x_5 * x_7)]
+
+    assert dsolve_sol == sol
 
 
 @slow
@@ -1056,7 +1104,7 @@ def test_linear_neq_order1_type2_slow_check():
     if ON_TRAVIS:
         skip("Too slow for travis.")
 
-    system, sol = neq_order1_type2_slow()
+    system, sol, _ = _neq_order1_type2_slow()
 
     assert checksysodesol(system, sol) == (True, [0, 0])
 
@@ -1073,5 +1121,22 @@ def test_linear_3eq_order1_type4_skip():
         t) + (-3 * f + g) * z(t)))
 
     dsolve_sol = dsolve(eq1)
-    sol1 = [_simpsol(sol) for sol in dsolve_sol]
-    assert checksysodesol(eq1, sol1) == (True, [0, 0, 0])
+    dsolve_sol1 = [_simpsol(sol) for sol in dsolve_sol]
+
+    x_1 = sqrt(-t ** 6 - 8 * t ** 3 * log(t) + 8 * t ** 3 - 16 * log(t) ** 2 + 32 * log(t) - 16)
+    x_2 = sqrt(3)
+    x_3 = 8324372644 * C1 * x_1 * x_2 + 4162186322 * C2 * x_1 * x_2 - 8324372644 * C3 * x_1 * x_2
+    x_4 = 1 / (1903457163 * t ** 3 + 3825881643 * x_1 * x_2 + 7613828652 * log(t) - 7613828652)
+    x_5 = exp(t ** 3 / 3 + t * x_1 * x_2 / 4 - cos(t))
+    x_6 = exp(t ** 3 / 3 - t * x_1 * x_2 / 4 - cos(t))
+    x_7 = exp(t ** 4 / 2 + t ** 3 / 3 + 2 * t * log(t) - 2 * t - cos(t))
+    x_8 = 91238 * C1 * x_1 * x_2 + 91238 * C2 * x_1 * x_2 - 91238 * C3 * x_1 * x_2
+    x_9 = 1 / (66049 * t ** 3 - 50629 * x_1 * x_2 + 264196 * log(t) - 264196)
+    x_10 = 50629 * C1 / 25189 + 37909 * C2 / 25189 - 50629 * C3 / 25189 - x_3 * x_4
+    x_11 = -50629 * C1 / 25189 - 12720 * C2 / 25189 + 50629 * C3 / 25189 + x_3 * x_4
+    sol = [Eq(x(t), x_10 * x_5 + x_11 * x_6 + x_7 * (C1 - C2)), Eq(y(t), x_10 * x_5 + x_11 * x_6), Eq(z(t), x_5 * (
+            -424 * C1 / 257 - 167 * C2 / 257 + 424 * C3 / 257 - x_8 * x_9) + x_6 * (167 * C1 / 257 + 424 * C2 / 257 -
+            167 * C3 / 257 + x_8 * x_9) + x_7 * (C1 - C2))]
+
+    assert dsolve_sol1 == sol
+    assert checksysodesol(eq1, dsolve_sol1) == (True, [0, 0, 0])
