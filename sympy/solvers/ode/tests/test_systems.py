@@ -62,7 +62,6 @@ def test_neq_nth_linear_constant_coeff_match():
     eqs_1 = (5 * x1 + 12 * x(t) - 6 * (y(t)), (2 * y1 - 11 * t * x(t) + 3 * y(t) + t))
     assert neq_nth_linear_constant_coeff_match(eqs_1, funcs, t) is None
 
-    # NOTE: Raises TypeError
     eqs_2 = (5 * (x1**2) + 12 * x(t) - 6 * (y(t)), (2 * y1 - 11 * t * x(t) + 3 * y(t) + t))
     assert neq_nth_linear_constant_coeff_match(eqs_2, funcs, t) is None
 
@@ -996,9 +995,7 @@ def test_linear_neq_order1_type2_big_test_cases():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
 
-# A very big solution is obtained for this
-# test case. To be simplified in future.
-def test_linear_new_order1_type2_de_lorentz():
+def de_lorentz_solution():
     m = Symbol("m", real=True)
     q = Symbol("q", real=True)
     t = Symbol("t", real=True)
@@ -1013,9 +1010,16 @@ def test_linear_new_order1_type2_de_lorentz():
         -e3 * q + m * Derivative(v3(t), t) - q * (-b1 * v2(t) + b2 * v1(t))
     ]
 
+    return eqs, dsolve(eqs)
+
+
+# A very big solution is obtained for this
+# test case. To be simplified in future.
+def test_linear_new_order1_type2_de_lorentz():
+
     # NOTE: With the current state of the solvers, the solution for this
     # system is too complicated to be compared with the dsolve's output
-    dsolve(eqs)
+    de_lorentz_solution()
 
 
 @slow
@@ -1023,30 +1027,14 @@ def test_linear_new_order1_type2_de_lorentz_fail():
     if ON_TRAVIS:
         skip("Too slow for travis.")
 
-    m = Symbol("m", real=True)
-    q = Symbol("q", real=True)
-    t = Symbol("t", real=True)
-
-    e1, e2, e3 = symbols("e1:4", real=True)
-    b1, b2, b3 = symbols("b1:4", real=True)
-    v1, v2, v3 = symbols("v1:4", cls=Function, real=True)
-
-    eqs = [
-        -e1 * q + m * Derivative(v1(t), t) - q * (-b2 * v3(t) + b3 * v2(t)),
-        -e2 * q + m * Derivative(v2(t), t) - q * (b1 * v3(t) - b3 * v1(t)),
-        -e3 * q + m * Derivative(v3(t), t) - q * (-b1 * v2(t) + b2 * v1(t))
-    ]
-
-    sol = dsolve(eqs)
+    eqs, sol = de_lorentz_solution()
 
     # NOTE: checksysodesol states the dsolve's output is
     # incorrect
     assert checksysodesol(eqs, sol) == (True, [0, 0, 0])
 
 
-# A very big solution is obtained for this
-# test case. To be simplified in future.
-def test_linear_neq_order1_type2_fails():
+def neq_order1_type2_slow():
     RC, t, C, Vs, L, R1, V0, I0 = symbols("RC t C Vs L R1 V0 I0")
     V = Function("V")
     I = Function("I")
@@ -1054,22 +1042,22 @@ def test_linear_neq_order1_type2_fails():
 
     # NOTE: With the current state of the solvers, the solution for this
     # system is too complicated to be compared with the dsolve's output
-    dsolve(system)
+    return system, dsolve(system)
+
+
+# A very big solution is obtained for this
+# test case. To be simplified in future.
+def test_linear_neq_order1_type2_slow():
+    neq_order1_type2_slow()
 
 
 @slow
-def test_linear_neq_order1_type2_fails_too_slow():
+def test_linear_neq_order1_type2_slow_check():
     if ON_TRAVIS:
         skip("Too slow for travis.")
 
-    RC, t, C, Vs, L, R1, V0, I0 = symbols("RC t C Vs L R1 V0 I0")
-    V = Function("V")
-    I = Function("I")
-    system = [Eq(V(t).diff(t), -1 / RC * V(t) + I(t) / C), Eq(I(t).diff(t), -R1 / L * I(t) - 1 / L * V(t) + Vs / L)]
-    sol = dsolve(system)
+    system, sol = neq_order1_type2_slow()
 
-    # NOTE: checksysodesol states the dsolve's output is
-    # incorrect
     assert checksysodesol(system, sol) == (True, [0, 0])
 
 
@@ -1084,17 +1072,6 @@ def test_linear_3eq_order1_type4_skip():
                 Eq(diff(y(t), t), 2 * f * x(t) + (f + g) * y(t) - 2 * f * z(t)), Eq(diff(z(t), t), 5 * f * x(t) + f * y(
         t) + (-3 * f + g) * z(t)))
 
-    # sol1 = [Eq(x(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 \
-    #         + cos(sqrt(3)*Integral(t**3 + log(t), t))/2) + C3*(-sin(sqrt(3)*Integral(t**3 + log(t), t))/2 \
-    #         + sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))),
-    #         Eq(y(t), (C2*(sqrt(3)*sin(sqrt(3)*Integral(t**3 + log(t), t))/6 + cos(sqrt(3)* \
-    #         Integral(t**3 + log(t), t))/2) + C3*(-sin(sqrt(3)*Integral(t**3 + log(t), t))/2 \
-    #         + sqrt(3)*cos(sqrt(3)*Integral(t**3 + log(t), t))/6))*exp(Integral(-t**2 - sin(t), t))),
-    #         Eq(z(t), (C1*exp(-2*Integral(t**3 + log(t), t)) + C2*cos(sqrt(3)*Integral(t**3 + log(t), t)) - \
-    #         C3*sin(sqrt(3)*Integral(t**3 + log(t), t)))*exp(Integral(-t**2 - sin(t), t)))]
-
     dsolve_sol = dsolve(eq1)
     sol1 = [_simpsol(sol) for sol in dsolve_sol]
-    # dsolve_sol = [eq.subs(C3, -C3) for eq in dsolve_sol]
-    # assert all(simplify(s1.rhs - ds1.rhs) == 0 for s1, ds1 in zip(sol1, dsolve_sol))
     assert checksysodesol(eq1, sol1) == (True, [0, 0, 0])
