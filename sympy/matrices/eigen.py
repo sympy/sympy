@@ -701,6 +701,11 @@ def _is_positive_semidefinite(M):
     if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
         return True
 
+    try:
+        return _is_positive_semidefinite_by_cholesky_factorization_with_pivots(M)
+    except Exception:
+        pass
+
     if M.rows < 5 or all(a.func != Symbol for a in M.atoms()):
         try:
             return _is_positive_semidefinite_by_eigenvalues(M)
@@ -763,6 +768,25 @@ def _is_positive_semidefinite_by_eigenvalues(M):
     """Determines if a matrix is positive semidefinite by checking
     if all the eigenvalues are nonnegative"""
     return all(eigenvalue.is_nonnegative for eigenvalue in M.eigenvals())
+
+
+def _is_positive_semidefinite_by_cholesky_factorization_with_pivots(M):
+    M = M.copy()
+    for k in range(M.rows):
+        pivot = max(range(k, M.rows), key=lambda i: M[i, i])
+        if pivot > k:
+            M[[k, pivot], :] = M[[pivot, k], :]
+            M[:, [k, pivot]] = M[:, [pivot, k]]
+            if M[k, k].is_negative:
+                return False
+            M[k, k] = sqrt(M[k, k])
+            for j in range(k+1, M.rows):
+                M[k, j] /= M[k, k]
+            for j in range(k+1, M.rows):
+                for i in range(k+1, j+1):
+                    M[i, j] -= M[k, i] * M[k, j]
+    return M[-1, -1].is_nonnegative
+
 
 
 _doc_positive_definite = \
