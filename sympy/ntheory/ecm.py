@@ -62,7 +62,7 @@ class Point:
         Examples
         ========
 
-        >>> from sympy.ntheory import Point
+        >>> from sympy.ntheory.ecm import Point
         >>> p1 = Point(11, 16, 7, 29)
         >>> p2 = Point(13, 10, 7, 29)
         >>> p3 = p2.add(p1, p1)
@@ -86,7 +86,7 @@ class Point:
         Examples
         ========
 
-        >>> from sympy.ntheory import Point
+        >>> from sympy.ntheory.ecm import Point
         >>> p1 = Point(11, 16, 7, 29)
         >>> p2 = p1.double()
         >>> p2.x_cord
@@ -116,7 +116,7 @@ class Point:
         Examples
         ========
 
-        >>> from sympy.ntheory import Point
+        >>> from sympy.ntheory.ecm import Point
         >>> p1 = Point(11, 16, 7, 29)
         >>> p3 = p1.mont_ladder(3)
         >>> p3.x_cord
