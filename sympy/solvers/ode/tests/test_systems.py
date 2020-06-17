@@ -1068,15 +1068,6 @@ def _neq_order1_type2_slow():
     I = Function("I")
     system = [Eq(V(t).diff(t), -1 / RC * V(t) + I(t) / C), Eq(I(t).diff(t), -R1 / L * I(t) - 1 / L * V(t) + Vs / L)]
 
-    return system, dsolve(system), [RC, t, C, Vs, L, R1, V0, I0, V, I]
-
-
-# A very big solution is obtained for this
-# test case. To be simplified in future.
-def test_linear_neq_order1_type2_slow():
-    system, dsolve_sol, symbols = _neq_order1_type2_slow()
-    RC, t, C, Vs, L, R1, V0, I0, V, I = symbols
-
     x_1 = sqrt(C ** 2 * L ** 2 - 2 * C ** 2 * L * R1 * RC + C ** 2 * R1 ** 2 * RC ** 2 - 4 * C * L * RC ** 2)
     x_2 = 1 / (
             C * L ** 3 - 2 * C * L ** 2 * R1 * RC + C * L * R1 ** 2 * RC ** 2 - 4 * L ** 2 * RC ** 2 - L ** 2 * x_1 +
@@ -1096,7 +1087,15 @@ def test_linear_neq_order1_type2_slow():
                       C * L - C * R1 * RC - x_1) + 2 * L * RC * x_5 * x_7 * x_8),
            Eq(I(t), C1 * x_4 + C2 * x_7 + x_4 * x_6 + x_5 * x_7)]
 
-    assert dsolve_sol == sol
+    return system, sol
+
+
+# A very big solution is obtained for this
+# test case. To be simplified in future.
+def test_linear_neq_order1_type2_slow():
+    system, sol = _neq_order1_type2_slow()
+
+    assert dsolve(system) == sol
 
 
 @slow
@@ -1104,12 +1103,12 @@ def test_linear_neq_order1_type2_slow_check():
     if ON_TRAVIS:
         skip("Too slow for travis.")
 
-    system, sol, _ = _neq_order1_type2_slow()
+    system, sol = _neq_order1_type2_slow()
 
     assert checksysodesol(system, sol) == (True, [0, 0])
 
 
-def test_linear_3eq_order1_type4_skip():
+def test_linear_3eq_order1_type4_long():
 
     x, y, z = symbols('x, y, z', cls=Function)
     t = Symbol('t')
