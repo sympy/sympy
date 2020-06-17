@@ -995,7 +995,7 @@ def test_linear_neq_order1_type2_big_test_cases():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
 
-def de_lorentz_solution():
+def _de_lorentz_solution():
     m = Symbol("m", real=True)
     q = Symbol("q", real=True)
     t = Symbol("t", real=True)
@@ -1034,7 +1034,7 @@ def test_linear_new_order1_type2_de_lorentz_fail():
     assert checksysodesol(eqs, sol) == (True, [0, 0, 0])
 
 
-def neq_order1_type2_slow():
+def _neq_order1_type2_slow():
     RC, t, C, Vs, L, R1, V0, I0 = symbols("RC t C Vs L R1 V0 I0")
     V = Function("V")
     I = Function("I")
