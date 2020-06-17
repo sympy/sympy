@@ -1,4 +1,4 @@
-from sympy.ntheory import ecm, Point
+from sympy.ntheory.ecm import ecm, Point
 from sympy.testing.pytest import slow
 
 @slow
