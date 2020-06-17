@@ -780,11 +780,9 @@ def _is_positive_semidefinite_by_cholesky_factorization_with_pivots(M):
             if M[k, k].is_negative:
                 return False
             M[k, k] = sqrt(M[k, k])
+            M[k, (k+1):] /= M[k, k]
             for j in range(k+1, M.rows):
-                M[k, j] /= M[k, k]
-            for j in range(k+1, M.rows):
-                for i in range(k+1, j+1):
-                    M[i, j] -= M[k, i] * M[k, j]
+                M[(k+1):(j+1), j] = M[k, (k+1):(j+1)].T * M[k, j]
     return M[-1, -1].is_nonnegative
 
 
