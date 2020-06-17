@@ -744,32 +744,9 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
 
     __hash__ = None  # type: ignore
 
-    def col_del(self, k):
-        """Delete the given column of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> M = SparseMatrix([[0, 0], [0, 1]])
-        >>> M
-        Matrix([
-        [0, 0],
-        [0, 1]])
-        >>> M.col_del(0)
-        >>> M
-        Matrix([
-        [0],
-        [1]])
-
-        See Also
-        ========
-
-        row_del
-        """
+    def _eval_col_del(self, k):
         newD = {}
-        k = a2idx(k, self.cols)
-        for (i, j) in self._smat:
+        for i, j in self._smat:
             if j == k:
                 pass
             elif j > k:
@@ -778,6 +755,18 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                 newD[i, j] = self._smat[i, j]
         self._smat = newD
         self.cols -= 1
+
+    def _eval_row_del(self, k):
+        newD = {}
+        for i, j in self._smat:
+            if i == k:
+                pass
+            elif i > k:
+                newD[i - 1, j] = self._smat[i, j]
+            else:
+                newD[i, j] = self._smat[i, j]
+        self._smat = newD
+        self.rows -= 1
 
     def col_join(self, other):
         """Returns B augmented beneath A (row-wise joining)::
@@ -957,39 +946,6 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
             v = self._sympify(value)
             self._smat = {(i, j): v
                 for i in range(self.rows) for j in range(self.cols)}
-
-    def row_del(self, k):
-        """Delete the given row of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> M = SparseMatrix([[0, 0], [0, 1]])
-        >>> M
-        Matrix([
-        [0, 0],
-        [0, 1]])
-        >>> M.row_del(0)
-        >>> M
-        Matrix([[0, 1]])
-
-        See Also
-        ========
-
-        col_del
-        """
-        newD = {}
-        k = a2idx(k, self.rows)
-        for (i, j) in self._smat:
-            if i == k:
-                pass
-            elif i > k:
-                newD[i - 1, j] = self._smat[i, j]
-            else:
-                newD[i, j] = self._smat[i, j]
-        self._smat = newD
-        self.rows -= 1
 
     def row_join(self, other):
         """Returns B appended after A (column-wise augmenting)::

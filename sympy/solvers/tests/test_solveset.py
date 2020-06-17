@@ -952,6 +952,12 @@ def test_solve_hyperbolic():
         ImageSet(Lambda(n, n*pi/4 - 13*pi/16 + E), S.Integers),
         ImageSet(Lambda(n, n*pi/4 - 11*pi/16 + E), S.Integers)))
 
+    # issues #18490 / #19489
+    assert solveset(cosh(x) + cosh(3*x) - cosh(5*x), x, S.Reals) == \
+        ConditionSet(x, Eq(cosh(x) + cosh(3*x) - cosh(5*x), 0), S.Reals)
+    assert solveset(sinh(8*x) + coth(12*x)) == ConditionSet(
+        x, Eq(sinh(8*x) + coth(12*x), 0), S.Complexes)
+
 
 def test_solve_trig_hyp_symbolic():
     # actual solver: _solve_trig1
