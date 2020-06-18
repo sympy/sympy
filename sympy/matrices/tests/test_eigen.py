@@ -586,3 +586,11 @@ def test_definite():
 def test_is_indefinite(m, expected_is_indefinite):
     assert m.is_indefinite is not None
     assert m.is_indefinite == expected_is_indefinite
+    # test for issue 19547: https://github.com/sympy/sympy/issues/19547
+    m = Matrix([
+        [0, 0, 0],
+        [0, 1, 2],
+        [0, 2, 1]
+    ])
+    assert not m.is_positive_definite
+    assert not m.is_positive_semidefinite
