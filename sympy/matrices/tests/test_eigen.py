@@ -602,11 +602,13 @@ def test_is_indefinite():
         (Matrix(([-1, -I], [I, -2])), False),
         # Complex Singular
         (Matrix(([0, I, I], [I, I, 2 * I], [I, 2 * I, 3 * I])), False),
+        # From comment in PR
+        (Matrix([[2, 2], [-1, -1]]), True),
     ]
     errors = []
     for m, expected in test_data:
         actual = m.is_indefinite
         if actual != expected:
-            msg = 'Expected m.is_indefinite == {%r}. Found {%r}.\n\tm={%r}'
+            msg = 'Expected m.is_indefinite == {}. Found {}.\n\tm={}'
             errors.append(msg.format(expected, actual, m))
     assert not errors, '\n'.join(errors)
