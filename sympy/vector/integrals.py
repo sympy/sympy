@@ -19,28 +19,32 @@ class ParametricIntegral(Basic):
     >>> from sympy.abc import t
 
     >>> C = CoordSys3D('C)
-    >>> curve = ParametricRegion(t, (3*t - 2, t + 1), {t: (1, 2)})
-
+    >>> curve = ParametricRegion((3*t - 2, t + 1), (t, 1, 2))
     >>> ParametricIntegral(C.x, curve)
-    0
-    >>> semisphere = ParametricRegion((theta, phi), (2*sin(phi)*cos(theta), 2*sin(phi)*sin(theta), 2*cos(phi))
-                            {theta: (0, 2*pi), phi: (0, pi/2)})
+    5*sqrt(10)/2
+    >>> length = ParametricIntegral(1, curve)
+    sqrt(10)
+    >>> semisphere = ParametricRegion((2*sin(phi)*cos(theta), 2*sin(phi)*sin(theta), 2*cos(phi)),\
+                            (theta, 0, 2*pi), (phi, 0, pi/2))
     >>> ParametricIntegral(C.z, semisphere)
     8*pi
 
-    >>> ParametricIntegral(C.j - C.k, ParametricRegion((r, theta), (r*cos(theta), r*sin(theta))))
-    ParametricIntegral(C.j - C.k, ParametricRegion((r, theta), (r*cos(theta), r*sin(theta))))-
+    >>> ParametricIntegral(C.j - C.k, ParametricRegion((r*cos(theta), r*sin(theta)), r, theta))
+    ParametricIntegral(C.j - C.k, ParametricRegion((r, theta), (r*cos(theta), r*sin(theta))))
 
     """
     
     def __new__(cls, field, parametricregion):
             
-        coord_sys = _get_coord_sys_from_expr(field)
+        coord_set = _get_coord_sys_from_expr(field)
         
-        if len(coord_sys) > 1:
+        if len(coord_set) == 0:
+            coord_sys = CoordSys3D('C')
+        elif len(coord_set) > 1:
             raise ValueError
+        else:
+            coord_sys = next(iter(coord_set))
         
-        coord_sys = next(iter(coord_sys))
         base_vectors = coord_sys.base_vectors()
         base_scalars = coord_sys.base_scalars()
 
@@ -49,11 +53,12 @@ class ParametricIntegral(Basic):
         r = Vector.zero
         for i in range(len(parametricregion.definition)):
             r += base_vectors[i]*parametricregion.definition[i]
-    
-        for i in range(len(parametricregion.definition)):
-            parametricfield = parametricfield.subs(base_scalars[i], parametricregion.definition[i])
+        
+        if len(coord_set) != 0:
+            for i in range(len(parametricregion.definition)):
+                parametricfield = parametricfield.subs(base_scalars[i], parametricregion.definition[i])
 
-        if parametricregion.dimension == 1:
+        if parametricregion.dimensions == 1:
             parameter = parametricregion.parameters[0]
 
             r_diff = diff(r, parameter)        
@@ -62,10 +67,10 @@ class ParametricIntegral(Basic):
             
             if isinstance(parametricfield, Vector):
                 result = integrate(r_diff.dot(parametricfield), (parameter, lower, upper))
+                print(result)
             else:
-                result = integrate(r_diff.magnitude()*parametricfield, (parameter, lower, upper))
-                
-        elif parametricregion.dimension == 2:
+                result = integrate(r_diff.magnitude()*parametricfield, (parameter, lower, upper))            
+        elif parametricregion.dimensions == 2:
             u, v = parametricregion.parameters[0], parametricregion.parameters[1]
             
             r_u = diff(r, u)
@@ -97,7 +102,7 @@ class ParametricIntegral(Basic):
                             
         if not isinstance(result, Integral):
             return result     
-        else:        
+        else: 
             return super().__new__(cls, field, parametricregion)
     
     @classmethod             
@@ -125,4 +130,4 @@ class ParametricIntegral(Basic):
     
     @property
     def parametricregion(self):
-        return self.args[1]  
+        return self.args[1]
