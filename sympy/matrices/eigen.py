@@ -719,40 +719,10 @@ def _is_indefinite(M):
     fails due to a symbol in the matrix, makes a symbolic
     determination using _is_positive_definite and _is_negative_definite
     """
-    try:
-        return _is_indefinite_mpmath(M)
-    except TypeError: # could not convert symbol to mpf
-        M = (M + M.H) / 2
-        if sympy.det(M).is_zero:
-            return False
-        return not (
-            sympy.det(M).is_zero \
-            or _is_positive_definite(M) \
-            or _is_negative_definite(M))
-
-
-def _is_indefinite_mpmath(M):
-    """Computes the eigenvalues of M using mpmath. Returns
-    False if at least one eigenvalue is zero, all eigenvalues
-    are positive, or all eigenvalues are negative. Returns
-    True otherwise.
-    """
-    TOLERANCE = mp.mpf(10**-6)
-    def _is_numerically_zero(x):
-        return -TOLERANCE < x and x < TOLERANCE
-    M = mp.matrix(M.evalf())
-    M = (M + M.H) / 2
-    eigvals = mp.eighe(M, eigvals_only=True)
-    positive_eigvals = []
-    negative_eigvals = []
-    for eigval in eigvals:
-        if _is_numerically_zero(eigval):
-            return False
-        elif eigval > TOLERANCE:
-            positive_eigvals.append(eigval)
-        else:
-            negative_eigvals.append(eigval)
-    return bool(positive_eigvals) and bool(negative_eigvals)
+    return not (
+        sympy.det(M).is_zero \
+        or _is_positive_definite(M) \
+        or _is_negative_definite(M))
 
 
 def _is_positive_definite_GE(M):

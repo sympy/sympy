@@ -607,6 +607,6 @@ def test_is_indefinite():
     for m, expected in test_data:
         actual = m.is_indefinite
         if actual != expected:
-            msg = 'Expected m.is_indefinite == {%r}. Found {%r}.\n\tm={%r}' 
+            msg = 'Expected m.is_indefinite == {%r}. Found {%r}.\n\tm={%r}'
             errors.append(msg.format(expected, actual, m))
     assert not errors, '\n'.join(errors)
