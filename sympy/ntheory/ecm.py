@@ -45,19 +45,20 @@ class Point:
         from sympy import mod_inverse
         if self.a_24 != other.a_24 or self.mod != other.mod:
             return False
-        return self.x_cord * mod_inverse(self.z_cord, self.mod) % self.mod == other.x_cord * mod_inverse(other.z_cord, self.mod) % self.mod
+        return self.x_cord * mod_inverse(self.z_cord, self.mod) % self.mod ==\
+            other.x_cord * mod_inverse(other.z_cord, self.mod) % self.mod
 
     def add(self, Q, diff):
         """
-        Add two points P and Q where diff = P - Q. Moreover the assumption
-        is P.x_cord*Q.x_cord*(P.x_cord - Q.x_cord) != 0. This algorithm
+        Add two points self and Q where diff = self - Q. Moreover the assumption
+        is self.x_cord*Q.x_cord*(self.x_cord - Q.x_cord) != 0. This algorithm
         requires 6 multiplications.
 
         Parameters:
         ===========
 
         Q : point on the curve in Montgomery form
-        diff : P - Q
+        diff : self - Q
 
         Examples
         ========
@@ -247,9 +248,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
                 alpha + beta[delta]
                 g = (g*f) % n
             #Swap
-            TT = R
-            R = R.add(S[D], T)
-            T = TT
+            T, R = R, R.add(S[D], T)
         g = gcd(n, g)
 
         #Stage 2 Factor found
