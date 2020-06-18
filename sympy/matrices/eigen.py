@@ -1,6 +1,5 @@
 from types import FunctionType
 from collections import Counter
-import itertools
 
 from mpmath import mp, workprec
 from mpmath.libmp.libmpf import prec_to_dps
@@ -700,7 +699,21 @@ def _is_positive_semidefinite(M):
     if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
         return True
 
-    return _is_positive_semidefinite_by_minors(M)
+    # uses Cholesky factorization with complete pivoting
+    # see http://eprints.ma.man.ac.uk/1199/1/covered/MIMS_ep2008_116.pdf
+    M = M.copy()
+    for k in range(M.rows):
+        pivot = max(range(k, M.rows), key=lambda i: M[i, i])
+        if pivot > k:
+            M.col_swap(k, pivot)
+            M.row_swap(k, pivot)
+        if M[k, k].is_negative:
+            return False
+        M[k, k] = sqrt(M[k, k])
+        M[k, (k+1):] /= M[k, k]
+        for j in range(k+1, M.rows):
+            M[(k+1):(j+1), j] -= M[k, (k+1):(j+1)].T * M[k, j]
+    return M[-1, -1].is_nonnegative
 
 
 def _is_negative_definite(M):
@@ -740,16 +753,6 @@ def _is_positive_definite_GE(M):
         for j in range(i+1, size):
             M[j, i+1:] = M[i, i] * M[j, i+1:] - M[j, i] * M[i, i+1:]
     return True
-
-
-def _is_positive_semidefinite_by_minors(M):
-    """A method to evaluate all principal minors for testing
-    positive-semidefiniteness by using Sylvestre's crieterion."""
-    return all(
-        M[idx, idx].det(method='berkowitz').is_nonnegative
-        for minor_size in range(1, M.rows+1)
-        for idx in itertools.combinations(range(M.rows), minor_size)
-    )
 
 
 _doc_positive_definite = \
