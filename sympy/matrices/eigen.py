@@ -712,8 +712,9 @@ def _is_negative_semidefinite(M):
 
 
 def _is_indefinite(M):
-    """Returns False if M is singular, positive definite, or
-    negative definite, and returns True otherwise.
+    """Returns True if a symmetric matrix M is nonsingular and
+    not either positive definite or negative definite. Returns
+    False otherwise.
     """
     M = (M + M.H) / 2
     if not M.is_square:
@@ -724,7 +725,7 @@ def _is_indefinite(M):
         (
             # faster check
             # if M nonsingular and has both positive and negative
-            # diagonal entries, it is not definite 
+            # diagonal entries, it is not definite
             any(M[i, i].is_positive for i in range(M.rows)) \
             and any(M[i, i].is_negative for i in range(M.rows)) \
         ) \
