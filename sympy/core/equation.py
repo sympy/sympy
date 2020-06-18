@@ -81,6 +81,16 @@ class Equation(Basic):
     >>> str(exp(log(t)))
     'a=b/c'
 
+    Utility operations
+    >>> t.reversed()
+    Equation(b/c,a)
+    >>> t.lhs
+    a
+    >>> t.rhs
+    b/c
+    >>> t.as_Boolean()
+    Equality(a, b/c)
+
     Integration can only be performed on one side at a time.
     >>> q=Eqn(a*c,b/c)
     >>> integrate(q,b,side='rhs')
