@@ -595,7 +595,6 @@ def test_definite():
     (Matrix(([1, I], [-I, 2])), False),
     (Matrix(([-1, -I], [I, -2])), False),
     (Matrix(([0, I, I], [I, I, 2*I], [I, 2*I, 3*I])), False),
-
 ], ids=['indefinite', 'positive-definite', 'negative-definite',
         'singular', 'complex-indefinite', 'complex-pos-def',
         'complex-neg-def', 'complex-singular'])

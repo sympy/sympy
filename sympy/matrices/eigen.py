@@ -8,7 +8,6 @@ from mpmath.libmp.libmpf import prec_to_dps
 import sympy
 from sympy.core.compatibility import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
-from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -713,7 +712,7 @@ def _is_negative_semidefinite(M):
 
 
 def _is_indefinite(M):
-    """Returns False if M is singular, positive definite, or 
+    """Returns False if M is singular, positive definite, or
     negative definite, and returns True otherwise.
 
     First tries a numerical computation using mpmath. If that
@@ -721,14 +720,14 @@ def _is_indefinite(M):
     determination using _is_positive_definite and _is_negative_definite
     """
     try:
-        return _is_indefinite_mpmath(M) 
-    except TypeError: # could not convert symbol to mpf 
+        return _is_indefinite_mpmath(M)
+    except TypeError: # could not convert symbol to mpf
         M = (M + M.H) / 2
         if sympy.det(M).is_zero:
             return False
         return not (
-            sympy.det(M).is_zero
-            or _is_positive_definite(M)
+            sympy.det(M).is_zero \
+            or _is_positive_definite(M) \
             or _is_negative_definite(M))
 
 
