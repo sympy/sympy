@@ -1,3 +1,5 @@
+import pytest
+
 from sympy import (
     Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
     cos, symbols)
@@ -572,3 +574,15 @@ def test_definite():
     assert m.is_positive_definite == True
     assert m.is_positive_semidefinite == True
     assert m.is_indefinite == False
+
+
+# issue 19365
+@pytest.mark.parametrize("m,expected_is_indefinite", [
+    (Matrix(([4, 2, sqrt(3)], [2, 2, 0], [sqrt(3), 0, 1] )), True),
+    (Matrix(([4, 2, 1], [2, 2, 0], [1, 0, 1] )), False),
+    (Matrix(([-4, -2, -1], [-2, -2, 0], [-1, 0, -1])), False),
+    (Matrix(([0, 1, 1], [1, 1, 2], [1, 2, 3])), False)
+], ids=['indefinite', 'positive-definite', 'negative-definite', 'singular'])
+def test_is_indefinite(m, expected_is_indefinite):
+    assert m.is_indefinite is not None
+    assert m.is_indefinite == expected_is_indefinite
