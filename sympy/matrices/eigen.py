@@ -714,17 +714,22 @@ def _is_negative_semidefinite(M):
 def _is_indefinite(M):
     """Returns False if M is singular, positive definite, or
     negative definite, and returns True otherwise.
-
-    First tries a numerical computation using mpmath. If that
-    fails due to a symbol in the matrix, makes a symbolic
-    determination using _is_positive_definite and _is_negative_definite
     """
     M = (M + M.H) / 2
+    if not M.is_square:
+        return False
+    if sympy.det(M).is_zero:
+        return False
     return (
-        M.is_square \
-        and not (
-            sympy.det(M).is_zero \
-            or M.is_positive_definite \
+        (
+            # faster check
+            # if M nonsingular and has both positive and negative
+            # diagonal entries, it is not definite 
+            any(M[i, i].is_positive for i in range(M.rows)) \
+            and any(M[i, i].is_negative for i in range(M.rows)) \
+        ) \
+        or not (
+            M.is_positive_definite \
             or M.is_negative_definite \
         )
     )
