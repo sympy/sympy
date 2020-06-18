@@ -647,7 +647,7 @@ class Function(Application, Expr):
             Asymptotic expansion of %s around %s is
             not implemented.''' % (type(self), args0)))
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         """
         This function does compute series for multivariate functions,
         but the expansion is always in terms of *one* variable.
@@ -1802,7 +1802,7 @@ class Derivative(Expr):
         for term in self.expr.lseries(x, logx=logx):
             yield self.func(term, *dx)
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.expr.nseries(x, n=n, logx=logx)
         o = arg.getO()
         dx = self.variables
@@ -2350,7 +2350,7 @@ class Subs(Expr):
             val += Subs(self.expr.diff(s), self.variables, self.point).doit()
         return val
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         if x in self.point:
             # x is the variable being substituted into
             apos = self.point.index(x)

@@ -208,13 +208,19 @@ class Limit(Expr):
         if not e.has(z):
             return e
 
+        cdir = 0
+        if str(dir) == "+":
+            cdir = 1
+        elif str(dir) == "-":
+            cdir = -1
+
         if e.is_meromorphic(z, z0):
             if abs(z0) is S.Infinity:
                 newe = e.subs(z, -1/z)
             else:
                 newe = e.subs(z, z + z0)
             try:
-                coeff, exp = newe.leadterm(z)
+                coeff, exp = newe._eval_nseries(z, 2, None, cdir).removeO().leadterm(z)
             except ValueError:
                 pass
             else:

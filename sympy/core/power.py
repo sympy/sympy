@@ -1488,7 +1488,7 @@ class Pow(Expr):
         #    g has order O(x**d) where d is strictly positive.
         # 2) Then b**e = (f**e)*((1 + g)**e).
         #    (1 + g)**e is computed using binomial series.
-        from sympy import ceiling, polygamma, logcombine, EulerGamma, exp, nan, zoo, log, factorial, ff, PoleError, O, powdenest, Wild
+        from sympy import im, I, ceiling, polygamma, logcombine, EulerGamma, exp, nan, zoo, log, factorial, ff, PoleError, O, powdenest, Wild
         from itertools import product
         self = powdenest(self, force=True).trigsimp()
         b, e = self.as_base_exp()
@@ -1497,7 +1497,7 @@ class Pow(Expr):
             raise PoleError()
 
         if e.has(x):
-            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
+            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
 
         if logx is not None and b.has(log):
             c, ex = symbols('c, ex', cls=Wild, exclude=[x])
@@ -1510,7 +1510,7 @@ class Pow(Expr):
                 raise ValueError()
             _, m = b.leadterm(x)
         except ValueError:
-            b = b._eval_nseries(x, n=max(2, n), logx=logx).removeO()
+            b = b._eval_nseries(x, n=max(2, n), logx=logx, cdir=cdir).removeO()
             if b.has(nan, zoo):
                 raise NotImplementedError()
             _, m = b.leadterm(x)
@@ -1519,7 +1519,7 @@ class Pow(Expr):
             e = logcombine(e).cancel()
 
         if not (m.is_zero or e.is_number and e.is_real):
-            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
+            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
 
         f = b.as_leading_term(x)
         g = (b/f - S.One).cancel()
@@ -1560,7 +1560,7 @@ class Pow(Expr):
             if not d.is_positive:
                 raise NotImplementedError()
 
-        gpoly = g._eval_nseries(x, n=ceiling(maxpow), logx=logx).removeO()
+        gpoly = g._eval_nseries(x, n=ceiling(maxpow), logx=logx, cdir=cdir).removeO()
         gterms = {}
 
         for term in Add.make_args(gpoly):
@@ -1578,7 +1578,10 @@ class Pow(Expr):
             tk = mul(tk, gterms)
             k += S.One
 
-        inco, inex = coeff_exp(f**e, x)
+        if not e.is_integer and m.is_zero and f.is_real and f.is_negative and im((b - f).dir(x, cdir)) < 0:
+            inco, inex = coeff_exp(f**e*exp(-2*e*S.Pi*I), x)
+        else:
+            inco, inex = coeff_exp(f**e, x)
         res = S.Zero
 
         for e1 in terms:

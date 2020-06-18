@@ -1794,10 +1794,10 @@ class Mul(Expr, AssocOp):
                     raise ValueError
 
             n0 = sum(t[1] for t in ords)
-            facs = [t.nseries(x, 0, ceiling(n-n0+m)).removeO() for t, m in ords]
+            facs = [t.nseries(x, 0, ceiling(n-n0+m), cdir=cdir).removeO() for t, m in ords]
 
         except (ValueError, NotImplementedError, TypeError, AttributeError):
-            facs = [t.nseries(x, n=n, logx=logx) for t in self.args]
+            facs = [t.nseries(x, n=n, logx=logx, cdir=cdir) for t in self.args]
             res = powsimp(self.func(*facs).expand(), combine='exp', deep=True)
             if res.has(Order):
                 res += Order(x**n, x)

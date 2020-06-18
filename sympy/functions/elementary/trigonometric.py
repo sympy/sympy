@@ -1136,7 +1136,7 @@ class tan(TrigonometricFunction):
 
             return (-1)**a*b*(b - 1)*B/F*x**n
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         i = self.args[0].limit(x, 0)*2/S.Pi
         if i and i.is_Integer:
             return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx)
@@ -1447,7 +1447,7 @@ class cot(TrigonometricFunction):
 
             return (-1)**((n + 1)//2)*2**(n + 1)*B/F*x**n
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         i = self.args[0].limit(x, 0)/S.Pi
         if i and i.is_Integer:
             return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx)
@@ -1692,7 +1692,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     def _eval_is_finite(self):
         return (1/self._reciprocal_of(self.args[0])).is_finite
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         return (1/self._reciprocal_of(self.args[0]))._eval_nseries(x, n, logx)
 
 
@@ -1959,7 +1959,7 @@ class sinc(Function):
             elif (2*pi_coeff).is_integer:
                 return S.NegativeOne**(pi_coeff - S.Half)/arg
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         x = self.args[0]
         return (sin(x)/x)._eval_nseries(x, n, logx)
 
@@ -2603,7 +2603,7 @@ class atan(InverseTrigonometricFunction):
         arg0 = self.args[0].subs(x, 0)
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
-            return res
+            return acot(1/self.args[0])._eval_nseries(x, n, logx, cdir)
         if cdir != 0:
             cdir = self.args[0].dir(x, cdir)
         if re(cdir) < 0 and re(arg0).is_zero and im(arg0) > S.One:
@@ -2794,6 +2794,10 @@ class acot(InverseTrigonometricFunction):
             return res
         if cdir != 0:
             cdir = self.args[0].dir(x, cdir)
+        if arg0.is_zero:
+            if re(cdir) < 0:
+                return res - S.Pi
+            return res
         if re(cdir) > 0 and re(arg0).is_zero and im(arg0) > S.Zero and im(arg0) < S.One:
             return res + S.Pi
         if re(cdir) < 0 and re(arg0).is_zero and im(arg0) < S.Zero and im(arg0) > S.NegativeOne:

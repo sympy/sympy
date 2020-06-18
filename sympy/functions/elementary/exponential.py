@@ -429,7 +429,7 @@ class exp(ExpBase):
             arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
         from sympy import ceiling, limit, oo, Order, powsimp, Wild, expand_complex
@@ -1068,7 +1068,7 @@ class LambertW(Function):
         else:
             return s.is_algebraic
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         if len(self.args) == 1:
             from sympy import Order, ceiling, expand_multinomial
             arg = self.args[0].nseries(x, n=n, logx=logx)

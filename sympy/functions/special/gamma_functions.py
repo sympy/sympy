@@ -190,7 +190,7 @@ class gamma(Function):
     def _eval_rewrite_as_factorial(self, z, **kwargs):
         return factorial(z - 1)
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         x0 = self.args[0].limit(x, 0)
         if not (x0.is_Integer and x0 <= 0):
             return super()._eval_nseries(x, n, logx)
@@ -989,7 +989,7 @@ class loggamma(Function):
 
         return self
 
-    def _eval_nseries(self, x, n, logx=None):
+    def _eval_nseries(self, x, n, logx=None, cdir=0):
         x0 = self.args[0].limit(x, 0)
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
