@@ -528,6 +528,7 @@ def test_definite():
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
 
+    # Hermetian matrices
     m = Matrix([[1, 2*I], [-I, 4]])
     assert m.is_positive_definite == True
     assert m.is_positive_semidefinite == True
