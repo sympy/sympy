@@ -1,5 +1,3 @@
-import pytest
-
 from sympy import (
     Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
     cos, symbols)
@@ -586,18 +584,28 @@ def test_definite():
 
 
 # issue 19365
-@pytest.mark.parametrize("m,expected_is_indefinite", [
-    (Matrix(([4, 2, sqrt(3)], [2, 2, 0], [sqrt(3), 0, 1] )), True),
-    (Matrix(([4, 2, 1], [2, 2, 0], [1, 0, 1] )), False),
-    (Matrix(([-4, -2, -1], [-2, -2, 0], [-1, 0, -1])), False),
-    (Matrix(([0, 1, 1], [1, 1, 2], [1, 2, 3])), False),
-    (Matrix(([1, 2*I], [-2*I, 2])), True),
-    (Matrix(([1, I], [-I, 2])), False),
-    (Matrix(([-1, -I], [I, -2])), False),
-    (Matrix(([0, I, I], [I, I, 2*I], [I, 2*I, 3*I])), False),
-], ids=['indefinite', 'positive-definite', 'negative-definite',
-        'singular', 'complex-indefinite', 'complex-pos-def',
-        'complex-neg-def', 'complex-singular'])
-def test_is_indefinite(m, expected_is_indefinite):
-    assert m.is_indefinite is not None
-    assert m.is_indefinite == expected_is_indefinite
+def test_is_indefinite():
+    test_data = [
+        # Indefinite
+        (Matrix(([4, 2, sqrt(3)], [2, 2, 0], [sqrt(3), 0, 1] )), True),
+        # Positive Definite
+        (Matrix(([4, 2, 1], [2, 2, 0], [1, 0, 1] )), False),
+        # Negative Definite
+        (Matrix(([-4, -2, -1], [-2, -2, 0], [-1, 0, -1])), False),
+        # Singular
+        (Matrix(([0, 1, 1], [1, 1, 2], [1, 2, 3])), False),
+        # Complex Indefinite
+        (Matrix(([1, 2*I], [-2*I, 2])), True),
+        # Complex Positive Definite
+        (Matrix(([1, I], [-I, 2])), False),
+        # Complex Negative Definite
+        (Matrix(([-1, -I], [I, -2])), False),
+        # Complex Singular
+        (Matrix(([0, I, I], [I, I, 2*I], [I, 2*I, 3*I])), False),
+    ]
+    errors = []
+    for m, expected in test_data:
+        actual = m.is_indefinite
+        if actual != expected:
+            errors.append('Expected m.is_indefinite == {%r}. Found {%r}.\n\tm={%r}'.format(expected, actual, m))
+    assert not errors, '\n'.join(errors) 
