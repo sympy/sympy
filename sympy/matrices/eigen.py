@@ -719,10 +719,15 @@ def _is_indefinite(M):
     fails due to a symbol in the matrix, makes a symbolic
     determination using _is_positive_definite and _is_negative_definite
     """
-    return not (
-        sympy.det(M).is_zero \
-        or _is_positive_definite(M) \
-        or _is_negative_definite(M))
+    M = (M + M.H) / 2
+    return (
+        M.is_square \
+        and not (
+            sympy.det(M).is_zero \
+            or M.is_positive_definite \
+            or M.is_negative_definite \
+        )
+    )
 
 
 def _is_positive_definite_GE(M):
