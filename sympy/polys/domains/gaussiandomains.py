@@ -218,7 +218,7 @@ class GaussianRational(GaussianElement):
 
 class GaussianDomain():
     """Base class for Gaussian domains."""
-    base = None  # base domain, ZZ or QQ
+    dom = None  # base domain, ZZ or QQ
 
     is_Numerical = True
     is_Exact = True
@@ -228,17 +228,17 @@ class GaussianDomain():
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
-        conv = self.base.to_sympy
+        conv = self.dom.to_sympy
         return conv(a.x) + I*conv(a.y)
 
     def from_sympy(self, a):
         """Convert a SymPy object to ``self.dtype``."""
         r, b = a.as_coeff_Add()
-        x = self.base.from_sympy(r)  # may raise CoercionFailed
+        x = self.dom.from_sympy(r)  # may raise CoercionFailed
         if not b:
             return self.new(x, 0)
         r, b = b.as_coeff_Mul()
-        y = self.base.from_sympy(r)
+        y = self.dom.from_sympy(r)
         if b is I:
             return self.new(x, y)
         else:
@@ -290,7 +290,7 @@ class GaussianDomain():
 
 class GaussianIntegerRing(GaussianDomain, Ring):
     """Ring of Gaussian integers."""
-    base = ZZ
+    dom = ZZ
     dtype = GaussianInteger
     zero = dtype(0, 0)
     one = dtype(1, 0)
@@ -346,7 +346,7 @@ ZZ_I = GaussianInteger._parent = GaussianIntegerRing()
 
 class GaussianRationalField(GaussianDomain, Field):
     """Field of Gaussian rational numbers."""
-    base = QQ
+    dom = QQ
     dtype = GaussianRational
     zero = dtype(0, 0)
     one = dtype(1, 0)
@@ -369,7 +369,7 @@ class GaussianRationalField(GaussianDomain, Field):
 
     def as_AlgebraicField(self):
         """Get equivalent domain as an ``AlgebraicField``. """
-        return AlgebraicField(self.base, I)
+        return AlgebraicField(self.dom, I)
 
     def numer(self, a):
         """Get the numerator of ``a``."""
@@ -378,8 +378,8 @@ class GaussianRationalField(GaussianDomain, Field):
 
     def denom(self, a):
         """Get the denominator of ``a``."""
-        ZZ = self.base.get_ring()
-        QQ = self.base
+        ZZ = self.dom.get_ring()
+        QQ = self.dom
         ZZ_I = self.get_ring()
         denom_ZZ = ZZ.lcm(QQ.denom(a.x), QQ.denom(a.y))
         return ZZ_I(denom_ZZ, ZZ.zero)

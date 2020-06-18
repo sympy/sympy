@@ -6,7 +6,7 @@ __all__ = ["Options"]
 
 from typing import Dict, List, Optional, Type
 
-from sympy.core import S, Basic, sympify
+from sympy.core import Basic, sympify
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 from sympy.utilities import numbered_symbols, topological_sort, public
 from sympy.utilities.iterables import has_dups
@@ -535,7 +535,7 @@ class Gaussian(BooleanOption, metaclass=OptionType):
     @classmethod
     def postprocess(cls, options):
         if 'gaussian' in options and options['gaussian'] is True:
-            options['extension'] = set([S.ImaginaryUnit])
+            options['domain'] = sympy.polys.domains.QQ_I
             Extension.postprocess(options)
 
 
