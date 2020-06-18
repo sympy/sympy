@@ -30,6 +30,8 @@ from .expressions import (
     DotProduct, kronecker_product, KroneckerProduct,
     PermutationMatrix, MatrixPermute)
 
+from .utilities import dotprodsimp
+
 __all__ = [
     'ShapeError', 'NonSquareMatrixError',
 
