@@ -1,6 +1,6 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import S, sqrt, sin, oo, Poly, Float, Rational, pi
+from sympy import I, S, sqrt, sin, oo, Poly, Float, Rational, pi
 from sympy.abc import x, y, z
 
 from sympy.core.compatibility import HAS_GMPY
@@ -62,6 +62,36 @@ def test_Domain_unify():
     assert unify(QQ, ZZ[x]) == QQ[x]
     assert unify(QQ, ZZ.frac_field(x)) == QQ.frac_field(x)
     assert unify(QQ, EX) == EX
+
+    assert unify(ZZ_I, F3) == ZZ_I
+    assert unify(ZZ_I, ZZ) == ZZ_I
+    assert unify(ZZ_I, ZZ_I) == ZZ_I
+    assert unify(ZZ_I, QQ) == QQ_I
+    assert unify(ZZ_I, ALG) == QQ.algebraic_field(I, sqrt(2), sqrt(3))
+    assert unify(ZZ_I, RR) == CC
+    assert unify(ZZ_I, CC) == CC
+    assert unify(ZZ_I, ZZ[x]) == ZZ_I[x]
+    assert unify(ZZ_I, ZZ_I[x]) == ZZ_I[x]
+    assert unify(ZZ_I, ZZ.frac_field(x)) == ZZ_I.frac_field(x)
+    assert unify(ZZ_I, ZZ_I.frac_field(x)) == ZZ_I.frac_field(x)
+    assert unify(ZZ_I, EX) == EX
+
+    assert unify(QQ_I, F3) == QQ_I
+    assert unify(QQ_I, ZZ) == QQ_I
+    assert unify(QQ_I, ZZ_I) == QQ_I
+    assert unify(QQ_I, QQ) == QQ_I
+    assert unify(QQ_I, ALG) == QQ.algebraic_field(I, sqrt(2), sqrt(3))
+    assert unify(QQ_I, RR) == CC
+    assert unify(QQ_I, CC) == CC
+    assert unify(QQ_I, ZZ[x]) == QQ_I[x]
+    assert unify(QQ_I, ZZ_I[x]) == QQ_I[x]
+    assert unify(QQ_I, QQ[x]) == QQ_I[x]
+    assert unify(QQ_I, QQ_I[x]) == QQ_I[x]
+    assert unify(QQ_I, ZZ.frac_field(x)) == QQ_I.frac_field(x)
+    assert unify(QQ_I, ZZ_I.frac_field(x)) == QQ_I.frac_field(x)
+    assert unify(QQ_I, QQ.frac_field(x)) == QQ_I.frac_field(x)
+    assert unify(QQ_I, QQ_I.frac_field(x)) == QQ_I.frac_field(x)
+    assert unify(QQ_I, EX) == EX
 
     assert unify(RR, F3) == RR
     assert unify(RR, ZZ) == RR

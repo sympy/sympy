@@ -456,6 +456,9 @@ def test_Poly__unify():
     assert Poly(x + 1, y, x, domain='QQ')._unify(Poly(x + 2, x, y))[2:] == (DMP([[1, 1]], QQ), DMP([[1, 2]], QQ))
     assert Poly(x + 1, y, x)._unify(Poly(x + 2, x, y, domain='QQ'))[2:] == (DMP([[1, 1]], QQ), DMP([[1, 2]], QQ))
 
+    assert Poly(x**2 + I, x, domain=ZZ_I).unify(Poly(x**2 + sqrt(2), x, extension=True)) == \
+            (Poly(x**2 + I, x, domain='QQ<sqrt(2) + I>'), Poly(x**2 + sqrt(2), x, domain='QQ<sqrt(2) + I>'))
+
     F, A, B = field("a,b", ZZ)
 
     assert Poly(a*x, x, domain='ZZ[a]')._unify(Poly(a*b*x, x, domain='ZZ(a,b)'))[2:] == \
