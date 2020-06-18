@@ -4,6 +4,7 @@ from collections import Counter
 from mpmath import mp, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
+import sympy
 from sympy.core.compatibility import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.logic import fuzzy_and, fuzzy_or
@@ -711,20 +712,28 @@ def _is_negative_semidefinite(M):
 
 
 def _is_indefinite(M):
-    if M.is_hermitian:
-        eigen = M.eigenvals()
-        args1        = [x.is_positive for x in eigen.keys()]
-        any_positive = fuzzy_or(args1)
-        args2        = [x.is_negative for x in eigen.keys()]
-        any_negative = fuzzy_or(args2)
+    TOLERANCE = sympy.Float(10**-6)
+    def _is_numerically_zero(x):
+        return -TOLERANCE < x and x < TOLERANCE
+    M = M.copy().evalf()
+    M = (M + M.H) / 2
+    positive_evals = []
+    negative_evals = []
+    for eigenvalue in M.eigenvals():
+        if _is_numerically_zero(eigenvalue):
+            return False
+        elif eigenvalue > TOLERANCE:
+            positive_evals.append(eigenvalue)
+        else:
+            negative_evals.append(eigenvalue)
+    return bool(positive_evals) and bool(negative_evals)
+            
 
-        return fuzzy_and([any_positive, any_negative])
+        
+    
+    
 
-    elif M.is_square:
-        return (M + M.H).is_indefinite
-
-    return False
-
+    
 
 def _is_positive_definite_GE(M):
     """A division-free gaussian elimination method for testing
