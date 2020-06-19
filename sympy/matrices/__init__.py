@@ -62,4 +62,6 @@ __all__ = [
     'det', 'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
     'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute',
+
+    'dotprodsimp',
 ]
