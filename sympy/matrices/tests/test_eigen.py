@@ -582,33 +582,98 @@ def test_definite():
     assert not m.is_positive_definite
     assert not m.is_positive_semidefinite
 
+# issue 19365
+def test_is_indefinite():
+    test_data = [
+        (Matrix([[0, 0, 0] for _ in range(3)]), False, "Zero matrix"),
+        (
+            Matrix(([4, 2, sqrt(3)], [2, 2, 0], [sqrt(3), 0, 1])),
+            True,
+            "Nonsingular Indefinite",
+        ),
+        (
+            Matrix(([4, 2, 1], [2, 2, 0], [1, 0, 1])),
+            False,
+            "Nonsingular Positive definite",
+        ),
+        (
+            Matrix(([-4, -2, -1], [-2, -2, 0], [-1, 0, -1])),
+            False,
+            "Nonsingular Negative definite",
+        ),
+        (Matrix(([0, 1, 1], [1, 1, 2], [1, 2, 3])), True, "Singular Indefinite"),
+        (
+            Matrix([[0, 0, 0], [0, 1, Rational(1, 2)], [0, Rational(1, 2), 1]]),
+            False,
+            "Singular positive semidefinite",
+        ),
+        (
+            Matrix([[0, 0, 0], [0, -1, Rational(-1, 2)], [0, Rational(-1, 2), -1]]),
+            False,
+            "Singular negative semidefinite",
+        ),
+        (Matrix(([1, 2 * I], [-2 * I, 2])), True, "Complex Indefinite"),
+        (Matrix(([1, I], [-I, 2])), False, "Complex positive definite"),
+        (Matrix(([-1, -I], [I, -2])), False, "Complex negative definite"),
+        (
+            Matrix([[0, 0, 0], [0, 5, -10 * I], [0, 10 * I, 5]]),
+            True,
+            "Complex singular indefinite",
+        ),
+        (Matrix([[2, 2], [-1, -1]]), True, "Pr-comment-1"),
+        (Matrix([[1, 0, 0], [0, 0, 0], [0, 0, -1]]), True, "Pr-comment-2"),
+    ]
+    errors = []
+    for m, expected, label in test_data:
+        actual = m.is_indefinite
+        if actual != expected:
+            msg = (
+                'Error for test "{}"\n'
+                "Expected m.is_indefinite == {}. Found {}.\n\tm={}"
+            )
+            errors.append(msg.format(label, expected, actual, m))
+    assert not errors, "\n".join(errors)
+
 
 # issue 19365
 def test_is_indefinite():
     test_data = [
-        # Indefinite
-        (Matrix(([4, 2, sqrt(3)], [2, 2, 0], [sqrt(3), 0, 1])), True),
-        # Positive Definite
-        (Matrix(([4, 2, 1], [2, 2, 0], [1, 0, 1])), False),
-        # Negative Definite
-        (Matrix(([-4, -2, -1], [-2, -2, 0], [-1, 0, -1])), False),
-        # Singular
-        (Matrix(([0, 1, 1], [1, 1, 2], [1, 2, 3])), False),
-        # Complex Indefinite
-        (Matrix(([1, 2 * I], [-2 * I, 2])), True),
-        # Complex Positive Definite
-        (Matrix(([1, I], [-I, 2])), False),
-        # Complex Negative Definite
-        (Matrix(([-1, -I], [I, -2])), False),
-        # Complex Singular
-        (Matrix(([0, I, I], [I, I, 2 * I], [I, 2 * I, 3 * I])), False),
-        # From comment in PR
-        (Matrix([[2, 2], [-1, -1]]), True),
+        (Matrix([[0, 0, 0] for _ in range(3)]),
+            False, "Zero matrix"),
+        (Matrix(([4, 2, sqrt(3)], [2, 2, 0], [sqrt(3), 0, 1])),
+            True, "Nonsingular Indefinite"),
+        (Matrix(([4, 2, 1], [2, 2, 0], [1, 0, 1])),
+            False, "Nonsingular Positive definite"),
+        (Matrix(([-4, -2, -1], [-2, -2, 0], [-1, 0, -1])),
+            False, "Nonsingular Negative definite"),
+        (Matrix(([0, 1, 1], [1, 1, 2], [1, 2, 3])),
+            True, "Singular Indefinite"),
+        (Matrix([[0, 0, 0], [0, 1, Rational(1, 2)], [0, Rational(1, 2), 1]]),
+            False, "Singular positive semidefinite"),
+        (Matrix([[0, 0, 0],
+                 [0, -1, Rational(-1, 2)],
+                 [0, Rational(-1, 2), -1]]),
+            False, "Singular negative semidefinite"),
+        (Matrix(([1, 2 * I], [-2 * I, 2])),
+            True, "Complex Indefinite"),
+        (Matrix(([1, I], [-I, 2])),
+            False, "Complex positive definite"),
+        (Matrix(([-1, -I], [I, -2])),
+            False, "Complex negative definite"),
+        (Matrix([[0, 0, 0], [0, 5, -10 * I], [0, 10 * I, 5]]),
+            True, "Complex singular indefinite"),
+        (Matrix([[2, 2], [-1, -1]]),
+            True, "Pr-comment-1"),
+        (Matrix([[1, 0, 0], [0, 0, 0], [0, 0, -1]]),
+            True, "Pr-comment-2")
     ]
     errors = []
-    for m, expected in test_data:
+    for m, expected, label in test_data:
         actual = m.is_indefinite
         if actual != expected:
-            msg = 'Expected m.is_indefinite == {}. Found {}.\n\tm={}'
-            errors.append(msg.format(expected, actual, m))
+            msg = (
+                'Error for test "{}"\n'
+                'Expected m.is_indefinite == {}. Found {}.\n\tm={}'
+            )
+            errors.append(msg.format(label, expected, actual, m))
     assert not errors, '\n'.join(errors)
