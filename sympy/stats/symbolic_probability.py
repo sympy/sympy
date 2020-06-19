@@ -5,7 +5,7 @@ from sympy.core.compatibility import default_sort_key
 from sympy.core.parameters import global_parameters
 from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
-from sympy.stats.rv import (RandomSymbol, probability, pspace, random_symbols,
+from sympy.stats.rv import (RandomSymbol, probability, pspace,
                             given, sampling_E, RandomIndexedSymbol, is_random,
                             PSpace)
 
@@ -139,6 +139,9 @@ class Expectation(Expr):
 
     def __new__(cls, expr, condition=None, **kwargs):
         expr = _sympify(expr)
+        if expr.is_Matrix:
+            from sympy.stats.symbolic_multivariate_probability import ExpectationMatrix
+            return ExpectationMatrix(expr, condition)
         if condition is None:
             if not is_random(expr):
                 return expr
@@ -183,7 +186,7 @@ class Expectation(Expr):
         if deep:
             expr = expr.doit(**hints)
 
-        if not random_symbols(expr) or isinstance(expr, Expectation):  # expr isn't random?
+        if not is_random(expr) or isinstance(expr, Expectation):  # expr isn't random?
             return expr
         if numsamples:  # Computing by monte carlo sampling?
             evalf = hints.get('evalf', True)
@@ -302,6 +305,10 @@ class Variance(Expr):
     """
     def __new__(cls, arg, condition=None, **kwargs):
         arg = _sympify(arg)
+
+        if arg.is_Matrix:
+            from sympy.stats.symbolic_multivariate_probability import VarianceMatrix
+            return VarianceMatrix(arg, condition)
         if condition is None:
             obj = Expr.__new__(cls, arg)
         else:
@@ -408,6 +415,10 @@ class Covariance(Expr):
     def __new__(cls, arg1, arg2, condition=None, **kwargs):
         arg1 = _sympify(arg1)
         arg2 = _sympify(arg2)
+
+        if arg1.is_Matrix or arg2.is_Matrix:
+            from sympy.stats.symbolic_multivariate_probability import CrossCovarianceMatrix
+            return CrossCovarianceMatrix(arg1, arg2, condition)
 
         if kwargs.pop('evaluate', global_parameters.evaluate):
             arg1, arg2 = sorted([arg1, arg2], key=default_sort_key)
