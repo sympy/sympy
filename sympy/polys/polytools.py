@@ -5219,7 +5219,8 @@ def gcd_list(seq, *gens, **args):
                 lc = 1
                 for frc in lst:
                     lc = lcm(lc, frc.as_numer_denom()[0])
-                return a/lc
+                # abs ensures that the gcd is always non-negative
+                return abs(a/lc)
 
     except PolificationFailed as exc:
         result = try_non_polynomial_gcd(exc.exprs)
@@ -5282,7 +5283,8 @@ def gcd(f, g=None, *gens, **args):
         if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
             frc = (a/b).ratsimp()
             if frc.is_rational:
-                return a/frc.as_numer_denom()[0]
+                # abs ensures that the returned gcd is always non-negative
+                return abs(a/frc.as_numer_denom()[0])
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
