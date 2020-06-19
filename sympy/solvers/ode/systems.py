@@ -596,7 +596,30 @@ def _linear_neq_order1_type3(match_):
 
 
 def _linear_neq_order1_type4(match_):
-    r""""""
+    r"""
+    System of n first-order nonconstant-coefficient linear non-homogeneous differential equations
+
+    .. math::
+        X' = A(t) X + f(t)
+
+    where $X$ is the vector of $n$ dependent variables, $t$ is the dependent variable, $X'$
+    is the first order differential of $X$ with respect to $t$ and $A(t)$ is a $n \times n$
+    coefficient matrix.
+
+    Let us define $B$ as antiderivative of coefficient matrix $A$:
+
+    .. math::
+        B(t) = \int A(t) dt
+
+    If the system of ODEs defined above is such that its antiderivative $B(t)$ commutes with
+    $A(t)$ itself, then, the solution of the above system is given as:
+
+    .. math::
+        X = e^{B(t)} ( \int e^{-B(t)} f(t) \,dt + C)
+
+    where $C$ is the vector of constants.
+
+    """
     # Some parts of code is repeated, this needs to be taken care of
     # The constant vector obtained here can be done so in the match
     # function itself.
@@ -626,9 +649,6 @@ def _linear_neq_order1_type4(match_):
         B = match_['commutative_antiderivative']
 
     sol_vector = B.exp() * (((-B).exp() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
-
-    # The expand_mul is added to handle the solutions so that
-    # the exponential terms are collected properly.
     sol_vector = [collect(expand_mul(s), ordered(sol_vector.atoms(exp)), exact=True) for s in sol_vector]
 
     sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
