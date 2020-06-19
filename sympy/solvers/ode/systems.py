@@ -808,10 +808,14 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
                 match['type_of_equation'] = "type2"
         else:
             B, is_commuting = _is_commutative_anti_derivative(-A, t)
-            if not is_commuting or not is_homogeneous:
+            if not is_commuting:
                 return None
             match['commutative_antiderivative'] = B
-            match['type_of_equation'] = "type3"
+            if is_homogeneous:
+                match['type_of_equation'] = "type3"
+            else:
+                match['rhs'] = b
+                match['type_of_equation'] = "type4"
 
         return match
 
