@@ -615,6 +615,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
     from sympy import Sum, Product, Integral
+    from sympy.functions.elementary.complexes import sign, Abs
+
+    if expr.has(sign):
+            expr = expr.rewrite(Abs)
 
     # Deal with Piecewise separately to avoid recursive growth of expressions
     if expr.has(Piecewise):

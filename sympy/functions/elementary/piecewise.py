@@ -1238,11 +1238,8 @@ def piecewise_simplify(expr, **kwargs):
             if eqs and not other:
                 eqs = list(ordered(eqs))
                 for e in eqs:
-                    # these blessed lhs objects behave like Symbols
-                    # and the rhs are simple replacements for the "symbols"
-                    if _blessed(e):
-                        _prevexpr = _prevexpr.subs(*e.args)
-                        _expr = _expr.subs(*e.args)
+                    _prevexpr = _prevexpr.subs(*e.args)
+                    _expr = _expr.subs(*e.args)
             # Did it evaluate to the same?
             if _prevexpr == _expr:
                 # Set the expression for the Not equal section to the same
