@@ -7287,8 +7287,14 @@ def sysode_linear_neq_order1(match):
         _linear_neq_order1_type2, _linear_neq_order1_type3,
         _linear_neq_order1_type4)
 
-    solver = locals()['_linear_neq_order1_{}'.format(match['type_of_equation'])]
-    sol = solver(match)
+    if match['type_of_equation'] == 'type1':
+        sol = _linear_neq_order1_type1(match)
+    elif match['type_of_equation'] == 'type2':
+        sol = _linear_neq_order1_type2(match)
+    elif match['type_of_equation'] == 'type3':
+        sol = _linear_neq_order1_type3(match)
+    elif match['type_of_equation'] == 'type4':
+        sol = _linear_neq_order1_type4(match)
 
     return sol
 
