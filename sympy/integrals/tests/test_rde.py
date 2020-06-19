@@ -81,7 +81,9 @@ def test_special_denom():
     DE.decrement_level()
     assert special_denom(Poly(1, t0), Poly(I*k, t0), Poly(1, t0), Poly(t0, t0),
     Poly(1, t0), DE) == \
-        (Poly(1, t0), Poly(I*k, t0), Poly(t0, t0), Poly(1, t0))
+        (Poly(1, t0, domain='ZZ'), Poly(I*k, t0, domain='ZZ_I[k,x]'),
+                Poly(t0, t0, domain='ZZ'), Poly(1, t0, domain='ZZ'))
+
 
     assert special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), Poly(t**2 - 1, t),
     Poly(t, t), DE, case='tan') == \
