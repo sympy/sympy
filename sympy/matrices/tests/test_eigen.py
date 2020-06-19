@@ -1,7 +1,10 @@
+import pytest
+
 from sympy import (
     Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
     cos, symbols)
 from sympy.matrices import eye, Matrix
+from sympy.core.numbers import nan
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL
 from sympy.matrices.matrices import NonSquareMatrixError, MatrixError
@@ -587,42 +590,60 @@ def test_definite():
 # issue 19365
 def test_is_indefinite():
     test_data = [
-        (Matrix([[0, 0, 0] for _ in range(3)]),
-            False, "Zero matrix"),
+        (Matrix([[1, 2, 3], [4, 5, 6]]), {'indefinite': False, 'positive_semidefinite': False}, "Nonsquare matrix"),
+        (Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]]),
+            {'indefinite': False,
+             'positive_semidefinite': True}, "Zero matrix"),
         (Matrix(([4, 2, sqrt(3)], [2, 2, 0], [sqrt(3), 0, 1])),
-            True, "Nonsingular Indefinite"),
+            {'indefinite': True,
+             'positive_semidefinite': False}, "Nonsingular Indefinite"),
         (Matrix(([4, 2, 1], [2, 2, 0], [1, 0, 1])),
-            False, "Nonsingular Positive definite"),
+            {'indefinite': False, 'positive_semidefinite': True}, "Nonsingular Positive definite"),
         (Matrix(([-4, -2, -1], [-2, -2, 0], [-1, 0, -1])),
-            False, "Nonsingular Negative definite"),
+            {'indefinite': False, 'positive_semidefinite': False}, "Nonsingular Negative definite"),
         (Matrix(([0, 1, 1], [1, 1, 2], [1, 2, 3])),
-            True, "Singular Indefinite"),
+            {'indefinite': True, 'positive_semidefinite': False}, "Singular Indefinite"),
         (Matrix([[0, 0, 0], [0, 1, Rational(1, 2)], [0, Rational(1, 2), 1]]),
-            False, "Singular positive semidefinite"),
+            {'indefinite': False, 'positive_semidefinite': True}, "Singular positive semidefinite"),
         (Matrix([[0, 0, 0],
                  [0, -1, Rational(-1, 2)],
                  [0, Rational(-1, 2), -1]]),
-            False, "Singular negative semidefinite"),
+            {'indefinite': False, 'positive_semidefinite': False}, "Singular negative semidefinite"),
         (Matrix(([1, 2 * I], [-2 * I, 2])),
-            True, "Complex Indefinite"),
+            {'indefinite': True, 'positive_semidefinite': False}, "Complex Indefinite"),
         (Matrix(([1, I], [-I, 2])),
-            False, "Complex positive definite"),
+            {'indefinite': False, 'positive_semidefinite': True}, "Complex positive definite"),
         (Matrix(([-1, -I], [I, -2])),
-            False, "Complex negative definite"),
+            {'indefinite': False, 'positive_semidefinite': False}, "Complex negative definite"),
         (Matrix([[0, 0, 0], [0, 5, -10 * I], [0, 10 * I, 5]]),
-            True, "Complex singular indefinite"),
+            {'indefinite': True, 'positive_semidefinite': False}, "Complex singular indefinite"),
         (Matrix([[2, 2], [-1, -1]]),
-            True, "Pr-comment-1"),
+            {'indefinite': True, 'positive_semidefinite': False}, "Pr-comment-1"),
         (Matrix([[1, 0, 0], [0, 0, 0], [0, 0, -1]]),
-            True, "Pr-comment-2")
+            {'indefinite': True, 'positive_semidefinite': False}, "Pr-comment-2")
     ]
     errors = []
-    for m, expected, label in test_data:
+    for m, expectations, label in test_data:
         actual = m.is_indefinite
-        if actual != expected:
+        if actual != expectations['indefinite']:
             msg = (
                 'Error for test "{}"\n'
                 'Expected m.is_indefinite == {}. Found {}.\n\tm={}'
             )
-            errors.append(msg.format(label, expected, actual, m))
+            errors.append(msg.format(label, expectations['indefinite'], actual, m))
+        actual = m.is_positive_semidefinite
+        if actual != expectations['positive_semidefinite']:
+            msg = (
+                'Error for test "{}"\n'
+                'Expected m.is_positive_semidefinite == {}. Found {}.\n\tm={}'
+            )
+            errors.append(msg.format(label, expectations['positive_semidefinite'], actual, m))
     assert not errors, '\n'.join(errors)
+
+
+def test_definite_errors():
+    m = Matrix([[nan, nan], [0, nan]])
+    with pytest.raises(ValueError):
+        m.is_positive_semidefinite
+    with pytest.raises(ValueError):
+        m.is_indefinite

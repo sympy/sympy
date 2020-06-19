@@ -6,8 +6,9 @@ from mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.core.compatibility import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, nan
 from sympy.core.sympify import _sympify
+from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots
 from sympy.simplify import nsimplify, simplify as _simplify
@@ -686,33 +687,19 @@ def _is_positive_definite(M):
 
 
 def _is_positive_semidefinite(M):
-    if not M.is_hermitian:
-        if not M.is_square:
-            return False
-        M = M + M.H
-
-    nonnegative_diagonals = M._has_nonnegative_diagonals()
-    if nonnegative_diagonals is False:
+    if not M.is_square:
         return False
+    if any(m == nan for m in M):
+        raise ValueError('Matrix contains nan')
+    M = (M + M.H) / 2
 
-    if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
+    if any(M[i, i].is_negative for i in range(M.rows)):
+        return False
+    elif M.is_weakly_diagonally_dominant:
+        # If diagonal entries of M are nonnegative and
+        # M wdd, then M is positive semidefinite
         return True
-
-    # uses Cholesky factorization with complete pivoting
-    # see http://eprints.ma.man.ac.uk/1199/1/covered/MIMS_ep2008_116.pdf
-    M = M.copy()
-    for k in range(M.rows):
-        pivot = max(range(k, M.rows), key=lambda i: M[i, i])
-        if pivot > k:
-            M.col_swap(k, pivot)
-            M.row_swap(k, pivot)
-        if M[k, k].is_negative:
-            return False
-        M[k, k] = sqrt(M[k, k])
-        M[k, (k+1):] /= M[k, k]
-        for j in range(k+1, M.rows):
-            M[(k+1):(j+1), j] -= M[k, (k+1):(j+1)].T * M[k, j]
-    return M[-1, -1].is_nonnegative
+    return all(re(e.evalf()) >= 0 for e in M.eigenvals())
 
 
 def _is_negative_definite(M):
@@ -727,9 +714,11 @@ def _is_indefinite(M):
     """Returns True if M is not positive semi-definite
     and not negative semi-definite and false otherwise
     """
-    M = (M + M.H) / 2
     if not M.is_square:
         return False
+    if any(m == nan for m in M):
+        raise ValueError('Matrix contains nan')
+    M = (M + M.H) / 2
     return (
         (
             # faster check
