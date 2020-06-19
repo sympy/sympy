@@ -8,7 +8,7 @@ from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 
 
 _dotprodsimp_state       = local()
-_dotprodsimp_state.state = None
+_dotprodsimp_state.state = False
 
 @contextmanager
 def dotprodsimp(x):
