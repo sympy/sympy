@@ -17,8 +17,6 @@ False
 
 """
 
-from __future__ import division, print_function
-
 import warnings
 
 from sympy.core import S, sympify, Expr
@@ -162,9 +160,9 @@ class Point(GeometryEntity):
         # Turn any Floats into rationals and simplify
         # any expressions before we instantiate
         if evaluate:
-            coords = coords.xreplace(dict(
-                [(f, simplify(nsimplify(f, rational=True)))
-                 for f in coords.atoms(Float)]))
+            coords = coords.xreplace({
+                f: simplify(nsimplify(f, rational=True))
+                 for f in coords.atoms(Float)})
 
         # return 2D or 3D instances
         if len(coords) == 2:
@@ -1155,7 +1153,7 @@ class Point3D(Point):
         Examples
         ========
 
-        >>> from sympy import Point3D, Matrix
+        >>> from sympy import Point3D
         >>> from sympy.abc import x
         >>> p1, p2 = Point3D(0, 0, 0), Point3D(1, 1, 1)
         >>> p3, p4, p5 = Point3D(2, 2, 2), Point3D(x, x, x), Point3D(1, 2, 6)

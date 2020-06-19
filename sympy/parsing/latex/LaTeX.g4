@@ -20,6 +20,15 @@ options {
 
 WS: [ \t\r\n]+ -> skip;
 
+THINSPACE: ('\\,' | '\\thinspace') -> skip;
+MEDSPACE: ('\\:' | '\\medspace') -> skip;
+THICKSPACE: ('\\;' | '\\thickspace') -> skip;
+QUAD: '\\quad' -> skip;
+QQUAD: '\\qquad' -> skip;
+NEGTHINSPACE: ('\\!' | '\\negthinspace') -> skip;
+NEGMEDSPACE: '\\negmedspace' -> skip;
+NEGTHICKSPACE: '\\negthickspace' -> skip;
+
 ADD: '+';
 SUB: '-';
 MUL: '*';
@@ -29,8 +38,12 @@ L_PAREN: '(';
 R_PAREN: ')';
 L_BRACE: '{';
 R_BRACE: '}';
+L_BRACE_LITERAL: '\\{';
+R_BRACE_LITERAL: '\\}';
 L_BRACKET: '[';
 R_BRACKET: ']';
+CMD_LEFT: '\\left' -> skip;
+CMD_RIGHT: '\\right' -> skip;
 
 BAR: '|';
 
@@ -40,6 +53,7 @@ FUNC_INT:  '\\int';
 FUNC_SUM:  '\\sum';
 FUNC_PROD: '\\prod';
 
+FUNC_EXP:  '\\exp';
 FUNC_LOG:  '\\log';
 FUNC_LN:   '\\ln';
 FUNC_SIN:  '\\sin';
@@ -69,6 +83,9 @@ CMD_TIMES: '\\times';
 CMD_CDOT:  '\\cdot';
 CMD_DIV:   '\\div';
 CMD_FRAC:  '\\frac';
+CMD_BINOM: '\\binom';
+CMD_DBINOM: '\\dbinom';
+CMD_TBINOM: '\\tbinom';
 
 CMD_MATHIT: '\\mathit';
 
@@ -157,18 +174,21 @@ comp:
     | abs_group
     | func
     | atom
-    | frac;
+    | frac
+    | binom;
 
 comp_nofunc:
     group
     | abs_group
     | atom
-    | frac;
+    | frac
+    | binom;
 
 group:
     L_PAREN expr R_PAREN
     | L_BRACKET expr R_BRACKET
-    | L_BRACE expr R_BRACE;
+    | L_BRACE expr R_BRACE
+    | L_BRACE_LITERAL expr R_BRACE_LITERAL;
 
 abs_group: BAR expr BAR;
 
@@ -184,8 +204,15 @@ frac:
     lower=expr
     R_BRACE;
 
+binom:
+    (CMD_BINOM | CMD_DBINOM | CMD_TBINOM) L_BRACE
+    n=expr
+    R_BRACE L_BRACE
+    k=expr
+    R_BRACE;
+
 func_normal:
-    FUNC_LOG | FUNC_LN
+    FUNC_EXP | FUNC_LOG | FUNC_LN
     | FUNC_SIN | FUNC_COS | FUNC_TAN
     | FUNC_CSC | FUNC_SEC | FUNC_COT
     | FUNC_ARCSIN | FUNC_ARCCOS | FUNC_ARCTAN

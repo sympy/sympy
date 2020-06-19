@@ -1,8 +1,5 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
 from functools import cmp_to_key
-
 from .basic import Basic
 from .compatibility import reduce, is_sequence
 from .parameters import global_parameters
@@ -76,6 +73,8 @@ class Add(Expr, AssocOp):
 
     is_Add = True
 
+    _args_type = Expr
+
     @classmethod
     def flatten(cls, seq):
         """
@@ -123,6 +122,8 @@ class Add(Expr, AssocOp):
 
             # O(x)
             if o.is_Order:
+                if o.expr.is_zero:
+                    continue
                 for o1 in order_factors:
                     if o1.contains(o):
                         o = None
@@ -414,7 +415,7 @@ class Add(Expr, AssocOp):
         return
 
     def matches(self, expr, repl_dict={}, old=False):
-        return AssocOp._matches_commutative(self, expr, repl_dict, old)
+        return self._matches_commutative(expr, repl_dict, old)
 
     @staticmethod
     def _combine_inverse(lhs, rhs):
@@ -514,6 +515,10 @@ class Add(Expr, AssocOp):
 
     def _eval_is_rational_function(self, syms):
         return all(term._eval_is_rational_function(syms) for term in self.args)
+
+    def _eval_is_meromorphic(self, x, a):
+        return _fuzzy_group((arg.is_meromorphic(x, a) for arg in self.args),
+                            quick_exit=True)
 
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
@@ -635,7 +640,7 @@ class Add(Expr, AssocOp):
     def _eval_is_extended_positive(self):
         from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
-            return super(Add, self)._eval_is_extended_positive()
+            return super()._eval_is_extended_positive()
         c, a = self.as_coeff_Add()
         if not c.is_zero:
             v = _monotonic_sign(a)
@@ -719,7 +724,7 @@ class Add(Expr, AssocOp):
     def _eval_is_extended_negative(self):
         from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
-            return super(Add, self)._eval_is_extended_negative()
+            return super()._eval_is_extended_negative()
         c, a = self.as_coeff_Add()
         if not c.is_zero:
             v = _monotonic_sign(a)
@@ -898,7 +903,7 @@ class Add(Expr, AssocOp):
                 if not min or order not in min:
                     min = order
                     new_expr = term
-                elif order == min:
+                elif min in order:
                     new_expr += term
 
         except TypeError:
@@ -1113,7 +1118,7 @@ class Add(Expr, AssocOp):
 
     def __neg__(self):
         if not global_parameters.distribute:
-            return super(Add, self).__neg__()
+            return super().__neg__()
         return Add(*[-i for i in self.args])
 
 

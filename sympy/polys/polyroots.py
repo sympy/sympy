@@ -18,6 +18,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
 from sympy.functions.elementary.miscellaneous import root
 from sympy.ntheory import divisors, isprime, nextprime
+from sympy.polys.domains import EX
 from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,
     DomainError)
 from sympy.polys.polyquinticconst import PolyQuintic
@@ -265,7 +266,7 @@ def roots_quartic(f):
     Examples
     ========
 
-        >>> from sympy import Poly, symbols, I
+        >>> from sympy import Poly
         >>> from sympy.polys.polyroots import roots_quartic
 
         >>> r = roots_quartic(Poly('x**4-6*x**3+17*x**2-26*x+20'))
@@ -470,7 +471,7 @@ def roots_cyclotomic(f, factor=False):
     for n in range(L, U + 1):
         g = cyclotomic_poly(n, f.gen, polys=True)
 
-        if f == g:
+        if f.expr == g.expr:
             break
     else:  # pragma: no cover
         raise RuntimeError("failed to find index of a cyclotomic polynomial")
@@ -625,6 +626,8 @@ def roots_quintic(f):
                 break
         if r2:
             break
+    else:
+        return []  # fall back to normal solve
 
     # Now, we have r's so we can get roots
     x1 = (r1 + r2 + r3 + r4)/5
@@ -870,7 +873,11 @@ def roots(f, *gens, **flags):
         f = Poly(poly, x, field=True)
     else:
         try:
-            f = Poly(f, *gens, **flags)
+            F = Poly(f, *gens, **flags)
+            if not isinstance(f, Poly) and not F.gen.is_Symbol:
+                raise PolynomialError("generator must be a Symbol")
+            else:
+                f = F
             if f.length == 2 and f.degree() != 1:
                 # check for foo**n factors in the constant
                 n = f.degree()
@@ -964,6 +971,10 @@ def roots(f, *gens, **flags):
 
         return result
 
+    # Convert the generators to symbols
+    dumgens = symbols('x:%d' % len(f.gens), cls=Dummy)
+    f = f.per(f.rep, dumgens)
+
     (k,), f = f.terms_gcd()
 
     if not k:
@@ -975,6 +986,10 @@ def roots(f, *gens, **flags):
 
     if auto and f.get_domain().is_Ring:
         f = f.to_field()
+
+    # Use EX instead of ZZ_I or QQ_I
+    if f.get_domain().is_QQ_I:
+        f = f.per(f.rep.convert(EX))
 
     rescale_x = None
     translate_x = None

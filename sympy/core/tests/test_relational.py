@@ -16,7 +16,7 @@ x, y, z, t = symbols('x,y,z,t')
 def rel_check(a, b):
     from sympy.testing.pytest import raises
     assert a.is_number and b.is_number
-    for do in range(len(set([type(a), type(b)]))):
+    for do in range(len({type(a), type(b)})):
         if S.NaN in (a, b):
             v = [(a == b), (a != b)]
             assert len(set(v)) == 1 and v[0] == False
@@ -114,7 +114,7 @@ def test_wrappers():
     assert Ne(y, x + x**2) == res
 
 
-def test_Eq():
+def test_Eq_Ne():
 
     assert Eq(x, x)  # issue 5719
 
@@ -125,10 +125,20 @@ def test_Eq():
     p = Symbol('p', positive=True)
     assert Eq(p, 0) is S.false
 
-    # issue 13348
+    # issue 13348; 19048
+    # SymPy is strict about 0 and 1 not being
+    # interpreted as Booleans
     assert Eq(True, 1) is S.false
+    assert Eq(False, 0) is S.false
+    assert Eq(~x, 0) is S.false
+    assert Eq(~x, 1) is S.false
+    assert Ne(True, 1) is S.true
+    assert Ne(False, 0) is S.true
+    assert Ne(~x, 0) is S.true
+    assert Ne(~x, 1) is S.true
 
     assert Eq((), 1) is S.false
+    assert Ne((), 1) is S.true
 
 
 def test_as_poly():
@@ -352,10 +362,9 @@ def test_new_relational():
 
     # finally, some fuzz testing
     from random import randint
-    from sympy.core.compatibility import unichr
     for i in range(100):
         while 1:
-            strtype, length = (unichr, 65535) if randint(0, 1) else (chr, 255)
+            strtype, length = (chr, 65535) if randint(0, 1) else (chr, 255)
             relation_type = strtype(randint(0, length))
             if randint(0, 1):
                 relation_type += strtype(randint(0, length))
@@ -696,6 +705,11 @@ def test_simplify_relational():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
     assert simplify(x*(y + 1) - x*y - x - 1 < x) == (x > -1)
     assert simplify(x < x*(y + 1) - x*y - x + 1) == (x < 1)
+    q, r = symbols("q r")
+    assert (((-q + r) - (q - r)) <= 0).simplify() == (q >= r)
+    root2 = sqrt(2)
+    equation = ((root2 * (-q + r) - root2 * (q - r)) <= 0).simplify()
+    assert equation == (q >= r)
     r = S.One < x
     # canonical operations are not the same as simplification,
     # so if there is no simplification, canonicalization will
@@ -970,7 +984,7 @@ def test_issue_18188():
     assert result2.as_set() == ConditionSet(x, Eq(sqrt(2)*sqrt(x) + x**2 + sin(x), 0), Reals)
 
 def test_binary_symbols():
-    ans = set([x])
+    ans = {x}
     for f in Eq, Ne:
         for t in S.true, S.false:
             eq = f(x, S.true)
@@ -980,10 +994,9 @@ def test_binary_symbols():
 
 
 def test_rel_args():
-    # can't have Boolean args; this is automatic with Python 3
-    # so this test and the __lt__, etc..., definitions in
-    # relational.py and boolalg.py which are marked with ///
-    # can be removed.
+    # can't have Boolean args; this is automatic for True/False
+    # with Python 3 and we confirm that SymPy does the same
+    # for true/false
     for op in ['<', '<=', '>', '>=']:
         for b in (S.true, x < 1, And(x, y)):
             for v in (0.1, 1, 2**32, t, S.One):

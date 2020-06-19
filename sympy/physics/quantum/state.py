@@ -17,6 +17,9 @@ __all__ = [
     'TimeDepState',
     'TimeDepBra',
     'TimeDepKet',
+    'OrthogonalKet',
+    'OrthogonalBra',
+    'OrthogonalState',
     'Wavefunction'
 ]
 
@@ -351,7 +354,7 @@ class Ket(State, KetBase):
 
     Create a simple Ket and looking at its properties::
 
-        >>> from sympy.physics.quantum import Ket, Bra
+        >>> from sympy.physics.quantum import Ket
         >>> from sympy import symbols, I
         >>> k = Ket('psi')
         >>> k
@@ -415,7 +418,7 @@ class Bra(State, BraBase):
 
     Create a simple Bra and look at its properties::
 
-        >>> from sympy.physics.quantum import Ket, Bra
+        >>> from sympy.physics.quantum import Bra
         >>> from sympy import symbols, I
         >>> b = Bra('psi')
         >>> b
@@ -597,7 +600,6 @@ class TimeDepBra(TimeDepState, BraBase):
     ========
 
         >>> from sympy.physics.quantum import TimeDepBra
-        >>> from sympy import symbols, I
         >>> b = TimeDepBra('psi', 't')
         >>> b
         <psi;t|
@@ -614,6 +616,57 @@ class TimeDepBra(TimeDepState, BraBase):
     @classmethod
     def dual_class(self):
         return TimeDepKet
+
+
+class OrthogonalState(State, StateBase):
+    """General abstract quantum state used as a base class for Ket and Bra."""
+    pass
+
+class OrthogonalKet(OrthogonalState, KetBase):
+    """Orthogonal Ket in quantum mechanics.
+
+    The inner product of two states with different labels will give zero,
+    states with the same label will give one.
+
+        >>> from sympy.physics.quantum import OrthogonalBra, OrthogonalKet
+        >>> from sympy.abc import m, n
+        >>> (OrthogonalBra(n)*OrthogonalKet(n)).doit()
+        1
+        >>> (OrthogonalBra(n)*OrthogonalKet(n+1)).doit()
+        0
+        >>> (OrthogonalBra(n)*OrthogonalKet(m)).doit()
+        <n|m>
+    """
+
+    @classmethod
+    def dual_class(self):
+        return OrthogonalBra
+
+    def _eval_innerproduct(self, bra, **hints):
+
+        if len(self.args) != len(bra.args):
+            raise ValueError('Cannot multiply a ket that has a different number of labels.')
+
+        for i in range(len(self.args)):
+            diff = self.args[i] - bra.args[i]
+            diff = diff.expand()
+
+            if diff.is_zero is False:
+                return 0
+
+            if diff.is_zero is None:
+                return None
+
+        return 1
+
+
+class OrthogonalBra(OrthogonalState, BraBase):
+    """Orthogonal Bra in quantum mechanics.
+    """
+
+    @classmethod
+    def dual_class(self):
+        return OrthogonalKet
 
 
 class Wavefunction(Function):
@@ -914,7 +967,7 @@ class Wavefunction(Function):
         ========
 
             >>> from sympy import symbols, pi
-            >>> from sympy.functions import sqrt, sin
+            >>> from sympy.functions import sin
             >>> from sympy.physics.quantum.state import Wavefunction
             >>> x = symbols('x', real=True)
             >>> L = symbols('L', positive=True)
@@ -940,7 +993,7 @@ class Wavefunction(Function):
         ========
 
             >>> from sympy import symbols, pi
-            >>> from sympy.functions import sqrt, sin
+            >>> from sympy.functions import sin
             >>> from sympy.physics.quantum.state import Wavefunction
             >>> x, L = symbols('x,L', real=True)
             >>> n = symbols('n', integer=True)

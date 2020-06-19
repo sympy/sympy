@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 """
 Algorithms and classes to support enumerative combinatorics.
 
@@ -91,7 +89,7 @@ time that would be spent skipping over zeros.
 
 """
 
-class PartComponent(object):
+class PartComponent:
     """Internal class used in support of the multiset partitions
     enumerators and the associated visitor functions.
 
@@ -159,7 +157,7 @@ def multiset_partitions_taocp(multiplicities):
 
     state
         Internal data structure which encodes a particular partition.
-        This output is then usually processed by a vistor function
+        This output is then usually processed by a visitor function
         which combines the information from this data structure with
         the components themselves to produce an actual partition.
 

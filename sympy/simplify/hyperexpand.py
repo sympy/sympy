@@ -637,7 +637,7 @@ class G_Function(Expr):
 
         >>> from sympy.simplify.hyperexpand import G_Function
         >>> from sympy.abc import y
-        >>> from sympy import S, symbols
+        >>> from sympy import S
 
         >>> a, b = [1, 3, 2, S(3)/2], [1 + y, y, 2, y + 3]
         >>> G_Function(a, b, [2], [y]).compute_buckets()
@@ -1048,7 +1048,7 @@ class UnShiftA(Operator):
         A = Dummy('A')
         n = D = Poly(ai*A - ai, A)
         for b in bq:
-            n *= (D + b - 1)
+            n *= D + (b - 1).as_poly(A)
 
         b0 = -n.nth(0)
         if b0 == 0:
@@ -1090,7 +1090,7 @@ class UnShiftB(Operator):
         D = Poly((bi - 1)*B - bi + 1, B)
         n = Poly(z, B)
         for a in ap:
-            n *= (D + a)
+            n *= (D + a.as_poly(B))
 
         b0 = n.nth(0)
         if b0 == 0:

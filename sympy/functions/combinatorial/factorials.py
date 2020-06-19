@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import List
 
 from sympy.core import S, sympify, Dummy, Mod
@@ -365,6 +363,16 @@ class subfactorial(CombinatorialFunction):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
+    def _eval_rewrite_as_factorial(self, arg, **kwargs):
+        from sympy import summation
+        i = Dummy('i')
+        f = S.NegativeOne**i / factorial(i)
+        return factorial(arg) * summation(f, (i, 0, arg))
+
+    def _eval_rewrite_as_gamma(self, arg, **kwargs):
+        from sympy import exp, gamma, I, lowergamma
+        return ((-1)**(arg + 1)*exp(-I*pi*arg)*lowergamma(arg + 1, -1) + gamma(arg + 1))*exp(-1)
+
     def _eval_rewrite_as_uppergamma(self, arg, **kwargs):
         from sympy import uppergamma
         return uppergamma(arg + 1, -1)/S.Exp1
@@ -398,7 +406,8 @@ class factorial2(CombinatorialFunction):
     ========
 
     >>> from sympy import factorial2, var
-    >>> var('n')
+    >>> n = var('n')
+    >>> n
     n
     >>> factorial2(n + 1)
     factorial2(n + 1)
@@ -578,7 +587,7 @@ class RisingFactorial(CombinatorialFunction):
                                             "polynomials on one generator")
                             else:
                                 return reduce(lambda r, i:
-                                              r*(x.shift(i).expand()),
+                                              r*(x.shift(i)),
                                               range(0, int(k)), 1)
                         else:
                             return reduce(lambda r, i: r*(x + i),
@@ -597,7 +606,7 @@ class RisingFactorial(CombinatorialFunction):
                                             "polynomials on one generator")
                             else:
                                 return 1/reduce(lambda r, i:
-                                                r*(x.shift(-i).expand()),
+                                                r*(x.shift(-i)),
                                                 range(1, abs(int(k)) + 1), 1)
                         else:
                             return 1/reduce(lambda r, i:
@@ -651,7 +660,7 @@ class FallingFactorial(CombinatorialFunction):
     Factorial Factorization and Symbolic Summation", Journal of
     Symbolic Computation, vol. 20, pp. 235-268, 1995.
 
-    >>> from sympy import ff, factorial, rf, gamma, polygamma, binomial, symbols, Poly
+    >>> from sympy import ff, factorial, rf, gamma, binomial, symbols, Poly
     >>> from sympy.abc import x, k
     >>> n, m = symbols('n m', integer=True)
     >>> ff(x, 0)
@@ -717,7 +726,7 @@ class FallingFactorial(CombinatorialFunction):
                                             "polynomials on one generator")
                             else:
                                 return reduce(lambda r, i:
-                                              r*(x.shift(-i).expand()),
+                                              r*(x.shift(-i)),
                                               range(0, int(k)), 1)
                         else:
                             return reduce(lambda r, i: r*(x - i),
@@ -735,7 +744,7 @@ class FallingFactorial(CombinatorialFunction):
                                             "polynomials on one generator")
                             else:
                                 return 1/reduce(lambda r, i:
-                                                r*(x.shift(i).expand()),
+                                                r*(x.shift(i)),
                                                 range(1, abs(int(k)) + 1), 1)
                         else:
                             return 1/reduce(lambda r, i: r*(x + i),
@@ -1012,7 +1021,7 @@ class binomial(CombinatorialFunction):
             return binomial(*self.args)
 
         k = self.args[1]
-        if k.is_Add and n in k.args:
+        if (n-k).is_Integer:
             k = n - k
 
         if k.is_Integer:

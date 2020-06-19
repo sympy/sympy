@@ -1,20 +1,21 @@
 from __future__ import print_function, division
+import random
 
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Set, And, Eq, FiniteSet, ImmutableMatrix,
                    Lambda, Mul, Dummy, IndexedBase, Add,
                    linsolve, eye, Or, Not, Intersection,
                    Union, Expr, Function, exp, cacheit,
-                   Ge, Piecewise, Symbol)
+                   Ge, Piecewise, Symbol, NonSquareMatrixError)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter, _value_check, pspace, given,
-                           dependent)
+                           dependent, is_random, sample_iter)
 from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
-from sympy.stats.frv_types import Bernoulli, BernoulliDistribution
+from sympy.stats.frv_types import Bernoulli, BernoulliDistribution, FiniteRV
 from sympy.core.sympify import _sympify
 
 __all__ = [
@@ -27,6 +28,15 @@ __all__ = [
     'ContinuousMarkovChain',
     'BernoulliProcess'
 ]
+
+
+@is_random.register(Indexed)
+def _(x):
+    return is_random(x.base)
+
+@is_random.register(RandomIndexedSymbol)
+def _(x):
+    return True
 
 def _set_converter(itr):
     """
@@ -80,7 +90,7 @@ def _matrix_checks(matrix):
         raise TypeError("Transition probabilities either should "
                             "be a Matrix or a MatrixSymbol.")
     if matrix.shape[0] != matrix.shape[1]:
-        raise ValueError("%s is not a square matrix"%(matrix))
+        raise NonSquareMatrixError("%s is not a square matrix"%(matrix))
     if isinstance(matrix, Matrix):
         matrix = ImmutableMatrix(matrix.tolist())
     return matrix
@@ -179,6 +189,9 @@ class StochasticProcess(Basic):
 
     def expectation(self, condition, given_condition):
         raise NotImplementedError("Abstract method for expectation queries.")
+
+    def sample(self):
+        raise NotImplementedError("Abstract method for sampling queries.")
 
 class DiscreteTimeStochasticProcess(StochasticProcess):
     """
@@ -718,6 +731,31 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         return self.fixed_row_vector()
 
+    def sample(self):
+        """
+        Returns
+        =======
+
+        sample: iterator object
+            iterator object containing the sample
+
+        """
+        if not isinstance(self.transition_probabilities, (Matrix, ImmutableMatrix)):
+            raise ValueError("Transition Matrix must be provided for sampling")
+        Tlist = self.transition_probabilities.tolist()
+        samps = [random.choice(list(self.state_space))]
+        yield samps[0]
+        time = 1
+        densities = {}
+        for state in self.state_space:
+            states = list(self.state_space)
+            densities[state] = {states[i]: Tlist[state][i]
+                        for i in range(len(states))}
+        while time < S.Infinity:
+            samps.append((next(sample_iter(FiniteRV("_", densities[samps[time - 1]])))))
+            yield samps[time]
+            time += 1
+
 class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     """
     Represents continuous time Markov chain.
@@ -735,7 +773,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     ========
 
     >>> from sympy.stats import ContinuousMarkovChain
-    >>> from sympy import Matrix, S, MatrixSymbol
+    >>> from sympy import Matrix, S
     >>> G = Matrix([[-S(1), S(1)], [S(1), -S(1)]])
     >>> C = ContinuousMarkovChain('C', state_space=[0, 1], gen_mat=G)
     >>> C.limiting_distribution()
@@ -811,7 +849,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     ========
 
     >>> from sympy.stats import BernoulliProcess, P, E
-    >>> from sympy import Eq, Gt, Lt
+    >>> from sympy import Eq, Gt
     >>> B = BernoulliProcess("B", p=0.7, success=1, failure=0)
     >>> B.state_space
     FiniteSet(0, 1)

@@ -30,6 +30,8 @@ class Domain(object):
     is_FiniteField = is_FF = False
     is_IntegerRing = is_ZZ = False
     is_RationalField = is_QQ = False
+    is_GaussianRing = is_ZZ_I = False
+    is_GaussianField = is_QQ_I = False
     is_RealField = is_RR = False
     is_ComplexField = is_CC = False
     is_AlgebraicField = is_Algebraic = False
@@ -150,8 +152,7 @@ class Domain(object):
         else: # TODO: remove this branch
             if not is_sequence(element):
                 try:
-                    element = sympify(element)
-
+                    element = sympify(element, strict=True)
                     if isinstance(element, Basic):
                         return self.from_sympy(element)
                 except (TypeError, ValueError):
@@ -305,24 +306,49 @@ class Domain(object):
             tol = max(K0.tolerance, K1.tolerance)
             return cls(prec=prec, tol=tol)
 
-        if K0.is_ComplexField and K1.is_ComplexField:
-            return mkinexact(K0.__class__, K0, K1)
-        if K0.is_ComplexField and K1.is_RealField:
-            return mkinexact(K0.__class__, K0, K1)
-        if K0.is_RealField and K1.is_ComplexField:
-            return mkinexact(K1.__class__, K1, K0)
-        if K0.is_RealField and K1.is_RealField:
-            return mkinexact(K0.__class__, K0, K1)
-        if K0.is_ComplexField or K0.is_RealField:
+        if K1.is_ComplexField:
+            K0, K1 = K1, K0
+        if K0.is_ComplexField:
+            if K1.is_ComplexField or K1.is_RealField:
+                return mkinexact(K0.__class__, K0, K1)
+            else:
+                return K0
+
+        if K1.is_RealField:
+            K0, K1 = K1, K0
+        if K0.is_RealField:
+            if K1.is_RealField:
+                return mkinexact(K0.__class__, K0, K1)
+            elif K1.is_GaussianRing or K1.is_GaussianField:
+                from sympy.polys.domains.complexfield import ComplexField
+                return ComplexField(prec=K0.precision, tol=K0.tolerance)
+            else:
+                return K0
+
+        if K1.is_AlgebraicField:
+            K0, K1 = K1, K0
+        if K0.is_AlgebraicField:
+            if K1.is_GaussianRing:
+                K1 = K1.get_field()
+            if K1.is_GaussianField:
+                K1 = K1.as_AlgebraicField()
+            if K1.is_AlgebraicField:
+                return K0.__class__(K0.dom.unify(K1.dom), *_unify_gens(K0.orig_ext, K1.orig_ext))
+            else:
+                return K0
+
+        if K0.is_GaussianField:
             return K0
-        if K1.is_ComplexField or K1.is_RealField:
+        if K1.is_GaussianField:
             return K1
 
-        if K0.is_AlgebraicField and K1.is_AlgebraicField:
-            return K0.__class__(K0.dom.unify(K1.dom), *_unify_gens(K0.orig_ext, K1.orig_ext))
-        elif K0.is_AlgebraicField:
+        if K0.is_GaussianRing:
+            if K1.is_RationalField:
+                K0 = K0.get_field()
             return K0
-        elif K1.is_AlgebraicField:
+        if K1.is_GaussianRing:
+            if K0.is_RationalField:
+                K1 = K1.get_field()
             return K1
 
         if K0.is_RationalField:

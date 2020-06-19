@@ -1,6 +1,7 @@
 from sympy import (
     symbols, log, ln, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
-    LambertW, sqrt, Rational, expand_log, S, sign, conjugate, refine,
+    LambertW, sqrt, Rational, expand_log, S, sign,
+    adjoint, conjugate, transpose, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, simplify,
     AccumBounds, MatrixSymbol, Pow, gcd, Sum, Product)
 from sympy.functions.elementary.exponential import match_real_imag
@@ -131,8 +132,16 @@ def test_exp_subs():
     assert exp(3).subs(E, sin) == sin(3)
 
 
+def test_exp_adjoint():
+    assert adjoint(exp(x)) == exp(adjoint(x))
+
+
 def test_exp_conjugate():
     assert conjugate(exp(x)) == exp(conjugate(x))
+
+
+def test_exp_transpose():
+    assert transpose(exp(x)) == exp(transpose(x))
 
 
 def test_exp_rewrite():
@@ -153,7 +162,8 @@ def test_exp_rewrite():
 
     assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == Rational(4, 5) + I*Rational(2, 5)
     assert Sum((exp(pi*I/4)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(1 - sqrt(2)*(1 + I)/4)
-    assert Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(Rational(3, 4) - sqrt(3)*I/4)
+    assert (Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit().cancel()
+            == 4/(3 - sqrt(3)*I))
 
 
 def test_exp_leading_term():
@@ -643,6 +653,20 @@ def test_issue_8866():
     b2 = log(exp(y), exp(5), evaluate=False)
     assert simplify(log(l1, b1)) == simplify(log(l2, b2))
     assert expand_log(log(l1, b1)) == expand_log(log(l2, b2))
+
+
+def test_log_expand_factor():
+    assert (log(18)/log(3) - 2).expand(factor=True) == log(2)/log(3)
+    assert (log(12)/log(2)).expand(factor=True) == log(3)/log(2) + 2
+    assert (log(15)/log(3)).expand(factor=True) == 1 + log(5)/log(3)
+    assert (log(2)/(-log(12) + log(24))).expand(factor=True) == 1
+
+    assert expand_log(log(12), factor=True) == log(3) + 2*log(2)
+    assert expand_log(log(21)/log(7), factor=False) == log(3)/log(7) + 1
+    assert expand_log(log(45)/log(5) + log(20), factor=False) == \
+        1 + 2*log(3)/log(5) + log(20)
+    assert expand_log(log(45)/log(5) + log(26), factor=True) == \
+        log(2) + log(13) + (log(5) + 2*log(3))/log(5)
 
 
 def test_issue_9116():

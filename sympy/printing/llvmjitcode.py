@@ -429,7 +429,7 @@ def llvm_callable(args, expr, callback_type=None):
     The 'cubature' callback handles multiple expressions (set `fdim`
     to match in the integration call.)
     >>> import sympy.printing.llvmjitcode as jit
-    >>> from sympy import cse, exp
+    >>> from sympy import cse
     >>> from sympy.abc import x,y
     >>> e1 = x*x + y*y
     >>> e2 = 4*(x*x + y*y) + 8.0

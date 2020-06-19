@@ -1,18 +1,20 @@
 from sympy import (S, Symbol, Sum, I, lambdify, re, im, log, simplify, sqrt,
                    zeta, pi, besseli, Dummy, oo, Piecewise, Rational, beta,
-                   floor)
+                   floor, FiniteSet)
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or
 from sympy.sets.fancysets import Range
 from sympy.stats import (P, E, variance, density, characteristic_function,
                          where, moment_generating_function, skewness, cdf,
-                         kurtosis)
+                         kurtosis, coskewness)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    Poisson, Geometric, Hermite, Logarithmic,
-                                    NegativeBinomial, Skellam, YuleSimon, Zeta)
+                                    NegativeBinomial, Skellam, YuleSimon, Zeta,
+                                    DiscreteRV)
 from sympy.stats.rv import sample
-from sympy.testing.pytest import slow, nocache_fail, raises
+from sympy.testing.pytest import slow, nocache_fail, raises, skip, ignore_warnings
+from sympy.external import import_module
 
 x = Symbol('x')
 
@@ -36,12 +38,18 @@ def test_Poisson():
     # issue 8248
     assert x.pspace.compute_expectation(1) == 1
 
+@slow
 def test_GeometricDistribution():
     p = S.One / 5
     d = GeometricDistribution(p)
     assert d.expectation(x, x) == 1/p
     assert d.expectation(x**2, x) - d.expectation(x, x)**2 == (1-p)/p**2
     assert abs(d.cdf(20000).evalf() - 1) < .001
+
+    X = Geometric('X', Rational(1, 5))
+    Y = Geometric('Y', Rational(3, 10))
+    assert coskewness(X, X + Y, X + 2*Y).simplify() == sqrt(230)*Rational(81, 1150)
+
 
 def test_Hermite():
     a1 = Symbol("a1", positive=True)
@@ -128,13 +136,15 @@ def test_zeta():
 
 @slow
 def test_sample_discrete():
-    X, Y, Z = Geometric('X', S.Half), Poisson('Y', 4), Poisson('Z', 1000)
-    W = Poisson('W', Rational(1, 100))
-    assert sample(X) in X.pspace.domain.set
-    assert sample(Y) in Y.pspace.domain.set
-    assert sample(Z) in Z.pspace.domain.set
-    assert sample(W) in W.pspace.domain.set
-
+    X = Geometric('X', S.Half)
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests')
+    with ignore_warnings(UserWarning):
+        assert next(sample(X)) in X.pspace.domain.set
+        samps = next(sample(X, size=2)) # This takes long time if ran without scipy
+        for samp in samps:
+            assert samp in X.pspace.domain.set
 
 def test_discrete_probability():
     X = Geometric('X', Rational(1, 5))
@@ -158,6 +168,16 @@ def test_discrete_probability():
     assert P(G < 3) == x*(2-x)
     assert P(Eq(G, 3)) == x*(-x + 1)**2
 
+
+def test_DiscreteRV():
+    p = S(1)/2
+    x = Symbol('x', integer=True, positive=True)
+    pdf = p*(1 - p)**(x - 1) # pdf of Geometric Distribution
+    D = DiscreteRV(x, pdf, set=S.Naturals)
+    assert E(D) == E(Geometric('G', S(1)/2)) == 2
+    assert P(D > 3) == S(1)/8
+    assert D.pspace.domain.set == S.Naturals
+    raises(ValueError, lambda: DiscreteRV(x, x, FiniteSet(*range(4))))
 
 def test_precomputed_characteristic_functions():
     import mpmath
@@ -262,3 +282,76 @@ def test_product_spaces():
 #    assert str(P(Eq(X1 + X2, 3))) == """Sum(Piecewise((2**(X2 - 2)*(2/3)**(X2 - 1)/6, """ +\
 #        """X2 <= 2), (0, True)), (X2, 1, oo))"""
     assert P(Eq(X1 + X2, 3)) == Rational(1, 12)
+
+
+def test_sample_numpy():
+    distribs_numpy = [
+        Geometric('G', 0.5),
+        Poisson('P', 1),
+        Zeta('Z', 2)
+    ]
+    size = 3
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy is not installed. Abort tests for _sample_numpy.')
+    else:
+        with ignore_warnings(UserWarning):
+            for X in distribs_numpy:
+                samps = next(sample(X, size=size, library='numpy'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
+            raises(NotImplementedError,
+                lambda: next(sample(Skellam('S', 1, 1), library='numpy')))
+    raises(NotImplementedError,
+            lambda: Skellam('S', 1, 1).pspace.distribution.sample(library='tensorflow'))
+
+def test_sample_scipy():
+    p = S(2)/3
+    x = Symbol('x', integer=True, positive=True)
+    pdf = p*(1 - p)**(x - 1) # pdf of Geometric Distribution
+    distribs_scipy = [
+        DiscreteRV(x, pdf, set=S.Naturals),
+        Geometric('G', 0.5),
+        Logarithmic('L', 0.5),
+        NegativeBinomial('N', 5, 0.4),
+        Poisson('P', 1),
+        Skellam('S', 1, 1),
+        YuleSimon('Y', 1),
+        Zeta('Z', 2)
+    ]
+    size = 3
+    numsamples = 5
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests for _sample_scipy.')
+    else:
+        with ignore_warnings(UserWarning):
+            z_sample = list(sample(Zeta("G", 7), size=size, numsamples=numsamples))
+            assert len(z_sample) == numsamples
+            for X in distribs_scipy:
+                samps = next(sample(X, size=size, library='scipy'))
+                samps2 = next(sample(X, size=(2, 2), library='scipy'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
+                for i in range(2):
+                    for j in range(2):
+                        assert samps2[i][j] in X.pspace.domain.set
+
+def test_sample_pymc3():
+    distribs_pymc3 = [
+        Geometric('G', 0.5),
+        Poisson('P', 1),
+        NegativeBinomial('N', 5, 0.4)
+    ]
+    size = 3
+    pymc3 = import_module('pymc3')
+    if not pymc3:
+        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
+    else:
+        with ignore_warnings(UserWarning):
+            for X in distribs_pymc3:
+                samps = next(sample(X, size=size, library='pymc3'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
+            raises(NotImplementedError,
+                lambda: next(sample(Skellam('S', 1, 1), library='pymc3')))

@@ -451,7 +451,6 @@ def TR4(rv):
     Examples
     ========
 
-    >>> from sympy.simplify.fu import TR4
     >>> from sympy import pi
     >>> from sympy import cos, sin, tan, cot
     >>> for s in (0, pi/6, pi/4, pi/3, pi/2):
@@ -599,7 +598,7 @@ def TR8(rv, first=True):
     Examples
     ========
 
-    >>> from sympy.simplify.fu import TR8, TR7
+    >>> from sympy.simplify.fu import TR8
     >>> from sympy import cos, sin
     >>> TR8(cos(2)*cos(3))
     cos(5)/2 + cos(1)/2
@@ -816,8 +815,8 @@ def TR10i(rv):
     ========
 
     >>> from sympy.simplify.fu import TR10i
-    >>> from sympy import cos, sin, pi, Add, Mul, sqrt, Symbol
-    >>> from sympy.abc import x, y
+    >>> from sympy import cos, sin, sqrt
+    >>> from sympy.abc import x
 
     >>> TR10i(cos(1)*cos(3) + sin(1)*sin(3))
     cos(2)
@@ -1021,13 +1020,73 @@ def TR11(rv, base=None):
     return bottom_up(rv, f)
 
 
+def _TR11(rv):
+    """
+    Helper for TR11 to find half-arguments for sin in factors of
+    num/den that appear in cos or sin factors in the den/num.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.fu import TR11, _TR11
+    >>> from sympy import cos, sin
+    >>> from sympy.abc import x
+    >>> TR11(sin(x/3)/(cos(x/6)))
+    sin(x/3)/cos(x/6)
+    >>> _TR11(sin(x/3)/(cos(x/6)))
+    2*sin(x/6)
+    >>> TR11(sin(x/6)/(sin(x/3)))
+    sin(x/6)/sin(x/3)
+    >>> _TR11(sin(x/6)/(sin(x/3)))
+    1/(2*cos(x/6))
+
+    """
+    def f(rv):
+        if not isinstance(rv, Expr):
+            return rv
+
+        def sincos_args(flat):
+            # find arguments of sin and cos that
+            # appears as bases in args of flat
+            # and have Integer exponents
+            args = defaultdict(set)
+            for fi in Mul.make_args(flat):
+                b, e = fi.as_base_exp()
+                if e.is_Integer and e > 0:
+                    if b.func in (cos, sin):
+                        args[b.func].add(b.args[0])
+            return args
+        num_args, den_args = map(sincos_args, rv.as_numer_denom())
+        def handle_match(rv, num_args, den_args):
+            # for arg in sin args of num_args, look for arg/2
+            # in den_args and pass this half-angle to TR11
+            # for handling in rv
+            for narg in num_args[sin]:
+                half = narg/2
+                if half in den_args[cos]:
+                    func = cos
+                elif half in den_args[sin]:
+                    func = sin
+                else:
+                    continue
+                rv = TR11(rv, half)
+                den_args[func].remove(half)
+            return rv
+        # sin in num, sin or cos in den
+        rv = handle_match(rv, num_args, den_args)
+        # sin in den, sin or cos in num
+        rv = handle_match(rv, den_args, num_args)
+        return rv
+
+    return bottom_up(rv, f)
+
+
 def TR12(rv, first=True):
     """Separate sums in ``tan``.
 
     Examples
     ========
 
-    >>> from sympy.simplify.fu import TR12
     >>> from sympy.abc import x, y
     >>> from sympy import tan
     >>> from sympy.simplify.fu import TR12
@@ -1189,7 +1248,7 @@ def TR13(rv):
     ========
 
     >>> from sympy.simplify.fu import TR13
-    >>> from sympy import tan, cot, cos
+    >>> from sympy import tan, cot
     >>> TR13(tan(3)*tan(2))
     -tan(2)/tan(5) - tan(3)/tan(5) + 1
     >>> TR13(cot(3)*cot(2))
@@ -1480,7 +1539,7 @@ def TR15(rv, max=4, pow=False):
 
     >>> from sympy.simplify.fu import TR15
     >>> from sympy.abc import x
-    >>> from sympy import cos, sin
+    >>> from sympy import sin
     >>> TR15(1 - 1/sin(x)**2)
     -cot(x)**2
 
@@ -1509,7 +1568,7 @@ def TR16(rv, max=4, pow=False):
 
     >>> from sympy.simplify.fu import TR16
     >>> from sympy.abc import x
-    >>> from sympy import cos, sin
+    >>> from sympy import cos
     >>> TR16(1 - 1/cos(x)**2)
     -tan(x)**2
 

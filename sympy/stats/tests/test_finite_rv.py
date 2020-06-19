@@ -7,11 +7,11 @@ from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBi
                          Hypergeometric, Rademacher, P, E, variance, covariance, skewness,
                          sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
                          cmoment, smoment, characteristic_function, moment_generating_function,
-                         quantile,  kurtosis)
+                         quantile,  kurtosis, median, coskewness)
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
     HypergeometricDistribution
 from sympy.stats.rv import Density
-from sympy.testing.pytest import raises, skip
+from sympy.testing.pytest import raises, skip, ignore_warnings
 
 
 def BayesTest(A, B):
@@ -34,6 +34,7 @@ def test_discreteuniform():
     # Numeric
     assert E(Y) == S('-1/2')
     assert variance(Y) == S('33/4')
+    assert median(Y) == FiniteSet(-1, 0)
 
     for x in range(-5, 5):
         assert P(Eq(Y, x)) == S('1/10')
@@ -45,6 +46,8 @@ def test_discreteuniform():
 
     assert characteristic_function(X)(t) == exp(I*a*t)/3 + exp(I*b*t)/3 + exp(I*c*t)/3
     assert moment_generating_function(X)(t) == exp(a*t)/3 + exp(b*t)/3 + exp(c*t)/3
+    # issue 18611
+    raises(ValueError, lambda: DiscreteUniform('Z', [a, a, a, b, b, c]))
 
 def test_dice():
     # TODO: Make iid method!
@@ -98,7 +101,9 @@ def test_dice():
 
     assert characteristic_function(X)(t) == exp(6*I*t)/6 + exp(5*I*t)/6 + exp(4*I*t)/6 + exp(3*I*t)/6 + exp(2*I*t)/6 + exp(I*t)/6
     assert moment_generating_function(X)(t) == exp(6*t)/6 + exp(5*t)/6 + exp(4*t)/6 + exp(3*t)/6 + exp(2*t)/6 + exp(t)/6
-
+    assert median(X) == FiniteSet(3, 4)
+    D = Die('D', 7)
+    assert median(D) == FiniteSet(4)
     # Bayes test for die
     BayesTest(X > 3, X + Y < 5)
     BayesTest(Eq(X - Y, Z), Z > Y)
@@ -141,7 +146,11 @@ def test_given():
     X = Die('X', 6)
     assert density(X, X > 5) == {S(6): S.One}
     assert where(X > 2, X > 5).as_boolean() == Eq(X.symbol, 6)
-    assert sample(X, X > 5) == 6
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
+    with ignore_warnings(UserWarning):
+        assert next(sample(X, X > 5)) == 6
 
 
 def test_domains():
@@ -188,12 +197,25 @@ def test_bernoulli():
     assert E(a*X + b) == a*E(X) + b
     assert simplify(variance(a*X + b)) == simplify(a**2 * variance(X))
     assert quantile(X)(z) == Piecewise((nan, (z > 1) | (z < 0)), (0, z <= 1 - p), (1, z <= 1))
-
+    Y = Bernoulli('Y', Rational(1, 2))
+    assert median(Y) == FiniteSet(0, 1)
+    Z = Bernoulli('Z', Rational(2, 3))
+    assert median(Z) == FiniteSet(1)
     raises(ValueError, lambda: Bernoulli('B', 1.5))
     raises(ValueError, lambda: Bernoulli('B', -0.5))
 
     #issue 8248
     assert X.pspace.compute_expectation(1) == 1
+
+    p = Rational(1, 5)
+    X = Binomial('X', 5, p)
+    Y = Binomial('Y', 7, 2*p)
+    Z = Binomial('Z', 9, 3*p)
+    assert coskewness(Y + Z, X + Y, X + Z).simplify() == 0
+    assert coskewness(Y + 2*X + Z, X + 2*Y + Z, X + 2*Z + Y).simplify() == \
+                        sqrt(1529)*Rational(12, 16819)
+    assert coskewness(Y + 2*X + Z, X + 2*Y + Z, X + 2*Z + Y, X < 2).simplify() \
+                        == -sqrt(357451121)*Rational(2812, 4646864573)
 
 def test_cdf():
     D = Die('D', 6)
@@ -242,13 +264,14 @@ def test_binomial_numeric():
 def test_binomial_quantile():
     X = Binomial('X', 50, S.Half)
     assert quantile(X)(0.95) == S(31)
+    assert median(X) == FiniteSet(25)
 
     X = Binomial('X', 5, S.Half)
     p = Symbol("p", positive=True)
     assert quantile(X)(p) == Piecewise((nan, p > S.One), (S.Zero, p <= Rational(1, 32)),\
         (S.One, p <= Rational(3, 16)), (S(2), p <= S.Half), (S(3), p <= Rational(13, 16)),\
         (S(4), p <= Rational(31, 32)), (S(5), p <= S.One))
-
+    assert median(X) == FiniteSet(2, 3)
 
 
 def test_binomial_symbolic():
@@ -371,6 +394,7 @@ def test_FiniteRV():
     assert pspace(F).domain.as_boolean() == Or(
         *[Eq(F.symbol, i) for i in [1, 2, 3]])
 
+    assert F.pspace.domain.set == FiniteSet(1, 2, 3)
     raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: S.Half, 3: S.Half}))
     raises(ValueError, lambda: FiniteRV('F', {1: S.Half, 2: Rational(-1, 2), 3: S.One}))
     raises(ValueError, lambda: FiniteRV('F', {1: S.One, 2: Rational(3, 2), 3: S.Zero,\
@@ -419,31 +443,70 @@ def test_symbolic_conditions():
     Piecewise((Rational(3, 4), n < 3), (0, True)) + Piecewise((S.One, n < 4), (0, True))
 
 
-def test_sampling_methods():
-    distribs_random = [DiscreteUniform("D", list(range(5)))]
-    distribs_scipy = [Hypergeometric("H", 1, 1, 1)]
-    distribs_pymc3 = [BetaBinomial("B", 1, 1, 1)]
+def test_sample_numpy():
+    distribs_numpy = [
+        Binomial("B", 5, 0.4),
+    ]
+    size = 3
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy is not installed. Abort tests for _sample_numpy.')
+    else:
+        with ignore_warnings(UserWarning):
+            for X in distribs_numpy:
+                samps = next(sample(X, size=size, library='numpy'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
+            raises(NotImplementedError,
+                lambda: next(sample(Die("D"), library='numpy')))
+    raises(NotImplementedError,
+            lambda: Die("D").pspace.sample(library='tensorflow'))
 
-    size = 5
+def test_sample_scipy():
+    distribs_scipy = [
+        FiniteRV('F', {1: S.Half, 2: Rational(1, 4), 3: Rational(1, 4)}),
+        DiscreteUniform("Y", list(range(5))),
+        Die("D"),
+        Bernoulli("Be", 0.3),
+        Binomial("Bi", 5, 0.4),
+        BetaBinomial("Bb", 2, 1, 1),
+        Hypergeometric("H", 1, 1, 1),
+        Rademacher("R")
+    ]
 
-    for X in distribs_random:
-        sam = X.pspace.distribution._sample_random(size)
-        for i in range(size):
-            assert sam[i] in X.pspace.domain.set
-
+    size = 3
+    numsamples = 5
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy not installed. Abort tests for _sample_scipy.')
     else:
-        for X in distribs_scipy:
-            sam = X.pspace.distribution._sample_scipy(size)
-            for i in range(size):
-                assert sam[i] in X.pspace.domain.set
+        with ignore_warnings(UserWarning):
+            h_sample = list(sample(Hypergeometric("H", 1, 1, 1), size=size, numsamples=numsamples))
+            assert len(h_sample) == numsamples
+            for X in distribs_scipy:
+                samps = next(sample(X, size=size))
+                samps2 = next(sample(X, size=(2, 2)))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
+                for i in range(2):
+                    for j in range(2):
+                        assert samps2[i][j] in X.pspace.domain.set
+
+
+def test_sample_pymc3():
+    distribs_pymc3 = [
+        Bernoulli('B', 0.2),
+        Binomial('N', 5, 0.4)
+    ]
+    size = 3
     pymc3 = import_module('pymc3')
     if not pymc3:
-        skip('PyMC3 not installed. Abort tests for _sample_pymc3.')
+        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
-        for X in distribs_pymc3:
-            sam = X.pspace.distribution._sample_pymc3(size)
-            for i in range(size):
-                assert sam[i] in X.pspace.domain.set
+        with ignore_warnings(UserWarning):
+            for X in distribs_pymc3:
+                samps = next(sample(X, size=size, library='pymc3'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
+            raises(NotImplementedError,
+                lambda: next(sample(Die("D"), library='pymc3')))

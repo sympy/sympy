@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -30,6 +28,7 @@ from sympy.ntheory import multiplicity, perfect_power
 class ExpBase(Function):
 
     unbranched = True
+    _singularities = (S.ComplexInfinity,)
 
     def inverse(self, argindex=1):
         """
@@ -74,8 +73,14 @@ class ExpBase(Function):
         """
         return self.func(1), Mul(*self.args)
 
+    def _eval_adjoint(self):
+        return self.func(self.args[0].adjoint())
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
+
+    def _eval_transpose(self):
+        return self.func(self.args[0].transpose())
 
     def _eval_is_finite(self):
         arg = self.args[0]
@@ -427,7 +432,7 @@ class exp(ExpBase):
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import limit, oo, Order, powsimp, Wild, expand_complex
+        from sympy import ceiling, limit, oo, Order, powsimp, Wild, expand_complex
         arg = self.args[0]
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
@@ -436,11 +441,19 @@ class exp(ExpBase):
         if arg0 in [-oo, oo]:
             return self
         t = Dummy("t")
-        exp_series = exp(t)._taylor(t, n)
-        o = exp_series.getO()
-        exp_series = exp_series.removeO()
+        nterms = n
+        try:
+            cf = Order(arg.as_leading_term(x), x).getn()
+        except NotImplementedError:
+            cf = 0
+        if cf and cf > 0:
+            nterms = ceiling(n/cf)
+        exp_series = exp(t)._taylor(t, nterms)
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
-        r += Order(o.expr.subs(t, (arg_series - arg0)), x)
+        if cf and cf > 1:
+            r += Order((arg_series - arg0)**n, x)/x**((cf-1)*n)
+        else:
+            r += Order((arg_series - arg0)**n, x)
         r = r.expand()
         r = powsimp(r, deep=True, combine='exp')
         # powsimp may introduce unexpanded (-1)**Rational; see PR #17201
@@ -450,14 +463,13 @@ class exp(ExpBase):
         return r
 
     def _taylor(self, x, n):
-        from sympy import Order
         l = []
         g = None
         for i in range(n):
             g = self.taylor_term(i, self.args[0], g)
             g = g.nseries(x, n=n)
-            l.append(g)
-        return Add(*l) + Order(x**n, x)
+            l.append(g.removeO())
+        return Add(*l)
 
     def _eval_as_leading_term(self, x):
         from sympy import Order
@@ -561,6 +573,7 @@ class log(Function):
     exp
 
     """
+    _singularities = (S.Zero, S.ComplexInfinity)
 
     def fdiff(self, argindex=1):
         """
@@ -747,17 +760,28 @@ class log(Function):
         return (1 - 2*(n % 2)) * x**(n + 1)/(n + 1)
 
     def _eval_expand_log(self, deep=True, **hints):
-        from sympy import unpolarify, expand_log
+        from sympy import unpolarify, expand_log, factorint
         from sympy.concrete import Sum, Product
         force = hints.get('force', False)
+        factor = hints.get('factor', False)
         if (len(self.args) == 2):
             return expand_log(self.func(*self.args), deep=deep, force=force)
         arg = self.args[0]
         if arg.is_Integer:
             # remove perfect powers
-            p = perfect_power(int(arg))
+            p = perfect_power(arg)
+            logarg = None
+            coeff = 1
             if p is not False:
-                return p[1]*self.func(p[0])
+                arg, coeff = p
+                logarg = self.func(arg)
+            # expand as product of its prime factors if factor=True
+            if factor:
+                p = factorint(arg)
+                if arg not in p.keys():
+                    logarg = sum(n*log(val) for val, n in p.items())
+            if logarg is not None:
+                return coeff*logarg
         elif arg.is_Rational:
             return log(arg.p) - log(arg.q)
         elif arg.is_Mul:
@@ -1056,7 +1080,7 @@ class LambertW(Function):
                 s = S.Zero
 
             return s + Order(x**n, x)
-        return super(LambertW, self)._eval_nseries(x, n, logx)
+        return super()._eval_nseries(x, n, logx)
 
     def _eval_is_zero(self):
         x = self.args[0]

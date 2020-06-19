@@ -62,7 +62,7 @@ unicode_strict_whitelist = [
 ]
 
 
-def test_this_file_encoding(
+def _test_this_file_encoding(
     fname, test_file,
     unicode_whitelist=unicode_whitelist,
     unicode_strict_whitelist=unicode_strict_whitelist):

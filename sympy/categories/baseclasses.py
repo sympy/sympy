@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, Basic, Dict, Symbol, Tuple, sympify
 from sympy.core.compatibility import iterable
 from sympy.sets import Set, FiniteSet, EmptySet
@@ -565,7 +563,7 @@ class Diagram(Basic):
     ========
 
     >>> from sympy.categories import Object, NamedMorphism, Diagram
-    >>> from sympy import FiniteSet, pprint, default_sort_key
+    >>> from sympy import pprint, default_sort_key
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")

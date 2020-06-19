@@ -850,3 +850,8 @@ def test_issue_17823():
     expr = q1.diff().diff()**2*q1 + q1.diff()*q2.diff()
     reps={q1: a, q1.diff(): a*x*y, q1.diff().diff(): z}
     assert expr.subs(reps) == a*x*y*Derivative(q2, t) + a*z**2
+
+
+def test_issue_19326():
+    x, y = [i(t) for i in map(Function, 'xy')]
+    assert (x*y).subs({x: 1 + x, y: x}) == (1 + x)*x

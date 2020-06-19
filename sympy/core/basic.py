@@ -1,12 +1,11 @@
 """Base class for all the objects in SymPy"""
-from __future__ import print_function, division
 from collections import defaultdict
 from itertools import chain, zip_longest
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import iterable, Iterator, ordered, Mapping
+from .compatibility import iterable, ordered, Mapping
 from .singleton import S
 
 from inspect import getmro
@@ -27,9 +26,10 @@ def as_Basic(expr):
 
 class Basic(metaclass=ManagedProperties):
     """
-    Base class for all objects in SymPy.
+    Base class for all SymPy objects.
 
-    Conventions:
+    Notes and conventions
+    =====================
 
     1) Always use ``.args``, when accessing parameters of some instance:
 
@@ -54,6 +54,19 @@ class Basic(metaclass=ManagedProperties):
     >>> cot(x)._args    # do not use this, use cot(x).args instead
     (x,)
 
+
+    3)  By "SymPy object" we mean something that can be returned by
+        ``sympify``.  But not all objects one encounters using SymPy are
+        subclasses of Basic.  For example, mutable objects are not:
+
+        >>> from sympy import Basic, Matrix, sympify
+        >>> A = Matrix([[1, 2], [3, 4]]).as_mutable()
+        >>> isinstance(A, Basic)
+        False
+
+        >>> B = sympify(A)
+        >>> isinstance(B, Basic)
+        True
     """
     __slots__ = ('_mhash',              # hash value
                  '_args',               # arguments
@@ -396,7 +409,7 @@ class Basic(metaclass=ManagedProperties):
 
         tmp = dummy.__class__()
 
-        return s.subs(dummy, tmp) == o.subs(symbol, tmp)
+        return s.xreplace({dummy: tmp}) == o.xreplace({symbol: tmp})
 
     # Note, we always use the default ordering (lex) in __str__ and __repr__,
     # regardless of the global setting.  See issue 5487.
@@ -527,59 +540,59 @@ class Basic(metaclass=ManagedProperties):
 
     @property
     def expr_free_symbols(self):
-        return set([])
+        return set()
 
     def as_dummy(self):
         """Return the expression with any objects having structurally
         bound symbols replaced with unique, canonical symbols within
         the object in which they appear and having only the default
-        assumption for commutativity being True.
+        assumption for commutativity being True. When applied to a
+        symbol a new symbol having only the same commutativity will be
+        returned.
 
         Examples
         ========
 
         >>> from sympy import Integral, Symbol
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
         >>> r = Symbol('r', real=True)
         >>> Integral(r, (r, x)).as_dummy()
         Integral(_0, (_0, x))
         >>> _.variables[0].is_real is None
         True
+        >>> r.as_dummy()
+        _r
 
         Notes
         =====
 
-        Any object that has structural dummy variables should have
-        a property, `bound_symbols` that returns a list of structural
-        dummy symbols of the object itself.
-
-        Lambda and Subs have bound symbols, but because of how they
-        are cached, they already compare the same regardless of their
-        bound symbols:
-
-        >>> from sympy import Lambda
-        >>> Lambda(x, x + 1) == Lambda(y, y + 1)
-        True
+        Any object that has structurally bound variables should have
+        a property, `bound_symbols` that returns those symbols
+        appearing in the object.
         """
+        from sympy.core.symbol import Dummy, Symbol
         def can(x):
-            d = {i: i.as_dummy() for i in x.bound_symbols}
             # mask free that shadow bound
+            free = x.free_symbols
+            bound = set(x.bound_symbols)
+            d = {i: Dummy() for i in bound & free}
             x = x.subs(d)
-            c = x.canonical_variables
-            # replace bound
-            x = x.xreplace(c)
-            # undo masking
-            x = x.xreplace(dict((v, k) for k, v in d.items()))
-            return x
+            # replace bound with canonical names
+            x = x.xreplace(x.canonical_variables)
+            # return after undoing masking
+            return x.xreplace({v: k for k, v in d.items()})
+        if not self.has(Symbol):
+            return self
         return self.replace(
             lambda x: hasattr(x, 'bound_symbols'),
-            lambda x: can(x))
+            lambda x: can(x),
+            simultaneous=False)
 
     @property
     def canonical_variables(self):
         """Return a dictionary mapping any variable defined in
         ``self.bound_symbols`` to Symbols that do not clash
-        with any existing symbol in the expression.
+        with any free symbols in the expression.
 
         Examples
         ========
@@ -589,22 +602,21 @@ class Basic(metaclass=ManagedProperties):
         >>> Lambda(x, 2*x).canonical_variables
         {x: _0}
         """
-        from sympy.core.symbol import Symbol
         from sympy.utilities.iterables import numbered_symbols
         if not hasattr(self, 'bound_symbols'):
             return {}
         dums = numbered_symbols('_')
         reps = {}
-        v = self.bound_symbols
-        # this free will include bound symbols that are not part of
-        # self's bound symbols
-        free = set([i.name for i in self.atoms(Symbol) - set(v)])
-        for v in v:
+        # watch out for free symbol that are not in bound symbols;
+        # those that are in bound symbols are about to get changed
+        bound = self.bound_symbols
+        names = {i.name for i in self.free_symbols - set(bound)}
+        for b in bound:
             d = next(dums)
-            if v.is_Symbol:
-                while v.name == d.name or d.name in free:
+            if b.is_Symbol:
+                while d.name in names:
                     d = next(dums)
-            reps[v] = d
+            reps[b] = d
         return reps
 
     def rcall(self, *args):
@@ -887,9 +899,10 @@ class Basic(metaclass=ManagedProperties):
         sympy.core.evalf.EvalfMixin.evalf: calculates the given formula to a desired level of precision
 
         """
+        from sympy.core.compatibility import _nodes, default_sort_key
         from sympy.core.containers import Dict
-        from sympy.utilities.iterables import sift
-        from sympy import Dummy, Symbol
+        from sympy.core.symbol import Dummy, Symbol
+        from sympy.utilities.misc import filldedent
 
         unordered = False
         if len(args) == 1:
@@ -900,7 +913,6 @@ class Basic(metaclass=ManagedProperties):
                 unordered = True
                 sequence = sequence.items()
             elif not iterable(sequence):
-                from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
                    it should be a dictionary of old: new pairs or an iterable
@@ -928,10 +940,17 @@ class Basic(metaclass=ManagedProperties):
 
         if unordered:
             sequence = dict(sequence)
-            atoms, nonatoms = sift(list(sequence),
-                lambda x: x.is_Atom, binary=True)
-            sequence = [(k, sequence[k]) for k in
-                list(reversed(list(ordered(nonatoms)))) + list(ordered(atoms))]
+            # order so more complex items are first and items
+            # of identical complexity are ordered so
+            # f(x) < f(y) < x < y
+            # \___ 2 __/    \_1_/  <- number of nodes
+            #
+            # For more complex ordering use an unordered sequence.
+            k = list(ordered(sequence, default=False, keys=(
+                lambda x: -_nodes(x),
+                lambda x: default_sort_key(x),
+                )))
+            sequence = [(k, sequence[k]) for k in k]
 
         if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
@@ -1226,7 +1245,7 @@ class Basic(metaclass=ManagedProperties):
             return any(f.func == pattern or f == pattern
             for f in self.atoms(Function, UndefinedFunction))
 
-        pattern = sympify(pattern)
+        pattern = _sympify(pattern)
         if isinstance(pattern, BasicMeta):
             return any(isinstance(arg, pattern)
             for arg in preorder_traversal(self))
@@ -1378,11 +1397,11 @@ class Basic(metaclass=ManagedProperties):
 
         >>> e = x**(1 + y)
         >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=False)
-        1
+        x
         >>> (x**(1 + y)).replace(x**(1 + a), lambda a: x**-a, exact=True)
         x**(-x - y + 1)
         >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=False)
-        1
+        x
         >>> (x**y).replace(x**(1 + a), lambda a: x**-a, exact=True)
         x**(1 - y)
 
@@ -1404,8 +1423,8 @@ class Basic(metaclass=ManagedProperties):
                   using matching rules
 
         """
-        from sympy.core.symbol import Dummy, Wild
-        from sympy.simplify.simplify import bottom_up
+        from sympy.core.symbol import Wild
+
 
         try:
             query = _sympify(query)
@@ -1467,55 +1486,40 @@ class Basic(metaclass=ManagedProperties):
                 "first argument to replace() must be a "
                 "type, an expression or a callable")
 
+        def walk(rv, F):
+            """Apply ``F`` to args and then to result.
+            """
+            args = getattr(rv, 'args', None)
+            if args is not None:
+                if args:
+                    newargs = tuple([walk(a, F) for a in args])
+                    if args != newargs:
+                        rv = rv.func(*newargs)
+                        if simultaneous:
+                            # if rv is something that was already
+                            # matched (that was changed) then skip
+                            # applying F again
+                            for i, e in enumerate(args):
+                                if rv == e and e != newargs[i]:
+                                    return rv
+                rv = F(rv)
+            return rv
+
+
         mapping = {}  # changes that took place
-        mask = []  # the dummies that were used as change placeholders
 
         def rec_replace(expr):
             result = _query(expr)
             if result or result == {}:
-                new = _value(expr, result)
-                if new is not None and new != expr:
-                    mapping[expr] = new
-                    if simultaneous:
-                        # don't let this change during rebuilding;
-                        # XXX this may fail if the object being replaced
-                        # cannot be represented as a Dummy in the expression
-                        # tree, e.g. an ExprConditionPair in Piecewise
-                        # cannot be represented with a Dummy
-                        com = getattr(new, 'is_commutative', True)
-                        if com is None:
-                            com = True
-                        d = Dummy('rec_replace', commutative=com)
-                        mask.append((d, new))
-                        expr = d
-                    else:
-                        expr = new
+                v = _value(expr, result)
+                if v is not None and v != expr:
+                    if map:
+                        mapping[expr] = v
+                    expr = v
             return expr
 
-        rv = bottom_up(self, rec_replace, atoms=True)
-
-        # restore original expressions for Dummy symbols
-        if simultaneous:
-            mask = list(reversed(mask))
-            for o, n in mask:
-                r = {o: n}
-                # if a sub-expression could not be replaced with
-                # a Dummy then this will fail; either filter
-                # against such sub-expressions or figure out a
-                # way to carry out simultaneous replacement
-                # in this situation.
-                rv = rv.xreplace(r)  # if this fails, see above
-
-        if not map:
-            return rv
-        else:
-            if simultaneous:
-                # restore subexpressions in mapping
-                for o, n in mask:
-                    r = {o: n}
-                    mapping = {k.xreplace(r): v.xreplace(r)
-                        for k, v in mapping.items()}
-            return rv, mapping
+        rv = walk(self, rec_replace)
+        return (rv, mapping) if map else rv
 
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
@@ -1556,6 +1560,7 @@ class Basic(metaclass=ManagedProperties):
         >>> Basic(a + x, x).matches(Basic(a + b + c, b + c))
         {x_: b + c}
         """
+        repl_dict = repl_dict.copy()
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):
             return None
@@ -1589,7 +1594,7 @@ class Basic(metaclass=ManagedProperties):
         Examples
         ========
 
-        >>> from sympy import Wild
+        >>> from sympy import Wild, Sum
         >>> from sympy.abc import x, y
         >>> p = Wild("p")
         >>> q = Wild("q")
@@ -1605,6 +1610,16 @@ class Basic(metaclass=ManagedProperties):
         >>> (p*q**r).xreplace(e.match(p*q**r))
         4*x**2
 
+        Structurally bound symbols are ignored during matching:
+
+        >>> Sum(x, (x, 1, 2)).match(Sum(y, (y, 1, p)))
+        {p_: 2}
+
+        But they can be identified if desired:
+
+        >>> Sum(x, (x, 1, 2)).match(Sum(q, (q, 1, p)))
+        {p_: 2, q_: x}
+
         The ``old`` flag will give the old-style pattern matching where
         expressions and patterns are essentially solved to give the
         match. Both of the following give None unless ``old=True``:
@@ -1615,8 +1630,37 @@ class Basic(metaclass=ManagedProperties):
         {p_: 2/x**2}
 
         """
+        from sympy.core.symbol import Wild
+        from sympy.core.function import WildFunction
+        from sympy.utilities.misc import filldedent
+
         pattern = sympify(pattern)
-        return pattern.matches(self, old=old)
+        # match non-bound symbols
+        canonical = lambda x: x if x.is_Symbol else x.as_dummy()
+        m = canonical(pattern).matches(canonical(self), old=old)
+        if m is None:
+            return m
+        wild = pattern.atoms(Wild, WildFunction)
+        # sanity check
+        if set(m) - wild:
+            raise ValueError(filldedent('''
+            Some `matches` routine did not use a copy of repl_dict
+            and injected unexpected symbols. Report this as an
+            error at https://github.com/sympy/sympy/issues'''))
+        # now see if bound symbols were requested
+        bwild = wild - set(m)
+        if not bwild:
+            return m
+        # replace free-Wild symbols in pattern with match result
+        # so they will match but not be in the next match
+        wpat = pattern.xreplace(m)
+        # identify remaining bound wild
+        w = wpat.matches(self, old=old)
+        # add them to m
+        if w:
+            m.update(w)
+        # done
+        return m
 
     def count_ops(self, visual=None):
         """wrapper for count_ops that returns the operation count."""
@@ -1826,7 +1870,7 @@ class Atom(Basic):
 
     def matches(self, expr, repl_dict={}, old=False):
         if self == expr:
-            return repl_dict
+            return repl_dict.copy()
 
     def xreplace(self, rule, hack2=False):
         return rule.get(self, self)
@@ -1939,7 +1983,7 @@ def _atomic(e, recursive=False):
     return atoms
 
 
-class preorder_traversal(Iterator):
+class preorder_traversal:
     """
     Do a pre-order traversal of a tree.
 
@@ -2007,12 +2051,10 @@ class preorder_traversal(Iterator):
                 else:
                     args = ordered(args)
             for arg in args:
-                for subtree in self._preorder_traversal(arg, keys):
-                    yield subtree
+                yield from self._preorder_traversal(arg, keys)
         elif iterable(node):
             for item in node:
-                for subtree in self._preorder_traversal(item, keys):
-                    yield subtree
+                yield from self._preorder_traversal(item, keys)
 
     def skip(self):
         """
@@ -2045,7 +2087,7 @@ class preorder_traversal(Iterator):
 def _make_find_query(query):
     """Convert the argument of Basic.find() into a callable"""
     try:
-        query = sympify(query)
+        query = _sympify(query)
     except SympifyError:
         pass
     if isinstance(query, type):
