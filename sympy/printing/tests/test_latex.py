@@ -2255,11 +2255,11 @@ def test_Series_printing():
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
     assert latex(Series(tf1, tf2)) == \
-        'Series\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}, \\frac{x - y}{x + y}\\right)'
+        '\\frac{1}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)} \\left(x - y\\right) \\left(x y^{2} - z\\right)'
     assert latex(Series(tf1, tf2, tf3)) == \
-        'Series\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}, \\frac{x - y}{x + y}, \\frac{t x^{2} - t^{w} x + w}{t - y}\\right)'
+        '\\frac{1}{\\left(t - y\\right) \\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)} \\left(x - y\\right) \\left(x y^{2} - z\\right) \\left(t x^{2} - t^{w} x + w\\right)'
     assert latex(Series(-tf2, tf1)) == \
-        'Series\\left(\\frac{- x + y}{x + y}, \\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right)'
+        '\\frac{1}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)} \\left(- x + y\\right) \\left(x y^{2} - z\\right)'
 
 
 def test_TransferFunction_printing():
@@ -2276,11 +2276,9 @@ def test_Parallel_printing():
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
     assert latex(Parallel(tf1, tf2)) == \
-        'Parallel\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}, \\frac{x - y}{x + y}\\right)'
-    assert latex(Parallel(tf1, tf2, tf3)) == \
-        'Parallel\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}, \\frac{x - y}{x + y}, \\frac{t x^{2} - t^{w} x + w}{t - y}\\right)'
+        '\\frac{1}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)} \\left(\\left(- t^{3} + y^{3}\\right) \\left(x - y\\right) + \\left(x + y\\right) \\left(x y^{2} - z\\right)\\right)'
     assert latex(Parallel(-tf2, tf1)) == \
-        'Parallel\\left(\\frac{- x + y}{x + y}, \\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right)'
+        '\\frac{1}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)} \\left(\\left(- t^{3} + y^{3}\\right) \\left(- x + y\\right) + \\left(x + y\\right) \\left(x y^{2} - z\\right)\\right)'
 
 
 def test_Quaternion_latex_printing():

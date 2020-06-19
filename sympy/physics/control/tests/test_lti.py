@@ -204,33 +204,30 @@ def test_TransferFunction_addition_and_subtraction():
     tf4 = TransferFunction(p, 2 - p, p)
 
     # addition
-    expect1 = TransferFunction((s - 5)*(s + 3) + (s + 1)*(s + 6), (s - 5)*(s + 1), s)
-    assert tf1 + tf2 == expect1
-    assert tf1 + (s - 1) == TransferFunction(s + (s - 5)*(s - 1) + 6, s - 5, s)
-    assert tf1 + 8 == TransferFunction(9*s - 34, s - 5, s)
-    assert (1 - p**3) + tf1 == TransferFunction(s + (1 - p**3)*(s - 5) + 6, s - 5, s)
+    assert tf1 + tf2 == Parallel(tf1, tf2)
+    assert tf3 + tf1 == Parallel(tf3, tf1)
+    assert -tf1 + tf2 + tf3 == Parallel(-tf1, tf2, tf3)
 
     c = symbols("c", commutative=False)
     raises(ValueError, lambda: tf1 + Matrix([1, 2, 3]))
     raises(ValueError, lambda: tf2 + c)
     raises(ValueError, lambda: tf3 + tf4)
+    raises(ValueError, lambda: tf1 + (s - 1))
+    raises(ValueError, lambda: tf1 + 8)
+    raises(ValueError, lambda: (1 - p**3) + tf1)
 
     # subtraction
-    expect1 = TransferFunction((s + 1)*(s + 6) - (s - 5)*(s + 3), (s - 5)*(s + 1), s)
-    assert tf1 - tf2 == expect1
-    assert tf3 - tf2 == \
-        TransferFunction((s + 1)**2 - (s + 3)*(s**2 + s + 1), (s + 1)*(s**2 + s + 1), s)
-    assert tf1 - (s - 1) == TransferFunction(s - (s - 5)*(s - 1) + 6, s - 5, s)
-    assert tf1 - 8 == TransferFunction(-7*s + 46, s - 5, s)
-    assert (s + 5) - tf2 == TransferFunction(-s + (s + 1)*(s + 5) - 3, s + 1, s)
-    assert (1 + p**4) - tf1 == TransferFunction(-s + (p**4 + 1)*(s - 5) - 6, s - 5, s)
+    assert tf1 - tf2 == Parallel(tf1, -tf2)
+    assert tf3 - tf2 == Parallel(tf3, -tf2)
+    assert -tf1 - tf3 == Parallel(-tf1, -tf3)
+    assert tf1 - tf2 + tf3 == Parallel(tf1, -tf2, tf3)
 
     raises(ValueError, lambda: tf1 - Matrix([1, 2, 3]))
     raises(ValueError, lambda: tf3 - tf4)
-
-    p1 = (s - 5)*(s + 1)**2 + ((s + 1)*(s + 6) - (s - 5)*(s + 3))*(s**2 + s + 1)
-    p2 = (s - 5)*(s + 1)*(s**2 + s + 1)
-    assert tf1 - tf2 + tf3 == TransferFunction(p1, p2, s)
+    raises(ValueError, lambda: tf1 - (s - 1))
+    raises(ValueError, lambda: tf1 - 8)
+    raises(ValueError, lambda: (s + 5) - tf2)
+    raises(ValueError, lambda: (1 + p**4) - tf1)
 
 
 def test_TransferFunction_multiplication_and_division():
@@ -242,50 +239,39 @@ def test_TransferFunction_multiplication_and_division():
     G6 = TransferFunction(s + 3, s + 1, s)
 
     # multiplication
-    expect1 = TransferFunction((s + 1)*(s + 3), (9 - s**3)*(s - 5), s)
-    assert G1*G2 == expect1
-
-    expect2 = TransferFunction(p*(p + 4), (p - 5)*(p**4 - 6), p)
-    assert G3*G4 == expect2
-    assert G5*(s - 1) == TransferFunction((s - 1)*(s + 6), s - 5, s)
-    assert 9*G5 == TransferFunction(9*s + 54, s - 5, s)
+    assert G1*G2 == Series(G1, G2)
+    assert -G1*G5 == Series(-G1, G5)
+    assert -G2*G5*-G6 == Series(-G2, G5, -G6)
+    assert G3*G4 == Series(G3, G4)
 
     c = symbols("c", commutative=False)
     raises(ValueError, lambda: G3 * Matrix([1, 2, 3]))
     raises(ValueError, lambda: G1 * c)
     raises(ValueError, lambda: G3 * G5)
+    raises(ValueError, lambda: G5 * (s - 1))
+    raises(ValueError, lambda: 9 * G5)
 
     # division
-    assert G5/G6 == TransferFunction((s + 1)*(s + 6), (s - 5)*(s + 3), s)
-    assert G5/2 == TransferFunction(s + 6, 2*s - 10, s)
-    assert G5/(s**2) == TransferFunction(s + 6, s**2*(s - 5), s)
-    assert (s - 4*s**2)/G2 == TransferFunction((s - 5)*(-4*s**2 + s), s + 1, s)
-    assert 0/G4 == TransferFunction(0, p + 4, p)
+    assert G5/G6 == Series(G5, 1/Series(G6))
+    assert -G3/G4 == Series(-G3, 1/Series(G4))
 
     raises(ValueError, lambda: G3 / Matrix([1, 2, 3]))
     raises(ValueError, lambda: G6 / 0)
     raises(ValueError, lambda: G3 / G5)
+    raises(ValueError, lambda: G5 / 2)
+    raises(ValueError, lambda: G5 / s**2)
+    raises(ValueError, lambda: (s - 4*s**2) / G2)
+    raises(ValueError, lambda: 0 / G4)
 
-    p1 = (9 - s**3)*(s - 5)*(s + 1)*(s + 6) + (s - 5)*(s + 1)*(s + 3)**2
-    p2 = (9 - s**3)*(s - 5)**2*(s + 3)
-    assert G1*G2 + G5/G6 == TransferFunction(p1, p2, s)
-
+    assert G1*G2 + G5/G6 == Parallel(Series(G1, G2), Series(G5, 1/Series(G6)))
     G3_ = TransferFunction(s**4 - 2*s**2 + 1, s - 1, s)
-    p3 = (s - 5)*(s - 1)*(s + 3)
-    p4 = (9 - s**3)*(s + 1)*(s**4 - 2*s**2 + 1)
-    assert G1/G2/G3_ == TransferFunction(p3, p4, s)
-
-    p5 = (s - 5)*(s - 1)*(s + 3)**2 - (9 - s**3)*(s + 1)**2*(s**4 - 2*s**2 + 1)
-    p6 = (9 - s**3)*(s - 1)*(s + 1)*(s + 3)
-    assert G1/G2 - G3_/G6 == TransferFunction(p5, p6, s)
+    assert G1/G2 - G3_/G6 == Parallel(Series(G1, 1/Series(G2)), -Series(G3_, 1/Series(G6)))
 
     omega_o, zeta = symbols('omega_o, zeta')
     G7 = TransferFunction(a0*s**p + a1*p**s, a2*p*zeta - s, zeta)
     G8 = TransferFunction(omega_o**2, s**2 + p*omega_o*zeta*s + omega_o**2, zeta)
     G9 = TransferFunction(zeta - s**3, zeta + p**4, zeta)
-    num = (p**4 + zeta)*(a0*s**p + a1*p**s)*(omega_o**2 + omega_o*p*s*zeta + s**2)
-    den = (omega_o**2*(p**4 + zeta) - (-s**3 + zeta)*(omega_o**2 + omega_o*p*s*zeta + s**2))
-    assert G7 / (G8 - G9) == TransferFunction(num, den*(a2*p*zeta - s), zeta)
+    assert G7 / (G8 - G9) == Series(G7, 1/Parallel(G8, -G9))
 
 
 def test_TransferFunction_is_proper():
@@ -351,8 +337,8 @@ def test_Series_construction():
     s5 = Series(tf2, tf4, 1/Parallel(1, tf2, tf4))
     assert s5.args == (tf2, tf4, 1/Parallel(1, tf2, tf4))
 
-    s6 = Series(tf2, tf4, Series(Parallel(tf2, -tf), tf4))
-    assert s6.args == (tf2, tf4, Series(Parallel(tf2, -tf), tf4))
+    s6 = Series(tf2, tf4, Parallel(tf2, -tf), tf4)
+    assert s6.args == (tf2, tf4, Parallel(tf2, -tf), tf4)
 
     s7 = Series(tf, tf2)
     assert s0 == s7
@@ -375,17 +361,20 @@ def test_Series_functions():
 
     assert tf1*tf2*tf3 == Series(tf1, tf2, tf3)
     assert tf1*(tf2 + tf3) == Series(tf1, Parallel(tf2, tf3))
-    assert tf2*tf3*(tf2 - tf1)*tf3 == Series(tf2, tf3, Series(Parallel(tf2, -tf1), tf3))
+    assert tf2*tf3*(tf2 - tf1)*tf3 == Series(tf2, tf3, Parallel(tf2, -tf1), tf3)
     assert -tf1*tf2 == Series(-tf1, tf2)
+    assert -(tf1*tf2) == -Series(tf1, tf2)
     raises(ValueError, lambda: tf1*tf2*tf4)
     raises(ValueError, lambda: tf1*(tf2 - tf4))
     raises(ValueError, lambda: tf3*Matrix([1, 2, 3]))
 
     # evaluate=True -> doit()
-    assert Series(tf1, tf2, evaluate=True) == Series(tf1, tf2).doit()
-    assert Series(tf1, tf2, Parallel(tf1, -tf3), evaluate=True) == \
-        Series(tf1, tf2, Parallel(tf1, -tf3)).doit()
-    assert Series(tf2, tf1, -tf3, evaluate=True) == Series(tf2, tf1, -tf3).doit()
+    assert Series(tf1, tf2, evaluate=True) == Series(tf1, tf2).doit() == \
+        TransferFunction(k, s**2 + 2*s*wn*zeta + wn**2, s)
+    assert Series(tf1, tf2, Parallel(tf1, -tf3), evaluate=True) == Series(tf1, tf2, Parallel(tf1, -tf3)).doit() == \
+        TransferFunction(k*(a2*s + p - (a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2)), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2, s)
+    assert Series(tf2, tf1, -tf3, evaluate=True) == Series(tf2, tf1, -tf3).doit() == \
+        TransferFunction(k*(-a2*p + s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert not Series(tf1, -tf2, evaluate=False) == Series(tf1, -tf2).doit()
 
     assert Series(Parallel(tf1, tf2), Parallel(tf2, -tf3)).doit() == \
@@ -393,9 +382,30 @@ def test_Series_functions():
             (a2*s + p)*(omega_n**2 + 2*omega_n*s*zeta + s**2), s)
     assert Series(-tf1, -tf2, -tf3).doit() == \
         TransferFunction(k*(-a2*p + s), (a2*s + p)*(omega_n**2 + 2*omega_n*s*zeta + s**2), s)
-    assert Series(tf2, tf3, Series(Parallel(tf2, -tf1), tf3)).doit() == \
+    assert -Series(tf1, tf2, tf3).doit() == \
+        TransferFunction(-k*(a2*p - s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Series(tf2, tf3, Parallel(tf2, -tf1), tf3).doit() == \
         TransferFunction(k*(a2*p - s)**2*(k*(omega_n**2 + 2*omega_n*s*zeta + s**2) - 1),\
             (a2*s + p)**2*(omega_n**2 + 2*omega_n*s*zeta + s**2), s)
+
+    assert Series(tf1, tf2).rewrite(TransferFunction) == TransferFunction(k, s**2 + 2*s*wn*zeta + wn**2, s)
+    assert Series(tf2, tf1, -tf3).rewrite(TransferFunction) == \
+        TransferFunction(k*(-a2*p + s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+
+    S1 = Series(Parallel(tf1, tf2), Parallel(tf2, -tf3))
+    assert S1.is_proper
+    assert not S1.is_strictly_proper
+    assert S1.is_biproper
+
+    S2 = Series(tf1, tf2, tf3)
+    assert S2.is_proper
+    assert S2.is_strictly_proper
+    assert not S2.is_biproper
+
+    S3 = Series(tf1, -tf2, Parallel(tf1, -tf3))
+    assert S3.is_proper
+    assert S3.is_strictly_proper
+    assert not S3.is_biproper
 
 
 def test_Parallel_construction():
@@ -429,8 +439,8 @@ def test_Parallel_construction():
     p6 = Parallel(tf2, tf4, Series(tf2, -tf4))
     assert p6.args == (tf2, tf4, Series(tf2, -tf4))
 
-    p7 = Parallel(tf2, tf4, Parallel(Series(tf2, -tf), tf4))
-    assert p7.args == (tf2, tf4, Parallel(Series(tf2, -tf), tf4))
+    p7 = Parallel(tf2, tf4, Series(tf2, -tf), tf4)
+    assert p7.args == (tf2, tf4, Series(tf2, -tf), tf4)
 
     raises(ValueError, lambda: Parallel(tf, tf3))
     raises(ValueError, lambda: Parallel(tf, tf2, tf3, tf4))
@@ -450,16 +460,21 @@ def test_Parallel_functions():
     assert tf1 + tf2 + tf3 == Parallel(tf1, tf2, tf3)
     assert tf1 + tf2*tf3 == Parallel(tf1, Series(tf2, tf3))
     assert tf2 + tf3 + tf2*tf1 - tf3 == Parallel(tf2, tf3, Series(tf2, tf1), -tf3)
-    assert -(tf1 + tf2) == -tf1 - tf2 == Parallel(-tf1, -tf2)
+    assert -(tf1 + tf2) == Series(TransferFunction(-1, 1, s), Parallel(tf1, tf2))
+    assert -tf1 - tf2 == Parallel(-tf1, -tf2)
     raises(ValueError, lambda: tf1 + tf2 + tf4)
     raises(ValueError, lambda: tf1 - tf2*tf4)
     raises(ValueError, lambda: tf3 + Matrix([1, 2, 3]))
 
     # evaluate=True -> doit()
-    assert Parallel(tf1, tf2, evaluate=True) == Parallel(tf1, tf2).doit()
+    assert Parallel(tf1, tf2, evaluate=True) == Parallel(tf1, tf2).doit() == \
+        TransferFunction(k*(s**2 + 2*s*wn*zeta + wn**2) + 1, s**2 + 2*s*wn*zeta + wn**2, s)
     assert Parallel(tf1, tf2, Series(-tf1, tf3), evaluate=True) == \
-        Parallel(tf1, tf2, Series(-tf1, tf3)).doit()
-    assert Parallel(tf2, tf1, -tf3, evaluate=True) == Parallel(tf2, tf1, -tf3).doit()
+        Parallel(tf1, tf2, Series(-tf1, tf3)).doit()== TransferFunction((-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2) + \
+        (a2*s + p)*(k*(s**2 + 2*s*wn*zeta + wn**2) + 1)*(s**2 + 2*s*wn*zeta + wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2, s)
+    assert Parallel(tf2, tf1, -tf3, evaluate=True) == Parallel(tf2, tf1, -tf3).doit() == \
+        TransferFunction(-(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(k*(s**2 + 2*s*wn*zeta + wn**2) + 1), \
+        (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert not Parallel(tf1, -tf2, evaluate=False) == Parallel(tf1, -tf2).doit()
 
     assert Parallel(Series(tf1, tf2), Series(tf2, tf3)).doit() == \
@@ -468,6 +483,30 @@ def test_Parallel_functions():
     assert Parallel(-tf1, -tf2, -tf3).doit() == \
         TransferFunction(-(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + \
             (a2*s + p)*(-k*(s**2 + 2*s*wn*zeta + wn**2) - 1), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
-    assert Parallel(tf2, tf3, Parallel(Series(tf2, -tf1), tf3)).doit() == \
+    assert -Parallel(tf1, tf2, tf3).doit() == \
+        TransferFunction(-(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) - (a2*s + p)*(k*(s**2 + 2*s*wn*zeta + wn**2) + 1), \
+            (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Parallel(tf2, tf3, Series(tf2, -tf1), tf3).doit() == \
         TransferFunction((a2*p - s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(-k*(a2*s + p) + \
             (s**2 + 2*s*wn*zeta + wn**2)*(a2*p + k*(a2*s + p) - s)), (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2), s)
+
+    assert Parallel(tf1, tf2).rewrite(TransferFunction) == \
+        TransferFunction(k*(s**2 + 2*s*wn*zeta + wn**2) + 1, s**2 + 2*s*wn*zeta + wn**2, s)
+    assert Parallel(tf2, tf1, -tf3).rewrite(TransferFunction) == \
+        TransferFunction(-(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(k*(s**2 + 2*s*wn*zeta + wn**2) + 1), \
+        (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+
+    P1 = Parallel(Series(tf1, tf2), Series(tf2, tf3))
+    assert P1.is_proper
+    assert not P1.is_strictly_proper
+    assert P1.is_biproper
+
+    P2 = Parallel(tf1, -tf2, -tf3)
+    assert P2.is_proper
+    assert not P2.is_strictly_proper
+    assert P2.is_biproper
+
+    P3 = Parallel(tf1, -tf2, Series(tf1, tf3))
+    assert P3.is_proper
+    assert not P3.is_strictly_proper
+    assert P3.is_biproper
