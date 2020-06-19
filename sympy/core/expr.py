@@ -1022,6 +1022,8 @@ class Expr(Basic, EvalfMixin):
 
     def dir(self, x, cdir):
         minexp = S.Zero
+        if self.is_zero:
+            return S.Zero
         arg = self
         while arg:
             minexp += S.One

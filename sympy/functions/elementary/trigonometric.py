@@ -905,16 +905,13 @@ class cos(TrigonometricFunction):
         return cos(arg)
 
     def _eval_as_leading_term(self, x):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
-
-        if x in arg.free_symbols and Order(1, x).contains(arg):
-            return S.One
-        else:
-            if not arg.subs(x, 0).is_finite:
-                return self
-            else:
-                return self.func(arg)
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        n = (x0 + S.Pi/2)/S.Pi
+        if n.is_integer:
+            lt = (arg - n*S.Pi + S.Pi/2).as_leading_term(x)
+            return ((-1)**n)*lt
+        return self.func(x0)
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
@@ -2195,7 +2192,7 @@ class asin(InverseTrigonometricFunction):
         else:
             return self.func(arg)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir=0): #asin
         from sympy import Dummy, im, O
         arg0 = self.args[0].subs(x, 0)
         if arg0 is S.One:
@@ -2394,7 +2391,7 @@ class acos(InverseTrigonometricFunction):
     def _eval_is_nonnegative(self):
         return self._eval_is_extended_real()
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir=0): #acos
         from sympy import Dummy, im, O
         arg0 = self.args[0].subs(x, 0)
         if arg0 is S.One:
@@ -2598,7 +2595,7 @@ class atan(InverseTrigonometricFunction):
         else:
             return self.func(arg)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir=0): #atan
         from sympy import im, re
         arg0 = self.args[0].subs(x, 0)
         res = Function._eval_nseries(self, x, n=n, logx=logx)
@@ -2786,7 +2783,7 @@ class acot(InverseTrigonometricFunction):
         else:
             return self.func(arg)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir=0): #acot
         from sympy import im, re
         arg0 = self.args[0].subs(x, 0)
         res = Function._eval_nseries(self, x, n=n, logx=logx)
@@ -2954,7 +2951,7 @@ class asec(InverseTrigonometricFunction):
         else:
             return self.func(arg)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir=0): #asec
         from sympy import Dummy, im, O
         arg0 = self.args[0].subs(x, 0)
         if arg0 is S.One:
@@ -3118,7 +3115,7 @@ class acsc(InverseTrigonometricFunction):
         else:
             return self.func(arg)
 
-    def _eval_nseries(self, x, n, logx, cdir=0):
+    def _eval_nseries(self, x, n, logx, cdir=0): #acsc
         from sympy import Dummy, im, O
         arg0 = self.args[0].subs(x, 0)
         if arg0 is S.One:
