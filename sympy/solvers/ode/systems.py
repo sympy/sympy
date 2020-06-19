@@ -595,6 +595,46 @@ def _linear_neq_order1_type3(match_):
     return sol_dict
 
 
+def _linear_neq_order1_type4(match_):
+    r""""""
+    # Some parts of code is repeated, this needs to be taken care of
+    # The constant vector obtained here can be done so in the match
+    # function itself.
+    eq = match_['eq']
+    func = match_['func']
+    fc = match_['func_coeff']
+    b = match_['rhs']
+    n = len(eq)
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+
+    # This needs to be modified in future so that fc is only of type Matrix
+    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
+
+    Cvect = Matrix(list(next(constants) for _ in range(n)))
+
+    # The code in if block will be removed when it is made sure
+    # that the code works without the statements in if block.
+    if "commutative_antiderivative" not in match_:
+        B, is_commuting = _is_commutative_anti_derivative(M, t)
+
+        # This course is subject to change
+        if not is_commuting:
+            return None
+
+    else:
+        B = match_['commutative_antiderivative']
+
+    sol_vector = B.exp() * (((-B).exp() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+
+    # The expand_mul is added to handle the solutions so that
+    # the exponential terms are collected properly.
+    sol_vector = [collect(expand_mul(s), ordered(sol_vector.atoms(exp)), exact=True) for s in sol_vector]
+
+    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
+    return sol_dict
+
+
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     r"""
     Returns a dictionary with details of the eqs if every equation is constant coefficient
