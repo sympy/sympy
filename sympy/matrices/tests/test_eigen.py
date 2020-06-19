@@ -1,5 +1,3 @@
-import pytest
-
 from sympy import (
     Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
     cos, symbols)
@@ -643,7 +641,17 @@ def test_is_indefinite():
 
 def test_definite_errors():
     m = Matrix([[nan, nan], [0, nan]])
-    with pytest.raises(ValueError):
+
+    error_raised = False
+    try:
         m.is_positive_semidefinite
-    with pytest.raises(ValueError):
+    except ValueError:
+        error_raised = True
+    assert error_raised
+
+    error_raised = False
+    try:
         m.is_indefinite
+    except ValueError:
+        error_raised = True
+    assert error_raised
