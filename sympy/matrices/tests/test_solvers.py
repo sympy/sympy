@@ -3,7 +3,7 @@ from sympy import (
 from sympy.matrices.matrices import (ShapeError, NonSquareMatrixError)
 from sympy.matrices import (
     ImmutableMatrix, Matrix, eye, ones, ImmutableDenseMatrix, dotprodsimp)
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
 from sympy.matrices.common import NonInvertibleMatrixError
 
 from sympy.abc import x, y
