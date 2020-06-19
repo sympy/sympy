@@ -5,7 +5,6 @@ import itertools
 from mpmath import mp, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
-import sympy
 from sympy.core.compatibility import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.numbers import Float
