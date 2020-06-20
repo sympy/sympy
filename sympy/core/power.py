@@ -1593,11 +1593,17 @@ class Pow(Expr):
 
         return res + O(x**n, x)
 
-    def _eval_as_leading_term(self, x):
-        from sympy import exp, log
-        if not self.exp.has(x):
-            return self.func(self.base.as_leading_term(x), self.exp)
-        return exp(self.exp * log(self.base)).as_leading_term(x)
+    def _eval_as_leading_term(self, x, cdir=0):
+        from sympy import exp, I, im, log
+        e = self.exp
+        b = self.base
+        if e.has(x):
+            return exp(e * log(b)).as_leading_term(x, cdir=cdir)
+        f = b.as_leading_term(x, cdir=cdir)
+        if (not e.is_integer and f.is_constant() and f.is_real
+            and f.is_negative and im((b - f).dir(x, cdir)) < 0):
+            return self.func(f, e)*exp(-2*e*S.Pi*I)
+        return self.func(f, e)
 
     @cacheit
     def _taylor_term(self, n, x, *previous_terms): # of (1 + x)**e

@@ -201,7 +201,7 @@ class gamma(Function):
         import sage.all as sage
         return sage.gamma(self.args[0]._sage_())
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         arg = self.args[0]
         x0 = arg.subs(x, 0)
 
@@ -826,7 +826,7 @@ class polygamma(Function):
             else:
                 return S.NegativeOne**(n+1) * factorial(n) * (zeta(n+1) - harmonic(z-1, n+1))
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         n, z = [a.as_leading_term(x) for a in self.args]
         o = Order(z, x)
@@ -1124,7 +1124,7 @@ class digamma(Function):
     def _eval_rewrite_as_polygamma(self, z, **kwargs):
         return polygamma(0, z)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         z = self.args[0]
         return polygamma(0, z).as_leading_term(x)
 
@@ -1220,7 +1220,7 @@ class trigamma(Function):
     def _eval_rewrite_as_harmonic(self, z, **kwargs):
         return -harmonic(z - 1, 2) + S.Pi**2 / 6
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         z = self.args[0]
         return polygamma(1, z).as_leading_term(x)
 

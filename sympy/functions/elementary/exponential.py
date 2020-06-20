@@ -471,7 +471,7 @@ class exp(ExpBase):
             l.append(g.removeO())
         return Add(*l)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0]
         if arg.is_Add:
@@ -923,11 +923,15 @@ class log(Function):
                 return r
 
         # TODO new and probably slow
-        s = self.args[0].nseries(x, n=n, logx=logx)
-        while s.is_Order:
-            n += 1
-            s = self.args[0].nseries(x, n=n, logx=logx)
-        a, b = s.leadterm(x)
+        try:
+            a, b = arg.leadterm(x)
+            s = arg.nseries(x, n=n+b, logx=logx)
+        except ValueError:
+            s = arg.nseries(x, n=n, logx=logx)
+            while s.is_Order:
+                n += 1
+                s = arg.nseries(x, n=n, logx=logx)
+            a, b = s.leadterm(x)
         p = cancel(s/(a*x**b) - 1)
         if p.has(exp):
             p = logcombine(p)
@@ -937,17 +941,24 @@ class log(Function):
             g = log.taylor_term(i, p, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
+
         if cdir != 0:
             cdir = self.args[0].dir(x, cdir)
         if a.is_real and a.is_negative and im(cdir) < 0:
-            return log(a) -2*I*S.Pi + b*logx + Add(*l) + Order(p**n, x)
+            return log(a) + b*logx - 2*I*S.Pi + Add(*l) + Order(p**n, x)
         return log(a) + b*logx + Add(*l) + Order(p**n, x)
 
-    def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
-        if arg is S.One:
-            return (self.args[0] - 1).as_leading_term(x)
-        return self.func(arg)
+    def _eval_as_leading_term(self, x, cdir=0):
+        from sympy import I, im
+        arg = self.args[0].cancel()
+        x0 = arg.subs(x, 0)
+        if x0 is S.One:
+            return (arg - S.One).as_leading_term(x)
+        if cdir != 0:
+            cdir = self.args[0].dir(x, cdir)
+        if x0.is_real and x0.is_negative and im(cdir) < 0:
+            return self.func(x0) -2*I*S.Pi
+        return self.func(arg.as_leading_term(x))
 
 
 class LambertW(Function):

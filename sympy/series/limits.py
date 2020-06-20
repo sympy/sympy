@@ -220,7 +220,7 @@ class Limit(Expr):
             else:
                 newe = e.subs(z, z + z0)
             try:
-                coeff, exp = newe._eval_nseries(z, 2, None, cdir).removeO().leadterm(z)
+                coeff, exp = newe.leadterm(z, cdir)
             except ValueError:
                 pass
             else:

@@ -461,7 +461,7 @@ class sin(TrigonometricFunction):
                     return self.rewrite(sqrt)
         return sin(arg)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -904,13 +904,15 @@ class cos(TrigonometricFunction):
                     return self.rewrite(sqrt)
         return cos(arg)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         n = (x0 + S.Pi/2)/S.Pi
         if n.is_integer:
             lt = (arg - n*S.Pi + S.Pi/2).as_leading_term(x)
             return ((-1)**n)*lt
+        if not x0.is_finite:
+            return self
         return self.func(x0)
 
     def _eval_is_extended_real(self):
@@ -1226,14 +1228,16 @@ class tan(TrigonometricFunction):
             return None
         return y
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         arg = self.args[0]
         x0 = arg.subs(x, 0)
         n = x0/S.Pi
         if n.is_integer:
             lt = (arg - n*S.Pi).as_leading_term(x)
             return lt if n.is_even else -1/lt
-        return self.func(arg)
+        if not x0.is_finite:
+            return self
+        return self.func(x0)
 
     def _eval_is_extended_real(self):
         # FIXME: currently tan(pi/2) return zoo
@@ -1508,7 +1512,7 @@ class cot(TrigonometricFunction):
             return None
         return y
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -1683,7 +1687,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     def _eval_is_extended_real(self):
         return self._reciprocal_of(self.args[0])._eval_is_extended_real()
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x)
 
     def _eval_is_finite(self):
@@ -1779,7 +1783,7 @@ class sec(ReciprocalTrigonometricFunction):
             k = n//2
             return (-1)**k*euler(2*k)/factorial(2*k)*x**(2*k)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         n = (x0 + S.Pi/2)/S.Pi
@@ -2183,14 +2187,21 @@ class asin(InverseTrigonometricFunction):
                 F = factorial(k)
                 return R/F*x**n/n
 
-    def _eval_as_leading_term(self, x):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
-
-        if x in arg.free_symbols and Order(1, x).contains(arg):
-            return arg
-        else:
-            return self.func(arg)
+    def _eval_as_leading_term(self, x, cdir=0):
+        from sympy import I, im, log
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        if x0.is_zero:
+            return arg.as_leading_term(x)
+        if x0 is S.ComplexInfinity:
+            return I*log(arg.as_leading_term(x))
+        if cdir != 0:
+            cdir = arg.dir(x, cdir)
+        if im(cdir) < 0 and x0.is_real and x0 < S.NegativeOne:
+            return -S.Pi - self.func(x0)
+        elif im(cdir) > 0 and x0.is_real and x0 > S.One:
+            return S.Pi - self.func(x0)
+        return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0): #asin
         from sympy import Dummy, im, O
@@ -2375,14 +2386,21 @@ class acos(InverseTrigonometricFunction):
                 F = factorial(k)
                 return -R/F*x**n/n
 
-    def _eval_as_leading_term(self, x):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
-
-        if x in arg.free_symbols and Order(1, x).contains(arg):
-            return arg
-        else:
-            return self.func(arg)
+    def _eval_as_leading_term(self, x, cdir=0):
+        from sympy import I, im, log
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        if x0 == 1:
+            return sqrt(2)*sqrt((S.One - arg).as_leading_term(x))
+        if x0 is S.ComplexInfinity:
+            return I*log(arg.as_leading_term(x))
+        if cdir != 0:
+            cdir = arg.dir(x, cdir)
+        if im(cdir) < 0 and x0.is_real and x0 < S.NegativeOne:
+            return 2*S.Pi - self.func(x0)
+        elif im(cdir) > 0 and x0.is_real and x0 > S.One:
+            return -self.func(x0)
+        return self.func(x0)
 
     def _eval_is_extended_real(self):
         x = self.args[0]
@@ -2586,14 +2604,21 @@ class atan(InverseTrigonometricFunction):
             x = sympify(x)
             return (-1)**((n - 1)//2)*x**n/n
 
-    def _eval_as_leading_term(self, x):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
-
-        if x in arg.free_symbols and Order(1, x).contains(arg):
-            return arg
-        else:
-            return self.func(arg)
+    def _eval_as_leading_term(self, x, cdir=0):
+        from sympy import im, re
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        if x0.is_zero:
+            return arg.as_leading_term(x)
+        if x0 is S.ComplexInfinity:
+            return acot(1/arg)._eval_as_leading_term(x, cdir=cdir)
+        if cdir != 0:
+            cdir = arg.dir(x, cdir)
+        if re(cdir) < 0 and re(x0).is_zero and im(x0) > S.One:
+            return self.func(x0) - S.Pi
+        elif re(cdir) > 0 and re(x0).is_zero and im(x0) < S.NegativeOne:
+            return self.func(x0) + S.Pi
+        return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0): #atan
         from sympy import im, re
@@ -2774,14 +2799,23 @@ class acot(InverseTrigonometricFunction):
             x = sympify(x)
             return (-1)**((n + 1)//2)*x**n/n
 
-    def _eval_as_leading_term(self, x):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
-
-        if x in arg.free_symbols and Order(1, x).contains(arg):
-            return arg
-        else:
-            return self.func(arg)
+    def _eval_as_leading_term(self, x, cdir=0):
+        from sympy import im, re
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        if x0 is S.ComplexInfinity:
+            return (1/arg).as_leading_term(x)
+        if cdir != 0:
+            cdir = arg.dir(x, cdir)
+        if x0.is_zero:
+            if re(cdir) < 0:
+                return self.func(x0) - S.Pi
+            return self.func(x0)
+        if re(cdir) > 0 and re(x0).is_zero and im(x0) > S.Zero and im(x0) < S.One:
+            return self.func(x0) + S.Pi
+        if re(cdir) < 0 and re(x0).is_zero and im(x0) < S.Zero and im(x0) > S.NegativeOne:
+            return self.func(x0) - S.Pi
+        return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0): #acot
         from sympy import im, re
@@ -2943,13 +2977,21 @@ class asec(InverseTrigonometricFunction):
         """
         return sec
 
-    def _eval_as_leading_term(self, x):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
-        if Order(1,x).contains(arg):
-            return log(arg)
-        else:
-            return self.func(arg)
+    def _eval_as_leading_term(self, x, cdir=0):
+        from sympy import I, im, log
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        if x0 == 1:
+            return sqrt(2)*sqrt((arg - S.One).as_leading_term(x))
+        if x0.is_zero:
+            return I*log(arg.as_leading_term(x))
+        if cdir != 0:
+            cdir = arg.dir(x, cdir)
+        if im(cdir) < 0 and x0.is_real and x0 > S.Zero and x0 < S.One:
+            return -self.func(x0)
+        elif im(cdir) > 0 and x0.is_real and x0 < S.Zero and x0 > S.NegativeOne:
+            return 2*S.Pi - self.func(x0)
+        return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0): #asec
         from sympy import Dummy, im, O
@@ -3107,13 +3149,21 @@ class acsc(InverseTrigonometricFunction):
         """
         return csc
 
-    def _eval_as_leading_term(self, x):
-        from sympy import Order
-        arg = self.args[0].as_leading_term(x)
-        if Order(1,x).contains(arg):
-            return log(arg)
-        else:
-            return self.func(arg)
+    def _eval_as_leading_term(self, x, cdir=0):
+        from sympy import I, im, log
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        if x0.is_zero:
+            return I*log(arg.as_leading_term(x))
+        if x0 is S.ComplexInfinity:
+            return arg.as_leading_term(x)
+        if cdir != 0:
+            cdir = arg.dir(x, cdir)
+        if im(cdir) < 0 and x0.is_real and x0 > S.Zero and x0 < S.One:
+            return S.Pi - self.func(x0)
+        elif im(cdir) > 0 and x0.is_real and x0 < S.Zero and x0 > S.NegativeOne:
+            return -S.Pi - self.func(x0)
+        return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0): #acsc
         from sympy import Dummy, im, O

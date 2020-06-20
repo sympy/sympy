@@ -393,8 +393,8 @@ def test_polynomial():
 
 
 def test_rational():
-    assert limit(1/y - (1/(y + x) + x/(y + x)/y)/z, x, oo) == 1/y - 1/(y*z)
-    assert limit(1/y - (1/(y + x) + x/(y + x)/y)/z, x, -oo) == 1/y - 1/(y*z)
+    assert limit(1/y - (1/(y + x) + x/(y + x)/y)/z, x, oo) == (z - 1)/(y*z)
+    assert limit(1/y - (1/(y + x) + x/(y + x)/y)/z, x, -oo) == (z - 1)/(y*z)
 
 
 def test_issue_5740():
@@ -767,6 +767,10 @@ def test_issue_19026():
 def test_issue_19067():
     x = Symbol('x')
     assert limit(gamma(x)/(gamma(x - 1)*gamma(x + 2)), x, 0) == -1
+
+
+def test_issue_19586():
+    assert limit(x**(2**x*3**(-x)), x, oo) == 1
 
 
 def test_issue_13715():
