@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 from sympy import (
     Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
     cos, symbols)
@@ -10,6 +12,9 @@ from sympy.simplify.simplify import simplify
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.testing.pytest import slow
 from sympy.testing.matrices import allclose
+from sympy.matrices.eigen import (
+    DefinitenessChecker, DefiniteFuzzyCheck,
+    DefiniteStrategy, DefiniteValidator)
 
 
 def test_eigen():
@@ -618,7 +623,9 @@ def test_is_indefinite():
         (Matrix([[2, 2], [-1, -1]]),
             {'indefinite': True, 'positive_semidefinite': False}, "Pr-comment-1"),
         (Matrix([[1, 0, 0], [0, 0, 0], [0, 0, -1]]),
-            {'indefinite': True, 'positive_semidefinite': False}, "Pr-comment-2")
+            {'indefinite': True, 'positive_semidefinite': False}, "Pr-comment-2"),
+        (Matrix([[0, 1], [1, 0]]),
+            {'indefinite': True, 'positive_semidefinite': False}, "Zeros on diagonal"),
     ]
     errors = []
     for m, expectations, label in test_data:
@@ -655,3 +662,69 @@ def test_definite_errors():
     except ValueError:
         error_raised = True
     assert error_raised
+
+
+class DefiniteCheckerMocks:
+    @staticmethod
+    def valid(M):
+        return None
+    @staticmethod
+    def raise_matrix_error(M):
+        raise MatrixError('test error')
+    @staticmethod
+    def fuzzy_true(M):
+        return True
+    @staticmethod
+    def fuzzy_false(M):
+        return False
+    @staticmethod
+    def fuzzy_none(M):
+        return None
+
+    
+class DefiniteCheckerAssert:
+    @staticmethod
+    def validation_error(expected_err, checker, msg):
+        errors = []
+        try:
+            checker(M=None)
+        except expected_err as e:
+            errors.append(str(e))
+        assert errors, msg
+
+
+def test_definiteness_checker_validation():
+    # test validation error
+    checker = DefinitenessChecker(
+        validators=[
+            DefiniteCheckerMocks.raise_matrix_error
+        ],
+        fuzzy_checks = [],
+        strategy=lambda M: True
+    )
+    DefiniteCheckerAssert.validation_error(
+        MatrixError, checker, 'Expected MatrixError')
+
+    # test no validation errors
+    checker = DefinitenessChecker(
+        validators=[
+            DefiniteCheckerMocks.valid
+        ],
+        fuzzy_checks = [],
+        strategy=lambda M: True
+    )
+    M = Matrix([[1, 2], [3, 4]])
+    assert checker(M)
+
+    # test validation error in second validator called
+    checker = DefinitenessChecker(
+        validators=[
+            DefiniteCheckerMocks.valid,
+            DefiniteCheckerMocks.raise_matrix_error
+        ],
+        fuzzy_checks=[],
+        strategy=lambda M: True
+    )
+    DefiniteCheckerAssert.validation_error(
+        MatrixError, checker, 'Expected MatrixError')
+
