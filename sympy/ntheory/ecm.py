@@ -52,7 +52,9 @@ class Point:
         """
         Add two points self and Q where diff = self - Q. Moreover the assumption
         is self.x_cord*Q.x_cord*(self.x_cord - Q.x_cord) != 0. This algorithm
-        requires 6 multiplications.
+        requires 6 multiplications. Here the difference between the points
+        is already known and using this this algorihtm speeds up the addition
+        by reducing the number of multiplication required.
 
         Parameters:
         ===========
