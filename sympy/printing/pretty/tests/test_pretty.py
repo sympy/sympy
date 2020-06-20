@@ -29,7 +29,7 @@ from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerP
 from sympy.matrices.expressions import hadamard_power
 
 from sympy.physics import mechanics
-from sympy.physics.control.lti import TransferFunction
+from sympy.physics.control.lti import TransferFunction, Series, Parallel
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
 from sympy.printing.pretty.pretty_symbology import center_accent, is_combining
@@ -2367,6 +2367,24 @@ def test_pretty_TransferFunction():
     assert upretty(tf2) == u"2⋅s + 1\n───────\n 3 - p "
     tf3 = TransferFunction(p, p + 1, p)
     assert upretty(tf3) == u"  p  \n─────\np + 1"
+
+
+def test_pretty_Series():
+    tf1 = TransferFunction(x + y, x - 2*y, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    assert pretty(Series(tf1, tf2)) == \
+        '        1                        \n─────────────────⋅(x - y)⋅(x + y)\n(x - 2⋅y)⋅(x + y)                '
+    assert pretty(Series(-tf2, -tf1)) == \
+        '                          1        \n(-x - y)⋅(-x + y)⋅─────────────────\n                  (x - 2⋅y)⋅(x + y)'
+
+
+def test_pretty_Parallel():
+    tf1 = TransferFunction(x + y, x - 2*y, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    assert pretty(Parallel(tf1, tf2)) == \
+        '        1         ⎛                           2⎞\n─────────────────⋅⎝(x - 2⋅y)⋅(x - y) + (x + y) ⎠\n(x - 2⋅y)⋅(x + y)                               '
+    assert pretty(Parallel(-tf2, -tf1)) == \
+        '        1         ⎛                            2⎞\n─────────────────⋅⎝(-x + y)⋅(x - 2⋅y) - (x + y) ⎠\n(x - 2⋅y)⋅(x + y)                                '
 
 
 def test_pretty_order():

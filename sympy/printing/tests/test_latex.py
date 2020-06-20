@@ -2274,7 +2274,6 @@ def test_TransferFunction_printing():
 def test_Parallel_printing():
     tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
     tf2 = TransferFunction(x - y, x + y, y)
-    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
     assert latex(Parallel(tf1, tf2)) == \
         '\\frac{1}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)} \\left(\\left(- t^{3} + y^{3}\\right) \\left(x - y\\right) + \\left(x + y\\right) \\left(x y^{2} - z\\right)\\right)'
     assert latex(Parallel(-tf2, tf1)) == \
