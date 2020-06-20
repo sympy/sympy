@@ -699,6 +699,16 @@ class DefiniteCheckerMocks:
     @staticmethod
     def invalid_strategy(M):
         return 18
+    @staticmethod
+    def validate_negative_entries(M):
+        if any(x.is_positive for x in M):
+            raise ValueError('test matrix has positive entries')
+    @staticmethod
+    def fuzzy_all_negative_entries(M):
+        return all(x.is_negative for x in M)
+    @staticmethod
+    def strategy_all_negative_entries(M):
+        return all(x.is_negative for x in M)
 
 
 class DefiniteCheckerAssert:
@@ -842,3 +852,20 @@ def test_checker_strategy():
     except DefinitenessChecker.StrategyError as e:
         errors.append(str(e))
     assert errors, 'Expected StrategyError'
+
+
+def test_checker_negate():
+    checker = DefinitenessChecker(
+        validators=[
+            DefiniteCheckerMocks.validate_negative_entries
+        ],
+        fuzzy_checks=[
+            DefiniteCheckerMocks.fuzzy_all_negative_entries
+        ],
+        strategy=DefiniteCheckerMocks.strategy_all_negative_entries
+    )
+    negated = checker.negate()
+    M = DefiniteCheckerMocks.M
+    assert negated.validators[0](M) is None, 'Validator not negated'
+    assert negated.fuzzy_checks[0](M), 'fuzzy checker altered by negation'
+    assert negated.strategy(M), 'strategy not negated'
