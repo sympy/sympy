@@ -587,46 +587,46 @@ def test_definite():
     assert not m.is_positive_definite
     assert not m.is_positive_semidefinite
 
+definite_test_data = [
+    (Matrix([[1, 2, 3], [4, 5, 6]]), {'indefinite': False, 'positive_semidefinite': False}, "Nonsquare matrix"),
+    (Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]]),
+        {'indefinite': False,
+            'positive_semidefinite': True}, "Zero matrix"),
+    (Matrix(([4, 2, sqrt(3)], [2, 2, 0], [sqrt(3), 0, 1])),
+        {'indefinite': True,
+            'positive_semidefinite': False}, "Nonsingular Indefinite"),
+    (Matrix(([4, 2, 1], [2, 2, 0], [1, 0, 1])),
+        {'indefinite': False, 'positive_semidefinite': True}, "Nonsingular Positive definite"),
+    (Matrix(([-4, -2, -1], [-2, -2, 0], [-1, 0, -1])),
+        {'indefinite': False, 'positive_semidefinite': False}, "Nonsingular Negative definite"),
+    (Matrix(([0, 1, 1], [1, 1, 2], [1, 2, 3])),
+        {'indefinite': True, 'positive_semidefinite': False}, "Singular Indefinite"),
+    (Matrix([[0, 0, 0], [0, 1, Rational(1, 2)], [0, Rational(1, 2), 1]]),
+        {'indefinite': False, 'positive_semidefinite': True}, "Singular positive semidefinite"),
+    (Matrix([[0, 0, 0],
+                [0, -1, Rational(-1, 2)],
+                [0, Rational(-1, 2), -1]]),
+        {'indefinite': False, 'positive_semidefinite': False}, "Singular negative semidefinite"),
+    (Matrix(([1, 2 * I], [-2 * I, 2])),
+        {'indefinite': True, 'positive_semidefinite': False}, "Complex Indefinite"),
+    (Matrix(([1, I], [-I, 2])),
+        {'indefinite': False, 'positive_semidefinite': True}, "Complex positive definite"),
+    (Matrix(([-1, -I], [I, -2])),
+        {'indefinite': False, 'positive_semidefinite': False}, "Complex negative definite"),
+    (Matrix([[0, 0, 0], [0, 5, -10 * I], [0, 10 * I, 5]]),
+        {'indefinite': True, 'positive_semidefinite': False}, "Complex singular indefinite"),
+    (Matrix([[2, 2], [-1, -1]]),
+        {'indefinite': True, 'positive_semidefinite': False}, "Pr-comment-1"),
+    (Matrix([[1, 0, 0], [0, 0, 0], [0, 0, -1]]),
+        {'indefinite': True, 'positive_semidefinite': False}, "Pr-comment-2"),
+    (Matrix([[0, 1], [1, 0]]),
+        {'indefinite': True, 'positive_semidefinite': False}, "Zeros on diagonal"),
+]
 
 # issue 19365
 def test_is_indefinite():
-    test_data = [
-        (Matrix([[1, 2, 3], [4, 5, 6]]), {'indefinite': False, 'positive_semidefinite': False}, "Nonsquare matrix"),
-        (Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]]),
-            {'indefinite': False,
-             'positive_semidefinite': True}, "Zero matrix"),
-        (Matrix(([4, 2, sqrt(3)], [2, 2, 0], [sqrt(3), 0, 1])),
-            {'indefinite': True,
-             'positive_semidefinite': False}, "Nonsingular Indefinite"),
-        (Matrix(([4, 2, 1], [2, 2, 0], [1, 0, 1])),
-            {'indefinite': False, 'positive_semidefinite': True}, "Nonsingular Positive definite"),
-        (Matrix(([-4, -2, -1], [-2, -2, 0], [-1, 0, -1])),
-            {'indefinite': False, 'positive_semidefinite': False}, "Nonsingular Negative definite"),
-        (Matrix(([0, 1, 1], [1, 1, 2], [1, 2, 3])),
-            {'indefinite': True, 'positive_semidefinite': False}, "Singular Indefinite"),
-        (Matrix([[0, 0, 0], [0, 1, Rational(1, 2)], [0, Rational(1, 2), 1]]),
-            {'indefinite': False, 'positive_semidefinite': True}, "Singular positive semidefinite"),
-        (Matrix([[0, 0, 0],
-                 [0, -1, Rational(-1, 2)],
-                 [0, Rational(-1, 2), -1]]),
-            {'indefinite': False, 'positive_semidefinite': False}, "Singular negative semidefinite"),
-        (Matrix(([1, 2 * I], [-2 * I, 2])),
-            {'indefinite': True, 'positive_semidefinite': False}, "Complex Indefinite"),
-        (Matrix(([1, I], [-I, 2])),
-            {'indefinite': False, 'positive_semidefinite': True}, "Complex positive definite"),
-        (Matrix(([-1, -I], [I, -2])),
-            {'indefinite': False, 'positive_semidefinite': False}, "Complex negative definite"),
-        (Matrix([[0, 0, 0], [0, 5, -10 * I], [0, 10 * I, 5]]),
-            {'indefinite': True, 'positive_semidefinite': False}, "Complex singular indefinite"),
-        (Matrix([[2, 2], [-1, -1]]),
-            {'indefinite': True, 'positive_semidefinite': False}, "Pr-comment-1"),
-        (Matrix([[1, 0, 0], [0, 0, 0], [0, 0, -1]]),
-            {'indefinite': True, 'positive_semidefinite': False}, "Pr-comment-2"),
-        (Matrix([[0, 1], [1, 0]]),
-            {'indefinite': True, 'positive_semidefinite': False}, "Zeros on diagonal"),
-    ]
     errors = []
-    for m, expectations, label in test_data:
+    for m, expectations, label in definite_test_data:
         actual = m.is_indefinite
         if actual != expectations['indefinite']:
             msg = (
@@ -869,3 +869,16 @@ def test_checker_negate():
     assert negated.validators[0](M) is None, 'Validator not negated'
     assert negated.fuzzy_checks[0](M), 'fuzzy checker altered by negation'
     assert negated.strategy(M), 'strategy not negated'
+
+
+def test_pos_semidef_cholesky():
+    errors = []
+    msg = "{}\nexpect {}: {}\nM = {}"
+    for M, expectations, label in definite_test_data:
+        try:
+            result = DefiniteStrategy.pos_semidef_cholesky(M) 
+            if result != expectations['positive_semidefinite']:
+                errors.append(msg.format(label, 'positive_semidefinite', expectations['positive_semidefinite'], M))
+        except Exception as e:
+            errors.append((msg + '\n' + str(e)).format(label, 'positive_semidefinite', expectations['positive_semidefinite'], M))
+    assert not errors, '\n'.join(errors)
