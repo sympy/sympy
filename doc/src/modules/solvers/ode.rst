@@ -219,15 +219,15 @@ Linear, 2 equations, Order 1, Type 2
 
 Linear, 2 equations, Order 1, Type 3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_2eq_order1_type3
+.. autofunction:: sympy.solvers.ode.ode::_linear_2eq_order1_type3
 
 Linear, 2 equations, Order 1, Type 4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_2eq_order1_type4
+.. autofunction:: sympy.solvers.ode.ode::_linear_2eq_order1_type4
 
 Linear, 2 equations, Order 1, Type 5
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_2eq_order1_type5
+.. autofunction:: sympy.solvers.ode.ode::_linear_2eq_order1_type5
 
 Linear, 2 equations, Order 1, Type 6
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -283,7 +283,7 @@ Linear, 2 equations, Order 2, Type 11
 
 Linear, 3 equations, Order 1, Type 4
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode._linear_3eq_order1_type4
+.. autofunction:: sympy.solvers.ode.ode::_linear_3eq_order1_type4
 
 Linear ODE to matrix
 ^^^^^^^^^^^^^^^^^^^^
