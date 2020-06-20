@@ -758,6 +758,51 @@ def _is_positive_definite_GE(M):
 _doc_positive_definite = \
     r"""Finds out the definiteness of a matrix.
 
+    Explanation
+    ===========
+
+    A square real matrix $A$ is:
+
+    - A positive definite matrix if $x^T A x > 0$
+      for all non-zero real vectors $x$.
+    - A positive semidefinite matrix if $x^T A x \geq 0$
+      for all non-zero real vectors $x$.
+    - A negative definite matrix if $x^T A x < 0$
+      for all non-zero real vectors $x$.
+    - A negative semidefinite matrix if $x^T A x \leq 0$
+      for all non-zero real vectors $x$.
+    - An indefinite matrix if there exists non-zero real vectors
+      $x, y$ with $x^T A x > 0 > y^T A y$.
+
+    A square complex matrix $A$ is:
+
+    - A positive definite matrix if $\text{re}(x^H A x) > 0$
+      for all non-zero complex vectors $x$.
+    - A positive semidefinite matrix if $\text{re}(x^H A x) \geq 0$
+      for all non-zero complex vectors $x$.
+    - A negative definite matrix if $\text{re}(x^H A x) < 0$
+      for all non-zero complex vectors $x$.
+    - A negative semidefinite matrix if $\text{re}(x^H A x) \leq 0$
+      for all non-zero complex vectors $x$.
+    - An indefinite matrix if there exists non-zero complex vectors
+      $x, y$ with $\text{re}(x^H A x) > 0 > \text{re}(y^H A y)$.
+
+    A matrix need not be symmetric or hermitian to be positive definite.
+
+    - A real non-symmetric matrix is positive definite if
+      $\frac{A + A^T}{2}$ is positive definite.
+    - A complex non-hermitian matrix is positive definite if
+      $\frac{A + A^H}{2}$ is positive definite.
+
+    And this extension can apply for all the definitions above.
+
+    However, for complex cases, you can restrict the definition of
+    $\text{re}(x^H A x) > 0$ to $x^H A x > 0$ and require the matrix
+    to be hermitian.
+    But we do not present this restriction for computation because you
+    can check ``M.is_hermitian`` independently with this and use
+    the same procedure.
+
     Examples
     ========
 
@@ -807,19 +852,49 @@ _doc_positive_definite = \
     Notes
     =====
 
-    Definitiveness is not very commonly discussed for non-hermitian
-    matrices.
+    Although some people trivialize the definition of positive definite
+    matrices only for symmetric or hermitian matrices, this restriction
+    is not correct because it does not classify all instances of
+    positive definite matrices from the definition $x^T A x > 0$ or
+    $\text{re}(x^H A x) > 0$.
 
-    However, computing the definitiveness of a matrix can be
-    generalized over any real matrix by taking the symmetric part:
+    For instance, the matrix
+    $\begin{bmatrix} 1 & 2 \\ -2 & 1 \end{bmatrix}$ is an example
+    of real positive definite matrix that is not symmetric because
 
-    `A_S = 1/2 (A + A^{T})`
+    .. math::
+        \begin{bmatrix} a & b \end{bmatrix}
+        \begin{bmatrix} 1 & 2 \\ -2 & 1 \end{bmatrix}
+        \begin{bmatrix} a \\ b \end{bmatrix} = a^2 + b^2 > 0
 
-    Or over any complex matrix by taking the hermitian part:
+    Furthermore, there is a matrix with no symmetry structure
+    $\begin{bmatrix} 1 & 2 \\ -1 & 1 \end{bmatrix}$ that is positive
+    definite because
 
-    `A_H = 1/2 (A + A^{H})`
+    .. math::
+        \begin{bmatrix} a & b \end{bmatrix}
+        \begin{bmatrix} 1 & 2 \\ -1 & 1 \end{bmatrix}
+        \begin{bmatrix} a \\ b \end{bmatrix} = a^2 + a b + b^2
+        = \frac{(a+b)^2 + a^2 + b^2}{2} > 0
 
-    And computing the eigenvalues.
+    However, since the following theorem is proven from [3]_.
+
+    .. math::
+        \text{re}(x^H A x) > 0 \iff
+        \text{re}(x^H \frac{A + A^H}{2} x) > 0
+
+    We can classify all instances of non symmetric or hermitian matrices
+    that can be found to be positive definite by testing positive
+    definiteness of $\frac{A + A^T}{2}$ or $\frac{A + A^H}{2}$
+    (which is guaranteed to be always real symmetric or complex
+    hermitian) and we can defer most of the studies to symmetric or
+    hermitian positive definite matrices.
+
+    But it is a different problem for the existance of Cholesky
+    decomposition. Because even though a non symmetric or a non
+    hermitian matrix can be positive definite, Cholesky or LDL
+    decomposition does not exist because the decompositions require the
+    matrix to be symmetric or hermitian.
 
     References
     ==========
