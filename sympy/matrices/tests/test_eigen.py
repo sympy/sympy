@@ -664,6 +664,11 @@ def test_definite_errors():
     assert error_raised
 
 
+"""
+Unit tests for the DefinitenessChecker class
+"""
+
+
 class DefiniteCheckerMocks:
     @staticmethod
     def valid(M):
@@ -680,6 +685,13 @@ class DefiniteCheckerMocks:
     @staticmethod
     def fuzzy_none(M):
         return None
+    @staticmethod
+    def error_strategy(M):
+        raise Exception('Error in test strategy')
+    @staticmethod
+    def true_strategy(M):
+        return True
+    M = Matrix([[1, 2], [3, 4]])
 
     
 class DefiniteCheckerAssert:
@@ -687,7 +699,7 @@ class DefiniteCheckerAssert:
     def validation_error(expected_err, checker, msg):
         errors = []
         try:
-            checker(M=None)
+            checker(DefiniteCheckerMocks.M)
         except expected_err as e:
             errors.append(str(e))
         assert errors, msg
@@ -713,8 +725,7 @@ def test_definiteness_checker_validation():
         fuzzy_checks = [],
         strategy=lambda M: True
     )
-    M = Matrix([[1, 2], [3, 4]])
-    assert checker(M)
+    assert checker(DefiniteCheckerMocks.M)
 
     # test validation error in second validator called
     checker = DefinitenessChecker(
@@ -728,3 +739,39 @@ def test_definiteness_checker_validation():
     DefiniteCheckerAssert.validation_error(
         MatrixError, checker, 'Expected MatrixError')
 
+
+def test_checker_fuzzy():
+    for mock_fuzzy, expected in [
+        (DefiniteCheckerMocks.fuzzy_true, True),
+        (DefiniteCheckerMocks.fuzzy_false, False),
+    ]:
+        checker = DefinitenessChecker(
+            validators=[DefiniteCheckerMocks.valid],
+            fuzzy_checks=[
+                mock_fuzzy
+            ],
+            strategy=DefiniteCheckerMocks.error_strategy
+        )
+        assert checker(DefiniteCheckerMocks.M) == expected
+
+    checker = DefinitenessChecker(
+        validators=[DefiniteCheckerMocks.valid],
+        fuzzy_checks=[
+            DefiniteCheckerMocks.fuzzy_none
+        ],
+        strategy=DefiniteCheckerMocks.true_strategy
+    )
+    assert checker(DefiniteCheckerMocks.M), "Unexpected return from fuzzy checker"
+
+    # fuzzy checks that return none are ignored,
+    # checks that return boolean trigger an early return
+    checker = DefinitenessChecker(
+        validators=[DefiniteCheckerMocks.valid],
+        fuzzy_checks=[
+            DefiniteCheckerMocks.fuzzy_none,
+            DefiniteCheckerMocks.fuzzy_true
+        ],
+        strategy=DefiniteCheckerMocks.error_strategy
+    )
+    assert checker(DefiniteCheckerMocks.M), "No early return from fuzzy checker"
+    
