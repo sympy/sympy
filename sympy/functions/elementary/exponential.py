@@ -431,7 +431,7 @@ class exp(ExpBase):
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import limit, oo, Order, powsimp, Wild, expand_complex
+        from sympy import ceiling, limit, oo, Order, powsimp, Wild, expand_complex
         arg = self.args[0]
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
@@ -446,7 +446,7 @@ class exp(ExpBase):
         except NotImplementedError:
             cf = 0
         if cf and cf > 0:
-            nterms = (n/cf).ceiling()
+            nterms = ceiling(n/cf)
         exp_series = exp(t)._taylor(t, nterms)
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
         if cf and cf > 1:
