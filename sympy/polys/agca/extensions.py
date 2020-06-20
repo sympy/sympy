@@ -1,7 +1,5 @@
 """Finite extensions of ring domains."""
 
-from __future__ import print_function, division
-
 from sympy.polys.polyerrors import CoercionFailed, NotInvertible
 from sympy.polys.polytools import Poly
 
@@ -103,7 +101,7 @@ class ExtensionElement(object):
         else:
             return NotImplemented
 
-    __div__ = __truediv__
+    __floordiv__ = __truediv__
 
     def __rtruediv__(f, g):
         try:
@@ -111,7 +109,7 @@ class ExtensionElement(object):
         except CoercionFailed:
             return NotImplemented
 
-    __rdiv__ = __rtruediv__
+    __rfloordiv__ = __rtruediv__
 
     def __pow__(f, n):
         if not isinstance(n, int):
