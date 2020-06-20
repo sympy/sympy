@@ -789,9 +789,9 @@ _doc_positive_definite = \
 
     A matrix need not be symmetric or hermitian to be positive definite.
 
-    - A real non-symmetric matrix is positive definite if
+    - A real non-symmetric matrix is positive definite if and only if
       $\frac{A + A^T}{2}$ is positive definite.
-    - A complex non-hermitian matrix is positive definite if
+    - A complex non-hermitian matrix is positive definite if and only if
       $\frac{A + A^H}{2}$ is positive definite.
 
     And this extension can apply for all the definitions above.
@@ -806,48 +806,85 @@ _doc_positive_definite = \
     Examples
     ========
 
-    An example of numeric positive definite matrix:
+    An example of symmetric positive definite matrix:
 
-    >>> from sympy import Matrix
-    >>> A = Matrix([[1, -2], [-2, 6]])
-    >>> A.is_positive_definite
-    True
-    >>> A.is_positive_semidefinite
-    True
-    >>> A.is_negative_definite
-    False
-    >>> A.is_negative_semidefinite
-    False
-    >>> A.is_indefinite
-    False
+    .. plot::
+        :context: reset
+        :format: doctest
+        :include-source: True
 
-    An example of numeric negative definite matrix:
+        >>> from sympy import Matrix, symbols
+        >>> from sympy.plotting import plot3d
+        >>> a, b = symbols('a b')
+        >>> x = Matrix([a, b])
 
-    >>> A = Matrix([[-1, 2], [2, -6]])
-    >>> A.is_positive_definite
-    False
-    >>> A.is_positive_semidefinite
-    False
-    >>> A.is_negative_definite
-    True
-    >>> A.is_negative_semidefinite
-    True
-    >>> A.is_indefinite
-    False
+        >>> A = Matrix([[1, 0], [0, 1]])
+        >>> A.is_positive_definite
+        True
+        >>> A.is_positive_semidefinite
+        True
 
-    An example of numeric indefinite matrix:
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
 
-    >>> A = Matrix([[1, 2], [2, 1]])
-    >>> A.is_positive_definite
-    False
-    >>> A.is_positive_semidefinite
-    False
-    >>> A.is_negative_definite
-    False
-    >>> A.is_negative_semidefinite
-    False
-    >>> A.is_indefinite
-    True
+    An example of symmetric positive semidefinite matrix:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[1, -1], [-1, 1]])
+        >>> A.is_positive_definite
+        False
+        >>> A.is_positive_semidefinite
+        True
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
+
+    An example of symmetric negative definite matrix:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[-1, 0], [0, -1]])
+        >>> A.is_negative_definite
+        True
+        >>> A.is_negative_semidefinite
+        True
+        >>> A.is_indefinite
+        False
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
+
+    An example of symmetric indefinite matrix:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[1, 2], [2, -1]])
+        >>> A.is_indefinite
+        True
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
+
+    An example of non-symmetric positive definite matrix.
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[1, 2], [-2, 1]])
+        >>> A.is_positive_definite
+        True
+        >>> A.is_positive_semidefinite
+        True
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
 
     Notes
     =====
@@ -858,34 +895,19 @@ _doc_positive_definite = \
     positive definite matrices from the definition $x^T A x > 0$ or
     $\text{re}(x^H A x) > 0$.
 
-    For instance, the matrix
-    $\begin{bmatrix} 1 & 2 \\ -2 & 1 \end{bmatrix}$ is an example
-    of real positive definite matrix that is not symmetric because
+    For instance, ``Matrix([[1, 2], [-2, 1]])`` presented in
+    the example above is an example of real positive definite matrix
+    that is not symmetric.
 
-    .. math::
-        \begin{bmatrix} a & b \end{bmatrix}
-        \begin{bmatrix} 1 & 2 \\ -2 & 1 \end{bmatrix}
-        \begin{bmatrix} a \\ b \end{bmatrix} = a^2 + b^2 > 0
-
-    Furthermore, there is a matrix with no symmetry structure
-    $\begin{bmatrix} 1 & 2 \\ -1 & 1 \end{bmatrix}$ that is positive
-    definite because
-
-    .. math::
-        \begin{bmatrix} a & b \end{bmatrix}
-        \begin{bmatrix} 1 & 2 \\ -1 & 1 \end{bmatrix}
-        \begin{bmatrix} a \\ b \end{bmatrix} = a^2 + a b + b^2
-        = \frac{(a+b)^2 + a^2 + b^2}{2} > 0
-
-    However, since the following theorem is proven from [3]_.
+    However, since the following formula holds true;
 
     .. math::
         \text{re}(x^H A x) > 0 \iff
         \text{re}(x^H \frac{A + A^H}{2} x) > 0
 
-    We can classify all instances of non symmetric or hermitian matrices
-    that can be found to be positive definite by testing positive
-    definiteness of $\frac{A + A^T}{2}$ or $\frac{A + A^H}{2}$
+    We can classify all positive definite matrices that may or may not
+    be symmetric or hermitian by transforming the matrix to
+    $\frac{A + A^T}{2}$ or $\frac{A + A^H}{2}$
     (which is guaranteed to be always real symmetric or complex
     hermitian) and we can defer most of the studies to symmetric or
     hermitian positive definite matrices.
