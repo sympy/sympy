@@ -730,6 +730,7 @@ class DefiniteStrategy:
     @staticmethod
     def pos_semidef_cholesky(M):
         M = M.as_mutable()
+        if not M.is_square: return False
         for k in range(M.rows):
             pivot, _, pivot_nonzero, _ = _find_reasonable_pivot(
                 [M[i, i] for i in range(k, M.rows)])
