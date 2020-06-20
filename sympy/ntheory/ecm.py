@@ -18,6 +18,10 @@ class Point:
     Using Montgomery form we try to perform point addition
     and doubling in least amount of multiplications.
 
+    The elliptic curve used here is of the form
+    (E : b*y**2*z = x**3 + a*x**2*z + x*z**2).
+    The a_24 parameter is equal to (a + 2)/4.
+
     References
     ==========
 
@@ -42,6 +46,8 @@ class Point:
         self.mod = mod
 
     def __eq__(self, other):
+        """Two points are equal if X/Z of both points are equal
+        """
         from sympy import mod_inverse
         if self.a_24 != other.a_24 or self.mod != other.mod:
             return False
