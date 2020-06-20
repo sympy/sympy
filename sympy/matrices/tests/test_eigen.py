@@ -1,5 +1,3 @@
-from unittest.mock import MagicMock
-
 from sympy import (
     Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
     cos, symbols)
@@ -694,7 +692,7 @@ class DefiniteCheckerMocks:
     M = Matrix([[1, 2], [3, 4]])
     @staticmethod
     def invalid_validator(M):
-        return False 
+        return False
     @staticmethod
     def invalid_fuzzy(M):
         return 17
@@ -702,7 +700,7 @@ class DefiniteCheckerMocks:
     def invalid_strategy(M):
         return 18
 
-    
+
 class DefiniteCheckerAssert:
     @staticmethod
     def validation_error(expected_err, checker, msg):
@@ -764,6 +762,20 @@ def test_definiteness_checker_validation():
     except DefinitenessChecker.ValidatorError as e:
         errors.append(str(e))
     assert errors, 'Expected error not raised'
+
+    # every Checker should have a validator that checks that the input is a Matrix
+    checker = DefinitenessChecker(
+        validators=[],
+        fuzzy_checks=[],
+        strategy=DefiniteCheckerMocks.true_strategy
+    )
+    errors = []
+    try:
+        checker(None)
+    except AttributeError as e:
+        errors.append(str(e))
+    assert errors, 'Expected TypeError'
+    assert str(errors[0]) == 'M must have attrs "is_square" and "H"'
 
 
 def test_checker_fuzzy():

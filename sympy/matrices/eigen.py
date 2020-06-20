@@ -667,6 +667,11 @@ class DefiniteValidator:
     """Checks for invalid input and raises an error if found
     """
     @staticmethod
+    def is_matrix_duck_type(M):
+        if not (hasattr(M, 'is_square') and hasattr(M, 'H')):
+            raise AttributeError('M must have attrs "is_square" and "H"')
+
+    @staticmethod
     def has_nan(M):
        if any(x is nan for x in M):
             raise MatrixError('Matrix contains nan')
@@ -770,7 +775,8 @@ class DefinitenessChecker:
             return 'Strategy should return a boolean'
 
     def __init__(self, validators, fuzzy_checks, strategy):
-        self.validators = validators
+        self.validators = [DefiniteValidator.is_matrix_duck_type]
+        self.validators.extend(validators)
         self.fuzzy_checks = fuzzy_checks
         self.strategy = strategy
 
