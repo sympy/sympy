@@ -692,6 +692,15 @@ class DefiniteCheckerMocks:
     def true_strategy(M):
         return True
     M = Matrix([[1, 2], [3, 4]])
+    @staticmethod
+    def invalid_validator(M):
+        return False 
+    @staticmethod
+    def invalid_fuzzy(M):
+        return 17
+    @staticmethod
+    def invalid_strategy(M):
+        return 18
 
     
 class DefiniteCheckerAssert:
@@ -739,6 +748,23 @@ def test_definiteness_checker_validation():
     DefiniteCheckerAssert.validation_error(
         MatrixError, checker, 'Expected MatrixError')
 
+    # validators should only return None, or raise an Error
+    # checker should raise error if invalid validator return type
+    # is detected
+    checker = DefinitenessChecker(
+        validators=[
+            DefiniteCheckerMocks.invalid_validator
+        ],
+        fuzzy_checks=[],
+        strategy=DefiniteCheckerMocks.true_strategy
+    )
+    errors = []
+    try:
+        checker(DefiniteCheckerMocks.M)
+    except DefinitenessChecker.ValidatorError as e:
+        errors.append(str(e))
+    assert errors, 'Expected error not raised'
+
 
 def test_checker_fuzzy():
     for mock_fuzzy, expected in [
@@ -774,4 +800,33 @@ def test_checker_fuzzy():
         strategy=DefiniteCheckerMocks.error_strategy
     )
     assert checker(DefiniteCheckerMocks.M), "No early return from fuzzy checker"
-    
+
+    # Checker raises error if fuzzy check does not return None or a boolean.
+    checker = DefinitenessChecker(
+        validators=[DefiniteCheckerMocks.valid],
+        fuzzy_checks=[
+            DefiniteCheckerMocks.invalid_fuzzy
+        ],
+        strategy=DefiniteCheckerMocks.true_strategy
+    )
+    errors = []
+    try:
+        checker(DefiniteCheckerMocks.M)
+    except DefinitenessChecker.FuzzyError as e:
+        errors.append(str(e))
+    assert errors, 'Expected FuzzyError'
+
+
+def test_checker_strategy():
+    # Checker raises error if strategy does not return a boolean
+    checker = DefinitenessChecker(
+        validators=[],
+        fuzzy_checks=[],
+        strategy=DefiniteCheckerMocks.invalid_strategy
+    )
+    errors = []
+    try:
+        checker(DefiniteCheckerMocks.M)
+    except DefinitenessChecker.StrategyError as e:
+        errors.append(str(e))
+    assert errors, 'Expected StrategyError'

@@ -757,6 +757,18 @@ class DefiniteStrategy:
 
 
 class DefinitenessChecker:
+    class ValidatorError(Exception):
+        def __repr__(self):
+            return 'validators should return None or raise an error'
+    
+    class FuzzyError(Exception):
+        def __repr__(self):
+            return 'Fuzzy checks should return None or a boolean'
+
+    class StrategyError(Exception):
+        def __repr__(self):
+            return 'Strategy should return a boolean'
+
     def __init__(self, validators, fuzzy_checks, strategy):
         self.validators = validators
         self.fuzzy_checks = fuzzy_checks
@@ -764,13 +776,17 @@ class DefinitenessChecker:
 
     def __call__(self, M):
         for validator in self.validators:
-            validator(M)
+            validation_result = validator(M)
+            self._check_validation(validation_result)
         if not M.is_square: return False
         M = M + M.H
         for fuzzy_check in self.fuzzy_checks:
             fuzzy = fuzzy_check(M)
+            self._check_fuzzy(fuzzy)
             if fuzzy is not None: return fuzzy
-        return self.strategy(M)
+        strategy_result = self.strategy(M)
+        self._check_strategy(strategy_result)
+        return strategy_result
 
     def negate(self):
         negated_validators = [lambda M: v(-M) for v in self.validators]
@@ -778,6 +794,21 @@ class DefinitenessChecker:
         negated_strategy = lambda M: self.strategy(-M)
         return DefinitenessChecker(
             negated_validators, negated_fuzzy_checks, negated_strategy)
+
+    @classmethod
+    def _check_validation(cls, validation_result):
+        if validation_result is not None:
+            raise cls.ValidatorError
+
+    @classmethod
+    def _check_fuzzy(cls, fuzzy_result):
+        if not (fuzzy_result is None or isinstance(fuzzy_result, bool)):
+            raise cls.FuzzyError
+
+    @classmethod
+    def _check_strategy(cls, strategy_result):
+        if not isinstance(strategy_result, bool):
+            raise cls.StrategyError
 
 
 _is_positive_definite = DefinitenessChecker(
