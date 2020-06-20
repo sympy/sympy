@@ -6,7 +6,7 @@ from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
                                        ODEOrderError, ODENonlinearError, _simpsol)
 from sympy.integrals.integrals import Integral
-from sympy.testing.pytest import raises, slow, ON_TRAVIS, skip
+from sympy.testing.pytest import ON_TRAVIS, raises, slow, skip, XFAIL
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 
@@ -1092,19 +1092,17 @@ def test_linear_neq_order1_type2_slow_check():
     assert checksysodesol(system, sol) == (True, [0, 0])
 
 
-def test_linear_3eq_order1_type4_long():
-
+def _linear_3eq_order1_type4_long():
     x, y, z = symbols('x, y, z', cls=Function)
     t = Symbol('t')
 
     f = t ** 3 + log(t)
     g = t ** 2 + sin(t)
-    eq1 = (Eq(diff(x(t), t), (4 * f + g) * x(t) - f * y(t) - 2 * f * z(t)),
-                Eq(diff(y(t), t), 2 * f * x(t) + (f + g) * y(t) - 2 * f * z(t)), Eq(diff(z(t), t), 5 * f * x(t) + f * y(
-        t) + (-3 * f + g) * z(t)))
-
-    dsolve_sol = dsolve(eq1)
-    dsolve_sol1 = [_simpsol(sol) for sol in dsolve_sol]
+    eq = [
+        Eq(diff(x(t), t), (4 * f + g) * x(t) - f * y(t) - 2 * f * z(t)),
+        Eq(diff(y(t), t), 2 * f * x(t) + (f + g) * y(t) - 2 * f * z(t)),
+        Eq(diff(z(t), t), 5 * f * x(t) + f * y( t) + (-3 * f + g) * z(t))
+    ]
 
     x_1 = sqrt(-t ** 6 - 8 * t ** 3 * log(t) + 8 * t ** 3 - 16 * log(t) ** 2 + 32 * log(t) - 16)
     x_2 = sqrt(3)
@@ -1117,9 +1115,45 @@ def test_linear_3eq_order1_type4_long():
     x_9 = 1 / (66049 * t ** 3 - 50629 * x_1 * x_2 + 264196 * log(t) - 264196)
     x_10 = 50629 * C1 / 25189 + 37909 * C2 / 25189 - 50629 * C3 / 25189 - x_3 * x_4
     x_11 = -50629 * C1 / 25189 - 12720 * C2 / 25189 + 50629 * C3 / 25189 + x_3 * x_4
-    sol = [Eq(x(t), x_10 * x_5 + x_11 * x_6 + x_7 * (C1 - C2)), Eq(y(t), x_10 * x_5 + x_11 * x_6), Eq(z(t), x_5 * (
-            -424 * C1 / 257 - 167 * C2 / 257 + 424 * C3 / 257 - x_8 * x_9) + x_6 * (167 * C1 / 257 + 424 * C2 / 257 -
-            167 * C3 / 257 + x_8 * x_9) + x_7 * (C1 - C2))]
+    sol = [
+        Eq(x(t), x_10 * x_5 + x_11 * x_6 + x_7 * (C1 - C2)),
+        Eq(y(t), x_10 * x_5 + x_11 * x_6),
+        Eq(z(t), x_5 * (-424*C1/257 - 167*C2 / 257+424*C3/257 - x_8*x_9)
+            + x_6*(167*C1/257 + 424*C2/257 - 167*C3/257 + x_8*x_9) + x_7*(C1 - C2))
+    ]
+
+    return eq, sol
+
+
+@XFAIL
+@slow
+def test_linear_3eq_order1_type4_long_dsolve_slow_xfail():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+
+    eq, sol = _linear_3eq_order1_type4_long()
+
+    dsolve_sol = dsolve(eq)
+    dsolve_sol1 = [_simpsol(sol) for sol in dsolve_sol]
 
     assert dsolve_sol1 == sol
-    assert checksysodesol(eq1, dsolve_sol1) == (True, [0, 0, 0])
+
+
+def test_linear_3eq_order1_type4_long_dsolve_dotprodsimp():
+
+    from sympy.matrices import dotprodsimp
+
+    eq, sol = _linear_3eq_order1_type4_long()
+
+    # XXX: Only works with dotprodsimp see
+    # test_linear_3eq_order1_type4_long_dsolve_slow_xfail which is too slow
+    with dotprodsimp(True):
+        dsolve_sol = dsolve(eq)
+
+    dsolve_sol1 = [_simpsol(sol) for sol in dsolve_sol]
+    assert dsolve_sol1 == sol
+
+
+def test_linear_3eq_order1_type4_long_check():
+    eq, sol = _linear_3eq_order1_type4_long()
+    assert checksysodesol(eq, sol) == (True, [0, 0, 0])

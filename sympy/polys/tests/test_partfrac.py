@@ -9,7 +9,7 @@ from sympy.polys.partfrac import (
 
 from sympy import (S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda,
                    Symbol, Dummy, factor, together, sqrt, Expr, Rational)
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, ON_TRAVIS, skip, XFAIL
 from sympy.abc import x, y, a, b, c
 
 
@@ -74,17 +74,7 @@ def test_apart_symbolic():
         1/((a - b)*(a - c)*(a + x))
 
 
-def test_apart_extension():
-    f = 2/(x**2 + 1)
-    g = I/(x + I) - I/(x - I)
-
-    assert apart(f, extension=I) == g
-    assert apart(f, gaussian=True) == g
-
-    f = x/((x - 2)*(x + I))
-
-    assert factor(together(apart(f)).expand()) == f
-
+def _make_extension_example():
     # https://github.com/sympy/sympy/issues/18531
     from sympy.core import Mul
     def mul2(expr):
@@ -98,7 +88,34 @@ def test_apart_extension():
        - 1/mul2(x - 1 + sqrt(2))
        + 1/mul2((x + 1)**2)
        + 1/mul2((x - 1)**2))
+    return f, g
 
+
+def test_apart_extension():
+    f = 2/(x**2 + 1)
+    g = I/(x + I) - I/(x - I)
+
+    assert apart(f, extension=I) == g
+    assert apart(f, gaussian=True) == g
+
+    f = x/((x - 2)*(x + I))
+
+    assert factor(together(apart(f)).expand()) == f
+
+    f, g = _make_extension_example()
+
+    # XXX: Only works with dotprodsimp. See test_apart_extension_xfail below
+    from sympy.matrices import dotprodsimp
+    with dotprodsimp(True):
+        assert apart(f, x, extension={sqrt(2)}) == g
+
+
+# XXX: This is XFAIL just because it is slow
+@XFAIL
+def test_apart_extension_xfail():
+    if ON_TRAVIS:
+        skip('Too slow for Travis')
+    f, g = _make_extension_example()
     assert apart(f, x, extension={sqrt(2)}) == g
 
 
