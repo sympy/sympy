@@ -4,11 +4,12 @@ from collections import Counter
 from mpmath import mp, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
+from .determinant import _find_reasonable_pivot
 from sympy.core.compatibility import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
+from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.numbers import Float, nan
 from sympy.core.sympify import _sympify
-from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots
 from sympy.simplify import nsimplify, simplify as _simplify
@@ -674,6 +675,8 @@ def _fuzzy_positive_definite(M):
 
 
 def _is_positive_definite(M):
+    if any(x is nan for x in M):
+        raise MatrixError('Matrix contains nan')
     if not M.is_hermitian:
         if not M.is_square:
             return False
@@ -689,9 +692,9 @@ def _is_positive_definite(M):
 def _is_positive_semidefinite(M):
     if not M.is_square:
         return False
-    if any(m == nan for m in M):
-        raise ValueError('Matrix contains nan')
-    M = (M + M.H) / 2
+    if any(x is nan for x in M):
+        raise MatrixError('Matrix contains nan')
+    M = M + M.H
 
     if any(M[i, i].is_negative for i in range(M.rows)):
         return False
@@ -699,7 +702,28 @@ def _is_positive_semidefinite(M):
         # If diagonal entries of M are nonnegative and
         # M wdd, then M is positive semidefinite
         return True
-    return all(re(e.evalf()) >= 0 for e in M.eigenvals())
+
+    # Cholesky Factorization
+    for k in range(M.rows):
+        pivot, _, pivot_nonzero, _ = _find_reasonable_pivot(
+            [M[i, i] for i in range(k, M.rows)])
+
+        if pivot is None:
+            return None if pivot_nonzero else True
+
+        if pivot > 0:
+            M.col_swap(k, k+pivot)
+            M.row_swap(k, k+pivot)
+
+        if M[k, k].is_negative:
+            return False
+
+        M[k, k] = sqrt(M[k, k])
+        M[k, (k+1):] /= M[k, k]
+        for j in range(k+1, M.rows):
+            M[(k+1):(j+1), j] -= M[k, (k+1):(j+1)].H * M[k, j]
+
+    return M[-1, -1].is_nonnegative
 
 
 def _is_negative_definite(M):
@@ -714,25 +738,21 @@ def _is_indefinite(M):
     """Returns True if M is not positive semi-definite
     and not negative semi-definite and false otherwise
     """
-    if not M.is_square:
-        return False
     if any(m == nan for m in M):
         raise ValueError('Matrix contains nan')
-    M = (M + M.H) / 2
-    return (
-        (
-            # faster check
-            # if M has both positive and negative
-            # diagonal entries, it is neither negative
-            # semidefinite nor positive semidefinite,
-            # so it is indefinite
-            any(M[i, i].is_positive for i in range(M.rows)) \
-            and any(M[i, i].is_negative for i in range(M.rows)) \
-        ) \
-        or not (
-            M.is_positive_semidefinite \
-            or M.is_negative_semidefinite \
-        )
+    if not M.is_square: return False
+    M = M + M.H
+
+    positive_diags = (M[i, i].is_positive for i in range(M.rows))
+    negative_diags = (M[i, i].is_negative for i in range(M.rows))
+    if fuzzy_or(positive_diags) and fuzzy_or(negative_diags):
+        return True
+
+    return fuzzy_not(
+        fuzzy_or([
+            M.is_positive_semidefinite,
+            M.is_negative_semidefinite
+        ])
     )
 
 
