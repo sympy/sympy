@@ -661,6 +661,10 @@ def test_issue_19026():
     assert limit(Abs(log(x) + 1)/log(x), x, oo) == 1
 
 
+def test_issue_19586():
+    assert limit(x**(2**x*3**(-x)), x, oo) == 1
+
+
 def test_issue_13715():
     n = Symbol('n')
     p = Symbol('p', zero=True)
