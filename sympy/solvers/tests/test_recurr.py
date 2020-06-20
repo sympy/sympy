@@ -1,8 +1,8 @@
-from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols, I, expand_func, binomial, gamma
+from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols, I, \
+    expand_func, binomial, gamma, Rational, Symbol, cos, sin, Abs
 from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
-from sympy.utilities.pytest import raises
-from sympy.core.compatibility import range
-from sympy.abc import a, b, c
+from sympy.testing.pytest import raises, slow
+from sympy.abc import a, b
 
 y = Function('y')
 n, k = symbols('n,k', integer=True)
@@ -28,10 +28,10 @@ def test_rsolve_ratio():
 
     assert solution in [
         C1*((-2*n + 3)/(n**2 - 1))/3,
-        (S(1)/2)*(C1*(-3 + 2*n)/(-1 + n**2)),
-        (S(1)/2)*(C1*( 3 - 2*n)/( 1 - n**2)),
-        (S(1)/2)*(C2*(-3 + 2*n)/(-1 + n**2)),
-        (S(1)/2)*(C2*( 3 - 2*n)/( 1 - n**2)),
+        (S.Half)*(C1*(-3 + 2*n)/(-1 + n**2)),
+        (S.Half)*(C1*( 3 - 2*n)/( 1 - n**2)),
+        (S.Half)*(C2*(-3 + 2*n)/(-1 + n**2)),
+        (S.Half)*(C2*( 3 - 2*n)/( 1 - n**2)),
     ]
 
 
@@ -70,7 +70,7 @@ def test_rsolve_hyper():
     assert rsolve_hyper([-a, 0, 1], 0, n).expand() == (-1)**n*C1*a**(n/2) + C0*a**(n/2)
 
     assert rsolve_hyper([1, 1, 1], 0, n).expand() == \
-        C0*(-S(1)/2 - sqrt(3)*I/2)**n + C1*(-S(1)/2 + sqrt(3)*I/2)**n
+        C0*(Rational(-1, 2) - sqrt(3)*I/2)**n + C1*(Rational(-1, 2) + sqrt(3)*I/2)**n
 
     assert rsolve_hyper([1, -2*n/a - 2/a, 1], 0, n) is None
 
@@ -188,6 +188,8 @@ def test_rsolve():
     assert (rsolve((k + 1)*y(k) + (k + 3)*y(k + 1) + (k + 5)*y(k + 2), y(k))
             is None)
 
+    assert rsolve(y(n) + y(n + 1) + 2**n + 3**n, y(n)) == (-1)**n*C0 - 2**n/3 - 3**n/4
+
 
 def test_rsolve_raises():
     x = Function('x')
@@ -196,9 +198,24 @@ def test_rsolve_raises():
     raises(ValueError, lambda: rsolve(y(n) - x(n + 1), y(n)))
     raises(ValueError, lambda: rsolve(y(n) - sqrt(n)*y(n + 1), y(n)))
     raises(ValueError, lambda: rsolve(y(n) - y(n + 1), y(n), {x(0): 0}))
+    raises(ValueError, lambda: rsolve(y(n) + y(n + 1) + 2**n + cos(n), y(n)))
 
 
 def test_issue_6844():
     f = y(n + 2) - y(n + 1) + y(n)/4
     assert rsolve(f, y(n)) == 2**(-n)*(C0 + C1*n)
     assert rsolve(f, y(n), {y(0): 0, y(1): 1}) == 2*2**(-n)*n
+
+
+def test_issue_18751():
+    r = Symbol('r', real=True, positive=True)
+    theta = Symbol('theta', real=True)
+    f = y(n) - 2 * r * cos(theta) * y(n - 1) + r**2 * y(n - 2)
+    assert rsolve(f, y(n)) == \
+        C0*(r*(cos(theta) - I*Abs(sin(theta))))**n + C1*(r*(cos(theta) + I*Abs(sin(theta))))**n
+
+
+@slow
+def test_issue_15751():
+    f = y(n) + 21*y(n + 1) - 273*y(n + 2) - 1092*y(n + 3) + 1820*y(n + 4) + 1092*y(n + 5) - 273*y(n + 6) - 21*y(n + 7) + y(n + 8)
+    assert rsolve(f, y(n)) is not None

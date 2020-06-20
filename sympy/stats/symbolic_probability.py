@@ -1,15 +1,27 @@
 import itertools
 
-from sympy.core.sympify import _sympify
-
+from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol, expand as _expand
 from sympy.core.compatibility import default_sort_key
-
-from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol, Dummy, Basic
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
+from sympy.core.sympify import _sympify
 from sympy.stats import variance, covariance
-from sympy.stats.rv import RandomSymbol, probability, expectation
+from sympy.stats.rv import (RandomSymbol, probability, pspace,
+                            given, sampling_E, RandomIndexedSymbol, is_random,
+                            PSpace)
 
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
+
+
+@is_random.register(Expr)
+def _(x):
+    atoms = x.free_symbols
+    if len(atoms) == 1 and next(iter(atoms)) == x:
+        return False
+    return any([is_random(i) for i in atoms])
+
+@is_random.register(RandomSymbol)
+def _(x):
+    return True
 
 
 class Probability(Expr):
@@ -46,11 +58,10 @@ class Probability(Expr):
         obj._condition = condition
         return obj
 
-    def _eval_rewrite_as_Integral(self, arg, condition=None):
+    def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
         return probability(arg, condition, evaluate=False)
 
-    def _eval_rewrite_as_Sum(self, arg, condition=None):
-        return self.rewrite(Integral)
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
@@ -63,8 +74,8 @@ class Expectation(Expr):
     Examples
     ========
 
-    >>> from sympy.stats import Expectation, Normal, Probability
-    >>> from sympy import symbols, Integral
+    >>> from sympy.stats import Expectation, Normal, Probability, Poisson
+    >>> from sympy import symbols, Integral, Sum
     >>> mu = symbols("mu")
     >>> sigma = symbols("sigma", positive=True)
     >>> X = Normal("X", mu, sigma)
@@ -83,29 +94,56 @@ class Expectation(Expr):
     >>> Expectation(X).rewrite(Probability)
     Integral(x*Probability(Eq(X, x)), (x, -oo, oo))
 
+    To get the Summation expression of the expectation for discrete random variables:
+
+    >>> lamda = symbols('lamda', positive=True)
+    >>> Z = Poisson('Z', lamda)
+    >>> Expectation(Z).rewrite(Sum)
+    Sum(Z*lamda**Z*exp(-lamda)/factorial(Z), (Z, 0, oo))
+
     This class is aware of some properties of the expectation:
 
     >>> from sympy.abc import a
     >>> Expectation(a*X)
     Expectation(a*X)
-    >>> Y = Normal("Y", 0, 1)
+    >>> Y = Normal("Y", 1, 2)
     >>> Expectation(X + Y)
     Expectation(X + Y)
 
-    To expand the ``Expectation`` into its expression, use ``doit()``:
+    To expand the ``Expectation`` into its expression, use ``expand()``:
 
-    >>> Expectation(X + Y).doit()
+    >>> Expectation(X + Y).expand()
     Expectation(X) + Expectation(Y)
-    >>> Expectation(a*X + Y).doit()
+    >>> Expectation(a*X + Y).expand()
     a*Expectation(X) + Expectation(Y)
     >>> Expectation(a*X + Y)
     Expectation(a*X + Y)
+    >>> Expectation((X + Y)*(X - Y)).expand()
+    Expectation(X**2) - Expectation(Y**2)
+
+    To evaluate the ``Expectation``, use ``doit()``:
+
+    >>> Expectation(X + Y).doit()
+    mu + 1
+    >>> Expectation(X + Expectation(Y + Expectation(2*X))).doit()
+    3*mu + 1
+
+    To prevent evaluating nested ``Expectation``, use ``doit(deep=False)``
+
+    >>> Expectation(X + Expectation(Y)).doit(deep=False)
+    mu + Expectation(Expectation(Y))
+    >>> Expectation(X + Expectation(Y + Expectation(2*X))).doit(deep=False)
+    mu + Expectation(Expectation(Y + Expectation(2*X)))
+
     """
 
     def __new__(cls, expr, condition=None, **kwargs):
         expr = _sympify(expr)
+        if expr.is_Matrix:
+            from sympy.stats.symbolic_multivariate_probability import ExpectationMatrix
+            return ExpectationMatrix(expr, condition)
         if condition is None:
-            if not expr.has(RandomSymbol):
+            if not is_random(expr):
                 return expr
             obj = Expr.__new__(cls, expr)
         else:
@@ -114,20 +152,23 @@ class Expectation(Expr):
         obj._condition = condition
         return obj
 
-    def doit(self, **hints):
+    def expand(self, **hints):
         expr = self.args[0]
         condition = self._condition
 
-        if not expr.has(RandomSymbol):
+        if not is_random(expr):
             return expr
 
         if isinstance(expr, Add):
-            return Add(*[Expectation(a, condition=condition).doit() for a in expr.args])
+            return Add(*[Expectation(a, condition=condition).expand()
+                    for a in expr.args])
         elif isinstance(expr, Mul):
+            if isinstance(_expand(expr), Add):
+                return Expectation(_expand(expr)).expand()
             rv = []
             nonrv = []
             for a in expr.args:
-                if isinstance(a, RandomSymbol) or a.has(RandomSymbol):
+                if is_random(a):
                     rv.append(a)
                 else:
                     nonrv.append(a)
@@ -135,7 +176,50 @@ class Expectation(Expr):
 
         return self
 
-    def _eval_rewrite_as_Probability(self, arg, condition=None):
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
+        condition = self._condition
+        expr = self.args[0]
+        numsamples = hints.get('numsamples', False)
+        for_rewrite = not hints.get('for_rewrite', False)
+
+        if deep:
+            expr = expr.doit(**hints)
+
+        if not is_random(expr) or isinstance(expr, Expectation):  # expr isn't random?
+            return expr
+        if numsamples:  # Computing by monte carlo sampling?
+            evalf = hints.get('evalf', True)
+            return sampling_E(expr, condition, numsamples=numsamples, evalf=evalf)
+
+        if expr.has(RandomIndexedSymbol):
+            return pspace(expr).compute_expectation(expr, condition)
+
+        # Create new expr and recompute E
+        if condition is not None:  # If there is a condition
+            return self.func(given(expr, condition)).doit(**hints)
+
+        # A few known statements for efficiency
+
+        if expr.is_Add:  # We know that E is Linear
+            return Add(*[self.func(arg, condition).doit(**hints)
+                    if not isinstance(arg, Expectation) else self.func(arg, condition)
+                         for arg in expr.args])
+        if expr.is_Mul:
+            if expr.atoms(Expectation):
+                return expr
+
+        if pspace(expr) == PSpace():
+            return self.func(expr)
+        # Otherwise case is simple, pass work off to the ProbabilitySpace
+        result = pspace(expr).compute_expectation(expr, evaluate=for_rewrite)
+        if hasattr(result, 'doit') and for_rewrite:
+            return result.doit(**hints)
+        else:
+            return result
+
+
+    def _eval_rewrite_as_Probability(self, arg, condition=None, **kwargs):
         rvs = arg.atoms(RandomSymbol)
         if len(rvs) > 1:
             raise NotImplementedError()
@@ -160,15 +244,15 @@ class Expectation(Expr):
             else:
                 return Sum(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.set.sup))
 
-    def _eval_rewrite_as_Integral(self, arg, condition=None):
-        return expectation(arg, condition=condition, evaluate=False)
+    def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
+        return self.func(arg, condition=condition).doit(deep=False, for_rewrite=True)
 
-    def _eval_rewrite_as_Sum(self, arg, condition=None):
-        return self.rewrite(Integral)
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral # For discrete this will be Sum
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
 
+    evaluate_sum = evaluate_integral
 
 class Variance(Expr):
     """
@@ -209,18 +293,22 @@ class Variance(Expr):
     >>> Variance(a*X)
     Variance(a*X)
 
-    To expand the variance in its expression, use ``doit()``:
+    To expand the variance in its expression, use ``expand()``:
 
-    >>> Variance(a*X).doit()
+    >>> Variance(a*X).expand()
     a**2*Variance(X)
     >>> Variance(X + Y)
     Variance(X + Y)
-    >>> Variance(X + Y).doit()
+    >>> Variance(X + Y).expand()
     2*Covariance(X, Y) + Variance(X) + Variance(Y)
 
     """
     def __new__(cls, arg, condition=None, **kwargs):
         arg = _sympify(arg)
+
+        if arg.is_Matrix:
+            from sympy.stats.symbolic_multivariate_probability import VarianceMatrix
+            return VarianceMatrix(arg, condition)
         if condition is None:
             obj = Expr.__new__(cls, arg)
         else:
@@ -229,11 +317,11 @@ class Variance(Expr):
         obj._condition = condition
         return obj
 
-    def doit(self, **hints):
+    def expand(self, **hints):
         arg = self.args[0]
         condition = self._condition
 
-        if not arg.has(RandomSymbol):
+        if not is_random(arg):
             return S.Zero
 
         if isinstance(arg, RandomSymbol):
@@ -241,17 +329,17 @@ class Variance(Expr):
         elif isinstance(arg, Add):
             rv = []
             for a in arg.args:
-                if a.has(RandomSymbol):
+                if is_random(a):
                     rv.append(a)
-            variances = Add(*map(lambda xv: Variance(xv, condition).doit(), rv))
-            map_to_covar = lambda x: 2*Covariance(*x, condition=condition).doit()
+            variances = Add(*map(lambda xv: Variance(xv, condition).expand(), rv))
+            map_to_covar = lambda x: 2*Covariance(*x, condition=condition).expand()
             covariances = Add(*map(map_to_covar, itertools.combinations(rv, 2)))
             return variances + covariances
         elif isinstance(arg, Mul):
             nonrv = []
             rv = []
             for a in arg.args:
-                if a.has(RandomSymbol):
+                if is_random(a):
                     rv.append(a)
                 else:
                     nonrv.append(a**2)
@@ -262,19 +350,18 @@ class Variance(Expr):
         # this expression contains a RandomSymbol somehow:
         return self
 
-    def _eval_rewrite_as_Expectation(self, arg, condition=None):
+    def _eval_rewrite_as_Expectation(self, arg, condition=None, **kwargs):
             e1 = Expectation(arg**2, condition)
             e2 = Expectation(arg, condition)**2
             return e1 - e2
 
-    def _eval_rewrite_as_Probability(self, arg, condition=None):
+    def _eval_rewrite_as_Probability(self, arg, condition=None, **kwargs):
         return self.rewrite(Expectation).rewrite(Probability)
 
-    def _eval_rewrite_as_Integral(self, arg, condition=None):
+    def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
         return variance(self.args[0], self._condition, evaluate=False)
 
-    def _eval_rewrite_as_Sum(self, arg, condition=None):
-        return self.rewrite(Integral)
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
@@ -309,19 +396,19 @@ class Covariance(Expr):
     >>> cexpr.rewrite(Expectation)
     Expectation(X*Y) - Expectation(X)*Expectation(Y)
 
-    In order to expand the argument, use ``doit()``:
+    In order to expand the argument, use ``expand()``:
 
     >>> from sympy.abc import a, b, c, d
     >>> Covariance(a*X + b*Y, c*Z + d*W)
     Covariance(a*X + b*Y, c*Z + d*W)
-    >>> Covariance(a*X + b*Y, c*Z + d*W).doit()
+    >>> Covariance(a*X + b*Y, c*Z + d*W).expand()
     a*c*Covariance(X, Z) + a*d*Covariance(W, X) + b*c*Covariance(Y, Z) + b*d*Covariance(W, Y)
 
     This class is aware of some properties of the covariance:
 
-    >>> Covariance(X, X).doit()
+    >>> Covariance(X, X).expand()
     Variance(X)
-    >>> Covariance(a*X, b*Y).doit()
+    >>> Covariance(a*X, b*Y).expand()
     a*b*Covariance(X, Y)
     """
 
@@ -329,7 +416,11 @@ class Covariance(Expr):
         arg1 = _sympify(arg1)
         arg2 = _sympify(arg2)
 
-        if kwargs.pop('evaluate', global_evaluate[0]):
+        if arg1.is_Matrix or arg2.is_Matrix:
+            from sympy.stats.symbolic_multivariate_probability import CrossCovarianceMatrix
+            return CrossCovarianceMatrix(arg1, arg2, condition)
+
+        if kwargs.pop('evaluate', global_parameters.evaluate):
             arg1, arg2 = sorted([arg1, arg2], key=default_sort_key)
 
         if condition is None:
@@ -340,17 +431,17 @@ class Covariance(Expr):
         obj._condition = condition
         return obj
 
-    def doit(self, **hints):
+    def expand(self, **hints):
         arg1 = self.args[0]
         arg2 = self.args[1]
         condition = self._condition
 
         if arg1 == arg2:
-            return Variance(arg1, condition).doit()
+            return Variance(arg1, condition).expand()
 
-        if not arg1.has(RandomSymbol):
+        if not is_random(arg1):
             return S.Zero
-        if not arg2.has(RandomSymbol):
+        if not is_random(arg2):
             return S.Zero
 
         arg1, arg2 = sorted([arg1, arg2], key=default_sort_key)
@@ -375,13 +466,13 @@ class Covariance(Expr):
             for a in expr.args:
                 if isinstance(a, Mul):
                     outval.append(cls._get_mul_nonrv_rv_tuple(a))
-                elif isinstance(a, RandomSymbol):
+                elif is_random(a):
                     outval.append((S.One, a))
 
             return outval
         elif isinstance(expr, Mul):
             return [cls._get_mul_nonrv_rv_tuple(expr)]
-        elif expr.has(RandomSymbol):
+        elif is_random(expr):
             return [(S.One, expr)]
 
     @classmethod
@@ -389,25 +480,24 @@ class Covariance(Expr):
         rv = []
         nonrv = []
         for a in m.args:
-            if a.has(RandomSymbol):
+            if is_random(a):
                 rv.append(a)
             else:
                 nonrv.append(a)
         return (Mul(*nonrv), Mul(*rv))
 
-    def _eval_rewrite_as_Expectation(self, arg1, arg2, condition=None):
+    def _eval_rewrite_as_Expectation(self, arg1, arg2, condition=None, **kwargs):
         e1 = Expectation(arg1*arg2, condition)
         e2 = Expectation(arg1, condition)*Expectation(arg2, condition)
         return e1 - e2
 
-    def _eval_rewrite_as_Probability(self, arg1, arg2, condition=None):
+    def _eval_rewrite_as_Probability(self, arg1, arg2, condition=None, **kwargs):
         return self.rewrite(Expectation).rewrite(Probability)
 
-    def _eval_rewrite_as_Integral(self, arg1, arg2, condition=None):
+    def _eval_rewrite_as_Integral(self, arg1, arg2, condition=None, **kwargs):
         return covariance(self.args[0], self.args[1], self._condition, evaluate=False)
 
-    def _eval_rewrite_as_Sum(self, arg1, arg2, condition=None):
-        return self.rewrite(Integral)
+    _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()

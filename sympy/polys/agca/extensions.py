@@ -16,7 +16,7 @@ class ExtensionElement(object):
     are of class DMP.
 
     """
-    __slots__ = ['rep', 'ext']
+    __slots__ = ('rep', 'ext')
 
     def __init__(self, rep, ext):
         self.rep = rep

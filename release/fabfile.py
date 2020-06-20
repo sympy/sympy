@@ -43,11 +43,7 @@ from fabric.contrib.files import exists
 from fabric.colors import blue, red, green
 from fabric.utils import error, warn
 
-try:
-    # Only works in newer versions of fabric
-    env.colorize_errors = True
-except AttributeError:
-    pass
+env.colorize_errors = True
 
 try:
     import requests
@@ -89,7 +85,7 @@ def full_path_split(path):
     """
     Function to do a full split on a path.
     """
-    # Based on http://stackoverflow.com/a/13505966/161801
+    # Based on https://stackoverflow.com/a/13505966/161801
     rest, tail = os.path.split(path)
     if not rest or rest == os.path.sep:
         return (tail,)
@@ -507,8 +503,8 @@ descriptions = OrderedDict([
     ('source', "The SymPy source installer.",),
     ('win32', "Python Windows 32-bit installer.",),
     ('html', '''Html documentation for the Python 2 version. This is the same as
-the <a href="http://docs.sympy.org/latest/index.html">online documentation</a>.''',),
-    ('pdf', '''Pdf version of the <a href="http://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
+the <a href="https://docs.sympy.org/latest/index.html">online documentation</a>.''',),
+    ('pdf', '''Pdf version of the <a href="https://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
     ])
 
 @task
@@ -546,7 +542,7 @@ def table():
 
     version = get_sympy_version()
 
-    # http://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
+    # https://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
     # recommended as a real way to generate html, but it works better than
     # anything else I've tried.
     @contextmanager
@@ -1021,7 +1017,7 @@ def GitHub_release(username=None, user='sympy', token=None,
     if not check_tag_exists():
         error("The tag for this version has not been pushed yet. Cannot upload the release.")
 
-    # See http://developer.github.com/v3/repos/releases/#create-a-release
+    # See https://developer.github.com/v3/repos/releases/#create-a-release
     # First, create the release
     post = {}
     post['tag_name'] = tag

@@ -1,6 +1,3 @@
-from __future__ import print_function, division
-
-from sympy.core.compatibility import range
 from sympy.liealgebras.cartan_type import Standard_Cartan
 from sympy.core.backend import eye
 
@@ -103,7 +100,7 @@ class TypeA(Standard_Cartan):
 
     def highest_root(self):
         """
-        Returns the heighest weight root for A_n
+        Returns the highest weight root for A_n
         """
 
         return self.basic_root(0, self.n)

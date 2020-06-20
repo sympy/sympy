@@ -7,14 +7,14 @@ SymPy Development Team
 .. literalinclude:: ../../AUTHORS
 
 
-You can find a brief history of SymPy in the `README <https://github.com/sympy/sympy/blob/master/README.rst>`_.
+You can find a brief history of SymPy in the `README <https://github.com/sympy/sympy/blob/master/README.md>`_.
 
 Financial and Infrastructure Support
 ------------------------------------
 
-* `Google <http://www.google.com/about/company/>`_: SymPy has received generous
+* `Google <https://www.google.com/about/company/>`_: SymPy has received generous
   financial support from Google in various years through the `Google Summer of
-  Code <http://g.co/gsoc>`_ program by providing stipends:
+  Code <https://g.co/gsoc>`_ program by providing stipends:
 
   * in 2007 for 5 students (`GSoC 2007 <https://github.com/sympy/sympy/wiki/GSoC-2007-Report>`_)
   * in 2008 for 1 student (`GSoC 2008 <https://github.com/sympy/sympy/wiki/GSoC-2008-report>`_)
@@ -26,6 +26,9 @@ Financial and Infrastructure Support
   * in 2014 for 10 students (`GSoC 2014 <https://github.com/sympy/sympy/wiki/Gsoc-2014-report>`_)
   * in 2015 for 7 students (`GSoC 2015 <https://github.com/sympy/sympy/wiki/Gsoc-2015-report>`_)
   * in 2016 for 9 students (`GSoC 2016 <https://github.com/sympy/sympy/wiki/GSoC-2016-report>`_)
+  * in 2017 for 9 students (`GSoC 2017 <https://github.com/sympy/sympy/wiki/GSoC-2017-report>`_)
+  * in 2018 for 7 students (`GSoC 2018 <https://github.com/sympy/sympy/wiki/GSoC-2018-report>`_)
+  * in 2019 for 9 students (`GSoC 2019 <https://github.com/sympy/sympy/wiki/GSoC-2019-report>`_)
 
   Of these, we would like to thank these organizations for hosting GSoC students under their
   umbrella organizations:
@@ -40,14 +43,14 @@ Financial and Infrastructure Support
     * 6 GSoC 2015 students
     * 1 GSoC 2016 student (James)
 
-  * `Portland State University (PSU) <http://www.pdx.edu/>`_ has hosted following
+  * `Portland State University (PSU) <https://www.pdx.edu/>`_ has hosted following
     GSoC students:
 
     * 1 student (Chris) in 2007
     * 3 students (Aaron, Dale and Fabian) in 2009
     * 1 student (Addison) in 2010
 
-  * `The Space Telescope Science Institute <http://www.stsci.edu/portal/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
+  * `The Space Telescope Science Institute <http://www.stsci.edu/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
 
   * `The Ruby Science Foundation <http://www.sciruby.com/>`_ has hosted following
     GSoC students:
@@ -57,8 +60,8 @@ Financial and Infrastructure Support
 
 * Several 13-17 year old pre-university students contributed as part of
   Google's `Code-In
-  <http://www.google-melange.com/gci/homepage/google/gci2011>`_ 2011.  (`GCI
-  2011 <http://www.google-melange.com/gci/org/google/gci2011/sympy>`_)
+  <https://www.google-melange.com/gci/homepage/google/gci2011>`_ 2011.  (`GCI
+  2011 <https://www.google-melange.com/gci/org/google/gci2011/sympy>`_)
 
 * `Simula Research Laboratory <https://www.simula.no/>`_: supports Pearu Peterson work in SymPy/SymPy Core projects
 

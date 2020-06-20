@@ -11,7 +11,7 @@ from sympy.parsing.sympy_parser import (
     split_symbols_custom,
     _token_splittable
 )
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_implicit_multiplication():
@@ -61,7 +61,7 @@ def test_implicit_application():
     for case in cases:
         implicit = parse_expr(case, transformations=transformations2)
         normal = parse_expr(cases[case], transformations=transformations)
-        assert(implicit == normal)
+        assert(implicit == normal), (implicit, normal)
 
     multiplication = ['x y', 'x sin x', '2x']
     for case in multiplication:

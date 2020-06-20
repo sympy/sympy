@@ -1,8 +1,7 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs, pi, symbols, IndexedBase
+    Function, PoleError, log, sqrt, N, Symbol, Subs, pi, symbols, atan, LambertW, Rational
 from sympy.abc import x, y, n, k
-from sympy.utilities.pytest import raises
-from sympy.core.compatibility import range
+from sympy.testing.pytest import raises
 from sympy.series.gruntz import calculate_series
 
 
@@ -32,7 +31,7 @@ def test_exp2():
 
 def test_issue_5223():
     assert series(1, x) == 1
-    assert next(S(0).lseries(x)) == 0
+    assert next(S.Zero.lseries(x)) == 0
     assert cos(x).series() == cos(x).series(x)
     raises(ValueError, lambda: cos(x + y).series())
     raises(ValueError, lambda: x.series(dir=""))
@@ -59,7 +58,7 @@ def test_issue_5223():
     assert (1 + x + O(x**2)).getn() == 2
     assert (1 + x).getn() is None
 
-    assert ((1/sin(x))**oo).series() == oo
+    raises(PoleError, lambda: ((1/sin(x))**oo).series())
     logx = Symbol('logx')
     assert ((sin(x))**y).nseries(x, n=1, logx=logx) == \
         exp(y*logx) + O(x*exp(y*logx), x)
@@ -97,43 +96,50 @@ def test_issue_11313():
     assert 1 + Integral(exp(x), x).series(x) == exp(x).series(x)
 
     assert Derivative(log(x), x).series(x).doit() == (1/x).series(x)
-    assert Integral(log(x), x).series(x) == Integral(log(x), x).doit().series(x)
+    assert Integral(log(x), x).series(x) == Integral(log(x), x).doit().series(x).removeO()
 
 
 def test_series_of_Subs():
     from sympy.abc import x, y, z
 
-    subs1 = Subs(sin(x), (x,), (y,))
-    subs2 = Subs(sin(x) * cos(z), (x,), (y,))
+    subs1 = Subs(sin(x), x, y)
+    subs2 = Subs(sin(x) * cos(z), x, y)
     subs3 = Subs(sin(x * z), (x, z), (y, x))
 
     assert subs1.series(x) == subs1
-    assert subs1.series(y) == Subs(x, (x,), (y,)) + Subs(-x**3/6, (x,), (y,)) + Subs(x**5/120, (x,), (y,)) + O(y**6)
+    subs1_series = (Subs(x, x, y) + Subs(-x**3/6, x, y) +
+        Subs(x**5/120, x, y) + O(y**6))
+    assert subs1.series() == subs1_series
+    assert subs1.series(y) == subs1_series
     assert subs1.series(z) == subs1
-    assert subs2.series(z) == Subs(z**4*sin(x)/24, (x,), (y,)) + Subs(-z**2*sin(x)/2, (x,), (y,)) + Subs(sin(x), (x,), (y,)) + O(z**6)
+    assert subs2.series(z) == (Subs(z**4*sin(x)/24, x, y) +
+        Subs(-z**2*sin(x)/2, x, y) + Subs(sin(x), x, y) + O(z**6))
     assert subs3.series(x).doit() == subs3.doit().series(x)
     assert subs3.series(z).doit() == sin(x*y)
+
+    raises(ValueError, lambda: Subs(x + 2*y, y, z).series())
+    assert Subs(x + y, y, z).series(x).doit() == x + z
 
 
 def test_issue_3978():
     f = Function('f')
     assert f(x).series(x, 0, 3, dir='-') == \
-            f(0) + x*Subs(Derivative(f(x), x), (x,), (0,)) + \
-            x**2*Subs(Derivative(f(x), x, x), (x,), (0,))/2 + O(x**3)
+            f(0) + x*Subs(Derivative(f(x), x), x, 0) + \
+            x**2*Subs(Derivative(f(x), x, x), x, 0)/2 + O(x**3)
     assert f(x).series(x, 0, 3) == \
-            f(0) + x*Subs(Derivative(f(x), x), (x,), (0,)) + \
-            x**2*Subs(Derivative(f(x), x, x), (x,), (0,))/2 + O(x**3)
+            f(0) + x*Subs(Derivative(f(x), x), x, 0) + \
+            x**2*Subs(Derivative(f(x), x, x), x, 0)/2 + O(x**3)
     assert f(x**2).series(x, 0, 3) == \
-            f(0) + x**2*Subs(Derivative(f(x), x), (x,), (0,)) + O(x**3)
+            f(0) + x**2*Subs(Derivative(f(x), x), x, 0) + O(x**3)
     assert f(x**2+1).series(x, 0, 3) == \
-            f(1) + x**2*Subs(Derivative(f(x), x), (x,), (1,)) + O(x**3)
+            f(1) + x**2*Subs(Derivative(f(x), x), x, 1) + O(x**3)
 
     class TestF(Function):
         pass
 
     assert TestF(x).series(x, 0, 3) ==  TestF(0) + \
-            x*Subs(Derivative(TestF(x), x), (x,), (0,)) + \
-            x**2*Subs(Derivative(TestF(x), x, x), (x,), (0,))/2 + O(x**3)
+            x*Subs(Derivative(TestF(x), x), x, 0) + \
+            x**2*Subs(Derivative(TestF(x), x, x), x, 0)/2 + O(x**3)
 
 from sympy.series.acceleration import richardson, shanks
 from sympy import Sum, Integer
@@ -160,13 +166,13 @@ def test_issue_4583():
 
 
 def test_issue_6318():
-    eq = (1/x)**(S(2)/3)
+    eq = (1/x)**Rational(2, 3)
     assert (eq + 1).as_leading_term(x) == eq
 
 
 def test_x_is_base_detection():
-    eq = (x**2)**(S(2)/3)
-    assert eq.series() == x**(S(4)/3)
+    eq = (x**2)**Rational(2, 3)
+    assert eq.series() == x**Rational(4, 3)
 
 
 def test_sin_power():
@@ -190,5 +196,91 @@ def test_exp_product_positive_factors():
 def test_issue_8805():
     assert series(1, n=8) == 1
 
+
+def test_issue_9549():
+    y = (x**2 + x + 1) / (x**3 + x**2)
+    assert series(y, x, oo) == x**(-5) - 1/x**4 + x**(-3) + 1/x + O(x**(-6), (x, oo))
+
+
 def test_issue_10761():
     assert series(1/(x**-2 + x**-3), x, 0) == x**3 - x**4 + x**5 + O(x**6)
+
+
+def test_issue_12578():
+    y = (1 - 1/(x/2 - 1/(2*x))**4)**(S(1)/8)
+    assert y.series(x, 0, n=17) == 1 - 2*x**4 - 8*x**6 - 34*x**8 - 152*x**10 - 714*x**12 - \
+        3472*x**14 - 17318*x**16 + O(x**17)
+
+
+def test_issue_14885():
+    assert series(x**Rational(-3, 2)*exp(x), x, 0) == (x**Rational(-3, 2) + 1/sqrt(x) +
+        sqrt(x)/2 + x**Rational(3, 2)/6 + x**Rational(5, 2)/24 + x**Rational(7, 2)/120 +
+        x**Rational(9, 2)/720 + x**Rational(11, 2)/5040 + O(x**6))
+
+
+def test_issue_15539():
+    assert series(atan(x), x, -oo) == (-1/(5*x**5) + 1/(3*x**3) - 1/x - pi/2
+        + O(x**(-6), (x, -oo)))
+    assert series(atan(x), x, oo) == (-1/(5*x**5) + 1/(3*x**3) - 1/x + pi/2
+        + O(x**(-6), (x, oo)))
+
+
+def test_issue_7259():
+    assert series(LambertW(x), x) == x - x**2 + 3*x**3/2 - 8*x**4/3 + 125*x**5/24 + O(x**6)
+    assert series(LambertW(x**2), x, n=8) == x**2 - x**4 + 3*x**6/2 + O(x**8)
+    assert series(LambertW(sin(x)), x, n=4) == x - x**2 + 4*x**3/3 + O(x**4)
+
+def test_issue_11884():
+    assert cos(x).series(x, 1, n=1) == cos(1) + O(x - 1, (x, 1))
+
+
+def test_issue_18008():
+    y = x*(1 + x*(1 - x))/((1 + x*(1 - x)) - (1 - x)*(1 - x))
+    assert y.series(x, oo, n=4) == -9/(32*x**3) - 3/(16*x**2) - 1/(8*x) + S(1)/4 + x/2 + \
+        O(x**(-4), (x, oo))
+
+
+def test_issue_19534():
+    dt = symbols('dt', real=True)
+    expr = 16*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0)/45 + \
+            49*dt*(-0.049335189898860408029*dt*(2.0*dt + 1.0) + \
+            0.29601113939316244817*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) - \
+            0.12564355335492979587*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) + 0.051640768506639183825*dt + \
+            dt*(1/2 - sqrt(21)/14) + 1.0)/180 + 49*dt*(-0.23637909581542530626*dt*(2.0*dt + 1.0) - \
+            0.74817562366625959291*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.88085458023927036857*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) + \
+            2.1165151389911680013*dt*(-0.049335189898860408029*dt*(2.0*dt + 1.0) + \
+            0.29601113939316244817*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) - \
+            0.12564355335492979587*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) + 0.22431393315265061193*dt + 1.0) - \
+            1.1854881643947648988*dt + dt*(sqrt(21)/14 + 1/2) + 1.0)/180 + \
+            dt*(0.66666666666666666667*dt*(2.0*dt + 1.0) + \
+            6.0173399699313066769*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) - \
+            4.1117044797036320069*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) - \
+            7.0189140975801991157*dt*(-0.049335189898860408029*dt*(2.0*dt + 1.0) + \
+            0.29601113939316244817*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) - \
+            0.12564355335492979587*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) + 0.22431393315265061193*dt + 1.0) + \
+            0.94010945196161777522*dt*(-0.23637909581542530626*dt*(2.0*dt + 1.0) - \
+            0.74817562366625959291*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.88085458023927036857*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) + \
+            2.1165151389911680013*dt*(-0.049335189898860408029*dt*(2.0*dt + 1.0) + \
+            0.29601113939316244817*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) - \
+            0.12564355335492979587*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) + 0.22431393315265061193*dt + 1.0) - \
+            0.35816132904077632692*dt + 1.0) + 5.5065024887242400038*dt + 1.0)/20 + dt/20 + 1
+
+    assert N(expr.series(dt, 0, 8), 20) == -0.00092592592592592596126*dt**7 + 0.0027777777777777783175*dt**6 + \
+    0.016666666666666656027*dt**5 + 0.083333333333333300952*dt**4 + 0.33333333333333337034*dt**3 + \
+    1.0*dt**2 + 1.0*dt + 1.0

@@ -1,6 +1,5 @@
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core import Basic
-from sympy.vector.vector import Vector
 from sympy.vector.operators import gradient, divergence, curl
 
 
@@ -18,7 +17,7 @@ class Del(Basic):
                 deprecated_since_version="1.1",
                 issue=12866,
             ).warn()
-        obj = super(Del, cls).__new__(cls)
+        obj = super().__new__(cls)
         obj._name = "delop"
         return obj
 

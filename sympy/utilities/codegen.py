@@ -79,16 +79,14 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 
 """
 
-from __future__ import print_function, division
-
 import os
 import textwrap
 
 from sympy import __version__ as sympy_version
-from sympy.core import Symbol, S, Expr, Tuple, Equality, Function, Basic
-from sympy.core.compatibility import is_sequence, StringIO, string_types
-from sympy.printing.codeprinter import AssignmentError
+from sympy.core import Symbol, S, Tuple, Equality, Function, Basic
+from sympy.core.compatibility import is_sequence, StringIO
 from sympy.printing.ccode import c_code_printers
+from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.fcode import FCodePrinter
 from sympy.printing.julia import JuliaCodePrinter
 from sympy.printing.octave import OctaveCodePrinter
@@ -115,7 +113,7 @@ __all__ = [
 #
 
 
-class Routine(object):
+class Routine:
     """Generic description of evaluation routine for set of expressions.
 
     A CodeGen class can translate instances of this class into code in a
@@ -160,8 +158,8 @@ class Routine(object):
         """
 
         # extract all input symbols and all symbols appearing in an expression
-        input_symbols = set([])
-        symbols = set([])
+        input_symbols = set()
+        symbols = set()
         for arg in arguments:
             if isinstance(arg, OutputArgument):
                 symbols.update(arg.expr.free_symbols - arg.expr.atoms(Indexed))
@@ -186,14 +184,14 @@ class Routine(object):
             else:
                 local_symbols.add(r)
 
-        symbols = set([s.label if isinstance(s, Idx) else s for s in symbols])
+        symbols = {s.label if isinstance(s, Idx) else s for s in symbols}
 
         # Check that all symbols in the expressions are covered by
         # InputArguments/InOutArguments---subset because user could
         # specify additional (unused) InputArguments or local_vars.
         notcovered = symbols.difference(
             input_symbols.union(local_symbols).union(global_vars))
-        if notcovered != set([]):
+        if notcovered != set():
             raise ValueError("Symbols needed for output are not in input " +
                              ", ".join([str(x) for x in notcovered]))
 
@@ -235,7 +233,7 @@ class Routine(object):
         return args
 
 
-class DataType(object):
+class DataType:
     """Holds strings for a certain datatype in different languages."""
     def __init__(self, cname, fname, pyname, jlname, octname, rsname):
         self.cname = cname
@@ -249,23 +247,41 @@ class DataType(object):
 default_datatypes = {
     "int": DataType("int", "INTEGER*4", "int", "", "", "i32"),
     "float": DataType("double", "REAL*8", "float", "", "", "f64"),
+    "complex": DataType("double", "COMPLEX*16", "complex", "", "", "float") #FIXME:
+       # complex is only supported in fortran, python, julia, and octave.
+       # So to not break c or rust code generation, we stick with double or
+       # float, respecitvely (but actually should raise an exception for
+       # explicitly complex variables (x.is_complex==True))
 }
 
 
-def get_default_datatype(expr):
+COMPLEX_ALLOWED = False
+def get_default_datatype(expr, complex_allowed=None):
     """Derives an appropriate datatype based on the expression."""
+    if complex_allowed is None:
+        complex_allowed = COMPLEX_ALLOWED
+    if complex_allowed:
+        final_dtype = "complex"
+    else:
+        final_dtype = "float"
     if expr.is_integer:
         return default_datatypes["int"]
-    elif isinstance(expr, MatrixBase):
-        for element in expr:
-            if not element.is_integer:
-                return default_datatypes["float"]
-        return default_datatypes["int"]
-    else:
+    elif expr.is_real:
         return default_datatypes["float"]
+    elif isinstance(expr, MatrixBase):
+        #check all entries
+        dt = "int"
+        for element in expr:
+            if dt == "int" and not element.is_integer:
+                dt = "float"
+            if dt == "float" and not element.is_real:
+                return default_datatypes[final_dtype]
+        return default_datatypes[dt]
+    else:
+        return default_datatypes[final_dtype]
 
 
-class Variable(object):
+class Variable:
     """Represents a typed variable."""
 
     def __init__(self, name, datatype=None, dimensions=None, precision=None):
@@ -356,7 +372,7 @@ class InputArgument(Argument):
     pass
 
 
-class ResultBase(object):
+class ResultBase:
     """Base class for all "outgoing" information from a routine.
 
     Objects of this class stores a sympy expression, and a sympy object
@@ -472,7 +488,7 @@ class Result(Variable, ResultBase):
 
         datatype : optional
             When not given, the data type will be guessed based on the
-            assumptions on the symbol argument.
+            assumptions on the expr argument.
 
         dimension : sequence containing tupes, optional
             If present, this variable is interpreted as an array,
@@ -490,7 +506,11 @@ class Result(Variable, ResultBase):
         if name is None:
             name = 'result_%d' % abs(hash(expr))
 
-        if isinstance(name, string_types):
+        if datatype is None:
+            #try to infer data type from the expression
+            datatype = get_default_datatype(expr)
+
+        if isinstance(name, str):
             if isinstance(expr, (MatrixBase, MatrixExpr)):
                 name = MatrixSymbol(name, *expr.shape)
             else:
@@ -514,7 +534,7 @@ class Result(Variable, ResultBase):
 # Transformation of routine objects into code
 #
 
-class CodeGen(object):
+class CodeGen:
     """Abstract class for the code generators."""
 
     printer = None  # will be set to an instance of a CodePrinter subclass
@@ -576,7 +596,6 @@ class CodeGen(object):
                 for e in expr:
                     if not e.is_Equality:
                         raise CodeGenError("Lists of expressions must all be Equalities. {} is not.".format(e))
-                lhs = [e.lhs for e in expr]
 
                 # create a list of right hand sides and simplify them
                 rhs = [e.rhs for e in expr]
@@ -595,7 +614,7 @@ class CodeGen(object):
                     expr = simplified
 
             local_vars = [Result(b,a) for a,b in common]
-            local_symbols = set([a for a,_ in common])
+            local_symbols = {a for a,_ in common}
             local_expressions = Tuple(*[b for _,b in common])
         else:
             local_expressions = Tuple()
@@ -620,7 +639,7 @@ class CodeGen(object):
 
         # symbols that should be arguments
         symbols = (expressions.free_symbols | local_expressions.free_symbols) - local_symbols - global_vars
-        new_symbols = set([])
+        new_symbols = set()
         new_symbols.update(symbols)
 
         for symbol in symbols:
@@ -674,6 +693,11 @@ class CodeGen(object):
         arg_list = []
 
         # setup input argument list
+
+        # helper to get dimensions for data for array-like args
+        def dimensions(s):
+            return [(S.Zero, dim - 1) for dim in s.shape]
+
         array_symbols = {}
         for array in expressions.atoms(Indexed) | local_expressions.atoms(Indexed):
             array_symbols[array.base.label] = array
@@ -682,11 +706,8 @@ class CodeGen(object):
 
         for symbol in sorted(symbols, key=str):
             if symbol in array_symbols:
-                dims = []
                 array = array_symbols[symbol]
-                for dim in array.shape:
-                    dims.append((S.Zero, dim - 1))
-                metadata = {'dimensions': dims}
+                metadata = {'dimensions': dimensions(array)}
             else:
                 metadata = {}
 
@@ -718,7 +739,11 @@ class CodeGen(object):
                 try:
                     new_args.append(name_arg_dict[symbol])
                 except KeyError:
-                    new_args.append(InputArgument(symbol))
+                    if isinstance(symbol, (IndexedBase, MatrixSymbol)):
+                        metadata = {'dimensions': dimensions(symbol)}
+                    else:
+                        metadata = {}
+                    new_args.append(InputArgument(symbol, **metadata))
             arg_list = new_args
 
         return Routine(name, arg_list, return_val, local_vars, global_vars)
@@ -852,7 +877,7 @@ class CCodeGen(CodeGen):
 
     def __init__(self, project="project", printer=None,
                  preprocessor_statements=None, cse=False):
-        super(CCodeGen, self).__init__(project=project, cse=cse)
+        super().__init__(project=project, cse=cse)
         self.printer = printer or c_code_printers[self.standard.lower()]()
 
         self.preprocessor_statements = preprocessor_statements
@@ -876,7 +901,7 @@ class CCodeGen(CodeGen):
         If the routine has multiple result objects, an CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         if len(routine.results) > 1:
@@ -941,10 +966,10 @@ class CCodeGen(CodeGen):
                 dims = result.expr.shape
                 if dims[1] != 1:
                     raise CodeGenError("Only column vectors are supported in local variabels. Local result {} has dimensions {}".format(result, dims))
-                code_lines.append("{0} {1}[{2}];\n".format(t, str(assign_to), dims[0]))
+                code_lines.append("{} {}[{}];\n".format(t, str(assign_to), dims[0]))
                 prefix = ""
             else:
-                prefix = "const {0} ".format(t)
+                prefix = "const {} ".format(t)
 
             constants, not_c, c_expr = self._printer_method_with_settings(
                 'doprint', dict(human=False, dereference=dereference),
@@ -973,7 +998,7 @@ class CCodeGen(CodeGen):
             if isinstance(result, Result):
                 assign_to = routine.name + "_result"
                 t = result.get_datatype('c')
-                code_lines.append("{0} {1};\n".format(t, str(assign_to)))
+                code_lines.append("{} {};\n".format(t, str(assign_to)))
                 return_val = assign_to
             else:
                 assign_to = result.result_var
@@ -1003,7 +1028,7 @@ class CCodeGen(CodeGen):
 
     def dump_c(self, routines, f, prefix, header=True, empty=True):
         self.dump_code(routines, f, prefix, header, empty)
-    dump_c.extension = code_extension
+    dump_c.extension = code_extension  # type: ignore
     dump_c.__doc__ = CodeGen.dump_code.__doc__
 
     def dump_h(self, routines, f, prefix, header=True, empty=True):
@@ -1054,7 +1079,7 @@ class CCodeGen(CodeGen):
         print("#endif", file=f)
         if empty:
             print(file=f)
-    dump_h.extension = interface_extension
+    dump_h.extension = interface_extension  # type: ignore
 
     # This list of dump functions is used by CodeGen.write to know which dump
     # functions it has to call.
@@ -1078,7 +1103,7 @@ class FCodeGen(CodeGen):
     interface_extension = "h"
 
     def __init__(self, project='project', printer=None):
-        super(FCodeGen, self).__init__(project)
+        super().__init__(project)
         self.printer = printer or FCodePrinter()
 
     def _get_header(self):
@@ -1111,7 +1136,7 @@ class FCodeGen(CodeGen):
         args = ", ".join("%s" % self._get_symbol(arg.name)
                         for arg in routine.arguments)
 
-        call_sig = "{0}({1})\n".format(routine.name, args)
+        call_sig = "{}({})\n".format(routine.name, args)
         # Fortran 95 requires all lines be less than 132 characters, so wrap
         # this line before appending.
         call_sig = ' &\n'.join(textwrap.wrap(call_sig,
@@ -1183,7 +1208,7 @@ class FCodeGen(CodeGen):
         If the routine has multiple result objects, a CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         prototype = [ "interface\n" ]
@@ -1204,7 +1229,7 @@ class FCodeGen(CodeGen):
                 assign_to = result.result_var
 
             constants, not_fortran, f_expr = self._printer_method_with_settings(
-                'doprint', dict(human=False, source_format='free'),
+                'doprint', dict(human=False, source_format='free', standard=95),
                 result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
@@ -1235,7 +1260,7 @@ class FCodeGen(CodeGen):
                 raise CodeGenError("Fortran ignores case. Got symbols: %s" %
                         (", ".join([str(var) for var in r.variables])))
         self.dump_code(routines, f, prefix, header, empty)
-    dump_f95.extension = code_extension
+    dump_f95.extension = code_extension  # type: ignore
     dump_f95.__doc__ = CodeGen.dump_code.__doc__
 
     def dump_h(self, routines, f, prefix, header=True, empty=True):
@@ -1274,7 +1299,7 @@ class FCodeGen(CodeGen):
             f.write(prototype)
         if empty:
             print(file=f)
-    dump_h.extension = interface_extension
+    dump_h.extension = interface_extension  # type: ignore
 
     # This list of dump functions is used by CodeGen.write to know which dump
     # functions it has to call.
@@ -1292,7 +1317,7 @@ class JuliaCodeGen(CodeGen):
     code_extension = "jl"
 
     def __init__(self, project='project', printer=None):
-        super(JuliaCodeGen, self).__init__(project)
+        super().__init__(project)
         self.printer = printer or JuliaCodePrinter()
 
     def routine(self, name, expr, argument_sequence, global_vars):
@@ -1313,7 +1338,7 @@ class JuliaCodeGen(CodeGen):
 
         # symbols that should be arguments
         old_symbols = expressions.free_symbols - local_vars - global_vars
-        symbols = set([])
+        symbols = set()
         for s in old_symbols:
             if isinstance(s, Idx):
                 symbols.update(s.args[1].free_symbols)
@@ -1474,7 +1499,7 @@ class JuliaCodeGen(CodeGen):
     def dump_jl(self, routines, f, prefix, header=True, empty=True):
         self.dump_code(routines, f, prefix, header, empty)
 
-    dump_jl.extension = code_extension
+    dump_jl.extension = code_extension  # type: ignore
     dump_jl.__doc__ = CodeGen.dump_code.__doc__
 
     # This list of dump functions is used by CodeGen.write to know which dump
@@ -1501,7 +1526,7 @@ class OctaveCodeGen(CodeGen):
     code_extension = "m"
 
     def __init__(self, project='project', printer=None):
-        super(OctaveCodeGen, self).__init__(project)
+        super().__init__(project)
         self.printer = printer or OctaveCodePrinter()
 
     def routine(self, name, expr, argument_sequence, global_vars):
@@ -1525,7 +1550,7 @@ class OctaveCodeGen(CodeGen):
 
         # symbols that should be arguments
         old_symbols = expressions.free_symbols - local_vars - global_vars
-        symbols = set([])
+        symbols = set()
         for s in old_symbols:
             if isinstance(s, Idx):
                 symbols.update(s.args[1].free_symbols)
@@ -1719,7 +1744,7 @@ class OctaveCodeGen(CodeGen):
         if code_lines:
             f.write(code_lines)
 
-    dump_m.extension = code_extension
+    dump_m.extension = code_extension  # type: ignore
     dump_m.__doc__ = CodeGen.dump_code.__doc__
 
     # This list of dump functions is used by CodeGen.write to know which dump
@@ -1737,7 +1762,7 @@ class RustCodeGen(CodeGen):
     code_extension = "rs"
 
     def __init__(self, project="project", printer=None):
-        super(RustCodeGen, self).__init__(project=project)
+        super().__init__(project=project)
         self.printer = printer or RustCodePrinter()
 
     def routine(self, name, expr, argument_sequence, global_vars):
@@ -1751,7 +1776,7 @@ class RustCodeGen(CodeGen):
             expressions = Tuple(expr)
 
         # local variables
-        local_vars = set([i.label for i in expressions.atoms(Idx)])
+        local_vars = {i.label for i in expressions.atoms(Idx)}
 
         # global variables
         global_vars = set() if global_vars is None else set(global_vars)
@@ -1814,7 +1839,7 @@ class RustCodeGen(CodeGen):
                 raise CodeGenArgumentListError(msg, missing)
 
             # create redundant arguments to produce the requested sequence
-            name_arg_dict = dict([(x.name, x) for x in arg_list])
+            name_arg_dict = {x.name: x for x in arg_list}
             new_args = []
             for symbol in argument_sequence:
                 try:
@@ -1843,7 +1868,7 @@ class RustCodeGen(CodeGen):
         If the routine has multiple result objects, an CodeGenError is
         raised.
 
-        See: http://en.wikipedia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         results = [i.get_datatype('Rust') for i in routine.results]
@@ -1935,7 +1960,7 @@ class RustCodeGen(CodeGen):
     def dump_rs(self, routines, f, prefix, header=True, empty=True):
         self.dump_code(routines, f, prefix, header, empty)
 
-    dump_rs.extension = code_extension
+    dump_rs.extension = code_extension  # type: ignore
     dump_rs.__doc__ = CodeGen.dump_code.__doc__
 
     # This list of dump functions is used by CodeGen.write to know which dump
@@ -2014,7 +2039,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
         CodeGenError is raised if required arguments are missing.
         Redundant arguments are used without warning.  If omitted,
         arguments will be ordered alphabetically, but with all input
-        aguments first, and then output or in-out arguments.
+        arguments first, and then output or in-out arguments.
 
     global_vars : iterable, optional
         Sequence of global variables used by the routine.  Variables
@@ -2105,7 +2130,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
             raise ValueError("You cannot specify both language and code_gen.")
         code_gen = get_code_generator(language, project, standard, printer)
 
-    if isinstance(name_expr[0], string_types):
+    if isinstance(name_expr[0], str):
         # single tuple is given, turn it into a singleton list with a tuple.
         name_expr = [name_expr]
 

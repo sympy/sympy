@@ -1,11 +1,10 @@
-from sympy.core.compatibility import range
 from sympy import symbols, FiniteSet
 from sympy.combinatorics.polyhedron import (Polyhedron,
     tetrahedron, cube as square, octahedron, dodecahedron, icosahedron,
     cube_faces)
 from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 rmul = Permutation.rmul
 
@@ -83,3 +82,24 @@ def test_polyhedron():
         (3, 4, 4, 5, 5),
             (12, 24, 24, 60, 60)):
         check(h, size, rpt, target)
+
+
+def test_pgroups():
+    from sympy.combinatorics.polyhedron import (tetrahedron, cube, octahedron,
+            dodecahedron, icosahedron, tetrahedron_faces, cube_faces,
+            octahedron_faces, dodecahedron_faces, icosahedron_faces)
+    from sympy.combinatorics.polyhedron import _pgroup_calcs
+    (tetrahedron2, cube2, octahedron2, dodecahedron2, icosahedron2,
+     tetrahedron_faces2, cube_faces2, octahedron_faces2,
+     dodecahedron_faces2, icosahedron_faces2) = _pgroup_calcs()
+
+    assert tetrahedron == tetrahedron2
+    assert cube == cube2
+    assert octahedron == octahedron2
+    assert dodecahedron == dodecahedron2
+    assert icosahedron == icosahedron2
+    assert sorted(map(sorted, tetrahedron_faces)) == sorted(map(sorted, tetrahedron_faces2))
+    assert sorted(cube_faces) == sorted(cube_faces2)
+    assert sorted(octahedron_faces) == sorted(octahedron_faces2)
+    assert sorted(dodecahedron_faces) == sorted(dodecahedron_faces2)
+    assert sorted(icosahedron_faces) == sorted(icosahedron_faces2)

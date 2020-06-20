@@ -123,7 +123,7 @@ in a shorter form.
 
 The output of the code above is::
 
-    \\frac{\\partial^{2}}{\\partial x\\partial y}  f{\\left (x,y \\right )}
+    \\frac{\\partial^{2}}{\\partial x\\partial y}  f{\\left(x,y \\right)}
     f_{xy}
 
 Example of Custom Printing Method
@@ -172,11 +172,26 @@ The output of the code above is::
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
+from contextlib import contextmanager
+
 from sympy import Basic, Add
 
 from sympy.core.core import BasicMeta
+from sympy.core.function import AppliedUndef, UndefinedFunction, Function
 
 from functools import cmp_to_key
+
+
+@contextmanager
+def printer_context(printer, **kwargs):
+    original = printer._context.copy()
+    try:
+        printer._context.update(kwargs)
+        yield
+    finally:
+        printer._context = original
 
 
 class Printer(object):
@@ -188,17 +203,17 @@ class Printer(object):
     for your custom class then see the example above: printer_example_ .
     """
 
-    _global_settings = {}
+    _global_settings = {}  # type: Dict[str, Any]
 
-    _default_settings = {}
+    _default_settings = {}  # type: Dict[str, Any]
 
-    emptyPrinter = str
-    printmethod = None
+    printmethod = None  # type: str
 
     def __init__(self, settings=None):
         self._str = str
 
         self._settings = self._default_settings.copy()
+        self._context = dict()  # mutable during printing
 
         for key, val in self._global_settings.items():
             if key in self._default_settings:
@@ -234,7 +249,7 @@ class Printer(object):
         """Returns printer's representation for expr (as a string)"""
         return self._str(self._print(expr))
 
-    def _print(self, expr, *args, **kwargs):
+    def _print(self, expr, **kwargs):
         """Internal dispatcher
 
         Tries the following concepts to print an expression:
@@ -249,18 +264,35 @@ class Printer(object):
             # should be printed, use that method.
             if (self.printmethod and hasattr(expr, self.printmethod)
                     and not isinstance(expr, BasicMeta)):
-                return getattr(expr, self.printmethod)(self, *args, **kwargs)
+                return getattr(expr, self.printmethod)(self, **kwargs)
 
             # See if the class of expr is known, or if one of its super
             # classes is known, and use that print function
-            for cls in type(expr).__mro__:
+            # Exception: ignore the subclasses of Undefined, so that, e.g.,
+            # Function('gamma') does not get dispatched to _print_gamma
+            classes = type(expr).__mro__
+            if AppliedUndef in classes:
+                classes = classes[classes.index(AppliedUndef):]
+            if UndefinedFunction in classes:
+                classes = classes[classes.index(UndefinedFunction):]
+            # Another exception: if someone subclasses a known function, e.g.,
+            # gamma, and changes the name, then ignore _print_gamma
+            if Function in classes:
+                i = classes.index(Function)
+                classes = tuple(c for c in classes[:i] if \
+                    c.__name__ == classes[0].__name__ or \
+                    c.__name__.endswith("Base")) + classes[i:]
+            for cls in classes:
                 printmethod = '_print_' + cls.__name__
                 if hasattr(self, printmethod):
-                    return getattr(self, printmethod)(expr, *args, **kwargs)
+                    return getattr(self, printmethod)(expr, **kwargs)
             # Unknown object, fall back to the emptyPrinter.
             return self.emptyPrinter(expr)
         finally:
             self._print_level -= 1
+
+    def emptyPrinter(self, expr):
+        return str(expr)
 
     def _as_ordered_terms(self, expr, order=None):
         """A compatibility function for ordering terms in Add. """
@@ -268,5 +300,7 @@ class Printer(object):
 
         if order == 'old':
             return sorted(Add.make_args(expr), key=cmp_to_key(Basic._compare_pretty))
+        elif order == 'none':
+            return list(expr.args)
         else:
             return expr.as_ordered_terms(order=order)

@@ -24,6 +24,12 @@ First, make sure that you have done the following things
 - Push the release branch up to origin, and make a pull request for it against
   master.
 
+- Create the release notes page for the new release on the wiki. See
+  https://github.com/sympy/sympy-bot/issues/26. The easiest way to do this is
+  to copy the old release notes to a new page and remove all the changes, and
+  update the version number. The formatting on the release notes page is
+  important as otherwise the bot will fail, so it is best to do it this way.
+
 It is important to create a new branch because that lets master continue as
 normal. The release script will automatically checkout the release branch from
 origin, which is why you need to push it (it determines what the release
@@ -54,16 +60,16 @@ script can take about an hour or so to run (depending on how long the tests
 take). Every time you re-run the script, it pulls from the branch and runs
 everything from scratch.
 
-At the end it will print two things, the list of authors, and the md5 sums.
+At the end it will print two things, the list of authors, and the sha256 sums.
 Copy the list of authors into the release notes. You should verify that the
-md5 sums of the release files are the same as what are printed.
+sha256 sums of the release files are the same as what are printed.
 
 # Tagging the release
 
 Once you have made the final release files that you plan to upload, be sure
 that everything is committed, and that the most recent git HEAD is indeed the
-same one that was used to build the files (you can always do `fab vagrant
-release` again if you are not sure). Then tag the release with the command
+same one that was used to build the files (you can always run the release
+script again if you are not sure). Then tag the release with the command
 
     git tag sympy-VERSION -a
 
@@ -138,3 +144,9 @@ Once you have it working, push the changes up to Dockerhub
     docker push sympy/sympy-release
 
 You'll need access to the sympy org, ask Aaron or Ondřej if you need it.
+
+It is usually not necessary to rebuild the Docker container. The container
+first pulls the latest version of the release branch before running rever
+(see `pull_and_run_rever.sh`), so unless you modify that script, or change the
+packages that are installed in the container, it should not be necessary to
+rebuild it.

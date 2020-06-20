@@ -5,7 +5,7 @@ from sympy.core import symbols, Add, Dummy
 from sympy.core.numbers import Rational
 from sympy.polys import cancel, ComputationFailed, parallel_poly_from_expr, reduced, Poly
 from sympy.polys.monomials import Monomial, monomial_div
-from sympy.polys.polyerrors import PolificationFailed
+from sympy.polys.polyerrors import DomainError, PolificationFailed
 from sympy.utilities.misc import debug
 
 def ratsimp(expr):
@@ -40,7 +40,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
     >>> from sympy.abc import x, y
     >>> eq = (x + y**5 + y)/(x - y)
     >>> ratsimpmodprime(eq, [x*y**5 - x - y], x, y, order='lex')
-    (x**2 + x*y + x + y)/(x**2 - x*y)
+    (-x**2 - x*y - x - y)/(-x**2 + x*y)
 
     If ``polynomial`` is False, the algorithm computes a rational
     simplification which minimizes the sum of the total degrees of
@@ -53,7 +53,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
     References
     ==========
 
-    M. Monagan, R. Pearce, Rational Simplification Modulo a Polynomial
+    .. [1] M. Monagan, R. Pearce, Rational Simplification Modulo a Polynomial
     Ideal,
     http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.163.6984
     (specifically, the second algorithm)

@@ -1,7 +1,5 @@
 """ Common Exceptions for `holonomic` module. """
 
-from __future__ import print_function, division
-
 class BaseHolonomicError(Exception):
 
     def new(self, *args):
@@ -14,7 +12,7 @@ class NotPowerSeriesError(BaseHolonomicError):
         self.x0 = x0
 
     def __str__(self):
-        s = 'A Power Series doesnot exists for '
+        s = 'A Power Series does not exists for '
         s += str(self.holonomic)
         s += ' about %s.' %self.x0
         return s

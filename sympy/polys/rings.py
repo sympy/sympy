@@ -2,30 +2,32 @@
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from operator import add, mul, lt, le, gt, ge
 from types import GeneratorType
 
+from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
-from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.numbers import igcd, oo
+from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify, sympify
-from sympy.core.compatibility import is_sequence, reduce, string_types, range
 from sympy.ntheory.multinomial import multinomial_coefficients
+from sympy.polys.compatibility import IPolys
+from sympy.polys.constructor import construct_domain
+from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
+from sympy.polys.domains.domainelement import DomainElement
+from sympy.polys.domains.polynomialring import PolynomialRing
+from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.monomials import MonomialOps
 from sympy.polys.orderings import lex
-from sympy.polys.heuristicgcd import heugcd
-from sympy.polys.compatibility import IPolys
-from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
-                                   _parallel_dict_from_expr)
 from sympy.polys.polyerrors import (
     CoercionFailed, GeneratorsError,
     ExactQuotientFailed, MultivariatePolynomialError)
-from sympy.polys.domains.domainelement import DomainElement
-from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.polyoptions import (Domain as DomainOpt,
                                      Order as OrderOpt, build_options)
-from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
-from sympy.polys.constructor import construct_domain
+from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
+                                   _parallel_dict_from_expr)
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
@@ -35,10 +37,12 @@ def ring(symbols, domain, order=lex):
     """Construct a polynomial ring returning ``(ring, x_1, ..., x_n)``.
 
     Parameters
-    ----------
-    symbols : str, Symbol/Expr or sequence of str, Symbol/Expr (non-empty)
-    domain : :class:`Domain` or coercible
-    order : :class:`Order` or coercible, optional, defaults to ``lex``
+    ==========
+
+    symbols : str
+        Symbol/Expr or sequence of str, Symbol/Expr (non-empty)
+    domain : :class:`~.Domain` or coercible
+    order : :class:`~.MonomialOrder` or coercible, optional, defaults to ``lex``
 
     Examples
     ========
@@ -64,10 +68,12 @@ def xring(symbols, domain, order=lex):
     """Construct a polynomial ring returning ``(ring, (x_1, ..., x_n))``.
 
     Parameters
-    ----------
-    symbols : str, Symbol/Expr or sequence of str, Symbol/Expr (non-empty)
-    domain : :class:`Domain` or coercible
-    order : :class:`Order` or coercible, optional, defaults to ``lex``
+    ==========
+
+    symbols : str
+        Symbol/Expr or sequence of str, Symbol/Expr (non-empty)
+    domain : :class:`~.Domain` or coercible
+    order : :class:`~.MonomialOrder` or coercible, optional, defaults to ``lex``
 
     Examples
     ========
@@ -93,10 +99,12 @@ def vring(symbols, domain, order=lex):
     """Construct a polynomial ring and inject ``x_1, ..., x_n`` into the global namespace.
 
     Parameters
-    ----------
-    symbols : str, Symbol/Expr or sequence of str, Symbol/Expr (non-empty)
-    domain : :class:`Domain` or coercible
-    order : :class:`Order` or coercible, optional, defaults to ``lex``
+    ==========
+
+    symbols : str
+        Symbol/Expr or sequence of str, Symbol/Expr (non-empty)
+    domain : :class:`~.Domain` or coercible
+    order : :class:`~.MonomialOrder` or coercible, optional, defaults to ``lex``
 
     Examples
     ========
@@ -107,7 +115,7 @@ def vring(symbols, domain, order=lex):
 
     >>> vring("x,y,z", ZZ, lex)
     Polynomial ring in x, y, z over ZZ with lex order
-    >>> x + y + z
+    >>> x + y + z # noqa:
     x + y + z
     >>> type(_)
     <class 'sympy.polys.rings.PolyElement'>
@@ -122,18 +130,17 @@ def sring(exprs, *symbols, **options):
     """Construct a ring deriving generators and domain from options and input expressions.
 
     Parameters
-    ----------
-    exprs : :class:`Expr` or sequence of :class:`Expr` (sympifiable)
-    symbols : sequence of :class:`Symbol`/:class:`Expr`
-    options : keyword arguments understood by :class:`Options`
+    ==========
+
+    exprs : :class:`~.Expr` or sequence of :class:`~.Expr` (sympifiable)
+    symbols : sequence of :class:`~.Symbol`/:class:`~.Expr`
+    options : keyword arguments understood by :class:`~.Options`
 
     Examples
     ========
 
     >>> from sympy.core import symbols
     >>> from sympy.polys.rings import sring
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.orderings import lex
 
     >>> x, y, z = symbols("x,y,z")
     >>> R, f = sring(x + 2*y + 3*z)
@@ -171,19 +178,19 @@ def sring(exprs, *symbols, **options):
         return (_ring, polys)
 
 def _parse_symbols(symbols):
-    if isinstance(symbols, string_types):
+    if isinstance(symbols, str):
         return _symbols(symbols, seq=True) if symbols else ()
     elif isinstance(symbols, Expr):
         return (symbols,)
     elif is_sequence(symbols):
-        if all(isinstance(s, string_types) for s in symbols):
+        if all(isinstance(s, str) for s in symbols):
             return _symbols(symbols)
         elif all(isinstance(s, Expr) for s in symbols):
             return symbols
 
     raise GeneratorsError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
-_ring_cache = {}
+_ring_cache = {}  # type: Dict[Any, Any]
 
 class PolyRing(DefaultPrinting, IPolys):
     """Multivariate distributed polynomial ring. """
@@ -326,7 +333,7 @@ class PolyRing(DefaultPrinting, IPolys):
                 return self.ground_new(element)
             else:
                 raise NotImplementedError("conversion")
-        elif isinstance(element, string_types):
+        elif isinstance(element, str):
             raise NotImplementedError("parsing")
         elif isinstance(element, dict):
             return self.from_dict(element)
@@ -409,7 +416,7 @@ class PolyRing(DefaultPrinting, IPolys):
                 i = self.gens.index(gen)
             except ValueError:
                 raise ValueError("invalid generator: %s" % gen)
-        elif isinstance(gen, string_types):
+        elif isinstance(gen, str):
             try:
                 i = self.symbols.index(gen)
             except ValueError:
@@ -680,8 +687,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             for k in p1.keys():
                 if not almosteq(p1[k], p2[k], tolerance):
                     return False
-            else:
-                return True
+            return True
         elif len(p1) > 1:
             return False
         else:
@@ -776,7 +782,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def str(self, printer, precedence, exp_pattern, mul_symbol):
         if not self:
             return printer._print(self.ring.domain.zero)
-        prec_add = precedence["Add"]
         prec_mul = precedence["Mul"]
         prec_atom = precedence["Atom"]
         ring = self.ring
@@ -785,17 +790,17 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         zm = ring.zero_monom
         sexpvs = []
         for expv, coeff in self.terms():
-            positive = ring.domain.is_positive(coeff)
-            sign = " + " if positive else " - "
+            negative = ring.domain.is_negative(coeff)
+            sign = " - " if negative else " + "
             sexpvs.append(sign)
             if expv == zm:
                 scoeff = printer._print(coeff)
-                if scoeff.startswith("-"):
+                if negative and scoeff.startswith("-"):
                     scoeff = scoeff[1:]
             else:
-                if not positive:
+                if negative:
                     coeff = -coeff
-                if coeff != 1:
+                if coeff != self.ring.one:
                     scoeff = printer.parenthesize(coeff, prec_mul, strict=True)
                 else:
                     scoeff = ''
@@ -1180,7 +1185,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return self.square()
         elif n == 3:
             return self*self.square()
-        elif len(self) <= 5: # TODO: use an actuall density measure
+        elif len(self) <= 5: # TODO: use an actual density measure
             return self._pow_multinomial(n)
         else:
             return self._pow_generic(n)
@@ -1268,7 +1273,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def __divmod__(p1, p2):
         ring = p1.ring
-        p = ring.zero
 
         if not p2:
             raise ZeroDivisionError("polynomial division")
@@ -1294,7 +1298,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def __mod__(p1, p2):
         ring = p1.ring
-        p = ring.zero
 
         if not p2:
             raise ZeroDivisionError("polynomial division")
@@ -1320,7 +1323,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def __truediv__(p1, p2):
         ring = p1.ring
-        p = ring.zero
 
         if not p2:
             raise ZeroDivisionError("polynomial division")
@@ -1414,7 +1416,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         """
         ring = self.ring
-        domain = ring.domain
         ret_single = False
         if isinstance(fv, PolyElement):
             ret_single = True
@@ -1470,7 +1471,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             raise ZeroDivisionError("polynomial division")
         ring = f.ring
         domain = ring.domain
-        order = ring.order
         zero = domain.zero
         monomial_mul = ring.monomial_mul
         r = ring.zero
@@ -1684,7 +1684,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         Returns the coefficient that stands next to the given monomial.
 
         Parameters
-        ----------
+        ==========
+
         element : PolyElement (with ``is_monomial = True``) or 1
 
         Examples
@@ -1795,8 +1796,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """Ordered list of polynomial coefficients.
 
         Parameters
-        ----------
-        order : :class:`Order` or coercible, optional
+        ==========
+
+        order : :class:`~.MonomialOrder` or coercible, optional
 
         Examples
         ========
@@ -1820,8 +1822,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """Ordered list of polynomial monomials.
 
         Parameters
-        ----------
-        order : :class:`Order` or coercible, optional
+        ==========
+
+        order : :class:`~.MonomialOrder` or coercible, optional
 
         Examples
         ========
@@ -1845,8 +1848,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """Ordered list of polynomial terms.
 
         Parameters
-        ----------
-        order : :class:`Order` or coercible, optional
+        ==========
+
+        order : :class:`~.MonomialOrder` or coercible, optional
 
         Examples
         ========

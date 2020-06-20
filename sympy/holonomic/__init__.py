@@ -9,3 +9,10 @@ other way around.
 from .holonomic import (DifferentialOperator, HolonomicFunction, DifferentialOperators,
     from_hyper, from_meijerg, expr_to_holonomic)
 from .recurrence import RecurrenceOperators, RecurrenceOperator, HolonomicSequence
+
+__all__ = [
+    'DifferentialOperator', 'HolonomicFunction', 'DifferentialOperators',
+    'from_hyper', 'from_meijerg', 'expr_to_holonomic',
+
+    'RecurrenceOperators', 'RecurrenceOperator', 'HolonomicSequence',
+]

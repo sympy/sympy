@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import inspect
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
@@ -18,7 +17,7 @@ class AssumptionsContext(set):
     Examples
     ========
 
-    >>> from sympy import AppliedPredicate, Q
+    >>> from sympy import Q
     >>> from sympy.assumptions.assume import global_assumptions
     >>> global_assumptions
     AssumptionsContext()
@@ -36,12 +35,12 @@ class AssumptionsContext(set):
     def add(self, *assumptions):
         """Add an assumption."""
         for a in assumptions:
-            super(AssumptionsContext, self).add(a)
+            super().add(a)
 
     def _sympystr(self, printer):
         if not self:
             return "%s()" % self.__class__.__name__
-        return "%s(%s)" % (self.__class__.__name__, printer._print_set(self))
+        return "{}({})".format(self.__class__.__name__, printer._print_set(self))
 
 global_assumptions = AssumptionsContext()
 
@@ -60,7 +59,7 @@ class AppliedPredicate(Boolean):
     <class 'sympy.assumptions.assume.AppliedPredicate'>
 
     """
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls, predicate, arg):
         arg = _sympify(arg)
@@ -104,7 +103,7 @@ class AppliedPredicate(Boolean):
         return False
 
     def __hash__(self):
-        return super(AppliedPredicate, self).__hash__()
+        return super().__hash__()
 
     def _eval_ask(self, assumptions):
         return self.func.eval(self.arg, assumptions)
@@ -186,11 +185,10 @@ class Predicate(Boolean):
         for handler in self.handlers:
             cls = get_class(handler)
             for subclass in mro:
-                try:
-                    eval = getattr(cls, subclass.__name__)
-                except AttributeError:
+                eval_ = getattr(cls, subclass.__name__, None)
+                if eval_ is None:
                     continue
-                res = eval(expr, assumptions)
+                res = eval_(expr, assumptions)
                 # Do not stop if value returned is None
                 # Try to check for higher classes
                 if res is None:

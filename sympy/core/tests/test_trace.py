@@ -1,6 +1,6 @@
 from sympy import symbols, Matrix, Tuple
 from sympy.core.trace import Tr
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_trace_new():

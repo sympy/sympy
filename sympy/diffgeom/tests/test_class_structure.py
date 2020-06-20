@@ -20,15 +20,16 @@ def test_point():
     #TODO assert point.free_symbols == set([x, y])
 
 
+def test_atomicclass_args():
+    assert m.args == ()
+    assert p.args == ()
+    assert cs.args == ()
+    assert cs_noname.args == ()
+
 def test_rebuild():
-    assert m == m.func(*m.args)
-    assert p == p.func(*p.args)
-    assert cs == cs.func(*cs.args)
-    assert cs_noname == cs_noname.func(*cs_noname.args)
     assert s1 == s1.func(*s1.args)
     assert v1 == v1.func(*v1.args)
     assert f1 == f1.func(*f1.args)
-
 
 def test_subs():
     assert s1.subs(s1, s2) == s2

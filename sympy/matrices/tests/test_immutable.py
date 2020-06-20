@@ -1,29 +1,35 @@
 from itertools import product
 
 from sympy import (ImmutableMatrix, Matrix, eye, zeros, S, Equality,
-        Unequality, ImmutableSparseMatrix, SparseMatrix, sympify,
-        integrate)
+        Unequality, SparseMatrix, sympify, integrate)
+from sympy.matrices.immutable import \
+    ImmutableDenseMatrix, ImmutableSparseMatrix
 from sympy.abc import x, y
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
-IM = ImmutableMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-ieye = ImmutableMatrix(eye(3))
+IM = ImmutableDenseMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+ISM = ImmutableSparseMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+ieye = ImmutableDenseMatrix(eye(3))
 
 
-def test_immutable_creation():
-    assert IM.shape == (3, 3)
-    assert IM[1, 2] == 6
-    assert IM[2, 2] == 9
+def test_creation():
+    assert IM.shape == ISM.shape == (3, 3)
+    assert IM[1, 2] == ISM[1, 2] == 6
+    assert IM[2, 2] == ISM[2, 2] == 9
 
 
 def test_immutability():
     with raises(TypeError):
         IM[2, 2] = 5
+    with raises(TypeError):
+        ISM[2, 2] = 5
 
 
 def test_slicing():
-    assert IM[1, :] == ImmutableMatrix([[4, 5, 6]])
-    assert IM[:2, :2] == ImmutableMatrix([[1, 2], [4, 5]])
+    assert IM[1, :] == ImmutableDenseMatrix([[4, 5, 6]])
+    assert IM[:2, :2] == ImmutableDenseMatrix([[1, 2], [4, 5]])
+    assert ISM[1, :] == ImmutableSparseMatrix([[4, 5, 6]])
+    assert ISM[:2, :2] == ImmutableSparseMatrix([[1, 2], [4, 5]])
 
 
 def test_subs():
@@ -41,11 +47,13 @@ def test_subs():
 
 
 def test_as_immutable():
-    X = Matrix([[1, 2], [3, 4]])
-    assert sympify(X) == X.as_immutable() == ImmutableMatrix([[1, 2], [3, 4]])
-    X = SparseMatrix(5, 5, {})
-    assert sympify(X) == X.as_immutable() == ImmutableSparseMatrix(
-            [[0 for i in range(5)] for i in range(5)])
+    data = [[1, 2], [3, 4]]
+    X = Matrix(data)
+    assert sympify(X) == X.as_immutable() == ImmutableMatrix(data)
+
+    data = {(0, 0): 1, (0, 1): 2, (1, 0): 3, (1, 1): 4}
+    X = SparseMatrix(2, 2, data)
+    assert sympify(X) == X.as_immutable() == ImmutableSparseMatrix(2, 2, data)
 
 
 def test_function_return_types():
@@ -59,13 +67,14 @@ def test_function_return_types():
     assert type(X.LUsolve(Y)) == ImmutableMatrix
     assert type(X.QRsolve(Y)) == ImmutableMatrix
 
-    X = ImmutableMatrix([[1, 2], [2, 1]])
+    X = ImmutableMatrix([[5, 2], [2, 7]])
     assert X.T == X
     assert X.is_symmetric
     assert type(X.cholesky()) == ImmutableMatrix
     L, D = X.LDLdecomposition()
     assert (type(L), type(D)) == (ImmutableMatrix, ImmutableMatrix)
 
+    X = ImmutableMatrix([[1, 2], [2, 1]])
     assert X.is_diagonalizable()
     assert X.det() == -3
     assert X.norm(2) == 3

@@ -1,6 +1,8 @@
-==================
-Assumptions module
-==================
+.. _assumptions_module:
+
+===========
+Assumptions
+===========
 
 .. automodule:: sympy.assumptions
 
@@ -18,7 +20,7 @@ Contents
 Queries are used to ask information about expressions. Main method for this
 is ask():
 
-.. autofunction:: sympy.assumptions.ask.ask
+.. autofunction:: sympy.assumptions.ask::ask
    :noindex:
 
 Querying
@@ -54,7 +56,7 @@ Design
 ======
 
 Each time ask is called, the appropriate Handler for the current key is called. This is
-always a subclass of sympy.assumptions.AskHandler. It's classmethods have the name's of the classes
+always a subclass of sympy.assumptions.AskHandler. Its classmethods have the names of the classes
 it supports. For example, a (simplified) AskHandler for the ask 'positive' would
 look like this::
 
@@ -83,12 +85,12 @@ Extensibility
 You can define new queries or support new types by subclassing sympy.assumptions.AskHandler
  and registering that handler for a particular key by calling register_handler:
 
-.. autofunction:: sympy.assumptions.ask.register_handler
+.. autofunction:: sympy.assumptions.ask::register_handler
                   :noindex:
 
 You can undo this operation by calling remove_handler.
 
-.. autofunction:: sympy.assumptions.ask.remove_handler
+.. autofunction:: sympy.assumptions.ask::remove_handler
                   :noindex:
 
 You can support new types [1]_ by adding a handler to an existing key. In the
@@ -121,7 +123,7 @@ in notable speed improvements.
 
 Logic inference used in one ask could be used to speed up further queries, and
 current system does not take advantage of this. For example, a truth maintenance
-system (http://en.wikipedia.org/wiki/Truth_maintenance_system) could be implemented.
+system (https://en.wikipedia.org/wiki/Truth_maintenance_system) could be implemented.
 
 Misc
 ====

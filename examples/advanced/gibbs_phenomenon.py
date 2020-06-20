@@ -10,7 +10,7 @@ first maximum.
 2) evaluating the integral for si(pi).
 
 See:
- * http://en.wikipedia.org/wiki/Gibbs_phenomena
+ * https://en.wikipedia.org/wiki/Gibbs_phenomena
 """
 
 from sympy import var, sqrt, integrate, conjugate, seterr, Abs, pprint, I, pi,\
@@ -104,7 +104,7 @@ def msolve(f, x):
     """
     Finds the first root of f(x) to the left of 0.
 
-    The x0 and dx below are taylored to get the correct result for our
+    The x0 and dx below are tailored to get the correct result for our
     particular function --- the general solver often overshoots the first
     solution.
     """

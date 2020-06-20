@@ -72,8 +72,8 @@ class Dagger(adjoint):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Hermitian_adjoint
-    .. [2] http://en.wikipedia.org/wiki/Hermitian_transpose
+    .. [1] https://en.wikipedia.org/wiki/Hermitian_adjoint
+    .. [2] https://en.wikipedia.org/wiki/Hermitian_transpose
     """
 
     def __new__(cls, arg):

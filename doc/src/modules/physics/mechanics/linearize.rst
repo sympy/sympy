@@ -2,7 +2,7 @@
 Linearization in Physics/Mechanics
 ==================================
 
-:mod:`mechanics` includes methods for linearizing the generated equations of
+:mod:`sympy.physics.mechanics` includes methods for linearizing the generated equations of
 motion (EOM) about an operating point (also known as the trim condition).
 Note that this operating point doesn't have to be an equilibrium position, it
 just needs to satisfy the equations of motion.
@@ -16,7 +16,7 @@ linearization methods provided here handle these constraints correctly.
 Background
 ==========
 
-In :mod:`mechanics` we assume all systems can be represented in the following
+In :mod:`sympy.physics.mechanics` we assume all systems can be represented in the following
 general form:
 
 .. math::
@@ -65,7 +65,7 @@ the ``to_linearizer`` class method.
   this guide. For more information, please see [Blajer1994]_.
 
 Once the system is coerced into the generalized form, the linearized EOM can be
-solved for. The methods provided in :mod:`mechanics` allow for two different
+solved for. The methods provided in :mod:`sympy.physics.mechanics` allow for two different
 forms of the linearized EOM:
 
 `M`, `A`, and `B`
@@ -228,7 +228,7 @@ the vector is empty: ::
 
 .. topic:: What's with the ``new_method`` kwarg?
 
-  Previous releases of :mod:`SymPy` contained a linearization method for
+  Previous releases of SymPy contained a linearization method for
   `KanesMethod`` objects. This method is deprecated, and will be removed
   from future releases. Until then, you must set ``new_method=True`` in all
   calls to ``KanesMethod.linearize``. After the old method is removed, this

@@ -72,7 +72,7 @@ class AntiCommutator(Expr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Commutator
+    .. [1] https://en.wikipedia.org/wiki/Commutator
     """
     is_commutative = False
 
@@ -130,7 +130,8 @@ class AntiCommutator(Expr):
         )
 
     def _sympystr(self, printer, *args):
-        return "{%s,%s}" % (self.args[0], self.args[1])
+        return "{%s,%s}" % (
+            printer._print(self.args[0]), printer._print(self.args[1]))
 
     def _pretty(self, printer, *args):
         pform = printer._print(self.args[0], *args)

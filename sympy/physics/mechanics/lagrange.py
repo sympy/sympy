@@ -57,7 +57,7 @@ class LagrangesMethod(object):
 
         >>> from sympy.physics.mechanics import LagrangesMethod, Lagrangian
         >>> from sympy.physics.mechanics import ReferenceFrame, Particle, Point
-        >>> from sympy.physics.mechanics import dynamicsymbols, kinetic_energy
+        >>> from sympy.physics.mechanics import dynamicsymbols
         >>> from sympy import symbols
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
@@ -365,7 +365,7 @@ class LagrangesMethod(object):
 
         The operating points may be also entered using the ``op_point`` kwarg.
         This takes a dictionary of {symbol: value}, or a an iterable of such
-        dictionaries. The values may be numberic or symbolic. The more values
+        dictionaries. The values may be numeric or symbolic. The more values
         you can specify beforehand, the faster this computation will run.
 
         For more documentation, please see the ``Linearizer`` class."""

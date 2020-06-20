@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 
-from pyglet.gl import *
 from pyglet.window import Window
 from pyglet.clock import Clock
 
@@ -54,7 +53,7 @@ class ManagedWindow(Window):
             gl_lock.release()
 
         clock = Clock()
-        clock.set_fps_limit(self.fps_limit)
+        clock.fps_limit = self.fps_limit
         while not self.has_exit:
             dt = clock.tick()
             gl_lock.acquire()

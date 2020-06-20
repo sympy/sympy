@@ -1,14 +1,13 @@
 from __future__ import print_function, division
 
-from pyglet.gl import *
+import pyglet.gl as pgl
 from pyglet import font
 
-from plot_object import PlotObject
-from util import strided_range, billboard_matrix
-from util import get_direction_vectors
-from util import dot_product, vec_sub, vec_mag
 from sympy.core import S
-from sympy.core.compatibility import is_sequence, range
+from sympy.core.compatibility import is_sequence
+from sympy.plotting.pygletplot.plot_object import PlotObject
+from sympy.plotting.pygletplot.util import billboard_matrix, dot_product, \
+        get_direction_vectors, strided_range, vec_mag, vec_sub
 
 
 class PlotAxes(PlotObject):
@@ -89,11 +88,11 @@ class PlotAxes(PlotObject):
 
     def draw(self):
         if self._render_object:
-            glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_DEPTH_BUFFER_BIT)
+            pgl.glPushAttrib(pgl.GL_ENABLE_BIT | pgl.GL_POLYGON_BIT | pgl.GL_DEPTH_BUFFER_BIT)
             if self._overlay:
-                glDisable(GL_DEPTH_TEST)
+                pgl.glDisable(pgl.GL_DEPTH_TEST)
             self._render_object.draw()
-            glPopAttrib()
+            pgl.glPopAttrib()
 
     def adjust_bounds(self, child_bounds):
         b = self._bounding_box
@@ -101,8 +100,9 @@ class PlotAxes(PlotObject):
         for i in [0, 1, 2]:
             if abs(c[i][0]) is S.Infinity or abs(c[i][1]) is S.Infinity:
                 continue
-            b[i][0] = [min([b[i][0], c[i][0]]), c[i][0]][b[i][0] is None]
-            b[i][1] = [max([b[i][1], c[i][1]]), c[i][1]][b[i][1] is None]
+            b[i][0] = c[i][0] if b[i][0] is None else min([b[i][0], c[i][0]])
+            b[i][1] = c[i][1] if b[i][1] is None else max([b[i][1], c[i][1]])
+            self._bounding_box = b
             self._recalculate_axis_ticks(i)
 
     def _recalculate_axis_ticks(self, axis):
@@ -153,22 +153,22 @@ class PlotAxesBase(PlotObject):
                           valign=font.Text.BASELINE,
                           halign=font.Text.CENTER)
 
-        glPushMatrix()
-        glTranslatef(*position)
+        pgl.glPushMatrix()
+        pgl.glTranslatef(*position)
         billboard_matrix()
         scale_factor = 0.005 * scale
-        glScalef(scale_factor, scale_factor, scale_factor)
-        glColor4f(0, 0, 0, 0)
+        pgl.glScalef(scale_factor, scale_factor, scale_factor)
+        pgl.glColor4f(0, 0, 0, 0)
         label.draw()
-        glPopMatrix()
+        pgl.glPopMatrix()
 
     def draw_line(self, v, color):
         o = self._p._origin
-        glBegin(GL_LINES)
-        glColor3f(*color)
-        glVertex3f(v[0][0] + o[0], v[0][1] + o[1], v[0][2] + o[2])
-        glVertex3f(v[1][0] + o[0], v[1][1] + o[1], v[1][2] + o[2])
-        glEnd()
+        pgl.glBegin(pgl.GL_LINES)
+        pgl.glColor3f(*color)
+        pgl.glVertex3f(v[0][0] + o[0], v[0][1] + o[1], v[0][2] + o[2])
+        pgl.glVertex3f(v[1][0] + o[0], v[1][1] + o[1], v[1][2] + o[2])
+        pgl.glEnd()
 
 
 class PlotAxesOrdinate(PlotAxesBase):

@@ -11,7 +11,7 @@ def test_GrowableGrid():
     assert grid.width == 1
     assert grid.height == 2
 
-    # Check initialisation of elements.
+    # Check initialization of elements.
     assert grid[0, 0] is None
     assert grid[1, 0] is None
 

@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import range
 
 from types import FunctionType
 
@@ -52,7 +51,7 @@ class TableForm(object):
                                 - "automatic" ... labels are 1, 2, 3, ...
 
                             Can be a list of labels for rows and columns:
-                            The lables for each dimension can be given
+                            The labels for each dimension can be given
                             as None, "automatic", or [l1, l2, ...] e.g.
                             ["automatic", None] will number the rows
 
@@ -97,7 +96,7 @@ class TableForm(object):
         Examples
         ========
 
-        >>> from sympy import TableForm, Matrix
+        >>> from sympy import TableForm, Symbol
         >>> TableForm([[5, 7], [4, 2], [10, 3]])
         5  7
         4  2
@@ -108,7 +107,7 @@ class TableForm(object):
         1 | .
         2 | . .
         3 | . . .
-        >>> TableForm([['.'*(j if not i%2 else 1) for i in range(3)]
+        >>> TableForm([[Symbol('.'*(j if not i%2 else 1)) for i in range(3)]
         ...            for j in range(4)], alignments='rcl')
             .
           . . .
@@ -121,7 +120,6 @@ class TableForm(object):
         # We only support 2D data. Check the consistency:
         if isinstance(data, Matrix):
             data = data.tolist()
-        _w = len(data[0])
         _h = len(data)
 
         # fill out any short lines

@@ -2,13 +2,12 @@
 
 from __future__ import print_function, division
 
+from sympy.core.numbers import Float
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.mpelements import MPContext
-
-from sympy.polys.polyerrors import DomainError, CoercionFailed
-from sympy.core.numbers import Float
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
 @public
@@ -45,7 +44,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         return self._context.tolerance
 
     def __init__(self, prec=_default_precision, dps=None, tol=None):
-        context = MPContext(prec, dps, tol)
+        context = MPContext(prec, dps, tol, True)
         context._parent = self
         self._context = context
 

@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 import sys
-sys._running_pytest = True
+sys._running_pytest = True  # type: ignore
 from distutils.version import LooseVersion as V
 
 import pytest
@@ -10,7 +10,7 @@ import re
 
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
 
-def process_split(session, config, items):
+def process_split(config, items):
     split = config.getoption("--split")
     if not split:
         return
@@ -56,10 +56,10 @@ def pytest_addoption(parser):
         help="split tests")
 
 
-def pytest_collection_modifyitems(session, config, items):
+def pytest_collection_modifyitems(config, items):
     """ pytest hook. """
     # handle splits
-    process_split(session, config, items)
+    process_split(config, items)
 
 
 @pytest.fixture(autouse=True, scope='module')

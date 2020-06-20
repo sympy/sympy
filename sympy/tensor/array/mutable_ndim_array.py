@@ -8,3 +8,6 @@ class MutableNDimArray(NDimArray):
 
     def as_mutable(self):
         return self
+
+    def _sympy_(self):
+        return self.as_immutable()
