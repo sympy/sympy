@@ -2255,11 +2255,11 @@ def test_Series_printing():
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
     assert latex(Series(tf1, tf2)) == \
-        '\\frac{1}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)} \\left(x - y\\right) \\left(x y^{2} - z\\right)'
+        '\\frac{\\left(x - y\\right) \\left(x y^{2} - z\\right)}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)}'
     assert latex(Series(tf1, tf2, tf3)) == \
-        '\\frac{1}{\\left(t - y\\right) \\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)} \\left(x - y\\right) \\left(x y^{2} - z\\right) \\left(t x^{2} - t^{w} x + w\\right)'
+        '\\frac{\\left(x - y\\right) \\left(x y^{2} - z\\right) \\left(t x^{2} - t^{w} x + w\\right)}{\\left(t - y\\right) \\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)}'
     assert latex(Series(-tf2, tf1)) == \
-        '\\frac{1}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)} \\left(- x + y\\right) \\left(x y^{2} - z\\right)'
+        '\\frac{\\left(- x + y\\right) \\left(x y^{2} - z\\right)}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)}'
 
 
 def test_TransferFunction_printing():
@@ -2275,9 +2275,9 @@ def test_Parallel_printing():
     tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
     tf2 = TransferFunction(x - y, x + y, y)
     assert latex(Parallel(tf1, tf2)) == \
-        '\\frac{1}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)} \\left(\\left(- t^{3} + y^{3}\\right) \\left(x - y\\right) + \\left(x + y\\right) \\left(x y^{2} - z\\right)\\right)'
+        '\\frac{\\left(- t^{3} + y^{3}\\right) \\left(x - y\\right) + \\left(x + y\\right) \\left(x y^{2} - z\\right)}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)}'
     assert latex(Parallel(-tf2, tf1)) == \
-        '\\frac{1}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)} \\left(\\left(- t^{3} + y^{3}\\right) \\left(- x + y\\right) + \\left(x + y\\right) \\left(x y^{2} - z\\right)\\right)'
+        '\\frac{\\left(- t^{3} + y^{3}\\right) \\left(- x + y\\right) + \\left(x + y\\right) \\left(x y^{2} - z\\right)}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)}'
 
 
 def test_Quaternion_latex_printing():

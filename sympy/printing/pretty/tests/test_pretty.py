@@ -2373,18 +2373,18 @@ def test_pretty_Series():
     tf1 = TransferFunction(x + y, x - 2*y, y)
     tf2 = TransferFunction(x - y, x + y, y)
     assert pretty(Series(tf1, tf2)) == \
-        '        1                        \n─────────────────⋅(x - y)⋅(x + y)\n(x - 2⋅y)⋅(x + y)                '
+        '         ⎛   2    ⎞\n (x - y)⋅⎝x⋅y  - z⎠\n───────────────────\n⎛   3    3⎞        \n⎝- t  + y ⎠⋅(x + y)'
     assert pretty(Series(-tf2, -tf1)) == \
-        '                          1        \n(-x - y)⋅(-x + y)⋅─────────────────\n                  (x - 2⋅y)⋅(x + y)'
+        '         ⎛     2    ⎞\n(-x + y)⋅⎝- x⋅y  + z⎠\n─────────────────────\n ⎛   3    3⎞         \n ⎝- t  + y ⎠⋅(x + y) '
 
 
 def test_pretty_Parallel():
     tf1 = TransferFunction(x + y, x - 2*y, y)
     tf2 = TransferFunction(x - y, x + y, y)
     assert pretty(Parallel(tf1, tf2)) == \
-        '        1         ⎛                           2⎞\n─────────────────⋅⎝(x - 2⋅y)⋅(x - y) + (x + y) ⎠\n(x - 2⋅y)⋅(x + y)                               '
+        '⎛   3    3⎞                   ⎛   2    ⎞\n⎝- t  + y ⎠⋅(x - y) + (x + y)⋅⎝x⋅y  - z⎠\n────────────────────────────────────────\n          ⎛   3    3⎞                   \n          ⎝- t  + y ⎠⋅(x + y)           '
     assert pretty(Parallel(-tf2, -tf1)) == \
-        '        1         ⎛                            2⎞\n─────────────────⋅⎝(-x + y)⋅(x - 2⋅y) - (x + y) ⎠\n(x - 2⋅y)⋅(x + y)                                '
+        '⎛   3    3⎞                    ⎛   2    ⎞\n⎝- t  + y ⎠⋅(-x + y) - (x + y)⋅⎝x⋅y  - z⎠\n─────────────────────────────────────────\n           ⎛   3    3⎞                   \n           ⎝- t  + y ⎠⋅(x + y)           '
 
 
 def test_pretty_order():
