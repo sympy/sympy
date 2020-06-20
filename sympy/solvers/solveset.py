@@ -605,19 +605,30 @@ def _solve_trig2(f, symbol, domain):
     denominators = []
     numerators = []
 
+    # todo: This solver can be extended to hyperbolics if the
+    # analogous change of variable to tanh (instead of tan)
+    # is used.
+    if not trig_functions:
+        return ConditionSet(symbol, Eq(f_original, 0), domain)
+
+    # todo: The pre-processing below (extraction of numerators, denominators,
+    # gcd, lcm, mu, etc.) should be updated to the enhanced version in
+    # _solve_trig1. (See #19507)
     for ar in trig_arguments:
         try:
             poly_ar = Poly(ar, symbol)
-
-        except ValueError:
+        except PolynomialError:
             raise ValueError("give up, we can't solve if this is not a polynomial in x")
         if poly_ar.degree() > 1:  # degree >1 still bad
             raise ValueError("degree of variable inside polynomial should not exceed one")
         if poly_ar.degree() == 0:  # degree 0, don't care
             continue
         c = poly_ar.all_coeffs()[0]   # got the coefficient of 'symbol'
-        numerators.append(Rational(c).p)
-        denominators.append(Rational(c).q)
+        try:
+            numerators.append(Rational(c).p)
+            denominators.append(Rational(c).q)
+        except TypeError:
+            return ConditionSet(symbol, Eq(f_original, 0), domain)
 
     x = Dummy('x')
 
