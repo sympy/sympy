@@ -663,112 +663,172 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     return M.hstack(*p_cols), M.diag(*diag)
 
 
-def _fuzzy_positive_definite(M):
-    positive_diagonals = M._has_positive_diagonals()
-    if positive_diagonals is False:
-        return False
+class DefiniteValidator:
+    """Checks for invalid input and raises an error if found
+    """
+    @staticmethod
+    def has_nan(M):
+       if any(x is nan for x in M):
+            raise MatrixError('Matrix contains nan')
 
-    if positive_diagonals and M.is_strongly_diagonally_dominant:
+
+class DefiniteFuzzyCheck:
+    """Methods for making early returns
+
+    Must return a Boolean or None
+    """
+    @staticmethod
+    def no_positive_diagonals(M):
+        positive_diags = (M[i, i].is_positive for i in range(M.rows))
+        if fuzzy_not(fuzzy_or(positive_diags)):
+           return True
+        return None
+        
+    @staticmethod
+    def strong_diag_dominant(M):
+        return True if M.is_strongly_diagonally_dominant else None
+
+    @staticmethod
+    def has_negative_diagonals(M):
+       negative_diags = (M[i, i].is_negative for i in range(M.rows))
+       if fuzzy_or(negative_diags): return True
+
+    @staticmethod
+    def weak_diag_dominant(M):
+        if M.is_weakly_diagonally_dominant: return True
+
+    @staticmethod
+    def has_positive_and_negative_diagonals(M):
+        positive_diags = (M[i, i].is_positive for i in range(M.rows))
+        negative_diags = (M[i, i].is_negative for i in range(M.rows))
+        if fuzzy_or(positive_diags) and fuzzy_or(negative_diags):
+            return True
+        return None
+
+
+class DefiniteStrategy:
+    @staticmethod
+    def pos_def_GE(M): 
+        """A division-free gaussian elimination method for testing
+        positive-definiteness."""
+        M = M.as_mutable()
+        size = M.rows
+
+        for i in range(size):
+            is_positive = M[i, i].is_positive
+            if is_positive is not True:
+                return is_positive
+            for j in range(i+1, size):
+                M[j, i+1:] = M[i, i] * M[j, i+1:] - M[j, i] * M[i, i+1:]
         return True
+
+    @staticmethod
+    def pos_semidef_cholesky(M):
+        M = M.as_mutable()
+        for k in range(M.rows):
+            pivot, _, pivot_nonzero, _ = _find_reasonable_pivot(
+                [M[i, i] for i in range(k, M.rows)])
+
+            if pivot is None:
+                return None if pivot_nonzero else True
+
+            if pivot > 0:
+                M.col_swap(k, k+pivot)
+                M.row_swap(k, k+pivot)
+
+            if M[k, k].is_negative:
+                return False
+
+            M[k, k] = sqrt(M[k, k])
+            M[k, (k+1):] /= M[k, k]
+            for j in range(k+1, M.rows):
+                M[(k+1):(j+1), j] -= M[k, (k+1):(j+1)].H * M[k, j]
+
+        return M[-1, -1].is_nonnegative
+
+    @staticmethod
+    def indefinite_by_def(M):
+        return fuzzy_not(
+                fuzzy_or([
+                    DefiniteStrategy.pos_semidef_cholesky(M),
+                    DefiniteStrategy.pos_semidef_cholesky(-M)
+                ])
+            )
+
+
+class DefinitenessChecker:
+    def __init__(self, validators, fuzzy_checks, strategy):
+        self.validators = validators
+        self.fuzzy_checks = fuzzy_checks
+        self.strategy = strategy
+
+    def __call__(self, M):
+        for validator in self.validators:
+            validator(M)
+        if not M.is_square: return False
+        M = M + M.H
+        for fuzzy_check in self.fuzzy_checks:
+            fuzzy = fuzzy_check(M)
+            if fuzzy is not None: return fuzzy
+        return self.strategy(M)
+
+    def negate(self):
+        negated_validators = [lambda M: v(-M) for v in self.validators]
+        negated_fuzzy_checks = [lambda M: fc(-M) for fc in self.fuzzy_checks]
+        negated_strategy = lambda M: self.strategy(-M)
+        return DefinitenessChecker(
+            negated_validators, negated_fuzzy_checks, negated_strategy)
+
+
+_is_positive_definite = DefinitenessChecker(
+    validators=[
+        DefiniteValidator.has_nan
+    ],
+    fuzzy_checks=[
+        DefiniteFuzzyCheck.no_positive_diagonals,
+        DefiniteFuzzyCheck.strong_diag_dominant,
+    ],
+    strategy=DefiniteStrategy.pos_def_GE
+)
+
+
+_is_negative_definite = _is_positive_definite.negate()
+
+
+_is_positive_semidefinite = DefinitenessChecker(
+    validators=[
+        DefiniteValidator.has_nan
+    ],
+    fuzzy_checks=[
+        DefiniteFuzzyCheck.has_negative_diagonals,
+        DefiniteFuzzyCheck.weak_diag_dominant,
+    ],
+    strategy=DefiniteStrategy.pos_semidef_cholesky
+)
+
+
+_is_negative_semidefinite = _is_positive_semidefinite.negate()
+
+
+_is_indefinite = DefinitenessChecker(
+    validators=[
+        DefiniteValidator.has_nan
+    ],
+    fuzzy_checks=[
+        DefiniteFuzzyCheck.has_positive_and_negative_diagonals
+    ],
+    strategy=DefiniteStrategy.indefinite_by_def
+)
+
+
+def _fuzzy_positive_definite(M):
+    no_pos_diags = DefiniteFuzzyCheck.no_positive_diagonals(M)
+    if no_pos_diags is not None: return False
+
+    strong_diag_dominant = DefiniteFuzzyCheck.strong_diag_dominant(M)
+    if strong_diag_dominant: return True
 
     return None
-
-
-def _is_positive_definite(M):
-    if any(x is nan for x in M):
-        raise MatrixError('Matrix contains nan')
-    if not M.is_hermitian:
-        if not M.is_square:
-            return False
-        M = M + M.H
-
-    fuzzy = _fuzzy_positive_definite(M)
-    if fuzzy is not None:
-        return fuzzy
-
-    return _is_positive_definite_GE(M)
-
-
-def _is_positive_semidefinite(M):
-    if not M.is_square:
-        return False
-    if any(x is nan for x in M):
-        raise MatrixError('Matrix contains nan')
-    M = M + M.H
-
-    if any(M[i, i].is_negative for i in range(M.rows)):
-        return False
-    elif M.is_weakly_diagonally_dominant:
-        # If diagonal entries of M are nonnegative and
-        # M wdd, then M is positive semidefinite
-        return True
-
-    # Cholesky Factorization
-    for k in range(M.rows):
-        pivot, _, pivot_nonzero, _ = _find_reasonable_pivot(
-            [M[i, i] for i in range(k, M.rows)])
-
-        if pivot is None:
-            return None if pivot_nonzero else True
-
-        if pivot > 0:
-            M.col_swap(k, k+pivot)
-            M.row_swap(k, k+pivot)
-
-        if M[k, k].is_negative:
-            return False
-
-        M[k, k] = sqrt(M[k, k])
-        M[k, (k+1):] /= M[k, k]
-        for j in range(k+1, M.rows):
-            M[(k+1):(j+1), j] -= M[k, (k+1):(j+1)].H * M[k, j]
-
-    return M[-1, -1].is_nonnegative
-
-
-def _is_negative_definite(M):
-    return _is_positive_definite(-M)
-
-
-def _is_negative_semidefinite(M):
-    return _is_positive_semidefinite(-M)
-
-
-def _is_indefinite(M):
-    """Returns True if M is not positive semi-definite
-    and not negative semi-definite and false otherwise
-    """
-    if any(m == nan for m in M):
-        raise ValueError('Matrix contains nan')
-    if not M.is_square: return False
-    M = M + M.H
-
-    positive_diags = (M[i, i].is_positive for i in range(M.rows))
-    negative_diags = (M[i, i].is_negative for i in range(M.rows))
-    if fuzzy_or(positive_diags) and fuzzy_or(negative_diags):
-        return True
-
-    return fuzzy_not(
-        fuzzy_or([
-            M.is_positive_semidefinite,
-            M.is_negative_semidefinite
-        ])
-    )
-
-
-def _is_positive_definite_GE(M):
-    """A division-free gaussian elimination method for testing
-    positive-definiteness."""
-    M = M.as_mutable()
-    size = M.rows
-
-    for i in range(size):
-        is_positive = M[i, i].is_positive
-        if is_positive is not True:
-            return is_positive
-        for j in range(i+1, size):
-            M[j, i+1:] = M[i, i] * M[j, i+1:] - M[j, i] * M[i, i+1:]
-    return True
 
 
 _doc_positive_definite = \
