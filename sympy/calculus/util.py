@@ -5,6 +5,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import expand_mul
 from sympy.core.numbers import _sympifyit, oo
+from sympy.core.relational import is_le, is_lt, is_ge, is_gt
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import And
@@ -1483,10 +1484,11 @@ class AccumulationBounds(AtomicExpr):
 
 @dispatch(AccumulationBounds, AccumulationBounds) # type: ignore # noqa:F811
 def _eval_is_le(lhs, rhs): # noqa:F811
-    if lhs.max <= rhs.min:
+    if is_le(lhs.max, rhs.min):
         return True
-    if lhs.min > rhs.max:
+    if is_gt(lhs.min, rhs.max):
         return False
+
 
 @dispatch(AccumulationBounds, Basic) # type: ignore # noqa:F811
 def _eval_is_le(lhs, rhs): # noqa: F811
@@ -1515,16 +1517,16 @@ def _eval_is_le(lhs, rhs): # noqa: F811
                 "Invalid comparison of %s %s" %
                 (type(rhs), rhs))
     elif rhs.is_comparable:
-        if lhs.max <= rhs:
+        if is_le(lhs.max, rhs):
             return True
-        if lhs.min > rhs:
+        if is_gt(lhs.min, rhs):
             return False
 
 @dispatch(AccumulationBounds, AccumulationBounds)
 def _eval_is_ge(lhs, rhs): # noqa:F811
-    if lhs.min >= rhs.max:
+    if is_ge(lhs.min, rhs.max):
         return True
-    if lhs.max < rhs.min:
+    if is_lt(lhs.max, rhs.min):
         return False
 
 @dispatch(AccumulationBounds, Expr)
@@ -1553,9 +1555,9 @@ def _eval_is_ge(lhs, rhs): # noqa: F811
             "Invalid comparison of %s %s" %
             (type(rhs), rhs))
     elif rhs.is_comparable:
-        if lhs.min >= rhs:
+        if is_ge(lhs.min, rhs):
             return True
-        if lhs.max < rhs:
+        if is_lt(lhs.max, rhs):
             return False
 
 
@@ -1566,17 +1568,17 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
             "Invalid comparison of %s %s" %
             (type(lhs), lhs))
     elif lhs.is_comparable:
-        if rhs.max <= lhs:
+        if is_le(rhs.max, lhs):
             return True
-        if rhs.min > lhs:
+        if is_gt(rhs.min, lhs):
             return False
 
 
 @dispatch(AccumulationBounds, AccumulationBounds)
 def _eval_is_ge(lhs, rhs): # noqa:F811
-    if lhs.min >= rhs.max:
+    if is_ge(lhs.min, rhs.max):
         return True
-    if lhs.max < rhs.min:
+    if is_lt(lhs.max, rhs.min):
         return False
 
 # setting an alias for AccumulationBounds

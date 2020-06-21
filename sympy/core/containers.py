@@ -12,7 +12,6 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, MutableSet
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
-from sympy.multipledispatch import dispatch
 
 class Tuple(Basic):
     """
@@ -143,16 +142,6 @@ class Tuple(Basic):
 converter[tuple] = lambda tup: Tuple(*tup)
 
 
-@dispatch(Tuple, Tuple)
-def _eval_Eq(lhs, rhs): # noqa:F811
-    from sympy.core.logic import fuzzy_and, fuzzy_bool
-    from sympy.core.relational import Eq
-
-
-    if len(lhs) != len(rhs):
-        return False
-
-    return fuzzy_and(fuzzy_bool(Eq(s, o)) for s, o in zip(lhs, rhs))
 
 
 

@@ -18,7 +18,7 @@ __all__ = (
 
 from .expr import Expr
 from sympy.multipledispatch import dispatch
-
+from .containers import Tuple
 
 
 def _nontrivBool(side):
@@ -1089,7 +1089,20 @@ def _eval_Eq(lhs, rhs):
     return None
 
 
+@dispatch(Tuple, Expr)
+def _eval_Eq(lhs, rhs):# noqa:F811
+    return False
 
+
+@dispatch(Tuple, Tuple)
+def _eval_Eq(lhs, rhs): # noqa:F811
+    from sympy.core.logic import fuzzy_and, fuzzy_bool
+    from sympy.core.relational import Eq
+
+    if len(lhs) != len(rhs):
+        return False
+
+    return fuzzy_and(fuzzy_bool(Eq(s, o)) for s, o in zip(lhs, rhs))
 
 
 def is_lt(lhs, rhs):
@@ -1105,7 +1118,11 @@ def is_le(lhs, rhs):
 
 
 def is_ge(lhs, rhs):
+    if type(lhs) == Basic or type(rhs) == Basic:
+        raise TypeError("Cannnot compare inequality on Basic")
+
     retval = _eval_is_ge(lhs, rhs)
+
     if retval is not None:
         return retval
     else:

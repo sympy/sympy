@@ -129,9 +129,9 @@ from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer, oo
-from sympy.core.relational import Lt, Le, Ge, Gt
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.utilities.iterables import iterable
+from sympy.multipledispatch import dispatch
 
 
 
@@ -1493,12 +1493,10 @@ class Variable(Node):
             raise TypeError("Invalid comparison %s < %s" % (self, rhs))
         return op(self, rhs, evaluate=False)
 
-    __lt__ = lambda self, other: self._relation(other, Lt)
-    __le__ = lambda self, other: self._relation(other, Le)
-    __ge__ = lambda self, other: self._relation(other, Ge)
-    __gt__ = lambda self, other: self._relation(other, Gt)
 
-
+@dispatch(Variable, Variable)
+def _eval_is_ge(rhs, lhs):
+    return None
 
 
 class Pointer(Variable):
