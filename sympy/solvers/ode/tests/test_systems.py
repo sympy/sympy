@@ -993,7 +993,8 @@ def test_linear_3eq_order1_type4_slow():
     eq1 = (Eq(diff(x(t), t), (4 * f + g) * x(t) - f * y(t) - 2 * f * z(t)),
                 Eq(diff(y(t), t), 2 * f * x(t) + (f + g) * y(t) - 2 * f * z(t)), Eq(diff(z(t), t), 5 * f * x(t) + f * y(
         t) + (-3 * f + g) * z(t)))
-    dsolve(eq1)
+    with dotprodsimp(True):
+        dsolve(eq1)
 
 
 def test_linear_neq_order1_type2_big_test_cases():
