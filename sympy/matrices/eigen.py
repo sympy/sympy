@@ -758,68 +758,165 @@ def _is_positive_definite_GE(M):
 _doc_positive_definite = \
     r"""Finds out the definiteness of a matrix.
 
+    Explanation
+    ===========
+
+    A square real matrix $A$ is:
+
+    - A positive definite matrix if $x^T A x > 0$
+      for all non-zero real vectors $x$.
+    - A positive semidefinite matrix if $x^T A x \geq 0$
+      for all non-zero real vectors $x$.
+    - A negative definite matrix if $x^T A x < 0$
+      for all non-zero real vectors $x$.
+    - A negative semidefinite matrix if $x^T A x \leq 0$
+      for all non-zero real vectors $x$.
+    - An indefinite matrix if there exists non-zero real vectors
+      $x, y$ with $x^T A x > 0 > y^T A y$.
+
+    A square complex matrix $A$ is:
+
+    - A positive definite matrix if $\text{re}(x^H A x) > 0$
+      for all non-zero complex vectors $x$.
+    - A positive semidefinite matrix if $\text{re}(x^H A x) \geq 0$
+      for all non-zero complex vectors $x$.
+    - A negative definite matrix if $\text{re}(x^H A x) < 0$
+      for all non-zero complex vectors $x$.
+    - A negative semidefinite matrix if $\text{re}(x^H A x) \leq 0$
+      for all non-zero complex vectors $x$.
+    - An indefinite matrix if there exists non-zero complex vectors
+      $x, y$ with $\text{re}(x^H A x) > 0 > \text{re}(y^H A y)$.
+
+    A matrix need not be symmetric or hermitian to be positive definite.
+
+    - A real non-symmetric matrix is positive definite if and only if
+      $\frac{A + A^T}{2}$ is positive definite.
+    - A complex non-hermitian matrix is positive definite if and only if
+      $\frac{A + A^H}{2}$ is positive definite.
+
+    And this extension can apply for all the definitions above.
+
+    However, for complex cases, you can restrict the definition of
+    $\text{re}(x^H A x) > 0$ to $x^H A x > 0$ and require the matrix
+    to be hermitian.
+    But we do not present this restriction for computation because you
+    can check ``M.is_hermitian`` independently with this and use
+    the same procedure.
+
     Examples
     ========
 
-    An example of numeric positive definite matrix:
+    An example of symmetric positive definite matrix:
 
-    >>> from sympy import Matrix
-    >>> A = Matrix([[1, -2], [-2, 6]])
-    >>> A.is_positive_definite
-    True
-    >>> A.is_positive_semidefinite
-    True
-    >>> A.is_negative_definite
-    False
-    >>> A.is_negative_semidefinite
-    False
-    >>> A.is_indefinite
-    False
+    .. plot::
+        :context: reset
+        :format: doctest
+        :include-source: True
 
-    An example of numeric negative definite matrix:
+        >>> from sympy import Matrix, symbols
+        >>> from sympy.plotting import plot3d
+        >>> a, b = symbols('a b')
+        >>> x = Matrix([a, b])
 
-    >>> A = Matrix([[-1, 2], [2, -6]])
-    >>> A.is_positive_definite
-    False
-    >>> A.is_positive_semidefinite
-    False
-    >>> A.is_negative_definite
-    True
-    >>> A.is_negative_semidefinite
-    True
-    >>> A.is_indefinite
-    False
+        >>> A = Matrix([[1, 0], [0, 1]])
+        >>> A.is_positive_definite
+        True
+        >>> A.is_positive_semidefinite
+        True
 
-    An example of numeric indefinite matrix:
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
 
-    >>> A = Matrix([[1, 2], [2, 1]])
-    >>> A.is_positive_definite
-    False
-    >>> A.is_positive_semidefinite
-    False
-    >>> A.is_negative_definite
-    False
-    >>> A.is_negative_semidefinite
-    False
-    >>> A.is_indefinite
-    True
+    An example of symmetric positive semidefinite matrix:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[1, -1], [-1, 1]])
+        >>> A.is_positive_definite
+        False
+        >>> A.is_positive_semidefinite
+        True
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
+
+    An example of symmetric negative definite matrix:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[-1, 0], [0, -1]])
+        >>> A.is_negative_definite
+        True
+        >>> A.is_negative_semidefinite
+        True
+        >>> A.is_indefinite
+        False
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
+
+    An example of symmetric indefinite matrix:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[1, 2], [2, -1]])
+        >>> A.is_indefinite
+        True
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
+
+    An example of non-symmetric positive definite matrix.
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[1, 2], [-2, 1]])
+        >>> A.is_positive_definite
+        True
+        >>> A.is_positive_semidefinite
+        True
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
 
     Notes
     =====
 
-    Definitiveness is not very commonly discussed for non-hermitian
-    matrices.
+    Although some people trivialize the definition of positive definite
+    matrices only for symmetric or hermitian matrices, this restriction
+    is not correct because it does not classify all instances of
+    positive definite matrices from the definition $x^T A x > 0$ or
+    $\text{re}(x^H A x) > 0$.
 
-    However, computing the definitiveness of a matrix can be
-    generalized over any real matrix by taking the symmetric part:
+    For instance, ``Matrix([[1, 2], [-2, 1]])`` presented in
+    the example above is an example of real positive definite matrix
+    that is not symmetric.
 
-    `A_S = 1/2 (A + A^{T})`
+    However, since the following formula holds true;
 
-    Or over any complex matrix by taking the hermitian part:
+    .. math::
+        \text{re}(x^H A x) > 0 \iff
+        \text{re}(x^H \frac{A + A^H}{2} x) > 0
 
-    `A_H = 1/2 (A + A^{H})`
+    We can classify all positive definite matrices that may or may not
+    be symmetric or hermitian by transforming the matrix to
+    $\frac{A + A^T}{2}$ or $\frac{A + A^H}{2}$
+    (which is guaranteed to be always real symmetric or complex
+    hermitian) and we can defer most of the studies to symmetric or
+    hermitian positive definite matrices.
 
-    And computing the eigenvalues.
+    But it is a different problem for the existance of Cholesky
+    decomposition. Because even though a non symmetric or a non
+    hermitian matrix can be positive definite, Cholesky or LDL
+    decomposition does not exist because the decompositions require the
+    matrix to be symmetric or hermitian.
 
     References
     ==========
