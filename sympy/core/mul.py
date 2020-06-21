@@ -1794,7 +1794,15 @@ class Mul(Expr, AssocOp):
                     raise ValueError
 
             n0 = sum(t[1] for t in ords)
-            facs = [t.nseries(x, 0, ceiling(n-n0+m), cdir=cdir).removeO() for t, m in ords]
+            facs = []
+            for t, m in ords:
+                n1 = ceiling(n - n0 + m)
+                s = t.nseries(x, 0, n1)
+                ns = s.getn()
+                if ns is not None:
+                    if ns < n1:  # less than expected
+                        n -= n1 - ns    # reduce n
+                facs.append(s.removeO())
 
         except (ValueError, NotImplementedError, TypeError, AttributeError):
             facs = [t.nseries(x, n=n, logx=logx, cdir=cdir) for t in self.args]

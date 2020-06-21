@@ -1021,6 +1021,7 @@ class Expr(Basic, EvalfMixin):
         return c(self)
 
     def dir(self, x, cdir):
+        from sympy import log
         minexp = S.Zero
         if self.is_zero:
             return S.Zero
@@ -1029,6 +1030,13 @@ class Expr(Basic, EvalfMixin):
             minexp += S.One
             arg = arg.diff(x)
             coeff = arg.subs(x, 0)
+            if coeff in (S.NaN, S.ComplexInfinity):
+                try:
+                    coeff, _ = arg.leadterm(x)
+                    if coeff.has(log(x)):
+                        raise ValueError()
+                except ValueError:
+                    coeff = arg.limit(x, 0)
             if coeff != S.Zero:
                 break
         return coeff*cdir**minexp

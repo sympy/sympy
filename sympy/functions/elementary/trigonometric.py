@@ -2624,10 +2624,12 @@ class atan(InverseTrigonometricFunction):
         from sympy import im, re
         arg0 = self.args[0].subs(x, 0)
         res = Function._eval_nseries(self, x, n=n, logx=logx)
-        if arg0 is S.ComplexInfinity:
-            return acot(1/self.args[0])._eval_nseries(x, n, logx, cdir)
         if cdir != 0:
             cdir = self.args[0].dir(x, cdir)
+        if arg0 is S.ComplexInfinity:
+            if re(cdir) > 0:
+                return res - S.Pi
+            return res
         if re(cdir) < 0 and re(arg0).is_zero and im(arg0) > S.One:
             return res - S.Pi
         elif re(cdir) > 0 and re(arg0).is_zero and im(arg0) < S.NegativeOne:
