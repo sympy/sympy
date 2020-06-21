@@ -5,6 +5,7 @@ from .basic import S, Atom
 from .compatibility import ordered
 from .basic import Basic
 from .evalf import EvalfMixin
+from .function import AppliedUndef
 from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
 from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
@@ -19,6 +20,7 @@ __all__ = (
 from .expr import Expr
 from sympy.multipledispatch import dispatch
 from .containers import Tuple
+from .symbol import Symbol
 
 
 def _nontrivBool(side):
@@ -1094,6 +1096,16 @@ def _eval_Eq(lhs, rhs):# noqa:F811
     return False
 
 
+@dispatch(Tuple, AppliedUndef)
+def _eval_Eq(lhs, rhs):# noqa:F811
+    return None
+
+
+@dispatch(Tuple, Symbol)
+def _eval_Eq(lhs, rhs):# noqa:F811
+    return None
+
+
 @dispatch(Tuple, Tuple)
 def _eval_Eq(lhs, rhs): # noqa:F811
     from sympy.core.logic import fuzzy_and, fuzzy_bool
@@ -1102,7 +1114,7 @@ def _eval_Eq(lhs, rhs): # noqa:F811
     if len(lhs) != len(rhs):
         return False
 
-    return fuzzy_and(fuzzy_bool(Eq(s, o)) for s, o in zip(lhs, rhs))
+    return fuzzy_and(fuzzy_bool(is_eq(s, o)) for s, o in zip(lhs, rhs))
 
 
 def is_lt(lhs, rhs):
