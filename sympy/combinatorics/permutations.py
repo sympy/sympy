@@ -950,8 +950,6 @@ class Permutation(Atom):
 
         return cls._af_new(aform)
 
-
-
     @classmethod
     def _af_new(cls, perm):
         """A method to produce a Permutation object from a list;
