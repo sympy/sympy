@@ -16,7 +16,6 @@ from sympy.core.sympify import sympify
 from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
                         Add)
 from sympy.core.containers import Tuple
-from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand)
@@ -61,6 +60,9 @@ from collections import defaultdict
 class NonlinearError(ValueError):
     """Raised by linear_eq_to_matrix if the equations are nonlinear"""
     pass
+
+
+_rc = Dummy("R", real=True), Dummy("C", complex=True)
 
 
 def _masked(f, *atoms):
@@ -1994,7 +1996,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     Examples
     ========
 
-    >>> from sympy import exp, sin, Symbol, pprint, S
+    >>> from sympy import exp, sin, Symbol, pprint, S, Eq
     >>> from sympy.solvers.solveset import solveset, solveset_real
 
     * The default domain is complex. Not specifying a domain will lead
@@ -2020,15 +2022,18 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> solveset_real(exp(x) - 1, x)
     FiniteSet(0)
 
-    The solution is mostly unaffected by assumptions on the symbol,
-    but there may be some slight difference:
-
-    >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
-    ({2*n*pi | n in Integers} \ {0}) U ({2*n*pi + pi | n in Integers} \ {0})
+    The solution is unaffected by assumptions on the symbol:
 
     >>> p = Symbol('p', positive=True)
-    >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
-    {2*n*pi | n in Integers} U {2*n*pi + pi | n in Integers}
+    >>> pprint(solveset(p**2 - 4))
+    {-2, 2}
+
+    When a conditionSet is returned, symbols with assumptions that
+    would alter the set are replaced with more generic symbols:
+
+    >>> i = Symbol('i', imaginary=True)
+    >>> solveset(Eq(i**2 + i*sin(i), 1), i, domain=S.Reals)
+    ConditionSet(_R, Eq(_R**2 + _R*sin(_R) - 1, 0), Reals)
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
@@ -2079,16 +2084,19 @@ def solveset(f, symbol=None, domain=S.Complexes):
         # the xreplace will be needed if a ConditionSet is returned
         return solveset(f[0], s[0], domain).xreplace(swap)
 
-    if domain.is_subset(S.Reals):
-        if not symbol.is_real:
-            assumptions = symbol.assumptions0
-            assumptions['real'] = True
-            try:
-                r = Dummy('r', **assumptions)
-                return solveset(f.xreplace({symbol: r}), r, domain
-                    ).xreplace({r: symbol})
-            except InconsistentAssumptions:
-                pass
+    # solveset should ignore assumptions on symbols
+    if symbol not in _rc:
+        x = _rc[0] if domain.is_subset(S.Reals) else _rc[1]
+        rv = solveset(f.xreplace({symbol: x}), x, domain)
+        # try to use the original symbol if possible
+        try:
+            _rv = rv.xreplace({x: symbol})
+        except TypeError:
+            _rv = rv
+        if rv.dummy_eq(_rv):
+            rv = _rv
+        return rv
+
     # Abs has its own handling method which avoids the
     # rewriting property that the first piece of abs(x)
     # is for x >= 0 and the 2nd piece for x < 0 -- solutions
