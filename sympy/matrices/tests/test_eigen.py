@@ -589,27 +589,30 @@ def test_definite():
 
 INDEFINITE = 'indefinite'
 POSITIVE_SEMIDEF = 'positive_semidefinite'
+HAS_NEG_DIAGS = 'has_negative_entries_on_diagonal'
 
 definite_test_data = [
     (Matrix([[1, 2, 3], [4, 5, 6]]), {INDEFINITE: False, POSITIVE_SEMIDEF: False}, "Nonsquare matrix"),
     (Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]]),
         {INDEFINITE: False,
-            POSITIVE_SEMIDEF: True}, "Zero matrix"),
+            POSITIVE_SEMIDEF: True,
+            HAS_NEG_DIAGS: None}, "Zero matrix",),
     (Matrix(([4, 2, sqrt(3)], [2, 2, 0], [sqrt(3), 0, 1])),
         {INDEFINITE: True,
-            POSITIVE_SEMIDEF: False}, "Nonsingular Indefinite"),
+            POSITIVE_SEMIDEF: False,
+            HAS_NEG_DIAGS: None}, "Nonsingular Indefinite"),
     (Matrix(([4, 2, 1], [2, 2, 0], [1, 0, 1])),
-        {INDEFINITE: False, POSITIVE_SEMIDEF: True}, "Nonsingular Positive definite"),
+        {INDEFINITE: False, POSITIVE_SEMIDEF: True, HAS_NEG_DIAGS: None}, "Nonsingular Positive definite"),
     (Matrix(([-4, -2, -1], [-2, -2, 0], [-1, 0, -1])),
-        {INDEFINITE: False, POSITIVE_SEMIDEF: False}, "Nonsingular Negative definite"),
+        {INDEFINITE: False, POSITIVE_SEMIDEF: False, HAS_NEG_DIAGS: True}, "Nonsingular Negative definite"),
     (Matrix(([0, 1, 1], [1, 1, 2], [1, 2, 3])),
-        {INDEFINITE: True, POSITIVE_SEMIDEF: False}, "Singular Indefinite"),
+        {INDEFINITE: True, POSITIVE_SEMIDEF: False, HAS_NEG_DIAGS: None}, "Singular Indefinite"),
     (Matrix([[0, 0, 0], [0, 1, Rational(1, 2)], [0, Rational(1, 2), 1]]),
-        {INDEFINITE: False, POSITIVE_SEMIDEF: True}, "Singular positive semidefinite"),
+        {INDEFINITE: False, POSITIVE_SEMIDEF: True, HAS_NEG_DIAGS: None}, "Singular positive semidefinite"),
     (Matrix([[0, 0, 0],
                 [0, -1, Rational(-1, 2)],
                 [0, Rational(-1, 2), -1]]),
-        {INDEFINITE: False, POSITIVE_SEMIDEF: False}, "Singular negative semidefinite"),
+        {INDEFINITE: False, POSITIVE_SEMIDEF: False, HAS_NEG_DIAGS: True}, "Singular negative semidefinite"),
     (Matrix(([1, 2 * I], [-2 * I, 2])),
         {INDEFINITE: True, POSITIVE_SEMIDEF: False}, "Complex Indefinite"),
     (Matrix(([1, I], [-I, 2])),
@@ -627,11 +630,13 @@ definite_test_data = [
 ]
 
 
-def _assert_definite_expectation(function, expectation):
+def _assert_definite_expectation(function, expectation, use_hermetian_part=True):
     errors = []
     for M, expectations, label in definite_test_data:
+        if M.is_square and use_hermetian_part:
+            M = (M + M.H) / 2
         actual = function(M)
-        if actual != expectations[expectation]:
+        if expectation in expectations and actual != expectations[expectation]:
             symm_M = (M + M.H) / 2
             evals = symm_M.evalf().eigenvals()
             msg = (
@@ -649,9 +654,17 @@ def _assert_definite_expectation(function, expectation):
 def test_is_indefinite():
     _assert_definite_expectation(lambda M: M.is_indefinite, INDEFINITE)
 
+
 def test_is_positive_semidefinite():
     _assert_definite_expectation(lambda M: M.is_positive_semidefinite, POSITIVE_SEMIDEF)
 
+
+# fuzzy checks
+def test_has_negative_diagonals():
+    _assert_definite_expectation(DefiniteFuzzyCheck.has_negative_diagonals, HAS_NEG_DIAGS)
+
+
+# strategies
 def test_positive_semidefinite_cholesky():
     _assert_definite_expectation(DefiniteStrategy.pos_semidef_cholesky, POSITIVE_SEMIDEF)
 
@@ -863,6 +876,8 @@ def test_checker_strategy():
     except DefinitenessChecker.StrategyError as e:
         errors.append(str(e))
     assert errors, 'Expected StrategyError'
+    # Strategies should raise an error if the matrix passed to them
+    # are not Hermetian
 
 
 def test_checker_negate():

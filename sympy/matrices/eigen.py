@@ -842,7 +842,7 @@ _is_positive_semidefinite = DefinitenessChecker(
         DefiniteValidator.has_nan
     ],
     fuzzy_checks=[
-        DefiniteFuzzyCheck.has_negative_diagonals,
+        lambda M: False if DefiniteFuzzyCheck.has_negative_diagonals(M) else None,
         DefiniteFuzzyCheck.weak_diag_dominant,
     ],
     strategy=DefiniteStrategy.pos_semidef_cholesky
