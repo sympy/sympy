@@ -1074,12 +1074,12 @@ def _n2(a, b):
             return dif
 
 
-@dispatch(Basic, Basic)
+@dispatch(Expr, Expr)
 def _eval_is_le(lhs, rhs):
     return None
 
 
-@dispatch(Basic, Basic)
+@dispatch(Expr, Expr)
 def _eval_is_ge(lhs, rhs):
     return None
 
@@ -1087,6 +1087,8 @@ def _eval_is_ge(lhs, rhs):
 @dispatch(Basic, Basic)
 def _eval_Eq(lhs, rhs):
     return None
+
+
 
 
 

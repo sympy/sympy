@@ -594,7 +594,7 @@ class MatrixExpr(Expr):
         from .applyfunc import ElementwiseApplyFunction
         return ElementwiseApplyFunction(func, self)
 
-@dispatch(MatrixExpr, Basic)
+@dispatch(MatrixExpr, Expr)
 def _eval_Eq(lhs, rhs): # noqa:F811
     return False
 

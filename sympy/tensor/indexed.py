@@ -106,7 +106,7 @@ See the appropriate docstrings for a detailed explanation of the output.
 
 from __future__ import print_function, division
 
-from sympy import Basic, Number
+from sympy import  Number
 from sympy.core.assumptions import StdFactKB
 from sympy.core import Expr, Tuple, sympify, S
 from sympy.core.symbol import _filter_assumptions, Symbol

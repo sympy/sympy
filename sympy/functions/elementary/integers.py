@@ -1,7 +1,7 @@
 
 from __future__ import print_function, division
 
-from sympy import Basic
+from sympy import Basic, Expr
 
 from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
@@ -217,7 +217,7 @@ class floor(RoundFunction):
 
         return Lt(self, other, evaluate=False)
 
-@dispatch(floor, Basic)
+@dispatch(floor, Expr)
 def _eval_Eq(lhs, rhs): # noqa:F811
     if (lhs.rewrite(ceiling) == rhs) or \
         (lhs.rewrite(frac) == rhs):
