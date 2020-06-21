@@ -796,6 +796,10 @@ class DefinitenessChecker:
         return strategy_result
 
     def negate(self):
+        ''' Returns a new DefinitenessChecker, all of whose methods
+        are applied to -M instead of M
+
+        '''
         negated_validators = [lambda M: v(-M) for v in self.validators]
         negated_fuzzy_checks = [lambda M: fc(-M) for fc in self.fuzzy_checks]
         negated_strategy = lambda M: self.strategy(-M)

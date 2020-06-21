@@ -587,62 +587,73 @@ def test_definite():
     assert not m.is_positive_definite
     assert not m.is_positive_semidefinite
 
+INDEFINITE = 'indefinite'
+POSITIVE_SEMIDEF = 'positive_semidefinite'
+
 definite_test_data = [
-    (Matrix([[1, 2, 3], [4, 5, 6]]), {'indefinite': False, 'positive_semidefinite': False}, "Nonsquare matrix"),
+    (Matrix([[1, 2, 3], [4, 5, 6]]), {INDEFINITE: False, POSITIVE_SEMIDEF: False}, "Nonsquare matrix"),
     (Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]]),
-        {'indefinite': False,
-            'positive_semidefinite': True}, "Zero matrix"),
+        {INDEFINITE: False,
+            POSITIVE_SEMIDEF: True}, "Zero matrix"),
     (Matrix(([4, 2, sqrt(3)], [2, 2, 0], [sqrt(3), 0, 1])),
-        {'indefinite': True,
-            'positive_semidefinite': False}, "Nonsingular Indefinite"),
+        {INDEFINITE: True,
+            POSITIVE_SEMIDEF: False}, "Nonsingular Indefinite"),
     (Matrix(([4, 2, 1], [2, 2, 0], [1, 0, 1])),
-        {'indefinite': False, 'positive_semidefinite': True}, "Nonsingular Positive definite"),
+        {INDEFINITE: False, POSITIVE_SEMIDEF: True}, "Nonsingular Positive definite"),
     (Matrix(([-4, -2, -1], [-2, -2, 0], [-1, 0, -1])),
-        {'indefinite': False, 'positive_semidefinite': False}, "Nonsingular Negative definite"),
+        {INDEFINITE: False, POSITIVE_SEMIDEF: False}, "Nonsingular Negative definite"),
     (Matrix(([0, 1, 1], [1, 1, 2], [1, 2, 3])),
-        {'indefinite': True, 'positive_semidefinite': False}, "Singular Indefinite"),
+        {INDEFINITE: True, POSITIVE_SEMIDEF: False}, "Singular Indefinite"),
     (Matrix([[0, 0, 0], [0, 1, Rational(1, 2)], [0, Rational(1, 2), 1]]),
-        {'indefinite': False, 'positive_semidefinite': True}, "Singular positive semidefinite"),
+        {INDEFINITE: False, POSITIVE_SEMIDEF: True}, "Singular positive semidefinite"),
     (Matrix([[0, 0, 0],
                 [0, -1, Rational(-1, 2)],
                 [0, Rational(-1, 2), -1]]),
-        {'indefinite': False, 'positive_semidefinite': False}, "Singular negative semidefinite"),
+        {INDEFINITE: False, POSITIVE_SEMIDEF: False}, "Singular negative semidefinite"),
     (Matrix(([1, 2 * I], [-2 * I, 2])),
-        {'indefinite': True, 'positive_semidefinite': False}, "Complex Indefinite"),
+        {INDEFINITE: True, POSITIVE_SEMIDEF: False}, "Complex Indefinite"),
     (Matrix(([1, I], [-I, 2])),
-        {'indefinite': False, 'positive_semidefinite': True}, "Complex positive definite"),
+        {INDEFINITE: False, POSITIVE_SEMIDEF: True}, "Complex positive definite"),
     (Matrix(([-1, -I], [I, -2])),
-        {'indefinite': False, 'positive_semidefinite': False}, "Complex negative definite"),
+        {INDEFINITE: False, POSITIVE_SEMIDEF: False}, "Complex negative definite"),
     (Matrix([[0, 0, 0], [0, 5, -10 * I], [0, 10 * I, 5]]),
-        {'indefinite': True, 'positive_semidefinite': False}, "Complex singular indefinite"),
+        {INDEFINITE: True, POSITIVE_SEMIDEF: False}, "Complex singular indefinite"),
     (Matrix([[2, 2], [-1, -1]]),
-        {'indefinite': True, 'positive_semidefinite': False}, "Pr-comment-1"),
+        {INDEFINITE: True, POSITIVE_SEMIDEF: False}, "Pr-comment-1"),
     (Matrix([[1, 0, 0], [0, 0, 0], [0, 0, -1]]),
-        {'indefinite': True, 'positive_semidefinite': False}, "Pr-comment-2"),
+        {INDEFINITE: True, POSITIVE_SEMIDEF: False}, "Pr-comment-2"),
     (Matrix([[0, 1], [1, 0]]),
-        {'indefinite': True, 'positive_semidefinite': False}, "Zeros on diagonal"),
+        {INDEFINITE: True, POSITIVE_SEMIDEF: False}, "Zeros on diagonal"),
 ]
+
+
+def _assert_definite_expectation(function, expectation):
+    errors = []
+    for M, expectations, label in definite_test_data:
+        actual = function(M)
+        if actual != expectations[expectation]:
+            symm_M = (M + M.H) / 2
+            evals = symm_M.evalf().eigenvals()
+            msg = (
+                'Error for test "{}"\n\t'
+                'M = {}\n\t'
+                'symm(M) = {}\n\t'
+                'Expected {}: {}\n\t'
+                'Found: {}\n\t'
+                'Eigenvals of symm(M): {}'
+            )
+            errors.append(msg.format(label, M, symm_M, expectation, expectations[expectation], actual, evals))
+    assert not errors, '\n' + '\n'.join(errors)
 
 # issue 19365
 def test_is_indefinite():
-    errors = []
-    for m, expectations, label in definite_test_data:
-        actual = m.is_indefinite
-        if actual != expectations['indefinite']:
-            msg = (
-                'Error for test "{}"\n'
-                'Expected m.is_indefinite == {}. Found {}.\n\tm={}'
-            )
-            errors.append(msg.format(label, expectations['indefinite'], actual, m))
-        actual = m.is_positive_semidefinite
-        if actual != expectations['positive_semidefinite']:
-            msg = (
-                'Error for test "{}"\n'
-                'Expected m.is_positive_semidefinite == {}. Found {}.\n\tm={}'
-            )
-            errors.append(msg.format(label, expectations['positive_semidefinite'], actual, m))
-    assert not errors, '\n'.join(errors)
+    _assert_definite_expectation(lambda M: M.is_indefinite, INDEFINITE)
 
+def test_is_positive_semidefinite():
+    _assert_definite_expectation(lambda M: M.is_positive_semidefinite, POSITIVE_SEMIDEF)
+
+def test_positive_semidefinite_cholesky():
+    _assert_definite_expectation(DefiniteStrategy.pos_semidef_cholesky, POSITIVE_SEMIDEF)
 
 def test_definite_errors():
     m = Matrix([[nan, nan], [0, nan]])
@@ -859,26 +870,11 @@ def test_checker_negate():
         validators=[
             DefiniteCheckerMocks.validate_negative_entries
         ],
-        fuzzy_checks=[
-            DefiniteCheckerMocks.fuzzy_all_negative_entries
-        ],
-        strategy=DefiniteCheckerMocks.strategy_all_negative_entries
+        fuzzy_checks=[ DefiniteCheckerMocks.fuzzy_all_negative_entries ],
+               strategy=DefiniteCheckerMocks.strategy_all_negative_entries
     )
     negated = checker.negate()
     M = DefiniteCheckerMocks.M
     assert negated.validators[0](M) is None, 'Validator not negated'
     assert negated.fuzzy_checks[0](M), 'fuzzy checker altered by negation'
     assert negated.strategy(M), 'strategy not negated'
-
-
-def test_pos_semidef_cholesky():
-    errors = []
-    msg = "{}\nexpect {}: {}\nM = {}"
-    for M, expectations, label in definite_test_data:
-        try:
-            result = DefiniteStrategy.pos_semidef_cholesky(M) 
-            if result != expectations['positive_semidefinite']:
-                errors.append(msg.format(label, 'positive_semidefinite', expectations['positive_semidefinite'], M))
-        except Exception as e:
-            errors.append((msg + '\n' + str(e)).format(label, 'positive_semidefinite', expectations['positive_semidefinite'], M))
-    assert not errors, '\n'.join(errors)
