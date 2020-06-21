@@ -1317,10 +1317,12 @@ class SymPyTests(object):
                 reporter.test_pass()
             taken = time.time() - start
             if taken > self._slow_threshold:
+                filename = os.path.relpath(filename, reporter._root_dir)
                 reporter.slow_test_functions.append(
                     (filename + "::" + f.__name__, taken))
             if getattr(f, '_slow', False) and slow:
                 if taken < self._fast_threshold:
+                    filename = os.path.relpath(filename, reporter._root_dir)
                     reporter.fast_test_functions.append(
                         (filename + "::" + f.__name__, taken))
         reporter.leaving_filename()
