@@ -1118,8 +1118,8 @@ def is_le(lhs, rhs):
 
 
 def is_ge(lhs, rhs):
-    if type(lhs) == Basic or type(rhs) == Basic:
-        raise TypeError("Cannnot compare inequality on Basic")
+    if not (isinstance(lhs, Expr) and isinstance(rhs, Expr)):
+        raise TypeError("Can only compare inequalities with Expr")
 
     retval = _eval_is_ge(lhs, rhs)
 

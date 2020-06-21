@@ -3016,4 +3016,4 @@ class AppliedPermutation(Expr):
 def _eval_Eq(lhs, rhs):
     if lhs._size != rhs._size:
         return None
-    return as_Boolean(lhs._array_form == rhs._array_form)
+    return lhs._array_form == rhs._array_form
