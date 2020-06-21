@@ -1,8 +1,7 @@
 """Tests for Finite Fields."""
 
 from sympy.polys.domains.finitefield import FiniteField
+from sympy.testing.pytest import raises
 
-from sympy.utilities.pytest import raises
-
-def test_finitefield():
+def test_FiniteField():
     raises(ValueError, lambda: FiniteField(42))
