@@ -1188,6 +1188,8 @@ def _de_lorentz_solution():
 
     return eqs, sol
 
+# Regression test case for issue #9204
+# https://github.com/sympy/sympy/issues/9204
 
 # A very big solution is obtained for this
 # test case. To be simplified in future.
@@ -1241,6 +1243,8 @@ def test_linear_neq_order1_type2_slow():
 
     assert dsolve(system) == sol
 
+# Regression test case for issue #14001
+# https://github.com/sympy/sympy/issues/14001
 
 @slow
 def test_linear_neq_order1_type2_slow_check():
