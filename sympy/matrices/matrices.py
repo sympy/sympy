@@ -2106,61 +2106,6 @@ class MatrixBase(MatrixDeprecated,
             res[i] = rowstart + colsep.join(row) + rowend
         return rowsep.join(res)
 
-    def vech(self, diagonal=True, check_symmetry=True):
-        """Return the unique elements of a symmetric Matrix as a one column matrix
-        by stacking the elements in the lower triangle.
-
-        Arguments:
-        diagonal -- include the diagonal cells of ``self`` or not
-        check_symmetry -- checks symmetry of ``self`` but not completely reliably
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m=Matrix([[1, 2], [2, 3]])
-        >>> m
-        Matrix([
-        [1, 2],
-        [2, 3]])
-        >>> m.vech()
-        Matrix([
-        [1],
-        [2],
-        [3]])
-        >>> m.vech(diagonal=False)
-        Matrix([[2]])
-
-        See Also
-        ========
-
-        vec
-        """
-        from sympy.matrices import zeros
-
-        c = self.cols
-        if c != self.rows:
-            raise NonSquareMatrixError("Matrix must be square")
-        if check_symmetry:
-            self.simplify()
-            if self != self.transpose():
-                raise ValueError(
-                    "Matrix appears to be asymmetric; consider check_symmetry=False")
-        count = 0
-        if diagonal:
-            v = zeros(c * (c + 1) // 2, 1)
-            for j in range(c):
-                for i in range(j, c):
-                    v[count] = self[i, j]
-                    count += 1
-        else:
-            v = zeros(c * (c - 1) // 2, 1)
-            for j in range(c):
-                for i in range(j + 1, c):
-                    v[count] = self[i, j]
-                    count += 1
-        return v
-
     def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
         return _rank_decomposition(self, iszerofunc=iszerofunc,
                 simplify=simplify)

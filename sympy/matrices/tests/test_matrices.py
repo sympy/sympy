@@ -1313,20 +1313,16 @@ def test_vech():
 
     m = Matrix([[1, x*(x + y)], [y*x + x**2, 1]])
     m_vech = m.vech(diagonal=False)
-    assert m_vech[0] == x*(x + y)
+    assert m_vech[0] == y*x + x**2
 
     m = Matrix([[1, x*(x + y)], [y*x, 1]])
     m_vech = m.vech(diagonal=False, check_symmetry=False)
     assert m_vech[0] == y*x
 
-
-def test_vech_errors():
-    m = Matrix([[1, 3]])
-    raises(ShapeError, lambda: m.vech())
-    m = Matrix([[1, 3], [2, 4]])
-    raises(ValueError, lambda: m.vech())
-    raises(ShapeError, lambda: Matrix([ [1, 3] ]).vech())
-    raises(ValueError, lambda: Matrix([ [1, 3], [2, 4] ]).vech())
+    raises(ShapeError, lambda: Matrix([[1, 3]]).vech())
+    raises(ValueError, lambda: Matrix([[1, 3], [2, 4]]).vech())
+    raises(ShapeError, lambda: Matrix([[1, 3]]).vech())
+    raises(ValueError, lambda: Matrix([[1, 3], [2, 4]]).vech())
 
 
 def test_diag():
