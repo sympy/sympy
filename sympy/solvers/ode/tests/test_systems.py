@@ -992,46 +992,38 @@ def _de_lorentz_solution():
         -e3 * q + m * Derivative(v3(t), t) - q * (-b1 * v2(t) + b2 * v1(t))
     ]
 
-    x1 = sqrt(b1 ** 2 + b2 ** 2 + b3 ** 2)
-    x2 = exp(q * t * sqrt(-b1 ** 2 - b2 ** 2 - b3 ** 2) / m)
-    x3 = 1 / (b1 ** 2 * x1 * x2 + b2 ** 2 * x1 * x2)
-    x4 = 1 / (2 * b1 ** 2 * m * x2 + 2 * b2 ** 2 * m * x2 + 2 * b3 ** 2 * m * x2)
-    x5 = Integral(
-        b1 * b3 * e1 * q / (b1 ** 2 * m + b2 ** 2 * m + b3 ** 2 * m)
-        + b2 * b3 * e2 * q / (b1 ** 2 * m + b2 ** 2 * m + b3 ** 2 * m)
-        + b3 ** 2 * e3 * q / (b1 ** 2 * m + b2 ** 2 * m + b3 ** 2 * m), t)
-    x6 = 1 / (2 * b1 ** 3 * b3 * m + 2 * I * b1 ** 2 * b2 * m * x1 + 2 * b1 * b2 ** 2 * b3 * m
-              + 2 * b1 * b3 ** 3 * m + 2 * I * b2 ** 3 * m * x1 + 2 * I * b2 * b3 ** 2 * m * x1)
-    x7 = Integral(
-        b1 ** 2 * e3 * q * x4 - b1 * b3 * e1 * q * x4 + I * b1 * e2 * q * x1 * x4
-        + b2 ** 2 * e3 * q * x4 - b2 * b3 * e2 * q * x4 - I * b2 * e1 * q * x1 * x4, t)
-    x8 = Integral(
-        b1 ** 3 * b2 * e2 * q * x2 * x6 - b1 ** 2 * b2 ** 2 * e1 * q * x2 * x6 - b1 ** 2 * b3 ** 2 * e1 * q * x2 * x6
-        - I * b1 ** 2 * b3 * e2 * q * x1 * x2 * x6 + b1 ** 2 * e3 * q * x2 / (
-                2 * b1 ** 2 * m + 2 * b2 ** 2 * m + 2 * b3 ** 2 * m)
-        + b1 * b2 ** 3 * e2 * q * x2 * x6 - b2 ** 4 * e1 * q * x2 * x6 - b2 ** 2 * b3 ** 2 * e1 * q * x2 * x6
-        - I * b2 ** 2 * b3 * e2 * q * x1 * x2 * x6 + b2 ** 2 * e3 * q * x2 / (
-                2 * b1 ** 2 * m + 2 * b2 ** 2 * m + 2 * b3 ** 2 * m), t)
+    # The code for the solution here is made using
+    # printsol from https://github.com/sympy/sympy/issues/19574
+    z1 = sqrt(-b1**2 - b2**2 - b3**2)
+    z2 = sqrt(b1**2 + b2**2 + b3**2)
+    z3 = exp(q*t*z1/m)
+    z4 = 1/(-2*I*b1**2*m*z2*z3 - 2*I*b2**2*m*z2*z3 - 2*I*b3**2*m*z2*z3)
+    z5 = 1/(b1**2*m + b2**2*m + b3**2*m)
+    z6 = Integral(b1*b3*e1*q*z5 + b2*b3*e2*q*z5 + b3**2*e3*q*z5, t)
+    z7 = 1/(2*b1**3*b3*m + 2*I*b1**2*b2*m*z2 + 2*b1*b2**2*b3*m + 2*b1*b3**3*m + 2*I*b2**3*m*z2 + 2*I*b2*b3**2*m*z2)
+    z8 = 1/(-2*b1**3*b3*m - 2*I*b1**2*b2*m*z2 - 2*b1*b2**2*b3*m - 2*b1*b3**3*m - 2*I*b2**3*m*z2 - 2*I*b2*b3**2*m*z2)
+    z9 = 1/(2*b1**2*m*z3 + 2*b2**2*m*z3 + 2*b3**2*m*z3)
+    z10 = Integral(-b1**2*b2*e1*q*z4 + b1**2*e3*q*z9 + I*b1*b3*e1*q*z2*z4 + I*b1*e2*q*z2*z9
+                  - b2**3*e1*q*z4 + b2**2*e3*q*z9 - b2*b3**2*e1*q*z4 - b2*b3*e2*q*z9, t)
+    z11 = 1/(b1**2*z2 + b2**2*z2)
+    z12 = 1/(b1**2*z2*z3 + b2**2*z2*z3)
+    z13 = Integral(b1**3*b2*e2*q*z3*z7 + b1**2*b2**2*e1*q*z3*z8 + b1**2*b3**2*e1*q*z3*z8
+               - I*b1**2*b3*e2*q*z2*z3*z7 - b1**2*e3*q*z3/(-2*b1**2*m - 2*b2**2*m - 2*b3**2*m)
+               + b1*b2**3*e2*q*z3*z7 + b2**4*e1*q*z3*z8 + b2**2*b3**2*e1*q*z3*z8
+               - I*b2**2*b3*e2*q*z2*z3*z7 - b2**2*e3*q*z3/(-2*b1**2*m - 2*b2**2*m - 2*b3**2*m), t)
     sol = [
         Eq(v1(t),
-           C1 * b1 / b3
-           - I * C2 * b1 ** 2 * b2 * x3 - C2 * b1 * b3 * x1 * x3 - I * C2 * b2 ** 3 * x3 - I * C2 * b2 * b3 ** 2 * x3
-           + I * C3 * b1 ** 2 * b2 * x2 / (b1 ** 2 * x1 + b2 ** 2 * x1) - C3 * b1 * b3 * x1 * x2 / (
-                   b1 ** 2 * x1 + b2 ** 2 * x1)
-           + I * C3 * b2 ** 3 * x2 / (b1 ** 2 * x1 + b2 ** 2 * x1) + I * C3 * b2 * b3 ** 2 * x2 / (
-                   b1 ** 2 * x1 + b2 ** 2 * x1)
-           + I * b1 ** 2 * b2 * x2 * x7 / (b1 ** 2 * x1 + b2 ** 2 * x1) - I * b1 ** 2 * b2 * x3 * x8
-           - b1 * b3 * x1 * x2 * x7 / (b1 ** 2 * x1 + b2 ** 2 * x1) - b1 * b3 * x1 * x3 * x8 + b1 * x5 / b3
-           + I * b2 ** 3 * x2 * x7 / (b1 ** 2 * x1 + b2 ** 2 * x1) - I * b2 ** 3 * x3 * x8
-           + I * b2 * b3 ** 2 * x2 * x7 / (b1 ** 2 * x1 + b2 ** 2 * x1) - I * b2 * b3 ** 2 * x3 * x8),
+            C1*b1/b3
+          - I*C2*b1**2*b2*z12 + I*C2*b1*b3*z1*z12 - I*C2*b2**3*z12 - I*C2*b2*b3**2*z12
+          + I*C3*b1**2*b2*z11*z3 + I*C3*b1*b3*z1*z11*z3 + I*C3*b2**3*z11*z3 + I*C3*b2*b3**2*z11*z3
+          + I*b1**2*b2*z10*z11*z3 - I*b1**2*b2*z12*z13 + I*b1*b3*z1*z10*z11*z3 + I*b1*b3*z1*z12*z13
+          + b1*z6/b3 + I*b2**3*z10*z11*z3 - I*b2**3*z12*z13 + I*b2*b3**2*z10*z11*z3 - I*b2*b3**2*z12*z13),
         Eq(v2(t),
-           C1 * b2 / b3
-           + C2 * b1 * sqrt(-b1 ** 2 - b2 ** 2 - b3 ** 2) / (b1 ** 2 * x2 + b2 ** 2 * x2)
-           - C2 * b2 * b3 / (b1 ** 2 * x2 + b2 ** 2 * x2) - I * C3 * b1 * x1 * x2 / (b1 ** 2 + b2 ** 2)
-           - C3 * b2 * b3 * x2 / (b1 ** 2 + b2 ** 2) - I * b1 * x1 * x2 * x7 / (b1 ** 2 + b2 ** 2)
-           + b1 * x8 * sqrt(-b1 ** 2 - b2 ** 2 - b3 ** 2) / (b1 ** 2 * x2 + b2 ** 2 * x2)
-           - b2 * b3 * x2 * x7 / (b1 ** 2 + b2 ** 2) - b2 * b3 * x8 / (b1 ** 2 * x2 + b2 ** 2 * x2) + b2 * x5 / b3),
-        Eq(v3(t), C1 + C3 * x2 + x2 * x7 + x5 + (C2 + x8) * exp(-q * t * sqrt(-b1 ** 2 - b2 ** 2 - b3 ** 2) / m)),
+            C1*b2/b3
+          + C2*b1*z1/(b1**2*z3 + b2**2*z3) - C2*b2*b3/(b1**2*z3 + b2**2*z3)
+          - I*C3*b1*z2*z3/(b1**2 + b2**2) - C3*b2*b3*z3/(b1**2 + b2**2) + b1*z1*z13/(b1**2*z3 + b2**2*z3)
+          - I*b1*z10*z2*z3/(b1**2 + b2**2) - b2*b3*z10*z3/(b1**2 + b2**2) - b2*b3*z13/(b1**2*z3 + b2**2*z3) + b2*z6/b3),
+        Eq(v3(t), C1 + C3*z3 + z10*z3 + z6 + (C2 + z13)*exp(-q*t*z1/m)),
     ]
 
     return eqs, sol

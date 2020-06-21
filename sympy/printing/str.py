@@ -465,6 +465,9 @@ class StrPrinter(Printer):
     def _print_FreeGroupElement(self, elm):
         return elm.__str__()
 
+    def _print_GaussianElement(self, poly):
+        return "(%s + %s*I)" % (poly.x, poly.y)
+
     def _print_PolyElement(self, poly):
         return poly.str(self, PRECEDENCE, "%s**%s", "*")
 

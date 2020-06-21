@@ -11,6 +11,7 @@ from sympy.core import (
 from sympy.core.basic import preorder_traversal
 from sympy.core.compatibility import iterable, ordered
 from sympy.core.decorators import _sympifyit
+from sympy.core.evalf import pure_complex
 from sympy.core.function import Derivative
 from sympy.core.mul import _keep_coeff
 from sympy.core.relational import Relational
@@ -5916,7 +5917,7 @@ def _symbolic_factor_list(expr, opt, method):
     args = [i._eval_factor() if hasattr(i, '_eval_factor') else i
         for i in Mul.make_args(expr)]
     for arg in args:
-        if arg.is_Number:
+        if arg.is_Number or (isinstance(arg, Expr) and pure_complex(arg)):
             coeff *= arg
             continue
         elif arg.is_Pow:

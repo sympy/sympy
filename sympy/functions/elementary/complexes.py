@@ -395,7 +395,7 @@ class sign(Function):
             return Heaviside(arg, H0=S(1)/2) * 2 - 1
 
     def _eval_simplify(self, **kwargs):
-        return self.func(self.args[0].factor())  # XXX include doit?
+        return self.func(factor_terms(self.args[0]))  # XXX include doit?
 
 
 class Abs(Function):
