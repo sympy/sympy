@@ -1003,21 +1003,21 @@ def test_linear_neq_order1_type2_big_test_cases():
     eq1 = r1*c1*Derivative(x1(t), t) + x1(t) - x2(t) - r1*i
     eq2 = r2*c1*Derivative(x1(t), t) + r2*c2*Derivative(x2(t), t) + x2(t) - r2*i
     eq = [eq1, eq2]
-    _x1 = c1 ** 2 * r1 ** 2 + 2 * c1 ** 2 * r1 * r2 + c1 ** 2 * r2 ** 2 - 2 * c1 * c2 * r1 * r2 + 2 * c1 * c2 * r2 ** 2 + c2 ** 2 * r2 ** 2
-    _x2 = Integral(i * r2 * exp(-sqrt(_x1) * t / (2 * c1 * c2 * r1 * r2) + t / (2 * c2 * r2)
-                                + t / (2 * c2 * r1) + t / (2 * c1 * r1)) / sqrt(_x1), t)
-    _x3 = Integral(-i * r2 * exp(sqrt(_x1) * t / (2 * c1 * c2 * r1 * r2) + t / (2 * c2 * r2)
-                                 + t / (2 * c2 * r1) + t / (2 * c1 * r1)) / sqrt(_x1), t)
-    _x4 = exp(sqrt(_x1) * t / (2 * c1 * c2 * r1 * r2) - t / (2 * c2 * r2) - t / (2 * c2 * r1) - t / (2 * c1 * r1))
-    _x5 = exp(-sqrt(_x1) * t / (2 * c1 * c2 * r1 * r2) - t / (2 * c2 * r2) - t / (2 * c2 * r1) - t / (2 * c1 * r1))
+
+    z1 = c1**2*r1**2 + 2*c1**2*r1*r2 + c1**2*r2**2 - 2*c1*c2*r1*r2 + 2*c1*c2*r2**2 + c2**2*r2**2
+    z2 = exp(-t/(2*c2*r2) - t/(2*c2*r1) - t/(2*c1*r1) + t*sqrt(z1)/(2*c1*c2*r1*r2))
+    z3 = exp(-t/(2*c2*r2) - t/(2*c2*r1) - t/(2*c1*r1) - t*sqrt(z1)/(2*c1*c2*r1*r2))
+    z4 = Integral(i*r2*exp(t/(2*c2*r2) + t/(2*c2*r1) + t/(2*c1*r1) - t*sqrt(z1)/(2*c1*c2*r1*r2))/sqrt(z1), t)
+    z5 = Integral(-i*r2*exp(t/(2*c2*r2) + t/(2*c2*r1) + t/(2*c1*r1) + t*sqrt(z1)/(2*c1*c2*r1*r2))/sqrt(z1), t)
     sol = [
         Eq(x1(t),
-           - 2 * C1 * _x5 * c2 * r2 / (sqrt(_x1) + c1 * r1 + c1 * r2 - c2 * r2)
-           - 2 * C2 * _x4 * c2 * r2 / (-sqrt(_x1) + c1 * r1 + c1 * r2 - c2 * r2)
-           - 2 * _x2 * _x4 * c2 * r2 / (-sqrt(_x1) + c1 * r1 + c1 * r2 - c2 * r2)
-           - 2 * _x3 * _x5 * c2 * r2 / (sqrt(_x1) + c1 * r1 + c1 * r2 - c2 * r2)),
-        Eq(x2(t), C1 * _x5 + C2 * _x4 + _x2 * _x4 + _x3 * _x5),
+            z2*(C2*r1/(2*r2) + C2/2 - C2*c2/(2*c1) + C2*sqrt(z1)/(2*c1*r2)
+          + r1*z4/(2*r2) + z4/2 - c2*z4/(2*c1) + sqrt(z1)*z4/(2*c1*r2))
+          + z3*(C1*r1/(2*r2) + C1/2 - C1*c2/(2*c1) - C1*sqrt(z1)/(2*c1*r2)
+          + r1*z5/(2*r2) + z5/2 - c2*z5/(2*c1) - sqrt(z1)*z5/(2*c1*r2))),
+        Eq(x2(t), z2*(C2 + z4) + z3*(C1 + z5)),
     ]
+
     with dotprodsimp(True):
         assert dsolve(eq) == sol
     assert checksysodesol(eq, sol) == (True, [0, 0])
@@ -1040,36 +1040,37 @@ def _de_lorentz_solution():
 
     # The code for the solution here is made using
     # printsol from https://github.com/sympy/sympy/issues/19574
-    z1 = sqrt(-b1**2 - b2**2 - b3**2)
-    z2 = sqrt(b1**2 + b2**2 + b3**2)
-    z3 = exp(q*t*z1/m)
-    z4 = 1/(-2*I*b1**2*m*z2*z3 - 2*I*b2**2*m*z2*z3 - 2*I*b3**2*m*z2*z3)
-    z5 = 1/(b1**2*m + b2**2*m + b3**2*m)
-    z6 = Integral(b1*b3*e1*q*z5 + b2*b3*e2*q*z5 + b3**2*e3*q*z5, t)
-    z7 = 1/(2*b1**3*b3*m + 2*I*b1**2*b2*m*z2 + 2*b1*b2**2*b3*m + 2*b1*b3**3*m + 2*I*b2**3*m*z2 + 2*I*b2*b3**2*m*z2)
-    z8 = 1/(-2*b1**3*b3*m - 2*I*b1**2*b2*m*z2 - 2*b1*b2**2*b3*m - 2*b1*b3**3*m - 2*I*b2**3*m*z2 - 2*I*b2*b3**2*m*z2)
-    z9 = 1/(2*b1**2*m*z3 + 2*b2**2*m*z3 + 2*b3**2*m*z3)
-    z10 = Integral(-b1**2*b2*e1*q*z4 + b1**2*e3*q*z9 + I*b1*b3*e1*q*z2*z4 + I*b1*e2*q*z2*z9
-                  - b2**3*e1*q*z4 + b2**2*e3*q*z9 - b2*b3**2*e1*q*z4 - b2*b3*e2*q*z9, t)
-    z11 = 1/(b1**2*z2 + b2**2*z2)
-    z12 = 1/(b1**2*z2*z3 + b2**2*z2*z3)
-    z13 = Integral(b1**3*b2*e2*q*z3*z7 + b1**2*b2**2*e1*q*z3*z8 + b1**2*b3**2*e1*q*z3*z8
-               - I*b1**2*b3*e2*q*z2*z3*z7 - b1**2*e3*q*z3/(-2*b1**2*m - 2*b2**2*m - 2*b3**2*m)
-               + b1*b2**3*e2*q*z3*z7 + b2**4*e1*q*z3*z8 + b2**2*b3**2*e1*q*z3*z8
-               - I*b2**2*b3*e2*q*z2*z3*z7 - b2**2*e3*q*z3/(-2*b1**2*m - 2*b2**2*m - 2*b3**2*m), t)
+    z1 = exp(2*q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)
+    z2 = exp(q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)
+    z3 = 1/(-b1**2*b3*z2 - b2**2*b3*z2)
+    z4 = sqrt(b1**2 + b2**2 + b3**2)
+    z5 = Integral(b1*b3*e1*q/(b1**2*m + b2**2*m + b3**2*m)
+                + b2*b3*e2*q/(b1**2*m + b2**2*m + b3**2*m)
+                + b3**2*e3*q/(b1**2*m + b2**2*m + b3**2*m), t)
+    z6 = 1/(-2*I*b1**2*m*z2*z4 - 2*I*b2**2*m*z2*z4 - 2*I*b3**2*m*z2*z4)
+    z7 = Integral(b1**3*e2*q*z6 - b1**2*b2*e1*q*z6 - I*b1**2*e3*q*z4*z6
+                + b1*b2**2*e2*q*z6 + b1*b3**2*e2*q*z6 + I*b1*b3*e1*q*z4*z6
+                - b2**3*e1*q*z6 - I*b2**2*e3*q*z4*z6 - b2*b3**2*e1*q*z6 + I*b2*b3*e2*q*z4*z6, t)
+    z8 = 1/(-2*b1**3*b3*m - 2*I*b1**2*b2*m*z4 - 2*b1*b2**2*b3*m - 2*b1*b3**3*m - 2*I*b2**3*m*z4 - 2*I*b2*b3**2*m*z4)
+    z9 = Integral(-b1**3*b2*e2*q*z2*z8 - b1**3*b3*e3*q*z2*z8 + b1**2*b2**2*e1*q*z2*z8
+                - I*b1**2*b2*e3*q*z2*z4*z8 + b1**2*b3**2*e1*q*z2*z8 + I*b1**2*b3*e2*q*z2*z4*z8
+                - b1*b2**3*e2*q*z2*z8 - b1*b2**2*b3*e3*q*z2*z8 + b2**4*e1*q*z2*z8
+                - I*b2**3*e3*q*z2*z4*z8 + b2**2*b3**2*e1*q*z2*z8 + I*b2**2*b3*e2*q*z2*z4*z8, t)
+    z10 = 1/(b1**2*b3*z2 + b2**2*b3*z2)
     sol = [
         Eq(v1(t),
-            C1*b1/b3
-          - I*C2*b1**2*b2*z12 + I*C2*b1*b3*z1*z12 - I*C2*b2**3*z12 - I*C2*b2*b3**2*z12
-          + I*C3*b1**2*b2*z11*z3 + I*C3*b1*b3*z1*z11*z3 + I*C3*b2**3*z11*z3 + I*C3*b2*b3**2*z11*z3
-          + I*b1**2*b2*z10*z11*z3 - I*b1**2*b2*z12*z13 + I*b1*b3*z1*z10*z11*z3 + I*b1*b3*z1*z12*z13
-          + b1*z6/b3 + I*b2**3*z10*z11*z3 - I*b2**3*z12*z13 + I*b2*b3**2*z10*z11*z3 - I*b2*b3**2*z12*z13),
+            C1*b1**3*z10*z2 + C1*b1*b2**2*z10*z2
+          - C2*b1*b3**2*z10 - I*C2*b2*b3*z10*z4
+          - C3*b1*b3**2*z1*z10 + I*C3*b2*b3*z1*z10*z4
+          + b1**3*z10*z2*z5 + b1*b2**2*z10*z2*z5 - b1*b3**2*z1*z10*z7
+          - b1*b3**2*z10*z9 + I*b2*b3*z1*z10*z4*z7 - I*b2*b3*z10*z4*z9),
         Eq(v2(t),
-            C1*b2/b3
-          + C2*b1*z1/(b1**2*z3 + b2**2*z3) - C2*b2*b3/(b1**2*z3 + b2**2*z3)
-          - I*C3*b1*z2*z3/(b1**2 + b2**2) - C3*b2*b3*z3/(b1**2 + b2**2) + b1*z1*z13/(b1**2*z3 + b2**2*z3)
-          - I*b1*z10*z2*z3/(b1**2 + b2**2) - b2*b3*z10*z3/(b1**2 + b2**2) - b2*b3*z13/(b1**2*z3 + b2**2*z3) + b2*z6/b3),
-        Eq(v3(t), C1 + C3*z3 + z10*z3 + z6 + (C2 + z13)*exp(-q*t*z1/m)),
+          - C1*b1**2*b2*z2*z3 - C1*b2**3*z2*z3
+          - I*C2*b1*b3*z3*z4 + C2*b2*b3**2*z3
+          + I*C3*b1*b3*z1*z3*z4 + C3*b2*b3**2*z1*z3
+          - b1**2*b2*z2*z3*z5 + I*b1*b3*z1*z3*z4*z7 - I*b1*b3*z3*z4*z9
+          - b2**3*z2*z3*z5 + b2*b3**2*z1*z3*z7 + b2*b3**2*z3*z9),
+        Eq(v3(t), C1 + C3*z2 + z2*z7 + z5 + (C2 + z9)*exp(-q*t*sqrt(-b1**2 - b2**2 - b3**2)/m)),
     ]
 
     return eqs, sol
