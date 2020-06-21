@@ -918,6 +918,14 @@ def test_sysode_linear_neq_order1_type2():
     assert dsolve(eq9) == sol9
     assert checksysodesol(eq9, sol9) == (True, [0, 0, 0])
 
+    # Regression test case for issue #16635
+    # https://github.com/sympy/sympy/issues/16635
+    eq10 = [Eq(f(t).diff(t), f(t) - g(t) + 15*t - 10), Eq(g(t).diff(t), f(t) - g(t) - 15*t - 5)]
+    sol10 = [Eq(f(t), C1 + C2*t + C2 + t*Integral(30*t - 5, t) + Integral(30*t - 5, t) + Integral(-30*t**2 -
+            10*t - 5, t)), Eq(g(t), C1 + C2*t + t*Integral(30*t - 5, t) + Integral(-30*t**2 - 10*t - 5, t))]
+    assert dsolve(eq10) == sol10
+    assert checksysodesol(eq10, sol10) == (True, [0, 0])
+
 
 def test_sysode_linear_neq_order1_type3():
     f, g, h, k = symbols('f g h k', cls=Function)
