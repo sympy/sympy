@@ -127,25 +127,31 @@ matrix:
       dist: xenial
       env:
         - TEST_SYMPY="true"
-        - SPLIT="1/4"
+        - SPLIT="1/45"
         - TEST_COVERAGE="true"
     - python: 3.6
       dist: xenial
       env:
         - TEST_SYMPY="true"
-        - SPLIT="2/4"
+        - SPLIT="2/5"
         - TEST_COVERAGE="true"
     - python: 3.6
       dist: xenial
       env:
         - TEST_SYMPY="true"
-        - SPLIT="3/4"
+        - SPLIT="3/5"
         - TEST_COVERAGE="true"
     - python: 3.6
       dist: xenial
       env:
         - TEST_SYMPY="true"
-        - SPLIT="4/4"
+        - SPLIT="4/5"
+        - TEST_COVERAGE="true"
+    - python: 3.6
+      dist: xenial
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="5/5"
         - TEST_COVERAGE="true"
 
     # PyPy randomly fails because of some PyPy bugs
