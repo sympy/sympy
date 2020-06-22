@@ -708,7 +708,11 @@ class _Inequality(Relational):
 
     @classmethod
     def _eval_relation(cls, lhs, rhs, **options):
-        return cls._eval_fuzzy_relation(lhs, rhs)
+        val = cls._eval_fuzzy_relation(lhs, rhs)
+        if val is None:
+            return cls(lhs, rhs, evaluate=False)
+        else:
+            return _sympify(val)
 
 
 class _Greater(_Inequality):
@@ -978,11 +982,7 @@ class GreaterThan(_Greater):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
-        val = is_ge(lhs, rhs)
-        if val is None:
-            return cls(lhs, rhs, evaluate=False)
-        else:
-            return _sympify(val)
+        return is_ge(lhs, rhs)
 
 
 Ge = GreaterThan
@@ -996,11 +996,7 @@ class LessThan(_Less):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
-        val = is_le(lhs, rhs)
-        if val is None:
-            return cls(lhs, rhs, evaluate=False)
-        else:
-            return _sympify(val)
+        return is_le(lhs, rhs)
 
 
 Le = LessThan
@@ -1014,11 +1010,7 @@ class StrictGreaterThan(_Greater):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
-        val = is_gt(lhs, rhs)
-        if val is None:
-            return cls(lhs, rhs, evaluate=False)
-        else:
-            return _sympify(val)
+        return is_gt(lhs, rhs)
 
 
 Gt = StrictGreaterThan
@@ -1032,15 +1024,11 @@ class StrictLessThan(_Less):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
-        val = is_lt(lhs, rhs)
-        if val is None:
-            return cls(lhs, rhs, evaluate=False)
-        else:
-            return _sympify(val)
-
+       return is_lt(lhs, rhs)
 
 
 Lt = StrictLessThan
+
 
 # A class-specific (not object-specific) data item used for a minor speedup.
 # It is defined here, rather than directly in the class, because the classes
