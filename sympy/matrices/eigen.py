@@ -752,7 +752,13 @@ def _is_positive_definite_GE(M):
 
 def _is_positive_semidefinite_cholesky(M):
     """Uses Cholesky factorization with complete pivoting
-    see http://eprints.ma.man.ac.uk/1199/1/covered/MIMS_ep2008_116.pdf
+
+    References
+    ==========
+
+    .. [1] http://eprints.ma.man.ac.uk/1199/1/covered/MIMS_ep2008_116.pdf
+
+    .. [2] https://www.value-at-risk.net/cholesky-factorization/
     """
     M = M.as_mutable()
     for k in range(M.rows):
@@ -781,8 +787,7 @@ def _is_positive_semidefinite_cholesky(M):
 
         M[k, k] = sqrt(M[k, k])
         M[k, k+1:] /= M[k, k]
-        for j in range(k+1, M.rows):
-            M[k+1: j+1, j] -= M[k, k+1: j+1].H * M[k, j]
+        M[k+1:, k+1:] -= M[k, k+1:].H * M[k, k+1:]
 
     return M[-1, -1].is_nonnegative
 
