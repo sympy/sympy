@@ -967,7 +967,7 @@ class LatexPrinter(Printer):
     def _hprint_variadic_function(self, expr, exp=None):
         args = sorted(expr.args, key=default_sort_key)
         texargs = [r"%s" % self._print(symbol) for symbol in args]
-        tex = r"\%s\left(%s\right)" % (self._print((str(expr.func)).lower()),
+        tex = r"\%s\left(%s\right)" % (str(expr.func).lower(),
                                        ", ".join(texargs))
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -1626,10 +1626,10 @@ class LatexPrinter(Printer):
             if x[2] == 1:
                 del x[2]
             if x[0] == 0:
-                x[0] = ''
+                x[0] = None
             if x[1] == dim:
-                x[1] = ''
-            return ':'.join(map(self._print, x))
+                x[1] = None
+            return ':'.join(self._print(xi) if xi is not None else '' for xi in x)
         return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + r'\left[' +
                 latexslice(expr.rowslice, expr.parent.rows) + ', ' +
                 latexslice(expr.colslice, expr.parent.cols) + r'\right]')
@@ -2004,7 +2004,7 @@ class LatexPrinter(Printer):
     _print_frozenset = _print_set
 
     def _print_Range(self, s):
-        dots = r'\ldots'
+        dots = object()
 
         if s.has(Symbol):
             return self._print_Basic(s)
@@ -2026,7 +2026,7 @@ class LatexPrinter(Printer):
             printset = tuple(s)
 
         return (r"\left\{" +
-                r", ".join(self._print(el) for el in printset) +
+                r", ".join(self._print(el) if el is not dots else r'\ldots' for el in printset) +
                 r"\right\}")
 
     def __print_number_polynomial(self, expr, letter, exp=None):
@@ -2073,6 +2073,7 @@ class LatexPrinter(Printer):
         return self.__print_number_polynomial(expr, "T", exp)
 
     def _print_SeqFormula(self, s):
+        dots = object()
         if len(s.start.free_symbols) > 0 or len(s.stop.free_symbols) > 0:
             return r"\left\{%s\right\}_{%s=%s}^{%s}" % (
                 self._print(s.formula),
@@ -2082,16 +2083,16 @@ class LatexPrinter(Printer):
             )
         if s.start is S.NegativeInfinity:
             stop = s.stop
-            printset = (r'\ldots', s.coeff(stop - 3), s.coeff(stop - 2),
+            printset = (dots, s.coeff(stop - 3), s.coeff(stop - 2),
                         s.coeff(stop - 1), s.coeff(stop))
         elif s.stop is S.Infinity or s.length > 4:
             printset = s[:4]
-            printset.append(r'\ldots')
+            printset.append(dots)
         else:
             printset = tuple(s)
 
         return (r"\left[" +
-                r", ".join(self._print(el) for el in printset) +
+                r", ".join(self._print(el) if el is not dots else r'\ldots' for el in printset) +
                 r"\right]")
 
     _print_SeqPer = _print_SeqFormula
@@ -2198,7 +2199,7 @@ class LatexPrinter(Printer):
         return r"%s \in %s" % tuple(self._print(a) for a in e.args)
 
     def _print_FourierSeries(self, s):
-        return self._print_Add(s.truncate()) + self._print(r' + \ldots')
+        return self._print_Add(s.truncate()) + r' + \ldots'
 
     def _print_FormalPowerSeries(self, s):
         return self._print_Add(s.infinite)

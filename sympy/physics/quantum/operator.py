@@ -109,7 +109,7 @@ class Operator(QExpr):
     _label_separator = ','
 
     def _print_operator_name(self, printer, *args):
-        return printer._print(self.__class__.__name__, *args)
+        return self.__class__.__name__
 
     _print_operator_name_latex = _print_operator_name
 
