@@ -2213,7 +2213,7 @@ class asin(InverseTrigonometricFunction):
             f = arg1.as_leading_term(x)
             g = (arg1 - f)/ f
             if not g.is_meromorphic(x, 0):   # cannot be expanded
-                return O(1) if n == 0 else pi/2 + O(sqrt(x))
+                return O(1) if n == 0 else S.Pi/2 + O(sqrt(x))
             res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
@@ -2225,7 +2225,7 @@ class asin(InverseTrigonometricFunction):
             f = arg1.as_leading_term(x)
             g = (arg1 - f)/ f
             if not g.is_meromorphic(x, 0):   # cannot be expanded
-                return O(1) if n == 0 else -pi/2 + O(sqrt(x))
+                return O(1) if n == 0 else -S.Pi/2 + O(sqrt(x))
             res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
@@ -2422,6 +2422,8 @@ class acos(InverseTrigonometricFunction):
             arg1 = S.One - self.args[0]
             f = arg1.as_leading_term(x)
             g = (arg1 - f)/ f
+            if not g.is_meromorphic(x, 0):   # cannot be expanded
+                return O(1) if n == 0 else O(sqrt(x))
             res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
@@ -2432,6 +2434,8 @@ class acos(InverseTrigonometricFunction):
             arg1 = S.One + self.args[0]
             f = arg1.as_leading_term(x)
             g = (arg1 - f)/ f
+            if not g.is_meromorphic(x, 0):   # cannot be expanded
+                return O(1) if n == 0 else S.Pi + O(sqrt(x))
             res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)

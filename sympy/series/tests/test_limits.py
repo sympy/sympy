@@ -461,6 +461,8 @@ def test_branch_cuts():
     assert limit(atan(x - 2*I), x, 0, '-') == -I*atanh(2)
     assert limit(atan(1/x), x, 0) == pi/2
     assert limit(atan(1/x), x, 0, '-') == -pi/2
+    assert limit(atan(x), x, oo) == pi/2
+    assert limit(atan(x), x, -oo) == -pi/2
     assert limit(acot(x + S(1)/2*I), x, 0) == pi - I*acoth(S(1)/2)
     assert limit(acot(x + S(1)/2*I), x, 0, '-') == -I*acoth(S(1)/2)
     assert limit(acot(x - S(1)/2*I), x, 0) == I*acoth(S(1)/2)
