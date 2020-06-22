@@ -190,11 +190,6 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
     is_diagonalizable = cacheit(is_diagonalizable)
 
 
-@dispatch(ImmutableDenseMatrix, MatrixExpr)
-def _eval_Eq(lhs, rhs): # noqa:F811
-    return None
-
-
 @dispatch(ImmutableDenseMatrix, ImmutableDenseMatrix)
 def _eval_Eq(lhs, rhs): # noqa:F811
     """Helper method for Equality with matrices.sympy.
