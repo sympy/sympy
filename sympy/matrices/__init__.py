@@ -30,6 +30,8 @@ from .expressions import (
     DotProduct, kronecker_product, KroneckerProduct,
     PermutationMatrix, MatrixPermute)
 
+from .utilities import dotprodsimp
+
 __all__ = [
     'ShapeError', 'NonSquareMatrixError',
 
@@ -60,4 +62,6 @@ __all__ = [
     'det', 'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
     'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute',
+
+    'dotprodsimp',
 ]
