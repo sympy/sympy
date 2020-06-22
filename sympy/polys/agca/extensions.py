@@ -2,8 +2,10 @@
 
 from sympy.polys.polyerrors import CoercionFailed, NotInvertible
 from sympy.polys.polytools import Poly
+from sympy.printing.defaults import DefaultPrinting
 
-class ExtensionElement(object):
+
+class ExtensionElement(DefaultPrinting):
     """
     Element of a finite extension.
 
