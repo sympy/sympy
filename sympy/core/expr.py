@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 from typing import Tuple as tTuple
 
 from .sympify import sympify, _sympify, SympifyError
@@ -25,8 +24,9 @@ class Expr(Basic, EvalfMixin):
     pattern matching, substitutions, etc).
 
     If you want to override the comparisons of expressions:
-    Should use _eval_is_X (where X is gt, ge, lt, or Eq).
-    _eval_is_X should return None if you want to return the object unevaluated
+    Should use _eval_is_ge for inequality, or _eval_Eq, with multiple dispatch.
+    _eval_is_ge return true if x >= y, false if x < y, and None if the two types
+    cannot be compared.
 
     See Also
     ========

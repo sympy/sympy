@@ -131,8 +131,6 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.utilities.iterables import iterable
-from sympy.multipledispatch import dispatch
-
 
 
 def _mk_Tuple(args):
@@ -1492,11 +1490,6 @@ class Variable(Node):
         except SympifyError:
             raise TypeError("Invalid comparison %s < %s" % (self, rhs))
         return op(self, rhs, evaluate=False)
-
-
-@dispatch(Variable, Variable)
-def _eval_is_ge(rhs, lhs):
-    return None
 
 
 class Pointer(Variable):

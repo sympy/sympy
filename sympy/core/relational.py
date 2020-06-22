@@ -1109,7 +1109,6 @@ def _eval_Eq(lhs, rhs):# noqa:F811
 @dispatch(Tuple, Tuple)
 def _eval_Eq(lhs, rhs): # noqa:F811
     from sympy.core.logic import fuzzy_and, fuzzy_bool
-    from sympy.core.relational import Eq
 
     if len(lhs) != len(rhs):
         return False
