@@ -89,27 +89,26 @@ def _convert_numpy_types(a, **sympify_args):
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         evaluate=None):
-    """Converts an arbitrary expression to a type that can be used inside SymPy.
+    """
+    Converts an arbitrary expression to a type that can be used inside SymPy.
 
-    For example, it will convert Python ints into instances of sympy.Integer,
+    Explanation
+    ===========
+
+    It will convert Python ints into instances of sympy.Integer,
     floats into instances of sympy.Float, etc. It is also able to coerce symbolic
     expressions which inherit from Basic. This can be useful in cooperation
     with SAGE.
 
-    It currently accepts as arguments:
-       - any object defined in SymPy
-       - standard numeric python types: int, long, float, Decimal
-       - strings (like "0.09" or "2e-19")
-       - booleans, including ``None`` (will leave ``None`` unchanged)
-       - dict, lists, sets or tuples containing any of the above
-
     .. warning::
-        Note that this function uses ``eval``, and thus shouldn't be used on
-        unsanitized input.
+        Note that this function uses ``eval``, and thus shouldn't be used on sunsanitized input.
 
     If the argument is already a type that SymPy understands, it will do
     nothing but return that value. This can be used at the beginning of a
     function to ensure you are working with the correct type.
+
+    Examples
+    ========
 
     >>> from sympy import sympify
 
@@ -272,6 +271,31 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     -1
     >>> kernS(s)
     -2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) - 1
+
+    Parameters
+    ==========
+
+    a : Can be :
+        - any object defined in SymPy
+        - standard numeric python types: int, long, float, Decimal
+        - strings (like "0.09" or "2e-19")
+        - booleans, including ``None`` (will leave ``None`` unchanged)
+        - dict, lists, sets or tuples containing any of the above
+
+    convert_xor : boolean, optional
+        If true, treats XOR, $^$, as exponentiation, $**$. Used when input is a string
+
+    locals : any object defined in SymPy
+        In order to have strings be recognized it can be imported into a namespace dictionary and passed as locals
+
+    strict : boolean, optional
+        If the option strict is set to True, only the types for which an explicit conversion has been defined are converted. In the other cases, a SympifyError is raised
+
+    rational : boolean, optional
+        If true, converts floats into Rational. Used when input is a string.
+
+    evaluate : boolean
+        If False, then arithmetic and operators will be converted into their SymPy equivalents
 
     """
     is_sympy = getattr(a, '__sympy__', None)
