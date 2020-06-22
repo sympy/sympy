@@ -101,7 +101,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     with SAGE.
 
     .. warning::
-        Note that this function uses ``eval``, and thus shouldn't be used on sunsanitized input.
+        Note that this function uses ``eval``, and thus shouldn't be used on
+        sunsanitized input.
 
     If the argument is already a type that SymPy understands, it will do
     nothing but return that value. This can be used at the beginning of a
@@ -275,7 +276,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Parameters
     ==========
 
-    a : Can be :
+    a :
         - any object defined in SymPy
         - standard numeric python types: int, long, float, Decimal
         - strings (like "0.09" or "2e-19")
@@ -283,19 +284,28 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         - dict, lists, sets or tuples containing any of the above
 
     convert_xor : boolean, optional
-        If true, treats XOR, $^$, as exponentiation, $**$. Used when input is a string
+        If true, treats XOR, $^$, as exponentiation, $**$.
+        If False, treats XOR, $^$ as XOR itself.
+        Used when input is a string.
 
-    locals : any object defined in SymPy
-        In order to have strings be recognized it can be imported into a namespace dictionary and passed as locals
+    locals : any object defined in SymPy, optional
+        In order to have strings be recognized it can be imported
+        into a namespace dictionary and passed as locals
 
     strict : boolean, optional
-        If the option strict is set to True, only the types for which an explicit conversion has been defined are converted. In the other cases, a SympifyError is raised
+        If the option strict is set to True, only the types for which
+        an explicit conversion has been defined are converted. In the
+        other cases, a SympifyError is raised
 
     rational : boolean, optional
-        If true, converts floats into Rational. Used when input is a string.
+        If true, converts floats into Rational.
+        If false, it lets floats remain as it is.
+        Used when input is a string.
 
-    evaluate : boolean
-        If False, then arithmetic and operators will be converted into their SymPy equivalents
+    evaluate : boolean, optional
+        If False, then arithmetic and operators will be converted into
+        their SymPy equivalents. If True the expression will be evalauted
+        and the result will be returned.
 
     """
     is_sympy = getattr(a, '__sympy__', None)
