@@ -1155,7 +1155,6 @@ def is_ge(lhs, rhs):
 
 
 def is_neq(lhs, rhs):
-    from .logic import fuzzy_not
     return fuzzy_not(is_eq(lhs, rhs))
 
 
