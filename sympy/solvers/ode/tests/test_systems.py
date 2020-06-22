@@ -1377,7 +1377,7 @@ def test_neq_order1_type4_slow2():
 @slow
 def test_neq_order1_type4_slow_check2():
     eqs, sol = _neq_order1_type4_slow2()
-    assert checksysodesol(eqs, sol) == (True, [0, 0])
+    assert checksysodesol(eqs, sol) == (True, [0, 0, 0])
 
 
 def _neq_order1_type4_slow3():
@@ -1409,8 +1409,5 @@ def test_neq_order1_type4_slow3():
 
 @slow
 def test_neq_order1_type4_slow_check3():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
-
     eqs, sol = _neq_order1_type4_slow3()
     assert checksysodesol(eqs, sol) == (True, [0, 0])

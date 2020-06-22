@@ -795,9 +795,6 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     # The match['is_linear'] check will be added in the future when this
     # function becomes ready to deal with non-linear systems of ODEs
 
-    # Converting the equation into canonical form if the
-    # equation is first order. There will be a separate
-    # function for this in the future.
     if all([order[func] == 1 for func in funcs]):
         match['func_coeff'] = A
 
