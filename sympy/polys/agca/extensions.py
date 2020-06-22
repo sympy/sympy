@@ -195,7 +195,8 @@ class MonogenicFiniteExtension(object):
     Notes
     =====
 
-    It's not possible to use a ``FiniteExtension`` as ``domain`` for the
+    ``FiniteExtension`` is not a subclass of :class:`~.Domain`. Consequently,
+    a ``FiniteExtension`` can't currently be used as ``domain`` for the
     :class:`~.Poly` class.
 
     """
