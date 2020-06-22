@@ -261,24 +261,16 @@ class TransferFunction(Basic, EvalfMixin):
         return TransferFunction(expand(self.num), expand(self.den), self.var)
 
     def __add__(self, other):
-        other = _sympify(other)
-        if other.is_number:
-            return TransferFunction(self.num + self.den*other, self.den, self.var)
-
-        elif isinstance(other, TransferFunction):
+        if isinstance(other, TransferFunction):
             if not self.var == other.var:
-                raise ValueError("Both the transfer functions should be anchored "
+                raise ValueError("All the transfer functions should be anchored "
                     "with the same variable.")
-            p = self.num * other.den + other.num * self.den
-            q = self.den * other.den
-            return TransferFunction(p, q, self.var)
+            return Parallel(self, other)
 
-        elif isinstance(other, Expr) and other.has(Symbol):
-            # other input is a polynomial.
-            if not other.is_commutative:
-                raise ValueError("Only commutative expressions can be added "
-                    "with a transfer function.")
-            return TransferFunction(self.num + self.den*other, self.den, self.var)
+        elif isinstance(other, Parallel):
+            pass
+        elif isinstance(other, Series):
+            pass
         else:
             raise ValueError("TransferFunction cannot be added with {}.".
                 format(type(other)))
@@ -287,20 +279,16 @@ class TransferFunction(Basic, EvalfMixin):
         return self + other
 
     def __sub__(self, other):
-        other = _sympify(other)
-        if other.is_number:
-            return TransferFunction(self.num - self.den*other, self.den, self.var)
-
-        elif isinstance(other, TransferFunction):
+        if isinstance(other, TransferFunction):
             if not self.var == other.var:
-                raise ValueError("Both the transfer functions should be anchored "
+                raise ValueError("All the transfer functions should be anchored "
                     "with the same variable.")
-            p = self.num * other.den - other.num * self.den
-            q = self.den * other.den
-            return TransferFunction(p, q, self.var)
+            return Parallel(self, -other)
 
-        elif isinstance(other, Expr) and other.has(Symbol):
-            return TransferFunction(self.num - self.den*other, self.den, self.var)
+        elif isinstance(other, Parallel):
+            pass
+        elif isinstance(other, Series):
+            pass
         else:
             raise ValueError("{} cannot be subtracted from a TransferFunction."
                 .format(type(other)))
@@ -440,9 +428,77 @@ class TransferFunction(Basic, EvalfMixin):
 
 class Series(Basic):
     def __new__(cls, *args, evaluate=False):
+        if not all(isinstance(arg, (TransferFunction, Parallel)) for arg in args):
+            raise TypeError
+
+        obj = super(Series, cls).__new__(cls, *args)
+        obj._var = None
+        for arg in args:
+            if obj._var is None:
+                obj._var = arg.var
+            elif obj._var != arg.var:
+                raise ValueError("All transfer functions should be anchored with the same variable.")
+        if evaluate:
+            return obj.doit()
+        return obj
+
+    @property
+    def var(self):
+        return self._var
+
+    def doit(self, **kwargs):
         pass
+
+    def _eval_rewrite_as_TransferFunction(self):
+        pass
+
+    @property
+    def is_proper(self):
+        return self.doit().is_proper
+
+    @property
+    def is_strictly_proper(self):
+        return self.doit().is_strictly_proper
+
+    @property
+    def is_biproper(self):
+        return self.doit().is_biproper
 
 
 class Parallel(Basic):
     def __new__(cls, *args, evaluate=False):
+        if not all(isinstance(arg, (TransferFunction, Series)) for arg in args):
+            raise TypeError
+
+        obj = super(Parallel, cls).__new__(cls, *args)
+        obj._var = None
+        for arg in args:
+            if obj._var is None:
+                obj._var = arg.var
+            elif obj._var != arg.var:
+                raise ValueError("All transfer functions should be anchored with the same variable.")
+        if evaluate:
+            return obj.doit()
+        return obj
+
+    @property
+    def var(self):
+        return self._var
+
+    def doit(self, **kwargs):
         pass
+
+    def _eval_rewrite_as_TransferFunction(self):
+        pass
+
+    @property
+    def is_proper(self):
+        return self.doit().is_proper
+
+    @property
+    def is_strictly_proper(self):
+        return self.doit().is_strictly_proper
+
+    @property
+    def is_biproper(self):
+        return self.doit().is_biproper

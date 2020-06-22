@@ -321,21 +321,27 @@ def test_Series_construction():
 
     s0 = Series(tf, tf2)
     assert s0.args == (tf, tf2)
+    assert s0.var == s
 
     s1 = Series(Parallel(tf, -tf2), tf2)
     assert s1.args == (Parallel(tf, -tf2), tf2)
+    assert s1.var == s
 
-    s2 = Series(tf, Parallel(inp, -out), tf2)
-    assert s2.args == (tf, Parallel(X_d, - X), tf2)
+    tf3_ = TransferFunction(inp, 1, s)
+    tf4_ = TransferFunction(-out, 1, s)
+    s2 = Series(tf, Parallel(tf3_, tf4_), tf2)
+    assert s2.args == (tf, Parallel(tf3_, tf4_), tf2)
 
     s3 = Series(tf, tf2, tf4)
     assert s3.args == (tf, tf2, tf4)
 
-    s4 = Series(inp, out)
-    assert s4.args == (X_d, X)
+    s4 = Series(tf3_, tf4_)
+    assert s4.args == (tf3_, tf4_)
+    assert s4.var == s
 
-    s5 = Series(tf2, tf4, 1/Parallel(1, tf2, tf4))
-    assert s5.args == (tf2, tf4, 1/Parallel(1, tf2, tf4))
+    tf5 = TransferFunction(1, 1, s)
+    s5 = Series(tf2, tf4, 1/Parallel(tf5, tf2, tf4))
+    assert s5.args == (tf2, tf4, 1/Parallel(tf5, tf2, tf4))
 
     s6 = Series(tf2, tf4, Parallel(tf2, -tf), tf4)
     assert s6.args == (tf2, tf4, Parallel(tf2, -tf), tf4)
@@ -419,18 +425,23 @@ def test_Parallel_construction():
 
     p0 = Parallel(tf, tf2)
     assert p0.args == (tf, tf2)
+    assert p0.var == s
 
     p1 = Parallel(Series(tf, -tf2), tf2)
     assert p1.args == (Series(tf, -tf2), tf2)
+    assert p1.var == s
 
-    p2 = Parallel(tf, Series(inp, -out), tf2)
-    assert p2.args == (tf, Series(X_d, -X), tf2)
+    tf3_ = TransferFunction(inp, 1, s)
+    tf4_ = TransferFunction(-out, 1, s)
+    p2 = Parallel(tf, Series(tf3_, -tf4_), tf2)
+    assert p2.args == (tf, Series(tf3_, -tf4_), tf2)
 
     p3 = Parallel(tf, tf2, tf4)
     assert p3.args == (tf, tf2, tf4)
 
-    p4 = Parallel(inp, out)
-    assert p4.args == (X_d, X)
+    p4 = Parallel(tf3_, tf4_)
+    assert p4.args == (tf3_, tf4_)
+    assert p4.var == s
 
     p5 = Parallel(tf, tf2)
     assert p0 == p5
