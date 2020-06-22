@@ -1,4 +1,3 @@
-from typing import Any
 import mpmath as mp
 
 from sympy.core.add import Add
@@ -16,6 +15,7 @@ from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import cancel
 from sympy.printing import sstr
+from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
@@ -752,7 +752,8 @@ class MatrixDeprecated(MatrixCommon):
 class MatrixBase(MatrixDeprecated,
                  MatrixCalculus,
                  MatrixEigen,
-                 MatrixCommon):
+                 MatrixCommon,
+                 Printable):
     """Base class for matrix objects."""
     # Added just for numpy compatibility
     __array_priority__ = 11
@@ -762,27 +763,6 @@ class MatrixBase(MatrixDeprecated,
     _sympify = staticmethod(sympify)
     zero = S.Zero
     one = S.One
-
-    # Defined here the same as on Basic.
-
-    # We don't define _repr_png_ here because it would add a large amount of
-    # data to any notebook containing SymPy expressions, without adding
-    # anything useful to the notebook. It can still enabled manually, e.g.,
-    # for the qtconsole, with init_printing().
-    def _repr_latex_(self):
-        """
-        IPython/Jupyter LaTeX printing
-
-        To change the behavior of this (e.g., pass in some settings to LaTeX),
-        use init_printing(). init_printing() will also enable LaTeX printing
-        for built in numeric types like ints and container types that contain
-        SymPy objects, like lists and dictionaries of expressions.
-        """
-        from sympy.printing.latex import latex
-        s = latex(self, mode='plain')
-        return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_  # type: Any
 
     def __array__(self, dtype=object):
         from .dense import matrix2numpy
