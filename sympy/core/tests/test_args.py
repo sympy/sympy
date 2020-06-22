@@ -898,6 +898,14 @@ def test_sympy__sets__sets__DisjointUnion():
     assert _test_args(DisjointUnion(FiniteSet(1, 2, 3), \
            FiniteSet(2, 3, 4)))
 
+def test_sympy__sets__sets__indicator():
+    from sympy.sets.sets import indicator, Interval
+    assert _test_args(indicator(Interval(0, 1), x))
+
+def test_sympy__sets__sets__boolean_indicator():
+    from sympy.sets.sets import boolean_indicator
+    assert _test_args(boolean_indicator(x))
+
 
 def test_sympy__core__trace__Tr():
     from sympy.core.trace import Tr
