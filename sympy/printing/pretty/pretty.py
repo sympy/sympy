@@ -2094,6 +2094,26 @@ class PrettyPrinter(Printer):
         return self._print_seq((variables, bar, variables, inn,
                                 base, _and, cond), "{", "}", ' ')
 
+    def _print_indicator(self, expr):
+        if self._use_unicode:
+            one = u'\N{MATHEMATICAL DOUBLE-STRUCK DIGIT ONE}'
+        else:
+            one = '1'
+        pform = self._print(expr.args[1])
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left(one + 'A'))
+        return pform
+
+    def _print_boolean_indicator(self, expr):
+        if self._use_unicode:
+            one = u'\N{MATHEMATICAL DOUBLE-STRUCK DIGIT ONE}'
+        else:
+            one = '1'
+        pform = self._print(expr.args[0])
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left(one + 'A'))
+        return pform
+
     def _print_ComplexRegion(self, ts):
         if self._use_unicode:
             inn = u"\N{SMALL ELEMENT OF}"

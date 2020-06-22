@@ -1,6 +1,6 @@
 from .sets import (Set, Interval, Union, FiniteSet, ProductSet,
         Intersection, imageset, Complement, SymmetricDifference,
-        DisjointUnion, indicator)
+        DisjointUnion, indicator, boolean_indicator)
 from .fancysets import ImageSet, Range, ComplexRegion
 from .contains import Contains
 from .conditionset import ConditionSet
@@ -19,7 +19,7 @@ Rationals = S.Rationals
 __all__ = [
     'Set', 'Interval', 'Union', 'EmptySet', 'FiniteSet', 'ProductSet',
     'Intersection', 'imageset', 'Complement', 'SymmetricDifference', 'DisjointUnion',
-    'indicator',
+    'indicator', 'boolean_indicator',
 
     'ImageSet', 'Range', 'ComplexRegion', 'Reals',
 

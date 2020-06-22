@@ -2570,3 +2570,53 @@ class indicator(Function):
         elif x_in_a is false:
             return 0
 
+
+class boolean_indicator(Function):
+    r"""
+        Indicator function (or the Characteristic function) for booleans
+
+        .. math::
+            1_A:X  \rightarrow \{0, 1\}
+            1_A(x) :=  \begin{cases} 1 & \text{true} \\ 0 & \text{false} \end{cases}
+
+        Parameters
+        ==========
+
+        x : the boolean
+
+        Examples
+        ========
+
+        >>> from sympy.sets import boolean_indicator
+        >>> from sympy import true, false
+        >>> boolean_indicator(True)
+        1
+        >>> boolean_indicator(False)
+        0
+        >>> boolean_indicator(true)
+        1
+        >>> boolean_indicator(false)
+        0
+
+        See Also
+        ========
+
+        indicator
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Indicator_function
+        .. [2] https://mathworld.wolfram.com/CharacteristicFunction.html
+
+        """
+    is_integer = True
+    is_nonnegative = True
+    is_prime = False
+
+    @classmethod
+    def eval(cls, x):
+        if x is true:
+            return 1
+        elif x is false:
+            return 0

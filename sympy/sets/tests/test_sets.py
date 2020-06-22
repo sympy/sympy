@@ -4,7 +4,7 @@ from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
     sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
     Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
     Matrix, Range, Add, symbols, zoo, Rational)
-from sympy.sets.sets import indicator
+from sympy.sets import indicator, boolean_indicator
 from mpmath import mpi
 
 from sympy.core.expr import unchanged
@@ -1597,3 +1597,13 @@ def test_indicator_function():
     symbolic_indicator = indicator(A, x)
     assert symbolic_indicator.subs({x: -1}) == 0
     assert symbolic_indicator.subs({x: 1}) == 1
+
+def test_boolean_indicator():
+    from sympy import true, false
+    assert boolean_indicator(True) == 1
+    assert boolean_indicator(true) == 1
+
+    boolean = Symbol('boolean')
+    sym_bool_indicator = boolean_indicator(boolean)
+    assert sym_bool_indicator.subs({boolean: true}) == 1
+    assert sym_bool_indicator.subs({boolean: false}) == 0

@@ -2188,9 +2188,13 @@ class LatexPrinter(Printer):
             self._print(s.condition))
 
     def _print_indicator(self, expr):
-        set_name = self._print(expr.args[0])
+        set_value = self._print(expr.args[0])
         element = self._print(expr.args[1])
-        return r"1_{%s}(%s)" % (set_name, element)
+        return r"1_{%s}(%s)" % (set_value, element)
+
+    def _print_boolean_indicator(self, expr):
+        boolean = self._print(expr.args[0])
+        return r"1_A(%s)" % boolean
 
     def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.variables])

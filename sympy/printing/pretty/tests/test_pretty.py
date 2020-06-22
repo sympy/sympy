@@ -3935,6 +3935,21 @@ def test_pretty_ConditionSet():
     assert upretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == u'{2}'
 
 
+def test_pretty_indicator():
+    from sympy.sets import indicator
+    interval = Interval(0, 1)
+    assert pretty(indicator(interval, x)) == '1A(x)'
+    assert upretty(indicator(interval, x)) == '𝟙A(x)'
+
+
+def test_pretty_boolean_indicator():
+    from sympy.sets import boolean_indicator
+    assert pretty(boolean_indicator(x)) == '1A(x)'
+    assert upretty(boolean_indicator(x)) == '𝟙A(x)'
+    assert pretty(boolean_indicator(x ^ y)) == '1A(Xor(x, y))'
+    assert upretty(boolean_indicator(x ^ y)) == '𝟙A(x ⊻ y)'
+
+
 def test_pretty_ComplexRegion():
     from sympy import ComplexRegion
     ucode_str = u'{x + y⋅ⅈ | x, y ∊ [3, 5] × [4, 6]}'
