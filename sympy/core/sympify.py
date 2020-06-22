@@ -304,7 +304,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     evaluate : boolean, optional
         If False, then arithmetic and operators will be converted into
-        their SymPy equivalents. If True the expression will be evalauted
+        their SymPy equivalents. If True the expression will be evaluated
         and the result will be returned.
 
     """
