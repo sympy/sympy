@@ -1,11 +1,14 @@
 #
 # This is the module for ODE solver classes for single ODEs.
 #
-import typing
 
-if typing.TYPE_CHECKING:
-    from typing import ClassVar
-from typing import Dict, Iterable, List, Optional, Type
+#import typing
+#
+#if typing.TYPE_CHECKING:
+#    from typing import ClassVar
+#from typing import Dict, Type
+
+from typing import Iterable, List, Optional
 
 from sympy.core import S
 from sympy.core.exprtools import factor_terms
@@ -178,11 +181,11 @@ class SingleODESolver:
 
     # Subclasses should store the hint name (the argument to dsolve) in this
     # attribute
-    hint = None  # type: ClassVar[str]
+    hint = None  ## type: ClassVar[str]
 
     # Subclasses should define this to indicate if they support an _Integral
     # hint.
-    has_integral = None  # type: ClassVar[bool]
+    has_integral = None  ## type: ClassVar[bool]
 
     # The ODE to be solved
     ode_problem = None  # type: SingleODEProblem
@@ -351,7 +354,7 @@ class NthAlgebraic(SingleODESolver):
     # be stored in cached results we need to ensure that we always get the
     # same class back for each particular integration variable so we store these
     # classes in a global dict:
-    _diffx_stored = {}  # type: Dict[Symbol, Type[Function]]
+    _diffx_stored = {}  ## type: Dict[Symbol, Type[Function]]
 
     @staticmethod
     def _get_diffx(var):
