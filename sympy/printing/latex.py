@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 import itertools
 
-from sympy.core import Add, Mod, Mul, Number, S, Symbol
+from sympy.core import Add, Float, Mod, Mul, Number, S, Symbol
 from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg, AppliedUndef, Derivative
@@ -119,6 +119,21 @@ _between_two_numbers_p = (
     re.compile(r'[0-9][} ]*$'),  # search
     re.compile(r'[{ ]*[-+0-9]'),  # match
 )
+
+
+def latex_escape(s):
+    """
+    Escape a string such that latex interprets it as plaintext.
+
+    We can't use verbatim easily with mathjax, so escaping is easier.
+    Rules from https://tex.stackexchange.com/a/34586/41112.
+    """
+    s = s.replace('\\', r'\textbackslash')
+    for c in '&%$#_{}':
+        s = s.replace(c, '\\' + c)
+    s = s.replace('~', r'\textasciitilde')
+    s = s.replace('^', r'\textasciicircum')
+    return s
 
 
 class LatexPrinter(Printer):
@@ -2651,14 +2666,26 @@ class LatexPrinter(Printer):
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
     def _print_Str(self, s):
-        return self._print(s.name)
+        return str(s.name)
+
+    def _print_float(self, expr):
+        return self._print(Float(expr))
+
+    def _print_int(self, expr):
+        return str(expr)
+
+    def _print_mpz(self, expr):
+        return str(expr)
+
+    def _print_mpq(self, expr):
+        return str(expr)
 
     def emptyPrinter(self, expr):
-        # Checks what type of decimal separator to print.
-        expr = super().emptyPrinter(expr)
-        if self._settings['decimal_separator'] == 'comma':
-            expr = expr.replace('.', '{,}')
-        return expr
+        # default to just printing as monospace, like would normally be shown
+        s = super().emptyPrinter(expr)
+
+        return r"\mathtt{\text{%s}}" % latex_escape(s)
+
 
 def translate(s):
     r'''
