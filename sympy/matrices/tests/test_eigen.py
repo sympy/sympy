@@ -582,3 +582,16 @@ def test_definite():
     ])
     assert not m.is_positive_definite
     assert not m.is_positive_semidefinite
+
+
+def test_positive_semidefinite_cholesky():
+    from sympy.matrices.eigen import _is_positive_semidefinite_cholesky
+
+    m = Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+    assert _is_positive_semidefinite_cholesky(m) == True
+    m = Matrix([[0, 0, 0], [0, 5, -10*I], [0, 10*I, 5]])
+    assert _is_positive_semidefinite_cholesky(m) == False
+    m = Matrix([[1, 0, 0], [0, 0, 0], [0, 0, -1]])
+    assert _is_positive_semidefinite_cholesky(m) == False
+    m = Matrix([[0, 1], [1, 0]])
+    assert _is_positive_semidefinite_cholesky(m) == False

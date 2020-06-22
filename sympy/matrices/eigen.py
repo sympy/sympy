@@ -15,6 +15,7 @@ from sympy.simplify import nsimplify, simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .common import MatrixError, NonSquareMatrixError
+from .determinant import _find_reasonable_pivot
 
 from .utilities import _iszero
 
@@ -673,6 +674,17 @@ def _fuzzy_positive_definite(M):
     return None
 
 
+def _fuzzy_positive_semidefinite(M):
+    nonnegative_diagonals = M._has_nonnegative_diagonals()
+    if nonnegative_diagonals is False:
+        return False
+
+    if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
+        return True
+
+    return None
+
+
 def _is_positive_definite(M):
     if not M.is_hermitian:
         if not M.is_square:
@@ -692,28 +704,11 @@ def _is_positive_semidefinite(M):
             return False
         M = M + M.H
 
-    nonnegative_diagonals = M._has_nonnegative_diagonals()
-    if nonnegative_diagonals is False:
-        return False
+    fuzzy = _fuzzy_positive_semidefinite(M)
+    if fuzzy is not None:
+        return fuzzy
 
-    if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
-        return True
-
-    # uses Cholesky factorization with complete pivoting
-    # see http://eprints.ma.man.ac.uk/1199/1/covered/MIMS_ep2008_116.pdf
-    M = M.copy()
-    for k in range(M.rows):
-        pivot = max(range(k, M.rows), key=lambda i: M[i, i])
-        if pivot > k:
-            M.col_swap(k, pivot)
-            M.row_swap(k, pivot)
-        if M[k, k].is_negative:
-            return False
-        M[k, k] = sqrt(M[k, k])
-        M[k, (k+1):] /= M[k, k]
-        for j in range(k+1, M.rows):
-            M[(k+1):(j+1), j] -= M[k, (k+1):(j+1)].T * M[k, j]
-    return M[-1, -1].is_nonnegative
+    return _is_positive_semidefinite_cholesky(M)
 
 
 def _is_negative_definite(M):
@@ -753,6 +748,43 @@ def _is_positive_definite_GE(M):
         for j in range(i+1, size):
             M[j, i+1:] = M[i, i] * M[j, i+1:] - M[j, i] * M[i, i+1:]
     return True
+
+
+def _is_positive_semidefinite_cholesky(M):
+    """Uses Cholesky factorization with complete pivoting
+    see http://eprints.ma.man.ac.uk/1199/1/covered/MIMS_ep2008_116.pdf
+    """
+    M = M.as_mutable()
+    for k in range(M.rows):
+        diags = [M[i, i] for i in range(k, M.rows)]
+        pivot, pivot_val, nonzero, _ = _find_reasonable_pivot(diags)
+
+        if nonzero:
+            return None
+
+        if pivot is None:
+            for i in range(k+1, M.rows):
+                for j in range(k, M.cols):
+                    iszero = M[i, j].is_zero
+                    if iszero is None:
+                        return None
+                    elif iszero is False:
+                        return False
+            return True
+
+        if M[k, k].is_negative or pivot_val.is_negative:
+            return False
+
+        if pivot > 0:
+            M.col_swap(k, k+pivot)
+            M.row_swap(k, k+pivot)
+
+        M[k, k] = sqrt(M[k, k])
+        M[k, k+1:] /= M[k, k]
+        for j in range(k+1, M.rows):
+            M[k+1: j+1, j] -= M[k, k+1: j+1].H * M[k, j]
+
+    return M[-1, -1].is_nonnegative
 
 
 _doc_positive_definite = \
