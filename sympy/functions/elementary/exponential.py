@@ -926,7 +926,7 @@ class log(Function):
         try:
             a, b = arg.leadterm(x)
             s = arg.nseries(x, n=n+b, logx=logx)
-        except ValueError:
+        except (ValueError, NotImplementedError):
             s = arg.nseries(x, n=n, logx=logx)
             while s.is_Order:
                 n += 1
@@ -950,7 +950,7 @@ class log(Function):
 
     def _eval_as_leading_term(self, x, cdir=0):
         from sympy import I, im
-        arg = self.args[0].cancel()
+        arg = self.args[0].together()
         x0 = arg.subs(x, 0)
         if x0 is S.One:
             return (arg - S.One).as_leading_term(x)
