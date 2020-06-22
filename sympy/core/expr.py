@@ -344,30 +344,25 @@ class Expr(Basic, EvalfMixin):
         re, im = result.as_real_imag()
         return complex(float(re), float(im))
 
+    @sympify_return([('other', 'Expr')], NotImplemented)
     def __ge__(self, other):
         from .relational import GreaterThan
-        return self._cmp(other, GreaterThan)
+        return GreaterThan(self, other)
 
+    @sympify_return([('other', 'Expr')], NotImplemented)
     def __le__(self, other):
         from .relational import LessThan
-        return self._cmp(other, LessThan)
+        return LessThan(self, other)
 
+    @sympify_return([('other', 'Expr')], NotImplemented)
     def __gt__(self, other):
         from .relational import StrictGreaterThan
-        return self._cmp(other, StrictGreaterThan)
+        return StrictGreaterThan(self, other)
 
+    @sympify_return([('other', 'Expr')], NotImplemented)
     def __lt__(self, other):
         from .relational import StrictLessThan
-        return self._cmp(other, StrictLessThan)
-
-    def _cmp(self, other, cls):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return NotImplemented
-        if not isinstance(other, Expr):
-            return NotImplemented
-        return cls(self, other)
+        return StrictLessThan(self, other)
 
     def __trunc__(self):
         if not self.is_number:
