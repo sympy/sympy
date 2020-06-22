@@ -711,7 +711,6 @@ class _Inequality(Relational):
         return cls._eval_fuzzy_relation(lhs, rhs)
 
 
-
 class _Greater(_Inequality):
     """Not intended for general use
 
