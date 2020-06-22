@@ -561,6 +561,9 @@ def _det(M, method="bareiss", iszerofunc=None):
     True
     """
 
+    if not M.is_square:
+        raise NonSquareMatrixError
+
     # sanitize `method`
     method = method.lower()
 
@@ -616,7 +619,7 @@ def _det(M, method="bareiss", iszerofunc=None):
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
+def _det_bareiss(M, ctx):
     """Compute matrix determinant using Bareiss' fraction-free
     algorithm which is an extension of the well known Gaussian
     elimination method. This approach is best suited for dense
@@ -631,14 +634,21 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
         The function to use to determine zeros when doing an LU decomposition.
         Defaults to ``lambda x: x.is_zero``.
 
+    Notes
+    =====
+
     TODO: Implement algorithm for sparse matrices (SFF),
     http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.
-    """
 
-    # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
-    # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
-    def bareiss(mat, cumm=1):
-        if mat.rows == 0:
+    References
+    ==========
+
+    .. [1] Recursively implemented Bareiss' algorithm as per Deanna
+        Richelle Leggett's thesis
+        http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
+    """
+    def bareiss(mat, cumm):
+        if not mat.rows:
             return mat.one
         elif mat.rows == 1:
             return mat[0, 0]
@@ -647,7 +657,7 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
         # With the default iszerofunc, _find_reasonable_pivot slows down
         # the computation by the factor of 2.5 in one test.
         # Relevant issues: #10279 and #13877.
-        pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0], iszerofunc=iszerofunc)
+        pivot_pos, pivot_val, _, _ = ctx.find_pivot(mat[:, 0])
         if pivot_pos is None:
             return mat.zero
 
@@ -661,25 +671,76 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
         tmp_mat = mat.extract(rows, cols)
 
         def entry(i, j):
-            ret = (pivot_val*tmp_mat[i, j + 1] - mat[pivot_pos, j + 1]*tmp_mat[i, 0]) / cumm
-            if _get_intermediate_simp_bool(True):
-                return _dotprodsimp(ret)
-            elif not ret.is_Atom:
-                return cancel(ret)
+            a = pivot_val * tmp_mat[i, j + 1]
+            b = mat[pivot_pos, j + 1] * tmp_mat[i, 0]
+            ret = ctx.div(a - b, cumm)
+
+            ret, status = ctx.simplify_1(ret)
+            if status:
+                return ret
+
+            ret, _ = ctx.simplify_2(ret)
             return ret
 
-        return sign*bareiss(M._new(mat.rows - 1, mat.cols - 1, entry), pivot_val)
+        new_mat = ctx.new_matrix(mat.rows - 1, mat.cols - 1, entry)
+        return sign*bareiss(new_mat, pivot_val)
 
-    if not M.is_square:
-        raise NonSquareMatrixError()
+    return bareiss(M, M.one)
 
-    if M.rows == 0:
-        return M.one
-        # sympy/matrices/tests/test_matrices.py contains a test that
-        # suggests that the determinant of a 0 x 0 matrix is one, by
-        # convention.
 
-    return bareiss(M)
+def _det_bareiss_expr(M, iszerofunc=_is_zero_after_expand_mul):
+    class ctx:
+        @staticmethod
+        def find_pivot(x):
+            return _find_reasonable_pivot(
+                x, iszerofunc=_is_zero_after_expand_mul)
+
+        @staticmethod
+        def div(x, y):
+            return x / y
+
+        @staticmethod
+        def simplify_1(x):
+            if _get_intermediate_simp_bool(True):
+                return _dotprodsimp(x), True
+            return x, False
+
+        @staticmethod
+        def simplify_2(x):
+            if not x.is_Atom:
+                return cancel(x), True
+            return x, False
+
+        @staticmethod
+        def new_matrix(rows, cols, entry):
+            return M._new(rows, cols, entry)
+
+    return _det_bareiss(M, ctx)
+
+
+def _poly_det_bareiss(M):
+    class ctx:
+        @staticmethod
+        def find_pivot(x):
+            return _find_pivot(x, M.zero)
+
+        @staticmethod
+        def div(x, y):
+            return x // y
+
+        @staticmethod
+        def simplify_1(x):
+            return x, True
+
+        @staticmethod
+        def simplify_2(x):
+            return x, True
+
+        @staticmethod
+        def new_matrix(rows, cols, entry):
+            return M._new(rows, cols, entry, ring=M.ring)
+
+    return _det_bareiss(M, ctx)
 
 
 def _det_berkowitz(M):
@@ -839,37 +900,6 @@ def _minor_submatrix(M, i, j):
     cols = [a for a in range(M.cols) if a != j]
 
     return M.extract(rows, cols)
-
-
-def _poly_det_bareiss(M):
-    def bareiss(mat, cumm):
-        if mat.rows == 0:
-            return mat.one
-        elif mat.rows == 1:
-            return mat[0, 0]
-
-        pivot_pos, pivot_val, _, _ = _find_pivot(mat[:, 0], M.zero)
-        if pivot_pos is None:
-            return mat.zero
-
-        sign = (-1) ** (pivot_pos % 2)
-
-        rows = list(i for i in range(mat.rows) if i != pivot_pos)
-        cols = list(range(mat.cols))
-        tmp_mat = mat.extract(rows, cols)
-
-        def entry(i, j):
-            ret = (
-                pivot_val*tmp_mat[i, j + 1] -
-                mat[pivot_pos, j + 1]*tmp_mat[i, 0]) // cumm
-            return ret
-
-        return sign*bareiss(
-            M._new(mat.rows-1, mat.cols-1, entry, ring=M.ring), pivot_val)
-
-    if not M.rows:
-        return M.one
-    return bareiss(M, M.one)
 
 
 def _poly_berkowitz_toeplitz_matrix(M):

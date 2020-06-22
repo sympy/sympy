@@ -30,7 +30,8 @@ from .utilities import _iszero, _is_zero_after_expand_mul
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
     _adjugate, _charpoly, _cofactor, _cofactor_matrix,
-    _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
+    _det, _det_bareiss, _det_bareiss_expr, _det_berkowitz, _det_LU,
+    _minor, _minor_submatrix)
 
 from .reductions import _is_echelon, _echelon_form, _rank, _rref
 from .subspaces import _columnspace, _nullspace, _rowspace, _orthogonalize
@@ -96,7 +97,7 @@ class MatrixDeterminant(MatrixCommon):
     directly. See ``determinant.py`` for their implementations."""
 
     def _eval_det_bareiss(self, iszerofunc=_is_zero_after_expand_mul):
-        return _det_bareiss(self, iszerofunc=iszerofunc)
+        return _det_bareiss_expr(self, iszerofunc=iszerofunc)
 
     def _eval_det_berkowitz(self):
         return _det_berkowitz(self)
