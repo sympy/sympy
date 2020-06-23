@@ -1,6 +1,6 @@
 from mpmath.matrices.matrices import _matrix
 
-from sympy.core import Basic, Dict, Integer, S, Tuple
+from sympy.core import Basic, Dict, Integer, Tuple
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter, _sympify
 from sympy.matrices.dense import DenseMatrix

@@ -1132,7 +1132,7 @@ def is_ge(lhs, rhs):
         if lhs.is_extended_real and rhs.is_extended_real:
             if (lhs.is_infinite and lhs.is_extended_positive) \
                      or (rhs.is_infinite and rhs.is_extended_negative):
-                return S.true
+                return True
             diff = lhs - rhs
             if diff is not S.NaN:
                 rv = diff.is_extended_nonnegative
@@ -1150,13 +1150,15 @@ def is_eq(lhs, rhs):
     from sympy.simplify.simplify import clear_coefficients
     from sympy.utilities.iterables import sift
 
+
     retval = _eval_is_eq(lhs, rhs)
     if retval is not None:
         return retval
 
-    retval = _eval_is_eq(rhs, lhs)
-    if retval is not None:
-        return retval
+    if dispatch(type(lhs), type(rhs)) != dispatch(type(rhs), type(lhs)):
+        retval = _eval_is_eq(rhs, lhs)
+        if retval is not None:
+            return retval
 
     retval = lhs._eval_Eq(rhs)
     if retval is not None:
@@ -1169,19 +1171,19 @@ def is_eq(lhs, rhs):
     # retval is still None, so go through the equality logic
     # If expressions have the same structure, they must be equal.
     if lhs == rhs:
-        return S.true  # e.g. True == True
+        return True  # e.g. True == True
     elif all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
-        return S.false # True != False
+        return False # True != False
     elif not (lhs.is_Symbol or rhs.is_Symbol) and (
         isinstance(lhs, Boolean) !=
         isinstance(rhs, Boolean)):
-        return S.false  # only Booleans can equal Booleans
+        return False  # only Booleans can equal Booleans
 
     if lhs.is_infinite or rhs.is_infinite:
         if fuzzy_xor([lhs.is_infinite, rhs.is_infinite]):
-            return S.false
+            return False
         if fuzzy_xor([lhs.is_extended_real, rhs.is_extended_real]):
-            return S.false
+            return False
         if fuzzy_and([lhs.is_extended_real, rhs.is_extended_real]):
             return fuzzy_xor([lhs.is_extended_positive, fuzzy_not(rhs.is_extended_positive)])
 
@@ -1215,9 +1217,9 @@ def is_eq(lhs, rhs):
         z = dif.is_zero
         if z is not None:
             if z is False and dif.is_commutative:  # issue 10728
-                return S.false
+                return False
             if z:
-                return S.true
+                return True
 
         n2 = _n2(lhs, rhs)
         if n2 is not None:
@@ -1245,6 +1247,6 @@ def is_eq(lhs, rhs):
                             rv = None
         elif any(a.is_infinite for a in Add.make_args(n)):
             # (inf or nan)/x != 0
-            rv = S.false
+            rv = False
         if rv is not None:
             return rv
