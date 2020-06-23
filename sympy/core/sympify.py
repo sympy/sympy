@@ -281,7 +281,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     >>> sympify('0.1',rational=False)
     0.1
-    
+
     >>> sympify('0.1',rational=True)
     1/10
 
