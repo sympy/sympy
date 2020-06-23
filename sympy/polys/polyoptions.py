@@ -4,7 +4,8 @@ from __future__ import print_function, division
 
 __all__ = ["Options"]
 
-from typing import Dict, List, Optional, Type
+# from typing import Dict, Type
+from typing import List, Optional
 
 from sympy.core import S, Basic, sympify
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
@@ -123,7 +124,7 @@ class Options(dict):
     """
 
     __order__ = None
-    __options__ = {}  # type: Dict[str, Type[Option]]
+    __options__ = {}  ## type: Dict[str, Type[Option]]
 
     def __init__(self, gens, args, flags=None, strict=False):
         dict.__init__(self)

@@ -1,7 +1,7 @@
 """Singleton mechanism"""
 
 
-from typing import Any, Dict, Type
+# from typing import Any, Dict, Type
 
 from .core import Registry
 from .assumptions import ManagedProperties
@@ -160,7 +160,7 @@ class Singleton(ManagedProperties):
     subclass may use a subclassed metaclass).
     """
 
-    _instances = {}  # type: Dict[Type[Any], Any]
+    _instances = {}  ## type: Dict[Type[Any], Any]
     "Maps singleton classes to their instances."
 
     def __new__(cls, *args, **kwargs):
