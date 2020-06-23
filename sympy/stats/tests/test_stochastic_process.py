@@ -327,8 +327,7 @@ def test_PoissonProcess():
 
     # tests from https://www.probabilitycourse.com/chapter11/11_1_2_basic_concepts_of_the_poisson_process.php
     X = PoissonProcess('X', 10) # 11.1
-    assert P(Eq(X(S(1)/3), 3) & Eq(X(1), 10)).evalf() == 0.0325439914084338
-    assert P(Eq(X(S(1)/3), 3), Eq(X(1), 10)).evalf() == 0.0325439914084338
+    assert P(Eq(X(S(1)/3), 3) & Eq(X(1), 10)) == exp(-10)*Rational(8000000000, 11160261)
     assert P(Eq(X(1), 1), Eq(X(S(1)/3), 3)) == 0
     assert P(Eq(X(1), 10), Eq(X(S(1)/3), 3)) == P(Eq(X(S(2)/3), 7))
 

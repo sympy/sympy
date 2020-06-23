@@ -1216,7 +1216,8 @@ class CountingProcess(ContinuousTimeStochasticProcess):
             if len(intervals) == 1 or all(Intersection(*intv_comb) == EmptySet
                 for intv_comb in itertools.combinations(intervals, 2)):
                 if expr.is_Add:
-                    return Add(*[self.expectation(arg, condition) for arg in expr.args])
+                    return Add.fromiter([self.expectation(arg, condition)
+                            for arg in expr.args])
                 expr = expr.subs(rv_swap)
             else:
                 return Expectation(expr, condition)
@@ -1281,17 +1282,17 @@ class CountingProcess(ContinuousTimeStochasticProcess):
                         rv = Eq(curr.args[0].pspace.process(diff_key), len(working_set))
                         result.append(_SubstituteRV._probability(rv))
                     elif isinstance(curr, Eq) ^ isinstance(nex, Eq):
-                        result.append(Add(*[_SubstituteRV._probability(Eq(
+                        result.append(Add.fromiter([_SubstituteRV._probability(Eq(
                         curr.args[0].pspace.process(diff_key), x))
                                 for x in range(len(working_set))]))
                     else:
                         n = len(working_set)
-                        result.append(Add(*[(n - x)*_SubstituteRV._probability(Eq(
+                        result.append(Add.fromiter([(n - x)*_SubstituteRV._probability(Eq(
                         curr.args[0].pspace.process(diff_key), x)) for x in range(n)]))
                 else:
                     result.append(_SubstituteRV._probability(
                     curr.args[0].pspace.process(diff_key) <= working_set._sup - working_set._inf))
-        return Mul(*result)
+        return Mul.fromiter(result)
 
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
@@ -1335,13 +1336,13 @@ class CountingProcess(ContinuousTimeStochasticProcess):
             if check_numeric and check_given_numeric:
                 res = []
                 if isinstance(condition, Or):
-                    res.append(Add(*[self._solve_numerical(arg, given_condition)
+                    res.append(Add.fromiter([self._solve_numerical(arg, given_condition)
                             for arg in condition.args]))
                 if isinstance(given_condition, Or):
-                    res.append(Add(*[self._solve_numerical(condition, arg)
+                    res.append(Add.fromiter([self._solve_numerical(condition, arg)
                             for arg in given_condition.args]))
                 if res:
-                    return Add(*res)
+                    return Add.fromiter(res)
                 return self._solve_numerical(condition, given_condition)
 
             # No numeric queries, go by Contains?... then check that all the
@@ -1356,9 +1357,11 @@ class CountingProcess(ContinuousTimeStochasticProcess):
             if len(intervals) == 1 or all(Intersection(*intv_comb) == EmptySet
                 for intv_comb in itertools.combinations(intervals, 2)):
                 if isinstance(condition, And):
-                    return Mul(*[self.probability(arg, given_condition) for arg in condition.args])
+                    return Mul.fromiter([self.probability(arg, given_condition)
+                            for arg in condition.args])
                 elif isinstance(condition, Or):
-                    return Add(*[self.probability(arg, given_condition) for arg in condition.args])
+                    return Add.fromiter([self.probability(arg, given_condition)
+                            for arg in condition.args])
                 condition = condition.subs(rv_swap)
             else:
                 return Probability(condition, given_condition)
@@ -1402,6 +1405,12 @@ class PoissonProcess(CountingProcess):
     >>> E(X(t1)**2 + 2*X(t2),  Contains(t1, Interval.Lopen(0, 1))
     ... & Contains(t2, Interval.Lopen(1, 2)))
     18
+    >>> P(X(3) < 1, Eq(X(1), 0))
+    exp(-6)
+    >>> P(Eq(X(4), 3), Eq(X(2), 3))
+    exp(-6)
+    >>> P(X(2) <= 3, X(1) > 1)
+    5*exp(-3)
 
     Merging two Poisson Processes
 
@@ -1450,7 +1459,8 @@ class PoissonProcess(CountingProcess):
     def __add__(self, other):
         if not isinstance(other, PoissonProcess):
             raise ValueError("Only instances of Poisson Process can be merged")
-        return PoissonProcess(Dummy(self.symbol.name + other.symbol.name), self.lamda + other.lamda)
+        return PoissonProcess(Dummy(self.symbol.name + other.symbol.name),
+                self.lamda + other.lamda)
 
     def split(self, l1, l2):
         if _sympify(l1 + l2) != self.lamda:
