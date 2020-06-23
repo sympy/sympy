@@ -269,15 +269,19 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     convert_xor
     -----------
+
     >>> sympify('x^y',convert_xor=True)
     x**y
+
     >>> sympify('x^y',convert_xor=False)
     x ^ y
 
     rational
     --------
+
     >>> sympify('0.1',rational=False)
     0.1
+    
     >>> sympify('0.1',rational=True)
     1/10
 
