@@ -127,7 +127,7 @@ matrix:
       dist: xenial
       env:
         - TEST_SYMPY="true"
-        - SPLIT="1/45"
+        - SPLIT="1/5"
         - TEST_COVERAGE="true"
     - python: 3.6
       dist: xenial
