@@ -196,12 +196,25 @@ class MatrixShaping(MatrixRequired):
 
         return self._new(len(self), 1, entry)
 
+    def _eval_vech(self, diagonal):
+        c = self.cols
+        v = []
+        if diagonal:
+            for j in range(c):
+                for i in range(j, c):
+                    v.append(self[i, j])
+        else:
+            for j in range(c):
+                for i in range(j + 1, c):
+                    v.append(self[i, j])
+        return self._new(len(v), 1, v)
+
     def col_del(self, col):
         """Delete the specified column."""
         if col < 0:
             col += self.cols
         if not 0 <= col < self.cols:
-            raise ValueError("Column {} out of range.".format(col))
+            raise IndexError("Column {} is out of range.".format(col))
         return self._eval_col_del(col)
 
     def col_insert(self, pos, other):
@@ -437,7 +450,7 @@ class MatrixShaping(MatrixRequired):
         if row < 0:
             row += self.rows
         if not 0 <= row < self.rows:
-            raise ValueError("Row {} out of range.".format(row))
+            raise IndexError("Row {} is out of range.".format(row))
 
         return self._eval_row_del(row)
 
@@ -670,6 +683,56 @@ class MatrixShaping(MatrixRequired):
         vech
         """
         return self._eval_vec()
+
+    def vech(self, diagonal=True, check_symmetry=True):
+        """Reshapes the matrix into a column vector by stacking the
+        elements in the lower triangle.
+
+        Parameters
+        ==========
+
+        diagonal : bool, optional
+            If ``True``, it includes the diagonal elements.
+
+        check_symmetry : bool, optional
+            If ``True``, it checks whether the matrix is symmetric.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> m=Matrix([[1, 2], [2, 3]])
+        >>> m
+        Matrix([
+        [1, 2],
+        [2, 3]])
+        >>> m.vech()
+        Matrix([
+        [1],
+        [2],
+        [3]])
+        >>> m.vech(diagonal=False)
+        Matrix([[2]])
+
+        Notes
+        =====
+
+        This should work for symmetric matrices and ``vech`` can
+        represent symmetric matrices in vector form with less size than
+        ``vec``.
+
+        See Also
+        ========
+
+        vec
+        """
+        if not self.is_square:
+            raise NonSquareMatrixError
+
+        if check_symmetry and not self.is_symmetric():
+            raise ValueError("The matrix is not symmetric.")
+
+        return self._eval_vech(diagonal)
 
     @classmethod
     def vstack(cls, *args):

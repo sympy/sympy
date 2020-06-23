@@ -1,6 +1,5 @@
 from sympy.core.basic import Basic
-from sympy.core.containers import Dict, Tuple
-from sympy.vector.coordsysrect import CoordSys3D
+from sympy.core.containers import Tuple
 
 class ParametricRegion(Basic):
     """
@@ -13,16 +12,16 @@ class ParametricRegion(Basic):
     >>> from sympy.abc import r, theta, t, a, b, x, y
     >>> from sympy.vector import ParametricRegion
 
-    >>> ParametricRegion(t, (t, t**2), limits={t: (-1, 2)})
-    ParametricRegion((t,), (t, t**2), {t: (-1, 2)})
-    >>> ParametricRegion((x, y), (x, y), {x: (3, 4), y: (5, 6)})
-    ParametricRegion((x, y), (x, y), {x: (3, 4), y: (5, 6)})
-    >>> ParametricRegion((r, theta), (r*cos(theta), r*sin(theta)), {r: (-2, 2), theta: (0, pi)})
-    ParametricRegion((r, theta), (r*cos(theta), r*sin(theta)), {r: (-2, 2), theta: (0, pi)})
-    >>> ParametricRegion(t, (a*cos(t), b*sin(t)))
-    ParametricRegion((t,), (a*cos(t), b*sin(t)), {})
+    >>> ParametricRegion((t, t**2), (t, -1, 2))
+    ParametricRegion((t, t**2), (t, -1, 2))
+    >>> ParametricRegion((x, y), (x, 3, 4), (y, 5, 6))
+    ParametricRegion((x, y), (x, 3, 4), (y, 5, 6))
+    >>> ParametricRegion((r*cos(theta), r*sin(theta)), (r, -2, 2), (theta, 0, pi))
+    ParametricRegion((r*cos(theta), r*sin(theta)), (r, -2, 2), (theta, 0, pi))
+    >>> ParametricRegion((a*cos(t), b*sin(t)), t)
+    ParametricRegion((a*cos(t), b*sin(t)), t)
 
-    >>> circle = ParametricRegion((r, theta), (r*cos(theta), r*sin(theta)), {theta: (0, pi)})
+    >>> circle = ParametricRegion((r*cos(theta), r*sin(theta)), r, (theta, 0, pi))
     >>> circle.parameters
     (r, theta)
     >>> circle.definition
@@ -30,51 +29,56 @@ class ParametricRegion(Basic):
     >>> circle.limits
     {theta: (0, pi)}
 
+    Dimension of a parametric region determines whether a region is a curve, surface
+    or volume region. It does not represent its dimensions in space.
+    >>> circle.dimensions
+    1
+
     Parameters
     ==========
 
-    parameters_or_coordsys : parameter or a tuple of parameters or a CoordSys3d object.
-                        When a CoordSys3d object is passed, its base scalars are used as parameters.
-
     definition : tuple to define base scalars in terms of parameters.
 
-    limits : dict to define bounds of each parameter.
-            Each Key of dictionary should be parameter and value
-            is a tuple to represent corresponding lower and upper bound.`
-
+    bounds : Parameter or a tuple of length 3 to define parameter and
+            corresponding lower and upper bound
     """
-    def __new__(cls, parameters_or_coordsys, definition, limits=None):
+    def __new__(cls, definition, *bounds):
+        parameters = ()
+        limits = {}
 
-        if isinstance(parameters_or_coordsys, CoordSys3D):
-            parameters = parameters_or_coordsys.base_scalars()
-        elif not (isinstance(parameters_or_coordsys, tuple) or isinstance(parameters_or_coordsys, Tuple)):
-            parameters = (parameters_or_coordsys,)
-        else:
-            parameters = parameters_or_coordsys
+        if not isinstance(bounds, Tuple):
+            bounds = Tuple(*bounds)
+
+        for bound in bounds:
+            if  isinstance(bound, tuple) or isinstance(bound, Tuple):
+                if len(bound) != 3:
+                    raise ValueError("Tuple should be in the form (parameter, lowerbound, upperbound)")
+                parameters += (bound[0],)
+                limits[bound[0]] = (bound[1], bound[2])
+            else:
+                parameters += (bound,)
 
         if not (isinstance(definition, tuple) or isinstance(definition, Tuple)):
             definition = (definition,)
 
-        if limits is None:
-            limits = {}
+        obj = super().__new__(cls, Tuple(*definition), *bounds)
+        obj._parameters = parameters
+        obj._limits = limits
 
-        for parameter, bounds in limits.items():
-            if parameter not in parameters:
-                raise ValueError("%s is not listed in parameter tuple" % parameter)
-            if len(bounds) != 2:
-                raise ValueError("Bounds should be in the form (lower_bound, upper_bound)")
-
-        obj = super().__new__(cls, Tuple(*parameters), Tuple(*definition), Dict(limits))
         return obj
 
     @property
-    def limits(self):
-        return self.args[2]
+    def definition(self):
+        return self.args[0]
 
     @property
-    def definition(self):
-        return self.args[1]
+    def limits(self):
+        return self._limits
 
     @property
     def parameters(self):
-        return self.args[0]
+        return self._parameters
+
+    @property
+    def dimensions(self):
+        return len(self.limits)

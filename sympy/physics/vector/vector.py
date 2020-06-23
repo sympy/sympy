@@ -1,13 +1,14 @@
 from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
     ImmutableMatrix as Matrix)
 from sympy import trigsimp
+from sympy.printing.defaults import Printable
 from sympy.core.compatibility import unicode
 from sympy.utilities.misc import filldedent
 
 __all__ = ['Vector']
 
 
-class Vector(object):
+class Vector(Printable):
     """The class used to define vectors.
 
     It along with ReferenceFrame are the building blocks of describing a
@@ -447,26 +448,6 @@ class Vector(object):
                 Vector([ar[i]]) & tempy, Vector([ar[i]]) & tempz]])
             outlist += _det(tempm).args
         return Vector(outlist)
-
-
-    # We don't define _repr_png_ here because it would add a large amount of
-    # data to any notebook containing SymPy expressions, without adding
-    # anything useful to the notebook. It can still enabled manually, e.g.,
-    # for the qtconsole, with init_printing().
-    def _repr_latex_(self):
-        """
-        IPython/Jupyter LaTeX printing
-
-        To change the behavior of this (e.g., pass in some settings to LaTeX),
-        use init_printing(). init_printing() will also enable LaTeX printing
-        for built in numeric types like ints and container types that contain
-        SymPy objects, like lists and dictionaries of expressions.
-        """
-        from sympy.printing.latex import latex
-        s = latex(self, mode='plain')
-        return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_
 
     _sympystr = __str__
     _sympyrepr = _sympystr

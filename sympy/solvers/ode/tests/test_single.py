@@ -949,8 +949,8 @@ def _get_examples_ode_sol_nth_order_reducible():
 
     'reducible_11': {
         'eq': f(x).diff(x, 2) - f(x).diff(x)**3,
-        'sol': [Eq(f(x), C1 - sqrt(2)*I*(C2 + x)*sqrt(1/(C2 + x))),
-        Eq(f(x), C1 + sqrt(2)*I*(C2 + x)*sqrt(1/(C2 + x)))],
+        'sol': [Eq(f(x), C1 - sqrt(2)*(I*C2 + I*x)*sqrt(1/(C2 + x))),
+        Eq(f(x), C1 + sqrt(2)*(I*C2 + I*x)*sqrt(1/(C2 + x)))],
         'slow': True,
     },
     }
@@ -994,7 +994,7 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
 
     'undet_05': {
         'eq': f2 + 3*f(x).diff(x) + 2*f(x) - exp(I*x),
-        'sol': [Eq(f(x), C1*exp(-2*x) + C2*exp(-x) + exp(I*x)/10 - 3*I*exp(I*x)/10)],
+        'sol': [Eq(f(x), (S(3)/10 + I/10)*(C1*exp(-2*x) + C2*exp(-x) - I*exp(I*x)))],
         'slow': True,
     },
 

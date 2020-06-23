@@ -47,7 +47,7 @@ from sympy.polys.polyerrors import (
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.fields import field
-from sympy.polys.domains import FF, ZZ, QQ, RR, EX
+from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.orderings import lex, grlex, grevlex
 
@@ -455,6 +455,9 @@ def test_Poly__unify():
     assert Poly(x + 1, y, x)._unify(Poly(x + 2, x, y))[2:] == (DMP([[1, 1]], ZZ), DMP([[1, 2]], ZZ))
     assert Poly(x + 1, y, x, domain='QQ')._unify(Poly(x + 2, x, y))[2:] == (DMP([[1, 1]], QQ), DMP([[1, 2]], QQ))
     assert Poly(x + 1, y, x)._unify(Poly(x + 2, x, y, domain='QQ'))[2:] == (DMP([[1, 1]], QQ), DMP([[1, 2]], QQ))
+
+    assert Poly(x**2 + I, x, domain=ZZ_I).unify(Poly(x**2 + sqrt(2), x, extension=True)) == \
+            (Poly(x**2 + I, x, domain='QQ<sqrt(2) + I>'), Poly(x**2 + sqrt(2), x, domain='QQ<sqrt(2) + I>'))
 
     F, A, B = field("a,b", ZZ)
 
@@ -1744,6 +1747,14 @@ def test_div():
     q, r = f.div(g)
     assert q.get_domain().is_Frac and r.get_domain().is_Frac
 
+    # https://github.com/sympy/sympy/issues/19579
+    p = Poly(2+3*I, x, domain=ZZ_I)
+    q = Poly(1-I, x, domain=ZZ_I)
+    assert p.div(q, auto=False) == \
+        (Poly(0, x, domain='ZZ_I'), Poly(2 + 3*I, x, domain='ZZ_I'))
+    assert p.div(q, auto=True) == \
+        (Poly(-S(1)/2 + 5*I/2, x, domain='QQ_I'), Poly(0, x, domain='QQ_I'))
+
 
 def test_issue_7864():
     q, r = div(a, .408248290463863*a)
@@ -1900,6 +1911,9 @@ def test_gcd_list():
     gcd = gcd_list([], x, polys=True)
     assert gcd.is_Poly and gcd.is_zero
 
+    a = sqrt(2)
+    assert gcd_list([a, -a]) == gcd_list([-a, a]) == a
+
     raises(ComputationFailed, lambda: gcd_list([], polys=True))
 
 
@@ -1992,6 +2006,12 @@ def test_gcd():
     assert cofactors(f, g, modulus=11, symmetric=False) == (h, s, t)
     assert gcd(f, g, modulus=11, symmetric=False) == h
     assert lcm(f, g, modulus=11, symmetric=False) == l
+
+    a, b = sqrt(2), -sqrt(2)
+    assert gcd(a, b) == gcd(b, a) == a
+
+    a, b = sqrt(-2), -sqrt(-2)
+    assert gcd(a, b) in (a, b)
 
     raises(TypeError, lambda: gcd(x))
     raises(TypeError, lambda: lcm(x))
@@ -2414,6 +2434,20 @@ def test_factor():
     assert factor(f, gaussian=True) == (x**2 - I)*(x**2 + I)
     assert factor(
         f, extension=sqrt(2)) == (x**2 + sqrt(2)*x + 1)*(x**2 - sqrt(2)*x + 1)
+
+    assert factor(x**2 + 4*I*x - 4) == (x + 2*I)**2
+
+    f = x**2 + 2*I*x - 4
+
+    assert factor(f) == f
+
+    f = 8192*x**2 + x*(22656 + 175232*I) - 921416 + 242313*I
+    f_zzi = I*(x*(64 - 64*I) + 773 + 596*I)**2
+    f_qqi = 8192*(x + S(177)/128 + 1369*I/128)**2
+
+    assert factor(f) == f_zzi
+    assert factor(f, domain=ZZ_I) == f_zzi
+    assert factor(f, domain=QQ_I) == f_qqi
 
     f = x**2 + 2*sqrt(2)*x + 2
 
@@ -2994,6 +3028,9 @@ def test_cancel():
     assert cancel(M[0,0] + 7) == M[0,0] + 7
     expr = sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2] / z
     assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
+
+    assert cancel((x**2 + 1)/(x - I)) == x + I
+
 
 def test_reduced():
     f = 2*x**4 + y**2 - x**2 + y**3

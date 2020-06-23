@@ -360,33 +360,14 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
     def as_mutable(self):
         return self.copy()
 
-    def col_del(self, i):
-        """Delete the given column.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import eye
-        >>> M = eye(3)
-        >>> M.col_del(1)
-        >>> M
-        Matrix([
-        [1, 0],
-        [0, 0],
-        [0, 1]])
-
-        See Also
-        ========
-
-        col
-        row_del
-        """
-        if i < -self.cols or i >= self.cols:
-            raise IndexError("Index out of range: 'i=%s', valid -%s <= i < %s"
-                             % (i, self.cols, self.cols))
-        for j in range(self.rows - 1, -1, -1):
-            del self._mat[i + j*self.cols]
+    def _eval_col_del(self, col):
+        for j in range(self.rows-1, -1, -1):
+            del self._mat[col + j*self.cols]
         self.cols -= 1
+
+    def _eval_row_del(self, row):
+        del self._mat[row*self.cols: (row+1)*self.cols]
+        self.rows -= 1
 
     def col_op(self, j, f):
         """In-place operation on col j using two-arg functor whose args are
@@ -532,34 +513,6 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         ones
         """
         self._mat = [value]*len(self)
-
-    def row_del(self, i):
-        """Delete the given row.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import eye
-        >>> M = eye(3)
-        >>> M.row_del(1)
-        >>> M
-        Matrix([
-        [1, 0, 0],
-        [0, 0, 1]])
-
-        See Also
-        ========
-
-        row
-        col_del
-        """
-        if i < -self.rows or i >= self.rows:
-            raise IndexError("Index out of range: 'i = %s', valid -%s <= i"
-                             " < %s" % (i, self.rows, self.rows))
-        if i < 0:
-            i += self.rows
-        del self._mat[i*self.cols:(i+1)*self.cols]
-        self.rows -= 1
 
     def row_op(self, i, f):
         """In-place operation on row ``i`` using two-arg functor whose args are

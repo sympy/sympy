@@ -11,6 +11,7 @@ from sympy.core import (
 from sympy.core.basic import preorder_traversal
 from sympy.core.compatibility import iterable, ordered
 from sympy.core.decorators import _sympifyit
+from sympy.core.evalf import pure_complex
 from sympy.core.function import Derivative
 from sympy.core.mul import _keep_coeff
 from sympy.core.relational import Relational
@@ -5219,7 +5220,8 @@ def gcd_list(seq, *gens, **args):
                 lc = 1
                 for frc in lst:
                     lc = lcm(lc, frc.as_numer_denom()[0])
-                return a/lc
+                # abs ensures that the gcd is always non-negative
+                return abs(a/lc)
 
     except PolificationFailed as exc:
         result = try_non_polynomial_gcd(exc.exprs)
@@ -5282,7 +5284,8 @@ def gcd(f, g=None, *gens, **args):
         if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
             frc = (a/b).ratsimp()
             if frc.is_rational:
-                return a/frc.as_numer_denom()[0]
+                # abs ensures that the returned gcd is always non-negative
+                return abs(a/frc.as_numer_denom()[0])
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
@@ -5914,7 +5917,7 @@ def _symbolic_factor_list(expr, opt, method):
     args = [i._eval_factor() if hasattr(i, '_eval_factor') else i
         for i in Mul.make_args(expr)]
     for arg in args:
-        if arg.is_Number:
+        if arg.is_Number or (isinstance(arg, Expr) and pure_complex(arg)):
             coeff *= arg
             continue
         elif arg.is_Pow:

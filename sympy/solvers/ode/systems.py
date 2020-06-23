@@ -1,4 +1,5 @@
-from sympy import (Derivative, Symbol, expand, factor_terms)
+from sympy import (Derivative, Symbol, expand, factor_terms, powsimp, Poly,
+                   Mul, ratsimp, Add, Piecewise, piecewise_fold)
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy
@@ -11,7 +12,7 @@ from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError
 from sympy.utilities import numbered_symbols, default_sort_key
 from sympy.utilities.iterables import ordered, uniq
-from sympy.integrals.integrals import integrate
+from sympy.integrals.integrals import Integral, integrate
 
 
 def _get_func_order(eqs, funcs):
@@ -26,6 +27,37 @@ class ODEOrderError(ValueError):
 class ODENonlinearError(NonlinearError):
     """Raised by linear_ode_to_matrix if the system is nonlinear"""
     pass
+
+
+def _simpsol(soleq):
+    lhs = soleq.lhs
+    sol = soleq.rhs
+    sol = powsimp(sol)
+    gens = list(sol.atoms(exp))
+    p = Poly(sol, *gens, expand=False)
+    gens = [factor_terms(g) for g in gens]
+    if not gens:
+        gens = p.gens
+    syms = [Symbol('C1'), Symbol('C2')]
+    terms = []
+    for coeff, monom in zip(p.coeffs(), p.monoms()):
+        coeff = piecewise_fold(coeff)
+        if type(coeff) is Piecewise:
+            coeff = Piecewise(*((ratsimp(coef).collect(syms), cond) for coef, cond in coeff.args))
+        else:
+            coeff = ratsimp(coeff).collect(syms)
+        monom = Mul(*(g ** i for g, i in zip(gens, monom)))
+        terms.append(coeff * monom)
+    return Eq(lhs, Add(*terms))
+
+
+def _solsimp(e, t):
+    no_t, has_t = powsimp(expand_mul(e)).as_independent(t)
+
+    no_t = ratsimp(no_t)
+    has_t = has_t.replace(exp, lambda a: exp(factor_terms(a)))
+
+    return no_t + has_t
 
 
 def linear_ode_to_matrix(eqs, funcs, t, order):
@@ -412,9 +444,59 @@ def _linear_neq_order1_type1(match_):
     Cvect = Matrix(list(next(constants) for _ in range(n)))
     sol_vector = P * (J * Cvect)
 
-    sol_vector = [collect(s, ordered(J.atoms(exp)), exact=True) for s in sol_vector]
+    gens = sol_vector.atoms(exp)
+    sol_vector = [collect(s, ordered(gens), exact=True) for s in sol_vector]
 
     sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
+    return sol_dict
+
+
+def _linear_neq_order1_type2(match_):
+    r"""
+    System of n first-order coefficient linear non-homogeneous differential equations
+
+    .. math::
+        X' = A X + b(t)
+
+    where $X$ is the vector of $n$ dependent variables, $t$ is the dependent variable, $X'$
+    is the first order differential of $X$ with respect to $t$, $A$ is a $n \times n$
+    constant coefficient matrix and $b(t)$ is the non-homogeneous term.
+
+    The solution of the above system is:
+
+    .. math::
+        X = e^{A t} ( \int e^{- A t} b \,dt + C)
+
+    where $C$ is the vector of constants.
+
+    """
+    eq = match_['eq']
+    func = match_['func']
+    fc = match_['func_coeff']
+    b = match_['rhs']
+
+    n = len(eq)
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+
+    # This needs to be modified in future so that fc is only of type Matrix
+    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
+
+    P, J = matrix_exp_jordan_form(M, t)
+    P = simplify(P)
+    Cvect = Matrix(list(next(constants) for _ in range(n)))
+    sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+
+    # sol_vector = sol_vector.applyfunc(_solsimp)
+
+    # Removing the expand_mul can simplify the solutions of the ODEs
+    # with symbolic coeffs. To be addressed in the future.
+    sol_vector = [collect(expand_mul(s), sol_vector.atoms(exp), exact=True) for s in sol_vector]
+
+    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
+
+    # sol_dict = [simpsol(eq) for eq in sol_dict]
+
     return sol_dict
 
 
@@ -574,6 +656,8 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
                           may or may not exist.
             9. is_general: Boolean value indicating if the system of ODEs is
                            solvable using one of the general case solvers or not.
+            10. rhs: rhs of the non-homogeneous system of ODEs in Matrix form. This
+                     key may or may not exist.
         This Dict is the answer returned if the eqs are linear and constant
         coefficient. Otherwise, None is returned.
 
@@ -654,13 +738,17 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     # Converting the equation into canonical form if the
     # equation is first order. There will be a separate
     # function for this in the future.
-    if all([order[func] == 1 for func in funcs]) and match['is_homogeneous']:
+    if all([order[func] == 1 for func in funcs]):
         match['func_coeff'] = A
         if match['is_constant']:
-            match['type_of_equation'] = "type1"
+            if is_homogeneous:
+                match['type_of_equation'] = "type1"
+            else:
+                match['rhs'] = b
+                match['type_of_equation'] = "type2"
         else:
             B, is_commuting = _is_commutative_anti_derivative(-A, t)
-            if not is_commuting:
+            if not is_commuting or not is_homogeneous:
                 return None
             match['commutative_antiderivative'] = B
             match['type_of_equation'] = "type3"

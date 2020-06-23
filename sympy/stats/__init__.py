@@ -144,6 +144,8 @@ __all__ = [
 
     'Probability', 'Expectation', 'Variance', 'Covariance',
 
+    'ExpectationMatrix', 'VarianceMatrix', 'CrossCovarianceMatrix'
+
 ]
 from .rv_interface import (P, E, H, density, where, given, sample, cdf, median,
         characteristic_function, pspace, sample_iter, variance, std, skewness,
@@ -187,3 +189,6 @@ from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
 
 from .symbolic_probability import (Probability, Expectation, Variance,
         Covariance)
+
+from .symbolic_multivariate_probability import (ExpectationMatrix, VarianceMatrix,
+        CrossCovarianceMatrix)
