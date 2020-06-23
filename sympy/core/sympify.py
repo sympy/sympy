@@ -206,12 +206,17 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     ``evaluate=False`` option will be added. Nested ``Add`` or ``Mul`` will
     be denested first. This is done via an AST transformation that replaces
     operators with their SymPy equivalents, so if an operand redefines any
-    of those operations, the redefined operators will not be used.
+    of those operations, the redefined operators will not be used. If
+    argument a is not a string, the mathematical expression is evaluated
+    before being passed to sympify, so adding evaluate=False will still
+    return the evaluated result of expression.
 
     >>> sympify('2**2 / 3 + 5')
     19/3
     >>> sympify('2**2 / 3 + 5', evaluate=False)
     2**2/3 + 5
+    >>> sympify(2**2 / 3 + 5, evaluate=False)
+    19/3
 
     Extending
     ---------
