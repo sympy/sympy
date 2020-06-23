@@ -138,16 +138,24 @@ This is done by overriding the method ``_latex`` of ``Mod``.
     from sympy.printing.latex import print_latex
 
 
+    # Always use printer._print()
     class ModOp(Mod):
-        def _latex(self, printer=None):
-            # Always use printer.doprint() otherwise nested expressions won't
-            # work. See the example of ModOpWrong.
+        def _latex(self, printer):
+            a, b = [printer._print(i) for i in self.args]
+            return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+
+
+    # This example does not work properly, as only the outermost call may use
+    # doprint.
+    class ModOpModeWrong(Mod):
+        def _latex(self, printer):
             a, b = [printer.doprint(i) for i in self.args]
             return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
 
 
-    class ModOpWrong(Mod):
-        def _latex(self, printer=None):
+    # This example does not print nested objects properly.
+    class ModOpNestedWrong(Mod):
+        def _latex(self, printer):
             a, b = [str(i) for i in self.args]
             return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
 
@@ -155,19 +163,32 @@ This is done by overriding the method ``_latex`` of ``Mod``.
     x = Symbol('x')
     m = Symbol('m')
 
-    print_latex(ModOp(x, m))
     print_latex(Mod(x, m))
+    print_latex(ModOp(x, m))
+
+    print()
+
+    # non-default latex mode
+    print_latex(ModOp(x, m), mode='inline')
+    print_latex(ModOpModeWrong(x, m), mode='inline')
+
+    print()
 
     # Nested modulo.
     print_latex(ModOp(ModOp(x, m), Integer(7)))
-    print_latex(ModOpWrong(ModOpWrong(x, m), Integer(7)))
+    print_latex(ModOpNestedWrong(ModOpNestedWrong(x, m), Integer(7)))
+
 
 The output of the code above is::
 
-    \\operatorname{Mod}{\\left( x,m \\right)}
     x\\bmod{m}
+    \\operatorname{Mod}{\\left( x,m \\right)}
+
+    $\\operatorname{Mod}{\\left( x,m \\right)}$
+    $\\operatorname{Mod}{\\left( $x$,$m$ \\right)}$
+
     \\operatorname{Mod}{\\left( \\operatorname{Mod}{\\left( x,m \\right)},7 \\right)}
-    \\operatorname{Mod}{\\left( ModOpWrong(x, m),7 \\right)}
+    \\operatorname{Mod}{\\left( ModOpNestedWrong(x, m),7 \\right)}
 """
 
 from __future__ import print_function, division
