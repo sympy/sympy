@@ -298,8 +298,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         - dict, lists, sets or tuples containing any of the above
 
     convert_xor : boolean, optional
-        If true, treats XOR, $^$, as exponentiation, $**$.
-        If False, treats XOR, $^$ as XOR itself.
+        If true, treats XOR as exponentiation.
+        If False, treats XOR as XOR itself.
         Used only when input is a string.
 
     locals : any object defined in SymPy, optional
