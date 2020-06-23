@@ -2940,7 +2940,7 @@ class Expr(Basic, EvalfMixin):
 
         if x0 in [S.Infinity, S.NegativeInfinity]:
             sgn = 1 if x0 is S.Infinity else -1
-            s = self.subs(x, sgn/x).series(x, n=n, dir='+')
+            s = self.subs(x, sgn/x).series(x, n=n, dir='+', cdir=cdir)
             if n is None:
                 return (si.subs(x, sgn/x) for si in s)
             return s.subs(x, sgn/x)
@@ -2956,7 +2956,7 @@ class Expr(Basic, EvalfMixin):
                 rep = x + x0
                 rep2 = x
                 rep2b = -x0
-            s = self.subs(x, rep).series(x, x0=0, n=n, dir='+', logx=logx)
+            s = self.subs(x, rep).series(x, x0=0, n=n, dir='+', logx=logx, cdir=cdir)
             if n is None:  # lseries...
                 return (si.subs(x, rep2 + rep2b) for si in s)
             return s.subs(x, rep2 + rep2b)
@@ -2966,14 +2966,14 @@ class Expr(Basic, EvalfMixin):
         if x.is_positive is x.is_negative is None or x.is_Symbol is not True:
             # replace x with an x that has a positive assumption
             xpos = Dummy('x', positive=True, finite=True)
-            rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)
+            rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx, cdir=cdir)
             if n is None:
                 return (s.subs(xpos, x) for s in rv)
             else:
                 return rv.subs(xpos, x)
 
         if n is not None:  # nseries handling
-            s1 = self._eval_nseries(x, n=n, logx=logx)
+            s1 = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             o = s1.getO() or S.Zero
             if o:
                 # make sure the requested order is returned
@@ -2991,13 +2991,13 @@ class Expr(Basic, EvalfMixin):
                     # is different than the original order and then predict how
                     # many additional terms are needed
                     for more in range(1, 9):
-                        s1 = self._eval_nseries(x, n=n + more, logx=logx)
+                        s1 = self._eval_nseries(x, n=n + more, logx=logx, cdir=cdir)
                         newn = s1.getn()
                         if newn != ngot:
                             ndo = n + ceiling((n - ngot)*more/(newn - ngot))
-                            s1 = self._eval_nseries(x, n=ndo, logx=logx)
+                            s1 = self._eval_nseries(x, n=ndo, logx=logx, cdir=cdir)
                             while s1.getn() < n:
-                                s1 = self._eval_nseries(x, n=ndo, logx=logx)
+                                s1 = self._eval_nseries(x, n=ndo, logx=logx, cdir=cdir)
                                 ndo += 1
                             break
                     else:
@@ -3045,7 +3045,7 @@ class Expr(Basic, EvalfMixin):
                             break
                         yielded += do
 
-            return yield_lseries(self.removeO()._eval_lseries(x, logx=logx))
+            return yield_lseries(self.removeO()._eval_lseries(x, logx=logx, cdir=cdir))
 
     def aseries(self, x=None, n=6, bound=0, hir=False):
         """Asymptotic Series expansion of self.
@@ -3223,7 +3223,7 @@ class Expr(Basic, EvalfMixin):
 
         See also nseries().
         """
-        return self.series(x, x0, n=None, dir=dir, logx=logx)
+        return self.series(x, x0, n=None, dir=dir, logx=logx, cdir=cdir)
 
     def _eval_lseries(self, x, logx=None, cdir=0):
         # default implementation of lseries is using nseries(), and adaptively
@@ -3232,7 +3232,7 @@ class Expr(Basic, EvalfMixin):
         # override this method and implement much more efficient yielding of
         # terms.
         n = 0
-        series = self._eval_nseries(x, n=n, logx=logx)
+        series = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
         if not series.is_Order:
             newseries = series.cancel()
             if not newseries.is_Order:
@@ -3246,7 +3246,7 @@ class Expr(Basic, EvalfMixin):
 
         while series.is_Order:
             n += 1
-            series = self._eval_nseries(x, n=n, logx=logx)
+            series = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
         e = series.removeO()
         yield e
         if e.is_zero:
@@ -3255,7 +3255,7 @@ class Expr(Basic, EvalfMixin):
         while 1:
             while 1:
                 n += 1
-                series = self._eval_nseries(x, n=n, logx=logx).removeO()
+                series = self._eval_nseries(x, n=n, logx=logx, cdir=cdir).removeO()
                 if e != series:
                     break
                 if (series - self).cancel() is S.Zero:
@@ -3330,7 +3330,7 @@ class Expr(Basic, EvalfMixin):
         else:
             return self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir):
         """
         Return terms of series for self up to O(x**n) at x=0
         from the positive direction.

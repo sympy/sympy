@@ -1797,7 +1797,7 @@ class Mul(Expr, AssocOp):
             facs = []
             for t, m in ords:
                 n1 = ceiling(n - n0 + m)
-                s = t.nseries(x, 0, n1)
+                s = t.nseries(x, n=n1, logx=logx, cdir=cdir)
                 ns = s.getn()
                 if ns is not None:
                     if ns < n1:  # less than expected

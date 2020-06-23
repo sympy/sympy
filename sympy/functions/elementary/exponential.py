@@ -942,11 +942,12 @@ class log(Function):
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
 
+        res = log(a) + b*logx
         if cdir != 0:
             cdir = self.args[0].dir(x, cdir)
         if a.is_real and a.is_negative and im(cdir) < 0:
-            return log(a) + b*logx - 2*I*S.Pi + Add(*l) + Order(p**n, x)
-        return log(a) + b*logx + Add(*l) + Order(p**n, x)
+            res -= 2*I*S.Pi
+        return res + Add(*l) + Order(p**n, x)
 
     def _eval_as_leading_term(self, x, cdir=0):
         from sympy import I, im

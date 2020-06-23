@@ -1578,7 +1578,8 @@ class Pow(Expr):
             tk = mul(tk, gterms)
             k += S.One
 
-        if not e.is_integer and m.is_zero and f.is_real and f.is_negative and im((b - f).dir(x, cdir)) < 0:
+        if (not e.is_integer and m.is_zero and f.is_real
+            and f.is_negative and im((b - f).dir(x, cdir)) < 0):
             inco, inex = coeff_exp(f**e*exp(-2*e*S.Pi*I), x)
         else:
             inco, inex = coeff_exp(f**e, x)

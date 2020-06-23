@@ -1797,9 +1797,9 @@ class Derivative(Expr):
         # everything was ok
         return Derivative(*newargs)
 
-    def _eval_lseries(self, x, logx):
+    def _eval_lseries(self, x, logx, cdir=0):
         dx = self.variables
-        for term in self.expr.lseries(x, logx=logx):
+        for term in self.expr.lseries(x, logx=logx, cdir=cdir):
             yield self.func(term, *dx)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
