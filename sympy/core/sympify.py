@@ -213,10 +213,15 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     >>> sympify('2**2 / 3 + 5')
     19/3
+
     >>> sympify('2**2 / 3 + 5', evaluate=False)
     2**2/3 + 5
-    >>> sympify(2**2 / 3 + 5, evaluate=False)
-    6.33333333333333
+
+    >>> sympify('4/2+7', evaluate=True)
+    9
+
+    >>> sympify('4/2+7', evaluate=False)
+    4/2 + 7
 
     Extending
     ---------
