@@ -32,7 +32,7 @@ class Density(HermitianOperator):
     >>> from sympy.physics.quantum.density import Density
     >>> d = Density([Ket(0), 0.5], [Ket(1),0.5])
     >>> d
-    'Density'((|0>, 0.5),(|1>, 0.5))
+    Density((|0>, 0.5),(|1>, 0.5))
 
     """
     @classmethod
@@ -137,7 +137,7 @@ class Density(HermitianOperator):
         >>> A = Operator('A')
         >>> d = Density([Ket(0), 0.5], [Ket(1),0.5])
         >>> d.apply_op(A)
-        'Density'((A*|0>, 0.5),(A*|1>, 0.5))
+        Density((A*|0>, 0.5),(A*|1>, 0.5))
 
         """
         new_args = [(op*state, prob) for (state, prob) in self.args]
@@ -194,7 +194,7 @@ class Density(HermitianOperator):
         return represent(self.doit(), **options)
 
     def _print_operator_name_latex(self, printer, *args):
-        return printer._print(r'\rho', *args)
+        return r'\rho'
 
     def _print_operator_name_pretty(self, printer, *args):
         return prettyForm('\N{GREEK SMALL LETTER RHO}')
