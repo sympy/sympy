@@ -259,7 +259,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     convert_xor
     -----------
-    >>> from sympy.abc import x,y
     >>> sympify('x^y',convert_xor=True)
     x**y
     >>> sympify('x^y',convert_xor=False)
@@ -267,7 +266,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     rational
     --------
-    >>> from sympy import sympify
     >>> sympify('0.1',rational=False)
     0.1
     >>> sympify('0.1',rational=True)
