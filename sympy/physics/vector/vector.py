@@ -214,7 +214,7 @@ class Vector(Printable):
                 ol += Dyadic([(v[0][2] * v2[0][2], v[1].z, v2[1].z)])
         return ol
 
-    def _latex(self, printer=None):
+    def _latex(self, printer):
         """Latex Printing method. """
 
         from sympy.physics.vector.printing import VectorLatexPrinter
@@ -250,9 +250,8 @@ class Vector(Printable):
             outstr = outstr[1:]
         return outstr
 
-    def _pretty(self, printer=None):
+    def _pretty(self, printer):
         """Pretty Printing method. """
-        from sympy.physics.vector.printing import VectorPrettyPrinter
         from sympy.printing.pretty.stringpict import prettyForm
         e = self
 
@@ -262,8 +261,7 @@ class Vector(Printable):
                 ar = e.args  # just to shorten things
                 if len(ar) == 0:
                     return unicode(0)
-                settings = printer._settings if printer else {}
-                vp = printer if printer else VectorPrettyPrinter(settings)
+                vp = printer
                 pforms = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     for j in 0, 1, 2:

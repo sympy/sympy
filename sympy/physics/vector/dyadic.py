@@ -1,8 +1,7 @@
 from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
 from sympy.core.compatibility import unicode
 from sympy.printing.defaults import Printable
-from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
-                       VectorStrPrinter)
+from .printing import (VectorLatexPrinter, VectorStrPrinter)
 
 __all__ = ['Dyadic']
 
@@ -153,7 +152,7 @@ class Dyadic(Printable):
     def __neg__(self):
         return self * -1
 
-    def _latex(self, printer=None):
+    def _latex(self, printer):
         ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
@@ -190,7 +189,7 @@ class Dyadic(Printable):
             outstr = outstr[1:]
         return outstr
 
-    def _pretty(self, printer=None):
+    def _pretty(self, printer):
         e = self
 
         class Fake(object):
@@ -198,17 +197,10 @@ class Dyadic(Printable):
 
             def render(self, *args, **kwargs):
                 ar = e.args  # just to shorten things
-                settings = printer._settings if printer else {}
-                if printer:
-                    use_unicode = printer._use_unicode
-                else:
-                    from sympy.printing.pretty.pretty_symbology import (
-                        pretty_use_unicode)
-                    use_unicode = pretty_use_unicode()
-                mpp = printer if printer else VectorPrettyPrinter(settings)
+                mpp = printer
                 if len(ar) == 0:
                     return unicode(0)
-                bar = u"\N{CIRCLED TIMES}" if use_unicode else "|"
+                bar = u"\N{CIRCLED TIMES}" if printer._use_unicode else "|"
                 ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1
