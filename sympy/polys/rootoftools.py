@@ -976,12 +976,12 @@ CRootOf = ComplexRootOf
 
 
 @dispatch(ComplexRootOf, ComplexRootOf)
-def _eval_Eq(lhs, rhs): # noqa:F811
+def _eval_is_eq(lhs, rhs): # noqa:F811
     return sympify(lhs == rhs)
 
 
 @dispatch(ComplexRootOf, Basic)
-def _eval_Eq(lhs, rhs): # noqa:F811
+def _eval_is_eq(lhs, rhs): # noqa:F811
     # CRootOf represents a Root, so if rhs is that root, it should set
     # the expression to zero *and* it should be in the interval of the
     # CRootOf instance. It must also be a number that agrees with the
@@ -989,20 +989,20 @@ def _eval_Eq(lhs, rhs): # noqa:F811
     if not rhs.is_number:
         return None
     if not rhs.is_finite:
-        return S.false
+        return False
     z = lhs.expr.subs(lhs.expr.free_symbols.pop(), rhs).is_zero
     if z is False:  # all roots will make z True but we don't know
         # whether this is the right root if z is True
-        return S.false
+        return False
     o = rhs.is_real, rhs.is_imaginary
     s = lhs.is_real, lhs.is_imaginary
     assert None not in s  # this is part of initial refinement
     if o != s and None not in o:
-        return S.false
+        return False
     re, im = rhs.as_real_imag()
     if lhs.is_real:
         if im:
-            return S.false
+            return False
         i = lhs._get_interval()
         a, b = [Rational(str(_)) for _ in (i.a, i.b)]
         return sympify(a <= rhs and rhs <= b)

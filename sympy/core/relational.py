@@ -1074,29 +1074,27 @@ def _eval_is_ge(lhs, rhs):
 
 
 @dispatch(Basic, Basic)
-def _eval_Eq(lhs, rhs):
+def _eval_is_eq(lhs, rhs):
     return None
 
 
 @dispatch(Tuple, Expr)
-def _eval_Eq(lhs, rhs):# noqa:F811
+def _eval_is_eq(lhs, rhs):# noqa:F811
     return False
 
 
 @dispatch(Tuple, AppliedUndef)
-def _eval_Eq(lhs, rhs):# noqa:F811
+def _eval_is_eq(lhs, rhs):# noqa:F811
     return None
 
 
 @dispatch(Tuple, Symbol)
-def _eval_Eq(lhs, rhs):# noqa:F811
+def _eval_is_eq(lhs, rhs):# noqa:F811
     return None
 
 
 @dispatch(Tuple, Tuple)
-def _eval_Eq(lhs, rhs): # noqa:F811
-    from sympy.core.logic import fuzzy_and, fuzzy_bool
-
+def _eval_is_eq(lhs, rhs): # noqa:F811
     if len(lhs) != len(rhs):
         return False
 
@@ -1152,93 +1150,101 @@ def is_eq(lhs, rhs):
     from sympy.simplify.simplify import clear_coefficients
     from sympy.utilities.iterables import sift
 
-    retval = _eval_Eq(lhs, rhs)
+    retval = _eval_is_eq(lhs, rhs)
     if retval is not None:
         return retval
 
-    retval = _eval_Eq(rhs, lhs)
+    retval = _eval_is_eq(rhs, lhs)
     if retval is not None:
         return retval
-    else:
-        # retval is still None, so go through the equality logic
-        # If expressions have the same structure, they must be equal.
-        if lhs == rhs:
-            return S.true  # e.g. True == True
-        elif all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
-            return S.false # True != False
-        elif not (lhs.is_Symbol or rhs.is_Symbol) and (
-            isinstance(lhs, Boolean) !=
-            isinstance(rhs, Boolean)):
-            return S.false  # only Booleans can equal Booleans
 
-        if lhs.is_infinite or rhs.is_infinite:
-            if fuzzy_xor([lhs.is_infinite, rhs.is_infinite]):
+    retval = lhs._eval_Eq(rhs)
+    if retval is not None:
+        return retval
+
+    retval = rhs._eval_Eq(lhs)
+    if retval is not None:
+        return retval
+
+    # retval is still None, so go through the equality logic
+    # If expressions have the same structure, they must be equal.
+    if lhs == rhs:
+        return S.true  # e.g. True == True
+    elif all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
+        return S.false # True != False
+    elif not (lhs.is_Symbol or rhs.is_Symbol) and (
+        isinstance(lhs, Boolean) !=
+        isinstance(rhs, Boolean)):
+        return S.false  # only Booleans can equal Booleans
+
+    if lhs.is_infinite or rhs.is_infinite:
+        if fuzzy_xor([lhs.is_infinite, rhs.is_infinite]):
+            return S.false
+        if fuzzy_xor([lhs.is_extended_real, rhs.is_extended_real]):
+            return S.false
+        if fuzzy_and([lhs.is_extended_real, rhs.is_extended_real]):
+            return fuzzy_xor([lhs.is_extended_positive, fuzzy_not(rhs.is_extended_positive)])
+
+        # Try to split real/imaginary parts and equate them
+        I = S.ImaginaryUnit
+
+        def split_real_imag(expr):
+            real_imag = lambda t: (
+                'real' if t.is_extended_real else
+                'imag' if (I * t).is_extended_real else None)
+            return sift(Add.make_args(expr), real_imag)
+
+        lhs_ri = split_real_imag(lhs)
+        if not lhs_ri[None]:
+            rhs_ri = split_real_imag(rhs)
+            if not rhs_ri[None]:
+                eq_real = Eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']))
+                eq_imag = Eq(I * Add(*lhs_ri['imag']), I * Add(*rhs_ri['imag']))
+                return fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
+
+        # Compare e.g. zoo with 1+I*oo by comparing args
+        arglhs = arg(lhs)
+        argrhs = arg(rhs)
+        # Guard against Eq(nan, nan) -> False
+        if not (arglhs == S.NaN and argrhs == S.NaN):
+            return fuzzy_bool(Eq(arglhs, argrhs))
+
+    if all(isinstance(i, Expr) for i in (lhs, rhs)):
+        # see if the difference evaluates
+        dif = lhs - rhs
+        z = dif.is_zero
+        if z is not None:
+            if z is False and dif.is_commutative:  # issue 10728
                 return S.false
-            if fuzzy_xor([lhs.is_extended_real, rhs.is_extended_real]):
-                return S.false
-            if fuzzy_and([lhs.is_extended_real, rhs.is_extended_real]):
-                return fuzzy_xor([lhs.is_extended_positive, fuzzy_not(rhs.is_extended_positive)])
+            if z:
+                return S.true
 
-            # Try to split real/imaginary parts and equate them
-            I = S.ImaginaryUnit
+        n2 = _n2(lhs, rhs)
+        if n2 is not None:
+            return _sympify(n2 == 0)
 
-            def split_real_imag(expr):
-                real_imag = lambda t: (
-                    'real' if t.is_extended_real else
-                    'imag' if (I * t).is_extended_real else None)
-                return sift(Add.make_args(expr), real_imag)
-
-            lhs_ri = split_real_imag(lhs)
-            if not lhs_ri[None]:
-                rhs_ri = split_real_imag(rhs)
-                if not rhs_ri[None]:
-                    eq_real = Eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']))
-                    eq_imag = Eq(I * Add(*lhs_ri['imag']), I * Add(*rhs_ri['imag']))
-                    return fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
-
-            # Compare e.g. zoo with 1+I*oo by comparing args
-            arglhs = arg(lhs)
-            argrhs = arg(rhs)
-            # Guard against Eq(nan, nan) -> False
-            if not (arglhs == S.NaN and argrhs == S.NaN):
-                return fuzzy_bool(Eq(arglhs, argrhs))
-
-        if all(isinstance(i, Expr) for i in (lhs, rhs)):
-            # see if the difference evaluates
-            dif = lhs - rhs
-            z = dif.is_zero
-            if z is not None:
-                if z is False and dif.is_commutative:  # issue 10728
-                    return S.false
-                if z:
-                    return S.true
-
-            n2 = _n2(lhs, rhs)
-            if n2 is not None:
-                return _sympify(n2 == 0)
-
-            # see if the ratio evaluates
-            n, d = dif.as_numer_denom()
-            rv = None
-            if n.is_zero:
-                rv = d.is_nonzero
-            elif n.is_finite:
-                if d.is_infinite:
-                    rv = True
-                elif n.is_zero is False:
-                    rv = d.is_infinite
-                    if rv is None:
-                        # if the condition that makes the denominator
-                        # infinite does not make the original expression
-                        # True then False can be returned
-                        l, r = clear_coefficients(d, S.Infinity)
-                        args = [_.subs(l, r) for _ in (lhs, rhs)]
-                        if args != [lhs, rhs]:
-                            rv = fuzzy_bool(Eq(*args))
-                            if rv is True:
-                                rv = None
-            elif any(a.is_infinite for a in Add.make_args(n)):
-                # (inf or nan)/x != 0
-                rv = S.false
-            if rv is not None:
-                return rv
+        # see if the ratio evaluates
+        n, d = dif.as_numer_denom()
+        rv = None
+        if n.is_zero:
+            rv = d.is_nonzero
+        elif n.is_finite:
+            if d.is_infinite:
+                rv = True
+            elif n.is_zero is False:
+                rv = d.is_infinite
+                if rv is None:
+                    # if the condition that makes the denominator
+                    # infinite does not make the original expression
+                    # True then False can be returned
+                    l, r = clear_coefficients(d, S.Infinity)
+                    args = [_.subs(l, r) for _ in (lhs, rhs)]
+                    if args != [lhs, rhs]:
+                        rv = fuzzy_bool(Eq(*args))
+                        if rv is True:
+                            rv = None
+        elif any(a.is_infinite for a in Add.make_args(n)):
+            # (inf or nan)/x != 0
+            rv = S.false
+        if rv is not None:
+            return rv

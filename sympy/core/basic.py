@@ -1852,6 +1852,8 @@ class Basic(metaclass=ManagedProperties):
 
         return obj
 
+    def _eval_Eq(self, other):
+        return None
 
 class Atom(Basic):
     """

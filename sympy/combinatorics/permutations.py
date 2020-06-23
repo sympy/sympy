@@ -3012,7 +3012,7 @@ class AppliedPermutation(Expr):
 
 
 @dispatch(Permutation, Permutation)
-def _eval_Eq(lhs, rhs):
+def _eval_is_eq(lhs, rhs):
     if lhs._size != rhs._size:
         return None
     return lhs._array_form == rhs._array_form

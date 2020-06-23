@@ -3273,8 +3273,8 @@ class NaN(Number, metaclass=Singleton):
 nan = S.NaN
 
 @dispatch(NaN, Expr)
-def _eval_Eq(a, b): # noqa:F811
-    return S.false
+def _eval_is_eq(a, b): # noqa:F811
+    return False
 
 class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     r"""Complex infinity.
@@ -3888,8 +3888,8 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
 I = S.ImaginaryUnit
 
 @dispatch(Tuple, Number)
-def _eval_Eq(self, other): # noqa: F811
-    return S.false
+def _eval_is_eq(self, other): # noqa: F811
+    return False
 
 def sympify_fractions(f):
     return Rational(f.numerator, f.denominator, 1)
