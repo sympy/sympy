@@ -213,13 +213,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     >>> sympify('2**2 / 3 + 5')
     19/3
-
     >>> sympify('2**2 / 3 + 5', evaluate=False)
     2**2/3 + 5
-
     >>> sympify('4/2+7', evaluate=True)
     9
-
     >>> sympify('4/2+7', evaluate=False)
     4/2 + 7
 
@@ -272,7 +269,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     >>> sympify('x^y',convert_xor=True)
     x**y
-
     >>> sympify('x^y',convert_xor=False)
     x ^ y
 
@@ -281,7 +277,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     >>> sympify('0.1',rational=False)
     0.1
-    
     >>> sympify('0.1',rational=True)
     1/10
 
