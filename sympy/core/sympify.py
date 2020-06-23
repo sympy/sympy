@@ -102,7 +102,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     .. warning::
         Note that this function uses ``eval``, and thus shouldn't be used on
-        sunsanitized input.
+        unsanitized input.
 
     If the argument is already a type that SymPy understands, it will do
     nothing but return that value. This can be used at the beginning of a
@@ -257,6 +257,22 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     The keywords ``rational`` and ``convert_xor`` are only used
     when the input is a string.
 
+    convert_xor
+    -----------
+    >>> from sympy.abc import x,y
+    >>> sympify('x^y',convert_xor=True)
+    x**y
+    >>> sympify('x^y',convert_xor=False)
+    x ^ y
+
+    rational
+    --------
+    >>> from sympy import sympify
+    >>> sympify('0.1',rational=False)
+    0.1
+    >>> sympify('0.1',rational=True)
+    1/10
+
     Sometimes autosimplification during sympification results in expressions
     that are very different in structure than what was entered. Until such
     autosimplification is no longer done, the ``kernS`` function might be of
@@ -279,28 +295,28 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     a :
         - any object defined in SymPy
         - standard numeric python types: int, long, float, Decimal
-        - strings (like "0.09" or "2e-19")
+        - strings (like "0.09", "2e-19" or 'sin(x)')
         - booleans, including ``None`` (will leave ``None`` unchanged)
         - dict, lists, sets or tuples containing any of the above
 
     convert_xor : boolean, optional
         If true, treats XOR, $^$, as exponentiation, $**$.
         If False, treats XOR, $^$ as XOR itself.
-        Used when input is a string.
+        Used only when input is a string.
 
     locals : any object defined in SymPy, optional
         In order to have strings be recognized it can be imported
-        into a namespace dictionary and passed as locals
+        into a namespace dictionary and passed as locals.
 
     strict : boolean, optional
         If the option strict is set to True, only the types for which
         an explicit conversion has been defined are converted. In the
-        other cases, a SympifyError is raised
+        other cases, a SympifyError is raised.
 
     rational : boolean, optional
         If true, converts floats into Rational.
         If false, it lets floats remain as it is.
-        Used when input is a string.
+        Used only when input is a string.
 
     evaluate : boolean, optional
         If False, then arithmetic and operators will be converted into
