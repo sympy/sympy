@@ -118,24 +118,38 @@ def test_eigen():
     assert Matrix([]).eigenvects() == []
 
     # issue 15119
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 2], [0, 4], [0, 0]]).eigenvals())
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 0], [3, 4], [5, 6]]).eigenvals())
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals())
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals())
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals(error_when_incomplete = False))
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals(error_when_incomplete = False))
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 2], [0, 4], [0, 0]]).eigenvals())
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 0], [3, 4], [5, 6]]).eigenvals())
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals())
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals())
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals(
+               error_when_incomplete = False))
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals(
+               error_when_incomplete = False))
 
-    # issue 15125
-    from sympy.core.function import count_ops
-    q = Symbol("q", positive = True)
-    m = Matrix([[-2, exp(-q), 1], [exp(q), -2, 1], [1, 1, -2]])
-    assert count_ops(m.eigenvals(simplify=False)) > count_ops(m.eigenvals(simplify=True))
-    assert count_ops(m.eigenvals(simplify=lambda x: x)) > count_ops(m.eigenvals(simplify=True))
-
+    m = Matrix([[1, 2], [3, 4]])
     assert isinstance(m.eigenvals(simplify=True, multiple=False), dict)
     assert isinstance(m.eigenvals(simplify=True, multiple=True), list)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=False), dict)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=True), list)
+
+
+@slow
+def test_eigen_slow():
+    # issue 15125
+    from sympy.core.function import count_ops
+    q = Symbol("q", positive = True)
+    m = Matrix([[-2, exp(-q), 1], [exp(q), -2, 1], [1, 1, -2]])
+    assert count_ops(m.eigenvals(simplify=False)) > \
+        count_ops(m.eigenvals(simplify=True))
+    assert count_ops(m.eigenvals(simplify=lambda x: x)) > \
+        count_ops(m.eigenvals(simplify=True))
 
 
 def test_float_eigenvals():
