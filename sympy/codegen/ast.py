@@ -125,6 +125,8 @@ There is a function constructing a loop (or a complete function) like this in
 from typing import Any, Dict, List
 
 from collections import defaultdict
+
+from sympy import Lt, Le, Ge, Gt
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
@@ -1491,6 +1493,10 @@ class Variable(Node):
             raise TypeError("Invalid comparison %s < %s" % (self, rhs))
         return op(self, rhs, evaluate=False)
 
+    __lt__ = lambda self, other: self._relation(other, Lt)
+    __le__ = lambda self, other: self._relation(other, Le)
+    __ge__ = lambda self, other: self._relation(other, Ge)
+    __gt__ = lambda self, other: self._relation(other, Gt)
 
 class Pointer(Variable):
     """ Represents a pointer. See ``Variable``.

@@ -1852,9 +1852,6 @@ class Basic(metaclass=ManagedProperties):
 
         return obj
 
-    def _eval_Eq(self, other):
-        return None
-
 class Atom(Basic):
     """
     A parent class for atomic things. An atom is an expression with no subexpressions.

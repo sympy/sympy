@@ -8,6 +8,7 @@ from sympy.polys.domains.modularinteger import ModularIntegerFactory
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
+from sympy.polys.domains.groundtypes import SymPyInteger
 
 @public
 class FiniteField(Field, SimpleDomain):
@@ -57,7 +58,6 @@ class FiniteField(Field, SimpleDomain):
         return self
 
     def to_sympy(self, a):
-        from sympy.polys.domains.groundtypes import SymPyInteger
         """Convert ``a`` to a SymPy object. """
         return SymPyInteger(int(a))
 

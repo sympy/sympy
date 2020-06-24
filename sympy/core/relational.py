@@ -25,8 +25,7 @@ from .symbol import Symbol
 
 def _nontrivBool(side):
     return isinstance(side, Boolean) and \
-        not isinstance(side, Atom)
-
+           not isinstance(side, Atom)
 
 
 # Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
@@ -1024,11 +1023,10 @@ class StrictLessThan(_Less):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
-       return is_lt(lhs, rhs)
+        return is_lt(lhs, rhs)
 
 
 Lt = StrictLessThan
-
 
 # A class-specific (not object-specific) data item used for a minor speedup.
 # It is defined here, rather than directly in the class, because the classes
@@ -1064,11 +1062,6 @@ def _n2(a, b):
 
 
 @dispatch(Expr, Expr)
-def _eval_is_le(lhs, rhs):
-    return None
-
-
-@dispatch(Expr, Expr)
 def _eval_is_ge(lhs, rhs):
     return None
 
@@ -1079,22 +1072,22 @@ def _eval_is_eq(lhs, rhs):
 
 
 @dispatch(Tuple, Expr)
-def _eval_is_eq(lhs, rhs):# noqa:F811
+def _eval_is_eq(lhs, rhs):  # noqa:F811
     return False
 
 
 @dispatch(Tuple, AppliedUndef)
-def _eval_is_eq(lhs, rhs):# noqa:F811
+def _eval_is_eq(lhs, rhs):  # noqa:F811
     return None
 
 
 @dispatch(Tuple, Symbol)
-def _eval_is_eq(lhs, rhs):# noqa:F811
+def _eval_is_eq(lhs, rhs):  # noqa:F811
     return None
 
 
 @dispatch(Tuple, Tuple)
-def _eval_is_eq(lhs, rhs): # noqa:F811
+def _eval_is_eq(lhs, rhs):  # noqa:F811
     if len(lhs) != len(rhs):
         return False
 
@@ -1102,18 +1095,83 @@ def _eval_is_eq(lhs, rhs): # noqa:F811
 
 
 def is_lt(lhs, rhs):
+    """Fuzzy bool for lhs is strictly less than rhs.
+
+    See the docstring for is_ge for more
+    """
     return fuzzy_not(is_ge(lhs, rhs))
 
 
 def is_gt(lhs, rhs):
+    """Fuzzy bool for lhs is strictly greater than rhs.
+
+    See the docstring for is_ge for more
+    """
     return fuzzy_not(is_le(lhs, rhs))
 
 
 def is_le(lhs, rhs):
+    """Fuzzy bool for lhs is less than or equal to rhs.
+
+    See the docstring for is_ge for more
+    """
     return is_ge(rhs, lhs)
 
 
 def is_ge(lhs, rhs):
+    """
+    Fuzzy bool for lhs is greater than or equal to rhs.
+
+    Returns True if lhs is greater than or equal to rhs
+    Returns False if lhs is not greater than rhs
+    Returns None if lhs cannot be compared to rhs, or if the comparison is indeterminate
+
+    is_le calls is_ge swapping rhs and lhs
+    is_lt calls is_ge and then fuzzy nots the result
+    is_gt calls is_le and fuzzy nots the result
+
+    so, to override inequality you just need to write an _eval_is_ge
+    using multiple dispatch
+
+    Examples
+    ========
+
+    >>> from sympy.core.relational import is_ge
+    >>> from sympy.core.sympify import _sympify
+    >>> is_ge(_sympify(2), _sympify(0))
+    True
+
+    >>> from sympy.core.relational import is_ge
+    >>> from sympy.core.sympify import _sympify
+    >>> is_ge(_sympify(0), _sympify(2))
+    False
+
+    >>> from sympy.abc import x
+    >>> from sympy.core.relational import is_ge
+    >>> from sympy.core.sympify import _sympify
+    >>> is_ge(_sympify(0), x)
+
+    >>> from sympy.core.relational import is_gt
+    >>> from sympy.core.sympify import _sympify
+    >>> is_gt(_sympify(2), _sympify(0))
+    True
+
+    >>> from sympy.core.relational import is_gt
+    >>> from sympy.core.sympify import _sympify
+    >>> is_gt(_sympify(0), _sympify(2))
+    False
+
+    >>> from sympy.core.relational import is_lt
+    >>> from sympy.core.sympify import _sympify
+    >>> is_lt(_sympify(0), _sympify(2))
+    True
+
+    >>> from sympy.core.relational import is_lt
+    >>> from sympy.core.sympify import _sympify
+    >>> is_lt(_sympify(2), _sympify(0))
+    False
+
+   """
     if not (isinstance(lhs, Expr) and isinstance(rhs, Expr)):
         raise TypeError("Can only compare inequalities with Expr")
 
@@ -1131,25 +1189,66 @@ def is_ge(lhs, rhs):
             return _sympify(n2 >= 0)
         if lhs.is_extended_real and rhs.is_extended_real:
             if (lhs.is_infinite and lhs.is_extended_positive) \
-                     or (rhs.is_infinite and rhs.is_extended_negative):
+                or (rhs.is_infinite and rhs.is_extended_negative):
                 return True
             diff = lhs - rhs
             if diff is not S.NaN:
                 rv = diff.is_extended_nonnegative
                 if rv is not None:
-                   return rv
+                    return rv
 
 
 def is_neq(lhs, rhs):
+    """Fuzzy bool for lhs does not equal rhs.
+
+    See the docstring for is_eq for more
+    """
     return fuzzy_not(is_eq(lhs, rhs))
 
 
 def is_eq(lhs, rhs):
+    """
+    Fuzzy boolean used to check if lhs is equal, mathematically
+    to rhs.
+    Returns True or False if the two are comparable, or None if the two are incomparable
+    or if the comparison is indeterminate.
+
+     To override the default equality logic, use _eval_is_eq with multiple dispatch.
+     is_ne, fuzzy nots is_eq so, to override the logic of is_ne, you will need to override _eval_is_eq
+
+    Examples
+    ========
+
+    >>> from sympy.core.relational import is_eq
+    >>> from sympy.core.sympify import _sympify
+    >>> is_eq(_sympify(0), _sympify(0))
+    True
+
+    >>> from sympy.core.relational import is_neq
+    >>> from sympy.core.sympify import _sympify
+    >>> is_neq(_sympify(0), _sympify(0))
+    False
+
+    >>> from sympy.core.relational import is_eq
+    >>> from sympy.core.sympify import _sympify
+    >>> is_eq(_sympify(0), _sympify(2))
+    False
+
+    >>> from sympy.core.relational import is_neq
+    >>> from sympy.core.sympify import _sympify
+    >>> is_neq(_sympify(0), _sympify(2))
+    True
+
+    >>> from sympy.abc import x
+    >>> from sympy.core.relational import is_eq
+    >>> from sympy.core.sympify import _sympify
+    >>> is_eq(_sympify(0), x)
+
+    """
     from sympy.core.add import Add
     from sympy.functions.elementary.complexes import arg
     from sympy.simplify.simplify import clear_coefficients
     from sympy.utilities.iterables import sift
-
 
     retval = _eval_is_eq(lhs, rhs)
     if retval is not None:
@@ -1160,20 +1259,24 @@ def is_eq(lhs, rhs):
         if retval is not None:
             return retval
 
-    retval = lhs._eval_Eq(rhs)
-    if retval is not None:
-        return retval
+    eval_func = getattr(lhs, '_eval_Eq', None)
+    if eval_func is not None:
+        retval = eval_func(rhs)
+        if retval is not None:
+            return retval
 
-    retval = rhs._eval_Eq(lhs)
-    if retval is not None:
-        return retval
+    eval_func = getattr(rhs, '_eval_Eq', None)
+    if eval_func is not None:
+        retval = eval_func(lhs)
+        if retval is not None:
+            return retval
 
     # retval is still None, so go through the equality logic
     # If expressions have the same structure, they must be equal.
     if lhs == rhs:
         return True  # e.g. True == True
     elif all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
-        return False # True != False
+        return False  # True != False
     elif not (lhs.is_Symbol or rhs.is_Symbol) and (
         isinstance(lhs, Boolean) !=
         isinstance(rhs, Boolean)):

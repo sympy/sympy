@@ -7,6 +7,7 @@ from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
     symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered
+from sympy.core.relational import is_le
 from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -977,7 +978,8 @@ CRootOf = ComplexRootOf
 
 @dispatch(ComplexRootOf, ComplexRootOf)
 def _eval_is_eq(lhs, rhs): # noqa:F811
-    return sympify(lhs == rhs)
+    # if we use is_eq to check here, we get infinite recurion
+    return lhs == rhs
 
 
 @dispatch(ComplexRootOf, Basic)
@@ -1009,9 +1011,7 @@ def _eval_is_eq(lhs, rhs): # noqa:F811
     i = lhs._get_interval()
     r1, r2, i1, i2 = [Rational(str(j)) for j in (
         i.ax, i.bx, i.ay, i.by)]
-    return sympify((
-                       r1 <= re and re <= r2) and (
-                       i1 <= im and im <= i2))
+    return is_le(r1, re) and is_le(re,r2) and is_le(i1,im) and is_le(im,i2)
 
 
 @public

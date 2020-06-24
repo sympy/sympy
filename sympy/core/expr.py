@@ -24,9 +24,9 @@ class Expr(Basic, EvalfMixin):
     pattern matching, substitutions, etc).
 
     If you want to override the comparisons of expressions:
-    Should use _eval_is_ge for inequality, or _eval_Eq, with multiple dispatch.
+    Should use _eval_is_ge for inequality, or _eval_is_eq, with multiple dispatch.
     _eval_is_ge return true if x >= y, false if x < y, and None if the two types
-    cannot be compared.
+    are not comparable or the comparison is indeterminate
 
     See Also
     ========
