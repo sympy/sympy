@@ -219,6 +219,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     9
     >>> sympify('4/2+7', evaluate=False)
     4/2 + 7
+    >>> sympify(4/2+7, evaluate=False)
+    9.00000000000000
 
     Extending
     ---------
