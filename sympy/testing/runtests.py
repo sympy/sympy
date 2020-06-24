@@ -29,6 +29,7 @@ import doctest as pdoctest  # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
 import random
 import subprocess
+import shutil
 import signal
 import stat
 import tempfile
@@ -38,7 +39,6 @@ from contextlib import contextmanager
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import (exec_, PY3, unwrap,
         unicode)
-from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 
 IS_WINDOWS = (os.name == 'nt')
@@ -1529,7 +1529,7 @@ class SymPyDocTests(object):
         """
 
         for executable in executables:
-            if not find_executable(executable):
+            if not shutil.which(executable):
                 raise DependencyError("Could not find %s" % executable)
 
         for module in modules:
