@@ -2894,7 +2894,7 @@ def Normal(name, mean, std):
     Examples
     ========
 
-    >>> from sympy.stats import Normal, density, E, std, cdf, skewness, quantile
+    >>> from sympy.stats import Normal, density, E, std, cdf, skewness, quantile, marginal_distribution
     >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu")
@@ -2933,7 +2933,6 @@ def Normal(name, mean, std):
     2
 
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
-    >>> from sympy.stats.joint_rv import marginal_distribution
     >>> pprint(density(m)(y, z), use_unicode=False)
            /1   y\ /2*y   z\   /    z\ /  y   2*z    \
            |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
