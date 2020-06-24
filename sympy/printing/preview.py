@@ -14,7 +14,6 @@ except ImportError:
 
 from sympy.core.compatibility import unicode, u_decode
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.misc import find_executable
 from .latex import latex
 
 __doctest_requires__ = {('preview',): ['pyglet']}
@@ -126,7 +125,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             try:
                 for candidate in candidates[output]:
-                    path = find_executable(candidate)
+                    path = shutil.which(candidate)
                     if path is not None:
                         viewer = path
                         break
@@ -145,7 +144,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             if outputbuffer is None:
                 raise ValueError("outputbuffer has to be a BytesIO "
                                  "compatible object if viewer=\"BytesIO\"")
-        elif viewer not in special and not find_executable(viewer):
+        elif viewer not in special and not shutil.which(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
 
@@ -183,7 +182,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
 
-        if not find_executable('latex'):
+        if not shutil.which('latex'):
             raise RuntimeError("latex program is not installed")
 
         try:
@@ -222,7 +221,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 cmd = ["dvisvgm"]
             else:
                 cmd = ["dvi" + output]
-            if not find_executable(cmd[0]):
+            if not shutil.which(cmd[0]):
                 raise RuntimeError("%s is not installed" % cmd[0])
             try:
                 if dvioptions is not None:
