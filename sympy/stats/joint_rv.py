@@ -202,44 +202,6 @@ class JointDistributionHandmade(JointDistribution, NamedArgsMixin):
     def set(self):
         return self.args[1]
 
-def marginal_distribution(rv, *indices):
-    """
-    Marginal distribution function of a joint random variable.
-
-    Parameters
-    ==========
-
-    rv: A random variable with a joint probability distribution.
-    indices: component indices or the indexed random symbol
-        for whom the joint distribution is to be calculated
-
-    Returns
-    =======
-
-    A Lambda expression n `sym`.
-
-    Examples
-    ========
-
-    >>> from sympy.stats.crv_types import Normal
-    >>> from sympy.stats.joint_rv import marginal_distribution
-    >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
-    >>> marginal_distribution(m, m[0])(1)
-    1/(2*sqrt(pi))
-
-    """
-    indices = list(indices)
-    for i in range(len(indices)):
-        if isinstance(indices[i], Indexed):
-            indices[i] = indices[i].args[1]
-    prob_space = rv.pspace
-    if not indices:
-        raise ValueError(
-            "At least one component for marginal density is needed.")
-    if hasattr(prob_space.distribution, 'marginal_distribution'):
-        return prob_space.distribution.marginal_distribution(indices, rv.symbol)
-    return prob_space.marginal_distribution(*indices)
-
 
 class CompoundDistribution(Basic, NamedArgsMixin):
     """

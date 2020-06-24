@@ -4,9 +4,7 @@ from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplif
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.stats import density, median
-from sympy.stats.crv_types import Normal
-from sympy.stats.joint_rv import marginal_distribution
+from sympy.stats import density, median, marginal_distribution, Normal
 from sympy.stats.joint_rv_types import JointRV, MultivariateNormalDistribution
 from sympy.testing.pytest import raises, XFAIL
 
