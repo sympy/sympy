@@ -591,7 +591,7 @@ class Abs(Function):
                 return self.args[0]**(exponent - 1)*self
         return
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         direction = self.args[0].leadterm(x)[0]
         if direction.has(log(x)):
             direction = direction.subs(log(x), logx)
