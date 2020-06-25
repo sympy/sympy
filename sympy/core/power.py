@@ -1589,7 +1589,7 @@ class Pow(Expr):
             ex = e1 + inex
             res += terms[e1]*inco*x**(ex)
 
-        if (res - self).cancel() == S.Zero:
+        if (res - self).subs(x, 3) is S.Zero:
             return res
 
         return res + O(x**n, x)

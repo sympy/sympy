@@ -624,6 +624,10 @@ def test_issue_13462():
     assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x*(x**2 - 3*x + 2)/24
 
 
+def test_issue_14514():
+    assert limit((1/(log(x)**log(x)))**(1/x), x, oo) == 1
+
+
 def test_issue_14574():
     assert limit(sqrt(x)*cos(x - x**2) / (x + 1), x, oo) == 0
 
@@ -645,6 +649,10 @@ def test_issue_15146():
     e = (x/2) * (-2*x**3 - 2*(x**3 - 1) * x**2 * digamma(x**3 + 1) + \
         2*(x**3 - 1) * x**2 * digamma(x**3 + x + 1) + x + 3)
     assert limit(e, x, oo) == S(1)/3
+
+
+def test_issue_15282():
+    assert limit((x**2000 - (x + 1)**2000) / x**1999, x, oo) == -2000
 
 
 def test_issue_15984():
@@ -696,6 +704,10 @@ def test_issue_14556():
 
 def test_issue_14811():
     assert limit(((1 + ((S(2)/3)**(x + 1)))**(2**x))/(2**((S(4)/3)**(x - 1))), x, oo) == oo
+
+
+def test_issue_16714():
+    assert limit(((x**(x + 1) + (x + 1)**x) / x**(x + 1))**x, x, oo) == exp(exp(1))
 
 
 def test_issue_16722():
