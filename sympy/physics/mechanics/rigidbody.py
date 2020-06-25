@@ -150,7 +150,7 @@ class RigidBody(object):
         >>> Inertia_tuple = (I, P)
         >>> B = RigidBody('B', P, N, M, Inertia_tuple)
         >>> B.linear_momentum(N)
-        M*v*N.x
+        M(t)*v(t)*N.x
 
         """
 
@@ -191,7 +191,7 @@ class RigidBody(object):
         >>> I = outer(b.x, b.x)
         >>> B = RigidBody('B', P, b, M, (I, P))
         >>> B.angular_momentum(P, N)
-        omega*b.x
+        omega(t)*b.x
 
         """
         I = self.central_inertia

@@ -102,7 +102,7 @@ class Particle(object):
         >>> A = Particle('A', P, m)
         >>> P.set_vel(N, v * N.x)
         >>> A.linear_momentum(N)
-        m*v*N.x
+        m(t)*v(t)*N.x
 
         """
 
@@ -141,7 +141,7 @@ class Particle(object):
         >>> P = Particle('P', A, m)
         >>> P.point.set_vel(N, v * N.y)
         >>> P.angular_momentum(O, N)
-        m*r*v*N.z
+        m(t)*r(t)*v(t)*N.z
 
         """
 

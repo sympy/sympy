@@ -28,7 +28,7 @@ class Point(object):
     >>> u1, u2, u3 = dynamicsymbols('u1 u2 u3')
     >>> O.set_vel(N, u1 * N.x + u2 * N.y + u3 * N.z)
     >>> O.acc(N)
-    u1'*N.x + u2'*N.y + u3'*N.z
+    Derivative(u1(t), t)*N.x + Derivative(u2(t), t)*N.y + Derivative(u3(t), t)*N.z
 
     symbols() can be used to create multiple Points in a single step, for example:
 
@@ -42,7 +42,7 @@ class Point(object):
     >>> A.set_vel(N, u1 * N.x + u2 * N.y)
     >>> B.set_vel(N, u2 * N.x + u1 * N.y)
     >>> A.acc(N) - B.acc(N)
-    (u1' - u2')*N.x + (-u1' + u2')*N.y
+    (Derivative(u1(t), t) - Derivative(u2(t), t))*N.x + (-Derivative(u1(t), t) + Derivative(u2(t), t))*N.y
 
     """
 
@@ -123,7 +123,7 @@ class Point(object):
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
         >>> P.a1pt_theory(O, N, B)
-        (-25*q + q'')*B.x + q2''*B.y - 10*q'*B.z
+        (-25*q(t) + Derivative(q(t), (t, 2)))*B.x + Derivative(q2(t), (t, 2))*B.y - 10*Derivative(q(t), t)*B.z
 
         """
 
@@ -172,7 +172,7 @@ class Point(object):
         >>> P = O.locatenew('P', 10 * B.x)
         >>> O.set_vel(N, 5 * N.x)
         >>> P.a2pt_theory(O, N, B)
-        - 10*q'**2*B.x + 10*q''*B.y
+        - 10*Derivative(q(t), t)**2*B.x + 10*Derivative(q(t), (t, 2))*B.y
 
         """
 
@@ -400,7 +400,7 @@ class Point(object):
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
         >>> P.v1pt_theory(O, N, B)
-        q'*B.x + q2'*B.y - 5*q*B.z
+        Derivative(q(t), t)*B.x + Derivative(q2(t), t)*B.y - 5*q(t)*B.z
 
         """
 
@@ -446,7 +446,7 @@ class Point(object):
         >>> P = O.locatenew('P', 10 * B.x)
         >>> O.set_vel(N, 5 * N.x)
         >>> P.v2pt_theory(O, N, B)
-        5*N.x + 10*q'*B.y
+        5*N.x + 10*Derivative(q(t), t)*B.y
 
         """
 

@@ -71,9 +71,9 @@ def express(expr, frame, frame2=None, variables=False):
     >>> d = outer(N.x, N.x)
     >>> from sympy.physics.vector import express
     >>> express(d, B, N)
-    cos(q)*(B.x|N.x) - sin(q)*(B.y|N.x)
+    cos(q(t))*(B.x|N.x) - sin(q(t))*(B.y|N.x)
     >>> express(B.x, N)
-    cos(q)*N.x + sin(q)*N.y
+    cos(q(t))*N.x + sin(q(t))*N.y
     >>> express(N[0], B, variables=True)
     B_x*cos(q(t)) - B_y*sin(q(t))
 
@@ -169,14 +169,14 @@ def time_derivative(expr, frame, order=1):
     >>> A.set_ang_vel(N, 10*A.x)
     >>> from sympy.physics.vector import time_derivative
     >>> time_derivative(v, N)
-    u1'*N.x
+    Derivative(u1(t), t)*N.x
     >>> time_derivative(u1*A[0], N)
     N_x*Derivative(u1(t), t)
     >>> B = N.orientnew('B', 'Axis', [u1, N.z])
     >>> from sympy.physics.vector import outer
     >>> d = outer(N.x, N.x)
     >>> time_derivative(d, B)
-    - u1'*(N.y|N.x) - u1'*(N.x|N.y)
+    - Derivative(u1(t), t)*(N.y|N.x) - Derivative(u1(t), t)*(N.x|N.y)
 
     """
 
@@ -425,7 +425,7 @@ def get_motion_params(frame, **kwargs):
     >>> v1, v2, v3 = dynamicsymbols('v1 v2 v3')
     >>> v = v1*R.x + v2*R.y + v3*R.z
     >>> get_motion_params(R, position = v)
-    (v1''*R.x + v2''*R.y + v3''*R.z, v1'*R.x + v2'*R.y + v3'*R.z, v1*R.x + v2*R.y + v3*R.z)
+    (Derivative(v1(t), (t, 2))*R.x + Derivative(v2(t), (t, 2))*R.y + Derivative(v3(t), (t, 2))*R.z, Derivative(v1(t), t)*R.x + Derivative(v2(t), t)*R.y + Derivative(v3(t), t)*R.z, v1(t)*R.x + v2(t)*R.y + v3(t)*R.z)
     >>> a, b, c = symbols('a b c')
     >>> v = a*R.x + b*R.y + c*R.z
     >>> get_motion_params(R, velocity = v)

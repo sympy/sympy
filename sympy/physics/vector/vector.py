@@ -217,8 +217,6 @@ class Vector(Printable):
     def _latex(self, printer):
         """Latex Printing method. """
 
-        from sympy.physics.vector.printing import VectorLatexPrinter
-
         ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
@@ -234,7 +232,7 @@ class Vector(Printable):
                 elif ar[i][0][j] != 0:
                     # If the coefficient of the basis vector is not 1 or -1;
                     # also, we might wrap it in parentheses, for readability.
-                    arg_str = VectorLatexPrinter().doprint(ar[i][0][j])
+                    arg_str = printer._print(ar[i][0][j])
                     if isinstance(ar[i][0][j], Add):
                         arg_str = "(%s)" % arg_str
                     if arg_str[0] == '-':
@@ -261,23 +259,22 @@ class Vector(Printable):
                 ar = e.args  # just to shorten things
                 if len(ar) == 0:
                     return unicode(0)
-                vp = printer
                 pforms = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     for j in 0, 1, 2:
                         # if the coef of the basis vector is 1, we skip the 1
                         if ar[i][0][j] == 1:
-                            pform = vp._print(ar[i][1].pretty_vecs[j])
+                            pform = printer._print(ar[i][1].pretty_vecs[j])
                         # if the coef of the basis vector is -1, we skip the 1
                         elif ar[i][0][j] == -1:
-                            pform = vp._print(ar[i][1].pretty_vecs[j])
+                            pform = printer._print(ar[i][1].pretty_vecs[j])
                             pform = prettyForm(*pform.left(" - "))
                             bin = prettyForm.NEG
                             pform = prettyForm(binding=bin, *pform)
                         elif ar[i][0][j] != 0:
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
-                            pform = vp._print(ar[i][0][j])
+                            pform = printer._print(ar[i][0][j])
 
                             if isinstance(ar[i][0][j], Add):
                                 tmp = pform.parens()
@@ -343,8 +340,6 @@ class Vector(Printable):
 
     def _sympystr(self, printer, order=True):
         """Printing method. """
-        from sympy.physics.vector.printing import VectorStrPrinter
-
         if not order or len(self.args) == 1:
             ar = list(self.args)
         elif len(self.args) == 0:
@@ -367,7 +362,7 @@ class Vector(Printable):
                 elif ar[i][0][j] != 0:
                     # If the coefficient of the basis vector is not 1 or -1;
                     # also, we might wrap it in parentheses, for readability.
-                    arg_str = VectorStrPrinter().doprint(ar[i][0][j])
+                    arg_str = printer._print(ar[i][0][j])
                     if isinstance(ar[i][0][j], Add):
                         arg_str = "(%s)" % arg_str
                     if arg_str[0] == '-':
@@ -518,7 +513,7 @@ class Vector(Printable):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.diff(t, N)
-        - q1'*A.z
+        - Derivative(q1(t), t)*A.z
         >>> B = ReferenceFrame('B')
         >>> u1, u2 = dynamicsymbols('u1, u2')
         >>> v = u1 * A.x + u2 * B.y
@@ -576,7 +571,7 @@ class Vector(Printable):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.express(N)
-        cos(q1)*N.x - sin(q1)*N.z
+        cos(q1(t))*N.x - sin(q1(t))*N.z
 
         """
         from sympy.physics.vector import express
