@@ -1589,10 +1589,11 @@ class Pow(Expr):
             ex = e1 + inex
             res += terms[e1]*inco*x**(ex)
 
-        if (res - self).subs(x, 3) is S.Zero:
-            return res
-
-        return res + O(x**n, x)
+        for i in (1, 2, 3):
+            if (res - self).subs(x, i) is not S.Zero:
+                res += O(x**n, x)
+                break
+        return res
 
     def _eval_as_leading_term(self, x, cdir=0):
         from sympy import exp, I, im, log
