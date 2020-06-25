@@ -85,6 +85,22 @@ matrix:
       env:
         - TEST_SYMPY="true" SPLIT="2/2"
 
+    - python: 3.9-dev
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="1/2" TEST_SYMPY="true"
+    - python: 3.9-dev
+      dist: xenial
+      sudo: true
+      env:
+        - SPLIT="2/2" TEST_SYMPY="true"
+    - python: 3.9-dev
+      dist: xenial
+      sudo: true
+      env:
+        - TEST_DOCTESTS="true" TEST_SETUP="true" TEST_EXAMPLES="true"
+
     # Tensorflow 1 support
     - python: 3.6
       env:
@@ -236,7 +252,9 @@ before_install:
             conda clean --all;
         fi
     elif [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then
-        pip list | grep "numpy" && pip uninstall -y numpy;
+        if pip list | grep "numpy"; then
+            pip uninstall -y numpy;
+        fi
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
       pip install "sphinx" "docutils" doctr "matplotlib<3.2" sphinx-math-dollar;
