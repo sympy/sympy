@@ -9,7 +9,8 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
                    Ge, Piecewise, Symbol, NonSquareMatrixError)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
-from sympy.stats.joint_rv import JointDistributionHandmade, JointDistribution
+from sympy.stats.joint_rv import JointDistribution
+from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter, _value_check, pspace, given,
                            dependent, is_random, sample_iter)

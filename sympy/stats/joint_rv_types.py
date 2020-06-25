@@ -4,8 +4,7 @@ from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, besselk, gamma, I
                    Intersection, Matrix, symbols, Product, IndexedBase)
 from sympy.matrices import ImmutableMatrix, MatrixSymbol
 from sympy.matrices.expressions.determinant import det
-from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
-    JointDistributionHandmade, MarginalDistribution)
+from sympy.stats.joint_rv import JointDistribution, JointPSpace, MarginalDistribution
 from sympy.stats.rv import _value_check, random_symbols
 
 __all__ = ['JointRV',
@@ -66,6 +65,16 @@ def marginal_distribution(rv, *indices):
     if hasattr(prob_space.distribution, '_marginal_distribution'):
         return prob_space.distribution._marginal_distribution(indices, rv.symbol)
     return prob_space.marginal_distribution(*indices)
+
+
+class JointDistributionHandmade(JointDistribution):
+
+    _argnames = ('pdf',)
+    is_Continuous = True
+
+    @property
+    def set(self):
+        return self.args[1]
 
 
 def JointRV(symbol, pdf, _set=None):

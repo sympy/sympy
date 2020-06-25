@@ -193,15 +193,6 @@ class JointRandomSymbol(RandomSymbol):
                     (self.name, self.pspace.component_count - 1))
             return Indexed(self, key)
 
-class JointDistributionHandmade(JointDistribution, NamedArgsMixin):
-
-    _argnames = ('pdf',)
-    is_Continuous = True
-
-    @property
-    def set(self):
-        return self.args[1]
-
 
 class CompoundDistribution(Basic, NamedArgsMixin):
     """
