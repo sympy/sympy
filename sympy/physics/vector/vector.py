@@ -341,14 +341,14 @@ class Vector(Printable):
     def __rsub__(self, other):
         return (-1 * self) + other
 
-    def __str__(self, printer=None, order=True):
+    def _sympystr(self, printer, order=True):
         """Printing method. """
         from sympy.physics.vector.printing import VectorStrPrinter
 
         if not order or len(self.args) == 1:
             ar = list(self.args)
         elif len(self.args) == 0:
-            return str(0)
+            return printer._print(0)
         else:
             d = {v[1]: v[0] for v in self.args}
             keys = sorted(d.keys(), key=lambda x: x.index)
@@ -447,9 +447,6 @@ class Vector(Printable):
             outlist += _det(tempm).args
         return Vector(outlist)
 
-    _sympystr = __str__
-    _sympyrepr = _sympystr
-    __repr__ = __str__
     __radd__ = __add__
     __rand__ = __and__
     __rmul__ = __mul__
