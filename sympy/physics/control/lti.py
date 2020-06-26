@@ -1,12 +1,13 @@
-from sympy import Basic, Mul, degree, Symbol, expand, cancel, Expr, exp
+from sympy import S, Basic, Mul, degree, Symbol, expand, cancel, Expr, exp
+from sympy.core.decorators import call_highest_priority
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify, _sympify
 
-__all__ = ['TransferFunction', 'Series', 'Parallel']
+__all__ = ['TransferFunction', 'Series', 'Parallel', 'TransferFunctionExpr']
 
 
-class TransferFunction(Basic, EvalfMixin):
+class TransferFunction(TransferFunctionExpr, EvalfMixin):
     """TransferFunction(num, den, var)
 
     A class for representing continuous transfer functions. This class is used to represent
@@ -260,91 +261,6 @@ class TransferFunction(Basic, EvalfMixin):
         """
         return TransferFunction(expand(self.num), expand(self.den), self.var)
 
-    def __add__(self, other):
-        if isinstance(other, TransferFunction):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
-            return Parallel(self, other)
-
-        elif isinstance(other, Parallel):
-            pass
-        elif isinstance(other, Series):
-            pass
-        else:
-            raise ValueError("TransferFunction cannot be added with {}.".
-                format(type(other)))
-
-    def __radd__(self, other):
-        return self + other
-
-    def __sub__(self, other):
-        if isinstance(other, TransferFunction):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
-            return Parallel(self, -other)
-
-        elif isinstance(other, Parallel):
-            pass
-        elif isinstance(other, Series):
-            pass
-        else:
-            raise ValueError("{} cannot be subtracted from a TransferFunction."
-                .format(type(other)))
-
-    def __rsub__(self, other):
-        return -self + other
-
-    def __mul__(self, other):
-        other = _sympify(other)
-        if other.is_number:
-            return TransferFunction(self.num*other, self.den, self.var)
-
-        elif isinstance(other, TransferFunction):
-            if not self.var == other.var:
-                raise ValueError("Both the transfer functions should be anchored "
-                    "with the same variable.")
-            p = self.num * other.num
-            q = self.den * other.den
-            return TransferFunction(p, q, self.var)
-
-        elif isinstance(other, Expr) and other.has(Symbol):
-            # other input is a polynomial.
-            if not other.is_commutative:
-                raise ValueError("Only commutative expressions can be multiplied "
-                    "with a TransferFunction.")
-            return TransferFunction(self.num*other, self.den, self.var)
-        else:
-            raise ValueError("TransferFunction cannot be multiplied with {}."
-                .format(type(other)))
-
-    __rmul__ = __mul__
-
-    def __truediv__(self, other):
-        other = _sympify(other)
-        if other.is_number:
-            if other == 0:
-                raise ValueError("TransferFunction cannot be divided by zero.")
-            return TransferFunction(self.num, self.den*other, self.var)
-
-        elif isinstance(other, TransferFunction):
-            if not self.var == other.var:
-                raise ValueError("Both the transfer functions should be anchored "
-                    "with the same variable.")
-            p = self.num * other.den
-            q = self.den * other.num
-            return TransferFunction(p, q, self.var)
-
-        elif isinstance(other, Expr) and other.has(Symbol):
-            return TransferFunction(self.num, self.den*other, self.var)
-        else:
-            raise ValueError("TransferFunction cannot be divided by {}.".
-                format(type(other)))
-
-    def __rtruediv__(self, other):
-        return _sympify(other) * self**-1
-
     def __pow__(self, p):
         p = sympify(p)
         if not isinstance(p, Integer):
@@ -426,7 +342,8 @@ class TransferFunction(Basic, EvalfMixin):
         return degree(self.num, self.var) == degree(self.den, self.var)
 
 
-class Series(Basic):
+class Series(TransferFunctionExpr):
+
     def __new__(cls, *args, evaluate=False):
         if not all(isinstance(arg, (TransferFunction, Parallel)) for arg in args):
             raise TypeError
@@ -465,7 +382,8 @@ class Series(Basic):
         return self.doit().is_biproper
 
 
-class Parallel(Basic):
+class Parallel(TransferFunctionExpr):
+
     def __new__(cls, *args, evaluate=False):
         if not all(isinstance(arg, (TransferFunction, Series)) for arg in args):
             raise TypeError
@@ -502,3 +420,41 @@ class Parallel(Basic):
     @property
     def is_biproper(self):
         return self.doit().is_biproper
+
+
+class TransferFunctionExpr(Expr):
+
+    def __new__(cls, *args, **kwargs):
+        args = map(_sympify, args)
+        obj = super().__new__(cls, *args, **kwargs)
+        return obj
+
+    def __neg__(self):
+        return Series(S.NegativeOne, self).doit()
+
+    @call_highest_priority('__radd__')
+    def __add__(self, other):
+        return Parallel(self, other, check=True)
+
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        return Parallel(other, self, check=True)
+
+    @call_highest_priority('__rsub__')
+    def __sub__(self, other):
+        return Parallel(self, -other, check=True)
+
+    @call_highest_priority('__sub__')
+    def __rsub__(self, other):
+        return Parallel(other, -self, check=True)
+
+    @call_highest_priority('__rmul__')
+    def __mul__(self, other):
+        return Series(self, other, check=True)
+
+    @call_highest_priority('__mul__')
+    def __rmul__(self, other):
+        return Series(other, self, check=True)
+
+    def __truediv__(self, other):
+        pass
