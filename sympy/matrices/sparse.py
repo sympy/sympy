@@ -321,7 +321,7 @@ class SparseMatrix(MatrixBase):
 
     def _eval_col_insert(self, icol, other):
         if not isinstance(other, SparseMatrix):
-            other = SparseMatrix(other)
+            other = MutableSparseMatrix(other)
         new_smat = {}
         # make room for the new rows
         for key, val in self._smat.items():
@@ -428,7 +428,7 @@ class SparseMatrix(MatrixBase):
 
     def _eval_row_insert(self, irow, other):
         if not isinstance(other, SparseMatrix):
-            other = SparseMatrix(other)
+            other = MutableSparseMatrix(other)
         new_smat = {}
         # make room for the new rows
         for key, val in self._smat.items():
