@@ -1824,7 +1824,7 @@ class Segment(LinearEntity):
 
     def parametric_region(self, parameter='t'):
         """
-        Returns an object of ParamRegion class representing the Segment.
+        Returns an object of ParametricRegion class representing the Segment.
 
         Examples
         ========

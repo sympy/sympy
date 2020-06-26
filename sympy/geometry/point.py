@@ -614,7 +614,7 @@ class Point(GeometryEntity):
 
     def parametric_region(self):
         """
-        Returns an object of ParamRegion class representing the Point.
+        Returns an object of ParametricRegion class representing the Point.
 
         Examples
         ========

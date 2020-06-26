@@ -147,7 +147,7 @@ class Curve(GeometrySet):
 
     def parametric_region(self):
         """
-        Returns an object of ParamRegion class representing the Curve.
+        Returns an object of ParametricRegion class representing the Curve.
 
         Examples
         ========

@@ -249,7 +249,7 @@ class Ellipse(GeometrySet):
 
     def parametric_region(self, parameter='t'):
         """
-        Returns an object of ParamRegion class representing the Ellipse.
+        Returns an object of ParametricRegion class representing the Ellipse.
 
         Examples
         ========
