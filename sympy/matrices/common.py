@@ -2985,6 +2985,7 @@ class _MatrixWrapper:
         self.mat = mat
         self.shape = shape
         self.rows, self.cols = shape
+        self.ring = EX
 
     def __getitem__(self, key):
         if isinstance(key, tuple):
