@@ -917,10 +917,9 @@ class MatrixSpecial(MatrixRequired):
                     r, c = _.shape
                     m = _.tolist()
                 else:
-                    m = SparseMatrix(m)
-                    for (i, j), _ in m._smat.items():
+                    r, c, smat = SparseMatrix._handle_creation_inputs(m)
+                    for (i, j), _ in smat.items():
                         diag_entries[(i + rmax, j + cmax)] = _
-                    r, c = m.shape
                     m = []  # to skip process below
             elif hasattr(m, 'shape'):  # a Matrix
                 # convert to list of lists

@@ -6,7 +6,7 @@ from sympy.core.sympify import converter as sympify_converter, _sympify
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
-from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
+from sympy.matrices.sparse import SparseMatrix
 
 
 def sympify_matrix(arg):
@@ -165,8 +165,7 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        s = MutableSparseMatrix(*args)
-        rows, cols, smat = s.rows, s.cols, s._smat
+        rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
         obj = Basic.__new__(cls, Integer(rows), Integer(cols), Dict(smat))
         obj._rows = rows
         obj._cols = cols
