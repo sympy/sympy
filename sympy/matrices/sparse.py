@@ -7,7 +7,6 @@ from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.functions import Abs
 from sympy.utilities.iterables import uniq
-from sympy.utilities.misc import filldedent
 
 from .common import a2idx
 from .dense import Matrix
