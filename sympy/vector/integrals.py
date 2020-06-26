@@ -6,6 +6,8 @@ from sympy.vector.operators import _get_coord_sys_from_expr
 from sympy.integrals import Integral, integrate
 from sympy.core.function import diff
 from sympy.utilities.iterables import topological_sort, default_sort_key
+from sympy.geometry.entity import GeometryEntity
+from sympy.geometry import Polygon
 
 class ParametricIntegral(Basic):
     """
@@ -152,8 +154,24 @@ def vector_integrate(field, *region):
 
     >>> vector_integrate(C.x**2*C.z, C.x)
     C.x**3*C.z/3
+
     """
     if len(region) == 1:
-        if isinstance(region[0], ParametricRegion):
-            return ParametricIntegral(field, region[0])
+        region = region[0]
+        if isinstance(region, ParametricRegion):
+            return ParametricIntegral(field, region)
+
+        if isinstance(region, GeometryEntity):
+            if isinstance(region, Polygon):
+                result = 0
+                for s in region.sides:
+                    result += vector_integrate(field, s)
+                return result
+
+            try:
+                region = region.parametric_region()
+                return ParametricIntegral(field, region)
+            except AttributeError:
+                raise ValueError("SymPy cannot determine parametric representation of the region.")
+
     return integrate(field, *region)

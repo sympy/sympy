@@ -247,6 +247,14 @@ class Ellipse(GeometrySet):
         return Point(self.center.x + self.hradius*cos(t),
                      self.center.y + self.vradius*sin(t))
 
+    def parametric_region(self, parameter='t'):
+        from sympy.vector import ParametricRegion
+
+        definition = self.arbitrary_point(parameter).args
+        t = _symbol(parameter, real=True)
+        bounds = (t, 0, 2*pi)
+        return ParametricRegion(definition, bounds)
+
     @property
     def area(self):
         """The area of the ellipse.
