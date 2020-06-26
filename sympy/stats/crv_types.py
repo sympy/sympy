@@ -135,7 +135,8 @@ def rv(symbol, cls, args):
     dist.check(*args)
     pspace = SingleContinuousPSpace(symbol, dist)
     if any(is_random(arg) for arg in args):
-        pspace = JointPSpace(symbol, CompoundDistribution(dist))
+        from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
+        pspace = CompoundPSpace(symbol, CompoundDistribution(dist))
     return pspace.value
 
 
@@ -148,12 +149,6 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
     @property
     def set(self):
         return self.args[1]
-
-    @staticmethod
-    def check(pdf, set):
-        x = Dummy('x')
-        val = integrate(pdf(x), (x, set))
-        _value_check(val == S.One, "The pdf on the given set is incorrect.")
 
 
 def ContinuousRV(symbol, density, set=Interval(-oo, oo)):

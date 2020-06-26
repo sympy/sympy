@@ -40,7 +40,8 @@ def rv(symbol, cls, *args):
     dist.check(*args)
     pspace = SingleDiscretePSpace(symbol, dist)
     if any(is_random(arg) for arg in args):
-        pspace = JointPSpace(symbol, CompoundDistribution(dist))
+        from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
+        pspace = CompoundPSpace(symbol, CompoundDistribution(dist))
     return pspace.value
 
 
@@ -54,11 +55,6 @@ class DiscreteDistributionHandmade(SingleDiscreteDistribution):
     def set(self):
         return self.args[1]
 
-    @staticmethod
-    def check(pdf, set):
-        x = Dummy('x')
-        val = Sum(pdf(x), (x, set._inf, set._sup)).doit()
-        _value_check(val == S.One, "The pdf is incorrect on the given set.")
 
 def DiscreteRV(symbol, density, set=S.Integers):
     """
