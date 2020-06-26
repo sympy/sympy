@@ -9,8 +9,6 @@ from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.sparse import SparseMatrix
 from sympy.polys.domains import EX
 
-import sympy.polys.polyoptions as polyoptions
-
 
 def sympify_matrix(arg):
     return arg.as_immutable()
@@ -55,6 +53,8 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
 
     @classmethod
     def _new(cls, *args, copy=True, ring=EX, **kwargs):
+        import sympy.polys.polyoptions as polyoptions
+
         if len(args) == 1 and isinstance(args[0], ImmutableDenseMatrix):
             return args[0]
         if not copy:
@@ -173,6 +173,8 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
 
     @classmethod
     def _new(cls, *args, ring=EX, **kwargs):
+        import sympy.polys.polyoptions as polyoptions
+
         rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
         obj = Basic.__new__(cls, Integer(rows), Integer(cols), Dict(smat))
         obj._rows = rows

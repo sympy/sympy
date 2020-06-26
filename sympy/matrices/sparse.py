@@ -22,8 +22,6 @@ from .decompositions import (
 from .solvers import (
     _lower_triangular_solve_sparse, _upper_triangular_solve_sparse)
 
-import sympy.polys.polyoptions as polyoptions
-
 
 class SparseMatrix(MatrixBase):
     """
@@ -715,6 +713,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
 
     @classmethod
     def _new(cls, *args, ring=EX, **kwargs):
+        import sympy.polys.polyoptions as polyoptions
         obj = super().__new__(cls)
         rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
         obj.rows = rows
