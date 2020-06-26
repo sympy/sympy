@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 import pyglet.gl as pgl
 from sympy.core import S
-from sympy.core.compatibility import range
 from sympy.plotting.pygletplot.plot_mode_base import PlotModeBase
 
 

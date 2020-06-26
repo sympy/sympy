@@ -91,7 +91,7 @@ def parse_autolev(autolev_code, include_numeric=False):
 
     _autolev = import_module(
         'sympy.parsing.autolev._parse_autolev_antlr',
-        __import__kwargs={'fromlist': ['X']})
+        import_kwargs={'fromlist': ['X']})
 
     if _autolev is not None:
         return _autolev.parse_autolev(autolev_code, include_numeric)

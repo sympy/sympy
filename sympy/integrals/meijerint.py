@@ -25,7 +25,8 @@ The main references for this are:
     Integrals and Series: More Special Functions, Vol. 3,.
     Gordon and Breach Science Publisher
 """
-from __future__ import print_function, division
+
+from typing import Dict, Tuple
 
 from sympy.core import oo, S, pi, Expr
 from sympy.core.exprtools import factor_terms
@@ -33,7 +34,6 @@ from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
-from sympy.core.compatibility import range
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest, collect
@@ -371,7 +371,7 @@ def _exponents(expr, x):
 def _functions(expr, x):
     """ Find the types of functions in expr, to estimate the complexity. """
     from sympy import Function
-    return set(e.func for e in expr.atoms(Function) if x in e.free_symbols)
+    return {e.func for e in expr.atoms(Function) if x in e.free_symbols}
 
 
 def _find_splitting_points(expr, x):
@@ -381,7 +381,7 @@ def _find_splitting_points(expr, x):
 
     >>> from sympy.integrals.meijerint import _find_splitting_points as fsp
     >>> from sympy import sin
-    >>> from sympy.abc import a, x
+    >>> from sympy.abc import x
     >>> fsp(x, x)
     {0}
     >>> fsp((x-1)**3, x)
@@ -546,7 +546,7 @@ def _inflate_fox_h(g, a):
     bs = [(n + 1)/p for n in range(p)]
     return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)
 
-_dummies = {}
+_dummies = {}  # type: Dict[Tuple[str, str], Dummy]
 
 
 def _dummy(name, token, expr, **kwargs):
@@ -587,7 +587,7 @@ def _condsimp(cond):
     added as need arises rather than following any logical pattern.
 
     >>> from sympy.integrals.meijerint import _condsimp as simp
-    >>> from sympy import Or, Eq, unbranched_argument as arg, And
+    >>> from sympy import Or, Eq, And
     >>> from sympy.abc import x, y, z
     >>> simp(Or(x < y, z, Eq(x, y)))
     z | (x <= y)

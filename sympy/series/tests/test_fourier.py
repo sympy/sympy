@@ -1,7 +1,7 @@
 from sympy import (symbols, pi, Piecewise, sin, cos, sinc, Rational, S,
                    oo, fourier_series, Add, log, exp, tan)
 from sympy.series.fourier import FourierSeries
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core.cache import lru_cache
 
 x, y, z = symbols('x y z')
@@ -72,7 +72,7 @@ def test_FourierSeries_2():
                             4*cos(pi*x / 2) / pi**2 + S.Half)
 
 
-def test_fourier_series_square_wave():
+def test_square_wave():
     """Test if fourier_series approximates discontinuous function correctly."""
     square_wave = Piecewise((1, x < pi), (-1, True))
     s = fourier_series(square_wave, (x, 0, 2*pi))
@@ -81,6 +81,15 @@ def test_fourier_series_square_wave():
         4 / (5 * pi) * sin(5 * x)
     assert s.sigma_approximation(4) == 4 / pi * sin(x) * sinc(pi / 4) + \
         4 / (3 * pi) * sin(3 * x) * sinc(3 * pi / 4)
+
+
+def test_sawtooth_wave():
+    s = fourier_series(x, (x, 0, pi))
+    assert s.truncate(4) == \
+        pi/2 - sin(2*x) - sin(4*x)/2 - sin(6*x)/3
+    s = fourier_series(x, (x, 0, 1))
+    assert s.truncate(4) == \
+        S.Half - sin(2*pi*x)/pi - sin(4*pi*x)/(2*pi) - sin(6*pi*x)/(3*pi)
 
 
 def test_FourierSeries__operations():

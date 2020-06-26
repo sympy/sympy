@@ -6,15 +6,13 @@ Contains
 
 """
 
-from __future__ import division, print_function
-
 from sympy import Expr, Eq
 from sympy.core import S, pi, sympify
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import ordered
-from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
+from sympy.core.symbol import Dummy, uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -119,7 +117,7 @@ class Ellipse(GeometrySet):
                                            self.vradius == o.vradius)
 
     def __hash__(self):
-        return super(Ellipse, self).__hash__()
+        return super().__hash__()
 
     def __new__(
         cls, center=None, hradius=None, vradius=None, eccentricity=None, **kwargs):
@@ -134,7 +132,7 @@ class Ellipse(GeometrySet):
             center = Point(center, dim=2)
 
         if len(center) != 2:
-            raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
+            raise ValueError('The center of "{}" must be a two dimensional point'.format(cls))
 
         if len(list(filter(lambda x: x is not None, (hradius, vradius, eccentricity)))) != 2:
             raise ValueError(filldedent('''
@@ -637,7 +635,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Ellipse, Point, Line, sqrt
+        >>> from sympy import Ellipse, Point, Line
         >>> e = Ellipse(Point(0, 0), 5, 7)
         >>> e.intersection(Point(0, 0))
         []
@@ -734,7 +732,7 @@ class Ellipse(GeometrySet):
             if isinstance(intersect, Ellipse):
                 return True
             elif intersect:
-                return all((self.tangent_lines(i)[0]).equals((o.tangent_lines(i)[0])) for i in intersect)
+                return all((self.tangent_lines(i)[0]).equals(o.tangent_lines(i)[0]) for i in intersect)
             else:
                 return False
         elif isinstance(o, Line2D):
@@ -881,7 +879,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Line, Point, Ellipse
+        >>> from sympy import Point, Ellipse
         >>> e = Ellipse((0, 0), 2, 3)
         >>> c = e.center
         >>> e.normal_lines(c + Point(1, 0))
@@ -1018,7 +1016,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Circle, Ellipse, Point, symbols
+        >>> from sympy import Ellipse, Point, symbols
         >>> c = Point(1, 2)
         >>> Ellipse(c, 8, 7).auxiliary_circle()
         Circle(Point2D(1, 2), 8)
@@ -1042,7 +1040,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Circle, Ellipse, Point, symbols
+        >>> from sympy import Ellipse, Point, symbols
         >>> c = Point(3,8)
         >>> Ellipse(c, 7, 9).director_circle()
         Circle(Point2D(3, 8), sqrt(130))
@@ -1096,7 +1094,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Ellipse, Segment
+        >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.random_point() # gives some random point
         Point2D(...)
@@ -1175,8 +1173,9 @@ class Ellipse(GeometrySet):
             c = c.reflect(line)
             return self.func(c, -self.hradius, self.vradius)
         else:
-            x, y = [_uniquely_named_symbol(
-                name, (self, line), real=True) for name in 'xy']
+            x, y = [uniquely_named_symbol(
+                name, (self, line), modify=lambda s: '_' + s, real=True)
+                for name in 'xy']
             expr = self.equation(x, y)
             p = Point(x, y).reflect(line)
             result = expr.subs(zip((x, y), p.args
@@ -1204,7 +1203,7 @@ class Ellipse(GeometrySet):
         if self.hradius == self.vradius:
             return self.func(self.center.rotate(angle, pt), self.hradius)
         if (angle/S.Pi).is_integer:
-            return super(Ellipse, self).rotate(angle, pt)
+            return super().rotate(angle, pt)
         if (2*angle/S.Pi).is_integer:
             return self.func(self.center.rotate(angle, pt), self.vradius, self.hradius)
         # XXX see https://github.com/sympy/sympy/issues/2815 for general ellipes
@@ -1459,6 +1458,8 @@ class Ellipse(GeometrySet):
         >>> e = Ellipse(Point2D(0, 0), 2, 4)
         >>> e.section_modulus()
         (8*pi, 4*pi)
+        >>> e.section_modulus((2, 2))
+        (16*pi, 4*pi)
         """
         x_c, y_c = self.center
         if point is None:
@@ -1468,6 +1469,7 @@ class Ellipse(GeometrySet):
             x = max(x_c - x_min, x_max - x_c)
         else:
             # taking x and y as distances of the given point from the center
+            point = Point2D(point)
             y = point.y - y_c
             x = point.x - x_c
 
@@ -1546,8 +1548,8 @@ class Circle(Ellipse):
     def __new__(cls, *args, **kwargs):
         from sympy.geometry.util import find
         from .polygon import Triangle
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
-        if len(args) == 1 and isinstance(args[0], Expr):
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
+        if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
             equation = args[0]

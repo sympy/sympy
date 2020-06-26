@@ -4,9 +4,10 @@ A Printer for generating readable representation of most sympy classes.
 
 from __future__ import print_function, division
 
-from sympy.core import S, Rational, Pow, Basic, Mul
+from typing import Any, Dict
+
+from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
-from sympy.core.compatibility import string_types
 from .printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -22,9 +23,12 @@ class StrPrinter(Printer):
         "full_prec": "auto",
         "sympy_integers": False,
         "abbrev": False,
-    }
+        "perm_cyclic": True,
+        "min": None,
+        "max": None,
+    }  # type: Dict[str, Any]
 
-    _relationals = dict()
+    _relationals = dict()  # type: Dict[str, str]
 
     def parenthesize(self, item, level, strict=False):
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
@@ -36,7 +40,7 @@ class StrPrinter(Printer):
         return sep.join([self.parenthesize(item, level) for item in args])
 
     def emptyPrinter(self, expr):
-        if isinstance(expr, string_types):
+        if isinstance(expr, str):
             return expr
         elif isinstance(expr, Basic):
             return repr(expr)
@@ -44,10 +48,7 @@ class StrPrinter(Printer):
             return str(expr)
 
     def _print_Add(self, expr, order=None):
-        if self.order == 'none':
-            terms = list(expr.args)
-        else:
-            terms = self._as_ordered_terms(expr, order=order)
+        terms = self._as_ordered_terms(expr, order=order)
 
         PREC = precedence(expr)
         l = []
@@ -152,10 +153,6 @@ class StrPrinter(Printer):
     def _print_Function(self, expr):
         return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
 
-    def _print_GeometryEntity(self, expr):
-        # GeometryEntity is special -- it's base is tuple
-        return str(expr)
-
     def _print_GoldenRatio(self, expr):
         return 'GoldenRatio'
 
@@ -227,32 +224,49 @@ class StrPrinter(Printer):
 
     def _print_MatrixBase(self, expr):
         return expr._format_str(self)
-    _print_MutableSparseMatrix = \
-        _print_ImmutableSparseMatrix = \
-        _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
+
+    def _print_MutableSparseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_SparseMatrix(self, expr):
+        from sympy.matrices import Matrix
+        return self._print(Matrix(expr))
+
+    def _print_ImmutableSparseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_Matrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_DenseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_MutableDenseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_ImmutableMatrix(self, expr):
+        return self._print_MatrixBase(expr)
+
+    def _print_ImmutableDenseMatrix(self, expr):
+        return self._print_MatrixBase(expr)
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
             + '[%s, %s]' % (self._print(expr.i), self._print(expr.j))
 
     def _print_MatrixSlice(self, expr):
-        def strslice(x):
+        def strslice(x, dim):
             x = list(x)
             if x[2] == 1:
                 del x[2]
-            if x[1] == x[0] + 1:
-                del x[1]
             if x[0] == 0:
                 x[0] = ''
+            if x[1] == dim:
+                x[1] = ''
             return ':'.join(map(lambda arg: self._print(arg), x))
-        return (self._print(expr.parent) + '[' +
-                strslice(expr.rowslice) + ', ' +
-                strslice(expr.colslice) + ']')
+        return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + '[' +
+                strslice(expr.rowslice, expr.parent.rows) + ', ' +
+                strslice(expr.colslice, expr.parent.cols) + ']')
 
     def _print_DeferredVector(self, expr):
         return expr.name
@@ -260,6 +274,15 @@ class StrPrinter(Printer):
     def _print_Mul(self, expr):
 
         prec = precedence(expr)
+
+        # Check for unevaluated Mul. In this case we need to make sure the
+        # identities are visible, multiple Rational factors are not combined
+        # etc so we display in a straight-forward form that fully preserves all
+        # args and their order.
+        args = expr.args
+        if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]):
+            factors = [self.parenthesize(a, prec, strict=False) for a in args]
+            return '*'.join(factors)
 
         c, e = expr.as_coeff_Mul()
         if c < 0:
@@ -315,11 +338,16 @@ class StrPrinter(Printer):
 
     def _print_MatMul(self, expr):
         c, m = expr.as_coeff_mmul()
-        if c.is_number and c < 0:
-            expr = _keep_coeff(-c, m)
-            sign = "-"
-        else:
-            sign = ""
+
+        sign = ""
+        if c.is_number:
+            re, im = c.as_real_imag()
+            if im.is_zero and re.is_negative:
+                expr = _keep_coeff(-c, m)
+                sign = "-"
+            elif re.is_zero and im.is_negative:
+                expr = _keep_coeff(-c, m)
+                sign = "-"
 
         return sign + '*'.join(
             [self.parenthesize(arg, precedence(expr)) for arg in expr.args]
@@ -354,7 +382,20 @@ class StrPrinter(Printer):
 
     def _print_Permutation(self, expr):
         from sympy.combinatorics.permutations import Permutation, Cycle
-        if Permutation.print_cyclic:
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+        perm_cyclic = Permutation.print_cyclic
+        if perm_cyclic is not None:
+            SymPyDeprecationWarning(
+                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
+                useinstead="init_printing(perm_cyclic={})"
+                .format(perm_cyclic),
+                issue=15201,
+                deprecated_since_version="1.6").warn()
+        else:
+            perm_cyclic = self._settings.get("perm_cyclic", True)
+
+        if perm_cyclic:
             if not expr.size:
                 return '()'
             # before taking Cycle notation, see if the last element is
@@ -423,6 +464,9 @@ class StrPrinter(Printer):
 
     def _print_FreeGroupElement(self, elm):
         return elm.__str__()
+
+    def _print_GaussianElement(self, poly):
+        return "(%s + %s*I)" % (poly.x, poly.y)
 
     def _print_PolyElement(self, poly):
         return poly.str(self, PRECEDENCE, "%s**%s", "*")
@@ -659,7 +703,9 @@ class StrPrinter(Printer):
             strip = True
         elif self._settings["full_prec"] == "auto":
             strip = self._print_level > 1
-        rv = mlib_to_str(expr._mpf_, dps, strip_zeros=strip)
+        low = self._settings["min"] if "min" in self._settings else None
+        high = self._settings["max"] if "max" in self._settings else None
+        rv = mlib_to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
         if rv.startswith('-.0'):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):
@@ -728,10 +774,6 @@ class StrPrinter(Printer):
         if not s:
             return "frozenset()"
         return "frozenset(%s)" % self._print_set(s)
-
-    def _print_SparseMatrix(self, expr):
-        from sympy.matrices import Matrix
-        return self._print(Matrix(expr))
 
     def _print_Sum(self, expr):
         def _xab_tostr(xab):
@@ -833,6 +875,15 @@ class StrPrinter(Printer):
     def _print_Category(self, category):
         return 'Category("%s")' % category.name
 
+    def _print_Manifold(self, manifold):
+        return manifold.name
+
+    def _print_Patch(self, patch):
+        return patch.name
+
+    def _print_CoordSystem(self, coords):
+        return coords.name
+
     def _print_BaseScalarField(self, field):
         return field._coord_sys._names[field._index]
 
@@ -849,7 +900,6 @@ class StrPrinter(Printer):
     def _print_Tr(self, expr):
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
-
 
 def sstr(expr, **settings):
     """Returns the expression as a string.

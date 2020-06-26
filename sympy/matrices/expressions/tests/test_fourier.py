@@ -2,7 +2,7 @@ from sympy import S, I, ask, Q, Abs, simplify, exp, sqrt
 from sympy.core.symbol import symbols
 from sympy.matrices.expressions.fourier import DFT, IDFT
 from sympy.matrices import det, Matrix, Identity
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_dft_creation():

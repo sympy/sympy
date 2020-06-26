@@ -2,7 +2,7 @@ from sympy.assumptions.satask import satask
 
 from sympy import S, symbols, Q, assuming, Implies, MatrixSymbol, I, pi
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 x, y, z = symbols('x y z')

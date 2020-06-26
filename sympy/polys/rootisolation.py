@@ -2,7 +2,6 @@
 
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
 from sympy.polys.densearith import (
     dup_neg, dup_rshift, dup_rem)
 from sympy.polys.densebasic import (
@@ -1797,7 +1796,7 @@ class ComplexInterval(object):
     Examples
     ========
 
-    >>> from sympy import CRootOf, Rational, S
+    >>> from sympy import CRootOf, S
     >>> from sympy.abc import x
     >>> CRootOf.clear_cache()  # for doctest reproducibility
     >>> root = CRootOf(x**10 - 2*x + 3, 9)

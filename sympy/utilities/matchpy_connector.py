@@ -3,7 +3,7 @@ from sympy.functions import (log, sin, cos, tan, cot, csc, sec, erf, gamma, uppe
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei
-from sympy import (Basic, Mul, Add, Pow, Integral, UnevaluatedExpr, exp)
+from sympy import (Basic, Mul, Add, Pow, Integral, exp)
 
 matchpy = import_module("matchpy")
 
@@ -60,19 +60,19 @@ if matchpy:
     Operation.register(acsch)
     Operation.register(asech)
 
-    @op_iter.register(Integral)
+    @op_iter.register(Integral)  # type: ignore
     def _(operation):
         return iter((operation._args[0],) + operation._args[1])
 
-    @op_iter.register(Basic)
+    @op_iter.register(Basic)  # type: ignore
     def _(operation):
         return iter(operation._args)
 
-    @op_len.register(Integral)
+    @op_len.register(Integral)  # type: ignore
     def _(operation):
         return 1 + len(operation._args[1])
 
-    @op_len.register(Basic)
+    @op_len.register(Basic)  # type: ignore
     def _(operation):
         return len(operation._args)
 

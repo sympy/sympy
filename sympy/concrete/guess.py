@@ -1,10 +1,8 @@
 """Various algorithms for helping identifying numbers and sequences."""
-from __future__ import print_function, division
 
 from sympy.utilities import public
 
 from sympy.core import Function, Symbol
-from sympy.core.compatibility import range
 from sympy.core.numbers import Zero
 from sympy import (sympify, floor, lcm, denom, Integer, Rational,
                    exp, integrate, symbols, Product, product)
@@ -250,7 +248,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     >>> ggf([fibonacci(k) for k in range(5, 15)], types=['ogf'])
     {'ogf': (3*x + 5)/(-x**2 - x + 1)}
 
-    >>> from sympy import simplify, factorial
+    >>> from sympy import factorial
     >>> ggf([factorial(k) for k in range(12)], types=['ogf', 'egf', 'lgf'])
     {'egf': 1/(1 - x)}
 

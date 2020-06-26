@@ -65,7 +65,7 @@ is not able to find solutions then a ``ConditionSet`` is returned.
     >>> solveset(exp(x), x)     # No solution exists
     ∅
     >>> solveset(cos(x) - x, x)  # Not able to find solution
-    {x | x ∊ ℂ ∧ -x + cos(x) = 0}
+    {x | x ∊ ℂ ∧ (-x + cos(x) = 0)}
 
 
 In the ``solveset`` module, the linear system of equations is solved using ``linsolve``.
@@ -232,7 +232,7 @@ solutions to differential equations cannot be solved explicitly for the
 function.
 
     >>> dsolve(f(x).diff(x)*(1 - sin(f(x))) - 1, f(x))
-    -x + f(x) + cos(f(x)) = C₁
+    x - f(x) - cos(f(x)) = C₁
 
 The arbitrary constants in the solutions from dsolve are symbols of the form
 ``C1``, ``C2``, ``C3``, and so on.

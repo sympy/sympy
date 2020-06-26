@@ -1,6 +1,5 @@
 """Finitely Presented Groups and its algorithms. """
 
-from __future__ import print_function, division
 from sympy import S
 from sympy.combinatorics.free_groups import (FreeGroup, FreeGroupElement,
                                                 free_group)
@@ -11,7 +10,8 @@ from sympy.combinatorics.coset_table import (CosetTable,
 from sympy.combinatorics import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
-from sympy.core.compatibility import string_types
+from sympy.utilities.magic import pollute
+from sympy import symbols
 
 from itertools import product
 
@@ -127,7 +127,7 @@ class FpGroup(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.fp_groups import (FpGroup, FpSubgroup)
+        >>> from sympy.combinatorics.fp_groups import FpGroup
         >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
@@ -559,9 +559,9 @@ class FpSubgroup(DefaultPrinting):
 
     '''
     def __init__(self, G, gens, normal=False):
-        super(FpSubgroup,self).__init__()
+        super().__init__()
         self.parent = G
-        self.generators = list(set([g for g in gens if g != G.identity]))
+        self.generators = list({g for g in gens if g != G.identity})
         self._min_words = None #for use in __contains__
         self.C = None
         self.normal = normal
@@ -767,10 +767,10 @@ def low_index_subgroups(G, N, Y=[]):
     len_short_rel = 5
     # elements of R2 only checked at the last step for complete
     # coset tables
-    R2 = set([rel for rel in R if len(rel) > len_short_rel])
+    R2 = {rel for rel in R if len(rel) > len_short_rel}
     # elements of R1 are used in inner parts of the process to prune
     # branches of the search tree,
-    R1 = set([rel.identity_cyclic_reduction() for rel in set(R) - R2])
+    R1 = {rel.identity_cyclic_reduction() for rel in set(R) - R2}
     R1_c_list = C.conjugates(R1)
     S = []
     descendant_subgroups(S, C, R1_c_list, C.A[0], R2, N, Y)
@@ -1173,7 +1173,7 @@ def define_schreier_generators(C, homomorphism=False):
         # if equals "<identity>", replace by identity element
         if C.P[i][j] == "<identity>":
             C.P[i][j] = C._schreier_free_group.identity
-        elif isinstance(C.P[i][j], string_types):
+        elif isinstance(C.P[i][j], str):
             r = C._schreier_generators[y.index(C.P[i][j])]
             C.P[i][j] = r
             beta = C.table[i][j]
@@ -1182,7 +1182,7 @@ def define_schreier_generators(C, homomorphism=False):
 def reidemeister_relators(C):
     R = C.fp_group.relators
     rels = [rewrite(C, coset, word) for word in R for coset in range(C.n)]
-    order_1_gens = set([i for i in rels if len(i) == 1])
+    order_1_gens = {i for i in rels if len(i) == 1}
 
     # remove all the order 1 generators from relators
     rels = list(filter(lambda rel: rel not in order_1_gens, rels))

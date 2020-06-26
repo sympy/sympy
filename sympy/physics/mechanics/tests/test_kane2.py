@@ -1,10 +1,10 @@
-from sympy.core.compatibility import range
 from sympy.core.backend import cos, Matrix, sin, zeros, tan, pi, symbols
 from sympy import trigsimp, simplify, solve
-from sympy.physics.mechanics import (cross, dot, dynamicsymbols, KanesMethod,
-                                     inertia, inertia_of_point_mass,
-                                     Point, ReferenceFrame, RigidBody)
-from sympy.utilities.pytest import warns_deprecated_sympy
+from sympy.physics.mechanics import (cross, dot, dynamicsymbols,
+                                     find_dynamicsymbols, KanesMethod, inertia,
+                                     inertia_of_point_mass, Point,
+                                     ReferenceFrame, RigidBody)
+from sympy.testing.pytest import warns_deprecated_sympy
 
 
 def test_aux_dep():
@@ -188,6 +188,10 @@ def test_aux_dep():
     assert Matrix(Fr_star_c.subs(kdd)).expand() == frstar.expand()
     assert (simplify(Matrix(Fr_star_steady).expand()) ==
             simplify(frstar_steady.expand()))
+
+    syms_in_forcing = find_dynamicsymbols(kane.forcing)
+    for qdi in qd:
+        assert qdi not in syms_in_forcing
 
 
 def test_non_central_inertia():

@@ -1,6 +1,6 @@
 from sympy import Symbol, pi, symbols, Tuple, S, sqrt, asinh, Rational
 from sympy.geometry import Curve, Line, Point, Ellipse, Ray, Segment, Circle, Polygon, RegularPolygon
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises, slow
 
 
 def test_curve():
@@ -104,3 +104,11 @@ def test_parameter_value():
     C = Curve([2*t, t**2], (t, 0, 2))
     assert C.parameter_value((2, 1), t) == {t: 1}
     raises(ValueError, lambda: C.parameter_value((2, 0), t))
+
+
+def test_issue_17997():
+    t, s = symbols('t s')
+    c = Curve((t, t**2), (t, 0, 10))
+    p = Curve([2*s, s**2], (s, 0, 2))
+    assert c(2) == Point(2, 4)
+    assert p(1) == Point(2, 1)

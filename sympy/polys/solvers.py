@@ -2,9 +2,9 @@
 
 from __future__ import print_function, division
 
-from sympy.matrices import Matrix, zeros
+from sympy.matrices import MutableDenseMatrix, zeros
 
-class RawMatrix(Matrix):
+class RawMatrix(MutableDenseMatrix):
     _sympify = staticmethod(lambda x: x)
 
 def eqs_to_matrix(eqs, ring):

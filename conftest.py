@@ -8,7 +8,7 @@ import json
 import sys
 import warnings
 import pytest
-from sympy.utilities.runtests import setup_pprint, _get_doctest_blacklist
+from sympy.testing.runtests import setup_pprint, _get_doctest_blacklist
 
 durations_path = os.path.join(os.path.dirname(__file__), '.ci', 'durations.json')
 blacklist_path = os.path.join(os.path.dirname(__file__), '.ci', 'blacklisted.json')

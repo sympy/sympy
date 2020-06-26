@@ -7,7 +7,6 @@ The dense matrix is stored as a list of lists.
 
 import copy
 
-from sympy.core.compatibility import range
 from sympy.core.power import isqrt
 from sympy.core.symbol import symbols
 from sympy.matrices.densetools import (

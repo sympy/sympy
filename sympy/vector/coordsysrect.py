@@ -1,6 +1,6 @@
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
-from sympy.core.compatibility import string_types, range, Callable
+from sympy.core.compatibility import Callable
 from sympy.core.cache import cacheit
 from sympy.core import S, Dummy, Lambda
 from sympy import symbols, MatrixBase, ImmutableDenseMatrix
@@ -66,10 +66,9 @@ class CoordSys3D(Basic):
 
         name = str(name)
         Vector = sympy.vector.Vector
-        BaseVector = sympy.vector.BaseVector
         Point = sympy.vector.Point
 
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError("name should be a string")
 
         if transformation is not None:
@@ -87,13 +86,13 @@ class CoordSys3D(Basic):
                 x1, x2, x3 = symbols('x1 x2 x3', cls=Dummy)
                 transformation = Lambda((x1, x2, x3),
                                         transformation(x1, x2, x3))
-            elif isinstance(transformation, string_types):
+            elif isinstance(transformation, str):
                 transformation = Symbol(transformation)
             elif isinstance(transformation, (Symbol, Lambda)):
                 pass
             else:
                 raise TypeError("transformation: "
-                                "wrong type {0}".format(type(transformation)))
+                                "wrong type {}".format(type(transformation)))
 
         # If orientation information has been provided, store
         # the rotation matrix accordingly
@@ -188,10 +187,10 @@ class CoordSys3D(Basic):
         # positioned/oriented wrt different parents, even though
         # they may actually be 'coincident' wrt the root system.
         if parent is not None:
-            obj = super(CoordSys3D, cls).__new__(
+            obj = super().__new__(
                 cls, Symbol(name), transformation, parent)
         else:
-            obj = super(CoordSys3D, cls).__new__(
+            obj = super().__new__(
                 cls, Symbol(name), transformation)
         obj._name = name
         # Initialize the base vectors
@@ -253,11 +252,8 @@ class CoordSys3D(Basic):
         # Return the instance
         return obj
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return self._name
-
-    __repr__ = __str__
-    _sympystr = __str__
 
     def __iter__(self):
         return iter(self.base_vectors())
@@ -359,7 +355,7 @@ class CoordSys3D(Basic):
             Name of coordinate system
 
         """
-        if isinstance(curv_coord_name, string_types):
+        if isinstance(curv_coord_name, str):
             if curv_coord_name == 'cartesian':
                 return lambda x, y, z: (S.One, S.One, S.One)
             if curv_coord_name == 'spherical':
@@ -414,7 +410,7 @@ class CoordSys3D(Basic):
             Name of coordinate system
 
         """
-        if isinstance(curv_coord_name, string_types):
+        if isinstance(curv_coord_name, str):
             if curv_coord_name == 'cartesian':
                 return lambda x, y, z: (x, y, z)
             if curv_coord_name == 'spherical':
@@ -1045,5 +1041,9 @@ def _check_strings(arg_name, arg):
     if len(arg) != 3:
         raise ValueError(errorstr)
     for s in arg:
-        if not isinstance(s, string_types):
+        if not isinstance(s, str):
             raise TypeError(errorstr)
+
+
+# Delayed import to avoid cyclic import problems:
+from sympy.vector.vector import BaseVector

@@ -1,7 +1,7 @@
 from sympy import (symbols, Symbol, product, factorial, rf, sqrt, cos,
                    Function, Product, Rational, Sum, oo, exp, log, S, pi,
                    KroneckerDelta)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy import simplify
 
 a, k, n, m, x = symbols('a,k,n,m,x', integer=True)

@@ -6,7 +6,7 @@ from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  FormalPowerSeriesProduct, FormalPowerSeriesCompose,
                                  FormalPowerSeriesInverse, simpleDE,
                                  rational_independent, exp_re, hyper_re)
-from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy.testing.pytest import raises, XFAIL, slow
 
 x, y, z = symbols('x y z')
 n, m, k = symbols('n m k', integer=True)

@@ -1,8 +1,8 @@
-from sympy.core.compatibility import range, ordered
+from sympy.core.compatibility import ordered
 from sympy.combinatorics.partitions import (Partition, IntegerPartition,
                                             RGS_enum, RGS_unrank, RGS_rank,
                                             random_integer_partition)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.utilities.iterables import default_sort_key, partitions
 from sympy.sets.sets import Set, FiniteSet
 

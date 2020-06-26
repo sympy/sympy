@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from sympy.core.logic import FuzzyBool
 
 from sympy.core import S, sympify, cacheit, pi, I, Rational
 from sympy.core.add import Add
@@ -8,9 +8,7 @@ from sympy.functions.elementary.exponential import exp, log, match_real_imag
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.integers import floor
 
-from sympy import pi, Eq
-from sympy.logic import Or, And
-from sympy.core.logic import fuzzy_or, fuzzy_and, fuzzy_bool
+from sympy.core.logic import fuzzy_or, fuzzy_and
 
 
 
@@ -225,7 +223,7 @@ class sinh(HyperbolicFunction):
         coth_half = coth(S.Half*arg)
         return 2*coth_half/(coth_half**2 - 1)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -403,7 +401,7 @@ class cosh(HyperbolicFunction):
         coth_half = coth(S.Half*arg)**2
         return (coth_half + 1)/(coth_half - 1)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -619,7 +617,7 @@ class tanh(HyperbolicFunction):
     def _eval_rewrite_as_coth(self, arg, **kwargs):
         return 1/coth(arg)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -808,7 +806,7 @@ class coth(HyperbolicFunction):
         if self.args[0].is_extended_real:
             return self.args[0].is_negative
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -823,8 +821,8 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
 
     #To be defined in class
     _reciprocal_of = None
-    _is_even = None
-    _is_odd = None
+    _is_even = None  # type: FuzzyBool
+    _is_odd = None  # type: FuzzyBool
 
     @classmethod
     def eval(cls, arg):
@@ -879,7 +877,7 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
         re_part, im_part = self.as_real_imag(deep=True, **hints)
         return re_part + S.ImaginaryUnit*im_part
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         return (1/self._reciprocal_of(self.args[0]))._eval_as_leading_term(x)
 
     def _eval_is_extended_real(self):
@@ -1085,7 +1083,7 @@ class asinh(InverseHyperbolicFunction):
                 F = factorial(k)
                 return (-1)**k * R / F * x**n / n
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -1224,7 +1222,7 @@ class acosh(InverseHyperbolicFunction):
                 F = factorial(k)
                 return -R / F * S.ImaginaryUnit * x**n / n
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -1320,7 +1318,7 @@ class atanh(InverseHyperbolicFunction):
             x = sympify(x)
             return x**n / n
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 
@@ -1404,7 +1402,7 @@ class acoth(InverseHyperbolicFunction):
             x = sympify(x)
             return x**n / n
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0].as_leading_term(x)
 

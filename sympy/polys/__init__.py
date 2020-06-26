@@ -41,7 +41,8 @@ __all__ = [
     'PythonIntegerRing', 'GMPYIntegerRing', 'PythonRational',
     'GMPYRationalField', 'AlgebraicField', 'PolynomialRing', 'FractionField',
     'ExpressionDomain', 'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy',
-    'QQ_python', 'QQ_gmpy', 'GF', 'FF', 'ZZ', 'QQ', 'RR', 'CC', 'EX',
+    'QQ_python', 'QQ_gmpy', 'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR',
+    'CC', 'EX',
 
     'construct_domain',
 
@@ -101,7 +102,7 @@ from .domains import (Domain, FiniteField, IntegerRing, RationalField,
         PythonIntegerRing, GMPYIntegerRing, PythonRational, GMPYRationalField,
         AlgebraicField, PolynomialRing, FractionField, ExpressionDomain,
         FF_python, FF_gmpy, ZZ_python, ZZ_gmpy, QQ_python, QQ_gmpy, GF, FF,
-        ZZ, QQ, RR, CC, EX)
+        ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX)
 
 from .constructor import construct_domain
 

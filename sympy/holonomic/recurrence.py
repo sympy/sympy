@@ -1,10 +1,7 @@
 """Recurrence Operators"""
 
-from __future__ import print_function, division
-
 from sympy import symbols, Symbol, S
 from sympy.printing import sstr
-from sympy.core.compatibility import range, string_types
 from sympy.core.sympify import sympify
 
 
@@ -30,7 +27,7 @@ def RecurrenceOperators(base, generator):
     return (ring, ring.shift_operator)
 
 
-class RecurrenceOperatorAlgebra(object):
+class RecurrenceOperatorAlgebra:
     """
     A Recurrence Operator Algebra is a set of noncommutative polynomials
     in intermediate `Sn` and coefficients in a base ring A. It follows the
@@ -68,7 +65,7 @@ class RecurrenceOperatorAlgebra(object):
         if generator is None:
             self.gen_symbol = symbols('Sn', commutative=False)
         else:
-            if isinstance(generator, string_types):
+            if isinstance(generator, str):
                 self.gen_symbol = symbols(generator, commutative=False)
             elif isinstance(generator, Symbol):
                 self.gen_symbol = generator
@@ -97,7 +94,7 @@ def _add_lists(list1, list2):
     return sol
 
 
-class RecurrenceOperator(object):
+class RecurrenceOperator:
     """
     The Recurrence Operators are defined by a list of polynomials
     in the base ring and the parent ring of the Operator.
@@ -112,7 +109,7 @@ class RecurrenceOperator(object):
     ========
 
     >>> from sympy.holonomic.recurrence import RecurrenceOperator, RecurrenceOperators
-    >>> from sympy.polys.domains import ZZ, QQ
+    >>> from sympy.polys.domains import ZZ
     >>> from sympy import symbols
     >>> n = symbols('n', integer=True)
     >>> R, Sn = RecurrenceOperators(ZZ.old_poly_ring(n),'Sn')
@@ -312,7 +309,7 @@ class RecurrenceOperator(object):
                 return False
 
 
-class HolonomicSequence(object):
+class HolonomicSequence:
     """
     A Holonomic Sequence is a type of sequence satisfying a linear homogeneous
     recurrence relation with Polynomial coefficients. Alternatively, A sequence

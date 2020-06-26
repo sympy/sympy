@@ -16,8 +16,6 @@ from .source import source
 
 from .decorator import threaded, xthreaded, public, memoize_property
 
-from .runtests import test, doctest
-
 from .timeutils import timed
 
 __all__ = [
@@ -34,8 +32,6 @@ __all__ = [
     'source',
 
     'threaded', 'xthreaded', 'public', 'memoize_property',
-
-    'test', 'doctest',
 
     'timed',
 ]

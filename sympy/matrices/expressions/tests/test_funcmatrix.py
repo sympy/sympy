@@ -2,7 +2,7 @@ from sympy.core import symbols, Lambda
 from sympy.functions import KroneckerDelta
 from sympy.matrices import Matrix
 from sympy.matrices.expressions import FunctionMatrix, MatrixExpr, Identity
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 def test_funcmatrix_creation():
@@ -18,7 +18,8 @@ def test_funcmatrix_creation():
     raises(ValueError, lambda: FunctionMatrix(0, 2j, Lambda((i, j), 0)))
 
     raises(ValueError, lambda: FunctionMatrix(2, 2, Lambda(i, 0)))
-    raises(ValueError, lambda: FunctionMatrix(2, 2, lambda i, j: 0))
+    with warns_deprecated_sympy():
+        raises(ValueError, lambda: FunctionMatrix(2, 2, lambda i, j: 0))
     raises(ValueError, lambda: FunctionMatrix(2, 2, Lambda((i,), 0)))
     raises(ValueError, lambda: FunctionMatrix(2, 2, Lambda((i, j, k), 0)))
     raises(ValueError, lambda: FunctionMatrix(2, 2, i+j))
@@ -27,7 +28,7 @@ def test_funcmatrix_creation():
 
     m = FunctionMatrix(2, 2, KroneckerDelta)
     assert m.as_explicit() == Identity(2).as_explicit()
-    assert m.args[2] == Lambda((i, j), KroneckerDelta(i, j))
+    assert m.args[2].dummy_eq(Lambda((i, j), KroneckerDelta(i, j)))
 
     n = symbols('n')
     assert FunctionMatrix(n, n, Lambda((i, j), 0))

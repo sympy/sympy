@@ -16,7 +16,8 @@ match, add the key and call to the antiderivative function to integral_steps.
 To enable simple substitutions, add the match to find_substitutions.
 
 """
-from __future__ import print_function, division
+
+from typing import Dict as tDict, Optional
 
 from collections import namedtuple, defaultdict
 
@@ -24,6 +25,7 @@ import sympy
 
 from sympy.core.compatibility import reduce, Mapping, iterable
 from sympy.core.containers import Dict
+from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.polynomials import OrthogonalPolynomial
@@ -1163,7 +1165,7 @@ distribute_expand_rule = rewriter(
 trig_expand_rule = rewriter(
     # If there are trig functions with different arguments, expand them
     lambda integrand, symbol: (
-        len(set(a.args[0] for a in integrand.atoms(TrigonometricFunction))) > 1),
+        len({a.args[0] for a in integrand.atoms(TrigonometricFunction)}) > 1),
     lambda integrand, symbol: integrand.expand(trig=True))
 
 def derivative_rule(integral):
@@ -1193,8 +1195,8 @@ def fallback_rule(integral):
 # Cache is used to break cyclic integrals.
 # Need to use the same dummy variable in cached expressions for them to match.
 # Also record "u" of integration by parts, to avoid infinite repetition.
-_integral_cache = {}
-_parts_u_cache = defaultdict(int)
+_integral_cache = {}  # type: tDict[Expr, Optional[Expr]]
+_parts_u_cache = defaultdict(int)  # type: tDict[Expr, int]
 _cache_dummy = sympy.Dummy("z")
 
 def integral_steps(integrand, symbol, **options):
@@ -1211,7 +1213,7 @@ def integral_steps(integrand, symbol, **options):
     Examples
     ========
 
-    >>> from sympy import exp, sin, cos
+    >>> from sympy import exp, sin
     >>> from sympy.integrals.manualintegrate import integral_steps
     >>> from sympy.abc import x
     >>> print(repr(integral_steps(exp(x) / (1 + exp(2 * x)), x))) \

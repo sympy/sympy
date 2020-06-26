@@ -1,7 +1,6 @@
 """
 AskHandlers related to order relations: positive, negative, etc.
 """
-from __future__ import print_function, division
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
@@ -177,7 +176,9 @@ class AskNonZeroHandler(CommonHandler):
     def Pow(expr, assumptions):
         return ask(Q.nonzero(expr.base), assumptions)
 
-    NaN = staticmethod(CommonHandler.AlwaysTrue)
+    @staticmethod
+    def NaN(expr, assumptions):
+        return True
 
     @staticmethod
     def Abs(expr, assumptions):

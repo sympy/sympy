@@ -69,7 +69,7 @@ keyword parameter. By default, it is determined by the coefficients
 of the polynomial arguments.
 
 Polynomial expressions can be transformed into polynomials by the
-method :obj:`sympy.core.basic.Basic.as_poly`::
+method :obj:`sympy.core.expr.Expr.as_poly`::
 
     >>> e = (x + y)*(y - 2*z)
     >>> e.as_poly()
@@ -536,11 +536,13 @@ factors (not necessarily irreducible) of degree 1, 2 etc.::
     >>> f = 2*x**2 + 5*x**3 + 4*x**4 + x**5
 
     >>> sqf_list(f)
-    (1, [(x + 2, 1), (x, 2), (x + 1, 2)])
+                       2
+    (1, [(x + 2, 1), (x  + x, 2)])
 
     >>> sqf(f)
-     2        2
-    x *(x + 1) *(x + 2)
+                    2
+            / 2    \
+    (x + 2)*\x  + x/
 
 Factorization
 -------------

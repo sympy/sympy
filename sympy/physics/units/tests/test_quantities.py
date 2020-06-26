@@ -15,7 +15,7 @@ from sympy.physics.units.definitions.dimension_definitions import (
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.systems import SI
-from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 
 k = PREFIXES["k"]
 

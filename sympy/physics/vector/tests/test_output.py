@@ -1,6 +1,6 @@
 from sympy import S
 from sympy.physics.vector import Vector, ReferenceFrame, Dyadic
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 Vector.simp = True
 A = ReferenceFrame('A')

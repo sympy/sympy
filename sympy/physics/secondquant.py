@@ -12,8 +12,6 @@ from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
                    KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
                    zeros)
 from sympy.printing.str import StrPrinter
-
-from sympy.core.compatibility import range
 from sympy.utilities.iterables import has_dups
 from sympy.utilities import default_sort_key
 
@@ -2773,8 +2771,8 @@ def wicks(e, **kw_args):
     Examples
     ========
 
-    >>> from sympy import symbols, Function, Dummy
-    >>> from sympy.physics.secondquant import wicks, F, Fd, NO
+    >>> from sympy import symbols, Dummy
+    >>> from sympy.physics.secondquant import wicks, F, Fd
     >>> p, q, r = symbols('p,q,r')
     >>> wicks(Fd(p)*F(q))
     KroneckerDelta(_i, q)*KroneckerDelta(p, q) + NO(CreateFermion(p)*AnnihilateFermion(q))

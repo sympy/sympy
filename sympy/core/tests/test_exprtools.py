@@ -8,7 +8,7 @@ from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   _monotonic_sign)
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.abc import a, b, t, x, y, z
 
@@ -27,6 +27,8 @@ def test_Factors():
     assert Factors({x: 2, y: 3, sin(x): 4}).as_expr() == x**2*y**3*sin(x)**4
     assert Factors(S.Infinity) == Factors({oo: 1})
     assert Factors(S.NegativeInfinity) == Factors({oo: 1, -1: 1})
+    # issue #18059:
+    assert Factors((x**2)**S.Half).as_expr() == (x**2)**S.Half
 
     a = Factors({x: 5, y: 3, z: 7})
     b = Factors({      y: 4, z: 3, t: 10})

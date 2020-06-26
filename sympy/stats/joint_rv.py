@@ -15,7 +15,7 @@ from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
                    Dummy)
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum, summation
-from sympy.core.compatibility import string_types, iterable
+from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import ImmutableMatrix
@@ -41,7 +41,7 @@ class JointPSpace(ProductPSpace):
             return SingleContinuousPSpace(sym, dist)
         if isinstance(dist, SingleDiscreteDistribution):
             return SingleDiscretePSpace(sym, dist)
-        if isinstance(sym, string_types):
+        if isinstance(sym, str):
             sym = Symbol(sym)
         if not isinstance(sym, Symbol):
             raise TypeError("s should have been string or Symbol")
@@ -160,7 +160,7 @@ class JointDistribution(Basic, NamedArgsMixin):
         return ProductDomain(self.symbols)
 
     @property
-    def pdf(self, *args):
+    def pdf(self):
         return self.density.args[1]
 
     def cdf(self, other):

@@ -1,8 +1,5 @@
-from __future__ import print_function, division
-
 from sympy.core import Basic, S, Function, diff, Tuple, Dummy
 from sympy.core.basic import as_Basic
-from sympy.core.compatibility import range
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.relational import (Equality, Unequality, Relational,
     _canonical)
@@ -78,7 +75,7 @@ class Piecewise(Function):
     Examples
     ========
 
-    >>> from sympy import Piecewise, log, ITE, piecewise_fold
+    >>> from sympy import Piecewise, log, piecewise_fold
     >>> from sympy.abc import x, y
     >>> f = x**2
     >>> g = log(x)
@@ -321,7 +318,7 @@ class Piecewise(Function):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         for e, c in self.args:
             if c == True or c.subs(x, 0) == True:
                 return e.as_leading_term(x)
@@ -449,7 +446,7 @@ class Piecewise(Function):
                 e, c = args[-1]
                 args[-1] = (e, S.true)
             else:
-                assert len(set([e for e, c in [args[i] for i in trues]])) == 1
+                assert len({e for e, c in [args[i] for i in trues]}) == 1
                 args.append(args.pop(trues.pop()))
                 while trues:
                     args.pop(trues.pop())
@@ -554,7 +551,7 @@ class Piecewise(Function):
 
         if a is None or b is None:
             # In this case, it is just simple substitution
-            return super(Piecewise, self)._eval_interval(sym, a, b)
+            return super()._eval_interval(sym, a, b)
         else:
             x, lo, hi = map(as_Basic, (sym, a, b))
 
@@ -724,8 +721,8 @@ class Piecewise(Function):
                 %s appeared: %s''' % (sym, cond)))
 
         # make self canonical wrt Relationals
-        reps = dict([
-            (r, _solve_relational(r)) for r in self.atoms(Relational)])
+        reps = {
+            r: _solve_relational(r) for r in self.atoms(Relational)}
         # process args individually so if any evaluate, their position
         # in the original Piecewise will be known
         args = [i.xreplace(reps) for i in self.args]
@@ -790,7 +787,7 @@ class Piecewise(Function):
 
         return list(uniq(int_expr))
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
         return self.func(*args)
 
@@ -908,7 +905,12 @@ class Piecewise(Function):
         exp_sets = []
         U = domain
         complex = not domain.is_subset(S.Reals)
+        cond_free = set()
         for expr, cond in self.args:
+            cond_free |= cond.free_symbols
+            if len(cond_free) > 1:
+                raise NotImplementedError(filldedent('''
+                    multivariate conditions are not handled.'''))
             if complex:
                 for i in cond.atoms(Relational):
                     if not isinstance(i, (Equality, Unequality)):
@@ -1188,6 +1190,8 @@ def piecewise_simplify_arguments(expr, **kwargs):
 
 def piecewise_simplify(expr, **kwargs):
     expr = piecewise_simplify_arguments(expr, **kwargs)
+    if not isinstance(expr, Piecewise):
+        return expr
     args = list(expr.args)
 
     _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (

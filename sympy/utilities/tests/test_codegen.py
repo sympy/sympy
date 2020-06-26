@@ -7,7 +7,7 @@ from sympy.utilities.codegen import (
     codegen, make_routine, CCodeGen, C89CodeGen, C99CodeGen, InputArgument,
     CodeGenError, FCodeGen, CodeGenArgumentListError, OutputArgument,
     InOutArgument)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 
 #FIXME: Fails due to circular import in with core

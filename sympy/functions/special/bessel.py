@@ -1,11 +1,8 @@
-from __future__ import print_function, division
-
 from functools import wraps
 
 from sympy import S, pi, I, Rational, Wild, cacheit, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.power import Pow
-from sympy.core.compatibility import range
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.complexes import Abs
@@ -351,9 +348,8 @@ class besseli(BesselBase):
                 return S.ComplexInfinity
             elif nu.is_imaginary:
                 return S.NaN
-        if z.is_imaginary:
-            if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
-                return S.Zero
+        if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
+            return S.Zero
 
         if z.could_extract_minus_sign():
             return (z)**nu*(-z)**(-nu)*besseli(nu, -z)
@@ -450,9 +446,8 @@ class besselk(BesselBase):
                 return S.ComplexInfinity
             elif re(nu).is_zero:
                 return S.NaN
-        if z.is_imaginary:
-            if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
-                return S.Zero
+        if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
+            return S.Zero
 
         if nu.is_integer:
             if nu.could_extract_minus_sign():
@@ -665,7 +660,6 @@ class jn(SphericalBesselBase):
     ========
 
     >>> from sympy import Symbol, jn, sin, cos, expand_func, besselj, bessely
-    >>> from sympy import simplify
     >>> z = Symbol("z")
     >>> nu = Symbol("nu", integer=True)
     >>> print(expand_func(jn(0, z)))
@@ -988,6 +982,16 @@ def jn_zeros(n, k, method="sympy", dps=15):
     ========
 
     jn, yn, besselj, besselk, bessely
+
+    Parameters
+    ==========
+
+    n : integer
+        order of Bessel function
+
+    k : integer
+        number of zeros to return
+
 
     """
     from math import pi
@@ -1747,7 +1751,7 @@ class marcumq(Function):
     ========
 
     >>> from sympy import marcumq
-    >>> from sympy.abc import m, a, b, x
+    >>> from sympy.abc import m, a, b
     >>> marcumq(m, a, b)
     marcumq(m, a, b)
 

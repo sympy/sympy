@@ -15,7 +15,7 @@ from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.abc import x, y
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 
 inf = oo.evalf()
@@ -199,7 +199,7 @@ def test_reduce_abs_inequalities():
 
 def test_reduce_inequalities_general():
     assert reduce_inequalities(Ge(sqrt(2)*x, 1)) == And(sqrt(2)/2 <= x, x < oo)
-    assert reduce_inequalities(PurePoly(x + 1, x) > 0) == And(S.NegativeOne < x, x < oo)
+    assert reduce_inequalities(x + 1 > 0) == And(S.NegativeOne < x, x < oo)
 
 
 def test_reduce_inequalities_boolean():

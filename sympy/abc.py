@@ -53,6 +53,8 @@ pi(C, Q)
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 import string
 
 from .core import Symbol, symbols
@@ -92,7 +94,7 @@ _greek = list(greeks) # make a copy, so we can mutate it
 _greek.remove("lambda")
 _greek.append("lamda")
 
-ns = {}
+ns = {}  # type: Dict[str, Any]
 exec_('from sympy import *', ns)
 _clash1 = {}
 _clash2 = {}

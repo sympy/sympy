@@ -1,6 +1,6 @@
 from sympy import Symbol, Contains, S, Interval, FiniteSet, oo, Eq
 from sympy.core.expr import unchanged
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_contains_basic():
     raises(TypeError, lambda: Contains(S.Integers, 1))

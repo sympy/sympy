@@ -11,9 +11,8 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        build_hypergeometric_formula)
 from sympy import hyper, I, S, meijerg, Piecewise, Tuple, Sum, binomial, Expr
 from sympy.abc import z, a, b, c
-from sympy.utilities.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
-from sympy.utilities.randtest import verify_numerically as tn
-from sympy.core.compatibility import range
+from sympy.testing.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
+from sympy.testing.randtest import verify_numerically as tn
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
                    gamma, sqrt, pi, erf, exp_polar, Rational)
@@ -52,8 +51,8 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
     randsyms = r.free_symbols - {z}
     while randsyms:
         # Only randomly generated parameters are checked.
-        for n, a in enumerate(randsyms):
-            repl[a] = randcplx(n)/div
+        for n, ai in enumerate(randsyms):
+            repl[ai] = randcplx(n)/div
         if not any([b.is_Integer and b <= 0 for b in Tuple(*bq).subs(repl)]):
             break
     [a, b, c, d] = [2, -1, 3, 1]
@@ -340,8 +339,8 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
         return True
 
     repl = {}
-    for n, a in enumerate(meijerg(a1, a2, b1, b2, z).free_symbols - {z}):
-        repl[a] = randcplx(n)
+    for n, ai in enumerate(meijerg(a1, a2, b1, b2, z).free_symbols - {z}):
+        repl[ai] = randcplx(n)
     return tn(meijerg(a1, a2, b1, b2, z).subs(repl), r.subs(repl), z)
 
 
@@ -824,26 +823,26 @@ def test_prudnikov_8():
     h = S.Half
 
     # 7.12.2
-    for a in [1, 2, 3]:
-        for b in [1, 2, 3]:
-            for c in range(1, a + 1):
-                for d in [h, 1, 3*h, 2, 5*h, 3]:
-                    assert can_do([a, b], [c, d])
-        for b in [3*h, 5*h]:
-            for c in [h, 1, 3*h, 2, 5*h, 3]:
-                for d in [1, 2, 3]:
-                    assert can_do([a, b], [c, d])
+    for ai in [1, 2, 3]:
+        for bi in [1, 2, 3]:
+            for ci in range(1, ai + 1):
+                for di in [h, 1, 3*h, 2, 5*h, 3]:
+                    assert can_do([ai, bi], [ci, di])
+        for bi in [3*h, 5*h]:
+            for ci in [h, 1, 3*h, 2, 5*h, 3]:
+                for di in [1, 2, 3]:
+                    assert can_do([ai, bi], [ci, di])
 
-    for a in [-h, h, 3*h, 5*h]:
-        for b in [1, 2, 3]:
-            for c in [h, 1, 3*h, 2, 5*h, 3]:
-                for d in [1, 2, 3]:
-                    assert can_do([a, b], [c, d])
-        for b in [h, 3*h, 5*h]:
-            for c in [h, 3*h, 5*h, 3]:
-                for d in [h, 1, 3*h, 2, 5*h, 3]:
-                    if c <= b:
-                        assert can_do([a, b], [c, d])
+    for ai in [-h, h, 3*h, 5*h]:
+        for bi in [1, 2, 3]:
+            for ci in [h, 1, 3*h, 2, 5*h, 3]:
+                for di in [1, 2, 3]:
+                    assert can_do([ai, bi], [ci, di])
+        for bi in [h, 3*h, 5*h]:
+            for ci in [h, 3*h, 5*h, 3]:
+                for di in [h, 1, 3*h, 2, 5*h, 3]:
+                    if ci <= bi:
+                        assert can_do([ai, bi], [ci, di])
 
 
 def test_prudnikov_9():

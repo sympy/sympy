@@ -2,7 +2,7 @@ from sympy.core.symbol import Symbol
 from sympy.plotting.intervalmath import interval
 from sympy.plotting.intervalmath.interval_membership import intervalMembership
 from sympy.plotting.experimental_lambdify import experimental_lambdify
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_creation():

@@ -1,9 +1,8 @@
-from sympy.core.compatibility import range
 from sympy.combinatorics.permutations import Permutation, Perm
 from sympy.combinatorics.tensor_can import (perm_af_direct_product, dummy_sgs,
     riemann_bsgs, get_symmetric_group_sgs, canonicalize, bsgs_direct_product)
 from sympy.combinatorics.testutil import canonicalize_naive, graph_certificate
-from sympy.utilities.pytest import skip, XFAIL
+from sympy.testing.pytest import skip, XFAIL
 
 def test_perm_af_direct_product():
     gens1 = [[1,0,2,3], [0,1,3,2]]

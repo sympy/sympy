@@ -4,7 +4,7 @@ from sympy.combinatorics.homomorphisms import homomorphism, group_isomorphism, i
 from sympy.combinatorics.free_groups import free_group
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.named_groups import AlternatingGroup, DihedralGroup, CyclicGroup
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_homomorphism():
     # FpGroup -> PermutationGroup

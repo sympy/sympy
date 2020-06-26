@@ -3,7 +3,7 @@ from sympy.geometry import Point, Point2D, Line, Polygon, Segment, convex_hull,\
     intersection, centroid, Point3D, Line3D
 from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points, are_coplanar
 from sympy.solvers.solvers import solve
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_idiff():
@@ -116,20 +116,20 @@ def test_farthest_points_closest_points():
     # equidistant points
     a, b, c = (
         Point2D(0, 0), Point2D(1, 0), Point2D(S.Half, sqrt(3)/2))
-    ans = set([_ordered_points((i, j))
-        for i, j in subsets((a, b, c), 2)])
+    ans = {_ordered_points((i, j))
+        for i, j in subsets((a, b, c), 2)}
     assert closest_points(b, c, a) == ans
     assert farthest_points(b, c, a) == ans
 
     # unique to farthest
     points = [(1, 1), (1, 2), (3, 1), (-5, 2), (15, 4)]
-    assert farthest_points(*points) == set(
-        [(Point2D(-5, 2), Point2D(15, 4))])
+    assert farthest_points(*points) == {
+        (Point2D(-5, 2), Point2D(15, 4))}
     points = [(1, -1), (1, -2), (3, -1), (-5, -2), (15, -4)]
-    assert farthest_points(*points) == set(
-        [(Point2D(-5, -2), Point2D(15, -4))])
-    assert farthest_points((1, 1), (0, 0)) == set(
-        [(Point2D(0, 0), Point2D(1, 1))])
+    assert farthest_points(*points) == {
+        (Point2D(-5, -2), Point2D(15, -4))}
+    assert farthest_points((1, 1), (0, 0)) == {
+        (Point2D(0, 0), Point2D(1, 1))}
     raises(ValueError, lambda: farthest_points((1, 1)))
 
 

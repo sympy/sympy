@@ -1,5 +1,5 @@
 from sympy import symbols
-from sympy.functions import beta, Ei, zeta, Max, Min, sqrt, exp
+from sympy.functions import beta, Ei, zeta, Max, Min, sqrt
 from sympy.printing.cxxcode import CXX98CodePrinter, CXX11CodePrinter, CXX17CodePrinter, cxxcode
 from sympy.codegen.cfunctions import log1p
 

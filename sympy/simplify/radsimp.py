@@ -7,7 +7,7 @@ from sympy import SYMPY_DEBUG
 from sympy.core import expand_power_base, sympify, Add, S, Mul, Derivative, Pow, symbols, expand_mul
 from sympy.core.add import _unevaluated_Add
 from sympy.core.compatibility import iterable, ordered, default_sort_key
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul
@@ -46,7 +46,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     ========
 
     >>> from sympy import S, collect, expand, factor, Wild
-    >>> from sympy.abc import a, b, c, x, y, z
+    >>> from sympy.abc import a, b, c, x, y
 
     This function can collect symbolic coefficients in polynomials or
     rational expressions. It will manage to find all integer or rational
@@ -159,11 +159,29 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
     collect_const, collect_sqrt, rcollect
     """
+    from sympy.core.assumptions import assumptions
+    from sympy.utilities.iterables import sift
+    from sympy.core.symbol import Dummy, Wild
     expr = sympify(expr)
-    syms = list(syms) if iterable(syms) else [syms]
+    syms = [sympify(i) for i in (syms if iterable(syms) else [syms])]
+    # replace syms[i] if it is not x, -x or has Wild symbols
+    cond = lambda x: x.is_Symbol or (-x).is_Symbol or bool(
+        x.atoms(Wild))
+    _, nonsyms = sift(syms, cond, binary=True)
+    if nonsyms:
+        reps = dict(zip(nonsyms, [Dummy(**assumptions(i)) for i in nonsyms]))
+        syms = [reps.get(s, s) for s in syms]
+        rv = collect(expr.subs(reps), syms,
+            func=func, evaluate=evaluate, exact=exact,
+            distribute_order_term=distribute_order_term)
+        urep = {v: k for k, v in reps.items()}
+        if not isinstance(rv, dict):
+            return rv.xreplace(urep)
+        else:
+            return {urep.get(k, k): v.xreplace(urep) for k, v in rv.items()}
 
     if evaluate is None:
-        evaluate = global_evaluate[0]
+        evaluate = global_parameters.evaluate
 
     def make_expression(terms):
         product = []
@@ -496,7 +514,7 @@ def collect_sqrt(expr, evaluate=None):
     collect, collect_const, rcollect
     """
     if evaluate is None:
-        evaluate = global_evaluate[0]
+        evaluate = global_parameters.evaluate
     # this step will help to standardize any complex arguments
     # of sqrts
     coeff, expr = expr.as_content_primitive()
@@ -616,7 +634,7 @@ def collect_const(expr, *vars, **kwargs):
     ========
 
     >>> from sympy import sqrt
-    >>> from sympy.abc import a, s, x, y, z
+    >>> from sympy.abc import s, x, y, z
     >>> from sympy.simplify.radsimp import collect_const
     >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
     sqrt(3)*(sqrt(2) + 2)
@@ -739,7 +757,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     Examples
     ========
 
-    >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
+    >>> from sympy import radsimp, sqrt, Symbol, pprint
     >>> from sympy import factor_terms, fraction, signsimp
     >>> from sympy.simplify.radsimp import collect_sqrt
     >>> from sympy.abc import a, b, c
@@ -1067,20 +1085,18 @@ def fraction(expr, exact=False):
                 numer.append(term)
             elif not exact and ex.is_Mul:
                 n, d = term.as_numer_denom()
-                numer.append(n)
+                if n != 1:
+                    numer.append(n)
                 denom.append(d)
             else:
                 numer.append(term)
-        elif term.is_Rational:
-            n, d = term.as_numer_denom()
-            numer.append(n)
-            denom.append(d)
+        elif term.is_Rational and not term.is_Integer:
+            if term.p != 1:
+                numer.append(term.p)
+            denom.append(term.q)
         else:
             numer.append(term)
-    if exact:
-        return Mul(*numer, evaluate=False), Mul(*denom, evaluate=False)
-    else:
-        return Mul(*numer), Mul(*denom)
+    return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
 
 
 def numer(expr):

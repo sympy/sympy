@@ -76,8 +76,6 @@ from sympy.utilities import subsets
 
 from math import ceil as _ceil, log as _log
 
-from sympy.core.compatibility import range
-
 
 def dup_trial_division(f, factors, K):
     """
@@ -126,13 +124,64 @@ def dmp_trial_division(f, factors, u, K):
 
 
 def dup_zz_mignotte_bound(f, K):
-    """Mignotte bound for univariate polynomials in `K[x]`. """
-    a = dup_max_norm(f, K)
-    b = abs(dup_LC(f, K))
-    n = dup_degree(f)
+    """
+    The Knuth-Cohen variant of Mignotte bound for
+    univariate polynomials in `K[x]`.
 
-    return K.sqrt(K(n + 1))*2**n*a*b
+    Examples
+    ========
 
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
+
+    >>> f = x**3 + 14*x**2 + 56*x + 64
+    >>> R.dup_zz_mignotte_bound(f)
+    152
+
+    By checking `factor(f)` we can see that max coeff is 8
+
+    Also consider a case that `f` is irreducible for example `f = 2*x**2 + 3*x + 4`
+    To avoid a bug for these cases, we return the bound plus the max coefficient of `f`
+
+    >>> f = 2*x**2 + 3*x + 4
+    >>> R.dup_zz_mignotte_bound(f)
+    6
+
+    Lastly,To see the difference between the new and the old Mignotte bound
+    consider the irreducible polynomial::
+
+    >>> f = 87*x**7 + 4*x**6 + 80*x**5 + 17*x**4 + 9*x**3 + 12*x**2 + 49*x + 26
+    >>> R.dup_zz_mignotte_bound(f)
+    744
+
+    The new Mignotte bound is 744 whereas the old one (SymPy 1.5.1) is 1937664.
+
+
+    References
+    ==========
+
+    ..[1] [Abbott2013]_
+
+    """
+    from sympy import binomial
+
+    d = dup_degree(f)
+    delta = _ceil(d / 2)
+    delta2 = _ceil(delta / 2)
+
+    # euclidean-norm
+    eucl_norm = K.sqrt( sum( [cf**2 for cf in f] ) )
+
+    # biggest values of binomial coefficients (p. 538 of reference)
+    t1 = binomial(delta - 1, delta2)
+    t2 = binomial(delta - 1, delta2 - 1)
+
+    lc = K.abs(dup_LC(f, K))   # leading coefficient
+    bound = t1 * eucl_norm + t2 * lc   # (p. 538 of reference)
+    bound += dup_max_norm(f, K) # add max coeff for irreducible polys
+    bound = _ceil(bound / 2) * 2   # round up to even integer
+
+    return bound
 
 def dmp_zz_mignotte_bound(f, u, K):
     """Mignotte bound for multivariate polynomials in `K[X]`. """
@@ -929,7 +978,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
     .. [2] [Geddes92]_
 
     """
-    from sympy.utilities.randtest import _randint
+    from sympy.testing.randtest import _randint
 
     randint = _randint(seed)
 
@@ -1106,6 +1155,72 @@ def dmp_zz_factor(f, u, K):
     return cont, _sort_factors(factors)
 
 
+def dup_qq_i_factor(f, K0):
+    """Factor univariate polynomials into irreducibles in `QQ_I[x]`. """
+    # Factor in QQ<I>
+    K1 = K0.as_AlgebraicField()
+    f = dup_convert(f, K0, K1)
+    coeff, factors = dup_factor_list(f, K1)
+    factors = [(dup_convert(fac, K1, K0), i) for fac, i in factors]
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
+def dup_zz_i_factor(f, K0):
+    """Factor univariate polynomials into irreducibles in `ZZ_I[x]`. """
+    # First factor in QQ_I
+    K1 = K0.get_field()
+    f = dup_convert(f, K0, K1)
+    coeff, factors = dup_qq_i_factor(f, K1)
+
+    new_factors = []
+    for fac, i in factors:
+        # Extract content
+        fac_denom, fac_num = dup_clear_denoms(fac, K1)
+        fac_num_ZZ_I = dup_convert(fac_num, K1, K0)
+        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, 0, K1)
+
+        coeff = (coeff * content ** i) // fac_denom ** i
+        new_factors.append((fac_prim, i))
+
+    factors = new_factors
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
+def dmp_qq_i_factor(f, u, K0):
+    """Factor multivariate polynomials into irreducibles in `QQ_I[X]`. """
+    # Factor in QQ<I>
+    K1 = K0.as_AlgebraicField()
+    f = dmp_convert(f, u, K0, K1)
+    coeff, factors = dmp_factor_list(f, u, K1)
+    factors = [(dmp_convert(fac, u, K1, K0), i) for fac, i in factors]
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
+def dmp_zz_i_factor(f, u, K0):
+    """Factor multivariate polynomials into irreducibles in `ZZ_I[X]`. """
+    # First factor in QQ_I
+    K1 = K0.get_field()
+    f = dmp_convert(f, u, K0, K1)
+    coeff, factors = dmp_qq_i_factor(f, u, K1)
+
+    new_factors = []
+    for fac, i in factors:
+        # Extract content
+        fac_denom, fac_num = dmp_clear_denoms(fac, u, K1)
+        fac_num_ZZ_I = dmp_convert(fac_num, u, K1, K0)
+        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, u, K1)
+
+        coeff = (coeff * content ** i) // fac_denom ** i
+        new_factors.append((fac_prim, i))
+
+    factors = new_factors
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
 def dup_ext_factor(f, K):
     """Factor univariate polynomials over algebraic number fields. """
     n, lc = dup_degree(f), dup_LC(f, K)
@@ -1193,6 +1308,10 @@ def dup_factor_list(f, K0):
         coeff, factors = dup_gf_factor(f, K0)
     elif K0.is_Algebraic:
         coeff, factors = dup_ext_factor(f, K0)
+    elif K0.is_GaussianRing:
+        coeff, factors = dup_zz_i_factor(f, K0)
+    elif K0.is_GaussianField:
+        coeff, factors = dup_qq_i_factor(f, K0)
     else:
         if not K0.is_Exact:
             K0_inexact, K0 = K0, K0.get_exact()
@@ -1269,6 +1388,10 @@ def dmp_factor_list(f, u, K0):
         coeff, factors = dmp_gf_factor(f, u, K0)
     elif K0.is_Algebraic:
         coeff, factors = dmp_ext_factor(f, u, K0)
+    elif K0.is_GaussianRing:
+        coeff, factors = dmp_zz_i_factor(f, u, K0)
+    elif K0.is_GaussianField:
+        coeff, factors = dmp_qq_i_factor(f, u, K0)
     else:
         if not K0.is_Exact:
             K0_inexact, K0 = K0, K0.get_exact()

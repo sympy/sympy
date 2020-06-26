@@ -1,10 +1,9 @@
 from sympy.concrete.tests.test_sums_products import NS
 
 from sympy import sqrt, S
-from sympy.physics.units import convert_to, coulomb_constant, elementary_charge, gravitational_constant, planck, \
-    atomic_mass_unit, electronvolt, avogadro_number
+from sympy.physics.units import convert_to, coulomb_constant, elementary_charge, gravitational_constant, planck
 from sympy.physics.units.definitions.unit_definitions import statcoulomb, coulomb, second, gram, centimeter, erg, \
-    newton, joule, dyne, speed_of_light, statvolt, meter
+    newton, joule, dyne, speed_of_light, meter
 from sympy.physics.units.systems import SI
 from sympy.physics.units.systems.cgs import cgs_gauss
 

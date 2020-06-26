@@ -1,3 +1,5 @@
+from typing import Type
+
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
 from sympy.core import S, Pow
@@ -20,6 +22,13 @@ class Dyadic(BasisDependent):
     """
 
     _op_priority = 13.0
+
+    _expr_type = None  # type: Type[Dyadic]
+    _mul_func = None  # type: Type[Dyadic]
+    _add_func = None  # type: Type[Dyadic]
+    _zero_func = None  # type: Type[Dyadic]
+    _base_func = None  # type: Type[Dyadic]
+    zero = None  # type: DyadicZero
 
     @property
     def components(self):
@@ -172,6 +181,15 @@ class Dyadic(BasisDependent):
         return Matrix([i.dot(self).dot(j) for i in system for j in
                        second_system]).reshape(3, 3)
 
+    def _div_helper(one, other):
+        """ Helper for division involving dyadics """
+        if isinstance(one, Dyadic) and isinstance(other, Dyadic):
+            raise TypeError("Cannot divide two dyadics")
+        elif isinstance(one, Dyadic):
+            return DyadicMul(one, Pow(other, S.NegativeOne))
+        else:
+            raise TypeError("Cannot divide by a dyadic")
+
 
 class BaseDyadic(Dyadic, AtomicExpr):
     """
@@ -191,23 +209,21 @@ class BaseDyadic(Dyadic, AtomicExpr):
         elif vector1 == Vector.zero or vector2 == Vector.zero:
             return Dyadic.zero
         # Initialize instance
-        obj = super(BaseDyadic, cls).__new__(cls, vector1, vector2)
+        obj = super().__new__(cls, vector1, vector2)
         obj._base_instance = obj
         obj._measure_number = 1
         obj._components = {obj: S.One}
         obj._sys = vector1._sys
-        obj._pretty_form = (u'(' + vector1._pretty_form + '|' +
+        obj._pretty_form = ('(' + vector1._pretty_form + '|' +
                              vector2._pretty_form + ')')
         obj._latex_form = ('(' + vector1._latex_form + "{|}" +
                            vector2._latex_form + ')')
 
         return obj
 
-    def __str__(self, printer=None):
-        return "(" + str(self.args[0]) + "|" + str(self.args[1]) + ")"
-
-    _sympystr = __str__
-    _sympyrepr = _sympystr
+    def _sympystr(self, printer):
+        return "({}|{})".format(
+            printer._print(self.args[0]), printer._print(self.args[1]))
 
 
 class DyadicMul(BasisDependentMul, Dyadic):
@@ -237,17 +253,10 @@ class DyadicAdd(BasisDependentAdd, Dyadic):
         obj = BasisDependentAdd.__new__(cls, *args, **options)
         return obj
 
-    def __str__(self, printer=None):
-        ret_str = ''
+    def _sympystr(self, printer):
         items = list(self.components.items())
         items.sort(key=lambda x: x[0].__str__())
-        for k, v in items:
-            temp_dyad = k * v
-            ret_str += temp_dyad.__str__(printer) + " + "
-        return ret_str[:-3]
-
-    __repr__ = __str__
-    _sympystr = __str__
+        return " + ".join(printer._print(k * v) for k, v in items)
 
 
 class DyadicZero(BasisDependentZero, Dyadic):
@@ -256,7 +265,7 @@ class DyadicZero(BasisDependentZero, Dyadic):
     """
 
     _op_priority = 13.1
-    _pretty_form = u'(0|0)'
+    _pretty_form = '(0|0)'
     _latex_form = r'(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
 
     def __new__(cls):
@@ -264,20 +273,9 @@ class DyadicZero(BasisDependentZero, Dyadic):
         return obj
 
 
-def _dyad_div(one, other):
-    """ Helper for division involving dyadics """
-    if isinstance(one, Dyadic) and isinstance(other, Dyadic):
-        raise TypeError("Cannot divide two dyadics")
-    elif isinstance(one, Dyadic):
-        return DyadicMul(one, Pow(other, S.NegativeOne))
-    else:
-        raise TypeError("Cannot divide by a dyadic")
-
-
 Dyadic._expr_type = Dyadic
 Dyadic._mul_func = DyadicMul
 Dyadic._add_func = DyadicAdd
 Dyadic._zero_func = DyadicZero
 Dyadic._base_func = BaseDyadic
-Dyadic._div_helper = _dyad_div
 Dyadic.zero = DyadicZero()

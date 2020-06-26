@@ -1,7 +1,7 @@
 from sympy import Rational, oo, sqrt, S
 from sympy import Line, Point, Point2D, Parabola, Segment2D, Ray2D
 from sympy import Circle, Ellipse, symbols, sign
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_parabola_geom():

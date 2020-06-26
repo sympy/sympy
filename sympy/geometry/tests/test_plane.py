@@ -1,7 +1,7 @@
 from sympy import Dummy, S, symbols, pi, sqrt, asin, sin, cos, Rational
 from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane
 from sympy.geometry.util import are_coplanar
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_plane():

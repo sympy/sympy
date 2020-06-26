@@ -5,7 +5,7 @@ from sympy.physics.units import (
     planck_length, planck_mass, planck_temperature, planck_time, radians,
     second, speed_of_light, steradian, time, km)
 from sympy.physics.units.util import convert_to, check_dimensions
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def NS(e, n=15, **options):

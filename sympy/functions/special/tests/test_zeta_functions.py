@@ -3,8 +3,8 @@ from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    exp_polar, polar_lift, O, stieltjes, Abs, Sum, oo)
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial
-from sympy.utilities.pytest import raises
-from sympy.utilities.randtest import (test_derivative_numerically as td,
+from sympy.testing.pytest import raises
+from sympy.testing.randtest import (test_derivative_numerically as td,
                       random_complex_number as randcplx, verify_numerically as tn)
 
 x = Symbol('x')
@@ -154,7 +154,7 @@ def test_issue_8404():
 
 
 def test_polylog_values():
-    from sympy.utilities.randtest import verify_numerically as tn
+    from sympy.testing.randtest import verify_numerically as tn
     assert polylog(2, 2) == pi**2/4 - I*pi*log(2)
     assert polylog(2, S.Half) == pi**2/12 - log(2)**2/2
     for z in [S.Half, 2, (sqrt(5)-1)/2, -(sqrt(5)-1)/2, -(sqrt(5)+1)/2, (3-sqrt(5))/2]:

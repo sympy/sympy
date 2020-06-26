@@ -1,6 +1,6 @@
 from sympy import Integer, S, symbols, Mul
 from sympy.core.operations import AssocOp, LatticeOp
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core.sympify import SympifyError
 from sympy.core.add import Add
 

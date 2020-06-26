@@ -4,7 +4,7 @@ Euler-Lagrange Equations for given Lagrangian.
 """
 from itertools import combinations_with_replacement
 from sympy import Function, sympify, diff, Eq, S, Symbol, Derivative
-from sympy.core.compatibility import (iterable, range)
+from sympy.core.compatibility import iterable
 
 
 def euler_equations(L, funcs=(), vars=()):

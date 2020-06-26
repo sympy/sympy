@@ -2,6 +2,7 @@
 
 from .slice import MatrixSlice
 from .blockmatrix import BlockMatrix, BlockDiagMatrix, block_collapse, blockcut
+from .companion import CompanionMatrix
 from .funcmatrix import FunctionMatrix
 from .inverse import Inverse
 from .matadd import MatAdd
@@ -17,12 +18,15 @@ from .hadamard import hadamard_product, HadamardProduct, hadamard_power, Hadamar
 from .diagonal import DiagonalMatrix, DiagonalOf, DiagMatrix, diagonalize_vector
 from .dotproduct import DotProduct
 from .kronecker import kronecker_product, KroneckerProduct, combine_kronecker
+from .permutation import PermutationMatrix, MatrixPermute
 
 __all__ = [
     'MatrixSlice',
 
     'BlockMatrix', 'BlockDiagMatrix', 'block_collapse', 'blockcut',
     'FunctionMatrix',
+
+    'CompanionMatrix',
 
     'Inverse',
 
@@ -45,9 +49,11 @@ __all__ = [
 
     'hadamard_product', 'HadamardProduct', 'hadamard_power', 'HadamardPower',
 
-    'DiagonalMatrix', 'DiagonalOf', 'DiagonalizeVector', 'diagonalize_vector',
+    'DiagonalMatrix', 'DiagonalOf', 'DiagMatrix', 'diagonalize_vector',
 
     'DotProduct',
 
     'kronecker_product', 'KroneckerProduct', 'combine_kronecker',
+
+    'PermutationMatrix', 'MatrixPermute',
 ]

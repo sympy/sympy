@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import ignore_warnings
+from sympy.testing.pytest import ignore_warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 with ignore_warnings(SymPyDeprecationWarning):

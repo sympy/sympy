@@ -8,7 +8,6 @@ Authors:
 from __future__ import print_function, division
 
 from sympy import Basic, Interval, oo, sympify
-from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
@@ -453,7 +452,6 @@ class DirectSumHilbertSpace(HilbertSpace):
     ========
 
     >>> from sympy.physics.quantum.hilbert import ComplexSpace, FockSpace
-    >>> from sympy import symbols
 
     >>> c = ComplexSpace(2)
     >>> f = FockSpace()

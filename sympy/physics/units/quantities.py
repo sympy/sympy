@@ -4,9 +4,7 @@ Physical quantities.
 
 from __future__ import division
 
-from sympy import Abs, AtomicExpr, Symbol, sympify
-from sympy.core.compatibility import string_types
-from sympy.physics.units import Dimension, dimensions
+from sympy import AtomicExpr, Symbol, sympify
 from sympy.physics.units.dimensions import _QuantityMapper
 from sympy.physics.units.prefixes import Prefix
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -33,7 +31,7 @@ class Quantity(AtomicExpr):
 
         # For Quantity(name, dim, scale, abbrev) to work like in the
         # old version of Sympy:
-        if not isinstance(abbrev, string_types) and not \
+        if not isinstance(abbrev, str) and not \
                    isinstance(abbrev, Symbol):
             dimension, scale_factor, abbrev = abbrev, dimension, scale_factor
 
@@ -55,7 +53,7 @@ class Quantity(AtomicExpr):
 
         if abbrev is None:
             abbrev = name
-        elif isinstance(abbrev, string_types):
+        elif isinstance(abbrev, str):
             abbrev = Symbol(abbrev)
 
         obj = AtomicExpr.__new__(cls, name, abbrev)
@@ -120,10 +118,9 @@ class Quantity(AtomicExpr):
         return self._name
 
     @property
-    def dimension(self, unit_system=None):
+    def dimension(self):
         from sympy.physics.units import UnitSystem
-        if unit_system is None:
-            unit_system = UnitSystem.get_default_unit_system()
+        unit_system = UnitSystem.get_default_unit_system()
         return unit_system.get_quantity_dimension(self)
 
     @property
@@ -136,13 +133,12 @@ class Quantity(AtomicExpr):
         return self._abbrev
 
     @property
-    def scale_factor(self, unit_system=None):
+    def scale_factor(self):
         """
         Overall magnitude of the quantity as compared to the canonical units.
         """
         from sympy.physics.units import UnitSystem
-        if unit_system is None:
-            unit_system = UnitSystem.get_default_unit_system()
+        unit_system = UnitSystem.get_default_unit_system()
         return unit_system.get_quantity_scale_factor(self)
 
     def _eval_is_positive(self):

@@ -11,7 +11,7 @@ from sympy.vector.deloperator import Del
 from sympy.vector.functions import (is_conservative, is_solenoidal,
                                     scalar_potential, directional_derivative,
                                     laplacian, scalar_potential_difference)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 C = CoordSys3D('C')
 i, j, k = C.base_vectors()
@@ -167,7 +167,7 @@ def test_product_rules():
     assert simplify(lhs) == simplify(rhs)
 
 
-P = C.orient_new_axis('P', q, C.k)
+P = C.orient_new_axis('P', q, C.k)  # type: ignore
 scalar_field = 2*x**2*y*z
 grad_field = gradient(scalar_field)
 vector_field = y**2*i + 3*x*j + 5*y*z*k
@@ -290,7 +290,7 @@ def test_mixed_coordinates():
     b = CoordSys3D('b')
     c = CoordSys3D('c')
     assert gradient(a.x*b.y) == b.y*a.i + a.x*b.j
-    assert gradient(3*cos(q)*a.x*b.x+a.y*(a.x+((cos(q)+b.x)))) ==\
+    assert gradient(3*cos(q)*a.x*b.x+a.y*(a.x+(cos(q)+b.x))) ==\
            (a.y + 3*b.x*cos(q))*a.i + (a.x + b.x + cos(q))*a.j + (3*a.x*cos(q) + a.y)*b.i
     # Some tests need further work:
     # assert gradient(a.x*(cos(a.x+b.x))) == (cos(a.x + b.x))*a.i + a.x*Gradient(cos(a.x + b.x))

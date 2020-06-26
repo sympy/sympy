@@ -1,7 +1,7 @@
 from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix
 from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols
 from sympy.physics.vector.dyadic import _check_dyadic
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 Vector.simp = True
 A = ReferenceFrame('A')

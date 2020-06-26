@@ -7,10 +7,9 @@ References
 - http://mathworld.wolfram.com/KroneckerDelta.html
 
 """
-from __future__ import print_function, division
 from sympy.core import Add, Mul, S, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import default_sort_key, range
+from sympy.core.compatibility import default_sort_key
 from sympy.functions import KroneckerDelta, Piecewise, piecewise_fold
 from sympy.sets import Interval
 
@@ -268,7 +267,7 @@ def deltasummation(f, limit, no_piecewise=False):
     >>> from sympy.abc import k
     >>> i, j = symbols('i, j', integer=True, finite=True)
     >>> from sympy.concrete.delta import deltasummation
-    >>> from sympy import KroneckerDelta, Piecewise
+    >>> from sympy import KroneckerDelta
     >>> deltasummation(KroneckerDelta(i, k), (k, -oo, oo))
     1
     >>> deltasummation(KroneckerDelta(i, k), (k, 0, oo))

@@ -12,7 +12,7 @@ from sympy.functions.elementary.miscellaneous import Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
 from sympy.tensor.array.ndim_array import NDimArray
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.abc import a, b, c, x, y, z
 
 def test_diff():

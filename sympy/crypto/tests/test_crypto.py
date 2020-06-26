@@ -1,5 +1,4 @@
 from sympy.core import symbols
-from sympy.core.compatibility import range
 from sympy.crypto.crypto import (cycle_list,
       encipher_shift, encipher_affine, encipher_substitution,
       check_and_join, encipher_vigenere, decipher_vigenere,
@@ -21,7 +20,7 @@ from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 
-from sympy.utilities.pytest import raises, warns
+from sympy.testing.pytest import raises, warns
 
 from random import randrange
 

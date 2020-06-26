@@ -8,20 +8,15 @@ from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, 
                    integrate, gammasimp, Gt)
 from sympy.core.expr import ExprBuilder, unchanged
 from sympy.core.function import AppliedUndef
-from sympy.core.compatibility import range, round, PY3
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
 
-# replace 3 instances with int when PY2 is dropped and
-# delete this line
-_rint = int if PY3 else float
-
-class DummyNumber(object):
+class DummyNumber:
     """
     Minimal implementation of a number that works with SymPy.
 
@@ -163,6 +158,188 @@ def test_ibasic():
         x = a
         x /= b
     assert dotest(s)
+
+
+class NonBasic:
+    '''This class represents an object that knows how to implement binary
+    operations like +, -, etc with Expr but is not a subclass of Basic itself.
+    The NonExpr subclass below does subclass Basic but not Expr.
+
+    For both NonBasic and NonExpr it should be possible for them to override
+    Expr.__add__ etc because Expr.__add__ should be returning NotImplemented
+    for non Expr classes. Otherwise Expr.__add__ would create meaningless
+    objects like Add(Integer(1), FiniteSet(2)) and it wouldn't be possible for
+    other classes to override these operations when interacting with Expr.
+    '''
+    def __add__(self, other):
+        return SpecialOp('+', self, other)
+
+    def __radd__(self, other):
+        return SpecialOp('+', other, self)
+
+    def __sub__(self, other):
+        return SpecialOp('-', self, other)
+
+    def __rsub__(self, other):
+        return SpecialOp('-', other, self)
+
+    def __mul__(self, other):
+        return SpecialOp('*', self, other)
+
+    def __rmul__(self, other):
+        return SpecialOp('*', other, self)
+
+    def __div__(self, other):
+        return SpecialOp('/', self, other)
+
+    def __rdiv__(self, other):
+        return SpecialOp('/', other, self)
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
+    def __floordiv__(self, other):
+        return SpecialOp('//', self, other)
+
+    def __rfloordiv__(self, other):
+        return SpecialOp('//', other, self)
+
+    def __mod__(self, other):
+        return SpecialOp('%', self, other)
+
+    def __rmod__(self, other):
+        return SpecialOp('%', other, self)
+
+    def __divmod__(self, other):
+        return SpecialOp('divmod', self, other)
+
+    def __rdivmod__(self, other):
+        return SpecialOp('divmod', other, self)
+
+    def __pow__(self, other):
+        return SpecialOp('**', self, other)
+
+    def __rpow__(self, other):
+        return SpecialOp('**', other, self)
+
+    def __lt__(self, other):
+        return SpecialOp('<', self, other)
+
+    def __gt__(self, other):
+        return SpecialOp('>', self, other)
+
+    def __le__(self, other):
+        return SpecialOp('<=', self, other)
+
+    def __ge__(self, other):
+        return SpecialOp('>=', self, other)
+
+
+class NonExpr(Basic, NonBasic):
+    '''Like NonBasic above except this is a subclass of Basic but not Expr'''
+    pass
+
+
+class SpecialOp(Basic):
+    '''Represents the results of operations with NonBasic and NonExpr'''
+    def __new__(cls, op, arg1, arg2):
+        return Basic.__new__(cls, op, arg1, arg2)
+
+
+class NonArithmetic(Basic):
+    '''Represents a Basic subclass that does not support arithmetic operations'''
+    pass
+
+
+def test_cooperative_operations():
+    '''Tests that Expr uses binary operations cooperatively.
+
+    In particular it should be possible for non-Expr classes to override
+    binary operators like +, - etc when used with Expr instances. This should
+    work for non-Expr classes whether they are Basic subclasses or not. Also
+    non-Expr classes that do not define binary operators with Expr should give
+    TypeError.
+    '''
+    # A bunch of instances of Expr subclasses
+    exprs = [
+        Expr(),
+        S.Zero,
+        S.One,
+        S.Infinity,
+        S.NegativeInfinity,
+        S.ComplexInfinity,
+        S.Half,
+        Float(0.5),
+        Integer(2),
+        Symbol('x'),
+        Mul(2, Symbol('x')),
+        Add(2, Symbol('x')),
+        Pow(2, Symbol('x')),
+    ]
+
+    for e in exprs:
+        # Test that these classes can override arithmetic operations in
+        # combination with various Expr types.
+        for ne in [NonBasic(), NonExpr()]:
+
+            results = [
+                (ne + e, ('+', ne, e)),
+                (e + ne, ('+', e, ne)),
+                (ne - e, ('-', ne, e)),
+                (e - ne, ('-', e, ne)),
+                (ne * e, ('*', ne, e)),
+                (e * ne, ('*', e, ne)),
+                (ne / e, ('/', ne, e)),
+                (e / ne, ('/', e, ne)),
+                (ne // e, ('//', ne, e)),
+                (e // ne, ('//', e, ne)),
+                (ne % e, ('%', ne, e)),
+                (e % ne, ('%', e, ne)),
+                (divmod(ne, e), ('divmod', ne, e)),
+                (divmod(e, ne), ('divmod', e, ne)),
+                (ne ** e, ('**', ne, e)),
+                (e ** ne, ('**', e, ne)),
+                (e < ne, ('>', ne, e)),
+                (ne < e, ('<', ne, e)),
+                (e > ne, ('<', ne, e)),
+                (ne > e, ('>', ne, e)),
+                (e <= ne, ('>=', ne, e)),
+                (ne <= e, ('<=', ne, e)),
+                (e >= ne, ('<=', ne, e)),
+                (ne >= e, ('>=', ne, e)),
+            ]
+
+            for res, args in results:
+                assert type(res) is SpecialOp and res.args == args
+
+        # These classes do not support binary operators with Expr. Every
+        # operation should raise in combination with any of the Expr types.
+        for na in [NonArithmetic(), object()]:
+
+            raises(TypeError, lambda : e + na)
+            raises(TypeError, lambda : na + e)
+            raises(TypeError, lambda : e - na)
+            raises(TypeError, lambda : na - e)
+            raises(TypeError, lambda : e * na)
+            raises(TypeError, lambda : na * e)
+            raises(TypeError, lambda : e / na)
+            raises(TypeError, lambda : na / e)
+            raises(TypeError, lambda : e // na)
+            raises(TypeError, lambda : na // e)
+            raises(TypeError, lambda : e % na)
+            raises(TypeError, lambda : na % e)
+            raises(TypeError, lambda : divmod(e, na))
+            raises(TypeError, lambda : divmod(na, e))
+            raises(TypeError, lambda : e ** na)
+            raises(TypeError, lambda : na ** e)
+            raises(TypeError, lambda : e > na)
+            raises(TypeError, lambda : na > e)
+            raises(TypeError, lambda : e < na)
+            raises(TypeError, lambda : na < e)
+            raises(TypeError, lambda : e >= na)
+            raises(TypeError, lambda : na >= e)
+            raises(TypeError, lambda : e <= na)
+            raises(TypeError, lambda : na <= e)
 
 
 def test_relational():
@@ -331,18 +508,18 @@ def test_atoms():
     assert (2*(x**(y**x))).atoms() == {S(2), x, y}
 
     assert S.Half.atoms() == {S.Half}
-    assert S.Half.atoms(Symbol) == set([])
+    assert S.Half.atoms(Symbol) == set()
 
     assert sin(oo).atoms(oo) == set()
 
-    assert Poly(0, x).atoms() == {S.Zero}
-    assert Poly(1, x).atoms() == {S.One}
+    assert Poly(0, x).atoms() == {S.Zero, x}
+    assert Poly(1, x).atoms() == {S.One, x}
 
     assert Poly(x, x).atoms() == {x}
-    assert Poly(x, x, y).atoms() == {x}
+    assert Poly(x, x, y).atoms() == {x, y}
     assert Poly(x + y, x, y).atoms() == {x, y}
-    assert Poly(x + y, x, y, z).atoms() == {x, y}
-    assert Poly(x + y*t, x, y, z).atoms() == {t, x, y}
+    assert Poly(x + y, x, y, z).atoms() == {x, y, z}
+    assert Poly(x + y*t, x, y, z).atoms() == {t, x, y, z}
 
     assert (I*pi).atoms(NumberSymbol) == {pi}
     assert (I*pi).atoms(NumberSymbol, I) == \
@@ -442,6 +619,34 @@ def test_is_rational_function():
     assert (S.NegativeInfinity).is_rational_function() is False
     assert (S.ComplexInfinity).is_rational_function() is False
 
+def test_is_meromorphic():
+    f = a/x**2 + b + x + c*x**2
+    assert f.is_meromorphic(x, 0) is True
+    assert f.is_meromorphic(x, 1) is True
+    assert f.is_meromorphic(x, zoo) is True
+
+    g = 3 + 2*x**(log(3)/log(2) - 1)
+    assert g.is_meromorphic(x, 0) is False
+    assert g.is_meromorphic(x, 1) is True
+    assert g.is_meromorphic(x, zoo) is False
+
+    n = Symbol('n', integer=True)
+    h = sin(1/x)**n*x
+    assert h.is_meromorphic(x, 0) is False
+    assert h.is_meromorphic(x, 1) is True
+    assert h.is_meromorphic(x, zoo) is False
+
+    e = log(x)**pi
+    assert e.is_meromorphic(x, 0) is False
+    assert e.is_meromorphic(x, 1) is False
+    assert e.is_meromorphic(x, 2) is True
+    assert e.is_meromorphic(x, zoo) is False
+
+    assert (log(x)**a).is_meromorphic(x, 0) is False
+    assert (log(x)**a).is_meromorphic(x, 1) is False
+    assert (a**log(x)).is_meromorphic(x, 0) is None
+    assert (3**log(x)).is_meromorphic(x, 0) is False
+    assert (3**log(x)).is_meromorphic(x, 1) is True
 
 def test_is_algebraic_expr():
     assert sqrt(3).is_algebraic_expr(x) is True
@@ -474,7 +679,7 @@ def test_SAGE1():
 
 
 def test_SAGE2():
-    class MyInt(object):
+    class MyInt:
         def __int__(self):
             return 5
     assert sympify(MyInt()) == 5
@@ -704,7 +909,8 @@ def test_replace():
     # if not simultaneous then y*sin(x) -> y*sin(x)/y = sin(x) -> sin(x)/y
     assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y,
         simultaneous=False) == sin(x)/y
-    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e) == O(1, x)
+    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e
+        ) == x**2/2 + O(x**3)
     assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e,
         simultaneous=False) == x**2/2 + O(x**3)
     assert (x*(x*y + 3)).replace(lambda x: x.is_Mul, lambda x: 2 + x) == \
@@ -933,6 +1139,9 @@ def test_as_poly_as_expr():
     p = Poly(f, x, y)
 
     assert p.as_poly() == p
+
+    raises(AttributeError, lambda: Tuple(x, x).as_poly(x))
+    raises(AttributeError, lambda: Tuple(x ** 2, x, y).as_poly(x))
 
 
 def test_nonzero():
@@ -1209,7 +1418,7 @@ def test_coeff2():
     psi = Function("psi")
     g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
     g = g.expand()
-    assert g.coeff((psi(r).diff(r))) == 2/r
+    assert g.coeff(psi(r).diff(r)) == 2/r
 
 
 def test_coeff2_0():
@@ -1250,7 +1459,7 @@ def test_issue_4963():
 
 
 def test_action_verbs():
-    assert nsimplify((1/(exp(3*pi*x/5) + 1))) == \
+    assert nsimplify(1/(exp(3*pi*x/5) + 1)) == \
         (1/(exp(3*pi*x/5) + 1)).nsimplify()
     assert ratsimp(1/x + 1/y) == (1/x + 1/y).ratsimp()
     assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep=True)
@@ -1579,8 +1788,6 @@ def test_is_constant():
     assert (3*meter).is_constant() is True
     assert (x*meter).is_constant() is False
 
-    assert Poly(3, x).is_constant() is True
-
 
 def test_equals():
     assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).equals(0)
@@ -1767,14 +1974,14 @@ def test_round():
     for i in range(2):
         f = float(i)
         # 2 args
-        assert all(type(round(i, p)) is _rint for p in (-1, 0, 1))
+        assert all(type(round(i, p)) is int for p in (-1, 0, 1))
         assert all(S(i).round(p).is_Integer for p in (-1, 0, 1))
         assert all(type(round(f, p)) is float for p in (-1, 0, 1))
         assert all(S(f).round(p).is_Float for p in (-1, 0, 1))
         # 1 arg (p is None)
-        assert type(round(i)) is _rint
+        assert type(round(i)) is int
         assert S(i).round().is_Integer
-        assert type(round(f)) is _rint
+        assert type(round(f)) is int
         assert S(f).round().is_Integer
 
 
@@ -1903,3 +2110,24 @@ def test_ExprBuilder():
     eb = ExprBuilder(Mul)
     eb.args.extend([x, x])
     assert eb.build() == x**2
+
+def test_non_string_equality():
+    # Expressions should not compare equal to strings
+    x = symbols('x')
+    one = sympify(1)
+    assert (x == 'x') is False
+    assert (x != 'x') is True
+    assert (one == '1') is False
+    assert (one != '1') is True
+    assert (x + 1 == 'x + 1') is False
+    assert (x + 1 != 'x + 1') is True
+
+    # Make sure == doesn't try to convert the resulting expression to a string
+    # (e.g., by calling sympify() instead of _sympify())
+
+    class BadRepr:
+        def __repr__(self):
+            raise RuntimeError
+
+    assert (x == BadRepr()) is False
+    assert (x != BadRepr()) is True

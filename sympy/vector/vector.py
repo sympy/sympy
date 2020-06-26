@@ -1,7 +1,9 @@
+from typing import Type
+
 from sympy.core.assumptions import StdFactKB
 from sympy.core import S, Pow, sympify
 from sympy.core.expr import AtomicExpr, Expr
-from sympy.core.compatibility import range, default_sort_key
+from sympy.core.compatibility import default_sort_key
 from sympy import sqrt, ImmutableMatrix as Matrix, Add
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
@@ -18,6 +20,13 @@ class Vector(BasisDependent):
 
     is_Vector = True
     _op_priority = 12.0
+
+    _expr_type = None  # type: Type[Vector]
+    _mul_func = None  # type: Type[Vector]
+    _add_func = None  # type: Type[Vector]
+    _zero_func = None  # type: Type[Vector]
+    _base_func = None  # type: Type[Vector]
+    zero = None  # type: VectorZero
 
     @property
     def components(self):
@@ -214,7 +223,6 @@ class Vector(BasisDependent):
         ========
 
         >>> from sympy.vector.coordsysrect import CoordSys3D
-        >>> from sympy.vector.vector import Vector, BaseVector
         >>> C = CoordSys3D('C')
         >>> i, j, k = C.base_vectors()
         >>> v1 = i + j + k
@@ -321,6 +329,17 @@ class Vector(BasisDependent):
                                   vect * measure)
         return parts
 
+    def _div_helper(one, other):
+        """ Helper for division involving vectors. """
+        if isinstance(one, Vector) and isinstance(other, Vector):
+            raise TypeError("Cannot divide two vectors")
+        elif isinstance(one, Vector):
+            if other == S.Zero:
+                raise ValueError("Cannot divide a vector by zero")
+            return VectorMul(one, Pow(other, S.NegativeOne))
+        else:
+            raise TypeError("Invalid division involving a vector")
+
 
 class BaseVector(Vector, AtomicExpr):
     """
@@ -332,9 +351,9 @@ class BaseVector(Vector, AtomicExpr):
 
     def __new__(cls, index, system, pretty_str=None, latex_str=None):
         if pretty_str is None:
-            pretty_str = "x{0}".format(index)
+            pretty_str = "x{}".format(index)
         if latex_str is None:
-            latex_str = "x_{0}".format(index)
+            latex_str = "x_{}".format(index)
         pretty_str = str(pretty_str)
         latex_str = str(latex_str)
         # Verify arguments
@@ -344,13 +363,13 @@ class BaseVector(Vector, AtomicExpr):
             raise TypeError("system should be a CoordSys3D")
         name = system._vector_names[index]
         # Initialize an object
-        obj = super(BaseVector, cls).__new__(cls, S(index), system)
+        obj = super().__new__(cls, S(index), system)
         # Assign important attributes
         obj._base_instance = obj
         obj._components = {obj: S.One}
         obj._measure_number = S.One
         obj._name = system._name + '.' + name
-        obj._pretty_form = u'' + pretty_str
+        obj._pretty_form = '' + pretty_str
         obj._latex_form = latex_str
         obj._system = system
         # The _id is used for printing purposes
@@ -369,15 +388,12 @@ class BaseVector(Vector, AtomicExpr):
     def system(self):
         return self._system
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return self._name
 
     @property
     def free_symbols(self):
         return {self}
-
-    __repr__ = __str__
-    _sympystr = __str__
 
 
 class VectorAdd(BasisDependentAdd, Vector):
@@ -389,7 +405,7 @@ class VectorAdd(BasisDependentAdd, Vector):
         obj = BasisDependentAdd.__new__(cls, *args, **options)
         return obj
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         ret_str = ''
         items = list(self.separate().items())
         items.sort(key=lambda x: x[0].__str__())
@@ -398,11 +414,8 @@ class VectorAdd(BasisDependentAdd, Vector):
             for x in base_vects:
                 if x in vect.components:
                     temp_vect = self.components[x] * x
-                    ret_str += temp_vect.__str__(printer) + " + "
+                    ret_str += printer._print(temp_vect) + " + "
         return ret_str[:-3]
-
-    __repr__ = __str__
-    _sympystr = __str__
 
 
 class VectorMul(BasisDependentMul, Vector):
@@ -433,7 +446,7 @@ class VectorZero(BasisDependentZero, Vector):
     """
 
     _op_priority = 12.1
-    _pretty_form = u'0'
+    _pretty_form = '0'
     _latex_form = r'\mathbf{\hat{0}}'
 
     def __new__(cls):
@@ -596,22 +609,9 @@ def dot(vect1, vect2):
     return Dot(vect1, vect2)
 
 
-def _vect_div(one, other):
-    """ Helper for division involving vectors. """
-    if isinstance(one, Vector) and isinstance(other, Vector):
-        raise TypeError("Cannot divide two vectors")
-    elif isinstance(one, Vector):
-        if other == S.Zero:
-            raise ValueError("Cannot divide a vector by zero")
-        return VectorMul(one, Pow(other, S.NegativeOne))
-    else:
-        raise TypeError("Invalid division involving a vector")
-
-
 Vector._expr_type = Vector
 Vector._mul_func = VectorMul
 Vector._add_func = VectorAdd
 Vector._zero_func = VectorZero
 Vector._base_func = BaseVector
-Vector._div_helper = _vect_div
 Vector.zero = VectorZero()

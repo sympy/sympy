@@ -8,7 +8,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    sinh, cosh, elliptic_f, elliptic_e)
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, contains_dont_know, manual_subs)
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises, slow
 
 x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
 f = Function('f')
@@ -232,7 +232,7 @@ def test_manualintegrate_special():
 
 def test_manualintegrate_derivative():
     assert manualintegrate(pi * Derivative(x**2 + 2*x + 3), x) == \
-        pi * ((x**2 + 2*x + 3))
+        pi * (x**2 + 2*x + 3)
     assert manualintegrate(Derivative(x**2 + 2*x + 3, y), x) == \
         Integral(Derivative(x**2 + 2*x + 3, y))
     assert manualintegrate(Derivative(sin(x), x, x, x, y), x) == \

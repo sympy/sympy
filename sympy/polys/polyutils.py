@@ -2,9 +2,8 @@
 
 from __future__ import print_function, division
 
-from sympy.core import (S, Add, Mul, Pow, Expr,
+from sympy.core import (S, Add, Mul, Pow, Eq, Expr,
     expand_mul, expand_multinomial)
-from sympy.core.compatibility import range
 from sympy.core.exprtools import decompose_power, decompose_power_rat
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
@@ -41,7 +40,7 @@ def _nsort(roots, separated=False):
     # get the real part of the evaluated real and imaginary parts of each root
     key = [[i.n(2).as_real_imag()[0] for i in r.as_real_imag()] for r in roots]
     # make sure the parts were computed with precision
-    if any(i._prec == 1 for k in key for i in k):
+    if len(roots) > 1 and any(i._prec == 1 for k in key for i in k):
         raise NotImplementedError("could not compute root with precision")
     # insert a key to indicate if the root has an imaginary part
     key = [(1 if i else 0, r, i) for r, i in key]
@@ -239,7 +238,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             return factor.is_algebraic
     elif opt.greedy is not False:
         def _is_coeff(factor):
-            return False
+            return factor is S.ImaginaryUnit
     else:
         def _is_coeff(factor):
             return factor.is_number
@@ -353,7 +352,7 @@ def _dict_from_expr(expr, opt):
                 and expr.base.is_Add)
 
     if opt.expand is not False:
-        if not isinstance(expr, Expr):
+        if not isinstance(expr, (Expr, Eq)):
             raise PolynomialError('expression must be of type Expr')
         expr = expr.expand()
         # TODO: Integrate this into expand() itself
@@ -433,7 +432,7 @@ class PicklableWithSlots(object):
 
         >>> from sympy.polys.polyutils import PicklableWithSlots
         >>> class Some(PicklableWithSlots):
-        ...     __slots__ = ['foo', 'bar']
+        ...     __slots__ = ('foo', 'bar')
         ...
         ...     def __init__(self, foo, bar):
         ...         self.foo = foo
@@ -460,7 +459,7 @@ class PicklableWithSlots(object):
 
     """
 
-    __slots__ = []
+    __slots__ = ()
 
     def __getstate__(self, cls=None):
         if cls is None:

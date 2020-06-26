@@ -1,5 +1,4 @@
 from __future__ import division, absolute_import, print_function
-from sympy.core.compatibility import string_types
 
 import sys
 import re
@@ -195,7 +194,7 @@ class SphinxDocString(NumpyDocString):
         out = []
         if self['References']:
             out += self._str_header('References')
-            if isinstance(self['References'], string_types):
+            if isinstance(self['References'], str):
                 self['References'] = [self['References']]
             out.extend(self['References'])
             out += ['']

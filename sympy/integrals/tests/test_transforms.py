@@ -13,7 +13,7 @@ from sympy import (
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, unpolarify, Function, expint, expand_mul, Rational,
     gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2)
-from sympy.utilities.pytest import XFAIL, slow, skip, raises
+from sympy.testing.pytest import XFAIL, slow, skip, raises
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
 nu, beta, rho = symbols('nu beta rho')
@@ -258,7 +258,7 @@ def test_mellin_transform_bessel():
     # TODO products of besselk are a mess
 
     mt = MT(exp(-x/2)*besselk(a, x/2), x, s)
-    mt0 = gammasimp((trigsimp(gammasimp(mt[0].expand(func=True)))))
+    mt0 = gammasimp(trigsimp(gammasimp(mt[0].expand(func=True))))
     assert mt0 == 2*pi**Rational(3, 2)*cos(pi*s)*gamma(-s + S.Half)/(
         (cos(2*pi*a) - cos(2*pi*s))*gamma(-a - s + 1)*gamma(a - s + 1))
     assert mt[1:] == ((Max(-re(a), re(a)), oo), True)
@@ -833,6 +833,8 @@ def test_issue_8514():
                   - cos(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
                   b**2))/(2*a)))*exp(-t*(b + cos(atan2(0, -4*a*c + b**2)/2)
                   *sqrt(Abs(4*a*c - b**2)))/(2*a))/sqrt(-4*a*c + b**2)
+
+
 def test_issue_12591():
     x, y = symbols("x y", real=True)
     assert fourier_transform(exp(x), x, y) == FourierTransform(exp(x), x, y)

@@ -1,8 +1,8 @@
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
     StrictLessThan, pi, I, Rational, sympify, symbols, Dummy)
-from sympy.core.symbol import _uniquely_named_symbol, _symbol
+from sympy.core.symbol import uniquely_named_symbol, _symbol
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core.symbol import disambiguate
 
 
@@ -232,7 +232,7 @@ def test_symbols():
 
     assert symbols(('x', 'y', 'z')) == (x, y, z)
     assert symbols(['x', 'y', 'z']) == [x, y, z]
-    assert symbols(set(['x', 'y', 'z'])) == set([x, y, z])
+    assert symbols({'x', 'y', 'z'}) == {x, y, z}
 
     raises(ValueError, lambda: symbols(''))
     raises(ValueError, lambda: symbols(','))
@@ -293,8 +293,8 @@ def test_symbols():
     assert sym('a0:4') == '(a0, a1, a2, a3)'
     assert sym('a2:4,b1:3') == '(a2, a3, b1, b2)'
     assert sym('a1(2:4)') == '(a12, a13)'
-    assert sym(('a0:2.0:2')) == '(a0.0, a0.1, a1.0, a1.1)'
-    assert sym(('aa:cz')) == '(aaz, abz, acz)'
+    assert sym('a0:2.0:2') == '(a0.0, a0.1, a1.0, a1.1)'
+    assert sym('aa:cz') == '(aaz, abz, acz)'
     assert sym('aa:c0:2') == '(aa0, aa1, ab0, ab1, ac0, ac1)'
     assert sym('aa:ba:b') == '(aaa, aab, aba, abb)'
     assert sym('a:3b') == '(a0b, a1b, a2b)'
@@ -329,20 +329,20 @@ def test_symbols_become_functions_issue_3539():
 
 
 def test_unicode():
-    xu = Symbol(u'x')
+    xu = Symbol('x')
     x = Symbol('x')
     assert x == xu
 
     raises(TypeError, lambda: Symbol(1))
 
 
-def test__uniquely_named_symbol_and__symbol():
-    F = _uniquely_named_symbol
+def testuniquely_named_symbol_and__symbol():
+    F = uniquely_named_symbol
     x = Symbol('x')
     assert F(x) == x
     assert F('x') == x
-    assert str(F('x', x)) == '_x'
-    assert str(F('x', (x + 1, 1/x))) == '_x'
+    assert str(F('x', x)) == 'x0'
+    assert str(F('x', (x + 1, 1/x))) == 'x0'
     _x = Symbol('x', real=True)
     assert F(('x', _x)) == _x
     assert F((x, _x)) == _x

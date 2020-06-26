@@ -3,7 +3,7 @@ from sympy.physics.optics import Medium
 from sympy.abc import epsilon, mu, n
 from sympy.physics.units import speed_of_light, u0, e0, m, kg, s, A
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 c = speed_of_light.convert_to(m/s)
 e0 = e0.convert_to(A**2*s**4/(kg*m**3))

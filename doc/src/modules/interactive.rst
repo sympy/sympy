@@ -3,7 +3,6 @@
 =============
 
 .. automodule:: sympy.interactive
-   :members:
 
 Session
 =======

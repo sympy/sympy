@@ -1,11 +1,10 @@
-import sys
 import inspect
 import copy
 import pickle
 
 from sympy.physics.units import meter
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 from sympy.core.basic import Atom, Basic
 from sympy.core.core import BasicMeta
@@ -31,21 +30,17 @@ from sympy import symbols, S
 from sympy.external import import_module
 cloudpickle = import_module('cloudpickle')
 
-excluded_attrs = set([
+excluded_attrs = {
     '_assumptions',  # This is a local cache that isn't automatically filled on creation
     '_mhash',   # Cached after __hash__ is called but set to None after creation
-    'message',   # This is an exception attribute that is present but deprecated in Py2 (can be removed when Py2 support is dropped
     'is_EmptySet',  # Deprecated from SymPy 1.5. This can be removed when is_EmptySet is removed.
-    ])
+    }
 
 
 def check(a, exclude=[], check_attr=True):
     """ Check that pickling and copying round-trips.
     """
-    protocols = [0, 1, 2, copy.copy, copy.deepcopy]
-    # Python 2.x doesn't support the third pickling protocol
-    if sys.version_info >= (3,):
-        protocols.extend([3, 4])
+    protocols = [0, 1, 2, copy.copy, copy.deepcopy, 3, 4]
     if cloudpickle:
         protocols.extend([cloudpickle])
 
@@ -180,9 +175,7 @@ def test_core_multidimensional():
 
 
 def test_Singletons():
-    protocols = [0, 1, 2]
-    if sys.version_info >= (3,):
-        protocols.extend([3, 4])
+    protocols = [0, 1, 2, 3, 4]
     copiers = [copy.copy, copy.deepcopy]
     copiers += [lambda x: pickle.loads(pickle.dumps(x, proto))
             for proto in protocols]
@@ -299,20 +292,20 @@ def test_physics():
 
 @XFAIL
 def test_plotting():
-    from sympy.plotting.color_scheme import ColorGradient, ColorScheme
-    from sympy.plotting.managed_window import ManagedWindow
+    from sympy.plotting.pygletplot.color_scheme import ColorGradient, ColorScheme
+    from sympy.plotting.pygletplot.managed_window import ManagedWindow
     from sympy.plotting.plot import Plot, ScreenShot
-    from sympy.plotting.plot_axes import PlotAxes, PlotAxesBase, PlotAxesFrame, PlotAxesOrdinate
-    from sympy.plotting.plot_camera import PlotCamera
-    from sympy.plotting.plot_controller import PlotController
-    from sympy.plotting.plot_curve import PlotCurve
-    from sympy.plotting.plot_interval import PlotInterval
-    from sympy.plotting.plot_mode import PlotMode
-    from sympy.plotting.plot_modes import Cartesian2D, Cartesian3D, Cylindrical, \
+    from sympy.plotting.pygletplot.plot_axes import PlotAxes, PlotAxesBase, PlotAxesFrame, PlotAxesOrdinate
+    from sympy.plotting.pygletplot.plot_camera import PlotCamera
+    from sympy.plotting.pygletplot.plot_controller import PlotController
+    from sympy.plotting.pygletplot.plot_curve import PlotCurve
+    from sympy.plotting.pygletplot.plot_interval import PlotInterval
+    from sympy.plotting.pygletplot.plot_mode import PlotMode
+    from sympy.plotting.pygletplot.plot_modes import Cartesian2D, Cartesian3D, Cylindrical, \
         ParametricCurve2D, ParametricCurve3D, ParametricSurface, Polar, Spherical
-    from sympy.plotting.plot_object import PlotObject
-    from sympy.plotting.plot_surface import PlotSurface
-    from sympy.plotting.plot_window import PlotWindow
+    from sympy.plotting.pygletplot.plot_object import PlotObject
+    from sympy.plotting.pygletplot.plot_surface import PlotSurface
+    from sympy.plotting.pygletplot.plot_window import PlotWindow
     for c in (
         ColorGradient, ColorGradient(0.2, 0.4), ColorScheme, ManagedWindow,
         ManagedWindow, Plot, ScreenShot, PlotAxes, PlotAxesBase,
@@ -327,11 +320,11 @@ def test_plotting():
 @XFAIL
 def test_plotting2():
     #from sympy.plotting.color_scheme import ColorGradient
-    from sympy.plotting.color_scheme import ColorScheme
+    from sympy.plotting.pygletplot.color_scheme import ColorScheme
     #from sympy.plotting.managed_window import ManagedWindow
     from sympy.plotting.plot import Plot
     #from sympy.plotting.plot import ScreenShot
-    from sympy.plotting.plot_axes import PlotAxes
+    from sympy.plotting.pygletplot.plot_axes import PlotAxes
     #from sympy.plotting.plot_axes import PlotAxesBase, PlotAxesFrame, PlotAxesOrdinate
     #from sympy.plotting.plot_camera import PlotCamera
     #from sympy.plotting.plot_controller import PlotController
@@ -694,3 +687,6 @@ def test_concrete():
 def test_deprecation_warning():
     w = SymPyDeprecationWarning('value', 'feature', issue=12345, deprecated_since_version='1.0')
     check(w)
+
+def test_issue_18438():
+    assert pickle.loads(pickle.dumps(S.Half)) == 1/2

@@ -10,11 +10,10 @@ are_coplanar
 are_similar
 
 """
-from __future__ import division, print_function
 
 from sympy import Function, Symbol, solve, sqrt
 from sympy.core.compatibility import (
-    is_sequence, range, string_types, ordered)
+    is_sequence, ordered)
 from sympy.core.containers import OrderedSet
 from .point import Point, Point2D
 
@@ -27,7 +26,7 @@ def find(x, equation):
     """
 
     free = equation.free_symbols
-    xs = [i for i in free if (i.name if isinstance(x, string_types) else i) == x]
+    xs = [i for i in free if (i.name if isinstance(x, str) else i) == x]
     if not xs:
         raise ValueError('could not find %s' % x)
     if len(xs) != 1:
@@ -277,7 +276,7 @@ def closest_points(*args):
     Examples
     ========
 
-    >>> from sympy.geometry import closest_points, Point2D, Triangle
+    >>> from sympy.geometry import closest_points, Triangle
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> closest_points(*_)
@@ -331,7 +330,7 @@ def closest_points(*args):
     return {tuple([p[i] for i in pair]) for pair in rv}
 
 
-def convex_hull(*args, **kwargs):
+def convex_hull(*args, polygon=True):
     """The convex hull surrounding the Points contained in the list of entities.
 
     Parameters
@@ -339,10 +338,17 @@ def convex_hull(*args, **kwargs):
 
     args : a collection of Points, Segments and/or Polygons
 
+    Optional parameters
+    ===================
+
+    polygon : Boolean. If True, returns a Polygon, if false a tuple, see below.
+              Default is True.
+
     Returns
     =======
 
-    convex_hull : Polygon if ``polygon`` is True else as a tuple `(U, L)` where ``L`` and ``U`` are the lower and upper hulls, respectively.
+    convex_hull : Polygon if ``polygon`` is True else as a tuple `(U, L)` where
+                  ``L`` and ``U`` are the lower and upper hulls, respectively.
 
     Notes
     =====
@@ -368,7 +374,7 @@ def convex_hull(*args, **kwargs):
     Examples
     ========
 
-    >>> from sympy.geometry import Point, convex_hull
+    >>> from sympy.geometry import convex_hull
     >>> points = [(1, 1), (1, 2), (3, 1), (-5, 2), (15, 4)]
     >>> convex_hull(*points)
     Polygon(Point2D(-5, 2), Point2D(1, 1), Point2D(3, 1), Point2D(15, 4))
@@ -382,7 +388,6 @@ def convex_hull(*args, **kwargs):
     from .line import Segment
     from .polygon import Polygon
 
-    polygon = kwargs.get('polygon', True)
     p = OrderedSet()
     for e in args:
         if not isinstance(e, GeometryEntity):
@@ -469,7 +474,7 @@ def farthest_points(*args):
     Examples
     ========
 
-    >>> from sympy.geometry import farthest_points, Point2D, Triangle
+    >>> from sympy.geometry import farthest_points, Triangle
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> farthest_points(*_)

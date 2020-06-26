@@ -1,12 +1,11 @@
 """sympify -- convert objects SymPy internal format"""
 
-from __future__ import print_function, division
+# from typing import Any, Callable, Dict, Type
 
 from inspect import getmro
 
-from .core import all_classes as sympy_classes
-from .compatibility import iterable, string_types, range
-from .evaluate import global_evaluate
+from .compatibility import iterable
+from .parameters import global_parameters
 
 
 class SympifyError(ValueError):
@@ -22,9 +21,12 @@ class SympifyError(ValueError):
             "raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__,
             str(self.base_exc)))
 
-converter = {}  # See sympify docstring.
 
-class CantSympify(object):
+# See sympify docstring.
+converter = {}  ## type: Dict[Type[Any], Callable[[Any], Basic]]
+
+
+class CantSympify:
     """
     Mix in this trait to a class to disallow sympification of its instances.
 
@@ -49,6 +51,16 @@ class CantSympify(object):
 
     """
     pass
+
+
+def _is_numpy_instance(a):
+    """
+    Checks if an object is an instance of a type from the numpy module.
+    """
+    # This check avoids unnecessarily importing NumPy.  We check the whole
+    # __mro__ in case any base type is a numpy type.
+    return any(type_.__module__ == 'numpy'
+               for type_ in type(a).__mro__)
 
 
 def _convert_numpy_types(a, **sympify_args):
@@ -288,14 +300,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             return a
 
     if evaluate is None:
-        if global_evaluate[0] is False:
-            evaluate = global_evaluate[0]
-        else:
-            evaluate = True
+        evaluate = global_parameters.evaluate
 
     # Support for basic numpy datatypes
-    # Note that this check exists to avoid importing NumPy when not necessary
-    if type(a).__module__ == 'numpy':
+    if _is_numpy_instance(a):
         import numpy as np
         if np.isscalar(a):
             return _convert_numpy_types(a, locals=locals,
@@ -322,19 +330,31 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                 from ..tensor.array import Array
                 return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
 
-    if not isinstance(a, string_types):
-        for coerce in (float, int):
-            try:
-                coerced = coerce(a)
-            except (TypeError, ValueError):
-                continue
-            # XXX: AttributeError only needed here for Py2
-            except AttributeError:
-                continue
-            try:
-                return sympify(coerced)
-            except SympifyError:
-                continue
+    if not isinstance(a, str):
+        if _is_numpy_instance(a):
+            import numpy as np
+            assert not isinstance(a, np.number)
+            if isinstance(a, np.ndarray):
+                # Scalar arrays (those with zero dimensions) have sympify
+                # called on the scalar element.
+                if a.ndim == 0:
+                    try:
+                        return sympify(a.item(),
+                                       locals=locals,
+                                       convert_xor=convert_xor,
+                                       strict=strict,
+                                       rational=rational,
+                                       evaluate=evaluate)
+                    except SympifyError:
+                        pass
+        else:
+            # float and int can coerce size-one numpy arrays to their lone
+            # element.  See issue https://github.com/numpy/numpy/issues/10404.
+            for coerce in (float, int):
+                try:
+                    return sympify(coerce(a))
+                except (TypeError, ValueError, AttributeError, SympifyError):
+                    continue
 
     if strict:
         raise SympifyError(a)
@@ -354,19 +374,20 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             # Not all iterables are rebuildable with their type.
             pass
 
-    # At this point we were given an arbitrary expression
-    # which does not inherit from Basic and doesn't implement
-    # _sympy_ (which is a canonical and robust way to convert
-    # anything to SymPy expression).
-    #
-    # As a last chance, we try to take "a"'s normal form via unicode()
-    # and try to parse it. If it fails, then we have no luck and
-    # return an exception
-    try:
-        from .compatibility import unicode
-        a = unicode(a)
-    except Exception as exc:
-        raise SympifyError(a, exc)
+    if not isinstance(a, str):
+        try:
+            a = str(a)
+        except Exception as exc:
+            raise SympifyError(a, exc)
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(
+            feature="String fallback in sympify",
+            useinstead= \
+                'sympify(str(obj)) or ' + \
+                'sympy.core.sympify.converter or obj._sympy_',
+            issue=18066,
+            deprecated_since_version='1.6'
+        ).warn()
 
     from sympy.parsing.sympy_parser import (parse_expr, TokenError,
                                             standard_transformations)
@@ -427,7 +448,7 @@ def kernS(s):
     ========
 
     >>> from sympy.core.sympify import kernS
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x, y
 
     The 2-arg Mul distributes a number (or minus sign) across the terms
     of an expression, but kernS will prevent that:
@@ -492,13 +513,15 @@ def kernS(s):
             while kern in s:
                 kern += choice(string.ascii_letters + string.digits)
             s = s.replace(' ', kern)
-        hit = kern in s
+            hit = kern in s
+        else:
+            hit = False
 
     for i in range(2):
         try:
             expr = sympify(s)
             break
-        except:  # the kern might cause unknown errors, so use bare except
+        except TypeError:  # the kern might cause unknown errors...
             if hit:
                 s = olds  # maybe it didn't like the kern; use un-kerned s
                 hit = False
@@ -518,3 +541,7 @@ def kernS(s):
     expr = _clear(expr)
     # hope that kern is not there anymore
     return expr
+
+
+# Avoid circular import
+# from .basic import Basic

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, Dummy, pi
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos
@@ -8,7 +6,6 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.polys.orthopolys import (legendre_poly, laguerre_poly,
                                     hermite_poly, jacobi_poly)
 from sympy.polys.rootoftools import RootOf
-from sympy.core.compatibility import range
 
 
 def gauss_legendre(n, n_digits):
@@ -330,7 +327,6 @@ def gauss_chebyshev_t(n, n_digits):
     Examples
     ========
 
-    >>> from sympy import S
     >>> from sympy.integrals.quadrature import gauss_chebyshev_t
     >>> x, w = gauss_chebyshev_t(3, 5)
     >>> x
@@ -397,7 +393,6 @@ def gauss_chebyshev_u(n, n_digits):
     Examples
     ========
 
-    >>> from sympy import S
     >>> from sympy.integrals.quadrature import gauss_chebyshev_u
     >>> x, w = gauss_chebyshev_u(3, 5)
     >>> x

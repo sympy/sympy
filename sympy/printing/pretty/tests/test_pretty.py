@@ -9,11 +9,11 @@ from sympy import (
     SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
     Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio,
     LambertW, airyai, airybi, airyaiprime, airybiprime, fresnelc, fresnels,
-    Heaviside, dirichlet_eta, diag)
+    Heaviside, dirichlet_eta, diag, MatrixSlice)
 
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
-from sympy.core.compatibility import range, u_decode as u, unicode, PY3
+from sympy.core.compatibility import u_decode as u
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.trace import Tr
 
@@ -32,6 +32,7 @@ from sympy.physics import mechanics
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
 from sympy.printing.pretty.pretty_symbology import center_accent, is_combining
+from sympy import ConditionSet
 
 from sympy.sets import ImageSet, ProductSet
 from sympy.sets.setexpr import SetExpr
@@ -41,7 +42,7 @@ from sympy.tensor.functions import TensorProduct
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
                                  TensorElement, tensor_heads)
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
@@ -308,15 +309,14 @@ def test_upretty_subs_missing_in_24():
 
 
 def test_missing_in_2X_issue_9047():
-    if PY3:
-        assert upretty( Symbol('F_h') ) == u'Fₕ'
-        assert upretty( Symbol('F_k') ) == u'Fₖ'
-        assert upretty( Symbol('F_l') ) == u'Fₗ'
-        assert upretty( Symbol('F_m') ) == u'Fₘ'
-        assert upretty( Symbol('F_n') ) == u'Fₙ'
-        assert upretty( Symbol('F_p') ) == u'Fₚ'
-        assert upretty( Symbol('F_s') ) == u'Fₛ'
-        assert upretty( Symbol('F_t') ) == u'Fₜ'
+    assert upretty( Symbol('F_h') ) == u'Fₕ'
+    assert upretty( Symbol('F_k') ) == u'Fₖ'
+    assert upretty( Symbol('F_l') ) == u'Fₗ'
+    assert upretty( Symbol('F_m') ) == u'Fₘ'
+    assert upretty( Symbol('F_n') ) == u'Fₙ'
+    assert upretty( Symbol('F_p') ) == u'Fₚ'
+    assert upretty( Symbol('F_s') ) == u'Fₛ'
+    assert upretty( Symbol('F_t') ) == u'Fₜ'
 
 
 def test_upretty_modifiers():
@@ -364,6 +364,18 @@ def test_pretty_Cycle():
     assert pretty(Cycle(1, 3)(4, 5)) == '(1 3)(4 5)'
     assert pretty(Cycle()) == '()'
 
+
+def test_pretty_Permutation():
+    from sympy.combinatorics.permutations import Permutation
+    p1 = Permutation(1, 2)(3, 4)
+    assert xpretty(p1, perm_cyclic=True, use_unicode=True) == "(1 2)(3 4)"
+    assert xpretty(p1, perm_cyclic=True, use_unicode=False) == "(1 2)(3 4)"
+    assert xpretty(p1, perm_cyclic=False, use_unicode=True) == \
+    u'⎛0 1 2 3 4⎞\n'\
+    u'⎝0 2 1 4 3⎠'
+    assert xpretty(p1, perm_cyclic=False, use_unicode=False) == \
+    "/0 1 2 3 4\\\n"\
+    "\\0 2 1 4 3/"
 
 def test_pretty_basic():
     assert pretty( -Rational(1)/2 ) == '-1/2'
@@ -938,6 +950,51 @@ u("""\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+    expr = Mul(0, 1, evaluate=False)
+    assert pretty(expr) == "0*1"
+    assert upretty(expr) == "0⋅1"
+    expr = Mul(1, 0, evaluate=False)
+    assert pretty(expr) == "1*0"
+    assert upretty(expr) == "1⋅0"
+    expr = Mul(1, 1, evaluate=False)
+    assert pretty(expr) == "1*1"
+    assert upretty(expr) == "1⋅1"
+    expr = Mul(1, 1, 1, evaluate=False)
+    assert pretty(expr) == "1*1*1"
+    assert upretty(expr) == "1⋅1⋅1"
+    expr = Mul(1, 2, evaluate=False)
+    assert pretty(expr) == "1*2"
+    assert upretty(expr) == "1⋅2"
+    expr = Add(0, 1, evaluate=False)
+    assert pretty(expr) == "0 + 1"
+    assert upretty(expr) == "0 + 1"
+    expr = Mul(1, 1, 2, evaluate=False)
+    assert pretty(expr) == "1*1*2"
+    assert upretty(expr) == "1⋅1⋅2"
+    expr = Add(0, 0, 1, evaluate=False)
+    assert pretty(expr) == "0 + 0 + 1"
+    assert upretty(expr) == "0 + 0 + 1"
+    expr = Mul(1, -1, evaluate=False)
+    assert pretty(expr) == "1*(-1)"
+    assert upretty(expr) == "1⋅(-1)"
+    expr = Mul(1.0, x, evaluate=False)
+    assert pretty(expr) == "1.0*x"
+    assert upretty(expr) == "1.0⋅x"
+    expr = Mul(1, 1, 2, 3, x, evaluate=False)
+    assert pretty(expr) == "1*1*2*3*x"
+    assert upretty(expr) == "1⋅1⋅2⋅3⋅x"
+    expr = Mul(-1, 1, evaluate=False)
+    assert pretty(expr) == "-1*1"
+    assert upretty(expr) == "-1⋅1"
+    expr = Mul(4, 3, 2, 1, 0, y, x, evaluate=False)
+    assert pretty(expr) == "4*3*2*1*0*y*x"
+    assert upretty(expr) == "4⋅3⋅2⋅1⋅0⋅y⋅x"
+    expr = Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)
+    assert pretty(expr) == "4*3*2*(z + 1)*0*y*x"
+    assert upretty(expr) == "4⋅3⋅2⋅(z + 1)⋅0⋅y⋅x"
+    expr = Mul(Rational(2, 3), Rational(5, 7), evaluate=False)
+    assert pretty(expr) == "2/3*5/7"
+    assert upretty(expr) == "2/3⋅5/7"
 
 def test_issue_5524():
     assert pretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
@@ -1180,37 +1237,6 @@ x %= y\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
-
-def test_issue_7117():
-    # See also issue #5031 (hence the evaluate=False in these).
-    e = Eq(x + 1, x/2)
-    q = Mul(2, e, evaluate=False)
-    assert upretty(q) == u("""\
-  ⎛        x⎞\n\
-2⋅⎜x + 1 = ─⎟\n\
-  ⎝        2⎠\
-""")
-    q = Add(e, 6, evaluate=False)
-    assert upretty(q) == u("""\
-    ⎛        x⎞\n\
-6 + ⎜x + 1 = ─⎟\n\
-    ⎝        2⎠\
-""")
-    q = Pow(e, 2, evaluate=False)
-    assert upretty(q) == u("""\
-           2\n\
-⎛        x⎞ \n\
-⎜x + 1 = ─⎟ \n\
-⎝        2⎠ \
-""")
-    e2 = Eq(x, 2)
-    q = Mul(e, e2, evaluate=False)
-    assert upretty(q) == u("""\
-⎛        x⎞        \n\
-⎜x + 1 = ─⎟⋅(x = 2)\n\
-⎝        2⎠        \
-""")
-
 
 def test_pretty_rational():
     expr = y*x**-2
@@ -3185,25 +3211,68 @@ tr⎜⎢    ⎥⎟ + tr⎜⎢    ⎥⎟
     assert upretty(Trace(X) + Trace(Y)) == ucode_str_2
 
 
+def test_MatrixSlice():
+    n = Symbol('n', integer=True)
+    x, y, z, w, t, = symbols('x y z w t')
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', 10, 10)
+    Z = MatrixSymbol('Z', 10, 10)
+
+    expr = MatrixSlice(X, (None, None, None), (None, None, None))
+    assert pretty(expr) == upretty(expr) == 'X[:, :]'
+    expr = X[x:x + 1, y:y + 1]
+    assert pretty(expr) == upretty(expr) == 'X[x:x + 1, y:y + 1]'
+    expr = X[x:x + 1:2, y:y + 1:2]
+    assert pretty(expr) == upretty(expr) == 'X[x:x + 1:2, y:y + 1:2]'
+    expr = X[:x, y:]
+    assert pretty(expr) == upretty(expr) == 'X[:x, y:]'
+    expr = X[:x, y:]
+    assert pretty(expr) == upretty(expr) == 'X[:x, y:]'
+    expr = X[x:, :y]
+    assert pretty(expr) == upretty(expr) == 'X[x:, :y]'
+    expr = X[x:y, z:w]
+    assert pretty(expr) == upretty(expr) == 'X[x:y, z:w]'
+    expr = X[x:y:t, w:t:x]
+    assert pretty(expr) == upretty(expr) == 'X[x:y:t, w:t:x]'
+    expr = X[x::y, t::w]
+    assert pretty(expr) == upretty(expr) == 'X[x::y, t::w]'
+    expr = X[:x:y, :t:w]
+    assert pretty(expr) == upretty(expr) == 'X[:x:y, :t:w]'
+    expr = X[::x, ::y]
+    assert pretty(expr) == upretty(expr) == 'X[::x, ::y]'
+    expr = MatrixSlice(X, (0, None, None), (0, None, None))
+    assert pretty(expr) == upretty(expr) == 'X[:, :]'
+    expr = MatrixSlice(X, (None, n, None), (None, n, None))
+    assert pretty(expr) == upretty(expr) == 'X[:, :]'
+    expr = MatrixSlice(X, (0, n, None), (0, n, None))
+    assert pretty(expr) == upretty(expr) == 'X[:, :]'
+    expr = MatrixSlice(X, (0, n, 2), (0, n, 2))
+    assert pretty(expr) == upretty(expr) == 'X[::2, ::2]'
+    expr = X[1:2:3, 4:5:6]
+    assert pretty(expr) == upretty(expr) == 'X[1:2:3, 4:5:6]'
+    expr = X[1:3:5, 4:6:8]
+    assert pretty(expr) == upretty(expr) == 'X[1:3:5, 4:6:8]'
+    expr = X[1:10:2]
+    assert pretty(expr) == upretty(expr) == 'X[1:10:2, :]'
+    expr = Y[:5, 1:9:2]
+    assert pretty(expr) == upretty(expr) == 'Y[:5, 1:9:2]'
+    expr = Y[:5, 1:10:2]
+    assert pretty(expr) == upretty(expr) == 'Y[:5, 1::2]'
+    expr = Y[5, :5:2]
+    assert pretty(expr) == upretty(expr) == 'Y[5:6, :5:2]'
+    expr = X[0:1, 0:1]
+    assert pretty(expr) == upretty(expr) == 'X[:1, :1]'
+    expr = X[0:1:2, 0:1:2]
+    assert pretty(expr) == upretty(expr) == 'X[:1:2, :1:2]'
+    expr = (Y + Z)[2:, 2:]
+    assert pretty(expr) == upretty(expr) == '(Y + Z)[2:, 2:]'
+
+
 def test_MatrixExpressions():
     n = Symbol('n', integer=True)
     X = MatrixSymbol('X', n, n)
 
     assert pretty(X) == upretty(X) == "X"
-
-    Y = X[1:2:3, 4:5:6]
-
-    ascii_str = ucode_str = "X[1:3, 4:6]"
-
-    assert pretty(Y) == ascii_str
-    assert upretty(Y) == ucode_str
-
-    Z = X[1:10:2]
-
-    ascii_str = ucode_str = "X[1:10:2, :n]"
-
-    assert pretty(Z) == ascii_str
-    assert upretty(Z) == ucode_str
 
     # Apply function elementwise (`ElementwiseApplyFunc`):
 
@@ -3224,13 +3293,13 @@ def test_MatrixExpressions():
     expr = (n*X).applyfunc(lamda)
     ascii_str = """\
 /     1\\      \n\
-|d -> -|.(n*X)\n\
-\\     d/      \
+|x -> -|.(n*X)\n\
+\\     x/      \
 """
     ucode_str = u("""\
 ⎛    1⎞      \n\
-⎜d ↦ ─⎟˳(n⋅X)\n\
-⎝    d⎠      \
+⎜x ↦ ─⎟˳(n⋅X)\n\
+⎝    x⎠      \
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3852,7 +3921,7 @@ def test_pretty_ImageSet():
 def test_pretty_ConditionSet():
     from sympy import ConditionSet
     ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
-    ucode_str = u'{x | x ∊ ℝ ∧ sin(x) = 0}'
+    ucode_str = u'{x | x ∊ ℝ ∧ (sin(x) = 0)}'
     assert pretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ascii_str
     assert upretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ucode_str
 
@@ -3898,7 +3967,7 @@ def test_ProductSet_exponent():
 def test_ProductSet_parenthesis():
     ucode_str = u'([4, 7] × {1, 2}) ∪ ([2, 3] × [4, 7])'
 
-    a, b, c = Interval(2, 3), Interval(4, 7), Interval(1, 9)
+    a, b = Interval(2, 3), Interval(4, 7)
     assert upretty(Union(a*b, b*FiniteSet(1, 2))) == ucode_str
 
 def test_ProductSet_prod_char_issue_10413():
@@ -6070,7 +6139,7 @@ def test_pretty_Complement():
 
 def test_pretty_SymmetricDifference():
     from sympy import SymmetricDifference, Interval
-    from sympy.utilities.pytest import raises
+    from sympy.testing.pytest import raises
     assert upretty(SymmetricDifference(Interval(2,3), Interval(3,5), \
            evaluate = False)) == u'[2, 3] ∆ [3, 5]'
     with raises(NotImplementedError):
@@ -6562,14 +6631,14 @@ u("""\
     expr = A(i) + 3*B(i)
     ascii_str = \
 """\
- i      i\n\
-A  + 3*B \n\
+   i    i\n\
+3*B  + A \n\
          \
 """
     ucode_str = \
 u("""\
- i      i\n\
-A  + 3⋅B \n\
+   i    i\n\
+3⋅B  + A \n\
          \
 """)
     assert pretty(expr) == ascii_str
@@ -6582,7 +6651,6 @@ def test_pretty_print_tensor_partial_deriv():
 
     L = TensorIndexType("L")
     i, j, k = tensor_indices("i j k", L)
-    i0 = tensor_indices("i0", L)
 
     A, B, C, D = tensor_heads("A B C D", [L])
 
@@ -6631,16 +6699,16 @@ A  ⋅───⎜H   ⎟\n\
     expr = A(i)*PartialDerivative(B(k)*C(-i) + 3*H(k, -i), A(j))
     ascii_str = \
 """\
- L_0  d / k           k   \\\n\
-A   *---|B *C    + 3*H    |\n\
+ L_0  d /   k       k     \\\n\
+A   *---|3*H     + B *C   |\n\
        j\\    L_0       L_0/\n\
      dA                    \n\
                            \
 """
     ucode_str = \
 u("""\
- L₀  ∂ ⎛ k          k  ⎞\n\
-A  ⋅───⎜B ⋅C   + 3⋅H   ⎟\n\
+ L₀  ∂ ⎛   k      k    ⎞\n\
+A  ⋅───⎜3⋅H    + B ⋅C  ⎟\n\
       j⎝    L₀       L₀⎠\n\
     ∂A                  \n\
                         \
@@ -6648,20 +6716,20 @@ A  ⋅───⎜B ⋅C   + 3⋅H   ⎟\n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = (A(i) + B(i))*PartialDerivative(C(-j), D(j))
+    expr = (A(i) + B(i))*PartialDerivative(C(j), D(j))
     ascii_str = \
 """\
-/ i    i\\   d  /    \\\n\
+/ i    i\\   d  / L_0\\\n\
 |A  + B |*-----|C   |\n\
-\\       /   L_0\\ L_0/\n\
+\\       /   L_0\\    /\n\
           dD         \n\
                      \
 """
     ucode_str = \
 u("""\
-⎛ i    i⎞  ∂  ⎛   ⎞\n\
+⎛ i    i⎞  ∂  ⎛ L₀⎞\n\
 ⎜A  + B ⎟⋅────⎜C  ⎟\n\
-⎝       ⎠   L₀⎝ L₀⎠\n\
+⎝       ⎠   L₀⎝   ⎠\n\
           ∂D       \n\
                    \
 """)
@@ -6688,6 +6756,28 @@ u("""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = PartialDerivative(B(-i) + A(-i), A(-j), A(-n))
+    ucode_str = u("""\
+    2           \n\
+   ∂   ⎛       ⎞\n\
+───────⎜A  + B ⎟\n\
+       ⎝ i    i⎠\n\
+∂A  ∂A          \n\
+  n   j         \
+""")
+    assert upretty(expr) == ucode_str
+
+    expr = PartialDerivative(3*A(-i), A(-j), A(-n))
+    ucode_str = u("""\
+    2        \n\
+   ∂   ⎛    ⎞\n\
+───────⎜3⋅A ⎟\n\
+       ⎝   i⎠\n\
+∂A  ∂A       \n\
+  n   j      \
+""")
+    assert upretty(expr) == ucode_str
+
     expr = TensorElement(H(i, j), {i:1})
     ascii_str = \
 """\
@@ -6699,7 +6789,7 @@ H     \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = TensorElement(H(i, j), {i:1, j:1})
+    expr = TensorElement(H(i, j), {i: 1, j: 1})
     ascii_str = \
 """\
  i=1,j=1\n\
@@ -6710,7 +6800,7 @@ H       \n\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = TensorElement(H(i, j), {j:1})
+    expr = TensorElement(H(i, j), {j: 1})
     ascii_str = \
 """\
  i,j=1\n\
@@ -6719,7 +6809,7 @@ H     \n\
 """
     ucode_str = ascii_str
 
-    expr = TensorElement(H(-i, j), {-i:1})
+    expr = TensorElement(H(-i, j), {-i: 1})
     ascii_str = \
 """\
     j\n\
@@ -6854,7 +6944,6 @@ def test_hadamard_power():
     m, n, p = symbols('m, n, p', integer=True)
     A = MatrixSymbol('A', m, n)
     B = MatrixSymbol('B', m, n)
-    C = MatrixSymbol('C', m, p)
 
     # Testing printer:
     expr = hadamard_power(A, n)
@@ -6933,3 +7022,40 @@ def test_is_combining():
 def test_issue_17857():
     assert pretty(Range(-oo, oo)) == '{..., -1, 0, 1, ...}'
     assert pretty(Range(oo, -oo, -1)) == '{..., 1, 0, -1, ...}'
+
+def test_issue_18272():
+    x = Symbol('x')
+    n = Symbol('n')
+
+    assert upretty(ConditionSet(x, Eq(-x + exp(x), 0), S.Complexes)) == \
+    '⎧            ⎛      x    ⎞⎫\n'\
+    '⎨x | x ∊ ℂ ∧ ⎝-x + ℯ  = 0⎠⎬\n'\
+    '⎩                         ⎭'
+    assert upretty(ConditionSet(x, Contains(n/2, Interval(0, oo)), FiniteSet(-n/2, n/2))) == \
+    '⎧        ⎧-n   n⎫   ⎛n         ⎞⎫\n'\
+    '⎨x | x ∊ ⎨───, ─⎬ ∧ ⎜─ ∈ [0, ∞)⎟⎬\n'\
+    '⎩        ⎩ 2   2⎭   ⎝2         ⎠⎭'
+    assert upretty(ConditionSet(x, Eq(Piecewise((1, x >= 3), (x/2 - 1/2, x >= 2), (1/2, x >= 1),
+                (x/2, True)) - 1/2, 0), Interval(0, 3))) == \
+    '⎧                 ⎛⎛⎧   1     for x ≥ 3⎞          ⎞⎫\n'\
+    '⎪                 ⎜⎜⎪                  ⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪x                 ⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪─ - 0.5  for x ≥ 2⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪2                 ⎟          ⎟⎪\n'\
+    '⎨x | x ∊ [0, 3] ∧ ⎜⎜⎨                  ⎟ - 0.5 = 0⎟⎬\n'\
+    '⎪                 ⎜⎜⎪  0.5    for x ≥ 1⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪                  ⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪   x              ⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪   ─     otherwise⎟          ⎟⎪\n'\
+    '⎩                 ⎝⎝⎩   2              ⎠          ⎠⎭'
+
+def test_diffgeom():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
+    m = Manifold('M', 2)
+    assert pretty(m) == 'M'
+    p = Patch('P', m)
+    assert pretty(p) == "P"
+    rect = CoordSystem('rect', p)
+    assert pretty(rect) == "rect"
+    b = BaseScalarField(rect, 0)
+    assert pretty(b) == "rect_0"

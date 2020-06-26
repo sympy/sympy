@@ -6,18 +6,22 @@ MKS stands for "meter, kilogram, second, ampere".
 
 from __future__ import division
 
+from typing import List
+
 from sympy.physics.units.definitions import Z0, A, C, F, H, S, T, V, Wb, ohm
 from sympy.physics.units.definitions.dimension_definitions import (
     capacitance, charge, conductance, current, impedance, inductance,
     magnetic_density, magnetic_flux, voltage)
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
 from sympy.physics.units.systems.mks import MKS, dimsys_length_weight_time
+from sympy.physics.units.quantities import Quantity
 
 dims = (voltage, impedance, conductance, current, capacitance, inductance, charge,
         magnetic_density, magnetic_flux)
 
 units = [A, V, ohm, S, F, H, C, T, Wb]
-all_units = []
+
+all_units = []  # type: List[Quantity]
 for u in units:
     all_units.extend(prefix_unit(u, PREFIXES))
 

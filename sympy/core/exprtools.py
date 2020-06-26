@@ -1,9 +1,7 @@
 """Tools for manipulating of large commutative expressions. """
 
-from __future__ import print_function, division
-
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS, range
+from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
@@ -51,7 +49,7 @@ def _monotonic_sign(self):
     ========
 
     >>> from sympy.core.exprtools import _monotonic_sign as F
-    >>> from sympy import Dummy, S
+    >>> from sympy import Dummy
     >>> nn = Dummy(integer=True, nonnegative=True)
     >>> p = Dummy(integer=True, positive=True)
     >>> p2 = Dummy(integer=True, positive=True)
@@ -284,10 +282,10 @@ def decompose_power_rat(expr):
     return base, exp
 
 
-class Factors(object):
+class Factors:
     """Efficient representation of ``f_1*f_2*...*f_n``."""
 
-    __slots__ = ['factors', 'gens']
+    __slots__ = ('factors', 'gens')
 
     def __init__(self, factors=None):  # Factors
         """Initialize Factors from dict or expr.
@@ -358,8 +356,8 @@ class Factors(object):
             for f in list(factors.keys()):
                 if isinstance(f, Rational) and not isinstance(f, Integer):
                     p, q = Integer(f.p), Integer(f.q)
-                    factors[p] = (factors[p] if p in factors else 0) + factors[f]
-                    factors[q] = (factors[q] if q in factors else 0) - factors[f]
+                    factors[p] = (factors[p] if p in factors else S.Zero) + factors[f]
+                    factors[q] = (factors[q] if q in factors else S.Zero) - factors[f]
                     factors.pop(f)
             if i:
                 factors[I] = S.One*i
@@ -448,14 +446,12 @@ class Factors(object):
         args = []
         for factor, exp in self.factors.items():
             if exp != 1:
-                b, e = factor.as_base_exp()
-                if isinstance(exp, int):
-                    e = _keep_coeff(Integer(exp), e)
-                elif isinstance(exp, Rational):
+                if isinstance(exp, Integer):
+                    b, e = factor.as_base_exp()
                     e = _keep_coeff(exp, e)
+                    args.append(b**e)
                 else:
-                    e *= exp
-                args.append(b**e)
+                    args.append(factor**exp)
             else:
                 args.append(factor)
         return Mul(*args)
@@ -814,10 +810,10 @@ class Factors(object):
         return not self == other
 
 
-class Term(object):
+class Term:
     """Efficient representation of ``coeff*(numer/denom)``. """
 
-    __slots__ = ['coeff', 'numer', 'denom']
+    __slots__ = ('coeff', 'numer', 'denom')
 
     def __init__(self, term, numer=None, denom=None):  # Term
         if numer is None and denom is None:
@@ -1141,7 +1137,7 @@ def _factor_sum_int(expr, **kwargs):
     limits = expr.limits
 
     # get the wrt variables
-    wrt = set([i.args[0] for i in limits])
+    wrt = {i.args[0] for i in limits}
 
     # factor out any common terms that are independent of wrt
     f = factor_terms(result, **kwargs)
@@ -1286,7 +1282,7 @@ def _mask_nc(eq, name=None):
     ========
 
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
-    >>> from sympy import symbols, Mul
+    >>> from sympy import symbols
     >>> from sympy.core.exprtools import _mask_nc
     >>> from sympy.abc import x, y
     >>> A, B, C = symbols('A,B,C', commutative=False)
@@ -1319,22 +1315,6 @@ def _mask_nc(eq, name=None):
     >>> eq = A*Commutator(A, B) + B*Commutator(A, C)
     >>> _mask_nc(eq, 'd')
     (A*_d0 + B*_d1, {_d0: Commutator(A, B), _d1: Commutator(A, C)}, [_d0, _d1, A, B])
-
-    If there is an object that:
-
-        - doesn't contain nc-symbols
-        - but has arguments which derive from Basic, not Expr
-        - and doesn't define an _eval_is_commutative routine
-
-    then it will give False (or None?) for the is_commutative test. Such
-    objects are also removed by this routine:
-
-    >>> from sympy import Basic
-    >>> eq = (1 + Mul(Basic(), Basic(), evaluate=False))
-    >>> eq.is_commutative
-    False
-    >>> _mask_nc(eq, 'd')
-    (_d0**2 + 1, {_d0: Basic()}, [])
 
     """
     name = name or 'mask'

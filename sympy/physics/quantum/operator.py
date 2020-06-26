@@ -51,7 +51,7 @@ class Operator(QExpr):
     Create an operator and examine its attributes::
 
         >>> from sympy.physics.quantum import Operator
-        >>> from sympy import symbols, I
+        >>> from sympy import I
         >>> A = Operator('A')
         >>> A
         A
@@ -109,7 +109,7 @@ class Operator(QExpr):
     _label_separator = ','
 
     def _print_operator_name(self, printer, *args):
-        return printer._print(self.__class__.__name__, *args)
+        return self.__class__.__name__
 
     _print_operator_name_latex = _print_operator_name
 
@@ -458,7 +458,7 @@ class OuterProduct(Operator):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
     def _sympystr(self, printer, *args):
-        return str(self.ket) + str(self.bra)
+        return printer._print(self.ket) + printer._print(self.bra)
 
     def _sympyrepr(self, printer, *args):
         return '%s(%s,%s)' % (self.__class__.__name__,

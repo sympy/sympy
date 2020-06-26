@@ -1,7 +1,7 @@
 from sympy import (Symbol, exp, log, sqrt, O, oo, sin, cos, PoleError)
 from sympy.abc import x
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_simple():
     # Gruntz' theses pp. 91 to 96

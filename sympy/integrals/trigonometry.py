@@ -1,6 +1,3 @@
-from __future__ import print_function, division
-
-from sympy.core.compatibility import range
 from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
 from sympy.functions import binomial, sin, cos, Piecewise
 
@@ -31,7 +28,7 @@ _u = Dummy('u')
 def trigintegrate(f, x, conds='piecewise'):
     """Integrate f = Mul(trig) over x
 
-       >>> from sympy import Symbol, sin, cos, tan, sec, csc, cot
+       >>> from sympy import sin, cos, tan, sec
        >>> from sympy.integrals.trigonometry import trigintegrate
        >>> from sympy.abc import x
 

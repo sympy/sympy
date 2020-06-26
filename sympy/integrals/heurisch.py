@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from typing import Dict, List
 
 from itertools import permutations
 
@@ -36,6 +36,7 @@ from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
 from sympy.core.compatibility import reduce, ordered
+from sympy.integrals.integrals import integrate
 
 
 def components(f, x):
@@ -46,7 +47,7 @@ def components(f, x):
     minimal, positive exponents.
 
     >>> from sympy import cos, sin
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> from sympy.integrals.heurisch import components
 
     >>> components(sin(x)*cos(x)**2, x)
@@ -82,7 +83,7 @@ def components(f, x):
     return result
 
 # name -> [] of symbols
-_symbols_cache = {}
+_symbols_cache = {}  # type: Dict[str, List[Dummy]]
 
 
 # NB @cacheit is not convenient here
@@ -171,6 +172,8 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                         _try_heurisch)
         cond = And(*[Eq(key, value) for key, value in sub_dict.items()])
         generic = Or(*[Ne(key, value) for key, value in sub_dict.items()])
+        if expr is None:
+            expr = integrate(f.subs(sub_dict),x)
         pairs.append((expr, cond))
     # If there is one condition, put the generic case first. Otherwise,
     # doing so may lead to longer Piecewise formulas
@@ -187,7 +190,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                               True))
     return Piecewise(*pairs)
 
-class BesselTable(object):
+class BesselTable:
     """
     Derivatives of Bessel functions of orders n and n-1
     in terms of each other.
@@ -229,7 +232,7 @@ class BesselTable(object):
 
 _bessel_table = None
 
-class DiffCache(object):
+class DiffCache:
     """
     Store for derivatives of expressions.
 
@@ -445,8 +448,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                             if M[a].is_positive:
                                 terms.add(acosh(sqrt(M[a]/M[b])*x))
                             elif M[a].is_negative:
-                                terms.add((-M[b]/2*sqrt(-M[a])*
-                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2 - M[b]))))
+                                terms.add(-M[b]/2*sqrt(-M[a])*
+                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2 - M[b])))
 
         else:
             terms |= set(hints)
@@ -580,9 +583,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     A, B = _exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
-        monoms = tuple(itermonomials(V, A + B - 1 + degree_offset))
+        monoms = tuple(ordered(itermonomials(V, A + B - 1 + degree_offset)))
     else:
-        monoms = tuple(itermonomials(V, A + B + degree_offset))
+        monoms = tuple(ordered(itermonomials(V, A + B + degree_offset)))
 
     poly_coeffs = _symbols('A', len(monoms))
 
@@ -653,12 +656,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         C = _symbols('C', len(atans))
 
         # Note: the ordering matters here
-        for poly, b in reversed(list(ordered(zip(irreducibles, B)))):
+        for poly, b in reversed(list(zip(ordered(irreducibles), B))):
             if poly.has(*V):
                 poly_coeffs.append(b)
                 log_part.append(b * log(poly))
 
-        for poly, c in reversed(list(ordered(zip(atans, C)))):
+        for poly, c in reversed(list(zip(ordered(atans), C))):
             if poly.has(*V):
                 poly_coeffs.append(c)
                 atan_part.append(c * poly)
@@ -677,7 +680,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         # sqrt(y) and similar expressions can appear, leading to non-trivial
         # domains.
         syms = set(poly_coeffs) | set(V)
-        non_syms = set([])
+        non_syms = set()
 
         def find_non_syms(expr):
             if expr.is_Integer or expr.is_Rational:

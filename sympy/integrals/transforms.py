@@ -1,9 +1,7 @@
 """ Integral Transforms """
 
-from __future__ import print_function, division
-
 from sympy.core import S
-from sympy.core.compatibility import reduce, range, iterable
+from sympy.core.compatibility import reduce, iterable
 from sympy.core.function import Function
 from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
@@ -33,7 +31,7 @@ class IntegralTransformError(NotImplementedError):
     computed.
     """
     def __init__(self, transform, function, msg):
-        super(IntegralTransformError, self).__init__(
+        super().__init__(
             "%s Transform could not be computed: %s." % (transform, msg))
         self.function = function
 
@@ -737,7 +735,10 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
             a, b, C, e, fac = _rewrite_gamma(g, s, strip[0], strip[1])
         except IntegralTransformError:
             continue
-        G = meijerg(a, b, C/x**e)
+        try:
+            G = meijerg(a, b, C/x**e)
+        except ValueError:
+            continue
         if as_meijerg:
             h = G
         else:
@@ -807,9 +808,9 @@ class InverseMellinTransform(IntegralTransform):
             from sympy import (
                 exp, gamma, sin, cos, tan, cot, cosh, sinh, tanh,
                 coth, factorial, rf)
-            _allowed = set(
-                [exp, gamma, sin, cos, tan, cot, cosh, sinh, tanh, coth,
-                 factorial, rf])
+            _allowed = {
+                exp, gamma, sin, cos, tan, cot, cosh, sinh, tanh, coth,
+                 factorial, rf}
         for f in postorder_traversal(F):
             if f.is_Function and f.has(s) and f.func not in _allowed:
                 raise IntegralTransformError('Inverse Mellin', F,
@@ -1608,7 +1609,7 @@ def inverse_sine_transform(F, k, x, **hints):
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
 
-    >>> from sympy import inverse_sine_transform, exp, sqrt, gamma, pi
+    >>> from sympy import inverse_sine_transform, exp, sqrt, gamma
     >>> from sympy.abc import x, k, a
     >>> inverse_sine_transform(2**((1-2*a)/2)*k**(a - 1)*
     ...     gamma(-a/2 + 1)/gamma((a+1)/2), k, x)
@@ -1715,7 +1716,7 @@ def inverse_cosine_transform(F, k, x, **hints):
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
 
-    >>> from sympy import inverse_cosine_transform, exp, sqrt, pi
+    >>> from sympy import inverse_cosine_transform, sqrt, pi
     >>> from sympy.abc import x, k, a
     >>> inverse_cosine_transform(sqrt(2)*a/(sqrt(pi)*(a**2 + k**2)), k, x)
     exp(-a*x)
@@ -1815,7 +1816,7 @@ def hankel_transform(f, r, k, nu, **hints):
     Note that for this transform, by default ``noconds=True``.
 
     >>> from sympy import hankel_transform, inverse_hankel_transform
-    >>> from sympy import gamma, exp, sinh, cosh
+    >>> from sympy import exp
     >>> from sympy.abc import r, k, m, nu, a
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)
@@ -1870,8 +1871,8 @@ def inverse_hankel_transform(F, k, r, nu, **hints):
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
     Note that for this transform, by default ``noconds=True``.
 
-    >>> from sympy import hankel_transform, inverse_hankel_transform, gamma
-    >>> from sympy import gamma, exp, sinh, cosh
+    >>> from sympy import hankel_transform, inverse_hankel_transform
+    >>> from sympy import exp
     >>> from sympy.abc import r, k, m, nu, a
 
     >>> ht = hankel_transform(1/r**m, r, k, nu)

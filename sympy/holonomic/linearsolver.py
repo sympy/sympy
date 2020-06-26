@@ -1,6 +1,5 @@
 """ Linear Solver for Holonomic Functions"""
 
-from __future__ import print_function, division
 
 from sympy.core import S
 from sympy.matrices.common import ShapeError
@@ -66,7 +65,7 @@ class NewMatrix(MutableDenseMatrix):
 
         # check for existence of solutions
         # rank of aug Matrix should be equal to rank of coefficient matrix
-        if not v[rank:, 0].is_zero:
+        if not v[rank:, 0].is_zero_matrix:
             raise ValueError("Linear system has no solution")
 
         # Get index of free symbols (free parameters)

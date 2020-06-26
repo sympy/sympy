@@ -1,8 +1,9 @@
 from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer,
                    SeqFormula, sequence, SeqAdd, SeqMul, Indexed, Idx, sqrt,
-                   fibonacci, tribonacci, sin, cos, exp, Rational)
-from sympy.series.sequences import SeqExpr, SeqExprOp
-from sympy.utilities.pytest import raises, slow
+                   fibonacci, tribonacci, sin, cos, exp, Rational, Symbol,
+                   Function)
+from sympy.series.sequences import SeqExpr, SeqExprOp, RecursiveSeq
+from sympy.testing.pytest import raises, slow
 
 x, y, z = symbols('x y z')
 n, m = symbols('n m')
@@ -290,3 +291,9 @@ def test_find_linear_recurrence():
     == ([1, 1], -x/(x**2 + x - 1))
     assert sequence(tribonacci(n)).find_linear_recurrence(30,gfvar=x) \
     ==  ([1, 1, 1], -x/(x**3 + x**2 + x - 1))
+
+def test_RecursiveSeq():
+    y = Function('y')
+    n = Symbol('n')
+    fib = RecursiveSeq(y(n - 1) + y(n - 2), y(n), n, [0, 1])
+    assert fib.coeff(3) == 2

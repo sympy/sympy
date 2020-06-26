@@ -35,4 +35,4 @@ from .utils import (refraction_angle, deviation, fresnel_coefficients,
 from .polarization import (jones_vector, stokes_vector, jones_2_stokes,
         linear_polarizer, phase_retarder, half_wave_retarder,
         quarter_wave_retarder, transmissive_filter, reflective_filter,
-        mueller_matrix, polarizing_beam_splitter)
+        mueller_matrix)

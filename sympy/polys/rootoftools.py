@@ -5,7 +5,7 @@ from __future__ import print_function, division
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
     symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import range, ordered
+from sympy.core.compatibility import ordered
 from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -21,10 +21,12 @@ from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
     dup_isolate_real_roots_sqf)
-from sympy.utilities import lambdify, public, sift
+from sympy.utilities import lambdify, public, sift, numbered_symbols
 
 from mpmath import mpf, mpc, findroot, workprec
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
+
+from itertools import chain
 
 
 __all__ = ['CRootOf']
@@ -41,7 +43,7 @@ class _pure_key_dict(object):
     Only the following actions are guaranteed:
 
     >>> from sympy.polys.rootoftools import _pure_key_dict
-    >>> from sympy import S, PurePoly
+    >>> from sympy import PurePoly
     >>> from sympy.abc import x, y
 
     1) creation
@@ -153,7 +155,7 @@ class RootOf(Expr):
     Only complex roots are currently supported.
     """
 
-    __slots__ = ['poly']
+    __slots__ = ('poly',)
 
     def __new__(cls, f, x, index=None, radicals=True, expand=True):
         """Construct a new ``CRootOf`` object for ``k``-th root of ``f``."""
@@ -286,7 +288,7 @@ class ComplexRootOf(RootOf):
 
     """
 
-    __slots__ = ['index']
+    __slots__ = ('index',)
     is_complex = True
     is_number = True
     is_finite = True
@@ -733,13 +735,22 @@ class ComplexRootOf(RootOf):
         """Return postprocessed roots of specified kind. """
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
-
+        # get rid of gen and it's free symbol
+        d = Dummy()
+        poly = poly.subs(poly.gen, d)
+        x = symbols('x')
+        # see what others are left and select x or a numbered x
+        # that doesn't clash
+        free_names = {str(i) for i in poly.free_symbols}
+        for x in chain((symbols('x'),), numbered_symbols('x')):
+            if x.name not in free_names:
+                poly = poly.xreplace({d: x})
+                break
         coeff, poly = cls._preprocess_roots(poly)
         roots = []
 
         for root in getattr(cls, method)(poly):
             roots.append(coeff*cls._postprocess_root(root, radicals))
-
         return roots
 
     @classmethod
@@ -896,7 +907,7 @@ class ComplexRootOf(RootOf):
         ensure the decimal representation of the approximation will be
         correct (including rounding) to 6 digits:
 
-        >>> from sympy import S, legendre_poly, Symbol
+        >>> from sympy import legendre_poly, Symbol
         >>> x = Symbol("x")
         >>> p = legendre_poly(4, x, polys=True)
         >>> r = p.real_roots()[-1]
@@ -999,7 +1010,7 @@ CRootOf = ComplexRootOf
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """
 
-    __slots__ = ['poly', 'fun', 'auto']
+    __slots__ = ('poly', 'fun', 'auto')
 
     def __new__(cls, expr, func=None, x=None, auto=True, quadratic=False):
         """Construct a new ``RootSum`` instance of roots of a polynomial."""

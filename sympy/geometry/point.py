@@ -17,8 +17,6 @@ False
 
 """
 
-from __future__ import division, print_function
-
 import warnings
 
 from sympy.core import S, sympify, Expr
@@ -30,7 +28,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import im
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.add import Add
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent, func_name, Undecidable
@@ -106,7 +104,7 @@ class Point(GeometryEntity):
     is_Point = True
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
         on_morph = kwargs.get('on_morph', 'ignore')
 
         # unpack into coords
@@ -162,9 +160,9 @@ class Point(GeometryEntity):
         # Turn any Floats into rationals and simplify
         # any expressions before we instantiate
         if evaluate:
-            coords = coords.xreplace(dict(
-                [(f, simplify(nsimplify(f, rational=True)))
-                 for f in coords.atoms(Float)]))
+            coords = coords.xreplace({
+                f: simplify(nsimplify(f, rational=True))
+                 for f in coords.atoms(Float)})
 
         # return 2D or 3D instances
         if len(coords) == 2:
@@ -1030,6 +1028,21 @@ class Point2D(Point):
         return Point(self.x + x, self.y + y)
 
     @property
+    def coordinates(self):
+        """
+        Returns the two coordinates of the Point.
+
+        Examples
+        ========
+
+        >>> from sympy import Point2D
+        >>> p = Point2D(0, 1)
+        >>> p.coordinates
+        (0, 1)
+        """
+        return self.args
+
+    @property
     def x(self):
         """
         Returns the X coordinate of the Point.
@@ -1140,7 +1153,7 @@ class Point3D(Point):
         Examples
         ========
 
-        >>> from sympy import Point3D, Matrix
+        >>> from sympy import Point3D
         >>> from sympy.abc import x
         >>> p1, p2 = Point3D(0, 0, 0), Point3D(1, 1, 1)
         >>> p3, p4, p5 = Point3D(2, 2, 2), Point3D(x, x, x), Point3D(1, 2, 6)
@@ -1307,6 +1320,21 @@ class Point3D(Point):
 
         """
         return Point3D(self.x + x, self.y + y, self.z + z)
+
+    @property
+    def coordinates(self):
+        """
+        Returns the three coordinates of the Point.
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D
+        >>> p = Point3D(0, 1, 2)
+        >>> p.coordinates
+        (0, 1, 2)
+        """
+        return self.args
 
     @property
     def x(self):

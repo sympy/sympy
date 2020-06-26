@@ -2,7 +2,6 @@
 
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
 from sympy.core.symbol import Dummy
 from sympy.polys.monomials import monomial_mul, monomial_lcm, monomial_divides, term_div
 from sympy.polys.orderings import lex
@@ -777,7 +776,7 @@ def is_reduced(G, ring):
         if g.LC != domain.one:
             return False
 
-        for term in g:
+        for term in g.terms():
             for h in G[:i] + G[i + 1:]:
                 if monomial_divides(h.LM, term[0]):
                     return False

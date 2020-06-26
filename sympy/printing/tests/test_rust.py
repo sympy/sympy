@@ -4,7 +4,7 @@ from sympy.core import (S, pi, oo, symbols, Rational, Integer,
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              sign)
 from sympy.logic import ITE
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import MatrixSymbol

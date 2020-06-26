@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range, is_sequence
+from typing import Any, Dict
+
+from sympy.core.compatibility import is_sequence
 from sympy.external import import_module
 from sympy.printing.printer import Printer
 import sympy
@@ -54,7 +56,7 @@ if theano:
             sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
             sympy.conjugate: tt.conj,
-            sympy.numbers.ImaginaryUnit: lambda:tt.complex(0,1),
+            sympy.core.numbers.ImaginaryUnit: lambda:tt.complex(0,1),
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
             sympy.HadamardProduct: tt.Elemwise(ts.mul),
@@ -300,7 +302,7 @@ class TheanoPrinter(Printer):
         return self._print(expr, dtypes=dtypes, broadcastables=broadcastables)
 
 
-global_cache = {}
+global_cache = {}  # type: Dict[Any, Any]
 
 
 def theano_code(expr, cache=None, **kwargs):

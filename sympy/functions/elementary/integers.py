@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
 from sympy.core.function import Function
@@ -21,6 +19,10 @@ class RoundFunction(Function):
     @classmethod
     def eval(cls, arg):
         from sympy import im
+        v = cls._eval_number(arg)
+        if v is not None:
+            return v
+
         if arg.is_integer or arg.is_finite is False:
             return arg
         if arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
@@ -28,10 +30,6 @@ class RoundFunction(Function):
             if not i.has(S.ImaginaryUnit):
                 return cls(i)*S.ImaginaryUnit
             return cls(arg, evaluate=False)
-
-        v = cls._eval_number(arg)
-        if v is not None:
-            return v
 
         # Integral, numerical, symbolic part
         ipart = npart = spart = S.Zero
@@ -68,6 +66,8 @@ class RoundFunction(Function):
             return ipart
         elif spart.is_imaginary or (S.ImaginaryUnit*spart).is_real:
             return ipart + cls(im(spart), evaluate=False)*S.ImaginaryUnit
+        elif isinstance(spart, (floor, ceiling)):
+            return ipart + spart
         else:
             return ipart + cls(spart, evaluate=False)
 
@@ -129,7 +129,7 @@ class floor(RoundFunction):
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[0]
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         r = self.subs(x, 0)
         args = self.args[0]
         args0 = args.subs(x, 0)
@@ -264,7 +264,7 @@ class ceiling(RoundFunction):
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[1]
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         r = self.subs(x, 0)
         args = self.args[0]
         args0 = args.subs(x, 0)
@@ -362,7 +362,7 @@ class frac(Function):
     Examples
     ========
 
-    >>> from sympy import Symbol, frac, Rational, floor, ceiling, I
+    >>> from sympy import Symbol, frac, Rational, floor, I
     >>> frac(Rational(4, 3))
     1/3
     >>> frac(-Rational(4, 3))

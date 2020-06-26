@@ -1,8 +1,8 @@
-from sympy import (symbols, Symbol, oo, Sum, harmonic, Add, S, binomial,
-    factorial, log, fibonacci, sin, cos, pi, I, sqrt, Rational)
+from sympy import (symbols, Symbol, oo, Sum, harmonic, exp, Add, S, binomial,
+    factorial, log, fibonacci, subfactorial, sin, cos, pi, I, sqrt, Rational)
 from sympy.series.limitseq import limit_seq
 from sympy.series.limitseq import difference_delta as dd
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.calculus.util import AccumulationBounds
 
 n, m, k = symbols('n m k', integer=True)
@@ -114,6 +114,10 @@ def test_limitseq_sum():
             S(3) / 4)
     assert (limit_seq(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
                   (2**x*x), x) == 4)
+
+
+def test_issue_9308():
+    assert limit_seq(subfactorial(n)/factorial(n), n) == exp(-1)
 
 
 def test_issue_10382():

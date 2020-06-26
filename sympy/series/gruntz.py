@@ -124,9 +124,6 @@ from sympy.core.compatibility import reduce
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp, powdenest
-from sympy import cacheit
-
-from sympy.core.compatibility import reduce
 
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
@@ -419,19 +416,20 @@ def limitinf(e, x, leadsimp=False):
     ``e`` cannot be simplified.
     """
     # rewrite e in terms of tractable functions only
-    e = e.rewrite('tractable', deep=True)
 
     if not e.has(x):
         return e  # e is a constant
     if e.has(Order):
         e = e.expand().removeO()
-    if not x.is_positive:
-        # We make sure that x.is_positive is True so we
-        # get all the correct mathematical behavior from the expression.
+    if not x.is_positive or x.is_integer:
+        # We make sure that x.is_positive is True and x.is_integer is None
+        # so we get all the correct mathematical behavior from the expression.
         # We need a fresh variable.
-        p = Dummy('p', positive=True, finite=True)
+        p = Dummy('p', positive=True)
         e = e.subs(x, p)
         x = p
+    e = e.rewrite('tractable', deep=True)
+    e = powdenest(e)
     c0, e0 = mrv_leadterm(e, x)
     sig = sign(e0, x)
     if sig == 1:
@@ -630,7 +628,7 @@ def rewrite(e, Omega, x, wsym):
     # Some parts of sympy have difficulty computing series expansions with
     # non-integral exponents. The following heuristic improves the situation:
     exponent = reduce(ilcm, denominators, 1)
-    f = f.xreplace({wsym: wsym**exponent})
+    f = f.subs({wsym: wsym**exponent})
     logw /= exponent
 
     return f, logw

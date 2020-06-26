@@ -5,10 +5,9 @@ from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
         meijerint_indefinite, _inflate_g, _create_lookup_table,
         meijerint_definite, meijerint_inversion)
 from sympy.utilities import default_sort_key
-from sympy.utilities.pytest import slow
-from sympy.utilities.randtest import (verify_numerically,
+from sympy.testing.pytest import slow
+from sympy.testing.randtest import (verify_numerically,
         random_complex_number as randcplx)
-from sympy.core.compatibility import range
 from sympy.abc import x, y, a, b, c, d, s, t, z
 
 
@@ -694,7 +693,7 @@ def test_issue_8368():
 
 def test_issue_10211():
     from sympy.abc import h, w
-    assert integrate((1/sqrt(((y-x)**2 + h**2))**3), (x,0,w), (y,0,w)) == \
+    assert integrate((1/sqrt((y-x)**2 + h**2)**3), (x,0,w), (y,0,w)) == \
         2*sqrt(1 + w**2/h**2)/h - 2/h
 
 

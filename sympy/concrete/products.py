@@ -1,6 +1,3 @@
-from __future__ import print_function, division
-
-from sympy.core.compatibility import range
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
@@ -66,7 +63,7 @@ class Product(ExprWithIntLimits):
     ========
 
     >>> from sympy.abc import a, b, i, k, m, n, x
-    >>> from sympy import Product, factorial, oo
+    >>> from sympy import Product, oo
     >>> Product(k, (k, 1, m))
     Product(k, (k, 1, m))
     >>> Product(k, (k, 1, m)).doit()
@@ -185,7 +182,7 @@ class Product(ExprWithIntLimits):
     .. [3] https://en.wikipedia.org/wiki/Empty_product
     """
 
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)
@@ -254,7 +251,7 @@ class Product(ExprWithIntLimits):
             if d:
                 reps[xab[0]] = d
         if reps:
-            undo = dict([(v, k) for k, v in reps.items()])
+            undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
             if type(did) is tuple:  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])
@@ -431,7 +428,7 @@ class Product(ExprWithIntLimits):
         Examples
         ========
 
-        >>> from sympy import Interval, S, Product, Symbol, cos, pi, exp, oo
+        >>> from sympy import Product, Symbol, cos, pi, exp, oo
         >>> n = Symbol('n', integer=True)
         >>> Product(n/(n + 1), (n, 1, oo)).is_convergent()
         False
@@ -477,7 +474,7 @@ class Product(ExprWithIntLimits):
         Examples
         ========
 
-        >>> from sympy import Product, simplify, RisingFactorial, gamma, Sum
+        >>> from sympy import Product, simplify, Sum
         >>> from sympy.abc import x, y, a, b, c, d
         >>> P = Product(x, (x, a, b))
         >>> Pr = P.reverse_order(x)

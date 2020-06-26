@@ -5,7 +5,6 @@ from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         Matrix, Basic, Dict, oo, zoo, nan, Pow)
 from sympy.core.basic import _aresame
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import range
 from sympy.core.expr import unchanged
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)
@@ -15,7 +14,7 @@ from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
 from sympy.tensor.array import NDimArray
 from sympy.utilities.iterables import subsets, variations
-from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 
 from sympy.abc import t, w, x, y, z
 f, g, h = symbols('f g h', cls=Function)
@@ -160,6 +159,40 @@ def test_nargs():
     assert Function('f', nargs=None).nargs == S.Naturals0
     raises(ValueError, lambda: Function('f', nargs=()))
 
+def test_nargs_inheritance():
+    class f1(Function):
+        nargs = 2
+    class f2(f1):
+        pass
+    class f3(f2):
+        pass
+    class f4(f3):
+        nargs = 1,2
+    class f5(f4):
+        pass
+    class f6(f5):
+        pass
+    class f7(f6):
+        nargs=None
+    class f8(f7):
+        pass
+    class f9(f8):
+        pass
+    class f10(f9):
+        nargs = 1
+    class f11(f10):
+        pass
+    assert f1.nargs == FiniteSet(2)
+    assert f2.nargs == FiniteSet(2)
+    assert f3.nargs == FiniteSet(2)
+    assert f4.nargs == FiniteSet(1, 2)
+    assert f5.nargs == FiniteSet(1, 2)
+    assert f6.nargs == FiniteSet(1, 2)
+    assert f7.nargs == S.Naturals0
+    assert f8.nargs == S.Naturals0
+    assert f9.nargs == S.Naturals0
+    assert f10.nargs == FiniteSet(1)
+    assert f11.nargs == FiniteSet(1)
 
 def test_arity():
     f = lambda x, y: 1
@@ -185,9 +218,8 @@ def test_Lambda():
 
     assert unchanged(Lambda, (x,), x**2)
     assert Lambda(x, x**2) == Lambda((x,), x**2)
-    assert Lambda(x, x**2) == Lambda(y, y**2)
-    assert Lambda(x, x**2) != Lambda(y, y**2 + 1)
-    assert Lambda((x, y), x**y) == Lambda((y, x), y**x)
+    assert Lambda(x, x**2) != Lambda(x, x**2 + 1)
+    assert Lambda((x, y), x**y) != Lambda((y, x), y**x)
     assert Lambda((x, y), x**y) != Lambda((x, y), y**x)
 
     assert Lambda((x, y), x**y)(x, y) == x**y
@@ -206,7 +238,9 @@ def test_Lambda():
     p = x, y, z, t
     assert Lambda(p, t*(x + y + z))(*p) == t * (x + y + z)
 
-    assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
+    eq = Lambda(x, 2*x) + Lambda(y, 2*y)
+    assert eq != 2*Lambda(x, 2*x)
+    assert eq.as_dummy() == 2*Lambda(x, 2*x).as_dummy()
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
     raises(BadSignatureError, lambda: Lambda(1, x))
     assert Lambda(x, 1)(1) is S.One
@@ -267,12 +301,19 @@ def test_Lambda_arguments():
 
 
 def test_Lambda_equality():
-    assert Lambda(x, 2*x) == Lambda(y, 2*y)
-    # although variables are casts as Dummies, the expressions
-    # should still compare equal
     assert Lambda((x, y), 2*x) == Lambda((x, y), 2*x)
+    # these, of course, should never be equal
     assert Lambda(x, 2*x) != Lambda((x, y), 2*x)
     assert Lambda(x, 2*x) != 2*x
+    # But it is tempting to want expressions that differ only
+    # in bound symbols to compare the same.  But this is not what
+    # Python's `==` is intended to do; two objects that compare
+    # as equal means that they are indistibguishable and cache to the
+    # same value.  We wouldn't want to expression that are
+    # mathematically the same but written in different variables to be
+    # interchanged else what is the point of allowing for different
+    # variable names?
+    assert Lambda(x, 2*x) != Lambda(y, 2*y)
 
 
 def test_Subs():
@@ -315,7 +356,7 @@ def test_Subs():
     assert Subs(y*f(x), x, y).subs(y, 2) == Subs(2*f(x), x, 2)
     assert (2 * Subs(f(x), x, 0)).subs(Subs(f(x), x, 0), y) == 2*y
 
-    assert Subs(f(x), x, 0).free_symbols == set([])
+    assert Subs(f(x), x, 0).free_symbols == set()
     assert Subs(f(x, y), x, z).free_symbols == {y, z}
 
     assert Subs(f(x).diff(x), x, 0).doit(), Subs(f(x).diff(x), x, 0)
@@ -500,15 +541,16 @@ def test_function__eval_nseries():
     assert polygamma(n, x + 1)._eval_nseries(x, 2, None) == \
         polygamma(n, 1) + polygamma(n + 1, 1)*x + O(x**2)
     raises(PoleError, lambda: sin(1/x)._eval_nseries(x, 2, None))
-    assert acos(1 - x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x) + O(x)
-    assert acos(1 + x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(-x) + O(x)  # XXX: wrong, branch cuts
+    assert acos(1 - x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(x) + sqrt(2)*x**(S(3)/2)/12 + O(x**2)
+    assert acos(1 + x)._eval_nseries(x, 2, None) == sqrt(2)*sqrt(-x) + sqrt(2)*(-x)**(S(3)/2)/12 + O(x**2)
     assert loggamma(1/x)._eval_nseries(x, 0, None) == \
         log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
 
     # issue 6725:
     assert expint(Rational(3, 2), -x)._eval_nseries(x, 5, None) == \
-        2 - 2*sqrt(pi)*sqrt(-x) - 2*x - x**2/3 - x**3/15 - x**4/84 + O(x**5)
+        2 - 2*sqrt(pi)*sqrt(-x) - 2*x + x**2 + x**3/3 + x**4/12 + 4*I*x**(S(3)/2)*sqrt(-x)/3 + \
+        2*I*x**(S(5)/2)*sqrt(-x)/5 + 2*I*x**(S(7)/2)*sqrt(-x)/21 + O(x**5)
     assert sin(sqrt(x))._eval_nseries(x, 3, None) == \
         sqrt(x) - x**Rational(3, 2)/6 + x**Rational(5, 2)/120 + O(x**3)
 
@@ -636,8 +678,8 @@ def test_diff_wrt():
     assert diff(f(g(x), h(y)), x) == \
         Derivative(g(x), x)*Derivative(f(g(x), h(y)), g(x))
     assert diff(f(g(x), h(x)), x) == (
-        Subs(Derivative(f(y, h(x)), y), y, g(x))*Derivative(g(x), x) +
-        Subs(Derivative(f(g(x), y), y), y, h(x))*Derivative(h(x), x))
+        Derivative(f(g(x), h(x)), g(x))*Derivative(g(x), x) +
+        Derivative(f(g(x), h(x)), h(x))*Derivative(h(x), x))
     assert f(
         sin(x)).diff(x) == cos(x)*Subs(Derivative(f(x), x), x, sin(x))
 
@@ -1317,3 +1359,8 @@ def test_Derivative_free_symbols():
     f = Function('f')
     n = Symbol('n', integer=True, positive=True)
     assert diff(f(x), (x, n)).free_symbols == {n, x}
+
+
+def test_issue_10503():
+    f = exp(x**3)*cos(x**6)
+    assert f.series(x, 0, 14) == 1 + x**3 + x**6/2 + x**9/6 - 11*x**12/24 + O(x**14)

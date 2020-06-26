@@ -1,6 +1,6 @@
 
 from sympy.external import import_module
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 import ctypes
 
 

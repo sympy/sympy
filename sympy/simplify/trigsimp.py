@@ -444,7 +444,7 @@ def trigsimp(expr, **opts):
     ========
 
     >>> from sympy import trigsimp, sin, cos, log
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e)
     2
@@ -638,8 +638,8 @@ def trigsimp_old(expr, **opts):
     Examples
     ========
 
-    >>> from sympy import trigsimp, sin, cos, log, cosh, sinh, tan, cot
-    >>> from sympy.abc import x, y
+    >>> from sympy import trigsimp, sin, cos, log, cot
+    >>> from sympy.abc import x
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e, old=True)
     2
@@ -1098,11 +1098,11 @@ def futrig(e, **kwargs):
         return e
 
     old = e
-    e = bottom_up(e, lambda x: _futrig(x, **kwargs))
+    e = bottom_up(e, _futrig)
 
     if kwargs.pop('hyper', True) and e.has(HyperbolicFunction):
         e, f = hyper_as_trig(e)
-        e = f(_futrig(e))
+        e = f(bottom_up(e, _futrig))
 
     if e != old and e.is_Mul and e.args[0].is_Rational:
         # redistribute leading coeff on 2-arg Add
@@ -1110,11 +1110,11 @@ def futrig(e, **kwargs):
     return e
 
 
-def _futrig(e, **kwargs):
+def _futrig(e):
     """Helper for futrig."""
     from sympy.simplify.fu import (
         TR1, TR2, TR3, TR2i, TR10, L, TR10i,
-        TR8, TR6, TR15, TR16, TR111, TR5, TRmorrie, TR11, TR14, TR22,
+        TR8, TR6, TR15, TR16, TR111, TR5, TRmorrie, TR11, _TR11, TR14, TR22,
         TR12)
     from sympy.core.compatibility import _nodes
 
@@ -1124,7 +1124,7 @@ def _futrig(e, **kwargs):
     if e.is_Mul:
         coeff, e = e.as_independent(TrigonometricFunction)
     else:
-        coeff = S.One
+        coeff = None
 
     Lops = lambda x: (L(x), x.count_ops(), _nodes(x), len(x.args), x.is_Add)
     trigs = lambda x: x.has(TrigonometricFunction)
@@ -1142,7 +1142,7 @@ def _futrig(e, **kwargs):
         TR14,  # factored identities
         TR5,  # sin-pow -> cos_pow
         TR10,  # sin-cos of sums -> sin-cos prod
-        TR11, TR6, # reduce double angles and rewrite cos pows
+        TR11, _TR11, TR6, # reduce double angles and rewrite cos pows
         lambda x: _eapply(factor, x, trigs),
         TR14,  # factored powers of identities
         [identity, lambda x: _eapply(_mexpand, x, trigs)],
@@ -1167,7 +1167,11 @@ def _futrig(e, **kwargs):
             factor_terms, TR12(x), trigs)],  # expand tan of sum
         )]
     e = greedy(tree, objective=Lops)(e)
-    return coeff*e
+
+    if coeff is not None:
+        e = coeff * e
+
+    return e
 
 
 def _is_Expr(e):

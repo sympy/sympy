@@ -1,6 +1,5 @@
 from sympy.matrices.expressions import MatrixExpr
 from sympy import MatrixBase, Dummy, Lambda, Function, FunctionClass
-from sympy.core.basic import Basic
 from sympy.core.sympify import sympify, _sympify
 
 
@@ -50,7 +49,7 @@ class ElementwiseApplyFunction(MatrixExpr):
         if not expr.is_Matrix:
             raise ValueError("{} must be a matrix instance.".format(expr))
 
-        if not isinstance(function, FunctionClass):
+        if not isinstance(function, (FunctionClass, Lambda)):
             d = Dummy('d')
             function = Lambda(d, function(d))
 

@@ -8,7 +8,6 @@ the function ``homomorphism(from, to, matrix)`` to create homomorphism objects.
 
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
 from sympy.polys.agca.modules import (Module, FreeModule, QuotientModule,
     SubModule, SubQuotientModule)
 from sympy.polys.polyerrors import CoercionFailed

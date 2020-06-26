@@ -1,7 +1,4 @@
-from __future__ import print_function, division
-
 from sympy import Integer
-from sympy.core.compatibility import range
 import sympy.polys
 
 import sys

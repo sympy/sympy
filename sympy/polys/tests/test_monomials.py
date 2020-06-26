@@ -13,7 +13,7 @@ from sympy.polys.polyerrors import ExactQuotientFailed
 
 from sympy.abc import a, b, c, x, y, z
 from sympy.core import S, symbols
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_monomials():

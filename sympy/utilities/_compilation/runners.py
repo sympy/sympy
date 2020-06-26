@@ -1,4 +1,4 @@
-from __future__ import print_function, division, absolute_import
+from typing import Callable, Dict, Optional, Tuple, Union
 
 from collections import OrderedDict
 from distutils.errors import CompileError
@@ -10,10 +10,9 @@ import sys
 from .util import (
     find_binary_of_command, unique_list
 )
-from sympy.core.compatibility import string_types
 
 
-class CompilerRunner(object):
+class CompilerRunner:
     """ CompilerRunner base class.
 
     Parameters
@@ -52,21 +51,23 @@ class CompilerRunner(object):
 
     """
 
-    compiler_dict = None  # Subclass to vendor/binary dict
+    # Subclass to vendor/binary dict
+    compiler_dict = None  # type: Dict[str, str]
 
     # Standards should be a tuple of supported standards
     # (first one will be the default)
-    standards = None
+    standards = None  # type: Tuple[Union[None, str], ...]
 
-    std_formater = None  # Subclass to dict of binary/formater-callback
+    # Subclass to dict of binary/formater-callback
+    std_formater = None  # type: Dict[str, Callable[[Optional[str]], str]]
 
     # subclass to be e.g. {'gcc': 'gnu', ...}
-    compiler_name_vendor_mapping = None
+    compiler_name_vendor_mapping = None  # type: Dict[str, str]
 
     def __init__(self, sources, out, flags=None, run_linker=True, compiler=None, cwd='.',
                  include_dirs=None, libraries=None, library_dirs=None, std=None, define=None,
                  undef=None, strict_aliasing=None, preferred_vendor=None, **kwargs):
-        if isinstance(sources, string_types):
+        if isinstance(sources, str):
             raise ValueError("Expected argument sources to be a list of strings.")
         self.sources = list(sources)
         self.out = out
@@ -80,7 +81,7 @@ class CompilerRunner(object):
                 preferred_vendor = os.environ.get('SYMPY_COMPILER_VENDOR', None)
             self.compiler_name, self.compiler_binary, self.compiler_vendor = self.find_compiler(preferred_vendor)
             if self.compiler_binary is None:
-                raise ValueError("No compiler found (searched: {0})".format(', '.join(self.compiler_dict.values())))
+                raise ValueError("No compiler found (searched: {})".format(', '.join(self.compiler_dict.values())))
         self.define = define or []
         self.undef = undef or []
         self.include_dirs = include_dirs or []
@@ -186,7 +187,7 @@ class CompilerRunner(object):
 
         # Error handling
         if self.cmd_returncode != 0:
-            msg = "Error executing '{0}' in {1} (exited status {2}):\n {3}\n".format(
+            msg = "Error executing '{}' in {} (exited status {}):\n {}\n".format(
                 ' '.join(self.cmd()), self.cwd, str(self.cmd_returncode), self.cmd_outerr
             )
             raise CompileError(msg)

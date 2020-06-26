@@ -8,11 +8,11 @@ from sympy import (
 from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic, _dummy_with_inherited_properties_concrete
 from sympy.concrete.expr_with_intlimits import ReorderError
-from sympy.utilities.pytest import XFAIL, raises, slow
+from sympy.core.facts import InconsistentAssumptions
+from sympy.testing.pytest import XFAIL, raises, slow
 from sympy.matrices import \
     Matrix, SparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix
 from sympy.core.mod import Mod
-from sympy.core.compatibility import range
 
 n = Symbol('n', integer=True)
 
@@ -402,9 +402,9 @@ def test_euler_maclaurin():
     # Not exact
     assert Sum(k**6, (k, a, b)).euler_maclaurin(0, 2)[1] != 0
     # Numerical test
-    for m, n in [(2, 4), (2, 20), (10, 20), (18, 20)]:
+    for mi, ni in [(2, 4), (2, 20), (10, 20), (18, 20)]:
         A = Sum(1/k**3, (k, 1, oo))
-        s, e = A.euler_maclaurin(m, n)
+        s, e = A.euler_maclaurin(mi, ni)
         assert abs((s - zeta(3)).evalf()) < e.evalf()
 
     raises(ValueError, lambda: Sum(1, (x, 0, 1), (k, 0, 1)).euler_maclaurin())
@@ -1050,6 +1050,8 @@ def test_is_convergent():
     assert Sum(1/(x**3), (x, 1, oo)).is_convergent() is S.true
     assert Sum(1/(x**S.Half), (x, 1, oo)).is_convergent() is S.false
 
+    # issue 19545
+    assert Sum(1/n - 3/(3*n +2), (n, 1, oo)).is_convergent() is S.true
 
 def test_is_absolutely_convergent():
     assert Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent() is S.false
@@ -1371,7 +1373,6 @@ def test__dummy_with_inherited_properties_concrete():
     d = _dummy_with_inherited_properties_concrete(Tuple(N, 2, 4))
     assert d is None
 
-    from sympy.core.facts import InconsistentAssumptions
     x = Symbol('x', negative=True)
     raises(InconsistentAssumptions,
            lambda: _dummy_with_inherited_properties_concrete(Tuple(x, 1, 5)))

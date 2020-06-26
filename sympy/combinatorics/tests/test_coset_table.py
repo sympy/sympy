@@ -4,7 +4,7 @@ from sympy.combinatorics.coset_table import (CosetTable,
 from sympy.combinatorics.coset_table import modified_coset_enumeration_r
 from sympy.combinatorics.free_groups import free_group
 
-from sympy.utilities.pytest import slow
+from sympy.testing.pytest import slow
 
 """
 References

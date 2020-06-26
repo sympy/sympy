@@ -1,8 +1,7 @@
-from sympy.core.compatibility import range
 from sympy import evalf, symbols, pi, sin, cos, sqrt, acos, Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols, inertia,
                                      KanesMethod, RigidBody, Point, dot, msubs)
-from sympy.utilities.pytest import slow, ON_TRAVIS, skip, warns_deprecated_sympy
+from sympy.testing.pytest import slow, ON_TRAVIS, skip, warns_deprecated_sympy
 
 
 @slow

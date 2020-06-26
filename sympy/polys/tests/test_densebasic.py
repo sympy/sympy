@@ -41,7 +41,7 @@ from sympy.polys.domains import ZZ, QQ
 from sympy.polys.rings import ring
 
 from sympy.core.singleton import S
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy import oo
 

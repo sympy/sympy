@@ -70,7 +70,7 @@ class VectorLatexPrinter(LatexPrinter):
                 subs = r""
 
             if exp:
-                supers += r"^{%s}" % self._print(exp)
+                supers += r"^{%s}" % exp
 
             return r"%s" % (name + supers + subs)
         else:
@@ -417,5 +417,5 @@ def init_vprinting(**kwargs):
     kwargs['latex_printer'] = vlatex
     init_printing(**kwargs)
 
-params = init_printing.__doc__.split('Examples\n    ========')[0]
-init_vprinting.__doc__ = init_vprinting.__doc__.format(params)
+params = init_printing.__doc__.split('Examples\n    ========')[0]  # type: ignore
+init_vprinting.__doc__ = init_vprinting.__doc__.format(params)  # type: ignore

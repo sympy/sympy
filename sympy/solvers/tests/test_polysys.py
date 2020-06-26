@@ -7,7 +7,7 @@ from sympy.polys import PolynomialError
 from sympy.solvers.polysys import (solve_poly_system,
     solve_triangulated, solve_biquadratic, SolveFailed)
 from sympy.polys.polytools import parallel_poly_from_expr
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_solve_poly_system():

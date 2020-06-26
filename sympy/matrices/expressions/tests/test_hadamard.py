@@ -1,6 +1,6 @@
 from sympy import Identity, OneMatrix, ZeroMatrix, Matrix, MatAdd
 from sympy.core import symbols
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.matrices import ShapeError, MatrixSymbol
 from sympy.matrices.expressions import (HadamardProduct, hadamard_product, HadamardPower, hadamard_power)
@@ -25,7 +25,7 @@ def test_HadamardProduct():
     mix = HadamardProduct(Z*A, B)*C
     assert mix.shape == (n, k)
 
-    assert set(HadamardProduct(A, B, A).T.args) == set((A.T, A.T, B.T))
+    assert set(HadamardProduct(A, B, A).T.args) == {A.T, A.T, B.T}
 
 
 def test_HadamardProduct_isnt_commutative():

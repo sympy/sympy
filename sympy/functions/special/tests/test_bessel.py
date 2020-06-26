@@ -3,16 +3,16 @@ from itertools import product
 from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
                    bessely, besseli, besselk, hankel1, hankel2, hn1, hn2,
                    expand_func, sqrt, sinh, cosh, diff, series, gamma, hyper,
-                   Abs, I, O, oo, conjugate, uppergamma, exp, Integral, Sum,
+                   I, O, oo, conjugate, uppergamma, exp, Integral, Sum,
                    Rational)
 from sympy.functions.special.bessel import fn
 from sympy.functions.special.bessel import (airyai, airybi,
                                             airyaiprime, airybiprime, marcumq)
-from sympy.utilities.randtest import (random_complex_number as randcplx,
+from sympy.testing.randtest import (random_complex_number as randcplx,
                                       verify_numerically as tn,
                                       test_derivative_numerically as td,
                                       _randint)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.abc import z, n, k, x
 

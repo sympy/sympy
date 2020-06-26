@@ -1,7 +1,7 @@
 from sympy.multipledispatch.dispatcher import (Dispatcher, MDNotImplementedError,
                                          MethodDispatcher, halt_ordering,
                                          restart_ordering)
-from sympy.utilities.pytest import raises, XFAIL, warns
+from sympy.testing.pytest import raises, XFAIL, warns
 
 
 def identity(x):
@@ -41,11 +41,11 @@ def test_dispatcher_as_decorator():
     f = Dispatcher('f')
 
     @f.register(int)
-    def inc(x):
+    def inc(x): # noqa:F811
         return x + 1
 
-    @f.register(float)
-    def inc(x):
+    @f.register(float) # noqa:F811
+    def inc(x): # noqa:F811
         return x - 1
 
     assert f(1) == 2
@@ -54,7 +54,7 @@ def test_dispatcher_as_decorator():
 
 def test_register_instance_method():
 
-    class Test(object):
+    class Test:
         __init__ = MethodDispatcher('f')
 
         @__init__.register(list)
@@ -194,7 +194,7 @@ def test_halt_method_resolution():
 
     assert g == [1]
 
-    assert set(f.ordering) == set([(int, object), (object, int)])
+    assert set(f.ordering) == {(int, object), (object, int)}
 
 
 @XFAIL

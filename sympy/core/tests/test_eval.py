@@ -1,5 +1,5 @@
 from sympy import Symbol, Function, exp, sqrt, Rational, I, cos, tan, S
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 
 def test_add_eval():

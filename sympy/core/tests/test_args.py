@@ -6,13 +6,11 @@
 
 import os
 import re
-import io
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
                    Eq, log, Function, Rational)
 
-from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, SKIP
+from sympy.testing.pytest import XFAIL, SKIP
 
 x, y, z = symbols('x,y,z')
 
@@ -36,7 +34,7 @@ def test_all_classes_are_tested():
             if not file.endswith(".py"):
                 continue
 
-            with io.open(os.path.join(root, file), "r", encoding='utf-8') as f:
+            with open(os.path.join(root, file), "r", encoding='utf-8') as f:
                 text = f.read()
 
             submodule = module + '.' + file[:-3]
@@ -77,7 +75,11 @@ def test_all_classes_are_tested():
 
 
 def _test_args(obj):
-    return all(isinstance(arg, Basic) for arg in obj.args)
+    all_basic = all(isinstance(arg, Basic) for arg in obj.args)
+    # Ideally obj.func(*obj.args) would always recreate the object, but for
+    # now, we only require it for objects with non-empty .args
+    recreatable = not obj.args or obj.func(*obj.args) == obj
+    return all_basic and recreatable
 
 
 def test_sympy__assumptions__assume__AppliedPredicate():
@@ -468,6 +470,11 @@ def test_sympy__combinatorics__permutations__Permutation():
     from sympy.combinatorics.permutations import Permutation
     assert _test_args(Permutation([0, 1, 2, 3]))
 
+def test_sympy__combinatorics__permutations__AppliedPermutation():
+    from sympy.combinatorics.permutations import Permutation
+    from sympy.combinatorics.permutations import AppliedPermutation
+    p = Permutation([0, 1, 2, 3])
+    assert _test_args(AppliedPermutation(p, 1))
 
 def test_sympy__combinatorics__perm_groups__PermutationGroup():
     from sympy.combinatorics.permutations import Permutation
@@ -863,8 +870,12 @@ def test_sympy__sets__sets__Set():
 
 def test_sympy__sets__sets__Intersection():
     from sympy.sets.sets import Intersection, Interval
-    assert _test_args(Intersection(Interval(0, 3), Interval(2, 4),
-        evaluate=False))
+    from sympy.core.symbol import Symbol
+    x = Symbol('x')
+    y = Symbol('y')
+    S = Intersection(Interval(0, x), Interval(y, 1))
+    assert isinstance(S, Intersection)
+    assert _test_args(S)
 
 
 def test_sympy__sets__sets__Union():
@@ -880,6 +891,11 @@ def test_sympy__sets__sets__Complement():
 def test_sympy__sets__sets__SymmetricDifference():
     from sympy.sets.sets import FiniteSet, SymmetricDifference
     assert _test_args(SymmetricDifference(FiniteSet(1, 2, 3), \
+           FiniteSet(2, 3, 4)))
+
+def test_sympy__sets__sets__DisjointUnion():
+    from sympy.sets.sets import FiniteSet, DisjointUnion
+    assert _test_args(DisjointUnion(FiniteSet(1, 2, 3), \
            FiniteSet(2, 3, 4)))
 
 
@@ -1274,16 +1290,20 @@ def test_sympy__stats__frv_types__FiniteDistributionHandmade():
     assert _test_args(FiniteDistributionHandmade(Dict({1: 1})))
 
 
-def test_sympy__stats__crv__ContinuousDistributionHandmade():
-    from sympy.stats.crv import ContinuousDistributionHandmade
-    from sympy import Symbol, Interval
-    assert _test_args(ContinuousDistributionHandmade(Symbol('x'),
-                                                     Interval(0, 2)))
+def test_sympy__stats__crv_types__ContinuousDistributionHandmade():
+    from sympy.stats.crv_types import ContinuousDistributionHandmade
+    from sympy import Interval, Lambda
+    from sympy.abc import x
+    assert _test_args(ContinuousDistributionHandmade(Lambda(x, 2*x),
+                                                     Interval(0, 1)))
 
 
-def test_sympy__stats__drv__DiscreteDistributionHandmade():
-    from sympy.stats.drv import DiscreteDistributionHandmade
-    assert _test_args(DiscreteDistributionHandmade(x, S.Naturals))
+def test_sympy__stats__drv_types__DiscreteDistributionHandmade():
+    from sympy.stats.drv_types import DiscreteDistributionHandmade
+    from sympy import Lambda, FiniteSet
+    from sympy.abc import x
+    assert _test_args(DiscreteDistributionHandmade(Lambda(x, Rational(1, 10)),
+                                                    FiniteSet(*range(10))))
 
 
 def test_sympy__stats__rv__Density():
@@ -1315,6 +1335,9 @@ def test_sympy__stats__crv_types__BetaPrimeDistribution():
     from sympy.stats.crv_types import BetaPrimeDistribution
     assert _test_args(BetaPrimeDistribution(1, 1))
 
+def test_sympy__stats__crv_types__BoundedParetoDistribution():
+    from sympy.stats.crv_types import BoundedParetoDistribution
+    assert _test_args(BoundedParetoDistribution(1, 1, 2))
 
 def test_sympy__stats__crv_types__CauchyDistribution():
     from sympy.stats.crv_types import CauchyDistribution
@@ -1396,6 +1419,9 @@ def test_sympy__stats__crv_types__LaplaceDistribution():
     from sympy.stats.crv_types import LaplaceDistribution
     assert _test_args(LaplaceDistribution(0, 1))
 
+def test_sympy__stats__crv_types__LevyDistribution():
+    from sympy.stats.crv_types import LevyDistribution
+    assert _test_args(LevyDistribution(0, 1))
 
 def test_sympy__stats__crv_types__LogisticDistribution():
     from sympy.stats.crv_types import LogisticDistribution
@@ -1410,11 +1436,17 @@ def test_sympy__stats__crv_types__LogNormalDistribution():
     from sympy.stats.crv_types import LogNormalDistribution
     assert _test_args(LogNormalDistribution(0, 1))
 
+def test_sympy__stats__crv_types__LomaxDistribution():
+    from sympy.stats.crv_types import LomaxDistribution
+    assert _test_args(LomaxDistribution(1, 2))
 
 def test_sympy__stats__crv_types__MaxwellDistribution():
     from sympy.stats.crv_types import MaxwellDistribution
     assert _test_args(MaxwellDistribution(1))
 
+def test_sympy__stats__crv_types__MoyalDistribution():
+    from sympy.stats.crv_types import MoyalDistribution
+    assert _test_args(MoyalDistribution(1,2))
 
 def test_sympy__stats__crv_types__NakagamiDistribution():
     from sympy.stats.crv_types import NakagamiDistribution
@@ -1434,6 +1466,9 @@ def test_sympy__stats__crv_types__ParetoDistribution():
     from sympy.stats.crv_types import ParetoDistribution
     assert _test_args(ParetoDistribution(1, 1))
 
+def test_sympy__stats__crv_types__PowerFunctionDistribution():
+    from sympy.stats.crv_types import PowerFunctionDistribution
+    assert _test_args(PowerFunctionDistribution(2,0,1))
 
 def test_sympy__stats__crv_types__QuadraticUDistribution():
     from sympy.stats.crv_types import QuadraticUDistribution
@@ -1446,6 +1481,10 @@ def test_sympy__stats__crv_types__RaisedCosineDistribution():
 def test_sympy__stats__crv_types__RayleighDistribution():
     from sympy.stats.crv_types import RayleighDistribution
     assert _test_args(RayleighDistribution(1))
+
+def test_sympy__stats__crv_types__ReciprocalDistribution():
+    from sympy.stats.crv_types import ReciprocalDistribution
+    assert _test_args(ReciprocalDistribution(5, 30))
 
 def test_sympy__stats__crv_types__ShiftedGompertzDistribution():
     from sympy.stats.crv_types import ShiftedGompertzDistribution
@@ -1493,6 +1532,9 @@ def test_sympy__stats__drv_types__GeometricDistribution():
     from sympy.stats.drv_types import GeometricDistribution
     assert _test_args(GeometricDistribution(.5))
 
+def test_sympy__stats__drv_types__HermiteDistribution():
+    from sympy.stats.drv_types import HermiteDistribution
+    assert _test_args(HermiteDistribution(1, 2))
 
 def test_sympy__stats__drv_types__LogarithmicDistribution():
     from sympy.stats.drv_types import LogarithmicDistribution
@@ -1630,6 +1672,26 @@ def test_sympy__stats__stochastic_process_types__ContinuousMarkovChain():
     from sympy import MatrixSymbol
     assert _test_args(ContinuousMarkovChain("Y", [0, 1, 2], MatrixSymbol('T', 3, 3)))
 
+def test_sympy__stats__stochastic_process_types__BernoulliProcess():
+    from sympy.stats.stochastic_process_types import BernoulliProcess
+    assert _test_args(BernoulliProcess("B", 0.5, 1, 0))
+
+def test_sympy__stats__stochastic_process_types__CountingProcess():
+    from sympy.stats.stochastic_process_types import CountingProcess
+    assert _test_args(CountingProcess("C"))
+
+def test_sympy__stats__stochastic_process_types__PoissonProcess():
+    from sympy.stats.stochastic_process_types import PoissonProcess
+    assert _test_args(PoissonProcess("X", 2))
+
+def test_sympy__stats__stochastic_process_types__WienerProcess():
+    from sympy.stats.stochastic_process_types import WienerProcess
+    assert _test_args(WienerProcess("X"))
+
+def test_sympy__stats__stochastic_process_types__GammaProcess():
+    from sympy.stats.stochastic_process_types import GammaProcess
+    assert _test_args(GammaProcess("X", 1, 2))
+
 def test_sympy__stats__random_matrix__RandomMatrixPSpace():
     from sympy.stats.random_matrix import RandomMatrixPSpace
     from sympy.stats.random_matrix_models import RandomMatrixEnsemble
@@ -1670,6 +1732,22 @@ def test_sympy__stats__random_matrix_models__CircularOrthogonalEnsemble():
 def test_sympy__stats__random_matrix_models__CircularSymplecticEnsemble():
     from sympy.stats import CircularSymplecticEnsemble
     assert _test_args(CircularSymplecticEnsemble('S', 3))
+
+def test_sympy__stats__symbolic_multivariate_probability__ExpectationMatrix():
+    from sympy.stats import ExpectationMatrix
+    from sympy.stats.rv import RandomMatrixSymbol
+    assert _test_args(ExpectationMatrix(RandomMatrixSymbol('R', 2, 1)))
+
+def test_sympy__stats__symbolic_multivariate_probability__VarianceMatrix():
+    from sympy.stats import VarianceMatrix
+    from sympy.stats.rv import RandomMatrixSymbol
+    assert _test_args(VarianceMatrix(RandomMatrixSymbol('R', 3, 1)))
+
+def test_sympy__stats__symbolic_multivariate_probability__CrossCovarianceMatrix():
+    from sympy.stats import CrossCovarianceMatrix
+    from sympy.stats.rv import RandomMatrixSymbol
+    assert _test_args(CrossCovarianceMatrix(RandomMatrixSymbol('R', 3, 1),
+                        RandomMatrixSymbol('X', 3, 1)))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
@@ -3041,6 +3119,27 @@ def test_sympy__matrices__expressions__factorizations__SofSVD():
 def test_sympy__matrices__expressions__factorizations__Factorization():
     pass
 
+def test_sympy__matrices__expressions__permutation__PermutationMatrix():
+    from sympy.combinatorics import Permutation
+    from sympy.matrices.expressions.permutation import PermutationMatrix
+    assert _test_args(PermutationMatrix(Permutation([2, 0, 1])))
+
+def test_sympy__matrices__expressions__permutation__MatrixPermute():
+    from sympy.combinatorics import Permutation
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
+    from sympy.matrices.expressions.permutation import MatrixPermute
+    A = MatrixSymbol('A', 3, 3)
+    assert _test_args(MatrixPermute(A, Permutation([2, 0, 1])))
+
+def test_sympy__matrices__expressions__companion__CompanionMatrix():
+    from sympy.core.symbol import Symbol
+    from sympy.matrices.expressions.companion import CompanionMatrix
+    from sympy.polys.polytools import Poly
+
+    x = Symbol('x')
+    p = Poly([1, 2, 3], x)
+    assert _test_args(CompanionMatrix(p))
+
 def test_sympy__physics__vector__frame__CoordinateSym():
     from sympy.physics.vector import CoordinateSym
     from sympy.physics.vector import ReferenceFrame
@@ -3641,6 +3740,21 @@ def test_sympy__physics__quantum__state__StateBase():
     assert _test_args(StateBase(0))
 
 
+def test_sympy__physics__quantum__state__OrthogonalBra():
+    from sympy.physics.quantum.state import OrthogonalBra
+    assert _test_args(OrthogonalBra(0))
+
+
+def test_sympy__physics__quantum__state__OrthogonalKet():
+    from sympy.physics.quantum.state import OrthogonalKet
+    assert _test_args(OrthogonalKet(0))
+
+
+def test_sympy__physics__quantum__state__OrthogonalState():
+    from sympy.physics.quantum.state import OrthogonalState
+    assert _test_args(OrthogonalState(0))
+
+
 def test_sympy__physics__quantum__state__TimeDepBra():
     from sympy.physics.quantum.state import TimeDepBra
     assert _test_args(TimeDepBra('psi', 't'))
@@ -3943,8 +4057,8 @@ def test_sympy__series__sequences__RecursiveSeq():
     from sympy.series.sequences import RecursiveSeq
     y = Function("y")
     n = symbols("n")
-    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y, n, (0, 1)))
-    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y, n))
+    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y(n), n, (0, 1)))
+    assert _test_args(RecursiveSeq(y(n - 1) + y(n - 2), y(n), n))
 
 
 def test_sympy__series__sequences__SeqExprOp():
@@ -4061,7 +4175,9 @@ def test_sympy__tensor__array__arrayop__Flatten():
 
 def test_sympy__tensor__functions__TensorProduct():
     from sympy.tensor.functions import TensorProduct
-    tp = TensorProduct(3, 4, evaluate=False)
+    A = MatrixSymbol('A', 3, 3)
+    B = MatrixSymbol('B', 3, 3)
+    tp = TensorProduct(A, B)
     assert _test_args(tp)
 
 
@@ -4656,27 +4772,31 @@ def test_sympy__vector__point__Point():
 
 
 def test_sympy__vector__basisdependent__BasisDependent():
-    from sympy.vector.basisdependent import BasisDependent
+    #from sympy.vector.basisdependent import BasisDependent
     #These classes have been created to maintain an OOP hierarchy
     #for Vectors and Dyadics. Are NOT meant to be initialized
+    pass
 
 
 def test_sympy__vector__basisdependent__BasisDependentMul():
-    from sympy.vector.basisdependent import BasisDependentMul
+    #from sympy.vector.basisdependent import BasisDependentMul
     #These classes have been created to maintain an OOP hierarchy
     #for Vectors and Dyadics. Are NOT meant to be initialized
+    pass
 
 
 def test_sympy__vector__basisdependent__BasisDependentAdd():
-    from sympy.vector.basisdependent import BasisDependentAdd
+    #from sympy.vector.basisdependent import BasisDependentAdd
     #These classes have been created to maintain an OOP hierarchy
     #for Vectors and Dyadics. Are NOT meant to be initialized
+    pass
 
 
 def test_sympy__vector__basisdependent__BasisDependentZero():
-    from sympy.vector.basisdependent import BasisDependentZero
+    #from sympy.vector.basisdependent import BasisDependentZero
     #These classes have been created to maintain an OOP hierarchy
     #for Vectors and Dyadics. Are NOT meant to be initialized
+    pass
 
 
 def test_sympy__vector__vector__BaseVector():
@@ -4711,7 +4831,7 @@ def test_sympy__vector__vector__VectorZero():
 
 
 def test_sympy__vector__vector__Vector():
-    from sympy.vector.vector import Vector
+    #from sympy.vector.vector import Vector
     #Vector is never to be initialized using args
     pass
 
@@ -4731,7 +4851,7 @@ def test_sympy__vector__vector__Dot():
 
 
 def test_sympy__vector__dyadic__Dyadic():
-    from sympy.vector.dyadic import Dyadic
+    #from sympy.vector.dyadic import Dyadic
     #Dyadic is never to be initialized using args
     pass
 
@@ -4768,6 +4888,14 @@ def test_sympy__vector__deloperator__Del():
     assert _test_args(Del())
 
 
+def test_sympy__vector__integrals__ParametricIntegral():
+    from sympy.vector.integrals import ParametricIntegral
+    from sympy.vector.parametricregion import ParametricRegion
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    assert _test_args(ParametricIntegral(C.y*C.i - 10*C.j,\
+                    ParametricRegion((x, y), (x, 1, 3), (y, -2, 2))))
+
 def test_sympy__vector__operators__Curl():
     from sympy.vector.operators import Curl
     from sympy.vector.coordsysrect import CoordSys3D
@@ -4797,13 +4925,15 @@ def test_sympy__vector__operators__Gradient():
 
 
 def test_sympy__vector__orienters__Orienter():
-    from sympy.vector.orienters import Orienter
+    #from sympy.vector.orienters import Orienter
     #Not to be initialized
+    pass
 
 
 def test_sympy__vector__orienters__ThreeAngleOrienter():
-    from sympy.vector.orienters import ThreeAngleOrienter
+    #from sympy.vector.orienters import ThreeAngleOrienter
     #Not to be initialized
+    pass
 
 
 def test_sympy__vector__orienters__AxisOrienter():
@@ -4829,6 +4959,12 @@ def test_sympy__vector__orienters__QuaternionOrienter():
     assert _test_args(QuaternionOrienter(a, b, c, d))
 
 
+def test_sympy__vector__parametricregion__ParametricRegion():
+    from sympy.abc import t
+    from sympy.vector.parametricregion import ParametricRegion
+    assert _test_args(ParametricRegion((t, t**3), (t, 0, 2)))
+
+
 def test_sympy__vector__scalar__BaseScalar():
     from sympy.vector.scalar import BaseScalar
     from sympy.vector.coordsysrect import CoordSys3D
@@ -4840,45 +4976,74 @@ def test_sympy__physics__wigner__Wigner3j():
     from sympy.physics.wigner import Wigner3j
     assert _test_args(Wigner3j(0, 0, 0, 0, 0, 0))
 
+
 def test_sympy__integrals__rubi__symbol__matchpyWC():
     from sympy.integrals.rubi.symbol import matchpyWC
     assert _test_args(matchpyWC(1, True, 'a'))
+
 
 def test_sympy__integrals__rubi__utility_function__rubi_unevaluated_expr():
     from sympy.integrals.rubi.utility_function import rubi_unevaluated_expr
     a = symbols('a')
     assert _test_args(rubi_unevaluated_expr(a))
 
+
 def test_sympy__integrals__rubi__utility_function__rubi_exp():
     from sympy.integrals.rubi.utility_function import rubi_exp
     assert _test_args(rubi_exp(5))
+
 
 def test_sympy__integrals__rubi__utility_function__rubi_log():
     from sympy.integrals.rubi.utility_function import rubi_log
     assert _test_args(rubi_log(5))
 
+
 def test_sympy__integrals__rubi__utility_function__Int():
     from sympy.integrals.rubi.utility_function import Int
     assert _test_args(Int(5, x))
+
 
 def test_sympy__integrals__rubi__utility_function__Util_Coefficient():
     from sympy.integrals.rubi.utility_function import Util_Coefficient
     a, x = symbols('a x')
     assert _test_args(Util_Coefficient(a, x))
 
+
 def test_sympy__integrals__rubi__utility_function__Gamma():
     from sympy.integrals.rubi.utility_function import Gamma
     assert _test_args(Gamma(5))
+
 
 def test_sympy__integrals__rubi__utility_function__Util_Part():
     from sympy.integrals.rubi.utility_function import Util_Part
     a, b = symbols('a b')
     assert _test_args(Util_Part(a + b, 0))
 
+
 def test_sympy__integrals__rubi__utility_function__PolyGamma():
     from sympy.integrals.rubi.utility_function import PolyGamma
     assert _test_args(PolyGamma(1, 1))
 
+
 def test_sympy__integrals__rubi__utility_function__ProductLog():
     from sympy.integrals.rubi.utility_function import ProductLog
     assert _test_args(ProductLog(1))
+
+
+def test_sympy__combinatorics__schur_number__SchurNumber():
+    from sympy.combinatorics.schur_number import SchurNumber
+    assert _test_args(SchurNumber(1))
+
+
+def test_sympy__combinatorics__perm_groups__SymmetricPermutationGroup():
+    from sympy.combinatorics.perm_groups import SymmetricPermutationGroup
+    assert _test_args(SymmetricPermutationGroup(5))
+
+
+def test_sympy__combinatorics__perm_groups__Coset():
+    from sympy.combinatorics.permutations import Permutation
+    from sympy.combinatorics.perm_groups import PermutationGroup, Coset
+    a = Permutation(1, 2)
+    b = Permutation(0, 1)
+    G = PermutationGroup([a, b])
+    assert _test_args(Coset(a, G))

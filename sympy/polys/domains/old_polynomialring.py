@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core.compatibility import iterable, range
+from sympy.core.compatibility import iterable
 from sympy.polys.agca.modules import FreeModulePolyRing
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.compositedomain import CompositeDomain

@@ -33,7 +33,7 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # arithmetic.
 from __future__ import print_function, division
 
-from sympy.core.logic import fuzzy_and, fuzzy_or
+from sympy.core.logic import fuzzy_and
 from sympy.simplify.simplify import nsimplify
 
 from .interval_membership import intervalMembership

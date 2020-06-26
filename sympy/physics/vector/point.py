@@ -1,5 +1,4 @@
 from __future__ import print_function, division
-from sympy.core.compatibility import range, string_types
 from .vector import Vector, _check_vector
 from .frame import _check_frame
 
@@ -111,7 +110,7 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame
-        >>> from sympy.physics.vector import Vector, dynamicsymbols
+        >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)
@@ -237,7 +236,7 @@ class Point(object):
 
         """
 
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError('Must supply a valid name')
         if value == 0:
             value = Vector(0)
@@ -388,7 +387,7 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame
-        >>> from sympy.physics.vector import Vector, dynamicsymbols
+        >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)

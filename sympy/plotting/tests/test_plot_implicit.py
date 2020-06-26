@@ -1,11 +1,10 @@
-import warnings
 from sympy import (plot_implicit, cos, Symbol, symbols, Eq, sin, re, And, Or, exp, I,
                    tan, pi)
 from sympy.plotting.plot import unset_show
 from tempfile import NamedTemporaryFile, mkdtemp
-from sympy.utilities.pytest import skip, warns
+from sympy.testing.pytest import skip, warns
 from sympy.external import import_module
-from sympy.utilities.tmpfiles import TmpFileManager, cleanup_tmp_files
+from sympy.testing.tmpfiles import TmpFileManager
 
 import os
 
@@ -29,7 +28,6 @@ def plot_implicit_tests(name):
     TmpFileManager.tmp_folder(temp_dir)
     x = Symbol('x')
     y = Symbol('y')
-    z = Symbol('z')
     #implicit plot tests
     plot_and_save(Eq(y, cos(x)), (x, -5, 5), (y, -2, 2), name=name, dir=temp_dir)
     plot_and_save(Eq(y**2, x**3 - x), (x, -5, 5),

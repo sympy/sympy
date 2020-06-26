@@ -4,7 +4,7 @@ from sympy.printing.latex import latex
 from sympy.abc import x
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from textwrap import dedent
 

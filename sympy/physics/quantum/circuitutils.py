@@ -339,7 +339,7 @@ def convert_to_real_indices(seq, qubit_map):
 
     >>> from sympy import symbols
     >>> from sympy.physics.quantum.circuitutils import convert_to_real_indices
-    >>> from sympy.physics.quantum.gate import X, Y, Z, H
+    >>> from sympy.physics.quantum.gate import X, Y, H
     >>> i0, i1 = symbols('i:2')
     >>> index_map = {i0 : 0, i1 : 1}
     >>> convert_to_real_indices(X(i0)*Y(i1)*H(i0)*X(i1), index_map)
@@ -394,7 +394,7 @@ def random_reduce(circuit, gate_ids, seed=None):
         given by the list
 
     """
-    from sympy.utilities.randtest import _randrange
+    from sympy.testing.randtest import _randrange
 
     if not gate_ids:
         return circuit
@@ -445,7 +445,7 @@ def random_insert(circuit, choices, seed=None):
     Indices for insertion should be [0, n] if n is the length of the
     circuit.
     """
-    from sympy.utilities.randtest import _randrange
+    from sympy.testing.randtest import _randrange
 
     if not choices:
         return circuit
