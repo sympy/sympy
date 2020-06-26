@@ -1057,7 +1057,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             if isinstance(node.op, ast.Sub):
                 right = ast.Call(
                     func=ast.Name(id='Mul', ctx=ast.Load()),
-                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Num(1)), right],
+                    args=self.flatten([ast.UnaryOp(op=ast.USub(), operand=ast.Num(1)), right], 'Mul'),
                     keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
