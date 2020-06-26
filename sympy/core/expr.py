@@ -1020,6 +1020,27 @@ class Expr(Basic, EvalfMixin):
         from sympy.functions.elementary.complexes import conjugate as c
         return c(self)
 
+    def dir(self, x, cdir):
+        from sympy import log
+        minexp = S.Zero
+        if self.is_zero:
+            return S.Zero
+        arg = self
+        while arg:
+            minexp += S.One
+            arg = arg.diff(x)
+            coeff = arg.subs(x, 0)
+            if coeff in (S.NaN, S.ComplexInfinity):
+                try:
+                    coeff, _ = arg.leadterm(x)
+                    if coeff.has(log(x)):
+                        raise ValueError()
+                except ValueError:
+                    coeff = arg.limit(x, 0)
+            if coeff != S.Zero:
+                break
+        return coeff*cdir**minexp
+
     def _eval_transpose(self):
         from sympy.functions.elementary.complexes import conjugate
         if (self.is_complex or self.is_infinite):
@@ -2793,7 +2814,7 @@ class Expr(Basic, EvalfMixin):
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
 
-    def series(self, x=None, x0=0, n=6, dir="+", logx=None):
+    def series(self, x=None, x0=0, n=6, dir="+", logx=None, cdir=0):
         """
         Series expansion of "self" around ``x = x0`` yielding either terms of
         the series one by one (the lazy series given when n=None), else
@@ -2831,6 +2852,10 @@ class Expr(Basic, EvalfMixin):
         logx : optional
                It is used to replace any log(x) in the returned series with a
                symbolic value rather than evaluating the actual value.
+
+        cdir : optional
+               It stands for complex direction, and indicates the direction
+               from which the expansion needs to be evaluated.
 
         Examples
         ========
@@ -2915,7 +2940,7 @@ class Expr(Basic, EvalfMixin):
 
         if x0 in [S.Infinity, S.NegativeInfinity]:
             sgn = 1 if x0 is S.Infinity else -1
-            s = self.subs(x, sgn/x).series(x, n=n, dir='+')
+            s = self.subs(x, sgn/x).series(x, n=n, dir='+', cdir=cdir)
             if n is None:
                 return (si.subs(x, sgn/x) for si in s)
             return s.subs(x, sgn/x)
@@ -2931,7 +2956,7 @@ class Expr(Basic, EvalfMixin):
                 rep = x + x0
                 rep2 = x
                 rep2b = -x0
-            s = self.subs(x, rep).series(x, x0=0, n=n, dir='+', logx=logx)
+            s = self.subs(x, rep).series(x, x0=0, n=n, dir='+', logx=logx, cdir=cdir)
             if n is None:  # lseries...
                 return (si.subs(x, rep2 + rep2b) for si in s)
             return s.subs(x, rep2 + rep2b)
@@ -2941,14 +2966,14 @@ class Expr(Basic, EvalfMixin):
         if x.is_positive is x.is_negative is None or x.is_Symbol is not True:
             # replace x with an x that has a positive assumption
             xpos = Dummy('x', positive=True, finite=True)
-            rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx)
+            rv = self.subs(x, xpos).series(xpos, x0, n, dir, logx=logx, cdir=cdir)
             if n is None:
                 return (s.subs(xpos, x) for s in rv)
             else:
                 return rv.subs(xpos, x)
 
         if n is not None:  # nseries handling
-            s1 = self._eval_nseries(x, n=n, logx=logx)
+            s1 = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             o = s1.getO() or S.Zero
             if o:
                 # make sure the requested order is returned
@@ -2966,13 +2991,13 @@ class Expr(Basic, EvalfMixin):
                     # is different than the original order and then predict how
                     # many additional terms are needed
                     for more in range(1, 9):
-                        s1 = self._eval_nseries(x, n=n + more, logx=logx)
+                        s1 = self._eval_nseries(x, n=n + more, logx=logx, cdir=cdir)
                         newn = s1.getn()
                         if newn != ngot:
                             ndo = n + ceiling((n - ngot)*more/(newn - ngot))
-                            s1 = self._eval_nseries(x, n=ndo, logx=logx)
+                            s1 = self._eval_nseries(x, n=ndo, logx=logx, cdir=cdir)
                             while s1.getn() < n:
-                                s1 = self._eval_nseries(x, n=ndo, logx=logx)
+                                s1 = self._eval_nseries(x, n=ndo, logx=logx, cdir=cdir)
                                 ndo += 1
                             break
                     else:
@@ -3020,7 +3045,7 @@ class Expr(Basic, EvalfMixin):
                             break
                         yielded += do
 
-            return yield_lseries(self.removeO()._eval_lseries(x, logx=logx))
+            return yield_lseries(self.removeO()._eval_lseries(x, logx=logx, cdir=cdir))
 
     def aseries(self, x=None, n=6, bound=0, hir=False):
         """Asymptotic Series expansion of self.
@@ -3180,7 +3205,7 @@ class Expr(Basic, EvalfMixin):
         _x = Dummy('x')
         return self.subs(x, _x).diff(_x, n).subs(_x, x).subs(x, 0) * x**n / factorial(n)
 
-    def lseries(self, x=None, x0=0, dir='+', logx=None):
+    def lseries(self, x=None, x0=0, dir='+', logx=None, cdir=0):
         """
         Wrapper for series yielding an iterator of the terms of the series.
 
@@ -3198,16 +3223,16 @@ class Expr(Basic, EvalfMixin):
 
         See also nseries().
         """
-        return self.series(x, x0, n=None, dir=dir, logx=logx)
+        return self.series(x, x0, n=None, dir=dir, logx=logx, cdir=cdir)
 
-    def _eval_lseries(self, x, logx=None):
+    def _eval_lseries(self, x, logx=None, cdir=0):
         # default implementation of lseries is using nseries(), and adaptively
         # increasing the "n". As you can see, it is not very efficient, because
         # we are calculating the series over and over again. Subclasses should
         # override this method and implement much more efficient yielding of
         # terms.
         n = 0
-        series = self._eval_nseries(x, n=n, logx=logx)
+        series = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
         if not series.is_Order:
             newseries = series.cancel()
             if not newseries.is_Order:
@@ -3221,7 +3246,7 @@ class Expr(Basic, EvalfMixin):
 
         while series.is_Order:
             n += 1
-            series = self._eval_nseries(x, n=n, logx=logx)
+            series = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
         e = series.removeO()
         yield e
         if e.is_zero:
@@ -3230,7 +3255,7 @@ class Expr(Basic, EvalfMixin):
         while 1:
             while 1:
                 n += 1
-                series = self._eval_nseries(x, n=n, logx=logx).removeO()
+                series = self._eval_nseries(x, n=n, logx=logx, cdir=cdir).removeO()
                 if e != series:
                     break
                 if (series - self).cancel() is S.Zero:
@@ -3238,7 +3263,7 @@ class Expr(Basic, EvalfMixin):
             yield series - e
             e = series
 
-    def nseries(self, x=None, x0=0, n=6, dir='+', logx=None):
+    def nseries(self, x=None, x0=0, n=6, dir='+', logx=None, cdir=0):
         """
         Wrapper to _eval_nseries if assumptions allow, else to series.
 
@@ -3301,11 +3326,11 @@ class Expr(Basic, EvalfMixin):
         if x and not x in self.free_symbols:
             return self
         if x is None or x0 or dir != '+':  # {see XPOS above} or (x.is_positive == x.is_negative == None):
-            return self.series(x, x0, n, dir)
+            return self.series(x, x0, n, dir, cdir=cdir)
         else:
-            return self._eval_nseries(x, n=n, logx=logx)
+            return self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir):
         """
         Return terms of series for self up to O(x**n) at x=0
         from the positive direction.
@@ -3352,7 +3377,7 @@ class Expr(Basic, EvalfMixin):
         return s.as_leading_term(x)
 
     @cacheit
-    def as_leading_term(self, *symbols):
+    def as_leading_term(self, *symbols, cdir=0):
         """
         Returns the leading (nonzero) term of the series expansion of self.
 
@@ -3373,7 +3398,7 @@ class Expr(Basic, EvalfMixin):
         if len(symbols) > 1:
             c = self
             for x in symbols:
-                c = c.as_leading_term(x)
+                c = c.as_leading_term(x, cdir=cdir)
             return c
         elif not symbols:
             return self
@@ -3382,12 +3407,12 @@ class Expr(Basic, EvalfMixin):
             raise ValueError('expecting a Symbol but got %s' % x)
         if x not in self.free_symbols:
             return self
-        obj = self._eval_as_leading_term(x)
+        obj = self._eval_as_leading_term(x, cdir=cdir)
         if obj is not None:
             return powsimp(obj, deep=True, combine='exp')
         raise NotImplementedError('as_leading_term(%s, %s)' % (self, x))
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         return self
 
     def as_coeff_exponent(self, x):
@@ -3402,7 +3427,7 @@ class Expr(Basic, EvalfMixin):
                 return c, e
         return s, S.Zero
 
-    def leadterm(self, x):
+    def leadterm(self, x, cdir=0):
         """
         Returns the leading term a*x**b as a tuple (a, b).
 
@@ -3417,7 +3442,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy import Dummy, log
-        l = self.as_leading_term(x)
+        l = self.as_leading_term(x, cdir=cdir)
         d = Dummy('logx')
         if l.has(log(x)):
             l = l.subs(log(x), d)
@@ -3888,7 +3913,7 @@ class AtomicExpr(Atom, Expr):
     def _eval_is_algebraic_expr(self, syms):
         return True
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         return self
 
     @property

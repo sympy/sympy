@@ -29,6 +29,7 @@ import doctest as pdoctest  # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
 import random
 import subprocess
+import shutil
 import signal
 import stat
 import tempfile
@@ -38,7 +39,6 @@ from contextlib import contextmanager
 from sympy.core.cache import clear_cache
 from sympy.core.compatibility import (exec_, PY3, unwrap,
         unicode)
-from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 
 IS_WINDOWS = (os.name == 'nt')
@@ -63,7 +63,27 @@ ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 #         delays.append(time() - tic)
 #     tot = sum(delays)
 #     print([round(x / tot, 4) for x in delays])
-SPLIT_DENSITY = [0.0185, 0.0047, 0.0155, 0.02, 0.0311, 0.0098, 0.0045, 0.0102, 0.0127, 0.0532, 0.0171, 0.097, 0.0906, 0.0007, 0.0086, 0.0013, 0.0143, 0.0068, 0.0252, 0.0128, 0.0043, 0.0043, 0.0118, 0.016, 0.0073, 0.0476, 0.0042, 0.0102, 0.012, 0.002, 0.0019, 0.0409, 0.054, 0.0237, 0.1236, 0.0973, 0.0032, 0.0047, 0.0081, 0.0685]
+SPLIT_DENSITY = [
+    0.0059, 0.0027, 0.0068, 0.0011, 0.0006,
+    0.0058, 0.0047, 0.0046, 0.004, 0.0257,
+    0.0017, 0.0026, 0.004, 0.0032, 0.0016,
+    0.0015, 0.0004, 0.0011, 0.0016, 0.0014,
+    0.0077, 0.0137, 0.0217, 0.0074, 0.0043,
+    0.0067, 0.0236, 0.0004, 0.1189, 0.0142,
+    0.0234, 0.0003, 0.0003, 0.0047, 0.0006,
+    0.0013, 0.0004, 0.0008, 0.0007, 0.0006,
+    0.0139, 0.0013, 0.0007, 0.0051, 0.002,
+    0.0004, 0.0005, 0.0213, 0.0048, 0.0016,
+    0.0012, 0.0014, 0.0024, 0.0015, 0.0004,
+    0.0005, 0.0007, 0.011, 0.0062, 0.0015,
+    0.0021, 0.0049, 0.0006, 0.0006, 0.0011,
+    0.0006, 0.0019, 0.003, 0.0044, 0.0054,
+    0.0057, 0.0049, 0.0016, 0.0006, 0.0009,
+    0.0006, 0.0012, 0.0006, 0.0149, 0.0532,
+    0.0076, 0.0041, 0.0024, 0.0135, 0.0081,
+    0.2209, 0.0459, 0.0438, 0.0488, 0.0137,
+    0.002, 0.0003, 0.0008, 0.0039, 0.0024,
+    0.0005, 0.0004, 0.003, 0.056, 0.0026]
 SPLIT_DENSITY_SLOW = [0.0086, 0.0004, 0.0568, 0.0003, 0.0032, 0.0005, 0.0004, 0.0013, 0.0016, 0.0648, 0.0198, 0.1285, 0.098, 0.0005, 0.0064, 0.0003, 0.0004, 0.0026, 0.0007, 0.0051, 0.0089, 0.0024, 0.0033, 0.0057, 0.0005, 0.0003, 0.001, 0.0045, 0.0091, 0.0006, 0.0005, 0.0321, 0.0059, 0.1105, 0.216, 0.1489, 0.0004, 0.0003, 0.0006, 0.0483]
 
 class Skipped(Exception):
@@ -1529,7 +1549,7 @@ class SymPyDocTests(object):
         """
 
         for executable in executables:
-            if not find_executable(executable):
+            if not shutil.which(executable):
                 raise DependencyError("Could not find %s" % executable)
 
         for module in modules:

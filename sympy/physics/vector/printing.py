@@ -70,7 +70,7 @@ class VectorLatexPrinter(LatexPrinter):
                 subs = r""
 
             if exp:
-                supers += r"^{%s}" % self._print(exp)
+                supers += r"^{%s}" % exp
 
             return r"%s" % (name + supers + subs)
         else:

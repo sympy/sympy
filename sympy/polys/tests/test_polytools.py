@@ -1,5 +1,7 @@
 """Tests for user-friendly public interface to polynomial functions. """
 
+import pickle
+
 from sympy.polys.polytools import (
     Poly, PurePoly, poly,
     parallel_poly_from_expr,
@@ -3395,3 +3397,21 @@ def test_issue_19360():
 
     f = -I*t*x - t*y + x*z - I*y*z
     assert factor(f, extension=I) == (x - I*y)*(-I*t + z)
+
+
+def test_poly_copy_equals_original():
+    poly = Poly(x + y, x, y, z)
+    copy = poly.copy()
+    assert poly == copy, (
+        "Copied polynomial not equal to original.")
+    assert poly.gens == copy.gens, (
+        "Copied polynomial has different generators than original.")
+
+
+def test_deserialized_poly_equals_original():
+    poly = Poly(x + y, x, y, z)
+    deserialized = pickle.loads(pickle.dumps(poly))
+    assert poly == deserialized, (
+        "Deserialized polynomial not equal to original.")
+    assert poly.gens == deserialized.gens, (
+        "Deserialized polynomial has different generators than original.")

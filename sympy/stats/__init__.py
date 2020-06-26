@@ -133,6 +133,7 @@ __all__ = [
     'StochasticProcess', 'DiscreteTimeStochasticProcess',
     'DiscreteMarkovChain', 'TransitionMatrixOf', 'StochasticStateSpaceOf',
     'GeneratorMatrixOf', 'ContinuousMarkovChain', 'BernoulliProcess',
+    'PoissonProcess', 'WienerProcess', 'GammaProcess',
 
     'CircularEnsemble', 'CircularUnitaryEnsemble',
     'CircularOrthogonalEnsemble', 'CircularSymplecticEnsemble',
@@ -178,7 +179,8 @@ from .joint_rv_types import (JointRV, Dirichlet,
 from .stochastic_process_types import (StochasticProcess,
         DiscreteTimeStochasticProcess, DiscreteMarkovChain,
         TransitionMatrixOf, StochasticStateSpaceOf, GeneratorMatrixOf,
-        ContinuousMarkovChain, BernoulliProcess)
+        ContinuousMarkovChain, BernoulliProcess, PoissonProcess, WienerProcess,
+        GammaProcess)
 
 from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         CircularOrthogonalEnsemble, CircularSymplecticEnsemble,

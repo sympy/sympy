@@ -1,7 +1,7 @@
 from sympy import (
     Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
     cos, symbols)
-from sympy.matrices import eye, Matrix
+from sympy.matrices import eye, Matrix, dotprodsimp
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL
 from sympy.matrices.matrices import NonSquareMatrixError, MatrixError
@@ -107,9 +107,10 @@ def test_eigen():
     assert M.eigenvects(simplify=True) == [
         (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-sqrt(73)/8 - Rational(3, 8)], [1]])]),
         (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[Rational(-3, 8) + sqrt(73)/8], [1]])])]
-    assert M.eigenvects(simplify=False) == [
-        (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-1/(-Rational(3, 8) + sqrt(73)/8)], [1]])]),
-        (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))], [1]])])]
+    with dotprodsimp(True):
+        assert M.eigenvects(simplify=False) == [
+            (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-1/(-Rational(3, 8) + sqrt(73)/8)], [1]])]),
+            (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))], [1]])])]
 
     # issue 10719
     assert Matrix([]).eigenvals() == {}
@@ -117,24 +118,38 @@ def test_eigen():
     assert Matrix([]).eigenvects() == []
 
     # issue 15119
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 2], [0, 4], [0, 0]]).eigenvals())
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 0], [3, 4], [5, 6]]).eigenvals())
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals())
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals())
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals(error_when_incomplete = False))
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals(error_when_incomplete = False))
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 2], [0, 4], [0, 0]]).eigenvals())
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 0], [3, 4], [5, 6]]).eigenvals())
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals())
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals())
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals(
+               error_when_incomplete = False))
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals(
+               error_when_incomplete = False))
 
-    # issue 15125
-    from sympy.core.function import count_ops
-    q = Symbol("q", positive = True)
-    m = Matrix([[-2, exp(-q), 1], [exp(q), -2, 1], [1, 1, -2]])
-    assert count_ops(m.eigenvals(simplify=False)) > count_ops(m.eigenvals(simplify=True))
-    assert count_ops(m.eigenvals(simplify=lambda x: x)) > count_ops(m.eigenvals(simplify=True))
-
+    m = Matrix([[1, 2], [3, 4]])
     assert isinstance(m.eigenvals(simplify=True, multiple=False), dict)
     assert isinstance(m.eigenvals(simplify=True, multiple=True), list)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=False), dict)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=True), list)
+
+
+@slow
+def test_eigen_slow():
+    # issue 15125
+    from sympy.core.function import count_ops
+    q = Symbol("q", positive = True)
+    m = Matrix([[-2, exp(-q), 1], [exp(q), -2, 1], [1, 1, -2]])
+    assert count_ops(m.eigenvals(simplify=False)) > \
+        count_ops(m.eigenvals(simplify=True))
+    assert count_ops(m.eigenvals(simplify=lambda x: x)) > \
+        count_ops(m.eigenvals(simplify=True))
 
 
 def test_float_eigenvals():
@@ -582,3 +597,26 @@ def test_definite():
     ])
     assert not m.is_positive_definite
     assert not m.is_positive_semidefinite
+
+
+def test_positive_semidefinite_cholesky():
+    from sympy.matrices.eigen import _is_positive_semidefinite_cholesky
+
+    m = Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+    assert _is_positive_semidefinite_cholesky(m) == True
+    m = Matrix([[0, 0, 0], [0, 5, -10*I], [0, 10*I, 5]])
+    assert _is_positive_semidefinite_cholesky(m) == False
+    m = Matrix([[1, 0, 0], [0, 0, 0], [0, 0, -1]])
+    assert _is_positive_semidefinite_cholesky(m) == False
+    m = Matrix([[0, 1], [1, 0]])
+    assert _is_positive_semidefinite_cholesky(m) == False
+
+    # https://www.value-at-risk.net/cholesky-factorization/
+    m = Matrix([[4, -2, -6], [-2, 10, 9], [-6, 9, 14]])
+    assert _is_positive_semidefinite_cholesky(m) == True
+    m = Matrix([[9, -3, 3], [-3, 2, 1], [3, 1, 6]])
+    assert _is_positive_semidefinite_cholesky(m) == True
+    m = Matrix([[4, -2, 2], [-2, 1, -1], [2, -1, 5]])
+    assert _is_positive_semidefinite_cholesky(m) == True
+    m = Matrix([[1, 2, -1], [2, 5, 1], [-1, 1, 9]])
+    assert _is_positive_semidefinite_cholesky(m) == False
