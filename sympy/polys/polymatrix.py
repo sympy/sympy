@@ -68,12 +68,15 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
 
         if ring:
             ring = polyoptions.Domain.preprocess(ring)
+        # XXX PolyMatrix must always have Poly instances or sympifiable
+        # objects that can be comprehended as Poly.
         if all(isinstance(p, Poly) for p in self._mat) and self._mat:
             domains = set([p.domain[p.gens] for p in self._mat])
             if not ring:
                 ring = domains.pop()
             for dom in domains:
                 ring = ring.unify(dom)
+        # XXX PolyMatrix should not have EX domain
         if not ring:
             ring = EX
         self.ring = ring
@@ -81,6 +84,7 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
         if isinstance(ring, PolynomialRing):
             self.zero = Poly(0, *ring.symbols, domain=ring.domain)
             self.one = Poly(1, *ring.symbols, domain=ring.domain)
+        # XXX PolyMatrix should not have EX domain
         elif ring == EX:
             self.zero = S.Zero
             self.one = S.One
@@ -108,17 +112,6 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
     def _eval_copy(self):
         return self._new(self.rows, self.cols, self._mat, ring=self.ring)
 
-    def _eval_col_insert(self, pos, other):
-        def entry(i, j):
-            if j < pos:
-                return self[i, j]
-            elif pos <= j < pos + other.cols:
-                return other[i, j - pos]
-            return self[i, j - other.cols]
-        return self._new(
-            self.rows, self.cols + other.cols, entry,
-            ring=self.ring.unify(other.ring))
-
     @classmethod
     def _eval_companion(cls, size, poly):
         coeffs = poly.all_coeffs()
@@ -135,40 +128,6 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
             return zero
 
         return cls._new(size, size, entry, ring=ring)
-
-    def _eval_diagonal(self, k):
-        rv = []
-        r = 0 if k > 0 else -k
-        c = 0 if r else k
-        while True:
-            if r == self.rows or c == self.cols:
-                break
-            rv.append(self[r, c])
-            r += 1
-            c += 1
-        return self._new(1, len(rv), rv, ring=self.ring)
-
-    def _eval_row_insert(self, pos, other):
-        if not isinstance(other, PolyMatrix):
-            other = PolyMatrix(other)
-        entries = self._mat
-        insert_pos = pos * self.cols
-        entries[insert_pos:insert_pos] = other._mat
-        return self._new(
-            self.rows + other.rows, self.cols, entries,
-            ring=self.ring.unify(other.ring))
-
-    def _eval_col_join(self, other):
-        if not isinstance(other, PolyMatrix):
-            other = PolyMatrix(other)
-        rows = self.rows
-        def entry(i, j):
-            if i < rows:
-                return self[i, j]
-            return other[i - rows, j]
-        return self._new(
-            rows + other.rows, self.cols, entry,
-            ring=self.ring.unify(other.ring))
 
     def _eval_as_real_imag(self):
         raise NotImplementedError
@@ -191,34 +150,6 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
                 if self[i, j] != self[j, i]:
                     return False
         return True
-
-    def _eval_permute_cols(self, perm):
-        mapping = list(perm)
-        def entry(i, j):
-            return self[i, mapping[j]]
-        return self._new(self.rows, self.cols, entry, ring=self.ring)
-
-    def _eval_permute_rows(self, perm):
-        mapping = list(perm)
-        def entry(i, j):
-            return self[mapping[i], j]
-        return self._new(self.rows, self.cols, entry, ring=self.ring)
-
-    def _eval_row_join(self, other):
-        if not isinstance(other, PolyMatrix):
-            other = PolyMatrix(other)
-        cols = self.cols
-        def entry(i, j):
-            if j < cols:
-                return self[i, j]
-            return other[i, j - cols]
-        return self._new(
-            self.rows, cols + other.cols, entry,
-            ring=self.ring.unify(other.ring))
-
-    def _eval_reshape(self, rows, cols):
-        return self._new(
-            rows, cols, lambda i, j: self._mat[i * cols + j], ring=self.ring)
 
     @classmethod
     def _eval_jordan_block(cls, rows, cols, eigenvalue, band='upper'):
@@ -280,14 +211,6 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
         return self.__class__(
             self.rows, self.cols, new_mat, ring=ring, copy=False)
 
-    def _eval_matrix_add(self, other):
-        if not isinstance(other, PolyMatrix):
-            other = PolyMatrix(other)
-        ring = self.ring.unify(other.ring)
-        new_mat = [x + y for x, y in zip(self._mat, other._mat)]
-        return self.__class__(
-            self.rows, self.cols, new_mat, ring=ring, copy=False)
-
     def _eval_scalar_mul(self, other):
         ring = self.ring
         if isinstance(other, Poly):
@@ -327,14 +250,6 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
 
     def _eval_det_lu(self, *args, **kwargs):
         raise NotImplementedError
-
-    def _eval_extract(self, rowsList, colsList):
-        mat = self._mat
-        cols = self.cols
-        indices = (i * cols + j for i in rowsList for j in colsList)
-        new_mat = list(mat[i] for i in indices)
-        return self._new(
-            len(rowsList), len(colsList), new_mat, ring=self.ring, copy=False)
 
     def _eval_pow_by_cayley(self, exp):
         raise NotImplementedError

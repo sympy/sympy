@@ -11,12 +11,15 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError
 from sympy.matrices.matrices import MatrixBase
+from sympy.polys.domains import EX
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
 
 from .decompositions import _cholesky, _LDLdecomposition
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
+
+import sympy.polys.polyoptions as polyoptions
 
 
 def _iszero(x):
@@ -130,14 +133,18 @@ class DenseMatrix(MatrixBase):
         # we assume both arguments are dense matrices since
         # sparse matrices have a higher priority
         mat = [a + b for a,b in zip(self._mat, other._mat)]
-        return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
+        ring = self.ring.unify(other.ring)
+        return classof(self, other)._new(
+            self.rows, self.cols, mat, copy=False, ring=ring)
 
     def _eval_extract(self, rowsList, colsList):
         mat = self._mat
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
-        return self._new(len(rowsList), len(colsList),
-                         list(mat[i] for i in indices), copy=False)
+        return self._new(
+            len(rowsList), len(colsList),
+            list(mat[i] for i in indices),
+            copy=False, ring=self.ring)
 
     def _eval_matrix_mul(self, other):
         other_len = other.rows*other.cols
@@ -295,22 +302,25 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         return cls._new(*args, **kwargs)
 
     @classmethod
-    def _new(cls, *args, **kwargs):
+    def _new(cls, *args, copy=True, ring=EX, **kwargs):
         # if the `copy` flag is set to False, the input
         # was rows, cols, [list].  It should be used directly
         # without creating a copy.
-        if kwargs.get('copy', True) is False:
+        if not copy:
             if len(args) != 3:
                 raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
             rows, cols, flat_list = args
         else:
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
-        self = object.__new__(cls)
-        self.rows = rows
-        self.cols = cols
-        self._mat = flat_list
-        return self
+        obj = object.__new__(cls)
+        obj.rows = rows
+        obj.cols = cols
+        obj._mat = flat_list
+        # XXX Only allow EX domain for other than PolyMatrix.
+        ring = polyoptions.Domain.preprocess(ring)
+        obj.ring = ring
+        return obj
 
     def __setitem__(self, key, value):
         """

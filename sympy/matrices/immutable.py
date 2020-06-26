@@ -7,6 +7,9 @@ from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.sparse import SparseMatrix
+from sympy.polys.domains import EX
+
+import sympy.polys.polyoptions as polyoptions
 
 
 def sympify_matrix(arg):
@@ -51,10 +54,10 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     __hash__ = MatrixExpr.__hash__
 
     @classmethod
-    def _new(cls, *args, **kwargs):
+    def _new(cls, *args, copy=True, ring=EX, **kwargs):
         if len(args) == 1 and isinstance(args[0], ImmutableDenseMatrix):
             return args[0]
-        if kwargs.get('copy', True) is False:
+        if not copy:
             if len(args) != 3:
                 raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
             rows, cols, flat_list = args
@@ -69,6 +72,9 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
         obj._rows = rows
         obj._cols = cols
         obj._mat = flat_list
+        # XXX Only allow EX domain for other than PolyMatrix.
+        ring = polyoptions.Domain.preprocess(ring)
+        obj.ring = ring
         return obj
 
     def _entry(self, i, j, **kwargs):
@@ -104,8 +110,10 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
         mat = self._mat
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
-        return self._new(len(rowsList), len(colsList),
-                         Tuple(*(mat[i] for i in indices), sympify=False), copy=False)
+        return self._new(
+            len(rowsList), len(colsList),
+            Tuple(*(mat[i] for i in indices), sympify=False),
+            copy=False, ring=self.ring)
 
     @property
     def cols(self):
@@ -164,12 +172,16 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
     __hash__ = MatrixExpr.__hash__
 
     @classmethod
-    def _new(cls, *args, **kwargs):
+    def _new(cls, *args, ring=EX, **kwargs):
         rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
         obj = Basic.__new__(cls, Integer(rows), Integer(cols), Dict(smat))
         obj._rows = rows
         obj._cols = cols
         obj._smat = smat
+
+        # XXX Only allow EX domain for other than PolyMatrix.
+        ring = polyoptions.Domain.preprocess(ring)
+        obj.ring = ring
         return obj
 
     def __setitem__(self, *args):

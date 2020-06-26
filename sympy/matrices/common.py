@@ -20,6 +20,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
+from sympy.polys.domains import EX
 from sympy.polys.polytools import Poly
 from sympy.simplify import simplify as _simplify
 from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
@@ -58,6 +59,7 @@ class MatrixRequired:
     required matrix properties listed here."""
     rows = None  # type: int
     cols = None  # type: int
+    ring = EX
     _simplify = None
 
     @classmethod
@@ -95,7 +97,6 @@ class MatrixShaping(MatrixRequired):
         return self._new(self.rows, self.cols - 1, entry)
 
     def _eval_col_insert(self, pos, other):
-
         def entry(i, j):
             if j < pos:
                 return self[i, j]
@@ -103,8 +104,10 @@ class MatrixShaping(MatrixRequired):
                 return other[i, j - pos]
             return self[i, j - other.cols]
 
-        return self._new(self.rows, self.cols + other.cols,
-                         lambda i, j: entry(i, j))
+        ring = self.ring.unify(other.ring)
+        return self._new(
+            self.rows, self.cols + other.cols,
+            lambda i, j: entry(i, j), ring=ring)
 
     def _eval_col_join(self, other):
         rows = self.rows
@@ -114,8 +117,9 @@ class MatrixShaping(MatrixRequired):
                 return self[i, j]
             return other[i - rows, j]
 
-        return classof(self, other)._new(self.rows + other.rows, self.cols,
-                                         lambda i, j: entry(i, j))
+        return classof(self, other)._new(
+            self.rows + other.rows, self.cols,
+            lambda i, j: entry(i, j), ring=self.ring.unify(other.ring))
 
     def _eval_diagonal(self, k):
         rv = []
@@ -127,14 +131,16 @@ class MatrixShaping(MatrixRequired):
             rv.append(self[r, c])
             r += 1
             c += 1
-        return self._new(1, len(rv), rv)
+        return self._new(1, len(rv), rv, ring=self.ring)
 
     def _eval_extract(self, rowsList, colsList):
         mat = list(self)
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
-        return self._new(len(rowsList), len(colsList),
-                         list(mat[i] for i in indices))
+        return self._new(
+            len(rowsList), len(colsList),
+            list(mat[i] for i in indices),
+            ring=self.ring)
 
     def _eval_get_diag_blocks(self):
         sub_blocks = []
@@ -163,7 +169,8 @@ class MatrixShaping(MatrixRequired):
         return sub_blocks
 
     def _eval_reshape(self, rows, cols):
-        return self._new(rows, cols, lambda i, j: self[i * cols + j])
+        return self._new(
+            rows, cols, lambda i, j: self[i * cols + j], ring=self.ring)
 
     def _eval_row_del(self, row):
         def entry(i, j):
@@ -174,7 +181,9 @@ class MatrixShaping(MatrixRequired):
         entries = list(self)
         insert_pos = pos * self.cols
         entries[insert_pos:insert_pos] = list(other)
-        return self._new(self.rows + other.rows, self.cols, entries)
+        ring = self.ring.unify(other.ring)
+        return self._new(
+            self.rows + other.rows, self.cols, entries, ring=ring)
 
     def _eval_row_join(self, other):
         cols = self.cols
@@ -184,8 +193,9 @@ class MatrixShaping(MatrixRequired):
                 return self[i, j]
             return other[i, j - cols]
 
-        return classof(self, other)._new(self.rows, self.cols + other.cols,
-                                         lambda i, j: entry(i, j))
+        return classof(self, other)._new(
+            self.rows, self.cols + other.cols,
+            lambda i, j: entry(i, j), ring=self.ring.unify(other.ring))
 
     def _eval_tolist(self):
         return [list(self[i,:]) for i in range(self.rows)]
@@ -1938,7 +1948,7 @@ class MatrixOperations(MatrixRequired):
         def entry(i, j):
             return self[i, mapping[j]]
 
-        return self._new(self.rows, self.cols, entry)
+        return self._new(self.rows, self.cols, entry, ring=self.ring)
 
     def _eval_permute_rows(self, perm):
         # apply the permutation to a list
@@ -1947,7 +1957,7 @@ class MatrixOperations(MatrixRequired):
         def entry(i, j):
             return self[mapping[i], j]
 
-        return self._new(self.rows, self.cols, entry)
+        return self._new(self.rows, self.cols, entry, ring=self.ring)
 
     def _eval_trace(self):
         return sum(self[i, i] for i in range(self.rows))
@@ -2452,8 +2462,11 @@ class MatrixArithmetic(MatrixRequired):
         return self._new(self.rows, self.cols, lambda i, j: Abs(self[i, j]))
 
     def _eval_matrix_add(self, other):
-        return self._new(self.rows, self.cols,
-                         lambda i, j: self[i, j] + other[i, j])
+        ring = self.ring.unify(other.ring)
+        return self._new(
+            self.rows, self.cols,
+            lambda i, j: self[i, j] + other[i, j],
+            ring=ring)
 
     def _eval_matrix_mul(self, other):
         def entry(i, j):
@@ -2859,6 +2872,7 @@ class _MinimalMatrix:
     _class_priority = 3
     zero = S.Zero
     one = S.One
+    ring = EX
 
     is_Matrix = True
     is_MatrixExpr = False
@@ -2867,7 +2881,7 @@ class _MinimalMatrix:
     def _new(cls, *args, **kwargs):
         return cls(*args, **kwargs)
 
-    def __init__(self, rows, cols=None, mat=None):
+    def __init__(self, rows, cols=None, mat=None, ring=EX):
         if isfunction(mat):
             # if we passed in a function, use that to populate the indices
             mat = list(mat(i, j) for i in range(rows) for j in range(cols))
@@ -2887,6 +2901,7 @@ class _MinimalMatrix:
         self.rows, self.cols = rows, cols
         if self.rows is None or self.cols is None:
             raise NotImplementedError("Cannot initialize matrix with given parameters")
+        self.ring = ring
 
     def __getitem__(self, key):
         def _normalize_slices(row_slice, col_slice):

@@ -6,6 +6,7 @@ from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.functions import Abs
+from sympy.polys.domains import EX
 from sympy.utilities.iterables import uniq
 
 from .common import a2idx
@@ -20,6 +21,8 @@ from .decompositions import (
 
 from .solvers import (
     _lower_triangular_solve_sparse, _upper_triangular_solve_sparse)
+
+import sympy.polys.polyoptions as polyoptions
 
 
 class SparseMatrix(MatrixBase):
@@ -317,7 +320,9 @@ class SparseMatrix(MatrixBase):
             sum = self._smat.get(key, zero) + other._smat.get(key, zero)
             if sum != 0:
                 smat[key] = sum
-        return self._new(self.rows, self.cols, smat)
+
+        ring = self.ring.unify(other.ring)
+        return self._new(self.rows, self.cols, smat, ring=ring)
 
     def _eval_col_insert(self, icol, other):
         if not isinstance(other, SparseMatrix):
@@ -333,7 +338,9 @@ class SparseMatrix(MatrixBase):
         for key, val in other._smat.items():
             row, col = key
             new_smat[row, col + icol] = val
-        return self._new(self.rows, self.cols + other.cols, new_smat)
+        ring = self.ring.unify(other.ring)
+        return self._new(
+            self.rows, self.cols + other.cols, new_smat, ring=ring)
 
     def _eval_conjugate(self):
         smat = {key: val.conjugate() for key,val in self._smat.items()}
@@ -355,7 +362,7 @@ class SparseMatrix(MatrixBase):
                 if rk in urow and ck in ucol:
                     smat[urow.index(rk), ucol.index(ck)] = self._smat[rk, ck]
 
-        rv = self._new(len(urow), len(ucol), smat)
+        rv = self._new(len(urow), len(ucol), smat, ring=self.ring)
         # rv is nominally correct but there might be rows/cols
         # which require duplication
         if len(rowsList) != len(urow):
@@ -440,7 +447,9 @@ class SparseMatrix(MatrixBase):
         for key, val in other._smat.items():
             row, col = key
             new_smat[row + irow, col] = val
-        return self._new(self.rows + other.rows, self.cols, new_smat)
+        ring = self.ring.unify(other.ring)
+        return self._new(
+            self.rows + other.rows, self.cols, new_smat, ring=ring)
 
     def _eval_scalar_mul(self, other):
         return self.applyfunc(lambda x: x*other)
@@ -705,12 +714,15 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         return cls._new(*args, **kwargs)
 
     @classmethod
-    def _new(cls, *args, **kwargs):
+    def _new(cls, *args, ring=EX, **kwargs):
         obj = super().__new__(cls)
         rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
         obj.rows = rows
         obj.cols = cols
         obj._smat = smat
+        # XXX Only allow EX domain for other than PolyMatrix.
+        ring = polyoptions.Domain.preprocess(ring)
+        obj.ring = ring
         return obj
 
     def __setitem__(self, key, value):
