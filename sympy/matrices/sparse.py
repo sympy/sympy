@@ -108,14 +108,6 @@ class SparseMatrix(MatrixBase):
     ImmutableSparseMatrix
     """
 
-    def __new__(cls, *args, **kwargs):
-        self = object.__new__(cls)
-        rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
-        self._rows = rows
-        self._cols = cols
-        self._smat = smat
-        return self
-
     @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], MatrixBase):
@@ -709,9 +701,17 @@ class SparseMatrix(MatrixBase):
 
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
+
     @classmethod
     def _new(cls, *args, **kwargs):
-        return cls(*args)
+        obj = super().__new__(cls)
+        rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
+        obj.rows = rows
+        obj.cols = cols
+        obj._smat = smat
+        return obj
 
     def __setitem__(self, key, value):
         """Assign value to position designated by key.
