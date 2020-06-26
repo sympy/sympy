@@ -285,6 +285,10 @@ Linear, n equations, Order 1, Type 3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.systems::_linear_neq_order1_type3
 
+Linear, n equations, Order 1, Type 4
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems::_linear_neq_order1_type4
+
 Nonlinear, 2 equations, Order 1, Type 1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::_nonlinear_2eq_order1_type1
