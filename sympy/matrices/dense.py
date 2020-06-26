@@ -19,8 +19,6 @@ from sympy.utilities.misc import filldedent
 from .decompositions import _cholesky, _LDLdecomposition
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
 
-import sympy.polys.polyoptions as polyoptions
-
 
 def _iszero(x):
     """Returns True if x is zero."""
@@ -303,6 +301,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
     @classmethod
     def _new(cls, *args, copy=True, ring=EX, **kwargs):
+        import sympy.polys.polyoptions as polyoptions
+
         # if the `copy` flag is set to False, the input
         # was rows, cols, [list].  It should be used directly
         # without creating a copy.
