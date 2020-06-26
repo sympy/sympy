@@ -7,7 +7,7 @@ from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          BernoulliProcess, PoissonProcess, WienerProcess,
                          GammaProcess, sample_stochastic_process)
 from sympy.stats.joint_rv import JointDistribution
-from sympy.stats.joint_rv_types JointDistributionHandmade
+from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.testing.pytest import raises, skip
