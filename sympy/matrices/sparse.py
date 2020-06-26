@@ -170,7 +170,7 @@ class SparseMatrix(MatrixBase):
                     elif isinstance(v, (list, tuple)):
                         _, _, smat = cls._handle_creation_inputs(v, **kwargs)
                         for i, j in smat:
-                            update(r + i, c + j, v[i, j])
+                            update(r + i, c + j, smat[i, j])
                     else:
                         v = cls._sympify(v)
                         update(r, c, cls._sympify(v))
