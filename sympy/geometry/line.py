@@ -1825,6 +1825,15 @@ class Segment(LinearEntity):
     def parametric_region(self, parameter='t'):
         """
         Returns an object of ParamRegion class representing the Segment.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Segment
+        >>> s = Segment(Point(1, 3), Point(2, 6))
+        >>> s.parametric_region()
+        ParametricRegion((t + 1, 3*t + 3), (t, 0, 1))
+
         """
         from sympy.vector import ParametricRegion
 

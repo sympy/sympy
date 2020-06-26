@@ -152,24 +152,34 @@ def vector_integrate(field, *region):
     >>> vector_integrate(C.x*C.i, region)
     12
 
+    Integrals over special regions can also be calculated using geometry module.
+    >>> from sympy.geometry import Point, Circle, Triangle
+    >>> c = Circle(Point(0, 2), 5)
+    >>> vector_integrate(C.x**2 + C.y**2, c)
+    290*pi
+    >>> triangle = Triangle(Point(-2, 3), Point(2, 3), Point(0, 5))
+    >>> vector_integrate(3*C.x**2*C.y*C.i + C.j, triangle)
+    -8
+
+    >>> vector_integrate(12*C.y**3, (C.y, 1, 3))
+    240
     >>> vector_integrate(C.x**2*C.z, C.x)
     C.x**3*C.z/3
 
     """
     if len(region) == 1:
-        region = region[0]
-        if isinstance(region, ParametricRegion):
-            return ParametricIntegral(field, region)
+        if isinstance(region[0], ParametricRegion):
+            return ParametricIntegral(field, region[0])
 
-        if isinstance(region, GeometryEntity):
-            if isinstance(region, Polygon):
+        if isinstance(region[0], GeometryEntity):
+            if isinstance(region[0], Polygon):
                 result = 0
-                for s in region.sides:
+                for s in region[0].sides:
                     result += vector_integrate(field, s)
                 return result
 
             try:
-                region = region.parametric_region()
+                region = region[0].parametric_region()
                 return ParametricIntegral(field, region)
             except AttributeError:
                 raise ValueError("SymPy cannot determine parametric representation of the region.")
