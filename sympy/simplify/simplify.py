@@ -617,8 +617,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     from sympy import Sum, Product, Integral
     from sympy.functions.elementary.complexes import sign, Abs
 
+    # must come before `Piecewise` since this introduces more `Piecewise` terms
     if expr.has(sign):
-            expr = expr.rewrite(Abs)
+        expr = expr.rewrite(Abs)
 
     # Deal with Piecewise separately to avoid recursive growth of expressions
     if expr.has(Piecewise):
