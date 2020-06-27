@@ -170,8 +170,8 @@ def test_TransferFunction_functions():
     tf5 = TransferFunction(s**2 + 1, 1 - s, s)
     expect2 = TransferFunction((s**2 + 1)**3, (1 - s)**3, s)
     expect1 = TransferFunction((p + 4)**2, (p - 3)**2, p)
-    assert tf4*tf4 == tf4**2 == pow(tf4, 2) == expect1
-    assert tf5*tf5*tf5 == tf5**3 == pow(tf5, 3) == expect2
+    assert tf4**2 == pow(tf4, 2) == expect1
+    assert tf5**3 == pow(tf5, 3) == expect2
     assert tf5**0 == pow(tf5, 0) == TransferFunction(1, 1, s)
     assert tf4**-1 == pow(tf4, -1) == TransferFunction(p - 3, p + 4, p)
     assert tf5**-2 == pow(tf5, -2) == TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
@@ -353,9 +353,9 @@ def test_Series_construction():
     raises(ValueError, lambda: Series(tf, tf3))
     raises(ValueError, lambda: Series(tf, tf2, tf3, tf4))
     raises(ValueError, lambda: Series(-tf3, tf2))
-    raises(ValueError, lambda: Series(2, tf, tf4))
-    raises(ValueError, lambda: Series(s**2 + p*s, tf3, tf2))
-    raises(ValueError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
+    raises(TypeError, lambda: Series(2, tf, tf4))
+    raises(TypeError, lambda: Series(s**2 + p*s, tf3, tf2))
+    raises(TypeError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
 
 
 def test_Series_functions():
@@ -369,7 +369,7 @@ def test_Series_functions():
     assert tf1*(tf2 + tf3) == Series(tf1, Parallel(tf2, tf3))
     assert tf2*tf3*(tf2 - tf1)*tf3 == Series(tf2, tf3, Parallel(tf2, -tf1), tf3)
     assert -tf1*tf2 == Series(-tf1, tf2)
-    assert -(tf1*tf2) == -Series(tf1, tf2)
+    assert -(tf1*tf2) == Series(TransferFunction(-1, 1, s), Series(tf1, tf2))
     raises(ValueError, lambda: tf1*tf2*tf4)
     raises(ValueError, lambda: tf1*(tf2 - tf4))
     raises(ValueError, lambda: tf3*Matrix([1, 2, 3]))
@@ -456,9 +456,9 @@ def test_Parallel_construction():
     raises(ValueError, lambda: Parallel(tf, tf3))
     raises(ValueError, lambda: Parallel(tf, tf2, tf3, tf4))
     raises(ValueError, lambda: Parallel(-tf3, tf4))
-    raises(ValueError, lambda: Parallel(2, tf, tf4))
-    raises(ValueError, lambda: Parallel(s**2 + p*s, tf3, tf2))
-    raises(ValueError, lambda: Parallel(tf3, Matrix([1, 2, 3, 4])))
+    raises(TypeError, lambda: Parallel(2, tf, tf4))
+    raises(TypeError, lambda: Parallel(s**2 + p*s, tf3, tf2))
+    raises(TypeError, lambda: Parallel(tf3, Matrix([1, 2, 3, 4])))
 
 
 def test_Parallel_functions():
@@ -467,9 +467,14 @@ def test_Parallel_functions():
     tf2 = TransferFunction(k, 1, s)
     tf3 = TransferFunction(a2*p - s, a2*s + p, s)
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
+    tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
 
     assert tf1 + tf2 + tf3 == Parallel(tf1, tf2, tf3)
+    assert tf1 + tf2 + tf3 + tf5 == Parallel(tf1, tf2, tf3, tf5)
+    assert tf1 + tf2 - tf3 - tf5 == Parallel(tf1, tf2, -tf3, -tf5)
     assert tf1 + tf2*tf3 == Parallel(tf1, Series(tf2, tf3))
+    assert tf1 - tf2*tf3 == Parallel(tf1, -Series(tf2,tf3))
+    assert tf2 + tf3 + tf2*tf1 + tf5 == Parallel(tf2, tf3, Series(tf2, tf1), tf5)
     assert tf2 + tf3 + tf2*tf1 - tf3 == Parallel(tf2, tf3, Series(tf2, tf1), -tf3)
     assert -(tf1 + tf2) == Series(TransferFunction(-1, 1, s), Parallel(tf1, tf2))
     assert -tf1 - tf2 == Parallel(-tf1, -tf2)

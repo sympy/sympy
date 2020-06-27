@@ -1,13 +1,12 @@
-from sympy import S, Basic, Mul, degree, Symbol, expand, cancel, Expr, exp
-from sympy.core.decorators import call_highest_priority
+from sympy import Basic, Mul, degree, Symbol, expand, cancel, Expr, exp
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify, _sympify
 
-__all__ = ['TransferFunction', 'Series', 'Parallel', 'TransferFunctionExpr']
+__all__ = ['TransferFunction', 'Series', 'Parallel']
 
 
-class TransferFunction(TransferFunctionExpr, EvalfMixin):
+class TransferFunction(Basic, EvalfMixin):
     """TransferFunction(num, den, var)
 
     A class for representing continuous transfer functions. This class is used to represent
@@ -261,6 +260,56 @@ class TransferFunction(TransferFunctionExpr, EvalfMixin):
         """
         return TransferFunction(expand(self.num), expand(self.den), self.var)
 
+    def __add__(self, other):
+        if isinstance(other, (TransferFunction, Series)):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            return Parallel(self, other)
+        else:
+            raise ValueError("TransferFunction cannot be added with {}.".
+                format(type(other)))
+
+    def __radd__(self, other):
+        return self + other
+
+    def __sub__(self, other):
+        if isinstance(other, (TransferFunction, Series)):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            return Parallel(self, -other)
+        else:
+            raise ValueError("{} cannot be subtracted from a TransferFunction."
+                .format(type(other)))
+
+    def __rsub__(self, other):
+        return -self + other
+
+    def __mul__(self, other):
+        if isinstance(other, TransferFunction):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            return Series(self, other)
+        else:
+            raise ValueError("TransferFunction cannot be multiplied with {}."
+                .format(type(other)))
+
+    __rmul__ = __mul__
+
+    def __truediv__(self, other):
+        if isinstance(other, TransferFunction):
+            if not self.var == other.var:
+                raise ValueError("Both the transfer functions should be anchored "
+                    "with the same variable.")
+            return Series(self, 1/Series(other))
+        else:
+            raise ValueError("TransferFunction cannot be divided by {}.".
+                format(type(other)))
+
+    __rtruediv__ = __truediv__
+
     def __pow__(self, p):
         p = sympify(p)
         if not isinstance(p, Integer):
@@ -342,10 +391,10 @@ class TransferFunction(TransferFunctionExpr, EvalfMixin):
         return degree(self.num, self.var) == degree(self.den, self.var)
 
 
-class Series(TransferFunctionExpr):
+class Series(Basic):
 
     def __new__(cls, *args, evaluate=False):
-        if not all(isinstance(arg, (TransferFunction, Parallel)) for arg in args):
+        if not all(isinstance(arg, (TransferFunction, Parallel, Series)) for arg in args):
             raise TypeError
 
         obj = super(Series, cls).__new__(cls, *args)
@@ -369,6 +418,9 @@ class Series(TransferFunctionExpr):
     def _eval_rewrite_as_TransferFunction(self):
         pass
 
+    def __neg__(self):
+        return Series(TransferFunction(-1, 1, self.var), self)
+
     @property
     def is_proper(self):
         return self.doit().is_proper
@@ -382,10 +434,10 @@ class Series(TransferFunctionExpr):
         return self.doit().is_biproper
 
 
-class Parallel(TransferFunctionExpr):
+class Parallel(Basic):
 
     def __new__(cls, *args, evaluate=False):
-        if not all(isinstance(arg, (TransferFunction, Series)) for arg in args):
+        if not all(isinstance(arg, (TransferFunction, Series, Parallel)) for arg in args):
             raise TypeError
 
         obj = super(Parallel, cls).__new__(cls, *args)
@@ -409,6 +461,53 @@ class Parallel(TransferFunctionExpr):
     def _eval_rewrite_as_TransferFunction(self):
         pass
 
+    def __add__(self, other):
+        if isinstance(other, (TransferFunction, Series)):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            arg_list = list(self.args)
+            arg_list.append(other)
+
+            return Parallel(*arg_list)
+        elif isinstance(other, Parallel):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            self_arg_list = list(self.args)
+            other_arg_list = list(other.args)
+            for elem in other_arg_list:
+                self_arg_list.append(elem)
+
+            return Parallel(*self_arg_list)
+        else:
+            raise ValueError("This transfer function expression is invalid.")
+
+    def __sub__(self, other):
+        if isinstance(other, (TransferFunction, Series)):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            arg_list = list(self.args)
+            arg_list.append(-other)
+
+            return Parallel(*arg_list)
+        elif isinstance(other, Parallel):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            self_arg_list = list(self.args)
+            other_arg_list = list(other.args)
+            for elem in other_arg_list:
+                self_arg_list.append(-elem)
+
+            return Parallel(*self_arg_list)
+        else:
+            raise ValueError("This transfer function expression is invalid.")
+
+    def __neg__(self):
+        return Series(TransferFunction(-1, 1, self.var), self)
+
     @property
     def is_proper(self):
         return self.doit().is_proper
@@ -420,41 +519,3 @@ class Parallel(TransferFunctionExpr):
     @property
     def is_biproper(self):
         return self.doit().is_biproper
-
-
-class TransferFunctionExpr(Expr):
-
-    def __new__(cls, *args, **kwargs):
-        args = map(_sympify, args)
-        obj = super().__new__(cls, *args, **kwargs)
-        return obj
-
-    def __neg__(self):
-        return Series(S.NegativeOne, self).doit()
-
-    @call_highest_priority('__radd__')
-    def __add__(self, other):
-        return Parallel(self, other, check=True)
-
-    @call_highest_priority('__add__')
-    def __radd__(self, other):
-        return Parallel(other, self, check=True)
-
-    @call_highest_priority('__rsub__')
-    def __sub__(self, other):
-        return Parallel(self, -other, check=True)
-
-    @call_highest_priority('__sub__')
-    def __rsub__(self, other):
-        return Parallel(other, -self, check=True)
-
-    @call_highest_priority('__rmul__')
-    def __mul__(self, other):
-        return Series(self, other, check=True)
-
-    @call_highest_priority('__mul__')
-    def __rmul__(self, other):
-        return Series(other, self, check=True)
-
-    def __truediv__(self, other):
-        pass
