@@ -431,12 +431,12 @@ def _linear_neq_order1_type1(A, t):
 
     """
     if not isinstance(A, MatrixBase):
-        raise ValueError(filldedent('''
+        raise ValueError(filldedent('''\
             The coefficients of the system of ODEs should be of type Matrix
         '''))
 
     if not A.is_square:
-        raise NonSquareMatrixError(filldedent('''
+        raise NonSquareMatrixError(filldedent('''\
             The coefficient matrix must be a square
         '''))
 
@@ -475,22 +475,22 @@ def _linear_neq_order1_type2(A, t, b):
 
     """
     if not isinstance(A, MatrixBase):
-        raise ValueError(filldedent('''
+        raise ValueError(filldedent('''\
             The coefficients of the system of ODEs should be of type Matrix
         '''))
 
     if not isinstance(b, MatrixBase):
-        raise ValueError(filldedent('''
+        raise ValueError(filldedent('''\
             The non-homogeneous terms of the system of ODEs should be of type Matrix
         '''))
 
     if not A.is_square:
-        raise NonSquareMatrixError(filldedent('''
+        raise NonSquareMatrixError(filldedent('''\
             The coefficient matrix must be a square
         '''))
 
     if A.rows != b.rows:
-        raise ValueError(filldedent('''
+        raise ValueError(filldedent('''\
             The system of ODEs should have the same number of non-homogeneous terms and the number of
             equations
         '''))
@@ -574,12 +574,12 @@ def _linear_neq_order1_type3(B):
 
     """
     if not isinstance(B, MatrixBase):
-        raise ValueError(filldedent('''
+        raise ValueError(filldedent('''\
             The coefficients of the system of ODEs should be of type Matrix
         '''))
 
     if not B.is_square:
-        raise NonSquareMatrixError(filldedent('''
+        raise NonSquareMatrixError(filldedent('''\
             The coefficient matrix must be a square
         '''))
 
@@ -624,22 +624,22 @@ def _linear_neq_order1_type4(B, t, b):
 
     """
     if not isinstance(B, MatrixBase):
-        raise ValueError(filldedent('''
+        raise ValueError(filldedent('''\
             The coefficients of the system of ODEs should be of type Matrix
         '''))
 
     if not isinstance(b, MatrixBase):
-        raise ValueError(filldedent('''
+        raise ValueError(filldedent('''\
             The non-homogeneous terms of the system of ODEs should be of type Matrix
         '''))
 
     if not B.is_square:
-        raise NonSquareMatrixError(filldedent('''
+        raise NonSquareMatrixError(filldedent('''\
             The coefficient matrix must be a square
         '''))
 
     if B.rows != b.rows:
-        raise ValueError(filldedent('''
+        raise ValueError(filldedent('''\
             The system of ODEs should have the same number of non-homogeneous terms and the number of
             equations
         '''))
