@@ -1155,6 +1155,72 @@ def dmp_zz_factor(f, u, K):
     return cont, _sort_factors(factors)
 
 
+def dup_qq_i_factor(f, K0):
+    """Factor univariate polynomials into irreducibles in `QQ_I[x]`. """
+    # Factor in QQ<I>
+    K1 = K0.as_AlgebraicField()
+    f = dup_convert(f, K0, K1)
+    coeff, factors = dup_factor_list(f, K1)
+    factors = [(dup_convert(fac, K1, K0), i) for fac, i in factors]
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
+def dup_zz_i_factor(f, K0):
+    """Factor univariate polynomials into irreducibles in `ZZ_I[x]`. """
+    # First factor in QQ_I
+    K1 = K0.get_field()
+    f = dup_convert(f, K0, K1)
+    coeff, factors = dup_qq_i_factor(f, K1)
+
+    new_factors = []
+    for fac, i in factors:
+        # Extract content
+        fac_denom, fac_num = dup_clear_denoms(fac, K1)
+        fac_num_ZZ_I = dup_convert(fac_num, K1, K0)
+        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, 0, K1)
+
+        coeff = (coeff * content ** i) // fac_denom ** i
+        new_factors.append((fac_prim, i))
+
+    factors = new_factors
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
+def dmp_qq_i_factor(f, u, K0):
+    """Factor multivariate polynomials into irreducibles in `QQ_I[X]`. """
+    # Factor in QQ<I>
+    K1 = K0.as_AlgebraicField()
+    f = dmp_convert(f, u, K0, K1)
+    coeff, factors = dmp_factor_list(f, u, K1)
+    factors = [(dmp_convert(fac, u, K1, K0), i) for fac, i in factors]
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
+def dmp_zz_i_factor(f, u, K0):
+    """Factor multivariate polynomials into irreducibles in `ZZ_I[X]`. """
+    # First factor in QQ_I
+    K1 = K0.get_field()
+    f = dmp_convert(f, u, K0, K1)
+    coeff, factors = dmp_qq_i_factor(f, u, K1)
+
+    new_factors = []
+    for fac, i in factors:
+        # Extract content
+        fac_denom, fac_num = dmp_clear_denoms(fac, u, K1)
+        fac_num_ZZ_I = dmp_convert(fac_num, u, K1, K0)
+        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, u, K1)
+
+        coeff = (coeff * content ** i) // fac_denom ** i
+        new_factors.append((fac_prim, i))
+
+    factors = new_factors
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
 def dup_ext_factor(f, K):
     """Factor univariate polynomials over algebraic number fields. """
     n, lc = dup_degree(f), dup_LC(f, K)
@@ -1242,6 +1308,10 @@ def dup_factor_list(f, K0):
         coeff, factors = dup_gf_factor(f, K0)
     elif K0.is_Algebraic:
         coeff, factors = dup_ext_factor(f, K0)
+    elif K0.is_GaussianRing:
+        coeff, factors = dup_zz_i_factor(f, K0)
+    elif K0.is_GaussianField:
+        coeff, factors = dup_qq_i_factor(f, K0)
     else:
         if not K0.is_Exact:
             K0_inexact, K0 = K0, K0.get_exact()
@@ -1318,6 +1388,10 @@ def dmp_factor_list(f, u, K0):
         coeff, factors = dmp_gf_factor(f, u, K0)
     elif K0.is_Algebraic:
         coeff, factors = dmp_ext_factor(f, u, K0)
+    elif K0.is_GaussianRing:
+        coeff, factors = dmp_zz_i_factor(f, u, K0)
+    elif K0.is_GaussianField:
+        coeff, factors = dmp_qq_i_factor(f, u, K0)
     else:
         if not K0.is_Exact:
             K0_inexact, K0 = K0, K0.get_exact()

@@ -1,13 +1,14 @@
 from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
     ImmutableMatrix as Matrix)
 from sympy import trigsimp
+from sympy.printing.defaults import Printable
 from sympy.core.compatibility import unicode
 from sympy.utilities.misc import filldedent
 
 __all__ = ['Vector']
 
 
-class Vector(object):
+class Vector(Printable):
     """The class used to define vectors.
 
     It along with ReferenceFrame are the building blocks of describing a
@@ -213,7 +214,7 @@ class Vector(object):
                 ol += Dyadic([(v[0][2] * v2[0][2], v[1].z, v2[1].z)])
         return ol
 
-    def _latex(self, printer=None):
+    def _latex(self, printer):
         """Latex Printing method. """
 
         from sympy.physics.vector.printing import VectorLatexPrinter
@@ -249,9 +250,8 @@ class Vector(object):
             outstr = outstr[1:]
         return outstr
 
-    def _pretty(self, printer=None):
+    def _pretty(self, printer):
         """Pretty Printing method. """
-        from sympy.physics.vector.printing import VectorPrettyPrinter
         from sympy.printing.pretty.stringpict import prettyForm
         e = self
 
@@ -261,8 +261,7 @@ class Vector(object):
                 ar = e.args  # just to shorten things
                 if len(ar) == 0:
                     return unicode(0)
-                settings = printer._settings if printer else {}
-                vp = printer if printer else VectorPrettyPrinter(settings)
+                vp = printer
                 pforms = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     for j in 0, 1, 2:
@@ -342,14 +341,14 @@ class Vector(object):
     def __rsub__(self, other):
         return (-1 * self) + other
 
-    def __str__(self, printer=None, order=True):
+    def _sympystr(self, printer, order=True):
         """Printing method. """
         from sympy.physics.vector.printing import VectorStrPrinter
 
         if not order or len(self.args) == 1:
             ar = list(self.args)
         elif len(self.args) == 0:
-            return str(0)
+            return printer._print(0)
         else:
             d = {v[1]: v[0] for v in self.args}
             keys = sorted(d.keys(), key=lambda x: x.index)
@@ -448,29 +447,6 @@ class Vector(object):
             outlist += _det(tempm).args
         return Vector(outlist)
 
-
-    # We don't define _repr_png_ here because it would add a large amount of
-    # data to any notebook containing SymPy expressions, without adding
-    # anything useful to the notebook. It can still enabled manually, e.g.,
-    # for the qtconsole, with init_printing().
-    def _repr_latex_(self):
-        """
-        IPython/Jupyter LaTeX printing
-
-        To change the behavior of this (e.g., pass in some settings to LaTeX),
-        use init_printing(). init_printing() will also enable LaTeX printing
-        for built in numeric types like ints and container types that contain
-        SymPy objects, like lists and dictionaries of expressions.
-        """
-        from sympy.printing.latex import latex
-        s = latex(self, mode='plain')
-        return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_
-
-    _sympystr = __str__
-    _sympyrepr = _sympystr
-    __repr__ = __str__
     __radd__ = __add__
     __rand__ = __and__
     __rmul__ = __mul__

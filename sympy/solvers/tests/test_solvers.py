@@ -2280,3 +2280,15 @@ def test_issue_19113_19102():
         -2*atan(-sqrt(5)/2 + h + sqrt(2)*sqrt(1 - sqrt(5))/2),
         -2*atan(-sqrt(2)*sqrt(1 + sqrt(5))/2 + h + sqrt(5)/2)]
     assert solve(3*cos(x) - sin(x)) == [atan(3)]
+
+
+def test_issue_19509():
+    a = S(3)/4
+    b = S(5)/8
+    c = sqrt(5)/8
+    d = sqrt(5)/4
+    assert solve(1/(x -1)**5 - 1) == [2,
+        -d + a - sqrt(-b + c),
+        -d + a + sqrt(-b + c),
+        d + a - sqrt(-b - c),
+        d + a + sqrt(-b - c)]

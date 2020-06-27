@@ -16,7 +16,6 @@ from sympy.core.sympify import sympify
 from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
                         Add)
 from sympy.core.containers import Tuple
-from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log)
@@ -42,7 +41,7 @@ from sympy.ntheory import totient
 from sympy.ntheory.factor_ import divisors
 from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
-                         RootOf, factor)
+                         RootOf, factor, lcm, gcd)
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
@@ -63,6 +62,9 @@ from collections import defaultdict
 class NonlinearError(ValueError):
     """Raised when unexpectedly encountering nonlinear equations"""
     pass
+
+
+_rc = Dummy("R", real=True), Dummy("C", complex=True)
 
 
 def _masked(f, *atoms):
@@ -534,66 +536,122 @@ def _solve_as_rational(f, symbol, domain):
         return valid_solns - invalid_solns
 
 
+class _SolveTrig1Error(Exception):
+    """Raised when _solve_trig1 heuristics do not apply"""
+
 def _solve_trig(f, symbol, domain):
     """Function to call other helpers to solve trigonometric equations """
-    sol1 = sol = None
+    sol = None
     try:
-        sol1 = _solve_trig1(f, symbol, domain)
-    except NotImplementedError:
-        pass
-    if sol1 is None or isinstance(sol1, ConditionSet):
+        sol = _solve_trig1(f, symbol, domain)
+    except _SolveTrig1Error:
         try:
             sol = _solve_trig2(f, symbol, domain)
         except ValueError:
-            sol = sol1
-        if isinstance(sol1, ConditionSet) and isinstance(sol, ConditionSet):
-            if sol1.count_ops() < sol.count_ops():
-                sol = sol1
-    else:
-        sol = sol1
-    if sol is None:
-        raise NotImplementedError(filldedent('''
-            Solution to this kind of trigonometric equations
-            is yet to be implemented'''))
+            raise NotImplementedError(filldedent('''
+                Solution to this kind of trigonometric equations
+                is yet to be implemented'''))
     return sol
 
 
 def _solve_trig1(f, symbol, domain):
-    """Primary helper to solve trigonometric and hyperbolic equations"""
+    """Primary solver for trigonometric and hyperbolic equations
+
+    Returns either the solution set as a ConditionSet (auto-evaluated to a
+    union of ImageSets if no variables besides 'symbol' are involved) or
+    raises _SolveTrig1Error if f == 0 can't be solved.
+
+    Notes
+    =====
+    Algorithm:
+    1. Do a change of variable x -> mu*x in arguments to trigonometric and
+    hyperbolic functions, in order to reduce them to small integers. (This
+    step is crucial to keep the degrees of the polynomials of step 4 low.)
+    2. Rewrite trigonometric/hyperbolic functions as exponentials.
+    3. Proceed to a 2nd change of variable, replacing exp(I*x) or exp(x) by y.
+    4. Solve the resulting rational equation.
+    5. Use invert_complex or invert_real to return to the original variable.
+    6. If the coefficients of 'symbol' were symbolic in nature, add the
+    necessary consistency conditions in a ConditionSet.
+
+    """
+    # Prepare change of variable
+    x = Dummy('x')
     if _is_function_class_equation(HyperbolicFunction, f, symbol):
-        cov = exp(symbol)
+        cov = exp(x)
         inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
     else:
-        cov = exp(I*symbol)
+        cov = exp(I*x)
         inverter = invert_complex
+
     f = trigsimp(f)
     f_original = f
+    trig_functions = f.atoms(TrigonometricFunction, HyperbolicFunction)
+    trig_arguments = [e.args[0] for e in trig_functions]
+    # trigsimp may have reduced the equation to an expression
+    # that is independent of 'symbol' (e.g. cos**2+sin**2)
+    if not any(a.has(symbol) for a in trig_arguments):
+        return solveset(f_original, symbol, domain)
+
+    denominators = []
+    numerators = []
+    for ar in trig_arguments:
+        try:
+            poly_ar = Poly(ar, symbol)
+        except PolynomialError:
+            raise _SolveTrig1Error("trig argument is not a polynomial")
+        if poly_ar.degree() > 1:  # degree >1 still bad
+            raise _SolveTrig1Error("degree of variable must not exceed one")
+        if poly_ar.degree() == 0:  # degree 0, don't care
+            continue
+        c = poly_ar.all_coeffs()[0]   # got the coefficient of 'symbol'
+        numerators.append(fraction(c)[0])
+        denominators.append(fraction(c)[1])
+
+    mu = lcm(denominators)/gcd(numerators)
+    f = f.subs(symbol, mu*x)
     f = f.rewrite(exp)
     f = together(f)
     g, h = fraction(f)
     y = Dummy('y')
     g, h = g.expand(), h.expand()
     g, h = g.subs(cov, y), h.subs(cov, y)
-    if g.has(symbol) or h.has(symbol):
-        return ConditionSet(symbol, Eq(f, 0), domain)
+    if g.has(x) or h.has(x):
+        raise _SolveTrig1Error("change of variable not possible")
 
     solns = solveset_complex(g, y) - solveset_complex(h, y)
     if isinstance(solns, ConditionSet):
-        raise NotImplementedError
+        raise _SolveTrig1Error("polynomial has ConditionSet solution")
 
     if isinstance(solns, FiniteSet):
         if any(isinstance(s, RootOf) for s in solns):
-            raise NotImplementedError
+            raise _SolveTrig1Error("polynomial results in RootOf object")
+        # revert the change of variable
+        cov = cov.subs(x, symbol/mu)
         result = Union(*[inverter(cov, s, symbol)[1] for s in solns])
-        # avoid spurious intersections with C in solution set
-        if domain is S.Complexes:
-            return result
+        # In case of symbolic coefficients, the solution set is only valid
+        # if numerator and denominator of mu are non-zero.
+        if mu.has(Symbol):
+            syms = (mu).atoms(Symbol)
+            munum, muden = fraction(mu)
+            condnum = munum.as_independent(*syms, as_Add=False)[1]
+            condden = muden.as_independent(*syms, as_Add=False)[1]
+            cond = And(Ne(condnum, 0), Ne(condden, 0))
         else:
-            return Intersection(result, domain)
+            cond = True
+        # Actual conditions are returned as part of the ConditionSet. Adding an
+        # intersection with C would only complicate some solution sets due to
+        # current limitations of intersection code. (e.g. #19154)
+        if domain is S.Complexes:
+            # This is a slight abuse of ConditionSet. Ideally this should
+            # be some kind of "PiecewiseSet". (See #19507 discussion)
+            return ConditionSet(symbol, cond, result)
+        else:
+            return ConditionSet(symbol, cond, Intersection(result, domain))
     elif solns is S.EmptySet:
         return S.EmptySet
     else:
-        return ConditionSet(symbol, Eq(f_original, 0), domain)
+        raise _SolveTrig1Error("polynomial solutions must form FiniteSet")
 
 
 def _solve_trig2(f, symbol, domain):
@@ -607,19 +665,30 @@ def _solve_trig2(f, symbol, domain):
     denominators = []
     numerators = []
 
+    # todo: This solver can be extended to hyperbolics if the
+    # analogous change of variable to tanh (instead of tan)
+    # is used.
+    if not trig_functions:
+        return ConditionSet(symbol, Eq(f_original, 0), domain)
+
+    # todo: The pre-processing below (extraction of numerators, denominators,
+    # gcd, lcm, mu, etc.) should be updated to the enhanced version in
+    # _solve_trig1. (See #19507)
     for ar in trig_arguments:
         try:
             poly_ar = Poly(ar, symbol)
-
-        except ValueError:
+        except PolynomialError:
             raise ValueError("give up, we can't solve if this is not a polynomial in x")
         if poly_ar.degree() > 1:  # degree >1 still bad
             raise ValueError("degree of variable inside polynomial should not exceed one")
         if poly_ar.degree() == 0:  # degree 0, don't care
             continue
         c = poly_ar.all_coeffs()[0]   # got the coefficient of 'symbol'
-        numerators.append(Rational(c).p)
-        denominators.append(Rational(c).q)
+        try:
+            numerators.append(Rational(c).p)
+            denominators.append(Rational(c).q)
+        except TypeError:
+            return ConditionSet(symbol, Eq(f_original, 0), domain)
 
     x = Dummy('x')
 
@@ -1929,7 +1998,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     Examples
     ========
 
-    >>> from sympy import exp, sin, Symbol, pprint, S
+    >>> from sympy import exp, sin, Symbol, pprint, S, Eq
     >>> from sympy.solvers.solveset import solveset, solveset_real
 
     * The default domain is complex. Not specifying a domain will lead
@@ -1955,15 +2024,18 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> solveset_real(exp(x) - 1, x)
     FiniteSet(0)
 
-    The solution is mostly unaffected by assumptions on the symbol,
-    but there may be some slight difference:
-
-    >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
-    ({2*n*pi | n in Integers} \ {0}) U ({2*n*pi + pi | n in Integers} \ {0})
+    The solution is unaffected by assumptions on the symbol:
 
     >>> p = Symbol('p', positive=True)
-    >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
-    {2*n*pi | n in Integers} U {2*n*pi + pi | n in Integers}
+    >>> pprint(solveset(p**2 - 4))
+    {-2, 2}
+
+    When a conditionSet is returned, symbols with assumptions that
+    would alter the set are replaced with more generic symbols:
+
+    >>> i = Symbol('i', imaginary=True)
+    >>> solveset(Eq(i**2 + i*sin(i), 1), i, domain=S.Reals)
+    ConditionSet(_R, Eq(_R**2 + _R*sin(_R) - 1, 0), Reals)
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
@@ -2014,16 +2086,19 @@ def solveset(f, symbol=None, domain=S.Complexes):
         # the xreplace will be needed if a ConditionSet is returned
         return solveset(f[0], s[0], domain).xreplace(swap)
 
-    if domain.is_subset(S.Reals):
-        if not symbol.is_real:
-            assumptions = symbol.assumptions0
-            assumptions['real'] = True
-            try:
-                r = Dummy('r', **assumptions)
-                return solveset(f.xreplace({symbol: r}), r, domain
-                    ).xreplace({r: symbol})
-            except InconsistentAssumptions:
-                pass
+    # solveset should ignore assumptions on symbols
+    if symbol not in _rc:
+        x = _rc[0] if domain.is_subset(S.Reals) else _rc[1]
+        rv = solveset(f.xreplace({symbol: x}), x, domain)
+        # try to use the original symbol if possible
+        try:
+            _rv = rv.xreplace({x: symbol})
+        except TypeError:
+            _rv = rv
+        if rv.dummy_eq(_rv):
+            rv = _rv
+        return rv
+
     # Abs has its own handling method which avoids the
     # rewriting property that the first piece of abs(x)
     # is for x >= 0 and the 2nd piece for x < 0 -- solutions

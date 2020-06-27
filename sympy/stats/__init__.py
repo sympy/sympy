@@ -106,7 +106,7 @@ __all__ = [
     'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'independent',
     'random_symbols', 'correlation', 'factorial_moment', 'moment', 'cmoment',
     'sampling_density', 'moment_generating_function', 'smoment', 'quantile',
-    'coskewness',
+    'coskewness', 'sample_stochastic_process',
 
     'FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin', 'Binomial',
     'BetaBinomial', 'Hypergeometric', 'Rademacher',
@@ -133,6 +133,7 @@ __all__ = [
     'StochasticProcess', 'DiscreteTimeStochasticProcess',
     'DiscreteMarkovChain', 'TransitionMatrixOf', 'StochasticStateSpaceOf',
     'GeneratorMatrixOf', 'ContinuousMarkovChain', 'BernoulliProcess',
+    'PoissonProcess', 'WienerProcess', 'GammaProcess',
 
     'CircularEnsemble', 'CircularUnitaryEnsemble',
     'CircularOrthogonalEnsemble', 'CircularSymplecticEnsemble',
@@ -143,12 +144,15 @@ __all__ = [
 
     'Probability', 'Expectation', 'Variance', 'Covariance',
 
+    'ExpectationMatrix', 'VarianceMatrix', 'CrossCovarianceMatrix'
+
 ]
 from .rv_interface import (P, E, H, density, where, given, sample, cdf, median,
         characteristic_function, pspace, sample_iter, variance, std, skewness,
         kurtosis, covariance, dependent, entropy, independent, random_symbols,
         correlation, factorial_moment, moment, cmoment, sampling_density,
-        moment_generating_function, smoment, quantile, coskewness)
+        moment_generating_function, smoment, quantile, coskewness,
+        sample_stochastic_process)
 
 from .frv_types import (FiniteRV, DiscreteUniform, Die, Bernoulli, Coin,
         Binomial, BetaBinomial, Hypergeometric, Rademacher,
@@ -174,7 +178,8 @@ from .joint_rv_types import (JointRV, Dirichlet,
 from .stochastic_process_types import (StochasticProcess,
         DiscreteTimeStochasticProcess, DiscreteMarkovChain,
         TransitionMatrixOf, StochasticStateSpaceOf, GeneratorMatrixOf,
-        ContinuousMarkovChain, BernoulliProcess)
+        ContinuousMarkovChain, BernoulliProcess, PoissonProcess, WienerProcess,
+        GammaProcess)
 
 from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         CircularOrthogonalEnsemble, CircularSymplecticEnsemble,
@@ -184,3 +189,6 @@ from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
 
 from .symbolic_probability import (Probability, Expectation, Variance,
         Covariance)
+
+from .symbolic_multivariate_probability import (ExpectationMatrix, VarianceMatrix,
+        CrossCovarianceMatrix)

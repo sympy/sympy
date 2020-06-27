@@ -252,11 +252,8 @@ class CoordSys3D(Basic):
         # Return the instance
         return obj
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return self._name
-
-    __repr__ = __str__
-    _sympystr = __str__
 
     def __iter__(self):
         return iter(self.base_vectors())

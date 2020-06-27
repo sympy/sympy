@@ -137,6 +137,20 @@ def bspline_basis(d, knots, n, x):
         >>> f = lambdify(x, b0)
         >>> y = f(0.5)
 
+    Parameters
+    ==========
+
+    d : integer
+        degree of bspline
+
+    knots : list of integer values
+        list of knots points of bspline
+
+    n : integer
+        $n$-th B-spline
+
+    x : symbol
+
     See Also
     ========
 
@@ -218,6 +232,17 @@ def bspline_basis_set(d, knots, x):
               (x**2/2 - 4*x + 8, (x >= 3) & (x <= 4)),
               (0, True))]
 
+    Parameters
+    ==========
+
+    d : integer
+        degree of bspline
+
+    knots : list of integers
+        list of knots points of bspline
+
+    x : symbol
+
     See Also
     ========
 
@@ -253,6 +278,20 @@ def interpolating_spline(d, x, X, Y):
     >>> interpolating_spline(3, x, [-2, 0, 1, 3, 4], [4, 2, 1, 1, 3])
     Piecewise((7*x**3/117 + 7*x**2/117 - 131*x/117 + 2, (x >= -2) & (x <= 1)),
             (10*x**3/117 - 2*x**2/117 - 122*x/117 + 77/39, (x >= 1) & (x <= 4)))
+
+    Parameters
+    ==========
+
+    d : integer
+        Degree of Bspline strictly greater than equal to one
+
+    x : symbol
+
+    X : list of strictly increasing integer values
+        list of X coordinates through which the spline passes
+
+    Y : list of strictly increasing integer values
+        list of Y coordinates through which the spline passes
 
     See Also
     ========

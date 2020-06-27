@@ -429,7 +429,7 @@ class exp(ExpBase):
             arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
         from sympy import ceiling, limit, oo, Order, powsimp, Wild, expand_complex
@@ -471,7 +471,7 @@ class exp(ExpBase):
             l.append(g.removeO())
         return Add(*l)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0]
         if arg.is_Add:
@@ -905,10 +905,10 @@ class log(Function):
     def _eval_is_extended_nonnegative(self):
         return (self.args[0] - 1).is_extended_nonnegative
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import cancel, Order, logcombine
+        from sympy import im, cancel, I, Order, logcombine
         if not logx:
             logx = log(x)
         if self.args[0] == x:
@@ -923,11 +923,15 @@ class log(Function):
                 return r
 
         # TODO new and probably slow
-        s = self.args[0].nseries(x, n=n, logx=logx)
-        while s.is_Order:
-            n += 1
-            s = self.args[0].nseries(x, n=n, logx=logx)
-        a, b = s.leadterm(x)
+        try:
+            a, b = arg.leadterm(x)
+            s = arg.nseries(x, n=n+b, logx=logx)
+        except (ValueError, NotImplementedError):
+            s = arg.nseries(x, n=n, logx=logx)
+            while s.is_Order:
+                n += 1
+                s = arg.nseries(x, n=n, logx=logx)
+            a, b = s.leadterm(x)
         p = cancel(s/(a*x**b) - 1)
         if p.has(exp):
             p = logcombine(p)
@@ -937,13 +941,25 @@ class log(Function):
             g = log.taylor_term(i, p, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
-        return log(a) + b*logx + Add(*l) + Order(p**n, x)
 
-    def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
-        if arg is S.One:
-            return (self.args[0] - 1).as_leading_term(x)
-        return self.func(arg)
+        res = log(a) + b*logx
+        if cdir != 0:
+            cdir = self.args[0].dir(x, cdir)
+        if a.is_real and a.is_negative and im(cdir) < 0:
+            res -= 2*I*S.Pi
+        return res + Add(*l) + Order(p**n, x)
+
+    def _eval_as_leading_term(self, x, cdir=0):
+        from sympy import I, im
+        arg = self.args[0].together()
+        x0 = arg.subs(x, 0)
+        if x0 is S.One:
+            return (arg - S.One).as_leading_term(x)
+        if cdir != 0:
+            cdir = self.args[0].dir(x, cdir)
+        if x0.is_real and x0.is_negative and im(cdir) < 0:
+            return self.func(x0) -2*I*S.Pi
+        return self.func(arg.as_leading_term(x))
 
 
 class LambertW(Function):
@@ -1064,7 +1080,7 @@ class LambertW(Function):
         else:
             return s.is_algebraic
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         if len(self.args) == 1:
             from sympy import Order, ceiling, expand_multinomial
             arg = self.args[0].nseries(x, n=n, logx=logx)

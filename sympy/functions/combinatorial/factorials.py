@@ -266,7 +266,7 @@ class factorial(CombinatorialFunction):
         if x.is_nonnegative or x.is_noninteger:
             return True
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0]
         arg_1 = arg.as_leading_term(x)
@@ -362,6 +362,16 @@ class subfactorial(CombinatorialFunction):
     def _eval_is_integer(self):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
+
+    def _eval_rewrite_as_factorial(self, arg, **kwargs):
+        from sympy import summation
+        i = Dummy('i')
+        f = S.NegativeOne**i / factorial(i)
+        return factorial(arg) * summation(f, (i, 0, arg))
+
+    def _eval_rewrite_as_gamma(self, arg, **kwargs):
+        from sympy import exp, gamma, I, lowergamma
+        return ((-1)**(arg + 1)*exp(-I*pi*arg)*lowergamma(arg + 1, -1) + gamma(arg + 1))*exp(-1)
 
     def _eval_rewrite_as_uppergamma(self, arg, **kwargs):
         from sympy import uppergamma

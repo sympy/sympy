@@ -173,6 +173,14 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         """Convert a GMPY ``mpq`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
+    def from_GaussianIntegerRing(K1, a, K0):
+        """Convert a ``GaussianRational`` object to ``dtype``. """
+        return K1(K0.to_sympy(a))
+
+    def from_GaussianRationalField(K1, a, K0):
+        """Convert a ``GaussianRational`` object to ``dtype``. """
+        return K1(K0.to_sympy(a))
+
     def from_RealField(K1, a, K0):
         """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
