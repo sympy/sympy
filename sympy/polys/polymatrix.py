@@ -138,7 +138,9 @@ class DomainMatrix:
         return MutableDenseMatrix(rows_sympy)
 
     def __repr__(self):
-        return str(self.to_Matrix())
+        rows_str = ['[%s]' % (', '.join(map(str, row))) for row in self.rows]
+        rowstr = '[%s]' % ', '.join(rows_str)
+        return 'DomainMatrix(%s, %r, %r)' % (rowstr, self.shape, self.domain)
 
     def __mul__(A, B):
         """A * B"""
