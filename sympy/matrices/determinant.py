@@ -682,7 +682,7 @@ def _det_bareiss(M, ctx):
             ret, _ = ctx.simplify_2(ret)
             return ret
 
-        new_mat = ctx.new_matrix(mat.rows - 1, mat.cols - 1, entry)
+        new_mat = mat._new(mat.rows - 1, mat.cols - 1, entry, ring=mat.ring)
         return sign*bareiss(new_mat, pivot_val)
 
     return bareiss(M, M.one)
@@ -711,10 +711,6 @@ def _det_bareiss_expr(M, iszerofunc=_is_zero_after_expand_mul):
                 return cancel(x), True
             return x, False
 
-        @staticmethod
-        def new_matrix(rows, cols, entry):
-            return M._new(rows, cols, entry)
-
     return _det_bareiss(M, ctx)
 
 
@@ -735,10 +731,6 @@ def _poly_det_bareiss(M):
         @staticmethod
         def simplify_2(x):
             return x, True
-
-        @staticmethod
-        def new_matrix(rows, cols, entry):
-            return M._new(rows, cols, entry, ring=M.ring)
 
     return _det_bareiss(M, ctx)
 

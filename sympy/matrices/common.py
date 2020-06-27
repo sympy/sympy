@@ -94,7 +94,7 @@ class MatrixShaping(MatrixRequired):
     def _eval_col_del(self, col):
         def entry(i, j):
             return self[i, j] if j < col else self[i, j + 1]
-        return self._new(self.rows, self.cols - 1, entry)
+        return self._new(self.rows, self.cols - 1, entry, ring=self.ring)
 
     def _eval_col_insert(self, pos, other):
         def entry(i, j):
@@ -175,7 +175,7 @@ class MatrixShaping(MatrixRequired):
     def _eval_row_del(self, row):
         def entry(i, j):
             return self[i, j] if i < row else self[i + 1, j]
-        return self._new(self.rows - 1, self.cols, entry)
+        return self._new(self.rows - 1, self.cols, entry, ring=self.ring)
 
     def _eval_row_insert(self, pos, other):
         entries = list(self)
