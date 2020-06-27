@@ -45,7 +45,8 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor)
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
-from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
+from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
+    PolyNonlinearError)
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -2561,7 +2562,12 @@ def linsolve(system, *symbols):
             except PolynomialError as exc:
                 # e.g. cos(x) contains an element of the set of generators
                 raise NonlinearError(str(exc))
-            sol = solve_lin_sys(eqs, ring, _raw=False)
+
+            try:
+                sol = solve_lin_sys(eqs, ring, _raw=False)
+            except PolyNonlinearError as exc:
+                raise NonlinearError(str(exc))
+
             if sol is None:
                 return S.EmptySet
             sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
