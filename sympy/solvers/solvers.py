@@ -53,7 +53,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import (cartes, connected_components, flatten,
-    generate_bell, uniq)
+    generate_bell, uniq, sift)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
@@ -1719,38 +1719,51 @@ def _solve_system(exprs, symbols, **flags):
     if not exprs:
         return []
 
-    # Split the system into connected components?
-    V = exprs
-    #exprsyms = {e: {s for s in symbols if e.has(s)} for e in exprs}
-    symsset = set(symbols)
-    exprsyms = {e: e.free_symbols & symsset for e in exprs}
-    E = []
-    for n, e1 in enumerate(exprs):
-        for e2 in exprs[:n]:
-            # Equations are connected if they share a symbol
-            if exprsyms[e1] & exprsyms[e2]:
-                E.append((e1, e2))
-    G = V, E
-    subexprs = connected_components(G)
-    if len(subexprs) > 1:
-        subsols = []
-        for subexpr in subexprs:
-            subsyms = set()
-            for e in subexpr:
-                subsyms |= exprsyms[e]
-            subsyms = sorted(subsyms, key=default_sort_key)
-            subsol = _solve_system(subexpr, subsyms, **flags)
-            if not isinstance(subsol, list):
-                subsol = [subsol]
-            subsols.append(subsol)
-        # Full solution is cartesion product of subsystems
-        sols = []
-        for soldicts in cartes(*subsols):
-            sols.append(dict(item for sd in soldicts for item in sd.items()))
-        # Return a single dict if it would be a list of one dicts
-        if len(sols) == 1:
-            return sols[0]
-        return sols
+    if flags.pop('_split', True):
+        # Split the system into connected components
+        V = exprs
+        symsset = set(symbols)
+        exprsyms = {e: e.free_symbols & symsset for e in exprs}
+        E = []
+        for n, e1 in enumerate(exprs):
+            for e2 in exprs[:n]:
+                # Equations are connected if they share a symbol
+                if exprsyms[e1] & exprsyms[e2]:
+                    E.append((e1, e2))
+        G = V, E
+        subexprs = connected_components(G)
+        if len(subexprs) > 1:
+            subsols = []
+            for subexpr in subexprs:
+                subsyms = set()
+                for e in subexpr:
+                    subsyms |= exprsyms[e]
+                subsyms = list(ordered(subsyms))
+                # use canonical subset to solve these equations
+                # since there may be redundant equations in the set:
+                # take the first equation of several that may have the
+                # same sub-maximal free symbols of interest; the
+                # other equations that weren't used should be checked
+                # to see that they did not fail -- does the solver
+                # take care of that?
+                choices = sift(subexpr, lambda x: tuple(ordered(exprsyms[x])))
+                subexpr = choices.pop(tuple(ordered(subsyms)), [])
+                for k in choices:
+                    subexpr.append(next(ordered(choices[k])))
+                flags['_split'] = False  # skip split step
+                subsol = _solve_system(subexpr, subsyms, **flags)
+                if not isinstance(subsol, list):
+                    subsol = [subsol]
+                subsols.append(subsol)
+            # Full solution is cartesion product of subsystems
+            sols = []
+            for soldicts in cartes(*subsols):
+                sols.append(dict(item for sd in soldicts
+                    for item in sd.items()))
+            # Return a list with one dict as just the dict
+            if len(sols) == 1:
+                return sols[0]
+            return sols
 
     polys = []
     dens = set()
