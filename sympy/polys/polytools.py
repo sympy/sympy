@@ -6652,6 +6652,9 @@ def cancel(f, *gens, **args):
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
+    opt = {}
+    if 'polys' in args:
+        opt['polys'] = args['polys']
 
     if not isinstance(f, (tuple, Tuple)):
         if f.is_Number or isinstance(f, Relational) or not isinstance(f, Expr):
@@ -6662,8 +6665,9 @@ def cancel(f, *gens, **args):
     elif len(f) == 2:
         p, q = f
         if isinstance(p, Poly) and isinstance(q, Poly):
-            args['polys'] = True
-            args['domain'] = p.domain
+            opt['gens'] = p.gens
+            opt['domain'] = p.domain
+            opt['polys'] = opt.get('polys', True)
         p, q = p.as_expr(), q.as_expr()
     elif isinstance(f, Tuple):
         return factor_terms(f)
@@ -6705,15 +6709,17 @@ def cancel(f, *gens, **args):
             return f.xreplace(dict(reps))
 
     c, (P, Q) = 1, F.cancel(G)
+    if opt.get('polys', False) and not 'gens' in opt:
+        opt['gens'] = R.symbols
 
     if not isinstance(f, (tuple, Tuple)):
         return c*(P.as_expr()/Q.as_expr())
     else:
         P, Q = P.as_expr(), Q.as_expr()
-        if not args.get('polys', False):
+        if not opt.get('polys', False):
             return c, P, Q
         else:
-            return c, Poly(P, *R.symbols, **args), Poly(Q, *R.symbols, **args)
+            return c, Poly(P, *gens, **opt), Poly(Q, *gens, **opt)
 
 
 @public
