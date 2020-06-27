@@ -1238,10 +1238,10 @@ def test_linsolve():
     x0, x1, x2, _x0 = symbols('tau0 tau1 tau2 _tau0')
     assert linsolve(Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, _x0]])
         ) == FiniteSet((x0, 0, x1, _x0, x2))
-    x0, x1, x2, _x0 = symbols('_tau0 _tau1 _tau2 tau0')
+    x0, x1, x2, _x0 = symbols('tau00 tau01 tau02 tau0')
     assert linsolve(Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, _x0]])
         ) == FiniteSet((x0, 0, x1, _x0, x2))
-    x0, x1, x2, _x0 = symbols('_tau0 _tau1 _tau2 tau1')
+    x0, x1, x2, _x0 = symbols('tau00 tau01 tau02 tau1')
     assert linsolve(Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, _x0]])
         ) == FiniteSet((x0, 0, x1, _x0, x2))
     # symbols can be given as generators
