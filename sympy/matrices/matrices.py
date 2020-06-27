@@ -786,7 +786,7 @@ class MatrixBase(MatrixDeprecated,
         return "<matrix>" + mml + "</matrix>"
 
     def _eval_copy(self):
-        return self._new(self.rows, self.cols, self._mat)
+        return self._new(self.rows, self.cols, self._mat, ring=self.ring)
 
     def _eval_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix

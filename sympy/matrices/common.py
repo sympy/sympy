@@ -219,7 +219,7 @@ class MatrixShaping(MatrixRequired):
             i = n - j * rows
             return self[i, j]
 
-        return self._new(len(self), 1, entry)
+        return self._new(len(self), 1, entry, ring=self.ring)
 
     def _eval_vech(self, diagonal):
         c = self.cols
@@ -232,7 +232,7 @@ class MatrixShaping(MatrixRequired):
             for j in range(c):
                 for i in range(j + 1, c):
                     v.append(self[i, j])
-        return self._new(len(v), 1, v)
+        return self._new(len(v), 1, v, ring=self.ring)
 
     def col_del(self, col):
         """Delete the specified column."""
@@ -1930,8 +1930,8 @@ class MatrixOperations(MatrixRequired):
         return self.transpose().conjugate()
 
     def _eval_applyfunc(self, f):
-        out = self._new(self.rows, self.cols, [f(x) for x in self])
-        return out
+        return self._new(
+            self.rows, self.cols, [f(x) for x in self], ring=self.ring)
 
     def _eval_as_real_imag(self):  # type: ignore
         from sympy.functions.elementary.complexes import re, im
@@ -1963,7 +1963,8 @@ class MatrixOperations(MatrixRequired):
         return sum(self[i, i] for i in range(self.rows))
 
     def _eval_transpose(self):
-        return self._new(self.cols, self.rows, lambda i, j: self[j, i])
+        return self._new(
+            self.cols, self.rows, lambda i, j: self[j, i], ring=self.ring)
 
     def adjoint(self):
         """Conjugate transpose or Hermitian conjugation."""

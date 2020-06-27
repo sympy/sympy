@@ -459,24 +459,8 @@ class SparseMatrix(MatrixBase):
         return self._smat.copy()
 
     def _eval_transpose(self):
-        """Returns the transposed SparseMatrix of this SparseMatrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> a = SparseMatrix(((1, 2), (3, 4)))
-        >>> a
-        Matrix([
-        [1, 2],
-        [3, 4]])
-        >>> a.T
-        Matrix([
-        [1, 3],
-        [2, 4]])
-        """
-        smat = {(j,i): val for (i,j),val in self._smat.items()}
-        return self._new(self.cols, self.rows, smat)
+        smat = {(j, i): val for (i, j), val in self._smat.items()}
+        return self._new(self.cols, self.rows, smat, ring=self.ring)
 
     def _eval_values(self):
         return [v for k,v in self._smat.items() if not v.is_zero]
@@ -566,7 +550,7 @@ class SparseMatrix(MatrixBase):
         return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(reversed(k)))]
 
     def _eval_copy(self):
-        return self._new(self.rows, self.cols, self._smat)
+        return self._new(self.rows, self.cols, self._smat, ring=self.ring)
 
     def nnz(self):
         """Returns the number of non-zero elements in Matrix."""

@@ -102,15 +102,8 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
     def _eval_adjoint(self):
         raise NotImplementedError
 
-    def _eval_applyfunc(self, f):
-        new_mat = [f(x) for x in self._mat]
-        return self._new(self.rows, self.cols, new_mat, ring=self.ring)
-
     def _eval_conjugate(self):
         raise NotImplementedError
-
-    def _eval_copy(self):
-        return self._new(self.rows, self.cols, self._mat, ring=self.ring)
 
     @classmethod
     def _eval_companion(cls, size, poly):
@@ -259,19 +252,6 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
 
     def _eval_pow_by_jordan_blocks(self, exp):
         raise NotImplementedError
-
-    def _eval_transpose(self):
-        return self._new(
-            self.cols, self.rows, lambda i, j: self[j, i], ring=self.ring)
-
-    def _eval_vec(self):
-        rows = self.rows
-        def entry(n, _):
-            j = n // rows
-            i = n - j * rows
-            return self[i, j]
-
-        return self._new(len(self), 1, entry, ring=self.ring)
 
     @property
     def D(self):
