@@ -946,6 +946,8 @@ def test_sysode_linear_neq_order1_type2():
 
 
 def test_sysode_linear_neq_order1_type3():
+    from sympy.core import Mul
+
     f, g, h, k = symbols('f g h k', cls=Function)
     x = symbols('x')
     r = symbols('r', real=True)
@@ -958,17 +960,6 @@ def test_sysode_linear_neq_order1_type3():
 
     eqs2 = [Eq(diff(f(x), x),  x*f(x) + x**2*g(x)),
            Eq(diff(g(x), x),  2*x**2*f(x) + (x + 3*x**2)*g(x))]
-    sol2 = [Eq(f(x), (6*sqrt(17)*C1/(-221 + 51*sqrt(17)) - 34*C1/(-221 + 51*sqrt(17)) - 13*C2/(-51 + 13*sqrt(17))
-                        + 3*sqrt(17)*C2/(-51 + 13*sqrt(17)))*exp(-sqrt(17)*x**3/6 + x**3/2 + x**2/2)
-                        + (45*sqrt(17)*C1/(-221 + 51*sqrt(17)) - 187*C1/(-221 + 51*sqrt(17)) - 3*sqrt(17)*C2/(-51 + 13*sqrt(17))
-                        + 13*C2/(-51 + 13*sqrt(17)))*exp(x**3/2 + sqrt(17)*x**3/6 + x**2/2)),
-            Eq(g(x), (102*C1/(-221 + 51*sqrt(17)) - 26*sqrt(17)*C1/(-221 + 51*sqrt(17))
-                        + 6*sqrt(17)*C2/(-221 + 51*sqrt(17)) - 34*C2/(-221 + 51*sqrt(17)))*exp(x**3/2
-                        + sqrt(17)*x**3/6 + x**2/2) + (26*sqrt(17)*C1/(-221 + 51*sqrt(17)) - 102*C1/(-221 + 51*sqrt(17))
-                        + 45*sqrt(17)*C2/(-221 + 51*sqrt(17)) - 187*C2/(-221 + 51*sqrt(17)))*exp(-sqrt(17)*x**3/6
-                        + x**3/2 + x**2/2))]
-
-    from sympy.core import Mul
     sol2 = [
         Eq(f(x),
           - 2*sqrt(17)*C1*x**3*exp(x**3/2 + sqrt(17)*x**3/6 + x**2/2)/Mul(51, (-sqrt(17)*x**3/6 - x**3/2), evaluate=False)

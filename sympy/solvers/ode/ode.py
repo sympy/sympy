@@ -7287,14 +7287,29 @@ def sysode_linear_neq_order1(match):
         _linear_neq_order1_type2, _linear_neq_order1_type3,
         _linear_neq_order1_type4)
 
+    eqs = match['eq']
+    t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    funcs = match['func']
+
+    if not match['is_homogeneous']:
+        rhs = match['rhs']
+    if match['is_constant']:
+        A = -match['func_coeff']
+    else:
+        A = match['commutative_antiderivative']
+
+    n = A.rows
+
     if match['type_of_equation'] == 'type1':
-        sol = _linear_neq_order1_type1(match)
+        sol = _linear_neq_order1_type1(A, t)
     elif match['type_of_equation'] == 'type2':
-        sol = _linear_neq_order1_type2(match)
+        sol = _linear_neq_order1_type2(A, t, rhs)
     elif match['type_of_equation'] == 'type3':
-        sol = _linear_neq_order1_type3(match)
+        sol = _linear_neq_order1_type3(A)
     elif match['type_of_equation'] == 'type4':
-        sol = _linear_neq_order1_type4(match)
+        sol = _linear_neq_order1_type4(A, t, rhs)
+
+    sol = [Eq(funcs[i], sol[i]) for i in range(n)]
 
     return sol
 

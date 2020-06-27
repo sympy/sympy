@@ -1,4 +1,4 @@
-from sympy import (Derivative, Symbol, expand, factor_terms, powsimp, Poly,
+from sympy import (Symbol, expand, factor_terms, powsimp, Poly,
                    Mul, ratsimp, Add, Piecewise, piecewise_fold)
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
@@ -6,12 +6,13 @@ from sympy.core.symbol import Dummy
 from sympy.core.function import expand_mul
 from sympy.functions import exp, im, cos, sin, re
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.matrices import zeros, Matrix
+from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase
 from sympy.simplify import simplify, collect
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError
 from sympy.utilities import numbered_symbols, default_sort_key
 from sympy.utilities.iterables import ordered, uniq
+from sympy.utilities.misc import filldedent
 from sympy.integrals.integrals import Integral, integrate
 
 
@@ -408,7 +409,7 @@ def matrix_exp_jordan_form(A, t):
     return P, expJ
 
 
-def _linear_neq_order1_type1(match_):
+def _linear_neq_order1_type1(A, t):
     r"""
     System of n first-order constant-coefficient linear homogeneous differential equations
 
@@ -429,17 +430,21 @@ def _linear_neq_order1_type1(match_):
     from the integration.
 
     """
-    eq = match_['eq']
-    func = match_['func']
-    fc = match_['func_coeff']
-    n = len(eq)
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    if not isinstance(A, MatrixBase):
+        raise ValueError(filldedent('''
+            The coefficients of the system of ODEs should be of type Matrix
+        '''))
+
+    if not A.is_square:
+        raise NonSquareMatrixError(filldedent('''
+            The coefficient matrix must be a square
+        '''))
+
+    n = A.rows
+
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
 
-    # This needs to be modified in future so that fc is only of type Matrix
-    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
-
-    P, J = matrix_exp_jordan_form(M, t)
+    P, J = matrix_exp_jordan_form(A, t)
     P = simplify(P)
     Cvect = Matrix(list(next(constants) for _ in range(n)))
     sol_vector = P * (J * Cvect)
@@ -447,11 +452,10 @@ def _linear_neq_order1_type1(match_):
     gens = sol_vector.atoms(exp)
     sol_vector = [collect(s, ordered(gens), exact=True) for s in sol_vector]
 
-    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
-    return sol_dict
+    return sol_vector
 
 
-def _linear_neq_order1_type2(match_):
+def _linear_neq_order1_type2(A, t, b):
     r"""
     System of n first-order coefficient linear non-homogeneous differential equations
 
@@ -470,19 +474,32 @@ def _linear_neq_order1_type2(match_):
     where $C$ is the vector of constants.
 
     """
-    eq = match_['eq']
-    func = match_['func']
-    fc = match_['func_coeff']
-    b = match_['rhs']
+    if not isinstance(A, MatrixBase):
+        raise ValueError(filldedent('''
+            The coefficients of the system of ODEs should be of type Matrix
+        '''))
 
-    n = len(eq)
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    if not isinstance(b, MatrixBase):
+        raise ValueError(filldedent('''
+            The non-homogeneous terms of the system of ODEs should be of type Matrix
+        '''))
+
+    if not A.is_square:
+        raise NonSquareMatrixError(filldedent('''
+            The coefficient matrix must be a square
+        '''))
+
+    if A.rows != b.rows:
+        raise ValueError(filldedent('''
+            The system of ODEs should have the same number of non-homogeneous terms and the number of
+            equations
+        '''))
+
+    n = A.rows
+
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
 
-    # This needs to be modified in future so that fc is only of type Matrix
-    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
-
-    P, J = matrix_exp_jordan_form(M, t)
+    P, J = matrix_exp_jordan_form(A, t)
     P = simplify(P)
     Cvect = Matrix(list(next(constants) for _ in range(n)))
     sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
@@ -493,11 +510,9 @@ def _linear_neq_order1_type2(match_):
     # with symbolic coeffs. To be addressed in the future.
     sol_vector = [collect(expand_mul(s), sol_vector.atoms(exp), exact=True) for s in sol_vector]
 
-    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
-
     # sol_dict = [simpsol(eq) for eq in sol_dict]
 
-    return sol_dict
+    return sol_vector
 
 
 def _matrix_is_constant(M, t):
@@ -533,7 +548,7 @@ def _is_commutative_anti_derivative(A, t):
     return B, is_commuting
 
 
-def _linear_neq_order1_type3(match_):
+def _linear_neq_order1_type3(B):
     r"""
     System of n first-order nonconstant-coefficient linear homogeneous differential equations
 
@@ -558,32 +573,21 @@ def _linear_neq_order1_type3(match_):
     where $C$ is the vector of constants.
 
     """
-    # Some parts of code is repeated, this needs to be taken care of
-    # The constant vector obtained here can be done so in the match
-    # function itself.
-    eq = match_['eq']
-    func = match_['func']
-    fc = match_['func_coeff']
-    n = len(eq)
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    if not isinstance(B, MatrixBase):
+        raise ValueError(filldedent('''
+            The coefficients of the system of ODEs should be of type Matrix
+        '''))
+
+    if not B.is_square:
+        raise NonSquareMatrixError(filldedent('''
+            The coefficient matrix must be a square
+        '''))
+
+    n = B.rows
+
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
 
-    # This needs to be modified in future so that fc is only of type Matrix
-    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
-
     Cvect = Matrix(list(next(constants) for _ in range(n)))
-
-    # The code in if block will be removed when it is made sure
-    # that the code works without the statements in if block.
-    if "commutative_antiderivative" not in match_:
-        B, is_commuting = _is_commutative_anti_derivative(M, t)
-
-        # This course is subject to change
-        if not is_commuting:
-            return None
-
-    else:
-        B = match_['commutative_antiderivative']
 
     sol_vector = B.exp() * Cvect
 
@@ -591,11 +595,10 @@ def _linear_neq_order1_type3(match_):
     # the exponential terms are collected properly.
     sol_vector = [collect(expand_mul(s), ordered(s.atoms(exp)), exact=True) for s in sol_vector]
 
-    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
-    return sol_dict
+    return sol_vector
 
 
-def _linear_neq_order1_type4(match_):
+def _linear_neq_order1_type4(B, t, b):
     r"""
     System of n first-order nonconstant-coefficient linear non-homogeneous differential equations
 
@@ -620,39 +623,37 @@ def _linear_neq_order1_type4(match_):
     where $C$ is the vector of constants.
 
     """
-    # Some parts of code is repeated, this needs to be taken care of
-    # The constant vector obtained here can be done so in the match
-    # function itself.
-    eq = match_['eq']
-    func = match_['func']
-    fc = match_['func_coeff']
-    b = match_['rhs']
-    n = len(eq)
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    if not isinstance(B, MatrixBase):
+        raise ValueError(filldedent('''
+            The coefficients of the system of ODEs should be of type Matrix
+        '''))
+
+    if not isinstance(b, MatrixBase):
+        raise ValueError(filldedent('''
+            The non-homogeneous terms of the system of ODEs should be of type Matrix
+        '''))
+
+    if not B.is_square:
+        raise NonSquareMatrixError(filldedent('''
+            The coefficient matrix must be a square
+        '''))
+
+    if B.rows != b.rows:
+        raise ValueError(filldedent('''
+            The system of ODEs should have the same number of non-homogeneous terms and the number of
+            equations
+        '''))
+
+    n = B.rows
+
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
 
-    # This needs to be modified in future so that fc is only of type Matrix
-    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
-
     Cvect = Matrix(list(next(constants) for _ in range(n)))
-
-    # The code in if block will be removed when it is made sure
-    # that the code works without the statements in if block.
-    if "commutative_antiderivative" not in match_:
-        B, is_commuting = _is_commutative_anti_derivative(M, t)
-
-        # This course is subject to change
-        if not is_commuting:
-            return None
-
-    else:
-        B = match_['commutative_antiderivative']
 
     sol_vector = B.exp() * (((-B).exp() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
     sol_vector = [collect(expand_mul(s), ordered(sol_vector.atoms(exp)), exact=True) for s in sol_vector]
 
-    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
-    return sol_dict
+    return sol_vector
 
 
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
