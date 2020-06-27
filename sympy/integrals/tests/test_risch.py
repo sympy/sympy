@@ -415,7 +415,7 @@ def test_integrate_nonlinear_no_specials():
     DE = DifferentialExtension(extension={'D': [Poly(1, x),
         Poly(-t**2 - t/x - (1 - nu**2/x**2), t)], 'Tfuncs': [f]})
     assert integrate_nonlinear_no_specials(a, d, DE) == \
-        (-log(1 + f(x)**2 + x**2/2)/2 - (4 + x**2)/(4 + 2*x**2 + 4*f(x)**2), True)
+        (-log(1 + f(x)**2 + x**2/2)/2 + (- 4 - x**2)/(4 + 2*x**2 + 4*f(x)**2), True)
     assert integrate_nonlinear_no_specials(Poly(t, t), Poly(1, t), DE) == \
         (0, False)
 

@@ -6648,6 +6648,7 @@ def cancel(f, *gens, **args):
     """
     from sympy.core.exprtools import factor_terms
     from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.polys.rings import sring
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
@@ -6660,18 +6661,24 @@ def cancel(f, *gens, **args):
 
     elif len(f) == 2:
         p, q = f
+        if isinstance(p, Poly) and isinstance(q, Poly):
+            args['polys'] = True
+            args['domain'] = p.domain
+        p, q = p.as_expr(), q.as_expr()
     elif isinstance(f, Tuple):
         return factor_terms(f)
     else:
         raise ValueError('unexpected argument: %s' % f)
 
     try:
-        (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
-    except PolificationFailed:
-        if not isinstance(f, (tuple, Tuple)):
-            return f.expand()
-        else:
-            return S.One, p, q
+        if f.has(Piecewise):
+            raise PolynomialError()
+        R, (F, G) = sring((p, q), *gens, **args)
+        if not R.ngens:
+            if not isinstance(f, (tuple, Tuple)):
+                return f.expand()
+            else:
+                return S.One, p, q
     except PolynomialError as msg:
         if f.is_commutative and not f.has(Piecewise):
             raise PolynomialError(msg)
@@ -6697,15 +6704,16 @@ def cancel(f, *gens, **args):
                     pass
             return f.xreplace(dict(reps))
 
-    c, P, Q = F.cancel(G)
+    c, (P, Q) = 1, F.cancel(G)
 
     if not isinstance(f, (tuple, Tuple)):
         return c*(P.as_expr()/Q.as_expr())
     else:
-        if not opt.polys:
-            return c, P.as_expr(), Q.as_expr()
-        else:
+        P, Q = P.as_expr(), Q.as_expr()
+        if not args.get('polys', False):
             return c, P, Q
+        else:
+            return c, Poly(P, *R.symbols, **args), Poly(Q, *R.symbols, **args)
 
 
 @public

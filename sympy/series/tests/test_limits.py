@@ -514,6 +514,10 @@ def test_issue_4503():
         exp(x)/(2*sqrt(exp(x) + 1))
 
 
+def test_issue_8208():
+    assert limit(n**(Rational(1, 1e9) - 1), n, oo) == 0
+
+
 def test_issue_8481():
     k = Symbol('k', integer=True, nonnegative=True)
     lamda = Symbol('lamda', real=True, positive=True)
