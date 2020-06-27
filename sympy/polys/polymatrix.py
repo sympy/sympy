@@ -196,14 +196,6 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
         return self.__class__(
             new_mat_rows, new_mat_cols, new_mat, ring=ring, copy=False)
 
-    def _eval_matrix_mul_elementwise(self, other):
-        if not isinstance(other, PolyMatrix):
-            other = PolyMatrix(other)
-        ring = self.ring.unify(other.ring)
-        new_mat = [x * y for x, y in zip(self._mat, other._mat)]
-        return self.__class__(
-            self.rows, self.cols, new_mat, ring=ring, copy=False)
-
     def _eval_scalar_mul(self, other):
         ring = self.ring
         if isinstance(other, Poly):

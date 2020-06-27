@@ -172,7 +172,9 @@ class DenseMatrix(MatrixBase):
 
     def _eval_matrix_mul_elementwise(self, other):
         mat = [a*b for a,b in zip(self._mat, other._mat)]
-        return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
+        ring = self.ring.unify(other.ring)
+        return classof(self, other)._new(
+            self.rows, self.cols, mat, copy=False, ring=ring)
 
     def _eval_inverse(self, **kwargs):
         return self.inv(method=kwargs.get('method', 'GE'),

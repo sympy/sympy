@@ -2483,7 +2483,9 @@ class MatrixArithmetic(MatrixRequired):
         return self._new(self.rows, other.cols, entry)
 
     def _eval_matrix_mul_elementwise(self, other):
-        return self._new(self.rows, self.cols, lambda i, j: self[i,j]*other[i,j])
+        return self._new(
+            self.rows, self.cols, lambda i, j: self[i,j]*other[i,j],
+            ring=self.ring.unify(other.ring))
 
     def _eval_matrix_rmul(self, other):
         def entry(i, j):
