@@ -943,6 +943,7 @@ class MatrixBase(MatrixDeprecated,
         ========
         irregular - filling a matrix with irregular blocks
         """
+        from sympy.matrices.dense import DenseDomainMatrix
         from sympy.matrices.sparse import SparseMatrix
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.matrices.expressions.blockmatrix import BlockMatrix
@@ -954,6 +955,9 @@ class MatrixBase(MatrixDeprecated,
             # Matrix(SparseMatrix(...))
             if isinstance(args[0], SparseMatrix):
                 return args[0].rows, args[0].cols, flatten(args[0].tolist())
+
+            elif isinstance(args[0], DenseDomainMatrix):
+                return args[0].rows, args[0].cols, args[0]._flat()
 
             # Matrix(Matrix(...))
             elif isinstance(args[0], MatrixBase):

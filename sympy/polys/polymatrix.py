@@ -142,6 +142,17 @@ class DomainMatrix:
         rowstr = '[%s]' % ', '.join(rows_str)
         return 'DomainMatrix(%s, %r, %r)' % (rowstr, self.shape, self.domain)
 
+    def __add__(A, B):
+        if not isinstance(B, DomainMatrix):
+            return NotImplemented
+        if A.shape != B.shape:
+            raise ValueError("shape")
+        if A.domain is not B.domain:
+            raise ValueError("domain")
+        rows = [[a+b for a, b in zip(row1, row2)]
+                    for row1, row2 in zip(A.rows, B.rows)]
+        return type(A)(rows, A.shape, A.domain)
+
     def __mul__(A, B):
         """A * B"""
         if not isinstance(B, DomainMatrix):
@@ -152,7 +163,17 @@ class DomainMatrix:
 
     def __pow__(A, n):
         """A ** n"""
-        if n == 1:
+        if not isinstance(n, int):
+            return NotImplemented
+        if n < 0:
+            raise NotImplementedError('Negative powers')
+        elif n == 0:
+            m, n = A.shape
+            rows = [[A.domain.zero] * m for _ in range(m)]
+            for i in range(m):
+                rows[i][i] = A.domain.one
+            return type(A)(rows, A.shape, A.domain)
+        elif n == 1:
             return A
         elif n % 2 == 1:
             return A * A**(n - 1)

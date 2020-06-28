@@ -3,10 +3,11 @@ from mpmath.matrices.matrices import _matrix
 from sympy.core import Basic, Dict, Integer, S, Tuple
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter, _sympify
-from sympy.matrices.dense import DenseMatrix
+from sympy.matrices.dense import DenseMatrix, DenseDomainMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.sparse import SparseMatrix
+from sympy.polys.polymatrix import DomainMatrix
 
 
 def sympify_matrix(arg):
@@ -61,6 +62,9 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
         else:
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
+
+        if all(x.is_Rational for x in flat_list):
+            return ImmutableDenseDomainMatrix(rows, cols, flat_list)
 
         obj = Basic.__new__(cls,
             Integer(rows),
@@ -133,6 +137,26 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
 ImmutableMatrix = ImmutableDenseMatrix
 
 
+class ImmutableDenseDomainMatrix(DenseDomainMatrix, ImmutableDenseMatrix):
+
+    __hash__ = MatrixExpr.__hash__
+
+    rows = cols = None
+
+    def __new__(cls, rows, cols, flat_list):
+        rows_list = [[flat_list[i*cols + j] for j in range(cols)] for i in range(rows)]
+        rep = DomainMatrix.from_list_sympy(rows_list)
+        assert str(rep.domain) in ('ZZ', 'QQ')
+        obj = cls.from_DomainMatrix(rep)
+        obj._mhash = None
+        return obj
+
+    @classmethod
+    def _new(cls, *args, **kwargs):
+        # This will come back to DenseDomainMatrix.__new__ if possible
+        return ImmutableDenseMatrix._new(*args, **kwargs)
+
+
 class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
     """Create an immutable version of a sparse matrix.
 
@@ -166,6 +190,11 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
     @classmethod
     def _new(cls, *args, **kwargs):
         rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
+        #if all(x.is_Rational for x in smat.values()):
+        #    flat_list = [0] * (rows * cols)
+        #    for (i, j), v in smat.items():
+        #        flat_list[i*cols + j] = v
+        #    return MutableDenseDomainMatrix(rows, cols, flat_list)
         obj = Basic.__new__(cls, Integer(rows), Integer(cols), Dict(smat))
         obj._rows = rows
         obj._cols = cols

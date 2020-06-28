@@ -6,7 +6,7 @@ from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError
@@ -52,8 +52,11 @@ class DenseMatrix(MatrixBase):
             return False
         if isinstance(other, Matrix):
             return _compare_sequence(self._mat,  other._mat)
+        other = Matrix(other)
+        if isinstance(other, DenseDomainMatrix):
+            return NotImplemented
         elif isinstance(other, MatrixBase):
-            return _compare_sequence(self._mat, Matrix(other)._mat)
+            return _compare_sequence(self._mat, other._mat)
 
     def __getitem__(self, key):
         """Return portion of self defined by key. If the key involves a slice
@@ -306,6 +309,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         else:
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
+        if all(x.is_Rational for x in flat_list):
+            return MutableDenseDomainMatrix(rows, cols, flat_list)
         self = object.__new__(cls)
         self.rows = rows
         self.cols = cols
@@ -614,6 +619,82 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
 
 MutableMatrix = Matrix = MutableDenseMatrix
+
+
+from sympy.polys.polymatrix import DomainMatrix
+
+
+class DenseDomainMatrix(DenseMatrix):
+
+    def __new__(cls, rows, cols, flat_list):
+        rows_list = [[flat_list[i*cols + j] for j in range(cols)] for i in range(rows)]
+        rep = DomainMatrix.from_list_sympy(rows_list)
+        assert str(rep.domain) in ('ZZ', 'QQ')
+        return cls.from_DomainMatrix(rep)
+
+    @classmethod
+    def from_DomainMatrix(cls, rep):
+        self = object.__new__(cls)
+        self._rep = rep
+        self.rows, self.cols = rep.shape
+        self._rows, self._cols = rep.shape
+        return self
+
+    def __getitem__(self, index):
+        if isinstance(index, tuple):
+            i, j = index
+            element_dom = self._rep.rows[i][j]
+        elif isinstance(index, int):
+            i, j = index // self.cols, index % self.cols
+            element_dom = self._rep.rows[i][j]
+        element_sympy = self._rep.domain.to_sympy(element_dom)
+        return element_sympy
+
+    def __add__(self, other):
+        if not isinstance(other, DenseDomainMatrix):
+            return NotImplemented
+        return self.from_DomainMatrix(self._rep + other._rep)
+
+    def __mul__(self, other):
+        if not isinstance(other, DenseDomainMatrix):
+            return NotImplemented
+        return self.from_DomainMatrix(self._rep * other._rep)
+
+    def __pow__(self, exp):
+        exp = _sympify(exp)
+        if exp.is_Integer:
+            return self.from_DomainMatrix(self._rep ** exp.p)
+        from sympy.matrices.expressions import MatPow
+        return MatPow(self, exp)
+
+    # needed by multiply
+    def _eval_matrix_mul(self, other):
+        if isinstance(other, DenseDomainMatrix):
+            return self.from_DomainMatrix(self._rep * other._rep)
+        else:
+            raise ValueError("Not domain matrix")
+
+    def tolist(self):
+        conv = self._rep.domain.to_sympy
+        rows = self._rep.rows
+        return [[conv(e) for e in row] for row in rows]
+
+    def _flat(self):
+        return [e for row in self.tolist() for e in row]
+
+    def __eq__(self, other):
+        if not isinstance(other, DenseDomainMatrix):
+            return NotImplemented
+        return self._rep == other._rep
+
+
+class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
+
+    @classmethod
+    def _new(cls, *args, **kwargs):
+        # This will come back to DenseDomainMatrix.__new__ if possible
+        return MutableDenseMatrix._new(*args, **kwargs)
+
 
 ###########
 # Numpy Utility Functions:
