@@ -1222,7 +1222,7 @@ class MatrixProperties(MatrixRequired):
         return result
 
     def _eval_free_symbols(self):
-        return set().union(*(i.free_symbols for i in self))
+        return set().union(*(i.free_symbols for i in self if i))
 
     def _eval_has(self, *patterns):
         return any(a.has(*patterns) for a in self)

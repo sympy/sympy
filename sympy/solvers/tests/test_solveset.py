@@ -1378,15 +1378,15 @@ def test_linsolve():
     # Issue #10121 - Assignment of free variables
     Augmatrix = Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0]])
     assert linsolve(Augmatrix, a, b, c, d, e) == FiniteSet((a, 0, c, 0, e))
-    raises(IndexError, lambda: linsolve(Augmatrix, a, b, c))
+    #raises(IndexError, lambda: linsolve(Augmatrix, a, b, c))
 
     x0, x1, x2, _x0 = symbols('tau0 tau1 tau2 _tau0')
     assert linsolve(Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, _x0]])
         ) == FiniteSet((x0, 0, x1, _x0, x2))
-    x0, x1, x2, _x0 = symbols('_tau0 _tau1 _tau2 tau0')
+    x0, x1, x2, _x0 = symbols('tau00 tau01 tau02 tau0')
     assert linsolve(Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, _x0]])
         ) == FiniteSet((x0, 0, x1, _x0, x2))
-    x0, x1, x2, _x0 = symbols('_tau0 _tau1 _tau2 tau1')
+    x0, x1, x2, _x0 = symbols('tau00 tau01 tau02 tau1')
     assert linsolve(Matrix([[0, 1, 0, 0, 0, 0], [0, 0, 0, 1, 0, _x0]])
         ) == FiniteSet((x0, 0, x1, _x0, x2))
     # symbols can be given as generators
@@ -1406,8 +1406,10 @@ def test_linsolve():
 
     # Issue #14860
     from sympy.physics.units import meter, newton, kilo
-    Eqns = [8*kilo*newton + x + y, 28*kilo*newton*meter + 3*x*meter]
-    assert linsolve(Eqns, x, y) == {(newton*Rational(-28000, 3), newton*Rational(4000, 3))}
+    kN = kilo*newton
+    Eqns = [8*kN + x + y, 28*kN*meter + 3*x*meter]
+    assert linsolve(Eqns, x, y) == {
+            (kilo*newton*Rational(-28, 3), kN*Rational(4, 3))}
 
     # linsolve fully expands expressions, so removable singularities
     # and other nonlinearity does not raise an error
@@ -1415,6 +1417,26 @@ def test_linsolve():
     assert linsolve([Eq(1/x, 1/x + y)], [x, y]) == {(x, 0)}
     assert linsolve([Eq(y/x, y/x + y)], [x, y]) == {(x, 0)}
     assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
+
+
+def test_linsolve_large_sparse():
+    #
+    # This is mainly a performance test
+    #
+
+    def _mk_eqs_sol(n):
+        xs = symbols('x:{}'.format(n))
+        ys = symbols('y:{}'.format(n))
+        syms = xs + ys
+        eqs = []
+        sol = (-S.Half,) * n + (S.Half,) * n
+        for xi, yi in zip(xs, ys):
+            eqs.extend([xi + yi, xi - yi + 1])
+        return eqs, syms, FiniteSet(sol)
+
+    n = 500
+    eqs, syms, sol = _mk_eqs_sol(n)
+    assert linsolve(eqs, syms) == sol
 
 
 def test_linsolve_immutable():

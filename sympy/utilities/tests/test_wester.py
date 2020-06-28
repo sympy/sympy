@@ -2990,10 +2990,10 @@ def test_Z3():
     r = Function('r')
     # recurrence solution is correct, Wester expects it to be simplified to
     # fibonacci(n+1), but that is quite hard
-    assert (rsolve(r(n) - (r(n - 1) + r(n - 2)), r(n),
-                   {r(1): 1, r(2): 2}).simplify()
-            == 2**(-n)*((1 + sqrt(5))**n*(sqrt(5) + 5) +
-                        (-sqrt(5) + 1)**n*(-sqrt(5) + 5))/10)
+    expected = ((S(1)/2 - sqrt(5)/2)**n*(S(1)/2 - sqrt(5)/10)
+              + (S(1)/2 + sqrt(5)/2)**n*(sqrt(5)/10 + S(1)/2))
+    sol = rsolve(r(n) - (r(n - 1) + r(n - 2)), r(n), {r(1): 1, r(2): 2})
+    assert sol == expected
 
 
 @XFAIL
