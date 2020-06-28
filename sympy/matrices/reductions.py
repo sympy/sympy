@@ -396,19 +396,6 @@ def _poly_row_reduce(
     return M._new(M.rows, M.cols, mat, ring=M.ring), pivot_cols, swaps
 
 
-def _poly_rref(
-    M, pivots=True, normalize_last=True):
-    mat, pivot_cols, _ = _poly_row_reduce(
-        M,
-        normalize_last=normalize_last,
-        normalize=True,
-        zero_above=True)
-
-    if pivots:
-        return mat, pivot_cols
-    return mat
-
-
 def _poly_echelon_form(M, with_pivots=False):
     mat, pivots, _ = _poly_row_reduce(
         M,

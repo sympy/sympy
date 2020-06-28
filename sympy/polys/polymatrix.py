@@ -417,12 +417,16 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
         raise NotImplementedError
 
     def rref(self, pivots=True, normalize_last=True, **kwargs):
-        from sympy.matrices.reductions import _poly_rref
         if self.ring == EX:
             return super().rref(
                 pivots=pivots, normalize_last=normalize_last, **kwargs)
-        return _poly_rref(
-            self, pivots=pivots, normalize_last=normalize_last)
+
+        M = self._to_domain_matrix()
+        rref, pivots = M.rref()
+        rref = self._from_domain_matrix(rref)
+        if pivots:
+            return rref, pivots
+        return rref
 
     def simplify(self, *args, **kwargs):
         return
@@ -470,6 +474,39 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
             # XXX FractionField has some issues with
             # ZZ[a, b][x].get_field()(a + b)
             raise NotImplementedError
+
+    def _to_domain_matrix(self):
+        rows = []
+
+        ring = self.ring
+        if all(isinstance(x, Poly) for x in self._mat) and \
+            all(x.degree() <= 0 for x in self._mat):
+            ring = ring.domain
+
+        for i in range(self.rows):
+            row = []
+            for j in range(self.cols):
+                if isinstance(self[i, j], Poly):
+                    # XXX Poly to Domain conversion should be more
+                    # straightforward than Expr to Domain.
+                    x = ring(self[i, j].as_expr())
+                else:
+                    x = ring(self[i, j])
+                row.append(x)
+            rows.append(row)
+        return DomainMatrix(rows, self.shape, ring)
+
+    def _from_domain_matrix(self, M):
+        flat = []
+        ring = self.ring
+        for row in M.rows:
+            for x in row:
+                x = M.domain.to_sympy(x)
+                if isinstance(ring, PolynomialRing):
+                    x = Poly(x, *ring.symbols, domain=ring.domain)
+                flat.append(x)
+
+        return self._new(self.rows, self.cols, flat, ring=self.ring)
 
 
 MutablePolyMatrix = PolyMatrix = MutablePolyDenseMatrix
