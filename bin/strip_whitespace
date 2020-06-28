@@ -18,13 +18,13 @@ def strip_file(filename, write, report):
     cr = False
     extra = 0
     for index, line in enumerate(lines):
-        if line.endswith(b" \n"):
+        if line.endswith(" \n"):
             if report:
                 print("%s, line %s" % (filename, index + 1))
             if write:
                 lines[index] = line.rstrip() + "\n"
                 hit = True
-        if line.endswith(b"\r\n"):
+        if line.endswith("\r\n"):
             if report and not cr:
                 print("%s, line %s (crlf now silent)" % (filename, index + 1))
                 cr = True
@@ -33,7 +33,7 @@ def strip_file(filename, write, report):
                 hit = True
 
     # correct no newline at eof
-    if lines and not lines[-1].endswith(b"\n"):
+    if lines and not lines[-1].endswith("\n"):
         lines[-1] += "\n"
         if report:
             print("%s, no newline at eof" % filename)
@@ -41,7 +41,7 @@ def strip_file(filename, write, report):
             hit = True
 
     # correct multiple newlines at eof
-    while len(lines) > 1 and lines[-1] == "\n" and lines[-2].endswith(b"\n"):
+    while len(lines) > 1 and lines[-1] == "\n" and lines[-2].endswith("\n"):
         if write:
             hit = True
         lines.pop()

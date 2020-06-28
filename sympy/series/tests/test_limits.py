@@ -738,6 +738,11 @@ def test_issue_18442():
     assert limit(tan(x)**(2**(sqrt(pi))), x, oo, dir='-') == Limit(tan(x)**(2**(sqrt(pi))), x, oo, dir='-')
 
 
+def test_issue_18452():
+    assert limit(abs(log(x))**x, x, 0) == 1
+    assert limit(abs(log(x))**x, x, 0, "-") == 1
+
+
 def test_issue_18482():
     assert limit((2*exp(3*x)/(exp(2*x) + 1))**(1/x), x, oo) == exp(1)
 

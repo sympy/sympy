@@ -3481,7 +3481,7 @@ def nonlinsolve(system, *symbols):
     # main code of def nonlinsolve() starts from here
     polys, polys_expr, nonpolys, denominators = _separate_poly_nonpoly(
         system, symbols)
-        
+
     if len(symbols) == len(polys):
         # If all the equations in the system are poly
         if is_zero_dimensional(polys, symbols):
