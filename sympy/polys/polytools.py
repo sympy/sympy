@@ -26,7 +26,7 @@ from sympy.polys.fglmtools import matrix_fglm
 from sympy.polys.groebnertools import groebner as _groebner
 from sympy.polys.monomials import Monomial
 from sympy.polys.orderings import monomial_key
-from sympy.polys.polyclasses import DMP
+from sympy.polys.polyclasses import DMP, DMF, ANP
 from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,
     CoercionFailed, UnificationFailed,
@@ -147,7 +147,7 @@ class Poly(Basic):
         if 'order' in opt:
             raise NotImplementedError("'order' keyword is not implemented yet")
 
-        if isinstance(rep, DomainElement):
+        if isinstance(rep, (DMP, DMF, ANP, DomainElement)):
             return cls._from_domain_element(rep, opt)
         elif iterable(rep, exclude=str):
             if isinstance(rep, dict):
