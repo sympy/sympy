@@ -673,7 +673,7 @@ def test_diff():
     C_0, C_1, C_2, C_3 = symbols('C_0, C_1, C_2, C_3')
     q = Si(x)
     assert p.diff(x).to_expr() == q.diff()
-    assert p.diff(x, 2).to_expr().subs(C_0, Rational(-1, 3)) == q.diff(x, 2).simplify()
+    assert p.diff(x, 2).to_expr().subs(C_0, Rational(-1, 3)).cancel() == q.diff(x, 2).cancel()
     assert p.diff(x, 3).series().subs({C_3: Rational(-1, 3), C_0: 0}) == q.diff(x, 3).series()
 
 

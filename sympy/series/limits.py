@@ -250,7 +250,7 @@ class Limit(Expr):
             else:
                 inve = e.subs(z, 1/u)
             try:
-                f = inve.as_leading_term(u)
+                f = inve.as_leading_term(u).gammasimp()
                 if f.is_meromorphic(u, S.Zero):
                     r = limit(f, u, S.Zero, "+")
                     if isinstance(r, Limit):

@@ -514,6 +514,10 @@ def test_issue_4503():
         exp(x)/(2*sqrt(exp(x) + 1))
 
 
+def test_issue_8208():
+    assert limit(n**(Rational(1, 1e9) - 1), n, oo) == 0
+
+
 def test_issue_8481():
     k = Symbol('k', integer=True, nonnegative=True)
     lamda = Symbol('lamda', real=True, positive=True)
@@ -621,7 +625,11 @@ def test_issue_13416():
 
 
 def test_issue_13462():
-    assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x*(x**2 - 3*x + 2)/24
+    assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x*(x - 2)*(x - 1)/24
+
+
+def test_issue_14514():
+    assert limit((1/(log(x)**log(x)))**(1/x), x, oo) == 1
 
 
 def test_issue_14574():
@@ -645,6 +653,18 @@ def test_issue_15146():
     e = (x/2) * (-2*x**3 - 2*(x**3 - 1) * x**2 * digamma(x**3 + 1) + \
         2*(x**3 - 1) * x**2 * digamma(x**3 + x + 1) + x + 3)
     assert limit(e, x, oo) == S(1)/3
+
+
+def test_issue_15202():
+    e = (2**x*(2 + 2**(-x)*(-2*2**x + x + 2))/(x + 1))**(x + 1)
+    assert limit(e, x, oo) == exp(1)
+
+    e = (log(x, 2)**7 + 10*x*factorial(x) + 5**x) / (factorial(x + 1) + 3*factorial(x) + 10**x)
+    assert limit(e, x, oo) == 10
+
+
+def test_issue_15282():
+    assert limit((x**2000 - (x + 1)**2000) / x**1999, x, oo) == -2000
 
 
 def test_issue_15984():
@@ -696,6 +716,10 @@ def test_issue_14556():
 
 def test_issue_14811():
     assert limit(((1 + ((S(2)/3)**(x + 1)))**(2**x))/(2**((S(4)/3)**(x - 1))), x, oo) == oo
+
+
+def test_issue_16714():
+    assert limit(((x**(x + 1) + (x + 1)**x) / x**(x + 1))**x, x, oo) == exp(exp(1))
 
 
 def test_issue_16722():

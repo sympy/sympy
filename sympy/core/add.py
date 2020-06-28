@@ -916,7 +916,13 @@ class Add(Expr, AssocOp):
         if not new_expr:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
-            return old.compute_leading_term(x)
+            n0 = min.getn()
+            res = Order(1)
+            incr = S.One
+            while res.is_Order:
+                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().powsimp().trigsimp()
+                incr *= 2
+            return res.as_leading_term(x, cdir=cdir)
 
         elif new_expr is S.NaN:
             return old.func._from_args(infinite)
