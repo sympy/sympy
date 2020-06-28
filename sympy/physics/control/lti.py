@@ -287,16 +287,20 @@ class TransferFunction(Basic, EvalfMixin):
         return -self + other
 
     def __mul__(self, other):
-        if isinstance(other, TransferFunction):
+        if isinstance(other, (TransferFunction, Parallel)):
             if not self.var == other.var:
                 raise ValueError("All the transfer functions should be anchored "
                     "with the same variable.")
             return Series(self, other)
+        elif isinstance(other, Series):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            arg_list = list(other.args)
+            return Series(self, *arg_list)
         else:
             raise ValueError("TransferFunction cannot be multiplied with {}."
                 .format(type(other)))
-
-    __rmul__ = __mul__
 
     def __truediv__(self, other):
         if isinstance(other, TransferFunction):
@@ -417,6 +421,59 @@ class Series(Basic):
 
     def _eval_rewrite_as_TransferFunction(self):
         pass
+
+    def __add__(self, other):
+        if isinstance(other, (TransferFunction, Series)):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+
+            return Parallel(self, other)
+        elif isinstance(other, Parallel):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            arg_list = list(other.args)
+
+            return Parallel(self, *arg_list)
+        else:
+            raise ValueError("This transfer function expression is invalid.")
+
+    def __sub__(self, other):
+        if isinstance(other, (TransferFunction, Series)):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+
+            return Parallel(self, -other)
+        elif isinstance(other, Parallel):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            arg_list = [-i for i in list(other.args)]
+
+            return Parallel(self, *arg_list)
+        else:
+            raise ValueError("This transfer function expression is invalid.")
+
+    def __mul__(self, other):
+        if isinstance(other, (TransferFunction, Parallel)):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            arg_list = list(self.args)
+
+            return Series(*arg_list, other)
+        elif isinstance(other, Series):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            self_arg_list = list(self.args)
+            other_arg_list = list(other.args)
+
+            return Series(*self_arg_list, *other_arg_list)
+        else:
+            raise ValueError("This transfer function expression is invalid.")
 
     def __neg__(self):
         return Series(TransferFunction(-1, 1, self.var), self)
