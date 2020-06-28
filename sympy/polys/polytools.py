@@ -147,13 +147,13 @@ class Poly(Basic):
         if 'order' in opt:
             raise NotImplementedError("'order' keyword is not implemented yet")
 
-        if iterable(rep, exclude=str):
+        if isinstance(rep, DomainElement):
+            return cls._from_domain_element(rep, opt)
+        elif iterable(rep, exclude=str):
             if isinstance(rep, dict):
                 return cls._from_dict(rep, opt)
             else:
                 return cls._from_list(list(rep), opt)
-        elif isinstance(rep, DomainElement):
-            return cls._from_domain_element(rep, opt)
         else:
             rep = sympify(rep)
 

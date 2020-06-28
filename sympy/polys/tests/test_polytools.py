@@ -282,6 +282,18 @@ def test_Poly_from_expr():
     assert Poly.from_expr(y + 5, x, y, domain=ZZ).rep == DMP([[1, 5]], ZZ)
 
 
+def test_poly_from_domain_element():
+    dom = ZZ[x]
+    assert Poly(dom(x+1), y, domain=dom).rep == DMP([dom(x+1)], dom)
+    dom = dom.get_field()
+    assert Poly(dom(x+1), y, domain=dom).rep == DMP([dom(x+1)], dom)
+
+    dom = QQ[x]
+    assert Poly(dom(x+1), y, domain=dom).rep == DMP([dom(x+1)], dom)
+    dom = dom.get_field()
+    assert Poly(dom(x+1), y, domain=dom).rep == DMP([dom(x+1)], dom)
+
+
 def test_Poly__new__():
     raises(GeneratorsError, lambda: Poly(x + 1, x, x))
 
