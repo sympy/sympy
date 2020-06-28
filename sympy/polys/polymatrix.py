@@ -1,12 +1,12 @@
 from __future__ import print_function
 
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
-
 from sympy.matrices.dense import MutableDenseMatrix
-
 from sympy.polys.fields import sfield
 from sympy.polys.polytools import Poly
-from sympy.polys.domains import EX
+from sympy.polys.domains import EX, PolynomialRing
 
 import sympy.polys.polyoptions as polyoptions
 
