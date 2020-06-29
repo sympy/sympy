@@ -11,7 +11,7 @@ def strip_file(filename, write, report):
     # to re-add \n to a few right-stripped lines. The hit flag will keep us
     # from unecessarily re-writing files with no changes.
 
-    # without newline="", all lines appear as \n terminated
+    # newline="" keeps current line endings
     with open(filename, newline="") as f:
         lines = f.readlines()
     hit = False
@@ -51,7 +51,7 @@ def strip_file(filename, write, report):
         print("%s, %d extra newlines at eof" % (filename, extra))
 
     if write and hit:
-        # without newline="", the lines may be written in sys-dep format
+        # newline="" leaves line endings unchanged
         with open(filename, "w", newline="") as f:
             f.writelines(lines)
 
