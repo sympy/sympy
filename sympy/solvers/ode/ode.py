@@ -7283,33 +7283,21 @@ def _linear_2eq_order2_type11(x, y, t, r, eq):
 
 
 def sysode_linear_neq_order1(match):
-    from sympy.solvers.ode.systems import (_linear_neq_order1_type1,
-        _linear_neq_order1_type2, _linear_neq_order1_type3,
-        _linear_neq_order1_type4)
+    from sympy.solvers.ode.systems import _linear_neq_order1_solver
 
     eqs = match['eq']
     t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
     funcs = match['func']
 
-    if not match['is_homogeneous']:
-        rhs = match['rhs']
-    if match['is_constant']:
-        A = -match['func_coeff']
-    else:
-        A = match['commutative_antiderivative']
+    rhs = match.get('rhs', None)
+    A = -match['func_coeff']
+    B = match.get('commutative_antiderivative', None)
 
-    n = A.rows
+    type_of_equation = match['type_of_equation']
 
-    if match['type_of_equation'] == 'type1':
-        sol = _linear_neq_order1_type1(A, t)
-    elif match['type_of_equation'] == 'type2':
-        sol = _linear_neq_order1_type2(A, t, rhs)
-    elif match['type_of_equation'] == 'type3':
-        sol = _linear_neq_order1_type3(A)
-    elif match['type_of_equation'] == 'type4':
-        sol = _linear_neq_order1_type4(A, t, rhs)
+    sol_vector = _linear_neq_order1_solver(A, t, b=rhs, B=B, type=type_of_equation)
 
-    sol = [Eq(funcs[i], sol[i]) for i in range(n)]
+    sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
 
     return sol
 
