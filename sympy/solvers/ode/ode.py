@@ -7292,7 +7292,6 @@ def sysode_linear_neq_order1(match):
     rhs = match.get('rhs', None)
     A = -match['func_coeff']
     B = match.get('commutative_antiderivative', None)
-
     type_of_equation = match['type_of_equation']
 
     sol_vector = _linear_neq_order1_solver(A, t, b=rhs, B=B, type=type_of_equation)
