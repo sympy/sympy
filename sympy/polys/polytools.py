@@ -11,6 +11,7 @@ from sympy.core import (
 from sympy.core.basic import preorder_traversal
 from sympy.core.compatibility import iterable, ordered
 from sympy.core.decorators import _sympifyit
+from sympy.core.evalf import pure_complex
 from sympy.core.function import Derivative
 from sympy.core.mul import _keep_coeff
 from sympy.core.relational import Relational
@@ -5219,7 +5220,8 @@ def gcd_list(seq, *gens, **args):
                 lc = 1
                 for frc in lst:
                     lc = lcm(lc, frc.as_numer_denom()[0])
-                return a/lc
+                # abs ensures that the gcd is always non-negative
+                return abs(a/lc)
 
     except PolificationFailed as exc:
         result = try_non_polynomial_gcd(exc.exprs)
@@ -5282,7 +5284,8 @@ def gcd(f, g=None, *gens, **args):
         if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
             frc = (a/b).ratsimp()
             if frc.is_rational:
-                return a/frc.as_numer_denom()[0]
+                # abs ensures that the returned gcd is always non-negative
+                return abs(a/frc.as_numer_denom()[0])
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
@@ -5914,7 +5917,7 @@ def _symbolic_factor_list(expr, opt, method):
     args = [i._eval_factor() if hasattr(i, '_eval_factor') else i
         for i in Mul.make_args(expr)]
     for arg in args:
-        if arg.is_Number:
+        if arg.is_Number or (isinstance(arg, Expr) and pure_complex(arg)):
             coeff *= arg
             continue
         elif arg.is_Pow:
@@ -6645,9 +6648,13 @@ def cancel(f, *gens, **args):
     """
     from sympy.core.exprtools import factor_terms
     from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.polys.rings import sring
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
+    opt = {}
+    if 'polys' in args:
+        opt['polys'] = args['polys']
 
     if not isinstance(f, (tuple, Tuple)):
         if f.is_Number or isinstance(f, Relational) or not isinstance(f, Expr):
@@ -6657,18 +6664,25 @@ def cancel(f, *gens, **args):
 
     elif len(f) == 2:
         p, q = f
+        if isinstance(p, Poly) and isinstance(q, Poly):
+            opt['gens'] = p.gens
+            opt['domain'] = p.domain
+            opt['polys'] = opt.get('polys', True)
+        p, q = p.as_expr(), q.as_expr()
     elif isinstance(f, Tuple):
         return factor_terms(f)
     else:
         raise ValueError('unexpected argument: %s' % f)
 
     try:
-        (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
-    except PolificationFailed:
-        if not isinstance(f, (tuple, Tuple)):
-            return f.expand()
-        else:
-            return S.One, p, q
+        if f.has(Piecewise):
+            raise PolynomialError()
+        R, (F, G) = sring((p, q), *gens, **args)
+        if not R.ngens:
+            if not isinstance(f, (tuple, Tuple)):
+                return f.expand()
+            else:
+                return S.One, p, q
     except PolynomialError as msg:
         if f.is_commutative and not f.has(Piecewise):
             raise PolynomialError(msg)
@@ -6694,15 +6708,18 @@ def cancel(f, *gens, **args):
                     pass
             return f.xreplace(dict(reps))
 
-    c, P, Q = F.cancel(G)
+    c, (P, Q) = 1, F.cancel(G)
+    if opt.get('polys', False) and not 'gens' in opt:
+        opt['gens'] = R.symbols
 
     if not isinstance(f, (tuple, Tuple)):
         return c*(P.as_expr()/Q.as_expr())
     else:
-        if not opt.polys:
-            return c, P.as_expr(), Q.as_expr()
-        else:
+        P, Q = P.as_expr(), Q.as_expr()
+        if not opt.get('polys', False):
             return c, P, Q
+        else:
+            return c, Poly(P, *gens, **opt), Poly(Q, *gens, **opt)
 
 
 @public

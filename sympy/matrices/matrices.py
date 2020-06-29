@@ -1,4 +1,3 @@
-from typing import Any
 import mpmath as mp
 
 from sympy.core.add import Add
@@ -16,6 +15,7 @@ from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import cancel
 from sympy.printing import sstr
+from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
@@ -752,7 +752,8 @@ class MatrixDeprecated(MatrixCommon):
 class MatrixBase(MatrixDeprecated,
                  MatrixCalculus,
                  MatrixEigen,
-                 MatrixCommon):
+                 MatrixCommon,
+                 Printable):
     """Base class for matrix objects."""
     # Added just for numpy compatibility
     __array_priority__ = 11
@@ -762,27 +763,6 @@ class MatrixBase(MatrixDeprecated,
     _sympify = staticmethod(sympify)
     zero = S.Zero
     one = S.One
-
-    # Defined here the same as on Basic.
-
-    # We don't define _repr_png_ here because it would add a large amount of
-    # data to any notebook containing SymPy expressions, without adding
-    # anything useful to the notebook. It can still enabled manually, e.g.,
-    # for the qtconsole, with init_printing().
-    def _repr_latex_(self):
-        """
-        IPython/Jupyter LaTeX printing
-
-        To change the behavior of this (e.g., pass in some settings to LaTeX),
-        use init_printing(). init_printing() will also enable LaTeX printing
-        for built in numeric types like ints and container types that contain
-        SymPy objects, like lists and dictionaries of expressions.
-        """
-        from sympy.printing.latex import latex
-        s = latex(self, mode='plain')
-        return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_  # type: Any
 
     def __array__(self, dtype=object):
         from .dense import matrix2numpy
@@ -1630,7 +1610,7 @@ class MatrixBase(MatrixDeprecated,
         from sympy import re
         eJ = diag(*blocks)
         # n = self.rows
-        ret = P.multiply(eJ, dotprodsimp=True).multiply(P.inv(), dotprodsimp=True)
+        ret = P.multiply(eJ, dotprodsimp=None).multiply(P.inv(), dotprodsimp=None)
         if all(value.is_real for value in self.values()):
             return type(self)(re(ret))
         else:
@@ -2105,61 +2085,6 @@ class MatrixBase(MatrixDeprecated,
                 row[j] = getattr(elem, align)(maxlen[j])
             res[i] = rowstart + colsep.join(row) + rowend
         return rowsep.join(res)
-
-    def vech(self, diagonal=True, check_symmetry=True):
-        """Return the unique elements of a symmetric Matrix as a one column matrix
-        by stacking the elements in the lower triangle.
-
-        Arguments:
-        diagonal -- include the diagonal cells of ``self`` or not
-        check_symmetry -- checks symmetry of ``self`` but not completely reliably
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m=Matrix([[1, 2], [2, 3]])
-        >>> m
-        Matrix([
-        [1, 2],
-        [2, 3]])
-        >>> m.vech()
-        Matrix([
-        [1],
-        [2],
-        [3]])
-        >>> m.vech(diagonal=False)
-        Matrix([[2]])
-
-        See Also
-        ========
-
-        vec
-        """
-        from sympy.matrices import zeros
-
-        c = self.cols
-        if c != self.rows:
-            raise NonSquareMatrixError("Matrix must be square")
-        if check_symmetry:
-            self.simplify()
-            if self != self.transpose():
-                raise ValueError(
-                    "Matrix appears to be asymmetric; consider check_symmetry=False")
-        count = 0
-        if diagonal:
-            v = zeros(c * (c + 1) // 2, 1)
-            for j in range(c):
-                for i in range(j, c):
-                    v[count] = self[i, j]
-                    count += 1
-        else:
-            v = zeros(c * (c - 1) // 2, 1)
-            for j in range(c):
-                for i in range(j + 1, c):
-                    v[count] = self[i, j]
-                    count += 1
-        return v
 
     def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
         return _rank_decomposition(self, iszerofunc=iszerofunc,

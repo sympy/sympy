@@ -1,12 +1,12 @@
 from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
 from sympy.core.compatibility import unicode
-from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
-                       VectorStrPrinter)
+from sympy.printing.defaults import Printable
+from .printing import VectorLatexPrinter, VectorStrPrinter
 
 __all__ = ['Dyadic']
 
 
-class Dyadic(object):
+class Dyadic(Printable):
     """A Dyadic object.
 
     See:
@@ -152,7 +152,7 @@ class Dyadic(object):
     def __neg__(self):
         return self * -1
 
-    def _latex(self, printer=None):
+    def _latex(self, printer):
         ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
@@ -189,7 +189,7 @@ class Dyadic(object):
             outstr = outstr[1:]
         return outstr
 
-    def _pretty(self, printer=None):
+    def _pretty(self, printer):
         e = self
 
         class Fake(object):
@@ -197,17 +197,10 @@ class Dyadic(object):
 
             def render(self, *args, **kwargs):
                 ar = e.args  # just to shorten things
-                settings = printer._settings if printer else {}
-                if printer:
-                    use_unicode = printer._use_unicode
-                else:
-                    from sympy.printing.pretty.pretty_symbology import (
-                        pretty_use_unicode)
-                    use_unicode = pretty_use_unicode()
-                mpp = printer if printer else VectorPrettyPrinter(settings)
+                mpp = printer
                 if len(ar) == 0:
                     return unicode(0)
-                bar = u"\N{CIRCLED TIMES}" if use_unicode else "|"
+                bar = u"\N{CIRCLED TIMES}" if printer._use_unicode else "|"
                 ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1
@@ -309,23 +302,28 @@ class Dyadic(object):
             ol += v[0] * ((other ^ v[1]) | v[2])
         return ol
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         """Printing method. """
         ar = self.args  # just to shorten things
         if len(ar) == 0:
-            return str(0)
+            return printer._print(0)
+
+        # Ignore parent printer class and settings and use our own.
+        # TODO: Remove this, it's only here to preserve old behavior
+        printer = VectorStrPrinter()
+
         ol = []  # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             # if the coef of the dyadic is 1, we skip the 1
             if ar[i][0] == 1:
-                ol.append(' + (' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
+                ol.append(' + (' + printer._print(ar[i][1]) + '|' + printer._print(ar[i][2]) + ')')
             # if the coef of the dyadic is -1, we skip the 1
             elif ar[i][0] == -1:
-                ol.append(' - (' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
+                ol.append(' - (' + printer._print(ar[i][1]) + '|' + printer._print(ar[i][2]) + ')')
             # If the coefficient of the dyadic is not 1 or -1,
             # we might wrap it in parentheses, for readability.
             elif ar[i][0] != 0:
-                arg_str = VectorStrPrinter().doprint(ar[i][0])
+                arg_str = printer.doprint(ar[i][0])
                 if isinstance(ar[i][0], Add):
                     arg_str = "(%s)" % arg_str
                 if arg_str[0] == '-':
@@ -333,8 +331,8 @@ class Dyadic(object):
                     str_start = ' - '
                 else:
                     str_start = ' + '
-                ol.append(str_start + arg_str + '*(' + str(ar[i][1]) +
-                          '|' + str(ar[i][2]) + ')')
+                ol.append(str_start + arg_str + '*(' + printer._print(ar[i][1]) +
+                          '|' + printer._print(ar[i][2]) + ')')
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]
@@ -373,28 +371,6 @@ class Dyadic(object):
             ol += v[0] * (v[1] | (v[2] ^ other))
         return ol
 
-    # We don't define _repr_png_ here because it would add a large amount of
-    # data to any notebook containing SymPy expressions, without adding
-    # anything useful to the notebook. It can still enabled manually, e.g.,
-    # for the qtconsole, with init_printing().
-    def _repr_latex_(self):
-        """
-        IPython/Jupyter LaTeX printing
-
-        To change the behavior of this (e.g., pass in some settings to LaTeX),
-        use init_printing(). init_printing() will also enable LaTeX printing
-        for built in numeric types like ints and container types that contain
-        SymPy objects, like lists and dictionaries of expressions.
-        """
-        from sympy.printing.latex import latex
-        s = latex(self, mode='plain')
-        return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_
-
-    _sympystr = __str__
-    _sympyrepr = _sympystr
-    __repr__ = __str__
     __radd__ = __add__
     __rmul__ = __mul__
 

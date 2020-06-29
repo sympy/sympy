@@ -80,7 +80,7 @@ class elliptic_k(Function):
         if (m.is_real and (m - 1).is_positive) is False:
             return self.func(m.conjugate())
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         from sympy.simplify import hyperexpand
         return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
 
@@ -289,7 +289,7 @@ class elliptic_e(Function):
             if (m.is_real and (m - 1).is_positive) is False:
                 return self.func(m.conjugate())
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         from sympy.simplify import hyperexpand
         if len(self.args) == 1:
             return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))

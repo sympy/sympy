@@ -1,6 +1,6 @@
 """sympify -- convert objects SymPy internal format"""
 
-from typing import Dict, Type, Callable, Any
+# from typing import Any, Callable, Dict, Type
 
 from inspect import getmro
 
@@ -23,7 +23,7 @@ class SympifyError(ValueError):
 
 
 # See sympify docstring.
-converter = {}  # type: Dict[Type[Any], Callable[[Any], Basic]]
+converter = {}  ## type: Dict[Type[Any], Callable[[Any], Basic]]
 
 
 class CantSympify:
@@ -513,7 +513,9 @@ def kernS(s):
             while kern in s:
                 kern += choice(string.ascii_letters + string.digits)
             s = s.replace(' ', kern)
-        hit = kern in s
+            hit = kern in s
+        else:
+            hit = False
 
     for i in range(2):
         try:
@@ -542,4 +544,4 @@ def kernS(s):
 
 
 # Avoid circular import
-from .basic import Basic
+# from .basic import Basic

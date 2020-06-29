@@ -147,8 +147,5 @@ class Point(Basic):
         # Express it in the given coordinate system
         return tuple(pos_vect.to_matrix(coordinate_system))
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return self._name
-
-    __repr__ = __str__
-    _sympystr = __str__

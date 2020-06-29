@@ -1441,15 +1441,16 @@ class CoupledSpinState(SpinState):
         )
 
     def _print_label_latex(self, printer, *args):
-        label = [self.j, self.m]
+        label = [
+            printer._print(self.j, *args),
+            printer._print(self.m, *args)
+        ]
         for i, ji in enumerate(self.jn, start=1):
-            label.append('j_{%d}=%s' % (i, printer._print(ji)) )
+            label.append('j_{%d}=%s' % (i, printer._print(ji, *args)) )
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             n = ','.join(str(i) for i in sorted(n1 + n2))
-            label.append('j_{%s}=%s' % (n, printer._print(jn)) )
-        return self._print_sequence(
-            label, self._label_separator, printer, *args
-        )
+            label.append('j_{%s}=%s' % (n, printer._print(jn, *args)) )
+        return self._label_separator.join(label)
 
     @property
     def jn(self):

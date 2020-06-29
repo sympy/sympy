@@ -366,7 +366,8 @@ def test_issue_12283():
     x = symbols('x')
     X = RandomSymbol(x)
     Y = RandomSymbol('Y')
-    Z = RandomMatrixSymbol('Z', 2, 3)
+    Z = RandomMatrixSymbol('Z', 2, 1)
+    W = RandomMatrixSymbol('W', 2, 1)
     RI = RandomIndexedSymbol(Indexed('RI', 3))
     assert pspace(Z) == PSpace()
     assert pspace(RI) == PSpace()
@@ -376,7 +377,7 @@ def test_issue_12283():
     assert variance(X) == Variance(X)
     assert variance(RI) == Variance(RI)
     assert covariance(X, Y) == Covariance(X, Y)
-    assert covariance(X, Z) == Covariance(X, Z)
+    assert covariance(W, Z) == Covariance(W, Z)
 
 def test_issue_6810():
     X = Die('X', 6)
