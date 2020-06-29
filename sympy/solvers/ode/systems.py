@@ -409,6 +409,87 @@ def matrix_exp_jordan_form(A, t):
     return P, expJ
 
 
+def _linear_neq_order1_solver(A, t, rhs=None, B=None, type="type4", doit=False):
+    r""""""
+
+    if not isinstance(A, MatrixBase):
+        raise ValueError(filldedent('''\
+            The coefficients of the system of ODEs should be of type Matrix
+        '''))
+
+    if not A.is_square:
+        raise NonSquareMatrixError(filldedent('''\
+            The coefficient matrix must be a square
+        '''))
+
+    if rhs is not None:
+        if not isinstance(rhs, MatrixBase):
+            raise ValueError(filldedent('''\
+                The non-homogeneous terms of the system of ODEs should be of type Matrix
+            '''))
+
+        if A.rows != rhs.rows:
+            raise ValueError(filldedent('''\
+                The system of ODEs should have the same number of non-homogeneous terms and the number of
+                equations
+            '''))
+
+    if B is not None:
+        if not isinstance(B, MatrixBase):
+            raise ValueError(filldedent('''\
+                The antiderivative of coefficients of the system of ODEs should be of type Matrix
+            '''))
+
+        if not B.is_square:
+            raise NonSquareMatrixError(filldedent('''\
+                The antiderivative of the coefficient matrix must be a square
+            '''))
+
+        if A.rows != B.rows:
+            raise ValueError(filldedent('''\
+                        The coefficient matrix and its antiderivative should be of the same size
+                    '''))
+
+    if not any(type == "type{}".format(i) for i in range(1, 5)):
+        raise ValueError(filldedent('''\
+                    The input to type should be a valid one
+                '''))
+
+    n = A.rows
+
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+    Cvect = Matrix(list(next(constants) for _ in range(n)))
+
+    if (type == "type2" or type == "type4") and rhs is None:
+        rhs = zeros(n, 1)
+
+    if type == "type1" or type == "type2":
+        P, J = matrix_exp_jordan_form(A, t)
+        P = simplify(P)
+
+        sol_vector = P * (J * Cvect) if type == "type1" else P * J * ((J.inv() * P.inv() * rhs).applyfunc(
+            lambda x: Integral(x, t)) + Cvect)
+
+    else:
+        if B is None:
+            B, _ = _is_commutative_anti_derivative(A, t)
+
+        sol_vector = B.exp() * Cvect if type == "type3" else B.exp() * (((-B).exp() * rhs).applyfunc(
+            lambda x: Integral(x, t)) + Cvect)
+
+    gens = sol_vector.atoms(exp)
+
+    if type != "type1":
+        sol_vector = [expand_mul(s) for s in sol_vector]
+
+    sol_vector = [collect(s, ordered(gens), exact=True) for s in sol_vector]
+
+    if doit:
+        sol_vector = [s.doit() for s in sol_vector]
+
+    return sol_vector
+
+
 def _linear_neq_order1_type1(A, t):
     r"""
     System of n first-order constant-coefficient linear homogeneous differential equations
