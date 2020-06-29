@@ -145,11 +145,21 @@ class ImmutableDenseDomainMatrix(DenseDomainMatrix, ImmutableDenseMatrix):
 
     def __new__(cls, rows, cols, flat_list):
         rows_list = [[flat_list[i*cols + j] for j in range(cols)] for i in range(rows)]
-        rep = DomainMatrix.from_list_sympy(rows_list)
+        rep = DomainMatrix.from_list_sympy_2(rows, cols, rows_list)
         assert str(rep.domain) in ('ZZ', 'QQ')
         obj = cls.from_DomainMatrix(rep)
         obj._mhash = None
         return obj
+
+    @property
+    def args(self):
+        return (self.rows, self.cols, tuple(self._flat()))
+
+    def _hashable_content(self):
+        return self.args
+
+    def _entry(self, i, j, **kwargs):
+        return DenseDomainMatrix.__getitem__(self, (i, j))
 
     @classmethod
     def _new(cls, *args, **kwargs):

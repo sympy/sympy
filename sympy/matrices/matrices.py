@@ -965,7 +965,11 @@ class MatrixBase(MatrixDeprecated,
 
             # Matrix(MatrixSymbol('X', 2, 2))
             elif isinstance(args[0], Basic) and args[0].is_Matrix:
-                return args[0].rows, args[0].cols, args[0].as_explicit()._mat
+                expl = args[0].as_explicit()
+                amat = getattr(expl, "_mat", None)
+                if amat is None:
+                    amat = expl._flat()
+                return args[0].rows, args[0].cols, amat
 
             elif isinstance(args[0], mp.matrix):
                 M = args[0]
