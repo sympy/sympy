@@ -717,6 +717,9 @@ class DenseDomainMatrix(DenseMatrix):
         from sympy.matrices.expressions import MatPow
         return MatPow(self, exp)
 
+    def inv(self):
+        return self.from_DomainMatrix(self._rep.inv())
+
     # called by __rmul__ in common.py
     def _eval_scalar_mul(self, other):
         mat = [other*a for a in self._flat()]
