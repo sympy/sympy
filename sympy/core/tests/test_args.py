@@ -1076,9 +1076,9 @@ def test_sympy__stats__joint_rv__JointRandomSymbol():
     from sympy.stats.joint_rv import JointRandomSymbol
     assert _test_args(JointRandomSymbol(x))
 
-def test_sympy__stats__joint_rv__JointDistributionHandmade():
+def test_sympy__stats__joint_rv_types__JointDistributionHandmade():
     from sympy import Indexed
-    from sympy.stats.joint_rv import JointDistributionHandmade
+    from sympy.stats.joint_rv_types import JointDistributionHandmade
     x1, x2 = (Indexed('x', i) for i in (1, 2))
     assert _test_args(JointDistributionHandmade(x1 + x2, S.Reals**2))
 
@@ -1675,6 +1675,22 @@ def test_sympy__stats__stochastic_process_types__ContinuousMarkovChain():
 def test_sympy__stats__stochastic_process_types__BernoulliProcess():
     from sympy.stats.stochastic_process_types import BernoulliProcess
     assert _test_args(BernoulliProcess("B", 0.5, 1, 0))
+
+def test_sympy__stats__stochastic_process_types__CountingProcess():
+    from sympy.stats.stochastic_process_types import CountingProcess
+    assert _test_args(CountingProcess("C"))
+
+def test_sympy__stats__stochastic_process_types__PoissonProcess():
+    from sympy.stats.stochastic_process_types import PoissonProcess
+    assert _test_args(PoissonProcess("X", 2))
+
+def test_sympy__stats__stochastic_process_types__WienerProcess():
+    from sympy.stats.stochastic_process_types import WienerProcess
+    assert _test_args(WienerProcess("X"))
+
+def test_sympy__stats__stochastic_process_types__GammaProcess():
+    from sympy.stats.stochastic_process_types import GammaProcess
+    assert _test_args(GammaProcess("X", 1, 2))
 
 def test_sympy__stats__random_matrix__RandomMatrixPSpace():
     from sympy.stats.random_matrix import RandomMatrixPSpace
@@ -4871,6 +4887,14 @@ def test_sympy__vector__deloperator__Del():
     from sympy.vector.deloperator import Del
     assert _test_args(Del())
 
+
+def test_sympy__vector__integrals__ParametricIntegral():
+    from sympy.vector.integrals import ParametricIntegral
+    from sympy.vector.parametricregion import ParametricRegion
+    from sympy.vector.coordsysrect import CoordSys3D
+    C = CoordSys3D('C')
+    assert _test_args(ParametricIntegral(C.y*C.i - 10*C.j,\
+                    ParametricRegion((x, y), (x, 1, 3), (y, -2, 2))))
 
 def test_sympy__vector__operators__Curl():
     from sympy.vector.operators import Curl

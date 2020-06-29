@@ -1,20 +1,26 @@
 from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplify,
-                   Rational, factorial, gamma, Piecewise, Eq, Product,
-                   IndexedBase, RisingFactorial)
+                   Rational, factorial, gamma, Piecewise, Eq, Product, Interval,
+                   IndexedBase, RisingFactorial, polar_lift, ProductSet, Range)
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.stats import density, median
-from sympy.stats.crv_types import Normal
-from sympy.stats.joint_rv import marginal_distribution
-from sympy.stats.joint_rv_types import JointRV, MultivariateNormalDistribution
+from sympy.stats import density, median, marginal_distribution, Normal, Laplace, E
+from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
+                JointDistributionHandmade, MultivariateT, NormalGamma,
+                GeneralizedMultivariateLogGammaOmega as GMVLGO, MultivariateBeta,
+                GeneralizedMultivariateLogGamma as GMVLG, MultivariateEwens,
+                Multinomial, NegativeMultinomial, MultivariateNormal,
+                MultivariateLaplace)
 from sympy.testing.pytest import raises, XFAIL
 
 x, y, z, a, b = symbols('x y z a b')
 
 def test_Normal():
     m = Normal('A', [1, 2], [[1, 0], [0, 1]])
+    A = MultivariateNormal('A', [1, 2], [[1, 0], [0, 1]])
+    assert m == A
     assert density(m)(1, 2) == 1/(2*pi)
+    assert m.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
     raises (ValueError, lambda:m[2])
     raises (ValueError,\
         lambda: Normal('M',[1, 2], [[0, 0], [0, 1]]))
@@ -22,6 +28,7 @@ def test_Normal():
     p = Normal('C',  Matrix([1, 2]), Matrix([[1, 0], [0, 1]]))
     assert density(m)(x, y) == density(p)(x, y)
     assert marginal_distribution(n, 0, 1)(1, 2) == 1/(2*pi)
+    raises(ValueError, lambda: marginal_distribution(m))
     assert integrate(density(m)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
     N = Normal('N', [1, 2], [[x, 0], [0, y]])
     assert density(N)(0, 0) == exp(-2/y - 1/(2*x))/(2*pi*sqrt(x*y))
@@ -39,9 +46,9 @@ def test_Normal():
     # assert variance(X) == sigma
 
 def test_MultivariateTDist():
-    from sympy.stats.joint_rv_types import MultivariateT
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert(density(t1))(1, 1) == 1/(8*pi)
+    assert t1.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
     assert integrate(density(t1)(x, y), (x, -oo, oo), \
         (y, -oo, oo)).evalf() == 1
     raises(ValueError, lambda: MultivariateT('T', [1, 2], [[1, 1], [1, -1]], 1))
@@ -49,27 +56,27 @@ def test_MultivariateTDist():
     assert density(t2)(1, 2) == 1/(2*pi*sqrt(x*y))
 
 def test_multivariate_laplace():
-    from sympy.stats.crv_types import Laplace
     raises(ValueError, lambda: Laplace('T', [1, 2], [[1, 2], [2, 1]]))
     L = Laplace('L', [1, 0], [[1, 0], [0, 1]])
+    L2 = MultivariateLaplace('L2', [1, 0], [[1, 0], [0, 1]])
     assert density(L)(2, 3) == exp(2)*besselk(0, sqrt(39))/pi
     L1 = Laplace('L1', [1, 2], [[x, 0], [0, y]])
     assert density(L1)(0, 1) == \
         exp(2/y)*besselk(0, sqrt((2 + 4/y + 1/x)/y))/(pi*sqrt(x*y))
+    assert L.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
+    assert L.pspace.distribution == L2.pspace.distribution
 
 def test_NormalGamma():
-    from sympy.stats.joint_rv_types import NormalGamma
-    from sympy import gamma
     ng = NormalGamma('G', 1, 2, 3, 4)
     assert density(ng)(1, 1) == 32*exp(-4)/sqrt(pi)
+    assert ng.pspace.distribution.set == ProductSet(S.Reals, Interval(0, oo))
     raises(ValueError, lambda:NormalGamma('G', 1, 2, 3, -1))
     assert marginal_distribution(ng, 0)(1) == \
         3*sqrt(10)*gamma(Rational(7, 4))/(10*sqrt(pi)*gamma(Rational(5, 4)))
     assert marginal_distribution(ng, y)(1) == exp(Rational(-1, 4))/128
+    assert marginal_distribution(ng,[0,1])(x) == x**2*exp(-x/4)/128
 
 def test_GeneralizedMultivariateLogGammaDistribution():
-    from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO
-    from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG
     h = S.Half
     omega = Matrix([[1, h, h, h],
                      [h, 1, h, h],
@@ -128,8 +135,6 @@ def test_GeneralizedMultivariateLogGammaDistribution():
     raises(ValueError, lambda: GMVLG('G', Rational(3, 2), v, l, mu))
 
 def test_MultivariateBeta():
-    from sympy.stats.joint_rv_types import MultivariateBeta
-    from sympy import gamma
     a1, a2 = symbols('a1, a2', positive=True)
     a1_f, a2_f = symbols('a1, a2', positive=False, real=True)
     mb = MultivariateBeta('B', [a1, a2])
@@ -142,10 +147,9 @@ def test_MultivariateBeta():
     raises(ValueError, lambda: MultivariateBeta('b2', [a1, a2_f]))
     raises(ValueError, lambda: MultivariateBeta('b3', [0, 0]))
     raises(ValueError, lambda: MultivariateBeta('b4', [a1_f, a2_f]))
+    assert mb.pspace.distribution.set == ProductSet(Interval(0, 1), Interval(0, 1))
 
 def test_MultivariateEwens():
-    from sympy.stats.joint_rv_types import MultivariateEwens
-
     n, theta, i = symbols('n theta i', positive=True)
 
     # tests for integer dimensions
@@ -163,6 +167,8 @@ def test_MultivariateEwens():
                                                     (theta + 2)*factorial(a[1])),
                                                     Eq(2*a[1] + 1, 3)), (0, True))
     raises(ValueError, lambda: MultivariateEwens('e1', 5, theta_f))
+    assert ed.pspace.distribution.set == ProductSet(Range(0, 4, 1),
+                                            Range(0, 2, 1), Range(0, 2, 1))
 
     # tests for symbolic dimensions
     eds = MultivariateEwens('E', n, theta)
@@ -174,7 +180,6 @@ def test_MultivariateEwens():
     assert density(eds)(a).dummy_eq(den)
 
 def test_Multinomial():
-    from sympy.stats.joint_rv_types import Multinomial
     n, x1, x2, x3, x4 = symbols('n, x1, x2, x3, x4', nonnegative=True, integer=True)
     p1, p2, p3, p4 = symbols('p1, p2, p3, p4', positive=True)
     p1_f, n_f = symbols('p1_f, n_f', negative=True)
@@ -193,7 +198,6 @@ def test_Multinomial():
     raises(ValueError, lambda: Multinomial('b3', n, 0.5, 0.4, 0.3, 0.1))
 
 def test_NegativeMultinomial():
-    from sympy.stats.joint_rv_types import NegativeMultinomial
     k0, x1, x2, x3, x4 = symbols('k0, x1, x2, x3, x4', nonnegative=True, integer=True)
     p1, p2, p3, p4 = symbols('p1, p2, p3, p4', positive=True)
     p1_f = symbols('p1_f', negative=True)
@@ -207,11 +211,10 @@ def test_NegativeMultinomial():
     assert comp(marginal_distribution(C, C[0])(1).evalf(), 0.33, .01)
     raises(ValueError, lambda: NegativeMultinomial('b1', 5, [p1, p2, p3, p1_f]))
     raises(ValueError, lambda: NegativeMultinomial('b2', k0, 0.5, 0.4, 0.3, 0.4))
-
+    assert N.pspace.distribution.set == ProductSet(Range(0, oo, 1),
+                    Range(0, oo, 1), Range(0, oo, 1), Range(0, oo, 1))
 
 def test_JointPSpace_marginal_distribution():
-    from sympy.stats.joint_rv_types import MultivariateT
-    from sympy import polar_lift
     T = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert marginal_distribution(T, T[1])(x) == sqrt(2)*(x**2 + 2)/(
         8*polar_lift(x**2/2 + 1)**Rational(5, 2))
@@ -221,7 +224,6 @@ def test_JointPSpace_marginal_distribution():
     assert comp(marginal_distribution(t, 0)(1).evalf(), 0.2, .01)
 
 def test_JointRV():
-    from sympy.stats.joint_rv import JointDistributionHandmade
     x1, x2 = (Indexed('x', i) for i in (1, 2))
     pdf = exp(-x1**2/2 + x1 - x2**2/2 - S.Half)/(2*pi)
     X = JointRV('x', pdf)
@@ -230,13 +232,10 @@ def test_JointRV():
     assert marginal_distribution(X, 0)(2) == sqrt(2)*exp(Rational(-1, 2))/(2*sqrt(pi))
 
 def test_expectation():
-    from sympy import simplify
-    from sympy.stats import E
     m = Normal('A', [x, y], [[1, 0], [0, 1]])
     assert simplify(E(m[1])) == y
 
 @XFAIL
 def test_joint_vector_expectation():
-    from sympy.stats import E
     m = Normal('A', [x, y], [[1, 0], [0, 1]])
     assert E(m) == (x, y)

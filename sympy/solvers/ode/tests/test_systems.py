@@ -107,10 +107,10 @@ def test_neq_nth_linear_constant_coeff_match():
      'is_general': True}
     assert neq_nth_linear_constant_coeff_match(eqs_4, funcs_2, t) == answer_4
 
-    eqs_5 = (5 * x1 + 12 * x(t) - 6 * (y(t)) + x2, (2 * y1 - 11 * x(t) + 3 * y(t)), (z1 - w(t)), (w1 - z(t)))
+    eqs_5 = (5*x1 + 12*x(t) - 6*(y(t)) + x2, (2*y1 - 11*x(t) + 3*y(t)), (z1 - w(t)), (w1 - z(t)))
     assert neq_nth_linear_constant_coeff_match(eqs_5, funcs_2, t) is None
 
-    eqs_6 = (Eq(x1,3*y(t)-11*z(t)),Eq(y1,7*z(t)-3*x(t)),Eq(z1,11*x(t)-7*y(t)))
+    eqs_6 = (Eq(x1, 3*y(t) - 11*z(t)), Eq(y1, 7*z(t) - 3*x(t)), Eq(z1, 11*x(t) - 7*y(t)))
     answer_6 = {'no_of_equation': 3, 'eq': (Eq(Derivative(x(t), t), 3*y(t) - 11*z(t)), Eq(Derivative(y(t), t), -3*x(t) + 7*z(t)),
             Eq(Derivative(z(t), t), 11*x(t) - 7*y(t))), 'func': [x(t), y(t), z(t)], 'order': {x(t): 1, y(t): 1, z(t): 1},
             'is_linear': True, 'is_constant': True, 'is_homogeneous': True,
@@ -131,7 +131,7 @@ def test_neq_nth_linear_constant_coeff_match():
                 'type_of_equation': 'type1', 'is_general': True}
     assert neq_nth_linear_constant_coeff_match(eqs_7, funcs, t) == answer_7
 
-    eqs_8 = (Eq(x1, 21*x(t)), Eq(y1, 17*x(t)+3*y(t)), Eq(z1, 5*x(t)+7*y(t)+9*z(t)))
+    eqs_8 = (Eq(x1, 21*x(t)), Eq(y1, 17*x(t) + 3*y(t)), Eq(z1, 5*x(t) + 7*y(t) + 9*z(t)))
     answer_8 = {'no_of_equation': 3, 'eq': (Eq(Derivative(x(t), t), 21*x(t)), Eq(Derivative(y(t), t), 17*x(t) + 3*y(t)),
             Eq(Derivative(z(t), t), 5*x(t) + 7*y(t) + 9*z(t))), 'func': [x(t), y(t), z(t)], 'order': {x(t): 1, y(t): 1, z(t): 1},
             'is_linear': True, 'is_constant': True, 'is_homogeneous': True,
@@ -143,7 +143,7 @@ def test_neq_nth_linear_constant_coeff_match():
 
     assert neq_nth_linear_constant_coeff_match(eqs_8, funcs_2[:-1], t) == answer_8
 
-    eqs_9 = (Eq(x1,4*x(t)+5*y(t)+2*z(t)),Eq(y1,x(t)+13*y(t)+9*z(t)),Eq(z1,32*x(t)+41*y(t)+11*z(t)))
+    eqs_9 = (Eq(x1, 4*x(t) + 5*y(t) + 2*z(t)), Eq(y1, x(t) + 13*y(t) + 9*z(t)), Eq(z1, 32*x(t) + 41*y(t) + 11*z(t)))
     answer_9 = {'no_of_equation': 3, 'eq': (Eq(Derivative(x(t), t), 4*x(t) + 5*y(t) + 2*z(t)),
                 Eq(Derivative(y(t), t), x(t) + 13*y(t) + 9*z(t)), Eq(Derivative(z(t), t), 32*x(t) + 41*y(t) + 11*z(t))),
                 'func': [x(t), y(t), z(t)], 'order': {x(t): 1, y(t): 1, z(t): 1}, 'is_linear': True,
@@ -155,7 +155,7 @@ def test_neq_nth_linear_constant_coeff_match():
                 'type_of_equation': 'type1', 'is_general': True}
     assert neq_nth_linear_constant_coeff_match(eqs_9, funcs_2[:-1], t) == answer_9
 
-    eqs_10 = (Eq(3*x1,4*5*(y(t)-z(t))),Eq(4*y1,3*5*(z(t)-x(t))),Eq(5*z1,3*4*(x(t)-y(t))))
+    eqs_10 = (Eq(3*x1, 4*5*(y(t) - z(t))), Eq(4*y1, 3*5*(z(t) - x(t))), Eq(5*z1, 3*4*(x(t) - y(t))))
     answer_10 = {'no_of_equation': 3, 'eq': (Eq(3*Derivative(x(t), t), 20*y(t) - 20*z(t)),
                 Eq(4*Derivative(y(t), t), -15*x(t) + 15*z(t)), Eq(5*Derivative(z(t), t), 12*x(t) - 12*y(t))),
                 'func': [x(t), y(t), z(t)], 'order': {x(t): 1, y(t): 1, z(t): 1}, 'is_linear': True,
@@ -167,7 +167,7 @@ def test_neq_nth_linear_constant_coeff_match():
                 'type_of_equation': 'type1', 'is_general': True}
     assert neq_nth_linear_constant_coeff_match(eqs_10, funcs_2[:-1], t) == answer_10
 
-    eq11 = (Eq(x1,3*y(t)-11*z(t)),Eq(y1,7*z(t)-3*x(t)),Eq(z1,11*x(t)-7*y(t)))
+    eq11 = (Eq(x1, 3*y(t) - 11*z(t)), Eq(y1, 7*z(t) - 3*x(t)), Eq(z1, 11*x(t) - 7*y(t)))
     sol11 = {'no_of_equation': 3, 'eq': (Eq(Derivative(x(t), t), 3*y(t) - 11*z(t)), Eq(Derivative(y(t), t), -3*x(t) + 7*z(t)),
             Eq(Derivative(z(t), t), 11*x(t) - 7*y(t))), 'func': [x(t), y(t), z(t)], 'order': {x(t): 1, y(t): 1, z(t): 1},
             'is_linear': True, 'is_constant': True, 'is_homogeneous': True, 'func_coeff': Matrix([
@@ -182,8 +182,8 @@ def test_neq_nth_linear_constant_coeff_match():
             [-1, 0]]), 'type_of_equation': 'type1', 'is_general': True}
     assert neq_nth_linear_constant_coeff_match(eq12, [x(t), y(t)], t) == sol12
 
-    eq13 = (Eq(Derivative(x(t), t), 21 * x(t)), Eq(Derivative(y(t), t), 17 * x(t) + 3 * y(t)),
-            Eq(Derivative(z(t), t), 5 * x(t) + 7 * y(t) + 9 * z(t)))
+    eq13 = (Eq(Derivative(x(t), t), 21*x(t)), Eq(Derivative(y(t), t), 17*x(t) + 3*y(t)),
+            Eq(Derivative(z(t), t), 5*x(t) + 7*y(t) + 9*z(t)))
     sol13 = {'no_of_equation': 3, 'eq': (
     Eq(Derivative(x(t), t), 21 * x(t)), Eq(Derivative(y(t), t), 17 * x(t) + 3 * y(t)),
     Eq(Derivative(z(t), t), 5 * x(t) + 7 * y(t) + 9 * z(t))), 'func': [x(t), y(t), z(t)],
@@ -195,8 +195,8 @@ def test_neq_nth_linear_constant_coeff_match():
     assert neq_nth_linear_constant_coeff_match(eq13, [x(t), y(t), z(t)], t) == sol13
 
     eq14 = (
-    Eq(Derivative(x(t), t), 4 * x(t) + 5 * y(t) + 2 * z(t)), Eq(Derivative(y(t), t), x(t) + 13 * y(t) + 9 * z(t)),
-    Eq(Derivative(z(t), t), 32 * x(t) + 41 * y(t) + 11 * z(t)))
+        Eq(Derivative(x(t), t), 4*x(t) + 5*y(t) + 2*z(t)), Eq(Derivative(y(t), t), x(t) + 13*y(t) + 9*z(t)),
+        Eq(Derivative(z(t), t), 32*x(t) + 41*y(t) + 11*z(t)))
     sol14 = {'no_of_equation': 3, 'eq': (
     Eq(Derivative(x(t), t), 4 * x(t) + 5 * y(t) + 2 * z(t)), Eq(Derivative(y(t), t), x(t) + 13 * y(t) + 9 * z(t)),
     Eq(Derivative(z(t), t), 32 * x(t) + 41 * y(t) + 11 * z(t))), 'func': [x(t), y(t), z(t)],
@@ -207,8 +207,8 @@ def test_neq_nth_linear_constant_coeff_match():
                  [-32, -41, -11]]), 'type_of_equation': 'type1', 'is_general': True}
     assert neq_nth_linear_constant_coeff_match(eq14, [x(t), y(t), z(t)], t) == sol14
 
-    eq15 = (Eq(3 * Derivative(x(t), t), 20 * y(t) - 20 * z(t)), Eq(4 * Derivative(y(t), t), -15 * x(t) + 15 * z(t)),
-            Eq(5 * Derivative(z(t), t), 12 * x(t) - 12 * y(t)))
+    eq15 = (Eq(3*Derivative(x(t), t), 20*y(t) - 20*z(t)), Eq(4*Derivative(y(t), t), -15*x(t) + 15*z(t)),
+            Eq(5*Derivative(z(t), t), 12*x(t) - 12*y(t)))
     sol15 = {'no_of_equation': 3, 'eq': (
     Eq(3 * Derivative(x(t), t), 20 * y(t) - 20 * z(t)), Eq(4 * Derivative(y(t), t), -15 * x(t) + 15 * z(t)),
     Eq(5 * Derivative(z(t), t), 12 * x(t) - 12 * y(t))), 'func': [x(t), y(t), z(t)],
@@ -220,20 +220,68 @@ def test_neq_nth_linear_constant_coeff_match():
     assert neq_nth_linear_constant_coeff_match(eq15, [x(t), y(t), z(t)], t) == sol15
 
     # Constant coefficient homogeneous ODEs
-    eq1 = (Eq(diff(x(t),t), x(t) + y(t) + 9), Eq(diff(y(t),t), 2*x(t) + 5*y(t) + 23))
+    eq1 = (Eq(diff(x(t), t), x(t) + y(t) + 9), Eq(diff(y(t), t), 2*x(t) + 5*y(t) + 23))
     sol1 = {'no_of_equation': 2, 'eq': (Eq(Derivative(x(t), t), x(t) + y(t) + 9),
         Eq(Derivative(y(t), t), 2*x(t) + 5*y(t) + 23)), 'func': [x(t), y(t)],
         'order': {x(t): 1, y(t): 1}, 'is_linear': True, 'is_constant': True, 'is_homogeneous': False, 'is_general': True,
         'func_coeff': Matrix([[-1, -1], [-2, -5]]), 'rhs': Matrix([[ 9], [23]]), 'type_of_equation': 'type2'}
     assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
 
-    # Non constant coefficient non-homogeneous ODEs
-    eq1 = (Eq(diff(x(t), t), 5 * t * x(t) + 2 * y(t)), Eq(diff(y(t), t), 2 * x(t) + 5 * t * y(t)))
+    # Non constant coefficient homogeneous ODEs
+    eq1 = (Eq(diff(x(t), t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t), t), 2*x(t) + 5*t*y(t)))
     sol1 = {'no_of_equation': 2, 'eq': (Eq(Derivative(x(t), t), 5*t*x(t) + 2*y(t)), Eq(Derivative(y(t), t), 5*t*y(t) + 2*x(t))),
             'func': [x(t), y(t)], 'order': {x(t): 1, y(t): 1}, 'is_linear': True, 'is_constant': False,
             'is_homogeneous': True, 'func_coeff': Matrix([ [-5*t,   -2], [  -2, -5*t]]), 'commutative_antiderivative': Matrix([
             [5*t**2/2,      2*t], [     2*t, 5*t**2/2]]), 'type_of_equation': 'type3', 'is_general': True}
     assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
+
+    # Non constant coefficient non-homogeneous ODEs
+    eq1 = [Eq(x1, x(t) + t*y(t) + t), Eq(y1, t*x(t) + y(t))]
+    sol1 = {'no_of_equation': 2, 'eq': [Eq(Derivative(x(t), t), t*y(t) + t + x(t)), Eq(Derivative(y(t), t),
+            t*x(t) + y(t))], 'func': [x(t), y(t)], 'order': {x(t): 1, y(t): 1}, 'is_linear': True,
+            'is_constant': False, 'is_homogeneous': False, 'is_general': True, 'func_coeff': Matrix([ [-1, -t],
+            [-t, -1]]), 'commutative_antiderivative': Matrix([ [     t, t**2/2], [t**2/2,      t]]), 'rhs':
+            Matrix([ [t], [0]]), 'type_of_equation': 'type4'}
+    assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
+
+    eq2 = [Eq(x1, t*x(t) + t*y(t) + t), Eq(y1, t*x(t) + t*y(t) + cos(t))]
+    sol2 = {'no_of_equation': 2, 'eq': [Eq(Derivative(x(t), t), t*x(t) + t*y(t) + t), Eq(Derivative(y(t), t),
+            t*x(t) + t*y(t) + cos(t))], 'func': [x(t), y(t)], 'order': {x(t): 1, y(t): 1}, 'is_linear': True,
+            'is_constant': False, 'is_homogeneous': False, 'is_general': True, 'func_coeff': Matrix([ [-t, -t],
+            [-t, -t]]), 'commutative_antiderivative': Matrix([ [t**2/2, t**2/2], [t**2/2, t**2/2]]), 'rhs':
+            Matrix([ [     t], [cos(t)]]), 'type_of_equation': 'type4'}
+    assert neq_nth_linear_constant_coeff_match(eq2, funcs, t) == sol2
+
+    eq3 = [Eq(x1, t*(x(t) + y(t) + z(t) + 1)), Eq(y1, t*(x(t) + y(t) + z(t))), Eq(z1, t*(x(t) + y(t) + z(t)))]
+    sol3 = {'no_of_equation': 3, 'eq': [Eq(Derivative(x(t), t), t*(x(t) + y(t) + z(t) + 1)),
+            Eq(Derivative(y(t), t), t*(x(t) + y(t) + z(t))), Eq(Derivative(z(t), t), t*(x(t) + y(t) + z(t)))],
+            'func': [x(t), y(t), z(t)], 'order': {x(t): 1, y(t): 1, z(t): 1}, 'is_linear': True, 'is_constant':
+            False, 'is_homogeneous': False, 'is_general': True, 'func_coeff': Matrix([ [-t, -t, -t], [-t, -t,
+            -t], [-t, -t, -t]]), 'commutative_antiderivative': Matrix([ [t**2/2, t**2/2, t**2/2], [t**2/2,
+            t**2/2, t**2/2], [t**2/2, t**2/2, t**2/2]]), 'rhs': Matrix([ [t], [0], [0]]), 'type_of_equation':
+            'type4'}
+    assert neq_nth_linear_constant_coeff_match(eq3, funcs_2[:-1], t) == sol3
+
+    eq4 = [Eq(x1, x(t) + y(t) + t*z(t) + 1), Eq(y1, x(t) + t*y(t) + z(t) + 10), Eq(z1, t*x(t) + y(t) + z(t) + t)]
+    sol4 = {'no_of_equation': 3, 'eq': [Eq(Derivative(x(t), t), t*z(t) + x(t) + y(t) + 1), Eq(Derivative(y(t),
+            t), t*y(t) + x(t) + z(t) + 10), Eq(Derivative(z(t), t), t*x(t) + t + y(t) + z(t))], 'func': [x(t),
+            y(t), z(t)], 'order': {x(t): 1, y(t): 1, z(t): 1}, 'is_linear': True, 'is_constant': False,
+            'is_homogeneous': False, 'is_general': True, 'func_coeff': Matrix([ [-1, -1, -t], [-1, -t, -1], [-t,
+            -1, -1]]), 'commutative_antiderivative': Matrix([ [     t,      t, t**2/2], [     t, t**2/2,
+            t], [t**2/2,      t,      t]]), 'rhs': Matrix([ [ 1], [10], [ t]]), 'type_of_equation': 'type4'}
+    assert neq_nth_linear_constant_coeff_match(eq4, funcs_2[:-1], t) == sol4
+
+    sum_terms = t*(x(t) + y(t) + z(t) + w(t))
+    eq5 = [Eq(x1, sum_terms), Eq(y1, sum_terms), Eq(z1, sum_terms + 1), Eq(w1, sum_terms)]
+    sol5 = {'no_of_equation': 4, 'eq': [Eq(Derivative(x(t), t), t*(w(t) + x(t) + y(t) + z(t))),
+            Eq(Derivative(y(t), t), t*(w(t) + x(t) + y(t) + z(t))), Eq(Derivative(z(t), t), t*(w(t) + x(t) +
+            y(t) + z(t)) + 1), Eq(Derivative(w(t), t), t*(w(t) + x(t) + y(t) + z(t)))], 'func': [x(t), y(t),
+            z(t), w(t)], 'order': {x(t): 1, y(t): 1, z(t): 1, w(t): 1}, 'is_linear': True, 'is_constant': False,
+            'is_homogeneous': False, 'is_general': True, 'func_coeff': Matrix([ [-t, -t, -t, -t], [-t, -t, -t,
+            -t], [-t, -t, -t, -t], [-t, -t, -t, -t]]), 'commutative_antiderivative': Matrix([ [t**2/2, t**2/2,
+            t**2/2, t**2/2], [t**2/2, t**2/2, t**2/2, t**2/2], [t**2/2, t**2/2, t**2/2, t**2/2], [t**2/2,
+            t**2/2, t**2/2, t**2/2]]), 'rhs': Matrix([ [0], [0], [1], [0]]), 'type_of_equation': 'type4'}
+    assert neq_nth_linear_constant_coeff_match(eq5, funcs_2, t) == sol5
 
 
 def test_matrix_exp():
@@ -473,18 +521,6 @@ def test_sysode_linear_neq_order1_type1():
          t), k23*Z2(t) - k30*Z3(t)))
     sol1 = [
         Eq(Z0(t), C1*k10/k01 + C2*(-k10 + k30)*exp(-k30*t)/(k01 + k10 - k30)
-            - C3*exp(t*(-k01 - k10)) + C4*(-k10*k20 - k10*k21 + k10*k30
-            + k20**2 + k20*k21 + k20*k23 - k20*k30 - k23*k30)*exp(t*(-k20 - k21
-            - k23))/(k23*(-k01 - k10 + k20 + k21 + k23))),
-        Eq(Z1(t), C1 - C2*k01*exp(-k30*t)/(k01 + k10 - k30) + C3*exp(t*(-k01 -
-            k10)) + C4*(-k01*k20 - k01*k21 + k01*k30 + k20*k21 + k21**2
-            + k21*k23 - k21*k30)*exp(t*(-k20 - k21 - k23))/(k23*(-k01 - k10
-            + k20 + k21 + k23))),
-        Eq(Z2(t), C4*(-k20 - k21 - k23 + k30)*exp(t*(-k20 - k21 - k23))/k23),
-        Eq(Z3(t), C2*exp(-k30*t) + C4*exp(t*(-k20 - k21 - k23)))
-    ]
-    sol1 = [
-        Eq(Z0(t), C1*k10/k01 + C2*(-k10 + k30)*exp(-k30*t)/(k01 + k10 - k30)
             - C3*exp(t*(-k01 - k10)) + C4*(k10*k20 + k10*k21 - k10*k30
             - k20**2 - k20*k21 - k20*k23 + k20*k30 + k23*k30)*exp(t*(-k20 - k21
             - k23))/(k23*(k01 + k10 - k20 - k21 - k23))),
@@ -502,20 +538,20 @@ def test_sysode_linear_neq_order1_type1():
     x, y, z = symbols('x y z', cls=Function)
     k2, k3 = symbols('k2 k3')
     eq2 = (
-       Eq(Derivative(z(t), t), k2 * y(t)),
-       Eq(Derivative(x(t), t), k3 * y(t)),
-       Eq(Derivative(y(t), t), (-k2 - k3) * y(t))
+        Eq(Derivative(z(t), t), k2*y(t)),
+        Eq(Derivative(x(t), t), k3*y(t)),
+        Eq(Derivative(y(t), t), (-k2 - k3)*y(t))
     )
-    sol2 = {Eq(z(t), C1 - C3 * k2 * exp(t * (-k2 - k3)) / (k2 + k3)),
-           Eq(x(t), C2 - C3 * k3 * exp(t * (-k2 - k3)) / (k2 + k3)),
-           Eq(y(t), C3 * exp(t * (-k2 - k3)))}
+    sol2 = {Eq(z(t), C1 - C3*k2*exp(t*(-k2 - k3))/(k2 + k3)),
+            Eq(x(t), C2 - C3*k3*exp(t*(-k2 - k3))/(k2 + k3)),
+            Eq(y(t), C3*exp(t*(-k2 - k3)))}
     assert set(dsolve(eq2)) == sol2
     assert checksysodesol(eq2, sol2) == (True, [0, 0, 0])
 
     u, v, w = symbols('u v w', cls=Function)
-    eq3 = [4 * u(t) - v(t) - 2 * w(t) + Derivative(u(t), t),
-          2 * u(t) + v(t) - 2 * w(t) + Derivative(v(t), t),
-          5 * u(t) + v(t) - 3 * w(t) + Derivative(w(t), t)]
+    eq3 = [4*u(t) - v(t) - 2*w(t) + Derivative(u(t), t),
+           2*u(t) + v(t) - 2*w(t) + Derivative(v(t), t),
+           5*u(t) + v(t) - 3*w(t) + Derivative(w(t), t)]
     sol3 = [Eq(u(t), C1*exp(-2*t) + C2*cos(sqrt(3)*t)/2 - C3*sin(sqrt(3)*t)/2 + sqrt(3)*(C2*sin(sqrt(3)*t)
             + C3*cos(sqrt(3)*t))/6), Eq(v(t), C2*cos(sqrt(3)*t)/2 - C3*sin(sqrt(3)*t)/2 + sqrt(3)*(C2*sin(sqrt(3)*t)
             + C3*cos(sqrt(3)*t))/6), Eq(w(t), C1*exp(-2*t) + C2*cos(sqrt(3)*t) - C3*sin(sqrt(3)*t))]
@@ -523,9 +559,9 @@ def test_sysode_linear_neq_order1_type1():
     assert checksysodesol(eq3, sol3) == (True, [0, 0, 0])
 
     tw = Rational(2, 9)
-    eq4 = [Eq(x(t).diff(t), 2 * x(t) + y(t) - tw * 4 * z(t) - tw * w(t)),
-          Eq(y(t).diff(t), 2 * y(t) + 8 * tw * z(t) + 2 * tw * w(t)),
-          Eq(z(t).diff(t), Rational(37, 9) * z(t) - tw * w(t)), Eq(w(t).diff(t), 22 * tw * w(t) - 2 * tw * z(t))]
+    eq4 = [Eq(x(t).diff(t), 2*x(t) + y(t) - tw*4*z(t) - tw*w(t)),
+           Eq(y(t).diff(t), 2*y(t) + 8*tw*z(t) + 2*tw*w(t)),
+           Eq(z(t).diff(t), Rational(37, 9)*z(t) - tw*w(t)), Eq(w(t).diff(t), 22*tw*w(t) - 2*tw*z(t))]
 
     sol4 = [Eq(x(t), (C1 + C2*t)*exp(2*t)),
             Eq(y(t), C2*exp(2*t) + 2*C3*exp(4*t)),
@@ -543,8 +579,8 @@ def test_sysode_linear_neq_order1_type1():
     assert checksysodesol(eq5, sol5) == (True, [0, 0, 0, 0])
 
     eq6 = [Eq(x(t).diff(t), x(t) + y(t)), Eq(y(t).diff(t), y(t) + z(t)),
-          Eq(z(t).diff(t), z(t) + Rational(-1, 8) * w(t)),
-          Eq(w(t).diff(t), Rational(1, 2) * (w(t) + z(t)))]
+           Eq(z(t).diff(t), z(t) + Rational(-1, 8)*w(t)),
+           Eq(w(t).diff(t), Rational(1, 2)*(w(t) + z(t)))]
 
     sol6 = [Eq(x(t), (C3 + C4*t)*exp(t) + (4*C1 + 4*C2*t + 48*C2)*exp(3*t/4)),
             Eq(y(t), C4*exp(t) + (-C1 - C2*t - 8*C2)*exp(3*t/4)),
@@ -565,9 +601,9 @@ def test_sysode_linear_neq_order1_type1():
     assert dsolve(eq7) == sol7
     assert checksysodesol(eq7, sol7) == (True, [0, 0, 0, 0, 0])
 
-    eq8 = [Eq(x(t).diff(t), 2 * x(t) + y(t)), Eq(y(t).diff(t), 2 * y(t)),
-          Eq(z(t).diff(t), 4 * z(t)), Eq(w(t).diff(t), 5 * w(t) + u(t)),
-          Eq(u(t).diff(t), 5 * u(t))]
+    eq8 = [Eq(x(t).diff(t), 2*x(t) + y(t)), Eq(y(t).diff(t), 2*y(t)),
+           Eq(z(t).diff(t), 4*z(t)), Eq(w(t).diff(t), 5*w(t) + u(t)),
+           Eq(u(t).diff(t), 5*u(t))]
 
     sol8 = [Eq(x(t), (C1 + C2*t)*exp(2*t)), Eq(y(t), C2*exp(2*t)), Eq(z(t), C3*exp(4*t)), Eq(w(t), (C4 + C5*t)*exp(5*t)),
             Eq(u(t), C5*exp(5*t))]
@@ -594,7 +630,7 @@ def test_sysode_linear_neq_order1_type1():
 
     # Regression test case for issue #14312
     # https://github.com/sympy/sympy/issues/14312
-    eq11 = (Eq(Derivative(x(t),t), k3*y(t)), Eq(Derivative(y(t),t), -(k3+k2)*y(t)), Eq(Derivative(z(t),t), k2*y(t)))
+    eq11 = (Eq(Derivative(x(t), t), k3*y(t)), Eq(Derivative(y(t), t), -(k3 + k2)*y(t)), Eq(Derivative(z(t), t), k2*y(t)))
     sol11 = [Eq(x(t), C1 + C3*k3*exp(t*(-k2 - k3))/k2), Eq(y(t), -C3*(k2 + k3)*exp(t*(-k2 - k3))/k2),
             Eq(z(t), C2 + C3*exp(t*(-k2 - k3)))]
     assert dsolve(eq11) == sol11
@@ -602,7 +638,7 @@ def test_sysode_linear_neq_order1_type1():
 
     # Regression test case for issue #14312
     # https://github.com/sympy/sympy/issues/14312
-    eq12 = (Eq(Derivative(z(t),t), k2*y(t)), Eq(Derivative(x(t),t), k3*y(t)), Eq(Derivative(y(t),t), -(k3+k2)*y(t)))
+    eq12 = (Eq(Derivative(z(t), t), k2*y(t)), Eq(Derivative(x(t), t), k3*y(t)), Eq(Derivative(y(t), t), -(k3 + k2)*y(t)))
     sol12 = [Eq(z(t), C1 - C3*k2*exp(t*(-k2 - k3))/(k2 + k3)), Eq(x(t), C2 - C3*k3*exp(t*(-k2 - k3))/(k2 + k3)),
             Eq(y(t), C3*exp(t*(-k2 - k3)))]
     assert dsolve(eq12) == sol12
@@ -610,17 +646,17 @@ def test_sysode_linear_neq_order1_type1():
 
     # Regression test case for issue #15474
     # https://github.com/sympy/sympy/issues/15474
-    eq13 = [Eq(diff(f(t), t), 2 * f(t) + g(t)),
-         Eq(diff(g(t), t), a * f(t))]
+    eq13 = [Eq(diff(f(t), t), 2*f(t) + g(t)),
+            Eq(diff(g(t), t), a*f(t))]
     sol13 = [Eq(f(t), -C1*exp(t*(1 - sqrt(a + 1)))/(sqrt(a + 1) + 1) + C2*exp(t*(sqrt(a + 1) + 1))/(sqrt(a + 1) - 1)),
             Eq(g(t), C1*exp(t*(1 - sqrt(a + 1))) + C2*exp(t*(sqrt(a + 1) + 1)))]
 
     assert dsolve(eq13) == sol13
     assert checksysodesol(eq13, sol13) == (True, [0, 0])
 
-    eq14 = [Eq(f(t).diff(t), 2 * g(t) - 3 * h(t)),
-           Eq(g(t).diff(t), 4 * h(t) - 2 * f(t)),
-           Eq(h(t).diff(t), 3 * f(t) - 4 * g(t))]
+    eq14 = [Eq(f(t).diff(t), 2*g(t) - 3*h(t)),
+            Eq(g(t).diff(t), 4*h(t) - 2*f(t)),
+            Eq(h(t).diff(t), 3*f(t) - 4*g(t))]
     sol14 = [Eq(f(t), 2*C1 - 8*C2*cos(sqrt(29)*t)/25 + 8*C3*sin(sqrt(29)*t)/25 - 3*sqrt(29)*(C2*sin(sqrt(29)*t)
             + C3*cos(sqrt(29)*t))/25), Eq(g(t), 3*C1/2 - 6*C2*cos(sqrt(29)*t)/25 + 6*C3*sin(sqrt(29)*t)/25
             + 4*sqrt(29)*(C2*sin(sqrt(29)*t) + C3*cos(sqrt(29)*t))/25), Eq(h(t), C1 + C2*cos(sqrt(29)*t)
@@ -629,9 +665,9 @@ def test_sysode_linear_neq_order1_type1():
     assert dsolve(eq14) == sol14
     assert checksysodesol(eq14, sol14) == (True, [0, 0, 0])
 
-    eq15 = [Eq(2 * f(t).diff(t), 3 * 4 * (g(t) - h(t))),
-          Eq(3 * g(t).diff(t), 2 * 4 * (h(t) - f(t))),
-          Eq(4 * h(t).diff(t), 2 * 3 * (f(t) - g(t)))]
+    eq15 = [Eq(2*f(t).diff(t), 3*4*(g(t) - h(t))),
+            Eq(3*g(t).diff(t), 2*4*(h(t) - f(t))),
+            Eq(4*h(t).diff(t), 2*3*(f(t) - g(t)))]
     sol15 = [Eq(f(t), C1 - 16*C2*cos(sqrt(29)*t)/13 + 16*C3*sin(sqrt(29)*t)/13 - 6*sqrt(29)*(C2*sin(sqrt(29)*t)
             + C3*cos(sqrt(29)*t))/13), Eq(g(t), C1 - 16*C2*cos(sqrt(29)*t)/13 + 16*C3*sin(sqrt(29)*t)/13
             + 8*sqrt(29)*(C2*sin(sqrt(29)*t) + C3*cos(sqrt(29)*t))/39), Eq(h(t), C1 + C2*cos(sqrt(29)*t) - C3*sin(sqrt(29)*t))]
@@ -639,15 +675,15 @@ def test_sysode_linear_neq_order1_type1():
     assert dsolve(eq15) == sol15
     assert checksysodesol(eq15, sol15) == (True, [0, 0, 0])
 
-    eq16 = (Eq(diff(x(t), t), 21 * x(t)), Eq(diff(y(t), t), 17 * x(t) + 3 * y(t)),
-           Eq(diff(z(t), t), 5 * x(t) + 7 * y(t) + 9 * z(t)))
+    eq16 = (Eq(diff(x(t), t), 21*x(t)), Eq(diff(y(t), t), 17*x(t) + 3*y(t)),
+            Eq(diff(z(t), t), 5*x(t) + 7*y(t) + 9*z(t)))
     sol16 = [Eq(x(t), 216*C3*exp(21*t)/209), Eq(y(t), -6*C1*exp(3*t)/7 + 204*C3*exp(21*t)/209),
             Eq(z(t), C1*exp(3*t) + C2*exp(9*t) + C3*exp(21*t))]
 
     assert dsolve(eq16) == sol16
     assert checksysodesol(eq16, sol16) == (True, [0, 0, 0])
 
-    eq17 = (Eq(diff(x(t),t),3*y(t)-11*z(t)),Eq(diff(y(t),t),7*z(t)-3*x(t)),Eq(diff(z(t),t),11*x(t)-7*y(t)))
+    eq17 = (Eq(diff(x(t), t), 3*y(t) - 11*z(t)), Eq(diff(y(t), t), 7*z(t) - 3*x(t)), Eq(diff(z(t), t), 11*x(t) - 7*y(t)))
     sol17 = [Eq(x(t), 7*C1/3 - 21*C2*cos(sqrt(179)*t)/170 + 21*C3*sin(sqrt(179)*t)/170 - 11*sqrt(179)*(C2*sin(sqrt(179)*t)
             + C3*cos(sqrt(179)*t))/170), Eq(y(t), 11*C1/3 - 33*C2*cos(sqrt(179)*t)/170 + 33*C3*sin(sqrt(179)*t)/170
             + 7*sqrt(179)*(C2*sin(sqrt(179)*t) + C3*cos(sqrt(179)*t))/170), Eq(z(t), C1 + C2*cos(sqrt(179)*t)
@@ -656,7 +692,8 @@ def test_sysode_linear_neq_order1_type1():
     assert dsolve(eq17) == sol17
     assert checksysodesol(eq17, sol17) == (True, [0, 0, 0])
 
-    eq18 = (Eq(3*diff(x(t),t),4*5*(y(t)-z(t))),Eq(4*diff(y(t),t),3*5*(z(t)-x(t))),Eq(5*diff(z(t),t),3*4*(x(t)-y(t))))
+    eq18 = (Eq(3*diff(x(t), t), 4*5*(y(t) - z(t))), Eq(4*diff(y(t), t), 3*5*(z(t) - x(t))),
+            Eq(5*diff(z(t), t), 3*4*(x(t) - y(t))))
     sol18 = [Eq(x(t), C1 - C2*cos(5*sqrt(2)*t) + C3*sin(5*sqrt(2)*t) - 4*sqrt(2)*(C2*sin(5*sqrt(2)*t) + C3*cos(5*sqrt(2)*t))/3),
             Eq(y(t), C1 - C2*cos(5*sqrt(2)*t) + C3*sin(5*sqrt(2)*t) + 3*sqrt(2)*(C2*sin(5*sqrt(2)*t) + C3*cos(5*sqrt(2)*t))/4),
             Eq(z(t), C1 + C2*cos(5*sqrt(2)*t) - C3*sin(5*sqrt(2)*t))]
@@ -664,7 +701,7 @@ def test_sysode_linear_neq_order1_type1():
     assert dsolve(eq18) == sol18
     assert checksysodesol(eq18, sol18) == (True, [0, 0, 0])
 
-    eq19 = (Eq(diff(x(t),t),4*x(t) - z(t)),Eq(diff(y(t),t),2*x(t)+2*y(t)-z(t)),Eq(diff(z(t),t),3*x(t)+y(t)))
+    eq19 = (Eq(diff(x(t), t), 4*x(t) - z(t)), Eq(diff(y(t), t), 2*x(t) + 2*y(t) - z(t)), Eq(diff(z(t), t), 3*x(t) + y(t)))
     sol19 = [Eq(x(t), (C1 + C2*t + 2*C2 + C3*t**2/2 + 2*C3*t + C3)*exp(2*t)),
             Eq(y(t), (C1 + C2*t + 2*C2 + C3*t**2/2 + 2*C3*t)*exp(2*t)),
             Eq(z(t), (2*C1 + 2*C2*t + 3*C2 + C3*t**2 + 3*C3*t)*exp(2*t))]
@@ -672,7 +709,8 @@ def test_sysode_linear_neq_order1_type1():
     assert dsolve(eq19) == sol19
     assert checksysodesol(eq19, sol19) == (True, [0, 0, 0])
 
-    eq20 = (Eq(diff(x(t),t),4*x(t) - y(t) - 2*z(t)),Eq(diff(y(t),t),2*x(t) + y(t)- 2*z(t)),Eq(diff(z(t),t),5*x(t)-3*z(t)))
+    eq20 = (Eq(diff(x(t), t), 4*x(t) - y(t) - 2*z(t)), Eq(diff(y(t), t), 2*x(t) + y(t) - 2*z(t)),
+            Eq(diff(z(t), t), 5*x(t) - 3*z(t)))
     sol20 = [Eq(x(t), C1*exp(2*t) - C2*sin(t)/5 + 3*C2*cos(t)/5 - 3*C3*sin(t)/5 - C3*cos(t)/5),
              Eq(y(t), -C2*sin(t)/5 + 3*C2*cos(t)/5 - 3*C3*sin(t)/5 - C3*cos(t)/5),
              Eq(z(t), C1*exp(2*t) + C2*cos(t) - C3*sin(t))]
@@ -680,14 +718,14 @@ def test_sysode_linear_neq_order1_type1():
     assert dsolve(eq20) == sol20
     assert checksysodesol(eq20, sol20) == (True, [0, 0, 0])
 
-    eq21 = (Eq(diff(x(t),t), 9*y(t)), Eq(diff(y(t),t), 12*x(t)))
+    eq21 = (Eq(diff(x(t), t), 9*y(t)), Eq(diff(y(t), t), 12*x(t)))
     sol21 = [Eq(x(t), -sqrt(3)*C1*exp(-6*sqrt(3)*t)/2 + sqrt(3)*C2*exp(6*sqrt(3)*t)/2),
             Eq(y(t), C1*exp(-6*sqrt(3)*t) + C2*exp(6*sqrt(3)*t))]
 
     assert dsolve(eq21) == sol21
     assert checksysodesol(eq21, sol21) == (True, [0, 0])
 
-    eq22 = (Eq(diff(x(t),t), 2*x(t) + 4*y(t)), Eq(diff(y(t),t), 12*x(t) + 41*y(t)))
+    eq22 = (Eq(diff(x(t), t), 2*x(t) + 4*y(t)), Eq(diff(y(t), t), 12*x(t) + 41*y(t)))
     sol22 = [Eq(x(t), C1*(-sqrt(1713)/24 + Rational(-13, 8))*exp(t*(Rational(43, 2) - sqrt(1713)/2)) \
             + C2*(Rational(-13, 8) + sqrt(1713)/24)*exp(t*(sqrt(1713)/2 + Rational(43, 2)))),
             Eq(y(t), C1*exp(t*(Rational(43, 2) - sqrt(1713)/2)) + C2*exp(t*(sqrt(1713)/2 + Rational(43, 2))))]
@@ -695,7 +733,7 @@ def test_sysode_linear_neq_order1_type1():
     assert dsolve(eq22) == sol22
     assert checksysodesol(eq22, sol22) == (True, [0, 0])
 
-    eq23 = (Eq(diff(x(t),t), x(t) + y(t)), Eq(diff(y(t),t), -2*x(t) + 2*y(t)))
+    eq23 = (Eq(diff(x(t), t), x(t) + y(t)), Eq(diff(y(t), t), -2*x(t) + 2*y(t)))
     sol23 = [Eq(x(t), (C1*cos(sqrt(7)*t/2)/4 - C2*sin(sqrt(7)*t/2)/4 + sqrt(7)*(C1*sin(sqrt(7)*t/2)
                         + C2*cos(sqrt(7)*t/2))/4)*exp(3*t/2)),
             Eq(y(t), (C1*cos(sqrt(7)*t/2) - C2*sin(sqrt(7)*t/2))*exp(3*t/2))]
@@ -715,10 +753,10 @@ def test_sysode_linear_neq_order1_type1():
     # Regression test case for issue #19150
     # https://github.com/sympy/sympy/issues/19150
     eq25 = [Eq(Derivative(f(t), t), 0),
-           Eq(Derivative(g(t), t), 1/(c*b)* ( -2*g(t)+x(t)+f(t) )  ),
-           Eq(Derivative(x(t), t), 1/(c*b)* ( -2*x(t)+g(t)+y(t) ) ),
-           Eq(Derivative(y(t), t), 1/(c*b)* ( -2*y(t)+x(t)+h(t) ) ),
-           Eq(Derivative(h(t), t), 0)]
+            Eq(Derivative(g(t), t), 1/(c*b)*(-2*g(t) + x(t) + f(t))),
+            Eq(Derivative(x(t), t), 1/(c*b)*(-2*x(t) + g(t) + y(t))),
+            Eq(Derivative(y(t), t), 1/(c*b)*(-2*y(t) + x(t) + h(t))),
+            Eq(Derivative(h(t), t), 0)]
 
     sol25 = [Eq(f(t), 4*C1 - 3*C2),
              Eq(g(t), 3*C1 - 2*C2 - C3*exp(-2*t/(b*c)) + C4*exp(t*(-2 - sqrt(2))/(b*c)) + C5*exp(t*(-2 + sqrt(2))/(b*c))),
@@ -755,37 +793,37 @@ def test_sysode_linear_neq_order1_type1():
     assert checksysodesol(eq30, sol30) == (True, [0, 0])
 
     eq31 = [Eq(Derivative(f(t), t), g(t)), Eq(Derivative(g(t), t), 0)]
-    sol31 = [Eq(f(t), C1 + C2 * t), Eq(g(t), C2)]
+    sol31 = [Eq(f(t), C1 + C2*t), Eq(g(t), C2)]
     assert dsolve(eq31) == sol31
     assert checksysodesol(eq31, sol31) == (True, [0, 0])
 
     eq32 = [Eq(Derivative(f(t), t), 0), Eq(Derivative(g(t), t), f(t))]
-    sol32 = [Eq(f(t), C2), Eq(g(t), C1 + C2 * t)]
+    sol32 = [Eq(f(t), C2), Eq(g(t), C1 + C2*t)]
     assert dsolve(eq32) == sol32
     assert checksysodesol(eq32, sol32) == (True, [0, 0])
 
     eq33 = [Eq(Derivative(f(t), t), 0), Eq(Derivative(g(t), t), g(t))]
-    sol33 = [Eq(f(t), C1), Eq(g(t), C2 * exp(t))]
+    sol33 = [Eq(f(t), C1), Eq(g(t), C2*exp(t))]
     assert dsolve(eq33) == sol33
     assert checksysodesol(eq33, sol33) == (True, [0, 0])
 
-    eq34 = [Eq(Derivative(f(t), t), f(t)), Eq(Derivative(g(t), t), I * g(t))]
-    sol34 = [Eq(f(t), C1 * exp(t)), Eq(g(t), C2 * exp(I * t))]
+    eq34 = [Eq(Derivative(f(t), t), f(t)), Eq(Derivative(g(t), t), I*g(t))]
+    sol34 = [Eq(f(t), C1*exp(t)), Eq(g(t), C2*exp(I*t))]
     assert dsolve(eq34) == sol34
     assert checksysodesol(eq34, sol34) == (True, [0, 0])
 
-    eq35 = [Eq(Derivative(f(t), t), I * f(t)), Eq(Derivative(g(t), t), -I * g(t))]
-    sol35 = [Eq(f(t), C2 * exp(I * t)), Eq(g(t), C1 * exp(-I * t))]
+    eq35 = [Eq(Derivative(f(t), t), I*f(t)), Eq(Derivative(g(t), t), -I*g(t))]
+    sol35 = [Eq(f(t), C2*exp(I*t)), Eq(g(t), C1*exp(-I*t))]
     assert dsolve(eq35) == sol35
     assert checksysodesol(eq35, sol35) == (True, [0, 0])
 
-    eq36 = [Eq(Derivative(f(t), t), I * g(t)), Eq(Derivative(g(t), t), 0)]
-    sol36 = [Eq(f(t), I * (C1 + C2 * t)), Eq(g(t), C2)]
+    eq36 = [Eq(Derivative(f(t), t), I*g(t)), Eq(Derivative(g(t), t), 0)]
+    sol36 = [Eq(f(t), I*(C1 + C2*t)), Eq(g(t), C2)]
     assert dsolve(eq36) == sol36
     assert checksysodesol(eq36, sol36) == (True, [0, 0])
 
-    eq37 = [Eq(Derivative(f(t), t), I * g(t)), Eq(Derivative(g(t), t), I * f(t))]
-    sol37 = [Eq(f(t), -C1 * exp(-I * t) + C2 * exp(I * t)), Eq(g(t), C1 * exp(-I * t) + C2 * exp(I * t))]
+    eq37 = [Eq(Derivative(f(t), t), I*g(t)), Eq(Derivative(g(t), t), I*f(t))]
+    sol37 = [Eq(f(t), -C1*exp(-I*t) + C2*exp(I*t)), Eq(g(t), C1*exp(-I*t) + C2*exp(I*t))]
     assert dsolve(eq37) == sol37
     assert checksysodesol(eq37, sol37) == (True, [0, 0])
 
@@ -846,7 +884,7 @@ def test_sysode_linear_neq_order1_type2():
 
     # Regression test case for issue #8859
     # https://github.com/sympy/sympy/issues/8859
-    eq7 = [Eq(diff(f(t),t), f(t) + 3*t), Eq(diff(g(t),t), g(t))]
+    eq7 = [Eq(diff(f(t), t), f(t) + 3*t), Eq(diff(g(t), t), g(t))]
     sol7 = [Eq(f(t), C1*exp(t) + exp(t)*Integral(3*t*exp(-t), t)), Eq(g(t),
             C2*exp(t) + exp(t)*Integral(0, t))]
     assert dsolve(eq7) == sol7
@@ -871,9 +909,9 @@ def test_sysode_linear_neq_order1_type2():
 
     # Regression test case for issue #19150
     # https://github.com/sympy/sympy/issues/19150
-    eq9 = [Eq(Derivative(f(t), t), 1 / (a * b) * (-2 * f(t) + g(t) + c)),
-          Eq(Derivative(g(t), t), 1 / (a * b) * (-2 * g(t) + f(t) + h(t))),
-          Eq(Derivative(h(t), t), 1 / (a * b) * (-2 * h(t) + g(t) + d))]
+    eq9 = [Eq(Derivative(f(t), t), 1/(a*b)*(-2*f(t) + g(t) + c)),
+           Eq(Derivative(g(t), t), 1/(a*b)*(-2*g(t) + f(t) + h(t))),
+           Eq(Derivative(h(t), t), 1/(a*b)*(-2*h(t) + g(t) + d))]
     sol9 = [Eq(f(t), (-C1 + C2*exp(-sqrt(2)*t/(a*b)) + C3*exp(sqrt(2)*t/(a*b)) +
             exp(sqrt(2)*t/(a*b))*Integral(c*exp(-sqrt(2)*t/(a*b) +
             2*t/(a*b))/(4*a*b) + d*exp(-sqrt(2)*t/(a*b) + 2*t/(a*b))/(4*a*b), t) -
@@ -897,6 +935,14 @@ def test_sysode_linear_neq_order1_type2():
 
     assert dsolve(eq9) == sol9
     assert checksysodesol(eq9, sol9) == (True, [0, 0, 0])
+
+    # Regression test case for issue #16635
+    # https://github.com/sympy/sympy/issues/16635
+    eq10 = [Eq(f(t).diff(t), f(t) - g(t) + 15*t - 10), Eq(g(t).diff(t), f(t) - g(t) - 15*t - 5)]
+    sol10 = [Eq(f(t), C1 + C2*t + C2 + t*Integral(30*t - 5, t) + Integral(30*t - 5, t) + Integral(-30*t**2 -
+            10*t - 5, t)), Eq(g(t), C1 + C2*t + t*Integral(30*t - 5, t) + Integral(-30*t**2 - 10*t - 5, t))]
+    assert dsolve(eq10) == sol10
+    assert checksysodesol(eq10, sol10) == (True, [0, 0])
 
 
 def test_sysode_linear_neq_order1_type3():
@@ -943,7 +989,7 @@ def test_sysode_linear_neq_order1_type3():
     assert dsolve(eqs2) == sol2
     assert checksysodesol(eqs2, sol2) == (True, [0, 0])
 
-    eqs3 = [Eq(f(x).diff(x), x * f(x) + g(x)), Eq(g(x).diff(x), -f(x) + x * g(x))]
+    eqs3 = [Eq(f(x).diff(x), x*f(x) + g(x)), Eq(g(x).diff(x), -f(x) + x*g(x))]
     sol3 = [Eq(f(x), (C1/2 - I*C2/2)*exp(x**2/2 + I*x) + (C1/2 + I*C2/2)*exp(x**2/2 - I*x)),
             Eq(g(x), (-I*C1/2 + C2/2)*exp(x**2/2 - I*x) + (I*C1/2 + C2/2)*exp(x**2/2 + I*x))]
     assert dsolve(eqs3) == sol3
@@ -983,6 +1029,111 @@ def test_sysode_linear_neq_order1_type3():
     assert checksysodesol(eqs7, sol7) == (True, [0, 0])
 
 
+def test_sysode_linear_neq_order1_type4():
+    f, g, h, k = symbols('f g h k', cls=Function)
+    x = symbols('x')
+    r = symbols('r', real=True)
+
+    eqs1 = [Eq(diff(f(r), r), f(r) + r*g(r) + r**2), Eq(diff(g(r), r), -r*f(r) + g(r) + r)]
+    sol1 = [Eq(f(r), C1*exp(r)*cos(r**2/2) + C2*exp(r)*sin(r**2/2) +
+            exp(r)*sin(r**2/2)*Integral(r**2*exp(-r)*sin(r**2/2) + r*exp(-r)*cos(r**2/2), r) +
+            exp(r)*cos(r**2/2)*Integral(r**2*exp(-r)*cos(r**2/2) - r*exp(-r)*sin(r**2/2), r)), Eq(g(r),
+            -C1*exp(r)*sin(r**2/2) + C2*exp(r)*cos(r**2/2) -
+            exp(r)*sin(r**2/2)*Integral(r**2*exp(-r)*cos(r**2/2) - r*exp(-r)*sin(r**2/2), r) +
+            exp(r)*cos(r**2/2)*Integral(r**2*exp(-r)*sin(r**2/2) + r*exp(-r)*cos(r**2/2), r))]
+    assert dsolve(eqs1) == sol1
+    assert checksysodesol(eqs1, sol1) == (True, [0, 0])
+
+    eqs2 = [Eq(diff(f(r), r), f(r) + r*g(r) + r), Eq(diff(g(r), r), -r*f(r) + g(r) + log(r))]
+    sol2 = [Eq(f(r), C1*exp(r)*cos(r**2/2) + C2*exp(r)*sin(r**2/2) +
+            exp(r)*sin(r**2/2)*Integral(r*exp(-r)*sin(r**2/2) + exp(-r)*log(r)*cos(r**2/2), r) +
+            exp(r)*cos(r**2/2)*Integral(r*exp(-r)*cos(r**2/2) - exp(-r)*log(r)*sin(r**2/2), r)), Eq(g(r),
+            -C1*exp(r)*sin(r**2/2) + C2*exp(r)*cos(r**2/2) - exp(r)*sin(r**2/2)*Integral(r*exp(-r)*cos(r**2/2) -
+            exp(-r)*log(r)*sin(r**2/2), r) + exp(r)*cos(r**2/2)*Integral(r*exp(-r)*sin(r**2/2) +
+            exp(-r)*log(r)*cos(r**2/2), r))]
+    assert dsolve(eqs2) == sol2
+    assert checksysodesol(eqs2, sol2) == (True, [0, 0])
+
+    eqs3 = [Eq(f(x).diff(x), x*(f(x) + g(x) + h(x)) + x), Eq(g(x).diff(x), x*(f(x) + g(x) + h(x)) + x),
+            Eq(h(x).diff(x), x*(f(x) + g(x) + h(x)) + 1)]
+    _x1 = exp(-3*x**2/2)
+    _x2 = exp(3*x**2/2)
+    _x3 = Integral(2*_x1*x/3 + _x1/3 + x/3 - Rational(1, 3), x)
+    _x4 = 2*_x2*_x3/3
+    _x5 = Integral(2*_x1*x/3 + _x1/3 - 2*x/3 + Rational(2, 3), x)
+    sol3 = [
+        Eq(f(x),
+           C1*_x2/3 + 2*C1/3 + C2*_x2/3 - C2/3 + C3*_x2/3 - C3/3 + _x2*_x5/3 + _x3/3 + _x4 - _x5/3),
+        Eq(g(x),
+           C1*_x2/3 - C1/3 + C2*_x2/3 + 2*C2/3 + C3*_x2/3 - C3/3 + _x2*_x5/3 + _x3/3 + _x4 - _x5/3),
+        Eq(h(x),
+           C1*_x2/3 - C1/3 + C2*_x2/3 - C2/3 + C3*_x2/3 + 2*C3/3 + _x2*_x5/3 - 2*_x3/3 + _x4 + 2*_x5/3),
+    ]
+    assert dsolve(eqs3) == sol3
+    assert checksysodesol(eqs3, sol3) == (True, [0, 0, 0])
+
+    eqs4 = [Eq(f(x).diff(x), x*(f(x) + g(x) + h(x)) + sin(x)), Eq(g(x).diff(x), x*(f(x) + g(x) + h(x)) + sin(x)),
+            Eq(h(x).diff(x), x*(f(x) + g(x) + h(x)) + sin(x))]
+    sol4 = [Eq(f(x), C1*exp(3*x**2/2)/3 + 2*C1/3 + C2*exp(3*x**2/2)/3 - C2/3 + C3*exp(3*x**2/2)/3 - C3/3 +
+            exp(3*x**2/2)*Integral(exp(-3*x**2/2)*sin(x), x)), Eq(g(x), C1*exp(3*x**2/2)/3 - C1/3 +
+            C2*exp(3*x**2/2)/3 + 2*C2/3 + C3*exp(3*x**2/2)/3 - C3/3 +
+            exp(3*x**2/2)*Integral(exp(-3*x**2/2)*sin(x), x)), Eq(h(x), C1*exp(3*x**2/2)/3 - C1/3 +
+            C2*exp(3*x**2/2)/3 - C2/3 + C3*exp(3*x**2/2)/3 + 2*C3/3 +
+            exp(3*x**2/2)*Integral(exp(-3*x**2/2)*sin(x), x))]
+    assert dsolve(eqs4) == sol4
+    assert checksysodesol(eqs4, sol4) == (True, [0, 0, 0])
+
+    eqs5 = [Eq(Derivative(f(x), x), x*(f(x) + g(x) + h(x) + k(x) + 1)), Eq(Derivative(g(x), x), x*(f(x) + g(x)
+            + h(x) + k(x) + 1)), Eq(Derivative(h(x), x), x*(f(x) + g(x) + h(x) + k(x) + 1)), Eq(Derivative(k(x),
+            x), x*(f(x) + g(x) + h(x) + k(x) + 1))]
+    sol5 = [Eq(f(x), C1*exp(2*x**2)/4 + 3*C1/4 + C2*exp(2*x**2)/4 - C2/4 + C3*exp(2*x**2)/4 - C3/4 +
+            C4*exp(2*x**2)/4 - C4/4 + exp(2*x**2)*Integral(x*exp(-2*x**2), x)), Eq(g(x), C1*exp(2*x**2)/4 - C1/4
+            + C2*exp(2*x**2)/4 + 3*C2/4 + C3*exp(2*x**2)/4 - C3/4 + C4*exp(2*x**2)/4 - C4/4 +
+            exp(2*x**2)*Integral(x*exp(-2*x**2), x)), Eq(h(x), C1*exp(2*x**2)/4 - C1/4 + C2*exp(2*x**2)/4 - C2/4
+            + C3*exp(2*x**2)/4 + 3*C3/4 + C4*exp(2*x**2)/4 - C4/4 + exp(2*x**2)*Integral(x*exp(-2*x**2), x)),
+            Eq(k(x), C1*exp(2*x**2)/4 - C1/4 + C2*exp(2*x**2)/4 - C2/4 + C3*exp(2*x**2)/4 - C3/4 +
+            C4*exp(2*x**2)/4 + 3*C4/4 + exp(2*x**2)*Integral(x*exp(-2*x**2), x))]
+    assert dsolve(eqs5) == sol5
+    assert checksysodesol(eqs5, sol5) == (True, [0, 0, 0, 0])
+
+    eqs6 = [Eq(Derivative(f(x), x), x**2*(f(x) + g(x) + h(x) + k(x) + 1)), Eq(Derivative(g(x), x), x**2*(f(x) +
+            g(x) + h(x) + k(x) + 1)), Eq(Derivative(h(x), x), x**2*(f(x) + g(x) + h(x) + k(x) + 1)),
+            Eq(Derivative(k(x), x), x**2*(f(x) + g(x) + h(x) + k(x) + 1))]
+    sol6 = [Eq(f(x), C1*exp(4*x**3/3)/4 + 3*C1/4 + C2*exp(4*x**3/3)/4 - C2/4 + C3*exp(4*x**3/3)/4 - C3/4 +
+            C4*exp(4*x**3/3)/4 - C4/4 + exp(4*x**3/3)*Integral(x**2*exp(-4*x**3/3), x)), Eq(g(x),
+            C1*exp(4*x**3/3)/4 - C1/4 + C2*exp(4*x**3/3)/4 + 3*C2/4 + C3*exp(4*x**3/3)/4 - C3/4 +
+            C4*exp(4*x**3/3)/4 - C4/4 + exp(4*x**3/3)*Integral(x**2*exp(-4*x**3/3), x)), Eq(h(x),
+            C1*exp(4*x**3/3)/4 - C1/4 + C2*exp(4*x**3/3)/4 - C2/4 + C3*exp(4*x**3/3)/4 + 3*C3/4 +
+            C4*exp(4*x**3/3)/4 - C4/4 + exp(4*x**3/3)*Integral(x**2*exp(-4*x**3/3), x)), Eq(k(x),
+            C1*exp(4*x**3/3)/4 - C1/4 + C2*exp(4*x**3/3)/4 - C2/4 + C3*exp(4*x**3/3)/4 - C3/4 +
+            C4*exp(4*x**3/3)/4 + 3*C4/4 + exp(4*x**3/3)*Integral(x**2*exp(-4*x**3/3), x))]
+    assert dsolve(eqs6) == sol6
+    assert checksysodesol(eqs6, sol6) == (True, [0, 0, 0, 0])
+
+    eqs7 = [Eq(Derivative(f(x), x), (f(x) + g(x) + h(x))*log(x) + sin(x)), Eq(Derivative(g(x), x), (f(x) + g(x)
+            + h(x))*log(x) + sin(x)), Eq(Derivative(h(x), x), (f(x) + g(x) + h(x))*log(x) + sin(x))]
+    sol7 = [Eq(f(x), 2*C1/3 - C2/3 - C3/3 + (C1/3 + C2/3 + C3/3 + Integral(exp(-3*x*log(x) + 3*x)*sin(x),
+            x))*exp(3*x*log(x) - 3*x)), Eq(g(x), -C1/3 + 2*C2/3 - C3/3 + (C1/3 + C2/3 + C3/3 +
+            Integral(exp(-3*x*log(x) + 3*x)*sin(x), x))*exp(3*x*log(x) - 3*x)), Eq(h(x), -C1/3 - C2/3 + 2*C3/3 +
+            (C1/3 + C2/3 + C3/3 + Integral(exp(-3*x*log(x) + 3*x)*sin(x), x))*exp(3*x*log(x) - 3*x))]
+    with dotprodsimp(True):
+        assert dsolve(eqs7) == sol7
+    assert checksysodesol(eqs7, sol7) == (True, [0, 0, 0])
+
+    eqs8 = [Eq(Derivative(f(x), x), (f(x) + g(x) + h(x) + k(x))*log(x) + sin(x)), Eq(Derivative(g(x), x), (f(x)
+            + g(x) + h(x) + k(x))*log(x) + sin(x)), Eq(Derivative(h(x), x), (f(x) + g(x) + h(x) + k(x))*log(x) +
+            sin(x)), Eq(Derivative(k(x), x), (f(x) + g(x) + h(x) + k(x))*log(x) + sin(x))]
+    sol8 = [Eq(f(x), 3*C1/4 - C2/4 - C3/4 - C4/4 + (C1/4 + C2/4 + C3/4 + C4/4 + Integral(exp(-4*x*log(x) +
+            4*x)*sin(x), x))*exp(4*x*log(x) - 4*x)), Eq(g(x), -C1/4 + 3*C2/4 - C3/4 - C4/4 + (C1/4 + C2/4 + C3/4
+            + C4/4 + Integral(exp(-4*x*log(x) + 4*x)*sin(x), x))*exp(4*x*log(x) - 4*x)), Eq(h(x), -C1/4 - C2/4 +
+            3*C3/4 - C4/4 + (C1/4 + C2/4 + C3/4 + C4/4 + Integral(exp(-4*x*log(x) + 4*x)*sin(x),
+            x))*exp(4*x*log(x) - 4*x)), Eq(k(x), -C1/4 - C2/4 - C3/4 + 3*C4/4 + (C1/4 + C2/4 + C3/4 + C4/4 +
+            Integral(exp(-4*x*log(x) + 4*x)*sin(x), x))*exp(4*x*log(x) - 4*x))]
+    with dotprodsimp(True):
+        assert dsolve(eqs8) == sol8
+    assert checksysodesol(eqs8, sol8) == (True, [0, 0, 0, 0])
+
+
 @slow
 def test_linear_3eq_order1_type4_slow():
     x, y, z = symbols('x, y, z', cls=Function)
@@ -997,10 +1148,12 @@ def test_linear_3eq_order1_type4_slow():
         dsolve(eq1)
 
 
+@slow
 def test_linear_neq_order1_type2_big_test_cases():
     i, r1, c1, r2, c2, t = symbols('i, r1, c1, r2, c2, t')
     x1 = Function('x1')
     x2 = Function('x2')
+
     eq1 = r1*c1*Derivative(x1(t), t) + x1(t) - x2(t) - r1*i
     eq2 = r2*c1*Derivative(x1(t), t) + r2*c2*Derivative(x2(t), t) + x2(t) - r2*i
     eq = [eq1, eq2]
@@ -1034,9 +1187,9 @@ def _de_lorentz_solution():
     v1, v2, v3 = symbols("v1:4", cls=Function, real=True)
 
     eqs = [
-        -e1 * q + m * Derivative(v1(t), t) - q * (-b2 * v3(t) + b3 * v2(t)),
-        -e2 * q + m * Derivative(v2(t), t) - q * (b1 * v3(t) - b3 * v1(t)),
-        -e3 * q + m * Derivative(v3(t), t) - q * (-b1 * v2(t) + b2 * v1(t))
+        -e1*q + m*Derivative(v1(t), t) - q*(-b2*v3(t) + b3*v2(t)),
+        -e2*q + m*Derivative(v2(t), t) - q*(b1*v3(t) - b3*v1(t)),
+        -e3*q + m*Derivative(v3(t), t) - q*(-b1*v2(t) + b2*v1(t))
     ]
 
     # The code for the solution here is made using
@@ -1076,10 +1229,16 @@ def _de_lorentz_solution():
 
     return eqs, sol
 
+# Regression test case for issue #9204
+# https://github.com/sympy/sympy/issues/9204
 
 # A very big solution is obtained for this
 # test case. To be simplified in future.
+@slow
 def test_linear_new_order1_type2_de_lorentz():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+
     eqs, sol = _de_lorentz_solution()
 
     with dotprodsimp(True):
@@ -1099,7 +1258,7 @@ def _neq_order1_type2_slow():
     RC, t, C, Vs, L, R1, V0, I0 = symbols("RC t C Vs L R1 V0 I0")
     V = Function("V")
     I = Function("I")
-    system = [Eq(V(t).diff(t), -1 / RC * V(t) + I(t) / C), Eq(I(t).diff(t), -R1 / L * I(t) - 1 / L * V(t) + Vs / L)]
+    system = [Eq(V(t).diff(t), -1/RC*V(t) + I(t)/C), Eq(I(t).diff(t), -R1/L*I(t) - 1/L*V(t) + Vs/L)]
 
     z1 = sqrt(C**2*L**2 - 2*C**2*L*R1*RC + C**2*R1**2*RC**2 - 4*C*L*RC**2)
     z2 = 1/(C*L - C*R1*RC - z1)
@@ -1127,6 +1286,8 @@ def test_linear_neq_order1_type2_slow():
 
     assert dsolve(system) == sol
 
+# Regression test case for issue #14001
+# https://github.com/sympy/sympy/issues/14001
 
 @slow
 def test_linear_neq_order1_type2_slow_check():
@@ -1144,31 +1305,152 @@ def _linear_3eq_order1_type4_long():
 
     f = t ** 3 + log(t)
     g = t ** 2 + sin(t)
-    eq = [
-        Eq(diff(x(t), t), (4 * f + g) * x(t) - f * y(t) - 2 * f * z(t)),
-        Eq(diff(y(t), t), 2 * f * x(t) + (f + g) * y(t) - 2 * f * z(t)),
-        Eq(diff(z(t), t), 5 * f * x(t) + f * y( t) + (-3 * f + g) * z(t))
-    ]
 
-    x_1 = sqrt(-t ** 6 - 8 * t ** 3 * log(t) + 8 * t ** 3 - 16 * log(t) ** 2 + 32 * log(t) - 16)
+    eq1 = (Eq(diff(x(t), t), (4*f + g)*x(t) - f*y(t) - 2*f*z(t)),
+           Eq(diff(y(t), t), 2*f*x(t) + (f + g)*y(t) - 2*f*z(t)), Eq(diff(z(t), t), 5*f*x(t) + f*y(
+        t) + (-3*f + g)*z(t)))
+
+    dsolve_sol = dsolve(eq1)
+    dsolve_sol1 = [_simpsol(sol) for sol in dsolve_sol]
+
+    x_1 = sqrt(-t**6 - 8*t**3*log(t) + 8*t**3 - 16*log(t)**2 + 32*log(t) - 16)
     x_2 = sqrt(3)
-    x_3 = 8324372644 * C1 * x_1 * x_2 + 4162186322 * C2 * x_1 * x_2 - 8324372644 * C3 * x_1 * x_2
-    x_4 = 1 / (1903457163 * t ** 3 + 3825881643 * x_1 * x_2 + 7613828652 * log(t) - 7613828652)
-    x_5 = exp(t ** 3 / 3 + t * x_1 * x_2 / 4 - cos(t))
-    x_6 = exp(t ** 3 / 3 - t * x_1 * x_2 / 4 - cos(t))
-    x_7 = exp(t ** 4 / 2 + t ** 3 / 3 + 2 * t * log(t) - 2 * t - cos(t))
-    x_8 = 91238 * C1 * x_1 * x_2 + 91238 * C2 * x_1 * x_2 - 91238 * C3 * x_1 * x_2
-    x_9 = 1 / (66049 * t ** 3 - 50629 * x_1 * x_2 + 264196 * log(t) - 264196)
-    x_10 = 50629 * C1 / 25189 + 37909 * C2 / 25189 - 50629 * C3 / 25189 - x_3 * x_4
-    x_11 = -50629 * C1 / 25189 - 12720 * C2 / 25189 + 50629 * C3 / 25189 + x_3 * x_4
+    x_3 = 8324372644*C1*x_1*x_2 + 4162186322*C2*x_1*x_2 - 8324372644*C3*x_1*x_2
+    x_4 = 1 / (1903457163*t**3 + 3825881643*x_1*x_2 + 7613828652*log(t) - 7613828652)
+    x_5 = exp(t**3/3 + t*x_1*x_2/4 - cos(t))
+    x_6 = exp(t**3/3 - t*x_1*x_2/4 - cos(t))
+    x_7 = exp(t**4/2 + t**3/3 + 2*t*log(t) - 2*t - cos(t))
+    x_8 = 91238*C1*x_1*x_2 + 91238*C2*x_1*x_2 - 91238*C3*x_1*x_2
+    x_9 = 1 / (66049*t**3 - 50629*x_1*x_2 + 264196*log(t) - 264196)
+    x_10 = 50629 * C1 / 25189 + 37909*C2/25189 - 50629*C3/25189 - x_3*x_4
+    x_11 = -50629*C1/25189 - 12720*C2/25189 + 50629*C3/25189 + x_3*x_4
+    sol = [Eq(x(t), x_10*x_5 + x_11*x_6 + x_7*(C1 - C2)), Eq(y(t), x_10*x_5 + x_11*x_6), Eq(z(t), x_5*(
+            -424*C1/257 - 167*C2/257 + 424*C3/257 - x_8*x_9) + x_6*(167*C1/257 + 424*C2/257 -
+            167*C3/257 + x_8*x_9) + x_7*(C1 - C2))]
+
+    assert dsolve_sol1 == sol
+    assert checksysodesol(eq1, dsolve_sol1) == (True, [0, 0, 0])
+
+
+def _neq_order1_type4_slow1():
+    f, g = symbols("f, g", cls=Function)
+    x = Symbol("x")
+
+    eqs = [Eq(diff(f(x), x), x*f(x) + x**2*g(x) + x),
+           Eq(diff(g(x), x), 2*x**2*f(x) + (x + 3*x**2)*g(x) + 1)]
+    _x1 = sqrt(17)
+    _x2 = 1/(45*_x1 + 187)
+    _x3 = 1/(161*_x1 + 663)
+    _x4 = 1/(51*_x1 - 221)
+    _x5 = 1/(161*_x1 - 663)
+    _x6 = exp(_x1*x**3/6 - x**3/2 - x**2/2)
+    _x7 = -_x1*x**3/6
+    _x8 = exp(_x7 - x**3/2 - x**2/2)
+    _x9 = Integral(
+        139*_x1*_x3*_x6*x - 39*_x1*_x3*_x6 + 22*_x1*_x3*_x8*x + 39*_x1*_x3*_x8 + 573*_x3*_x6*x - 161*_x3*_x6 + 90*_x3*_x8*x + 161*_x3*_x8,
+        x)
+    _x10 = exp(_x7 + x**3/2 + x**2/2)
+    _x11 = exp(_x1*x**3/6 + x**3/2 + x**2/2)
+    _x12 = Integral(
+        -22*_x1*_x2*_x6*x + 6*_x1*_x2*_x6 + 22*_x1*_x2*_x8*x + 39*_x1*_x2*_x8 - 90*_x2*_x6*x + 26*_x2*_x6 + 90*_x2*_x8*x + 161*_x2*_x8,
+        x)
     sol = [
-        Eq(x(t), x_10 * x_5 + x_11 * x_6 + x_7 * (C1 - C2)),
-        Eq(y(t), x_10 * x_5 + x_11 * x_6),
-        Eq(z(t), x_5 * (-424*C1/257 - 167*C2 / 257+424*C3/257 - x_8*x_9)
-            + x_6*(167*C1/257 + 424*C2/257 - 167*C3/257 + x_8*x_9) + x_7*(C1 - C2))
+        Eq(f(x), _x10*(
+            22*C1*_x1*_x5 - 90*C1*_x5 + 39*C2*_x1*_x5 - 161*C2*_x5 + 39*_x1*_x12*_x5 + 22*_x1*_x5*_x9 - 161*_x12*_x5 - 90*_x5*_x9) + _x11*(
+               139*C1*_x1*_x5 - 573*C1*_x5 - 39*C2*_x1*_x5 + 161*C2*_x5 - 39*_x1*_x12*_x5 + 139*_x1*_x5*_x9 + 161*_x12*_x5 - 573*_x5*_x9)),
+        Eq(g(x), _x10*(
+            26*C1*_x1*_x4 - 102*C1*_x4 + 45*C2*_x1*_x4 - 187*C2*_x4 + 45*_x1*_x12*_x4 + 26*_x1*_x4*_x9 - 187*_x12*_x4 - 102*_x4*_x9) + _x11*(
+               -26*C1*_x1*_x4 + 102*C1*_x4 + 6*C2*_x1*_x4 - 34*C2*_x4 + 6*_x1*_x12*_x4 - 26*_x1*_x4*_x9 - 34*_x12*_x4 + 102*_x4*_x9)),
     ]
 
-    return eq, sol
+    return eqs, sol
+
+
+def test_neq_order1_type4_slow1():
+    eqs, sol = _neq_order1_type4_slow1()
+    with dotprodsimp(True):
+        assert dsolve(eqs) == sol
+
+
+@slow
+def test_neq_order1_type4_slow_check1():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+
+    eqs, sol = _neq_order1_type4_slow1()
+    assert checksysodesol(eqs, sol) == (True, [0, 0])
+
+def _neq_order1_type4_slow2():
+    f, g, h = symbols("f, g, h", cls=Function)
+    x = Symbol("x")
+
+    eqs = [Eq(Derivative(f(x), x), x*h(x) + f(x) + g(x) + 1), Eq(Derivative(g(x), x), x*g(x) + f(x) + h(x) +
+            10), Eq(Derivative(h(x), x), x*f(x) + x + g(x) + h(x))]
+    _x1 = -x**2/2
+    _x2 = exp(_x1 + x)
+    _x3 = exp(_x1 - 2*x)
+    _x4 = exp(x**2/2 - x)
+    _x5 = 11*_x3/3
+    _x6 = _x3*x/3
+    _x7 = Integral(-_x2*x/3 + 19*_x2/3 + _x5 + _x6, x)
+    _x8 = _x2*x/6
+    _x9 = -19*_x2/6
+    _x10 = Integral(-_x4*x/2 + _x4/2 + _x5 + _x6 + _x8 + _x9, x)
+    _x11 = Integral(_x4*x/2 - _x4/2 + _x5 + _x6 + _x8 + _x9, x)
+    _x12 = _x4*(C1/6 - C2/3 + C3/6 + _x10/6 + _x11/6 - _x7/3)
+    _x13 = (C1/3 + C2/3 + C3/3 + _x10/3 + _x11/3 + _x7/3)*exp(x**2/2 + 2*x)
+    sol = [
+        Eq(f(x), _x12 + _x13 + _x2*(C1/2 - C3/2 + _x10/2 - _x11/2)),
+        Eq(g(x), _x13 + _x4*(-C1/3 + 2*C2/3 - C3/3 - _x10/3 - _x11/3 + 2*_x7/3)),
+        Eq(h(x), _x12 + _x13 + _x2*(-C1/2 + C3/2 - _x10/2 + _x11/2)),
+    ]
+
+    return eqs, sol
+
+
+def test_neq_order1_type4_slow2():
+    eqs, sol = _neq_order1_type4_slow2()
+    with dotprodsimp(True):
+        assert dsolve(eqs) == sol
+
+
+@slow
+def test_neq_order1_type4_slow_check2():
+    eqs, sol = _neq_order1_type4_slow2()
+    assert checksysodesol(eqs, sol) == (True, [0, 0, 0])
+
+
+def _neq_order1_type4_slow3():
+    f, g = symbols("f g", cls=Function)
+    x = symbols("x")
+
+    eqs = [Eq(Derivative(f(x), x), x*f(x) + g(x) + sin(x)), Eq(Derivative(g(x), x), x**2 + x*g(x) - f(x))]
+    _x1 = exp(x**2/2 + I*x)
+    _x2 = exp(-x**2/2 + I*x)
+    _x3 = exp(-x**2/2 - I*x)
+    _x4 = Integral(_x2*x**2/2 - I*_x2*sin(x)/2 + _x3*x**2/2 + I*_x3*sin(x)/2, x)
+    _x5 = Integral(I*_x2*x**2/2 + _x2*sin(x)/2 - I*_x3*x**2/2 + _x3*sin(x)/2, x)
+    sol = [
+        Eq(f(x),
+           _x1*(C1/2 - I*C2/2 - I*_x4/2 + _x5/2) + (C1/2 + I*C2/2 + I*_x4/2 + _x5/2)*exp(
+               x**2/2 - I*x)),
+        Eq(g(x),
+           _x1*(I*C1/2 + C2/2 + _x4/2 + I*_x5/2) + (-I*C1/2 + C2/2 + _x4/2 - I*_x5/2)*exp(
+               x**2/2 - I*x)),
+    ]
+
+    return eqs, sol
+
+
+def test_neq_order1_type4_slow3():
+    eqs, sol = _neq_order1_type4_slow3()
+    assert dsolve(eqs) == sol
+
+
+@slow
+def test_neq_order1_type4_slow_check3():
+    eqs, sol = _neq_order1_type4_slow3()
+    assert checksysodesol(eqs, sol) == (True, [0, 0])
 
 
 @XFAIL
@@ -1185,7 +1467,10 @@ def test_linear_3eq_order1_type4_long_dsolve_slow_xfail():
     assert dsolve_sol1 == sol
 
 
+@slow
 def test_linear_3eq_order1_type4_long_dsolve_dotprodsimp():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
 
     from sympy.matrices import dotprodsimp
 
@@ -1200,6 +1485,10 @@ def test_linear_3eq_order1_type4_long_dsolve_dotprodsimp():
     assert dsolve_sol1 == sol
 
 
+@slow
 def test_linear_3eq_order1_type4_long_check():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+
     eq, sol = _linear_3eq_order1_type4_long()
     assert checksysodesol(eq, sol) == (True, [0, 0, 0])

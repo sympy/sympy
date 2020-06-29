@@ -595,6 +595,66 @@ def _linear_neq_order1_type3(match_):
     return sol_dict
 
 
+def _linear_neq_order1_type4(match_):
+    r"""
+    System of n first-order nonconstant-coefficient linear non-homogeneous differential equations
+
+    .. math::
+        X' = A(t) X + f(t)
+
+    where $X$ is the vector of $n$ dependent variables, $t$ is the dependent variable, $X'$
+    is the first order differential of $X$ with respect to $t$ and $A(t)$ is a $n \times n$
+    coefficient matrix.
+
+    Let us define $B$ as antiderivative of coefficient matrix $A$:
+
+    .. math::
+        B(t) = \int A(t) dt
+
+    If the system of ODEs defined above is such that its antiderivative $B(t)$ commutes with
+    $A(t)$ itself, then, the solution of the above system is given as:
+
+    .. math::
+        X = e^{B(t)} ( \int e^{-B(t)} f(t) \,dt + C)
+
+    where $C$ is the vector of constants.
+
+    """
+    # Some parts of code is repeated, this needs to be taken care of
+    # The constant vector obtained here can be done so in the match
+    # function itself.
+    eq = match_['eq']
+    func = match_['func']
+    fc = match_['func_coeff']
+    b = match_['rhs']
+    n = len(eq)
+    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+
+    # This needs to be modified in future so that fc is only of type Matrix
+    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
+
+    Cvect = Matrix(list(next(constants) for _ in range(n)))
+
+    # The code in if block will be removed when it is made sure
+    # that the code works without the statements in if block.
+    if "commutative_antiderivative" not in match_:
+        B, is_commuting = _is_commutative_anti_derivative(M, t)
+
+        # This course is subject to change
+        if not is_commuting:
+            return None
+
+    else:
+        B = match_['commutative_antiderivative']
+
+    sol_vector = B.exp() * (((-B).exp() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+    sol_vector = [collect(expand_mul(s), ordered(sol_vector.atoms(exp)), exact=True) for s in sol_vector]
+
+    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
+    return sol_dict
+
+
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     r"""
     Returns a dictionary with details of the eqs if every equation is constant coefficient
@@ -735,23 +795,20 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     # The match['is_linear'] check will be added in the future when this
     # function becomes ready to deal with non-linear systems of ODEs
 
-    # Converting the equation into canonical form if the
-    # equation is first order. There will be a separate
-    # function for this in the future.
     if all([order[func] == 1 for func in funcs]):
         match['func_coeff'] = A
+
+        if not is_homogeneous:
+            match['rhs'] = b
+
         if match['is_constant']:
-            if is_homogeneous:
-                match['type_of_equation'] = "type1"
-            else:
-                match['rhs'] = b
-                match['type_of_equation'] = "type2"
+            match['type_of_equation'] = "type1" if is_homogeneous else "type2"
         else:
             B, is_commuting = _is_commutative_anti_derivative(-A, t)
-            if not is_commuting or not is_homogeneous:
+            if not is_commuting:
                 return None
             match['commutative_antiderivative'] = B
-            match['type_of_equation'] = "type3"
+            match['type_of_equation'] = "type3" if is_homogeneous else "type4"
 
         return match
 

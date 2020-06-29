@@ -700,6 +700,7 @@ class log(Function):
                     from sympy.simplify import ratsimp
                     # Check for arguments involving rational multiples of pi
                     t = (i_/r_).cancel()
+                    t1 = (-t).cancel()
                     atan_table = {
                         # first quadrant only
                         sqrt(3): S.Pi/3,
@@ -728,12 +729,12 @@ class log(Function):
                             return cls(modulus) + I * atan_table[t]
                         else:
                             return cls(modulus) + I * (atan_table[t] - S.Pi)
-                    elif -t in atan_table:
+                    elif t1 in atan_table:
                         modulus = ratsimp(coeff * Abs(arg_))
                         if r_.is_positive:
-                            return cls(modulus) + I * (-atan_table[-t])
+                            return cls(modulus) + I * (-atan_table[t1])
                         else:
-                            return cls(modulus) + I * (S.Pi - atan_table[-t])
+                            return cls(modulus) + I * (S.Pi - atan_table[t1])
 
     def as_base_exp(self):
         """

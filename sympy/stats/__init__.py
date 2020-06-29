@@ -128,11 +128,12 @@ __all__ = [
     'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
     'GeneralizedMultivariateLogGammaOmega', 'Multinomial', 'MultivariateBeta',
     'MultivariateEwens', 'MultivariateT', 'NegativeMultinomial',
-    'NormalGamma',
+    'NormalGamma', 'MultivariateNormal', 'MultivariateLaplace', 'marginal_distribution',
 
     'StochasticProcess', 'DiscreteTimeStochasticProcess',
     'DiscreteMarkovChain', 'TransitionMatrixOf', 'StochasticStateSpaceOf',
     'GeneratorMatrixOf', 'ContinuousMarkovChain', 'BernoulliProcess',
+    'PoissonProcess', 'WienerProcess', 'GammaProcess',
 
     'CircularEnsemble', 'CircularUnitaryEnsemble',
     'CircularOrthogonalEnsemble', 'CircularSymplecticEnsemble',
@@ -172,12 +173,14 @@ from .drv_types import (Geometric, Hermite, Logarithmic, NegativeBinomial, Poiss
 from .joint_rv_types import (JointRV, Dirichlet,
         GeneralizedMultivariateLogGamma, GeneralizedMultivariateLogGammaOmega,
         Multinomial, MultivariateBeta, MultivariateEwens, MultivariateT,
-        NegativeMultinomial, NormalGamma)
+        NegativeMultinomial, NormalGamma, MultivariateNormal, MultivariateLaplace,
+        marginal_distribution)
 
 from .stochastic_process_types import (StochasticProcess,
         DiscreteTimeStochasticProcess, DiscreteMarkovChain,
         TransitionMatrixOf, StochasticStateSpaceOf, GeneratorMatrixOf,
-        ContinuousMarkovChain, BernoulliProcess)
+        ContinuousMarkovChain, BernoulliProcess, PoissonProcess, WienerProcess,
+        GammaProcess)
 
 from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         CircularOrthogonalEnsemble, CircularSymplecticEnsemble,

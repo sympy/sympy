@@ -1832,10 +1832,13 @@ def classify_sysode(eq, funcs=None, **kwargs):
     [-11, -3]]), 'is_constant': True, 'is_general': True, 'is_homogeneous': True, 'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': 'type1'}
     >>> eq = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t) + 2), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
     >>> classify_sysode(eq)
-    {'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t) - 2, t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)],
-     'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -5*t, (0, x(t), 1): 1, (0, y(t), 0): -t**2,
-     (0, y(t), 1): 0, (1, x(t), 0): t**2, (1, x(t), 1): 0, (1, y(t), 0): -5*t, (1, y(t), 1): 1},
-     'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': None}
+    {'commutative_antiderivative': Matrix([
+    [5*t**2/2,   t**3/3],
+    [ -t**3/3, 5*t**2/2]]), 'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t) - 2, t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)], 'func': [x(t), y(t)], 'func_coeff': Matrix([
+    [-5*t, -t**2],
+    [t**2,  -5*t]]), 'is_constant': False, 'is_general': True, 'is_homogeneous': False, 'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'rhs': Matrix([
+    [2],
+    [0]]), 'type_of_equation': 'type4'}
 
     """
     from sympy.solvers.ode.systems import neq_nth_linear_constant_coeff_match
@@ -7281,7 +7284,8 @@ def _linear_2eq_order2_type11(x, y, t, r, eq):
 
 def sysode_linear_neq_order1(match):
     from sympy.solvers.ode.systems import (_linear_neq_order1_type1,
-        _linear_neq_order1_type3, _linear_neq_order1_type2)
+        _linear_neq_order1_type2, _linear_neq_order1_type3,
+        _linear_neq_order1_type4)
 
     if match['type_of_equation'] == 'type1':
         sol = _linear_neq_order1_type1(match)
@@ -7289,6 +7293,9 @@ def sysode_linear_neq_order1(match):
         sol = _linear_neq_order1_type2(match)
     elif match['type_of_equation'] == 'type3':
         sol = _linear_neq_order1_type3(match)
+    elif match['type_of_equation'] == 'type4':
+        sol = _linear_neq_order1_type4(match)
+
     return sol
 
 
