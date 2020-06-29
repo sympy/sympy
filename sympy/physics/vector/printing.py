@@ -133,7 +133,7 @@ class VectorLatexPrinter(LatexPrinter):
         test1 = not all([True for i in red if i.free_symbols == {t}])
         test2 = not all([(t == i) for i in syms])
         if test1 or test2:
-            return LatexPrinter().doprint(der_expr)
+            return super()._print_Derivative(der_expr)
 
         # done checking
         dots = len(syms)
@@ -149,7 +149,7 @@ class VectorLatexPrinter(LatexPrinter):
         elif dots == 4:
             base = r"\ddddot{%s}" % base
         else: # Fallback to standard printing
-            return LatexPrinter().doprint(der_expr)
+            return super()._print_Derivative(der_expr)
         if len(base_split) != 1:
             base += '_' + base_split[1]
         return base
