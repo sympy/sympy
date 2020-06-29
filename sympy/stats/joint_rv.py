@@ -19,10 +19,8 @@ from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import ImmutableMatrix
-from sympy.stats.crv import (ContinuousDistribution,
-                             SingleContinuousDistribution, SingleContinuousPSpace)
-from sympy.stats.drv import (DiscreteDistribution,
-                             SingleDiscreteDistribution, SingleDiscretePSpace)
+from sympy.stats.crv import SingleContinuousDistribution, SingleContinuousPSpace
+from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
                             ProductDomain, RandomSymbol, random_symbols, SingleDomain)
 from sympy.utilities.misc import filldedent
@@ -241,42 +239,6 @@ def marginal_distribution(rv, *indices):
     return prob_space.marginal_distribution(*indices)
 
 
-class CompoundDistribution(Basic, NamedArgsMixin):
-    """
-    Represents a compound probability distribution.
-
-    Constructed using a single probability distribution with a parameter
-    distributed according to some given distribution.
-    """
-    def __new__(cls, dist):
-        if not isinstance(dist, (ContinuousDistribution, DiscreteDistribution)):
-            raise ValueError(filldedent('''CompoundDistribution can only be
-             initialized from ContinuousDistribution or DiscreteDistribution
-             '''))
-        _args = dist.args
-        if not any([isinstance(i, RandomSymbol) for i in _args]):
-            return dist
-        return Basic.__new__(cls, dist)
-
-    @property
-    def latent_distributions(self):
-        return random_symbols(self.args[0])
-
-    def pdf(self, *x):
-        dist = self.args[0]
-        z = Dummy('z')
-        if isinstance(dist, ContinuousDistribution):
-            rv = SingleContinuousPSpace(z, dist).value
-        elif isinstance(dist, DiscreteDistribution):
-            rv = SingleDiscretePSpace(z, dist).value
-        return MarginalDistribution(self, (rv,)).pdf(*x)
-
-    def set(self):
-        return self.args[0].set
-
-    def __call__(self, *args):
-        return self.pdf(*args)
-
 
 class MarginalDistribution(Basic):
     """
@@ -315,10 +277,7 @@ class MarginalDistribution(Basic):
     def pdf(self, *x):
         expr, rvs = self.args[0], self.args[1]
         marginalise_out = [i for i in random_symbols(expr) if i not in rvs]
-        if isinstance(expr, CompoundDistribution):
-            syms = Dummy('x', real=True)
-            expr = expr.args[0].pdf(syms)
-        elif isinstance(expr, JointDistribution):
+        if isinstance(expr, JointDistribution):
             count = len(expr.domain.args)
             x = Dummy('x', real=True, finite=True)
             syms = tuple(Indexed(x, i) for i in count)

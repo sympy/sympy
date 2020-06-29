@@ -65,7 +65,6 @@ from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    hyper, uppergamma, sinh, Ne, expint, Rational, integrate)
 from sympy.matrices import MatrixBase, MatrixExpr
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
-from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
 from sympy.stats.joint_rv_types import multivariate_rv
 from sympy.stats.rv import _value_check, is_random
 
@@ -135,8 +134,8 @@ def rv(symbol, cls, args):
     dist.check(*args)
     pspace = SingleContinuousPSpace(symbol, dist)
     if any(is_random(arg) for arg in args):
-        from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
-        pspace = CompoundPSpace(symbol, CompoundDistribution(dist))
+        from sympy.stats.compound_rv import compound_pspace, CompoundDistribution
+        pspace = compound_pspace(symbol, CompoundDistribution(dist))
     return pspace.value
 
 
@@ -150,6 +149,11 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
     def set(self):
         return self.args[1]
 
+    @staticmethod
+    def check(pdf, set):
+        x = Dummy('x')
+        val = integrate(pdf(x), (x, set))
+        _value_check(val == S.One, "The pdf on the given set is incorrect.")
 
 def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
