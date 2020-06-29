@@ -562,6 +562,21 @@ class Parallel(Basic):
         else:
             raise ValueError("This transfer function expression is invalid.")
 
+    def __mul__(self, other):
+        if isinstance(other, (TransferFunction, Parallel)):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            return Series(self, other)
+        elif isinstance(other, Series):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            arg_list = list(other.args)
+            return Series(self, *arg_list)
+        else:
+            raise ValueError("This transfer function expression is invalid.")
+
     def __neg__(self):
         return Series(TransferFunction(-1, 1, self.var), self)
 
