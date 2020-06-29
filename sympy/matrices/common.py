@@ -240,7 +240,7 @@ class MatrixShaping(MatrixRequired):
         """
         # Allows you to build a matrix even if it is null matrix
         if not self:
-            return type(self)(other)
+            return self._new(other)
 
         pos = as_int(pos)
 

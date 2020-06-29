@@ -3,6 +3,7 @@ from __future__ import print_function
 from sympy.core.sympify import _sympify
 
 from sympy.matrices.dense import MutableDenseMatrix
+from sympy.matrices import NonSquareMatrixError
 
 from sympy.polys.fields import sfield
 from sympy.polys.polytools import Poly
@@ -211,7 +212,8 @@ class DomainMatrix:
 def matrix_mul(items1, shape1, items2, shape2):
     m, n1 = shape1
     n2, o = shape2
-    assert n1 == n2
+    if n1 != n2:
+        raise NonSquareMatrixError
     n = n1
     shape3 = (m, o)
     items3 = [[None] * o for _ in range(m)]

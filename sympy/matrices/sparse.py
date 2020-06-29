@@ -848,7 +848,9 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         A = A.copy()
         if not isinstance(B, SparseMatrix):
             k = 0
-            b = B._mat
+            b = getattr(B, "_mat", None)
+            if b is None:
+                b = B._flat()
             for i in range(B.rows):
                 for j in range(B.cols):
                     v = b[k]
@@ -1023,7 +1025,9 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         A = A.copy()
         if not isinstance(B, SparseMatrix):
             k = 0
-            b = B._mat
+            b = getattr(B, "_mat", None)
+            if b is None:
+                b = B._flat()
             for i in range(B.rows):
                 for j in range(B.cols):
                     v = b[k]

@@ -1438,13 +1438,15 @@ class MatrixBase(MatrixDeprecated,
         if self.is_symmetric():
             return work
 
+        work = work.tolist()
+
         for i in range(1, n):
             for j in range(1, n):
                 acum = 0
                 for k in range(1, n):
                     acum += LeviCivita(i, j, 0, k) * M[0, k]
-                work[i, j] = acum
-                work[j, i] = -acum
+                work[i][j] = acum
+                work[j][i] = -acum
 
         for l in range(1, n):
             acum = 0
@@ -1452,10 +1454,10 @@ class MatrixBase(MatrixDeprecated,
                 for b in range(1, n):
                     acum += LeviCivita(0, l, a, b) * M[a, b]
             acum /= 2
-            work[0, l] = -acum
-            work[l, 0] = acum
+            work[0][l] = -acum
+            work[l][0] = acum
 
-        return work
+        return self._new(work)
 
     def _eval_matrix_exp_jblock(self):
         """A helper function to compute an exponential of a Jordan block
@@ -1494,7 +1496,7 @@ class MatrixBase(MatrixDeprecated,
         bands = {i: exp_l / factorial(i) for i in range(size)}
 
         from .sparsetools import banded
-        return self.__class__(banded(size, bands))
+        return self._new(banded(size, bands))
 
 
     def analytic_func(self, f, x):
@@ -1544,8 +1546,8 @@ class MatrixBase(MatrixDeprecated,
             dd = diff(dd, x)
             derivative[i + 1] = dd
         n = self.shape[0]
-        r = self.zeros(n)
-        f_val = self.zeros(n, 1)
+        r = self.zeros(n).tolist()
+        f_val = [0] * n
         row = 0
 
         for i in eigen:
@@ -1556,7 +1558,7 @@ class MatrixBase(MatrixDeprecated,
                                  " analytic at some eigen value")
             val = 1
             for a in range(n):
-                r[row, a] = val
+                r[row][a] = val
                 val *= i
             if mul > 1:
                 coe = [1 for ii in range(n)]
@@ -1571,14 +1573,14 @@ class MatrixBase(MatrixDeprecated,
                     f_val[row] = d_i
                     for a in range(n):
                         if a - deri + 1 <= 0:
-                            r[row, a] = 0
+                            r[row][a] = 0
                             coe[a] = 0
                             continue
                         coe[a] = coe[a]*(a - deri + 1)
-                        r[row, a] = coe[a]*pow(i, a - deri)
+                        r[row][a] = coe[a]*pow(i, a - deri)
                     deri += 1
             row += 1
-        c = r.solve(f_val)
+        c = self._new(r).solve(self._new(f_val))
         ans = self.zeros(n)
         pre = self.eye(n)
         for i in range(n):
@@ -1620,9 +1622,9 @@ class MatrixBase(MatrixDeprecated,
         # n = self.rows
         ret = P.multiply(eJ, dotprodsimp=None).multiply(P.inv(), dotprodsimp=None)
         if all(value.is_real for value in self.values()):
-            return type(self)(re(ret))
+            return self._new(re(ret))
         else:
-            return type(self)(ret)
+            return self._new(ret)
 
     def _eval_matrix_log_jblock(self):
         """Helper function to compute logarithm of a jordan block.

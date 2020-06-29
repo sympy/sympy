@@ -141,30 +141,42 @@ class ImmutableDenseDomainMatrix(DenseDomainMatrix, ImmutableDenseMatrix):
 
     __hash__ = MatrixExpr.__hash__
 
-    rows = cols = None
-
     def __new__(cls, rows, cols, flat_list):
+        flat_list = [_sympify(e) for e in flat_list]
         rows_list = [[flat_list[i*cols + j] for j in range(cols)] for i in range(rows)]
         rep = DomainMatrix.from_list_sympy_2(rows, cols, rows_list)
         assert str(rep.domain) in ('ZZ', 'QQ')
-        obj = cls.from_DomainMatrix(rep)
-        obj._mhash = None
+
+        obj = Basic.__new__(cls,
+            Integer(rows),
+            Integer(cols),
+            Tuple(*flat_list))
+
+        obj._rows = int(rows)
+        obj._cols = int(cols)
+        obj._rep = rep
         return obj
-
-    @property
-    def args(self):
-        return (self.rows, self.cols, tuple(self._flat()))
-
-    def _hashable_content(self):
-        return self.args
-
-    def _entry(self, i, j, **kwargs):
-        return DenseDomainMatrix.__getitem__(self, (i, j))
 
     @classmethod
     def _new(cls, *args, **kwargs):
         # This will come back to DenseDomainMatrix.__new__ if possible
         return ImmutableDenseMatrix._new(*args, **kwargs)
+
+    @classmethod
+    def from_DomainMatrix(cls, rep):
+        rows, cols = rep.shape
+        flat_list = [rep.domain.to_sympy(e) for row in rep.rows for e in row]
+        return ImmutableDenseDomainMatrix(rows, cols, flat_list)
+
+    #@property
+    #def args(self):
+    #    return (self.rows, self.cols, tuple(self._flat()))
+#
+#    def _hashable_content(self):
+#        return self.args
+
+    def _entry(self, i, j, **kwargs):
+        return DenseDomainMatrix.__getitem__(self, (i, j))
 
 
 class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):

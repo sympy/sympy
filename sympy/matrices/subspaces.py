@@ -183,7 +183,7 @@ def _orthogonalize(cls, *vecs, **kwargs):
         perp = perp_to_subspace(vec, ret)
 
         if not perp.is_zero_matrix:
-            ret.append(cls(perp))
+            ret.append(cls._new(perp))
         elif rankcheck is True:
             raise ValueError("GramSchmidt: vector set not linearly independent")
 

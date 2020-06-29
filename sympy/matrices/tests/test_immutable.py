@@ -64,30 +64,31 @@ def test_function_return_types():
     q, r = X.QRdecomposition()
     assert (type(q), type(r)) == (ImmutableMatrix, ImmutableMatrix)
 
-    assert type(X.LUsolve(Y)) == ImmutableMatrix
-    assert type(X.QRsolve(Y)) == ImmutableMatrix
+    assert isinstance((X.LUsolve(Y)), ImmutableMatrix)
+    assert isinstance((X.QRsolve(Y)), ImmutableMatrix)
 
     X = ImmutableMatrix([[5, 2], [2, 7]])
     assert X.T == X
     assert X.is_symmetric
     assert type(X.cholesky()) == ImmutableMatrix
     L, D = X.LDLdecomposition()
-    assert (type(L), type(D)) == (ImmutableMatrix, ImmutableMatrix)
+    assert isinstance(L, ImmutableMatrix)
+    assert isinstance(D, ImmutableMatrix)
 
     X = ImmutableMatrix([[1, 2], [2, 1]])
     assert X.is_diagonalizable()
     assert X.det() == -3
     assert X.norm(2) == 3
 
-    assert type(X.eigenvects()[0][2][0]) == ImmutableMatrix
+    assert isinstance((X.eigenvects()[0][2][0]), ImmutableMatrix)
 
-    assert type(zeros(3, 3).as_immutable().nullspace()[0]) == ImmutableMatrix
+    assert isinstance((zeros(3, 3).as_immutable().nullspace()[0]), ImmutableMatrix)
 
     X = ImmutableMatrix([[1, 0], [2, 1]])
-    assert type(X.lower_triangular_solve(Y)) == ImmutableMatrix
-    assert type(X.T.upper_triangular_solve(Y)) == ImmutableMatrix
+    assert isinstance((X.lower_triangular_solve(Y)), ImmutableMatrix)
+    assert isinstance((X.T.upper_triangular_solve(Y)), ImmutableMatrix)
 
-    assert type(X.minor_submatrix(0, 0)) == ImmutableMatrix
+    assert isinstance((X.minor_submatrix(0, 0)), ImmutableMatrix)
 
 # issue 6279
 # https://github.com/sympy/sympy/issues/6279

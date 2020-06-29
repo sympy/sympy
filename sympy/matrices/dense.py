@@ -133,7 +133,10 @@ class DenseMatrix(MatrixBase):
     def _eval_add(self, other):
         # we assume both arguments are dense matrices since
         # sparse matrices have a higher priority
-        mat = [a + b for a,b in zip(self._mat, other._mat)]
+        other_mat = getattr(other, "_mat", None)
+        if other_mat is None:
+            other_mat = other._flat()
+        mat = [a + b for a,b in zip(self._mat, other_mat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_extract(self, rowsList, colsList):
@@ -172,7 +175,13 @@ class DenseMatrix(MatrixBase):
         return classof(self, other)._new(self.rows, other.cols, new_mat, copy=False)
 
     def _eval_matrix_mul_elementwise(self, other):
-        mat = [a*b for a,b in zip(self._mat, other._mat)]
+        self_mat = getattr(self, "_mat", None)
+        if self_mat is None:
+            self_mat = self._flat()
+        other_mat = getattr(other, "_mat", None)
+        if other_mat is None:
+            other_mat = other._flat()
+        mat = [a*b for a,b in zip(self_mat, other_mat)]
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_inverse(self, **kwargs):
@@ -545,8 +554,15 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
         """
         i0 = i*self.cols
-        ri = self._mat[i0: i0 + self.cols]
-        self._mat[i0: i0 + self.cols] = [f(x, j) for x, j in zip(ri, list(range(self.cols)))]
+
+        flat = getattr(self, "_mat", None)
+        if flat is None:
+            flat = self._flat()
+
+        ri = flat[i0: i0 + self.cols]
+
+        for i in range(self.cols):
+            self[i0 + i] = f(ri[i], i)
 
     def row_swap(self, i, j):
         """Swap the two given rows of the matrix in-place.
@@ -585,8 +601,8 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
         sympy.simplify.simplify.simplify
         """
-        for i in range(len(self._mat)):
-            self._mat[i] = _simplify(self._mat[i], **kwargs)
+        for i in range(self.rows * self.cols):
+            self[i] = _simplify(self[i], **kwargs)
 
     def zip_row_op(self, i, k, f):
         """In-place operation on row ``i`` using two-arg functor whose args are
@@ -634,20 +650,6 @@ from sympy.polys.polymatrix import DomainMatrix
 
 class DenseDomainMatrix(DenseMatrix):
 
-    def __new__(cls, rows, cols, flat_list):
-        rows_list = [[flat_list[i*cols + j] for j in range(cols)] for i in range(rows)]
-        rep = DomainMatrix.from_list_sympy_2(rows, cols, rows_list)
-        assert str(rep.domain) in ('ZZ', 'QQ')
-        return cls.from_DomainMatrix(rep)
-
-    @classmethod
-    def from_DomainMatrix(cls, rep):
-        self = object.__new__(cls)
-        self._rep = rep
-        self.rows, self.cols = rep.shape
-        self._rows, self._cols = rep.shape
-        return self
-
     def __getitem__(self, index):
 
         def a2i(ind, dim):
@@ -658,8 +660,15 @@ class DenseDomainMatrix(DenseMatrix):
             else:
                 return [ind]
 
+        def toint(i):
+            if hasattr(i, '__index__'):
+                i = i.__index__()
+            return i
+
+        index = toint(index)
+
         if isinstance(index, tuple):
-            i, j = index
+            i, j = map(toint, index)
             if isinstance(i, (int, Integer)) and isinstance(j, (int, Integer)):
                 element_dom = self._rep.rows[i][j]
             elif isinstance(i, (slice, list)) or isinstance(j, (slice, list)):
@@ -667,7 +676,7 @@ class DenseDomainMatrix(DenseMatrix):
                 j_indices = a2i(j, self.cols)
                 return self.extract(i_indices, j_indices)
             else:
-                raise ValueError("no slice~~~~")
+                raise IndexError("no slice~~~~")
         elif isinstance(index, (int, Integer)):
             if not self.cols:
                 raise IndexError("no more elements........")
@@ -681,16 +690,19 @@ class DenseDomainMatrix(DenseMatrix):
         return element_sympy
 
     def __add__(self, other):
-        if not isinstance(other, DenseDomainMatrix):
+        if isinstance(other, DenseDomainMatrix):
+            return classof(self, other).from_DomainMatrix(self._rep + other._rep)
+        elif isinstance(other, DenseMatrix):
+            return other._eval_add(self)
+        else:
             return NotImplemented
-        return self.from_DomainMatrix(self._rep + other._rep)
 
     def __mul__(self, other):
         other = _sympify(other)
         if isinstance(other, DenseDomainMatrix):
             return self.from_DomainMatrix(self._rep * other._rep)
         elif isinstance(other, DenseMatrix):
-            return NotImplemented
+            return other._eval_matrix_rmul(self)
         return self._eval_scalar_mul(other)
 
     def __pow__(self, exp):
@@ -715,6 +727,8 @@ class DenseDomainMatrix(DenseMatrix):
     def _eval_matrix_mul(self, other):
         if isinstance(other, DenseDomainMatrix):
             return self.from_DomainMatrix(self._rep * other._rep)
+        elif isinstance(other, DenseMatrix):
+            return other._eval_matrix_rmul(self)
         else:
             raise ValueError("Not domain matrix")
 
@@ -754,6 +768,20 @@ class DenseDomainMatrix(DenseMatrix):
 
 class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
 
+    def __new__(cls, rows, cols, flat_list):
+        rows_list = [[flat_list[i*cols + j] for j in range(cols)] for i in range(rows)]
+        rep = DomainMatrix.from_list_sympy_2(rows, cols, rows_list)
+        assert str(rep.domain) in ('ZZ', 'QQ')
+        return cls.from_DomainMatrix(rep)
+
+    @classmethod
+    def from_DomainMatrix(cls, rep):
+        self = object.__new__(cls)
+        self._rep = rep
+        self.rows, self.cols = rep.shape
+        self._rows, self._cols = rep.shape
+        return self
+
     @classmethod
     def _new(cls, *args, **kwargs):
         # This will come back to DenseDomainMatrix.__new__ if possible
@@ -769,14 +797,22 @@ class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
             else:
                 return [ind]
 
+        def toint(i):
+            if hasattr(i, '__index__'):
+                i = i.__index__()
+            return i
+
+        key = toint(key)
+
         if isinstance(key, tuple):
-            i, j = key
+            i, j = map(toint, key)
             if isinstance(i, (int, Integer)) and isinstance(j, (int, Integer)):
                 value = self._rep.domain.convert(value)
                 self._rep.rows[i][j] = value
             elif isinstance(i, (slice, list)) or isinstance(j, (slice, list)):
                 i_indices = a2i(i, self.rows)
                 j_indices = a2i(j, self.cols)
+                value = MutableDenseMatrix(value)
                 for i in range(len(i_indices)):
                     for j in range(len(j_indices)):
                         self[i_indices[i], j_indices[j]] = value[i, j]
@@ -786,9 +822,39 @@ class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
             i, j = key // self.cols, key % self.cols
             value = self._rep.domain.convert(value)
             self._rep.rows[i][j] = value
+        elif isinstance(key, slice):
+            if not isinstance(value, list):
+                raise IndexError('bad value-----')
+            for i in range(self.rows * self.cols)[key]:
+                self[i] = value
         else:
             raise ValueError("bad set index @@@@@@@@")
 
+    def _set_rep(self, rep):
+        self._rep = rep
+        self.rows, self.cols = rep.shape
+        self._rows, self._cols = rep.shape
+
+    def _eval_row_del(self, i):
+        rows = self.rows - 1
+        cols = self.cols
+        itemslist = self._rep.rows
+        itemslist = itemslist[:i] + itemslist[i+1:]
+        rep = DomainMatrix.from_list_sympy_2(rows, cols, itemslist)
+        self._set_rep(rep)
+
+    def _eval_col_del(self, i):
+        rows = self.rows
+        cols = self.cols - 1
+        itemslist = self._rep.rows
+        itemslist = [row[:i] + row[i+1:] for row in itemslist]
+        rep = DomainMatrix.from_list_sympy_2(rows, cols, itemslist)
+        self._set_rep(rep)
+
+    def fill(self, value):
+        for i in range(self.rows):
+            for j in range(self.cols):
+                self[i, j] = value
 
 
 ###########
@@ -1235,20 +1301,20 @@ def hessian(f, varlist, constraints=[]):
         raise ValueError("Function `f` (%s) is not differentiable" % f)
     m = len(constraints)
     N = m + n
-    out = zeros(N)
+    out = zeros(N).tolist()
     for k, g in enumerate(constraints):
         if not getattr(g, 'diff'):
             # check differentiability
             raise ValueError("Function `f` (%s) is not differentiable" % f)
         for i in range(n):
-            out[k, i + m] = g.diff(varlist[i])
+            out[k][i + m] = g.diff(varlist[i])
     for i in range(n):
         for j in range(i, n):
-            out[i + m, j + m] = f.diff(varlist[i]).diff(varlist[j])
+            out[i + m][j + m] = f.diff(varlist[i]).diff(varlist[j])
     for i in range(N):
         for j in range(i + 1, N):
-            out[j, i] = out[i, j]
-    return out
+            out[j][i] = out[i][j]
+    return Matrix(out)
 
 
 def jordan_cell(eigenval, n):
@@ -1367,10 +1433,11 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
         if percent == 100:
             return m
         z = int(r*c*(100 - percent) // 100)
-        m._mat[:z] = [S.Zero]*z
-        prng.shuffle(m._mat)
+        mlist = [e for row in m.tolist() for e in row]
+        mlist[:z] = [S.Zero]*z
+        prng.shuffle(mlist)
 
-        return m
+        return Matrix._new(r, c, mlist)
 
     # Symmetric case
     if r != c:

@@ -68,14 +68,14 @@ def _lower_triangular_solve(M, rhs):
         raise ValueError("Matrix must be lower triangular.")
 
     dps = _get_intermediate_simp()
-    X   = MutableDenseMatrix.zeros(M.rows, rhs.cols)
+    X   = MutableDenseMatrix.zeros(M.rows, rhs.cols).tolist()
 
     for j in range(rhs.cols):
         for i in range(M.rows):
             if M[i, i] == 0:
                 raise TypeError("Matrix must be non-singular.")
 
-            X[i, j] = dps((rhs[i, j] - sum(M[i, k]*X[k, j]
+            X[i][j] = dps((rhs[i, j] - sum(M[i, k]*X[k][j]
                                         for k in range(i))) / M[i, i])
 
     return M._new(X)
@@ -110,14 +110,14 @@ def _lower_triangular_solve_sparse(M, rhs):
         if i > j:
             rows[i].append((j, v))
 
-    X = rhs.as_mutable()
+    X = rhs.as_mutable().tolist()
 
     for j in range(rhs.cols):
         for i in range(rhs.rows):
             for u, v in rows[i]:
-                X[i, j] -= v*X[u, j]
+                X[i][j] -= v*X[u][j]
 
-            X[i, j] = dps(X[i, j] / M[i, i])
+            X[i][j] = dps(X[i][j] / M[i, i])
 
     return M._new(X)
 
@@ -148,14 +148,14 @@ def _upper_triangular_solve(M, rhs):
         raise TypeError("Matrix is not upper triangular.")
 
     dps = _get_intermediate_simp()
-    X   = MutableDenseMatrix.zeros(M.rows, rhs.cols)
+    X   = MutableDenseMatrix.zeros(M.rows, rhs.cols).tolist()
 
     for j in range(rhs.cols):
         for i in reversed(range(M.rows)):
             if M[i, i] == 0:
                 raise ValueError("Matrix must be non-singular.")
 
-            X[i, j] = dps((rhs[i, j] - sum(M[i, k]*X[k, j]
+            X[i][j] = dps((rhs[i, j] - sum(M[i, k]*X[k][j]
                                         for k in range(i + 1, M.rows))) / M[i, i])
 
     return M._new(X)
@@ -190,14 +190,14 @@ def _upper_triangular_solve_sparse(M, rhs):
         if i < j:
             rows[i].append((j, v))
 
-    X = rhs.as_mutable()
+    X = rhs.as_mutable().tolist()
 
     for j in range(rhs.cols):
         for i in reversed(range(rhs.rows)):
             for u, v in reversed(rows[i]):
-                X[i, j] -= v*X[u, j]
+                X[i][j] -= v*X[u][j]
 
-            X[i, j] = dps(X[i, j] / M[i, i])
+            X[i][j] = dps(X[i][j] / M[i, i])
 
     return M._new(X)
 
@@ -369,7 +369,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
         scale = A[i, i]
         b.row_op(i, lambda x, _: dps(x / scale))
 
-    return rhs.__class__(b)
+    return rhs._new(b)
 
 
 def _QRsolve(M, b):
@@ -422,7 +422,7 @@ def _QRsolve(M, b):
 
         x.append(tmp / R[j, j])
 
-    return M._new([row._mat for row in reversed(x)])
+    return M._new([row.tolist()[0] for row in reversed(x)])
 
 
 def _gauss_jordan_solve(M, B, freevar=False):
@@ -530,7 +530,7 @@ def _gauss_jordan_solve(M, B, freevar=False):
 
     from sympy.matrices import Matrix, zeros
 
-    cls      = M.__class__
+    cls      = M._new
     aug      = M.hstack(M.copy(), B.copy())
     B_cols   = B.cols
     row, col = aug[:, :-B_cols].shape
@@ -571,10 +571,9 @@ def _gauss_jordan_solve(M, B, freevar=False):
     free_sol = tau.vstack(vt - V * tau, tau)
 
     # Undo permutation
-    sol = zeros(col, B_cols)
-
+    sol = [None] * col
     for k in range(col):
-        sol[permutation[k], :] = free_sol[k,:]
+        sol[permutation[k]] = list(free_sol[k,:])
 
     sol, tau = cls(sol), cls(tau)
 
@@ -670,7 +669,7 @@ def _pinv_solve(M, B, arbitrary_matrix=None):
     if arbitrary_matrix is None:
         rows, cols       = A.cols, B.cols
         w                = symbols('w:{}_:{}'.format(rows, cols), cls=Dummy)
-        arbitrary_matrix = M.__class__(cols, rows, w).T
+        arbitrary_matrix = M._new(cols, rows, w).T
 
     return A_pinv.multiply(B) + (eye(A.cols) -
             A_pinv.multiply(A)).multiply(arbitrary_matrix)

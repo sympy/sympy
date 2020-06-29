@@ -199,10 +199,11 @@ class DiagMatrix(MatrixExpr):
         if ask(Q.diagonal(vector)):
             return vector
         if isinstance(vector, MatrixBase):
-            ret = eye(max(vector.shape))
-            for i in range(ret.shape[0]):
-                ret[i, i] = vector[i]
-            return type(vector)(ret)
+            n = max(vector.shape)
+            ret = eye(n).tolist()
+            for i in range(n):
+                ret[i][i] = vector[i]
+            return vector._new(ret)
         if vector.is_MatMul:
             matrices = [arg for arg in vector.args if arg.is_Matrix]
             scalars = [arg for arg in vector.args if arg not in matrices]

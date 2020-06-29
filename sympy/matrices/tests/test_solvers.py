@@ -480,8 +480,8 @@ def test_gauss_jordan_solve():
     sol, params = A.gauss_jordan_solve(B)
     assert sol == ImmutableMatrix([1, 2])
     assert params == ImmutableMatrix(0, 1, [])
-    assert sol.__class__ == ImmutableDenseMatrix
-    assert params.__class__ == ImmutableDenseMatrix
+    assert isinstance(sol, ImmutableDenseMatrix)
+    assert isinstance(params, ImmutableDenseMatrix)
 
 
 def test_solve():

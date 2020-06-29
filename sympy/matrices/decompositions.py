@@ -257,31 +257,31 @@ def _cholesky(M, hermitian=True):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    L   = MutableDenseMatrix.zeros(M.rows, M.rows)
+    L   = MutableDenseMatrix.zeros(M.rows, M.rows).tolist()
 
     if hermitian:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = ((1 / L[j, j])*(M[i, j] -
-                    sum(L[i, k]*L[j, k].conjugate() for k in range(j))))
+                L[i][j] = ((1 / L[j][j])*(M[i, j] -
+                    sum(L[i][k]*L[j][k].conjugate() for k in range(j))))
 
             Lii2 = (M[i, i] -
-                sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
+                sum(L[i][k]*L[i][k].conjugate() for k in range(i)))
 
             if Lii2.is_positive is False:
                 raise NonPositiveDefiniteMatrixError(
                     "Matrix must be positive-definite")
 
-            L[i, i] = sqrt(Lii2)
+            L[i][i] = sqrt(Lii2)
 
     else:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = ((1 / L[j, j])*(M[i, j] -
-                    sum(L[i, k]*L[j, k] for k in range(j))))
+                L[i][j] = ((1 / L[j][j])*(M[i, j] -
+                    sum(L[i][k]*L[j][k] for k in range(j))))
 
-            L[i, i] = sqrt(M[i, i] -
-                sum(L[i, k]**2 for k in range(i)))
+            L[i][i] = sqrt(M[i, i] -
+                sum(L[i][k]**2 for k in range(i)))
 
     return M._new(L)
 
@@ -350,12 +350,12 @@ def _cholesky_sparse(M, hermitian=True):
 
     dps       = _get_intermediate_simp(expand_mul, expand_mul)
     Crowstruc = M.row_structure_symbolic_cholesky()
-    C         = MutableDenseMatrix.zeros(M.rows)
+    C         = MutableDenseMatrix.zeros(M.rows).tolist()
 
     for i in range(len(Crowstruc)):
         for j in Crowstruc[i]:
             if i != j:
-                C[i, j] = M[i, j]
+                C[i][j] = M[i, j]
                 summ    = 0
 
                 for p1 in Crowstruc[i]:
@@ -364,36 +364,36 @@ def _cholesky_sparse(M, hermitian=True):
                             if p2 < j:
                                 if p1 == p2:
                                     if hermitian:
-                                        summ += C[i, p1]*C[j, p1].conjugate()
+                                        summ += C[i][p1]*C[j][p1].conjugate()
                                     else:
-                                        summ += C[i, p1]*C[j, p1]
+                                        summ += C[i][p1]*C[j][p1]
                             else:
                                 break
                         else:
                             break
 
-                C[i, j] = dps((C[i, j] - summ) / C[j, j])
+                C[i][j] = dps((C[i][j] - summ) / C[j][j])
 
             else: # i == j
-                C[j, j] = M[j, j]
+                C[j][j] = M[j, j]
                 summ    = 0
 
                 for k in Crowstruc[j]:
                     if k < j:
                         if hermitian:
-                            summ += C[j, k]*C[j, k].conjugate()
+                            summ += C[j][k]*C[j][k].conjugate()
                         else:
-                            summ += C[j, k]**2
+                            summ += C[j][k]**2
                     else:
                         break
 
-                Cjj2 = dps(C[j, j] - summ)
+                Cjj2 = dps(C[j][j] - summ)
 
                 if hermitian and Cjj2.is_positive is False:
                     raise NonPositiveDefiniteMatrixError(
                         "Matrix must be positive-definite")
 
-                C[j, j] = sqrt(Cjj2)
+                C[j][j] = sqrt(Cjj2)
 
     return M._new(C)
 
@@ -459,29 +459,29 @@ def _LDLdecomposition(M, hermitian=True):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    D   = MutableDenseMatrix.zeros(M.rows, M.rows)
-    L   = MutableDenseMatrix.eye(M.rows)
+    D   = MutableDenseMatrix.zeros(M.rows, M.rows).tolist()
+    L   = MutableDenseMatrix.eye(M.rows).tolist()
 
     if hermitian:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = (1 / D[j, j])*(M[i, j] - sum(
-                    L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j)))
+                L[i][j] = (1 / D[j][j])*(M[i, j] - sum(
+                    L[i][k]*L[j][k].conjugate()*D[k][k] for k in range(j)))
 
-            D[i, i] = (M[i, i] -
-                sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
+            D[i][i] = (M[i, i] -
+                sum(L[i][k]*L[i][k].conjugate()*D[k][k] for k in range(i)))
 
-            if D[i, i].is_positive is False:
+            if D[i][i].is_positive is False:
                 raise NonPositiveDefiniteMatrixError(
                     "Matrix must be positive-definite")
 
     else:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = (1 / D[j, j])*(M[i, j] - sum(
-                    L[i, k]*L[j, k]*D[k, k] for k in range(j)))
+                L[i][j] = (1 / D[j][j])*(M[i, j] - sum(
+                    L[i][k]*L[j][k]*D[k][k] for k in range(j)))
 
-            D[i, i] = M[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i))
+            D[i][i] = M[i, i] - sum(L[i][k]**2*D[k][k] for k in range(i))
 
     return M._new(L), M._new(D)
 
@@ -526,13 +526,13 @@ def _LDLdecomposition_sparse(M, hermitian=True):
 
     dps       = _get_intermediate_simp(expand_mul, expand_mul)
     Lrowstruc = M.row_structure_symbolic_cholesky()
-    L         = MutableDenseMatrix.eye(M.rows)
-    D         = MutableDenseMatrix.zeros(M.rows, M.cols)
+    L         = MutableDenseMatrix.eye(M.rows).tolist()
+    D         = MutableDenseMatrix.zeros(M.rows, M.cols).tolist()
 
     for i in range(len(Lrowstruc)):
         for j in Lrowstruc[i]:
             if i != j:
-                L[i, j] = M[i, j]
+                L[i][j] = M[i, j]
                 summ    = 0
 
                 for p1 in Lrowstruc[i]:
@@ -541,32 +541,32 @@ def _LDLdecomposition_sparse(M, hermitian=True):
                             if p2 < j:
                                 if p1 == p2:
                                     if hermitian:
-                                        summ += L[i, p1]*L[j, p1].conjugate()*D[p1, p1]
+                                        summ += L[i][p1]*L[j][p1].conjugate()*D[p1][p1]
                                     else:
-                                        summ += L[i, p1]*L[j, p1]*D[p1, p1]
+                                        summ += L[i][p1]*L[j][p1]*D[p1][p1]
                             else:
                                 break
                     else:
                         break
 
-                L[i, j] = dps((L[i, j] - summ) / D[j, j])
+                L[i][j] = dps((L[i][j] - summ) / D[j][j])
 
             else: # i == j
-                D[i, i] = M[i, i]
+                D[i][i] = M[i, i]
                 summ    = 0
 
                 for k in Lrowstruc[i]:
                     if k < i:
                         if hermitian:
-                            summ += L[i, k]*L[i, k].conjugate()*D[k, k]
+                            summ += L[i][k]*L[i][k].conjugate()*D[k][k]
                         else:
-                            summ += L[i, k]**2*D[k, k]
+                            summ += L[i][k]**2*D[k][k]
                     else:
                         break
 
-                D[i, i] = dps(D[i, i] - summ)
+                D[i][i] = dps(D[i][i] - summ)
 
-                if hermitian and D[i, i].is_positive is False:
+                if hermitian and D[i][i].is_positive is False:
                     raise NonPositiveDefiniteMatrixError(
                         "Matrix must be positive-definite")
 
@@ -1319,25 +1319,29 @@ def _QRdecomposition(M):
     else:
         nOrig = n
 
-    Q, R = mat.zeros(n, m), mat.zeros(m)
+    Q, R = mat.zeros(n, m).tolist(), mat.zeros(m).tolist()
 
     for j in range(m):  # for each column vector
         tmp = mat[:, j]  # take original v
 
         for i in range(j):
             # subtract the project of mat on new vector
-            R[i, j]  = dps(Q[:, i].dot(mat[:, j], hermitian=True))
-            tmp     -= Q[:, i] * R[i, j]
+            R[i][j]  = dps(M._new(Q)[:, i].dot(mat[:, j], hermitian=True))
+            tmp     -= M._new(Q)[:, i] * R[i][j]
 
         tmp = dps(tmp)
 
         # normalize it
-        R[j, j] = tmp.norm()
+        R[j][j] = tmp.norm()
 
-        if not R[j, j].is_zero:
+        if not R[j][j].is_zero:
             ranked.append(j)
-            Q[:, j] = tmp / R[j, j]
+            for k in range(n):
+                Q[k][j] = tmp[k] / R[j][j]
+
+    Q = M._new(Q)
+    R = M._new(R)
 
     Q = Q.extract(range(nOrig), ranked)
     R = R.extract(ranked, range(R.cols))
-    return M.__class__(Q), M.__class__(R)
+    return Q, R

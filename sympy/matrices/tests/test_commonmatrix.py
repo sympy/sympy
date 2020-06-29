@@ -782,7 +782,7 @@ def test_eye():
     assert list(SpecialOnlyMatrix.eye(2, 2)) == [1, 0, 0, 1]
     assert list(SpecialOnlyMatrix.eye(2)) == [1, 0, 0, 1]
     assert type(SpecialOnlyMatrix.eye(2)) == SpecialOnlyMatrix
-    assert type(SpecialOnlyMatrix.eye(2, cls=Matrix)) == Matrix
+    assert isinstance(SpecialOnlyMatrix.eye(2, cls=Matrix), Matrix)
 
 
 def test_ones():
@@ -790,7 +790,7 @@ def test_ones():
     assert list(SpecialOnlyMatrix.ones(2)) == [1, 1, 1, 1]
     assert SpecialOnlyMatrix.ones(2, 3) == Matrix([[1, 1, 1], [1, 1, 1]])
     assert type(SpecialOnlyMatrix.ones(2)) == SpecialOnlyMatrix
-    assert type(SpecialOnlyMatrix.ones(2, cls=Matrix)) == Matrix
+    assert isinstance(SpecialOnlyMatrix.ones(2, cls=Matrix), Matrix)
 
 
 def test_zeros():
@@ -798,7 +798,7 @@ def test_zeros():
     assert list(SpecialOnlyMatrix.zeros(2)) == [0, 0, 0, 0]
     assert SpecialOnlyMatrix.zeros(2, 3) == Matrix([[0, 0, 0], [0, 0, 0]])
     assert type(SpecialOnlyMatrix.zeros(2)) == SpecialOnlyMatrix
-    assert type(SpecialOnlyMatrix.zeros(2, cls=Matrix)) == Matrix
+    assert isinstance(SpecialOnlyMatrix.zeros(2, cls=Matrix), Matrix)
 
 
 def test_diag_make():
@@ -863,7 +863,7 @@ def test_diag_make():
         [2, 3],
         [4, 0]])
     assert type(diag(1)) == SpecialOnlyMatrix
-    assert type(diag(1, cls=Matrix)) == Matrix
+    assert isinstance(diag(1, cls=Matrix), Matrix)
     assert Matrix.diag([1, 2, 3]) == Matrix.diag(1, 2, 3)
     assert Matrix.diag([1, 2, 3], unpack=False).shape == (3, 1)
     assert Matrix.diag([[1, 2, 3]]).shape == (3, 1)
