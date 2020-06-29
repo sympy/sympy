@@ -18,11 +18,11 @@ from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
 from sympy.core.containers import Tuple
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
-                                expand_log, _mexpand)
+                                expand_log)
 from sympy.core.mod import Mod
 from sympy.core.numbers import igcd
 from sympy.core.relational import Eq, Ne, Relational
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
 from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
@@ -44,6 +44,8 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor, lcm, gcd)
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
+from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
+    PolyNonlinearError)
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -58,7 +60,7 @@ from collections import defaultdict
 
 
 class NonlinearError(ValueError):
-    """Raised by linear_eq_to_matrix if the equations are nonlinear"""
+    """Raised when unexpectedly encountering nonlinear equations"""
     pass
 
 
@@ -2303,19 +2305,21 @@ def linear_coeffs(eq, *syms, **_kw):
     """
     d = defaultdict(list)
     eq = _sympify(eq)
-    if not eq.has(*syms):
+    symset = set(syms)
+    has = eq.free_symbols & symset
+    if not has:
         return [S.Zero]*len(syms) + [eq]
-    c, terms = eq.as_coeff_add(*syms)
+    c, terms = eq.as_coeff_add(*has)
     d[0].extend(Add.make_args(c))
     for t in terms:
-        m, f = t.as_coeff_mul(*syms)
+        m, f = t.as_coeff_mul(*has)
         if len(f) != 1:
             break
         f = f[0]
-        if f in syms:
+        if f in symset:
             d[f].append(m)
         elif f.is_Add:
-            d1 = linear_coeffs(f, *syms, **{'dict': True})
+            d1 = linear_coeffs(f, *has, **{'dict': True})
             d[0].append(m*d1.pop(0))
             for xf, vf in d1.items():
                 d[xf].append(m*vf)
@@ -2608,7 +2612,6 @@ def linsolve(system, *symbols):
         symbols = symbols[0]
     sym_gen = isinstance(symbols, GeneratorType)
 
-    swap = {}
     b = None  # if we don't get b the input was bad
     syms_needed_msg = None
 
@@ -2628,12 +2631,22 @@ def linsolve(system, *symbols):
                     symbols for which a solution is being sought must
                     be given as a sequence, too.
                 '''))
-            system = [
-                _mexpand(i.lhs - i.rhs if isinstance(i, Eq) else i,
-                recursive=True) for i in system]
-            system, symbols, swap = recast_to_symbols(system, symbols)
-            A, b = linear_eq_to_matrix(system, symbols)
-            syms_needed_msg = 'free symbols in the equations provided'
+            eqs = system
+            try:
+                eqs, ring = sympy_eqs_to_ring(eqs, symbols)
+            except PolynomialError as exc:
+                # e.g. cos(x) contains an element of the set of generators
+                raise NonlinearError(str(exc))
+
+            try:
+                sol = solve_lin_sys(eqs, ring, _raw=False)
+            except PolyNonlinearError as exc:
+                raise NonlinearError(str(exc))
+
+            if sol is None:
+                return S.EmptySet
+            sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
+            return sol
 
     elif isinstance(system, MatrixBase) and not (
             symbols and not isinstance(symbols, GeneratorType) and
@@ -2656,34 +2669,35 @@ def linsolve(system, *symbols):
                 the generator, e.g. numbered_symbols('%s', cls=Dummy)
             ''' % symbols[0].name.rstrip('1234567890')))
 
-    try:
-        solution, params, free_syms = A.gauss_jordan_solve(b, freevar=True)
-    except ValueError:
-        # No solution
+    if not symbols:
+        symbols = [Dummy() for _ in range(A.cols)]
+        name = _uniquely_named_symbol('tau', (A, b),
+            compare=lambda i: str(i).rstrip('1234567890')).name
+        gen  = numbered_symbols(name)
+    else:
+        gen = None
+
+    # This is just a wrapper for solve_lin_sys
+    eqs = []
+    rows = A.tolist()
+    for rowi, bi in zip(rows, b):
+        terms = [elem * sym for elem, sym in zip(rowi, symbols) if elem]
+        terms.append(-bi)
+        eqs.append(Add(*terms))
+
+    eqs, ring = sympy_eqs_to_ring(eqs, symbols)
+    sol = solve_lin_sys(eqs, ring, _raw=False)
+    if sol is None:
         return S.EmptySet
+    #sol = {sym:val for sym, val in sol.items() if sym != val}
+    sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
 
-    # Replace free parameters with free symbols
-    if params:
-        if not symbols:
-            symbols = [_ for _ in params]
-            # re-use the parameters but put them in order
-            # params       [x, y, z]
-            # free_symbols [2, 0, 4]
-            # idx          [1, 0, 2]
-            idx = list(zip(*sorted(zip(free_syms, range(len(free_syms))))))[1]
-            # simultaneous replacements {y: x, x: y, z: z}
-            replace_dict = dict(zip(symbols, [symbols[i] for i in idx]))
-        elif len(symbols) >= A.cols:
-            replace_dict = {v: symbols[free_syms[k]] for k, v in enumerate(params)}
-        else:
-            raise IndexError(filldedent('''
-                the number of symbols passed should have a length
-                equal to the number of %s.
-                ''' % syms_needed_msg))
-        solution = [sol.xreplace(replace_dict) for sol in solution]
+    if gen is not None:
+        solsym = sol.free_symbols
+        rep = {sym: next(gen) for sym in symbols if sym in solsym}
+        sol = sol.subs(rep)
 
-    solution = [simplify(sol).xreplace(swap) for sol in solution]
-    return FiniteSet(tuple(solution))
+    return sol
 
 
 
@@ -3481,7 +3495,7 @@ def nonlinsolve(system, *symbols):
     # main code of def nonlinsolve() starts from here
     polys, polys_expr, nonpolys, denominators = _separate_poly_nonpoly(
         system, symbols)
-        
+
     if len(symbols) == len(polys):
         # If all the equations in the system are poly
         if is_zero_dimensional(polys, symbols):

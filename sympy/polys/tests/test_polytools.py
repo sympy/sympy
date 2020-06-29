@@ -2954,7 +2954,8 @@ def test_cancel():
     assert cancel(f) == f
     assert cancel(f, greedy=False) == x + sqrt(2)
 
-    assert cancel((x**2/4 - 1, x/2 - 1)) == (S.Half, x + 2, 1)
+    assert cancel((x**2/4 - 1, x/2 - 1)) == (1, x + 2, 2)
+    # assert cancel((x**2/4 - 1, x/2 - 1)) == (S.Half, x + 2, 1)
 
     assert cancel((x**2 - y)/(x - y)) == 1/(x - y)*(x**2 - y)
 

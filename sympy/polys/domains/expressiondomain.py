@@ -230,7 +230,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         return a.denom()
 
     def gcd(self, a, b):
-        return a.gcd(b)
+        return self(1)
 
     def lcm(self, a, b):
         return a.lcm(b)
