@@ -790,11 +790,13 @@ def _is_positive_semidefinite_cholesky(M):
             M[k], M[k+pivot] = M[k+pivot], M[k]
 
         M[k][k] = sqrt(M[k][k])
-        Mn = Morig._new(M)
-        Mnprod = Mn[k, k+1:].H * Mn[k, k+1:]
         for j in range(k+1, cols):
             M[k][j] /= M[k][k]
-            for i in range(k+1, rows):
+
+        Mn = Morig._new(M)
+        Mnprod = Mn[k, k+1:].H * Mn[k, k+1:]
+        for i in range(k+1, rows):
+            for j in range(k+1, cols):
                 M[i][j] -= Mnprod[i-k-1, j-k-1]
 
     return M[-1][-1].is_nonnegative

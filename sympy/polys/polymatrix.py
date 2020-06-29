@@ -202,6 +202,20 @@ class DomainMatrix:
         pivots = tuple(pivots)
         return rref_matrix, pivots
 
+    def inv(self):
+        m, n = self.shape
+        assert m == n
+        dom = self.domain
+        rows = self.rows
+        eye = [[dom.one if i==j else dom.zero for j in range(n)] for i in range(n)]
+        rows = [row + eyerow for row, eyerow in zip(rows, eye)]
+        Aaug = DomainMatrix(rows, (n, 2*n), dom)
+        Aaug_rref, pivots = Aaug.rref()
+        assert pivots == tuple(range(n))
+        Ainv_rows = [row[n:] for row in Aaug_rref.rows]
+        Ainv = DomainMatrix(Ainv_rows, (n, n), dom)
+        return Ainv
+
     def __eq__(A, B):
         """A == B"""
         if not isinstance(B, DomainMatrix):

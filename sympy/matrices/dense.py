@@ -708,7 +708,10 @@ class DenseDomainMatrix(DenseMatrix):
     def __pow__(self, exp):
         exp = _sympify(exp)
         if exp.is_Integer:
-            return self.from_DomainMatrix(self._rep ** exp.p)
+            if exp < 0:
+                return self.inv() ** (-exp)
+            else:
+                return self.from_DomainMatrix(self._rep ** exp.p)
         elif self.is_Identity:
             return self
         from sympy.matrices.expressions import MatPow
