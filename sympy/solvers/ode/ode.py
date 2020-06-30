@@ -1879,6 +1879,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
     if len(funcs) != len(eq):
         raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
 
+    # This logic of list of lists in funcs to
+    # be replaced later.
     func_dict = dict()
     for func in funcs:
         if not order.get(func, False):
@@ -1893,6 +1895,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
             else:
                 func_dict[eq_no] = func
             order[func] = max_order
+
     funcs = [func_dict[i] for i in range(len(func_dict))]
     matching_hints['func'] = funcs
     for func in funcs:

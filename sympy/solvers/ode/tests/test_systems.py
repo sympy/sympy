@@ -992,6 +992,13 @@ def test_sysode_linear_neq_order1_type2():
     raises(ValueError, lambda: _linear_neq_order1_solver(A1[:2, :], t, b=b1))
     raises(ValueError, lambda: _linear_neq_order1_solver(A1[:2, :], t, b=b1[:1]))
 
+    # DOIT check
+    A1 = Matrix([[1, -1], [1, -1]])
+    b1 = Matrix([15*t - 10, -15*t - 5])
+    sol1 = [C1 + C2*t + C2 - 10*t**3 + 10*t**2 + t*(15*t**2 - 5*t) - 10*t,
+            C1 + C2*t - 10*t**3 - 5*t**2 + t*(15*t**2 - 5*t) - 5*t]
+    assert _linear_neq_order1_solver(A1, t, b=b1, type="type2", doit=True) == sol1
+
 
 def test_sysode_linear_neq_order1_type3():
     from sympy.core import Mul
