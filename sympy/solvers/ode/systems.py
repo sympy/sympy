@@ -413,6 +413,11 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
     r"""
     System of n equations linear first-order differential equations
 
+    Explanation
+    ===========
+
+    This solver solves the system of ODEs of the follwing form:
+
     .. math::
         X'(t) = A(t) X(t) +  b(t)
 
@@ -762,7 +767,62 @@ def _matrix_is_constant(M, t):
 
 
 def _canonical_equations(eqs, funcs, t):
-    """Helper function that solves for first order derivatives in a system"""
+    r"""
+    Helper function that solves for first order derivatives in a system
+
+    Explanation
+    ===========
+
+    This function inputs a linear first order system of ODEs and based on the system
+    and the dependent variables, returns the system in the following form:
+
+    .. math::
+        X'(t) = A(t) X(t) + b(t)
+
+    Here, $X(t)$ is the vector of dependent variables, $A(t)$ is the coefficient matrix
+    and $b(t)$ is the non-homogeneous term.
+
+    This function works only for linear first order system of ODEs. If a higher order or
+    a non-linear system is passed, then appropriate error will be raised.
+
+    Parameters
+    ==========
+
+    eqs : List
+        List of the ODEs
+    funcs : List
+        List of dependent variables
+    t : Symbol
+        Independent variable
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Function, Eq
+    >>> from sympy.solvers.ode.systems import _canonical_equations
+    >>> f, g = symbols("f g", cls=Function)
+    >>> x = symbols("x")
+    >>> funcs = [f(x), g(x)]
+    >>> eqs = [Eq(f(x).diff(x) - 7*f(x), 12*g(x)), Eq(g(x).diff(x) + g(x), 20*f(x))]
+
+    >>> canonical_eqs = _canonical_equations(eqs, funcs, x)
+    >>> canonical_eqs
+    [Eq(Derivative(f(x), x), 7*f(x) + 12*g(x)), Eq(Derivative(g(x), x), 20*f(x) - g(x))]
+
+    Returns
+    =======
+
+    List
+
+    Raises
+    ======
+
+    ODEOrderError
+        When the system of ODEs passed has an order greater than 1
+    ODENonlinearError
+        When the system of ODEs passed is non-linear
+
+    """
     from sympy.solvers.solvers import solve
 
     # For now the system of ODEs dealt by this function can have a
