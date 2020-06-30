@@ -385,6 +385,21 @@ def test_matrix_exp():
     assert matrix_exp(A, t) == expAt
 
 
+def test_canonical_equations():
+    from sympy.solvers.ode.systems import _canonical_equations
+
+    f, g, h = symbols('f g h', cls=Function)
+    x = symbols('x')
+    funcs = [f(x), g(x), h(x)]
+
+
+    eqs1 = [Eq(f(x).diff(x, x), f(x) + 2*g(x)), Eq(g(x) + 1, g(x).diff(x) + f(x))]
+    raises(ODEOrderError, lambda: _canonical_equations(eqs1, funcs[:2], x))
+
+    eqs2 = [Eq(f(x).diff(x), h(x).diff(x) + f(x)), Eq(g(x).diff(x)**2, f(x) + h(x)), Eq(h(x).diff(x), f(x))]
+    raises(ODENonlinearError, lambda: _canonical_equations(eqs2, funcs, x))
+
+
 def test_sysode_linear_neq_order1_type1():
 
     f, g, x, y, h = symbols('f g x y h', cls=Function)
