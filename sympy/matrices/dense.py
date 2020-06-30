@@ -53,7 +53,6 @@ class DenseMatrix(MatrixBase):
             return False
         if isinstance(other, Matrix):
             return _compare_sequence(self._mat,  other._mat)
-        other = Matrix(other)
         if isinstance(other, DenseDomainMatrix):
             return NotImplemented
         elif isinstance(other, MatrixBase):
