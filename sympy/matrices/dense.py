@@ -707,7 +707,10 @@ class DenseDomainMatrix(DenseMatrix):
             return self.from_DomainMatrix(self._rep * other._rep)
         elif isinstance(other, DenseMatrix):
             return other._eval_matrix_rmul(self)
-        return self._eval_scalar_mul(other)
+        elif not getattr(other, 'is_Matrix', False):
+            return self._eval_scalar_mul(other)
+        else:
+            return NotImplemented
 
     def __pow__(self, exp):
         exp = _sympify(exp)
