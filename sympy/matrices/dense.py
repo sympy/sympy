@@ -714,6 +714,10 @@ class DenseDomainMatrix(DenseMatrix):
                 return self.from_DomainMatrix(self._rep ** exp.p)
         elif self.is_Identity:
             return self
+        elif self.is_diagonal():
+            itemfunc = lambda i, j: self[i, j]**exp if i == j else 0
+            return self._new(self.rows, self.cols, itemfunc)
+
         from sympy.matrices.expressions import MatPow
         return MatPow(self, exp)
 
