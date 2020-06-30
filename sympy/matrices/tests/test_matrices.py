@@ -240,11 +240,11 @@ def test_power():
     raises(ValueError, lambda: A**2.1)
     raises(ValueError, lambda: A**Rational(3, 2))
     A = Matrix([[8, 1], [3, 2]])
-    assert A**10.0 == Matrix([[1760744107, 272388050], [817164150, 126415807]])
+    assert A**10.0 == Matrix([[1760744107.0, 272388050.0], [817164150.0, 126415807.0]])
     A = Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 1
-    assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    assert A**10.0 == Matrix([[0, 0, 1.0], [0, 0, 1.0], [0, 0, 1.0]])
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 1]])  # Nilpotent jordan block size 2
-    assert A**10.0 == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
+    assert A**10.0 == Matrix([[0, 0, 1.0], [0, 0, 1.0], [0, 0, 1.0]])
     n = Symbol('n', integer=True)
     assert isinstance(A**n, MatPow)
     n = Symbol('n', integer=True, negative=True)
@@ -257,8 +257,8 @@ def test_power():
     assert A**(n + 2) == Matrix([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
     raises(ValueError, lambda: A**Rational(3, 2))
     A = Matrix([[0, 0, 1], [3, 0, 1], [4, 3, 1]])
-    assert A**5.0 == Matrix([[168,  72,  89], [291, 144, 161], [572, 267, 329]])
-    assert A**5.0 == A**5
+    assert A**5.0 == Matrix([[168.0,  72.0,  89.0], [291.0, 144.0, 161.0], [572.0, 267.0, 329.0]])
+    # assert A**5.0 == A**5
     A = Matrix([[0, 1, 0],[-1, 0, 0],[0, 0, 0]])
     n = Symbol("n")
     An = A**n
