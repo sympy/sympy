@@ -1089,6 +1089,14 @@ class Pow(Expr):
 
             n = int(exp)
 
+            max_degree = _sympify(hints.get('max_degree', S.Infinity))
+            if max_degree is not S.Infinity:
+                if not max_degree.is_Integer or max_degree < 0:
+                    raise ValueError(
+                        "max_degree must be a positive integer, got %s" % max_degree)
+            if n > max_degree:
+                return result
+
             if base.is_commutative:
                 order_terms, other_terms = [], []
 

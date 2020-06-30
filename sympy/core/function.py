@@ -2455,9 +2455,9 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     hints are supported but not applied unless set to True:  ``complex``,
     ``func``, and ``trig``.  In addition, the following meta-hints are
     supported by some or all of the other hints:  ``frac``, ``numer``,
-    ``denom``, ``modulus``, and ``force``.  ``deep`` is supported by all
-    hints.  Additionally, subclasses of Expr may define their own hints or
-    meta-hints.
+    ``denom``, ``max_degree``, ``modulus``, and ``force``.  ``deep`` is
+    supported by all hints.  Additionally, subclasses of Expr may define
+    their own hints or meta-hints.
 
     The ``basic`` hint is used for any special rewriting of an object that
     should be done automatically (along with the other hints like ``mul``)
@@ -2494,8 +2494,13 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
 
     Expand (x + y + ...)**n where n is a positive integer.
 
+    The ``max_degree`` meta-hint can be applied to only expand
+    multinomials when n is less than or equal to max_degree.
+
     >>> ((x + y + z)**2).expand(multinomial=True)
     x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2
+    >>> ((x + y + z)**2).expand(multinomial=True, max_degree=1)
+    (x + y + z)**2
 
     power_exp
     ---------
@@ -2811,7 +2816,7 @@ def expand_mul(expr, deep=True):
     power_base=False, basic=False, multinomial=False, log=False)
 
 
-def expand_multinomial(expr, deep=True):
+def expand_multinomial(expr, deep=True, max_degree=S.Infinity):
     """
     Wrapper around expand that only uses the multinomial hint.  See the expand
     docstring for more information.
@@ -2825,8 +2830,9 @@ def expand_multinomial(expr, deep=True):
     x**2 + 2*x*exp(x + 1) + exp(2*x + 2)
 
     """
-    return sympify(expr).expand(deep=deep, mul=False, power_exp=False,
-    power_base=False, basic=False, multinomial=True, log=False)
+    return sympify(expr).expand(deep=deep, max_degree=max_degree,
+        mul=False, power_exp=False, power_base=False, basic=False,
+        multinomial=True, log=False)
 
 
 def expand_log(expr, deep=True, force=False, factor=False):
