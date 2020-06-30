@@ -1,5 +1,5 @@
 from sympy import symbols, Matrix, factor, Function, simplify, exp, pi
-from sympy.physics.control.lti import TransferFunction, Series, Parallel
+from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.testing.pytest import raises
 
 a, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2 = symbols('a, b, s, g, d, p, k, a0:3, b0:3')
@@ -207,6 +207,7 @@ def test_TransferFunction_addition_and_subtraction():
     assert tf1 + tf2 == Parallel(tf1, tf2)
     assert tf3 + tf1 == Parallel(tf3, tf1)
     assert -tf1 + tf2 + tf3 == Parallel(-tf1, tf2, tf3)
+    assert tf1 + (tf2 + tf3) == Parallel(tf1, tf2, tf3)
 
     c = symbols("c", commutative=False)
     raises(ValueError, lambda: tf1 + Matrix([1, 2, 3]))
@@ -342,10 +343,6 @@ def test_Series_construction():
     s4 = Series(tf3_, tf4_)
     assert s4.args == (tf3_, tf4_)
     assert s4.var == s
-
-    tf5 = TransferFunction(1, 1, s)
-    s5 = Series(tf2, tf4, 1/Parallel(tf5, tf2, tf4))
-    assert s5.args == (tf2, tf4, 1/Parallel(tf5, tf2, tf4))
 
     s6 = Series(tf2, tf4, Parallel(tf2, -tf), tf4)
     assert s6.args == (tf2, tf4, Parallel(tf2, -tf), tf4)
@@ -542,3 +539,77 @@ def test_Parallel_functions():
     assert P3.is_proper
     assert not P3.is_strictly_proper
     assert P3.is_biproper
+
+
+def test_Feedback_construction():
+    zeta, omega_n, wn = symbols('zeta, omega_n, wn')
+    tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    tf2 = TransferFunction(k, 1, s)
+    tf3 = TransferFunction(a2*p - s, a2*s + p, s)
+    tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
+    tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
+    tf6 = TransferFunction(s - p, p + s, p)
+
+    f1 = Feedback(TransferFunction(1, 1, s), tf1*tf2*tf3)
+    assert f1.args == (TransferFunction(1, 1, s), Series(tf1, tf2, tf3))
+    assert f1.num == TransferFunction(1, 1, s)
+    assert f1.den == Series(tf1, tf2, tf3)
+    assert f1.var == s
+
+    f2 = Feedback(tf1, tf2*tf3)
+    assert f2.args == (tf1, Series(tf2, tf3))
+    assert f2.num == tf1
+    assert f2.den == Series(tf2, tf3)
+    assert f2.var == s
+
+    f3 = Feedback(tf1*tf2, tf5)
+    assert f3.args == (Series(tf1, tf2), tf5)
+    assert f3.num == Series(tf1, tf2)
+
+    f4 = Feedback(tf4, tf6)
+    assert f4.args == (tf4, tf6)
+    assert f4.num == tf4
+    assert f4.var == p
+
+    f5 = Feedback(tf5, TransferFunction(1, 1, s))
+    assert f5.args == (tf5, TransferFunction(1, 1, s))
+    assert f5.var == s
+
+    f6 = Feedback(TransferFunction(1, 1, p), tf4)
+    assert f6.args == (TransferFunction(1, 1, p), tf4)
+    assert f6.var == p
+
+    # denominator can't be a Parallel instance
+    raises(TypeError, Feedback(tf1, tf2 + tf3))
+    raises(TypeError, Feedback(tf1, Matrix([1, 2,3])))
+    raises(TypeError, Feedback(TransferFunction(1, 1, s), s - 1))
+    raises(TypeError, Feedback(1, 1))
+    raises(TypeError, Feedback(TransferFunction(1, 1, s), TransferFunction(1, 1, s)))
+    raises(ValueError, Feedback(tf2, tf4*tf5))
+
+
+def test_Feedback_functions():
+    zeta, omega_n, wn = symbols('zeta, omega_n, wn')
+    tf = TransferFunction(1, 1, s)
+    tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    tf2 = TransferFunction(k, 1, s)
+    tf3 = TransferFunction(a2*p - s, a2*s + p, s)
+    tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
+    tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
+    tf6 = TransferFunction(s - p, p + s, p)
+
+    assert tf / (tf + tf1*tf2*tf3) == Feedback(tf, tf1*tf2*tf3)
+    assert tf1 / (tf + tf1*tf2*tf3) == Feedback(tf1, tf2*tf3)
+    assert (tf1*tf2) / (tf + tf1*tf2*tf5) == Feedback(tf1*tf2, tf5)
+    assert tf4 / (TransferFunction(1, 1, p) + tf4*tf6) == Feedback(tf4, tf6)
+    assert tf5 / (tf + tf5) == Feedback(tf5, tf)
+
+    # Resultant transfer function will be added while implementation.
+    assert Feedback(tf, tf1*tf2*tf3).doit() == TransferFunction(...)
+    assert Feedback(tf1, tf2*tf3).doit() == TransferFunction(...)
+    assert Feedback(tf1*tf2, tf5).doit() == TransferFunction(...)
+    assert Feedback(tf4, tf6).doit() == TransferFunction(...)
+
+    assert Feedback(tf1, tf2*tf5).rewrite(TransferFunction) == TransferFunction(...)
+    assert Feedback(TransferFunction(1, 1, p), tf4).rewrite(TransferFunction) == \
+        TransferFunction(...)

@@ -3,7 +3,7 @@ from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify, _sympify
 
-__all__ = ['TransferFunction', 'Series', 'Parallel']
+__all__ = ['TransferFunction', 'Series', 'Parallel', 'Feedback']
 
 
 class TransferFunction(Basic, EvalfMixin):
@@ -266,6 +266,12 @@ class TransferFunction(Basic, EvalfMixin):
                 raise ValueError("All the transfer functions should be anchored "
                     "with the same variable.")
             return Parallel(self, other)
+        elif isinstance(other, Parallel):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            arg_list = list(other.args)
+            return Parallel(self, *arg_list)
         else:
             raise ValueError("TransferFunction cannot be added with {}.".
                 format(type(other)))
@@ -279,6 +285,12 @@ class TransferFunction(Basic, EvalfMixin):
                 raise ValueError("All the transfer functions should be anchored "
                     "with the same variable.")
             return Parallel(self, -other)
+        elif isinstance(other, Parallel):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            arg_list = [-i for i in list(other.args)]
+            return Parallel(self, *arg_list)
         else:
             raise ValueError("{} cannot be subtracted from a TransferFunction."
                 .format(type(other)))
@@ -591,3 +603,26 @@ class Parallel(Basic):
     @property
     def is_biproper(self):
         return self.doit().is_biproper
+
+
+class Feedback(Basic):
+
+    def __new__(cls, num, den):
+        obj = super(Feedback, cls).__new__(cls, num, den)
+        obj._num = num
+        obj._den = den
+        obj._var = num.var
+
+        return obj
+
+    @property
+    def num(self):
+        return self._num
+
+    @property
+    def den(self):
+        return self._den
+
+    @property
+    def var(self):
+        return self._var
