@@ -574,6 +574,8 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
     ========
 
     linear_ode_to_matrix: Coefficient matrix computation function
+    _canonical_equations: System of ODEs representation change
+    _is_commutative_anti_derivative: Getting the antiderivative for coefficient matrix
 
     """
 
@@ -632,15 +634,19 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
         P, J = matrix_exp_jordan_form(A, t)
         P = simplify(P)
 
-        sol_vector = P * (J * Cvect) if type == "type1" else P * J * ((J.inv() * P.inv() * b).applyfunc(
-            lambda x: Integral(x, t)) + Cvect)
+        if type == "type1":
+            sol_vector = P * (J * Cvect)
+        else:
+            sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
 
     else:
         if B is None:
             B, _ = _is_commutative_anti_derivative(A, t)
 
-        sol_vector = B.exp() * Cvect if type == "type3" else B.exp() * (((-B).exp() * b).applyfunc(
-            lambda x: Integral(x, t)) + Cvect)
+        if type == "type3":
+            sol_vector = B.exp() * Cvect
+        else:
+            sol_vector = B.exp() * (((-B).exp() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
 
     gens = sol_vector.atoms(exp)
 
