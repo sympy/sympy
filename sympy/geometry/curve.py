@@ -145,26 +145,6 @@ class Curve(GeometrySet):
                 'and cannot be used as a parameter.' % tnew.name)
         return Point(*[w.subs(t, tnew) for w in self.functions])
 
-    def parametric_region(self):
-        """
-        Returns an object of ParametricRegion class representing the Curve.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import t
-        >>> from sympy import Curve
-        >>> c = Curve((t**3, 4*t), (t, -3, 4))
-        >>> c.parametric_region()
-        ParametricRegion((t**3, 4*t), (t, -3, 4))
-
-        """
-        from sympy.vector import ParametricRegion
-
-        definition = self.arbitrary_point(self.parameter).args
-        bounds = self.limits
-        return ParametricRegion(definition, bounds)
-
     @property
     def free_symbols(self):
         """Return a set of symbols other than the bound symbols used to

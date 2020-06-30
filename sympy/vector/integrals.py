@@ -1,13 +1,13 @@
-from sympy.core.basic import Basic
 from sympy import simplify
+from sympy.core import Basic, diff
 from sympy.matrices import Matrix
-from sympy.vector import CoordSys3D, Vector, ParametricRegion
+from sympy.vector import CoordSys3D, Vector, ParametricRegion, parametric_region
 from sympy.vector.operators import _get_coord_sys_from_expr
 from sympy.integrals import Integral, integrate
-from sympy.core.function import diff
 from sympy.utilities.iterables import topological_sort, default_sort_key
-from sympy.geometry.entity import GeometryEntity
 from sympy.geometry import Polygon
+from sympy.geometry.entity import GeometryEntity
+
 
 class ParametricIntegral(Basic):
     """
@@ -137,6 +137,7 @@ class ParametricIntegral(Basic):
     def parametricregion(self):
         return self.args[1]
 
+
 def vector_integrate(field, *region):
     """
     Compute the integral of a vector/scalar field
@@ -178,10 +179,7 @@ def vector_integrate(field, *region):
                     result += vector_integrate(field, s)
                 return result
 
-            try:
-                region = region[0].parametric_region()
-                return ParametricIntegral(field, region)
-            except AttributeError:
-                raise ValueError("SymPy cannot determine parametric representation of the region.")
+            region = parametric_region(region[0])
+            return ParametricIntegral(field, region)
 
     return integrate(field, *region)

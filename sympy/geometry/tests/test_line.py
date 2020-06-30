@@ -6,7 +6,6 @@ from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
     Point2D, Line2D)
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
-from sympy.vector import ParametricRegion
 from sympy.utilities.iterables import cartes
 from sympy.testing.pytest import raises, warns
 
@@ -95,15 +94,6 @@ def test_arbitrary_point():
     assert Segment3D((1, 1, 1), (2, 3, 4)).arbitrary_point() == \
            Point3D(t + 1, 2 * t + 1, 3 * t + 1)
     raises(ValueError, (lambda: Line((x, 1), (2, 3)).arbitrary_point(x)))
-
-
-def test_parametric_region():
-    s1 = Segment(Point(0, 0), (1, 0))
-    assert s1.parametric_region() == ParametricRegion((t, 0), (t, 0, 1))
-    s2 = Segment(Point(1, 2, 3), Point(1, 2, 5))
-    assert s2.parametric_region() == ParametricRegion((1, 2, 2*t + 3), (t, 0, 1))
-    s3 = Segment(Point(12, 56), Point(12, 56))
-    assert s3.parametric_region() == ParametricRegion((12, 56))
 
 
 def test_are_concurrent_2d():

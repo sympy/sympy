@@ -612,22 +612,6 @@ class Point(GeometryEntity):
             return True
         return False
 
-    def parametric_region(self):
-        """
-        Returns an object of ParametricRegion class representing the Point.
-
-        Examples
-        ========
-
-        >>> from sympy import Point
-        >>> p = Point(2, 5)
-        >>> p.parametric_region()
-        ParametricRegion((2, 5))
-
-        """
-        from sympy.vector import ParametricRegion
-        return ParametricRegion(self.args)
-
     @property
     def is_nonzero(self):
         """True if any coordinate is nonzero, False if every coordinate is zero,

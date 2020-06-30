@@ -1,5 +1,10 @@
-from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
+from functools import singledispatch
+from sympy import pi
+from sympy.core import Basic, Tuple
+from sympy.core.symbol import _symbol
+from sympy.solvers import solve
+from sympy.geometry import Point, Segment, Curve, Ellipse
+
 
 class ParametricRegion(Basic):
     """
@@ -82,3 +87,72 @@ class ParametricRegion(Basic):
     @property
     def dimensions(self):
         return len(self.limits)
+
+
+@singledispatch
+def parametric_region(reg):
+    """
+    Returns an object of ParametricRegion class representing the geometric region.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import t
+    >>> from sympy.vector import parametric_region
+    >>> from sympy.geometry import Point, Curve, Ellipse, Segment
+
+    >>> p = Point(2, 5)
+    >>> parametric_region(p)
+    ParametricRegion((2, 5))
+
+    >>> c = Curve((t**3, 4*t), (t, -3, 4))
+    >>> parametric_region(c)
+    ParametricRegion((t**3, 4*t), (t, -3, 4))
+
+    >>> e = Ellipse(Point(1, 3), 2, 3)
+    >>> parametric_region(e)
+    ParametricRegion((2*cos(t) + 1, 3*sin(t) + 3), (t, 0, 2*pi))
+
+    >>> s = Segment(Point(1, 3), Point(2, 6))
+    >>> parametric_region(s)
+    ParametricRegion((t + 1, 3*t + 3), (t, 0, 1))
+
+    """
+    raise ValueError("SymPy cannot determine parametric representation of the region.")
+
+
+@parametric_region.register(Point)
+def _(obj):
+    return ParametricRegion(obj.args)
+
+
+@parametric_region.register(Curve)
+def _(obj):
+    definition = obj.arbitrary_point(obj.parameter).args
+    bounds = obj.limits
+    return ParametricRegion(definition, bounds)
+
+
+@parametric_region.register(Ellipse)
+def _(obj, parameter='t'):
+    definition = obj.arbitrary_point(parameter).args
+    t = _symbol(parameter, real=True)
+    bounds = (t, 0, 2*pi)
+    return ParametricRegion(definition, bounds)
+
+
+@parametric_region.register(Segment)
+def _(obj, parameter='t'):
+    t = _symbol(parameter, real=True)
+    definition = obj.arbitrary_point(t).args
+
+    for i in range(0, 3):
+        lower_bound = solve(definition[i] - obj.points[0].args[i], t)
+        upper_bound = solve(definition[i] - obj.points[1].args[i], t)
+
+        if len(lower_bound) == 1 and len(upper_bound) == 1:
+            bounds = t, lower_bound[0], upper_bound[0]
+            break
+
+    definition_tuple = obj.arbitrary_point(parameter).args
+    return ParametricRegion(definition_tuple, bounds)

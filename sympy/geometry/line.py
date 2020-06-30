@@ -33,7 +33,6 @@ from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
 from sympy.sets import Intersection
 from sympy.simplify.simplify import simplify
-from sympy.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import Undecidable, filldedent
@@ -1810,36 +1809,6 @@ class Segment(LinearEntity):
             if p2 in l:
                 return Segment(p2, self.midpoint)
         return l
-
-    def _parametric_bounds(self, parameter='t'):
-        t = _symbol(parameter, real=True)
-        definition = self.arbitrary_point().args
-
-        for i in range(0, 3):
-            lower_bound = solve(definition[i] - self.points[0].args[i], t)
-            upper_bound = solve(definition[i] - self.points[1].args[i], t)
-
-            if len(lower_bound) == 1 and len(upper_bound) == 1:
-                return t, lower_bound[0], upper_bound[0]
-
-    def parametric_region(self, parameter='t'):
-        """
-        Returns an object of ParametricRegion class representing the Segment.
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Segment
-        >>> s = Segment(Point(1, 3), Point(2, 6))
-        >>> s.parametric_region()
-        ParametricRegion((t + 1, 3*t + 3), (t, 0, 1))
-
-        """
-        from sympy.vector import ParametricRegion
-
-        definition_tuple = self.arbitrary_point(parameter).args
-        bounds = self._parametric_bounds()
-        return ParametricRegion(definition_tuple, bounds)
 
     def plot_interval(self, parameter='t'):
         """The plot interval for the default geometric plot of the Segment gives
