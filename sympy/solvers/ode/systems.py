@@ -455,35 +455,27 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
     ==========
 
     A : Matrix
-      Coefficient matrix of the system of linear first order ODEs.
+        Coefficient matrix of the system of linear first order ODEs.
     t : Symbol
-      Independent variable in the system of ODEs.
+        Independent variable in the system of ODEs.
     b : Matrix or None
-      Non-homogeneous term in the system of ODEs. If None is passed,
-      a homogeneous system of ODEs is assumed.
+        Non-homogeneous term in the system of ODEs. If None is passed,
+        a homogeneous system of ODEs is assumed.
     B : Matrix or None
-      Antiderivative of the coefficient matrix. If the antiderivative
-      is not passed and the solution requires the term, then the solver
-      would compute it internally.
+        Antiderivative of the coefficient matrix. If the antiderivative
+        is not passed and the solution requires the term, then the solver
+        would compute it internally.
     type : String
-      Type of the system of ODEs passed. Depending on the type, the
-      solution is evaluated. The type values allowed and the corresponding
-      system it solves is given below:
-        1. "type1" : constant coefficient homogeneous
-        2. "type2" : constant coefficient non-homogeneous
-        3. "type3" : non-constant coefficient homogeneous
-        4. "type4" : non-constant coefficient non-homogeneous
-      The default value is "type4" since that solution can be used to get solutions
-      for all the four types. Passing the correct type is encouraged as
-      evaluating "type4" solution takes more time than other types.
+        Type of the system of ODEs passed. Depending on the type, the
+        solution is evaluated. The type values allowed and the corresponding
+        system it solves are: "type1" for constant coefficient homogeneous
+        "type2" for constant coefficient non-homogeneous, "type3" for non-constant
+        coefficient homogeneous and "type4" for non-constant coefficient non-homogeneous.
+        The default value is "type4" since that solution can be used to get solutions
+        for all the four types. Passing the correct type is encouraged as
+        evaluating "type4" solution takes more time than other types.
     doit : Boolean
-      In some solutions, there maybe unevaluated expressions and if this argument
-      is True, then the solutions would be evaluated. Default value is False
-
-    Returns
-    =======
-
-    List
+        Evaluate the solution if True, default value is False
 
     Examples
     ========
@@ -492,8 +484,7 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
     done in the right order. Wrong inputs to the function will lead to incorrect results.
 
     >>> from sympy import symbols, Function, Eq
-    >>> from sympy.solvers.ode.systems import (_canonical_equations, linear_ode_to_matrix,
-    ...     _linear_neq_order1_solver, _is_commutative_anti_derivative)
+    >>> from sympy.solvers.ode.systems import _canonical_equations, linear_ode_to_matrix, _linear_neq_order1_solver, _is_commutative_anti_derivative
     >>> from sympy.solvers.ode.subscheck import checksysodesol
     >>> f, g = symbols("f, g", cls=Function)
     >>> x, a = symbols("x, a")
@@ -502,13 +493,13 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
 
     Here, it is important to note that before we derive the coefficient matrix, it is
     important to get the system of ODEs into the desired form. For that we will use
-    :obj:`~sympy.solvers.ode.systems._canonical_equations()`.
+    :obj:`sympy.solvers.ode.systems._canonical_equations()`.
 
     >>> eqs = _canonical_equations(eqs, funcs, x)
     >>> eqs
     [Eq(Derivative(f(x), x), a*g(x) + f(x) + 1), Eq(Derivative(g(x), x), a*f(x) - g(x))]
 
-    Now, we will use :obj:`~sympy.solvers.ode.systems.linear_ode_to_matrix()` to get the coefficient matrix and the
+    Now, we will use :obj:`sympy.solvers.ode.systems.linear_ode_to_matrix()` to get the coefficient matrix and the
     non-homogeneous term if it is there.
 
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
@@ -519,7 +510,7 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
 
     >>> sol_vector = _linear_neq_order1_solver(A, x, b=b, type="type2")
 
-    Now, we can prove if the solution is correct or not by using :obj:`~sympy.solvers.ode.subscheck.checksysodesol()`
+    Now, we can prove if the solution is correct or not by using :obj:`sympy.solvers.ode.subscheck.checksysodesol()`
 
     >>> sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
     >>> checksysodesol(eqs, sol)
@@ -541,7 +532,7 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
     A user can also pass the commutative antidervative required for type3 and type4 system of ODEs.
     Passing an incorrect one will lead to incorrect results. We can check if the coefficient matrix
     is commutative with the antiderivative and get the antiderivative using
-    :obj:`~sympy.solvers.ode.systems._is_commutative_anti_derivative()`.
+    :obj:`sympy.solvers.ode.systems._is_commutative_anti_derivative()`.
 
     >>> B, is_commuting = _is_commutative_anti_derivative(A, x)
     >>> is_commuting
@@ -558,16 +549,18 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
     >>> checksysodesol(eqs, sol)
     (True, [0, 0])
 
+    Returns
+    =======
+
+    List
+
     Raises
     ======
 
     ValueError
-        This error is raised when:
-            1. The coefficient matrix, its antiderivative or the non-homogeneous
-             term if passed, isn't a matrix
-            2. There is a dimension mismatch between the coefficient matrix and either
-             the antiderivative or the non-homogeneous term
-            3. The type passed isn't a valid one
+        This error is raised when the coefficient matrix, non-homogeneous term
+        or the antiderivative, if passed, aren't a matrix or
+        don't have correct dimensions
     NonSquareMatrixError
         When the coefficient matrix or its antiderivative, if passed isn't a square
         matrix

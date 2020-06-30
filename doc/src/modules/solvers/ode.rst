@@ -25,6 +25,10 @@ checkodesol
 ^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode::checkodesol
 
+checksysodesol
+^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.subscheck::checksysodesol
+
 homogeneous_order
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode::homogeneous_order
@@ -265,6 +269,14 @@ Linear ODE to matrix
 ^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.systems::linear_ode_to_matrix
 
+Canonical Equations Converter
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems::_canonical_equations
+
+Commutative Anti derivative Checker
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems::_is_commutative_anti_derivative
+
 Matrix Exponential Jordan Form
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.systems::matrix_exp_jordan_form
@@ -273,21 +285,9 @@ Matrix Exponential
 ^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.systems::matrix_exp
 
-Linear, n equations, Order 1, Type 1
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.systems::_linear_neq_order1_type1
-
-Linear, n equations, Order 1, Type 2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.systems::_linear_neq_order1_type2
-
-Linear, n equations, Order 1, Type 3
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.systems::_linear_neq_order1_type3
-
-Linear, n equations, Order 1, Type 4
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.systems::_linear_neq_order1_type4
+Linear, n equations, Order 1 Solver
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems::_linear_neq_order1_solver
 
 Nonlinear, 2 equations, Order 1, Type 1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
