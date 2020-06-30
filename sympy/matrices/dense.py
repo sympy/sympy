@@ -662,6 +662,8 @@ class DenseDomainMatrix(DenseMatrix):
         def toint(i):
             if hasattr(i, '__index__'):
                 i = i.__index__()
+            if isinstance(i, int):
+                i = Integer(i)
             return i
 
         index = toint(index)
@@ -674,6 +676,9 @@ class DenseDomainMatrix(DenseMatrix):
                 i_indices = a2i(i, self.rows)
                 j_indices = a2i(j, self.cols)
                 return self.extract(i_indices, j_indices)
+            elif isinstance(i, Expr) and isinstance(j, Expr) and (not i.is_Number or not j.is_Number):
+                from sympy.matrices.expressions.matexpr import MatrixElement
+                return MatrixElement(self, i, j)
             else:
                 raise IndexError("no slice~~~~")
         elif isinstance(index, (int, Integer)):
