@@ -717,7 +717,9 @@ class DenseDomainMatrix(DenseMatrix):
         from sympy.matrices.expressions import MatPow
         return MatPow(self, exp)
 
-    def inv(self):
+    def inv(self, method=None, iszerofunc=None, try_block_diag=None):
+        if method not in (None, 'GE', 'ADJ', 'LU', 'CH', 'LDL', 'QR', 'BLOCK'):
+            raise ValueError("no methods allowed!")
         return self.from_DomainMatrix(self._rep.inv())
 
     # called by __rmul__ in common.py

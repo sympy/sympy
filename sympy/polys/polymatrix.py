@@ -204,14 +204,16 @@ class DomainMatrix:
 
     def inv(self):
         m, n = self.shape
-        assert m == n
+        if m != n:
+            raise NonSquareMatrixError
         dom = self.domain
         rows = self.rows
         eye = [[dom.one if i==j else dom.zero for j in range(n)] for i in range(n)]
         rows = [row + eyerow for row, eyerow in zip(rows, eye)]
         Aaug = DomainMatrix(rows, (n, 2*n), dom)
         Aaug_rref, pivots = Aaug.rref()
-        assert pivots == tuple(range(n))
+        if pivots != tuple(range(n)):
+            raise ValueError('Not invertible')
         Ainv_rows = [row[n:] for row in Aaug_rref.rows]
         Ainv = DomainMatrix(Ainv_rows, (n, n), dom)
         return Ainv
