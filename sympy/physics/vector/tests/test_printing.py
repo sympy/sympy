@@ -153,6 +153,11 @@ def test_vector_latex():
     assert vlatex(xx2) == expected
 
 
+def test_vector_latex_arguments():
+    assert vlatex(N.x * 3.0, full_prec=False) == r'3.0\mathbf{\hat{n}_x}'
+    assert vlatex(N.x * 3.0, full_prec=True) == r'3.00000000000000\mathbf{\hat{n}_x}'
+
+
 def test_vector_latex_with_functions():
 
     N = ReferenceFrame('N')
@@ -218,12 +223,12 @@ def test_dyadic_latex():
 
 
 def test_dyadic_str():
-    assert str(Dyadic([])) == '0'
-    assert str(y) == 'a**2*(N.x|N.y) + b*(N.y|N.y) + c*sin(alpha)*(N.z|N.y)'
-    assert str(x) == 'alpha*(N.x|N.x) + sin(omega)*(N.y|N.z) + alpha*beta*(N.z|N.x)'
-    assert str(ww) == "alpha*N.x + asin(omega)*N.y - beta*alpha'*N.z"
-    assert str(xx) == '- (N.x|N.y) - (N.x|N.z)'
-    assert str(xx2) == '(N.x|N.y) + (N.x|N.z)'
+    assert vsprint(Dyadic([])) == '0'
+    assert vsprint(y) == 'a**2*(N.x|N.y) + b*(N.y|N.y) + c*sin(alpha)*(N.z|N.y)'
+    assert vsprint(x) == 'alpha*(N.x|N.x) + sin(omega)*(N.y|N.z) + alpha*beta*(N.z|N.x)'
+    assert vsprint(ww) == "alpha*N.x + asin(omega)*N.y - beta*alpha'*N.z"
+    assert vsprint(xx) == '- (N.x|N.y) - (N.x|N.z)'
+    assert vsprint(xx2) == '(N.x|N.y) + (N.x|N.z)'
 
 
 def test_vlatex(): # vlatex is broken #12078
@@ -302,3 +307,23 @@ def test_vector_str_printing():
     assert vsprint(w) == 'alpha*N.x + sin(omega)*N.y + alpha*beta*N.z'
     assert vsprint(omega.diff() * N.x) == "omega'*N.x"
     assert vsstrrepr(w) == 'alpha*N.x + sin(omega)*N.y + alpha*beta*N.z'
+
+
+def test_vector_str_arguments():
+    assert vsprint(N.x * 3.0, full_prec=False) == '3.0*N.x'
+    assert vsprint(N.x * 3.0, full_prec=True) == '3.00000000000000*N.x'
+
+
+def test_issue_14041():
+    import sympy.physics.mechanics as me
+
+    A_frame = me.ReferenceFrame('A')
+    thetad, phid = me.dynamicsymbols('theta, phi', 1)
+    L = symbols('L')
+
+    assert vlatex(L*(phid + thetad)**2*A_frame.x) == \
+        r"L \left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
+    assert vlatex((phid + thetad)**2*A_frame.x) == \
+        r"\left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
+    assert vlatex((phid*thetad)**a*A_frame.x) == \
+        r"\left(\dot{\phi} \dot{\theta}\right)^{a}\mathbf{\hat{a}_x}"
