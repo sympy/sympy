@@ -1837,8 +1837,8 @@ class Basic(metaclass=ManagedProperties):
         After an object (e.g. ``Add(x, y)``) is constructed, this method checks
         every superclass of its every arguments. If any of the superclasses can be
         found in ``Basic._constructor_postprocessor_mapping``, its postprocessors are
-        collected. When it is done for every arguments, every postprocessors are
-        applied to the object.
+        collected. When it is done for every arguments, every postprocessor is applied
+        to the object.
         """
         # WARNING: This API is experimental.
 
