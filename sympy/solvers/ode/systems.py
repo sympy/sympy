@@ -61,6 +61,11 @@ def _solsimp(e, t):
     return no_t + has_t
 
 
+def _return_system_type(is_non_constant, is_non_homogeneous):
+    type = "type{}".format(int("{}{}".format(int(is_non_constant), int(is_non_homogeneous)), 2) + 1)
+    return type
+
+
 def linear_ode_to_matrix(eqs, funcs, t, order):
     r"""
     Convert a linear system of ODEs to matrix form
@@ -632,7 +637,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     if type == "auto":
         is_non_constant = not _matrix_is_constant(A, t)
         is_non_homogeneous = not (b is None or b.is_zero_matrix)
-        type = "type{}".format(int("{}{}".format(int(is_non_constant), int(is_non_homogeneous)), 2) + 1)
+        type = _return_system_type(is_non_constant, is_non_homogeneous)
 
     if type == "type1" or type == "type2":
         P, J = matrix_exp_jordan_form(A, t)
@@ -949,14 +954,13 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         if not is_homogeneous:
             match['rhs'] = b
 
-        if match['is_constant']:
-            match['type_of_equation'] = "type1" if is_homogeneous else "type2"
-        else:
+        if not is_constant:
             B, is_commuting = _is_commutative_anti_derivative(-A, t)
             if not is_commuting:
                 return None
             match['commutative_antiderivative'] = B
-            match['type_of_equation'] = "type3" if is_homogeneous else "type4"
+
+        match['type_of_equation'] = _return_system_type(not is_constant, not is_homogeneous)
 
         return match
 
