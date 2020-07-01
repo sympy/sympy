@@ -306,13 +306,13 @@ def test_bidiagonalize():
         LM2.simplify()
         LM4.simplify()
 
-        assert M == M4
+        assert M == simplify(M4)
         assert M2 == M0
-        assert N == N4
+        assert N == simplify(N4)
         assert N2 == N0
-        assert M == LM4
+        assert M == simplify(LM4)
         assert LM2 == LM0
-        assert N == LN4
+        assert N == simplify(LN4)
         assert LN2 == LN0
 
     #Complex Tests

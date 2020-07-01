@@ -1814,15 +1814,17 @@ def _solve_system(exprs, symbols, **flags):
     else:
         if all(p.is_linear for p in polys):
             n, m = len(polys), len(symbols)
-            matrix = zeros(n, m + 1)
+            matrix = zeros(n, m + 1).tolist()
 
             for i, poly in enumerate(polys):
                 for monom, coeff in poly.terms():
                     try:
                         j = monom.index(1)
-                        matrix[i, j] = coeff
+                        matrix[i][j] = coeff
                     except ValueError:
-                        matrix[i, m] = -coeff
+                        matrix[i][m] = -coeff
+
+            matrix = Matrix(matrix)
 
             # returns a dictionary ({symbols: values}) or None
             if flags.pop('particular', False):

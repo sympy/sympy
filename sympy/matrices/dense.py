@@ -702,10 +702,11 @@ class DenseDomainMatrix(DenseMatrix):
             return NotImplemented
 
     def __mul__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return NotImplemented
+        if not isinstance(other, MatrixBase):
+            try:
+                other = _sympify(other)
+            except SympifyError:
+                return NotImplemented
         if isinstance(other, DenseDomainMatrix):
             return self.from_DomainMatrix(self._rep * other._rep)
         elif isinstance(other, DenseMatrix):

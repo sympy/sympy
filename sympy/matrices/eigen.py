@@ -465,21 +465,23 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
 def _householder_vector(x):
     if not x.cols == 1:
         raise ValueError("Input must be a column matrix")
-    v = x.copy()
-    v_plus = x.copy()
-    v_minus = x.copy()
-    q = x[0, 0] / abs(x[0, 0])
-    norm_x = x.norm()
-    v_plus[0, 0] = x[0, 0] + q * norm_x
-    v_minus[0, 0] = x[0, 0] - q * norm_x
+    v = x.copy().tolist()
     if x[1:, 0].norm() == 0:
         bet = 0
-        v[0, 0] = 1
+        v[0][0] = 1
+        v = x._new(v)
     else:
-        if v_plus.norm() <= v_minus.norm():
+        q = x[0, 0] / abs(x[0, 0])
+        norm_x = x.norm()
+        v_plus = x.copy().tolist()
+        v_minus = x.copy().tolist()
+        v_plus[0][0] = x[0, 0] + q * norm_x
+        v_minus[0][0] = x[0, 0] - q * norm_x
+        if x._new(v_plus).norm() <= x._new(v_minus).norm():
             v = v_plus
         else:
             v = v_minus
+        v = x._new(v)
         v = v / v[0]
         bet = 2 / (v.norm() ** 2)
     return v, bet
@@ -488,38 +490,59 @@ def _householder_vector(x):
 def _bidiagonal_decmp_hholder(M):
     m = M.rows
     n = M.cols
-    A = M.as_mutable()
-    U, V = A.eye(m), A.eye(n)
+    Am = M.as_mutable()
+    A = Am.tolist()
+    U, V = Am.eye(m), Am.eye(n)
+
+    def set(C, j, k, B):
+        for j2 in range(B.rows):
+            for k2 in range(B.cols):
+                C[j+j2][k+k2] = B[j2, k2]
+
     for i in range(min(m, n)):
-        v, bet = _householder_vector(A[i:, i])
-        hh_mat = A.eye(m - i) - bet * v * v.H
-        A[i:, i:] = hh_mat * A[i:, i:]
-        temp = A.eye(m)
-        temp[i:, i:] = hh_mat
-        U = U * temp
+        v, bet = _householder_vector(Am._new(A)[i:, i])
+        hh_mat = Am.eye(m - i) - bet * v * v.H
+        set(A, i, i, hh_mat * Am._new(A)[i:, i:])
+        temp = Am.eye(m).tolist()
+        set(temp, i, i, hh_mat)
+        res = Am._new(temp)
+        if type(res) != type(res.as_mutable()):
+            import pdb; pdb.set_trace()
+        Uorig = U
+        Amnew = Am._new(temp)
+        U = Uorig * Amnew
+        if type(U) != type(U.as_mutable()):
+            import pdb; pdb.set_trace()
         if i + 1 <= n - 2:
-            v, bet = _householder_vector(A[i, i+1:].T)
-            hh_mat = A.eye(n - i - 1) - bet * v * v.H
-            A[i:, i+1:] = A[i:, i+1:] * hh_mat
-            temp = A.eye(n)
-            temp[i+1:, i+1:] = hh_mat
-            V = temp * V
-    return U, A, V
+            v, bet = _householder_vector(Am._new(A)[i, i+1:].T)
+            hh_mat = Am.eye(n - i - 1) - bet * v * v.H
+            set(A, i, i+1, Am._new(A)[i:, i+1:] * hh_mat)
+            temp = Am.eye(n).tolist()
+            set(temp, i+1, i+1, hh_mat)
+            V = Am._new(temp) * V
+    return U, Am._new(A), V
 
 
 def _eval_bidiag_hholder(M):
     m = M.rows
     n = M.cols
-    A = M.as_mutable()
+    Am = M.as_mutable()
+    A = Am.tolist()
+
+    def set(C, j, k, B):
+        for j2 in range(B.rows):
+            for k2 in range(B.cols):
+                C[j+j2][k+k2] = B[j2, k2]
+
     for i in range(min(m, n)):
-        v, bet = _householder_vector(A[i:, i])
-        hh_mat = A.eye(m-i) - bet * v * v.H
-        A[i:, i:] = hh_mat * A[i:, i:]
+        v, bet = _householder_vector(Am._new(A)[i:, i])
+        hh_mat = Am.eye(m-i) - bet * v * v.H
+        set(A, i, i, hh_mat * Am._new(A)[i:, i:])
         if i + 1 <= n - 2:
-            v, bet = _householder_vector(A[i, i+1:].T)
-            hh_mat = A.eye(n - i - 1) - bet * v * v.H
-            A[i:, i+1:] = A[i:, i+1:] * hh_mat
-    return A
+            v, bet = _householder_vector(Am._new(A)[i, i+1:].T)
+            hh_mat = Am.eye(n - i - 1) - bet * v * v.H
+            set(A, i, i+1, Am._new(A)[i:, i+1:] * hh_mat)
+    return Am._new(A)
 
 
 def _bidiagonal_decomposition(M, upper=True):
