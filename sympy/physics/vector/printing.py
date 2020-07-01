@@ -2,11 +2,11 @@ from sympy import Derivative
 from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.core.symbol import Symbol
 from sympy.interactive.printing import init_printing
-from sympy.printing.conventions import split_super_sub
-from sympy.printing.latex import LatexPrinter, translate
+from sympy.printing.latex import LatexPrinter
 from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.pretty_symbology import center_accent
 from sympy.printing.str import StrPrinter
+from sympy.printing.precedence import PRECEDENCE
 
 __all__ = ['vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex',
            'init_vprinting']
@@ -53,26 +53,16 @@ class VectorLatexPrinter(LatexPrinter):
             not isinstance(type(expr), UndefinedFunction):
             return getattr(self, '_print_' + func)(expr, exp)
         elif isinstance(type(expr), UndefinedFunction) and (expr.args == (t,)):
-
-            name, supers, subs = split_super_sub(func)
-            name = translate(name)
-            supers = [translate(sup) for sup in supers]
-            subs = [translate(sub) for sub in subs]
-
-            if len(supers) != 0:
-                supers = r"^{%s}" % "".join(supers)
+            # treat this function like a symbol
+            expr = Symbol(func)
+            if exp is not None:
+                # copied from LatexPrinter._helper_print_standard_power, which
+                # we can't call because we only have exp as a string.
+                base = self.parenthesize(expr, PRECEDENCE['Pow'])
+                base = self.parenthesize_super(base)
+                return r"%s^{%s}" % (base, exp)
             else:
-                supers = r""
-
-            if len(subs) != 0:
-                subs = r"_{%s}" % "".join(subs)
-            else:
-                subs = r""
-
-            if exp:
-                supers += r"^{%s}" % exp
-
-            return r"%s" % (name + supers + subs)
+                return super()._print(expr)
         else:
             return super()._print_Function(expr, exp)
 
