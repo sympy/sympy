@@ -536,7 +536,7 @@ def _gauss_jordan_solve(M, B, freevar=False):
 
     """
 
-    from sympy.matrices import Matrix, zeros
+    from sympy.matrices import Matrix
 
     cls      = M._new
     aug      = M.hstack(M.copy(), B.copy())

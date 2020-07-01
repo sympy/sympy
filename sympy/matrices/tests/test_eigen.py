@@ -1,7 +1,7 @@
 from sympy import (
     Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
     cos, symbols)
-from sympy.matrices import eye, Matrix, dotprodsimp
+from sympy.matrices import Matrix, dotprodsimp
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL
 from sympy.matrices.matrices import NonSquareMatrixError, MatrixError

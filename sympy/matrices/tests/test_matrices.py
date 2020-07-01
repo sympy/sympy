@@ -14,7 +14,7 @@ from sympy.matrices import (
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
     MatrixSymbol, dotprodsimp)
 from sympy.core.compatibility import iterable, Hashable
-from sympy.core import Tuple, Wild
+from sympy.core import Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture
 from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
