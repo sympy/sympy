@@ -1,13 +1,14 @@
-from sympy import (Symbol, expand, factor_terms, powsimp, Poly,
-                   Mul, ratsimp, Add, Piecewise, piecewise_fold)
+from sympy.core import Add, Mul
+from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
-from sympy.core.symbol import Dummy
-from sympy.core.function import expand_mul
-from sympy.functions import exp, im, cos, sin, re
+from sympy.core.symbol import Dummy, Symbol
+from sympy.core.function import expand_mul, expand
+from sympy.functions import exp, im, cos, sin, re, Piecewise, piecewise_fold
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase
-from sympy.simplify import simplify, collect
+from sympy.polys import Poly
+from sympy.simplify import simplify, collect, powsimp, ratsimp
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError
 from sympy.utilities import numbered_symbols, default_sort_key
@@ -101,26 +102,24 @@ def return_system_type(A, t, b=None):
     >>> b = Matrix([t, 1])
 
     >>> return_system_type(A, t)
-    {'type': 'type1', 'antiderivative': None}
+    {'antiderivative': None, 'type': 'type1'}
 
     >>> return_system_type(A, t, b=b)
-    {'type': 'type2', 'antiderivative': None}
+    {'antiderivative': None, 'type': 'type2'}
 
     >>> A_t = Matrix([[1, t], [-t, 1]])
 
-    >>> return_system_type(A, t)
-    {'type': 'type3',
-    'antiderivative': Matrix([
+    >>> return_system_type(A_t, t)
+    {'antiderivative': Matrix([
     [      t, t**2/2],
-    [-t**2/2,      t]])}
+    [-t**2/2,      t]]), 'type': 'type3'}
 
     >>> return_system_type(A_t, t, b=b)
-    {'type': 'type4',
-     'antiderivative': Matrix([
-     [      t, t**2/2],
-     [-t**2/2,      t]])}
+    {'antiderivative': Matrix([
+    [      t, t**2/2],
+    [-t**2/2,      t]]), 'type': 'type4'}
 
-    >>> A_non_commutative = Matrix([[1, t], [t, 1]])
+    >>> A_non_commutative = Matrix([[1, t], [t, -1]])
     >>> return_system_type(A_non_commutative, t)
     Traceback (most recent call last):
     ...
