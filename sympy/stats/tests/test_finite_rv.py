@@ -183,11 +183,13 @@ def test_bernoulli():
     p, a, b, t = symbols('p a b t')
     X = Bernoulli('B', p, a, b)
 
-    assert E(X) == a*p + b*(-p + 1)
+    assert E(X) == a*p + b*Piecewise((p, Eq(a, b)), (1 - p, True))
     assert density(X)[a] == p
-    assert density(X)[b] == 1 - p
-    assert characteristic_function(X)(t) == p * exp(I * a * t) + (-p + 1) * exp(I * b * t)
-    assert moment_generating_function(X)(t) == p * exp(a * t) + (-p + 1) * exp(b * t)
+    assert density(X)[b] == Piecewise((p, Eq(a, b)), (1 - p, True))
+    assert characteristic_function(X)(t) == p*exp(I*a*t) + Piecewise((p, Eq(a, b)),
+                        (1 - p, True))*exp(I*b*t)
+    assert moment_generating_function(X)(t) == p*exp(a*t) + Piecewise((p, Eq(a, b)),
+                        (1 - p, True))*exp(b*t)
 
     X = Bernoulli('B', p, 1, 0)
     z = Symbol("z")

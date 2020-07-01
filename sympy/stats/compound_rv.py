@@ -98,12 +98,16 @@ def _get_pdf(dist):
         raise NotImplementedError("Compound Distributions for more than one random"
             " argument is not implemeted yet.")
     rand_sym = randoms[0]
-    x = Dummy('x')
     if isinstance(dist, SingleFiniteDistribution):
+        x = Dummy('x', integer=True, negative=False)
         _pdf = dist.pmf(x)
     else:
+        x = Dummy('x')
         _pdf = dist.pdf(x)
-    rand_dens = rand_sym.pspace.distribution.pdf(rand_sym)
+    if isinstance(rand_sym.pspace.distribution, SingleFiniteDistribution):
+        rand_dens = rand_sym.pspace.distribution.pmf(rand_sym)
+    else:
+        rand_dens = rand_sym.pspace.distribution.pdf(rand_sym)
     rand_sym_dom = rand_sym.pspace.domain.set
     if rand_sym.pspace.is_Discrete or rand_sym.pspace.is_Finite:
         _pdf = Sum(_pdf*rand_dens, (rand_sym, rand_sym_dom._inf, rand_sym_dom._sup)).doit()

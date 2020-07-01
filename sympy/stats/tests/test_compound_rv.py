@@ -1,7 +1,11 @@
-from sympy import symbols, S, erf, sqrt, pi, exp, gamma, Interval, oo
-from sympy.stats import Normal, P, E, density, Gamma, Poisson, Rayleigh, variance
+from sympy import (symbols, S, erf, sqrt, pi, exp, gamma, Interval, oo, beta,
+                    Eq, Piecewise)
+from sympy.stats import (Normal, P, E, density, Gamma, Poisson, Rayleigh,
+                        variance, Bernoulli, Beta, Uniform)
 from sympy.stats.compound_rv import CompoundDistribution, compound_pspace
 from sympy.stats.crv_types import NormalDistribution
+from sympy.stats.drv_types import PoissonDistribution
+from sympy.stats.frv_types import BernoulliDistribution
 from sympy.testing.pytest import raises
 from sympy.stats.joint_rv_types import MultivariateNormalDistribution
 
@@ -17,6 +21,7 @@ def test_normal_CompoundDist():
     # https://math.stackexchange.com/questions/1484451/
     # (Contains proof of E and variance computation)
 
+
 def test_poisson_CompoundDist():
     k, t, y = symbols('k t y', positive=True, real=True)
     G = Gamma('G', k, t)
@@ -24,6 +29,25 @@ def test_poisson_CompoundDist():
     assert density(D)(y).simplify() == t**y*(t + 1)**(-k - y)*gamma(k + y)/(gamma(k)*gamma(y + 1))
     # https://en.wikipedia.org/wiki/Negative_binomial_distribution#Gamma%E2%80%93Poisson_mixture
     assert E(D).simplify() == k*t # mean of NegativeBinomialDistribution
+
+def test_bernoulli_CompoundDist():
+    X = Beta('X', 1, 2)
+    Y = Bernoulli('Y', X)
+    assert density(Y).dict == {0: S(2)/3, 1: S(1)/3}
+    assert E(Y) == P(Eq(Y, 1)) == S(1)/3
+    assert variance(Y) == S(2)/9
+
+    # test issue 8128
+    a = Bernoulli('a', S(1)/2)
+    b = Bernoulli('b', a)
+    assert density(b).dict == {0: S(1)/2, 1: S(1)/2}
+    assert P(b > 0.5) == S(1)/2
+
+    X = Uniform('X', 0, 1)
+    Y = Bernoulli('Y', X)
+    assert E(Y) == S(1)/2
+    assert P(Eq(Y, 1)) == E(Y)
+
 
 def test_unevaluated_CompoundDist():
     # these tests need to be removed once they work with evaluation as they are currently not
@@ -38,6 +62,7 @@ def test_unevaluated_CompoundDist():
     "2*Abs(arg(X - 3)) <= pi/2), (X*Integral(sqrt(2)*exp(-(X - 3)**2/(2*R**2))*exp(-R**2/32)"
     "/(32*sqrt(pi)), (R, 0, oo)), True)), (X, -oo, oo))")
 
+
 def test_Compound_Distribution():
     X = Normal('X', 2, 4)
     N = NormalDistribution(X, 4)
@@ -49,6 +74,24 @@ def test_Compound_Distribution():
     raises(ValueError, lambda: CompoundDistribution(NormalDistribution(2, 3)))
     M = MultivariateNormalDistribution([1, 2], [[2, 1], [1, 2]])
     raises(NotImplementedError, lambda: CompoundDistribution(M))
+
+    X = Beta('X', 2, 4)
+    B = BernoulliDistribution(X, 1, 0)
+    C = CompoundDistribution(B)
+    assert C.is_Finite
+    assert C.set == {0, 1}
+    y = symbols('y', negative=False, integer=True)
+    assert C.pdf(y) == Piecewise((S(1)/(30*beta(2, 4)), Eq(y, 0)),
+                (S(1)/(60*beta(2, 4)), Eq(y, 1)), (0, True))
+
+    k, t, z = symbols('k t z', positive=True, real=True)
+    G = Gamma('G', k, t)
+    X = PoissonDistribution(G)
+    C = CompoundDistribution(X)
+    assert C.is_Discrete
+    assert C.set == S.Naturals0
+    assert C.pdf(z).simplify() == t**z*(t + 1)**(-k - z)*gamma(k + z)/(gamma(k)*gamma(z + 1))
+
 
 def test_compound_pspace():
     X = Normal('X', 2, 4)

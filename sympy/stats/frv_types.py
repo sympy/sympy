@@ -265,8 +265,8 @@ class BernoulliDistribution(SingleFiniteDistribution):
         return set([self.succ, self.fail])
 
     def pmf(self, x):
-        return Piecewise((self.p, x == self.succ),
-                         (1 - self.p, x == self.fail),
+        return Piecewise((self.p, Eq(x, self.succ)),
+                         (1 - self.p, Eq(x, self.fail)),
                          (S.Zero, True))
 
 
