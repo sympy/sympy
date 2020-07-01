@@ -61,9 +61,100 @@ def _solsimp(e, t):
     return no_t + has_t
 
 
-def _return_system_type(is_non_constant, is_non_homogeneous):
+def return_system_type(A, t, b=None):
+    r"""
+    Helper function that determines the type of the system of ODEs for solving with :obj:`sympy.solvers.ode.systems.linodesolve()`
+
+    Explanation
+    ===========
+
+    This function takes in the coefficient matrix and/or the non-homogeneous term
+    and returns the type of the equation that can be solved by :obj:`sympy.solvers.ode.systems.linodesolve()`.
+
+    If the system is constant coefficient homogeneous, then "type1" is returned
+    If the system is constant coefficient non-homogeneous, then "type2" is returned
+    If the system is non-constant coefficient homogeneous, then "type3" is returned
+    If the system is non-constnt coefficient non-homogeneous, then "type4" is returned
+
+    Note that, if the system of ODEs is of "type3" or "type4", then along with the type,
+    the commutative antiderivative of the coefficient matrix is also returned.
+
+    If the system cannot be solved by :obj:`sympy.solvers.ode.systems.linodesolve()`, then
+    NotImplementedError is raised.
+
+    Parameters
+    ==========
+
+    A : Matrix
+        Coefficient matrix of the system of ODEs
+    b : Matrix or None
+        Non-homogeneous term of the system. The default value is None.
+        If this argument is None, then the system is assumed to be homogeneous.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Matrix
+    >>> from sympy.solvers.ode.systems import return_system_type
+    >>> t = symbols("t")
+    >>> A = Matrix([[1, 1], [2, 3]])
+    >>> b = Matrix([t, 1])
+
+    >>> return_system_type(A, t)
+    {'type': 'type1', 'antiderivative': None}
+
+    >>> return_system_type(A, t, b=b)
+    {'type': 'type2', 'antiderivative': None}
+
+    >>> A_t = Matrix([[1, t], [-t, 1]])
+
+    >>> return_system_type(A, t)
+    {'type': 'type3',
+    'antiderivative': Matrix([
+    [      t, t**2/2],
+    [-t**2/2,      t]])}
+
+    >>> return_system_type(A_t, t, b=b)
+    {'type': 'type4',
+     'antiderivative': Matrix([
+     [      t, t**2/2],
+     [-t**2/2,      t]])}
+
+    >>> A_non_commutative = Matrix([[1, t], [t, 1]])
+    >>> return_system_type(A_non_commutative, t)
+    Traceback (most recent call last):
+    ...
+    NotImplementedError:
+    The system doesn't have a commutative antiderivative, it can't be
+    solved by linodesolve.
+
+    Returns
+    =======
+
+    Dict
+
+    Raises
+    ======
+
+    NotImplementedError
+        When the coefficient matrix doesn't have a commutative antiderivative
+
+    """
+
+    is_non_constant = not _matrix_is_constant(A, t)
+    is_non_homogeneous = not (b is None or b.is_zero_matrix)
     type = "type{}".format(int("{}{}".format(int(is_non_constant), int(is_non_homogeneous)), 2) + 1)
-    return type
+
+    B = None
+    if is_non_constant:
+        B, is_commuting = _is_commutative_anti_derivative(A, t)
+        if not is_commuting:
+            raise NotImplementedError(filldedent('''
+                The system doesn't have a commutative antiderivative, it can't be solved
+                by linodesolve.
+            '''))
+
+    return {"type": type, "antiderivative": B}
 
 
 def linear_ode_to_matrix(eqs, funcs, t, order):
@@ -573,6 +664,8 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     NonSquareMatrixError
         When the coefficient matrix or its antiderivative, if passed isn't a square
         matrix
+    NotImplementedError
+        If the coefficient matrix doesn't have a commutative antiderivative
 
     See Also
     ========
@@ -635,9 +728,8 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
         b = zeros(n, 1)
 
     if type == "auto":
-        is_non_constant = not _matrix_is_constant(A, t)
-        is_non_homogeneous = not (b is None or b.is_zero_matrix)
-        type = _return_system_type(is_non_constant, is_non_homogeneous)
+        system_info = return_system_type(A, t, b=b)
+        type = system_info["type"]
 
     if type == "type1" or type == "type2":
         P, J = matrix_exp_jordan_form(A, t)
@@ -650,7 +742,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
 
     else:
         if B is None:
-            B, _ = _is_commutative_anti_derivative(A, t)
+            B = system_info['antiderivative']
 
         if type == "type3":
             sol_vector = B.exp() * Cvect
@@ -954,13 +1046,15 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         if not is_homogeneous:
             match['rhs'] = b
 
-        if not is_constant:
-            B, is_commuting = _is_commutative_anti_derivative(-A, t)
-            if not is_commuting:
-                return None
-            match['commutative_antiderivative'] = B
+        try:
+            system_info = return_system_type(-A, t, b=b)
+        except NotImplementedError:
+            return None
 
-        match['type_of_equation'] = _return_system_type(not is_constant, not is_homogeneous)
+        if not is_constant:
+            match['commutative_antiderivative'] = system_info["antiderivative"]
+
+        match['type_of_equation'] = system_info["type"]
 
         return match
 
