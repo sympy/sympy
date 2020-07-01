@@ -2566,9 +2566,9 @@ class indicator(Function):
     def eval(cls, A: Set, x: Basic):
         x_in_a = A.contains(x)
         if x_in_a is true:
-            return 1
+            return S.One
         elif x_in_a is false:
-            return 0
+            return S.Zero
 
 
 class boolean_indicator(Function):
@@ -2617,6 +2617,6 @@ class boolean_indicator(Function):
     @classmethod
     def eval(cls, x):
         if x is true:
-            return 1
+            return S.One
         elif x is false:
-            return 0
+            return S.Zero
