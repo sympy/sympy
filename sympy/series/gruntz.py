@@ -520,7 +520,7 @@ def mrv_leadterm(e, x):
     # For limits of complex functions, the algorithm would have to be
     # improved, or just find limits of Re and Im components separately.
     #
-    w = Dummy("w", real=True, positive=True, finite=True)
+    w = Dummy("w", real=True, positive=True)
     f, logw = rewrite(exps, Omega, x, w)
     f = f.subs(log(w), logw)
     series = calculate_series(f, w, logx=logw)

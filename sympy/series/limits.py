@@ -265,8 +265,7 @@ class Limit(Expr):
             return Order(limit(e.expr, z, z0), *e.args[1:])
 
         if e.is_Pow:
-            if (e.has(S.Infinity) or e.has(S.NegativeInfinity)
-                or e.has(S.ComplexInfinity) or e.has(S.NaN)):
+            if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
                 return self
 
             b1, e1 = e.base, e.exp
