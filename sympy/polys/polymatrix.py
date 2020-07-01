@@ -70,7 +70,9 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
 
         if self.cols != 0 and other.rows != 0:
             mat = self._mat
-            other_mat = other._mat
+            other_mat = getattr(other, "_mat", None)
+            if other_mat is None:
+                other_mat = other._flat()
             for i in range(len(new_mat)):
                 row, col = i // new_mat_cols, i % new_mat_cols
                 row_indices = range(self_cols*row, self_cols*(row+1))
