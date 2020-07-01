@@ -2,11 +2,11 @@ from sympy import Derivative
 from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.core.symbol import Symbol
 from sympy.interactive.printing import init_printing
-from sympy.printing.conventions import split_super_sub
-from sympy.printing.latex import LatexPrinter, translate
+from sympy.printing.latex import LatexPrinter
 from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.pretty_symbology import center_accent
 from sympy.printing.str import StrPrinter
+from sympy.printing.precedence import PRECEDENCE
 
 __all__ = ['vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex',
            'init_vprinting']
@@ -53,70 +53,18 @@ class VectorLatexPrinter(LatexPrinter):
             not isinstance(type(expr), UndefinedFunction):
             return getattr(self, '_print_' + func)(expr, exp)
         elif isinstance(type(expr), UndefinedFunction) and (expr.args == (t,)):
-
-            name, supers, subs = split_super_sub(func)
-            name = translate(name)
-            supers = [translate(sup) for sup in supers]
-            subs = [translate(sub) for sub in subs]
-
-            if len(supers) != 0:
-                supers = r"^{%s}" % "".join(supers)
+            # treat this function like a symbol
+            expr = Symbol(func)
+            if exp is not None:
+                # copied from LatexPrinter._helper_print_standard_power, which
+                # we can't call because we only have exp as a string.
+                base = self.parenthesize(expr, PRECEDENCE['Pow'])
+                base = self.parenthesize_super(base)
+                return r"%s^{%s}" % (base, exp)
             else:
-                supers = r""
-
-            if len(subs) != 0:
-                subs = r"_{%s}" % "".join(subs)
-            else:
-                subs = r""
-
-            if exp:
-                supers += r"^{%s}" % exp
-
-            return r"%s" % (name + supers + subs)
+                return super()._print(expr)
         else:
-            args = [str(self._print(arg)) for arg in expr.args]
-            # How inverse trig functions should be displayed, formats are:
-            # abbreviated: asin, full: arcsin, power: sin^-1
-            inv_trig_style = self._settings['inv_trig_style']
-            # If we are dealing with a power-style inverse trig function
-            inv_trig_power_case = False
-            # If it is applicable to fold the argument brackets
-            can_fold_brackets = self._settings['fold_func_brackets'] and \
-                len(args) == 1 and \
-                not self._needs_function_brackets(expr.args[0])
-
-            inv_trig_table = ["asin", "acos", "atan", "acot"]
-
-            # If the function is an inverse trig function, handle the style
-            if func in inv_trig_table:
-                if inv_trig_style == "abbreviated":
-                    pass
-                elif inv_trig_style == "full":
-                    func = "arc" + func[1:]
-                elif inv_trig_style == "power":
-                    func = func[1:]
-                    inv_trig_power_case = True
-
-                    # Can never fold brackets if we're raised to a power
-                    if exp is not None:
-                        can_fold_brackets = False
-
-            if inv_trig_power_case:
-                name = r"\operatorname{%s}^{-1}" % func
-            elif exp is not None:
-                name = r"\operatorname{%s}^{%s}" % (func, exp)
-            else:
-                name = r"\operatorname{%s}" % func
-
-            if can_fold_brackets:
-                name += r"%s"
-            else:
-                name += r"\left(%s\right)"
-
-            if inv_trig_power_case and exp is not None:
-                name += r"^{%s}" % exp
-
-            return name % ",".join(args)
+            return super()._print_Function(expr, exp)
 
     def _print_Derivative(self, der_expr):
         from sympy.physics.vector.functions import dynamicsymbols

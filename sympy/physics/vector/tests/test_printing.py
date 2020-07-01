@@ -91,7 +91,7 @@ def test_vector_latex():
 
     assert vlatex(v) == (r'(a^{2} + \frac{b}{c})\mathbf{\hat{a}_x} + '
                          r'\sqrt{d}\mathbf{\hat{a}_y} + '
-                         r'\operatorname{cos}\left(\omega\right)'
+                         r'\cos{\left(\omega \right)}'
                          r'\mathbf{\hat{a}_z}')
 
     theta, omega, alpha, q = dynamicsymbols('theta, omega, alpha, q')
@@ -109,12 +109,12 @@ def test_vector_latex():
          cos(phi1) * cos(phi2) * A.y +
          cos(theta1 + phi3) * A.z)
 
-    assert vlatex(v) == (r'\operatorname{sin}\left(\theta_{1}\right)'
-                         r'\mathbf{\hat{a}_x} + \operatorname{cos}'
-                         r'\left(\phi_{1}\right) \operatorname{cos}'
-                         r'\left(\phi_{2}\right)\mathbf{\hat{a}_y} + '
-                         r'\operatorname{cos}\left(\theta_{1} + '
-                         r'\phi_{3}\right)\mathbf{\hat{a}_z}')
+    assert vlatex(v) == (r'\sin{\left(\theta_{1} \right)}'
+                         r'\mathbf{\hat{a}_x} + \cos{'
+                         r'\left(\phi_{1} \right)} \cos{'
+                         r'\left(\phi_{2} \right)}\mathbf{\hat{a}_y} + '
+                         r'\cos{\left(\theta_{1} + '
+                         r'\phi_{3} \right)}\mathbf{\hat{a}_z}')
 
     N = ReferenceFrame('N')
 
@@ -124,7 +124,7 @@ def test_vector_latex():
 
     expected = (r'(a^{2} + \frac{b}{c})\mathbf{\hat{n}_x} + '
                 r'\sqrt{d}\mathbf{\hat{n}_y} + '
-                r'\operatorname{cos}\left(\omega\right)'
+                r'\cos{\left(\omega \right)}'
                 r'\mathbf{\hat{n}_z}')
 
     assert vlatex(v) == expected
@@ -137,11 +137,11 @@ def test_vector_latex():
 
     expected = (r'(a^{2} + \frac{b}{c})\hat{i} + '
                 r'\sqrt{d}\hat{j} + '
-                r'\operatorname{cos}\left(\omega\right)\hat{k}')
+                r'\cos{\left(\omega \right)}\hat{k}')
     assert vlatex(v) == expected
 
-    expected = r'\alpha\mathbf{\hat{n}_x} + \operatorname{asin}\left(\omega' \
-        r'\right)\mathbf{\hat{n}_y} -  \beta \dot{\alpha}\mathbf{\hat{n}_z}'
+    expected = r'\alpha\mathbf{\hat{n}_x} + \operatorname{asin}{\left(\omega ' \
+        r'\right)}\mathbf{\hat{n}_y} -  \beta \dot{\alpha}\mathbf{\hat{n}_z}'
     assert vlatex(ww) == expected
 
     expected = r'- \mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_y} - ' \
@@ -207,13 +207,13 @@ def test_dyadic_latex():
 
     expected = (r'a^{2}\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_y} + '
                 r'b\mathbf{\hat{n}_y}\otimes \mathbf{\hat{n}_y} + '
-                r'c \operatorname{sin}\left(\alpha\right)'
+                r'c \sin{\left(\alpha \right)}'
                 r'\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_y}')
 
     assert vlatex(y) == expected
 
     expected = (r'\alpha\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_x} + '
-                r'\operatorname{sin}\left(\omega\right)\mathbf{\hat{n}_y}'
+                r'\sin{\left(\omega \right)}\mathbf{\hat{n}_y}'
                 r'\otimes \mathbf{\hat{n}_z} + '
                 r'\alpha \beta\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_x}')
 
@@ -241,7 +241,7 @@ def test_vlatex(): # vlatex is broken #12078
     g = Function('g')
     h = Function('h')
 
-    expected = r'J \left(\frac{d}{d x} \operatorname{g}\left(x\right) - \frac{d}{d x} \operatorname{h}\left(x\right)\right)'
+    expected = r'J \left(\frac{d}{d x} g{\left(x \right)} - \frac{d}{d x} h{\left(x \right)}\right)'
 
     expr = J*f(x).diff(x).subs(f(x), g(x)-h(x))
 
