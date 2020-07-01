@@ -358,7 +358,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
     # consistency check for overdetermined systems
     if m > n:
         for i in range(n, m):
-            for j in range(n):
+            for j in range(bcols):
                 if not iszerofunc(b[i][j]):
                     raise ValueError("The system is inconsistent.")
 
