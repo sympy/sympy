@@ -710,7 +710,7 @@ continued fraction can also be infinite, but infinite objects are more
 difficult to represent in computers, so we will only examine the finite case
 here.
 
-A continued fraction of the above form is often represented as a list `[a_0;
+A continued fraction of the above form is often represented as a list `[a_0,
 a_1, \ldots, a_n]`.  Let's write a simple function that converts such a list
 to its continued fraction form.  The easiest way to construct a continued
 fraction from a list is to work backwards.  Note that despite the apparent
