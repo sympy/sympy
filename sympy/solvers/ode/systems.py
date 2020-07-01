@@ -409,7 +409,7 @@ def matrix_exp_jordan_form(A, t):
     return P, expJ
 
 
-def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
+def _linear_neq_order1_solver(A, t, b=None, B=None, type="auto", doit=False):
     r"""
     System of n equations linear first-order differential equations
 
@@ -476,9 +476,8 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
         system it solves are: "type1" for constant coefficient homogeneous
         "type2" for constant coefficient non-homogeneous, "type3" for non-constant
         coefficient homogeneous and "type4" for non-constant coefficient non-homogeneous.
-        The default value is "type4" since that solution can be used to get solutions
-        for all the four types. Passing the correct type is encouraged as
-        evaluating "type4" solution takes more time than other types.
+        The default value is "auto" which will let the solver decide the correct type of
+        the system passed.
     doit : Boolean
         Evaluate the solution if True, default value is False
 
@@ -510,7 +509,7 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
     >>> A = -A0
 
-    We have the coefficient matrices and the non-homogeneous term ready. If you the system
+    We have the coefficient matrices and the non-homogeneous term ready. If you know the system
     is homogeneous, then there is no need to pass the argument *b*.
 
     >>> sol_vector = _linear_neq_order1_solver(A, x, b=b, type="type2")
@@ -617,7 +616,7 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
                         The coefficient matrix and its antiderivative should have same dimensions
                     '''))
 
-    if not any(type == "type{}".format(i) for i in range(1, 5)):
+    if not any(type == "type{}".format(i) for i in range(1, 5)) and not type == "auto":
         raise ValueError(filldedent('''\
                     The input to type should be a valid one
                 '''))
@@ -629,6 +628,11 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="type4", doit=False):
 
     if (type == "type2" or type == "type4") and b is None:
         b = zeros(n, 1)
+
+    if type == "auto":
+        is_non_constant = not _matrix_is_constant(A, t)
+        is_non_homogeneous = not (b is None or b.is_zero_matrix)
+        type = "type{}".format(int("{}{}".format(int(is_non_constant), int(is_non_homogeneous)), 2) + 1)
 
     if type == "type1" or type == "type2":
         P, J = matrix_exp_jordan_form(A, t)

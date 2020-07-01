@@ -6,7 +6,8 @@ from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
                                        ODEOrderError, ODENonlinearError, _simpsol,
-                                       _is_commutative_anti_derivative, _linear_neq_order1_solver)
+                                       _is_commutative_anti_derivative, _linear_neq_order1_solver,
+                                       _canonical_equations)
 from sympy.integrals.integrals import Integral
 from sympy.testing.pytest import ON_TRAVIS, raises, slow, skip, XFAIL
 
@@ -386,8 +387,6 @@ def test_matrix_exp():
 
 
 def test_canonical_equations():
-    from sympy.solvers.ode.systems import _canonical_equations
-
     f, g, h = symbols('f g h', cls=Function)
     x = symbols('x')
     funcs = [f(x), g(x), h(x)]
@@ -853,6 +852,18 @@ def test_sysode_linear_neq_order1_type1():
     A2 = Matrix([[1, 2, 1], [3, 1, 2]])
     raises(NonSquareMatrixError, lambda: _linear_neq_order1_solver(A2, t))
 
+    # Testing auto functionality
+    func = [f(t), g(t)]
+    eq = [Eq(f(t).diff(t) + g(t).diff(t), g(t)), Eq(g(t).diff(t), f(t))]
+    ceq = _canonical_equations(eq, func, t)
+    (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
+    A = -A0
+    sol = [C1*(-Rational(1, 2) + sqrt(5)/2)*exp(t*(-Rational(1, 2) + sqrt(5)/2)) + C2*(-sqrt(5)/2 - Rational(1, 2))*
+           exp(t*(-sqrt(5)/2 - Rational(1, 2))),
+            C1*exp(t*(-Rational(1, 2) + sqrt(5)/2)) + C2*exp(t*(-sqrt(5)/2 - Rational(1, 2)))]
+    assert _linear_neq_order1_solver(A, t) == sol
+
+
 
 def test_sysode_linear_neq_order1_type2():
 
@@ -999,6 +1010,22 @@ def test_sysode_linear_neq_order1_type2():
             C1 + C2*t - 10*t**3 - 5*t**2 + t*(15*t**2 - 5*t) - 5*t]
     assert _linear_neq_order1_solver(A1, t, b=b1, type="type2", doit=True) == sol1
 
+    # Testing auto functionality
+    func = [f(t), g(t)]
+    eq = [Eq(f(t).diff(t) + g(t).diff(t), g(t) + t), Eq(g(t).diff(t), f(t))]
+    ceq = _canonical_equations(eq, func, t)
+    (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
+    A = -A0
+    sol = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
+            - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 +
+            sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5, t)/2 + sqrt(5)*exp(-t/2 +
+            sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 -
+            t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2 - exp(-sqrt(5)*t/2 -
+            t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2, C1*exp(-t/2 + sqrt(5)*t/2) +
+            C2*exp(-sqrt(5)*t/2 - t/2) + exp(-t/2 + sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5,
+            t) + exp(-sqrt(5)*t/2 - t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)]
+    assert _linear_neq_order1_solver(A, t, b=b) == sol
+
 
 def test_sysode_linear_neq_order1_type3():
     from sympy.core import Mul
@@ -1088,6 +1115,27 @@ def test_sysode_linear_neq_order1_type3():
 
     raises(ValueError, lambda: _linear_neq_order1_solver(A1, t, B=B2))
     raises(ValueError, lambda: _linear_neq_order1_solver(A2, t, B=B1))
+
+    # Testing auto functionality
+    func = [f(t), g(t)]
+    eq = [Eq(f(t).diff(t) + g(t).diff(t), t*g(t)), Eq(g(t).diff(t), f(t))]
+    ceq = _canonical_equations(eq, func, t)
+    (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
+    A = -A0
+    _x1 = sqrt(2*t + 1)
+    _x2 = _x1*t/2 - t/2
+    _x3 = -_x1*t/2 - t/2
+    _x4 = 1/_x2
+    _x5 = 1/_x3
+    _x6 = 1/(-_x4*t**5 + _x5*t**5)
+    _x7 = 1/(_x4*t**2/2 - _x5*t**2/2)
+    _x8 = 1/(_x1*_x4*t**3/2 - _x1*_x5*t**3/2 - _x4*t**3/2 + _x5*t**3/2)
+    _x9 = 1/(-_x1*_x4*t**3/2 + _x1*_x5*t**3/2 - _x4*t**3/2 + _x5*t**3/2)
+    sol = [
+        (C1*_x8*t**2 + C2*_x6*t**4)*exp(_x3) + (-C1*_x9*t**2 - C2*_x6*t**4)*exp(_x2),
+        (-C1*_x7 - C2*_x9*t**2)*exp(_x3) + (C1*_x7 + C2*_x8*t**2)*exp(_x2),
+    ]
+    assert _linear_neq_order1_solver(A, t) == sol
 
 
 def test_sysode_linear_neq_order1_type4():
@@ -1220,6 +1268,23 @@ def test_sysode_linear_neq_order1_type4():
 
     raises(ValueError, lambda: _linear_neq_order1_solver(A1, t, b=b1, B=B2))
     raises(ValueError, lambda: _linear_neq_order1_solver(A2, t, b=b2, B=B1))
+
+    # Testing auto functionality
+    func = [f(x), g(x), h(x)]
+    eq = [Eq(f(x).diff(x), x*(f(x) + g(x) + h(x)) + x), Eq(g(x).diff(x), x*(f(x) + g(x) + h(x)) + x),
+            Eq(h(x).diff(x), x*(f(x) + g(x) + h(x)) + 1)]
+    ceq = _canonical_equations(eq, func, x)
+    (A1, A0), b = linear_ode_to_matrix(ceq, func, x, 1)
+    A = -A0
+    _x1 = exp(3*x**2/2)
+    _x2 = Integral(x/3 + 2*x*exp(-3*x**2/2)/3 - Rational(1, 3) + exp(-3*x**2/2)/3, x)
+    _x3 = Integral(-2*x/3 + 2*x*exp(-3*x**2/2)/3 + Rational(2, 3) + exp(-3*x**2/2)/3, x)
+    sol = [
+        C1*_x1/3 + 2*C1/3 + C2*_x1/3 - C2/3 + C3*_x1/3 - C3/3 + 2*_x1*_x2/3 + _x1*_x3/3 + _x2/3 - _x3/3,
+        C1*_x1/3 - C1/3 + C2*_x1/3 + 2*C2/3 + C3*_x1/3 - C3/3 + 2*_x1*_x2/3 + _x1*_x3/3 + _x2/3 - _x3/3,
+        C1*_x1/3 - C1/3 + C2*_x1/3 - C2/3 + C3*_x1/3 + 2*C3/3 + 2*_x1*_x2/3 + _x1*_x3/3 - 2*_x2/3 + 2*_x3/3,
+    ]
+    assert _linear_neq_order1_solver(A, x, b=b) == sol
 
 
 @slow
