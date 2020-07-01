@@ -96,13 +96,15 @@ class Particle(object):
 
         >>> from sympy.physics.mechanics import Particle, Point, ReferenceFrame
         >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> m, v = dynamicsymbols('m v')
         >>> N = ReferenceFrame('N')
         >>> P = Point('P')
         >>> A = Particle('A', P, m)
         >>> P.set_vel(N, v * N.x)
         >>> A.linear_momentum(N)
-        m(t)*v(t)*N.x
+        m*v*N.x
 
         """
 
@@ -134,6 +136,8 @@ class Particle(object):
 
         >>> from sympy.physics.mechanics import Particle, Point, ReferenceFrame
         >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> m, v, r = dynamicsymbols('m v r')
         >>> N = ReferenceFrame('N')
         >>> O = Point('O')
@@ -141,7 +145,7 @@ class Particle(object):
         >>> P = Particle('P', A, m)
         >>> P.point.set_vel(N, v * N.y)
         >>> P.angular_momentum(O, N)
-        m(t)*r(t)*v(t)*N.z
+        m*r*v*N.z
 
         """
 

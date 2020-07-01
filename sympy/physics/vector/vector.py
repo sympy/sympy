@@ -507,13 +507,15 @@ class Vector(Printable):
         >>> from sympy import Symbol
         >>> from sympy.physics.vector import dynamicsymbols, ReferenceFrame
         >>> from sympy.physics.vector import Vector
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> Vector.simp = True
         >>> t = Symbol('t')
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.diff(t, N)
-        - Derivative(q1(t), t)*A.z
+        - q1'*A.z
         >>> B = ReferenceFrame('B')
         >>> u1, u2 = dynamicsymbols('u1, u2')
         >>> v = u1 * A.x + u2 * B.y
@@ -567,11 +569,13 @@ class Vector(Printable):
         ========
 
         >>> from sympy.physics.vector import ReferenceFrame, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.express(N)
-        cos(q1(t))*N.x - sin(q1(t))*N.z
+        cos(q1)*N.x - sin(q1)*N.z
 
         """
         from sympy.physics.vector import express

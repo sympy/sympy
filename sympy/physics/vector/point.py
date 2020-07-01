@@ -22,17 +22,21 @@ class Point(object):
     ========
 
     >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
     >>> N = ReferenceFrame('N')
     >>> O = Point('O')
     >>> P = Point('P')
     >>> u1, u2, u3 = dynamicsymbols('u1 u2 u3')
     >>> O.set_vel(N, u1 * N.x + u2 * N.y + u3 * N.z)
     >>> O.acc(N)
-    Derivative(u1(t), t)*N.x + Derivative(u2(t), t)*N.y + Derivative(u3(t), t)*N.z
+    u1'*N.x + u2'*N.y + u3'*N.z
 
     symbols() can be used to create multiple Points in a single step, for example:
 
     >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
     >>> from sympy import symbols
     >>> N = ReferenceFrame('N')
     >>> u1, u2 = dynamicsymbols('u1 u2')
@@ -42,7 +46,7 @@ class Point(object):
     >>> A.set_vel(N, u1 * N.x + u2 * N.y)
     >>> B.set_vel(N, u2 * N.x + u1 * N.y)
     >>> A.acc(N) - B.acc(N)
-    (Derivative(u1(t), t) - Derivative(u2(t), t))*N.x + (-Derivative(u1(t), t) + Derivative(u2(t), t))*N.y
+    (u1' - u2')*N.x + (-u1' + u2')*N.y
 
     """
 
@@ -111,6 +115,8 @@ class Point(object):
 
         >>> from sympy.physics.vector import Point, ReferenceFrame
         >>> from sympy.physics.vector import dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)
@@ -123,7 +129,7 @@ class Point(object):
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
         >>> P.a1pt_theory(O, N, B)
-        (-25*q(t) + Derivative(q(t), (t, 2)))*B.x + Derivative(q2(t), (t, 2))*B.y - 10*Derivative(q(t), t)*B.z
+        (-25*q + q'')*B.x + q2''*B.y - 10*q'*B.z
 
         """
 
@@ -164,6 +170,8 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
         >>> N = ReferenceFrame('N')
@@ -172,7 +180,7 @@ class Point(object):
         >>> P = O.locatenew('P', 10 * B.x)
         >>> O.set_vel(N, 5 * N.x)
         >>> P.a2pt_theory(O, N, B)
-        - 10*Derivative(q(t), t)**2*B.x + 10*Derivative(q(t), (t, 2))*B.y
+        - 10*q'**2*B.x + 10*q''*B.y
 
         """
 
@@ -388,6 +396,8 @@ class Point(object):
 
         >>> from sympy.physics.vector import Point, ReferenceFrame
         >>> from sympy.physics.vector import dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)
@@ -400,7 +410,7 @@ class Point(object):
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
         >>> P.v1pt_theory(O, N, B)
-        Derivative(q(t), t)*B.x + Derivative(q2(t), t)*B.y - 5*q(t)*B.z
+        q'*B.x + q2'*B.y - 5*q*B.z
 
         """
 
@@ -438,6 +448,8 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
         >>> N = ReferenceFrame('N')
@@ -446,7 +458,7 @@ class Point(object):
         >>> P = O.locatenew('P', 10 * B.x)
         >>> O.set_vel(N, 5 * N.x)
         >>> P.v2pt_theory(O, N, B)
-        5*N.x + 10*Derivative(q(t), t)*B.y
+        5*N.x + 10*q'*B.y
 
         """
 

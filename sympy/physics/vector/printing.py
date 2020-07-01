@@ -395,7 +395,6 @@ def init_vprinting(**kwargs):
     ========
 
     >>> from sympy import Function, symbols
-    >>> from sympy.physics.vector import init_vprinting
     >>> t, x = symbols('t, x')
     >>> omega = Function('omega')
     >>> omega(x).diff()
@@ -405,6 +404,7 @@ def init_vprinting(**kwargs):
 
     Now use the string printer:
 
+    >>> from sympy.physics.vector import init_vprinting
     >>> init_vprinting(pretty_print=False)
     >>> omega(x).diff()
     Derivative(omega(x), x)

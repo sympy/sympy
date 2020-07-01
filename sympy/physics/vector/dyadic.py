@@ -389,12 +389,14 @@ class Dyadic(Printable):
         ========
 
         >>> from sympy.physics.vector import ReferenceFrame, outer, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> N = ReferenceFrame('N')
         >>> q = dynamicsymbols('q')
         >>> B = N.orientnew('B', 'Axis', [q, N.z])
         >>> d = outer(N.x, N.x)
         >>> d.express(B, N)
-        cos(q(t))*(B.x|N.x) - sin(q(t))*(B.y|N.x)
+        cos(q)*(B.x|N.x) - sin(q)*(B.y|N.x)
 
         """
         from sympy.physics.vector.functions import express
@@ -470,12 +472,14 @@ class Dyadic(Printable):
         ========
 
         >>> from sympy.physics.vector import ReferenceFrame, outer, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> N = ReferenceFrame('N')
         >>> q = dynamicsymbols('q')
         >>> B = N.orientnew('B', 'Axis', [q, N.z])
         >>> d = outer(N.x, N.x)
         >>> d.dt(B)
-        - Derivative(q(t), t)*(N.y|N.x) - Derivative(q(t), t)*(N.x|N.y)
+        - q'*(N.y|N.x) - q'*(N.x|N.y)
 
         """
         from sympy.physics.vector.functions import time_derivative
