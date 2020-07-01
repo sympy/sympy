@@ -271,7 +271,7 @@ Linear ODE to matrix
 
 Canonical Equations Converter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.systems::_canonical_equations
+.. autofunction:: sympy.solvers.ode.systems::canonical_odes
 
 Commutative Anti derivative Checker
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

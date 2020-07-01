@@ -7,7 +7,7 @@ from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
                                        ODEOrderError, ODENonlinearError, _simpsol,
                                        _is_commutative_anti_derivative, linodesolve,
-                                       _canonical_equations)
+                                       canonical_odes)
 from sympy.integrals.integrals import Integral
 from sympy.testing.pytest import ON_TRAVIS, raises, slow, skip, XFAIL
 
@@ -386,17 +386,19 @@ def test_matrix_exp():
     assert matrix_exp(A, t) == expAt
 
 
-def test_canonical_equations():
+def test_canonical_odes():
     f, g, h = symbols('f g h', cls=Function)
     x = symbols('x')
     funcs = [f(x), g(x), h(x)]
 
-
     eqs1 = [Eq(f(x).diff(x, x), f(x) + 2*g(x)), Eq(g(x) + 1, g(x).diff(x) + f(x))]
-    raises(ODEOrderError, lambda: _canonical_equations(eqs1, funcs[:2], x))
+    sol1 = [Eq(Derivative(f(x), (x, 2)), f(x) + 2*g(x)), Eq(Derivative(g(x), x), -f(x) + g(x) + 1)]
+    assert canonical_odes(eqs1, funcs[:2], x) == sol1
 
     eqs2 = [Eq(f(x).diff(x), h(x).diff(x) + f(x)), Eq(g(x).diff(x)**2, f(x) + h(x)), Eq(h(x).diff(x), f(x))]
-    raises(ODENonlinearError, lambda: _canonical_equations(eqs2, funcs, x))
+    sol2 = [[Eq(Derivative(f(x), x), 2*f(x)), Eq(Derivative(g(x), x), -sqrt(f(x) + h(x))), Eq(Derivative(h(x), x), f(x))],
+            [Eq(Derivative(f(x), x), 2*f(x)), Eq(Derivative(g(x), x), sqrt(f(x) + h(x))), Eq(Derivative(h(x), x), f(x))]]
+    assert canonical_odes(eqs2, funcs, x) == sol2
 
 
 def test_sysode_linear_neq_order1_type1():
@@ -855,7 +857,7 @@ def test_sysode_linear_neq_order1_type1():
     # Testing auto functionality
     func = [f(t), g(t)]
     eq = [Eq(f(t).diff(t) + g(t).diff(t), g(t)), Eq(g(t).diff(t), f(t))]
-    ceq = _canonical_equations(eq, func, t)
+    ceq = canonical_odes(eq, func, t)
     (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
     A = -A0
     sol = [C1*(-Rational(1, 2) + sqrt(5)/2)*exp(t*(-Rational(1, 2) + sqrt(5)/2)) + C2*(-sqrt(5)/2 - Rational(1, 2))*
@@ -1013,7 +1015,7 @@ def test_sysode_linear_neq_order1_type2():
     # Testing auto functionality
     func = [f(t), g(t)]
     eq = [Eq(f(t).diff(t) + g(t).diff(t), g(t) + t), Eq(g(t).diff(t), f(t))]
-    ceq = _canonical_equations(eq, func, t)
+    ceq = canonical_odes(eq, func, t)
     (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
     A = -A0
     sol = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
@@ -1119,7 +1121,7 @@ def test_sysode_linear_neq_order1_type3():
     # Testing auto functionality
     func = [f(t), g(t)]
     eq = [Eq(f(t).diff(t) + g(t).diff(t), t*g(t)), Eq(g(t).diff(t), f(t))]
-    ceq = _canonical_equations(eq, func, t)
+    ceq = canonical_odes(eq, func, t)
     (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
     A = -A0
     _x1 = sqrt(2*t + 1)
@@ -1273,7 +1275,7 @@ def test_sysode_linear_neq_order1_type4():
     func = [f(x), g(x), h(x)]
     eq = [Eq(f(x).diff(x), x*(f(x) + g(x) + h(x)) + x), Eq(g(x).diff(x), x*(f(x) + g(x) + h(x)) + x),
             Eq(h(x).diff(x), x*(f(x) + g(x) + h(x)) + 1)]
-    ceq = _canonical_equations(eq, func, x)
+    ceq = canonical_odes(eq, func, x)
     (A1, A0), b = linear_ode_to_matrix(ceq, func, x, 1)
     A = -A0
     _x1 = exp(3*x**2/2)

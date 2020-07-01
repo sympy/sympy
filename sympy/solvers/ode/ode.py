@@ -574,6 +574,19 @@ def dsolve(eq, func=None, hint="default", simplify=True,
 
     if iterable(eq):
         match = classify_sysode(eq, func)
+
+        # This case can happen only when the system of ODEs have
+        # been divided into multiple linear first order system of
+        # ODEs with the help of canonical_odes function. Hence, the
+        # linodesolve can be directly used to get the solution in
+        # this case. In future, this may have to be changed.
+        if isinstance(match, list):
+            sols = []
+            for m in match:
+                sol = sysode_linear_neq_order1(m)
+                sols.append(sol)
+            return sols
+
         eq = match['eq']
         order = match['order']
         func = match['func']

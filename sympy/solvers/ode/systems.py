@@ -488,7 +488,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     done in the right order. Wrong inputs to the function will lead to incorrect results.
 
     >>> from sympy import symbols, Function, Eq
-    >>> from sympy.solvers.ode.systems import _canonical_equations, linear_ode_to_matrix, linodesolve, _is_commutative_anti_derivative
+    >>> from sympy.solvers.ode.systems import canonical_odes, linear_ode_to_matrix, linodesolve, _is_commutative_anti_derivative
     >>> from sympy.solvers.ode.subscheck import checksysodesol
     >>> f, g = symbols("f, g", cls=Function)
     >>> x, a = symbols("x, a")
@@ -497,9 +497,9 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
 
     Here, it is important to note that before we derive the coefficient matrix, it is
     important to get the system of ODEs into the desired form. For that we will use
-    :obj:`sympy.solvers.ode.systems._canonical_equations()`.
+    :obj:`sympy.solvers.ode.systems.canonical_odes()`.
 
-    >>> eqs = _canonical_equations(eqs, funcs, x)
+    >>> eqs = canonical_odes(eqs, funcs, x)
     >>> eqs
     [Eq(Derivative(f(x), x), a*g(x) + f(x) + 1), Eq(Derivative(g(x), x), a*f(x) - g(x))]
 
@@ -573,7 +573,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     ========
 
     linear_ode_to_matrix: Coefficient matrix computation function
-    _canonical_equations: System of ODEs representation change
+    canonical_odes: System of ODEs representation change
     _is_commutative_anti_derivative: Getting the antiderivative for coefficient matrix
 
     """
@@ -670,24 +670,27 @@ def _matrix_is_constant(M, t):
     return all(coef.as_independent(t, as_Add=True)[1] == 0 for coef in M)
 
 
-def _canonical_equations(eqs, funcs, t):
+def canonical_odes(eqs, funcs, t):
     r"""
-    Helper function that solves for first order derivatives in a system
+    Function that solves for highest order derivatives in a system
 
     Explanation
     ===========
 
-    This function inputs a linear first order system of ODEs and based on the system
-    and the dependent variables, returns the system in the following form:
+    This function inputs a system of ODEs and based on the system,
+    the dependent variables and their highest order, returns the system
+    in the following form:
 
     .. math::
         X'(t) = A(t) X(t) + b(t)
 
-    Here, $X(t)$ is the vector of dependent variables, $A(t)$ is the coefficient matrix
-    and $b(t)$ is the non-homogeneous term.
+    Here, $X(t)$ is the vector of dependent variables of lower order, $A(t)$ is
+    the coefficient matrix, $b(t)$ is the non-homogeneous term and $X'(t)$ is the
+    vector of dependent variables in their respective highest order. We use the term
+    canonical form to imply the system of ODEs which is of the above form.
 
-    This function works only for linear first order system of ODEs. If a higher order or
-    a non-linear system is passed, then appropriate error will be raised.
+    If the system passed has a non-linear term with multiple solutions, then a list of
+    systems is returned in its canonical form.
 
     Parameters
     ==========
@@ -702,48 +705,44 @@ def _canonical_equations(eqs, funcs, t):
     Examples
     ========
 
-    >>> from sympy import symbols, Function, Eq
-    >>> from sympy.solvers.ode.systems import _canonical_equations
+    >>> from sympy import symbols, Function, Eq, Derivative
+    >>> from sympy.solvers.ode.systems import canonical_odes
     >>> f, g = symbols("f g", cls=Function)
-    >>> x = symbols("x")
+    >>> x, y = symbols("x y")
     >>> funcs = [f(x), g(x)]
     >>> eqs = [Eq(f(x).diff(x) - 7*f(x), 12*g(x)), Eq(g(x).diff(x) + g(x), 20*f(x))]
 
-    >>> canonical_eqs = _canonical_equations(eqs, funcs, x)
+    >>> canonical_eqs = canonical_odes(eqs, funcs, x)
     >>> canonical_eqs
     [Eq(Derivative(f(x), x), 7*f(x) + 12*g(x)), Eq(Derivative(g(x), x), 20*f(x) - g(x))]
+
+    >>> system = [Eq(Derivative(f(x), x)**2 - 2*Derivative(f(x), x) + 1, 4), Eq(-y*f(x) + Derivative(g(x), x), 0)]
+
+    >>> canonical_system = canonical_odes(system, funcs, x)
+    >>> canonical_system
+    [[Eq(Derivative(f(x), x), -1), Eq(Derivative(g(x), x), y*f(x))], [Eq(Derivative(f(x), x), 3), Eq(Derivative(g(x), x), y*f(x))]]
 
     Returns
     =======
 
     List
 
-    Raises
-    ======
-
-    ODEOrderError
-        When the system of ODEs passed has an order greater than 1
-    ODENonlinearError
-        When the system of ODEs passed is non-linear
-
     """
     from sympy.solvers.solvers import solve
 
-    # For now the system of ODEs dealt by this function can have a
-    # maximum order of 1.
-    if any(ode_order(eq, func) > 1 for eq in eqs for func in funcs):
-        msg = "Cannot represent system in {}-order canonical form"
-        raise ODEOrderError(msg.format(1))
+    order = _get_func_order(eqs, funcs)
 
-    canon_eqs = solve(eqs, *[func.diff(t) for func in funcs], dict=True)
+    canon_eqs = solve(eqs, *[func.diff(t, order[func]) for func in funcs], dict=True)
 
-    if len(canon_eqs) != 1:
-        raise ODENonlinearError("System of ODEs is nonlinear")
+    systems = []
+    for eq in canon_eqs:
+        system = [Eq(func.diff(t, order[func]), eq[func.diff(t, order[func])]) for func in funcs]
+        systems.append(system)
 
-    canon_eqs = canon_eqs[0]
-    canon_eqs = [Eq(func.diff(t), canon_eqs[func.diff(t)]) for func in funcs]
+    if len(canon_eqs) == 1:
+        systems = systems[0]
 
-    return canon_eqs
+    return systems
 
 
 def _is_commutative_anti_derivative(A, t):
@@ -839,7 +838,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         'is_homogeneous': is_homogeneous,
     }
 
-    Dict or None
+    Dict or list of Dicts or None
         Dict with values for keys:
             1. no_of_equation: Number of equations
             2. eq: The set of equations
@@ -902,17 +901,24 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
     # Linearity check
     try:
-        canon_eqs = _canonical_equations(eqs, funcs, t)
-        As, b = linear_ode_to_matrix(canon_eqs, funcs, t, system_order)
+        canon_eqs = canonical_odes(eqs, funcs, t)
+
+        if isinstance(canon_eqs[0], Eq):
+            As, b = linear_ode_to_matrix(canon_eqs, funcs, t, system_order)
+            A = As[1]
+        else:
+            matchs = []
+            for canon_eq in canon_eqs:
+                match = neq_nth_linear_constant_coeff_match(canon_eq, funcs, t)
+                if match is not None:
+                    matchs.append(match)
+            return matchs if matchs else None
 
     # When the system of ODEs is non-linear, an ODENonlinearError is raised.
-    # When system has an order greater than what is specified in system_order,
-    # ODEOrderError is raised.
-    # This function catches these errors and None is returned
-    except (ODEOrderError, ODENonlinearError):
+    # This function catches the error and None is returned.
+    except ODENonlinearError:
         return None
 
-    A = As[1]
     is_linear = True
 
     # Constant coefficient check
