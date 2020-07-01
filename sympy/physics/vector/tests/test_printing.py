@@ -241,7 +241,7 @@ def test_vlatex(): # vlatex is broken #12078
     g = Function('g')
     h = Function('h')
 
-    expected = r'J \left(\frac{d}{d x} g{\left(x \right)} - \frac{d}{d x} h{\left(x \right)}\right)'
+    expected = r'J \left(\frac{d}{d x} \operatorname{g}\left(x\right) - \frac{d}{d x} \operatorname{h}\left(x\right)\right)'
 
     expr = J*f(x).diff(x).subs(f(x), g(x)-h(x))
 
@@ -298,7 +298,7 @@ def test_vector_derivative_printing():
     # Fifth order
     v = omega.diff().diff().diff().diff().diff() * N.x
 
-    assert vlatex(v) == r'\frac{d^{5}}{d t^{5}} \omega{\left(t \right)}\mathbf{\hat{n}_x}'
+    assert vlatex(v) == r'\frac{d^{5}}{d t^{5}} \omega\mathbf{\hat{n}_x}'
     assert unicode_vpretty(v) == u('  5\n d\n───(ω) n_x\n  5\ndt')
     assert ascii_vpretty(v) == '  5\n d\n---(omega) n_x\n  5\ndt'
 
