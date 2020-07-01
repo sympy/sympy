@@ -287,7 +287,7 @@ Matrix Exponential
 
 Linear, n equations, Order 1 Solver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.systems::_linear_neq_order1_solver
+.. autofunction:: sympy.solvers.ode.systems::linodesolve
 
 Nonlinear, 2 equations, Order 1, Type 1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

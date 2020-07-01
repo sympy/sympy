@@ -409,7 +409,7 @@ def matrix_exp_jordan_form(A, t):
     return P, expJ
 
 
-def _linear_neq_order1_solver(A, t, b=None, B=None, type="auto", doit=False):
+def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     r"""
     System of n equations linear first-order differential equations
 
@@ -488,7 +488,7 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="auto", doit=False):
     done in the right order. Wrong inputs to the function will lead to incorrect results.
 
     >>> from sympy import symbols, Function, Eq
-    >>> from sympy.solvers.ode.systems import _canonical_equations, linear_ode_to_matrix, _linear_neq_order1_solver, _is_commutative_anti_derivative
+    >>> from sympy.solvers.ode.systems import _canonical_equations, linear_ode_to_matrix, linodesolve, _is_commutative_anti_derivative
     >>> from sympy.solvers.ode.subscheck import checksysodesol
     >>> f, g = symbols("f, g", cls=Function)
     >>> x, a = symbols("x, a")
@@ -512,7 +512,7 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="auto", doit=False):
     We have the coefficient matrices and the non-homogeneous term ready. If you know the system
     is homogeneous, then there is no need to pass the argument *b*.
 
-    >>> sol_vector = _linear_neq_order1_solver(A, x, b=b, type="type2")
+    >>> sol_vector = linodesolve(A, x, b=b, type="type2")
 
     Now, we can prove if the solution is correct or not by using :obj:`sympy.solvers.ode.subscheck.checksysodesol()`
 
@@ -522,7 +522,7 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="auto", doit=False):
 
     We can also use the doit method to evaluate the solutions passed by the function.
 
-    >>> sol_vector_evaluated = _linear_neq_order1_solver(A, x, b=b, type="type2", doit=True)
+    >>> sol_vector_evaluated = linodesolve(A, x, b=b, type="type2", doit=True)
 
     Now, we will look at a system of ODEs which is non-constant.
 
@@ -545,7 +545,7 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="auto", doit=False):
     Now, we can pass the antiderivative as an argument to get the solution. If it is not passed, then this
     solver computes the antiderivative for the solution.
 
-    >>> sol_vector = _linear_neq_order1_solver(A, x, B=B, type="type3")
+    >>> sol_vector = linodesolve(A, x, B=B, type="type3")
 
     Once again, we can verify the solution obtained.
 
@@ -618,7 +618,7 @@ def _linear_neq_order1_solver(A, t, b=None, B=None, type="auto", doit=False):
 
     if not any(type == "type{}".format(i) for i in range(1, 5)) and not type == "auto":
         raise ValueError(filldedent('''\
-                    The input to type should be a valid one
+                    The input type should be a valid one
                 '''))
 
     n = A.rows

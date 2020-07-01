@@ -6,7 +6,7 @@ from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
                                        ODEOrderError, ODENonlinearError, _simpsol,
-                                       _is_commutative_anti_derivative, _linear_neq_order1_solver,
+                                       _is_commutative_anti_derivative, linodesolve,
                                        _canonical_equations)
 from sympy.integrals.integrals import Integral
 from sympy.testing.pytest import ON_TRAVIS, raises, slow, skip, XFAIL
@@ -843,14 +843,14 @@ def test_sysode_linear_neq_order1_type1():
     assert checksysodesol(eq37, sol37) == (True, [0, 0])
 
     # Testing the Errors
-    raises(ValueError, lambda: _linear_neq_order1_solver(1, t))
-    raises(ValueError, lambda: _linear_neq_order1_solver(a, t))
+    raises(ValueError, lambda: linodesolve(1, t))
+    raises(ValueError, lambda: linodesolve(a, t))
 
     A1 = Matrix([[1, 2], [2, 4], [4, 6]])
-    raises(NonSquareMatrixError, lambda: _linear_neq_order1_solver(A1, t))
+    raises(NonSquareMatrixError, lambda: linodesolve(A1, t))
 
     A2 = Matrix([[1, 2, 1], [3, 1, 2]])
-    raises(NonSquareMatrixError, lambda: _linear_neq_order1_solver(A2, t))
+    raises(NonSquareMatrixError, lambda: linodesolve(A2, t))
 
     # Testing auto functionality
     func = [f(t), g(t)]
@@ -861,7 +861,7 @@ def test_sysode_linear_neq_order1_type1():
     sol = [C1*(-Rational(1, 2) + sqrt(5)/2)*exp(t*(-Rational(1, 2) + sqrt(5)/2)) + C2*(-sqrt(5)/2 - Rational(1, 2))*
            exp(t*(-sqrt(5)/2 - Rational(1, 2))),
             C1*exp(t*(-Rational(1, 2) + sqrt(5)/2)) + C2*exp(t*(-sqrt(5)/2 - Rational(1, 2)))]
-    assert _linear_neq_order1_solver(A, t) == sol
+    assert linodesolve(A, t) == sol
 
 
 
@@ -983,32 +983,32 @@ def test_sysode_linear_neq_order1_type2():
     assert checksysodesol(eq10, sol10) == (True, [0, 0])
 
     # Testing the Errors
-    raises(ValueError, lambda: _linear_neq_order1_solver(1, t, b=Matrix([t+1])))
-    raises(ValueError, lambda: _linear_neq_order1_solver(a, t, b=Matrix([log(t) + sin(t)])))
+    raises(ValueError, lambda: linodesolve(1, t, b=Matrix([t+1])))
+    raises(ValueError, lambda: linodesolve(a, t, b=Matrix([log(t) + sin(t)])))
 
-    raises(ValueError, lambda: _linear_neq_order1_solver(Matrix([7]), t, b=t**2))
-    raises(ValueError, lambda: _linear_neq_order1_solver(Matrix([a+10]), t, b=log(t)*cos(t)))
+    raises(ValueError, lambda: linodesolve(Matrix([7]), t, b=t**2))
+    raises(ValueError, lambda: linodesolve(Matrix([a+10]), t, b=log(t)*cos(t)))
 
-    raises(ValueError, lambda: _linear_neq_order1_solver(7, t, b=t**2))
-    raises(ValueError, lambda: _linear_neq_order1_solver(a, t, b=log(t) + sin(t)))
+    raises(ValueError, lambda: linodesolve(7, t, b=t**2))
+    raises(ValueError, lambda: linodesolve(a, t, b=log(t) + sin(t)))
 
     A1 = Matrix([[1, 2], [2, 4], [4, 6]])
     b1 = Matrix([t, 1, t**2])
-    raises(NonSquareMatrixError, lambda: _linear_neq_order1_solver(A1, t, b=b1))
+    raises(NonSquareMatrixError, lambda: linodesolve(A1, t, b=b1))
 
     A2 = Matrix([[1, 2, 1], [3, 1, 2]])
     b2 = Matrix([t, t**2])
-    raises(NonSquareMatrixError, lambda: _linear_neq_order1_solver(A2, t, b=b2))
+    raises(NonSquareMatrixError, lambda: linodesolve(A2, t, b=b2))
 
-    raises(ValueError, lambda: _linear_neq_order1_solver(A1[:2, :], t, b=b1))
-    raises(ValueError, lambda: _linear_neq_order1_solver(A1[:2, :], t, b=b1[:1]))
+    raises(ValueError, lambda: linodesolve(A1[:2, :], t, b=b1))
+    raises(ValueError, lambda: linodesolve(A1[:2, :], t, b=b1[:1]))
 
     # DOIT check
     A1 = Matrix([[1, -1], [1, -1]])
     b1 = Matrix([15*t - 10, -15*t - 5])
     sol1 = [C1 + C2*t + C2 - 10*t**3 + 10*t**2 + t*(15*t**2 - 5*t) - 10*t,
             C1 + C2*t - 10*t**3 - 5*t**2 + t*(15*t**2 - 5*t) - 5*t]
-    assert _linear_neq_order1_solver(A1, t, b=b1, type="type2", doit=True) == sol1
+    assert linodesolve(A1, t, b=b1, type="type2", doit=True) == sol1
 
     # Testing auto functionality
     func = [f(t), g(t)]
@@ -1024,7 +1024,7 @@ def test_sysode_linear_neq_order1_type2():
             t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2, C1*exp(-t/2 + sqrt(5)*t/2) +
             C2*exp(-sqrt(5)*t/2 - t/2) + exp(-t/2 + sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5,
             t) + exp(-sqrt(5)*t/2 - t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)]
-    assert _linear_neq_order1_solver(A, t, b=b) == sol
+    assert linodesolve(A, t, b=b) == sol
 
 
 def test_sysode_linear_neq_order1_type3():
@@ -1102,19 +1102,19 @@ def test_sysode_linear_neq_order1_type3():
     assert checksysodesol(eqs7, sol7) == (True, [0, 0])
 
     # Testing the Errors
-    raises(ValueError, lambda: _linear_neq_order1_solver(t+10, t))
-    raises(ValueError, lambda: _linear_neq_order1_solver(a*t, t))
+    raises(ValueError, lambda: linodesolve(t+10, t))
+    raises(ValueError, lambda: linodesolve(a*t, t))
 
     A1 = Matrix([[1, t], [-t, 1]])
     B1, _ = _is_commutative_anti_derivative(A1, t)
-    raises(NonSquareMatrixError, lambda: _linear_neq_order1_solver(A1[:, :1], t, B=B1))
+    raises(NonSquareMatrixError, lambda: linodesolve(A1[:, :1], t, B=B1))
 
     A2 = Matrix([[t, t, t], [t, t, t], [t, t, t]])
     B2, _ = _is_commutative_anti_derivative(A2, t)
-    raises(NonSquareMatrixError, lambda: _linear_neq_order1_solver(A2, t, B=B2[:2, :]))
+    raises(NonSquareMatrixError, lambda: linodesolve(A2, t, B=B2[:2, :]))
 
-    raises(ValueError, lambda: _linear_neq_order1_solver(A1, t, B=B2))
-    raises(ValueError, lambda: _linear_neq_order1_solver(A2, t, B=B1))
+    raises(ValueError, lambda: linodesolve(A1, t, B=B2))
+    raises(ValueError, lambda: linodesolve(A2, t, B=B1))
 
     # Testing auto functionality
     func = [f(t), g(t)]
@@ -1135,7 +1135,7 @@ def test_sysode_linear_neq_order1_type3():
         (C1*_x8*t**2 + C2*_x6*t**4)*exp(_x3) + (-C1*_x9*t**2 - C2*_x6*t**4)*exp(_x2),
         (-C1*_x7 - C2*_x9*t**2)*exp(_x3) + (C1*_x7 + C2*_x8*t**2)*exp(_x2),
     ]
-    assert _linear_neq_order1_solver(A, t) == sol
+    assert linodesolve(A, t) == sol
 
 
 def test_sysode_linear_neq_order1_type4():
@@ -1244,30 +1244,30 @@ def test_sysode_linear_neq_order1_type4():
     assert checksysodesol(eqs8, sol8) == (True, [0, 0, 0, 0])
 
     # Testing the Errors
-    raises(ValueError, lambda: _linear_neq_order1_solver(t+10, t, b=Matrix([t+1])))
-    raises(ValueError, lambda: _linear_neq_order1_solver(a*t, t, b=Matrix([log(t) + sin(t)])))
+    raises(ValueError, lambda: linodesolve(t+10, t, b=Matrix([t+1])))
+    raises(ValueError, lambda: linodesolve(a*t, t, b=Matrix([log(t) + sin(t)])))
 
-    raises(ValueError, lambda: _linear_neq_order1_solver(Matrix([7*t]), t, b=t**2))
-    raises(ValueError, lambda: _linear_neq_order1_solver(Matrix([a + 10*log(t)]), t, b=log(t)*cos(t)))
+    raises(ValueError, lambda: linodesolve(Matrix([7*t]), t, b=t**2))
+    raises(ValueError, lambda: linodesolve(Matrix([a + 10*log(t)]), t, b=log(t)*cos(t)))
 
-    raises(ValueError, lambda: _linear_neq_order1_solver(7*t, t, b=t**2))
-    raises(ValueError, lambda: _linear_neq_order1_solver(a*t**2, t, b=log(t) + sin(t)))
+    raises(ValueError, lambda: linodesolve(7*t, t, b=t**2))
+    raises(ValueError, lambda: linodesolve(a*t**2, t, b=log(t) + sin(t)))
 
     A1 = Matrix([[1, t], [-t, 1]])
     b1 = Matrix([t, t ** 2])
     B1, _ = _is_commutative_anti_derivative(A1, t)
-    raises(NonSquareMatrixError, lambda: _linear_neq_order1_solver(A1[:, :1], t, b=b1))
+    raises(NonSquareMatrixError, lambda: linodesolve(A1[:, :1], t, b=b1))
 
     A2 = Matrix([[t, t, t], [t, t, t], [t, t, t]])
     b2 = Matrix([t, 1, t**2])
     B2, _ = _is_commutative_anti_derivative(A2, t)
-    raises(NonSquareMatrixError, lambda: _linear_neq_order1_solver(A2[:2, :], t, b=b2))
+    raises(NonSquareMatrixError, lambda: linodesolve(A2[:2, :], t, b=b2))
 
-    raises(ValueError, lambda: _linear_neq_order1_solver(A1, t, b=b2))
-    raises(ValueError, lambda: _linear_neq_order1_solver(A2, t, b=b1))
+    raises(ValueError, lambda: linodesolve(A1, t, b=b2))
+    raises(ValueError, lambda: linodesolve(A2, t, b=b1))
 
-    raises(ValueError, lambda: _linear_neq_order1_solver(A1, t, b=b1, B=B2))
-    raises(ValueError, lambda: _linear_neq_order1_solver(A2, t, b=b2, B=B1))
+    raises(ValueError, lambda: linodesolve(A1, t, b=b1, B=B2))
+    raises(ValueError, lambda: linodesolve(A2, t, b=b2, B=B1))
 
     # Testing auto functionality
     func = [f(x), g(x), h(x)]
@@ -1284,7 +1284,7 @@ def test_sysode_linear_neq_order1_type4():
         C1*_x1/3 - C1/3 + C2*_x1/3 + 2*C2/3 + C3*_x1/3 - C3/3 + 2*_x1*_x2/3 + _x1*_x3/3 + _x2/3 - _x3/3,
         C1*_x1/3 - C1/3 + C2*_x1/3 - C2/3 + C3*_x1/3 + 2*C3/3 + 2*_x1*_x2/3 + _x1*_x3/3 - 2*_x2/3 + 2*_x3/3,
     ]
-    assert _linear_neq_order1_solver(A, x, b=b) == sol
+    assert linodesolve(A, x, b=b) == sol
 
 
 @slow

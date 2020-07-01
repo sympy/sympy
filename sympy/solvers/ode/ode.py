@@ -7286,7 +7286,7 @@ def _linear_2eq_order2_type11(x, y, t, r, eq):
 
 
 def sysode_linear_neq_order1(match):
-    from sympy.solvers.ode.systems import _linear_neq_order1_solver
+    from sympy.solvers.ode.systems import linodesolve
 
     eqs = match['eq']
     t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
@@ -7297,7 +7297,7 @@ def sysode_linear_neq_order1(match):
     B = match.get('commutative_antiderivative', None)
     type_of_equation = match['type_of_equation']
 
-    sol_vector = _linear_neq_order1_solver(A, t, b=rhs, B=B, type=type_of_equation)
+    sol_vector = linodesolve(A, t, b=rhs, B=B, type=type_of_equation)
 
     sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
 
