@@ -344,30 +344,38 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
 
     dps = _get_intermediate_simp()
     b   = rhs.permute_rows(perm).as_mutable()
+    bcols = b.cols
+    b   = b.tolist()
 
     # forward substitution, all diag entries are scaled to 1
     for i in range(m):
         for j in range(min(i, n)):
             scale = A[i, j]
-            b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
+            for k in range(bcols):
+                f = lambda x, y: dps(x - y * scale)
+                b[i][k] = f(b[i][k], b[j][k])
 
     # consistency check for overdetermined systems
     if m > n:
         for i in range(n, m):
-            for j in range(b.cols):
-                if not iszerofunc(b[i, j]):
+            for j in range(n):
+                if not iszerofunc(b[i][j]):
                     raise ValueError("The system is inconsistent.")
 
-        b = b[0:n, :]   # truncate zero rows if consistent
+        b = b[0:n]   # truncate zero rows if consistent
 
     # backward substitution
     for i in range(n - 1, -1, -1):
         for j in range(i + 1, n):
             scale = A[i, j]
-            b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
+            for k in range(bcols):
+                f = lambda x, y: dps(x - y * scale)
+                b[i][k] = f(b[i][k], b[j][k])
 
         scale = A[i, i]
-        b.row_op(i, lambda x, _: dps(x / scale))
+        for k in range(bcols):
+            f = lambda x, _: dps(x / scale)
+            b[i][k] = f(b[i][k], k)
 
     return rhs._new(b)
 

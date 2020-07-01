@@ -702,7 +702,10 @@ class DenseDomainMatrix(DenseMatrix):
             return NotImplemented
 
     def __mul__(self, other):
-        other = _sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return NotImplemented
         if isinstance(other, DenseDomainMatrix):
             return self.from_DomainMatrix(self._rep * other._rep)
         elif isinstance(other, DenseMatrix):
@@ -831,8 +834,13 @@ class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
         if isinstance(key, tuple):
             i, j = map(toint, key)
             if isinstance(i, (int, Integer)) and isinstance(j, (int, Integer)):
-                value = self._rep.domain.convert(value)
-                self._rep.rows[i][j] = value
+                if isinstance(value, list) or isinstance(value, MatrixBase):
+                    for ip in range(len(value)):
+                        v = self._rep.domain.convert(value[ip])
+                        self._rep.rows[i+ip][j] = v
+                else:
+                    value = self._rep.domain.convert(value)
+                    self._rep.rows[i][j] = value
             elif isinstance(i, (slice, list)) or isinstance(j, (slice, list)):
                 i_indices = a2i(i, self.rows)
                 j_indices = a2i(j, self.cols)
