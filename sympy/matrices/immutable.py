@@ -1,6 +1,6 @@
 from mpmath.matrices.matrices import _matrix
 
-from sympy.core import Basic, Dict, Integer, S, Tuple
+from sympy.core import Basic, Dict, Expr, Integer, S, Tuple
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter, _sympify
 from sympy.matrices.dense import DenseMatrix, DenseDomainMatrix
@@ -63,7 +63,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
 
-        if all(x.is_Rational for x in flat_list):
+        if all(isinstance(x, Expr) and x.is_Rational for x in flat_list):
             return ImmutableDenseDomainMatrix(rows, cols, flat_list)
 
         obj = Basic.__new__(cls,

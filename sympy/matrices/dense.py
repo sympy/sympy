@@ -320,7 +320,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         else:
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
-        if all(x.is_Rational for x in flat_list):
+        if all(isinstance(x, Expr) and x.is_Rational for x in flat_list):
             return MutableDenseDomainMatrix(rows, cols, flat_list)
         self = object.__new__(cls)
         self.rows = rows
