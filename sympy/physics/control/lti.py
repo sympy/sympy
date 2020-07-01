@@ -411,7 +411,7 @@ class Series(Basic):
 
     def __new__(cls, *args, evaluate=False):
         if not all(isinstance(arg, (TransferFunction, Parallel, Series)) for arg in args):
-            raise TypeError
+            raise TypeError("Unsupported type of argument(s) for Series.")
 
         obj = super(Series, cls).__new__(cls, *args)
         obj._var = None
@@ -429,10 +429,19 @@ class Series(Basic):
         return self._var
 
     def doit(self, **kwargs):
-        pass
+        res = None
+        for arg in self.args:
+            arg = arg.doit()
+            if res is None:
+                res = arg
+            else:
+                num_ = arg.num * res.num
+                den_ = arg.den * res.den
+                res = TransferFunction(num_, den_, self.var)
+        return res
 
-    def _eval_rewrite_as_TransferFunction(self):
-        pass
+    def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        return self.doit()
 
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series)):
@@ -507,7 +516,7 @@ class Parallel(Basic):
 
     def __new__(cls, *args, evaluate=False):
         if not all(isinstance(arg, (TransferFunction, Series, Parallel)) for arg in args):
-            raise TypeError
+            raise TypeError("Unsupported type of argument(s) for Parallel.")
 
         obj = super(Parallel, cls).__new__(cls, *args)
         obj._var = None
@@ -525,10 +534,19 @@ class Parallel(Basic):
         return self._var
 
     def doit(self, **kwargs):
-        pass
+        res = None
+        for arg in self.args:
+            arg = arg.doit()
+            if res is None:
+                res = arg
+            else:
+                num_ = res.num * arg.den + res.den * arg.num
+                den_ = res.den * arg.den
+                res = TransferFunction(num_, den_, self.var)
+        return res
 
-    def _eval_rewrite_as_TransferFunction(self):
-        pass
+    def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        return self.doit()
 
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series)):
@@ -608,6 +626,12 @@ class Parallel(Basic):
 class Feedback(Basic):
 
     def __new__(cls, num, den):
+        if not (isinstance(num, (TransferFunction, Series)) and num != den
+            and isinstance(den, (TransferFunction, Series))):
+            raise TypeError("Unsupported type for numerator or denominator of Feedback.")
+
+        if not num.var == den.var:
+            raise ValueError("Both numerator and denominator should be anchored with the same variable.")
         obj = super(Feedback, cls).__new__(cls, num, den)
         obj._num = num
         obj._den = den
@@ -626,3 +650,17 @@ class Feedback(Basic):
     @property
     def var(self):
         return self._var
+
+    def doit(self, **kwargs):
+        arg_list = list(self.num.args) if isinstance(self.num, Series) else [self.num]
+        # F_n and F_d are resultant TFs of num and den of Feedback.
+        F_n, tf = self.num.doit(), TransferFunction(1, 1, self.num.var)
+        F_d = Parallel(tf, Series(self.den, *arg_list)).doit()
+
+        return TransferFunction(F_n.num*F_d.den, F_n.den*F_d.num, F_n.var)
+
+    def _eval_rewrite_as_TransferFunction(self, num, den, **kwargs):
+        return self.doit()
+
+    def __neg__(self):
+        return Feedback(-self.num, self.den)
