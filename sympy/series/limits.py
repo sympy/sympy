@@ -216,6 +216,8 @@ class Limit(Expr):
             cdir = -1
 
         def remove_abs(expr):
+            if not expr.args:
+                return expr
             newargs = tuple(remove_abs(arg) for arg in expr.args)
             if newargs != expr.args:
                 expr = expr.func(*newargs)
@@ -230,8 +232,7 @@ class Limit(Expr):
                         return expr.args[0]
             return expr
 
-        if e.has(Abs):
-            e = remove_abs(e)
+        e = remove_abs(e)
 
         if e.is_meromorphic(z, z0):
             if abs(z0) is S.Infinity:
@@ -295,9 +296,12 @@ class Limit(Expr):
             ex_lim = limit(e1, z, z0)
             base_lim = limit(b1, z, z0)
 
-            if base_lim is S.One and ex_lim in (S.Infinity, S.NegativeInfinity):
-                res = limit(e1*(b1 - 1), z, z0)
-                return exp(res)
+            if base_lim is S.One:
+                if ex_lim in (S.Infinity, S.NegativeInfinity):
+                    res = limit(e1*(b1 - 1), z, z0)
+                    return exp(res)
+                elif ex_lim.is_real:
+                    return S.One
 
             if base_lim in (S.Zero, S.Infinity, S.NegativeInfinity) and ex_lim is S.Zero:
                 res = limit(f1, z, z0)
