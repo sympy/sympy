@@ -1012,45 +1012,41 @@ def test_sysode_linear_neq_order1_type2():
     assert checksysodesol(eq9, sol9) == (True, [0, 0, 0])
 
     # Simpsol and Solsimp testing
-    _x1 = sqrt(2)
-    _x2 = 1/b
-    _x3 = exp(2*_x2*t/a)
-    _x4 = exp(_x1*_x2*t/a)
-    _x5 = -2*_x4*c*Integral(_x3, t)
+    _x1 = exp(-2*t/(a*b))
+    _x2 = sqrt(2)
+    _x3 = exp(-_x2*t/(a*b))
+    _x4 = exp(2*t/(a*b))
+    _x5 = exp(2*_x2*t/(a*b))
     _x6 = Integral(_x3*_x4, t)
-    _x7 = exp(-2*_x2*t/a)
-    _x8 = exp(-_x1*_x2*t/a)
-    _x9 = exp(2*_x1*_x2*t/a)
-    _x10 = Integral(_x3*_x8, t)
-    _x11 = 2*_x4*d*Integral(_x3, t)
-    _x12 = 4*C1*_x4*a*b
+    _x7 = exp(_x2*t/(a*b))
     sol9_simpsol = [
-        Eq(f(t), -_x2*_x7*_x8*(
-            -4*C2*a*b - 4*C3*_x9*a*b - _x10*_x9*c - _x10*_x9*d + _x11 + _x12 + _x5 - _x6*c - _x6*d)/(
-               4*a)),
-        Eq(g(t), -_x2*_x7*_x8*(
-            4*C2*_x1*a*b - 4*C3*_x1*_x9*a*b - _x1*_x10*_x9*c - _x1*_x10*_x9*d + _x1*_x6*c + _x1*_x6*d)/(
-               4*a)),
-        Eq(h(t), _x2*_x7*_x8*(
-            4*C2*a*b + 4*C3*_x9*a*b + _x10*_x9*c + _x10*_x9*d + _x11 + _x12 + _x5 + _x6*c + _x6*d)/(
-               4*a)),
+        Eq(f(t), _x1*_x3*(
+            -4*C1*_x7*a*b + 4*C2*a*b + 4*C3*_x5*a*b + _x5*_x6*c + _x5*_x6*d + 2*_x7*c*Integral(
+            _x4, t) - 2*_x7*d*Integral(_x4, t) + c*Integral(_x4*_x7, t) + d*Integral(_x4*_x7, t))/(
+               4*a*b)),
+        Eq(g(t), _x1*_x3*(
+            -4*C2*_x2*a*b + 4*C3*_x2*_x5*a*b + _x2*_x5*_x6*c + _x2*_x5*_x6*d - _x2*c*Integral(
+            _x4*_x7, t) - _x2*d*Integral(_x4*_x7, t))/(4*a*b)),
+        Eq(h(t), _x1*_x3*(
+            4*C1*_x7*a*b + 4*C2*a*b + 4*C3*_x5*a*b + _x5*_x6*c + _x5*_x6*d - 2*_x7*c*Integral(
+            _x4, t) + 2*_x7*d*Integral(_x4, t) + c*Integral(_x4*_x7, t) + d*Integral(_x4*_x7, t))/(
+               4*a*b)),
     ]
     assert [_simpsol(s) for s in sol9] == sol9_simpsol
 
-    sol9_solsimp = [Eq(f(t), -C1*exp(-2*t/(a*b)) + C2*exp(-t*(sqrt(2) + 2)/(a*b)) + C3*exp(t*(-2 + sqrt(2))/(a*b)) +
-                    exp(t*(-2 + sqrt(2))/(a*b))*Integral(c*exp(t*(2 - sqrt(2))/(a*b))/(4*a*b) + d*exp(t*(2 -
-                    sqrt(2))/(a*b))/(4*a*b), t) + exp(-t*(sqrt(2) + 2)/(a*b))*Integral(c*exp(t*(sqrt(2) +
-                    2)/(a*b))/(4*a*b) + d*exp(t*(sqrt(2) + 2)/(a*b))/(4*a*b), t) -
-                    exp(-2*t/(a*b))*Integral(-c*exp(2*t/(a*b))/(2*a*b) + d*exp(2*t/(a*b))/(2*a*b), t)), Eq(g(t),
-                    -sqrt(2)*C2*exp(-t*(sqrt(2) + 2)/(a*b)) + sqrt(2)*C3*exp(t*(-2 + sqrt(2))/(a*b)) + sqrt(2)*exp(t*(-2
-                    + sqrt(2))/(a*b))*Integral(c*exp(t*(2 - sqrt(2))/(a*b))/(4*a*b) + d*exp(t*(2 -
-                    sqrt(2))/(a*b))/(4*a*b), t) - sqrt(2)*exp(-t*(sqrt(2) + 2)/(a*b))*Integral(c*exp(t*(sqrt(2) +
-                    2)/(a*b))/(4*a*b) + d*exp(t*(sqrt(2) + 2)/(a*b))/(4*a*b), t)), Eq(h(t), C1*exp(-2*t/(a*b)) +
-                    C2*exp(-t*(sqrt(2) + 2)/(a*b)) + C3*exp(t*(-2 + sqrt(2))/(a*b)) + exp(t*(-2 +
-                    sqrt(2))/(a*b))*Integral(c*exp(t*(2 - sqrt(2))/(a*b))/(4*a*b) + d*exp(t*(2 -
-                    sqrt(2))/(a*b))/(4*a*b), t) + exp(-t*(sqrt(2) + 2)/(a*b))*Integral(c*exp(t*(sqrt(2) +
-                    2)/(a*b))/(4*a*b) + d*exp(t*(sqrt(2) + 2)/(a*b))/(4*a*b), t) +
-                    exp(-2*t/(a*b))*Integral(-c*exp(2*t/(a*b))/(2*a*b) + d*exp(2*t/(a*b))/(2*a*b), t))]
+    _x1 = exp(-2*t/(a*b))
+    _x2 = Integral(-c*exp(2*t/(a*b))/(2*a*b) + d*exp(2*t/(a*b))/(2*a*b), t)
+    _x3 = exp(t*(-2 + sqrt(2))/(a*b))
+    _x4 = exp(-t*(sqrt(2) + 2)/(a*b))
+    _x5 = Integral(
+        c*exp(t*(2 - sqrt(2))/(a*b))/(4*a*b) + d*exp(t*(2 - sqrt(2))/(a*b))/(4*a*b), t)
+    _x6 = Integral(
+        c*exp(t*(sqrt(2) + 2)/(a*b))/(4*a*b) + d*exp(t*(sqrt(2) + 2)/(a*b))/(4*a*b), t)
+    sol9_solsimp = [
+        Eq(f(t), -C1*_x1 + C2*_x4 + C3*_x3 - _x1*_x2 + _x3*_x5 + _x4*_x6),
+        Eq(g(t), -sqrt(2)*C2*_x4 + sqrt(2)*C3*_x3 + sqrt(2)*_x3*_x5 - sqrt(2)*_x4*_x6),
+        Eq(h(t), C1*_x1 + C2*_x4 + C3*_x3 + _x1*_x2 + _x3*_x5 + _x4*_x6),
+    ]
     assert [Eq(s.lhs, _solsimp(s.rhs, t)) for s in sol9] == sol9_solsimp
 
     # Regression test case for issue #16635
