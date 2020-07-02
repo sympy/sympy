@@ -273,9 +273,9 @@ Canonical Equations Converter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.systems::canonical_odes
 
-Commutative Anti derivative Checker
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.systems::_is_commutative_anti_derivative
+LinODESolve Systems Information
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems::linodesolve_type
 
 Matrix Exponential Jordan Form
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -62,7 +62,7 @@ def _solsimp(e, t):
     return no_t + has_t
 
 
-def return_system_type(A, t, b=None):
+def linodesolve_type(A, t, b=None):
     r"""
     Helper function that determines the type of the system of ODEs for solving with :obj:`sympy.solvers.ode.systems.linodesolve()`
 
@@ -96,31 +96,31 @@ def return_system_type(A, t, b=None):
     ========
 
     >>> from sympy import symbols, Matrix
-    >>> from sympy.solvers.ode.systems import return_system_type
+    >>> from sympy.solvers.ode.systems import linodesolve_type
     >>> t = symbols("t")
     >>> A = Matrix([[1, 1], [2, 3]])
     >>> b = Matrix([t, 1])
 
-    >>> return_system_type(A, t)
+    >>> linodesolve_type(A, t)
     {'antiderivative': None, 'type': 'type1'}
 
-    >>> return_system_type(A, t, b=b)
+    >>> linodesolve_type(A, t, b=b)
     {'antiderivative': None, 'type': 'type2'}
 
     >>> A_t = Matrix([[1, t], [-t, 1]])
 
-    >>> return_system_type(A_t, t)
+    >>> linodesolve_type(A_t, t)
     {'antiderivative': Matrix([
     [      t, t**2/2],
     [-t**2/2,      t]]), 'type': 'type3'}
 
-    >>> return_system_type(A_t, t, b=b)
+    >>> linodesolve_type(A_t, t, b=b)
     {'antiderivative': Matrix([
     [      t, t**2/2],
     [-t**2/2,      t]]), 'type': 'type4'}
 
     >>> A_non_commutative = Matrix([[1, t], [t, -1]])
-    >>> return_system_type(A_non_commutative, t)
+    >>> linodesolve_type(A_non_commutative, t)
     Traceback (most recent call last):
     ...
     NotImplementedError:
@@ -137,6 +137,11 @@ def return_system_type(A, t, b=None):
 
     NotImplementedError
         When the coefficient matrix doesn't have a commutative antiderivative
+
+    See Also
+    ========
+
+    linodesolve: Function for which linodesolve_type gets the information
 
     """
 
@@ -583,7 +588,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     done in the right order. Wrong inputs to the function will lead to incorrect results.
 
     >>> from sympy import symbols, Function, Eq
-    >>> from sympy.solvers.ode.systems import canonical_odes, linear_ode_to_matrix, linodesolve, _is_commutative_anti_derivative
+    >>> from sympy.solvers.ode.systems import canonical_odes, linear_ode_to_matrix, linodesolve, linodesolve_type
     >>> from sympy.solvers.ode.subscheck import checksysodesol
     >>> f, g = symbols("f, g", cls=Function)
     >>> x, a = symbols("x, a")
@@ -604,10 +609,12 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
     >>> A = -A0
 
-    We have the coefficient matrices and the non-homogeneous term ready. If you know the system
-    is homogeneous, then there is no need to pass the argument *b*.
+    We have the coefficient matrices and the non-homogeneous term ready. Now, we can use
+    :obj:`sympy.solvers.ode.systems.linodesolve_type()` to get the information for the system of ODEs
+    to finally pass it to the solver.
 
-    >>> sol_vector = linodesolve(A, x, b=b, type="type2")
+    >>> system_info = linodesolve_type(A, x, b=b)
+    >>> sol_vector = linodesolve(A, x, b=b, B=system_info['antiderivative'], type=system_info['type'])
 
     Now, we can prove if the solution is correct or not by using :obj:`sympy.solvers.ode.subscheck.checksysodesol()`
 
@@ -629,18 +636,16 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     >>> A = -A0
 
     A user can also pass the commutative antidervative required for type3 and type4 system of ODEs.
-    Passing an incorrect one will lead to incorrect results. We can check if the coefficient matrix
-    is commutative with the antiderivative and get the antiderivative using
-    :obj:`sympy.solvers.ode.systems._is_commutative_anti_derivative()`.
+    Passing an incorrect one will lead to incorrect results. If the coefficient matrix is not commutative
+    with its antiderivative, then :obj:`sympy.solvers.ode.systems.linodesolve_type()` raises a NotImplementedError.
+    If it does have a commutative antiderivative, then the function just returns the information about the system.
 
-    >>> B, is_commuting = _is_commutative_anti_derivative(A, x)
-    >>> is_commuting
-    True
+    >>> system_info = linodesolve_type(A, x, b=b)
 
-    Now, we can pass the antiderivative as an argument to get the solution. If it is not passed, then this
-    solver computes the antiderivative for the solution.
+    Now, we can pass the antiderivative as an argument to get the solution. If the system information is not
+    passed, then the solver will compute the required arguments internally.
 
-    >>> sol_vector = linodesolve(A, x, B=B, type="type3")
+    >>> sol_vector = linodesolve(A, x, b=b)
 
     Once again, we can verify the solution obtained.
 
@@ -671,7 +676,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
 
     linear_ode_to_matrix: Coefficient matrix computation function
     canonical_odes: System of ODEs representation change
-    _is_commutative_anti_derivative: Getting the antiderivative for coefficient matrix
+    linodesolve_type: Getting information about systems of ODEs to pass in this solver
 
     """
 
@@ -727,8 +732,9 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
         b = zeros(n, 1)
 
     if type == "auto":
-        system_info = return_system_type(A, t, b=b)
+        system_info = linodesolve_type(A, t, b=b)
         type = system_info["type"]
+        B = system_info["antiderivative"]
 
     if type == "type1" or type == "type2":
         P, J = matrix_exp_jordan_form(A, t)
@@ -741,7 +747,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
 
     else:
         if B is None:
-            B = system_info['antiderivative']
+            B, _ = _is_commutative_anti_derivative(A, t)
 
         if type == "type3":
             sol_vector = B.exp() * Cvect
@@ -1046,7 +1052,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
             match['rhs'] = b
 
         try:
-            system_info = return_system_type(-A, t, b=b)
+            system_info = linodesolve_type(-A, t, b=b)
         except NotImplementedError:
             return None
 
