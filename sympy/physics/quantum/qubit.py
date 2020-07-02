@@ -740,7 +740,7 @@ def _get_possible_outcomes(m, bits):
     # bit being true
     output_matrices = []
     for i in range(1 << len(bits)):
-        output_matrices.append(zeros(2**nqubits, 1))
+        output_matrices.append(zeros(2**nqubits, 1).tolist())
 
     # Bitmasks will help sort how to determine possible outcomes.
     # When the bit mask is and-ed with a matrix-index,
@@ -757,8 +757,8 @@ def _get_possible_outcomes(m, bits):
             if i & bit_masks[j]:
                 trueness += j + 1
         # Put the value in the correct output matrix
-        output_matrices[trueness][i] = m[i]
-    return output_matrices
+        output_matrices[trueness][i][0] = m[i]
+    return [Matrix(m) for m in output_matrices]
 
 
 def measure_all_oneshot(qubit, format='sympy'):

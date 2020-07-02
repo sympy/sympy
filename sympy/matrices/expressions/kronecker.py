@@ -330,7 +330,7 @@ def matrix_kronecker_product(*matrices):
     if isinstance(matrix_expansion, MatrixClass):
         return matrix_expansion
     else:
-        return MatrixClass(matrix_expansion)
+        return MatrixClass._new(matrix_expansion)
 
 
 def explicit_kronecker_product(kron):

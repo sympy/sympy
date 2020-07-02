@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy import sqrt, I, Symbol, Integer, S
+from sympy import sqrt, I, Matrix, Symbol, Integer, S, zeros
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.state import Bra, Ket, State
@@ -10,7 +10,7 @@ from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.cartesian import X, Px
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.hilbert import ComplexSpace
-from sympy.physics.quantum.matrixutils import matrix_zeros
+from sympy.physics.quantum.matrixutils import matrix_zeros, to_scipy_sparse
 
 #------------------------------------------------------------------------------
 
@@ -133,14 +133,15 @@ class RaisingOp(SHOOp):
     def _represent_NumberOp(self, basis, **options):
         ndim_info = options.get('ndim', 4)
         format = options.get('format','sympy')
-        matrix = matrix_zeros(ndim_info, ndim_info, **options)
+        matrix = zeros(ndim_info, ndim_info, **options).tolist()
         for i in range(ndim_info - 1):
             value = sqrt(i + 1)
             if format == 'scipy.sparse':
                 value = float(value)
-            matrix[i + 1, i] = value
+            matrix[i + 1][i] = value
+        matrix = Matrix(matrix)
         if format == 'scipy.sparse':
-            matrix = matrix.tocsr()
+            matrix = to_scipy_sparse(matrix, format=format).tocsr()
         return matrix
 
     #--------------------------------------------------------------------------
@@ -274,12 +275,13 @@ class LoweringOp(SHOOp):
     def _represent_NumberOp(self, basis, **options):
         ndim_info = options.get('ndim', 4)
         format = options.get('format', 'sympy')
-        matrix = matrix_zeros(ndim_info, ndim_info, **options)
+        matrix = matrix_zeros(ndim_info, ndim_info, **options).tolist()
         for i in range(ndim_info - 1):
             value = sqrt(i + 1)
             if format == 'scipy.sparse':
                 value = float(value)
-            matrix[i,i + 1] = value
+            matrix[i][i + 1] = value
+        matrix = Matrix(matrix)
         if format == 'scipy.sparse':
             matrix = matrix.tocsr()
         return matrix
