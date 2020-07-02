@@ -1238,9 +1238,10 @@ def piecewise_simplify(expr, **kwargs):
             if eqs and not other:
                 eqs = list(ordered(eqs))
                 for e in eqs:
-                    # these blessed lhs objects behave like Symbols
-                    # and the rhs are simple replacements for the "symbols"
-                    if _blessed(e):
+                    # allow 2 args to collapse into 1 for any e
+                    # otherwise limit simplification to only simple-arg
+                    # Eq instances
+                    if len(args) == 2 or _blessed(e):
                         _prevexpr = _prevexpr.subs(*e.args)
                         _expr = _expr.subs(*e.args)
             # Did it evaluate to the same?
