@@ -941,7 +941,7 @@ class log(Function):
             while s.is_Order:
                 n += 1
                 s = arg.nseries(x, n=n, logx=logx)
-            a, b = s.leadterm(x)
+        a, b = s.removeO().leadterm(x)
         p = cancel(s/(a*x**b) - 1)
         if p.has(exp):
             p = logcombine(p)
@@ -963,7 +963,7 @@ class log(Function):
         from sympy import I, im
         arg = self.args[0].together()
         x0 = arg.subs(x, 0)
-        if x0 is S.One:
+        if x0 == 1:
             return (arg - S.One).as_leading_term(x)
         if cdir != 0:
             cdir = self.args[0].dir(x, cdir)

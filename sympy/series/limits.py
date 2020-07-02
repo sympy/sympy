@@ -188,7 +188,7 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy import exp, log, sign
+        from sympy import Abs, exp, log, sign
         from sympy.calculus.util import AccumBounds
         from sympy.functions import RisingFactorial
 
@@ -214,6 +214,32 @@ class Limit(Expr):
             cdir = 1
         elif str(dir) == "-":
             cdir = -1
+
+        while e.has(Abs):
+            term = e
+            while term:
+                cnt = 0
+                for t in term.args:
+                    if t.has(Abs):
+                        cnt += 1
+                        break
+                if cnt == 1:
+                    term = t
+                else:
+                    fin = term
+                    term = 0
+            sig = limit(fin.args[0], z, z0, dir)
+            if sig.is_zero:
+                sig = limit(1/fin.args[0], z, z0, dir)
+            if sig.is_extended_real:
+                if (sig < 0) == True:
+                    e = e.subs(fin, -fin.args[0])
+                elif (sig > 0) == True:
+                    e = e.subs(fin, fin.args[0])
+                else:
+                    break
+            else:
+                break
 
         if e.is_meromorphic(z, z0):
             if abs(z0) is S.Infinity:

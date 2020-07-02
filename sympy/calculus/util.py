@@ -1372,6 +1372,8 @@ class AccumulationBounds(AtomicExpr):
         else:
             return self
 
+    _eval_Abs = __abs__
+
     def __lt__(self, other):
         """
         Returns True if range of values attained by `self` AccumulationBounds
