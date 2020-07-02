@@ -25,10 +25,6 @@ checkodesol
 ^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode::checkodesol
 
-checksysodesol
-^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.subscheck::checksysodesol
-
 homogeneous_order
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode::homogeneous_order
@@ -328,6 +324,13 @@ Nonlinear, 3 equations, Order 1, Type 4
 Nonlinear, 3 equations, Order 1, Type 5
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::_nonlinear_3eq_order1_type5
+
+Other useful functions
+----------------------
+
+checksysodesol
+^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.subscheck::checksysodesol
 
 Information on the ode module
 -----------------------------

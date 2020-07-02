@@ -5,7 +5,7 @@ from sympy.matrices import dotprodsimp, NonSquareMatrixError
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
-                                       ODEOrderError, ODENonlinearError, _simpsol,
+                                       ODEOrderError, ODENonlinearError, _simpsol, _solsimp,
                                        _is_commutative_anti_derivative, linodesolve,
                                        canonical_odes)
 from sympy.integrals.integrals import Integral
@@ -401,6 +401,15 @@ def test_matrix_exp():
     [exp(I*t)/2 + exp(-I*t)/2, exp(I*t)/2 - exp(-I*t)/2],
     [exp(I*t)/2 - exp(-I*t)/2, exp(I*t)/2 + exp(-I*t)/2]])
     assert matrix_exp(A, t) == expAt
+
+    # Testing Errors
+    M = Matrix([[1, 2, 3], [4, 5, 6], [7, 7, 7]])
+    M1 = Matrix([[t, 1], [1, 1]])
+
+    raises(ValueError, lambda: matrix_exp(M[:, :2], t))
+    raises(ValueError, lambda: matrix_exp(M[:2, :], t))
+    raises(ValueError, lambda: matrix_exp(M1, t))
+    raises(ValueError, lambda: matrix_exp(M1[:1, :1], t))
 
 
 def test_canonical_odes():
@@ -1002,6 +1011,48 @@ def test_sysode_linear_neq_order1_type2():
     assert dsolve(eq9) == sol9
     assert checksysodesol(eq9, sol9) == (True, [0, 0, 0])
 
+    # Simpsol and Solsimp testing
+    _x1 = sqrt(2)
+    _x2 = 1/b
+    _x3 = exp(2*_x2*t/a)
+    _x4 = exp(_x1*_x2*t/a)
+    _x5 = -2*_x4*c*Integral(_x3, t)
+    _x6 = Integral(_x3*_x4, t)
+    _x7 = exp(-2*_x2*t/a)
+    _x8 = exp(-_x1*_x2*t/a)
+    _x9 = exp(2*_x1*_x2*t/a)
+    _x10 = Integral(_x3*_x8, t)
+    _x11 = 2*_x4*d*Integral(_x3, t)
+    _x12 = 4*C1*_x4*a*b
+    sol9_simpsol = [
+        Eq(f(t), -_x2*_x7*_x8*(
+            -4*C2*a*b - 4*C3*_x9*a*b - _x10*_x9*c - _x10*_x9*d + _x11 + _x12 + _x5 - _x6*c - _x6*d)/(
+               4*a)),
+        Eq(g(t), -_x2*_x7*_x8*(
+            4*C2*_x1*a*b - 4*C3*_x1*_x9*a*b - _x1*_x10*_x9*c - _x1*_x10*_x9*d + _x1*_x6*c + _x1*_x6*d)/(
+               4*a)),
+        Eq(h(t), _x2*_x7*_x8*(
+            4*C2*a*b + 4*C3*_x9*a*b + _x10*_x9*c + _x10*_x9*d + _x11 + _x12 + _x5 + _x6*c + _x6*d)/(
+               4*a)),
+    ]
+    assert [_simpsol(s) for s in sol9] == sol9_simpsol
+
+    sol9_solsimp = [Eq(f(t), -C1*exp(-2*t/(a*b)) + C2*exp(-t*(sqrt(2) + 2)/(a*b)) + C3*exp(t*(-2 + sqrt(2))/(a*b)) +
+                    exp(t*(-2 + sqrt(2))/(a*b))*Integral(c*exp(t*(2 - sqrt(2))/(a*b))/(4*a*b) + d*exp(t*(2 -
+                    sqrt(2))/(a*b))/(4*a*b), t) + exp(-t*(sqrt(2) + 2)/(a*b))*Integral(c*exp(t*(sqrt(2) +
+                    2)/(a*b))/(4*a*b) + d*exp(t*(sqrt(2) + 2)/(a*b))/(4*a*b), t) -
+                    exp(-2*t/(a*b))*Integral(-c*exp(2*t/(a*b))/(2*a*b) + d*exp(2*t/(a*b))/(2*a*b), t)), Eq(g(t),
+                    -sqrt(2)*C2*exp(-t*(sqrt(2) + 2)/(a*b)) + sqrt(2)*C3*exp(t*(-2 + sqrt(2))/(a*b)) + sqrt(2)*exp(t*(-2
+                    + sqrt(2))/(a*b))*Integral(c*exp(t*(2 - sqrt(2))/(a*b))/(4*a*b) + d*exp(t*(2 -
+                    sqrt(2))/(a*b))/(4*a*b), t) - sqrt(2)*exp(-t*(sqrt(2) + 2)/(a*b))*Integral(c*exp(t*(sqrt(2) +
+                    2)/(a*b))/(4*a*b) + d*exp(t*(sqrt(2) + 2)/(a*b))/(4*a*b), t)), Eq(h(t), C1*exp(-2*t/(a*b)) +
+                    C2*exp(-t*(sqrt(2) + 2)/(a*b)) + C3*exp(t*(-2 + sqrt(2))/(a*b)) + exp(t*(-2 +
+                    sqrt(2))/(a*b))*Integral(c*exp(t*(2 - sqrt(2))/(a*b))/(4*a*b) + d*exp(t*(2 -
+                    sqrt(2))/(a*b))/(4*a*b), t) + exp(-t*(sqrt(2) + 2)/(a*b))*Integral(c*exp(t*(sqrt(2) +
+                    2)/(a*b))/(4*a*b) + d*exp(t*(sqrt(2) + 2)/(a*b))/(4*a*b), t) +
+                    exp(-2*t/(a*b))*Integral(-c*exp(2*t/(a*b))/(2*a*b) + d*exp(2*t/(a*b))/(2*a*b), t))]
+    assert [Eq(s.lhs, _solsimp(s.rhs, t)) for s in sol9] == sol9_solsimp
+
     # Regression test case for issue #16635
     # https://github.com/sympy/sympy/issues/16635
     eq10 = [Eq(f(t).diff(t), f(t) - g(t) + 15*t - 10), Eq(g(t).diff(t), f(t) - g(t) - 15*t - 5)]
@@ -1062,6 +1113,14 @@ def test_sysode_linear_neq_order1_type2():
             C2*exp(-sqrt(5)*t/2 - t/2) + exp(-t/2 + sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5,
             t) + exp(-sqrt(5)*t/2 - t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)]
     assert linodesolve(A, t, b=b) == sol
+
+    # non-homogeneous term assumed to be 0
+    sol1 = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
+            - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 +
+            sqrt(5)*exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2
+            - exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2, C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)
+            + exp(-t/2 + sqrt(5)*t/2)*Integral(0, t) + exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)]
+    assert linodesolve(A, t, type="type2") == sol1
 
 
 def test_sysode_linear_neq_order1_type3():
@@ -1162,6 +1221,7 @@ def test_sysode_linear_neq_order1_type3():
     sol = [(C1/2 - I*C2/2)*exp(I*t**2/2 + t) + (C1/2 + I*C2/2)*exp(-I*t**2/2 + t),
             (-I*C1/2 + C2/2)*exp(-I*t**2/2 + t) + (I*C1/2 + C2/2)*exp(I*t**2/2 + t)]
     assert linodesolve(A, t) == sol
+    assert linodesolve(A, t, type="type3") == sol
 
     A1 = Matrix([[t, 1], [t, -1]])
     raises(NotImplementedError, lambda: linodesolve(A1, t))
@@ -1314,9 +1374,16 @@ def test_sysode_linear_neq_order1_type4():
         C1*_x1/3 - C1/3 + C2*_x1/3 - C2/3 + C3*_x1/3 + 2*C3/3 + 2*_x1*_x2/3 + _x1*_x3/3 - 2*_x2/3 + 2*_x3/3,
     ]
     assert linodesolve(A, x, b=b) == sol
+    assert linodesolve(A, x, b=b, type="type4") == sol
 
     A1 = Matrix([[t, 1], [t, -1]])
     raises(NotImplementedError, lambda: linodesolve(A1, t, b=b1))
+
+    # non-homogeneous term not passed
+    sol1 = [2*C1/3 - C2/3 - C3/3 + (C1/3 + C2/3 + C3/3)*exp(3*x**2/2),
+             -C1/3 + 2*C2/3 - C3/3 + (C1/3 + C2/3 + C3/3)*exp(3*x**2/2),
+             -C1/3 - C2/3 + 2*C3/3 + (C1/3 + C2/3 + C3/3)*exp(3*x**2/2)]
+    assert linodesolve(A, x, type="type4", doit=True) == sol1
 
 
 @slow
