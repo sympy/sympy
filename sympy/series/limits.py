@@ -215,31 +215,23 @@ class Limit(Expr):
         elif str(dir) == "-":
             cdir = -1
 
-        while e.has(Abs):
-            term = e
-            while term:
-                cnt = 0
-                for t in term.args:
-                    if t.has(Abs):
-                        cnt += 1
-                        break
-                if cnt == 1:
-                    term = t
-                else:
-                    fin = term
-                    term = 0
-            sig = limit(fin.args[0], z, z0, dir)
-            if sig.is_zero:
-                sig = limit(1/fin.args[0], z, z0, dir)
-            if sig.is_extended_real:
-                if (sig < 0) == True:
-                    e = e.subs(fin, -fin.args[0])
-                elif (sig > 0) == True:
-                    e = e.subs(fin, fin.args[0])
-                else:
-                    break
-            else:
-                break
+        def remove_abs(expr):
+            newargs = tuple(remove_abs(arg) for arg in expr.args)
+            if newargs != expr.args:
+                expr = expr.func(*newargs)
+            if isinstance(expr, Abs):
+                sig = limit(expr.args[0], z, z0, dir)
+                if sig.is_zero:
+                    sig = limit(1/expr.args[0], z, z0, dir)
+                if sig.is_extended_real:
+                    if (sig < 0) == True:
+                        return -expr.args[0]
+                    elif (sig > 0) == True:
+                        return expr.args[0]
+            return expr
+
+        if e.has(Abs):
+            e = remove_abs(e)
 
         if e.is_meromorphic(z, z0):
             if abs(z0) is S.Infinity:
