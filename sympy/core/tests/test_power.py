@@ -277,6 +277,17 @@ def test_pow_as_base_exp():
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S.One, S(2))
 
 
+def test_nseries():
+    x = Symbol('x')
+    assert sqrt(I*x - 1)._eval_nseries(x, 4, None, 1) == I + x/2 + I*x**2/8 - x**3/16 + O(x**4)
+    assert sqrt(I*x - 1)._eval_nseries(x, 4, None, -1) == -I - x/2 - I*x**2/8 + x**3/16 + O(x**4)
+    assert cbrt(I*x - 1)._eval_nseries(x, 4, None, 1) == (-1)**(S(1)/3) - (-1)**(S(5)/6)*x/3 + \
+    (-1)**(S(1)/3)*x**2/9 + 5*(-1)**(S(5)/6)*x**3/81 + O(x**4)
+    assert cbrt(I*x - 1)._eval_nseries(x, 4, None, -1) == (-1)**(S(1)/3)*exp(-2*I*pi/3) - \
+    (-1)**(S(5)/6)*x*exp(-2*I*pi/3)/3 + (-1)**(S(1)/3)*x**2*exp(-2*I*pi/3)/9 + \
+    5*(-1)**(S(5)/6)*x**3*exp(-2*I*pi/3)/81 + O(x**4)
+
+
 def test_issue_6100_12942_4473():
     x = Symbol('x')
     y = Symbol('y')
@@ -314,8 +325,7 @@ def test_issue_6990():
     a = Symbol('a')
     b = Symbol('b')
     assert (sqrt(a + b*x + x**2)).series(x, 0, 3).removeO() == \
-        b*x/(2*sqrt(a)) + x**2*(1/(2*sqrt(a)) - \
-        b**2/(8*a**Rational(3, 2))) + sqrt(a)
+        sqrt(a)*x**2*(1/(2*a) - b**2/(8*a**2)) + sqrt(a) + b*x/(2*sqrt(a))
 
 
 def test_issue_6068():

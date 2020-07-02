@@ -1050,6 +1050,8 @@ def test_is_convergent():
     assert Sum(1/(x**3), (x, 1, oo)).is_convergent() is S.true
     assert Sum(1/(x**S.Half), (x, 1, oo)).is_convergent() is S.false
 
+    # issue 19545
+    assert Sum(1/n - 3/(3*n +2), (n, 1, oo)).is_convergent() is S.true
 
 def test_is_absolutely_convergent():
     assert Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent() is S.false

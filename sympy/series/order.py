@@ -197,8 +197,7 @@ class Order(Expr):
             expr = expr.subs(s)
 
             if expr.is_Add:
-                from sympy import expand_multinomial
-                expr = expand_multinomial(expr)
+                expr = expr.factor()
 
             if s:
                 args = tuple([r[0] for r in rs.items()])
@@ -271,7 +270,7 @@ class Order(Expr):
         obj = Expr.__new__(cls, *args)
         return obj
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         return self
 
     @property

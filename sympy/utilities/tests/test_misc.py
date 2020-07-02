@@ -116,5 +116,5 @@ def test_debug_output():
     out, err = proc.communicate()
     out = out.decode('ascii') # utf-8?
     err = err.decode('ascii')
-    expected = 'substituted: -x*(cos(x) - 1), u: 1/x, u_var: _u'
+    expected = 'substituted: -x*(1 - cos(x)), u: 1/x, u_var: _u'
     assert expected in err, err

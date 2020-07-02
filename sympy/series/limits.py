@@ -208,13 +208,19 @@ class Limit(Expr):
         if not e.has(z):
             return e
 
+        cdir = 0
+        if str(dir) == "+":
+            cdir = 1
+        elif str(dir) == "-":
+            cdir = -1
+
         if e.is_meromorphic(z, z0):
             if abs(z0) is S.Infinity:
                 newe = e.subs(z, -1/z)
             else:
                 newe = e.subs(z, z + z0)
             try:
-                coeff, exp = newe.leadterm(z)
+                coeff, exp = newe.leadterm(z, cdir)
             except ValueError:
                 pass
             else:
@@ -244,7 +250,7 @@ class Limit(Expr):
             else:
                 inve = e.subs(z, 1/u)
             try:
-                f = inve.as_leading_term(u)
+                f = inve.as_leading_term(u).gammasimp()
                 if f.is_meromorphic(u, S.Zero):
                     r = limit(f, u, S.Zero, "+")
                     if isinstance(r, Limit):
