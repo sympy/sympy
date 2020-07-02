@@ -3,7 +3,7 @@ from sympy import pi
 from sympy.core import Basic, Tuple
 from sympy.core.symbol import _symbol
 from sympy.solvers import solve
-from sympy.geometry import Point, Segment, Curve, Ellipse
+from sympy.geometry import Point, Segment, Curve, Ellipse, Polygon
 
 
 class ParametricRegion(Basic):
@@ -92,30 +92,36 @@ class ParametricRegion(Basic):
 @singledispatch
 def parametric_region(reg):
     """
-    Returns an object of ParametricRegion class representing the geometric region.
+    Returns a list of ParametricRegion objects representing the geometric region.
 
     Examples
     ========
 
     >>> from sympy.abc import t
     >>> from sympy.vector import parametric_region
-    >>> from sympy.geometry import Point, Curve, Ellipse, Segment
+    >>> from sympy.geometry import Point, Curve, Ellipse, Segment, Polygon
 
     >>> p = Point(2, 5)
     >>> parametric_region(p)
-    ParametricRegion((2, 5))
+    [ParametricRegion((2, 5))]
 
     >>> c = Curve((t**3, 4*t), (t, -3, 4))
     >>> parametric_region(c)
-    ParametricRegion((t**3, 4*t), (t, -3, 4))
+    [ParametricRegion((t**3, 4*t), (t, -3, 4))]
 
     >>> e = Ellipse(Point(1, 3), 2, 3)
     >>> parametric_region(e)
-    ParametricRegion((2*cos(t) + 1, 3*sin(t) + 3), (t, 0, 2*pi))
+    [ParametricRegion((2*cos(t) + 1, 3*sin(t) + 3), (t, 0, 2*pi))]
 
     >>> s = Segment(Point(1, 3), Point(2, 6))
     >>> parametric_region(s)
-    ParametricRegion((t + 1, 3*t + 3), (t, 0, 1))
+    [ParametricRegion((t + 1, 3*t + 3), (t, 0, 1))]
+
+    >>> p1, p2, p3, p4 = [(0, 1), (2, -3), (5, 3), (-2, 3)]
+    >>> poly = Polygon(p1, p2, p3, p4)
+    >>> parametric_region(poly)
+    [ParametricRegion((2*t, 1 - 4*t), (t, 0, 1)), ParametricRegion((3*t + 2, 6*t - 3), (t, 0, 1)),\
+     ParametricRegion((5 - 7*t, 3), (t, 0, 1)), ParametricRegion((2*t - 2, 3 - 2*t),  (t, 0, 1))]
 
     """
     raise ValueError("SymPy cannot determine parametric representation of the region.")
@@ -123,14 +129,14 @@ def parametric_region(reg):
 
 @parametric_region.register(Point)
 def _(obj):
-    return ParametricRegion(obj.args)
+    return [ParametricRegion(obj.args)]
 
 
 @parametric_region.register(Curve)
 def _(obj):
     definition = obj.arbitrary_point(obj.parameter).args
     bounds = obj.limits
-    return ParametricRegion(definition, bounds)
+    return [ParametricRegion(definition, bounds)]
 
 
 @parametric_region.register(Ellipse)
@@ -138,7 +144,7 @@ def _(obj, parameter='t'):
     definition = obj.arbitrary_point(parameter).args
     t = _symbol(parameter, real=True)
     bounds = (t, 0, 2*pi)
-    return ParametricRegion(definition, bounds)
+    return [ParametricRegion(definition, bounds)]
 
 
 @parametric_region.register(Segment)
@@ -155,4 +161,10 @@ def _(obj, parameter='t'):
             break
 
     definition_tuple = obj.arbitrary_point(parameter).args
-    return ParametricRegion(definition_tuple, bounds)
+    return [ParametricRegion(definition_tuple, bounds)]
+
+
+@parametric_region.register(Polygon)
+def _(obj, parameter='t'):
+    l = [parametric_region(side, parameter)[0] for side in obj.sides]
+    return l

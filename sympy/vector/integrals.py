@@ -5,7 +5,6 @@ from sympy.vector import CoordSys3D, Vector, ParametricRegion, parametric_region
 from sympy.vector.operators import _get_coord_sys_from_expr
 from sympy.integrals import Integral, integrate
 from sympy.utilities.iterables import topological_sort, default_sort_key
-from sympy.geometry import Polygon
 from sympy.geometry.entity import GeometryEntity
 
 
@@ -13,8 +12,7 @@ class ParametricIntegral(Basic):
     """
     Represents integral of a scalar or vector field
     over a Parametric Region
-
-    Examples
+/bin    Examples
     ========
 
     >>> from sympy import cos, sin, pi
@@ -34,7 +32,7 @@ class ParametricIntegral(Basic):
     8*pi
 
     >>> ParametricIntegral(C.j + C.k, ParametricRegion((r*cos(theta), r*sin(theta)), r, theta))
-    ParametricIntegral(C.j + C.k, ParametricRegion((r*cos(theta), r*sin(theta)), r, theta))
+    0
 
     """
 
@@ -50,7 +48,7 @@ class ParametricIntegral(Basic):
             coord_sys = next(iter(coord_set))
 
         if parametricregion.dimensions == 0:
-            return super().__new__(cls, field, parametricregion)
+            return 0
 
         base_vectors = coord_sys.base_vectors()
         base_scalars = coord_sys.base_scalars()
@@ -173,13 +171,11 @@ def vector_integrate(field, *region):
             return ParametricIntegral(field, region[0])
 
         if isinstance(region[0], GeometryEntity):
-            if isinstance(region[0], Polygon):
-                result = 0
-                for s in region[0].sides:
-                    result += vector_integrate(field, s)
-                return result
+            regions_list = parametric_region(region[0])
 
-            region = parametric_region(region[0])
-            return ParametricIntegral(field, region)
+            result = 0
+            for reg in regions_list:
+                result += vector_integrate(field, reg)
+            return result
 
     return integrate(field, *region)
