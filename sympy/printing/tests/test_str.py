@@ -617,7 +617,7 @@ def test_tuple():
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
 
 
-def test_Series():
+def test_Series_str():
     tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
@@ -629,7 +629,7 @@ def test_Series():
         "Series(TransferFunction(-x + y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y))"
 
 
-def test_TransferFunction():
+def test_TransferFunction_str():
     tf1 = TransferFunction(x - 1, x + 1, x)
     assert str(tf1) == "TransferFunction(x - 1, x + 1, x)"
     tf2 = TransferFunction(x + 1, 2 - y, x)
@@ -638,7 +638,7 @@ def test_TransferFunction():
     assert str(tf3) == "TransferFunction(y, y**2 + 2*y + 3, y)"
 
 
-def test_Parallel():
+def test_Parallel_str():
     tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
@@ -650,7 +650,7 @@ def test_Parallel():
         "Parallel(TransferFunction(-x + y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y))"
 
 
-def test_Feedback():
+def test_Feedback_str():
     tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)

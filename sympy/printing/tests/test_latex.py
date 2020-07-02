@@ -38,7 +38,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
-from sympy.physics.control.lti import TransferFunction, Series, Parallel
+from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
@@ -58,7 +58,7 @@ class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
 
 
-x, y, z, t, w, a, b, c = symbols('x y z t w a b c')
+x, y, z, t, w, a, b, c, s, p = symbols('x y z t w a b c s p')
 k, m, n = symbols('k m n', integer=True)
 
 
@@ -2278,6 +2278,15 @@ def test_Parallel_printing():
         '\\frac{\\left(- t^{3} + y^{3}\\right) \\left(x - y\\right) + \\left(x + y\\right) \\left(x y^{2} - z\\right)}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)}'
     assert latex(Parallel(-tf2, tf1)) == \
         '\\frac{\\left(- t^{3} + y^{3}\\right) \\left(- x + y\\right) + \\left(x + y\\right) \\left(x y^{2} - z\\right)}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)}'
+
+
+def test_Feedback_printing():
+    tf1 = TransferFunction(p, p + x, p)
+    tf2 = TransferFunction(-s + p, p + s, p)
+    assert latex(Feedback(tf1, tf2)) == \
+        '\\frac{p \\left(p + s\\right)}{p \\left(p - s\\right) + \\left(p + s\\right) \\left(p + x\\right)}'
+    assert latex(Feedback(tf1*tf2, TransferFunction(1, 1, p))) == \
+        '\\frac{p \\left(p - s\\right)}{p \\left(p - s\\right) + \\left(p + s\\right) \\left(p + x\\right)}'
 
 
 def test_Quaternion_latex_printing():

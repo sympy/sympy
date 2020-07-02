@@ -314,12 +314,29 @@ class TransferFunction(Basic, EvalfMixin):
             raise ValueError("TransferFunction cannot be multiplied with {}."
                 .format(type(other)))
 
+    __rmul__ = __mul__
+
     def __truediv__(self, other):
-        if isinstance(other, TransferFunction):
+        if (isinstance(other, Parallel) and isinstance(other.args[0], TransferFunction)
+            and isinstance(other.args[1], (Series, TransferFunction))):
+
             if not self.var == other.var:
-                raise ValueError("Both the transfer functions should be anchored "
+                raise ValueError("Both TransferFunction and Parallel should be anchored "
                     "with the same variable.")
-            return Series(self, 1/Series(other))
+            if other.args[1] == self:
+                return Feedback(self, other.args[0])
+            other_arg_list = list(other.args[1].args)
+            if self in other_arg_list:
+                other_arg_list.remove(self)
+            else:
+                return Feedback(self, Series(*other_arg_list))
+
+            if len(other_arg_list) == 0:
+                return Feedback(self, other.args[0])
+            elif len(other_arg_list) == 1:
+                return Feedback(self, *other_arg_list)
+            else:
+                return Feedback(self, Series(*other_arg_list))
         else:
             raise ValueError("TransferFunction cannot be divided by {}.".
                 format(type(other)))
@@ -493,6 +510,25 @@ class Series(Basic):
             other_arg_list = list(other.args)
 
             return Series(*self_arg_list, *other_arg_list)
+        else:
+            raise ValueError("This transfer function expression is invalid.")
+
+    def __truediv__(self, other):
+        if (isinstance(other, Parallel) and isinstance(other.args[0], TransferFunction)
+            and isinstance(other.args[1], Series)):
+
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should be anchored "
+                    "with the same variable.")
+            self_arg_list = set(list(self.args))
+            other_arg_list = set(list(other.args[1].args))
+            res = list(self_arg_list ^ other_arg_list)
+            if len(res) == 0:
+                return Feedback(self, other.args[0])
+            elif len(res) == 1:
+                return Feedback(self, *res)
+            else:
+                return Feedback(self, Series(*res))
         else:
             raise ValueError("This transfer function expression is invalid.")
 

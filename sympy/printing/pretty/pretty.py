@@ -968,6 +968,15 @@ class PrettyPrinter(Printer):
         res = Mul(num/den, evaluate=False)
         return self._print_Mul(res)
 
+    def _print_Series(self, expr):
+        return self._print_TransferFunction(expr.doit())
+
+    def _print_Parallel(self, expr):
+        return self._print_TransferFunction(expr.doit())
+
+    def _print_Feedback(self, expr):
+        return self._print_TransferFunction(expr.doit())
+
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
 

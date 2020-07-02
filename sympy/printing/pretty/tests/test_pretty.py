@@ -29,7 +29,7 @@ from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerP
 from sympy.matrices.expressions import hadamard_power
 
 from sympy.physics import mechanics
-from sympy.physics.control.lti import TransferFunction, Series, Parallel
+from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
 from sympy.printing.pretty.pretty_symbology import center_accent, is_combining
@@ -2372,19 +2372,63 @@ def test_pretty_TransferFunction():
 def test_pretty_Series():
     tf1 = TransferFunction(x + y, x - 2*y, y)
     tf2 = TransferFunction(x - y, x + y, y)
-    assert pretty(Series(tf1, tf2)) == \
-        '         ⎛   2    ⎞\n (x - y)⋅⎝x⋅y  - z⎠\n───────────────────\n⎛   3    3⎞        \n⎝- t  + y ⎠⋅(x + y)'
-    assert pretty(Series(-tf2, -tf1)) == \
-        '         ⎛     2    ⎞\n(-x + y)⋅⎝- x⋅y  + z⎠\n─────────────────────\n ⎛   3    3⎞         \n ⎝- t  + y ⎠⋅(x + y) '
+    tf3 = TransferFunction(x**2 + y, y - x, y)
+    expected1 = \
+u("""\
+         ⎛ 2    ⎞ \n\
+ (x + y)⋅⎝x  + y⎠ \n\
+──────────────────\n\
+(-x + y)⋅(x - 2⋅y)\
+""")
+    expected2 = \
+u("""\
+(-x - y)⋅(-x + y)\n\
+─────────────────\n\
+(x - 2⋅y)⋅(x + y)\
+""")
+    assert upretty(Series(tf1, tf3)) == expected1
+    assert upretty(Series(-tf2, -tf1)) == expected2
 
 
 def test_pretty_Parallel():
     tf1 = TransferFunction(x + y, x - 2*y, y)
     tf2 = TransferFunction(x - y, x + y, y)
-    assert pretty(Parallel(tf1, tf2)) == \
-        '⎛   3    3⎞                   ⎛   2    ⎞\n⎝- t  + y ⎠⋅(x - y) + (x + y)⋅⎝x⋅y  - z⎠\n────────────────────────────────────────\n          ⎛   3    3⎞                   \n          ⎝- t  + y ⎠⋅(x + y)           '
-    assert pretty(Parallel(-tf2, -tf1)) == \
-        '⎛   3    3⎞                    ⎛   2    ⎞\n⎝- t  + y ⎠⋅(-x + y) - (x + y)⋅⎝x⋅y  - z⎠\n─────────────────────────────────────────\n           ⎛   3    3⎞                   \n           ⎝- t  + y ⎠⋅(x + y)           '
+    expected1 = \
+u("""\
+                           2\n\
+(x - 2⋅y)⋅(x - y) + (x + y) \n\
+────────────────────────────\n\
+     (x - 2⋅y)⋅(x + y)      \
+""")
+    expected2 = \
+u("""\
+(-x - y)⋅(x + y) + (-x + y)⋅(x - 2⋅y)\n\
+─────────────────────────────────────\n\
+          (x - 2⋅y)⋅(x + y)          \
+""")
+    assert upretty(Parallel(tf1, tf2)) == expected1
+    assert upretty(Parallel(-tf2, -tf1)) == expected2
+
+
+def test_pretty_Feedback():
+    tf = TransferFunction(1, 1, y)
+    tf1 = TransferFunction(x + y, x - 2*y, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    expected1 = \
+u("""\
+                     2             \n\
+              (x + y)              \n\
+───────────────────────────────────\n\
+(x - 2⋅y)⋅(x + y) + (x - y)⋅(x + y)\
+""")
+    expected2 = \
+u("""\
+          (x - y)⋅(x + y)          \n\
+───────────────────────────────────\n\
+(x - 2⋅y)⋅(x + y) + (x - y)⋅(x + y)\
+""")
+    assert upretty(Feedback(tf1, tf2)) == expected1
+    assert upretty(Feedback(tf1*tf2, tf)) == expected2
 
 
 def test_pretty_order():

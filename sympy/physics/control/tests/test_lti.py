@@ -71,7 +71,7 @@ def test_TransferFunction_construction():
     assert tf11.den == (b0 + b1*s + b2*s**2)
     assert tf11.args == (a0 + a1*s, b0 + b1*s + b2*s**2, s)
 
-    # when just the numerator is 0, leave the denominator along.
+    # when just the numerator is 0, leave the denominator alone.
     tf12 = TransferFunction(0, p**2 - p + 1, p)
     assert tf12.args == (0, p**2 - p + 1, p)
 
@@ -136,6 +136,7 @@ def test_TransferFunction_functions():
     SP1 = TransferFunction(p1, p2, s)
     expect1 = TransferFunction(2.0*s + 1.0, 5.0*s**2 + 4.0*s + 3.0, s)
     expect1_ = TransferFunction(2*s + 1, 5*s**2 + 4*s + 3, s)
+    assert SP1.subs({a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}) == expect1_
     assert SP1.subs({a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}).evalf() == expect1
     assert expect1_.evalf() == expect1
 
@@ -144,18 +145,21 @@ def test_TransferFunction_functions():
     SP2 = TransferFunction(p3, p4, p)
     expect2 = TransferFunction(2.0*p, 5.0*p**3 + 2.0*p**2 - 3.0, p)
     expect2_ = TransferFunction(2*p, 5*p**3 + 2*p**2 - 3, p)
+    assert SP2.subs({c1: 2, d0: 3, d1: 2, d2: 5}) == expect2_
     assert SP2.subs({c1: 2, d0: 3, d1: 2, d2: 5}).evalf() == expect2
     assert expect2_.evalf() == expect2
 
     SP3 = TransferFunction(a0*p**3 + a1*s**2 - b0*s + b1, a1*s + p, s)
     expect3 = TransferFunction(2.0*p**3 + 4.0*s**2 - s + 5.0, p + 4.0*s, s)
     expect3_ = TransferFunction(2*p**3 + 4*s**2 - s + 5, p + 4*s, s)
+    assert SP3.subs({a0: 2, a1: 4, b0: 1, b1: 5}) == expect3_
     assert SP3.subs({a0: 2, a1: 4, b0: 1, b1: 5}).evalf() == expect3
     assert expect3_.evalf() == expect3
 
     SP4 = TransferFunction(s - a1*p**3, a0*s + p, p)
     expect4 = TransferFunction(7.0*p**3 + s, p - s, p)
     expect4_ = TransferFunction(7*p**3 + s, p - s, p)
+    assert SP4.subs({a0: -1, a1: -7}) == expect4_
     assert SP4.subs({a0: -1, a1: -7}).evalf() == expect4
     assert expect4_.evalf() == expect4
 
@@ -173,8 +177,8 @@ def test_TransferFunction_functions():
     assert (tf4*tf4).doit() == tf4**2 == pow(tf4, 2) == expect1
     assert (tf5*tf5*tf5).doit() == tf5**3 == pow(tf5, 3) == expect2
     assert tf5**0 == pow(tf5, 0) == TransferFunction(1, 1, s)
-    assert tf4**-1 == pow(tf4, -1) == TransferFunction(p - 3, p + 4, p)
-    assert tf5**-2 == pow(tf5, -2) == TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
+    assert Series(tf4).doit()**-1 == tf4**-1 == pow(tf4, -1) == TransferFunction(p - 3, p + 4, p)
+    assert (tf5*tf5).doit()**-1 == tf5**-2 == pow(tf5, -2) == TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
 
     raises(ValueError, lambda: tf4**(s**2 + s - 1))
     raises(ValueError, lambda: tf5**s)
@@ -256,10 +260,6 @@ def test_TransferFunction_multiplication_and_division():
     raises(ValueError, lambda: G5 * (s - 1))
     raises(ValueError, lambda: 9 * G5)
 
-    # division
-    assert G5/G6 == Series(G5, 1/Series(G6))
-    assert -G3/G4 == Series(-G3, 1/Series(G4))
-
     raises(ValueError, lambda: G3 / Matrix([1, 2, 3]))
     raises(ValueError, lambda: G6 / 0)
     raises(ValueError, lambda: G3 / G5)
@@ -267,16 +267,8 @@ def test_TransferFunction_multiplication_and_division():
     raises(ValueError, lambda: G5 / s**2)
     raises(ValueError, lambda: (s - 4*s**2) / G2)
     raises(ValueError, lambda: 0 / G4)
-
-    assert G1*G2 + G5/G6 == Parallel(Series(G1, G2), Series(G5, 1/Series(G6)))
-    G3_ = TransferFunction(s**4 - 2*s**2 + 1, s - 1, s)
-    assert G1/G2 - G3_/G6 == Parallel(Series(G1, 1/Series(G2)), -Series(G3_, 1/Series(G6)))
-
-    omega_o, zeta = symbols('omega_o, zeta')
-    G7 = TransferFunction(a0*s**p + a1*p**s, a2*p*zeta - s, zeta)
-    G8 = TransferFunction(omega_o**2, s**2 + p*omega_o*zeta*s + omega_o**2, zeta)
-    G9 = TransferFunction(zeta - s**3, zeta + p**4, zeta)
-    assert G7 / (G8 - G9) == Series(G7, 1/Parallel(G8, -G9))
+    raises(ValueError, lambda: G5 / G6)
+    raises(ValueError, lambda: -G3 /G4)
 
 
 def test_TransferFunction_is_proper():
@@ -617,7 +609,7 @@ def test_Feedback_functions():
     assert Feedback(tf4, tf6).doit() == \
         TransferFunction(p*(p + s)*(a0*p + p**a1 - s), p*(p*(p + s) + (-p + s)*(a0*p + p**a1 - s)), p)
     assert -Feedback(tf4*tf6, TransferFunction(1, 1, p)).doit() == \
-        TransferFunction(-p*(-p + s)*(p + s)*(a0*p + p**a1 - s), p*(p + s)*(p*(p + s) - (-p + s)*(a0*p + p**a1 - s)), p)
+        TransferFunction(-p*(-p + s)*(p + s)*(a0*p + p**a1 - s), p*(p + s)*(p*(p + s) + (-p + s)*(a0*p + p**a1 - s)), p)
 
     assert Feedback(tf1, tf2*tf5).rewrite(TransferFunction) == \
         TransferFunction((a0 + s)*(s**2 + 2*s*wn*zeta + wn**2), (k*(-a0 + a1*s**2 + a2*s) + \

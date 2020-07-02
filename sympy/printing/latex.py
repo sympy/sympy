@@ -2410,6 +2410,15 @@ class LatexPrinter(Printer):
         res = Mul(num/den, evaluate=False)
         return self._print_Mul(res)
 
+    def _print_Series(self, expr):
+        return self._print_TransferFunction(expr.doit())
+
+    def _print_Parallel(self, expr):
+        return self._print_TransferFunction(expr.doit())
+
+    def _print_Feedback(self, expr):
+        return self._print_TransferFunction(expr.doit())
+
     def _print_NamedMorphism(self, morphism):
         pretty_name = self._print(Symbol(morphism.name))
         pretty_morphism = self._print_Morphism(morphism)
