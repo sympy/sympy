@@ -40,7 +40,7 @@ class TransferFunction(Basic, EvalfMixin):
     Examples
     ========
 
-    >>> from sympy.abc import s, p, a, b
+    >>> from sympy.abc import s, p, a
     >>> from sympy.physics.control.lti import TransferFunction
     >>> tf1 = TransferFunction(s + a, s**2 + s + 1, s)
     >>> tf1
