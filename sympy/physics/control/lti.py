@@ -91,53 +91,6 @@ class TransferFunction(Basic, EvalfMixin):
     >>> tf8**-1
     TransferFunction(p - 3, p + 4, p)
 
-
-    We can add the current (self) transfer function to a polynomial, a number or another
-    transfer function using ``+`` operator. This can be called as the parallel inter-connection of
-    two transfer functions.
-
-    >>> G1 = TransferFunction(s + 6, s - 5, s)
-    >>> G2 = TransferFunction(s + 3, s + 1, s)
-    >>> G1 + G2
-    TransferFunction((s - 5)*(s + 3) + (s + 1)*(s + 6), (s - 5)*(s + 1), s)
-    >>> G1 + (a - 1)
-    TransferFunction(s + (a - 1)*(s - 5) + 6, s - 5, s)
-    >>> G1 + 8
-    TransferFunction(9*s - 34, s - 5, s)
-
-    We can subtract a polynomial, a number or a transfer function from the current (self)
-    transfer function using ``-`` operator.
-
-    >>> G1 - G2
-    TransferFunction(-(s - 5)*(s + 3) + (s + 1)*(s + 6), (s - 5)*(s + 1), s)
-    >>> G1 - 4
-    TransferFunction(26 - 3*s, s - 5, s)
-    >>> G2 - (b + 7)
-    TransferFunction(s - (b + 7)*(s + 1) + 3, s + 1, s)
-
-    We can also multiply the current (self) transfer function with a polynomial, a number or
-    another transfer function using ``*`` operator. This can be called as the series inter-connection
-    of two transfer functions.
-
-    >>> G3 = TransferFunction(s + 1, s - 8, s)
-    >>> G4 = TransferFunction(p + s**2, p - s, s)
-    >>> G3*G4
-    TransferFunction((p + s**2)*(s + 1), (p - s)*(s - 8), s)
-    >>> 9*G4
-    TransferFunction(9*p + 9*s**2, p - s, s)
-    >>> G3*(a + 6)
-    TransferFunction((a + 6)*(s + 1), s - 8, s)
-
-    Similarly, we can divide the current (self) transfer function by a polynomial, a number or
-    another transfer function using ``/`` operator.
-
-    >>> G3/G4
-    TransferFunction((p - s)*(s + 1), (p + s**2)*(s - 8), s)
-    >>> G4/(-3)
-    TransferFunction(p + s**2, -3*p + 3*s, s)
-    >>> G3/(a**2)
-    TransferFunction(s + 1, a**2*(s - 8), s)
-
     References
     ==========
 
