@@ -4,11 +4,12 @@ from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, besselk, gamma, I
                    Intersection, Matrix, symbols, Product, IndexedBase)
 from sympy.matrices import ImmutableMatrix, MatrixSymbol
 from sympy.matrices.expressions.determinant import det
-from sympy.stats.joint_rv import (JointDistribution, JointPSpace,
-    JointDistributionHandmade, MarginalDistribution)
+from sympy.stats.joint_rv import JointDistribution, JointPSpace, MarginalDistribution
 from sympy.stats.rv import _value_check, random_symbols
 
 __all__ = ['JointRV',
+'MultivariateNormal',
+'MultivariateLaplace',
 'Dirichlet',
 'GeneralizedMultivariateLogGamma',
 'GeneralizedMultivariateLogGammaOmega',
@@ -27,6 +28,55 @@ def multivariate_rv(cls, sym, *args):
     dist.check(*args)
     return JointPSpace(sym, dist).value
 
+
+def marginal_distribution(rv, *indices):
+    """
+    Marginal distribution function of a joint random variable.
+
+    Parameters
+    ==========
+
+    rv: A random variable with a joint probability distribution.
+    indices: component indices or the indexed random symbol
+        for whom the joint distribution is to be calculated
+
+    Returns
+    =======
+
+    A Lambda expression in `sym`.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import MultivariateNormal, marginal_distribution
+    >>> m = MultivariateNormal('X', [1, 2], [[2, 1], [1, 2]])
+    >>> marginal_distribution(m, m[0])(1)
+    1/(2*sqrt(pi))
+
+    """
+    indices = list(indices)
+    for i in range(len(indices)):
+        if isinstance(indices[i], Indexed):
+            indices[i] = indices[i].args[1]
+    prob_space = rv.pspace
+    if not indices:
+        raise ValueError(
+            "At least one component for marginal density is needed.")
+    if hasattr(prob_space.distribution, '_marginal_distribution'):
+        return prob_space.distribution._marginal_distribution(indices, rv.symbol)
+    return prob_space.marginal_distribution(*indices)
+
+
+class JointDistributionHandmade(JointDistribution):
+
+    _argnames = ('pdf',)
+    is_Continuous = True
+
+    @property
+    def set(self):
+        return self.args[1]
+
+
 def JointRV(symbol, pdf, _set=None):
     """
     Create a Joint Random Variable where each of its component is conitinuous,
@@ -43,12 +93,9 @@ def JointRV(symbol, pdf, _set=None):
     ========
 
     >>> from sympy import exp, pi, Indexed, S
-    >>> from sympy.stats import density
-    >>> from sympy.stats.joint_rv_types import JointRV
-
+    >>> from sympy.stats import density, JointRV
     >>> x1, x2 = (Indexed('x', i) for i in (1, 2))
     >>> pdf = exp(-x1**2/2 + x1 - x2**2/2 - S(1)/2)/(2*pi)
-
     >>> N1 = JointRV('x', pdf) #Multivariate Normal distribution
     >>> density(N1)(1, 2)
     exp(-2)/(2*pi)
@@ -56,7 +103,7 @@ def JointRV(symbol, pdf, _set=None):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     """
     #TODO: Add support for sets provided by the user
@@ -75,7 +122,7 @@ def JointRV(symbol, pdf, _set=None):
     return jrv
 
 #-------------------------------------------------------------------------------
-# Multivariate Normal distribution ---------------------------------------------------------
+# Multivariate Normal distribution ---------------------------------------------
 
 class MultivariateNormalDistribution(JointDistribution):
     _argnames = ('mu', 'sigma')
@@ -105,7 +152,7 @@ class MultivariateNormalDistribution(JointDistribution):
             Rational(-1, 2)*x.transpose()*(sigma.inv()*\
                 x))[0]
 
-    def marginal_distribution(self, indices, sym):
+    def _marginal_distribution(self, indices, sym):
         sym = ImmutableMatrix([Indexed(sym, i) for i in indices])
         _mu, _sigma = self.mu, self.sigma
         k = self.mu.shape[0]
@@ -118,8 +165,51 @@ class MultivariateNormalDistribution(JointDistribution):
             Rational(-1, 2)*(_mu - sym).transpose()*(_sigma.inv()*\
                 (_mu - sym)))[0])
 
+def MultivariateNormal(name, mu, sigma):
+    """
+    Creates a continuous random variable with Multivariate Normal
+    Distribution.
+
+    The density of the multivariate normal distribution can be found at [1].
+
+    Parameters
+    ==========
+
+    mu : List representing the mean or the mean vector
+    sigma : Positive definite square matrix
+        Represents covariance Matrix
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import MultivariateNormal, density, marginal_distribution
+    >>> from sympy import symbols
+    >>> X = MultivariateNormal('X', [3, 4], [[2, 1], [1, 2]])
+    >>> y, z = symbols('y z')
+    >>> density(X)(y, z)
+    sqrt(3)*exp((3/2 - y/2)*(2*y/3 - z/3 - 2/3) + (2 - z/2)*(-y/3 + 2*z/3 - 5/3))/(6*pi)
+    >>> density(X)(1, 2)
+    sqrt(3)*exp(-4/3)/(6*pi)
+    >>> marginal_distribution(X, X[1])(y)
+    exp((2 - y/2)*(y/2 - 2))/(2*sqrt(pi))
+    >>> marginal_distribution(X, X[0])(y)
+    exp((3/2 - y/2)*(y/2 - 3/2))/(2*sqrt(pi))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Multivariate_normal_distribution
+
+    """
+    return multivariate_rv(MultivariateNormalDistribution, name, mu, sigma)
+
 #-------------------------------------------------------------------------------
-# Multivariate Laplace distribution ---------------------------------------------------------
+# Multivariate Laplace distribution --------------------------------------------
 
 class MultivariateLaplaceDistribution(JointDistribution):
     _argnames = ('mu', 'sigma')
@@ -153,9 +243,47 @@ class MultivariateLaplaceDistribution(JointDistribution):
         *(y/(2 + x))**(S(v)/2)*besselk(v, sqrt((2 + x)*(y)))\
         *exp((args_T*sigma_inv*mu)[0])
 
+def MultivariateLaplace(name, mu, sigma):
+    """
+    Creates a continuous random variable with Multivariate Laplace
+    Distribution.
+
+    The density of the multivariate Laplace distribution can be found at [1].
+
+    Parameters
+    ==========
+
+    mu : List representing the mean or the mean vector
+    sigma : Positive definite square matrix
+        Represents covariance Matrix
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import MultivariateLaplace, density
+    >>> from sympy import symbols
+    >>> y, z = symbols('y z')
+    >>> X = MultivariateLaplace('X', [2, 4], [[3, 1], [1, 3]])
+    >>> density(X)(y, z)
+    sqrt(2)*exp(y/4 + 5*z/4)*besselk(0, sqrt(15*y*(3*y/8 - z/8)/2 + 15*z*(-y/8 + 3*z/8)/2))/(4*pi)
+    >>> density(X)(1, 2)
+    sqrt(2)*exp(11/4)*besselk(0, sqrt(165)/4)/(4*pi)
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Multivariate_Laplace_distribution
+
+    """
+    return multivariate_rv(MultivariateLaplaceDistribution, name, mu, sigma)
 
 #-------------------------------------------------------------------------------
-# Multivariate StudentT distribution ---------------------------------------------------------
+# Multivariate StudentT distribution -------------------------------------------
 
 class MultivariateTDistribution(JointDistribution):
     _argnames = ('mu', 'shape_mat', 'dof')
@@ -213,13 +341,14 @@ def MultivariateT(syms, mu, sigma, v):
     Returns
     =======
 
-    A random symbol
+    RandomSymbol
+
     """
     return multivariate_rv(MultivariateTDistribution, syms, mu, sigma, v)
 
 
 #-------------------------------------------------------------------------------
-# Multivariate Normal Gamma distribution ---------------------------------------------------------
+# Multivariate Normal Gamma distribution ---------------------------------------
 
 class NormalGammaDistribution(JointDistribution):
 
@@ -245,7 +374,7 @@ class NormalGammaDistribution(JointDistribution):
         tau**(alpha - S.Half)*exp(-1*beta*tau)*\
         exp(-1*(lamda*tau*(x - mu)**2)/S(2))
 
-    def marginal_distribution(self, indices, *sym):
+    def _marginal_distribution(self, indices, *sym):
         if len(indices) == 2:
             return self.pdf(*sym)
         if indices[0] == 0:
@@ -272,9 +401,17 @@ def NormalGamma(sym, mu, lamda, alpha, beta):
         For identifying the random variable.
     mu: A real number
         The mean of the normal distribution
-    alpha: a positive integer
-    beta: a positive integer
-    lamda: a positive integer
+    lamda: A positive integer
+        Parameter of joint distribution
+    alpha: A positive integer
+        Parameter of joint distribution
+    beta: A positive integer
+        Parameter of joint distribution
+
+    Returns
+    =======
+
+    RandomSymbol
 
     Examples
     ========
@@ -288,15 +425,16 @@ def NormalGamma(sym, mu, lamda, alpha, beta):
     >>> density(X)(y, z)
     9*sqrt(2)*z**(3/2)*exp(-3*z)*exp(-y**2*z/2)/(2*sqrt(pi))
 
-    Returns
-    =======
+    References
+    ==========
 
-    A random symbol
+    .. [1] https://en.wikipedia.org/wiki/Normal-gamma_distribution
+
     """
     return multivariate_rv(NormalGammaDistribution, sym, mu, lamda, alpha, beta)
 
 #-------------------------------------------------------------------------------
-# Multivariate Beta/Dirichlet distribution ---------------------------------------------------------
+# Multivariate Beta/Dirichlet distribution -------------------------------------
 
 class MultivariateBetaDistribution(JointDistribution):
 
@@ -318,7 +456,7 @@ class MultivariateBetaDistribution(JointDistribution):
     def pdf(self, *syms):
         alpha = self.alpha
         B = Mul.fromiter(map(gamma, alpha))/gamma(Add(*alpha))
-        return Mul.fromiter([sym**(a_k - 1) for a_k, sym in zip(alpha, syms)])/B
+        return Mul.fromiter(sym**(a_k - 1) for a_k, sym in zip(alpha, syms))/B
 
 def MultivariateBeta(syms, *alpha):
     """
@@ -330,19 +468,18 @@ def MultivariateBeta(syms, *alpha):
     Parameters
     ==========
 
-    alpha: positive real numbers signifying concentration numbers.
+    alpha: Positive real numbers
+        Signifies concentration numbers.
 
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import density
-    >>> from sympy.stats.joint_rv import marginal_distribution
-    >>> from sympy.stats.joint_rv_types import MultivariateBeta
+    >>> from sympy.stats import density, MultivariateBeta, marginal_distribution
     >>> from sympy import Symbol
     >>> a1 = Symbol('a1', positive=True)
     >>> a2 = Symbol('a2', positive=True)
@@ -369,7 +506,7 @@ def MultivariateBeta(syms, *alpha):
 Dirichlet = MultivariateBeta
 
 #-------------------------------------------------------------------------------
-# Multivariate Ewens distribution ---------------------------------------------------------
+# Multivariate Ewens distribution ----------------------------------------------
 
 class MultivariateEwensDistribution(JointDistribution):
 
@@ -402,8 +539,8 @@ class MultivariateEwensDistribution(JointDistribution):
                                 "the dimension is symbolic")
         term_1 = factorial(n)/rf(theta, n)
         if condi:
-            term_2 = Mul.fromiter([theta**syms[j]/((j+1)**syms[j]*factorial(syms[j]))
-                                    for j in range(n)])
+            term_2 = Mul.fromiter(theta**syms[j]/((j+1)**syms[j]*factorial(syms[j]))
+                                    for j in range(n))
             cond = Eq(sum([(k + 1)*syms[k] for k in range(n)]), n)
             return Piecewise((term_1 * term_2, cond), (0, True))
         syms = syms[0]
@@ -424,21 +561,20 @@ def MultivariateEwens(syms, n, theta):
     Parameters
     ==========
 
-    n: positive integer of class Integer,
-            size of the sample or the integer whose partitions are considered
-    theta: mutation rate, must be positive real number.
+    n: Positive integer
+        Size of the sample or the integer whose partitions are considered
+    theta: Positive real number
+        Denotes Mutation rate
 
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import density
-    >>> from sympy.stats.joint_rv import marginal_distribution
-    >>> from sympy.stats.joint_rv_types import MultivariateEwens
+    >>> from sympy.stats import density, marginal_distribution, MultivariateEwens
     >>> from sympy import Symbol
     >>> a1 = Symbol('a1', positive=True)
     >>> a2 = Symbol('a2', positive=True)
@@ -458,7 +594,7 @@ def MultivariateEwens(syms, n, theta):
     return multivariate_rv(MultivariateEwensDistribution, syms, n, theta)
 
 #-------------------------------------------------------------------------------
-# Generalized Multivariate Log Gamma distribution ---------------------------------------------------------
+# Generalized Multivariate Log Gamma distribution ------------------------------
 
 class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
 
@@ -486,7 +622,7 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
         k = len(l)
         sterm1 = Pow((1 - d), n)/\
                 ((gamma(v + n)**(k - 1))*gamma(v)*gamma(n + 1))
-        sterm2 = Mul.fromiter([mui*li**(-v - n) for mui, li in zip(mu, l)])
+        sterm2 = Mul.fromiter(mui*li**(-v - n) for mui, li in zip(mu, l))
         term1 = sterm1 * sterm2
         sterm3 = (v + n) * sum([mui * yi for mui, yi in zip(mu, y)])
         sterm4 = sum([exp(mui * yi)/li for (mui, yi, li) in zip(mu, y, l)])
@@ -505,14 +641,14 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
 
     syms: list/tuple/set of symbols for identifying each component
     delta: A constant in range [0, 1]
-    v: positive real
-    lamda: a list of positive reals
-    mu: a list of positive reals
+    v: Positive real number
+    lamda: List of positive real numbers
+    mu: List of positive real numbers
 
     Returns
     =======
 
-    A Random Symbol
+    RandomSymbol
 
     Examples
     ========
@@ -559,14 +695,14 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     omega: A square matrix
            Every element of square matrix must be absolute value of
            square root of correlation coefficient
-    v: positive real
-    lamda: a list of positive reals
-    mu: a list of positive reals
+    v: Positive real number
+    lamda: List of positive real numbers
+    mu: List of positive real numbers
 
     Returns
     =======
 
-    A Random Symbol
+    RandomSymbol
 
     Examples
     ========
@@ -586,13 +722,15 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     References
     ==========
 
-    See references of GeneralizedMultivariateLogGamma.
+    .. [1] https://en.wikipedia.org/wiki/Generalized_multivariate_log-gamma_distribution
+    .. [2] https://www.researchgate.net/publication/234137346_On_a_multivariate_log-gamma_distribution_and_the_use_of_the_distribution_in_the_Bayesian_analysis
 
     Notes
     =====
 
     If the GeneralizedMultivariateLogGammaOmega is too long to type use,
     `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO`
+
     """
     _value_check((omega.is_square, isinstance(omega, Matrix)), "omega must be a"
                                                             " square matrix")
@@ -611,7 +749,7 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
 
 
 #-------------------------------------------------------------------------------
-# Multinomial distribution ---------------------------------------------------------
+# Multinomial distribution -----------------------------------------------------
 
 class MultinomialDistribution(JointDistribution):
 
@@ -635,8 +773,8 @@ class MultinomialDistribution(JointDistribution):
 
     def pdf(self, *x):
         n, p = self.n, self.p
-        term_1 = factorial(n)/Mul.fromiter([factorial(x_k) for x_k in x])
-        term_2 = Mul.fromiter([p_k**x_k for p_k, x_k in zip(p, x)])
+        term_1 = factorial(n)/Mul.fromiter(factorial(x_k) for x_k in x)
+        term_2 = Mul.fromiter(p_k**x_k for p_k, x_k in zip(p, x))
         return Piecewise((term_1 * term_2, Eq(sum(x), n)), (0, True))
 
 def Multinomial(syms, n, *p):
@@ -647,19 +785,21 @@ def Multinomial(syms, n, *p):
 
     Parameters
     ==========
-    n: positive integer of class Integer,
-       number of trials
-    p: event probabilites, >= 0 and <= 1
+
+    n: Positive integer
+        Represents number of trials
+    p: List of event probabilites
+        Must be in the range of [0, 1]
 
     Returns
     =======
-    A RandomSymbol.
+
+    RandomSymbol
 
     Examples
     ========
-    >>> from sympy.stats import density
-    >>> from sympy.stats.joint_rv import marginal_distribution
-    >>> from sympy.stats.joint_rv_types import Multinomial
+
+    >>> from sympy.stats import density,  Multinomial, marginal_distribution
     >>> from sympy import symbols
     >>> x1, x2, x3 = symbols('x1, x2, x3', nonnegative=True, integer=True)
     >>> p1, p2, p3 = symbols('p1, p2, p3', positive=True)
@@ -672,15 +812,17 @@ def Multinomial(syms, n, *p):
 
     References
     ==========
+
     .. [1] https://en.wikipedia.org/wiki/Multinomial_distribution
     .. [2] http://mathworld.wolfram.com/MultinomialDistribution.html
+
     """
     if not isinstance(p[0], list):
         p = (list(p), )
     return multivariate_rv(MultinomialDistribution, syms, n, p[0])
 
 #-------------------------------------------------------------------------------
-# Negative Multinomial Distribution ---------------------------------------------------------
+# Negative Multinomial Distribution --------------------------------------------
 
 class NegativeMultinomialDistribution(JointDistribution):
 
@@ -705,7 +847,7 @@ class NegativeMultinomialDistribution(JointDistribution):
     def pdf(self, *k):
         k0, p = self.k0, self.p
         term_1 = (gamma(k0 + sum(k))*(1 - sum(p))**k0)/gamma(k0)
-        term_2 = Mul.fromiter([pi**ki/factorial(ki) for pi, ki in zip(p, k)])
+        term_2 = Mul.fromiter(pi**ki/factorial(ki) for pi, ki in zip(p, k))
         return term_1 * term_2
 
 def NegativeMultinomial(syms, k0, *p):
@@ -716,19 +858,21 @@ def NegativeMultinomial(syms, k0, *p):
 
     Parameters
     ==========
-    k0: positive integer of class Integer,
-        number of failures before the experiment is stopped
-    p: event probabilites, >= 0 and <= 1
+
+    k0: positive integer
+        Represents number of failures before the experiment is stopped
+    p: List of event probabilites
+        Must be in the range of [0, 1]
 
     Returns
     =======
-    A RandomSymbol.
+
+    RandomSymbol
 
     Examples
     ========
-    >>> from sympy.stats import density
-    >>> from sympy.stats.joint_rv import marginal_distribution
-    >>> from sympy.stats.joint_rv_types import NegativeMultinomial
+
+    >>> from sympy.stats import density, NegativeMultinomial, marginal_distribution
     >>> from sympy import symbols
     >>> x1, x2, x3 = symbols('x1, x2, x3', nonnegative=True, integer=True)
     >>> p1, p2, p3 = symbols('p1, p2, p3', positive=True)
@@ -743,8 +887,10 @@ def NegativeMultinomial(syms, k0, *p):
 
     References
     ==========
+
     .. [1] https://en.wikipedia.org/wiki/Negative_multinomial_distribution
     .. [2] http://mathworld.wolfram.com/NegativeBinomialDistribution.html
+
     """
     if not isinstance(p[0], list):
         p = (list(p), )

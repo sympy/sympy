@@ -282,6 +282,31 @@ def test_Poly_from_expr():
     assert Poly.from_expr(y + 5, x, y, domain=ZZ).rep == DMP([[1, 5]], ZZ)
 
 
+def test_poly_from_domain_element():
+    dom = ZZ[x]
+    assert Poly(dom(x+1), y, domain=dom).rep == DMP([dom(x+1)], dom)
+    dom = dom.get_field()
+    assert Poly(dom(x+1), y, domain=dom).rep == DMP([dom(x+1)], dom)
+
+    dom = QQ[x]
+    assert Poly(dom(x+1), y, domain=dom).rep == DMP([dom(x+1)], dom)
+    dom = dom.get_field()
+    assert Poly(dom(x+1), y, domain=dom).rep == DMP([dom(x+1)], dom)
+
+    dom = ZZ.old_poly_ring(x)
+    assert Poly(dom([1, 1]), y, domain=dom).rep == DMP([dom([1, 1])], dom)
+    dom = dom.get_field()
+    assert Poly(dom([1, 1]), y, domain=dom).rep == DMP([dom([1, 1])], dom)
+
+    dom = QQ.old_poly_ring(x)
+    assert Poly(dom([1, 1]), y, domain=dom).rep == DMP([dom([1, 1])], dom)
+    dom = dom.get_field()
+    assert Poly(dom([1, 1]), y, domain=dom).rep == DMP([dom([1, 1])], dom)
+
+    dom = QQ.algebraic_field(I)
+    assert Poly(dom([1, 1]), x, domain=dom).rep == DMP([dom([1, 1])], dom)
+
+
 def test_Poly__new__():
     raises(GeneratorsError, lambda: Poly(x + 1, x, x))
 
@@ -2954,7 +2979,8 @@ def test_cancel():
     assert cancel(f) == f
     assert cancel(f, greedy=False) == x + sqrt(2)
 
-    assert cancel((x**2/4 - 1, x/2 - 1)) == (S.Half, x + 2, 1)
+    assert cancel((x**2/4 - 1, x/2 - 1)) == (1, x + 2, 2)
+    # assert cancel((x**2/4 - 1, x/2 - 1)) == (S.Half, x + 2, 1)
 
     assert cancel((x**2 - y)/(x - y)) == 1/(x - y)*(x**2 - y)
 

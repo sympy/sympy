@@ -21,11 +21,12 @@ from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import FF, QQ, ZZ
+from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.fglmtools import matrix_fglm
 from sympy.polys.groebnertools import groebner as _groebner
 from sympy.polys.monomials import Monomial
 from sympy.polys.orderings import monomial_key
-from sympy.polys.polyclasses import DMP
+from sympy.polys.polyclasses import DMP, DMF, ANP
 from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,
     CoercionFailed, UnificationFailed,
@@ -146,7 +147,9 @@ class Poly(Basic):
         if 'order' in opt:
             raise NotImplementedError("'order' keyword is not implemented yet")
 
-        if iterable(rep, exclude=str):
+        if isinstance(rep, (DMP, DMF, ANP, DomainElement)):
+            return cls._from_domain_element(rep, opt)
+        elif iterable(rep, exclude=str):
             if isinstance(rep, dict):
                 return cls._from_dict(rep, opt)
             else:
@@ -288,6 +291,16 @@ class Poly(Basic):
         """Construct a polynomial from an expression. """
         rep, opt = _dict_from_expr(rep, opt)
         return cls._from_dict(rep, opt)
+
+    @classmethod
+    def _from_domain_element(cls, rep, opt):
+        gens = opt.gens
+        domain = opt.domain
+
+        level = len(gens) - 1
+        rep = [domain.convert(rep)]
+
+        return cls.new(DMP.from_list(rep, level, domain), *gens)
 
     def __hash__(self):
         return super(Poly, self).__hash__()
@@ -6648,9 +6661,13 @@ def cancel(f, *gens, **args):
     """
     from sympy.core.exprtools import factor_terms
     from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.polys.rings import sring
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
+    opt = {}
+    if 'polys' in args:
+        opt['polys'] = args['polys']
 
     if not isinstance(f, (tuple, Tuple)):
         if f.is_Number or isinstance(f, Relational) or not isinstance(f, Expr):
@@ -6660,18 +6677,25 @@ def cancel(f, *gens, **args):
 
     elif len(f) == 2:
         p, q = f
+        if isinstance(p, Poly) and isinstance(q, Poly):
+            opt['gens'] = p.gens
+            opt['domain'] = p.domain
+            opt['polys'] = opt.get('polys', True)
+        p, q = p.as_expr(), q.as_expr()
     elif isinstance(f, Tuple):
         return factor_terms(f)
     else:
         raise ValueError('unexpected argument: %s' % f)
 
     try:
-        (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
-    except PolificationFailed:
-        if not isinstance(f, (tuple, Tuple)):
-            return f.expand()
-        else:
-            return S.One, p, q
+        if f.has(Piecewise):
+            raise PolynomialError()
+        R, (F, G) = sring((p, q), *gens, **args)
+        if not R.ngens:
+            if not isinstance(f, (tuple, Tuple)):
+                return f.expand()
+            else:
+                return S.One, p, q
     except PolynomialError as msg:
         if f.is_commutative and not f.has(Piecewise):
             raise PolynomialError(msg)
@@ -6697,15 +6721,18 @@ def cancel(f, *gens, **args):
                     pass
             return f.xreplace(dict(reps))
 
-    c, P, Q = F.cancel(G)
+    c, (P, Q) = 1, F.cancel(G)
+    if opt.get('polys', False) and not 'gens' in opt:
+        opt['gens'] = R.symbols
 
     if not isinstance(f, (tuple, Tuple)):
         return c*(P.as_expr()/Q.as_expr())
     else:
-        if not opt.polys:
-            return c, P.as_expr(), Q.as_expr()
-        else:
+        P, Q = P.as_expr(), Q.as_expr()
+        if not opt.get('polys', False):
             return c, P, Q
+        else:
+            return c, Poly(P, *gens, **opt), Poly(Q, *gens, **opt)
 
 
 @public

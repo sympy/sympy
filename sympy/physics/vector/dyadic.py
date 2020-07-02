@@ -1,7 +1,6 @@
 from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
 from sympy.core.compatibility import unicode
 from sympy.printing.defaults import Printable
-from .printing import VectorLatexPrinter, VectorStrPrinter
 
 __all__ = ['Dyadic']
 
@@ -157,22 +156,21 @@ class Dyadic(Printable):
         if len(ar) == 0:
             return str(0)
         ol = []  # output list, to be concatenated to a string
-        mlp = VectorLatexPrinter()
         for i, v in enumerate(ar):
             # if the coef of the dyadic is 1, we skip the 1
             if ar[i][0] == 1:
-                ol.append(' + ' + mlp.doprint(ar[i][1]) + r"\otimes " +
-                          mlp.doprint(ar[i][2]))
+                ol.append(' + ' + printer._print(ar[i][1]) + r"\otimes " +
+                          printer._print(ar[i][2]))
             # if the coef of the dyadic is -1, we skip the 1
             elif ar[i][0] == -1:
                 ol.append(' - ' +
-                          mlp.doprint(ar[i][1]) +
+                          printer._print(ar[i][1]) +
                           r"\otimes " +
-                          mlp.doprint(ar[i][2]))
+                          printer._print(ar[i][2]))
             # If the coefficient of the dyadic is not 1 or -1,
             # we might wrap it in parentheses, for readability.
             elif ar[i][0] != 0:
-                arg_str = mlp.doprint(ar[i][0])
+                arg_str = printer._print(ar[i][0])
                 if isinstance(ar[i][0], Add):
                     arg_str = '(%s)' % arg_str
                 if arg_str.startswith('-'):
@@ -180,8 +178,8 @@ class Dyadic(Printable):
                     str_start = ' - '
                 else:
                     str_start = ' + '
-                ol.append(str_start + arg_str + mlp.doprint(ar[i][1]) +
-                          r"\otimes " + mlp.doprint(ar[i][2]))
+                ol.append(str_start + arg_str + printer._print(ar[i][1]) +
+                          r"\otimes " + printer._print(ar[i][2]))
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]
@@ -307,11 +305,6 @@ class Dyadic(Printable):
         ar = self.args  # just to shorten things
         if len(ar) == 0:
             return printer._print(0)
-
-        # Ignore parent printer class and settings and use our own.
-        # TODO: Remove this, it's only here to preserve old behavior
-        printer = VectorStrPrinter()
-
         ol = []  # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             # if the coef of the dyadic is 1, we skip the 1
@@ -323,7 +316,7 @@ class Dyadic(Printable):
             # If the coefficient of the dyadic is not 1 or -1,
             # we might wrap it in parentheses, for readability.
             elif ar[i][0] != 0:
-                arg_str = printer.doprint(ar[i][0])
+                arg_str = printer._print(ar[i][0])
                 if isinstance(ar[i][0], Add):
                     arg_str = "(%s)" % arg_str
                 if arg_str[0] == '-':
@@ -396,6 +389,8 @@ class Dyadic(Printable):
         ========
 
         >>> from sympy.physics.vector import ReferenceFrame, outer, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> N = ReferenceFrame('N')
         >>> q = dynamicsymbols('q')
         >>> B = N.orientnew('B', 'Axis', [q, N.z])
@@ -477,6 +472,8 @@ class Dyadic(Printable):
         ========
 
         >>> from sympy.physics.vector import ReferenceFrame, outer, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> N = ReferenceFrame('N')
         >>> q = dynamicsymbols('q')
         >>> B = N.orientnew('B', 'Axis', [q, N.z])
