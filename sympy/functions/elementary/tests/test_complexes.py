@@ -306,7 +306,7 @@ def test_sign():
     assert sign(f(y)).rewrite(Abs) == Piecewise((0, Eq(f(y), 0)), (f(y)/Abs(f(y)), True))
     # issue 19484
     e = x + sign(x + x**3)
-    assert simplify(abs(x + x**3)*e) == x**3 + x*abs(x**3 + x) + x
+    assert (abs(x + x**3)*e).simplify() == x**3 + x*abs(x**3 + x) + x
 
     # evaluate what can be evaluated
     assert sign(exp_polar(I*pi)*pi) is S.NegativeOne
