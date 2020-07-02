@@ -574,6 +574,19 @@ def dsolve(eq, func=None, hint="default", simplify=True,
 
     if iterable(eq):
         match = classify_sysode(eq, func)
+
+        # This case can happen only when the system of ODEs have
+        # been divided into multiple linear first order system of
+        # ODEs with the help of canonical_odes function. Hence, the
+        # linodesolve can be directly used to get the solution in
+        # this case. In future, this may have to be changed.
+        if isinstance(match, list):
+            sols = []
+            for m in match:
+                sol = sysode_linear_neq_order1(m)
+                sols.append(sol)
+            return sols
+
         eq = match['eq']
         order = match['order']
         func = match['func']
@@ -1879,6 +1892,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
     if len(funcs) != len(eq):
         raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
 
+    # This logic of list of lists in funcs to
+    # be replaced later.
     func_dict = dict()
     for func in funcs:
         if not order.get(func, False):
@@ -1893,6 +1908,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
             else:
                 func_dict[eq_no] = func
             order[func] = max_order
+
     funcs = [func_dict[i] for i in range(len(func_dict))]
     matching_hints['func'] = funcs
     for func in funcs:
@@ -7283,18 +7299,20 @@ def _linear_2eq_order2_type11(x, y, t, r, eq):
 
 
 def sysode_linear_neq_order1(match):
-    from sympy.solvers.ode.systems import (_linear_neq_order1_type1,
-        _linear_neq_order1_type2, _linear_neq_order1_type3,
-        _linear_neq_order1_type4)
+    from sympy.solvers.ode.systems import linodesolve
 
-    if match['type_of_equation'] == 'type1':
-        sol = _linear_neq_order1_type1(match)
-    elif match['type_of_equation'] == 'type2':
-        sol = _linear_neq_order1_type2(match)
-    elif match['type_of_equation'] == 'type3':
-        sol = _linear_neq_order1_type3(match)
-    elif match['type_of_equation'] == 'type4':
-        sol = _linear_neq_order1_type4(match)
+    eqs = match['eq']
+    t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    funcs = match['func']
+
+    rhs = match.get('rhs', None)
+    A = -match['func_coeff']
+    B = match.get('commutative_antiderivative', None)
+    type_of_equation = match['type_of_equation']
+
+    sol_vector = linodesolve(A, t, b=rhs, B=B, type=type_of_equation)
+
+    sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
 
     return sol
 

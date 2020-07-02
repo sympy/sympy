@@ -1,11 +1,13 @@
 from sympy import (symbols, Symbol, diff, Function, Derivative, Matrix, Rational, S,
                    I, Eq, sqrt)
 from sympy.functions import exp, cos, sin, log
-from sympy.matrices import dotprodsimp
+from sympy.matrices import dotprodsimp, NonSquareMatrixError
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
-                                       ODEOrderError, ODENonlinearError, _simpsol)
+                                       ODEOrderError, ODENonlinearError, _simpsol, _solsimp,
+                                       _is_commutative_anti_derivative, linodesolve,
+                                       canonical_odes)
 from sympy.integrals.integrals import Integral
 from sympy.testing.pytest import ON_TRAVIS, raises, slow, skip, XFAIL
 
@@ -283,6 +285,23 @@ def test_neq_nth_linear_constant_coeff_match():
             t**2/2, t**2/2, t**2/2]]), 'rhs': Matrix([ [0], [0], [1], [0]]), 'type_of_equation': 'type4'}
     assert neq_nth_linear_constant_coeff_match(eq5, funcs_2, t) == sol5
 
+    # Multiple matchs
+
+    f, g = symbols("f g", cls=Function)
+    y = symbols("y")
+    funcs = [f(t), g(t)]
+
+    eq1 = [Eq(Derivative(f(t), t)**2 - 2*Derivative(f(t), t) + 1, 4),
+            Eq(-y*f(t) + Derivative(g(t), t), 0)]
+    sol1 = [{'no_of_equation': 2, 'eq': [Eq(Derivative(f(t), t), -1), Eq(Derivative(g(t), t), y*f(t))], 'func':
+            [f(t), g(t)], 'order': {f(t): 1, g(t): 1}, 'is_linear': True, 'is_constant': True, 'is_homogeneous':
+            False, 'is_general': True, 'func_coeff': Matrix([ [ 0, 0], [-y, 0]]), 'rhs': Matrix([ [-1], [ 0]]),
+            'type_of_equation': 'type2'}, {'no_of_equation': 2, 'eq': [Eq(Derivative(f(t), t), 3),
+            Eq(Derivative(g(t), t), y*f(t))], 'func': [f(t), g(t)], 'order': {f(t): 1, g(t): 1}, 'is_linear':
+            True, 'is_constant': True, 'is_homogeneous': False, 'is_general': True, 'func_coeff': Matrix([ [ 0,
+            0], [-y, 0]]), 'rhs': Matrix([ [3], [0]]), 'type_of_equation': 'type2'}]
+    assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
+
 
 def test_matrix_exp():
     from sympy.matrices.dense import Matrix, eye, zeros
@@ -382,6 +401,30 @@ def test_matrix_exp():
     [exp(I*t)/2 + exp(-I*t)/2, exp(I*t)/2 - exp(-I*t)/2],
     [exp(I*t)/2 - exp(-I*t)/2, exp(I*t)/2 + exp(-I*t)/2]])
     assert matrix_exp(A, t) == expAt
+
+    # Testing Errors
+    M = Matrix([[1, 2, 3], [4, 5, 6], [7, 7, 7]])
+    M1 = Matrix([[t, 1], [1, 1]])
+
+    raises(ValueError, lambda: matrix_exp(M[:, :2], t))
+    raises(ValueError, lambda: matrix_exp(M[:2, :], t))
+    raises(ValueError, lambda: matrix_exp(M1, t))
+    raises(ValueError, lambda: matrix_exp(M1[:1, :1], t))
+
+
+def test_canonical_odes():
+    f, g, h = symbols('f g h', cls=Function)
+    x = symbols('x')
+    funcs = [f(x), g(x), h(x)]
+
+    eqs1 = [Eq(f(x).diff(x, x), f(x) + 2*g(x)), Eq(g(x) + 1, g(x).diff(x) + f(x))]
+    sol1 = [Eq(Derivative(f(x), (x, 2)), f(x) + 2*g(x)), Eq(Derivative(g(x), x), -f(x) + g(x) + 1)]
+    assert canonical_odes(eqs1, funcs[:2], x) == sol1
+
+    eqs2 = [Eq(f(x).diff(x), h(x).diff(x) + f(x)), Eq(g(x).diff(x)**2, f(x) + h(x)), Eq(h(x).diff(x), f(x))]
+    sol2 = [[Eq(Derivative(f(x), x), 2*f(x)), Eq(Derivative(g(x), x), -sqrt(f(x) + h(x))), Eq(Derivative(h(x), x), f(x))],
+            [Eq(Derivative(f(x), x), 2*f(x)), Eq(Derivative(g(x), x), sqrt(f(x) + h(x))), Eq(Derivative(h(x), x), f(x))]]
+    assert canonical_odes(eqs2, funcs, x) == sol2
 
 
 def test_sysode_linear_neq_order1_type1():
@@ -827,10 +870,42 @@ def test_sysode_linear_neq_order1_type1():
     assert dsolve(eq37) == sol37
     assert checksysodesol(eq37, sol37) == (True, [0, 0])
 
+    # Multiple systems
+    eq1 = [Eq(Derivative(f(t), t)**2, g(t)**2), Eq(-f(t) + Derivative(g(t), t), 0)]
+    sol1 = [[Eq(f(t), -C1*sin(t) - C2*cos(t)), Eq(g(t), C1*cos(t) - C2*sin(t))], [Eq(f(t), -C1*exp(-t) +
+            C2*exp(t)), Eq(g(t), C1*exp(-t) + C2*exp(t))]]
+    assert dsolve(eq1) == sol1
+    for sol in sol1:
+        assert checksysodesol(eq1, sol) == (True, [0, 0])
+
+
+    # Testing the Errors
+    raises(ValueError, lambda: linodesolve(1, t))
+    raises(ValueError, lambda: linodesolve(a, t))
+
+    A1 = Matrix([[1, 2], [2, 4], [4, 6]])
+    raises(NonSquareMatrixError, lambda: linodesolve(A1, t))
+
+    A2 = Matrix([[1, 2, 1], [3, 1, 2]])
+    raises(NonSquareMatrixError, lambda: linodesolve(A2, t))
+
+    # Testing auto functionality
+    func = [f(t), g(t)]
+    eq = [Eq(f(t).diff(t) + g(t).diff(t), g(t)), Eq(g(t).diff(t), f(t))]
+    ceq = canonical_odes(eq, func, t)
+    (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
+    A = -A0
+    sol = [C1*(-Rational(1, 2) + sqrt(5)/2)*exp(t*(-Rational(1, 2) + sqrt(5)/2)) + C2*(-sqrt(5)/2 - Rational(1, 2))*
+           exp(t*(-sqrt(5)/2 - Rational(1, 2))),
+            C1*exp(t*(-Rational(1, 2) + sqrt(5)/2)) + C2*exp(t*(-sqrt(5)/2 - Rational(1, 2)))]
+    assert linodesolve(A, t) == sol
+
+
 
 def test_sysode_linear_neq_order1_type2():
+
     f, g, h, k = symbols('f g h k', cls=Function)
-    x, t, a, b, c, d = symbols('x t a b c d')
+    x, t, a, b, c, d, y = symbols('x t a b c d y')
 
     eq1 = [Eq(diff(f(x), x),  f(x) + g(x) + 5),
            Eq(diff(g(x), x), -f(x) - g(x) + 7)]
@@ -936,6 +1011,44 @@ def test_sysode_linear_neq_order1_type2():
     assert dsolve(eq9) == sol9
     assert checksysodesol(eq9, sol9) == (True, [0, 0, 0])
 
+    # Simpsol and Solsimp testing
+    _x1 = exp(-2*t/(a*b))
+    _x2 = sqrt(2)
+    _x3 = exp(-_x2*t/(a*b))
+    _x4 = exp(2*t/(a*b))
+    _x5 = exp(2*_x2*t/(a*b))
+    _x6 = Integral(_x3*_x4, t)
+    _x7 = exp(_x2*t/(a*b))
+    sol9_simpsol = [
+        Eq(f(t), _x1*_x3*(
+            -4*C1*_x7*a*b + 4*C2*a*b + 4*C3*_x5*a*b + _x5*_x6*c + _x5*_x6*d + 2*_x7*c*Integral(
+            _x4, t) - 2*_x7*d*Integral(_x4, t) + c*Integral(_x4*_x7, t) + d*Integral(_x4*_x7, t))/(
+               4*a*b)),
+        Eq(g(t), _x1*_x3*(
+            -4*C2*_x2*a*b + 4*C3*_x2*_x5*a*b + _x2*_x5*_x6*c + _x2*_x5*_x6*d - _x2*c*Integral(
+            _x4*_x7, t) - _x2*d*Integral(_x4*_x7, t))/(4*a*b)),
+        Eq(h(t), _x1*_x3*(
+            4*C1*_x7*a*b + 4*C2*a*b + 4*C3*_x5*a*b + _x5*_x6*c + _x5*_x6*d - 2*_x7*c*Integral(
+            _x4, t) + 2*_x7*d*Integral(_x4, t) + c*Integral(_x4*_x7, t) + d*Integral(_x4*_x7, t))/(
+               4*a*b)),
+    ]
+    assert [_simpsol(s) for s in sol9] == sol9_simpsol
+
+    _x1 = exp(-2*t/(a*b))
+    _x2 = Integral(-c*exp(2*t/(a*b))/(2*a*b) + d*exp(2*t/(a*b))/(2*a*b), t)
+    _x3 = exp(t*(-2 + sqrt(2))/(a*b))
+    _x4 = exp(-t*(sqrt(2) + 2)/(a*b))
+    _x5 = Integral(
+        c*exp(t*(2 - sqrt(2))/(a*b))/(4*a*b) + d*exp(t*(2 - sqrt(2))/(a*b))/(4*a*b), t)
+    _x6 = Integral(
+        c*exp(t*(sqrt(2) + 2)/(a*b))/(4*a*b) + d*exp(t*(sqrt(2) + 2)/(a*b))/(4*a*b), t)
+    sol9_solsimp = [
+        Eq(f(t), -C1*_x1 + C2*_x4 + C3*_x3 - _x1*_x2 + _x3*_x5 + _x4*_x6),
+        Eq(g(t), -sqrt(2)*C2*_x4 + sqrt(2)*C3*_x3 + sqrt(2)*_x3*_x5 - sqrt(2)*_x4*_x6),
+        Eq(h(t), C1*_x1 + C2*_x4 + C3*_x3 + _x1*_x2 + _x3*_x5 + _x4*_x6),
+    ]
+    assert [Eq(s.lhs, _solsimp(s.rhs, t)) for s in sol9] == sol9_solsimp
+
     # Regression test case for issue #16635
     # https://github.com/sympy/sympy/issues/16635
     eq10 = [Eq(f(t).diff(t), f(t) - g(t) + 15*t - 10), Eq(g(t).diff(t), f(t) - g(t) - 15*t - 5)]
@@ -944,10 +1057,73 @@ def test_sysode_linear_neq_order1_type2():
     assert dsolve(eq10) == sol10
     assert checksysodesol(eq10, sol10) == (True, [0, 0])
 
+    # Multiple equations
+    eq1 = [Eq(Derivative(f(t), t)**2 - 2*Derivative(f(t), t) + 1, 4),
+            Eq(-y*f(t) + Derivative(g(t), t), 0)]
+    sol1 = [[Eq(f(t), C2 + Integral(-1, t)), Eq(g(t), C1*y + C2*t*y + t*y*Integral(-1, t) + y*Integral(t, t))],
+             [Eq(f(t), C2 + Integral(3, t)), Eq(g(t), C1*y + C2*t*y + t*y*Integral(3, t) + y*Integral(-3*t, t))]]
+    assert dsolve(eq1) == sol1
+    for sol in sol1:
+        assert checksysodesol(eq1, sol) == (True, [0, 0])
+
+    # Testing the Errors
+    raises(ValueError, lambda: linodesolve(1, t, b=Matrix([t+1])))
+    raises(ValueError, lambda: linodesolve(a, t, b=Matrix([log(t) + sin(t)])))
+
+    raises(ValueError, lambda: linodesolve(Matrix([7]), t, b=t**2))
+    raises(ValueError, lambda: linodesolve(Matrix([a+10]), t, b=log(t)*cos(t)))
+
+    raises(ValueError, lambda: linodesolve(7, t, b=t**2))
+    raises(ValueError, lambda: linodesolve(a, t, b=log(t) + sin(t)))
+
+    A1 = Matrix([[1, 2], [2, 4], [4, 6]])
+    b1 = Matrix([t, 1, t**2])
+    raises(NonSquareMatrixError, lambda: linodesolve(A1, t, b=b1))
+
+    A2 = Matrix([[1, 2, 1], [3, 1, 2]])
+    b2 = Matrix([t, t**2])
+    raises(NonSquareMatrixError, lambda: linodesolve(A2, t, b=b2))
+
+    raises(ValueError, lambda: linodesolve(A1[:2, :], t, b=b1))
+    raises(ValueError, lambda: linodesolve(A1[:2, :], t, b=b1[:1]))
+
+    # DOIT check
+    A1 = Matrix([[1, -1], [1, -1]])
+    b1 = Matrix([15*t - 10, -15*t - 5])
+    sol1 = [C1 + C2*t + C2 - 10*t**3 + 10*t**2 + t*(15*t**2 - 5*t) - 10*t,
+            C1 + C2*t - 10*t**3 - 5*t**2 + t*(15*t**2 - 5*t) - 5*t]
+    assert linodesolve(A1, t, b=b1, type="type2", doit=True) == sol1
+
+    # Testing auto functionality
+    func = [f(t), g(t)]
+    eq = [Eq(f(t).diff(t) + g(t).diff(t), g(t) + t), Eq(g(t).diff(t), f(t))]
+    ceq = canonical_odes(eq, func, t)
+    (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
+    A = -A0
+    sol = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
+            - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 +
+            sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5, t)/2 + sqrt(5)*exp(-t/2 +
+            sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 -
+            t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2 - exp(-sqrt(5)*t/2 -
+            t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2, C1*exp(-t/2 + sqrt(5)*t/2) +
+            C2*exp(-sqrt(5)*t/2 - t/2) + exp(-t/2 + sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5,
+            t) + exp(-sqrt(5)*t/2 - t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)]
+    assert linodesolve(A, t, b=b) == sol
+
+    # non-homogeneous term assumed to be 0
+    sol1 = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
+            - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 +
+            sqrt(5)*exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2
+            - exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2, C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)
+            + exp(-t/2 + sqrt(5)*t/2)*Integral(0, t) + exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)]
+    assert linodesolve(A, t, type="type2") == sol1
+
 
 def test_sysode_linear_neq_order1_type3():
+    from sympy.core import Mul
+
     f, g, h, k = symbols('f g h k', cls=Function)
-    x = symbols('x')
+    x, t, a = symbols('x t a')
     r = symbols('r', real=True)
     eqs1 = [Eq(diff(f(r), r),  f(r) + r*g(r)),
            Eq(diff(g(r), r),-r*f(r) + g(r))]
@@ -958,17 +1134,6 @@ def test_sysode_linear_neq_order1_type3():
 
     eqs2 = [Eq(diff(f(x), x),  x*f(x) + x**2*g(x)),
            Eq(diff(g(x), x),  2*x**2*f(x) + (x + 3*x**2)*g(x))]
-    sol2 = [Eq(f(x), (6*sqrt(17)*C1/(-221 + 51*sqrt(17)) - 34*C1/(-221 + 51*sqrt(17)) - 13*C2/(-51 + 13*sqrt(17))
-                        + 3*sqrt(17)*C2/(-51 + 13*sqrt(17)))*exp(-sqrt(17)*x**3/6 + x**3/2 + x**2/2)
-                        + (45*sqrt(17)*C1/(-221 + 51*sqrt(17)) - 187*C1/(-221 + 51*sqrt(17)) - 3*sqrt(17)*C2/(-51 + 13*sqrt(17))
-                        + 13*C2/(-51 + 13*sqrt(17)))*exp(x**3/2 + sqrt(17)*x**3/6 + x**2/2)),
-            Eq(g(x), (102*C1/(-221 + 51*sqrt(17)) - 26*sqrt(17)*C1/(-221 + 51*sqrt(17))
-                        + 6*sqrt(17)*C2/(-221 + 51*sqrt(17)) - 34*C2/(-221 + 51*sqrt(17)))*exp(x**3/2
-                        + sqrt(17)*x**3/6 + x**2/2) + (26*sqrt(17)*C1/(-221 + 51*sqrt(17)) - 102*C1/(-221 + 51*sqrt(17))
-                        + 45*sqrt(17)*C2/(-221 + 51*sqrt(17)) - 187*C2/(-221 + 51*sqrt(17)))*exp(-sqrt(17)*x**3/6
-                        + x**3/2 + x**2/2))]
-
-    from sympy.core import Mul
     sol2 = [
         Eq(f(x),
           - 2*sqrt(17)*C1*x**3*exp(x**3/2 + sqrt(17)*x**3/6 + x**2/2)/Mul(51, (-sqrt(17)*x**3/6 - x**3/2), evaluate=False)
@@ -1028,10 +1193,40 @@ def test_sysode_linear_neq_order1_type3():
     assert dsolve(eqs7) == sol7
     assert checksysodesol(eqs7, sol7) == (True, [0, 0])
 
+    # Testing the Errors
+    raises(ValueError, lambda: linodesolve(t+10, t))
+    raises(ValueError, lambda: linodesolve(a*t, t))
+
+    A1 = Matrix([[1, t], [-t, 1]])
+    B1, _ = _is_commutative_anti_derivative(A1, t)
+    raises(NonSquareMatrixError, lambda: linodesolve(A1[:, :1], t, B=B1))
+
+    A2 = Matrix([[t, t, t], [t, t, t], [t, t, t]])
+    B2, _ = _is_commutative_anti_derivative(A2, t)
+    raises(NonSquareMatrixError, lambda: linodesolve(A2, t, B=B2[:2, :]))
+
+    raises(ValueError, lambda: linodesolve(A1, t, B=B2))
+    raises(ValueError, lambda: linodesolve(A2, t, B=B1))
+
+    # Testing auto functionality
+    func = [f(t), g(t)]
+    eq = [Eq(f(t).diff(t), f(t) + t*g(t)), Eq(g(t).diff(t), -t*f(t) + g(t))]
+    ceq = canonical_odes(eq, func, t)
+    (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
+    A = -A0
+    sol = [(C1/2 - I*C2/2)*exp(I*t**2/2 + t) + (C1/2 + I*C2/2)*exp(-I*t**2/2 + t),
+            (-I*C1/2 + C2/2)*exp(-I*t**2/2 + t) + (I*C1/2 + C2/2)*exp(I*t**2/2 + t)]
+    assert linodesolve(A, t) == sol
+    assert linodesolve(A, t, type="type3") == sol
+
+    A1 = Matrix([[t, 1], [t, -1]])
+    raises(NotImplementedError, lambda: linodesolve(A1, t))
+
 
 def test_sysode_linear_neq_order1_type4():
+
     f, g, h, k = symbols('f g h k', cls=Function)
-    x = symbols('x')
+    x, t, a = symbols('x t a')
     r = symbols('r', real=True)
 
     eqs1 = [Eq(diff(f(r), r), f(r) + r*g(r) + r**2), Eq(diff(g(r), r), -r*f(r) + g(r) + r)]
@@ -1132,6 +1327,59 @@ def test_sysode_linear_neq_order1_type4():
     with dotprodsimp(True):
         assert dsolve(eqs8) == sol8
     assert checksysodesol(eqs8, sol8) == (True, [0, 0, 0, 0])
+
+    # Testing the Errors
+    raises(ValueError, lambda: linodesolve(t+10, t, b=Matrix([t+1])))
+    raises(ValueError, lambda: linodesolve(a*t, t, b=Matrix([log(t) + sin(t)])))
+
+    raises(ValueError, lambda: linodesolve(Matrix([7*t]), t, b=t**2))
+    raises(ValueError, lambda: linodesolve(Matrix([a + 10*log(t)]), t, b=log(t)*cos(t)))
+
+    raises(ValueError, lambda: linodesolve(7*t, t, b=t**2))
+    raises(ValueError, lambda: linodesolve(a*t**2, t, b=log(t) + sin(t)))
+
+    A1 = Matrix([[1, t], [-t, 1]])
+    b1 = Matrix([t, t ** 2])
+    B1, _ = _is_commutative_anti_derivative(A1, t)
+    raises(NonSquareMatrixError, lambda: linodesolve(A1[:, :1], t, b=b1))
+
+    A2 = Matrix([[t, t, t], [t, t, t], [t, t, t]])
+    b2 = Matrix([t, 1, t**2])
+    B2, _ = _is_commutative_anti_derivative(A2, t)
+    raises(NonSquareMatrixError, lambda: linodesolve(A2[:2, :], t, b=b2))
+
+    raises(ValueError, lambda: linodesolve(A1, t, b=b2))
+    raises(ValueError, lambda: linodesolve(A2, t, b=b1))
+
+    raises(ValueError, lambda: linodesolve(A1, t, b=b1, B=B2))
+    raises(ValueError, lambda: linodesolve(A2, t, b=b2, B=B1))
+
+    # Testing auto functionality
+    func = [f(x), g(x), h(x)]
+    eq = [Eq(f(x).diff(x), x*(f(x) + g(x) + h(x)) + x), Eq(g(x).diff(x), x*(f(x) + g(x) + h(x)) + x),
+            Eq(h(x).diff(x), x*(f(x) + g(x) + h(x)) + 1)]
+    ceq = canonical_odes(eq, func, x)
+    (A1, A0), b = linear_ode_to_matrix(ceq, func, x, 1)
+    A = -A0
+    _x1 = exp(3*x**2/2)
+    _x2 = Integral(x/3 + 2*x*exp(-3*x**2/2)/3 - Rational(1, 3) + exp(-3*x**2/2)/3, x)
+    _x3 = Integral(-2*x/3 + 2*x*exp(-3*x**2/2)/3 + Rational(2, 3) + exp(-3*x**2/2)/3, x)
+    sol = [
+        C1*_x1/3 + 2*C1/3 + C2*_x1/3 - C2/3 + C3*_x1/3 - C3/3 + 2*_x1*_x2/3 + _x1*_x3/3 + _x2/3 - _x3/3,
+        C1*_x1/3 - C1/3 + C2*_x1/3 + 2*C2/3 + C3*_x1/3 - C3/3 + 2*_x1*_x2/3 + _x1*_x3/3 + _x2/3 - _x3/3,
+        C1*_x1/3 - C1/3 + C2*_x1/3 - C2/3 + C3*_x1/3 + 2*C3/3 + 2*_x1*_x2/3 + _x1*_x3/3 - 2*_x2/3 + 2*_x3/3,
+    ]
+    assert linodesolve(A, x, b=b) == sol
+    assert linodesolve(A, x, b=b, type="type4") == sol
+
+    A1 = Matrix([[t, 1], [t, -1]])
+    raises(NotImplementedError, lambda: linodesolve(A1, t, b=b1))
+
+    # non-homogeneous term not passed
+    sol1 = [2*C1/3 - C2/3 - C3/3 + (C1/3 + C2/3 + C3/3)*exp(3*x**2/2),
+             -C1/3 + 2*C2/3 - C3/3 + (C1/3 + C2/3 + C3/3)*exp(3*x**2/2),
+             -C1/3 - C2/3 + 2*C3/3 + (C1/3 + C2/3 + C3/3)*exp(3*x**2/2)]
+    assert linodesolve(A, x, type="type4", doit=True) == sol1
 
 
 @slow
