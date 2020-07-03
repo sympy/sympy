@@ -799,7 +799,13 @@ class DenseDomainMatrix(DenseMatrix):
 
 class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
 
-    def __new__(cls, rows, cols, flat_list):
+    def __new__(cls, *args):
+        if len(args) == 1:
+            return MutableDenseMatrix(*args)
+        elif len(args) == 0:
+            rows, cols, flat_list = 0, 0, []
+        else:
+            rows, cols, flat_list = args
         rows_list = [[flat_list[i*cols + j] for j in range(cols)] for i in range(rows)]
         rep = DomainMatrix.from_list_sympy_2(rows, cols, rows_list)
         assert str(rep.domain) in ('ZZ', 'QQ')
