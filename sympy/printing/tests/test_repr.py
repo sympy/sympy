@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from sympy.testing.pytest import raises
 from sympy import (symbols, sympify, Function, Integer, Matrix, Abs,
-    Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
+    Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false,
     sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol)
 from sympy.combinatorics import Cycle, Permutation
 from sympy.core.compatibility import exec_

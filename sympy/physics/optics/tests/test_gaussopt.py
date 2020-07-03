@@ -49,8 +49,8 @@ def test_gauss_opt():
     assert streq(N(p.q), 1.0 + 5.92753330865999*I)
     assert streq(N(p.w_0), Float(0.00100000000000000))
     assert streq(N(p.z_r), Float(5.92753330865999))
-    fs = FreeSpace(10)
-    p1 = fs*p
+    #fs = FreeSpace(10)
+    #p1 = fs*p
     assert streq(N(p.w), Float(0.00101413072159615))
     #assert streq(N(p1.w), Float(0.00210803120913829))
 
