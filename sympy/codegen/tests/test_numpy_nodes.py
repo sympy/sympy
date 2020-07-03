@@ -11,4 +11,4 @@ def test_logaddexp():
         assert (
             lae_xy.diff(wrt, deriv_order) -
             ref_xy.diff(wrt, deriv_order)
-        ).simplify() == 0
+        ).rewrite(log).simplify() == 0
