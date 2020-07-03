@@ -378,7 +378,38 @@ class TransferFunction(Basic, EvalfMixin):
 
 
 class Series(Basic):
+    """
+    A class for representing product of transfer functions (or ``Parallel`` objects).
+    All the transfer functions (or ``Parallel`` objects) must be anchored with the same variable.
 
+    Examples
+    ========
+
+    >>> from sympy.abc import s, p, a, b
+    >>> from sympy.physics.control.lti import TransferFunction
+    >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+    >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
+    >>> tf3 = TransferFunction(p**2, p + s, s)
+    >>> tf1*tf2
+    Series(TransferFunction(a*p**2 + b*s, -p + s, s), TransferFunction(s**3 - 2, s**4 + 5*s + 6, s))
+    >>> tf2*(tf3 - tf1)
+    Series(TransferFunction(s**3 - 2, s**4 + 5*s + 6, s), Parallel(TransferFunction(p**2, p + s, s), TransferFunction(-a*p**2 - b*s, -p + s, s)))
+
+    You can get the resultant transfer function by using ``.doit()`` method.
+
+    >>> S1 = Series(tf1, tf2, -tf3)
+    >>> S1.doit()
+    TransferFunction(-p**2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
+    >>> S2 = Series(tf2, Parallel(tf3, -tf1))
+    >>> S2.doit()
+    TransferFunction((s**3 - 2)*(p**2*(-p + s) + (p + s)*(-a*p**2 - b*s)), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
+
+    See Also
+    ========
+
+    sympy.physics.control.lti.Parallel
+
+    """
     def __new__(cls, *args, evaluate=False):
         if not all(isinstance(arg, (TransferFunction, Parallel, Series)) for arg in args):
             raise TypeError("Unsupported type of argument(s) for Series.")
@@ -396,6 +427,24 @@ class Series(Basic):
 
     @property
     def var(self):
+        """
+        Returns the variable used to anchor all the transfer functions (or ``Parallel`` objects)
+        in a ``Series`` object.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction, Series
+        >>> G1 = TransferFunction(p**2 + 2*p + 4, p - 6, p)
+        >>> G2 = TransferFunction(p, 4 - p, p)
+        >>> G3 = TransferFunction(0, p**4 - 1, p)
+        >>> Series(G1, G2).var
+        p
+        >>> Series(-G3, Parallel(G1, G2)).var
+        p
+
+        """
         return self._var
 
     def doit(self, **kwargs):
@@ -490,14 +539,59 @@ class Series(Basic):
 
     @property
     def is_proper(self):
+        """
+        Returns True if degree of the numerator polynomial of the resultant transfer
+        function is less than or equal to degree of the denominator polynomial of the same, else False.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Series
+        >>> tf1 = TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
+        >>> tf2 = TransferFunction(p**2 - 4*p, p**3 + 3*s + 2, s)
+        >>> Series(-tf2, tf1).is_proper
+        False
+
+        """
         return self.doit().is_proper
 
     @property
     def is_strictly_proper(self):
+        """
+        Returns True if degree of the numerator polynomial of the resultant transfer
+        function is strictly less than degree of the denominator polynomial of the same, else False.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Series
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
+        >>> Series(tf1, tf2).is_strictly_proper
+        True
+
+        """
         return self.doit().is_strictly_proper
 
     @property
     def is_biproper(self):
+        r"""
+        Returns True if degree of the numerator polynomial of the resultant transfer
+        function is equal to degree of the denominator polynomial of the same, else False.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Series
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(p**2, p + s, s)
+        >>> Series(tf1, -tf2).is_biproper
+        False
+
+        """
         return self.doit().is_biproper
 
 
