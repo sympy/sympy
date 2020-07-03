@@ -5,9 +5,10 @@ passed to a designated Printer who then is responsible to return an
 adequate representation of that expression.
 
 **The basic concept is the following:**
-  1. Let the object print itself if it knows how.
-  2. Take the best fitting method defined in the printer.
-  3. As fall-back use the emptyPrinter method for the printer.
+
+1.  Let the object print itself if it knows how.
+2.  Take the best fitting method defined in the printer.
+3.  As fall-back use the emptyPrinter method for the printer.
 
 Which Method is Responsible for Printing?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -17,7 +18,7 @@ which you want to use. This method looks for an appropriate method which can
 print the given expression in the given style that the printer defines.
 While looking for the method, it follows these steps:
 
-1. **Let the object print itself if it knows how.**
+1.  **Let the object print itself if it knows how.**
 
     The printer looks for a specific method in every object. The name of that method
     depends on the specific printer and is defined under ``Printer.printmethod``.
@@ -33,7 +34,7 @@ While looking for the method, it follows these steps:
     good for user defined classes where it is inconvenient to patch the
     printers.
 
-2. **Take the best fitting method defined in the printer.**
+2.  **Take the best fitting method defined in the printer.**
 
     The printer loops through expr classes (class + its bases), and tries
     to dispatch the work to ``_print_<EXPR_CLASS>``
@@ -65,7 +66,7 @@ While looking for the method, it follows these steps:
     and the result is returned back. Otherwise, the printer tries to call
     ``._print_Number`` and so on.
 
-3. **As a fall-back use the emptyPrinter method for the printer.**
+3.  **As a fall-back use the emptyPrinter method for the printer.**
 
     As fall-back ``self.emptyPrinter`` will be called with the expression. If
     not defined in the Printer subclass this will be the same as ``str(expr)``.
@@ -155,7 +156,7 @@ Common mistakes
 It's important to always use ``self._print(obj)`` to print subcomponents of
 an expression when customizing a printer. Mistakes include:
 
-1. Using ``self.doprint(obj)`` instead:
+1.  Using ``self.doprint(obj)`` instead:
 
     >>> # This example does not work properly, as only the outermost call may use
     >>> # doprint.
@@ -171,7 +172,7 @@ an expression when customizing a printer. Mistakes include:
     >>> print_latex(ModOpModeWrong(x, m), mode='inline')  # bad
     $\\operatorname{Mod}{\\left( $x$,$m$ \\right)}$
 
-2. Using ``str(obj)`` instead:
+2.  Using ``str(obj)`` instead:
 
     >>> class ModOpNestedWrong(Mod):
     ...     def _latex(self, printer):
@@ -186,7 +187,7 @@ an expression when customizing a printer. Mistakes include:
     >>> print_latex(ModOpNestedWrong(ModOpNestedWrong(x, m), Integer(7)))  # bad
     \\operatorname{Mod}{\\left( ModOpNestedWrong(x, m),7 \\right)}
 
-3. Using ``LatexPrinter()._print(obj)`` instead.
+3.  Using ``LatexPrinter()._print(obj)`` instead.
 
     >>> from sympy.printing.latex import LatexPrinter
     >>> class ModOpSettingsWrong(Mod):
