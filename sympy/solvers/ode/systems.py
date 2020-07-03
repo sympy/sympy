@@ -1,7 +1,7 @@
 from sympy.core import Add, Mul
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Equality
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.function import (expand_mul, expand, Derivative,
                             AppliedUndef)
@@ -1068,6 +1068,15 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
     return None
 
 
+def _preprocess_eqs(eqs):
+
+    processed_eqs = []
+    for eq in eqs:
+        processed_eqs.append(eq if isinstance(eq, Equality) else Eq(eq, 0))
+
+    return processed_eqs
+
+
 # For now, this function returns a simple output, later it will
 # be capable of dividing the system of ODEs into strongly and
 # weakly connected components. Also, later the argument funcs
@@ -1101,16 +1110,15 @@ def _ode_component_solver(eqs, funcs, t, const_idx=0):
     match['const_idx'] = const_idx
     match['t'] = t
 
-    if match['is_linear']:
+    if match.get('is_linear', False):
         return [_linear_ode_solver(match)], const_idx + len(eqs)
     if match.get('is_implicit', False):
         canon_eqs = match['canon_eqs']
         sols = []
         for canon_eq in canon_eqs:
-            sol = _ode_component_solver(canon_eq, funcs, t, const_idx=const_idx)
+            sol, const_idx = _ode_component_solver(canon_eq, funcs, t, const_idx=const_idx)
             if sol is not None:
-                sols.append(sol)
-            const_idx += len(canon_eq)
+                sols += sol
         return sols, const_idx
 
     # To add non-linear case here in future
@@ -1126,6 +1134,9 @@ def dsolve_system(eqs, funcs=None, t=None):
     # Note: To add proper preprocessing function
     # where the function can get the equations from
     # the expressions.
+
+    eqs = _preprocess_eqs(eqs)
+
     if any(not isinstance(eq, Eq) for eq in eqs):
         raise ValueError(filldedent('''
             List of equations should be passed. The input is not valid.
