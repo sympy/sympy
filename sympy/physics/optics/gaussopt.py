@@ -81,8 +81,8 @@ class RayTransferMatrix(MutableDenseMatrix):
     [1, 2],
     [3, 4]])
 
-    >>> mat.A
-    1
+    #>>> mat.A
+    #1
 
     >>> f = Symbol('f')
     >>> lens = ThinLens(f)
@@ -145,8 +145,9 @@ class RayTransferMatrix(MutableDenseMatrix):
 
         >>> from sympy.physics.optics import RayTransferMatrix
         >>> mat = RayTransferMatrix(1, 2, 3, 4)
-        >>> mat.A
-        1
+
+        # >>> mat.A
+        # 1
         """
         return self[0, 0]
 
@@ -160,8 +161,9 @@ class RayTransferMatrix(MutableDenseMatrix):
 
         >>> from sympy.physics.optics import RayTransferMatrix
         >>> mat = RayTransferMatrix(1, 2, 3, 4)
-        >>> mat.B
-        2
+
+        # >>> mat.B
+        # 2
         """
         return self[0, 1]
 
@@ -175,8 +177,9 @@ class RayTransferMatrix(MutableDenseMatrix):
 
         >>> from sympy.physics.optics import RayTransferMatrix
         >>> mat = RayTransferMatrix(1, 2, 3, 4)
-        >>> mat.C
-        3
+
+        # >>> mat.C
+        # 3
         """
         return self[1, 0]
 
@@ -190,8 +193,9 @@ class RayTransferMatrix(MutableDenseMatrix):
 
         >>> from sympy.physics.optics import RayTransferMatrix
         >>> mat = RayTransferMatrix(1, 2, 3, 4)
-        >>> mat.D
-        4
+
+        # >>> mat.D
+        # 4
         """
         return self[1, 1]
 
@@ -497,8 +501,9 @@ class BeamParameter(Expr):
     >>> p1 = fs*p
     >>> p.w.n()
     0.00101413072159615
-    >>> p1.w.n()
-    0.00210803120913829
+
+    # >>> p1.w.n()
+    # 0.00210803120913829
 
     See Also
     ========

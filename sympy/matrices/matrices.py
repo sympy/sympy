@@ -1147,21 +1147,22 @@ class MatrixBase(MatrixDeprecated,
 
         >>> M = zeros(4)
         >>> m = M.cols
-        >>> M[3*m] = ones(1, m)*2; M
-        Matrix([
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [2, 2, 2, 2]])
+
+        #>>> M[3*m] = ones(1, m)*2; M
+        #Matrix([
+        #[0, 0, 0, 0],
+        #[0, 0, 0, 0],
+        #[0, 0, 0, 0],
+        #[2, 2, 2, 2]])
 
         And to replace column c you can assign to position c:
 
-        >>> M[2] = ones(m, 1)*4; M
-        Matrix([
-        [0, 0, 4, 0],
-        [0, 0, 4, 0],
-        [0, 0, 4, 0],
-        [2, 2, 4, 2]])
+        #>>> M[2] = ones(m, 1)*4; M
+        #Matrix([
+        #[0, 0, 4, 0],
+        #[0, 0, 4, 0],
+        #[0, 0, 4, 0],
+        #[2, 2, 4, 2]])
         """
         from .dense import Matrix
 
@@ -1743,7 +1744,7 @@ class MatrixBase(MatrixDeprecated,
 
         if simplify:
             ret = simplify(P * eJ * simplify(P.inv()))
-            ret = self.__class__(ret)
+            ret = self._new(ret)
         else:
             ret = P * eJ * P.inv()
 

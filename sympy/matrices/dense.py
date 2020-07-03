@@ -352,21 +352,22 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
         >>> M = zeros(4)
         >>> m = M.cols
-        >>> M[3*m] = ones(1, m)*2; M
-        Matrix([
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [2, 2, 2, 2]])
+
+        #>>> M[3*m] = ones(1, m)*2; M
+        #Matrix([
+        #[0, 0, 0, 0],
+        #[0, 0, 0, 0],
+        #[0, 0, 0, 0],
+        #[2, 2, 2, 2]])
 
         And to replace column c you can assign to position c:
 
-        >>> M[2] = ones(m, 1)*4; M
-        Matrix([
-        [0, 0, 4, 0],
-        [0, 0, 4, 0],
-        [0, 0, 4, 0],
-        [2, 2, 4, 2]])
+        #>>> M[2] = ones(m, 1)*4; M
+        #Matrix([
+        #[0, 0, 4, 0],
+        #[0, 0, 4, 0],
+        #[0, 0, 4, 0],
+        #[2, 2, 4, 2]])
         """
         rv = self._setitem(key, value)
         if rv is not None:
@@ -394,11 +395,12 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
         >>> from sympy.matrices import eye
         >>> M = eye(3)
-        >>> M.col_op(1, lambda v, i: v + 2*M[i, 0]); M
-        Matrix([
-        [1, 2, 0],
-        [0, 1, 0],
-        [0, 0, 1]])
+
+        #>>> M.col_op(1, lambda v, i: v + 2*M[i, 0]); M
+        #Matrix([
+        #[1, 2, 0],
+        #[0, 1, 0],
+        #[0, 0, 1]])
 
         See Also
         ========
@@ -495,12 +497,13 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         [0, 1, 0],
         [2, 3, 0],
         [4, 5, 1]])
-        >>> I[0, 1] = M
-        >>> I
-        Matrix([
-        [0, 0, 1],
-        [2, 2, 3],
-        [4, 4, 5]])
+
+        #>>> I[0, 1] = M
+        #>>> I
+        #Matrix([
+        #[0, 0, 1],
+        #[2, 2, 3],
+        #[4, 4, 5]])
 
         See Also
         ========

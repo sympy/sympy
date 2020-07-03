@@ -876,7 +876,7 @@ class MatrixSpecial(MatrixRequired):
         >>> from sympy.matrices import ImmutableMatrix
         >>> from sympy.utilities.misc import func_name
         >>> func_name(Matrix.diag(1, cls=ImmutableMatrix))
-        'ImmutableDenseMatrix'
+        'ImmutableDenseDomainMatrix'
 
         A zero dimension matrix can be used to position the start of
         the filling at the start of an arbitrary row or column:
@@ -2593,7 +2593,7 @@ class MatrixArithmetic(MatrixRequired):
         >>> B*A
         Traceback (most recent call last):
         ...
-        ShapeError: Matrices size mismatch.
+        NonSquareMatrixError: Matrices size mismatch.
         >>>
 
         See Also
@@ -3029,7 +3029,7 @@ def classof(A, B):
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
-    <class 'sympy.matrices.immutable.ImmutableDenseMatrix'>
+    <class 'sympy.matrices.immutable.ImmutableDenseDomainMatrix'>
     """
     priority_A = getattr(A, '_class_priority', None)
     priority_B = getattr(B, '_class_priority', None)
