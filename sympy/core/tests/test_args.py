@@ -1749,6 +1749,10 @@ def test_sympy__stats__symbolic_multivariate_probability__CrossCovarianceMatrix(
     assert _test_args(CrossCovarianceMatrix(RandomMatrixSymbol('R', 3, 1),
                         RandomMatrixSymbol('X', 3, 1)))
 
+def test_sympy__core__symbol__Str():
+    from sympy.core.symbol import Str
+    assert _test_args(Str('t'))
+
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
     assert _test_args(Dummy('t'))
