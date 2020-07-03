@@ -509,7 +509,7 @@ def matrix_exp_jordan_form(A, t):
     return P, expJ
 
 
-def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
+def linodesolve(A, t, b=None, B=None, type="auto", doit=False, const_idx=0):
     r"""
     System of n equations linear first-order differential equations
 
@@ -725,7 +725,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
 
     n = A.rows
 
-    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
+    constants = numbered_symbols(prefix='C', cls=Symbol, start=const_idx+1)
     Cvect = Matrix(list(next(constants) for _ in range(n)))
 
     if (type == "type2" or type == "type4") and b is None:
@@ -1064,3 +1064,105 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         return match
 
     return None
+
+
+# For now, this function returns a simple output, later it will
+# be capable of dividing the system of ODEs into strongly and
+# weakly connected components. Also, later the argument funcs
+# is needed too.
+def _component_division(eqs, funcs):
+    return [[eqs, funcs]]
+
+
+# Returns: List of equations
+def _linear_ode_solver(match):
+    t = match['t']
+    funcs = match['func']
+
+    rhs = match.get('rhs', None)
+    A = -match['func_coeff']
+    B = match.get('commutative_antiderivative', None)
+    const_idx = match['const_idx']
+    type_of_equation = match['type_of_equation']
+
+    sol_vector = linodesolve(A, t, b=rhs, B=B,
+                             type=type_of_equation, const_idx=const_idx)
+
+    sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
+
+    return sol
+
+
+# Returns: (List of List of equations, const_idx) or None
+def _ode_component_solver(eqs, funcs, t, const_idx=0):
+    match = neq_nth_linear_constant_coeff_match(eqs, funcs, t)
+    match['const_idx'] = const_idx
+    match['t'] = t
+
+    if match['is_linear']:
+        return [_linear_ode_solver(match)], const_idx + len(eqs)
+    if match.get('is_implicit', False):
+        canon_eqs = match['canon_eqs']
+        sols = []
+        for canon_eq in canon_eqs:
+            sol = _ode_component_solver(canon_eq, funcs, t, const_idx=const_idx)
+            if sol is not None:
+                sols.append(sol)
+            const_idx += len(canon_eq)
+        return sols, const_idx
+
+    # To add non-linear case here in future
+
+    return None
+
+
+def dsolve_system(eqs, funcs, t):
+    r"""
+
+    """
+
+    # Note: To add proper preprocessing function
+    # where the function can get the equations from
+    # the expressions.
+    if any(not isinstance(eq, Eq) for eq in eqs):
+        raise ValueError(filldedent('''
+            List of equations should be passed. The input is not valid.
+        '''))
+
+    # Note: To add proper error for passing incorrect funcs
+    # input later.
+
+    sol = []
+    const_idx = 0
+    components = _component_division(eqs, funcs)
+
+    not_solved_systems = []
+
+    for wcc in components:
+        loop_sol = []
+
+        for j, scc in wcc:
+            eqs, funcs = scc
+            scc_sols = []
+            for sol in loop_sol:
+                comp_eqs = eqs.subs({s.lhs: s.rhs for s in sol})
+                comp_sol = _ode_component_solver(comp_eqs, funcs, t, const_idx=const_idx)
+
+                if comp_sol is None:
+                    continue
+
+                scc_sol, const_idx = comp_sol
+                scc_sols.append(scc_sol)
+
+            if not scc_sols:
+
+                # All the SCCs which are not solvable
+                not_solved_systems += wcc[j:]
+                break
+
+            loop_sol = [sol + scc_s for sol, scc_sol in zip(loop_sol, scc_sols) for scc_s in scc_sol]
+
+        if loop_sol:
+            sol = [s + ls for s in sol for ls in loop_sol]
+
+    return sol, not_solved_systems
