@@ -1,7 +1,7 @@
-from sympy import simplify
+from sympy import S, simplify
 from sympy.core import Basic, diff
 from sympy.matrices import Matrix
-from sympy.vector import CoordSys3D, Vector, ParametricRegion, parametric_region
+from sympy.vector import CoordSys3D, Vector, ParametricRegion, parametric_region_list
 from sympy.vector.operators import _get_coord_sys_from_expr
 from sympy.integrals import Integral, integrate
 from sympy.utilities.iterables import topological_sort, default_sort_key
@@ -12,7 +12,8 @@ class ParametricIntegral(Basic):
     """
     Represents integral of a scalar or vector field
     over a Parametric Region
-/bin    Examples
+
+    Examples
     ========
 
     >>> from sympy import cos, sin, pi
@@ -48,7 +49,7 @@ class ParametricIntegral(Basic):
             coord_sys = next(iter(coord_set))
 
         if parametricregion.dimensions == 0:
-            return 0
+            return S.Zero
 
         base_vectors = coord_sys.base_vectors()
         base_scalars = coord_sys.base_scalars()
@@ -171,7 +172,7 @@ def vector_integrate(field, *region):
             return ParametricIntegral(field, region[0])
 
         if isinstance(region[0], GeometryEntity):
-            regions_list = parametric_region(region[0])
+            regions_list = parametric_region_list(region[0])
 
             result = 0
             for reg in regions_list:
