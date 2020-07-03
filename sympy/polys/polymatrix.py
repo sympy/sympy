@@ -4,6 +4,7 @@ from sympy.core.sympify import _sympify
 
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.matrices import NonSquareMatrixError
+from sympy.matrices.common import NonInvertibleMatrixError
 
 from sympy.polys.fields import sfield
 from sympy.polys.polytools import Poly
@@ -215,7 +216,7 @@ class DomainMatrix:
         Aaug = DomainMatrix(rows, (n, 2*n), dom)
         Aaug_rref, pivots = Aaug.rref()
         if pivots != tuple(range(n)):
-            raise ValueError('Not invertible')
+            raise NonInvertibleMatrixError('Matrix det == 0; not invertible.')
         Ainv_rows = [row[n:] for row in Aaug_rref.rows]
         Ainv = DomainMatrix(Ainv_rows, (n, n), dom)
         return Ainv

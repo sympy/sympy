@@ -8,6 +8,7 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_cancel_liouvillian)
 
 from sympy.polys.polymatrix import PolyMatrix as Matrix
+from sympy.matrices import Matrix as normal_Matrix
 
 from sympy import Poly, S, symbols, Rational
 from sympy.abc import x, t, n
@@ -69,7 +70,7 @@ def test_prde_linear_constraints():
         (Poly(1, x), Poly(x + 1, x))]
     assert prde_linear_constraints(Poly(1, x), Poly(0, x), G, DE) == \
         ((Poly(2*x, x, domain='QQ'), Poly(0, x, domain='QQ'), Poly(0, x, domain='QQ')),
-            Matrix([[1, 1, -1], [5, 1, 1]]))
+            normal_Matrix([[1, 1, -1], [5, 1, 1]]))
     G = [(Poly(t, t), Poly(1, t)), (Poly(t**2, t), Poly(1, t)), (Poly(t**3, t), Poly(1, t))]
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
     assert prde_linear_constraints(Poly(t + 1, t), Poly(t**2, t), G, DE) == \
@@ -88,10 +89,10 @@ def test_constant_system():
     u = Matrix([(x + 1)/(x - 1), x + 1, 0])
     DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
     assert constant_system(A, u, DE) == \
-        (Matrix([[1, 0, 0],
+        (normal_Matrix([[1, 0, 0],
                  [0, 1, 0],
                  [0, 0, 0],
-                 [0, 0, 1]]), Matrix([0, 1, 0, 0]))
+                 [0, 0, 1]]), normal_Matrix([0, 1, 0, 0]))
 
 
 def test_prde_spde():
@@ -108,13 +109,13 @@ def test_prde_no_cancel():
     # b large
     DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
     assert prde_no_cancel_b_large(Poly(1, x), [Poly(x**2, x), Poly(1, x)], 2, DE) == \
-        ([Poly(x**2 - 2*x + 2, x), Poly(1, x)], Matrix([[1, 0, -1, 0],
+        ([Poly(x**2 - 2*x + 2, x), Poly(1, x)], normal_Matrix([[1, 0, -1, 0],
                                                         [0, 1, 0, -1]]))
     assert prde_no_cancel_b_large(Poly(1, x), [Poly(x**3, x), Poly(1, x)], 3, DE) == \
-        ([Poly(x**3 - 3*x**2 + 6*x - 6, x), Poly(1, x)], Matrix([[1, 0, -1, 0],
+        ([Poly(x**3 - 3*x**2 + 6*x - 6, x), Poly(1, x)], normal_Matrix([[1, 0, -1, 0],
                                                                  [0, 1, 0, -1]]))
     assert prde_no_cancel_b_large(Poly(x, x), [Poly(x**2, x), Poly(1, x)], 1, DE) == \
-        ([Poly(x, x, domain='ZZ'), Poly(0, x, domain='ZZ')], Matrix([[1, -1,  0,  0],
+        ([Poly(x, x, domain='ZZ'), Poly(0, x, domain='ZZ')], normal_Matrix([[1, -1,  0,  0],
                                                                     [1,  0, -1,  0],
                                                                     [0,  1,  0, -1]]))
     # b small
@@ -127,7 +128,7 @@ def test_prde_no_cancel():
     assert prde_no_cancel_b_small(Poly(x*t, t), G, 4, DE) == \
         ([Poly(t**4/4 - x/12*t**3 + x**2/24*t**2 + (Rational(-11, 12) - x**3/24)*t + x/24, t),
         Poly(x/3*t**3 - x**2/6*t**2 + (Rational(-1, 3) + x**3/6)*t - x/6, t), Poly(t, t),
-        Poly(0, t), Poly(0, t)], Matrix([[1, 0,              -1, 0, 0,  0,  0,  0,  0,  0],
+        Poly(0, t), Poly(0, t)], normal_Matrix([[1, 0,              -1, 0, 0,  0,  0,  0,  0,  0],
                                          [0, 1, Rational(-1, 4), 0, 0,  0,  0,  0,  0,  0],
                                          [0, 0,               0, 0, 0,  0,  0,  0,  0,  0],
                                          [0, 0,               0, 1, 0,  0,  0,  0,  0,  0],
@@ -145,7 +146,7 @@ def test_prde_no_cancel():
     h, A = prde_no_cancel_b_small(b, q, 3, DE)
     V = A.nullspace()
     assert len(V) == 1
-    assert V[0] == Matrix([Rational(-1, 2), 0, 0, 1, 0, 0]*3)
+    assert V[0] == normal_Matrix([Rational(-1, 2), 0, 0, 1, 0, 0]*3)
     assert (Matrix([h])*V[0][6:, :])[0] == Poly(x**2/2, t, domain='ZZ(x)')
     assert (Matrix([q])*V[0][:6, :])[0] == Poly(x - S.Half, t, domain='QQ(x)')
 
@@ -167,7 +168,7 @@ def test_prde_cancel_liouvillian():
     # Not taken from book
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t, t)]})
     assert prde_cancel_liouvillian(Poly(0, t, domain='QQ[x]'), [Poly(1, t, domain='QQ(x)')], 0, DE) == \
-            ([Poly(1, t, domain='QQ'), Poly(x, t, domain='ZZ(x)')], Matrix([[-1, 0, 1]]))
+            ([Poly(1, t, domain='QQ'), Poly(x, t, domain='ZZ(x)')], normal_Matrix([[-1, 0, 1]]))
 
 
 def test_param_poly_rischDE():
@@ -177,7 +178,7 @@ def test_param_poly_rischDE():
     q = [Poly(x, x, field=True), Poly(x**2, x, field=True)]
     h, A = param_poly_rischDE(a, b, q, 3, DE)
 
-    assert A.nullspace() == [Matrix([0, 1, 1, 1])]  # c1, c2, d1, d2
+    assert A.nullspace() == [normal_Matrix([0, 1, 1, 1])]  # c1, c2, d1, d2
     # Solution of a*Dp + b*p = c1*q1 + c2*q2 = q2 = x**2
     # is d1*h1 + d2*h2 = h1 + h2 = x.
     assert h[0] + h[1] == Poly(x, x, domain='QQ')
@@ -189,7 +190,7 @@ def test_param_poly_rischDE():
          Poly(x**2, x, field=True)]
     h, A = param_poly_rischDE(a, b, q, 3, DE)
 
-    assert A.nullspace() == [Matrix([3, -5, 1, -5, 1, 1])]
+    assert A.nullspace() == [normal_Matrix([3, -5, 1, -5, 1, 1])]
     p = -Poly(5, DE.t)*h[0] + h[1] + h[2]  # Poly(1, x)
     assert a*derivation(p, DE) + b*p == Poly(x**2 - 5*x + 3, x, domain='QQ')
 
@@ -203,7 +204,7 @@ def test_param_rischDE():
     p = [hi[0].as_expr()/hi[1].as_expr() for hi in h]
     V = A.nullspace()
     assert len(V) == 2
-    assert V[0] == Matrix([-1, 1, 0, -1, 1, 0])
+    assert V[0] == normal_Matrix([-1, 1, 0, -1, 1, 0])
     y = -p[0] + p[1] + 0*p[2]  # x
     assert y.diff(x) - y/x**2 == 1 - 1/x  # Dy + f*y == -G0 + G1 + 0*G2
 
@@ -216,7 +217,7 @@ def test_param_rischDE():
     p = [hi[0].as_expr()/hi[1].as_expr() for hi in h]
     V = A.nullspace()
     assert len(V) == 3
-    assert V[0] == Matrix([0, 0, 0, 0, 1, 0, 0])
+    assert V[0] == normal_Matrix([0, 0, 0, 0, 1, 0, 0])
     y = 0*p[0] + 0*p[1] + 1*p[2] + 0*p[3] + 0*p[4]
     assert y.diff(t) - y/(t + x) == 0   # Dy + f*y = 0*G0 + 0*G1
 
