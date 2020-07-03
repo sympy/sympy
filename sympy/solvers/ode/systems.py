@@ -1071,7 +1071,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 # weakly connected components. Also, later the argument funcs
 # is needed too.
 def _component_division(eqs, funcs):
-    return [[eqs, funcs]]
+    return [[[eqs, funcs]]]
 
 
 # Returns: List of equations
@@ -1132,7 +1132,12 @@ def dsolve_system(eqs, funcs, t):
     # Note: To add proper error for passing incorrect funcs
     # input later.
 
-    sol = []
+    if not isinstance(t, Symbol):
+        raise ValueError(filldedent('''
+            The indepedent variable must be of type Symbol
+        '''))
+
+    sols = []
     const_idx = 0
     components = _component_division(eqs, funcs)
 
@@ -1141,18 +1146,24 @@ def dsolve_system(eqs, funcs, t):
     for wcc in components:
         loop_sol = []
 
-        for j, scc in wcc:
+        for j, scc in enumerate(wcc):
             eqs, funcs = scc
             scc_sols = []
-            for sol in loop_sol:
-                comp_eqs = eqs.subs({s.lhs: s.rhs for s in sol})
-                comp_sol = _ode_component_solver(comp_eqs, funcs, t, const_idx=const_idx)
+            if not loop_sol:
+                comp_sol = _ode_component_solver(eqs, funcs, t, const_idx=const_idx)
+                if comp_sol is not None:
+                    scc_sol, const_idx = comp_sol
+                    scc_sols.append(scc_sol)
+            else:
+                for sol in loop_sol:
+                    comp_eqs = eqs.subs({s.lhs: s.rhs for s in sol})
+                    comp_sol = _ode_component_solver(comp_eqs, funcs, t, const_idx=const_idx)
 
-                if comp_sol is None:
-                    continue
+                    if comp_sol is None:
+                        continue
 
-                scc_sol, const_idx = comp_sol
-                scc_sols.append(scc_sol)
+                    scc_sol, const_idx = comp_sol
+                    scc_sols.append(scc_sol)
 
             if not scc_sols:
 
@@ -1160,9 +1171,19 @@ def dsolve_system(eqs, funcs, t):
                 not_solved_systems += wcc[j:]
                 break
 
-            loop_sol = [sol + scc_s for sol, scc_sol in zip(loop_sol, scc_sols) for scc_s in scc_sol]
+            if loop_sol:
+                loop_sol = [sol + scc_s for sol, scc_sol in zip(loop_sol, scc_sols) for scc_s in scc_sol]
+            else:
+                loop_sol = scc_sols[0]
 
         if loop_sol:
-            sol = [s + ls for s in sol for ls in loop_sol]
+            if sols:
+                sols = [s + ls for s in sols for ls in loop_sol]
+            else:
 
-    return sol, not_solved_systems
+                # Note: This copy is added as safety precaution
+                # Maybe deleted in the future.
+                sols = loop_sol.copy()
+
+
+    return sols, not_solved_systems
