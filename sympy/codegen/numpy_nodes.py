@@ -30,13 +30,19 @@ class logaddexp(Function):
             raise ArgumentIndexError(self, argindex)
         return 1/(1 + exp(other-wrt))
 
-    def _eval_expand_func(self, **hints):
-        return _logaddexpr(*self.args)
-
     def _eval_rewrite_as_log(self, x1, x2, **kwargs):
         return _logaddexp(x1, x2)
 
-    _eval_rewrite_as_tractable = _eval_rewrite_as_log
-
     def _eval_simplify(self, *args, **kwargs):
-        return self.rewrite(log).simplify(*args, **kwargs)
+        a, b = map(lambda x: x.simplify(**kwargs), self.args)
+        candidate = _logaddexp(a, b)
+        if candidate.is_Function and candidate.func == log and len(candidate.args[0].args) == 2:
+            for arg in candidate.args[0].args:
+                if arg.is_Function and arg.func == exp:
+                    continue
+                else:
+                    break
+            else:
+                return logaddexp(a, b)  # no simplification made
+
+        return candidate  # simplified
