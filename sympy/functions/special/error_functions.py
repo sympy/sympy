@@ -216,6 +216,9 @@ class erf(Function):
         return sqrt(z**2)/z - z*expint(S.Half, z**2)/sqrt(S.Pi)
 
     def _eval_rewrite_as_tractable(self, z, **kwargs):
+        from sympy import sign
+        if z.is_real:
+            return (S.One - _erfs(abs(z))*exp(-z**2))*sign(z)
         return S.One - _erfs(z)*exp(-z**2)
 
     def _eval_rewrite_as_erfc(self, z, **kwargs):
@@ -229,7 +232,7 @@ class erf(Function):
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
-            return 2*x/sqrt(pi)
+            return 2*arg/sqrt(pi)
         else:
             return self.func(arg)
 
@@ -2468,6 +2471,10 @@ class _erfs(Function):
     tractable for the Gruntz algorithm.
 
     """
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_zero:
+            return S.One
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order
