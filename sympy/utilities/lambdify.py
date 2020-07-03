@@ -67,6 +67,8 @@ MPMATH_TRANSLATIONS = {
     "LambertW": "lambertw",
     "MutableDenseMatrix": "matrix",
     "ImmutableDenseMatrix": "matrix",
+    "MutableDenseDomainMatrix": "matrix",
+    "ImmutableDenseDomainMatrix": "matrix",
     "conjugate": "conj",
     "dirichlet_eta": "altzeta",
     "Ei": "ei",
@@ -95,6 +97,8 @@ MODULES = {
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
+        "from sympy.matrices.dense import MutableDenseDomainMatrix",
+        "from sympy.matrices.immutable import ImmutableDenseDomainMatrix",
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
     "numexpr" : (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS,
                  ("import_module('numexpr')", )),

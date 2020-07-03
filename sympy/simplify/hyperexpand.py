@@ -1913,11 +1913,12 @@ def build_hypergeometric_formula(func):
         B = Matrix(basis)
         n = len(B)
         C = Matrix([[1] + [0]*(n - 1)])
-        M = zeros(n)
-        M[0, n - 1] = z/Mul(*func.bq)
+        M = zeros(n).tolist()
+        M[0][n - 1] = z/Mul(*func.bq)
         for k in range(1, n):
-            M[k, k - 1] = func.bq[k - 1]
-            M[k, k] = -func.bq[k - 1]
+            M[k][k - 1] = func.bq[k - 1]
+            M[k][k] = -func.bq[k - 1]
+        M = Matrix(M)
         return Formula(func, z, None, [], B, C, M)
 
 

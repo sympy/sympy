@@ -654,7 +654,7 @@ class DenseDomainMatrix(DenseMatrix):
         def a2i(ind, dim):
             if isinstance(ind, slice):
                 return range(dim)[ind]
-            elif isinstance(ind, list):
+            elif isinstance(ind, (list, tuple)):
                 return ind
             else:
                 return [ind]
@@ -672,7 +672,7 @@ class DenseDomainMatrix(DenseMatrix):
             i, j = map(toint, index)
             if isinstance(i, (int, Integer)) and isinstance(j, (int, Integer)):
                 element_dom = self._rep.rows[i][j]
-            elif isinstance(i, (slice, list)) or isinstance(j, (slice, list)):
+            elif isinstance(i, (slice, list, tuple)) or isinstance(j, (slice, list, tuple)):
                 i_indices = a2i(i, self.rows)
                 j_indices = a2i(j, self.cols)
                 return self.extract(i_indices, j_indices)

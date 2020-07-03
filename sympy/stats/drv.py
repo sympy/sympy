@@ -18,6 +18,7 @@ from sympy.core.sympify import _sympify
 from sympy.external import import_module
 
 scipy = import_module('scipy')
+scipy_stats = import_module('scipy.stats')
 numpy = import_module('numpy')
 pymc3 = import_module('pymc3')
 

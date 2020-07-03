@@ -141,7 +141,10 @@ class ImmutableDenseDomainMatrix(DenseDomainMatrix, ImmutableDenseMatrix):
 
     __hash__ = MatrixExpr.__hash__
 
-    def __new__(cls, rows, cols, flat_list):
+    def __new__(cls, *args):
+        if len(args) == 1:
+            return ImmutableDenseMatrix(*args)
+        rows, cols, flat_list = args
         flat_list = [_sympify(e) for e in flat_list]
         rows_list = [[flat_list[i*cols + j] for j in range(cols)] for i in range(rows)]
         rep = DomainMatrix.from_list_sympy_2(rows, cols, rows_list)

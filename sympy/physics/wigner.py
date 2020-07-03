@@ -866,7 +866,7 @@ def wigner_d_small(J, beta):
 
     """
     M = [J-i for i in range(2*J+1)]
-    d = zeros(2*J+1)
+    d = zeros(2*J+1).tolist()
     for i, Mi in enumerate(M):
         for j, Mj in enumerate(M):
 
@@ -883,7 +883,7 @@ def wigner_d_small(J, beta):
                      sin(beta/2)**(2*J-2*s-Mj-Mi)
                      for s in range(sigmamin, sigmamax+1)]
 
-            d[i, j] = dij*Add(*terms)
+            d[i][j] = dij*Add(*terms)
 
     return ImmutableMatrix(d)
 
