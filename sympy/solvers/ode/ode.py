@@ -571,8 +571,20 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq)
     {Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))}
     """
+    from sympy.solvers.ode.systems import dsolve_system
 
     if iterable(eq):
+
+        # This may have to be changed in future
+        # when we have weakly and strongly
+        # connected components
+        sol = dsolve_system(eq)
+        if sol[0]:
+            sol = sol[0]
+            if len(sol) == 1:
+                return sol[0]
+            return sol
+
         match = classify_sysode(eq, func)
 
         # This case can happen only when the system of ODEs have
@@ -580,11 +592,12 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         # ODEs with the help of canonical_odes function. Hence, the
         # linodesolve can be directly used to get the solution in
         # this case. In future, this may have to be changed.
-        if isinstance(match, list):
+        if match.get('is_general', False) or match.get('is_implicit', False):
             sols = []
-            for m in match:
-                sol = sysode_linear_neq_order1(m)
-                sols.append(sol)
+            for canon_eq in match['canon_eqs']:
+                sol = dsolve_system(canon_eq, match['func'], t)
+                sol = sol[0]
+
             return sols
 
         eq = match['eq']

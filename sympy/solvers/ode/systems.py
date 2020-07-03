@@ -3,7 +3,8 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.function import expand_mul, expand
+from sympy.core.function import (expand_mul, expand, Derivative,
+                            AppliedUndef)
 from sympy.functions import exp, im, cos, sin, re, Piecewise, piecewise_fold
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase
@@ -1009,12 +1010,13 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
             As, b = linear_ode_to_matrix(canon_eqs, funcs, t, system_order)
             A = As[1]
         else:
-            matchs = []
-            for canon_eq in canon_eqs:
-                match = neq_nth_linear_constant_coeff_match(canon_eq, funcs, t)
-                if match is not None:
-                    matchs.append(match)
-            return matchs if matchs else None
+
+            match = {
+                'is_implicit': True,
+                'canon_eqs': canon_eqs
+            }
+
+            return match
 
     # When the system of ODEs is non-linear, an ODENonlinearError is raised.
     # This function catches the error and None is returned.
@@ -1116,7 +1118,7 @@ def _ode_component_solver(eqs, funcs, t, const_idx=0):
     return None
 
 
-def dsolve_system(eqs, funcs, t):
+def dsolve_system(eqs, funcs=None, t=None):
     r"""
 
     """
@@ -1129,13 +1131,30 @@ def dsolve_system(eqs, funcs, t):
             List of equations should be passed. The input is not valid.
         '''))
 
-    # Note: To add proper error for passing incorrect funcs
-    # input later.
+    # Note: This error checking has to be improved later.
+    if funcs is not None and not isinstance(funcs, list):
+        raise ValueError(filldedent('''
+            Input to the funcs should be a list of functions.
+        '''))
 
-    if not isinstance(t, Symbol):
+    # Note: This is added to solve a major problem encountered.
+    # Might be best to make a function for this function
+    # extraction later.
+    if funcs is None:
+        funcs = []
+        for eq in eqs:
+            derivs = eq.atoms(Derivative)
+            func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
+            for func_ in func:
+                funcs.append(func_)
+
+    if t is not None and not isinstance(t, Symbol):
         raise ValueError(filldedent('''
             The indepedent variable must be of type Symbol
         '''))
+
+    if t is None:
+        t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
 
     sols = []
     const_idx = 0
@@ -1181,9 +1200,8 @@ def dsolve_system(eqs, funcs, t):
                 sols = [s + ls for s in sols for ls in loop_sol]
             else:
 
-                # Note: This copy is added as safety precaution
+                # Note: This copy is added as safety precaution.
                 # Maybe deleted in the future.
                 sols = loop_sol.copy()
-
 
     return sols, not_solved_systems
