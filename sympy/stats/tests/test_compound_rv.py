@@ -1,5 +1,5 @@
 from sympy import (symbols, S, erf, sqrt, pi, exp, gamma, Interval, oo, beta,
-                    Eq, Piecewise)
+                    Eq, Piecewise, Integral, Abs, arg, Dummy)
 from sympy.stats import (Normal, P, E, density, Gamma, Poisson, Rayleigh,
                         variance, Bernoulli, Beta, Uniform)
 from sympy.stats.compound_rv import CompoundDistribution, compound_pspace
@@ -8,6 +8,7 @@ from sympy.stats.drv_types import PoissonDistribution
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.testing.pytest import raises
 from sympy.stats.joint_rv_types import MultivariateNormalDistribution
+
 
 x = symbols('x')
 def test_normal_CompoundDist():
@@ -29,6 +30,7 @@ def test_poisson_CompoundDist():
     assert density(D)(y).simplify() == t**y*(t + 1)**(-k - y)*gamma(k + y)/(gamma(k)*gamma(y + 1))
     # https://en.wikipedia.org/wiki/Negative_binomial_distribution#Gamma%E2%80%93Poisson_mixture
     assert E(D).simplify() == k*t # mean of NegativeBinomialDistribution
+
 
 def test_bernoulli_CompoundDist():
     X = Beta('X', 1, 2)
@@ -54,13 +56,16 @@ def test_unevaluated_CompoundDist():
     # evaluated completely in sympy.
     R = Rayleigh('R', 4)
     X = Normal('X', 3, R)
-    assert str(density(X)(x).simplify()) == ("Piecewise((exp(3/4 - x/4)/8, 2*Abs(arg(x - 3))"
-    " <= pi/2), (sqrt(2)*Integral(exp(-(16*(x - 3)**2 + R**4)/(32*R**2)), "
-    "(R, 0, oo))/(32*sqrt(pi)), True))")
-    assert str(E(X, evaluate=False)) == \
-    ("Integral(Piecewise((X*(-sqrt(pi)*sinh(X/4 - 3/4) + sqrt(pi)*cosh(X/4 - 3/4))/(8*sqrt(pi)), "
-    "2*Abs(arg(X - 3)) <= pi/2), (X*Integral(sqrt(2)*exp(-(X - 3)**2/(2*R**2))*exp(-R**2/32)"
-    "/(32*sqrt(pi)), (R, 0, oo)), True)), (X, -oo, oo))")
+    _k = Dummy('k')
+    exprd = Piecewise((exp(S(3)/4 - x/4)/8, 2*Abs(arg(x - 3)) <= pi/2),
+    (sqrt(2)*Integral(exp(-(_k**4 + 16*(x - 3)**2)/(32*_k**2)),
+    (_k, 0, oo))/(32*sqrt(pi)), True))
+    assert (density(X)(x).simplify()).dummy_eq(exprd.simplify())
+
+    expre = Integral(Piecewise((_k*exp(S(3)/4 - _k/4)/8, 2*Abs(arg(_k - 3)) <= pi/2),
+    (sqrt(2)*_k*Integral(exp(-(_k**4 + 16*(_k - 3)**2)/(32*_k**2)),
+    (_k, 0, oo))/(32*sqrt(pi)), True)), (_k, -oo, oo))
+    assert (E(X, evaluate=False).simplify()).dummy_eq(expre.simplify())
 
 
 def test_Compound_Distribution():

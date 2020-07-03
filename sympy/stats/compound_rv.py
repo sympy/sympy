@@ -7,6 +7,7 @@ from sympy.stats.crv_types import ContinuousDistributionHandmade
 from sympy.stats.drv_types import DiscreteDistributionHandmade
 from sympy.stats.frv_types import FiniteDistributionHandmade
 
+
 def compound_pspace(s, comp_distribution):
     """
     A temporary Probability Space for the Compound Distribution. After
