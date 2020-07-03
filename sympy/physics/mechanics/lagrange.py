@@ -208,10 +208,11 @@ class LagrangesMethod(object):
         # Fourth term
         if self.forcelist:
             N = self.inertial
-            self._term4 = zeros(n, 1)
+            term4 = [0] * n
             for i, qd in enumerate(qds):
                 flist = zip(*_f_list_parser(self.forcelist, N))
-                self._term4[i] = sum(v.diff(qd, N) & f for (v, f) in flist)
+                term4[i] = sum(v.diff(qd, N) & f for (v, f) in flist)
+            self._term4 = Matrix(term4)
         else:
             self._term4 = zeros(n, 1)
 

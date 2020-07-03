@@ -16,6 +16,24 @@ class NewMatrix(MutableDenseMatrix):
     def _sympify(a):
         return a
 
+    @classmethod
+    def _new(cls, *args, **kwargs):
+        # if the `copy` flag is set to False, the input
+        # was rows, cols, [list].  It should be used directly
+        # without creating a copy.
+        if kwargs.get('copy', True) is False:
+            if len(args) != 3:
+                raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
+            rows, cols, flat_list = args
+        else:
+            rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
+            flat_list = list(flat_list) # create a shallow copy
+        self = object.__new__(cls)
+        self.rows = rows
+        self.cols = cols
+        self._mat = flat_list
+        return self
+
     def row_join(self, rhs):
         # Allows you to build a matrix even if it is null matrix
         if not self:
@@ -24,10 +42,10 @@ class NewMatrix(MutableDenseMatrix):
         if self.rows != rhs.rows:
             raise ShapeError(
                 "`self` and `rhs` must have the same number of rows.")
-        newmat = NewMatrix.zeros(self.rows, self.cols + rhs.cols)
-        newmat[:, :self.cols] = self
-        newmat[:, self.cols:] = rhs
-        return type(self)(newmat)
+        self_list = self.tolist()
+        rhs_list = rhs.tolist()
+        newmat_list = [srow + rrow for srow, rrow in zip(self_list, rhs_list)]
+        return self._new(newmat_list)
 
     def col_join(self, bott):
         # Allows you to build a matrix even if it is null matrix
@@ -37,10 +55,8 @@ class NewMatrix(MutableDenseMatrix):
         if self.cols != bott.cols:
             raise ShapeError(
                 "`self` and `bott` must have the same number of columns.")
-        newmat = NewMatrix.zeros(self.rows + bott.rows, self.cols)
-        newmat[:self.rows, :] = self
-        newmat[self.rows:, :] = bott
-        return type(self)(newmat)
+        newmat_list = self.tolist() + bott.tolist()
+        return type(self)(newmat_list)
 
     def gauss_jordan_solve(self, b, freevar=False):
         from sympy.matrices import Matrix
@@ -77,12 +93,14 @@ class NewMatrix(MutableDenseMatrix):
         # Full parametric solution
         V = A[:rank, rank:]
         vt = v[:rank, 0]
+        assert type(vt - V*tau) == NewMatrix
         free_sol = tau.vstack(vt - V*tau, tau)
 
         # Undo permutation
-        sol = NewMatrix.zeros(col, 1)
+        sol = [0] * col
         for k, v in enumerate(free_sol):
-            sol[permutation[k], 0] = v
+            sol[permutation[k]] = v
+        sol = NewMatrix(sol)
 
         if freevar:
             return sol, tau, free_var_index

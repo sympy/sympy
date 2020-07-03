@@ -2864,6 +2864,12 @@ def test_sympy__matrices__immutable__ImmutableDenseMatrix():
     assert _test_args(Basic(*list(m)))
 
 
+def test_sympy__matrices__immutable__ImmutableDenseDomainMatrix():
+    from sympy.matrices.immutable import ImmutableDenseDomainMatrix
+    m = ImmutableDenseDomainMatrix([[1, 2], [3, 4]])
+    assert _test_args(m)
+
+
 def test_sympy__matrices__immutable__ImmutableSparseMatrix():
     from sympy.matrices.immutable import ImmutableSparseMatrix
     m = ImmutableSparseMatrix([[1, 2], [3, 4]])

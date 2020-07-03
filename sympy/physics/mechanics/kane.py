@@ -286,10 +286,11 @@ class KanesMethod(object):
         # Fill Fr with dot product of partial velocities and forces
         o = len(self.u)
         b = len(f_list)
-        FR = zeros(o, 1)
+        FR = zeros(o, 1).tolist()
         partials = partial_velocity(vel_list, self.u, N)
         for i in range(o):
             FR[i] = sum(partials[j][i] & f_list[j] for j in range(b))
+        FR = Matrix(FR)
 
         # In case there are dependent speeds
         if self._udep:
@@ -342,8 +343,8 @@ class KanesMethod(object):
         # Compute fr_star in two components:
         # fr_star = -(MM*u' + nonMM)
         o = len(self.u)
-        MM = zeros(o, o)
-        nonMM = zeros(o, 1)
+        MM = zeros(o, o).tolist()
+        nonMM = zeros(o, 1).tolist()
         zero_uaux = lambda expr: msubs(expr, uaux_zero)
         zero_udot_uaux = lambda expr: msubs(msubs(expr, udot_zero), uaux_zero)
         for i, body in enumerate(bl):
@@ -362,11 +363,11 @@ class KanesMethod(object):
                     tmp_ang = zero_uaux(I & partials[i][1][j])
                     for k in range(o):
                         # translational
-                        MM[j, k] += M * (tmp_vel & partials[i][0][k])
+                        MM[j][k] += M * (tmp_vel & partials[i][0][k])
                         # rotational
-                        MM[j, k] += (tmp_ang & partials[i][1][k])
-                    nonMM[j] += inertial_force & partials[i][0][j]
-                    nonMM[j] += inertial_torque & partials[i][1][j]
+                        MM[j][k] += (tmp_ang & partials[i][1][k])
+                    nonMM[j][0] += inertial_force & partials[i][0][j]
+                    nonMM[j][0] += inertial_torque & partials[i][1][j]
             else:
                 M = zero_uaux(body.mass)
                 vel = zero_uaux(body.point.vel(N))
@@ -375,8 +376,10 @@ class KanesMethod(object):
                 for j in range(o):
                     temp = zero_uaux(partials[i][0][j])
                     for k in range(o):
-                        MM[j, k] += M * (temp & partials[i][0][k])
-                    nonMM[j] += inertial_force & partials[i][0][j]
+                        MM[j][k] += M * (temp & partials[i][0][k])
+                    nonMM[j][0] += inertial_force & partials[i][0][j]
+        MM = Matrix(MM)
+        nonMM = Matrix(nonMM)
         # Compose fr_star out of MM and nonMM
         MM = zero_uaux(msubs(MM, q_ddot_u_map))
         nonMM = msubs(msubs(nonMM, q_ddot_u_map),
@@ -579,19 +582,18 @@ class KanesMethod(object):
             :meth:`~sympy.matrices.matrices.MatrixBase.inv`
 
         """
-        rhs = zeros(len(self.q) + len(self.u), 1)
+        rhs = [0] * (len(self.q) + len(self.u))
         kdes = self.kindiffdict()
         for i, q_i in enumerate(self.q):
             rhs[i] = kdes[q_i.diff()]
 
         if inv_method is None:
-            rhs[len(self.q):, 0] = self.mass_matrix.LUsolve(self.forcing)
+            rhs[len(self.q):] = self.mass_matrix.LUsolve(self.forcing)
         else:
-            rhs[len(self.q):, 0] = (self.mass_matrix.inv(inv_method,
-                                                         try_block_diag=True) *
-                                    self.forcing)
+            rhs[len(self.q):] = (self.mass_matrix.inv(inv_method,
+                try_block_diag=True) * self.forcing)
 
-        return rhs
+        return Matrix(rhs)
 
     def kindiffdict(self):
         """Returns a dictionary mapping q' to u."""

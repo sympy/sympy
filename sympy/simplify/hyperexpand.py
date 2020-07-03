@@ -1847,13 +1847,15 @@ def try_lerchphi(func):
     basis = [expand_func(b) for (b, _) in sorted(list(trans.items()),
                                                  key=lambda x:x[1])]
     B = Matrix(basis)
-    C = Matrix([[0]*len(B)])
+    C = Matrix([[0]*len(B)]).tolist()
     for b, c in coeffs.items():
-        C[trans[b]] = Add(*c)
-    M = zeros(len(B))
+        C[0][trans[b]] = Add(*c)
+    C = Matrix(C)
+    M = zeros(len(B)).tolist()
     for b, l in deriv.items():
         for c, b2 in l:
-            M[trans[b], trans[b2]] = c
+            M[trans[b]][trans[b2]] = c
+    M = Matrix(M)
     return Formula(func, z, None, [], B, C, M)
 
 
@@ -1875,16 +1877,17 @@ def build_hypergeometric_formula(func):
         poly = Poly(expr, _x)
         n = poly.degree()
         basis = []
-        M = zeros(n)
+        M = zeros(n).tolist()
         for k in range(n):
             a = func.ap[0] + k
             basis += [hyper([a] + list(func.ap[1:]), func.bq, z)]
             if k < n - 1:
-                M[k, k] = -a
-                M[k, k + 1] = a
+                M[k][k] = -a
+                M[k][k + 1] = a
         B = Matrix(basis)
         C = Matrix([[1] + [0]*(n - 1)])
         derivs = [eye(n)]
+        M = Matrix(M)
         for k in range(n):
             derivs.append(M*derivs[k])
         l = poly.all_coeffs()
@@ -1893,8 +1896,10 @@ def build_hypergeometric_formula(func):
         for k, c in enumerate(l):
             for r, d in enumerate(C*derivs[k]):
                 res[r] += c*d
+        M = M.tolist()
         for k, c in enumerate(res):
-            M[n - 1, k] = -c/derivs[n - 1][0, n - 1]/poly.all_coeffs()[0]
+            M[n - 1][k] = -c/derivs[n - 1][0, n - 1]/poly.all_coeffs()[0]
+        M = Matrix(M)
         return Formula(func, z, None, [], B, C, M)
     else:
         # Since there are no `ap`, none of the `bq` can be non-positive

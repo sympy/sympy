@@ -9,8 +9,8 @@ from __future__ import print_function, division
 from collections import defaultdict
 
 from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
-                   KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
-                   zeros)
+                   KroneckerDelta, Matrix, Mul, Pow, S, sqrt, Symbol, sympify,
+                   Tuple, zeros)
 from sympy.printing.str import StrPrinter
 from sympy.utilities.iterables import has_dups
 from sympy.utilities import default_sort_key
@@ -1424,11 +1424,11 @@ def matrix_rep(op, basis):
     [0, 0,       0,       0, 2],
     [0, 0,       0,       0, 0]])
     """
-    a = zeros(len(basis))
+    a = zeros(len(basis)).tolist()
     for i in range(len(basis)):
         for j in range(len(basis)):
-            a[i, j] = apply_operators(Dagger(basis[i])*op*basis[j])
-    return a
+            a[i][j] = apply_operators(Dagger(basis[i])*op*basis[j])
+    return Matrix(a)
 
 
 class BosonicBasis(object):
