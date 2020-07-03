@@ -334,7 +334,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         Examples
         ========
 
-        >>> from sympy import Matrix, I, zeros, ones
+        >>> from sympy import Matrix, I, zeros
         >>> m = Matrix(((1, 2+I), (3, 4)))
         >>> m
         Matrix([

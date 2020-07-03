@@ -178,8 +178,8 @@ class RayTransferMatrix(MutableDenseMatrix):
         >>> from sympy.physics.optics import RayTransferMatrix
         >>> mat = RayTransferMatrix(1, 2, 3, 4)
 
-        # >>> mat.C
-        # 3
+        # >>> mat.C
+        # 3
         """
         return self[1, 0]
 
