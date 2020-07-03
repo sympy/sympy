@@ -297,7 +297,7 @@ def func_name(x, short=False):
     >>> from sympy import Matrix
     >>> from sympy.abc import x
     >>> func_name(Matrix.eye(3))
-    'MutableDenseMatrix'
+    'MutableDenseDomainMatrix'
     >>> func_name(x < 1)
     'StrictLessThan'
     >>> func_name(x < 1, short=True)

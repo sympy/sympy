@@ -52,7 +52,7 @@ transmitted and reflected Jones vectors:
 
 >>> PBS = polarizing_beam_splitter()
 >>> X1 = zeros(4, 1)
->>> X1[:2, :] = x1
+>>> X1 = X1._new(x1.tolist() + X1.tolist()[2:])
 >>> X2 = PBS*X1
 >>> transmitted_port = X2[:2, :]
 >>> reflected_port = X2[2:, :]
