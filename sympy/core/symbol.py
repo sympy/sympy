@@ -32,7 +32,7 @@ class Str(Atom):
     def __new__(cls, name, **kwargs):
         if not isinstance(name, str):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
-        obj = Expr.__new__(cls)
+        obj = Expr.__new__(cls, **kwargs)
         obj.name = name
         return obj
 
