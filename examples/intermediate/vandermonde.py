@@ -58,7 +58,7 @@ def vandermonde(order, dim=1, syms='a b c d'):
     for i in range(order + 1):
         terms.extend(comb_w_rep(dim, i))
     rank = len(terms)
-    V = zeros(rank)
+    V = zeros(rank).tolist()
     generators = [symbol_gen(syms[i]) for i in range(dim)]
     all_syms = []
     for i in range(rank):
@@ -68,7 +68,8 @@ def vandermonde(order, dim=1, syms='a b c d'):
             v_entry = 1
             for k in term:
                 v_entry *= row_syms[k]
-            V[i*rank + j] = v_entry
+            V[i][j] = v_entry
+    V = Matrix(V)
     return V, all_syms, terms
 
 
