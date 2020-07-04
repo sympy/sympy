@@ -5,7 +5,7 @@ from sympy import symbols, Eq, Mod
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
-from sympy.testing.pytest import skip
+from sympy.testing.pytest import skip, XFAIL
 
 numpy = import_module('numpy', min_module_version='1.6.1')
 Cython = import_module('Cython', min_module_version='0.15.1')
@@ -216,41 +216,65 @@ def test_issue_15337_f95_f2py():
 # Cython
 
 
+# Fails on Travis possibly due to updated dependencies:
+# https://github.com/sympy/sympy/issues/19700
+@XFAIL
 def test_wrap_twice_c_cython():
     has_module('Cython')
     runtest_autowrap_twice('C', 'cython')
 
 
+# Fails on Travis possibly due to updated dependencies:
+# https://github.com/sympy/sympy/issues/19700
+@XFAIL
 def test_autowrap_trace_C_Cython():
     has_module('Cython')
     runtest_autowrap_trace('C99', 'cython')
 
 
+# Fails on Travis possibly due to updated dependencies:
+# https://github.com/sympy/sympy/issues/19700
+@XFAIL
 def test_autowrap_matrix_vector_C_cython():
     has_module('Cython')
     runtest_autowrap_matrix_vector('C99', 'cython')
 
 
+# Fails on Travis possibly due to updated dependencies:
+# https://github.com/sympy/sympy/issues/19700
+@XFAIL
 def test_autowrap_matrix_matrix_C_cython():
     has_module('Cython')
     runtest_autowrap_matrix_matrix('C99', 'cython')
 
 
+# Fails on Travis possibly due to updated dependencies:
+# https://github.com/sympy/sympy/issues/19700
+@XFAIL
 def test_ufuncify_C_Cython():
     has_module('Cython')
     runtest_ufuncify('C99', 'cython')
 
 
+# Fails on Travis possibly due to updated dependencies:
+# https://github.com/sympy/sympy/issues/19700
+@XFAIL
 def test_issue_10274_C_cython():
     has_module('Cython')
     runtest_issue_10274('C89', 'cython')
 
 
+# Fails on Travis possibly due to updated dependencies:
+# https://github.com/sympy/sympy/issues/19700
+@XFAIL
 def test_issue_15337_C_cython():
     has_module('Cython')
     runtest_issue_15337('C89', 'cython')
 
 
+# Fails on Travis possibly due to updated dependencies:
+# https://github.com/sympy/sympy/issues/19700
+@XFAIL
 def test_autowrap_custom_printer():
     has_module('Cython')
 
