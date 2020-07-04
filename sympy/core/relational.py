@@ -1146,7 +1146,7 @@ def is_ge(lhs, rhs):
 
     >>> from sympy.core.relational import is_ge, is_lt, is_gt
     >>> from sympy.abc import x
-    >>> from sympy import S, Expr, sympify, Eq
+    >>> from sympy import S, Expr, sympify
     >>> from sympy.multipledispatch import dispatch
     >>> class MyExpr(Expr):
     ...     def __new__(cls, arg):
