@@ -1079,8 +1079,7 @@ def _preprocess_eqs(eqs):
 
 # For now, this function returns a simple output, later it will
 # be capable of dividing the system of ODEs into strongly and
-# weakly connected components. Also, later the argument funcs
-# is needed too.
+# weakly connected components.
 def _component_division(eqs, funcs):
     return [[[eqs, funcs]]]
 
@@ -1249,7 +1248,7 @@ def dsolve_system(eqs, funcs=None, t=None):
         '''))
 
     # Note: This is added to solve a major problem encountered.
-    # Might be best to make a function for this function
+    # Might be best to make a function for this functions
     # extraction later.
     if funcs is None:
         funcs = []
@@ -1258,6 +1257,12 @@ def dsolve_system(eqs, funcs=None, t=None):
             func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
             for func_ in func:
                 funcs.append(func_)
+        funcs = list(uniq(funcs))
+
+    if len(eqs) != len(funcs):
+        raise ValueError(filldedent('''
+            Number of equations and number of functions don't match
+        '''))
 
     if t is not None and not isinstance(t, Symbol):
         raise ValueError(filldedent('''

@@ -580,24 +580,12 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         # connected components. This have to
         # changed to show the systems that haven't
         # been solved.
-        sol = dsolve_system(eq)
+        sols = []
+        sol = dsolve_system(eq, funcs=func)
         if sol[0]:
-            return sol[0] if len(sol[0]) > 1 else sol[0][0]
+            sols = sol[0] if len(sol[0]) > 1 else sol[0][0]
 
         match = classify_sysode(eq, func)
-
-        # This case can happen only when the system of ODEs have
-        # been divided into multiple linear first order system of
-        # ODEs with the help of canonical_odes function. Hence, the
-        # linodesolve can be directly used to get the solution in
-        # this case. In future, this may have to be changed.
-        if match.get('is_general', False) or match.get('is_implicit', False):
-            sols = []
-            for canon_eq in match['canon_eqs']:
-                sol = dsolve_system(canon_eq, match['func'], t)
-                sol = sol[0]
-
-            return sols
 
         eq = match['eq']
         order = match['order']
@@ -621,19 +609,15 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         if recur_len(func) != len(eq):
             raise ValueError("dsolve() and classify_sysode() work with "
             "number of functions being equal to number of equations")
-        if match['type_of_equation'] is None:
+        if match['type_of_equation'] is None and not sols:
             raise NotImplementedError
         else:
-            if match['is_linear'] == True:
-                # These conditions have to be improved upon in future for the new solvers
-                # added in systems.py
-                if match.get('is_general', False):
-                    solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
-                else:
+            if not sols:
+                if match['is_linear'] == True:
                     solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
-            else:
-                solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
-            sols = solvefunc(match)
+                else:
+                    solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
+                sols = solvefunc(match)
             if ics:
                 constants = Tuple(*sols).free_symbols - Tuple(*eq).free_symbols
                 solved_constants = solve_ics(sols, func, constants, ics)
@@ -1866,7 +1850,6 @@ def classify_sysode(eq, funcs=None, **kwargs):
     [0]]), 'type_of_equation': 'type4'}
 
     """
-    from sympy.solvers.ode.systems import neq_nth_linear_constant_coeff_match
 
     # Sympify equations and convert iterables of equations into
     # a list of equations
@@ -1894,11 +1877,6 @@ def classify_sysode(eq, funcs=None, **kwargs):
             func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
             for func_ in  func:
                 funcs.append(func_)
-
-    temp_eqs = eq
-    match = neq_nth_linear_constant_coeff_match(temp_eqs, funcs, t)
-    if match is not None:
-        return match
 
     funcs = list(set(funcs))
     if len(funcs) != len(eq):
@@ -7308,25 +7286,6 @@ def _linear_2eq_order2_type11(x, y, t, r, eq):
     sol1 = C3*t + t*Integral(msol1.rhs/t**2, t)
     sol2 = C4*t + t*Integral(msol2.rhs/t**2, t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
-
-def sysode_linear_neq_order1(match):
-    from sympy.solvers.ode.systems import linodesolve
-
-    eqs = match['eq']
-    t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    funcs = match['func']
-
-    rhs = match.get('rhs', None)
-    A = -match['func_coeff']
-    B = match.get('commutative_antiderivative', None)
-    type_of_equation = match['type_of_equation']
-
-    sol_vector = linodesolve(A, t, b=rhs, B=B, type=type_of_equation)
-
-    sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
-
-    return sol
 
 
 def sysode_nonlinear_2eq_order1(match_):
