@@ -457,7 +457,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             else:
                 return get_for_name(result)
 
-        raise TypeError(f"Type {type(name)} not implemented for get_dimensional_dependencies")
+        raise TypeError("Type {0} not implemented for get_dimensional_dependencies".format(type(name)))
 
     def get_dimensional_dependencies(self, name, mark_dimensionless=False):
         dimdep = self._get_dimensional_dependencies_for_name(name)
