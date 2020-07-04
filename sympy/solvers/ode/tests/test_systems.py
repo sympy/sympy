@@ -67,7 +67,20 @@ def test_neq_nth_linear_constant_coeff_match():
     assert neq_nth_linear_constant_coeff_match(eqs_1, funcs, t) is None
 
     eqs_2 = (5 * (x1**2) + 12 * x(t) - 6 * (y(t)), (2 * y1 - 11 * t * x(t) + 3 * y(t) + t))
-    assert neq_nth_linear_constant_coeff_match(eqs_2, funcs, t) is None
+    sol2 = {'is_implicit': True,
+            'canon_eqs': [[Eq(Derivative(x(t), t), -sqrt(-12*x(t)/5 + 6*y(t)/5)),
+            Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)],
+            [Eq(Derivative(x(t), t), sqrt(-12*x(t)/5 + 6*y(t)/5)),
+            Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)]]}
+    assert neq_nth_linear_constant_coeff_match(eqs_2, funcs, t) == sol2
+
+    eqs_2_1 = [Eq(Derivative(x(t), t), -sqrt(-12*x(t)/5 + 6*y(t)/5)),
+            Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)]
+    assert neq_nth_linear_constant_coeff_match(eqs_2_1, funcs, t) is None
+
+    eqs_2_2 = [Eq(Derivative(x(t), t), sqrt(-12*x(t)/5 + 6*y(t)/5)),
+            Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)]
+    assert neq_nth_linear_constant_coeff_match(eqs_2_2, funcs, t) is None
 
     eqs_3 = (5 * x1 + 12 * x(t) - 6 * (y(t)), (2 * y1 - 11 * x(t) + 3 * y(t)), (5 * w1 + z(t)), (z1 + w(t)))
     answer_3 = {'no_of_equation': 4,
@@ -293,13 +306,9 @@ def test_neq_nth_linear_constant_coeff_match():
 
     eq1 = [Eq(Derivative(f(t), t)**2 - 2*Derivative(f(t), t) + 1, 4),
             Eq(-y*f(t) + Derivative(g(t), t), 0)]
-    sol1 = [{'no_of_equation': 2, 'eq': [Eq(Derivative(f(t), t), -1), Eq(Derivative(g(t), t), y*f(t))], 'func':
-            [f(t), g(t)], 'order': {f(t): 1, g(t): 1}, 'is_linear': True, 'is_constant': True, 'is_homogeneous':
-            False, 'is_general': True, 'func_coeff': Matrix([ [ 0, 0], [-y, 0]]), 'rhs': Matrix([ [-1], [ 0]]),
-            'type_of_equation': 'type2'}, {'no_of_equation': 2, 'eq': [Eq(Derivative(f(t), t), 3),
-            Eq(Derivative(g(t), t), y*f(t))], 'func': [f(t), g(t)], 'order': {f(t): 1, g(t): 1}, 'is_linear':
-            True, 'is_constant': True, 'is_homogeneous': False, 'is_general': True, 'func_coeff': Matrix([ [ 0,
-            0], [-y, 0]]), 'rhs': Matrix([ [3], [0]]), 'type_of_equation': 'type2'}]
+    sol1 = {'is_implicit': True,
+             'canon_eqs': [[Eq(Derivative(f(t), t), -1), Eq(Derivative(g(t), t), y*f(t))],
+              [Eq(Derivative(f(t), t), 3), Eq(Derivative(g(t), t), y*f(t))]]}
     assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
 
 

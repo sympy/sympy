@@ -1107,25 +1107,28 @@ def _linear_ode_solver(match):
 # Returns: (List of List of equations, const_idx) or None
 def _ode_component_solver(eqs, funcs, t, const_idx=0):
     match = neq_nth_linear_constant_coeff_match(eqs, funcs, t)
-    match['const_idx'] = const_idx
-    match['t'] = t
 
-    if match.get('is_linear', False):
-        return [_linear_ode_solver(match)], const_idx + len(eqs)
-    if match.get('is_implicit', False):
-        canon_eqs = match['canon_eqs']
-        sols = []
-        temp_const_idx = 0
-        for canon_eq in canon_eqs:
-            sol, temp_const_idx = _ode_component_solver(canon_eq, funcs, t, const_idx=const_idx)
-            if sol is not None:
-                sols += sol
+    if match:
+        match['const_idx'] = const_idx
+        match['t'] = t
 
-        # Note: This const_idx logic has to be
-        # verified
-        return sols, temp_const_idx
+        if match.get('is_linear', False):
+            return [_linear_ode_solver(match)], const_idx + len(eqs)
+        if match.get('is_implicit', False):
+            canon_eqs = match['canon_eqs']
+            sols = []
+            temp_const_idx = 0
+            for canon_eq in canon_eqs:
+                sol = _ode_component_solver(canon_eq, funcs, t, const_idx=const_idx)
+                if sol is not None:
+                    sol, temp_const_idx = sol
+                    sols += sol
 
-    # To add non-linear case here in future
+            # Note: This const_idx logic has to be
+            # verified
+            return sols, temp_const_idx
+
+        # To add non-linear case here in future
 
     return None
 

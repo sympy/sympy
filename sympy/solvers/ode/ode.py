@@ -577,13 +577,12 @@ def dsolve(eq, func=None, hint="default", simplify=True,
 
         # This may have to be changed in future
         # when we have weakly and strongly
-        # connected components
+        # connected components. This have to
+        # changed to show the systems that haven't
+        # been solved.
         sol = dsolve_system(eq)
         if sol[0]:
-            sol = sol[0]
-            if len(sol) == 1:
-                return sol[0]
-            return sol
+            return sol[0] if len(sol[0]) > 1 else sol[0][0]
 
         match = classify_sysode(eq, func)
 
