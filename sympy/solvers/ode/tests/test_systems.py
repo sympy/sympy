@@ -1749,3 +1749,18 @@ def test_linear_3eq_order1_type4_long_check():
 
     eq, sol = _linear_3eq_order1_type4_long()
     assert checksysodesol(eq, sol) == (True, [0, 0, 0])
+
+
+# Error checking work
+def test_dsolve_system():
+    from sympy.solvers.ode.systems import dsolve_system
+
+    f, g = symbols("f g", cls=Function)
+    x = symbols("x")
+    eqs = [Eq(f(x).diff(x), f(x) + g(x)), Eq(g(x).diff(x), f(x) + g(x))]
+    funcs = [f(x), g(x)]
+
+    raises(ValueError, lambda: dsolve_system(1))
+    raises(ValueError, lambda: dsolve_system(eqs, 1))
+    raises(ValueError, lambda: dsolve_system(eqs, funcs, 1))
+    raises(ValueError, lambda: dsolve_system(eqs, funcs[:1], x))

@@ -1,4 +1,6 @@
 from sympy.core import Add, Mul
+from sympy.core.containers import Tuple
+from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
@@ -1069,7 +1071,6 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
 
 def _preprocess_eqs(eqs):
-
     processed_eqs = []
     for eq in eqs:
         processed_eqs.append(eq if isinstance(eq, Equality) else Eq(eq, 0))
@@ -1229,19 +1230,19 @@ def _weak_component_solver(wcc, t, const_idx):
     return loop_sol, const_idx, not_solved_systems
 
 
-def dsolve_system(eqs, funcs=None, t=None):
+def dsolve_system(eqs, funcs=None, t=None, ics=None):
     r"""
 
     """
+    from sympy.solvers.ode.ode import solve_ics
 
-    eqs = _preprocess_eqs(eqs)
-
-    if any(not isinstance(eq, Eq) for eq in eqs):
+    if not iterable(eqs):
         raise ValueError(filldedent('''
             List of equations should be passed. The input is not valid.
         '''))
 
-    # Note: This error checking has to be improved later.
+    eqs = _preprocess_eqs(eqs)
+
     if funcs is not None and not isinstance(funcs, list):
         raise ValueError(filldedent('''
             Input to the funcs should be a list of functions.
@@ -1300,9 +1301,22 @@ def dsolve_system(eqs, funcs=None, t=None):
                 # If this is the first weakly connected component
                 # to be solved, then the solution will start with
                 # this weakly connected component.
-                # Note: This copy is added as safety precaution.
-                # Maybe deleted in the future.
-                sols = wcc_sol.copy()
+                sols = wcc_sol
+
+    if ics:
+        ics_sols = []
+
+        # This is assuming that all the solutions
+        # have the same funcs. This may have to
+        # be changed when system division is
+        # added.
+        funcs = [s.lhs for s in sols[0]]
+        for sol in sols:
+            constants = Tuple(*sol).free_symbols - Tuple(*eqs).free_symbols
+            solved_constants = solve_ics(sol, funcs, constants, ics)
+            ics_sols.append([s.subs(solved_constants) for s in sol])
+
+        sols = ics_sols
 
     # sols: List of List of Equations
     return sols, not_solved_systems

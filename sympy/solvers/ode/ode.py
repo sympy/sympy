@@ -571,19 +571,17 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq)
     {Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))}
     """
-    from sympy.solvers.ode.systems import dsolve_system
-
     if iterable(eq):
+        from sympy.solvers.ode.systems import dsolve_system
 
         # This may have to be changed in future
         # when we have weakly and strongly
         # connected components. This have to
         # changed to show the systems that haven't
         # been solved.
-        sols = []
-        sol = dsolve_system(eq, funcs=func)
+        sol = dsolve_system(eq, funcs=func, ics=ics)
         if sol[0]:
-            sols = sol[0] if len(sol[0]) > 1 else sol[0][0]
+            return sol[0] if len(sol[0]) > 1 else sol[0][0]
 
         match = classify_sysode(eq, func)
 
@@ -609,15 +607,14 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         if recur_len(func) != len(eq):
             raise ValueError("dsolve() and classify_sysode() work with "
             "number of functions being equal to number of equations")
-        if match['type_of_equation'] is None and not sols:
+        if match['type_of_equation'] is None:
             raise NotImplementedError
         else:
-            if not sols:
-                if match['is_linear'] == True:
-                    solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
-                else:
-                    solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
-                sols = solvefunc(match)
+            if match['is_linear'] == True:
+                solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
+            else:
+                solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
+            sols = solvefunc(match)
             if ics:
                 constants = Tuple(*sols).free_symbols - Tuple(*eq).free_symbols
                 solved_constants = solve_ics(sols, func, constants, ics)
@@ -1836,18 +1833,14 @@ def classify_sysode(eq, funcs=None, **kwargs):
     >>> x2 = diff(x(t), t, t) ; y2 = diff(y(t), t, t)
     >>> eq = (Eq(x1, 12*x(t) - 6*y(t)), Eq(y1, 11*x(t) + 3*y(t)))
     >>> classify_sysode(eq)
-    {'eq': [-12*x(t) + 6*y(t) + Derivative(x(t), t), -11*x(t) - 3*y(t) + Derivative(y(t), t)], 'func': [x(t), y(t)], 'func_coeff': Matrix([
-    [-12,  6],
-    [-11, -3]]), 'is_constant': True, 'is_general': True, 'is_homogeneous': True, 'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': 'type1'}
+    {'eq': [-12*x(t) + 6*y(t) + Derivative(x(t), t), -11*x(t) - 3*y(t) + Derivative(y(t), t)], 'func': [x(t), y(t)],
+     'func_coeff': {(0, x(t), 0): -12, (0, x(t), 1): 1, (0, y(t), 0): 6, (0, y(t), 1): 0, (1, x(t), 0): -11, (1, x(t), 1): 0, (1, y(t), 0): -3, (1, y(t), 1): 1}, 'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': None}
     >>> eq = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t) + 2), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
     >>> classify_sysode(eq)
-    {'commutative_antiderivative': Matrix([
-    [5*t**2/2,   t**3/3],
-    [ -t**3/3, 5*t**2/2]]), 'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t) - 2, t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)], 'func': [x(t), y(t)], 'func_coeff': Matrix([
-    [-5*t, -t**2],
-    [t**2,  -5*t]]), 'is_constant': False, 'is_general': True, 'is_homogeneous': False, 'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'rhs': Matrix([
-    [2],
-    [0]]), 'type_of_equation': 'type4'}
+    {'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t) - 2, t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)],
+     'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -5*t, (0, x(t), 1): 1, (0, y(t), 0): -t**2, (0, y(t), 1): 0,
+     (1, x(t), 0): t**2, (1, x(t), 1): 0, (1, y(t), 0): -5*t, (1, y(t), 1): 1}, 'is_linear': True, 'no_of_equation': 2,
+      'order': {x(t): 1, y(t): 1}, 'type_of_equation': None}
 
     """
 
