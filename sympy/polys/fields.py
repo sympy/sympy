@@ -86,7 +86,9 @@ def sfield(exprs, *symbols, **options):
     if opt.domain is None:
         # NOTE: this is inefficient because construct_domain() automatically
         # performs conversion to the target domain. It shouldn't do this.
-        coeffs = sum([list(rep.values()) for rep in reps], [])
+        coeffs = []
+        for rep in reps:
+            coeffs.extend(rep.values())
         opt.domain, _ = construct_domain(coeffs, opt=opt)
 
     _field = FracField(opt.gens, opt.domain, opt.order)

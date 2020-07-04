@@ -6,7 +6,7 @@ from sympy.matrices.dense import MutableDenseMatrix
 from sympy.matrices import NonSquareMatrixError
 from sympy.matrices.common import NonInvertibleMatrixError
 
-from sympy.polys.fields import sfield
+from sympy.polys.constructor import construct_domain
 from sympy.polys.polytools import Poly
 from sympy.polys.domains import EX
 
@@ -134,9 +134,12 @@ class DomainMatrix:
 
     @classmethod
     def get_domain(cls, items_sympy):
-        K, items_K = sfield(items_sympy, field=True, extension=True)
+        K, items_K = construct_domain(items_sympy, field=True, extension=True)
 
-        if K.gens:
+        gens = getattr(K, "gens", None)
+        if gens is None:
+            return K, items_K
+        elif not gens:
             domain = K.to_domain()
         else:
             domain = K.domain
