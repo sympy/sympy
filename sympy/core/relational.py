@@ -1112,7 +1112,7 @@ def is_gt(lhs, rhs):
 
 def is_le(lhs, rhs):
     """Fuzzy bool for lhs is less than or equal to rhs.
-
+    is_gt calls is_lt
     See the docstring for is_ge for more
     """
     return is_ge(rhs, lhs)
@@ -1126,49 +1126,40 @@ def is_ge(lhs, rhs):
     Returns False if lhs is not greater than rhs
     Returns None if lhs cannot be compared to rhs, or if the comparison is indeterminate
 
-    is_le calls is_ge swapping rhs and lhs
-    is_lt calls is_ge and then fuzzy nots the result
-    is_gt calls is_le and fuzzy nots the result
+    is_le calls is_ge
+    is_lt calls is_ge
+
+    InEquality classes, such as Lt, Gt, etc. Use one of is_ge, is_le, etc.
+    If is_ge(a, b) returns nont the Ge(a, b) will just return an unevalutated comparison
 
     so, to override inequality you just need to write an _eval_is_ge
     using multiple dispatch
 
+
     Examples
     ========
 
-    >>> from sympy.core.relational import is_ge
-    >>> from sympy.core.sympify import _sympify
-    >>> is_ge(_sympify(2), _sympify(0))
-    True
-
-    >>> from sympy.core.relational import is_ge
-    >>> from sympy.core.sympify import _sympify
-    >>> is_ge(_sympify(0), _sympify(2))
-    False
-
+    >>> from sympy.core.relational import is_ge, is_lt, is_gt
     >>> from sympy.abc import x
-    >>> from sympy.core.relational import is_ge
-    >>> from sympy.core.sympify import _sympify
-    >>> is_ge(_sympify(0), x)
-
-    >>> from sympy.core.relational import is_gt
-    >>> from sympy.core.sympify import _sympify
-    >>> is_gt(_sympify(2), _sympify(0))
+    >>> from sympy import S
+    >>> is_ge(S(2), S(0))
     True
 
-    >>> from sympy.core.relational import is_gt
-    >>> from sympy.core.sympify import _sympify
-    >>> is_gt(_sympify(0), _sympify(2))
+    >>> is_ge(S(0), S(2))
     False
 
-    >>> from sympy.core.relational import is_lt
-    >>> from sympy.core.sympify import _sympify
-    >>> is_lt(_sympify(0), _sympify(2))
+    >>> is_ge(S(0), x)
+
+    >>> is_gt(S(2), S(0))
     True
 
-    >>> from sympy.core.relational import is_lt
-    >>> from sympy.core.sympify import _sympify
-    >>> is_lt(_sympify(2), _sympify(0))
+    >>> is_gt(S(0), S(2))
+    False
+
+    >>> is_lt(S(0), S(2))
+    True
+
+    >>> is_lt(S(2), S(0))
     False
 
    """
@@ -1208,40 +1199,40 @@ def is_neq(lhs, rhs):
 
 def is_eq(lhs, rhs):
     """
-    Fuzzy boolean used to check if lhs is equal, mathematically
-    to rhs.
-    Returns True or False if the two are comparable, or None if the two are incomparable
-    or if the comparison is indeterminate.
+    Fuzzy bool representing mathematical equality between lhs and rhs.
+    If lhs and rhs are easily shown to be equal (or unequal) then True (or False) is returned.
+    Otherwise None is returned meaning that lhs and rhs may or may not be equal.
 
-     To override the default equality logic, use _eval_is_eq with multiple dispatch.
-     is_ne, fuzzy nots is_eq so, to override the logic of is_ne, you will need to override _eval_is_eq
+    Notes:
+
+    This function is intended to give a relatively fast determination and deliberately does not attempt slow
+    calculations that might help in obtaining a determination of True or False in more difficult cases.
+    The evaluation of an Equality uses is_eq internally so if is_eq(a, b) gives True (or False) then Eq(a, b) will give
+    S.true or S.false and vice versa. When is_eq(a, b) returns None, Eq(a, b) will give an unevaluated Eq.
+
+    Since is_eq is primarily an internal function it is expected that the arguments will be sympified already.
 
     Examples
     ========
 
     >>> from sympy.core.relational import is_eq
     >>> from sympy.core.sympify import _sympify
-    >>> is_eq(_sympify(0), _sympify(0))
-    True
-
     >>> from sympy.core.relational import is_neq
-    >>> from sympy.core.sympify import _sympify
-    >>> is_neq(_sympify(0), _sympify(0))
-    False
-
-    >>> from sympy.core.relational import is_eq
-    >>> from sympy.core.sympify import _sympify
-    >>> is_eq(_sympify(0), _sympify(2))
-    False
-
-    >>> from sympy.core.relational import is_neq
-    >>> from sympy.core.sympify import _sympify
-    >>> is_neq(_sympify(0), _sympify(2))
-    True
-
+    >>> from sympy import S
     >>> from sympy.abc import x
-    >>> from sympy.core.relational import is_eq
-    >>> from sympy.core.sympify import _sympify
+
+    >>> is_eq(_sympify(0), S(0))
+    True
+
+    >>> is_neq(_sympify(0), S(0))
+    False
+
+    >>> is_eq(_sympify(0), S(2))
+    False
+
+    >>> is_neq(_sympify(0), S(2))
+    True
+
     >>> is_eq(_sympify(0), x)
 
     """
@@ -1259,17 +1250,15 @@ def is_eq(lhs, rhs):
         if retval is not None:
             return retval
 
-    eval_func = getattr(lhs, '_eval_Eq', None)
-    if eval_func is not None:
-        retval = eval_func(rhs)
-        if retval is not None:
-            return retval
-
-    eval_func = getattr(rhs, '_eval_Eq', None)
-    if eval_func is not None:
-        retval = eval_func(lhs)
-        if retval is not None:
-            return retval
+    # here, _eval_Eq is only called for backwards compatibility
+    # new code should use is_eq with multiple dispatch as
+    # outlined in the docstring
+    for side1, side2 in (lhs, rhs), (rhs, lhs):
+        eval_func = getattr(side1, '_eval_Eq', None)
+        if eval_func is not None:
+            retval = eval_func(side2)
+            if retval is not None:
+                return retval
 
     # retval is still None, so go through the equality logic
     # If expressions have the same structure, they must be equal.
