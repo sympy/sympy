@@ -1115,25 +1115,122 @@ def _ode_component_solver(eqs, funcs, t, const_idx=0):
     if match.get('is_implicit', False):
         canon_eqs = match['canon_eqs']
         sols = []
+        temp_const_idx = 0
         for canon_eq in canon_eqs:
-            sol, const_idx = _ode_component_solver(canon_eq, funcs, t, const_idx=const_idx)
+            sol, temp_const_idx = _ode_component_solver(canon_eq, funcs, t, const_idx=const_idx)
             if sol is not None:
                 sols += sol
-        return sols, const_idx
+
+        # Note: This const_idx logic has to be
+        # verified
+        return sols, temp_const_idx
 
     # To add non-linear case here in future
 
     return None
 
 
+def _weak_component_solver(wcc, t, const_idx):
+    loop_sol = []
+    not_solved_systems = []
+
+    for j, scc in enumerate(wcc):
+        eqs, funcs = scc
+        scc_sols = []
+
+        # If this is the first SCC to be solved,
+        # then looping isn't necessary.
+        if not loop_sol:
+
+            # Solving the SCC
+            comp_sol = _ode_component_solver(eqs, funcs, t, const_idx=const_idx)
+            if comp_sol is not None:
+
+                # scc_sol: List of List of Equations
+                # scc_sol is the list of solutions
+                scc_sol, const_idx = comp_sol
+
+                # scc_sols: List of List of List of Equations
+                # Since only one scc_sol is appended in this
+                # block, the scc_sols will look like:
+                # scc_sol = [[s1, s2, ...]]
+                # where s1, s2, ... are solutions. A solution
+                # is a List of Equations.
+                scc_sols.append(scc_sol)
+        else:
+
+            changed_const_idx = 0
+            for sol in loop_sol:
+
+                # If this is a SCC after the first one, then we will
+                # loop through loop_sol, which is basically List of
+                # solutions, and substitute each solution to solve the
+                # SCC. Each time we substitute a different solution from
+                # loop_sol, we will get a different subsystem, and different
+                # solution.
+                comp_eqs = eqs.subs({s.lhs: s.rhs for s in sol})
+                comp_sol = _ode_component_solver(comp_eqs, funcs, t, const_idx=const_idx)
+
+                if comp_sol is None:
+                    continue
+
+                # scc_sol: List of List of equations
+                # scc_sol is List of solutions
+                scc_sol, changed_const_idx = comp_sol
+
+                # scc_sols: List of List of List of equations
+                # If we got s1, s2 as solutions for first iteration
+                # of this loop and s3, s4 for second iteration, then
+                # scc_sol = [[s1, s2], [s3, s4]]
+                # where each solution is a List of Equations.
+                scc_sols.append(scc_sol)
+
+            # Note: This const_idx logic has to be
+            # verified
+            const_idx = changed_const_idx
+
+        if not scc_sols:
+
+            # All the SCCs which are not solvable
+            # If a SCC is found to be unsolvable,
+            # then all the other SCCs won't have a
+            # solution and we would have to stop
+            # the loop.
+            not_solved_systems += wcc[j:]
+            break
+
+        # Its time to combine the solutions, there are two cases:
+        # 1. When loop_sol isn't empty: This would mean we have
+        #    solved a SCC before.
+        # 2. When loop_sol is empty: This is first SCC we solved.
+
+        # Case 1: loop_sol isn't empty.
+        if loop_sol:
+
+            # For each solution in loop_sol, we have to append the
+            # appropriate solution from scc_sols
+            # For example: loop_sol has two solutions s1 and s2
+            # Now, by substituting s1, if we got s3 and s4 and by
+            # substituting s2, we got s5 and s6, then the combined
+            # solution for the weakly connected component till now
+            # will be: [s1+s3, s1+s4, s2+s5, s2+s6]
+            loop_sol = [sol + scc_s for sol, scc_sol in zip(loop_sol, scc_sols) for scc_s in scc_sol]
+        else:
+
+            # If this is the first SCC to be solved, then
+            # scc_sols will be of the form:
+            # scc_sols = [[s1, s2, ...]]
+            # Hence, our starting loop_sol will be
+            # loop_sol = [s1, s2, ...]
+            loop_sol = scc_sols[0]
+
+    return loop_sol, const_idx, not_solved_systems
+
+
 def dsolve_system(eqs, funcs=None, t=None):
     r"""
 
     """
-
-    # Note: To add proper preprocessing function
-    # where the function can get the equations from
-    # the expressions.
 
     eqs = _preprocess_eqs(eqs)
 
@@ -1174,45 +1271,30 @@ def dsolve_system(eqs, funcs=None, t=None):
     not_solved_systems = []
 
     for wcc in components:
-        loop_sol = []
 
-        for j, scc in enumerate(wcc):
-            eqs, funcs = scc
-            scc_sols = []
-            if not loop_sol:
-                comp_sol = _ode_component_solver(eqs, funcs, t, const_idx=const_idx)
-                if comp_sol is not None:
-                    scc_sol, const_idx = comp_sol
-                    scc_sols.append(scc_sol)
-            else:
-                for sol in loop_sol:
-                    comp_eqs = eqs.subs({s.lhs: s.rhs for s in sol})
-                    comp_sol = _ode_component_solver(comp_eqs, funcs, t, const_idx=const_idx)
+        # wcc_sol: List of List of Equations
+        wcc_sol, const_idx, wcc_not_solved_systems = _weak_component_solver(wcc, t, const_idx)
 
-                    if comp_sol is None:
-                        continue
+        not_solved_systems += wcc_not_solved_systems
 
-                    scc_sol, const_idx = comp_sol
-                    scc_sols.append(scc_sol)
+        if wcc_sol:
 
-            if not scc_sols:
-
-                # All the SCCs which are not solvable
-                not_solved_systems += wcc[j:]
-                break
-
-            if loop_sol:
-                loop_sol = [sol + scc_s for sol, scc_sol in zip(loop_sol, scc_sols) for scc_s in scc_sol]
-            else:
-                loop_sol = scc_sols[0]
-
-        if loop_sol:
+            # If there are solutions for other weakly
+            # connected components, then the solution
+            # for the combined system will be all the
+            # combinations of solutions of other weakly
+            # connected components and this one's solutions.
             if sols:
-                sols = [s + ls for s in sols for ls in loop_sol]
+                sols = [s + ls for s in sols for ls in wcc_sol]
+
             else:
 
+                # If this is the first weakly connected component
+                # to be solved, then the solution will start with
+                # this weakly connected component.
                 # Note: This copy is added as safety precaution.
                 # Maybe deleted in the future.
-                sols = loop_sol.copy()
+                sols = wcc_sol.copy()
 
+    # sols: List of List of Equations
     return sols, not_solved_systems
