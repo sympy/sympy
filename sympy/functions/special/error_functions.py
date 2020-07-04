@@ -216,9 +216,11 @@ class erf(Function):
         return sqrt(z**2)/z - z*expint(S.Half, z**2)/sqrt(S.Pi)
 
     def _eval_rewrite_as_tractable(self, z, **kwargs):
-        from sympy import sign
-        if z.is_real:
-            return (S.One - _erfs(abs(z))*exp(-z**2))*sign(z)
+        from sympy.series.limits import limit
+        if 'var' in kwargs:
+            lim = limit(z, kwargs['var'], S.Infinity)
+            if lim is S.NegativeInfinity:
+                return S.NegativeOne + _erfs(-z)*exp(-z**2)
         return S.One - _erfs(z)*exp(-z**2)
 
     def _eval_rewrite_as_erfc(self, z, **kwargs):
@@ -381,6 +383,8 @@ class erfc(Function):
         return self.args[0].is_extended_real
 
     def _eval_rewrite_as_tractable(self, z, **kwargs):
+        if 'var' in kwargs:
+            return self.rewrite(erf).rewrite("tractable", deep=True, var=kwargs['var'])
         return self.rewrite(erf).rewrite("tractable", deep=True)
 
     def _eval_rewrite_as_erf(self, z, **kwargs):
@@ -561,6 +565,8 @@ class erfi(Function):
             return True
 
     def _eval_rewrite_as_tractable(self, z, **kwargs):
+        if 'var' in kwargs:
+            return self.rewrite(erf).rewrite("tractable", deep=True, var=kwargs['var'])
         return self.rewrite(erf).rewrite("tractable", deep=True)
 
     def _eval_rewrite_as_erf(self, z, **kwargs):

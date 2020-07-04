@@ -544,7 +544,7 @@ def test_issue_10801():
 
 def test_issue_10976():
     s, x = symbols('s x', real=True)
-    assert limit(erf(s*x)/erf(s), s, 0) == Abs(x)*sign(x)
+    assert limit(erf(s*x)/erf(s), s, 0) == x
 
 
 def test_issue_9041():
