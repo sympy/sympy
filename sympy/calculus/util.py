@@ -1373,8 +1373,7 @@ class AccumulationBounds(AtomicExpr):
         else:
             return self
 
-
-
+          
     def __contains__(self, other):
         """
         Returns True if other is contained in self, where other

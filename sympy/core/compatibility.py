@@ -4,7 +4,7 @@ we support. Also some functions that are needed SymPy-wide and are located
 here for easy import.
 """
 
-from typing import Tuple, Type
+# from typing import Tuple, Type
 
 import operator
 from collections import defaultdict
@@ -728,7 +728,7 @@ if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
     GROUND_TYPES = 'python'
 
 # SYMPY_INTS is a tuple containing the base types for valid integer types.
-SYMPY_INTS = (int, )  # type: Tuple[Type, ...]
+SYMPY_INTS = (int, )  ## type: Tuple[Type, ...]
 
 if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)

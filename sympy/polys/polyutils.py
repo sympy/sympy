@@ -238,7 +238,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             return factor.is_algebraic
     elif opt.greedy is not False:
         def _is_coeff(factor):
-            return False
+            return factor is S.ImaginaryUnit
     else:
         def _is_coeff(factor):
             return factor.is_number

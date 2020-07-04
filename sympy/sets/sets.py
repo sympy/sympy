@@ -323,6 +323,8 @@ class Set(Basic):
         """
         other = sympify(other, strict=True)
         c = self._contains(other)
+        if isinstance(c, Contains):
+            return c
         if c is None:
             return Contains(other, self, evaluate=False)
         b = tfn[c]
@@ -668,6 +670,8 @@ class Set(Basic):
         c = self._contains(other)
         b = tfn[c]
         if b is None:
+            # x in y must evaluate to T or F; to entertain a None
+            # result with Set use y.contains(x)
             raise TypeError('did not evaluate to a bool: %r' % c)
         return b
 

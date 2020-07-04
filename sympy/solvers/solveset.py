@@ -16,14 +16,13 @@ from sympy.core.sympify import sympify
 from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
                         Add)
 from sympy.core.containers import Tuple
-from sympy.core.facts import InconsistentAssumptions
 from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
-                                expand_log, _mexpand)
+                                expand_log)
 from sympy.core.mod import Mod
 from sympy.core.numbers import igcd
 from sympy.core.relational import Eq, Ne, Relational
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
 from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
@@ -45,6 +44,8 @@ from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor, lcm, gcd)
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polytools import invert
+from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
+    PolyNonlinearError)
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
@@ -59,8 +60,11 @@ from collections import defaultdict
 
 
 class NonlinearError(ValueError):
-    """Raised by linear_eq_to_matrix if the equations are nonlinear"""
+    """Raised when unexpectedly encountering nonlinear equations"""
     pass
+
+
+_rc = Dummy("R", real=True), Dummy("C", complex=True)
 
 
 def _masked(f, *atoms):
@@ -661,19 +665,30 @@ def _solve_trig2(f, symbol, domain):
     denominators = []
     numerators = []
 
+    # todo: This solver can be extended to hyperbolics if the
+    # analogous change of variable to tanh (instead of tan)
+    # is used.
+    if not trig_functions:
+        return ConditionSet(symbol, Eq(f_original, 0), domain)
+
+    # todo: The pre-processing below (extraction of numerators, denominators,
+    # gcd, lcm, mu, etc.) should be updated to the enhanced version in
+    # _solve_trig1. (See #19507)
     for ar in trig_arguments:
         try:
             poly_ar = Poly(ar, symbol)
-
-        except ValueError:
+        except PolynomialError:
             raise ValueError("give up, we can't solve if this is not a polynomial in x")
         if poly_ar.degree() > 1:  # degree >1 still bad
             raise ValueError("degree of variable inside polynomial should not exceed one")
         if poly_ar.degree() == 0:  # degree 0, don't care
             continue
         c = poly_ar.all_coeffs()[0]   # got the coefficient of 'symbol'
-        numerators.append(Rational(c).p)
-        denominators.append(Rational(c).q)
+        try:
+            numerators.append(Rational(c).p)
+            denominators.append(Rational(c).q)
+        except TypeError:
+            return ConditionSet(symbol, Eq(f_original, 0), domain)
 
     x = Dummy('x')
 
@@ -1983,7 +1998,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     Examples
     ========
 
-    >>> from sympy import exp, sin, Symbol, pprint, S
+    >>> from sympy import exp, sin, Symbol, pprint, S, Eq
     >>> from sympy.solvers.solveset import solveset, solveset_real
 
     * The default domain is complex. Not specifying a domain will lead
@@ -2009,15 +2024,18 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> solveset_real(exp(x) - 1, x)
     FiniteSet(0)
 
-    The solution is mostly unaffected by assumptions on the symbol,
-    but there may be some slight difference:
-
-    >>> pprint(solveset(sin(x)/x,x), use_unicode=False)
-    ({2*n*pi | n in Integers} \ {0}) U ({2*n*pi + pi | n in Integers} \ {0})
+    The solution is unaffected by assumptions on the symbol:
 
     >>> p = Symbol('p', positive=True)
-    >>> pprint(solveset(sin(p)/p, p), use_unicode=False)
-    {2*n*pi | n in Integers} U {2*n*pi + pi | n in Integers}
+    >>> pprint(solveset(p**2 - 4))
+    {-2, 2}
+
+    When a conditionSet is returned, symbols with assumptions that
+    would alter the set are replaced with more generic symbols:
+
+    >>> i = Symbol('i', imaginary=True)
+    >>> solveset(Eq(i**2 + i*sin(i), 1), i, domain=S.Reals)
+    ConditionSet(_R, Eq(_R**2 + _R*sin(_R) - 1, 0), Reals)
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
@@ -2068,16 +2086,19 @@ def solveset(f, symbol=None, domain=S.Complexes):
         # the xreplace will be needed if a ConditionSet is returned
         return solveset(f[0], s[0], domain).xreplace(swap)
 
-    if domain.is_subset(S.Reals):
-        if not symbol.is_real:
-            assumptions = symbol.assumptions0
-            assumptions['real'] = True
-            try:
-                r = Dummy('r', **assumptions)
-                return solveset(f.xreplace({symbol: r}), r, domain
-                    ).xreplace({r: symbol})
-            except InconsistentAssumptions:
-                pass
+    # solveset should ignore assumptions on symbols
+    if symbol not in _rc:
+        x = _rc[0] if domain.is_subset(S.Reals) else _rc[1]
+        rv = solveset(f.xreplace({symbol: x}), x, domain)
+        # try to use the original symbol if possible
+        try:
+            _rv = rv.xreplace({x: symbol})
+        except TypeError:
+            _rv = rv
+        if rv.dummy_eq(_rv):
+            rv = _rv
+        return rv
+
     # Abs has its own handling method which avoids the
     # rewriting property that the first piece of abs(x)
     # is for x >= 0 and the 2nd piece for x < 0 -- solutions
@@ -2284,19 +2305,21 @@ def linear_coeffs(eq, *syms, **_kw):
     """
     d = defaultdict(list)
     eq = _sympify(eq)
-    if not eq.has(*syms):
+    symset = set(syms)
+    has = eq.free_symbols & symset
+    if not has:
         return [S.Zero]*len(syms) + [eq]
-    c, terms = eq.as_coeff_add(*syms)
+    c, terms = eq.as_coeff_add(*has)
     d[0].extend(Add.make_args(c))
     for t in terms:
-        m, f = t.as_coeff_mul(*syms)
+        m, f = t.as_coeff_mul(*has)
         if len(f) != 1:
             break
         f = f[0]
-        if f in syms:
+        if f in symset:
             d[f].append(m)
         elif f.is_Add:
-            d1 = linear_coeffs(f, *syms, **{'dict': True})
+            d1 = linear_coeffs(f, *has, **{'dict': True})
             d[0].append(m*d1.pop(0))
             for xf, vf in d1.items():
                 d[xf].append(m*vf)
@@ -2589,7 +2612,6 @@ def linsolve(system, *symbols):
         symbols = symbols[0]
     sym_gen = isinstance(symbols, GeneratorType)
 
-    swap = {}
     b = None  # if we don't get b the input was bad
     syms_needed_msg = None
 
@@ -2609,12 +2631,22 @@ def linsolve(system, *symbols):
                     symbols for which a solution is being sought must
                     be given as a sequence, too.
                 '''))
-            system = [
-                _mexpand(i.lhs - i.rhs if isinstance(i, Eq) else i,
-                recursive=True) for i in system]
-            system, symbols, swap = recast_to_symbols(system, symbols)
-            A, b = linear_eq_to_matrix(system, symbols)
-            syms_needed_msg = 'free symbols in the equations provided'
+            eqs = system
+            try:
+                eqs, ring = sympy_eqs_to_ring(eqs, symbols)
+            except PolynomialError as exc:
+                # e.g. cos(x) contains an element of the set of generators
+                raise NonlinearError(str(exc))
+
+            try:
+                sol = solve_lin_sys(eqs, ring, _raw=False)
+            except PolyNonlinearError as exc:
+                raise NonlinearError(str(exc))
+
+            if sol is None:
+                return S.EmptySet
+            sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
+            return sol
 
     elif isinstance(system, MatrixBase) and not (
             symbols and not isinstance(symbols, GeneratorType) and
@@ -2637,34 +2669,35 @@ def linsolve(system, *symbols):
                 the generator, e.g. numbered_symbols('%s', cls=Dummy)
             ''' % symbols[0].name.rstrip('1234567890')))
 
-    try:
-        solution, params, free_syms = A.gauss_jordan_solve(b, freevar=True)
-    except ValueError:
-        # No solution
+    if not symbols:
+        symbols = [Dummy() for _ in range(A.cols)]
+        name = _uniquely_named_symbol('tau', (A, b),
+            compare=lambda i: str(i).rstrip('1234567890')).name
+        gen  = numbered_symbols(name)
+    else:
+        gen = None
+
+    # This is just a wrapper for solve_lin_sys
+    eqs = []
+    rows = A.tolist()
+    for rowi, bi in zip(rows, b):
+        terms = [elem * sym for elem, sym in zip(rowi, symbols) if elem]
+        terms.append(-bi)
+        eqs.append(Add(*terms))
+
+    eqs, ring = sympy_eqs_to_ring(eqs, symbols)
+    sol = solve_lin_sys(eqs, ring, _raw=False)
+    if sol is None:
         return S.EmptySet
+    #sol = {sym:val for sym, val in sol.items() if sym != val}
+    sol = FiniteSet(Tuple(*(sol.get(sym, sym) for sym in symbols)))
 
-    # Replace free parameters with free symbols
-    if params:
-        if not symbols:
-            symbols = [_ for _ in params]
-            # re-use the parameters but put them in order
-            # params       [x, y, z]
-            # free_symbols [2, 0, 4]
-            # idx          [1, 0, 2]
-            idx = list(zip(*sorted(zip(free_syms, range(len(free_syms))))))[1]
-            # simultaneous replacements {y: x, x: y, z: z}
-            replace_dict = dict(zip(symbols, [symbols[i] for i in idx]))
-        elif len(symbols) >= A.cols:
-            replace_dict = {v: symbols[free_syms[k]] for k, v in enumerate(params)}
-        else:
-            raise IndexError(filldedent('''
-                the number of symbols passed should have a length
-                equal to the number of %s.
-                ''' % syms_needed_msg))
-        solution = [sol.xreplace(replace_dict) for sol in solution]
+    if gen is not None:
+        solsym = sol.free_symbols
+        rep = {sym: next(gen) for sym in symbols if sym in solsym}
+        sol = sol.subs(rep)
 
-    solution = [simplify(sol).xreplace(swap) for sol in solution]
-    return FiniteSet(tuple(solution))
+    return sol
 
 
 

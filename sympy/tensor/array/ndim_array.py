@@ -1,17 +1,16 @@
 from __future__ import print_function, division
 
-from typing import Any
-
 from sympy import Basic
 from sympy import S
 from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import SYMPY_INTS, Iterable
+from sympy.printing.defaults import Printable
 
 import itertools
 
-class NDimArray(object):
+class NDimArray(Printable):
     """
 
     Examples
@@ -319,25 +318,6 @@ class NDimArray(object):
 
     def __repr__(self):
         return self.__str__()
-
-    # We don't define _repr_png_ here because it would add a large amount of
-    # data to any notebook containing SymPy expressions, without adding
-    # anything useful to the notebook. It can still enabled manually, e.g.,
-    # for the qtconsole, with init_printing().
-    def _repr_latex_(self):
-        """
-        IPython/Jupyter LaTeX printing
-
-        To change the behavior of this (e.g., pass in some settings to LaTeX),
-        use init_printing(). init_printing() will also enable LaTeX printing
-        for built in numeric types like ints and container types that contain
-        SymPy objects, like lists and dictionaries of expressions.
-        """
-        from sympy.printing.latex import latex
-        s = latex(self, mode='plain')
-        return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_  # type: Any
 
     def tolist(self):
         """

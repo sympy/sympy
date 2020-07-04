@@ -705,6 +705,11 @@ def test_simplify_relational():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
     assert simplify(x*(y + 1) - x*y - x - 1 < x) == (x > -1)
     assert simplify(x < x*(y + 1) - x*y - x + 1) == (x < 1)
+    q, r = symbols("q r")
+    assert (((-q + r) - (q - r)) <= 0).simplify() == (q >= r)
+    root2 = sqrt(2)
+    equation = ((root2 * (-q + r) - root2 * (q - r)) <= 0).simplify()
+    assert equation == (q >= r)
     r = S.One < x
     # canonical operations are not the same as simplification,
     # so if there is no simplification, canonicalization will

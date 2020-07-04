@@ -10,6 +10,7 @@ from sympy.matrices.sparse import MutableSparseMatrix, SparseMatrix
 from sympy.multipledispatch import dispatch
 
 
+
 def sympify_matrix(arg):
     return arg.as_immutable()
 
@@ -151,8 +152,7 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
 
     @classmethod
     def _new(cls, *args, **kwargs):
-        s = MutableSparseMatrix(*args)
-        rows, cols, smat = s.rows, s.cols, s._smat
+        rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
         obj = Basic.__new__(cls, Integer(rows), Integer(cols), Dict(smat))
         obj._rows = rows
         obj._cols = cols

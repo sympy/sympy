@@ -1475,7 +1475,7 @@ class Pow(Expr):
             return Expr.matches(self, expr, repl_dict)
         return d
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE! This function is an important part of the gruntz algorithm
         #       for computing limits. It has to return a generalized power
         #       series with coefficients in C(log, log(x)). In more detail:
@@ -1488,7 +1488,7 @@ class Pow(Expr):
         #    g has order O(x**d) where d is strictly positive.
         # 2) Then b**e = (f**e)*((1 + g)**e).
         #    (1 + g)**e is computed using binomial series.
-        from sympy import ceiling, polygamma, logcombine, EulerGamma, exp, nan, zoo, log, factorial, ff, PoleError, O, powdenest, Wild
+        from sympy import im, I, ceiling, polygamma, logcombine, EulerGamma, exp, nan, zoo, log, factorial, ff, PoleError, O, powdenest, Wild
         from itertools import product
         self = powdenest(self, force=True).trigsimp()
         b, e = self.as_base_exp()
@@ -1497,7 +1497,7 @@ class Pow(Expr):
             raise PoleError()
 
         if e.has(x):
-            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
+            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
 
         if logx is not None and b.has(log):
             c, ex = symbols('c, ex', cls=Wild, exclude=[x])
@@ -1510,7 +1510,7 @@ class Pow(Expr):
                 raise ValueError()
             _, m = b.leadterm(x)
         except ValueError:
-            b = b._eval_nseries(x, n=max(2, n), logx=logx).removeO()
+            b = b._eval_nseries(x, n=max(2, n), logx=logx, cdir=cdir).removeO()
             if b.has(nan, zoo):
                 raise NotImplementedError()
             _, m = b.leadterm(x)
@@ -1519,7 +1519,7 @@ class Pow(Expr):
             e = logcombine(e).cancel()
 
         if not (m.is_zero or e.is_number and e.is_real):
-            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx)
+            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
 
         f = b.as_leading_term(x)
         g = (b/f - S.One).cancel()
@@ -1537,7 +1537,10 @@ class Pow(Expr):
                 if factor.has(x):
                     base, exp = factor.as_base_exp()
                     if base != x:
-                        return term.leadterm(x)
+                        try:
+                            return term.leadterm(x)
+                        except ValueError:
+                            return term, S.Zero
                 else:
                     coeff *= factor
             return coeff, exp
@@ -1557,7 +1560,7 @@ class Pow(Expr):
             if not d.is_positive:
                 raise NotImplementedError()
 
-        gpoly = g._eval_nseries(x, n=ceiling(maxpow), logx=logx).removeO()
+        gpoly = g._eval_nseries(x, n=ceiling(maxpow), logx=logx, cdir=cdir).removeO()
         gterms = {}
 
         for term in Add.make_args(gpoly):
@@ -1575,23 +1578,34 @@ class Pow(Expr):
             tk = mul(tk, gterms)
             k += S.One
 
-        inco, inex = coeff_exp(f**e, x)
+        if (not e.is_integer and m.is_zero and f.is_real
+            and f.is_negative and im((b - f).dir(x, cdir)) < 0):
+            inco, inex = coeff_exp(f**e*exp(-2*e*S.Pi*I), x)
+        else:
+            inco, inex = coeff_exp(f**e, x)
         res = S.Zero
 
         for e1 in terms:
             ex = e1 + inex
             res += terms[e1]*inco*x**(ex)
 
-        if (res - self).cancel() == S.Zero:
-            return res
+        for i in (1, 2, 3):
+            if (res - self).subs(x, i) is not S.Zero:
+                res += O(x**n, x)
+                break
+        return res
 
-        return res + O(x**n, x)
-
-    def _eval_as_leading_term(self, x):
-        from sympy import exp, log
-        if not self.exp.has(x):
-            return self.func(self.base.as_leading_term(x), self.exp)
-        return exp(self.exp * log(self.base)).as_leading_term(x)
+    def _eval_as_leading_term(self, x, cdir=0):
+        from sympy import exp, I, im, log
+        e = self.exp
+        b = self.base
+        if e.has(x):
+            return exp(e * log(b)).as_leading_term(x, cdir=cdir)
+        f = b.as_leading_term(x, cdir=cdir)
+        if (not e.is_integer and f.is_constant() and f.is_real
+            and f.is_negative and im((b - f).dir(x, cdir)) < 0):
+            return self.func(f, e)*exp(-2*e*S.Pi*I)
+        return self.func(f, e)
 
     @cacheit
     def _taylor_term(self, n, x, *previous_terms): # of (1 + x)**e

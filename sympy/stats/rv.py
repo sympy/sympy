@@ -18,8 +18,8 @@ from __future__ import print_function, division
 from functools import singledispatch
 from typing import Tuple as tTuple
 
-from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
-                   Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
+from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify, Or,
+                   Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta, Not,
                    DiracDelta, Mul, Indexed, MatrixSymbol, Function, Integral)
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
@@ -318,7 +318,7 @@ class RandomIndexedSymbol(RandomSymbol):
             return free_syms
         return {self}
 
-class RandomMatrixSymbol(MatrixSymbol):
+class RandomMatrixSymbol(RandomSymbol, MatrixSymbol):
     def __new__(cls, symbol, n, m, pspace=None):
         n, m = _sympify(n), _sympify(m)
         symbol = _symbol_converter(symbol)
@@ -426,6 +426,10 @@ class IndependentProductPSpace(ProductPSpace):
         if isinstance(condition, Ne):
             condition = Eq(condition.args[0], condition.args[1])
             cond_inv = True
+        elif isinstance(condition, And): # they are independent
+            return Mul(*[self.probability(arg) for arg in condition.args])
+        elif isinstance(condition, Or): # they are independent
+            return Add(*[self.probability(arg) for arg in condition.args])
         expr = condition.lhs - condition.rhs
         rvs = random_symbols(expr)
         dens = self.compute_density(expr)
@@ -786,6 +790,9 @@ def probability(condition, given_condition=None, numsamples=None,
 
     condition = sympify(condition)
     given_condition = sympify(given_condition)
+
+    if isinstance(condition, Not):
+        return S.One - probability(condition.args[0], given_condition, evaluate, **kwargs)
 
     if condition.has(RandomIndexedSymbol):
         return pspace(condition).probability(condition, given_condition, evaluate, **kwargs)

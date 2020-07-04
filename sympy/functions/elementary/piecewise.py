@@ -318,7 +318,7 @@ class Piecewise(Function):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         for e, c in self.args:
             if c == True or c.subs(x, 0) == True:
                 return e.as_leading_term(x)
@@ -787,7 +787,7 @@ class Piecewise(Function):
 
         return list(uniq(int_expr))
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
         return self.func(*args)
 
@@ -1238,9 +1238,10 @@ def piecewise_simplify(expr, **kwargs):
             if eqs and not other:
                 eqs = list(ordered(eqs))
                 for e in eqs:
-                    # these blessed lhs objects behave like Symbols
-                    # and the rhs are simple replacements for the "symbols"
-                    if _blessed(e):
+                    # allow 2 args to collapse into 1 for any e
+                    # otherwise limit simplification to only simple-arg
+                    # Eq instances
+                    if len(args) == 2 or _blessed(e):
                         _prevexpr = _prevexpr.subs(*e.args)
                         _expr = _expr.subs(*e.args)
             # Did it evaluate to the same?

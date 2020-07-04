@@ -405,7 +405,7 @@ class FourierSeries(SeriesBase):
 
         return self.func(sfunc, self.args[1], (self.a0, an, bn))
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         for t in self:
             if t is not S.Zero:
                 return t

@@ -1,4 +1,4 @@
-from typing import Dict, Type, Union
+# from typing import Dict, Union, Type
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .basic import S, Atom
@@ -65,7 +65,7 @@ class Relational(Boolean, EvalfMixin):
     """
     __slots__ = ()
 
-    ValidRelationOperator = {}  # type: Dict[Union[str, None], Type[Relational]]
+    ValidRelationOperator = {}  ## type: Dict[Union[str, None], Type[Relational]]
 
     is_Relational = True
 
