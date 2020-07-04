@@ -1144,21 +1144,16 @@ def is_ge(lhs, rhs):
     >>> from sympy import S
     >>> is_ge(S(2), S(0))
     True
-
     >>> is_ge(S(0), S(2))
     False
-
     >>> is_ge(S(0), x)
 
     >>> is_gt(S(2), S(0))
     True
-
     >>> is_gt(S(0), S(2))
     False
-
     >>> is_lt(S(0), S(2))
     True
-
     >>> is_lt(S(2), S(0))
     False
 
@@ -1179,8 +1174,7 @@ def is_ge(lhs, rhs):
                 n2 = float(n2)
             return _sympify(n2 >= 0)
         if lhs.is_extended_real and rhs.is_extended_real:
-            if (lhs.is_infinite and lhs.is_extended_positive) \
-                or (rhs.is_infinite and rhs.is_extended_negative):
+            if (lhs.is_infinite and lhs.is_extended_positive) or (rhs.is_infinite and rhs.is_extended_negative):
                 return True
             diff = lhs - rhs
             if diff is not S.NaN:
@@ -1216,39 +1210,25 @@ def is_eq(lhs, rhs):
     ========
 
     >>> from sympy.core.relational import is_eq
-    >>> from sympy.core.sympify import _sympify
     >>> from sympy.core.relational import is_neq
     >>> from sympy import S
     >>> from sympy.abc import x
 
-    >>> is_eq(_sympify(0), S(0))
+    >>> is_eq(S(0), S(0))
     True
-
-    >>> is_neq(_sympify(0), S(0))
+    >>> is_neq(S(0), S(0))
     False
-
-    >>> is_eq(_sympify(0), S(2))
+    >>> is_eq(S(0), S(2))
     False
-
-    >>> is_neq(_sympify(0), S(2))
+    >>> is_neq(S(0), S(2))
     True
-
-    >>> is_eq(_sympify(0), x)
+    >>> is_eq(S(0), x)
 
     """
     from sympy.core.add import Add
     from sympy.functions.elementary.complexes import arg
     from sympy.simplify.simplify import clear_coefficients
     from sympy.utilities.iterables import sift
-
-    retval = _eval_is_eq(lhs, rhs)
-    if retval is not None:
-        return retval
-
-    if dispatch(type(lhs), type(rhs)) != dispatch(type(rhs), type(lhs)):
-        retval = _eval_is_eq(rhs, lhs)
-        if retval is not None:
-            return retval
 
     # here, _eval_Eq is only called for backwards compatibility
     # new code should use is_eq with multiple dispatch as
@@ -1259,6 +1239,15 @@ def is_eq(lhs, rhs):
             retval = eval_func(side2)
             if retval is not None:
                 return retval
+
+    retval = _eval_is_eq(lhs, rhs)
+    if retval is not None:
+        return retval
+
+    if dispatch(type(lhs), type(rhs)) != dispatch(type(rhs), type(lhs)):
+        retval = _eval_is_eq(rhs, lhs)
+        if retval is not None:
+            return retval
 
     # retval is still None, so go through the equality logic
     # If expressions have the same structure, they must be equal.
