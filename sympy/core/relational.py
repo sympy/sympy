@@ -1122,26 +1122,58 @@ def is_ge(lhs, rhs):
     """
     Fuzzy bool for lhs is greater than or equal to rhs.
 
-    Returns True if lhs is greater than or equal to rhs
-    Returns False if lhs is not greater than rhs
-    Returns None if lhs cannot be compared to rhs, or if the comparison is indeterminate
+    :param lhs: the left-hand side of the expression, must be sympified, and an instance of expression
+                Throws an exception if lhs is not an instance of expression
+    :param rhs: the right-hand side of the expression, must be sympified and an instance of expression
+                Throws an exception if lhs is not an instance of expression
+    :return: True if lhs is greater than or equal to rhs, false is lhs is less than rhs, and
+            None if the comparison between lhs and rhs is indeterminate
 
-    is_le calls is_ge
-    is_lt calls is_ge
+    The four comparison functions ``is_le``, ``is_lt``, ``is_ge``, and ``is_gt`` are
+    each implemented in terms of ``is_ge`` in the following way:
+
+    is_ge(x, y) := is_ge(x, y)
+    is_le(x, y) := is_ge(y, x)
+    is_lt(x, y) := fuzzy_not(is_ge(x, y))
+    is_gt(x, y) = fuzzy_not(is_ge(y, x))
+
+    To maintain these equivalences in fuzzy logic it is important that in cases where
+    either x or y is non-real all comparisons will give None.
 
     InEquality classes, such as Lt, Gt, etc. Use one of is_ge, is_le, etc.
-    If is_ge(a, b) returns nont the Ge(a, b) will just return an unevalutated comparison
+    To implement comparisons with ``Gt(a, b)`` or ``a > b`` etc for an ``Expr`` subclass
+    it is only necessary to define a dispatcher method for ``_eval_is_ge`` like
 
-    so, to override inequality you just need to write an _eval_is_ge
-    using multiple dispatch
-
+    >>> from sympy.core.relational import is_ge, is_lt, is_gt
+    >>> from sympy.abc import x
+    >>> from sympy import S, Expr, sympify, Eq
+    >>> from sympy.multipledispatch import dispatch
+    >>> class MyExpr(Expr):
+    ...     def __new__(cls, arg):
+    ...         return Expr.__new__(cls, sympify(arg))
+    ...     @property
+    ...     def value(self):
+    ...         return self.args[0]
+    ...
+    >>> @dispatch(MyExpr, MyExpr)
+    ... def _eval_is_ge(a, b):
+    ...     return is_ge(a.value, b.value)
+    ...
+    >>> a = MyExpr(1)
+    >>> b = MyExpr(2)
+    >>> a < b
+    True
+    >>> a <= b
+    True
+    >>> a > b
+    False
+    >>> is_lt(a, b)
+    True
 
     Examples
     ========
 
-    >>> from sympy.core.relational import is_ge, is_lt, is_gt
-    >>> from sympy.abc import x
-    >>> from sympy import S
+
     >>> is_ge(S(2), S(0))
     True
     >>> is_ge(S(0), S(2))
@@ -1194,35 +1226,72 @@ def is_neq(lhs, rhs):
 def is_eq(lhs, rhs):
     """
     Fuzzy bool representing mathematical equality between lhs and rhs.
-    If lhs and rhs are easily shown to be equal (or unequal) then True (or False) is returned.
-    Otherwise None is returned meaning that lhs and rhs may or may not be equal.
+
+    :param lhs: the left-hand side of the expression, must be sympified
+    :param rhs: the right-hand side of the expression, must be sympified
+    :return: True if lhs is equal to rhs, false is lhs is not equal to rhs, and
+            None if the comparison between lhs and rhs is indeterminate
 
     Notes:
 
     This function is intended to give a relatively fast determination and deliberately does not attempt slow
     calculations that might help in obtaining a determination of True or False in more difficult cases.
-    The evaluation of an Equality uses is_eq internally so if is_eq(a, b) gives True (or False) then Eq(a, b) will give
-    S.true or S.false and vice versa. When is_eq(a, b) returns None, Eq(a, b) will give an unevaluated Eq.
 
-    Since is_eq is primarily an internal function it is expected that the arguments will be sympified already.
+    InEquality classes, such as Lt, Gt, etc. Use one of is_ge, is_le, etc.
+    To implement comparisons with ``Gt(a, b)`` or ``a > b`` etc for an ``Expr`` subclass
+    it is only necessary to define a dispatcher method for ``_eval_is_ge`` like
+
+    >>> from sympy.core.relational import is_eq
+    >>> from sympy.core.relational import is_neq
+    >>> from sympy import S, Basic, Eq, sympify
+    >>> from sympy.abc import x
+    >>> from sympy.multipledispatch import dispatch
+    >>> class MyBasic(Basic):
+    ...     def __new__(cls, arg):
+    ...         return Basic.__new__(cls, sympify(arg))
+    ...     @property
+    ...     def value(self):
+    ...         return self.args[0]
+    ...
+    >>> @dispatch(MyBasic, MyBasic)
+    ... def _eval_is_eq(a, b):
+    ...     return is_eq(a.value, b.value)
+    ...
+    >>> a = MyBasic(1)
+    >>> b = MyBasic(1)
+    >>> a == b
+    True
+    >>> Eq(a, b)
+    True
+    >>> a != b
+    False
+    >>> is_eq(a, b)
+    True
+
 
     Examples
     ========
 
-    >>> from sympy.core.relational import is_eq
-    >>> from sympy.core.relational import is_neq
-    >>> from sympy import S
-    >>> from sympy.abc import x
+
 
     >>> is_eq(S(0), S(0))
+    True
+    >>> Eq(0, 0)
     True
     >>> is_neq(S(0), S(0))
     False
     >>> is_eq(S(0), S(2))
     False
+    >>> Eq(0, 2)
+    False
     >>> is_neq(S(0), S(2))
     True
     >>> is_eq(S(0), x)
+
+    >>> Eq(S(0), x)
+    Eq(0, x)
+
+
 
     """
     from sympy.core.add import Add
@@ -1288,7 +1357,7 @@ def is_eq(lhs, rhs):
         # Compare e.g. zoo with 1+I*oo by comparing args
         arglhs = arg(lhs)
         argrhs = arg(rhs)
-        # Guard against Eq(nan, nan) -> False
+        # Guard against Eq(nan, nan) -> Falsesymp
         if not (arglhs == S.NaN and argrhs == S.NaN):
             return fuzzy_bool(Eq(arglhs, argrhs))
 

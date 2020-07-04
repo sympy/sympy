@@ -17,7 +17,7 @@ from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
     fuzzy_not)
 from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Eq, Ne, is_lt
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
@@ -915,7 +915,7 @@ class Interval(Set, EvalfMixin):
             raise ValueError("Non-real intervals are not supported")
 
         # evaluate if possible
-        if (end >= start) == False:
+        if is_lt(end, start):
             return S.EmptySet
         elif (end - start).is_negative:
             return S.EmptySet

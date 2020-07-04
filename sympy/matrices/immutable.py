@@ -165,8 +165,6 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
     def _entry(self, i, j, **kwargs):
         return SparseMatrix.__getitem__(self, (i, j))
 
-    # _eval_Eq = ImmutableDenseMatrix._eval_Eq
-
     @property
     def cols(self):
         return self._cols
