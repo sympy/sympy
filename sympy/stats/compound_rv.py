@@ -52,7 +52,7 @@ class CompoundDistribution(Basic, NamedArgsMixin):
     ==========
 
     dist : Distribution
-        Distribution must contain an random parameter
+        Distribution must contain a random parameter
 
     Examples
     ========
