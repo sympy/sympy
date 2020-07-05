@@ -1,5 +1,5 @@
-from sympy import Basic, Symbol, integrate, Sum, Dummy, Lambda
-from sympy.stats.rv import NamedArgsMixin, random_symbols
+from sympy import Basic, integrate, Sum, Dummy, Lambda
+from sympy.stats.rv import NamedArgsMixin, random_symbols, _symbol_converter
 from sympy.stats.crv import ContinuousDistribution, SingleContinuousPSpace
 from sympy.stats.drv import DiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.frv import SingleFiniteDistribution, SingleFinitePSpace
@@ -10,23 +10,38 @@ from sympy.stats.frv_types import FiniteDistributionHandmade
 
 def compound_pspace(s, comp_distribution):
     """
-    A temporary Probability Space for the Compound Distribution. After
-    Marginalization, this return the corresponding Probability Space of the
+    A temporary Probability Space function for the Compound Distribution. After
+    Marginalization, this returns the corresponding Probability Space of the
     parent distribution.
     """
-    if isinstance(s, str):
-        s = Symbol(s)
-    if not isinstance(s, Symbol):
-        raise TypeError("s should have been string or Symbol")
+    s = _symbol_converter(s)
     if not isinstance(comp_distribution, CompoundDistribution):
-        raise ValueError("comp_distribution should be an isinstance of "
-                        "CompoundDistribution")
+        raise ValueError("%s should be an isinstance of "
+                        "CompoundDistribution"%(comp_distribution))
+    x = Dummy('x')
     parent_dist = comp_distribution.args[0]
-    new_pspace = _get_newpspace(s, parent_dist, _get_pdf(parent_dist))
+    new_pspace = _get_newpspace(s, parent_dist,
+                        Lambda(x, comp_distribution.pdf(x)))
     if new_pspace is not None:
         return new_pspace
     message = ("Compound Distribution for %s is not implemeted yet" % str(parent_dist))
     raise NotImplementedError(message)
+
+
+def _get_newpspace(sym, dist, pdf):
+    """
+    This function returns the new pspace of the distribution using handmade
+    Distributions and their corresponding pspace.
+    """
+    pdf = Lambda(sym, pdf(sym))
+    _set = dist.set
+    if isinstance(dist, ContinuousDistribution):
+        return SingleContinuousPSpace(sym, ContinuousDistributionHandmade(pdf, _set))
+    elif isinstance(dist, DiscreteDistribution):
+        return SingleDiscretePSpace(sym, DiscreteDistributionHandmade(pdf, _set))
+    elif isinstance(dist, SingleFiniteDistribution):
+        dens = dict((k, pdf(k)) for k in _set)
+        return SingleFinitePSpace(sym, FiniteDistributionHandmade(dens))
 
 
 class CompoundDistribution(Basic, NamedArgsMixin):
@@ -60,6 +75,7 @@ class CompoundDistribution(Basic, NamedArgsMixin):
     .. [1] https://en.wikipedia.org/wiki/Compound_probability_distribution
 
     """
+
     is_Finite = None
     is_Continuous = None
     is_Discrete = None
@@ -74,7 +90,7 @@ class CompoundDistribution(Basic, NamedArgsMixin):
         else:
             message = "Compound Distribution for %s is not implemeted yet" % str(dist)
             raise NotImplementedError(message)
-        if not _compound_check(dist):
+        if not cls._compound_check(dist):
             raise ValueError("There are no random arguments for considering it as "
                             "Compound Distribution.")
         return Basic.__new__(cls, dist)
@@ -84,63 +100,41 @@ class CompoundDistribution(Basic, NamedArgsMixin):
         return self.args[0].set
 
     def pdf(self, x):
-        return _get_pdf(self.args[0])(x)
+        dist = self.args[0]
+        randoms = []
+        for arg in dist.args:
+            randoms.extend(random_symbols(arg))
+        if len(randoms) > 1:
+            raise NotImplementedError("Compound Distributions for more than"
+                " one random argument is not implemeted yet.")
+        rand_sym = randoms[0]
+        if isinstance(dist, SingleFiniteDistribution):
+            y = Dummy('y', integer=True, negative=False)
+            _pdf = dist.pmf(y)
+        else:
+            y = Dummy('y')
+            _pdf = dist.pdf(y)
+        if isinstance(rand_sym.pspace.distribution, SingleFiniteDistribution):
+            rand_dens = rand_sym.pspace.distribution.pmf(rand_sym)
+        else:
+            rand_dens = rand_sym.pspace.distribution.pdf(rand_sym)
+        rand_sym_dom = rand_sym.pspace.domain.set
+        if rand_sym.pspace.is_Discrete or rand_sym.pspace.is_Finite:
+            _pdf = Sum(_pdf*rand_dens, (rand_sym, rand_sym_dom._inf,
+                    rand_sym_dom._sup)).doit()
+        else:
+            _pdf = integrate(_pdf*rand_dens, (rand_sym, rand_sym_dom._inf,
+                    rand_sym_dom._sup))
+        return Lambda(y, _pdf)(x)
 
-
-def _get_pdf(dist):
-    """
-    This function is used to get the pdf of CompoundDistribution after
-    removing random parameters by Marginalization.
-    """
-    randoms = []
-    for arg in dist.args:
-        randoms.extend(random_symbols(arg))
-    if len(randoms) > 1:
-        raise NotImplementedError("Compound Distributions for more than one random"
-            " argument is not implemeted yet.")
-    rand_sym = randoms[0]
-    if isinstance(dist, SingleFiniteDistribution):
-        x = Dummy('x', integer=True, negative=False)
-        _pdf = dist.pmf(x)
-    else:
-        x = Dummy('x')
-        _pdf = dist.pdf(x)
-    if isinstance(rand_sym.pspace.distribution, SingleFiniteDistribution):
-        rand_dens = rand_sym.pspace.distribution.pmf(rand_sym)
-    else:
-        rand_dens = rand_sym.pspace.distribution.pdf(rand_sym)
-    rand_sym_dom = rand_sym.pspace.domain.set
-    if rand_sym.pspace.is_Discrete or rand_sym.pspace.is_Finite:
-        _pdf = Sum(_pdf*rand_dens, (rand_sym, rand_sym_dom._inf, rand_sym_dom._sup)).doit()
-    else:
-        _pdf = integrate(_pdf*rand_dens, (rand_sym, rand_sym_dom._inf, rand_sym_dom._sup))
-    return Lambda(x, _pdf)
-
-
-def _get_newpspace(sym, dist, pdf):
-    """
-    This function returns the new pspace of the distribution using handmade
-    Distributions and their corresponding pspace.
-    """
-    pdf = Lambda(sym, pdf(sym))
-    _set = dist.set
-    if isinstance(dist, ContinuousDistribution):
-        return SingleContinuousPSpace(sym, ContinuousDistributionHandmade(pdf, _set))
-    elif isinstance(dist, DiscreteDistribution):
-        return SingleDiscretePSpace(sym, DiscreteDistributionHandmade(pdf, _set))
-    elif isinstance(dist, SingleFiniteDistribution):
-        dens = dict((k, pdf(k)) for k in _set)
-        return SingleFinitePSpace(sym, FiniteDistributionHandmade(dens))
-    return None
-
-
-def _compound_check(dist):
-    """
-    Checks if the given distribution contains random parameters.
-    """
-    randoms = []
-    for arg in dist.args:
-        randoms.extend(random_symbols(arg))
-    if len(randoms) == 0:
-        return False
-    return True
+    @classmethod
+    def _compound_check(self, dist):
+        """
+        Checks if the given distribution contains random parameters.
+        """
+        randoms = []
+        for arg in dist.args:
+            randoms.extend(random_symbols(arg))
+        if len(randoms) == 0:
+            return False
+        return True

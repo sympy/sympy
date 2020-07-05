@@ -154,6 +154,7 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
         val = integrate(pdf(x), (x, set))
         _value_check(val == S.One, "The pdf on the given set is incorrect.")
 
+
 def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     Create a Continuous Random Variable given the following:
