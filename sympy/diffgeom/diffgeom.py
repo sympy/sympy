@@ -9,6 +9,7 @@ from sympy.core import (
 )
 from sympy.core.compatibility import reduce
 from sympy.core.numbers import Zero
+from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.functions import factorial
 from sympy.matrices import Matrix
@@ -43,13 +44,22 @@ class Manifold(Atom):
     """
 
     def __new__(cls, name, dim):
-        obj = super().__new__(cls)
-        obj.name = name
-        obj.dim = dim
+        if not isinstance(name, Str):
+            name = Str(name)
+        dim = _sympify(dim)
+        obj = super().__new__(cls, name, dim)
         obj.patches = []
         # The patches list is necessary if a Patch instance needs to enumerate
         # other Patch instance on the same manifold.
         return obj
+
+    @property
+    def name(self):
+        return self.args[0]
+
+    @property
+    def dim(self):
+        return self.args[1]
 
     def _hashable_content(self):
         return self.name, self.dim
@@ -91,14 +101,22 @@ class Patch(Atom):
     # Contains a reference to the parent manifold in order to be able to access
     # other patches.
     def __new__(cls, name, manifold):
-        obj = super().__new__(cls)
-        obj.name = name
-        obj.manifold = manifold
+        if not isinstance(name, Str):
+            name = Str(name)
+        obj = super().__new__(cls, name, manifold)
         obj.manifold.patches.append(obj)
         obj.coord_systems = []
         # The list of coordinate systems is necessary for an instance of
         # CoordSystem to enumerate other coord systems on the patch.
         return obj
+
+    @property
+    def name(self):
+        return self.args[0]
+
+    @property
+    def manifold(self):
+        return self.args[1]
 
     @property
     def dim(self):
@@ -217,14 +235,14 @@ class CoordSystem(Atom):
     #  Contains a reference to the parent patch in order to be able to access
     # other coordinate system charts.
     def __new__(cls, name, patch, names=None):
+        if not isinstance(name, Str):
+            name = Str(name)
         # names is not in args because it is related only to printing, not to
         # identifying the CoordSystem instance.
+        obj = super().__new__(cls, name, patch)
         if not names:
             names = ['%s_%d' % (name, i) for i in range(patch.dim)]
-        obj = super().__new__(cls)
-        obj.name = name
         obj._names = tuple(str(i) for i in names)
-        obj.patch = patch
         obj.patch.coord_systems.append(obj)
         obj.transforms = {}
         # All the coordinate transformation logic is in this dictionary in the
@@ -239,11 +257,19 @@ class CoordSystem(Atom):
         return obj
 
     @property
+    def name(self):
+        return self.args[0]
+
+    @property
+    def patch(self):
+        return self.args[1]
+
+    @property
     def dim(self):
         return self.patch.dim
 
     def _hashable_content(self):
-        return self.name, self.patch, self._names
+        return self.name, self.patch
 
     ##########################################################################
     # Coordinate transformations.
