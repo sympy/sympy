@@ -311,6 +311,8 @@ def test_neq_nth_linear_constant_coeff_match():
               [Eq(Derivative(f(t), t), 3), Eq(Derivative(g(t), t), y*f(t))]]}
     assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
 
+    raises(ValueError, lambda: neq_nth_linear_constant_coeff_match(eq1, funcs[:1], t))
+
 
 def test_matrix_exp():
     from sympy.matrices.dense import Matrix, eye, zeros
@@ -1209,10 +1211,13 @@ def test_sysode_linear_neq_order1_type3():
     A1 = Matrix([[1, t], [-t, 1]])
     B1, _ = _is_commutative_anti_derivative(A1, t)
     raises(NonSquareMatrixError, lambda: linodesolve(A1[:, :1], t, B=B1))
+    raises(ValueError, lambda: linodesolve(A1, t, B=1))
 
     A2 = Matrix([[t, t, t], [t, t, t], [t, t, t]])
     B2, _ = _is_commutative_anti_derivative(A2, t)
     raises(NonSquareMatrixError, lambda: linodesolve(A2, t, B=B2[:2, :]))
+    raises(ValueError, lambda: linodesolve(A2, t, B=2))
+    raises(ValueError, lambda: linodesolve(A2, t, B=B2, type="type31"))
 
     raises(ValueError, lambda: linodesolve(A1, t, B=B2))
     raises(ValueError, lambda: linodesolve(A2, t, B=B1))
@@ -1764,3 +1769,6 @@ def test_dsolve_system():
     raises(ValueError, lambda: dsolve_system(eqs, 1))
     raises(ValueError, lambda: dsolve_system(eqs, funcs, 1))
     raises(ValueError, lambda: dsolve_system(eqs, funcs[:1], x))
+
+    eq = (Eq(f(x).diff(x), 12 * f(x) - 6 * g(x)), Eq(g(x).diff(x) ** 2, 11 * f(x) + 3 * g(x)))
+    assert dsolve_system(eq) == ([], [])

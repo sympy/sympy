@@ -1284,7 +1284,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None):
     Returns
     =======
 
-    Tuple : (List of List of Equations, List of subsystems not solved)
+    Tuple : (List of List of Equations, List of sub-systems not solved)
 
     """
     from sympy.solvers.ode.ode import solve_ics
@@ -1370,6 +1370,9 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None):
             ics_sols.append([s.subs(solved_constants) for s in sol])
 
         sols = ics_sols
+
+    if not sols:
+        not_solved_systems = []
 
     # sols: List of List of Equations
     return sols, not_solved_systems
