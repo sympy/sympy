@@ -16,7 +16,7 @@ class AskFiniteHandler(CommonHandler):
 
     Examples of usage:
 
-    >>> from sympy import Symbol, Q
+    >>> from sympy import Q
     >>> from sympy.assumptions.handlers.calculus import AskFiniteHandler
     >>> from sympy.abc import x
     >>> a = AskFiniteHandler()
@@ -35,7 +35,7 @@ class AskFiniteHandler(CommonHandler):
         Examples
         ========
 
-        >>> from sympy import Symbol, Q
+        >>> from sympy import Q
         >>> from sympy.assumptions.handlers.calculus import AskFiniteHandler
         >>> from sympy.abc import x
         >>> a = AskFiniteHandler()

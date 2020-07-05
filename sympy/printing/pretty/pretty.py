@@ -6,7 +6,7 @@ from sympy.core import S
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
 from sympy.core.mul import Mul
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Number, Rational
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import SympifyError
@@ -52,7 +52,9 @@ class PrettyPrinter(Printer):
             raise TypeError("'imaginary_unit' must a string, not {}".format(self._settings['imaginary_unit']))
         elif self._settings['imaginary_unit'] not in ["i", "j"]:
             raise ValueError("'imaginary_unit' must be either 'i' or 'j', not '{}'".format(self._settings['imaginary_unit']))
-        self.emptyPrinter = lambda x: prettyForm(xstr(x))
+
+    def emptyPrinter(self, expr):
+        return prettyForm(xstr(expr))
 
     @property
     def _use_unicode(self):
@@ -1734,7 +1736,11 @@ class PrettyPrinter(Printer):
         for i, term in enumerate(terms):
             if term.is_Mul and _coeff_isneg(term):
                 coeff, other = term.as_coeff_mul(rational=False)
-                pform = self._print(Mul(-coeff, *other, evaluate=False))
+                if coeff == -1:
+                    negterm = Mul(*other, evaluate=False)
+                else:
+                    negterm = Mul(-coeff, *other, evaluate=False)
+                pform = self._print(negterm)
                 pforms.append(pretty_negative(pform, i))
             elif term.is_Rational and term.q > 1:
                 pforms.append(None)
@@ -1776,6 +1782,25 @@ class PrettyPrinter(Printer):
 
     def _print_Mul(self, product):
         from sympy.physics.units import Quantity
+
+        # Check for unevaluated Mul. In this case we need to make sure the
+        # identities are visible, multiple Rational factors are not combined
+        # etc so we display in a straight-forward form that fully preserves all
+        # args and their order.
+        args = product.args
+        if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]):
+            strargs = list(map(self._print, args))
+            # XXX: This is a hack to work around the fact that
+            # prettyForm.__mul__ absorbs a leading -1 in the args. Probably it
+            # would be better to fix this in prettyForm.__mul__ instead.
+            negone = strargs[0] == '-1'
+            if negone:
+                strargs[0] = prettyForm('1', 0, 0)
+            obj = prettyForm.__mul__(*strargs)
+            if negone:
+                obj = prettyForm('-' + obj.s, obj.baseline, obj.binding)
+            return obj
+
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 
@@ -1933,8 +1958,7 @@ class PrettyPrinter(Printer):
 
     def _print_ProductSet(self, p):
         if len(p.sets) >= 1 and not has_variety(p.sets):
-            from sympy import Pow
-            return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
+            return self._print(p.sets[0]) ** self._print(len(p.sets))
         else:
             prod_char = u"\N{MULTIPLICATION SIGN}" if self._use_unicode else 'x'
             return self._print_seq(p.sets, None, None, ' %s ' % prod_char,

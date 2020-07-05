@@ -5,9 +5,10 @@ passed to a designated Printer who then is responsible to return an
 adequate representation of that expression.
 
 **The basic concept is the following:**
-  1. Let the object print itself if it knows how.
-  2. Take the best fitting method defined in the printer.
-  3. As fall-back use the emptyPrinter method for the printer.
+
+1.  Let the object print itself if it knows how.
+2.  Take the best fitting method defined in the printer.
+3.  As fall-back use the emptyPrinter method for the printer.
 
 Which Method is Responsible for Printing?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -17,7 +18,7 @@ which you want to use. This method looks for an appropriate method which can
 print the given expression in the given style that the printer defines.
 While looking for the method, it follows these steps:
 
-1. **Let the object print itself if it knows how.**
+1.  **Let the object print itself if it knows how.**
 
     The printer looks for a specific method in every object. The name of that method
     depends on the specific printer and is defined under ``Printer.printmethod``.
@@ -33,7 +34,7 @@ While looking for the method, it follows these steps:
     good for user defined classes where it is inconvenient to patch the
     printers.
 
-2. **Take the best fitting method defined in the printer.**
+2.  **Take the best fitting method defined in the printer.**
 
     The printer loops through expr classes (class + its bases), and tries
     to dispatch the work to ``_print_<EXPR_CLASS>``
@@ -65,7 +66,7 @@ While looking for the method, it follows these steps:
     and the result is returned back. Otherwise, the printer tries to call
     ``._print_Number`` and so on.
 
-3. **As a fall-back use the emptyPrinter method for the printer.**
+3.  **As a fall-back use the emptyPrinter method for the printer.**
 
     As fall-back ``self.emptyPrinter`` will be called with the expression. If
     not defined in the Printer subclass this will be the same as ``str(expr)``.
@@ -132,42 +133,78 @@ Example of Custom Printing Method
 In the example below, the latex printing of the modulo operator is modified.
 This is done by overriding the method ``_latex`` of ``Mod``.
 
-.. code-block:: python
+>>> from sympy import Symbol, Mod, Integer
+>>> from sympy.printing.latex import print_latex
 
-    from sympy import Symbol, Mod, Integer
-    from sympy.printing.latex import print_latex
+>>> # Always use printer._print()
+>>> class ModOp(Mod):
+...     def _latex(self, printer):
+...         a, b = [printer._print(i) for i in self.args]
+...         return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
 
+Comparing the output of our custom operator to the builtin one:
 
-    class ModOp(Mod):
-        def _latex(self, printer=None):
-            # Always use printer.doprint() otherwise nested expressions won't
-            # work. See the example of ModOpWrong.
-            a, b = [printer.doprint(i) for i in self.args]
-            return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+>>> x = Symbol('x')
+>>> m = Symbol('m')
+>>> print_latex(Mod(x, m))
+x\\bmod{m}
+>>> print_latex(ModOp(x, m))
+\\operatorname{Mod}{\\left( x,m \\right)}
 
+Common mistakes
+~~~~~~~~~~~~~~~
+It's important to always use ``self._print(obj)`` to print subcomponents of
+an expression when customizing a printer. Mistakes include:
 
-    class ModOpWrong(Mod):
-        def _latex(self, printer=None):
-            a, b = [str(i) for i in self.args]
-            return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+1.  Using ``self.doprint(obj)`` instead:
 
+    >>> # This example does not work properly, as only the outermost call may use
+    >>> # doprint.
+    >>> class ModOpModeWrong(Mod):
+    ...     def _latex(self, printer):
+    ...         a, b = [printer.doprint(i) for i in self.args]
+    ...         return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
 
-    x = Symbol('x')
-    m = Symbol('m')
+    This fails when the `mode` argument is passed to the printer:
 
-    print_latex(ModOp(x, m))
-    print_latex(Mod(x, m))
+    >>> print_latex(ModOp(x, m), mode='inline')  # ok
+    $\\operatorname{Mod}{\\left( x,m \\right)}$
+    >>> print_latex(ModOpModeWrong(x, m), mode='inline')  # bad
+    $\\operatorname{Mod}{\\left( $x$,$m$ \\right)}$
 
-    # Nested modulo.
-    print_latex(ModOp(ModOp(x, m), Integer(7)))
-    print_latex(ModOpWrong(ModOpWrong(x, m), Integer(7)))
+2.  Using ``str(obj)`` instead:
 
-The output of the code above is::
+    >>> class ModOpNestedWrong(Mod):
+    ...     def _latex(self, printer):
+    ...         a, b = [str(i) for i in self.args]
+    ...         return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
 
-    \\operatorname{Mod}{\\left( x,m \\right)}
-    x\\bmod{m}
+    This fails on nested objects:
+
+    >>> # Nested modulo.
+    >>> print_latex(ModOp(ModOp(x, m), Integer(7)))  # ok
     \\operatorname{Mod}{\\left( \\operatorname{Mod}{\\left( x,m \\right)},7 \\right)}
-    \\operatorname{Mod}{\\left( ModOpWrong(x, m),7 \\right)}
+    >>> print_latex(ModOpNestedWrong(ModOpNestedWrong(x, m), Integer(7)))  # bad
+    \\operatorname{Mod}{\\left( ModOpNestedWrong(x, m),7 \\right)}
+
+3.  Using ``LatexPrinter()._print(obj)`` instead.
+
+    >>> from sympy.printing.latex import LatexPrinter
+    >>> class ModOpSettingsWrong(Mod):
+    ...     def _latex(self, printer):
+    ...         a, b = [LatexPrinter()._print(i) for i in self.args]
+    ...         return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+
+    This causes all the settings to be discarded in the subobjects. As an
+    example, the ``full_prec`` setting which shows floats to full precision is
+    ignored:
+
+    >>> from sympy import Float
+    >>> print_latex(ModOp(Float(1) * x, m), full_prec=True)  # ok
+    \\operatorname{Mod}{\\left( 1.00000000000000 x,m \\right)}
+    >>> print_latex(ModOpSettingsWrong(Float(1) * x, m), full_prec=True)  # bad
+    \\operatorname{Mod}{\\left( 1.0 x,m \\right)}
+
 """
 
 from __future__ import print_function, division
@@ -207,7 +244,6 @@ class Printer(object):
 
     _default_settings = {}  # type: Dict[str, Any]
 
-    emptyPrinter = str
     printmethod = None  # type: str
 
     def __init__(self, settings=None):
@@ -287,14 +323,13 @@ class Printer(object):
                 printmethod = '_print_' + cls.__name__
                 if hasattr(self, printmethod):
                     return getattr(self, printmethod)(expr, **kwargs)
-            # Unknown object, fall back to the emptyPrinter. Checks what type of
-            # decimal separator to print.
-            if (self.emptyPrinter == str) & \
-                (self._settings.get('decimal_separator', None) == 'comma'):
-                expr = str(expr).replace('.', '{,}')
+            # Unknown object, fall back to the emptyPrinter.
             return self.emptyPrinter(expr)
         finally:
             self._print_level -= 1
+
+    def emptyPrinter(self, expr):
+        return str(expr)
 
     def _as_ordered_terms(self, expr, order=None):
         """A compatibility function for ordering terms in Add. """

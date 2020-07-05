@@ -92,6 +92,8 @@ class Mul(Expr, AssocOp):
 
     is_Mul = True
 
+    _args_type = Expr
+
     def __neg__(self):
         c, args = self.as_coeff_mul()
         c = -c
@@ -198,8 +200,13 @@ class Mul(Expr, AssocOp):
                 r, b = b.as_coeff_Mul()
                 if b.is_Add:
                     if r is not S.One:  # 2-arg hack
-                        # leave the Mul as a Mul
-                        rv = [cls(a*r, b, evaluate=False)], [], None
+                        # leave the Mul as a Mul?
+                        ar = a*r
+                        if ar is S.One:
+                            arb = b
+                        else:
+                            arb = cls(a*r, b, evaluate=False)
+                        rv = [arb], [], None
                     elif global_parameters.distribute and b.is_commutative:
                         r, b = b.as_coeff_Add()
                         bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
@@ -1758,16 +1765,79 @@ class Mul(Expr, AssocOp):
             margs = [Pow(new, cdid)] + margs
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
-    def _eval_nseries(self, x, n, logx):
-        from sympy import Order, powsimp
-        terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
-        res = powsimp(self.func(*terms).expand(), combine='exp', deep=True)
-        if res.has(Order):
-            res += Order(x**n, x)
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy import degree, Mul, Order, ceiling, powsimp, PolynomialError
+        from itertools import product
+
+        def coeff_exp(term, x):
+            coeff, exp = S.One, S.Zero
+            for factor in Mul.make_args(term):
+                if factor.has(x):
+                    base, exp = factor.as_base_exp()
+                    if base != x:
+                        try:
+                            return term.leadterm(x)
+                        except ValueError:
+                            return term, S.Zero
+                else:
+                    coeff *= factor
+            return coeff, exp
+
+        ords = []
+
+        try:
+            for t in self.args:
+                coeff, exp = t.leadterm(x)
+                if not coeff.has(x):
+                    ords.append((t, exp))
+                else:
+                    raise ValueError
+
+            n0 = sum(t[1] for t in ords)
+            facs = []
+            for t, m in ords:
+                n1 = ceiling(n - n0 + m)
+                s = t.nseries(x, n=n1, logx=logx, cdir=cdir)
+                ns = s.getn()
+                if ns is not None:
+                    if ns < n1:  # less than expected
+                        n -= n1 - ns    # reduce n
+                facs.append(s.removeO())
+
+        except (ValueError, NotImplementedError, TypeError, AttributeError):
+            facs = [t.nseries(x, n=n, logx=logx, cdir=cdir) for t in self.args]
+            res = powsimp(self.func(*facs).expand(), combine='exp', deep=True)
+            if res.has(Order):
+                res += Order(x**n, x)
+            return res
+
+        res = 0
+        ords2 = [Add.make_args(factor) for factor in facs]
+
+        for fac in product(*ords2):
+            ords3 = [coeff_exp(term, x) for term in fac]
+            coeffs, powers = zip(*ords3)
+            power = sum(powers)
+            if power < n:
+                res += Mul(*coeffs)*(x**power)
+
+        if self.is_polynomial(x):
+            try:
+                if degree(self, x) != degree(res, x):
+                    res += Order(x**n, x)
+            except PolynomialError:
+                pass
+            else:
+                return res
+
+        for i in (1, 2, 3):
+            if (res - self).subs(x, i) is not S.Zero:
+                res += Order(x**n, x)
+                break
         return res
 
-    def _eval_as_leading_term(self, x):
-        return self.func(*[t.as_leading_term(x) for t in self.args])
+    def _eval_as_leading_term(self, x, cdir=0):
+        return self.func(*[t.as_leading_term(x, cdir=cdir) for t in self.args])
 
     def _eval_conjugate(self):
         return self.func(*[t.conjugate() for t in self.args])

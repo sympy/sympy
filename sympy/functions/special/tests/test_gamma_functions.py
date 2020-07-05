@@ -546,10 +546,10 @@ def test_loggamma():
 
     assert loggamma(x).rewrite('intractable') == log(gamma(x))
 
-    s1 = loggamma(x).series(x)
+    s1 = loggamma(x).series(x).cancel()
     assert s1 == -log(x) - EulerGamma*x + pi**2*x**2/12 + x**3*polygamma(2, 1)/6 + \
         pi**4*x**4/360 + x**5*polygamma(4, 1)/120 + O(x**6)
-    assert s1 == loggamma(x).rewrite('intractable').series(x)
+    assert s1 == loggamma(x).rewrite('intractable').series(x).cancel()
 
     assert conjugate(loggamma(x)) == loggamma(conjugate(x))
     assert conjugate(loggamma(0)) is oo
@@ -575,16 +575,16 @@ def test_loggamma():
         assert loggamma(1/x)._eval_nseries(x, n=N).getn() == M
     tN(0, 0)
     tN(1, 1)
-    tN(2, 3)
+    tN(2, 2)
     tN(3, 3)
-    tN(4, 5)
+    tN(4, 4)
     tN(5, 5)
 
 
 def test_polygamma_expansion():
     # A. & S., pa. 259 and 260
     assert polygamma(0, 1/x).nseries(x, n=3) == \
-        -log(x) - x/2 - x**2/12 + O(x**4)
+        -log(x) - x/2 - x**2/12 + O(x**3)
     assert polygamma(1, 1/x).series(x, n=5) == \
         x + x**2/2 + x**3/6 + O(x**5)
     assert polygamma(3, 1/x).nseries(x, n=11) == \

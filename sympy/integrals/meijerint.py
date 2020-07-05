@@ -381,7 +381,7 @@ def _find_splitting_points(expr, x):
 
     >>> from sympy.integrals.meijerint import _find_splitting_points as fsp
     >>> from sympy import sin
-    >>> from sympy.abc import a, x
+    >>> from sympy.abc import x
     >>> fsp(x, x)
     {0}
     >>> fsp((x-1)**3, x)
@@ -587,7 +587,7 @@ def _condsimp(cond):
     added as need arises rather than following any logical pattern.
 
     >>> from sympy.integrals.meijerint import _condsimp as simp
-    >>> from sympy import Or, Eq, unbranched_argument as arg, And
+    >>> from sympy import Or, Eq, And
     >>> from sympy.abc import x, y, z
     >>> simp(Or(x < y, z, Eq(x, y)))
     z | (x <= y)

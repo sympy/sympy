@@ -5,6 +5,7 @@ from itertools import repeat, combinations
 
 from sympy import S, Symbol, Add, Mul, simplify, Pow, exp
 from sympy.stats.symbolic_probability import RandomSymbol, Variance, Covariance
+from sympy.stats.rv import is_random
 
 _arg0_or_var = lambda var: var.args[0] if len(var.args) > 0 else var
 
@@ -59,7 +60,7 @@ def variance_prop(expr, consts=(), include_covar=False):
     if len(args) == 0:
         if expr in consts:
             return S.Zero
-        elif isinstance(expr, RandomSymbol):
+        elif is_random(expr):
             return Variance(expr).doit()
         elif isinstance(expr, Symbol):
             return Variance(RandomSymbol(expr)).doit()

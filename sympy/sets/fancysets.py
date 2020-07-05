@@ -241,7 +241,7 @@ class Reals(Interval, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import S, Interval, Rational, pi, I
+    >>> from sympy import S, Rational, pi, I
     >>> 5 in S.Reals
     True
     >>> Rational(-1, 2) in S.Reals

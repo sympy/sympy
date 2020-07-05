@@ -17,9 +17,9 @@ from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
     fuzzy_not)
 from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Eq, Ne, is_lt
 from sympy.core.singleton import Singleton, S
-from sympy.core.symbol import Symbol, Dummy, _uniquely_named_symbol
+from sympy.core.symbol import Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
@@ -27,7 +27,6 @@ from sympy.utilities import subsets
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iproduct, sift, roundrobin
 from sympy.utilities.misc import func_name, filldedent
-
 from mpmath import mpi, mpf
 
 
@@ -80,6 +79,7 @@ class Set(Basic):
         try:
             infimum = expr.inf
             assert infimum.is_comparable
+            infimum = infimum.evalf()  # issue #18505
         except (NotImplementedError,
                 AttributeError, AssertionError, ValueError):
             infimum = S.Infinity
@@ -323,6 +323,8 @@ class Set(Basic):
         """
         other = sympify(other, strict=True)
         c = self._contains(other)
+        if isinstance(c, Contains):
+            return c
         if c is None:
             return Contains(other, self, evaluate=False)
         b = tfn[c]
@@ -479,11 +481,10 @@ class Set(Basic):
         Examples
         ========
 
-        >>> from sympy import EmptySet, FiniteSet, Interval, PowerSet
+        >>> from sympy import EmptySet, FiniteSet, Interval
 
         A power set of an empty set:
 
-        >>> from sympy import FiniteSet, EmptySet
         >>> A = EmptySet
         >>> A.powerset()
         FiniteSet(EmptySet)
@@ -669,6 +670,8 @@ class Set(Basic):
         c = self._contains(other)
         b = tfn[c]
         if b is None:
+            # x in y must evaluate to T or F; to entertain a None
+            # result with Set use y.contains(x)
             raise TypeError('did not evaluate to a bool: %r' % c)
         return b
 
@@ -757,15 +760,7 @@ class ProductSet(Set):
                     yield s
         return ProductSet(*_flatten(self.sets))
 
-    def _eval_Eq(self, other):
-        if not other.is_ProductSet:
-            return
 
-        if len(self.sets) != len(other.sets):
-            return false
-
-        eqs = (Eq(x, y) for x, y in zip(self.sets, other.sets))
-        return tfn[fuzzy_and(map(fuzzy_bool, eqs))]
 
     def _contains(self, element):
         """
@@ -814,7 +809,7 @@ class ProductSet(Set):
         Examples
         ========
 
-        >>> from sympy import FiniteSet, Interval, ProductSet
+        >>> from sympy import FiniteSet, Interval
         >>> I = Interval(0, 1)
         >>> A = FiniteSet(1, 2, 3, 4, 5)
         >>> I.is_iterable
@@ -920,7 +915,7 @@ class Interval(Set, EvalfMixin):
             raise ValueError("Non-real intervals are not supported")
 
         # evaluate if possible
-        if (end < start) == True:
+        if is_lt(end, start):
             return S.EmptySet
         elif (end - start).is_negative:
             return S.EmptySet
@@ -1123,11 +1118,6 @@ class Interval(Set, EvalfMixin):
             elif isinstance(other, Set):
                 return None
             return false
-
-        return And(Eq(self.left, other.left),
-                   Eq(self.right, other.right),
-                   self.left_open == other.left_open,
-                   self.right_open == other.right_open)
 
 
 class Union(Set, LatticeOp, EvalfMixin):
@@ -1787,24 +1777,6 @@ class FiniteSet(Set, EvalfMixin):
         obj._args_set = _args_set
         return obj
 
-    def _eval_Eq(self, other):
-        if not isinstance(other, FiniteSet):
-            # XXX: If Interval(x, x, evaluate=False) worked then the line
-            # below would mean that
-            #     FiniteSet(x) & Interval(x, x, evaluate=False) -> false
-            if isinstance(other, Interval):
-                return false
-            elif isinstance(other, Set):
-                return None
-            return false
-
-        def all_in_both():
-            s_set = set(self.args)
-            o_set = set(other.args)
-            yield fuzzy_and(self._contains(e) for e in o_set - s_set)
-            yield fuzzy_and(other._contains(e) for e in s_set - o_set)
-
-        return tfn[fuzzy_and(all_in_both())]
 
     def __iter__(self):
         return iter(self.args)
@@ -2200,8 +2172,8 @@ def imageset(*args):
     Examples
     ========
 
-    >>> from sympy import S, Interval, Symbol, imageset, sin, Lambda
-    >>> from sympy.abc import x, y
+    >>> from sympy import S, Interval, imageset, sin, Lambda
+    >>> from sympy.abc import x
 
     >>> imageset(x, 2*x, Interval(0, 2))
     Interval(0, 4)
@@ -2266,7 +2238,8 @@ def imageset(*args):
             s = inspect.signature(f).parameters
 
         dexpr = _sympify(f(*[Dummy() for i in s]))
-        var = tuple(_uniquely_named_symbol(Symbol(i), dexpr) for i in s)
+        var = tuple(uniquely_named_symbol(
+            Symbol(i), dexpr) for i in s)
         f = Lambda(var, f(*var))
     else:
         raise TypeError(filldedent('''

@@ -216,7 +216,6 @@ class FunctionClass(ManagedProperties):
         ========
 
         >>> from sympy.core.function import Function
-        >>> from sympy.abc import x, y
         >>> f = Function('f')
 
         If the function can take any number of arguments, the set of whole
@@ -648,7 +647,7 @@ class Function(Application, Expr):
             Asymptotic expansion of %s around %s is
             not implemented.''' % (type(self), args0)))
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         """
         This function does compute series for multivariate functions,
         but the expansion is always in terms of *one* variable.
@@ -781,7 +780,7 @@ class Function(Application, Expr):
         args = self.args[:ix] + (D,) + self.args[ix + 1:]
         return Subs(Derivative(self.func(*args), D), D, A)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         """Stub that should be overridden by new Functions to return
         the first non-zero term in a series if ever an x-dependent
         argument whose leading term vanishes as x -> 0 might be encountered.
@@ -847,7 +846,7 @@ class AppliedUndef(Function):
         obj = super().__new__(cls, *args, **options)
         return obj
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         return self
 
     def _sage_(self):
@@ -1090,7 +1089,7 @@ class Derivative(Expr):
     automatically simplified in a fairly conservative fashion unless the
     keyword ``simplify`` is set to False.
 
-        >>> from sympy import cos, sin, sqrt, diff, Function, symbols
+        >>> from sympy import sqrt, diff, Function, symbols
         >>> from sympy.abc import x, y, z
         >>> f, g = symbols('f,g', cls=Function)
 
@@ -1524,7 +1523,7 @@ class Derivative(Expr):
         Examples
         ========
 
-        >>> from sympy import Derivative, Function, symbols, cos
+        >>> from sympy import Derivative, Function, symbols
         >>> vsort = Derivative._sort_variable_count
         >>> x, y, z = symbols('x y z')
         >>> f, g, h = symbols('f g h', cls=Function)
@@ -1798,12 +1797,12 @@ class Derivative(Expr):
         # everything was ok
         return Derivative(*newargs)
 
-    def _eval_lseries(self, x, logx):
+    def _eval_lseries(self, x, logx, cdir=0):
         dx = self.variables
-        for term in self.expr.lseries(x, logx=logx):
+        for term in self.expr.lseries(x, logx=logx, cdir=cdir):
             yield self.func(term, *dx)
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.expr.nseries(x, n=n, logx=logx)
         o = arg.getO()
         dx = self.variables
@@ -1812,7 +1811,7 @@ class Derivative(Expr):
             rv.append(o/x)
         return Add(*rv)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         series_gen = self.expr.lseries(x)
         d = S.Zero
         for leading_term in series_gen:
@@ -2351,7 +2350,7 @@ class Subs(Expr):
             val += Subs(self.expr.diff(s), self.variables, self.point).doit()
         return val
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         if x in self.point:
             # x is the variable being substituted into
             apos = self.point.index(x)
@@ -2366,7 +2365,7 @@ class Subs(Expr):
             rv += o.subs(other, x)
         return rv
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         if x in self.point:
             ipos = self.point.index(x)
             xvar = self.variables[ipos]

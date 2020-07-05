@@ -15,6 +15,7 @@ from sympy.simplify import nsimplify, simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .common import MatrixError, NonSquareMatrixError
+from .determinant import _find_reasonable_pivot
 
 from .utilities import _iszero
 
@@ -673,6 +674,17 @@ def _fuzzy_positive_definite(M):
     return None
 
 
+def _fuzzy_positive_semidefinite(M):
+    nonnegative_diagonals = M._has_nonnegative_diagonals()
+    if nonnegative_diagonals is False:
+        return False
+
+    if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
+        return True
+
+    return None
+
+
 def _is_positive_definite(M):
     if not M.is_hermitian:
         if not M.is_square:
@@ -692,14 +704,11 @@ def _is_positive_semidefinite(M):
             return False
         M = M + M.H
 
-    nonnegative_diagonals = M._has_nonnegative_diagonals()
-    if nonnegative_diagonals is False:
-        return False
+    fuzzy = _fuzzy_positive_semidefinite(M)
+    if fuzzy is not None:
+        return fuzzy
 
-    if nonnegative_diagonals and M.is_weakly_diagonally_dominant:
-        return True
-
-    return _is_positive_semidefinite_minors(M)
+    return _is_positive_semidefinite_cholesky(M)
 
 
 def _is_negative_definite(M):
@@ -741,83 +750,210 @@ def _is_positive_definite_GE(M):
     return True
 
 
-def _is_positive_semidefinite_minors(M):
-    """A method to evaluate all principal minors for testing
-    positive-semidefiniteness."""
-    size = M.rows
-    for i in range(size):
-        minor = M[:i+1, :i+1].det(method='berkowitz')
-        is_nonnegative = minor.is_nonnegative
-        if is_nonnegative is not True:
-            return is_nonnegative
-    return True
+def _is_positive_semidefinite_cholesky(M):
+    """Uses Cholesky factorization with complete pivoting
+
+    References
+    ==========
+
+    .. [1] http://eprints.ma.man.ac.uk/1199/1/covered/MIMS_ep2008_116.pdf
+
+    .. [2] https://www.value-at-risk.net/cholesky-factorization/
+    """
+    M = M.as_mutable()
+    for k in range(M.rows):
+        diags = [M[i, i] for i in range(k, M.rows)]
+        pivot, pivot_val, nonzero, _ = _find_reasonable_pivot(diags)
+
+        if nonzero:
+            return None
+
+        if pivot is None:
+            for i in range(k+1, M.rows):
+                for j in range(k, M.cols):
+                    iszero = M[i, j].is_zero
+                    if iszero is None:
+                        return None
+                    elif iszero is False:
+                        return False
+            return True
+
+        if M[k, k].is_negative or pivot_val.is_negative:
+            return False
+
+        if pivot > 0:
+            M.col_swap(k, k+pivot)
+            M.row_swap(k, k+pivot)
+
+        M[k, k] = sqrt(M[k, k])
+        M[k, k+1:] /= M[k, k]
+        M[k+1:, k+1:] -= M[k, k+1:].H * M[k, k+1:]
+
+    return M[-1, -1].is_nonnegative
 
 
 _doc_positive_definite = \
     r"""Finds out the definiteness of a matrix.
 
+    Explanation
+    ===========
+
+    A square real matrix $A$ is:
+
+    - A positive definite matrix if $x^T A x > 0$
+      for all non-zero real vectors $x$.
+    - A positive semidefinite matrix if $x^T A x \geq 0$
+      for all non-zero real vectors $x$.
+    - A negative definite matrix if $x^T A x < 0$
+      for all non-zero real vectors $x$.
+    - A negative semidefinite matrix if $x^T A x \leq 0$
+      for all non-zero real vectors $x$.
+    - An indefinite matrix if there exists non-zero real vectors
+      $x, y$ with $x^T A x > 0 > y^T A y$.
+
+    A square complex matrix $A$ is:
+
+    - A positive definite matrix if $\text{re}(x^H A x) > 0$
+      for all non-zero complex vectors $x$.
+    - A positive semidefinite matrix if $\text{re}(x^H A x) \geq 0$
+      for all non-zero complex vectors $x$.
+    - A negative definite matrix if $\text{re}(x^H A x) < 0$
+      for all non-zero complex vectors $x$.
+    - A negative semidefinite matrix if $\text{re}(x^H A x) \leq 0$
+      for all non-zero complex vectors $x$.
+    - An indefinite matrix if there exists non-zero complex vectors
+      $x, y$ with $\text{re}(x^H A x) > 0 > \text{re}(y^H A y)$.
+
+    A matrix need not be symmetric or hermitian to be positive definite.
+
+    - A real non-symmetric matrix is positive definite if and only if
+      $\frac{A + A^T}{2}$ is positive definite.
+    - A complex non-hermitian matrix is positive definite if and only if
+      $\frac{A + A^H}{2}$ is positive definite.
+
+    And this extension can apply for all the definitions above.
+
+    However, for complex cases, you can restrict the definition of
+    $\text{re}(x^H A x) > 0$ to $x^H A x > 0$ and require the matrix
+    to be hermitian.
+    But we do not present this restriction for computation because you
+    can check ``M.is_hermitian`` independently with this and use
+    the same procedure.
+
     Examples
     ========
 
-    An example of numeric positive definite matrix:
+    An example of symmetric positive definite matrix:
 
-    >>> from sympy import Matrix
-    >>> A = Matrix([[1, -2], [-2, 6]])
-    >>> A.is_positive_definite
-    True
-    >>> A.is_positive_semidefinite
-    True
-    >>> A.is_negative_definite
-    False
-    >>> A.is_negative_semidefinite
-    False
-    >>> A.is_indefinite
-    False
+    .. plot::
+        :context: reset
+        :format: doctest
+        :include-source: True
 
-    An example of numeric negative definite matrix:
+        >>> from sympy import Matrix, symbols
+        >>> from sympy.plotting import plot3d
+        >>> a, b = symbols('a b')
+        >>> x = Matrix([a, b])
 
-    >>> A = Matrix([[-1, 2], [2, -6]])
-    >>> A.is_positive_definite
-    False
-    >>> A.is_positive_semidefinite
-    False
-    >>> A.is_negative_definite
-    True
-    >>> A.is_negative_semidefinite
-    True
-    >>> A.is_indefinite
-    False
+        >>> A = Matrix([[1, 0], [0, 1]])
+        >>> A.is_positive_definite
+        True
+        >>> A.is_positive_semidefinite
+        True
 
-    An example of numeric indefinite matrix:
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
 
-    >>> A = Matrix([[1, 2], [2, 1]])
-    >>> A.is_positive_definite
-    False
-    >>> A.is_positive_semidefinite
-    False
-    >>> A.is_negative_definite
-    False
-    >>> A.is_negative_semidefinite
-    False
-    >>> A.is_indefinite
-    True
+    An example of symmetric positive semidefinite matrix:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[1, -1], [-1, 1]])
+        >>> A.is_positive_definite
+        False
+        >>> A.is_positive_semidefinite
+        True
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
+
+    An example of symmetric negative definite matrix:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[-1, 0], [0, -1]])
+        >>> A.is_negative_definite
+        True
+        >>> A.is_negative_semidefinite
+        True
+        >>> A.is_indefinite
+        False
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
+
+    An example of symmetric indefinite matrix:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[1, 2], [2, -1]])
+        >>> A.is_indefinite
+        True
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
+
+    An example of non-symmetric positive definite matrix.
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> A = Matrix([[1, 2], [-2, 1]])
+        >>> A.is_positive_definite
+        True
+        >>> A.is_positive_semidefinite
+        True
+
+        >>> p = plot3d((x.T*A*x)[0, 0], (a, -1, 1), (b, -1, 1))
 
     Notes
     =====
 
-    Definitiveness is not very commonly discussed for non-hermitian
-    matrices.
+    Although some people trivialize the definition of positive definite
+    matrices only for symmetric or hermitian matrices, this restriction
+    is not correct because it does not classify all instances of
+    positive definite matrices from the definition $x^T A x > 0$ or
+    $\text{re}(x^H A x) > 0$.
 
-    However, computing the definitiveness of a matrix can be
-    generalized over any real matrix by taking the symmetric part:
+    For instance, ``Matrix([[1, 2], [-2, 1]])`` presented in
+    the example above is an example of real positive definite matrix
+    that is not symmetric.
 
-    `A_S = 1/2 (A + A^{T})`
+    However, since the following formula holds true;
 
-    Or over any complex matrix by taking the hermitian part:
+    .. math::
+        \text{re}(x^H A x) > 0 \iff
+        \text{re}(x^H \frac{A + A^H}{2} x) > 0
 
-    `A_H = 1/2 (A + A^{H})`
+    We can classify all positive definite matrices that may or may not
+    be symmetric or hermitian by transforming the matrix to
+    $\frac{A + A^T}{2}$ or $\frac{A + A^H}{2}$
+    (which is guaranteed to be always real symmetric or complex
+    hermitian) and we can defer most of the studies to symmetric or
+    hermitian positive definite matrices.
 
-    And computing the eigenvalues.
+    But it is a different problem for the existance of Cholesky
+    decomposition. Because even though a non symmetric or a non
+    hermitian matrix can be positive definite, Cholesky or LDL
+    decomposition does not exist because the decompositions require the
+    matrix to be symmetric or hermitian.
 
     References
     ==========
@@ -916,7 +1052,7 @@ def _jordan_form(M, calc_transform=True, **kwargs):
 
         if (val, pow - 1) in mat_cache:
             mat_cache[(val, pow)] = mat_cache[(val, pow - 1)].multiply(
-                    mat_cache[(val, 1)], dotprodsimp=True)
+                    mat_cache[(val, 1)], dotprodsimp=None)
         else:
             mat_cache[(val, pow)] = (mat - val*M.eye(M.rows)).pow(pow)
 
@@ -1071,7 +1207,7 @@ def _jordan_form(M, calc_transform=True, **kwargs):
             # of any other generalized eigenvectors from a different
             # generalized eigenspace sharing the same eigenvalue.
             vec      = pick_vec(null_small + eig_basis, null_big)
-            new_vecs = [eig_mat(eig, i).multiply(vec, dotprodsimp=True)
+            new_vecs = [eig_mat(eig, i).multiply(vec, dotprodsimp=None)
                     for i in range(size)]
 
             eig_basis.extend(new_vecs)

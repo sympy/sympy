@@ -387,7 +387,6 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     ========
 
     >>> from sympy.combinatorics.permutations import Permutation
-    >>> from sympy.combinatorics.perm_groups import PermutationGroup
     >>> from sympy.combinatorics.tensor_can import double_coset_can_rep, get_transversals
     >>> gens = [Permutation(x) for x in [[2, 1, 0, 3, 4, 5, 7, 6], [4, 1, 2, 3, 0, 5, 7, 6]]]
     >>> base = [0, 2]
@@ -913,7 +912,6 @@ def bsgs_direct_product(base1, gens1, base2, gens2, signed=True):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import (get_symmetric_group_sgs, bsgs_direct_product)
     >>> base1, gens1 = get_symmetric_group_sgs(1)
     >>> base2, gens2 = get_symmetric_group_sgs(2)
@@ -947,7 +945,6 @@ def get_symmetric_group_sgs(n, antisym=False):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
     >>> get_symmetric_group_sgs(3)
     ([0, 1], [(4)(0 1), (4)(1 2)])
@@ -1051,7 +1048,6 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import tensor_gens, get_symmetric_group_sgs
 
     two symmetric tensors with 3 indices without free indices
@@ -1167,7 +1163,6 @@ def gens_products(*v):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, gens_products
     >>> base, gens = get_symmetric_group_sgs(2)
     >>> gens_products((base, gens, [[], []], 0))

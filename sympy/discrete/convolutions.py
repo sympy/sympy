@@ -296,7 +296,7 @@ def convolution_subset(a, b):
     Examples
     ========
 
-    >>> from sympy import symbols, S, I
+    >>> from sympy import symbols, S
     >>> from sympy.discrete.convolutions import convolution_subset
     >>> u, v, x, y, z = symbols('u v x y z')
 

@@ -47,7 +47,7 @@ def components(f, x):
     minimal, positive exponents.
 
     >>> from sympy import cos, sin
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> from sympy.integrals.heurisch import components
 
     >>> components(sin(x)*cos(x)**2, x)

@@ -142,6 +142,8 @@ class RigidBody(object):
 
         >>> from sympy.physics.mechanics import Point, ReferenceFrame, outer
         >>> from sympy.physics.mechanics import RigidBody, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> M, v = dynamicsymbols('M v')
         >>> N = ReferenceFrame('N')
         >>> P = Point('P')
@@ -182,6 +184,8 @@ class RigidBody(object):
 
         >>> from sympy.physics.mechanics import Point, ReferenceFrame, outer
         >>> from sympy.physics.mechanics import RigidBody, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> M, v, r, omega = dynamicsymbols('M v r omega')
         >>> N = ReferenceFrame('N')
         >>> b = ReferenceFrame('b')
@@ -285,7 +289,7 @@ class RigidBody(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Particle, Point, outer
+        >>> from sympy.physics.mechanics import Point, outer
         >>> from sympy.physics.mechanics import RigidBody, ReferenceFrame
         >>> from sympy import symbols
         >>> b = ReferenceFrame('b')

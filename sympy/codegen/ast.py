@@ -125,14 +125,14 @@ There is a function constructing a loop (or a complete function) like this in
 from typing import Any, Dict, List
 
 from collections import defaultdict
+
+from sympy import Lt, Le, Ge, Gt
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer, oo
-from sympy.core.relational import Lt, Le, Ge, Gt
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.utilities.iterables import iterable
-
 
 
 def _mk_Tuple(args):
@@ -968,7 +968,6 @@ class Type(Token):
       ...
     ValueError: Casting gives a significantly different value.
     >>> boost_mp50 = Type('boost::multiprecision::cpp_dec_float_50')
-    >>> from sympy import Symbol
     >>> from sympy.printing.cxxcode import cxxcode
     >>> from sympy.codegen.ast import Declaration, Variable
     >>> cxxcode(Declaration(Variable('x', type=boost_mp50)))
@@ -1052,7 +1051,7 @@ class Type(Token):
         Examples
         ========
 
-        >>> from sympy.codegen.ast import Type, integer, float32, int8
+        >>> from sympy.codegen.ast import integer, float32, int8
         >>> integer.cast_check(3.0) == 3
         True
         >>> float32.cast_check(1e-40)  # doctest: +ELLIPSIS
@@ -1168,7 +1167,7 @@ class FloatType(FloatBaseType):
     Examples
     ========
 
-    >>> from sympy import S, Float
+    >>> from sympy import S
     >>> from sympy.codegen.ast import FloatType
     >>> half_precision = FloatType('f16', nbits=16, nmant=10, nexp=5)
     >>> half_precision.max
@@ -1499,9 +1498,6 @@ class Variable(Node):
     __ge__ = lambda self, other: self._relation(other, Ge)
     __gt__ = lambda self, other: self._relation(other, Gt)
 
-
-
-
 class Pointer(Variable):
     """ Represents a pointer. See ``Variable``.
 
@@ -1564,8 +1560,7 @@ class Declaration(Token):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.codegen.ast import Declaration, Type, Variable, NoneToken, integer, untyped
+    >>> from sympy.codegen.ast import Declaration, NoneToken, untyped
     >>> z = Declaration('z')
     >>> z.variable.type == untyped
     True

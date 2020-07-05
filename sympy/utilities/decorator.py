@@ -192,7 +192,7 @@ def public(obj):
 
     >>> from sympy.utilities.decorator import public
 
-    >>> __all__
+    >>> __all__ # noqa: F821
     Traceback (most recent call last):
     ...
     NameError: name '__all__' is not defined
@@ -201,7 +201,7 @@ def public(obj):
     ... def some_function():
     ...     pass
 
-    >>> __all__
+    >>> __all__ # noqa: F821
     ['some_function']
 
     """

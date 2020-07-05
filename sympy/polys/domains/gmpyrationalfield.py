@@ -59,6 +59,11 @@ class GMPYRationalField(RationalField):
         """Convert a GMPY `mpq` object to `dtype`. """
         return a
 
+    def from_GaussianRationalField(K1, a, K0):
+        """Convert a `GaussianElement` object to `dtype`. """
+        if a.y == 0:
+            return GMPYRational(a.x)
+
     def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
         return GMPYRational(*map(int, K0.to_rational(a)))

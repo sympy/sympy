@@ -1,6 +1,6 @@
 from sympy.core import (
-    Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
-    Basic, I, nan, pi, symbols, oo, zoo, N)
+    Basic, Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
+    Expr, I, nan, pi, symbols, oo, zoo, N)
 from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
@@ -8,8 +8,12 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
     sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
+from sympy.polys import Poly
 from sympy.series.order import O
+from sympy.sets import FiniteSet
 from sympy.core.expr import unchanged
+
+from sympy.testing.pytest import warns_deprecated_sympy
 
 
 def test_rational():
@@ -190,6 +194,14 @@ def test_issue_4362():
     assert ((1 + x/y)**i).as_numer_denom() == ((x + y)**i, y**i)
 
 
+def test_Pow_Expr_args():
+    x = Symbol('x')
+    bases = [Basic(), Poly(x, x), FiniteSet(x)]
+    for base in bases:
+        with warns_deprecated_sympy():
+            Pow(base, S.One)
+
+
 def test_Pow_signs():
     """Cf. issues 4595 and 5250"""
     x = Symbol('x')
@@ -265,6 +277,17 @@ def test_pow_as_base_exp():
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S.One, S(2))
 
 
+def test_nseries():
+    x = Symbol('x')
+    assert sqrt(I*x - 1)._eval_nseries(x, 4, None, 1) == I + x/2 + I*x**2/8 - x**3/16 + O(x**4)
+    assert sqrt(I*x - 1)._eval_nseries(x, 4, None, -1) == -I - x/2 - I*x**2/8 + x**3/16 + O(x**4)
+    assert cbrt(I*x - 1)._eval_nseries(x, 4, None, 1) == (-1)**(S(1)/3) - (-1)**(S(5)/6)*x/3 + \
+    (-1)**(S(1)/3)*x**2/9 + 5*(-1)**(S(5)/6)*x**3/81 + O(x**4)
+    assert cbrt(I*x - 1)._eval_nseries(x, 4, None, -1) == (-1)**(S(1)/3)*exp(-2*I*pi/3) - \
+    (-1)**(S(5)/6)*x*exp(-2*I*pi/3)/3 + (-1)**(S(1)/3)*x**2*exp(-2*I*pi/3)/9 + \
+    5*(-1)**(S(5)/6)*x**3*exp(-2*I*pi/3)/81 + O(x**4)
+
+
 def test_issue_6100_12942_4473():
     x = Symbol('x')
     y = Symbol('y')
@@ -277,7 +300,7 @@ def test_issue_6100_12942_4473():
     # Pow != Symbol
     assert (x**1.0)**1.0 != x
     assert (x**1.0)**2.0 != x**2
-    b = Basic()
+    b = Expr()
     assert Pow(b, 1.0, evaluate=False) != b
     # if the following gets distributed as a Mul (x**1.0*y**1.0 then
     # __eq__ methods could be added to Symbol and Pow to detect the
@@ -302,8 +325,7 @@ def test_issue_6990():
     a = Symbol('a')
     b = Symbol('b')
     assert (sqrt(a + b*x + x**2)).series(x, 0, 3).removeO() == \
-        b*x/(2*sqrt(a)) + x**2*(1/(2*sqrt(a)) - \
-        b**2/(8*a**Rational(3, 2))) + sqrt(a)
+        sqrt(a)*x**2*(1/(2*a) - b**2/(8*a**2)) + sqrt(a) + b*x/(2*sqrt(a))
 
 
 def test_issue_6068():

@@ -1,11 +1,14 @@
 #
 # This is the module for ODE solver classes for single ODEs.
 #
-import typing
 
-if typing.TYPE_CHECKING:
-    from typing import ClassVar
-from typing import Dict, Iterable, List, Optional, Type
+#import typing
+#
+#if typing.TYPE_CHECKING:
+#    from typing import ClassVar
+#from typing import Dict, Type
+
+from typing import Iterable, List, Optional
 
 from sympy.core import S
 from sympy.core.exprtools import factor_terms
@@ -55,7 +58,7 @@ class SingleODEProblem:
     This class is used internally by dsolve. To instantiate an instance
     directly first define an ODE problem:
 
-    >>> from sympy import Eq, Function, Symbol
+    >>> from sympy import Function, Symbol
     >>> x = Symbol('x')
     >>> f = Function('f')
     >>> eq = f(x).diff(x, 2)
@@ -152,7 +155,7 @@ class SingleODESolver:
     You can use a subclass of SingleODEProblem to solve a particular type of
     ODE. We first define a particular ODE problem:
 
-    >>> from sympy import Eq, Function, Symbol
+    >>> from sympy import Function, Symbol
     >>> x = Symbol('x')
     >>> f = Function('f')
     >>> eq = f(x).diff(x, 2)
@@ -178,11 +181,11 @@ class SingleODESolver:
 
     # Subclasses should store the hint name (the argument to dsolve) in this
     # attribute
-    hint = None  # type: ClassVar[str]
+    hint = None  ## type: ClassVar[str]
 
     # Subclasses should define this to indicate if they support an _Integral
     # hint.
-    has_integral = None  # type: ClassVar[bool]
+    has_integral = None  ## type: ClassVar[bool]
 
     # The ODE to be solved
     ode_problem = None  # type: SingleODEProblem
@@ -351,7 +354,7 @@ class NthAlgebraic(SingleODESolver):
     # be stored in cached results we need to ensure that we always get the
     # same class back for each particular integration variable so we store these
     # classes in a global dict:
-    _diffx_stored = {}  # type: Dict[Symbol, Type[Function]]
+    _diffx_stored = {}  ## type: Dict[Symbol, Type[Function]]
 
     @staticmethod
     def _get_diffx(var):
@@ -466,8 +469,8 @@ class AlmostLinear(SinglePatternODESolver):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint, sin, cos
-    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy import Function, pprint, sin, cos
+    >>> from sympy.solvers.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -650,7 +653,7 @@ class Factorable(SingleODESolver):
         Examples
         ========
 
-        >>> from sympy import Function, dsolve, Eq, pprint, Derivative
+        >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
         >>> eq = (f(x)**2-4)*(f(x).diff(x)+f(x))
@@ -727,7 +730,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     and is valid when neither `a` nor `b` are zero and either `c` or `d` is
     zero.
 
-    >>> from sympy.abc import x, y, a, b, c, d
+    >>> from sympy.abc import x, a, b, c, d
     >>> from sympy.solvers.ode import dsolve, checkodesol
     >>> from sympy import pprint, Function
     >>> f = Function('f')

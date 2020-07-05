@@ -1,5 +1,7 @@
 from typing import Tuple
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
@@ -25,16 +27,28 @@ class AssocOp(Basic):
     # and keep it right here
     __slots__ = ('is_commutative',)  # type: Tuple[str, ...]
 
+    _args_type = None
+
     @cacheit
     def __new__(cls, *args, **options):
         from sympy import Order
         args = list(map(_sympify, args))
-        args = [a for a in args if a is not cls.identity]
 
-        # XXX: Maybe only Expr should be allowed here...
-        from sympy.core.relational import Relational
-        if any(isinstance(arg, Relational) for arg in args):
-            raise TypeError("Relational can not be used in %s" % cls.__name__)
+        # Disallow non-Expr args in Add/Mul
+        typ = cls._args_type
+        if typ is not None:
+            from sympy.core.relational import Relational
+            if any(isinstance(arg, Relational) for arg in args):
+                raise TypeError("Relational can not be used in %s" % cls.__name__)
+
+            # This should raise TypeError once deprecation period is over:
+            if not all(isinstance(arg, typ) for arg in args):
+                SymPyDeprecationWarning(
+                    feature="Add/Mul with non-Expr args",
+                    useinstead="Expr args",
+                    issue=19445,
+                    deprecated_since_version="1.7"
+                ).warn()
 
         evaluate = options.get('evaluate')
         if evaluate is None:
@@ -43,6 +57,8 @@ class AssocOp(Basic):
             obj = cls._from_args(args)
             obj = cls._exec_constructor_postprocessors(obj)
             return obj
+
+        args = [a for a in args if a is not cls.identity]
 
         if len(args) == 0:
             return cls.identity
@@ -94,12 +110,10 @@ class AssocOp(Basic):
            Note: use this with caution. There is no checking of arguments at
            all. This is best used when you are rebuilding an Add or Mul after
            simply removing one or more args. If, for example, modifications,
-           result in extra 1s being inserted (as when collecting an
-           expression's numerators and denominators) they will not show up in
-           the result but a Mul will be returned nonetheless:
+           result in extra 1s being inserted they will show up in the result:
 
                >>> m = (x*y)._new_rawargs(S.One, x); m
-               x
+               1*x
                >>> m == x
                False
                >>> m.is_Mul

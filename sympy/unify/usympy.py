@@ -79,7 +79,7 @@ def unify(x, y, s=None, variables=(), **kwargs):
     ========
 
     >>> from sympy.unify.usympy import unify
-    >>> from sympy import Basic, cos
+    >>> from sympy import Basic
     >>> from sympy.abc import x, y, z, p, q
 
     >>> next(unify(Basic(1, 2), Basic(1, x), variables=[x]))

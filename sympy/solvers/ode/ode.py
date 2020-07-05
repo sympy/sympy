@@ -249,13 +249,13 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
-from sympy.logic.boolalg import (BooleanAtom, And, Not, BooleanTrue,
+from sympy.logic.boolalg import (BooleanAtom, BooleanTrue,
                                 BooleanFalse)
 from sympy.functions import cos, cosh, exp, im, log, re, sin, sinh, sqrt, \
-    atan2, conjugate, Piecewise, cbrt, besselj, bessely, airyai, airybi
+    atan2, conjugate, cbrt, besselj, bessely, airyai, airybi
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral, integrate
-from sympy.matrices import wronskian, Matrix
+from sympy.matrices import wronskian
 from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
                          PolynomialError, lcm, roots, gcd)
 from sympy.polys.polyroots import roots_quartic
@@ -574,6 +574,19 @@ def dsolve(eq, func=None, hint="default", simplify=True,
 
     if iterable(eq):
         match = classify_sysode(eq, func)
+
+        # This case can happen only when the system of ODEs have
+        # been divided into multiple linear first order system of
+        # ODEs with the help of canonical_odes function. Hence, the
+        # linodesolve can be directly used to get the solution in
+        # this case. In future, this may have to be changed.
+        if isinstance(match, list):
+            sols = []
+            for m in match:
+                sol = sysode_linear_neq_order1(m)
+                sols.append(sol)
+            return sols
+
         eq = match['eq']
         order = match['order']
         func = match['func']
@@ -1818,9 +1831,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy import Function, Eq, symbols, diff, Rational
+    >>> from sympy import Function, Eq, symbols, diff
     >>> from sympy.solvers.ode.ode import classify_sysode
-    >>> from sympy.matrices.dense import Matrix
     >>> from sympy.abc import t
     >>> f, x, y = symbols('f, x, y', cls=Function)
     >>> k, l, m, n = symbols('k, l, m, n', Integer=True)
@@ -1833,10 +1845,13 @@ def classify_sysode(eq, funcs=None, **kwargs):
     [-11, -3]]), 'is_constant': True, 'is_general': True, 'is_homogeneous': True, 'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': 'type1'}
     >>> eq = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t) + 2), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
     >>> classify_sysode(eq)
-    {'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t) - 2, t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)],
-     'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -5*t, (0, x(t), 1): 1, (0, y(t), 0): -t**2,
-     (0, y(t), 1): 0, (1, x(t), 0): t**2, (1, x(t), 1): 0, (1, y(t), 0): -5*t, (1, y(t), 1): 1},
-     'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': None}
+    {'commutative_antiderivative': Matrix([
+    [5*t**2/2,   t**3/3],
+    [ -t**3/3, 5*t**2/2]]), 'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t) - 2, t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)], 'func': [x(t), y(t)], 'func_coeff': Matrix([
+    [-5*t, -t**2],
+    [t**2,  -5*t]]), 'is_constant': False, 'is_general': True, 'is_homogeneous': False, 'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'rhs': Matrix([
+    [2],
+    [0]]), 'type_of_equation': 'type4'}
 
     """
     from sympy.solvers.ode.systems import neq_nth_linear_constant_coeff_match
@@ -1877,6 +1892,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
     if len(funcs) != len(eq):
         raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
 
+    # This logic of list of lists in funcs to
+    # be replaced later.
     func_dict = dict()
     for func in funcs:
         if not order.get(func, False):
@@ -1891,6 +1908,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
             else:
                 func_dict[eq_no] = func
             order[func] = max_order
+
     funcs = [func_dict[i] for i in range(len(func_dict))]
     matching_hints['func'] = funcs
     for func in funcs:
@@ -2032,16 +2050,10 @@ def check_linear_2eq_order1(eq, func, func_coef):
     # End of condition for type 6
 
     if r['d1']!=0 or r['d2']!=0:
-        if not r['d1'].has(t) and not r['d2'].has(t):
-            if all(not r[k].has(t) for k in 'a1 a2 b1 b2 c1 c2'.split()):
-                # Equations for type 2 are Eq(a1*diff(x(t),t),b1*x(t)+c1*y(t)+d1) and Eq(a2*diff(y(t),t),b2*x(t)+c2*y(t)+d2)
-                return "type2"
-        else:
-            return None
+        return None
     else:
         if all(not r[k].has(t) for k in 'a1 a2 b1 b2 c1 c2'.split()):
-             # Equations for type 1 are Eq(a1*diff(x(t),t),b1*x(t)+c1*y(t)) and Eq(a2*diff(y(t),t),b2*x(t)+c2*y(t))
-            return "type1"
+            return None
         else:
             r['b1'] = r['b1']/r['a1'] ; r['b2'] = r['b2']/r['a2']
             r['c1'] = r['c1']/r['a1'] ; r['c2'] = r['c2']/r['a2']
@@ -2050,6 +2062,7 @@ def check_linear_2eq_order1(eq, func, func_coef):
             else:
                 # Equations for type 7 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), h(t)*x(t) + p(t)*y(t))
                 return "type7"
+
 
 def check_linear_2eq_order2(eq, func, func_coef):
     x = func[0].func
@@ -2537,7 +2550,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     such as ``min(listofsolutions, key=lambda i: ode_sol_simplicity(i,
     f(x)))``.
 
-    >>> from sympy import symbols, Function, Eq, tan, cos, sqrt, Integral
+    >>> from sympy import symbols, Function, Eq, tan, Integral
     >>> from sympy.solvers.ode.ode import ode_sol_simplicity
     >>> x, C1, C2 = symbols('x, C1, C2')
     >>> f = Function('f')
@@ -2838,7 +2851,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     Examples
     ========
 
-    >>> from sympy import symbols, Eq, pprint
+    >>> from sympy import symbols
     >>> from sympy.solvers.ode.ode import constant_renumber
     >>> x, C1, C2, C3 = symbols('x,C1:4')
     >>> expr = C3 + C2*x + C1*x**2
@@ -3466,7 +3479,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     ========
 
     >>> from sympy import dsolve, Function, pprint
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> f = Function("f")
     >>> eq = f(x).diff(x, 2) + f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_ordinary'))
@@ -3603,7 +3616,7 @@ def ode_2nd_linear_airy(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import dsolve, Function, pprint
+    >>> from sympy import dsolve, Function
     >>> from sympy.abc import x
     >>> f = Function("f")
     >>> eq = f(x).diff(x, 2) - x*f(x)
@@ -3660,7 +3673,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     ========
 
     >>> from sympy import dsolve, Function, pprint
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> f = Function("f")
     >>> eq = x*(f(x).diff(x, 2)) + 2*(f(x).diff(x)) + x*f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_regular'))
@@ -3761,11 +3774,11 @@ def ode_2nd_linear_bessel(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy.abc import x, y, a
+    >>> from sympy.abc import x
     >>> from sympy import Symbol
     >>> v = Symbol('v', positive=True)
-    >>> from sympy.solvers.ode import dsolve, checkodesol
-    >>> from sympy import pprint, Function
+    >>> from sympy.solvers.ode import dsolve
+    >>> from sympy import Function
     >>> f = Function('f')
     >>> y = f(x)
     >>> genform = x**2*y.diff(x, 2) + x*y.diff(x) + (x**2 - v**2)*y
@@ -4104,7 +4117,7 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     :py:obj:`~.ComplexRootOf` instance will be returned
     instead.
 
-    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy import Function, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> dsolve(4*x**2*f(x).diff(x, 2) + f(x), f(x),
@@ -4470,8 +4483,8 @@ def ode_linear_coefficients(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint
-    >>> from sympy.solvers.ode.ode import dsolve, classify_ode
+    >>> from sympy import Function, pprint
+    >>> from sympy.solvers.ode.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> df = f(x).diff(x)
@@ -4508,7 +4521,7 @@ def ode_separable_reduced(eq, func, order, match):
 
     The general solution is:
 
-        >>> from sympy import Function, dsolve, Eq, pprint
+        >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x, n
         >>> f, g = map(Function, ['f', 'g'])
         >>> genform = f(x).diff(x) + (f(x)/x)*g(x**n*f(x))
@@ -4535,8 +4548,8 @@ def ode_separable_reduced(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint
-    >>> from sympy.solvers.ode.ode import dsolve, classify_ode
+    >>> from sympy import Function, pprint
+    >>> from sympy.solvers.ode.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -4591,7 +4604,7 @@ def ode_1st_power_series(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint, exp
+    >>> from sympy import Function, pprint, exp
     >>> from sympy.solvers.ode.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -4672,7 +4685,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
     :py:class:`~sympy.polys.rootoftools.ComplexRootOf` instance will be return
     instead.
 
-    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy import Function, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
@@ -5508,7 +5521,7 @@ def ode_lie_group(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, dsolve, Eq, exp, pprint
+    >>> from sympy import Function, dsolve, exp, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> pprint(dsolve(f(x).diff(x) + 2*x*f(x) - x*exp(-x**2), f(x),
@@ -5621,7 +5634,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
 
     The infinitesimals can be found by solving the following PDE:
 
-        >>> from sympy import Function, diff, Eq, pprint
+        >>> from sympy import Function, Eq, pprint
         >>> from sympy.abc import x, y
         >>> xi, eta, h = map(Function, ['xi', 'eta', 'h'])
         >>> h = h(x, y)  # dy/dx = h
@@ -5649,7 +5662,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
     Examples
     ========
 
-    >>> from sympy import Function, diff
+    >>> from sympy import Function
     >>> from sympy.solvers.ode.ode import infinitesimals
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -6518,203 +6531,11 @@ def sysode_linear_2eq_order1(match_):
         raise NotImplementedError("Only homogeneous problems are supported" +
                                   " (and constant inhomogeneity)")
 
-    if match_['type_of_equation'] == 'type2':
-        gsol = _linear_2eq_order1_type1(x, y, t, r, eq)
-        psol = _linear_2eq_order1_type2(x, y, t, r, eq)
-        sol = [Eq(x(t), gsol[0].rhs+psol[0]), Eq(y(t), gsol[1].rhs+psol[1])]
     if match_['type_of_equation'] == 'type6':
         sol = _linear_2eq_order1_type6(x, y, t, r, eq)
     if match_['type_of_equation'] == 'type7':
         sol = _linear_2eq_order1_type7(x, y, t, r, eq)
     return sol
-
-# To remove Linear 2 Eq, Order 1, Type 1 when
-# Linear 2 Eq, Order 1, Type 2 is removed.
-def _linear_2eq_order1_type1(x, y, t, r, eq):
-    r"""
-    It is classified under system of two linear homogeneous first-order constant-coefficient
-    ordinary differential equations.
-
-    The equations which come under this type are
-
-    .. math:: x' = ax + by,
-
-    .. math:: y' = cx + dy
-
-    The characteristics equation is written as
-
-    .. math:: \lambda^{2} + (a+d) \lambda + ad - bc = 0
-
-    and its discriminant is `D = (a-d)^{2} + 4bc`. There are several cases
-
-    1. Case when `ad - bc \neq 0`. The origin of coordinates, `x = y = 0`,
-    is the only stationary point; it is
-    - a node if `D = 0`
-    - a node if `D > 0` and `ad - bc > 0`
-    - a saddle if `D > 0` and `ad - bc < 0`
-    - a focus if `D < 0` and `a + d \neq 0`
-    - a centre if `D < 0` and `a + d \neq 0`.
-
-    1.1. If `D > 0`. The characteristic equation has two distinct real roots
-    `\lambda_1` and `\lambda_ 2` . The general solution of the system in question is expressed as
-
-    .. math:: x = C_1 b e^{\lambda_1 t} + C_2 b e^{\lambda_2 t}
-
-    .. math:: y = C_1 (\lambda_1 - a) e^{\lambda_1 t} + C_2 (\lambda_2 - a) e^{\lambda_2 t}
-
-    where `C_1` and `C_2` being arbitrary constants
-
-    1.2. If `D < 0`. The characteristics equation has two conjugate
-    roots, `\lambda_1 = \sigma + i \beta` and `\lambda_2 = \sigma - i \beta`.
-    The general solution of the system is given by
-
-    .. math:: x = b e^{\sigma t} (C_1 \sin(\beta t) + C_2 \cos(\beta t))
-
-    .. math:: y = e^{\sigma t} ([(\sigma - a) C_1 - \beta C_2] \sin(\beta t) + [\beta C_1 + (\sigma - a) C_2 \cos(\beta t)])
-
-    1.3. If `D = 0` and `a \neq d`. The characteristic equation has
-    two equal roots, `\lambda_1 = \lambda_2`. The general solution of the system is written as
-
-    .. math:: x = 2b (C_1 + \frac{C_2}{a-d} + C_2 t) e^{\frac{a+d}{2} t}
-
-    .. math:: y = [(d - a) C_1 + C_2 + (d - a) C_2 t] e^{\frac{a+d}{2} t}
-
-    1.4. If `D = 0` and `a = d \neq 0` and `b = 0`
-
-    .. math:: x = C_1 e^{a t} , y = (c C_1 t + C_2) e^{a t}
-
-    1.5. If `D = 0` and `a = d \neq 0` and `c = 0`
-
-    .. math:: x = (b C_1 t + C_2) e^{a t} , y = C_1 e^{a t}
-
-    2. Case when `ad - bc = 0` and `a^{2} + b^{2} > 0`. The whole straight
-    line `ax + by = 0` consists of singular points. The original system of differential
-    equations can be rewritten as
-
-    .. math:: x' = ax + by , y' = k (ax + by)
-
-    2.1 If `a + bk \neq 0`, solution will be
-
-    .. math:: x = b C_1 + C_2 e^{(a + bk) t} , y = -a C_1 + k C_2 e^{(a + bk) t}
-
-    2.2 If `a + bk = 0`, solution will be
-
-    .. math:: x = C_1 (bk t - 1) + b C_2 t , y = k^{2} b C_1 t + (b k^{2} t + 1) C_2
-
-    """
-
-    C1, C2 = get_numbered_constants(eq, num=2)
-    a, b, c, d = r['a'], r['b'], r['c'], r['d']
-    real_coeff = all(v.is_real for v in (a, b, c, d))
-    D = (a - d)**2 + 4*b*c
-    l1 = (a + d + sqrt(D))/2
-    l2 = (a + d - sqrt(D))/2
-    equal_roots = Eq(D, 0).expand()
-    gsol1, gsol2 = [], []
-
-    # Solutions have exponential form if either D > 0 with real coefficients
-    # or D != 0 with complex coefficients. Eigenvalues are distinct.
-    # For each eigenvalue lam, pick an eigenvector, making sure we don't get (0, 0)
-    # The candidates are (b, lam-a) and (lam-d, c).
-    exponential_form = D > 0 if real_coeff else Not(equal_roots)
-    bad_ab_vector1 = And(Eq(b, 0), Eq(l1, a))
-    bad_ab_vector2 = And(Eq(b, 0), Eq(l2, a))
-    vector1 = Matrix((Piecewise((l1 - d, bad_ab_vector1), (b, True)),
-                      Piecewise((c, bad_ab_vector1), (l1 - a, True))))
-    vector2 = Matrix((Piecewise((l2 - d, bad_ab_vector2), (b, True)),
-                      Piecewise((c, bad_ab_vector2), (l2 - a, True))))
-    sol_vector = C1*exp(l1*t)*vector1 + C2*exp(l2*t)*vector2
-    gsol1.append((sol_vector[0], exponential_form))
-    gsol2.append((sol_vector[1], exponential_form))
-
-    # Solutions have trigonometric form for real coefficients with D < 0
-    # Both b and c are nonzero in this case, so (b, lam-a) is an eigenvector
-    # It splits into real/imag parts as (b, sigma-a) and (0, beta). Then
-    # multiply it by C1(cos(beta*t) + I*C2*sin(beta*t)) and separate real/imag
-    trigonometric_form = D < 0 if real_coeff else False
-    sigma = re(l1)
-    if im(l1).is_positive:
-        beta = im(l1)
-    else:
-        beta = im(l2)
-    vector1 = Matrix((b, sigma - a))
-    vector2 = Matrix((0, beta))
-    sol_vector = exp(sigma*t) * (C1*(cos(beta*t)*vector1 - sin(beta*t)*vector2) + \
-        C2*(sin(beta*t)*vector1 + cos(beta*t)*vector2))
-    gsol1.append((sol_vector[0], trigonometric_form))
-    gsol2.append((sol_vector[1], trigonometric_form))
-
-    # Final case is D == 0, a single eigenvalue. If the eigenspace is 2-dimensional
-    # then we have a scalar matrix, deal with this case first.
-    scalar_matrix = And(Eq(a, d), Eq(b, 0), Eq(c, 0))
-
-    vector1 = Matrix((S.One, S.Zero))
-    vector2 = Matrix((S.Zero, S.One))
-    sol_vector = exp(l1*t) * (C1*vector1 + C2*vector2)
-    gsol1.append((sol_vector[0], scalar_matrix))
-    gsol2.append((sol_vector[1], scalar_matrix))
-
-    # Have one eigenvector. Get a generalized eigenvector from (A-lam)*vector2 = vector1
-    vector1 = Matrix((Piecewise((l1 - d, bad_ab_vector1), (b, True)),
-                      Piecewise((c, bad_ab_vector1), (l1 - a, True))))
-    vector2 = Matrix((Piecewise((S.One, bad_ab_vector1), (S.Zero, Eq(a, l1)),
-                                (b/(a - l1), True)),
-                      Piecewise((S.Zero, bad_ab_vector1), (S.One, Eq(a, l1)),
-                                (S.Zero, True))))
-    sol_vector = exp(l1*t) * (C1*vector1  + C2*(vector2 + t*vector1))
-    gsol1.append((sol_vector[0], equal_roots))
-    gsol2.append((sol_vector[1], equal_roots))
-    return [Eq(x(t), Piecewise(*gsol1)), Eq(y(t), Piecewise(*gsol2))]
-
-
-def _linear_2eq_order1_type2(x, y, t, r, eq):
-    r"""
-    The equations of this type are
-
-    .. math:: x' = ax + by + k1 , y' = cx + dy + k2
-
-    The general solution of this system is given by sum of its particular solution and the
-    general solution of the corresponding homogeneous system is obtained from type1.
-
-    1. When `ad - bc \neq 0`. The particular solution will be
-    `x = x_0` and `y = y_0` where `x_0` and `y_0` are determined by solving linear system of equations
-
-    .. math:: a x_0 + b y_0 + k1 = 0 , c x_0 + d y_0 + k2 = 0
-
-    2. When `ad - bc = 0` and `a^{2} + b^{2} > 0`. In this case, the system of equation becomes
-
-    .. math:: x' = ax + by + k_1 , y' = k (ax + by) + k_2
-
-    2.1 If `\sigma = a + bk \neq 0`, particular solution is given by
-
-    .. math:: x = b \sigma^{-1} (c_1 k - c_2) t - \sigma^{-2} (a c_1 + b c_2)
-
-    .. math:: y = kx + (c_2 - c_1 k) t
-
-    2.2 If `\sigma = a + bk = 0`, particular solution is given by
-
-    .. math:: x = \frac{1}{2} b (c_2 - c_1 k) t^{2} + c_1 t
-
-    .. math:: y = kx + (c_2 - c_1 k) t
-
-    """
-    r['k1'] = -r['k1']; r['k2'] = -r['k2']
-    if (r['a']*r['d'] - r['b']*r['c']) != 0:
-        x0, y0 = symbols('x0, y0', cls=Dummy)
-        sol = solve((r['a']*x0+r['b']*y0+r['k1'], r['c']*x0+r['d']*y0+r['k2']), x0, y0)
-        psol = [sol[x0], sol[y0]]
-    elif (r['a']*r['d'] - r['b']*r['c']) == 0 and (r['a']**2+r['b']**2) > 0:
-        k = r['c']/r['a']
-        sigma = r['a'] + r['b']*k
-        if sigma != 0:
-            sol1 = r['b']*sigma**-1*(r['k1']*k-r['k2'])*t - sigma**-2*(r['a']*r['k1']+r['b']*r['k2'])
-            sol2 = k*sol1 + (r['k2']-r['k1']*k)*t
-        else:
-            # FIXME: a previous typo fix shows this is not covered by tests
-            sol1 = r['b']*(r['k2']-r['k1']*k)*t**2 + r['k1']*t
-            sol2 = k*sol1 + (r['k2']-r['k1']*k)*t
-        psol = [sol1, sol2]
-    return psol
 
 def _linear_2eq_order1_type6(x, y, t, r, eq):
     r"""
@@ -7478,13 +7299,21 @@ def _linear_2eq_order2_type11(x, y, t, r, eq):
 
 
 def sysode_linear_neq_order1(match):
-    from sympy.solvers.ode.systems import (_linear_neq_order1_type1,
-        _linear_neq_order1_type3)
+    from sympy.solvers.ode.systems import linodesolve
 
-    if match['type_of_equation'] == 'type1':
-        sol = _linear_neq_order1_type1(match)
-    elif match['type_of_equation'] == 'type3':
-        sol = _linear_neq_order1_type3(match)
+    eqs = match['eq']
+    t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
+    funcs = match['func']
+
+    rhs = match.get('rhs', None)
+    A = -match['func_coeff']
+    B = match.get('commutative_antiderivative', None)
+    type_of_equation = match['type_of_equation']
+
+    sol_vector = linodesolve(A, t, b=rhs, B=B, type=type_of_equation)
+
+    sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
+
     return sol
 
 

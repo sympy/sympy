@@ -29,7 +29,7 @@ class re(Function):
     ========
 
     >>> from sympy import re, im, I, E
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> re(2*E)
     2*E
     >>> re(2*I + 17)
@@ -394,8 +394,11 @@ class sign(Function):
         if arg.is_extended_real:
             return Heaviside(arg, H0=S(1)/2) * 2 - 1
 
+    def _eval_rewrite_as_Abs(self, arg, **kwargs):
+        return Piecewise((0, Eq(arg, 0)), (arg / Abs(arg), True))
+
     def _eval_simplify(self, **kwargs):
-        return self.func(self.args[0].factor())  # XXX include doit?
+        return self.func(factor_terms(self.args[0]))  # XXX include doit?
 
 
 class Abs(Function):
@@ -591,7 +594,7 @@ class Abs(Function):
                 return self.args[0]**(exponent - 1)*self
         return
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         direction = self.args[0].leadterm(x)[0]
         if direction.has(log(x)):
             direction = direction.subs(log(x), logx)
@@ -796,7 +799,7 @@ class adjoint(Function):
         arg = printer._print(self.args[0])
         tex = r'%s^{\dagger}' % arg
         if exp:
-            tex = r'\left(%s\right)^{%s}' % (tex, printer._print(exp))
+            tex = r'\left(%s\right)^{%s}' % (tex, exp)
         return tex
 
     def _pretty(self, printer, *args):

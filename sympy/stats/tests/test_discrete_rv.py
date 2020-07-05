@@ -141,7 +141,7 @@ def test_sample_discrete():
     if not scipy:
         skip('Scipy not installed. Abort tests')
     with ignore_warnings(UserWarning):
-        assert next(sample(X))[0] in X.pspace.domain.set
+        assert next(sample(X)) in X.pspace.domain.set
         samps = next(sample(X, size=2)) # This takes long time if ran without scipy
         for samp in samps:
             assert samp in X.pspace.domain.set
@@ -284,23 +284,11 @@ def test_product_spaces():
     assert P(Eq(X1 + X2, 3)) == Rational(1, 12)
 
 
-def test_sampling_methods():
+def test_sample_numpy():
     distribs_numpy = [
         Geometric('G', 0.5),
         Poisson('P', 1),
         Zeta('Z', 2)
-    ]
-    distribs_scipy = [
-        Geometric('G', 0.5),
-        Logarithmic('L', 0.5),
-        Poisson('P', 1),
-        Skellam('S', 1, 1),
-        YuleSimon('Y', 1),
-        Zeta('Z', 2)
-    ]
-    distribs_pymc3 = [
-        Geometric('G', 0.5),
-        Poisson('P', 1),
     ]
     size = 3
     numpy = import_module('numpy')
@@ -309,24 +297,61 @@ def test_sampling_methods():
     else:
         with ignore_warnings(UserWarning):
             for X in distribs_numpy:
-                samps = X.pspace.distribution._sample_numpy(size)
-                for samp in samps:
-                    assert samp in X.pspace.domain.set
+                samps = next(sample(X, size=size, library='numpy'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
+            raises(NotImplementedError,
+                lambda: next(sample(Skellam('S', 1, 1), library='numpy')))
+    raises(NotImplementedError,
+            lambda: Skellam('S', 1, 1).pspace.distribution.sample(library='tensorflow'))
+
+def test_sample_scipy():
+    p = S(2)/3
+    x = Symbol('x', integer=True, positive=True)
+    pdf = p*(1 - p)**(x - 1) # pdf of Geometric Distribution
+    distribs_scipy = [
+        DiscreteRV(x, pdf, set=S.Naturals),
+        Geometric('G', 0.5),
+        Logarithmic('L', 0.5),
+        NegativeBinomial('N', 5, 0.4),
+        Poisson('P', 1),
+        Skellam('S', 1, 1),
+        YuleSimon('Y', 1),
+        Zeta('Z', 2)
+    ]
+    size = 3
+    numsamples = 5
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
         with ignore_warnings(UserWarning):
+            z_sample = list(sample(Zeta("G", 7), size=size, numsamples=numsamples))
+            assert len(z_sample) == numsamples
             for X in distribs_scipy:
-                samps = next(sample(X, size=size))
-                for samp in samps:
-                    assert samp in X.pspace.domain.set
+                samps = next(sample(X, size=size, library='scipy'))
+                samps2 = next(sample(X, size=(2, 2), library='scipy'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
+                for i in range(2):
+                    for j in range(2):
+                        assert samps2[i][j] in X.pspace.domain.set
+
+def test_sample_pymc3():
+    distribs_pymc3 = [
+        Geometric('G', 0.5),
+        Poisson('P', 1),
+        NegativeBinomial('N', 5, 0.4)
+    ]
+    size = 3
     pymc3 = import_module('pymc3')
     if not pymc3:
         skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
         with ignore_warnings(UserWarning):
             for X in distribs_pymc3:
-                samps = X.pspace.distribution._sample_pymc3(size)
-                for samp in samps:
-                    assert samp in X.pspace.domain.set
+                samps = next(sample(X, size=size, library='pymc3'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
+            raises(NotImplementedError,
+                lambda: next(sample(Skellam('S', 1, 1), library='pymc3')))

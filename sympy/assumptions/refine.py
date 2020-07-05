@@ -53,7 +53,7 @@ def refine_abs(expr, assumptions):
     Examples
     ========
 
-    >>> from sympy import Symbol, Q, refine, Abs
+    >>> from sympy import Q, Abs
     >>> from sympy.assumptions.refine import refine_abs
     >>> from sympy.abc import x
     >>> refine_abs(Abs(x), Q.real(x))
@@ -89,7 +89,7 @@ def refine_Pow(expr, assumptions):
     """
     Handler for instances of Pow.
 
-    >>> from sympy import Symbol, Q
+    >>> from sympy import Q
     >>> from sympy.assumptions.refine import refine_Pow
     >>> from sympy.abc import x,y,z
     >>> refine_Pow((-1)**x, Q.real(x))
@@ -190,7 +190,7 @@ def refine_atan2(expr, assumptions):
     Examples
     ========
 
-    >>> from sympy import Symbol, Q, refine, atan2
+    >>> from sympy import Q, atan2
     >>> from sympy.assumptions.refine import refine_atan2
     >>> from sympy.abc import x, y
     >>> refine_atan2(atan2(y,x), Q.real(y) & Q.positive(x))

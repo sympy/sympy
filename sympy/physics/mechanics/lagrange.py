@@ -57,7 +57,7 @@ class LagrangesMethod(object):
 
         >>> from sympy.physics.mechanics import LagrangesMethod, Lagrangian
         >>> from sympy.physics.mechanics import ReferenceFrame, Particle, Point
-        >>> from sympy.physics.mechanics import dynamicsymbols, kinetic_energy
+        >>> from sympy.physics.mechanics import dynamicsymbols
         >>> from sympy import symbols
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
