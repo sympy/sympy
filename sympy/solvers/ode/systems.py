@@ -1232,6 +1232,59 @@ def _weak_component_solver(wcc, t, const_idx):
 
 def dsolve_system(eqs, funcs=None, t=None, ics=None):
     r"""
+    Solves any(supported) system of Ordinary Differential Equations
+
+    Explanation
+    ===========
+
+    This function takes a system of ODEs as an input, determines if the
+    it is solvable by this function, and returns the solution if found any.
+
+    This function can handle:
+    1. Linear, First Order, Constant coefficient homogeneous system of ODEs
+    2. Linear, First Order, Constant coefficient non-homogeneous system of ODEs
+    3. Linear, First Order, non-constant coefficient homogeneous system of ODEs
+    4. Linear, First Order, non-constant coefficient non-homogeneous system of ODEs
+    5. Any implicit system which can be divided into system of ODEs which is of the above 4 forms
+
+    The types of systems described above aren't limited by the number of equations, i.e. this
+    function can solve the above types irrespective the number of equations in the system passed.
+
+    This function returns a pair of elements, first being the solutions obtained and second being
+    the sub-system of ODEs that it was not able to solve. If the function wasn't able to solve the
+    whole system, then just a tuple of two empty lists is returned.
+
+    Parameters
+    ==========
+
+    eqs : List
+        List of ODEs to be solved
+    funcs : List or None
+        List of dependent variables that make up the system of ODEs
+    t : Symbol
+        Independent variable in the system of ODEs
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Eq, Function, filldedent
+    >>> from sympy.solvers.ode.systems import dsolve_system
+    >>> f, g = symbols("f g", cls=Function)
+    >>> x = symbols("x")
+
+    >>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
+    >>> dsolve_system(eqs)
+    ([[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]], [])
+
+    Lets look at an implicit system of ODEs:
+    >>> eqs = [Eq(f(x).diff(x)**2, g(x)**2), Eq(g(x).diff(x), g(x))]
+    >>> dsolve_system(eqs)
+    ([[Eq(f(x), C1 - C2*exp(x)), Eq(g(x), C2*exp(x))], [Eq(f(x), C1 + C2*exp(x)), Eq(g(x), C2*exp(x))]], [])
+
+    Returns
+    =======
+
+    Tuple : (List of List of Equations, List of subsystems not solved)
 
     """
     from sympy.solvers.ode.ode import solve_ics
