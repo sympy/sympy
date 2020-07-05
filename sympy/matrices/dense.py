@@ -745,6 +745,10 @@ class DenseDomainMatrix(DenseMatrix):
             raise ValueError("no methods allowed!")
         return self.from_DomainMatrix(self._rep.inv())
 
+    def rref(self, **kwargs):
+        rep_rref, pivots = self._rep.rref()
+        return self.from_DomainMatrix(rep_rref), pivots
+
     # called by __rmul__ in common.py
     def _eval_scalar_mul(self, other):
         mat = [other*a for a in self._flat()]
