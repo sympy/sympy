@@ -6,15 +6,16 @@ import mpmath
 from sympy.testing.pytest import raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
-    Float, Matrix, Lambda, Piecewise, exp, E, Integral, oo, I, Abs, Function,
+    Float, Lambda, Piecewise, exp, E, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
     digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
-    MatrixSymbol, fresnelc, fresnels)
+    fresnelc, fresnels)
 from sympy.functions.elementary.complexes import re, im, arg
 from sympy.functions.special.polynomials import \
     chebyshevt, chebyshevu, legendre, hermite, laguerre, gegenbauer, \
     assoc_legendre, assoc_laguerre, jacobi
+from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.pycode import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
@@ -29,7 +30,7 @@ import sympy
 MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
-scipy = import_module('scipy')
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 
@@ -431,6 +432,15 @@ def test_numpy_old_matrix():
     f = lambdify((x, y, z), A, [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy'])
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     assert isinstance(f(1, 2, 3), numpy.matrix)
+
+
+def test_scipy_sparse_matrix():
+    if not scipy:
+        skip("scipy not installed.")
+    A = SparseMatrix([[x, 0], [0, y]])
+    f = lambdify((x, y), A, modules="scipy")
+    B = f(1, 2)
+    assert isinstance(B, scipy.sparse.coo_matrix)
 
 
 def test_python_div_zero_issue_11306():

@@ -1820,7 +1820,6 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         return obj
 
-
 class Atom(Basic):
     """
     A parent class for atomic things. An atom is an expression with no subexpressions.

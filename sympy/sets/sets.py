@@ -17,7 +17,7 @@ from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
     fuzzy_not)
 from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Eq, Ne, is_lt
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
@@ -27,7 +27,6 @@ from sympy.utilities import subsets
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iproduct, sift, roundrobin
 from sympy.utilities.misc import func_name, filldedent
-
 from mpmath import mpi, mpf
 
 
@@ -761,15 +760,7 @@ class ProductSet(Set):
                     yield s
         return ProductSet(*_flatten(self.sets))
 
-    def _eval_Eq(self, other):
-        if not other.is_ProductSet:
-            return
 
-        if len(self.sets) != len(other.sets):
-            return false
-
-        eqs = (Eq(x, y) for x, y in zip(self.sets, other.sets))
-        return tfn[fuzzy_and(map(fuzzy_bool, eqs))]
 
     def _contains(self, element):
         """
@@ -924,7 +915,7 @@ class Interval(Set, EvalfMixin):
             raise ValueError("Non-real intervals are not supported")
 
         # evaluate if possible
-        if (end < start) == True:
+        if is_lt(end, start):
             return S.EmptySet
         elif (end - start).is_negative:
             return S.EmptySet
@@ -1127,11 +1118,6 @@ class Interval(Set, EvalfMixin):
             elif isinstance(other, Set):
                 return None
             return false
-
-        return And(Eq(self.left, other.left),
-                   Eq(self.right, other.right),
-                   self.left_open == other.left_open,
-                   self.right_open == other.right_open)
 
 
 class Union(Set, LatticeOp, EvalfMixin):
@@ -1791,24 +1777,6 @@ class FiniteSet(Set, EvalfMixin):
         obj._args_set = _args_set
         return obj
 
-    def _eval_Eq(self, other):
-        if not isinstance(other, FiniteSet):
-            # XXX: If Interval(x, x, evaluate=False) worked then the line
-            # below would mean that
-            #     FiniteSet(x) & Interval(x, x, evaluate=False) -> false
-            if isinstance(other, Interval):
-                return false
-            elif isinstance(other, Set):
-                return None
-            return false
-
-        def all_in_both():
-            s_set = set(self.args)
-            o_set = set(other.args)
-            yield fuzzy_and(self._contains(e) for e in o_set - s_set)
-            yield fuzzy_and(other._contains(e) for e in s_set - o_set)
-
-        return tfn[fuzzy_and(all_in_both())]
 
     def __iter__(self):
         return iter(self.args)

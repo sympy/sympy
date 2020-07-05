@@ -386,6 +386,14 @@ def test_issue_9569():
     assert integrate(1/(2 - cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)) + pi*floor((x/2 - pi/2)/pi))/3
 
 
+def test_issue_13733():
+    s = Symbol('s', positive=True)
+    pz = exp(-(z - y)**2/(2*s*s))/sqrt(2*pi*s*s)
+    pzgx = integrate(pz, (z, x, oo))
+    assert integrate(pzgx, (x, 0, oo)) == sqrt(2)*s*exp(-y**2/(2*s**2))/(2*sqrt(pi)) + \
+        y*erf(sqrt(2)*y/(2*s))/2 + y/2
+
+
 def test_issue_13749():
     assert integrate(1 / (2 + cos(x)), (x, 0, pi)) == pi/sqrt(3)
     assert integrate(1/(2 + cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)/3) + pi*floor((x/2 - pi/2)/pi))/3

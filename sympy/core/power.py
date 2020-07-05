@@ -1509,7 +1509,7 @@ class Pow(Expr):
             if b.has(polygamma, EulerGamma) and logx is not None:
                 raise ValueError()
             _, m = b.leadterm(x)
-        except ValueError:
+        except (ValueError, NotImplementedError):
             b = b._eval_nseries(x, n=max(2, n), logx=logx, cdir=cdir).removeO()
             if b.has(nan, zoo):
                 raise NotImplementedError()

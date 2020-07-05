@@ -1,11 +1,14 @@
+from sympy.core.logic import fuzzy_and
+from sympy.core.sympify import _sympify
+from sympy.multipledispatch import dispatch
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
-    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
-    log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals)
+                   Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
+                   log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals, Basic, Expr)
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
-                                   Gt, Ge, Ne)
+                                   Gt, Ge, Ne, is_le, is_gt, is_ge, is_lt, is_eq, is_neq)
 from sympy.sets.sets import Interval, FiniteSet
 
 from itertools import combinations
@@ -690,7 +693,7 @@ def test_issue_8245():
     r = Rational(str(a.n(29)))
     assert rel_check(a, r)
 
-    assert Eq(log(cos(2)**2 + sin(2)**2), 0) == True
+    assert Eq(log(cos(2)**2 + sin(2)**2), 0) is S.true
 
 
 def test_issue_8449():
@@ -1129,3 +1132,58 @@ def test_multivariate_linear_function_simplification():
 
 def test_nonpolymonial_relations():
     assert Eq(cos(x), 0).simplify() == Eq(cos(x), 0)
+
+def test_18778():
+    raises(TypeError, lambda: is_le(Basic(), Basic()))
+    raises(TypeError, lambda: is_gt(Basic(), Basic()))
+    raises(TypeError, lambda: is_ge(Basic(), Basic()))
+    raises(TypeError, lambda: is_lt(Basic(), Basic()))
+
+def test_EvalEq():
+    """
+
+    This test exists to ensure backwards compatibility.
+    The method to use is _eval_is_eq
+    """
+    from sympy import Expr
+
+    class PowTest(Expr):
+        def __new__(cls, base, exp):
+           return Basic.__new__(PowTest, _sympify(base), _sympify(exp))
+
+        def _eval_Eq(lhs, rhs):
+            if type(lhs) == PowTest and type(rhs) == PowTest:
+                return lhs.args[0] == rhs.args[0] and lhs.args[1] == rhs.args[1]
+
+    assert is_eq(PowTest(3, 4), PowTest(3,4))
+    assert is_eq(PowTest(3, 4), _sympify(4)) is None
+    assert is_neq(PowTest(3, 4), PowTest(3,7))
+
+def test_is_eq():
+    class PowTest(Expr):
+        def __new__(cls, base, exp):
+            return Basic.__new__(cls, _sympify(base), _sympify(exp))
+
+    @dispatch(PowTest, PowTest)
+    def _eval_is_eq(lhs, rhs):
+        if type(lhs) == PowTest and type(rhs) == PowTest:
+            return fuzzy_and([is_eq(lhs.args[0], rhs.args[0]), is_eq(lhs.args[1], rhs.args[1])])
+
+    assert is_eq(PowTest(3, 4), PowTest(3,4))
+    assert is_eq(PowTest(3, 4), _sympify(4)) is None
+    assert is_neq(PowTest(3, 4), PowTest(3,7))
+
+def test_is_ge_le():
+    class PowTest(Expr):
+        def __new__(cls, base, exp):
+            return Basic.__new__(cls, _sympify(base), _sympify(exp))
+
+    @dispatch(PowTest, PowTest)
+    def _eval_is_ge(lhs, rhs):
+        if type(lhs) == PowTest and type(rhs) == PowTest:
+            return fuzzy_and([is_ge(lhs.args[0], rhs.args[0]), is_ge(lhs.args[1], rhs.args[1])])
+
+    assert is_ge(PowTest(3, 9), PowTest(3,2))
+    assert is_gt(PowTest(3, 9), PowTest(3,2))
+    assert is_le(PowTest(3, 2), PowTest(3,9))
+    assert is_lt(PowTest(3, 2), PowTest(3,9))
