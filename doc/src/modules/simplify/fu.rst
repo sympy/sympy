@@ -89,7 +89,7 @@ recognized even when they are each multiplied by a common factor:
     >>> fu(a*cos(x)*cos(y) + a*sin(x)*sin(y))
     a*cos(x - y)
 
-Factoring with ``factor_terms`` is used but it it "JIT"-like, being delayed
+Factoring with ``factor_terms`` is used but it is "JIT"-like, being delayed
 until it is deemed necessary. Furthermore, if the factoring does not
 help with the simplification, it is not retained, so
 ``a*cos(x)*cos(y) + a*sin(x)*sin(z)`` does not become the factored
