@@ -749,6 +749,10 @@ class DenseDomainMatrix(DenseMatrix):
         rep_rref, pivots = self._rep.rref()
         return self.from_DomainMatrix(rep_rref), pivots
 
+    def rank(self, **kwargs):
+        rep_rref, pivots = self.rref()
+        return len(pivots)
+
     # called by __rmul__ in common.py
     def _eval_scalar_mul(self, other):
         mat = [other*a for a in self._flat()]
