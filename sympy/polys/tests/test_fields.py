@@ -137,6 +137,22 @@ def test_FracElement_from_expr():
         FracElement)
 
 
+def test_FracField_nested():
+    a, b, x = symbols('a b x')
+    F1 = ZZ.frac_field(a, b)
+    F2 = F1.frac_field(x)
+    numer = F2(a + b).numer
+    numer == F1.poly_ring(x)(a + b)
+    numer.coeffs() == [F1(a + b)]
+    F2(a + b).denom == F1.poly_ring(x)(1)
+
+    F1 = ZZ.poly_ring(a, b)
+    F2 = F1.frac_field(x)
+    numer == F1.poly_ring(x)(a + b)
+    numer.coeffs() == [F1(a + b)]
+    F2(a + b).denom == F1.poly_ring(x)(1)
+
+
 def test_FracElement__lt_le_gt_ge__():
     F, x, y = field("x,y", ZZ)
 
