@@ -216,11 +216,15 @@ class Expectation(Expr):
             return expr
 
         if isinstance(expr, Add):
-            return Add(*[Expectation(a, condition=condition).expand()
-                    for a in expr.args])
+            return Add.fromiter(Expectation(a, condition=condition).expand()
+                    for a in expr.args)
+
+        expand_expr = _expand(expr)
+        if isinstance(expand_expr, Add):
+            return Add.fromiter(Expectation(a, condition=condition).expand()
+                    for a in expand_expr.args)
+
         elif isinstance(expr, Mul):
-            if isinstance(_expand(expr), Add):
-                return Expectation(_expand(expr)).expand()
             rv = []
             nonrv = []
             for a in expr.args:
@@ -228,9 +232,7 @@ class Expectation(Expr):
                     rv.append(a)
                 else:
                     nonrv.append(a)
-            return Mul(*nonrv)*Expectation(Mul(*rv), condition=condition)
-        elif isinstance(_expand(expr), Add):
-            return Expectation(_expand(expr)).expand()
+            return Mul.fromiter(nonrv)*Expectation(Mul.fromiter(rv), condition=condition)
 
         return self
 
@@ -403,7 +405,7 @@ class Variance(Expr):
                     nonrv.append(a**2)
             if len(rv) == 0:
                 return S.Zero
-            return Mul(*nonrv)*Variance(Mul(*rv), condition)
+            return Mul.fromiter(nonrv)*Variance(Mul.fromiter(rv), condition)
 
         # this expression contains a RandomSymbol somehow:
         return self
@@ -512,7 +514,7 @@ class Covariance(Expr):
 
         addends = [a*b*Covariance(*sorted([r1, r2], key=default_sort_key), condition=condition)
                    for (a, r1) in coeff_rv_list1 for (b, r2) in coeff_rv_list2]
-        return Add(*addends)
+        return Add.fromiter(addends)
 
     @classmethod
     def _expand_single_argument(cls, expr):
@@ -542,7 +544,7 @@ class Covariance(Expr):
                 rv.append(a)
             else:
                 nonrv.append(a)
-        return (Mul(*nonrv), Mul(*rv))
+        return (Mul.fromiter(nonrv), Mul.fromiter(rv))
 
     def _eval_rewrite_as_Expectation(self, arg1, arg2, condition=None, **kwargs):
         e1 = Expectation(arg1*arg2, condition)
