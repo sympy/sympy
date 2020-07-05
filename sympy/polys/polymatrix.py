@@ -232,27 +232,34 @@ class DomainMatrix:
         # https://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
         a = [row[:] for row in self.rows]
         dom = self.domain
-        uf = 1
+        # uf keeps track of the effect of row swaps and multiplies
+        uf = dom.one
         for j in range(n-1):
+            # if zero on the diagonal need to swap
             if not a[j][j]:
                 for l in range(j+1, n):
                     if a[l][j]:
                         a[j], a[l] = a[l], a[j]
                         uf = -uf
+                        break
                 else:
+                    # unable to swap: det = 0
                     return dom.zero
             for i in range(j+1, n):
                 if a[i][j]:
                     d = dom.gcd(a[j][j], a[i][j])
-                    b = a[j][j] // d
-                    c = a[i][j] // d
+                    b = dom.convert(a[j][j] // d)
+                    c = dom.convert(a[i][j] // d)
+                    # account for multiplying row i by b
                     uf = b * uf
                     for k in range(j+1, n):
                         a[i][k] = b*a[i][k] - c*a[j][k]
+        # triangular det is product of diagonal
         prod = dom.one
         for i in range(n):
             prod = prod * a[i][i]
-        D = prod // uf
+        # incorporate swaps and multiplies
+        D = dom.convert(prod // uf)
         return D
 
     def __eq__(A, B):
