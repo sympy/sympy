@@ -224,6 +224,37 @@ class DomainMatrix:
         Ainv = DomainMatrix(Ainv_rows, (n, n), dom)
         return Ainv
 
+    def det(self):
+        m, n = self.shape
+        if m != n:
+            raise NonSquareMatrixError
+        # Fraction-free Gaussian elimination
+        # https://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
+        a = [row[:] for row in self.rows]
+        dom = self.domain
+        uf = 1
+        for j in range(n-1):
+            if not a[j][j]:
+                for l in range(j+1, n):
+                    if a[l][j]:
+                        a[j], a[l] = a[l], a[j]
+                        uf = -uf
+                else:
+                    return dom.zero
+            for i in range(j+1, n):
+                if a[i][j]:
+                    d = dom.gcd(a[j][j], a[i][j])
+                    b = a[j][j] // d
+                    c = a[i][j] // d
+                    uf = b * uf
+                    for k in range(j+1, n):
+                        a[i][k] = b*a[i][k] - c*a[j][k]
+        prod = dom.one
+        for i in range(n):
+            prod = prod * a[i][i]
+        D = prod // uf
+        return D
+
     def __eq__(A, B):
         """A == B"""
         if not isinstance(B, DomainMatrix):
