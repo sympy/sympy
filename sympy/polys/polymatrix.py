@@ -135,6 +135,7 @@ class DomainMatrix:
     @classmethod
     def get_domain(cls, items_sympy):
         K, items_K = construct_domain(items_sympy, field=True, extension=True)
+        return K, items_K
 
         gens = getattr(K, "gens", None)
         if gens is None:
@@ -150,9 +151,19 @@ class DomainMatrix:
                 else:
                     return item.numer[()] / item.denom[()]
 
+            convert = domain.convert
+
             items_K = [convert(item) for item in items_K]
 
         return domain, items_K
+
+    def convert_to(self, K):
+        new_rows = [[K.convert(e) for e in row] for row in self.rows]
+        return DomainMatrix(new_rows, self.shape, K)
+
+    def unify(self, other):
+        K = self.domain.unify(other.domain)
+        return self.convert_to(K), other.convert_to(K)
 
     def to_Matrix(self):
         rows_sympy = [[self.domain.to_sympy(e) for e in row] for row in self.rows]

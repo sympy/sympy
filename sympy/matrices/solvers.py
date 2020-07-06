@@ -679,8 +679,9 @@ def _pinv_solve(M, B, arbitrary_matrix=None):
         w                = symbols('w:{}_:{}'.format(rows, cols), cls=Dummy)
         arbitrary_matrix = M._new(cols, rows, w).T
 
-    return A_pinv.multiply(B) + (eye(A.cols) -
+    sol = A_pinv.multiply(B) + (eye(A.cols) -
             A_pinv.multiply(A)).multiply(arbitrary_matrix)
+    return M._new(sol)
 
 
 def _solve(M, rhs, method='GJ'):

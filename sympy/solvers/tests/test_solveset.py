@@ -1395,10 +1395,10 @@ def test_linsolve():
         ) == FiniteSet((x0, 0, x2, 0, x4))
     Augmatrix = Augmatrix.tolist()
     Augmatrix[-1][-1] = x0
-    Augmatrix = Matrix(Augmatrix)
     # use Dummy to avoid clash; the names may clash but the symbols
     # will not
-    Augmatrix[-1, -1] = symbols('_x0')
+    Augmatrix[-1][-1] = symbols('_x0')
+    Augmatrix = Matrix(Augmatrix)
     assert len(linsolve(
         Augmatrix, numbered_symbols('x', cls=Dummy)).free_symbols) == 4
 

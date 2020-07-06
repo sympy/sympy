@@ -134,7 +134,6 @@ class ImmutableDenseDomainMatrix(DenseDomainMatrix, ImmutableDenseMatrix):
         flat_list = [_sympify(e) for e in flat_list]
         rows_list = [[flat_list[i*cols + j] for j in range(cols)] for i in range(rows)]
         rep = DomainMatrix.from_list_sympy_2(rows, cols, rows_list)
-        assert str(rep.domain) in ('ZZ', 'QQ')
 
         obj = Basic.__new__(cls,
             Integer(rows),

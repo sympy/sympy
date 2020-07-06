@@ -320,7 +320,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         else:
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
-        if all(isinstance(x, Expr) and x.is_Rational for x in flat_list):
+        if all(isinstance(x, Expr) and x.is_commutative and (x.is_Rational or x.is_Symbol) for x in flat_list):
             return MutableDenseDomainMatrix(rows, cols, flat_list)
         self = object.__new__(cls)
         self.rows = rows
@@ -407,7 +407,14 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         col
         row_op
         """
-        self._mat[j::self.cols] = [f(*t) for t in list(zip(self._mat[j::self.cols], list(range(self.rows))))]
+        flat = getattr(self, "_mat", None)
+        if flat is None:
+            flat = self._flat()
+
+        ri = flat[j: j + self.cols*self.rows: self.cols]
+
+        for k in range(self.rows):
+            self[j + self.cols*k] = f(ri[k], k)
 
     def col_swap(self, i, j):
         """Swap the two given columns of the matrix in-place.
@@ -681,6 +688,8 @@ class DenseDomainMatrix(DenseMatrix):
                 return self.extract(i_indices, j_indices)
             elif isinstance(i, Expr) and isinstance(j, Expr) and (not i.is_Number or not j.is_Number):
                 from sympy.matrices.expressions.matexpr import MatrixElement
+                if ((0 <= i) & (i < self.rows) & (0 <= j) & (j < self.cols)) == False:
+                    raise ValueError('Bad index')
                 return MatrixElement(self, i, j)
             else:
                 raise IndexError("no slice~~~~")
@@ -698,7 +707,7 @@ class DenseDomainMatrix(DenseMatrix):
 
     def __add__(self, other):
         if isinstance(other, DenseDomainMatrix):
-            return classof(self, other).from_DomainMatrix(self._rep + other._rep)
+            return self.add(other)
         elif isinstance(other, DenseMatrix):
             return other._eval_add(self)
         else:
@@ -711,13 +720,25 @@ class DenseDomainMatrix(DenseMatrix):
             except SympifyError:
                 return NotImplemented
         if isinstance(other, DenseDomainMatrix):
-            return self.from_DomainMatrix(self._rep * other._rep)
+            return self.matrix_mul(other)
         elif isinstance(other, DenseMatrix):
             return other._eval_matrix_rmul(self)
         elif not getattr(other, 'is_Matrix', False):
             return self._eval_scalar_mul(other)
         else:
             return NotImplemented
+
+    def add(self, other):
+        a = self._rep
+        b = other._rep
+        A, B = a.unify(b)
+        return classof(self, other).from_DomainMatrix(A + B)
+
+    def matrix_mul(self, other):
+        a = self._rep
+        b = other._rep
+        A, B = a.unify(b)
+        return classof(self, other).from_DomainMatrix(A * B)
 
     def __pow__(self, exp):
         exp = _sympify(exp)
@@ -769,7 +790,7 @@ class DenseDomainMatrix(DenseMatrix):
     # needed by multiply
     def _eval_matrix_mul(self, other):
         if isinstance(other, DenseDomainMatrix):
-            return self.from_DomainMatrix(self._rep * other._rep)
+            return self.matrix_mul(other)
         elif isinstance(other, DenseMatrix):
             return other._eval_matrix_rmul(self)
         else:
@@ -820,7 +841,6 @@ class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
             rows, cols, flat_list = args
         rows_list = [[flat_list[i*cols + j] for j in range(cols)] for i in range(rows)]
         rep = DomainMatrix.from_list_sympy_2(rows, cols, rows_list)
-        assert str(rep.domain) in ('ZZ', 'QQ')
         return cls.from_DomainMatrix(rep)
 
     @classmethod
