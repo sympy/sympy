@@ -300,16 +300,12 @@ def hypersimp(f, k):
     """
     f = sympify(f)
 
-    if f.has(Piecewise):
-        return None
-    f = f.rewrite(gamma)
-    if f.has(Piecewise):
-        f = piecewise_fold(f)
-        f = f.args[-1][0]
-
     g = f.subs(k, k + 1) / f
 
     g = g.rewrite(gamma)
+    if g.has(Piecewise):
+        g = piecewise_fold(g)
+        g = g.args[-1][0]
     g = expand_func(g)
     g = powsimp(g, deep=True, combine='exp')
 
