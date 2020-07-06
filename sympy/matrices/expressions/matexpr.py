@@ -5,6 +5,7 @@ from functools import wraps, reduce
 import collections
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Mul, Add
+from sympy.core.symbol import Str
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import SYMPY_INTS, default_sort_key
 from sympy.core.sympify import SympifyError, _sympify
@@ -786,12 +787,13 @@ class MatrixSymbol(MatrixExpr):
         cls._check_dim(n)
 
         if isinstance(name, str):
-            name = Symbol(name)
+            name = Str(name)
+        elif isinstance(name, Symbol):
+            name = Str(name.name)
+        elif not isinstance(name, Str):
+            raise ValueError("{} must be a string.".format(name))
         obj = Basic.__new__(cls, name, n, m)
         return obj
-
-    def _hashable_content(self):
-        return (self.name, self.shape)
 
     @property
     def shape(self):
