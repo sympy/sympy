@@ -248,8 +248,8 @@ class DomainMatrix:
             for i in range(j+1, n):
                 if a[i][j]:
                     d = dom.gcd(a[j][j], a[i][j])
-                    b = dom.convert(a[j][j] // d)
-                    c = dom.convert(a[i][j] // d)
+                    b = dom.convert(a[j][j] / d)
+                    c = dom.convert(a[i][j] / d)
                     # account for multiplying row i by b
                     uf = b * uf
                     for k in range(j+1, n):
@@ -259,7 +259,7 @@ class DomainMatrix:
         for i in range(n):
             prod = prod * a[i][i]
         # incorporate swaps and multiplies
-        D = dom.convert(prod // uf)
+        D = dom.convert(prod / uf)
         return D
 
     def __eq__(A, B):
