@@ -137,26 +137,6 @@ class DomainMatrix:
         K, items_K = construct_domain(items_sympy, field=True, extension=True)
         return K, items_K
 
-        gens = getattr(K, "gens", None)
-        if gens is None:
-            return K, items_K
-        elif not gens:
-            domain = K.to_domain()
-        else:
-            domain = K.domain
-
-            def convert(item):
-                if not item:
-                    return domain.zero
-                else:
-                    return item.numer[()] / item.denom[()]
-
-            convert = domain.convert
-
-            items_K = [convert(item) for item in items_K]
-
-        return domain, items_K
-
     def convert_to(self, K):
         new_rows = [[K.convert(e) for e in row] for row in self.rows]
         return DomainMatrix(new_rows, self.shape, K)
