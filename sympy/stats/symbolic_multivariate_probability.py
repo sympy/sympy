@@ -6,6 +6,7 @@ from sympy.stats.rv import RandomSymbol, is_random
 from sympy.core.sympify import _sympify
 from sympy.stats.symbolic_probability import Variance, Covariance, Expectation
 
+
 class ExpectationMatrix(Expectation, MatrixExpr):
     """
     Expectation of a random matrix expression.
@@ -70,10 +71,15 @@ class ExpectationMatrix(Expectation, MatrixExpr):
             return expr
 
         if isinstance(expr, Add):
-            return Add(*[Expectation(a, condition=condition).expand() for a in expr.args])
+            return Add.fromiter(Expectation(a, condition=condition).expand()
+                    for a in expr.args)
+
+        expand_expr = _expand(expr)
+        if isinstance(expand_expr, Add):
+            return Add.fromiter(Expectation(a, condition=condition).expand()
+                    for a in expand_expr.args)
+
         elif isinstance(expr, (Mul, MatMul)):
-            if isinstance(_expand(expr), Add):
-                return Expectation(_expand(expr)).expand()
             rv = []
             nonrv = []
             postnon = []
@@ -262,7 +268,7 @@ class CrossCovarianceMatrix(Covariance, MatrixExpr):
 
         addends = [a*CrossCovarianceMatrix(r1, r2, condition=condition)*b.transpose()
                    for (a, r1) in coeff_rv_list1 for (b, r2) in coeff_rv_list2]
-        return Add(*addends)
+        return Add.fromiter(addends)
 
     @classmethod
     def _expand_single_argument(cls, expr):
@@ -292,4 +298,4 @@ class CrossCovarianceMatrix(Covariance, MatrixExpr):
                 rv.append(a)
             else:
                 nonrv.append(a)
-        return (Mul(*nonrv), Mul(*rv))
+        return (Mul.fromiter(nonrv), Mul.fromiter(rv))
