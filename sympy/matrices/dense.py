@@ -44,7 +44,8 @@ class DenseMatrix(MatrixBase):
     _class_priority = 4
 
     def __eq__(self, other):
-        other = sympify(other)
+        if not isinstance(other, DenseMatrix):
+            other = sympify(other)
         self_shape = getattr(self, 'shape', None)
         other_shape = getattr(other, 'shape', None)
         if None in (self_shape, other_shape):
@@ -52,7 +53,11 @@ class DenseMatrix(MatrixBase):
         if self_shape != other_shape:
             return False
         if isinstance(other, Matrix):
-            return _compare_sequence(self._mat,  other._mat)
+            self_mat = self._mat
+            other_mat = getattr(other, '_mat', None)
+            if other_mat is None:
+                other_mat = other._flat()
+            return _compare_sequence(self_mat,  other_mat)
         if isinstance(other, DenseDomainMatrix):
             return NotImplemented
         elif isinstance(other, MatrixBase):
@@ -320,8 +325,9 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         else:
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
-        if all(isinstance(x, Expr) and x.is_commutative and (x.is_Rational or x.is_Symbol) for x in flat_list):
-            return MutableDenseDomainMatrix(rows, cols, flat_list)
+        if cls is MutableDenseMatrix:
+            if all(isinstance(x, Expr) and x.is_commutative and (x.is_Rational or x.is_Symbol) for x in flat_list):
+                return MutableDenseDomainMatrix(rows, cols, flat_list)
         self = object.__new__(cls)
         self.rows = rows
         self.cols = cols
@@ -824,7 +830,8 @@ class DenseDomainMatrix(DenseMatrix):
     def __eq__(self, other):
         if not isinstance(other, DenseDomainMatrix):
             return NotImplemented
-        return self._rep == other._rep
+        s, o = self._rep.unify(other._rep)
+        return s == o
 
     def copy(self):
         return self._new(self.rows, self.cols, self._flat())

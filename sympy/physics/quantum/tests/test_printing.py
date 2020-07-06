@@ -39,6 +39,7 @@ MutableDenseMatrix = Matrix
 
 ENV = {}  # type: Dict[str, Any]
 exec_('from sympy import *', ENV)
+exec_('from sympy.matrices.dense import MutableDenseDomainMatrix', ENV)
 exec_('from sympy.physics.quantum import *', ENV)
 exec_('from sympy.physics.quantum.cg import *', ENV)
 exec_('from sympy.physics.quantum.spin import *', ENV)
@@ -319,7 +320,7 @@ U((0,),Matrix([\n\
     assert pretty(g4) == ascii_str
     assert upretty(g4) == ucode_str
     assert latex(g4) == r'U_{0}'
-    sT(g4, "UGate(Tuple(Integer(0)),MutableDenseMatrix([[Symbol('a'), Symbol('b')], [Symbol('c'), Symbol('d')]]))")
+    sT(g4, "UGate(Tuple(Integer(0)),MutableDenseDomainMatrix([[Symbol('a'), Symbol('b')], [Symbol('c'), Symbol('d')]]))")
 
 
 def test_hilbert():

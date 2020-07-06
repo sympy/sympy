@@ -15,7 +15,7 @@ def test_gauss_opt():
     mat = RayTransferMatrix(1, 2, 3, 4)
     assert mat == Matrix([[1, 2], [3, 4]])
     assert mat == RayTransferMatrix( Matrix([[1, 2], [3, 4]]) )
-    # assert [mat.A, mat.B, mat.C, mat.D] == [1, 2, 3, 4]
+    assert [mat.A, mat.B, mat.C, mat.D] == [1, 2, 3, 4]
 
     d, f, h, n1, n2, R = symbols('d f h n1 n2 R')
     lens = ThinLens(f)

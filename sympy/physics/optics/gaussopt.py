@@ -81,8 +81,8 @@ class RayTransferMatrix(MutableDenseMatrix):
     [1, 2],
     [3, 4]])
 
-    #>>> mat.A
-    #1
+    >>> mat.A
+    1
 
     >>> f = Symbol('f')
     >>> lens = ThinLens(f)
