@@ -24,6 +24,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
 from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, MultivariateNormalDistribution
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
+from sympy.stats.compound_rv import CompoundPSpace
 from sympy.testing.pytest import raises, XFAIL, slow, skip, ignore_warnings
 from sympy.testing.randtest import verify_numerically as tn
 
@@ -1394,13 +1395,12 @@ def test_random_parameters():
     mu = Normal('mu', 2, 3)
     meas = Normal('T', mu, 1)
     assert density(meas, evaluate=False)(z)
-    assert isinstance(pspace(meas), SingleContinuousPSpace)
+    assert isinstance(pspace(meas), CompoundPSpace)
     X = Normal('x', [1, 2], [[1, 0], [0, 1]])
     assert isinstance(pspace(X).distribution, MultivariateNormalDistribution)
     assert density(meas)(z).simplify() == sqrt(5)*exp(-z**2/20 + z/5 - S(1)/5)/(10*sqrt(pi))
 
 
-@XFAIL
 def test_random_parameters_given():
     mu = Normal('mu', 2, 3)
     meas = Normal('T', mu, 1)

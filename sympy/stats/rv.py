@@ -605,6 +605,10 @@ def pspace(expr):
     # If only one space present
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
+    from sympy.stats.compound_rv import CompoundPSpace
+    for rv in rvs:
+        if isinstance(rv.pspace, CompoundPSpace):
+            return rv.pspace
     # Otherwise make a product space
     return IndependentProductPSpace(*[rv.pspace for rv in rvs])
 

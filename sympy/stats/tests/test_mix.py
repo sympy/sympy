@@ -5,8 +5,8 @@ from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.stats import (Poisson, Beta, Exponential, P,
                         Multinomial, MultivariateBeta)
 from sympy.stats.crv_types import Normal
-from sympy.stats.drv_types import DiscreteDistributionHandmade
-from sympy.stats.drv import SingleDiscretePSpace
+from sympy.stats.drv_types import PoissonDistribution
+from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
 from sympy.stats.joint_rv import MarginalDistribution
 from sympy.stats.rv import pspace, density
 
@@ -15,11 +15,13 @@ def test_density():
     l = Symbol('l', positive=True)
     rate = Beta(l, 2, 3)
     X = Poisson(x, rate)
-    assert isinstance(pspace(X), SingleDiscretePSpace)
-    assert isinstance(density(X, Eq(rate, rate.symbol)), DiscreteDistributionHandmade)
+    assert isinstance(pspace(X), CompoundPSpace)
+    assert density(X, Eq(rate, rate.symbol)) == PoissonDistribution(l)
     N1 = Normal('N1', 0, 1)
     N2 = Normal('N2', N1, 2)
     assert density(N2)(0).doit() == sqrt(10)/(10*sqrt(pi))
+    assert simplify(density(N2, Eq(N1, 1))(x)) == \
+        sqrt(2)*exp(-(x - 1)**2/8)/(4*sqrt(pi))
     assert simplify(density(N2)(x)) == sqrt(10)*exp(-x**2/10)/(10*sqrt(pi))
 
 def test_MarginalDistribution():
@@ -48,8 +50,8 @@ def test_MarginalDistribution():
 def test_compound_distribution():
     Y = Poisson('Y', 1)
     Z = Poisson('Z', Y)
-    assert isinstance(pspace(Z), SingleDiscretePSpace)
-    assert isinstance(pspace(Z).distribution, DiscreteDistributionHandmade)
+    assert isinstance(pspace(Z), CompoundPSpace)
+    assert isinstance(pspace(Z).distribution, CompoundDistribution)
     assert Z.pspace.distribution.pdf(1).doit() == exp(-2)*exp(exp(-1))
 
 def test_mix_expression():

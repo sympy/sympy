@@ -39,8 +39,8 @@ def rv(symbol, cls, *args):
     dist.check(*args)
     pspace = SingleDiscretePSpace(symbol, dist)
     if any(is_random(arg) for arg in args):
-        from sympy.stats.compound_rv import compound_pspace, CompoundDistribution
-        pspace = compound_pspace(symbol, CompoundDistribution(dist))
+        from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
+        pspace = CompoundPSpace(symbol, CompoundDistribution(dist))
     return pspace.value
 
 

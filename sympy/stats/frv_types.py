@@ -42,8 +42,8 @@ def rv(name, cls, *args):
     dist.check(*args)
     pspace = SingleFinitePSpace(name, dist)
     if any(is_random(arg) for arg in args):
-        from sympy.stats.compound_rv import compound_pspace, CompoundDistribution
-        pspace = compound_pspace(name, CompoundDistribution(dist))
+        from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
+        pspace = CompoundPSpace(name, CompoundDistribution(dist))
     return pspace.value
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):

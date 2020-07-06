@@ -1,5 +1,6 @@
 from sympy import Basic, integrate, Sum, Dummy, Lambda
-from sympy.stats.rv import NamedArgsMixin, random_symbols, _symbol_converter
+from sympy.stats.rv import (NamedArgsMixin, random_symbols, _symbol_converter,
+                        PSpace, RandomSymbol)
 from sympy.stats.crv import ContinuousDistribution, SingleContinuousPSpace
 from sympy.stats.drv import DiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.frv import SingleFiniteDistribution, SingleFinitePSpace
@@ -8,40 +9,103 @@ from sympy.stats.drv_types import DiscreteDistributionHandmade
 from sympy.stats.frv_types import FiniteDistributionHandmade
 
 
-def compound_pspace(s, comp_distribution):
+class CompoundPSpace(PSpace):
     """
-    A temporary Probability Space function for the Compound Distribution. After
+    A temporary Probability Space for the Compound Distribution. After
     Marginalization, this returns the corresponding Probability Space of the
     parent distribution.
     """
-    s = _symbol_converter(s)
-    if not isinstance(comp_distribution, CompoundDistribution):
-        raise ValueError("%s should be an isinstance of "
-                        "CompoundDistribution"%(comp_distribution))
-    x = Dummy('x')
-    parent_dist = comp_distribution.args[0]
-    new_pspace = _get_newpspace(s, parent_dist,
-                        Lambda(x, comp_distribution.pdf(x)))
-    if new_pspace is not None:
-        return new_pspace
-    message = ("Compound Distribution for %s is not implemeted yet" % str(parent_dist))
-    raise NotImplementedError(message)
 
+    def __new__(cls, s, distribution):
+        s = _symbol_converter(s)
+        if isinstance(distribution, ContinuousDistribution):
+            return SingleContinuousPSpace(s, distribution)
+        if isinstance(distribution, DiscreteDistribution):
+            return SingleDiscretePSpace(s, distribution)
+        if isinstance(distribution, SingleFiniteDistribution):
+            return SingleFinitePSpace(s, distribution)
+        if not isinstance(distribution, CompoundDistribution):
+            raise ValueError("%s should be an isinstance of "
+                        "CompoundDistribution"%(distribution))
+        return Basic.__new__(cls, s, distribution)
 
-def _get_newpspace(sym, dist, pdf):
-    """
-    This function returns the new pspace of the distribution using handmade
-    Distributions and their corresponding pspace.
-    """
-    pdf = Lambda(sym, pdf(sym))
-    _set = dist.set
-    if isinstance(dist, ContinuousDistribution):
-        return SingleContinuousPSpace(sym, ContinuousDistributionHandmade(pdf, _set))
-    elif isinstance(dist, DiscreteDistribution):
-        return SingleDiscretePSpace(sym, DiscreteDistributionHandmade(pdf, _set))
-    elif isinstance(dist, SingleFiniteDistribution):
-        dens = dict((k, pdf(k)) for k in _set)
-        return SingleFinitePSpace(sym, FiniteDistributionHandmade(dens))
+    @property
+    def value(self):
+        return RandomSymbol(self.symbol, self)
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def distribution(self):
+        return self.args[1]
+
+    @property
+    def pdf(self):
+        return self.distribution.pdf(self.symbol)
+
+    @property
+    def set(self):
+        return self.distribution.set
+
+    @property
+    def domain(self):
+        return self._get_newpspace().domain
+
+    def _get_newpspace(self):
+        x = Dummy('x')
+        parent_dist = self.distribution.args[0]
+        new_pspace = self._transform_pspace(self.symbol, parent_dist,
+                            Lambda(x, self.distribution.pdf(x)))
+        if new_pspace is not None:
+            return new_pspace
+        message = ("Compound Distribution for %s is not implemeted yet" % str(parent_dist))
+        raise NotImplementedError(message)
+
+    def _transform_pspace(self, sym, dist, pdf):
+        """
+        This function returns the new pspace of the distribution using handmade
+        Distributions and their corresponding pspace.
+        """
+        pdf = Lambda(sym, pdf(sym))
+        _set = dist.set
+        if isinstance(dist, ContinuousDistribution):
+            return SingleContinuousPSpace(sym, ContinuousDistributionHandmade(pdf, _set))
+        elif isinstance(dist, DiscreteDistribution):
+            return SingleDiscretePSpace(sym, DiscreteDistributionHandmade(pdf, _set))
+        elif isinstance(dist, SingleFiniteDistribution):
+            dens = dict((k, pdf(k)) for k in _set)
+            return SingleFinitePSpace(sym, FiniteDistributionHandmade(dens))
+
+    def compute_density(self, expr, **kwargs):
+        new_pspace = self._get_newpspace()
+        expr = expr.subs({self.value: new_pspace.value})
+        return new_pspace.compute_density(expr, **kwargs)
+
+    def compute_cdf(self, expr, **kwargs):
+        new_pspace = self._get_newpspace()
+        expr = expr.subs({self.value: new_pspace.value})
+        return new_pspace.compute_cdf(expr, **kwargs)
+
+    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
+        new_pspace = self._get_newpspace()
+        expr = expr.subs({self.value: new_pspace.value})
+        if rvs:
+            rvs = rvs.subs({self.value: new_pspace.value})
+        if isinstance(new_pspace, SingleFinitePSpace):
+            return new_pspace.compute_expectation(expr, rvs, **kwargs)
+        return new_pspace.compute_expectation(expr, rvs, evaluate, **kwargs)
+
+    def probability(self, condition, **kwargs):
+        new_pspace = self._get_newpspace()
+        condition = condition.subs({self.value: new_pspace.value})
+        return new_pspace.probability(condition)
+
+    def conditional_space(self, condition, **kwargs):
+        new_pspace = self._get_newpspace()
+        condition = condition.subs({self.value: new_pspace.value})
+        return new_pspace.conditional_space(condition)
 
 
 class CompoundDistribution(Basic, NamedArgsMixin):
@@ -91,8 +155,7 @@ class CompoundDistribution(Basic, NamedArgsMixin):
             message = "Compound Distribution for %s is not implemeted yet" % str(dist)
             raise NotImplementedError(message)
         if not cls._compound_check(dist):
-            raise ValueError("There are no random arguments for considering it as "
-                            "Compound Distribution.")
+            return dist
         return Basic.__new__(cls, dist)
 
     @property

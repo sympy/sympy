@@ -1,8 +1,8 @@
 from sympy import (symbols, S, erf, sqrt, pi, exp, gamma, Interval, oo, beta,
                     Eq, Piecewise, Integral, Abs, arg, Dummy)
 from sympy.stats import (Normal, P, E, density, Gamma, Poisson, Rayleigh,
-                        variance, Bernoulli, Beta, Uniform)
-from sympy.stats.compound_rv import CompoundDistribution, compound_pspace
+                        variance, Bernoulli, Beta, Uniform, cdf)
+from sympy.stats.compound_rv import CompoundDistribution, CompoundPSpace
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.drv_types import PoissonDistribution
 from sympy.stats.frv_types import BernoulliDistribution
@@ -38,6 +38,7 @@ def test_bernoulli_CompoundDist():
     assert density(Y).dict == {0: S(2)/3, 1: S(1)/3}
     assert E(Y) == P(Eq(Y, 1)) == S(1)/3
     assert variance(Y) == S(2)/9
+    assert cdf(Y) == {0: S(2)/3, 1: 1}
 
     # test issue 8128
     a = Bernoulli('a', S(1)/2)
@@ -76,7 +77,8 @@ def test_Compound_Distribution():
     assert C.set == Interval(-oo, oo)
     assert C.pdf(x).simplify() == exp(-x**2/64 + x/16 - S(1)/16)/(8*sqrt(pi))
 
-    raises(ValueError, lambda: CompoundDistribution(NormalDistribution(2, 3)))
+    assert not isinstance(CompoundDistribution(NormalDistribution(2, 3)),
+                            CompoundDistribution)
     M = MultivariateNormalDistribution([1, 2], [[2, 1], [1, 2]])
     raises(NotImplementedError, lambda: CompoundDistribution(M))
 
@@ -101,8 +103,19 @@ def test_Compound_Distribution():
 def test_compound_pspace():
     X = Normal('X', 2, 4)
     Y = Normal('Y', 3, 6)
-    N = NormalDistribution(X, Y)
-    raises(ValueError, lambda: compound_pspace('C', N))
-    raises(TypeError, lambda: compound_pspace(['C'], N))
-    C = CompoundDistribution(N)
-    raises(NotImplementedError, lambda: compound_pspace('C', C))
+    assert not isinstance(Y.pspace, CompoundPSpace)
+    N = NormalDistribution(1, 2)
+    D = PoissonDistribution(3)
+    B = BernoulliDistribution(0.2, 1, 0)
+    pspace1 = CompoundPSpace('N', N)
+    pspace2 = CompoundPSpace('D', D)
+    pspace3 = CompoundPSpace('B', B)
+    assert not isinstance(pspace1, CompoundPSpace)
+    assert not isinstance(pspace2, CompoundPSpace)
+    assert not isinstance(pspace3, CompoundPSpace)
+    M = MultivariateNormalDistribution([1, 2], [[2, 1], [1, 2]])
+    raises(ValueError, lambda: CompoundPSpace('M', M))
+    Y = Normal('Y', X, 6)
+    assert isinstance(Y.pspace, CompoundPSpace)
+    assert Y.pspace.distribution == CompoundDistribution(NormalDistribution(X, 6))
+    assert Y.pspace.domain.set == Interval(-oo, oo)
