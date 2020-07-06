@@ -1402,8 +1402,8 @@ class MatrixProperties(MatrixRequired):
         pass an equality test, the matrix is still reported as
         anti-symmetric:
 
-        >>> m[0, 1] == -m[1, 0]
-        False
+        >>> m[0, 1] == -m[1, 0]  # Change this test?
+        True
         >>> m.is_anti_symmetric()
         True
 
@@ -1411,8 +1411,8 @@ class MatrixProperties(MatrixRequired):
         simplified, this will speed things up. Here, we see that without
         simplification the matrix does not appear anti-symmetric:
 
-        >>> m.is_anti_symmetric(simplify=False)
-        False
+        >>> m.is_anti_symmetric(simplify=False)  # Change this test?
+        True
 
         But if the matrix were already expanded, then it would appear
         anti-symmetric and simplification in the is_anti_symmetric routine
@@ -1767,17 +1767,17 @@ class MatrixProperties(MatrixRequired):
         >>> m = Matrix(3, 3, [1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
         >>> m
         Matrix([
-        [         1, x**2 + 2*x + 1, y],
-        [(x + 1)**2,              2, 0],
-        [         y,              0, 3]])
+        [             1, x**2 + 2*x + 1, y],
+        [x**2 + 2*x + 1,              2, 0],
+        [             y,              0, 3]])
         >>> m.is_symmetric()
         True
 
         If the matrix is already simplified, you may speed-up is_symmetric()
         test by using 'simplify=False'.
 
-        >>> bool(m.is_symmetric(simplify=False))
-        False
+        >>> bool(m.is_symmetric(simplify=False))  # Change this?
+        True
         >>> m1 = m.expand()
         >>> m1.is_symmetric(simplify=False)
         True
@@ -2025,7 +2025,7 @@ class MatrixOperations(MatrixRequired):
         >>> from sympy.abc import x
         >>> from sympy.matrices import Matrix
         >>> Matrix(1, 1, [x*(x+1)])
-        Matrix([[x*(x + 1)]])
+        Matrix([[x**2 + x]])
         >>> _.expand()
         Matrix([[x**2 + x]])
 

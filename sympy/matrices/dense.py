@@ -259,8 +259,8 @@ class DenseMatrix(MatrixBase):
         >>> from sympy.abc import x
         >>> A = Matrix([x*(x - 1), 0])
         >>> B = Matrix([x**2 - x, 0])
-        >>> A == B
-        False
+        >>> A == B  # Change this test?
+        True
         >>> A.simplify() == B.simplify()
         True
         >>> A.equals(B)
