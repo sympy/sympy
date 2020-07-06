@@ -1756,7 +1756,6 @@ def test_linear_3eq_order1_type4_long_check():
     assert checksysodesol(eq, sol) == (True, [0, 0, 0])
 
 
-# Error checking work
 def test_dsolve_system():
     from sympy.solvers.ode.systems import dsolve_system
 
@@ -1772,3 +1771,10 @@ def test_dsolve_system():
 
     eq = (Eq(f(x).diff(x), 12 * f(x) - 6 * g(x)), Eq(g(x).diff(x) ** 2, 11 * f(x) + 3 * g(x)))
     assert dsolve_system(eq) == ([], [])
+
+    assert dsolve_system(eq, funcs=[f(x), g(x)]) == ([], [])
+    assert dsolve_system(eq, funcs=[f(x), g(x)], t=x) == ([], [])
+    assert dsolve_system(eq, funcs=[f(x), g(x)], t=x, ics={f(0): 1, g(0): 1}) == ([], [])
+    assert dsolve_system(eq, t=x, ics={f(0): 1, g(0): 1}) == ([], [])
+    assert dsolve_system(eq, ics={f(0): 1, g(0): 1}) == ([], [])
+    assert dsolve_system(eq, funcs=[f(x), g(x)], ics={f(0): 1, g(0): 1}) == ([], [])

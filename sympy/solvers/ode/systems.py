@@ -1263,17 +1263,29 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None):
         List of dependent variables that make up the system of ODEs
     t : Symbol
         Independent variable in the system of ODEs
+    ics : Dict or None
+        Set of initial boundary/conditions for the system of ODEs.
 
     Examples
     ========
 
-    >>> from sympy import symbols, Eq, Function, filldedent
+    >>> from sympy import symbols, Eq, Function
     >>> from sympy.solvers.ode.systems import dsolve_system
     >>> f, g = symbols("f g", cls=Function)
     >>> x = symbols("x")
 
     >>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
     >>> dsolve_system(eqs)
+    ([[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]], [])
+
+    You can also pass the initial conditions for the system of ODEs:
+    >>> dsolve_system(eqs, ics={f(0): 1, g(0): 0})
+    ([[Eq(f(x), exp(x)/2 + exp(-x)/2), Eq(g(x), exp(x)/2 - exp(-x)/2)]], [])
+
+    Optionally, you can pass the dependent variables and the independent
+    variable for which the system is to be solved:
+    >>> funcs = [f(x), g(x)]
+    >>> dsolve_system(eqs, funcs=funcs, t=x)
     ([[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]], [])
 
     Lets look at an implicit system of ODEs:
@@ -1356,7 +1368,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None):
                 # this weakly connected component.
                 sols = wcc_sol
 
-    if ics:
+    if ics and sols:
         ics_sols = []
 
         # This is assuming that all the solutions
