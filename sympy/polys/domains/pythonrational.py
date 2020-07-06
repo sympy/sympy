@@ -119,7 +119,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         else:
             return NotImplemented
 
-        return self.__class__(p, q, _gcd=False)
+        return self.new(p, q)
 
     def __radd__(self, other):
         if not isinstance(other, int):
