@@ -328,18 +328,6 @@ class ReprPrinter(Printer):
         ext = self._print(f.ext)
         return "ExtElem(%s, %s)" % (rep, ext)
 
-    def _print_Manifold(self, manifold):
-        class_name = manifold.func.__name__
-        name = self._print(manifold.name)
-        dim = self._print(manifold.dim)
-        return "%s(%s, %s)" % (class_name, name, dim)
-
-    def _print_Patch(self, patch):
-        class_name = patch.func.__name__
-        name = self._print(patch.name)
-        manifold = self._print(patch.manifold)
-        return "%s(%s, %s)" % (class_name, name, manifold)
-
     def _print_CoordSystem(self, coords):
         class_name = coords.func.__name__
         name = self._print(coords.name)
