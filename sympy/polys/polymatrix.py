@@ -4,7 +4,7 @@ from sympy.core.sympify import _sympify
 
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.matrices import NonSquareMatrixError
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.common import NonInvertibleMatrixError, ShapeError
 
 from sympy.polys.constructor import construct_domain
 from sympy.polys.polytools import Poly
@@ -158,7 +158,7 @@ class DomainMatrix:
         if not isinstance(B, DomainMatrix):
             return NotImplemented
         if A.shape != B.shape:
-            raise ValueError("shape")
+            raise ShapeError("shape")
         if A.domain is not B.domain:
             raise ValueError("domain")
         rows = [[a+b for a, b in zip(row1, row2)]

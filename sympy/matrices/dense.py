@@ -43,6 +43,19 @@ class DenseMatrix(MatrixBase):
     _op_priority = 10.01
     _class_priority = 4
 
+    @classmethod
+    def _can_use_dm(cls, x):
+        if x.is_Rational:
+            return True
+        elif x.is_Symbol and x.is_commutative:
+            return True
+        elif x.is_Pow:
+            return x.exp.is_Integer and cls._can_use_dm(x.base)
+        elif x.is_Mul or x.is_Add:
+            return all(map(cls._can_use_dm, x.args))
+        else:
+            return False
+
     def __eq__(self, other):
         if not isinstance(other, DenseMatrix):
             other = sympify(other)
@@ -326,7 +339,7 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
         if cls is MutableDenseMatrix:
-            if all(isinstance(x, Expr) and x.is_commutative and (x.is_Rational or x.is_Symbol) for x in flat_list):
+            if all(isinstance(x, Expr) and cls._can_use_dm(x) for x in flat_list):
                 return MutableDenseDomainMatrix(rows, cols, flat_list)
         self = object.__new__(cls)
         self.rows = rows

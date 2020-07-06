@@ -642,8 +642,8 @@ def test_lower_triangular_solve():
     C = ImmutableSparseMatrix([[u, v], [w, x]])
 
     sol = Matrix([[u/a, v/a], [(w - c*u/a)/d, (x - c*v/a)/d]])
-    assert A.lower_triangular_solve(B) == sol
-    assert A.lower_triangular_solve(C) == sol
+    assert Matrix(A.lower_triangular_solve(B)) == sol
+    assert Matrix(A.lower_triangular_solve(C)) == sol
 
 
 def test_upper_triangular_solve():
@@ -655,8 +655,8 @@ def test_upper_triangular_solve():
     C = ImmutableSparseMatrix([[u, v], [w, x]])
 
     sol = Matrix([[(u - b*w/d)/a, (v - b*x/d)/a], [w/d, x/d]])
-    assert A.upper_triangular_solve(B) == sol
-    assert A.upper_triangular_solve(C) == sol
+    assert Matrix(A.upper_triangular_solve(B)) == sol
+    assert Matrix(A.upper_triangular_solve(C)) == sol
 
 
 def test_diagonal_solve():

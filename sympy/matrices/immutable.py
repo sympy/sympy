@@ -69,7 +69,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
             rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
             flat_list = list(flat_list) # create a shallow copy
 
-        if all(isinstance(x, Expr) and x.is_Rational for x in flat_list):
+        if all(isinstance(x, Expr) and cls._can_use_dm(x) for x in flat_list):
             return ImmutableDenseDomainMatrix(rows, cols, flat_list)
 
         obj = Basic.__new__(cls,
