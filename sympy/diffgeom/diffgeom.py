@@ -61,9 +61,6 @@ class Manifold(Atom):
     def dim(self):
         return self.args[1]
 
-    def _hashable_content(self):
-        return self.name, self.dim
-
 class Patch(Atom):
     """A patch on a manifold.
 
@@ -121,9 +118,6 @@ class Patch(Atom):
     @property
     def dim(self):
         return self.manifold.dim
-
-    def _hashable_content(self):
-        return self.name, self.manifold
 
 class CoordSystem(Atom):
     """A coordinate system defined on the patch
@@ -267,9 +261,6 @@ class CoordSystem(Atom):
     @property
     def dim(self):
         return self.patch.dim
-
-    def _hashable_content(self):
-        return self.name, self.patch
 
     ##########################################################################
     # Coordinate transformations.
