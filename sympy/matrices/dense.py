@@ -753,7 +753,7 @@ class DenseDomainMatrix(DenseMatrix):
         rep_rref, pivots = self.rref()
         return len(pivots)
 
-    def det(self, **kwargs):
+    def det(self, *args, **kwargs):
         rep = self._rep
         return rep.domain.to_sympy(rep.det())
 
