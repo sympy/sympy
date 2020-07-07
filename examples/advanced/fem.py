@@ -124,6 +124,7 @@ def create_point_set(order, nsd):
 
 def create_matrix(equations, coeffs):
     A = zeros(len(equations))
+    A = A.from_DomainMatrix(A._rep.to_field())
     i = 0
     j = 0
     for j in range(0, len(coeffs)):
@@ -189,6 +190,7 @@ def main():
         u += ui*fe.N[i]
 
     J = zeros(fe.nbf())
+    J = J.from_DomainMatrix(J._rep.to_field())
     for i in range(0, fe.nbf()):
         Fi = u*fe.N[i]
         print(Fi)
