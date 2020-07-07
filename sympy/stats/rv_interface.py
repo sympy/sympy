@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 from sympy.sets import FiniteSet
-from sympy import sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy, piecewise_fold, solveset
+from sympy import (sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy,
+                piecewise_fold, solveset, Integral)
 from .rv import (probability, expectation, density, where, given, pspace, cdf, PSpace,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile, is_random,
@@ -33,7 +34,10 @@ def moment(X, n, c=0, condition=None, **kwargs):
     >>> moment(X, 1) == E(X)
     True
     """
-    return expectation((X - c)**n, condition, **kwargs)
+    from sympy.stats.symbolic_probability import Moment
+    if kwargs.pop('evaluate', True):
+        return Moment(X, n, c, condition).doit()
+    return Moment(X, n, c, condition).rewrite(Integral)
 
 
 def variance(X, condition=None, **kwargs):

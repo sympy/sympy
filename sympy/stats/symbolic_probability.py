@@ -501,3 +501,32 @@ class Covariance(Expr):
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
+
+class Moment(Expr):
+    """
+    Symbolic Moment class.
+    """
+    def __new__(cls, X, n, c=0, condition=None, **kwargs):
+        if not is_random(X):
+            return X
+        n = _sympify(n)
+        c = _sympify(c)
+        if condition is not None:
+            condition = _sympify(condition)
+            obj = Expr.__new__(cls, X, n, c, condition)
+        else:
+            obj = Expr.__new__(cls, X, n, c)
+        obj._condition = condition
+        return obj
+
+    def doit(self, **hints):
+        return self.rewrite(Expectation).doit()
+
+    def _eval_rewrite_as_Expectation(self, X, n, c=0, condition=None, **kwargs):
+        return Expectation((X - c)**n, condition)
+
+    def _eval_rewrite_as_Probability(self, X, n, c=0, condition=None, **kwargs):
+        return self.rewrite(Expectation).rewrite(Probability)
+
+    def _eval_rewrite_as_Integral(self, X, n, c=0, condition=None, **kwargs):
+        return self.rewrite(Expectation).rewrite(Integral)
