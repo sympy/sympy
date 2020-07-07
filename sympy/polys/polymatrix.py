@@ -146,8 +146,16 @@ class DomainMatrix:
         return self.convert_to(K)
 
     def unify(self, other):
-        K = self.domain.unify(other.domain)
-        return self.convert_to(K), other.convert_to(K)
+        K1 = self.domain
+        K2 = other.domain
+        if K1 == K2:
+            return self, other
+        K = K1.unify(K2)
+        if K1 != K:
+            self = self.convert_to(K)
+        if K2 != K:
+            other = other.convert_to(K)
+        return self, other
 
     def to_Matrix(self):
         rows_sympy = [[self.domain.to_sympy(e) for e in row] for row in self.rows]
