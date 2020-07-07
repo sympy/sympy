@@ -162,20 +162,20 @@ def test_Matrix4():
 def test_Matrix_sum():
     M = Matrix([[1, 2, 3], [x, y, x], [2*y, -50, z*x]])
     m = matrix([[2, 3, 4], [x, 5, 6], [x, y, z**2]])
-    assert M + m == Matrix([[3, 5, 7], [2*x, y + 5, x + 6], [2*y + x, y - 50, z*x + z**2]])
-    assert m + M == Matrix([[3, 5, 7], [2*x, y + 5, x + 6], [2*y + x, y - 50, z*x + z**2]])
-    assert M + m == M.add(m)
+    assert Matrix(M + m) == Matrix([[3, 5, 7], [2*x, y + 5, x + 6], [2*y + x, y - 50, z*x + z**2]])
+    assert Matrix(m + M) == Matrix([[3, 5, 7], [2*x, y + 5, x + 6], [2*y + x, y - 50, z*x + z**2]])
+    assert Matrix(M + m) == M.add(Matrix(m))
 
 
 def test_Matrix_mul():
     M = Matrix([[1, 2, 3], [x, y, x]])
     m = matrix([[2, 4], [x, 6], [x, z**2]])
-    assert M*m == Matrix([
+    assert Matrix(M*m) == Matrix([
         [         2 + 5*x,        16 + 3*z**2],
         [2*x + x*y + x**2, 4*x + 6*y + x*z**2],
     ])
 
-    assert m*M == Matrix([
+    assert Matrix(m*M) == Matrix([
         [   2 + 4*x,      4 + 4*y,      6 + 4*x],
         [       7*x,    2*x + 6*y,          9*x],
         [x + x*z**2, 2*x + y*z**2, 3*x + x*z**2],
