@@ -232,8 +232,6 @@ class DomainMatrix:
         return Ainv
 
     def det(self):
-        if not self.domain.is_Field:
-            raise ValueError('Not a field')
         m, n = self.shape
         if m != n:
             raise NonSquareMatrixError
@@ -241,6 +239,7 @@ class DomainMatrix:
         # https://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
         a = [row[:] for row in self.rows]
         dom = self.domain
+        is_field = dom.is_Field
         # uf keeps track of the effect of row swaps and multiplies
         uf = dom.one
         for j in range(n-1):
@@ -256,9 +255,13 @@ class DomainMatrix:
                     return dom.zero
             for i in range(j+1, n):
                 if a[i][j]:
-                    d = dom.gcd(a[j][j], a[i][j])
-                    b = dom.convert(a[j][j] / d)
-                    c = dom.convert(a[i][j] / d)
+                    if not is_field:
+                        d = dom.gcd(a[j][j], a[i][j])
+                        b = a[j][j] // d
+                        c = a[i][j] // d
+                    else:
+                        b = a[j][j]
+                        c = a[i][j]
                     # account for multiplying row i by b
                     uf = b * uf
                     for k in range(j+1, n):
@@ -268,7 +271,10 @@ class DomainMatrix:
         for i in range(n):
             prod = prod * a[i][i]
         # incorporate swaps and multiplies
-        D = dom.convert(prod / uf)
+        if not is_field:
+            D = prod // uf
+        else:
+            D = prod / uf
         return D
 
     def __eq__(A, B):

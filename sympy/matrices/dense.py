@@ -801,8 +801,8 @@ class DenseDomainMatrix(DenseMatrix):
 
     def det(self, *args, **kwargs):
         rep = self._rep
-        if not rep.domain.is_Field:
-            rep = rep.to_field()
+        #if not rep.domain.is_Field:
+        #    rep = rep.to_field()
         return rep.domain.to_sympy(rep.det())
 
     # called by __rmul__ in common.py
