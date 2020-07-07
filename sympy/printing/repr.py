@@ -232,6 +232,9 @@ class ReprPrinter(Printer):
         return "Sum2(%s, (%s, %s, %s))" % (self._print(expr.f), self._print(expr.i),
                                            self._print(expr.a), self._print(expr.b))
 
+    def _print_Str(self, s):
+        return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
+
     def _print_Symbol(self, expr):
         d = expr._assumptions.generator
         # print the dummy_index like it was an assumption
@@ -324,18 +327,6 @@ class ReprPrinter(Printer):
         rep = self._print(f.rep)
         ext = self._print(f.ext)
         return "ExtElem(%s, %s)" % (rep, ext)
-
-    def _print_Manifold(self, manifold):
-        class_name = manifold.func.__name__
-        name = self._print(manifold.name)
-        dim = self._print(manifold.dim)
-        return "%s(%s, %s)" % (class_name, name, dim)
-
-    def _print_Patch(self, patch):
-        class_name = patch.func.__name__
-        name = self._print(patch.name)
-        manifold = self._print(patch.manifold)
-        return "%s(%s, %s)" % (class_name, name, manifold)
 
     def _print_CoordSystem(self, coords):
         class_name = coords.func.__name__

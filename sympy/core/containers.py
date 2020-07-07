@@ -8,13 +8,10 @@
 
 from collections import OrderedDict
 
-from sympy.core import S
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, MutableSet
 from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
-
-
 
 class Tuple(Basic):
     """
@@ -141,25 +138,11 @@ class Tuple(Basic):
         else:
             return self.args.index(value, start, stop)
 
-    def _eval_Eq(self, other):
-        from sympy.core.function import AppliedUndef
-        from sympy.core.logic import fuzzy_and, fuzzy_bool
-        from sympy.core.relational import Eq
-
-        if other.is_Symbol or isinstance(other, AppliedUndef):
-            return None
-
-        if not isinstance(other, Tuple) or len(self) != len(other):
-            return S.false
-
-        r = fuzzy_and(fuzzy_bool(Eq(s, o)) for s, o in zip(self, other))
-        if r is True:
-            return S.true
-        elif r is False:
-            return S.false
-
 
 converter[tuple] = lambda tup: Tuple(*tup)
+
+
+
 
 
 def tuple_wrapper(method):

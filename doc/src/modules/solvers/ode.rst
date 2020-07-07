@@ -265,6 +265,14 @@ Linear ODE to matrix
 ^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.systems::linear_ode_to_matrix
 
+Canonical Equations Converter
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems::canonical_odes
+
+LinODESolve Systems Information
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems::linodesolve_type
+
 Matrix Exponential Jordan Form
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.systems::matrix_exp_jordan_form
@@ -273,21 +281,9 @@ Matrix Exponential
 ^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.systems::matrix_exp
 
-Linear, n equations, Order 1, Type 1
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.systems::_linear_neq_order1_type1
-
-Linear, n equations, Order 1, Type 2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.systems::_linear_neq_order1_type2
-
-Linear, n equations, Order 1, Type 3
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.systems::_linear_neq_order1_type3
-
-Linear, n equations, Order 1, Type 4
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.systems::_linear_neq_order1_type4
+Linear, n equations, Order 1 Solver
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems::linodesolve
 
 Nonlinear, 2 equations, Order 1, Type 1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -328,6 +324,13 @@ Nonlinear, 3 equations, Order 1, Type 4
 Nonlinear, 3 equations, Order 1, Type 5
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::_nonlinear_3eq_order1_type5
+
+Other useful functions
+----------------------
+
+checksysodesol
+^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.subscheck::checksysodesol
 
 Information on the ode module
 -----------------------------

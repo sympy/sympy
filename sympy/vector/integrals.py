@@ -1,11 +1,12 @@
-from sympy.core.basic import Basic
-from sympy import simplify
+from sympy import S, simplify
+from sympy.core import Basic, diff
 from sympy.matrices import Matrix
-from sympy.vector import CoordSys3D, Vector, ParametricRegion
+from sympy.vector import CoordSys3D, Vector, ParametricRegion, parametric_region_list
 from sympy.vector.operators import _get_coord_sys_from_expr
 from sympy.integrals import Integral, integrate
-from sympy.core.function import diff
 from sympy.utilities.iterables import topological_sort, default_sort_key
+from sympy.geometry.entity import GeometryEntity
+
 
 class ParametricIntegral(Basic):
     """
@@ -32,7 +33,7 @@ class ParametricIntegral(Basic):
     8*pi
 
     >>> ParametricIntegral(C.j + C.k, ParametricRegion((r*cos(theta), r*sin(theta)), r, theta))
-    ParametricIntegral(C.j + C.k, ParametricRegion((r*cos(theta), r*sin(theta)), r, theta))
+    0
 
     """
 
@@ -48,7 +49,7 @@ class ParametricIntegral(Basic):
             coord_sys = next(iter(coord_set))
 
         if parametricregion.dimensions == 0:
-            return super().__new__(cls, field, parametricregion)
+            return S.Zero
 
         base_vectors = coord_sys.base_vectors()
         base_scalars = coord_sys.base_scalars()
@@ -135,6 +136,7 @@ class ParametricIntegral(Basic):
     def parametricregion(self):
         return self.args[1]
 
+
 def vector_integrate(field, *region):
     """
     Compute the integral of a vector/scalar field
@@ -150,10 +152,31 @@ def vector_integrate(field, *region):
     >>> vector_integrate(C.x*C.i, region)
     12
 
+    Integrals over special regions can also be calculated using geometry module.
+    >>> from sympy.geometry import Point, Circle, Triangle
+    >>> c = Circle(Point(0, 2), 5)
+    >>> vector_integrate(C.x**2 + C.y**2, c)
+    290*pi
+    >>> triangle = Triangle(Point(-2, 3), Point(2, 3), Point(0, 5))
+    >>> vector_integrate(3*C.x**2*C.y*C.i + C.j, triangle)
+    -8
+
+    >>> vector_integrate(12*C.y**3, (C.y, 1, 3))
+    240
     >>> vector_integrate(C.x**2*C.z, C.x)
     C.x**3*C.z/3
+
     """
     if len(region) == 1:
         if isinstance(region[0], ParametricRegion):
             return ParametricIntegral(field, region[0])
+
+        if isinstance(region[0], GeometryEntity):
+            regions_list = parametric_region_list(region[0])
+
+            result = 0
+            for reg in regions_list:
+                result += vector_integrate(field, reg)
+            return result
+
     return integrate(field, *region)

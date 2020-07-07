@@ -91,7 +91,7 @@ def test_vector_latex():
 
     assert vlatex(v) == (r'(a^{2} + \frac{b}{c})\mathbf{\hat{a}_x} + '
                          r'\sqrt{d}\mathbf{\hat{a}_y} + '
-                         r'\operatorname{cos}\left(\omega\right)'
+                         r'\cos{\left(\omega \right)}'
                          r'\mathbf{\hat{a}_z}')
 
     theta, omega, alpha, q = dynamicsymbols('theta, omega, alpha, q')
@@ -109,12 +109,12 @@ def test_vector_latex():
          cos(phi1) * cos(phi2) * A.y +
          cos(theta1 + phi3) * A.z)
 
-    assert vlatex(v) == (r'\operatorname{sin}\left(\theta_{1}\right)'
-                         r'\mathbf{\hat{a}_x} + \operatorname{cos}'
-                         r'\left(\phi_{1}\right) \operatorname{cos}'
-                         r'\left(\phi_{2}\right)\mathbf{\hat{a}_y} + '
-                         r'\operatorname{cos}\left(\theta_{1} + '
-                         r'\phi_{3}\right)\mathbf{\hat{a}_z}')
+    assert vlatex(v) == (r'\sin{\left(\theta_{1} \right)}'
+                         r'\mathbf{\hat{a}_x} + \cos{'
+                         r'\left(\phi_{1} \right)} \cos{'
+                         r'\left(\phi_{2} \right)}\mathbf{\hat{a}_y} + '
+                         r'\cos{\left(\theta_{1} + '
+                         r'\phi_{3} \right)}\mathbf{\hat{a}_z}')
 
     N = ReferenceFrame('N')
 
@@ -124,7 +124,7 @@ def test_vector_latex():
 
     expected = (r'(a^{2} + \frac{b}{c})\mathbf{\hat{n}_x} + '
                 r'\sqrt{d}\mathbf{\hat{n}_y} + '
-                r'\operatorname{cos}\left(\omega\right)'
+                r'\cos{\left(\omega \right)}'
                 r'\mathbf{\hat{n}_z}')
 
     assert vlatex(v) == expected
@@ -137,11 +137,11 @@ def test_vector_latex():
 
     expected = (r'(a^{2} + \frac{b}{c})\hat{i} + '
                 r'\sqrt{d}\hat{j} + '
-                r'\operatorname{cos}\left(\omega\right)\hat{k}')
+                r'\cos{\left(\omega \right)}\hat{k}')
     assert vlatex(v) == expected
 
-    expected = r'\alpha\mathbf{\hat{n}_x} + \operatorname{asin}\left(\omega' \
-        r'\right)\mathbf{\hat{n}_y} -  \beta \dot{\alpha}\mathbf{\hat{n}_z}'
+    expected = r'\alpha\mathbf{\hat{n}_x} + \operatorname{asin}{\left(\omega ' \
+        r'\right)}\mathbf{\hat{n}_y} -  \beta \dot{\alpha}\mathbf{\hat{n}_z}'
     assert vlatex(ww) == expected
 
     expected = r'- \mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_y} - ' \
@@ -151,6 +151,11 @@ def test_vector_latex():
     expected = r'\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_y} + ' \
         r'\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_z}'
     assert vlatex(xx2) == expected
+
+
+def test_vector_latex_arguments():
+    assert vlatex(N.x * 3.0, full_prec=False) == r'3.0\mathbf{\hat{n}_x}'
+    assert vlatex(N.x * 3.0, full_prec=True) == r'3.00000000000000\mathbf{\hat{n}_x}'
 
 
 def test_vector_latex_with_functions():
@@ -202,13 +207,13 @@ def test_dyadic_latex():
 
     expected = (r'a^{2}\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_y} + '
                 r'b\mathbf{\hat{n}_y}\otimes \mathbf{\hat{n}_y} + '
-                r'c \operatorname{sin}\left(\alpha\right)'
+                r'c \sin{\left(\alpha \right)}'
                 r'\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_y}')
 
     assert vlatex(y) == expected
 
     expected = (r'\alpha\mathbf{\hat{n}_x}\otimes \mathbf{\hat{n}_x} + '
-                r'\operatorname{sin}\left(\omega\right)\mathbf{\hat{n}_y}'
+                r'\sin{\left(\omega \right)}\mathbf{\hat{n}_y}'
                 r'\otimes \mathbf{\hat{n}_z} + '
                 r'\alpha \beta\mathbf{\hat{n}_z}\otimes \mathbf{\hat{n}_x}')
 
@@ -218,12 +223,12 @@ def test_dyadic_latex():
 
 
 def test_dyadic_str():
-    assert str(Dyadic([])) == '0'
-    assert str(y) == 'a**2*(N.x|N.y) + b*(N.y|N.y) + c*sin(alpha)*(N.z|N.y)'
-    assert str(x) == 'alpha*(N.x|N.x) + sin(omega)*(N.y|N.z) + alpha*beta*(N.z|N.x)'
-    assert str(ww) == "alpha*N.x + asin(omega)*N.y - beta*alpha'*N.z"
-    assert str(xx) == '- (N.x|N.y) - (N.x|N.z)'
-    assert str(xx2) == '(N.x|N.y) + (N.x|N.z)'
+    assert vsprint(Dyadic([])) == '0'
+    assert vsprint(y) == 'a**2*(N.x|N.y) + b*(N.y|N.y) + c*sin(alpha)*(N.z|N.y)'
+    assert vsprint(x) == 'alpha*(N.x|N.x) + sin(omega)*(N.y|N.z) + alpha*beta*(N.z|N.x)'
+    assert vsprint(ww) == "alpha*N.x + asin(omega)*N.y - beta*alpha'*N.z"
+    assert vsprint(xx) == '- (N.x|N.y) - (N.x|N.z)'
+    assert vsprint(xx2) == '(N.x|N.y) + (N.x|N.z)'
 
 
 def test_vlatex(): # vlatex is broken #12078
@@ -293,7 +298,7 @@ def test_vector_derivative_printing():
     # Fifth order
     v = omega.diff().diff().diff().diff().diff() * N.x
 
-    assert vlatex(v) == r'\frac{d^{5}}{d t^{5}} \omega{\left(t \right)}\mathbf{\hat{n}_x}'
+    assert vlatex(v) == r'\frac{d^{5}}{d t^{5}} \omega\mathbf{\hat{n}_x}'
     assert unicode_vpretty(v) == u('  5\n d\n───(ω) n_x\n  5\ndt')
     assert ascii_vpretty(v) == '  5\n d\n---(omega) n_x\n  5\ndt'
 
@@ -302,3 +307,23 @@ def test_vector_str_printing():
     assert vsprint(w) == 'alpha*N.x + sin(omega)*N.y + alpha*beta*N.z'
     assert vsprint(omega.diff() * N.x) == "omega'*N.x"
     assert vsstrrepr(w) == 'alpha*N.x + sin(omega)*N.y + alpha*beta*N.z'
+
+
+def test_vector_str_arguments():
+    assert vsprint(N.x * 3.0, full_prec=False) == '3.0*N.x'
+    assert vsprint(N.x * 3.0, full_prec=True) == '3.00000000000000*N.x'
+
+
+def test_issue_14041():
+    import sympy.physics.mechanics as me
+
+    A_frame = me.ReferenceFrame('A')
+    thetad, phid = me.dynamicsymbols('theta, phi', 1)
+    L = symbols('L')
+
+    assert vlatex(L*(phid + thetad)**2*A_frame.x) == \
+        r"L \left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
+    assert vlatex((phid + thetad)**2*A_frame.x) == \
+        r"\left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
+    assert vlatex((phid*thetad)**a*A_frame.x) == \
+        r"\left(\dot{\phi} \dot{\theta}\right)^{a}\mathbf{\hat{a}_x}"

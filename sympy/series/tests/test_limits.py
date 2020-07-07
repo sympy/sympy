@@ -5,7 +5,7 @@ from sympy import (
     atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
-    acos, erf, erfi, LambertW, factorial, digamma, Ei, EulerGamma,
+    acos, erf, erfc, erfi, LambertW, factorial, digamma, Ei, EulerGamma,
     asin, atanh, acot, acoth, asec, acsc, cbrt)
 
 from sympy.calculus.util import AccumBounds
@@ -36,7 +36,7 @@ def test_basic1():
     assert limit((1 + x)**(1 + sqrt(2)), x, 0) == 1
     assert limit((1 + x)**oo, x, 0) == Limit((x + 1)**oo, x, 0)
     assert limit((1 + x)**oo, x, 0, dir='-') == Limit((x + 1)**oo, x, 0, dir='-')
-    assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
+    assert limit((1 + x + y)**oo, x, 0, dir='-') == Limit((x + y + 1)**oo, x, 0, dir='-')
     assert limit(y/x/log(x), x, 0) == -oo*sign(y)
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
     assert limit(gamma(1/x + 3), x, oo) == 2
@@ -75,7 +75,7 @@ def test_basic1():
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(sqrt(x), x, 0, dir='-') == 0
     assert limit(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
-    assert limit((1 + cos(x))**oo, x, 0) is oo
+    assert limit((1 + cos(x))**oo, x, 0) == Limit((cos(x) + 1)**oo, x, 0)
 
 
 def test_basic2():
@@ -210,7 +210,6 @@ def test_exponential():
     assert limit((2 + 6*x)**x/(6*x)**x, x, oo) == exp(S('1/3'))
 
 
-@XFAIL
 def test_exponential2():
     n = Symbol('n')
     assert limit((1 + x/(n + sin(n)))**n, n, oo) == exp(x)
@@ -518,6 +517,11 @@ def test_issue_8208():
     assert limit(n**(Rational(1, 1e9) - 1), n, oo) == 0
 
 
+def test_issue_8433():
+    d, t = symbols('d t', positive=True)
+    assert limit(erf(1 - t/d), t, oo) == -1
+
+
 def test_issue_8481():
     k = Symbol('k', integer=True, nonnegative=True)
     lamda = Symbol('lamda', real=True, positive=True)
@@ -537,6 +541,11 @@ def test_issue_10801():
     assert limit(16**k / (k * binomial(2*k, k)**2), k, oo) == pi
 
 
+def test_issue_10976():
+    s, x = symbols('s x', real=True)
+    assert limit(erf(s*x)/erf(s), s, 0) == x
+
+
 def test_issue_9041():
     assert limit(factorial(n) / ((n/exp(1))**n * sqrt(2*pi*n)), n, oo) == 1
 
@@ -552,6 +561,10 @@ def test_issue_9205():
 def test_issue_9471():
     assert limit((((27**(log(n,3))))/n**3),n,oo) == 1
     assert limit((((27**(log(n,3)+1)))/n**3),n,oo) == 27
+
+
+def test_issue_11496():
+    assert limit(erfc(log(1/x)), x, oo) == 2
 
 
 def test_issue_11879():
@@ -570,6 +583,11 @@ def test_issue_10610():
 
 def test_issue_6599():
     assert limit((n + cos(n))/n, n, oo) == 1
+
+
+def test_issue_12398():
+    assert limit(Abs(log(x)/x**3), x, oo) == 0
+    assert limit(x*(Abs(log(x)/x**3)/Abs(log(x + 1)/(x + 1)**3) - 1), x, oo) == 3
 
 
 def test_issue_12555():
@@ -626,6 +644,12 @@ def test_issue_13416():
 
 def test_issue_13462():
     assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x*(x - 2)*(x - 1)/24
+
+
+def test_issue_13750():
+    a = Symbol('a')
+    assert limit(erf(a - x), x, oo) == -1
+    assert limit(erf(sqrt(x) - x), x, oo) == -1
 
 
 def test_issue_14514():
@@ -718,6 +742,10 @@ def test_issue_14811():
     assert limit(((1 + ((S(2)/3)**(x + 1)))**(2**x))/(2**((S(4)/3)**(x - 1))), x, oo) == oo
 
 
+def test_issue_16222():
+    assert limit(exp(x), x, 1000000000) == exp(1000000000)
+
+
 def test_issue_16714():
     assert limit(((x**(x + 1) + (x + 1)**x) / x**(x + 1))**x, x, oo) == exp(exp(1))
 
@@ -756,6 +784,11 @@ def test_issue_18306():
 
 def test_issue_18378():
     assert limit(log(exp(3*x) + x)/log(exp(x) + x**100), x, oo) == 3
+
+
+def test_issue_18399():
+    assert limit((1 - S(1)/2*x)**(3*x), x, oo) is zoo
+    assert limit((-x)**x, x, oo) is zoo
 
 
 def test_issue_18442():

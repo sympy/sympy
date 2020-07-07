@@ -21,11 +21,12 @@ from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import FF, QQ, ZZ
+from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.fglmtools import matrix_fglm
 from sympy.polys.groebnertools import groebner as _groebner
 from sympy.polys.monomials import Monomial
 from sympy.polys.orderings import monomial_key
-from sympy.polys.polyclasses import DMP
+from sympy.polys.polyclasses import DMP, DMF, ANP
 from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,
     CoercionFailed, UnificationFailed,
@@ -146,7 +147,9 @@ class Poly(Basic):
         if 'order' in opt:
             raise NotImplementedError("'order' keyword is not implemented yet")
 
-        if iterable(rep, exclude=str):
+        if isinstance(rep, (DMP, DMF, ANP, DomainElement)):
+            return cls._from_domain_element(rep, opt)
+        elif iterable(rep, exclude=str):
             if isinstance(rep, dict):
                 return cls._from_dict(rep, opt)
             else:
@@ -288,6 +291,16 @@ class Poly(Basic):
         """Construct a polynomial from an expression. """
         rep, opt = _dict_from_expr(rep, opt)
         return cls._from_dict(rep, opt)
+
+    @classmethod
+    def _from_domain_element(cls, rep, opt):
+        gens = opt.gens
+        domain = opt.domain
+
+        level = len(gens) - 1
+        rep = [domain.convert(rep)]
+
+        return cls.new(DMP.from_list(rep, level, domain), *gens)
 
     def __hash__(self):
         return super(Poly, self).__hash__()

@@ -235,7 +235,7 @@ class exp(ExpBase):
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
-        from sympy import logcombine
+        from sympy import im, logcombine, re
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -283,6 +283,15 @@ class exp(ExpBase):
 
             # but it can't be multiplied by oo
             if coeff in [S.NegativeInfinity, S.Infinity]:
+                if terms.is_number:
+                    if coeff is S.NegativeInfinity:
+                        terms = -terms
+                    if re(terms).is_zero and terms is not S.Zero:
+                        return S.NaN
+                    if re(terms).is_positive and im(terms) is not S.Zero:
+                        return S.ComplexInfinity
+                    if re(terms).is_negative:
+                        return S.Zero
                 return None
 
             coeffs, log_term = [coeff], None
@@ -932,7 +941,7 @@ class log(Function):
             while s.is_Order:
                 n += 1
                 s = arg.nseries(x, n=n, logx=logx)
-            a, b = s.leadterm(x)
+        a, b = s.removeO().leadterm(x)
         p = cancel(s/(a*x**b) - 1)
         if p.has(exp):
             p = logcombine(p)
@@ -954,7 +963,7 @@ class log(Function):
         from sympy import I, im
         arg = self.args[0].together()
         x0 = arg.subs(x, 0)
-        if x0 is S.One:
+        if x0 == 1:
             return (arg - S.One).as_leading_term(x)
         if cdir != 0:
             cdir = self.args[0].dir(x, cdir)

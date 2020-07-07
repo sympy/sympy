@@ -1,17 +1,19 @@
-from sympy import (Derivative, Symbol, expand, factor_terms, powsimp, Poly,
-                   Mul, ratsimp, Add, Piecewise, piecewise_fold)
+from sympy.core import Add, Mul
+from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
-from sympy.core.symbol import Dummy
-from sympy.core.function import expand_mul
-from sympy.functions import exp, im, cos, sin, re
+from sympy.core.symbol import Dummy, Symbol
+from sympy.core.function import expand_mul, expand
+from sympy.functions import exp, im, cos, sin, re, Piecewise, piecewise_fold
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.matrices import zeros, Matrix
-from sympy.simplify import simplify, collect
+from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase
+from sympy.polys import Poly
+from sympy.simplify import simplify, collect, powsimp, ratsimp
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError
 from sympy.utilities import numbered_symbols, default_sort_key
 from sympy.utilities.iterables import ordered, uniq
+from sympy.utilities.misc import filldedent
 from sympy.integrals.integrals import Integral, integrate
 
 
@@ -58,6 +60,105 @@ def _solsimp(e, t):
     has_t = has_t.replace(exp, lambda a: exp(factor_terms(a)))
 
     return no_t + has_t
+
+
+def linodesolve_type(A, t, b=None):
+    r"""
+    Helper function that determines the type of the system of ODEs for solving with :obj:`sympy.solvers.ode.systems.linodesolve()`
+
+    Explanation
+    ===========
+
+    This function takes in the coefficient matrix and/or the non-homogeneous term
+    and returns the type of the equation that can be solved by :obj:`sympy.solvers.ode.systems.linodesolve()`.
+
+    If the system is constant coefficient homogeneous, then "type1" is returned
+    If the system is constant coefficient non-homogeneous, then "type2" is returned
+    If the system is non-constant coefficient homogeneous, then "type3" is returned
+    If the system is non-constnt coefficient non-homogeneous, then "type4" is returned
+
+    Note that, if the system of ODEs is of "type3" or "type4", then along with the type,
+    the commutative antiderivative of the coefficient matrix is also returned.
+
+    If the system cannot be solved by :obj:`sympy.solvers.ode.systems.linodesolve()`, then
+    NotImplementedError is raised.
+
+    Parameters
+    ==========
+
+    A : Matrix
+        Coefficient matrix of the system of ODEs
+    b : Matrix or None
+        Non-homogeneous term of the system. The default value is None.
+        If this argument is None, then the system is assumed to be homogeneous.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Matrix
+    >>> from sympy.solvers.ode.systems import linodesolve_type
+    >>> t = symbols("t")
+    >>> A = Matrix([[1, 1], [2, 3]])
+    >>> b = Matrix([t, 1])
+
+    >>> linodesolve_type(A, t)
+    {'antiderivative': None, 'type': 'type1'}
+
+    >>> linodesolve_type(A, t, b=b)
+    {'antiderivative': None, 'type': 'type2'}
+
+    >>> A_t = Matrix([[1, t], [-t, 1]])
+
+    >>> linodesolve_type(A_t, t)
+    {'antiderivative': Matrix([
+    [      t, t**2/2],
+    [-t**2/2,      t]]), 'type': 'type3'}
+
+    >>> linodesolve_type(A_t, t, b=b)
+    {'antiderivative': Matrix([
+    [      t, t**2/2],
+    [-t**2/2,      t]]), 'type': 'type4'}
+
+    >>> A_non_commutative = Matrix([[1, t], [t, -1]])
+    >>> linodesolve_type(A_non_commutative, t)
+    Traceback (most recent call last):
+    ...
+    NotImplementedError:
+    The system doesn't have a commutative antiderivative, it can't be
+    solved by linodesolve.
+
+    Returns
+    =======
+
+    Dict
+
+    Raises
+    ======
+
+    NotImplementedError
+        When the coefficient matrix doesn't have a commutative antiderivative
+
+    See Also
+    ========
+
+    linodesolve: Function for which linodesolve_type gets the information
+
+    """
+
+    is_non_constant = not _matrix_is_constant(A, t)
+    is_non_homogeneous = not (b is None or b.is_zero_matrix)
+    type = "type{}".format(int("{}{}".format(int(is_non_constant), int(is_non_homogeneous)), 2) + 1)
+
+    B = None
+    if is_non_constant:
+        B, is_commuting = _is_commutative_anti_derivative(A, t)
+        if not is_commuting:
+            raise NotImplementedError(filldedent('''
+                The system doesn't have a commutative antiderivative, it can't be solved
+                by linodesolve.
+            '''))
+
+    return {"type": type, "antiderivative": B}
 
 
 def linear_ode_to_matrix(eqs, funcs, t, order):
@@ -408,96 +509,262 @@ def matrix_exp_jordan_form(A, t):
     return P, expJ
 
 
-def _linear_neq_order1_type1(match_):
+def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     r"""
-    System of n first-order constant-coefficient linear homogeneous differential equations
+    System of n equations linear first-order differential equations
 
-    .. math:: y'_k = a_{k1} y_1 + a_{k2} y_2 +...+ a_{kn} y_n; k = 1,2,...,n
+    Explanation
+    ===========
 
-    or that can be written as `\vec{y'} = A . \vec{y}`
-    where `\vec{y}` is matrix of `y_k` for `k = 1,2,...n` and `A` is a `n \times n` matrix.
+    This solver solves the system of ODEs of the follwing form:
 
-    These equations are equivalent to a first order homogeneous linear
-    differential equation.
+    .. math::
+        X'(t) = A(t) X(t) +  b(t)
 
-    The system of ODEs described above has a unique solution, namely:
+    Here, $A(t)$ is the coefficient matrix, $X(t)$ is the vector of n independent variables,
+    $b(t)$ is the non-homogeneous term and $X'(t)$ is the derivative of $X(t)$
 
-    .. math ::
-        \vec{y} = \exp(A t) C
+    Depending on the properties of $A(t)$ and $b(t)$, this solver evaluates the solution
+    differently.
 
-    where $t$ is the independent variable and $C$ is a vector of n constants. These are constants
-    from the integration.
+    When $A(t)$ is constant coefficient matrix and $b(t)$ is zero vector i.e. system is homogeneous,
+    the solution is:
+
+    .. math::
+        X(t) = \exp(A t) C
+
+    Here, $C$ is a vector of constants and $A$ is the constant coefficient matrix.
+
+    When $A(t)$ is constant coefficient matrix and $b(t)$ is non-zero i.e. system is non-homogeneous,
+    the solution is:
+
+    .. math::
+        X(t) = e^{A t} ( \int e^{- A t} b \,dt + C)
+
+    When $A(t)$ is coefficient matrix such that its commutative with its antiderivative $B(t)$ and
+    $b(t)$ is a zero vector i.e. system is homogeneous, the solution is:
+
+    .. math::
+        X(t) = \exp(B(t)) C
+
+    When $A(t)$ is commutative with its antiderivative $B(t)$ and $b(t)$ is non-zero i.e. system is
+    non-homogeneous, the solution is:
+
+    .. math::
+        X(t) =  e^{B(t)} ( \int e^{-B(t)} b(t) \,dt + C)
+
+    The final solution is the general solution for all the four equations since a constant coefficient
+    matrix is always commutative with its antidervative.
+
+    Parameters
+    ==========
+
+    A : Matrix
+        Coefficient matrix of the system of linear first order ODEs.
+    t : Symbol
+        Independent variable in the system of ODEs.
+    b : Matrix or None
+        Non-homogeneous term in the system of ODEs. If None is passed,
+        a homogeneous system of ODEs is assumed.
+    B : Matrix or None
+        Antiderivative of the coefficient matrix. If the antiderivative
+        is not passed and the solution requires the term, then the solver
+        would compute it internally.
+    type : String
+        Type of the system of ODEs passed. Depending on the type, the
+        solution is evaluated. The type values allowed and the corresponding
+        system it solves are: "type1" for constant coefficient homogeneous
+        "type2" for constant coefficient non-homogeneous, "type3" for non-constant
+        coefficient homogeneous and "type4" for non-constant coefficient non-homogeneous.
+        The default value is "auto" which will let the solver decide the correct type of
+        the system passed.
+    doit : Boolean
+        Evaluate the solution if True, default value is False
+
+    Examples
+    ========
+
+    To solve the system of ODEs using this function directly, several things must be
+    done in the right order. Wrong inputs to the function will lead to incorrect results.
+
+    >>> from sympy import symbols, Function, Eq
+    >>> from sympy.solvers.ode.systems import canonical_odes, linear_ode_to_matrix, linodesolve, linodesolve_type
+    >>> from sympy.solvers.ode.subscheck import checksysodesol
+    >>> f, g = symbols("f, g", cls=Function)
+    >>> x, a = symbols("x, a")
+    >>> funcs = [f(x), g(x)]
+    >>> eqs = [Eq(f(x).diff(x) - f(x), a*g(x) + 1), Eq(g(x).diff(x) + g(x), a*f(x))]
+
+    Here, it is important to note that before we derive the coefficient matrix, it is
+    important to get the system of ODEs into the desired form. For that we will use
+    :obj:`sympy.solvers.ode.systems.canonical_odes()`.
+
+    >>> eqs = canonical_odes(eqs, funcs, x)
+    >>> eqs
+    [Eq(Derivative(f(x), x), a*g(x) + f(x) + 1), Eq(Derivative(g(x), x), a*f(x) - g(x))]
+
+    Now, we will use :obj:`sympy.solvers.ode.systems.linear_ode_to_matrix()` to get the coefficient matrix and the
+    non-homogeneous term if it is there.
+
+    >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
+    >>> A = -A0
+
+    We have the coefficient matrices and the non-homogeneous term ready. Now, we can use
+    :obj:`sympy.solvers.ode.systems.linodesolve_type()` to get the information for the system of ODEs
+    to finally pass it to the solver.
+
+    >>> system_info = linodesolve_type(A, x, b=b)
+    >>> sol_vector = linodesolve(A, x, b=b, B=system_info['antiderivative'], type=system_info['type'])
+
+    Now, we can prove if the solution is correct or not by using :obj:`sympy.solvers.ode.subscheck.checksysodesol()`
+
+    >>> sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
+    >>> checksysodesol(eqs, sol)
+    (True, [0, 0])
+
+    We can also use the doit method to evaluate the solutions passed by the function.
+
+    >>> sol_vector_evaluated = linodesolve(A, x, b=b, type="type2", doit=True)
+
+    Now, we will look at a system of ODEs which is non-constant.
+
+    >>> eqs = [Eq(f(x).diff(x), f(x) + x*g(x)), Eq(g(x).diff(x), -x*f(x) + g(x))]
+
+    The system defined above is already in the desired form, so we don't have to convert it.
+
+    >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
+    >>> A = -A0
+
+    A user can also pass the commutative antidervative required for type3 and type4 system of ODEs.
+    Passing an incorrect one will lead to incorrect results. If the coefficient matrix is not commutative
+    with its antiderivative, then :obj:`sympy.solvers.ode.systems.linodesolve_type()` raises a NotImplementedError.
+    If it does have a commutative antiderivative, then the function just returns the information about the system.
+
+    >>> system_info = linodesolve_type(A, x, b=b)
+
+    Now, we can pass the antiderivative as an argument to get the solution. If the system information is not
+    passed, then the solver will compute the required arguments internally.
+
+    >>> sol_vector = linodesolve(A, x, b=b)
+
+    Once again, we can verify the solution obtained.
+
+    >>> sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
+    >>> checksysodesol(eqs, sol)
+    (True, [0, 0])
+
+    Returns
+    =======
+
+    List
+
+    Raises
+    ======
+
+    ValueError
+        This error is raised when the coefficient matrix, non-homogeneous term
+        or the antiderivative, if passed, aren't a matrix or
+        don't have correct dimensions
+    NonSquareMatrixError
+        When the coefficient matrix or its antiderivative, if passed isn't a square
+        matrix
+    NotImplementedError
+        If the coefficient matrix doesn't have a commutative antiderivative
+
+    See Also
+    ========
+
+    linear_ode_to_matrix: Coefficient matrix computation function
+    canonical_odes: System of ODEs representation change
+    linodesolve_type: Getting information about systems of ODEs to pass in this solver
 
     """
-    eq = match_['eq']
-    func = match_['func']
-    fc = match_['func_coeff']
-    n = len(eq)
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
+
+    if not isinstance(A, MatrixBase):
+        raise ValueError(filldedent('''\
+            The coefficients of the system of ODEs should be of type Matrix
+        '''))
+
+    if not A.is_square:
+        raise NonSquareMatrixError(filldedent('''\
+            The coefficient matrix must be a square
+        '''))
+
+    if b is not None:
+        if not isinstance(b, MatrixBase):
+            raise ValueError(filldedent('''\
+                The non-homogeneous terms of the system of ODEs should be of type Matrix
+            '''))
+
+        if A.rows != b.rows:
+            raise ValueError(filldedent('''\
+                The system of ODEs should have the same number of non-homogeneous terms and the number of
+                equations
+            '''))
+
+    if B is not None:
+        if not isinstance(B, MatrixBase):
+            raise ValueError(filldedent('''\
+                The antiderivative of coefficients of the system of ODEs should be of type Matrix
+            '''))
+
+        if not B.is_square:
+            raise NonSquareMatrixError(filldedent('''\
+                The antiderivative of the coefficient matrix must be a square
+            '''))
+
+        if A.rows != B.rows:
+            raise ValueError(filldedent('''\
+                        The coefficient matrix and its antiderivative should have same dimensions
+                    '''))
+
+    if not any(type == "type{}".format(i) for i in range(1, 5)) and not type == "auto":
+        raise ValueError(filldedent('''\
+                    The input type should be a valid one
+                '''))
+
+    n = A.rows
+
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
-
-    # This needs to be modified in future so that fc is only of type Matrix
-    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
-
-    P, J = matrix_exp_jordan_form(M, t)
-    P = simplify(P)
     Cvect = Matrix(list(next(constants) for _ in range(n)))
-    sol_vector = P * (J * Cvect)
+
+    if (type == "type2" or type == "type4") and b is None:
+        b = zeros(n, 1)
+
+    if type == "auto":
+        system_info = linodesolve_type(A, t, b=b)
+        type = system_info["type"]
+        B = system_info["antiderivative"]
+
+    if type == "type1" or type == "type2":
+        P, J = matrix_exp_jordan_form(A, t)
+        P = simplify(P)
+
+        if type == "type1":
+            sol_vector = P * (J * Cvect)
+        else:
+            sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+
+    else:
+        if B is None:
+            B, _ = _is_commutative_anti_derivative(A, t)
+
+        if type == "type3":
+            sol_vector = B.exp() * Cvect
+        else:
+            sol_vector = B.exp() * (((-B).exp() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
 
     gens = sol_vector.atoms(exp)
+
+    if type != "type1":
+        sol_vector = [expand_mul(s) for s in sol_vector]
+
     sol_vector = [collect(s, ordered(gens), exact=True) for s in sol_vector]
 
-    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
-    return sol_dict
+    if doit:
+        sol_vector = [s.doit() for s in sol_vector]
 
-
-def _linear_neq_order1_type2(match_):
-    r"""
-    System of n first-order coefficient linear non-homogeneous differential equations
-
-    .. math::
-        X' = A X + b(t)
-
-    where $X$ is the vector of $n$ dependent variables, $t$ is the dependent variable, $X'$
-    is the first order differential of $X$ with respect to $t$, $A$ is a $n \times n$
-    constant coefficient matrix and $b(t)$ is the non-homogeneous term.
-
-    The solution of the above system is:
-
-    .. math::
-        X = e^{A t} ( \int e^{- A t} b \,dt + C)
-
-    where $C$ is the vector of constants.
-
-    """
-    eq = match_['eq']
-    func = match_['func']
-    fc = match_['func_coeff']
-    b = match_['rhs']
-
-    n = len(eq)
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
-
-    # This needs to be modified in future so that fc is only of type Matrix
-    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
-
-    P, J = matrix_exp_jordan_form(M, t)
-    P = simplify(P)
-    Cvect = Matrix(list(next(constants) for _ in range(n)))
-    sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
-
-    # sol_vector = sol_vector.applyfunc(_solsimp)
-
-    # Removing the expand_mul can simplify the solutions of the ODEs
-    # with symbolic coeffs. To be addressed in the future.
-    sol_vector = [collect(expand_mul(s), sol_vector.atoms(exp), exact=True) for s in sol_vector]
-
-    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
-
-    # sol_dict = [simpsol(eq) for eq in sol_dict]
-
-    return sol_dict
+    return sol_vector
 
 
 def _matrix_is_constant(M, t):
@@ -505,154 +772,130 @@ def _matrix_is_constant(M, t):
     return all(coef.as_independent(t, as_Add=True)[1] == 0 for coef in M)
 
 
-def _canonical_equations(eqs, funcs, t):
-    """Helper function that solves for first order derivatives in a system"""
+def canonical_odes(eqs, funcs, t):
+    r"""
+    Function that solves for highest order derivatives in a system
+
+    Explanation
+    ===========
+
+    This function inputs a system of ODEs and based on the system,
+    the dependent variables and their highest order, returns the system
+    in the following form:
+
+    .. math::
+        X'(t) = A(t) X(t) + b(t)
+
+    Here, $X(t)$ is the vector of dependent variables of lower order, $A(t)$ is
+    the coefficient matrix, $b(t)$ is the non-homogeneous term and $X'(t)$ is the
+    vector of dependent variables in their respective highest order. We use the term
+    canonical form to imply the system of ODEs which is of the above form.
+
+    If the system passed has a non-linear term with multiple solutions, then a list of
+    systems is returned in its canonical form.
+
+    Parameters
+    ==========
+
+    eqs : List
+        List of the ODEs
+    funcs : List
+        List of dependent variables
+    t : Symbol
+        Independent variable
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Function, Eq, Derivative
+    >>> from sympy.solvers.ode.systems import canonical_odes
+    >>> f, g = symbols("f g", cls=Function)
+    >>> x, y = symbols("x y")
+    >>> funcs = [f(x), g(x)]
+    >>> eqs = [Eq(f(x).diff(x) - 7*f(x), 12*g(x)), Eq(g(x).diff(x) + g(x), 20*f(x))]
+
+    >>> canonical_eqs = canonical_odes(eqs, funcs, x)
+    >>> canonical_eqs
+    [Eq(Derivative(f(x), x), 7*f(x) + 12*g(x)), Eq(Derivative(g(x), x), 20*f(x) - g(x))]
+
+    >>> system = [Eq(Derivative(f(x), x)**2 - 2*Derivative(f(x), x) + 1, 4), Eq(-y*f(x) + Derivative(g(x), x), 0)]
+
+    >>> canonical_system = canonical_odes(system, funcs, x)
+    >>> canonical_system
+    [[Eq(Derivative(f(x), x), -1), Eq(Derivative(g(x), x), y*f(x))], [Eq(Derivative(f(x), x), 3), Eq(Derivative(g(x), x), y*f(x))]]
+
+    Returns
+    =======
+
+    List
+
+    """
     from sympy.solvers.solvers import solve
 
-    # For now the system of ODEs dealt by this function can have a
-    # maximum order of 1.
-    if any(ode_order(eq, func) > 1 for eq in eqs for func in funcs):
-        msg = "Cannot represent system in {}-order canonical form"
-        raise ODEOrderError(msg.format(1))
+    order = _get_func_order(eqs, funcs)
 
-    canon_eqs = solve(eqs, *[func.diff(t) for func in funcs], dict=True)
+    canon_eqs = solve(eqs, *[func.diff(t, order[func]) for func in funcs], dict=True)
 
-    if len(canon_eqs) != 1:
-        raise ODENonlinearError("System of ODEs is nonlinear")
+    systems = []
+    for eq in canon_eqs:
+        system = [Eq(func.diff(t, order[func]), eq[func.diff(t, order[func])]) for func in funcs]
+        systems.append(system)
 
-    canon_eqs = canon_eqs[0]
-    canon_eqs = [Eq(func.diff(t), canon_eqs[func.diff(t)]) for func in funcs]
+    if len(canon_eqs) == 1:
+        systems = systems[0]
 
-    return canon_eqs
+    return systems
 
 
 def _is_commutative_anti_derivative(A, t):
+    r"""
+    Helper function for determining if the Matrix passed is commutative with its antiderivative
+
+    Explanation
+    ===========
+
+    This function checks if the Matrix $A$ passed is commutative with its antiderivative with respect
+    to the independent variable $t$.
+
+    .. math::
+        B(t) = \int A(t) dt
+
+    The function outputs two values, first one being the antiderivative $B(t)$, second one being a
+    boolean value, if True, then the matrix $A(t)$ passed is commutative with $B(t)$, else the matrix
+    passed isn't commutative with $B(t)$.
+
+    Parameters
+    ==========
+
+    A : Matrix
+        The matrix which has to be checked
+    t : Symbol
+        Independent variable
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Matrix
+    >>> from sympy.solvers.ode.systems import _is_commutative_anti_derivative
+    >>> t = symbols("t")
+    >>> A = Matrix([[1, t], [-t, 1]])
+
+    >>> B, is_commuting = _is_commutative_anti_derivative(A, t)
+    >>> is_commuting
+    True
+
+    Returns
+    =======
+
+    Matrix, Boolean
+
+    """
     B = integrate(A, t)
     is_commuting = (B*A - A*B).applyfunc(expand).applyfunc(factor_terms).is_zero_matrix
 
+    is_commuting = False if is_commuting is None else is_commuting
+
     return B, is_commuting
-
-
-def _linear_neq_order1_type3(match_):
-    r"""
-    System of n first-order nonconstant-coefficient linear homogeneous differential equations
-
-    .. math::
-        X' = A(t) X
-
-    where $X$ is the vector of $n$ dependent variables, $t$ is the dependent variable, $X'$
-    is the first order differential of $X$ with respect to $t$ and $A(t)$ is a $n \times n$
-    coefficient matrix.
-
-    Let us define $B$ as antiderivative of coefficient matrix $A$:
-
-    .. math::
-        B(t) = \int A(t) dt
-
-    If the system of ODEs defined above is such that its antiderivative $B(t)$ commutes with
-    $A(t)$ itself, then, the solution of the above system is given as:
-
-    .. math::
-        X = \exp(B(t)) C
-
-    where $C$ is the vector of constants.
-
-    """
-    # Some parts of code is repeated, this needs to be taken care of
-    # The constant vector obtained here can be done so in the match
-    # function itself.
-    eq = match_['eq']
-    func = match_['func']
-    fc = match_['func_coeff']
-    n = len(eq)
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
-
-    # This needs to be modified in future so that fc is only of type Matrix
-    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
-
-    Cvect = Matrix(list(next(constants) for _ in range(n)))
-
-    # The code in if block will be removed when it is made sure
-    # that the code works without the statements in if block.
-    if "commutative_antiderivative" not in match_:
-        B, is_commuting = _is_commutative_anti_derivative(M, t)
-
-        # This course is subject to change
-        if not is_commuting:
-            return None
-
-    else:
-        B = match_['commutative_antiderivative']
-
-    sol_vector = B.exp() * Cvect
-
-    # The expand_mul is added to handle the solutions so that
-    # the exponential terms are collected properly.
-    sol_vector = [collect(expand_mul(s), ordered(s.atoms(exp)), exact=True) for s in sol_vector]
-
-    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
-    return sol_dict
-
-
-def _linear_neq_order1_type4(match_):
-    r"""
-    System of n first-order nonconstant-coefficient linear non-homogeneous differential equations
-
-    .. math::
-        X' = A(t) X + f(t)
-
-    where $X$ is the vector of $n$ dependent variables, $t$ is the dependent variable, $X'$
-    is the first order differential of $X$ with respect to $t$ and $A(t)$ is a $n \times n$
-    coefficient matrix.
-
-    Let us define $B$ as antiderivative of coefficient matrix $A$:
-
-    .. math::
-        B(t) = \int A(t) dt
-
-    If the system of ODEs defined above is such that its antiderivative $B(t)$ commutes with
-    $A(t)$ itself, then, the solution of the above system is given as:
-
-    .. math::
-        X = e^{B(t)} ( \int e^{-B(t)} f(t) \,dt + C)
-
-    where $C$ is the vector of constants.
-
-    """
-    # Some parts of code is repeated, this needs to be taken care of
-    # The constant vector obtained here can be done so in the match
-    # function itself.
-    eq = match_['eq']
-    func = match_['func']
-    fc = match_['func_coeff']
-    b = match_['rhs']
-    n = len(eq)
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
-
-    # This needs to be modified in future so that fc is only of type Matrix
-    M = -fc if type(fc) is Matrix else Matrix(n, n, lambda i,j:-fc[i,func[j],0])
-
-    Cvect = Matrix(list(next(constants) for _ in range(n)))
-
-    # The code in if block will be removed when it is made sure
-    # that the code works without the statements in if block.
-    if "commutative_antiderivative" not in match_:
-        B, is_commuting = _is_commutative_anti_derivative(M, t)
-
-        # This course is subject to change
-        if not is_commuting:
-            return None
-
-    else:
-        B = match_['commutative_antiderivative']
-
-    sol_vector = B.exp() * (((-B).exp() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
-    sol_vector = [collect(expand_mul(s), ordered(sol_vector.atoms(exp)), exact=True) for s in sol_vector]
-
-    sol_dict = [Eq(func[i], sol_vector[i]) for i in range(n)]
-    return sol_dict
 
 
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
@@ -697,7 +940,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         'is_homogeneous': is_homogeneous,
     }
 
-    Dict or None
+    Dict or list of Dicts or None
         Dict with values for keys:
             1. no_of_equation: Number of equations
             2. eq: The set of equations
@@ -760,17 +1003,24 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
     # Linearity check
     try:
-        canon_eqs = _canonical_equations(eqs, funcs, t)
-        As, b = linear_ode_to_matrix(canon_eqs, funcs, t, system_order)
+        canon_eqs = canonical_odes(eqs, funcs, t)
+
+        if isinstance(canon_eqs[0], Eq):
+            As, b = linear_ode_to_matrix(canon_eqs, funcs, t, system_order)
+            A = As[1]
+        else:
+            matchs = []
+            for canon_eq in canon_eqs:
+                match = neq_nth_linear_constant_coeff_match(canon_eq, funcs, t)
+                if match is not None:
+                    matchs.append(match)
+            return matchs if matchs else None
 
     # When the system of ODEs is non-linear, an ODENonlinearError is raised.
-    # When system has an order greater than what is specified in system_order,
-    # ODEOrderError is raised.
-    # This function catches these errors and None is returned
-    except (ODEOrderError, ODENonlinearError):
+    # This function catches the error and None is returned.
+    except ODENonlinearError:
         return None
 
-    A = As[1]
     is_linear = True
 
     # Constant coefficient check
@@ -801,14 +1051,15 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         if not is_homogeneous:
             match['rhs'] = b
 
-        if match['is_constant']:
-            match['type_of_equation'] = "type1" if is_homogeneous else "type2"
-        else:
-            B, is_commuting = _is_commutative_anti_derivative(-A, t)
-            if not is_commuting:
-                return None
-            match['commutative_antiderivative'] = B
-            match['type_of_equation'] = "type3" if is_homogeneous else "type4"
+        try:
+            system_info = linodesolve_type(-A, t, b=b)
+        except NotImplementedError:
+            return None
+
+        if not is_constant:
+            match['commutative_antiderivative'] = system_info["antiderivative"]
+
+        match['type_of_equation'] = system_info["type"]
 
         return match
 

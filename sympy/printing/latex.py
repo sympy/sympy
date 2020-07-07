@@ -716,7 +716,7 @@ class LatexPrinter(Printer):
                 elif v == -1:
                     o1.append(' - ' + k._latex_form)
                 else:
-                    arg_str = '(' + LatexPrinter().doprint(v) + ')'
+                    arg_str = '(' + self._print(v) + ')'
                     o1.append(' + ' + arg_str + k._latex_form)
 
         outstr = (''.join(o1))

@@ -435,7 +435,7 @@ def limitinf(e, x, leadsimp=False):
         p = Dummy('p', positive=True)
         e = e.subs(x, p)
         x = p
-    e = e.rewrite('tractable', deep=True)
+    e = e.rewrite('tractable', deep=True, var=x)
     e = powdenest(e)
     c0, e0 = mrv_leadterm(e, x)
     sig = sign(e0, x)
@@ -520,7 +520,7 @@ def mrv_leadterm(e, x):
     # For limits of complex functions, the algorithm would have to be
     # improved, or just find limits of Re and Im components separately.
     #
-    w = Dummy("w", real=True, positive=True, finite=True)
+    w = Dummy("w", real=True, positive=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
     return series.leadterm(w)

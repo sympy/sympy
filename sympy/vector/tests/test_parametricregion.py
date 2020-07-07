@@ -1,12 +1,14 @@
 from sympy import sin, cos, pi
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.parametricregion import ParametricRegion
+from sympy.vector.parametricregion import ParametricRegion, parametric_region_list
+from sympy.geometry import Point, Segment, Curve, Ellipse, Line, Parabola, Polygon
 from sympy.testing.pytest import raises
 from sympy.abc import a, b, r, t, x, y, z, theta, phi
 
+
 C = CoordSys3D('C')
 
-def test_parametricregion():
+def test_ParametricRegion():
 
     point = ParametricRegion((3, 4))
     assert point.definition == (3, 4)
@@ -42,7 +44,7 @@ def test_parametricregion():
     assert circle.definition == (r*cos(theta), r*sin(theta))
     assert circle.dimensions == 1
 
-    halfdisc = ParametricRegion((r*cos(theta), r* sin(theta)), (r, -2, 2), (theta, 0, pi))
+    halfdisc = ParametricRegion((r*cos(theta), r*sin(theta)), (r, -2, 2), (theta, 0, pi))
     assert halfdisc.definition == (r*cos(theta), r*sin(theta))
     assert halfdisc.parameters == (r, theta)
     assert halfdisc.limits == {r: (-2, 2), theta: (0, pi)}
@@ -65,3 +67,30 @@ def test_parametricregion():
 
     raises(ValueError, lambda: ParametricRegion((a*t**2, 2*a*t), (a, -2)))
     raises(ValueError, lambda: ParametricRegion((a, b), (a**2, sin(b)), (a, 2, 4, 6)))
+
+
+def test_parametric_region_list():
+
+    point = Point(-5, 12)
+    assert parametric_region_list(point) == [ParametricRegion((-5, 12))]
+
+    e = Ellipse(Point(2, 8), 2, 6)
+    assert parametric_region_list(e, t) == [ParametricRegion((2*cos(t) + 2, 6*sin(t) + 8), (t, 0, 2*pi))]
+
+    c = Curve((t, t**3), (t, 5, 3))
+    assert parametric_region_list(c) == [ParametricRegion((t, t**3), (t, 5, 3))]
+
+    s = Segment(Point(2, 11, -6), Point(0, 2, 5))
+    assert parametric_region_list(s, t) == [ParametricRegion((2 - 2*t, 11 - 9*t, 11*t - 6), (t, 0, 1))]
+    s1 = Segment(Point(0, 0), (1, 0))
+    assert parametric_region_list(s1, t) == [ParametricRegion((t, 0), (t, 0, 1))]
+    s2 = Segment(Point(1, 2, 3), Point(1, 2, 5))
+    assert parametric_region_list(s2, t) == [ParametricRegion((1, 2, 2*t + 3), (t, 0, 1))]
+    s3 = Segment(Point(12, 56), Point(12, 56))
+    assert parametric_region_list(s3) == [ParametricRegion((12, 56))]
+
+    poly = Polygon((1,3), (-3, 8), (2, 4))
+    assert parametric_region_list(poly, t) == [ParametricRegion((1 - 4*t, 5*t + 3), (t, 0, 1)), ParametricRegion((5*t - 3, 8 - 4*t), (t, 0, 1)), ParametricRegion((2 - t, 4 - t), (t, 0, 1))]
+
+    p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7,8)))
+    raises(ValueError, lambda: parametric_region_list(p1))

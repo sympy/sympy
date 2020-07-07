@@ -19,11 +19,10 @@ from functools import singledispatch
 from typing import Tuple as tTuple
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify, Or,
-                   Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta, Not,
+                   Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
                    DiracDelta, Mul, Indexed, MatrixSymbol, Function, Integral)
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
-from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
 from sympy.external import import_module
@@ -788,57 +787,11 @@ def probability(condition, given_condition=None, numsamples=None,
     5/12
     """
 
-    condition = sympify(condition)
-    given_condition = sympify(given_condition)
-
-    if isinstance(condition, Not):
-        return S.One - probability(condition.args[0], given_condition, evaluate, **kwargs)
-
-    if condition.has(RandomIndexedSymbol):
-        return pspace(condition).probability(condition, given_condition, evaluate, **kwargs)
-
-    if isinstance(given_condition, RandomSymbol):
-        condrv = random_symbols(condition)
-        if len(condrv) == 1 and condrv[0] == given_condition:
-            from sympy.stats.frv_types import BernoulliDistribution
-            return BernoulliDistribution(probability(condition), 0, 1)
-        if any([dependent(rv, given_condition) for rv in condrv]):
-            from sympy.stats.symbolic_probability import Probability
-            return Probability(condition, given_condition)
-        else:
-            return probability(condition)
-
-    if given_condition is not None and \
-            not isinstance(given_condition, (Relational, Boolean)):
-        raise ValueError("%s is not a relational or combination of relationals"
-                % (given_condition))
-    if given_condition == False:
-        return S.Zero
-    if not isinstance(condition, (Relational, Boolean)):
-        raise ValueError("%s is not a relational or combination of relationals"
-                % (condition))
-    if condition is S.true:
-        return S.One
-    if condition is S.false:
-        return S.Zero
-
-    if numsamples:
-        return sampling_P(condition, given_condition, numsamples=numsamples,
-                **kwargs)
-    if given_condition is not None:  # If there is a condition
-        # Recompute on new conditional expr
-        return probability(given(condition, given_condition, **kwargs), **kwargs)
-
-    # Otherwise pass work off to the ProbabilitySpace
-    if pspace(condition) == PSpace():
-        from sympy.stats.symbolic_probability import Probability
-        return Probability(condition, given_condition)
-
-    result = pspace(condition).probability(condition, **kwargs)
-    if evaluate and hasattr(result, 'doit'):
-        return result.doit()
-    else:
-        return result
+    kwargs['numsamples'] = numsamples
+    from sympy.stats.symbolic_probability import Probability
+    if evaluate:
+        return Probability(condition, given_condition).doit(**kwargs)
+    return Probability(condition, given_condition).rewrite(Integral) # will return Sum in case of discrete RV
 
 
 class Density(Basic):
