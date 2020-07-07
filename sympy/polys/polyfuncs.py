@@ -315,6 +315,7 @@ def rational_interpolate(data, degnum, X=symbols('x')):
     if k < 0:
         raise OptionError("Too few values for the required degree.")
     c = ones(degnum + k + 1, degnum + k + 2)
+    c = c.from_DomainMatrix(c._rep.to_field())
     for j in range(max(degnum, k)):
         for i in range(degnum + k + 1):
             c[i, j + 1] = c[i, j]*xdata[i]

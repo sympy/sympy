@@ -503,6 +503,7 @@ class Hamiltonian(SHOOp):
         ndim_info = options.get('ndim', 4)
         format = options.get('format', 'sympy')
         matrix = matrix_zeros(ndim_info, ndim_info, **options)
+        matrix = matrix.from_DomainMatrix(matrix._rep.to_field())
         for i in range(ndim_info):
             value = i + Integer(1)/Integer(2)
             if format == 'scipy.sparse':

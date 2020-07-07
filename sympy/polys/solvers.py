@@ -346,6 +346,10 @@ def _solve_lin_sys_component(eqs_coeffs, eqs_rhs, ring):
     # transform from equations to matrix form
     matrix = eqs_to_matrix(eqs_coeffs, eqs_rhs, ring.gens, ring.domain)
 
+    # convert to a field for rref
+    if not matrix.domain.is_Field:
+        matrix = matrix.to_field()
+
     # solve by row-reduction
     echelon, pivots = matrix.rref()
 
