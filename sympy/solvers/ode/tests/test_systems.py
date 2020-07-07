@@ -566,11 +566,11 @@ def test_sysode_linear_neq_order1_type1():
         Eq(Z0(t), C1*k10/k01 + C2*(-k10 + k30)*exp(-k30*t)/(k01 + k10 - k30)
             - C3*exp(t*(-k01 - k10)) + C4*(k10*k20 + k10*k21 - k10*k30
             - k20**2 - k20*k21 - k20*k23 + k20*k30 + k23*k30)*exp(t*(-k20 - k21
-            - k23))/(k23*(k01 + k10 - k20 - k21 - k23))),
+            - k23))/(k01*k23 + k10*k23 - k20*k23 - k21*k23 - k23**2)),
         Eq(Z1(t), C1 - C2*k01*exp(-k30*t)/(k01 + k10 - k30) + C3*exp(t*(-k01
             - k10)) + C4*(k01*k20 + k01*k21 - k01*k30 - k20*k21 - k21**2
-            - k21*k23 + k21*k30)*exp(t*(-k20 - k21 - k23))/(k23*(k01 + k10
-            - k20 - k21 - k23))),
+            - k21*k23 + k21*k30)*exp(t*(-k20 - k21 - k23))/(k01*k23 + k10*k23
+            - k20*k23 - k21*k23 - k23**2)),
         Eq(Z2(t), C4*(-k20 - k21 - k23 + k30)*exp(t*(-k20 - k21 - k23))/k23),
         Eq(Z3(t), C2*exp(-k30*t) + C4*exp(t*(-k20 - k21 - k23)))
     ]
@@ -666,16 +666,18 @@ def test_sysode_linear_neq_order1_type1():
     a_b, a_c = symbols('a_b a_c', real=True)
 
     eq10 = [Eq(x(t).diff(t), (-a_b - a_c)*x(t)), Eq(y(t).diff(t), a_b*y(t)), Eq(z(t).diff(t), a_c*x(t))]
-    sol10 = [Eq(x(t), -C3*(a_b + a_c)*exp(t*(-a_b - a_c))/a_c), Eq(y(t), C2*exp(a_b*t)),
+    sol10 = [Eq(x(t), C3*(-a_b - a_c)*exp(t*(-a_b - a_c))/a_c), Eq(y(t), C2*exp(a_b*t)),
             Eq(z(t), C1 + C3*exp(t*(-a_b - a_c)))]
+
     assert dsolve(eq10) == sol10
     assert checksysodesol(eq10, sol10) == (True, [0, 0, 0])
 
     # Regression test case for issue #14312
     # https://github.com/sympy/sympy/issues/14312
     eq11 = (Eq(Derivative(x(t), t), k3*y(t)), Eq(Derivative(y(t), t), -(k3 + k2)*y(t)), Eq(Derivative(z(t), t), k2*y(t)))
-    sol11 = [Eq(x(t), C1 + C3*k3*exp(t*(-k2 - k3))/k2), Eq(y(t), -C3*(k2 + k3)*exp(t*(-k2 - k3))/k2),
+    sol11 = [Eq(x(t), C1 + C3*k3*exp(t*(-k2 - k3))/k2), Eq(y(t), C3*(-k2 - k3)*exp(t*(-k2 - k3))/k2),
             Eq(z(t), C2 + C3*exp(t*(-k2 - k3)))]
+
     assert dsolve(eq11) == sol11
     assert checksysodesol(eq11, sol11) == (True, [0, 0, 0])
 

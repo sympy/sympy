@@ -34,7 +34,7 @@ def test_gauss_opt():
     assert mul.A == mul_mat[0, 0]
     assert mul.B == mul_mat[0, 1]
     assert mul.C == mul_mat[1, 0]
-    assert mul.D == mul_mat[1, 1]
+    assert mul.D == mul_mat[1, 1].expand()
 
     angle = symbols('angle')
     assert GeometricRay(h, angle) == Matrix([[    h], [angle]])

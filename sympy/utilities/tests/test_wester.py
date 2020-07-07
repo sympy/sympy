@@ -1411,8 +1411,8 @@ def test_P11_workaround():
     M = Matrix([[x, y], [1, x*y]]).inv('ADJ')
     c = gcd(tuple(M))
     assert MatMul(c, M/c, evaluate=False) == MatMul(c, Matrix([
-        [x*y, -y],
-        [ -1,  x]]), evaluate=False)
+        [   x/(x**2 - 1),  -1/(x**2 - 1)],
+        [-1/(x**2*y - y), x/(x**2*y - y)]]), evaluate=False)
 
 
 def test_P12():

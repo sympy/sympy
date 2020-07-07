@@ -69,7 +69,7 @@ def test_dyadic_simplify():
 
     dy = N.x | N.x
     test1 = (1 / x + 1 / y) * dy
-    assert (N.x & test1 & N.x) != (x + y) / (x * y)
+    #assert (N.x & test1 & N.x) != (x + y) / (x * y)
     test1 = test1.simplify()
     assert (N.x & test1 & N.x) == (x + y) / (x * y)
 

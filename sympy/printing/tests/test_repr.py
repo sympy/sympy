@@ -18,6 +18,8 @@ x, y = symbols('x,y')
 # environment is the scope of "from sympy import *" for most cases.
 ENV = {}  # type: Dict[str, Any]
 exec_("from sympy import *", ENV)
+exec_("from sympy.matrices.dense import MutableDenseDomainMatrix", ENV)
+exec_("from sympy.matrices.immutable import ImmutableDenseDomainMatrix", ENV)
 
 
 def sT(expr, string, import_stmt=None):
@@ -101,7 +103,7 @@ def test_list():
 
 
 def test_Matrix():
-    for cls, name in [(Matrix, "MutableDenseMatrix"), (ImmutableDenseMatrix, "ImmutableDenseMatrix")]:
+    for cls, name in [(Matrix, "MutableDenseDomainMatrix"), (ImmutableDenseMatrix, "ImmutableDenseDomainMatrix")]:
         sT(cls([[x**+1, 1], [y, x + y]]),
            "%s([[Symbol('x'), Integer(1)], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])" % name)
 

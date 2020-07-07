@@ -154,7 +154,7 @@ def test_vector_simplify():
     N = ReferenceFrame('N')
 
     test1 = (1 / x + 1 / y) * N.x
-    assert (test1 & N.x) != (x + y) / (x * y)
+    #assert (test1 & N.x) != (x + y) / (x * y)
     test1 = test1.simplify()
     assert (test1 & N.x) == (x + y) / (x * y)
 

@@ -89,7 +89,7 @@ def test_vector_latex():
 
     v = (a ** 2 + b / c) * A.x + sqrt(d) * A.y + cos(omega) * A.z
 
-    assert vlatex(v) == (r'(a^{2} + \frac{b}{c})\mathbf{\hat{a}_x} + '
+    assert vlatex(v) == (r'\frac{a^{2} c + b}{c}\mathbf{\hat{a}_x} + '
                          r'\sqrt{d}\mathbf{\hat{a}_y} + '
                          r'\cos{\left(\omega \right)}'
                          r'\mathbf{\hat{a}_z}')
@@ -122,7 +122,7 @@ def test_vector_latex():
 
     v = (a ** 2 + b / c) * N.x + sqrt(d) * N.y + cos(omega) * N.z
 
-    expected = (r'(a^{2} + \frac{b}{c})\mathbf{\hat{n}_x} + '
+    expected = (r'\frac{a^{2} c + b}{c}\mathbf{\hat{n}_x} + '
                 r'\sqrt{d}\mathbf{\hat{n}_y} + '
                 r'\cos{\left(\omega \right)}'
                 r'\mathbf{\hat{n}_z}')
@@ -135,7 +135,7 @@ def test_vector_latex():
 
     v = (a ** 2 + b / c) * N.x + sqrt(d) * N.y + cos(omega) * N.z
 
-    expected = (r'(a^{2} + \frac{b}{c})\hat{i} + '
+    expected = (r'\frac{a^{2} c + b}{c}\hat{i} + '
                 r'\sqrt{d}\hat{j} + '
                 r'\cos{\left(\omega \right)}\hat{k}')
     assert vlatex(v) == expected
