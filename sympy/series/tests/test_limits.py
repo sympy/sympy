@@ -536,7 +536,6 @@ def test_issue_9558():
     assert limit(sin(x)**15, x, 0, '-') == 0
 
 
-@slow
 def test_issue_10801():
     # make sure limits work with binomial
     k = symbols('k', nonnegative=True)
