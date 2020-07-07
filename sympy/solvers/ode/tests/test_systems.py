@@ -7,7 +7,7 @@ from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
                                        ODEOrderError, ODENonlinearError, _simpsol, _solsimp,
                                        _is_commutative_anti_derivative, linodesolve,
-                                       canonical_odes)
+                                       canonical_odes, dsolve_system)
 from sympy.integrals.integrals import Integral
 from sympy.testing.pytest import ON_TRAVIS, raises, slow, skip, XFAIL
 
@@ -890,29 +890,6 @@ def test_sysode_linear_neq_order1_type1():
         assert checksysodesol(eq1, sol) == (True, [0, 0])
 
 
-    # Testing the Errors
-    raises(ValueError, lambda: linodesolve(1, t))
-    raises(ValueError, lambda: linodesolve(a, t))
-
-    A1 = Matrix([[1, 2], [2, 4], [4, 6]])
-    raises(NonSquareMatrixError, lambda: linodesolve(A1, t))
-
-    A2 = Matrix([[1, 2, 1], [3, 1, 2]])
-    raises(NonSquareMatrixError, lambda: linodesolve(A2, t))
-
-    # Testing auto functionality
-    func = [f(t), g(t)]
-    eq = [Eq(f(t).diff(t) + g(t).diff(t), g(t)), Eq(g(t).diff(t), f(t))]
-    ceq = canonical_odes(eq, func, t)
-    (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
-    A = -A0
-    sol = [C1*(-Rational(1, 2) + sqrt(5)/2)*exp(t*(-Rational(1, 2) + sqrt(5)/2)) + C2*(-sqrt(5)/2 - Rational(1, 2))*
-           exp(t*(-sqrt(5)/2 - Rational(1, 2))),
-            C1*exp(t*(-Rational(1, 2) + sqrt(5)/2)) + C2*exp(t*(-sqrt(5)/2 - Rational(1, 2)))]
-    assert linodesolve(A, t) == sol
-
-
-
 def test_sysode_linear_neq_order1_type2():
 
     f, g, h, k = symbols('f g h k', cls=Function)
@@ -1077,58 +1054,6 @@ def test_sysode_linear_neq_order1_type2():
     for sol in sol1:
         assert checksysodesol(eq1, sol) == (True, [0, 0])
 
-    # Testing the Errors
-    raises(ValueError, lambda: linodesolve(1, t, b=Matrix([t+1])))
-    raises(ValueError, lambda: linodesolve(a, t, b=Matrix([log(t) + sin(t)])))
-
-    raises(ValueError, lambda: linodesolve(Matrix([7]), t, b=t**2))
-    raises(ValueError, lambda: linodesolve(Matrix([a+10]), t, b=log(t)*cos(t)))
-
-    raises(ValueError, lambda: linodesolve(7, t, b=t**2))
-    raises(ValueError, lambda: linodesolve(a, t, b=log(t) + sin(t)))
-
-    A1 = Matrix([[1, 2], [2, 4], [4, 6]])
-    b1 = Matrix([t, 1, t**2])
-    raises(NonSquareMatrixError, lambda: linodesolve(A1, t, b=b1))
-
-    A2 = Matrix([[1, 2, 1], [3, 1, 2]])
-    b2 = Matrix([t, t**2])
-    raises(NonSquareMatrixError, lambda: linodesolve(A2, t, b=b2))
-
-    raises(ValueError, lambda: linodesolve(A1[:2, :], t, b=b1))
-    raises(ValueError, lambda: linodesolve(A1[:2, :], t, b=b1[:1]))
-
-    # DOIT check
-    A1 = Matrix([[1, -1], [1, -1]])
-    b1 = Matrix([15*t - 10, -15*t - 5])
-    sol1 = [C1 + C2*t + C2 - 10*t**3 + 10*t**2 + t*(15*t**2 - 5*t) - 10*t,
-            C1 + C2*t - 10*t**3 - 5*t**2 + t*(15*t**2 - 5*t) - 5*t]
-    assert linodesolve(A1, t, b=b1, type="type2", doit=True) == sol1
-
-    # Testing auto functionality
-    func = [f(t), g(t)]
-    eq = [Eq(f(t).diff(t) + g(t).diff(t), g(t) + t), Eq(g(t).diff(t), f(t))]
-    ceq = canonical_odes(eq, func, t)
-    (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
-    A = -A0
-    sol = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
-            - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 +
-            sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5, t)/2 + sqrt(5)*exp(-t/2 +
-            sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 -
-            t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2 - exp(-sqrt(5)*t/2 -
-            t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2, C1*exp(-t/2 + sqrt(5)*t/2) +
-            C2*exp(-sqrt(5)*t/2 - t/2) + exp(-t/2 + sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5,
-            t) + exp(-sqrt(5)*t/2 - t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)]
-    assert linodesolve(A, t, b=b) == sol
-
-    # non-homogeneous term assumed to be 0
-    sol1 = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
-            - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 +
-            sqrt(5)*exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2
-            - exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2, C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)
-            + exp(-t/2 + sqrt(5)*t/2)*Integral(0, t) + exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)]
-    assert linodesolve(A, t, type="type2") == sol1
-
 
 def test_sysode_linear_neq_order1_type3():
     from sympy.core import Mul
@@ -1203,38 +1128,6 @@ def test_sysode_linear_neq_order1_type3():
     sol7 = [Eq(f(y), (C1*cos(y) + C2*sin(y))*exp(y**2/2)), Eq(g(y), (-C1*sin(y) + C2*cos(y))*exp(y**2/2))]
     assert dsolve(eqs7) == sol7
     assert checksysodesol(eqs7, sol7) == (True, [0, 0])
-
-    # Testing the Errors
-    raises(ValueError, lambda: linodesolve(t+10, t))
-    raises(ValueError, lambda: linodesolve(a*t, t))
-
-    A1 = Matrix([[1, t], [-t, 1]])
-    B1, _ = _is_commutative_anti_derivative(A1, t)
-    raises(NonSquareMatrixError, lambda: linodesolve(A1[:, :1], t, B=B1))
-    raises(ValueError, lambda: linodesolve(A1, t, B=1))
-
-    A2 = Matrix([[t, t, t], [t, t, t], [t, t, t]])
-    B2, _ = _is_commutative_anti_derivative(A2, t)
-    raises(NonSquareMatrixError, lambda: linodesolve(A2, t, B=B2[:2, :]))
-    raises(ValueError, lambda: linodesolve(A2, t, B=2))
-    raises(ValueError, lambda: linodesolve(A2, t, B=B2, type="type31"))
-
-    raises(ValueError, lambda: linodesolve(A1, t, B=B2))
-    raises(ValueError, lambda: linodesolve(A2, t, B=B1))
-
-    # Testing auto functionality
-    func = [f(t), g(t)]
-    eq = [Eq(f(t).diff(t), f(t) + t*g(t)), Eq(g(t).diff(t), -t*f(t) + g(t))]
-    ceq = canonical_odes(eq, func, t)
-    (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
-    A = -A0
-    sol = [(C1/2 - I*C2/2)*exp(I*t**2/2 + t) + (C1/2 + I*C2/2)*exp(-I*t**2/2 + t),
-            (-I*C1/2 + C2/2)*exp(-I*t**2/2 + t) + (I*C1/2 + C2/2)*exp(I*t**2/2 + t)]
-    assert linodesolve(A, t) == sol
-    assert linodesolve(A, t, type="type3") == sol
-
-    A1 = Matrix([[t, 1], [t, -1]])
-    raises(NotImplementedError, lambda: linodesolve(A1, t))
 
 
 def test_sysode_linear_neq_order1_type4():
@@ -1341,6 +1234,116 @@ def test_sysode_linear_neq_order1_type4():
     with dotprodsimp(True):
         assert dsolve(eqs8) == sol8
     assert checksysodesol(eqs8, sol8) == (True, [0, 0, 0, 0])
+
+
+def test_linodesolve():
+    t, x, a = symbols("t x a")
+    f, g, h = symbols("f g h", cls=Function)
+
+    # Testing the Errors
+    raises(ValueError, lambda: linodesolve(1, t))
+    raises(ValueError, lambda: linodesolve(a, t))
+
+    A1 = Matrix([[1, 2], [2, 4], [4, 6]])
+    raises(NonSquareMatrixError, lambda: linodesolve(A1, t))
+
+    A2 = Matrix([[1, 2, 1], [3, 1, 2]])
+    raises(NonSquareMatrixError, lambda: linodesolve(A2, t))
+
+    # Testing auto functionality
+    func = [f(t), g(t)]
+    eq = [Eq(f(t).diff(t) + g(t).diff(t), g(t)), Eq(g(t).diff(t), f(t))]
+    ceq = canonical_odes(eq, func, t)
+    (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
+    A = -A0
+    sol = [C1*(-Rational(1, 2) + sqrt(5)/2)*exp(t*(-Rational(1, 2) + sqrt(5)/2)) + C2*(-sqrt(5)/2 - Rational(1, 2))*
+           exp(t*(-sqrt(5)/2 - Rational(1, 2))),
+            C1*exp(t*(-Rational(1, 2) + sqrt(5)/2)) + C2*exp(t*(-sqrt(5)/2 - Rational(1, 2)))]
+    assert linodesolve(A, t) == sol
+
+    # Testing the Errors
+    raises(ValueError, lambda: linodesolve(1, t, b=Matrix([t+1])))
+    raises(ValueError, lambda: linodesolve(a, t, b=Matrix([log(t) + sin(t)])))
+
+    raises(ValueError, lambda: linodesolve(Matrix([7]), t, b=t**2))
+    raises(ValueError, lambda: linodesolve(Matrix([a+10]), t, b=log(t)*cos(t)))
+
+    raises(ValueError, lambda: linodesolve(7, t, b=t**2))
+    raises(ValueError, lambda: linodesolve(a, t, b=log(t) + sin(t)))
+
+    A1 = Matrix([[1, 2], [2, 4], [4, 6]])
+    b1 = Matrix([t, 1, t**2])
+    raises(NonSquareMatrixError, lambda: linodesolve(A1, t, b=b1))
+
+    A2 = Matrix([[1, 2, 1], [3, 1, 2]])
+    b2 = Matrix([t, t**2])
+    raises(NonSquareMatrixError, lambda: linodesolve(A2, t, b=b2))
+
+    raises(ValueError, lambda: linodesolve(A1[:2, :], t, b=b1))
+    raises(ValueError, lambda: linodesolve(A1[:2, :], t, b=b1[:1]))
+
+    # DOIT check
+    A1 = Matrix([[1, -1], [1, -1]])
+    b1 = Matrix([15*t - 10, -15*t - 5])
+    sol1 = [C1 + C2*t + C2 - 10*t**3 + 10*t**2 + t*(15*t**2 - 5*t) - 10*t,
+            C1 + C2*t - 10*t**3 - 5*t**2 + t*(15*t**2 - 5*t) - 5*t]
+    assert linodesolve(A1, t, b=b1, type="type2", doit=True) == sol1
+
+    # Testing auto functionality
+    func = [f(t), g(t)]
+    eq = [Eq(f(t).diff(t) + g(t).diff(t), g(t) + t), Eq(g(t).diff(t), f(t))]
+    ceq = canonical_odes(eq, func, t)
+    (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
+    A = -A0
+    sol = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
+            - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 +
+            sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5, t)/2 + sqrt(5)*exp(-t/2 +
+            sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 -
+            t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2 - exp(-sqrt(5)*t/2 -
+            t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2, C1*exp(-t/2 + sqrt(5)*t/2) +
+            C2*exp(-sqrt(5)*t/2 - t/2) + exp(-t/2 + sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5,
+            t) + exp(-sqrt(5)*t/2 - t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)]
+    assert linodesolve(A, t, b=b) == sol
+
+    # non-homogeneous term assumed to be 0
+    sol1 = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
+            - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 +
+            sqrt(5)*exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2
+            - exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2, C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)
+            + exp(-t/2 + sqrt(5)*t/2)*Integral(0, t) + exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)]
+    assert linodesolve(A, t, type="type2") == sol1
+
+    # Testing the Errors
+    raises(ValueError, lambda: linodesolve(t+10, t))
+    raises(ValueError, lambda: linodesolve(a*t, t))
+
+    A1 = Matrix([[1, t], [-t, 1]])
+    B1, _ = _is_commutative_anti_derivative(A1, t)
+    raises(NonSquareMatrixError, lambda: linodesolve(A1[:, :1], t, B=B1))
+    raises(ValueError, lambda: linodesolve(A1, t, B=1))
+
+    A2 = Matrix([[t, t, t], [t, t, t], [t, t, t]])
+    B2, _ = _is_commutative_anti_derivative(A2, t)
+    raises(NonSquareMatrixError, lambda: linodesolve(A2, t, B=B2[:2, :]))
+    raises(ValueError, lambda: linodesolve(A2, t, B=2))
+    raises(ValueError, lambda: linodesolve(A2, t, B=B2, type="type31"))
+
+    raises(ValueError, lambda: linodesolve(A1, t, B=B2))
+    raises(ValueError, lambda: linodesolve(A2, t, B=B1))
+
+    # Testing auto functionality
+    func = [f(t), g(t)]
+    eq = [Eq(f(t).diff(t), f(t) + t*g(t)), Eq(g(t).diff(t), -t*f(t) + g(t))]
+    ceq = canonical_odes(eq, func, t)
+    (A1, A0), b = linear_ode_to_matrix(ceq, func, t, 1)
+    A = -A0
+    sol = [(C1/2 - I*C2/2)*exp(I*t**2/2 + t) + (C1/2 + I*C2/2)*exp(-I*t**2/2 + t),
+            (-I*C1/2 + C2/2)*exp(-I*t**2/2 + t) + (I*C1/2 + C2/2)*exp(I*t**2/2 + t)]
+    assert linodesolve(A, t) == sol
+    assert linodesolve(A, t, type="type3") == sol
+
+    A1 = Matrix([[t, 1], [t, -1]])
+    raises(NotImplementedError, lambda: linodesolve(A1, t))
 
     # Testing the Errors
     raises(ValueError, lambda: linodesolve(t+10, t, b=Matrix([t+1])))
@@ -1757,8 +1760,6 @@ def test_linear_3eq_order1_type4_long_check():
 
 
 def test_dsolve_system():
-    from sympy.solvers.ode.systems import dsolve_system
-
     f, g = symbols("f g", cls=Function)
     x = symbols("x")
     eqs = [Eq(f(x).diff(x), f(x) + g(x)), Eq(g(x).diff(x), f(x) + g(x))]
