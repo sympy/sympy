@@ -112,7 +112,7 @@ class DomainMatrix:
 
         items_sympy = [_sympify(item) for row in rows for item in row]
 
-        domain, items_domain = cls.get_domain(items_sympy)
+        domain, items_domain = cls.get_domain(items_sympy, field=True, extension=True)
 
         domain_rows = [[items_domain[ncols*r + c] for c in range(ncols)] for r in range(nrows)]
 
@@ -133,13 +133,17 @@ class DomainMatrix:
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
 
     @classmethod
-    def get_domain(cls, items_sympy):
-        K, items_K = construct_domain(items_sympy, field=True, extension=True)
+    def get_domain(cls, items_sympy, **kwargs):
+        K, items_K = construct_domain(items_sympy, **kwargs)
         return K, items_K
 
     def convert_to(self, K):
         new_rows = [[K.convert(e) for e in row] for row in self.rows]
         return DomainMatrix(new_rows, self.shape, K)
+
+    def to_field(self):
+        K = self.domain.get_field()
+        return self.convert_to(K)
 
     def unify(self, other):
         K = self.domain.unify(other.domain)
@@ -194,12 +198,16 @@ class DomainMatrix:
             return sqrtAn * sqrtAn
 
     def rref(self):
+        if not self.domain.is_Field:
+            raise ValueError('Not a field')
         rref_rows, pivots = rref(self.rows, self.shape)
         rref_matrix = type(self)(rref_rows, self.shape, self.domain)
         pivots = tuple(pivots)
         return rref_matrix, pivots
 
     def inv(self):
+        if not self.domain.is_Field:
+            raise ValueError('Not a field')
         m, n = self.shape
         if m != n:
             raise NonSquareMatrixError
@@ -216,6 +224,8 @@ class DomainMatrix:
         return Ainv
 
     def det(self):
+        if not self.domain.is_Field:
+            raise ValueError('Not a field')
         m, n = self.shape
         if m != n:
             raise NonSquareMatrixError

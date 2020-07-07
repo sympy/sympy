@@ -783,10 +783,16 @@ class DenseDomainMatrix(DenseMatrix):
     def inv(self, method=None, iszerofunc=None, try_block_diag=None):
         if method not in (None, 'GE', 'ADJ', 'LU', 'CH', 'LDL', 'QR', 'BLOCK'):
             raise ValueError("no methods allowed!")
-        return self.from_DomainMatrix(self._rep.inv())
+        rep = self._rep
+        if not rep.domain.is_Field:
+            rep = rep.to_field()
+        return self.from_DomainMatrix(rep.inv())
 
     def rref(self, **kwargs):
-        rep_rref, pivots = self._rep.rref()
+        rep = self._rep
+        if not rep.domain.is_Field:
+            rep = rep.to_field()
+        rep_rref, pivots = rep.rref()
         return self.from_DomainMatrix(rep_rref), pivots
 
     def rank(self, **kwargs):
@@ -795,6 +801,8 @@ class DenseDomainMatrix(DenseMatrix):
 
     def det(self, *args, **kwargs):
         rep = self._rep
+        if not rep.domain.is_Field:
+            rep = rep.to_field()
         return rep.domain.to_sympy(rep.det())
 
     # called by __rmul__ in common.py

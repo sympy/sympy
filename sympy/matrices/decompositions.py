@@ -945,6 +945,9 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
     lu        = M.as_mutable()
     row_swaps = []
 
+    if hasattr(lu, '_rep'):
+        lu = lu.from_DomainMatrix(lu._rep.to_field())
+
     pivot_col = 0
 
     for pivot_row in range(0, lu.rows - 1):
