@@ -288,15 +288,12 @@ class BasisDependentMul(BasisDependent, Mul):
 
         return obj
 
-    def __str__(self, printer=None):
-        measure_str = self._measure_number.__str__()
+    def _sympystr(self, printer):
+        measure_str = printer._print(self._measure_number)
         if ('(' in measure_str or '-' in measure_str or
                 '+' in measure_str):
             measure_str = '(' + measure_str + ')'
-        return measure_str + '*' + self._base_instance.__str__(printer)
-
-    __repr__ = __str__
-    _sympystr = __str__
+        return measure_str + '*' + printer._print(self._base_instance)
 
 
 class BasisDependentZero(BasisDependent):
@@ -360,8 +357,5 @@ class BasisDependentZero(BasisDependent):
         """
         return self
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return '0'
-
-    __repr__ = __str__
-    _sympystr = __str__

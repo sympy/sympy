@@ -84,6 +84,25 @@ def test_latex_basic():
     assert latex(3*x**2*y, mul_symbol='\\,') == r"3\,x^{2}\,y"
     assert latex(1.5*3**x, mul_symbol='\\,') == r"1.5 \cdot 3^{x}"
 
+    assert latex(Mul(0, 1, evaluate=False)) == r'0 \cdot 1'
+    assert latex(Mul(1, 0, evaluate=False)) == r'1 \cdot 0'
+    assert latex(Mul(1, 1, evaluate=False)) == r'1 \cdot 1'
+    assert latex(Mul(-1, 1, evaluate=False)) == r'\left(-1\right) 1'
+    assert latex(Mul(1, 1, 1, evaluate=False)) == r'1 \cdot 1 \cdot 1'
+    assert latex(Mul(1, 2, evaluate=False)) == r'1 \cdot 2'
+    assert latex(Mul(1, S.Half, evaluate=False)) == r'1 \frac{1}{2}'
+    assert latex(Mul(1, 1, S.Half, evaluate=False)) == \
+        r'1 \cdot 1 \frac{1}{2}'
+    assert latex(Mul(1, 1, 2, 3, x, evaluate=False)) == \
+        r'1 \cdot 1 \cdot 2 \cdot 3 x'
+    assert latex(Mul(1, -1, evaluate=False)) == r'1 \left(-1\right)'
+    assert latex(Mul(4, 3, 2, 1, 0, y, x, evaluate=False)) == \
+        r'4 \cdot 3 \cdot 2 \cdot 1 \cdot 0 y x'
+    assert latex(Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)) == \
+        r'4 \cdot 3 \cdot 2 \left(z + 1\right) 0 y x'
+    assert latex(Mul(Rational(2, 3), Rational(5, 7), evaluate=False)) == \
+        r'\frac{2}{3} \frac{5}{7}'
+
     assert latex(1/x) == r"\frac{1}{x}"
     assert latex(1/x, fold_short_frac=True) == "1 / x"
     assert latex(-S(3)/2) == r"- \frac{3}{2}"
@@ -2251,21 +2270,6 @@ def test_WedgeProduct_printing():
     from sympy.diffgeom import WedgeProduct
     wp = WedgeProduct(R2.dx, R2.dy)
     assert latex(wp) == r"\operatorname{d}x \wedge \operatorname{d}y"
-
-
-def test_issue_14041():
-    import sympy.physics.mechanics as me
-
-    A_frame = me.ReferenceFrame('A')
-    thetad, phid = me.dynamicsymbols('theta, phi', 1)
-    L = Symbol('L')
-
-    assert latex(L*(phid + thetad)**2*A_frame.x) == \
-        r"L \left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
-    assert latex((phid + thetad)**2*A_frame.x) == \
-        r"\left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
-    assert latex((phid*thetad)**a*A_frame.x) == \
-        r"\left(\dot{\phi} \dot{\theta}\right)^{a}\mathbf{\hat{a}_x}"
 
 
 def test_issue_9216():

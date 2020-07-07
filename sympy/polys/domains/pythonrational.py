@@ -243,7 +243,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         elif isinstance(other, int):
             return self.q == 1 and self.p == other
         else:
-            return False
+            return NotImplemented
 
     def __ne__(self, other):
         return not self == other

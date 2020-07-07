@@ -1,5 +1,5 @@
-from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols, I, \
-    expand_func, binomial, gamma, Rational, Symbol, cos, sin, Abs
+from sympy import Eq, factor, factorial, Function, Lambda, rf, S, sqrt, symbols, I, \
+    expand, binomial, Rational, Symbol, cos, sin, Abs
 from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
 from sympy.testing.pytest import raises, slow
 from sympy.abc import a, b
@@ -176,9 +176,9 @@ def test_rsolve():
 
     f = (-16*n**2 + 32*n - 12)*y(n - 1) + (4*n**2 - 12*n + 9)*y(n)
 
-    assert expand_func(rsolve(f, y(n), \
-            {y(1): binomial(2*n + 1, 3)}).rewrite(gamma)).simplify() == \
-        2**(2*n)*n*(2*n - 1)*(4*n**2 - 1)/12
+    yn = rsolve(f, y(n), {y(1): binomial(2*n + 1, 3)})
+    sol = 2**(2*n)*n*(2*n - 1)**2*(2*n + 1)/12
+    assert factor(expand(yn, func=True)) == sol
 
     assert (rsolve(y(n) + a*(y(n + 1) + y(n - 1))/2, y(n)) -
             (C0*((sqrt(-a**2 + 1) - 1)/a)**n +

@@ -14,7 +14,6 @@ except ImportError:
 
 from sympy.core.compatibility import unicode, u_decode
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.misc import find_executable
 from .latex import latex
 
 __doctest_requires__ = {('preview',): ['pyglet']}
@@ -125,16 +124,18 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             }
 
             try:
-                for candidate in candidates[output]:
-                    path = find_executable(candidate)
-                    if path is not None:
-                        viewer = path
-                        break
-                else:
-                    raise SystemError(
-                        "No viewers found for '%s' output format." % output)
+                candidate_viewers = candidates[output]
             except KeyError:
                 raise SystemError("Invalid output format: %s" % output)
+
+            for candidate in candidate_viewers:
+                path = shutil.which(candidate)
+                if path is not None:
+                    viewer = path
+                    break
+            else:
+                raise SystemError(
+                    "No viewers found for '%s' output format." % output)
     else:
         if viewer == "StringIO":
             viewer = "BytesIO"
@@ -145,7 +146,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             if outputbuffer is None:
                 raise ValueError("outputbuffer has to be a BytesIO "
                                  "compatible object if viewer=\"BytesIO\"")
-        elif viewer not in special and not find_executable(viewer):
+        elif viewer not in special and not shutil.which(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
 
@@ -183,7 +184,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
 
-        if not find_executable('latex'):
+        if not shutil.which('latex'):
             raise RuntimeError("latex program is not installed")
 
         try:
@@ -203,35 +204,52 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 "'latex' exited abnormally with the following output:\n%s" %
                 e.output)
 
+        src = "texput.%s" % (output)
+
         if output != "dvi":
+            # in order of preference
+            commandnames = {
+                "ps": ["dvips"],
+                "pdf": ["dvipdfmx", "dvipdfm", "dvipdf"],
+                "png": ["dvipng"],
+                "svg": ["dvisvgm"],
+            }
+            try:
+                cmd_variants = commandnames[output]
+            except KeyError:
+                raise SystemError("Invalid output format: %s" % output)
+
+            # find an appropriate command
+            for cmd_variant in cmd_variants:
+                cmd_path = shutil.which(cmd_variant)
+                if cmd_path:
+                    cmd = [cmd_path]
+                    break
+            else:
+                if len(cmd_variants) > 1:
+                    raise RuntimeError("None of %s are installed" % ", ".join(cmd_variants))
+                else:
+                    raise RuntimeError("%s is not installed" % cmd_variants[0])
+
             defaultoptions = {
-                "ps": [],
-                "pdf": [],
-                "png": ["-T", "tight", "-z", "9", "--truecolor"],
-                "svg": ["--no-fonts"],
+                "dvipng": ["-T", "tight", "-z", "9", "--truecolor"],
+                "dvisvgm": ["--no-fonts"],
             }
 
             commandend = {
-                "ps": ["-o", "texput.ps", "texput.dvi"],
-                "pdf": ["texput.dvi", "texput.pdf"],
-                "png": ["-o", "texput.png", "texput.dvi"],
-                "svg": ["-o", "texput.svg", "texput.dvi"],
+                "dvips": ["-o", src, "texput.dvi"],
+                "dvipdf": ["texput.dvi", src],
+                "dvipdfm": ["-o", src, "texput.dvi"],
+                "dvipdfmx": ["-o", src, "texput.dvi"],
+                "dvipng": ["-o", src, "texput.dvi"],
+                "dvisvgm": ["-o", src, "texput.dvi"],
             }
 
-            if output == "svg":
-                cmd = ["dvisvgm"]
+            if dvioptions is not None:
+                cmd.extend(dvioptions)
             else:
-                cmd = ["dvi" + output]
-            if not find_executable(cmd[0]):
-                raise RuntimeError("%s is not installed" % cmd[0])
-            try:
-                if dvioptions is not None:
-                    cmd.extend(dvioptions)
-                else:
-                    cmd.extend(defaultoptions[output])
-                cmd.extend(commandend[output])
-            except KeyError:
-                raise SystemError("Invalid output format: %s" % output)
+                cmd.extend(defaultoptions.get(cmd_variant, []))
+            cmd.extend(commandend[cmd_variant])
 
             try:
                 # Avoid showing a cmd.exe window when running this
@@ -247,7 +265,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                     "'%s' exited abnormally with the following output:\n%s" %
                     (' '.join(cmd), e.output))
 
-        src = "texput.%s" % (output)
 
         if viewer == "file":
             if filename is None:

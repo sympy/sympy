@@ -653,6 +653,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
         return None
 
     if hints.get('symbols', False):
+        # XXX: This returns the symbols in a non-deterministic order
         symbols |= {s for s, k in sk}
         return (result, list(symbols))
     else:

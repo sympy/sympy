@@ -4,9 +4,10 @@ from __future__ import print_function, division
 
 __all__ = ["Options"]
 
-from typing import Dict, List, Optional, Type
+# from typing import Dict, Type
+from typing import List, Optional
 
-from sympy.core import S, Basic, sympify
+from sympy.core import Basic, sympify
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 from sympy.utilities import numbered_symbols, topological_sort, public
 from sympy.utilities.iterables import has_dups
@@ -123,7 +124,7 @@ class Options(dict):
     """
 
     __order__ = None
-    __options__ = {}  # type: Dict[str, Type[Option]]
+    __options__ = {}  ## type: Dict[str, Type[Option]]
 
     def __init__(self, gens, args, flags=None, strict=False):
         dict.__init__(self)
@@ -406,7 +407,7 @@ class Domain(Option, metaclass=OptionType):
     _re_realfield = re.compile(r"^(R|RR)(_(\d+))?$")
     _re_complexfield = re.compile(r"^(C|CC)(_(\d+))?$")
     _re_finitefield = re.compile(r"^(FF|GF)\((\d+)\)$")
-    _re_polynomial = re.compile(r"^(Z|ZZ|Q|QQ|R|RR|C|CC)\[(.+)\]$")
+    _re_polynomial = re.compile(r"^(Z|ZZ|Q|QQ|ZZ_I|QQ_I|R|RR|C|CC)\[(.+)\]$")
     _re_fraction = re.compile(r"^(Z|ZZ|Q|QQ)\((.+)\)$")
     _re_algebraic = re.compile(r"^(Q|QQ)\<(.+)\>$")
 
@@ -422,6 +423,12 @@ class Domain(Option, metaclass=OptionType):
 
             if domain in ['Q', 'QQ']:
                 return sympy.polys.domains.QQ
+
+            if domain == 'ZZ_I':
+                return sympy.polys.domains.ZZ_I
+
+            if domain == 'QQ_I':
+                return sympy.polys.domains.QQ_I
 
             if domain == 'EX':
                 return sympy.polys.domains.EX
@@ -464,6 +471,10 @@ class Domain(Option, metaclass=OptionType):
                     return sympy.polys.domains.QQ.poly_ring(*gens)
                 elif ground in ['R', 'RR']:
                     return sympy.polys.domains.RR.poly_ring(*gens)
+                elif ground == 'ZZ_I':
+                    return sympy.polys.domains.ZZ_I.poly_ring(*gens)
+                elif ground == 'QQ_I':
+                    return sympy.polys.domains.QQ_I.poly_ring(*gens)
                 else:
                     return sympy.polys.domains.CC.poly_ring(*gens)
 
@@ -525,7 +536,7 @@ class Gaussian(BooleanOption, metaclass=OptionType):
     @classmethod
     def postprocess(cls, options):
         if 'gaussian' in options and options['gaussian'] is True:
-            options['extension'] = set([S.ImaginaryUnit])
+            options['domain'] = sympy.polys.domains.QQ_I
             Extension.postprocess(options)
 
 

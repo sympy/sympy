@@ -7,6 +7,7 @@ from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import iterable, ordered, Mapping
 from .singleton import S
+from ._print_helpers import Printable
 
 from inspect import getmro
 
@@ -24,7 +25,7 @@ def as_Basic(expr):
             expr))
 
 
-class Basic(metaclass=ManagedProperties):
+class Basic(Printable, metaclass=ManagedProperties):
     """
     Base class for all SymPy objects.
 
@@ -410,39 +411,6 @@ class Basic(metaclass=ManagedProperties):
         tmp = dummy.__class__()
 
         return s.xreplace({dummy: tmp}) == o.xreplace({symbol: tmp})
-
-    # Note, we always use the default ordering (lex) in __str__ and __repr__,
-    # regardless of the global setting.  See issue 5487.
-    def __repr__(self):
-        """Method to return the string representation.
-
-        Return the expression as a string.
-        """
-        from sympy.printing import sstr
-        return sstr(self, order=None)
-
-    def __str__(self):
-        from sympy.printing import sstr
-        return sstr(self, order=None)
-
-    # We don't define _repr_png_ here because it would add a large amount of
-    # data to any notebook containing SymPy expressions, without adding
-    # anything useful to the notebook. It can still enabled manually, e.g.,
-    # for the qtconsole, with init_printing().
-    def _repr_latex_(self):
-        """
-        IPython/Jupyter LaTeX printing
-
-        To change the behavior of this (e.g., pass in some settings to LaTeX),
-        use init_printing(). init_printing() will also enable LaTeX printing
-        for built in numeric types like ints and container types that contain
-        SymPy objects, like lists and dictionaries of expressions.
-        """
-        from sympy.printing.latex import latex
-        s = latex(self, mode='plain')
-        return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_
 
     def atoms(self, *types):
         """Returns the atoms that form the current object.
@@ -1851,7 +1819,6 @@ class Basic(metaclass=ManagedProperties):
             obj = f(obj)
 
         return obj
-
 
 class Atom(Basic):
     """

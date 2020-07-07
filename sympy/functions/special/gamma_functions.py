@@ -190,7 +190,7 @@ class gamma(Function):
     def _eval_rewrite_as_factorial(self, z, **kwargs):
         return factorial(z - 1)
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         x0 = self.args[0].limit(x, 0)
         if not (x0.is_Integer and x0 <= 0):
             return super()._eval_nseries(x, n, logx)
@@ -201,7 +201,7 @@ class gamma(Function):
         import sage.all as sage
         return sage.gamma(self.args[0]._sage_())
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         arg = self.args[0]
         x0 = arg.subs(x, 0)
 
@@ -688,7 +688,7 @@ class polygamma(Function):
                 m = ceiling((n + 1)//2)
                 l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
                 r -= Add(*l)
-                o = Order(1/z**(2*m), x)
+                o = Order(1/z**n, x)
             return r._eval_nseries(x, n, logx) + o
         else:
             # proper polygamma function
@@ -826,7 +826,7 @@ class polygamma(Function):
             else:
                 return S.NegativeOne**(n+1) * factorial(n) * (zeta(n+1) - harmonic(z-1, n+1))
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         n, z = [a.as_leading_term(x) for a in self.args]
         o = Order(z, x)
@@ -914,7 +914,7 @@ class loggamma(Function):
     Series expansion is also supported:
 
     >>> from sympy import series
-    >>> series(loggamma(x), x, 0, 4)
+    >>> series(loggamma(x), x, 0, 4).cancel()
     -log(x) - EulerGamma*x + pi**2*x**2/12 + x**3*polygamma(2, 1)/6 + O(x**4)
 
     We can numerically evaluate the ``gamma`` function to arbitrary precision
@@ -989,7 +989,7 @@ class loggamma(Function):
 
         return self
 
-    def _eval_nseries(self, x, n, logx=None):
+    def _eval_nseries(self, x, n, logx=None, cdir=0):
         x0 = self.args[0].limit(x, 0)
         if x0.is_zero:
             f = self._eval_rewrite_as_intractable(*self.args)
@@ -1001,14 +1001,13 @@ class loggamma(Function):
         if args0[0] != oo:
             return super()._eval_aseries(n, args0, x, logx)
         z = self.args[0]
-        m = min(n, ceiling((n + S.One)/2))
         r = log(z)*(z - S.Half) - z + log(2*pi)/2
-        l = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, m)]
+        l = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, n)]
         o = None
-        if m == 0:
+        if n == 0:
             o = Order(1, x)
         else:
-            o = Order(1/z**(2*m - 1), x)
+            o = Order(1/z**n, x)
         # It is very inefficient to first add the order and then do the nseries
         return (r + Add(*l))._eval_nseries(x, n, logx) + o
 
@@ -1125,7 +1124,7 @@ class digamma(Function):
     def _eval_rewrite_as_polygamma(self, z, **kwargs):
         return polygamma(0, z)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         z = self.args[0]
         return polygamma(0, z).as_leading_term(x)
 
@@ -1221,7 +1220,7 @@ class trigamma(Function):
     def _eval_rewrite_as_harmonic(self, z, **kwargs):
         return -harmonic(z - 1, 2) + S.Pi**2 / 6
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         z = self.args[0]
         return polygamma(1, z).as_leading_term(x)
 

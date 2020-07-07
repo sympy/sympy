@@ -70,6 +70,10 @@ class GMPYIntegerRing(IntegerRing):
         if q == 1:
             return GMPYInteger(p)
 
+    def from_GaussianIntegerRing(K1, a, K0):
+        if a.y == 0:
+            return a.x
+
     def gcdex(self, a, b):
         """Compute extended GCD of ``a`` and ``b``. """
         h, s, t = gmpy_gcdex(a, b)

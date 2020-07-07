@@ -1,6 +1,6 @@
 from sympy.core.assumptions import StdFactKB, _assume_defined
 from sympy.core.compatibility import is_sequence, ordered
-from .basic import Basic
+from .basic import Basic, Atom
 from .sympify import sympify
 from .singleton import S
 from .expr import Expr, AtomicExpr
@@ -15,6 +15,32 @@ import string
 import re as _re
 import random
 
+class Str(Atom):
+    """
+    Represents string in SymPy.
+
+    Explanation
+    ===========
+
+    Previously, ``Symbol`` was used where string is needed in ``args`` of SymPy
+    objects, e.g. denoting the name of the instance. However, since ``Symbol``
+    represents mathematical scalar, this class should be used instead.
+
+    """
+    __slots__ = ('name',)
+
+    def __new__(cls, name, **kwargs):
+        if not isinstance(name, str):
+            raise TypeError("name should be a string, not %s" % repr(type(name)))
+        obj = Expr.__new__(cls, **kwargs)
+        obj.name = name
+        return obj
+
+    def __getnewargs__(self):
+        return (self.name,)
+
+    def _hashable_content(self):
+        return (self.name,)
 
 def _filter_assumptions(kwargs):
     """Split the given dict into assumptions and non-assumptions.
@@ -26,7 +52,6 @@ def _filter_assumptions(kwargs):
         binary=True))
     Symbol._sanitize(assumptions)
     return assumptions, nonassumptions
-
 
 def _symbol(s, matching_symbol=None, **assumptions):
     """Return s if s is a Symbol, else if s is a string, return either
@@ -94,11 +119,10 @@ def _symbol(s, matching_symbol=None, **assumptions):
     else:
         raise ValueError('symbol must be string for symbol name or Symbol')
 
-
-def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions):
+def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions):
     """Return a symbol which, when printed, will have a name unique
     from any other already in the expressions given. The name is made
-    unique by prepending underscores (default) but this can be
+    unique by appending numbers (default) but this can be
     customized with the keyword 'modify'.
 
     Parameters
@@ -111,16 +135,29 @@ def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumpti
             is printed, e.g. this includes underscores that appear on
             Dummy symbols)
         modify : a single arg function that changes its string argument
-            in some way (the default is to prepend underscores)
+            in some way (the default is to append numbers)
 
     Examples
     ========
 
-    >>> from sympy.core.symbol import _uniquely_named_symbol as usym
+    >>> from sympy.core.symbol import uniquely_named_symbol
     >>> from sympy.abc import x
-    >>> usym('x', x)
-    _x
+    >>> uniquely_named_symbol('x', x)
+    x0
     """
+    from sympy.core.function import AppliedUndef
+
+    def numbered_string_incr(s, start=0):
+        if not s:
+            return str(start)
+        i = len(s) - 1
+        while i != -1:
+            if not s[i].isdigit():
+                break
+            i -= 1
+        n = str(int(s[i + 1:] or start - 1) + 1)
+        return s[:i + 1] + n
+
     default = None
     if is_sequence(xname):
         xname, default = xname
@@ -129,13 +166,15 @@ def _uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumpti
         return _symbol(x, default, **assumptions)
     if not is_sequence(exprs):
         exprs = [exprs]
-    syms = set().union(*[e.free_symbols for e in exprs])
+    names = set().union((
+        [i.name for e in exprs for i in e.atoms(Symbol)] +
+        [i.func.name for e in exprs for i in e.atoms(AppliedUndef)]))
     if modify is None:
-        modify = lambda s: '_' + s
-    while any(x == compare(s) for s in syms):
+        modify = numbered_string_incr
+    while any(x == compare(s) for s in names):
         x = modify(x)
     return _symbol(x, default, **assumptions)
-
+_uniquely_named_symbol = uniquely_named_symbol
 
 class Symbol(AtomicExpr, Boolean):
     """

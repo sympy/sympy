@@ -18,12 +18,11 @@ from __future__ import print_function, division
 from functools import singledispatch
 from typing import Tuple as tTuple
 
-from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
+from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify, Or,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
                    DiracDelta, Mul, Indexed, MatrixSymbol, Function, Integral)
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
-from sympy.logic.boolalg import Boolean
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
 from sympy.external import import_module
@@ -310,7 +309,15 @@ class RandomIndexedSymbol(RandomSymbol):
         elif isinstance(self.symbol, Function):
             return self.symbol.args[0]
 
-class RandomMatrixSymbol(MatrixSymbol):
+    @property
+    def free_symbols(self):
+        if self.key.free_symbols:
+            free_syms = self.key.free_symbols
+            free_syms.add(self)
+            return free_syms
+        return {self}
+
+class RandomMatrixSymbol(RandomSymbol, MatrixSymbol):
     def __new__(cls, symbol, n, m, pspace=None):
         n, m = _sympify(n), _sympify(m)
         symbol = _symbol_converter(symbol)
@@ -418,6 +425,10 @@ class IndependentProductPSpace(ProductPSpace):
         if isinstance(condition, Ne):
             condition = Eq(condition.args[0], condition.args[1])
             cond_inv = True
+        elif isinstance(condition, And): # they are independent
+            return Mul(*[self.probability(arg) for arg in condition.args])
+        elif isinstance(condition, Or): # they are independent
+            return Add(*[self.probability(arg) for arg in condition.args])
         expr = condition.lhs - condition.rhs
         rvs = random_symbols(expr)
         dens = self.compute_density(expr)
@@ -776,54 +787,11 @@ def probability(condition, given_condition=None, numsamples=None,
     5/12
     """
 
-    condition = sympify(condition)
-    given_condition = sympify(given_condition)
-
-    if condition.has(RandomIndexedSymbol):
-        return pspace(condition).probability(condition, given_condition, evaluate, **kwargs)
-
-    if isinstance(given_condition, RandomSymbol):
-        condrv = random_symbols(condition)
-        if len(condrv) == 1 and condrv[0] == given_condition:
-            from sympy.stats.frv_types import BernoulliDistribution
-            return BernoulliDistribution(probability(condition), 0, 1)
-        if any([dependent(rv, given_condition) for rv in condrv]):
-            from sympy.stats.symbolic_probability import Probability
-            return Probability(condition, given_condition)
-        else:
-            return probability(condition)
-
-    if given_condition is not None and \
-            not isinstance(given_condition, (Relational, Boolean)):
-        raise ValueError("%s is not a relational or combination of relationals"
-                % (given_condition))
-    if given_condition == False:
-        return S.Zero
-    if not isinstance(condition, (Relational, Boolean)):
-        raise ValueError("%s is not a relational or combination of relationals"
-                % (condition))
-    if condition is S.true:
-        return S.One
-    if condition is S.false:
-        return S.Zero
-
-    if numsamples:
-        return sampling_P(condition, given_condition, numsamples=numsamples,
-                **kwargs)
-    if given_condition is not None:  # If there is a condition
-        # Recompute on new conditional expr
-        return probability(given(condition, given_condition, **kwargs), **kwargs)
-
-    # Otherwise pass work off to the ProbabilitySpace
-    if pspace(condition) == PSpace():
-        from sympy.stats.symbolic_probability import Probability
-        return Probability(condition, given_condition)
-
-    result = pspace(condition).probability(condition, **kwargs)
-    if evaluate and hasattr(result, 'doit'):
-        return result.doit()
-    else:
-        return result
+    kwargs['numsamples'] = numsamples
+    from sympy.stats.symbolic_probability import Probability
+    if evaluate:
+        return Probability(condition, given_condition).doit(**kwargs)
+    return Probability(condition, given_condition).rewrite(Integral) # will return Sum in case of discrete RV
 
 
 class Density(Basic):
@@ -1511,3 +1479,40 @@ def _symbol_converter(sym):
     if not isinstance(sym, Symbol):
         raise TypeError("%s is neither a Symbol nor a string"%(sym))
     return sym
+
+def sample_stochastic_process(process):
+    """
+    This function is used to sample from stochastic process.
+
+    Parameters
+    ==========
+
+    process: StochasticProcess
+        Process used to extract the samples. It must be an instance of
+        StochasticProcess
+
+    Examples
+    ========
+
+    >>> from sympy.stats import sample_stochastic_process, DiscreteMarkovChain
+    >>> from sympy import Matrix
+    >>> T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
+    >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    >>> next(sample_stochastic_process(Y)) in Y.state_space # doctest: +SKIP
+    True
+    >>> next(sample_stochastic_process(Y))  # doctest: +SKIP
+    0
+    >>> next(sample_stochastic_process(Y)) # doctest: +SKIP
+    2
+
+    Returns
+    =======
+
+    sample: iterator object
+        iterator object containing the sample of given process
+
+    """
+    from sympy.stats.stochastic_process_types import StochasticProcess
+    if not isinstance(process, StochasticProcess):
+        raise ValueError("Process must be an instance of Stochastic Process")
+    return process.sample()

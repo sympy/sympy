@@ -12,7 +12,8 @@ from sympy.testing.randtest import (random_complex_number as randcplx,
                                       verify_numerically as tn,
                                       test_derivative_numerically as td,
                                       _randint)
-from sympy.testing.pytest import raises
+from sympy.simplify import besselsimp
+from sympy.testing.pytest import raises, slow
 
 from sympy.abc import z, n, k, x
 
@@ -104,7 +105,7 @@ def test_rewrite():
 
 
 def test_expand():
-    from sympy import besselsimp, Symbol, exp, exp_polar, I
+    from sympy import exp_polar, I
 
     assert expand_func(besselj(S.Half, z).rewrite(jn)) == \
         sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
@@ -142,35 +143,6 @@ def test_expand():
         besselsimp(besselk(Rational(-5, 2), z)) == \
         sqrt(2)*sqrt(pi)*(z**2 + 3*z + 3)*exp(-z)/(2*z**Rational(5, 2))
 
-    def check(eq, ans):
-        return tn(eq, ans) and eq == ans
-
-    rn = randcplx(a=1, b=0, d=0, c=2)
-
-    for besselx in [besselj, bessely, besseli, besselk]:
-        ri = S(2*randint(-11, 10) + 1) / 2  # half integer in [-21/2, 21/2]
-        assert tn(besselsimp(besselx(ri, z)), besselx(ri, z))
-
-    assert check(expand_func(besseli(rn, x)),
-                 besseli(rn - 2, x) - 2*(rn - 1)*besseli(rn - 1, x)/x)
-    assert check(expand_func(besseli(-rn, x)),
-                 besseli(-rn + 2, x) + 2*(-rn + 1)*besseli(-rn + 1, x)/x)
-
-    assert check(expand_func(besselj(rn, x)),
-                 -besselj(rn - 2, x) + 2*(rn - 1)*besselj(rn - 1, x)/x)
-    assert check(expand_func(besselj(-rn, x)),
-                 -besselj(-rn + 2, x) + 2*(-rn + 1)*besselj(-rn + 1, x)/x)
-
-    assert check(expand_func(besselk(rn, x)),
-                 besselk(rn - 2, x) + 2*(rn - 1)*besselk(rn - 1, x)/x)
-    assert check(expand_func(besselk(-rn, x)),
-                 besselk(-rn + 2, x) - 2*(-rn + 1)*besselk(-rn + 1, x)/x)
-
-    assert check(expand_func(bessely(rn, x)),
-                 -bessely(rn - 2, x) + 2*(rn - 1)*bessely(rn - 1, x)/x)
-    assert check(expand_func(bessely(-rn, x)),
-                 -bessely(-rn + 2, x) + 2*(-rn + 1)*bessely(-rn + 1, x)/x)
-
     n = Symbol('n', integer=True, positive=True)
 
     assert expand_func(besseli(n + 2, z)) == \
@@ -201,6 +173,38 @@ def test_expand():
         assert besselx(i, r).is_extended_real is True
     for besselx in [bessely, besselk]:
         assert besselx(i, r).is_extended_real is None
+
+
+@slow
+def test_slow_expand():
+    def check(eq, ans):
+        return tn(eq, ans) and eq == ans
+
+    rn = randcplx(a=1, b=0, d=0, c=2)
+
+    for besselx in [besselj, bessely, besseli, besselk]:
+        ri = S(2*randint(-11, 10) + 1) / 2  # half integer in [-21/2, 21/2]
+        assert tn(besselsimp(besselx(ri, z)), besselx(ri, z))
+
+    assert check(expand_func(besseli(rn, x)),
+                 besseli(rn - 2, x) - 2*(rn - 1)*besseli(rn - 1, x)/x)
+    assert check(expand_func(besseli(-rn, x)),
+                 besseli(-rn + 2, x) + 2*(-rn + 1)*besseli(-rn + 1, x)/x)
+
+    assert check(expand_func(besselj(rn, x)),
+                 -besselj(rn - 2, x) + 2*(rn - 1)*besselj(rn - 1, x)/x)
+    assert check(expand_func(besselj(-rn, x)),
+                 -besselj(-rn + 2, x) + 2*(-rn + 1)*besselj(-rn + 1, x)/x)
+
+    assert check(expand_func(besselk(rn, x)),
+                 besselk(rn - 2, x) + 2*(rn - 1)*besselk(rn - 1, x)/x)
+    assert check(expand_func(besselk(-rn, x)),
+                 besselk(-rn + 2, x) - 2*(-rn + 1)*besselk(-rn + 1, x)/x)
+
+    assert check(expand_func(bessely(rn, x)),
+                 -bessely(rn - 2, x) + 2*(rn - 1)*bessely(rn - 1, x)/x)
+    assert check(expand_func(bessely(-rn, x)),
+                 -bessely(-rn + 2, x) + 2*(-rn + 1)*bessely(-rn + 1, x)/x)
 
 
 def test_fn():
