@@ -462,7 +462,7 @@ class Series(Basic):
         Examples
         ========
 
-        >>> from sympy.abc import s, p
+        >>> from sympy.abc import p
         >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel
         >>> G1 = TransferFunction(p**2 + 2*p + 4, p - 6, p)
         >>> G2 = TransferFunction(p, 4 - p, p)
@@ -703,7 +703,7 @@ class Parallel(Basic):
         Examples
         ========
 
-        >>> from sympy.abc import s, p
+        >>> from sympy.abc import p
         >>> from sympy.physics.control.lti import TransferFunction, Parallel, Series
         >>> G1 = TransferFunction(p**2 + 2*p + 4, p - 6, p)
         >>> G2 = TransferFunction(p, 4 - p, p)
