@@ -94,6 +94,30 @@ class TransferFunction(Basic, EvalfMixin):
     >>> tf8**-1
     TransferFunction(p - 3, p + 4, p)
 
+    Addition, subtraction, and multiplication of transfer functions can form unevaluated ``Series`` or
+    ``Parallel`` objects.
+
+    >>> tf9 = TransferFunction(s + 1, s**2 + s + 1, s)
+    >>> tf10 = TransferFunction(s - p, s + 3, s)
+    >>> tf11 = TransferFunction(4*s**2 + 2*s - 4, s - 1, s)
+    >>> tf12 = TransferFunction(1 - s, s**2 + 4, s)
+    >>> tf9 + tf10
+    Parallel(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(-p + s, s + 3, s))
+    >>> tf10 - tf11
+    Parallel(TransferFunction(-p + s, s + 3, s), TransferFunction(-4*s**2 - 2*s + 4, s - 1, s))
+    >>> tf11 * tf10 * tf9
+    Series(TransferFunction(4*s**2 + 2*s - 4, s - 1, s), TransferFunction(-p + s, s + 3, s), TransferFunction(s + 1, s**2 + s + 1, s))
+    >>> tf9 * tf11 + tf10 * tf12
+    Parallel(Series(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(4*s**2 + 2*s - 4, s - 1, s)), Series(TransferFunction(-p + s, s + 3, s), TransferFunction(1 - s, s**2 + 4, s)))
+
+    These unevaluated ``Series`` or ``Parallel`` objects can convert into the resultant transfer function using
+    ``.doit()`` method or by ``.rewrite(TransferFunction)``.
+
+    >>> ((tf9 + tf10) * tf12).doit()
+    TransferFunction((1 - s)*((-p + s)*(s**2 + s + 1) + (s + 1)*(s + 3)), (s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
+    >>> (tf9 * tf10 - tf11 * tf12).rewrite(TransferFunction)
+    TransferFunction(-(1 - s)*(s + 3)*(s**2 + s + 1)*(4*s**2 + 2*s - 4) + (-p + s)*(s - 1)*(s + 1)*(s**2 + 4), (s - 1)*(s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
+
     """
     def __new__(cls, num, den, var):
         num, den = _sympify(num), _sympify(den)
