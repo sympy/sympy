@@ -171,7 +171,7 @@ class DomainMatrix:
             return NotImplemented
         if A.shape != B.shape:
             raise ShapeError("shape")
-        if A.domain is not B.domain:
+        if A.domain != B.domain:
             raise ValueError("domain")
         rows = [[a+b for a, b in zip(row1, row2)]
                     for row1, row2 in zip(A.rows, B.rows)]
