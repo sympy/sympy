@@ -95,8 +95,8 @@ def test_TransferFunction_construction():
     raises(ValueError, lambda: TransferFunction(s, 0, s))
     raises(ValueError, lambda: TransferFunction(0, 0, s))
 
-    raises(TypeError, lambda: TransferFunction(Matrix([1, 2, 3]), s, s))
-    raises(TypeError, lambda: TransferFunction(s**pi*exp(s), s, s))
+    raises(ValueError, lambda: TransferFunction(Matrix([1, 2, 3]), s, s))
+    raises(ValueError, lambda: TransferFunction(s**pi*exp(s), s, s))
 
     raises(TypeError, lambda: TransferFunction(s**2 + 2*s - 1, s + 3, 3))
     raises(TypeError, lambda: TransferFunction(p + 1, 5 - p, 4))
@@ -346,9 +346,9 @@ def test_Series_construction():
     raises(ValueError, lambda: Series(tf, tf3))
     raises(ValueError, lambda: Series(tf, tf2, tf3, tf4))
     raises(ValueError, lambda: Series(-tf3, tf2))
-    raises(TypeError, lambda: Series(2, tf, tf4))
-    raises(TypeError, lambda: Series(s**2 + p*s, tf3, tf2))
-    raises(TypeError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
+    raises(ValueError, lambda: Series(2, tf, tf4))
+    raises(ValueError, lambda: Series(s**2 + p*s, tf3, tf2))
+    raises(ValueError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
 
 
 def test_Series_functions():
@@ -455,9 +455,9 @@ def test_Parallel_construction():
     raises(ValueError, lambda: Parallel(tf, tf3))
     raises(ValueError, lambda: Parallel(tf, tf2, tf3, tf4))
     raises(ValueError, lambda: Parallel(-tf3, tf4))
-    raises(TypeError, lambda: Parallel(2, tf, tf4))
-    raises(TypeError, lambda: Parallel(s**2 + p*s, tf3, tf2))
-    raises(TypeError, lambda: Parallel(tf3, Matrix([1, 2, 3, 4])))
+    raises(ValueError, lambda: Parallel(2, tf, tf4))
+    raises(ValueError, lambda: Parallel(s**2 + p*s, tf3, tf2))
+    raises(ValueError, lambda: Parallel(tf3, Matrix([1, 2, 3, 4])))
 
 
 def test_Parallel_functions():
@@ -573,11 +573,11 @@ def test_Feedback_construction():
     assert f7.num == Series(TransferFunction(-1, 1, p), Series(tf4, tf6))
 
     # denominator can't be a Parallel instance
-    raises(TypeError, lambda: Feedback(tf1, tf2 + tf3))
-    raises(TypeError, lambda: Feedback(tf1, Matrix([1, 2, 3])))
-    raises(TypeError, lambda: Feedback(TransferFunction(1, 1, s), s - 1))
-    raises(TypeError, lambda: Feedback(1, 1))
-    raises(TypeError, lambda: Feedback(TransferFunction(1, 1, s), TransferFunction(1, 1, s)))
+    raises(ValueError, lambda: Feedback(tf1, tf2 + tf3))
+    raises(ValueError, lambda: Feedback(tf1, Matrix([1, 2, 3])))
+    raises(ValueError, lambda: Feedback(TransferFunction(1, 1, s), s - 1))
+    raises(ValueError, lambda: Feedback(1, 1))
+    raises(ValueError, lambda: Feedback(TransferFunction(1, 1, s), TransferFunction(1, 1, s)))
     raises(ValueError, lambda: Feedback(tf2, tf4*tf5))
 
 

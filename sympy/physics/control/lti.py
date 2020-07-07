@@ -7,14 +7,13 @@ __all__ = ['TransferFunction', 'Series', 'Parallel', 'Feedback']
 
 
 class TransferFunction(Basic, EvalfMixin):
-    """TransferFunction(num, den, var)
-
+    """
     A class for representing continuous transfer functions. This class is used to represent
     LTI (Linear, time-invariant) systems in transfer function form. The arguments
     are ``num``, ``den``, and ``var``, where ``num`` and ``den`` are numerator and
     denominator polynomials of the ``TransferFunction`` respectively, and the third argument is
-    a variable used to anchor these polynomials of the transfer function. ``num`` and ``den`` can
-    be either sympy expressions (with no time delay terms) or numbers, whereas ``var``
+    a complex variable of the Laplace transform used by these polynomials of the transfer function.
+    ``num`` and ``den`` can be either sympy expressions (with no time delay terms) or numbers, whereas ``var``
     has to be a Symbol.
 
     Parameters
@@ -25,7 +24,7 @@ class TransferFunction(Basic, EvalfMixin):
     den : Expr, Number
         The denominator polynomial of the transfer function.
     var : Symbol
-        Variable used to anchor the polynomials of the transfer function.
+        Complex variable of the Laplace transform used by the polynomials of the transfer function.
 
     Raises
     ======
@@ -51,8 +50,10 @@ class TransferFunction(Basic, EvalfMixin):
     s**2 + s + 1
     >>> tf1.var
     s
+    >>> tf1.args
+    (a + s, s**2 + s + 1, s)
 
-    Using different polynomial variables.
+    Any complex variable can be used for ``var``.
 
     >>> tf2 = TransferFunction(a*p**3 - a*p**2 + s*p, p + a**2, p)
     >>> tf2
@@ -61,7 +62,7 @@ class TransferFunction(Basic, EvalfMixin):
     >>> tf3
     TransferFunction((p - 1)*(p + 3), (p - 1)*(p + 5), p)
 
-    Using ``-`` operator in front of a transfer function to negate it.
+    To negate a transfer function the ``-`` operator can be prepended:
 
     >>> tf4 = TransferFunction(-a + s, p**2 + s, p)
     >>> -tf4
@@ -70,7 +71,7 @@ class TransferFunction(Basic, EvalfMixin):
     >>> -tf5
     TransferFunction(-s**4 + 2*s**3 - 5*s - 4, s + 4, s)
 
-    Using Float or Integer (or other constants) as numerator and denominator.
+    You can use a Float or an Integer (or other constants) as numerator and denominator:
 
     >>> tf6 = TransferFunction(1/2, 4, s)
     >>> tf6.num
@@ -79,8 +80,10 @@ class TransferFunction(Basic, EvalfMixin):
     4
     >>> tf6.var
     s
+    >>> tf6.args
+    (0.5, 4, s)
 
-    Using ``**`` operator to take the power of a transfer function.
+    You can take the integer power of a transfer function using the ``**`` operator:
 
     >>> tf7 = TransferFunction(s + a, s - a, s)
     >>> tf7**3
@@ -90,11 +93,6 @@ class TransferFunction(Basic, EvalfMixin):
     >>> tf8 = TransferFunction(p + 4, p - 3, p)
     >>> tf8**-1
     TransferFunction(p - 3, p + 4, p)
-
-    References
-    ==========
-
-    .. [1] http://www.cds.caltech.edu/~murray/amwiki/index.php?title=First_Edition
 
     """
     def __new__(cls, num, den, var):
@@ -113,7 +111,7 @@ class TransferFunction(Basic, EvalfMixin):
                 obj._var = var
                 return obj
         else:
-            raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
+            raise ValueError("Unsupported type for numerator or denominator of TransferFunction.")
 
     @property
     def num(self):
@@ -158,7 +156,7 @@ class TransferFunction(Basic, EvalfMixin):
     @property
     def var(self):
         """
-        Returns the variable used to anchor the expressions/polynomials of
+        Returns the complex variable of the Laplace transform used by the polynomials of
         the transfer function.
 
         Examples
@@ -216,13 +214,13 @@ class TransferFunction(Basic, EvalfMixin):
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             return Parallel(self, other)
         elif isinstance(other, Parallel):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             arg_list = list(other.args)
             return Parallel(self, *arg_list)
         else:
@@ -235,13 +233,13 @@ class TransferFunction(Basic, EvalfMixin):
     def __sub__(self, other):
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             return Parallel(self, -other)
         elif isinstance(other, Parallel):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             arg_list = [-i for i in list(other.args)]
             return Parallel(self, *arg_list)
         else:
@@ -254,13 +252,13 @@ class TransferFunction(Basic, EvalfMixin):
     def __mul__(self, other):
         if isinstance(other, (TransferFunction, Parallel)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             return Series(self, other)
         elif isinstance(other, Series):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             arg_list = list(other.args)
             return Series(self, *arg_list)
         else:
@@ -274,8 +272,8 @@ class TransferFunction(Basic, EvalfMixin):
             and isinstance(other.args[1], (Series, TransferFunction))):
 
             if not self.var == other.var:
-                raise ValueError("Both TransferFunction and Parallel should be anchored "
-                    "with the same variable.")
+                raise ValueError("Both TransferFunction and Parallel should use the same complex variable "
+                    "of the Laplace transform.")
             if other.args[1] == self:
                 return Feedback(self, other.args[0])
             other_arg_list = list(other.args[1].args)
@@ -380,29 +378,36 @@ class TransferFunction(Basic, EvalfMixin):
 class Series(Basic):
     """
     A class for representing product of transfer functions (or ``Parallel`` objects).
-    All the transfer functions (or ``Parallel`` objects) must be anchored with the same variable.
+    All the transfer functions (or ``Parallel`` objects) should be using the same complex variable ``var`` of the
+    Laplace transform.
 
     Examples
     ========
 
     >>> from sympy.abc import s, p, a, b
-    >>> from sympy.physics.control.lti import TransferFunction
+    >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel
     >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
     >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
     >>> tf3 = TransferFunction(p**2, p + s, s)
-    >>> tf1*tf2
+    >>> S1 = Series(tf1, tf2)
+    >>> S1
     Series(TransferFunction(a*p**2 + b*s, -p + s, s), TransferFunction(s**3 - 2, s**4 + 5*s + 6, s))
-    >>> tf2*(tf3 - tf1)
-    Series(TransferFunction(s**3 - 2, s**4 + 5*s + 6, s), Parallel(TransferFunction(p**2, p + s, s), TransferFunction(-a*p**2 - b*s, -p + s, s)))
-
-    You can get the resultant transfer function by using ``.doit()`` method.
-
-    >>> S1 = Series(tf1, tf2, -tf3)
-    >>> S1.doit()
-    TransferFunction(-p**2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
+    >>> S1.var
+    s
     >>> S2 = Series(tf2, Parallel(tf3, -tf1))
-    >>> S2.doit()
-    TransferFunction((s**3 - 2)*(p**2*(-p + s) + (p + s)*(-a*p**2 - b*s)), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
+    >>> S2
+    Series(TransferFunction(s**3 - 2, s**4 + 5*s + 6, s), Parallel(TransferFunction(p**2, p + s, s), TransferFunction(-a*p**2 - b*s, -p + s, s)))
+    >>> S2.var
+    s
+
+    You can get the resultant transfer function by using ``.doit()`` method:
+
+    >>> S3 = Series(tf1, tf2, -tf3)
+    >>> S3.doit()
+    TransferFunction(-p**2*(s**3 - 2)*(a*p**2 + b*s), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
+    >>> S4 = Series(tf2, Parallel(tf1, -tf3))
+    >>> S4.doit()
+    TransferFunction((s**3 - 2)*(-p**2*(-p + s) + (p + s)*(a*p**2 + b*s)), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
 
     See Also
     ========
@@ -412,7 +417,7 @@ class Series(Basic):
     """
     def __new__(cls, *args, evaluate=False):
         if not all(isinstance(arg, (TransferFunction, Parallel, Series)) for arg in args):
-            raise TypeError("Unsupported type of argument(s) for Series.")
+            raise ValueError("Unsupported type of argument(s) for Series.")
 
         obj = super(Series, cls).__new__(cls, *args)
         obj._var = None
@@ -420,7 +425,7 @@ class Series(Basic):
             if obj._var is None:
                 obj._var = arg.var
             elif obj._var != arg.var:
-                raise ValueError("All transfer functions should be anchored with the same variable.")
+                raise ValueError("All transfer functions should use the same complex variable of the Laplace transform.")
         if evaluate:
             return obj.doit()
         return obj
@@ -428,14 +433,13 @@ class Series(Basic):
     @property
     def var(self):
         """
-        Returns the variable used to anchor all the transfer functions (or ``Parallel`` objects)
-        in a ``Series`` object.
+        Returns the complex variable used by all the transfer functions (or ``Parallel`` objects).
 
         Examples
         ========
 
         >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction, Series
+        >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel
         >>> G1 = TransferFunction(p**2 + 2*p + 4, p - 6, p)
         >>> G2 = TransferFunction(p, 4 - p, p)
         >>> G3 = TransferFunction(0, p**4 - 1, p)
@@ -448,6 +452,22 @@ class Series(Basic):
         return self._var
 
     def doit(self, **kwargs):
+        """
+        Returns the resultant transfer function.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Series
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
+        >>> Series(tf2, tf1).doit()
+        TransferFunction((s**3 - 2)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s)
+        >>> Series(-tf1, -tf2).doit()
+        TransferFunction((2 - s**3)*(-a*p**2 - b*s), (-p + s)*(s**4 + 5*s + 6), s)
+
+        """
         res = None
         for arg in self.args:
             arg = arg.doit()
@@ -465,14 +485,14 @@ class Series(Basic):
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
 
             return Parallel(self, other)
         elif isinstance(other, Parallel):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             arg_list = list(other.args)
 
             return Parallel(self, *arg_list)
@@ -482,14 +502,14 @@ class Series(Basic):
     def __sub__(self, other):
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
 
             return Parallel(self, -other)
         elif isinstance(other, Parallel):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             arg_list = [-i for i in list(other.args)]
 
             return Parallel(self, *arg_list)
@@ -499,15 +519,15 @@ class Series(Basic):
     def __mul__(self, other):
         if isinstance(other, (TransferFunction, Parallel)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             arg_list = list(self.args)
 
             return Series(*arg_list, other)
         elif isinstance(other, Series):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             self_arg_list = list(self.args)
             other_arg_list = list(other.args)
 
@@ -520,8 +540,8 @@ class Series(Basic):
             and isinstance(other.args[1], Series)):
 
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             self_arg_list = set(list(self.args))
             other_arg_list = set(list(other.args[1].args))
             res = list(self_arg_list ^ other_arg_list)
@@ -550,7 +570,8 @@ class Series(Basic):
         >>> from sympy.physics.control.lti import TransferFunction, Series
         >>> tf1 = TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
         >>> tf2 = TransferFunction(p**2 - 4*p, p**3 + 3*s + 2, s)
-        >>> Series(-tf2, tf1).is_proper
+        >>> S = Series(-tf2, tf1)
+        >>> S.is_proper
         False
 
         """
@@ -569,7 +590,8 @@ class Series(Basic):
         >>> from sympy.physics.control.lti import TransferFunction, Series
         >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
         >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
-        >>> Series(tf1, tf2).is_strictly_proper
+        >>> S = Series(tf1, tf2)
+        >>> S.is_strictly_proper
         True
 
         """
@@ -588,7 +610,8 @@ class Series(Basic):
         >>> from sympy.physics.control.lti import TransferFunction, Series
         >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
         >>> tf2 = TransferFunction(p**2, p + s, s)
-        >>> Series(tf1, -tf2).is_biproper
+        >>> S = Series(tf1, -tf2)
+        >>> S.is_biproper
         False
 
         """
@@ -596,10 +619,46 @@ class Series(Basic):
 
 
 class Parallel(Basic):
+    """
+    A class for representing addition of transfer functions (or ``Series`` objects).
+    All the transfer functions (or ``Series`` objects) should be using the same complex variable ``var`` of the
+    Laplace transform.
 
+    Examples
+    ========
+
+    >>> from sympy.abc import s, p, a, b
+    >>> from sympy.physics.control.lti import TransferFunction, Parallel, Series
+    >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+    >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
+    >>> tf3 = TransferFunction(p**2, p + s, s)
+    >>> P1 = Parallel(tf1, tf2)
+    >>> P1
+    Parallel(TransferFunction(a*p**2 + b*s, -p + s, s), TransferFunction(s**3 - 2, s**4 + 5*s + 6, s))
+    >>> P1.var
+    s
+    >>> P2 = Parallel(tf2, Series(tf3, -tf1))
+    >>> P2
+    Parallel(TransferFunction(s**3 - 2, s**4 + 5*s + 6, s), Series(TransferFunction(p**2, p + s, s), TransferFunction(-a*p**2 - b*s, -p + s, s)))
+    >>> P2.var
+    s
+
+    You can get the resultant transfer function by using ``.doit()`` method:
+
+    >>> Parallel(tf1, tf2, -tf3).doit()
+    TransferFunction(-p**2*(-p + s)*(s**4 + 5*s + 6) + (p + s)*((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6)), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
+    >>> Parallel(tf2, Series(tf1, -tf3)).doit()
+    TransferFunction(-p**2*(a*p**2 + b*s)*(s**4 + 5*s + 6) + (-p + s)*(p + s)*(s**3 - 2), (-p + s)*(p + s)*(s**4 + 5*s + 6), s)
+
+    See Also
+    ========
+
+    sympy.physics.control.lti.Series
+
+    """
     def __new__(cls, *args, evaluate=False):
         if not all(isinstance(arg, (TransferFunction, Series, Parallel)) for arg in args):
-            raise TypeError("Unsupported type of argument(s) for Parallel.")
+            raise ValueError("Unsupported type of argument(s) for Parallel.")
 
         obj = super(Parallel, cls).__new__(cls, *args)
         obj._var = None
@@ -607,16 +666,49 @@ class Parallel(Basic):
             if obj._var is None:
                 obj._var = arg.var
             elif obj._var != arg.var:
-                raise ValueError("All transfer functions should be anchored with the same variable.")
+                raise ValueError("All transfer functions should use the same complex variable of the Laplace transform.")
         if evaluate:
             return obj.doit()
         return obj
 
     @property
     def var(self):
+        """
+        Returns the complex variable used by all the transfer functions (or ``Series`` objects).
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction, Parallel, Series
+        >>> G1 = TransferFunction(p**2 + 2*p + 4, p - 6, p)
+        >>> G2 = TransferFunction(p, 4 - p, p)
+        >>> G3 = TransferFunction(0, p**4 - 1, p)
+        >>> Parallel(G1, G2).var
+        p
+        >>> Parallel(-G3, Series(G1, G2)).var
+        p
+
+        """
         return self._var
 
     def doit(self, **kwargs):
+        """
+        Returns the resultant transfer function.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Parallel
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
+        >>> Parallel(tf2, tf1).doit()
+        TransferFunction((-p + s)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)
+        >>> Parallel(-tf1, -tf2).doit()
+        TransferFunction((2 - s**3)*(-p + s) + (-a*p**2 - b*s)*(s**4 + 5*s + 6), (-p + s)*(s**4 + 5*s + 6), s)
+
+        """
         res = None
         for arg in self.args:
             arg = arg.doit()
@@ -634,16 +726,16 @@ class Parallel(Basic):
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             arg_list = list(self.args)
             arg_list.append(other)
 
             return Parallel(*arg_list)
         elif isinstance(other, Parallel):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             self_arg_list = list(self.args)
             other_arg_list = list(other.args)
             for elem in other_arg_list:
@@ -656,16 +748,16 @@ class Parallel(Basic):
     def __sub__(self, other):
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             arg_list = list(self.args)
             arg_list.append(-other)
 
             return Parallel(*arg_list)
         elif isinstance(other, Parallel):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             self_arg_list = list(self.args)
             other_arg_list = list(other.args)
             for elem in other_arg_list:
@@ -678,13 +770,13 @@ class Parallel(Basic):
     def __mul__(self, other):
         if isinstance(other, (TransferFunction, Parallel)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             return Series(self, other)
         elif isinstance(other, Series):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should be anchored "
-                    "with the same variable.")
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
             arg_list = list(other.args)
             return Series(self, *arg_list)
         else:
@@ -695,26 +787,135 @@ class Parallel(Basic):
 
     @property
     def is_proper(self):
+        """
+        Returns True if degree of the numerator polynomial of the resultant transfer
+        function is less than or equal to degree of the denominator polynomial of the same, else False.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Parallel
+        >>> tf1 = TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
+        >>> tf2 = TransferFunction(p**2 - 4*p, p**3 + 3*s + 2, s)
+        >>> P = Parallel(-tf2, tf1)
+        >>> P.is_proper
+        False
+
+        """
         return self.doit().is_proper
 
     @property
     def is_strictly_proper(self):
+        """
+        Returns True if degree of the numerator polynomial of the resultant transfer
+        function is strictly less than degree of the denominator polynomial of the same, else False.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Parallel
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
+        >>> P = Parallel(tf1, tf2)
+        >>> P.is_strictly_proper
+        False
+
+        """
         return self.doit().is_strictly_proper
 
     @property
     def is_biproper(self):
+        """
+        Returns True if degree of the numerator polynomial of the resultant transfer
+        function is equal to degree of the denominator polynomial of the same, else False.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Parallel
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(p**2, p + s, s)
+        >>> P = Parallel(tf1, -tf2)
+        >>> P.is_biproper
+        True
+
+        """
         return self.doit().is_biproper
 
 
 class Feedback(Basic):
+    """
+    A class for representing negative feedback interconnection between two input/output systems.
+    The first argument, ``num``, is called as the primary plant or the numerator, and the second argument,
+    ``den``, is called as the feedback plant (which is often a feedback controller) or the denominator. Both
+    ``num`` and ``den`` can either be ``Series`` or ``TransferFunction`` objects.
 
+    Parameters
+    ==========
+
+    num : Series, TransferFunction
+        The primary plant.
+    den : Series, TransferFunction
+        The feedback plant (often a feedback controller).
+
+    Raises
+    ======
+
+    ValueError
+        When either ``num`` or ``den`` is not a ``Series`` or a ``TransferFunction`` object.
+        Also, when ``num`` is equal to ``den`` or when they are not using the same complex variable of
+        the Laplace transform.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import s
+    >>> from sympy.physics.control.lti import TransferFunction, Feedback
+    >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
+    >>> controller = TransferFunction(5*s - 10, s + 7, s)
+    >>> F1 = Feedback(plant, controller)
+    >>> F1
+    Feedback(TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s))
+    >>> F1.var
+    s
+    >>> F1.args
+    (TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s))
+
+    You can get the primary and the feedback plant using ``.num`` and ``.den`` respectively.
+
+    >>> F1.num
+    TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
+    >>> F1.den
+    TransferFunction(5*s - 10, s + 7, s)
+
+    You can get the resultant closed loop transfer function obtained by negative feedback interconnection using ``.doit()`` method.
+
+    >>> F1.doit()
+    TransferFunction((s + 7)*(s**2 - 4*s + 2)*(3*s**2 + 7*s - 3), ((s + 7)*(s**2 - 4*s + 2) + (5*s - 10)*(3*s**2 + 7*s - 3))*(s**2 - 4*s + 2), s)
+    >>> G = TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s)
+    >>> C = TransferFunction(5*s + 10, s + 10, s)
+    >>> F2 = Feedback(G*C, TransferFunction(1, 1, s))
+    >>> F2.doit()
+    TransferFunction((s + 10)*(5*s + 10)*(s**2 + 2*s + 3)*(2*s**2 + 5*s + 1), (s + 10)*((s + 10)*(s**2 + 2*s + 3) + (5*s + 10)*(2*s**2 + 5*s + 1))*(s**2 + 2*s + 3), s)
+
+    To negate a ``Feedback`` object, the ``-`` operator can be prepended:
+
+    >>> -F1
+    Feedback(TransferFunction(-3*s**2 - 7*s + 3, s**2 - 4*s + 2, s), TransferFunction(5*s - 10, s + 7, s))
+    >>> -F2
+    Feedback(Series(TransferFunction(-1, 1, s), Series(TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s), TransferFunction(5*s + 10, s + 10, s))), TransferFunction(1, 1, s))
+
+    """
     def __new__(cls, num, den):
         if not (isinstance(num, (TransferFunction, Series)) and num != den
             and isinstance(den, (TransferFunction, Series))):
-            raise TypeError("Unsupported type for numerator or denominator of Feedback.")
+            raise ValueError("Unsupported type for numerator or denominator of Feedback.")
 
         if not num.var == den.var:
-            raise ValueError("Both numerator and denominator should be anchored with the same variable.")
+            raise ValueError("Both numerator and denominator should be using the same complex variable.")
         obj = super(Feedback, cls).__new__(cls, num, den)
         obj._num = num
         obj._den = den
@@ -724,17 +925,100 @@ class Feedback(Basic):
 
     @property
     def num(self):
+        """
+        Returns the primary plant of the negative feedback closed loop.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
+        >>> controller = TransferFunction(5*s - 10, s + 7, s)
+        >>> F1 = Feedback(plant, controller)
+        >>> F1.num
+        TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
+        >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
+        >>> C = TransferFunction(5*p + 10, p + 10, p)
+        >>> P = TransferFunction(1 - s, p + 2, p)
+        >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
+        >>> F2.num
+        TransferFunction(1, 1, p)
+
+        """
         return self._num
 
     @property
     def den(self):
+        """
+        Returns the feedback plant (often a feedback controller) of the negative feedback closed loop.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
+        >>> controller = TransferFunction(5*s - 10, s + 7, s)
+        >>> F1 = Feedback(plant, controller)
+        >>> F1.den
+        TransferFunction(5*s - 10, s + 7, s)
+        >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
+        >>> C = TransferFunction(5*p + 10, p + 10, p)
+        >>> P = TransferFunction(1 - s, p + 2, p)
+        >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
+        >>> F2.den
+        Series(TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p), TransferFunction(5*p + 10, p + 10, p), TransferFunction(1 - s, p + 2, p))
+
+        """
         return self._den
 
     @property
     def var(self):
+        """
+        Returns the complex variable of the Laplace transform used by all the transfer functions of the negative feedback
+        closed loop.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
+        >>> controller = TransferFunction(5*s - 10, s + 7, s)
+        >>> F1 = Feedback(plant, controller)
+        >>> F1.var
+        s
+        >>> G = TransferFunction(2*s**2 + 5*s + 1, p**2 + 2*p + 3, p)
+        >>> C = TransferFunction(5*p + 10, p + 10, p)
+        >>> P = TransferFunction(1 - s, p + 2, p)
+        >>> F2 = Feedback(TransferFunction(1, 1, p), G*C*P)
+        >>> F2.var
+        p
+
+        """
         return self._var
 
     def doit(self, **kwargs):
+        """
+        Returns the resultant closed loop transfer function obtained by the negative feedback interconnection.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> plant = TransferFunction(3*s**2 + 7*s - 3, s**2 - 4*s + 2, s)
+        >>> controller = TransferFunction(5*s - 10, s + 7, s)
+        >>> F1 = Feedback(plant, controller)
+        >>> F1.doit()
+        TransferFunction((s + 7)*(s**2 - 4*s + 2)*(3*s**2 + 7*s - 3), ((s + 7)*(s**2 - 4*s + 2) + (5*s - 10)*(3*s**2 + 7*s - 3))*(s**2 - 4*s + 2), s)
+        >>> G = TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s)
+        >>> F2 = Feedback(G, TransferFunction(1, 1, s))
+        >>> F2.doit()
+        TransferFunction((s**2 + 2*s + 3)*(2*s**2 + 5*s + 1), (s**2 + 2*s + 3)*(3*s**2 + 7*s + 4), s)
+
+        """
         arg_list = list(self.num.args) if isinstance(self.num, Series) else [self.num]
         # F_n and F_d are resultant TFs of num and den of Feedback.
         F_n, tf = self.num.doit(), TransferFunction(1, 1, self.num.var)
