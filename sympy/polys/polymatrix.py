@@ -138,7 +138,8 @@ class DomainMatrix:
         return K, items_K
 
     def convert_to(self, K):
-        new_rows = [[K.convert(e) for e in row] for row in self.rows]
+        Kold = self.domain
+        new_rows = [[K.convert_from(e, Kold) for e in row] for row in self.rows]
         return DomainMatrix(new_rows, self.shape, K)
 
     def to_field(self):
