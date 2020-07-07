@@ -883,7 +883,8 @@ def solve(f, *symbols, **flags):
     ###########################################################################
     for i, fi in enumerate(f):
         if isinstance(fi, (Equality, Unequality)):
-            if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
+            if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args] \
+                or 'ImmutableDenseDomainMatrix' in [type(a).__name__ for a in fi.args]:
                 fi = fi.lhs - fi.rhs
             else:
                 L, R = fi.args
