@@ -815,8 +815,8 @@ class DenseDomainMatrix(DenseMatrix):
 
     def LUsolve(self, rhs, **kwargs):
         L, U, p = self.LUdecomposition()
-        y = _upper_triangular_solve(U, rhs)
-        x = _lower_triangular_solve(L, y)
+        y = _lower_triangular_solve(L, rhs)
+        x = _upper_triangular_solve(U, y)
         return x
 
     # called by __rmul__ in common.py

@@ -338,34 +338,31 @@ def lu_decomp(M):
         raise ValueError("Domain")
 
     rows = M.rows
-    N, n = M.shape
-    if N != n:
-        raise ValueError("Not square")
-    del n
+    N, O = M.shape
 
     lu = [row[:] for row in M.rows]
     swaps = []
 
-    for n in range(N):
+    for n in range(min(N, O)):
         if not lu[n][n]:
             for m in range(n+1, N):
                 if lu[m][n]:
                     swaps.append((n, m))
-                lu[n], lu[m] = lu[m], lu[n]
-                break
+                    lu[n], lu[m] = lu[m], lu[n]
+                    break
             else:
-                raise ValueError('Singular matrix')
+                break
         for i in range(n+1, N):
             l_in = lu[i][n] / lu[n][n]
             lu[i][n] = l_in
-            for j in range(n+1, N):
+            for j in range(n+1, O):
                 lu[i][j] -= l_in * lu[n][j]
 
     L = [[dom.one] + [dom.zero] * (N-1)]
     U = [lu[0]]
     for i in range(1, N):
-        L.append(lu[i][:i] + [dom.one] + [dom.zero] * (n-i))
+        L.append(lu[i][:i] + [dom.one] + [dom.zero] * (N-i))
         U.append([dom.zero] * i + lu[i][i:])
     L = DomainMatrix(L, (N, N), dom)
-    U = DomainMatrix(U, (N, N), dom)
+    U = DomainMatrix(U, (N, O), dom)
     return L, U, swaps
