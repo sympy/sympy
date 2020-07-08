@@ -72,8 +72,8 @@ def eqs_to_matrix(eqs_coeffs, eqs_rhs, gens, domain):
     rows = [[domain.zero] * ncols for _ in range(nrows)]
     for row, eq_coeff, eq_rhs in zip(rows, eqs_coeffs, eqs_rhs):
         for sym, coeff in eq_coeff.items():
-            row[sym2index[sym]] = coeff
-        row[-1] = -eq_rhs
+            row[sym2index[sym]] = domain.convert(coeff)
+        row[-1] = -domain.convert(eq_rhs)
 
     return DomainMatrix(rows, (nrows, ncols), domain)
 
