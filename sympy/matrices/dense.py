@@ -815,7 +815,13 @@ class DenseDomainMatrix(DenseMatrix):
 
     def LUsolve(self, rhs, **kwargs):
         L, U, p = self.LUdecomposition()
+        rhs = rhs.permute_rows(p)
         y = _lower_triangular_solve(L, rhs)
+        if U.rows != U.cols:
+            if y[U.cols:,:].is_zero_matrix is False:
+                raise ValueError("inconsistent")
+            U = U[:U.cols,:]
+            y = y[:U.cols,:]
         x = _upper_triangular_solve(U, y)
         return x
 
