@@ -337,7 +337,6 @@ def lu_decomp(M):
     if not dom.is_Field:
         raise ValueError("Domain")
 
-    rows = M.rows
     N, O = M.shape
 
     lu = [row[:] for row in M.rows]
