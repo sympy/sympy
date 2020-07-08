@@ -814,6 +814,8 @@ class DenseDomainMatrix(DenseMatrix):
         return L, U, p
 
     def LUsolve(self, rhs, **kwargs):
+        if self.rows < self.cols:
+            raise NotImplementedError("Underdetermined")
         L, U, p = self.LUdecomposition()
         rhs = rhs.permute_rows(p)
         y = _lower_triangular_solve(L, rhs)
@@ -822,7 +824,11 @@ class DenseDomainMatrix(DenseMatrix):
                 raise ValueError("inconsistent")
             U = U[:U.cols,:]
             y = y[:U.cols,:]
-        x = _upper_triangular_solve(U, y)
+        try:
+            x = _upper_triangular_solve(U, y)
+        except ValueError:
+            from .common import NonInvertibleMatrixError
+            raise NonInvertibleMatrixError
         return x
 
     # called by __rmul__ in common.py

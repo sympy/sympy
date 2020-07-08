@@ -361,7 +361,10 @@ def lu_decomp(M):
     L = [[dom.one] + [dom.zero] * (N-1)]
     U = [lu[0]]
     for i in range(1, N):
-        L.append(lu[i][:i] + [dom.one] + [dom.zero] * (N-i))
+        if i < O:
+            L.append(lu[i][:i] + [dom.one] + [dom.zero] * (N-i))
+        else:
+            L.append(lu[i] + [dom.zero] * (i-O) + [dom.one] + [dom.zero] * (N-i-1))
         U.append([dom.zero] * i + lu[i][i:])
     L = DomainMatrix(L, (N, N), dom)
     U = DomainMatrix(U, (N, O), dom)
