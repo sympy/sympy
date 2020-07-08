@@ -1,5 +1,6 @@
 from sympy import (symbols, Symbol, diff, Function, Derivative, Matrix, Rational, S,
                    I, Eq, sqrt)
+from sympy.core.containers import Tuple
 from sympy.functions import exp, cos, sin, log
 from sympy.matrices import dotprodsimp, NonSquareMatrixError
 from sympy.solvers.ode import dsolve
@@ -1236,6 +1237,13 @@ def test_sysode_linear_neq_order1_type4():
     assert checksysodesol(eqs8, sol8) == (True, [0, 0, 0, 0])
 
 
+def _remove_dummies(vec, t):
+    dummies = sorted(Tuple(*vec).free_symbols - {t}, key=lambda x: x.dummy_index)
+    dummies_to_constants = {d: Symbol('C{}'.format(i+1)) for i, d in enumerate(dummies)}
+
+    return [v.subs(dummies_to_constants) for v in vec]
+
+
 def test_linodesolve():
     t, x, a = symbols("t x a")
     f, g, h = symbols("f g h", cls=Function)
@@ -1259,7 +1267,7 @@ def test_linodesolve():
     sol = [C1*(-Rational(1, 2) + sqrt(5)/2)*exp(t*(-Rational(1, 2) + sqrt(5)/2)) + C2*(-sqrt(5)/2 - Rational(1, 2))*
            exp(t*(-sqrt(5)/2 - Rational(1, 2))),
             C1*exp(t*(-Rational(1, 2) + sqrt(5)/2)) + C2*exp(t*(-sqrt(5)/2 - Rational(1, 2)))]
-    assert linodesolve(A, t) == sol
+    assert _remove_dummies(linodesolve(A, t), t) == sol
 
     # Testing the Errors
     raises(ValueError, lambda: linodesolve(1, t, b=Matrix([t+1])))
@@ -1287,7 +1295,7 @@ def test_linodesolve():
     b1 = Matrix([15*t - 10, -15*t - 5])
     sol1 = [C1 + C2*t + C2 - 10*t**3 + 10*t**2 + t*(15*t**2 - 5*t) - 10*t,
             C1 + C2*t - 10*t**3 - 5*t**2 + t*(15*t**2 - 5*t) - 5*t]
-    assert linodesolve(A1, t, b=b1, type="type2", doit=True) == sol1
+    assert _remove_dummies(linodesolve(A1, t, b=b1, type="type2", doit=True), t) == sol1
 
     # Testing auto functionality
     func = [f(t), g(t)]
@@ -1303,7 +1311,7 @@ def test_linodesolve():
             t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2, C1*exp(-t/2 + sqrt(5)*t/2) +
             C2*exp(-sqrt(5)*t/2 - t/2) + exp(-t/2 + sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5,
             t) + exp(-sqrt(5)*t/2 - t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)]
-    assert linodesolve(A, t, b=b) == sol
+    assert _remove_dummies(linodesolve(A, t, b=b), t) == sol
 
     # non-homogeneous term assumed to be 0
     sol1 = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
@@ -1311,7 +1319,7 @@ def test_linodesolve():
             sqrt(5)*exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2
             - exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2, C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)
             + exp(-t/2 + sqrt(5)*t/2)*Integral(0, t) + exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)]
-    assert linodesolve(A, t, type="type2") == sol1
+    assert _remove_dummies(linodesolve(A, t, type="type2"), t) == sol1
 
     # Testing the Errors
     raises(ValueError, lambda: linodesolve(t+10, t))
@@ -1339,8 +1347,8 @@ def test_linodesolve():
     A = -A0
     sol = [(C1/2 - I*C2/2)*exp(I*t**2/2 + t) + (C1/2 + I*C2/2)*exp(-I*t**2/2 + t),
             (-I*C1/2 + C2/2)*exp(-I*t**2/2 + t) + (I*C1/2 + C2/2)*exp(I*t**2/2 + t)]
-    assert linodesolve(A, t) == sol
-    assert linodesolve(A, t, type="type3") == sol
+    assert _remove_dummies(linodesolve(A, t), t) == sol
+    assert _remove_dummies(linodesolve(A, t, type="type3"), t) == sol
 
     A1 = Matrix([[t, 1], [t, -1]])
     raises(NotImplementedError, lambda: linodesolve(A1, t))
@@ -1386,8 +1394,8 @@ def test_linodesolve():
         C1*_x1/3 - C1/3 + C2*_x1/3 + 2*C2/3 + C3*_x1/3 - C3/3 + 2*_x1*_x2/3 + _x1*_x3/3 + _x2/3 - _x3/3,
         C1*_x1/3 - C1/3 + C2*_x1/3 - C2/3 + C3*_x1/3 + 2*C3/3 + 2*_x1*_x2/3 + _x1*_x3/3 - 2*_x2/3 + 2*_x3/3,
     ]
-    assert linodesolve(A, x, b=b) == sol
-    assert linodesolve(A, x, b=b, type="type4") == sol
+    assert _remove_dummies(linodesolve(A, x, b=b), x) == sol
+    assert _remove_dummies(linodesolve(A, x, b=b, type="type4"), x) == sol
 
     A1 = Matrix([[t, 1], [t, -1]])
     raises(NotImplementedError, lambda: linodesolve(A1, t, b=b1))
@@ -1396,7 +1404,7 @@ def test_linodesolve():
     sol1 = [2*C1/3 - C2/3 - C3/3 + (C1/3 + C2/3 + C3/3)*exp(3*x**2/2),
              -C1/3 + 2*C2/3 - C3/3 + (C1/3 + C2/3 + C3/3)*exp(3*x**2/2),
              -C1/3 - C2/3 + 2*C3/3 + (C1/3 + C2/3 + C3/3)*exp(3*x**2/2)]
-    assert linodesolve(A, x, type="type4", doit=True) == sol1
+    assert _remove_dummies(linodesolve(A, x, type="type4", doit=True), x) == sol1
 
 
 @slow

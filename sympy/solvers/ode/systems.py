@@ -14,7 +14,7 @@ from sympy.polys import Poly
 from sympy.simplify import simplify, collect, powsimp, ratsimp
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError
-from sympy.utilities import numbered_symbols, default_sort_key
+from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import ordered, uniq
 from sympy.utilities.misc import filldedent
 from sympy.integrals.integrals import Integral, integrate
@@ -512,7 +512,7 @@ def matrix_exp_jordan_form(A, t):
     return P, expJ
 
 
-def linodesolve(A, t, b=None, B=None, type="auto", doit=False, const_idx=0):
+def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     r"""
     System of n equations linear first-order differential equations
 
@@ -728,8 +728,8 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False, const_idx=0):
 
     n = A.rows
 
-    constants = numbered_symbols(prefix='C', cls=Symbol, start=const_idx+1)
-    Cvect = Matrix(list(next(constants) for _ in range(n)))
+    # constants = numbered_symbols(prefix='C', cls=Dummy, start=const_idx+1)
+    Cvect = Matrix(list(Dummy() for _ in range(n)))
 
     if (type == "type2" or type == "type4") and b is None:
         b = zeros(n, 1)
@@ -1006,6 +1006,12 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
     # Linearity check
     try:
+
+        # Note: We can add a is_canon parameter to this
+        # function to check if the equation passed is
+        # already in its canonical form or not. This
+        # can be used to solve big linear first order
+        # system of ODEs using component division.
         canon_eqs = canonical_odes(eqs, funcs, t)
 
         if isinstance(canon_eqs[0], Eq):
@@ -1078,6 +1084,16 @@ def _preprocess_eqs(eqs):
     return processed_eqs
 
 
+def _replace_dummies(eqs, sol):
+
+    constants = sorted(Tuple(*sol).free_symbols - Tuple(*eqs).free_symbols,
+                       key=lambda x: x.dummy_index)
+    dummy_to_constants = {c: Symbol('C{}'.format(i+1)) for i, c, in enumerate(constants)}
+    sol = [s.subs(dummy_to_constants) for s in sol]
+
+    return sol
+
+
 # For now, this function returns a simple output, later it will
 # be capable of dividing the system of ODEs into strongly and
 # weakly connected components.
@@ -1093,11 +1109,10 @@ def _linear_ode_solver(match):
     rhs = match.get('rhs', None)
     A = -match['func_coeff']
     B = match.get('commutative_antiderivative', None)
-    const_idx = match['const_idx']
     type_of_equation = match['type_of_equation']
 
     sol_vector = linodesolve(A, t, b=rhs, B=B,
-                             type=type_of_equation, const_idx=const_idx)
+                             type=type_of_equation)
 
     sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
 
@@ -1107,7 +1122,7 @@ def _linear_ode_solver(match):
 # Returns: (List of equations, const_idx) or None
 # If None is returned by this solver, then the system
 # of ODEs cannot be solved by dsolve_system.
-def _ode_component_solver(eqs, funcs, t, const_idx=0):
+def _strong_component_solver(eqs, funcs, t):
     match = neq_nth_linear_constant_coeff_match(eqs, funcs, t)
 
     # Assuming that we can't get an implicit system
@@ -1115,7 +1130,7 @@ def _ode_component_solver(eqs, funcs, t, const_idx=0):
     # dsolve_system
     if match:
         if match.get('is_linear', False):
-            match.update({'const_idx': 0, 't': t})
+            match['t'] = t
             return _linear_ode_solver(match)
 
         # To add non-linear case here in future
@@ -1124,7 +1139,7 @@ def _ode_component_solver(eqs, funcs, t, const_idx=0):
 
 
 # Returns: List of Equations(a solution), const_idx
-def _weak_component_solver(wcc, t, const_idx):
+def _weak_component_solver(wcc, t):
     sol = []
 
     for j, scc in enumerate(wcc):
@@ -1133,7 +1148,7 @@ def _weak_component_solver(wcc, t, const_idx):
         # Substituting solutions for the dependent
         # variables solved in previous SCC, if any solved.
         comp_eqs = [eq.subs({s.lhs: s.rhs for s in sol}) for eq in eqs]
-        scc_sol = _ode_component_solver(comp_eqs, funcs, t, const_idx=const_idx)
+        scc_sol = _strong_component_solver(comp_eqs, funcs, t)
 
         if scc_sol is None:
             raise NotImplementedError(filldedent('''
@@ -1144,21 +1159,18 @@ def _weak_component_solver(wcc, t, const_idx):
         # scc_sol is a solution
         sol += scc_sol
 
-        const_idx += len(eqs)
+    return sol
 
-    return sol, const_idx
 
 # Returns: List of Equations(a solution)
 def _component_solver(eqs, funcs, t):
-    const_idx = 0
     components = _component_division(eqs, funcs)
     sol = []
 
     for wcc in components:
 
         # wcc_sol: List of Equations
-        wcc_sol, const_idx = _weak_component_solver(wcc, t, const_idx)
-        sol += wcc_sol
+        sol += _weak_component_solver(wcc, t)
 
     # sol: List of Equations
     return sol
@@ -1284,26 +1296,27 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None):
 
     sols = []
 
-    # Note: It is advantageous to
-    # divide a system of ODEs since smaller
-    # the matrices, faster the solution
-    # computation. Has to be considered in
-    # future.
-    if match.get('is_general', False):
-        if match.get('is_linear', False):
-            match.update({'const_idx': 0, 't': t})
-            sols.append(_linear_ode_solver(match))
+    if match is None or match.get('is_implicit', False):
+        canon_eqs = [eqs] if match is None else match['canon_eqs']
 
-    if match.get('is_implicit', False):
-        canon_eqs = match['canon_eqs']
-
-        # Assuming a canon_eq has a single
+        # Note: Assuming a canon_eq has a single
         # solution.
         for canon_eq in canon_eqs:
             sols.append(_component_solver(canon_eq, funcs, t))
 
-    if ics and sols:
-        ics_sols = []
+    # Note: It is advantageous to
+    # divide a system of ODEs since smaller
+    # the matrices, faster the solution
+    # computation. Has to be considered in
+    # future PR when component division function
+    # is added.
+    elif match.get('is_general', False):
+        if match.get('is_linear', False):
+            match.update({'const_idx': 0, 't': t})
+            sols.append(_linear_ode_solver(match))
+
+    if sols:
+        final_sols = []
 
         # This is assuming that all the solutions
         # have the same funcs. This may have to
@@ -1311,10 +1324,13 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None):
         # added.
         funcs = [s.lhs for s in sols[0]]
         for sol in sols:
-            constants = Tuple(*sol).free_symbols - Tuple(*eqs).free_symbols
-            solved_constants = solve_ics(sol, funcs, constants, ics)
-            ics_sols.append([s.subs(solved_constants) for s in sol])
+            sol = _replace_dummies(eqs, sol)
+            if ics:
+                constants = Tuple(*sol).free_symbols - Tuple(*eqs).free_symbols
+                solved_constants = solve_ics(sol, funcs, constants, ics)
+                sol = [s.subs(solved_constants) for s in sol]
+            final_sols.append(sol)
 
-        sols = ics_sols
+        sols = final_sols
 
     return sols
