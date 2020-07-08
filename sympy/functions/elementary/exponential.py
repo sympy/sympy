@@ -1004,6 +1004,7 @@ class LambertW(Function):
 
     .. [1] https://en.wikipedia.org/wiki/Lambert_W_function
     """
+    _singularities = (-Pow(S.Exp1, -1, evaluate=False), S.ComplexInfinity)
 
     @classmethod
     def eval(cls, x, k=None):
