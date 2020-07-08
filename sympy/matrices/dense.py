@@ -814,6 +814,8 @@ class DenseDomainMatrix(DenseMatrix):
         return L, U, p
 
     def LUsolve(self, rhs, **kwargs):
+        if not isinstance(rhs, DenseDomainMatrix):
+            return super().LUsolve(rhs, **kwargs)
         from sympy.polys.polymatrix import lu_solve
         rep = self._rep
         rhsrep = rhs._rep

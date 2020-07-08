@@ -358,11 +358,11 @@ def lu_decomp(M):
             for j in range(n+1, O):
                 lu[i][j] -= l_in * lu[n][j]
 
-    L = [[dom.one] + [dom.zero] * (N-1)]
-    U = [lu[0]]
-    for i in range(1, N):
+    L = []
+    U = []
+    for i in range(N):
         if i < O:
-            L.append(lu[i][:i] + [dom.one] + [dom.zero] * (N-i))
+            L.append(lu[i][:i] + [dom.one] + [dom.zero] * (N-i-1))
         else:
             L.append(lu[i] + [dom.zero] * (i-O) + [dom.one] + [dom.zero] * (N-i-1))
         U.append([dom.zero] * i + lu[i][i:])
