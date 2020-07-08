@@ -215,8 +215,10 @@ def cmoment(X, n, condition=None, **kwargs):
     >>> cmoment(X, 2) == variance(X)
     True
     """
-    mu = expectation(X, condition, **kwargs)
-    return moment(X, n, mu, condition, **kwargs)
+    from sympy.stats.symbolic_probability import CMoment
+    if kwargs.pop('evaluate', True):
+        return CMoment(X, n, condition).doit()
+    return CMoment(X, n, condition).rewrite(Integral)
 
 
 def smoment(X, n, condition=None, **kwargs):

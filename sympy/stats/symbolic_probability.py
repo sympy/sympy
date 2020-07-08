@@ -564,23 +564,47 @@ class Covariance(Expr):
 
 class Moment(Expr):
     """
-    Symbolic Moment class.
+    Symbolic class for Moment
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Integral
+    >>> from sympy.stats import Normal, Expectation, Probability, Moment
+    >>> mu = Symbol('mu', real=True)
+    >>> sigma = Symbol('sigma', real=True, positive=True)
+    >>> X = Normal('X', mu, sigma)
+    >>> M = Moment(X, 3, 1)
+
+    To evaluate the result of Moment use `doit`:
+    >>> M.doit()
+    mu**3 - 3*mu**2 + 3*mu*sigma**2 + 3*mu - 3*sigma**2 - 1
+
+    Rewrite the Moment expression in terms of Expectation:
+    >>> M.rewrite(Expectation)
+    Expectation((X - 1)**3)
+
+    Rewrite the Moment expression in terms of Probability:
+    >>> M.rewrite(Probability)
+    Integral((x - 1)**3*Probability(Eq(X, x)), (x, -oo, oo))
+
+    Rewrite the Moment expression in terms of Integral:
+    >>> M.rewrite(Integral)
+    Integral(sqrt(2)*(X - 1)**3*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo))
+
     """
     def __new__(cls, X, n, c=0, condition=None, **kwargs):
-        if not is_random(X):
-            return X
+        X = _sympify(X)
         n = _sympify(n)
         c = _sympify(c)
         if condition is not None:
             condition = _sympify(condition)
-            obj = Expr.__new__(cls, X, n, c, condition)
-        else:
-            obj = Expr.__new__(cls, X, n, c)
-        obj._condition = condition
-        return obj
+        return Expr.__new__(cls, X, n, c, condition)
 
     def doit(self, **hints):
-        return self.rewrite(Expectation).doit()
+        if not is_random(self.args[0]):
+            return self.args[0]
+        return self.rewrite(Expectation).doit(**hints)
 
     def _eval_rewrite_as_Expectation(self, X, n, c=0, condition=None, **kwargs):
         return Expectation((X - c)**n, condition)
@@ -589,4 +613,57 @@ class Moment(Expr):
         return self.rewrite(Expectation).rewrite(Probability)
 
     def _eval_rewrite_as_Integral(self, X, n, c=0, condition=None, **kwargs):
+        return self.rewrite(Expectation).rewrite(Integral)
+
+class CMoment(Expr):
+    """
+    Symbolic class Central Moment
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Integral
+    >>> from sympy.stats import Normal, Expectation, Probability, CMoment
+    >>> mu = Symbol('mu', real=True)
+    >>> sigma = Symbol('sigma', real=True, positive=True)
+    >>> X = Normal('X', mu, sigma)
+    >>> CM = CMoment(X, 4)
+
+    To evaluate the result of CMoment use `doit`:
+    >>> CM.doit().simplify()
+    3*sigma**4
+
+    Rewrite the CMoment expression in terms of Expectation:
+    >>> CM.rewrite(Expectation)
+    Expectation((X - Expectation(X))**4)
+
+    Rewrite the CMoment expression in terms of Probability:
+    >>> CM.rewrite(Probability)
+    Integral((x - Integral(x*Probability(True), (x, -oo, oo)))**4*Probability(Eq(X, x)), (x, -oo, oo))
+
+    Rewrite the CMoment expression in terms of Integral:
+    >>> CM.rewrite(Integral)
+    Integral(sqrt(2)*(X - Integral(sqrt(2)*X*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo)))**4*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo))
+
+    """
+    def __new__(cls, X, n, condition=None, **kwargs):
+        X = _sympify(X)
+        n = _sympify(n)
+        if condition is not None:
+            condition = _sympify(condition)
+        return Expr.__new__(cls, X, n, condition)
+
+    def doit(self, **hints):
+        if not is_random(self.args[0]):
+            return self.args[0]
+        return self.rewrite(Expectation).doit(**hints)
+
+    def _eval_rewrite_as_Expectation(self, X, n, condition=None, **kwargs):
+        mu = Expectation(X, condition, **kwargs)
+        return Moment(X, n, mu, condition, **kwargs).rewrite(Expectation)
+
+    def _eval_rewrite_as_Probability(self, X, n, condition=None, **kwargs):
+        return self.rewrite(Expectation).rewrite(Probability)
+
+    def _eval_rewrite_as_Integral(self, X, n, condition=None, **kwargs):
         return self.rewrite(Expectation).rewrite(Integral)

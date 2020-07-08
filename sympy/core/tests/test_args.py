@@ -1199,7 +1199,14 @@ def test_sympy__stats__symbolic_probability__Moment():
     from sympy.stats.symbolic_probability import Moment
     from sympy.stats import Normal
     X = Normal('X', 0, 1)
-    assert _test_args(Moment(X, 3, 2))
+    assert _test_args(Moment(X, 3, 2, X > 3))
+
+
+def test_sympy__stats__symbolic_probability__CMoment():
+    from sympy.stats.symbolic_probability import CMoment
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(CMoment(X, 2, X > 1))
 
 
 def test_sympy__stats__frv_types__DiscreteUniformDistribution():
