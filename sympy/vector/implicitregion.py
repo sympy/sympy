@@ -1,7 +1,7 @@
 from sympy import tan, pi
 from sympy.abc import theta
 from sympy.core import expand_trig, Eq
-from sympy.solvers import solve
+from sympy.solvers import solveset
 from sympy.simplify.trigsimp import trigsimp
 from sympy.vector import ParametricRegion
 
@@ -40,14 +40,14 @@ def ImplicitConicSection(equation, x, y):
     # Needs to find a better way than random looping.
     for i in range(100):
         eq = equation.subs(x, i)
-        if len(solve(eq, y)) > 0:
+        if len(solveset(eq, y)) > 0:
             p_x = i
-            p_y = solve(eq, y)[0]
+            p_y = next(iter(solveset(eq, y)))
             break
 
     y_dash = tan(theta)*(x- p_x) + p_y
     eq2 = equation.subs(y, y_dash)
-    x_par_list = solve(eq2, x)
+    x_par_list = solveset(eq2, x)
 
     for x_ in x_par_list:
         if x_ != p_x:
