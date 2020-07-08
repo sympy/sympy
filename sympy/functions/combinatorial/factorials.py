@@ -626,9 +626,15 @@ class RisingFactorial(CombinatorialFunction):
 
     def _eval_rewrite_as_gamma(self, x, k, **kwargs):
         from sympy import gamma, Piecewise
-        return Piecewise(
-            (gamma(x + k)/gamma(x), x > 0),
-            ((-1)**k*gamma(1 - x)/gamma(-k - x + 1), True))
+        if kwargs.get('piecewise', True):
+            return Piecewise(
+            (gamma(x + k) / gamma(x), x > 0),
+            ((-1)**k*gamma(1 - x) / gamma(-k - x + 1), True))
+        if (x > 0) == True:
+            return gamma(x + k) / gamma(x)
+        elif (x <= 0) == True:
+            return (-1)**k*gamma(1 - x) / gamma(-k - x + 1)
+        return gamma(x + k) / gamma(x)
 
     def _eval_rewrite_as_FallingFactorial(self, x, k, **kwargs):
         return FallingFactorial(x + k - 1, k)
@@ -768,10 +774,15 @@ class FallingFactorial(CombinatorialFunction):
 
     def _eval_rewrite_as_gamma(self, x, k, **kwargs):
         from sympy import gamma, Piecewise
-
-        return Piecewise(
+        if kwargs.get('piecewise', True):
+            return Piecewise(
             (gamma(x + 1) / gamma(x - k + 1), x >= 0),
             ((-1)**k*gamma(k - x) / gamma(-x), True))
+        if (x >= 0) == True:
+            return gamma(x + 1) / gamma(x - k + 1)
+        elif (x < 0) == True:
+            return (-1)**k*gamma(k - x) / gamma(-x)
+        return gamma(x + 1) / gamma(x - k + 1)
 
     def _eval_rewrite_as_RisingFactorial(self, x, k, **kwargs):
         return rf(x - k + 1, k)
