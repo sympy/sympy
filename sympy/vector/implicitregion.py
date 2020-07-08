@@ -1,7 +1,7 @@
 from sympy import tan, pi
 from sympy.abc import theta
 from sympy.core import expand_trig, Eq
-from sympy.solvers import solveset
+from sympy.solvers import solveset, nonlinsolve
 from sympy.simplify.trigsimp import trigsimp
 from sympy.vector import ParametricRegion
 
@@ -36,14 +36,16 @@ def ImplicitConicSection(equation, x, y):
     if isinstance(equation, Eq):
         equation = equation.lhs - equation.rhs
 
-    # Finding  a point on the Curve.
-    # Needs to find a better way than random looping.
-    for i in range(100):
-        eq = equation.subs(x, i)
-        if len(solveset(eq, y)) > 0:
-            p_x = i
-            p_y = next(iter(solveset(eq, y)))
-            break
+    diff_x = diff(equation, x)
+    diff_y = diff(equation, y)
+    
+    singular_points = nonlinsolve([equation, diff_x, diff_y], x, y)
+    
+    if len(singular_points) == 0:
+        # No singular points
+        raise ValueError()
+
+    p_x, p_y = next(iter(singular_points))
 
     y_dash = tan(theta)*(x- p_x) + p_y
     eq2 = equation.subs(y, y_dash)
