@@ -579,9 +579,11 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         # connected components. This have to
         # changed to show the systems that haven't
         # been solved.
-        sol = dsolve_system(eq, funcs=func, ics=ics)
-        if sol[0]:
-            return sol[0] if len(sol[0]) > 1 else sol[0][0]
+        try:
+            sol = dsolve_system(eq, funcs=func, ics=ics)
+            return sol[0] if len(sol) == 1 else sol
+        except NotImplementedError:
+            pass
 
         match = classify_sysode(eq, func)
 

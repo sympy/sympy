@@ -1771,11 +1771,11 @@ def test_dsolve_system():
     raises(ValueError, lambda: dsolve_system(eqs, funcs[:1], x))
 
     eq = (Eq(f(x).diff(x), 12 * f(x) - 6 * g(x)), Eq(g(x).diff(x) ** 2, 11 * f(x) + 3 * g(x)))
-    assert dsolve_system(eq) == ([], [])
+    raises(NotImplementedError, lambda: dsolve_system(eq) == ([], []))
 
-    assert dsolve_system(eq, funcs=[f(x), g(x)]) == ([], [])
-    assert dsolve_system(eq, funcs=[f(x), g(x)], t=x) == ([], [])
-    assert dsolve_system(eq, funcs=[f(x), g(x)], t=x, ics={f(0): 1, g(0): 1}) == ([], [])
-    assert dsolve_system(eq, t=x, ics={f(0): 1, g(0): 1}) == ([], [])
-    assert dsolve_system(eq, ics={f(0): 1, g(0): 1}) == ([], [])
-    assert dsolve_system(eq, funcs=[f(x), g(x)], ics={f(0): 1, g(0): 1}) == ([], [])
+    raises(NotImplementedError, lambda: dsolve_system(eq, funcs=[f(x), g(x)]) == ([], []))
+    raises(NotImplementedError, lambda: dsolve_system(eq, funcs=[f(x), g(x)], t=x) == ([], []))
+    raises(NotImplementedError, lambda: dsolve_system(eq, funcs=[f(x), g(x)], t=x, ics={f(0): 1, g(0): 1}) == ([], []))
+    raises(NotImplementedError, lambda: dsolve_system(eq, t=x, ics={f(0): 1, g(0): 1}) == ([], []))
+    raises(NotImplementedError, lambda: dsolve_system(eq, ics={f(0): 1, g(0): 1}) == ([], []))
+    raises(NotImplementedError, lambda: dsolve_system(eq, funcs=[f(x), g(x)], ics={f(0): 1, g(0): 1}) == ([], []))
