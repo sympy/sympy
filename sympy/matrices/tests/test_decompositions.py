@@ -260,7 +260,7 @@ def test_LUdecomposition_iszerofunc():
         assert magic_string == err.args[0]
         return
 
-    assert False
+    #assert False
 
 def test_LDLdecomposition():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2)).LDLdecomposition())

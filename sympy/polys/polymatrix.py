@@ -328,3 +328,44 @@ def rref(rows, shape):
                     rows[rk][ck] = rows[rk][ck] - pivotk * rows[ri][ck]
         ri += 1
     return rows, pivots
+
+
+def lu_decomp(M):
+
+    dom = M.domain
+
+    if not dom.is_Field:
+        raise ValueError("Domain")
+
+    rows = M.rows
+    N, n = M.shape
+    if N != n:
+        raise ValueError("Not square")
+    del n
+
+    lu = [row[:] for row in M.rows]
+    swaps = []
+
+    for n in range(N):
+        if not lu[n][n]:
+            for m in range(n+1, N):
+                if lu[m][n]:
+                    swaps.append((n, m))
+                lu[n], lu[m] = lu[m], lu[n]
+                break
+            else:
+                raise ValueError('Singular matrix')
+        for i in range(n+1, N):
+            l_in = lu[i][n] / lu[n][n]
+            lu[i][n] = l_in
+            for j in range(n+1, N):
+                lu[i][j] -= l_in * lu[n][j]
+
+    L = [[dom.one] + [dom.zero] * (N-1)]
+    U = [lu[0]]
+    for i in range(1, N):
+        L.append(lu[i][:i] + [dom.one] + [dom.zero] * (n-i))
+        U.append([dom.zero] * i + lu[i][i:])
+    L = DomainMatrix(L, (N, N), dom)
+    U = DomainMatrix(U, (N, N), dom)
+    return L, U, swaps

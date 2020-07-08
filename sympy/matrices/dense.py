@@ -801,9 +801,23 @@ class DenseDomainMatrix(DenseMatrix):
 
     def det(self, *args, **kwargs):
         rep = self._rep
-        #if not rep.domain.is_Field:
-        #    rep = rep.to_field()
         return rep.domain.to_sympy(rep.det())
+
+    def LUdecomposition(self, *args, **kwargs):
+        from sympy.polys.polymatrix import lu_decomp
+        rep = self._rep
+        if not rep.domain.is_Field:
+            rep = rep.to_field()
+        L, U, p = lu_decomp(rep)
+        L = self.from_DomainMatrix(L)
+        U = self.from_DomainMatrix(U)
+        return L, U, p
+
+    def LUsolve(self, rhs, **kwargs):
+        L, U, p = self.LUdecomposition()
+        y = _upper_triangular_solve(U, rhs)
+        x = _lower_triangular_solve(L, y)
+        return x
 
     # called by __rmul__ in common.py
     def _eval_scalar_mul(self, other):
