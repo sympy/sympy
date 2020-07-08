@@ -10,7 +10,7 @@ from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _s
 from .singleton import S, Singleton
 from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
-from .decorators import _sympifyit
+from .decorators import _sympifyit, call_highest_priority
 from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
 from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS,
@@ -1028,6 +1028,8 @@ class Float(Number):
 
     is_Float = True
 
+    _op_priority = 10.0003
+
     def __new__(cls, num, dps=None, prec=None, precision=None):
         if prec is not None:
             SymPyDeprecationWarning(
@@ -1594,6 +1596,8 @@ class Rational(Number):
 
     is_Rational = True
 
+    _op_priority = 10.0001
+
     @cacheit
     def __new__(cls, p, q=None, gcd=None):
         if q is None:
@@ -1685,6 +1689,12 @@ class Rational(Number):
     def __getnewargs__(self):
         return (self.p, self.q)
 
+    @classmethod
+    def _classof(cls, *args):
+        if cls._op_priority > Rational._op_priority:
+            return cls(*args)
+        return Rational(*args)
+
     def _hashable_content(self):
         return (self.p, self.q)
 
@@ -1695,100 +1705,82 @@ class Rational(Number):
         return self.p == 0
 
     def __neg__(self):
-        return self.__class__(-self.p, self.q)
+        return self._classof(-self.p, self.q)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__radd__')
     def __add__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(self.p + self.q*other.p, self.q, 1)
-            elif isinstance(other, DecimalRational):
-                return other + self
+                return self._classof(self.p + self.q*other.p, self.q, 1)
             elif isinstance(other, Rational):
                 #TODO: this can probably be optimized more
-                return Rational(self.p*other.q + self.q*other.p, self.q*other.q)
-            elif isinstance(other, Float):
-                return other + self
+                return self._classof(self.p*other.q + self.q*other.p, self.q*other.q)
             else:
                 return Number.__add__(self, other)
         return Number.__add__(self, other)
     __radd__ = __add__
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rsub__')
     def __sub__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(self.p - self.q*other.p, self.q, 1)
-            elif isinstance(other, DecimalRational):
-                return -other + self
+                return self._classof(self.p - self.q*other.p, self.q, 1)
             elif isinstance(other, Rational):
-                return Rational(self.p*other.q - self.q*other.p, self.q*other.q)
-            elif isinstance(other, Float):
-                return -other + self
+                return self._classof(self.p*other.q - self.q*other.p, self.q*other.q)
             else:
                 return Number.__sub__(self, other)
         return Number.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__sub__')
     def __rsub__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(self.q*other.p - self.p, self.q, 1)
-            elif isinstance(other, DecimalRational):
-                return -self + other
+                return self._classof(self.q*other.p - self.p, self.q, 1)
             elif isinstance(other, Rational):
-                return Rational(self.q*other.p - self.p*other.q, self.q*other.q)
-            elif isinstance(other, Float):
-                return -self + other
+                return self._classof(self.q*other.p - self.p*other.q, self.q*other.q)
             else:
                 return Number.__rsub__(self, other)
         return Number.__rsub__(self, other)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(self.p*other.p, self.q, igcd(other.p, self.q))
-            elif isinstance(other, DecimalRational):
-                return other*self
+                return self._classof(self.p*other.p, self.q, igcd(other.p, self.q))
             elif isinstance(other, Rational):
-                return Rational(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
-            elif isinstance(other, Float):
-                return other*self
+                return self._classof(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
             else:
                 return Number.__mul__(self, other)
         return Number.__mul__(self, other)
     __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rdiv__')
     def __div__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
                 if self.p and other.p == S.Zero:
                     return S.ComplexInfinity
                 else:
-                    return Rational(self.p, self.q*other.p, igcd(self.p, other.p))
-            elif isinstance(other, DecimalRational):
-                return self*(1/other)
+                    return self._classof(self.p, self.q*other.p, igcd(self.p, other.p))
             elif isinstance(other, Rational):
-                return Rational(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
-            elif isinstance(other, Float):
-                return self*(1/other)
+                return self._classof(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
             else:
                 return Number.__div__(self, other)
         return Number.__div__(self, other)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__div__')
     def __rdiv__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(other.p*self.q, self.p, igcd(self.p, other.p))
-            elif isinstance(other, DecimalRational):
-                return other*(1/self)
+                return self._classof(other.p*self.q, self.p, igcd(self.p, other.p))
             elif isinstance(other, Rational):
-                return Rational(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
-            elif isinstance(other, Float):
-                return other*(1/self)
+                return self._classof(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
             else:
                 return Number.__rdiv__(self, other)
         return Number.__rdiv__(self, other)
@@ -1858,7 +1850,7 @@ class Rational(Number):
         return mpmath.make_mpf(mlib.from_rational(self.p, self.q, prec, rnd))
 
     def __abs__(self):
-        return self.__class__(abs(self.p), self.q)
+        return self._classof(abs(self.p), self.q)
 
     def __int__(self):
         p, q = self.p, self.q
@@ -2072,6 +2064,8 @@ class DecimalRational(Rational):
     """
     is_DecimalRational = True
 
+    _op_priority = 10.0002
+
     @cacheit
     def __new__(cls, *args):
         obj = super().__new__(cls, *args)
@@ -2081,90 +2075,6 @@ class DecimalRational(Rational):
             obj.p = p
             obj.q = q
         return obj
-
-    @_sympifyit('other', NotImplemented)
-    def __add__(self, other):
-        if global_parameters.evaluate:
-            if isinstance(other, Integer):
-                return self.__class__(self.p + self.q*other.p, self.q, 1)
-            elif isinstance(other, Rational):
-                return self.__class__(self.p*other.q + self.q*other.p, self.q*other.q)
-            elif isinstance(other, Float):
-                return other + self
-            else:
-                return Number.__add__(self, other)
-        return Number.__add__(self, other)
-    __radd__ = __add__
-
-    @_sympifyit('other', NotImplemented)
-    def __sub__(self, other):
-        if global_parameters.evaluate:
-            if isinstance(other, Integer):
-                return self.__class__(self.p - self.q*other.p, self.q, 1)
-            elif isinstance(other, Rational):
-                return self.__class__(self.p*other.q - self.q*other.p, self.q*other.q)
-            elif isinstance(other, Float):
-                return -other + self
-            else:
-                return Number.__sub__(self, other)
-        return Number.__sub__(self, other)
-
-    @_sympifyit('other', NotImplemented)
-    def __rsub__(self, other):
-        if global_parameters.evaluate:
-            if isinstance(other, Integer):
-                return self.__class__(self.q*other.p - self.p, self.q, 1)
-            elif isinstance(other, Rational):
-                return self.__class__(self.q*other.p - self.p*other.q, self.q*other.q)
-            elif isinstance(other, Float):
-                return -self + other
-            else:
-                return Number.__rsub__(self, other)
-        return Number.__rsub__(self, other)
-
-    @_sympifyit('other', NotImplemented)
-    def __mul__(self, other):
-        if global_parameters.evaluate:
-            if isinstance(other, Integer):
-                return self.__class__(self.p*other.p, self.q, igcd(other.p, self.q))
-            elif isinstance(other, Rational):
-                return self.__class__(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
-            elif isinstance(other, Float):
-                return other*self
-            else:
-                return Number.__mul__(self, other)
-        return Number.__mul__(self, other)
-    __rmul__ = __mul__
-
-    @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
-        if global_parameters.evaluate:
-            if isinstance(other, Integer):
-                if self.p and other.p == S.Zero:
-                    return S.ComplexInfinity
-                else:
-                    return self.__class__(self.p, self.q*other.p, igcd(self.p, other.p))
-            elif isinstance(other, Rational):
-                return self.__class__(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
-            elif isinstance(other, Float):
-                return self*(1/other)
-            else:
-                return Number.__div__(self, other)
-        return Number.__div__(self, other)
-
-    @_sympifyit('other', NotImplemented)
-    def __rdiv__(self, other):
-        if global_parameters.evaluate:
-            if isinstance(other, Integer):
-                return self.__class__(other.p*self.q, self.p, igcd(self.p, other.p))
-            elif isinstance(other, Rational):
-                return self.__class__(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
-            elif isinstance(other, Float):
-                return other*(1/self)
-            else:
-                return Number.__rdiv__(self, other)
-        return Number.__rdiv__(self, other)
-    __truediv__ = __div__
 
     def _eval_power(self, expt):
         if isinstance(expt, Number):
@@ -2239,6 +2149,8 @@ class Integer(Rational):
     is_Integer = True
 
     __slots__ = ('p',)
+
+    _op_priority = 10.0000
 
     def _as_mpf_val(self, prec):
         return mlib.from_int(self.p, prec, rnd)
@@ -2324,57 +2236,46 @@ class Integer(Rational):
                 raise TypeError(msg % (oname, sname))
             return Number.__divmod__(other, self)
 
-    # TODO make it decorator + bytecodehacks?
+    # TODO bytecodehacks?
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__radd__')
     def __add__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, int):
-                return Integer(self.p + other)
-            elif isinstance(other, Integer):
+            if isinstance(other, Integer):
                 return Integer(self.p + other.p)
-            elif isinstance(other, DecimalRational):
-                return other + self
-            elif isinstance(other, Rational):
-                return Rational(self.p*other.q + other.p, other.q, 1)
-            return Rational.__add__(self, other)
-        else:
-            return Add(self, other)
+            else:
+                return Rational.__add__(self, other)
+        return Rational.__add__(self, other)
     __radd__ = __add__
 
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rsub__')
     def __sub__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, int):
-                return Integer(self.p - other)
-            elif isinstance(other, Integer):
+            if isinstance(other, Integer):
                 return Integer(self.p - other.p)
-            elif isinstance(other, DecimalRational):
-                return -other + self
-            elif isinstance(other, Rational):
-                return Rational(self.p*other.q - other.p, other.q, 1)
-            return Rational.__sub__(self, other)
+            else:
+                return Rational.__sub__(self, other)
         return Rational.__sub__(self, other)
 
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__sub__')
     def __rsub__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, int):
-                return Integer(other - self.p)
-            elif isinstance(other, DecimalRational):
-                return -self + other
-            elif isinstance(other, Rational):
-                return Rational(other.p - self.p*other.q, other.q, 1)
-            return Rational.__rsub__(self, other)
+            if isinstance(other, Integer):
+                return Integer(other.p - self.p)
+            else:
+                return Rational.__rsub__(self, other)
         return Rational.__rsub__(self, other)
 
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
         if global_parameters.evaluate:
-            if isinstance(other, int):
-                return Integer(self.p*other)
-            elif isinstance(other, Integer):
+            if isinstance(other, Integer):
                 return Integer(self.p*other.p)
-            elif isinstance(other, DecimalRational):
-                return other*self
-            elif isinstance(other, Rational):
-                return Rational(self.p*other.p, other.q, igcd(self.p, other.q))
-            return Rational.__mul__(self, other)
+            else:
+                return Rational.__mul__(self, other)
         return Rational.__mul__(self, other)
     __rmul__ = __mul__
 
@@ -2945,10 +2846,6 @@ class Half(RationalConstant, metaclass=Singleton):
     @staticmethod
     def __abs__():
         return S.Half
-
-    @staticmethod
-    def __neg__():
-        return Rational(-1,2)
 
 
 class Infinity(Number, metaclass=Singleton):
