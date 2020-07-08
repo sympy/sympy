@@ -814,22 +814,14 @@ class DenseDomainMatrix(DenseMatrix):
         return L, U, p
 
     def LUsolve(self, rhs, **kwargs):
-        if self.rows < self.cols:
-            raise NotImplementedError("Underdetermined")
-        L, U, p = self.LUdecomposition()
-        rhs = rhs.permute_rows(p)
-        y = _lower_triangular_solve(L, rhs)
-        if U.rows != U.cols:
-            if y[U.cols:,:].is_zero_matrix is False:
-                raise ValueError("inconsistent")
-            U = U[:U.cols,:]
-            y = y[:U.cols,:]
-        try:
-            x = _upper_triangular_solve(U, y)
-        except ValueError:
-            from .common import NonInvertibleMatrixError
-            raise NonInvertibleMatrixError
-        return x
+        from sympy.polys.polymatrix import lu_solve
+        rep = self._rep
+        rhsrep = rhs._rep
+        if not rep.domain.is_Field:
+            rep = rep.to_field()
+        rep, rhsrep = rep.unify(rhsrep)
+        x = lu_solve(rep, rhsrep)
+        return self.from_DomainMatrix(x)
 
     # called by __rmul__ in common.py
     def _eval_scalar_mul(self, other):

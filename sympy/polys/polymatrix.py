@@ -351,7 +351,8 @@ def lu_decomp(M):
                     lu[n], lu[m] = lu[m], lu[n]
                     break
             else:
-                break
+                # M = Matrix([[1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 1, 1], [0, 0, 1, 2]])
+                continue
         for i in range(n+1, N):
             l_in = lu[i][n] / lu[n][n]
             lu[i][n] = l_in
@@ -366,6 +367,58 @@ def lu_decomp(M):
         else:
             L.append(lu[i] + [dom.zero] * (i-O) + [dom.one] + [dom.zero] * (N-i-1))
         U.append([dom.zero] * i + lu[i][i:])
+
     L = DomainMatrix(L, (N, N), dom)
     U = DomainMatrix(U, (N, O), dom)
+
     return L, U, swaps
+
+
+def lu_solve(M, b):
+    if M.domain != b.domain:
+        raise ValueError("Domain")
+
+    dom = M.domain
+    m, n = M.shape
+    m2, o = b.shape
+
+    if m != m2:
+        raise ShapeError("Shape")
+    if m < n:
+        raise NotImplementedError("Underdetermined")
+
+    L, U, swaps = lu_decomp(M)
+
+    b_rows = [row[:] for row in b.rows]
+    if swaps:
+        for i1, i2 in swaps:
+            b_rows[i1], b_rows[i2] = b_rows[i2], b_rows[i1]
+
+    # solve Ly = b
+    y = [[None] * o for _ in range(m)]
+    for k in range(o):
+        for i in range(m):
+            rhs = b_rows[i][k]
+            for j in range(i):
+                rhs -= L.rows[i][j] * y[j][k]
+            y[i][k] = rhs
+
+    if m > n:
+        for i in range(n, m):
+            for j in range(o):
+                if y[i][j]:
+                    raise NonInvertibleMatrixError
+
+    # Solve Ux = y
+    x = [[None] * o for _ in range(n)]
+    for k in range(o):
+        for i in reversed(range(n)):
+            if not U.rows[i][i]:
+                raise NonInvertibleMatrixError
+            rhs = y[i][k]
+            for j in range(i+1, n):
+                rhs -= U.rows[i][j] * x[j][k]
+            x[i][k] = rhs / U.rows[i][i]
+
+    x = DomainMatrix(x, (n, o), dom)
+    return x
