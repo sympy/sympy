@@ -6,7 +6,7 @@ from sympy.core.compatibility import reduce, HAS_GMPY
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
-from sympy.core.relational import Eq, Ge
+from sympy.core.relational import Eq
 from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly
 
@@ -525,9 +525,8 @@ class RisingFactorial(CombinatorialFunction):
     Examples
     ========
 
-    >>> from sympy import rf, symbols, factorial, ff, binomial, Poly
+    >>> from sympy import rf, Poly
     >>> from sympy.abc import x
-    >>> n, k = symbols('n k', integer=True)
     >>> rf(x, 0)
     1
     >>> rf(1, 5)
@@ -537,14 +536,22 @@ class RisingFactorial(CombinatorialFunction):
     >>> rf(Poly(x**3, x), 2)
     Poly(x**6 + 3*x**5 + 3*x**4 + x**3, x, domain='ZZ')
 
-    Rewrite
+    Rewriting is complicated unless the relationship between
+    the arguments is known, but rising factorial can
+    be rewritten in terms of gamma, factorial and binomial
+    and falling factorial.
 
-    >>> rf(x, k).rewrite(ff)
-    FallingFactorial(k + x - 1, k)
-    >>> rf(x, k).rewrite(binomial)
-    binomial(k + x - 1, k)*factorial(k)
-    >>> rf(n, k).rewrite(factorial)
-    factorial(k + n - 1)/factorial(n - 1)
+    >>> from sympy import Symbol, factorial, ff, binomial, gamma
+    >>> n = Symbol('n', integer=True, positive=True)
+    >>> R = rf(n, n + 2)
+    >>> for i in (rf, ff, factorial, binomial, gamma):
+    ...  R.rewrite(i)
+    ...
+    RisingFactorial(n, n + 2)
+    FallingFactorial(2*n + 1, n + 2)
+    factorial(2*n + 1)/factorial(n - 1)
+    binomial(2*n + 1, n + 2)*factorial(n + 2)
+    gamma(2*n + 2)/gamma(n)
 
     See Also
     ========
@@ -618,8 +625,10 @@ class RisingFactorial(CombinatorialFunction):
                 return S.Zero
 
     def _eval_rewrite_as_gamma(self, x, k, **kwargs):
-        from sympy import gamma
-        return gamma(x + k) / gamma(x)
+        from sympy import gamma, Piecewise
+        return Piecewise(
+            (gamma(x + k)/gamma(x), x > 0),
+            ((-1)**k*gamma(1 - x)/gamma(-k - x + 1), True))
 
     def _eval_rewrite_as_FallingFactorial(self, x, k, **kwargs):
         return FallingFactorial(x + k - 1, k)
@@ -660,30 +669,37 @@ class FallingFactorial(CombinatorialFunction):
     Factorial Factorization and Symbolic Summation", Journal of
     Symbolic Computation, vol. 20, pp. 235-268, 1995.
 
-    >>> from sympy import ff, factorial, rf, gamma, binomial, symbols, Poly
-    >>> from sympy.abc import x, k
-    >>> n, m = symbols('n m', integer=True)
+    >>> from sympy import ff, Poly, Symbol
+    >>> from sympy.abc import x
+    >>> n = Symbol('n', integer=True)
+
     >>> ff(x, 0)
     1
     >>> ff(5, 5)
     120
-    >>> ff(x, 5) == x*(x-1)*(x-2)*(x-3)*(x-4)
+    >>> ff(x, 5) == x*(x - 1)*(x - 2)*(x - 3)*(x - 4)
     True
     >>> ff(Poly(x**2, x), 2)
     Poly(x**4 - 2*x**3 + x**2, x, domain='ZZ')
     >>> ff(n, n)
     factorial(n)
 
-    Rewrite
+    Rewriting is complicated unless the relationship between
+    the arguments is known, but falling factorial can
+    be rewritten in terms of gamma, factorial and binomial
+    and rising factorial.
 
-    >>> ff(x, k).rewrite(gamma)
-    Piecewise((gamma(x + 1)/gamma(-k + x + 1), x >= 0), ((-1)**k*gamma(k - x)/gamma(-x), True))
-    >>> ff(x, k).rewrite(rf)
-    RisingFactorial(-k + x + 1, k)
-    >>> ff(x, m).rewrite(binomial)
-    binomial(x, m)*factorial(m)
-    >>> ff(n, m).rewrite(factorial)
-    factorial(n)/factorial(-m + n)
+    >>> from sympy import factorial, rf, gamma, binomial, Symbol
+    >>> n = Symbol('n', integer=True, positive=True)
+    >>> F = ff(n, n - 2)
+    >>> for i in (rf, ff, factorial, binomial, gamma):
+    ...  F.rewrite(i)
+    ...
+    RisingFactorial(3, n - 2)
+    FallingFactorial(n, n - 2)
+    factorial(n)/2
+    binomial(n, n - 2)*factorial(n - 2)
+    gamma(n + 1)/2
 
     See Also
     ========
@@ -754,7 +770,7 @@ class FallingFactorial(CombinatorialFunction):
         from sympy import gamma, Piecewise
 
         return Piecewise(
-            (gamma(x + 1) / gamma(x - k + 1), Ge(x, 0)),
+            (gamma(x + 1) / gamma(x - k + 1), x >= 0),
             ((-1)**k*gamma(k - x) / gamma(-x), True))
 
     def _eval_rewrite_as_RisingFactorial(self, x, k, **kwargs):

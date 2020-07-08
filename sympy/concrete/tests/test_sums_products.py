@@ -476,13 +476,28 @@ def test_simple_products():
 
 
 def test_rational_products():
-    assert simplify(product(1 + 1/n, (n, a, b))) == (1 + b)/a
-    assert simplify(product(n + 1, (n, a, b))) == gamma(2 + b)/gamma(1 + a)
-    assert simplify(product((n + 1)/(n - 1), (n, a, b))) == b*(1 + b)/(a*(a - 1))
-    assert simplify(product(n/(n + 1)/(n + 2), (n, a, b))) == \
-        a*gamma(a + 2)/(b + 1)/gamma(b + 3)
-    assert simplify(product(n*(n + 1)/(n - 1)/(n - 2), (n, a, b))) == \
-        b**2*(b - 1)*(1 + b)/(a - 1)**2/(a*(a - 2))
+    assert simplify(product(1 + 1/n, (n, a, b)).rewrite(gamma)) == Piecewise(
+        ((b + 1)/a, a > 0),
+        ((-1)**(a - b)*(b + 1)*sin(pi*a)/(a*sin(pi*b)), a > -1),
+        ((b + 1)/a, True))
+    assert simplify(product(n + 1, (n, a, b)).rewrite(gamma)) == Piecewise(
+        (gamma(b + 2)/gamma(a + 1), a > -1),
+        (-(-1)**(-a + b)*gamma(-a)/gamma(-b - 1), True))
+    assert simplify(product((n + 1)/(n - 1), (n, a, b)).rewrite(gamma)) == Piecewise(
+        (b*(b + 1)/(a*(a - 1)), a > 1),
+        ((-1)**(a - b)*b*(b + 1)*sin(pi*a)/(a*(a - 1)*sin(pi*b)), a > -1),
+        (b*(b + 1)/(a*(a - 1)), True))
+    assert simplify(product(n/(n + 1)/(n + 2), (n, a, b)).rewrite(gamma)).expand() == Piecewise(
+        (a*gamma(a + 2)/(b*gamma(b + 3) + gamma(b + 3)), a > 0),
+        ((-1)**b*a*sin(pi*b)*gamma(a + 2)/((-1)**a*b*sin(pi*a)*gamma(b + 3) + (-1)**a*sin(pi*a)*gamma(b + 3)), a > -1),
+        (a*gamma(a + 2)/(b*gamma(b + 3) + gamma(b + 3)), a > -2),
+        (-(-1)**a*a*gamma(-b - 2)/((-1)**b*b*gamma(-a - 1) + (-1)**b*gamma(-a - 1)), True))
+    assert simplify(product(n*(n + 1)/(n - 1)/(n - 2), (n, a, b)).rewrite(gamma)) == Piecewise(
+        (b**2*(b - 1)*(b + 1)/(a*(a - 2)*(a - 1)**2), a > 2),
+        ((-1)**(a - b)*b**2*(b - 1)*(b + 1)*sin(pi*a)/(a*(a - 2)*(a - 1)**2*sin(pi*b)), a > 1),
+        ((-1)**(2*a - 2*b)*b**2*(b - 1)*(b + 1)*sin(pi*a)**2/(a*(a - 2)*(a - 1)**2*sin(pi*b)**2), a > 0),
+        ((-1)**(a - b)*b**2*(b - 1)*(b + 1)*sin(pi*a)/(a*(a - 2)*(a - 1)**2*sin(pi*b)), a > -1),
+        (b**2*(b - 1)*(b + 1)/(a*(a - 2)*(a - 1)**2), True))
 
 
 def test_wallis_product():
