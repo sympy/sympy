@@ -270,6 +270,7 @@ from sympy.solvers import checksol, solve
 from sympy.solvers.pde import pdsolve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
+from sympy.utilities.iterables import uniq
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
 from .subscheck import sub_func_doit
@@ -1866,12 +1867,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     # find all the functions if not given
     order = dict()
     if funcs==[None]:
-        funcs = []
-        for eqs in eq:
-            derivs = eqs.atoms(Derivative)
-            func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
-            for func_ in  func:
-                funcs.append(func_)
+        funcs = _extract_funcs(eq)
 
     funcs = list(set(funcs))
     if len(funcs) != len(eq):
@@ -2601,6 +2597,18 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     # introduced arbitrary constants numbered higher than the order of a
     # given ODE that sol is a solution of.
     return len(str(sol))
+
+
+def _extract_funcs(eqs):
+    funcs = []
+    for eq in eqs:
+        derivs = eq.atoms(Derivative)
+        func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
+        for func_ in func:
+            funcs.append(func_)
+    funcs = list(uniq(funcs))
+
+    return funcs
 
 
 def _get_constant_subexpressions(expr, Cs):

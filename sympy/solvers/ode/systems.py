@@ -5,8 +5,7 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.function import (expand_mul, expand, Derivative,
-                            AppliedUndef)
+from sympy.core.function import expand_mul, expand, Derivative
 from sympy.functions import exp, im, cos, sin, re, Piecewise, piecewise_fold
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase
@@ -15,7 +14,7 @@ from sympy.simplify import simplify, collect, powsimp, ratsimp
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError
 from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import ordered, uniq
+from sympy.utilities.iterables import ordered
 from sympy.utilities.misc import filldedent
 from sympy.integrals.integrals import Integral, integrate
 
@@ -971,13 +970,6 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
     # Error for i == 0 can be added but isn't for now
 
-    # Removing the duplicates from the list of funcs
-    # meanwhile maintaining the order. This is done
-    # since the line in classify_sysode: list(set(funcs)
-    # cause some test cases to fail when gives different
-    # results in different versions of Python.
-    funcs = list(uniq(funcs))
-
     # Check for len(funcs) == len(eqs)
     if len(funcs) != len(eqs):
         raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
@@ -1197,7 +1189,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     function can solve the above types irrespective of the number of equations in the system passed.
 
     This function returns a list of solutions. Each solution is a list of equations where LHS is
-    the dependent variable and RHS is an expression in terms of the independent variable *t*
+    the dependent variable and RHS is an expression in terms of the independent variable.
 
     Parameters
     ==========
@@ -1238,8 +1230,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     Lets look at an implicit system of ODEs:
     >>> eqs = [Eq(f(x).diff(x)**2, g(x)**2), Eq(g(x).diff(x), g(x))]
     >>> dsolve_system(eqs)
-    [[Eq(f(x), C1 - C2*exp(x)), Eq(g(x), C2*exp(x))],
-     [Eq(f(x), C1 + C2*exp(x)), Eq(g(x), C2*exp(x))]]
+    [[Eq(f(x), C1 - C2*exp(x)), Eq(g(x), C2*exp(x))], [Eq(f(x), C1 + C2*exp(x)), Eq(g(x), C2*exp(x))]]
 
     Returns
     =======
@@ -1255,7 +1246,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
         When the parameters passed aren't in the required form.
 
     """
-    from sympy.solvers.ode.ode import solve_ics
+    from sympy.solvers.ode.ode import solve_ics, _extract_funcs
 
     if not iterable(eqs):
         raise ValueError(filldedent('''
@@ -1273,14 +1264,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     # Might be best to make a function for this functions
     # extraction later.
     if funcs is None:
-        funcs = []
-        for eq in eqs:
-            derivs = eq.atoms(Derivative)
-            func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
-            for func_ in func:
-                funcs.append(func_)
-        funcs = list(uniq(funcs))
-
+        funcs = _extract_funcs(eqs)
     if len(eqs) != len(funcs):
         raise ValueError(filldedent('''
             Number of equations and number of functions don't match
