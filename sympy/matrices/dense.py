@@ -732,6 +732,14 @@ class DenseDomainMatrix(DenseMatrix):
         else:
             return NotImplemented
 
+    def __sub__(self, other):
+        if isinstance(other, DenseDomainMatrix):
+            return self.sub(other)
+        elif isinstance(other, DenseMatrix):
+            return other._eval_add(self)
+        else:
+            return NotImplemented
+
     def __neg__(self):
         return self.from_DomainMatrix(-self._rep)
 
@@ -755,6 +763,12 @@ class DenseDomainMatrix(DenseMatrix):
         b = other._rep
         A, B = a.unify(b)
         return classof(self, other).from_DomainMatrix(A + B)
+
+    def sub(self, other):
+        a = self._rep
+        b = other._rep
+        A, B = a.unify(b)
+        return classof(self, other).from_DomainMatrix(A - B)
 
     def matrix_mul(self, other):
         a = self._rep

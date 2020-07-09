@@ -178,6 +178,17 @@ class DomainMatrix:
                     for row1, row2 in zip(A.rows, B.rows)]
         return type(A)(rows, A.shape, A.domain)
 
+    def __sub__(A, B):
+        if not isinstance(B, DomainMatrix):
+            return NotImplemented
+        if A.shape != B.shape:
+            raise ShapeError("shape")
+        if A.domain != B.domain:
+            raise ValueError("domain")
+        rows = [[a-b for a, b in zip(row1, row2)]
+                    for row1, row2 in zip(A.rows, B.rows)]
+        return type(A)(rows, A.shape, A.domain)
+
     def __neg__(A):
         rows = [[-a for a in row] for row in A.rows]
         return type(A)(rows, A.shape, A.domain)
