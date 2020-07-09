@@ -183,7 +183,7 @@ class CoordSystem(Atom):
     patch : Patch
         The patch where the coordinate system is defined.
 
-    names : list of Symbols
+    symbols : list of Symbols
         Defines the names and assumptions of coordinate symbols.
 
     relations : dict, optional
@@ -197,7 +197,7 @@ class CoordSystem(Atom):
 
     Define a Manifold and a Patch, and then define a CoordSystem on that patch:
 
-    >>> from sympy import symbols
+    >>> from sympy import symbols, pi
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
@@ -216,22 +216,27 @@ class CoordSystem(Atom):
     >>> Car2D.symbols
     [x, y]
     >>> Car2D.transformation(Pol)
-    qwer
+    Lambda((x, y), Matrix([
+    [sqrt(x**2 + y**2)],
+    [      atan2(y, x)]]))
 
     >>> Car2D.transform(Pol)
-    qwer
+    Matrix([
+    [sqrt(x**2 + y**2)],
+    [      atan2(y, x)]])
     >>> Car2D.transform(Pol, [1, 2])
-    qwer
+    Matrix([
+    [sqrt(5)],
+    [atan(2)]])
 
-    >>> Car2D.jacobian_matrix(Pol)
-    qwer
-    >>> Car2D.jacobian_matrix(Pol, [1, 2])
-    qwer
-
-    >>> Car2D.jacobian_determinant(Pol)
-    qwer
-    >>> Car2D.jacobian_determinant(Pol, [1, 2])
-    qwer
+    >>> Pol.jacobian_matrix(Car2D)
+    Matrix([
+    [cos(theta), -r*sin(theta)],
+    [sin(theta),  r*cos(theta)]])
+    >>> Pol.jacobian_matrix(Car2D, [1, pi/2])
+    Matrix([
+    [0, -1],
+    [1,  0]])
 
     References
     ========

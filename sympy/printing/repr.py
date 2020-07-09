@@ -328,13 +328,6 @@ class ReprPrinter(Printer):
         ext = self._print(f.ext)
         return "ExtElem(%s, %s)" % (rep, ext)
 
-    def _print_CoordSystem(self, coords):
-        class_name = coords.func.__name__
-        name = self._print(coords.name)
-        patch = self._print(coords.patch)
-        names = self._print(coords._names)
-        return "%s(%s, %s, %s)" % (class_name, name, patch, names)
-
 def srepr(expr, **settings):
     """return expr in repr form"""
     return ReprPrinter(settings).doprint(expr)
