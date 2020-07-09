@@ -2525,11 +2525,11 @@ class LatexPrinter(Printer):
         return name
 
     def _print_Patch(self, patch):
-        return r'\text{%s}_{\text{%s}}' % (patch.name, patch.manifold.name)
+        return r'\text{%s}_{%s}' % (self._print(patch.name), self._print(patch.manifold))
 
-    def _print_CoordSystem(self, coords):
-        return r'\text{%s}^{\text{%s}}_{\text{%s}}' % (
-            coords.name, coords.patch.name, coords.patch.manifold.name
+    def _print_CoordSystem(self, coordsys):
+        return r'\text{%s}^{\text{%s}}_{%s}' % (
+            self._print(coordsys.name), self._print(coordsys.patch.name), self._print(coordsys.manifold)
         )
 
     def _print_Point(self, point):
