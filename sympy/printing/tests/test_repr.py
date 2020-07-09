@@ -314,7 +314,7 @@ def test_Permutation():
 
 
 def test_diffgeom():
-    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
+    from sympy.diffgeom import Manifold, Patch, CoordSystem
     m = Manifold('M', 2)
     p = Patch('P', m)
     rect = CoordSystem('rect', p)

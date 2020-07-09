@@ -246,6 +246,16 @@ def test_geometry():
             RegularPolygon(p1, 4, 5), Triangle, Triangle(p1, p2, p3)):
         check(c, check_attr=False)
 
+#================== diffgeom ====================
+from sympy.diffgeom.rn import (
+    R2, R2_origin, R2_r, coordsys_structure_2d
+)
+def test_diffgeom():
+    for c in (
+        R2, R2_origin, R2_r, coordsys_structure_2d
+    ):
+    check(c)
+
 #================== integrals ====================
 from sympy.integrals.integrals import Integral
 

@@ -4422,13 +4422,10 @@ def test_sympy__diffgeom__diffgeom__CoordSystem():
     from sympy.diffgeom import Manifold, Patch, CoordSystem
     assert _test_args(CoordSystem('name', Patch('name', Manifold('name', 3))))
 
-
-@XFAIL
 def test_sympy__diffgeom__diffgeom__Point():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, Point
     assert _test_args(Point(
         CoordSystem('name', Patch('name', Manifold('name', 3))), [x, y]))
-
 
 def test_sympy__diffgeom__diffgeom__BaseScalarField():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
