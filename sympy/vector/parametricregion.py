@@ -1,9 +1,11 @@
 from functools import singledispatch
-from sympy import pi
-from sympy.core import Basic, Tuple
+from sympy import tan, pi
+from sympy.core import Basic, Tuple, expand
 from sympy.core.symbol import _symbol
-from sympy.solvers import solve
+from sympy.solvers import solveset, nonlinsolve
+from sympy.simplify.trigsimp import trigsimp
 from sympy.geometry import Point, Segment, Curve, Ellipse, Polygon
+from sympy.vector import ImplicitRegion
 
 
 class ParametricRegion(Basic):
@@ -153,11 +155,11 @@ def _(obj, parameter='t'):
     definition = obj.arbitrary_point(t).args
 
     for i in range(0, 3):
-        lower_bound = solve(definition[i] - obj.points[0].args[i], t)
-        upper_bound = solve(definition[i] - obj.points[1].args[i], t)
+        lower_bound = solveset(definition[i] - obj.points[0].args[i], t)
+        upper_bound = solveset(definition[i] - obj.points[1].args[i], t)
 
         if len(lower_bound) == 1 and len(upper_bound) == 1:
-            bounds = t, lower_bound[0], upper_bound[0]
+            bounds = t, next(iter(lower_bound)), next(iter(upper_bound))
             break
 
     definition_tuple = obj.arbitrary_point(parameter).args
@@ -168,3 +170,36 @@ def _(obj, parameter='t'):
 def _(obj, parameter='t'):
     l = [parametric_region_list(side, parameter)[0] for side in obj.sides]
     return l
+    
+
+@parametric_region_list.register(ImplicitRegion)
+def _(obj, parameter='theta'):
+    equation = obj.equation
+    diff_x = diff(equation, x)
+    diff_y = diff(equation, y)
+    
+    singular_points = nonlinsolve([equation, diff_x, diff_y], x, y)
+    
+    if len(singular_points) == 0:
+        return obj
+
+    p_x, p_y = next(iter(singular_points))
+    theta = _symbol(parameter, real=True)
+
+    y_dash = tan(theta)*(x- p_x) + p_y
+    eq2 = equation.subs(y, y_dash)
+    x_par_list = solveset(eq2, x)
+
+    for x_ in x_par_list:
+        if x_ != p_x:
+            x_par = x_
+            break
+
+    y_par = tan(theta)*(x_par - p_x) + p_y
+
+    definition = {}
+    definition[x] = trigsimp(expand_trig(x_par))
+    definition[y] = trigsimp(expand_trig(y_par))
+
+    p = [ParametricRegion((definition[x], definition[y]), (theta, 0, pi))]
+    return p    
