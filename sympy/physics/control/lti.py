@@ -8,12 +8,12 @@ __all__ = ['TransferFunction', 'Series', 'Parallel', 'Feedback']
 
 class TransferFunction(Basic, EvalfMixin):
     """
-    A class for representing continuous transfer functions. This class is used to represent
-    LTI (Linear, time-invariant) systems in transfer function form. The arguments
+    A class for representing LTI (Linear, time-invariant) systems that can be strictly described
+    by ratio of polynomials in the Laplace Transform complex variable. The arguments
     are ``num``, ``den``, and ``var``, where ``num`` and ``den`` are numerator and
     denominator polynomials of the ``TransferFunction`` respectively, and the third argument is
     a complex variable of the Laplace transform used by these polynomials of the transfer function.
-    ``num`` and ``den`` can be either sympy expressions (with no time delay terms) or numbers, whereas ``var``
+    ``num`` and ``den`` can be either polynomials or numbers, whereas ``var``
     has to be a Symbol.
 
     Parameters
@@ -31,7 +31,7 @@ class TransferFunction(Basic, EvalfMixin):
 
     TypeError
         When ``var`` is not a Symbol or when ``num`` or ``den`` is not
-        a number or expression/polynomial. Also, when ``num`` or ``den`` has
+        a number or a polynomial. Also, when ``num`` or ``den`` has
         a time delay term.
     ValueError
         When ``den`` is zero.
@@ -140,7 +140,7 @@ class TransferFunction(Basic, EvalfMixin):
     @property
     def num(self):
         """
-        Returns the numerator polynomial/expression of the transfer function.
+        Returns the numerator polynomial of the transfer function.
 
         Examples
         ========
@@ -160,7 +160,7 @@ class TransferFunction(Basic, EvalfMixin):
     @property
     def den(self):
         """
-        Returns the denominator polynomial/expression of the transfer function.
+        Returns the denominator polynomial of the transfer function.
 
         Examples
         ========
@@ -292,23 +292,24 @@ class TransferFunction(Basic, EvalfMixin):
     __rmul__ = __mul__
 
     def __truediv__(self, other):
-        if (isinstance(other, Parallel) and isinstance(other.args[0], TransferFunction)
+        if (isinstance(other, Parallel) and len(other.args) == 2 and isinstance(other.args[0], TransferFunction)
             and isinstance(other.args[1], (Series, TransferFunction))):
 
             if not self.var == other.var:
                 raise ValueError("Both TransferFunction and Parallel should use the same complex variable "
                     "of the Laplace transform.")
             if other.args[1] == self:
+                # plant and controller with unit feedback.
                 return Feedback(self, other.args[0])
-            other_arg_list = list(other.args[1].args)
-            if self in other_arg_list:
+            other_arg_list = list(other.args[1].args) if isinstance(other.args[1], Series) else other.args[1]
+            if other_arg_list == other.args[1]:
+                return Feedback(self, other_arg_list)
+            elif self in other_arg_list:
                 other_arg_list.remove(self)
             else:
                 return Feedback(self, Series(*other_arg_list))
 
-            if len(other_arg_list) == 0:
-                return Feedback(self, other.args[0])
-            elif len(other_arg_list) == 1:
+            if len(other_arg_list) == 1:
                 return Feedback(self, *other_arg_list)
             else:
                 return Feedback(self, Series(*other_arg_list))
@@ -523,6 +524,8 @@ class Series(Basic):
         else:
             raise ValueError("This transfer function expression is invalid.")
 
+    __radd__ = __add__
+
     def __sub__(self, other):
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
@@ -539,6 +542,9 @@ class Series(Basic):
             return Parallel(self, *arg_list)
         else:
             raise ValueError("This transfer function expression is invalid.")
+
+    def __rsub__(self, other):
+        return -self + other
 
     def __mul__(self, other):
         if isinstance(other, (TransferFunction, Parallel)):
@@ -560,7 +566,7 @@ class Series(Basic):
             raise ValueError("This transfer function expression is invalid.")
 
     def __truediv__(self, other):
-        if (isinstance(other, Parallel) and isinstance(other.args[0], TransferFunction)
+        if (isinstance(other, Parallel) and len(other.args) == 2 and isinstance(other.args[0], TransferFunction)
             and isinstance(other.args[1], Series)):
 
             if not self.var == other.var:

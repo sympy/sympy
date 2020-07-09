@@ -2405,9 +2405,9 @@ class LatexPrinter(Printer):
         return "%s\\rightarrow %s" % (domain, codomain)
 
     def _print_TransferFunction(self, expr):
-        from sympy.core.mul import Mul
+        from sympy.core import Mul, Pow
         num, den = expr.num, expr.den
-        res = Mul(num/den, evaluate=False)
+        res = Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
         return self._print_Mul(res)
 
     def _print_Series(self, expr):

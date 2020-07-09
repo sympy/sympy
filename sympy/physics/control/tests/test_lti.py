@@ -242,6 +242,7 @@ def test_TransferFunction_multiplication_and_division():
     G4 = TransferFunction(p + 4, p - 5, p)
     G5 = TransferFunction(s + 6, s - 5, s)
     G6 = TransferFunction(s + 3, s + 1, s)
+    G7 = TransferFunction(1, 1, s)
 
     # multiplication
     assert G1*G2 == Series(G1, G2)
@@ -269,6 +270,9 @@ def test_TransferFunction_multiplication_and_division():
     raises(ValueError, lambda: 0 / G4)
     raises(ValueError, lambda: G5 / G6)
     raises(ValueError, lambda: -G3 /G4)
+    raises(ValueError, lambda: G7 / (1 + G6))
+    raises(ValueError, lambda: G7 / (G5 * G6))
+    raises(ValueError, lambda: G7 / (G7 + (G5 + G6)))
 
 
 def test_TransferFunction_is_proper():
@@ -591,11 +595,18 @@ def test_Feedback_functions():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
     tf6 = TransferFunction(s - p, p + s, p)
 
+    assert tf / (tf + tf1) == Feedback(tf, tf1)
     assert tf / (tf + tf1*tf2*tf3) == Feedback(tf, tf1*tf2*tf3)
     assert tf1 / (tf + tf1*tf2*tf3) == Feedback(tf1, tf2*tf3)
+    assert (tf1*tf2) / (tf + tf1*tf2) == Feedback(tf1*tf2, tf)
     assert (tf1*tf2) / (tf + tf1*tf2*tf5) == Feedback(tf1*tf2, tf5)
+    assert (tf1*tf2) / (tf + tf1*tf2*tf3*tf5) == Feedback(tf1*tf2, tf3*tf5)
     assert tf4 / (TransferFunction(1, 1, p) + tf4*tf6) == Feedback(tf4, tf6)
     assert tf5 / (tf + tf5) == Feedback(tf5, tf)
+
+    raises(ValueError, lambda: tf1*tf2*tf3 / (1 + tf1*tf2*tf3))
+    raises(ValueError, lambda: tf1*tf2*tf3 / tf3*tf5)
+    raises(ValueError, lambda: tf2*tf3 / (tf + tf2*tf3*tf4))
 
     assert Feedback(tf, tf1*tf2*tf3).doit() == \
         TransferFunction((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), k*(a2*p - s) + \

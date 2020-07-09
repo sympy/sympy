@@ -965,14 +965,25 @@ class PrettyPrinter(Printer):
 
     def _print_TransferFunction(self, expr):
         num, den = expr.num, expr.den
-        res = Mul(num/den, evaluate=False)
+        res = Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
         return self._print_Mul(res)
 
     def _print_Series(self, expr):
-        return self._print_TransferFunction(expr.doit())
+        args = list(expr.args)
+        for i, a in enumerate(expr.args):
+            args[i] = prettyForm(*self._print(a).parens())
+        return prettyForm.__mul__(*args)
 
     def _print_Parallel(self, expr):
-        return self._print_TransferFunction(expr.doit())
+        s = None
+        for item in expr.args:
+            pform = self._print(item)
+            if s is None:
+                s = pform     # First element
+            else:
+                s = prettyForm(*stringPict.next(s, ' + '))
+                s = prettyForm(*stringPict.next(s, pform))
+        return s
 
     def _print_Feedback(self, expr):
         return self._print_TransferFunction(expr.doit())

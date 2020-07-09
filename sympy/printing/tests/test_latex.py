@@ -2284,9 +2284,9 @@ def test_Feedback_printing():
     tf1 = TransferFunction(p, p + x, p)
     tf2 = TransferFunction(-s + p, p + s, p)
     assert latex(Feedback(tf1, tf2)) == \
-        '\\frac{p \\left(p + s\\right)}{p \\left(p - s\\right) + \\left(p + s\\right) \\left(p + x\\right)}'
+        '\\frac{p \\left(p + s\\right) \\left(p + x\\right)}{\\left(p + x\\right) \\left(p \\left(p - s\\right) + \\left(p + s\\right) \\left(p + x\\right)\\right)}'
     assert latex(Feedback(tf1*tf2, TransferFunction(1, 1, p))) == \
-        '\\frac{p \\left(p - s\\right)}{p \\left(p - s\\right) + \\left(p + s\\right) \\left(p + x\\right)}'
+        '\\frac{p \\left(p - s\\right) \\left(p + s\\right) \\left(p + x\\right)}{\\left(p + s\\right) \\left(p + x\\right) \\left(p \\left(p - s\\right) + \\left(p + s\\right) \\left(p + x\\right)\\right)}'
 
 
 def test_Quaternion_latex_printing():
