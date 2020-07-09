@@ -732,6 +732,9 @@ class DenseDomainMatrix(DenseMatrix):
         else:
             return NotImplemented
 
+    def __neg__(self):
+        return self.from_DomainMatrix(-self._rep)
+
     def __mul__(self, other):
         if not isinstance(other, MatrixBase):
             try:
