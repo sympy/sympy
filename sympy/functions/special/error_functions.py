@@ -217,8 +217,8 @@ class erf(Function):
 
     def _eval_rewrite_as_tractable(self, z, **kwargs):
         from sympy.series.limits import limit
-        if 'var' in kwargs:
-            lim = limit(z, kwargs['var'], S.Infinity)
+        if 'limitvar' in kwargs:
+            lim = limit(z, kwargs['limitvar'], S.Infinity)
             if lim is S.NegativeInfinity:
                 return S.NegativeOne + _erfs(-z)*exp(-z**2)
         return S.One - _erfs(z)*exp(-z**2)
@@ -383,8 +383,8 @@ class erfc(Function):
         return self.args[0].is_extended_real
 
     def _eval_rewrite_as_tractable(self, z, **kwargs):
-        if 'var' in kwargs:
-            return self.rewrite(erf).rewrite("tractable", deep=True, var=kwargs['var'])
+        if 'limitvar' in kwargs:
+            return self.rewrite(erf).rewrite("tractable", deep=True, limitvar=kwargs['limitvar'])
         return self.rewrite(erf).rewrite("tractable", deep=True)
 
     def _eval_rewrite_as_erf(self, z, **kwargs):
@@ -565,8 +565,8 @@ class erfi(Function):
             return True
 
     def _eval_rewrite_as_tractable(self, z, **kwargs):
-        if 'var' in kwargs:
-            return self.rewrite(erf).rewrite("tractable", deep=True, var=kwargs['var'])
+        if 'limitvar' in kwargs:
+            return self.rewrite(erf).rewrite("tractable", deep=True, limitvar=kwargs['limitvar'])
         return self.rewrite(erf).rewrite("tractable", deep=True)
 
     def _eval_rewrite_as_erf(self, z, **kwargs):

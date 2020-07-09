@@ -106,16 +106,10 @@ class Product(ExprWithIntLimits):
     >>> Pe = P.doit()
     >>> Pe
     pi**2*RisingFactorial(1 - pi/2, n)*RisingFactorial(1 + pi/2, n)/(2*factorial(n)**2)
-    >>> Pe = Pe.rewrite(gamma)
-    >>> Pe
+    >>> limit(Pe, n, oo).gammasimp()
+    sin(pi**2/2)
+    >>> Pe.rewrite(gamma)
     (-1)**n*pi**2*gamma(pi/2)*gamma(n + 1 + pi/2)/(2*gamma(1 + pi/2)*gamma(-n + pi/2)*gamma(n + 1)**2)
-    >>> Pe = simplify(Pe)
-    >>> Pe
-    (-1)**n*pi*gamma(n + 1 + pi/2)/(gamma(-n + pi/2)*gamma(n + 1)**2)
-    >>> limit(Pe, n, oo)
-    Limit((-1)**n*pi*gamma(n + 1 + pi/2)/(gamma(-n + pi/2)*gamma(n + 1)**2), n, oo, dir='-')
-
-    The above limit should ideally compute to sin(pi**2/2)
 
     Products with the lower limit being larger than the upper one:
 

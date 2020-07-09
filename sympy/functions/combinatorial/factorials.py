@@ -626,15 +626,13 @@ class RisingFactorial(CombinatorialFunction):
 
     def _eval_rewrite_as_gamma(self, x, k, **kwargs):
         from sympy import gamma, Piecewise
-        if kwargs.get('piecewise', True):
-            return Piecewise(
+        if not kwargs.get('piecewise', True):
+            if (x <= 0) == True:
+                return (-1)**k*gamma(1 - x) / gamma(-k - x + 1)
+            return gamma(x + k) / gamma(x)
+        return Piecewise(
             (gamma(x + k) / gamma(x), x > 0),
             ((-1)**k*gamma(1 - x) / gamma(-k - x + 1), True))
-        if (x > 0) == True:
-            return gamma(x + k) / gamma(x)
-        elif (x <= 0) == True:
-            return (-1)**k*gamma(1 - x) / gamma(-k - x + 1)
-        return gamma(x + k) / gamma(x)
 
     def _eval_rewrite_as_FallingFactorial(self, x, k, **kwargs):
         return FallingFactorial(x + k - 1, k)
@@ -646,6 +644,17 @@ class RisingFactorial(CombinatorialFunction):
     def _eval_rewrite_as_binomial(self, x, k, **kwargs):
         if k.is_integer:
             return factorial(k) * binomial(x + k - 1, k)
+
+    def _eval_rewrite_as_tractable(self, x, k, **kwargs):
+        from sympy import gamma
+        limitvar = kwargs.get('limitvar', None)
+        if limitvar is not None:
+            k_lim = k.subs(limitvar, S.Infinity)
+            if k_lim is S.Infinity:
+                return (gamma(x + k).rewrite('tractable', deep=True) / gamma(x))
+            elif k_lim is S.NegativeInfinity:
+                return ((-1)**k*gamma(1 - x) / gamma(-k - x + 1).rewrite('tractable', deep=True))
+        return self.rewrite(gamma).rewrite('tractable', deep=True)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
@@ -774,15 +783,13 @@ class FallingFactorial(CombinatorialFunction):
 
     def _eval_rewrite_as_gamma(self, x, k, **kwargs):
         from sympy import gamma, Piecewise
-        if kwargs.get('piecewise', True):
-            return Piecewise(
+        if not kwargs.get('piecewise', True):
+            if (x < 0) == True:
+                return (-1)**k*gamma(k - x) / gamma(-x)
+            return gamma(x + 1) / gamma(x - k + 1)
+        return Piecewise(
             (gamma(x + 1) / gamma(x - k + 1), x >= 0),
             ((-1)**k*gamma(k - x) / gamma(-x), True))
-        if (x >= 0) == True:
-            return gamma(x + 1) / gamma(x - k + 1)
-        elif (x < 0) == True:
-            return (-1)**k*gamma(k - x) / gamma(-x)
-        return gamma(x + 1) / gamma(x - k + 1)
 
     def _eval_rewrite_as_RisingFactorial(self, x, k, **kwargs):
         return rf(x - k + 1, k)
@@ -794,6 +801,17 @@ class FallingFactorial(CombinatorialFunction):
     def _eval_rewrite_as_factorial(self, x, k, **kwargs):
         if x.is_integer and k.is_integer:
             return factorial(x) / factorial(x - k)
+
+    def _eval_rewrite_as_tractable(self, x, k, **kwargs):
+        from sympy import gamma
+        limitvar = kwargs.get('limitvar', None)
+        if limitvar is not None:
+            k_lim = k.subs(limitvar, S.Infinity)
+            if k_lim is S.Infinity:
+                return ((-1)**k*gamma(k - x).rewrite('tractable', deep=True) / gamma(-x))
+            elif k_lim is S.NegativeInfinity:
+                return (gamma(x + 1) / gamma(x - k + 1).rewrite('tractable', deep=True))
+        return self.rewrite(gamma).rewrite('tractable', deep=True)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
