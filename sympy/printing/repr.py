@@ -248,6 +248,24 @@ class ReprPrinter(Printer):
             return "%s(%s, %s)" % (expr.__class__.__name__,
                                    self._print(expr.name), ', '.join(attr))
 
+    def _print_CoordinateSymbol(self, expr):
+        d = expr._assumptions.generator
+
+        if d == {}:
+            return "%s(%s, %s)" % (
+                expr.__class__.__name__,
+                self._print(expr.coordinate_system),
+                self._print(expr.index)
+            )
+        else:
+            attr = ['%s=%s' % (k, v) for k, v in d.items()]
+            return "%s(%s, %s, %s)" % (
+                expr.__class__.__name__,
+                self._print(expr.coordinate_system),
+                self._print(expr.index),
+                ', '.join(attr)
+            )
+
     def _print_Predicate(self, expr):
         return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
 

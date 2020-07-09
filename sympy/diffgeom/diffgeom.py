@@ -113,8 +113,6 @@ class Patch(Atom):
     Examples
     ========
 
-    Define a Manifold, and a Patch on that manifold:
-
     >>> from sympy.diffgeom import Manifold, Patch
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
@@ -194,8 +192,6 @@ class CoordSystem(Atom):
 
     Examples
     ========
-
-    Define a Manifold and a Patch, and then define a CoordSystem on that patch:
 
     >>> from sympy import symbols, pi
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
@@ -323,7 +319,7 @@ class CoordSystem(Atom):
     def symbols(self):
         return [
             CoordinateSymbol(
-                s.name, i, self, **s._assumptions.generator
+                self, i, **s._assumptions.generator
             ) for i,s in enumerate(self.args[2])
         ]
 
@@ -586,22 +582,48 @@ class CoordinateSymbol(Symbol):
     You may not construct this class directly. Instead, use `symbols` method
     of CoordSystem.
 
+    Parameters
+    ==========
+
+    coordinate_system : CoordSystem
+
+    index : integer
+
     Examples
     ========
 
+    >>> from sympy import symbols, pi
+    >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
+    >>> m = Manifold('M', 2)
+    >>> p = Patch('P', m)
+    >>> _x, _y = symbols('x y', nonnegative=True)
+
+    >>> C = CoordSystem('C', p, [_x, _y])
+    >>> x, y = C.symbols
+
+    >>> x.name
+    'x'
+    >>> x.coordinate_system
+    C
+    >>> x.index
+    0
+    >>> x.is_nonnegative
+    True
+
     """
-    def __new__(cls, name, coordinate_system, index, **assumptions):
+    def __new__(cls, coordinate_system, index, **assumptions):
+        name = coordinate_system.args[2][index].name
         obj = super().__new__(cls, name, **assumptions)
         obj.coordinate_system = coordinate_system
         obj.index = index
         return obj
 
     def __getnewargs__(self):
-        return (self.name, self.coordinate_system, self.index)
+        return (self.coordinate_system, self.index)
 
     def _hashable_content(self):
         return (
-            self.name, self.coordinate_system, self.index
+            self.coordinate_system, self.index
         ) + tuple(sorted(self.assumptions0.items()))
 
 class Point(Basic):
