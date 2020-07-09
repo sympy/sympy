@@ -248,11 +248,11 @@ def test_geometry():
 
 #================== diffgeom ====================
 from sympy.diffgeom.rn import (
-    R2, R2_origin, R2_r, coordsys_structure_2d
+    R2, R2_origin, R2_r
 )
 def test_diffgeom():
     for c in (
-        R2, R2_origin, R2_r, coordsys_structure_2d
+        R2, R2_origin, R2_r
     ):
     check(c)
 
