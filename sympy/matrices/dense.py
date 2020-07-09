@@ -821,6 +821,8 @@ class DenseDomainMatrix(DenseMatrix):
         rhsrep = rhs._rep
         if not rep.domain.is_Field:
             rep = rep.to_field()
+        if not rhsrep.domain.is_Field:
+            rhsrep = rhsrep.to_field()
         rep, rhsrep = rep.unify(rhsrep)
         x = lu_solve(rep, rhsrep)
         return self.from_DomainMatrix(x)
