@@ -562,6 +562,7 @@ class Covariance(Expr):
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
 
+
 class Moment(Expr):
     """
     Symbolic class for Moment
@@ -615,7 +616,8 @@ class Moment(Expr):
     def _eval_rewrite_as_Integral(self, X, n, c=0, condition=None, **kwargs):
         return self.rewrite(Expectation).rewrite(Integral)
 
-class CMoment(Expr):
+
+class CentralMoment(Expr):
     """
     Symbolic class Central Moment
 
@@ -623,25 +625,25 @@ class CMoment(Expr):
     ========
 
     >>> from sympy import Symbol, Integral
-    >>> from sympy.stats import Normal, Expectation, Probability, CMoment
+    >>> from sympy.stats import Normal, Expectation, Probability, CentralMoment
     >>> mu = Symbol('mu', real=True)
     >>> sigma = Symbol('sigma', real=True, positive=True)
     >>> X = Normal('X', mu, sigma)
-    >>> CM = CMoment(X, 4)
+    >>> CM = CentralMoment(X, 4)
 
-    To evaluate the result of CMoment use `doit`:
+    To evaluate the result of CentralMoment use `doit`:
     >>> CM.doit().simplify()
     3*sigma**4
 
-    Rewrite the CMoment expression in terms of Expectation:
+    Rewrite the CentralMoment expression in terms of Expectation:
     >>> CM.rewrite(Expectation)
     Expectation((X - Expectation(X))**4)
 
-    Rewrite the CMoment expression in terms of Probability:
+    Rewrite the CentralMoment expression in terms of Probability:
     >>> CM.rewrite(Probability)
     Integral((x - Integral(x*Probability(True), (x, -oo, oo)))**4*Probability(Eq(X, x)), (x, -oo, oo))
 
-    Rewrite the CMoment expression in terms of Integral:
+    Rewrite the CentralMoment expression in terms of Integral:
     >>> CM.rewrite(Integral)
     Integral(sqrt(2)*(X - Integral(sqrt(2)*X*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo)))**4*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo))
 
