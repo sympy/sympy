@@ -66,7 +66,7 @@ def test_add():
         assert S.One / 3 + sqrt(3) == Add(S.One / 3, sqrt(3))
         assert sqrt(3) + S.One / 3 == Add(sqrt(3), S.One / 3)
 
-        assert S.One / 2 * 10.333 == Mul(S.One / 2, 10.333)
+        assert S.One / 2 * 10.333 == Mul(10.333, S.One / 2)
         assert 10.333 * S.One / 2 == Mul(10.333, S.One / 2)
 
         assert sqrt(2) * sqrt(2) == Mul(sqrt(2), sqrt(2))

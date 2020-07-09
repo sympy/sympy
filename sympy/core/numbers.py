@@ -1298,6 +1298,7 @@ class Float(Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
         return Number.__add__(self, other)
+    __radd__ = __add__
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
@@ -1307,11 +1308,19 @@ class Float(Number):
         return Number.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
+    def __rsub__(self, other):
+        if isinstance(other, Number) and global_parameters.evaluate:
+            lhs, prec = other._as_mpf_op(self._prec)
+            return Float._new(mlib.mpf_sub(lhs, self._mpf_, prec, rnd), prec)
+        return Number.__rsub__(self, other)
+
+    @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mul__(self, other)
+    __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
@@ -1320,6 +1329,12 @@ class Float(Number):
             return Float._new(mlib.mpf_div(self._mpf_, rhs, prec, rnd), prec)
         return Number.__div__(self, other)
 
+    @_sympifyit('other', NotImplemented)
+    def __rdiv__(self, other):
+        if isinstance(other, Number) and self != 0 and global_parameters.evaluate:
+            lhs, prec = other._as_mpf_op(self._prec)
+            return Float._new(mlib.mpf_div(lhs, self._mpf_, prec, rnd), prec)
+        return Number.__rdiv__(self, other)
     __truediv__ = __div__
 
     @_sympifyit('other', NotImplemented)
