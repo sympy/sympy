@@ -803,18 +803,23 @@ class DenseDomainMatrix(DenseMatrix):
         rep = self._rep
         return rep.domain.to_sympy(rep.det())
 
-    def charpoly(self, *args, **kwargs):
+    def charpoly(self, name='lambda', **kwargs):
         from sympy.polys.polymatrix import berk
         from sympy.polys import PurePoly
         from sympy import Dummy
+        from sympy.core.symbol import uniquely_named_symbol
+
         rep = self._rep
         m, n = self.shape
         if m != n:
             raise NonSquareMatrixError("not square")
+
         dom = rep.domain
         vec = berk(rep)
-        psympy = [vec.rows[i][0] for i in range(n+1)]
-        return PurePoly(psympy, Dummy(), domain=dom)
+        coeffs = [vec.rows[i][0] for i in range(n+1)]
+
+        x = uniquely_named_symbol(name, self, modify=lambda s: '_' + s)
+        return PurePoly(coeffs, x, domain=dom)
 
     def LUdecomposition(self, *args, **kwargs):
         from sympy.polys.polymatrix import lu_decomp
