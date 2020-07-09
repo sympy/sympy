@@ -126,7 +126,7 @@ def test_issue_10382():
 
 
 def test_issue_16735():
-    assert limit_seq(5**n/factorial(n),n) == 0
+    assert limit_seq(5**n/factorial(n), n) == 0
 
 
 @XFAIL
