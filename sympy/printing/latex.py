@@ -2506,7 +2506,23 @@ class LatexPrinter(Printer):
             self._print(h.domain), self._print(h.codomain))
 
     def _print_Manifold(self, manifold):
-        return r'\text{%s}' % manifold.name
+        string = manifold.name.name
+        if '{' in string:
+            name, supers, subs = string, [], []
+        else:
+            name, supers, subs = split_super_sub(string)
+
+            name = translate(name)
+            supers = [translate(sup) for sup in supers]
+            subs = [translate(sub) for sub in subs]
+
+        name = r'\text{%s}' % name
+        if supers:
+            name += "^{%s}" % " ".join(supers)
+        if subs:
+            name += "_{%s}" % " ".join(subs)
+
+        return name
 
     def _print_Patch(self, patch):
         return r'\text{%s}_{\text{%s}}' % (patch.name, patch.manifold.name)
@@ -2514,6 +2530,11 @@ class LatexPrinter(Printer):
     def _print_CoordSystem(self, coords):
         return r'\text{%s}^{\text{%s}}_{\text{%s}}' % (
             coords.name, coords.patch.name, coords.patch.manifold.name
+        )
+
+    def _print_Point(self, point):
+        return '{%s}_{%s}' % (
+            self._print(point.coordinates()), self._print(point._coord_sys)
         )
 
     def _print_CovarDerivativeOp(self, cvd):
