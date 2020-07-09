@@ -16,7 +16,7 @@ from sympy import sqrt, atan2, acos, sin, cos, Lambda, Matrix, symbols
 
 __all__ = [
     'R2', 'R2_origin', 'relations_2d', 'R2_r', 'R2_p',
-    'R3', 'R3_origin', 'R3_r', 'R3_c', 'R3_s', 'coordsys_structure_3d'
+    'R3', 'R3_origin', 'relations_3d', 'R3_r', 'R3_c', 'R3_s'
 ]
 
 ###############################################################################
@@ -62,7 +62,7 @@ R3_origin = Patch('origin', R3)  # type: Any
 x, y, z = symbols('x y z', real=True)
 rho, psi, r, theta, phi = symbols('rho psi r theta phi', nonnegative=True)
 
-rel_dict_3d = {
+relations_3d = {
     ('rectangular', 'cylindrical'):
         Lambda((x, y, z), Matrix([sqrt(x**2 + y**2), atan2(y, x), z])),
     ('cylindrical', 'rectangular'):
