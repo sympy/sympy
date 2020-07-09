@@ -806,7 +806,6 @@ class DenseDomainMatrix(DenseMatrix):
     def charpoly(self, name='lambda', **kwargs):
         from sympy.polys.polymatrix import berk
         from sympy.polys import PurePoly
-        from sympy import Dummy
         from sympy.core.symbol import uniquely_named_symbol
 
         rep = self._rep
