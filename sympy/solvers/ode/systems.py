@@ -1119,7 +1119,7 @@ def _linear_ode_solver(match):
     return sol
 
 
-# Returns: (List of equations, const_idx) or None
+# Returns: List of equations or None
 # If None is returned by this solver, then the system
 # of ODEs cannot be solved by dsolve_system.
 def _strong_component_solver(eqs, funcs, t):
@@ -1138,7 +1138,7 @@ def _strong_component_solver(eqs, funcs, t):
     return None
 
 
-# Returns: List of Equations(a solution), const_idx
+# Returns: List of Equations(a solution)
 def _weak_component_solver(wcc, t):
     sol = []
 
@@ -1176,7 +1176,7 @@ def _component_solver(eqs, funcs, t):
     return sol
 
 
-def dsolve_system(eqs, funcs=None, t=None, ics=None):
+def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     r"""
     Solves any(supported) system of Ordinary Differential Equations
 
@@ -1194,23 +1194,24 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None):
     5. Any implicit system which can be divided into system of ODEs which is of the above 4 forms
 
     The types of systems described above aren't limited by the number of equations, i.e. this
-    function can solve the above types irrespective the number of equations in the system passed.
+    function can solve the above types irrespective of the number of equations in the system passed.
 
-    This function returns a pair of elements, first being the solutions obtained and second being
-    the sub-system of ODEs that it was not able to solve. If the function wasn't able to solve the
-    whole system, then just a tuple of two empty lists is returned.
+    This function returns a list of solutions. Each solution is a list of equations where LHS is
+    the dependent variable and RHS is an expression in terms of the independent variable *t*
 
     Parameters
     ==========
 
     eqs : List
-        List of ODEs to be solved
+        system of ODEs to be solved
     funcs : List or None
         List of dependent variables that make up the system of ODEs
     t : Symbol
         Independent variable in the system of ODEs
     ics : Dict or None
-        Set of initial boundary/conditions for the system of ODEs.
+        Set of initial boundary/conditions for the system of ODEs
+    doit : Boolean
+        Evaluate the solutions if True. Default value is False
 
     Examples
     ========
@@ -1222,27 +1223,28 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None):
 
     >>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
     >>> dsolve_system(eqs)
-    ([[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]], [])
+    [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
 
     You can also pass the initial conditions for the system of ODEs:
     >>> dsolve_system(eqs, ics={f(0): 1, g(0): 0})
-    ([[Eq(f(x), exp(x)/2 + exp(-x)/2), Eq(g(x), exp(x)/2 - exp(-x)/2)]], [])
+    [[Eq(f(x), exp(x)/2 + exp(-x)/2), Eq(g(x), exp(x)/2 - exp(-x)/2)]]
 
     Optionally, you can pass the dependent variables and the independent
     variable for which the system is to be solved:
     >>> funcs = [f(x), g(x)]
     >>> dsolve_system(eqs, funcs=funcs, t=x)
-    ([[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]], [])
+    [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
 
     Lets look at an implicit system of ODEs:
     >>> eqs = [Eq(f(x).diff(x)**2, g(x)**2), Eq(g(x).diff(x), g(x))]
     >>> dsolve_system(eqs)
-    ([[Eq(f(x), C1 - C2*exp(x)), Eq(g(x), C2*exp(x))], [Eq(f(x), C1 + C2*exp(x)), Eq(g(x), C2*exp(x))]], [])
+    [[Eq(f(x), C1 - C2*exp(x)), Eq(g(x), C2*exp(x))],
+     [Eq(f(x), C1 + C2*exp(x)), Eq(g(x), C2*exp(x))]]
 
     Returns
     =======
 
-    Tuple : (List of List of Equations, List of sub-systems not solved)
+    List of List of Equations
 
     Raises
     ======
@@ -1312,7 +1314,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None):
     # is added.
     elif match.get('is_general', False):
         if match.get('is_linear', False):
-            match.update({'const_idx': 0, 't': t})
+            match['t'] = t
             sols.append(_linear_ode_solver(match))
 
     if sols:
@@ -1323,12 +1325,18 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None):
         # be changed when system division is
         # added.
         funcs = [s.lhs for s in sols[0]]
+
         for sol in sols:
             sol = _replace_dummies(eqs, sol)
+
             if ics:
                 constants = Tuple(*sol).free_symbols - Tuple(*eqs).free_symbols
                 solved_constants = solve_ics(sol, funcs, constants, ics)
                 sol = [s.subs(solved_constants) for s in sol]
+
+            if doit:
+                sol = [s.doit() for s in sol]
+
             final_sols.append(sol)
 
         sols = final_sols

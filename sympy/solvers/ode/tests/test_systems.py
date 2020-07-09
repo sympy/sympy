@@ -1773,6 +1773,9 @@ def test_dsolve_system():
     eqs = [Eq(f(x).diff(x), f(x) + g(x)), Eq(g(x).diff(x), f(x) + g(x))]
     funcs = [f(x), g(x)]
 
+    sol = [[Eq(f(x), -C1 + C2*exp(2*x)), Eq(g(x), C1 + C2*exp(2*x))]]
+    assert dsolve_system(eqs, funcs=funcs, t=x, doit=True) == sol
+
     raises(ValueError, lambda: dsolve_system(1))
     raises(ValueError, lambda: dsolve_system(eqs, 1))
     raises(ValueError, lambda: dsolve_system(eqs, funcs, 1))
