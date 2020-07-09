@@ -10,7 +10,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
-    a2idx, classof, ShapeError
+    a2idx, classof, ShapeError, NonSquareMatrixError
 from sympy.matrices.matrices import MatrixBase
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
@@ -802,6 +802,19 @@ class DenseDomainMatrix(DenseMatrix):
     def det(self, *args, **kwargs):
         rep = self._rep
         return rep.domain.to_sympy(rep.det())
+
+    def charpoly(self, *args, **kwargs):
+        from sympy.polys.polymatrix import berk
+        from sympy.polys import PurePoly
+        from sympy import Dummy
+        rep = self._rep
+        m, n = self.shape
+        if m != n:
+            raise NonSquareMatrixError("not square")
+        dom = rep.domain
+        vec = berk(rep)
+        psympy = [vec.rows[i][0] for i in range(n+1)]
+        return PurePoly(psympy, Dummy(), domain=dom)
 
     def LUdecomposition(self, *args, **kwargs):
         from sympy.polys.polymatrix import lu_decomp

@@ -421,3 +421,36 @@ def lu_solve(M, b):
 
     x = DomainMatrix(x, (n, o), dom)
     return x
+
+def berk(M):
+    dom = M.domain
+    m, n = M.shape
+    assert m == n
+
+    if n == 1:
+        v = [[1], [-M.rows[0][0]]]
+        return DomainMatrix(v, (2, 1), dom)
+
+    a = M.rows[0][0]
+    R = DomainMatrix([M.rows[0][1:]], (1, n-1), dom)
+    C = DomainMatrix([[row[0]] for row in M.rows[1:]], (n-1, 1), dom)
+    A = DomainMatrix([row[1:] for row in M.rows[1:]], (n-1, n-1), dom)
+
+    q = berk(A)
+
+    T = [[dom.zero] * n for _ in range(n+1)]
+    for i in range(n):
+        T[i][i] = dom.one
+        T[i+1][i] = -a
+    for i in range(2, n+1):
+        if i == 2:
+            AnC = C
+        else:
+            AnC = A * AnC
+        RAnC = R * AnC
+        assert RAnC.shape == (1, 1)
+        for j in range(0, n+1-i):
+            T[i+j][j] = -RAnC.rows[0][0]
+    T = DomainMatrix(T, (n+1, n), dom)
+
+    return T * q
