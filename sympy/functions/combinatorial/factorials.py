@@ -638,8 +638,11 @@ class RisingFactorial(CombinatorialFunction):
         return FallingFactorial(x + k - 1, k)
 
     def _eval_rewrite_as_factorial(self, x, k, **kwargs):
+        from sympy import Piecewise
         if x.is_integer and k.is_integer:
-            return factorial(k + x - 1) / factorial(x - 1)
+            return Piecewise(
+                (factorial(k + x - 1)/factorial(x - 1), x > 0),
+                ((-1)**k*factorial(-x)/factorial(-k - x), True))
 
     def _eval_rewrite_as_binomial(self, x, k, **kwargs):
         if k.is_integer:
@@ -799,8 +802,11 @@ class FallingFactorial(CombinatorialFunction):
             return factorial(k) * binomial(x, k)
 
     def _eval_rewrite_as_factorial(self, x, k, **kwargs):
+        from sympy import Piecewise
         if x.is_integer and k.is_integer:
-            return factorial(x) / factorial(x - k)
+            return Piecewise(
+                (factorial(x)/factorial(-k + x), x >= 0),
+                ((-1)**k*factorial(k - x - 1)/factorial(-x - 1), True))
 
     def _eval_rewrite_as_tractable(self, x, k, **kwargs):
         from sympy import gamma

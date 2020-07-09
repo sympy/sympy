@@ -85,8 +85,10 @@ def test_rf_eval_apply():
         ((-1)**k*gamma(1 - x)/gamma(-k - x + 1), True))
     assert rf(5, k).rewrite(gamma) == gamma(k + 5)/24
     assert rf(x, k).rewrite(binomial) == factorial(k)*binomial(x + k - 1, k)
-    assert rf(n, k).rewrite(factorial) == \
-        factorial(n + k - 1) / factorial(n - 1)
+    assert rf(n, k).rewrite(factorial) == Piecewise(
+        (factorial(k + n - 1)/factorial(n - 1), n > 0),
+        ((-1)**k*factorial(-n)/factorial(-k - n), True))
+    assert rf(5, k).rewrite(factorial) == factorial(k + 4)/24
     assert rf(x, y).rewrite(factorial) == rf(x, y)
     assert rf(x, y).rewrite(binomial) == rf(x, y)
 
@@ -169,7 +171,10 @@ def test_ff_eval_apply():
         (gamma(x + 1)/gamma(-k + x + 1), x >= 0),
         ((-1)**k*gamma(k - x)/gamma(-x), True))
     assert ff(5, k).rewrite(gamma) == 120/gamma(6 - k)
-    assert ff(n, k).rewrite(factorial) == factorial(n) / factorial(n - k)
+    assert ff(n, k).rewrite(factorial) == Piecewise(
+        (factorial(n)/factorial(-k + n), n >= 0),
+        ((-1)**k*factorial(k - n - 1)/factorial(-n - 1), True))
+    assert ff(5, k).rewrite(factorial) == 120/factorial(5 - k)
     assert ff(x, k).rewrite(binomial) == factorial(k) * binomial(x, k)
     assert ff(x, y).rewrite(factorial) == ff(x, y)
     assert ff(x, y).rewrite(binomial) == ff(x, y)

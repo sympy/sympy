@@ -2121,7 +2121,6 @@ def test_T11():
     assert limit(n**x/(x*product((1 + x/k), (k, 1, n))), n, oo) == gamma(x)
 
 
-@XFAIL
 def test_T12():
     x, t = symbols('x t', real=True)
     # Does not evaluate the limit but returns an expression with erf
