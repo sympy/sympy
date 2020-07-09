@@ -11,7 +11,7 @@ from sympy.core.parameters import global_parameters
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, DecimalRational
 from sympy.functions import exp, sqrt, log
 from sympy.functions.elementary.complexes import Abs
 from sympy.polys import gcd
@@ -1089,7 +1089,7 @@ def fraction(expr, exact=False):
                 denom.append(d)
             else:
                 numer.append(term)
-        elif term.is_DecimalRational:
+        elif isinstance(term, DecimalRational):
             numer.append(term)
         elif term.is_Rational:
             n, d = term.as_numer_denom()

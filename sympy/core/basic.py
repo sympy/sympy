@@ -88,7 +88,6 @@ class Basic(metaclass=ManagedProperties):
     is_Number = False
     is_Float = False
     is_Rational = False
-    is_DecimalRational = False
     is_Integer = False
     is_NumberSymbol = False
     is_Order = False

@@ -5,7 +5,7 @@ from collections import defaultdict
 from sympy.core.function import expand_log, count_ops
 from sympy.core import sympify, Basic, Dummy, S, Add, Mul, Pow, expand_mul, factor_terms
 from sympy.core.compatibility import ordered, default_sort_key, reduce
-from sympy.core.numbers import Integer, Rational
+from sympy.core.numbers import Integer, Rational, DecimalRational
 from sympy.core.mul import prod, _keep_coeff
 from sympy.core.rules import Transform
 from sympy.functions import exp_polar, exp, log, root, polarify, unpolarify
@@ -239,11 +239,11 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
             '''
             if e is not None:  # coming from c_powers or from below
-                if e.is_Integer:
+                if isinstance(e, Integer):
                     return (b, S.One), e
-                elif e.is_DecimalRational:
+                elif isinstance(e, DecimalRational):
                     return (b**e, S.One), S.One
-                elif e.is_Rational:
+                elif isinstance(e, Rational):
                     return (b, Integer(e.q)), Integer(e.p)
                 else:
                     c, m = e.as_coeff_Mul(rational=True)
