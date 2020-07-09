@@ -635,7 +635,7 @@ class Point(Basic):
     Mathematically, point is defined in the manifold and does not have any coordinates
     by itself. Coordinate system is what imbues the coordinates to the point by coordinate
     chart. However, due to the difficulty of realizing such logic, you must supply
-    a coordinate system and coordinates to define a point.
+    a coordinate system and coordinates to define a Point here.
 
     The usage of this object after its definition is independent of the
     coordinate system that was used in order to define it, however due to
@@ -653,6 +653,23 @@ class Point(Basic):
     Examples
     ========
 
+    >>> from sympy import pi
+    >>> from sympy.diffgeom import Point
+    >>> from sympy.diffgeom.rn import R2_r, R2_p
+    >>> rho, theta = R2_p.symbols
+
+    >>> p = Point(R2_p, [rho, 3*pi/4])
+
+    >>> p.manifold
+    >>> p.coordinates()
+    Matrix([
+    [   rho],
+    [3*pi/4]])
+    >>> p.coordinates(R2_r)
+    Matrix([
+    [-sqrt(2)*rho/2],
+    [ sqrt(2)*rho/2]])
+
     """
 
     def __new__(cls, coordinate_system, coordinates):
@@ -661,6 +678,10 @@ class Point(Basic):
         obj._coord_sys = coordinate_system
         obj._coords = coordinates
         return obj
+
+    @property
+    def manifold(self):
+        return self._coord_sys.manifold
 
     def coordinates(self, sys=None):
         """
