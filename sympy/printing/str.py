@@ -885,15 +885,15 @@ class StrPrinter(Printer):
         return self._print(coords.name)
 
     def _print_BaseScalarField(self, field):
-        return field._coord_sys._names[field._index]
+        return field._coord_sys.symbols[field._index].name
 
     def _print_BaseVectorField(self, field):
-        return 'e_%s' % field._coord_sys._names[field._index]
+        return 'e_%s' % field._coord_sys.symbols[field._index].name
 
     def _print_Differential(self, diff):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
-            return 'd%s' % field._coord_sys._names[field._index]
+            return 'd%s' % field._coord_sys.symbols[field._index].name
         else:
             return 'd(%s)' % self._print(field)
 

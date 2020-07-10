@@ -2541,17 +2541,17 @@ class LatexPrinter(Printer):
         return r'\mathbb{\nabla}_{%s}' % self._print(cvd._wrt)
 
     def _print_BaseScalarField(self, field):
-        string = field._coord_sys._names[field._index]
+        string = field._coord_sys.symbols[field._index].name
         return r'\mathbf{{{}}}'.format(self._print(Symbol(string)))
 
     def _print_BaseVectorField(self, field):
-        string = field._coord_sys._names[field._index]
+        string = field._coord_sys.symbols[field._index].name
         return r'\partial_{{{}}}'.format(self._print(Symbol(string)))
 
     def _print_Differential(self, diff):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
-            string = field._coord_sys._names[field._index]
+            string = field._coord_sys.symbols[field._index].name
             return r'\operatorname{{d}}{}'.format(self._print(Symbol(string)))
         else:
             string = self._print(field)
