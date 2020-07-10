@@ -126,7 +126,15 @@ def test_issue_10382():
 
 
 def test_issue_11672():
+<<<<<<< HEAD
     assert limit_seq(Rational(-1, 2)**n, n) == 0
+=======
+    assert limit_seq(Rational(-1,2)**n, n) == 0
+    
+    
+def test_issue_16735():
+    assert limit_seq(5**n/factorial(n), n) == 0
+>>>>>>> 267fdab611eb8638e1aad97dd7133dcc5c3e7ce9
 
 
 @XFAIL

@@ -1488,7 +1488,7 @@ class Pow(Expr):
         #    g has order O(x**d) where d is strictly positive.
         # 2) Then b**e = (f**e)*((1 + g)**e).
         #    (1 + g)**e is computed using binomial series.
-        from sympy import im, I, ceiling, polygamma, logcombine, EulerGamma, exp, nan, zoo, log, factorial, ff, PoleError, O, powdenest, Wild
+        from sympy import im, I, ceiling, polygamma, limit, logcombine, EulerGamma, exp, nan, zoo, log, factorial, ff, PoleError, O, powdenest, Wild
         from itertools import product
         self = powdenest(self, force=True).trigsimp()
         b, e = self.as_base_exp()
@@ -1509,7 +1509,7 @@ class Pow(Expr):
             if b.has(polygamma, EulerGamma) and logx is not None:
                 raise ValueError()
             _, m = b.leadterm(x)
-        except ValueError:
+        except (ValueError, NotImplementedError):
             b = b._eval_nseries(x, n=max(2, n), logx=logx, cdir=cdir).removeO()
             if b.has(nan, zoo):
                 raise NotImplementedError()
@@ -1553,7 +1553,14 @@ class Pow(Expr):
                     res[ex] = res.get(ex, S.Zero) + d1[e1]*d2[e2]
             return res
 
-        _, d = g.leadterm(x)
+        try:
+            _, d = g.leadterm(x)
+        except (ValueError, NotImplementedError):
+            if limit(g/x**maxpow, x, 0) == 0:
+                # g has higher order zero
+                return f**e + e*f**e*g  # first term of binomial series
+            else:
+                raise NotImplementedError()
         if not d.is_positive:
             g = (b - f).simplify()/f
             _, d = g.leadterm(x)

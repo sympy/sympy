@@ -23,6 +23,11 @@ class Expr(Basic, EvalfMixin):
     used only for argument storage and expression manipulation, i.e.
     pattern matching, substitutions, etc).
 
+    If you want to override the comparisons of expressions:
+    Should use _eval_is_ge for inequality, or _eval_is_eq, with multiple dispatch.
+    _eval_is_ge return true if x >= y, false if x < y, and None if the two types
+    are not comparable or the comparison is indeterminate
+
     See Also
     ========
 
@@ -339,78 +344,25 @@ class Expr(Basic, EvalfMixin):
         re, im = result.as_real_imag()
         return complex(float(re), float(im))
 
-    def _cmp(self, other, op, cls):
-        assert op in ("<", ">", "<=", ">=")
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return NotImplemented
-
-        if not isinstance(other, Expr):
-            return NotImplemented
-
-        for me in (self, other):
-            if me.is_extended_real is False:
-                raise TypeError("Invalid comparison of non-real %s" % me)
-            if me is S.NaN:
-                raise TypeError("Invalid NaN comparison")
-
-        n2 = _n2(self, other)
-        if n2 is not None:
-            # use float comparison for infinity.
-            # otherwise get stuck in infinite recursion
-            if n2 in (S.Infinity, S.NegativeInfinity):
-                n2 = float(n2)
-            if op == "<":
-                return _sympify(n2 < 0)
-            elif op == ">":
-                return _sympify(n2 > 0)
-            elif op == "<=":
-                return _sympify(n2 <= 0)
-            else: # >=
-                return _sympify(n2 >= 0)
-
-        if self.is_extended_real and other.is_extended_real:
-            if op in ("<=", ">") \
-                and ((self.is_infinite and self.is_extended_negative) \
-                     or (other.is_infinite and other.is_extended_positive)):
-                return S.true if op == "<=" else S.false
-            if op in ("<", ">=") \
-                and ((self.is_infinite and self.is_extended_positive) \
-                     or (other.is_infinite and other.is_extended_negative)):
-                return S.true if op == ">=" else S.false
-            diff = self - other
-            if diff is not S.NaN:
-                if op == "<":
-                    test = diff.is_extended_negative
-                elif op == ">":
-                    test = diff.is_extended_positive
-                elif op == "<=":
-                    test = diff.is_extended_nonpositive
-                else: # >=
-                    test = diff.is_extended_nonnegative
-
-                if test is not None:
-                    return S.true if test == True else S.false
-
-        # return unevaluated comparison object
-        return cls(self, other, evaluate=False)
-
+    @sympify_return([('other', 'Expr')], NotImplemented)
     def __ge__(self, other):
-        from sympy import GreaterThan
-        return self._cmp(other, ">=", GreaterThan)
+        from .relational import GreaterThan
+        return GreaterThan(self, other)
 
+    @sympify_return([('other', 'Expr')], NotImplemented)
     def __le__(self, other):
-        from sympy import LessThan
-        return self._cmp(other, "<=", LessThan)
+        from .relational import LessThan
+        return LessThan(self, other)
 
+    @sympify_return([('other', 'Expr')], NotImplemented)
     def __gt__(self, other):
-        from sympy import StrictGreaterThan
-        return self._cmp(other, ">", StrictGreaterThan)
+        from .relational import StrictGreaterThan
+        return StrictGreaterThan(self, other)
 
+    @sympify_return([('other', 'Expr')], NotImplemented)
     def __lt__(self, other):
-        from sympy import StrictLessThan
-        return self._cmp(other, "<", StrictLessThan)
+        from .relational import StrictLessThan
+        return StrictLessThan(self, other)
 
     def __trunc__(self):
         if not self.is_number:
@@ -3979,17 +3931,6 @@ class UnevaluatedExpr(Expr):
         else:
             return self.args[0]
 
-
-def _n2(a, b):
-    """Return (a - b).evalf(2) if a and b are comparable, else None.
-    This should only be used when a and b are already sympified.
-    """
-    # /!\ it is very important (see issue 8245) not to
-    # use a re-evaluated number in the calculation of dif
-    if a.is_comparable and b.is_comparable:
-        dif = (a - b).evalf(2)
-        if dif.is_comparable:
-            return dif
 
 
 def unchanged(func, *args):
