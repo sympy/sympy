@@ -2255,11 +2255,11 @@ def test_Series_printing():
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
     assert latex(Series(tf1, tf2)) == \
-        '\\frac{\\left(x - y\\right) \\left(x y^{2} - z\\right)}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)}'
+        '\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right)'
     assert latex(Series(tf1, tf2, tf3)) == \
-        '\\frac{\\left(x - y\\right) \\left(x y^{2} - z\\right) \\left(t x^{2} - t^{w} x + w\\right)}{\\left(t - y\\right) \\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)}'
+        '\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right) \\left(\\frac{t x^{2} - t^{w} x + w}{t - y}\\right)'
     assert latex(Series(-tf2, tf1)) == \
-        '\\frac{\\left(- x + y\\right) \\left(x y^{2} - z\\right)}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)}'
+        '\\left(\\frac{- x + y}{x + y}\\right) \\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right)'
 
 
 def test_TransferFunction_printing():
@@ -2275,18 +2275,18 @@ def test_Parallel_printing():
     tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
     tf2 = TransferFunction(x - y, x + y, y)
     assert latex(Parallel(tf1, tf2)) == \
-        '\\frac{\\left(- t^{3} + y^{3}\\right) \\left(x - y\\right) + \\left(x + y\\right) \\left(x y^{2} - z\\right)}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)}'
+        '\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right)'
     assert latex(Parallel(-tf2, tf1)) == \
-        '\\frac{\\left(- t^{3} + y^{3}\\right) \\left(- x + y\\right) + \\left(x + y\\right) \\left(x y^{2} - z\\right)}{\\left(- t^{3} + y^{3}\\right) \\left(x + y\\right)}'
+        '\\left(\\frac{- x + y}{x + y}\\right) \\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right)'
 
 
 def test_Feedback_printing():
     tf1 = TransferFunction(p, p + x, p)
     tf2 = TransferFunction(-s + p, p + s, p)
     assert latex(Feedback(tf1, tf2)) == \
-        '\\frac{p \\left(p + s\\right) \\left(p + x\\right)}{\\left(p + x\\right) \\left(p \\left(p - s\\right) + \\left(p + s\\right) \\left(p + x\\right)\\right)}'
+        '\\frac{\\frac{p}{p + x}}{\\left(1 \\cdot 1^{-1}\\right) \\left(\\left(\\frac{p}{p + x}\\right) \\left(\\frac{p - s}{p + s}\\right)\\right)}'
     assert latex(Feedback(tf1*tf2, TransferFunction(1, 1, p))) == \
-        '\\frac{p \\left(p - s\\right) \\left(p + s\\right) \\left(p + x\\right)}{\\left(p + s\\right) \\left(p + x\\right) \\left(p \\left(p - s\\right) + \\left(p + s\\right) \\left(p + x\\right)\\right)}'
+        '\\frac{\\left(\\frac{p}{p + x}\\right) \\left(\\frac{p - s}{p + s}\\right)}{\\left(1 \\cdot 1^{-1}\\right) \\left(\\left(\\frac{p}{p + x}\\right) \\left(\\frac{p - s}{p + s}\\right)\\right)}'
 
 
 def test_Quaternion_latex_printing():
