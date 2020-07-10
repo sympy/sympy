@@ -174,7 +174,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     matrix differential equation [1]. For example the system $x' = x + y + 1$
     and $y' = x - y$ can be represented as
 
-    .. math:: A_1 X' + A_0 X = b
+    .. math:: A_1 X' = A0 X + b
 
     where $A_1$ and $A_0$ are $2 \times 2$ matrices and $b$, $X$ and $X'$ are
     $2 \times 1$ matrices with $X = [x, y]^T$.
@@ -182,7 +182,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Higher-order systems are represented with additional matrices e.g. a
     second-order system would look like
 
-    .. math:: A_2 X'' + A_1 X' + A_0 X = b
+    .. math:: A_2 X'' =  A_1 X' + A_0 X  + b
 
     Examples
     ========
@@ -212,8 +212,8 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     [0, 1]])
     >>> A0
     Matrix([
-    [-1, -1],
-    [-1,  1]])
+    [1, 1],
+    [1,  -1]])
     >>> b
     Matrix([
     [1],
@@ -223,7 +223,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
     >>> eqs_mat = Matrix([eq.lhs - eq.rhs for eq in eqs])
     >>> X = Matrix(funcs)
-    >>> A1 * X.diff(t) + A0 * X - b == eqs_mat
+    >>> A1 * X.diff(t) - A0 * X - b == eqs_mat
     True
 
     If the system of equations has a maximum order greater than the
@@ -308,7 +308,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
         Ai = Ai.applyfunc(expand_mul)
 
-        As.append(Ai)
+        As.append(Ai if o == order else -Ai)
 
         if o:
             eqs = [-eq for eq in b]
@@ -609,7 +609,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     non-homogeneous term if it is there.
 
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
-    >>> A = -A0
+    >>> A = A0
 
     We have the coefficient matrices and the non-homogeneous term ready. Now, we can use
     :obj:`sympy.solvers.ode.systems.linodesolve_type()` to get the information for the system of ODEs
@@ -635,7 +635,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     The system defined above is already in the desired form, so we don't have to convert it.
 
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
-    >>> A = -A0
+    >>> A = A0
 
     A user can also pass the commutative antidervative required for type3 and type4 system of ODEs.
     Passing an incorrect one will lead to incorrect results. If the coefficient matrix is not commutative
@@ -1054,7 +1054,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
             match['rhs'] = b
 
         try:
-            system_info = linodesolve_type(-A, t, b=b)
+            system_info = linodesolve_type(A, t, b=b)
         except NotImplementedError:
             return None
 
@@ -1099,7 +1099,7 @@ def _linear_ode_solver(match):
     funcs = match['func']
 
     rhs = match.get('rhs', None)
-    A = -match['func_coeff']
+    A = match['func_coeff']
     B = match.get('commutative_antiderivative', None)
     type_of_equation = match['type_of_equation']
 
