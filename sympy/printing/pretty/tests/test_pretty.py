@@ -7051,11 +7051,12 @@ def test_issue_18272():
 
 def test_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
+    x,y = symbols('x y', real=True)
     m = Manifold('M', 2)
     assert pretty(m) == 'M'
     p = Patch('P', m)
     assert pretty(p) == "P"
-    rect = CoordSystem('rect', p)
+    rect = CoordSystem('rect', p, [x, y])
     assert pretty(rect) == "rect"
     b = BaseScalarField(rect, 0)
-    assert pretty(b) == "rect_0"
+    assert pretty(b) == "x"
