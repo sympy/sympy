@@ -7,8 +7,8 @@ from sympy.matrices.dense import DenseMatrix, DenseDomainMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.sparse import SparseMatrix
-from sympy.polys.polymatrix import DomainMatrix
 from sympy.multipledispatch import dispatch
+from sympy.polys.domainmatrix import DomainMatrix
 
 
 def sympify_matrix(arg):

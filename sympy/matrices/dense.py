@@ -12,6 +12,7 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError, NonSquareMatrixError
 from sympy.matrices.matrices import MatrixBase
+from sympy.polys.domainmatrix import DomainMatrix
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
@@ -671,9 +672,6 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
 
 MutableMatrix = Matrix = MutableDenseMatrix
-
-
-from sympy.polys.polymatrix import DomainMatrix
 
 
 class DenseDomainMatrix(DenseMatrix):

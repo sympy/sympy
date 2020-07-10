@@ -8,7 +8,7 @@ from sympy.matrices import MutableDenseMatrix
 from sympy.polys.domains import EX
 from sympy.polys.rings import sring
 from sympy.polys.polyerrors import NotInvertible
-from sympy.polys.polymatrix import DomainMatrix
+from sympy.polys.domainmatrix import DomainMatrix
 
 
 class PolyNonlinearError(Exception):
