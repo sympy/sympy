@@ -460,3 +460,10 @@ def test_collect_abs():
 def test_issue_19149():
     eq = exp(3*x/4)
     assert collect(eq, exp(x)) == eq
+
+def test_issue_19719():
+    a, b = symbols('a, b')
+    expr = a**2 * (b + 1) + (7 + 1/b)/a
+    collected = collect(expr, (a**2, 1/a), evaluate=False)
+    # Would return {_Dummy_20**(-2): b + 1, 1/a: 7 + 1/b} without xreplace
+    assert collected == {a**2: b + 1, 1/a: 7 + 1/b}

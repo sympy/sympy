@@ -919,7 +919,7 @@ class TensorIndexType(Basic):
     dummy_name : name of the head of dummy indices
     dim : dimension, it can be a symbol or an integer or ``None``
     eps_dim : dimension of the epsilon tensor
-    metric_symmetry : integer that denotes metric symmetry or `None` for no metirc
+    metric_symmetry : integer that denotes metric symmetry or ``None`` for no metirc
     metric_name : string with the name of the metric tensor
 
     Attributes
@@ -933,15 +933,15 @@ class TensorIndexType(Basic):
     Notes
     =====
 
-    The possible values of the `metric_symmetry` parameter are:
+    The possible values of the ``metric_symmetry`` parameter are:
 
         ``1``   :   metric tensor is fully symmetric
         ``0``   :   metric tensor possesses no index symmetry
         ``-1``  :   metric tensor is fully antisymmetric
-        ``None``:   there is no metric tensor (metric equals to `None`)
+        ``None``:   there is no metric tensor (metric equals to ``None``)
 
     The metric is assumed to be symmetric by default. It can also be set
-    to a custom tensor by the `.set_metric()` method.
+    to a custom tensor by the ``.set_metric()`` method.
 
     If there is a metric the metric is used to raise and lower indices.
 

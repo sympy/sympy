@@ -814,6 +814,12 @@ def test_issue_18508():
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)
 
 
+def test_issue_18969():
+    a, b = symbols('a b', positive=True)
+    assert limit(LambertW(a), a, b) == LambertW(b)
+    assert limit(exp(LambertW(a)), a, b) == exp(LambertW(b))
+
+
 def test_issue_18992():
     assert limit(n/(factorial(n)**(1/n)), n, oo) == exp(1)
 

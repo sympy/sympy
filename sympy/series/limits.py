@@ -240,7 +240,7 @@ class Limit(Expr):
                 newe = e.subs(z, z + z0)
             try:
                 coeff, ex = newe.leadterm(z, cdir)
-            except ValueError:
+            except (ValueError, NotImplementedError):
                 pass
             else:
                 if ex > 0:

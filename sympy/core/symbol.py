@@ -1,6 +1,6 @@
 from sympy.core.assumptions import StdFactKB, _assume_defined
 from sympy.core.compatibility import is_sequence, ordered
-from .basic import Basic
+from .basic import Basic, Atom
 from .sympify import sympify
 from .singleton import S
 from .expr import Expr, AtomicExpr
@@ -15,6 +15,32 @@ import string
 import re as _re
 import random
 
+class Str(Atom):
+    """
+    Represents string in SymPy.
+
+    Explanation
+    ===========
+
+    Previously, ``Symbol`` was used where string is needed in ``args`` of SymPy
+    objects, e.g. denoting the name of the instance. However, since ``Symbol``
+    represents mathematical scalar, this class should be used instead.
+
+    """
+    __slots__ = ('name',)
+
+    def __new__(cls, name, **kwargs):
+        if not isinstance(name, str):
+            raise TypeError("name should be a string, not %s" % repr(type(name)))
+        obj = Expr.__new__(cls, **kwargs)
+        obj.name = name
+        return obj
+
+    def __getnewargs__(self):
+        return (self.name,)
+
+    def _hashable_content(self):
+        return (self.name,)
 
 def _filter_assumptions(kwargs):
     """Split the given dict into assumptions and non-assumptions.
@@ -26,7 +52,6 @@ def _filter_assumptions(kwargs):
         binary=True))
     Symbol._sanitize(assumptions)
     return assumptions, nonassumptions
-
 
 def _symbol(s, matching_symbol=None, **assumptions):
     """Return s if s is a Symbol, else if s is a string, return either
