@@ -1489,49 +1489,68 @@ class CovarDerivativeOp(Expr):
 ###############################################################################
 def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeffs=False):
     r"""Return the series expansion for an integral curve of the field.
+
+    Explanation
+    ===========
+
     Integral curve is a function `\gamma` taking a parameter in `R` to a point
     in the manifold. It verifies the equation:
+
     `V(f)\big(\gamma(t)\big) = \frac{d}{dt}f\big(\gamma(t)\big)`
+
     where the given ``vector_field`` is denoted as `V`. This holds for any
     value `t` for the parameter and any scalar field `f`.
+
     This equation can also be decomposed of a basis of coordinate functions
     `V(f_i)\big(\gamma(t)\big) = \frac{d}{dt}f_i\big(\gamma(t)\big) \quad \forall i`
+
     This function returns a series expansion of `\gamma(t)` in terms of the
     coordinate system ``coord_sys``. The equations and expansions are necessarily
     done in coordinate-system-dependent way as there is no other way to
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
-    See Also
-    ========
-    intcurve_diffequ
+
     Parameters
     ==========
     vector_field
         the vector field for which an integral curve will be given
+
     param
         the argument of the function `\gamma` from R to the curve
+
     start_point
         the point which corresponds to `\gamma(0)`
+
     n
         the order to which to expand
+
     coord_sys
         the coordinate system in which to expand
         coeffs (default False) - if True return a list of elements of the expansion
+
     Examples
     ========
+
     Use the predefined R2 manifold:
+
     >>> from sympy.abc import t, x, y
     >>> from sympy.diffgeom.rn import R2_p, R2_r
     >>> from sympy.diffgeom import intcurve_series
+
     Specify a starting point and a vector field:
+
     >>> start_point = R2_r.point([x, y])
     >>> vector_field = R2_r.e_x
+
     Calculate the series:
+
     >>> intcurve_series(vector_field, t, start_point, n=3)
     Matrix([
     [t + x],
     [    y]])
+
     Or get the elements of the expansion in a list:
+
     >>> series = intcurve_series(vector_field, t, start_point, n=3, coeffs=True)
     >>> series[0]
     Matrix([
@@ -1545,7 +1564,9 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     Matrix([
     [0],
     [0]])
+
     The series in the polar coordinate system:
+
     >>> series = intcurve_series(vector_field, t, start_point,
     ...             n=3, coord_sys=R2_p, coeffs=True)
     >>> series[0]
@@ -1560,6 +1581,12 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     Matrix([
     [t**2*(-x**2/(x**2 + y**2)**(3/2) + 1/sqrt(x**2 + y**2))/2],
     [                                t**2*x*y/(x**2 + y**2)**2]])
+
+    See Also
+    ========
+
+    intcurve_diffequ
+
     """
     if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
         raise ValueError('The supplied field was not a vector field.')
@@ -1583,53 +1610,79 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
 
 def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     r"""Return the differential equation for an integral curve of the field.
+
+    Explanation
+    ===========
+
     Integral curve is a function `\gamma` taking a parameter in `R` to a point
     in the manifold. It verifies the equation:
+
     `V(f)\big(\gamma(t)\big) = \frac{d}{dt}f\big(\gamma(t)\big)`
+
     where the given ``vector_field`` is denoted as `V`. This holds for any
     value `t` for the parameter and any scalar field `f`.
+
     This function returns the differential equation of `\gamma(t)` in terms of the
     coordinate system ``coord_sys``. The equations and expansions are necessarily
     done in coordinate-system-dependent way as there is no other way to
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
-    See Also
-    ========
-    intcurve_series
+
     Parameters
     ==========
+
     vector_field
         the vector field for which an integral curve will be given
+
     param
         the argument of the function `\gamma` from R to the curve
+
     start_point
         the point which corresponds to `\gamma(0)`
+
     coord_sys
         the coordinate system in which to give the equations
+
     Returns
     =======
+
     a tuple of (equations, initial conditions)
+
     Examples
     ========
+
     Use the predefined R2 manifold:
+
     >>> from sympy.abc import t
     >>> from sympy.diffgeom.rn import R2, R2_p, R2_r
     >>> from sympy.diffgeom import intcurve_diffequ
+
     Specify a starting point and a vector field:
+
     >>> start_point = R2_r.point([0, 1])
     >>> vector_field = -R2.y*R2.e_x + R2.x*R2.e_y
+
     Get the equation:
+
     >>> equations, init_cond = intcurve_diffequ(vector_field, t, start_point)
     >>> equations
     [f_1(t) + Derivative(f_0(t), t), -f_0(t) + Derivative(f_1(t), t)]
     >>> init_cond
     [f_0(0), f_1(0) - 1]
+
     The series in the polar coordinate system:
+
     >>> equations, init_cond = intcurve_diffequ(vector_field, t, start_point, R2_p)
     >>> equations
     [Derivative(f_0(t), t), Derivative(f_1(t), t) - 1]
     >>> init_cond
     [f_0(0) - 1, f_1(0) - pi/2]
+
+    See Also
+    ========
+
+    intcurve_series
+
     """
     if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
         raise ValueError('The supplied field was not a vector field.')
@@ -1661,17 +1714,21 @@ def dummyfy(args, exprs):
 ###############################################################################
 def contravariant_order(expr, _strict=False):
     """Return the contravariant order of an expression.
+
     Examples
     ========
+
     >>> from sympy.diffgeom import contravariant_order
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.abc import a
+
     >>> contravariant_order(a)
     0
     >>> contravariant_order(a*R2.x + 2)
     0
     >>> contravariant_order(a*R2.x*R2.e_y + R2.e_x)
     1
+
     """
     # TODO move some of this to class methods.
     # TODO rewrite using the .as_blah_blah methods
@@ -1703,17 +1760,21 @@ def contravariant_order(expr, _strict=False):
 
 def covariant_order(expr, _strict=False):
     """Return the covariant order of an expression.
+
     Examples
     ========
+
     >>> from sympy.diffgeom import covariant_order
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.abc import a
+
     >>> covariant_order(a)
     0
     >>> covariant_order(a*R2.x + 2)
     0
     >>> covariant_order(a*R2.x*R2.dy + R2.dx)
     1
+
     """
     # TODO move some of this to class methods.
     # TODO rewrite using the .as_blah_blah methods
@@ -1750,14 +1811,18 @@ def vectors_in_basis(expr, to_sys):
     """Transform all base vectors in base vectors of a specified coord basis.
     While the new base vectors are in the new coordinate system basis, any
     coefficients are kept in the old system.
+
     Examples
     ========
+
     >>> from sympy.diffgeom import vectors_in_basis
     >>> from sympy.diffgeom.rn import R2_r, R2_p
+
     >>> vectors_in_basis(R2_r.e_x, R2_p)
     -y*e_theta/(x**2 + y**2) + x*e_r/sqrt(x**2 + y**2)
     >>> vectors_in_basis(R2_p.e_r, R2_r)
     sin(theta)*e_y + cos(theta)*e_x
+
     """
     vectors = list(expr.atoms(BaseVectorField))
     new_vectors = []
@@ -1774,14 +1839,18 @@ def vectors_in_basis(expr, to_sys):
 ###############################################################################
 def twoform_to_matrix(expr):
     """Return the matrix representing the twoform.
+
     For the twoform `w` return the matrix `M` such that `M[i,j]=w(e_i, e_j)`,
     where `e_i` is the i-th base vector field for the coordinate system in
     which the expression of `w` is given.
+
     Examples
     ========
+
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import twoform_to_matrix, TensorProduct
     >>> TP = TensorProduct
+
     >>> twoform_to_matrix(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     Matrix([
     [1, 0],
@@ -1794,6 +1863,7 @@ def twoform_to_matrix(expr):
     Matrix([
     [   1, 0],
     [-1/2, 1]])
+
     """
     if covariant_order(expr) != 2 or contravariant_order(expr):
         raise ValueError('The input expression is not a two-form.')
@@ -1814,15 +1884,19 @@ def metric_to_Christoffel_1st(expr):
     """Return the nested list of Christoffel symbols for the given metric.
     This returns the Christoffel symbol of first kind that represents the
     Levi-Civita connection for the given metric.
+
     Examples
     ========
+
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Christoffel_1st, TensorProduct
     >>> TP = TensorProduct
+
     >>> metric_to_Christoffel_1st(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> metric_to_Christoffel_1st(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     [[[1/2, 0], [0, 0]], [[0, 0], [0, 0]]]
+
     """
     matrix = twoform_to_matrix(expr)
     if not matrix.is_symmetric():
@@ -1843,15 +1917,19 @@ def metric_to_Christoffel_2nd(expr):
     """Return the nested list of Christoffel symbols for the given metric.
     This returns the Christoffel symbol of second kind that represents the
     Levi-Civita connection for the given metric.
+
     Examples
     ========
+
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
     >>> TP = TensorProduct
+
     >>> metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> metric_to_Christoffel_2nd(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     [[[1/(2*x), 0], [0, 0]], [[0, 0], [0, 0]]]
+
     """
     ch_1st = metric_to_Christoffel_1st(expr)
     coord_sys = _find_coords(expr).pop()
@@ -1876,15 +1954,19 @@ def metric_to_Christoffel_2nd(expr):
 
 def metric_to_Riemann_components(expr):
     """Return the components of the Riemann tensor expressed in a given basis.
+
     Given a metric it calculates the components of the Riemann tensor in the
     canonical basis of the coordinate system in which the metric expression is
     given.
+
     Examples
     ========
+
     >>> from sympy import exp
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Riemann_components, TensorProduct
     >>> TP = TensorProduct
+
     >>> metric_to_Riemann_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     [[[[0, 0], [0, 0]], [[0, 0], [0, 0]]], [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]]
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
@@ -1896,6 +1978,7 @@ def metric_to_Riemann_components(expr):
     [[[0, 0], [0, 0]], [[0, exp(-2*r)*r], [-exp(-2*r)*r, 0]]]
     >>> riemann[1, :, :, :]
     [[[0, -1/r], [1/r, 0]], [[0, 0], [0, 0]]]
+
     """
     ch_2nd = metric_to_Christoffel_2nd(expr)
     coord_sys = _find_coords(expr).pop()
@@ -1924,16 +2007,21 @@ def metric_to_Riemann_components(expr):
 
 
 def metric_to_Ricci_components(expr):
+
     """Return the components of the Ricci tensor expressed in a given basis.
+
     Given a metric it calculates the components of the Ricci tensor in the
     canonical basis of the coordinate system in which the metric expression is
     given.
+
     Examples
     ========
+
     >>> from sympy import exp
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Ricci_components, TensorProduct
     >>> TP = TensorProduct
+
     >>> metric_to_Ricci_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     [[0, 0], [0, 0]]
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
@@ -1942,6 +2030,7 @@ def metric_to_Ricci_components(expr):
     exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
     >>> metric_to_Ricci_components(non_trivial_metric)
     [[1/r, 0], [0, exp(-2*r)*r]]
+
     """
     riemann = metric_to_Riemann_components(expr)
     coord_sys = _find_coords(expr).pop()
