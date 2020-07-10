@@ -1,9 +1,11 @@
 from __future__ import print_function, division
 
 from sympy import (Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral,
-                   gamma, Product, Dummy, Sum, Abs, IndexedBase, I)
+                   gamma, Product, Dummy, Sum, Abs, IndexedBase, I, multigamma,
+                   Determinant)
 from sympy.core.sympify import _sympify
-from sympy.stats.rv import _symbol_converter, Density, RandomMatrixSymbol, is_random
+from sympy.matrices import ImmutableMatrix, Inverse
+from sympy.stats.rv import _symbol_converter, Density, RandomMatrixSymbol, is_random, _value_check
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.random_matrix import RandomMatrixPSpace
 from sympy.tensor.array import ArrayComprehension
@@ -296,6 +298,49 @@ class CircularSymplecticEnsemble(CircularEnsemble):
 
     def joint_eigen_distribution(self):
         return self._compute_joint_eigen_distribution(S(4))
+
+
+
+class MatrixGammaDistribution(RandomMatrixEnsemble):
+
+    def __new__(cls, sym, alpha, beta, scale_matrix):
+        sym = _symbol_converter(sym)
+        alpha = _sympify(alpha)
+        beta = _sympify(beta)
+        if isinstance(scale_matrix, list):
+            scale_matrix = ImmutableMatrix(scale_matrix)
+        dim = scale_matrix.shape[0]
+        cls.check(alpha, beta, scale_matrix)
+        self = Basic.__new__(cls, sym, alpha, beta, scale_matrix)
+        rmp = RandomMatrixPSpace(sym, model=self)
+        return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
+
+    @classmethod
+    def check(self,alpha, beta, scale_matrix):
+        if not isinstance(scale_matrix , MatrixSymbol):
+            _value_check(scale_matrix.is_positive_definite, "The shape \
+                matrix must be positive definite.")
+        _value_check(scale_matrix.shape[0] == scale_matrix.shape[1], "Should \
+        be square matrix")
+        _value_check(alpha.is_positive, "Shape parameter should be positive.")
+        _value_check(beta.is_positive, "Scale parameter should be positive.")
+
+    @property
+    def set(self):
+        k = self.args[3].shape[0]
+        return S.Reals ** k
+
+    def density(self, expr):
+        alpha , beta , scale_matrix = self.args[1], self.args[2], self.args[3]
+        p = scale_matrix.shape[0]
+        h_pspace = RandomMatrixPSpace('P', model=self)
+        H = RandomMatrixSymbol('H', p, p, pspace=h_pspace)
+        sigma_inv_x = - Inverse(scale_matrix)*H / beta
+        term1 = exp(Trace(sigma_inv_x))/((beta**(p*alpha)) * multigamma(alpha, p))
+        term2 = (Determinant(scale_matrix))**(-alpha)
+        term3 = (Determinant(H))**(alpha - (p + 1)/2)
+        return Lambda(H, term1 * term2 * term3)
+
 
 def joint_eigen_distribution(mat):
     """
