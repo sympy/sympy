@@ -2423,7 +2423,6 @@ class LatexPrinter(Printer):
         return ' '.join(map(parens, args))
 
     def _print_Feedback(self, expr):
-        from sympy.core import Mul, Pow
         from sympy.physics.control import TransferFunction, Parallel, Series
 
         num, tf = expr.num, TransferFunction(1, 1, expr.num.var)
