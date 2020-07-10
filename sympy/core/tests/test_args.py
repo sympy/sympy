@@ -12,7 +12,7 @@ from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
 
 from sympy.testing.pytest import XFAIL, SKIP
 
-x, y, z = symbols('x,y,z')
+a, b, c, x, y, z = symbols('a,b,c,x,y,z')
 
 
 def test_all_classes_are_tested():
@@ -4419,36 +4419,44 @@ def test_sympy__diffgeom__diffgeom__Patch():
 
 
 def test_sympy__diffgeom__diffgeom__CoordSystem():
+    from sympy import symbols
     from sympy.diffgeom import Manifold, Patch, CoordSystem
-    assert _test_args(CoordSystem('name', Patch('name', Manifold('name', 3))))
+    assert _test_args(CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c]))
+
+
+def test_sympy__diffgeom__diffgeom__CoordinateSymbol():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, CoordinateSymbol
+    assert _test_args(CoordinateSymbol(CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c]), 0))
+
 
 def test_sympy__diffgeom__diffgeom__Point():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, Point
     assert _test_args(Point(
-        CoordSystem('name', Patch('name', Manifold('name', 3))), [x, y]))
+        CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c]), [x, y]))
+
 
 def test_sympy__diffgeom__diffgeom__BaseScalarField():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     assert _test_args(BaseScalarField(cs, 0))
 
 
 def test_sympy__diffgeom__diffgeom__BaseVectorField():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseVectorField
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     assert _test_args(BaseVectorField(cs, 0))
 
 
 def test_sympy__diffgeom__diffgeom__Differential():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     assert _test_args(Differential(BaseScalarField(cs, 0)))
 
 
 def test_sympy__diffgeom__diffgeom__Commutator():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseVectorField, Commutator
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
-    cs1 = CoordSystem('name1', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
+    cs1 = CoordSystem('name1', Patch('name', Manifold('name', 3)), [a, b, c])
     v = BaseVectorField(cs, 0)
     v1 = BaseVectorField(cs1, 0)
     assert _test_args(Commutator(v, v1))
@@ -4456,14 +4464,14 @@ def test_sympy__diffgeom__diffgeom__Commutator():
 
 def test_sympy__diffgeom__diffgeom__TensorProduct():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential, TensorProduct
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     d = Differential(BaseScalarField(cs, 0))
     assert _test_args(TensorProduct(d, d))
 
 
 def test_sympy__diffgeom__diffgeom__WedgeProduct():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential, WedgeProduct
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     d = Differential(BaseScalarField(cs, 0))
     d1 = Differential(BaseScalarField(cs, 1))
     assert _test_args(WedgeProduct(d, d1))
@@ -4471,7 +4479,7 @@ def test_sympy__diffgeom__diffgeom__WedgeProduct():
 
 def test_sympy__diffgeom__diffgeom__LieDerivative():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential, BaseVectorField, LieDerivative
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     d = Differential(BaseScalarField(cs, 0))
     v = BaseVectorField(cs, 0)
     assert _test_args(LieDerivative(v, d))
@@ -4480,13 +4488,13 @@ def test_sympy__diffgeom__diffgeom__LieDerivative():
 @XFAIL
 def test_sympy__diffgeom__diffgeom__BaseCovarDerivativeOp():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseCovarDerivativeOp
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     assert _test_args(BaseCovarDerivativeOp(cs, 0, [[[0, ]*3, ]*3, ]*3))
 
 
 def test_sympy__diffgeom__diffgeom__CovarDerivativeOp():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseVectorField, CovarDerivativeOp
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     v = BaseVectorField(cs, 0)
     _test_args(CovarDerivativeOp(v, [[[0, ]*3, ]*3, ]*3))
 

@@ -1375,6 +1375,7 @@ class BaseCovarDerivativeOp(Expr):
 
     def __new__(cls, coord_sys, index, christoffel):
         index = _sympify(index)
+        christoffel = ImmutableDenseNDimArray(christoffel)
         obj = super().__new__(cls, coord_sys, index, christoffel)
         # deprecated assignments
         obj._coord_sys = coord_sys
