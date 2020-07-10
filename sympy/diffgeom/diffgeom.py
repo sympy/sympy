@@ -372,11 +372,11 @@ class CoordSystem(Atom):
         expr = Matrix(inv_results)
         return Lambda(signature, expr)
 
-    @staticmethod
+    @classmethod
     @cacheit
-    def _indirect_transformation(sys1, sys2):
+    def _indirect_transformation(cls, sys1, sys2):
         # Find the transformation relation between two indirectly connected coordinate systems
-        path = self._dijkstra(sys1, sys2)
+        path = cls._dijkstra(sys1, sys2)
         Lambdas = []
         for i in range(len(path) - 1):
             s1, s2 = path[i], path[i + 1]
@@ -597,7 +597,7 @@ class CoordinateSymbol(Symbol):
     Examples
     ========
 
-    >>> from sympy import symbols, pi
+    >>> from sympy import symbols
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
@@ -845,7 +845,7 @@ class BaseVectorField(Expr):
     Examples
     ========
 
-    >>> from sympy import symbols, Function
+    >>> from sympy import Function
     >>> from sympy.diffgeom.rn import R2_p, R2_r
     >>> from sympy.diffgeom import BaseVectorField
     >>> from sympy import pprint

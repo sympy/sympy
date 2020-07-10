@@ -12,7 +12,6 @@ from typing import Any
 import warnings
 
 from sympy import sqrt, atan2, acos, sin, cos, Lambda, Matrix, symbols, Dummy
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .diffgeom import Manifold, Patch, CoordSystem
 
 __all__ = [

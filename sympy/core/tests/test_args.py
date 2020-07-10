@@ -4419,7 +4419,6 @@ def test_sympy__diffgeom__diffgeom__Patch():
 
 
 def test_sympy__diffgeom__diffgeom__CoordSystem():
-    from sympy import symbols
     from sympy.diffgeom import Manifold, Patch, CoordSystem
     assert _test_args(CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c]))
 
