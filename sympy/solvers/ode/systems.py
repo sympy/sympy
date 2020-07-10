@@ -591,7 +591,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
 
     >>> from sympy import symbols, Function, Eq
     >>> from sympy.solvers.ode.systems import canonical_odes, linear_ode_to_matrix, linodesolve, linodesolve_type
-    >>> from sympy.solvers.ode.subscheck import checksysodesol
+    >>> from sympy.solvers.ode.subscheck import checkodesol
     >>> f, g = symbols("f, g", cls=Function)
     >>> x, a = symbols("x, a")
     >>> funcs = [f(x), g(x)]
@@ -618,10 +618,10 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     >>> system_info = linodesolve_type(A, x, b=b)
     >>> sol_vector = linodesolve(A, x, b=b, B=system_info['antiderivative'], type=system_info['type'])
 
-    Now, we can prove if the solution is correct or not by using :obj:`sympy.solvers.ode.subscheck.checksysodesol()`
+    Now, we can prove if the solution is correct or not by using :obj:`sympy.solvers.ode.checkodesol()`
 
     >>> sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
-    >>> checksysodesol(eqs, sol)
+    >>> checkodesol(eqs, sol)
     (True, [0, 0])
 
     We can also use the doit method to evaluate the solutions passed by the function.
@@ -652,7 +652,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     Once again, we can verify the solution obtained.
 
     >>> sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
-    >>> checksysodesol(eqs, sol)
+    >>> checkodesol(eqs, sol)
     (True, [0, 0])
 
     Returns

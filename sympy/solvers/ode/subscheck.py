@@ -48,7 +48,8 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     r"""
     Substitutes ``sol`` into ``ode`` and checks that the result is ``0``.
 
-    This only works when ``func`` is one function, like `f(x)`.  ``sol`` can
+    This works when ``func`` is one function, like `f(x)` or a list of
+    functions like `[f(x), g(x)]` when `ode` is a system of ODEs.  ``sol`` can
     be a single solution or a list of solutions.  Each solution may be an
     :py:class:`~sympy.core.relational.Equality` that the solution satisfies,
     e.g. ``Eq(f(x), C1), Eq(f(x) + C1, 0)``; or simply an
@@ -92,8 +93,8 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     ========
 
     >>> from sympy import Eq, Function, checkodesol, symbols
-    >>> x, C1 = symbols('x,C1')
-    >>> f = Function('f')
+    >>> x, C1, C2 = symbols('x,C1,C2')
+    >>> f, g = Function('f')
     >>> checkodesol(f(x).diff(x), Eq(f(x), C1))
     (True, 0)
     >>> assert checkodesol(f(x).diff(x), C1)[0]
@@ -101,7 +102,15 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     >>> checkodesol(f(x).diff(x, 2), x**2)
     (False, 2)
 
+    >>> eqs = [Eq(Derivative(f(x), x), f(x)), Eq(Derivative(g(x), x), g(x))]
+    >>> sol = [Eq(f(x), C1*exp(x)), Eq(g(x), C2*exp(x))]
+    >>> checkodesol(eqs, sol)
+    (True, [0, 0])
+
     """
+    if iterable(ode):
+        return checksysodesol(ode, sol, func=func)
+
     if not isinstance(ode, Equality):
         ode = Eq(ode, 0)
     if func is None:
