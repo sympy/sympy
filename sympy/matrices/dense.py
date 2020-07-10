@@ -734,7 +734,7 @@ class DenseDomainMatrix(DenseMatrix):
         if isinstance(other, DenseDomainMatrix):
             return self.sub(other)
         elif isinstance(other, DenseMatrix):
-            return other._eval_add(self)
+            return (-other)._eval_add(self)
         else:
             return NotImplemented
 
