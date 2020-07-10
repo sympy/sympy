@@ -1185,10 +1185,12 @@ def test_powers_Integer():
 
 def test_powers_DecimalRational():
     """Test DecimalRational._eval_power"""
+    assert DecimalRational(4, 3) ** -2 == Rational(4, 3) ** -2
     assert isinstance(DecimalRational(4, 3) ** -2, DecimalRational)
     assert DecimalRational('.25') ** DecimalRational('.5') == DecimalRational('.5')
     assert isinstance(DecimalRational('.25') ** DecimalRational('.5'), DecimalRational)
     assert sqrt(DecimalRational(1, 2)) is not sqrt(S.Half)
+    assert sqrt(DecimalRational('.8')) is not 2*sqrt(5)/5
 
 
 def test_powers_Rational():

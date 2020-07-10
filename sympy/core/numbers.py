@@ -1828,11 +1828,11 @@ class Rational(Number):
                 # (3/4)**-2 -> (4/3)**2
                 ne = -expt
                 if (ne is S.One):
-                    return Rational(self.q, self.p)
+                    return self._classof(self.q, self.p)
                 if self.is_negative:
-                    return S.NegativeOne**expt*Rational(self.q, -self.p)**ne
+                    return S.NegativeOne**expt*self._classof(self.q, -self.p)**ne
                 else:
-                    return Rational(self.q, self.p)**ne
+                    return self._classof(self.q, self.p)**ne
             if expt is S.Infinity:  # -oo already caught by test for negative
                 if self.p > self.q:
                     # (3/2)**oo -> oo
@@ -1843,7 +1843,7 @@ class Rational(Number):
                 return S.Zero
             if isinstance(expt, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
-                return Rational(self.p**expt.p, self.q**expt.p, 1)
+                return self._classof(self.p**expt.p, self.q**expt.p, 1)
             if isinstance(expt, Rational):
                 if self.p != 1:
                     # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
@@ -2091,28 +2091,8 @@ class DecimalRational(Rational):
 
     def _eval_power(self, expt):
         if isinstance(expt, Number):
-            if isinstance(expt, Float):
-                return self._eval_evalf(expt._prec)**expt
-            if expt.is_extended_negative:
-                # DecimalRational(3, 4)**-2 -> DecimalRational(4,3)**2
-                ne = -expt
-                if (ne is S.One):
-                    return self.__class__(self.q, self.p)
-                if self.is_negative:
-                    return S.NegativeOne**expt*self.__class__(self.q, -self.p)**ne
-                else:
-                    return self.__class__(self.q, self.p)**ne
-            if expt is S.Infinity:  # -oo already caught by test for negative
-                if self.p > self.q:
-                    # DecimalRational(3,2)**oo -> oo
-                    return S.Infinity
-                if self.p < -self.q:
-                    # DecimalRational(-3,2)**oo -> oo + I*oo
-                    return S.Infinity + S.Infinity*S.ImaginaryUnit
-                return S.Zero
-            if isinstance(expt, Integer):
-                # DecimalRational(4,3)**2 -> DecimalRational(4**2, 3**2)
-                return self.__class__(self.p**expt.p, self.q**expt.p, 1)
+            if expt.is_extended_negative or isinstance(expt, Integer):
+                return super()._eval_power(expt)
             if isinstance(expt, Rational):
                 # see if base is a perfect root, sqrt(.25) -> .5
                 x, xexact = integer_nthroot(abs(self.p), expt.q)
@@ -2126,6 +2106,7 @@ class DecimalRational(Rational):
                 #otherwise return self**expt unevaluated, e.g. sqrt(.5)
                 return Pow(self.__class__(self.p, self.q), \
                     expt.__class__(expt.p, expt.q), evaluate = False)
+        return super()._eval_power(expt)
 
 
 class Integer(Rational):
