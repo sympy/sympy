@@ -840,17 +840,18 @@ class BaseVectorField(Expr):
     ========
 
     >>> from sympy import symbols, Function
-    >>> from sympy.diffgeom.rn import R2, R2_p, R2_r
+    >>> from sympy.diffgeom.rn import R2_p, R2_r
     >>> from sympy.diffgeom import BaseVectorField
     >>> from sympy import pprint
 
     >>> x, y = R2_r.symbols
     >>> rho, theta = R2_p.symbols
+    >>> fx, fy = R2_r.base_scalars()
     >>> point_p = R2_p.point([rho, theta])
     >>> point_r = R2_r.point([x, y])
 
     >>> g = Function('g')
-    >>> s_field = g(R2.x, R2.y)
+    >>> s_field = g(fx, fy)
 
     >>> v = BaseVectorField(R2_r, 1)
     >>> pprint(v(s_field))
@@ -943,26 +944,38 @@ def _find_coords(expr):
 
 class Commutator(Expr):
     r"""Commutator of two vector fields.
+
+    Explanation
+    ===========
+
     The commutator of two vector fields `v_1` and `v_2` is defined as the
     vector field `[v_1, v_2]` that evaluated on each scalar field `f` is equal
     to `v_1(v_2(f)) - v_2(v_1(f))`.
+
     Examples
     ========
-    Use the predefined R2 manifold, setup some boilerplate.
-    >>> from sympy.diffgeom.rn import R2
+
+
+    >>> from sympy.diffgeom.rn import R2_p, R2_r
     >>> from sympy.diffgeom import Commutator
     >>> from sympy.simplify import simplify
-    Vector fields:
-    >>> e_x, e_y, e_r = R2.e_x, R2.e_y, R2.e_r
+
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
+    >>> e_r = R2_p.base_vector(0)
+
     >>> c_xy = Commutator(e_x, e_y)
     >>> c_xr = Commutator(e_x, e_r)
     >>> c_xy
     0
+
     Unfortunately, the current code is not able to compute everything:
+
     >>> c_xr
     Commutator(e_x, e_r)
-    >>> simplify(c_xr(R2.y**2))
+    >>> simplify(c_xr(fy**2))
     -2*cos(theta)*y**2/(x**2 + y**2)
+
     """
     def __new__(cls, v1, v2):
         if (covariant_order(v1) or contravariant_order(v1) != 1
@@ -970,13 +983,13 @@ class Commutator(Expr):
             raise ValueError(
                 'Only commutators of vector fields are supported.')
         if v1 == v2:
-            return Zero()
+            return S.Zero
         coord_sys = set().union(*[_find_coords(v) for v in (v1, v2)])
         if len(coord_sys) == 1:
             # Only one coordinate systems is used, hence it is easy enough to
             # actually evaluate the commutator.
             if all(isinstance(v, BaseVectorField) for v in (v1, v2)):
-                return Zero()
+                return S.Zero
             bases_1, bases_2 = [list(v.atoms(BaseVectorField))
                                 for v in (v1, v2)]
             coeffs_1 = [v1.expand().coeff(b) for b in bases_1]
@@ -987,41 +1000,51 @@ class Commutator(Expr):
                     res += c1*b1(c2)*b2 - c2*b2(c1)*b1
             return res
         else:
-            return super().__new__(cls, v1, v2)
+            obj = super().__new__(cls, v1, v2)
+            obj._v1 = v1 # deprecated assignment
+            obj._v2 = v2 # deprecated assignment
+            return obj
 
-    def __init__(self, v1, v2):
-        super().__init__()
-        self._args = (v1, v2)
-        self._v1 = v1
-        self._v2 = v2
+    @property
+    def v1(self):
+        return self.args[0]
+
+    @property
+    def v2(self):
+        return self.args[1]
 
     def __call__(self, scalar_field):
         """Apply on a scalar field.
         If the argument is not a scalar field an error is raised.
         """
-        return self._v1(self._v2(scalar_field)) - self._v2(self._v1(scalar_field))
+        return self.v1(self.v2(scalar_field)) - self.v2(self.v1(scalar_field))
 
 
 class Differential(Expr):
     r"""Return the differential (exterior derivative) of a form field.
+
+    Explanation
+    ===========
+
     The differential of a form (i.e. the exterior derivative) has a complicated
     definition in the general case.
     The differential `df` of the 0-form `f` is defined for any vector field `v`
     as `df(v) = v(f)`.
+
     Examples
     ========
-    Use the predefined R2 manifold, setup some boilerplate.
+
     >>> from sympy import Function
-    >>> from sympy.diffgeom.rn import R2
+    >>> from sympy.diffgeom.rn import R2_r
     >>> from sympy.diffgeom import Differential
     >>> from sympy import pprint
-    Scalar field (0-forms):
+
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
     >>> g = Function('g')
-    >>> s_field = g(R2.x, R2.y)
-    Vector fields:
-    >>> e_x, e_y, = R2.e_x, R2.e_y
-    Differentials:
+    >>> s_field = g(fx, fy)
     >>> dg = Differential(s_field)
+
     >>> dg
     d(g(x, y))
     >>> pprint(dg(e_x))
@@ -1032,7 +1055,9 @@ class Differential(Expr):
     / d           \|
     |---(g(x, xi))||
     \dxi          /|xi=y
+
     Applying the exterior derivative operator twice always results in:
+
     >>> Differential(dg)
     0
     """
@@ -1044,28 +1069,36 @@ class Differential(Expr):
             raise ValueError(
                 'A vector field was supplied as an argument to Differential.')
         if isinstance(form_field, Differential):
-            return Zero()
+            return S.Zero
         else:
-            return super().__new__(cls, form_field)
+            obj = super().__new__(cls, form_field)
+            obj._form_field = form_field # deprecated assignment
+            return obj
 
-    def __init__(self, form_field):
-        super().__init__()
-        self._form_field = form_field
-        self._args = (self._form_field, )
+    @property
+    def form_field(self):
+        return self.args[0]
 
     def __call__(self, *vector_fields):
         """Apply on a list of vector_fields.
+
+        Explanation
+        ===========
+
         If the number of vector fields supplied is not equal to 1 + the order of
         the form field inside the differential the result is undefined.
+    
         For 1-forms (i.e. differentials of scalar fields) the evaluation is
         done as `df(v)=v(f)`. However if `v` is ``None`` instead of a vector
         field, the differential is returned unchanged. This is done in order to
         permit partial contractions for higher forms.
+    
         In the general case the evaluation is done by applying the form field
         inside the differential on a list with one less elements than the number
         of elements in the original list. Lowering the number of vector fields
         is achieved through replacing each pair of fields by their
         commutator.
+
         If the arguments are not vectors or ``None``s an error is raised.
         """
         if any((contravariant_order(a) != 1 or covariant_order(a)) and a is not None
@@ -1096,43 +1129,59 @@ class Differential(Expr):
                         ret += (-1)**(i + j)*t
             return ret
 
-
 class TensorProduct(Expr):
     """Tensor product of forms.
+
+    Explanation
+    ===========
+
     The tensor product permits the creation of multilinear functionals (i.e.
     higher order tensors) out of lower order fields (e.g. 1-forms and vector
     fields). However, the higher tensors thus created lack the interesting
     features provided by the other type of product, the wedge product, namely
     they are not antisymmetric and hence are not form fields.
+
     Examples
     ========
-    Use the predefined R2 manifold, setup some boilerplate.
-    >>> from sympy.diffgeom.rn import R2
+
+    >>> from sympy.diffgeom.rn import R2_r
     >>> from sympy.diffgeom import TensorProduct
-    >>> TensorProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y)
+
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
+    >>> dx, dy = R2_r.base_oneforms()
+
+    >>> TensorProduct(dx, dy)(e_x, e_y)
     1
-    >>> TensorProduct(R2.dx, R2.dy)(R2.e_y, R2.e_x)
+    >>> TensorProduct(dx, dy)(e_y, e_x)
     0
-    >>> TensorProduct(R2.dx, R2.x*R2.dy)(R2.x*R2.e_x, R2.e_y)
+    >>> TensorProduct(dx, fx*dy)(fx*e_x, e_y)
     x**2
-    >>> TensorProduct(R2.e_x, R2.e_y)(R2.x**2, R2.y**2)
+    >>> TensorProduct(e_x, e_y)(fx**2, fy**2)
     4*x*y
-    >>> TensorProduct(R2.e_y, R2.dx)(R2.y)
+    >>> TensorProduct(e_y, dx)(fy)
     dx
+
     You can nest tensor products.
-    >>> tp1 = TensorProduct(R2.dx, R2.dy)
-    >>> TensorProduct(tp1, R2.dx)(R2.e_x, R2.e_y, R2.e_x)
+
+    >>> tp1 = TensorProduct(dx, dy)
+    >>> TensorProduct(tp1, dx)(e_x, e_y, e_x)
     1
+
     You can make partial contraction for instance when 'raising an index'.
     Putting ``None`` in the second argument of ``rcall`` means that the
     respective position in the tensor product is left as it is.
+
     >>> TP = TensorProduct
-    >>> metric = TP(R2.dx, R2.dx) + 3*TP(R2.dy, R2.dy)
-    >>> metric.rcall(R2.e_y, None)
+    >>> metric = TP(dx, dx) + 3*TP(dy, dy)
+    >>> metric.rcall(e_y, None)
     3*dy
+
     Or automatically pad the args with ``None`` without specifying them.
-    >>> metric.rcall(R2.e_y)
+
+    >>> metric.rcall(e_y)
     3*dy
+
     """
     def __new__(cls, *args):
         scalar = Mul(*[m for m in args if covariant_order(m) + contravariant_order(m) == 0])
@@ -1144,18 +1193,17 @@ class TensorProduct(Expr):
         else:
             return scalar
 
-    def __init__(self, *args):
-        super().__init__()
-        self._args = args
-
     def __call__(self, *fields):
         """Apply on a list of fields.
+    
         If the number of input fields supplied is not equal to the order of
         the tensor product field, the list of arguments is padded with ``None``'s.
+
         The list of arguments is divided in sublists depending on the order of
         the forms inside the tensor product. The sublists are provided as
         arguments to these forms and the resulting expressions are given to the
         constructor of ``TensorProduct``.
+
         """
         tot_order = covariant_order(self) + contravariant_order(self)
         tot_args = len(fields)
@@ -1170,25 +1218,38 @@ class TensorProduct(Expr):
 
 class WedgeProduct(TensorProduct):
     """Wedge product of forms.
+
+    Explanation
+    ===========
+
     In the context of integration only completely antisymmetric forms make
     sense. The wedge product permits the creation of such forms.
+
     Examples
     ========
-    Use the predefined R2 manifold, setup some boilerplate.
-    >>> from sympy.diffgeom.rn import R2
+
+    >>> from sympy.diffgeom.rn import R2_r
     >>> from sympy.diffgeom import WedgeProduct
-    >>> WedgeProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y)
+
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
+    >>> dx, dy = R2_r.base_oneforms()
+
+    >>> WedgeProduct(dx, dy)(e_x, e_y)
     1
-    >>> WedgeProduct(R2.dx, R2.dy)(R2.e_y, R2.e_x)
+    >>> WedgeProduct(dx, dy)(e_y, e_x)
     -1
-    >>> WedgeProduct(R2.dx, R2.x*R2.dy)(R2.x*R2.e_x, R2.e_y)
+    >>> WedgeProduct(dx, fx*dy)(fx*e_x, e_y)
     x**2
-    >>> WedgeProduct(R2.e_x,R2.e_y)(R2.y,None)
+    >>> WedgeProduct(e_x, e_y)(fy, None)
     -e_x
+
     You can nest wedge products.
-    >>> wp1 = WedgeProduct(R2.dx, R2.dy)
-    >>> WedgeProduct(wp1, R2.dx)(R2.e_x, R2.e_y, R2.e_x)
+
+    >>> wp1 = WedgeProduct(dx, dy)
+    >>> WedgeProduct(wp1, dx)(e_x, e_y, e_x)
     0
+
     """
     # TODO the calculation of signatures is slow
     # TODO you do not need all these permutations (neither the prefactor)
@@ -1206,30 +1267,46 @@ class WedgeProduct(TensorProduct):
 
 class LieDerivative(Expr):
     """Lie derivative with respect to a vector field.
+
+    Explanation
+    ===========
+
     The transport operator that defines the Lie derivative is the pushforward of
     the field to be derived along the integral curve of the field with respect
     to which one derives.
+
     Examples
     ========
+
+    >>> from sympy.diffgeom.rn import R2_r, R2_p
     >>> from sympy.diffgeom import (LieDerivative, TensorProduct)
-    >>> from sympy.diffgeom.rn import R2
-    >>> LieDerivative(R2.e_x, R2.y)
+
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
+    >>> e_rho, e_theta = R2_p.base_vectors()
+    >>> dx, dy = R2_r.base_oneforms()
+
+    >>> LieDerivative(e_x, fy)
     0
-    >>> LieDerivative(R2.e_x, R2.x)
+    >>> LieDerivative(e_x, fx)
     1
-    >>> LieDerivative(R2.e_x, R2.e_x)
+    >>> LieDerivative(e_x, e_x)
     0
+
     The Lie derivative of a tensor field by another tensor field is equal to
     their commutator:
-    >>> LieDerivative(R2.e_x, R2.e_r)
-    Commutator(e_x, e_r)
-    >>> LieDerivative(R2.e_x + R2.e_y, R2.x)
+
+    >>> LieDerivative(e_x, e_rho)
+    Commutator(e_x, e_rho)
+    >>> LieDerivative(e_x + e_y, fx)
     1
-    >>> tp = TensorProduct(R2.dx, R2.dy)
-    >>> LieDerivative(R2.e_x, tp)
+
+    >>> tp = TensorProduct(dx, dy)
+    >>> LieDerivative(e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
-    >>> LieDerivative(R2.e_x, tp)
+    >>> LieDerivative(e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
+
     """
     def __new__(cls, v_field, expr):
         expr_form_ord = covariant_order(expr)
@@ -1238,21 +1315,27 @@ class LieDerivative(Expr):
                              ' vector fields. The supplied argument was not a '
                              'vector field.')
         if expr_form_ord > 0:
-            return super().__new__(cls, v_field, expr)
+            obj = super().__new__(cls, v_field, expr)
+            # deprecated assignments
+            obj._v_field = v_field
+            obj._expr = expr
+            return obj
         if expr.atoms(BaseVectorField):
             return Commutator(v_field, expr)
         else:
             return v_field.rcall(expr)
 
-    def __init__(self, v_field, expr):
-        super().__init__()
-        self._v_field = v_field
-        self._expr = expr
-        self._args = (self._v_field, self._expr)
+    @property
+    def v_field(self):
+        return self.args[0]
+
+    @property
+    def expr(self):
+        return self.args[1]
 
     def __call__(self, *args):
-        v = self._v_field
-        expr = self._expr
+        v = self.v_field
+        expr = self.expr
         lead_term = v(expr(*args))
         rest = Add(*[Mul(*args[:i] + (Commutator(v, args[i]),) + args[i + 1:])
                      for i in range(len(args))])
@@ -1261,30 +1344,53 @@ class LieDerivative(Expr):
 
 class BaseCovarDerivativeOp(Expr):
     """Covariant derivative operator with respect to a base vector.
+
     Examples
     ========
-    >>> from sympy.diffgeom.rn import R2, R2_r
+
+    >>> from sympy.diffgeom.rn import R2_r
     >>> from sympy.diffgeom import BaseCovarDerivativeOp
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
+
     >>> TP = TensorProduct
-    >>> ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
+    >>> dx, dy = R2_r.base_oneforms()
+
+    >>> ch = metric_to_Christoffel_2nd(TP(dx, dx) + TP(dy, dy))
     >>> ch
     [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> cvd = BaseCovarDerivativeOp(R2_r, 0, ch)
-    >>> cvd(R2.x)
+    >>> cvd(fx)
     1
-    >>> cvd(R2.x*R2.e_x)
+    >>> cvd(fx*e_x)
     e_x
     """
-    def __init__(self, coord_sys, index, christoffel):
-        super().__init__()
-        self._coord_sys = coord_sys
-        self._index = index
-        self._christoffel = christoffel
-        self._args = self._coord_sys, self._index, self._christoffel
+
+    def __new__(cls, coord_sys, index, christoffel):
+        index = _sympify(index)
+        obj = super().__new__(cls, coord_sys, index, christoffel)
+        # deprecated assignments
+        obj._coord_sys = coord_sys
+        obj._index = index
+        obj._christoffel = christoffel
+        return obj
+
+    @property
+    def coord_sys(self):
+        return self.args[0]
+
+    @property
+    def index(self):
+        return self.args[1]
+
+    @property
+    def christoffel(self):
+        return self.args[2]
 
     def __call__(self, field):
         """Apply on a scalar field.
+
         The action of a vector field on a scalar field is a directional
         differentiation.
         If the argument is not a scalar field the behaviour is undefined.
@@ -1328,32 +1434,48 @@ class BaseCovarDerivativeOp(Expr):
 
 class CovarDerivativeOp(Expr):
     """Covariant derivative operator.
+
     Examples
     ========
-    >>> from sympy.diffgeom.rn import R2
+
+    >>> from sympy.diffgeom.rn import R2_r
     >>> from sympy.diffgeom import CovarDerivativeOp
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
     >>> TP = TensorProduct
-    >>> ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
+    >>> dx, dy = R2_r.base_oneforms()
+    >>> ch = metric_to_Christoffel_2nd(TP(dx, dx) + TP(dy, dy))
+
     >>> ch
     [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
-    >>> cvd = CovarDerivativeOp(R2.x*R2.e_x, ch)
-    >>> cvd(R2.x)
+    >>> cvd = CovarDerivativeOp(fx*e_x, ch)
+    >>> cvd(fx)
     x
-    >>> cvd(R2.x*R2.e_x)
+    >>> cvd(fx*e_x)
     x*e_x
+
     """
-    def __init__(self, wrt, christoffel):
-        super().__init__()
+
+    def __new__(cls, wrt, christoffel):
         if len({v._coord_sys for v in wrt.atoms(BaseVectorField)}) > 1:
             raise NotImplementedError()
         if contravariant_order(wrt) != 1 or covariant_order(wrt):
             raise ValueError('Covariant derivatives are defined only with '
                              'respect to vector fields. The supplied argument '
                              'was not a vector field.')
-        self._wrt = wrt
-        self._christoffel = christoffel
-        self._args = self._wrt, self._christoffel
+        obj = super().__new__(cls, wrt, christoffel)
+        # deprecated assigments
+        obj._wrt = wrt
+        obj._christoffel = christoffel
+        return obj
+
+    @property
+    def wrt(self):
+        return self.args[0]
+
+    def christoffel(self):
+        return self.args[1]
 
     def __call__(self, field):
         vectors = list(self._wrt.atoms(BaseVectorField))
@@ -1641,7 +1763,7 @@ def vectors_in_basis(expr, to_sys):
     new_vectors = []
     for v in vectors:
         cs = v._coord_sys
-        jac = cs.jacobian(to_sys, cs.coord_functions())
+        jac = cs.jacobian_matrix(to_sys, cs.coord_functions())
         new = (jac.T*Matrix(to_sys.base_vectors()))[v._index]
         new_vectors.append(new)
     return expr.subs(list(zip(vectors, new_vectors)))
@@ -1742,7 +1864,7 @@ def metric_to_Christoffel_2nd(expr):
     for e in matrix:
         s_fields.update(e.atoms(BaseScalarField))
     s_fields = list(s_fields)
-    dums = coord_sys._dummies
+    dums = coord_sys.symbols
     matrix = matrix.subs(list(zip(s_fields, dums))).inv().subs(list(zip(dums, s_fields)))
     # XXX end of workaround
     christoffel = [[[Add(*[matrix[i, l]*ch_1st[l, j, k] for l in indices])
