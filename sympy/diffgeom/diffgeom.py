@@ -33,6 +33,7 @@ class Manifold(Atom):
 
     A manifold is a topological space that locally resembles
     Euclidean space near each point [1].
+
     This class does not provide any means to study the topological
     characteristics of the manifold that it represents, though.
 
@@ -42,7 +43,7 @@ class Manifold(Atom):
     name : str
         The name of the manifold.
 
-    dimension : int
+    dim : int
         The dimension of the manifold.
 
     Examples
@@ -53,7 +54,7 @@ class Manifold(Atom):
 
     >>> m.name
     M
-    >>> m.dimension
+    >>> m.dim
     2
 
     References
@@ -63,11 +64,11 @@ class Manifold(Atom):
 
     """
 
-    def __new__(cls, name, dimension, **kwargs):
+    def __new__(cls, name, dim, **kwargs):
         if not isinstance(name, Str):
             name = Str(name)
-        dimension = _sympify(dimension)
-        obj = super().__new__(cls, name, dimension)
+        dim = _sympify(dim)
+        obj = super().__new__(cls, name, dim)
 
         obj.patches = _deprecated_list(
             "Manifold.patches",
@@ -83,9 +84,8 @@ class Manifold(Atom):
         return self.args[0]
 
     @property
-    def dimension(self):
+    def dim(self):
         return self.args[1]
-    dim = dimension
 
 class Patch(Atom):
     """A patch on a manifold.
@@ -98,6 +98,7 @@ class Patch(Atom):
     include the whole manifold. On these patches coordinate charts can be defined that
     permit the parameterization of any point on the patch in terms of a tuple of
     real numbers (the coordinates).
+
     This class does not provide any means to study the topological
     characteristics of the patch that it represents.
 
@@ -121,7 +122,7 @@ class Patch(Atom):
     P
     >>> p.manifold
     M
-    >>> p.dimension
+    >>> p.dim
     2
 
     References
@@ -154,9 +155,8 @@ class Patch(Atom):
         return self.args[1]
 
     @property
-    def dimension(self):
-        return self.manifold.dimension
-    dim = dimension
+    def dim(self):
+        return self.manifold.dim
 
 class CoordSystem(Atom):
     """A coordinate system defined on the patch.
@@ -166,6 +166,7 @@ class CoordSystem(Atom):
 
     Coordinate system is a system that uses one or more coordinates to uniquely determine
     the position of the points or other geometric elements on a manifold [1].
+
     By passing Symbols to *symbols* parameter, user can define the name and assumptions
     of coordinate symbols of the coordinate system.
     By passing *relations* parameter, user can define the tranform relations of coordinate
@@ -189,7 +190,6 @@ class CoordSystem(Atom):
             the coordinates transform from and transform to.
         - value : Lambda returning the transformed coordinates.
 
-
     Examples
     ========
 
@@ -207,7 +207,7 @@ class CoordSystem(Atom):
     >>> Car2D = CoordSystem('Car2D', p, [x, y], relation_dict)
     >>> Pol = CoordSystem('Pol', p, [r, theta], relation_dict)
 
-    >>> Car2D.name, Car2D.patch, Car2D.dimension
+    >>> Car2D.name, Car2D.patch, Car2D.dim
     Car2D, P, 2
     >>> Car2D.symbols
     [x, y]
@@ -328,9 +328,8 @@ class CoordSystem(Atom):
         return self.args[3]
 
     @property
-    def dimension(self):
-        return self.patch.dimension
-    dim = dimension
+    def dim(self):
+        return self.patch.dim
 
     ##########################################################################
     # Finding transformation relation
@@ -340,7 +339,6 @@ class CoordSystem(Atom):
         """
         Return coordinate transform relation from *self* to *sys* as Lambda.
         """
-
         if self.relations != sys.relations:
             raise TypeError(
         "Two coordinate systems have different relations")
@@ -430,7 +428,6 @@ class CoordSystem(Atom):
         if result == [sys2]:
             raise KeyError("Two coordinate systems are not connected.")
         return result
-
 
     def connect_to(self, to_sys, from_coords, to_exprs, inverse=True, fill_in_gaps=False):
         SymPyDeprecationWarning(
@@ -539,14 +536,16 @@ class CoordSystem(Atom):
     # Base fields.
     ##########################################################################
 
-    def coord_function(self, coord_index):
+    def base_scalar(self, coord_index):
         """Return ``BaseScalarField`` that takes a point and returns one of the coordinates."""
         return BaseScalarField(self, coord_index)
+    coord_function = base_scalar
 
-    def coord_functions(self):
+    def base_scalars(self):
         """Returns a list of all coordinate functions.
-        For more details see the ``coord_function`` method of this class."""
-        return [self.coord_function(i) for i in range(self.dim)]
+        For more details see the ``base_scalar`` method of this class."""
+        return [self.base_scalar(i) for i in range(self.dim)]
+    coord_functions = base_scalars
 
     def base_vector(self, coord_index):
         """Return a basis vector field.
@@ -577,15 +576,16 @@ class CoordinateSymbol(Symbol):
     Explanation
     ===========
 
-    Coordinates in coordinate system are represented by unique symbol, such as
-    x, y, z in Cartesian coordinate system.
+    Each coordinates in coordinate system are represented by unique symbol,
+    such as x, y, z in Cartesian coordinate system.
+
     You may not construct this class directly. Instead, use `symbols` method
     of CoordSystem.
 
     Parameters
     ==========
 
-    coordinate_system : CoordSystem
+    coord_sys : CoordSystem
 
     index : integer
 
@@ -603,7 +603,7 @@ class CoordinateSymbol(Symbol):
 
     >>> x.name
     'x'
-    >>> x.coordinate_system
+    >>> x.coord_sys
     C
     >>> x.index
     0
@@ -611,19 +611,19 @@ class CoordinateSymbol(Symbol):
     True
 
     """
-    def __new__(cls, coordinate_system, index, **assumptions):
-        name = coordinate_system.args[2][index].name
+    def __new__(cls, coord_sys, index, **assumptions):
+        name = coord_sys.args[2][index].name
         obj = super().__new__(cls, name, **assumptions)
-        obj.coordinate_system = coordinate_system
+        obj.coord_sys = coord_sys
         obj.index = index
         return obj
 
     def __getnewargs__(self):
-        return (self.coordinate_system, self.index)
+        return (self.coord_sys, self.index)
 
     def _hashable_content(self):
         return (
-            self.coordinate_system, self.index
+            self.coord_sys, self.index
         ) + tuple(sorted(self.assumptions0.items()))
 
 class Point(Basic):
@@ -645,9 +645,9 @@ class Point(Basic):
     Parameters
     ==========
 
-    coordinate_system : CoordSystem
+    coord_sys : CoordSystem
 
-    coordinates : list
+    coords : list
         The coordinates of the point.
 
     Examples
@@ -661,29 +661,38 @@ class Point(Basic):
     >>> p = Point(R2_p, [rho, 3*pi/4])
 
     >>> p.manifold
-    >>> p.coordinates()
+    R^2
+    >>> p.coords()
     Matrix([
     [   rho],
     [3*pi/4]])
-    >>> p.coordinates(R2_r)
+    >>> p.coords(R2_r)
     Matrix([
     [-sqrt(2)*rho/2],
     [ sqrt(2)*rho/2]])
 
     """
 
-    def __new__(cls, coordinate_system, coordinates):
-        coordinates = Matrix(coordinates)
-        obj = super().__new__(cls, coordinate_system, coordinates)
-        obj._coord_sys = coordinate_system
-        obj._coords = coordinates
+    def __new__(cls, coord_sys, coords, **kwargs):
+        coords = Matrix(coords)
+        obj = super().__new__(cls, coord_sys, coords)
+        obj._coord_sys = coord_sys
+        obj._coords = coords
         return obj
+
+    @property
+    def patch(self):
+        return self._coord_sys.patch
 
     @property
     def manifold(self):
         return self._coord_sys.manifold
 
-    def coordinates(self, sys=None):
+    @property
+    def dim(self):
+        return self.manifold.dim
+
+    def coords(self, sys=None):
         """
         Coordinates of the point in given coordinate system. If coordinate system
         is not passed, it returns the coordinates in the coordinate system in which
@@ -693,7 +702,6 @@ class Point(Basic):
             return self._coords
         else:
             return self._coord_sys.transform(sys, self._coords)
-    coords = coordinates
 
     @property
     def free_symbols(self):
@@ -701,56 +709,83 @@ class Point(Basic):
 
 class BaseScalarField(Expr):
     """Base Scalar Field over a Manifold for a given Coordinate System.
+
     Explanation
     ===========
+
     A scalar field takes a point as an argument and returns a scalar.
     A base scalar field of a coordinate system takes a point and returns one of
     the coordinates of that point in the coordinate system in question.
+
     To define a scalar field you need to choose the coordinate system and the
     index of the coordinate.
+
     The use of the scalar field after its definition is independent of the
     coordinate system in which it was defined, however due to limitations in
     the simplification routines you may arrive at more complicated
     expression if you use unappropriate coordinate systems.
     You can build complicated scalar fields by just building up SymPy
     expressions containing ``BaseScalarField`` instances.
+
     Parameters
     ==========
+
     coord_sys : CoordSystem
+
     index : integer
+
     Examples
     ========
-    Define boilerplate Manifold, Patch and coordinate systems:
-    >>> from sympy import symbols, sin, cos, pi, Function
-    >>> from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
-    >>> r0, theta0 = symbols('r0, theta0')
-    >>> m = Manifold('M', 2)
-    >>> p = Patch('P', m)
-    >>> rect = CoordSystem('rect', p)
-    >>> polar = CoordSystem('polar', p)
-    >>> polar.connect_to(rect, [r0, theta0], [r0*cos(theta0), r0*sin(theta0)])
-    Point to be used as an argument for the filed:
-    >>> point = polar.point([r0, 0])
-    Examples of fields:
-    >>> fx = BaseScalarField(rect, 0)
-    >>> fy = BaseScalarField(rect, 1)
+
+    >>> from sympy import Function, pi
+    >>> from sympy.diffgeom import BaseScalarField
+    >>> from sympy.diffgeom.rn import R2_r, R2_p
+    >>> rho, _ = R2_p.symbols
+    >>> point = R2_p.point([rho, 0])
+    >>> fx, fy = R2_r.base_scalars()
+    >>> ftheta = BaseScalarField(R2_r, 1)
+
+    >>> fx(point)
+    rho
+
     >>> (fx**2+fy**2).rcall(point)
-    r0**2
+    rho**2
+
     >>> g = Function('g')
-    >>> ftheta = BaseScalarField(polar, 1)
     >>> fg = g(ftheta-pi)
     >>> fg.rcall(point)
     g(-pi)
+
     """
 
     is_commutative = True
 
-    def __new__(cls, coord_sys, index):
+    def __new__(cls, coord_sys, index, **kwargs):
         index = _sympify(index)
         obj = super().__new__(cls, coord_sys, index)
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
+
+    @property
+    def coord_sys(self):
+        return self.args[0]
+
+    @property
+    def index(self):
+        return self.args[1]
+
+    @property
+    def patch(self):
+        return self.coord_sys.patch
+
+    @property
+    def manifold(self):
+        return self.coord_sys.manifold
+
+    @property
+    def dim(self):
+        return self.manifold.dim
 
     def __call__(self, *args):
         """Evaluating the field at a point or doing nothing.
