@@ -58,7 +58,7 @@ class Manifold(Atom):
     2
 
     References
-    ========
+    ==========
 
     .. [1] https://en.wikipedia.org/wiki/Manifold
 
@@ -124,7 +124,7 @@ class Patch(Atom):
     2
 
     References
-    ========
+    ==========
 
     .. [1] G. Sussman, J. Wisdom, W. Farr, Functional Differential Geometry (2013)
 
@@ -235,7 +235,7 @@ class CoordSystem(Atom):
     [1,  0]])
 
     References
-    ========
+    ==========
 
     .. [1] https://en.wikipedia.org/wiki/Coordinate_system
 
