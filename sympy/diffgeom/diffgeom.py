@@ -245,7 +245,7 @@ class CoordSystem(Atom):
             name = Str(name)
 
         # canonicallize the symbols
-        if symbols is None:
+        if symbols is None or any(not isinstance(s, Symbol) for s in symbols) :
             # support deprecated signature
             SymPyDeprecationWarning(
                 feature="Class signature 'names' of CoordSystem",
@@ -253,7 +253,12 @@ class CoordSystem(Atom):
                 issue=19321,
                 deprecated_since_version="1.7"
             ).warn()
-            names = kwargs.get('names', None)
+
+            if symbols is None:
+                names = kwargs.get('names', None)
+            else:
+                names = symbols
+
             if names is None:
                 symbols = Tuple(*[Symbol('%s_%d' % (name, i), real=True) for i in range(patch.dim)])
             else:

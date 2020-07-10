@@ -1,10 +1,11 @@
 from sympy.diffgeom import Manifold, Patch, CoordSystem, Point
 from sympy import symbols, Function
+from sympy.testing.pytest import warns_deprecated_sympy
 
 m = Manifold('m', 2)
 p = Patch('p', m)
-cs = CoordSystem('cs', p, ['a', 'b'])
-cs_noname = CoordSystem('cs', p)
+a, b = symbols('a b')
+cs = CoordSystem('cs', p, [a, b])
 x, y = symbols('x y')
 f = Function('f')
 s1, s2 = cs.coord_functions()
@@ -23,7 +24,6 @@ def test_rebuild():
     assert m == m.func(*m.args)
     assert p == p.func(*p.args)
     assert cs == cs.func(*cs.args)
-    assert cs_noname == cs_noname.func(*cs_noname.args)
     assert s1 == s1.func(*s1.args)
     assert v1 == v1.func(*v1.args)
     assert f1 == f1.func(*f1.args)
@@ -35,3 +35,10 @@ def test_subs():
     assert (x*f(s1) + y).subs(s1, s2) == x*f(s2) + y
     assert (f(s1)*v1).subs(v1, v2) == f(s1)*v2
     assert (y*f(s1)*f1).subs(f1, f2) == y*f(s1)*f2
+
+def test_deprecated():
+    with warns_deprecated_sympy():
+        cs_wname = CoordSystem('cs', p, ['a', 'b'])
+        cs_noname = CoordSystem('cs', p)
+        assert cs_wname == cs_wname.func(*cs_wname.args)
+        assert cs_noname == cs_wname.func(*cs_noname.args)
