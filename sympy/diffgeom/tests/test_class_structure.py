@@ -12,21 +12,11 @@ s1, s2 = cs.coord_functions()
 v1, v2 = cs.base_vectors()
 f1, f2 = cs.base_oneforms()
 
-
 def test_point():
     point = Point(cs, [x, y])
-    assert point == point.func(*point.args)
     assert point != Point(cs, [2, y])
     #TODO assert point.subs(x, 2) == Point(cs, [2, y])
     #TODO assert point.free_symbols == set([x, y])
-
-def test_rebuild():
-    assert m == m.func(*m.args)
-    assert p == p.func(*p.args)
-    assert cs == cs.func(*cs.args)
-    assert s1 == s1.func(*s1.args)
-    assert v1 == v1.func(*v1.args)
-    assert f1 == f1.func(*f1.args)
 
 def test_subs():
     assert s1.subs(s1, s2) == s2

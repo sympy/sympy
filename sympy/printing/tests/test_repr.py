@@ -312,16 +312,6 @@ def test_Permutation():
     import_stmt = "from sympy.combinatorics import Permutation"
     sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)
 
-
-def test_diffgeom():
-    from sympy.diffgeom import Manifold, Patch, CoordSystem
-    m = Manifold('M', 2)
-    p = Patch('P', m)
-    rect = CoordSystem('rect', p)
-    assert srepr(rect) == "CoordSystem(Str('rect'), Patch(Str('P'), Manifold(Str('M'), Integer(2))), ('rect_0', 'rect_1'))"
-    b = BaseScalarField(rect, 0)
-    assert srepr(b) == "BaseScalarField(CoordSystem(Str('rect'), Patch(Str('P'), Manifold(Str('M'), Integer(2))), ('rect_0', 'rect_1')), Integer(0))"
-
 def test_dict():
     from sympy import srepr
     from sympy.abc import x, y, z
