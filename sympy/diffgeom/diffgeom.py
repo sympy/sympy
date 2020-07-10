@@ -476,7 +476,7 @@ class CoordSystem(Atom):
             coordinates = Matrix(coordinates)
         if self != sys:
             transf = self.transformation(sys)
-            coordinates =  transf(*coordinates)
+            coordinates = transf(*coordinates)
         return coordinates
 
     def jacobian_matrix(self, sys, coordinates=None):
@@ -708,7 +708,7 @@ class Point(Basic):
         return self._coords.free_symbols
 
 class BaseScalarField(Expr):
-    """Base Scalar Field over a Manifold for a given Coordinate System.
+    """Base scalar field over a manifold for a given coordinate system.
 
     Explanation
     ===========
@@ -747,6 +747,8 @@ class BaseScalarField(Expr):
 
     >>> fx(point)
     rho
+    >>> fy(point)
+    0
 
     >>> (fx**2+fy**2).rcall(point)
     rho**2
@@ -810,42 +812,46 @@ class BaseScalarField(Expr):
 
 
 class BaseVectorField(Expr):
-    r"""Vector Field over a Manifold.
+    r"""Base vector field over a manifold for a given coordinate system.
+
     Explanation
     ===========
+
     A vector field is an operator taking a scalar field and returning a
     directional derivative (which is also a scalar field).
     A base vector field is the same type of operator, however the derivation is
     specifically done with respect to a chosen coordinate.
+
     To define a base vector field you need to choose the coordinate system and
     the index of the coordinate.
+
     The use of the vector field after its definition is independent of the
     coordinate system in which it was defined, however due to limitations in the
     simplification routines you may arrive at more complicated expression if you
     use unappropriate coordinate systems.
+
     Parameters
     ==========
     coord_sys : CoordSystem
+
     index : integer
+
     Examples
     ========
-    Use the predefined R2 manifold, setup some boilerplate.
+
     >>> from sympy import symbols, Function
     >>> from sympy.diffgeom.rn import R2, R2_p, R2_r
     >>> from sympy.diffgeom import BaseVectorField
     >>> from sympy import pprint
-    >>> x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0')
-    Points to be used as arguments for the field:
-    >>> point_p = R2_p.point([r0, theta0])
-    >>> point_r = R2_r.point([x0, y0])
-    Scalar field to operate on:
+
+    >>> x, y = R2_r.symbols
+    >>> rho, theta = R2_p.symbols
+    >>> point_p = R2_p.point([rho, theta])
+    >>> point_r = R2_r.point([x, y])
+
     >>> g = Function('g')
     >>> s_field = g(R2.x, R2.y)
-    >>> s_field.rcall(point_r)
-    g(x0, y0)
-    >>> s_field.rcall(point_p)
-    g(r0*cos(theta0), r0*sin(theta0))
-    Vector field:
+
     >>> v = BaseVectorField(R2_r, 1)
     >>> pprint(v(s_field))
     / d           \|
@@ -853,22 +859,43 @@ class BaseVectorField(Expr):
     \dxi          /|xi=y
     >>> pprint(v(s_field).rcall(point_r).doit())
      d
-    ---(g(x0, y0))
-    dy0
+    ---(g(x, y))
+    dy
     >>> pprint(v(s_field).rcall(point_p))
     / d                        \|
-    |---(g(r0*cos(theta0), xi))||
-    \dxi                       /|xi=r0*sin(theta0)
+    |---(g(r*cos(theta), xi))||
+    \dxi                       /|xi=r*sin(theta)
+
     """
 
     is_commutative = False
 
-    def __new__(cls, coord_sys, index):
+    def __new__(cls, coord_sys, index, **kwargs):
         index = _sympify(index)
         obj = super().__new__(cls, coord_sys, index)
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
+
+    @property
+    def coord_sys(self):
+        return self.args[0]
+
+    @property
+    def index(self):
+        return self.args[1]
+
+    @property
+    def patch(self):
+        return self.coord_sys.patch
+
+    @property
+    def manifold(self):
+        return self.coord_sys.manifold
+
+    @property
+    def dim(self):
+        return self.manifold.dim
 
     def __call__(self, scalar_field):
         """Apply on a scalar field.
@@ -893,11 +920,11 @@ class BaseVectorField(Expr):
         d_result = d_result.diff(d_var)
 
         # Second step: e_x(x) -> 1 and e_x(r) -> cos(atan2(x, y))
-        coords = self._coord_sys._dummies
+        coords = self._coord_sys.symbols
         d_funcs_deriv = [f.diff(d_var) for f in d_funcs]
         d_funcs_deriv_sub = []
         for b in base_scalars:
-            jac = self._coord_sys.jacobian(b._coord_sys, coords)
+            jac = self._coord_sys.jacobian_matrix(b._coord_sys, coords)
             d_funcs_deriv_sub.append(jac[b._index, self._index])
         d_result = d_result.subs(list(zip(d_funcs_deriv, d_funcs_deriv_sub)))
 
