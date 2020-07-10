@@ -53,7 +53,7 @@ class Manifold(Atom):
     >>> m = Manifold('M', 2)
 
     >>> m.name
-    M
+    'M'
     >>> m.dim
     2
 
@@ -119,9 +119,7 @@ class Patch(Atom):
     >>> p = Patch('P', m)
 
     >>> p.name
-    P
-    >>> p.manifold
-    M
+    'P'
     >>> p.dim
     2
 
@@ -193,7 +191,7 @@ class CoordSystem(Atom):
     Examples
     ========
 
-    >>> from sympy import symbols, pi
+    >>> from sympy import symbols, pi, Lambda, Matrix, sqrt, atan2, cos, sin
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
@@ -207,8 +205,10 @@ class CoordSystem(Atom):
     >>> Car2D = CoordSystem('Car2D', p, [x, y], relation_dict)
     >>> Pol = CoordSystem('Pol', p, [r, theta], relation_dict)
 
-    >>> Car2D.name, Car2D.patch, Car2D.dim
-    Car2D, P, 2
+    >>> Car2D.name
+    'Car2D'
+    >>> Car2D.dim
+    2
     >>> Car2D.symbols
     [x, y]
     >>> Car2D.transformation(Pol)
@@ -603,8 +603,8 @@ class CoordinateSymbol(Symbol):
 
     >>> x.name
     'x'
-    >>> x.coord_sys
-    C
+    >>> x.coord_sys == C
+    True
     >>> x.index
     0
     >>> x.is_nonnegative
@@ -655,13 +655,14 @@ class Point(Basic):
 
     >>> from sympy import pi
     >>> from sympy.diffgeom import Point
-    >>> from sympy.diffgeom.rn import R2_r, R2_p
+    >>> from sympy.diffgeom.rn import R2, R2_r, R2_p
     >>> rho, theta = R2_p.symbols
 
     >>> p = Point(R2_p, [rho, 3*pi/4])
 
-    >>> p.manifold
-    R^2
+    >>> p.manifold == R2
+    True
+
     >>> p.coords()
     Matrix([
     [   rho],
@@ -859,13 +860,13 @@ class BaseVectorField(Expr):
     |---(g(x, xi))||
     \dxi          /|xi=y
     >>> pprint(v(s_field).rcall(point_r).doit())
-     d
-    ---(g(x, y))
+    d
+    --(g(x, y))
     dy
     >>> pprint(v(s_field).rcall(point_p))
     / d                        \|
-    |---(g(r*cos(theta), xi))||
-    \dxi                       /|xi=r*sin(theta)
+    |---(g(rho*cos(theta), xi))||
+    \dxi                       /|xi=rho*sin(theta)
 
     """
 
@@ -972,7 +973,7 @@ class Commutator(Expr):
     Unfortunately, the current code is not able to compute everything:
 
     >>> c_xr
-    Commutator(e_x, e_r)
+    Commutator(e_x, e_rho)
     >>> simplify(c_xr(fy**2))
     -2*cos(theta)*y**2/(x**2 + y**2)
 
@@ -1087,12 +1088,12 @@ class Differential(Expr):
 
         If the number of vector fields supplied is not equal to 1 + the order of
         the form field inside the differential the result is undefined.
-    
+
         For 1-forms (i.e. differentials of scalar fields) the evaluation is
         done as `df(v)=v(f)`. However if `v` is ``None`` instead of a vector
         field, the differential is returned unchanged. This is done in order to
         permit partial contractions for higher forms.
-    
+
         In the general case the evaluation is done by applying the form field
         inside the differential on a list with one less elements than the number
         of elements in the original list. Lowering the number of vector fields
@@ -1195,7 +1196,7 @@ class TensorProduct(Expr):
 
     def __call__(self, *fields):
         """Apply on a list of fields.
-    
+
         If the number of input fields supplied is not equal to the order of
         the tensor product field, the list of arguments is padded with ``None``'s.
 
@@ -1819,7 +1820,7 @@ def vectors_in_basis(expr, to_sys):
     >>> from sympy.diffgeom.rn import R2_r, R2_p
 
     >>> vectors_in_basis(R2_r.e_x, R2_p)
-    -y*e_theta/(x**2 + y**2) + x*e_r/sqrt(x**2 + y**2)
+    -y*e_theta/(x**2 + y**2) + x*e_rho/sqrt(x**2 + y**2)
     >>> vectors_in_basis(R2_p.e_r, R2_r)
     sin(theta)*e_y + cos(theta)*e_x
 
@@ -1972,12 +1973,12 @@ def metric_to_Riemann_components(expr):
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
         R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
-    exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
+    exp(2*rho)*TensorProduct(drho, drho) + rho**2*TensorProduct(dtheta, dtheta)
     >>> riemann = metric_to_Riemann_components(non_trivial_metric)
     >>> riemann[0, :, :, :]
-    [[[0, 0], [0, 0]], [[0, exp(-2*r)*r], [-exp(-2*r)*r, 0]]]
+    [[[0, 0], [0, 0]], [[0, exp(-2*rho)*rho], [-exp(-2*rho)*rho, 0]]]
     >>> riemann[1, :, :, :]
-    [[[0, -1/r], [1/r, 0]], [[0, 0], [0, 0]]]
+    [[[0, -1/rho], [1/rho, 0]], [[0, 0], [0, 0]]]
 
     """
     ch_2nd = metric_to_Christoffel_2nd(expr)
@@ -2027,9 +2028,9 @@ def metric_to_Ricci_components(expr):
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
                              R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
-    exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
+    exp(2*rho)*TensorProduct(drho, drho) + rho**2*TensorProduct(dtheta, dtheta)
     >>> metric_to_Ricci_components(non_trivial_metric)
-    [[1/r, 0], [0, exp(-2*r)*r]]
+    [[1/rho, 0], [0, exp(-2*rho)*rho]]
 
     """
     riemann = metric_to_Riemann_components(expr)
