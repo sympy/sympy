@@ -452,7 +452,7 @@ class CoordSystem(Atom):
             self._fill_gaps_in_transformations()
 
     @staticmethod
-    def _inv_transf(from_coords, to_exprs, deprecated=False):
+    def _inv_transf(from_coords, to_exprs):
         # Will be removed when connect_to is removed
         inv_from = [i.as_dummy() for i in from_coords]
         inv_to = solve(
