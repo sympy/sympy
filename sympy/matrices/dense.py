@@ -819,7 +819,7 @@ class DenseDomainMatrix(DenseMatrix):
         return rep.domain.to_sympy(rep.det())
 
     def charpoly(self, name='lambda', **kwargs):
-        from sympy.polys.polymatrix import berk
+        from sympy.polys.domainmatrix import berk
         from sympy.polys import PurePoly
         from sympy.core.symbol import uniquely_named_symbol
 
@@ -836,7 +836,7 @@ class DenseDomainMatrix(DenseMatrix):
         return PurePoly(coeffs, x, domain=dom)
 
     def LUdecomposition(self, *args, **kwargs):
-        from sympy.polys.polymatrix import lu_decomp
+        from sympy.polys.domainmatrix import lu_decomp
         rep = self._rep
         if not rep.domain.is_Field:
             rep = rep.to_field()
@@ -848,7 +848,7 @@ class DenseDomainMatrix(DenseMatrix):
     def LUsolve(self, rhs, **kwargs):
         if not isinstance(rhs, DenseDomainMatrix):
             return super().LUsolve(rhs, **kwargs)
-        from sympy.polys.polymatrix import lu_solve
+        from sympy.polys.domainmatrix import lu_solve
         rep = self._rep
         rhsrep = rhs._rep
         if not rep.domain.is_Field:
