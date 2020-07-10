@@ -9,10 +9,11 @@ using the usual `coord_sys.coord_function(index, name)` interface.
 """
 
 from typing import Any
+import warnings
 
+from sympy import sqrt, atan2, acos, sin, cos, Lambda, Matrix, symbols, Dummy
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .diffgeom import Manifold, Patch, CoordSystem
-from sympy import sqrt, atan2, acos, sin, cos, Lambda, Matrix, symbols
-
 
 __all__ = [
     'R2', 'R2_origin', 'relations_2d', 'R2_r', 'R2_p',
@@ -36,6 +37,17 @@ relations_2d = {
 
 R2_r = CoordSystem('rectangular', R2_origin, [x, y], relations_2d)  # type: Any
 R2_p = CoordSystem('polar', R2_origin, [r, theta], relations_2d)  # type: Any
+
+# support deprecated feature
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    x, y, r, theta = symbols('x y r theta', cls=Dummy)
+    R2_r.connect_to(R2_p, [x, y],
+                        [sqrt(x**2 + y**2), atan2(y, x)],
+                    inverse=False, fill_in_gaps=False)
+    R2_p.connect_to(R2_r, [r, theta],
+                        [r*cos(theta), r*sin(theta)],
+                    inverse=False, fill_in_gaps=False)
 
 # Defining the basis coordinate functions and adding shortcuts for them to the
 # manifold and the patch.
@@ -92,6 +104,33 @@ relations_3d = {
 R3_r = CoordSystem('rectangular', R3_origin, [x, y, z], relations_3d)  # type: Any
 R3_c = CoordSystem('cylindrical', R3_origin, [rho, psi, z], relations_3d)  # type: Any
 R3_s = CoordSystem('spherical', R3_origin, [r, theta, phi], relations_3d)  # type: Any
+
+# support deprecated feature
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    x, y, z, rho, psi, r, theta, phi = symbols('x y z rho psi r theta phi', cls=Dummy)
+    R3_r.connect_to(R3_c, [x, y, z],
+                        [sqrt(x**2 + y**2), atan2(y, x), z],
+                    inverse=False, fill_in_gaps=False)
+    R3_c.connect_to(R3_r, [rho, psi, z],
+                        [rho*cos(psi), rho*sin(psi), z],
+                    inverse=False, fill_in_gaps=False)
+    ## rectangular <-> spherical
+    R3_r.connect_to(R3_s, [x, y, z],
+                        [sqrt(x**2 + y**2 + z**2), acos(z/
+                                sqrt(x**2 + y**2 + z**2)), atan2(y, x)],
+                    inverse=False, fill_in_gaps=False)
+    R3_s.connect_to(R3_r, [r, theta, phi],
+                        [r*sin(theta)*cos(phi), r*sin(
+                            theta)*sin(phi), r*cos(theta)],
+                    inverse=False, fill_in_gaps=False)
+    ## cylindrical <-> spherical
+    R3_c.connect_to(R3_s, [rho, psi, z],
+                        [sqrt(rho**2 + z**2), acos(z/sqrt(rho**2 + z**2)), psi],
+                    inverse=False, fill_in_gaps=False)
+    R3_s.connect_to(R3_c, [r, theta, phi],
+                        [r*sin(theta), phi, r*cos(theta)],
+                    inverse=False, fill_in_gaps=False)
 
 # Defining the basis coordinate functions.
 R3_r.x, R3_r.y, R3_r.z = R3_r.coord_functions()
