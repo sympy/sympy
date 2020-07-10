@@ -279,7 +279,7 @@ def test_issue_5164():
 def test_issue_14793():
     expr = ((x + S(1)/2) * log(x) - x + log(2*pi)/2 - \
         log(factorial(x)) + S(1)/(12*x))*x**3
-    assert simplify(limit(expr, x, oo) - 1/360) == 0
+    assert limit(expr, x, oo) == S(1)/360
 
 
 def test_issue_5183():
