@@ -600,7 +600,7 @@ def test_Feedback_functions():
     assert tf1 / (tf + tf1*tf2*tf3) == Feedback(tf1, tf2*tf3)
     assert (tf1*tf2) / (tf + tf1*tf2) == Feedback(tf1*tf2, tf)
     assert (tf1*tf2) / (tf + tf1*tf2*tf5) == Feedback(tf1*tf2, tf5)
-    assert (tf1*tf2) / (tf + tf1*tf2*tf3*tf5) == Feedback(tf1*tf2, tf5*tf3)
+    assert (tf1*tf2) / (tf + tf1*tf2*tf5*tf3) == Feedback(tf1*tf2, tf5*tf3)
     assert tf4 / (TransferFunction(1, 1, p) + tf4*tf6) == Feedback(tf4, tf6)
     assert tf5 / (tf + tf5) == Feedback(tf5, tf)
 
