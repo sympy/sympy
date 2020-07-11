@@ -2532,11 +2532,6 @@ class LatexPrinter(Printer):
             self._print(coordsys.name), self._print(coordsys.patch.name), self._print(coordsys.manifold)
         )
 
-    def _print_Point(self, point):
-        return '{%s}_{%s}' % (
-            self._print(point.coordinates()), self._print(point._coord_sys)
-        )
-
     def _print_CovarDerivativeOp(self, cvd):
         return r'\mathbb{\nabla}_{%s}' % self._print(cvd._wrt)
 
