@@ -361,7 +361,7 @@ def _solve_lin_sys_component(eqs_coeffs, eqs_rhs, ring):
 
     if len(pivots) == len(keys):
         sol = []
-        for s in [row[-1] for row in echelon.rows]:
+        for s in [row[-1] for row in echelon.rep]:
             a = s
             sol.append(a)
         sols = dict(zip(keys, sol))
