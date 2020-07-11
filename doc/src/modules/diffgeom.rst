@@ -18,6 +18,9 @@ Base Class Reference
 .. autoclass:: CoordSystem
    :members:
 
+.. autoclass:: CoordinateSymbol
+   :members:
+
 .. autoclass:: Point
    :members:
 

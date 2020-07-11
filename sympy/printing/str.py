@@ -876,24 +876,24 @@ class StrPrinter(Printer):
         return 'Category("%s")' % category.name
 
     def _print_Manifold(self, manifold):
-        return manifold.name
+        return self._print(manifold.name)
 
     def _print_Patch(self, patch):
-        return patch.name
+        return self._print(patch.name)
 
     def _print_CoordSystem(self, coords):
-        return coords.name
+        return self._print(coords.name)
 
     def _print_BaseScalarField(self, field):
-        return field._coord_sys._names[field._index]
+        return field._coord_sys.symbols[field._index].name
 
     def _print_BaseVectorField(self, field):
-        return 'e_%s' % field._coord_sys._names[field._index]
+        return 'e_%s' % field._coord_sys.symbols[field._index].name
 
     def _print_Differential(self, diff):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
-            return 'd%s' % field._coord_sys._names[field._index]
+            return 'd%s' % field._coord_sys.symbols[field._index].name
         else:
             return 'd(%s)' % self._print(field)
 

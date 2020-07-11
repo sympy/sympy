@@ -14,6 +14,7 @@ from sympy.matrices.common import NonSquareMatrixError, NonInvertibleMatrixError
 from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 from sympy.assumptions.ask import ask, Q
+from sympy.multipledispatch import dispatch
 
 
 def _sympifyit(arg, retval=None):
@@ -593,15 +594,16 @@ class MatrixExpr(Expr):
         from .applyfunc import ElementwiseApplyFunction
         return ElementwiseApplyFunction(func, self)
 
-    def _eval_Eq(self, other):
-        if not isinstance(other, MatrixExpr):
-            return False
-        if self.shape != other.shape:
-            return False
-        if (self - other).is_ZeroMatrix:
-            return True
-        return Eq(self, other, evaluate=False)
+@dispatch(MatrixExpr, Expr)
+def _eval_is_eq(lhs, rhs): # noqa:F811
+    return False
 
+@dispatch(MatrixExpr, MatrixExpr)
+def _eval_is_eq(lhs, rhs): # noqa:F811
+    if lhs.shape != rhs.shape:
+        return False
+    if (lhs - rhs).is_ZeroMatrix:
+        return True
 
 def get_postprocessor(cls):
     def _postprocessor(expr):

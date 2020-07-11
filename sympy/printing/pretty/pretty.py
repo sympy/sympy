@@ -2608,17 +2608,17 @@ class PrettyPrinter(Printer):
         return self._print(coords.name)
 
     def _print_BaseScalarField(self, field):
-        string = field._coord_sys._names[field._index]
+        string = field._coord_sys.symbols[field._index].name
         return self._print(pretty_symbol(string))
 
     def _print_BaseVectorField(self, field):
-        s = U('PARTIAL DIFFERENTIAL') + '_' + field._coord_sys._names[field._index]
+        s = U('PARTIAL DIFFERENTIAL') + '_' + field._coord_sys.symbols[field._index].name
         return self._print(pretty_symbol(s))
 
     def _print_Differential(self, diff):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
-            string = field._coord_sys._names[field._index]
+            string = field._coord_sys.symbols[field._index].name
             return self._print(u'\N{DOUBLE-STRUCK ITALIC SMALL D} ' + pretty_symbol(string))
         else:
             pform = self._print(field)
