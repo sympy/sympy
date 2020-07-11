@@ -300,13 +300,7 @@ class CoordSystem(Atom):
             "1.7",
             {}
         )
-        obj._names =_deprecated_list(
-                "CoordSystem._names",
-                "CoordSystem.symbols",
-                19321,
-                "1.7",
-                [str(n) for n in symbols]
-            )
+        obj._names = [str(n) for n in symbols]
         obj.patch.coord_systems.append(obj) # deprecated
         obj._dummies = [Dummy(str(n)) for n in symbols] # deprecated
         obj._dummy = Dummy()
