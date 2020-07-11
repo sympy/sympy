@@ -2,6 +2,8 @@
 Control Module
 ==============
 
+.. module:: sympy.physics.control
+
 .. topic:: Abstract
 
     Contains docstrings of Physics-Control module
