@@ -963,6 +963,60 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('[', ']'))
         return D
 
+    def _print_TransferFunction(self, expr):
+        if not expr.num == 1:
+            num, den = expr.num, expr.den
+            res = Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
+            return self._print_Mul(res)
+        else:
+            return self._print(1)/self._print(expr.den)
+
+    def _print_Series(self, expr):
+        args = list(expr.args)
+        for i, a in enumerate(expr.args):
+            args[i] = prettyForm(*self._print(a).parens())
+        return prettyForm.__mul__(*args)
+
+    def _print_Parallel(self, expr):
+        s = None
+        for item in expr.args:
+            pform = self._print(item)
+            if s is None:
+                s = pform     # First element
+            else:
+                s = prettyForm(*stringPict.next(s, ' + '))
+                s = prettyForm(*stringPict.next(s, pform))
+        return s
+
+    def _print_Feedback(self, expr):
+        from sympy.physics.control import TransferFunction, Parallel, Series
+
+        num, tf = expr.num, TransferFunction(1, 1, expr.num.var)
+        num_arg_list = list(num.args) if isinstance(num, Series) else [num]
+        den_arg_list = list(expr.den.args) if isinstance(expr.den, Series) else [expr.den]
+
+        if isinstance(num, Series) and isinstance(expr.den, Series):
+            den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+        elif isinstance(num, Series) and isinstance(expr.den, TransferFunction):
+            if expr.den == tf:
+                den = Parallel(tf, Series(*num_arg_list))
+            else:
+                den = Parallel(tf, Series(*num_arg_list, expr.den))
+        elif isinstance(num, TransferFunction) and isinstance(expr.den, Series):
+            if num == tf:
+                den = Parallel(tf, Series(*den_arg_list))
+            else:
+                den = Parallel(tf, Series(num, *den_arg_list))
+        else:
+            if num == tf:
+                den = Parallel(tf, *den_arg_list)
+            elif expr.den == tf:
+                den = Parallel(tf, *num_arg_list)
+            else:
+                den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+
+        return self._print(num)/self._print(den)
+
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
 
