@@ -4,7 +4,6 @@ from sympy.core import symbols, Function, Derivative
 from sympy.simplify import trigsimp, simplify
 from sympy.functions import sqrt, atan2, sin, cos
 from sympy.matrices import Matrix
-from sympy.testing.pytest import warns_deprecated_sympy
 
 # Most of the functionality is covered in the
 # test_functional_diffgeom_ch* tests which are based on the
@@ -26,12 +25,8 @@ def test_functional_diffgeom_ch2():
     assert (R2_r.point_to_coords(R2_p.point([r0, theta0])) ==
            Matrix([r0*cos(theta0), r0*sin(theta0)]))
 
-    assert R2_p.jacobian_matrix(R2_r, [r0, theta0]) == Matrix(
-            [[cos(theta0), -r0*sin(theta0)], [sin(theta0), r0*cos(theta0)]])
-
-    with warns_deprecated_sympy():
-        assert R2_p.jacobian(R2_r, [r0, theta0]) == Matrix(
-            [[cos(theta0), -r0*sin(theta0)], [sin(theta0), r0*cos(theta0)]])
+    assert R2_p.jacobian(R2_r, [r0, theta0]) == Matrix(
+        [[cos(theta0), -r0*sin(theta0)], [sin(theta0), r0*cos(theta0)]])
 
     field = f(R2.x, R2.y)
     p1_in_rect = R2_r.point([x0, y0])

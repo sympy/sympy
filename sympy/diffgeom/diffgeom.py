@@ -166,7 +166,8 @@ class CoordSystem(Atom):
     the position of the points or other geometric elements on a manifold [1].
 
     By passing Symbols to *symbols* parameter, user can define the name and assumptions
-    of coordinate symbols of the coordinate system.
+    of coordinate symbols of the coordinate system. If not passed, these symbols are
+    generated automatically and are assumed to be real valued.
     By passing *relations* parameter, user can define the tranform relations of coordinate
     systems. Inverse transformation and indirect transformation can be found automatically.
     If this parameter is not passed, coordinate transformation cannot be done.
@@ -180,7 +181,7 @@ class CoordSystem(Atom):
     patch : Patch
         The patch where the coordinate system is defined.
 
-    symbols : list of Symbols
+    symbols : list of Symbols, optional
         Defines the names and assumptions of coordinate symbols.
 
     relations : dict, optional
@@ -225,11 +226,11 @@ class CoordSystem(Atom):
     [sqrt(5)],
     [atan(2)]])
 
-    >>> Pol.jacobian_matrix(Car2D)
+    >>> Pol.jacobian(Car2D)
     Matrix([
     [cos(theta), -r*sin(theta)],
     [sin(theta),  r*cos(theta)]])
-    >>> Pol.jacobian_matrix(Car2D, [1, pi/2])
+    >>> Pol.jacobian(Car2D, [1, pi/2])
     Matrix([
     [0, -1],
     [1,  0]])
@@ -245,26 +246,36 @@ class CoordSystem(Atom):
             name = Str(name)
 
         # canonicallize the symbols
-        if symbols is None or any(not isinstance(s, Symbol) for s in symbols) :
-            # support deprecated signature
-            SymPyDeprecationWarning(
-                feature="Class signature 'names' of CoordSystem",
-                useinstead="class signature 'symbols'",
-                issue=19321,
-                deprecated_since_version="1.7"
-            ).warn()
-
-            if symbols is None:
-                names = kwargs.get('names', None)
-            else:
-                names = symbols
-
+        if symbols is None:
+            names = kwargs.get('names', None)
             if names is None:
-                symbols = Tuple(*[Symbol('%s_%d' % (name, i), real=True) for i in range(patch.dim)])
+                symbols = Tuple(
+                    *[Symbol('%s_%s' % (name.name, i), real=True) for i in range(patch.dim)]
+                )
             else:
-                symbols = Tuple(*[Symbol(n, real=True) for n in names])
+                SymPyDeprecationWarning(
+                    feature="Class signature 'names' of CoordSystem",
+                    useinstead="class signature 'symbols'",
+                    issue=19321,
+                    deprecated_since_version="1.7"
+                ).warn()
+                symbols = Tuple(
+                    *[Symbol(n, real=True) for n in names]
+                )
         else:
-            symbols = Tuple(*[Symbol(s.name, **s._assumptions.generator) for s in symbols])
+            syms = []
+            for s in symbols:
+                if isinstance(s, Symbol):
+                    syms.append(Symbol(s.name, **s._assumptions.generator))
+                elif isinstance(s, str):
+                    SymPyDeprecationWarning(
+                        feature="Passing str as coordinate symbol's name",
+                        useinstead="Symbol which contains the name and assumption for coordinate symbol",
+                        issue=19321,
+                        deprecated_since_version="1.7"
+                    ).warn()
+                    syms.append(Symbol(s, real=True))
+            symbols = Tuple(*syms)
 
         # canonicallize the relations
         rel_temp = {}
@@ -297,13 +308,7 @@ class CoordSystem(Atom):
                 [str(n) for n in symbols]
             )
         obj.patch.coord_systems.append(obj) # deprecated
-        obj._dummies = _deprecated_list(
-            "CoordSystem._dummies",
-            "CoordSystem.symbols",
-            19321,
-            "1.7",
-            [Dummy(str(n)) for n in symbols]
-        )
+        obj._dummies = [Dummy(str(n)) for n in symbols] # deprecated
         obj._dummy = Dummy()
 
         return obj
@@ -484,19 +489,6 @@ class CoordSystem(Atom):
             coordinates = transf(*coordinates)
         return coordinates
 
-    def jacobian_matrix(self, sys, coordinates=None):
-        """
-        Return the jacobian matrix of a transformation.
-        """
-        result = self.transform(sys).jacobian(self.symbols)
-        if coordinates is not None:
-            result = result.subs(list(zip(self.symbols, coordinates)))
-        return result
-
-    def jacobian_determinant(self, sys, coordinates=None):
-        """Return the jacobian determinant of a transformation."""
-        return self.jacobian_matrix(sys, coordinates).det()
-
     def coord_tuple_transform_to(self, to_sys, coords):
         """Transform ``coords`` to coord system ``to_sys``."""
         SymPyDeprecationWarning(
@@ -512,18 +504,20 @@ class CoordSystem(Atom):
             coords = transf[1].subs(list(zip(transf[0], coords)))
         return coords
 
-    def jacobian(self, to_sys, coords):
-        """Return the jacobian matrix of a transformation."""
-        SymPyDeprecationWarning(
-            feature="CoordSystem.jacobian",
-            useinstead="CoordSystem.jacobian_matrix",
-            issue=19321,
-            deprecated_since_version="1.7"
-        ).warn()
+    def jacobian(self, sys, coordinates=None):
+        """
+        Return the jacobian matrix of a transformation.
+        """
+        result = self.transform(sys).jacobian(self.symbols)
+        if coordinates is not None:
+            result = result.subs(list(zip(self.symbols, coordinates)))
+        return result
+    jacobian_matrix = jacobian
 
-        with_dummies = self.coord_tuple_transform_to(
-            to_sys, self._dummies).jacobian(self._dummies)
-        return with_dummies.subs(list(zip(self._dummies, coords)))
+    def jacobian_determinant(self, sys, coordinates=None):
+        """Return the jacobian determinant of a transformation."""
+        return self.jacobian(sys, coordinates).det()
+
 
     ##########################################################################
     # Points
@@ -931,7 +925,7 @@ class BaseVectorField(Expr):
         d_funcs_deriv = [f.diff(d_var) for f in d_funcs]
         d_funcs_deriv_sub = []
         for b in base_scalars:
-            jac = self._coord_sys.jacobian_matrix(b._coord_sys, coords)
+            jac = self._coord_sys.jacobian(b._coord_sys, coords)
             d_funcs_deriv_sub.append(jac[b._index, self._index])
         d_result = d_result.subs(list(zip(d_funcs_deriv, d_funcs_deriv_sub)))
 
@@ -1481,6 +1475,7 @@ class CovarDerivativeOp(Expr):
     def wrt(self):
         return self.args[0]
 
+    @property
     def christoffel(self):
         return self.args[1]
 
@@ -1835,7 +1830,7 @@ def vectors_in_basis(expr, to_sys):
     new_vectors = []
     for v in vectors:
         cs = v._coord_sys
-        jac = cs.jacobian_matrix(to_sys, cs.coord_functions())
+        jac = cs.jacobian(to_sys, cs.coord_functions())
         new = (jac.T*Matrix(to_sys.base_vectors()))[v._index]
         new_vectors.append(new)
     return expr.subs(list(zip(vectors, new_vectors)))
