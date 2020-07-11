@@ -129,6 +129,10 @@ def test_issue_11672():
     assert limit_seq(Rational(-1, 2)**n, n) == 0
     
 
+def test_issue_16735():
+    assert limit_seq(5**n/factorial(n), n) == 0
+
+
 @XFAIL
 def test_limit_seq_fail():
     # improve Summation algorithm or add ad-hoc criteria

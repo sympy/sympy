@@ -9,7 +9,7 @@ from sympy.testing.pytest import XFAIL
 from sympy.core.basic import Atom, Basic
 from sympy.core.core import BasicMeta
 from sympy.core.singleton import SingletonRegistry
-from sympy.core.symbol import Dummy, Symbol, Wild
+from sympy.core.symbol import Str, Dummy, Symbol, Wild
 from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
         Rational, Float)
 from sympy.core.relational import (Equality, GreaterThan, LessThan, Relational,
@@ -92,6 +92,8 @@ def test_core_basic():
               SingletonRegistry, S):
         check(c)
 
+def test_core_Str():
+    check(Str('x'))
 
 def test_core_symbol():
     # make the Symbol a unique name that doesn't class with any other

@@ -40,7 +40,11 @@ def rv(name, cls, *args):
     args = list(map(sympify, args))
     dist = cls(*args)
     dist.check(*args)
-    return SingleFinitePSpace(name, dist).value
+    pspace = SingleFinitePSpace(name, dist)
+    if any(is_random(arg) for arg in args):
+        from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
+        pspace = CompoundPSpace(name, CompoundDistribution(dist))
+    return pspace.value
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
 
@@ -261,8 +265,12 @@ class BernoulliDistribution(SingleFiniteDistribution):
         return set([self.succ, self.fail])
 
     def pmf(self, x):
-        return Piecewise((self.p, x == self.succ),
-                         (1 - self.p, x == self.fail),
+        if isinstance(self.succ, Symbol) and isinstance(self.fail, Symbol):
+            return Piecewise((self.p, x == self.succ),
+                             (1 - self.p, x == self.fail),
+                             (S.Zero, True))
+        return Piecewise((self.p, Eq(x, self.succ)),
+                         (1 - self.p, Eq(x, self.fail)),
                          (S.Zero, True))
 
 

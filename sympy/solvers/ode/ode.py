@@ -270,6 +270,7 @@ from sympy.solvers import checksol, solve
 from sympy.solvers.pde import pdsolve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
+from sympy.utilities.iterables import uniq
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
 from .subscheck import sub_func_doit
@@ -571,21 +572,21 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq)
     {Eq(x(t), -exp(C1)/(C2*exp(C1) - cos(t))), Eq(y(t), -1/(C1 - cos(t)))}
     """
-
     if iterable(eq):
-        match = classify_sysode(eq, func)
+        from sympy.solvers.ode.systems import dsolve_system
 
-        # This case can happen only when the system of ODEs have
-        # been divided into multiple linear first order system of
-        # ODEs with the help of canonical_odes function. Hence, the
-        # linodesolve can be directly used to get the solution in
-        # this case. In future, this may have to be changed.
-        if isinstance(match, list):
-            sols = []
-            for m in match:
-                sol = sysode_linear_neq_order1(m)
-                sols.append(sol)
-            return sols
+        # This may have to be changed in future
+        # when we have weakly and strongly
+        # connected components. This have to
+        # changed to show the systems that haven't
+        # been solved.
+        try:
+            sol = dsolve_system(eq, funcs=func, ics=ics)
+            return sol[0] if len(sol) == 1 else sol
+        except NotImplementedError:
+            pass
+
+        match = classify_sysode(eq, func)
 
         eq = match['eq']
         order = match['order']
@@ -613,12 +614,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             raise NotImplementedError
         else:
             if match['is_linear'] == True:
-                # These conditions have to be improved upon in future for the new solvers
-                # added in systems.py
-                if match.get('is_general', False):
-                    solvefunc = globals()['sysode_linear_neq_order%(order)s' % match]
-                else:
-                    solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
+                solvefunc = globals()['sysode_linear_%(no_of_equation)seq_order%(order)s' % match]
             else:
                 solvefunc = globals()['sysode_nonlinear_%(no_of_equation)seq_order%(order)s' % match]
             sols = solvefunc(match)
@@ -1840,21 +1836,16 @@ def classify_sysode(eq, funcs=None, **kwargs):
     >>> x2 = diff(x(t), t, t) ; y2 = diff(y(t), t, t)
     >>> eq = (Eq(x1, 12*x(t) - 6*y(t)), Eq(y1, 11*x(t) + 3*y(t)))
     >>> classify_sysode(eq)
-    {'eq': [-12*x(t) + 6*y(t) + Derivative(x(t), t), -11*x(t) - 3*y(t) + Derivative(y(t), t)], 'func': [x(t), y(t)], 'func_coeff': Matrix([
-    [-12,  6],
-    [-11, -3]]), 'is_constant': True, 'is_general': True, 'is_homogeneous': True, 'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': 'type1'}
+    {'eq': [-12*x(t) + 6*y(t) + Derivative(x(t), t), -11*x(t) - 3*y(t) + Derivative(y(t), t)], 'func': [x(t), y(t)],
+     'func_coeff': {(0, x(t), 0): -12, (0, x(t), 1): 1, (0, y(t), 0): 6, (0, y(t), 1): 0, (1, x(t), 0): -11, (1, x(t), 1): 0, (1, y(t), 0): -3, (1, y(t), 1): 1}, 'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'type_of_equation': None}
     >>> eq = (Eq(diff(x(t),t), 5*t*x(t) + t**2*y(t) + 2), Eq(diff(y(t),t), -t**2*x(t) + 5*t*y(t)))
     >>> classify_sysode(eq)
-    {'commutative_antiderivative': Matrix([
-    [5*t**2/2,   t**3/3],
-    [ -t**3/3, 5*t**2/2]]), 'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t) - 2, t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)], 'func': [x(t), y(t)], 'func_coeff': Matrix([
-    [-5*t, -t**2],
-    [t**2,  -5*t]]), 'is_constant': False, 'is_general': True, 'is_homogeneous': False, 'is_linear': True, 'no_of_equation': 2, 'order': {x(t): 1, y(t): 1}, 'rhs': Matrix([
-    [2],
-    [0]]), 'type_of_equation': 'type4'}
+    {'eq': [-t**2*y(t) - 5*t*x(t) + Derivative(x(t), t) - 2, t**2*x(t) - 5*t*y(t) + Derivative(y(t), t)],
+     'func': [x(t), y(t)], 'func_coeff': {(0, x(t), 0): -5*t, (0, x(t), 1): 1, (0, y(t), 0): -t**2, (0, y(t), 1): 0,
+     (1, x(t), 0): t**2, (1, x(t), 1): 0, (1, y(t), 0): -5*t, (1, y(t), 1): 1}, 'is_linear': True, 'no_of_equation': 2,
+      'order': {x(t): 1, y(t): 1}, 'type_of_equation': None}
 
     """
-    from sympy.solvers.ode.systems import neq_nth_linear_constant_coeff_match
 
     # Sympify equations and convert iterables of equations into
     # a list of equations
@@ -1876,17 +1867,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     # find all the functions if not given
     order = dict()
     if funcs==[None]:
-        funcs = []
-        for eqs in eq:
-            derivs = eqs.atoms(Derivative)
-            func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
-            for func_ in  func:
-                funcs.append(func_)
-
-    temp_eqs = eq
-    match = neq_nth_linear_constant_coeff_match(temp_eqs, funcs, t)
-    if match is not None:
-        return match
+        funcs = _extract_funcs(eq)
 
     funcs = list(set(funcs))
     if len(funcs) != len(eq):
@@ -2616,6 +2597,18 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     # introduced arbitrary constants numbered higher than the order of a
     # given ODE that sol is a solution of.
     return len(str(sol))
+
+
+def _extract_funcs(eqs):
+    funcs = []
+    for eq in eqs:
+        derivs = eq.atoms(Derivative)
+        func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
+        for func_ in func:
+            funcs.append(func_)
+    funcs = list(uniq(funcs))
+
+    return funcs
 
 
 def _get_constant_subexpressions(expr, Cs):
@@ -7296,25 +7289,6 @@ def _linear_2eq_order2_type11(x, y, t, r, eq):
     sol1 = C3*t + t*Integral(msol1.rhs/t**2, t)
     sol2 = C4*t + t*Integral(msol2.rhs/t**2, t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
-
-def sysode_linear_neq_order1(match):
-    from sympy.solvers.ode.systems import linodesolve
-
-    eqs = match['eq']
-    t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    funcs = match['func']
-
-    rhs = match.get('rhs', None)
-    A = -match['func_coeff']
-    B = match.get('commutative_antiderivative', None)
-    type_of_equation = match['type_of_equation']
-
-    sol_vector = linodesolve(A, t, b=rhs, B=B, type=type_of_equation)
-
-    sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
-
-    return sol
 
 
 def sysode_nonlinear_2eq_order1(match_):

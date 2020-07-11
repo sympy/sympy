@@ -1,26 +1,33 @@
 from mpmath.matrices.matrices import _matrix
 
-from sympy.core import Basic, Dict, Integer, S, Tuple
+from sympy.core import Basic, Dict, Integer, Tuple
 from sympy.core.cache import cacheit
 from sympy.core.sympify import converter as sympify_converter, _sympify
 from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.sparse import SparseMatrix
+from sympy.multipledispatch import dispatch
+
 
 
 def sympify_matrix(arg):
     return arg.as_immutable()
+
+
 sympify_converter[MatrixBase] = sympify_matrix
 
 
 def sympify_mpmath_matrix(arg):
     mat = [_sympify(x) for x in arg]
     return ImmutableDenseMatrix(arg.rows, arg.cols, mat)
+
+
 sympify_converter[_matrix] = sympify_mpmath_matrix
 
 
-class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
+
+class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):  # type: ignore
     """Create an immutable version of a matrix.
 
     Examples
@@ -77,27 +84,6 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of {}".format(self.__class__))
 
-    def _eval_Eq(self, other):
-        """Helper method for Equality with matrices.
-
-        Relational automatically converts matrices to ImmutableDenseMatrix
-        instances, so this method only applies here.  Returns True if the
-        matrices are definitively the same, False if they are definitively
-        different, and None if undetermined (e.g. if they contain Symbols).
-        Returning None triggers default handling of Equalities.
-
-        """
-        if not hasattr(other, 'shape') or self.shape != other.shape:
-            return S.false
-        if isinstance(other, MatrixExpr) and not isinstance(
-                other, ImmutableDenseMatrix):
-            return None
-        diff = (self - other).is_zero_matrix
-        if diff is True:
-            return S.true
-        elif diff is False:
-            return S.false
-
     def _eval_extract(self, rowsList, colsList):
         # self._mat is a Tuple.  It is slightly faster to index a
         # tuple over a Tuple, so grab the internal tuple directly
@@ -125,6 +111,7 @@ class ImmutableDenseMatrix(DenseMatrix, MatrixExpr):
     def is_diagonalizable(self, reals_only=False, **kwargs):
         return super().is_diagonalizable(
             reals_only=reals_only, **kwargs)
+
     is_diagonalizable.__doc__ = DenseMatrix.is_diagonalizable.__doc__
     is_diagonalizable = cacheit(is_diagonalizable)
 
@@ -178,8 +165,6 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
     def _entry(self, i, j, **kwargs):
         return SparseMatrix.__getitem__(self, (i, j))
 
-    _eval_Eq = ImmutableDenseMatrix._eval_Eq
-
     @property
     def cols(self):
         return self._cols
@@ -198,5 +183,22 @@ class ImmutableSparseMatrix(SparseMatrix, MatrixExpr):
     def is_diagonalizable(self, reals_only=False, **kwargs):
         return super().is_diagonalizable(
             reals_only=reals_only, **kwargs)
+
     is_diagonalizable.__doc__ = SparseMatrix.is_diagonalizable.__doc__
     is_diagonalizable = cacheit(is_diagonalizable)
+
+
+@dispatch(ImmutableDenseMatrix, ImmutableDenseMatrix)
+def _eval_is_eq(lhs, rhs): # noqa:F811
+    """Helper method for Equality with matrices.sympy.
+
+    Relational automatically converts matrices to ImmutableDenseMatrix
+    instances, so this method only applies here.  Returns True if the
+    matrices are definitively the same, False if they are definitively
+    different, and None if undetermined (e.g. if they contain Symbols).
+    Returning None triggers default handling of Equalities.
+
+    """
+    if lhs.shape != rhs.shape:
+        return False
+    return (lhs - rhs).is_zero_matrix
