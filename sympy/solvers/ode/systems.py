@@ -637,7 +637,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
     >>> A = A0
 
-    A user can also pass the commutative antidervative required for type3 and type4 system of ODEs.
+    A user can also pass the commutative antiderivative required for type3 and type4 system of ODEs.
     Passing an incorrect one will lead to incorrect results. If the coefficient matrix is not commutative
     with its antiderivative, then :obj:`sympy.solvers.ode.systems.linodesolve_type()` raises a NotImplementedError.
     If it does have a commutative antiderivative, then the function just returns the information about the system.
@@ -1076,16 +1076,6 @@ def _preprocess_eqs(eqs):
     return processed_eqs
 
 
-def _replace_dummies(eqs, sol):
-
-    constants = sorted(Tuple(*sol).free_symbols - Tuple(*eqs).free_symbols,
-                       key=lambda x: x.dummy_index)
-    dummy_to_constants = {c: Symbol('C{}'.format(i+1)) for i, c, in enumerate(constants)}
-    sol = [s.subs(dummy_to_constants) for s in sol]
-
-    return sol
-
-
 # For now, this function returns a simple output, later it will
 # be capable of dividing the system of ODEs into strongly and
 # weakly connected components.
@@ -1246,7 +1236,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
         When the parameters passed aren't in the required form.
 
     """
-    from sympy.solvers.ode.ode import solve_ics, _extract_funcs
+    from sympy.solvers.ode.ode import solve_ics, _extract_funcs, constant_renumber
 
     if not iterable(eqs):
         raise ValueError(filldedent('''
@@ -1311,10 +1301,11 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
         funcs = [s.lhs for s in sols[0]]
 
         for sol in sols:
-            sol = _replace_dummies(eqs, sol)
+            variables = Tuple(*eqs).free_symbols
+            sol = constant_renumber(sol, variables=variables)
 
             if ics:
-                constants = Tuple(*sol).free_symbols - Tuple(*eqs).free_symbols
+                constants = Tuple(*sol).free_symbols - variables
                 solved_constants = solve_ics(sol, funcs, constants, ics)
                 sol = [s.subs(solved_constants) for s in sol]
 

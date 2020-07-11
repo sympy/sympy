@@ -92,9 +92,10 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     Examples
     ========
 
-    >>> from sympy import Eq, Function, checkodesol, symbols
+    >>> from sympy import (Eq, Function, checkodesol, symbols,
+    ...     Derivative, exp)
     >>> x, C1, C2 = symbols('x,C1,C2')
-    >>> f, g = Function('f')
+    >>> f, g = symbols('f g', cls=Function)
     >>> checkodesol(f(x).diff(x), Eq(f(x), C1))
     (True, 0)
     >>> assert checkodesol(f(x).diff(x), C1)[0]
