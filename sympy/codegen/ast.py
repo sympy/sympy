@@ -125,14 +125,14 @@ There is a function constructing a loop (or a complete function) like this in
 from typing import Any, Dict, List
 
 from collections import defaultdict
+
+from sympy import Lt, Le, Ge, Gt
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer, oo
-from sympy.core.relational import Lt, Le, Ge, Gt
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.utilities.iterables import iterable
-
 
 
 def _mk_Tuple(args):
@@ -1497,9 +1497,6 @@ class Variable(Node):
     __le__ = lambda self, other: self._relation(other, Le)
     __ge__ = lambda self, other: self._relation(other, Ge)
     __gt__ = lambda self, other: self._relation(other, Gt)
-
-
-
 
 class Pointer(Variable):
     """ Represents a pointer. See ``Variable``.

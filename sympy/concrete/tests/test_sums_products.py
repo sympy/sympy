@@ -1317,6 +1317,10 @@ def test_issue_14313():
     assert Sum(S.Half**floor(n/2), (n, 1, oo)).is_convergent()
 
 
+def test_issue_16735():
+    assert Sum(5**n/gamma(n+1), (n, 1, oo)).is_convergent() is S.true
+
+
 @XFAIL
 def test_issue_14871():
     assert Sum((Rational(1, 10))**x*RisingFactorial(0, x)/factorial(x), (x, 0, oo)).rewrite(factorial).doit() == 1

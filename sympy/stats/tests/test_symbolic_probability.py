@@ -40,6 +40,12 @@ def test_literal_probability():
     assert Expectation(Expectation(2*X)).doit() == 4
     assert Expectation(Expectation(2*X)).doit(deep=False) == Expectation(2*X)
     assert Expectation(4*Expectation(2*X)).doit(deep=False) == 4*Expectation(2*X)
+    assert Expectation((X + Y)**3).expand() == 3*Expectation(X*Y**2) +\
+                3*Expectation(X**2*Y) + Expectation(X**3) + Expectation(Y**3)
+    assert Expectation((X - Y)**3).expand() == 3*Expectation(X*Y**2) -\
+                3*Expectation(X**2*Y) + Expectation(X**3) - Expectation(Y**3)
+    assert Expectation((X - Y)**2).expand() == -2*Expectation(X*Y) +\
+                Expectation(X**2) + Expectation(Y**2)
 
     assert Variance(w).args == (w,)
     assert Variance(w).expand() == 0

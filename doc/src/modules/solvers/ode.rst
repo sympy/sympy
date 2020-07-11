@@ -17,6 +17,10 @@ dsolve
 ^^^^^^
 .. autofunction:: sympy.solvers.ode::dsolve
 
+dsolve_system
+^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems::dsolve_system
+
 classify_ode
 ^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode::classify_ode
