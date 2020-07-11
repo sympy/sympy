@@ -846,5 +846,6 @@ def test_issue_13715():
 def test_issue_15055():
     assert limit(n**3*((-n - 1)*sin(1/n) + (n + 2)*sin(1/(n + 1)))/(-n + 1), n, oo) == 1
 
+
 def test_issue_19739():
-    assert limit((-1/4)**n, n, oo) == 0
+    assert limit((-S(1)/4)**x, x, oo) == 0
