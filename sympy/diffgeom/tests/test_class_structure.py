@@ -29,6 +29,4 @@ def test_subs():
 def test_deprecated():
     with warns_deprecated_sympy():
         cs_wname = CoordSystem('cs', p, ['a', 'b'])
-        cs_noname = CoordSystem('cs', p)
         assert cs_wname == cs_wname.func(*cs_wname.args)
-        assert cs_noname == cs_wname.func(*cs_noname.args)
