@@ -125,6 +125,10 @@ def test_issue_10382():
     assert limit_seq(fibonacci(n+1)/fibonacci(n), n) == S.GoldenRatio
 
 
+def test_issue_11672():
+    assert limit_seq(Rational(-1, 2)**n, n) == 0
+    
+
 @XFAIL
 def test_limit_seq_fail():
     # improve Summation algorithm or add ad-hoc criteria
