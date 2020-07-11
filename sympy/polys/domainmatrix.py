@@ -1,11 +1,155 @@
 from __future__ import print_function
 
-from sympy.core.sympify import _sympify
+from operator import mul
 
+from sympy.core.sympify import _sympify
 from sympy.matrices.common import (NonInvertibleMatrixError,
     NonSquareMatrixError, ShapeError)
-
 from sympy.polys.constructor import construct_domain
+
+
+class DDMError(Exception):
+    """Base class for errors raised by DDM"""
+    pass
+
+
+class DDMBadInputError(DDMError):
+    """list of lists is inconsistent with shape"""
+    pass
+
+
+class DDMDomainError(DDMError):
+    """domains do not match"""
+    pass
+
+
+class DDMShapeError(DDMError):
+    """shapes are inconsistent"""
+    pass
+
+
+class DDM(list):
+    """Dense matrix based on polys domain elements
+
+    This is a list subclass and is a wrapper for a list of lists that supports
+    basic matrix arithmetic +, -, *, **.
+    """
+    def __init__(self, rowslist, shape, domain):
+        super().__init__(rowslist)
+        self.shape = self.rows, self.cols = m, n = shape
+        self.domain = domain
+
+        if not (len(self) == m and all(len(row) == n for row in self)):
+            raise DDMBadInputError("Inconsistent row-list/shape")
+
+    def __str__(self):
+        cls = type(self).__name__
+        rows = list.__str__(self)
+        return '%s(%s, %s, %s)' % (cls, rows, self.shape, self.domain)
+
+    def __eq__(self, other):
+        if not isinstance(other, DDM):
+            return False
+        return (super().__eq__(other) and self.domain == other.domain)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    @classmethod
+    def zeros(cls, shape, domain):
+        z = domain.zero
+        m, n = shape
+        rowslist = ([z] * n for _ in range(m))
+        return DDM(rowslist, shape, domain)
+
+    def copy(self):
+        copyrows = (row[:] for row in self)
+        return DDM(copyrows, self.shape, self.domain)
+
+    def __add__(a, b):
+        if not isinstance(b, DDM):
+            return NotImplemented
+        return a.add(b)
+
+    def __sub__(a, b):
+        if not isinstance(b, DDM):
+            return NotImplemented
+        return a.sub(b)
+
+    def __neg__(a):
+        return a.neg()
+
+    def __mul__(a, b):
+        if isinstance(b, DDM):
+            return a.mul(b)
+        else:
+            return NotImplemented
+
+    @classmethod
+    def _check(cls, a, op, b, ashape, bshape):
+        if a.domain != b.domain:
+            msg = "Domain mismatch: %s %s %s" % (a.domain, op, b.domain)
+            raise DDMDomainError(msg)
+        if ashape != bshape:
+            msg = "Shape mismatch: %s %s %s" % (a.shape, op, b.shape)
+            raise DDMShapeError(msg)
+
+    def add(a, b):
+        """a + b"""
+        a._check(a, '+', b, a.shape, b.shape)
+        c = a.copy()
+        ddm_add(c, b)
+        return c
+
+    def sub(a, b):
+        """a - b"""
+        a._check(a, '-', b, a.shape, b.shape)
+        c = a.copy()
+        ddm_sub(c, b)
+        return c
+
+    def neg(a):
+        """-a"""
+        b = a.copy()
+        ddm_neg(b)
+        return b
+
+    def mul(a, b):
+        """a * b"""
+        m, o = a.shape
+        o2, n = b.shape
+        a._check(a, '*', b, o, o2)
+        c = a.zeros((m, n), a.domain)
+        ddm_mmul(a, b, c)
+        return c
+
+
+def ddm_add(a, b):
+    """a <- a + b"""
+    for ai, bi in zip(a, b):
+        for j, bij in enumerate(bi):
+            ai[j] += bij
+
+def ddm_sub(a, b):
+    """a <- a - b"""
+    for ai, bi in zip(a, b):
+        for j, bij in enumerate(bi):
+            ai[j] -= bij
+
+def ddm_neg(a):
+    """a <- -a"""
+    for ai in a:
+        for j, aij in enumerate(ai):
+            ai[j] = -aij
+
+# XXX: Change ordering to a <- a + b*c
+def ddm_mmul(a, b, c):
+    """c <- c + a * b"""
+    bT = list(zip(*b))
+
+    for ai, ci in zip(a, c):
+        for j, bTj in enumerate(bT):
+            ci[j] = sum(map(mul, ai, bTj), ci[j])
 
 
 class DomainMatrix:
