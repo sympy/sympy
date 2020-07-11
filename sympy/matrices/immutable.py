@@ -153,7 +153,7 @@ class ImmutableDenseDomainMatrix(DenseDomainMatrix, ImmutableDenseMatrix):
     @classmethod
     def from_DomainMatrix(cls, rep):
         rows, cols = rep.shape
-        flat_list = [rep.domain.to_sympy(e) for row in rep.rows for e in row]
+        flat_list = [rep.domain.to_sympy(e) for row in rep.rep for e in row]
         return ImmutableDenseDomainMatrix(rows, cols, flat_list)
 
     #@property

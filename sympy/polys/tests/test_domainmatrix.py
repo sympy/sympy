@@ -3,7 +3,7 @@ from sympy.polys import ZZ, QQ
 from sympy.polys.domainmatrix import (
         DDM,
         DDMBadInputError, DDMDomainError, DDMShapeError,
-        ddm_add, ddm_sub, ddm_neg, ddm_mmul,
+        ddm_iadd, ddm_isub, ddm_ineg, ddm_imatmul,
         )
 
 from sympy.testing.pytest import raises
@@ -20,6 +20,20 @@ def test_DDM_init():
 
     raises(DDMBadInputError, lambda: DDM([[ZZ(2), ZZ(3)]], (2, 2), ZZ))
     raises(DDMBadInputError, lambda: DDM([[ZZ(1)], [ZZ(2), ZZ(3)]], (2, 2), ZZ))
+
+
+def test_DDM_getsetitem():
+    ddm = DDM([[ZZ(2), ZZ(3)], [ZZ(4), ZZ(5)]], (2, 2), ZZ)
+
+    assert ddm[0][0] == ZZ(2)
+    assert ddm[0][1] == ZZ(3)
+    assert ddm[1][0] == ZZ(4)
+    assert ddm[1][1] == ZZ(5)
+    raises(IndexError, lambda: ddm[2][0])
+    raises(IndexError, lambda: ddm[0][2])
+
+    ddm[0][0] = ZZ(-1)
+    assert ddm[0][0] == ZZ(-1)
 
 
 def test_DDM_str():
@@ -118,53 +132,78 @@ def test_DDM_mul():
     raises(TypeError, lambda: A * [[1]])
 
 
-def test_DDM_mmul():
-    # ZZZ: Use a @ b?
-    # ZZZ: test 0xn matrices
+def test_DDM_matmul():
     A = DDM([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
     B = DDM([[ZZ(3), ZZ(4)]], (1, 2), ZZ)
     AB = DDM([[ZZ(3), ZZ(4)], [ZZ(6), ZZ(8)]], (2, 2), ZZ)
     BA = DDM([[ZZ(11)]], (1, 1), ZZ)
+
+    assert A @ B == A.matmul(B) == AB
+    assert B @ A == B.matmul(A) == BA
+
+    raises(TypeError, lambda: A @ 1)
+    raises(TypeError, lambda: A @ [[3, 4]])
+
     Bq = DDM([[QQ(3), QQ(4)]], (1, 2), QQ)
+
+    raises(DDMDomainError, lambda: A @ Bq)
+    raises(DDMDomainError, lambda: Bq @ A)
+
     C = DDM([[ZZ(1)]], (1, 1), ZZ)
-    assert A * B == A.mul(B) == AB
-    assert B * A == B.mul(A) == BA
-    raises(DDMDomainError, lambda: A * Bq)
-    raises(DDMDomainError, lambda: Bq * A)
-    assert A * C == A.mul(C) == A
-    raises(DDMShapeError, lambda: C * A)
-    raises(DDMShapeError, lambda: C.mul(A))
+
+    assert A @ C == A.matmul(C) == A
+
+    raises(DDMShapeError, lambda: C @ A)
+    raises(DDMShapeError, lambda: C.matmul(A))
+
+    Z04 = DDM([], (0, 4), ZZ)
+    Z40 = DDM([[]]*4, (4, 0), ZZ)
+    Z50 = DDM([[]]*5, (5, 0), ZZ)
+    Z05 = DDM([], (0, 5), ZZ)
+    Z45 = DDM([[0] * 5] * 4, (4, 5), ZZ)
+    Z54 = DDM([[0] * 4] * 5, (5, 4), ZZ)
+    Z00 = DDM([], (0, 0), ZZ)
+
+    assert Z04 @ Z45 == Z04.matmul(Z45) == Z05
+    assert Z45 @ Z50 == Z45.matmul(Z50) == Z40
+    assert Z00 @ Z04 == Z00.matmul(Z04) == Z04
+    assert Z50 @ Z00 == Z50.matmul(Z00) == Z50
+    assert Z00 @ Z00 == Z00.matmul(Z00) == Z00
+    assert Z50 @ Z04 == Z50.matmul(Z04) == Z54
+
+    raises(DDMShapeError, lambda: Z05 @ Z40)
+    raises(DDMShapeError, lambda: Z05.matmul(Z40))
 
 
-def test_ddm_add():
+def test_ddm_iadd():
     a = [[1, 2], [3, 4]]
     b = [[5, 6], [7, 8]]
-    ddm_add(a, b)
+    ddm_iadd(a, b)
     assert a == [[6, 8], [10, 12]]
 
 
-def test_ddm_sub():
+def test_ddm_isub():
     a = [[1, 2], [3, 4]]
     b = [[5, 6], [7, 8]]
-    ddm_sub(a, b)
+    ddm_isub(a, b)
     assert a == [[-4, -4], [-4, -4]]
 
-def test_ddm_neg():
+def test_ddm_ineg():
     a = [[1, 2], [3, 4]]
-    ddm_neg(a)
+    ddm_ineg(a)
     assert a == [[-1, -2], [-3, -4]]
 
 
-def test_ddm_mmul():
+def test_ddm_imatmul():
     a = [[1, 2, 3], [4, 5, 6]]
     b = [[1, 2], [3, 4], [5, 6]]
     c1 = [[0, 0], [0, 0]]
     c2 = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
-    ddm_mmul(a, b, c1)
+    ddm_imatmul(c1, a, b)
     assert c1 == [[22, 28], [49, 64]]
-    ddm_mmul(b, a, c2)
+    ddm_imatmul(c2, b, a)
     assert c2 == [[9, 12, 15], [19, 26, 33], [29, 40, 51]]
     b3 = [[1], [2], [3]]
     c3 = [[0], [0]]
-    ddm_mmul(a, b3, c3)
+    ddm_imatmul(c3, a, b3)
     assert c3 == [[14], [32]]

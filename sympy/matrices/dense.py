@@ -12,7 +12,7 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError, NonSquareMatrixError
 from sympy.matrices.matrices import MatrixBase
-from sympy.polys.domainmatrix import DomainMatrix
+from sympy.polys.domainmatrix import DomainMatrix, DDMShapeError
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
@@ -698,7 +698,7 @@ class DenseDomainMatrix(DenseMatrix):
         if isinstance(index, tuple):
             i, j = map(toint, index)
             if isinstance(i, (int, Integer)) and isinstance(j, (int, Integer)):
-                element_dom = self._rep.rows[i][j]
+                element_dom = self._rep.rep[i][j]
             elif isinstance(i, (slice, list, tuple)) or isinstance(j, (slice, list, tuple)):
                 i_indices = a2i(i, self.rows)
                 j_indices = a2i(j, self.cols)
@@ -714,7 +714,7 @@ class DenseDomainMatrix(DenseMatrix):
             if not self.cols:
                 raise IndexError("no more elements........")
             i, j = index // self.cols, index % self.cols
-            element_dom = self._rep.rows[i][j]
+            element_dom = self._rep.rep[i][j]
         elif isinstance(index, slice):
             return self._flat()[index]
         else:
@@ -780,7 +780,11 @@ class DenseDomainMatrix(DenseMatrix):
             if exp < 0:
                 return self.inv() ** (-exp)
             else:
-                return self.from_DomainMatrix(self._rep ** exp.p)
+                try:
+                    rep = self._rep ** exp.p
+                except DDMShapeError:
+                    raise NonSquareMatrixError("Matrix power is only for square matrices")
+                return self.from_DomainMatrix(rep)
         elif self.is_Identity:
             return self
         elif self.is_diagonal():
@@ -830,7 +834,7 @@ class DenseDomainMatrix(DenseMatrix):
 
         dom = rep.domain
         vec = berk(rep)
-        coeffs = [vec.rows[i][0] for i in range(n+1)]
+        coeffs = [vec.rep[i][0] for i in range(n+1)]
 
         x = uniquely_named_symbol(name, self, modify=lambda s: '_' + s)
         return PurePoly(coeffs, x, domain=dom)
@@ -896,7 +900,7 @@ class DenseDomainMatrix(DenseMatrix):
 
     def tolist(self):
         conv = self._rep.domain.to_sympy
-        rows = self._rep.rows
+        rows = self._rep.rep
         return [[conv(e) for e in row] for row in rows]
 
     def _flat(self):
@@ -961,10 +965,10 @@ class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
                 if isinstance(value, list) or isinstance(value, MatrixBase):
                     for ip in range(len(value)):
                         v = self._rep.domain.convert(value[ip])
-                        self._rep.rows[i+ip][j] = v
+                        self._rep.rep[i+ip][j] = v
                 else:
                     value = self._rep.domain.convert(value)
-                    self._rep.rows[i][j] = value
+                    self._rep.rep[i][j] = value
             elif isinstance(i, (slice, list)) or isinstance(j, (slice, list)):
                 i_indices = a2i(i, self.rows)
                 j_indices = a2i(j, self.cols)
@@ -977,7 +981,7 @@ class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
         elif isinstance(key, int):
             i, j = key // self.cols, key % self.cols
             value = self._rep.domain.convert(value)
-            self._rep.rows[i][j] = value
+            self._rep.rep[i][j] = value
         elif isinstance(key, slice):
             if not isinstance(value, list):
                 raise IndexError('bad value-----')
@@ -994,7 +998,7 @@ class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
     def _eval_row_del(self, i):
         rows = self.rows - 1
         cols = self.cols
-        itemslist = self._rep.rows
+        itemslist = self._rep.rep
         itemslist = itemslist[:i] + itemslist[i+1:]
         rep = DomainMatrix.from_list_sympy_2(rows, cols, itemslist)
         self._set_rep(rep)
@@ -1002,7 +1006,7 @@ class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
     def _eval_col_del(self, i):
         rows = self.rows
         cols = self.cols - 1
-        itemslist = self._rep.rows
+        itemslist = self._rep.rep
         itemslist = [row[:i] + row[i+1:] for row in itemslist]
         rep = DomainMatrix.from_list_sympy_2(rows, cols, itemslist)
         self._set_rep(rep)
