@@ -1,4 +1,4 @@
-from sympy import (symbols, Symbol, product, gamma, factorial, rf, sqrt, cos,
+from sympy import (symbols, Symbol, product, combsimp, factorial, rf, sqrt, cos,
                    Function, Product, Rational, Sum, oo, exp, log, S, pi,
                    KroneckerDelta)
 from sympy.testing.pytest import raises
@@ -103,9 +103,7 @@ def test_karr_convention():
 
 def test_karr_proposition_2a():
     # Test Karr, page 309, proposition 2, part a
-    u, v = symbols('u v')
-    i, u1 = symbols('i u1', integer=True)
-    v1 = Symbol("v1", integer=True, positive=True)
+    i, u, v = symbols('i u v', integer=True)
 
     def test_the_product(m, n):
         # g
@@ -115,23 +113,21 @@ def test_karr_proposition_2a():
         # The product
         a = m
         b = n - 1
-        P = Product(f, (i, a, b)).doit().rewrite(gamma)
+        P = Product(f, (i, a, b)).doit()
         # Test if Product_{m <= i < n} f(i) = g(n) / g(m)
-        return simplify(P / (g.subs(i, n) / g.subs(i, m)))
+        assert combsimp(P / (g.subs(i, n) / g.subs(i, m))) == 1
 
     # m < n
-    assert test_the_product(u, u + v).subs(v, v1).simplify().subs(u, u1) == 1
+    test_the_product(u, u + v)
     # m = n
-    assert test_the_product(u, u).subs(u, u1) == 1
+    test_the_product(u, u)
     # m > n
-    assert test_the_product(u + v, u).subs(v, v1).simplify().subs(u, u1) == 1
+    test_the_product(u + v, u)
 
 
 def test_karr_proposition_2b():
     # Test Karr, page 309, proposition 2, part b
-    u, v, w = symbols('u v w')
-    i, u1 = symbols('i u1', integer=True)
-    v1, w1 = symbols("v1 w1", integer=True, positive=True)
+    i, u, v, w = symbols('i u v w', integer=True)
 
     def test_the_product(l, n, m):
         # Productmand
@@ -139,36 +135,36 @@ def test_karr_proposition_2b():
         # First product
         a = l
         b = n - 1
-        S1 = Product(s, (i, a, b)).doit().rewrite(gamma)
+        S1 = Product(s, (i, a, b)).doit()
         # Second product
         a = l
         b = m - 1
-        S2 = Product(s, (i, a, b)).doit().rewrite(gamma)
+        S2 = Product(s, (i, a, b)).doit()
         # Third product
         a = m
         b = n - 1
-        S3 = Product(s, (i, a, b)).doit().rewrite(gamma)
+        S3 = Product(s, (i, a, b)).doit()
         # Test if S1 = S2 * S3 as required
-        return simplify(S1 / (S2 * S3))
+        assert combsimp(S1 / (S2 * S3)) == 1
 
     # l < m < n
-    assert test_the_product(u, u + v, u + v + w).subs(v, v1).subs(w, w1).simplify().subs(u, u1) == 1
+    test_the_product(u, u + v, u + v + w)
     # l < m = n
-    assert test_the_product(u, u + v, u + v).subs(v, v1).simplify().subs(u, u1) == 1
+    test_the_product(u, u + v, u + v)
     # l < m > n
-    assert test_the_product(u, u + v + w, v).subs(u, u1).subs(w, w1).simplify().subs(v, v1) == 1
+    test_the_product(u, u + v + w, v)
     # l = m < n
-    assert test_the_product(u, u, u + v).subs(v, v1).simplify().subs(u, u1) == 1
+    test_the_product(u, u, u + v)
     # l = m = n
-    assert test_the_product(u, u, u).subs(u, u1) == 1
+    test_the_product(u, u, u)
     # l = m > n
-    assert test_the_product(u + v, u + v, u).subs(v, v1).simplify().subs(u, u1) == 1
+    test_the_product(u + v, u + v, u)
     # l > m < n
-    assert test_the_product(u + v, u, u + w).subs(v, v1).subs(w, w1).simplify().subs(u, u1) == 1
+    test_the_product(u + v, u, u + w)
     # l > m = n
-    assert test_the_product(u + v, u, u).subs(v, v1).simplify().subs(u, u1) == 1
+    test_the_product(u + v, u, u)
     # l > m > n
-    assert test_the_product(u + v + w, u + v, u).subs(v, v1).subs(w, w1).simplify().subs(u, u1) == 1
+    test_the_product(u + v + w, u + v, u)
 
 
 def test_simple_products():

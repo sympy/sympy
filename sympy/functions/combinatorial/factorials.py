@@ -233,7 +233,7 @@ class factorial(CombinatorialFunction):
 
                     return S(fc % q)
 
-    def _eval_rewrite_as_gamma(self, n, **kwargs):
+    def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
         from sympy import gamma
         return gamma(n + 1)
 
@@ -369,7 +369,7 @@ class subfactorial(CombinatorialFunction):
         f = S.NegativeOne**i / factorial(i)
         return factorial(arg) * summation(f, (i, 0, arg))
 
-    def _eval_rewrite_as_gamma(self, arg, **kwargs):
+    def _eval_rewrite_as_gamma(self, arg, piecewise=True, **kwargs):
         from sympy import exp, gamma, I, lowergamma
         return ((-1)**(arg + 1)*exp(-I*pi*arg)*lowergamma(arg + 1, -1) + gamma(arg + 1))*exp(-1)
 
@@ -493,7 +493,7 @@ class factorial2(CombinatorialFunction):
             if n.is_odd:
                 return ((n + 1) / 2).is_even
 
-    def _eval_rewrite_as_gamma(self, n, **kwargs):
+    def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
         from sympy import gamma, Piecewise, sqrt
         return 2**(n/2)*gamma(n/2 + 1) * Piecewise((1, Eq(Mod(n, 2), 0)),
                 (sqrt(2/pi), Eq(Mod(n, 2), 1)))
@@ -624,9 +624,9 @@ class RisingFactorial(CombinatorialFunction):
             if x.is_integer and x.is_negative:
                 return S.Zero
 
-    def _eval_rewrite_as_gamma(self, x, k, **kwargs):
+    def _eval_rewrite_as_gamma(self, x, k, piecewise=True, **kwargs):
         from sympy import gamma, Piecewise
-        if not kwargs.get('piecewise', True):
+        if not piecewise:
             if (x <= 0) == True:
                 return (-1)**k*gamma(1 - x) / gamma(-k - x + 1)
             return gamma(x + k) / gamma(x)
@@ -648,10 +648,9 @@ class RisingFactorial(CombinatorialFunction):
         if k.is_integer:
             return factorial(k) * binomial(x + k - 1, k)
 
-    def _eval_rewrite_as_tractable(self, x, k, **kwargs):
+    def _eval_rewrite_as_tractable(self, x, k, limitvar=None, **kwargs):
         from sympy import gamma
-        limitvar = kwargs.get('limitvar', None)
-        if limitvar is not None:
+        if limitvar:
             k_lim = k.subs(limitvar, S.Infinity)
             if k_lim is S.Infinity:
                 return (gamma(x + k).rewrite('tractable', deep=True) / gamma(x))
@@ -784,9 +783,9 @@ class FallingFactorial(CombinatorialFunction):
                             return 1/reduce(lambda r, i: r*(x + i),
                                             range(1, abs(int(k)) + 1), 1)
 
-    def _eval_rewrite_as_gamma(self, x, k, **kwargs):
+    def _eval_rewrite_as_gamma(self, x, k, piecewise=True, **kwargs):
         from sympy import gamma, Piecewise
-        if not kwargs.get('piecewise', True):
+        if not piecewise:
             if (x < 0) == True:
                 return (-1)**k*gamma(k - x) / gamma(-x)
             return gamma(x + 1) / gamma(x - k + 1)
@@ -808,10 +807,9 @@ class FallingFactorial(CombinatorialFunction):
                 (factorial(x)/factorial(-k + x), x >= 0),
                 ((-1)**k*factorial(k - x - 1)/factorial(-x - 1), True))
 
-    def _eval_rewrite_as_tractable(self, x, k, **kwargs):
+    def _eval_rewrite_as_tractable(self, x, k, limitvar=None, **kwargs):
         from sympy import gamma
-        limitvar = kwargs.get('limitvar', None)
-        if limitvar is not None:
+        if limitvar:
             k_lim = k.subs(limitvar, S.Infinity)
             if k_lim is S.Infinity:
                 return ((-1)**k*gamma(k - x).rewrite('tractable', deep=True) / gamma(-x))
@@ -1095,11 +1093,11 @@ class binomial(CombinatorialFunction):
     def _eval_rewrite_as_factorial(self, n, k, **kwargs):
         return factorial(n)/(factorial(k)*factorial(n - k))
 
-    def _eval_rewrite_as_gamma(self, n, k, **kwargs):
+    def _eval_rewrite_as_gamma(self, n, k, piecewise=True, **kwargs):
         from sympy import gamma
         return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 
-    def _eval_rewrite_as_tractable(self, n, k, **kwargs):
+    def _eval_rewrite_as_tractable(self, n, k, limitvar=None, **kwargs):
         return self._eval_rewrite_as_gamma(n, k).rewrite('tractable')
 
     def _eval_rewrite_as_FallingFactorial(self, n, k, **kwargs):

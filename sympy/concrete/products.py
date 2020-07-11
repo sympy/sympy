@@ -98,7 +98,7 @@ class Product(ExprWithIntLimits):
 
     By the same formula we can compute sin(pi/2):
 
-    >>> from sympy import pi, gamma, simplify
+    >>> from sympy import combsimp, pi, gamma, simplify
     >>> P = pi * x * Product(1 - x**2/k**2, (k, 1, n))
     >>> P = P.subs(x, pi/2)
     >>> P
@@ -159,11 +159,8 @@ class Product(ExprWithIntLimits):
     RisingFactorial(a + 1, -a + b - 1)
     >>> P1 * P2
     RisingFactorial(b, a - b + 1)*RisingFactorial(a + 1, -a + b - 1)
-    >>> simplify((P1 * P2).rewrite(gamma))
-    Piecewise((1, (a > -1) & (b > 0)),
-    ((-1)**(a - b)*sin(pi*a)/sin(pi*b), a > -1),
-    ((-1)**(-a + b)*sin(pi*b)/sin(pi*a), b > 0),
-    (1, True))
+    >>> combsimp(P1 * P2)
+    1
 
     See Also
     ========
