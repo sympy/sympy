@@ -772,7 +772,11 @@ class DenseDomainMatrix(DenseMatrix):
         a = self._rep
         b = other._rep
         A, B = a.unify(b)
-        return classof(self, other).from_DomainMatrix(A * B)
+        try:
+            C = A * B
+        except DDMShapeError:
+            raise NonSquareMatrixError('Matrices size mismatch')
+        return classof(self, other).from_DomainMatrix(C)
 
     def __pow__(self, exp):
         exp = _sympify(exp)
