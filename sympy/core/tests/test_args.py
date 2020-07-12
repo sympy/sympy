@@ -2850,6 +2850,13 @@ def test_sympy__logic__boolalg__Xnor():
     from sympy.logic.boolalg import Xnor
     assert _test_args(Xnor(x, y, 2))
 
+def test_sympy__map__map__Map():
+    from sympy.map import Map
+    assert _test_args(Map((x, y), name='f'))
+
+def test_sympy__map__map__AppliedMap():
+    from sympy.map import Map, AppliedMap
+    assert _test_args(AppliedMap(Map((x, y), name='f'), z))
 
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
