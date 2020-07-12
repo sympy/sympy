@@ -1001,3 +1001,7 @@ def test_map():
     # Map with parameter
     f2 = Map(parameters=(x, y), name='f')
     assert str(f2(z)) == "f(z; x, y)"
+
+    # Inverse map
+    assert str(f1.inv()) == "InverseMap(f)"
+    assert str(f1.inv()(z)) == "InverseMap(f)(z)"

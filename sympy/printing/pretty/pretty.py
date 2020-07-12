@@ -2721,7 +2721,11 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Map(self, e):
-        return self._print(Symbol(e.name.name))
+        mapping = pretty_symbol(e.name.name, bold_name=False)
+        return prettyForm(mapping)
+
+    def _print_InverseMap(self, e):
+        return self._print(e.base)**self._print(-1)
 
     def _print_AppliedMap(self, e):
         prettyMap = self._print(e.map)

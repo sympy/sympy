@@ -2651,7 +2651,10 @@ class LatexPrinter(Printer):
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
     def _print_Map(self, expr):
-        return self._print(Symbol(expr.name.name))
+        return self._deal_with_super_sub(expr.name.name)
+
+    def _print_InverseMap(self, expr):
+        return "{%s}^{-1}" % self._print(expr.base)
 
     def _print_AppliedMap(self, expr):
         map_str = self._print(expr.map)

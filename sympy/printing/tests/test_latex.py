@@ -2663,3 +2663,7 @@ def test_map():
     # Map with parameter
     f2 = Map(parameters=(x, y), name='f')
     assert latex(f2(z)) == r"f{\left(z; x, y \right)}"
+
+    # Inverse map
+    assert latex(f1.inv()) == "{f}^{-1}"
+    assert latex(f1.inv()(z)) == r"{f}^{-1}{\left(z \right)}"

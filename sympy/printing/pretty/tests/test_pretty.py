@@ -7259,3 +7259,7 @@ def test_map():
     # Map with parameter
     f2 = Map(parameters=(x, y), name='f')
     assert pretty(f2(z)) == "f(z; x, y)"
+
+    # Inverse map
+    assert pretty(f1.inv()) == " -1\nf  "
+    assert pretty(f1.inv()(z)) == " -1   \nf  (z)"
