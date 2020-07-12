@@ -905,7 +905,7 @@ class StrPrinter(Printer):
         return self._print(expr.name)
 
     def _print_AppliedMap(self, expr):
-        map_str = self._print(expr.map.name)
+        map_str = self._print(expr.map)
         args_str = self.stringify(expr.arguments, ", ")
         if expr.parameters:
             pars_str = self.stringify(expr.parameters, ", ")

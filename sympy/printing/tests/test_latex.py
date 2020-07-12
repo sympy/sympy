@@ -2610,3 +2610,9 @@ def test_latex_decimal_separator():
     raises(ValueError, lambda: latex([1,2.3,4.5], decimal_separator='non_existing_decimal_separator_in_list'))
     raises(ValueError, lambda: latex(FiniteSet(1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_set'))
     raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))
+
+def test_map():
+    from sympy.map import Map
+    f = Map(parameters=(x, y), name='f')
+    assert latex(f) == "f"
+    assert latex(f(z)) == r"f{\left(z; x, y \right)}"

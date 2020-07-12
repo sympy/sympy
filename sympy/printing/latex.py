@@ -2585,6 +2585,19 @@ class LatexPrinter(Printer):
                 (self._print(expr.args[0]), exp)
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
+    def _print_Map(self, expr):
+        return self._print(Symbol(expr.name.name))
+
+    def _print_AppliedMap(self, expr):
+        map_str = self._print(expr.map)
+        temp = map_str + r"{\left(%s \right)}"
+        args_str = ', '.join([self._print(arg) for arg in expr.arguments])
+        if expr.parameters:
+            pars_str = ', '.join([self._print(arg) for arg in expr.parameters])
+            return temp % '; '.join([args_str, pars_str])
+        else:
+            return temp % args_str
+
     def emptyPrinter(self, expr):
         # Checks what type of decimal separator to print.
         expr = super().emptyPrinter(expr)
