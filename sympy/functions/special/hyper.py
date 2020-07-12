@@ -1100,6 +1100,16 @@ class appellf1(Function):
         \frac{(a)_{m+n} (b_1)_m (b_2)_n}{(c)_{m+n}}
         \frac{x^m y^n}{m! n!}.
 
+    Examples
+    ========
+    >>> from sympy.functions.special.hyper import appellf1
+    >>> appellf1(2., 1., 6., 4., 5., 6.)
+    0.0063339426292673
+    >>> appellf1(1,2,3,5,0.5,0.25)
+    appellf1(1, 2, 3, 5, 0.5, 0.25)
+    >>> appellf1(1,2,3,5,0.5,0.25)
+    appellf1(1, 2, 3, 5, 0.5, 0.25)
+
     References
     ==========
 
