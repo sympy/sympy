@@ -1,9 +1,7 @@
 from sympy.core import Expr, S, Tuple
-from sympy.core.compatibility import is_sequence, ordered
-from sympy.core.function import arity
 from sympy.core.sympify import _sympify
 from sympy.core.symbol import Str
-from sympy.sets.sets import FiniteSet
+from sympy.sets import ProductSet
 
 __all__ = ['Map', 'InverseMap', 'AppliedMap']
 
@@ -27,33 +25,26 @@ class Map(Expr):
 
     >>> from sympy import symbols
     >>> from sympy.map import Map
-    >>> x, y, z = symbols('x y z')
+    >>> x, y = symbols('x y')
 
-    >>> f = Map(parameters=(x, ), name='f')
-    >>> f.name
+    >>> class F(Map):
+    ...     def eval(self, x):
+    ...         a, = self.parameters
+    ...         return a*x
+
+    >>> f1 = F(parameters=(x,), name='f')
+    >>> f1.name
     'f'
-    >>> f.parameters
+    >>> f1.parameters
     (x,)
-    >>> f.nargs
-    Naturals0
+    >>> f1(y).doit()
+    x*y
 
-    >>> class G(Map):
-    ...     def eval(self, a, b):
-    ...         x,y = self.parameters
-    ...         return a*x + b*y
-    >>> g = G(parameters=(x,y), name='g')
-
-    >>> g.name
-    'g'
-    >>> g.parameters
-    (x, y)
-    >>> g.nargs
-    FiniteSet(2)
-
-    >>> g.subs(x,2).parameters
-    (2, y)
-    >>> g.subs(y, 4).parameters
-    (x, 4)
+    >>> f2 = f1.subs(x, 2)
+    >>> f2.parameters
+    (2,)
+    >>> f2(y).doit()
+    2*y
 
     """
     def __new__(
@@ -67,10 +58,7 @@ class Map(Expr):
         if not isinstance(name, Str):
             name = Str(name)
 
-        nargs = cls._find_nargs()
-
         obj = super().__new__(cls, parameters, domain, codomain, name)
-        obj._nargs = nargs
         return obj
 
     @property
@@ -89,19 +77,12 @@ class Map(Expr):
     def name(self):
         return self.args[3]
 
-    @classmethod
-    def _find_nargs(cls):
-        nargs = arity(cls.eval)
-        if is_sequence(nargs): # multiple arity
-            nargs = [i-1 for i in nargs]
-            nargs = tuple(ordered(nargs))
-        elif nargs is not None:
-            nargs = (nargs-1,)
-        return FiniteSet(*nargs) if nargs else S.Naturals0
-
     @property
     def nargs(self):
-        return self._nargs
+        if isinstance(self.domain, ProductSet):
+            return len(self.domain.args)
+        else:
+            return 1
 
     def eval(self, *args):
         return None
@@ -180,32 +161,19 @@ class AppliedMap(Expr):
     ========
 
     >>> from sympy import symbols
-    >>> from sympy.map import Map
-    >>> x, y, z = symbols('x y z')
+    >>> from sympy.map import Map, AppliedMap
+    >>> x, y = symbols('x y')
 
-    >>> f = Map(parameters=(x, y))
-    >>> expr = f.subs(x, 4)(z)
-    >>> expr.arguments
-    (z,)
-    >>> expr.parameters
-    (4, y)
-    >>> expr.doit() == expr
-    True
+    >>> class F(Map):
+    ...     def eval(self, x):
+    ...         a, = self.parameters
+    ...         return a*x
 
-    >>> class G1(Map):
-    ...     def eval(self, x, y):
-    ...         a, b = self.parameters
-    ...         return a*x + b*y
-    >>> g1 = G1(parameters=(1, 2))
-    >>> g1(x, y) != g1(x, y, evaluate=True) == g1(x, y).doit() == x+2*y
+    >>> f1 = F(parameters=(x,), name='f')
+    >>> isinstance(f1(y), AppliedMap)
     True
-
-    >>> class G2(Map):
-    ...     def eval(self, x, y):
-    ...         return None
-    >>> g2 = G2(parameters=(1, 2))
-    >>> g2(x, y) == g2(x, y, evaluate=True) == g2(x, y).doit()
-    True
+    >>> f1(y, evaluate=True)
+    x*y
 
     """
     def __new__(cls, map, *args, evaluate=False, **kwargs):
