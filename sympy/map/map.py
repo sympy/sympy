@@ -1,5 +1,5 @@
 from sympy.core import Expr, S, Tuple
-from sympy.core.compatibility import is_sequence, as_int, ordered
+from sympy.core.compatibility import is_sequence, ordered
 from sympy.core.function import arity
 from sympy.core.sympify import _sympify
 from sympy.core.symbol import Str
