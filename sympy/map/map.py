@@ -1,6 +1,9 @@
 from sympy.core import Expr, S, Tuple
+from sympy.core.compatibility import is_sequence, as_int, ordered
+from sympy.core.function import arity
 from sympy.core.sympify import _sympify
 from sympy.core.symbol import Str
+from sympy.sets.sets import FiniteSet
 
 class Map(Expr):
     """
@@ -9,7 +12,7 @@ class Map(Expr):
     Parameters
     ==========
 
-    parameters
+    parameters : tuple
         Parameters of the map
 
     domain, codomain : Set
@@ -19,14 +22,21 @@ class Map(Expr):
 
     """
     def __new__(
-        cls, parameters, domain=S.UniversalSet, codomain=S.UniversalSet,
-        name='', **kwargs
+        cls, parameters=(), domain=S.UniversalSet, codomain=S.UniversalSet,
+        name='f', **kwargs
     ):
         parameters = Tuple(*[_sympify(a) for a in parameters])
+
         domain, codomain = _sympify(domain), _sympify(codomain)
+
         if not isinstance(name, Str):
             name = Str(name)
-        return super().__new__(cls, parameters, domain, codomain, name)
+
+        nargs = cls._find_nargs()
+
+        obj = super().__new__(cls, parameters, domain, codomain, name)
+        obj._nargs = nargs
+        return obj
 
     @property
     def parameters(self):
@@ -43,6 +53,20 @@ class Map(Expr):
     @property
     def name(self):
         return self.args[3]
+
+    @classmethod
+    def _find_nargs(cls):
+        nargs = arity(cls.eval)
+        if is_sequence(nargs): # multiple arity
+            nargs = [i-1 for i in nargs]
+            nargs = tuple(ordered(nargs))
+        elif nargs is not None:
+            nargs = (nargs-1,)
+        return FiniteSet(*nargs) if nargs else S.Naturals0
+
+    @property
+    def nargs(self):
+        return self._nargs
 
     def eval(self, *args):
         return None
