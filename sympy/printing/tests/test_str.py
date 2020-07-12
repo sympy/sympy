@@ -947,6 +947,12 @@ def test_diffgeom():
 
 def test_map():
     from sympy.map import Map
-    f = Map(parameters=(x, y), name='f')
-    assert str(f) == "f"
-    assert str(f(z)) == "f(z; x, y)"
+
+    # Map without parameter
+    f1 = Map(name='f')
+    assert str(f1) == "f"
+    assert str(f1(z)) == "f(z)"
+
+    # Map with parameter
+    f2 = Map(parameters=(x, y), name='f')
+    assert str(f2(z)) == "f(z; x, y)"

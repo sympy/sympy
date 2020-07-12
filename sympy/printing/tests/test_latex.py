@@ -2613,6 +2613,12 @@ def test_latex_decimal_separator():
 
 def test_map():
     from sympy.map import Map
-    f = Map(parameters=(x, y), name='f')
-    assert latex(f) == "f"
-    assert latex(f(z)) == r"f{\left(z; x, y \right)}"
+
+    # Map without parameter
+    f1 = Map(name='f')
+    assert latex(f1) == "f"
+    assert latex(f1(z)) == r"f{\left(z \right)}"
+
+    # Map with parameter
+    f2 = Map(parameters=(x, y), name='f')
+    assert latex(f2(z)) == r"f{\left(z; x, y \right)}"
