@@ -2666,6 +2666,25 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
 
+    def _print_Map(self, e):
+        return self._print(Symbol(e.name.name))
+
+    def _print_AppliedMap(self, e):
+        prettyMap = self._print(e.map)
+        prettyArgs = self._print_seq(e.arguments, delimiter=', ')
+        if e.parameters:
+            prettyPars = self._print_seq(e.parameters, delimiter=', ')
+            prettyA_P = prettyForm(*prettyArgs.right('; '))
+            prettyA_P = prettyForm(*prettyA_P.right(prettyPars))
+            prettyA_P = prettyForm(*prettyA_P.parens())
+        else:
+            prettyA_P = prettyForm(*prettyArgs.parens())
+
+        pform = prettyForm(binding=prettyForm.FUNC, *prettyForm.next(prettyMap, prettyA_P))
+        pform.prettyFunc = prettyMap
+        pform.prettyArgs = prettyA_P
+        return pform
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 
