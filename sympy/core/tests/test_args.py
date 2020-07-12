@@ -2868,6 +2868,10 @@ def test_sympy__map__map__Map():
     from sympy.map import Map
     assert _test_args(Map((x, y), name='f'))
 
+def test_sympy__map__map__InverseMap():
+    from sympy.map import Map, InverseMap
+    assert _test_args(InverseMap(Map((x, y), name='f')))
+
 def test_sympy__map__map__AppliedMap():
     from sympy.map import Map, AppliedMap
     assert _test_args(AppliedMap(Map((x, y), name='f'), z))

@@ -5,7 +5,9 @@ Includes any maps such as function, differential operator, etc.
 """
 
 __all__ = [
-    'Map', 'AppliedMap'
+    'Map', 'InverseMap', 'AppliedMap'
 ]
 
-from .map import Map, AppliedMap
+from .map import (
+    Map, InverseMap, AppliedMap
+)
