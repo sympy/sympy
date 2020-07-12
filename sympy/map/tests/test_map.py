@@ -1,5 +1,5 @@
-from sympy import symbols, Tuple
-from sympy.map import Map, AppliedMap
+from sympy import symbols
+from sympy.map import Map
 
 a, b, c, x = symbols('a b c x')
 
