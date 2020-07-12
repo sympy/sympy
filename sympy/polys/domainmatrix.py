@@ -130,10 +130,20 @@ class DDM(list):
         return c
 
     def rref(a):
-        """Reduced-row echelon form of a"""
+        """Reduced-row echelon form of a and list of pivots"""
         b = a.copy()
         pivots = ddm_irref(b)
         return b, pivots
+
+    def det(a):
+        """Determinant of a"""
+        m, n = a.shape
+        if m != n:
+            raise DDMShapeError("Determinant of non-square matrix")
+        b = a.copy()
+        K = b.domain
+        deta = ddm_idet(b, K)
+        return deta
 
 
 def ddm_iadd(a, b):
@@ -149,7 +159,7 @@ def ddm_isub(a, b):
             ai[j] -= bij
 
 def ddm_ineg(a):
-    """a = -a"""
+    """a  <--  -a"""
     for ai in a:
         for j, aij in enumerate(ai):
             ai[j] = -aij
@@ -163,6 +173,7 @@ def ddm_imatmul(a, b, c):
             ai[j] = sum(map(mul, bi, cTj), ai[j])
 
 def ddm_irref(a):
+    """a  <--  rref(a)"""
     # a is (m x n)
     m = len(a)
     if not m:
@@ -211,6 +222,56 @@ def ddm_irref(a):
             break
 
     return pivots
+
+def ddm_idet(a, K):
+    """a  <--  echelon(a); return det"""
+    # Fraction-free Gaussian elimination
+    # https://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
+
+    # a is (m x n)
+    m = len(a)
+    if not m:
+        return K.one
+    n = len(a[0])
+
+    is_field = K.is_Field
+    # uf keeps track of the effect of row swaps and multiplies
+    uf = K.one
+    for j in range(n-1):
+        # if zero on the diagonal need to swap
+        if not a[j][j]:
+            for l in range(j+1, n):
+                if a[l][j]:
+                    a[j], a[l] = a[l], a[j]
+                    uf = -uf
+                    break
+            else:
+                # unable to swap: det = 0
+                return K.zero
+        for i in range(j+1, n):
+            if a[i][j]:
+                if not is_field:
+                    d = K.gcd(a[j][j], a[i][j])
+                    b = a[j][j] // d
+                    c = a[i][j] // d
+                else:
+                    b = a[j][j]
+                    c = a[i][j]
+                # account for multiplying row i by b
+                uf = b * uf
+                for k in range(j+1, n):
+                    a[i][k] = b*a[i][k] - c*a[j][k]
+
+    # triangular det is product of diagonal
+    prod = K.one
+    for i in range(n):
+        prod = prod * a[i][i]
+    # incorporate swaps and multiplies
+    if not is_field:
+        D = prod // uf
+    else:
+        D = prod / uf
+    return D
 
 
 class DomainMatrix:
@@ -364,47 +425,7 @@ class DomainMatrix:
         m, n = self.shape
         if m != n:
             raise NonSquareMatrixError
-        # Fraction-free Gaussian elimination
-        # https://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
-        a = [row[:] for row in self.rep]
-        dom = self.domain
-        is_field = dom.is_Field
-        # uf keeps track of the effect of row swaps and multiplies
-        uf = dom.one
-        for j in range(n-1):
-            # if zero on the diagonal need to swap
-            if not a[j][j]:
-                for l in range(j+1, n):
-                    if a[l][j]:
-                        a[j], a[l] = a[l], a[j]
-                        uf = -uf
-                        break
-                else:
-                    # unable to swap: det = 0
-                    return dom.zero
-            for i in range(j+1, n):
-                if a[i][j]:
-                    if not is_field:
-                        d = dom.gcd(a[j][j], a[i][j])
-                        b = a[j][j] // d
-                        c = a[i][j] // d
-                    else:
-                        b = a[j][j]
-                        c = a[i][j]
-                    # account for multiplying row i by b
-                    uf = b * uf
-                    for k in range(j+1, n):
-                        a[i][k] = b*a[i][k] - c*a[j][k]
-        # triangular det is product of diagonal
-        prod = dom.one
-        for i in range(n):
-            prod = prod * a[i][i]
-        # incorporate swaps and multiplies
-        if not is_field:
-            D = prod // uf
-        else:
-            D = prod / uf
-        return D
+        return self.rep.det()
 
     def __eq__(A, B):
         """A == B"""

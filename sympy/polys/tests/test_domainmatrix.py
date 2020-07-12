@@ -4,6 +4,7 @@ from sympy.polys.domainmatrix import (
         DDM,
         DDMBadInputError, DDMDomainError, DDMShapeError,
         ddm_iadd, ddm_isub, ddm_ineg, ddm_imatmul,
+        ddm_irref, ddm_idet,
         )
 
 from sympy.testing.pytest import raises
@@ -29,6 +30,7 @@ def test_DDM_getsetitem():
     assert ddm[0][1] == ZZ(3)
     assert ddm[1][0] == ZZ(4)
     assert ddm[1][1] == ZZ(5)
+
     raises(IndexError, lambda: ddm[2][0])
     raises(IndexError, lambda: ddm[0][2])
 
@@ -93,6 +95,7 @@ def test_DDM_add():
     C = DDM([[ZZ(4)], [ZZ(6)]], (2, 1), ZZ)
     AQ = DDM([[QQ(1)], [QQ(2)]], (2, 1), QQ)
     assert A + B == A.add(B) == C
+
     raises(DDMShapeError, lambda: A + DDM([[ZZ(5)]], (1, 1), ZZ))
     raises(TypeError, lambda: A + ZZ(1))
     raises(TypeError, lambda: ZZ(1) + A)
@@ -107,6 +110,7 @@ def test_DDM_sub():
     AQ = DDM([[QQ(1)], [QQ(2)]], (2, 1), QQ)
     D = DDM([[ZZ(5)]], (1, 1), ZZ)
     assert A - B == A.sub(B) == C
+
     raises(TypeError, lambda: A - ZZ(1))
     raises(TypeError, lambda: ZZ(1) - A)
     raises(DDMShapeError, lambda: A - D)
@@ -206,6 +210,23 @@ def test_DDM_rref():
     assert A.rref() == (Ar, pivots)
 
 
+def test_DDM_det():
+    A = DDM([], (0, 0), ZZ)
+    assert A.det() == ZZ(1)
+
+    A = DDM([[ZZ(2)]], (1, 1), ZZ)
+    assert A.det() == ZZ(2)
+
+    A = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert A.det() == ZZ(-2)
+
+    A = DDM([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
+    raises(DDMShapeError, lambda: A.det())
+
+    A = DDM([], (0, 1), ZZ)
+    raises(DDMShapeError, lambda: A.det())
+
+
 def test_ddm_iadd():
     a = [[1, 2], [3, 4]]
     b = [[5, 6], [7, 8]]
@@ -219,6 +240,7 @@ def test_ddm_isub():
     ddm_isub(a, b)
     assert a == [[-4, -4], [-4, -4]]
 
+
 def test_ddm_ineg():
     a = [[1, 2], [3, 4]]
     ddm_ineg(a)
@@ -228,13 +250,66 @@ def test_ddm_ineg():
 def test_ddm_imatmul():
     a = [[1, 2, 3], [4, 5, 6]]
     b = [[1, 2], [3, 4], [5, 6]]
+
     c1 = [[0, 0], [0, 0]]
-    c2 = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
     ddm_imatmul(c1, a, b)
     assert c1 == [[22, 28], [49, 64]]
+
+    c2 = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
     ddm_imatmul(c2, b, a)
     assert c2 == [[9, 12, 15], [19, 26, 33], [29, 40, 51]]
+
     b3 = [[1], [2], [3]]
     c3 = [[0], [0]]
     ddm_imatmul(c3, a, b3)
     assert c3 == [[14], [32]]
+
+
+def test_ddm_irref():
+
+    A = []
+    Ar = []
+    pivots = []
+    assert ddm_irref(A) == pivots
+    assert A == Ar
+
+    A = [[QQ(0), QQ(1)], [QQ(1), QQ(1)]]
+    Ar = [[QQ(1), QQ(0)], [QQ(0), QQ(1)]]
+    pivots = [0, 1]
+    assert ddm_irref(A) == pivots
+    assert A == Ar
+
+    A = [[QQ(1), QQ(2), QQ(1)], [QQ(3), QQ(4), QQ(1)]]
+    Ar = [[QQ(1), QQ(0), QQ(-1)], [QQ(0), QQ(1), QQ(1)]]
+    pivots = [0, 1]
+    assert ddm_irref(A) == pivots
+    assert A == Ar
+
+    A = [[QQ(3), QQ(4), QQ(1)], [QQ(1), QQ(2), QQ(1)]]
+    Ar = [[QQ(1), QQ(0), QQ(-1)], [QQ(0), QQ(1), QQ(1)]]
+    pivots = [0, 1]
+    assert ddm_irref(A) == pivots
+    assert A == Ar
+
+    A = [[QQ(1), QQ(0)], [QQ(1), QQ(3)], [QQ(0), QQ(1)]]
+    Ar = [[QQ(1), QQ(0)], [QQ(0), QQ(1)], [QQ(0), QQ(0)]]
+    pivots = [0, 1]
+    assert ddm_irref(A) == pivots
+    assert A == Ar
+
+    A = [[QQ(1), QQ(0), QQ(1)], [QQ(3), QQ(0), QQ(1)]]
+    Ar = [[QQ(1), QQ(0), QQ(0)], [QQ(0), QQ(0), QQ(1)]]
+    pivots = [0, 2]
+    assert ddm_irref(A) == pivots
+    assert A == Ar
+
+
+def test_ddm_idet():
+    A = []
+    assert ddm_idet(A, ZZ) == ZZ(1)
+
+    A = [[ZZ(2)]]
+    assert ddm_idet(A, ZZ) == ZZ(2)
+
+    A = [[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]]
+    assert ddm_idet(A, ZZ) == ZZ(-2)
