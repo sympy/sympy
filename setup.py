@@ -371,6 +371,7 @@ tests = [
     'sympy.logic.tests',
     'sympy.matrices.expressions.tests',
     'sympy.matrices.tests',
+    'sympy.map.tests',
     'sympy.multipledispatch.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
