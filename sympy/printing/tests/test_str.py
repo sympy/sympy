@@ -944,3 +944,9 @@ def test_diffgeom():
     assert str(rect) == "rect"
     b = BaseScalarField(rect, 0)
     assert str(b) == "rect_0"
+
+def test_map():
+    from sympy.map import Map
+    f = Map(parameters=(x, y), name='f')
+    assert str(f) == "f"
+    assert str(f(z)) == "f(z; x, y)"

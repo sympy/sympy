@@ -901,6 +901,18 @@ class StrPrinter(Printer):
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
 
+    def _print_Map(self, expr):
+        return self._print(expr.name)
+
+    def _print_AppliedMap(self, expr):
+        map_str = self._print(expr.map.name)
+        args_str = self.stringify(expr.arguments, ", ")
+        if expr.parameters:
+            pars_str = self.stringify(expr.parameters, ", ")
+            return "%s(%s)" % (map_str, '; '.join([args_str, pars_str]))
+        else:
+            return "%s(%s)" % (map_str, args_str)
+
 def sstr(expr, **settings):
     """Returns the expression as a string.
 
