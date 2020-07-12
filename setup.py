@@ -112,6 +112,7 @@ modules = [
     'sympy.logic',
     'sympy.logic.algorithms',
     'sympy.logic.utilities',
+    'sympy.map',
     'sympy.matrices',
     'sympy.matrices.benchmarks',
     'sympy.matrices.expressions',
