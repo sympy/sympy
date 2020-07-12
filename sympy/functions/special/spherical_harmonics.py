@@ -262,6 +262,24 @@ def Ynm_c(n, m, theta, phi):
 
     Ynm, Znm
 
+    Examples
+    ========
+    >>> from sympy import Znm, Symbol, simplify
+    >>> from sympy.abc import n,m
+    >>> theta = Symbol("theta")
+    >>> phi = Symbol("phi")
+    >>> Znm(n, m, theta, phi)
+    Znm(n, m, theta, phi)
+
+    For specific integers n and m we can evaluate the harmonics
+    to more useful expressions:
+    >>> simplify(Znm(0, 0, theta, phi).expand(func=True))
+    1/(2*sqrt(pi))
+    >>> simplify(Znm(1, 1, theta, phi).expand(func=True))
+    -sqrt(3)*sin(theta)*cos(phi)/(2*sqrt(pi))
+    >>> simplify(Znm(2, 1, theta, phi).expand(func=True))
+    -sqrt(15)*sin(2*theta)*cos(phi)/(4*sqrt(pi))
+
     References
     ==========
 
