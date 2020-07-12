@@ -303,6 +303,9 @@ def hypersimp(f, k):
     g = f.subs(k, k + 1) / f
 
     g = g.rewrite(gamma)
+    if g.has(Piecewise):
+        g = piecewise_fold(g)
+        g = g.args[-1][0]
     g = expand_func(g)
     g = powsimp(g, deep=True, combine='exp')
 
