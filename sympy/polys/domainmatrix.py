@@ -129,6 +129,12 @@ class DDM(list):
         ddm_imatmul(c, a, b)
         return c
 
+    def rref(a):
+        """Reduced-row echelon form of a"""
+        b = a.copy()
+        pivots = ddm_irref(b)
+        return b, pivots
+
 
 def ddm_iadd(a, b):
     """a += b"""
@@ -155,6 +161,56 @@ def ddm_imatmul(a, b, c):
     for bi, ai in zip(b, a):
         for j, cTj in enumerate(cT):
             ai[j] = sum(map(mul, bi, cTj), ai[j])
+
+def ddm_irref(a):
+    # a is (m x n)
+    m = len(a)
+    if not m:
+        return []
+    n = len(a[0])
+
+    i = 0
+    pivots = []
+
+    for j in range(n):
+        # pivot
+        aij = a[i][j]
+
+        # zero-pivot
+        if not aij:
+            for ip in range(i+1, m):
+                aij = a[ip][j]
+                # row-swap
+                if aij:
+                    a[i], a[ip] = a[ip], a[i]
+                    break
+            else:
+                # next column
+                continue
+
+        # normalise row
+        ai = a[i]
+        for l in range(j, n):
+            ai[l] /= aij # ai[j] = one
+
+        # eliminate above and below to the right
+        for k, ak in enumerate(a):
+            if k == i or not ak[j]:
+                continue
+            akj = ak[j]
+            ak[j] -= akj # ak[j] = zero
+            for l in range(j+1, n):
+                ak[l] -= akj * ai[l]
+
+        # next row
+        pivots.append(j)
+        i += 1
+
+        # no more rows?
+        if i >= m:
+            break
+
+    return pivots
 
 
 class DomainMatrix:
@@ -283,10 +339,8 @@ class DomainMatrix:
     def rref(self):
         if not self.domain.is_Field:
             raise ValueError('Not a field')
-        rref_rows, pivots = rref(self.rep, self.shape)
-        rref_matrix = type(self)(rref_rows, self.shape, self.domain)
-        pivots = tuple(pivots)
-        return rref_matrix, pivots
+        rref_ddm, pivots = self.rep.rref()
+        return self.from_ddm(rref_ddm), tuple(pivots)
 
     def inv(self):
         if not self.domain.is_Field:
@@ -357,51 +411,6 @@ class DomainMatrix:
         if not isinstance(B, DomainMatrix):
             return NotImplemented
         return A.rep == B.rep
-
-
-def matrix_mul(items1, shape1, items2, shape2):
-    m, n1 = shape1
-    n2, o = shape2
-    if n1 != n2:
-        raise NonSquareMatrixError
-    n = n1
-    shape3 = (m, o)
-    items3 = [[None] * o for _ in range(m)]
-    for i in range(m):
-        for j in range(o):
-            items3[i][j] = sum(items1[i][k] * items2[k][j] for k in range(n))
-    return items3, shape3
-
-
-def rref(rows, shape):
-    nrows, ncols = shape
-    rows = [[item for item in row] for row in rows]
-    pivots = []
-    ri = 0
-    for ci in range(ncols):
-        for rj in range(ri, nrows):
-            if rows[rj][ci]:
-                # Row swap for pivot
-                if rj != ri:
-                    rows[rj], rows[ri] = rows[ri], rows[rj]
-                # Record pivot
-                pivots.append(ci)
-                break
-        else:
-            # No pivot
-            continue
-        # Normalise row
-        pivoti = rows[ri][ci]
-        for ck in range(ci, ncols):
-            rows[ri][ck] = rows[ri][ck] / pivoti
-        # Eliminate above and below from col to the right
-        for rk in range(nrows):
-            pivotk = rows[rk][ci]
-            if rk != ri and pivotk:
-                for ck in range(ci, ncols):
-                    rows[rk][ck] = rows[rk][ck] - pivotk * rows[ri][ck]
-        ri += 1
-    return rows, pivots
 
 
 def lu_decomp(M):
