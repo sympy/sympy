@@ -20,6 +20,39 @@ class Map(Expr):
     name : str
         Name of the map
 
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.map import Map
+    >>> x, y, z = symbols('x y z')
+
+    >>> f = Map(parameters=(x, ), name='f')
+    >>> f.name
+    'f'
+    >>> f.parameters
+    (x,)
+    >>> f.nargs
+    Naturals0
+
+    >>> class G(Map):
+    ...     def eval(self, a, b):
+    ...         x,y = self.parameters
+    ...         return a*x + b*y
+    >>> g = G(parameters=(x,y), name='g')
+
+    >>> g.name
+    'g'
+    >>> g.parameters
+    (x, y)
+    >>> g.nargs
+    FiniteSet(2)
+
+    >>> g.subs(x,2).parameters
+    (2, y)
+    >>> g.subs(y, 4).parameters
+    (x, 4)
+
     """
     def __new__(
         cls, parameters=(), domain=S.UniversalSet, codomain=S.UniversalSet,
@@ -92,6 +125,37 @@ class AppliedMap(Expr):
 
     evaluate : bool, optional
         If True, returns evaluated application of *map* to *args*
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.map import Map
+    >>> x, y, z = symbols('x y z')
+
+    >>> f = Map(parameters=(x, y))
+    >>> expr = f.subs(x, 4)(z)
+    >>> expr.arguments
+    (z,)
+    >>> expr.parameters
+    (4, y)
+    >>> expr.doit() == expr
+    True
+
+    >>> class G1(Map):
+    ...     def eval(self, x, y):
+    ...         a, b = self.parameters
+    ...         return a*x + b*y
+    >>> g1 = G1(parameters=(1, 2))
+    >>> g1(x, y) != g1(x, y, evaluate=True) == g1(x, y).doit() == x+2*y
+    True
+
+    >>> class G2(Map):
+    ...     def eval(self, x, y):
+    ...         return None
+    >>> g2 = G2(parameters=(1, 2))
+    >>> g2(x, y) == g2(x, y, evaluate=True) == g2(x, y).doit()
+    True
 
     """
     def __new__(cls, map, *args, evaluate=False):
