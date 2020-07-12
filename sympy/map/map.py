@@ -113,6 +113,37 @@ class InverseMap(Map):
     """
     A class for unevaluated inverse mappings
 
+    Parameters
+    ==========
+
+    mapping : Map
+
+    evaluate : bool, optional
+        If True, return the evaluated inverse function of *mapping*
+
+    Example
+    =======
+
+    >>> from sympy.map import Map, InverseMap
+    >>> from sympy.abc import x
+
+    # Minimalist implementation of Exp and Log
+
+    >>> class Exp(Map):
+    ...     def _eval_inverse(self):
+    ...         return Log(self.parameters)
+    >>> exp = Exp(parameters=(2,))
+
+    >>> class Log(Map):
+    ...     def _eval_inverse(self):
+    ...         return Exp(self.parameters)
+    >>> log = Log(parameters=(2,))
+
+    >>> exp.inv() == InverseMap(exp)
+    True
+    >>> InverseMap(exp, evaluate=True) == exp.inv(evaluate=True) == log
+    True
+
     """
     def __new__(cls, mapping, evaluate=False, **kwargs):
         if evaluate:
