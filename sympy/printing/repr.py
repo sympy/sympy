@@ -248,6 +248,24 @@ class ReprPrinter(Printer):
             return "%s(%s, %s)" % (expr.__class__.__name__,
                                    self._print(expr.name), ', '.join(attr))
 
+    def _print_CoordinateSymbol(self, expr):
+        d = expr._assumptions.generator
+
+        if d == {}:
+            return "%s(%s, %s)" % (
+                expr.__class__.__name__,
+                self._print(expr.coordinate_system),
+                self._print(expr.index)
+            )
+        else:
+            attr = ['%s=%s' % (k, v) for k, v in d.items()]
+            return "%s(%s, %s, %s)" % (
+                expr.__class__.__name__,
+                self._print(expr.coordinate_system),
+                self._print(expr.index),
+                ', '.join(attr)
+            )
+
     def _print_Predicate(self, expr):
         return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
 
@@ -327,19 +345,6 @@ class ReprPrinter(Printer):
         rep = self._print(f.rep)
         ext = self._print(f.ext)
         return "ExtElem(%s, %s)" % (rep, ext)
-
-    def _print_CoordSystem(self, coords):
-        class_name = coords.func.__name__
-        name = self._print(coords.name)
-        patch = self._print(coords.patch)
-        names = self._print(coords._names)
-        return "%s(%s, %s, %s)" % (class_name, name, patch, names)
-
-    def _print_BaseScalarField(self, bsf):
-        class_name = bsf.func.__name__
-        coords = self._print(bsf._coord_sys)
-        idx = self._print(bsf._index)
-        return "%s(%s, %s)" % (class_name, coords, idx)
 
 def srepr(expr, **settings):
     """return expr in repr form"""

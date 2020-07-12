@@ -627,6 +627,9 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp
+        from sympy.functions import Piecewise
+        if self.has(Piecewise):
+            return None
         return hypersimp(self, k) is not None
 
     @property

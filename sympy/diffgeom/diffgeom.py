@@ -4,18 +4,20 @@ from itertools import permutations
 
 from sympy.combinatorics import Permutation
 from sympy.core import (
-    Basic, Expr, Dummy, Function,  diff,
-    Pow, Mul, Add, Atom
+    Basic, Expr, Function, diff,
+    Pow, Mul, Add, Atom, Lambda, S, Tuple, Dict
 )
+from sympy.core.cache import cacheit
 from sympy.core.compatibility import reduce
-from sympy.core.numbers import Zero
+from sympy.core.symbol import Symbol, Dummy
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.functions import factorial
-from sympy.matrices import Matrix
+from sympy.matrices import ImmutableDenseMatrix as Matrix
 from sympy.simplify import simplify
 from sympy.solvers import solve
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # TODO you are a bit excessive in the use of Dummies
 # TODO dummy point, literal field
@@ -23,34 +25,58 @@ from sympy.solvers import solve
 # tests and find out why
 from sympy.tensor.array import ImmutableDenseNDimArray
 
-
 class Manifold(Atom):
     """A mathematical manifold.
 
     Explanation
     ===========
 
-    The only role that this object plays is to keep a list of all patches
-    defined on the manifold. It does not provide any means to study the
-    topological characteristics of the manifold that it represents.
+    A manifold is a topological space that locally resembles
+    Euclidean space near each point [1].
+
+    This class does not provide any means to study the topological
+    characteristics of the manifold that it represents, though.
 
     Parameters
     ==========
+
     name : str
         The name of the manifold.
 
     dim : int
         The dimension of the manifold.
+
+    Examples
+    ========
+
+    >>> from sympy.diffgeom import Manifold
+    >>> m = Manifold('M', 2)
+
+    >>> m.name
+    'M'
+    >>> m.dim
+    2
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Manifold
+
     """
 
-    def __new__(cls, name, dim):
+    def __new__(cls, name, dim, **kwargs):
         if not isinstance(name, Str):
             name = Str(name)
         dim = _sympify(dim)
         obj = super().__new__(cls, name, dim)
-        obj.patches = []
-        # The patches list is necessary if a Patch instance needs to enumerate
-        # other Patch instance on the same manifold.
+
+        obj.patches = _deprecated_list(
+            "Manifold.patches",
+            "external container for registry",
+            19321,
+            "1.7",
+            []
+        )
         return obj
 
     @property
@@ -67,17 +93,19 @@ class Patch(Atom):
     Explanation
     ===========
 
-    On a manifold one can have many patches that do not always include the
-    whole manifold. On these patches coordinate charts can be defined that
-    permit the parameterization of any point on the patch in terms of a tuple
-    of real numbers (the coordinates).
+    Coordinate patch, or patch in short, is a simply-connected open set around a point
+    in the manifold [1]. On a manifold one can have many patches that do not always
+    include the whole manifold. On these patches coordinate charts can be defined that
+    permit the parameterization of any point on the patch in terms of a tuple of
+    real numbers (the coordinates).
 
-    This object serves as a container/parent for all coordinate system charts
-    that can be defined on the patch it represents.
+    This class does not provide any means to study the topological
+    characteristics of the patch that it represents.
 
     Parameters
     ==========
-    name : string
+
+    name : str
         The name of the patch.
 
     manifold : Manifold
@@ -86,25 +114,34 @@ class Patch(Atom):
     Examples
     ========
 
-    Define a Manifold and a Patch on that Manifold:
-
     >>> from sympy.diffgeom import Manifold, Patch
-    >>> m = Manifold('M', 3)
+    >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
-    >>> p in m.patches
-    True
+
+    >>> p.name
+    'P'
+    >>> p.dim
+    2
+
+    References
+    ==========
+
+    .. [1] G. Sussman, J. Wisdom, W. Farr, Functional Differential Geometry (2013)
 
     """
-    # Contains a reference to the parent manifold in order to be able to access
-    # other patches.
-    def __new__(cls, name, manifold):
+    def __new__(cls, name, manifold, **kwargs):
         if not isinstance(name, Str):
             name = Str(name)
         obj = super().__new__(cls, name, manifold)
-        obj.manifold.patches.append(obj)
-        obj.coord_systems = []
-        # The list of coordinate systems is necessary for an instance of
-        # CoordSystem to enumerate other coord systems on the patch.
+
+        obj.manifold.patches.append(obj) # deprecated
+        obj.coord_systems = _deprecated_list(
+            "Patch.coord_systems",
+            "external container for registry",
+            19321,
+            "1.7",
+            []
+        )
         return obj
 
     @property
@@ -120,134 +157,154 @@ class Patch(Atom):
         return self.manifold.dim
 
 class CoordSystem(Atom):
-    """A coordinate system defined on the patch
+    """A coordinate system defined on the patch.
 
     Explanation
     ===========
 
-    This class contains all coordinate transformation logic.
+    Coordinate system is a system that uses one or more coordinates to uniquely determine
+    the position of the points or other geometric elements on a manifold [1].
+
+    By passing Symbols to *symbols* parameter, user can define the name and assumptions
+    of coordinate symbols of the coordinate system. If not passed, these symbols are
+    generated automatically and are assumed to be real valued.
+    By passing *relations* parameter, user can define the tranform relations of coordinate
+    systems. Inverse transformation and indirect transformation can be found automatically.
+    If this parameter is not passed, coordinate transformation cannot be done.
 
     Parameters
     ==========
 
-    name : string
+    name : str
         The name of the coordinate system.
 
     patch : Patch
         The patch where the coordinate system is defined.
 
-    names : list of strings, optional
-        Determines how base scalar fields will be printed.
+    symbols : list of Symbols, optional
+        Defines the names and assumptions of coordinate symbols.
+
+    relations : dict, optional
+        - key : tuple of two strings, who are the names of systems where
+            the coordinates transform from and transform to.
+        - value : Lambda returning the transformed coordinates.
 
     Examples
     ========
 
-    Define a Manifold and a Patch, and then define two coord systems on that
-    patch:
-
-    >>> from sympy import symbols, sin, cos, pi
+    >>> from sympy import symbols, pi, Lambda, Matrix, sqrt, atan2, cos, sin
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
-    >>> from sympy.simplify import simplify
-    >>> r, theta = symbols('r, theta')
     >>> m = Manifold('M', 2)
-    >>> patch = Patch('P', m)
-    >>> rect = CoordSystem('rect', patch)
-    >>> polar = CoordSystem('polar', patch)
-    >>> rect in patch.coord_systems
-    True
+    >>> p = Patch('P', m)
 
-    Connect the coordinate systems. An inverse transformation is automatically
-    found by ``solve`` when possible:
+    >>> x, y = symbols('x y', real=True)
+    >>> r, theta = symbols('r theta', nonnegative=True)
+    >>> relation_dict = {
+    ... ('Car2D', 'Pol'): Lambda((x, y), Matrix([sqrt(x**2 + y**2), atan2(y, x)])),
+    ... ('Pol', 'Car2D'): Lambda((r, theta), Matrix([r*cos(theta), r*sin(theta)]))
+    ... }
+    >>> Car2D = CoordSystem('Car2D', p, [x, y], relation_dict)
+    >>> Pol = CoordSystem('Pol', p, [r, theta], relation_dict)
 
-    >>> polar.connect_to(rect, [r, theta], [r*cos(theta), r*sin(theta)])
-    >>> polar.coord_tuple_transform_to(rect, [0, 2])
+    >>> Car2D.name
+    'Car2D'
+    >>> Car2D.dim
+    2
+    >>> Car2D.symbols
+    [x, y]
+    >>> Car2D.transformation(Pol)
+    Lambda((x, y), Matrix([
+    [sqrt(x**2 + y**2)],
+    [      atan2(y, x)]]))
+
+    >>> Car2D.transform(Pol)
     Matrix([
-    [0],
-    [0]])
-    >>> polar.coord_tuple_transform_to(rect, [2, pi/2])
+    [sqrt(x**2 + y**2)],
+    [      atan2(y, x)]])
+    >>> Car2D.transform(Pol, [1, 2])
     Matrix([
-    [0],
-    [2]])
-    >>> rect.coord_tuple_transform_to(polar, [1, 1]).applyfunc(simplify)
-    Matrix([
-    [sqrt(2)],
-    [   pi/4]])
+    [sqrt(5)],
+    [atan(2)]])
 
-    Calculate the jacobian of the polar to cartesian transformation:
-
-    >>> polar.jacobian(rect, [r, theta])
+    >>> Pol.jacobian(Car2D)
     Matrix([
     [cos(theta), -r*sin(theta)],
     [sin(theta),  r*cos(theta)]])
-
-    Define a point using coordinates in one of the coordinate systems:
-
-    >>> p = polar.point([1, 3*pi/4])
-    >>> rect.point_to_coords(p)
+    >>> Pol.jacobian(Car2D, [1, pi/2])
     Matrix([
-    [-sqrt(2)/2],
-    [ sqrt(2)/2]])
+    [0, -1],
+    [1,  0]])
 
-    Define a basis scalar field (i.e. a coordinate function), that takes a
-    point and returns its coordinates. It is an instance of ``BaseScalarField``.
+    References
+    ==========
 
-    >>> rect.coord_function(0)(p)
-    -sqrt(2)/2
-    >>> rect.coord_function(1)(p)
-    sqrt(2)/2
-
-    Define a basis vector field (i.e. a unit vector field along the coordinate
-    line). Vectors are also differential operators on scalar fields. It is an
-    instance of ``BaseVectorField``.
-
-    >>> v_x = rect.base_vector(0)
-    >>> x = rect.coord_function(0)
-    >>> v_x(x)
-    1
-    >>> v_x(v_x(x))
-    0
-
-    Define a basis oneform field:
-
-    >>> dx = rect.base_oneform(0)
-    >>> dx(v_x)
-    1
-
-    If you provide a list of names the fields will print nicely:
-    - without provided names:
-
-    >>> x, v_x, dx
-    (rect_0, e_rect_0, drect_0)
-
-    - with provided names
-
-    >>> rect = CoordSystem('rect', patch, ['x', 'y'])
-    >>> rect.coord_function(0), rect.base_vector(0), rect.base_oneform(0)
-    (x, e_x, dx)
+    .. [1] https://en.wikipedia.org/wiki/Coordinate_system
 
     """
-    #  Contains a reference to the parent patch in order to be able to access
-    # other coordinate system charts.
-    def __new__(cls, name, patch, names=None):
+    def __new__(cls, name, patch, symbols=None, relations={}, **kwargs):
         if not isinstance(name, Str):
             name = Str(name)
-        # names is not in args because it is related only to printing, not to
-        # identifying the CoordSystem instance.
-        obj = super().__new__(cls, name, patch)
-        if not names:
-            names = ['%s_%d' % (name, i) for i in range(patch.dim)]
-        obj._names = tuple(str(i) for i in names)
-        obj.patch.coord_systems.append(obj)
-        obj.transforms = {}
-        # All the coordinate transformation logic is in this dictionary in the
-        # form of:
-        #  key = other coordinate system
-        #  value = tuple of  # TODO make these Lambda instances
-        #          - list of `Dummy` coordinates in this coordinate system
-        #          - list of expressions as a function of the Dummies giving
-        #          the coordinates in another coordinate system
-        obj._dummies = [Dummy(str(n)) for n in names]
+
+        # canonicallize the symbols
+        if symbols is None:
+            names = kwargs.get('names', None)
+            if names is None:
+                symbols = Tuple(
+                    *[Symbol('%s_%s' % (name.name, i), real=True) for i in range(patch.dim)]
+                )
+            else:
+                SymPyDeprecationWarning(
+                    feature="Class signature 'names' of CoordSystem",
+                    useinstead="class signature 'symbols'",
+                    issue=19321,
+                    deprecated_since_version="1.7"
+                ).warn()
+                symbols = Tuple(
+                    *[Symbol(n, real=True) for n in names]
+                )
+        else:
+            syms = []
+            for s in symbols:
+                if isinstance(s, Symbol):
+                    syms.append(Symbol(s.name, **s._assumptions.generator))
+                elif isinstance(s, str):
+                    SymPyDeprecationWarning(
+                        feature="Passing str as coordinate symbol's name",
+                        useinstead="Symbol which contains the name and assumption for coordinate symbol",
+                        issue=19321,
+                        deprecated_since_version="1.7"
+                    ).warn()
+                    syms.append(Symbol(s, real=True))
+            symbols = Tuple(*syms)
+
+        # canonicallize the relations
+        rel_temp = {}
+        for k,v in relations.items():
+            s1, s2 = k
+            if not isinstance(s1, Str):
+                s1 = Str(s1)
+            if not isinstance(s2, Str):
+                s2 = Str(s2)
+            key = Tuple(s1, s2)
+            rel_temp[key] = v
+        relations = Dict(rel_temp)
+
+        # construct the object
+        obj = super().__new__(cls, name, patch, symbols, relations)
+
+        # Add deprecated attributes
+        obj.transforms = _deprecated_dict(
+            "Mutable CoordSystem.transforms",
+            "'relations' parameter in class signature",
+            19321,
+            "1.7",
+            {}
+        )
+        obj._names = [str(n) for n in symbols]
+        obj.patch.coord_systems.append(obj) # deprecated
+        obj._dummies = [Dummy(str(n)) for n in symbols] # deprecated
         obj._dummy = Dummy()
+
         return obj
 
     @property
@@ -259,33 +316,131 @@ class CoordSystem(Atom):
         return self.args[1]
 
     @property
+    def manifold(self):
+        return self.patch.manifold
+
+    @property
+    def symbols(self):
+        return [
+            CoordinateSymbol(
+                self, i, **s._assumptions.generator
+            ) for i,s in enumerate(self.args[2])
+        ]
+
+    @property
+    def relations(self):
+        return self.args[3]
+
+    @property
     def dim(self):
         return self.patch.dim
 
     ##########################################################################
-    # Coordinate transformations.
+    # Finding transformation relation
     ##########################################################################
 
-    def connect_to(self, to_sys, from_coords, to_exprs, inverse=True, fill_in_gaps=False):
-        """Register the transformation used to switch to another coordinate system.
-
-        Parameters
-        ==========
-
-        to_sys
-            another instance of ``CoordSystem``
-        from_coords
-            list of symbols in terms of which ``to_exprs`` is given
-        to_exprs
-            list of the expressions of the new coordinate tuple
-        inverse
-            try to deduce and register the inverse transformation
-        fill_in_gaps
-            try to deduce other transformation that are made
-            possible by composing the present transformation with other already
-            registered transformation
-
+    def transformation(self, sys):
         """
+        Return coordinate transform relation from *self* to *sys* as Lambda.
+        """
+        if self.relations != sys.relations:
+            raise TypeError(
+        "Two coordinate systems have different relations")
+
+        key = Tuple(self.name, sys.name)
+        if key in self.relations:
+            return self.relations[key]
+        elif key[::-1] in self.relations:
+            return self._inverse_transformation(sys, self)
+        else:
+            return self._indirect_transformation(self, sys)
+
+    @staticmethod
+    def _inverse_transformation(sys1, sys2):
+        # Find the transformation relation from sys2 to sys1
+        forward_transform = sys1.transform(sys2)
+        forward_syms, forward_results = forward_transform.args
+
+        inv_syms = [i.as_dummy() for i in forward_syms]
+        inv_results = solve(
+            [t[0] - t[1] for t in zip(inv_syms, forward_results)],
+            list(forward_syms), dict=True)[0]
+        inv_results = [inv_results[s] for s in forward_syms]
+
+        signature = tuple(inv_syms)
+        expr = Matrix(inv_results)
+        return Lambda(signature, expr)
+
+    @classmethod
+    @cacheit
+    def _indirect_transformation(cls, sys1, sys2):
+        # Find the transformation relation between two indirectly connected coordinate systems
+        path = cls._dijkstra(sys1, sys2)
+        Lambdas = []
+        for i in range(len(path) - 1):
+            s1, s2 = path[i], path[i + 1]
+            Lambdas.append(s1.transformation(s2))
+        syms = Lambdas[-1].signature
+        expr = syms
+        for l in reversed(Lambdas):
+            expr = l(*expr)
+        return Lambda(syms, expr)
+
+    @staticmethod
+    def _dijkstra(sys1, sys2):
+        # Use Dijkstra algorithm to find the shortest path between two indirectly-connected
+        # coordinate systems
+        relations = sys1.relations
+        graph = {}
+        for s1, s2 in relations.keys():
+            if s1 not in graph:
+                graph[s1] = {s2}
+            else:
+                graph[s1].add(s2)
+            if s2 not in graph:
+                graph[s2] = {s1}
+            else:
+                graph[s2].add(s1)
+
+        path_dict = {sys:[0, [], 0] for sys in graph} # minimum distance, path, times of visited
+
+        def visit(sys):
+            path_dict[sys][2] = 1
+            for newsys in graph[sys]:
+                distance = path_dict[sys][0] + 1
+                if path_dict[newsys][0] >= distance or not path_dict[newsys][1]:
+                    path_dict[newsys][0] = distance
+                    path_dict[newsys][1] = [i for i in path_dict[sys][1]]
+                    path_dict[newsys][1].append(sys)
+
+        visit(sys1)
+
+        while True:
+            min_distance = max(path_dict.values(), key=lambda x:x[0])[0]
+            newsys = None
+            for sys, lst in path_dict.items():
+                if 0 < lst[0] <= min_distance and not lst[2]:
+                    min_distance = lst[0]
+                    newsys = sys
+            if newsys is None:
+                break
+            visit(newsys)
+
+        result = path_dict[sys2][1]
+        result.append(sys2)
+
+        if result == [sys2]:
+            raise KeyError("Two coordinate systems are not connected.")
+        return result
+
+    def connect_to(self, to_sys, from_coords, to_exprs, inverse=True, fill_in_gaps=False):
+        SymPyDeprecationWarning(
+            feature="CoordSystem.connect_to",
+            useinstead="new instance generated with new 'transforms' parameter",
+            issue=19321,
+            deprecated_since_version="1.7"
+        ).warn()
+
         from_coords, to_exprs = dummyfy(from_coords, to_exprs)
         self.transforms[to_sys] = Matrix(from_coords), Matrix(to_exprs)
 
@@ -297,6 +452,7 @@ class CoordSystem(Atom):
 
     @staticmethod
     def _inv_transf(from_coords, to_exprs):
+        # Will be removed when connect_to is removed
         inv_from = [i.as_dummy() for i in from_coords]
         inv_to = solve(
             [t[0] - t[1] for t in zip(inv_from, to_exprs)],
@@ -306,92 +462,162 @@ class CoordSystem(Atom):
 
     @staticmethod
     def _fill_gaps_in_transformations():
+        # Will be removed when connect_to is removed
         raise NotImplementedError
-        # TODO
+
+    ##########################################################################
+    # Coordinate transformations
+    ##########################################################################
+
+    def transform(self, sys, coordinates=None):
+        """
+        Return the result of coordinate transformation from *self* to *sys*.
+        If coordinates are not given, coordinate symbols of *self* are used.
+        """
+        if coordinates is None:
+            coordinates = Matrix(self.symbols)
+        else:
+            coordinates = Matrix(coordinates)
+        if self != sys:
+            transf = self.transformation(sys)
+            coordinates = transf(*coordinates)
+        return coordinates
 
     def coord_tuple_transform_to(self, to_sys, coords):
-        """Transform ``coords`` to coord system ``to_sys``.
+        """Transform ``coords`` to coord system ``to_sys``."""
+        SymPyDeprecationWarning(
+            feature="CoordSystem.coord_tuple_transform_to",
+            useinstead="CoordSystem.transform",
+            issue=19321,
+            deprecated_since_version="1.7"
+        ).warn()
 
-        See the docstring of ``CoordSystem`` for examples."""
         coords = Matrix(coords)
         if self != to_sys:
             transf = self.transforms[to_sys]
             coords = transf[1].subs(list(zip(transf[0], coords)))
         return coords
 
-    def jacobian(self, to_sys, coords):
-        """Return the jacobian matrix of a transformation."""
-        with_dummies = self.coord_tuple_transform_to(
-            to_sys, self._dummies).jacobian(self._dummies)
-        return with_dummies.subs(list(zip(self._dummies, coords)))
+    def jacobian(self, sys, coordinates=None):
+        """
+        Return the jacobian matrix of a transformation.
+        """
+        result = self.transform(sys).jacobian(self.symbols)
+        if coordinates is not None:
+            result = result.subs(list(zip(self.symbols, coordinates)))
+        return result
+    jacobian_matrix = jacobian
+
+    def jacobian_determinant(self, sys, coordinates=None):
+        """Return the jacobian determinant of a transformation."""
+        return self.jacobian(sys, coordinates).det()
+
+
+    ##########################################################################
+    # Points
+    ##########################################################################
+
+    def point(self, coords):
+        """Create a ``Point`` with coordinates given in this coord system."""
+        return Point(self, coords)
+
+    def point_to_coords(self, point):
+        """Calculate the coordinates of a point in this coord system."""
+        return point.coords(self)
 
     ##########################################################################
     # Base fields.
     ##########################################################################
 
-    def coord_function(self, coord_index):
-        """Return a ``BaseScalarField`` that takes a point and returns one of the coords.
-
-        Takes a point and returns its coordinate in this coordinate system.
-
-        See the docstring of ``CoordSystem`` for examples."""
+    def base_scalar(self, coord_index):
+        """Return ``BaseScalarField`` that takes a point and returns one of the coordinates."""
         return BaseScalarField(self, coord_index)
+    coord_function = base_scalar
 
-    def coord_functions(self):
+    def base_scalars(self):
         """Returns a list of all coordinate functions.
-
-        For more details see the ``coord_function`` method of this class."""
-        return [self.coord_function(i) for i in range(self.dim)]
+        For more details see the ``base_scalar`` method of this class."""
+        return [self.base_scalar(i) for i in range(self.dim)]
+    coord_functions = base_scalars
 
     def base_vector(self, coord_index):
         """Return a basis vector field.
-
         The basis vector field for this coordinate system. It is also an
-        operator on scalar fields.
-
-        See the docstring of ``CoordSystem`` for examples."""
+        operator on scalar fields."""
         return BaseVectorField(self, coord_index)
 
     def base_vectors(self):
         """Returns a list of all base vectors.
-
         For more details see the ``base_vector`` method of this class."""
         return [self.base_vector(i) for i in range(self.dim)]
 
     def base_oneform(self, coord_index):
         """Return a basis 1-form field.
-
         The basis one-form field for this coordinate system. It is also an
-        operator on vector fields.
-
-        See the docstring of ``CoordSystem`` for examples."""
+        operator on vector fields."""
         return Differential(self.coord_function(coord_index))
 
     def base_oneforms(self):
         """Returns a list of all base oneforms.
-
         For more details see the ``base_oneform`` method of this class."""
         return [self.base_oneform(i) for i in range(self.dim)]
 
-    ##########################################################################
-    # Points.
-    ##########################################################################
+class CoordinateSymbol(Symbol):
+    """A symbol which denotes an abstract value of i-th coordinate of
+    the coordinate system with given context.
 
-    def point(self, coords):
-        """Create a ``Point`` with coordinates given in this coord system.
+    Explanation
+    ===========
 
-        See the docstring of ``CoordSystem`` for examples."""
-        return Point(self, coords)
+    Each coordinates in coordinate system are represented by unique symbol,
+    such as x, y, z in Cartesian coordinate system.
 
-    def point_to_coords(self, point):
-        """Calculate the coordinates of a point in this coord system.
+    You may not construct this class directly. Instead, use `symbols` method
+    of CoordSystem.
 
-        See the docstring of ``CoordSystem`` for examples."""
-        return point.coords(self)
+    Parameters
+    ==========
 
-    ##########################################################################
-    # Printing.
-    ##########################################################################
+    coord_sys : CoordSystem
+
+    index : integer
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
+    >>> m = Manifold('M', 2)
+    >>> p = Patch('P', m)
+    >>> _x, _y = symbols('x y', nonnegative=True)
+
+    >>> C = CoordSystem('C', p, [_x, _y])
+    >>> x, y = C.symbols
+
+    >>> x.name
+    'x'
+    >>> x.coord_sys == C
+    True
+    >>> x.index
+    0
+    >>> x.is_nonnegative
+    True
+
+    """
+    def __new__(cls, coord_sys, index, **assumptions):
+        name = coord_sys.args[2][index].name
+        obj = super().__new__(cls, name, **assumptions)
+        obj.coord_sys = coord_sys
+        obj.index = index
+        return obj
+
+    def __getnewargs__(self):
+        return (self.coord_sys, self.index)
+
+    def _hashable_content(self):
+        return (
+            self.coord_sys, self.index
+        ) + tuple(sorted(self.assumptions0.items()))
 
 class Point(Basic):
     """Point defined in a coordinate system.
@@ -399,7 +625,10 @@ class Point(Basic):
     Explanation
     ===========
 
-    To define a point you must supply coordinates and a coordinate system.
+    Mathematically, point is defined in the manifold and does not have any coordinates
+    by itself. Coordinate system is what imbues the coordinates to the point by coordinate
+    chart. However, due to the difficulty of realizing such logic, you must supply
+    a coordinate system and coordinates to define a Point here.
 
     The usage of this object after its definition is independent of the
     coordinate system that was used in order to define it, however due to
@@ -411,67 +640,74 @@ class Point(Basic):
 
     coord_sys : CoordSystem
 
-    coords: list of sympy expressions
+    coords : list
         The coordinates of the point.
 
     Examples
     ========
 
-    Define the boilerplate Manifold, Patch and coordinate systems:
+    >>> from sympy import pi
+    >>> from sympy.diffgeom import Point
+    >>> from sympy.diffgeom.rn import R2, R2_r, R2_p
+    >>> rho, theta = R2_p.symbols
 
-    >>> from sympy import symbols, sin, cos, pi
-    >>> from sympy.diffgeom import (
-    ...        Manifold, Patch, CoordSystem, Point)
-    >>> r, theta = symbols('r, theta')
-    >>> m = Manifold('M', 2)
-    >>> p = Patch('P', m)
-    >>> rect = CoordSystem('rect', p)
-    >>> polar = CoordSystem('polar', p)
-    >>> polar.connect_to(rect, [r, theta], [r*cos(theta), r*sin(theta)])
+    >>> p = Point(R2_p, [rho, 3*pi/4])
 
-    Define a point using coordinates from one of the coordinate systems:
+    >>> p.manifold == R2
+    True
 
-    >>> p = Point(polar, [r, 3*pi/4])
     >>> p.coords()
     Matrix([
-    [     r],
+    [   rho],
     [3*pi/4]])
-    >>> p.coords(rect)
+    >>> p.coords(R2_r)
     Matrix([
-    [-sqrt(2)*r/2],
-    [ sqrt(2)*r/2]])
+    [-sqrt(2)*rho/2],
+    [ sqrt(2)*rho/2]])
 
     """
-    def __new__(cls, coord_sys, coords):
+
+    def __new__(cls, coord_sys, coords, **kwargs):
         coords = Matrix(coords)
         obj = super().__new__(cls, coord_sys, coords)
         obj._coord_sys = coord_sys
         obj._coords = coords
         return obj
 
-    def coords(self, to_sys=None):
-        """Coordinates of the point in a given coordinate system.
+    @property
+    def patch(self):
+        return self._coord_sys.patch
 
-        If ``to_sys`` is ``None`` it returns the coordinates in the system in
-        which the point was defined."""
-        if to_sys:
-            return self._coord_sys.coord_tuple_transform_to(to_sys, self._coords)
-        else:
+    @property
+    def manifold(self):
+        return self._coord_sys.manifold
+
+    @property
+    def dim(self):
+        return self.manifold.dim
+
+    def coords(self, sys=None):
+        """
+        Coordinates of the point in given coordinate system. If coordinate system
+        is not passed, it returns the coordinates in the coordinate system in which
+        the poin was defined.
+        """
+        if sys is None:
             return self._coords
+        else:
+            return self._coord_sys.transform(sys, self._coords)
 
     @property
     def free_symbols(self):
         return self._coords.free_symbols
 
-
 class BaseScalarField(Expr):
-    """Base Scalar Field over a Manifold for a given Coordinate System.
+    """Base scalar field over a manifold for a given coordinate system.
 
     Explanation
     ===========
 
     A scalar field takes a point as an argument and returns a scalar.
-
     A base scalar field of a coordinate system takes a point and returns one of
     the coordinates of that point in the coordinate system in question.
 
@@ -482,7 +718,6 @@ class BaseScalarField(Expr):
     coordinate system in which it was defined, however due to limitations in
     the simplification routines you may arrive at more complicated
     expression if you use unappropriate coordinate systems.
-
     You can build complicated scalar fields by just building up SymPy
     expressions containing ``BaseScalarField`` instances.
 
@@ -496,30 +731,23 @@ class BaseScalarField(Expr):
     Examples
     ========
 
-    Define boilerplate Manifold, Patch and coordinate systems:
+    >>> from sympy import Function, pi
+    >>> from sympy.diffgeom import BaseScalarField
+    >>> from sympy.diffgeom.rn import R2_r, R2_p
+    >>> rho, _ = R2_p.symbols
+    >>> point = R2_p.point([rho, 0])
+    >>> fx, fy = R2_r.base_scalars()
+    >>> ftheta = BaseScalarField(R2_r, 1)
 
-    >>> from sympy import symbols, sin, cos, pi, Function
-    >>> from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
-    >>> r0, theta0 = symbols('r0, theta0')
-    >>> m = Manifold('M', 2)
-    >>> p = Patch('P', m)
-    >>> rect = CoordSystem('rect', p)
-    >>> polar = CoordSystem('polar', p)
-    >>> polar.connect_to(rect, [r0, theta0], [r0*cos(theta0), r0*sin(theta0)])
+    >>> fx(point)
+    rho
+    >>> fy(point)
+    0
 
-    Point to be used as an argument for the filed:
-
-    >>> point = polar.point([r0, 0])
-
-    Examples of fields:
-
-    >>> fx = BaseScalarField(rect, 0)
-    >>> fy = BaseScalarField(rect, 1)
     >>> (fx**2+fy**2).rcall(point)
-    r0**2
+    rho**2
 
     >>> g = Function('g')
-    >>> ftheta = BaseScalarField(polar, 1)
     >>> fg = g(ftheta-pi)
     >>> fg.rcall(point)
     g(-pi)
@@ -528,16 +756,35 @@ class BaseScalarField(Expr):
 
     is_commutative = True
 
-    def __new__(cls, coord_sys, index):
+    def __new__(cls, coord_sys, index, **kwargs):
         index = _sympify(index)
         obj = super().__new__(cls, coord_sys, index)
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
 
+    @property
+    def coord_sys(self):
+        return self.args[0]
+
+    @property
+    def index(self):
+        return self.args[1]
+
+    @property
+    def patch(self):
+        return self.coord_sys.patch
+
+    @property
+    def manifold(self):
+        return self.coord_sys.manifold
+
+    @property
+    def dim(self):
+        return self.manifold.dim
+
     def __call__(self, *args):
         """Evaluating the field at a point or doing nothing.
-
         If the argument is a ``Point`` instance, the field is evaluated at that
         point. The field is returned itself if the argument is any other
         object. It is so in order to have working recursive calling mechanics
@@ -559,14 +806,13 @@ class BaseScalarField(Expr):
 
 
 class BaseVectorField(Expr):
-    r"""Vector Field over a Manifold.
+    r"""Base vector field over a manifold for a given coordinate system.
 
     Explanation
     ===========
 
     A vector field is an operator taking a scalar field and returning a
     directional derivative (which is also a scalar field).
-
     A base vector field is the same type of operator, however the derivation is
     specifically done with respect to a chosen coordinate.
 
@@ -580,7 +826,6 @@ class BaseVectorField(Expr):
 
     Parameters
     ==========
-
     coord_sys : CoordSystem
 
     index : integer
@@ -588,29 +833,19 @@ class BaseVectorField(Expr):
     Examples
     ========
 
-    Use the predefined R2 manifold, setup some boilerplate.
-
-    >>> from sympy import symbols, Function
-    >>> from sympy.diffgeom.rn import R2, R2_p, R2_r
+    >>> from sympy import Function
+    >>> from sympy.diffgeom.rn import R2_p, R2_r
     >>> from sympy.diffgeom import BaseVectorField
     >>> from sympy import pprint
-    >>> x0, y0, r0, theta0 = symbols('x0, y0, r0, theta0')
 
-    Points to be used as arguments for the field:
-
-    >>> point_p = R2_p.point([r0, theta0])
-    >>> point_r = R2_r.point([x0, y0])
-
-    Scalar field to operate on:
+    >>> x, y = R2_r.symbols
+    >>> rho, theta = R2_p.symbols
+    >>> fx, fy = R2_r.base_scalars()
+    >>> point_p = R2_p.point([rho, theta])
+    >>> point_r = R2_r.point([x, y])
 
     >>> g = Function('g')
-    >>> s_field = g(R2.x, R2.y)
-    >>> s_field.rcall(point_r)
-    g(x0, y0)
-    >>> s_field.rcall(point_p)
-    g(r0*cos(theta0), r0*sin(theta0))
-
-    Vector field:
+    >>> s_field = g(fx, fy)
 
     >>> v = BaseVectorField(R2_r, 1)
     >>> pprint(v(s_field))
@@ -618,31 +853,49 @@ class BaseVectorField(Expr):
     |---(g(x, xi))||
     \dxi          /|xi=y
     >>> pprint(v(s_field).rcall(point_r).doit())
-     d
-    ---(g(x0, y0))
-    dy0
+    d
+    --(g(x, y))
+    dy
     >>> pprint(v(s_field).rcall(point_p))
     / d                        \|
-    |---(g(r0*cos(theta0), xi))||
-    \dxi                       /|xi=r0*sin(theta0)
+    |---(g(rho*cos(theta), xi))||
+    \dxi                       /|xi=rho*sin(theta)
 
     """
 
     is_commutative = False
 
-    def __new__(cls, coord_sys, index):
+    def __new__(cls, coord_sys, index, **kwargs):
         index = _sympify(index)
         obj = super().__new__(cls, coord_sys, index)
         obj._coord_sys = coord_sys
         obj._index = index
         return obj
 
+    @property
+    def coord_sys(self):
+        return self.args[0]
+
+    @property
+    def index(self):
+        return self.args[1]
+
+    @property
+    def patch(self):
+        return self.coord_sys.patch
+
+    @property
+    def manifold(self):
+        return self.coord_sys.manifold
+
+    @property
+    def dim(self):
+        return self.manifold.dim
+
     def __call__(self, scalar_field):
         """Apply on a scalar field.
-
         The action of a vector field on a scalar field is a directional
         differentiation.
-
         If the argument is not a scalar field an error is raised.
         """
         if covariant_order(scalar_field) or contravariant_order(scalar_field):
@@ -662,7 +915,7 @@ class BaseVectorField(Expr):
         d_result = d_result.diff(d_var)
 
         # Second step: e_x(x) -> 1 and e_x(r) -> cos(atan2(x, y))
-        coords = self._coord_sys._dummies
+        coords = self._coord_sys.symbols
         d_funcs_deriv = [f.diff(d_var) for f in d_funcs]
         d_funcs_deriv_sub = []
         for b in base_scalars:
@@ -686,6 +939,9 @@ def _find_coords(expr):
 class Commutator(Expr):
     r"""Commutator of two vector fields.
 
+    Explanation
+    ===========
+
     The commutator of two vector fields `v_1` and `v_2` is defined as the
     vector field `[v_1, v_2]` that evaluated on each scalar field `f` is equal
     to `v_1(v_2(f)) - v_2(v_1(f))`.
@@ -693,15 +949,15 @@ class Commutator(Expr):
     Examples
     ========
 
-    Use the predefined R2 manifold, setup some boilerplate.
 
-    >>> from sympy.diffgeom.rn import R2
+    >>> from sympy.diffgeom.rn import R2_p, R2_r
     >>> from sympy.diffgeom import Commutator
     >>> from sympy.simplify import simplify
 
-    Vector fields:
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
+    >>> e_r = R2_p.base_vector(0)
 
-    >>> e_x, e_y, e_r = R2.e_x, R2.e_y, R2.e_r
     >>> c_xy = Commutator(e_x, e_y)
     >>> c_xr = Commutator(e_x, e_r)
     >>> c_xy
@@ -710,9 +966,8 @@ class Commutator(Expr):
     Unfortunately, the current code is not able to compute everything:
 
     >>> c_xr
-    Commutator(e_x, e_r)
-
-    >>> simplify(c_xr(R2.y**2))
+    Commutator(e_x, e_rho)
+    >>> simplify(c_xr(fy**2))
     -2*cos(theta)*y**2/(x**2 + y**2)
 
     """
@@ -722,13 +977,13 @@ class Commutator(Expr):
             raise ValueError(
                 'Only commutators of vector fields are supported.')
         if v1 == v2:
-            return Zero()
+            return S.Zero
         coord_sys = set().union(*[_find_coords(v) for v in (v1, v2)])
         if len(coord_sys) == 1:
             # Only one coordinate systems is used, hence it is easy enough to
             # actually evaluate the commutator.
             if all(isinstance(v, BaseVectorField) for v in (v1, v2)):
-                return Zero()
+                return S.Zero
             bases_1, bases_2 = [list(v.atoms(BaseVectorField))
                                 for v in (v1, v2)]
             coeffs_1 = [v1.expand().coeff(b) for b in bases_1]
@@ -739,53 +994,51 @@ class Commutator(Expr):
                     res += c1*b1(c2)*b2 - c2*b2(c1)*b1
             return res
         else:
-            return super().__new__(cls, v1, v2)
+            obj = super().__new__(cls, v1, v2)
+            obj._v1 = v1 # deprecated assignment
+            obj._v2 = v2 # deprecated assignment
+            return obj
 
-    def __init__(self, v1, v2):
-        super().__init__()
-        self._args = (v1, v2)
-        self._v1 = v1
-        self._v2 = v2
+    @property
+    def v1(self):
+        return self.args[0]
+
+    @property
+    def v2(self):
+        return self.args[1]
 
     def __call__(self, scalar_field):
         """Apply on a scalar field.
-
         If the argument is not a scalar field an error is raised.
         """
-        return self._v1(self._v2(scalar_field)) - self._v2(self._v1(scalar_field))
+        return self.v1(self.v2(scalar_field)) - self.v2(self.v1(scalar_field))
 
 
 class Differential(Expr):
     r"""Return the differential (exterior derivative) of a form field.
 
+    Explanation
+    ===========
+
     The differential of a form (i.e. the exterior derivative) has a complicated
     definition in the general case.
-
     The differential `df` of the 0-form `f` is defined for any vector field `v`
     as `df(v) = v(f)`.
 
     Examples
     ========
 
-    Use the predefined R2 manifold, setup some boilerplate.
-
     >>> from sympy import Function
-    >>> from sympy.diffgeom.rn import R2
+    >>> from sympy.diffgeom.rn import R2_r
     >>> from sympy.diffgeom import Differential
     >>> from sympy import pprint
 
-    Scalar field (0-forms):
-
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
     >>> g = Function('g')
-    >>> s_field = g(R2.x, R2.y)
-
-    Vector fields:
-
-    >>> e_x, e_y, = R2.e_x, R2.e_y
-
-    Differentials:
-
+    >>> s_field = g(fx, fy)
     >>> dg = Differential(s_field)
+
     >>> dg
     d(g(x, y))
     >>> pprint(dg(e_x))
@@ -801,7 +1054,6 @@ class Differential(Expr):
 
     >>> Differential(dg)
     0
-
     """
 
     is_commutative = False
@@ -811,17 +1063,21 @@ class Differential(Expr):
             raise ValueError(
                 'A vector field was supplied as an argument to Differential.')
         if isinstance(form_field, Differential):
-            return Zero()
+            return S.Zero
         else:
-            return super().__new__(cls, form_field)
+            obj = super().__new__(cls, form_field)
+            obj._form_field = form_field # deprecated assignment
+            return obj
 
-    def __init__(self, form_field):
-        super().__init__()
-        self._form_field = form_field
-        self._args = (self._form_field, )
+    @property
+    def form_field(self):
+        return self.args[0]
 
     def __call__(self, *vector_fields):
         """Apply on a list of vector_fields.
+
+        Explanation
+        ===========
 
         If the number of vector fields supplied is not equal to 1 + the order of
         the form field inside the differential the result is undefined.
@@ -867,9 +1123,11 @@ class Differential(Expr):
                         ret += (-1)**(i + j)*t
             return ret
 
-
 class TensorProduct(Expr):
     """Tensor product of forms.
+
+    Explanation
+    ===========
 
     The tensor product permits the creation of multilinear functionals (i.e.
     higher order tensors) out of lower order fields (e.g. 1-forms and vector
@@ -880,27 +1138,28 @@ class TensorProduct(Expr):
     Examples
     ========
 
-    Use the predefined R2 manifold, setup some boilerplate.
-
-    >>> from sympy.diffgeom.rn import R2
+    >>> from sympy.diffgeom.rn import R2_r
     >>> from sympy.diffgeom import TensorProduct
 
-    >>> TensorProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y)
-    1
-    >>> TensorProduct(R2.dx, R2.dy)(R2.e_y, R2.e_x)
-    0
-    >>> TensorProduct(R2.dx, R2.x*R2.dy)(R2.x*R2.e_x, R2.e_y)
-    x**2
-    >>> TensorProduct(R2.e_x, R2.e_y)(R2.x**2, R2.y**2)
-    4*x*y
-    >>> TensorProduct(R2.e_y, R2.dx)(R2.y)
-    dx
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
+    >>> dx, dy = R2_r.base_oneforms()
 
+    >>> TensorProduct(dx, dy)(e_x, e_y)
+    1
+    >>> TensorProduct(dx, dy)(e_y, e_x)
+    0
+    >>> TensorProduct(dx, fx*dy)(fx*e_x, e_y)
+    x**2
+    >>> TensorProduct(e_x, e_y)(fx**2, fy**2)
+    4*x*y
+    >>> TensorProduct(e_y, dx)(fy)
+    dx
 
     You can nest tensor products.
 
-    >>> tp1 = TensorProduct(R2.dx, R2.dy)
-    >>> TensorProduct(tp1, R2.dx)(R2.e_x, R2.e_y, R2.e_x)
+    >>> tp1 = TensorProduct(dx, dy)
+    >>> TensorProduct(tp1, dx)(e_x, e_y, e_x)
     1
 
     You can make partial contraction for instance when 'raising an index'.
@@ -908,13 +1167,13 @@ class TensorProduct(Expr):
     respective position in the tensor product is left as it is.
 
     >>> TP = TensorProduct
-    >>> metric = TP(R2.dx, R2.dx) + 3*TP(R2.dy, R2.dy)
-    >>> metric.rcall(R2.e_y, None)
+    >>> metric = TP(dx, dx) + 3*TP(dy, dy)
+    >>> metric.rcall(e_y, None)
     3*dy
 
     Or automatically pad the args with ``None`` without specifying them.
 
-    >>> metric.rcall(R2.e_y)
+    >>> metric.rcall(e_y)
     3*dy
 
     """
@@ -928,10 +1187,6 @@ class TensorProduct(Expr):
         else:
             return scalar
 
-    def __init__(self, *args):
-        super().__init__()
-        self._args = args
-
     def __call__(self, *fields):
         """Apply on a list of fields.
 
@@ -942,6 +1197,7 @@ class TensorProduct(Expr):
         the forms inside the tensor product. The sublists are provided as
         arguments to these forms and the resulting expressions are given to the
         constructor of ``TensorProduct``.
+
         """
         tot_order = covariant_order(self) + contravariant_order(self)
         tot_args = len(fields)
@@ -957,30 +1213,35 @@ class TensorProduct(Expr):
 class WedgeProduct(TensorProduct):
     """Wedge product of forms.
 
+    Explanation
+    ===========
+
     In the context of integration only completely antisymmetric forms make
     sense. The wedge product permits the creation of such forms.
 
     Examples
     ========
 
-    Use the predefined R2 manifold, setup some boilerplate.
-
-    >>> from sympy.diffgeom.rn import R2
+    >>> from sympy.diffgeom.rn import R2_r
     >>> from sympy.diffgeom import WedgeProduct
 
-    >>> WedgeProduct(R2.dx, R2.dy)(R2.e_x, R2.e_y)
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
+    >>> dx, dy = R2_r.base_oneforms()
+
+    >>> WedgeProduct(dx, dy)(e_x, e_y)
     1
-    >>> WedgeProduct(R2.dx, R2.dy)(R2.e_y, R2.e_x)
+    >>> WedgeProduct(dx, dy)(e_y, e_x)
     -1
-    >>> WedgeProduct(R2.dx, R2.x*R2.dy)(R2.x*R2.e_x, R2.e_y)
+    >>> WedgeProduct(dx, fx*dy)(fx*e_x, e_y)
     x**2
-    >>> WedgeProduct(R2.e_x,R2.e_y)(R2.y,None)
+    >>> WedgeProduct(e_x, e_y)(fy, None)
     -e_x
 
     You can nest wedge products.
 
-    >>> wp1 = WedgeProduct(R2.dx, R2.dy)
-    >>> WedgeProduct(wp1, R2.dx)(R2.e_x, R2.e_y, R2.e_x)
+    >>> wp1 = WedgeProduct(dx, dy)
+    >>> WedgeProduct(wp1, dx)(e_x, e_y, e_x)
     0
 
     """
@@ -988,7 +1249,6 @@ class WedgeProduct(TensorProduct):
     # TODO you do not need all these permutations (neither the prefactor)
     def __call__(self, *fields):
         """Apply on a list of vector_fields.
-
         The expression is rewritten internally in terms of tensor products and evaluated."""
         orders = (covariant_order(e) + contravariant_order(e) for e in self.args)
         mul = 1/Mul(*(factorial(o) for o in orders))
@@ -1002,6 +1262,9 @@ class WedgeProduct(TensorProduct):
 class LieDerivative(Expr):
     """Lie derivative with respect to a vector field.
 
+    Explanation
+    ===========
+
     The transport operator that defines the Lie derivative is the pushforward of
     the field to be derived along the integral curve of the field with respect
     to which one derives.
@@ -1009,27 +1272,35 @@ class LieDerivative(Expr):
     Examples
     ========
 
+    >>> from sympy.diffgeom.rn import R2_r, R2_p
     >>> from sympy.diffgeom import (LieDerivative, TensorProduct)
-    >>> from sympy.diffgeom.rn import R2
-    >>> LieDerivative(R2.e_x, R2.y)
+
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
+    >>> e_rho, e_theta = R2_p.base_vectors()
+    >>> dx, dy = R2_r.base_oneforms()
+
+    >>> LieDerivative(e_x, fy)
     0
-    >>> LieDerivative(R2.e_x, R2.x)
+    >>> LieDerivative(e_x, fx)
     1
-    >>> LieDerivative(R2.e_x, R2.e_x)
+    >>> LieDerivative(e_x, e_x)
     0
 
     The Lie derivative of a tensor field by another tensor field is equal to
     their commutator:
 
-    >>> LieDerivative(R2.e_x, R2.e_r)
-    Commutator(e_x, e_r)
-    >>> LieDerivative(R2.e_x + R2.e_y, R2.x)
+    >>> LieDerivative(e_x, e_rho)
+    Commutator(e_x, e_rho)
+    >>> LieDerivative(e_x + e_y, fx)
     1
-    >>> tp = TensorProduct(R2.dx, R2.dy)
-    >>> LieDerivative(R2.e_x, tp)
+
+    >>> tp = TensorProduct(dx, dy)
+    >>> LieDerivative(e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
-    >>> LieDerivative(R2.e_x, tp)
+    >>> LieDerivative(e_x, tp)
     LieDerivative(e_x, TensorProduct(dx, dy))
+
     """
     def __new__(cls, v_field, expr):
         expr_form_ord = covariant_order(expr)
@@ -1038,21 +1309,27 @@ class LieDerivative(Expr):
                              ' vector fields. The supplied argument was not a '
                              'vector field.')
         if expr_form_ord > 0:
-            return super().__new__(cls, v_field, expr)
+            obj = super().__new__(cls, v_field, expr)
+            # deprecated assignments
+            obj._v_field = v_field
+            obj._expr = expr
+            return obj
         if expr.atoms(BaseVectorField):
             return Commutator(v_field, expr)
         else:
             return v_field.rcall(expr)
 
-    def __init__(self, v_field, expr):
-        super().__init__()
-        self._v_field = v_field
-        self._expr = expr
-        self._args = (self._v_field, self._expr)
+    @property
+    def v_field(self):
+        return self.args[0]
+
+    @property
+    def expr(self):
+        return self.args[1]
 
     def __call__(self, *args):
-        v = self._v_field
-        expr = self._expr
+        v = self.v_field
+        expr = self.expr
         lead_term = v(expr(*args))
         rest = Add(*[Mul(*args[:i] + (Commutator(v, args[i]),) + args[i + 1:])
                      for i in range(len(args))])
@@ -1065,32 +1342,52 @@ class BaseCovarDerivativeOp(Expr):
     Examples
     ========
 
-    >>> from sympy.diffgeom.rn import R2, R2_r
+    >>> from sympy.diffgeom.rn import R2_r
     >>> from sympy.diffgeom import BaseCovarDerivativeOp
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
+
     >>> TP = TensorProduct
-    >>> ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
+    >>> dx, dy = R2_r.base_oneforms()
+
+    >>> ch = metric_to_Christoffel_2nd(TP(dx, dx) + TP(dy, dy))
     >>> ch
     [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> cvd = BaseCovarDerivativeOp(R2_r, 0, ch)
-    >>> cvd(R2.x)
+    >>> cvd(fx)
     1
-    >>> cvd(R2.x*R2.e_x)
+    >>> cvd(fx*e_x)
     e_x
     """
-    def __init__(self, coord_sys, index, christoffel):
-        super().__init__()
-        self._coord_sys = coord_sys
-        self._index = index
-        self._christoffel = christoffel
-        self._args = self._coord_sys, self._index, self._christoffel
+
+    def __new__(cls, coord_sys, index, christoffel):
+        index = _sympify(index)
+        christoffel = ImmutableDenseNDimArray(christoffel)
+        obj = super().__new__(cls, coord_sys, index, christoffel)
+        # deprecated assignments
+        obj._coord_sys = coord_sys
+        obj._index = index
+        obj._christoffel = christoffel
+        return obj
+
+    @property
+    def coord_sys(self):
+        return self.args[0]
+
+    @property
+    def index(self):
+        return self.args[1]
+
+    @property
+    def christoffel(self):
+        return self.args[2]
 
     def __call__(self, field):
         """Apply on a scalar field.
 
         The action of a vector field on a scalar field is a directional
         differentiation.
-
         If the argument is not a scalar field the behaviour is undefined.
         """
         if covariant_order(field) != 0:
@@ -1136,31 +1433,45 @@ class CovarDerivativeOp(Expr):
     Examples
     ========
 
-    >>> from sympy.diffgeom.rn import R2
+    >>> from sympy.diffgeom.rn import R2_r
     >>> from sympy.diffgeom import CovarDerivativeOp
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
     >>> TP = TensorProduct
-    >>> ch = metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
+    >>> fx, fy = R2_r.base_scalars()
+    >>> e_x, e_y = R2_r.base_vectors()
+    >>> dx, dy = R2_r.base_oneforms()
+    >>> ch = metric_to_Christoffel_2nd(TP(dx, dx) + TP(dy, dy))
+
     >>> ch
     [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
-    >>> cvd = CovarDerivativeOp(R2.x*R2.e_x, ch)
-    >>> cvd(R2.x)
+    >>> cvd = CovarDerivativeOp(fx*e_x, ch)
+    >>> cvd(fx)
     x
-    >>> cvd(R2.x*R2.e_x)
+    >>> cvd(fx*e_x)
     x*e_x
 
     """
-    def __init__(self, wrt, christoffel):
-        super().__init__()
+
+    def __new__(cls, wrt, christoffel):
         if len({v._coord_sys for v in wrt.atoms(BaseVectorField)}) > 1:
             raise NotImplementedError()
         if contravariant_order(wrt) != 1 or covariant_order(wrt):
             raise ValueError('Covariant derivatives are defined only with '
                              'respect to vector fields. The supplied argument '
                              'was not a vector field.')
-        self._wrt = wrt
-        self._christoffel = christoffel
-        self._args = self._wrt, self._christoffel
+        obj = super().__new__(cls, wrt, christoffel)
+        # deprecated assigments
+        obj._wrt = wrt
+        obj._christoffel = christoffel
+        return obj
+
+    @property
+    def wrt(self):
+        return self.args[0]
+
+    @property
+    def christoffel(self):
+        return self.args[1]
 
     def __call__(self, field):
         vectors = list(self._wrt.atoms(BaseVectorField))
@@ -1175,6 +1486,9 @@ class CovarDerivativeOp(Expr):
 def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeffs=False):
     r"""Return the series expansion for an integral curve of the field.
 
+    Explanation
+    ===========
+
     Integral curve is a function `\gamma` taking a parameter in `R` to a point
     in the manifold. It verifies the equation:
 
@@ -1184,7 +1498,6 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     value `t` for the parameter and any scalar field `f`.
 
     This equation can also be decomposed of a basis of coordinate functions
-
     `V(f_i)\big(\gamma(t)\big) = \frac{d}{dt}f_i\big(\gamma(t)\big) \quad \forall i`
 
     This function returns a series expansion of `\gamma(t)` in terms of the
@@ -1193,22 +1506,20 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
 
-    See Also
-    ========
-
-    intcurve_diffequ
-
     Parameters
     ==========
-
     vector_field
         the vector field for which an integral curve will be given
+
     param
         the argument of the function `\gamma` from R to the curve
+
     start_point
         the point which corresponds to `\gamma(0)`
+
     n
         the order to which to expand
+
     coord_sys
         the coordinate system in which to expand
         coeffs (default False) - if True return a list of elements of the expansion
@@ -1267,6 +1578,11 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     [t**2*(-x**2/(x**2 + y**2)**(3/2) + 1/sqrt(x**2 + y**2))/2],
     [                                t**2*x*y/(x**2 + y**2)**2]])
 
+    See Also
+    ========
+
+    intcurve_diffequ
+
     """
     if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
         raise ValueError('The supplied field was not a vector field.')
@@ -1291,6 +1607,9 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
 def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     r"""Return the differential equation for an integral curve of the field.
 
+    Explanation
+    ===========
+
     Integral curve is a function `\gamma` taking a parameter in `R` to a point
     in the manifold. It verifies the equation:
 
@@ -1305,25 +1624,24 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     represent movement between points on the manifold (i.e. there is no such
     thing as a difference of points for a general manifold).
 
-    See Also
-    ========
-
-    intcurve_series
-
     Parameters
     ==========
 
     vector_field
         the vector field for which an integral curve will be given
+
     param
         the argument of the function `\gamma` from R to the curve
+
     start_point
         the point which corresponds to `\gamma(0)`
+
     coord_sys
         the coordinate system in which to give the equations
 
     Returns
     =======
+
     a tuple of (equations, initial conditions)
 
     Examples
@@ -1355,6 +1673,11 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     [Derivative(f_0(t), t), Derivative(f_1(t), t) - 1]
     >>> init_cond
     [f_0(0) - 1, f_1(0) - pi/2]
+
+    See Also
+    ========
+
+    intcurve_series
 
     """
     if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
@@ -1394,6 +1717,7 @@ def contravariant_order(expr, _strict=False):
     >>> from sympy.diffgeom import contravariant_order
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.abc import a
+
     >>> contravariant_order(a)
     0
     >>> contravariant_order(a*R2.x + 2)
@@ -1439,6 +1763,7 @@ def covariant_order(expr, _strict=False):
     >>> from sympy.diffgeom import covariant_order
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.abc import a
+
     >>> covariant_order(a)
     0
     >>> covariant_order(a*R2.x + 2)
@@ -1480,7 +1805,6 @@ def covariant_order(expr, _strict=False):
 ###############################################################################
 def vectors_in_basis(expr, to_sys):
     """Transform all base vectors in base vectors of a specified coord basis.
-
     While the new base vectors are in the new coordinate system basis, any
     coefficients are kept in the old system.
 
@@ -1489,10 +1813,12 @@ def vectors_in_basis(expr, to_sys):
 
     >>> from sympy.diffgeom import vectors_in_basis
     >>> from sympy.diffgeom.rn import R2_r, R2_p
+
     >>> vectors_in_basis(R2_r.e_x, R2_p)
-    -y*e_theta/(x**2 + y**2) + x*e_r/sqrt(x**2 + y**2)
+    -y*e_theta/(x**2 + y**2) + x*e_rho/sqrt(x**2 + y**2)
     >>> vectors_in_basis(R2_p.e_r, R2_r)
     sin(theta)*e_y + cos(theta)*e_x
+
     """
     vectors = list(expr.atoms(BaseVectorField))
     new_vectors = []
@@ -1520,6 +1846,7 @@ def twoform_to_matrix(expr):
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import twoform_to_matrix, TensorProduct
     >>> TP = TensorProduct
+
     >>> twoform_to_matrix(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     Matrix([
     [1, 0],
@@ -1551,7 +1878,6 @@ def twoform_to_matrix(expr):
 
 def metric_to_Christoffel_1st(expr):
     """Return the nested list of Christoffel symbols for the given metric.
-
     This returns the Christoffel symbol of first kind that represents the
     Levi-Civita connection for the given metric.
 
@@ -1561,6 +1887,7 @@ def metric_to_Christoffel_1st(expr):
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Christoffel_1st, TensorProduct
     >>> TP = TensorProduct
+
     >>> metric_to_Christoffel_1st(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> metric_to_Christoffel_1st(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
@@ -1584,7 +1911,6 @@ def metric_to_Christoffel_1st(expr):
 
 def metric_to_Christoffel_2nd(expr):
     """Return the nested list of Christoffel symbols for the given metric.
-
     This returns the Christoffel symbol of second kind that represents the
     Levi-Civita connection for the given metric.
 
@@ -1594,6 +1920,7 @@ def metric_to_Christoffel_2nd(expr):
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Christoffel_2nd, TensorProduct
     >>> TP = TensorProduct
+
     >>> metric_to_Christoffel_2nd(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]
     >>> metric_to_Christoffel_2nd(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
@@ -1611,7 +1938,7 @@ def metric_to_Christoffel_2nd(expr):
     for e in matrix:
         s_fields.update(e.atoms(BaseScalarField))
     s_fields = list(s_fields)
-    dums = coord_sys._dummies
+    dums = coord_sys.symbols
     matrix = matrix.subs(list(zip(s_fields, dums))).inv().subs(list(zip(dums, s_fields)))
     # XXX end of workaround
     christoffel = [[[Add(*[matrix[i, l]*ch_1st[l, j, k] for l in indices])
@@ -1635,18 +1962,18 @@ def metric_to_Riemann_components(expr):
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Riemann_components, TensorProduct
     >>> TP = TensorProduct
+
     >>> metric_to_Riemann_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     [[[[0, 0], [0, 0]], [[0, 0], [0, 0]]], [[[0, 0], [0, 0]], [[0, 0], [0, 0]]]]
-
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
         R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
-    exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
+    exp(2*rho)*TensorProduct(drho, drho) + rho**2*TensorProduct(dtheta, dtheta)
     >>> riemann = metric_to_Riemann_components(non_trivial_metric)
     >>> riemann[0, :, :, :]
-    [[[0, 0], [0, 0]], [[0, exp(-2*r)*r], [-exp(-2*r)*r, 0]]]
+    [[[0, 0], [0, 0]], [[0, exp(-2*rho)*rho], [-exp(-2*rho)*rho, 0]]]
     >>> riemann[1, :, :, :]
-    [[[0, -1/r], [1/r, 0]], [[0, 0], [0, 0]]]
+    [[[0, -1/rho], [1/rho, 0]], [[0, 0], [0, 0]]]
 
     """
     ch_2nd = metric_to_Christoffel_2nd(expr)
@@ -1676,6 +2003,7 @@ def metric_to_Riemann_components(expr):
 
 
 def metric_to_Ricci_components(expr):
+
     """Return the components of the Ricci tensor expressed in a given basis.
 
     Given a metric it calculates the components of the Ricci tensor in the
@@ -1689,15 +2017,15 @@ def metric_to_Ricci_components(expr):
     >>> from sympy.diffgeom.rn import R2
     >>> from sympy.diffgeom import metric_to_Ricci_components, TensorProduct
     >>> TP = TensorProduct
+
     >>> metric_to_Ricci_components(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
     [[0, 0], [0, 0]]
-
     >>> non_trivial_metric = exp(2*R2.r)*TP(R2.dr, R2.dr) + \
                              R2.r**2*TP(R2.dtheta, R2.dtheta)
     >>> non_trivial_metric
-    exp(2*r)*TensorProduct(dr, dr) + r**2*TensorProduct(dtheta, dtheta)
+    exp(2*rho)*TensorProduct(drho, drho) + rho**2*TensorProduct(dtheta, dtheta)
     >>> metric_to_Ricci_components(non_trivial_metric)
-    [[1/r, 0], [0, exp(-2*r)*r]]
+    [[1/rho, 0], [0, exp(-2*rho)*rho]]
 
     """
     riemann = metric_to_Riemann_components(expr)
@@ -1707,3 +2035,43 @@ def metric_to_Ricci_components(expr):
               for j in indices]
              for i in indices]
     return ImmutableDenseNDimArray(ricci)
+
+###############################################################################
+# Classes for deprecation
+###############################################################################
+
+class _deprecated_container(object):
+    # This class gives deprecation warning.
+    # When deprecated features are completely deleted, this should be removed as well.
+    # See https://github.com/sympy/sympy/pull/19368
+    def __init__(self, feature, useinstead, issue, version, data):
+        super().__init__(data)
+        self.feature = feature
+        self.useinstead = useinstead
+        self.issue = issue
+        self.version = version
+
+    def warn(self):
+        SymPyDeprecationWarning(
+                    feature=self.feature,
+                    useinstead=self.useinstead,
+                    issue=self.issue,
+                    deprecated_since_version=self.version).warn()
+
+    def __iter__(self):
+        self.warn()
+        return super().__iter__()
+
+    def __getitem__(self, key):
+        self.warn()
+        return super().__getitem__(key)
+
+    def __contains__(self, key):
+        self.warn()
+        return super().__contains__(key)
+
+class _deprecated_list(_deprecated_container, list):
+    pass
+
+class _deprecated_dict(_deprecated_container, dict):
+    pass

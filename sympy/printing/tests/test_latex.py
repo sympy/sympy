@@ -38,6 +38,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
+from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
@@ -57,7 +58,7 @@ class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
 
 
-x, y, z, t, a, b, c = symbols('x y z t a b c')
+x, y, z, t, w, a, b, c, s, p = symbols('x y z t w a b c s p')
 k, m, n = symbols('k m n', integer=True)
 
 
@@ -2249,6 +2250,45 @@ def test_KroneckerProduct_printing():
     assert latex(KroneckerProduct(A, B)) == r'A \otimes B'
 
 
+def test_Series_printing():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert latex(Series(tf1, tf2)) == \
+        '\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right)'
+    assert latex(Series(tf1, tf2, tf3)) == \
+        '\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right) \\left(\\frac{t x^{2} - t^{w} x + w}{t - y}\\right)'
+    assert latex(Series(-tf2, tf1)) == \
+        '\\left(\\frac{- x + y}{x + y}\\right) \\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right)'
+
+
+def test_TransferFunction_printing():
+    tf1 = TransferFunction(x - 1, x + 1, x)
+    assert latex(tf1) == r"\frac{x - 1}{x + 1}"
+    tf2 = TransferFunction(x + 1, 2 - y, x)
+    assert latex(tf2) == r"\frac{x + 1}{2 - y}"
+    tf3 = TransferFunction(y, y**2 + 2*y + 3, y)
+    assert latex(tf3) == r"\frac{y}{y^{2} + 2 y + 3}"
+
+
+def test_Parallel_printing():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    assert latex(Parallel(tf1, tf2)) == \
+        '\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right)'
+    assert latex(Parallel(-tf2, tf1)) == \
+        '\\left(\\frac{- x + y}{x + y}\\right) \\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right)'
+
+
+def test_Feedback_printing():
+    tf1 = TransferFunction(p, p + x, p)
+    tf2 = TransferFunction(-s + p, p + s, p)
+    assert latex(Feedback(tf1, tf2)) == \
+        '\\frac{\\frac{p}{p + x}}{\\left(1 \\cdot 1^{-1}\\right) \\left(\\left(\\frac{p}{p + x}\\right) \\left(\\frac{p - s}{p + s}\\right)\\right)}'
+    assert latex(Feedback(tf1*tf2, TransferFunction(1, 1, p))) == \
+        '\\frac{\\left(\\frac{p}{p + x}\\right) \\left(\\frac{p - s}{p + s}\\right)}{\\left(1 \\cdot 1^{-1}\\right) \\left(\\left(\\frac{p}{p + x}\\right) \\left(\\frac{p - s}{p + s}\\right)\\right)}'
+
+
 def test_Quaternion_latex_printing():
     q = Quaternion(x, y, z, t)
     assert latex(q) == "x + y i + z j + t k"
@@ -2535,14 +2575,15 @@ def test_text_re_im():
 def test_latex_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential
     from sympy.diffgeom.rn import R2
+    x,y = symbols('x y', real=True)
     m = Manifold('M', 2)
     assert latex(m) == r'\text{M}'
     p = Patch('P', m)
     assert latex(p) == r'\text{P}_{\text{M}}'
-    rect = CoordSystem('rect', p)
+    rect = CoordSystem('rect', p, [x, y])
     assert latex(rect) == r'\text{rect}^{\text{P}}_{\text{M}}'
     b = BaseScalarField(rect, 0)
-    assert latex(b) ==  r'\mathbf{rect_{0}}'
+    assert latex(b) ==  r'\mathbf{x}'
 
     g = Function('g')
     s_field = g(R2.x, R2.y)
