@@ -174,7 +174,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     matrix differential equation [1]. For example the system $x' = x + y + 1$
     and $y' = x - y$ can be represented as
 
-    .. math:: A_1 X' + A_0 X = b
+    .. math:: A_1 X' = A0 X + b
 
     where $A_1$ and $A_0$ are $2 \times 2$ matrices and $b$, $X$ and $X'$ are
     $2 \times 1$ matrices with $X = [x, y]^T$.
@@ -182,7 +182,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Higher-order systems are represented with additional matrices e.g. a
     second-order system would look like
 
-    .. math:: A_2 X'' + A_1 X' + A_0 X = b
+    .. math:: A_2 X'' =  A_1 X' + A_0 X  + b
 
     Examples
     ========
@@ -212,8 +212,8 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     [0, 1]])
     >>> A0
     Matrix([
-    [-1, -1],
-    [-1,  1]])
+    [1, 1],
+    [1,  -1]])
     >>> b
     Matrix([
     [1],
@@ -223,7 +223,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
     >>> eqs_mat = Matrix([eq.lhs - eq.rhs for eq in eqs])
     >>> X = Matrix(funcs)
-    >>> A1 * X.diff(t) + A0 * X - b == eqs_mat
+    >>> A1 * X.diff(t) - A0 * X - b == eqs_mat
     True
 
     If the system of equations has a maximum order greater than the
@@ -308,7 +308,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
         Ai = Ai.applyfunc(expand_mul)
 
-        As.append(Ai)
+        As.append(Ai if o == order else -Ai)
 
         if o:
             eqs = [-eq for eq in b]
@@ -591,7 +591,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
 
     >>> from sympy import symbols, Function, Eq
     >>> from sympy.solvers.ode.systems import canonical_odes, linear_ode_to_matrix, linodesolve, linodesolve_type
-    >>> from sympy.solvers.ode.subscheck import checksysodesol
+    >>> from sympy.solvers.ode.subscheck import checkodesol
     >>> f, g = symbols("f, g", cls=Function)
     >>> x, a = symbols("x, a")
     >>> funcs = [f(x), g(x)]
@@ -609,7 +609,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     non-homogeneous term if it is there.
 
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
-    >>> A = -A0
+    >>> A = A0
 
     We have the coefficient matrices and the non-homogeneous term ready. Now, we can use
     :obj:`sympy.solvers.ode.systems.linodesolve_type()` to get the information for the system of ODEs
@@ -618,10 +618,10 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     >>> system_info = linodesolve_type(A, x, b=b)
     >>> sol_vector = linodesolve(A, x, b=b, B=system_info['antiderivative'], type=system_info['type'])
 
-    Now, we can prove if the solution is correct or not by using :obj:`sympy.solvers.ode.subscheck.checksysodesol()`
+    Now, we can prove if the solution is correct or not by using :obj:`sympy.solvers.ode.checkodesol()`
 
     >>> sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
-    >>> checksysodesol(eqs, sol)
+    >>> checkodesol(eqs, sol)
     (True, [0, 0])
 
     We can also use the doit method to evaluate the solutions passed by the function.
@@ -635,9 +635,9 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     The system defined above is already in the desired form, so we don't have to convert it.
 
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
-    >>> A = -A0
+    >>> A = A0
 
-    A user can also pass the commutative antidervative required for type3 and type4 system of ODEs.
+    A user can also pass the commutative antiderivative required for type3 and type4 system of ODEs.
     Passing an incorrect one will lead to incorrect results. If the coefficient matrix is not commutative
     with its antiderivative, then :obj:`sympy.solvers.ode.systems.linodesolve_type()` raises a NotImplementedError.
     If it does have a commutative antiderivative, then the function just returns the information about the system.
@@ -652,7 +652,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     Once again, we can verify the solution obtained.
 
     >>> sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
-    >>> checksysodesol(eqs, sol)
+    >>> checkodesol(eqs, sol)
     (True, [0, 0])
 
     Returns
@@ -1054,7 +1054,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
             match['rhs'] = b
 
         try:
-            system_info = linodesolve_type(-A, t, b=b)
+            system_info = linodesolve_type(A, t, b=b)
         except NotImplementedError:
             return None
 
@@ -1076,16 +1076,6 @@ def _preprocess_eqs(eqs):
     return processed_eqs
 
 
-def _replace_dummies(eqs, sol):
-
-    constants = sorted(Tuple(*sol).free_symbols - Tuple(*eqs).free_symbols,
-                       key=lambda x: x.dummy_index)
-    dummy_to_constants = {c: Symbol('C{}'.format(i+1)) for i, c, in enumerate(constants)}
-    sol = [s.subs(dummy_to_constants) for s in sol]
-
-    return sol
-
-
 # For now, this function returns a simple output, later it will
 # be capable of dividing the system of ODEs into strongly and
 # weakly connected components.
@@ -1099,7 +1089,7 @@ def _linear_ode_solver(match):
     funcs = match['func']
 
     rhs = match.get('rhs', None)
-    A = -match['func_coeff']
+    A = match['func_coeff']
     B = match.get('commutative_antiderivative', None)
     type_of_equation = match['type_of_equation']
 
@@ -1246,7 +1236,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
         When the parameters passed aren't in the required form.
 
     """
-    from sympy.solvers.ode.ode import solve_ics, _extract_funcs
+    from sympy.solvers.ode.ode import solve_ics, _extract_funcs, constant_renumber
 
     if not iterable(eqs):
         raise ValueError(filldedent('''
@@ -1311,10 +1301,11 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
         funcs = [s.lhs for s in sols[0]]
 
         for sol in sols:
-            sol = _replace_dummies(eqs, sol)
+            variables = Tuple(*eqs).free_symbols
+            sol = constant_renumber(sol, variables=variables)
 
             if ics:
-                constants = Tuple(*sol).free_symbols - Tuple(*eqs).free_symbols
+                constants = Tuple(*sol).free_symbols - variables
                 solved_constants = solve_ics(sol, funcs, constants, ics)
                 sol = [s.subs(solved_constants) for s in sol]
 
