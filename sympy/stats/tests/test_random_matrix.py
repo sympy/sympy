@@ -11,7 +11,7 @@ from sympy.stats import (GaussianUnitaryEnsemble as GUE, density,
                          level_spacing_distribution,
                          Normal, Beta)
 from sympy.stats.joint_rv_types import JointDistributionHandmade
-from sympy.stats.rv import RandomMatrixSymbol, Density
+from sympy.stats.rv import RandomMatrixSymbol
 from sympy.stats.random_matrix_models import GaussianEnsemble
 from sympy.testing.pytest import raises
 
