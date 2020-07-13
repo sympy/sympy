@@ -991,7 +991,7 @@ def test_diffgeom():
     assert str(b) == "x"
 
 def test_map():
-    from sympy.map import Map
+    from sympy.map import Map, IdentityMap
 
     # Map without parameter
     f1 = Map(name='f')
@@ -1005,3 +1005,11 @@ def test_map():
     # Inverse map
     assert str(f1.inv()) == "InverseMap(f)"
     assert str(f1.inv()(z)) == "InverseMap(f)(z)"
+
+    # Identity map
+    id_woname = IdentityMap(domain=S.Reals)
+    assert str(id_woname) == "IdentityMap"
+    assert str(id_woname(x)) == "IdentityMap(x)"
+    id_wname = IdentityMap(domain=S.Reals, name='1')
+    assert str(id_wname) == "1"
+    assert str(id_wname(x)) == "1(x)"

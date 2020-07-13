@@ -2727,6 +2727,12 @@ class PrettyPrinter(Printer):
     def _print_InverseMap(self, e):
         return self._print(e.base)**self._print(-1)
 
+    def _print_IdentityMap(self, e):
+        if not e.name.name:
+            return prettyForm("IdentityMap")
+        else:
+            return prettyForm(e.name.name)
+
     def _print_AppliedMap(self, e):
         prettyMap = self._print(e.map)
         prettyArgs = self._print_seq(e.arguments, delimiter=', ')

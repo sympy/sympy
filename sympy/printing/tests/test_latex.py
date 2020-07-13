@@ -2653,7 +2653,7 @@ def test_latex_decimal_separator():
     raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))
 
 def test_map():
-    from sympy.map import Map
+    from sympy.map import Map, IdentityMap
 
     # Map without parameter
     f1 = Map(name='f')
@@ -2667,3 +2667,11 @@ def test_map():
     # Inverse map
     assert latex(f1.inv()) == "{f}^{-1}"
     assert latex(f1.inv()(z)) == r"{f}^{-1}{\left(z \right)}"
+
+    # Identity map
+    id_woname = IdentityMap(domain=S.Reals)
+    assert latex(id_woname) == r"\text{id}_{\mathbb{R}}"
+    assert latex(id_woname(x)) == r"\text{id}_{\mathbb{R}}{\left(x \right)}"
+    id_wname = IdentityMap(domain=S.Reals, name='1')
+    assert latex(id_wname) == r"1"
+    assert latex(id_wname(x)) == r"1{\left(x \right)}"

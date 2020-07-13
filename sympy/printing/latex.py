@@ -2656,6 +2656,12 @@ class LatexPrinter(Printer):
     def _print_InverseMap(self, expr):
         return "{%s}^{-1}" % self._print(expr.base)
 
+    def _print_IdentityMap(self, expr):
+        if not expr.name.name:
+            return r"\text{id}_{%s}" % self._print(expr.domain)
+        else:
+            return expr.name.name
+
     def _print_AppliedMap(self, expr):
         map_str = self._print(expr.map)
         temp = map_str + r"{\left(%s \right)}"

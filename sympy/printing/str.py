@@ -907,6 +907,12 @@ class StrPrinter(Printer):
     def _print_InverseMap(self, expr):
         return "InverseMap(%s)" % self._print(expr.base)
 
+    def _print_IdentityMap(self, expr):
+        if not expr.name.name:
+            return "IdentityMap"
+        else:
+            return self._print(expr.name)
+
     def _print_AppliedMap(self, expr):
         map_str = self._print(expr.map)
         args_str = self.stringify(expr.arguments, ", ")

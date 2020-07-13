@@ -7249,7 +7249,7 @@ def test_diffgeom():
     assert pretty(b) == "x"
 
 def test_map():
-    from sympy.map import Map
+    from sympy.map import Map, IdentityMap
 
     # Map without parameter
     f1 = Map(name='f')
@@ -7263,3 +7263,11 @@ def test_map():
     # Inverse map
     assert pretty(f1.inv()) == " -1\nf  "
     assert pretty(f1.inv()(z)) == " -1   \nf  (z)"
+
+    # Identity map
+    id_woname = IdentityMap(domain=S.Reals)
+    assert pretty(id_woname) == "IdentityMap"
+    assert pretty(id_woname(x)) == "IdentityMap(x)"
+    id_wname = IdentityMap(domain=S.Reals, name='1')
+    assert pretty(id_wname) == "1"
+    assert pretty(id_wname(x)) == "1(x)"
