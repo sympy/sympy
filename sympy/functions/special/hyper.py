@@ -1102,13 +1102,16 @@ class appellf1(Function):
 
     Examples
     ========
+
     >>> from sympy.functions.special.hyper import appellf1
     >>> appellf1(2., 1., 6., 4., 5., 6.)
     0.0063339426292673
-    >>> appellf1(1,2,3,5,0.5,0.25)
+    >>> appellf1(1, 2, 3, 5, 0.5, 0.25)
     appellf1(1, 2, 3, 5, 0.5, 0.25)
-    >>> appellf1(1,2,3,5,0.5,0.25)
-    appellf1(1, 2, 3, 5, 0.5, 0.25)
+    >>> appellf1(1, 2, 3, 4, 5, 6)
+    appellf1(1, 2, 3, 4, 5, 6)
+    >>> appellf1(1., 2., 3., 4., 5., 6.)
+    -0.151473567018263
 
     References
     ==========
