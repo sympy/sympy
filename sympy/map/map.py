@@ -188,9 +188,15 @@ class IdentityMap(Map):
 
     >>> I = IdentityMap()
     >>> I(x, evaluate=True)
-    (x,)
-    >>> I(x, y, evaluate=True)
+    x
+    >>> I((x, y), evaluate=True)
     (x, y)
+
+    Notes
+    =====
+
+    Identity map is unary. If you need to pass multiple arguments,
+    pass tuple without argument unpacking as shown in Examples section.
 
     """
     def __new__(cls, domain=S.UniversalSet, name='', **kwargs):
@@ -214,8 +220,8 @@ class IdentityMap(Map):
     def name(self):
         return self.args[1]
 
-    def eval(self, *args):
-        return args
+    def eval(self, x):
+        return x
 
     def _eval_inverse(self):
         return self

@@ -50,7 +50,7 @@ def test_IdentityMap():
     I = IdentityMap()
     assert I.inv(evaluate=True) == I
     args = (x, y)
-    assert I(*args, evaluate=True) == args
+    assert I(args, evaluate=True) == args
 
 def test_AppliedMap():
 

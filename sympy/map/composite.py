@@ -28,13 +28,13 @@ class CompositeMap(Map, AssocOp):
     >>> CompositeMap(f, f)(x).doit()
     4*x
     >>> CompositeMap(f, f.inv())(x).doit()
-    (x,)
+    x
 
     Notes
     =====
 
     Only unary maps can be arguments of CompositeMap. If you need multivariate
-    map, make maps that take tuple withoug argument unpacking. See
+    map, make maps that take tuple without argument unpacking. See
     test_composite.py for example.
 
     References
