@@ -126,8 +126,6 @@ class InverseMap(Map):
 
     >>> from sympy.map import Map, InverseMap
 
-    # Minimalist implementation of Exp and Log
-
     >>> class Exp(Map):
     ...     def _eval_inverse(self):
     ...         return Log(self.parameters)
@@ -189,7 +187,9 @@ class IdentityMap(Map):
     >>> from sympy.map import IdentityMap
 
     >>> I = IdentityMap()
-    >>> I(*(x, y), evaluate=True)
+    >>> I(x, evaluate=True)
+    (x,)
+    >>> I(x, y, evaluate=True)
     (x, y)
 
     """
