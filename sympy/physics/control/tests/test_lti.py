@@ -1,5 +1,6 @@
 from sympy import symbols, Matrix, factor, Function, simplify, exp, pi
-from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
+from sympy.physics.control import TransferFunction, Series, Parallel, \
+    Feedback, TransferFunctionMatrix
 from sympy.testing.pytest import raises
 
 a, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2 = symbols('a, b, s, g, d, p, k, a0:3, b0:3')
@@ -627,3 +628,23 @@ def test_Feedback_functions():
         (a0 + s)*(s**2 + 2*s*wn*zeta + wn**2))*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert Feedback(TransferFunction(1, 1, p), tf4).rewrite(TransferFunction) == \
         TransferFunction(p, a0*p + p + p**a1 - s, p)
+
+
+def test_TransferFunctionMatrix_construction():
+    pass
+
+
+def test_TransferFunctionMatrix_functions():
+    pass
+
+
+def test_TransferFunctionMatrix_is_proper():
+    pass
+
+
+def test_TransferFunctionMatrix_is_strictly_proper():
+    pass
+
+
+def test_TransferFunctionMatrix_is_biproper():
+    pass

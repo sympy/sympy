@@ -3,7 +3,7 @@ from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify, _sympify
 
-__all__ = ['TransferFunction', 'Series', 'Parallel', 'Feedback']
+__all__ = ['TransferFunction', 'Series', 'Parallel', 'Feedback', 'TransferFunctionMatrix']
 
 
 class TransferFunction(Basic, EvalfMixin):
@@ -1144,3 +1144,32 @@ class Feedback(Basic):
 
     def __neg__(self):
         return Feedback(-self.num, self.den)
+
+
+class TransferFunctionMatrix(Basic):
+
+    def __new__(cls, arg):
+        if not isinstance(arg, list):
+            raise TypeError("Unsupported type for argument of TransferFunctionMatrix.")
+
+        obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
+        return obj
+
+    def __neg__(self):
+        pass
+
+    @property
+    def var(self):
+        pass
+
+    @property
+    def is_proper(self):
+        pass
+
+    @property
+    def is_strictly_proper(self):
+        pass
+
+    @property
+    def is_biproper(self):
+        pass
