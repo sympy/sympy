@@ -2872,6 +2872,10 @@ def test_sympy__map__map__InverseMap():
     from sympy.map import Map, InverseMap
     assert _test_args(InverseMap(Map((x, y), name='f')))
 
+def test_sympy__map__map__IdentityMap():
+    from sympy.map import IdentityMap
+    assert _test_args(IdentityMap())
+
 def test_sympy__map__map__AppliedMap():
     from sympy.map import Map, AppliedMap
     assert _test_args(AppliedMap(Map((x, y), name='f'), z))

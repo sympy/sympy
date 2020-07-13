@@ -3,7 +3,7 @@ from sympy.core.sympify import _sympify
 from sympy.core.symbol import Str
 from sympy.sets import ProductSet
 
-__all__ = ['Map', 'InverseMap', 'AppliedMap']
+__all__ = ['Map', 'InverseMap', 'IdentityMap', 'AppliedMap']
 
 class Map(Expr):
     """
@@ -172,6 +172,44 @@ class InverseMap(Map):
 
     def _eval_inverse(self):
         return self.base
+
+class IdentityMap(Map):
+    """
+    General identity mapping
+
+    Explanation
+    ===========
+
+    Identity map is a map that always return its argument.
+    For common linear identity function, use LinearIdentityMap.
+
+    """
+    def __new__(cls, domain=S.UniversalSet, name='', **kwargs):
+        if not isinstance(name, Str):
+            name = Str(name)
+        return super(Expr, cls).__new__(cls, domain, name)
+
+    @property
+    def parameters(self):
+        return ()
+
+    @property
+    def domain(self):
+        return self.args[0]
+
+    @property
+    def codomain(self):
+        return self.domain
+
+    @property
+    def name(self):
+        return self.args[1]
+
+    def eval(self, *args):
+        return args
+
+    def _eval_inverse(self):
+        return self
 
 class AppliedMap(Expr):
     """

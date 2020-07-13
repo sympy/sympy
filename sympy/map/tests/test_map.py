@@ -1,7 +1,7 @@
 from sympy import symbols, S
-from sympy.map import Map, InverseMap, AppliedMap
+from sympy.map import Map, InverseMap, IdentityMap, AppliedMap
 
-a, b, c, x = symbols('a b c x')
+a, b, c, x, y = symbols('a b c x y')
 
 def test_nargs():
 
@@ -45,6 +45,12 @@ def test_InverseMap():
             )
     assert f2().inv() != f2().inv().doit() == f2().inv(evaluate=True) == f2_inv()
     assert f2_inv().inv() != f2_inv().inv().doit() == f2_inv().inv(evaluate=True) == f2()
+
+def test_IdentityMap():
+    I = IdentityMap()
+    assert I.inv(evaluate=True) == I
+    args = (x, y)
+    assert I(*args, evaluate=True) == args
 
 def test_AppliedMap():
 
