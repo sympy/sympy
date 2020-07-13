@@ -183,6 +183,16 @@ class IdentityMap(Map):
     Identity map is a map that always return its argument.
     For common linear identity function, use LinearIdentityMap.
 
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y
+    >>> from sympy.map import IdentityMap
+
+    >>> I = IdentityMap()
+    >>> I(*(x, y), evaluate=True)
+    (x, y)
+
     """
     def __new__(cls, domain=S.UniversalSet, name='', **kwargs):
         if not isinstance(name, Str):
