@@ -922,6 +922,9 @@ class StrPrinter(Printer):
         else:
             return "%s(%s)" % (map_str, args_str)
 
+    def _print_CompositeMap(self, expr):
+        return "CompositeMap(%s)" % self.stringify(expr.args, ", ")
+
 def sstr(expr, **settings):
     """Returns the expression as a string.
 

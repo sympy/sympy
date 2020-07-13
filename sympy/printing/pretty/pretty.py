@@ -2749,6 +2749,22 @@ class PrettyPrinter(Printer):
         pform.prettyArgs = prettyA_P
         return pform
 
+    def _print_CompositeMap(self, e):
+        if self._use_unicode:
+            circ = ' ' + U('RING OPERATOR') + ' '
+            circ_pform = prettyForm(circ)
+            terms = e.args
+            for i,term in enumerate(terms):
+                if i == 0:
+                    pform = self._print(term)
+                else:
+                    next_pform = self._print(term)
+                    pform = prettyForm(*pform.right(circ_pform))
+                    pform = pform = prettyForm(*pform.right(next_pform))
+        else:
+            pform = prettyForm(str(e))
+        return pform
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 

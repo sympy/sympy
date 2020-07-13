@@ -2672,6 +2672,10 @@ class LatexPrinter(Printer):
         else:
             return temp % args_str
 
+    def _print_CompositeMap(self, expr):
+        tex = r" \circ ".join([self._print(t) for t in expr.args])
+        return tex
+
     def emptyPrinter(self, expr):
         # Checks what type of decimal separator to print.
         expr = super().emptyPrinter(expr)

@@ -991,7 +991,7 @@ def test_diffgeom():
     assert str(b) == "x"
 
 def test_map():
-    from sympy.map import Map, IdentityMap
+    from sympy.map import Map, IdentityMap, CompositeMap
 
     # Map without parameter
     f1 = Map(name='f')
@@ -1013,3 +1013,6 @@ def test_map():
     id_wname = IdentityMap(domain=S.Reals, name='1')
     assert str(id_wname) == "1"
     assert str(id_wname(x)) == "1(x)"
+
+    # Composite map
+    assert str(CompositeMap(f1, f1)) == "CompositeMap(f, f)"
