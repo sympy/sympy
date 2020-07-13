@@ -930,7 +930,7 @@ class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
         else:
             rows, cols, flat_list = args
         rows_list = [[flat_list[i*cols + j] for j in range(cols)] for i in range(rows)]
-        rep = DomainMatrix.from_list_sympy_2(rows, cols, rows_list)
+        rep = DomainMatrix.from_list_sympy(rows, cols, rows_list)
         return cls.from_DomainMatrix(rep)
 
     @classmethod
@@ -1004,7 +1004,7 @@ class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
         cols = self.cols
         itemslist = self._rep.rep
         itemslist = itemslist[:i] + itemslist[i+1:]
-        rep = DomainMatrix.from_list_sympy_2(rows, cols, itemslist)
+        rep = DomainMatrix.from_list_sympy(rows, cols, itemslist)
         self._set_rep(rep)
 
     def _eval_col_del(self, i):
@@ -1012,7 +1012,7 @@ class MutableDenseDomainMatrix(DenseDomainMatrix, MutableDenseMatrix):
         cols = self.cols - 1
         itemslist = self._rep.rep
         itemslist = [row[:i] + row[i+1:] for row in itemslist]
-        rep = DomainMatrix.from_list_sympy_2(rows, cols, itemslist)
+        rep = DomainMatrix.from_list_sympy(rows, cols, itemslist)
         self._set_rep(rep)
 
     def fill(self, value):

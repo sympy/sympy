@@ -286,23 +286,7 @@ class DomainMatrix:
         return cls(ddm, ddm.shape, ddm.domain)
 
     @classmethod
-    def from_list_sympy(cls, rows):
-        nrows = len(rows)
-        ncols = len(rows[0])
-        assert len(rows) == nrows
-        assert all(len(row) == ncols for row in rows)
-
-        items_sympy = [_sympify(item) for row in rows for item in row]
-
-        domain, items_domain = cls.get_domain(items_sympy, field=True, extension=True)
-
-        domain_rows = [[items_domain[ncols*r + c] for c in range(ncols)] for r in range(nrows)]
-
-        return DomainMatrix(domain_rows, (nrows, ncols), domain)
-
-
-    @classmethod
-    def from_list_sympy_2(cls, nrows, ncols, rows):
+    def from_list_sympy(cls, nrows, ncols, rows):
         assert len(rows) == nrows
         assert all(len(row) == ncols for row in rows)
 

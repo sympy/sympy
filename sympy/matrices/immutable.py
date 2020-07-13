@@ -133,7 +133,7 @@ class ImmutableDenseDomainMatrix(DenseDomainMatrix, ImmutableDenseMatrix):
         rows, cols, flat_list = args
         flat_list = [_sympify(e) for e in flat_list]
         rows_list = [[flat_list[i*cols + j] for j in range(cols)] for i in range(rows)]
-        rep = DomainMatrix.from_list_sympy_2(rows, cols, rows_list)
+        rep = DomainMatrix.from_list_sympy(rows, cols, rows_list)
 
         obj = Basic.__new__(cls,
             Integer(rows),
