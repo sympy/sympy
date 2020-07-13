@@ -49,6 +49,9 @@ class RandomMatrixEnsemble(Basic):
     def density(self, expr):
         return Density(expr)
 
+    def __call__(self, expr):
+        return self.density(expr)
+
 class GaussianEnsemble(RandomMatrixEnsemble):
     """
     Abstract class for Gaussian ensembles.
@@ -106,9 +109,11 @@ class GaussianUnitaryEnsemble(GaussianEnsemble):
     ========
 
     >>> from sympy.stats import GaussianUnitaryEnsemble as GUE, density
+    >>> from sympy import MatrixSymbol
     >>> G = GUE('U', 2)
-    >>> density(G)
-    Lambda(H, exp(-Trace(H**2))/(2*pi**2))
+    >>> X = MatrixSymbol('X', 2, 2)
+    >>> density(G)(X)
+    exp(-Trace(X**2))/(2*pi**2)
     """
     @property
     def normalization_constant(self):
@@ -119,7 +124,7 @@ class GaussianUnitaryEnsemble(GaussianEnsemble):
         n, ZGUE = self.dimension, self.normalization_constant
         h_pspace = RandomMatrixPSpace('P', model=self)
         H = RandomMatrixSymbol('H', n, n, pspace=h_pspace)
-        return Lambda(H, exp(-S(n)/2 * Trace(H**2))/ZGUE)
+        return Lambda(H, exp(-S(n)/2 * Trace(H**2))/ZGUE)(expr)
 
     def joint_eigen_distribution(self):
         return self._compute_joint_eigen_distribution(S(2))
@@ -137,9 +142,11 @@ class GaussianOrthogonalEnsemble(GaussianEnsemble):
     ========
 
     >>> from sympy.stats import GaussianOrthogonalEnsemble as GOE, density
+    >>> from sympy import MatrixSymbol
     >>> G = GOE('U', 2)
-    >>> density(G)
-    Lambda(H, exp(-Trace(H**2)/2)/Integral(exp(-Trace(_H**2)/2), _H))
+    >>> X = MatrixSymbol('X', 2, 2)
+    >>> density(G)(X)
+    exp(-Trace(X**2)/2)/Integral(exp(-Trace(_H**2)/2), _H)
     """
     @property
     def normalization_constant(self):
@@ -151,7 +158,7 @@ class GaussianOrthogonalEnsemble(GaussianEnsemble):
         n, ZGOE = self.dimension, self.normalization_constant
         h_pspace = RandomMatrixPSpace('P', model=self)
         H = RandomMatrixSymbol('H', n, n, pspace=h_pspace)
-        return Lambda(H, exp(-S(n)/4 * Trace(H**2))/ZGOE)
+        return Lambda(H, exp(-S(n)/4 * Trace(H**2))/ZGOE)(expr)
 
     def joint_eigen_distribution(self):
         return self._compute_joint_eigen_distribution(S.One)
@@ -169,9 +176,11 @@ class GaussianSymplecticEnsemble(GaussianEnsemble):
     ========
 
     >>> from sympy.stats import GaussianSymplecticEnsemble as GSE, density
+    >>> from sympy import MatrixSymbol
     >>> G = GSE('U', 2)
-    >>> density(G)
-    Lambda(H, exp(-2*Trace(H**2))/Integral(exp(-2*Trace(_H**2)), _H))
+    >>> X = MatrixSymbol('X', 2, 2)
+    >>> density(G)(X)
+    exp(-2*Trace(X**2))/Integral(exp(-2*Trace(_H**2)), _H)
     """
     @property
     def normalization_constant(self):
@@ -183,7 +192,7 @@ class GaussianSymplecticEnsemble(GaussianEnsemble):
         n, ZGSE = self.dimension, self.normalization_constant
         h_pspace = RandomMatrixPSpace('P', model=self)
         H = RandomMatrixSymbol('H', n, n, pspace=h_pspace)
-        return Lambda(H, exp(-S(n) * Trace(H**2))/ZGSE)
+        return Lambda(H, exp(-S(n) * Trace(H**2))/ZGSE)(expr)
 
     def joint_eigen_distribution(self):
         return self._compute_joint_eigen_distribution(S(4))

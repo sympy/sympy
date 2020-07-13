@@ -2,7 +2,7 @@ from sympy import S, Lambda, Basic, exp, multigamma
 from sympy.core.sympify import sympify
 from sympy.matrices import ImmutableMatrix, Inverse, Trace, Determinant, MatrixSymbol
 from sympy.stats.random_matrix import RandomMatrixPSpace
-from sympy.stats.rv import _symbol_converter, _value_check, RandomMatrixSymbol, NamedArgsMixin
+from sympy.stats.rv import _value_check, RandomMatrixSymbol, NamedArgsMixin
 
 
 def rv(symbol, dim, cls, args):
@@ -22,6 +22,11 @@ class MatrixDistribution(Basic, NamedArgsMixin):
     def check(*args):
         pass
 
+    def __call__(self, expr):
+        if isinstance(expr, list):
+            expr = ImmutableMatrix(expr)
+        return self.density(expr)
+
 class MatrixGammaDistribution(MatrixDistribution):
 
     _argnames = ('alpha', 'beta', 'scale_matrix')
@@ -38,7 +43,7 @@ class MatrixGammaDistribution(MatrixDistribution):
 
     @property
     def set(self):
-        k = self.args[3].shape[0]
+        k = self.scale_matrix.shape[0]
         return S.Reals ** k
 
     def density(self, expr):
@@ -49,8 +54,8 @@ class MatrixGammaDistribution(MatrixDistribution):
         sigma_inv_x = - Inverse(scale_matrix)*H / beta
         term1 = exp(Trace(sigma_inv_x))/((beta**(p*alpha)) * multigamma(alpha, p))
         term2 = (Determinant(scale_matrix))**(-alpha)
-        term3 = (Determinant(H))**(alpha - (p + 1)/2)
-        return Lambda(H, term1 * term2 * term3)
+        term3 = (Determinant(H))**(alpha - S(p + 1)/2)
+        return Lambda(H, term1 * term2 * term3)(expr)
 
 def MatrixGamma(symbol, alpha, beta, scale_matrix):
     if isinstance(scale_matrix, list):

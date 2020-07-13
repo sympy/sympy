@@ -142,6 +142,8 @@ __all__ = [
     'joint_eigen_distribution', 'JointEigenDistribution',
     'level_spacing_distribution',
 
+    'MatrixGamma',
+
     'Probability', 'Expectation', 'Variance', 'Covariance',
 
     'ExpectationMatrix', 'VarianceMatrix', 'CrossCovarianceMatrix'
@@ -187,6 +189,8 @@ from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         GaussianEnsemble, GaussianUnitaryEnsemble, GaussianOrthogonalEnsemble,
         GaussianSymplecticEnsemble, joint_eigen_distribution,
         JointEigenDistribution, level_spacing_distribution)
+
+from .matrix_distributions import MatrixGamma
 
 from .symbolic_probability import (Probability, Expectation, Variance,
         Covariance)
