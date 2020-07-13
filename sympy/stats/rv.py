@@ -359,7 +359,8 @@ class IndependentProductPSpace(ProductPSpace):
         symbols = FiniteSet(*[val.symbol for val in rs_space_dict.keys()])
 
         # Overlapping symbols
-        from sympy.stats.joint_rv import MarginalDistribution, CompoundDistribution
+        from sympy.stats.joint_rv import MarginalDistribution
+        from sympy.stats.compound_rv import CompoundDistribution
         if len(symbols) < sum(len(space.symbols) for space in spaces if not
          isinstance(space.distribution, (
             CompoundDistribution, MarginalDistribution))):
@@ -603,6 +604,10 @@ def pspace(expr):
     # If only one space present
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
+    from sympy.stats.compound_rv import CompoundPSpace
+    for rv in rvs:
+        if isinstance(rv.pspace, CompoundPSpace):
+            return rv.pspace
     # Otherwise make a product space
     return IndependentProductPSpace(*[rv.pspace for rv in rvs])
 

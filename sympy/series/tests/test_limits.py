@@ -276,6 +276,12 @@ def test_issue_5164():
     assert limit(x**(-0.5), x, 4) == S(4)**(-0.5)
 
 
+def test_issue_14793():
+    expr = ((x + S(1)/2) * log(x) - x + log(2*pi)/2 - \
+        log(factorial(x)) + S(1)/(12*x))*x**3
+    assert limit(expr, x, oo) == S(1)/360
+
+
 def test_issue_5183():
     # using list(...) so py.test can recalculate values
     tests = list(cartes([x, -x],
@@ -814,6 +820,12 @@ def test_issue_18508():
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)
 
 
+def test_issue_18969():
+    a, b = symbols('a b', positive=True)
+    assert limit(LambertW(a), a, b) == LambertW(b)
+    assert limit(exp(LambertW(a)), a, b) == exp(LambertW(b))
+
+
 def test_issue_18992():
     assert limit(n/(factorial(n)**(1/n)), n, oo) == exp(1)
 
@@ -845,3 +857,7 @@ def test_issue_13715():
 
 def test_issue_15055():
     assert limit(n**3*((-n - 1)*sin(1/n) + (n + 2)*sin(1/(n + 1)))/(-n + 1), n, oo) == 1
+
+
+def test_issue_19739():
+    assert limit((-S(1)/4)**x, x, oo) == 0

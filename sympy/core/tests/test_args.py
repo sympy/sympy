@@ -12,7 +12,7 @@ from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
 
 from sympy.testing.pytest import XFAIL, SKIP
 
-x, y, z = symbols('x,y,z')
+a, b, c, x, y, z = symbols('a,b,c,x,y,z')
 
 
 def test_all_classes_are_tested():
@@ -1090,11 +1090,20 @@ def test_sympy__stats__joint_rv__MarginalDistribution():
     assert _test_args(MarginalDistribution(r, (r,)))
 
 
-def test_sympy__stats__joint_rv__CompoundDistribution():
-    from sympy.stats.joint_rv import CompoundDistribution
-    from sympy.stats.drv_types import PoissonDistribution
-    r = PoissonDistribution(x)
+def test_sympy__stats__compound_rv__CompoundDistribution():
+    from sympy.stats.compound_rv import CompoundDistribution
+    from sympy.stats.drv_types import PoissonDistribution, Poisson
+    r = Poisson('r', 10)
     assert _test_args(CompoundDistribution(PoissonDistribution(r)))
+
+
+def test_sympy__stats__compound_rv__CompoundPSpace():
+    from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
+    from sympy.stats.drv_types import PoissonDistribution, Poisson
+    r = Poisson('r', 5)
+    C = CompoundDistribution(PoissonDistribution(r))
+    assert _test_args(CompoundPSpace('C', C))
+
 
 @SKIP("abstract class")
 def test_sympy__stats__drv__SingleDiscreteDistribution():
@@ -1193,6 +1202,20 @@ def test_sympy__stats__symbolic_probability__Variance():
     from sympy.stats import Normal
     X = Normal('X', 0, 1)
     assert _test_args(Variance(X))
+
+
+def test_sympy__stats__symbolic_probability__Moment():
+    from sympy.stats.symbolic_probability import Moment
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(Moment(X, 3, 2, X > 3))
+
+
+def test_sympy__stats__symbolic_probability__CentralMoment():
+    from sympy.stats.symbolic_probability import CentralMoment
+    from sympy.stats import Normal
+    X = Normal('X', 0, 1)
+    assert _test_args(CentralMoment(X, 2, X > 1))
 
 
 def test_sympy__stats__frv_types__DiscreteUniformDistribution():
@@ -3975,6 +3998,32 @@ def test_sympy__physics__secondquant__TensorSymbol():
     assert _test_args(TensorSymbol(x))
 
 
+def test_sympy__physics__control__lti__TransferFunction():
+    from sympy.physics.control.lti import TransferFunction
+    assert _test_args(TransferFunction(2, 3, x))
+
+
+def test_sympy__physics__control__lti__Series():
+    from sympy.physics.control import Series, TransferFunction
+    tf1 = TransferFunction(x**2 - y**3, y - z, x)
+    tf2 = TransferFunction(y - x, z + y, x)
+    assert _test_args(Series(tf1, tf2))
+
+
+def test_sympy__physics__control__lti__Parallel():
+    from sympy.physics.control import Parallel, TransferFunction
+    tf1 = TransferFunction(x**2 - y**3, y - z, x)
+    tf2 = TransferFunction(y - x, z + y, x)
+    assert _test_args(Parallel(tf1, tf2))
+
+
+def test_sympy__physics__control__lti__Feedback():
+    from sympy.physics.control import TransferFunction, Feedback
+    tf1 = TransferFunction(x**2 - y**3, y - z, x)
+    tf2 = TransferFunction(y - x, z + y, x)
+    assert _test_args(Feedback(tf1, tf2))
+
+
 def test_sympy__physics__units__dimensions__Dimension():
     from sympy.physics.units.dimensions import Dimension
     assert _test_args(Dimension("length", "L"))
@@ -4432,37 +4481,42 @@ def test_sympy__diffgeom__diffgeom__Patch():
 def test_sympy__diffgeom__diffgeom__CoordSystem():
     from sympy.diffgeom import Manifold, Patch, CoordSystem
     assert _test_args(CoordSystem('name', Patch('name', Manifold('name', 3))))
+    assert _test_args(CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c]))
 
 
-@XFAIL
+def test_sympy__diffgeom__diffgeom__CoordinateSymbol():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, CoordinateSymbol
+    assert _test_args(CoordinateSymbol(CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c]), 0))
+
+
 def test_sympy__diffgeom__diffgeom__Point():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, Point
     assert _test_args(Point(
-        CoordSystem('name', Patch('name', Manifold('name', 3))), [x, y]))
+        CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c]), [x, y]))
 
 
 def test_sympy__diffgeom__diffgeom__BaseScalarField():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     assert _test_args(BaseScalarField(cs, 0))
 
 
 def test_sympy__diffgeom__diffgeom__BaseVectorField():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseVectorField
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     assert _test_args(BaseVectorField(cs, 0))
 
 
 def test_sympy__diffgeom__diffgeom__Differential():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     assert _test_args(Differential(BaseScalarField(cs, 0)))
 
 
 def test_sympy__diffgeom__diffgeom__Commutator():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseVectorField, Commutator
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
-    cs1 = CoordSystem('name1', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
+    cs1 = CoordSystem('name1', Patch('name', Manifold('name', 3)), [a, b, c])
     v = BaseVectorField(cs, 0)
     v1 = BaseVectorField(cs1, 0)
     assert _test_args(Commutator(v, v1))
@@ -4470,14 +4524,14 @@ def test_sympy__diffgeom__diffgeom__Commutator():
 
 def test_sympy__diffgeom__diffgeom__TensorProduct():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential, TensorProduct
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     d = Differential(BaseScalarField(cs, 0))
     assert _test_args(TensorProduct(d, d))
 
 
 def test_sympy__diffgeom__diffgeom__WedgeProduct():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential, WedgeProduct
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     d = Differential(BaseScalarField(cs, 0))
     d1 = Differential(BaseScalarField(cs, 1))
     assert _test_args(WedgeProduct(d, d1))
@@ -4485,7 +4539,7 @@ def test_sympy__diffgeom__diffgeom__WedgeProduct():
 
 def test_sympy__diffgeom__diffgeom__LieDerivative():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential, BaseVectorField, LieDerivative
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     d = Differential(BaseScalarField(cs, 0))
     v = BaseVectorField(cs, 0)
     assert _test_args(LieDerivative(v, d))
@@ -4494,13 +4548,13 @@ def test_sympy__diffgeom__diffgeom__LieDerivative():
 @XFAIL
 def test_sympy__diffgeom__diffgeom__BaseCovarDerivativeOp():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseCovarDerivativeOp
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     assert _test_args(BaseCovarDerivativeOp(cs, 0, [[[0, ]*3, ]*3, ]*3))
 
 
 def test_sympy__diffgeom__diffgeom__CovarDerivativeOp():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseVectorField, CovarDerivativeOp
-    cs = CoordSystem('name', Patch('name', Manifold('name', 3)))
+    cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
     v = BaseVectorField(cs, 0)
     _test_args(CovarDerivativeOp(v, [[[0, ]*3, ]*3, ]*3))
 

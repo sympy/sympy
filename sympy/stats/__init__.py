@@ -144,7 +144,8 @@ __all__ = [
 
     'MatrixGamma',
 
-    'Probability', 'Expectation', 'Variance', 'Covariance',
+    'Probability', 'Expectation', 'Variance', 'Covariance', 'Moment',
+    'CentralMoment',
 
     'ExpectationMatrix', 'VarianceMatrix', 'CrossCovarianceMatrix'
 
@@ -193,7 +194,7 @@ from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
 from .matrix_distributions import MatrixGamma
 
 from .symbolic_probability import (Probability, Expectation, Variance,
-        Covariance)
+        Covariance, Moment, CentralMoment)
 
 from .symbolic_multivariate_probability import (ExpectationMatrix, VarianceMatrix,
         CrossCovarianceMatrix)
