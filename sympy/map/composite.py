@@ -15,12 +15,27 @@ class CompositeMap(Map, AssocOp):
     and produces a function $h$ such that $h(x)=g(f(x))$ [1]. The composition
     of functions is always associative [1].
 
+    Examples
+    ========
+
+    >>> from sympy.map import Map, CompositeMap
+    >>> from sympy.abc import x
+    >>> class F(Map):
+    ...     def eval(self, x):
+    ...        return 2*x
+    >>> f = F()
+
+    >>> CompositeMap(f, f)(x).doit()
+    4*x
+    >>> CompositeMap(f, f.inv())(x).doit()
+    (x,)
+
     Notes
     =====
 
     Only unary maps can be arguments of CompositeMap. If you need multivariate
-    map, make maps that take tuple withoug argument unpacking.
-    See test_composite.py for example.
+    map, make maps that take tuple withoug argument unpacking. See
+    test_composite.py for example.
 
     References
     ==========
