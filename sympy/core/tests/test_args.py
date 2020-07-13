@@ -2880,6 +2880,11 @@ def test_sympy__map__map__AppliedMap():
     from sympy.map import Map, AppliedMap
     assert _test_args(AppliedMap(Map((x, y), name='f'), z))
 
+def test_sympy__map__composite__CompositeMap():
+    from sympy.map import Map, CompositeMap
+    f, g = Map(name='f'), Map(name='g')
+    assert _test_args(CompositeMap(f, g))
+
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
     assert _test_args(DeferredVector("X"))
