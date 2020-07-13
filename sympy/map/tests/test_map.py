@@ -1,4 +1,4 @@
-from sympy import symbols, S, FiniteSet
+from sympy import symbols, S
 from sympy.map import Map, InverseMap, AppliedMap
 
 a, b, c, x = symbols('a b c x')
@@ -20,7 +20,7 @@ def test_parameters():
     assert f2.parameters == (a, 2, c)
     assert f2(x).free_symbols == {a, c, x}
 
-def test_inversemap():
+def test_InverseMap():
 
     class f1(Map):
         def eval(self, x):
@@ -45,3 +45,17 @@ def test_inversemap():
             )
     assert f2().inv() != f2().inv().doit() == f2().inv(evaluate=True) == f2_inv()
     assert f2_inv().inv() != f2_inv().inv().doit() == f2_inv().inv(evaluate=True) == f2()
+
+def test_AppliedMap():
+
+    class f1(Map): # cannot be evaluated
+        pass
+    assert isinstance(f1()(x), AppliedMap)
+    assert isinstance(f1()(x, evaluate=True), AppliedMap)
+    assert isinstance(f1()(x).doit(), AppliedMap)
+
+    class f2(Map): # can be evaluated
+        def eval(self, x):
+            return 2*x
+    assert isinstance(f2()(x), AppliedMap)
+    assert f2()(x, evaluate=True) == f2()(x).doit() == 2*x
