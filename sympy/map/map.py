@@ -125,7 +125,6 @@ class InverseMap(Map):
     =======
 
     >>> from sympy.map import Map, InverseMap
-    >>> from sympy.abc import x
 
     # Minimalist implementation of Exp and Log
 
@@ -141,7 +140,7 @@ class InverseMap(Map):
 
     >>> exp.inv() == InverseMap(exp)
     True
-    >>> InverseMap(exp, evaluate=True) == exp.inv(evaluate=True) == log
+    >>> exp.inv(evaluate=True) == InverseMap(exp, evaluate=True) == log
     True
 
     """
