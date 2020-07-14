@@ -216,9 +216,9 @@ class NotIterable:
     calling list() on the instance, for example, would result in
     an infinite loop.
     """
-    pass
+    _iterable = False
 
-def iterable(i, exclude=(str, dict, NotIterable)):
+def iterable(i, exclude=(str, dict)):
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
     True also indicates that the iterator is finite, e.g. you can

@@ -44,6 +44,7 @@ def test_iterable():
         pass
 
     assert iterable(Test1()) is False
+    assert iterable(Test1(), exclude=str) is False
 
     class Test2(NotIterable):
         _iterable = True
@@ -70,6 +71,14 @@ def test_iterable():
         _iterable = False
 
     assert iterable(Test6()) is False
+
+    class Test8(NotIterable):
+        def __getitem__(self, *idx):
+            return "something"
+
+    assert iter(Test8())
+    assert iterable(Test8()) is False
+    assert iterable(Test8(), exclude=str) is False
 
 
 def test_ordered():
