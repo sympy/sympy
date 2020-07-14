@@ -991,7 +991,7 @@ def test_diffgeom():
     assert str(b) == "x"
 
 def test_map():
-    from sympy.map import Map, IdentityMap, CompositeMap
+    from sympy.map import Map, IdentityMap
 
     # Map without parameter
     f1 = Map(name='f')

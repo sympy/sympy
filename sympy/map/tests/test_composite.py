@@ -1,11 +1,10 @@
 from sympy import symbols
-from sympy.map import Map, AppliedMap, CompositeMap, IdentityMap
+from sympy.map import Map, CompositeMap, IdentityMap
 
 x, y = symbols('x y')
 f, g = Map('f'), Map('g')
 
 def test_CompositeMap():
-    from sympy.core.compatibility import iterable
 
     # inverse cancellation
     assert CompositeMap(g, f, f.inv(), f, evaluate=True) == CompositeMap(g, f)

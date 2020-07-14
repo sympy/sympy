@@ -41,7 +41,6 @@ class CompositeMap(Map, AssocOp):
     """
     def __new__(cls, *args, evaluate=False, **options):
         domain = args[0].domain
-        codomain = args[-1].codomain
 
         if not evaluate:
             return Expr.__new__(cls, *args)
@@ -81,6 +80,14 @@ class CompositeMap(Map, AssocOp):
                 seq.append(m1)
 
         return [], seq, None
+
+    @property
+    def domain(self):
+        return self.args[0].domain
+
+    @property
+    def codomain(self):
+        return self.args[-1].codomain
 
     def eval(self, arg):
         result = arg
