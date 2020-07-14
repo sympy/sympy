@@ -861,3 +861,7 @@ def test_issue_15055():
 
 def test_issue_19739():
     assert limit((-S(1)/4)**x, x, oo) == 0
+
+
+def test_issue_19766():
+    assert limit(2**(-x)*sqrt(4**(x + 1) + 1), x, oo) == 2
