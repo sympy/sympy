@@ -1,4 +1,4 @@
-from sympy import (symbols, Symbol, product, factorial, rf, sqrt, cos,
+from sympy import (symbols, Symbol, product, combsimp, factorial, rf, sqrt, cos,
                    Function, Product, Rational, Sum, oo, exp, log, S, pi,
                    KroneckerDelta)
 from sympy.testing.pytest import raises
@@ -36,7 +36,7 @@ def test_karr_convention():
 
     i = Symbol("i", integer=True)
     k = Symbol("k", integer=True)
-    j = Symbol("j", integer=True)
+    j = Symbol("j", integer=True, positive=True)
 
     # A simple example with a concrete factors and symbolic limits.
 
@@ -56,7 +56,7 @@ def test_karr_convention():
     b = n - 1
     S2 = Product(i**2, (i, a, b)).doit()
 
-    assert simplify(S1 * S2) == 1
+    assert S1 * S2 == 1
 
     # Test the empty product: m = k and n = k and therefore m = n:
     m = k
@@ -103,9 +103,7 @@ def test_karr_convention():
 
 def test_karr_proposition_2a():
     # Test Karr, page 309, proposition 2, part a
-    i = Symbol("i", integer=True)
-    u = Symbol("u", integer=True)
-    v = Symbol("v", integer=True)
+    i, u, v = symbols('i u v', integer=True)
 
     def test_the_product(m, n):
         # g
@@ -117,22 +115,19 @@ def test_karr_proposition_2a():
         b = n - 1
         P = Product(f, (i, a, b)).doit()
         # Test if Product_{m <= i < n} f(i) = g(n) / g(m)
-        assert simplify(P / (g.subs(i, n) / g.subs(i, m))) == 1
+        assert combsimp(P / (g.subs(i, n) / g.subs(i, m))) == 1
 
     # m < n
-    test_the_product(u, u+v)
+    test_the_product(u, u + v)
     # m = n
     test_the_product(u, u)
     # m > n
-    test_the_product(u+v, u)
+    test_the_product(u + v, u)
 
 
 def test_karr_proposition_2b():
     # Test Karr, page 309, proposition 2, part b
-    i = Symbol("i", integer=True)
-    u = Symbol("u", integer=True)
-    v = Symbol("v", integer=True)
-    w = Symbol("w", integer=True)
+    i, u, v, w = symbols('i u v w', integer=True)
 
     def test_the_product(l, n, m):
         # Productmand
@@ -150,26 +145,26 @@ def test_karr_proposition_2b():
         b = n - 1
         S3 = Product(s, (i, a, b)).doit()
         # Test if S1 = S2 * S3 as required
-        assert simplify(S1 / (S2 * S3)) == 1
+        assert combsimp(S1 / (S2 * S3)) == 1
 
     # l < m < n
-    test_the_product(u, u+v, u+v+w)
+    test_the_product(u, u + v, u + v + w)
     # l < m = n
-    test_the_product(u, u+v, u+v)
+    test_the_product(u, u + v, u + v)
     # l < m > n
-    test_the_product(u, u+v+w, v)
+    test_the_product(u, u + v + w, v)
     # l = m < n
-    test_the_product(u, u, u+v)
+    test_the_product(u, u, u + v)
     # l = m = n
     test_the_product(u, u, u)
     # l = m > n
-    test_the_product(u+v, u+v, u)
+    test_the_product(u + v, u + v, u)
     # l > m < n
-    test_the_product(u+v, u, u+w)
+    test_the_product(u + v, u, u + w)
     # l > m = n
-    test_the_product(u+v, u, u)
+    test_the_product(u + v, u, u)
     # l > m > n
-    test_the_product(u+v+w, u+v, u)
+    test_the_product(u + v + w, u + v, u)
 
 
 def test_simple_products():

@@ -190,7 +190,6 @@ class Limit(Expr):
         """
         from sympy import Abs, exp, log, sign
         from sympy.calculus.util import AccumBounds
-        from sympy.functions import RisingFactorial
 
         e, z, z0, dir = self.args
 
@@ -241,7 +240,7 @@ class Limit(Expr):
                 newe = e.subs(z, z + z0)
             try:
                 coeff, ex = newe.leadterm(z, cdir)
-            except ValueError:
+            except (ValueError, NotImplementedError):
                 pass
             else:
                 if ex > 0:
@@ -260,7 +259,7 @@ class Limit(Expr):
         # factorial is defined to be zero for negative inputs (which
         # differs from gamma) so only rewrite for positive z0.
         if z0.is_extended_positive:
-            e = e.rewrite([factorial, RisingFactorial], gamma)
+            e = e.rewrite(factorial, gamma)
 
         if e.is_Mul and abs(z0) is S.Infinity:
             e = factor_terms(e)

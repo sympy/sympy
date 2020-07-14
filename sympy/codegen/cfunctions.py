@@ -303,7 +303,7 @@ class fma(Function):
     def _eval_expand_func(self, **hints):
         return _fma(*self.args)
 
-    def _eval_rewrite_as_tractable(self, arg, **kwargs):
+    def _eval_rewrite_as_tractable(self, arg, limitvar=None, **kwargs):
         return _fma(arg)
 
 

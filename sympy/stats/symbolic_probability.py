@@ -1,13 +1,16 @@
 import itertools
 
-from sympy import Expr, Add, Mul, S, Integral, Eq, Sum, Symbol, expand as _expand
+from sympy import (Expr, Add, Mul, S, Integral, Eq, Sum, Symbol,
+                    expand as _expand, Not)
 from sympy.core.compatibility import default_sort_key
 from sympy.core.parameters import global_parameters
 from sympy.core.sympify import _sympify
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import Boolean
 from sympy.stats import variance, covariance
-from sympy.stats.rv import (RandomSymbol, probability, pspace,
+from sympy.stats.rv import (RandomSymbol, pspace, dependent,
                             given, sampling_E, RandomIndexedSymbol, is_random,
-                            PSpace)
+                            PSpace, sampling_P, random_symbols)
 
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
 
@@ -58,8 +61,61 @@ class Probability(Expr):
         obj._condition = condition
         return obj
 
+    def doit(self, **hints):
+        condition = self.args[0]
+        given_condition = self._condition
+        numsamples = hints.get('numsamples', False)
+        for_rewrite = not hints.get('for_rewrite', False)
+
+        if isinstance(condition, Not):
+            return S.One - self.func(condition.args[0], given_condition,
+                                    evaluate=for_rewrite).doit(**hints)
+
+        if condition.has(RandomIndexedSymbol):
+            return pspace(condition).probability(condition, given_condition,
+                                evaluate=for_rewrite)
+
+        if isinstance(given_condition, RandomSymbol):
+            condrv = random_symbols(condition)
+            if len(condrv) == 1 and condrv[0] == given_condition:
+                from sympy.stats.frv_types import BernoulliDistribution
+                return BernoulliDistribution(self.func(condition).doit(**hints), 0, 1)
+            if any([dependent(rv, given_condition) for rv in condrv]):
+                return Probability(condition, given_condition)
+            else:
+                return Probability(condition).doit()
+
+        if given_condition is not None and \
+                not isinstance(given_condition, (Relational, Boolean)):
+            raise ValueError("%s is not a relational or combination of relationals"
+                    % (given_condition))
+
+        if given_condition == False or condition is S.false:
+            return S.Zero
+        if not isinstance(condition, (Relational, Boolean)):
+            raise ValueError("%s is not a relational or combination of relationals"
+                    % (condition))
+        if condition is S.true:
+            return S.One
+
+        if numsamples:
+            return sampling_P(condition, given_condition, numsamples=numsamples)
+        if given_condition is not None:  # If there is a condition
+            # Recompute on new conditional expr
+            return Probability(given(condition, given_condition)).doit()
+
+        # Otherwise pass work off to the ProbabilitySpace
+        if pspace(condition) == PSpace():
+            return Probability(condition, given_condition)
+
+        result = pspace(condition).probability(condition)
+        if hasattr(result, 'doit') and for_rewrite:
+            return result.doit()
+        else:
+            return result
+
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
-        return probability(arg, condition, evaluate=False)
+        return self.func(arg, condition=condition).doit(for_rewrite=True)
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
@@ -160,11 +216,15 @@ class Expectation(Expr):
             return expr
 
         if isinstance(expr, Add):
-            return Add(*[Expectation(a, condition=condition).expand()
-                    for a in expr.args])
+            return Add.fromiter(Expectation(a, condition=condition).expand()
+                    for a in expr.args)
+
+        expand_expr = _expand(expr)
+        if isinstance(expand_expr, Add):
+            return Add.fromiter(Expectation(a, condition=condition).expand()
+                    for a in expand_expr.args)
+
         elif isinstance(expr, Mul):
-            if isinstance(_expand(expr), Add):
-                return Expectation(_expand(expr)).expand()
             rv = []
             nonrv = []
             for a in expr.args:
@@ -172,7 +232,7 @@ class Expectation(Expr):
                     rv.append(a)
                 else:
                     nonrv.append(a)
-            return Mul(*nonrv)*Expectation(Mul(*rv), condition=condition)
+            return Mul.fromiter(nonrv)*Expectation(Mul.fromiter(rv), condition=condition)
 
         return self
 
@@ -345,7 +405,7 @@ class Variance(Expr):
                     nonrv.append(a**2)
             if len(rv) == 0:
                 return S.Zero
-            return Mul(*nonrv)*Variance(Mul(*rv), condition)
+            return Mul.fromiter(nonrv)*Variance(Mul.fromiter(rv), condition)
 
         # this expression contains a RandomSymbol somehow:
         return self
@@ -454,7 +514,7 @@ class Covariance(Expr):
 
         addends = [a*b*Covariance(*sorted([r1, r2], key=default_sort_key), condition=condition)
                    for (a, r1) in coeff_rv_list1 for (b, r2) in coeff_rv_list2]
-        return Add(*addends)
+        return Add.fromiter(addends)
 
     @classmethod
     def _expand_single_argument(cls, expr):
@@ -484,7 +544,7 @@ class Covariance(Expr):
                 rv.append(a)
             else:
                 nonrv.append(a)
-        return (Mul(*nonrv), Mul(*rv))
+        return (Mul.fromiter(nonrv), Mul.fromiter(rv))
 
     def _eval_rewrite_as_Expectation(self, arg1, arg2, condition=None, **kwargs):
         e1 = Expectation(arg1*arg2, condition)
@@ -501,3 +561,111 @@ class Covariance(Expr):
 
     def evaluate_integral(self):
         return self.rewrite(Integral).doit()
+
+
+class Moment(Expr):
+    """
+    Symbolic class for Moment
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Integral
+    >>> from sympy.stats import Normal, Expectation, Probability, Moment
+    >>> mu = Symbol('mu', real=True)
+    >>> sigma = Symbol('sigma', real=True, positive=True)
+    >>> X = Normal('X', mu, sigma)
+    >>> M = Moment(X, 3, 1)
+
+    To evaluate the result of Moment use `doit`:
+    >>> M.doit()
+    mu**3 - 3*mu**2 + 3*mu*sigma**2 + 3*mu - 3*sigma**2 - 1
+
+    Rewrite the Moment expression in terms of Expectation:
+    >>> M.rewrite(Expectation)
+    Expectation((X - 1)**3)
+
+    Rewrite the Moment expression in terms of Probability:
+    >>> M.rewrite(Probability)
+    Integral((x - 1)**3*Probability(Eq(X, x)), (x, -oo, oo))
+
+    Rewrite the Moment expression in terms of Integral:
+    >>> M.rewrite(Integral)
+    Integral(sqrt(2)*(X - 1)**3*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo))
+
+    """
+    def __new__(cls, X, n, c=0, condition=None, **kwargs):
+        X = _sympify(X)
+        n = _sympify(n)
+        c = _sympify(c)
+        if condition is not None:
+            condition = _sympify(condition)
+        return Expr.__new__(cls, X, n, c, condition)
+
+    def doit(self, **hints):
+        if not is_random(self.args[0]):
+            return self.args[0]
+        return self.rewrite(Expectation).doit(**hints)
+
+    def _eval_rewrite_as_Expectation(self, X, n, c=0, condition=None, **kwargs):
+        return Expectation((X - c)**n, condition)
+
+    def _eval_rewrite_as_Probability(self, X, n, c=0, condition=None, **kwargs):
+        return self.rewrite(Expectation).rewrite(Probability)
+
+    def _eval_rewrite_as_Integral(self, X, n, c=0, condition=None, **kwargs):
+        return self.rewrite(Expectation).rewrite(Integral)
+
+
+class CentralMoment(Expr):
+    """
+    Symbolic class Central Moment
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Integral
+    >>> from sympy.stats import Normal, Expectation, Probability, CentralMoment
+    >>> mu = Symbol('mu', real=True)
+    >>> sigma = Symbol('sigma', real=True, positive=True)
+    >>> X = Normal('X', mu, sigma)
+    >>> CM = CentralMoment(X, 4)
+
+    To evaluate the result of CentralMoment use `doit`:
+    >>> CM.doit().simplify()
+    3*sigma**4
+
+    Rewrite the CentralMoment expression in terms of Expectation:
+    >>> CM.rewrite(Expectation)
+    Expectation((X - Expectation(X))**4)
+
+    Rewrite the CentralMoment expression in terms of Probability:
+    >>> CM.rewrite(Probability)
+    Integral((x - Integral(x*Probability(True), (x, -oo, oo)))**4*Probability(Eq(X, x)), (x, -oo, oo))
+
+    Rewrite the CentralMoment expression in terms of Integral:
+    >>> CM.rewrite(Integral)
+    Integral(sqrt(2)*(X - Integral(sqrt(2)*X*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo)))**4*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo))
+
+    """
+    def __new__(cls, X, n, condition=None, **kwargs):
+        X = _sympify(X)
+        n = _sympify(n)
+        if condition is not None:
+            condition = _sympify(condition)
+        return Expr.__new__(cls, X, n, condition)
+
+    def doit(self, **hints):
+        if not is_random(self.args[0]):
+            return self.args[0]
+        return self.rewrite(Expectation).doit(**hints)
+
+    def _eval_rewrite_as_Expectation(self, X, n, condition=None, **kwargs):
+        mu = Expectation(X, condition, **kwargs)
+        return Moment(X, n, mu, condition, **kwargs).rewrite(Expectation)
+
+    def _eval_rewrite_as_Probability(self, X, n, condition=None, **kwargs):
+        return self.rewrite(Expectation).rewrite(Probability)
+
+    def _eval_rewrite_as_Integral(self, X, n, condition=None, **kwargs):
+        return self.rewrite(Expectation).rewrite(Integral)

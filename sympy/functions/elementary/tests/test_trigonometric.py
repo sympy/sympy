@@ -14,7 +14,7 @@ from sympy.testing.pytest import XFAIL, slow, raises
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
-k = Symbol('k', integer=True)
+k, m = symbols('k m', integer=True)
 p = Symbol('p', positive=True)
 n = Symbol('n', negative=True)
 np = Symbol('p', nonpositive=True)
@@ -120,6 +120,8 @@ def test_sin():
 
     assert sin(k*pi) == 0
     assert sin(17*k*pi) == 0
+    assert sin(2*k*pi + 4) == sin(4)
+    assert sin(2*k*pi + m*pi + 1) == (-1)**(m + 2*k)*sin(1)
 
     assert sin(k*pi*I) == sinh(k*pi)*I
 

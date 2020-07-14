@@ -23,8 +23,8 @@ class Str(Atom):
     ===========
 
     Previously, ``Symbol`` was used where string is needed in ``args`` of SymPy
-    objects, e.g. denoting the printing. However, since ``Symbol`` represents
-    mathematical scalar, this class should be used instead.
+    objects, e.g. denoting the name of the instance. However, since ``Symbol``
+    represents mathematical scalar, this class should be used instead.
 
     """
     __slots__ = ('name',)
