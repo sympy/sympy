@@ -145,6 +145,16 @@ class DDM(list):
         deta = ddm_idet(b, K)
         return deta
 
+    def inv(a):
+        """Inverse of a"""
+        m, n = a.shape
+        if m != n:
+            raise DDMShapeError("Determinant of non-square matrix")
+        ainv = a.copy()
+        K = a.domain
+        ddm_iinv(ainv, a, K)
+        return ainv
+
 
 def ddm_iadd(a, b):
     """a += b"""
@@ -152,17 +162,20 @@ def ddm_iadd(a, b):
         for j, bij in enumerate(bi):
             ai[j] += bij
 
+
 def ddm_isub(a, b):
     """a -= b"""
     for ai, bi in zip(a, b):
         for j, bij in enumerate(bi):
             ai[j] -= bij
 
+
 def ddm_ineg(a):
     """a  <--  -a"""
     for ai in a:
         for j, aij in enumerate(ai):
             ai[j] = -aij
+
 
 def ddm_imatmul(a, b, c):
     """a += b @ c"""
@@ -171,6 +184,7 @@ def ddm_imatmul(a, b, c):
     for bi, ai in zip(b, a):
         for j, cTj in enumerate(cT):
             ai[j] = sum(map(mul, bi, cTj), ai[j])
+
 
 def ddm_irref(a):
     """a  <--  rref(a)"""
@@ -223,6 +237,7 @@ def ddm_irref(a):
 
     return pivots
 
+
 def ddm_idet(a, K):
     """a  <--  echelon(a); return det"""
     # Fraction-free Gaussian elimination
@@ -272,6 +287,26 @@ def ddm_idet(a, K):
     else:
         D = prod / uf
     return D
+
+
+def ddm_iinv(ainv, a, K):
+    if not K.is_Field:
+        raise ValueError('Not a field')
+
+    # a is (m x n)
+    m = len(a)
+    if not m:
+        return
+    n = len(a[0])
+    if m != n:
+        raise NonSquareMatrixError
+
+    eye = [[K.one if i==j else K.zero for j in range(n)] for i in range(n)]
+    Aaug = [row + eyerow for row, eyerow in zip(a, eye)]
+    pivots = ddm_irref(Aaug)
+    if pivots != list(range(n)):
+        raise NonInvertibleMatrixError('Matrix det == 0; not invertible.')
+    ainv[:] = [row[n:] for row in Aaug]
 
 
 class DomainMatrix:
@@ -393,17 +428,8 @@ class DomainMatrix:
         m, n = self.shape
         if m != n:
             raise NonSquareMatrixError
-        dom = self.domain
-        rows = self.rep
-        eye = [[dom.one if i==j else dom.zero for j in range(n)] for i in range(n)]
-        rows = [row + eyerow for row, eyerow in zip(rows, eye)]
-        Aaug = DomainMatrix(rows, (n, 2*n), dom)
-        Aaug_rref, pivots = Aaug.rref()
-        if pivots != tuple(range(n)):
-            raise NonInvertibleMatrixError('Matrix det == 0; not invertible.')
-        Ainv_rows = [row[n:] for row in Aaug_rref.rep]
-        Ainv = DomainMatrix(Ainv_rows, (n, n), dom)
-        return Ainv
+        inv = self.rep.inv()
+        return self.from_ddm(inv)
 
     def det(self):
         m, n = self.shape
