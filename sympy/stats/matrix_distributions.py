@@ -9,14 +9,13 @@ from sympy.stats.rv import (_value_check, RandomMatrixSymbol, NamedArgsMixin, PS
 class MatrixPSpace(PSpace):
     """
     Represents probability space for
-    random matrices. It contains the mechanics
-    for handling the API calls for random matrices.
+    Matrix Distributions
     """
     def __new__(cls, sym, distribution, dim_n, dim_m):
         sym = _symbol_converter(sym)
         dim_n, dim_m = _sympify(dim_n), _sympify(dim_m)
         if not (dim_n.is_integer and dim_m.is_integer):
-            raise(ValueError, "Dimensions should be integers")
+            raise ValueError("Dimensions should be integers")
         return Basic.__new__(cls, sym, distribution, dim_n, dim_m)
 
     distribution = property(lambda self: self.args[1])
@@ -31,7 +30,7 @@ class MatrixPSpace(PSpace):
         if len(rms) > 2 or (not isinstance(expr, RandomMatrixSymbol)):
             raise NotImplementedError("Currently, no algorithm has been "
                     "implemented to handle general expressions containing "
-                    "multiple random matrices.")
+                    "multiple matrix distributions.")
         return self.distribution.pdf(expr)
 
 
