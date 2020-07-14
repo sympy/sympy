@@ -1007,12 +1007,6 @@ def test_map():
     assert str(f1.inv()(z)) == "InverseMap(f)(z)"
 
     # Identity map
-    id_woname = IdentityMap(domain=S.Reals)
-    assert str(id_woname) == "IdentityMap"
-    assert str(id_woname(x)) == "IdentityMap(x)"
-    id_wname = IdentityMap(domain=S.Reals, name='1')
-    assert str(id_wname) == "1"
-    assert str(id_wname(x)) == "1(x)"
-
-    # Composite map
-    assert str(CompositeMap(f1, f1)) == "CompositeMap(f, f)"
+    Id = IdentityMap(domain=S.Reals)
+    assert str(Id) == "IdentityMap"
+    assert str(Id(x)) == "IdentityMap(x)"

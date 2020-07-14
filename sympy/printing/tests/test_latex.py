@@ -2669,12 +2669,9 @@ def test_map():
     assert latex(f1.inv()(z)) == r"{f}^{-1}{\left(z \right)}"
 
     # Identity map
-    id_woname = IdentityMap(domain=S.Reals)
-    assert latex(id_woname) == r"\text{id}_{\mathbb{R}}"
-    assert latex(id_woname(x)) == r"\text{id}_{\mathbb{R}}{\left(x \right)}"
-    id_wname = IdentityMap(domain=S.Reals, name='1')
-    assert latex(id_wname) == r"1"
-    assert latex(id_wname(x)) == r"1{\left(x \right)}"
+    Id = IdentityMap(domain=S.Reals)
+    assert latex(Id) == r"\text{id}_{\mathbb{R}}"
+    assert latex(Id(x)) == r"\text{id}_{\mathbb{R}}{\left(x \right)}"
 
     # Composite map
     assert latex(CompositeMap(f1, f1)) == r'f \circ f'

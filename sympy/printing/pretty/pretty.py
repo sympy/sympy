@@ -2721,17 +2721,15 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Map(self, e):
-        mapping = pretty_symbol(e.name.name, bold_name=False)
+        name = str(getattr(e, 'name', e.__class__.__name__))
+        mapping = pretty_symbol(name, bold_name=False)
         return prettyForm(mapping)
 
     def _print_InverseMap(self, e):
         return self._print(e.base)**self._print(-1)
 
     def _print_IdentityMap(self, e):
-        if not e.name.name:
-            return prettyForm("IdentityMap")
-        else:
-            return prettyForm(e.name.name)
+        return prettyForm("IdentityMap")
 
     def _print_AppliedMap(self, e):
         prettyMap = self._print(e.map)

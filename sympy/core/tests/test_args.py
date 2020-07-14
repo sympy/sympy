@@ -2864,13 +2864,17 @@ def test_sympy__logic__boolalg__Xnor():
     from sympy.logic.boolalg import Xnor
     assert _test_args(Xnor(x, y, 2))
 
+@SKIP("abstract class")
 def test_sympy__map__map__Map():
+    pass
+
+def test_sympy__map__map__UndefinedMap():
     from sympy.map import Map
-    assert _test_args(Map((x, y), name='f'))
+    assert _test_args(Map('f'))
 
 def test_sympy__map__map__InverseMap():
     from sympy.map import Map, InverseMap
-    assert _test_args(InverseMap(Map((x, y), name='f')))
+    assert _test_args(InverseMap(Map('f')))
 
 def test_sympy__map__map__IdentityMap():
     from sympy.map import IdentityMap
@@ -2878,11 +2882,11 @@ def test_sympy__map__map__IdentityMap():
 
 def test_sympy__map__map__AppliedMap():
     from sympy.map import Map, AppliedMap
-    assert _test_args(AppliedMap(Map((x, y), name='f'), z))
+    assert _test_args(AppliedMap(Map('f'), x))
 
 def test_sympy__map__composite__CompositeMap():
     from sympy.map import Map, CompositeMap
-    f, g = Map(name='f'), Map(name='g')
+    f, g = Map('f'), Map('g')
     assert _test_args(CompositeMap(f, g))
 
 def test_sympy__matrices__matrices__DeferredVector():

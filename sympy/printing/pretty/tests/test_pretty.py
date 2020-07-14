@@ -7265,12 +7265,9 @@ def test_map():
     assert pretty(f1.inv()(z)) == " -1   \nf  (z)"
 
     # Identity map
-    id_woname = IdentityMap(domain=S.Reals)
-    assert pretty(id_woname) == "IdentityMap"
-    assert pretty(id_woname(x)) == "IdentityMap(x)"
-    id_wname = IdentityMap(domain=S.Reals, name='1')
-    assert pretty(id_wname) == "1"
-    assert pretty(id_wname(x)) == "1(x)"
+    Id = IdentityMap(domain=S.Reals)
+    assert pretty(Id) == "IdentityMap"
+    assert pretty(Id(x)) == "IdentityMap(x)"
 
     # Composite map
     assert upretty(CompositeMap(f1, f1)) == 'f ∘ f'

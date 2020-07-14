@@ -3,79 +3,91 @@ from sympy.core.sympify import _sympify
 from sympy.core.symbol import Str
 from sympy.sets import ProductSet
 
-__all__ = ['Map', 'InverseMap', 'IdentityMap', 'AppliedMap']
+__all__ = [
+    'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'AppliedMap'
+]
 
 class Map(Expr):
     """
-    A class for general mathematical mappings
+    Abstract base class for general mathematical mappings, which also serves
+    as a constructor for undefined map classes.
 
-    Parameters
-    ==========
+    Explanation
+    ===========
 
-    parameters : tuple
-        Parameters of the map
+    Map is a binary relation over two sets that associates to every
+    element of the first set exactly one element of the second set [1].
+    The first set is called domain, and the second set is called
+    codomain of the map.
 
-    domain, codomain : Set
-
-    name : str
-        Name of the map
+    .. note::
+       User must be aware that argument of `f(x)` can be interpreted to
+       both `x` or `(x,)`. The former agrees with mathematical intuition,
+       while the latter is mathematically rigorous (just as the argument
+       of `f(x,y)` is `(x, y)`).
 
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import symbols, S
     >>> from sympy.map import Map
     >>> x, y = symbols('x y')
 
-    >>> class F(Map):
-    ...     def eval(self, x):
-    ...         a, = self.parameters
-    ...         return a*x
+    Constructing undefined map:
 
-    >>> f1 = F(parameters=(x,), name='f')
-    >>> f1.name
-    'f'
-    >>> f1.parameters
-    (x,)
-    >>> f1(y).doit()
-    x*y
+    >>> f = Map('f', S.Reals, S.Reals**2, (y,))
 
-    >>> f2 = f1.subs(x, 2)
-    >>> f2.parameters
-    (2,)
-    >>> f2(y).doit()
-    2*y
+    >>> f
+    f
+    >>> f.domain
+    Reals
+    >>> f.codomain
+    ProductSet(Reals, Reals)
+    >>> f.parameters
+    (y,)
+    >>> f.nargs
+    1
+
+    >>> f(x)
+    f(x; y)
+    >>> f(x).doit()
+    f(x; y)
+
+    Parameters can be substituted.
+
+    >>> f.subs(y, 2)(x)
+    f(x; 2)
+
+    Subclassing for defined map:
+
+    >>> class G(Map):
+    ...     name = 'g'
+    ...     domain = S.Reals**2
+    ...     codomain = S.Reals
+    ...     def eval(self, tup):
+    ...         return sum(tup)
+    >>> g = G()
+
+    >>> g.nargs
+    2
+    >>> g((x,y)).doit()
+    x + y
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Function_(mathematics)
 
     """
-    def __new__(
-        cls, parameters=(), domain=S.UniversalSet, codomain=S.UniversalSet,
-        name='f', **kwargs
-    ):
-        parameters = Tuple(*[_sympify(a) for a in parameters])
 
-        domain, codomain = _sympify(domain), _sympify(codomain)
+    # these attributes are designed to be overridden if needed
+    domain = codomain = S.UniversalSet
+    parameters = ()
 
-        if not isinstance(name, Str):
-            name = Str(name)
-
-        obj = super().__new__(cls, parameters, domain, codomain, name)
-        return obj
-
-    @property
-    def parameters(self):
-        return self.args[0]
-
-    @property
-    def domain(self):
-        return self.args[1]
-
-    @property
-    def codomain(self):
-        return self.args[2]
-
-    @property
-    def name(self):
-        return self.args[3]
+    def __new__(cls, *args, **kwargs):
+        if cls is Map:
+            return UndefinedMap(*args, **kwargs)
+        return super().__new__(cls, *args)
 
     @property
     def nargs(self):
@@ -109,9 +121,56 @@ class Map(Expr):
         else:
             return self.func(*self.args, evaluate=True)
 
+class UndefinedMap(Map):
+    """
+    A class for undefined mappings.
+
+    Parameters
+    ==========
+
+    name : str
+        Name of the map
+
+    domain, codomain : Set
+
+    parameters : tuple
+        Parameters of the map
+
+    """
+
+    def __new__(
+        cls, name, domain=S.UniversalSet, codomain=S.UniversalSet,
+        parameters=(), **kwargs
+    ):
+        if not isinstance(name, Str):
+            name = Str(name)
+
+        domain, codomain = _sympify(domain), _sympify(codomain)
+
+        parameters = Tuple(*[_sympify(a) for a in parameters])
+
+        obj = super().__new__(cls, name, domain, codomain, parameters)
+        return obj
+
+    @property
+    def name(self):
+        return self.args[0]
+
+    @property
+    def domain(self):
+        return self.args[1]
+
+    @property
+    def codomain(self):
+        return self.args[2]
+
+    @property
+    def parameters(self):
+        return self.args[3]
+
 class InverseMap(Map):
     """
-    A class for unevaluated inverse mappings
+    A class for unevaluated inverse mappings.
 
     Parameters
     ==========
@@ -128,13 +187,13 @@ class InverseMap(Map):
 
     >>> class Exp(Map):
     ...     def _eval_inverse(self):
-    ...         return Log(self.parameters)
-    >>> exp = Exp(parameters=(2,))
+    ...         return Log()
+    >>> exp = Exp()
 
     >>> class Log(Map):
     ...     def _eval_inverse(self):
-    ...         return Exp(self.parameters)
-    >>> log = Log(parameters=(2,))
+    ...         return Exp()
+    >>> log = Log()
 
     >>> exp.inv() == InverseMap(exp)
     True
@@ -148,7 +207,7 @@ class InverseMap(Map):
             if obj is None:
                 obj = cls(mapping, evaluate=False)
         else:
-            obj = super(Expr, cls).__new__(cls, mapping)
+            obj = super().__new__(cls, mapping)
         return obj
 
     @property
@@ -172,13 +231,20 @@ class InverseMap(Map):
 
 class IdentityMap(Map):
     """
-    General identity mapping
+    General identity mapping.
+
+    .. note::
+       IdentityMap is unary. Pass tuple for n-dimensional argument.
 
     Explanation
     ===========
 
     Identity map is a map that always return its argument.
-    For common linear identity function, use LinearIdentityMap.
+
+    Parameters
+    ==========
+
+    domain : Set
 
     Examples
     ========
@@ -192,17 +258,9 @@ class IdentityMap(Map):
     >>> I((x, y), evaluate=True)
     (x, y)
 
-    Notes
-    =====
-
-    Identity map is unary. If you need to pass multiple arguments,
-    pass tuple without argument unpacking as shown in Examples section.
-
     """
-    def __new__(cls, domain=S.UniversalSet, name='', **kwargs):
-        if not isinstance(name, Str):
-            name = Str(name)
-        return super(Expr, cls).__new__(cls, domain, name)
+    def __new__(cls, domain=S.UniversalSet, **kwargs):
+        return super().__new__(cls, domain)
 
     @property
     def parameters(self):
@@ -216,10 +274,6 @@ class IdentityMap(Map):
     def codomain(self):
         return self.domain
 
-    @property
-    def name(self):
-        return self.args[1]
-
     def eval(self, x):
         return x
 
@@ -228,7 +282,7 @@ class IdentityMap(Map):
 
 class AppliedMap(Expr):
     """
-    Unevaluated result of Map applied to arguments
+    Unevaluated result of Map applied to arguments.
 
     Parameters
     ==========
@@ -244,20 +298,18 @@ class AppliedMap(Expr):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy.abc import x
     >>> from sympy.map import Map, AppliedMap
-    >>> x, y = symbols('x y')
 
     >>> class F(Map):
     ...     def eval(self, x):
-    ...         a, = self.parameters
-    ...         return a*x
+    ...         return x + 2
+    >>> f = F()
 
-    >>> f1 = F(parameters=(x,), name='f')
-    >>> isinstance(f1(y), AppliedMap)
+    >>> isinstance(f(x), AppliedMap)
     True
-    >>> f1(y, evaluate=True)
-    x*y
+    >>> f(x, evaluate=True)
+    x + 2
 
     """
     def __new__(cls, map, *args, evaluate=False, **kwargs):

@@ -8,6 +8,9 @@ class CompositeMap(Map, AssocOp):
     """
     A class for general composite mappings.
 
+    .. note::
+       IdentityMap is unary. Pass tuple for n-dimensional argument.
+
     Explanation
     ===========
 
@@ -29,13 +32,6 @@ class CompositeMap(Map, AssocOp):
     4*x
     >>> CompositeMap(f, f.inv())(x).doit()
     x
-
-    Notes
-    =====
-
-    Only unary maps can be arguments of CompositeMap. If you need multivariate
-    map, make maps that take tuple without argument unpacking. See
-    test_composite.py for example.
 
     References
     ==========

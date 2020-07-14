@@ -2,7 +2,7 @@ from sympy import symbols
 from sympy.map import Map, AppliedMap, CompositeMap, IdentityMap
 
 x, y = symbols('x y')
-f, g = Map(name='f'), Map(name='g')
+f, g = Map('f'), Map('g')
 
 def test_CompositeMap():
     from sympy.core.compatibility import iterable

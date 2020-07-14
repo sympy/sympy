@@ -5,12 +5,12 @@ Includes any maps such as function, differential operator, etc.
 """
 
 __all__ = [
-    'Map', 'InverseMap', 'IdentityMap', 'AppliedMap',
+    'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'AppliedMap',
     "CompositeMap"
 ]
 
 from .map import (
-    Map, InverseMap, IdentityMap, AppliedMap
+    Map, UndefinedMap, InverseMap, IdentityMap, AppliedMap
 )
 from .composite import (
     CompositeMap,

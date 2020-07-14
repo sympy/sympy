@@ -2651,16 +2651,14 @@ class LatexPrinter(Printer):
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
     def _print_Map(self, expr):
-        return self._deal_with_super_sub(expr.name.name)
+        name = str(getattr(expr, 'name', expr.__class__.__name__))
+        return self._deal_with_super_sub(str(name))
 
     def _print_InverseMap(self, expr):
         return "{%s}^{-1}" % self._print(expr.base)
 
     def _print_IdentityMap(self, expr):
-        if not expr.name.name:
-            return r"\text{id}_{%s}" % self._print(expr.domain)
-        else:
-            return expr.name.name
+        return r"\text{id}_{%s}" % self._print(expr.domain)
 
     def _print_AppliedMap(self, expr):
         map_str = self._print(expr.map)

@@ -5,14 +5,14 @@ a, b, c, x, y = symbols('a b c x y')
 
 def test_nargs():
 
-    assert Map(domain=S.Reals).nargs == 1
-    assert Map(domain=S.Reals**1).nargs == 1
-    assert Map(domain=S.Reals*S.Integers).nargs == 2
-    assert Map(domain=S.Reals**4).nargs == 4
+    assert Map('f', domain=S.Reals).nargs == 1
+    assert Map('f', domain=S.Reals**1).nargs == 1
+    assert Map('f', domain=S.Reals*S.Integers).nargs == 2
+    assert Map('f', domain=S.Reals**4).nargs == 4
 
 def test_parameters():
 
-    f1 = Map(parameters=(a, b, c))
+    f1 = Map('f', parameters=(a, b, c))
     assert f1.parameters == (a, b, c)
     assert f1(x).free_symbols == {a, b, c, x}
 
