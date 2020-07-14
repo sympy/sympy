@@ -929,6 +929,10 @@ class StrReprPrinter(StrPrinter):
     def _print_str(self, s):
         return repr(s)
 
+    def _print_Str(self, s):
+        # Str does not to be printed same as str here
+        return str(s)
+
 
 def sstrrepr(expr, **settings):
     """return expr in mixed str/repr form
