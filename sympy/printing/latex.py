@@ -2650,6 +2650,9 @@ class LatexPrinter(Printer):
                 (self._print(expr.args[0]), exp)
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
+    def _print_Str(self, s):
+        return self._print(s.name)
+
     def emptyPrinter(self, expr):
         # Checks what type of decimal separator to print.
         expr = super().emptyPrinter(expr)

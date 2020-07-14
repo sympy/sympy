@@ -341,6 +341,3 @@ class Printer(object):
             return list(expr.args)
         else:
             return expr.as_ordered_terms(order=order)
-
-    def _print_Str(self, s):
-        return self._print(s.name)
