@@ -36,4 +36,3 @@ def test_CompositeMap():
             return (a+1, b+1)
     h3, h4 = H3(), H4()
     assert CompositeMap(h2, h3, h4)((1, 2), evaluate=True) == 15
-
