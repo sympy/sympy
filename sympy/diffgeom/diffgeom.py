@@ -53,7 +53,7 @@ class Manifold(Atom):
     >>> m = Manifold('M', 2)
 
     >>> m.name
-    'M'
+    M
     >>> m.dim
     2
 
@@ -119,7 +119,7 @@ class Patch(Atom):
     >>> p = Patch('P', m)
 
     >>> p.name
-    'P'
+    P
     >>> p.dim
     2
 
@@ -207,7 +207,7 @@ class CoordSystem(Atom):
     >>> Pol = CoordSystem('Pol', p, [r, theta], relation_dict)
 
     >>> Car2D.name
-    'Car2D'
+    Car2D
     >>> Car2D.dim
     2
     >>> Car2D.symbols
