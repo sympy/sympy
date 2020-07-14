@@ -51,9 +51,6 @@ class Manifold(Atom):
 
     >>> from sympy.diffgeom import Manifold
     >>> m = Manifold('M', 2)
-
-    >>> m.name
-    M
     >>> m.dim
     2
 
@@ -117,9 +114,6 @@ class Patch(Atom):
     >>> from sympy.diffgeom import Manifold, Patch
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
-
-    >>> p.name
-    P
     >>> p.dim
     2
 
@@ -206,8 +200,6 @@ class CoordSystem(Atom):
     >>> Car2D = CoordSystem('Car2D', p, [x, y], relation_dict)
     >>> Pol = CoordSystem('Pol', p, [r, theta], relation_dict)
 
-    >>> Car2D.name
-    Car2D
     >>> Car2D.dim
     2
     >>> Car2D.symbols
