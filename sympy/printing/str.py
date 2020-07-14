@@ -934,7 +934,7 @@ class StrReprPrinter(StrPrinter):
 
     def _print_Str(self, s):
         # Str does not to be printed same as str here
-        return repr(s)
+        return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
 
 
 def sstrrepr(expr, **settings):
