@@ -843,9 +843,6 @@ def canonical_odes(eqs, funcs, t):
         system = [Eq(func.diff(t, order[func]), eq[func.diff(t, order[func])]) for func in funcs]
         systems.append(system)
 
-    if len(canon_eqs) == 1:
-        systems = systems[0]
-
     return systems
 
 
@@ -900,7 +897,7 @@ def _is_commutative_anti_derivative(A, t):
     return B, is_commuting
 
 
-def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
+def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
     r"""
     Returns a dictionary with details of the eqs if every equation is constant coefficient
     and linear else returns None
@@ -928,6 +925,9 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         List of dependent variables
     t: Symbol
         Independent variable of the equations in eqs
+    is_canon: Boolean
+        If True, then this function won't try to get the
+        system in canonical form. Default value is False
 
     Returns
     =======
@@ -1004,10 +1004,10 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         # already in its canonical form or not. This
         # can be used to solve big linear first order
         # system of ODEs using component division.
-        canon_eqs = canonical_odes(eqs, funcs, t)
+        canon_eqs = canonical_odes(eqs, funcs, t) if not is_canon else [eqs]
 
-        if isinstance(canon_eqs[0], Eq):
-            As, b = linear_ode_to_matrix(canon_eqs, funcs, t, system_order)
+        if len(canon_eqs) == 1:
+            As, b = linear_ode_to_matrix(canon_eqs[0], funcs, t, system_order)
             A = As[1]
         else:
 
@@ -1134,7 +1134,7 @@ def _linear_ode_solver(match):
 # If None is returned by this solver, then the system
 # of ODEs cannot be solved by dsolve_system.
 def _strong_component_solver(eqs, funcs, t):
-    match = neq_nth_linear_constant_coeff_match(eqs, funcs, t)
+    match = neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=True)
 
     # Assuming that we can't get an implicit system
     # since we are already canonical equations from
@@ -1174,7 +1174,7 @@ def _weak_component_solver(wcc, t):
 
 
 # Returns: List of Equations(a solution)
-def _component_solver(eqs, funcs, t):
+def _component_solver(eqs, t):
     components = _component_division(eqs, t)
     sol = []
 
@@ -1297,39 +1297,24 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     if t is None:
         t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
 
-    match = neq_nth_linear_constant_coeff_match(eqs, funcs, t)
-
+    canon_eqs = canonical_odes(eqs, funcs, t)
     sols = []
 
-    if match is None or match.get('is_implicit', False):
-        canon_eqs = [eqs] if match is None else match['canon_eqs']
-
-        # Note: Assuming a canon_eq has a single
-        # solution.
-        for canon_eq in canon_eqs:
-            sols.append(_component_solver(canon_eq, funcs, t))
-
-    # Note: It is advantageous to
-    # divide a system of ODEs since smaller
-    # the matrices, faster the solution
-    # computation. Has to be considered in
-    # future PR when component division function
-    # is added.
-    elif match.get('is_general', False):
-        if match.get('is_linear', False):
-            match['t'] = t
-            sols.append(_linear_ode_solver(match))
+    # Note: Assuming a canon_eq has a single
+    # solution.
+    for canon_eq in canon_eqs:
+        sols.append(_component_solver(canon_eq, t))
 
     if sols:
         final_sols = []
 
-        # This is assuming that all the solutions
-        # have the same funcs. This may have to
-        # be changed when system division is
-        # added.
-        funcs = [s.lhs for s in sols[0]]
-
         for sol in sols:
+
+            # To preserve the order corresponding to the
+            # funcs list.
+            sol_dict = {s.lhs: s.rhs for s in sol}
+            sol = [Eq(var, sol_dict[var]) for var in funcs]
+
             variables = Tuple(*eqs).free_symbols
             sol = constant_renumber(sol, variables=variables)
 

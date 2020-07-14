@@ -551,12 +551,12 @@ def test_sysode_linear_neq_order1_type1():
     assert checksysodesol(eq19, sol19) == (True, [0, 0])
 
     eq20 = [Eq(x(t).diff(t), x(t)), Eq(y(t).diff(t), x(t) + y(t))]
-    sol20 = [Eq(x(t), C1*exp(t)), Eq(y(t), (C1*t + C2)*exp(t))]
+    sol20 = [Eq(x(t), C1*exp(t)), Eq(y(t), (C2 + Integral(C1, t))*exp(t))]
     assert dsolve(eq20) == sol20
     assert checksysodesol(eq20, sol20) == (True, [0, 0])
 
     eq21 = [Eq(Derivative(x(t), t), 3*x(t)), Eq(Derivative(y(t), t), x(t) + y(t))]
-    sol21 = [Eq(x(t), 2*C1*exp(3*t)), Eq(y(t), C1*exp(3*t) + C2*exp(t))]
+    sol21 = [Eq(x(t), C1*exp(3*t)), Eq(y(t), (C2 + Integral(C1*exp(2*t), t))*exp(t))]
     assert dsolve(eq21) == sol21
     assert checksysodesol(eq21, sol21) == (True, [0, 0])
 
@@ -575,13 +575,22 @@ def test_sysode_linear_neq_order1_type1():
     eq1 = (Eq(Derivative(Z0(t), t), -k01*Z0(t) + k10*Z1(t) + k20*Z2(t) + k30*Z3(t)),
            Eq(Derivative(Z1(t), t), k01*Z0(t) - k10*Z1(t) + k21*Z2(t)),
            Eq(Derivative(Z2(t), t), -(k20 + k21 + k23)*Z2(t)), Eq(Derivative(Z3(t), t), k23*Z2(t) - k30*Z3(t)))
-    sol1 = [Eq(Z0(t), C1*k10/k01 + C2*(-k10 + k30)*exp(-k30*t)/(k01 + k10 - k30) + C3*(k10*k20 + k10*k21 - k10*k30 - k20**2 -
-                k20*k21 - k20*k23 + k20*k30 + k23*k30)*exp(t*(-k20 - k21 - k23))/(k23*(k01 + k10 - k20 - k21 - k23)) -
-                C4*exp(t*(-k01 - k10))),
-            Eq(Z1(t), C1 - C2*k01*exp(-k30*t)/(k01 + k10 - k30) + C3*(k01*k20 + k01*k21 - k01*k30 - k20*k21 - k21**2 -
-                k21*k23 + k21*k30)*exp(t*(-k20 - k21 - k23))/(k23*(k01 + k10 - k20 - k21 - k23)) + C4*exp(t*(-k01 - k10))),
-            Eq(Z2(t), C3*(-k20 - k21 - k23 + k30)*exp(t*(-k20 - k21 - k23))/k23), Eq(Z3(t), C2*exp(-k30*t) +
-                C3*exp(t*(-k20 - k21 - k23)))]
+    sol1 = [Eq(Z0(t), C1*k10/k01 - C4*exp(-k01*t - k10*t) - exp(-k01*t - k10*t)*Integral(C2*k30*exp(k01*t + k10*t)/(
+                -exp(k30*t) - k10*exp(k30*t)/k01) - C3*k10*k21*exp(k01*t + k10*t)*exp(-k20*t - k21*t - k23*t)/(-k01 -
+                k10) + C3*k20*exp(k01*t + k10*t)*exp(-k20*t - k21*t - k23*t)/(-1 - k10/k01) + k30*exp(k01*t + k10*t)*
+                Integral(C3*k23*exp(k30*t)*exp(-k20*t - k21*t - k23*t), t)/(-exp(k30*t) - k10*exp(k30*t)/k01), t) +
+                k10*Integral(-C2*k30/(-exp(k30*t) - k10*exp(k30*t)/k01) - C3*k20*exp(-k20*t - k21*t - k23*t)/(-1 - k10/k01)
+                - C3*k21*exp(-k20*t - k21*t - k23*t)/(-1 - k10/k01) - k30*Integral(C3*k23*exp(k30*t)*exp(-k20*t - k21*t -
+                k23*t), t)/(-exp(k30*t) - k10*exp(k30*t)/k01), t)/k01),
+            Eq(Z1(t), C1 + C4*exp(-k01*t - k10*t) + exp(-k01*t - k10*t)*Integral(C2*k30*exp(k01*t + k10*t)/(-exp(k30*t)
+                - k10*exp(k30*t)/k01) - C3*k10*k21*exp(k01*t + k10*t)*exp(-k20*t - k21*t - k23*t)/(-k01 - k10) +
+                C3*k20*exp(k01*t + k10*t)*exp(-k20*t - k21*t - k23*t)/(-1 - k10/k01) + k30*exp(k01*t + k10*t)*Integral(
+                C3*k23*exp(k30*t)*exp(-k20*t - k21*t - k23*t), t)/(-exp(k30*t) - k10*exp(k30*t)/k01), t) + Integral(
+                -C2*k30/(-exp(k30*t) - k10*exp(k30*t)/k01) - C3*k20*exp(-k20*t - k21*t - k23*t)/(-1 - k10/k01) -
+                C3*k21*exp(-k20*t - k21*t - k23*t)/(-1 - k10/k01) - k30*Integral(C3*k23*exp(k30*t)*exp(-k20*t - k21*t -
+                k23*t), t)/(-exp(k30*t) - k10*exp(k30*t)/k01), t)),
+            Eq(Z2(t), C3*exp(t*(-k20 - k21 - k23))),
+            Eq(Z3(t), (C2 + Integral(C3*k23*exp(k30*t)*exp(-k20*t - k21*t - k23*t), t))*exp(-k30*t))]
 
     assert dsolve(eq1, simplify=False) == sol1
     assert checksysodesol(eq1, sol1) == (True, [0, 0, 0, 0])
@@ -594,10 +603,10 @@ def test_sysode_linear_neq_order1_type1():
         Eq(Derivative(x(t), t), k3*y(t)),
         Eq(Derivative(y(t), t), (-k2 - k3)*y(t))
     )
-    sol2 = {Eq(z(t), C1 - C2*k2*exp(t*(-k2 - k3))/(k2 + k3)),
-            Eq(x(t), -C2*k3*exp(t*(-k2 - k3))/(k2 + k3) + C3),
-            Eq(y(t), C2*exp(t*(-k2 - k3)))}
-    assert set(dsolve(eq2)) == sol2
+    sol2 = [Eq(z(t), C1 + Integral(C2*k2*exp(-k2*t - k3*t), t)),
+            Eq(x(t), C3 + Integral(C2*k3*exp(-k2*t - k3*t), t)),
+            Eq(y(t), C2*exp(t*(-k2 - k3)))]
+    assert dsolve(eq2) == sol2
     assert checksysodesol(eq2, sol2) == (True, [0, 0, 0])
 
     eq3 = [4*u(t) - v(t) - 2*w(t) + Derivative(u(t), t),
@@ -615,10 +624,10 @@ def test_sysode_linear_neq_order1_type1():
            Eq(z(t).diff(t), Rational(37, 9)*z(t) - tw*w(t)),
            Eq(w(t).diff(t), 22*tw*w(t) - 2*tw*z(t))]
 
-    sol4 = [Eq(x(t), (C1 + C2*t)*exp(2*t)),
-            Eq(y(t), C2*exp(2*t) + 2*C3*exp(4*t)),
-            Eq(z(t), 2*C3*exp(4*t) - C4*exp(5*t)/4),
-            Eq(w(t), C3*exp(4*t) + C4*exp(5*t))]
+    sol4 = [Eq(x(t), C3*exp(2*t) + exp(2*t)*Integral(C1 - 2*C2*exp(2*t) + Integral(4*C2*exp(2*t), t), t)),
+            Eq(y(t), (C1 + Integral(4*C2*exp(2*t), t))*exp(2*t)),
+            Eq(z(t), 2*C2*exp(4*t) - C4*exp(5*t)/4),
+            Eq(w(t), C2*exp(4*t) + C4*exp(5*t))]
 
     assert dsolve(eq4) == sol4
     assert checksysodesol(eq4, sol4) == (True, [0, 0, 0, 0])
