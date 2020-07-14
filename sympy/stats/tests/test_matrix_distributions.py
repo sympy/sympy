@@ -6,7 +6,7 @@ from sympy.testing.pytest import raises
 
 def test_MatrixGamma():
     M = MatrixGamma('M', 1, 2, [[1, 0], [0, 1]])
-    assert M.pspace.model.set == ProductSet(S.Reals, S.Reals)
+    assert M.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
     assert isinstance(density(M), MatrixGammaDistribution)
     X = MatrixSymbol('X', 2, 2)
     num = exp(Trace(Matrix([[-S(1)/2, 0], [0, -S(1)/2]])*X))

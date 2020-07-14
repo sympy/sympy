@@ -1772,6 +1772,12 @@ def test_sympy__stats__symbolic_multivariate_probability__CrossCovarianceMatrix(
     assert _test_args(CrossCovarianceMatrix(RandomMatrixSymbol('R', 3, 1),
                         RandomMatrixSymbol('X', 3, 1)))
 
+def test_sympy__stats__matrix_distributions__MatrixPSpace():
+    from sympy.stats.matrix_distributions import MatrixDistribution, MatrixPSpace
+    from sympy import Matrix
+    M = MatrixDistribution(1, Matrix([[1, 0], [0, 1]]))
+    assert _test_args(MatrixPSpace('M', M, 2, 2))
+
 def test_sympy__stats__matrix_distributions__MatrixDistribution():
     from sympy.stats.matrix_distributions import MatrixDistribution
     from sympy import Matrix

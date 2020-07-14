@@ -812,6 +812,7 @@ class Density(Basic):
     def doit(self, evaluate=True, **kwargs):
         from sympy.stats.random_matrix import RandomMatrixPSpace
         from sympy.stats.joint_rv import JointPSpace
+        from sympy.stats.matrix_distributions import MatrixPSpace
         from sympy.stats.frv import SingleFiniteDistribution
         expr, condition = self.expr, self.condition
 
@@ -823,7 +824,7 @@ class Density(Basic):
         if not random_symbols(expr):
             return Lambda(x, DiracDelta(x - expr))
         if isinstance(expr, RandomSymbol):
-            if isinstance(expr.pspace, (SinglePSpace, JointPSpace)) and \
+            if isinstance(expr.pspace, (SinglePSpace, JointPSpace, MatrixPSpace)) and \
                 hasattr(expr.pspace, 'distribution'):
                 return expr.pspace.distribution
             elif isinstance(expr.pspace, RandomMatrixPSpace):
