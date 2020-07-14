@@ -2454,6 +2454,10 @@ class LatexPrinter(Printer):
         denom = self._print(den)
         return r"\frac{%s}{%s}" % (numer, denom)
 
+    def _print_TransferFunctionMatrix(self, expr):
+        from sympy.matrices import Matrix
+        return self._print(Matrix(expr.args[0]))
+
     def _print_NamedMorphism(self, morphism):
         pretty_name = self._print(Symbol(morphism.name))
         pretty_morphism = self._print_Morphism(morphism)

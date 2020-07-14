@@ -6,7 +6,8 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
 from sympy.core import Expr, Mul
-from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
+from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
+    Feedback, TransferFunctionMatrix
 from sympy.physics.units import second, joule
 from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
     ZZ_I, QQ_I, lex, grlex)
@@ -686,6 +687,16 @@ def test_Feedback_str():
         "Feedback(Series(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)), TransferFunction(t*x**2 - t**w*x + w, t - y, y))"
     assert str(Feedback(tf1, TransferFunction(1, 1, y))) == \
         "Feedback(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(1, 1, y))"
+
+
+def test_TransferFunctionMatrix_str():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert str(TransferFunctionMatrix([tf1, tf2])) == \
+        "TransferFunctionMatrix([TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)])"
+    assert str(TransferFunctionMatrix([[tf1, tf2], [tf3, tf2]])) == \
+        "TransferFunctionMatrix([[TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)], [TransferFunction(t*x**2 - t**w*x + w, t - y, y), TransferFunction(x - y, x + y, y)]])"
 
 
 def test_Quaternion_str_printer():
