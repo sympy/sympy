@@ -1076,11 +1076,40 @@ def _preprocess_eqs(eqs):
     return processed_eqs
 
 
-# For now, this function returns a simple output, later it will
-# be capable of dividing the system of ODEs into strongly and
-# weakly connected components.
-def _component_division(eqs, funcs):
-    return [[[eqs, funcs]]]
+def _sysode_graph(eqs):
+    funcs = [eq.lhs.args[0] for eq in eqs]
+    rhss = [eq.rhs for eq in eqs]
+
+    edges = []
+    for func, rhs in zip(funcs, rhss):
+        for other in funcs:
+            if other != func and rhs.has(other):
+                edges.append((func, other))
+    return funcs, edges
+
+
+def _component_division(eqs, t):
+    from sympy.utilities.iterables import connected_components, strongly_connected_components
+
+    # Assuming that each eq in eqs is in canonical form,
+    # that is, [f(x).diff(x) = .., g(x).diff(x) = .., etc]
+    # and that the system passed is in its first order
+    eqs_dict = {eq.lhs: eq.rhs for eq in eqs}
+
+    weak_graph = _sysode_graph(eqs)
+    weak_components = connected_components(weak_graph)
+    weak_components = [[Eq(var.diff(t), eqs_dict[var.diff(t)]) for var in wcc]
+                            for wcc in weak_components]
+
+    components = []
+
+    for wcc in weak_components:
+        strong_graph = _sysode_graph(wcc)
+        strong_components = strongly_connected_components(strong_graph)
+        strong_components = [([Eq(var.diff(t), eqs_dict[var.diff(t)]) for var in scc], scc) for scc in strong_components]
+        components.append(strong_components)
+
+    return components
 
 
 # Returns: List of equations
@@ -1146,7 +1175,7 @@ def _weak_component_solver(wcc, t):
 
 # Returns: List of Equations(a solution)
 def _component_solver(eqs, funcs, t):
-    components = _component_division(eqs, funcs)
+    components = _component_division(eqs, t)
     sol = []
 
     for wcc in components:
