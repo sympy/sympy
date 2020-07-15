@@ -249,6 +249,9 @@ class IdentityMap(Map):
     def codomain(self):
         return self.domain
 
+    def __call__(self, arg, **kwargs):
+        return super().__call__(arg, **kwargs)
+
     def eval(self, x):
         return x
 

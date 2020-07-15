@@ -1,55 +1,84 @@
 from sympy import symbols, S
-from sympy.map import Map, InverseMap, IdentityMap, AppliedMap
+from sympy.core.symbol import Str
+from sympy.map import (
+    Map, UndefinedMap, InverseMap, IdentityMap, AppliedMap
+)
+from sympy.testing.pytest import raises
 
-a, b, c, x, y = symbols('a b c x y')
+x, y = symbols('x y')
 
-def test_nargs():
+class F(Map):
+    def eval(self, x):
+        return x+1
+f = F()
 
+def test_Map():
+
+    # test UndefinedMap generation
+    undf = Map('f')
+    assert isinstance(undf, UndefinedMap)
+    assert undf.name == Str('f')
+
+    # test nargs
     assert Map('f', domain=S.Reals).nargs == 1
     assert Map('f', domain=S.Reals**1).nargs == 1
-    assert Map('f', domain=S.Reals*S.Integers).nargs == 2
+    assert Map('f', domain=S.Reals*S.Integers, codomain=S.Reals).nargs == 2
     assert Map('f', domain=S.Reals**4).nargs == 4
-
-def test_InverseMap():
-
-    class f1(Map):
-        def eval(self, x):
-            return x+1
-    assert f1().inv() == f1().inv().doit() == f1().inv(evaluate=True) == InverseMap(f1())
-
-    class f2(Map):
-        def eval(self, x):
-            return 2*x
-        def _eval_inverse(self):
-            return f2_inv(
-                domain=self.codomain, codomain=self.domain
-            )
-    class f2_inv(Map):
-        def eval(self, x):
-            return x/2
-        def _eval_inverse(self):
-            return f2(
-                domain=self.codomain, codomain=self.domain
-            )
-    assert f2().inv() != f2().inv().doit() == f2().inv(evaluate=True) == f2_inv()
-    assert f2_inv().inv() != f2_inv().inv().doit() == f2_inv().inv(evaluate=True) == f2()
-
-def test_IdentityMap():
-    I = IdentityMap()
-    assert I.inv(evaluate=True) == I
-    args = (x, y)
-    assert I(args, evaluate=True) == args
 
 def test_AppliedMap():
 
-    class f1(Map): # cannot be evaluated
-        pass
-    assert isinstance(f1()(x), AppliedMap)
-    assert isinstance(f1()(x, evaluate=True), AppliedMap)
-    assert isinstance(f1()(x).doit(), AppliedMap)
+    arg = x.diff(x, evaluate=False) # unevaluated argument
 
-    class f2(Map): # can be evaluated
-        def eval(self, x):
-            return 2*x
-    assert isinstance(f2()(x), AppliedMap)
-    assert f2()(x, evaluate=True) == f2()(x).doit() == 2*x
+    # do not evaluate by default
+    assert f(arg) == AppliedMap(f, arg)
+
+    # evaluate by evaluate=True keyword
+    assert f(arg, evaluate=True) == AppliedMap(f, arg, evaluate=True) == arg+1
+
+    # evaluation by doit(deep=False)
+    assert AppliedMap(f, arg).doit(deep=False) == arg+1
+
+    # recursive evaluation by doit()
+    assert AppliedMap(f, arg).doit() == 2
+
+    # undefined map cannot be evaluated
+    assert Map('f')(x).doit() == AppliedMap(Map('f'), x)
+
+def test_InverseMap():
+
+    # cannot be evaluated when _eval_inverse is not implemented
+    assert f.inv() == f.inv(evaluate=True) == InverseMap(f)
+
+    class G(Map):
+        def _eval_inverse(self):
+            return H()
+    g = G()
+    class H(Map):
+        def _eval_inverse(self):
+            return G()
+    h = H()
+
+    # do not evaluate by default
+    assert g.inv() == InverseMap(g)
+    assert h.inv() == InverseMap(h)
+
+    # evaluate by evaluate=True keyword
+    assert g.inv(evaluate=True) == InverseMap(g, evaluate=True) == h
+    assert h.inv(evaluate=True) == InverseMap(h, evaluate=True) == g
+
+    # evaluation by doit()
+    assert InverseMap(g).doit() == InverseMap(g).doit(deep=False) == h
+    assert InverseMap(h).doit() == InverseMap(h).doit(deep=False) == g
+
+def test_IdentityMap():
+
+    I = IdentityMap()
+
+    # inverse is self
+    assert I.inv(evaluate=True) == I
+
+    # application returns argument
+    assert I(x, evaluate=True) == x
+    assert I((x, y), evaluate=True) == (x, y)
+    # does not take multiple arguments
+    raises(TypeError, lambda: I(x,y))

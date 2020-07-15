@@ -1,17 +1,26 @@
-from sympy import symbols
+from sympy import Symbol, S
 from sympy.map import Map, CompositeMap, IdentityMap
 
-x, y = symbols('x y')
-f, g = Map('f'), Map('g')
+x = Symbol('x')
+f, g = Map('f', codomain=S.Reals), Map('g', domain=S.Naturals0)
 
 def test_CompositeMap():
 
+    # domain and codomain
+    fg = CompositeMap(f, g)
+    assert fg.domain == S.Naturals0
+    assert fg.codomain == S.Reals
+
+    # flattening
+    ff = CompositeMap(f, f)
+    assert CompositeMap(f, ff, evaluate=True) == CompositeMap(f, f, f)
+
     # inverse cancellation
     assert CompositeMap(g, f, f.inv(), f, evaluate=True) == CompositeMap(g, f)
-    assert CompositeMap(g, f, f.inv(), g.inv(), evaluate=True) == IdentityMap()
+    assert CompositeMap(g, f, f.inv(), g.inv(), evaluate=True) == IdentityMap(S.Naturals0)
 
     # inverse
-    assert CompositeMap(f, g).inv(evaluate=True) == CompositeMap(g.inv(), f.inv())
+    assert fg.inv(evaluate=True) == CompositeMap(g.inv(), f.inv())
 
     # evaluation
     class H1(Map):

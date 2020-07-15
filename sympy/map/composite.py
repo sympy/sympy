@@ -9,7 +9,7 @@ class CompositeMap(Map, AssocOp):
     A class for general composite mappings.
 
     .. note::
-       IdentityMap is unary. Pass tuple for n-dimensional argument.
+       CompositeMap is unary. Pass tuple for n-dimensional argument.
 
     Explanation
     ===========
@@ -30,8 +30,8 @@ class CompositeMap(Map, AssocOp):
 
     >>> CompositeMap(f, f)(x).doit()
     4*x
-    >>> CompositeMap(f, f.inv())(x).doit()
-    x
+    >>> CompositeMap(f, f.inv()).doit()
+    IdentityMap
 
     References
     ==========
@@ -83,11 +83,11 @@ class CompositeMap(Map, AssocOp):
 
     @property
     def domain(self):
-        return self.args[0].domain
+        return self.args[-1].domain
 
     @property
     def codomain(self):
-        return self.args[-1].codomain
+        return self.args[0].codomain
 
     def eval(self, arg):
         result = arg
