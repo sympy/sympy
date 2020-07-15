@@ -1,4 +1,4 @@
-from sympy.core import Expr, S, Tuple
+from sympy.core import Expr, S
 from sympy.core.sympify import _sympify
 from sympy.core.symbol import Str
 from sympy.sets import ProductSet
