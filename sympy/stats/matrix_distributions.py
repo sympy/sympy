@@ -27,7 +27,7 @@ class MatrixPSpace(PSpace):
 
     def compute_density(self, expr, *args):
         rms = expr.atoms(RandomMatrixSymbol)
-        if len(rms) > 2 or (not isinstance(expr, RandomMatrixSymbol)):
+        if len(rms) > 1 or (not isinstance(expr, RandomMatrixSymbol)):
             raise NotImplementedError("Currently, no algorithm has been "
                     "implemented to handle general expressions containing "
                     "multiple matrix distributions.")
@@ -44,6 +44,9 @@ def rv(symbol, cls, args):
 
 
 class MatrixDistribution(Basic, NamedArgsMixin):
+    """
+    Abstract class for Matrix Distribution
+    """
     def __new__(cls, *args):
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
@@ -56,6 +59,14 @@ class MatrixDistribution(Basic, NamedArgsMixin):
         if isinstance(expr, list):
             expr = ImmutableMatrix(expr)
         return self.pdf(expr)
+
+
+########################################
+#--------Matrix Distributions----------#
+########################################
+
+#-------------------------------------------------------------------------------
+# Matrix Gamma distribution ----------------------------------------------------
 
 class MatrixGammaDistribution(MatrixDistribution):
 
@@ -94,8 +105,49 @@ class MatrixGammaDistribution(MatrixDistribution):
         term3 = (Determinant(x))**(alpha - S(p + 1)/2)
         return term1 * term2 * term3
 
-
 def MatrixGamma(symbol, alpha, beta, scale_matrix):
+    """
+    Creates a random variable with Matrix Gamma Distribution.
+
+    The density of the said distribution can be found at [1].
+
+    Parameters
+    ==========
+
+    alpha: Positive Real number
+        Shape Parameter
+    beta: Positive Real number
+        Scale Parameter
+    scale_matrix: Positive definite real square matrix
+        Scale Matrix
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density, MatrixGamma
+    >>> from sympy import MatrixSymbol, symbols
+    >>> a, b = symbols('a b', positive=True)
+    >>> M = MatrixGamma('M', a, b, [[2, 1], [1, 2]])
+    >>> X = MatrixSymbol('X', 2, 2)
+    >>> density(M)(X).doit()
+    3**(-a)*b**(-2*a)*exp(Trace(Matrix([
+    [-2/3,  1/3],
+    [ 1/3, -2/3]])*X)/b)*Determinant(X)**(a - 3/2)/(sqrt(pi)*gamma(a)*gamma(a - 1/2))
+    >>> density(M)([[1, 0], [0, 1]]).doit()
+    3**(-a)*b**(-2*a)*exp(-4/(3*b))/(sqrt(pi)*gamma(a)*gamma(a - 1/2))
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Matrix_gamma_distribution
+
+    """
     if isinstance(scale_matrix, list):
         scale_matrix = ImmutableMatrix(scale_matrix)
     return rv(symbol, MatrixGammaDistribution, (alpha, beta, scale_matrix))
