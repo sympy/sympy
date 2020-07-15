@@ -902,7 +902,10 @@ class StrPrinter(Printer):
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
 
     def _print_Map(self, expr):
-        name = str(getattr(expr, 'name', expr.__class__.__name__))
+        if hasattr(expr, 'name'):
+            name = expr.name.name
+        else:
+            name = expr.__class__.__name__
         return name
 
     def _print_InverseMap(self, expr):
@@ -914,11 +917,7 @@ class StrPrinter(Printer):
     def _print_AppliedMap(self, expr):
         map_str = self._print(expr.map)
         args_str = self.stringify(expr.arguments, ", ")
-        if expr.parameters:
-            pars_str = self.stringify(expr.parameters, ", ")
-            return "%s(%s)" % (map_str, '; '.join([args_str, pars_str]))
-        else:
-            return "%s(%s)" % (map_str, args_str)
+        return "%s(%s)" % (map_str, args_str)
 
     def _print_CompositeMap(self, expr):
         return "CompositeMap(%s)" % self.stringify(expr.args, ", ")
@@ -951,9 +950,6 @@ class StrReprPrinter(StrPrinter):
     def _print_str(self, s):
         return repr(s)
 
-    def _print_Str(self, s):
-        # Str does not to be printed same as str here
-        return str(s)
 
 def sstrrepr(expr, **settings):
     """return expr in mixed str/repr form

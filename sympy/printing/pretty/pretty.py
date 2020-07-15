@@ -2721,7 +2721,10 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Map(self, e):
-        name = str(getattr(e, 'name', e.__class__.__name__))
+        if hasattr(e, 'name'):
+            name = e.name.name
+        else:
+            name = e.__class__.__name__
         mapping = pretty_symbol(name, bold_name=False)
         return prettyForm(mapping)
 
@@ -2734,17 +2737,11 @@ class PrettyPrinter(Printer):
     def _print_AppliedMap(self, e):
         prettyMap = self._print(e.map)
         prettyArgs = self._print_seq(e.arguments, delimiter=', ')
-        if e.parameters:
-            prettyPars = self._print_seq(e.parameters, delimiter=', ')
-            prettyA_P = prettyForm(*prettyArgs.right('; '))
-            prettyA_P = prettyForm(*prettyA_P.right(prettyPars))
-            prettyA_P = prettyForm(*prettyA_P.parens())
-        else:
-            prettyA_P = prettyForm(*prettyArgs.parens())
+        prettyArgs = prettyForm(*prettyArgs.parens())
 
-        pform = prettyForm(binding=prettyForm.FUNC, *prettyForm.next(prettyMap, prettyA_P))
+        pform = prettyForm(binding=prettyForm.FUNC, *prettyForm.next(prettyMap, prettyArgs))
         pform.prettyFunc = prettyMap
-        pform.prettyArgs = prettyA_P
+        pform.prettyArgs = prettyArgs
         return pform
 
     def _print_CompositeMap(self, e):

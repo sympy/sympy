@@ -2655,18 +2655,13 @@ def test_latex_decimal_separator():
 def test_map():
     from sympy.map import Map, IdentityMap, CompositeMap
 
-    # Map without parameter
-    f1 = Map(name='f')
-    assert latex(f1) == "f"
-    assert latex(f1(z)) == r"f{\left(z \right)}"
-
-    # Map with parameter
-    f2 = Map(parameters=(x, y), name='f')
-    assert latex(f2(z)) == r"f{\left(z; x, y \right)}"
+    f = Map(name='f')
+    assert latex(f) == "f"
+    assert latex(f(z)) == r"f{\left(z \right)}"
 
     # Inverse map
-    assert latex(f1.inv()) == "{f}^{-1}"
-    assert latex(f1.inv()(z)) == r"{f}^{-1}{\left(z \right)}"
+    assert latex(f.inv()) == "{f}^{-1}"
+    assert latex(f.inv()(z)) == r"{f}^{-1}{\left(z \right)}"
 
     # Identity map
     Id = IdentityMap(domain=S.Reals)
@@ -2674,4 +2669,4 @@ def test_map():
     assert latex(Id(x)) == r"\text{id}_{\mathbb{R}}{\left(x \right)}"
 
     # Composite map
-    assert latex(CompositeMap(f1, f1)) == r'f \circ f'
+    assert latex(CompositeMap(f, f)) == r'f \circ f'

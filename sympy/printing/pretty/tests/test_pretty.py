@@ -7251,18 +7251,13 @@ def test_diffgeom():
 def test_map():
     from sympy.map import Map, IdentityMap, CompositeMap
 
-    # Map without parameter
-    f1 = Map(name='f')
-    assert pretty(f1) == "f"
-    assert pretty(f1(z)) == "f(z)"
-
-    # Map with parameter
-    f2 = Map(parameters=(x, y), name='f')
-    assert pretty(f2(z)) == "f(z; x, y)"
+    f = Map(name='f')
+    assert pretty(f) == "f"
+    assert pretty(f(z)) == "f(z)"
 
     # Inverse map
-    assert pretty(f1.inv()) == " -1\nf  "
-    assert pretty(f1.inv()(z)) == " -1   \nf  (z)"
+    assert pretty(f.inv()) == " -1\nf  "
+    assert pretty(f.inv()(z)) == " -1   \nf  (z)"
 
     # Identity map
     Id = IdentityMap(domain=S.Reals)
@@ -7270,4 +7265,4 @@ def test_map():
     assert pretty(Id(x)) == "IdentityMap(x)"
 
     # Composite map
-    assert upretty(CompositeMap(f1, f1)) == 'f ∘ f'
+    assert upretty(CompositeMap(f, f)) == 'f ∘ f'

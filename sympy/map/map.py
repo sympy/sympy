@@ -35,7 +35,7 @@ class Map(Expr):
 
     Constructing undefined map:
 
-    >>> f = Map('f', S.Reals, S.Reals**2, (y,))
+    >>> f = Map('f', S.Reals, S.Reals**2)
 
     >>> f
     f
@@ -43,20 +43,13 @@ class Map(Expr):
     Reals
     >>> f.codomain
     ProductSet(Reals, Reals)
-    >>> f.parameters
-    (y,)
     >>> f.nargs
     1
 
     >>> f(x)
-    f(x; y)
+    f(x)
     >>> f(x).doit()
-    f(x; y)
-
-    Parameters can be substituted.
-
-    >>> f.subs(y, 2)(x)
-    f(x; 2)
+    f(x)
 
     Subclassing for defined map:
 
@@ -82,7 +75,6 @@ class Map(Expr):
 
     # these attributes are designed to be overridden if needed
     domain = codomain = S.UniversalSet
-    parameters = ()
 
     def __new__(cls, *args, **kwargs):
         if cls is Map:
@@ -133,23 +125,18 @@ class UndefinedMap(Map):
 
     domain, codomain : Set
 
-    parameters : tuple
-        Parameters of the map
-
     """
 
     def __new__(
         cls, name, domain=S.UniversalSet, codomain=S.UniversalSet,
-        parameters=(), **kwargs
+        **kwargs
     ):
         if not isinstance(name, Str):
             name = Str(name)
 
         domain, codomain = _sympify(domain), _sympify(codomain)
 
-        parameters = Tuple(*[_sympify(a) for a in parameters])
-
-        obj = super().__new__(cls, name, domain, codomain, parameters)
+        obj = super().__new__(cls, name, domain, codomain)
         return obj
 
     @property
@@ -163,10 +150,6 @@ class UndefinedMap(Map):
     @property
     def codomain(self):
         return self.args[2]
-
-    @property
-    def parameters(self):
-        return self.args[3]
 
 class InverseMap(Map):
     """
@@ -215,10 +198,6 @@ class InverseMap(Map):
         return self.args[0]
 
     @property
-    def parameters(self):
-        return self.base.parameters
-
-    @property
     def domain(self):
         return self.base.codomain
 
@@ -263,10 +242,6 @@ class IdentityMap(Map):
         return super().__new__(cls, domain)
 
     @property
-    def parameters(self):
-        return ()
-
-    @property
     def domain(self):
         return self.args[0]
 
@@ -283,6 +258,12 @@ class IdentityMap(Map):
 class AppliedMap(Expr):
     """
     Unevaluated result of Map applied to arguments.
+
+    .. note::
+       If user include parameter in mapping definition (e.g. $a$ in $f(x) = a*x)$,
+       `free_symbol` of its `AppliedMap` will return incoincident value with its
+       evaluated result. Instead, design the mapping to be multivariate function
+       (e.g. $f(x, a) = a*x$).
 
     Parameters
     ==========
@@ -325,18 +306,6 @@ class AppliedMap(Expr):
     @property
     def arguments(self):
         return self.args[1:]
-
-    @property
-    def parameters(self):
-        return self.map.parameters
-
-    @property
-    def free_symbols(self):
-        result = set()
-        result.update(self.parameters.free_symbols)
-        for a in self.arguments:
-            result.update(a.free_symbols)
-        return result
 
     def doit(self, **hints):
         deep = hints.get('deep', True)

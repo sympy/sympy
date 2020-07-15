@@ -10,16 +10,6 @@ def test_nargs():
     assert Map('f', domain=S.Reals*S.Integers).nargs == 2
     assert Map('f', domain=S.Reals**4).nargs == 4
 
-def test_parameters():
-
-    f1 = Map('f', parameters=(a, b, c))
-    assert f1.parameters == (a, b, c)
-    assert f1(x).free_symbols == {a, b, c, x}
-
-    f2 = f1.subs(b, 2)
-    assert f2.parameters == (a, 2, c)
-    assert f2(x).free_symbols == {a, c, x}
-
 def test_InverseMap():
 
     class f1(Map):
@@ -32,7 +22,6 @@ def test_InverseMap():
             return 2*x
         def _eval_inverse(self):
             return f2_inv(
-                parameters=self.parameters,
                 domain=self.codomain, codomain=self.domain
             )
     class f2_inv(Map):
@@ -40,7 +29,6 @@ def test_InverseMap():
             return x/2
         def _eval_inverse(self):
             return f2(
-                parameters=self.parameters,
                 domain=self.codomain, codomain=self.domain
             )
     assert f2().inv() != f2().inv().doit() == f2().inv(evaluate=True) == f2_inv()

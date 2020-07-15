@@ -2651,7 +2651,10 @@ class LatexPrinter(Printer):
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
     def _print_Map(self, expr):
-        name = str(getattr(expr, 'name', expr.__class__.__name__))
+        if hasattr(expr, 'name'):
+            name = expr.name.name
+        else:
+            name = expr.__class__.__name__
         return self._deal_with_super_sub(str(name))
 
     def _print_InverseMap(self, expr):
@@ -2664,11 +2667,7 @@ class LatexPrinter(Printer):
         map_str = self._print(expr.map)
         temp = map_str + r"{\left(%s \right)}"
         args_str = ', '.join([self._print(arg) for arg in expr.arguments])
-        if expr.parameters:
-            pars_str = ', '.join([self._print(arg) for arg in expr.parameters])
-            return temp % '; '.join([args_str, pars_str])
-        else:
-            return temp % args_str
+        return temp % args_str
 
     def _print_CompositeMap(self, expr):
         tex = r" \circ ".join([self._print(t) for t in expr.args])
