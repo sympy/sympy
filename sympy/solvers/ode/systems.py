@@ -5,7 +5,7 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.function import expand_mul, expand, Derivative
+from sympy.core.function import expand_mul, expand, Derivative, Function
 from sympy.functions import exp, im, cos, sin, re, Piecewise, piecewise_fold
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase
@@ -1088,6 +1088,41 @@ def _sysode_graph(eqs):
     return funcs, edges
 
 
+def _is_type1(scc, t):
+    eqs, funcs = scc
+
+    try:
+        (A1, A0), b = linear_ode_to_matrix(eqs, funcs, t, 1)
+    except (ODENonlinearError, ODEOrderError):
+        return False
+
+    if _matrix_is_constant(A0, t) and b.is_zero_matrix:
+        return True
+
+    return False
+
+
+def _combine_systems(sccs, t):
+    can_combine = _is_type1(sccs[0], t)
+
+    if can_combine:
+        end_idx = 1
+        for scc in sccs[1:]:
+            eqs, funcs = scc
+            old_eqs, old_funcs = sccs[0]
+            new_eqs, new_funcs = (old_eqs + eqs, old_funcs + funcs)
+
+            if not _is_type1((new_eqs, new_funcs), t):
+                break
+
+            sccs[0] = (new_eqs, new_funcs)
+            end_idx += 1
+
+        del sccs[1:end_idx]
+
+    return sccs
+
+
 def _component_division(eqs, t):
     from sympy.utilities.iterables import connected_components, strongly_connected_components
 
@@ -1107,6 +1142,7 @@ def _component_division(eqs, t):
         strong_graph = _sysode_graph(wcc)
         strong_components = strongly_connected_components(strong_graph)
         strong_components = [([Eq(var.diff(t), eqs_dict[var.diff(t)]) for var in scc], scc) for scc in strong_components]
+        strong_components = _combine_systems(strong_components, t)
         components.append(strong_components)
 
     return components
