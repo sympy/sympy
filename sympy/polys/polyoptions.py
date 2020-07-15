@@ -10,6 +10,7 @@ from sympy.core import Basic, sympify
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 from sympy.utilities import numbered_symbols, topological_sort, public
 from sympy.utilities.iterables import has_dups
+from sympy.core.compatibility import is_sequence
 
 import sympy.polys
 
@@ -283,7 +284,7 @@ class Gens(Option, metaclass=OptionType):
     def preprocess(cls, gens):
         if isinstance(gens, Basic):
             gens = (gens,)
-        elif len(gens) == 1 and hasattr(gens[0], '__iter__'):
+        elif len(gens) == 1 and is_sequence(gens[0]):
             gens = gens[0]
 
         if gens == (None,):
