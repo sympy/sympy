@@ -1,11 +1,9 @@
 from functools import singledispatch
-from sympy import tan, pi
-from sympy.core import Basic, Tuple, expand
+from sympy import pi
+from sympy.core import Basic, Tuple
 from sympy.core.symbol import _symbol
-from sympy.solvers import solveset, nonlinsolve
-from sympy.simplify.trigsimp import trigsimp
+from sympy.solvers import solve
 from sympy.geometry import Point, Segment, Curve, Ellipse, Polygon
-from sympy.vector import ImplicitRegion
 
 
 class ParametricRegion(Basic):
@@ -155,11 +153,11 @@ def _(obj, parameter='t'):
     definition = obj.arbitrary_point(t).args
 
     for i in range(0, 3):
-        lower_bound = solveset(definition[i] - obj.points[0].args[i], t)
-        upper_bound = solveset(definition[i] - obj.points[1].args[i], t)
+        lower_bound = solve(definition[i] - obj.points[0].args[i], t)
+        upper_bound = solve(definition[i] - obj.points[1].args[i], t)
 
         if len(lower_bound) == 1 and len(upper_bound) == 1:
-            bounds = t, next(iter(lower_bound)), next(iter(upper_bound))
+            bounds = t, lower_bound[0], upper_bound[0]
             break
 
     definition_tuple = obj.arbitrary_point(parameter).args
@@ -170,8 +168,3 @@ def _(obj, parameter='t'):
 def _(obj, parameter='t'):
     l = [parametric_region_list(side, parameter)[0] for side in obj.sides]
     return l
-    
-
-@parametric_region_list.register(ImplicitRegion)
-def _(obj, parameter='theta'):
-    pass
