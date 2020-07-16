@@ -232,7 +232,7 @@ class AskInvertibleHandler(CommonHandler):
         #3. assumed to be invertible
         if Q.invertible(expr) in conjuncts(assumptions):
             return True
-        
+
 class AskOrthogonalHandler(CommonHandler):
     """
     Handler for key 'orthogonal'
