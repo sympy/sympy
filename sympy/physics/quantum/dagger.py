@@ -1,7 +1,5 @@
 """Hermitian conjugation."""
 
-from __future__ import print_function, division
-
 from sympy.core import Expr, Mul
 from sympy.functions.elementary.complexes import adjoint
 
@@ -91,7 +89,7 @@ class Dagger(adjoint):
         if isinstance(other, IdentityOperator):
             return self
 
-        return Mul(self,other)
+        return Mul(self, other)
 
 adjoint.__name__ = "Dagger"
 adjoint._sympyrepr = lambda a, b: "Dagger(%s)" % b._print(a.args[0])
