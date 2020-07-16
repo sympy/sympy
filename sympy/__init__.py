@@ -177,6 +177,9 @@ from .solvers import (solve, solve_linear_system, solve_linear_system_LU,
         solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution,
         Complexes)
 
+from .map import (Map, UndefinedMap, InverseMap, IdentityMap, AppliedMap,
+        CompositeMap)
+
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         casoratian, diag, eye, hessian, jordan_cell, list2numpy, matrix2numpy,
         matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
@@ -408,6 +411,9 @@ __all__ = [
     'solve_poly_inequality', 'solve_rational_inequalities',
     'solve_univariate_inequality', 'decompogen', 'solveset', 'linsolve',
     'linear_eq_to_matrix', 'nonlinsolve', 'substitution', 'Complexes',
+
+    # sympy.map
+    'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'AppliedMap', 'CompositeMap',
 
     # sympy.matrices
     'ShapeError', 'NonSquareMatrixError', 'GramSchmidt', 'casoratian', 'diag',

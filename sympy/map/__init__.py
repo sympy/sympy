@@ -6,7 +6,7 @@ Includes any maps such as function, differential operator, etc.
 
 __all__ = [
     'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'AppliedMap',
-    "CompositeMap"
+    'CompositeMap'
 ]
 
 from .map import (
