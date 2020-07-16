@@ -2602,6 +2602,7 @@ def test_issue_17092():
     assert latex(Derivative(x_star, x_star,2)) == r'\frac{d^{2}}{d \left(x^{*}\right)^{2}} x^{*}'
 
 
+@XFAIL
 def test_latex_decimal_separator():
 
     x, y, z, t = symbols('x y z t')
