@@ -3,8 +3,8 @@ import random
 
 import itertools
 
-from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
-                   Set, And, Eq, FiniteSet, ImmutableMatrix,
+from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, binomial,
+                   Set, And, Eq, FiniteSet, ImmutableMatrix, Range, Mod,
                    Lambda, Mul, Dummy, IndexedBase, Add, Interval, oo, rsolve,
                    linsolve, eye, Or, Not, Intersection, factorial, Contains,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma, Sum,
@@ -1633,7 +1633,24 @@ class RandomWalk(DiscreteTimeStochasticProcess):
         func = Lambda(n, func)
         return func
 
+    def p_from_pgf(self, n, k): # probability from probability generating function
+        x = k - n * self.failure
+        check = Mod(x, (self.success - self.failure))
+        if not isinstance(check, Mod) and check != 0:
+            return 0
+        x = x / (self.success - self.failure)
+        return self.p**(x)*binomial(n, x)*(1 - self.p)**(n - x)
+
+
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
+        check_numeric, check_given_numeric = True, True
+        if isinstance(condition, (And, Or)):
+            cond_args = condition.args
+        else:
+            cond_args = (condition, )
+        # check that condition args are numeric or not
+        if not all(arg.args[0].key.is_number for arg in cond_args):
+            check_numeric = False
         if given_condition is not None:
             if not isinstance(given_condition, (And, Or)) and \
                 given_condition == True: # to handle queries with recurrence
@@ -1643,24 +1660,84 @@ class RandomWalk(DiscreteTimeStochasticProcess):
                 if working_space == EmptySet:
                     return 0
                 else:
-                    return {n: self.recurr_func(n) for n in working_space}
+                    f = self.recurr_func
+                    return {n: f(n) for n in working_space}
+
+            if isinstance(given_condition, (And, Or)):
+                given_cond_args = given_condition.args
+            else:
+                given_cond_args = (given_condition, )
+
+            # check that given condition args are numeric or not
+            if given_condition.has(Contains):
+                check_given_numeric = False
+            if check_numeric and check_given_numeric:
+                return self._solve(condition, given_condition, check_numeric=True)
+            if not all(arg.has(Contains) for arg in given_cond_args):
+                raise ValueError("If given condition is passed with `Contains`, then "
+                "please pass the evaluated condition with its corresponding information "
+                "in terms of intervals of each time stamp to be passed in given condition.")
 
             intervals, rv_swap = get_timerv_swaps(condition, given_condition)
-            new_rv_swap = {}
-            for k, v in rv_swap.items():
-                t = Dummy('t', positive=True, integer=True)
-                B = BernoulliProcess('B', k.pspace.process.p, k.pspace.process.success,
-                                    k.pspace.process.failure)
-                new_rv_swap[k] = Sum(B[t], (t, 0, v.key)).doit()
-            condition = condition.subs(new_rv_swap)
+            condition = condition.subs(rv_swap)
+
+        return self._solve(condition, check_numeric=check_numeric and check_given_numeric)
+
+    def _solve(self, condition, given_condition=None, check_numeric=False):
+        if isinstance(condition, And):
+            args_list = list(condition.args)
         else:
-            new_rv_swap = {}
-            rvs = list(condition.atoms(RandomIndexedSymbol))
-            for rv in rvs:
-                if isinstance(rv.pspace.process, RandomWalk):
-                    t = Dummy('t', positive=True, integer=True)
-                    B = BernoulliProcess('B', rv.pspace.process.p, rv.pspace.process.success,
-                                        rv.pspace.process.failure)
-                    new_rv_swap[rv] = Sum(B[t], (t, 0, rv.key)).doit()
-            condition = condition.subs(new_rv_swap)
-        return _SubstituteRV._probability(condition, evaluate=evaluate, **kwargs)
+            args_list = [condition]
+        if given_condition is not None:
+            if isinstance(given_condition, And):
+                args_list.extend(list(given_condition.args))
+            else:
+                args_list.extend([given_condition])
+        # sort the args based on timestamp to get the independent increments in
+        # each segment using all the condition args as well as given_condition args
+        if check_numeric:
+            args_list = sorted(args_list, key=lambda x: x.args[0].key)
+        result = []
+        cond_args = list(condition.args) if isinstance(condition, And) else [condition]
+        if len(args_list) == 1:
+            arg = args_list[0]
+            arg = arg.subs({arg.args[0]: Dummy(arg.args[0].name)})
+            working_set = Intersection(self.state_space, arg.as_set())
+            x = Dummy('x')
+            return Sum(self.p_from_pgf(arg.args[0].key, x), (x, working_set._inf,
+                            working_set._sup))
+        for i in range(len(args_list) - 1):
+            curr, nex = args_list[i], args_list[i + 1]
+            diff_key = nex.args[0].key - curr.args[0].key
+            working_set = self.state_space
+            if isinstance(curr, Eq) and isinstance(nex, Eq):
+                k = abs(curr.args[1] - nex.args[1])
+                print(diff_key, k, self.p_from_pgf(diff_key, k))
+                result.append(self.p_from_pgf(diff_key, k))
+            elif isinstance(curr, Eq) ^ isinstance(nex, Eq):
+                if isinstance(curr, Eq):
+                    init = curr.args[1]
+                    working_set = Intersection(Range(init + diff_key * self.failure,
+                            init + diff_key * self.success + 1), nex.as_set())
+                else:
+                    init = nex.args[1]
+                    working_set = Intersection(Range(init + diff_key * self.failure,
+                            init + diff_key * self.success + 1), curr.as_set())
+                print(working_set)
+                result.append(Add.fromiter(self.p_from_pgf(diff_key, abs(x - init))
+                                for x in working_set))
+            else:
+                working_set = Intersection(S.Integers, nex.as_set())
+                working_set = Intersection(working_set, curr.as_set())
+                print(working_set)
+                if working_set.is_finite_set:
+                    temp_res = [ ]
+                    for init in working_set:
+                        for pos in working_set:
+                            temp_res.append(self.p_from_pgf(diff_key, abs(init - pos)))
+                    result.append(Add.fromiter(temp_res))
+                else:
+                # infinte set
+                    from sympy.stats.symbolic_probability import Probability
+                    result.append(Probability(nex, curr))
+        return Mul.fromiter(result)
