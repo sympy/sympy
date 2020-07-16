@@ -1202,30 +1202,21 @@ class TransferFunctionMatrix(Basic):
         if self.inputs == 1:
             return all(elem.is_proper for elem in self.args[0])
         else:
-            for row in range(self.inputs):
-                for col in range(self.outputs):
-                    if not self.args[0][row][col].is_proper:
-                        return False
-            return True
+            return all(self.args[0][row][col].is_proper
+                for col in range(self.outputs) for row in range(self.inputs))
 
     @property
     def is_strictly_proper(self):
         if self.inputs == 1:
             return all(elem.is_strictly_proper for elem in self.args[0])
         else:
-            for row in range(self.inputs):
-                for col in range(self.outputs):
-                    if not self.args[0][row][col].is_strictly_proper:
-                        return False
-            return True
+            return all(self.args[0][row][col].is_strictly_proper
+                for col in range(self.outputs) for row in range(self.inputs))
 
     @property
     def is_biproper(self):
         if self.inputs == 1:
             return all(elem.is_biproper for elem in self.args[0])
         else:
-            for row in range(self.inputs):
-                for col in range(self.outputs):
-                    if not self.args[0][row][col].is_biproper:
-                        return False
-            return True
+            return all(self.args[0][row][col].is_biproper
+                for col in range(self.outputs) for row in range(self.inputs))

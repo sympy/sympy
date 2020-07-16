@@ -2553,7 +2553,7 @@ def test_pretty_TransferFunctionMatrix():
     tf3 = TransferFunction(y**2 - 2*y + 1, y + 5, y)
     tf4 = TransferFunction(y, x**2 + x + 1, y)
     tf5 = TransferFunction(1 - x, x - y, y)
-    tf6 = TransferFunction(2, 2, x)
+    tf6 = TransferFunction(2, 2, y)
     expected1 = \
 u("""\
 ⎡ x + y ⎤\n\
