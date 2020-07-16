@@ -15,8 +15,9 @@ class CompositeMap(Map, AssocOp):
     ===========
 
     Function composition is an operation that takes two functions $f$ and $g$
-    and produces a function $h$ such that $h(x)=g(f(x))$ [1]. The composition
-    of functions is always associative [1].
+    and produces a function $h$ such that $h(x)=g(f(x))$ when codomain of $f$
+    is subset of domain of $g$ [1]. The composition of functions is always
+    associative [1].
 
     Examples
     ========
