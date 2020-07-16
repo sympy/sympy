@@ -1,5 +1,8 @@
 from sympy.assumptions import ask, Q
 from sympy.core import Expr, S
+from sympy.core.decorators import (
+    call_highest_priority, sympify_method_args, sympify_return
+)
 from sympy.core.sympify import _sympify
 from sympy.core.symbol import Str
 from sympy.sets import ProductSet
@@ -8,6 +11,7 @@ __all__ = [
     'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'AppliedMap'
 ]
 
+@sympify_method_args
 class Map(Expr):
     """
     Abstract base class for general mathematical mappings, which also serves
@@ -94,6 +98,16 @@ class Map(Expr):
 
     def __call__(self, *args, evaluate=False, **kwargs):
         return AppliedMap(self, *args, evaluate=evaluate )
+
+    @sympify_return([('other', Expr)], NotImplemented)
+    @call_highest_priority('__rmatmul__')
+    def __matmul__(self, other):
+        return CompositeMap(self, other, evaluate=True)
+
+    @sympify_return([('other', Expr)], NotImplemented)
+    @call_highest_priority('__matmul__')
+    def __rmatmul__(self, other):
+        return CompositeMap(other, self, evaluate=True)
 
     def inverse(self, evaluate=False):
         return InverseMap(self, evaluate=evaluate)

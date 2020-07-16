@@ -29,9 +29,18 @@ class CompositeMap(Map, AssocOp):
     ...        return 2*x
     >>> f = F()
 
+    >>> CompositeMap(f, f)
+    F@F
     >>> CompositeMap(f, f)(x).doit()
     4*x
     >>> CompositeMap(f, f.inv()).doit()
+    IdentityMap
+
+   @ operator returns evaluated composition
+
+    >>> f@f
+    F@F
+    >>> f@f.inv()
     IdentityMap
 
     References

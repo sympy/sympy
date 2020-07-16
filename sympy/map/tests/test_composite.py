@@ -76,3 +76,6 @@ def test_CompositeMap():
             if other == f1:
                 return f2
     assert CompositeMap(A(), f1, evaluate=True) == f2
+
+    # __matmul__ returns evaluated composition
+    assert A()@f1 == f2
