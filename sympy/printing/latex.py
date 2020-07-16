@@ -2663,15 +2663,15 @@ class LatexPrinter(Printer):
     def _print_IdentityMap(self, expr):
         return r"\text{id}_{%s}" % self._print(expr.domain)
 
-    def _print_AppliedMap(self, expr):
-        map_str = self._print(expr.map)
-        temp = map_str + r"{\left(%s \right)}"
-        args_str = ', '.join([self._print(arg) for arg in expr.arguments])
-        return temp % args_str
-
     def _print_CompositeMap(self, expr):
         tex = r" \circ ".join([self._print(t) for t in expr.args])
         return tex
+
+    def _print_AppliedMap(self, expr):
+        map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'])
+        temp = map_str + r"{\left(%s \right)}"
+        args_str = ', '.join([self._print(arg) for arg in expr.arguments])
+        return temp % args_str
 
     def emptyPrinter(self, expr):
         # Checks what type of decimal separator to print.

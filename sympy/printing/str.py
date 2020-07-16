@@ -914,13 +914,13 @@ class StrPrinter(Printer):
     def _print_IdentityMap(self, expr):
         return "IdentityMap"
 
+    def _print_CompositeMap(self, expr):
+        return "@".join([self._print(t) for t in expr.args])
+
     def _print_AppliedMap(self, expr):
-        map_str = self._print(expr.map)
+        map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'])
         args_str = self.stringify(expr.arguments, ", ")
         return "%s(%s)" % (map_str, args_str)
-
-    def _print_CompositeMap(self, expr):
-        return "CompositeMap(%s)" % self.stringify(expr.args, ", ")
 
 def sstr(expr, **settings):
     """Returns the expression as a string.

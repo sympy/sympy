@@ -2670,3 +2670,4 @@ def test_map():
 
     # Composite map
     assert latex(CompositeMap(f, f)) == r'f \circ f'
+    assert latex(CompositeMap(f, f)(x)) == r'\left(f \circ f\right){\left(x \right)}'

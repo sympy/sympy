@@ -53,6 +53,16 @@ class PrettyPrinter(Printer):
         elif self._settings['imaginary_unit'] not in ["i", "j"]:
             raise ValueError("'imaginary_unit' must be either 'i' or 'j', not '{}'".format(self._settings['imaginary_unit']))
 
+    def parenthesize(self, item, level, is_neg=False, strict=False):
+        prec_val = precedence_traditional(item)
+        if is_neg and strict:
+            return prettyForm(*self._print(item).parens())
+
+        if (prec_val < level) or ((not strict) and prec_val <= level):
+            return prettyForm(*self._print(item).parens())
+        else:
+            return self._print(item)
+
     def emptyPrinter(self, expr):
         return prettyForm(xstr(expr))
 
@@ -2734,30 +2744,22 @@ class PrettyPrinter(Printer):
     def _print_IdentityMap(self, e):
         return prettyForm("IdentityMap")
 
+    def _print_CompositeMap(self, e):
+        if self._use_unicode:
+            ring_op = ' ' + U('RING OPERATOR') + ' '
+            return self._print_seq(e.args, delimiter=ring_op)
+        else:
+            pform = prettyForm(str(e))
+        return pform
+
     def _print_AppliedMap(self, e):
-        prettyMap = self._print(e.map)
+        prettyMap = self.parenthesize(e.map, PRECEDENCE['Mul'])
         prettyArgs = self._print_seq(e.arguments, delimiter=', ')
         prettyArgs = prettyForm(*prettyArgs.parens())
 
         pform = prettyForm(binding=prettyForm.FUNC, *prettyForm.next(prettyMap, prettyArgs))
         pform.prettyFunc = prettyMap
         pform.prettyArgs = prettyArgs
-        return pform
-
-    def _print_CompositeMap(self, e):
-        if self._use_unicode:
-            circ = ' ' + U('RING OPERATOR') + ' '
-            circ_pform = prettyForm(circ)
-            terms = e.args
-            for i,term in enumerate(terms):
-                if i == 0:
-                    pform = self._print(term)
-                else:
-                    next_pform = self._print(term)
-                    pform = prettyForm(*pform.right(circ_pform))
-                    pform = pform = prettyForm(*pform.right(next_pform))
-        else:
-            pform = prettyForm(str(e))
         return pform
 
 def pretty(expr, **settings):

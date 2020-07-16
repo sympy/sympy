@@ -7266,3 +7266,4 @@ def test_map():
 
     # Composite map
     assert upretty(CompositeMap(f, f)) == 'f ∘ f'
+    assert upretty(CompositeMap(f, f)(x)) == '(f ∘ f)(x)'
