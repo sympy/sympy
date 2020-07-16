@@ -1,3 +1,4 @@
+from sympy.assumptions import ask, Q
 from sympy.core import Expr, S
 from sympy.core.sympify import _sympify
 from sympy.core.symbol import Str
@@ -92,11 +93,7 @@ class Map(Expr):
         return None
 
     def __call__(self, *args, evaluate=False, **kwargs):
-        if evaluate:
-            ret = self.eval(*args)
-            if ret is not None:
-                return ret
-        return AppliedMap(self, *args, evaluate=False)
+        return AppliedMap(self, *args, evaluate=evaluate )
 
     def inverse(self, evaluate=False):
         return InverseMap(self, evaluate=evaluate)
@@ -104,6 +101,17 @@ class Map(Expr):
 
     def _eval_inverse(self):
         return None
+
+    def composite(self, other, evaluate=False):
+        return CompositeMap(self, other, evaluate=evaluate)
+
+    def _eval_composite(self, other):
+        if isinstance(other, IdentityMap) and other.codomain == self.domain:
+            return self
+
+        are_inverse = self.doit() == other.inv().doit()
+        if are_inverse:
+            return IdentityMap(self.codomain)
 
     def doit(self, **hints):
         deep = hints.get('deep', True)
@@ -185,6 +193,10 @@ class InverseMap(Map):
 
     """
     def __new__(cls, mapping, evaluate=False, **kwargs):
+
+        if ask(Q.invertible(mapping)) is False:
+            raise TypeError("%s is not invertible." % mapping)
+
         if evaluate:
             obj = mapping._eval_inverse()
             if obj is None:
@@ -258,6 +270,10 @@ class IdentityMap(Map):
     def _eval_inverse(self):
         return self
 
+    def _eval_composite(self, other):
+        if other.codomain == self.domain:
+            return other
+
 class AppliedMap(Expr):
     """
     Unevaluated result of Map applied to arguments.
@@ -296,11 +312,20 @@ class AppliedMap(Expr):
     x + 2
 
     """
-    def __new__(cls, map, *args, evaluate=False, **kwargs):
-        args = (_sympify(a) for a in args)
+    def __new__(cls, mapping, *args, evaluate=False, **kwargs):
+        args = [_sympify(a) for a in args]
         if evaluate:
-            return map(*args, evaluate=True)
-        return super().__new__(cls, map, *args)
+
+            # convert f(f(x)) to CompositeMap(f,f)(x)
+            if len(args) == 1 and isinstance(args[0], cls):
+                mapping = CompositeMap(mapping, args[0].map)
+                args = args[0].arguments
+
+            result = mapping.eval(*args)
+            if result is not None:
+                return result
+
+        return super().__new__(cls, mapping, *args)
 
     @property
     def map(self):
@@ -317,3 +342,5 @@ class AppliedMap(Expr):
             return self.func(*args, evaluate=True)
         else:
             return self.func(*self.args, evaluate=True)
+
+from .composite import CompositeMap

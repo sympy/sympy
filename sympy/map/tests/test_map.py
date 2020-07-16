@@ -1,4 +1,4 @@
-from sympy import symbols, S
+from sympy import symbols, S, assuming, Q, ask
 from sympy.core.symbol import Str
 from sympy.map import (
     Map, UndefinedMap, InverseMap, IdentityMap, AppliedMap
@@ -25,6 +25,9 @@ def test_Map():
     assert Map('f', domain=S.Reals*S.Integers, codomain=S.Reals).nargs == 2
     assert Map('f', domain=S.Reals**4).nargs == 4
 
+    # invertibility cannot be determined by default
+    assert ask(Q.invertible(f)) is None
+
 def test_AppliedMap():
 
     arg = x.diff(x, evaluate=False) # unevaluated argument
@@ -45,6 +48,22 @@ def test_AppliedMap():
     assert Map('f')(x).doit() == AppliedMap(Map('f'), x)
 
 def test_InverseMap():
+
+    # cannot invert if mapping is assumed to be non-invertible
+    with assuming(~Q.invertible(f)):
+        raises(TypeError, lambda: f.inv())
+    # can invert if mapping is assumed to be invertible
+    with assuming(Q.invertible(f)):
+        f.inv()
+    # can invert if invertibility annot be determined as well
+    f.inv()
+
+    # inverted map is always assumed to be invertible back
+    assert ask(Q.invertible(f.inv())) is True
+
+    # domain and codomain
+    m = Map('m', domain=S.Reals, codomain=S.Naturals0)
+    assert m.inv().domain is S.Naturals0, m.inv().domain is S.Reals
 
     # cannot be evaluated when _eval_inverse is not implemented
     assert f.inv() == f.inv(evaluate=True) == InverseMap(f)

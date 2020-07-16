@@ -1,46 +1,78 @@
-from sympy import Symbol, S
+from sympy import Symbol, S, FiniteSet, ask, Q, assuming
 from sympy.map import Map, CompositeMap, IdentityMap
+from sympy.testing.pytest import raises
 
 x = Symbol('x')
-f, g = Map('f', codomain=S.Reals), Map('g', domain=S.Naturals0)
+f = Map('f', domain=FiniteSet(1,2), codomain=S.Naturals0)
+g = Map('g', domain=S.Reals, codomain=FiniteSet(3,4))
+h, h1, h2, h3 = Map('h'), Map('h1'), Map('h2'), Map('h3')
 
 def test_CompositeMap():
 
     # domain and codomain
-    fg = CompositeMap(f, g)
-    assert fg.domain == S.Naturals0
-    assert fg.codomain == S.Reals
+    raises(TypeError, lambda: CompositeMap(f, g))
+    gf = CompositeMap(g, f)
+    assert gf.domain == FiniteSet(1,2)
+    assert gf.codomain == FiniteSet(3,4)
 
     # flattening
-    ff = CompositeMap(f, f)
-    assert CompositeMap(f, ff, evaluate=True) == CompositeMap(f, f, f)
+    hh = CompositeMap(h, h)
+    assert CompositeMap(hh, h, evaluate=True) == CompositeMap(h, h, h)
 
     # inverse cancellation
-    assert CompositeMap(g, f, f.inv(), f, evaluate=True) == CompositeMap(g, f)
-    assert CompositeMap(g, f, f.inv(), g.inv(), evaluate=True) == IdentityMap(S.Naturals0)
+    assert CompositeMap(h, h.inv(), evaluate=True) == IdentityMap()
+    assert CompositeMap(h1, h2, h3, h3.inv(), h2.inv(), evaluate=True) == h1
 
-    # inverse
-    assert fg.inv(evaluate=True) == CompositeMap(g.inv(), f.inv())
+    # identity cancellation only when domain and codomain are strictly same
+    assert CompositeMap(IdentityMap(S.Naturals0), f, evaluate=True) == f
+    assert CompositeMap(IdentityMap(S.Reals), f, evaluate=True) != f
+    assert CompositeMap(g, IdentityMap(S.Reals), evaluate=True) == g
+    assert CompositeMap(g, IdentityMap(S.Naturals0), evaluate=True) != g
+
+    # not invertible when domains and codomains are not suitable
+    assert ask(Q.invertible(gf)) is False
+    # not invertible when any of its argument is not invertible
+    with assuming(~Q.invertible(h2)):
+        assert ask(Q.invertible(CompositeMap(h1, h2, h3))) is False
+    # invertible when all arguments are invertible and domains/codomains are suitable
+    with assuming(Q.invertible(h1) & Q.invertible(h2) & Q.invertible(h3)):
+        assert ask(Q.invertible(CompositeMap(h1, h2, h3))) is True
+    # invertible if assumed to be invertible
+    with assuming(Q.invertible(hh)):
+        assert ask(Q.invertible(hh)) is True
+
+    # inverse evaluation
+    assert CompositeMap(h1, h2).inv(evaluate=True) == CompositeMap(h2.inv(), h1.inv())
 
     # evaluation
-    class H1(Map):
-        def eval(cls, x):
+    class F1(Map):
+        def eval(self, x):
             return x+2
-    class H2(Map):
-        def eval(cls, x):
+    class F2(Map):
+        def eval(self, x):
             return x*3
-    h1, h2 = H1(), H2()
-    assert CompositeMap(h1, h2)(x, evaluate=True) == 3*x + 2
-    assert CompositeMap(h2, h1)(x, evaluate=True) == 3*x + 6
+    f1, f2 = F1(), F2()
+    assert CompositeMap(f1, f2)(x, evaluate=True) == 3*x + 2
+    assert CompositeMap(f2, f1)(x, evaluate=True) == 3*x + 6
 
     # multivariate
-    class H3(Map):
-        def eval(cls, tup):
+    class F3(Map):
+        def eval(self, tup):
             a,b = tup
             return a+b
-    class H4(Map):
-        def eval(cls, tup):
+    class F4(Map):
+        def eval(self, tup):
             a,b = tup
             return (a+1, b+1)
-    h3, h4 = H3(), H4()
-    assert CompositeMap(h2, h3, h4)((1, 2), evaluate=True) == 15
+    f3, f4 = F3(), F4()
+    assert CompositeMap(f2, f3, f4)((1, 2), evaluate=True) == 15
+
+    # composition can be defined
+    class A(Map):
+        def _eval_composite(self, other):
+            result = super()._eval_composite(other)
+            if result is not None:
+                return result
+            if other == f1:
+                return f2
+    assert CompositeMap(A(), f1, evaluate=True) == f2

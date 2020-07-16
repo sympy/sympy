@@ -1,6 +1,6 @@
 from sympy.core import Expr
 from sympy.core.operations import AssocOp
-from .map import Map, IdentityMap
+from .map import Map, IdentityMap, AppliedMap
 
 __all__ = ["CompositeMap",]
 
@@ -40,6 +40,9 @@ class CompositeMap(Map, AssocOp):
 
     """
     def __new__(cls, *args, evaluate=False, **options):
+
+        cls.check_domain(args)
+
         domain = args[0].domain
 
         if not evaluate:
@@ -56,11 +59,20 @@ class CompositeMap(Map, AssocOp):
                 return Expr.__new__(cls, *args)
 
     @classmethod
+    def check_domain(cls, seq):
+        for i in range(len(seq)-1):
+            g, f = seq[i], seq[i+1]
+            if not f.codomain.is_subset(g.domain):
+                raise TypeError(
+            "%s's codomain %s is not subset of %s's domain %s" % (f, f.codomain, g, g.domain))
+
+    @classmethod
     def flatten(cls, seq):
-        # denest the composite mappings
+        #1.  denest the composite mappings
         _, seq, _ = super().flatten(seq)
 
-        # cancel out composition of inverse mappings
+        #2.  find if composition is defined
+        # composition with inverse or identity are handled here
         oldseq = []
         while len(oldseq) != len(seq):
             oldseq = seq
@@ -70,12 +82,12 @@ class CompositeMap(Map, AssocOp):
                 if m1 is None:
                     m1 = m2
                 else:
-                    are_inverse = m1.doit() == m2.inv().doit()
-                    if are_inverse:
-                        m1 = None
-                    else:
+                    comp_val = m1._eval_composite(m2)
+                    if comp_val is None:
                         seq.append(m1)
                         m1 = m2
+                    else:
+                        m1 = comp_val
             if m1 is not None:
                 seq.append(m1)
 
@@ -90,10 +102,29 @@ class CompositeMap(Map, AssocOp):
         return self.args[0].codomain
 
     def eval(self, arg):
+
+        #1. denest mappings
+
+        self_args = self.flatten([*self.args])[1]
+
+        #2. f(g(h(x))) -> CompositeMap(f,g,h)(x)
+
+        mappings = [] # store unresolved mappings
+        innermost_arg = arg
         result = arg
-        for a in reversed(self.args):
-            result = a(result, evaluate=True)
-        return result
+        for m in reversed(self_args):
+            m_eval = m(result, evaluate=True)
+            if isinstance(m_eval, AppliedMap):
+                mappings.insert(0, m)
+            else:
+                mappings = []
+                innermost_arg = m_eval
+            result = m_eval
+
+        if mappings:
+            return self.func(*mappings)(innermost_arg)
+        else:
+            return result
 
     def _eval_inverse(self):
         maps = reversed([a.inverse() for a in self.args])

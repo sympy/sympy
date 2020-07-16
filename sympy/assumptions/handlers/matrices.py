@@ -201,7 +201,38 @@ class AskInvertibleHandler(CommonHandler):
             return None
         return fuzzy_and([ask(Q.invertible(a), assumptions) for a in expr.diag])
 
+    @staticmethod
+    def Map(expr, assumptions):
+        if Q.invertible(expr) in conjuncts(assumptions):
+            return True
 
+    @staticmethod
+    def IdentityMap(expr, assumptions):
+        return True
+
+    @staticmethod
+    def InverseMap(expr, assumptions):
+        return True
+
+    @staticmethod
+    def CompositeMap(expr, assumptions):
+        seq = expr.args
+
+        #1. domains and codomains must match
+        for i in range(len(seq)-1):
+            g, f = seq[i], seq[i+1]
+            if not g.domain.is_subset(f.codomain):
+                return False
+
+        #2. invertibility of args
+        args_inv = fuzzy_and([ask(Q.invertible(a), assumptions) for a in seq])
+        if args_inv is not None:
+            return args_inv
+
+        #3. assumed to be invertible
+        if Q.invertible(expr) in conjuncts(assumptions):
+            return True
+        
 class AskOrthogonalHandler(CommonHandler):
     """
     Handler for key 'orthogonal'
