@@ -2,7 +2,7 @@
 
 from __future__ import print_function, division
 
-from sympy.core import Expr
+from sympy.core import Expr, Mul
 from sympy.functions.elementary.complexes import adjoint
 
 __all__ = [
@@ -84,6 +84,14 @@ class Dagger(adjoint):
         if obj is not None:
             return obj
         return Expr.__new__(cls, arg)
+
+    def __mul__(self, other):
+        from sympy.physics.quantum import IdentityOperator
+
+        if isinstance(other, IdentityOperator):
+            return self
+
+        return Mul(self,other)
 
 adjoint.__name__ = "Dagger"
 adjoint._sympyrepr = lambda a, b: "Dagger(%s)" % b._print(a.args[0])
