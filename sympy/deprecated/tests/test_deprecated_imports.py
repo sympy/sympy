@@ -16,7 +16,7 @@ def test_deprecated_imports():
 
     modnames = type(add)._DEPRECATED_IMPORTS
 
-    assert len(modnames) == 80
+    assert len(modnames) == 75
 
     for modname in modnames:
         name = modname.split('.')[-1]
