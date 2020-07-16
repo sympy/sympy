@@ -1102,25 +1102,53 @@ def _is_type1(scc, t):
     return False
 
 
-def _combine_systems(sccs, t):
-    can_combine = _is_type1(sccs[0], t)
-
-    if can_combine:
-        end_idx = 1
-        for scc in sccs[1:]:
-            eqs, funcs = scc
-            old_eqs, old_funcs = sccs[0]
-            new_eqs, new_funcs = (old_eqs + eqs, old_funcs + funcs)
-
-            if not _is_type1((new_eqs, new_funcs), t):
+def _combine_systems(sccs, graph, t):
+    is_type1 = [True for i in range(len(sccs))]
+    to_delete = set()
+    for i, scc in enumerate(sccs):
+        eqs, funcs = scc
+        for j in graph[i]:
+            if is_type1[j]:
+                if j not in to_delete:
+                    eqs, funcs = eqs + sccs[j][0], funcs + sccs[j][1]
+            else:
+                is_type1[i] = False
                 break
 
-            sccs[0] = (new_eqs, new_funcs)
-            end_idx += 1
+        is_type1[i] = _is_type1((eqs, funcs), t) if is_type1[i] else is_type1[i]
 
-        del sccs[1:end_idx]
+        if is_type1[i]:
+            min_index = graph[i][-1] if graph[i] else i
+            sccs[min_index] = (eqs, funcs)
+            to_delete |= set(graph[i] + [i])
+            to_delete.discard(min_index)
 
-    return sccs
+    components = []
+    for i, scc in enumerate(sccs):
+        if i not in to_delete:
+            components.append(sccs[i])
+    return components
+
+
+def _has_edge(s1, s2, graph):
+    return any(p in s2 for n in s1 for p in graph[n])
+
+
+def _scc_graph(graph, components):
+    nodes, edges = graph
+    graph_dict = {n: set() for n in nodes}
+    for e in edges:
+        graph_dict[e[0]].add(e[1])
+
+    n_comps = len(components)
+    scomps = [set(comp) for comp in components]
+    parents = [[] for _ in range(n_comps)]
+    for i in range(n_comps-1, 0, -1):
+        for j in range(i-1, -1, -1):
+            if _has_edge(scomps[i], scomps[j], graph_dict):
+                parents[i].append(j)
+
+    return parents
 
 
 def _component_division(eqs, t):
@@ -1141,8 +1169,9 @@ def _component_division(eqs, t):
     for wcc in weak_components:
         strong_graph = _sysode_graph(wcc)
         strong_components = strongly_connected_components(strong_graph)
+        scc_graph = _scc_graph(strong_graph, strong_components)
         strong_components = [([Eq(var.diff(t), eqs_dict[var.diff(t)]) for var in scc], scc) for scc in strong_components]
-        strong_components = _combine_systems(strong_components, t)
+        strong_components = _combine_systems(strong_components, scc_graph, t)
         components.append(strong_components)
 
     return components
