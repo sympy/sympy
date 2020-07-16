@@ -1149,14 +1149,41 @@ class Feedback(Basic):
 class TransferFunctionMatrix(Basic):
 
     def __new__(cls, arg):
-        if not isinstance(arg, list):
+        if not (isinstance(arg, list) and (all(isinstance(i, list) for i in arg) or
+            all(isinstance(i, TransferFunction) for i in arg))):
             raise TypeError("Unsupported type for argument of TransferFunctionMatrix.")
 
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
+        if all(isinstance(i, TransferFunction) for i in arg):
+            obj._var = arg[0].var
+            if not all(elem.var == obj._var for elem in arg):
+                raise ValueError("All transfer functions should use the same complex"
+                    " variable of the Laplace transform.")
+            obj._inputs, obj._outputs = 1, len(arg)
+        else:
+            obj._inputs, obj._outputs = len(arg), len(arg[0])
+            if not all(len(l) == obj._outputs for l in arg):
+                raise ValueError("Length of all the lists in the argument of"
+                    " TransferFunctionMatrix should be equal.")
+            if not all(isinstance(arg[row][col], TransferFunction)
+                for col in range(obj._outputs) for row in range(obj._inputs)):
+                raise TypeError("All the lists in the argument of TransferFunctionMatrix"
+                    " only support transfer functions in them.")
+
+            obj._var = arg[0][0].var
+            if not all(arg[row][col].var == obj._var
+                for col in range(obj._outputs) for row in range(obj._inputs)):
+                raise ValueError("All transfer functions should use the same complex"
+                    " variable of the Laplace transform.")
+
         return obj
 
     def __neg__(self):
-        pass
+        if self.inputs == 1:
+            neg_args = [-col for col in self.args[0]]
+        else:
+            neg_args = [[-col for col in row] for row in self.args[0]]
+        return TransferFunctionMatrix(neg_args)
 
     @property
     def var(self):
@@ -1175,21 +1202,30 @@ class TransferFunctionMatrix(Basic):
         if self.inputs == 1:
             return all(elem.is_proper for elem in self.args[0])
         else:
-            return all(self.args[row][col].is_proper
-                for row in range(self.inputs) for col in range(self.outputs))
+            for row in range(self.inputs):
+                for col in range(self.outputs):
+                    if not self.args[0][row][col].is_proper:
+                        return False
+            return True
 
     @property
     def is_strictly_proper(self):
         if self.inputs == 1:
             return all(elem.is_strictly_proper for elem in self.args[0])
         else:
-            return all(self.args[row][col].is_strictly_proper
-                for row in range(self.inputs) for col in range(self.outputs))
+            for row in range(self.inputs):
+                for col in range(self.outputs):
+                    if not self.args[0][row][col].is_strictly_proper:
+                        return False
+            return True
 
     @property
     def is_biproper(self):
         if self.inputs == 1:
             return all(elem.is_biproper for elem in self.args[0])
         else:
-            return all(self.args[row][col].is_biproper
-                for row in range(self.inputs) for col in range(self.outputs))
+            for row in range(self.inputs):
+                for col in range(self.outputs):
+                    if not self.args[0][row][col].is_biproper:
+                        return False
+            return True

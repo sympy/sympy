@@ -1,5 +1,6 @@
 from sympy import symbols, Matrix, factor, Function, simplify, exp, pi
-from sympy.physics.control import TransferFunction, Series, Parallel, Feedback
+from sympy.physics.control import TransferFunction, Series, Parallel, \
+    Feedback, TransferFunctionMatrix
 from sympy.testing.pytest import raises
 
 a, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2 = symbols('a, b, s, g, d, p, k, a0:3, b0:3')
@@ -630,20 +631,87 @@ def test_Feedback_functions():
 
 
 def test_TransferFunctionMatrix_construction():
-    pass
+    zeta, wn = symbols('zeta, wn')
+    tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    tf2 = TransferFunction(k, 1, s)
+    tf3 = TransferFunction(a2*p - s, a2*s + p, s)
+    tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
+    tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
+    tf6 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
+    tf7 = TransferFunction(p, a0, p)
+
+    tfm1 = TransferFunctionMatrix([tf1, tf2])
+    assert (tfm1.inputs, tfm1.outputs) == (1, 2)
+    assert tfm1.args == ([tf1, tf2],)
+    assert tfm1.var == s
+
+    tfm2 = TransferFunctionMatrix([-tf1, tf2])
+    assert (tfm2.inputs, tfm2.outputs) == (1, 2)
+    assert tfm2.args == ([-tf1, tf2],)
+    assert tfm2.var == s
+
+    tfm3 = TransferFunctionMatrix([tf7])
+    assert (tfm3.inputs, tfm3.outputs) == (1, 1)
+    assert tfm3.var == p
+    assert tfm3.args == ([tf7],)
+
+    tfm4 = TransferFunctionMatrix([tf3, tf5, tf6])
+    assert (tfm4.inputs, tfm4.outputs) == (1, 3)
+    assert tfm4.args == ([tf3, tf5, tf6],)
+    assert tfm4.var == s
+
+    tfm5 = TransferFunctionMatrix([[tf1, -tf2], [tf3, tf5]])
+    assert (tfm5.inputs, tfm5.outputs) == (2, 2)
+    assert tfm5.args == ([[tf1, -tf2], [tf3, tf5]],)
+
+    tfm6 = TransferFunctionMatrix([[tf1, tf2, tf3], [tf5, tf6, -tf6]])
+    assert (tfm6.inputs, tfm6.outputs) == (2, 3)
+    assert tfm6.args == ([[tf1, tf2, tf3], [tf5, tf6, -tf6]],)
+
+    tfm7 = TransferFunctionMatrix([[tf1, tf2], [tf3, -tf5], [-tf5, tf2]])
+    assert (tfm7.inputs, tfm7.outputs) == (3, 2)
+    assert tfm7.args == ([[tf1, tf2], [tf3, -tf5], [-tf5, tf2]],)
+
+    raises(TypeError, lambda: TransferFunction(Matrix([1, 2, 3])))
+    raises(ValueError, lambda: TransferFunctionMatrix([tf1, tf2, tf4]))
+    raises(ValueError, lambda: TransferFunctionMatrix([[tf1], [tf3, tf5]]))
+    raises(TypeError, lambda: TransferFunctionMatrix([[tf1, tf2], [tf3, Matrix([1, 2])]]))
+    raises(ValueError, lambda: TransferFunctionMatrix([[tf1, tf4], [tf3, tf5]]))
 
 
 def test_TransferFunctionMatrix_functions():
-    pass
+    zeta, wn = symbols('zeta, wn')
+    tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    tf2 = TransferFunction(k, 1, s)
+    tf3 = TransferFunction(a2*p - s, a2*s + p, s)
+    tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
+    tf6 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
 
+    tfm1 = TransferFunctionMatrix([tf1, tf2])
+    assert -tfm1 == TransferFunctionMatrix([-tf1, -tf2])
 
-def test_TransferFunctionMatrix_is_proper():
-    pass
+    tfm2 = TransferFunctionMatrix([[tf1, -tf2], [tf3, tf5]])
+    assert -tfm2 == TransferFunctionMatrix([[-tf1, tf2], [-tf3, -tf5]])
 
+    tfm3 = TransferFunctionMatrix([[tf1, tf2, tf3], [tf5, -tf1, -tf3]])
+    assert -tfm3 == TransferFunctionMatrix([[-tf1, -tf2, -tf3], [-tf5, tf1, tf3]])
 
-def test_TransferFunctionMatrix_is_strictly_proper():
-    pass
+    tfm4 = TransferFunctionMatrix([tf1, tf2, tf3])
+    assert tfm4.is_proper
+    assert not tfm4.is_strictly_proper
+    assert not tfm4.is_biproper
 
+    tfm5 = TransferFunctionMatrix([[tf1, tf2], [tf3, -tf5], [-tf5, tf2]])
+    assert not tfm5.is_proper
+    assert not tfm5.is_strictly_proper
+    assert not tfm5.is_biproper
 
-def test_TransferFunctionMatrix_is_biproper():
-    pass
+    tfm6 = TransferFunctionMatrix([[tf1, tf2], [tf3, -tf3]])
+    assert tfm6.is_proper
+    assert not tfm6.is_strictly_proper
+    assert not tfm6.is_biproper
+
+    tfm7 = TransferFunctionMatrix([-tf1, -tf6])
+    assert not tfm7.is_proper
+    assert not tfm7.is_strictly_proper
+    assert not tfm7.is_biproper
