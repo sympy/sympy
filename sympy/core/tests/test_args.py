@@ -2889,10 +2889,10 @@ def test_sympy__map__composite__CompositeMap():
     f, g = Map('f'), Map('g')
     assert _test_args(CompositeMap(f, g))
 
-def test_sympy__map__composite__CompositionalMapPow():
-    from sympy.map import Map, CompositionalMapPow
+def test_sympy__map__composite__IteratedMap():
+    from sympy.map import Map, IteratedMap
     f = Map('f')
-    assert _test_args(CompositionalMapPow(f, 2))
+    assert _test_args(IteratedMap(f, 2))
 
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector

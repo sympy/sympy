@@ -2752,7 +2752,7 @@ class PrettyPrinter(Printer):
             pform = prettyForm(str(e))
         return pform
 
-    def _print_CompositionalMapPow(self, expr):
+    def _print_IteratedMap(self, expr):
         return self._print(expr.base)**self._print(expr.exp)
 
     def _print_AppliedMap(self, e):

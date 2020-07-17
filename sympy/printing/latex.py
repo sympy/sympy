@@ -2667,7 +2667,7 @@ class LatexPrinter(Printer):
         tex = r" \circ ".join([self._print(t) for t in expr.args])
         return tex
 
-    def _print_CompositionalMapPow(self, expr):
+    def _print_IteratedMap(self, expr):
         return "{%s}^{%s}" % (self._print(expr.base), self._print(expr.exp))
 
     def _print_AppliedMap(self, expr):

@@ -178,7 +178,7 @@ from .solvers import (solve, solve_linear_system, solve_linear_system_LU,
         Complexes)
 
 from .map import (Map, UndefinedMap, InverseMap, IdentityMap, AppliedMap,
-        CompositeMap, CompositionalMapPow)
+        CompositeMap, IteratedMap)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         casoratian, diag, eye, hessian, jordan_cell, list2numpy, matrix2numpy,
@@ -414,7 +414,7 @@ __all__ = [
 
     # sympy.map
     'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'AppliedMap',
-    'CompositeMap', 'CompositionalMapPow',
+    'CompositeMap', 'IteratedMap',
 
     # sympy.matrices
     'ShapeError', 'NonSquareMatrixError', 'GramSchmidt', 'casoratian', 'diag',

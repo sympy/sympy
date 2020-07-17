@@ -1,5 +1,5 @@
 from sympy import Symbol, S, FiniteSet, ask, Q, assuming
-from sympy.map import Map, CompositeMap, IdentityMap, CompositionalMapPow
+from sympy.map import Map, CompositeMap, IdentityMap, IteratedMap
 from sympy.testing.pytest import raises
 
 x = Symbol('x')
@@ -80,13 +80,14 @@ def test_CompositeMap():
     # __matmul__ returns evaluated composition
     assert A()@f1 == f2
 
-def test_CompositionalMapPow():
+def test_IteratedMap():
     # domain and codomain
-    raises(TypeError, lambda: CompositionalMapPow(f, 2))
+    raises(TypeError, lambda: IteratedMap(f, 2))
 
     # 0 and 1 exponents
-    assert CompositionalMapPow(h, 0, evaluate=True) == IdentityMap()
-    assert CompositionalMapPow(h, 1, evaluate=True) == h
+    assert IteratedMap(h, 0, evaluate=True) == IdentityMap()
+    assert IteratedMap(h, 1, evaluate=True) == h
 
     # negative exponents
-    assert CompositionalMapPow(h, -1, evaluate=True) == h.inv()
+    assert IteratedMap(h, -1, evaluate=True) == h.inv()
+    assert IteratedMap(h, -2, evaluate=True) == IteratedMap(h.inv(), 2)

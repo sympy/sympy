@@ -992,7 +992,7 @@ def test_diffgeom():
 
 def test_map():
     from sympy.map import (
-        Map, IdentityMap, CompositeMap, CompositionalMapPow
+        Map, IdentityMap, CompositeMap, IteratedMap
     )
 
     f = Map(name='f')
@@ -1013,5 +1013,5 @@ def test_map():
     assert str(CompositeMap(f, f)(x)) == '(f@f)(x)'
 
     # Compositional map power
-    assert str(CompositionalMapPow(f, 2)) == "CompositionalMapPow(f, 2)"
-    assert str(CompositionalMapPow(f, 2)(x)) == "CompositionalMapPow(f, 2)(x)"
+    assert str(IteratedMap(f, 2)) == "IteratedMap(f, 2)"
+    assert str(IteratedMap(f, 2)(x)) == "IteratedMap(f, 2)(x)"

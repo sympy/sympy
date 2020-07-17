@@ -3,7 +3,7 @@ from sympy.core.operations import AssocOp
 from sympy.core.sympify import _sympify
 from .map import Map, IdentityMap, AppliedMap
 
-__all__ = ["CompositeMap", "CompositionalMapPow"]
+__all__ = ["CompositeMap", "IteratedMap"]
 
 class CompositeMap(Map, AssocOp):
     """
@@ -141,20 +141,22 @@ class CompositeMap(Map, AssocOp):
         maps = reversed([a.inverse() for a in self.args])
         return self.func(*maps)
 
-class CompositionalMapPow(Map):
+class IteratedMap(Map):
     """
-    A class for functional power.
+    A class n-th iterated function
 
     Explanation
     ===========
 
-    The n-th functional power is a function composed with itself n times. This
-    class has no direct relation with productional power, and should not be
-    confused with n-fold product function which is defined in function ring [1].
+    The n-th iterated function is a function composed with itself n times. This
+    class has no direct relation with productional power [1]. should not be
+    confused with n-fold product function which is defined in function ring [2].
 
     References
     ==========
-    .. [1] https://en.wikipedia.org/wiki/Function_composition
+
+    .. [1] https://en.wikipedia.org/wiki/Iterated_function
+    .. [2] https://en.wikipedia.org/wiki/Function_composition
 
     """
     def __new__(cls, b, e, evaluate=False):

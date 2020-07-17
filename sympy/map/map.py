@@ -133,8 +133,8 @@ class Map(Expr):
         if e == 1:
             return self
         if e < 0:
-            inv = self.inv(evaluate=True)
-            return CompositionalMapPow(inv, -e, evaluate=True)
+            inv = self.inv()
+            return IteratedMap(inv, -e, evaluate=True)
 
     def doit(self, **hints):
         deep = hints.get('deep', True)
@@ -366,4 +366,4 @@ class AppliedMap(Expr):
         else:
             return self.func(*self.args, evaluate=True)
 
-from .composite import CompositeMap, CompositionalMapPow
+from .composite import CompositeMap, IteratedMap
