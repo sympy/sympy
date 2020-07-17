@@ -52,12 +52,12 @@ def test_rational_parametrization():
     assert line.rational_parametrization() == (x, 3*x + 2)
 
     circle1 = ImplicitRegion((x, y), ((x-2)**2 + (y+3)**2 - 4))
-    assert circle1.rational_parametrization(parameter1=t) == (4/(t**2 + 1), 4*t/(t**2 + 1) - 3)
+    assert circle1.rational_parametrization(parameters=t) == (4/(t**2 + 1), 4*t/(t**2 + 1) - 3)
     circle2 = ImplicitRegion((x, y), (x - 1/2)**2 + y**2 - (1/4)**2 )
     raises(NotImplementedError, lambda: circle2.rational_parametrization())
     circle2.rational_parametrization(t, reg_point=Point(0.75, 0)) == (3/4 - 0.5/(t**2 + 1), -0.5*t/(t**2 + 1))
     circle3 = ImplicitRegion((x, y), Eq(x**2 + y**2, 2*x))
-    assert circle3.rational_parametrization(parameter1=t) == (2/(t**2 + 1), 2*t/(t**2 + 1))
+    assert circle3.rational_parametrization(parameters=(t,)) == (2/(t**2 + 1), 2*t/(t**2 + 1))
 
     parabola = ImplicitRegion((x, y), (y - 3)**2 - 4*(x + 6))
     assert parabola.rational_parametrization(t) == (-6 + 4/t**2, 3 + 4/t)
@@ -66,7 +66,7 @@ def test_rational_parametrization():
     assert rect_hyperbola.rational_parametrization(t) == (-100 + (100*t + S(1)/100)/t, 100*t)
 
     cubic_curve = ImplicitRegion((x, y), x**3 + x**2 - y**2)
-    assert cubic_curve.rational_parametrization(t) == (t**2 - 1, t*(t**2 - 1))
+    assert cubic_curve.rational_parametrization(parameters=(t)) == (t**2 - 1, t*(t**2 - 1))
     cuspidal = ImplicitRegion((x, y), (x**3 - y**2))
     assert cuspidal.rational_parametrization(t) == (t**2, t**3)
 
@@ -74,7 +74,11 @@ def test_rational_parametrization():
     assert I.rational_parametrization(t) == (t**2 - 1, t*(t**2 - 1))
 
     sphere = ImplicitRegion((x, y, z), Eq(x**2 + y**2 + z**2, 2*x))
-    assert sphere.rational_parametrization(s, t) == (2/(s**2 + t**2 + 1), 2*t/(s**2 + t**2 + 1), 2*s/(s**2 + t**2 + 1))
+    assert sphere.rational_parametrization(parameters=(s, t)) == (2/(s**2 + t**2 + 1), 2*t/(s**2 + t**2 + 1), 2*s/(s**2 + t**2 + 1))
+
+    conic = ImplicitRegion((x, y), Eq(x**2 + 4*x*y + 3*y**2 + x - y + 10, 0))
+    conic.rational_parametrization(t) == (-100 - 205/(3*(3*t**2 - sqrt(41881)*t + 4*t - 2*sqrt(41881)/3 + 1)),\
+                                -205*t/(3*(3*t**2 - sqrt(41881)*t + 4*t - 2*sqrt(41881)/3 + 1)) - sqrt(41881)/6 + 401/6)
 
     r1 = ImplicitRegion((x, y), y**2 - x**3 + x)
     raises(NotImplementedError, lambda: r1.rational_parametrization())
