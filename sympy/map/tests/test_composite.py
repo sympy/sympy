@@ -70,9 +70,6 @@ def test_CompositeMap():
     # composition can be defined
     class A(Map):
         def _eval_composite(self, other):
-            result = super()._eval_composite(other)
-            if result is not None:
-                return result
             if other == f1:
                 return f2
     assert CompositeMap(A(), f1, evaluate=True) == f2
@@ -91,3 +88,10 @@ def test_IteratedMap():
     # negative exponents
     assert IteratedMap(h, -1, evaluate=True) == h.inv()
     assert IteratedMap(h, -2, evaluate=True) == IteratedMap(h.inv(), 2)
+
+    # iteration can be defined
+    class A(Map):
+        def _eval_iteration(self, n):
+            if n == S.One/2:
+                return h1
+    assert IteratedMap(A(), S.One/2, evaluate=True) == h1

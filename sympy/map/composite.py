@@ -41,7 +41,7 @@ class CompositeMap(Map, AssocOp):
 
     >>> f@f
     F@F
-    >>> f@f.inv()
+    >>> f@(f.inv())
     IdentityMap
 
     References
