@@ -1,3 +1,4 @@
+from sympy.assumptions import ask, Q
 from sympy.core import Expr
 from sympy.core.operations import AssocOp
 from sympy.core.sympify import _sympify
@@ -158,7 +159,7 @@ class CompositeMap(Map, AssocOp):
 
 class IteratedMap(Map):
     """
-    A class n-th iterated function
+    A class for n-th iterated function.
 
     Explanation
     ===========
@@ -184,12 +185,13 @@ class IteratedMap(Map):
 
         if evaluate:
 
+            
             if n == 0:
                 return IdentityMap(b.domain)
             if n == 1:
                 return b
-            if n < 0:
-                return cls(b.inv(), -n, evaluate=True)
+            if ask(Q.negative(n)):
+                return cls(b.inv(evaluate=True), -n, evaluate=True)
 
             result = b._eval_iteration(n)
             if result is not None:
@@ -203,3 +205,28 @@ class IteratedMap(Map):
     @property
     def exp(self):
         return self.args[1]
+
+    @property
+    def domain(self):
+        return self.base.domain
+
+    @property
+    def codomain(self):
+        return self.base.codomain
+
+    def eval(self, arg):
+        new_self = self.doit(deep=False)
+
+        if not isinstance(new_self, self.func):
+            return new_self(arg, evaluate=True)
+        
+        b, n = new_self.args
+        if not n.free_symbols and ask(Q.integer(n)):
+            # n is non-abstract integer
+            result = arg
+            for i in range(n):
+                result = b(result, evaluate=True)
+                if isinstance(result, AppliedMap):
+                    # cannot be evaluated: abort evaluation
+                    return new_self(arg, evaluate=False)
+            return result

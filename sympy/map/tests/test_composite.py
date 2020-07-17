@@ -3,6 +3,7 @@ from sympy.map import Map, CompositeMap, IdentityMap, IteratedMap
 from sympy.testing.pytest import raises
 
 x = Symbol('x')
+n = Symbol('n', integer=True)
 f = Map('f', domain=FiniteSet(1,2), codomain=S.Naturals0)
 g = Map('g', domain=S.Reals, codomain=FiniteSet(3,4))
 h, h1, h2, h3 = Map('h'), Map('h1'), Map('h2'), Map('h3')
@@ -89,9 +90,30 @@ def test_IteratedMap():
     assert IteratedMap(h, -1, evaluate=True) == h.inv()
     assert IteratedMap(h, -2, evaluate=True) == IteratedMap(h.inv(), 2)
 
+    # undefined evaluation
+    assert IteratedMap(h, 2)(x, evaluate=True) == IteratedMap(h, 2)(x)
+
     # iteration can be defined
     class A(Map):
+        def eval(self, x):
+            return x + 1
+        def _eval_inverse(self):
+            return h1
         def _eval_iteration(self, n):
             if n == S.One/2:
-                return h1
-    assert IteratedMap(A(), S.One/2, evaluate=True) == h1
+                return h2
+    assert IteratedMap(A(), -1, evaluate=True) == h1
+    assert IteratedMap(A(), -2, evaluate=True) == IteratedMap(h1, 2, evaluate=True)
+    assert IteratedMap(A(), S.One/2, evaluate=True) == h2
+    assert IteratedMap(A(), n, evaluate=True) == IteratedMap(A(), n)
+    with assuming(Q.negative(n)):
+        assert IteratedMap(A(), n, evaluate=True) == IteratedMap(h1, -n)
+
+    # defined evaluation
+    assert IteratedMap(A(), 0)(x, evaluate=True) == x
+    assert IteratedMap(A(), S.One/2)(x, evaluate=True) == h2(x)
+    assert IteratedMap(A(), 1)(x, evaluate=True) == x + 1
+    assert IteratedMap(A(), 2)(x, evaluate=True) == x + 2
+    assert IteratedMap(A(), -1)(x, evaluate=True) == h1(x)
+    assert IteratedMap(A(), -2)(x, evaluate=True) == IteratedMap(h1, 2)(x)
+    assert IteratedMap(A(), n)(x, evaluate=True) == IteratedMap(A(), n)(x)

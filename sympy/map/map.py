@@ -94,7 +94,7 @@ class Map(Expr):
             return 1
 
     def eval(self, *args):
-        return None
+        return
 
     def __call__(self, *args, evaluate=False, **kwargs):
         return AppliedMap(self, *args, evaluate=evaluate )
