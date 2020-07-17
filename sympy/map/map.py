@@ -220,11 +220,9 @@ class InverseMap(Map):
 
         if evaluate:
             obj = mapping._eval_inverse()
-            if obj is None:
-                obj = cls(mapping, evaluate=False)
-        else:
-            obj = super().__new__(cls, mapping)
-        return obj
+            if obj is not None:
+                return obj
+        return super().__new__(cls, mapping)
 
     @property
     def base(self):
@@ -331,6 +329,7 @@ class AppliedMap(Expr):
     """
     def __new__(cls, mapping, *args, evaluate=False, **kwargs):
         args = [_sympify(a) for a in args]
+
         if evaluate:
 
             # convert f(f(x)) to CompositeMap(f,f)(x)

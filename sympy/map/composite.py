@@ -56,9 +56,7 @@ class CompositeMap(Map, AssocOp):
 
         domain = args[0].domain
 
-        if not evaluate:
-            return Expr.__new__(cls, *args)
-        else:
+        if evaluate:
             _, args, _ = cls.flatten(list(args))
 
             if len(args) == 0:
@@ -66,8 +64,8 @@ class CompositeMap(Map, AssocOp):
                 return IdentityMap(domain=domain)
             elif len(args) == 1:
                 return args[0]
-            else:
-                return Expr.__new__(cls, *args)
+
+        return Expr.__new__(cls, *args)
 
     @classmethod
     def check_domain(cls, seq):
