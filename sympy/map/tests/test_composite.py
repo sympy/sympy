@@ -17,8 +17,8 @@ def test_CompositeMap():
     assert gf.codomain == FiniteSet(3,4)
 
     # flattening
-    hh = CompositeMap(h, h)
-    assert CompositeMap(hh, h, evaluate=True) == CompositeMap(h, h, h)
+    hh = CompositeMap(h1, h2)
+    assert CompositeMap(hh, h3, evaluate=True) == CompositeMap(h1, h2, h3)
 
     # inverse cancellation
     assert CompositeMap(h, h.inv(), evaluate=True) == IdentityMap()
@@ -90,6 +90,11 @@ def test_IteratedMap():
     assert IteratedMap(h, -1, evaluate=True) == h.inv()
     assert IteratedMap(h, -2, evaluate=True) == IteratedMap(h.inv(), 2)
 
+    # Nested iteration
+    assert IteratedMap(IteratedMap(h, 2), 3, evaluate=True) == IteratedMap(h, 6)
+    # Inverse map is not considered as nested iteration
+    assert IteratedMap(h.inv(), 3, evaluate=True) != IteratedMap(h, -3)
+
     # undefined evaluation
     assert IteratedMap(h, 2)(x, evaluate=True) == IteratedMap(h, 2)(x)
 
@@ -108,6 +113,7 @@ def test_IteratedMap():
     assert IteratedMap(A(), n, evaluate=True) == IteratedMap(A(), n)
     with assuming(Q.negative(n)):
         assert IteratedMap(A(), n, evaluate=True) == IteratedMap(h1, -n)
+    assert IteratedMap(IteratedMap(A(), S.One/4), 2, evaluate=True) == h2
 
     # defined evaluation
     assert IteratedMap(A(), 0)(x, evaluate=True) == x

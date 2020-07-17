@@ -138,6 +138,14 @@ class Map(Expr):
         else:
             return self.func(*self.args, evaluate=True)
 
+    def as_base_iternum(self):
+        """
+        Interprete *self* as IteratedMap, returning the
+        base and number of iteration.
+
+        """
+        return self, S.One
+
 class UndefinedMap(Map):
     """
     A class for undefined mappings.

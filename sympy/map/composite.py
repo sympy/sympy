@@ -192,6 +192,10 @@ class IteratedMap(Map):
             if ask(Q.negative(n)):
                 return cls(b.inv(evaluate=True), -n, evaluate=True)
 
+            b_base, b_iternum = b.as_base_iternum()
+            if b_iternum != 1:
+                return cls(b.base, b.iternum*n, evaluate=True)
+
             result = b._eval_iteration(n)
             if result is not None:
                 return result
@@ -202,7 +206,7 @@ class IteratedMap(Map):
         return self.args[0]
 
     @property
-    def exp(self):
+    def iternum(self):
         return self.args[1]
 
     @property
@@ -229,3 +233,6 @@ class IteratedMap(Map):
                     # cannot be evaluated: abort evaluation
                     return new_self(arg, evaluate=False)
             return result
+
+    def as_base_iternum(self):
+        return self.args
