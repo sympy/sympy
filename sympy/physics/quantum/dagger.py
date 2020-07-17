@@ -85,7 +85,6 @@ class Dagger(adjoint):
 
     def __mul__(self, other):
         from sympy.physics.quantum import IdentityOperator
-
         if isinstance(other, IdentityOperator):
             return self
 
