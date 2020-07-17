@@ -127,6 +127,15 @@ class Map(Expr):
         if are_inverse:
             return IdentityMap(self.codomain)
 
+    def _eval_compositionalpow(self, e):
+        if e == 0:
+            return IdentityMap(self.domain)
+        if e == 1:
+            return self
+        if e < 0:
+            inv = self.inv(evaluate=True)
+            return CompositionalMapPow(inv, -e, evaluate=True)
+
     def doit(self, **hints):
         deep = hints.get('deep', True)
         if deep:
@@ -357,4 +366,4 @@ class AppliedMap(Expr):
         else:
             return self.func(*self.args, evaluate=True)
 
-from .composite import CompositeMap
+from .composite import CompositeMap, CompositionalMapPow

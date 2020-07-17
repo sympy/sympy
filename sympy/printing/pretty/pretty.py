@@ -2752,6 +2752,9 @@ class PrettyPrinter(Printer):
             pform = prettyForm(str(e))
         return pform
 
+    def _print_CompositionalMapPow(self, expr):
+        return self._print(expr.base)**self._print(expr.exp)
+
     def _print_AppliedMap(self, e):
         prettyMap = self.parenthesize(e.map, PRECEDENCE['Mul'])
         prettyArgs = self._print_seq(e.arguments, delimiter=', ')

@@ -7249,7 +7249,9 @@ def test_diffgeom():
     assert pretty(b) == "x"
 
 def test_map():
-    from sympy.map import Map, IdentityMap, CompositeMap
+    from sympy.map import (
+        Map, IdentityMap, CompositeMap, CompositionalMapPow
+    )
 
     f = Map(name='f')
     assert pretty(f) == "f"
@@ -7267,3 +7269,7 @@ def test_map():
     # Composite map
     assert upretty(CompositeMap(f, f)) == 'f ∘ f'
     assert upretty(CompositeMap(f, f)(x)) == '(f ∘ f)(x)'
+
+    # Compositional map power
+    assert pretty(CompositionalMapPow(f, 2)) == ' 2\nf '
+    assert pretty(CompositionalMapPow(f, 2)(x)) == ' 2   \nf (x)'

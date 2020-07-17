@@ -1,8 +1,9 @@
 from sympy.core import Expr
 from sympy.core.operations import AssocOp
+from sympy.core.sympify import _sympify
 from .map import Map, IdentityMap, AppliedMap
 
-__all__ = ["CompositeMap",]
+__all__ = ["CompositeMap", "CompositionalMapPow"]
 
 class CompositeMap(Map, AssocOp):
     """
@@ -139,3 +140,41 @@ class CompositeMap(Map, AssocOp):
     def _eval_inverse(self):
         maps = reversed([a.inverse() for a in self.args])
         return self.func(*maps)
+
+class CompositionalMapPow(Map):
+    """
+    A class for functional power.
+
+    Explanation
+    ===========
+
+    The n-th functional power is a function composed with itself n times. This
+    class has no direct relation with productional power, and should not be
+    confused with n-fold product function which is defined in function ring [1].
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Function_composition
+
+    """
+    def __new__(cls, b, e, evaluate=False):
+
+        if not b.codomain.is_subset(b.domain):
+            raise TypeError(
+        "%s's codomain %s is not subset of %s's domain %s" % (b, b.codomain, b, b.domain))
+
+        e = _sympify(e)
+
+        if evaluate:
+            result = b._eval_compositionalpow(e)
+            if result is not None:
+                return result
+        return super().__new__(cls, b, e)
+
+    @property
+    def base(self):
+        return self.args[0]
+
+    @property
+    def exp(self):
+        return self.args[1]

@@ -2653,7 +2653,9 @@ def test_latex_decimal_separator():
     raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))
 
 def test_map():
-    from sympy.map import Map, IdentityMap, CompositeMap
+    from sympy.map import (
+        Map, IdentityMap, CompositeMap, CompositionalMapPow
+    )
 
     f = Map(name='f')
     assert latex(f) == "f"
@@ -2671,3 +2673,7 @@ def test_map():
     # Composite map
     assert latex(CompositeMap(f, f)) == r'f \circ f'
     assert latex(CompositeMap(f, f)(x)) == r'\left(f \circ f\right){\left(x \right)}'
+
+    # Compositional map power
+    assert latex(CompositionalMapPow(f, 2)) == "{f}^{2}"
+    assert latex(CompositionalMapPow(f, 2)(x)) == r'{f}^{2}{\left(x \right)}'

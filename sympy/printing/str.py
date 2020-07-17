@@ -914,6 +914,11 @@ class StrPrinter(Printer):
     def _print_IdentityMap(self, expr):
         return "IdentityMap"
 
+    def _print_CompositionalMapPow(self, expr):
+        return "CompositionalMapPow(%s, %s)" % (
+            self._print(expr.base), self._print(expr.exp)
+        )
+
     def _print_CompositeMap(self, expr):
         return "@".join([self._print(t) for t in expr.args])
 
