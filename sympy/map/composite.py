@@ -174,19 +174,27 @@ class IteratedMap(Map):
     .. [2] https://en.wikipedia.org/wiki/Function_composition
 
     """
-    def __new__(cls, b, e, evaluate=False):
+    def __new__(cls, b, n, evaluate=False):
 
         if not b.codomain.is_subset(b.domain):
             raise TypeError(
         "%s's codomain %s is not subset of %s's domain %s" % (b, b.codomain, b, b.domain))
 
-        e = _sympify(e)
+        n = _sympify(n)
 
         if evaluate:
-            result = b._eval_compositionalpow(e)
+
+            if n == 0:
+                return IdentityMap(b.domain)
+            if n == 1:
+                return b
+            if n < 0:
+                return cls(b.inv(), -n, evaluate=True)
+
+            result = b._eval_iteration(n)
             if result is not None:
                 return result
-        return super().__new__(cls, b, e)
+        return super().__new__(cls, b, n)
 
     @property
     def base(self):

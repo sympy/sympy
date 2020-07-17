@@ -125,14 +125,10 @@ class Map(Expr):
         # be defined here since CompositeMap deals with it.
         return
 
-    def _eval_compositionalpow(self, e):
-        if e == 0:
-            return IdentityMap(self.domain)
-        if e == 1:
-            return self
-        if e < 0:
-            inv = self.inv()
-            return IteratedMap(inv, -e, evaluate=True)
+    def _eval_iteration(self, n):
+        # define special result for positive n-th iteration
+        # of self here.
+        return
 
     def doit(self, **hints):
         deep = hints.get('deep', True)
