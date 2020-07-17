@@ -185,7 +185,6 @@ class IteratedMap(Map):
 
         if evaluate:
 
-            
             if n == 0:
                 return IdentityMap(b.domain)
             if n == 1:
@@ -219,7 +218,7 @@ class IteratedMap(Map):
 
         if not isinstance(new_self, self.func):
             return new_self(arg, evaluate=True)
-        
+
         b, n = new_self.args
         if not n.free_symbols and ask(Q.integer(n)):
             # n is non-abstract integer
