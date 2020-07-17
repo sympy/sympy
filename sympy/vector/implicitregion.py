@@ -92,14 +92,14 @@ class ImplicitRegion(Basic):
             x, y = self.variables
 
             for x_reg in range(-100, 100):
-                if len(solveset(equation.subs(x, x_reg), self.variables[1], domain=S.Reals)) > 0:
+                if not solveset(equation.subs(x, x_reg), self.variables[1], domain=S.Reals).is_empty:
                     return (x_reg, list(solveset(equation.subs(x, x_reg), domain=S.Reals))[0])
         elif len(self.variables) == 3:
             x, y, z = self.variables
 
             for x_reg in range(-10, 10):
                 for y_reg in range(-10, 10):
-                    if len(solveset(equation.subs({x: x_reg, y: y_reg}), self.variables[2], domain=S.Reals)) > 0:
+                    if not solveset(equation.subs({x: x_reg, y: y_reg}), self.variables[2], domain=S.Reals).is_empty:
                         return (x_reg, y_reg, list(solveset(equation.subs({x: x_reg, y: y_reg})))[0])
 
         if len(self.singular_points()) != 0:
@@ -167,7 +167,7 @@ class ImplicitRegion(Basic):
 
         return m
 
-    def rational_parametrization(self, parameter1='t', parameter2='s', reg_point=None):
+    def rational_parametrization(self, parameters=('t', 's'), reg_point=None):
         """
         Returns the rational parametrization of implict region.
 
@@ -191,11 +191,11 @@ class ImplicitRegion(Basic):
         (t**2 - 1, t*(t**2 - 1))
 
         >>> cubic_curve = ImplicitRegion((x, y), x**3 + x**2 - y**2)
-        >>> cubic_curve.rational_parametrization(t)
+        >>> cubic_curve.rational_parametrization(parameters=(t))
         (t**2 - 1, t*(t**2 - 1))
 
         >>> sphere = ImplicitRegion((x, y, z), x**2 + y**2 + z**2 - 4)
-        >>> sphere.rational_parametrization(parameter1=t, parameter2=s)
+        >>> sphere.rational_parametrization(parameters=(t, s))
         (-2 + 4/(s**2 + t**2 + 1), 4*s/(s**2 + t**2 + 1), 4*t/(s**2 + t**2 + 1))
 
         For some conics, regular_points() is unable to find a point on curve.
@@ -269,8 +269,12 @@ class ImplicitRegion(Basic):
 
         hn_1 = -1*hn_1
 
+        if not isinstance(parameters, tuple):
+            parameters = (parameters,)
+
         if len(self.variables) == 2:
 
+            parameter1 = parameters[0]
             if parameter1 == 's':
                 # To avoid name conflict between parameters
                 s = _symbol('s_', real=True)
@@ -288,6 +292,7 @@ class ImplicitRegion(Basic):
 
         elif len(self.variables) == 3:
 
+            parameter1, parameter2 = parameters
             if parameter1 == 'r' or parameter2 == 'r':
                 # To avoid name conflict between parameters
                 r = _symbol('r_', real=True)
