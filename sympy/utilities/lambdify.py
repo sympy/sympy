@@ -165,14 +165,20 @@ def _import(module, reload=False):
 _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
-def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-             dummify=False):
+def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
+             dummify=False, sort_args=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
     .. warning::
        This function uses ``exec``, and thus shouldn't be used on
        unsanitized input.
+
+    .. warning::
+       This function uses ``enumerate`` on ``args``, thus you should
+       provide `args` that is a fixed-ordering iterable, e.g. a sequence,
+        or take responsibility for making sure the args are in the order
+        you want them to be.
 
     Explanation
     ===========
@@ -322,6 +328,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         Set ``dummify=True`` to replace all arguments with dummy symbols
         (if ``args`` is not a string) - for example, to ensure that the
         arguments do not redefine any built-in names.
+
+    sort_args: bool, optional
+            Lambdify can take care of sorting your iterable ``args`` in consistent
+            way using fixed sorting criterion by alphabetical order
 
     Examples
     ========
@@ -797,10 +807,30 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                            'allow_unknown_functions': True,
                            'user_functions': user_functions})
 
+
+    if  type(args) is set:
+        print('WARNING: The list of arguments is a `set`. The outcome of enumerate(args) is used to `lambdify` but its outcome is not predictable')
+        print('WARNING: Convert your argument list to an iterable that can be enumerated in a predictable way, e.g. a sequence, list or OrderedDicts')
+        if not sort_args:
+            print('WARNING: If you wish you can let `lambdify` sort your args in a predictable way. Set the optional argument `sort_args=True` ')
+        if sort_args:
+            def sort_symbols(_args):
+                return sorted(list( _args ) ,key=lambda s: s.name)
+
+            sorted_args=sort_symbols(args)
+            change_warning='WARNING: You gave a set as args ' + str(args) + ' and they have been sorted to ' + str(sorted_args)
+            print( change_warning )
+            args=sorted_args
+
+    #print('WARNING: Your args are', args)
+
+
     # Get the names of the args, for creating a docstring
     if not iterable(args):
         args = (args,)
     names = []
+
+
     # Grab the callers frame, for getting the names by inspection (if needed)
     callers_local_vars = inspect.currentframe().f_back.f_locals.items()
     for n, var in enumerate(args):
