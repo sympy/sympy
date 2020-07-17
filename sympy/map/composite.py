@@ -79,26 +79,43 @@ class CompositeMap(Map, AssocOp):
 
     @classmethod
     def flatten(cls, seq):
-        #1.  denest the composite mappings
-        _, seq, _ = super().flatten(seq)
 
-        #2.  find if composition is defined
-        # composition with inverse or identity are handled here
         oldseq = []
-        while len(oldseq) != len(seq):
-            oldseq = seq
+        while oldseq != seq:
+            #1. Denest the composite mappings.
+            # This must be in while loop since the user may define
+            # composite of maps to return another composite of maps.
+            _, oldseq, _ = super().flatten(seq)
             seq = []
+
             m1 = None
             for m2 in oldseq:
                 if m1 is None:
                     m1 = m2
-                else:
-                    comp_val = m1._eval_composite(m2)
-                    if comp_val is None:
-                        seq.append(m1)
-                        m1 = m2
-                    else:
-                        m1 = comp_val
+                    continue
+                #2. Find if composition is defined
+                comp_val = m1._eval_composite(m2)
+                if comp_val is not None:
+                    m1 = comp_val
+                    continue
+                #3. Check if m1 and m2 are inverse.
+                # Unevaluated substructures are not evaluated here
+                # to check if m1 and m2 are inverse for performance reason.
+                # Calling doit(deep=True) will deal with such case.
+                if m1 == m2.inv(evaluate=True):
+                    m1 = IdentityMap(m1.codomain)
+                    continue
+                #4. Deal with identity maps
+                # IdentityMaps cannot be blindly removed because
+                # the domain and codomain of m1 and m2 can be different.
+                if isinstance(m1, IdentityMap) and m1.domain == m2.codomain:
+                    m1 = m2
+                    continue
+                if isinstance(m2, IdentityMap) and m1.domain == m2.codomain:
+                    continue
+                #5. No evaluation can be done with m1 and m2
+                seq.append(m1)
+                m1 = m2
             if m1 is not None:
                 seq.append(m1)
 

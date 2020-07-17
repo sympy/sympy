@@ -114,18 +114,16 @@ class Map(Expr):
     inv = inverse
 
     def _eval_inverse(self):
-        return None
+        return
 
     def composite(self, other, evaluate=False):
         return CompositeMap(self, other, evaluate=evaluate)
 
     def _eval_composite(self, other):
-        if isinstance(other, IdentityMap) and other.codomain == self.domain:
-            return self
-
-        are_inverse = self.doit() == other.inv().doit()
-        if are_inverse:
-            return IdentityMap(self.codomain)
+        # define composition with other 'special' map here.
+        # composition with inverse map or identity map need not
+        # be defined here since CompositeMap deals with it.
+        return
 
     def _eval_compositionalpow(self, e):
         if e == 0:
@@ -292,10 +290,6 @@ class IdentityMap(Map):
 
     def _eval_inverse(self):
         return self
-
-    def _eval_composite(self, other):
-        if other.codomain == self.domain:
-            return other
 
 class AppliedMap(Expr):
     """
