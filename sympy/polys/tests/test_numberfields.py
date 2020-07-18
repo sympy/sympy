@@ -782,3 +782,10 @@ def test_issue_13230():
     + 9*sqrt(5)/29 + sqrt(196*sqrt(35) + 1941)/29), -2*sqrt(7)/29 + 9*sqrt(5)/29
     + sqrt(196*sqrt(35) + 1941)/29), Point2D(-1 + (-sqrt(7) + sqrt(5))*(-sqrt(196*sqrt(35)
     + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29), -sqrt(196*sqrt(35) + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29)]
+
+def test_sympyissue_19760():
+    e = 1/(sqrt(1 + sqrt(2)) - sqrt(2)*sqrt(1 + sqrt(2))) + 1
+
+    for comp in (True, False):
+        mp = Poly(minimal_polynomial(e, compose=comp))
+        assert mp(x) == x**4 - 4*x**3 + 4*x**2 - 2
