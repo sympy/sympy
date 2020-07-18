@@ -3,7 +3,7 @@ from sympy import (exp, S, ProductSet, sqrt, pi, symbols,
 from sympy.matrices import Determinant, Matrix, Trace, MatrixSymbol
 from sympy.stats import density
 from sympy.stats.matrix_distributions import (MatrixGammaDistribution,
-                MatrixGamma, MatrixPSpace)
+                MatrixGamma, MatrixPSpace, Wishart, MatrixNormal)
 from sympy.testing.pytest import raises
 
 
@@ -15,7 +15,7 @@ def test_MatrixPSpace():
 
 def test_MatrixGamma():
     M = MatrixGamma('M', 1, 2, [[1, 0], [0, 1]])
-    assert M.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
+    assert M.pspace.distribution.set == ProductSet(S.Reals**2, S.Reals**2)
     assert isinstance(density(M), MatrixGammaDistribution)
     X = MatrixSymbol('X', 2, 2)
     num = exp(Trace(Matrix([[-S(1)/2, 0], [0, -S(1)/2]])*X))
@@ -44,3 +44,52 @@ def test_MatrixGamma():
     raises(ValueError, lambda: MatrixGamma('M', -1, -2, [[1, 0], [0, 1]]))
     raises(ValueError, lambda: MatrixGamma('M', -1, 2, [[1, 0], [2, 1]]))
     raises(ValueError, lambda: MatrixGamma('M', -1, 2, [[1, 0], [0]]))
+
+def test_Wishart():
+    W = Wishart('W', 5, [[1, 0], [0, 1]])
+    assert W.pspace.distribution.set == ProductSet(S.Reals**2, S.Reals**2)
+    assert isinstance(density(W), MatrixGammaDistribution)
+    X = MatrixSymbol('X', 2, 2)
+    term1 = exp(Trace(Matrix([[-S(1)/2, 0], [0, -S(1)/2]])*X))
+    assert density(W)(X).doit() == term1 * Determinant(X)/(24*pi)
+    assert density(W)([[2, 1], [1, 2]]).doit() == exp(-2)/(8*pi)
+    n = symbols('n', positive=True)
+    d = symbols('d', positive=True, integer=True)
+    Y = MatrixSymbol('Y', d, d)
+    SM = MatrixSymbol('SM', d, d)
+    W = Wishart('W', n, SM)
+    k = Dummy('k')
+    exprd = 2**(-d*n/2)*pi**(-d*(d - 1)/4)*exp(Trace(-(S(1)/2)*SM**(-1)*Y)
+    )*Determinant(SM)**(-n/2)*Determinant(Y)**(
+    -d/2 + n/2 - S(1)/2)/Product(gamma(-k/2 + n/2 + S(1)/2), (k, 1, d))
+    assert density(W)(Y).dummy_eq(exprd)
+    raises(ValueError, lambda: density(W)(1))
+    raises(ValueError, lambda: Wishart('W', -1, [[1, 0], [0, 1]]))
+    raises(ValueError, lambda: Wishart('W', -1, [[1, 0], [2, 1]]))
+    raises(ValueError, lambda: Wishart('W',  2, [[1, 0], [0]]))
+
+def test_MatrixNormal():
+    M = MatrixNormal('M', [[5, 6]], [4], [[2, 1], [1, 2]])
+    assert M.pspace.distribution.set == ProductSet(S.Reals**1, S.Reals**2)
+    X = MatrixSymbol('X', 1, 2)
+    term1 = exp(-Trace(Matrix([[ S(2)/3, -S(1)/3], [-S(1)/3, S(2)/3]])*(
+            Matrix([[-5], [-6]]) + X.T)*Matrix([[1/4]])*(Matrix([[-5, -6]]) + X))/2)
+    assert density(M)(X).doit() == term1/(24*pi)
+    assert density(M)([[7, 8]]).doit() == exp(-S(1)/3)/(24*pi)
+    d, n = symbols('d n', positive=True, integer=True)
+    SM2 = MatrixSymbol('SM2', d, d)
+    SM1 = MatrixSymbol('SM1', n, n)
+    LM = MatrixSymbol('LM', n, d)
+    Y = MatrixSymbol('Y', n, d)
+    M = MatrixNormal('M', LM, SM1, SM2)
+    exprd = 4*(2*pi)**(-d*n/2)*exp(-Trace(SM2**(-1)*(-LM.T + Y.T)*SM1**(-1)*(-LM + Y)
+        )/2)*Determinant(SM1)**(-d)*Determinant(SM2)**(-n)
+    assert density(M)(Y).doit() == exprd
+    raises(ValueError, lambda: density(M)(1))
+    raises(ValueError, lambda: MatrixNormal('M', [1, 2], [[1, 0], [0, 1]], [[1, 0], [2, 1]]))
+    raises(ValueError, lambda: MatrixNormal('M', [1, 2], [[1, 0], [2, 1]], [[1, 0], [0, 1]]))
+    raises(ValueError, lambda: MatrixNormal('M', [1, 2], [[1, 0], [0, 1]], [[1, 0], [0, 1]]))
+    raises(ValueError, lambda: MatrixNormal('M', [1, 2], [[1, 0], [2]], [[1, 0], [0, 1]]))
+    raises(ValueError, lambda: MatrixNormal('M', [1, 2], [[1, 0], [2, 1]], [[1, 0], [0]]))
+    raises(ValueError, lambda: MatrixNormal('M', [[1, 2]], [[1, 0], [0, 1]], [[1, 0]]))
+    raises(ValueError, lambda: MatrixNormal('M', [[1, 2]], [1], [[1, 0]]))

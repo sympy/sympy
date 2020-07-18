@@ -1788,6 +1788,14 @@ def test_sympy__stats__matrix_distributions__MatrixGammaDistribution():
     from sympy import Matrix
     assert _test_args(MatrixGammaDistribution(3, 4, Matrix([[1, 0], [0, 1]])))
 
+def test_sympy__stats__matrix_distributions__MatrixNormalDistribution():
+    from sympy.stats.matrix_distributions import MatrixNormalDistribution
+    from sympy import MatrixSymbol
+    L = MatrixSymbol('L', 1, 2)
+    S1 = MatrixSymbol('S1', 1, 1)
+    S2 = MatrixSymbol('S2', 2, 2)
+    assert _test_args(MatrixNormalDistribution(L, S1, S2))
+
 
 def test_sympy__core__symbol__Str():
     from sympy.core.symbol import Str

@@ -1,7 +1,7 @@
-from sympy import S, Basic, exp, multigamma
+from sympy import S, Basic, exp, multigamma, ProductSet, pi
 from sympy.core.sympify import sympify, _sympify
 from sympy.matrices import (ImmutableMatrix, Inverse, Trace, Determinant,
-                            MatrixSymbol, MatrixBase)
+                            MatrixSymbol, MatrixBase, Transpose)
 from sympy.stats.rv import (_value_check, RandomMatrixSymbol, NamedArgsMixin, PSpace,
                             _symbol_converter)
 
@@ -85,7 +85,7 @@ class MatrixGammaDistribution(MatrixDistribution):
     @property
     def set(self):
         k = self.scale_matrix.shape[0]
-        return S.Reals ** k
+        return ProductSet(S.Reals**k, S.Reals**k)
 
     @property
     def dimension(self):
@@ -151,3 +151,148 @@ def MatrixGamma(symbol, alpha, beta, scale_matrix):
     if isinstance(scale_matrix, list):
         scale_matrix = ImmutableMatrix(scale_matrix)
     return rv(symbol, MatrixGammaDistribution, (alpha, beta, scale_matrix))
+
+#-------------------------------------------------------------------------------
+# Wishar Distribution ----------------------------------------------------------
+
+def Wishart(symbol, n, scale_matrix):
+    """
+    Creates a random variable with Wishart Distribution.
+
+    The density of the said distribution can be found at [1].
+
+    Parameters
+    ==========
+
+    n: Positive Real number
+        Represents degrees of freedom
+    scale_matrix: Positive definite real square matrix
+        Scale Matrix
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density, Wishart
+    >>> from sympy import MatrixSymbol, symbols
+    >>> n = symbols('n', positive=True)
+    >>> W = Wishart('W', n, [[2, 1], [1, 2]])
+    >>> X = MatrixSymbol('X', 2, 2)
+    >>> density(W)(X).doit()
+    2**(-n)*3**(-n/2)*exp(Trace(Matrix([
+    [-1/3,  1/6],
+    [ 1/6, -1/3]])*X))*Determinant(X)**(n/2 - 3/2)/(sqrt(pi)*gamma(n/2)*gamma(n/2 - 1/2))
+    >>> density(W)([[1, 0], [0, 1]]).doit()
+    2**(-n)*3**(-n/2)*exp(-2/3)/(sqrt(pi)*gamma(n/2)*gamma(n/2 - 1/2))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Wishart_distribution
+
+    """
+    if isinstance(scale_matrix, list):
+        scale_matrix = ImmutableMatrix(scale_matrix)
+    return rv(symbol, MatrixGammaDistribution, (n/S(2), S(2), scale_matrix))
+
+#-------------------------------------------------------------------------------
+# Matrix Normal distribution ---------------------------------------------------
+
+class MatrixNormalDistribution(MatrixDistribution):
+
+    _argnames = ('location_matrix', 'scale_matrix_1', 'scale_matrix_2')
+
+    @staticmethod
+    def check(location_matrix, scale_matrix_1, scale_matrix_2):
+        if not isinstance(scale_matrix_1 , MatrixSymbol):
+            _value_check(scale_matrix_1.is_positive_definite, "The shape "
+                "matrix must be positive definite.")
+        if not isinstance(scale_matrix_2 , MatrixSymbol):
+            _value_check(scale_matrix_2.is_positive_definite, "The shape "
+                "matrix must be positive definite.")
+        _value_check(scale_matrix_1.is_square, "Scale matrix 1 should be "
+        "be square matrix")
+        _value_check(scale_matrix_2.is_square, "Scale matrix 2 should be "
+        "be square matrix")
+        n = location_matrix.shape[0]
+        p = location_matrix.shape[1]
+        _value_check(scale_matrix_1.shape[0] == n, "Scale matrix 1 should be"
+        " of shape %s x %s"% (str(n), str(n)))
+        _value_check(scale_matrix_2.shape[0] == p, "Scale matrix 2 should be"
+        " of shape %s x %s"% (str(p), str(p)))
+
+    @property
+    def set(self):
+        n, p = self.location_matrix.shape
+        return ProductSet(S.Reals**n, S.Reals**p)
+
+    @property
+    def dimension(self):
+        return self.location_matrix.shape
+
+    def pdf(self, x):
+        M , U , V = self.location_matrix, self.scale_matrix_1, self.scale_matrix_2
+        n, p = M.shape
+        if isinstance(x, list):
+            x = ImmutableMatrix(x)
+        if not isinstance(x, (MatrixBase, MatrixSymbol)):
+            raise ValueError("%s should be an isinstance of Matrix "
+                    "or MatrixSymbol" % str(x))
+        term1 = Inverse(V)*Transpose(x - M)*Inverse(U)*(x - M)
+        num = exp(-Trace(term1)/S(2))
+        den = (2*pi)**(S(n*p)/2) * Determinant(U)**S(p)/2 * Determinant(V)**S(n)/2
+        return num/den
+
+def MatrixNormal(symbol, location_matrix, scale_matrix_1, scale_matrix_2):
+    """
+    Creates a random variable with Matrix Normal Distribution.
+
+    The density of the said distribution can be found at [1].
+
+    Parameters
+    ==========
+
+    location_matrix: Real ``n x p`` matrix
+        Represents degrees of freedom
+    scale_matrix_1: Positive definite matrix
+        Scale Matrix of shape ``n x n``
+    scale_matrix_2: Positive definite matrix
+        Scale Matrix of shape ``p x p``
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol
+    >>> from sympy.stats import density, MatrixNormal
+    >>> M = MatrixNormal('M', [[1, 2]], [1], [[1, 0], [0, 1]])
+    >>> X = MatrixSymbol('X', 1, 2)
+    >>> density(M)(X).doit()
+    2*exp(-Trace((Matrix([
+    [-1],
+    [-2]]) + X.T)*(Matrix([[-1, -2]]) + X))/2)/pi
+    >>> density(M)([[3, 4]]).doit()
+    2*exp(-4)/pi
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Matrix_normal_distribution
+
+    """
+    if isinstance(location_matrix, list):
+        location_matrix = ImmutableMatrix(location_matrix)
+    if isinstance(scale_matrix_1, list):
+        scale_matrix_1 = ImmutableMatrix(scale_matrix_1)
+    if isinstance(scale_matrix_2, list):
+        scale_matrix_2 = ImmutableMatrix(scale_matrix_2)
+    args = (location_matrix, scale_matrix_1, scale_matrix_2)
+    return rv(symbol, MatrixNormalDistribution, args)
