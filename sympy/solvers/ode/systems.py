@@ -603,11 +603,12 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
 
     >>> eqs = canonical_odes(eqs, funcs, x)
     >>> eqs
-    [Eq(Derivative(f(x), x), a*g(x) + f(x) + 1), Eq(Derivative(g(x), x), a*f(x) - g(x))]
+    [[Eq(Derivative(f(x), x), a*g(x) + f(x) + 1), Eq(Derivative(g(x), x), a*f(x) - g(x))]]
 
     Now, we will use :obj:`sympy.solvers.ode.systems.linear_ode_to_matrix()` to get the coefficient matrix and the
     non-homogeneous term if it is there.
 
+    >>> eqs = eqs[0]
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
     >>> A = A0
 
@@ -818,7 +819,7 @@ def canonical_odes(eqs, funcs, t):
 
     >>> canonical_eqs = canonical_odes(eqs, funcs, x)
     >>> canonical_eqs
-    [Eq(Derivative(f(x), x), 7*f(x) + 12*g(x)), Eq(Derivative(g(x), x), 20*f(x) - g(x))]
+    [[Eq(Derivative(f(x), x), 7*f(x) + 12*g(x)), Eq(Derivative(g(x), x), 20*f(x) - g(x))]]
 
     >>> system = [Eq(Derivative(f(x), x)**2 - 2*Derivative(f(x), x) + 1, 4), Eq(-y*f(x) + Derivative(g(x), x), 0)]
 
@@ -1105,23 +1106,28 @@ def _is_type1(scc, t):
 def _combine_systems(sccs, graph, t):
     is_type1 = [True for i in range(len(sccs))]
     to_delete = set()
+    delete_dict = {}
     for i, scc in enumerate(sccs):
-        eqs, funcs = scc
+        eqs, funcs = set(scc[0]), set(scc[1])
         for j in graph[i]:
             if is_type1[j]:
-                if j not in to_delete:
-                    eqs, funcs = eqs + sccs[j][0], funcs + sccs[j][1]
+                idx = delete_dict[j] if j in to_delete else j
+                eqs, funcs = eqs | set(sccs[idx][0]), funcs | set(sccs[idx][1])
             else:
                 is_type1[i] = False
                 break
 
+        eqs, funcs = list(eqs), list(funcs)
         is_type1[i] = _is_type1((eqs, funcs), t) if is_type1[i] else is_type1[i]
-
         if is_type1[i]:
-            min_index = graph[i][-1] if graph[i] else i
+            min_index = i
+            if graph[i]:
+                min_index = delete_dict[graph[i][-1]] if graph[i][-1] in to_delete else graph[i][-1]
             sccs[min_index] = (eqs, funcs)
-            to_delete |= set(graph[i] + [i])
-            to_delete.discard(min_index)
+            new_delete = set(graph[i] + [i])
+            new_delete.discard(min_index)
+            delete_dict.update({idx: min_index for idx in new_delete})
+            to_delete |= new_delete
 
     components = []
     for i, scc in enumerate(sccs):
@@ -1216,6 +1222,19 @@ def _strong_component_solver(eqs, funcs, t):
 
 # Returns: List of Equations(a solution)
 def _weak_component_solver(wcc, t):
+
+    # We will divide the systems into sccs
+    # only when the wcc cannot be solved as
+    # a whole
+    eqs, funcs = [], []
+    for scc in wcc:
+        eqs += scc[0]
+        funcs += scc[1]
+
+    sol = _strong_component_solver(eqs, funcs, t)
+    if sol:
+        return sol
+
     sol = []
 
     for j, scc in enumerate(wcc):
@@ -1239,6 +1258,8 @@ def _weak_component_solver(wcc, t):
 
 
 # Returns: List of Equations(a solution)
+# To add test cases for component division
+# when we have a nonlinear sysode solver
 def _component_solver(eqs, t):
     components = _component_division(eqs, t)
     sol = []
@@ -1365,10 +1386,11 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     canon_eqs = canonical_odes(eqs, funcs, t)
     sols = []
 
-    # Note: Assuming a canon_eq has a single
-    # solution.
     for canon_eq in canon_eqs:
-        sols.append(_component_solver(canon_eq, t))
+        sol = _strong_component_solver(canon_eq, funcs, t)
+        if sol is None:
+            sol = _component_solver(canon_eq, t)
+        sols.append(sol)
 
     if sols:
         final_sols = []
