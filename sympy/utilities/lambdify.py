@@ -9,6 +9,8 @@ import inspect
 import keyword
 import textwrap
 import linecache
+import warnings
+
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, builtins)
@@ -809,17 +811,17 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
 
 
     if  type(args) is set:
-        print('WARNING: The list of arguments is a `set`. The outcome of enumerate(args) is used to `lambdify` but its outcome is not predictable')
-        print('WARNING: Convert your argument list to an iterable that can be enumerated in a predictable way, e.g. a sequence, list or OrderedDicts')
+        warnings.warn('WARNING: The list of arguments is a `set`. The outcome of enumerate(args) is used to `lambdify` but its outcome is not predictable', category=DeprecationWarning)
+        #print('WARNING: Convert your argument list to an iterable that can be enumerated in a predictable way, e.g. a sequence, list or OrderedDicts')
         if not sort_args:
-            print('WARNING: If you wish you can let `lambdify` sort your args in a predictable way. Set the optional argument `sort_args=True` ')
+            warnings.warn('WARNING: If you wish you can let `lambdify` sort your args in a predictable way. Set the optional argument `sort_args=True` ', category=DeprecationWarning)
         if sort_args:
             def sort_symbols(_args):
                 return sorted(list( _args ) ,key=lambda s: s.name)
 
             sorted_args=sort_symbols(args)
             change_warning='WARNING: You gave a set as args ' + str(args) + ' and they have been sorted to ' + str(sorted_args)
-            print( change_warning )
+            warnings.warn( change_warning, category=DeprecationWarning )
             args=sorted_args
 
     #print('WARNING: Your args are', args)
