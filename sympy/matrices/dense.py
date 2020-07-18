@@ -855,7 +855,6 @@ class DenseDomainMatrix(DenseMatrix):
     def LUsolve(self, rhs, **kwargs):
         if not isinstance(rhs, DenseDomainMatrix):
             return super().LUsolve(rhs, **kwargs)
-        from sympy.polys.domainmatrix import lu_solve
         rep = self._rep
         rhsrep = rhs._rep
         if not rep.domain.is_Field:
@@ -863,7 +862,7 @@ class DenseDomainMatrix(DenseMatrix):
         if not rhsrep.domain.is_Field:
             rhsrep = rhsrep.to_field()
         rep, rhsrep = rep.unify(rhsrep)
-        x = lu_solve(rep, rhsrep)
+        x = rep.lu_solve(rhsrep)
         return self.from_DomainMatrix(x)
 
     # called by __rmul__ in common.py

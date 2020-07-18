@@ -174,6 +174,17 @@ class DDM(list):
 
         return L, U, swaps
 
+    def lu_solve(a, b):
+        """x where a*x = b"""
+        m, n = a.shape
+        m2, o = b.shape
+        a._check(a, 'lu_solve', b, m, m2)
+
+        L, U, swaps = a.lu()
+        x = a.zeros((n, o), a.domain)
+        ddm_ilu_solve(x, L, U, swaps, b)
+        return x
+
 
 def ddm_iadd(a, b):
     """a += b"""
@@ -374,6 +385,47 @@ def ddm_ilu(a):
     return swaps
 
 
+def ddm_ilu_solve(x, L, U, swaps, b):
+    """x  <--  solve(L*U*x = swaps(b))"""
+    m, n = U.shape
+    m2, o = b.shape
+
+    if m != m2:
+        raise DDMShapeError("Shape mismtch")
+    if m < n:
+        raise NotImplementedError("Underdetermined")
+
+    if swaps:
+        b = [row[:] for row in b]
+        for i1, i2 in swaps:
+            b[i1], b[i2] = b[i2], b[i1]
+
+    # solve Ly = b
+    y = [[None] * o for _ in range(m)]
+    for k in range(o):
+        for i in range(m):
+            rhs = b[i][k]
+            for j in range(i):
+                rhs -= L[i][j] * y[j][k]
+            y[i][k] = rhs
+
+    if m > n:
+        for i in range(n, m):
+            for j in range(o):
+                if y[i][j]:
+                    raise NonInvertibleMatrixError
+
+    # Solve Ux = y
+    for k in range(o):
+        for i in reversed(range(n)):
+            if not U[i][i]:
+                raise NonInvertibleMatrixError
+            rhs = y[i][k]
+            for j in range(i+1, n):
+                rhs -= U[i][j] * x[j][k]
+            x[i][k] = rhs / U[i][i]
+
+
 class DomainMatrix:
 
     def __init__(self, rows, shape, domain):
@@ -508,61 +560,20 @@ class DomainMatrix:
         L, U, swaps = self.rep.lu()
         return self.from_ddm(L), self.from_ddm(U), swaps
 
+    def lu_solve(self, rhs):
+        if self.shape[0] != rhs.shape[0]:
+            raise ShapeError("Shape")
+        if not self.domain.is_Field:
+            raise ValueError('Not a field')
+        sol = self.rep.lu_solve(rhs.rep)
+        return self.from_ddm(sol)
+
     def __eq__(A, B):
         """A == B"""
         if not isinstance(B, DomainMatrix):
             return NotImplemented
         return A.rep == B.rep
 
-
-def lu_solve(M, b):
-    if M.domain != b.domain:
-        raise ValueError("Domain")
-
-    dom = M.domain
-    m, n = M.shape
-    m2, o = b.shape
-
-    if m != m2:
-        raise ShapeError("Shape")
-    if m < n:
-        raise NotImplementedError("Underdetermined")
-
-    L, U, swaps = M.lu()
-
-    b_rows = [row[:] for row in b.rep]
-    if swaps:
-        for i1, i2 in swaps:
-            b_rows[i1], b_rows[i2] = b_rows[i2], b_rows[i1]
-
-    # solve Ly = b
-    y = [[None] * o for _ in range(m)]
-    for k in range(o):
-        for i in range(m):
-            rhs = b_rows[i][k]
-            for j in range(i):
-                rhs -= L.rep[i][j] * y[j][k]
-            y[i][k] = rhs
-
-    if m > n:
-        for i in range(n, m):
-            for j in range(o):
-                if y[i][j]:
-                    raise NonInvertibleMatrixError
-
-    # Solve Ux = y
-    x = [[None] * o for _ in range(n)]
-    for k in range(o):
-        for i in reversed(range(n)):
-            if not U.rep[i][i]:
-                raise NonInvertibleMatrixError
-            rhs = y[i][k]
-            for j in range(i+1, n):
-                rhs -= U.rep[i][j] * x[j][k]
-            x[i][k] = rhs / U.rep[i][i]
-
-    x = DomainMatrix(x, (n, o), dom)
-    return x
 
 def berk(M):
     dom = M.domain
