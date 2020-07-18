@@ -62,6 +62,14 @@ class DDM(list):
         rowslist = ([z] * n for _ in range(m))
         return DDM(rowslist, shape, domain)
 
+    @classmethod
+    def eye(cls, size, domain):
+        one = domain.one
+        ddm = cls.zeros((size, size), domain)
+        for i in range(size):
+            ddm[i][i] = one
+        return ddm
+
     def copy(self):
         copyrows = (row[:] for row in self)
         return DDM(copyrows, self.shape, self.domain)
@@ -154,6 +162,17 @@ class DDM(list):
         K = a.domain
         ddm_iinv(ainv, a, K)
         return ainv
+
+    def lu(a):
+        """L, U decomposition of a"""
+        m, n = a.shape
+        K = a.domain
+
+        U = a.copy()
+        L = a.eye(m, K)
+        swaps = ddm_ilu_split(L, U, K)
+
+        return L, U, swaps
 
 
 def ddm_iadd(a, b):
@@ -309,6 +328,52 @@ def ddm_iinv(ainv, a, K):
     ainv[:] = [row[n:] for row in Aaug]
 
 
+def ddm_ilu_split(L, U, K):
+    """L, U  <--  LU(U)"""
+    m = len(U)
+    if not m:
+        return []
+    n = len(U[0])
+
+    swaps = ddm_ilu(U)
+
+    zeros = [K.zero] * min(m, n)
+    for i in range(1, m):
+        j = min(i, n)
+        L[i][:j] = U[i][:j]
+        U[i][:j] = zeros[:j]
+
+    return swaps
+
+
+def ddm_ilu(a):
+    """a  <--  LU(a)"""
+    m = len(a)
+    if not m:
+        return []
+    n = len(a[0])
+
+    swaps = []
+
+    for i in range(min(m, n)):
+        if not a[i][i]:
+            for ip in range(i+1, m):
+                if a[ip][i]:
+                    swaps.append((i, ip))
+                    a[i], a[ip] = a[ip], a[i]
+                    break
+            else:
+                # M = Matrix([[1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 1, 1], [0, 0, 1, 2]])
+                continue
+        for j in range(i+1, m):
+            l_ji = a[j][i] / a[i][i]
+            a[j][i] = l_ji
+            for k in range(i+1, n):
+                a[j][k] -= l_ji * a[i][k]
+
+    return swaps
+
+
 class DomainMatrix:
 
     def __init__(self, rows, shape, domain):
@@ -437,55 +502,17 @@ class DomainMatrix:
             raise NonSquareMatrixError
         return self.rep.det()
 
+    def lu(self):
+        if not self.domain.is_Field:
+            raise ValueError('Not a field')
+        L, U, swaps = self.rep.lu()
+        return self.from_ddm(L), self.from_ddm(U), swaps
+
     def __eq__(A, B):
         """A == B"""
         if not isinstance(B, DomainMatrix):
             return NotImplemented
         return A.rep == B.rep
-
-
-def lu_decomp(M):
-
-    dom = M.domain
-
-    if not dom.is_Field:
-        raise ValueError("Domain")
-
-    N, O = M.shape
-
-    lu = [row[:] for row in M.rep]
-    swaps = []
-
-    for n in range(min(N, O)):
-        if not lu[n][n]:
-            for m in range(n+1, N):
-                if lu[m][n]:
-                    swaps.append((n, m))
-                    lu[n], lu[m] = lu[m], lu[n]
-                    break
-            else:
-                # M = Matrix([[1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 1, 1], [0, 0, 1, 2]])
-                continue
-        for i in range(n+1, N):
-            l_in = lu[i][n] / lu[n][n]
-            lu[i][n] = l_in
-            for j in range(n+1, O):
-                lu[i][j] -= l_in * lu[n][j]
-
-    L = []
-    U = []
-    for i in range(N):
-        if i < O:
-            L.append(lu[i][:i] + [dom.one] + [dom.zero] * (N-i-1))
-            U.append([dom.zero] * i + lu[i][i:])
-        else:
-            L.append(lu[i] + [dom.zero] * (i-O) + [dom.one] + [dom.zero] * (N-i-1))
-            U.append([dom.zero] * O)
-
-    L = DomainMatrix(L, (N, N), dom)
-    U = DomainMatrix(U, (N, O), dom)
-
-    return L, U, swaps
 
 
 def lu_solve(M, b):
@@ -501,7 +528,7 @@ def lu_solve(M, b):
     if m < n:
         raise NotImplementedError("Underdetermined")
 
-    L, U, swaps = lu_decomp(M)
+    L, U, swaps = M.lu()
 
     b_rows = [row[:] for row in b.rep]
     if swaps:

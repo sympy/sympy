@@ -844,11 +844,10 @@ class DenseDomainMatrix(DenseMatrix):
         return PurePoly(coeffs, x, domain=dom)
 
     def LUdecomposition(self, *args, **kwargs):
-        from sympy.polys.domainmatrix import lu_decomp
         rep = self._rep
         if not rep.domain.is_Field:
             rep = rep.to_field()
-        L, U, p = lu_decomp(rep)
+        L, U, p = rep.lu()
         L = self.from_DomainMatrix(L)
         U = self.from_DomainMatrix(U)
         return L, U, p
