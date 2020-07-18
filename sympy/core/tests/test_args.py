@@ -4963,6 +4963,12 @@ def test_sympy__vector__deloperator__Del():
     assert _test_args(Del())
 
 
+def test_sympy__vector__implicitregion__ImplicitRegion():
+    from sympy.vector.implicitregion import ImplicitRegion
+    from sympy.abc import x, y
+    assert _test_args(ImplicitRegion((x, y), y**3 - 4*x))
+
+
 def test_sympy__vector__integrals__ParametricIntegral():
     from sympy.vector.integrals import ParametricIntegral
     from sympy.vector.parametricregion import ParametricRegion
