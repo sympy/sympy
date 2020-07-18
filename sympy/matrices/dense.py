@@ -827,7 +827,6 @@ class DenseDomainMatrix(DenseMatrix):
         return rep.domain.to_sympy(rep.det())
 
     def charpoly(self, name='lambda', **kwargs):
-        from sympy.polys.domainmatrix import berk
         from sympy.polys import PurePoly
         from sympy.core.symbol import uniquely_named_symbol
 
@@ -837,8 +836,7 @@ class DenseDomainMatrix(DenseMatrix):
             raise NonSquareMatrixError("not square")
 
         dom = rep.domain
-        vec = berk(rep)
-        coeffs = [vec.rep[i][0] for i in range(n+1)]
+        coeffs = rep.charpoly()
 
         x = uniquely_named_symbol(name, self, modify=lambda s: '_' + s)
         return PurePoly(coeffs, x, domain=dom)

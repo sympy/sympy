@@ -185,6 +185,16 @@ class DDM(list):
         ddm_ilu_solve(x, L, U, swaps, b)
         return x
 
+    def charpoly(a):
+        """Coefficients of characteristic polynomial of a"""
+        K = a.domain
+        m, n = a.shape
+        if m != n:
+            raise DDMShapeError("Charpoly of non-square matrix")
+        vec = ddm_berk(a, K)
+        coeffs = [vec[i][0] for i in range(n+1)]
+        return coeffs
+
 
 def ddm_iadd(a, b):
     """a += b"""
@@ -426,6 +436,44 @@ def ddm_ilu_solve(x, L, U, swaps, b):
             x[i][k] = rhs / U[i][i]
 
 
+def ddm_berk(M, K):
+    m = len(M)
+    if not m:
+        return []
+    n = len(M[0])
+    assert m == n
+
+    if n == 1:
+        return [[K.one], [-M[0][0]]]
+
+    a = M[0][0]
+    R = [M[0][1:]]
+    C = [[row[0]] for row in M[1:]]
+    A = [row[1:] for row in M[1:]]
+
+    q = ddm_berk(A, K)
+
+    T = [[K.zero] * n for _ in range(n+1)]
+    for i in range(n):
+        T[i][i] = K.one
+        T[i+1][i] = -a
+    for i in range(2, n+1):
+        if i == 2:
+            AnC = C
+        else:
+            C = AnC
+            AnC = [[K.zero] for row in C]
+            ddm_imatmul(AnC, A, C)
+        RAnC = [[K.zero]]
+        ddm_imatmul(RAnC, R, AnC)
+        for j in range(0, n+1-i):
+            T[i+j][j] = -RAnC[0][0]
+
+    qout = [[K.zero] for _ in range(n+1)]
+    ddm_imatmul(qout, T, q)
+    return qout
+
+
 class DomainMatrix:
 
     def __init__(self, rows, shape, domain):
@@ -568,42 +616,14 @@ class DomainMatrix:
         sol = self.rep.lu_solve(rhs.rep)
         return self.from_ddm(sol)
 
+    def charpoly(self):
+        m, n = self.shape
+        if m != n:
+            raise NonSquareMatrixError("not square")
+        return self.rep.charpoly()
+
     def __eq__(A, B):
         """A == B"""
         if not isinstance(B, DomainMatrix):
             return NotImplemented
         return A.rep == B.rep
-
-
-def berk(M):
-    dom = M.domain
-    m, n = M.shape
-    assert m == n
-
-    if n == 1:
-        v = [[1], [-M.rep[0][0]]]
-        return DomainMatrix(v, (2, 1), dom)
-
-    a = M.rep[0][0]
-    R = DomainMatrix([M.rep[0][1:]], (1, n-1), dom)
-    C = DomainMatrix([[row[0]] for row in M.rep[1:]], (n-1, 1), dom)
-    A = DomainMatrix([row[1:] for row in M.rep[1:]], (n-1, n-1), dom)
-
-    q = berk(A)
-
-    T = [[dom.zero] * n for _ in range(n+1)]
-    for i in range(n):
-        T[i][i] = dom.one
-        T[i+1][i] = -a
-    for i in range(2, n+1):
-        if i == 2:
-            AnC = C
-        else:
-            AnC = A * AnC
-        RAnC = R * AnC
-        assert RAnC.shape == (1, 1)
-        for j in range(0, n+1-i):
-            T[i+j][j] = -RAnC.rep[0][0]
-    T = DomainMatrix(T, (n+1, n), dom)
-
-    return T * q
