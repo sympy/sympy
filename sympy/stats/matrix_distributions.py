@@ -153,7 +153,7 @@ def MatrixGamma(symbol, alpha, beta, scale_matrix):
     return rv(symbol, MatrixGammaDistribution, (alpha, beta, scale_matrix))
 
 #-------------------------------------------------------------------------------
-# Wishar Distribution ----------------------------------------------------------
+# Wishart Distribution ----------------------------------------------------------
 
 def Wishart(symbol, n, scale_matrix):
     """
