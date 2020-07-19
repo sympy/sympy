@@ -332,8 +332,8 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
         arguments do not redefine any built-in names.
 
     sort_args: bool, optional
-            Lambdify can take care of sorting your iterable ``args`` in consistent
-            way using fixed sorting criterion by alphabetical order
+            Lambdify can take care of sorting your iterable ``args`` in a consistent
+            way using fixed sorting criterion by alphabetical order (using .name of the symbols)
 
     Examples
     ========
