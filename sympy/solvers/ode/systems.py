@@ -5,7 +5,7 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.function import expand_mul, expand, Derivative, Function
+from sympy.core.function import expand_mul, expand, Derivative
 from sympy.functions import exp, im, cos, sin, re, Piecewise, piecewise_fold
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase
@@ -1117,7 +1117,8 @@ def _combine_systems(sccs, graph, t):
                 is_type1[i] = False
                 break
 
-        eqs, funcs = list(eqs), list(funcs)
+        eqs = list(eqs)
+        funcs = [e.lhs.args[0] for e in eqs]
         is_type1[i] = _is_type1((eqs, funcs), t) if is_type1[i] else is_type1[i]
         if is_type1[i]:
             min_index = i

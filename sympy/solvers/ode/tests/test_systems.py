@@ -1210,6 +1210,81 @@ def test_sysode_linear_neq_order1_type4():
     assert checksysodesol(eqs8, sol8) == (True, [0, 0, 0, 0])
 
 
+def test_component_division():
+    f, g, h, k = symbols('f g h k', cls=Function)
+    x = symbols("x")
+
+    eqs1 = [Eq(Derivative(f(x), x), 2*f(x)),
+            Eq(Derivative(g(x), x), f(x)),
+            Eq(Derivative(h(x), x), h(x)),
+            Eq(Derivative(k(x), x), h(x)**4 + k(x))]
+    sol1 = [Eq(f(x), C1*exp(2*x)),
+            Eq(g(x), C1*exp(2*x)/2 + C2),
+            Eq(h(x), C3*exp(x)),
+            Eq(k(x), (C4 + Integral(C3**4*exp(3*x), x))*exp(x))]
+    assert dsolve(eqs1) == sol1
+    assert checksysodesol(eqs1, sol1) == (True, [0, 0, 0, 0])
+
+    eqs2 = [Eq(Derivative(f(x), x), 2*f(x)),
+            Eq(Derivative(g(x), x), f(x)),
+            Eq(Derivative(h(x), x), h(x)),
+            Eq(Derivative(k(x), x), f(x)**4 + k(x))]
+    sol2 = [Eq(f(x), C1*exp(2*x)),
+            Eq(g(x), C1*exp(2*x)/2 + C2),
+            Eq(h(x), C3*exp(x)),
+            Eq(k(x), (C4 + Integral(C1**4*exp(7*x), x))*exp(x))]
+    assert dsolve(eqs2) == sol2
+    assert checksysodesol(eqs2, sol2) == (True, [0, 0, 0, 0])
+
+    eqs3 = [Eq(Derivative(f(x), x), 2*f(x)),
+            Eq(Derivative(g(x), x), f(x) + x),
+            Eq(Derivative(h(x), x), h(x)),
+            Eq(Derivative(k(x), x), f(x)**4 + k(x))]
+    sol3 = [Eq(f(x), C1*exp(2*x)),
+            Eq(g(x), C2 + Integral(C1*exp(2*x) + x, x)),
+            Eq(h(x), C3*exp(x)),
+            Eq(k(x), (C4 + Integral(C1**4*exp(7*x), x))*exp(x))]
+    assert dsolve(eqs3) == sol3
+    assert checksysodesol(eqs3, sol3) == (True, [0, 0, 0, 0])
+
+    eqs4 = [Eq(Derivative(f(x), x), x*f(x) + 2*g(x)),
+            Eq(Derivative(g(x), x), f(x) + x*g(x) + x),
+            Eq(Derivative(h(x), x), h(x)),
+            Eq(Derivative(k(x), x), f(x)**4 + k(x))]
+    sol4 = [Eq(f(x), (C1/2 - sqrt(2)*C2/2 - sqrt(2)*Integral(x*exp(-x**2/2 - sqrt(2)*x)/2 + x*exp(-x**2/2 +
+                sqrt(2)*x)/2, x)/2 + Integral(sqrt(2)*x*exp(-x**2/2 - sqrt(2)*x)/2 - sqrt(2)*x*exp(-x**2/2 +
+                sqrt(2)*x)/2, x)/2)*exp(x**2/2 - sqrt(2)*x) + (C1/2 + sqrt(2)*C2/2 + sqrt(2)*Integral(x*exp(-x**2/2 -
+                sqrt(2)*x)/2 + x*exp(-x**2/2 + sqrt(2)*x)/2, x)/2 + Integral(sqrt(2)*x*exp(-x**2/2 - sqrt(2)*x)/2 -
+                sqrt(2)*x*exp(-x**2/2 + sqrt(2)*x)/2, x)/2)*exp(x**2/2 + sqrt(2)*x)),
+            Eq(g(x), (-sqrt(2)*C1/4 + C2/2 + Integral(x*exp(-x**2/2 - sqrt(2)*x)/2 + x*exp(-x**2/2 + sqrt(2)*x)/2, x)/2 -
+                sqrt(2)*Integral(sqrt(2)*x*exp(-x**2/2 - sqrt(2)*x)/2 - sqrt(2)*x*exp(-x**2/2 + sqrt(2)*x)/2, x)/4)*
+                exp(x**2/2 - sqrt(2)*x) + (sqrt(2)*C1/4 + C2/2 + Integral(x*exp(-x**2/2 - sqrt(2)*x)/2 + x*exp(-x**2/2 +
+                sqrt(2)*x)/2, x)/2 + sqrt(2)*Integral(sqrt(2)*x*exp(-x**2/2 - sqrt(2)*x)/2 - sqrt(2)*x*exp(-x**2/2 +
+                sqrt(2)*x)/2, x)/4)*exp(x**2/2 + sqrt(2)*x)),
+            Eq(h(x), C3*exp(x)),
+            Eq(k(x), C4*exp(x) + exp(x)*Integral((C1*exp(x**2/2 - sqrt(2)*x)/2 + C1*exp(x**2/2 + sqrt(2)*x)/2 -
+                sqrt(2)*C2*exp(x**2/2 - sqrt(2)*x)/2 + sqrt(2)*C2*exp(x**2/2 + sqrt(2)*x)/2 - sqrt(2)*exp(x**2/2 -
+                sqrt(2)*x)*Integral(x*exp(-x**2/2 - sqrt(2)*x)/2 + x*exp(-x**2/2 + sqrt(2)*x)/2, x)/2 + exp(x**2/2 -
+                sqrt(2)*x)*Integral(sqrt(2)*x*exp(-x**2/2 - sqrt(2)*x)/2 - sqrt(2)*x*exp(-x**2/2 + sqrt(2)*x)/2, x)/2 +
+                sqrt(2)*exp(x**2/2 + sqrt(2)*x)*Integral(x*exp(-x**2/2 - sqrt(2)*x)/2 + x*exp(-x**2/2 +
+                sqrt(2)*x)/2, x)/2 + exp(x**2/2 + sqrt(2)*x)*Integral(sqrt(2)*x*exp(-x**2/2 - sqrt(2)*x)/2 -
+                sqrt(2)*x*exp(-x**2/2 + sqrt(2)*x)/2, x)/2)**4*exp(-x), x))]
+    assert dsolve(eqs4) == sol4
+    assert checksysodesol(eqs4, sol4) == (True, [0, 0, 0, 0])
+
+    eqs5 = [Eq(Derivative(f(x), x), x*f(x) + 2*g(x)),
+            Eq(Derivative(g(x), x), x*g(x) + f(x)),
+            Eq(Derivative(h(x), x), h(x)),
+            Eq(Derivative(k(x), x), f(x)**4 + k(x))]
+    sol5 = [Eq(f(x), (C1/2 - sqrt(2)*C2/2)*exp(x**2/2 - sqrt(2)*x) + (C1/2 + sqrt(2)*C2/2)*exp(x**2/2 + sqrt(2)*x)),
+            Eq(g(x), (-sqrt(2)*C1/4 + C2/2)*exp(x**2/2 - sqrt(2)*x) + (sqrt(2)*C1/4 + C2/2)*exp(x**2/2 + sqrt(2)*x)),
+            Eq(h(x), C3*exp(x)),
+            Eq(k(x), C4*exp(x) + exp(x)*Integral((C1*exp(x**2/2 - sqrt(2)*x)/2 + C1*exp(x**2/2 + sqrt(2)*x)/2 -
+                sqrt(2)*C2*exp(x**2/2 - sqrt(2)*x)/2 + sqrt(2)*C2*exp(x**2/2 + sqrt(2)*x)/2)**4*exp(-x), x))]
+    assert dsolve(eqs5) == sol5
+    assert checksysodesol(eqs5, sol5) == (True, [0, 0, 0, 0])
+
+
 def test_linodesolve():
     t, x, a = symbols("t x a")
     f, g, h = symbols("f g h", cls=Function)
