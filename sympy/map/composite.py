@@ -96,13 +96,16 @@ class CompositeMap(Map, AssocOp):
                     m1 = comp_val
                     continue
                 #3. Convert repeated composition to IteratedMap
-                # inverse maps are cancelled here as well.
                 m1_base, m1_iternum = m1.as_base_iternum()
                 m2_base, m2_iternum = m2.as_base_iternum()
                 if m1_base == m2_base:
                     m1 = IteratedMap(m1_base, m1_iternum + m2_iternum, evaluate=True)
                     continue
-                #4. Deal with identity maps
+                #4. Deal with inverse maps
+                if m1.inv(evaluate=True) == m2 or m1 == m2.inv(evaluate=True):
+                    m1 = IdentityMap(m1.domain)
+                    continue
+                #5. Deal with identity maps
                 # IdentityMaps cannot be blindly removed because
                 # the domain and codomain of m1 and m2 can be different.
                 if isinstance(m1, IdentityMap) and m1.domain == m2.codomain:
@@ -110,7 +113,7 @@ class CompositeMap(Map, AssocOp):
                     continue
                 if isinstance(m2, IdentityMap) and m1.domain == m2.codomain:
                     continue
-                #5. No evaluation can be done with m1 and m2
+                #6. No evaluation can be done with m1 and m2
                 seq.append(m1)
                 m1 = m2
             if m1 is not None:

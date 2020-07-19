@@ -23,6 +23,14 @@ def test_CompositeMap():
     # inverse cancellation
     assert CompositeMap(h, h.inv(), evaluate=True) == IdentityMap()
     assert CompositeMap(h1, h2, h3, h3.inv(), h2.inv(), evaluate=True) == h1
+    # defined inverse cancellation
+    class A(Map):
+        def _eval_inverse(self):
+            return B()
+    class B(Map):
+        def _eval_inverse(self):
+            return A()
+    assert CompositeMap(A(), B(), evaluate=True) == IdentityMap()
 
     # identity cancellation only when domain and codomain are strictly same
     assert CompositeMap(IdentityMap(S.Naturals0), f, evaluate=True) == f
