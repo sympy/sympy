@@ -5,7 +5,7 @@ from sympy.polys.domainmatrix import (
         DDM,
         DDMBadInputError, DDMDomainError, DDMShapeError,
         ddm_iadd, ddm_isub, ddm_ineg, ddm_imatmul,
-        ddm_irref, ddm_idet, ddm_iinv,
+        ddm_irref, ddm_idet, ddm_iinv, ddm_ilu, ddm_ilu_split,
         )
 
 from sympy.testing.pytest import raises
@@ -400,3 +400,100 @@ def test_ddm_inv():
     A = [[QQ(1, 1), QQ(2, 1)], [QQ(2, 1), QQ(4, 1)]]
     Ainv = [[QQ(0), QQ(0)], [QQ(0), QQ(0)]]
     raises(NonInvertibleMatrixError, lambda: ddm_iinv(Ainv, A, QQ))
+
+
+def test_ddm_ilu():
+    A = []
+    Alu = []
+    swaps = ddm_ilu(A)
+    assert A == Alu
+    assert swaps == []
+
+    A = [[]]
+    Alu = [[]]
+    swaps = ddm_ilu(A)
+    assert A == Alu
+    assert swaps == []
+
+    A = [[QQ(1), QQ(2)], [QQ(3), QQ(4)]]
+    Alu = [[QQ(1), QQ(2)], [QQ(3), QQ(-2)]]
+    swaps = ddm_ilu(A)
+    assert A == Alu
+    assert swaps == []
+
+    A = [[QQ(0), QQ(2)], [QQ(3), QQ(4)]]
+    Alu = [[QQ(3), QQ(4)], [QQ(0), QQ(2)]]
+    swaps = ddm_ilu(A)
+    assert A == Alu
+    assert swaps == [(0, 1)]
+
+    A = [[QQ(1), QQ(2), QQ(3)], [QQ(4), QQ(5), QQ(6)], [QQ(7), QQ(8), QQ(9)]]
+    Alu = [[QQ(1), QQ(2), QQ(3)], [QQ(4), QQ(-3), QQ(-6)], [QQ(7), QQ(2), QQ(0)]]
+    swaps = ddm_ilu(A)
+    assert A == Alu
+    assert swaps == []
+
+    A = [[QQ(0), QQ(1), QQ(2)], [QQ(0), QQ(1), QQ(3)], [QQ(1), QQ(1), QQ(2)]]
+    Alu = [[QQ(1), QQ(1), QQ(2)], [QQ(0), QQ(1), QQ(3)], [QQ(0), QQ(1), QQ(-1)]]
+    swaps = ddm_ilu(A)
+    assert A == Alu
+    assert swaps == [(0, 2)]
+
+    A = [[QQ(1), QQ(2), QQ(3)], [QQ(4), QQ(5), QQ(6)]]
+    Alu = [[QQ(1), QQ(2), QQ(3)], [QQ(4), QQ(-3), QQ(-6)]]
+    swaps = ddm_ilu(A)
+    assert A == Alu
+    assert swaps == []
+
+    A = [[QQ(1), QQ(2)], [QQ(3), QQ(4)], [QQ(5), QQ(6)]]
+    Alu = [[QQ(1), QQ(2)], [QQ(3), QQ(-2)], [QQ(5), QQ(2)]]
+    swaps = ddm_ilu(A)
+    assert A == Alu
+    assert swaps == []
+
+
+def test_ddm_ilu_split():
+    U = []
+    L = []
+    Uexp = []
+    Lexp = []
+    swaps = ddm_ilu_split(L, U, QQ)
+    assert U == Uexp
+    assert L == Lexp
+    assert swaps == []
+
+    U = [[]]
+    L = [[QQ(1)]]
+    Uexp = [[]]
+    Lexp = [[QQ(1)]]
+    swaps = ddm_ilu_split(L, U, QQ)
+    assert U == Uexp
+    assert L == Lexp
+    assert swaps == []
+
+    U = [[QQ(1), QQ(2)], [QQ(3), QQ(4)]]
+    L = [[QQ(1), QQ(0)], [QQ(0), QQ(1)]]
+    Uexp = [[QQ(1), QQ(2)], [QQ(0), QQ(-2)]]
+    Lexp = [[QQ(1), QQ(0)], [QQ(3), QQ(1)]]
+    swaps = ddm_ilu_split(L, U, QQ)
+    assert U == Uexp
+    assert L == Lexp
+    assert swaps == []
+
+    U = [[QQ(1), QQ(2), QQ(3)], [QQ(4), QQ(5), QQ(6)]]
+    L = [[QQ(1), QQ(0)], [QQ(0), QQ(1)]]
+    Uexp = [[QQ(1), QQ(2), QQ(3)], [QQ(0), QQ(-3), QQ(-6)]]
+    Lexp = [[QQ(1), QQ(0)], [QQ(4), QQ(1)]]
+    swaps = ddm_ilu_split(L, U, QQ)
+    assert U == Uexp
+    assert L == Lexp
+    assert swaps == []
+
+    U = [[QQ(1), QQ(2)], [QQ(3), QQ(4)], [QQ(5), QQ(6)]]
+    L = [[QQ(1), QQ(0), QQ(0)], [QQ(0), QQ(1), QQ(0)], [QQ(0), QQ(0), QQ(1)]]
+    Uexp = [[QQ(1), QQ(2)], [QQ(0), QQ(-2)], [QQ(0), QQ(0)]]
+    Lexp = [[QQ(1), QQ(0), QQ(0)], [QQ(3), QQ(1), QQ(0)], [QQ(5), QQ(2), QQ(1)]]
+    swaps = ddm_ilu_split(L, U, QQ)
+    assert U == Uexp
+    assert L == Lexp
+    assert swaps == []
