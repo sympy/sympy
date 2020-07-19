@@ -10,7 +10,7 @@ A Python library for symbolic mathematics.
 
 <https://sympy.org/>
 
-See the AUTHORS file for the list of authors.
+See the AUTHOR'S file for the list of authors.
 
 And many more people helped on the SymPy mailing list, reported bugs,
 helped organize SymPy's participation in the Google Summer of Code, the
@@ -142,7 +142,7 @@ To test pull requests, use
 
 The parser and lexer generated with the [ANTLR4](http://antlr4.org)
 toolchain in <span class="title-ref">sympy/parsing/latex/\_antlr</span>
-and checked into the repo. Presently, most users should not need to
+and checked into the repo. Presently, most of the users should not need to
 regenerate these files, but if you plan to work on this feature, you
 will need the <span class="title-ref">antlr4</span> command-line tool
 available. One way to get it is:
