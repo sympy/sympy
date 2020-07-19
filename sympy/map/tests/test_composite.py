@@ -92,8 +92,12 @@ def test_IteratedMap():
 
     # Nested iteration
     assert IteratedMap(IteratedMap(h, 2), 3, evaluate=True) == IteratedMap(h, 6)
-    # Inverse map is not considered as nested iteration
+    # Inverse map is not converted to iterated map
     assert IteratedMap(h.inv(), 3, evaluate=True) != IteratedMap(h, -3)
+
+    # Consecutive composition converted to iterated map
+    assert h@h == IteratedMap(h, 2)
+    assert h@h@h == IteratedMap(h, 3)
 
     # undefined evaluation
     assert IteratedMap(h, 2)(x, evaluate=True) == IteratedMap(h, 2)(x)
@@ -104,7 +108,7 @@ def test_IteratedMap():
             return x + 1
         def _eval_inverse(self):
             return h1
-        def _eval_iteration(self, n):
+        def _eval_iterate(self, n):
             if n == S.One/2:
                 return h2
     assert IteratedMap(A(), -1, evaluate=True) == h1

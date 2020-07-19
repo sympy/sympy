@@ -24,24 +24,22 @@ class CompositeMap(Map, AssocOp):
     Examples
     ========
 
-    >>> from sympy.map import Map, CompositeMap
+    >>> from sympy.map import Map
     >>> from sympy.abc import x
     >>> class F(Map):
     ...     def eval(self, x):
-    ...        return 2*x
+    ...         return 2*x
     >>> f = F()
 
-    >>> CompositeMap(f, f)
+    >>> f.composite(f)
     F@F
-    >>> CompositeMap(f, f)(x).doit()
+    >>> f.composite(f)(x, evaluate=True)
     4*x
-    >>> CompositeMap(f, f.inv()).doit()
+    >>> f.composite(f.inv(), evaluate=True)
     IdentityMap
 
    @ operator returns evaluated composition
 
-    >>> f@f
-    F@F
     >>> f@(f.inv())
     IdentityMap
 
@@ -97,12 +95,12 @@ class CompositeMap(Map, AssocOp):
                 if comp_val is not None:
                     m1 = comp_val
                     continue
-                #3. Check if m1 and m2 are inverse.
-                # Unevaluated substructures are not evaluated here
-                # to check if m1 and m2 are inverse for performance reason.
-                # Calling doit(deep=True) will deal with such case.
-                if m1 == m2.inv(evaluate=True):
-                    m1 = IdentityMap(m1.codomain)
+                #3. Convert repeated composition to IteratedMap
+                # inverse maps are cancelled here as well.
+                m1_base, m1_iternum = m1.as_base_iternum()
+                m2_base, m2_iternum = m2.as_base_iternum()
+                if m1_base == m2_base:
+                    m1 = IteratedMap(m1_base, m1_iternum + m2_iternum, evaluate=True)
                     continue
                 #4. Deal with identity maps
                 # IdentityMaps cannot be blindly removed because
@@ -168,6 +166,38 @@ class IteratedMap(Map):
     class has no direct relation with productional power [1]. should not be
     confused with n-fold product function which is defined in function ring [2].
 
+    Parameters
+    ==========
+
+    f : Map
+        Iterated map
+
+    n : number of iteration
+        Non-integers are allowed
+
+    Examples
+    ========
+
+    >>> from sympy import S, Symbol
+    >>> from sympy.map import Map
+    >>> from sympy.abc import x
+    >>> class F(Map):
+    ...     def eval(self, x):
+    ...         return 2*x
+    >>> f = F()
+
+    >>> f.composite(f, evaluate=True) == f.iterate(2)
+    True
+    >>> f.iterate(2)(x, evaluate=True)
+    4*x
+
+    Cannot evaluate if n is not Integer
+
+    >>> f.iterate(S.One/2)(x, evaluate=True)
+    IteratedMap(F, 1/2)(x)
+    >>> f.iterate(Symbol('n', integer=True))(x, evaluate=True)
+    IteratedMap(F, n)(x)
+
     References
     ==========
 
@@ -185,20 +215,23 @@ class IteratedMap(Map):
 
         if evaluate:
 
+            result = b._eval_iterate(n)
+            if result is not None:
+                return result
+
             if n == 0:
                 return IdentityMap(b.domain)
             if n == 1:
                 return b
+            if n == -1:
+                return b.inv(evaluate=True)
             if ask(Q.negative(n)):
                 return cls(b.inv(evaluate=True), -n, evaluate=True)
 
             b_base, b_iternum = b.as_base_iternum()
-            if b_iternum != 1:
-                return cls(b.base, b.iternum*n, evaluate=True)
+            if b_iternum != 1 and b_iternum != -1:
+                return cls(b_base, b_iternum*n, evaluate=True)
 
-            result = b._eval_iteration(n)
-            if result is not None:
-                return result
         return super().__new__(cls, b, n)
 
     @property

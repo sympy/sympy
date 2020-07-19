@@ -113,6 +113,9 @@ class Map(Expr):
         return InverseMap(self, evaluate=evaluate)
     inv = inverse
 
+    def iterate(self, n, evaluate=False):
+        return IteratedMap(self, n, evaluate=evaluate)
+
     def _eval_inverse(self):
         return
 
@@ -125,7 +128,7 @@ class Map(Expr):
         # be defined here since CompositeMap deals with it.
         return
 
-    def _eval_iteration(self, n):
+    def _eval_iterate(self, n):
         # define special result for positive n-th iteration
         # of self here.
         return
@@ -242,6 +245,9 @@ class InverseMap(Map):
 
     def _eval_inverse(self):
         return self.base
+
+    def as_base_iternum(self):
+        return self.base, S.NegativeOne
 
 class IdentityMap(Map):
     """
