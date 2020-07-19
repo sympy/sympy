@@ -2,13 +2,14 @@
 
 from sympy.core import Expr, Mul
 from sympy.functions.elementary.complexes import adjoint
+from sympy.physics.quantum.operator import Operator
 
 __all__ = [
     'Dagger'
 ]
 
 
-class Dagger(adjoint):
+class Dagger(adjoint, Operator):
     """General Hermitian conjugate operation.
 
     Take the Hermetian conjugate of an argument [1]_. For matrices this
@@ -83,12 +84,8 @@ class Dagger(adjoint):
             return obj
         return Expr.__new__(cls, arg)
 
-    def __mul__(self, other):
-        from sympy.physics.quantum import IdentityOperator
-        if isinstance(other, IdentityOperator):
-            return self
-
-        return Mul(self, other)
+    def _print_contents(self, printer, *args):
+        return 'Dagger(%s)' % self.args[0]._print_contents(printer, *args)
 
 adjoint.__name__ = "Dagger"
 adjoint._sympyrepr = lambda a, b: "Dagger(%s)" % b._print(a.args[0])
