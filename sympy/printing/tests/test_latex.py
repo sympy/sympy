@@ -2663,6 +2663,10 @@ def test_map():
     assert latex(f) == "f"
     assert latex(f(z)) == r"f{\left(z \right)}"
 
+    # Restricted map
+    assert latex(f.restrict(S.Reals)) == r"f \vert_{\mathbb{R}}"
+    assert latex(f.restrict(S.Reals)(x)) == r"f \vert_{\mathbb{R}}{\left(x \right)}"
+
     # Inverse map
     assert latex(f.inv()) == "{f}^{-1}"
     assert latex(f.inv()(z)) == r"{f}^{-1}{\left(z \right)}"

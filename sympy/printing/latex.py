@@ -2660,6 +2660,10 @@ class LatexPrinter(Printer):
             name = expr.__class__.__name__
         return self._deal_with_super_sub(str(name))
 
+    def _print_RestrictedMap(self, expr):
+        temp = r'%s \vert_{%s}'
+        return temp % (self._print(expr.base), self._print(expr.domain))
+
     def _print_InverseMap(self, expr):
         return "{%s}^{-1}" % self._print(expr.base)
 

@@ -1001,6 +1001,10 @@ def test_map():
     assert str(f) == "f"
     assert str(f(z)) == "f(z)"
 
+    # Restricted map
+    assert str(f.restrict(S.Reals)) == r"RestrictedMap(f, Reals)"
+    assert str(f.restrict(S.Reals)(x)) == r"RestrictedMap(f, Reals)(x)"
+
     # Inverse map
     assert str(f.inv()) == "InverseMap(f)"
     assert str(f.inv()(z)) == "InverseMap(f)(z)"

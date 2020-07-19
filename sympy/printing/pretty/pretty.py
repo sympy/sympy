@@ -2741,6 +2741,21 @@ class PrettyPrinter(Printer):
         mapping = pretty_symbol(name, bold_name=False)
         return prettyForm(mapping)
 
+    def _print_RestrictedMap(self, e):
+        pform = self._print(e.base)
+        pform = prettyForm(*pform.parens())
+
+        h = pform.height() if pform.height() > 1 else 2
+        rvert = stringPict(vobj('|', h), baseline=pform.baseline)
+        pform = prettyForm(*pform.right(rvert))
+
+        b = pform.baseline
+        pform.baseline = pform.height() - 1
+        pform = prettyForm(*pform.right(self._print(e.domain)))
+
+        pform.baseline = b
+        return pform
+
     def _print_InverseMap(self, e):
         return self._print(e.base)**self._print(-1)
 

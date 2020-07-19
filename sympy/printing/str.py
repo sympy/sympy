@@ -911,6 +911,11 @@ class StrPrinter(Printer):
             name = expr.__class__.__name__
         return name
 
+    def _print_RestrictedMap(self, expr):
+        return "RestrictedMap(%s, %s)" % (
+            self._print(expr.base), self._print(expr.domain)
+        )
+
     def _print_InverseMap(self, expr):
         return "InverseMap(%s)" % self._print(expr.base)
 

@@ -7259,6 +7259,10 @@ def test_map():
     assert pretty(f) == "f"
     assert pretty(f(z)) == "f(z)"
 
+    # Restricted map
+    assert upretty(f.restrict(S.Reals)) == '(f)│ \n   │ℝ'
+    assert upretty(f.restrict(S.Reals)(x)) == '(f)│ (x)\n   │ℝ   '
+
     # Inverse map
     assert pretty(f.inv()) == " -1\nf  "
     assert pretty(f.inv()(z)) == " -1   \nf  (z)"
