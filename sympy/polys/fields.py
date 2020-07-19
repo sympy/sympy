@@ -190,17 +190,27 @@ class FracField(DefaultPrinting):
         if isinstance(element, FracElement):
             if self == element.field:
                 return element
-            elif self.domain.field == element.field:
+
+            if isinstance(self.domain, FractionField) and \
+                self.domain.field == element.field:
+                return self.ground_new(element)
+            elif isinstance(self.domain, PolynomialRing) and \
+                self.domain.ring.to_field() == element.field:
                 return self.ground_new(element)
             else:
                 raise NotImplementedError("conversion")
         elif isinstance(element, PolyElement):
             denom, numer = element.clear_denoms()
+
             if isinstance(self.domain, PolynomialRing) and \
                 numer.ring == self.domain.ring:
                 numer = self.ring.ground_new(numer)
+            elif isinstance(self.domain, FractionField) and \
+                numer.ring == self.domain.field.to_ring():
+                numer = self.ring.ground_new(numer)
             else:
                 numer = numer.set_ring(self.ring)
+
             denom = self.ring.ground_new(denom)
             return self.raw_new(numer, denom)
         elif isinstance(element, tuple) and len(element) == 2:
