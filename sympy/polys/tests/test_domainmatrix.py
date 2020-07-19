@@ -1,10 +1,11 @@
 from sympy.core.compatibility import HAS_GMPY
+from sympy.matrices.common import NonInvertibleMatrixError, NonSquareMatrixError
 from sympy.polys import ZZ, QQ
 from sympy.polys.domainmatrix import (
         DDM,
         DDMBadInputError, DDMDomainError, DDMShapeError,
         ddm_iadd, ddm_isub, ddm_ineg, ddm_imatmul,
-        ddm_irref, ddm_idet,
+        ddm_irref, ddm_idet, ddm_iinv,
         )
 
 from sympy.testing.pytest import raises
@@ -76,6 +77,14 @@ def test_DDM_zeros():
     ddmz = DDM.zeros((3, 4), QQ)
     assert list(ddmz) == [[QQ(0)] * 4] * 3
     assert ddmz.shape == (3, 4)
+    assert ddmz.domain == QQ
+
+
+def test_DDM_eye():
+    ddmz = DDM.eye(3, QQ)
+    f = lambda i, j: QQ(1) if i == j else QQ(0)
+    assert list(ddmz) == [[f(i, j) for i in range(3)] for j in range(3)]
+    assert ddmz.shape == (3, 3)
     assert ddmz.domain == QQ
 
 
@@ -233,6 +242,44 @@ def test_DDM_det():
     raises(DDMShapeError, lambda: A.det())
 
 
+def test_DDM_inv():
+    A = DDM([[QQ(1, 1), QQ(2, 1)], [QQ(3, 1), QQ(4, 1)]], (2, 2), QQ)
+    Ainv = DDM([[QQ(-2, 1), QQ(1, 1)], [QQ(3, 2), QQ(-1, 2)]], (2, 2), QQ)
+    assert A.inv() == Ainv
+
+    A = DDM([[QQ(1), QQ(2)]], (1, 2), QQ)
+    raises(DDMShapeError, lambda: A.inv())
+
+    A = DDM([[ZZ(2)]], (1, 1), ZZ)
+    raises(ValueError, lambda: A.inv())
+
+    A = DDM([], (0, 0), QQ)
+    assert A.inv() == A
+
+    A = DDM([[QQ(1), QQ(2)], [QQ(2), QQ(4)]], (2, 2), QQ)
+    raises(NonInvertibleMatrixError, lambda: A.inv())
+
+
+def test_DDM_lu():
+    A = DDM([[QQ(1), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
+    L, U, swaps = A.lu()
+    assert L == DDM([[QQ(1), QQ(0)], [QQ(3), QQ(1)]], (2, 2), QQ)
+    assert U == DDM([[QQ(1), QQ(2)], [QQ(0), QQ(-2)]], (2, 2), QQ)
+    assert swaps == []
+
+    A = [[1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 1, 1], [0, 0, 1, 2]]
+    Lexp = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 1, 1]]
+    Uexp = [[1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 1, 1], [0, 0, 0, 1]]
+    to_dom = lambda rows, dom: [[dom(e) for e in row] for row in rows]
+    A = DDM(to_dom(A, QQ), (4, 4), QQ)
+    Lexp = DDM(to_dom(Lexp, QQ), (4, 4), QQ)
+    Uexp = DDM(to_dom(Uexp, QQ), (4, 4), QQ)
+    L, U, swaps = A.lu()
+    assert L == Lexp
+    assert U == Uexp
+    assert swaps == []
+
+
 def test_ddm_iadd():
     a = [[1, 2], [3, 4]]
     b = [[5, 6], [7, 8]]
@@ -328,3 +375,28 @@ def test_ddm_idet():
 
     A = [[QQ(1, 2), QQ(1, 2)], [QQ(1, 3), QQ(1, 4)]]
     assert ddm_idet(A, QQ) == QQ(-1, 24)
+
+
+def test_ddm_inv():
+    A = []
+    Ainv = []
+    ddm_iinv(Ainv, A, QQ)
+    assert Ainv == A
+
+    A = []
+    Ainv = []
+    raises(ValueError, lambda: ddm_iinv(Ainv, A, ZZ))
+
+    A = [[QQ(1), QQ(2)]]
+    Ainv = [[QQ(0), QQ(0)]]
+    raises(NonSquareMatrixError, lambda: ddm_iinv(Ainv, A, QQ))
+
+    A = [[QQ(1, 1), QQ(2, 1)], [QQ(3, 1), QQ(4, 1)]]
+    Ainv = [[QQ(0), QQ(0)], [QQ(0), QQ(0)]]
+    Ainv_expected = [[QQ(-2, 1), QQ(1, 1)], [QQ(3, 2), QQ(-1, 2)]]
+    ddm_iinv(Ainv, A, QQ)
+    assert Ainv == Ainv_expected
+
+    A = [[QQ(1, 1), QQ(2, 1)], [QQ(2, 1), QQ(4, 1)]]
+    Ainv = [[QQ(0), QQ(0)], [QQ(0), QQ(0)]]
+    raises(NonInvertibleMatrixError, lambda: ddm_iinv(Ainv, A, QQ))
