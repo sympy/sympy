@@ -12,6 +12,19 @@ class BinaryOperator(Map):
     Unlike ordinary mappings, binary operators are often written using
     infix notation [1].
 
+    Examples
+    ========
+
+    >>> from sympy.map import BinaryOperator
+    >>> from sympy.abc import x, y
+
+    >>> class AddOp(BinaryOperator):
+    ...     name = '+'
+    >>> addop = AddOp()
+
+    >>> addop(x, y)
+    x + y
+
     References
     ==========
 

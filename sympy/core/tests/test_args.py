@@ -2895,11 +2895,11 @@ def test_sympy__map__composite__IteratedMap():
     assert _test_args(IteratedMap(f, 2))
 
 @SKIP("abstract class")
-def test_sympy__map__binary__BinaryOperator():
+def test_sympy__map__operator__BinaryOperator():
     pass
 
 @SKIP("abstract class")
-def test_sympy__map__binary__AssociativeOperator():
+def test_sympy__map__operator__AssociativeOperator():
     pass
 
 def test_sympy__matrices__matrices__DeferredVector():

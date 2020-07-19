@@ -340,7 +340,7 @@ class AppliedMap(Expr):
 
             # convert f(f(x)) to CompositeMap(f,f)(x)
             if len(args) == 1 and isinstance(args[0], cls):
-                mapping = CompositeMap(mapping, args[0].map)
+                mapping = CompositeMap(mapping, args[0].map, evaluate=True)
                 args = args[0].arguments
 
             result = mapping.eval(*args)
