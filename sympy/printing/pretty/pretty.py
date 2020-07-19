@@ -2732,7 +2732,10 @@ class PrettyPrinter(Printer):
 
     def _print_Map(self, e):
         if hasattr(e, 'name'):
-            name = e.name.name
+            if isinstance(e.name, str):
+                name = e.name
+            else:
+                name = e.name.name
         else:
             name = e.__class__.__name__
         mapping = pretty_symbol(name, bold_name=False)
@@ -2753,17 +2756,26 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_IteratedMap(self, expr):
-        return self._print(expr.base)**self._print(expr.exp)
+        return self._print(expr.base)**self._print(expr.iternum)
 
     def _print_AppliedMap(self, e):
+        from sympy.map import BinaryOperator
         prettyMap = self.parenthesize(e.map, PRECEDENCE['Mul'])
-        prettyArgs = self._print_seq(e.arguments, delimiter=', ')
-        prettyArgs = prettyForm(*prettyArgs.parens())
 
-        pform = prettyForm(binding=prettyForm.FUNC, *prettyForm.next(prettyMap, prettyArgs))
-        pform.prettyFunc = prettyMap
-        pform.prettyArgs = prettyArgs
-        return pform
+        if isinstance(e.map, BinaryOperator):
+            infix = ' ' + str(prettyMap) + ' '
+            return self._print_seq(
+                e.arguments, None, None, infix,
+                lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"]
+            )
+        else:
+            prettyArgs = self._print_seq(e.arguments, delimiter=', ')
+            prettyArgs = prettyForm(*prettyArgs.parens())
+
+            pform = prettyForm(binding=prettyForm.FUNC, *prettyForm.next(prettyMap, prettyArgs))
+            pform.prettyFunc = prettyMap
+            pform.prettyArgs = prettyArgs
+            return pform
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

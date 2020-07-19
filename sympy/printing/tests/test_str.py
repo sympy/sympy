@@ -992,7 +992,9 @@ def test_diffgeom():
 
 def test_map():
     from sympy.map import (
-        Map, IdentityMap, CompositeMap, IteratedMap
+        Map, IdentityMap,
+        BinaryOperator,
+        CompositeMap, IteratedMap,
     )
 
     f = Map(name='f')
@@ -1015,3 +1017,9 @@ def test_map():
     # Compositional map power
     assert str(IteratedMap(f, 2)) == "IteratedMap(f, 2)"
     assert str(IteratedMap(f, 2)(x)) == "IteratedMap(f, 2)(x)"
+
+    # Binary operator
+    class AddOp(BinaryOperator):
+        name = '+'
+    addop = AddOp()
+    assert str(addop(x+y, x*y)) == '(x + y) + (x*y)'

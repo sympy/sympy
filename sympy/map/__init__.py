@@ -12,6 +12,9 @@ __all__ = [
 from .map import (
     Map, UndefinedMap, InverseMap, IdentityMap, AppliedMap
 )
+from .binary import (
+    BinaryOperator, AssociativeOperator
+)
 from .composite import (
     CompositeMap, IteratedMap,
 )

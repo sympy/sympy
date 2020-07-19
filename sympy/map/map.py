@@ -97,7 +97,7 @@ class Map(Expr):
         return
 
     def __call__(self, *args, evaluate=False, **kwargs):
-        return AppliedMap(self, *args, evaluate=evaluate )
+        return AppliedMap(self, *args, evaluate=evaluate)
 
     @sympify_return([('other', Expr)], NotImplemented)
     @call_highest_priority('__rmatmul__')
@@ -302,6 +302,8 @@ class AppliedMap(Expr):
        `free_symbol` of its `AppliedMap` will return incoincident value with its
        evaluated result. Instead, design the mapping to be multivariate function
        (e.g. $f(x, a) = a*x$).
+       User should not call this class directly. Instead, use `__call__` method
+       of the map instance.
 
     Parameters
     ==========

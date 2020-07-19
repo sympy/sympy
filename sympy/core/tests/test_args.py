@@ -2894,6 +2894,14 @@ def test_sympy__map__composite__IteratedMap():
     f = Map('f')
     assert _test_args(IteratedMap(f, 2))
 
+@SKIP("abstract class")
+def test_sympy__map__binary__BinaryOperator():
+    pass
+
+@SKIP("abstract class")
+def test_sympy__map__binary__AssociativeOperator():
+    pass
+
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
     assert _test_args(DeferredVector("X"))

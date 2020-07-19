@@ -2654,7 +2654,9 @@ def test_latex_decimal_separator():
 
 def test_map():
     from sympy.map import (
-        Map, IdentityMap, CompositeMap, IteratedMap
+        Map, IdentityMap,
+        BinaryOperator,
+        CompositeMap, IteratedMap,
     )
 
     f = Map(name='f')
@@ -2677,3 +2679,9 @@ def test_map():
     # Compositional map power
     assert latex(IteratedMap(f, 2)) == "{f}^{2}"
     assert latex(IteratedMap(f, 2)(x)) == r'{f}^{2}{\left(x \right)}'
+
+    # Binary operator
+    class AddOp(BinaryOperator):
+        name = '+'
+    addop = AddOp()
+    assert latex(addop(x+y, x*y)) == r'\left(x + y\right) + \left(x y\right)'

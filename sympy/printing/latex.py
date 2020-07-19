@@ -2652,7 +2652,10 @@ class LatexPrinter(Printer):
 
     def _print_Map(self, expr):
         if hasattr(expr, 'name'):
-            name = expr.name.name
+            if isinstance(expr.name, str):
+                name = expr.name
+            else:
+                name = expr.name.name
         else:
             name = expr.__class__.__name__
         return self._deal_with_super_sub(str(name))
@@ -2668,13 +2671,20 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_IteratedMap(self, expr):
-        return "{%s}^{%s}" % (self._print(expr.base), self._print(expr.exp))
+        return "{%s}^{%s}" % (self._print(expr.base), self._print(expr.iternum))
 
     def _print_AppliedMap(self, expr):
+        from sympy.map import BinaryOperator
         map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'])
-        temp = map_str + r"{\left(%s \right)}"
-        args_str = ', '.join([self._print(arg) for arg in expr.arguments])
-        return temp % args_str
+
+        if isinstance(expr.map, BinaryOperator):
+            infix_str = ' ' + map_str + ' '
+            args = [self.parenthesize(a, PRECEDENCE['Mul']) for a in expr.arguments]
+            return infix_str.join(args)
+        else:
+            temp = map_str + r"{\left(%s \right)}"
+            args_str = ', '.join([self._print(arg) for arg in expr.arguments])
+            return temp % args_str
 
     def emptyPrinter(self, expr):
         # Checks what type of decimal separator to print.

@@ -903,7 +903,10 @@ class StrPrinter(Printer):
 
     def _print_Map(self, expr):
         if hasattr(expr, 'name'):
-            name = expr.name.name
+            if isinstance(expr.name, str):
+                name = expr.name
+            else:
+                name = expr.name.name
         else:
             name = expr.__class__.__name__
         return name
@@ -916,16 +919,23 @@ class StrPrinter(Printer):
 
     def _print_IteratedMap(self, expr):
         return "IteratedMap(%s, %s)" % (
-            self._print(expr.base), self._print(expr.exp)
+            self._print(expr.base), self._print(expr.iternum)
         )
 
     def _print_CompositeMap(self, expr):
         return "@".join([self._print(t) for t in expr.args])
 
     def _print_AppliedMap(self, expr):
+        from sympy.map import BinaryOperator
         map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'])
-        args_str = self.stringify(expr.arguments, ", ")
-        return "%s(%s)" % (map_str, args_str)
+
+        if isinstance(expr.map, BinaryOperator):
+            infix_str = ' ' + map_str + ' '
+            args = [self.parenthesize(a, PRECEDENCE['Mul']) for a in expr.arguments]
+            return infix_str.join(args)
+        else:
+            args_str = self.stringify(expr.arguments, ", ")
+            return "%s(%s)" % (map_str, args_str)
 
 def sstr(expr, **settings):
     """Returns the expression as a string.
