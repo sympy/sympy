@@ -177,7 +177,8 @@ from .solvers import (solve, solve_linear_system, solve_linear_system_LU,
         solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution,
         Complexes)
 
-from .map import (Map, UndefinedMap, InverseMap, IdentityMap, AppliedMap,
+from .map import (Map, UndefinedMap, InverseMap, IdentityMap, RestrictedMap,
+        AppliedMap,
         BinaryOperator, AssociativeOperator,
         CompositeMap, IteratedMap)
 
@@ -414,7 +415,8 @@ __all__ = [
     'linear_eq_to_matrix', 'nonlinsolve', 'substitution', 'Complexes',
 
     # sympy.map
-    'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'AppliedMap',
+    'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'RestrictedMap',
+    'AppliedMap',
     "BinaryOperator", "AssociativeOperator",
     'CompositeMap', 'IteratedMap',
 

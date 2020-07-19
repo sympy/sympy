@@ -5,12 +5,14 @@ Includes any maps such as function, differential operator, etc.
 """
 
 __all__ = [
-    'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'AppliedMap',
+    'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'RestrictedMap',
+    'AppliedMap',
     'CompositeMap', 'IteratedMap',
 ]
 
 from .map import (
-    Map, UndefinedMap, InverseMap, IdentityMap, AppliedMap
+    Map, UndefinedMap, InverseMap, IdentityMap, RestrictedMap,
+    AppliedMap,
 )
 from .operator import (
     BinaryOperator, AssociativeOperator

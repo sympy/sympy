@@ -155,6 +155,9 @@ class CompositeMap(Map, AssocOp):
         maps = reversed([a.inverse() for a in self.args])
         return self.func(*maps)
 
+    def _map_content(self):
+        return self.func, tuple(a._map_content() for a in self.args)
+
 class IteratedMap(Map):
     """
     A class for n-th iterated function.
@@ -251,12 +254,7 @@ class IteratedMap(Map):
         return self.base.codomain
 
     def eval(self, arg):
-        new_self = self.doit(deep=False)
-
-        if not isinstance(new_self, self.func):
-            return new_self(arg, evaluate=True)
-
-        b, n = new_self.args
+        b, n = self.args
         if not n.free_symbols and ask(Q.integer(n)):
             # n is non-abstract integer
             result = arg
@@ -264,8 +262,11 @@ class IteratedMap(Map):
                 result = b(result, evaluate=True)
                 if isinstance(result, AppliedMap):
                     # cannot be evaluated: abort evaluation
-                    return new_self(arg, evaluate=False)
+                    return self(arg, evaluate=False)
             return result
 
     def as_base_iternum(self):
         return self.args
+
+    def _map_content(self):
+        return self.func, self.base._map_content(), self.iternum

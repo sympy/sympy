@@ -1,7 +1,8 @@
 from sympy import symbols, S, assuming, Q, ask
 from sympy.core.symbol import Str
 from sympy.map import (
-    Map, UndefinedMap, InverseMap, IdentityMap, AppliedMap
+    Map, UndefinedMap, InverseMap, IdentityMap, AppliedMap,
+    RestrictedMap
 )
 from sympy.testing.pytest import raises
 
@@ -101,3 +102,16 @@ def test_IdentityMap():
     assert I((x, y), evaluate=True) == (x, y)
     # does not take multiple arguments
     raises(TypeError, lambda: I(x,y))
+
+def test_RestrictedMap():
+    assert f.restrict(S.Naturals0)(2, evaluate=True) == 3
+    assert f.restrict(S.Naturals0).restrict(S.Naturals, evaluate=True) == f.restrict(S.Naturals)
+    assert f.restrict(S.Naturals0).is_restriction(f)
+
+def test_restriction():
+    f1, f2 = Map('f', S.Reals, S.Reals), Map('f', S.Naturals0, S.Naturals0)
+
+    assert f2.is_restriction(f1)
+    assert f2.inv().is_restriction(f1.inv())
+    assert IdentityMap(S.Naturals0).is_restriction(IdentityMap(S.Reals))
+    assert f2.restrict(S.Naturals).is_restriction(f2)

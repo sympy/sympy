@@ -8,7 +8,8 @@ from sympy.core.symbol import Str
 from sympy.sets import ProductSet
 
 __all__ = [
-    'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'AppliedMap'
+    'Map', 'UndefinedMap', 'RestrictedMap', 'InverseMap', 'IdentityMap',
+    'AppliedMap',
 ]
 
 @sympify_method_args
@@ -133,6 +134,30 @@ class Map(Expr):
         # of self here.
         return
 
+    def restrict(self, new_domain, evaluate=False):
+        return RestrictedMap(self, new_domain, evaluate=evaluate)
+
+    def _eval_restrict(self, new_domain):
+        return
+
+    def is_restriction(self, other):
+        """
+        Returns True if *self* is restricted function of *other*.
+        """
+        return self._eval_is_restriction(other)
+
+    def _eval_is_restriction(self, other):
+        return (
+            self._map_content() == other._map_content() and
+            self.codomain.is_subset(other.codomain) and
+            self.domain.is_subset(other.domain)
+        )
+
+    def _map_content(self):
+        # Unique fingerprint of map, independent of domain and codomain.
+        # Used for restricted function identification
+        return self.func
+
     def doit(self, **hints):
         deep = hints.get('deep', True)
         if deep:
@@ -186,6 +211,44 @@ class UndefinedMap(Map):
     @property
     def codomain(self):
         return self.args[2]
+
+    def _map_content(self):
+        return self.func, self.name
+
+class RestrictedMap(Map):
+    def __new__(cls, mapping, new_domain, evaluate=False, **kwargs):
+
+        new_domain = _sympify(new_domain)
+        if not new_domain.is_subset(mapping.domain):
+            raise TypeError("%s is not subset of %s's domain %s." % (new_domain, mapping, mapping.domain))
+
+        if evaluate:
+
+            if isinstance(mapping, RestrictedMap):
+                return cls(mapping.base, new_domain, evaluate=True)
+
+            result = mapping._eval_restrict(new_domain)
+            if result is not None:
+                return result
+        return super().__new__(cls, mapping, new_domain)
+
+    @property
+    def base(self):
+        return self.args[0]
+
+    @property
+    def domain(self):
+        return self.args[1]
+
+    @property
+    def codomain(self):
+        return self.base.codomain
+
+    def eval(self, *args):
+        return self.base(*args, evaluate=True)
+
+    def _map_content(self):
+        return self.base._map_content()
 
 class InverseMap(Map):
     """
@@ -298,6 +361,9 @@ class IdentityMap(Map):
 
     def _eval_inverse(self):
         return self
+
+    def _map_content(self):
+        return self.func
 
 class AppliedMap(Expr):
     """

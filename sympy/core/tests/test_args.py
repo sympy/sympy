@@ -2872,6 +2872,10 @@ def test_sympy__map__map__UndefinedMap():
     from sympy.map import Map
     assert _test_args(Map('f'))
 
+def test_sympy__map__map__RestrictedMap():
+    from sympy.map import Map, RestrictedMap
+    assert _test_args(Map('f').restrict(S.Reals))
+
 def test_sympy__map__map__InverseMap():
     from sympy.map import Map, InverseMap
     assert _test_args(InverseMap(Map('f')))
