@@ -39,26 +39,6 @@ def test_get_numbered_constants():
         get_numbered_constants(None)
 
 
-def test_dsolve_system():
-
-    eqs = [f(x).diff(x, 2), g(x).diff(x)]
-    with raises(ValueError):
-        dsolve(eqs) # NotImplementedError would be better
-
-    eqs = [f(x).diff(x) - x, f(x).diff(x) + x]
-    with raises(ValueError):
-        # Could also be NotImplementedError. f(x)=0 is a solution...
-        dsolve(eqs)
-
-    eqs = [f(x, y).diff(x)]
-    with raises(ValueError):
-        dsolve(eqs)
-
-    eqs = [f(x, y).diff(x)+g(x).diff(x), g(x).diff(x)]
-    with raises(ValueError):
-        dsolve(eqs)
-
-
 def test_dsolve_all_hint():
     eq = f(x).diff(x)
     output = dsolve(eq, hint='all')

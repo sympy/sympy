@@ -1384,6 +1384,14 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     if t is None:
         t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
 
+    sys_order = _get_func_order(eqs, funcs)
+
+    # To add higher order to first order reduction later
+    if not all(sys_order[func] == 1 for func in funcs):
+        raise NotImplementedError(filldedent('''
+            Higher order ODEs aren't solvable by dsolve_system
+        '''))
+
     canon_eqs = canonical_odes(eqs, funcs, t)
     sols = []
 

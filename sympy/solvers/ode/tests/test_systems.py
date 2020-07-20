@@ -1218,8 +1218,8 @@ def test_component_division():
             Eq(Derivative(g(x), x), f(x)),
             Eq(Derivative(h(x), x), h(x)),
             Eq(Derivative(k(x), x), h(x)**4 + k(x))]
-    sol1 = [Eq(f(x), C1*exp(2*x)),
-            Eq(g(x), C1*exp(2*x)/2 + C2),
+    sol1 = [Eq(f(x), 2*C1*exp(2*x)),
+            Eq(g(x), C1*exp(2*x) + C2),
             Eq(h(x), C3*exp(x)),
             Eq(k(x), (C4 + Integral(C3**4*exp(3*x), x))*exp(x))]
     assert dsolve(eqs1) == sol1
@@ -1229,10 +1229,10 @@ def test_component_division():
             Eq(Derivative(g(x), x), f(x)),
             Eq(Derivative(h(x), x), h(x)),
             Eq(Derivative(k(x), x), f(x)**4 + k(x))]
-    sol2 = [Eq(f(x), C1*exp(2*x)),
-            Eq(g(x), C1*exp(2*x)/2 + C2),
+    sol2 = [Eq(f(x), 2*C1*exp(2*x)),
+            Eq(g(x), C1*exp(2*x) + C2),
             Eq(h(x), C3*exp(x)),
-            Eq(k(x), (C4 + Integral(C1**4*exp(7*x), x))*exp(x))]
+            Eq(k(x), (C4 + Integral(16*C1**4*exp(7*x), x))*exp(x))]
     assert dsolve(eqs2) == sol2
     assert checksysodesol(eqs2, sol2) == (True, [0, 0, 0, 0])
 
@@ -1836,3 +1836,25 @@ def test_dsolve_system():
     raises(NotImplementedError, lambda: dsolve_system(eq, t=x, ics={f(0): 1, g(0): 1}) == ([], []))
     raises(NotImplementedError, lambda: dsolve_system(eq, ics={f(0): 1, g(0): 1}) == ([], []))
     raises(NotImplementedError, lambda: dsolve_system(eq, funcs=[f(x), g(x)], ics={f(0): 1, g(0): 1}) == ([], []))
+
+def test_dsolve():
+
+    f, g = symbols('f g', cls=Function)
+    x, y = symbols('x y')
+
+    eqs = [f(x).diff(x, 2), g(x).diff(x)]
+    with raises(ValueError):
+        dsolve(eqs) # NotImplementedError would be better
+
+    eqs = [f(x).diff(x) - x, f(x).diff(x) + x]
+    with raises(ValueError):
+        # Could also be NotImplementedError. f(x)=0 is a solution...
+        dsolve(eqs)
+
+    eqs = [f(x, y).diff(x)]
+    with raises(ValueError):
+        dsolve(eqs)
+
+    eqs = [f(x, y).diff(x)+g(x).diff(x), g(x).diff(x)]
+    with raises(ValueError):
+        dsolve(eqs)
