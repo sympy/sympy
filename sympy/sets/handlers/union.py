@@ -4,6 +4,7 @@ from sympy.multipledispatch import dispatch
 from sympy.sets.fancysets import (Naturals, Naturals0, Integers, Rationals,
                                   Reals)
 from sympy.sets.sets import UniversalSet
+from sympy.sets.undefinedset import UndefinedSet
 
 
 @dispatch(Naturals0, Naturals)  # type: ignore # noqa:F811
@@ -140,4 +141,12 @@ def union_sets(a, b): # noqa:F811
 
 @dispatch(Set, Set)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
+    return None
+
+@dispatch(UndefinedSet, Set)  # type: ignore # noqa:F811
+def union_sets(a, b): # noqa:F811
+    if a.is_subset(b):
+        return b
+    if b.is_subset(a):
+        return a
     return None

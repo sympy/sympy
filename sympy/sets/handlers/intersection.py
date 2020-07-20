@@ -5,6 +5,7 @@ from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
     ImageSet, Rationals)
 from sympy.sets.sets import UniversalSet, imageset, ProductSet
+from sympy.sets.undefinedset import UndefinedSet
 
 
 @dispatch(ConditionSet, ConditionSet)  # type: ignore # noqa:F811
@@ -474,3 +475,11 @@ def intersection_sets(a, b): # noqa:F811
 @dispatch(Naturals, Interval)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return _intlike_interval(a, b)
+
+@dispatch(UndefinedSet, Set)  # type: ignore # noqa:F811
+def intersection_sets(a, b): # noqa:F811
+    if a.is_subset(b):
+        return a
+    if b.is_subset(a):
+        return b
+    return None
