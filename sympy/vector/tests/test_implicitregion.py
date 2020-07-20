@@ -20,10 +20,14 @@ def test_ImplicitRegion():
 def test_regular_point():
     r1 = ImplicitRegion((x,), x**2 - 16)
     r1.regular_point() == (-4,)
-    c = ImplicitRegion((x, y), x**2 + y**2 - 4)
-    c.regular_point() == (-2, 0)
-    r2 = ImplicitRegion((x, y), (x - S(5)/2)**2 + y**2 - (S(1)/4)**2)
-    raises(NotImplementedError, lambda: r2.regular_point())
+    c1 = ImplicitRegion((x, y), x**2 + y**2 - 4)
+    c1.regular_point() == (2, 0)
+    c2 = ImplicitRegion((x, y), (x - S(5)/2)**2 + y**2 - (S(1)/4)**2)
+    c2.regular_point() == (11/4, 0)
+    c3 = ImplicitRegion((x, y), (y - 5)**2  - 16*(x - 5))
+    c3.regular_point() == (5, 5)
+    r2 = ImplicitRegion((x, y), x**2 - 4*x*y - 3*y**2 + 4*x + 8*y - 5)
+    r2.regular_point == (4/7, 13/21)
 
 
 def test_singular_points_and_multiplicty():
