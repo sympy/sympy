@@ -397,8 +397,15 @@ def ddm_ilu(a):
 
 def ddm_ilu_solve(x, L, U, swaps, b):
     """x  <--  solve(L*U*x = swaps(b))"""
-    m, n = U.shape
-    m2, o = b.shape
+    m = len(U)
+    if not m:
+        return
+    n = len(U[0])
+
+    m2 = len(b)
+    if not m2:
+        raise DDMShapeError("Shape mismtch")
+    o = len(b[0])
 
     if m != m2:
         raise DDMShapeError("Shape mismtch")
@@ -439,9 +446,11 @@ def ddm_ilu_solve(x, L, U, swaps, b):
 def ddm_berk(M, K):
     m = len(M)
     if not m:
-        return []
+        return [K.one]
     n = len(M[0])
-    assert m == n
+
+    if m != n:
+        raise DDMShapeError("Not square")
 
     if n == 1:
         return [[K.one], [-M[0][0]]]

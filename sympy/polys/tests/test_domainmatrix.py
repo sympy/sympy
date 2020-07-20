@@ -5,7 +5,8 @@ from sympy.polys.domainmatrix import (
         DDM,
         DDMBadInputError, DDMDomainError, DDMShapeError,
         ddm_iadd, ddm_isub, ddm_ineg, ddm_imatmul,
-        ddm_irref, ddm_idet, ddm_iinv, ddm_ilu, ddm_ilu_split,
+        ddm_irref, ddm_idet, ddm_iinv, ddm_ilu, ddm_ilu_split, ddm_ilu_solve,
+        ddm_berk,
         )
 
 from sympy.testing.pytest import raises
@@ -280,6 +281,60 @@ def test_DDM_lu():
     assert swaps == []
 
 
+def test_DDM_lu_solve():
+    # Basic example
+    A = DDM([[QQ(1), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
+    b = DDM([[QQ(1)], [QQ(2)]], (2, 1), QQ)
+    x = DDM([[QQ(0)], [QQ(1, 2)]], (2, 1), QQ)
+    assert A.lu_solve(b) == x
+
+    # Example with swaps
+    A = DDM([[QQ(0), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
+    assert A.lu_solve(b) == x
+
+    # Overdetermined, consistent
+    A = DDM([[QQ(1), QQ(2)], [QQ(3), QQ(4)], [QQ(5), QQ(6)]], (3, 2), QQ)
+    b = DDM([[QQ(1)], [QQ(2)], [QQ(3)]], (3, 1), QQ)
+    assert A.lu_solve(b) == x
+
+    # Overdetermined, inconsistent
+    b = DDM([[QQ(1)], [QQ(2)], [QQ(4)]], (3, 1), QQ)
+    raises(NonInvertibleMatrixError, lambda: A.lu_solve(b))
+
+    # Square, noninvertible
+    A = DDM([[QQ(1), QQ(2)], [QQ(1), QQ(2)]], (2, 2), QQ)
+    b = DDM([[QQ(1)], [QQ(2)]], (2, 1), QQ)
+    raises(NonInvertibleMatrixError, lambda: A.lu_solve(b))
+
+    # Underdetermined
+    A = DDM([[QQ(1), QQ(2)]], (1, 2), QQ)
+    b = DDM([[QQ(3)]], (1, 1), QQ)
+    raises(NotImplementedError, lambda: A.lu_solve(b))
+
+    # Domain mismatch
+    bz = DDM([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
+    raises(DDMDomainError, lambda: A.lu_solve(bz))
+
+    # Shape mismatch
+    b3 = DDM([[QQ(1)], [QQ(2)], [QQ(3)]], (3, 1), QQ)
+    raises(DDMShapeError, lambda: A.lu_solve(b3))
+
+
+def test_DDM_charpoly():
+    A = DDM([], (0, 0), ZZ)
+    assert A.charpoly() == [ZZ(1)]
+
+    A = DDM([
+        [ZZ(1), ZZ(2), ZZ(3)],
+        [ZZ(4), ZZ(5), ZZ(6)],
+        [ZZ(7), ZZ(8), ZZ(9)]], (3, 3), ZZ)
+    Avec = [ZZ(1), ZZ(-15), ZZ(-18), ZZ(0)]
+    assert A.charpoly() == Avec
+
+    A = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    raises(DDMShapeError, lambda: A.charpoly())
+
+
 def test_ddm_iadd():
     a = [[1, 2], [3, 4]]
     b = [[5, 6], [7, 8]]
@@ -319,40 +374,52 @@ def test_ddm_imatmul():
 
 
 def test_ddm_irref():
-
+    # Empty matrix
     A = []
     Ar = []
     pivots = []
     assert ddm_irref(A) == pivots
     assert A == Ar
 
+    # Standard square case
     A = [[QQ(0), QQ(1)], [QQ(1), QQ(1)]]
     Ar = [[QQ(1), QQ(0)], [QQ(0), QQ(1)]]
     pivots = [0, 1]
     assert ddm_irref(A) == pivots
     assert A == Ar
 
+    # m < n  case
     A = [[QQ(1), QQ(2), QQ(1)], [QQ(3), QQ(4), QQ(1)]]
     Ar = [[QQ(1), QQ(0), QQ(-1)], [QQ(0), QQ(1), QQ(1)]]
     pivots = [0, 1]
     assert ddm_irref(A) == pivots
     assert A == Ar
 
+    # same m < n  but reversed
     A = [[QQ(3), QQ(4), QQ(1)], [QQ(1), QQ(2), QQ(1)]]
     Ar = [[QQ(1), QQ(0), QQ(-1)], [QQ(0), QQ(1), QQ(1)]]
     pivots = [0, 1]
     assert ddm_irref(A) == pivots
     assert A == Ar
 
+    # m > n case
     A = [[QQ(1), QQ(0)], [QQ(1), QQ(3)], [QQ(0), QQ(1)]]
     Ar = [[QQ(1), QQ(0)], [QQ(0), QQ(1)], [QQ(0), QQ(0)]]
     pivots = [0, 1]
     assert ddm_irref(A) == pivots
     assert A == Ar
 
+    # Example with missing pivot
     A = [[QQ(1), QQ(0), QQ(1)], [QQ(3), QQ(0), QQ(1)]]
     Ar = [[QQ(1), QQ(0), QQ(0)], [QQ(0), QQ(0), QQ(1)]]
     pivots = [0, 2]
+    assert ddm_irref(A) == pivots
+    assert A == Ar
+
+    # Example with missing pivot and no replacement
+    A = [[QQ(0), QQ(1)], [QQ(0), QQ(2)], [QQ(1), QQ(0)]]
+    Ar = [[QQ(1), QQ(0)], [QQ(0), QQ(1)], [QQ(0), QQ(0)]]
+    pivots = [0, 1]
     assert ddm_irref(A) == pivots
     assert A == Ar
 
@@ -497,3 +564,91 @@ def test_ddm_ilu_split():
     assert U == Uexp
     assert L == Lexp
     assert swaps == []
+
+
+def test_ddm_ilu_solve():
+    # Basic example
+    # A = [[QQ(1), QQ(2)], [QQ(3), QQ(4)]]
+    U = [[QQ(1), QQ(2)], [QQ(0), QQ(-2)]]
+    L = [[QQ(1), QQ(0)], [QQ(3), QQ(1)]]
+    swaps = []
+    b = DDM([[QQ(1)], [QQ(2)]], (2, 1), QQ)
+    x = DDM([[QQ(0)], [QQ(0)]], (2, 1), QQ)
+    xexp = DDM([[QQ(0)], [QQ(1, 2)]], (2, 1), QQ)
+    ddm_ilu_solve(x, L, U, swaps, b)
+    assert x == xexp
+
+    # Example with swaps
+    # A = [[QQ(0), QQ(2)], [QQ(3), QQ(4)]]
+    U = [[QQ(3), QQ(4)], [QQ(0), QQ(2)]]
+    L = [[QQ(1), QQ(0)], [QQ(0), QQ(1)]]
+    swaps = [(0, 1)]
+    b = DDM([[QQ(1)], [QQ(2)]], (2, 1), QQ)
+    x = DDM([[QQ(0)], [QQ(0)]], (2, 1), QQ)
+    xexp = DDM([[QQ(0)], [QQ(1, 2)]], (2, 1), QQ)
+    ddm_ilu_solve(x, L, U, swaps, b)
+    assert x == xexp
+
+    # Overdetermined, consistent
+    # A = DDM([[QQ(1), QQ(2)], [QQ(3), QQ(4)], [QQ(5), QQ(6)]], (3, 2), QQ)
+    U = [[QQ(1), QQ(2)], [QQ(0), QQ(-2)], [QQ(0), QQ(0)]]
+    L = [[QQ(1), QQ(0), QQ(0)], [QQ(3), QQ(1), QQ(0)], [QQ(5), QQ(2), QQ(1)]]
+    swaps = []
+    b = DDM([[QQ(1)], [QQ(2)], [QQ(3)]], (3, 1), QQ)
+    x = DDM([[QQ(0)], [QQ(0)]], (2, 1), QQ)
+    xexp = DDM([[QQ(0)], [QQ(1, 2)]], (2, 1), QQ)
+    ddm_ilu_solve(x, L, U, swaps, b)
+    assert x == xexp
+
+    # Overdetermined, inconsistent
+    b = DDM([[QQ(1)], [QQ(2)], [QQ(4)]], (3, 1), QQ)
+    raises(NonInvertibleMatrixError, lambda: ddm_ilu_solve(x, L, U, swaps, b))
+
+    # Square, noninvertible
+    # A = DDM([[QQ(1), QQ(2)], [QQ(1), QQ(2)]], (2, 2), QQ)
+    U = [[QQ(1), QQ(2)], [QQ(0), QQ(0)]]
+    L = [[QQ(1), QQ(0)], [QQ(1), QQ(1)]]
+    swaps = []
+    b = DDM([[QQ(1)], [QQ(2)]], (2, 1), QQ)
+    raises(NonInvertibleMatrixError, lambda: ddm_ilu_solve(x, L, U, swaps, b))
+
+    # Underdetermined
+    # A = DDM([[QQ(1), QQ(2)]], (1, 2), QQ)
+    U = [[QQ(1), QQ(2)]]
+    L = [[QQ(1)]]
+    swaps = []
+    b = DDM([[QQ(3)]], (1, 1), QQ)
+    raises(NotImplementedError, lambda: ddm_ilu_solve(x, L, U, swaps, b))
+
+    # Shape mismatch
+    b3 = DDM([[QQ(1)], [QQ(2)], [QQ(3)]], (3, 1), QQ)
+    raises(DDMShapeError, lambda: ddm_ilu_solve(x, L, U, swaps, b3))
+
+    # Empty shape mismatch
+    U = [[QQ(1)]]
+    L = [[QQ(1)]]
+    swaps = []
+    x = [[QQ(1)]]
+    b = []
+    raises(DDMShapeError, lambda: ddm_ilu_solve(x, L, U, swaps, b))
+
+    # Empty system
+    U = []
+    L = []
+    swaps = []
+    b = []
+    x = []
+    ddm_ilu_solve(x, L, U, swaps, b)
+    assert x == []
+
+
+def test_ddm_charpoly():
+    A = []
+    assert ddm_berk(A, ZZ) == [ZZ(1)]
+
+    A = [[ZZ(1), ZZ(2), ZZ(3)], [ZZ(4), ZZ(5), ZZ(6)], [ZZ(7), ZZ(8), ZZ(9)]]
+    Avec = [[ZZ(1)], [ZZ(-15)], [ZZ(-18)], [ZZ(0)]]
+    assert ddm_berk(A, ZZ) == Avec
+
+    A = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    raises(DDMShapeError, lambda: ddm_berk(A, ZZ))
