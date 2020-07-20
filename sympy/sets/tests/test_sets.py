@@ -202,7 +202,7 @@ def test_union():
 
     assert Interval(1, 2).union(Interval(2, 3)) == Interval(1, 3)
 
-    assert Union(Set()) == Set()
+    assert Union(Set('S')) == Set('S')
 
     assert FiniteSet(1) + FiniteSet(2) + FiniteSet(3) == FiniteSet(1, 2, 3)
     assert FiniteSet('ham') + FiniteSet('eggs') == FiniteSet('ham', 'eggs')
@@ -863,7 +863,7 @@ def test_union_contains():
 
 def test_is_number():
     assert Interval(0, 1).is_number is False
-    assert Set().is_number is False
+    assert Set('S').is_number is False
 
 
 def test_Interval_is_left_unbounded():
@@ -1280,8 +1280,8 @@ def test_SymmetricDifference():
             == FiniteSet(5)
     assert FiniteSet(1, 2, 3, 4, 5) ^ FiniteSet(1, 2, 5, 6) == \
             FiniteSet(3, 4, 6)
-    assert Set(1, 2 , 3) ^ Set(2, 3, 4) == Union(Set(1, 2, 3) - Set(2, 3, 4), \
-            Set(2, 3, 4) - Set(1, 2, 3))
+    assert Set('A') ^ Set('B') == Union(Set('A') - Set('B'), \
+            Set('B') - Set('A'))
     assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
             Interval(2, 5), Interval(2, 5) - Interval(0, 4))
 

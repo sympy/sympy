@@ -49,6 +49,27 @@ class Set(Basic):
     Real intervals are represented by the :class:`Interval` class and unions of
     sets by the :class:`Union` class. The empty set is represented by the
     :class:`EmptySet` class and available as a singleton as ``S.EmptySet``.
+
+    Examples
+    ========
+
+    >>> from sympy import Set, FiniteSet, S
+
+    Set constructs UndefinedSet.
+
+    >>> Set('S')
+    S
+
+    Use FiniteSet for finite-element set.
+
+    >>> FiniteSet(1, 2, 3)
+    FiniteSet(1, 2, 3)
+
+    Use S.EmptySet to generate empty set.
+
+    >>> S.EmptySet
+    EmptySet
+
     """
     is_number = False
     is_iterable = False
@@ -680,7 +701,6 @@ class Set(Basic):
             # result with Set use y.contains(x)
             raise TypeError('did not evaluate to a bool: %r' % c)
         return b
-
 
 class ProductSet(Set):
     """
