@@ -49,7 +49,7 @@ class Map(Expr):
     Reals
     >>> f.codomain
     ProductSet(Reals, Reals)
-    >>> f.nargs
+    >>> f.arity
     1
 
     >>> f(x)
@@ -67,7 +67,7 @@ class Map(Expr):
     ...         return sum(tup)
     >>> g = G()
 
-    >>> g.nargs
+    >>> g.arity
     2
     >>> g((x,y)).doit()
     x + y
@@ -88,12 +88,13 @@ class Map(Expr):
         return super().__new__(cls, *args)
 
     @property
-    def nargs(self):
+    def arity(self):
         if self.domain in (FiniteSet(()), FiniteSet(S.EmptySet)):
             return 0
         if isinstance(self.domain, ProductSet):
             return len(self.domain.args)
         return 1
+    nargs = arity
 
     def eval(self, *args):
         return
