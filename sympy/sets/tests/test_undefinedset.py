@@ -19,6 +19,16 @@ def test_UndefinedSet():
     assert A.union(B) == A
     assert B.union(A) == A
 
+    D = UndefinedSet('D', (S.Reals,))
+    assert D.is_subset(S.Reals)
+    assert D.is_subset(S.Complexes)
+    assert S.Reals.is_superset(D)
+    assert S.Complexes.is_superset(D)
+    assert D.intersection(S.Reals) == D
+    assert S.Reals.intersection(D) == D
+    assert D.intersection(S.Complexes) == D
+    assert S.Complexes.intersection(D) == D
+
 def test_SetElement():
     c = SetElement('c', C)
     assert c == C.element('c')
