@@ -3,6 +3,10 @@ from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from .sets import Set
 
+__all__ = [
+    'UndefinedSet', 'SetElement'
+]
+
 class UndefinedSet(Set):
     """
     An abstract set with no condition defined, which is commonly
