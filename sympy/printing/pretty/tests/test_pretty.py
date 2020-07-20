@@ -4121,6 +4121,9 @@ def test_pretty_ConditionSet():
     assert pretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == '{2}'
     assert upretty(ConditionSet(x, Or(x > 1, x < -1), FiniteSet(1, 2))) == u'{2}'
 
+def test_pretty_UndefinedSet():
+    from sympy.sets.undefinedset import UndefinedSet
+    assert pretty(UndefinedSet('S')) == 'S'
 
 def test_pretty_ComplexRegion():
     from sympy import ComplexRegion

@@ -1058,6 +1058,9 @@ def test_set_operators_parenthesis():
         '\\left\\{b\\right\\}\\right) \\times \\left(\\left\\{c\\right\\} ' \
         '\\triangle \\left\\{d\\right\\}\\right)'
 
+def test_latex_UndefinedSet():
+    from sympy.sets.undefinedset import UndefinedSet
+    assert latex(UndefinedSet('S')) == 'S'
 
 def test_latex_Complexes():
     assert latex(S.Complexes) == r"\mathbb{C}"

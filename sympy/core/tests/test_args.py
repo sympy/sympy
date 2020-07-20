@@ -991,6 +991,10 @@ def test_sympy__sets__contains__Contains():
     from sympy.sets.contains import Contains
     assert _test_args(Contains(x, Range(0, 10, 2)))
 
+def test_sympy__sets__undefinedset__UndefinedSet():
+    from sympy.sets.undefinedset import UndefinedSet
+    assert _test_args(UndefinedSet('A'))
+    assert _test_args(UndefinedSet('B', (UndefinedSet('A'),)))
 
 # STATS
 

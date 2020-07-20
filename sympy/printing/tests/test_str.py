@@ -815,6 +815,9 @@ def test_FiniteSet():
 def test_UniversalSet():
     assert str(S.UniversalSet) == 'UniversalSet'
 
+def test_UndefinedSet():
+    from sympy.sets.undefinedset import UndefinedSet
+    assert str(UndefinedSet('S')) == 'S'
 
 def test_PrettyPoly():
     from sympy.polys.domains import QQ

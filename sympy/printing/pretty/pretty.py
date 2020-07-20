@@ -2179,6 +2179,9 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm(sstr(e))
 
+    def _print_UndefinedSet(self, expr):
+        return prettyForm(expr.name.name)
+
     def _print_FourierSeries(self, s):
         if self._use_unicode:
             dots = u"\N{HORIZONTAL ELLIPSIS}"

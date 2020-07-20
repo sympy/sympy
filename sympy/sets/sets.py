@@ -40,7 +40,8 @@ tfn = defaultdict(lambda: None, {
 @sympify_method_args
 class Set(Basic):
     """
-    The base class for any kind of set.
+    The base class for any kind of set, which also serves as a constructor
+    for UndefinedSet class.
 
     This is not meant to be used directly as a container of items. It does not
     behave like the builtin ``set``; see :class:`FiniteSet` for that.
@@ -64,6 +65,11 @@ class Set(Basic):
 
     is_empty = None  # type: FuzzyBool
     is_finite_set = None  # type: FuzzyBool
+
+    def __new__(cls, *args, **kwargs):
+        if cls is Set:
+            return UndefinedSet(*args, **kwargs)
+        return super().__new__(cls, *args, **kwargs)
 
     @property  # type: ignore
     @deprecated(useinstead="is S.EmptySet or is_empty",
@@ -2488,3 +2494,5 @@ def set_pow(x, y):
 def set_function(f, x):
     from sympy.sets.handlers.functions import _set_function
     return _set_function(f, x)
+
+from .undefinedset import UndefinedSet
