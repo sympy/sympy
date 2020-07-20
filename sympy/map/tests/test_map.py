@@ -21,6 +21,7 @@ def test_Map():
     assert undf.name == Str('f')
 
     # test nargs
+    assert Map('f', domain=S.Reals**0).nargs == 0
     assert Map('f', domain=S.Reals).nargs == 1
     assert Map('f', domain=S.Reals**1).nargs == 1
     assert Map('f', domain=S.Reals*S.Integers, codomain=S.Reals).nargs == 2

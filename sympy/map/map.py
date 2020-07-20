@@ -5,7 +5,7 @@ from sympy.core.decorators import (
 )
 from sympy.core.sympify import _sympify
 from sympy.core.symbol import Str
-from sympy.sets import ProductSet
+from sympy.sets import ProductSet, FiniteSet
 
 __all__ = [
     'Map', 'UndefinedMap', 'RestrictedMap', 'InverseMap', 'IdentityMap',
@@ -89,10 +89,11 @@ class Map(Expr):
 
     @property
     def nargs(self):
+        if self.domain in (FiniteSet(()), FiniteSet(S.EmptySet)):
+            return 0
         if isinstance(self.domain, ProductSet):
             return len(self.domain.args)
-        else:
-            return 1
+        return 1
 
     def eval(self, *args):
         return
