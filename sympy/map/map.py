@@ -44,7 +44,7 @@ class Map(Expr):
     >>> f = Map('f', S.Reals, S.Reals**2)
 
     >>> f
-    f
+    f : Reals -> ProductSet(Reals, Reals)
     >>> f.domain
     Reals
     >>> f.codomain
@@ -143,6 +143,38 @@ class Map(Expr):
     def is_restriction(self, other):
         """
         Returns True if *self* is restricted function of *other*.
+
+        Explanation
+        ===========
+
+        Restricted function has smaller domain, but pertains the relation between
+        domain and codomain. For the identification, `_map_content` method is
+        referred to.
+
+        Examples
+        ========
+
+        >>> from sympy import Map, S
+        >>> class F(Map):
+        ...     @property
+        ...     def domain(self):
+        ...         return self.args[0]
+        ...     @property
+        ...     def codomain(self):
+        ...         return self.args[1]
+        ...     def eval(self, x):
+        ...         return x + 1
+        >>> f1, f2 = F(S.Reals, S.Reals), F(S.Integers, S.Reals)
+
+        >>> f1 == f2
+        False
+        >>> f2.is_restriction(f1)
+        True
+        >>> f1(1) == f2(1)
+        False
+        >>> f1(1, evaluate=True) == f2(1, evaluate=True)
+        True
+
         """
         return self._eval_is_restriction(other)
 
@@ -168,7 +200,7 @@ class Map(Expr):
 
     def as_base_iternum(self):
         """
-        Interprete *self* as IteratedMap, returning the
+        Interprete *self* as iterated map, returning the
         base and number of iteration.
 
         """
@@ -216,6 +248,21 @@ class UndefinedMap(Map):
         return self.func, self.name
 
 class RestrictedMap(Map):
+    r"""
+    A class for general restricted function, whose domain is restricted to a subset of its
+    original domain.
+
+    Examples
+    ========
+
+    >>> from sympy import Map, S
+    >>> f = Map('f', S.Reals, S.Integers)
+    >>> f
+    f : Reals -> Integers
+    >>> f.restrict(S.Integers)
+    RestrictedMap(f, Integers) : Integers -> Integers
+
+    """
     def __new__(cls, mapping, new_domain, evaluate=False, **kwargs):
 
         new_domain = _sympify(new_domain)

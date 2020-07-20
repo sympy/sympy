@@ -32,16 +32,16 @@ class CompositeMap(Map, AssocOp):
     >>> f = F()
 
     >>> f.composite(f)
-    F@F
+    F@F : UniversalSet -> UniversalSet
     >>> f.composite(f)(x, evaluate=True)
     4*x
     >>> f.composite(f.inv(), evaluate=True)
-    IdentityMap
+    id : UniversalSet -> UniversalSet
 
    @ operator returns evaluated composition
 
     >>> f@(f.inv())
-    IdentityMap
+    id : UniversalSet -> UniversalSet
 
     References
     ==========
