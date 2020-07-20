@@ -77,7 +77,7 @@ class MatrixGammaDistribution(MatrixDistribution):
         if not isinstance(scale_matrix , MatrixSymbol):
             _value_check(scale_matrix.is_positive_definite, "The shape "
                 "matrix must be positive definite.")
-        _value_check(scale_matrix.shape[0] == scale_matrix.shape[1], "Should "
+        _value_check(scale_matrix.is_square, "Should "
         "be square matrix")
         _value_check(alpha.is_positive, "Shape parameter should be positive.")
         _value_check(beta.is_positive, "Scale parameter should be positive.")
@@ -153,7 +153,43 @@ def MatrixGamma(symbol, alpha, beta, scale_matrix):
     return rv(symbol, MatrixGammaDistribution, (alpha, beta, scale_matrix))
 
 #-------------------------------------------------------------------------------
-# Wishart Distribution ----------------------------------------------------------
+# Wishart Distribution ---------------------------------------------------------
+
+class WishartDistribution(MatrixDistribution):
+
+    _argnames = ('n', 'scale_matrix')
+
+    @staticmethod
+    def check(n, scale_matrix):
+        if not isinstance(scale_matrix , MatrixSymbol):
+            _value_check(scale_matrix.is_positive_definite, "The shape "
+                "matrix must be positive definite.")
+        _value_check(scale_matrix.is_square, "Should "
+        "be square matrix")
+        _value_check(n.is_positive, "Shape parameter should be positive.")
+
+    @property
+    def set(self):
+        k = self.scale_matrix.shape[0]
+        return ProductSet(S.Reals**k, S.Reals**k)
+
+    @property
+    def dimension(self):
+        return self.scale_matrix.shape
+
+    def pdf(self, x):
+        n, scale_matrix = self.n, self.scale_matrix
+        p = scale_matrix.shape[0]
+        if isinstance(x, list):
+            x = ImmutableMatrix(x)
+        if not isinstance(x, (MatrixBase, MatrixSymbol)):
+            raise ValueError("%s should be an isinstance of Matrix "
+                    "or MatrixSymbol" % str(x))
+        sigma_inv_x = - Inverse(scale_matrix)*x / S(2)
+        term1 = exp(Trace(sigma_inv_x))/((2**(p*n/S(2))) * multigamma(n/S(2), p))
+        term2 = (Determinant(scale_matrix))**(-n/S(2))
+        term3 = (Determinant(x))**(S(n - p - 1)/2)
+        return term1 * term2 * term3
 
 def Wishart(symbol, n, scale_matrix):
     """
@@ -197,7 +233,7 @@ def Wishart(symbol, n, scale_matrix):
     """
     if isinstance(scale_matrix, list):
         scale_matrix = ImmutableMatrix(scale_matrix)
-    return rv(symbol, MatrixGammaDistribution, (n/S(2), S(2), scale_matrix))
+    return rv(symbol, WishartDistribution, (n, scale_matrix))
 
 #-------------------------------------------------------------------------------
 # Matrix Normal distribution ---------------------------------------------------

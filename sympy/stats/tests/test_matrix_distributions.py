@@ -48,7 +48,6 @@ def test_MatrixGamma():
 def test_Wishart():
     W = Wishart('W', 5, [[1, 0], [0, 1]])
     assert W.pspace.distribution.set == ProductSet(S.Reals**2, S.Reals**2)
-    assert isinstance(density(W), MatrixGammaDistribution)
     X = MatrixSymbol('X', 2, 2)
     term1 = exp(Trace(Matrix([[-S(1)/2, 0], [0, -S(1)/2]])*X))
     assert density(W)(X).doit() == term1 * Determinant(X)/(24*pi)
