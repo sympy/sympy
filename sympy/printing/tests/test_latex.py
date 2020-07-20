@@ -2660,16 +2660,16 @@ def test_map():
     )
 
     f = Map(name='f')
-    assert latex(f) == "f"
-    assert latex(f(z)) == r"f{\left(z \right)}"
+    assert latex(f) == r"f : \mathbb{U} \rightarrow \mathbb{U}"
+    assert latex(f(x)) == r"f{\left(x \right)}"
 
     # Restricted map
-    assert latex(f.restrict(S.Reals)) == r"f \vert_{\mathbb{R}}"
+    assert latex(f.restrict(S.Reals)) == r"f \vert_{\mathbb{R}} : \mathbb{R} \rightarrow \mathbb{U}"
     assert latex(f.restrict(S.Reals)(x)) == r"f \vert_{\mathbb{R}}{\left(x \right)}"
 
     # Inverse map
-    assert latex(f.inv()) == "{f}^{-1}"
-    assert latex(f.inv()(z)) == r"{f}^{-1}{\left(z \right)}"
+    assert latex(f.inv()) == r'{f}^{-1} : \mathbb{U} \rightarrow \mathbb{U}'
+    assert latex(f.inv()(x)) == r"{f}^{-1}{\left(x \right)}"
 
     # Identity map
     Id = IdentityMap(domain=S.Reals)
@@ -2677,15 +2677,16 @@ def test_map():
     assert latex(Id(x)) == r"\text{id}_{\mathbb{R}}{\left(x \right)}"
 
     # Composite map
-    assert latex(CompositeMap(f, f)) == r'f \circ f'
+    assert latex(CompositeMap(f, f)) == r'f \circ f : \mathbb{U} \rightarrow \mathbb{U}'
     assert latex(CompositeMap(f, f)(x)) == r'\left(f \circ f\right){\left(x \right)}'
 
     # Compositional map power
-    assert latex(IteratedMap(f, 2)) == "{f}^{2}"
+    assert latex(IteratedMap(f, 2)) == r'{f}^{2} : \mathbb{U} \rightarrow \mathbb{U}'
     assert latex(IteratedMap(f, 2)(x)) == r'{f}^{2}{\left(x \right)}'
 
     # Binary operator
     class AddOp(BinaryOperator):
         name = '+'
     addop = AddOp()
+    assert latex(addop) == r"+ : \mathbb{U} \rightarrow \mathbb{U}"
     assert latex(addop(x+y, x*y)) == r'\left(x + y\right) + \left(x y\right)'

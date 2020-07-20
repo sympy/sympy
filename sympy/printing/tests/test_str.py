@@ -998,32 +998,33 @@ def test_map():
     )
 
     f = Map(name='f')
-    assert str(f) == "f"
-    assert str(f(z)) == "f(z)"
+    assert str(f) == 'f : UniversalSet -> UniversalSet'
+    assert str(f(x)) == "f(x)"
 
     # Restricted map
-    assert str(f.restrict(S.Reals)) == r"RestrictedMap(f, Reals)"
-    assert str(f.restrict(S.Reals)(x)) == r"RestrictedMap(f, Reals)(x)"
+    assert str(f.restrict(S.Reals)) == 'RestrictedMap(f, Reals) : Reals -> UniversalSet'
+    assert str(f.restrict(S.Reals)(x)) == 'RestrictedMap(f, Reals)(x)'
 
     # Inverse map
-    assert str(f.inv()) == "InverseMap(f)"
-    assert str(f.inv()(z)) == "InverseMap(f)(z)"
+    assert str(f.inv()) == 'InverseMap(f) : UniversalSet -> UniversalSet'
+    assert str(f.inv()(x)) == "InverseMap(f)(x)"
 
     # Identity map
     Id = IdentityMap(domain=S.Reals)
-    assert str(Id) == "IdentityMap"
-    assert str(Id(x)) == "IdentityMap(x)"
+    assert str(Id) == 'id : Reals -> Reals'
+    assert str(Id(x)) == 'id(x)'
 
     # Composite map
-    assert str(CompositeMap(f, f)) == 'f@f'
+    assert str(CompositeMap(f, f)) == 'f@f : UniversalSet -> UniversalSet'
     assert str(CompositeMap(f, f)(x)) == '(f@f)(x)'
 
     # Compositional map power
-    assert str(IteratedMap(f, 2)) == "IteratedMap(f, 2)"
-    assert str(IteratedMap(f, 2)(x)) == "IteratedMap(f, 2)(x)"
+    assert str(IteratedMap(f, 2)) == 'IteratedMap(f, 2) : UniversalSet -> UniversalSet'
+    assert str(IteratedMap(f, 2)(x)) == 'IteratedMap(f, 2)(x)'
 
     # Binary operator
     class AddOp(BinaryOperator):
         name = '+'
     addop = AddOp()
+    assert str(addop) == '+ : UniversalSet -> UniversalSet'
     assert str(addop(x+y, x*y)) == '(x + y) + (x*y)'

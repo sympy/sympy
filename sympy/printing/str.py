@@ -30,11 +30,11 @@ class StrPrinter(Printer):
 
     _relationals = dict()  # type: Dict[str, str]
 
-    def parenthesize(self, item, level, strict=False):
+    def parenthesize(self, item, level, strict=False, kwargs={}):
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
-            return "(%s)" % self._print(item)
+            return "(%s)" % self._print(item, **kwargs)
         else:
-            return self._print(item)
+            return self._print(item, **kwargs)
 
     def stringify(self, args, sep, level=0):
         return sep.join([self.parenthesize(item, level) for item in args])
@@ -901,7 +901,7 @@ class StrPrinter(Printer):
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
 
-    def _print_Map(self, expr):
+    def _print_Map(self, expr, print_domains=True):
         if hasattr(expr, 'name'):
             if isinstance(expr.name, str):
                 name = expr.name
@@ -909,30 +909,53 @@ class StrPrinter(Printer):
                 name = expr.name.name
         else:
             name = expr.__class__.__name__
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
         return name
 
-    def _print_RestrictedMap(self, expr):
-        return "RestrictedMap(%s, %s)" % (
-            self._print(expr.base), self._print(expr.domain)
+    def _helper_print_domain(self, expr, name):
+        result = r"%s : %s -> %s" % (
+                name, self._print(expr.domain), self._print(expr.codomain)
+            )
+        return result
+
+    def _print_RestrictedMap(self, expr, print_domains=True):
+        name = "RestrictedMap(%s, %s)" % (
+            self._print(expr.base, print_domains=False), self._print(expr.domain)
         )
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
+        return name
 
-    def _print_InverseMap(self, expr):
-        return "InverseMap(%s)" % self._print(expr.base)
+    def _print_InverseMap(self, expr, print_domains=True):
+        name = "InverseMap(%s)" % self._print(expr.base, print_domains=False)
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
+        return name
 
-    def _print_IdentityMap(self, expr):
-        return "IdentityMap"
+    def _print_IdentityMap(self, expr, print_domains=True):
+        name = 'id'
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
+        return name
 
-    def _print_IteratedMap(self, expr):
-        return "IteratedMap(%s, %s)" % (
-            self._print(expr.base), self._print(expr.iternum)
+    def _print_CompositeMap(self, expr, print_domains=True):
+        name = "@".join([self._print(t, print_domains=False) for t in expr.args])
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
+        return name
+
+    def _print_IteratedMap(self, expr, print_domains=True):
+        name = "IteratedMap(%s, %s)" % (
+            self._print(expr.base, print_domains=False), self._print(expr.iternum)
         )
-
-    def _print_CompositeMap(self, expr):
-        return "@".join([self._print(t) for t in expr.args])
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
+        return name
 
     def _print_AppliedMap(self, expr):
         from sympy.map import BinaryOperator
-        map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'])
+        map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
 
         if isinstance(expr.map, BinaryOperator):
             infix_str = ' ' + map_str + ' '

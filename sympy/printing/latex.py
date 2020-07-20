@@ -213,15 +213,15 @@ class LatexPrinter(Printer):
     def _add_parens_lspace(self, s):
         return r"\left( {}\right)".format(s)
 
-    def parenthesize(self, item, level, is_neg=False, strict=False):
+    def parenthesize(self, item, level, is_neg=False, strict=False, kwargs={}):
         prec_val = precedence_traditional(item)
         if is_neg and strict:
-            return self._add_parens(self._print(item))
+            return self._add_parens(self._print(item, **kwargs))
 
         if (prec_val < level) or ((not strict) and prec_val <= level):
-            return self._add_parens(self._print(item))
+            return self._add_parens(self._print(item, **kwargs))
         else:
-            return self._print(item)
+            return self._print(item, **kwargs)
 
     def parenthesize_super(self, s):
         """
@@ -2650,7 +2650,7 @@ class LatexPrinter(Printer):
                 (self._print(expr.args[0]), exp)
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
-    def _print_Map(self, expr):
+    def _print_Map(self, expr, print_domains=True):
         if hasattr(expr, 'name'):
             if isinstance(expr.name, str):
                 name = expr.name
@@ -2658,28 +2658,51 @@ class LatexPrinter(Printer):
                 name = expr.name.name
         else:
             name = expr.__class__.__name__
-        return self._deal_with_super_sub(str(name))
-
-    def _print_RestrictedMap(self, expr):
-        temp = r'%s \vert_{%s}'
-        return temp % (self._print(expr.base), self._print(expr.domain))
-
-    def _print_InverseMap(self, expr):
-        return "{%s}^{-1}" % self._print(expr.base)
-
-    def _print_IdentityMap(self, expr):
-        return r"\text{id}_{%s}" % self._print(expr.domain)
-
-    def _print_CompositeMap(self, expr):
-        tex = r" \circ ".join([self._print(t) for t in expr.args])
+        tex = self._deal_with_super_sub(str(name))
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
         return tex
 
-    def _print_IteratedMap(self, expr):
-        return "{%s}^{%s}" % (self._print(expr.base), self._print(expr.iternum))
+    def _helper_print_domain(self, expr, tex):
+        result = r"%s : %s \rightarrow %s" % (
+                tex, self._print(expr.domain), self._print(expr.codomain)
+            )
+        return result
+
+    def _print_RestrictedMap(self, expr, print_domains=True):
+        temp = r'%s \vert_{%s}'
+        tex = temp % (self._print(expr.base, print_domains=False), self._print(expr.domain))
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
+    def _print_InverseMap(self, expr, print_domains=True):
+        tex = "{%s}^{-1}" % self._print(expr.base, print_domains=False)
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
+    def _print_IdentityMap(self, expr, print_domains=False):
+        tex = r"\text{id}_{%s}" % self._print(expr.domain)
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
+    def _print_CompositeMap(self, expr, print_domains=True):
+        tex = r" \circ ".join([self._print(t, print_domains=False) for t in expr.args])
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
+    def _print_IteratedMap(self, expr, print_domains=True):
+        tex = "{%s}^{%s}" % (self._print(expr.base, print_domains=False), self._print(expr.iternum))
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
 
     def _print_AppliedMap(self, expr):
         from sympy.map import BinaryOperator
-        map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'])
+        map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
 
         if isinstance(expr.map, BinaryOperator):
             infix_str = ' ' + map_str + ' '

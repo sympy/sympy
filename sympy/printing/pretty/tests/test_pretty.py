@@ -7256,32 +7256,33 @@ def test_map():
     )
 
     f = Map(name='f')
-    assert pretty(f) == "f"
-    assert pretty(f(z)) == "f(z)"
+    assert upretty(f) == 'f : 𝕌 → 𝕌'
+    assert pretty(f(x)) == "f(x)"
 
     # Restricted map
-    assert upretty(f.restrict(S.Reals)) == '(f)│ \n   │ℝ'
-    assert upretty(f.restrict(S.Reals)(x)) == '(f)│ (x)\n   │ℝ   '
+    assert upretty(f.restrict(S.Reals)) == 'f│  : ℝ → 𝕌\n │ℝ        '
+    assert upretty(f.restrict(S.Reals)(x)) == 'f│ (x)\n │ℝ   '
 
     # Inverse map
-    assert pretty(f.inv()) == " -1\nf  "
-    assert pretty(f.inv()(z)) == " -1   \nf  (z)"
+    assert upretty(f.inv()) == ' -1        \nf   : 𝕌 → 𝕌'
+    assert pretty(f.inv()(x)) == ' -1   \nf  (x)'
 
     # Identity map
     Id = IdentityMap(domain=S.Reals)
-    assert pretty(Id) == "IdentityMap"
-    assert pretty(Id(x)) == "IdentityMap(x)"
+    assert upretty(Id) == 'id : ℝ → ℝ'
+    assert pretty(Id(x)) == "id(x)"
 
     # Composite map
-    assert upretty(CompositeMap(f, f)) == 'f ∘ f'
+    assert upretty(CompositeMap(f, f)) == 'f ∘ f : 𝕌 → 𝕌'
     assert upretty(CompositeMap(f, f)(x)) == '(f ∘ f)(x)'
 
     # Compositional map power
-    assert pretty(IteratedMap(f, 2)) == ' 2\nf '
+    assert upretty(IteratedMap(f, 2)) == ' 2        \nf  : 𝕌 → 𝕌'
     assert pretty(IteratedMap(f, 2)(x)) == ' 2   \nf (x)'
 
     # Binary operator
     class AddOp(BinaryOperator):
         name = '+'
     addop = AddOp()
+    assert upretty(addop) == '+ : 𝕌 → 𝕌'
     assert upretty(addop(x+y, x*y)) == '(x + y) + (x⋅y)'
