@@ -14,6 +14,22 @@ Set
 
 .. autofunction:: imageset
 
+Undefined Sets
+--------------
+
+.. module:: sympy.sets.undefinedset
+    :noindex:
+
+UndefinedSet
+^^^^^^^^^^^^
+.. autoclass:: UndefinedSet
+   :members:
+
+SetElement
+^^^^^^^^^^
+.. autoclass:: SetElement
+   :members:
+
 Elementary Sets
 ---------------
 
