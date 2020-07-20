@@ -1712,7 +1712,6 @@ class RandomWalk(DiscreteTimeStochasticProcess):
             working_set = self.state_space
             if isinstance(curr, Eq) and isinstance(nex, Eq):
                 k = abs(curr.args[1] - nex.args[1])
-                print(diff_key, k, self.p_from_pgf(diff_key, k))
                 result.append(self.p_from_pgf(diff_key, k))
             elif isinstance(curr, Eq) ^ isinstance(nex, Eq):
                 if isinstance(curr, Eq):
@@ -1723,13 +1722,11 @@ class RandomWalk(DiscreteTimeStochasticProcess):
                     init = nex.args[1]
                     working_set = Intersection(Range(init + diff_key * self.failure,
                             init + diff_key * self.success + 1), curr.as_set())
-                print(working_set)
                 result.append(Add.fromiter(self.p_from_pgf(diff_key, abs(x - init))
                                 for x in working_set))
             else:
                 working_set = Intersection(S.Integers, nex.as_set())
                 working_set = Intersection(working_set, curr.as_set())
-                print(working_set)
                 if working_set.is_finite_set:
                     temp_res = [ ]
                     for init in working_set:
