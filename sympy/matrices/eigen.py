@@ -837,9 +837,7 @@ _is_indefinite.__doc__            = _doc_positive_definite
 
 def _jordan_form(M, calc_transform=True, **kwargs):
     """Return $(P, J)$ where $J$ is a Jordan block
-    matrix and $P$ is a matrix such that
-
-        $M == P*J*P**-1$
+    matrix and $P$ is a matrix such that $M = P J P^{-1}$
 
     Parameters
     ==========
