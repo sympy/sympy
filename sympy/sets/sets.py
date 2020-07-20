@@ -702,6 +702,36 @@ class Set(Basic):
             raise TypeError('did not evaluate to a bool: %r' % c)
         return b
 
+    def element(self, name):
+        """
+        Returns arbitrary element of *self*.
+
+        Examples
+        ========
+
+        >>> from sympy import S, Symbol, Set
+
+        Element of special set
+
+        >>> x = S.Reals.element('x')
+        >>> x == Symbol('x', real=True)
+        True
+
+        Element of undefined set
+
+        >>> A = Set('A')
+        >>> a = A.element('a')
+        >>> a
+        a
+        >>> a in A
+        True
+
+        """
+        return SetElement(name, self)
+
+    def _element(self, name):
+        return
+
 class ProductSet(Set):
     """
     Represents a Cartesian Product of Sets.
@@ -2515,4 +2545,4 @@ def set_function(f, x):
     from sympy.sets.handlers.functions import _set_function
     return _set_function(f, x)
 
-from .undefinedset import UndefinedSet
+from .undefinedset import UndefinedSet, SetElement

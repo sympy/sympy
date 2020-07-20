@@ -819,6 +819,11 @@ def test_UndefinedSet():
     from sympy.sets.undefinedset import UndefinedSet
     assert str(UndefinedSet('S')) == 'S'
 
+def test_SetElement():
+    from sympy.sets.undefinedset import UndefinedSet, SetElement
+    s = SetElement('s', UndefinedSet('S'))
+    assert str(s) == 's'
+
 def test_PrettyPoly():
     from sympy.polys.domains import QQ
     F = QQ.frac_field(x, y)

@@ -2032,6 +2032,9 @@ class LatexPrinter(Printer):
     def _print_UndefinedSet(self, expr):
         return expr.name.name
 
+    def _print_SetElement(self, expr):
+        return expr.name.name
+
     def __print_number_polynomial(self, expr, letter, exp=None):
         if len(expr.args) == 2:
             if exp is not None:

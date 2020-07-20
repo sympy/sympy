@@ -778,6 +778,9 @@ class StrPrinter(Printer):
     def _print_UndefinedSet(self, expr):
         return expr.name.name
 
+    def _print_SetElement(self, expr):
+        return expr.name.name
+
     def _print_Sum(self, expr):
         def _xab_tostr(xab):
             if len(xab) == 1:

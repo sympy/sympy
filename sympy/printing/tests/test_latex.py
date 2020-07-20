@@ -1062,6 +1062,11 @@ def test_latex_UndefinedSet():
     from sympy.sets.undefinedset import UndefinedSet
     assert latex(UndefinedSet('S')) == 'S'
 
+def test_latex_SetElement():
+    from sympy.sets.undefinedset import UndefinedSet, SetElement
+    s = SetElement('s', UndefinedSet('S'))
+    assert latex(s) == 's'
+
 def test_latex_Complexes():
     assert latex(S.Complexes) == r"\mathbb{C}"
 

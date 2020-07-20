@@ -4125,6 +4125,11 @@ def test_pretty_UndefinedSet():
     from sympy.sets.undefinedset import UndefinedSet
     assert pretty(UndefinedSet('S')) == 'S'
 
+def test_SetElement():
+    from sympy.sets.undefinedset import UndefinedSet, SetElement
+    s = SetElement('s', UndefinedSet('S'))
+    assert pretty(s) == 's'
+
 def test_pretty_ComplexRegion():
     from sympy import ComplexRegion
     ucode_str = u'{x + y⋅ⅈ | x, y ∊ [3, 5] × [4, 6]}'

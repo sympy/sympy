@@ -996,6 +996,11 @@ def test_sympy__sets__undefinedset__UndefinedSet():
     assert _test_args(UndefinedSet('A'))
     assert _test_args(UndefinedSet('B', (UndefinedSet('A'),)))
 
+def test_sympy__sets__undefinedset__SetElement():
+    from sympy.sets.undefinedset import UndefinedSet, SetElement
+    A = UndefinedSet('A')
+    assert _test_args(SetElement('a', A))
+
 # STATS
 
 

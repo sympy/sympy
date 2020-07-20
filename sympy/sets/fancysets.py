@@ -27,12 +27,19 @@ class Rationals(Set, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import S
+    >>> from sympy import S, Symbol
     >>> S.Half in S.Rationals
     True
     >>> iterable = iter(S.Rationals)
     >>> [next(iterable) for i in range(12)]
     [0, 1, -1, 1/2, 2, -1/2, -2, 1/3, 3, -1/3, -3, 2/3]
+
+    >>> x = S.Rationals.element('x')
+    >>> x == Symbol('x', rational=True)
+    True
+    >>> x in S.Rationals
+    True
+
     """
 
     is_iterable = True
@@ -67,6 +74,8 @@ class Rationals(Set, metaclass=Singleton):
     def _boundary(self):
         return S.Reals
 
+    def _element(self, name):
+        return Symbol(name, rational=True)
 
 class Naturals(Set, metaclass=Singleton):
     """
@@ -77,7 +86,7 @@ class Naturals(Set, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import S, Interval, pprint
+    >>> from sympy import S, Interval, pprint, Symbol
     >>> 5 in S.Naturals
     True
     >>> iterable = iter(S.Naturals)
@@ -89,6 +98,12 @@ class Naturals(Set, metaclass=Singleton):
     3
     >>> pprint(S.Naturals.intersect(Interval(0, 10)))
     {1, 2, ..., 10}
+
+    >>> x = S.Naturals.element('x')
+    >>> x == Symbol('x', integer=True, positive=True)
+    True
+    >>> x in S.Naturals
+    True
 
     See Also
     ========
@@ -131,10 +146,23 @@ class Naturals(Set, metaclass=Singleton):
         from sympy.functions.elementary.integers import floor
         return And(Eq(floor(x), x), x >= self.inf, x < oo)
 
+    def _element(self, name):
+        return Symbol(name, integer=True, positive=True)
 
 class Naturals0(Naturals):
     """Represents the whole numbers which are all the non-negative integers,
     inclusive of zero.
+
+    Examples
+    ========
+
+    >>> from sympy import S, Symbol
+
+    >>> x = S.Naturals0.element('x')
+    >>> x == Symbol('x', integer=True, nonnegative=True)
+    True
+    >>> x in S.Naturals0
+    True
 
     See Also
     ========
@@ -158,6 +186,8 @@ class Naturals0(Naturals):
     def _eval_is_superset(self, other):
         return Range(oo).is_superset(other)
 
+    def _element(self, name):
+        return Symbol(name, integer=True, nonnegative=True)
 
 class Integers(Set, metaclass=Singleton):
     """
@@ -167,7 +197,7 @@ class Integers(Set, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import S, Interval, pprint
+    >>> from sympy import S, Interval, pprint, Symbol
     >>> 5 in S.Naturals
     True
     >>> iterable = iter(S.Integers)
@@ -182,6 +212,12 @@ class Integers(Set, metaclass=Singleton):
 
     >>> pprint(S.Integers.intersect(Interval(-4, 4)))
     {-4, -3, ..., 4}
+
+    >>> x = S.Integers.element('x')
+    >>> x == Symbol('x', integer=True)
+    True
+    >>> x in S.Integers
+    True
 
     See Also
     ========
@@ -229,6 +265,8 @@ class Integers(Set, metaclass=Singleton):
     def _eval_is_superset(self, other):
         return Range(-oo, oo).is_superset(other)
 
+    def _element(self, name):
+        return Symbol(name, integer=True)
 
 class Reals(Interval, metaclass=Singleton):
     """
@@ -241,7 +279,7 @@ class Reals(Interval, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import S, Rational, pi, I
+    >>> from sympy import S, Rational, pi, I, Symbol
     >>> 5 in S.Reals
     True
     >>> Rational(-1, 2) in S.Reals
@@ -253,6 +291,11 @@ class Reals(Interval, metaclass=Singleton):
     >>> S.Reals.contains(pi)
     True
 
+    >>> x = S.Reals.element('x')
+    >>> x == Symbol('x', real=True)
+    True
+    >>> x in S.Reals
+    True
 
     See Also
     ========
@@ -268,6 +311,8 @@ class Reals(Interval, metaclass=Singleton):
     def __hash__(self):
         return hash(Interval(S.NegativeInfinity, S.Infinity))
 
+    def _element(self, name):
+        return Symbol(name, real=True)
 
 class ImageSet(Set):
     """
@@ -1405,10 +1450,16 @@ class Complexes(CartesianComplexRegion, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import S, I
+    >>> from sympy import S, I, Symbol
     >>> S.Complexes
     Complexes
     >>> 1 + I in S.Complexes
+    True
+
+    >>> x = S.Complexes.element('x')
+    >>> x == Symbol('x', complex=True)
+    True
+    >>> x in S.Complexes
     True
 
     See also
@@ -1433,3 +1484,6 @@ class Complexes(CartesianComplexRegion, metaclass=Singleton):
 
     def __repr__(self):
         return "S.Complexes"
+
+    def _element(self, name):
+        return Symbol(name, complex=True)
