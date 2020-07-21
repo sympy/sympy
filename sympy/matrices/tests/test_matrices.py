@@ -14,6 +14,7 @@ from sympy.matrices import (
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
     MatrixSymbol, dotprodsimp)
+from sympy.matrices.utilities import _dotprodsimp_state
 from sympy.core.compatibility import iterable, Hashable
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -2921,10 +2922,12 @@ def test_func():
 
 def test_issue_19809():
     def f():
+        assert _dotprodsimp_state.state == False
         m = Matrix([[1]])
         m = m * m
         return True
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(f)
-        assert future.result()
+    with dotprodsimp(True):
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(f)
+            assert future.result()
