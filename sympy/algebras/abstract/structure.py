@@ -1,6 +1,7 @@
+from sympy.core import Tuple
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
-from sympy.sets import Set, Union, FiniteSet
+from sympy.sets import Set, Union
 
 __all__ = [
     'AlgebraicStructure',
@@ -44,10 +45,10 @@ class AlgebraicStructure(Set):
     name : str
         Name of the structure used for printing.
 
-    sets : set of Sets
+    sets : tuple of Sets
         See sympy.sets module.
 
-    operators : set of Maps
+    operators : tuple of Maps
         See sympy.map module.
 
     References
@@ -61,8 +62,8 @@ class AlgebraicStructure(Set):
         if not isinstance(name, Str):
             name = Str(name)
 
-        sets = FiniteSet(*[_sympify(a) for a in sets])
-        operators = FiniteSet(*[_sympify(a) for a in operators])
+        sets = Tuple(*[_sympify(a) for a in sets])
+        operators = Tuple(*[_sympify(a) for a in operators])
 
         if not sets:
             raise TypeError("At least one set must be provided.")
@@ -141,9 +142,14 @@ class AlgebraicStructure(Set):
             return False
         if not self.domain.is_subset(other.domain):
             return False
-        for self_o in self.operators:
-            if not any(self_o.is_restriction(other_o) for other_o in other.operators):
+
+        if len(other.operators) < len(self.operators):
+            return False
+        zip_ops = zip(self.operators, other.operators[:len(self.operators)])
+        for self_o, other_o in zip_ops:
+            if not self_o.is_restriction(other_o):
                 return False
+
         return True
     is_subset = is_substructure
 
@@ -163,9 +169,14 @@ class AlgebraicStructure(Set):
             return False
         if not self.domain.is_superset(other.domain):
             return False
-        for other_o in other.operators:
-            if not any(other_o.is_restriction(self_o) for self_o in self.operators):
+
+        if len(self.operators) < len(other.operators):
+            return False
+        zip_ops = zip(self.operators[:len(other.operators)], other.operators)
+        for self_o, other_o in zip_ops:
+            if not other_o.is_restriction(self_o):
                 return False
+
         return True
     is_superset = is_superstructure
 
