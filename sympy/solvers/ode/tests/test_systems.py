@@ -9,7 +9,8 @@ from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
                                        ODEOrderError, ODENonlinearError, _simpsol, _solsimp,
                                        _is_commutative_anti_derivative, linodesolve,
-                                       canonical_odes, dsolve_system)
+                                       canonical_odes, dsolve_system, _component_division,
+                                       _eqs2dict, _dict2graph)
 from sympy.integrals.integrals import Integral
 from sympy.testing.pytest import ON_TRAVIS, raises, slow, skip, XFAIL
 
@@ -1213,6 +1214,7 @@ def test_sysode_linear_neq_order1_type4():
 def test_component_division():
     f, g, h, k = symbols('f g h k', cls=Function)
     x = symbols("x")
+    funcs = [f(x), g(x), h(x), k(x)]
 
     eqs1 = [Eq(Derivative(f(x), x), 2*f(x)),
             Eq(Derivative(g(x), x), f(x)),
@@ -1222,6 +1224,17 @@ def test_component_division():
             Eq(g(x), C1*exp(2*x) + C2),
             Eq(h(x), C3*exp(x)),
             Eq(k(x), (C4 + Integral(C3**4*exp(3*x), x))*exp(x))]
+    components1 = [[[Eq(Derivative(f(x), x), 2*f(x))], [Eq(Derivative(g(x), x), f(x))]],
+                    [[Eq(Derivative(h(x), x), h(x))], [Eq(Derivative(k(x), x), h(x)**4 + k(x))]]]
+    eqsdict1 = ({f(x): set(), g(x): {f(x)}, h(x): set(), k(x): {h(x)}},
+                {f(x): Eq(Derivative(f(x), x), 2*f(x)),
+                g(x): Eq(Derivative(g(x), x), f(x)),
+                h(x): Eq(Derivative(h(x), x), h(x)),
+                k(x): Eq(Derivative(k(x), x), h(x)**4 + k(x))})
+    graph1 = ([f(x), g(x), h(x), k(x)], [(g(x), f(x)), (k(x), h(x))])
+    assert _component_division(eqs1, funcs, x) == components1
+    assert _eqs2dict(eqs1, funcs) == eqsdict1
+    assert _dict2graph(eqsdict1[0]) == graph1
     assert dsolve(eqs1) == sol1
     assert checksysodesol(eqs1, sol1) == (True, [0, 0, 0, 0])
 
@@ -1233,6 +1246,19 @@ def test_component_division():
             Eq(g(x), C2 + Integral(C1*exp(2*x), x)),
             Eq(h(x), C3*exp(x)),
             Eq(k(x), (C4 + Integral(C1**4*exp(7*x), x))*exp(x))]
+    components2 = [[[Eq(Derivative(f(x), x), 2*f(x))],
+                    [Eq(Derivative(g(x), x), f(x))],
+                    [Eq(Derivative(k(x), x), f(x)**4 + k(x))]],
+                    [[Eq(Derivative(h(x), x), h(x))]]]
+    eqsdict2 = ({f(x): set(), g(x): {f(x)}, h(x): set(), k(x): {f(x)}},
+                 {f(x): Eq(Derivative(f(x), x), 2*f(x)),
+                  g(x): Eq(Derivative(g(x), x), f(x)),
+                  h(x): Eq(Derivative(h(x), x), h(x)),
+                  k(x): Eq(Derivative(k(x), x), f(x)**4 + k(x))})
+    graph2 = ([f(x), g(x), h(x), k(x)], [(g(x), f(x)), (k(x), f(x))])
+    assert _component_division(eqs2, funcs, x) == components2
+    assert _eqs2dict(eqs2, funcs) == eqsdict2
+    assert _dict2graph(eqsdict2[0]) == graph2
     assert dsolve(eqs2) == sol2
     assert checksysodesol(eqs2, sol2) == (True, [0, 0, 0, 0])
 
@@ -1244,6 +1270,19 @@ def test_component_division():
             Eq(g(x), C2 + Integral(C1*exp(2*x) + x, x)),
             Eq(h(x), C3*exp(x)),
             Eq(k(x), (C4 + Integral(C1**4*exp(7*x), x))*exp(x))]
+    components3 = [[[Eq(Derivative(f(x), x), 2*f(x))],
+                    [Eq(Derivative(g(x), x), x + f(x))],
+                    [Eq(Derivative(k(x), x), f(x)**4 + k(x))]],
+                    [[Eq(Derivative(h(x), x), h(x))]]]
+    eqsdict3 = ({f(x): set(), g(x): {f(x)}, h(x): set(), k(x): {f(x)}},
+                {f(x): Eq(Derivative(f(x), x), 2*f(x)),
+                g(x): Eq(Derivative(g(x), x), x + f(x)),
+                h(x): Eq(Derivative(h(x), x), h(x)),
+                k(x): Eq(Derivative(k(x), x), f(x)**4 + k(x))})
+    graph3 = ([f(x), g(x), h(x), k(x)], [(g(x), f(x)), (k(x), f(x))])
+    assert _component_division(eqs3, funcs, x) == components3
+    assert _eqs2dict(eqs3, funcs) == eqsdict3
+    assert _dict2graph(eqsdict3[0]) == graph3
     assert dsolve(eqs3) == sol3
     assert checksysodesol(eqs3, sol3) == (True, [0, 0, 0, 0])
 
@@ -1269,6 +1308,19 @@ def test_component_division():
                 sqrt(2)*exp(x**2/2 + sqrt(2)*x)*Integral(x*exp(-x**2/2 - sqrt(2)*x)/2 + x*exp(-x**2/2 +
                 sqrt(2)*x)/2, x)/2 + exp(x**2/2 + sqrt(2)*x)*Integral(sqrt(2)*x*exp(-x**2/2 - sqrt(2)*x)/2 -
                 sqrt(2)*x*exp(-x**2/2 + sqrt(2)*x)/2, x)/2)**4*exp(-x), x))]
+    components4 = [[[Eq(Derivative(f(x), x), x*f(x) + 2*g(x)),
+                    Eq(Derivative(g(x), x), x*g(x) + x + f(x))],
+                    [Eq(Derivative(k(x), x), f(x)**4 + k(x))]],
+                    [[Eq(Derivative(h(x), x), h(x))]]]
+    eqsdict4 = ({f(x): {g(x)}, g(x): {f(x)}, h(x): set(), k(x): {f(x)}},
+                {f(x): Eq(Derivative(f(x), x), x*f(x) + 2*g(x)),
+                g(x): Eq(Derivative(g(x), x), x*g(x) + x + f(x)),
+                h(x): Eq(Derivative(h(x), x), h(x)),
+                k(x): Eq(Derivative(k(x), x), f(x)**4 + k(x))})
+    graph4 = ([f(x), g(x), h(x), k(x)], [(f(x), g(x)), (g(x), f(x)), (k(x), f(x))])
+    assert _component_division(eqs4, funcs, x) == components4
+    assert _eqs2dict(eqs4, funcs) == eqsdict4
+    assert _dict2graph(eqsdict4[0]) == graph4
     assert dsolve(eqs4) == sol4
     assert checksysodesol(eqs4, sol4) == (True, [0, 0, 0, 0])
 
@@ -1281,6 +1333,19 @@ def test_component_division():
             Eq(h(x), C3*exp(x)),
             Eq(k(x), C4*exp(x) + exp(x)*Integral((C1*exp(x**2/2 - sqrt(2)*x)/2 + C1*exp(x**2/2 + sqrt(2)*x)/2 -
                 sqrt(2)*C2*exp(x**2/2 - sqrt(2)*x)/2 + sqrt(2)*C2*exp(x**2/2 + sqrt(2)*x)/2)**4*exp(-x), x))]
+    components5 = [[[Eq(Derivative(f(x), x), x*f(x) + 2*g(x)),
+                    Eq(Derivative(g(x), x), x*g(x) + f(x))],
+                    [Eq(Derivative(k(x), x), f(x)**4 + k(x))]],
+                    [[Eq(Derivative(h(x), x), h(x))]]]
+    eqsdict5 = ({f(x): {g(x)}, g(x): {f(x)}, h(x): set(), k(x): {f(x)}},
+                {f(x): Eq(Derivative(f(x), x), x*f(x) + 2*g(x)),
+                g(x): Eq(Derivative(g(x), x), x*g(x) + f(x)),
+                h(x): Eq(Derivative(h(x), x), h(x)),
+                k(x): Eq(Derivative(k(x), x), f(x)**4 + k(x))})
+    graph5 = ([f(x), g(x), h(x), k(x)], [(f(x), g(x)), (g(x), f(x)), (k(x), f(x))])
+    assert _component_division(eqs5, funcs, x) == components5
+    assert _eqs2dict(eqs5, funcs) == eqsdict5
+    assert _dict2graph(eqsdict5[0]) == graph5
     assert dsolve(eqs5) == sol5
     assert checksysodesol(eqs5, sol5) == (True, [0, 0, 0, 0])
 
@@ -1848,7 +1913,6 @@ def test_dsolve():
 
     eqs = [f(x).diff(x) - x, f(x).diff(x) + x]
     with raises(ValueError):
-        # Could also be NotImplementedError. f(x)=0 is a solution...
         dsolve(eqs)
 
     eqs = [f(x, y).diff(x)]

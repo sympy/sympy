@@ -1328,11 +1328,15 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
             Input to the funcs should be a list of functions.
         '''))
 
-    # Note: This is added to solve a major problem encountered.
-    # Might be best to make a function for this functions
-    # extraction later.
     if funcs is None:
         funcs = _extract_funcs(eqs)
+
+    if any(len(func.args) != 1 for func in funcs):
+        raise ValueError(filldedent('''
+            dsolve_system can solve a system of ODEs with only one independent
+            variable.
+        '''))
+
     if len(eqs) != len(funcs):
         raise ValueError(filldedent('''
             Number of equations and number of functions don't match
