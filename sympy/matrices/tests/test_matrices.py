@@ -1,4 +1,5 @@
 import random
+import concurrent.futures
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, Poly, Pow, PurePoly, Rational,
@@ -2916,3 +2917,14 @@ def test_func():
 
     A = Matrix([[0, 2, 1, 6], [0, 0, 1, 2], [0, 0, 0, 3], [0, 0, 0, 0]])
     assert A.analytic_func(exp(x*t), x) == expand(simplify((A*t).exp()))
+
+
+def test_issue_19809():
+    def f():
+        m = Matrix([[1]])
+        m = m * m
+        return True
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(f)
+        assert future.result()
