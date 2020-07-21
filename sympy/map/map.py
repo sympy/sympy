@@ -183,6 +183,7 @@ class Map(Expr):
     def _eval_is_restriction(self, other):
         return (
             self._map_content() == other._map_content() and
+            self.arity == other.arity and
             self.codomain.is_subset(other.codomain) and
             self.domain.is_subset(other.domain)
         )
