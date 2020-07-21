@@ -1036,3 +1036,15 @@ def test_map():
     addop = AddOp()
     assert str(addop) == '+ : UniversalSet -> UniversalSet'
     assert str(addop(x+y, x*y)) == '(x + y) + (x*y)'
+
+def test_abstractalgebra():
+    from sympy.sets import Set
+    from sympy.map import Map
+    from sympy.algebras.abstract import (
+        AlgebraicStructure,
+    )
+    A = Set('A')
+    f = Map('f', domain=A, codomain=A)
+    S = AlgebraicStructure('S', (A,), (f,))
+
+    assert str(S) == 'S'

@@ -1,0 +1,174 @@
+from sympy.core.symbol import Str
+from sympy.core.sympify import _sympify
+from sympy.sets import Set, Union, FiniteSet
+
+__all__ = [
+    'AlgebraicStructure',
+]
+
+class AlgebraicStructure(Set):
+    r"""
+    A base class for algebriac structure, i.e. group, ring, or field.
+
+    Explanation
+    ===========
+
+    Algebraic structure is a mathematical structure which consists of one or more
+    nonempty sets, and a collection of operations on these sets [1]. The operations
+    must be closed to the set, i.e. $ f: \mathbb{S}^{n} \rightarrow \mathbb{S} $. where
+    $f$ is the operator and $\mathbb{S}$ is the set.
+
+    Examples
+    ========
+
+    >>> from sympy import Set, Map, AlgebraicStructure
+    >>> A = Set('A')
+    >>> a = A.element('a')
+    >>> f = Map('f', domain=A*A, codomain=A)
+    >>> S = AlgebraicStructure('S', (A,), (f,))
+
+    >>> a in S
+    True
+    >>> f(a, a) in S
+    True
+
+    >>> B = Set('B', (A,))
+    >>> f2 = Map('f', domain=B*B, codomain=B)
+    >>> S2 = AlgebraicStructure('S2', (B,), (f2,))
+    >>> S2.is_substructure(S)
+    True
+
+    Parameters
+    ==========
+
+    name : str
+        Name of the structure used for printing.
+
+    sets : set of Sets
+        See sympy.sets module.
+
+    operators : set of Maps
+        See sympy.map module.
+
+    References
+    ==========
+
+    https://en.wikipedia.org/wiki/Algebraic_structure
+
+    """
+    def __new__(cls, name, sets, operators, **kwargs):
+
+        if not isinstance(name, Str):
+            name = Str(name)
+
+        sets = FiniteSet(*[_sympify(a) for a in sets])
+        operators = FiniteSet(*[_sympify(a) for a in operators])
+
+        if not sets:
+            raise TypeError("At least one set must be provided.")
+
+        if not operators and len(sets) == 1:
+            # Set is a degenerate algebraic structure with no operations.
+            # If one set and no operator is given, return the set.
+            return sets[0]
+
+        obj = super().__new__(cls, name, sets, operators)
+        obj._check_closure()
+        return obj
+
+    @property
+    def name(self):
+        return self.args[0]
+
+    @property
+    def domain(self):
+        sets = []
+        for s in self.args[1]:
+            if isinstance(s, AlgebraicStructure):
+                sets.append(s.domain)
+            else:
+                sets.append(s)
+        return Union(*sets)
+
+    @property
+    def operators(self):
+        result = set()
+        for s in self.args[1]:
+            if isinstance(s, AlgebraicStructure):
+                result.update(s.operators)
+        result.update(self.args[2])
+        return result
+
+    def _check_closure(self):
+        for o in self.operators:
+            n = o.arity
+
+            # check domain
+            if n == 1:
+                # special case: domain can be S or S*1
+                if (
+                    not o.domain.is_superset(self.domain**n) and
+                    not o.domain.is_superset(self.domain)
+                ) :
+                    raise TypeError(
+                "%s is not closed on the structure." % o
+                )
+
+            else:
+                if not o.domain.is_superset(self.domain**n):
+                    raise TypeError(
+                "%s is not closed on the structure." % o
+                )
+
+            # check codomain
+            if not o.codomain.is_subset(self.domain):
+                raise TypeError(
+                "%s is not closed on the structure." % o
+                )
+
+    def _contains(self, other):
+        return self.domain.contains(other)
+
+    def is_substructure(self, other):
+
+        if self == other:
+            return True
+
+        val = self._eval_is_substructure(other)
+        if val is not None:
+            return val
+
+        if not issubclass(self.func, other.func):
+            return False
+        if not self.domain.is_subset(other.domain):
+            return False
+        for self_o in self.operators:
+            if not any(self_o.is_restriction(other_o) for other_o in other.operators):
+                return False
+        return True
+    is_subset = is_substructure
+
+    def _eval_is_substructure(self, other):
+        return
+
+    def is_superstructure(self, other):
+
+        if self == other:
+            return True
+
+        val = self._eval_is_superstructure(other)
+        if val is not None:
+            return val
+
+        if not issubclass(other.func, self.func):
+            return False
+        if not self.domain.is_superset(other.domain):
+            return False
+        for other_o in other.operators:
+            if not any(other_o.is_restriction(self_o) for self_o in self.operators):
+                return False
+        return True
+    is_superset = is_superstructure
+
+    def _eval_is_superstructure(self, other):
+        return

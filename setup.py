@@ -345,6 +345,7 @@ class sdist_sympy(sdist):
 # python bin/generate_test_list.py
 tests = [
     'sympy.algebras.tests',
+    'sympy.algebras.abstract.tests',
     'sympy.assumptions.tests',
     'sympy.calculus.tests',
     'sympy.categories.tests',

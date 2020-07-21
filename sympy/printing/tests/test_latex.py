@@ -2698,3 +2698,15 @@ def test_map():
     addop = AddOp()
     assert latex(addop) == r"+ : \mathbb{U} \rightarrow \mathbb{U}"
     assert latex(addop(x+y, x*y)) == r'\left(x + y\right) + \left(x y\right)'
+
+def test_abstractalgebra():
+    from sympy.sets import Set
+    from sympy.map import Map
+    from sympy.algebras.abstract import (
+        AlgebraicStructure,
+    )
+    A = Set('A')
+    f = Map('f', domain=A, codomain=A)
+    S = AlgebraicStructure('S', (A,), (f,))
+
+    assert latex(S) == 'S'

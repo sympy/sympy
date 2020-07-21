@@ -2763,7 +2763,7 @@ class PrettyPrinter(Printer):
 
     def _print_RestrictedMap(self, e, print_domains=True):
         pform = self._print(e.base, print_domains=False)
- 
+
         h = pform.height() if pform.height() > 1 else 2
         rvert = stringPict(vobj('|', h), baseline=pform.baseline)
         pform = prettyForm(*pform.right(rvert))
@@ -2823,6 +2823,12 @@ class PrettyPrinter(Printer):
             pform.prettyFunc = prettyMap
             pform.prettyArgs = prettyArgs
             return pform
+
+    def _print_AlgebraicStructure(self, e):
+        name = e.name.name
+        mapping = pretty_symbol(name, bold_name=False)
+        pform = prettyForm(mapping)
+        return pform
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

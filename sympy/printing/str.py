@@ -971,6 +971,10 @@ class StrPrinter(Printer):
             args_str = self.stringify(expr.arguments, ", ")
             return "%s(%s)" % (map_str, args_str)
 
+    def _print_AlgebraicStructure(self, expr):
+        name = expr.name.name
+        return name
+
 def sstr(expr, **settings):
     """Returns the expression as a string.
 

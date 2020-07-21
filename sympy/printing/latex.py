@@ -2719,6 +2719,11 @@ class LatexPrinter(Printer):
             args_str = ', '.join([self._print(arg) for arg in expr.arguments])
             return temp % args_str
 
+    def _print_AlgebraicStructure(self, expr):
+        name = expr.name.name
+        tex = self._deal_with_super_sub(str(name))
+        return tex
+
     def emptyPrinter(self, expr):
         # Checks what type of decimal separator to print.
         expr = super().emptyPrinter(expr)

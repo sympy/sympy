@@ -706,7 +706,7 @@ class Set(Basic):
             c = other._contained(self)
             if c is not None:
                 return c
-    
+
         c = self._contains(other)
         b = tfn[c]
         if b is None:

@@ -763,6 +763,13 @@ def test_sympy__algebras__quaternion__Quaternion():
     from sympy.algebras.quaternion import Quaternion
     assert _test_args(Quaternion(x, 1, 2, 3))
 
+def test_sympy__algebras__abstract__structure__AlgebraicStructure():
+    from sympy import Set, Map, AlgebraicStructure
+    A = Set('A')
+    f = Map('f', domain=A, codomain=A)
+    assert _test_args(
+        AlgebraicStructure('S', (Set('A'),), (f,))
+    )
 
 def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
