@@ -1229,10 +1229,10 @@ def test_component_division():
             Eq(Derivative(g(x), x), f(x)),
             Eq(Derivative(h(x), x), h(x)),
             Eq(Derivative(k(x), x), f(x)**4 + k(x))]
-    sol2 = [Eq(f(x), 2*C1*exp(2*x)),
-            Eq(g(x), C1*exp(2*x) + C2),
+    sol2 = [Eq(f(x), C1*exp(2*x)),
+            Eq(g(x), C2 + Integral(C1*exp(2*x), x)),
             Eq(h(x), C3*exp(x)),
-            Eq(k(x), (C4 + Integral(16*C1**4*exp(7*x), x))*exp(x))]
+            Eq(k(x), (C4 + Integral(C1**4*exp(7*x), x))*exp(x))]
     assert dsolve(eqs2) == sol2
     assert checksysodesol(eqs2, sol2) == (True, [0, 0, 0, 0])
 

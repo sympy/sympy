@@ -5,7 +5,7 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.function import expand_mul, expand, Derivative
+from sympy.core.function import expand_mul, expand, Derivative, AppliedUndef
 from sympy.functions import exp, im, cos, sin, re, Piecewise, piecewise_fold
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase
@@ -1077,16 +1077,23 @@ def _preprocess_eqs(eqs):
     return processed_eqs
 
 
-def _sysode_graph(eqs):
-    funcs = [eq.lhs.args[0] for eq in eqs]
-    rhss = [eq.rhs for eq in eqs]
+def _eqs2dict(eqs, funcs):
+    eqsorig = {}
+    eqsmap = {}
+    funcset = set(funcs)
+    for eq in eqs:
+        f1, = eq.lhs.atoms(AppliedUndef)
+        f2s = (eq.rhs.atoms(AppliedUndef) - {f1}) & funcset
+        eqsmap[f1] = f2s
+        eqsorig[f1] = eq
+    return eqsmap, eqsorig
 
-    edges = []
-    for func, rhs in zip(funcs, rhss):
-        for other in funcs:
-            if other != func and rhs.has(other):
-                edges.append((func, other))
-    return funcs, edges
+
+def _dict2graph(d):
+    nodes = list(d)
+    edges = [(f1, f2) for f1, f2s in d.items() for f2 in f2s]
+    G = (nodes, edges)
+    return G
 
 
 def _is_type1(scc, t):
@@ -1103,85 +1110,35 @@ def _is_type1(scc, t):
     return False
 
 
-def _combine_systems(sccs, graph, t):
-    is_type1 = [True for i in range(len(sccs))]
-    to_delete = set()
-    delete_dict = {}
-    for i, scc in enumerate(sccs):
-        eqs, funcs = set(scc[0]), set(scc[1])
-        for j in graph[i]:
-            if is_type1[j]:
-                idx = delete_dict[j] if j in to_delete else j
-                eqs, funcs = eqs | set(sccs[idx][0]), funcs | set(sccs[idx][1])
-            else:
-                is_type1[i] = False
-                break
-
-        eqs = list(eqs)
-        funcs = [e.lhs.args[0] for e in eqs]
-        is_type1[i] = _is_type1((eqs, funcs), t) if is_type1[i] else is_type1[i]
-        if is_type1[i]:
-            min_index = i
-            if graph[i]:
-                min_index = delete_dict[graph[i][-1]] if graph[i][-1] in to_delete else graph[i][-1]
-            sccs[min_index] = (eqs, funcs)
-            new_delete = set(graph[i] + [i])
-            new_delete.discard(min_index)
-            delete_dict.update({idx: min_index for idx in new_delete})
-            to_delete |= new_delete
-
-    components = []
-    for i, scc in enumerate(sccs):
-        if i not in to_delete:
-            components.append(sccs[i])
-    return components
+def _combine_type1_subsystems(subsystem, funcs, t):
+    indices = [i for i, sys in enumerate(zip(subsystem, funcs)) if _is_type1(sys, t)]
+    remove = set()
+    for ip, i in enumerate(indices):
+        for j in indices[ip+1:]:
+            if any(eq2.has(funcs[i]) for eq2 in subsystem[j]):
+                subsystem[j] = subsystem[i] + subsystem[j]
+                remove.add(i)
+    subsystem = [sys for i, sys in enumerate(subsystem) if i not in remove]
+    return subsystem
 
 
-def _has_edge(s1, s2, graph):
-    return any(p in s2 for n in s1 for p in graph[n])
-
-
-def _scc_graph(graph, components):
-    nodes, edges = graph
-    graph_dict = {n: set() for n in nodes}
-    for e in edges:
-        graph_dict[e[0]].add(e[1])
-
-    n_comps = len(components)
-    scomps = [set(comp) for comp in components]
-    parents = [[] for _ in range(n_comps)]
-    for i in range(n_comps-1, 0, -1):
-        for j in range(i-1, -1, -1):
-            if _has_edge(scomps[i], scomps[j], graph_dict):
-                parents[i].append(j)
-
-    return parents
-
-
-def _component_division(eqs, t):
+def _component_division(eqs, funcs, t):
     from sympy.utilities.iterables import connected_components, strongly_connected_components
 
     # Assuming that each eq in eqs is in canonical form,
     # that is, [f(x).diff(x) = .., g(x).diff(x) = .., etc]
     # and that the system passed is in its first order
-    eqs_dict = {eq.lhs: eq.rhs for eq in eqs}
+    eqsmap, eqsorig = _eqs2dict(eqs, funcs)
 
-    weak_graph = _sysode_graph(eqs)
-    weak_components = connected_components(weak_graph)
-    weak_components = [[Eq(var.diff(t), eqs_dict[var.diff(t)]) for var in wcc]
-                            for wcc in weak_components]
+    subsystems = []
+    for cc in connected_components(_dict2graph(eqsmap)):
+        eqsmap_c = {f: eqsmap[f] for f in cc}
+        sccs = strongly_connected_components(_dict2graph(eqsmap_c))
+        subsystem = [[eqsorig[f] for f in scc] for scc in sccs]
+        subsystem = _combine_type1_subsystems(subsystem, sccs, t)
+        subsystems.append(subsystem)
 
-    components = []
-
-    for wcc in weak_components:
-        strong_graph = _sysode_graph(wcc)
-        strong_components = strongly_connected_components(strong_graph)
-        scc_graph = _scc_graph(strong_graph, strong_components)
-        strong_components = [([Eq(var.diff(t), eqs_dict[var.diff(t)]) for var in scc], scc) for scc in strong_components]
-        strong_components = _combine_systems(strong_components, scc_graph, t)
-        components.append(strong_components)
-
-    return components
+    return subsystems
 
 
 # Returns: List of equations
@@ -1221,16 +1178,20 @@ def _strong_component_solver(eqs, funcs, t):
     return None
 
 
+def _get_funcs_from_canon(eqs):
+    return [eq.lhs.args[0] for eq in eqs]
+
+
 # Returns: List of Equations(a solution)
 def _weak_component_solver(wcc, t):
 
     # We will divide the systems into sccs
     # only when the wcc cannot be solved as
     # a whole
-    eqs, funcs = [], []
+    eqs = []
     for scc in wcc:
-        eqs += scc[0]
-        funcs += scc[1]
+        eqs += scc
+    funcs = _get_funcs_from_canon(eqs)
 
     sol = _strong_component_solver(eqs, funcs, t)
     if sol:
@@ -1239,7 +1200,8 @@ def _weak_component_solver(wcc, t):
     sol = []
 
     for j, scc in enumerate(wcc):
-        eqs, funcs = scc
+        eqs = scc
+        funcs = _get_funcs_from_canon(eqs)
 
         # Substituting solutions for the dependent
         # variables solved in previous SCC, if any solved.
@@ -1261,8 +1223,8 @@ def _weak_component_solver(wcc, t):
 # Returns: List of Equations(a solution)
 # To add test cases for component division
 # when we have a nonlinear sysode solver
-def _component_solver(eqs, t):
-    components = _component_division(eqs, t)
+def _component_solver(eqs, funcs, t):
+    components = _component_division(eqs, funcs, t)
     sol = []
 
     for wcc in components:
@@ -1398,7 +1360,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     for canon_eq in canon_eqs:
         sol = _strong_component_solver(canon_eq, funcs, t)
         if sol is None:
-            sol = _component_solver(canon_eq, t)
+            sol = _component_solver(canon_eq, funcs, t)
         sols.append(sol)
 
     if sols:
