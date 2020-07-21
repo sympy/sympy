@@ -6,8 +6,8 @@ B = Set('B', (A,))
 f_A = Map('f', domain=A, codomain=A)
 f_B = Map('f', domain=B, codomain=B)
 
-S_A = AlgebraicStructure('S', (A,), (f_A,))
-S_B = AlgebraicStructure('S', (B,), (f_B,))
+S_A = AlgebraicStructure('S_A', (A,), (f_A,))
+S_B = AlgebraicStructure('S_B', (B,), (f_B,))
 
 a, b = A.element('a'), B.element('b')
 
@@ -20,10 +20,10 @@ def test_AlgebraicStructure():
     assert S_A.is_superstructure(S_B)
 
     # check element
-    assert A.element('a') in S_A
-    assert A.element('a') not in S_B
-    assert B.element('b') in S_A
-    assert B.element('b') in S_B
+    assert a in S_A
+    assert a not in S_B
+    assert b in S_A
+    assert b in S_B
 
     # check codomain
     assert f_A(a) in S_A

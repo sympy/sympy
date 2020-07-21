@@ -768,7 +768,15 @@ def test_sympy__algebras__abstract__structure__AlgebraicStructure():
     A = Set('A')
     f = Map('f', domain=A, codomain=A)
     assert _test_args(
-        AlgebraicStructure('S', (Set('A'),), (f,))
+        AlgebraicStructure('S', (A,), (f,))
+    )
+
+def test_sympy__algebras__abstract__group__Magma():
+    from sympy import Set, Map, Magma
+    A = Set('A')
+    f = Map('f', domain=A**2, codomain=A)
+    assert _test_args(
+        Magma('M', (A,), (f,))
     )
 
 def test_sympy__core__relational__Equality():

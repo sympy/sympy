@@ -80,6 +80,7 @@ class Map(Expr):
     """
 
     # these attributes are designed to be overridden if needed
+    # they can be overridden by both class attribute or instance attribute
     domain = codomain = S.UniversalSet
 
     def __new__(cls, *args, **kwargs):
