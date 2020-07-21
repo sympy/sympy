@@ -14,6 +14,11 @@ def test_UndefinedSet():
     assert C.is_subset(A)
     assert A.is_superset(C)
 
+    assert (B**2).is_subset(A**2)
+    assert (A**2).is_superset(A**2)
+    assert not (B**1).is_subset(A)
+    assert not B.is_subset(A**1)
+
     assert A.intersection(B) == B
     assert B.intersection(A) == B
     assert A.union(B) == A
@@ -28,6 +33,10 @@ def test_UndefinedSet():
     assert S.Reals.intersection(D) == D
     assert D.intersection(S.Complexes) == D
     assert S.Complexes.intersection(D) == D
+    assert D.union(S.Reals) == S.Reals
+    assert S.Reals.union(D) == S.Reals
+    assert D.union(S.Complexes) == S.Complexes
+    assert S.Complexes.union(D) == S.Complexes
 
 def test_SetElement():
     c = SetElement('c', C)

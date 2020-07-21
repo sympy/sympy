@@ -1,7 +1,7 @@
-from sympy.core import Basic, Tuple
+from sympy.core import Basic
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
-from .sets import Set
+from .sets import Set, FiniteSet
 
 __all__ = [
     'UndefinedSet', 'SetElement'
@@ -16,10 +16,10 @@ class UndefinedSet(Set):
     ==========
 
     name : str
-        Name of the set.
+        Name of the undefined set.
 
-    supersets : tuple of Sets, optional
-        List of supersets of the set.
+    supersets : set of Sets, optional
+        Set of supersets of the undefined set.
 
     Examples
     ========
@@ -42,7 +42,7 @@ class UndefinedSet(Set):
     def __new__(cls, name, supersets=()):
         if not isinstance(name, Str):
             name = Str(name)
-        supersets = Tuple(*[_sympify(s) for s in supersets])
+        supersets = FiniteSet(*[_sympify(s) for s in supersets])
 
         return super().__new__(cls, name, supersets)
 
@@ -52,16 +52,15 @@ class UndefinedSet(Set):
 
     @property
     def supersets(self):
-        return self.args[1]
-
-    def _eval_is_subset(self, other):
-        for s in self.supersets:
-            if s.is_subset(other):
-                return True
-        return False
+        result = set()
+        for s in self.args[1]:
+            if isinstance(s, UndefinedSet):
+                result.update(s.supersets)
+            result.add(s)
+        return result
 
     def _contains(self, other):
-        if hasattr(other, 'set'):
+        if isinstance(other, SetElement):
             s = other.set
             if s.is_subset(self):
                 return True

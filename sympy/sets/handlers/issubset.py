@@ -3,6 +3,7 @@ from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
 from sympy.core.relational import Eq
 from sympy.sets.sets import FiniteSet, Interval, Set, Union
 from sympy.sets.fancysets import Complexes, Reals, Range, Rationals
+from sympy.sets.undefinedset import UndefinedSet
 from sympy.multipledispatch import dispatch
 
 
@@ -132,4 +133,13 @@ def is_subset_sets(a, b): # noqa:F811
 
 @dispatch(Rationals, Range)  # type: ignore # noqa:F811
 def is_subset_sets(a, b): # noqa:F811
+    return False
+
+@dispatch(UndefinedSet, Set)
+def is_subset_sets(a, b):
+    a_supersets = a.supersets
+    if b in a_supersets:
+        return True
+    if any(s.is_subset(b) for s in a_supersets if not isinstance(s, UndefinedSet)):
+        return True
     return False

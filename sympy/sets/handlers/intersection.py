@@ -480,6 +480,4 @@ def intersection_sets(a, b): # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     if a.is_subset(b):
         return a
-    if b.is_subset(a):
-        return b
     return None
