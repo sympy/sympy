@@ -75,11 +75,11 @@ class ImplicitRegion(Basic):
         Examples
         ========
 
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x, y, z
         >>> from sympy.vector import ImplicitRegion
-        >>> circle = ImplicitRegion((x, y), x**2 + y**2 - 4)
+        >>> circle = ImplicitRegion((x, y), (x + 2)**2 + (y - 3)**2 - 16)
         >>> circle.regular_point()
-        (2, 0)
+        (2, 3)
         >>> parabola = ImplicitRegion((x, y), x**2 - 4*y)
         >>> parabola.regular_point()
         (0, 0)
@@ -87,10 +87,11 @@ class ImplicitRegion(Basic):
         >>> r.regular_point()
         (-10, -10, 20)
 
-        Refrences
+        References
         =========
 
-        - Erik Hillgarter, Rational Points on Conics.
+        - Rational Points on Conics, Erik Hillgarter, 1996. Availaible:
+        https://www3.risc.jku.at/publications/download/risc_1355/Rational%20Points%20on%20Conics.pdf
 
         """
         equation = self.equation
@@ -114,7 +115,7 @@ class ImplicitRegion(Basic):
 
             for x_reg in range(-10, 10):
                 for y_reg in range(-10, 10):
-                    if len(solveset(equation.subs({x: x_reg, y: y_reg}), self.variables[2], domain=S.Reals)) > 0:
+                    if not solveset(equation.subs({x: x_reg, y: y_reg}), self.variables[2], domain=S.Reals).is_empty:
                         return (x_reg, y_reg, list(solveset(equation.subs({x: x_reg, y: y_reg})))[0])
 
         if len(self.singular_points()) != 0:
@@ -208,6 +209,7 @@ class ImplicitRegion(Basic):
 
             x, y, z = symbols("x y z")
             eq = a2*x**2 + b2*y**2 + c2*z**2
+
             sol = diophantine(eq)
             sol = list(sol)[0]
             syms = Tuple(*sol).free_symbols
@@ -232,7 +234,7 @@ class ImplicitRegion(Basic):
                 y_reg = (y - b*x_reg - e)/(2*c)
             else:
                 y_reg = (x - 2*e*a + b*d)/K
-                x_reg = (y - b*reg_y - d)/(2*a)
+                x_reg = (y - b*y_reg - d)/(2*a)
 
             return x_reg, y_reg
 
@@ -313,7 +315,7 @@ class ImplicitRegion(Basic):
 
         >>> circle = ImplicitRegion((x, y), Eq(x**2 + y**2, 4))
         >>> circle.rational_parametrization()
-        (-2 + 4/(t**2 + 1), 4*t/(t**2 + 1))
+        (2 - 4/(t**2 + 1), -4*t/(t**2 + 1))
 
         >>> I = ImplicitRegion((x, y), x**3 + x**2 - y**2)
         >>> I.rational_parametrization()
@@ -339,7 +341,8 @@ class ImplicitRegion(Basic):
         =========
 
         - Christoph M. Hoffmann, Conversion Methods between Parametric and
-        Implicit Curves and Surfaces.
+        Implicit Curves and Surfaces, 1990. Available:
+        https://docs.lib.purdue.edu/cgi/viewcontent.cgi?article=1827&context=cstech
 
         """
         equation = self.equation
