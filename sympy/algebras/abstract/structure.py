@@ -8,7 +8,7 @@ __all__ = [
 
 class AlgebraicStructure(Set):
     r"""
-    A base class for algebriac structure, i.e. group, ring, or field.
+    A base class for algebriac structure, i.e. group, ring, etc.
 
     Explanation
     ===========
@@ -81,23 +81,22 @@ class AlgebraicStructure(Set):
         return self.args[0]
 
     @property
+    def sets(self):
+        return self.args[1]
+
+    @property
+    def operators(self):
+        return self.args[2]
+
+    @property
     def domain(self):
         sets = []
-        for s in self.args[1]:
+        for s in self.sets:
             if isinstance(s, AlgebraicStructure):
                 sets.append(s.domain)
             else:
                 sets.append(s)
         return Union(*sets)
-
-    @property
-    def operators(self):
-        result = set()
-        for s in self.args[1]:
-            if isinstance(s, AlgebraicStructure):
-                result.update(s.operators)
-        result.update(self.args[2])
-        return result
 
     def _check_closure(self):
         for o in self.operators:
