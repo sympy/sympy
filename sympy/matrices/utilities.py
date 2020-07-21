@@ -5,8 +5,11 @@ from sympy.core.function import expand_mul
 from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 
 
-_dotprodsimp_state       = local()
-_dotprodsimp_state.state = None
+class DotProdSimpState(local):
+    def __init__(self):
+        self.state = None
+
+_dotprodsimp_state = DotProdSimpState()
 
 @contextmanager
 def dotprodsimp(x):
