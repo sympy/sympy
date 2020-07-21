@@ -2981,7 +2981,7 @@ def test_func():
 
 def test_issue_19809():
     def f():
-        assert _dotprodsimp_state.state == False
+        assert _dotprodsimp_state.state is None
         m = Matrix([[1]])
         m = m * m
         return True

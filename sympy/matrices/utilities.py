@@ -7,7 +7,7 @@ from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 
 class DotProdSimpState(local):
     def __init__(self):
-        self.state = False
+        self.state = None
 
 _dotprodsimp_state = DotProdSimpState()
 
