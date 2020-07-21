@@ -467,6 +467,10 @@ class AppliedMap(Expr):
 
             result = mapping.eval(*args)
             if result is not None:
+
+                if result not in mapping.codomain:
+                    raise TypeError("Result of evaluation does not belong to %s's codomain" % mapping)
+
                 return result
 
         return super().__new__(cls, mapping, *args)
