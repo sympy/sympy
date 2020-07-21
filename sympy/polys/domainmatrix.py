@@ -546,34 +546,49 @@ class DomainMatrix:
     def __add__(A, B):
         if not isinstance(B, DomainMatrix):
             return NotImplemented
-        if A.shape != B.shape:
-            raise ShapeError("shape")
-        if A.domain != B.domain:
-            raise ValueError("domain")
-        return A.from_ddm(A.rep + B.rep)
+        return A.add(B)
 
     def __sub__(A, B):
         if not isinstance(B, DomainMatrix):
             return NotImplemented
-        if A.shape != B.shape:
-            raise ShapeError("shape")
-        if A.domain != B.domain:
-            raise ValueError("domain")
-        return A.from_ddm(A.rep - B.rep)
+        return A.sub(B)
 
     def __neg__(A):
-        return A.from_ddm(-A.rep)
+        return A.neg()
 
     def __mul__(A, B):
         """A * B"""
         if not isinstance(B, DomainMatrix):
             return NotImplemented
-        return A.from_ddm(A.rep @ B.rep)
+        return A.matmul(B)
 
     def __pow__(A, n):
         """A ** n"""
         if not isinstance(n, int):
             return NotImplemented
+        return A.pow(n)
+
+    def add(A, B):
+        if A.shape != B.shape:
+            raise ShapeError("shape")
+        if A.domain != B.domain:
+            raise ValueError("domain")
+        return A.from_ddm(A.rep.add(B.rep))
+
+    def sub(A, B):
+        if A.shape != B.shape:
+            raise ShapeError("shape")
+        if A.domain != B.domain:
+            raise ValueError("domain")
+        return A.from_ddm(A.rep.sub(B.rep))
+
+    def neg(A):
+        return A.from_ddm(A.rep.neg())
+
+    def matmul(A, B):
+        return A.from_ddm(A.rep.matmul(B.rep))
+
+    def pow(A, n):
         if n < 0:
             raise NotImplementedError('Negative powers')
         elif n == 0:
