@@ -478,6 +478,13 @@ class AppliedMap(Expr):
     def arguments(self):
         return self.args[1:]
 
+    def _contained(self, other):
+        # Let `f(x) in f.codomain` return True
+        # see Set.contains and Set.__contains__ methods.
+        if other.is_superset(self.map.codomain):
+            return True
+        # Do not return False; allow other to check as well.
+
     def doit(self, **hints):
         deep = hints.get('deep', True)
         if deep:

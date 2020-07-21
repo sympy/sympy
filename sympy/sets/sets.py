@@ -349,6 +349,13 @@ class Set(Basic):
         False
         """
         other = sympify(other, strict=True)
+
+        # hook to let the element define where it belongs to
+        if hasattr(other, "_contained"):
+            c = other._contained(self)
+            if c is not None:
+                return tfn[c]
+
         c = self._contains(other)
         if isinstance(c, Contains):
             return c
@@ -694,6 +701,12 @@ class Set(Basic):
 
     def __contains__(self, other):
         other = _sympify(other)
+
+        if hasattr(other, "_contained"):
+            c = other._contained(self)
+            if c is not None:
+                return c
+    
         c = self._contains(other)
         b = tfn[c]
         if b is None:

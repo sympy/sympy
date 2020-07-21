@@ -49,6 +49,13 @@ def test_AppliedMap():
     # undefined map cannot be evaluated
     assert Map('f')(x).doit() == AppliedMap(Map('f'), x)
 
+    # map's codomain contains the result of evaluation
+    fx = Map('f', codomain=S.Integers)(x)
+    assert fx in S.Integers
+    assert S.Integers.contains(fx)
+    assert fx in S.Reals
+    assert S.Reals.contains(fx)
+
 def test_InverseMap():
 
     # cannot invert if mapping is assumed to be non-invertible
