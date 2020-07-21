@@ -37,7 +37,7 @@ class Map(Expr):
 
     >>> from sympy import symbols, S
     >>> from sympy.map import Map
-    >>> x, y = symbols('x y')
+    >>> x, y = symbols('x y', real=True)
 
     Constructing undefined map:
 
