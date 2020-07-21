@@ -2048,13 +2048,13 @@ def has_dups(seq):
     ========
 
     >>> from sympy.utilities.iterables import has_dups
-    >>> from sympy import Dict, Set
+    >>> from sympy import Dict
 
     >>> has_dups((1, 2, 1))
     True
     >>> has_dups(range(3))
     False
-    >>> all(has_dups(c) is False for c in (set(), Set(), dict(), Dict()))
+    >>> all(has_dups(c) is False for c in (set(), dict(), Dict()))
     True
     """
     from sympy.core.containers import Dict
