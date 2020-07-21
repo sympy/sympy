@@ -1,6 +1,6 @@
 from sympy import Basic, integrate, Sum, Dummy, Lambda
 from sympy.stats.rv import (NamedArgsMixin, random_symbols, _symbol_converter,
-                        PSpace, RandomSymbol)
+                        PSpace, RandomSymbol, is_random)
 from sympy.stats.crv import ContinuousDistribution, SingleContinuousPSpace
 from sympy.stats.drv import DiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.frv import SingleFiniteDistribution, SingleFinitePSpace
@@ -16,6 +16,10 @@ class CompoundPSpace(PSpace):
     parent distribution.
     """
 
+    is_Finite = None
+    is_Continuous = None
+    is_Discrete = None
+
     def __new__(cls, s, distribution):
         s = _symbol_converter(s)
         if isinstance(distribution, ContinuousDistribution):
@@ -27,6 +31,9 @@ class CompoundPSpace(PSpace):
         if not isinstance(distribution, CompoundDistribution):
             raise ValueError("%s should be an isinstance of "
                         "CompoundDistribution"%(distribution))
+        cls.is_Finite = distribution.is_Finite
+        cls.is_Continuous = distribution.is_Continuous
+        cls.is_Discrete = distribution.is_Discrete
         return Basic.__new__(cls, s, distribution)
 
     @property
@@ -164,31 +171,30 @@ class CompoundDistribution(Basic, NamedArgsMixin):
 
     def pdf(self, x):
         dist = self.args[0]
-        randoms = []
-        for arg in dist.args:
-            randoms.extend(random_symbols(arg))
-        if len(randoms) > 1:
-            raise NotImplementedError("Compound Distributions for more than"
-                " one random argument is not implemeted yet.")
-        rand_sym = randoms[0]
+        randoms = [rv for rv in dist.args if is_random(rv)]
         if isinstance(dist, SingleFiniteDistribution):
             y = Dummy('y', integer=True, negative=False)
-            _pdf = dist.pmf(y)
+            expr = dist.pmf(y)
         else:
             y = Dummy('y')
-            _pdf = dist.pdf(y)
-        if isinstance(rand_sym.pspace.distribution, SingleFiniteDistribution):
-            rand_dens = rand_sym.pspace.distribution.pmf(rand_sym)
+            expr = dist.pdf(y)
+        for rv in randoms:
+            expr = self._marginalise(expr, rv)
+        return Lambda(y, expr)(x)
+
+    def _marginalise(self, expr, rv):
+        if isinstance(rv.pspace.distribution, SingleFiniteDistribution):
+            rv_dens = rv.pspace.distribution.pmf(rv)
         else:
-            rand_dens = rand_sym.pspace.distribution.pdf(rand_sym)
-        rand_sym_dom = rand_sym.pspace.domain.set
-        if rand_sym.pspace.is_Discrete or rand_sym.pspace.is_Finite:
-            _pdf = Sum(_pdf*rand_dens, (rand_sym, rand_sym_dom._inf,
-                    rand_sym_dom._sup)).doit()
+            rv_dens = rv.pspace.distribution.pdf(rv)
+        rv_dom = rv.pspace.domain.set
+        if rv.pspace.is_Discrete or rv.pspace.is_Finite:
+            expr = Sum(expr*rv_dens, (rv, rv_dom._inf,
+                    rv_dom._sup)).doit()
         else:
-            _pdf = integrate(_pdf*rand_dens, (rand_sym, rand_sym_dom._inf,
-                    rand_sym_dom._sup))
-        return Lambda(y, _pdf)(x)
+            expr = integrate(expr*rv_dens, (rv, rv_dom._inf,
+                    rv_dom._sup))
+        return expr
 
     @classmethod
     def _compound_check(self, dist):

@@ -1,5 +1,5 @@
 from sympy import (symbols, S, erf, sqrt, pi, exp, gamma, Interval, oo, beta,
-                    Eq, Piecewise, Integral, Abs, arg, Dummy)
+                    Eq, Piecewise, Integral, Abs, arg, Dummy, Sum, factorial)
 from sympy.stats import (Normal, P, E, density, Gamma, Poisson, Rayleigh,
                         variance, Bernoulli, Beta, Uniform, cdf)
 from sympy.stats.compound_rv import CompoundDistribution, CompoundPSpace
@@ -67,6 +67,13 @@ def test_unevaluated_CompoundDist():
     (sqrt(2)*_k*Integral(exp(-(_k**4 + 16*(_k - 3)**2)/(32*_k**2)),
     (_k, 0, oo))/(32*sqrt(pi)), True)), (_k, -oo, oo))
     assert (E(X, evaluate=False).simplify()).dummy_eq(expre.simplify())
+
+    X = Poisson('X', 1)
+    Y = Poisson('Y', X)
+    Z = Poisson('Z', Y)
+    exprd = exp(-1)*Sum(exp(-Y)*Y**x*Sum(exp(-X)*X**Y/(factorial(X)*factorial(Y)
+                ), (X, 0, oo)), (Y, 0, oo))/factorial(x)
+    assert density(Z)(x).simplify() == exprd
 
 
 def test_Compound_Distribution():
