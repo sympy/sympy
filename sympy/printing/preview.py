@@ -29,15 +29,100 @@ def _check_output_no_window(*args, **kwargs):
     return check_output(*args, creationflags=creation_flag, **kwargs)
 
 
-def _run_pyglet(fname, fmt):
-    from pyglet import window, image, gl
-    from pyglet.window import key
+def _start_file(fname):
+    """
+    Like :func:`os.startfile`, but does not return until the program exits.
+
+    This is necessary because we delete the temp dir as soon as this function
+    returns
+
+    Equivalent code if we depended on ``pywin32``::
+
+        import win32con
+        import win32api
+        import win32event
+        from win32com.shell import shellcon
+        from win32com.shell.shell import ShellExecuteEx
+        rc = ShellExecuteEx(
+            fMask=shellcon.SEE_MASK_NOCLOSEPROCESS,
+            nShow=win32con.SW_SHOW,
+            lpFile=fname)
+        hproc = rc['hProcess']
+        win32event.WaitForSingleObject(hproc, win32event.INFINITE)
+        win32api.CloseHandle(hproc)
+    """
+    import ctypes
+    from ctypes.wintypes import ULONG, DWORD, HANDLE, HKEY, HINSTANCE, HWND, LPCWSTR
+    from _winapi import CloseHandle, WaitForSingleObject
+
+    class SHELLEXECUTEINFOW(ctypes.Structure):
+        _fields_ = [
+            ("cbSize", DWORD),
+            ("fMask", ULONG),
+            ("hwnd", HWND),
+            ("lpVerb", LPCWSTR),
+            ("lpFile", LPCWSTR),
+            ("lpParameters", LPCWSTR),
+            ("lpDirectory", LPCWSTR),
+            ("nShow", ctypes.c_int),
+            ("hInstApp", HINSTANCE),
+            ("lpIDList", ctypes.c_void_p),
+            ("lpClass", LPCWSTR),
+            ("hkeyClass", HKEY),
+            ("dwHotKey", DWORD),
+            ("DUMMYUNIONNAME", ctypes.c_void_p),
+            ("hProcess", HANDLE)
+        ]
+
+    shell_execute_ex = ctypes.windll.shell32.ShellExecuteExW
+    shell_execute_ex.argtypes = [ctypes.POINTER(SHELLEXECUTEINFOW)]
+    shell_execute_ex.res_type = ctypes.c_bool
+
+    # https://stackoverflow.com/a/17638969/102441
+    arg = SHELLEXECUTEINFOW()
+    arg.cbSize = ctypes.sizeof(arg)
+    arg.fMask = 0x00000040  # SEE_MASK_NOCLOSEPROCESS
+    arg.hwnd = None
+    arg.lpVerb = None
+    arg.lpFile = fname
+    arg.lpParameters = ""
+    arg.lpDirectory = None
+    arg.nShow = 10  # SW_SHOWDEFAULT
+    arg.hInstApp = None
+    ok = shell_execute_ex(arg)
+    if not ok:
+        raise ctypes.WinError()
+    proc = int(arg.hProcess)
+    try:
+        WaitForSingleObject(proc, -1)
+    finally:
+        CloseHandle(proc)
+
+
+def system_default_viewer(fname, fmt):
+    import platform
+    if platform.system() == 'Darwin':
+        import subprocess
+        subprocess.call(('open', fname))
+    elif platform.system() == 'Windows':
+        _start_file(fname)
+    else:
+        import subprocess
+        subprocess.call(('xdg-open', fname))
+
+
+def pyglet_viewer(fname, fmt):
+    try:
+        from pyglet import window, image, gl
+        from pyglet.window import key
+    except ImportError:
+        raise ImportError("pyglet is required for preview.\n visit http://www.pyglet.org/")
 
     if fmt == "png":
         from pyglet.image.codecs.png import PNGImageDecoder
         img = image.load(fname, decoder=PNGImageDecoder())
     else:
-        raise ValueError("pyglet preview works only for 'png' files.")
+        raise valueError("pyglet preview works only for 'png' files.")
 
     offset = 25
 
@@ -82,7 +167,6 @@ def _run_pyglet(fname, fmt):
         pass
 
     win.close()
-
 
 @doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
             disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
@@ -174,46 +258,47 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
 
     """
-    special = [ 'pyglet' ]
-
-    if viewer is None:
-        if output == "png":
-            viewer = "pyglet"
+    # pyglet is the default for png
+    if viewer is None and output == "png":
+        try:
+            import pyglet
+        except ImportError:
+            pass
         else:
-            # sorted in order from most pretty to most ugly
-            # very discussable, but indeed 'gv' looks awful :)
-            # TODO add candidates for windows to list
-            candidates = {
-                "dvi": [ "evince", "okular", "kdvi", "xdvi" ],
-                "ps": [ "evince", "okular", "gsview", "gv" ],
-                "pdf": [ "evince", "okular", "kpdf", "acroread", "xpdf", "gv" ],
-            }
+            viewer = pyglet_viewer
 
-            try:
-                candidate_viewers = candidates[output]
-            except KeyError:
-                raise ValueError("Invalid output format: %s" % output) from None
+    # look up a known application
+    if viewer is None:
+        # sorted in order from most pretty to most ugly
+        # very discussable, but indeed 'gv' looks awful :)
+        # TODO add candidates for windows to list
+        candidates = {
+            "dvi": [ "evince", "okular", "kdvi", "xdvi" ],
+            "ps": [ "evince", "okular", "gsview", "gv" ],
+            "pdf": [ "evince", "okular", "kpdf", "acroread", "xpdf", "gv" ],
+        }
 
-            for candidate in candidate_viewers:
-                path = shutil.which(candidate)
-                if path is not None:
-                    viewer = path
-                    break
-            else:
-                raise OSError(
-                    "No viewers found for '%s' output format." % output)
-    else:
-        if viewer == "StringIO":
-            viewer = "BytesIO"
-            if outputbuffer is None:
-                raise ValueError("outputbuffer has to be a BytesIO "
-                                 "compatible object if viewer=\"StringIO\"")
-        elif viewer == "BytesIO":
-            if outputbuffer is None:
-                raise ValueError("outputbuffer has to be a BytesIO "
-                                 "compatible object if viewer=\"BytesIO\"")
-        elif viewer not in special and not shutil.which(viewer):
-            raise OSError("Unrecognized viewer: %s" % viewer)
+        for candidate in candidates.get(output, []):
+            path = shutil.which(candidate)
+            if path is not None:
+                viewer = path
+                break
+
+    # otherwise, use the system default for file association
+    if viewer is None:
+        viewer = system_default_viewer
+
+    if viewer == "StringIO":
+        viewer = "BytesIO"
+        if outputbuffer is None:
+            raise ValueError("outputbuffer has to be a BytesIO "
+                             "compatible object if viewer=\"StringIO\"")
+    elif viewer == "BytesIO":
+        if outputbuffer is None:
+            raise ValueError("outputbuffer has to be a BytesIO "
+                             "compatible object if viewer=\"BytesIO\"")
+    elif not callable(viewer) and not shutil.which(viewer):
+        raise OSError("Unrecognized viewer: %s" % viewer)
 
 
     if preamble is None:
@@ -328,13 +413,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         elif viewer == "BytesIO":
             with open(join(workdir, src), 'rb') as fh:
                 outputbuffer.write(fh.read())
-        elif viewer == "pyglet":
-            try:
-                import pyglet  # noqa: F401
-            except ImportError:
-                raise ImportError("pyglet is required for preview.\n visit http://www.pyglet.org/")
-
-            return _run_pyglet(join(workdir, src), fmt=output)
+        elif callable(viewer):
+            viewer(join(workdir, src), fmt=output)
         else:
             try:
                 _check_output_no_window(
