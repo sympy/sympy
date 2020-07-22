@@ -446,7 +446,7 @@ def ddm_ilu_solve(x, L, U, swaps, b):
 def ddm_berk(M, K):
     m = len(M)
     if not m:
-        return [K.one]
+        return [[K.one]]
     n = len(M[0])
 
     if m != n:
