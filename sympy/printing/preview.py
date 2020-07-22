@@ -18,6 +18,17 @@ from .latex import latex
 
 __doctest_requires__ = {('preview',): ['pyglet']}
 
+
+def _check_output_no_window(*args, **kwargs):
+    # Avoid showing a cmd.exe window when running this
+    # on Windows
+    if os.name == 'nt':
+        creation_flag = 0x08000000 # CREATE_NO_WINDOW
+    else:
+        creation_flag = 0 # Default value
+    return check_output(*args, creationflags=creation_flag, **kwargs)
+
+
 @doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
             disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
@@ -188,17 +199,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             raise RuntimeError("latex program is not installed")
 
         try:
-            # Avoid showing a cmd.exe window when running this
-            # on Windows
-            if os.name == 'nt':
-                creation_flag = 0x08000000 # CREATE_NO_WINDOW
-            else:
-                creation_flag = 0 # Default value
-            check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
-                          'texput.tex'],
-                         cwd=workdir,
-                         stderr=STDOUT,
-                         creationflags=creation_flag)
+            _check_output_no_window(
+                ['latex', '-halt-on-error', '-interaction=nonstopmode',
+                 'texput.tex'],
+                cwd=workdir,
+                stderr=STDOUT)
         except CalledProcessError as e:
             raise RuntimeError(
                 "'latex' exited abnormally with the following output:\n%s" %
@@ -252,14 +257,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             cmd.extend(commandend[cmd_variant])
 
             try:
-                # Avoid showing a cmd.exe window when running this
-                # on Windows
-                if os.name == 'nt':
-                    creation_flag = 0x08000000 # CREATE_NO_WINDOW
-                else:
-                    creation_flag = 0 # Default value
-                check_output(cmd, cwd=workdir, stderr=STDOUT,
-                             creationflags=creation_flag)
+                _check_output_no_window(cmd, cwd=workdir, stderr=STDOUT)
             except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s' exited abnormally with the following output:\n%s" %
@@ -335,14 +333,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             win.close()
         else:
             try:
-                # Avoid showing a cmd.exe window when running this
-                # on Windows
-                if os.name == 'nt':
-                    creation_flag = 0x08000000 # CREATE_NO_WINDOW
-                else:
-                    creation_flag = 0 # Default value
-                check_output([viewer, src], cwd=workdir, stderr=STDOUT,
-                             creationflags=creation_flag)
+                _check_output_no_window(
+                    [viewer, src], cwd=workdir, stderr=STDOUT)
             except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s %s' exited abnormally with the following output:\n%s" %
