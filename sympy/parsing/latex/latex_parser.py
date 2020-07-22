@@ -1,4 +1,5 @@
 import operator
+import os
 
 import sympy
 from sympy.external import import_module
@@ -50,8 +51,10 @@ def parse_latex(s):
         parser = standalone_lark.Lark_StandAlone()
         Transformer = standalone_lark.Transformer
     else:
-        # TODO: proper pkg_resource get text
-        with open('latex.lark') as f:
+        # TODO: should we use pkg_resource to get grammar file?  I
+        # think this would make sympy depend on setuptools which we
+        # would not like
+        with open(os.path.join(os.path.dirname(__file__), 'latex.lark')) as f:
             latex_grammar = f.read()
 
         parser = _lark.Lark(latex_grammar, parser='lalr',
@@ -110,9 +113,9 @@ def parse_latex(s):
         def relation(self, args):
             op_map = {
                 'EQUAL': sympy.Eq,
-                'LT': sympy.StictLessThan,
+                'LT': sympy.StrictLessThan,
                 'LTE': sympy.LessThan,
-                'GT': sympy.StictGreaterThan,
+                'GT': sympy.StrictGreaterThan,
                 'GTE': sympy.GreaterThan,
             }
             return op_map[args[1].type](args[0], args[2])
