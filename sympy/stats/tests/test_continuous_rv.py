@@ -25,6 +25,7 @@ from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, C
 from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, MultivariateNormalDistribution
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
 from sympy.stats.compound_rv import CompoundPSpace
+from sympy.stats.symbolic_probability import Probability
 from sympy.testing.pytest import raises, XFAIL, slow, skip, ignore_warnings
 from sympy.testing.randtest import verify_numerically as tn
 
@@ -643,12 +644,12 @@ def test_exponential():
     _z = Dummy('_z')
     b = SingleContinuousPSpace(x, ExponentialDistribution(2))
 
-    expected1 = Integral(2*exp(-2*_z), (_z, 3, oo))
-    assert b.probability(x > 3, evaluate=False).dummy_eq(expected1) is True
+    with ignore_warnings(UserWarning):
+        expected1 = Integral(2*exp(-2*_z), (_z, 3, oo))
+        assert b.probability(x > 3, evaluate=False).rewrite(Integral).dummy_eq(expected1)
 
-    expected2 = Integral(2*exp(-2*_z), (_z, 0, 4))
-    assert b.probability(x < 4, evaluate=False).dummy_eq(expected2) is True
-
+        expected2 = Integral(2*exp(-2*_z), (_z, 0, 4))
+        assert b.probability(x < 4, evaluate=False).rewrite(Integral).dummy_eq(expected2)
     Y = Exponential('y', 2*rate)
     assert coskewness(X, X, X) == skewness(X)
     assert coskewness(X, Y + rate*X, Y + 2*rate*X) == \
@@ -1342,21 +1343,23 @@ def test_input_value_assertions():
 
 def test_unevaluated():
     X = Normal('x', 0, 1)
-    assert str(E(X, evaluate=False)) == ("Integral(sqrt(2)*x*exp(-x**2/2)/"
-    "(2*sqrt(pi)), (x, -oo, oo))")
+    with ignore_warnings(UserWarning):
+        assert str(E(X, evaluate=False).rewrite(Integral)) == ("Integral(sqrt(2)*x*exp(-x**2/2)/"
+        "(2*sqrt(pi)), (x, -oo, oo))")
 
-    assert str(E(X + 1, evaluate=False)) == ("Integral(sqrt(2)*x*exp(-x**2/2)/"
-    "(2*sqrt(pi)), (x, -oo, oo)) + 1")
+        assert str(E(X + 1, evaluate=False).rewrite(Integral)) == ("Integral(sqrt(2)*x*exp(-x**2/2)/"
+        "(2*sqrt(pi)), (x, -oo, oo)) + 1")
 
-    assert str(P(X > 0, evaluate=False)) == ("Integral(sqrt(2)*exp(-_z**2/2)/"
-    "(2*sqrt(pi)), (_z, 0, oo))")
+        assert str(P(X > 0, evaluate=False).rewrite(Integral)) == ("Integral(sqrt(2)*exp(-_z**2/2)/"
+        "(2*sqrt(pi)), (_z, 0, oo))")
 
-    assert P(X > 0, X**2 < 1, evaluate=False) == S.Half
+    assert P(X > 0, X**2 < 1) == S.Half
 
 
 def test_probability_unevaluated():
     T = Normal('T', 30, 3)
-    assert type(P(T > 33, evaluate=False)) == Integral
+    with ignore_warnings(UserWarning):
+        assert type(P(T > 33, evaluate=False)) == Probability
 
 
 def test_density_unevaluated():

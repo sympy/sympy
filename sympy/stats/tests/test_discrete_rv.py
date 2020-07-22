@@ -15,6 +15,7 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
 from sympy.stats.rv import sample
 from sympy.testing.pytest import slow, nocache_fail, raises, skip, ignore_warnings
 from sympy.external import import_module
+from sympy.stats.symbolic_probability import Expectation
 
 x = Symbol('x')
 
@@ -33,8 +34,9 @@ def test_Poisson():
     assert E(x) == l
     assert variance(x) == l
     assert density(x) == PoissonDistribution(l)
-    assert isinstance(E(x, evaluate=False), Sum)
-    assert isinstance(E(2*x, evaluate=False), Sum)
+    with ignore_warnings(UserWarning):
+        assert isinstance(E(x, evaluate=False), Expectation)
+        assert isinstance(E(2*x, evaluate=False), Expectation)
     # issue 8248
     assert x.pspace.compute_expectation(1) == 1
 
@@ -82,7 +84,8 @@ def test_Logarithmic():
     assert E(x) == -p / ((1 - p) * log(1 - p))
     assert variance(x) == -1/log(2)**2 + 2/log(2)
     assert E(2*x**2 + 3*x + 4) == 4 + 7 / log(2)
-    assert isinstance(E(x, evaluate=False), Sum)
+    with ignore_warnings(UserWarning):
+        assert isinstance(E(x, evaluate=False), Expectation)
 
 
 @nocache_fail
@@ -94,7 +97,8 @@ def test_negative_binomial():
     # This hangs when run with the cache disabled:
     assert variance(x) == p*r / (1-p)**2
     assert E(x**5 + 2*x + 3) == Rational(9207, 4)
-    assert isinstance(E(x, evaluate=False), Sum)
+    with ignore_warnings(UserWarning):
+        assert isinstance(E(x, evaluate=False), Expectation)
 
 
 def test_skellam():
@@ -121,7 +125,8 @@ def test_yule_simon():
     x = YuleSimon('x', rho)
     assert simplify(E(x)) == rho / (rho - 1)
     assert simplify(variance(x)) == rho**2 / ((rho - 1)**2 * (rho - 2))
-    assert isinstance(E(x, evaluate=False), Sum)
+    with ignore_warnings(UserWarning):
+        assert isinstance(E(x, evaluate=False), Expectation)
     # To test the cdf function
     assert cdf(x)(x) == Piecewise((-beta(floor(x), 4)*floor(x) + 1, x >= 1), (0, True))
 
@@ -272,7 +277,8 @@ def test_product_spaces():
     #assert str(P(X1 + X2 < 3, evaluate=False)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """\
     #    + """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, -oo, -1))"""
     n = Dummy('n')
-    assert P(X1 + X2 < 3, evaluate=False).dummy_eq(Sum(Piecewise((2**(-n)/4,
+    with ignore_warnings(UserWarning):
+        assert P(X1 + X2 < 3, evaluate=False).rewrite(Sum).dummy_eq(Sum(Piecewise((2**(-n)/4,
          n + 2 >= 1), (0, True)), (n, -oo, -1))/3)
     #assert str(P(X1 + X2 > 3)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """ +\
     #    """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, 1, oo))"""

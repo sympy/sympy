@@ -757,7 +757,11 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     from sympy.stats.symbolic_probability import Expectation
     if evaluate:
         return Expectation(expr, condition).doit(**kwargs)
-    return Expectation(expr, condition).rewrite(Integral) # will return Sum in case of discrete RV
+    message = ("Using `evaluate=False` now returns `Expectation` object "
+              "since version 1.7. If you want unevaluated Integral/Sum use "
+              "`E(expr, condition, evaluate=False).rewrite(Integral)`")
+    warnings.warn(filldedent(message))
+    return Expectation(expr, condition)
 
 
 def probability(condition, given_condition=None, numsamples=None,
@@ -796,7 +800,11 @@ def probability(condition, given_condition=None, numsamples=None,
     from sympy.stats.symbolic_probability import Probability
     if evaluate:
         return Probability(condition, given_condition).doit(**kwargs)
-    return Probability(condition, given_condition).rewrite(Integral) # will return Sum in case of discrete RV
+    message = ("Using `evaluate=False` returns `Probability` object since version 1.7. "
+              "If you want unevaluated Integral/Sum use "
+              "`P(condition, given_condition, evaluate=False).rewrite(Integral)`")
+    warnings.warn(filldedent(message))
+    return Probability(condition, given_condition)
 
 
 class Density(Basic):

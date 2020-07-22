@@ -6,7 +6,7 @@ from sympy.stats.compound_rv import CompoundDistribution, CompoundPSpace
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.drv_types import PoissonDistribution
 from sympy.stats.frv_types import BernoulliDistribution
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, ignore_warnings
 from sympy.stats.joint_rv_types import MultivariateNormalDistribution
 
 
@@ -66,7 +66,8 @@ def test_unevaluated_CompoundDist():
     expre = Integral(Piecewise((_k*exp(S(3)/4 - _k/4)/8, 2*Abs(arg(_k - 3)) <= pi/2),
     (sqrt(2)*_k*Integral(exp(-(_k**4 + 16*(_k - 3)**2)/(32*_k**2)),
     (_k, 0, oo))/(32*sqrt(pi)), True)), (_k, -oo, oo))
-    assert (E(X, evaluate=False).simplify()).dummy_eq(expre.simplify())
+    with ignore_warnings(UserWarning):
+        assert (E(X, evaluate=False).rewrite(Integral).simplify()).dummy_eq(expre.simplify())
 
 
 def test_Compound_Distribution():
