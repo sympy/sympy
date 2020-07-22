@@ -99,7 +99,6 @@ modules = [
     'sympy.parsing.c',
     'sympy.parsing.fortran',
     'sympy.parsing.latex',
-    'sympy.parsing.latex._antlr',
     'sympy.physics',
     'sympy.physics.continuum_mechanics',
     'sympy.physics.control',
@@ -170,10 +169,11 @@ class test_sympy(Command):
         runtests.run_all_tests()
 
 
-class antlr(Command):
-    """Generate code with antlr4"""
-    description = "generate parser code from antlr grammars"
-    user_options = []  # setuptools complains if this is not here.
+class run_benchmarks(Command):
+    """Runs all SymPy benchmarks"""
+
+    description = "run all benchmarks"
+    user_options = []  # distutils complains if this is not here.
 
     def __init__(self, *args):
         self.args = args[0]  # so we can pass it to other classes
@@ -333,7 +333,13 @@ if __name__ == '__main__':
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,
+<<<<<<< HEAD
                     'antlr': antlr,
+=======
+                    'bench': run_benchmarks,
+                    'clean': clean,
+                    'audit': audit,
+>>>>>>> e398b35ee9 (Removing all mention of sympy/parsing/latex/_antlr from docs and tests)
                     'sdist': sdist_sympy,
                     },
           python_requires='>=3.8',

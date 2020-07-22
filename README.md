@@ -141,27 +141,19 @@ To test pull requests, use
 
 ## Regenerate Experimental <span class="title-ref">LaTeX</span> Parser/Lexer
 
-The parser and lexer were generated with the [ANTLR4](http://antlr4.org)
-toolchain in `sympy/parsing/latex/_antlr` and checked into the repo.
-Presently, most users should not need to regenerate these files, but
-if you plan to work on this feature, you will need the `antlr4`
-command-line tool (and you must ensure that it is in your `PATH`).
-One way to get it is:
+The parser and lexer generated with the
+[LARK](https://github.com/lark-parser/lark) toolchain in <span
+class="title-ref">sympy/parsing/latex/latex_grammar.py</span> and
+checked into the repo. Presently, most users should not need to
+regenerate these files or modify the grammar, but if you plan to work
+on this feature, you will need the <span class="title-ref">lark</span>
+installed. One way to get it is:
 
-    $ conda install -c conda-forge antlr=4.11.1
+    $ conda install -c conda-forge lark-parser
 
-Alternatively, follow the instructions on the ANTLR website and download
-the `antlr-4.11.1-complete.jar`. Then export the `CLASSPATH` as instructed
-and instead of creating `antlr4` as an alias, make it an executable file
-with the following contents:
-``` bash
-#!/bin/bash
-java -jar /usr/local/lib/antlr-4.11.1-complete.jar "$@"
-```
-
-After making changes to `sympy/parsing/latex/LaTeX.g4`, run:
-
-    $ ./setup.py antlr
+After making changes to <span
+class="title-ref">sympy/parsing/latex/latex.lark</span> sympy will use
+the new grammar for parsing latex equations.
 
 ## Clean
 
