@@ -341,7 +341,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                     (viewer, src, e.output))
     finally:
         try:
-            shutil.rmtree(workdir) # delete directory
-        except OSError as e:
-            if e.errno != 2: # code 2 - no such file or directory
-                raise
+            shutil.rmtree(workdir)  # delete directory
+        except FileNotFoundError:
+            pass
