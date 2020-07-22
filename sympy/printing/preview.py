@@ -241,9 +241,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                         latex(expr, mode='plain', **latex_settings) +
                         '$')
 
-    try:
-        workdir = tempfile.mkdtemp()
-
+    with tempfile.TemporaryDirectory() as workdir:
         with io.open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
             fh.write(unicode(latex_main) % u_decode(latex_string))
 
@@ -345,8 +343,3 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 raise RuntimeError(
                     "'%s %s' exited abnormally with the following output:\n%s" %
                     (viewer, src, e.output))
-    finally:
-        try:
-            shutil.rmtree(workdir)  # delete directory
-        except FileNotFoundError:
-            pass
