@@ -284,3 +284,9 @@ def test_issue_19534():
     assert N(expr.series(dt, 0, 8), 20) == -0.00092592592592592596126*dt**7 + 0.0027777777777777783175*dt**6 + \
     0.016666666666666656027*dt**5 + 0.083333333333333300952*dt**4 + 0.33333333333333337034*dt**3 + \
     1.0*dt**2 + 1.0*dt + 1.0
+
+
+def test_issue_11407():
+    a, b, c, x = symbols('a b c x')
+    assert series(sqrt(a + b + c*x), x, 0, 1) == sqrt(a + b) + O(x)
+    assert series(sqrt(a + b + c + c*x), x, 0, 1) == sqrt(a + b + c) + O(x)
