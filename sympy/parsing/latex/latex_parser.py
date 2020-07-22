@@ -1,14 +1,18 @@
 import operator
 
+import sympy
 from sympy.external import import_module
-from sympy.utilities.decorator import doctest_depends_on
 
 
 class LaTeXParsingError(Exception):
     pass
 
 
-@doctest_depends_on(modules=('lark',))
+def _assert_nargs_func(args, n):
+    if len(args) != 3 + n:
+        raise LaTeXParsingError('latex function=%s expected %d args got %d' % (args[0].value, n, len(args)-3))
+
+
 def parse_latex(s):
     r"""Converts the string ``s`` to a SymPy ``Expr``
 
@@ -44,6 +48,7 @@ def parse_latex(s):
             # TODO: throw proper error
             raise ValueError('precompiled lark grammar "latex_grammar" not avialable')
         parser = standalone_lark.Lark_StandAlone()
+        Transformer = standalone_lark.Transformer
     else:
         # TODO: proper pkg_resource get text
         with open('latex.lark') as f:
@@ -53,6 +58,64 @@ def parse_latex(s):
                             lexer='standard',
                             propagate_positions=False,
                             maybe_placeholders=False)
+        Transformer = _lark.Transformer
+
+    class TreeToSympy(Transformer):
+        INTEGER = int
+        FLOAT = float
+        SYMBOL = sympy.Symbol
+
+        def group(self, args):
+            return args[1]
+
+        def abs_group(self, args):
+             return sympy.Abs(args[1])
+
+        def func(self, args):
+            unary_funcs = {
+                'FUNC_LOG': sympy.log,
+                'FUNC_LN': sympy.log,
+                'FUNC_SIN': sympy.sin,
+                'FUNC_COS': sympy.cos,
+                'FUNC_TAN': sympy.tan,
+                'FUNC_CSC': sympy.csc,
+                'FUNC_SEC': sympy.sec,
+                'FUNC_COT': sympy.cot,
+                'FUNC_ARCSIN': sympy.asin,
+                'FUNC_ARCCOS': sympy.acos,
+                'FUNC_ARCTAN': sympy.atan,
+                'FUNC_ARCCSC': sympy.acsc,
+                'FUNC_ARCSEC': sympy.asec,
+                'FUNC_ARCCOT': sympy.acot,
+                'FUNC_SINH': sympy.sinh,
+                'FUNC_COSH': sympy.cosh,
+                'FUNC_TANH': sympy.tanh,
+                'FUNC_ARSINH': sympy.asinh,
+                'FUNC_ARCOSH': sympy.acosh,
+                'FUNC_ARTANH': sympy.atanh
+            }
+            if args[0].type in unary_funcs:
+                _assert_nargs_func(args, 1)
+                return unary_funcs[args[0].type](args[2])
+
+        def expr(self, args):
+            op_map = {
+                'ADD': operator.add,
+                'SUB': operator.sub,
+                'MUL': operator.mul,
+                'DIV': operator.truediv,
+            }
+            return op_map[args[1].type](args[0], args[2])
+
+        def relation(self, args):
+            op_map = {
+                'EQUAL': sympy.Eq,
+                'LT': sympy.StictLessThan,
+                'LTE': sympy.LessThan,
+                'GT': sympy.StictGreaterThan,
+                'GTE': sympy.GreaterThan,
+            }
+            return op_map[args[1].type](args[0], args[2])
 
     tree = parser.parse(s)
     # this could be done within the parse step of lark however we
@@ -60,68 +123,3 @@ def parse_latex(s):
     # multiple backends for the generated expression
     sympy_expression = TreeToSympy().transform(tree)
     return sympy_expression
-
-
-def assert_nargs_func(args, n):
-    if len(args) != 3 + n:
-        raise LaTeXParsingError('latex function=%s expected %d args got %d' % (args[0].value, n, len(args)-3))
-
-
-class TreeToSympy(Transformer):
-    INTEGER = int
-    FLOAT = float
-    SYMBOL = sympy.Symbol
-
-    def group(self, args):
-        return args[1]
-
-    def abs_group(self, args):
-         return sympy.Abs(args[1])
-
-    def func(self, args):
-        unary_funcs = {
-            'FUNC_LOG': sympy.log,
-            'FUNC_LN': sympy.log,
-            'FUNC_SIN': sympy.sin,
-            'FUNC_COS': sympy.cos,
-            'FUNC_TAN': sympy.tan,
-            'FUNC_CSC': sympy.csc,
-            'FUNC_SEC': sympy.sec,
-            'FUNC_COT': sympy.cot,
-            'FUNC_ARCSIN': sympy.asin,
-            'FUNC_ARCCOS': sympy.acos,
-            'FUNC_ARCTAN': sympy.atan,
-            'FUNC_ARCCSC': sympy.acsc,
-            'FUNC_ARCSEC': sympy.asec,
-            'FUNC_ARCCOT': sympy.acot,
-            'FUNC_SINH': sympy.sinh,
-            'FUNC_COSH': sympy.cosh,
-            'FUNC_TANH': sympy.tanh,
-            'FUNC_ARSINH': sympy.asinh,
-            'FUNC_ARCOSH': sympy.acosh,
-            'FUNC_ARTANH': sympy.atanh
-        }
-        if args[0].type in unary_funcs:
-            assert_nargs_func(args, 1)
-            return unary_funcs[args[0].type](args[2])
-
-    @inline_args
-    def expr(self, left, op, right):
-        op_map = {
-            'ADD': operator.add,
-            'SUB': operator.sub,
-            'MUL': operator.mul,
-            'DIV': operator.truediv,
-        }
-        return op_map[op.type](left, right)
-
-    @inline_args
-    def relation(self, left, op, right):
-        op_map = {
-            'EQUAL': sympy.Eq,
-            'LT': sympy.StictLessThan,
-            'LTE': sympy.LessThan,
-            'GT': sympy.StictGreaterThan,
-            'GTE': sympy.GreaterThan,
-        }
-        return op_map[op.type](left, right)
