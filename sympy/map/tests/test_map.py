@@ -11,7 +11,20 @@ x, y = symbols('x y')
 class F(Map):
     def eval(self, x):
         return x+1
-f = F()
+    def _eval_inverse(self):
+        return G()
+    def _eval_restrict(self, domain):
+        return H()
+class G(Map):
+    def eval(self, x):
+        return x-1
+    def _eval_inverse(self):
+        return F()
+class H(Map):
+    def _map_content(self):
+        return F()._map_content()
+
+f, g, h = F(), G(), H()
 
 def test_Map():
 
@@ -33,21 +46,22 @@ def test_Map():
 def test_AppliedMap():
 
     arg = x.diff(x, evaluate=False) # unevaluated argument
+    args = (arg,)
 
     # do not evaluate by default
-    assert f(arg) == AppliedMap(f, arg)
+    assert f(arg) == AppliedMap(f, args)
 
     # evaluate by evaluate=True keyword
-    assert f(arg, evaluate=True) == AppliedMap(f, arg, evaluate=True) == arg+1
+    assert f(arg, evaluate=True) == AppliedMap(f, args, evaluate=True) == arg+1
 
     # evaluation by doit(deep=False)
-    assert AppliedMap(f, arg).doit(deep=False) == arg+1
+    assert AppliedMap(f, args).doit(deep=False) == arg+1
 
     # recursive evaluation by doit()
-    assert AppliedMap(f, arg).doit() == 2
+    assert AppliedMap(f, args).doit() == 2
 
     # undefined map cannot be evaluated
-    assert Map('f')(x).doit() == AppliedMap(Map('f'), x)
+    assert Map('f')(x).doit() == AppliedMap(Map('f'), (x,))
 
     # map's codomain contains the result of evaluation
     fx = Map('f', codomain=S.Integers)(x)
@@ -72,31 +86,22 @@ def test_InverseMap():
 
     # domain and codomain
     m = Map('m', domain=S.Reals, codomain=S.Naturals0)
-    assert m.inv().domain is S.Naturals0, m.inv().domain is S.Reals
+    assert m.inv().domain is S.Naturals0 and m.inv().codomain is S.Reals
 
     # cannot be evaluated when _eval_inverse is not implemented
-    assert f.inv() == f.inv(evaluate=True) == InverseMap(f)
-
-    class G(Map):
-        def _eval_inverse(self):
-            return H()
-    g = G()
-    class H(Map):
-        def _eval_inverse(self):
-            return G()
-    h = H()
+    assert h.inv() == h.inv(evaluate=True) == InverseMap(h)
 
     # do not evaluate by default
+    assert f.inv() == InverseMap(f)
     assert g.inv() == InverseMap(g)
-    assert h.inv() == InverseMap(h)
 
     # evaluate by evaluate=True keyword
-    assert g.inv(evaluate=True) == InverseMap(g, evaluate=True) == h
-    assert h.inv(evaluate=True) == InverseMap(h, evaluate=True) == g
+    assert f.inv(evaluate=True) == InverseMap(f, evaluate=True) == g
+    assert g.inv(evaluate=True) == InverseMap(g, evaluate=True) == f
 
     # evaluation by doit()
-    assert InverseMap(g).doit() == InverseMap(g).doit(deep=False) == h
-    assert InverseMap(h).doit() == InverseMap(h).doit(deep=False) == g
+    assert InverseMap(f).doit() == InverseMap(f).doit(deep=False) == g
+    assert InverseMap(g).doit() == InverseMap(g).doit(deep=False) == f
 
 def test_IdentityMap():
 
@@ -112,14 +117,29 @@ def test_IdentityMap():
     raises(TypeError, lambda: I(x,y))
 
 def test_RestrictedMap():
-    assert f.restrict(S.Naturals0)(2, evaluate=True) == 3
-    assert f.restrict(S.Naturals0).restrict(S.Naturals, evaluate=True) == f.restrict(S.Naturals)
-    assert f.restrict(S.Naturals0).is_restriction(f)
+    # restriction can be evaluated by _eval_restrict method
+    assert f.restrict(S.Naturals, evaluate=True) == h
+
+    # else, cannot be evaluated
+    assert g.restrict(S.Naturals, evaluate=True) == RestrictedMap(g, S.Naturals)
+
+    # restricted function pertains the original structure
+    assert g.restrict(S.Naturals0)(2, evaluate=True) == 1
+
+    # restriction of restriction can be evaluated.
+    assert g.restrict(S.Naturals0).restrict(S.Naturals, evaluate=True) == g.restrict(S.Naturals)
 
 def test_restriction():
+    # RestrictedMap is surely restriction of base function.
+    assert g.restrict(S.Naturals0).is_restriction(g)
+
+    # restriction checked by domain relations
     f1, f2 = Map('f', S.Reals, S.Reals), Map('f', S.Naturals0, S.Naturals0)
 
     assert f2.is_restriction(f1)
     assert f2.inv().is_restriction(f1.inv())
     assert IdentityMap(S.Naturals0).is_restriction(IdentityMap(S.Reals))
     assert f2.restrict(S.Naturals).is_restriction(f2)
+
+    # restriction checked by overriding _map_content
+    assert h.is_restriction(f)

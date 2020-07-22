@@ -71,8 +71,8 @@ class SetElement(Basic):
     An arbitrary element of a set.
 
     .. note::
-       SetElement of certain sets (e.g. `S.Reals`) returns `Symbol`,
-       since `Symbol('x', real=True)` is indeed an arbitrary element of `S.Reals`.
+       SetElement of certain sets (e.g. ``S.Reals``) returns ``Symbol``,
+       since ``Symbol('x', real=True)`` is indeed an arbitrary element of ``S.Reals``.
        Operation between SetElements is not defined. To define it,
        construct algebraic structure using sympy.algebras module.
 

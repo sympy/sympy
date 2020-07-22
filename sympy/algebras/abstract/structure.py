@@ -105,7 +105,7 @@ class AlgebraicStructure(Set):
 
             # check domain
             if n == 1:
-                # special case: domain can be S or S*1
+                # special case: domain can be S or S**1
                 if (
                     not o.domain.is_superset(self.domain**n) and
                     not o.domain.is_superset(self.domain)

@@ -1,5 +1,5 @@
 from sympy.assumptions import ask, Q
-from sympy.core import Expr, S
+from sympy.core import Expr, S, Tuple
 from sympy.core.decorators import (
     call_highest_priority, sympify_method_args, sympify_return
 )
@@ -27,10 +27,12 @@ class Map(Expr):
     codomain of the map.
 
     .. note::
-       User must be aware that argument of `f(x)` can be interpreted to
-       both `x` or `(x,)`. The former agrees with mathematical intuition,
+       User must be aware that argument of ``f(x)`` can be interpreted to
+       both ``x`` or ``(x,)``. The former agrees with mathematical intuition,
        while the latter is mathematically rigorous (just as the argument
-       of `f(x,y)` is `(x, y)`).
+       of ``f(x,y)`` is ``(x, y)``).
+       Due to the difficulty of determining assumptions (being real, integer, etc)
+       for complex expressions, domain and codomain are not checked when map is applied.
 
     Examples
     ========
@@ -63,13 +65,13 @@ class Map(Expr):
     ...     name = 'g'
     ...     domain = S.Reals**2
     ...     codomain = S.Reals
-    ...     def eval(self, tup):
-    ...         return sum(tup)
+    ...     def eval(self, *args):
+    ...         return sum(args)
     >>> g = G()
 
     >>> g.arity
     2
-    >>> g((x,y)).doit()
+    >>> g(x,y).doit()
     x + y
 
     References
@@ -78,6 +80,8 @@ class Map(Expr):
     .. [1] https://en.wikipedia.org/wiki/Function_(mathematics)
 
     """
+
+    is_associative = False
 
     # these attributes are designed to be overridden if needed
     # they can be overridden by both class attribute or instance attribute
@@ -101,7 +105,7 @@ class Map(Expr):
         return
 
     def __call__(self, *args, evaluate=False, **kwargs):
-        return AppliedMap(self, *args, evaluate=evaluate)
+        return AppliedMap(self, args, evaluate=evaluate)
 
     @sympify_return([('other', Expr)], NotImplemented)
     @call_highest_priority('__rmatmul__')
@@ -151,7 +155,7 @@ class Map(Expr):
         ===========
 
         Restricted function has smaller domain, but pertains the relation between
-        domain and codomain. For the identification, `_map_content` method is
+        domain and codomain. For the identification, ``_map_content`` method is
         referred to.
 
         Examples
@@ -422,10 +426,10 @@ class AppliedMap(Expr):
 
     .. note::
        If user include parameter in mapping definition (e.g. $a$ in $f(x) = a*x)$,
-       `free_symbol` of its `AppliedMap` will return incoincident value with its
+       ``free_symbol`` of its ``AppliedMap`` will return incoincident value with its
        evaluated result. Instead, design the mapping to be multivariate function
        (e.g. $f(x, a) = a*x$).
-       User should not call this class directly. Instead, use `__call__` method
+       User should not call this class directly. Instead, use ``__call__`` method
        of the map instance.
 
     Parameters
@@ -433,7 +437,7 @@ class AppliedMap(Expr):
 
     map : Map
 
-    args
+    args : tuple of arguments
         arguments applied to *map*
 
     evaluate : bool, optional
@@ -456,8 +460,8 @@ class AppliedMap(Expr):
     x + 2
 
     """
-    def __new__(cls, mapping, *args, evaluate=False, **kwargs):
-        args = [_sympify(a) for a in args]
+    def __new__(cls, mapping, args, evaluate=False, **kwargs):
+        args = Tuple(*[_sympify(a) for a in args])
 
         if evaluate:
 
@@ -468,13 +472,9 @@ class AppliedMap(Expr):
 
             result = mapping.eval(*args)
             if result is not None:
-
-                if result not in mapping.codomain:
-                    raise TypeError("Result of evaluation does not belong to %s's codomain" % mapping)
-
                 return result
 
-        return super().__new__(cls, mapping, *args)
+        return super().__new__(cls, mapping, args)
 
     @property
     def map(self):
@@ -482,7 +482,7 @@ class AppliedMap(Expr):
 
     @property
     def arguments(self):
-        return self.args[1:]
+        return self.args[1]
 
     def _contained(self, other):
         # Let `f(x) in f.codomain` return True
