@@ -16,10 +16,6 @@ class CompoundPSpace(PSpace):
     parent distribution.
     """
 
-    is_Finite = None
-    is_Continuous = None
-    is_Discrete = None
-
     def __new__(cls, s, distribution):
         s = _symbol_converter(s)
         if isinstance(distribution, ContinuousDistribution):
@@ -31,9 +27,6 @@ class CompoundPSpace(PSpace):
         if not isinstance(distribution, CompoundDistribution):
             raise ValueError("%s should be an isinstance of "
                         "CompoundDistribution"%(distribution))
-        cls.is_Finite = distribution.is_Finite
-        cls.is_Continuous = distribution.is_Continuous
-        cls.is_Discrete = distribution.is_Discrete
         return Basic.__new__(cls, s, distribution)
 
     @property
@@ -43,6 +36,18 @@ class CompoundPSpace(PSpace):
     @property
     def symbol(self):
         return self.args[0]
+
+    @property
+    def is_Continuous(self):
+        return self.distribution.is_Continuous
+
+    @property
+    def is_Finite(self):
+        return self.distribution.is_Finite
+
+    @property
+    def is_Discrete(self):
+        return self.distribution.is_Discrete
 
     @property
     def distribution(self):
@@ -147,18 +152,9 @@ class CompoundDistribution(Basic, NamedArgsMixin):
 
     """
 
-    is_Finite = None
-    is_Continuous = None
-    is_Discrete = None
-
     def __new__(cls, dist):
-        if isinstance(dist, ContinuousDistribution):
-            cls.is_Continuous = True
-        elif isinstance(dist, DiscreteDistribution):
-            cls.is_Discrete = True
-        elif isinstance(dist, SingleFiniteDistribution):
-            cls.is_Finite = True
-        else:
+        if not isinstance(dist, (ContinuousDistribution,
+                SingleFiniteDistribution, DiscreteDistribution)):
             message = "Compound Distribution for %s is not implemeted yet" % str(dist)
             raise NotImplementedError(message)
         if not cls._compound_check(dist):
@@ -168,6 +164,18 @@ class CompoundDistribution(Basic, NamedArgsMixin):
     @property
     def set(self):
         return self.args[0].set
+
+    @property
+    def is_Continuous(self):
+        return isinstance(self.args[0], ContinuousDistribution)
+
+    @property
+    def is_Finite(self):
+        return isinstance(self.args[0], SingleFiniteDistribution)
+
+    @property
+    def is_Discrete(self):
+        return isinstance(self.args[0], DiscreteDistribution)
 
     def pdf(self, x):
         dist = self.args[0]
