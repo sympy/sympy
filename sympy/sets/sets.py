@@ -853,7 +853,7 @@ class ProductSet(Set):
         if not isinstance(element, Tuple) or len(element) != len(self.sets):
             return False
 
-        return fuzzy_and(s._contains(e) for s, e in zip(self.sets, element))
+        return fuzzy_and(s.contains(e) for s, e in zip(self.sets, element))
 
     def as_relational(self, *symbols):
         symbols = [_sympify(s) for s in symbols]
