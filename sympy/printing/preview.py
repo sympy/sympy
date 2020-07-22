@@ -29,6 +29,61 @@ def _check_output_no_window(*args, **kwargs):
     return check_output(*args, creationflags=creation_flag, **kwargs)
 
 
+def _run_pyglet(fname, fmt):
+    from pyglet import window, image, gl
+    from pyglet.window import key
+
+    if fmt == "png":
+        from pyglet.image.codecs.png import PNGImageDecoder
+        img = image.load(fname, decoder=PNGImageDecoder())
+    else:
+        raise ValueError("pyglet preview works only for 'png' files.")
+
+    offset = 25
+
+    config = gl.Config(double_buffer=False)
+    win = window.Window(
+        width=img.width + 2*offset,
+        height=img.height + 2*offset,
+        caption="sympy",
+        resizable=False,
+        config=config
+    )
+
+    win.set_vsync(False)
+
+    try:
+        def on_close():
+            win.has_exit = True
+
+        win.on_close = on_close
+
+        def on_key_press(symbol, modifiers):
+            if symbol in [key.Q, key.ESCAPE]:
+                on_close()
+
+        win.on_key_press = on_key_press
+
+        def on_expose():
+            gl.glClearColor(1.0, 1.0, 1.0, 1.0)
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+
+            img.blit(
+                (win.width - img.width) / 2,
+                (win.height - img.height) / 2
+            )
+
+        win.on_expose = on_expose
+
+        while not win.has_exit:
+            win.dispatch_events()
+            win.flip()
+    except KeyboardInterrupt:
+        pass
+
+    win.close()
+
+
 @doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
             disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
@@ -277,60 +332,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 outputbuffer.write(fh.read())
         elif viewer == "pyglet":
             try:
-                from pyglet import window, image, gl
-                from pyglet.window import key
+                import pyglet
             except ImportError:
                 raise ImportError("pyglet is required for preview.\n visit http://www.pyglet.org/")
 
-            if output == "png":
-                from pyglet.image.codecs.png import PNGImageDecoder
-                img = image.load(join(workdir, src), decoder=PNGImageDecoder())
-            else:
-                raise ValueError("pyglet preview works only for 'png' files.")
-
-            offset = 25
-
-            config = gl.Config(double_buffer=False)
-            win = window.Window(
-                width=img.width + 2*offset,
-                height=img.height + 2*offset,
-                caption="sympy",
-                resizable=False,
-                config=config
-            )
-
-            win.set_vsync(False)
-
-            try:
-                def on_close():
-                    win.has_exit = True
-
-                win.on_close = on_close
-
-                def on_key_press(symbol, modifiers):
-                    if symbol in [key.Q, key.ESCAPE]:
-                        on_close()
-
-                win.on_key_press = on_key_press
-
-                def on_expose():
-                    gl.glClearColor(1.0, 1.0, 1.0, 1.0)
-                    gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-
-                    img.blit(
-                        (win.width - img.width) / 2,
-                        (win.height - img.height) / 2
-                    )
-
-                win.on_expose = on_expose
-
-                while not win.has_exit:
-                    win.dispatch_events()
-                    win.flip()
-            except KeyboardInterrupt:
-                pass
-
-            win.close()
+            return _run_pyglet(join(workdir, src), fmt=output)
         else:
             try:
                 _check_output_no_window(
