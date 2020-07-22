@@ -1,6 +1,4 @@
 from sympy.testing.pytest import raises, XFAIL
-from sympy.external import import_module
-
 from sympy import (
     Symbol, Mul, Add, Eq, Abs, sin, asin, cos, Pow,
     csc, sec, Limit, oo, Derivative, Integral, factorial,
@@ -8,11 +6,7 @@ from sympy import (
     GreaterThan, Sum, Product, E, log, tan, Function, binomial, exp,
 )
 from sympy.abc import x, y, z, a, b, c, t, k, n
-antlr4 = import_module("antlr4")
 
-# disable tests if antlr4-python*-runtime is not present
-if not antlr4:
-    disabled = True
 
 theta = Symbol('theta')
 f = Function('f')
@@ -49,16 +43,6 @@ def _log(a, b):
 
 def _binomial(n, k):
     return binomial(n, k, evaluate=False)
-
-
-def test_import():
-    from sympy.parsing.latex._build_latex_antlr import (
-        build_parser,
-        check_antlr_version,
-        dir_latex_antlr
-    )
-    # XXX: It would be better to come up with a test for these...
-    del build_parser, check_antlr_version, dir_latex_antlr
 
 
 # These LaTeX strings should parse to the corresponding SymPy expression

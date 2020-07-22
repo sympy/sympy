@@ -697,8 +697,7 @@ def _get_doctest_blacklist():
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
-        "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
-        "sympy/parsing/latex/_antlr/latexparser.py", # generated code
+        "sympy/parsing/latex/latex_grammar.py", # generated code
         "sympy/integrals/rubi/rubi.py",
         "sympy/plotting/pygletplot/__init__.py", # crashes on some systems
         "sympy/plotting/pygletplot/plot.py", # crashes on some systems
@@ -746,7 +745,6 @@ def _get_doctest_blacklist():
     if import_module('antlr4') is None:
         blacklist.extend([
             "sympy/parsing/autolev/__init__.py",
-            "sympy/parsing/latex/_parse_latex_antlr.py",
         ])
 
     if import_module('lfortran') is None:

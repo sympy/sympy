@@ -123,7 +123,6 @@ modules = [
     'sympy.parsing.c',
     'sympy.parsing.fortran',
     'sympy.parsing.latex',
-    'sympy.parsing.latex._antlr',
     'sympy.physics',
     'sympy.physics.continuum_mechanics',
     'sympy.physics.control',
@@ -288,27 +287,6 @@ class run_benchmarks(Command):
         benchmarking.main(['sympy'])
 
 
-class antlr(Command):
-    """Generate code with antlr4"""
-    description = "generate parser code from antlr grammars"
-    user_options = []  # distutils complains if this is not here.
-
-    def __init__(self, *args):
-        self.args = args[0]  # so we can pass it to other classes
-        Command.__init__(self, *args)
-
-    def initialize_options(self):  # distutils wants this
-        pass
-
-    def finalize_options(self):    # this too
-        pass
-
-    def run(self):
-        from sympy.parsing.latex._build_latex_antlr import build_parser
-        if not build_parser():
-            sys.exit(-1)
-
-
 class sdist_sympy(sdist):
     def run(self):
         # Fetch git commit hash and write down to commit_hash.txt before
@@ -445,7 +423,6 @@ if __name__ == '__main__':
                     'bench': run_benchmarks,
                     'clean': clean,
                     'audit': audit,
-                    'antlr': antlr,
                     'sdist': sdist_sympy,
                     },
           python_requires='>=3.5',

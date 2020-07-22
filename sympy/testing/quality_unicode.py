@@ -57,9 +57,7 @@ unicode_whitelist = [
     r'*/sympy/physics/optics/polarization.py',
 ]
 
-unicode_strict_whitelist = [
-    r'*/sympy/parsing/latex/_antlr/__init__.py',
-]
+unicode_strict_whitelist = [ ]
 
 
 def _test_this_file_encoding(

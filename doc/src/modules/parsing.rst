@@ -105,23 +105,6 @@ SymPy Expression Reference
 Runtime Installation
 --------------------
 
-The currently-packaged LaTeX parser backend is partially generated with
-`ANTLR4 <http://antlr4.org>`_,
-but to use the parser, you only need the ``antlr4`` Python package available.
-
-Depending on your package manager, you can install the right package with, for
-example, ``pip3`` (Python 3 only)::
-
-    $ pip3 install antlr4-python3-runtime
-
-or ``pip`` (Python 2 only)::
-
-    $ pip install antlr4-python2-runtime
-
-or ``conda`` (Python 2 or Python 3)::
-
-    $ conda install --channel=conda-forge antlr-python-runtime
-
 The C parser depends on ``clang`` and the Fortran parser depends on ``LFortran``.
 You can install these packages using::
 
