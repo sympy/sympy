@@ -235,7 +235,7 @@ from .calculus import (euler_equations, singularities, is_increasing,
         is_convex, stationary_points, minimum, maximum)
 
 from .algebras import (
-        Quaternion, AlgebraicStructure, Magma,
+        Quaternion, AlgebraicStructure, Magma, Semigroup,
 )
 
 from .printing import (pager_print, pretty, pretty_print, pprint,
@@ -485,7 +485,7 @@ __all__ = [
     'AccumBounds', 'is_convex', 'stationary_points', 'minimum', 'maximum',
 
     # sympy.algebras
-    'Quaternion', 'AlgebraicStructure', 'Magma',
+    'Quaternion', 'AlgebraicStructure', 'Magma', 'Semigroup',
 
     # sympy.printing
     'pager_print', 'pretty', 'pretty_print', 'pprint', 'pprint_use_unicode',

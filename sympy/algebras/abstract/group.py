@@ -2,6 +2,10 @@
 
 from .structure import AlgebraicStructure
 
+__all__ = [
+    "Magma", "Semigroup"
+]
+
 class Magma(AlgebraicStructure):
     """
     Magma is algebraic structure consists of one set and one binary operation.
@@ -12,7 +16,9 @@ class Magma(AlgebraicStructure):
     >>> from sympy import Set, BinaryOperator, Magma
 
     >>> S = Set('S')
-    >>> a,b = S.element('a'), S.element('b')
+    >>> a, b, c = S.element('a'), S.element('b'), S.element('c')
+
+    Define operator for magma.
 
     >>> class MagmaOp(BinaryOperator):
     ...     name = '*'
@@ -30,6 +36,11 @@ class Magma(AlgebraicStructure):
     >>> op(a, b) in M
     True
 
+    Operation of magma does not need to be associative
+
+    >>> op(a, op(b, c), evaluate=True)
+    a * (b * c)
+
     """
     def __new__(cls, name, sets, operators, **kwargs):
 
@@ -41,3 +52,40 @@ class Magma(AlgebraicStructure):
         obj = super().__new__(cls, name, sets, operators)
         return obj
 
+class Semigroup(Magma):
+    """
+    Semigroup is magma whose operation is associative.
+
+    Examples
+    ========
+
+    >>> from sympy import Set, AssociativeOperator, Semigroup
+
+    >>> S = Set('S')
+    >>> a, b, c = S.element('a'), S.element('b'), S.element('c')
+
+    >>> class SemigroupOp(AssociativeOperator):
+    ...     name = '*'
+    ...     domain = S*S
+    ...     codomain = S
+    >>> op = SemigroupOp()
+
+    >>> G = Semigroup('G', (S,), (op,))
+
+    >>> op(a, b)
+    a * b
+    >>> op(a, b) in G
+    True
+
+    Operation of semigroup is associative
+
+    >>> op(a, op(b, c), evaluate=True)
+    a * b * c
+
+    """
+    def __new__(cls, name, sets, operators, **kwargs):
+        op = operators[0]
+        if not op.is_associative:
+            raise TypeError("%s is not associative." % op)
+
+        return super().__new__(cls, name, sets, operators)

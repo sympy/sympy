@@ -779,6 +779,18 @@ def test_sympy__algebras__abstract__group__Magma():
         Magma('M', (A,), (f,))
     )
 
+def test_sympy__algebras__abstract__group__Semigroup():
+    from sympy import Set, Semigroup, AssociativeOperator
+    A = Set('A')
+    class AddOp(AssociativeOperator):
+        name = '+'
+        domain = A**2
+        codomain = A
+    addop = AddOp()
+    assert _test_args(
+        Semigroup('G', (A,), (addop,))
+    )
+
 def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
     assert _test_args(Equality(x, 2))
@@ -2910,7 +2922,7 @@ def test_sympy__map__map__IdentityMap():
 
 def test_sympy__map__map__AppliedMap():
     from sympy.map import Map, AppliedMap
-    assert _test_args(AppliedMap(Map('f'), x))
+    assert _test_args(AppliedMap(Map('f'), (x,)))
 
 def test_sympy__map__composite__CompositeMap():
     from sympy.map import Map, CompositeMap

@@ -68,10 +68,10 @@ class AlgebraicStructure(Set):
         if not sets:
             raise TypeError("At least one set must be provided.")
 
-        if not operators and len(sets) == 1:
+        if not operators:
             # Set is a degenerate algebraic structure with no operations.
-            # If one set and no operator is given, return the set.
-            return sets[0]
+            # If no operator is given, return the set.
+            return Union(*sets)
 
         obj = super().__new__(cls, name, sets, operators)
         obj._check_closure()
