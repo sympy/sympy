@@ -28,6 +28,9 @@ def test_AlgebraicStructure():
     raises(TypeError, lambda: AlgebraicStructure('X', (B,), (Map('f', domain=B, codomain=A),)))
     AlgebraicStructure('X', (A,), (Map('f', domain=A, codomain=B),)) # not raise error
 
+    # element of structure is element of set
+    assert S_A.element('a') == A.element('a')
+
     # element of set is in structure
     assert a in S_A
     assert a not in S_B

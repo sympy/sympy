@@ -129,6 +129,9 @@ class AlgebraicStructure(Set):
     def _contains(self, other):
         return self.domain.contains(other)
 
+    def element(self, name):
+        return self.domain.element(name)
+
     def is_substructure(self, other):
 
         if self == other:
