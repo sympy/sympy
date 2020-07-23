@@ -31,9 +31,8 @@ class Map(Expr):
        both ``x`` or ``(x,)``. The former agrees with mathematical intuition,
        while the latter is mathematically rigorous (just as the argument
        of ``f(x,y)`` is ``(x, y)``).
-       Due to the difficulty of determining assumptions (being real, integer, etc)
-       for complex expressions and the catch mentioned above, domain and codomain
-       are not checked when map is applied.
+       Due to the catch mentioned above, domain of the argument is not
+       checked when map is applied.
 
     Examples
     ========
@@ -473,6 +472,12 @@ class AppliedMap(Expr):
 
             result = mapping.eval(*args)
             if result is not None:
+
+                if mapping.codomain.contains(result) == False:
+                    raise TypeError(
+                "%s is not in %s's codomain %s." % (result, mapping, mapping.codomain)
+                )
+
                 return result
 
         return super().__new__(cls, mapping, args)

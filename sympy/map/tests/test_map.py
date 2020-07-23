@@ -63,12 +63,20 @@ def test_AppliedMap():
     # undefined map cannot be evaluated
     assert Map('f')(x).doit() == AppliedMap(Map('f'), (x,))
 
-    # map's codomain contains the result of evaluation
+    # map's unevaluated codomain contains the result of evaluation
     fx = Map('f', codomain=S.Integers)(x)
     assert fx in S.Integers
     assert S.Integers.contains(fx)
     assert fx in S.Reals
     assert S.Reals.contains(fx)
+
+    # error if evaluated result is not in codomain of mapping
+    class Phi(Map):
+        codomain = S.Naturals
+        def eval(self, x):
+            return x/2
+    phi = Phi()
+    raises(TypeError, lambda: phi(S.One, evaluate=True))
 
 def test_InverseMap():
 
