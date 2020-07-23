@@ -70,7 +70,15 @@ def parse_latex(s):
         LETTER = sympy.Symbol
 
         def SYMBOL(self, token):
-            return sympy.Symbol(token.value.replace('\\', ''))
+            symbol = token.value.replace('\\', '')
+            if symbol == 'infty':
+                return sympy.oo
+            elif symbol == 'pi':
+                return sympy.pi
+            return sympy.Symbol(symbol)
+
+        def CMD_MATHIT(self, token):
+            return sympy.Symbol(token.value[8:-1])
 
         def group(self, args):
             print(args)
@@ -86,7 +94,7 @@ def parse_latex(s):
             else: # e.g. | expr |
                 return sympy.Abs(args[1])
 
-        def func(self, args):
+        def function(self, args):
             unary_func_map = {
                 'FUNC_LOG': functools.partial(sympy.log, base=10),
                 'FUNC_LN': functools.partial(sympy.log, base=sympy.E),
@@ -111,7 +119,7 @@ def parse_latex(s):
             }
             if args[0].type in unary_func_map:
                 _assert_nargs_func(args, 1)
-                return unary_func_map[args[0].type](args[2])
+                return unary_func_map[args[0].type](args[-2])
 
         def implicit_mul(self, args):
             print('implicit_mul', args)
@@ -128,6 +136,21 @@ def parse_latex(s):
             op, left = args[0].type, args[1]
             print('unary', op, left)
             return op_map[op](left)
+
+        def factorial(self, args):
+            # ensure we handle x!!!!
+            result = sympy.factorial(args[0])
+            for _ in range(len(args) - 2):
+                result = sympy.factorial(result)
+            return result
+
+        def limit(self, args):
+            sub = args[1].children
+            if len(sub) == 9: # e.g. \\lim_{x \\to 3^{+}} a
+                direction = '+' if sub[7].type == 'ADD' else '-'
+                return sympy.Limit(args[2], sub[2], sub[4], dir=direction)
+            else: # e.g. \\lim_{x \\to 3} a
+                return sympy.Limit(args[2], sub[2], sub[4])
 
         def binary_op_1(self, args):
             print('op_1', args)
@@ -162,9 +185,35 @@ def parse_latex(s):
             left, op, right = args[0], args[1].type, args[2]
             result = op_map[op](left, right)
             for i in range((len(args) - 3) // 2):
-                left, op, right = result, args[i+3].type, args[i+4]
+                left, op, right = result, args[i*2 + 3].type, args[i*2 + 4]
                 result = op_map[op](left, right)
             return result
+
+        def fraction(self, args):
+            return args[2] * sympy.Pow(args[5], -1)
+
+        def summation(self, args):
+            if args[1].children[0].type == 'UNDERSCORE':
+                sub, sup = args[1].children, args[2]
+            else:
+                sup, sub = args[1], args[2].children
+            return sympy.Sum(args[3], (sub[2], sub[4], sup[1]))
+
+        def product(self, args):
+            if args[1].children[0].type == 'UNDERSCORE':
+                sub, sup = args[1], args[2]
+            else:
+                sup, sub = args[1], args[2]
+            return sympy.Product(args[3], (sub.children[2], sub.children[4], sup[1]))
+
+        def sqrt(self, args):
+            if len(args) == 7: # e.g \\sqrt [ 2 ] { a }
+                return sympy.root(args[5], args[2])
+            else: # e.g. \\sqrt { a }
+                return sympy.sqrt(args[2])
+
+        def binomial(self, args):
+            return sympy.binomial(args[2], args[5])
 
         def relation(self, args):
             if len(args) == 1: # relation: expr
