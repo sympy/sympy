@@ -2906,11 +2906,22 @@ def latex(expr, full_prec=False, min=None, max=None, fold_frac_powers=False,
     >>> print(latex(log(10), ln_notation=True))
     \ln{\left(10 \right)}
 
-    ``latex()`` also supports the builtin container types list, tuple, and
-    dictionary.
+    ``latex()`` also supports the builtin container types :class:`list`,
+    :class:`tuple`, and :class:`dict`:
 
     >>> print(latex([2/x, y], mode='inline'))
     $\left[ 2 / x, \  y\right]$
+
+    .. versionchanged:: 1.7.0
+        Unsupported types are now embedded as monospaced plaintext:
+
+        >>> print(latex(int))
+        \mathtt{\text{<class 'int'>}}
+        >>> print(latex("plain % text"))
+        \mathtt{\text{plain \% text}}
+
+        See :ref:`printer_method_example` for an example of how to override
+        this behavior for your own types by implementing ``_latex``.
 
     """
     if symbol_names is None:
