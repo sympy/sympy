@@ -234,6 +234,9 @@ class IteratedMap(Map):
             if ask(Q.negative(n)):
                 return cls(b.inv(evaluate=True), -n, evaluate=True)
 
+            if isinstance(b, IdentityMap):
+                return b
+
             b_base, b_iternum = b.as_base_iternum()
             if b_iternum != 1 and b_iternum != -1:
                 return cls(b_base, b_iternum*n, evaluate=True)

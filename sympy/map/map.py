@@ -32,7 +32,8 @@ class Map(Expr):
        while the latter is mathematically rigorous (just as the argument
        of ``f(x,y)`` is ``(x, y)``).
        Due to the difficulty of determining assumptions (being real, integer, etc)
-       for complex expressions, domain and codomain are not checked when map is applied.
+       for complex expressions and the catch mentioned above, domain and codomain
+       are not checked when map is applied.
 
     Examples
     ========

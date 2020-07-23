@@ -32,7 +32,8 @@ def test_CompositeMap():
             return A()
     assert CompositeMap(A(), B(), evaluate=True) == IdentityMap()
 
-    # identity cancellation only when domain and codomain are strictly same
+    # identity map cancellation, only when domain and codomain are strictly same
+    assert CompositeMap(IdentityMap(S.Reals), IdentityMap(S.Reals), evaluate=True) == IdentityMap(S.Reals)
     assert CompositeMap(IdentityMap(S.Naturals0), f, evaluate=True) == f
     assert CompositeMap(IdentityMap(S.Reals), f, evaluate=True) != f
     assert CompositeMap(g, IdentityMap(S.Reals), evaluate=True) == g
@@ -97,6 +98,9 @@ def test_IteratedMap():
     # negative exponents
     assert IteratedMap(h, -1, evaluate=True) == h.inv()
     assert IteratedMap(h, -2, evaluate=True) == IteratedMap(h.inv(), 2)
+
+    # Iteration of identity map
+    assert IteratedMap(IdentityMap(S.Reals), n, evaluate=True) == IdentityMap(S.Reals)
 
     # Nested iteration
     assert IteratedMap(IteratedMap(h, 2), 3, evaluate=True) == IteratedMap(h, 6)
