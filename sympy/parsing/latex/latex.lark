@@ -164,7 +164,8 @@ relation: relation (EQUAL | LT | LTE | GT | GTE) relation
             | FUNC_ARCOSH
             | FUNC_ARTANH
 
-?function: func_normal sup_expression? sub_expression? L_PAREN expr R_PAREN
+?function: func_normal sup_expression? sub_expression? L_PAREN expr R_PAREN -> normal_function
+         | (LETTER | SYMBOL) L_PAREN function_args R_PAREN -> named_function
          | fraction
          | sqrt
          | binomial
@@ -172,7 +173,7 @@ relation: relation (EQUAL | LT | LTE | GT | GTE) relation
          | product
          | limit
 
-?func_args: expr ("," func_args)*
+?function_args: expr ("," expr)*
 
 ?fraction: CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE
 
