@@ -43,18 +43,18 @@ FUNC_ARTANH: "\\artanh"
 
 // FUNC_SQRT: "\\sqrt"
 
-// CMD_TIMES: "\\times"
-// CMD_CDOT:  "\\cdot"
-// CMD_DIV:   "\\div"
+CMD_TIMES: "\\times"
+CMD_CDOT:  "\\cdot"
+CMD_DIV:   "\\div"
 // CMD_FRAC:  "\\frac"
 //
 // CMD_MATHIT: "\\mathit"
 //
 // UNDERSCORE: "_"
-// CARET: "^"
+CARET: "^"
 // COLON: ":"
 
-SYMBOL: /[a-zA-Z]+/
+SYMBOL: /(\\)?[a-zA-Z]+/
 INTEGER: /[+-]?\d+/
 FLOAT: /[+-]?\d+\.\d*|[+-]?\.\d+/
 
@@ -68,19 +68,36 @@ GTE: "\\geq"
 
 ?start: relation
 
-?relation: expr EQUAL expr
-         | expr LT expr
-         | expr LTE expr
-         | expr GT expr
-         | expr GTE expr
+relation: expr EQUAL expr
+        | expr LT expr
+        | expr LTE expr
+        | expr GT expr
+        | expr GTE expr
+        | expr
 
 ?expr: func
-     | group
-     | expr ADD expr
-     | expr SUB expr
-     | expr MUL expr
-     | expr DIV expr
-     | part
+     | binary_op
+
+?binary_op: binary_op_1
+          | expr ADD binary_op_1
+          | expr SUB binary_op_1
+
+?binary_op_1: binary_op_2
+            | binary_op_1 MUL binary_op_2
+            | binary_op_1 CMD_TIMES binary_op_2
+            | binary_op_1 CMD_CDOT binary_op_2
+            | binary_op_1 DIV binary_op_2
+            | binary_op_1 CMD_DIV binary_op_2
+
+?binary_op_2: part
+            | group
+            | unary_op
+            | binary_op_2 CARET part
+            | binary_op_2 CARET group
+            | binary_op_2 CARET unary_op
+
+?unary_op: SUB group
+         | SUB part
 
 ?group: abs_group
      | L_PAREN expr R_PAREN
@@ -119,4 +136,19 @@ GTE: "\\geq"
      | FLOAT
      | INTEGER
 
+
 %ignore /[ \t\n\r]+/
+
+%ignore /\\,|\\thinspace/
+%ignore /\\:|\\medspace/
+%ignore /\\;|\\thickspace/
+%ignore "\\quad"
+%ignore "\\qquad"
+%ignore /\\!|\\negthinspace/
+%ignore "\\negmedspace"
+%ignore "\\negthickspace"
+
+%ignore "\\left"
+%ignore "\\right"
+
+// need logix for a b meaning a x b

@@ -1,5 +1,6 @@
 import operator
 import os
+import functools
 
 import sympy
 from sympy.external import import_module
@@ -66,7 +67,10 @@ def parse_latex(s):
     class TreeToSympy(Transformer):
         INTEGER = int
         FLOAT = float
-        SYMBOL = sympy.Symbol
+
+        def SYMBOL(self, token):
+            # latex symbols can be "(\\)?[A-Za-z]+" e.g. \\theta or theta
+            return sympy.Symbol(token.value.replace('\\', ''))
 
         def group(self, args):
             return args[1]
@@ -75,9 +79,9 @@ def parse_latex(s):
              return sympy.Abs(args[1])
 
         def func(self, args):
-            unary_funcs = {
-                'FUNC_LOG': sympy.log,
-                'FUNC_LN': sympy.log,
+            unary_func_map = {
+                'FUNC_LOG': functools.partial(sympy.log, base=10),
+                'FUNC_LN': functools.partial(sympy.log, base=sympy.E),
                 'FUNC_SIN': sympy.sin,
                 'FUNC_COS': sympy.cos,
                 'FUNC_TAN': sympy.tan,
@@ -97,20 +101,39 @@ def parse_latex(s):
                 'FUNC_ARCOSH': sympy.acosh,
                 'FUNC_ARTANH': sympy.atanh
             }
-            if args[0].type in unary_funcs:
+            if args[0].type in unary_func_map:
                 _assert_nargs_func(args, 1)
-                return unary_funcs[args[0].type](args[2])
+                return unary_func_map[args[0].type](args[2])
 
-        def expr(self, args):
+        def unary_op(self, args):
+            op_map = {
+                'SUB': lambda e: -e,
+            }
+            return op_map[args[0].type](args[1])
+
+        def binary_op_1(self, args):
+            return self.binary_op(args)
+
+        def binary_op_2(self, args):
+            return self.binary_op(args)
+
+        def binary_op(self, args):
             op_map = {
                 'ADD': operator.add,
                 'SUB': operator.sub,
                 'MUL': operator.mul,
+                'CMD_TIMES': operator.mul,
+                'CMD_CDOT': operator.mul,
                 'DIV': operator.truediv,
+                'CMD_DIV': operator.truediv,
+                'CARET': pow,
             }
             return op_map[args[1].type](args[0], args[2])
 
         def relation(self, args):
+            if len(args) == 1: # relation: expr
+                return args[0]
+
             op_map = {
                 'EQUAL': sympy.Eq,
                 'LT': sympy.StrictLessThan,
