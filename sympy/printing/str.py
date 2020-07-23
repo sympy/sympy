@@ -908,13 +908,14 @@ class StrPrinter(Printer):
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
 
     def _print_Map(self, expr, print_domains=True):
-        if hasattr(expr, 'name'):
-            if isinstance(expr.name, str):
-                name = expr.name
-            else:
-                name = expr.name.name
+        if hasattr(expr, 'str_name'):
+            name = expr.str_name
+        elif hasattr(expr, 'name'):
+            expr.name
         else:
             name = expr.__class__.__name__
+        if not isinstance(name, str):
+            name = name.name
         if print_domains:
             name = self._helper_print_domain(expr, name)
         return name

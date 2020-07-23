@@ -2657,13 +2657,14 @@ class LatexPrinter(Printer):
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
     def _print_Map(self, expr, print_domains=True):
-        if hasattr(expr, 'name'):
-            if isinstance(expr.name, str):
-                name = expr.name
-            else:
-                name = expr.name.name
+        if hasattr(expr, 'latex_name'):
+            name = expr.latex_name
+        elif hasattr(expr, 'name'):
+            expr.name
         else:
             name = expr.__class__.__name__
+        if not isinstance(name, str):
+            name = name.name
         tex = self._deal_with_super_sub(str(name))
         if print_domains:
             tex = self._helper_print_domain(expr, tex)
