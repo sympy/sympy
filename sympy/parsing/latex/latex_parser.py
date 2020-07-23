@@ -94,7 +94,7 @@ def parse_latex(s):
             else: # e.g. | expr |
                 return sympy.Abs(args[1])
 
-        def function(self, args):
+        def normal_function(self, args):
             unary_func_map = {
                 'FUNC_LOG': functools.partial(sympy.log, base=10),
                 'FUNC_LN': functools.partial(sympy.log, base=sympy.E),
@@ -120,6 +120,11 @@ def parse_latex(s):
             if args[0].type in unary_func_map:
                 _assert_nargs_func(args, 1)
                 return unary_func_map[args[0].type](args[-2])
+
+        def named_function(self, args):
+            if hasattr(args[2], 'children'):
+                return sympy.Function(str(args[0]))(*args[2].children)
+            return sympy.Function(str(args[0]))(args[2])
 
         def implicit_mul(self, args):
             print('implicit_mul', args)
