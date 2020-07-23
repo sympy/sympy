@@ -31,7 +31,7 @@ R_RIGHT: "\\right"
 BAR: "|"
 
 FUNC_LIM:  "\\lim"
-LIM_APPROACH_SYM.2: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
+LIM_APPROACH_SYM: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
 FUNC_INT:  "\\int"
 FUNC_SUM:  "\\sum"
 FUNC_PROD: "\\prod"
@@ -85,7 +85,7 @@ GTE: "\\geq"
 
 DIFFERENTIAL: /d[ \t\r\n]*?([a-zA-Z]|\\[a-zA-Z]+)/
 LETTER: /[A-Za-z]/
-SYMBOL: /\\[a-zA-Z]+/
+SYMBOL.0: /\\[a-zA-Z]+/
 INTEGER: /\d+/
 FLOAT: /\d+\.\d*|\.\d+/
 
