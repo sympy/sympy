@@ -791,6 +791,19 @@ def test_sympy__algebras__abstract__group__Semigroup():
         Semigroup('G', (A,), (addop,))
     )
 
+def test_sympy__algebras__abstract__group__Monoid():
+    from sympy import Set, Monoid, AssociativeOperator
+    A = Set('A')
+    class AddOp(AssociativeOperator):
+        name = '+'
+        identity = A.element('e')
+        domain = A**2
+        codomain = A
+    addop = AddOp()
+    assert _test_args(
+        Monoid('M', (A,), (addop,))
+    )
+
 def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
     assert _test_args(Equality(x, 2))

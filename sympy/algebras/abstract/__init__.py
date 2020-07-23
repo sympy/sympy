@@ -1,10 +1,10 @@
 __all__ = [
     "AlgebraicStructure",
-    "Magma", "Semigroup",
+    "Magma", "Semigroup", "Monoid",
 ]
 
 from .structure import AlgebraicStructure
 
 from .group import (
-    Magma, Semigroup,
+    Magma, Semigroup, Monoid,
 )
