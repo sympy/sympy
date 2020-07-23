@@ -129,10 +129,13 @@ def test_IteratedMap():
 
     # defined evaluation
     assert IteratedMap(A(), 0)(x, evaluate=True) == x
-    assert IteratedMap(A(), S.One/2)(x, evaluate=True) != h2(x)
     assert IteratedMap(A(), 1)(x, evaluate=True) == x + 1
     assert IteratedMap(A(), 2)(x, evaluate=True) == x + 2
     # applying to argument does not evaluate the map
     assert IteratedMap(A(), -1)(x, evaluate=True) != h1(x)
+    assert IteratedMap(A(), S.One/2)(x, evaluate=True) != h2(x)
     assert IteratedMap(A(), -2)(x, evaluate=True) != IteratedMap(h1, 2)(x)
-    assert IteratedMap(A(), n)(x, evaluate=True) == IteratedMap(A(), n)(x)
+    # doit(deep=False) evaluates the map and arguments alltogether
+    assert IteratedMap(A(), -1)(x).doit() == h1(x)
+    assert IteratedMap(A(), S.One/2)(x).doit() == h2(x)
+    assert IteratedMap(A(), -2)(x).doit() == IteratedMap(h1, 2)(x)
