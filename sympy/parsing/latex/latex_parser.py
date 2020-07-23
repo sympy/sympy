@@ -198,14 +198,14 @@ def parse_latex(s):
             return args[2] * sympy.Pow(args[5], -1)
 
         def summation(self, args):
-            if args[1].children[0].type == 'UNDERSCORE':
+            if hasattr(args[1], 'children'):
                 sub, sup = args[1].children, args[2]
             else:
                 sup, sub = args[1], args[2].children
             return sympy.Sum(args[3], (sub[2], sub[4], sup[1]))
 
         def product(self, args):
-            if args[1].children[0].type == 'UNDERSCORE':
+            if hasattr(args[1], 'children'):
                 sub, sup = args[1], args[2]
             else:
                 sup, sub = args[1], args[2]
@@ -233,9 +233,12 @@ def parse_latex(s):
             }
             return op_map[args[1].type](args[0], args[2])
 
-    tree = parser.parse(s)
-    # this could be done within the parse step of lark however we
-    # would like to keep it seperate to allow for the possiblity of
-    # multiple backends for the generated expression
-    sympy_expression = TreeToSympy().transform(tree)
+    try:
+        tree = parser.parse(s)
+        # this could be done within the parse step of lark however we
+        # would like to keep it seperate to allow for the possiblity of
+        # multiple backends for the generated expression
+        sympy_expression = TreeToSympy().transform(tree)
+    except Exception as e:
+        raise LaTeXParsingError(str(e))
     return sympy_expression
