@@ -67,16 +67,24 @@ def parse_latex(s):
     class TreeToSympy(Transformer):
         INTEGER = int
         FLOAT = float
+        LETTER = sympy.Symbol
 
         def SYMBOL(self, token):
-            # latex symbols can be "(\\)?[A-Za-z]+" e.g. \\theta or theta
             return sympy.Symbol(token.value.replace('\\', ''))
 
         def group(self, args):
-            return args[1]
+            print(args)
+            if len(args) == 5: # e.g. \\left ( expr \right )
+                return args[2]
+            else: # e.g. ( expr )
+                return args[1]
 
         def abs_group(self, args):
-             return sympy.Abs(args[1])
+            print(args)
+            if len(args) == 5: # e.g. \\left | expr \\right |
+                return sympy.Abs(args[2])
+            else: # e.g. | expr |
+                return sympy.Abs(args[1])
 
         def func(self, args):
             unary_func_map = {
@@ -105,19 +113,42 @@ def parse_latex(s):
                 _assert_nargs_func(args, 1)
                 return unary_func_map[args[0].type](args[2])
 
+        def implicit_mul(self, args):
+            print('implicit_mul', args)
+            result = args[0] * args[1]
+            for i in range(len(args) - 2):
+                result = result * args[i + 2]
+            return result
+
         def unary_op(self, args):
             op_map = {
-                'SUB': lambda e: -e,
+                'SUB': lambda expr: -expr,
+                'ADD': lambda expr: expr
             }
-            return op_map[args[0].type](args[1])
+            op, left = args[0].type, args[1]
+            print('unary', op, left)
+            return op_map[op](left)
 
         def binary_op_1(self, args):
-            return self.binary_op(args)
+            print('op_1', args)
+            return self._binary_op(args)
 
         def binary_op_2(self, args):
-            return self.binary_op(args)
+            print('op_2', args)
+            return self._binary_op(args)
 
-        def binary_op(self, args):
+        def binary_op_3(self, args):
+            left, op, right = args[0], args[1][0], args[1][1]
+            print('op_3', op, left, right)
+            return self._binary_op([left, op, right])
+
+        def sup_expression(self, args):
+            if len(args) == 2: # ^ atom form
+                return args
+            else: # ^ { atom } form
+                return [args[0], args[2]]
+
+        def _binary_op(self, args):
             op_map = {
                 'ADD': operator.add,
                 'SUB': operator.sub,
@@ -126,9 +157,14 @@ def parse_latex(s):
                 'CMD_CDOT': operator.mul,
                 'DIV': operator.truediv,
                 'CMD_DIV': operator.truediv,
-                'CARET': pow,
+                'CARET': pow
             }
-            return op_map[args[1].type](args[0], args[2])
+            left, op, right = args[0], args[1].type, args[2]
+            result = op_map[op](left, right)
+            for i in range((len(args) - 3) // 2):
+                left, op, right = result, args[i+3].type, args[i+4]
+                result = op_map[op](left, right)
+            return result
 
         def relation(self, args):
             if len(args) == 1: # relation: expr
