@@ -1,8 +1,9 @@
+from sympy.assumptions import ask, Q
 from sympy.core.sympify import _sympify
 from .map import Map, AppliedMap
 
 __all__ = [
-    'BinaryOperator', 'AssociativeOperator', 'AppliedBinaryOperator', 'AppliedAssociativeOperator'
+    'BinaryOperator', 'AppliedBinaryOperator',
 ]
 
 class BinaryOperator(Map):
@@ -54,6 +55,15 @@ class BinaryOperator(Map):
     @property
     def identity(self):
         return
+
+    def flatten(self, seq):
+        new_seq = []
+        for o in seq:
+            if isinstance(o, AppliedMap) and o.map.is_restriction(self):
+                new_seq.extend(o.arguments)
+            else:
+                new_seq.append(o)
+        return new_seq
 
     def left_identity(self, element):
         r"""
@@ -145,7 +155,7 @@ class BinaryOperator(Map):
 
     def remove_identity(self, seq):
         # this method is deliberately designed to work for len(seq) > 2 case
-        # to be compatible if self is AssociativeOperator.
+        # to be compatible if self is associative
         if self.identity is not None:
             return [o for o in seq if o != self.identity]
 
@@ -173,105 +183,28 @@ class AppliedBinaryOperator(AppliedMap):
 
     def __new__(cls, mapping, args, evaluate=False, **kwargs):
 
+        associative = ask(Q.associative(mapping))
+
         if len(args) < 2:
             raise TypeError(
         "%s argument given to binary operator." % len(args)
         )
-        if not mapping.is_associative and len(args) > 2:
+        if not associative and len(args) > 2:
             raise TypeError(
         "Multiple aruments given to non-associative binary operator."
         )
         args = [_sympify(a) for a in args]
 
         if evaluate:
+
+            if associative:
+                args = mapping.flatten(args)
+
             args = mapping.remove_identity(args)
 
             if not args:
                 return mapping.identity
             if len(args) == 1:
                 return args[0]
-
-        return super().__new__(cls, mapping, args, evaluate=evaluate, **kwargs)
-
-class AssociativeOperator(BinaryOperator):
-    r"""
-    An abstract class for general algebraic associative binary operator
-
-    Explanation
-    ===========
-
-    Associative operator $*$ satisfies that $\left( f * g \right) * h$
-    equals $f * \left( g * h \right)$.
-
-    .. note::
-       Although associative operators are mathematically binary, nested
-       application of them can be designed to be n-ary in SymPy for
-       performance reason.
-
-    Examples
-    ========
-
-    >>> from sympy.map import AssociativeOperator
-    >>> from sympy.abc import a, b, e
-
-    >>> class AddOp(AssociativeOperator):
-    ...     name = '+'
-    ...     identity = e
-    >>> addop = AddOp()
-
-    AssociativeOperator flattens nested arguments.
-
-    >>> addop(addop(a, b), b, evaluate=True)
-    a + b + b
-
-    Deeply nested arguments are not flattened. Use ``doit`` method for recursive flattening.
-
-    >>> addop(addop(addop(a, b), b), b, evaluate=True)
-    (a + b) + b + b
-    >>> addop(addop(addop(a, b), b), b).doit()
-    a + b + b + b
-
-    Associative operation with identity is evaluated.
-
-    >>> addop(addop(a, e), b, evaluate=True)
-    a + b
-    >>> addop(addop(e, e), addop(e, e), evaluate=True)
-    e
-
-    """
-
-    is_associative = True
-
-    def flatten(self, seq):
-        # new_seq = []
-        # while seq:
-        #     o = seq.pop()
-        #     if isinstance(o, AppliedMap) and o.map.is_restriction(self):
-        #         seq.extend(o.arguments)
-        #     else:
-        #         new_seq.append(o)
-        # new_seq.reverse()
-        # return new_seq
-        new_seq = []
-        for o in seq:
-            if isinstance(o, AppliedMap) and o.map.is_restriction(self):
-                new_seq.extend(o.arguments)
-            else:
-                new_seq.append(o)
-        return new_seq
-
-    def __call__(self, *args, evaluate=False, **kwargs):
-        return AppliedAssociativeOperator(self, args, evaluate=evaluate)
-
-class AppliedAssociativeOperator(AppliedBinaryOperator):
-    """
-    Unevaluated result of AssociativeOperator applied to arguments.
-
-    """
-    def __new__(cls, mapping, args, evaluate=False, **kwargs):
-        args = [_sympify(a) for a in args]
-
-        if evaluate:
-            args = mapping.flatten(args)
 
         return super().__new__(cls, mapping, args, evaluate=evaluate, **kwargs)

@@ -911,7 +911,7 @@ class StrPrinter(Printer):
         if hasattr(expr, 'str_name'):
             name = expr.str_name
         elif hasattr(expr, 'name'):
-            expr.name
+            name = expr.name
         else:
             name = expr.__class__.__name__
         if not isinstance(name, str):

@@ -81,8 +81,6 @@ class Map(Expr):
 
     """
 
-    is_associative = False
-
     # these attributes are designed to be overridden if needed
     # they can be overridden by both class attribute or instance attribute
     domain = codomain = S.UniversalSet

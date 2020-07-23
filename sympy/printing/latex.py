@@ -2660,7 +2660,7 @@ class LatexPrinter(Printer):
         if hasattr(expr, 'latex_name'):
             name = expr.latex_name
         elif hasattr(expr, 'name'):
-            expr.name
+            name = expr.name
         else:
             name = expr.__class__.__name__
         if not isinstance(name, str):

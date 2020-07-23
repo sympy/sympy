@@ -1,7 +1,6 @@
-from sympy import Set
+from sympy import Set, assuming, Q
 from sympy.map import (
-    BinaryOperator, AssociativeOperator,
-    AppliedBinaryOperator, AppliedAssociativeOperator,
+    BinaryOperator, AppliedBinaryOperator,
 )
 from sympy.testing.pytest import raises
 
@@ -27,7 +26,8 @@ class F2(F):
     identity = a3
 f2 = F2(A**2, A)
 
-class G(AssociativeOperator):
+class G(BinaryOperator):
+    is_associative=True
     def __new__(cls, domain, codomain, **kwargs):
         obj = super().__new__(cls, domain, codomain, **kwargs)
         obj.domain = domain
@@ -70,17 +70,18 @@ def test_AppliedBinaryOperator():
     expr = f(f(a1, a1), f(a2, a2)).doit()
     assert expr.arguments == (f(a1, a1), f(a2, a2))
 
+    # associativity can be assumed.
+    with assuming(Q.associative(f)):
+        expr = f(f(a1, a1), f(a2, a2)).doit()
+        assert expr.arguments == (a1, a1, a2, a2)
+
     # identity removal
     expr = f(f(a3, a2), f(a1, a3)).doit()
     assert expr.arguments == (a2, f(a1, a3))
     expr = f2(f2(a3, a2), f2(a1, a3)).doit()
     assert expr.arguments == (a2, a1)
 
-def test_AssociativeOperator():
-    # calling associative operator returns AppliedAssociativeOperator
-    assert isinstance(g_A(a1, a2), AppliedAssociativeOperator)
-
-def test_AppliedAssociativeOperator():
+    # associative operators
     # check nested application (flattened)
     # also check that domain's subset's element can be argument
     expr = g_A(g_A(a1, b1), g_A(a2, b2), evaluate=True)

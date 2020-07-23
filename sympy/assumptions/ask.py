@@ -1451,6 +1451,7 @@ _handlers = [
     ("integer_elements",  "matrices.AskIntegerElementsHandler"),
     ("real_elements",     "matrices.AskRealElementsHandler"),
     ("complex_elements",  "matrices.AskComplexElementsHandler"),
+    ("associative",       "map.AskAssociativeHandler")
 ]
 
 for name, value in _handlers:

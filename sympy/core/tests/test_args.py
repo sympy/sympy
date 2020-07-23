@@ -780,10 +780,10 @@ def test_sympy__algebras__abstract__group__Magma():
     )
 
 def test_sympy__algebras__abstract__group__Semigroup():
-    from sympy import Set, Semigroup, AssociativeOperator
+    from sympy import Set, Semigroup, BinaryOperator
     A = Set('A')
-    class AddOp(AssociativeOperator):
-        name = '+'
+    class AddOp(BinaryOperator):
+        is_associative=True
         domain = A**2
         codomain = A
     addop = AddOp()
@@ -792,10 +792,10 @@ def test_sympy__algebras__abstract__group__Semigroup():
     )
 
 def test_sympy__algebras__abstract__group__Monoid():
-    from sympy import Set, Monoid, AssociativeOperator
+    from sympy import Set, Monoid, BinaryOperator
     A = Set('A')
-    class AddOp(AssociativeOperator):
-        name = '+'
+    class AddOp(BinaryOperator):
+        is_associative=True
         identity = A.element('e')
         domain = A**2
         codomain = A
@@ -2951,23 +2951,12 @@ def test_sympy__map__composite__IteratedMap():
 def test_sympy__map__operator__BinaryOperator():
     pass
 
-@SKIP("abstract class")
-def test_sympy__map__operator__AssociativeOperator():
-    pass
-
 def test_sympy__map__operator__AppliedBinaryOperator():
     from sympy.map import BinaryOperator, AppliedBinaryOperator
     class AddOp(BinaryOperator):
         name = '+'
     addop = AddOp()
     assert _test_args(AppliedBinaryOperator(addop, (x, y)))
-
-def test_sympy__map__operator__AppliedAssociativeOperator():
-    from sympy.map import AssociativeOperator, AppliedAssociativeOperator
-    class AddOp(AssociativeOperator):
-        name = '+'
-    addop = AddOp()
-    assert _test_args(AppliedAssociativeOperator(addop, (x, y, z)))
 
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector

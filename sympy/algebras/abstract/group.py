@@ -1,5 +1,6 @@
 """Group-like algebraic structures"""
 
+from sympy.assumptions import ask, Q
 from .structure import AlgebraicStructure
 
 __all__ = [
@@ -59,15 +60,16 @@ class Semigroup(Magma):
     Examples
     ========
 
-    >>> from sympy import Set, AssociativeOperator, Semigroup
+    >>> from sympy import Set, BinaryOperator, Semigroup
 
     >>> S = Set('S')
     >>> a, b, c = S.element('a'), S.element('b'), S.element('c')
 
-    >>> class SemigroupOp(AssociativeOperator):
+    >>> class SemigroupOp(BinaryOperator):
     ...     name = '*'
     ...     domain = S*S
     ...     codomain = S
+    ...     is_associative = True
     >>> op = SemigroupOp()
 
     >>> G = Semigroup('G', (S,), (op,))
@@ -85,7 +87,7 @@ class Semigroup(Magma):
     """
     def __new__(cls, name, sets, operators, **kwargs):
         op = operators[0]
-        if not op.is_associative:
+        if not ask(Q.associative(op)):
             raise TypeError("%s is not associative." % op)
 
         return super().__new__(cls, name, sets, operators)
@@ -97,15 +99,16 @@ class Monoid(Semigroup):
     Examples
     ========
 
-    >>> from sympy import Set, AssociativeOperator, Monoid
+    >>> from sympy import Set, BinaryOperator, Monoid
 
     >>> S = Set('S')
     >>> a, b, e = S.element('a'), S.element('b'), S.element('e')
 
-    >>> class MonoidOp(AssociativeOperator):
+    >>> class MonoidOp(BinaryOperator):
     ...     name = '*'
     ...     domain = S*S
     ...     codomain = S
+    ...     is_associative = True
     ...     identity = e
     >>> op = MonoidOp()
 

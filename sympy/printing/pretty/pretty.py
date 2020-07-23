@@ -2737,14 +2737,14 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Map(self, e, print_domains=True):
-        if hasattr(expr, 'pretty_name'):
-            name = expr.pretty_name
-        elif hasattr(expr, 'str_name'):
-            name = expr.str_name
-        elif hasattr(expr, 'name'):
-            expr.name
+        if hasattr(e, 'pretty_name'):
+            name = e.pretty_name
+        elif hasattr(e, 'str_name'):
+            name = e.str_name
+        elif hasattr(e, 'name'):
+            name = e.name
         else:
-            name = expr.__class__.__name__
+            name = e.__class__.__name__
         if not isinstance(name, str):
             name = name.name
         mapping = pretty_symbol(name, bold_name=False)
