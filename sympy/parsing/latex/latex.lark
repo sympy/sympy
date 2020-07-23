@@ -31,7 +31,7 @@ R_RIGHT: "\\right"
 BAR: "|"
 
 FUNC_LIM:  "\\lim"
-LIM_APPROACH_SYM: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
+LIM_APPROACH_SYM.2: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
 FUNC_INT:  "\\int"
 FUNC_SUM:  "\\sum"
 FUNC_PROD: "\\prod"
@@ -89,7 +89,6 @@ SYMBOL: /\\[a-zA-Z]+/
 INTEGER: /\d+/
 FLOAT: /\d+\.\d*|\.\d+/
 
-
 //////////////////// grammar //////////////////////
 
 ?start: relation
@@ -107,12 +106,13 @@ relation: relation (EQUAL | LT | LTE | GT | GTE) relation
             | unary_op
 
 ?unary_op: (ADD | SUB) implicit_mul
-         | implicit_mul BANG
+         | implicit_mul BANG+ -> factorial
          | implicit_mul
 
 ?implicit_mul: part+
 
 ?part: atom
+     | function
      | group
      | abs_group
 
@@ -129,7 +129,11 @@ relation: relation (EQUAL | LT | LTE | GT | GTE) relation
           | L_LEFT BAR expr R_RIGHT BAR
 
 ?sub_expression: UNDERSCORE (atom | L_BRACE expr R_BRACE)
+?sub_equation: UNDERSCORE L_BRACE expr EQUAL expr R_BRACE
+?sub_limit: UNDERSCORE L_BRACE (LETTER | SYMBOL) LIM_APPROACH_SYM expr R_BRACE
+          | UNDERSCORE L_BRACE (LETTER | SYMBOL) LIM_APPROACH_SYM expr CARET L_BRACE (ADD | SUB) R_BRACE R_BRACE
 ?sup_expression: CARET (atom | L_BRACE expr R_BRACE)
+
 
 ?atom: LETTER
      | SYMBOL
@@ -137,3 +141,49 @@ relation: relation (EQUAL | LT | LTE | GT | GTE) relation
      | FLOAT
      | DIFFERENTIAL
      | CMD_MATHIT
+
+?func_normal: FUNC_EXP
+            | FUNC_LOG
+            | FUNC_LN
+            | FUNC_SIN
+            | FUNC_COS
+            | FUNC_TAN
+            | FUNC_CSC
+            | FUNC_SEC
+            | FUNC_COT
+            | FUNC_ARCSIN
+            | FUNC_ARCCOS
+            | FUNC_ARCTAN
+            | FUNC_ARCCSC
+            | FUNC_ARCSEC
+            | FUNC_ARCCOT
+            | FUNC_SINH
+            | FUNC_COSH
+            | FUNC_TANH
+            | FUNC_ARSINH
+            | FUNC_ARCOSH
+            | FUNC_ARTANH
+
+?function: func_normal sup_expression? sub_expression? L_PAREN expr R_PAREN
+         | fraction
+         | sqrt
+         | binomial
+         | summation
+         | product
+         | limit
+
+?func_args: expr ("," func_args)*
+
+?fraction: CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE
+
+?sqrt: FUNC_SQRT (L_BRACKET expr R_BRACKET)? L_BRACE expr R_BRACE
+
+?binomial: (CMD_BINOM | CMD_DBINOM | CMD_TBINOM) L_BRACE expr R_BRACE L_BRACE expr R_BRACE
+
+?summation: FUNC_SUM sub_equation sup_expression expr
+          | FUNC_SUM sup_expression sub_equation expr
+
+?product: FUNC_PROD sub_equation sup_expression expr
+        | FUNC_PROD sup_expression sub_equation expr
+
+?limit: FUNC_LIM sub_limit expr
