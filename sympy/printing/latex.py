@@ -2912,16 +2912,18 @@ def latex(expr, full_prec=False, min=None, max=None, fold_frac_powers=False,
     >>> print(latex([2/x, y], mode='inline'))
     $\left[ 2 / x, \  y\right]$
 
+    Unsupported types are rendered as monospaced plaintext:
+
+    >>> print(latex(int))
+    \mathtt{\text{<class 'int'>}}
+    >>> print(latex("plain % text"))
+    \mathtt{\text{plain \% text}}
+
+    See :ref:`printer_method_example` for an example of how to override
+    this behavior for your own types by implementing ``_latex``.
+    
     .. versionchanged:: 1.7.0
-        Unsupported types are now embedded as monospaced plaintext:
-
-        >>> print(latex(int))
-        \mathtt{\text{<class 'int'>}}
-        >>> print(latex("plain % text"))
-        \mathtt{\text{plain \% text}}
-
-        See :ref:`printer_method_example` for an example of how to override
-        this behavior for your own types by implementing ``_latex``.
+        Unsupported types no longer have their ``str`` representation treated as valid latex.
 
     """
     if symbol_names is None:
