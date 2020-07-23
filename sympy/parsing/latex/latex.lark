@@ -1,3 +1,16 @@
+%ignore /[ \t\n\r]+/
+
+%ignore "\\," | "\\thinspace"
+%ignore "\\:" | "\\medspace"
+%ignore "\\;" | "\\thickspace"
+%ignore "\\quad"
+%ignore "\\qquad"
+%ignore "\\!" | "\\negthinspace"
+%ignore "\\negmedspace"
+%ignore "\\negthickspace"
+
+///////////////////// tokens ///////////////////////
+
 ADD: "+"
 SUB: "-"
 MUL: "*"
@@ -7,17 +20,23 @@ L_PAREN: "("
 R_PAREN: ")"
 L_BRACE: "{"
 R_BRACE: "}"
+L_BRACE_LITERAL: "\\{"
+R_BRACE_LITERAL: "\\}"
 L_BRACKET: "["
 R_BRACKET: "]"
 
+L_LEFT: "\\left"
+R_RIGHT: "\\right"
+
 BAR: "|"
 
-// FUNC_LIM:  "\\lim"
-// LIM_APPROACH_SYM: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
-// FUNC_INT:  "\\int"
-// FUNC_SUM:  "\\sum"
-// FUNC_PROD: "\\prod"
+FUNC_LIM:  "\\lim"
+LIM_APPROACH_SYM: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
+FUNC_INT:  "\\int"
+FUNC_SUM:  "\\sum"
+FUNC_PROD: "\\prod"
 
+FUNC_EXP:  "\\exp"
 FUNC_LOG:  "\\log"
 FUNC_LN:   "\\ln"
 FUNC_SIN:  "\\sin"
@@ -41,22 +60,22 @@ FUNC_ARSINH: "\\arsinh"
 FUNC_ARCOSH: "\\arcosh"
 FUNC_ARTANH: "\\artanh"
 
-// FUNC_SQRT: "\\sqrt"
+FUNC_SQRT: "\\sqrt"
 
 CMD_TIMES: "\\times"
 CMD_CDOT:  "\\cdot"
 CMD_DIV:   "\\div"
-// CMD_FRAC:  "\\frac"
-//
-// CMD_MATHIT: "\\mathit"
-//
-// UNDERSCORE: "_"
-CARET: "^"
-// COLON: ":"
+CMD_FRAC:  "\\frac"
+CMD_BINOM: "\\binom"
+CMD_DBINOM: "\\dbinom"
+CMD_TBINOM: "\\tbinom"
 
-SYMBOL: /(\\)?[a-zA-Z]+/
-INTEGER: /[+-]?\d+/
-FLOAT: /[+-]?\d+\.\d*|[+-]?\.\d+/
+CMD_MATHIT: /\\mathit\{[A-Za-z ]+\}/
+
+UNDERSCORE: "_"
+CARET: "^"
+COLON: ":"
+BANG: "!"
 
 EQUAL: "="
 LT: "<"
@@ -64,91 +83,57 @@ LTE: "\\leq"
 GT: ">"
 GTE: "\\geq"
 
-// BANG: "!"
+DIFFERENTIAL: /d[ \t\r\n]*?([a-zA-Z]|\\[a-zA-Z]+)/
+LETTER: /[A-Za-z]/
+SYMBOL: /\\[a-zA-Z]+/
+INTEGER: /\d+/
+FLOAT: /\d+\.\d*|\.\d+/
+
+
+//////////////////// grammar //////////////////////
 
 ?start: relation
 
-relation: expr EQUAL expr
-        | expr LT expr
-        | expr LTE expr
-        | expr GT expr
-        | expr GTE expr
+relation: relation (EQUAL | LT | LTE | GT | GTE) relation
         | expr
 
-?expr: func
-     | binary_op
+?expr: binary_op_1
 
-?binary_op: binary_op_1
-          | expr ADD binary_op_1
-          | expr SUB binary_op_1
+?binary_op_1: binary_op_2 ((ADD | SUB) binary_op_2)*
 
-?binary_op_1: binary_op_2
-            | binary_op_1 MUL binary_op_2
-            | binary_op_1 CMD_TIMES binary_op_2
-            | binary_op_1 CMD_CDOT binary_op_2
-            | binary_op_1 DIV binary_op_2
-            | binary_op_1 CMD_DIV binary_op_2
+?binary_op_2: binary_op_3 ((MUL | CMD_TIMES | CMD_CDOT | DIV | CMD_DIV | COLON) binary_op_3)*
 
-?binary_op_2: part
-            | group
+?binary_op_3: unary_op sup_expression
             | unary_op
-            | binary_op_2 CARET part
-            | binary_op_2 CARET group
-            | binary_op_2 CARET unary_op
 
-?unary_op: SUB group
-         | SUB part
+?unary_op: (ADD | SUB) implicit_mul
+         | implicit_mul BANG
+         | implicit_mul
 
-?group: abs_group
-     | L_PAREN expr R_PAREN
-     | L_BRACE expr R_BRACE
-     | L_BRACKET expr R_BRACKET
+?implicit_mul: part+
+
+?part: atom
+     | group
+     | abs_group
+
+?group: L_PAREN expr R_PAREN
+      | L_LEFT L_PAREN expr R_RIGHT R_PAREN
+      | L_BRACKET expr R_BRACKET
+      | L_LEFT L_BRACKET expr R_RIGHT R_BRACKET
+      | L_BRACE expr R_BRACE
+      | L_LEFT L_BRACE expr R_RIGHT R_BRACE
+      | L_BRACE_LITERAL expr R_BRACE_LITERAL
+      | L_LEFT L_BRACE_LITERAL expr R_RIGHT R_BRACE_LITERAL
 
 ?abs_group: BAR expr BAR
+          | L_LEFT BAR expr R_RIGHT BAR
 
-?func_normal: FUNC_LOG
-            | FUNC_LN
-            | FUNC_SIN
-            | FUNC_COS
-            | FUNC_TAN
-            | FUNC_CSC
-            | FUNC_SEC
-            | FUNC_COT
-            | FUNC_ARCSIN
-            | FUNC_ARCCOS
-            | FUNC_ARCTAN
-            | FUNC_ARCCSC
-            | FUNC_ARCSEC
-            | FUNC_ARCCOT
-            | FUNC_SINH
-            | FUNC_COSH
-            | FUNC_TANH
-            | FUNC_ARSINH
-            | FUNC_ARCOSH
-            | FUNC_ARTANH
+?sub_expression: UNDERSCORE (atom | L_BRACE expr R_BRACE)
+?sup_expression: CARET (atom | L_BRACE expr R_BRACE)
 
-?func: func_normal L_PAREN func_arg? R_PAREN
-
-?func_arg: expr
-         | expr "," func_arg
-
-?part: SYMBOL
-     | FLOAT
+?atom: LETTER
+     | SYMBOL
      | INTEGER
-
-
-%ignore /[ \t\n\r]+/
-
-%ignore /\\,|\\thinspace/
-%ignore /\\:|\\medspace/
-%ignore /\\;|\\thickspace/
-%ignore "\\quad"
-%ignore "\\qquad"
-%ignore /\\!|\\negthinspace/
-%ignore "\\negmedspace"
-%ignore "\\negthickspace"
-
-%ignore "\\left"
-%ignore "\\right"
-
-// need logix for a b meaning a x b
+     | FLOAT
+     | DIFFERENTIAL
+     | CMD_MATHIT
