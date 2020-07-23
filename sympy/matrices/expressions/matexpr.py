@@ -1,5 +1,5 @@
 from typing import Any, Callable
-from sympy.core.logic import FuzzyBool
+from sympy.core.logic import FuzzyBool, fuzzy_and
 
 from functools import wraps, reduce
 import collections
@@ -15,6 +15,7 @@ from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 from sympy.assumptions.ask import ask, Q
 from sympy.multipledispatch import dispatch
+from sympy.sets.sets import Set
 
 
 def _sympifyit(arg, retval=None):
@@ -1267,6 +1268,46 @@ def _make_matrix(x):
     if isinstance(x, MatrixExpr):
         return x
     return ImmutableDenseMatrix([[x]])
+
+
+class MatrixSet(Set):
+    """
+    MatrixSet represents the set of matrices with ``shape = (n, m)`` over the
+    given set.
+
+    Examples
+    ========
+
+    >>> from sympy.matrices import MatrixSet, Matrix
+    >>> from sympy import S, I
+    >>> M = MatrixSet(2, 2, set=S.Reals)
+    >>> X = Matrix([[1, 2], [3, 4]])
+    >>> X in M
+    True
+    >>> X = Matrix([[1, 2], [I, 4]])
+    >>> X in M
+    False
+
+    """
+    is_iterable = False
+    is_empty = False
+
+    def __new__(cls, n, m, set):
+        n, m, set = _sympify(n), _sympify(m), _sympify(set)
+        return Set.__new__(cls, n, m, set)
+
+    is_finite_set = property(lambda self: self.set.is_finite_set)
+    is_ComplexRegion = property(lambda self: self.set.is_ComplexRegion)
+
+    shape = property(lambda self: self.args[0:2])
+    set = property(lambda self: self.args[2])
+
+    def _contains(self, other):
+        if not isinstance(other, MatrixExpr):
+            raise TypeError("%s should be an instance of MatrixExpr" % str(other))
+        if other.shape != self.shape:
+            return False
+        return fuzzy_and(self.set.contains(x) for x in other)
 
 
 from .matmul import MatMul

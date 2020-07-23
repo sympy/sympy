@@ -3010,6 +3010,11 @@ def test_sympy__matrices__expressions__matexpr__GenericZeroMatrix():
     from sympy.matrices.expressions.matexpr import GenericZeroMatrix
     assert _test_args(GenericZeroMatrix())
 
+def test_sympy__matrices__expressions__matexpr__MatrixSet():
+    from sympy.matrices.expressions.matexpr import MatrixSet
+    from sympy import S
+    assert _test_args(MatrixSet(2, 2, S.Reals))
+
 def test_sympy__matrices__expressions__matmul__MatMul():
     from sympy.matrices.expressions.matmul import MatMul
     from sympy.matrices.expressions import MatrixSymbol
