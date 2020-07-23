@@ -2698,6 +2698,7 @@ def test_map():
     addop = AddOp()
     assert latex(addop) == r"+ : \mathbb{U} \rightarrow \mathbb{U}"
     assert latex(addop(x+y, x*y)) == r'\left(x + y\right) + \left(x y\right)'
+    assert latex(addop(addop(x,y), y)) == r'\left(x + y\right) + y' 
 
 def test_abstractalgebra():
     from sympy.sets import Set

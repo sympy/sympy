@@ -8,6 +8,7 @@ __all__ = [
     'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'RestrictedMap',
     'AppliedMap',
     'CompositeMap', 'IteratedMap',
+    'BinaryOperator', 'AssociativeOperator', 'AppliedBinaryOperator', 'AppliedAssociativeOperator',
 ]
 
 from .map import (
@@ -15,7 +16,7 @@ from .map import (
     AppliedMap,
 )
 from .operator import (
-    BinaryOperator, AssociativeOperator
+    BinaryOperator, AssociativeOperator, AppliedBinaryOperator, AppliedAssociativeOperator,
 )
 from .composite import (
     CompositeMap, IteratedMap,

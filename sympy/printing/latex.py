@@ -2709,15 +2709,16 @@ class LatexPrinter(Printer):
     def _print_AppliedMap(self, expr):
         from sympy.map import BinaryOperator
         map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
+        temp = map_str + r"{\left(%s \right)}"
+        args_str = ', '.join([self._print(arg) for arg in expr.arguments])
+        return temp % args_str
 
-        if isinstance(expr.map, BinaryOperator):
-            infix_str = ' ' + map_str + ' '
-            args = [self.parenthesize(a, PRECEDENCE['Mul']) for a in expr.arguments]
-            return infix_str.join(args)
-        else:
-            temp = map_str + r"{\left(%s \right)}"
-            args_str = ', '.join([self._print(arg) for arg in expr.arguments])
-            return temp % args_str
+    def _print_AppliedBinaryOperator(self, expr):
+        from sympy.map import BinaryOperator
+        map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
+        infix_str = ' ' + map_str + ' '
+        args = [self.parenthesize(a, PRECEDENCE['Mul']) for a in expr.arguments]
+        return infix_str.join(args)
 
     def _print_AlgebraicStructure(self, expr):
         name = expr.name.name

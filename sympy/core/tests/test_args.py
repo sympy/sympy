@@ -2930,6 +2930,20 @@ def test_sympy__map__operator__BinaryOperator():
 def test_sympy__map__operator__AssociativeOperator():
     pass
 
+def test_sympy__map__operator__AppliedBinaryOperator():
+    from sympy.map import BinaryOperator, AppliedBinaryOperator
+    class AddOp(BinaryOperator):
+        name = '+'
+    addop = AddOp()
+    assert _test_args(AppliedBinaryOperator(addop, (x, y)))
+
+def test_sympy__map__operator__AppliedAssociativeOperator():
+    from sympy.map import AssociativeOperator, AppliedAssociativeOperator
+    class AddOp(AssociativeOperator):
+        name = '+'
+    addop = AddOp()
+    assert _test_args(AppliedAssociativeOperator(addop, (x, y, z)))
+
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
     assert _test_args(DeferredVector("X"))

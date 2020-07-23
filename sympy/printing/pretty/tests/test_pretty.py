@@ -7294,6 +7294,7 @@ def test_map():
     addop = AddOp()
     assert upretty(addop) == '+ : 𝕌 → 𝕌'
     assert upretty(addop(x+y, x*y)) == '(x + y) + (x⋅y)'
+    assert pretty(addop(addop(x,y), y)) == '(x + y) + y'
 
 def test_abstractalgebra():
     from sympy.sets import Set

@@ -51,6 +51,8 @@ PRECEDENCE_VALUES = {
     "Equality": PRECEDENCE["Mul"],
     "Unequality": PRECEDENCE["Mul"],
     "CompositeMap": PRECEDENCE["Mul"],
+    "AppliedMap": PRECEDENCE["Func"],
+    "AppliedBinaryOperator": PRECEDENCE["Add"],
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a
@@ -159,6 +161,8 @@ PRECEDENCE_TRADITIONAL['Complement'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['SymmetricDifference'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['ProductSet'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['CompositeMap'] = PRECEDENCE["Mul"] - 1
+PRECEDENCE_TRADITIONAL['AppliedMap'] = PRECEDENCE["Func"]
+PRECEDENCE_TRADITIONAL['AppliedBinaryOperator'] = PRECEDENCE["Add"]
 
 
 def precedence_traditional(item):

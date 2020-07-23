@@ -1036,6 +1036,7 @@ def test_map():
     addop = AddOp()
     assert str(addop) == '+ : UniversalSet -> UniversalSet'
     assert str(addop(x+y, x*y)) == '(x + y) + (x*y)'
+    assert str(addop(addop(x,y), y)) == '(x + y) + y'
 
 def test_abstractalgebra():
     from sympy.sets import Set
