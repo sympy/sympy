@@ -757,8 +757,8 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     from sympy.stats.symbolic_probability import Expectation
     if evaluate:
         return Expectation(expr, condition).doit(**kwargs)
-    message = ("Using `evaluate=False` now returns `Expectation` object "
-              "since version 1.7. If you want unevaluated Integral/Sum use "
+    message = ("Since version 1.7, using `evaluate=False` returns `Expectation` "
+              "object. If you want unevaluated Integral/Sum use "
               "`E(expr, condition, evaluate=False).rewrite(Integral)`")
     warnings.warn(filldedent(message))
     return Expectation(expr, condition)
@@ -800,8 +800,8 @@ def probability(condition, given_condition=None, numsamples=None,
     from sympy.stats.symbolic_probability import Probability
     if evaluate:
         return Probability(condition, given_condition).doit(**kwargs)
-    message = ("Using `evaluate=False` returns `Probability` object since version 1.7. "
-              "If you want unevaluated Integral/Sum use "
+    message = ("Since version 1.7, using `evaluate=False` returns `Probability` "
+              "object. If you want unevaluated Integral/Sum use "
               "`P(condition, given_condition, evaluate=False).rewrite(Integral)`")
     warnings.warn(filldedent(message))
     return Probability(condition, given_condition)
