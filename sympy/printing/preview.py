@@ -330,7 +330,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 outputbuffer.write(fh.read())
         elif viewer == "pyglet":
             try:
-                import pyglet
+                import pyglet  # noqa: F401
             except ImportError:
                 raise ImportError("pyglet is required for preview.\n visit http://www.pyglet.org/")
 
