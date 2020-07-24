@@ -6,7 +6,7 @@ from sympy.core.expr import Expr
 
 class Dual(Expr):
     """Provides basic dual number operations. Dual objects can be instantiated
-    as Dual(a, b), as in (a + b*ε), where ε^2 = 0.
+    as Dual(a, b), as in (a + b*d), where d^2 = 0.
 
     An important use of dual numbers is automatic differentiation.
 
@@ -19,12 +19,12 @@ class Dual(Expr):
     >>> a = symbols('a')
     >>> d = Dual(a, 1)
     >>> d
-    a + 1*ε
+    a + 1*d
     >>> f = lambda x: x**2
     >>> f(d)
-    a**2 + 2*a*ε
+    a**2 + 2*a*d
 
-    We recognize the term proportional to ε as the derivative of the function.
+    We recognize the term proportional to d as the derivative of the function.
     To obtain only the derivative we select only the dual component:
 
     >>> f(d).b
@@ -33,7 +33,7 @@ class Dual(Expr):
     In order to compute second derivatives use nested dual numbers:
 
     >>> f(Dual(Dual(a, 1), Dual(1, 0)))
-    (a**2 + 2*a*ε) + (2*a + 2*ε)*ε
+    (a**2 + 2*a*d) + (2*a + 2*d)*d
 
     The last component is the second derivative, which is obtained as
 
@@ -123,9 +123,9 @@ class Dual(Expr):
         >>> d1 = Dual(1, 2)
         >>> d2 = Dual(5, 6)
         >>> d1.add(d2)
-        6 + 8*ε
+        6 + 8*d
         >>> d1 + 5
-        6 + 2*ε
+        6 + 2*d
 
         """
         d1 = self
@@ -162,9 +162,9 @@ class Dual(Expr):
         >>> d1 = Dual(1, 2)
         >>> d2 = Dual(5, 6)
         >>> d1.mul(d2)
-        5 + 16*ε
+        5 + 16*d
         >>> d1.mul(2)
-        2 + 4*ε
+        2 + 4*d
 
         """
         return self._generic_mul(self, other)
@@ -196,9 +196,9 @@ class Dual(Expr):
         >>> d1 = Dual(1, 2)
         >>> d2 = Dual(5, 6)
         >>> d1.mul(d2)
-        5 + 16*ε
+        5 + 16*d
         >>> d1.mul(2)
-        2 + 4*ε
+        2 + 4*d
 
         """
         d1 = sympify(d1)
@@ -267,7 +267,7 @@ class Dual(Expr):
         >>> from sympy.algebras.dual import Dual
         >>> q = Dual(1, 2)
         >>> q.pow(4)
-        1 + 8*ε
+        1 + 8*d
 
         """
         p = sympify(p)
@@ -295,7 +295,7 @@ class Dual(Expr):
         >>> from sympy.algebras.dual import Dual
         >>> q = Dual(3, 4)
         >>> q.exp()
-        exp(3) + 4*exp(3)*ε
+        exp(3) + 4*exp(3)*d
 
         """
         q = self
@@ -311,7 +311,7 @@ class Dual(Expr):
         >>> from sympy.algebras.dual import Dual
         >>> q = Dual(3, 4)
         >>> q._ln()
-        log(3) + 4/3*ε
+        log(3) + 4/3*d
 
         """
         q = self

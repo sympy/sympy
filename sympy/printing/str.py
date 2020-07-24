@@ -831,10 +831,10 @@ class StrPrinter(Printer):
 
     def _print_Dual(self, expr):
         s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
-        if s[1][-1] == u"ε":
-            a = ["("+s[0]+")"] + ["("+s[1]+u")*ε"]
+        if s[1][-1] == "d":
+            a = ["("+s[0]+")"] + ["("+s[1]+")*d"]
         else:
-            a = [s[0]] + [s[1] + u"*ε"]
+            a = [s[0]] + [s[1] + "*Q"]
         return " + ".join(a)
 
     def _print_Dimension(self, expr):
