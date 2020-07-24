@@ -136,7 +136,7 @@ def represent(expr, **options):
     """
 
     format = options.get('format', 'sympy')
-    if isinstance(expr, QExpr) and not isinstance(expr, OuterProduct):
+    if isinstance(expr, QExpr) and (not isinstance(expr, OuterProduct) and not isinstance(expr, Dagger)):
         options['replace_none'] = False
         temp_basis = get_basis(expr, **options)
         if temp_basis is not None:
