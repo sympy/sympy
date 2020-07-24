@@ -85,10 +85,12 @@ GT: ">"
 GTE: "\\geq"
 
 DIFFERENTIAL: /d[ \t\r\n]*?([a-zA-Z]|\\[a-zA-Z]+)/
-LETTER: /[A-Za-z]/
-SYMBOL.0: /\\[a-zA-Z]+/
+SYMBOL.0: /([A-Za-z]|\\[a-zA-Z]+)/
+SUBSCRIPT_SYMBOL: /([A-Za-z]|\\[a-zA-Z]+)_(([A-Za-z0-9]|\\[a-zA-Z]+)|\{([A-Za-z0-9]|\\[a-zA-Z]+)\})/
 INTEGER: /\d+/
 FLOAT: /\d+\.\d*|\.\d+/
+
+
 
 //////////////////// grammar //////////////////////
 
@@ -126,13 +128,14 @@ relation: relation (EQUAL | LT | LTE | GT | GTE) relation
 
 ?sub_expression: UNDERSCORE (atom | L_BRACE expr R_BRACE)
 ?sub_equation: UNDERSCORE L_BRACE expr EQUAL expr R_BRACE
-?sub_limit: UNDERSCORE L_BRACE (LETTER | SYMBOL) LIM_APPROACH_SYM expr R_BRACE
-          | UNDERSCORE L_BRACE (LETTER | SYMBOL) LIM_APPROACH_SYM expr CARET L_BRACE (ADD | SUB) R_BRACE R_BRACE
+?sub_limit: UNDERSCORE L_BRACE symbol LIM_APPROACH_SYM expr R_BRACE
+          | UNDERSCORE L_BRACE symbol LIM_APPROACH_SYM expr CARET L_BRACE (ADD | SUB) R_BRACE R_BRACE
 ?sup_expression: CARET (atom | L_BRACE expr R_BRACE)
 
+?symbol: SYMBOL
+       | SUBSCRIPT_SYMBOL
 
-?atom: LETTER
-     | SYMBOL
+?atom: symbol
      | INTEGER
      | FLOAT
      | DIFFERENTIAL
@@ -161,7 +164,7 @@ relation: relation (EQUAL | LT | LTE | GT | GTE) relation
             | FUNC_ARTANH
 
 ?function: func_normal sup_expression? sub_expression? L_PAREN expr R_PAREN -> normal_function
-         | (LETTER | SYMBOL) L_PAREN function_args R_PAREN -> named_function
+         | symbol L_PAREN function_args R_PAREN -> named_function
          | fraction
          | sqrt
          | binomial
