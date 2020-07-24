@@ -3,7 +3,8 @@ from sympy.core.sympify import _sympify
 from .map import Map, AppliedMap
 
 __all__ = [
-    'BinaryOperator', 'AppliedBinaryOperator',
+    'BinaryOperator', 'LeftDivision', 'RightDivision',
+    'AppliedBinaryOperator',
 ]
 
 class BinaryOperator(Map):
@@ -172,8 +173,190 @@ class BinaryOperator(Map):
             newseq.append(o)
         return newseq
 
+    def left_division(self, evaluate=False):
+        return LeftDivision(self, evaluate=evaluate)
+
+    def _eval_left_division(self):
+        return
+
+    def right_division(self, evaluate=False):
+        return RightDivision(self, evaluate=evaluate)
+
+    def _eval_right_division(self):
+        return
+
+    def is_left_division(self, other):
+        """
+        Return ``True`` if *self* is left division operator of *other*.
+        """
+        if not ask(Q.left_divisible(other)):
+            return False
+        if isinstance(self, LeftDivision) and self.base == other:
+            return True
+        elif other.left_division(evaluate=True) == self:
+            return True
+        return False
+
+    def is_right_division(self, other):
+        """
+        Return ``True`` if *self* is right division operator of *other*.
+        """
+        if not ask(Q.right_divisible(other)):
+            return False
+        if isinstance(self, RightDivision) and self.base == other:
+            return True
+        elif other.right_division(evaluate=True) == self:
+            return True
+        return False
+
+    def cancel_division(self, seq):
+        # this method is deliberately designed to work for len(seq) > 2 case
+        # to be compatible if self is associative
+        newseq = []
+        skip = False
+        for i,o in enumerate(seq):
+            if skip:
+                skip = False
+                continue
+            if isinstance(o, AppliedBinaryOperator):
+                if o.map.is_left_division(self) or self.is_left_division(o.map):
+                    if i>0 and newseq[-1] == o.arguments[0]:
+                        newseq.pop()
+                        newseq.extend(o.arguments[1:])
+                    else:
+                        newseq.append(o)
+                    continue
+                if o.map.is_right_division(self) or self.is_right_division(o.map):
+                    if i<len(seq)-1 and o.arguments[-1] == seq[i+1]:
+                        newseq.extend(o.arguments[:-1])
+                        skip = True
+                        continue
+                    else:
+                        newseq.append(o)
+                    continue
+            newseq.append(o)
+        return newseq
+
     def __call__(self, *args, evaluate=False, **kwargs):
         return AppliedBinaryOperator(self, args, evaluate=evaluate)
+
+class LeftDivision(BinaryOperator):
+    r"""
+    Left division operator, derived from a binary operation.
+
+    Explanation
+    ===========
+
+    For a set $S$ and binary operator $*$ defined on it, a left division $\backslash$
+    is an operator that satisfies $a * (a \backslash b) = b$ for any $a \in S$ and $ b \in S$.
+
+    Parameters
+    ==========
+
+    base_op : BinaryOperator
+        Base operator from where left division is derived
+
+    Examples
+    ========
+
+    >>> from sympy import BinaryOperator
+    >>> from sympy.abc import a, b
+    >>> class Op(BinaryOperator):
+    ...     name = '*'
+    ...     is_left_divisible = True
+    >>> op = Op()
+    >>> op_ld = op.left_division()
+
+    >>> op(b, op_ld(b, a))
+    b * (b \ a)
+    >>> op(b, op_ld(b, a), evaluate=True)
+    a
+
+    """
+
+    latex_name = r'\backslash'
+    str_name = '\\'
+
+    def __new__(cls, base_op, evaluate=False, **kwargs):
+
+        if not ask(Q.left_divisible(base_op)):
+            raise TypeError("Left division of %s does not exist." % base_op)
+
+        if evaluate:
+            result = base_op._eval_left_division()
+            if result is not None:
+                return result
+        return super().__new__(cls, base_op)
+
+    @property
+    def base(self):
+        return self.args[0]
+
+    @property
+    def domain(self):
+        return self.base.domain
+
+    @property
+    def codomain(self):
+        return self.base.codomain
+
+class RightDivision(BinaryOperator):
+    r"""
+    Right division operator, derived from a binary operation.
+
+    Explanation
+    ===========
+
+    For a set $S$ and binary operator $*$ defined on it, a right division $/$
+    is an operator that satisfies $(a / b) * b = a$ for any $a \in S$ and $ b \in S$.
+
+    Parameters
+    ==========
+
+    base_op : BinaryOperator
+        Base operator from where left division is derived
+
+    Examples
+    ========
+
+    >>> from sympy import BinaryOperator
+    >>> from sympy.abc import a, b
+    >>> class Op(BinaryOperator):
+    ...     name = '*'
+    ...     is_right_divisible = True
+    >>> op = Op()
+    >>> op_rd = op.right_division()
+
+    >>> op(op_rd(a, b), b)
+    (a / b) * b
+    >>> op(op_rd(a, b), b, evaluate=True)
+    a
+
+    """
+    name = '/'
+
+    def __new__(cls, base_op, evaluate=False, **kwargs):
+
+        if not ask(Q.right_divisible(base_op)):
+            raise TypeError("Right division of %s does not exist." % base_op)
+
+        if evaluate:
+            result = base_op._eval_right_division()
+            if result is not None:
+                return result
+        return super().__new__(cls, base_op)
+
+    @property
+    def base(self):
+        return self.args[0]
+
+    @property
+    def domain(self):
+        return self.base.domain
+
+    @property
+    def codomain(self):
+        return self.base.codomain
 
 class AppliedBinaryOperator(AppliedMap):
     """
@@ -201,6 +384,7 @@ class AppliedBinaryOperator(AppliedMap):
                 args = mapping.flatten(args)
 
             args = mapping.remove_identity(args)
+            args = mapping.cancel_division(args)
 
             if not args:
                 return mapping.identity

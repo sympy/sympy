@@ -2951,10 +2951,24 @@ def test_sympy__map__composite__IteratedMap():
 def test_sympy__map__operator__BinaryOperator():
     pass
 
+def test_sympy__map__operator__LeftDivision():
+    from sympy.map import BinaryOperator, LeftDivision
+    class AddOp(BinaryOperator):
+        is_left_divisible = True
+    addop = AddOp()
+    assert _test_args(LeftDivision(addop))
+
+def test_sympy__map__operator__RightDivision():
+    from sympy.map import BinaryOperator, RightDivision
+    class AddOp(BinaryOperator):
+        is_right_divisible = True
+    addop = AddOp()
+    assert _test_args(RightDivision(addop))
+
 def test_sympy__map__operator__AppliedBinaryOperator():
     from sympy.map import BinaryOperator, AppliedBinaryOperator
     class AddOp(BinaryOperator):
-        name = '+'
+        pass
     addop = AddOp()
     assert _test_args(AppliedBinaryOperator(addop, (x, y)))
 

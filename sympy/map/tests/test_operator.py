@@ -5,17 +5,18 @@ from sympy.map import (
 from sympy.testing.pytest import raises
 
 A = Set('A')
-a1, a2, a3 = [A.element('a%s' % i) for i in range(3)]
+a1, a2, a3 = [A.element('a%s' % i) for i in range(1,4)]
 B = Set('B', (A,))
-b1, b2, b3 = [B.element('b%s' % i) for i in range(3)]
+b1, b2, b3 = [B.element('b%s' % i) for i in range(1, 4)]
 
-class F(BinaryOperator):
+class BaseOp(BinaryOperator):
     def __new__(cls, domain, codomain, **kwargs):
         obj = super().__new__(cls, domain, codomain, **kwargs)
         obj.domain = domain
         obj.codomain = codomain
         return obj
 
+class F(BaseOp):
     def _eval_left_identity(self, element):
         # assume identity is in A but outside of B
         if element == a3:
@@ -26,14 +27,8 @@ class F2(F):
     identity = a3
 f2 = F2(A**2, A)
 
-class G(BinaryOperator):
+class G(BaseOp):
     is_associative=True
-    def __new__(cls, domain, codomain, **kwargs):
-        obj = super().__new__(cls, domain, codomain, **kwargs)
-        obj.domain = domain
-        obj.codomain = codomain
-        return obj
-
     def _eval_right_identity(self, element):
         # assume identity is in B (thus in A as well)
         if element == b3:
@@ -45,6 +40,22 @@ g_B = G(B**2, B)
 class G2(G):
     identity = a3
 g2 = G2(A**2, A)
+
+class H(BaseOp):
+    pass
+h = H(A**2, A)
+
+class H1(BaseOp):
+    is_left_divisible = True
+    def _eval_left_division(self):
+        return H(self.domain, self.codomain)
+h1 = H1(A**2, A)
+
+class H2(BaseOp):
+    is_right_divisible = True
+    def _eval_right_division(self):
+        return H(self.domain, self.codomain)
+h2 = H2(A**2, A)
 
 def test_BinaryOperator():
     # calling binary operator returns AppliedBinaryOperator
@@ -107,3 +118,77 @@ def test_AppliedBinaryOperator():
 
     expr = g2(g2(a3, a1), g2(a3, a2)).doit()
     assert expr.arguments == (a1, a2)
+
+def test_LeftDivision():
+    # left divisibility can be assumed
+    raises(TypeError, lambda: f.left_division())
+    with assuming(Q.left_divisible(f)):
+        f.left_division()   # not raise error
+
+    # left division operator can be evaluated
+    assert h1.left_division(evaluate=True) == h
+
+    h1_ld = h1.left_division()
+    # domain and codomain is preserved
+    assert h1_ld.domain == h1.domain
+    assert h1_ld.codomain == h1.codomain
+
+    # is_left_division
+    assert h1_ld.is_left_division(h1)
+    assert h.is_left_division(h1)
+
+    # left division cancellation
+    assert h1(a1, h1_ld(a1, a2), evaluate=True) == a2
+    assert h1_ld(a1, h1(a1, a2), evaluate=True) == a2
+    assert h1(a1, h1_ld(a2, a1), evaluate=True) != a2
+    assert h1_ld(a1, h1(a2, a1), evaluate=True) != a2
+    assert h1(h1_ld(a2, a1), a1, evaluate=True) != a2
+    assert h1_ld(h1(a2, a1), a1, evaluate=True) != a2
+
+    assert h1(a1, h(a1, a2), evaluate=True) == a2
+    assert h(a1, h1(a1, a2), evaluate=True) == a2
+    assert h1(a1, h(a2, a1), evaluate=True) != a2
+    assert h(a1, h1(a2, a1), evaluate=True) != a2
+    assert h1(h(a2, a1), a1, evaluate=True) != a2
+    assert h(h1(a2, a1), a1, evaluate=True) != a2
+
+    assert h1(h1(a1, a1), h1_ld(a1, a2), evaluate=True) != h1(a1, a2)
+    with assuming(Q.associative(h1)):
+        assert h1(h1(a1, a1), h1_ld(a1, a2), evaluate=True) == h1(a1, a2)
+
+def test_RightDivision():
+    # right divisibility can be assumed
+    raises(TypeError, lambda: f.right_division())
+    with assuming(Q.right_divisible(f)):
+        f.right_division()   # not raise error
+
+    # right division operator can be evaluated
+    assert h2.right_division(evaluate=True) == h
+
+    h2_rd = h2.right_division()
+    # domain and codomain is preserved
+    assert h2_rd.domain == h2.domain
+    assert h2_rd.codomain == h2.codomain
+
+    # is_right_division
+    assert h2_rd.is_right_division(h2)
+    assert h.is_right_division(h2)
+
+    # right division cancellation
+    assert h2(h2_rd(a1, a2), a2, evaluate=True) == a1
+    assert h2_rd(h2(a1, a2), a2, evaluate=True) == a1
+    assert h2(h2_rd(a2, a1), a2, evaluate=True) != a1
+    assert h2_rd(h2(a2, a1), a2, evaluate=True) != a1
+    assert h2(a2, h2_rd(a2, a1), evaluate=True) != a1
+    assert h2_rd(a2, h2(a2, a1), evaluate=True) != a1
+
+    assert h2(h(a1, a2), a2, evaluate=True) == a1
+    assert h(h2(a1, a2), a2, evaluate=True) == a1
+    assert h2(h(a2, a1), a2, evaluate=True) != a1
+    assert h(h2(a2, a1), a2, evaluate=True) != a1
+    assert h2(a2, h(a2, a1), evaluate=True) != a1
+    assert h(a2, h2(a2, a1), evaluate=True) != a1
+
+    assert h2(h2_rd(a1, a2), h2(a2, a2), evaluate=True) != h2(a2, a2)
+    with assuming(Q.associative(h2)):
+        assert h2(h2_rd(a1, a2), h2(a2, a2), evaluate=True) == h2(a1, a2)
