@@ -1,7 +1,7 @@
-from sympy import S, Basic, exp, multigamma, ProductSet, pi
+from sympy import S, Basic, exp, multigamma, pi
 from sympy.core.sympify import sympify, _sympify
 from sympy.matrices import (ImmutableMatrix, Inverse, Trace, Determinant,
-                            MatrixSymbol, MatrixBase, Transpose)
+                            MatrixSymbol, MatrixBase, Transpose, MatrixSet)
 from sympy.stats.rv import (_value_check, RandomMatrixSymbol, NamedArgsMixin, PSpace,
                             _symbol_converter)
 
@@ -85,7 +85,7 @@ class MatrixGammaDistribution(MatrixDistribution):
     @property
     def set(self):
         k = self.scale_matrix.shape[0]
-        return ProductSet(S.Reals**k, S.Reals**k)
+        return MatrixSet(k, k, S.Reals)
 
     @property
     def dimension(self):
@@ -171,7 +171,7 @@ class WishartDistribution(MatrixDistribution):
     @property
     def set(self):
         k = self.scale_matrix.shape[0]
-        return ProductSet(S.Reals**k, S.Reals**k)
+        return MatrixSet(k, k, S.Reals)
 
     @property
     def dimension(self):
@@ -264,7 +264,7 @@ class MatrixNormalDistribution(MatrixDistribution):
     @property
     def set(self):
         n, p = self.location_matrix.shape
-        return ProductSet(S.Reals**n, S.Reals**p)
+        return MatrixSet(n, p, S.Reals)
 
     @property
     def dimension(self):

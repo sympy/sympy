@@ -1,6 +1,5 @@
-from sympy import (exp, S, ProductSet, sqrt, pi, symbols,
-                Product, gamma, Dummy)
-from sympy.matrices import Determinant, Matrix, Trace, MatrixSymbol
+from sympy import exp, S, sqrt, pi, symbols, Product, gamma, Dummy
+from sympy.matrices import Determinant, Matrix, Trace, MatrixSymbol, MatrixSet
 from sympy.stats import density
 from sympy.stats.matrix_distributions import (MatrixGammaDistribution,
                 MatrixGamma, MatrixPSpace, Wishart, MatrixNormal)
@@ -15,7 +14,7 @@ def test_MatrixPSpace():
 
 def test_MatrixGamma():
     M = MatrixGamma('M', 1, 2, [[1, 0], [0, 1]])
-    assert M.pspace.distribution.set == ProductSet(S.Reals**2, S.Reals**2)
+    assert M.pspace.distribution.set == MatrixSet(2, 2, S.Reals)
     assert isinstance(density(M), MatrixGammaDistribution)
     X = MatrixSymbol('X', 2, 2)
     num = exp(Trace(Matrix([[-S(1)/2, 0], [0, -S(1)/2]])*X))
@@ -47,7 +46,7 @@ def test_MatrixGamma():
 
 def test_Wishart():
     W = Wishart('W', 5, [[1, 0], [0, 1]])
-    assert W.pspace.distribution.set == ProductSet(S.Reals**2, S.Reals**2)
+    assert W.pspace.distribution.set == MatrixSet(2, 2, S.Reals)
     X = MatrixSymbol('X', 2, 2)
     term1 = exp(Trace(Matrix([[-S(1)/2, 0], [0, -S(1)/2]])*X))
     assert density(W)(X).doit() == term1 * Determinant(X)/(24*pi)
@@ -69,7 +68,7 @@ def test_Wishart():
 
 def test_MatrixNormal():
     M = MatrixNormal('M', [[5, 6]], [4], [[2, 1], [1, 2]])
-    assert M.pspace.distribution.set == ProductSet(S.Reals**1, S.Reals**2)
+    assert M.pspace.distribution.set == MatrixSet(1, 2, S.Reals)
     X = MatrixSymbol('X', 1, 2)
     term1 = exp(-Trace(Matrix([[ S(2)/3, -S(1)/3], [-S(1)/3, S(2)/3]])*(
             Matrix([[-5], [-6]]) + X.T)*Matrix([[1/4]])*(Matrix([[-5, -6]]) + X))/2)
