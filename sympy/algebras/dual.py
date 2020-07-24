@@ -119,7 +119,6 @@ class Dual(Expr):
         ========
 
         >>> from sympy.algebras.Dual import Dual
-        >>> from sympy import symbols
         >>> d1 = Dual(1, 2)
         >>> d2 = Dual(5, 6)
         >>> d1.add(d2)
@@ -158,7 +157,6 @@ class Dual(Expr):
         ========
 
         >>> from sympy.algebras.dual import Dual
-        >>> from sympy import symbols
         >>> d1 = Dual(1, 2)
         >>> d2 = Dual(5, 6)
         >>> d1.mul(d2)
@@ -192,7 +190,6 @@ class Dual(Expr):
         ========
 
         >>> from sympy.algebras.dual import Dual
-        >>> from sympy import symbols
         >>> d1 = Dual(1, 2)
         >>> d2 = Dual(5, 6)
         >>> d1.mul(d2)
@@ -317,4 +314,3 @@ class Dual(Expr):
         q = self
         ln_qa = ln(q.a) if not isinstance(q.a, Dual) else q.a._ln()
         return Dual(ln_qa, q.b/q.a)
-

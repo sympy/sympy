@@ -1,4 +1,4 @@
-from sympy import symbols, simplify, exp, ln, I
+from sympy import symbols, simplify, exp, ln
 from sympy.algebras.dual import Dual
 
 a, b, c, d = symbols('a:d')
