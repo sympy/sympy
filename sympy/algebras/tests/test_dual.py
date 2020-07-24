@@ -1,5 +1,5 @@
-from sympy import symbols, simplify, exp, ln, I
-from sympy.algebras.dual import Dual
+from sympy import symbols, simplify, exp, ln
+from sympy.algebras import Dual
 
 a, b, c, d = symbols('a:d')
 

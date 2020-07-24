@@ -700,16 +700,16 @@ def test_Quaternion_str_printer():
 
 def test_Dual_str_printer():
     q = Dual(x, y)
-    assert str(q) == "x + y*ε"
+    assert str(q) == "x + y*d"
     q = Dual(x,x*y)
-    assert str(q) == "x + x*y*ε"
+    assert str(q) == "x + x*y*d"
     q = Dual(x,x+y)
-    assert str(q) == "x + (x + y)*ε"
+    assert str(q) == "x + (x + y)*d"
     # Nested duals
     q = Dual(x, y)
     p = Dual(t, z)
     n = Dual(q, p)
-    assert str(n) == "(x + y*ε) + (t + z*ε)*ε"
+    assert str(n) == "(x + y*d) + (t + z*d)*d"
 
 
 def test_Quantity_str():

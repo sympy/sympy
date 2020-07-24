@@ -472,7 +472,7 @@ __all__ = [
     'AccumBounds', 'is_convex', 'stationary_points', 'minimum', 'maximum',
 
     # sympy.algebras
-    'Quaternion',
+    'Quaternion', 'Dual',
 
     # sympy.printing
     'pager_print', 'pretty', 'pretty_print', 'pprint', 'pprint_use_unicode',
