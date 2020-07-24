@@ -314,4 +314,3 @@ class Dual(Expr):
         q = self
         ln_qa = ln(q.a) if not isinstance(q.a, Dual) else q.a._ln()
         return Dual(ln_qa, q.b/q.a)
-
