@@ -378,6 +378,18 @@ class AppliedBinaryOperator(AppliedMap):
         )
         args = [_sympify(a) for a in args]
 
+        if associative:
+            s = mapping.domain.args[0]
+            for a in args:
+                if s.contains(a) == False:
+                    raise TypeError(
+                "%s is not in %s's set %s." % (a, mapping, s)
+                )
+        elif not associative and mapping.domain.contains(tuple(args)) == False:
+            raise TypeError(
+        "%s is not in %s's domain %s." % (tuple(args), mapping, mapping.domain)
+        )
+
         if evaluate:
 
             if associative:
@@ -387,8 +399,17 @@ class AppliedBinaryOperator(AppliedMap):
             args = mapping.cancel_division(args)
 
             if not args:
-                return mapping.identity
-            if len(args) == 1:
-                return args[0]
+                result = mapping.identity
+            elif len(args) == 1:
+                result = args[0]
+            else:
+                result = super().__new__(cls, mapping, args, evaluate=True, **kwargs)
 
-        return super().__new__(cls, mapping, args, evaluate=evaluate, **kwargs)
+            if mapping.codomain.contains(result) == False:
+                raise TypeError(
+            "%s is not in %s's codomain %s." % (result, mapping, mapping.codomain)
+            )
+
+            return result
+
+        return super().__new__(cls, mapping, args, evaluate=False, **kwargs)

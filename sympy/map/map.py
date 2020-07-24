@@ -32,7 +32,7 @@ class Map(Expr):
        while the latter is mathematically rigorous (just as the argument
        of ``f(x,y)`` is ``(x, y)``).
        Due to the catch mentioned above, domain of the argument is not
-       checked when map is applied.
+       checked when map is applied by default.
 
     Examples
     ========

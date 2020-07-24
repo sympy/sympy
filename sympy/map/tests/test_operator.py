@@ -1,4 +1,4 @@
-from sympy import Set, assuming, Q
+from sympy import S, Set, assuming, Q
 from sympy.map import (
     BinaryOperator, AppliedBinaryOperator,
 )
@@ -76,6 +76,20 @@ def test_BinaryOperator():
     assert f2.left_identity(a3)
     assert f2.right_identity(a3)
 
+    class T(BaseOp):
+        def eval(self, a, b):
+            return a/b
+    t = T(S.Integers**2, S.Integers)
+    # arguments must be in domain
+    raises(TypeError, lambda: t(0.5, 4.2))
+    raises(TypeError, lambda: t(1, 2, 3))
+    # 3 or more arguments is allowed if mapping is associative
+    with assuming(Q.associative(t)):
+        t(1, 2, 3) # not raise error
+        raises(TypeError, lambda: t(1, 0.2, 3)) # still, each arguments must be integer
+    # result of evaluation must be in codomain
+    raises(TypeError, lambda: t(2, 3, evaluate=True))
+
 def test_AppliedBinaryOperator():
     # check nested application (not flattened)
     expr = f(f(a1, a1), f(a2, a2)).doit()
@@ -99,12 +113,8 @@ def test_AppliedBinaryOperator():
     assert expr.arguments == (a1, b1, a2, b2)
 
     # restricted function in argument is flattened
-    expr = g_A(g_A(a1, b1), g_B(a2, b2), evaluate=True)
-    assert expr.arguments == (a1, b1, a2, b2)
-
-    # extended function in argument is not flattened
-    expr = g_B(g_B(a1, b1), g_A(b2, b2), evaluate=True)
-    assert expr.arguments == (a1, b1, g_A(b2, b2))
+    expr = g_A(g_A(a1, b1), g_B(b2, b2), evaluate=True)
+    assert expr.arguments == (a1, b1, b2, b2)
 
     # identity removal with flattening
     expr = g_A(g_A(b3, b2), g_A(b1, b2)).doit()
