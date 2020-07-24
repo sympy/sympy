@@ -4,7 +4,8 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice,
+    Dual)
 from sympy.core import Expr, Mul
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.units import second, joule
@@ -695,6 +696,20 @@ def test_Quaternion_str_printer():
     assert str(q) == "x + y*i + z*j + t*x*k"
     q = Quaternion(x,y,z,x+t)
     assert str(q) == "x + y*i + z*j + (t + x)*k"
+
+
+def test_Dual_str_printer():
+    q = Dual(x, y)
+    assert str(q) == "x + y*ε"
+    q = Dual(x,x*y)
+    assert str(q) == "x + x*y*ε"
+    q = Dual(x,x+y)
+    assert str(q) == "x + (x + y)*ε"
+    # Nested duals
+    q = Dual(x, y)
+    p = Dual(t, z)
+    n = Dual(q, p)
+    assert str(n) == "(x + y*ε) + (t + z*ε)*ε"
 
 
 def test_Quantity_str():
