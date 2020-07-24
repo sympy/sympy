@@ -15,6 +15,7 @@ from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 from sympy.vector.operators import Gradient, Divergence, Curl, Laplacian, gradient, curl, divergence
 from sympy.vector.parametricregion import (ParametricRegion, parametric_region_list)
+from sympy.vector.implicitregion import ImplicitRegion
 from sympy.vector.integrals import (ParametricIntegral, vector_integrate)
 
 __all__ = [
@@ -40,5 +41,7 @@ __all__ = [
     'Gradient', 'Divergence', 'Curl', 'Laplacian', 'gradient', 'curl',
     'divergence',
 
-    'ParametricRegion', 'parametric_region_list', 'ParametricIntegral', 'vector_integrate',
+    'ParametricRegion', 'parametric_region_list', 'ImplicitRegion',
+
+    'ParametricIntegral', 'vector_integrate',
 ]
