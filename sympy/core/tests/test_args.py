@@ -771,7 +771,7 @@ def test_sympy__algebras__abstract__structure__AlgebraicStructure():
         AlgebraicStructure('S', (A,), (f,))
     )
 
-def test_sympy__algebras__abstract__group__Magma():
+def test_sympy__algebras__abstract__magma__Magma():
     from sympy import Set, Map, Magma
     A = Set('A')
     f = Map('f', domain=A**2, codomain=A)
@@ -779,7 +779,7 @@ def test_sympy__algebras__abstract__group__Magma():
         Magma('M', (A,), (f,))
     )
 
-def test_sympy__algebras__abstract__group__Semigroup():
+def test_sympy__algebras__abstract__semigroup__Semigroup():
     from sympy import Set, Semigroup, BinaryOperator
     A = Set('A')
     class AddOp(BinaryOperator):
@@ -791,7 +791,7 @@ def test_sympy__algebras__abstract__group__Semigroup():
         Semigroup('G', (A,), (addop,))
     )
 
-def test_sympy__algebras__abstract__group__Quasigroup():
+def test_sympy__algebras__abstract__quasigroup__Quasigroup():
     from sympy import Set, Quasigroup, BinaryOperator
     A = Set('A')
     class AddOp(BinaryOperator):
@@ -803,7 +803,7 @@ def test_sympy__algebras__abstract__group__Quasigroup():
         Quasigroup('G', (A,), (addop,))
     )
 
-def test_sympy__algebras__abstract__group__Monoid():
+def test_sympy__algebras__abstract__monoid__Monoid():
     from sympy import Set, Monoid, BinaryOperator
     A = Set('A')
     class AddOp(BinaryOperator):

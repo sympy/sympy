@@ -1,0 +1,51 @@
+from sympy.assumptions import ask, Q
+from .semigroup import Semigroup
+
+__all__ = [
+    "Monoid",
+]
+
+class Monoid(Semigroup):
+    """
+    Monoid is semigroup whose operation has two-sided identity.
+
+    Examples
+    ========
+
+    >>> from sympy import Set, BinaryOperator, Monoid
+
+    >>> S = Set('S')
+    >>> a, b, e = S.element('a'), S.element('b'), S.element('e')
+
+    >>> class MonoidOp(BinaryOperator):
+    ...     name = '*'
+    ...     domain = S*S
+    ...     codomain = S
+    ...     is_associative = True
+    ...     identity = e
+    >>> op = MonoidOp()
+
+    >>> M = Monoid('M', (S,), (op,))
+
+    >>> op(a, b)
+    a * b
+    >>> op(a, b) in M
+    True
+
+    Operation of monoid is associative.
+
+    >>> op(a, op(b, b), evaluate=True)
+    a * b * b
+
+    Operation of monoid has identity.
+
+    >>> op(a, op(e, b), evaluate=True)
+    a * b
+
+    """
+    def __new__(cls, name, sets, operators, **kwargs):
+        op = operators[0]
+        if getattr(op, 'identity', None) is None:
+            raise TypeError("%s does not have identity." % op)
+
+        return super().__new__(cls, name, sets, operators)

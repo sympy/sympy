@@ -5,6 +5,10 @@ __all__ = [
 
 from .structure import AlgebraicStructure
 
-from .group import (
-    Magma, Semigroup, Quasigroup, Monoid,
-)
+from .magma import Magma
+
+from .semigroup import Semigroup
+
+from .quasigroup import Quasigroup
+
+from .monoid import Monoid
