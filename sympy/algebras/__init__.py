@@ -1,9 +1,11 @@
 from .quaternion import Quaternion
 from .abstract import (
-    AlgebraicStructure, Magma, Semigroup, Monoid,
+    AlgebraicStructure,
+    Magma, Semigroup, Quasigroup, Monoid,
 )
 
 __all__ = [
     "Quaternion",
-    "AlgebraicStructure", "Magma", "Semigroup", "Monoid",
+    "AlgebraicStructure",
+    "Magma", "Quasigroup", "Semigroup", "Monoid",
 ]
