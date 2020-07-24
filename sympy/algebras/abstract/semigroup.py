@@ -26,11 +26,6 @@ class Semigroup(Magma):
 
     >>> G = Semigroup('G', (S,), (op,))
 
-    >>> op(a, b)
-    a * b
-    >>> op(a, b) in G
-    True
-
     Operation of semigroup is associative.
 
     >>> op(a, op(b, c), evaluate=True)

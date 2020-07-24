@@ -791,6 +791,31 @@ def test_sympy__algebras__abstract__semigroup__Semigroup():
         Semigroup('G', (A,), (addop,))
     )
 
+def test_sympy__algebras__abstract__quasigroup__LeftQuasigroup():
+    from sympy import Set, LeftQuasigroup, BinaryOperator
+    A = Set('A')
+    class AddOp(BinaryOperator):
+        is_left_divisible = True
+        domain = A**2
+        codomain = A
+    addop = AddOp()
+    assert _test_args(
+        LeftQuasigroup('G', (A,), (addop,))
+    )
+
+def test_sympy__algebras__abstract__quasigroup__RightQuasigroup():
+    from sympy import Set, RightQuasigroup, BinaryOperator
+    A = Set('A')
+    class AddOp(BinaryOperator):
+        is_right_divisible = True
+        domain = A**2
+        codomain = A
+    addop = AddOp()
+    assert _test_args(
+        RightQuasigroup('G', (A,), (addop,))
+    )
+
+
 def test_sympy__algebras__abstract__quasigroup__Quasigroup():
     from sympy import Set, Quasigroup, BinaryOperator
     A = Set('A')

@@ -27,11 +27,6 @@ class Monoid(Semigroup):
 
     >>> M = Monoid('M', (S,), (op,))
 
-    >>> op(a, b)
-    a * b
-    >>> op(a, b) in M
-    True
-
     Operation of monoid is associative.
 
     >>> op(a, op(b, b), evaluate=True)
