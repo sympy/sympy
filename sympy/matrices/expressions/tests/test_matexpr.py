@@ -686,9 +686,9 @@ def test_MatrixSet():
     raises(TypeError, lambda: X in M)
     M = MatrixSet(2, 2, set={1, 2, 3})
     X = Matrix([[1, 2], [3, 4]])
-    Y = Matrix([[1, 2], [3, 1]])
+    Y = Matrix([[1, 2]])
     assert (X in M) == S.false
-    assert Y in M
+    assert (Y in M) == S.false
     raises(ValueError, lambda: MatrixSet(2, -2, S.Reals))
     raises(ValueError, lambda: MatrixSet(2.4, -1, S.Reals))
     raises(TypeError, lambda: MatrixSet(2, 2, (1, 2, 3)))

@@ -1311,7 +1311,7 @@ class MatrixSet(Set):
         if not isinstance(other, MatrixExpr):
             raise TypeError("{} should be an instance of MatrixExpr.".format(other))
         if other.shape != self.shape:
-            are_symbolic = any(x.is_Symbol for x in other.shape + self.shape)
+            are_symbolic = any(_sympify(x).is_Symbol for x in other.shape + self.shape)
             if are_symbolic:
                 return None
             return False
