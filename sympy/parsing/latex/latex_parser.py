@@ -125,8 +125,16 @@ def parse_latex(s):
         FLOAT = float
         LETTER = sympy.Symbol
 
+        def SUBSCRIPT_SYMBOL(self, token):
+            symbol, sub = token.value.replace('\\', '').split('_')
+            if sub.startswith('{'):
+                return sympy.Symbol('%s_{%s}' % (symbol, sub[1:-1]))
+            else:
+                return sympy.Symbol('%s_{%s}' % (symbol, sub))
+
         def SYMBOL(self, token):
             symbol = token.value.replace('\\', '')
+
             if symbol == 'infty':
                 return sympy.oo
             elif symbol == 'pi':
