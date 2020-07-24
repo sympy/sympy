@@ -38,11 +38,11 @@ def test_dual_div():
 
 def test_dual_exp():
     x = Dual(a, b)
-    assert x.exp() == Dual(exp(a), b*exp(a))
+    assert exp(x) == Dual(exp(a), b * exp(a))
 
 def test_dual_ln():
     x = Dual(a, b)
-    assert x._ln().exp() == x
+    assert exp(ln(x)) == x
 
 def test_nested_dual():
     d1 = Dual(a, b)
@@ -59,8 +59,7 @@ def test_autodiff():
     """
     # Function contains both log and exp to really test it. If these work all
     # trig should also work.
-    f = lambda x: x**5 + 2*x**2.3 + (x.exp() if isinstance(x, Dual) else exp(x)) +\
-                  (x._ln() if isinstance(x, Dual) else ln(x))
+    f = lambda x: x ** 5 + 2 * x ** 2.3 + exp(x) + ln(x)
     y = f(Dual(Dual(a, 1), Dual(1, 0)))
     assert simplify(y.a.a - f(a)) == 0
     assert simplify(y.b.a - f(a).diff()) == 0

@@ -235,6 +235,7 @@ class exp(ExpBase):
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
+        from sympy.algebras import Quaternion, Dual
         from sympy import im, logcombine, re
         if arg.is_Number:
             if arg is S.NaN:
@@ -329,7 +330,7 @@ class exp(ExpBase):
             if out or argchanged:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
-        elif isinstance(arg, MatrixBase):
+        elif isinstance(arg, (MatrixBase, Quaternion, Dual)):
             return arg.exp()
 
         if arg.is_zero:
@@ -605,6 +606,7 @@ class log(Function):
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
         from sympy.functions.elementary.complexes import Abs
+        from sympy.algebras import Quaternion, Dual
 
         arg = sympify(arg)
 
@@ -744,6 +746,8 @@ class log(Function):
                             return cls(modulus) + I * (-atan_table[t1])
                         else:
                             return cls(modulus) + I * (S.Pi - atan_table[t1])
+        elif isinstance(arg, (Quaternion, Dual)):
+            return arg._ln()
 
     def as_base_exp(self):
         """
