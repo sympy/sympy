@@ -1289,26 +1289,43 @@ class MatrixSet(Set):
     False
 
     """
-    is_iterable = False
     is_empty = False
 
     def __new__(cls, n, m, set):
         n, m, set = _sympify(n), _sympify(m), _sympify(set)
+        cls._check_dim(n)
+        cls._check_dim(m)
+        if not isinstance(set, Set):
+            raise TypeError("{} should be an instance of Set.".format(set))
         return Set.__new__(cls, n, m, set)
 
-    is_finite_set = property(lambda self: self.set.is_finite_set)
-    is_ComplexRegion = property(lambda self: self.set.is_ComplexRegion)
+    @property
+    def shape(self):
+        return self.args[:2]
 
-    shape = property(lambda self: self.args[0:2])
-    set = property(lambda self: self.args[2])
+    @property
+    def set(self):
+        return self.args[2]
 
     def _contains(self, other):
         if not isinstance(other, MatrixExpr):
-            raise TypeError("%s should be an instance of MatrixExpr" % str(other))
+            raise TypeError("{} should be an instance of MatrixExpr.".format(other))
         if other.shape != self.shape:
+            are_symbolic = any(x.is_Symbol for x in other.shape + self.shape)
+            if are_symbolic:
+                return None
             return False
         return fuzzy_and(self.set.contains(x) for x in other)
 
+    @classmethod
+    def _check_dim(cls, dim):
+        """Helper function to check invalid matrix dimensions"""
+        from sympy.core.assumptions import check_assumptions
+        ok = check_assumptions(dim, integer=True, nonnegative=True)
+        if ok is False:
+            raise ValueError(
+                "The dimension specification {} should be "
+                "a nonnegative integer.".format(dim))
 
 from .matmul import MatMul
 from .matadd import MatAdd
