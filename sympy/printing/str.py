@@ -829,6 +829,14 @@ class StrPrinter(Printer):
         a = [s[0]] + [i+"*"+j for i, j in zip(s[1:], "ijk")]
         return " + ".join(a)
 
+    def _print_Dual(self, expr):
+        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
+        if s[1][-1] == "ε":
+            a = ["("+s[0]+")"] + ["("+s[1]+")*ε"]
+        else:
+            a = [s[0]] + [s[1] + "*ε"]
+        return " + ".join(a)
+
     def _print_Dimension(self, expr):
         return str(expr)
 

@@ -229,7 +229,7 @@ from .calculus import (euler_equations, singularities, is_increasing,
         differentiate_finite, periodicity, not_empty_in, AccumBounds,
         is_convex, stationary_points, minimum, maximum)
 
-from .algebras import Quaternion
+from .algebras import Quaternion, Dual
 
 from .printing import (pager_print, pretty, pretty_print, pprint,
         pprint_use_unicode, pprint_try_use_unicode, latex, print_latex,
