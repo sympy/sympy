@@ -1,4 +1,4 @@
-from sympy.core import Basic
+from sympy.core import Expr
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from .sets import Set, FiniteSet
@@ -66,7 +66,7 @@ class UndefinedSet(Set):
                 return True
         return False
 
-class SetElement(Basic):
+class SetElement(Expr):
     """
     An arbitrary element of a set.
 

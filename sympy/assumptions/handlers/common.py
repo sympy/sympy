@@ -58,6 +58,16 @@ class AskCommutativeHandler(CommonHandler):
     def NaN(expr, assumptions):
         return True
 
+    @staticmethod
+    def Map(expr, assumps):
+        assumps = conjuncts(assumps)
+        if expr.is_commutative is not None:
+            return expr.is_commutative and not ~Q.commutative(expr) in assumps
+        if Q.commutative(expr) in assumps:
+            return True
+        elif ~Q.commutative(expr) in assumps:
+            return False
+        return False
 
 class TautologicalHandler(AskHandler):
     """Wrapper allowing to query the truth value of a boolean expression."""

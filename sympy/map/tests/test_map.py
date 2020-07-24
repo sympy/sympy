@@ -16,11 +16,13 @@ class F(Map):
     def _eval_restrict(self, domain):
         return H()
 class G(Map):
+    is_commutative = True
     def eval(self, x):
         return x-1
     def _eval_inverse(self):
         return F()
 class H(Map):
+    is_commutative = False
     def _map_content(self):
         return F()._map_content()
 
@@ -42,6 +44,15 @@ def test_Map():
 
     # invertibility cannot be determined by default
     assert ask(Q.invertible(f)) is None
+
+    # commutativity is false by default
+    assert ask(Q.commutative(f)) is False
+    # commutativity can be set
+    assert ask(Q.commutative(g)) is True
+    # commutativity can be assumed
+    assert ask(Q.commutative(f), Q.commutative(f)) is True
+    assert ask(Q.commutative(g), ~Q.commutative(g)) is False
+    assert ask(Q.commutative(h), Q.commutative(h)) is True
 
 def test_AppliedMap():
 
