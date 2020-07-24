@@ -112,7 +112,7 @@ class BinaryOperator(Map):
 
     def right_identity(self, element):
         r"""
-        Returns ``True`` *element* is right identity of *self*.
+        Returns ``True`` if *element* is right identity of *self*.
 
         Explanation
         ===========
@@ -173,27 +173,17 @@ class BinaryOperator(Map):
             newseq.append(o)
         return newseq
 
-    def left_division(self, evaluate=False):
-        return LeftDivision(self, evaluate=evaluate)
+    def left_division(self):
+        return LeftDivision(self)
 
-    def _eval_left_division(self):
-        return
-
-    def right_division(self, evaluate=False):
-        return RightDivision(self, evaluate=evaluate)
-
-    def _eval_right_division(self):
-        return
+    def right_division(self):
+        return RightDivision(self)
 
     def is_left_division(self, other):
         """
         Return ``True`` if *self* is left division operator of *other*.
         """
-        if not ask(Q.left_divisible(other)):
-            return False
         if isinstance(self, LeftDivision) and self.base == other:
-            return True
-        elif other.left_division(evaluate=True) == self:
             return True
         return False
 
@@ -201,11 +191,7 @@ class BinaryOperator(Map):
         """
         Return ``True`` if *self* is right division operator of *other*.
         """
-        if not ask(Q.right_divisible(other)):
-            return False
         if isinstance(self, RightDivision) and self.base == other:
-            return True
-        elif other.right_division(evaluate=True) == self:
             return True
         return False
 
@@ -277,15 +263,11 @@ class LeftDivision(BinaryOperator):
     latex_name = r'\backslash'
     str_name = '\\'
 
-    def __new__(cls, base_op, evaluate=False, **kwargs):
+    def __new__(cls, base_op, **kwargs):
 
         if not ask(Q.left_divisible(base_op)):
             raise TypeError("Left division of %s does not exist." % base_op)
 
-        if evaluate:
-            result = base_op._eval_left_division()
-            if result is not None:
-                return result
         return super().__new__(cls, base_op)
 
     @property
@@ -335,15 +317,11 @@ class RightDivision(BinaryOperator):
     """
     name = '/'
 
-    def __new__(cls, base_op, evaluate=False, **kwargs):
+    def __new__(cls, base_op, **kwargs):
 
         if not ask(Q.right_divisible(base_op)):
             raise TypeError("Right division of %s does not exist." % base_op)
 
-        if evaluate:
-            result = base_op._eval_right_division()
-            if result is not None:
-                return result
         return super().__new__(cls, base_op)
 
     @property
