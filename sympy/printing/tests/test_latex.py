@@ -26,7 +26,8 @@ from sympy.ntheory.factor_ import udivisor_sigma
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import (latex, translate, greek_letters_set,
-                                  tex_greek_dictionary, multiline_latex)
+                                  tex_greek_dictionary, multiline_latex,
+                                  latex_escape)
 from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 ImmutableSparseNDimArray,
                                 MutableSparseNDimArray,
@@ -2639,7 +2640,7 @@ def test_latex_decimal_separator():
     assert(latex(S(.3), decimal_separator='comma')== r'0{,}3')
 
 
-    assert(latex(5.8*10**(-7), decimal_separator='comma') ==r'5{,}8e-07')
+    assert(latex(5.8*10**(-7), decimal_separator='comma') ==r'5{,}8 \cdot 10^{-7}')
     assert(latex(S(5.7)*10**(-7), decimal_separator='comma')==r'5{,}7 \cdot 10^{-7}')
     assert(latex(S(5.7*10**(-7)), decimal_separator='comma')==r'5{,}7 \cdot 10^{-7}')
 
@@ -2655,3 +2656,28 @@ def test_latex_decimal_separator():
 def test_Str():
     from sympy.core.symbol import Str
     assert str(Str('x')) == 'x'
+
+def test_latex_escape():
+    assert latex_escape(r"~^\&%$#_{}") == "".join([
+        r'\textasciitilde',
+        r'\textasciicircum',
+        r'\textbackslash',
+        r'\&',
+        r'\%',
+        r'\$',
+        r'\#',
+        r'\_',
+        r'\{',
+        r'\}',
+    ])
+
+def test_emptyPrinter():
+    class MyObject:
+        def __repr__(self):
+            return "<MyObject with {...}>"
+
+    # unknown objects are monospaced
+    assert latex(MyObject()) == r"\mathtt{\text{<MyObject with \{...\}>}}"
+
+    # even if they are nested within other objects
+    assert latex((MyObject(),)) == r"\left( \mathtt{\text{<MyObject with \{...\}>}},\right)"
