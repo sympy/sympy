@@ -25,10 +25,11 @@ R_BRACE_LITERAL: "\\}"
 L_BRACKET: "["
 R_BRACKET: "]"
 
-L_LEFT: "\\left"
-R_RIGHT: "\\right"
+%ignore "\\left"
+%ignore "\\right"
 
-BAR: "|"
+L_BAR.2: "(|"
+R_BAR.2: "|)"
 
 FUNC_LIM:  "\\lim"
 LIM_APPROACH_SYM: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
@@ -117,16 +118,11 @@ relation: relation (EQUAL | LT | LTE | GT | GTE) relation
      | abs_group
 
 ?group: L_PAREN expr R_PAREN
-      | L_LEFT L_PAREN expr R_RIGHT R_PAREN
       | L_BRACKET expr R_BRACKET
-      | L_LEFT L_BRACKET expr R_RIGHT R_BRACKET
       | L_BRACE expr R_BRACE
-      | L_LEFT L_BRACE expr R_RIGHT R_BRACE
       | L_BRACE_LITERAL expr R_BRACE_LITERAL
-      | L_LEFT L_BRACE_LITERAL expr R_RIGHT R_BRACE_LITERAL
 
-?abs_group: BAR expr BAR
-          | L_LEFT BAR expr R_RIGHT BAR
+?abs_group: L_BAR expr R_BAR
 
 ?sub_expression: UNDERSCORE (atom | L_BRACE expr R_BRACE)
 ?sub_equation: UNDERSCORE L_BRACE expr EQUAL expr R_BRACE

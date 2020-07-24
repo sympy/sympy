@@ -1,6 +1,7 @@
 import operator
 import os
 import functools
+import re
 
 import sympy
 from sympy.external import import_module
@@ -13,6 +14,61 @@ class LaTeXParsingError(Exception):
 def _assert_nargs_func(args, n):
     if len(args) != 3 + n:
         raise LaTeXParsingError('latex function=%s expected %d args got %d' % (args[0].value, n, len(args)-3))
+
+
+def transform_string(s):
+    # LALR(1) parser cannot with lookahead 1 determine if opening or
+    # closing "|" replaces with (left) @@ and (right) %%.  note that
+    # this does not handle "|" in the use case of evaluation e.g. $y
+    # |_1^4$
+    num_replacements = s.count('|') // 2
+    positions = [match.start() for match in re.finditer('\|(?![_\^])', s)]
+    replacements = [None] * len(positions)
+
+    left_bar = '(|'
+    right_bar = '|)'
+
+    left_prev_bar = None
+    right_prev_bar = None
+
+    left_prev_position = None
+    right_prev_position = None
+
+    for i, (left_position, right_position) in enumerate(zip(
+            positions[:num_replacements:1],
+            positions[num_replacements::-1])):
+        if left_prev_position is None and right_prev_position is None:
+            replacements[i] = left_bar
+            left_prev_bar = left_bar
+            replacements[-(i+1)] = right_bar
+            right_prev_bar = right_bar
+        elif (((left_position - left_prev_position) == 1) and left_prev_bar == left_bar) or \
+             (((right_position - right_prev_position) == 1) and right_prev_bar == right_bar):
+            # if they are next to eachother do not close
+            replacements[i] = left_bar
+            left_prev_bar = left_bar
+            replacements[-(i+1)] = right_bar
+            right_prev_bar = right_bar
+        elif left_prev_bar == left_bar:
+            replacements[i] = right_bar
+            left_prev_bar = right_bar
+            replacements[-(i+1)] = left_bar
+            right_prev_bar = left_bar
+        else: # left_prev_bar == right_bar:
+            replacements[i] = left_bar
+            left_prev_bar = left_bar
+            replacements[-(i+1)] = right_bar
+            right_prev_bar = right_bar
+
+        left_prev_position = left_position
+        right_prev_position = right_position
+
+    for replacement, position in zip(
+            replacements[::-1],
+            positions[::-1]):
+        print(s, position, replacement)
+        s = s[:position] + replacement + s[position+1:]
+    return s
 
 
 def parse_latex(s):
@@ -234,6 +290,8 @@ def parse_latex(s):
             return op_map[args[1].type](args[0], args[2])
 
     try:
+        s = transform_string(s)
+        print(s)
         tree = parser.parse(s)
         # this could be done within the parse step of lark however we
         # would like to keep it seperate to allow for the possiblity of

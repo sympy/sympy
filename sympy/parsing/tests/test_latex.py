@@ -4,6 +4,7 @@ from sympy import (
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
     GreaterThan, Sum, Product, E, log, tan, Function, binomial, exp,
+    pi
 )
 from sympy.abc import x, y, z, a, b, c, t, k, n
 
@@ -98,11 +99,11 @@ GOOD_PAIRS = [
     ("f(x, y, z)", f(x, y, z)),
     # ("\\frac{d f(x)}{dx}", Derivative(f(x), x)),
     # ("\\frac{d\\theta(x)}{dx}", Derivative(Function('theta')(x), x)),
-    # ("|x|", _Abs(x)),
-    # ("||x||", _Abs(Abs(x))),
-    # ("|x||y|", _Abs(x)*_Abs(y)),
-    # ("||x||y||", _Abs(_Abs(x)*_Abs(y))),
-    # ("\\pi^{|xy|}", Symbol('pi')**_Abs(x*y)),
+    ("|x|", Abs(x)),
+    ("||x||", Abs(Abs(x))),
+    ("|x||y|", Abs(x)*Abs(y)),
+    ("||x||y||", Abs(Abs(x)*Abs(y))),
+    ("\\pi^{|xy|}", pi**Abs(x*y)),
     # ("\\int x dx", Integral(x, x)),
     # ("\\int x d\\theta", Integral(x, theta)),
     # ("\\int (x^2 - y)dx", Integral(x**2 - y, x)),
