@@ -5,7 +5,7 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.function import expand_mul, expand, Derivative, AppliedUndef
+from sympy.core.function import expand_mul, expand, Derivative, AppliedUndef, Function
 from sympy.functions import exp, im, cos, sin, re, Piecewise, piecewise_fold
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase
@@ -1234,6 +1234,28 @@ def _component_solver(eqs, funcs, t):
 
     # sol: List of Equations
     return sol
+
+
+def _higher_order_to_first_order(eqs, sys_order, t):
+    new_funcs = []
+
+    for func in sys_order:
+        new_funcs.append(func)
+        subs_dict = {func: func}
+        new_eqs = []
+
+        for i in range(1, sys_order[func]):
+            new_func = Function(Dummy())(t)
+            subs_dict[func.diff(t, i)] = new_func
+            new_funcs.append(new_func)
+
+            prev_func = subs_dict[func.diff(t, i-1)]
+            new_eq = Eq(prev_func.diff(t), new_func)
+            new_eqs.append(new_eq)
+
+        eqs = [eq.subs(subs_dict) for eq in eqs] + new_eqs
+
+    return eqs, new_funcs
 
 
 def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
