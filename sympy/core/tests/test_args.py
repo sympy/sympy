@@ -3011,7 +3011,7 @@ def test_sympy__matrices__expressions__matexpr__GenericZeroMatrix():
     assert _test_args(GenericZeroMatrix())
 
 def test_sympy__matrices__expressions__matexpr__MatrixSet():
-    from sympy.matrices.expressions.matexpr import MatrixSet
+    from sympy.matrices.expressions.sets import MatrixSet
     from sympy import S
     assert _test_args(MatrixSet(2, 2, S.Reals))
 
