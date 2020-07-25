@@ -286,5 +286,11 @@ def test_issue_19534():
     1.0*dt**2 + 1.0*dt + 1.0
 
 
+def test_issue_11407():
+    a, b, c, x = symbols('a b c x')
+    assert series(sqrt(a + b + c*x), x, 0, 1) == sqrt(a + b) + O(x)
+    assert series(sqrt(a + b + c + c*x), x, 0, 1) == sqrt(a + b + c) + O(x)
+
+
 def test_issue_14037():
     assert (sin(x**50)/x**51).series(x, n=0) == 1/x + O(1, x)
