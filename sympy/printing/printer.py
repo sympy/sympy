@@ -71,10 +71,10 @@ While looking for the method, it follows these steps:
     As fall-back ``self.emptyPrinter`` will be called with the expression. If
     not defined in the Printer subclass this will be the same as ``str(expr)``.
 
+.. _printer_example:
+
 Example of Custom Printer
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. _printer_example:
 
 In the example below, we have a printer which prints the derivative of a function
 in a shorter form.
@@ -126,6 +126,8 @@ The output of the code above is::
 
     \\frac{\\partial^{2}}{\\partial x\\partial y}  f{\\left(x,y \\right)}
     f_{xy}
+
+.. _printer_method_example:
 
 Example of Custom Printing Method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
