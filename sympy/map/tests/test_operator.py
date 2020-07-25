@@ -34,7 +34,7 @@ class G(BaseOp):
         if element == b3:
             return True
 
-g_A = G(A**2, B)
+g_A = G(A**2, A)
 g_B = G(B**2, B)
 
 class G2(G):
@@ -48,6 +48,15 @@ h1 = H1(A**2, A)
 class H2(BaseOp):
     is_right_divisible = True
 h2 = H2(A**2, A)
+
+class L(BaseOp):
+    identity = a3
+l = L(A**2, A)
+
+class M(BaseOp):
+    is_associative = True
+    identity = a3
+m = M(A**2, A)    
 
 def test_BinaryOperator():
     # calling binary operator returns AppliedBinaryOperator
@@ -89,8 +98,8 @@ def test_AppliedBinaryOperator():
 
     # associativity can be assumed.
     with assuming(Q.associative(f)):
-        expr = f(f(a1, a1), f(a2, a2)).doit()
-        assert expr.arguments == (a1, a1, a2, a2)
+        expr = f(f(a1, a2), f(a1, a2)).doit()
+        assert expr.arguments == (a1, a2, a1, a2)
 
     # identity removal
     expr = f(f(a3, a2), f(a1, a3)).doit()
@@ -101,12 +110,12 @@ def test_AppliedBinaryOperator():
     # associative operators
     # check nested application (flattened)
     # also check that domain's subset's element can be argument
-    expr = g_A(g_A(a1, b1), g_A(a2, b2), evaluate=True)
-    assert expr.arguments == (a1, b1, a2, b2)
+    expr = g_A(g_A(a1, a2), g_A(b2, b1), evaluate=True)
+    assert expr.arguments == (a1, a2, b2, b1)
 
     # restricted function in argument is flattened
-    expr = g_A(g_A(a1, b1), g_B(b2, b2), evaluate=True)
-    assert expr.arguments == (a1, b1, b2, b2)
+    expr = g_A(g_A(a1, b1), g_B(b2, b1), evaluate=True)
+    assert expr.arguments == (a1, b1, b2, b1)
 
     # identity removal with flattening
     expr = g_A(g_A(b3, b2), g_A(b1, b2)).doit()
@@ -115,8 +124,8 @@ def test_AppliedBinaryOperator():
     assert expr.arguments == (b2, b1, b2)
     expr = g_A(g_A(b3, b1), g_A(b3, b2)).doit()
     assert expr.arguments == (b3, b1, b2)
-    expr = g_A(g_A(b2, b1), g_A(b2, g_A(b2, b3))).doit()
-    assert expr.arguments == (b2, b1, b2, b2)
+    expr = g_A(g_A(b2, b1), g_A(a2, g_A(b2, b3))).doit()
+    assert expr.arguments == (b2, b1, a2, b2)
 
     expr = g2(g2(a3, a1), g2(a3, a2)).doit()
     assert expr.arguments == (a1, a2)
@@ -172,3 +181,28 @@ def test_RightDivision():
     assert h2(h2_rd(a1, a2), h2(a2, a2), evaluate=True) != h2(a2, a2)
     with assuming(Q.associative(h2)):
         assert h2(h2_rd(a1, a2), h2(a2, a2), evaluate=True) == h2(a1, a2)
+
+def test_InverseOperator():
+    l_inv = l.inverse_operator()
+    # inverse cancellation
+    assert l(a1, l_inv(a1), evaluate=True) == a3
+    assert l(l_inv(a1), a1, evaluate=True) == a3
+
+    # are_inverse
+    assert l.are_inverse(a1, l_inv(a1)) == l.are_inverse(l_inv(a1), a1) == True
+    # inverse of identity
+    assert l_inv(a3, evaluate=True) == a3
+    # inverse operator is idempotent
+    assert l_inv(l_inv(a1), evaluate=True) == a1
+    assert l_inv(l_inv(l_inv(a1)), evaluate=True) == l_inv(a1)
+
+def test_ExponentOperator():
+    m_expop = m.exponent_operator()
+    # repetitive arguments are converted to ExponentOperator
+    assert m(a1, a1, a1, evaluate=True) == m_expop(a1, 3)
+    # n=1 is evaluated to original element
+    assert m_expop(a1, 1, evaluate=True) == a1
+    # n=0 is evaluated to identity element
+    assert m_expop(a1, 0, evaluate=True) == a3
+    # n=-1 is evaluated to inverse element
+    assert m_expop(a1, -1, evaluate=True) == m.inverse_operator()(a1)

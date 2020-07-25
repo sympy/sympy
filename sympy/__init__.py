@@ -179,7 +179,8 @@ from .solvers import (solve, solve_linear_system, solve_linear_system_LU,
 
 from .map import (Map, UndefinedMap, InverseMap, IdentityMap, RestrictedMap,
         AppliedMap,
-        BinaryOperator, LeftDivision, RightDivision, AppliedBinaryOperator,
+        BinaryOperator, LeftDivision, RightDivision,
+        InverseOperator, ExponentOperator, AppliedBinaryOperator,
         CompositeMap, IteratedMap)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
@@ -420,7 +421,8 @@ __all__ = [
     # sympy.map
     'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'RestrictedMap',
     'AppliedMap',
-    "BinaryOperator",  'LeftDivision', 'RightDivision', 'AppliedBinaryOperator',
+    "BinaryOperator",  'LeftDivision', 'RightDivision',
+    'InverseOperator', 'ExponentOperator', 'AppliedBinaryOperator',
     'CompositeMap', 'IteratedMap',
 
     # sympy.matrices

@@ -503,4 +503,7 @@ class AppliedMap(Expr):
         else:
             return self.func(*self.args, evaluate=True)
 
+    def as_base_exp(self):
+        return self.map._eval_as_base_exp(*self.arguments)
+
 from .composite import CompositeMap, IteratedMap

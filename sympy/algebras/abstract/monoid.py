@@ -15,7 +15,7 @@ class Monoid(Semigroup):
     >>> from sympy import Set, BinaryOperator, Monoid
 
     >>> S = Set('S')
-    >>> a, b, e = S.element('a'), S.element('b'), S.element('e')
+    >>> a, b, c, e = [S.element(n) for n in 'abce']
 
     >>> class MonoidOp(BinaryOperator):
     ...     name = '*'
@@ -29,8 +29,8 @@ class Monoid(Semigroup):
 
     Operation of monoid is associative.
 
-    >>> op(a, op(b, b), evaluate=True)
-    a * b * b
+    >>> op(a, op(b, c), evaluate=True)
+    a * b * c
 
     Operation of monoid has identity.
 

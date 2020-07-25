@@ -3002,6 +3002,21 @@ def test_sympy__map__operator__RightDivision():
     addop = AddOp()
     assert _test_args(RightDivision(addop))
 
+def test_sympy__map__operator__InverseOperator():
+    from sympy.map import BinaryOperator, InverseOperator
+    class AddOp(BinaryOperator):
+        identity = S.Zero
+        is_right_divisible = True
+    addop = AddOp()
+    assert _test_args(InverseOperator(addop))
+
+def test_sympy__map__operator__ExponentOperator():
+    from sympy.map import BinaryOperator, ExponentOperator
+    class AddOp(BinaryOperator):
+        is_right_divisible = True
+    addop = AddOp()
+    assert _test_args(ExponentOperator(addop))
+
 def test_sympy__map__operator__AppliedBinaryOperator():
     from sympy.map import BinaryOperator, AppliedBinaryOperator
     class AddOp(BinaryOperator):
