@@ -1,6 +1,6 @@
 from sympy import (Symbol, Eq, Ne, simplify, sqrt, exp, pi, symbols,
                 Piecewise, factorial, gamma, IndexedBase, Add, Pow, Mul,
-                Indexed, Integer, Integral)
+                Indexed, Integer, Integral, DiracDelta, Dummy, Sum, oo)
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.stats import (Poisson, Beta, Exponential, P,
                         Multinomial, MultivariateBeta)
@@ -57,10 +57,13 @@ def test_compound_distribution():
 
 def test_mix_expression():
     Y, E = Poisson('Y', 1), Exponential('E', 1)
+    k = Dummy('k')
+    expr1 = Integral(Sum(exp(-1)*Integral(exp(-k)*DiracDelta(k - 2), (k, 0, oo)
+    )/factorial(k), (k, 0, oo)), (k, -oo, 0))
+    expr2 = Integral(Sum(exp(-1)*Integral(exp(-k)*DiracDelta(k - 2), (k, 0, oo)
+    )/factorial(k), (k, 0, oo)), (k, 0, oo))
     assert P(Eq(Y + E, 1)) == 0
     assert P(Ne(Y + E, 2)) == 1
-    with ignore_warnings(UserWarning):
-        assert str(P(E + Y < 2, evaluate=False).rewrite(Integral)) == """Integral(Sum(exp(-1)*Integral"""\
-    +"""(exp(-E)*DiracDelta(-_z + E + Y - 2), (E, 0, oo))/factorial(Y), (Y, 0, oo)), (_z, -oo, 0))"""
-        assert str(P(E + Y > 2, evaluate=False).rewrite(Integral)) == """Integral(Sum(exp(-1)*Integral"""\
-    +"""(exp(-E)*DiracDelta(-_z + E + Y - 2), (E, 0, oo))/factorial(Y), (Y, 0, oo)), (_z, 0, oo))"""
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert P(E + Y < 2, evaluate=False).rewrite(Integral).dummy_eq(expr1)
+        assert P(E + Y > 2, evaluate=False).rewrite(Integral).dummy_eq(expr2)

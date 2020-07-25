@@ -66,7 +66,7 @@ def test_unevaluated_CompoundDist():
     expre = Integral(Piecewise((_k*exp(S(3)/4 - _k/4)/8, 2*Abs(arg(_k - 3)) <= pi/2),
     (sqrt(2)*_k*Integral(exp(-(_k**4 + 16*(_k - 3)**2)/(32*_k**2)),
     (_k, 0, oo))/(32*sqrt(pi)), True)), (_k, -oo, oo))
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert (E(X, evaluate=False).rewrite(Integral).simplify()).dummy_eq(expre.simplify())
 
 

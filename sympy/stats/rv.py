@@ -757,6 +757,7 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     from sympy.stats.symbolic_probability import Expectation
     if evaluate:
         return Expectation(expr, condition).doit(**kwargs)
+    ### TODO: Remove the user warnings in the future releases
     message = ("Since version 1.7, using `evaluate=False` returns `Expectation` "
               "object. If you want unevaluated Integral/Sum use "
               "`E(expr, condition, evaluate=False).rewrite(Integral)`")
@@ -800,6 +801,7 @@ def probability(condition, given_condition=None, numsamples=None,
     from sympy.stats.symbolic_probability import Probability
     if evaluate:
         return Probability(condition, given_condition).doit(**kwargs)
+    ### TODO: Remove the user warnings in the future releases
     message = ("Since version 1.7, using `evaluate=False` returns `Probability` "
               "object. If you want unevaluated Integral/Sum use "
               "`P(condition, given_condition, evaluate=False).rewrite(Integral)`")
@@ -1056,6 +1058,7 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
         iterator object containing the sample/samples of given expr
 
     """
+    ### TODO: Remove the user warnings in the future releases
     message = ("The return type of sample has been changed to return an "
                   "iterator object since version 1.7. For more information see "
                   "https://github.com/sympy/sympy/issues/19061")

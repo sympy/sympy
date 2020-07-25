@@ -328,7 +328,7 @@ def test_sample_continuous():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert next(sample(Z)) in Z.pspace.domain.set
     sym, val = list(Z.pspace.sample().items())[0]
     assert sym == Z and val in Interval(0, oo)
@@ -644,7 +644,7 @@ def test_exponential():
     _z = Dummy('_z')
     b = SingleContinuousPSpace(x, ExponentialDistribution(2))
 
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         expected1 = Integral(2*exp(-2*_z), (_z, 3, oo))
         assert b.probability(x > 3, evaluate=False).rewrite(Integral).dummy_eq(expected1)
 
@@ -759,7 +759,7 @@ def test_sampling_gamma_inverse():
     if not scipy:
         skip('Scipy not installed. Abort tests for sampling of gamma inverse.')
     X = GammaInverse("x", 1, 1)
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert next(sample(X)) in X.pspace.domain.set
 
 def test_gompertz():
@@ -886,13 +886,13 @@ def test_lognormal():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         for i in range(3):
             X = LogNormal('x', i, 1)
             assert next(sample(X)) in X.pspace.domain.set
 
     size = 5
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         samps = next(sample(X, size=size))
         for samp in samps:
             assert samp in X.pspace.domain.set
@@ -1015,7 +1015,7 @@ def test_sampling_gaussian_inverse():
     if not scipy:
         skip('Scipy not installed. Abort tests for sampling of Gaussian inverse.')
     X = GaussianInverse("x", 1, 1)
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert next(sample(X, library='scipy')) in X.pspace.domain.set
 
 def test_pareto():
@@ -1317,7 +1317,7 @@ def test_prefab_sampling():
     variables = [N, L, E, P, W, U, B, G]
     niter = 10
     size = 5
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         for var in variables:
             for i in range(niter):
                 assert next(sample(var)) in var.pspace.domain.set
@@ -1343,22 +1343,20 @@ def test_input_value_assertions():
 
 def test_unevaluated():
     X = Normal('x', 0, 1)
-    with ignore_warnings(UserWarning):
-        assert str(E(X, evaluate=False).rewrite(Integral)) == ("Integral(sqrt(2)*x*exp(-x**2/2)/"
-        "(2*sqrt(pi)), (x, -oo, oo))")
-
-        assert str(E(X + 1, evaluate=False).rewrite(Integral)) == ("Integral(sqrt(2)*x*exp(-x**2/2)/"
-        "(2*sqrt(pi)), (x, -oo, oo)) + 1")
-
-        assert str(P(X > 0, evaluate=False).rewrite(Integral)) == ("Integral(sqrt(2)*exp(-_z**2/2)/"
-        "(2*sqrt(pi)), (_z, 0, oo))")
+    k = Dummy('k')
+    expr1 = Integral(sqrt(2)*k*exp(-k**2/2)/(2*sqrt(pi)), (k, -oo, oo))
+    expr2 = Integral(sqrt(2)*exp(-k**2/2)/(2*sqrt(pi)), (k, 0, oo))
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert E(X, evaluate=False).rewrite(Integral).dummy_eq(expr1)
+        assert E(X + 1, evaluate=False).rewrite(Integral).dummy_eq(expr1 + 1)
+        assert P(X > 0, evaluate=False).rewrite(Integral).dummy_eq(expr2)
 
     assert P(X > 0, X**2 < 1) == S.Half
 
 
 def test_probability_unevaluated():
     T = Normal('T', 30, 3)
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert type(P(T > 33, evaluate=False)) == Probability
 
 
@@ -1586,7 +1584,7 @@ def test_sample_numpy():
     if not numpy:
         skip('Numpy is not installed. Abort tests for _sample_numpy.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_numpy:
                 samps = next(sample(X, size=size, library='numpy'))
                 for sam in samps:
@@ -1619,7 +1617,7 @@ def test_sample_scipy():
     if not scipy:
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             g_sample = list(sample(Gamma("G", 2, 7), size=size, numsamples=numsamples))
             assert len(g_sample) == numsamples
             for X in distribs_scipy:
@@ -1649,7 +1647,7 @@ def test_sample_pymc3():
     if not pymc3:
         skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_pymc3:
                 samps = next(sample(X, size=size, library='pymc3'))
                 for sam in samps:

@@ -34,7 +34,7 @@ def test_Poisson():
     assert E(x) == l
     assert variance(x) == l
     assert density(x) == PoissonDistribution(l)
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert isinstance(E(x, evaluate=False), Expectation)
         assert isinstance(E(2*x, evaluate=False), Expectation)
     # issue 8248
@@ -84,7 +84,7 @@ def test_Logarithmic():
     assert E(x) == -p / ((1 - p) * log(1 - p))
     assert variance(x) == -1/log(2)**2 + 2/log(2)
     assert E(2*x**2 + 3*x + 4) == 4 + 7 / log(2)
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert isinstance(E(x, evaluate=False), Expectation)
 
 
@@ -97,7 +97,7 @@ def test_negative_binomial():
     # This hangs when run with the cache disabled:
     assert variance(x) == p*r / (1-p)**2
     assert E(x**5 + 2*x + 3) == Rational(9207, 4)
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert isinstance(E(x, evaluate=False), Expectation)
 
 
@@ -125,7 +125,7 @@ def test_yule_simon():
     x = YuleSimon('x', rho)
     assert simplify(E(x)) == rho / (rho - 1)
     assert simplify(variance(x)) == rho**2 / ((rho - 1)**2 * (rho - 2))
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert isinstance(E(x, evaluate=False), Expectation)
     # To test the cdf function
     assert cdf(x)(x) == Piecewise((-beta(floor(x), 4)*floor(x) + 1, x >= 1), (0, True))
@@ -145,7 +145,7 @@ def test_sample_discrete():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy not installed. Abort tests')
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert next(sample(X)) in X.pspace.domain.set
         samps = next(sample(X, size=2)) # This takes long time if ran without scipy
         for samp in samps:
@@ -277,7 +277,7 @@ def test_product_spaces():
     #assert str(P(X1 + X2 < 3, evaluate=False)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """\
     #    + """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, -oo, -1))"""
     n = Dummy('n')
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert P(X1 + X2 < 3, evaluate=False).rewrite(Sum).dummy_eq(Sum(Piecewise((2**(-n)/4,
          n + 2 >= 1), (0, True)), (n, -oo, -1))/3)
     #assert str(P(X1 + X2 > 3)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """ +\
@@ -301,7 +301,7 @@ def test_sample_numpy():
     if not numpy:
         skip('Numpy is not installed. Abort tests for _sample_numpy.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_numpy:
                 samps = next(sample(X, size=size, library='numpy'))
                 for sam in samps:
@@ -331,7 +331,7 @@ def test_sample_scipy():
     if not scipy:
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             z_sample = list(sample(Zeta("G", 7), size=size, numsamples=numsamples))
             assert len(z_sample) == numsamples
             for X in distribs_scipy:
@@ -354,7 +354,7 @@ def test_sample_pymc3():
     if not pymc3:
         skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_pymc3:
                 samps = next(sample(X, size=size, library='pymc3'))
                 for sam in samps:
