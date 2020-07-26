@@ -7,7 +7,7 @@ from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
 from sympy.utilities.misc import filldedent
 
-from sympy.matrices.expressions.matexpr import MatrixExpr, Identity, MatrixElement
+from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matpow import MatPow
@@ -16,7 +16,7 @@ from sympy.matrices.expressions.trace import trace
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
-from sympy.matrices.expressions.special import ZeroMatrix
+from sympy.matrices.expressions.special import ZeroMatrix, Identity
 from sympy.matrices import Matrix, ShapeError
 from sympy.functions.elementary.complexes import re, im
 

@@ -3,7 +3,7 @@ from sympy.functions import adjoint, transpose
 from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
         eye, ImmutableMatrix)
 from sympy.matrices.expressions import Adjoint, Transpose, det, MatPow
-from sympy.matrices.expressions.matexpr import GenericIdentity
+from sympy.matrices.expressions.special import GenericIdentity
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, combine_powers, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe

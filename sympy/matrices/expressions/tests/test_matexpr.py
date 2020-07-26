@@ -7,8 +7,7 @@ from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         SparseMatrix, Transpose, Adjoint, NonSquareMatrixError, MatrixSet)
-from sympy.matrices.expressions.matexpr import (MatrixElement,
-                                                GenericIdentity, OneMatrix)
+from sympy.matrices.expressions.matexpr import MatrixElement, OneMatrix
 from sympy.testing.pytest import raises, XFAIL
 
 
@@ -57,21 +56,6 @@ def test_one_matrix_creation():
     raises(ValueError, lambda: OneMatrix(n, n))
     n = symbols('n', negative=True)
     raises(ValueError, lambda: OneMatrix(n, n))
-
-
-def test_identity_matrix_creation():
-    assert Identity(2)
-    assert Identity(0)
-    raises(ValueError, lambda: Identity(-1))
-    raises(ValueError, lambda: Identity(2.0))
-    raises(ValueError, lambda: Identity(2j))
-
-    n = symbols('n')
-    assert Identity(n)
-    n = symbols('n', integer=False)
-    raises(ValueError, lambda: Identity(n))
-    n = symbols('n', negative=True)
-    raises(ValueError, lambda: Identity(n))
 
 
 def test_shape():
@@ -490,26 +474,6 @@ def test_issue_7842():
     B = ZeroMatrix(2, 3)
     assert Eq(A, B) == True
 
-
-def test_generic_identity():
-    I = GenericIdentity()
-    A = MatrixSymbol("A", n, n)
-
-    assert I == I
-    assert I != A
-    assert A != I
-
-    assert I.is_Identity
-    assert I**-1 == I
-
-    raises(TypeError, lambda: I.shape)
-    raises(TypeError, lambda: I.rows)
-    raises(TypeError, lambda: I.cols)
-
-    assert MatMul() == I
-    assert MatMul(I, A) == MatMul(A)
-    # Make sure it is hashable
-    hash(I)
 
 def test_MatMul_postprocessor():
     z = zeros(2)

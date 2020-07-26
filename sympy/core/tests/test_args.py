@@ -2974,14 +2974,6 @@ def test_sympy__matrices__expressions__matadd__MatAdd():
     assert _test_args(MatAdd(X, Y))
 
 
-def test_sympy__matrices__expressions__matexpr__Identity():
-    from sympy.matrices.expressions.matexpr import Identity
-    assert _test_args(Identity(3))
-
-def test_sympy__matrices__expressions__matexpr__GenericIdentity():
-    from sympy.matrices.expressions.matexpr import GenericIdentity
-    assert _test_args(GenericIdentity())
-
 @SKIP("abstract class")
 def test_sympy__matrices__expressions__matexpr__MatrixExpr():
     pass
@@ -2996,19 +2988,30 @@ def test_sympy__matrices__expressions__matexpr__MatrixSymbol():
     assert _test_args(MatrixSymbol('A', 3, 5))
 
 
-def test_sympy__matrices__expressions__special__ZeroMatrix():
-    from sympy.matrices.expressions.special import ZeroMatrix
-    assert _test_args(ZeroMatrix(3, 5))
-
-
 def test_sympy__matrices__expressions__matexpr__OneMatrix():
     from sympy.matrices.expressions.matexpr import OneMatrix
     assert _test_args(OneMatrix(3, 5))
 
 
+def test_sympy__matrices__expressions__special__ZeroMatrix():
+    from sympy.matrices.expressions.special import ZeroMatrix
+    assert _test_args(ZeroMatrix(3, 5))
+
+
 def test_sympy__matrices__expressions__special__GenericZeroMatrix():
     from sympy.matrices.expressions.special import GenericZeroMatrix
     assert _test_args(GenericZeroMatrix())
+
+
+def test_sympy__matrices__expressions__special__Identity():
+    from sympy.matrices.expressions.special import Identity
+    assert _test_args(Identity(3))
+
+
+def test_sympy__matrices__expressions__special__GenericIdentity():
+    from sympy.matrices.expressions.special import GenericIdentity
+    assert _test_args(GenericIdentity())
+
 
 def test_sympy__matrices__expressions__sets__MatrixSet():
     from sympy.matrices.expressions.sets import MatrixSet
