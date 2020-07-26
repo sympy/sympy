@@ -191,7 +191,7 @@ def test_Sample():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
         assert isinstance(next(sample(X + Y)), float)
 
