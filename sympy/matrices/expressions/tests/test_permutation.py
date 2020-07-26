@@ -3,9 +3,8 @@ from sympy.core.expr import unchanged
 from sympy.matrices import Matrix
 from sympy.matrices.expressions import \
     MatMul, BlockDiagMatrix, Determinant, Inverse
-from sympy.matrices.expressions.matexpr import \
-    MatrixSymbol, Identity, OneMatrix
-from sympy.matrices.expressions.special import ZeroMatrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix, Identity
 from sympy.matrices.expressions.permutation import \
     MatrixPermute, PermutationMatrix
 from sympy.testing.pytest import raises

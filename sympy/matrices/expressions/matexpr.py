@@ -4,16 +4,15 @@ from sympy.core.logic import FuzzyBool
 from functools import wraps, reduce
 import collections
 
-from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Eq, Mul, Add
+from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Mul, Add
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import SYMPY_INTS, default_sort_key
 from sympy.core.sympify import SympifyError, _sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.matrices.common import NonSquareMatrixError, NonInvertibleMatrixError
+from sympy.matrices.common import NonSquareMatrixError
 from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
-from sympy.assumptions.ask import ask, Q
 from sympy.multipledispatch import dispatch
 
 
@@ -844,88 +843,6 @@ class MatrixSymbol(MatrixExpr):
             return [_LeftRightArgs(
                 [first, second],
             )]
-
-
-class OneMatrix(MatrixExpr):
-    """
-    Matrix whose all entries are ones.
-    """
-    def __new__(cls, m, n, evaluate=False):
-        m, n = _sympify(m), _sympify(n)
-        cls._check_dim(m)
-        cls._check_dim(n)
-
-        if evaluate:
-            condition = Eq(m, 1) & Eq(n, 1)
-            if condition == True:
-                return Identity(1)
-
-        obj = super().__new__(cls, m, n)
-        return obj
-
-    @property
-    def shape(self):
-        return self._args
-
-    @property
-    def is_Identity(self):
-        return self._is_1x1() == True
-
-    def as_explicit(self):
-        from sympy import ImmutableDenseMatrix
-        return ImmutableDenseMatrix.ones(*self.shape)
-
-    def doit(self, **hints):
-        args = self.args
-        if hints.get('deep', True):
-            args = [a.doit(**hints) for a in args]
-        return self.func(*args, evaluate=True)
-
-    def _eval_power(self, exp):
-        # exp = -1, 0, 1 are already handled at this stage
-        if self._is_1x1() == True:
-            return Identity(1)
-        if (exp < 0) == True:
-            raise NonInvertibleMatrixError("Matrix det == 0; not invertible")
-        if ask(Q.integer(exp)):
-            return self.shape[0] ** (exp - 1) * OneMatrix(*self.shape)
-        return super()._eval_power(exp)
-
-    def _eval_transpose(self):
-        return OneMatrix(self.cols, self.rows)
-
-    def _eval_trace(self):
-        return S.One*self.rows
-
-    def _is_1x1(self):
-        """Returns true if the matrix is known to be 1x1"""
-        shape = self.shape
-        return Eq(shape[0], 1) & Eq(shape[1], 1)
-
-    def _eval_determinant(self):
-        condition = self._is_1x1()
-        if condition == True:
-            return S.One
-        elif condition == False:
-            return S.Zero
-        else:
-            from sympy import Determinant
-            return Determinant(self)
-
-    def _eval_inverse(self):
-        condition = self._is_1x1()
-        if condition == True:
-            return Identity(1)
-        elif condition == False:
-            raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
-        else:
-            return Inverse(self)
-
-    def conjugate(self):
-        return self
-
-    def _entry(self, i, j, **kwargs):
-        return S.One
 
 
 def matrix_symbols(expr):
