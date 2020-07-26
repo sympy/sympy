@@ -7,6 +7,11 @@ __all__ = [
 
 class LeftQuasigroup(Magma):
     r"""
+    A base class for left quasigroup.
+
+    Explanation
+    ===========
+
     Left quasigroup is magma that left division operator can be derived from its operator.
 
     Examples
@@ -15,7 +20,7 @@ class LeftQuasigroup(Magma):
     >>> from sympy import Set, BinaryOperator, LeftQuasigroup
 
     >>> S = Set('S')
-    >>> a, b, c = S.element('a'), S.element('b'), S.element('c')
+    >>> a, b, c = [S.element(n) for n in 'abc']
 
     >>> class Op(BinaryOperator):
     ...     name = '*'
@@ -50,6 +55,11 @@ class LeftQuasigroup(Magma):
 
 class RightQuasigroup(Magma):
     r"""
+    A base class for righ quasigroup.
+
+    Explanation
+    ===========
+
     Right quasigroup is magma that right division operator can be derived from its operator.
 
     Examples
@@ -58,7 +68,7 @@ class RightQuasigroup(Magma):
     >>> from sympy import Set, BinaryOperator, RightQuasigroup
 
     >>> S = Set('S')
-    >>> a, b, c = S.element('a'), S.element('b'), S.element('c')
+    >>> a, b, c = [S.element(n) for n in 'abc']
 
     >>> class Op(BinaryOperator):
     ...     name = '*'
@@ -93,6 +103,11 @@ class RightQuasigroup(Magma):
 
 class Quasigroup(LeftQuasigroup, RightQuasigroup):
     r"""
+    A base class for quasigroup.
+
+    Explanation
+    ===========
+
     Quasigroup is both left quasigroup and right quasigroup.
 
     Examples
@@ -101,7 +116,7 @@ class Quasigroup(LeftQuasigroup, RightQuasigroup):
     >>> from sympy import Set, BinaryOperator, Quasigroup
 
     >>> S = Set('S')
-    >>> a, b, c = S.element('a'), S.element('b'), S.element('c')
+    >>> a, b, c = [S.element(n) for n in 'abc']
 
     >>> class QuasigroupOp(BinaryOperator):
     ...     name = '*'

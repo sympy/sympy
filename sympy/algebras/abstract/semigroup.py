@@ -7,6 +7,11 @@ __all__ = [
 
 class Semigroup(Magma):
     """
+    A base class for semigroup.
+
+    Explanation
+    ===========
+
     Semigroup is magma whose operation is associative.
 
     Examples
@@ -15,7 +20,7 @@ class Semigroup(Magma):
     >>> from sympy import Set, BinaryOperator, Semigroup
 
     >>> S = Set('S')
-    >>> a, b, c = S.element('a'), S.element('b'), S.element('c')
+    >>> a, b, c = [S.element(n) for n in 'abc']
 
     >>> class SemigroupOp(BinaryOperator):
     ...     name = '*'

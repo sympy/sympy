@@ -782,63 +782,105 @@ def test_sympy__algebras__abstract__magma__Magma():
 def test_sympy__algebras__abstract__semigroup__Semigroup():
     from sympy import Set, Semigroup, BinaryOperator
     A = Set('A')
-    class AddOp(BinaryOperator):
+    class Op(BinaryOperator):
         is_associative=True
         domain = A**2
         codomain = A
-    addop = AddOp()
+    op = Op()
     assert _test_args(
-        Semigroup('G', (A,), (addop,))
+        Semigroup('G', (A,), (op,))
     )
 
 def test_sympy__algebras__abstract__quasigroup__LeftQuasigroup():
     from sympy import Set, LeftQuasigroup, BinaryOperator
     A = Set('A')
-    class AddOp(BinaryOperator):
+    class Op(BinaryOperator):
         is_left_divisible = True
         domain = A**2
         codomain = A
-    addop = AddOp()
+    op = Op()
     assert _test_args(
-        LeftQuasigroup('G', (A,), (addop,))
+        LeftQuasigroup('G', (A,), (op,))
     )
 
 def test_sympy__algebras__abstract__quasigroup__RightQuasigroup():
     from sympy import Set, RightQuasigroup, BinaryOperator
     A = Set('A')
-    class AddOp(BinaryOperator):
+    class Op(BinaryOperator):
         is_right_divisible = True
         domain = A**2
         codomain = A
-    addop = AddOp()
+    op = Op()
     assert _test_args(
-        RightQuasigroup('G', (A,), (addop,))
+        RightQuasigroup('G', (A,), (op,))
     )
 
 
 def test_sympy__algebras__abstract__quasigroup__Quasigroup():
     from sympy import Set, Quasigroup, BinaryOperator
     A = Set('A')
-    class AddOp(BinaryOperator):
+    class Op(BinaryOperator):
         is_left_divisible = is_right_divisible = True
         domain = A**2
         codomain = A
-    addop = AddOp()
+    op = Op()
     assert _test_args(
-        Quasigroup('G', (A,), (addop,))
+        Quasigroup('G', (A,), (op,))
     )
 
 def test_sympy__algebras__abstract__monoid__Monoid():
     from sympy import Set, Monoid, BinaryOperator
     A = Set('A')
-    class AddOp(BinaryOperator):
+    class Op(BinaryOperator):
         is_associative=True
         identity = A.element('e')
         domain = A**2
         codomain = A
-    addop = AddOp()
+    op = Op()
     assert _test_args(
-        Monoid('M', (A,), (addop,))
+        Monoid('M', (A,), (op,))
+    )
+
+def test_sympy__algebras__abstract__loop__Loop():
+    from sympy import Set, Loop, BinaryOperator
+    A = Set('A')
+    class Op(BinaryOperator):
+        identity = A.element('e')
+        is_left_divisible = is_right_divisible = True
+        domain = A**2
+        codomain = A
+    op = Op()
+    assert _test_args(
+        Loop('L', (A,), (op,))
+    )
+
+def test_sympy__algebras__abstract__group__Group():
+    from sympy import Set, Group, BinaryOperator
+    A = Set('A')
+    class Op(BinaryOperator):
+        identity = A.element('e')
+        is_left_divisible = is_right_divisible = True
+        is_associative = True
+        domain = A**2
+        codomain = A
+    op = Op()
+    assert _test_args(
+        Group('g', (A,), (op,))
+    )
+
+def test_sympy__algebras__abstract__group__AbelianGroup():
+    from sympy import Set, AbelianGroup, BinaryOperator
+    A = Set('A')
+    class Op(BinaryOperator):
+        identity = A.element('e')
+        is_left_divisible = is_right_divisible = True
+        is_associative = True
+        is_commutative = True
+        domain = A**2
+        codomain = A
+    op = Op()
+    assert _test_args(
+        AbelianGroup('g', (A,), (op,))
     )
 
 def test_sympy__core__relational__Equality():
@@ -2990,55 +3032,55 @@ def test_sympy__map__operator__BinaryOperator():
 
 def test_sympy__map__operator__LeftDivision():
     from sympy.map import BinaryOperator, LeftDivision
-    class AddOp(BinaryOperator):
+    class Op(BinaryOperator):
         is_left_divisible = True
-    addop = AddOp()
-    assert _test_args(LeftDivision(addop))
+    op = Op()
+    assert _test_args(LeftDivision(op))
 
 def test_sympy__map__operator__RightDivision():
     from sympy.map import BinaryOperator, RightDivision
-    class AddOp(BinaryOperator):
+    class Op(BinaryOperator):
         is_right_divisible = True
-    addop = AddOp()
-    assert _test_args(RightDivision(addop))
+    op = Op()
+    assert _test_args(RightDivision(op))
 
 def test_sympy__map__operator__InverseOperator():
     from sympy.map import BinaryOperator, InverseOperator
-    class AddOp(BinaryOperator):
+    class Op(BinaryOperator):
         identity = S.Zero
         is_right_divisible = True
-    addop = AddOp()
-    assert _test_args(InverseOperator(addop))
+    op = Op()
+    assert _test_args(InverseOperator(op))
 
 def test_sympy__map__operator__ExponentOperator():
     from sympy.map import BinaryOperator, ExponentOperator
-    class AddOp(BinaryOperator):
+    class Op(BinaryOperator):
         is_right_divisible = True
-    addop = AddOp()
-    assert _test_args(ExponentOperator(addop))
+    op = Op()
+    assert _test_args(ExponentOperator(op))
 
 def test_sympy__map__operator__InverseElement():
     from sympy.map import BinaryOperator, InverseOperator, InverseElement
-    class AddOp(BinaryOperator):
+    class Op(BinaryOperator):
         identity = S.Zero
         is_right_divisible = True
-    addop = AddOp()
-    assert _test_args(InverseOperator(addop)(x))
+    op = Op()
+    assert _test_args(InverseOperator(op)(x))
 
 def test_sympy__map__operator__ExponentElement():
     from sympy.map import BinaryOperator, ExponentOperator, ExponentElement
-    class AddOp(BinaryOperator):
+    class Op(BinaryOperator):
         identity = S.Zero
         is_right_divisible = True
-    addop = AddOp()
-    assert _test_args(ExponentOperator(addop)(x, 2))
+    op = Op()
+    assert _test_args(ExponentOperator(op)(x, 2))
 
 def test_sympy__map__operator__AppliedBinaryOperator():
     from sympy.map import BinaryOperator, AppliedBinaryOperator
-    class AddOp(BinaryOperator):
+    class Op(BinaryOperator):
         pass
-    addop = AddOp()
-    assert _test_args(AppliedBinaryOperator(addop, (x, y)))
+    op = Op()
+    assert _test_args(AppliedBinaryOperator(op, (x, y)))
 
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector

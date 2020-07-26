@@ -6,6 +6,11 @@ __all__ = [
 
 class Magma(AlgebraicStructure):
     """
+    A base class for algebraic magma.
+
+    Explanation
+    ===========
+
     Magma is algebraic structure consists of one set and one binary operation.
 
     Examples
@@ -14,7 +19,7 @@ class Magma(AlgebraicStructure):
     >>> from sympy import Set, BinaryOperator, Magma
 
     >>> S = Set('S')
-    >>> a, b, c = S.element('a'), S.element('b'), S.element('c')
+    >>> a, b, c = [S.element(n) for n in 'abc']
 
     Define operator for magma.
 

@@ -7,6 +7,11 @@ __all__ = [
 
 class Monoid(Semigroup):
     """
+    A base class for monoid.
+
+    Explanation
+    ===========
+
     Monoid is semigroup whose operation has two-sided identity.
 
     Examples
@@ -44,3 +49,8 @@ class Monoid(Semigroup):
             raise TypeError("%s does not have identity." % op)
 
         return super().__new__(cls, name, sets, operators)
+
+    @property
+    def identity(self):
+        op = self.operators[0]
+        return op.identity

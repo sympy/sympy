@@ -5,6 +5,8 @@ from .abstract import (
     Semigroup,
     LeftQuasigroup, RightQuasigroup, Quasigroup,
     Monoid,
+    Loop,
+    Group, AbelianGroup,
 )
 
 __all__ = [
@@ -14,4 +16,6 @@ __all__ = [
     "Semigroup",
     "LeftQuasigroup", "RightQuasigroup", "Quasigroup",
     "Monoid",
+    "Loop",
+    "Group", "AbelianGroup",
 ]

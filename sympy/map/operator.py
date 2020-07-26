@@ -276,7 +276,8 @@ class BinaryOperator(Map):
             else:
                 newseq.append(exp_op(b, e, evaluate=True))
                 b, e = o_b, o_e
-        newseq.append(exp_op(b, e, evaluate=True))
+        if not (b is None or e is None):
+            newseq.append(exp_op(b, e, evaluate=True))
         return newseq
 
     def assoc_comm_process(self, seq):
