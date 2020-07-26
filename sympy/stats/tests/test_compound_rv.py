@@ -63,10 +63,9 @@ def test_unevaluated_CompoundDist():
     (_k, 0, oo))/(32*sqrt(pi)), True))
     assert (density(X)(x).simplify()).dummy_eq(exprd.simplify())
 
-    expre = Integral(Piecewise((_k*exp(S(3)/4 - _k/4)/8, 2*Abs(arg(_k - 3)) <= pi/2),
-    (sqrt(2)*_k*Integral(exp(-(_k**4 + 16*(_k - 3)**2)/(32*_k**2)),
-    (_k, 0, oo))/(32*sqrt(pi)), True)), (_k, -oo, oo))
-    assert (E(X, evaluate=False).simplify()).dummy_eq(expre.simplify())
+    expre = Integral(_k*Integral(sqrt(2)*exp(-_k**2/32)*exp(-(_k - 3)**2/(2*_k**2)
+    )/(32*sqrt(pi)), (_k, 0, oo)), (_k, -oo, oo))
+    assert E(X, evaluate=False).dummy_eq(expre)
 
     X = Poisson('X', 1)
     Y = Poisson('Y', X)
@@ -75,6 +74,13 @@ def test_unevaluated_CompoundDist():
                 ), (X, 0, oo)), (Y, 0, oo))/factorial(x)
     assert density(Z)(x).simplify() == exprd
 
+    N = Normal('N', 1, 2)
+    M = Normal('M', 3, 4)
+    D = Normal('D', M, N)
+    exprd = Integral(sqrt(2)*exp(-(_k - 1)**2/8)*Integral(exp(-(-_k + x
+    )**2/(2*_k**2))*exp(-(_k - 3)**2/32)/(8*pi*_k)
+    , (_k, -oo, oo))/(4*sqrt(pi)), (_k, -oo, oo))
+    assert density(D, evaluate=False)(x).dummy_eq(exprd)
 
 def test_Compound_Distribution():
     X = Normal('X', 2, 4)
@@ -82,7 +88,7 @@ def test_Compound_Distribution():
     C = CompoundDistribution(N)
     assert C.is_Continuous
     assert C.set == Interval(-oo, oo)
-    assert C.pdf(x).simplify() == exp(-x**2/64 + x/16 - S(1)/16)/(8*sqrt(pi))
+    assert C.pdf(x, True).simplify() == exp(-x**2/64 + x/16 - S(1)/16)/(8*sqrt(pi))
 
     assert not isinstance(CompoundDistribution(NormalDistribution(2, 3)),
                             CompoundDistribution)
@@ -95,7 +101,7 @@ def test_Compound_Distribution():
     assert C.is_Finite
     assert C.set == {0, 1}
     y = symbols('y', negative=False, integer=True)
-    assert C.pdf(y) == Piecewise((S(1)/(30*beta(2, 4)), Eq(y, 0)),
+    assert C.pdf(y, True) == Piecewise((S(1)/(30*beta(2, 4)), Eq(y, 0)),
                 (S(1)/(60*beta(2, 4)), Eq(y, 1)), (0, True))
 
     k, t, z = symbols('k t z', positive=True, real=True)
@@ -104,7 +110,7 @@ def test_Compound_Distribution():
     C = CompoundDistribution(X)
     assert C.is_Discrete
     assert C.set == S.Naturals0
-    assert C.pdf(z).simplify() == t**z*(t + 1)**(-k - z)*gamma(k + z)/(gamma(k)*gamma(z + 1))
+    assert C.pdf(z, True).simplify() == t**z*(t + 1)**(-k - z)*gamma(k + z)/(gamma(k)*gamma(z + 1))
 
 
 def test_compound_pspace():

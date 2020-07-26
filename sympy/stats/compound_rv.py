@@ -1,4 +1,4 @@
-from sympy import Basic, integrate, Sum, Dummy, Lambda
+from sympy import Basic, integrate, Sum, Dummy, Lambda, Integral
 from sympy.stats.rv import (NamedArgsMixin, random_symbols, _symbol_converter,
                         PSpace, RandomSymbol, is_random)
 from sympy.stats.crv import ContinuousDistribution, SingleContinuousPSpace
@@ -65,11 +65,11 @@ class CompoundPSpace(PSpace):
     def domain(self):
         return self._get_newpspace().domain
 
-    def _get_newpspace(self):
+    def _get_newpspace(self, evaluate=False):
         x = Dummy('x')
         parent_dist = self.distribution.args[0]
-        new_pspace = self._transform_pspace(self.symbol, parent_dist,
-                            Lambda(x, self.distribution.pdf(x)))
+        func = Lambda(x, self.distribution.pdf(x, evaluate))
+        new_pspace = self._transform_pspace(self.symbol, parent_dist, func)
         if new_pspace is not None:
             return new_pspace
         message = ("Compound Distribution for %s is not implemeted yet" % str(parent_dist))
@@ -91,17 +91,17 @@ class CompoundPSpace(PSpace):
             return SingleFinitePSpace(sym, FiniteDistributionHandmade(dens))
 
     def compute_density(self, expr, **kwargs):
-        new_pspace = self._get_newpspace()
+        new_pspace = self._get_newpspace(kwargs.pop('compound_evaluate', True))
         expr = expr.subs({self.value: new_pspace.value})
         return new_pspace.compute_density(expr, **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
-        new_pspace = self._get_newpspace()
+        new_pspace = self._get_newpspace(kwargs.pop('compound_evaluate', True))
         expr = expr.subs({self.value: new_pspace.value})
         return new_pspace.compute_cdf(expr, **kwargs)
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
-        new_pspace = self._get_newpspace()
+        new_pspace = self._get_newpspace(evaluate)
         expr = expr.subs({self.value: new_pspace.value})
         if rvs:
             rvs = rvs.subs({self.value: new_pspace.value})
@@ -110,12 +110,12 @@ class CompoundPSpace(PSpace):
         return new_pspace.compute_expectation(expr, rvs, evaluate, **kwargs)
 
     def probability(self, condition, **kwargs):
-        new_pspace = self._get_newpspace()
+        new_pspace = self._get_newpspace(kwargs.pop('compound_evaluate', True))
         condition = condition.subs({self.value: new_pspace.value})
         return new_pspace.probability(condition)
 
     def conditional_space(self, condition, **kwargs):
-        new_pspace = self._get_newpspace()
+        new_pspace = self._get_newpspace(kwargs.pop('compound_evaluate', True))
         condition = condition.subs({self.value: new_pspace.value})
         return new_pspace.conditional_space(condition)
 
@@ -177,7 +177,7 @@ class CompoundDistribution(Basic, NamedArgsMixin):
     def is_Discrete(self):
         return isinstance(self.args[0], DiscreteDistribution)
 
-    def pdf(self, x):
+    def pdf(self, x, evaluate=False):
         dist = self.args[0]
         randoms = [rv for rv in dist.args if is_random(rv)]
         if isinstance(dist, SingleFiniteDistribution):
@@ -187,10 +187,10 @@ class CompoundDistribution(Basic, NamedArgsMixin):
             y = Dummy('y')
             expr = dist.pdf(y)
         for rv in randoms:
-            expr = self._marginalise(expr, rv)
+            expr = self._marginalise(expr, rv, evaluate)
         return Lambda(y, expr)(x)
 
-    def _marginalise(self, expr, rv):
+    def _marginalise(self, expr, rv, evaluate):
         if isinstance(rv.pspace.distribution, SingleFiniteDistribution):
             rv_dens = rv.pspace.distribution.pmf(rv)
         else:
@@ -198,10 +198,12 @@ class CompoundDistribution(Basic, NamedArgsMixin):
         rv_dom = rv.pspace.domain.set
         if rv.pspace.is_Discrete or rv.pspace.is_Finite:
             expr = Sum(expr*rv_dens, (rv, rv_dom._inf,
-                    rv_dom._sup)).doit()
-        else:
-            expr = integrate(expr*rv_dens, (rv, rv_dom._inf,
                     rv_dom._sup))
+        else:
+            expr = Integral(expr*rv_dens, (rv, rv_dom._inf,
+                    rv_dom._sup))
+        if evaluate:
+            return expr.doit()
         return expr
 
     @classmethod
