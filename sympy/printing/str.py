@@ -961,17 +961,25 @@ class StrPrinter(Printer):
         return name
 
     def _print_AppliedMap(self, expr):
-        from sympy.map import BinaryOperator
         map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
         args_str = self.stringify(expr.arguments, ", ")
         return "%s(%s)" % (map_str, args_str)
 
     def _print_AppliedBinaryOperator(self, expr):
-        from sympy.map import BinaryOperator
         map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
         infix_str = ' ' + map_str + ' '
         args = [self.parenthesize(a, PRECEDENCE['Mul']) for a in expr.arguments]
         return infix_str.join(args)
+
+    def _print_InverseElement(self, expr):
+        base_str = self._print(expr.arguments[0])
+        return "%s**-1" % base_str
+
+    def _print_ExponentElement(self, expr):
+        base, exp = expr.as_base_exp()
+        base_str = self._print(base)
+        exp_str = self._print(exp)
+        return "%s**%s" % (base_str, exp_str)
 
     def _print_AlgebraicStructure(self, expr):
         name = expr.name.name

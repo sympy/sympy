@@ -56,7 +56,13 @@ l = L(A**2, A)
 class M(BaseOp):
     is_associative = True
     identity = a3
-m = M(A**2, A)    
+m = M(A**2, A)
+
+class N(BaseOp):
+    is_associative = True
+    is_commutative = True
+    identity = a3
+n = N(A**2, A)
 
 def test_BinaryOperator():
     # calling binary operator returns AppliedBinaryOperator
@@ -206,3 +212,11 @@ def test_ExponentOperator():
     assert m_expop(a1, 0, evaluate=True) == a3
     # n=-1 is evaluated to inverse element
     assert m_expop(a1, -1, evaluate=True) == m.inverse_operator()(a1)
+    # exponentiation of exponentiation is evaluated
+    assert m_expop(m_expop(a1, 2), 3, evaluate=True) == m_expop(a1, 6)
+
+def test_assoc_comm_process():
+    n_invop = n.inverse_operator()
+    n_expop = n.exponent_operator()
+    assert n(a1, a3, a2, a1, n_invop(a2), n_invop(a1), evaluate=True) == a1
+    assert n(a1, a2, a1, a3, n_expop(a1, -2), evaluate=True) == a2

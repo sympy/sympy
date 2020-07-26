@@ -10,7 +10,7 @@ __all__ = [
     'CompositeMap', 'IteratedMap',
     'BinaryOperator', 'LeftDivision', 'RightDivision',
     'InverseOperator', 'ExponentOperator',
-    'AppliedBinaryOperator',
+    'AppliedBinaryOperator', 'InverseElement', 'ExponentElement',
 ]
 
 from .map import (
@@ -20,7 +20,7 @@ from .map import (
 from .operator import (
     BinaryOperator, LeftDivision, RightDivision,
     InverseOperator, ExponentOperator,
-    AppliedBinaryOperator,
+    AppliedBinaryOperator, InverseElement, ExponentElement,
 )
 from .composite import (
     CompositeMap, IteratedMap,

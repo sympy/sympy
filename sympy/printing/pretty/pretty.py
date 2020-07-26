@@ -2809,7 +2809,6 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_AppliedMap(self, e):
-        from sympy.map import BinaryOperator
         prettyMap = self.parenthesize(e.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
         prettyArgs = self._print_seq(e.arguments, delimiter=', ')
         prettyArgs = prettyForm(*prettyArgs.parens())
@@ -2820,13 +2819,22 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_AppliedBinaryOperator(self, e):
-        from sympy.map import BinaryOperator
         prettyMap = self.parenthesize(e.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
         infix = ' ' + str(prettyMap) + ' '
         return self._print_seq(
                 e.arguments, None, None, infix,
                 lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"]
             )
+
+    def _print_InverseElement(self, e):
+        pretty_base = self._print(e.arguments[0])
+        return pretty_base**prettyForm('-1')
+
+    def _print_ExponentElement(self, e):
+        base, exp = e.as_base_exp()
+        pretty_base = self._print(base)
+        pretty_exp = self._print(exp)
+        return pretty_base**pretty_exp
 
     def _print_AlgebraicStructure(self, e):
         name = e.name.name

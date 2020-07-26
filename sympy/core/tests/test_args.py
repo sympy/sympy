@@ -3017,6 +3017,22 @@ def test_sympy__map__operator__ExponentOperator():
     addop = AddOp()
     assert _test_args(ExponentOperator(addop))
 
+def test_sympy__map__operator__InverseElement():
+    from sympy.map import BinaryOperator, InverseOperator, InverseElement
+    class AddOp(BinaryOperator):
+        identity = S.Zero
+        is_right_divisible = True
+    addop = AddOp()
+    assert _test_args(InverseOperator(addop)(x))
+
+def test_sympy__map__operator__ExponentElement():
+    from sympy.map import BinaryOperator, ExponentOperator, ExponentElement
+    class AddOp(BinaryOperator):
+        identity = S.Zero
+        is_right_divisible = True
+    addop = AddOp()
+    assert _test_args(ExponentOperator(addop)(x, 2))
+
 def test_sympy__map__operator__AppliedBinaryOperator():
     from sympy.map import BinaryOperator, AppliedBinaryOperator
     class AddOp(BinaryOperator):

@@ -1031,12 +1031,21 @@ def test_map():
     assert str(IteratedMap(f, 2)(x)) == 'IteratedMap(f, 2)(x)'
 
     # Binary operator
-    class AddOp(BinaryOperator):
+    class Op1(BinaryOperator):
         name = '+'
-    addop = AddOp()
-    assert str(addop) == '+ : UniversalSet -> UniversalSet'
-    assert str(addop(x+y, x*y)) == '(x + y) + (x*y)'
-    assert str(addop(addop(x,y), y)) == '(x + y) + y'
+    op1 = Op1()
+    assert str(op1) == '+ : ProductSet(UniversalSet, UniversalSet) -> UniversalSet'
+    assert str(op1(x+y, x*y)) == '(x + y) + (x*y)'
+    assert str(op1(op1(x,y), y)) == '(x + y) + y'
+
+    # inverse and exponent element
+    class Op2(BinaryOperator):
+        identity = S.One
+        is_associative = True
+    op2 = Op2()
+    assert str(op2.inverse_operator()(x)) == "x**-1"
+    assert str(op2.exponent_operator()(x, 2)) == "x**2"
+    assert str(op2.exponent_operator()(op2.inverse_operator()(x), 2)) == "x**-2"
 
 def test_abstractalgebra():
     from sympy.sets import Set

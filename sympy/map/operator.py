@@ -7,7 +7,7 @@ from .map import Map, AppliedMap, IdentityMap
 __all__ = [
     'BinaryOperator', 'LeftDivision', 'RightDivision',
     'InverseOperator', 'ExponentOperator',
-    'AppliedBinaryOperator',
+    'AppliedBinaryOperator', 'InverseElement', 'ExponentElement',
 ]
 
 class BinaryOperator(Map):
@@ -237,18 +237,12 @@ class BinaryOperator(Map):
             return []
         # 2. right division
         if isinstance(a, AppliedMap):
-            if (
-                self.is_right_division(a.map)
-                or getattr(a.map, "is_right_division", lambda cls: False)(self)
-            ):
+            if self.is_right_division(a.map) or a.map.is_right_division(self):
                 if a.arguments[-1] == b:
                     return [*a.arguments[:-1]]
         # 3. left division
         if isinstance(b, AppliedMap):
-            if (
-                self.is_left_division(b.map)
-                or getattr(b.map, "is_left_division", lambda cls: False)(self)
-            ):
+            if self.is_left_division(b.map) or b.map.is_left_division(self):
                 if a == b.arguments[0]:
                     return [*b.arguments[1:]]
         return [a, b]
@@ -288,6 +282,8 @@ class BinaryOperator(Map):
     def assoc_comm_process(self, seq):
         # Special process for associative and commutative operator
         # Common operators such as addition or multiplication use this method.
+        seq = self.remove_identity(seq)
+
         base_exp_dict = {}
         for o in seq:
             b, e = o.as_base_exp()
@@ -298,7 +294,8 @@ class BinaryOperator(Map):
         result = []
         exp_op = self.exponent_operator()
         for b,e in base_exp_dict.items():
-            result.append(exp_op(b, e, evaluate=True))
+            if e != 0:
+                result.append(exp_op(b, e, evaluate=True))
         return result
 
     def process_args(self, seq):
@@ -488,6 +485,15 @@ class InverseOperator(Map):
     def codomain(self):
         return self.base_op.codomain
 
+    def is_left_division(self, other):
+        return False
+
+    def is_right_division(self, other):
+        return False
+
+    def __call__(self, x, evaluate=False, **kwargs):
+        return InverseElement(self, (x,), evaluate=evaluate)
+
     def eval(self, x):
         if isinstance(x, AppliedMap) and x.map == self:
             return x.arguments[0]
@@ -554,6 +560,15 @@ class ExponentOperator(Map):
     def codomain(self):
         return self.base_op.domain.args[0]
 
+    def is_left_division(self, other):
+        return False
+
+    def is_right_division(self, other):
+        return False
+
+    def __call__(self, x, n, evaluate=False, **kwargs):
+        return ExponentElement(self, (x, n), evaluate=evaluate)
+
     def eval(self, x, n):
 
         if n <= 0:
@@ -568,9 +583,12 @@ class ExponentOperator(Map):
             return self.base_op.identity
         if n == -1:
             return self.base_op.inverse_operator()(x)
+        if n < -1:
+            return self(self.base_op.inverse_operator()(x), -n)
 
     def _eval_as_base_exp(self, x, n):
-        return x, n
+        b, e = x.as_base_exp()
+        return b, n*e
 
 class AppliedBinaryOperator(AppliedMap):
     """
@@ -629,3 +647,21 @@ class AppliedBinaryOperator(AppliedMap):
             return result
 
         return super().__new__(cls, mapping, args, evaluate=False, **kwargs)
+
+class InverseElement(AppliedMap):
+    """
+    Result of InverseOperator applied to element.
+
+    """
+
+class ExponentElement(AppliedMap):
+    """
+    Result of ExponentOperator applied to element.
+
+    """
+    def __new__(cls, mapping, args, evaluate=False, **kwargs):
+        x, n = map(_sympify, args)
+        if evaluate:
+            base, exp = x.as_base_exp()
+            x, n = base, exp*n
+        return super().__new__(cls, mapping, (x, n), evaluate=evaluate, **kwargs)

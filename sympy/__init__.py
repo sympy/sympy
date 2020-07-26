@@ -181,6 +181,7 @@ from .map import (Map, UndefinedMap, InverseMap, IdentityMap, RestrictedMap,
         AppliedMap,
         BinaryOperator, LeftDivision, RightDivision,
         InverseOperator, ExponentOperator, AppliedBinaryOperator,
+        InverseElement, ExponentElement,
         CompositeMap, IteratedMap)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
@@ -423,6 +424,7 @@ __all__ = [
     'AppliedMap',
     "BinaryOperator",  'LeftDivision', 'RightDivision',
     'InverseOperator', 'ExponentOperator', 'AppliedBinaryOperator',
+    'InverseElement', 'ExponentElement',
     'CompositeMap', 'IteratedMap',
 
     # sympy.matrices

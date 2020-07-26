@@ -7289,12 +7289,21 @@ def test_map():
     assert pretty(IteratedMap(f, 2)(x)) == ' 2   \nf (x)'
 
     # Binary operator
-    class AddOp(BinaryOperator):
+    class Op1(BinaryOperator):
         name = '+'
-    addop = AddOp()
-    assert upretty(addop) == '+ : 𝕌 → 𝕌'
-    assert upretty(addop(x+y, x*y)) == '(x + y) + (x⋅y)'
-    assert pretty(addop(addop(x,y), y)) == '(x + y) + y'
+    op1 = Op1()
+    assert upretty(op1) == '     2    \n+ : 𝕌  → 𝕌'
+    assert upretty(op1(x+y, x*y)) == '(x + y) + (x⋅y)'
+    assert pretty(op1(op1(x,y), y)) == '(x + y) + y'
+
+    # inverse and exponent element
+    class Op2(BinaryOperator):
+        identity = S.One
+        is_associative = True
+    op2 = Op2()
+    assert pretty(op2.inverse_operator()(x)) == ' -1\nx  '
+    assert pretty(op2.exponent_operator()(x, 2)) == ' 2\nx '
+    assert pretty(op2.exponent_operator()(op2.inverse_operator()(x), 2)) == ' -2\nx  '
 
 def test_abstractalgebra():
     from sympy.sets import Set

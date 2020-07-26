@@ -2693,12 +2693,21 @@ def test_map():
     assert latex(IteratedMap(f, 2)(x)) == r'{f}^{2}{\left(x \right)}'
 
     # Binary operator
-    class AddOp(BinaryOperator):
+    class Op1(BinaryOperator):
         name = '+'
-    addop = AddOp()
-    assert latex(addop) == r"+ : \mathbb{U} \rightarrow \mathbb{U}"
-    assert latex(addop(x+y, x*y)) == r'\left(x + y\right) + \left(x y\right)'
-    assert latex(addop(addop(x,y), y)) == r'\left(x + y\right) + y' 
+    op1 = Op1()
+    assert latex(op1) == r"+ : \mathbb{U}^{2} \rightarrow \mathbb{U}"
+    assert latex(op1(x+y, x*y)) == r'\left(x + y\right) + \left(x y\right)'
+    assert latex(op1(op1(x,y), y)) == r'\left(x + y\right) + y' 
+
+    # inverse and exponent element
+    class Op2(BinaryOperator):
+        identity = S.One
+        is_associative = True
+    op2 = Op2()
+    assert latex(op2.inverse_operator()(x)) == "{x}^{-1}"
+    assert latex(op2.exponent_operator()(x, 2)) == "{x}^{2}"
+    assert latex(op2.exponent_operator()(op2.inverse_operator()(x), 2)) == "{x}^{-2}"
 
 def test_abstractalgebra():
     from sympy.sets import Set
