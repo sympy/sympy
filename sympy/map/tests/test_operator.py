@@ -202,8 +202,13 @@ def test_InverseOperator():
     assert l_inv(l_inv(a1), evaluate=True) == a1
     assert l_inv(l_inv(l_inv(a1)), evaluate=True) == l_inv(a1)
 
+    # as_base_exp works only when base operator is passed
+    assert l_inv(a1).as_base_exp(l) == (a1, -1)
+    assert l_inv(a1).as_base_exp(f) == (l_inv(a1), 1)
+
 def test_ExponentOperator():
     m_expop = m.exponent_operator()
+    m_invop = m.inverse_operator()
     # repetitive arguments are converted to ExponentOperator
     assert m(a1, a1, a1, evaluate=True) == m_expop(a1, 3)
     # n=1 is evaluated to original element
@@ -211,9 +216,18 @@ def test_ExponentOperator():
     # n=0 is evaluated to identity element
     assert m_expop(a1, 0, evaluate=True) == a3
     # n=-1 is evaluated to inverse element
-    assert m_expop(a1, -1, evaluate=True) == m.inverse_operator()(a1)
-    # exponentiation of exponentiation is evaluated
+    assert m_expop(a1, -1, evaluate=True) == m_invop(a1)
+    # n<-1 is evaluated to exponenet of inverse
+    assert m_expop(a1, -3, evaluate=True) == m_expop(m_invop(a1), 3)
+
+    # exponentiation of exponentiation is combined
     assert m_expop(m_expop(a1, 2), 3, evaluate=True) == m_expop(a1, 6)
+    # inverse of exponent is converted to exponent of inverse
+    assert m_invop(m_expop(a1, 2), evaluate=True) == m_expop(m_invop(a1), 2)
+
+    # as_base_exp works only when base operator is passed
+    assert m_expop(a1, 2).as_base_exp(m) == (a1, 2)
+    assert m_expop(a1, 2).as_base_exp(l) == (m_expop(a1, 2), 1)
 
 def test_assoc_comm_process():
     n_invop = n.inverse_operator()

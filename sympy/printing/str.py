@@ -976,7 +976,7 @@ class StrPrinter(Printer):
         return "%s**-1" % base_str
 
     def _print_ExponentElement(self, expr):
-        base, exp = expr.as_base_exp()
+        base, exp = expr.as_base_exp(expr.map.base_op)
         base_str = self._print(base)
         exp_str = self._print(exp)
         return "%s**%s" % (base_str, exp_str)

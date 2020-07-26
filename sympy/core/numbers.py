@@ -3874,8 +3874,10 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
                 return -S.ImaginaryUnit
         return
 
-    def as_base_exp(self):
-        return S.NegativeOne, S.Half
+    def as_base_exp(self, operator=None):
+        if operator in (None, Mul):
+            return S.NegativeOne, S.Half
+        return super().as_base_exp(operator)
 
     def _sage_(self):
         import sage.all as sage

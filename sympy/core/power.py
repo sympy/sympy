@@ -867,7 +867,7 @@ class Pow(Expr):
                     result = Mul(result, Pow(old.base, remainder_pow))
                 return result
 
-    def as_base_exp(self):
+    def as_base_exp(self, operator=None):
         """Return base and exp of self.
 
         If base is 1/Integer, then return Integer, -exp. If this extra
@@ -885,11 +885,12 @@ class Pow(Expr):
         (1/2, 2)
 
         """
-
-        b, e = self.args
-        if b.is_Rational and b.p == 1 and b.q != 1:
-            return Integer(b.q), -e
-        return b, e
+        if operator in (None, Mul):
+            b, e = self.args
+            if b.is_Rational and b.p == 1 and b.q != 1:
+                return Integer(b.q), -e
+            return b, e
+        return super().as_base_exp(operator)
 
     def _eval_adjoint(self):
         from sympy.functions.elementary.complexes import adjoint

@@ -2837,7 +2837,7 @@ class Tensor(TensExpr):
         # instead of visiting the whole expression tree:
         return self.xreplace(repl)
 
-    def as_base_exp(self):
+    def as_base_exp(self, operator=None):
         return self, S.One
 
     def substitute_indices(self, *index_tuples):

@@ -268,7 +268,7 @@ class BinaryOperator(Map):
         exp_op = self.exponent_operator()
         b, e = None, None
         for o in seq:
-            o_b, o_e = o.as_base_exp()
+            o_b, o_e = o.as_base_exp(self)
             if b is None:
                 b, e = o_b, o_e
             elif b == o_b:
@@ -286,7 +286,7 @@ class BinaryOperator(Map):
 
         base_exp_dict = {}
         for o in seq:
-            b, e = o.as_base_exp()
+            b, e = o.as_base_exp(self)
             if b not in base_exp_dict:
                 base_exp_dict[b] = e
             else:
@@ -495,8 +495,6 @@ class InverseOperator(Map):
         return InverseElement(self, (x,), evaluate=evaluate)
 
     def eval(self, x):
-        if isinstance(x, AppliedMap) and x.map == self:
-            return x.arguments[0]
         if self.base_op.identity is not None and x == self.base_op.identity:
             return x
 
@@ -587,7 +585,7 @@ class ExponentOperator(Map):
             return self(self.base_op.inverse_operator()(x), -n)
 
     def _eval_as_base_exp(self, x, n):
-        b, e = x.as_base_exp()
+        b, e = x.as_base_exp(self.base_op)
         return b, n*e
 
 class AppliedBinaryOperator(AppliedMap):
@@ -653,6 +651,22 @@ class InverseElement(AppliedMap):
     Result of InverseOperator applied to element.
 
     """
+    def __new__(cls, mapping, args, evaluate=False, **kwargs):
+        x = _sympify(args[0])
+        if evaluate:
+            base, exp = x.as_base_exp(mapping.base_op)
+            if exp == -1:
+                return base
+            elif exp != 1:
+                exp_op = mapping.base_op.exponent_operator()
+                inv_elem = mapping(base, evaluate=True)
+                return exp_op(inv_elem, exp, evaluate=True)
+        return super().__new__(cls, mapping, (x,), evaluate=evaluate, **kwargs)
+
+    def as_base_exp(self, operator):
+        if self.map.base_op.is_restriction(operator):
+            return self.map._eval_as_base_exp(*self.arguments)
+        return self, S.One
 
 class ExponentElement(AppliedMap):
     """
@@ -662,6 +676,11 @@ class ExponentElement(AppliedMap):
     def __new__(cls, mapping, args, evaluate=False, **kwargs):
         x, n = map(_sympify, args)
         if evaluate:
-            base, exp = x.as_base_exp()
+            base, exp = x.as_base_exp(mapping.base_op)
             x, n = base, exp*n
         return super().__new__(cls, mapping, (x, n), evaluate=evaluate, **kwargs)
+
+    def as_base_exp(self, operator):
+        if self.map.base_op.is_restriction(operator):
+            return self.map._eval_as_base_exp(*self.arguments)
+        return self, S.One

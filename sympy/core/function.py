@@ -629,7 +629,7 @@ class Function(Application, Expr):
         return fuzzy_or(a.is_infinite if s is S.ComplexInfinity
                         else (a - s).is_zero for s in ss)
 
-    def as_base_exp(self):
+    def as_base_exp(self, operator=None):
         """
         Returns the method as the 2-tuple (base, exponent).
         """

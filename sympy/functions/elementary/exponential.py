@@ -67,11 +67,13 @@ class ExpBase(Function):
         """
         return self.args[0]
 
-    def as_base_exp(self):
+    def as_base_exp(self, operator=None):
         """
         Returns the 2-tuple (base, exponent).
         """
-        return self.func(1), Mul(*self.args)
+        if operator in (None, Mul):
+            return self.func(1), Mul(*self.args)
+        return super().as_base_exp(operator)
 
     def _eval_adjoint(self):
         return self.func(self.args[0].adjoint())
@@ -184,11 +186,12 @@ class exp_polar(ExpBase):
         if self.args[0].is_extended_real:
             return True
 
-    def as_base_exp(self):
+    def as_base_exp(self, operator=None):
         # XXX exp_polar(0) is special!
-        if self.args[0] == 0:
-            return self, S.One
-        return ExpBase.as_base_exp(self)
+        if operator in (None, Mul):
+            if self.args[0] == 0:
+                return self, S.One
+        return super().as_base_exp(operator)
 
 
 class exp(ExpBase):
@@ -745,7 +748,7 @@ class log(Function):
                         else:
                             return cls(modulus) + I * (S.Pi - atan_table[t1])
 
-    def as_base_exp(self):
+    def as_base_exp(self, operator=None):
         """
         Returns this function in the form (base, exponent).
         """

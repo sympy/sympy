@@ -2724,7 +2724,7 @@ class LatexPrinter(Printer):
         return "{%s}^{-1}" % base_tex
 
     def _print_ExponentElement(self, expr):
-        base, exp = expr.as_base_exp()
+        base, exp = expr.as_base_exp(expr.map.base_op)
         base_tex = self._print(base)
         exp_tex = self._print(exp)
         return "{%s}^{%s}" % (base_tex, exp_tex)

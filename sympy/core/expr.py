@@ -1934,7 +1934,7 @@ class Expr(Basic, EvalfMixin):
         d.update({m: c})
         return d
 
-    def as_base_exp(self):
+    def as_base_exp(self, operator=None):
         # a -> b ** e
         return self, S.One
 

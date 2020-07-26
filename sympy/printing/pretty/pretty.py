@@ -2831,7 +2831,7 @@ class PrettyPrinter(Printer):
         return pretty_base**prettyForm('-1')
 
     def _print_ExponentElement(self, e):
-        base, exp = e.as_base_exp()
+        base, exp = e.as_base_exp(e.map.base_op)
         pretty_base = self._print(base)
         pretty_exp = self._print(exp)
         return pretty_base**pretty_exp
