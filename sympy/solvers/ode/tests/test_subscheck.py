@@ -63,6 +63,10 @@ def test_checkodesol():
     sol = Eq(f(x), C1*besselj(5*I, sqrt(2)*x) + C2*bessely(5*I, sqrt(2)*x))
     assert checkodesol(eq, sol) == (True, 0)
 
+    eqs = [Eq(f(x).diff(x), f(x) + g(x)), Eq(g(x).diff(x), f(x) + g(x))]
+    sol = [Eq(f(x), -C1 + C2*exp(2*x)), Eq(g(x), C1 + C2*exp(2*x))]
+    assert checkodesol(eqs, sol) == (True, [0, 0])
+
 
 def test_checksysodesol():
     x, y, z = symbols('x, y, z', cls=Function)

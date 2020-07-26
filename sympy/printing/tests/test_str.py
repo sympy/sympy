@@ -974,9 +974,13 @@ def test_str_special_matrices():
     assert str(ZeroMatrix(2, 2)) == '0'
     assert str(OneMatrix(2, 2)) == '1'
 
-
 def test_issue_14567():
     assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error
+
+def test_Str():
+    from sympy.core.symbol import Str
+    assert str(Str('x')) == 'x'
+    assert sstrrepr(Str('x')) == "Str('x')"
 
 def test_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField

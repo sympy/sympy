@@ -1772,6 +1772,23 @@ def test_sympy__stats__symbolic_multivariate_probability__CrossCovarianceMatrix(
     assert _test_args(CrossCovarianceMatrix(RandomMatrixSymbol('R', 3, 1),
                         RandomMatrixSymbol('X', 3, 1)))
 
+def test_sympy__stats__matrix_distributions__MatrixPSpace():
+    from sympy.stats.matrix_distributions import MatrixDistribution, MatrixPSpace
+    from sympy import Matrix
+    M = MatrixDistribution(1, Matrix([[1, 0], [0, 1]]))
+    assert _test_args(MatrixPSpace('M', M, 2, 2))
+
+def test_sympy__stats__matrix_distributions__MatrixDistribution():
+    from sympy.stats.matrix_distributions import MatrixDistribution
+    from sympy import Matrix
+    assert _test_args(MatrixDistribution(1, Matrix([[1, 0], [0, 1]])))
+
+def test_sympy__stats__matrix_distributions__MatrixGammaDistribution():
+    from sympy.stats.matrix_distributions import MatrixGammaDistribution
+    from sympy import Matrix
+    assert _test_args(MatrixGammaDistribution(3, 4, Matrix([[1, 0], [0, 1]])))
+
+
 def test_sympy__core__symbol__Str():
     from sympy.core.symbol import Str
     assert _test_args(Str('t'))
@@ -2992,6 +3009,11 @@ def test_sympy__matrices__expressions__matexpr__OneMatrix():
 def test_sympy__matrices__expressions__matexpr__GenericZeroMatrix():
     from sympy.matrices.expressions.matexpr import GenericZeroMatrix
     assert _test_args(GenericZeroMatrix())
+
+def test_sympy__matrices__expressions__sets__MatrixSet():
+    from sympy.matrices.expressions.sets import MatrixSet
+    from sympy import S
+    assert _test_args(MatrixSet(2, 2, S.Reals))
 
 def test_sympy__matrices__expressions__matmul__MatMul():
     from sympy.matrices.expressions.matmul import MatMul
@@ -4944,6 +4966,12 @@ def test_sympy__vector__dyadic__DyadicZero():
 def test_sympy__vector__deloperator__Del():
     from sympy.vector.deloperator import Del
     assert _test_args(Del())
+
+
+def test_sympy__vector__implicitregion__ImplicitRegion():
+    from sympy.vector.implicitregion import ImplicitRegion
+    from sympy.abc import x, y
+    assert _test_args(ImplicitRegion((x, y), y**3 - 4*x))
 
 
 def test_sympy__vector__integrals__ParametricIntegral():

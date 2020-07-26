@@ -126,7 +126,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             try:
                 candidate_viewers = candidates[output]
             except KeyError:
-                raise SystemError("Invalid output format: %s" % output)
+                raise ValueError("Invalid output format: %s" % output) from None
 
             for candidate in candidate_viewers:
                 path = shutil.which(candidate)
@@ -134,7 +134,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                     viewer = path
                     break
             else:
-                raise SystemError(
+                raise OSError(
                     "No viewers found for '%s' output format." % output)
     else:
         if viewer == "StringIO":
@@ -147,7 +147,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 raise ValueError("outputbuffer has to be a BytesIO "
                                  "compatible object if viewer=\"BytesIO\"")
         elif viewer not in special and not shutil.which(viewer):
-            raise SystemError("Unrecognized viewer: %s" % viewer)
+            raise OSError("Unrecognized viewer: %s" % viewer)
 
 
     if preamble is None:
@@ -217,7 +217,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             try:
                 cmd_variants = commandnames[output]
             except KeyError:
-                raise SystemError("Invalid output format: %s" % output)
+                raise ValueError("Invalid output format: %s" % output) from None
 
             # find an appropriate command
             for cmd_variant in cmd_variants:
@@ -288,7 +288,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 from pyglet.image.codecs.png import PNGImageDecoder
                 img = image.load(join(workdir, src), decoder=PNGImageDecoder())
             else:
-                raise SystemError("pyglet preview works only for 'png' files.")
+                raise ValueError("pyglet preview works only for 'png' files.")
 
             offset = 25
 

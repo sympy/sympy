@@ -19,6 +19,7 @@ from .diagonal import DiagonalMatrix, DiagonalOf, DiagMatrix, diagonalize_vector
 from .dotproduct import DotProduct
 from .kronecker import kronecker_product, KroneckerProduct, combine_kronecker
 from .permutation import PermutationMatrix, MatrixPermute
+from .sets import MatrixSet
 
 __all__ = [
     'MatrixSlice',
@@ -33,7 +34,7 @@ __all__ = [
     'MatAdd',
 
     'Identity', 'MatrixExpr', 'MatrixSymbol', 'ZeroMatrix', 'OneMatrix',
-    'matrix_symbols',
+    'matrix_symbols', 'MatrixSet',
 
     'MatMul',
 
