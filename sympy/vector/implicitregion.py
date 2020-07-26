@@ -105,10 +105,9 @@ class ImplicitRegion(Basic):
 
                 if b**2 == 4*a*c:
                     x_reg, y_reg = self._regular_point_parabola(*coeffs)
-                    return x_reg, y_reg
                 else:
                     x_reg, y_reg = self._regular_point_ellipse(*coeffs)
-                    return x_reg, y_reg
+                return x_reg, y_reg
 
         if len(self.variables) == 3:
             x, y, z = self.variables
