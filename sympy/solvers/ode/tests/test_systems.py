@@ -1211,6 +1211,80 @@ def test_sysode_linear_neq_order1_type4():
     assert checksysodesol(eqs8, sol8) == (True, [0, 0, 0, 0])
 
 
+def test_higher_order_to_first_order():
+    f, g = symbols('f g', cls=Function)
+    x = symbols('x')
+
+    eqs1 = [Eq(f(x).diff(x, 2), 2*f(x) + g(x)), Eq(g(x).diff(x, 2), -f(x))]
+    sol1 = [Eq(f(x), C3*x*exp(x) + C3*exp(x) + C4*exp(x) + (-C1 - C2*x + C2)*exp(-x)),
+            Eq(g(x), -C3*x*exp(x) + C3*exp(x) - C4*exp(x) + (C1 + C2*x + C2)*exp(-x))]
+    assert dsolve(eqs1) == sol1
+    assert checksysodesol(eqs1, sol1) == (True, [0, 0])
+
+    eqs2 = [Eq(f(x).diff(x, 2), 0), Eq(g(x).diff(x, 2), f(x))]
+    sol2 = [Eq(f(x), C1 + C2*x), Eq(g(x), C1*x**2/2 + C2*x**3/6 + C3 + C4*x)]
+    assert dsolve(eqs2) == sol2
+    assert checksysodesol(eqs2, sol2) == (True, [0, 0])
+
+    eqs3 = [Eq(f(x).diff(x, 2), 2*f(x)), Eq(g(x).diff(x, 2), -f(x) + 2*g(x))]
+    sol3 = [Eq(f(x), 4*C1*exp(-sqrt(2)*x) + 4*C2*exp(sqrt(2)*x)),
+            Eq(g(x), C2*exp(sqrt(2)*x) + (C1 + sqrt(2)*(C1*x + C4))*exp(-sqrt(2)*x) - sqrt(2)*(C2*x*exp(sqrt(2)*x) +
+                C3*exp(sqrt(2)*x)))]
+    assert dsolve(eqs3) == sol3
+    assert checksysodesol(eqs3, sol3) == (True, [0, 0])
+
+    eqs4 = [Eq(f(x).diff(x, 2), 2*f(x) + g(x)), Eq(g(x).diff(x, 2), + 2*g(x))]
+    sol4 = [Eq(f(x), C1*x*exp(sqrt(2)*x)/4 - sqrt(2)*C1*exp(sqrt(2)*x)/8 + C4*exp(sqrt(2)*x)/4 + (C2/4 + C3*x/4 +
+                sqrt(2)*C3/8)*exp(-sqrt(2)*x)),
+            Eq(g(x), sqrt(2)*C1*exp(sqrt(2)*x)/2 - sqrt(2)*C3*exp(-sqrt(2)*x)/2)]
+    assert dsolve(eqs4) == sol4
+    assert checksysodesol(eqs4, sol4) == (True, [0, 0])
+
+    eqs5 = [Eq(f(x).diff(x, 2), f(x)), Eq(g(x).diff(x, 2), f(x))]
+    sol5 = [Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), -C1*exp(-x) + C2*exp(x) + C3 + C4*x)]
+    assert dsolve(eqs5) == sol5
+    assert checksysodesol(eqs5, sol5) == (True, [0, 0])
+
+    eqs6 = [Eq(f(x).diff(x, 2), f(x) + g(x)), Eq(g(x).diff(x, 2), -f(x) - g(x))]
+    sol6 = [Eq(f(x), C1 + C2*x**2/2 + C2 + C3*x + C4*x**3/6 + C4*x), Eq(g(x), -C1 - C2*x**2/2 - C3*x - C4*x**3/6)]
+    assert dsolve(eqs6) == sol6
+    assert checksysodesol(eqs6, sol6) == (True, [0, 0])
+
+    eqs7 = [Eq(f(x).diff(x, 2), f(x) + g(x) + 1), Eq(g(x).diff(x, 2), f(x) + g(x) + 1)]
+    sol7 = [Eq(f(x), -C1 - C2*x + sqrt(2)*C3*exp(sqrt(2)*x)/2 - x*Integral(0, x) + (-sqrt(2)*C4/2 -
+                sqrt(2)*Integral(exp(sqrt(2)*x)/2, x)/2)*exp(-sqrt(2)*x) + sqrt(2)*exp(sqrt(2)*x)*
+                Integral(exp(-sqrt(2)*x)/2, x)/2 - Integral(0, x)),
+            Eq(g(x), C1 + C2*x + sqrt(2)*C3*exp(sqrt(2)*x)/2 + x*Integral(0, x) + (-sqrt(2)*C4/2 - sqrt(2)*
+                Integral(exp(sqrt(2)*x)/2, x)/2)*exp(-sqrt(2)*x) + sqrt(2)*exp(sqrt(2)*x)*Integral(
+                exp(-sqrt(2)*x)/2, x)/2 + Integral(0, x))]
+    assert dsolve(eqs7) == sol7
+    assert checksysodesol(eqs7, sol7) == (True, [0, 0])
+
+    eqs8 = [Eq(f(x).diff(x, 2), f(x) + g(x) + 1), Eq(g(x).diff(x, 2), -f(x) - g(x) + 1)]
+    sol8 = [Eq(f(x), C1 + C2*x**2/2 + C2 + C3*x + C4*x**3/6 + C4*x + x**3*Integral(2, x)/6 +
+                x**2*Integral(-2*x, x)/2 + x*Integral(2, x) + x*Integral(x**2 - 1, x) + Integral(-2*x, x) +
+                Integral(-x**3/3 + x, x)),
+            Eq(g(x), -C1 - C2*x**2/2 - C3*x - C4*x**3/6 - x**3*Integral(2, x)/6 -
+                x**2*Integral(-2*x, x)/2 - x*Integral(x**2 - 1, x) - Integral(-x**3/3 + x, x))]
+    assert dsolve(eqs8) == sol8
+    assert checksysodesol(eqs8, sol8) == (True, [0, 0])
+
+    eqs9 = [f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) + g(x) - 2*exp(I*x),
+            g(x).diff(x, 2) + 2*g(x).diff(x) + f(x) + g(x) - 2*exp(I*x)]
+    sol9 = [Eq(f(x), -C1 + (C2/2 + Integral(0, x)/2)*exp(-2*x) + (C3*sin(x)/2 - C3*cos(x)/2 + C4*sin(x)/2 + C4*cos(x)/2 +
+                sin(x)*Integral(-2*exp(x)*exp(I*x)*sin(x) + 2*exp(x)*exp(I*x)*cos(x), x)/2 + sin(x)*Integral(-2*exp(x)*
+                exp(I*x)*sin(x)**2/cos(x) + 2*exp(x)*exp(I*x)*sin(x) + 2*exp(x)*exp(I*x)/cos(x), x)/2 + cos(x)*
+                Integral(-2*exp(x)*exp(I*x)*sin(x) + 2*exp(x)*exp(I*x)*cos(x), x)/2 - cos(x)*Integral(-2*exp(x)*exp(I*x)*
+                sin(x)**2/cos(x) + 2*exp(x)*exp(I*x)*sin(x) + 2*exp(x)*exp(I*x)/cos(x), x)/2)*exp(-x) - Integral(0, x)),
+            Eq(g(x), C1 + (-C2/2 - Integral(0, x)/2)*exp(-2*x) + (C3*sin(x)/2 - C3*cos(x)/2 + C4*sin(x)/2 + C4*cos(x)/2 +
+                sin(x)*Integral(-2*exp(x)*exp(I*x)*sin(x) + 2*exp(x)*exp(I*x)*cos(x), x)/2 + sin(x)*Integral(-2*exp(x)*
+                exp(I*x)*sin(x)**2/cos(x) + 2*exp(x)*exp(I*x)*sin(x) + 2*exp(x)*exp(I*x)/cos(x), x)/2 + cos(x)*
+                Integral(-2*exp(x)*exp(I*x)*sin(x) + 2*exp(x)*exp(I*x)*cos(x), x)/2 - cos(x)*Integral(-2*exp(x)*exp(I*x)*
+                sin(x)**2/cos(x) + 2*exp(x)*exp(I*x)*sin(x) + 2*exp(x)*exp(I*x)/cos(x), x)/2)*exp(-x) + Integral(0, x))]
+    assert dsolve(eqs9) == sol9
+    assert checksysodesol(eqs9, sol9) == (True, [0, 0])
+
+
 def test_component_division():
     f, g, h, k = symbols('f g h k', cls=Function)
     x = symbols("x")

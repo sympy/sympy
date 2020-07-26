@@ -1374,19 +1374,18 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
 
     sys_order = _get_func_order(eqs, funcs)
 
+    new_funcs = funcs
     # To add higher order to first order reduction later
     if not all(sys_order[func] == 1 for func in funcs):
-        raise NotImplementedError(filldedent('''
-            Higher order ODEs aren't solvable by dsolve_system
-        '''))
+        eqs, new_funcs = _higher_order_to_first_order(eqs, sys_order, t)
 
-    canon_eqs = canonical_odes(eqs, funcs, t)
+    canon_eqs = canonical_odes(eqs, new_funcs, t)
     sols = []
 
     for canon_eq in canon_eqs:
-        sol = _strong_component_solver(canon_eq, funcs, t)
+        sol = _strong_component_solver(canon_eq, new_funcs, t)
         if sol is None:
-            sol = _component_solver(canon_eq, funcs, t)
+            sol = _component_solver(canon_eq, new_funcs, t)
         sols.append(sol)
 
     if sols:
