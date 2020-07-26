@@ -78,6 +78,8 @@ if sys.version_info < (3, 5):
 # python bin/generate_module_list.py
 modules = [
     'sympy.algebras',
+    'sympy.algebras.abstract',
+    'sympy.algebras.abstract.group',
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.benchmarks',
@@ -344,8 +346,9 @@ class sdist_sympy(sdist):
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
 tests = [
-    'sympy.algebras.tests',
+    'sympy.algebras.abstract.group.tests',
     'sympy.algebras.abstract.tests',
+    'sympy.algebras.tests',
     'sympy.assumptions.tests',
     'sympy.calculus.tests',
     'sympy.categories.tests',

@@ -1,4 +1,4 @@
-from .structure import AlgebraicStructure
+from ..structure import AlgebraicStructure
 
 __all__ = [
     "Magma",

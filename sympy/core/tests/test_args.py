@@ -771,7 +771,7 @@ def test_sympy__algebras__abstract__structure__AlgebraicStructure():
         AlgebraicStructure('S', (A,), (f,))
     )
 
-def test_sympy__algebras__abstract__magma__Magma():
+def test_sympy__algebras__abstract__group__magma__Magma():
     from sympy import Set, Map, Magma
     A = Set('A')
     f = Map('f', domain=A**2, codomain=A)
@@ -779,7 +779,7 @@ def test_sympy__algebras__abstract__magma__Magma():
         Magma('M', (A,), (f,))
     )
 
-def test_sympy__algebras__abstract__semigroup__Semigroup():
+def test_sympy__algebras__abstract__group__semigroup__Semigroup():
     from sympy import Set, Semigroup, BinaryOperator
     A = Set('A')
     class Op(BinaryOperator):
@@ -791,7 +791,7 @@ def test_sympy__algebras__abstract__semigroup__Semigroup():
         Semigroup('G', (A,), (op,))
     )
 
-def test_sympy__algebras__abstract__quasigroup__LeftQuasigroup():
+def test_sympy__algebras__abstract__group__quasigroup__LeftQuasigroup():
     from sympy import Set, LeftQuasigroup, BinaryOperator
     A = Set('A')
     class Op(BinaryOperator):
@@ -803,7 +803,7 @@ def test_sympy__algebras__abstract__quasigroup__LeftQuasigroup():
         LeftQuasigroup('G', (A,), (op,))
     )
 
-def test_sympy__algebras__abstract__quasigroup__RightQuasigroup():
+def test_sympy__algebras__abstract__group__quasigroup__RightQuasigroup():
     from sympy import Set, RightQuasigroup, BinaryOperator
     A = Set('A')
     class Op(BinaryOperator):
@@ -816,7 +816,7 @@ def test_sympy__algebras__abstract__quasigroup__RightQuasigroup():
     )
 
 
-def test_sympy__algebras__abstract__quasigroup__Quasigroup():
+def test_sympy__algebras__abstract__group__quasigroup__Quasigroup():
     from sympy import Set, Quasigroup, BinaryOperator
     A = Set('A')
     class Op(BinaryOperator):
@@ -828,7 +828,7 @@ def test_sympy__algebras__abstract__quasigroup__Quasigroup():
         Quasigroup('G', (A,), (op,))
     )
 
-def test_sympy__algebras__abstract__monoid__Monoid():
+def test_sympy__algebras__abstract__group__monoid__Monoid():
     from sympy import Set, Monoid, BinaryOperator
     A = Set('A')
     class Op(BinaryOperator):
@@ -841,7 +841,7 @@ def test_sympy__algebras__abstract__monoid__Monoid():
         Monoid('M', (A,), (op,))
     )
 
-def test_sympy__algebras__abstract__loop__Loop():
+def test_sympy__algebras__abstract__group__loop__Loop():
     from sympy import Set, Loop, BinaryOperator
     A = Set('A')
     class Op(BinaryOperator):
@@ -854,7 +854,7 @@ def test_sympy__algebras__abstract__loop__Loop():
         Loop('L', (A,), (op,))
     )
 
-def test_sympy__algebras__abstract__group__Group():
+def test_sympy__algebras__abstract__group__group__Group():
     from sympy import Set, Group, BinaryOperator
     A = Set('A')
     class Op(BinaryOperator):
@@ -868,7 +868,7 @@ def test_sympy__algebras__abstract__group__Group():
         Group('g', (A,), (op,))
     )
 
-def test_sympy__algebras__abstract__group__AbelianGroup():
+def test_sympy__algebras__abstract__group__group__AbelianGroup():
     from sympy import Set, AbelianGroup, BinaryOperator
     A = Set('A')
     class Op(BinaryOperator):
