@@ -8,10 +8,11 @@ from sympy.matrices.matrices import MatrixBase
 
 from .inverse import Inverse
 from .matexpr import \
-    MatrixExpr, Identity, ZeroMatrix, OneMatrix, GenericIdentity
+    MatrixExpr, Identity, OneMatrix, GenericIdentity
 from .matpow import MatPow
 from .transpose import transpose
 from .permutation import PermutationMatrix
+from .special import ZeroMatrix
 
 
 # XXX: MatMul should perhaps not subclass directly from Mul

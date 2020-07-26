@@ -8,8 +8,8 @@ from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
-from sympy.matrices.expressions.matexpr import (MatrixExpr, ZeroMatrix,
-    GenericZeroMatrix)
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
 from sympy.utilities import default_sort_key, sift
 
 # XXX: MatAdd should perhaps not subclass directly from Add

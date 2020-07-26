@@ -2,14 +2,13 @@ from sympy import (KroneckerDelta, diff, Piecewise, Sum, Dummy, factor,
                    expand, zeros, gcd_terms, Eq, Symbol)
 
 from sympy.core import S, symbols, Add, Mul, SympifyError, Rational
-from sympy.core.expr import unchanged
 from sympy.functions import transpose, sin, cos, sqrt, cbrt, exp
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
         SparseMatrix, Transpose, Adjoint, NonSquareMatrixError, MatrixSet)
 from sympy.matrices.expressions.matexpr import (MatrixElement,
-                                                GenericZeroMatrix, GenericIdentity, OneMatrix)
+                                                GenericIdentity, OneMatrix)
 from sympy.testing.pytest import raises, XFAIL
 
 
@@ -39,24 +38,6 @@ def test_matrix_symbol_creation():
     raises(ValueError, lambda: MatrixSymbol('A', n, n))
     n = symbols('n', negative=True)
     raises(ValueError, lambda: MatrixSymbol('A', n, n))
-
-
-def test_zero_matrix_creation():
-    assert unchanged(ZeroMatrix, 2, 2)
-    assert unchanged(ZeroMatrix, 0, 0)
-    raises(ValueError, lambda: ZeroMatrix(-1, 2))
-    raises(ValueError, lambda: ZeroMatrix(2.0, 2))
-    raises(ValueError, lambda: ZeroMatrix(2j, 2))
-    raises(ValueError, lambda: ZeroMatrix(2, -1))
-    raises(ValueError, lambda: ZeroMatrix(2, 2.0))
-    raises(ValueError, lambda: ZeroMatrix(2, 2j))
-
-    n = symbols('n')
-    assert unchanged(ZeroMatrix, n, n)
-    n = symbols('n', integer=False)
-    raises(ValueError, lambda: ZeroMatrix(n, n))
-    n = symbols('n', negative=True)
-    raises(ValueError, lambda: ZeroMatrix(n, n))
 
 
 def test_one_matrix_creation():
@@ -508,26 +489,6 @@ def test_issue_7842():
     A = ZeroMatrix(2, 3)
     B = ZeroMatrix(2, 3)
     assert Eq(A, B) == True
-
-
-def test_generic_zero_matrix():
-    z = GenericZeroMatrix()
-    A = MatrixSymbol("A", n, n)
-
-    assert z == z
-    assert z != A
-    assert A != z
-
-    assert z.is_ZeroMatrix
-
-    raises(TypeError, lambda: z.shape)
-    raises(TypeError, lambda: z.rows)
-    raises(TypeError, lambda: z.cols)
-
-    assert MatAdd() == z
-    assert MatAdd(z, A) == MatAdd(A)
-    # Make sure it is hashable
-    hash(z)
 
 
 def test_generic_identity():

@@ -2,7 +2,8 @@ from sympy.core import S
 from sympy.core.sympify import _sympify
 from sympy.functions import KroneckerDelta
 
-from .matexpr import MatrixExpr, Identity, ZeroMatrix, OneMatrix
+from .matexpr import MatrixExpr, Identity, OneMatrix
+from .special import ZeroMatrix
 
 
 class PermutationMatrix(MatrixExpr):

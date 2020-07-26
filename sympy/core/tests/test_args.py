@@ -2996,8 +2996,8 @@ def test_sympy__matrices__expressions__matexpr__MatrixSymbol():
     assert _test_args(MatrixSymbol('A', 3, 5))
 
 
-def test_sympy__matrices__expressions__matexpr__ZeroMatrix():
-    from sympy.matrices.expressions.matexpr import ZeroMatrix
+def test_sympy__matrices__expressions__special__ZeroMatrix():
+    from sympy.matrices.expressions.special import ZeroMatrix
     assert _test_args(ZeroMatrix(3, 5))
 
 
@@ -3006,8 +3006,8 @@ def test_sympy__matrices__expressions__matexpr__OneMatrix():
     assert _test_args(OneMatrix(3, 5))
 
 
-def test_sympy__matrices__expressions__matexpr__GenericZeroMatrix():
-    from sympy.matrices.expressions.matexpr import GenericZeroMatrix
+def test_sympy__matrices__expressions__special__GenericZeroMatrix():
+    from sympy.matrices.expressions.special import GenericZeroMatrix
     assert _test_args(GenericZeroMatrix())
 
 def test_sympy__matrices__expressions__sets__MatrixSet():
