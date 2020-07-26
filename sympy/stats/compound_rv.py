@@ -1,4 +1,4 @@
-from sympy import Basic, integrate, Sum, Dummy, Lambda, Integral
+from sympy import Basic, Sum, Dummy, Lambda, Integral
 from sympy.stats.rv import (NamedArgsMixin, random_symbols, _symbol_converter,
                         PSpace, RandomSymbol, is_random)
 from sympy.stats.crv import ContinuousDistribution, SingleContinuousPSpace
