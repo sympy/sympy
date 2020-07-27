@@ -3010,6 +3010,11 @@ def test_sympy__matrices__expressions__matexpr__GenericZeroMatrix():
     from sympy.matrices.expressions.matexpr import GenericZeroMatrix
     assert _test_args(GenericZeroMatrix())
 
+def test_sympy__matrices__expressions__sets__MatrixSet():
+    from sympy.matrices.expressions.sets import MatrixSet
+    from sympy import S
+    assert _test_args(MatrixSet(2, 2, S.Reals))
+
 def test_sympy__matrices__expressions__matmul__MatMul():
     from sympy.matrices.expressions.matmul import MatMul
     from sympy.matrices.expressions import MatrixSymbol
@@ -4961,6 +4966,12 @@ def test_sympy__vector__dyadic__DyadicZero():
 def test_sympy__vector__deloperator__Del():
     from sympy.vector.deloperator import Del
     assert _test_args(Del())
+
+
+def test_sympy__vector__implicitregion__ImplicitRegion():
+    from sympy.vector.implicitregion import ImplicitRegion
+    from sympy.abc import x, y
+    assert _test_args(ImplicitRegion((x, y), y**3 - 4*x))
 
 
 def test_sympy__vector__integrals__ParametricIntegral():

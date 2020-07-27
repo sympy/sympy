@@ -7,7 +7,7 @@ from sympy.functions import transpose, sin, cos, sqrt, cbrt, exp
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
-        SparseMatrix, Transpose, Adjoint, NonSquareMatrixError)
+        SparseMatrix, Transpose, Adjoint, NonSquareMatrixError, MatrixSet)
 from sympy.matrices.expressions.matexpr import (MatrixElement,
                                                 GenericZeroMatrix, GenericIdentity, OneMatrix)
 from sympy.testing.pytest import raises, XFAIL
@@ -669,3 +669,26 @@ def test_as_explicit():
         [Z[1, 0], Z[1, 1], Z[1, 2]],
     ])
     raises(ValueError, lambda: A.as_explicit())
+
+def test_MatrixSet():
+    M = MatrixSet(2, 2, set=S.Reals)
+    assert M.shape == (2, 2)
+    assert M.set == S.Reals
+    X = Matrix([[1, 2], [3, 4]])
+    assert X in M
+    X = ZeroMatrix(2, 2)
+    assert X in M
+    raises(TypeError, lambda: A in M)
+    raises(TypeError, lambda: 1 in M)
+    M = MatrixSet(n, m, set=S.Reals)
+    assert A in M
+    raises(TypeError, lambda: C in M)
+    raises(TypeError, lambda: X in M)
+    M = MatrixSet(2, 2, set={1, 2, 3})
+    X = Matrix([[1, 2], [3, 4]])
+    Y = Matrix([[1, 2]])
+    assert (X in M) == S.false
+    assert (Y in M) == S.false
+    raises(ValueError, lambda: MatrixSet(2, -2, S.Reals))
+    raises(ValueError, lambda: MatrixSet(2.4, -1, S.Reals))
+    raises(TypeError, lambda: MatrixSet(2, 2, (1, 2, 3)))

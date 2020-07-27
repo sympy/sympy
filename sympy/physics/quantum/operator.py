@@ -307,7 +307,7 @@ class IdentityOperator(Operator):
 
     def __mul__(self, other):
 
-        if isinstance(other, Operator):
+        if isinstance(other, (Operator, Dagger)):
             return other
 
         return Mul(self, other)

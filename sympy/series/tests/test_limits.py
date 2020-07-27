@@ -865,3 +865,9 @@ def test_issue_19739():
 
 def test_issue_19766():
     assert limit(2**(-x)*sqrt(4**(x + 1) + 1), x, oo) == 2
+
+
+def test_issue_16708():
+    m, vi = symbols('m vi', positive=True)
+    B, ti, d = symbols('B ti d')
+    assert limit((B*ti*vi - sqrt(m)*sqrt(-2*B*d*vi + m*(vi)**2) + m*vi)/(B*vi), B, 0) == (d + ti*vi)/vi

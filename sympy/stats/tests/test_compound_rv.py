@@ -6,7 +6,7 @@ from sympy.stats.compound_rv import CompoundDistribution, CompoundPSpace
 from sympy.stats.crv_types import NormalDistribution
 from sympy.stats.drv_types import PoissonDistribution
 from sympy.stats.frv_types import BernoulliDistribution
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, ignore_warnings
 from sympy.stats.joint_rv_types import MultivariateNormalDistribution
 
 
@@ -65,7 +65,8 @@ def test_unevaluated_CompoundDist():
 
     expre = Integral(_k*Integral(sqrt(2)*exp(-_k**2/32)*exp(-(_k - 3)**2/(2*_k**2)
     )/(32*sqrt(pi)), (_k, 0, oo)), (_k, -oo, oo))
-    assert E(X, evaluate=False).dummy_eq(expre)
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert E(X, evaluate=False).rewrite(Integral).dummy_eq(expre)
 
     X = Poisson('X', 1)
     Y = Poisson('Y', X)
