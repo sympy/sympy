@@ -1,5 +1,6 @@
 from sympy.assumptions import ask, Q
 from sympy.core import Expr, S, Tuple
+from sympy.core.compatibility import iterable
 from sympy.core.decorators import (
     call_highest_priority, sympify_method_args, sympify_return
 )
@@ -10,6 +11,7 @@ from sympy.sets import ProductSet, FiniteSet
 __all__ = [
     'Map', 'UndefinedMap', 'RestrictedMap', 'InverseMap', 'IdentityMap',
     'AppliedMap',
+    'isapplied'
 ]
 
 @sympify_method_args
@@ -507,5 +509,44 @@ class AppliedMap(Expr):
         if self.map.is_restriction(operator):
             return self.map._eval_as_base_exp(*self.arguments)
         return self, S.One
+
+def isapplied(arg, maps):
+    """
+    Return ``True`` if *arg* is unevaluated applied result of
+    *maps* (if *maps* is ``Map``), or one of *maps* (if *maps* is iterable)
+
+    Parameters
+    ==========
+
+    arg : Expr
+
+    maps : Map, or iterable of Map
+
+    Examples
+    ========
+
+    >>> from sympy import S, Map, isapplied
+    >>> f = Map('f')
+    >>> g = Map('g')
+
+    >>> isapplied(f(1), f)
+    True
+    >>> isapplied(f(1), g)
+    False
+    >>> isapplied(f(1), (f, g))
+    True
+
+    """
+    if isinstance(arg, AppliedMap):
+        arg_map = arg.map
+        if not iterable(maps):
+            # maps is map
+            return arg.map.is_restriction(maps)
+        else:
+            for m in maps:
+                if arg.map.is_restriction(m):
+                    return True
+    return False
+
 
 from .composite import CompositeMap, IteratedMap

@@ -2,7 +2,7 @@ from functools import cmp_to_key
 from sympy.assumptions import ask, Q
 from sympy.core import Basic, S
 from sympy.core.sympify import _sympify
-from .map import Map, AppliedMap, IdentityMap
+from .map import Map, AppliedMap, IdentityMap, isapplied
 
 __all__ = [
     'BinaryOperator', 'LeftDivision', 'RightDivision',
@@ -70,7 +70,7 @@ class BinaryOperator(Map):
 
         new_seq = []
         for o in seq:
-            if isinstance(o, AppliedMap) and o.map.is_restriction(self):
+            if isapplied(o, self):
                 new_seq.extend(o.arguments)
             else:
                 new_seq.append(o)

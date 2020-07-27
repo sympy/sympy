@@ -178,7 +178,7 @@ from .solvers import (solve, solve_linear_system, solve_linear_system_LU,
         Complexes)
 
 from .map import (Map, UndefinedMap, InverseMap, IdentityMap, RestrictedMap,
-        AppliedMap,
+        AppliedMap, isapplied,
         BinaryOperator, LeftDivision, RightDivision,
         InverseOperator, ExponentOperator, AppliedBinaryOperator,
         InverseElement, ExponentElement,
@@ -424,7 +424,7 @@ __all__ = [
 
     # sympy.map
     'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'RestrictedMap',
-    'AppliedMap',
+    'AppliedMap', 'isapplied',
     "BinaryOperator",  'LeftDivision', 'RightDivision',
     'InverseOperator', 'ExponentOperator', 'AppliedBinaryOperator',
     'InverseElement', 'ExponentElement',
