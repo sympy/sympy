@@ -4,14 +4,14 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice,
-    Dual)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
 from sympy.core import Expr, Mul
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.units import second, joule
 from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
     ZZ_I, QQ_I, lex, grlex)
 from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
+from sympy.algebras.dual import Dual
 
 from sympy.testing.pytest import raises
 
@@ -700,16 +700,16 @@ def test_Quaternion_str_printer():
 
 def test_Dual_str_printer():
     q = Dual(x, y)
-    assert str(q) == "x + y*d"
+    assert str(q) == "x + y*ð"
     q = Dual(x,x*y)
-    assert str(q) == "x + x*y*d"
+    assert str(q) == "x + x*y*ð"
     q = Dual(x,x+y)
-    assert str(q) == "x + (x + y)*d"
+    assert str(q) == "x + (x + y)*ð"
     # Nested duals
     q = Dual(x, y)
     p = Dual(t, z)
     n = Dual(q, p)
-    assert str(n) == "(x + y*d) + (t + z*d)*d"
+    assert str(n) == "(x + y*ð) + (t + z*ð)*ð"
 
 
 def test_Quantity_str():

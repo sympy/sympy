@@ -830,11 +830,19 @@ class StrPrinter(Printer):
         return " + ".join(a)
 
     def _print_Dual(self, expr):
+        from sympy.algebras import Quaternion, Dual
         s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True) for i in expr.args]
-        if s[1][-1] == "d":
-            a = ["("+s[0]+")"] + ["("+s[1]+")*d"]
+        a = []
+        if isinstance(expr.args[0], (Quaternion, Dual)):
+            a.append("(" + s[0] + ")")
         else:
-            a = [s[0]] + [s[1] + "*d"]
+            a.append(s[0])
+
+        if isinstance(expr.args[1], (Quaternion, Dual)):
+            a.append("("+s[1]+")*ð")
+        else:
+            a.append(s[1]+"*ð")
+
         return " + ".join(a)
 
     def _print_Dimension(self, expr):
