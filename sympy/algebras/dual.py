@@ -2,17 +2,41 @@
 # https://en.wikipedia.org/wiki/Dual_number
 from sympy import conjugate, exp, ln, sympify
 from sympy.core.expr import Expr
+from sympy.algebras.quaternion import Quaternion
 
 
 class Dual(Expr):
     """Provides basic dual number operations. Dual objects can be instantiated
     as Dual(a, b), as in (a + b*d), where d^2 = 0.
 
-    An important use of dual numbers is automatic differentiation.
-
+    Dual numbers can be initiated with Quaternions to create Dual Quaternions,
+    the algebra of all rigid body kinematics in 3D. In other words, translations
+    and rotations. Another important use of dual numbers is automatic
+    differentiation.
 
     Examples
     ========
+
+    Dual Quaternions are created by initiating a dual number from quaternions:
+
+    >>> a, b, c, d, e, f, g, h = symbols('a:h')
+    >>> p = Quaternion(a, b, c, d)
+    >>> q = Quaternion(e, f, g, h)
+    >>> x = Dual(p, q)
+    >>> x
+    a + b*i + c*j + d*k + (e + f*i + g*j + h*k)*ð
+    >>> x*x.inverse()
+    1 + 0*i + 0*j + 0*k + (0 + 0*i + 0*j + 0*k)*ð
+
+    Take note that operations like conjugate only perform the dual conjugate,
+    not the quaternionic conjugate.
+
+    >>> conjugate(x)
+    a + b*i + c*j + d*k + ((-e) + (-f)*i + (-g)*j + (-h)*k)*ð
+
+    As an example of automatic differentiation consider the simple function x^2.
+    Evaluating the function with a dual number automatically performs the chain
+    rulewhile the function itself is being evaluated.
 
     >>> from sympy import symbols
     >>> from sympy.algebras.dual import Dual
@@ -29,17 +53,6 @@ class Dual(Expr):
 
     >>> f(d).b
     2*a
-
-    In order to compute second derivatives use nested dual numbers:
-
-    >>> f(Dual(Dual(a, 1), Dual(1, 0)))
-    (a**2 + 2*a*d) + (2*a + 2*d)*d
-
-    The last component is the second derivative, which is obtained as
-
-    >>> f.b.b
-    2
-
     """
     _op_priority = 11.0
 
@@ -49,13 +62,13 @@ class Dual(Expr):
         a = sympify(a)
         b = sympify(b)
 
-        if any(i.is_commutative is False for i in [a, b]):
-            raise ValueError("arguments have to be commutative")
-        else:
-            obj = Expr.__new__(cls, a, b)
-            obj._a = a
-            obj._b = b
-            return obj
+        obj = Expr.__new__(cls, a, b)
+        obj._a = a
+        obj._b = b
+        if isinstance(a, Quaternion) and isinstance(b, Quaternion):
+            # Dual quaterions are not a commutative algebra
+            obj.is_commutative = False
+        return obj
 
     @property
     def a(self):
@@ -131,10 +144,7 @@ class Dual(Expr):
         d2 = sympify(other)
 
         if not isinstance(d2, Dual):
-            if d2.is_commutative:
-                return Dual(d1.a + d2, d1.b)
-            else:
-                raise ValueError("Only commutative expressions can be added with a Dual.")
+            return Dual(d1.a + d2, d1.b)
 
         return Dual(d1.a + d2.a, d1.b + d2.b)
 
@@ -207,23 +217,18 @@ class Dual(Expr):
 
         # If d1 is a number or a sympy expression instead of a dual number
         if not isinstance(d1, Dual):
-            if d1.is_commutative:
-                return Dual(d1 * d2.a, d1 * d2.b)
-            else:
-                raise ValueError("Only commutative expressions can be multiplied with a Dual.")
+            return Dual(d1 * d2.a, d1 * d2.b)
 
         # If d2 is a number or a sympy expression instead of a dual number
         if not isinstance(d2, Dual):
-            if d2.is_commutative:
-                return Dual(d2 * d1.a, d2 * d1.b)
-            else:
-                raise ValueError("Only commutative expressions can be multiplied with a Dual.")
+            return Dual(d1.a * d2, d1.b * d2)
+
         return Dual(d1.a * d2.a, d1.a * d2.b + d1.b * d2.a)
 
     def _eval_conjugate(self):
         """Returns the conjugate of the dual number."""
         q = self
-        return Dual(q.a, -q.b)
+        return Dual(q.a, - q.b)
 
     def norm(self):
         """Returns the norm of the dual number."""
@@ -233,14 +238,15 @@ class Dual(Expr):
     def normalize(self):
         """Returns the normalized form of the dual number."""
         q = self
-        return q * (1/q.norm())
+        return q * q.norm()**-1
 
     def inverse(self):
         """Returns the inverse of the dual number."""
         q = self
         if not q.norm():
             raise ValueError("Cannot compute inverse for a dual number with zero norm")
-        return conjugate(q) * (1/q.norm()**2)
+        qainv = q.a ** -1
+        return Dual(qainv, -qainv * q.b * qainv)
 
     def pow(self, p):
         """Finds the pth power of the dual number.
@@ -272,10 +278,26 @@ class Dual(Expr):
         if p == -1:
             return q.inverse()
 
-        if p.is_Integer:
-            return Dual(q.a**p, q.b * p * q.a ** (p-1))
+
+        if isinstance(q.a, Quaternion) and isinstance(q.b, Quaternion):
+            res = 1
+
+            if not p.is_Integer:
+                return NotImplemented
+
+            if p < 0:
+                q, p = q.inverse(), -p
+
+            while p > 0:
+                res *= q
+                p -= 1
+
+            return res
         else:
-            return (p*q._ln()).exp()
+            if p.is_Integer:
+                return Dual(q.a**p, q.b * p * q.a ** (p-1))
+            else:
+                return (p*q._ln()).exp()
 
     def exp(self):
         """Returns the exponential of q (e^q).

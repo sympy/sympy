@@ -337,6 +337,7 @@ class Quaternion(Expr):
         (2 + 3*I)*(3 + 4*I) + (2 + 3*I)*(2 + 5*I)*i + 0*j + (2 + 3*I)*(7 + 8*I)*k
 
         """
+        from sympy.algebras.dual import Dual
         q1 = sympify(q1)
         q2 = sympify(q2)
 
@@ -358,7 +359,9 @@ class Quaternion(Expr):
             if q1.real_field and q2.is_complex:
                 return q1 * Quaternion(re(q2), im(q2), 0, 0)
             elif q2.is_commutative:
-                return Quaternion(q2 * q1.a, q2 * q1.b, q2 * q1.c, q2 * q1.d)
+                return Quaternion(q1.a * q2, q1.b * q2, q1.c * q2, q1.d * q2)
+            elif isinstance(q2, Dual):
+                return Dual._generic_mul(q1, q2)
             else:
                 raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
