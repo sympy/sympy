@@ -17,6 +17,18 @@ class Group(Monoid, Loop):
     operator which is closed, associative, has a two-sided identity
     element, and inverse element for every element.
 
+    Parameters
+    ==========
+
+    name : str
+        Name of the structure used for printing.
+
+    sets : tuple of Sets
+        See sympy.sets module.
+
+    operators : tuple of one Map
+        See sympy.map module.
+
     Examples
     ========
 
@@ -75,6 +87,18 @@ class AbelianGroup(Group):
     ===========
 
     Abelian group is a group whose operation is commutative.
+
+    Parameters
+    ==========
+
+    name : str
+        Name of the structure used for printing.
+
+    sets : tuple of Sets
+        See sympy.sets module.
+
+    operators : tuple of one Map
+        See sympy.map module.
 
     Examples
     ========

@@ -14,6 +14,18 @@ class LeftQuasigroup(Magma):
 
     Left quasigroup is magma that left division operator can be derived from its operator.
 
+    Parameters
+    ==========
+
+    name : str
+        Name of the structure used for printing.
+
+    sets : tuple of Sets
+        See sympy.sets module.
+
+    operators : tuple of one Map
+        See sympy.map module.
+
     Examples
     ========
 
@@ -62,6 +74,18 @@ class RightQuasigroup(Magma):
 
     Right quasigroup is magma that right division operator can be derived from its operator.
 
+    Parameters
+    ==========
+
+    name : str
+        Name of the structure used for printing.
+
+    sets : tuple of Sets
+        See sympy.sets module.
+
+    operators : tuple of one Map
+        See sympy.map module.
+
     Examples
     ========
 
@@ -109,6 +133,18 @@ class Quasigroup(LeftQuasigroup, RightQuasigroup):
     ===========
 
     Quasigroup is both left quasigroup and right quasigroup.
+
+    Parameters
+    ==========
+
+    name : str
+        Name of the structure used for printing.
+
+    sets : tuple of Sets
+        See sympy.sets module.
+
+    operators : tuple of one Map
+        See sympy.map module.
 
     Examples
     ========

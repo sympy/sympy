@@ -883,6 +883,16 @@ def test_sympy__algebras__abstract__group__group__AbelianGroup():
         AbelianGroup('g', (A,), (op,))
     )
 
+def test_sympy__algebras__abstract__ring__ring__Ring():
+    from sympy import Ring, S, scalar_add, scalar_mul
+    R = Ring('R', (S.Complexes,), (scalar_add, scalar_mul))
+    assert _test_args(R)
+
+def test_sympy__algebras__abstract__ring__ring__CommutativeRing():
+    from sympy import CommutativeRing, S, scalar_add, scalar_mul
+    R = CommutativeRing('R', (S.Complexes,), (scalar_add, scalar_mul))
+    assert _test_args(R)
+
 def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
     assert _test_args(Equality(x, 2))

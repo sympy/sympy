@@ -241,6 +241,7 @@ from .calculus import (euler_equations, singularities, is_increasing,
 from .algebras import (
         Quaternion, AlgebraicStructure, Magma, Semigroup, LeftQuasigroup,
         RightQuasigroup, Quasigroup, Monoid, Loop, Group, AbelianGroup,
+        Ring, CommutativeRing,
 )
 
 from .printing import (pager_print, pretty, pretty_print, pprint,
@@ -496,6 +497,7 @@ __all__ = [
     # sympy.algebras
     'Quaternion', 'AlgebraicStructure', 'Magma', 'Semigroup', 'LeftQuasigroup',
     'RightQuasigroup', 'Quasigroup', 'Monoid', 'Loop', 'Group', 'AbelianGroup',
+    "Ring", "CommutativeRing",
 
     # sympy.printing
     'pager_print', 'pretty', 'pretty_print', 'pprint', 'pprint_use_unicode',

@@ -7,6 +7,7 @@ from .abstract import (
     Monoid,
     Loop,
     Group, AbelianGroup,
+    Ring, CommutativeRing,
 )
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "Monoid",
     "Loop",
     "Group", "AbelianGroup",
+    "Ring", "CommutativeRing",
 ]

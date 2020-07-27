@@ -11,7 +11,19 @@ class Magma(AlgebraicStructure):
     Explanation
     ===========
 
-    Magma is algebraic structure consists of one set and one binary operation.
+    Magma is algebraic structure that consists of one set and one binary operation.
+
+    Parameters
+    ==========
+
+    name : str
+        Name of the structure used for printing.
+
+    sets : tuple of Sets
+        See sympy.sets module.
+
+    operators : tuple of one Map
+        See sympy.map module.
 
     Examples
     ========
@@ -48,9 +60,9 @@ class Magma(AlgebraicStructure):
     def __new__(cls, name, sets, operators, **kwargs):
 
         if not len(sets) == 1:
-            raise TypeError("%s consists of one set." % cls)
+            raise TypeError("%s must consist of one set." % cls)
         if not (len(operators) == 1 and operators[0].arity == 2):
-            raise TypeError("%s consists of one binary operator." % cls)
+            raise TypeError("%s must consist of one binary operator." % cls)
 
         obj = super().__new__(cls, name, sets, operators)
         return obj

@@ -13,6 +13,18 @@ class Loop(Quasigroup):
 
     Loop is quasigroup whose operation has two-sided identity.
 
+    Parameters
+    ==========
+
+    name : str
+        Name of the structure used for printing.
+
+    sets : tuple of Sets
+        See sympy.sets module.
+
+    operators : tuple of one Map
+        See sympy.map module.
+
     Examples
     ========
 

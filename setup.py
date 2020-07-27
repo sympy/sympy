@@ -80,6 +80,7 @@ modules = [
     'sympy.algebras',
     'sympy.algebras.abstract',
     'sympy.algebras.abstract.group',
+    'sympy.algebras.abstract.ring',
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.benchmarks',
@@ -347,6 +348,7 @@ class sdist_sympy(sdist):
 # python bin/generate_test_list.py
 tests = [
     'sympy.algebras.abstract.group.tests',
+    'sympy.algebras.abstract.ring.tests',
     'sympy.algebras.abstract.tests',
     'sympy.algebras.tests',
     'sympy.assumptions.tests',
