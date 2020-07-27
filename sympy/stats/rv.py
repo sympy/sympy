@@ -1144,6 +1144,7 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
     sampling_E
 
     """
+    from sympy.stats.joint_rv import JointRandomSymbol
     if not import_module(library):
         raise ValueError("Failed to import %s" % library)
 
@@ -1153,6 +1154,15 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
         ps = pspace(expr)
 
     rvs = list(ps.values)
+    if isinstance(expr, JointRandomSymbol):
+        expr = expr.subs({expr: RandomSymbol(expr.symbol, expr.pspace)})
+    else:
+        sub = {}
+        for arg in expr.args:
+            if isinstance(arg, JointRandomSymbol):
+                sub[arg] = RandomSymbol(arg.symbol, arg.pspace)
+        expr = expr.subs(sub)
+
     if library == 'pymc3':
         # Currently unable to lambdify in pymc3
         # TODO : Remove 'pymc3' when lambdify accepts 'pymc3' as module

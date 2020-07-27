@@ -4,14 +4,15 @@ from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplif
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.stats import density, median, marginal_distribution, Normal, Laplace, E
+from sympy.stats import density, median, marginal_distribution, Normal, Laplace, E, sample
 from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
                 JointDistributionHandmade, MultivariateT, NormalGamma,
                 GeneralizedMultivariateLogGammaOmega as GMVLGO, MultivariateBeta,
                 GeneralizedMultivariateLogGamma as GMVLG, MultivariateEwens,
                 Multinomial, NegativeMultinomial, MultivariateNormal,
                 MultivariateLaplace)
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, ignore_warnings, skip
+from sympy.external import import_module
 
 x, y, z, a, b = symbols('x y z a b')
 
@@ -239,3 +240,55 @@ def test_expectation():
 def test_joint_vector_expectation():
     m = Normal('A', [x, y], [[1, 0], [0, 1]])
     assert E(m) == (x, y)
+
+
+def test_sample_numpy():
+    distribs_numpy = [
+        MultivariateNormal("M", [3, 4], [[2, 1], [1, 2]])
+    ]
+    size = 3
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy is not installed. Abort tests for _sample_numpy.')
+    else:
+        with ignore_warnings(UserWarning):
+            for X in distribs_numpy:
+                samps = next(sample(X, size=size, library='numpy'))
+                for sam in samps:
+                    assert tuple(sam) in X.pspace.distribution.set
+
+def test_sample_scipy():
+    distribs_scipy = [
+        MultivariateNormal("M", [0, 0], [[0.1, 0.025], [0.025, 0.1]])
+    ]
+
+    size = 3
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for _sample_scipy.')
+    else:
+        with ignore_warnings(UserWarning):
+            for X in distribs_scipy:
+                samps = next(sample(X, size=size))
+                samps2 = next(sample(X, size=(2, 2)))
+                for sam in samps:
+                    assert tuple(sam) in X.pspace.distribution.set
+                for i in range(2):
+                    for j in range(2):
+                        assert tuple(samps2[i][j]) in X.pspace.distribution.set
+
+
+def test_sample_pymc3():
+    distribs_pymc3 = [
+        MultivariateNormal("M", [5, 2], [[1, 0], [0, 1]])
+    ]
+    size = 3
+    pymc3 = import_module('pymc3')
+    if not pymc3:
+        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
+    else:
+        with ignore_warnings(UserWarning):
+            for X in distribs_pymc3:
+                samps = next(sample(X, size=size, library='pymc3'))
+                for sam in samps:
+                    assert tuple(sam.flatten()) in X.pspace.distribution.set
