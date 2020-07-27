@@ -182,7 +182,9 @@ from .map import (Map, UndefinedMap, InverseMap, IdentityMap, RestrictedMap,
         BinaryOperator, LeftDivision, RightDivision,
         InverseOperator, ExponentOperator, AppliedBinaryOperator,
         InverseElement, ExponentElement,
-        CompositeMap, IteratedMap)
+        CompositeMap, IteratedMap,
+        AdditionOperator, Addition, scalar_add,
+        MultiplicationOperator, Multiplication, scalar_mul, scalar_pow,)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         casoratian, diag, eye, hessian, jordan_cell, list2numpy, matrix2numpy,
@@ -426,6 +428,8 @@ __all__ = [
     'InverseOperator', 'ExponentOperator', 'AppliedBinaryOperator',
     'InverseElement', 'ExponentElement',
     'CompositeMap', 'IteratedMap',
+    'AdditionOperator', 'Addition', 'scalar_add',
+    'MultiplicationOperator', 'Multiplication', 'scalar_mul', 'scalar_pow',
 
     # sympy.matrices
     'ShapeError', 'NonSquareMatrixError', 'GramSchmidt', 'casoratian', 'diag',

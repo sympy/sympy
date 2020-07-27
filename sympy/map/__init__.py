@@ -25,3 +25,13 @@ from .operator import (
 from .composite import (
     CompositeMap, IteratedMap,
 )
+
+from .add import (
+    AdditionOperator, Addition,
+    scalar_add,
+)
+
+from .mul import (
+    MultiplicationOperator, Multiplication,
+    scalar_mul, scalar_pow,
+)

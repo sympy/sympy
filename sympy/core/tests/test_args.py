@@ -3082,6 +3082,28 @@ def test_sympy__map__operator__AppliedBinaryOperator():
     op = Op()
     assert _test_args(AppliedBinaryOperator(op, (x, y)))
 
+def test_sympy__map__add__AdditionOperator():
+    from sympy.map import AdditionOperator
+    assert _test_args(AdditionOperator(S.Complexes**2, S.Complexes, S.Zero))
+
+def test_sympy__map__add__Addition():
+    from sympy.map import scalar_add, scalar_mul
+    assert _test_args(scalar_add(x, x, evaluate=True))
+    assert _test_args(scalar_add(x, x, evaluate=False))
+    assert _test_args(scalar_add(x, x, mul_op=scalar_mul, evaluate=True))
+    assert _test_args(scalar_add(x, x, mul_op=scalar_mul, evaluate=False))
+
+def test_sympy__map__mul__MultiplicationOperator():
+    from sympy.map import MultiplicationOperator
+    assert _test_args(MultiplicationOperator(S.Complexes**2, S.Complexes, S.One))
+
+def test_sympy__map__mul__Multiplication():
+    from sympy.map import scalar_mul
+    assert _test_args(scalar_mul(x, y, evaluate=True))
+    assert _test_args(scalar_mul(x, y, evaluate=False))
+    assert _test_args(scalar_mul(x, x, evaluate=True))
+    assert _test_args(scalar_mul(x, x, evaluate=False))
+
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
     assert _test_args(DeferredVector("X"))
