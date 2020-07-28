@@ -898,6 +898,52 @@ def test_sympy__algebras__abstract__ring__field__Field():
     F = Field('F', (S.Complexes,), (scalar_add, scalar_mul))
     assert _test_args(F)
 
+def test_sympy__algebras__abstract__module__module__Module():
+    from sympy import (
+        Ring, AbelianGroup, S, scalar_add, scalar_mul, Map,
+        Module, BinaryOperator
+    )
+
+    R = Ring('R', (S.Complexes,), (scalar_add, scalar_mul))
+
+    class Op(BinaryOperator):
+        identity = S.Zero
+        is_left_divisible = is_right_divisible = True
+        is_associative = True
+        is_commutative = True
+        domain = S.UniversalSet**2
+        codomain = S.UniversalSet
+    op = Op()
+    G = AbelianGroup('G', (S.UniversalSet,), (op,))
+
+    f = Map('f', domain=R.domain*G.domain, codomain=G.domain)
+
+    M = Module('M', (R, G), (f,))
+    assert _test_args(M)
+
+def test_sympy__algebras__abstract__module__vectorspace__VectorSpace():
+    from sympy import (
+        Field, AbelianGroup, S, scalar_add, scalar_mul, Map,
+        VectorSpace, BinaryOperator
+    )
+
+    F = Field('F', (S.Complexes,), (scalar_add, scalar_mul))
+
+    class Op(BinaryOperator):
+        identity = S.Zero
+        is_left_divisible = is_right_divisible = True
+        is_associative = True
+        is_commutative = True
+        domain = S.UniversalSet**2
+        codomain = S.UniversalSet
+    op = Op()
+    G = AbelianGroup('G', (S.UniversalSet,), (op,))
+
+    f = Map('f', domain=F.domain*G.domain, codomain=G.domain)
+
+    V = VectorSpace('V', (F, G), (f,))
+    assert _test_args(V)
+
 def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
     assert _test_args(Equality(x, 2))

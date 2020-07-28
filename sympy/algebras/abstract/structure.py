@@ -1,7 +1,7 @@
 from sympy.core import Tuple
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
-from sympy.sets import Set, Union
+from sympy.sets import Set, Union, ProductSet
 
 __all__ = [
     'AlgebraicStructure',
@@ -104,21 +104,33 @@ class AlgebraicStructure(Set):
             n = o.arity
 
             # check domain
-            if n == 1:
-                # special case: domain can be S or S**1
-                if (
-                    not o.domain.is_superset(self.domain**n) and
-                    not o.domain.is_superset(self.domain)
-                ) :
+            if n == 1 and not isinstance(o.domain, ProductSet):
+                domains = (o.domain,)
+            else:
+                domains = o.domain.args
+            for d in domains:
+                if not d.is_subset(self.domain):
                     raise TypeError(
                 "%s is not closed on the structure." % o
                 )
 
-            else:
-                if not o.domain.is_superset(self.domain**n):
-                    raise TypeError(
-                "%s is not closed on the structure." % o
-                )
+
+            # # check domain
+            # if n == 1:
+            #     # special case: domain can be S or S**1
+            #     if (
+            #         not o.domain.is_superset(self.domain**n) and
+            #         not o.domain.is_superset(self.domain)
+            #     ) :
+            #         raise TypeError(
+            #     "%s is not closed on the structure." % o
+            #     )
+
+            # else:
+            #     if not o.domain.is_superset(self.domain**n):
+            #         raise TypeError(
+            #     "%s is not closed on the structure." % o
+            #     )
 
             # check codomain
             if not o.codomain.is_subset(self.domain):

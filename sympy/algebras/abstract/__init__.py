@@ -8,6 +8,8 @@ __all__ = [
     "Group", 'AbelianGroup',
     "Ring", "CommutativeRing",
     "Field",
+    "Module",
+    "VectorSpace",
 ]
 
 from .structure import AlgebraicStructure
@@ -20,4 +22,8 @@ from .group import (
 
 from .ring import (
     Ring, CommutativeRing, Field,
+)
+
+from .module import (
+    Module, VectorSpace,
 )

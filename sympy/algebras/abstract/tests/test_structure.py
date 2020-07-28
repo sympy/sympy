@@ -21,9 +21,9 @@ def test_AlgebraicStructure():
     assert AlgebraicStructure('X', (S.Integers, S.Reals), ()) == S.Reals
 
     # check closure
-    # domain of operator must be superset of domain of structure
-    raises(TypeError, lambda: AlgebraicStructure('X', (A,), (Map('f', domain=B, codomain=A),)))
-    AlgebraicStructure('X', (B,), (Map('f', domain=A, codomain=B),)) # not raise error
+    # domain of operator must be subset of domain of structure
+    raises(TypeError, lambda: AlgebraicStructure('X', (B,), (Map('f', domain=A*A, codomain=A),)))
+    AlgebraicStructure('X', (A,), (Map('f', domain=A*B, codomain=A),)) # not raise error
     # codomain of operator must be subset of domain of structure
     raises(TypeError, lambda: AlgebraicStructure('X', (B,), (Map('f', domain=B, codomain=A),)))
     AlgebraicStructure('X', (A,), (Map('f', domain=A, codomain=B),)) # not raise error

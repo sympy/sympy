@@ -56,8 +56,8 @@ class MultiplicationOperator(BinaryOperator):
     def identity(self):
         return self.args[2]
 
-    def __call__(self, *args, evaluate=False):
-        return Multiplication(self, args, evaluate=evaluate)
+    def __call__(self, *args, add_op=None, evaluate=False):
+        return Multiplication(self, args, add_op, evaluate=evaluate)
 
     def gather_num(self, seq):
         num = self.identity

@@ -9,6 +9,8 @@ from .abstract import (
     Group, AbelianGroup,
     Ring, CommutativeRing,
     Field,
+    Module,
+    VectorSpace,
 )
 
 __all__ = [
@@ -22,4 +24,6 @@ __all__ = [
     "Group", "AbelianGroup",
     "Ring", "CommutativeRing",
     "Field",
+    "Module",
+    "VectorSpace",
 ]

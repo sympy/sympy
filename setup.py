@@ -80,6 +80,7 @@ modules = [
     'sympy.algebras',
     'sympy.algebras.abstract',
     'sympy.algebras.abstract.group',
+    'sympy.algebras.abstract.module',
     'sympy.algebras.abstract.ring',
     'sympy.assumptions',
     'sympy.assumptions.handlers',
