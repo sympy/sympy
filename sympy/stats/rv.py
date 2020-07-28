@@ -1026,11 +1026,11 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
     Examples
     ========
 
-    >>> from sympy.stats import Die, sample, Normal
-    >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
+    >>> from sympy.stats import Die, sample, Normal, Geometric
+    >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6) # Finite Random Variable
 
     >>> die_roll = sample(X + Y + Z) # doctest: +SKIP
-    >>> N = Normal('N', 3, 4)
+    >>> N = Normal('N', 3, 4) # Continuous Random Variable
     >>> samp = next(sample(N)) # doctest: +SKIP
     >>> samp in N.pspace.domain.set # doctest: +SKIP
     True
@@ -1040,6 +1040,15 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
     >>> samp_list = next(sample(N, size=4)) # doctest: +SKIP
     >>> [sam in N.pspace.domain.set for sam in samp_list] # doctest: +SKIP
     [True, True, True, True]
+    >>> G = Geometric('G', 0.5) # Discrete Random Variable
+    >>> samp_list = next(sample(G, size=3)) # doctest: +SKIP
+    >>> [sam in G.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    [True, True, True]
+    >>> MN = Normal("MN", [3, 4], [[2, 1], [1, 2]]) # Joint Random Variable
+    >>> samp_list = next(sample(MN, size=4)) # doctest: +SKIP
+    >>> [tuple(sam) in MN.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    [True, True, True, True]
+
 
     Returns
     =======
