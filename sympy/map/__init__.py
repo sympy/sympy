@@ -8,10 +8,15 @@ __all__ = [
     'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'RestrictedMap',
     'AppliedMap',
     'isapplied',
-    'CompositeMap', 'IteratedMap',
     'BinaryOperator', 'LeftDivision', 'RightDivision',
     'InverseOperator', 'ExponentOperator',
     'AppliedBinaryOperator', 'InverseElement', 'ExponentElement',
+    'CompositeMap', 'IteratedMap',
+    'AdditionOperator', 'Addition',
+    'scalar_add',
+    'MultiplicationOperator', 'Multiplication',
+    'scalar_mul', 'scalar_pow',
+    'FunctionSet',
 ]
 
 from .map import (
@@ -36,4 +41,8 @@ from .add import (
 from .mul import (
     MultiplicationOperator, Multiplication,
     scalar_mul, scalar_pow,
+)
+
+from .functionspace import (
+    FunctionSet,
 )

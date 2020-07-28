@@ -3165,6 +3165,10 @@ def test_sympy__map__mul__Multiplication():
     assert _test_args(scalar_mul(x, x, evaluate=True))
     assert _test_args(scalar_mul(x, x, evaluate=False))
 
+def test_sympy__map__functionspace__FunctionSet():
+    from sympy import FunctionSet, S
+    assert _test_args(FunctionSet(S.Reals, S.Integers))
+
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
     assert _test_args(DeferredVector("X"))
