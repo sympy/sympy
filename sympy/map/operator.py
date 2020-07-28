@@ -224,6 +224,12 @@ class BinaryOperator(Map):
         """
         if getattr(self, 'identity', None) is None:
             return False
+
+        a_base, a_exp = a.as_base_exp(self)
+        b_base, b_exp = b.as_base_exp(self)
+        if a_base == b_base and a_exp == -b_exp:
+            return True
+
         invop = self.inverse_operator()
         return invop(a) == b or invop(b) == a
 

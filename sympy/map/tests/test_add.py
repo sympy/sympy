@@ -11,3 +11,6 @@ def test_AdditionOperator():
     assert scalar_add(x, scalar_add(y, z), evaluate=True).arguments == (x, y, z)
     # Identity is always removed
     assert scalar_add(x, 0, y, evaluate=True).arguments == (x, y)
+
+    # numbers come first
+    assert scalar_add(x, 2, y, 4, evaluate=True).arguments == (6, x, y)

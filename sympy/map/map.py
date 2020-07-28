@@ -490,6 +490,9 @@ class AppliedMap(Expr):
     def arguments(self):
         return self.args[1]
 
+    def _new_rawargs(self, *args, **kwargs):
+        return self.func(self.mapping, args)
+
     def _contained(self, other):
         # Let `f(x) in f.codomain` return True
         # see Set.contains and Set.__contains__ methods.
@@ -509,6 +512,9 @@ class AppliedMap(Expr):
         if self.map.is_restriction(operator):
             return self.map._eval_as_base_exp(*self.arguments)
         return self, S.One
+
+    def as_coeff_Mul(self, rational=False, mul_op=None):
+        return S.One, self
 
 def isapplied(arg, maps):
     """

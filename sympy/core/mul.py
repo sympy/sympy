@@ -770,7 +770,7 @@ class Mul(Expr, AssocOp):
                 return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
-    def as_coeff_Mul(self, rational=False):
+    def as_coeff_Mul(self, rational=False, **kwargs):
         """
         Efficiently extract the coefficient of a product.
         """

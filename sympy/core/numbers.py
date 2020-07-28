@@ -824,7 +824,7 @@ class Number(AtomicExpr):
             return self, tuple()
         return S.Zero, (self,)
 
-    def as_coeff_Mul(self, rational=False):
+    def as_coeff_Mul(self, rational=False, **kwargs):
         """Efficiently extract the coefficient of a product. """
         if rational and not self.is_Rational:
             return S.One, self
@@ -2033,7 +2033,7 @@ class Rational(Number):
             return -self, S.NegativeOne
         return S.One, self
 
-    def as_coeff_Mul(self, rational=False):
+    def as_coeff_Mul(self, rational=False, **kwargs):
         """Efficiently extract the coefficient of a product. """
         return self, S.One
 
@@ -2641,7 +2641,7 @@ class Zero(IntegerConstant, metaclass=Singleton):
 
     __bool__ = __nonzero__
 
-    def as_coeff_Mul(self, rational=False):  # XXX this routine should be deleted
+    def as_coeff_Mul(self, rational=False, **kwargs):  # XXX this routine should be deleted
         """Efficiently extract the coefficient of a summation. """
         return S.One, self
 

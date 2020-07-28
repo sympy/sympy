@@ -66,29 +66,46 @@ class AdditionOperator(BinaryOperator):
     def __call__(self, *args, mul_op=None, evaluate=False):
         return Addition(self, args, mul_op, evaluate=evaluate)
 
+    def undestribute(self, seq, mul_op):
+        # collect coefficients, e.g. 2*x + 3*x -> 5*x
+        terms = {}
+        for o in seq:
+            coeff, term = o.as_coeff_Mul(mul_op=mul_op)
+            if term not in terms:
+                terms[term] = mul_op.identity
+            else:
+                terms[term] += coeff
+
+        result = []
+        for term, coeff in terms.items():
+            if coeff == S.Zero:
+                continue
+            elif coeff == mul_op.identity:
+                result.append(term)
+            else:
+                result.append(mul_op(coeff, term, evaluate=True))
+        return result
+
+    def gather_num(self, seq):
+        num = self.identity
+        newseq = []
+        for o in seq:
+            if o.is_Number:
+                num += o
+            else:
+                newseq.append(o)
+        if num != self.identity:
+            newseq.insert(0, num)
+        return newseq
+
     def addition_process(self, seq, mul_op):
         seq = self.flatten(seq)
         seq = self.remove_identity(seq)
-
         if mul_op is not None:
-            terms = {}
-            for o in seq:
-                if o not in terms:
-                    terms[o] = mul_op.identity
-                else:
-                    terms[o] += mul_op.identity
-
-            result = []
-            for term, coeff in terms.items():
-                if coeff == self.identity:
-                    continue
-                elif coeff == mul_op.identity:
-                    result.append(term)
-                else:
-                    result.append(mul_op(coeff, term, evaluate=True))
+            result = self.undestribute(seq, mul_op)
         else:
             result = self.cancel(seq)
-
+        result = self.gather_num(result)
         return result
 
 class Addition(AppliedBinaryOperator):
@@ -120,5 +137,8 @@ class Addition(AppliedBinaryOperator):
         if len(self.args) < 3:
             return None
         return self.args[2]
+
+    def _new_rawargs(self, *args, **kwargs):
+        return self.func(self.map, args, self.mul_op)
 
 scalar_add = AdditionOperator(S.Complexes**2, S.Complexes, S.Zero)

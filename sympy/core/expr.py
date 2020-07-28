@@ -3407,7 +3407,7 @@ class Expr(Basic, EvalfMixin):
         c = c.subs(d, log(x))
         return c, e
 
-    def as_coeff_Mul(self, rational=False):
+    def as_coeff_Mul(self, rational=False, **kwargs):
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 

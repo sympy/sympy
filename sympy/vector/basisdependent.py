@@ -143,7 +143,7 @@ class BasisDependent(Expr):
 
     factor.__doc__ += fctr.__doc__  # type: ignore
 
-    def as_coeff_Mul(self, rational=False):
+    def as_coeff_Mul(self, rational=False, **kwargs):
         """Efficiently extract the coefficient of a product. """
         return (S.One, self)
 

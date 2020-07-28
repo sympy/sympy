@@ -1,9 +1,10 @@
 """Common multiplication operator"""
 
 from functools import cmp_to_key
+import itertools
 from sympy.core import Basic, S, Tuple
 from sympy.core.sympify import _sympify
-from .map import AppliedMap
+from .map import AppliedMap, isapplied
 from .operator import (
     BinaryOperator, AppliedBinaryOperator
 )
@@ -58,10 +59,38 @@ class MultiplicationOperator(BinaryOperator):
     def __call__(self, *args, evaluate=False):
         return Multiplication(self, args, evaluate=evaluate)
 
+    def gather_num(self, seq):
+        num = self.identity
+        newseq = []
+        for o in seq:
+            if o.is_Number:
+                num *= o
+            else:
+                newseq.append(o)
+        if num != self.identity:
+            newseq.insert(0, num)
+        return newseq
+
     def multiplication_process(self, seq):
         seq = self.flatten(seq)
         seq = self.remove_identity(seq)
-        return self.assoc_comm_process(seq)
+        seq = self.assoc_comm_process(seq)
+        seq = self.gather_num(seq)
+        return seq
+
+    def distribute(self, seq, add_op, evaluate=False):
+        # x*(y+z) -> x*y + x*z
+        # not used in construction algorithm because it is
+        # discouraged in core/parameters
+        terms = []
+        for o in seq:
+            if isapplied(o, add_op):
+                terms.append(o.arguments)
+            else:
+                terms.append((o,))
+        terms = [self(*l, evaluate=evaluate) for l in itertools.product(*terms)]
+        return add_op(*terms, evaluate=evaluate)
+
 
 class Multiplication(AppliedBinaryOperator):
     def __new__(cls, mapping, args, evaluate=False, **kwargs):
@@ -78,6 +107,22 @@ class Multiplication(AppliedBinaryOperator):
         args.sort(key=cmp_to_key(Basic.compare))
         args = Tuple(*args)
         return super(AppliedMap, cls).__new__(cls, mapping, args)
+
+    def _new_rawargs(self, *args, **kwargs):
+        return self.func(self.map, args)
+
+    def as_coeff_Mul(self, rational=False, mul_op=None):
+        if mul_op is None or isapplied(self, mul_op):
+            coeff, args = self.arguments[0], self.arguments[1:]
+            if coeff.is_Number:
+                if not rational or coeff.is_Rational:
+                    if len(args) == 1:
+                        return coeff, args[0]
+                    else:
+                        return coeff, self._new_rawargs(*args)
+                elif coeff.is_extended_negative:
+                    return -self.map.identity, self._new_rawargs(*((-coeff,) + args))
+        return self.map.identity, self
 
 scalar_mul = MultiplicationOperator(S.Complexes**2, S.Complexes, S.One)
 scalar_pow = scalar_mul.exponent_operator()
