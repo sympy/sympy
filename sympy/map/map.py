@@ -116,7 +116,7 @@ class Map(Expr):
         >>> from sympy import Map
         >>> class F(Map):
         ...     name = 'f'
-        ...     def force_eval(self, x):
+        ...     def force_eval(self, x, **kwargs):
         ...         return x + 1
         >>> f = F()
 
