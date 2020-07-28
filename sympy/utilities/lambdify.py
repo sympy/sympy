@@ -168,7 +168,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
 def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, sort_args=False):
+             dummify=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -331,9 +331,6 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
         (if ``args`` is not a string) - for example, to ensure that the
         arguments do not redefine any built-in names.
 
-    sort_args: bool, optional
-            Lambdify can take care of sorting your iterable ``args`` in consistent
-            way using fixed sorting criterion by alphabetical order
 
     Examples
     ========
@@ -811,20 +808,9 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
 
 
     if  type(args) is set:
-        warnings.warn('WARNING: The list of arguments is a `set`. The outcome of enumerate(args) is used to `lambdify` but its outcome is not predictable', category=DeprecationWarning)
-        #print('WARNING: Convert your argument list to an iterable that can be enumerated in a predictable way, e.g. a sequence, list or OrderedDicts')
-        if not sort_args:
-            warnings.warn('WARNING: If you wish you can let `lambdify` sort your args in a predictable way. Set the optional argument `sort_args=True` ', category=DeprecationWarning)
-        if sort_args:
-            def sort_symbols(_args):
-                return sorted(list( _args ) ,key=lambda s: s.name)
+        warnings.warn('WARNING: The list of arguments is a `set`. The outcome of enumerate(args) is used to `lambdify`, but its outcome is not predictable. Lambdify will stop here and return `False`', category=DeprecationWarning)
+        return False  # Anything else that block the code would be fine
 
-            sorted_args=sort_symbols(args)
-            change_warning='WARNING: You gave a set as args ' + str(args) + ' and they have been sorted to ' + str(sorted_args)
-            warnings.warn( change_warning, category=DeprecationWarning )
-            args=sorted_args
-
-    #print('WARNING: Your args are', args)
 
 
     # Get the names of the args, for creating a docstring
