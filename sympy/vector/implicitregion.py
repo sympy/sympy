@@ -1,5 +1,6 @@
-from sympy import S, Rational, gcd, sqrt, sign, symbols
-from sympy.core import Basic, Tuple, diff, expand, Eq
+from sympy import S, Rational, gcd, sqrt, sign, symbols, Complement
+from sympy.core import Basic, Tuple, diff, expand, Eq, Integer
+from sympy.core.compatibility import ordered
 from sympy.core.symbol import _symbol
 from sympy.solvers import solveset, nonlinsolve, diophantine
 from sympy.polys import total_degree
@@ -79,7 +80,7 @@ class ImplicitRegion(Basic):
         >>> from sympy.vector import ImplicitRegion
         >>> circle = ImplicitRegion((x, y), (x + 2)**2 + (y - 3)**2 - 16)
         >>> circle.regular_point()
-        (2, 3)
+        (-2, -1)
         >>> parabola = ImplicitRegion((x, y), x**2 - 4*y)
         >>> parabola.regular_point()
         (0, 0)
@@ -105,10 +106,10 @@ class ImplicitRegion(Basic):
 
                 if b**2 == 4*a*c:
                     x_reg, y_reg = self._regular_point_parabola(*coeffs)
-                    return x_reg, y_reg
                 else:
                     x_reg, y_reg = self._regular_point_ellipse(*coeffs)
-                    return x_reg, y_reg
+
+                return x_reg, y_reg
 
         if len(self.variables) == 3:
             x, y, z = self.variables
@@ -210,15 +211,50 @@ class ImplicitRegion(Basic):
             x, y, z = symbols("x y z")
             eq = a2*x**2 + b2*y**2 + c2*z**2
 
-            sol = diophantine(eq)
-            sol = list(sol)[0]
-            syms = Tuple(*sol).free_symbols
-            rep = {s: 3 for s in syms}
+            solutions = diophantine(eq)
 
-            if len(syms) != 0:
-                x, y, z = tuple(s.subs(rep) for s in sol)
-            else:
-                x, y, z =   sol
+            if len(solutions) == 0:
+                raise ValueError("Rational Point on the conic does not exist")
+
+            flag = False
+            for sol in solutions:
+                syms = Tuple(*sol).free_symbols
+                rep = {s: 3 for s in syms}
+                sol_z = sol[2]
+
+                if sol_z == 0:
+                    flag = True
+                    continue
+
+                if not (isinstance(sol_z, Integer) or isinstance(sol_z, int)):
+                    syms_z = sol_z.free_symbols
+
+                    if len(syms_z) == 1:
+                        p = next(iter(syms_z))
+                        p_values = Complement(S.Integers, solveset(Eq(sol_z, 0), p, S.Integers))
+                        rep[p] = next(iter(p_values))
+
+                    if len(syms_z) == 2:
+                        p, q = list(ordered(syms_z))
+
+                        for i in S.Integers:
+                            subs_sol_z = sol_z.subs(p, i)
+                            q_values = Complement(S.Integers, solveset(Eq(subs_sol_z, 0), q, S.Integers))
+
+                            if not q_values.is_empty:
+                                rep[p] = i
+                                rep[q] = next(iter(q_values))
+                                break
+
+                    if len(syms) != 0:
+                        x, y, z = tuple(s.subs(rep) for s in sol)
+                    else:
+                        x, y, z =   sol
+                    flag = False
+                    break
+
+            if flag:
+                raise ValueError("Rational Point on the conic does not exist")
 
             x = (x*g3)/r1
             y = (y*g2)/r2
@@ -315,7 +351,7 @@ class ImplicitRegion(Basic):
 
         >>> circle = ImplicitRegion((x, y), Eq(x**2 + y**2, 4))
         >>> circle.rational_parametrization()
-        (2 - 4/(t**2 + 1), -4*t/(t**2 + 1))
+        (4*t/(t**2 + 1), 4*t**2/(t**2 + 1) - 2)
 
         >>> I = ImplicitRegion((x, y), x**3 + x**2 - y**2)
         >>> I.rational_parametrization()
