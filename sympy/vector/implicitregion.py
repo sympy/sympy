@@ -108,7 +108,6 @@ class ImplicitRegion(Basic):
                     x_reg, y_reg = self._regular_point_parabola(*coeffs)
                 else:
                     x_reg, y_reg = self._regular_point_ellipse(*coeffs)
-
                 return x_reg, y_reg
 
         if len(self.variables) == 3:
