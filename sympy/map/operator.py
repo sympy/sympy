@@ -364,7 +364,7 @@ class LeftDivision(BinaryOperator):
         if not ask(Q.left_divisible(base_op)):
             raise TypeError("Left division of %s does not exist." % base_op)
 
-        return super().__new__(cls, base_op)
+        return super().__new__(cls, base_op, **kwargs)
 
     @property
     def base_op(self):
@@ -427,7 +427,7 @@ class RightDivision(BinaryOperator):
         if not ask(Q.right_divisible(base_op)):
             raise TypeError("Right division of %s does not exist." % base_op)
 
-        return super().__new__(cls, base_op)
+        return super().__new__(cls, base_op, **kwargs)
 
     @property
     def base_op(self):
@@ -484,7 +484,7 @@ class InverseOperator(Map):
         if base_op.identity is None:
             raise TypeError("%s does not have identity." % base_op)
 
-        return super().__new__(cls, base_op)
+        return super().__new__(cls, base_op, **kwargs)
 
     @property
     def base_op(self):
@@ -562,7 +562,7 @@ class ExponentOperator(Map):
         if ask(Q.associative(base_op)) is False:
             raise TypeError("%s is not associative." % base_op)
 
-        return super().__new__(cls, base_op)
+        return super().__new__(cls, base_op, **kwargs)
 
     @property
     def base_op(self):
@@ -587,11 +587,14 @@ class ExponentOperator(Map):
 
     def eval(self, x, n):
 
-        if n <= 0:
+        if ask(Q.negative(n)):
             if getattr(self.base_op, "identity", None) is None:
                 raise TypeError(
             "Negative exponent cannot be defined since %s does not have identity." % self
             )
+
+        if x == self.base_op.identity:
+            return x
 
         if n == 1:
             return x
@@ -599,7 +602,7 @@ class ExponentOperator(Map):
             return self.base_op.identity
         if n == -1:
             return self.base_op.inverse_operator()(x)
-        if n < -1:
+        if ask(Q.negative(n)):
             return self(self.base_op.inverse_operator()(x), -n)
 
     def _eval_as_base_exp(self, x, n):

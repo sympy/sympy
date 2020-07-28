@@ -282,7 +282,7 @@ class UndefinedMap(Map):
 
         domain, codomain = _sympify(domain), _sympify(codomain)
 
-        obj = super().__new__(cls, name, domain, codomain)
+        obj = super().__new__(cls, name, domain, codomain, **kwargs)
         return obj
 
     @property
@@ -330,7 +330,7 @@ class RestrictedMap(Map):
             result = mapping._eval_restrict(new_domain)
             if result is not None:
                 return result
-        return super().__new__(cls, mapping, new_domain)
+        return super().__new__(cls, mapping, new_domain, **kwargs)
 
     @property
     def base(self):
@@ -392,7 +392,7 @@ class InverseMap(Map):
             obj = mapping._eval_inverse()
             if obj is not None:
                 return obj
-        return super().__new__(cls, mapping)
+        return super().__new__(cls, mapping, **kwargs)
 
     @property
     def base(self):
@@ -443,7 +443,7 @@ class IdentityMap(Map):
 
     """
     def __new__(cls, domain=S.UniversalSet, **kwargs):
-        return super().__new__(cls, domain)
+        return super().__new__(cls, domain, **kwargs)
 
     @property
     def domain(self):
@@ -508,7 +508,7 @@ class AppliedMap(Expr):
     def __new__(cls, mapping, args, evaluate=False, **kwargs):
         args = Tuple(*[_sympify(a) for a in args])
 
-        result = mapping.force_eval(*args, **kwargs)
+        result = mapping.force_eval(*args, evaluate=evaluate, **kwargs)
         if result is not None:
             return result
 

@@ -23,3 +23,6 @@ def test_scalar_multiplication():
 
     # inverse
     assert scalar_divide(1, 3) == scalar_pow(3, -1)
+    assert scalar_divide(3, 1, evaluate=True) == scalar_mul(3, 1, evaluate=True) == 3
+    assert scalar_pow(1, -1, evaluate=True) == scalar_pow(1, x, evaluate=True) == 1
+    assert scalar_divide(1, 1, evaluate=True) == 1

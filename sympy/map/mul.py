@@ -42,7 +42,7 @@ class MultiplicationOperator(BinaryOperator):
 
     def __new__(cls, domain, codomain, identity, **kwargs):
         domain, codomain, identity = _sympify(domain), _sympify(codomain), _sympify(identity)
-        return super().__new__(cls, domain, codomain, identity)
+        return super().__new__(cls, domain, codomain, identity, **kwargs)
 
     @property
     def domain(self):
@@ -108,9 +108,9 @@ class Multiplication(AppliedBinaryOperator):
         args = Tuple(*args)
 
         if add_op is None:
-            return super(AppliedMap, cls).__new__(cls, mapping, args)
+            return super(AppliedMap, cls).__new__(cls, mapping, args, **kwargs)
 
-        return super(AppliedMap, cls).__new__(cls, mapping, args, add_op)
+        return super(AppliedMap, cls).__new__(cls, mapping, args, add_op, **kwargs)
 
     @property
     def add_op(self):
