@@ -180,7 +180,7 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
        This function uses ``enumerate`` on ``args``, thus you should
        provide `args` that is a fixed-ordering iterable, e.g. a sequence,
         or take responsibility for making sure the args are in the order
-        you want them to be.
+        you want them to be. If a set is passed lambdify will return a False
 
     Explanation
     ===========
