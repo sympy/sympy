@@ -893,6 +893,11 @@ def test_sympy__algebras__abstract__ring__ring__CommutativeRing():
     R = CommutativeRing('R', (S.Complexes,), (scalar_add, scalar_mul))
     assert _test_args(R)
 
+def test_sympy__algebras__abstract__ring__field__Field():
+    from sympy import Field, S, scalar_add, scalar_mul
+    F = Field('F', (S.Complexes,), (scalar_add, scalar_mul))
+    assert _test_args(F)
+
 def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
     assert _test_args(Equality(x, 2))

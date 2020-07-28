@@ -66,7 +66,7 @@ class AdditionOperator(BinaryOperator):
     def __call__(self, *args, mul_op=None, evaluate=False):
         return Addition(self, args, mul_op, evaluate=evaluate)
 
-    def undestribute(self, seq, mul_op):
+    def undistribute(self, seq, mul_op, evaluate=False):
         # collect coefficients, e.g. 2*x + 3*x -> 5*x
         terms = {}
         for o in seq:
@@ -83,7 +83,7 @@ class AdditionOperator(BinaryOperator):
             elif coeff == mul_op.identity:
                 result.append(term)
             else:
-                result.append(mul_op(coeff, term, evaluate=True))
+                result.append(mul_op(coeff, term, evaluate=evaluate))
         return result
 
     def gather_num(self, seq):
@@ -102,7 +102,7 @@ class AdditionOperator(BinaryOperator):
         seq = self.flatten(seq)
         seq = self.remove_identity(seq)
         if mul_op is not None:
-            result = self.undestribute(seq, mul_op)
+            result = self.undistribute(seq, mul_op, evaluate=True)
         else:
             result = self.cancel(seq)
         result = self.gather_num(result)
@@ -140,5 +140,16 @@ class Addition(AppliedBinaryOperator):
 
     def _new_rawargs(self, *args, **kwargs):
         return self.func(self.map, args, self.mul_op)
+
+    def undistribute(self, mul_op=None, evaluate=False):
+        # collect coefficients, e.g. 2*x + 3*x -> 5*x
+        if mul_op is None:
+            mul_op = self.mul_op
+
+        if mul_op is not None:
+            seq = [*self.arguments]
+            return self.map.undistribute(seq, mul_op=mul_op, evaluate=evaluate)
+        else:
+            return self
 
 scalar_add = AdditionOperator(S.Complexes**2, S.Complexes, S.Zero)

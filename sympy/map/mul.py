@@ -93,7 +93,7 @@ class MultiplicationOperator(BinaryOperator):
 
 
 class Multiplication(AppliedBinaryOperator):
-    def __new__(cls, mapping, args, evaluate=False, **kwargs):
+    def __new__(cls, mapping, args, add_op=None, evaluate=False, **kwargs):
         args = [_sympify(a) for a in args]
 
         if evaluate:
@@ -106,7 +106,17 @@ class Multiplication(AppliedBinaryOperator):
 
         args.sort(key=cmp_to_key(Basic.compare))
         args = Tuple(*args)
-        return super(AppliedMap, cls).__new__(cls, mapping, args)
+
+        if add_op is None:
+            return super(AppliedMap, cls).__new__(cls, mapping, args)
+
+        return super(AppliedMap, cls).__new__(cls, mapping, args, add_op)
+
+    @property
+    def add_op(self):
+        if len(self.args) < 3:
+            return None
+        return self.args[2]
 
     def _new_rawargs(self, *args, **kwargs):
         return self.func(self.map, args)
@@ -123,6 +133,19 @@ class Multiplication(AppliedBinaryOperator):
                 elif coeff.is_extended_negative:
                     return -self.map.identity, self._new_rawargs(*((-coeff,) + args))
         return self.map.identity, self
+
+    def distribute(self, add_op=None, evaluate=False):
+        # x*(y+z) -> x*y + x*z
+        # not used in construction algorithm because it is
+        # discouraged in core/parameters
+        if add_op is None:
+            add_op = self.add_op
+
+        if add_op is not None:
+            seq = [*self.arguments]
+            return self.map.distribute(seq, add_op=add_op, evaluate=evaluate)
+        else:
+            return self
 
 scalar_mul = MultiplicationOperator(S.Complexes**2, S.Complexes, S.One)
 scalar_pow = scalar_mul.exponent_operator()

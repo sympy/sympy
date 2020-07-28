@@ -7,6 +7,7 @@ __all__ = [
     "Loop",
     "Group", 'AbelianGroup',
     "Ring", "CommutativeRing",
+    "Field",
 ]
 
 from .structure import AlgebraicStructure
@@ -18,5 +19,5 @@ from .group import (
 )
 
 from .ring import (
-    Ring, CommutativeRing,
+    Ring, CommutativeRing, Field,
 )

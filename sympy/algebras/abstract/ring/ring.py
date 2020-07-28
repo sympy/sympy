@@ -89,8 +89,14 @@ class Ring(AlgebraicStructure):
     add = addition
 
     def multiplication(self, *args, evaluate=False):
-        return self.mul_op(*args, evaluate=evaluate)
+        return self.mul_op(*args, add_op=self.add_op, evaluate=evaluate)
     mul = multiplication
+
+    def distribute(self, mul, evaluate=False):
+        return mul.distribute(add_op=self.add_op, evaluate=evaluate)
+
+    def undistribute(self, add, evaluate=False):
+        return add.undistribute(mul_op=self.mul_op, evaluate=evaluate)
 
 class CommutativeRing(Ring):
     """

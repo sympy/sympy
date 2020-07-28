@@ -8,6 +8,7 @@ from .abstract import (
     Loop,
     Group, AbelianGroup,
     Ring, CommutativeRing,
+    Field,
 )
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "Loop",
     "Group", "AbelianGroup",
     "Ring", "CommutativeRing",
+    "Field",
 ]
