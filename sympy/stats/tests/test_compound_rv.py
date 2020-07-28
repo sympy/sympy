@@ -89,7 +89,7 @@ def test_Compound_Distribution():
     C = CompoundDistribution(N)
     assert C.is_Continuous
     assert C.set == Interval(-oo, oo)
-    assert C.pdf(x, True).simplify() == exp(-x**2/64 + x/16 - S(1)/16)/(8*sqrt(pi))
+    assert C.pdf(x, evaluate=True).simplify() == exp(-x**2/64 + x/16 - S(1)/16)/(8*sqrt(pi))
 
     assert not isinstance(CompoundDistribution(NormalDistribution(2, 3)),
                             CompoundDistribution)
@@ -102,7 +102,7 @@ def test_Compound_Distribution():
     assert C.is_Finite
     assert C.set == {0, 1}
     y = symbols('y', negative=False, integer=True)
-    assert C.pdf(y, True) == Piecewise((S(1)/(30*beta(2, 4)), Eq(y, 0)),
+    assert C.pdf(y, evaluate=True) == Piecewise((S(1)/(30*beta(2, 4)), Eq(y, 0)),
                 (S(1)/(60*beta(2, 4)), Eq(y, 1)), (0, True))
 
     k, t, z = symbols('k t z', positive=True, real=True)
@@ -111,7 +111,8 @@ def test_Compound_Distribution():
     C = CompoundDistribution(X)
     assert C.is_Discrete
     assert C.set == S.Naturals0
-    assert C.pdf(z, True).simplify() == t**z*(t + 1)**(-k - z)*gamma(k + z)/(gamma(k)*gamma(z + 1))
+    assert C.pdf(z, evaluate=True).simplify() == t**z*(t + 1)**(-k - z)*gamma(k \
+                    + z)/(gamma(k)*gamma(z + 1))
 
 
 def test_compound_pspace():
