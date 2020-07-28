@@ -11,7 +11,7 @@ from .operator import (
 
 __all__ = [
     "MultiplicationOperator", "Multiplication",
-    "scalar_mul", "scalar_pow",
+    "scalar_mul", "scalar_pow", "scalar_divide",
 ]
 
 class MultiplicationOperator(BinaryOperator):
@@ -149,3 +149,4 @@ class Multiplication(AppliedBinaryOperator):
 
 scalar_mul = MultiplicationOperator(S.Complexes**2, S.Complexes, S.One)
 scalar_pow = scalar_mul.exponent_operator()
+scalar_divide = scalar_mul.right_division()

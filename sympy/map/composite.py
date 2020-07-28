@@ -6,6 +6,9 @@ from .map import Map, IdentityMap, AppliedMap
 
 __all__ = ["CompositeMap", "IteratedMap"]
 
+# TODO: Make this module follow the design if operator.py
+# That will include implementing composition operator and inverse operator.
+
 class CompositeMap(Map, AssocOp):
     """
     A class for general composite mappings.

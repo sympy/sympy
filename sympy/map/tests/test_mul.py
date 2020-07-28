@@ -1,8 +1,8 @@
 from sympy import S, symbols
-from sympy.map import scalar_add, scalar_mul
+from sympy.map import scalar_add, scalar_mul, scalar_pow, scalar_divide
 x, y, z = symbols('x y z')
 
-def test_MultiplicationOperator():
+def test_scalar_multiplication():
     # Nested is always flattened
     assert scalar_mul(x, scalar_mul(y, z), evaluate=True).arguments == (x, y, z)
     # Identity is removed
@@ -20,3 +20,6 @@ def test_MultiplicationOperator():
 
     # as_coeff_Mul
     assert scalar_mul(2, x, y, evaluate=True).as_coeff_Mul(mul_op=scalar_mul) == (2, scalar_mul(x, y))
+
+    # inverse
+    assert scalar_divide(1, 3) == scalar_pow(3, -1)

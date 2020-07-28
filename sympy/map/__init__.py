@@ -15,7 +15,7 @@ __all__ = [
     'AdditionOperator', 'Addition',
     'scalar_add',
     'MultiplicationOperator', 'Multiplication',
-    'scalar_mul', 'scalar_pow',
+    'scalar_mul', 'scalar_pow', 'scalar_divide',
     'FunctionSet',
 ]
 
@@ -40,7 +40,7 @@ from .add import (
 
 from .mul import (
     MultiplicationOperator, Multiplication,
-    scalar_mul, scalar_pow,
+    scalar_mul, scalar_pow, scalar_divide,
 )
 
 from .functionspace import (

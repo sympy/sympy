@@ -378,11 +378,14 @@ class LeftDivision(BinaryOperator):
     def codomain(self):
         return self.base_op.codomain
 
-    def eval(self, a, b):
+    def force_eval(self, a, b, **kwargs):
         base_op = self.base_op
         if base_op.identity is not None and ask(Q.associative(base_op)):
+            inv_a = ExponentOperator(base_op)(a, -1, **kwargs)
             if b == base_op.identity:
-                return InverseOperator(base_op)(a)
+                return inv_a
+            else:
+                return base_op(inv_a, b, **kwargs)
 
 class RightDivision(BinaryOperator):
     r"""
@@ -438,11 +441,14 @@ class RightDivision(BinaryOperator):
     def codomain(self):
         return self.base_op.codomain
 
-    def eval(self, a, b):
+    def force_eval(self, a, b, **kwargs):
         base_op = self.base_op
         if base_op.identity is not None and ask(Q.associative(base_op)):
+            inv_b = ExponentOperator(base_op)(b, -1, **kwargs)
             if a == base_op.identity:
-                return InverseOperator(base_op)(b)
+                return inv_b
+            else:
+                return base_op(a, inv_b, **kwargs)
 
 class InverseOperator(Map):
     """
@@ -500,6 +506,11 @@ class InverseOperator(Map):
 
     def __call__(self, x, evaluate=False, **kwargs):
         return InverseElement(self, (x,), evaluate=evaluate)
+
+    def force_eval(self, x, **kwargs):
+        base_op = self.base_op
+        if base_op.identity is not None and ask(Q.associative(base_op)):
+            return ExponentOperator(base_op)(x, -1, **kwargs)
 
     def eval(self, x):
         if self.base_op.identity is not None and x == self.base_op.identity:

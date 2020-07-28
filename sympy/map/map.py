@@ -101,7 +101,52 @@ class Map(Expr):
         return 1
     nargs = arity
 
+    def force_eval(self, *args, **kwargs):
+        """
+        If this method returns value, it is returned even if
+        ``evaluate=False`` is passed.
+
+        .. note::
+           This method is implemented a function to always return
+           the result of another function, e.g. $1/x$ to $x^{-1}$.
+
+        Examples
+        ========
+
+        >>> from sympy import Map
+        >>> class F(Map):
+        ...     name = 'f'
+        ...     def force_eval(self, x):
+        ...         return x + 1
+        >>> f = F()
+
+        >>> f(1, evaluate=False)
+        2
+
+        """
+
+        return
+
     def eval(self, *args):
+        """
+        Return the result of function application with evaluate=True
+
+        Examples
+        ========
+
+        >>> from sympy import Map
+        >>> class F(Map):
+        ...     name = 'f'
+        ...     def eval(self, x):
+        ...         return x + 1
+        >>> f = F()
+
+        >>> f(1)
+        f(1)
+        >>> f(1, evaluate=True)
+        2
+
+        """
         return
 
     def __call__(self, *args, evaluate=False, **kwargs):
@@ -462,6 +507,10 @@ class AppliedMap(Expr):
     """
     def __new__(cls, mapping, args, evaluate=False, **kwargs):
         args = Tuple(*[_sympify(a) for a in args])
+
+        result = mapping.force_eval(*args, **kwargs)
+        if result is not None:
+            return result
 
         if evaluate:
 
