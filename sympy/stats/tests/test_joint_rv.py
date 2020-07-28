@@ -244,7 +244,9 @@ def test_joint_vector_expectation():
 
 def test_sample_numpy():
     distribs_numpy = [
-        MultivariateNormal("M", [3, 4], [[2, 1], [1, 2]])
+        MultivariateNormal("M", [3, 4], [[2, 1], [1, 2]]),
+        MultivariateBeta("B", [0.4, 5, 15, 50, 203]),
+        Multinomial("N", 50, [0.3, 0.2, 0.1, 0.25, 0.15])
     ]
     size = 3
     numpy = import_module('numpy')
@@ -256,10 +258,14 @@ def test_sample_numpy():
                 samps = next(sample(X, size=size, library='numpy'))
                 for sam in samps:
                     assert tuple(sam) in X.pspace.distribution.set
+            N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
+            raises(NotImplementedError, lambda: next(sample(N_c, library='numpy')))
 
 def test_sample_scipy():
     distribs_scipy = [
-        MultivariateNormal("M", [0, 0], [[0.1, 0.025], [0.025, 0.1]])
+        MultivariateNormal("M", [0, 0], [[0.1, 0.025], [0.025, 0.1]]),
+        MultivariateBeta("B", [0.4, 5, 15]),
+        Multinomial("N", 8, [0.3, 0.2, 0.1, 0.4])
     ]
 
     size = 3
@@ -276,11 +282,15 @@ def test_sample_scipy():
                 for i in range(2):
                     for j in range(2):
                         assert tuple(samps2[i][j]) in X.pspace.distribution.set
+            N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
+            raises(NotImplementedError, lambda: next(sample(N_c)))
 
 
 def test_sample_pymc3():
     distribs_pymc3 = [
-        MultivariateNormal("M", [5, 2], [[1, 0], [0, 1]])
+        MultivariateNormal("M", [5, 2], [[1, 0], [0, 1]]),
+        MultivariateBeta("B", [0.4, 5, 15]),
+        Multinomial("N", 4, [0.3, 0.2, 0.1, 0.4])
     ]
     size = 3
     pymc3 = import_module('pymc3')
@@ -292,3 +302,5 @@ def test_sample_pymc3():
                 samps = next(sample(X, size=size, library='pymc3'))
                 for sam in samps:
                     assert tuple(sam.flatten()) in X.pspace.distribution.set
+            N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
+            raises(NotImplementedError, lambda: next(sample(N_c, library='pymc3')))

@@ -18,7 +18,7 @@ from sympy.concrete.summations import Sum, summation
 from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
-from sympy.matrices import ImmutableMatrix, matrix2numpy
+from sympy.matrices import ImmutableMatrix, matrix2numpy, list2numpy
 from sympy.stats.crv import SingleContinuousDistribution, SingleContinuousPSpace
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
@@ -156,6 +156,10 @@ class SampleJointScipy:
         'MultivariateNormalDistribution': lambda dist, size: scipy.stats.multivariate_normal.rvs(
             mean=matrix2numpy(dist.mu).flatten(),
             cov=matrix2numpy(dist.sigma), size=size),
+        'MultivariateBetaDistribution': lambda dist, size: scipy.stats.dirichlet.rvs(
+            alpha=list2numpy(dist.alpha, float).flatten(), size=size),
+        'MultinomialDistribution': lambda dist, size: scipy.stats.multinomial.rvs(
+            n=int(dist.n), p=list2numpy(dist.p, float).flatten(), size=size)
     }
 
     @classmethod
@@ -179,6 +183,10 @@ class SampleJointNumpy:
         'MultivariateNormalDistribution': lambda dist, size: numpy.random.multivariate_normal(
             mean=matrix2numpy(dist.mu, float).flatten(),
             cov=matrix2numpy(dist.sigma, float), size=size),
+        'MultivariateBetaDistribution': lambda dist, size: numpy.random.dirichlet(
+            alpha=list2numpy(dist.alpha, float).flatten(), size=size),
+        'MultinomialDistribution': lambda dist, size: numpy.random.multinomial(
+            n=int(dist.n), pvals=list2numpy(dist.p, float).flatten(), size=size)
     }
 
     @classmethod
@@ -202,6 +210,11 @@ class SampleJointPymc:
         'MultivariateNormalDistribution': lambda dist:
             pymc3.MvNormal('X', mu=matrix2numpy(dist.mu, float).flatten(),
             cov=matrix2numpy(dist.sigma, float), shape=(1, dist.mu.shape[0])),
+        'MultivariateBetaDistribution': lambda dist:
+            pymc3.Dirichlet('X', a=list2numpy(dist.alpha, float).flatten()),
+        'MultinomialDistribution': lambda dist:
+            pymc3.Multinomial('X', n=int(dist.n),
+            p=list2numpy(dist.p, float).flatten(), shape=(1, len(dist.p)))
     }
 
     @classmethod
