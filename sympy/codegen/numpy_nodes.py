@@ -1,10 +1,11 @@
-from sympy.core.function import ArgumentIndexError, Function
+from sympy.core.function import Add, ArgumentIndexError, Function
+from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp, log
 from sympy.utilities import default_sort_key
 
 
-def _logaddexp(x1, x2):
-    return log(exp(x1) + exp(x2))
+def _logaddexp(x1, x2, *, evaluate=True):
+    return log(Add(exp(x1, evaluate=evaluate), exp(x2, evaluate=evaluate), evaluate=evaluate))
 
 
 class logaddexp(Function):
@@ -28,7 +29,7 @@ class logaddexp(Function):
             other, wrt = self.args
         else:
             raise ArgumentIndexError(self, argindex)
-        return 1/(1 + exp(other-wrt))
+        return S.One/(S.One + exp(other-wrt))
 
     def _eval_rewrite_as_log(self, x1, x2, **kwargs):
         return _logaddexp(x1, x2)
@@ -36,13 +37,7 @@ class logaddexp(Function):
     def _eval_simplify(self, *args, **kwargs):
         a, b = map(lambda x: x.simplify(**kwargs), self.args)
         candidate = _logaddexp(a, b)
-        if candidate.is_Function and candidate.func == log and len(candidate.args[0].args) == 2:
-            for arg in candidate.args[0].args:
-                if arg.is_Function and arg.func == exp:
-                    continue
-                else:
-                    break
-            else:
-                return logaddexp(a, b)  # no simplification made
-
-        return candidate  # simplified
+        if candidate != _logaddexp(a, b, evaluate=False):
+            return candidate
+        else:
+            return logaddexp(a, b)
