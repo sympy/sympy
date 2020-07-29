@@ -31,6 +31,7 @@ from sympy.simplify.radsimp import radsimp, fraction, collect_abs
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.iterables import has_variety, sift
+from sympy.functions.elementary.complexes import Abs
 
 
 import mpmath
@@ -109,7 +110,6 @@ def separatevars(expr, symbols=[], dict=False, force=False):
 
 
 def _separatevars(expr, force):
-    from sympy.functions.elementary.complexes import Abs
     if isinstance(expr, Abs):
         arg = expr.args[0]
         if arg.is_Mul and not arg.is_number:
@@ -618,7 +618,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
     from sympy import Sum, Product, Integral
-    from sympy.functions.elementary.complexes import sign, Abs
+    from sympy.functions.elementary.complexes import sign
 
     # must come before `Piecewise` since this introduces more `Piecewise` terms
     if expr.has(sign):
