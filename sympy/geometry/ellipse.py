@@ -762,7 +762,7 @@ class Ellipse(GeometrySet):
                     else:
                         return False
                 else:
-                    return False 
+                    return False
             return all_tangents
         elif isinstance(o, (LinearEntity3D, Point3D)):
             raise TypeError('Entity must be two dimensional, not three dimensional')
