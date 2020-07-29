@@ -1284,6 +1284,32 @@ def test_higher_order_to_first_order():
     assert dsolve(eqs9) == sol9
     assert checksysodesol(eqs9, sol9) == (True, [0, 0])
 
+    x, y = symbols('x, y', cls=Function)
+    t, l = symbols('t, l')
+
+    eq1 = (Eq(diff(x(t),t,t), 5*x(t) + 43*y(t)), Eq(diff(y(t),t,t), x(t) + 9*y(t)))
+    sol1 = [Eq(x(t), 43*C1*exp(-t*sqrt(7 - sqrt(47)))/((-2 + sqrt(47))*sqrt(7 - sqrt(47))) + 43*C2*exp(t*sqrt(7
+                - sqrt(47)))/((2 - sqrt(47))*sqrt(7 - sqrt(47))) - 43*C3*exp(-t*sqrt(sqrt(47) + 7))/((2 +
+                sqrt(47))*sqrt(sqrt(47) + 7)) + 43*C4*exp(t*sqrt(sqrt(47) + 7))/((2 + sqrt(47))*sqrt(sqrt(47) + 7))),
+            Eq(y(t), -C1*exp(-t*sqrt(7 - sqrt(47)))/sqrt(7 - sqrt(47)) + C2*exp(t*sqrt(7 - sqrt(47)))/sqrt(7 -
+                sqrt(47)) - C3*exp(-t*sqrt(sqrt(47) + 7))/sqrt(sqrt(47) + 7) + C4*exp(t*sqrt(sqrt(47) +
+                7))/sqrt(sqrt(47) + 7))]
+    assert dsolve(eq1) == sol1
+    assert checksysodesol(eq1, sol1) == (True, [0, 0])
+
+    eq3 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
+    sol3 = [Eq(x(t), C1 + Integral(-243*sqrt(133)*C2*t**4*exp(-t**2/2 + sqrt(133)*t**2/2)/(266*(-sqrt(133)*t**2/2 +
+                5*t**2/2)**2) - 9*C2*t**2*exp(-t**2/2 + sqrt(133)*t**2/2)/(2*(-sqrt(133)*t**2/2 + 5*t**2/2)) -
+                9*sqrt(133)*C2*exp(-sqrt(133)*t**2/2 - t**2/2)/266 - 27*sqrt(133)*C3*t**2*exp(-t**2/2 +
+                sqrt(133)*t**2/2)/(133*(-sqrt(133)*t**2/2 + 5*t**2/2)) + 27*sqrt(133)*C3*t**2*exp(-sqrt(133)*t**2/2 -
+                t**2/2)/(133*(5*t**2/2 + sqrt(133)*t**2/2)), t)),
+            Eq(y(t), C4 + Integral(27*sqrt(133)*C2*t**2*exp(-t**2/2 + sqrt(133)*t**2/2)/(133*(-sqrt(133)*t**2/2 + 5*t**2/2))
+                - 27*sqrt(133)*C2*t**2*exp(-sqrt(133)*t**2/2 - t**2/2)/(133*(-sqrt(133)*t**2/2 + 5*t**2/2)) + C2*
+                exp(-t**2/2 + sqrt(133)*t**2/2) + 6*sqrt(133)*C3*exp(-t**2/2 + sqrt(133)*t**2/2)/133 - 6*sqrt(133)*C3*
+                exp(-sqrt(133)*t**2/2 - t**2/2)/133, t))]
+    assert dsolve(eq3) == sol3
+    assert checksysodesol(eq3, sol3) == (True, [0, 0])
+
 
 def test_component_division():
     f, g, h, k = symbols('f g h k', cls=Function)
@@ -1981,10 +2007,6 @@ def test_dsolve():
     f, g = symbols('f g', cls=Function)
     x, y = symbols('x y')
 
-    eqs = [f(x).diff(x, 2), g(x).diff(x)]
-    with raises(ValueError):
-        dsolve(eqs) # NotImplementedError would be better
-
     eqs = [f(x).diff(x) - x, f(x).diff(x) + x]
     with raises(ValueError):
         dsolve(eqs)
@@ -1996,3 +2018,77 @@ def test_dsolve():
     eqs = [f(x, y).diff(x)+g(x).diff(x), g(x).diff(x)]
     with raises(ValueError):
         dsolve(eqs)
+
+
+def _higher_order_slow1():
+    x, y = symbols("x y", cls=Function)
+    t = symbols("t")
+
+    eq = (Eq(diff(x(t),t,t), (log(t)+t**2)*diff(x(t),t)+(log(t)+t**2)*3*diff(y(t),t)), Eq(diff(y(t),t,t), \
+    (log(t)+t**2)*2*diff(x(t),t)+(log(t)+t**2)*9*diff(y(t),t)))
+    _x1 = log(t)**2
+    _x2 = sqrt(22)
+    _x3 = sqrt(9*_x1 + t**4 + 6*t**2*log(t) - 6*t**2 - 18*log(t) + 9)
+    _x4 = 1/(-_x2*_x3*t/3 - 4*t**3/3 - 4*t*log(t) + 4*t)
+    _x5 = 1/(_x2*_x3*t/3 - 4*t**3/3 - 4*t*log(t) + 4*t)
+    _x6 = 1/(-_x4*t**3 - 3*_x4*t*log(t) + 3*_x4*t + _x5*t**3 + 3*_x5*t*log(t) - 3*_x5*t)
+    _x7 = exp(-_x2*_x3*t/3 + 5*t**3/3 + 5*t*log(t) - 5*t)
+    _x8 = exp(_x2*_x3*t/3 + 5*t**3/3 + 5*t*log(t) - 5*t)
+    _x9 = 1/(18*_x1*_x4*t**5 - 54*_x1*_x4*t**3 - 18*_x1*_x5*t**5 + 54*_x1*_x5*t**3 + 2*_x4*t**9/3 + 6*_x4*t**7*log(t) -
+             6*_x4*t**7 - 36*_x4*t**5*log(t) + 18*_x4*t**5 + 18*_x4*t**3*log(t)**3 + 54*_x4*t**3*log(t) - 18*_x4*t**3 -
+             2*_x5*t**9/3 - 6*_x5*t**7*log(t) + 6*_x5*t**7 + 36*_x5*t**5*log(t) - 18*_x5*t**5 - 18*_x5*t**3*log(t)**3 -
+             54*_x5*t**3*log(t) + 18*_x5*t**3)
+    _x10 = -12*_x1*_x5*t**2
+    _x11 = 24*_x5*t**2*log(t)
+    _x12 = 8*_x4*t**4*log(t)
+    _x13 = -24*_x4*t**2*log(t)
+    _x14 = -8*_x5*t**4*log(t)
+    _x15 = 1/(12*_x1*_x4*t**2 + _x10 + _x11 + _x12 + _x13 + _x14 + _x2*_x3*_x4*t**4/3 + _x2*_x3*_x4*t**2*log(t) -
+              _x2*_x3*_x4*t**2 - _x2*_x3*_x5*t**4/3 - _x2*_x3*_x5*t**2*log(t) + _x2*_x3*_x5*t**2 + 4*_x4*t**6/3 -
+              8*_x4*t**4 + 12*_x4*t**2 - 4*_x5*t**6/3 + 8*_x5*t**4 - 12*_x5*t**2)
+    _x16 = 1/(12*_x1*_x4*t**2 + _x10 + _x11 + _x12 + _x13 + _x14 - _x2*_x3*_x4*t**4/3 - _x2*_x3*_x4*t**2*log(t) +
+              _x2*_x3*_x4*t**2 + _x2*_x3*_x5*t**4/3 + _x2*_x3*_x5*t**2*log(t) - _x2*_x3*_x5*t**2 + 4*_x4*t**6/3 -
+              8*_x4*t**4 + 12*_x4*t**2 - 4*_x5*t**6/3 + 8*_x5*t**4 - 12*_x5*t**2)
+    _x17 = (t**3 + 3*t*log(t) - 3*t)**2
+    sol = [
+        Eq(x(t), C1 + Integral(-C2*_x15*_x8*t**3 - 3*C2*_x15*_x8*t*log(t) + 3*C2*_x15*_x8*t + C2*_x16*_x7*t**3 +
+            3*C2*_x16*_x7*t*log(t) - 3*C2*_x16*_x7*t + C3*_x17*_x7*_x9 - C3*_x17*_x8*_x9, t)),
+        Eq(y(t), C4 + Integral(-C2*_x6*_x7 + C2*_x6*_x8 - C3*_x15*_x7*t**3 - 3*C3*_x15*_x7*t*log(t) + 3*C3*_x15*_x7*t +
+            C3*_x16*_x8*t**3 + 3*C3*_x16*_x8*t*log(t) - 3*C3*_x16*_x8*t, t)),
+    ]
+
+    return eq, sol
+
+
+@slow
+def test_higher_order_slow1():
+    eq, sol = _higher_order_slow1()
+
+    assert dsolve(eq) == sol
+
+
+@slow
+def test_higher_order1_slow1_check():
+    if ON_TRAVIS:
+        skip("Too slow for travis.")
+
+    eq, sol = _higher_order_slow1()
+    assert checksysodesol(eq, sol) == (True, [0, 0])
+
+
+# Test case fails not because of higher order reduction
+# but due to type 1 solver's incorrect answer.
+@XFAIL
+def test_higher_order_type1_fail():
+    x, y = symbols("x y", cls=Function)
+    t = symbols('t')
+
+    eq2 = (Eq(diff(x(t),t,t) - 9*diff(y(t),t) + 7*x(t),0), Eq(diff(y(t),t,t) + 9*diff(x(t),t) + 7*y(t),0))
+    sol2 = [Eq(x(t), (Rational(9, 14) - sqrt(109)/14)*(-C1*sin(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))) + C2*
+               cos(t*sqrt(9*sqrt(109)/2 + Rational(95, 2)))) + (Rational(9, 14) + sqrt(109)/14)*(-C3*sin(t*sqrt(Rational(95, 2)
+               - 9*sqrt(109)/2)) + C4*cos(t*sqrt(Rational(95, 2) - 9*sqrt(109)/2)))),
+            Eq(y(t), sqrt(2)*(C1*cos(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))) + C2*sin(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))))/sqrt(9*
+                sqrt(109) + 95) + sqrt(2)*(C3*cos(t*sqrt(Rational(95, 2) - 9*sqrt(109)/2)) + C4*sin(t*sqrt(Rational(95, 2)
+                - 9*sqrt(109)/2)))/sqrt(95 - 9*sqrt(109)))]
+    assert dsolve(eq2) == sol2
+    assert checksysodesol(eq2, sol2) == (True, [0, 0])

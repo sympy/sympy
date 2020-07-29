@@ -296,16 +296,7 @@ def test_linear_2eq_order2():
     t, l = symbols('t, l')
     x0, y0 = symbols('x0, y0', cls=Function)
 
-    eq1 = (Eq(diff(x(t),t,t), 5*x(t) + 43*y(t)), Eq(diff(y(t),t,t), x(t) + 9*y(t)))
-    sol1 = [Eq(x(t), 43*C1*exp(t*rootof(l**4 - 14*l**2 + 2, 0)) + 43*C2*exp(t*rootof(l**4 - 14*l**2 + 2, 1)) + \
-    43*C3*exp(t*rootof(l**4 - 14*l**2 + 2, 2)) + 43*C4*exp(t*rootof(l**4 - 14*l**2 + 2, 3))), \
-    Eq(y(t), C1*(rootof(l**4 - 14*l**2 + 2, 0)**2 - 5)*exp(t*rootof(l**4 - 14*l**2 + 2, 0)) + \
-    C2*(rootof(l**4 - 14*l**2 + 2, 1)**2 - 5)*exp(t*rootof(l**4 - 14*l**2 + 2, 1)) + \
-    C3*(rootof(l**4 - 14*l**2 + 2, 2)**2 - 5)*exp(t*rootof(l**4 - 14*l**2 + 2, 2)) + \
-    C4*(rootof(l**4 - 14*l**2 + 2, 3)**2 - 5)*exp(t*rootof(l**4 - 14*l**2 + 2, 3)))]
-    assert dsolve(eq1) == sol1
-    # FIXME: assert checksysodesol(eq1, sol1) == (True, [0, 0])  # this one fails
-
+    # Too big of a solution with the new technique.
     eq2 = (Eq(diff(x(t),t,t), 8*x(t)+3*y(t)+31), Eq(diff(y(t),t,t), 9*x(t)+7*y(t)+12))
     sol2 = [Eq(x(t), 3*C1*exp(t*rootof(l**4 - 15*l**2 + 29, 0)) + 3*C2*exp(t*rootof(l**4 - 15*l**2 + 29, 1)) + \
     3*C3*exp(t*rootof(l**4 - 15*l**2 + 29, 2)) + 3*C4*exp(t*rootof(l**4 - 15*l**2 + 29, 3)) - Rational(181, 29)), \
@@ -316,30 +307,14 @@ def test_linear_2eq_order2():
     assert dsolve(eq2) == sol2
     # FIXME: assert checksysodesol(eq2, sol2) == (True, [0, 0])  # this one fails
 
-    eq3 = (Eq(diff(x(t),t,t) - 9*diff(y(t),t) + 7*x(t),0), Eq(diff(y(t),t,t) + 9*diff(x(t),t) + 7*y(t),0))
-    sol3 = [Eq(x(t), C1*cos(t*(Rational(9, 2) + sqrt(109)/2)) + C2*sin(t*(Rational(9, 2) + sqrt(109)/2)) + C3*cos(t*(-sqrt(109)/2 + Rational(9, 2))) + \
-    C4*sin(t*(-sqrt(109)/2 + Rational(9, 2)))), Eq(y(t), -C1*sin(t*(Rational(9, 2) + sqrt(109)/2)) + C2*cos(t*(Rational(9, 2) + sqrt(109)/2)) - \
-    C3*sin(t*(-sqrt(109)/2 + Rational(9, 2))) + C4*cos(t*(-sqrt(109)/2 + Rational(9, 2))))]
-    assert dsolve(eq3) == sol3
-    assert checksysodesol(eq3, sol3) == (True, [0, 0])
-
+    # Not solvable by the new method.
     eq4 = (Eq(diff(x(t),t,t), 9*t*diff(y(t),t)-9*y(t)), Eq(diff(y(t),t,t),7*t*diff(x(t),t)-7*x(t)))
     sol4 = [Eq(x(t), C3*t + t*Integral((9*C1*exp(3*sqrt(7)*t**2/2) + 9*C2*exp(-3*sqrt(7)*t**2/2))/t**2, t)), \
     Eq(y(t), C4*t + t*Integral((3*sqrt(7)*C1*exp(3*sqrt(7)*t**2/2) - 3*sqrt(7)*C2*exp(-3*sqrt(7)*t**2/2))/t**2, t))]
     assert dsolve(eq4) == sol4
     assert checksysodesol(eq4, sol4) == (True, [0, 0])
 
-    eq5 = (Eq(diff(x(t),t,t), (log(t)+t**2)*diff(x(t),t)+(log(t)+t**2)*3*diff(y(t),t)), Eq(diff(y(t),t,t), \
-    (log(t)+t**2)*2*diff(x(t),t)+(log(t)+t**2)*9*diff(y(t),t)))
-    sol5 = [Eq(x(t), -sqrt(22)*(C1*Integral(exp((-sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) + C2 - \
-    C3*Integral(exp((sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) - C4 - \
-    (sqrt(22) + 5)*(C1*Integral(exp((-sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) + C2) + \
-    (-sqrt(22) + 5)*(C3*Integral(exp((sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) + C4))/88), \
-    Eq(y(t), -sqrt(22)*(C1*Integral(exp((-sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) + \
-    C2 - C3*Integral(exp((sqrt(22) + 5)*Integral(t**2 + log(t), t)), t) - C4)/44)]
-    assert dsolve(eq5) == sol5
-    assert checksysodesol(eq5, sol5) == (True, [0, 0])
-
+    # Not solvable by the new method
     eq6 = (Eq(diff(x(t),t,t), log(t)*t*diff(y(t),t) - log(t)*y(t)), Eq(diff(y(t),t,t), log(t)*t*diff(x(t),t) - log(t)*x(t)))
     sol6 = [Eq(x(t), C3*t + t*Integral((C1*exp(Integral(t*log(t), t)) + \
     C2*exp(-Integral(t*log(t), t)))/t**2, t)), Eq(y(t), C4*t + t*Integral((C1*exp(Integral(t*log(t), t)) - \
@@ -347,6 +322,7 @@ def test_linear_2eq_order2():
     assert dsolve(eq6) == sol6
     assert checksysodesol(eq6, sol6) == (True, [0, 0])
 
+    # Not solvable by the new method
     eq7 = (Eq(diff(x(t),t,t), log(t)*(t*diff(x(t),t) - x(t)) + exp(t)*(t*diff(y(t),t) - y(t))), \
     Eq(diff(y(t),t,t), (t**2)*(t*diff(x(t),t) - x(t)) + (t)*(t*diff(y(t),t) - y(t))))
     sol7 = [Eq(x(t), C3*t + t*Integral((C1*x0(t) + C2*x0(t)*Integral(t*exp(t)*exp(Integral(t**2, t))*\
@@ -356,6 +332,7 @@ def test_linear_2eq_order2():
     assert dsolve(eq7) == sol7
     # FIXME: assert checksysodesol(eq7, sol7) == (True, [0, 0])
 
+    # Not solvable by the new method
     eq8 = (Eq(diff(x(t),t,t), t*(4*x(t) + 9*y(t))), Eq(diff(y(t),t,t), t*(12*x(t) - 6*y(t))))
     sol8 = [Eq(x(t), -sqrt(133)*(-4*C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + 4*C1*airyai(-t*(1 + \
     sqrt(133))**(S(1)/3)) - 4*C2*airybi(t*(-1 + sqrt(133))**(S(1)/3)) + 4*C2*airybi(-t*(1 + sqrt(133))**(S(1)/3)) +\
@@ -378,15 +355,7 @@ def test_linear_2eq_order2():
         sqrt(133))**(1/3)))/266)]''')
     assert checksysodesol(eq8, sol8) == (True, [0, 0])
 
-    eq9 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
-    sol9 = [Eq(x(t), -sqrt(133)*(4*C1*Integral(exp((-sqrt(133) - 1)*Integral(t, t)), t) + 4*C2 - \
-    4*C3*Integral(exp((-1 + sqrt(133))*Integral(t, t)), t) - 4*C4 - (-1 + sqrt(133))*(C1*Integral(exp((-sqrt(133) - \
-    1)*Integral(t, t)), t) + C2) + (-sqrt(133) - 1)*(C3*Integral(exp((-1 + sqrt(133))*Integral(t, t)), t) + \
-    C4))/3192), Eq(y(t), -sqrt(133)*(C1*Integral(exp((-sqrt(133) - 1)*Integral(t, t)), t) + C2 - \
-    C3*Integral(exp((-1 + sqrt(133))*Integral(t, t)), t) - C4)/266)]
-    assert dsolve(eq9) == sol9
-    assert checksysodesol(eq9, sol9) == (True, [0, 0])
-
+    # Not solvable by the new method
     eq10 = (t**2*diff(x(t),t,t) + 3*t*diff(x(t),t) + 4*t*diff(y(t),t) + 12*x(t) + 9*y(t), \
     t**2*diff(y(t),t,t) + 2*t*diff(x(t),t) - 5*t*diff(y(t),t) + 15*x(t) + 8*y(t))
     sol10 = [Eq(x(t), -C1*(-2*sqrt(-346/(3*(Rational(4333, 4) + 5*sqrt(70771857)/36)**Rational(1, 3)) + 4 + 2*(Rational(4333, 4) + \
