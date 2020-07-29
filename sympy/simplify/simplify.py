@@ -15,7 +15,7 @@ from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
-from sympy.functions.elementary.complexes import unpolarify
+from sympy.functions.elementary.complexes import unpolarify, Abs
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
@@ -31,7 +31,6 @@ from sympy.simplify.radsimp import radsimp, fraction, collect_abs
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.iterables import has_variety, sift
-from sympy.functions.elementary.complexes import Abs
 
 
 import mpmath
