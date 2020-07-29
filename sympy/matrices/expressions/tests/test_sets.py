@@ -1,8 +1,9 @@
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.matrices import Matrix
-from sympy.matrices.expressions.matexpr import MatrixSymbol, ZeroMatrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.sets import MatrixSet
+from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.testing.pytest import raises
 
 

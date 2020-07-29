@@ -7,11 +7,11 @@ from sympy.matrices.common import ShapeError, NonInvertibleMatrixError
 from sympy.matrices.matrices import MatrixBase
 
 from .inverse import Inverse
-from .matexpr import \
-    MatrixExpr, Identity, ZeroMatrix, OneMatrix, GenericIdentity
+from .matexpr import MatrixExpr
 from .matpow import MatPow
 from .transpose import transpose
 from .permutation import PermutationMatrix
+from .special import ZeroMatrix, Identity, GenericIdentity, OneMatrix
 
 
 # XXX: MatMul should perhaps not subclass directly from Mul
