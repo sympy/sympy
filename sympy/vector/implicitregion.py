@@ -91,7 +91,8 @@ class ImplicitRegion(Basic):
         References
         =========
 
-        - Rational Points on Conics, Erik Hillgarter, 1996. Availaible:
+        - Erik Hillgarter, "Rational Points on Conics", Diploma Thesis, RISC-Linz,
+        J. Kepler Universitat Linz, 1996. Availaible:
         https://www3.risc.jku.at/publications/download/risc_1355/Rational%20Points%20on%20Conics.pdf
 
         """
@@ -372,11 +373,11 @@ class ImplicitRegion(Basic):
         >>> c.rational_parametrization(reg_point=(3/4, 0))
         (0.75 - 0.5/(t**2 + 1), -0.5*t/(t**2 + 1))
 
-        Refrences
+        References
         =========
 
-        - Christoph M. Hoffmann, Conversion Methods between Parametric and
-        Implicit Curves and Surfaces, 1990. Available:
+        - Christoph M. Hoffmann, "Conversion Methods between Parametric and
+        Implicit Curves and Surfaces", Purdue e-Pubs, 1990. Available:
         https://docs.lib.purdue.edu/cgi/viewcontent.cgi?article=1827&context=cstech
 
         """
