@@ -452,6 +452,11 @@ def test_sympy__codegen__fnodes__product_():
     assert _test_args(product_('arr'))
 
 
+def test_sympy__codegen__numpy_nodes__logaddexp():
+    from sympy.codegen.numpy_nodes import logaddexp
+    assert _test_args(logaddexp(x, y))
+
+
 @XFAIL
 def test_sympy__combinatorics__graycode__GrayCode():
     from sympy.combinatorics.graycode import GrayCode
