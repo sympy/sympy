@@ -14,17 +14,20 @@ def test_TransferFunction_construction():
     assert tf.num == (s + 1)
     assert tf.den == (s**2 + s + 1)
     assert tf.args == (s + 1, s**2 + s + 1, s)
+    assert tf.shape == (tf.inputs, tf.outputs) == (1, 1)
 
     tf1 = TransferFunction(s + 4, s - 5, s)
     assert tf1.num == (s + 4)
     assert tf1.den == (s - 5)
     assert tf1.args == (s + 4, s - 5, s)
+    assert tf1.shape == (tf1.inputs, tf1.outputs) == (1, 1)
 
     # using different polynomial variables.
     tf2 = TransferFunction(p + 3, p**2 - 9, p)
     assert tf2.num == (p + 3)
     assert tf2.den == (p**2 - 9)
     assert tf2.args == (p + 3, p**2 - 9, p)
+    assert tf2.shape == (tf2.inputs, tf2.outputs) == (1, 1)
 
     tf3 = TransferFunction(p**3 + 5*p**2 + 4, p**4 + 3*p + 1, p)
     assert tf3.args == (p**3 + 5*p**2 + 4, p**4 + 3*p + 1, p)
@@ -33,6 +36,7 @@ def test_TransferFunction_construction():
     tf4 = TransferFunction((s + 3)*(s - 1), (s - 1)*(s + 5), s)
     assert tf4.den == (s - 1)*(s + 5)
     assert tf4.args == ((s + 3)*(s - 1), (s - 1)*(s + 5), s)
+    assert tf4.shape == (tf4.inputs, tf4.outputs) == (1, 1)
 
     tf4_ = TransferFunction(p + 2, p + 2, p)
     assert tf4_.args == (p + 2, p + 2, p)
@@ -52,6 +56,7 @@ def test_TransferFunction_construction():
     assert tf6_.num == 0.5
     assert tf6_.den == 4
     assert tf6_.args == (0.500000000000000, 4, s)
+    assert tf6_.shape == (tf6_.inputs, tf6_.outputs) == (1, 1)
 
     tf7 = TransferFunction(3*s**2 + 2*p + 4*s, 8*p**2 + 7*s, s)
     tf8 = TransferFunction(3*s**2 + 2*p + 4*s, 8*p**2 + 7*s, p)
@@ -69,6 +74,7 @@ def test_TransferFunction_construction():
     tf10_ = TransferFunction(p**3 + d, g*s**2 + d*s + a, p)
     assert tf10.args == (d + p**3, a + d*s + g*s**2, p)
     assert tf10_ == tf10
+    assert tf10_.shape == tf10.shape == (1, 1)
 
     tf11 = TransferFunction(a1*s + a0, b2*s**2 + b1*s + b0, s)
     assert tf11.num == (a0 + a1*s)

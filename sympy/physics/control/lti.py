@@ -147,6 +147,8 @@ class TransferFunction(Basic, EvalfMixin):
                 obj._num = num
                 obj._den = den
                 obj._var = var
+                obj._inputs, obj._outputs = 1, 1
+                obj._shape = (1, 1) # SISO TF ≡ 1 x 1 TFM
                 return obj
         else:
             raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
@@ -211,6 +213,18 @@ class TransferFunction(Basic, EvalfMixin):
 
         """
         return self._var
+
+    @property
+    def inputs(self):
+        return self._inputs
+
+    @property
+    def outputs(self):
+        return self._outputs
+
+    @property
+    def shape(self):
+        return self._shape
 
     def _eval_subs(self, old, new):
         arg_num = self.num.subs(old, new)
