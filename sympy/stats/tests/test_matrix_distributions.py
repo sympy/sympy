@@ -1,9 +1,10 @@
 from sympy import exp, S, sqrt, pi, symbols, Product, gamma, Dummy
 from sympy.matrices import Determinant, Matrix, Trace, MatrixSymbol, MatrixSet
-from sympy.stats import density
+from sympy.stats import density, sample
 from sympy.stats.matrix_distributions import (MatrixGammaDistribution,
                 MatrixGamma, MatrixPSpace, Wishart, MatrixNormal)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip, ignore_warnings
+from sympy.external import import_module
 
 
 def test_MatrixPSpace():
@@ -91,3 +92,40 @@ def test_MatrixNormal():
     raises(ValueError, lambda: MatrixNormal('M', [1, 2], [[1, 0], [2, 1]], [[1, 0], [0]]))
     raises(ValueError, lambda: MatrixNormal('M', [[1, 2]], [[1, 0], [0, 1]], [[1, 0]]))
     raises(ValueError, lambda: MatrixNormal('M', [[1, 2]], [1], [[1, 0]]))
+
+def test_sample_scipy():
+    distribs_scipy = [
+        MatrixNormal('M', [[5, 6]], [4], [[2, 1], [1, 2]]),
+        Wishart('W', 5, [[1, 0], [0, 1]])
+    ]
+
+    size = 5
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests for _sample_scipy.')
+    else:
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+            for X in distribs_scipy:
+                samps = next(sample(X, size=size))
+                for sam in samps:
+                    assert Matrix(sam) in X.pspace.distribution.set
+            M = MatrixGamma('M', 1, 2, [[1, 0], [0, 1]])
+            raises(NotImplementedError, lambda: next(sample(M, size=3)))
+
+def test_sample_pymc3():
+    distribs_pymc3 = [
+        MatrixNormal('M', [[5, 6], [3, 4]], [[1, 0], [0, 1]], [[2, 1], [1, 2]])
+        ### TODO: Add tests for 'Wishart' Random Variable
+    ]
+    size = 3
+    pymc3 = import_module('pymc3')
+    if not pymc3:
+        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
+    else:
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+            for X in distribs_pymc3:
+                samps = next(sample(X, size=size, library='pymc3'))
+                for sam in samps:
+                    assert Matrix(sam) in X.pspace.distribution.set
+            M = MatrixGamma('M', 1, 2, [[1, 0], [0, 1]])
+            raises(NotImplementedError, lambda: next(sample(M, size=3)))

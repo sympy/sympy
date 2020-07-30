@@ -105,6 +105,24 @@ class SingleDomain(RandomDomain):
         return self.symbol == sym and val in self.set
 
 
+class MatrixDomain(RandomDomain):
+    """
+    A Random Matrix variable and its domain
+
+    """
+    def __new__(cls, symbol, set):
+        symbol, set = _symbol_converter(symbol), _sympify(set)
+        return Basic.__new__(cls, symbol, set)
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def symbols(self):
+        return FiniteSet(self.symbol)
+
+
 class ConditionalDomain(RandomDomain):
     """
     A RandomDomain with an attached condition
