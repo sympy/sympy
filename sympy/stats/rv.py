@@ -823,6 +823,7 @@ class Density(Basic):
         from sympy.stats.random_matrix import RandomMatrixPSpace
         from sympy.stats.joint_rv import JointPSpace
         from sympy.stats.matrix_distributions import MatrixPSpace
+        from sympy.stats.compound_rv import CompoundPSpace
         from sympy.stats.frv import SingleFiniteDistribution
         expr, condition = self.expr, self.condition
 
@@ -839,6 +840,8 @@ class Density(Basic):
                 return expr.pspace.distribution
             elif isinstance(expr.pspace, RandomMatrixPSpace):
                 return expr.pspace.model
+        if isinstance(pspace(expr), CompoundPSpace):
+            kwargs['compound_evaluate'] = evaluate
         result = pspace(expr).compute_density(expr, **kwargs)
 
         if evaluate and hasattr(result, 'doit'):
