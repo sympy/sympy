@@ -20,10 +20,16 @@ def test_ImplicitRegion():
 def test_regular_point():
     r1 = ImplicitRegion((x,), x**2 - 16)
     r1.regular_point() == (-4,)
-    c = ImplicitRegion((x, y), x**2 + y**2 - 4)
-    c.regular_point() == (-2, 0)
-    r2 = ImplicitRegion((x, y), (x - S(5)/2)**2 + y**2 - (S(1)/4)**2)
-    raises(NotImplementedError, lambda: r2.regular_point())
+    c1 = ImplicitRegion((x, y), x**2 + y**2 - 4)
+    c1.regular_point() == (2, 0)
+    c2 = ImplicitRegion((x, y), (x - S(5)/2)**2 + y**2 - (S(1)/4)**2)
+    c2.regular_point() == (11/4, 0)
+    c3 = ImplicitRegion((x, y), (y - 5)**2  - 16*(x - 5))
+    c3.regular_point() == (5, 5)
+    r2 = ImplicitRegion((x, y), x**2 - 4*x*y - 3*y**2 + 4*x + 8*y - 5)
+    r2.regular_point == (4/7, 13/21)
+    r3 = ImplicitRegion((x, y), x**2 - 2*x*y + 3*y**2 - 2*x - 5*y + 3/2)
+    raises(ValueError, lambda: r3.regular_point())
 
 
 def test_singular_points_and_multiplicty():
@@ -51,34 +57,35 @@ def test_rational_parametrization():
     line = ImplicitRegion((x, y), Eq(y, 3*x + 2))
     assert line.rational_parametrization() == (x, 3*x + 2)
 
-    circle1 = ImplicitRegion((x, y), ((x-2)**2 + (y+3)**2 - 4))
-    assert circle1.rational_parametrization(parameters=t) == (4/(t**2 + 1), 4*t/(t**2 + 1) - 3)
-    circle2 = ImplicitRegion((x, y), (x - 1/2)**2 + y**2 - (1/4)**2 )
-    raises(NotImplementedError, lambda: circle2.rational_parametrization())
-    circle2.rational_parametrization(t, reg_point=Point(0.75, 0)) == (3/4 - 0.5/(t**2 + 1), -0.5*t/(t**2 + 1))
+    circle1 = ImplicitRegion((x, y), (x-2)**2 + (y+3)**2 - 4)
+    assert circle1.rational_parametrization(parameters=t) == (4*t/(t**2 + 1) + 2, 4*t**2/(t**2 + 1) - 5)
+    circle2 = ImplicitRegion((x, y), (x - S.Half)**2 + y**2 - (S(1)/2)**2)
+    print(circle2.regular_point())
+    print(circle2.rational_parametrization())
+    assert circle2.rational_parametrization(parameters=t) == (t/(t**2 + 1) + S(1)/2, t**2/(t**2 + 1) - S(1)/2)
     circle3 = ImplicitRegion((x, y), Eq(x**2 + y**2, 2*x))
-    assert circle3.rational_parametrization(parameters=(t,)) == (2/(t**2 + 1), 2*t/(t**2 + 1))
+    assert circle3.rational_parametrization(parameters=(t,)) == (2*t/(t**2 + 1) + 1, 2*t**2/(t**2 + 1) - 1)
 
     parabola = ImplicitRegion((x, y), (y - 3)**2 - 4*(x + 6))
     assert parabola.rational_parametrization(t) == (-6 + 4/t**2, 3 + 4/t)
 
     rect_hyperbola = ImplicitRegion((x, y), x*y - 1)
-    assert rect_hyperbola.rational_parametrization(t) == (-100 + (100*t + S(1)/100)/t, 100*t)
+    assert rect_hyperbola.rational_parametrization(t) == (-1 + (t + 1)/t, t)
 
     cubic_curve = ImplicitRegion((x, y), x**3 + x**2 - y**2)
     assert cubic_curve.rational_parametrization(parameters=(t)) == (t**2 - 1, t*(t**2 - 1))
     cuspidal = ImplicitRegion((x, y), (x**3 - y**2))
     assert cuspidal.rational_parametrization(t) == (t**2, t**3)
 
-    I= ImplicitRegion((x, y), x**3 + x**2 - y**2)
+    I = ImplicitRegion((x, y), x**3 + x**2 - y**2)
     assert I.rational_parametrization(t) == (t**2 - 1, t*(t**2 - 1))
 
     sphere = ImplicitRegion((x, y, z), Eq(x**2 + y**2 + z**2, 2*x))
+    print(sphere.rational_parametrization(parameters=(s, t)))
     assert sphere.rational_parametrization(parameters=(s, t)) == (2/(s**2 + t**2 + 1), 2*t/(s**2 + t**2 + 1), 2*s/(s**2 + t**2 + 1))
 
     conic = ImplicitRegion((x, y), Eq(x**2 + 4*x*y + 3*y**2 + x - y + 10, 0))
-    conic.rational_parametrization(t) == (-100 - 205/(3*(3*t**2 - sqrt(41881)*t + 4*t - 2*sqrt(41881)/3 + 1)),\
-                                -205*t/(3*(3*t**2 - sqrt(41881)*t + 4*t - 2*sqrt(41881)/3 + 1)) - sqrt(41881)/6 + 401/6)
+    conic.rational_parametrization(t) == (17/2 + 4/(3*t**2 + 4*t + 1), 4*t/(3*t**2 + 4*t + 1) - 11/2)
 
     r1 = ImplicitRegion((x, y), y**2 - x**3 + x)
     raises(NotImplementedError, lambda: r1.rational_parametrization())
