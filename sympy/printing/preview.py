@@ -12,7 +12,6 @@ try:
 except ImportError:
     pass
 
-from sympy.core.compatibility import unicode, u_decode
 from sympy.utilities.decorator import doctest_depends_on
 from .latex import latex
 
@@ -166,7 +165,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if packages:
             raise ValueError("The \"packages\" keyword must not be set if a "
                              "custom LaTeX preamble was specified")
-    latex_main = preamble + '\n%s\n\n' + r"\end{document}"
 
     if isinstance(expr, str):
         latex_string = expr
@@ -175,11 +173,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                         latex(expr, mode='plain', **latex_settings) +
                         '$')
 
+    latex_main = preamble + '\n' + latex_string + '\n\n' + r"\end{document}"
+
     try:
         workdir = tempfile.mkdtemp()
 
         with io.open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
-            fh.write(unicode(latex_main) % u_decode(latex_string))
+            fh.write(latex_main)
 
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
