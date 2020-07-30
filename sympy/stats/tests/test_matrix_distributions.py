@@ -114,8 +114,8 @@ def test_sample_scipy():
 
 def test_sample_pymc3():
     distribs_pymc3 = [
-        MatrixNormal('M', [[5, 6], [3, 4]], [[1, 0], [0, 1]], [[2, 1], [1, 2]])
-        ### TODO: Add tests for 'Wishart' Random Variable
+        MatrixNormal('M', [[5, 6], [3, 4]], [[1, 0], [0, 1]], [[2, 1], [1, 2]]),
+        Wishart('W', 7, [[2, 1], [1, 2]])
     ]
     size = 3
     pymc3 = import_module('pymc3')

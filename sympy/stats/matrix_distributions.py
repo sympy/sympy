@@ -128,8 +128,8 @@ class SampleMatrixPymc:
             rowcov=matrix2numpy(dist.scale_matrix_1, float),
             colcov=matrix2numpy(dist.scale_matrix_2, float),
             shape=dist.location_matrix.shape),
-        'WishartDistribution': lambda dist: pymc3.Wishart('X', nu=int(dist.n),
-            V=matrix2numpy(dist.scale_matrix, float))
+        'WishartDistribution': lambda dist: pymc3.WishartBartlett('X',
+            nu=int(dist.n), S=matrix2numpy(dist.scale_matrix, float))
     }
 
     @classmethod
