@@ -72,12 +72,6 @@ def FiniteRV(name, density):
     r"""
     Create a Finite Random Variable given a dict representing the density.
 
-    Parameters
-    ==========
-
-    density: A dict
-        Dictionary conatining the pdf of finite distribution
-
     Examples
     ========
 
@@ -90,6 +84,12 @@ def FiniteRV(name, density):
     2.00000000000000
     >>> P(X >= 2)
     0.700000000000000
+
+    Parameters
+    ==========
+
+    density : A dict
+        Dictionary conatining the pdf of finite distribution
 
     Returns
     =======
@@ -140,14 +140,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
 
 def DiscreteUniform(name, items):
     r"""
-    Create a Finite Random Variable representing a uniform distribution over
-    the input set.
-
-    Parameters
-    ==========
-
-    items: list/tuple
-        Items over which Uniform distribution is to be made
+    Create a Finite Random Variable representing a uniform distribution.
 
     Examples
     ========
@@ -162,6 +155,12 @@ def DiscreteUniform(name, items):
     >>> Y = DiscreteUniform('Y', list(range(5))) # distribution over a range
     >>> density(Y).dict
     {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
+
+    Parameters
+    ==========
+
+    items : list/tuple
+        Items over which Uniform distribution is to be made
 
     Returns
     =======
@@ -216,23 +215,17 @@ def Die(name, sides=6):
     r"""
     Create a Finite Random Variable representing a fair die.
 
-    Parameters
-    ==========
-
-    sides: Integer
-        Represents the number of sides of the Die, by default is 6
-
     Examples
     ========
 
     >>> from sympy.stats import Die, density
     >>> from sympy import Symbol
 
-    >>> D6 = Die('D6', 6) # Six sided Die
+    >>> D6 = Die('D6') # Six-sided Die
     >>> density(D6).dict
     {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
 
-    >>> D4 = Die('D4', 4) # Four sided Die
+    >>> D4 = Die('D4', 4) # Four-sided Die
     >>> density(D4).dict
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
 
@@ -242,6 +235,12 @@ def Die(name, sides=6):
     Density(DieDistribution(n))
     >>> density(Dn).dict.subs(n, 4).doit()
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
+
+    Parameters
+    ==========
+
+    sides : Integer
+        Represents the number of sides of the Die, default is 6
 
     Returns
     =======
@@ -278,16 +277,6 @@ def Bernoulli(name, p, succ=1, fail=0):
     r"""
     Create a Finite Random Variable representing a Bernoulli process.
 
-    Parameters
-    ==========
-
-    p : Rational number between 0 and 1
-       Represents probability of success
-    succ : Integer/symbol/string
-       Represents event of success
-    fail : Integer/symbol/string
-       Represents event of failure
-
     Examples
     ========
 
@@ -301,6 +290,16 @@ def Bernoulli(name, p, succ=1, fail=0):
     >>> X = Bernoulli('X', S.Half, 'Heads', 'Tails') # A fair coin toss
     >>> density(X).dict
     {Heads: 1/2, Tails: 1/2}
+
+    Parameters
+    ==========
+
+    p : Rational number between 0 and 1
+       Represents probability of success
+    succ : Integer/symbol/string
+       Represents event of success
+    fail : Integer/symbol/string
+       Represents event of failure
 
     Returns
     =======
@@ -322,12 +321,6 @@ def Coin(name, p=S.Half):
     r"""
     Create a Finite Random Variable representing a Coin toss.
 
-    Parameters
-    ==========
-
-    p : Rational Numeber between 0 and 1
-      Represents probability of getting "Heads", by default is Half
-
     Examples
     ========
 
@@ -341,6 +334,12 @@ def Coin(name, p=S.Half):
     >>> C2 = Coin('C2', Rational(3, 5)) # An unfair coin
     >>> density(C2).dict
     {H: 3/5, T: 2/5}
+
+    Parameters
+    ==========
+
+    p : Rational Numeber between 0 and 1
+      Represents probability of getting "Heads", by default is Half
 
     Returns
     =======
@@ -410,18 +409,6 @@ def Binomial(name, n, p, succ=1, fail=0):
     r"""
     Create a Finite Random Variable representing a binomial distribution.
 
-    Parameters
-    ==========
-
-    n : Positive Integer
-      Represents number of trials
-    p : Rational Number between 0 and 1
-      Represents probability of success
-    succ : Integer/symbol/string
-      Represents event of success, by default is 1
-    fail : Integer/symbol/string
-      Represents event of failure, by default is 0
-
     Examples
     ========
 
@@ -439,6 +426,18 @@ def Binomial(name, n, p, succ=1, fail=0):
     Density(BinomialDistribution(n, 1/2, 1, 0))
     >>> density(X).dict.subs(n, 4).doit()
     {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
+
+    Parameters
+    ==========
+
+    n : Positive Integer
+      Represents number of trials
+    p : Rational Number between 0 and 1
+      Represents probability of success
+    succ : Integer/symbol/string
+      Represents event of success, by default is 1
+    fail : Integer/symbol/string
+      Represents event of failure, by default is 0
 
     Returns
     =======
@@ -497,14 +496,6 @@ def BetaBinomial(name, n, alpha, beta):
     r"""
     Create a Finite Random Variable representing a Beta-binomial distribution.
 
-    Parameters
-    ==========
-
-    n : Positive Integer
-      Represents number of trials
-    alpha : Real positive number
-    beta : Real positive number
-
     Examples
     ========
 
@@ -513,6 +504,14 @@ def BetaBinomial(name, n, alpha, beta):
     >>> X = BetaBinomial('X', 2, 1, 1)
     >>> density(X).dict
     {0: 1/3, 1: 2*beta(2, 2), 2: 1/3}
+
+    Parameters
+    ==========
+
+    n : Positive Integer
+      Represents number of trials
+    alpha : Real positive number
+    beta : Real positive number
 
     Returns
     =======
@@ -570,6 +569,15 @@ def Hypergeometric(name, N, m, n):
     r"""
     Create a Finite Random Variable representing a hypergeometric distribution.
 
+    Examples
+    ========
+
+    >>> from sympy.stats import Hypergeometric, density
+
+    >>> X = Hypergeometric('X', 10, 5, 3) # 10 marbles, 5 white (success), 3 draws
+    >>> density(X).dict
+    {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
+
     Parameters
     ==========
 
@@ -579,16 +587,6 @@ def Hypergeometric(name, N, m, n):
       Represents number of trials with required feature.
     n : Positive Integer
       Represents numbers of draws.
-
-
-    Examples
-    ========
-
-    >>> from sympy.stats import Hypergeometric, density
-
-    >>> X = Hypergeometric('X', 10, 5, 3) # 10 marbles, 5 white (success), 3 draws
-    >>> density(X).dict
-    {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
 
     Returns
     =======

@@ -94,6 +94,18 @@ def entropy(expr, condition=None, **kwargs):
     """
     Calculuates entropy of a probability distribution
 
+    Examples
+    ========
+
+    >>> from sympy.stats import Normal, Die, entropy
+    >>> X = Normal('X', 0, 1)
+    >>> entropy(X)
+    log(2)/2 + 1/2 + log(pi)/2
+
+    >>> D = Die('D', 4)
+    >>> entropy(D)
+    log(4)
+
     Parameters
     ==========
 
@@ -106,18 +118,6 @@ def entropy(expr, condition=None, **kwargs):
     =======
 
     result : Entropy of the expression, a constant
-
-    Examples
-    ========
-
-    >>> from sympy.stats import Normal, Die, entropy
-    >>> X = Normal('X', 0, 1)
-    >>> entropy(X)
-    log(2)/2 + 1/2 + log(pi)/2
-
-    >>> D = Die('D', 4)
-    >>> entropy(D)
-    log(4)
 
     References
     ==========

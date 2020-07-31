@@ -723,6 +723,19 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     """
     Returns the expected value of a random expression
 
+    Examples
+    ========
+
+    >>> from sympy.stats import E, Die
+    >>> X = Die('X', 6)
+    >>> E(X)
+    7/2
+    >>> E(2*X + 1)
+    8
+
+    >>> E(X, X > 3) # Expectation of X given that it is above 3
+    5
+
     Parameters
     ==========
 
@@ -736,19 +749,6 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
         If sampling return a number rather than a complex expression
     evaluate : Bool (defaults to True)
         In case of continuous systems return unevaluated integral
-
-    Examples
-    ========
-
-    >>> from sympy.stats import E, Die
-    >>> X = Die('X', 6)
-    >>> E(X)
-    7/2
-    >>> E(2*X + 1)
-    8
-
-    >>> E(X, X > 3) # Expectation of X given that it is above 3
-    5
     """
 
     if not is_random(expr):  # expr isn't random?
@@ -770,19 +770,6 @@ def probability(condition, given_condition=None, numsamples=None,
     """
     Probability that a condition is true, optionally given a second condition
 
-    Parameters
-    ==========
-
-    condition : Combination of Relationals containing RandomSymbols
-        The condition of which you want to compute the probability
-    given_condition : Combination of Relationals containing RandomSymbols
-        A conditional expression. P(X > 1, X > 0) is expectation of X > 1
-        given X > 0
-    numsamples : int
-        Enables sampling and approximates the probability with this many samples
-    evaluate : Bool (defaults to True)
-        In case of continuous systems return unevaluated integral
-
     Examples
     ========
 
@@ -795,6 +782,19 @@ def probability(condition, given_condition=None, numsamples=None,
     1/4
     >>> P(X > Y)
     5/12
+
+    Parameters
+    ==========
+
+    condition : Combination of Relationals containing RandomSymbols
+        The condition of which you want to compute the probability
+    given_condition : Combination of Relationals containing RandomSymbols
+        A conditional expression. P(X > 1, X > 0) is expectation of X > 1
+        given X > 0
+    numsamples : int
+        Enables sampling and approximates the probability with this many samples
+    evaluate : Bool (defaults to True)
+        In case of continuous systems return unevaluated integral
     """
 
     kwargs['numsamples'] = numsamples
@@ -859,17 +859,6 @@ def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs):
     probability spaces. Discrete variables produce Dicts. Continuous
     variables produce Lambdas.
 
-    Parameters
-    ==========
-
-    expr : Expr containing RandomSymbols
-        The expression of which you want to compute the density value
-    condition : Relational containing RandomSymbols
-        A conditional expression. density(X > 1, X > 0) is density of X > 1
-        given X > 0
-    numsamples : int
-        Enables sampling and approximates the density with this many samples
-
     Examples
     ========
 
@@ -886,6 +875,17 @@ def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs):
     {2: 1/6, 4: 1/6, 6: 1/6, 8: 1/6, 10: 1/6, 12: 1/6}
     >>> density(X)(x)
     sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))
+
+    Parameters
+    ==========
+
+    expr : Expr containing RandomSymbols
+        The expression of which you want to compute the density value
+    condition : Relational containing RandomSymbols
+        A conditional expression. density(X > 1, X > 0) is density of X > 1
+        given X > 0
+    numsamples : int
+        Enables sampling and approximates the density with this many samples
     """
 
     if numsamples:
@@ -1017,6 +1017,24 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
     """
     A realization of the random expression
 
+    Examples
+    ========
+
+    >>> from sympy.stats import Die, sample, Normal
+    >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
+
+    >>> die_roll = sample(X + Y + Z) # doctest: +SKIP
+    >>> N = Normal('N', 3, 4)
+    >>> samp = next(sample(N)) # doctest: +SKIP
+    >>> samp in N.pspace.domain.set # doctest: +SKIP
+    True
+    >>> samp = next(sample(N, N>0)) # doctest: +SKIP
+    >>> samp > 0 # doctest: +SKIP
+    True
+    >>> samp_list = next(sample(N, size=4)) # doctest: +SKIP
+    >>> [sam in N.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    [True, True, True, True]
+
     Parameters
     ==========
 
@@ -1035,24 +1053,6 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
         by default is 'scipy'
     numsamples : int
         Number of samples, each with size as ``size``
-
-    Examples
-    ========
-
-    >>> from sympy.stats import Die, sample, Normal
-    >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
-
-    >>> die_roll = sample(X + Y + Z) # doctest: +SKIP
-    >>> N = Normal('N', 3, 4)
-    >>> samp = next(sample(N)) # doctest: +SKIP
-    >>> samp in N.pspace.domain.set # doctest: +SKIP
-    True
-    >>> samp = next(sample(N, N>0)) # doctest: +SKIP
-    >>> samp > 0 # doctest: +SKIP
-    True
-    >>> samp_list = next(sample(N, size=4)) # doctest: +SKIP
-    >>> [sam in N.pspace.domain.set for sam in samp_list] # doctest: +SKIP
-    [True, True, True, True]
 
     Returns
     =======

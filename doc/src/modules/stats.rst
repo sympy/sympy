@@ -209,10 +209,10 @@ working on extending SymPy Stats to other random variable types.
 
 Users will not use this class structure. Instead these mechanics are exposed
 through variable creation functions Die, Coin, FiniteRV, Normal, Exponential,
-etc.... These build the appropriate SinglePSpaces and return the corresponding
+etc. These build the appropriate SinglePSpaces and return the corresponding
 RandomVariable. Conditional and Product spaces are formed in the natural
 construction of SymPy expressions and the use of interface functions E, Given,
-Density, etc....
+Density, etc.
 
 
 .. function:: sympy.stats.Die

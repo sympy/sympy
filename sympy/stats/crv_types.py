@@ -159,6 +159,9 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     Create a Continuous Random Variable given the following:
 
+    Many common continuous random variable types are already implemented.
+    This function should be necessary only very rarely.
+
     Parameters
     ==========
 
@@ -173,10 +176,6 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     =======
 
     RandomSymbol
-
-    Many common continuous random variable types are already implemented.
-    This function should be necessary only very rarely.
-
 
     Examples
     ========
@@ -236,17 +235,6 @@ def Arcsin(name, a=0, b=1):
 
     with :math:`x \in (a,b)`. It must hold that :math:`-\infty < a < b < \infty`.
 
-    Parameters
-    ==========
-
-    a : Real number, the left interval boundary
-    b : Real number, the right interval boundary
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -267,6 +255,16 @@ def Arcsin(name, a=0, b=1):
             (2*asin(sqrt((-a + z)/(-a + b)))/pi, b >= z),
             (1, True))
 
+    Parameters
+    ==========
+
+    a : Real number, the left interval boundary
+    b : Real number, the right interval boundary
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -317,18 +315,6 @@ def Benini(name, alpha, beta, sigma):
     This is a heavy-tailed distribution and is also known as the log-Rayleigh
     distribution.
 
-    Parameters
-    ==========
-
-    alpha : Real number, `\alpha > 0`, a shape
-    beta : Real number, `\beta > 0`, a shape
-    sigma : Real number, `\sigma > 0`, a scale
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -354,6 +340,17 @@ def Benini(name, alpha, beta, sigma):
     Piecewise((1 - exp(-alpha*log(z/sigma) - beta*log(z/sigma)**2), sigma <= z),
             (0, True))
 
+    Parameters
+    ==========
+
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
+    sigma : Real number, `\sigma > 0`, a scale
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -400,17 +397,6 @@ def Beta(name, alpha, beta):
 
     with :math:`x \in [0,1]`.
 
-    Parameters
-    ==========
-
-    alpha : Real number, `\alpha > 0`, a shape
-    beta : Real number, `\beta > 0`, a shape
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -435,6 +421,17 @@ def Beta(name, alpha, beta):
 
     >>> factor(simplify(variance(X)))
     alpha*beta/((alpha + beta)**2*(alpha + beta + 1))
+
+    Parameters
+    ==========
+
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -479,18 +476,6 @@ def BetaNoncentral(name, alpha, beta, lamda):
 
     with :math:`x \in [0,1]`.
 
-    Parameters
-    ==========
-
-    alpha : Real number, `\alpha > 0`, a shape
-    beta : Real number, `\beta > 0`, a shape
-    lamda: Real number, `\lambda >= 0`, noncentrality parameter
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -519,12 +504,25 @@ def BetaNoncentral(name, alpha, beta, lamda):
     /____,
     k = 0
 
-    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows :
+    Compute cdf with specific ``x``, ``alpha``, ``beta`` and ``lamda`` values as follows:
+    
     >>> cdf(BetaNoncentral("x", 1, 1, 1), evaluate=False)(2).doit()
     2*exp(1/2)
 
     The argument evaluate=False prevents an attempt at evaluation
     of the sum for general x, before the argument 2 is passed.
+
+    Parameters
+    ==========
+
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
+    lamda : Real number, `\lambda >= 0`, noncentrality parameter
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -566,17 +564,6 @@ def BetaPrime(name, alpha, beta):
 
     with :math:`x > 0`.
 
-    Parameters
-    ==========
-
-    alpha : Real number, `\alpha > 0`, a shape
-    beta : Real number, `\beta > 0`, a shape
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -595,6 +582,17 @@ def BetaPrime(name, alpha, beta):
     z         *(z + 1)
     -------------------------------
              B(alpha, beta)
+
+    Parameters
+    ==========
+
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -712,17 +710,6 @@ def Cauchy(name, x0, gamma):
     .. math::
         f(x) := \frac{1}{\pi \gamma [1 + {(\frac{x-x_0}{\gamma})}^2]}
 
-    Parameters
-    ==========
-
-    x0 : Real number, the location
-    gamma : Real number, `\gamma > 0`, a scale
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -737,6 +724,17 @@ def Cauchy(name, x0, gamma):
 
     >>> density(X)(z)
     1/(pi*gamma*(1 + (-x0 + z)**2/gamma**2))
+
+    Parameters
+    ==========
+
+    x0 : Real number, the location
+    gamma : Real number, `\gamma > 0`, a scale
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -792,16 +790,6 @@ def Chi(name, k):
 
     with :math:`x \geq 0`.
 
-    Parameters
-    ==========
-
-    k : Positive integer, The number of degrees of freedom
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -818,6 +806,16 @@ def Chi(name, k):
 
     >>> simplify(E(X))
     sqrt(2)*gamma(k/2 + 1/2)/gamma(k/2)
+
+    Parameters
+    ==========
+
+    k : Positive integer, the number of degrees of freedom
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -861,17 +859,6 @@ def ChiNoncentral(name, k, l):
     with `x \geq 0`. Here, `I_\nu (x)` is the
     :ref:`modified Bessel function of the first kind <besseli>`.
 
-    Parameters
-    ==========
-
-    k : A positive Integer, `k > 0`, the number of degrees of freedom
-    lambda : Real number, `\lambda > 0`, Shift parameter
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -886,6 +873,17 @@ def ChiNoncentral(name, k, l):
 
     >>> density(X)(z)
     l*z**k*(l*z)**(-k/2)*exp(-l**2/2 - z**2/2)*besseli(k/2 - 1, l*z)
+
+    Parameters
+    ==========
+
+    k : A positive Integer, `k > 0`, the number of degrees of freedom
+    lambda : Real number, `\lambda > 0`, shift parameter
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -938,16 +936,6 @@ def ChiSquared(name, k):
 
     with :math:`x \geq 0`.
 
-    Parameters
-    ==========
-
-    k : Positive integer, The number of degrees of freedom
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -970,6 +958,16 @@ def ChiSquared(name, k):
 
     >>> moment(X, 3)
     k**3 + 6*k**2 + 8*k
+
+    Parameters
+    ==========
+
+    k : Positive integer, the number of degrees of freedom
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -1016,18 +1014,6 @@ def Dagum(name, p, a, b):
 
     with :math:`x > 0`.
 
-    Parameters
-    ==========
-
-    p : Real number, `p > 0`, a shape
-    a : Real number, `a > 0`, a shape
-    b : Real number, `b > 0`, a scale
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -1047,6 +1033,17 @@ def Dagum(name, p, a, b):
     >>> cdf(X)(z)
     Piecewise(((1 + (z/b)**(-a))**(-p), z >= 0), (0, True))
 
+    Parameters
+    ==========
+
+    p : Real number, `p > 0`, a shape
+    a : Real number, `a > 0`, a shape
+    b : Real number, `b > 0`, a scale
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -1071,17 +1068,6 @@ def Erlang(name, k, l):
         f(x) := \frac{\lambda^k x^{k-1} e^{-\lambda x}}{(k-1)!}
 
     with :math:`x \in [0,\infty]`.
-
-    Parameters
-    ==========
-
-    k : Positive integer
-    l : Real number, `\lambda > 0`, the rate
-
-    Returns
-    =======
-
-    RandomSymbol
 
     Examples
     ========
@@ -1116,6 +1102,17 @@ def Erlang(name, k, l):
 
     >>> simplify(variance(X))
     k/l**2
+
+    Parameters
+    ==========
+
+    k : Positive integer
+    l : Real number, `\lambda > 0`, the rate
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -1185,20 +1182,6 @@ def ExGaussian(name, mean, std, rate):
 
     with `x > 0`. Note that the expected value is `1/\lambda`.
 
-    Parameters
-    ==========
-
-    mu : A Real number, the mean of Gaussian component
-    std: A positive Real number,
-        :math: `\sigma^2 > 0` the variance of Gaussian component
-    lambda: A positive Real number,
-        :math: `\lambda > 0` the rate of Exponential component
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -1233,6 +1216,21 @@ def ExGaussian(name, mean, std, rate):
 
     >>> simplify(skewness(X))
     2/(lamda**2*sigma**2 + 1)**(3/2)
+
+    Parameters
+    ==========
+
+    mu : Real number
+        mean of Gaussian component
+    std : positive Real number
+        `\sigma^2 > 0`, the variance of Gaussian component
+    lambda : positive Real number
+        `\lambda > 0`, the rate of Exponential component
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -1285,16 +1283,6 @@ def Exponential(name, rate):
 
     with `x > 0`. Note that the expected value is `1/\lambda`.
 
-    Parameters
-    ==========
-
-    rate : A positive Real number, `\lambda > 0`, the rate (or inverse scale/inverse mean)
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -1335,6 +1323,17 @@ def Exponential(name, rate):
 
     >>> std(X)
     1/10
+
+    Parameters
+    ==========
+
+    rate : positive Real number
+        `\lambda > 0`, the rate (or inverse scale/inverse mean)
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -1470,17 +1469,6 @@ def FDistribution(name, d1, d2):
 
     with :math:`x > 0`.
 
-    Parameters
-    ==========
-
-    d1 : `d_1 > 0`, where d_1 is the degrees of freedom (n_1 - 1)
-    d2 : `d_2 > 0`, where d_2 is the degrees of freedom (n_2 - 1)
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -1503,6 +1491,17 @@ def FDistribution(name, d1, d2):
                     /d1  d2\
                  z*B|--, --|
                     \2   2 /
+
+    Parameters
+    ==========
+
+    d1 : `d_1 > 0`, where d_1 is the degrees of freedom (n_1 - 1)
+    d2 : `d_2 > 0`, where d_2 is the degrees of freedom (n_2 - 1)
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -1545,17 +1544,6 @@ def FisherZ(name, d1, d2):
 
     .. TODO - What is the difference between these degrees of freedom?
 
-    Parameters
-    ==========
-
-    d1 : `d_1 > 0`, degree of freedom
-    d2 : `d_2 > 0`, degree of freedom
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -1579,6 +1567,17 @@ def FisherZ(name, d1, d2):
                      /d1  d2\
                     B|--, --|
                      \2   2 /
+
+    Parameters
+    ==========
+
+    d1 : `d_1 > 0`, degree of freedom
+    d2 : `d_2 > 0`, degree of freedom
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -1628,18 +1627,6 @@ def Frechet(name, a, s=1, m=0):
 
     with :math:`x \geq m`.
 
-    Parameters
-    ==========
-
-    a : Real number, :math:`a \in \left(0, \infty\right)` the shape
-    s : Real number, :math:`s \in \left(0, \infty\right)` the scale
-    m : Real number, :math:`m \in \left(-\infty, \infty\right)` the minimum
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -1658,6 +1645,18 @@ def Frechet(name, a, s=1, m=0):
 
     >>> cdf(X)(z)
      Piecewise((exp(-((-m + z)/s)**(-a)), m <= z), (0, True))
+
+    Parameters
+    ==========
+
+    a : Real number, :math:`a \in \left(0, \infty\right)` the shape
+    s : Real number, :math:`s \in \left(0, \infty\right)` the scale
+    m : Real number, :math:`m \in \left(-\infty, \infty\right)` the minimum
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -1709,17 +1708,6 @@ def Gamma(name, k, theta):
 
     with :math:`x \in [0,1]`.
 
-    Parameters
-    ==========
-
-    k : Real number, `k > 0`, a shape
-    theta : Real number, `\theta > 0`, a scale
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -1759,6 +1747,16 @@ def Gamma(name, k, theta):
            2
     k*theta
 
+    Parameters
+    ==========
+
+    k : Real number, `k > 0`, a shape
+    theta : Real number, `\theta > 0`, a scale
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -1813,17 +1811,6 @@ def GammaInverse(name, a, b):
 
     with :math:`x > 0`.
 
-    Parameters
-    ==========
-
-    a : Real number, `a > 0` a shape
-    b : Real number, `b > 0` a scale
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -1848,6 +1835,16 @@ def GammaInverse(name, a, b):
     >>> cdf(X)(z)
     Piecewise((uppergamma(a, b/z)/gamma(a), z > 0), (0, True))
 
+    Parameters
+    ==========
+
+    a : Real number, `a > 0` a shape
+    b : Real number, `b > 0` a scale
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -1917,18 +1914,6 @@ def Gumbel(name, beta, mu, minimum=False):
 
     with :math:`x \in [ - \infty, \infty ]`.
 
-    Parameters
-    ==========
-
-    mu : Real number, 'mu' is a location
-    beta : Real number, 'beta > 0' is a scale
-    minimum : Boolean, by default, False, set to True for enabling minimum distribution
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -1942,6 +1927,18 @@ def Gumbel(name, beta, mu, minimum=False):
     exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
     >>> cdf(X)(x)
     exp(-exp(-(-mu + x)/beta))
+
+    Parameters
+    ==========
+
+    mu : Real number, 'mu' is a location
+    beta : Real number, 'beta > 0' is a scale
+    minimum : Boolean, by default, False, set to True for enabling minimum distribution
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -1990,17 +1987,6 @@ def Gompertz(name, b, eta):
 
     with :math: 'x \in [0, \inf)'.
 
-    Parameters
-    ==========
-
-    b: Real number, 'b > 0' a scale
-    eta: Real number, 'eta > 0' a shape
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -2015,6 +2001,17 @@ def Gompertz(name, b, eta):
 
     >>> density(X)(z)
     b*eta*exp(eta)*exp(b*z)*exp(-eta*exp(b*z))
+
+    Parameters
+    ==========
+
+    b : Real number, 'b > 0' a scale
+    eta : Real number, 'eta > 0' a shape
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -2060,17 +2057,6 @@ def Kumaraswamy(name, a, b):
 
     with :math:`x \in [0,1]`.
 
-    Parameters
-    ==========
-
-    a : Real number, `a > 0` a shape
-    b : Real number, `b > 0` a shape
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -2091,6 +2077,17 @@ def Kumaraswamy(name, a, b):
 
     >>> cdf(X)(z)
     Piecewise((0, z < 0), (1 - (1 - z**a)**b, z <= 1), (1, True))
+
+    Parameters
+    ==========
+
+    a : Real number, `a > 0` a shape
+    b : Real number, `b > 0` a shape
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -2141,19 +2138,6 @@ def Laplace(name, mu, b):
     .. math::
         f(x) := \frac{1}{2 b} \exp \left(-\frac{|x-\mu|}b \right)
 
-    Parameters
-    ==========
-
-    mu : Real number or a list/matrix, the location (mean) or the
-        location vector
-    b : Real number or a positive definite matrix, representing a scale
-        or the covariance matrix.
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -2178,6 +2162,19 @@ def Laplace(name, mu, b):
     e *besselk\0, \/ 35 /
     ---------------------
               pi
+
+    Parameters
+    ==========
+
+    mu : Real number or a list/matrix
+        the location (mean) or the location vector
+    b : Real number or a positive definite matrix,
+        representing a scale or the covariance matrix.
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -2234,17 +2231,6 @@ def Levy(name, mu, c):
     .. math::
         f(x) := \sqrt(\frac{c}{2 \pi}) \frac{\exp -\frac{c}{2 (x - \mu)}}{(x - \mu)^{3/2}}
 
-    Parameters
-    ==========
-
-    mu : Real number, the location parameter
-    c : Real number, `c > 0`, a scale parameter
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -2262,6 +2248,17 @@ def Levy(name, mu, c):
 
     >>> cdf(X)(z)
     erfc(sqrt(c)*sqrt(1/(-2*mu + 2*z)))
+
+    Parameters
+    ==========
+
+    mu : Real number, the location parameter
+    c : Real number, `c > 0`, a scale parameter
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -2310,17 +2307,6 @@ def Logistic(name, mu, s):
     .. math::
         f(x) := \frac{e^{-(x-\mu)/s}} {s\left(1+e^{-(x-\mu)/s}\right)^2}
 
-    Parameters
-    ==========
-
-    mu : Real number, the location (mean)
-    s : Real number, `s > 0` a scale
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -2338,6 +2324,17 @@ def Logistic(name, mu, s):
 
     >>> cdf(X)(z)
     1/(exp((mu - z)/s) + 1)
+
+    Parameters
+    ==========
+
+    mu : Real number, the location (mean)
+    s : Real number, `s > 0` a scale
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -2390,17 +2387,6 @@ def LogLogistic(name, alpha, beta):
         f(x) := \frac{(\frac{\beta}{\alpha})(\frac{x}{\alpha})^{\beta - 1}}
                 {(1 + (\frac{x}{\alpha})^{\beta})^2}
 
-    Parameters
-    ==========
-
-    alpha : Real number, `\alpha > 0`, scale parameter and median of distribution
-    beta : Real number, `\beta > 0` a shape parameter
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -2432,6 +2418,17 @@ def LogLogistic(name, alpha, beta):
 
     >>> quantile(X)(p)
     alpha*(p/(1 - p))**(1/beta)
+
+    Parameters
+    ==========
+
+    alpha : Real number, `\alpha > 0`, scale parameter and median of distribution
+    beta : Real number, `\beta > 0` a shape parameter
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -2481,17 +2478,6 @@ def LogNormal(name, mean, std):
 
     with :math:`x \geq 0`.
 
-    Parameters
-    ==========
-
-    mu : Real number, the log-scale
-    sigma : Real number, :math:`\sigma^2 > 0` a shape
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -2521,6 +2507,17 @@ def LogNormal(name, mean, std):
 
     >>> density(X)(z)
     sqrt(2)*exp(-log(z)**2/2)/(2*sqrt(pi)*z)
+
+    Parameters
+    ==========
+
+    mu : Real number, the log-scale
+    sigma : Real number, `\sigma^2 > 0` a shape
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -2627,19 +2624,7 @@ def Maxwell(name, a):
     .. math::
         f(x) := \sqrt{\frac{2}{\pi}} \frac{x^2 e^{-x^2/(2a^2)}}{a^3}
 
-    with :math:`x \geq 0`.
-
-    .. TODO - what does the parameter mean?
-
-    Parameters
-    ==========
-
-    a : Real number, `a > 0`
-
-    Returns
-    =======
-
-    RandomSymbol
+    with `x \geq 0`.
 
     Examples
     ========
@@ -2660,6 +2645,18 @@ def Maxwell(name, a):
 
     >>> simplify(variance(X))
     a**2*(-8 + 3*pi)/pi
+
+    .. TODO - what does the parameter mean?
+
+    Parameters
+    ==========
+
+    a : Real number, `a > 0`
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -2710,19 +2707,6 @@ def Moyal(name, mu, sigma):
 
     with :math:`x \in \mathbb{R}`.
 
-    Parameters
-    ==========
-
-    mu : Real number
-        Location parameter
-    sigma : Real positive number
-        Scale parameter
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -2736,6 +2720,19 @@ def Moyal(name, mu, sigma):
     sqrt(2)*exp(-exp((mu - z)/sigma)/2 - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)
     >>> simplify(cdf(X)(z))
     1 - erf(sqrt(2)*exp((mu - z)/(2*sigma))/2)
+
+    Parameters
+    ==========
+
+    mu : Real number
+        Location parameter
+    sigma : Real positive number
+        Scale parameter
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -2783,17 +2780,6 @@ def Nakagami(name, mu, omega):
 
     with :math:`x > 0`.
 
-    Parameters
-    ==========
-
-    mu : Real number, `\mu \geq \frac{1}{2}` a shape
-    omega : Real number, `\omega > 0`, the spread
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -2830,6 +2816,16 @@ def Nakagami(name, mu, omega):
     Piecewise((lowergamma(mu, mu*z**2/omega)/gamma(mu), z > 0),
             (0, True))
 
+    Parameters
+    ==========
+
+    mu : Real number, `\mu \geq \frac{1}{2}` a shape
+    omega : Real number, `\omega > 0`, the spread
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -2878,18 +2874,6 @@ def Normal(name, mean, std):
 
     .. math::
         f(x) := \frac{1}{\sigma\sqrt{2\pi}} e^{ -\frac{(x-\mu)^2}{2\sigma^2} }
-
-    Parameters
-    ==========
-
-    mu : Real number or a list representing the mean or the mean vector
-    sigma : Real number or a positive definite square matrix,
-         :math:`\sigma^2 > 0` the variance
-
-    Returns
-    =======
-
-    RandomSymbol
 
     Examples
     ========
@@ -2944,6 +2928,17 @@ def Normal(name, mean, std):
     >>> marginal_distribution(m, m[0])(1)
      1/(2*sqrt(pi))
 
+    Parameters
+    ==========
+
+    mu : Real number or a list representing the mean or the mean vector
+    sigma : Real number or a positive definite square matrix,
+        `\sigma^2 > 0` the variance
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -3009,17 +3004,6 @@ def GaussianInverse(name, mean, shape):
     .. math::
         f(x) := \sqrt{\frac{\lambda}{2\pi x^3}} e^{-\frac{\lambda(x-\mu)^2}{2x\mu^2}}
 
-    Parameters
-    ==========
-
-    mu : Positive number representing the mean
-    lambda : Positive number representing the shape parameter
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -3051,6 +3035,17 @@ def GaussianInverse(name, mean, shape):
 
     >>> skewness(X).expand()
     3*sqrt(mu)/sqrt(lambda)
+
+    Parameters
+    ==========
+
+    mu : Positive number representing the mean
+    lambda : Positive number representing the shape parameter
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -4199,17 +4194,6 @@ def Weibull(name, alpha, beta):
                   0 & x<0
                 \end{cases}
 
-    Parameters
-    ==========
-
-    lambda : Real number, :math:`\lambda > 0` a scale
-    k : Real number, `k > 0` a shape
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -4230,6 +4214,17 @@ def Weibull(name, alpha, beta):
 
     >>> simplify(variance(X))
     lambda**2*(-gamma(1 + 1/k)**2 + gamma(1 + 2/k))
+
+    Parameters
+    ==========
+
+    lambda : Real number, :math:`\lambda > 0` a scale
+    k : Real number, `k > 0` a shape
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -4279,16 +4274,6 @@ def WignerSemicircle(name, R):
 
     with :math:`x \in [-R,R]`.
 
-    Parameters
-    ==========
-
-    R : Real number, `R > 0`, the radius
-
-    Returns
-    =======
-
-    A `RandomSymbol`.
-
     Examples
     ========
 
@@ -4305,6 +4290,16 @@ def WignerSemicircle(name, R):
 
     >>> E(X)
     0
+
+    Parameters
+    ==========
+
+    R : Real number, `R > 0`, the radius
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
