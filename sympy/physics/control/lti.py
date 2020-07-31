@@ -486,11 +486,12 @@ class Series(Basic):
         obj = super(Series, cls).__new__(cls, *args)
         obj.is_SISO = True if all(isinstance(arg.doit(), TransferFunction) for arg in args) \
             else False
-        obj._var = args[0].var
         if not obj.is_SISO:
             obj._shape = args[0].shape
+            obj._inputs, obj._outputs = args[0].inputs, args[0].outputs
 
         tf = "transfer functions" if obj.is_SISO else "TransferFunctionMatrix objects"
+        obj._var = args[0].var
         if not all(arg.var == obj._var for arg in args):
             raise ValueError("All {0} should use the same complex"
                 " variable of the Laplace transform.".format(tf))
@@ -516,6 +517,14 @@ class Series(Basic):
 
         """
         return self._var
+
+    @property
+    def inputs(self):
+        return self._inputs
+
+    @property
+    def outputs(self):
+        return self._outputs
 
     @property
     def shape(self):
@@ -767,6 +776,7 @@ class Parallel(Basic):
             else False
         if not obj.is_SISO:
             obj._shape = args[0].shape
+            obj._inputs, obj._outputs = args[0].inputs, args[0].outputs
             # All MIMO --> assert matching shapes..
             if not all(arg.shape == obj._shape for arg in args):
                 raise ShapeError("Dimensions of all TransferFunctionMatrix"
@@ -799,6 +809,14 @@ class Parallel(Basic):
 
         """
         return self._var
+
+    @property
+    def inputs(self):
+        return self._inputs
+
+    @property
+    def outputs(self):
+        return self._outputs
 
     @property
     def shape(self):
@@ -1191,21 +1209,23 @@ class TransferFunctionMatrix(Basic):
                     " variable of the Laplace transform.")
             obj._inputs, obj._outputs = 1, len(arg)
         else:
-            obj._inputs, obj._outputs = len(arg), len(arg[0])
-            if not all(len(l) == obj._outputs for l in arg):
+            obj._inputs, obj._outputs = len(arg[0]), len(arg)
+            if not all(len(l) == obj._inputs for l in arg):
                 raise ValueError("Length of all the lists in the argument of"
                     " TransferFunctionMatrix should be equal.")
             if not all(isinstance(arg[row][col], TransferFunction)
-                for col in range(obj._outputs) for row in range(obj._inputs)):
+                for col in range(obj._inputs) for row in range(obj._outputs)):
                 raise TypeError("All the lists in the argument of TransferFunctionMatrix"
                     " only support transfer functions in them.")
 
             obj._var = arg[0][0].var
             if not all(arg[row][col].var == obj._var
-                for col in range(obj._outputs) for row in range(obj._inputs)):
+                for col in range(obj._inputs) for row in range(obj._outputs)):
                 raise ValueError("All transfer functions should use the same complex"
                     " variable of the Laplace transform.")
-        obj._shape = (obj._inputs, obj._outputs)
+        obj._shape = (obj._outputs, obj._inputs)
+        # No. of columns ≡ # of inputs
+        # No. of rows ≡ # of outputs
         return obj
 
     @property
@@ -1254,6 +1274,11 @@ class TransferFunctionMatrix(Basic):
     def __rsub__(self, other):
         return -self + other
 
+    def __mul__(self, other):
+        pass
+
+    __rmul__ = __mul__
+
     def __neg__(self):
         if self.inputs == 1:
             neg_args = [-col for col in self.args[0]]
@@ -1267,7 +1292,7 @@ class TransferFunctionMatrix(Basic):
             return all(elem.is_proper for elem in self.args[0])
         else:
             return all(self.args[0][row][col].is_proper
-                for col in range(self.outputs) for row in range(self.inputs))
+                for col in range(self.inputs) for row in range(self.outputs))
 
     @property
     def is_strictly_proper(self):
@@ -1275,7 +1300,7 @@ class TransferFunctionMatrix(Basic):
             return all(elem.is_strictly_proper for elem in self.args[0])
         else:
             return all(self.args[0][row][col].is_strictly_proper
-                for col in range(self.outputs) for row in range(self.inputs))
+                for col in range(self.inputs) for row in range(self.outputs))
 
     @property
     def is_biproper(self):
@@ -1283,4 +1308,4 @@ class TransferFunctionMatrix(Basic):
             return all(elem.is_biproper for elem in self.args[0])
         else:
             return all(self.args[0][row][col].is_biproper
-                for col in range(self.outputs) for row in range(self.inputs))
+                for col in range(self.inputs) for row in range(self.outputs))
