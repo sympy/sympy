@@ -702,11 +702,47 @@ def test_TransferFunctionMatrix_functions():
 
 
 def test_TransferFunctionMatrix_addition_and_subtraction():
+    tf = TransferFunction(a0*p, a1*p**2 + a2*p - a0, p)
     tfm1 = TransferFunctionMatrix([TF1, TF2])
     tfm2 = TransferFunctionMatrix([-TF2, -TF1])
     tfm3 = TransferFunctionMatrix([TF1, TF1])
+    tfm4 = TransferFunctionMatrix([tf])
 
+    # addition
     assert tfm1 + tfm2 == Parallel(tfm1, tfm2)
     assert tfm3 + tfm1 == Parallel(tfm3, tfm1)
+
+    c = symbols("c", commutative=False)
+    raises(ValueError, lambda: tfm1 + Matrix([1, 2, 3]))
+    raises(ValueError, lambda: tfm2 + c)
+    raises(ValueError, lambda: tfm3 + tfm4)
+    raises(ValueError, lambda: tfm1 + (s - 1))
+    raises(ValueError, lambda: tfm1 + 8)
+    raises(ValueError, lambda: (1 - p**3) + tfm1)
+
+    # subtraction
     assert tfm1 - tfm2 == Parallel(tfm1, -tfm2)
     assert tfm3 - tfm1 == Parallel(tfm3, -tfm1)
+
+    raises(ValueError, lambda: tfm1 - Matrix([1, 2, 3]))
+    raises(ValueError, lambda: tfm3 - tfm4)
+    raises(ValueError, lambda: tfm1 - (s - 1))
+    raises(ValueError, lambda: tfm1 - 8)
+    raises(ValueError, lambda: (s + 5) - tfm2)
+    raises(ValueError, lambda: (1 + p**4) - tfm1)
+
+
+def test_TransferFunctionMatrix_multiplication():
+    tf = TransferFunction(a0*s**2, a1*s + a2, s)
+    tfm1 = TransferFunctionMatrix([[TF1, TF2], [TF3, tf]])
+    tfm2 = TransferFunctionMatrix([[-TF3, -tf], [TF2, TF1]])
+    tfm3 = TransferFunctionMatrix([TF1, TF2, TF3])
+
+    assert tfm1*tfm2 == Series(tfm1, tfm2)
+    assert -tfm2*tfm1 == Series(-tfm2, tfm1)
+
+    raises(ValueError, lambda: tfm2 * Matrix([1, 2, 3]))
+    raises(ValueError, lambda: tfm2 * a0)
+    raises(ValueError, lambda: tfm2 * tfm3)
+    raises(ValueError, lambda: tfm2 * (s - 1))
+    raises(ValueError, lambda: 9 * tfm3)

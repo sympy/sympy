@@ -143,13 +143,13 @@ class TransferFunction(Basic, EvalfMixin):
 
         if (((isinstance(num, Expr) and num.has(Symbol) and not num.has(exp)) or num.is_number) and
             ((isinstance(den, Expr) and den.has(Symbol) and not den.has(exp)) or den.is_number)):
-                obj = super(TransferFunction, cls).__new__(cls, num, den, var)
-                obj._num = num
-                obj._den = den
-                obj._var = var
-                obj._inputs, obj._outputs = 1, 1
-                obj._shape = (1, 1) # SISO TF ≡ 1 x 1 TFM
-                return obj
+            obj = super(TransferFunction, cls).__new__(cls, num, den, var)
+            obj._num = num
+            obj._den = den
+            obj._var = var
+            obj._inputs, obj._outputs = 1, 1
+            obj._shape = (1, 1) # SISO TF = 1 x 1 TFM
+            return obj
         else:
             raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
 
@@ -489,6 +489,12 @@ class Series(Basic):
         if not obj.is_SISO:
             obj._shape = args[0].shape
             obj._inputs, obj._outputs = args[0].inputs, args[0].outputs
+            for x in range(len(args) - 1):
+                # input-output sizes should be consistent.
+                if args[x].inputs != args[x + 1].outputs:
+                    raise ValueError("Argument {0} of Series has {1} input(s),"
+                        " but argument {2} has {3} output(s)."
+                        .format(x + 1, args[x].inputs, x + 2, args[x + 1].outputs))
 
         tf = "transfer functions" if obj.is_SISO else "TransferFunctionMatrix objects"
         obj._var = args[0].var
@@ -1224,8 +1230,8 @@ class TransferFunctionMatrix(Basic):
                 raise ValueError("All transfer functions should use the same complex"
                     " variable of the Laplace transform.")
         obj._shape = (obj._outputs, obj._inputs)
-        # No. of columns ≡ # of inputs
-        # No. of rows ≡ # of outputs
+        # No. of columns = # of inputs
+        # No. of rows = # of outputs
         return obj
 
     @property
@@ -1275,7 +1281,17 @@ class TransferFunctionMatrix(Basic):
         return -self + other
 
     def __mul__(self, other):
-        pass
+        if isinstance(other, TransferFunctionMatrix):
+            if not self.inputs == other.outputs:
+                raise ValueError("C = A * B: A has {0} input(s), but B has {1} output(s)."
+                    .format(self.inputs, other.outputs))
+            if not self.var == other.var:
+                raise ValueError("Both TransferFunctionMatrix objects should use the same"
+                    " complex variable of the Laplace transform.")
+            return Series(self, other)
+        else:
+            raise ValueError("TransferFunctionMatrix cannot be multiplied with {}."
+                .format(type(other)))
 
     __rmul__ = __mul__
 
