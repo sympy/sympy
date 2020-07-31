@@ -520,8 +520,8 @@ def Skellam(name, mu1, mu2):
     r"""
     Create a discrete random variable with a Skellam distribution.
 
-    The Skellam is the distribution of the difference N1 - N2 of two 
-    statistically independent random variables N1 and N2, each 
+    The Skellam is the distribution of the difference N1 - N2 of two
+    statistically independent random variables N1 and N2, each
     Poisson-distributed, with respective expected values ``mu1`` and ``mu2``.
 
     The density of the Skellam distribution is given by
