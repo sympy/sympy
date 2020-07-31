@@ -412,15 +412,15 @@ def NormalGamma(sym, mu, lamda, alpha, beta):
     Parameters
     ==========
 
-    sym : A symbol/str
-        For identifying the random variable.
-    m u: A real number
+    sym : symbol/str
+        For identifying the random variable
+    mu: real number
         The mean of the normal distribution
-    lamda : A positive integer
+    lamda : positive integer
         Parameter of joint distribution
-    alpha : A positive integer
+    alpha : positive integer
         Parameter of joint distribution
-    beta : A positive integer
+    beta : positive integer
         Parameter of joint distribution
 
     Returns
@@ -677,7 +677,7 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     Note
     ====
 
-    If ``GeneralizedMultivariateLogGamma`` is too long to type, use 
+    If ``GeneralizedMultivariateLogGamma`` is too long to type, use
     ``from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG``
 
     If you want to pass the matrix omega instead of the constant delta, then use
