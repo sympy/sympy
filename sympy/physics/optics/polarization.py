@@ -202,7 +202,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣    I⋅p⋅sin(2⋅χ)     ⎦
 
     Horizontal polarization:
-    
+
     >>> pprint(stokes_vector(0, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
@@ -213,7 +213,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0⎦
 
     Vertical polarization:
-    
+
     >>> pprint(stokes_vector(pi/2, 0), use_unicode=True)
     ⎡1 ⎤
     ⎢  ⎥
@@ -224,7 +224,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0 ⎦
 
     Diagonal polarization:
-    
+
     >>> pprint(stokes_vector(pi/4, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
@@ -235,7 +235,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0⎦
 
     Anti-diagonal polarization:
-    
+
     >>> pprint(stokes_vector(-pi/4, 0), use_unicode=True)
     ⎡1 ⎤
     ⎢  ⎥
@@ -246,7 +246,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0 ⎦
 
     Right-hand circular polarization:
-    
+
     >>> pprint(stokes_vector(0, pi/4), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
@@ -257,7 +257,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣1⎦
 
     Left-hand circular polarization:
-    
+
     >>> pprint(stokes_vector(0, -pi/4), use_unicode=True)
     ⎡1 ⎤
     ⎢  ⎥
@@ -268,7 +268,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣-1⎦
 
     Unpolarized light:
-    
+
     >>> pprint(stokes_vector(0, 0, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
@@ -478,7 +478,6 @@ def quarter_wave_retarder(theta):
     ⎢           4                  ⎛   2           2   ⎞    4  ⎥
     ⎣(1 - ⅈ)⋅ℯ     ⋅sin(θ)⋅cos(θ)  ⎝sin (θ) + ⅈ⋅cos (θ)⎠⋅ℯ     ⎦
 
-
     Parameters
     ==========
     theta : numeric type or sympy Symbol
@@ -582,7 +581,7 @@ def mueller_matrix(J):
     ⎣   0           0             0        0⎦
 
     A half-wave plate:
-    
+
     >>> pprint(mueller_matrix(half_wave_retarder(theta)), use_unicode=True)
     ⎡1              0                           0               0 ⎤
     ⎢                                                             ⎥
@@ -595,7 +594,7 @@ def mueller_matrix(J):
     ⎣0              0                           0               -1⎦
 
     A quarter-wave plate:
-    
+
     >>> pprint(mueller_matrix(quarter_wave_retarder(theta)), use_unicode=True)
     ⎡1       0             0            0    ⎤
     ⎢                                        ⎥
