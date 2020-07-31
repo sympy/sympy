@@ -452,6 +452,11 @@ def test_sympy__codegen__fnodes__product_():
     assert _test_args(product_('arr'))
 
 
+def test_sympy__codegen__numpy_nodes__logaddexp():
+    from sympy.codegen.numpy_nodes import logaddexp
+    assert _test_args(logaddexp(x, y))
+
+
 @XFAIL
 def test_sympy__combinatorics__graycode__GrayCode():
     from sympy.combinatorics.graycode import GrayCode
@@ -1788,6 +1793,19 @@ def test_sympy__stats__matrix_distributions__MatrixGammaDistribution():
     from sympy import Matrix
     assert _test_args(MatrixGammaDistribution(3, 4, Matrix([[1, 0], [0, 1]])))
 
+def test_sympy__stats__matrix_distributions__WishartDistribution():
+    from sympy.stats.matrix_distributions import WishartDistribution
+    from sympy import Matrix
+    assert _test_args(WishartDistribution(3, Matrix([[1, 0], [0, 1]])))
+
+def test_sympy__stats__matrix_distributions__MatrixNormalDistribution():
+    from sympy.stats.matrix_distributions import MatrixNormalDistribution
+    from sympy import MatrixSymbol
+    L = MatrixSymbol('L', 1, 2)
+    S1 = MatrixSymbol('S1', 1, 1)
+    S2 = MatrixSymbol('S2', 2, 2)
+    assert _test_args(MatrixNormalDistribution(L, S1, S2))
+
 
 def test_sympy__core__symbol__Str():
     from sympy.core.symbol import Str
@@ -2974,14 +2992,6 @@ def test_sympy__matrices__expressions__matadd__MatAdd():
     assert _test_args(MatAdd(X, Y))
 
 
-def test_sympy__matrices__expressions__matexpr__Identity():
-    from sympy.matrices.expressions.matexpr import Identity
-    assert _test_args(Identity(3))
-
-def test_sympy__matrices__expressions__matexpr__GenericIdentity():
-    from sympy.matrices.expressions.matexpr import GenericIdentity
-    assert _test_args(GenericIdentity())
-
 @SKIP("abstract class")
 def test_sympy__matrices__expressions__matexpr__MatrixExpr():
     pass
@@ -2996,19 +3006,30 @@ def test_sympy__matrices__expressions__matexpr__MatrixSymbol():
     assert _test_args(MatrixSymbol('A', 3, 5))
 
 
-def test_sympy__matrices__expressions__matexpr__ZeroMatrix():
-    from sympy.matrices.expressions.matexpr import ZeroMatrix
-    assert _test_args(ZeroMatrix(3, 5))
-
-
-def test_sympy__matrices__expressions__matexpr__OneMatrix():
-    from sympy.matrices.expressions.matexpr import OneMatrix
+def test_sympy__matrices__expressions__special__OneMatrix():
+    from sympy.matrices.expressions.special import OneMatrix
     assert _test_args(OneMatrix(3, 5))
 
 
-def test_sympy__matrices__expressions__matexpr__GenericZeroMatrix():
-    from sympy.matrices.expressions.matexpr import GenericZeroMatrix
+def test_sympy__matrices__expressions__special__ZeroMatrix():
+    from sympy.matrices.expressions.special import ZeroMatrix
+    assert _test_args(ZeroMatrix(3, 5))
+
+
+def test_sympy__matrices__expressions__special__GenericZeroMatrix():
+    from sympy.matrices.expressions.special import GenericZeroMatrix
     assert _test_args(GenericZeroMatrix())
+
+
+def test_sympy__matrices__expressions__special__Identity():
+    from sympy.matrices.expressions.special import Identity
+    assert _test_args(Identity(3))
+
+
+def test_sympy__matrices__expressions__special__GenericIdentity():
+    from sympy.matrices.expressions.special import GenericIdentity
+    assert _test_args(GenericIdentity())
+
 
 def test_sympy__matrices__expressions__sets__MatrixSet():
     from sympy.matrices.expressions.sets import MatrixSet

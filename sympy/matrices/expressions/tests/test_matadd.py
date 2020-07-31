@@ -1,5 +1,5 @@
 from sympy.matrices.expressions import MatrixSymbol, MatAdd, MatPow, MatMul
-from sympy.matrices.expressions.matexpr import GenericZeroMatrix, ZeroMatrix
+from sympy.matrices.expressions.special import GenericZeroMatrix, ZeroMatrix
 from sympy.matrices import eye, ImmutableMatrix
 from sympy.core import Add, Basic, S
 from sympy.testing.pytest import XFAIL, raises

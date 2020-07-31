@@ -36,6 +36,7 @@ from sympy.assumptions import Q, ask
 from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core.expr import UnevaluatedExpr
+from sympy.codegen.numpy_nodes import logaddexp
 from sympy.core.mul import Mul
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.utilities.iterables import sift
@@ -250,5 +251,9 @@ def _matinv_transform(expr):
 matinv_opt = ReplaceOptim(_matinv_predicate, _matinv_transform)
 
 
+logaddexp_opt = ReplaceOptim(log(exp(_v)+exp(_w)), logaddexp(_v, _w))
+
 # Collections of optimizations:
 optims_c99 = (expm1_opt, log1p_opt, exp2_opt, log2_opt, log2const_opt)
+
+optims_numpy = (logaddexp_opt,)
