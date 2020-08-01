@@ -51,8 +51,6 @@ PRECEDENCE_VALUES = {
     "Equality": PRECEDENCE["Mul"],
     "Unequality": PRECEDENCE["Mul"],
     "CompositeMap": PRECEDENCE["Mul"],
-    "AppliedMap": PRECEDENCE["Func"],
-    "AppliedBinaryOperator": PRECEDENCE["Add"],
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a
@@ -109,6 +107,13 @@ def precedence_UnevaluatedExpr(item):
     return precedence(item.args[0])
 
 
+def precedence_AppliedMap(item):
+    from sympy.map.operator import BinaryOperator
+    if isinstance(item.map, BinaryOperator):
+        return PRECEDENCE["Add"]
+    PRECEDENCE["Func"]
+
+
 PRECEDENCE_FUNCTIONS = {
     "Integer": precedence_Integer,
     "Mul": precedence_Mul,
@@ -117,6 +122,7 @@ PRECEDENCE_FUNCTIONS = {
     "PolyElement": precedence_PolyElement,
     "FracElement": precedence_FracElement,
     "UnevaluatedExpr": precedence_UnevaluatedExpr,
+    "AppliedMap": precedence_AppliedMap,
 }
 
 
@@ -161,8 +167,6 @@ PRECEDENCE_TRADITIONAL['Complement'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['SymmetricDifference'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['ProductSet'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['CompositeMap'] = PRECEDENCE["Mul"] - 1
-PRECEDENCE_TRADITIONAL['AppliedMap'] = PRECEDENCE["Func"]
-PRECEDENCE_TRADITIONAL['AppliedBinaryOperator'] = PRECEDENCE["Add"]
 
 
 def precedence_traditional(item):

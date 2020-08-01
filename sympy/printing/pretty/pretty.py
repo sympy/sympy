@@ -2809,7 +2809,16 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_AppliedMap(self, e):
+        from sympy.map.operator import BinaryOperator
         prettyMap = self.parenthesize(e.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
+
+        if isinstance(e.map, BinaryOperator):
+            infix = ' ' + str(prettyMap) + ' '
+            return self._print_seq(
+                    e.arguments, None, None, infix,
+                    lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"]
+                )
+
         prettyArgs = self._print_seq(e.arguments, delimiter=', ')
         prettyArgs = prettyForm(*prettyArgs.parens())
 
@@ -2817,14 +2826,6 @@ class PrettyPrinter(Printer):
         pform.prettyFunc = prettyMap
         pform.prettyArgs = prettyArgs
         return pform
-
-    def _print_AppliedBinaryOperator(self, e):
-        prettyMap = self.parenthesize(e.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
-        infix = ' ' + str(prettyMap) + ' '
-        return self._print_seq(
-                e.arguments, None, None, infix,
-                lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"]
-            )
 
     def _print_InverseElement(self, e):
         pretty_base = self._print(e.arguments[0])

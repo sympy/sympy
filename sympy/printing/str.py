@@ -961,15 +961,17 @@ class StrPrinter(Printer):
         return name
 
     def _print_AppliedMap(self, expr):
+        from sympy.map.operator import BinaryOperator
+
         map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
+
+        if isinstance(expr.map, BinaryOperator):
+            infix_str = ' ' + map_str + ' '
+            args = [self.parenthesize(a, PRECEDENCE['Mul']) for a in expr.arguments]
+            return infix_str.join(args)
+
         args_str = self.stringify(expr.arguments, ", ")
         return "%s(%s)" % (map_str, args_str)
-
-    def _print_AppliedBinaryOperator(self, expr):
-        map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
-        infix_str = ' ' + map_str + ' '
-        args = [self.parenthesize(a, PRECEDENCE['Mul']) for a in expr.arguments]
-        return infix_str.join(args)
 
     def _print_InverseElement(self, expr):
         base_str = self._print(expr.arguments[0])

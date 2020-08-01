@@ -2708,16 +2708,17 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_AppliedMap(self, expr):
+        from sympy.map.operator import BinaryOperator
         map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
+
+        if isinstance(e.map, BinaryOperator):
+            infix_str = ' ' + map_str + ' '
+            args = [self.parenthesize(a, PRECEDENCE['Mul']) for a in expr.arguments]
+            return infix_str.join(args)
+
         temp = map_str + r"{\left(%s \right)}"
         args_str = ', '.join([self._print(arg) for arg in expr.arguments])
         return temp % args_str
-
-    def _print_AppliedBinaryOperator(self, expr):
-        map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
-        infix_str = ' ' + map_str + ' '
-        args = [self.parenthesize(a, PRECEDENCE['Mul']) for a in expr.arguments]
-        return infix_str.join(args)
 
     def _print_InverseElement(self, expr):
         base_tex = self._print(expr.arguments[0])

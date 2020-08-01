@@ -3136,13 +3136,6 @@ def test_sympy__map__operator__ExponentElement():
     op = Op()
     assert _test_args(ExponentOperator(op)(x, 2))
 
-def test_sympy__map__operator__AppliedBinaryOperator():
-    from sympy.map import BinaryOperator, AppliedBinaryOperator
-    class Op(BinaryOperator):
-        pass
-    op = Op()
-    assert _test_args(AppliedBinaryOperator(op, (x, y)))
-
 def test_sympy__map__add__AdditionOperator():
     from sympy.map import AdditionOperator
     assert _test_args(AdditionOperator(S.Complexes**2, S.Complexes, S.Zero))

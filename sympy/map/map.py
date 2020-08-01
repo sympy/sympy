@@ -34,7 +34,7 @@ class Map(Expr):
        while the latter is mathematically rigorous (just as the argument
        of ``f(x,y)`` is ``(x, y)``).
        Due to the catch mentioned above, domain of the argument is not
-       checked when map is applied by default.
+       checked by default when map is applied to them.
 
     Examples
     ========
@@ -101,14 +101,10 @@ class Map(Expr):
         return 1
     nargs = arity
 
-    def force_eval(self, *args, **kwargs):
+    def apply(self, *args, **kwargs):
         """
-        If this method returns value, it is returned even if
-        ``evaluate=False`` is passed.
-
-        .. note::
-           This method is implemented a function to always return
-           the result of another function, e.g. $1/x$ to $x^{-1}$.
+        Action of the operator on arguments. This method is always
+        called when arguments are applied.
 
         Examples
         ========
@@ -116,20 +112,22 @@ class Map(Expr):
         >>> from sympy import Map
         >>> class F(Map):
         ...     name = 'f'
-        ...     def force_eval(self, x, **kwargs):
+        ...     def apply(self, x, **kwargs):
         ...         return x + 1
         >>> f = F()
-
-        >>> f(1, evaluate=False)
+    
+        >>> f(1)
         2
 
         """
-
-        return
+        evaluate = kwargs.get('evaluate', False)
+        if evaluate:
+            return self.eval(*args)        
 
     def eval(self, *args):
         """
-        Return the result of function application with evaluate=True
+        Evaluation of the operator on its arguments. This method
+        is called when ``evaluate=True`` is passed.
 
         Examples
         ========
@@ -187,6 +185,10 @@ class Map(Expr):
         return
 
     def restrict(self, new_domain, evaluate=False):
+        """
+        Restrict the map to smaller domain.
+
+        """
         return RestrictedMap(self, new_domain, evaluate=evaluate)
 
     def _eval_restrict(self, new_domain):
@@ -257,6 +259,8 @@ class Map(Expr):
         base and number of iteration.
 
         """
+        # TODO: Remove this and use the classes from
+        # operator.py for function composition and iteration.
         return self, S.One
 
 class UndefinedMap(Map):
@@ -304,6 +308,18 @@ class RestrictedMap(Map):
     r"""
     A class for general restricted function, whose domain is restricted to a subset of its
     original domain.
+
+    Parameters
+    ==========
+
+    mapping : Map
+        Original map before restriction.
+
+    new_domain : Set
+        Restricted domain.
+
+    evaluate : bool, optional
+        If True, return the evaluated restriction of *mapping*.
 
     Examples
     ========
@@ -358,9 +374,10 @@ class InverseMap(Map):
     ==========
 
     mapping : Map
+        Original map which will be inversed.
 
     evaluate : bool, optional
-        If True, return the evaluated inverse function of *mapping*
+        If True, return the evaluated inverse function of *mapping*.
 
     Example
     =======
@@ -474,7 +491,7 @@ class AppliedMap(Expr):
        ``free_symbol`` of its ``AppliedMap`` will return incoincident value with its
        evaluated result. Instead, design the mapping to be multivariate function
        (e.g. $f(x, a) = a*x$).
-       User should not call this class directly. Instead, use ``__call__`` method
+       This class is not designed to be constructed directly. Instead, use ``__call__`` method
        of the map instance.
 
     Parameters
@@ -506,30 +523,23 @@ class AppliedMap(Expr):
 
     """
     def __new__(cls, mapping, args, evaluate=False, **kwargs):
-        args = Tuple(*[_sympify(a) for a in args])
+        kwargs.update(evaluate=evaluate)
 
-        result = mapping.force_eval(*args, evaluate=evaluate, **kwargs)
-        if result is not None:
-            return result
+        # consult mapping.apply
+        result = mapping.apply(*args, **kwargs)
 
-        if evaluate:
+        if result is None:
+            # generate AppliedMap class
+            args = Tuple(*[_sympify(a) for a in args])
+            result = super().__new__(cls, mapping, args)
 
-            # convert f(f(x)) to CompositeMap(f,f)(x)
-            if len(args) == 1 and isinstance(args[0], cls):
-                mapping = CompositeMap(mapping, args[0].map, evaluate=True)
-                args = args[0].arguments
-
-            result = mapping.eval(*args)
-            if result is not None:
-
-                if mapping.codomain.contains(result) == False:
+        # check codomain
+        if mapping.codomain.contains(result) == False:
                     raise TypeError(
                 "%s is not in %s's codomain %s." % (result, mapping, mapping.codomain)
                 )
 
-                return result
-
-        return super().__new__(cls, mapping, args)
+        return result
 
     @property
     def map(self):
@@ -561,9 +571,6 @@ class AppliedMap(Expr):
         if self.map.is_restriction(operator):
             return self.map._eval_as_base_exp(*self.arguments)
         return self, S.One
-
-    def as_coeff_Mul(self, rational=False, mul_op=None):
-        return S.One, self
 
 def isapplied(arg, maps):
     """

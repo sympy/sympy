@@ -5,9 +5,7 @@ import itertools
 from sympy.core import Basic, S, Tuple
 from sympy.core.sympify import _sympify
 from .map import AppliedMap, isapplied
-from .operator import (
-    BinaryOperator, AppliedBinaryOperator
-)
+from .operator import BinaryOperator
 
 __all__ = [
     "MultiplicationOperator", "Multiplication",
@@ -17,6 +15,17 @@ __all__ = [
 class MultiplicationOperator(BinaryOperator):
     """
     Class for general scalar multiplication operator.
+
+    Explanation
+    ===========
+
+    When defined as group operator, multiplication operator has no special feature. However,
+    when defined as ring operator, multiplication is paired with addition and distributive
+    with respect to it.
+    When ``MultiplicationOperator`` is called, addition operator can be passed as *add_op*
+    parameter for this relation. This implies that two operators form a ring over their
+    domain.
+    If you use ``Ring`` class from algebras module, two operators are automatically related.
 
     Examples
     ========
@@ -59,6 +68,30 @@ class MultiplicationOperator(BinaryOperator):
     def __call__(self, *args, add_op=None, evaluate=False):
         return Multiplication(self, args, add_op, evaluate=evaluate)
 
+    def apply(self, *args, **kwargs):
+        evaluate = kwargs.get('evaluate', False)
+        add_op = kwargs.get('add_op', None)
+
+        # sympify the arguments
+        args = [_sympify(a) for a in args]
+
+        if evaluate:
+            args = self.multiplication_process(args)
+
+            if not args:
+                return self.identity
+            elif len(args) == 1:
+                return args[0]
+
+        # return Multiplication class with processed arguments
+        args = Tuple(*[_sympify(a) for a in args])
+
+        if add_op is None:
+            result = super(AppliedMap, Multiplication).__new__(Multiplication, self, args)
+        else:
+            result = super(AppliedMap, Multiplication).__new__(Multiplication, self, args, add_op)
+        return result
+
     def gather_num(self, seq):
         num = self.identity
         newseq = []
@@ -92,25 +125,18 @@ class MultiplicationOperator(BinaryOperator):
         return add_op(*terms, evaluate=evaluate)
 
 
-class Multiplication(AppliedBinaryOperator):
+class Multiplication(AppliedMap):
+    """
+    Class for the unevaluated result of general multiplication.
+
+    """
     def __new__(cls, mapping, args, add_op=None, evaluate=False, **kwargs):
-        args = [_sympify(a) for a in args]
+        kwargs.update(
+            evaluate=evaluate,
+            add_op=add_op
+        )
 
-        if evaluate:
-            args = mapping.multiplication_process(args)
-
-            if not args:
-                return mapping.identity
-            elif len(args) == 1:
-                return args[0]
-
-        args.sort(key=cmp_to_key(Basic.compare))
-        args = Tuple(*args)
-
-        if add_op is None:
-            return super(AppliedMap, cls).__new__(cls, mapping, args, **kwargs)
-
-        return super(AppliedMap, cls).__new__(cls, mapping, args, add_op, **kwargs)
+        return super().__new__(cls, mapping, args, **kwargs)
 
     @property
     def add_op(self):
@@ -137,7 +163,7 @@ class Multiplication(AppliedBinaryOperator):
     def distribute(self, add_op=None, evaluate=False):
         # x*(y+z) -> x*y + x*z
         # not used in construction algorithm because it is
-        # discouraged in core/parameters
+        # discouraged according to core/parameters
         if add_op is None:
             add_op = self.add_op
 

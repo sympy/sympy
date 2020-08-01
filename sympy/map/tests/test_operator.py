@@ -1,6 +1,6 @@
 from sympy import S, Set, assuming, Q
 from sympy.map import (
-    BinaryOperator, AppliedBinaryOperator,
+    BinaryOperator,
 )
 from sympy.testing.pytest import raises
 
@@ -17,7 +17,7 @@ class BaseOp(BinaryOperator):
         return obj
 
 class F(BaseOp):
-    def _eval_left_identity(self, element):
+    def _eval_check_left_identity(self, element):
         # assume identity is in A but outside of B
         if element == a3:
             return True
@@ -29,7 +29,7 @@ f2 = F2(A**2, A)
 
 class G(BaseOp):
     is_associative=True
-    def _eval_right_identity(self, element):
+    def _eval_check_right_identity(self, element):
         # assume identity is in B (thus in A as well)
         if element == b3:
             return True
@@ -65,8 +65,6 @@ class N(BaseOp):
 n = N(A**2, A)
 
 def test_BinaryOperator():
-    # calling binary operator returns AppliedBinaryOperator
-    assert isinstance(f(a1, a2), AppliedBinaryOperator)
 
     # 0 or 1 arguments to binary operator is not supported
     raises(TypeError, lambda: f())
@@ -76,28 +74,24 @@ def test_BinaryOperator():
     raises(TypeError, lambda: f(a1, a2, a2))
 
     # identity checking
-    assert f.left_identity(a3)
-    assert not f.right_identity(a3)
+    assert f.check_left_identity(a3)
+    assert not f.check_right_identity(a3)
 
     # two side identity is both left and right identity
-    assert f2.left_identity(a3)
-    assert f2.right_identity(a3)
+    assert f2.check_left_identity(a3)
+    assert f2.check_right_identity(a3)
 
     class T(BaseOp):
         def eval(self, a, b):
             return a/b
     t = T(S.Integers**2, S.Integers)
-    # arguments must be in domain
-    raises(TypeError, lambda: t(0.5, 4.2))
-    raises(TypeError, lambda: t(1, 2, 3))
     # 3 or more arguments is allowed if mapping is associative
+    raises(TypeError, lambda: t(1, 2, 3, evaluate=True))
     with assuming(Q.associative(t)):
         t(1, 2, 3) # not raise error
-        raises(TypeError, lambda: t(1, 0.2, 3)) # still, each arguments must be integer
     # result of evaluation must be in codomain
     raises(TypeError, lambda: t(2, 3, evaluate=True))
 
-def test_AppliedBinaryOperator():
     # check nested application (not flattened)
     expr = f(f(a1, a1), f(a2, a2)).doit()
     assert expr.arguments == (f(a1, a1), f(a2, a2))
@@ -206,6 +200,12 @@ def test_InverseOperator():
     assert l_inv(a1).as_base_exp(l) == (a1, -1)
     assert l_inv(a1).as_base_exp(f) == (l_inv(a1), 1)
 
+    # inverse element of associative operator is converted to exponent
+    m_expop = m.exponent_operator()
+    m_invop = m.inverse_operator()
+    assert m_invop(a1) == m_expop(a1, -1)
+    assert m_invop(m_expop(a1, 2)) == m_expop(m_expop(a1, 2), -1)
+
 def test_ExponentOperator():
     m_expop = m.exponent_operator()
     m_invop = m.inverse_operator()
@@ -215,15 +215,9 @@ def test_ExponentOperator():
     assert m_expop(a1, 1, evaluate=True) == a1
     # n=0 is evaluated to identity element
     assert m_expop(a1, 0, evaluate=True) == a3
-    # n=-1 is evaluated to inverse element
-    assert m_expop(a1, -1, evaluate=True) == m_invop(a1)
-    # n<-1 is evaluated to exponenet of inverse
-    assert m_expop(a1, -3, evaluate=True) == m_expop(m_invop(a1), 3)
 
     # exponentiation of exponentiation is combined
     assert m_expop(m_expop(a1, 2), 3, evaluate=True) == m_expop(a1, 6)
-    # inverse of exponent is converted to exponent of inverse
-    assert m_invop(m_expop(a1, 2), evaluate=True) == m_expop(m_invop(a1), 2)
 
     # as_base_exp works only when base operator is passed
     assert m_expop(a1, 2).as_base_exp(m) == (a1, 2)

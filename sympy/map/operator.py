@@ -1,13 +1,13 @@
 from functools import cmp_to_key
 from sympy.assumptions import ask, Q
-from sympy.core import Basic, S
+from sympy.core import Basic, S, Expr, Tuple
 from sympy.core.sympify import _sympify
 from .map import Map, AppliedMap, IdentityMap, isapplied
 
 __all__ = [
     'BinaryOperator', 'LeftDivision', 'RightDivision',
     'InverseOperator', 'ExponentOperator',
-    'AppliedBinaryOperator', 'InverseElement', 'ExponentElement',
+    'InverseElement', 'ExponentElement',
 ]
 
 class BinaryOperator(Map):
@@ -39,7 +39,7 @@ class BinaryOperator(Map):
     >>> op(a, b)
     a . b
 
-    Binary operation with identity is evaluated.
+    Binary operation with identity element
 
     >>> op(a, e)
     a . e
@@ -64,6 +64,44 @@ class BinaryOperator(Map):
     def identity(self):
         return
 
+    def apply(self, *args, **kwargs):
+        # This method completely overrides Map.apply
+
+        evaluate = kwargs.get('evaluate', False)
+        associative = ask(Q.associative(self))
+        commutative = ask(Q.commutative(self))
+
+        # check number of arguments
+        if len(args) < 2:
+            raise TypeError(
+        "%s argument given to binary operator." % len(args)
+        )
+        if not associative and len(args) > 2:
+            raise TypeError(
+        "Multiple aruments given to non-associative binary operator."
+        )
+
+        # sympify the arguments
+        args = [_sympify(a) for a in args]
+
+        if evaluate:
+            # flattening, identity removing, etc
+            args = self.process_args(args)
+            if commutative:
+                args.sort(key=cmp_to_key(Basic.compare))
+
+            if not args:
+                return self.identity
+            elif len(args) == 1:
+                return args[0]
+
+            result = self.eval(*args)
+            if result is not None:
+                return result
+
+        args = Tuple(*args)
+        return super(Expr, AppliedMap).__new__(AppliedMap, self, args)
+
     def flatten(self, seq):
         #Flatten nested structure for associative operator.
         #Other procedures such as inverse cancelling are implemented in other methods
@@ -76,7 +114,7 @@ class BinaryOperator(Map):
                 new_seq.append(o)
         return new_seq
 
-    def left_identity(self, element):
+    def check_left_identity(self, element):
         r"""
         Returns ``True`` if *element* is left identity of *self*.
 
@@ -96,7 +134,7 @@ class BinaryOperator(Map):
 
         >>> class Op(BinaryOperator):
         ...     name = '.'
-        ...     def _eval_left_identity(self, element):
+        ...     def _eval_check_left_identity(self, element):
         ...         return element in (a, b)
         >>> op = Op()
 
@@ -112,15 +150,15 @@ class BinaryOperator(Map):
             if element == self.identity:
                 return True
             return False
-        result = self._eval_left_identity(element)
+        result = self._eval_check_left_identity(element)
         if result is not None:
             return result
         return
 
-    def _eval_left_identity(self, element):
+    def _eval_check_left_identity(self, element):
         return
 
-    def right_identity(self, element):
+    def check_right_identity(self, element):
         r"""
         Returns ``True`` if *element* is right identity of *self*.
 
@@ -140,7 +178,7 @@ class BinaryOperator(Map):
 
         >>> class Op(BinaryOperator):
         ...     name = '.'
-        ...     def _eval_right_identity(self, element):
+        ...     def _eval_check_right_identity(self, element):
         ...         return element in (a, b)
         >>> op = Op()
 
@@ -156,29 +194,29 @@ class BinaryOperator(Map):
             if element == self.identity:
                 return True
             return False
-        result = self._eval_right_identity(element)
+        result = self._eval_check_right_identity(element)
         if result is not None:
             return result
         return
 
-    def _eval_right_identity(self, element):
+    def _eval_check_right_identity(self, element):
         return
 
     def remove_identity(self, seq):
-        # this method is deliberately designed to work for len(seq) > 2 case
+        # This method is deliberately designed to work for len(seq) > 2 case
         # to be compatible if self is associative
         if self.identity is not None:
             return [o for o in seq if o != self.identity]
 
         newseq = []
         for i,o in enumerate(seq):
-            if self.left_identity(o):
-                # a*e != a if e is left identity
+            if self.check_left_identity(o):
                 if i != len(seq)-1:
+                    # a*e != a if e is left identity
                     continue
-            elif self.right_identity(o):
-                # e*a != a if e is right identity
+            elif self.check_right_identity(o):
                 if i != 0:
+                    # e*a != a if e is right identity
                     continue
             newseq.append(o)
         return newseq
@@ -214,13 +252,14 @@ class BinaryOperator(Map):
     def inverse_operator(self):
         """
         Return unary operator which returns two-sided inverse element
-        with repect to *self*. Not to be confused with ``inverse`` method.
+        with repect to *self*.
         """
         return InverseOperator(self)
 
     def are_inverse(self, a, b):
         """
         Return ``True`` if *a* and *b* are in inverse relation with respect to *self*
+
         """
         if getattr(self, 'identity', None) is None:
             return False
@@ -230,14 +269,18 @@ class BinaryOperator(Map):
         if a_base == b_base and a_exp == -b_exp:
             return True
 
-        invop = self.inverse_operator()
-        return invop(a) == b or invop(b) == a
-
     def exponent_operator(self):
+        """
+        Return binary operator which represents repetitive operation
+        of same elements by **self**.
+
+        """
         return ExponentOperator(self)
 
     def _binary_cancel(self, a, b):
         # attempt to cancel a and b using inverse relation or division relation.
+        # used by ``cancel`` method
+
         # 1. inverse element
         if self.are_inverse(a, b):
             return []
@@ -306,6 +349,7 @@ class BinaryOperator(Map):
         return result
 
     def process_args(self, seq):
+        # method run to evaluate the operation of *self* on *weq*
         associative = ask(Q.associative(self))
         commutative = ask(Q.commutative(self))
 
@@ -318,9 +362,6 @@ class BinaryOperator(Map):
         if associative:
             seq = self.collect_iterated(seq)
         return seq
-
-    def __call__(self, *args, evaluate=False, **kwargs):
-        return AppliedBinaryOperator(self, args, evaluate=evaluate)
 
 class LeftDivision(BinaryOperator):
     r"""
@@ -378,14 +419,16 @@ class LeftDivision(BinaryOperator):
     def codomain(self):
         return self.base_op.codomain
 
-    def force_eval(self, a, b, **kwargs):
+    def apply(self, divisor, dividend, **kwargs):
+        # if base_op is associative and identity exists,
+        # convert the result to operation between dividend and
+        # inverse element of divisor.
         base_op = self.base_op
         if base_op.identity is not None and ask(Q.associative(base_op)):
-            inv_a = ExponentOperator(base_op)(a, -1, **kwargs)
-            if b == base_op.identity:
-                return inv_a
-            else:
-                return base_op(inv_a, b, **kwargs)
+            kwargs["evaluate"] = True
+            inv_divisor = ExponentOperator(base_op)(divisor, -1, **kwargs)
+            return base_op(inv_divisor, dividend, **kwargs)
+        return super().apply(divisor, dividend, **kwargs)
 
 class RightDivision(BinaryOperator):
     r"""
@@ -401,7 +444,7 @@ class RightDivision(BinaryOperator):
     ==========
 
     base_op : BinaryOperator
-        Base operator from where left division is derived
+        Base operator from where right division is derived
 
     Examples
     ========
@@ -441,21 +484,24 @@ class RightDivision(BinaryOperator):
     def codomain(self):
         return self.base_op.codomain
 
-    def force_eval(self, a, b, **kwargs):
+    def apply(self, dividend, divisor, **kwargs):
+        # if base_op is associative and identity exists,
+        # convert the result to operation between dividend and
+        # inverse element of divisor.
         base_op = self.base_op
         if base_op.identity is not None and ask(Q.associative(base_op)):
-            inv_b = ExponentOperator(base_op)(b, -1, **kwargs)
-            if a == base_op.identity:
-                return inv_b
-            else:
-                return base_op(a, inv_b, **kwargs)
+            kwargs["evaluate"] = True
+            inv_divisor = ExponentOperator(base_op)(divisor, -1, **kwargs)
+            return base_op(dividend, inv_divisor, **kwargs)
+        return super().apply(dividend, divisor, **kwargs)
 
 class InverseOperator(Map):
     """
     Unary map which returns two-sided inverse element.
 
     .. note::
-       Not to be confused with ``InverseMap``.
+       If the base operator is associative, applying this
+       returns ``ExponentElement`` instead of ``InverseElement``.
 
     Parameters
     ==========
@@ -505,16 +551,21 @@ class InverseOperator(Map):
         return False
 
     def __call__(self, x, evaluate=False, **kwargs):
-        return InverseElement(self, (x,), evaluate=evaluate)
+        return InverseElement(self, (x,), evaluate=evaluate, **kwargs)
 
-    def force_eval(self, x, **kwargs):
+    def apply(self, x, **kwargs):
         base_op = self.base_op
-        if base_op.identity is not None and ask(Q.associative(base_op)):
+        if ask(Q.associative(base_op)):
             return ExponentOperator(base_op)(x, -1, **kwargs)
+        return super().apply(x, **kwargs)
 
     def eval(self, x):
-        if self.base_op.identity is not None and x == self.base_op.identity:
+        if x == self.base_op.identity:
             return x
+
+        base, exp = x.as_base_exp(self.base_op)
+        if exp == -1:
+            return base
 
     def _eval_as_base_exp(self, a):
         return a, S.NegativeOne
@@ -527,7 +578,17 @@ class InverseOperator(Map):
 
 class ExponentOperator(Map):
     """
-    Binary map which returns exponentiation.
+    Binary map which represents the repetitive operation with same elements.
+
+    Explanations
+    ============
+
+    If an operation is associative, its exponentiation can be defined as
+    repetitive application of same elements.
+    If identity element exists, zeroth exponentiation is defined and it
+    returns the identity element.
+    If inverse element exists, negative exponentiation is defined and it
+    returns the positive exponentiation of inverse element.
 
     Parameters
     ==========
@@ -553,8 +614,6 @@ class ExponentOperator(Map):
     x
     >>> op_expop(x, 0, evaluate=True)
     1
-    >>> op_expop(x, -1, evaluate=True) == op.inverse_operator()(x)
-    True
 
     """
     def __new__(cls, base_op, **kwargs):
@@ -570,7 +629,7 @@ class ExponentOperator(Map):
 
     @property
     def domain(self):
-        return self.base_op.domain.args[0] * S.Integers
+        return self.base_op.domain.args[0] * S.Complexes
 
     @property
     def codomain(self):
@@ -585,105 +644,38 @@ class ExponentOperator(Map):
     def __call__(self, x, n, evaluate=False, **kwargs):
         return ExponentElement(self, (x, n), evaluate=evaluate)
 
-    def eval(self, x, n):
-
-        if ask(Q.negative(n)):
+    def apply(self, x, n, **kwargs):
+        if not ask(Q.positive(n)):
             if getattr(self.base_op, "identity", None) is None:
-                raise TypeError(
-            "Negative exponent cannot be defined since %s does not have identity." % self
-            )
+                raise TypeError("%s does not have identity." % self.base_op)
+
+        if kwargs.get("evaluate", False):
+            x = _sympify(x)
+            base, exp = x.as_base_exp(self.base_op)
+            if exp != 1:
+                # collect x**2**3 to x**6
+                x, n = base, exp*n
+                return self(x, n, **kwargs)
+
+        return super().apply(x, n, **kwargs)
+
+    def eval(self, x, n):
 
         if x == self.base_op.identity:
             return x
-
         if n == 1:
             return x
         if n == 0:
             return self.base_op.identity
-        if n == -1:
-            return self.base_op.inverse_operator()(x)
-        if ask(Q.negative(n)):
-            return self(self.base_op.inverse_operator()(x), -n)
 
     def _eval_as_base_exp(self, x, n):
-        b, e = x.as_base_exp(self.base_op)
-        return b, n*e
-
-class AppliedBinaryOperator(AppliedMap):
-    """
-    Unevaluated result of BinaryOperator applied to arguments.
-
-    """
-
-    def __new__(cls, mapping, args, evaluate=False, **kwargs):
-
-        associative = ask(Q.associative(mapping))
-        commutative = ask(Q.commutative(mapping))
-
-    # check argument
-        if len(args) < 2:
-            raise TypeError(
-        "%s argument given to binary operator." % len(args)
-        )
-        if not associative and len(args) > 2:
-            raise TypeError(
-        "Multiple aruments given to non-associative binary operator."
-        )
-        args = [_sympify(a) for a in args]
-
-        if associative:
-            s = mapping.domain.args[0]
-            for a in args:
-                if s.contains(a) == False:
-                    raise TypeError(
-                "%s is not in %s's set %s." % (a, mapping, s)
-                )
-        elif not associative and mapping.domain.contains(tuple(args)) == False:
-            raise TypeError(
-        "%s is not in %s's domain %s." % (tuple(args), mapping, mapping.domain)
-        )
-
-        if evaluate:
-
-            args = mapping.process_args(args)
-
-            if commutative:
-                args.sort(key=cmp_to_key(Basic.compare))
-
-            if not args:
-                result = mapping.identity
-            elif len(args) == 1:
-                result = args[0]
-            else:
-                result = super().__new__(cls, mapping, args, evaluate=True, **kwargs)
-
-            # check result
-            if mapping.codomain.contains(result) == False:
-                raise TypeError(
-            "%s is not in %s's codomain %s." % (result, mapping, mapping.codomain)
-            )
-
-            return result
-
-        return super().__new__(cls, mapping, args, evaluate=False, **kwargs)
+        return x, n
 
 class InverseElement(AppliedMap):
     """
     Result of InverseOperator applied to element.
 
     """
-    def __new__(cls, mapping, args, evaluate=False, **kwargs):
-        x = _sympify(args[0])
-        if evaluate:
-            base, exp = x.as_base_exp(mapping.base_op)
-            if exp == -1:
-                return base
-            elif exp != 1:
-                exp_op = mapping.base_op.exponent_operator()
-                inv_elem = mapping(base, evaluate=True)
-                return exp_op(inv_elem, exp, evaluate=True)
-        return super().__new__(cls, mapping, (x,), evaluate=evaluate, **kwargs)
-
     def as_base_exp(self, operator):
         if self.map.base_op.is_restriction(operator):
             return self.map._eval_as_base_exp(*self.arguments)
@@ -694,12 +686,6 @@ class ExponentElement(AppliedMap):
     Result of ExponentOperator applied to element.
 
     """
-    def __new__(cls, mapping, args, evaluate=False, **kwargs):
-        x, n = map(_sympify, args)
-        if evaluate:
-            base, exp = x.as_base_exp(mapping.base_op)
-            x, n = base, exp*n
-        return super().__new__(cls, mapping, (x, n), evaluate=evaluate, **kwargs)
 
     def as_base_exp(self, operator):
         if self.map.base_op.is_restriction(operator):
