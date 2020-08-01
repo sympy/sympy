@@ -871,3 +871,8 @@ def test_issue_16708():
     m, vi = symbols('m vi', positive=True)
     B, ti, d = symbols('B ti d')
     assert limit((B*ti*vi - sqrt(m)*sqrt(-2*B*d*vi + m*(vi)**2) + m*vi)/(B*vi), B, 0) == (d + ti*vi)/vi
+
+
+def test_issue_19836():
+    n = Symbol('n')
+    assert Sum(4/(n+2) - 5/(n+1) + 1/n, (n, 7, oo)).is_convergent() == True
