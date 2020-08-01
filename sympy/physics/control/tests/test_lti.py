@@ -1,4 +1,4 @@
-from sympy import symbols, Matrix, factor, Function, simplify, exp, pi
+from sympy import symbols, Matrix, factor, Function, simplify, exp, pi, ShapeError
 from sympy.physics.control import TransferFunction, Series, Parallel, \
     Feedback, TransferFunctionMatrix
 from sympy.testing.pytest import raises
@@ -707,10 +707,15 @@ def test_TransferFunctionMatrix_addition_and_subtraction():
     tfm2 = TransferFunctionMatrix([-TF2, -TF1])
     tfm3 = TransferFunctionMatrix([TF1, TF1])
     tfm4 = TransferFunctionMatrix([tf])
+    tfm5 = TransferFunctionMatrix([TF2, TF1, TF3])
+    tfm6 = TransferFunctionMatrix([-TF1, TF2, -TF3])
+    tfm7 = TransferFunctionMatrix([TF2])
 
     # addition
     assert tfm1 + tfm2 == Parallel(tfm1, tfm2)
     assert tfm3 + tfm1 == Parallel(tfm3, tfm1)
+    assert tfm2 + (tfm3 + tfm1) == Parallel(tfm2, tfm3, tfm1)
+    assert tfm1 + tfm3*tfm7 == Parallel(tfm1, Series(tfm3, tfm7))
 
     c = symbols("c", commutative=False)
     raises(ValueError, lambda: tfm1 + Matrix([1, 2, 3]))
@@ -719,17 +724,23 @@ def test_TransferFunctionMatrix_addition_and_subtraction():
     raises(ValueError, lambda: tfm1 + (s - 1))
     raises(ValueError, lambda: tfm1 + 8)
     raises(ValueError, lambda: (1 - p**3) + tfm1)
+    raises(ValueError, lambda: tfm1 + (TF1 + TF2))
+    raises(ShapeError, lambda: tfm2 + (tfm5 + tfm6))
 
     # subtraction
     assert tfm1 - tfm2 == Parallel(tfm1, -tfm2)
     assert tfm3 - tfm1 == Parallel(tfm3, -tfm1)
+    assert tfm2 - (tfm3 + tfm1) == Parallel(tfm2, -tfm3, -tfm1)
 
     raises(ValueError, lambda: tfm1 - Matrix([1, 2, 3]))
+    raises(ValueError, lambda: tfm2 - c)
     raises(ValueError, lambda: tfm3 - tfm4)
     raises(ValueError, lambda: tfm1 - (s - 1))
     raises(ValueError, lambda: tfm1 - 8)
     raises(ValueError, lambda: (s + 5) - tfm2)
     raises(ValueError, lambda: (1 + p**4) - tfm1)
+    raises(ValueError, lambda: tfm2 - (TF2 + TF1))
+    raises(ShapeError, lambda: tfm1 - (tfm6 - tfm5))
 
 
 def test_TransferFunctionMatrix_multiplication():

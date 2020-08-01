@@ -1251,13 +1251,30 @@ class TransferFunctionMatrix(Basic):
         return self._shape
 
     def __add__(self, other):
-        if isinstance(other, TransferFunctionMatrix):
+        if isinstance(other, (TransferFunctionMatrix, Series)):
+            if isinstance(other, Series):
+                if other.is_SISO:
+                    raise ValueError("All the arguments of Series must be either"
+                        " TransferFunctionMatrix or Parallel objects.")
             if not self.shape == other.shape:
                 raise ShapeError("Shapes of operands are not compatible for addition.")
             if not self.var == other.var:
-                raise ValueError("Both TransferFunctionMatrix objects should use the same"
+                raise ValueError("All the TransferFunctionMatrix objects should use the same"
                     " complex variable of the Laplace transform.")
             return Parallel(self, other)
+
+        elif isinstance(other, Parallel):
+            if other.is_SISO:
+                raise ValueError("All the arguments of Parallel must be either TransferFunctionMatrix"
+                    " or Series objects.")
+            if not self.shape == other.shape:
+                raise ShapeError("Shapes of operands are not compatible for addition.")
+            if not self.var == other.var:
+                raise ValueError("All the TransferFunctionMatrix objects should use the same"
+                    " complex variable of the Laplace transform.")
+            arg_list = list(other.args)
+            return Parallel(self, *arg_list)
+
         else:
             raise ValueError("TransferFunctionMatrix cannot be added with {}.".
                 format(type(other)))
@@ -1266,13 +1283,30 @@ class TransferFunctionMatrix(Basic):
         return self + other
 
     def __sub__(self, other):
-        if isinstance(other, TransferFunctionMatrix):
+        if isinstance(other, (TransferFunctionMatrix, Series)):
+            if isinstance(other, Series):
+                if other.is_SISO:
+                    raise ValueError("All the arguments of Series must be either"
+                        " TransferFunctionMatrix or Parallel objects.")
             if not self.shape == other.shape:
                 raise ShapeError("Shapes of operands are not compatible for subtraction.")
             if not self.var == other.var:
-                raise ValueError("Both TransferFunctionMatrix objects should use the same"
+                raise ValueError("All the TransferFunctionMatrix objects should use the same"
                     " complex variable of the Laplace transform.")
             return Parallel(self, -other)
+
+        elif isinstance(other, Parallel):
+            if other.is_SISO:
+                raise ValueError("All the arguments of Parallel must be either TransferFunctionMatrix"
+                    " or Series objects.")
+            if not self.shape == other.shape:
+                raise ShapeError("Shapes of operands are not compatible for subtraction.")
+            if not self.var == other.var:
+                raise ValueError("All the TransferFunctionMatrix objects should use the same"
+                    " complex variable of the Laplace transform.")
+            arg_list = [-i for i in list(other.args)]
+            return Parallel(self, *arg_list)
+
         else:
             raise ValueError("{} cannot be subtracted from a TransferFunctionMatrix."
                 .format(type(other)))
