@@ -6,6 +6,7 @@ from sympy import eye
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
+from sympy.codegen.numpy_nodes import logaddexp
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
 from sympy.codegen.array_utils import (CodegenArrayTensorProduct, CodegenArrayDiagonal,
                                        CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, parse_matrix_expression)
@@ -29,6 +30,10 @@ def test_numpy_piecewise_regression():
     assert printer.doprint(p) == \
         'numpy.select([numpy.less(x, 0),True], [1,0], default=numpy.nan)'
     assert printer.module_imports == {'numpy': {'select', 'less', 'nan'}}
+
+def test_numpy_logaddexp():
+    lae = logaddexp(a, b)
+    assert NumPyPrinter().doprint(lae) == 'numpy.logaddexp(a, b)'
 
 
 def test_sum():

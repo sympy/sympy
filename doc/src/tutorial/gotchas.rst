@@ -179,7 +179,7 @@ enough to recognize this basic algebraic fact?
 Recall from above that ``==`` represents *exact* structural equality testing.
 "Exact" here means that two expressions will compare equal with ``==`` only if
 they are exactly equal structurally.  Here, `(x + 1)^2` and `x^2 + 2x + 1` are
-not the same symbolically. One is the power of an addition of two terms, and
+not the same structurally. One is the power of an addition of two terms, and
 the other is the addition of three terms.
 
 It turns out that when using SymPy as a library, having ``==`` test for exact

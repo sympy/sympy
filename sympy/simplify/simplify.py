@@ -15,7 +15,7 @@ from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
-from sympy.functions.elementary.complexes import unpolarify
+from sympy.functions.elementary.complexes import unpolarify, Abs
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
@@ -109,7 +109,6 @@ def separatevars(expr, symbols=[], dict=False, force=False):
 
 
 def _separatevars(expr, force):
-    from sympy.functions.elementary.complexes import Abs
     if isinstance(expr, Abs):
         arg = expr.args[0]
         if arg.is_Mul and not arg.is_number:
@@ -618,7 +617,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
     from sympy import Sum, Product, Integral
-    from sympy.functions.elementary.complexes import sign, Abs
+    from sympy.functions.elementary.complexes import sign
 
     # must come before `Piecewise` since this introduces more `Piecewise` terms
     if expr.has(sign):

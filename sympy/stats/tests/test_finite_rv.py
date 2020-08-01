@@ -149,7 +149,7 @@ def test_given():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert next(sample(X, X > 5)) == 6
 
 
@@ -452,7 +452,7 @@ def test_sample_numpy():
     if not numpy:
         skip('Numpy is not installed. Abort tests for _sample_numpy.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_numpy:
                 samps = next(sample(X, size=size, library='numpy'))
                 for sam in samps:
@@ -480,7 +480,7 @@ def test_sample_scipy():
     if not scipy:
         skip('Scipy not installed. Abort tests for _sample_scipy.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             h_sample = list(sample(Hypergeometric("H", 1, 1, 1), size=size, numsamples=numsamples))
             assert len(h_sample) == numsamples
             for X in distribs_scipy:
@@ -503,7 +503,7 @@ def test_sample_pymc3():
     if not pymc3:
         skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_pymc3:
                 samps = next(sample(X, size=size, library='pymc3'))
                 for sam in samps:
