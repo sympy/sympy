@@ -111,7 +111,7 @@ def precedence_AppliedMap(item):
     from sympy.map.operator import BinaryOperator
     if isinstance(item.map, BinaryOperator):
         return PRECEDENCE["Add"]
-    PRECEDENCE["Func"]
+    return PRECEDENCE["Func"]
 
 
 PRECEDENCE_FUNCTIONS = {

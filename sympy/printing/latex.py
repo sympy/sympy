@@ -2711,7 +2711,7 @@ class LatexPrinter(Printer):
         from sympy.map.operator import BinaryOperator
         map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
 
-        if isinstance(e.map, BinaryOperator):
+        if isinstance(expr.map, BinaryOperator):
             infix_str = ' ' + map_str + ' '
             args = [self.parenthesize(a, PRECEDENCE['Mul']) for a in expr.arguments]
             return infix_str.join(args)

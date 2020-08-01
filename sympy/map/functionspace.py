@@ -3,6 +3,10 @@
 from sympy.core import S
 from sympy.sets import Set
 
+__all__ = [
+    "FunctionSet",
+]
+
 class FunctionSet(Set):
     """
     Set of functions who have same domains or codomains.
