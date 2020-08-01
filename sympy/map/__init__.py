@@ -30,7 +30,7 @@ from .operator import (
     InverseElement, ExponentElement,
 )
 from .composite import (
-    CompositeMap, IteratedMap,
+    FunctionSet, CompositeMap, IteratedMap,
 )
 
 from .add import (
@@ -41,8 +41,4 @@ from .add import (
 from .mul import (
     MultiplicationOperator, Multiplication,
     scalar_mul, scalar_pow, scalar_divide,
-)
-
-from .functionspace import (
-    FunctionSet,
 )

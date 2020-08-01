@@ -3077,6 +3077,10 @@ def test_sympy__map__map__AppliedMap():
     from sympy.map import Map, AppliedMap
     assert _test_args(AppliedMap(Map('f'), (x,)))
 
+def test_sympy__map__composite__FunctionSet():
+    from sympy import FunctionSet, S
+    assert _test_args(FunctionSet(S.Reals, S.Integers))
+
 def test_sympy__map__composite__CompositeMap():
     from sympy.map import Map, CompositeMap
     f, g = Map('f'), Map('g')
@@ -3157,10 +3161,6 @@ def test_sympy__map__mul__Multiplication():
     assert _test_args(scalar_mul(x, y, evaluate=False))
     assert _test_args(scalar_mul(x, x, evaluate=True))
     assert _test_args(scalar_mul(x, x, evaluate=False))
-
-def test_sympy__map__functionspace__FunctionSet():
-    from sympy import FunctionSet, S
-    assert _test_args(FunctionSet(S.Reals, S.Integers))
 
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
