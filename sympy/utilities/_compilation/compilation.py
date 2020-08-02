@@ -19,7 +19,7 @@ from .util import (
     sha256_of_string, sha256_of_file
 )
 
-sharedext = get_config_var('EXT_SUFFIX' if sys.version_info >= (3, 3) else 'SO')
+sharedext = get_config_var('EXT_SUFFIX')
 
 if os.name == 'posix':
     objext = '.o'
