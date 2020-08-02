@@ -2607,10 +2607,10 @@ u("""\
 ⎢──────────────   ─────      ───    ⎥\n\
 ⎣    y + 5        x - y       2     ⎦\
 """)
-    assert upretty(TransferFunctionMatrix([tf1, tf2])) == expected1
-    assert upretty(TransferFunctionMatrix([tf1, tf2, -tf3])) == expected2
-    assert upretty(TransferFunctionMatrix([[tf1, tf2], [tf3, tf4], [tf5, tf6]])) == expected3
-    assert upretty(TransferFunctionMatrix([[tf2, tf1, tf4], [-tf3, -tf5, -tf6]])) == expected4
+    assert upretty(TransferFunctionMatrix([tf1, tf2], (2, 1), y)) == expected1
+    assert upretty(TransferFunctionMatrix([tf1, tf2, -tf3], (3, 1), y)) == expected2
+    assert upretty(TransferFunctionMatrix([[tf1, tf2], [tf3, tf4], [tf5, tf6]], (3, 2), y)) == expected3
+    assert upretty(TransferFunctionMatrix([[tf2, tf1, tf4], [-tf3, -tf5, -tf6]], (2, 3), y)) == expected4
 
 
 def test_pretty_order():
