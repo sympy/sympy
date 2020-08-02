@@ -1057,11 +1057,13 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
     Examples
     ========
 
-    >>> from sympy.stats import Die, sample, Normal
-    >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
+    >>> from sympy.stats import Die, sample, Normal, Geometric
+    >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6) # Finite Random Variable
 
     >>> die_roll = sample(X + Y + Z) # doctest: +SKIP
-    >>> N = Normal('N', 3, 4)
+    >>> next(die_roll) # doctest: +SKIP
+    6
+    >>> N = Normal('N', 3, 4) # Continuous Random Variable
     >>> samp = next(sample(N)) # doctest: +SKIP
     >>> samp in N.pspace.domain.set # doctest: +SKIP
     True
@@ -1071,6 +1073,22 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
     >>> samp_list = next(sample(N, size=4)) # doctest: +SKIP
     >>> [sam in N.pspace.domain.set for sam in samp_list] # doctest: +SKIP
     [True, True, True, True]
+    >>> G = Geometric('G', 0.5) # Discrete Random Variable
+    >>> samp_list = next(sample(G, size=3)) # doctest: +SKIP
+    >>> samp_list # doctest: +SKIP
+    array([10,  4,  1])
+    >>> [sam in G.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    [True, True, True]
+    >>> MN = Normal("MN", [3, 4], [[2, 1], [1, 2]]) # Joint Random Variable
+    >>> samp_list = next(sample(MN, size=4)) # doctest: +SKIP
+    >>> samp_list # doctest: +SKIP
+    array([[4.22564264, 3.23364418],
+           [3.41002011, 4.60090908],
+           [3.76151866, 4.77617143],
+           [4.71440865, 2.65714157]])
+    >>> [tuple(sam) in MN.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    [True, True, True, True]
+
 
     Returns
     =======
@@ -1176,6 +1194,7 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
     sampling_E
 
     """
+    from sympy.stats.joint_rv import JointRandomSymbol
     if not import_module(library):
         raise ValueError("Failed to import %s" % library)
 
@@ -1185,6 +1204,15 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
         ps = pspace(expr)
 
     rvs = list(ps.values)
+    if isinstance(expr, JointRandomSymbol):
+        expr = expr.subs({expr: RandomSymbol(expr.symbol, expr.pspace)})
+    else:
+        sub = {}
+        for arg in expr.args:
+            if isinstance(arg, JointRandomSymbol):
+                sub[arg] = RandomSymbol(arg.symbol, arg.pspace)
+        expr = expr.subs(sub)
+
     if library == 'pymc3':
         # Currently unable to lambdify in pymc3
         # TODO : Remove 'pymc3' when lambdify accepts 'pymc3' as module
