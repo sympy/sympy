@@ -3,10 +3,10 @@ from sympy.assumptions import assuming, Q
 from sympy.printing.ccode import ccode
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log2, exp2, expm1, log1p
-from sympy.codegen.numpy_nodes import logaddexp
+from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.rewriting import (
     optimize, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
-    create_expand_pow_optimization, matinv_opt, logaddexp_opt
+    create_expand_pow_optimization, matinv_opt, logaddexp_opt, logaddexp2_opt
 )
 from sympy.testing.pytest import XFAIL
 
@@ -191,4 +191,13 @@ def test_logaddexp_opt():
     opt1 = optimize(expr1, [logaddexp_opt])
     assert logaddexp(x, y) - opt1 == 0
     assert logaddexp(y, x) - opt1 == 0
+    assert opt1.rewrite(log) == expr1
+
+
+def test_logaddexp2_opt():
+    x, y = map(Symbol, 'x y'.split())
+    expr1 = log(2**x + 2**y)/log(2)
+    opt1 = optimize(expr1, [logaddexp2_opt])
+    assert logaddexp2(x, y) - opt1 == 0
+    assert logaddexp2(y, x) - opt1 == 0
     assert opt1.rewrite(log) == expr1
