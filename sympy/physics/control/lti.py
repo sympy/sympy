@@ -838,9 +838,21 @@ class Parallel(Basic):
             if res is None:
                 res = arg
             else:
-                num_ = res.num * arg.den + res.den * arg.num
-                den_ = res.den * arg.den
-                res = TransferFunction(num_, den_, self.var)
+                if self.is_SISO:
+                    num_ = res.num * arg.den + res.den * arg.num
+                    den_ = res.den * arg.den
+                    res = TransferFunction(num_, den_, self.var)
+                else:
+                    if self.inputs == 1:
+                        a = [None] * self.outputs
+                        for x in range(self.outputs):
+                            a[x] = res.args[0][x] + arg.args[0][x]
+                    else:
+                        a = [[None] * self.inputs] * self.outputs
+                        for row in range(self.outputs):
+                            for col in range(self.inputs):
+                                a[row][col] = res.args[0][row][col] + arg.args[0][row][col]
+                    res = TransferFunctionMatrix(a, self.shape, self.var)
         return res
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
@@ -869,26 +881,7 @@ class Parallel(Basic):
             raise ValueError("This transfer function expression is invalid.")
 
     def __sub__(self, other):
-        if isinstance(other, (TransferFunction, Series)):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-            arg_list = list(self.args)
-            arg_list.append(-other)
-
-            return Parallel(*arg_list)
-        elif isinstance(other, Parallel):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-            self_arg_list = list(self.args)
-            other_arg_list = list(other.args)
-            for elem in other_arg_list:
-                self_arg_list.append(-elem)
-
-            return Parallel(*self_arg_list)
-        else:
-            raise ValueError("This transfer function expression is invalid.")
+        return self + (-other)
 
     def __mul__(self, other):
         if isinstance(other, (TransferFunction, Parallel)):
@@ -1190,11 +1183,11 @@ class TransferFunctionMatrix(Basic):
 
     def __new__(cls, arg, shape, var):
         if not (isinstance(arg, list) and (all(isinstance(i, list) for i in arg) or
-            all(isinstance(i, TransferFunction) for i in arg))
+            all(isinstance(i, (TransferFunction, Series, Parallel)) for i in arg))
             and isinstance(var, Symbol) and isinstance(shape, tuple)):
             raise TypeError("Unsupported type for arguments of TransferFunctionMatrix.")
 
-        if all(isinstance(i, TransferFunction) for i in arg):
+        if all(isinstance(i, (TransferFunction, Parallel, Series)) for i in arg):
             # TFM with 1st argument of the type - [tf1, tf2, tf3, ...]
             if not all(elem.var == var for elem in arg):
                 raise ValueError("All transfer functions should use the same complex"
@@ -1209,7 +1202,7 @@ class TransferFunctionMatrix(Basic):
             if not all(len(l) == shape[1] for l in arg):
                 raise ValueError("Length of all the lists in the first argument of"
                     " TransferFunctionMatrix should be equal.")
-            if not all(isinstance(arg[row][col], TransferFunction)
+            if not all(isinstance(arg[row][col], (TransferFunction, Series, Parallel))
                 for col in range(shape[1]) for row in range(shape[0])):
                 raise TypeError("All the lists in the first argument of TransferFunctionMatrix"
                     " only support transfer functions in them.")
@@ -1291,6 +1284,18 @@ class TransferFunctionMatrix(Basic):
                 .format(type(other)))
 
     __rmul__ = __mul__
+
+    def doit(self, **kwargs):
+        arg_matrix = self.args[0]
+        if self.inputs == 1:
+            for row in range(self.outputs):
+                arg_matrix[row] = arg_matrix[row].doit()
+        else:
+            for row in range(self.outputs):
+                for col in range(self.inputs):
+                    arg_matrix[row][col] = arg_matrix[row][col].doit()
+
+        return TransferFunctionMatrix(arg_matrix, self.shape, self.var)
 
     def __neg__(self):
         if self.inputs == 1:
