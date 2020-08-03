@@ -1,7 +1,8 @@
 from sympy import S, simplify
 from sympy.core import Basic, diff
 from sympy.matrices import Matrix
-from sympy.vector import CoordSys3D, Vector, ParametricRegion, parametric_region_list
+from sympy.vector import (CoordSys3D, Vector, ParametricRegion,
+                        parametric_region_list, ImplicitRegion)
 from sympy.vector.operators import _get_coord_sys_from_expr
 from sympy.integrals import Integral, integrate
 from sympy.utilities.iterables import topological_sort, default_sort_key
@@ -170,6 +171,10 @@ def vector_integrate(field, *region):
     if len(region) == 1:
         if isinstance(region[0], ParametricRegion):
             return ParametricIntegral(field, region[0])
+
+        if isinstance(region[0], ImplicitRegion):
+            region = parametric_region_list(region[0])[0]
+            return vector_integrate(field, region)
 
         if isinstance(region[0], GeometryEntity):
             regions_list = parametric_region_list(region[0])
