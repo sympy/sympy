@@ -6,7 +6,7 @@ from sympy import eye
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
-from sympy.codegen.numpy_nodes import logaddexp
+from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
 from sympy.codegen.array_utils import (CodegenArrayTensorProduct, CodegenArrayDiagonal,
                                        CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, parse_matrix_expression)
@@ -34,6 +34,8 @@ def test_numpy_piecewise_regression():
 def test_numpy_logaddexp():
     lae = logaddexp(a, b)
     assert NumPyPrinter().doprint(lae) == 'numpy.logaddexp(a, b)'
+    lae2 = logaddexp2(a, b)
+    assert NumPyPrinter().doprint(lae2) == 'numpy.logaddexp2(a, b)'
 
 
 def test_sum():
