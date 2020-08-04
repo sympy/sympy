@@ -1236,21 +1236,26 @@ def _component_solver(eqs, funcs, t):
     return sol
 
 
-def _higher_order_to_first_order(eqs, sys_order, t):
+def _higher_order_to_first_order(eqs, sys_order, t, funcs=None):
     new_funcs = []
 
-    for func in sys_order:
+    if funcs is None:
+        funcs = sys_order.keys()
+
+    for prev_func in funcs:
+        func_name = prev_func.func.__name__
+        func = Function(Dummy('{}_0'.format(func_name)))(t)
         new_funcs.append(func)
-        subs_dict = {func: func}
+        subs_dict = {prev_func: func}
         new_eqs = []
 
-        for i in range(1, sys_order[func]):
-            new_func = Function(Dummy())(t)
-            subs_dict[func.diff(t, i)] = new_func
+        for i in range(1, sys_order[prev_func]):
+            new_func = Function(Dummy('{}_{}'.format(func_name, i)))(t)
+            subs_dict[prev_func.diff(t, i)] = new_func
             new_funcs.append(new_func)
 
-            prev_func = subs_dict[func.diff(t, i-1)]
-            new_eq = Eq(prev_func.diff(t), new_func)
+            prev_f = subs_dict[prev_func.diff(t, i-1)]
+            new_eq = Eq(prev_f.diff(t), new_func)
             new_eqs.append(new_eq)
 
         eqs = [eq.subs(subs_dict) for eq in eqs] + new_eqs
@@ -1274,6 +1279,8 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     3. Linear, First Order, non-constant coefficient homogeneous system of ODEs
     4. Linear, First Order, non-constant coefficient non-homogeneous system of ODEs
     5. Any implicit system which can be divided into system of ODEs which is of the above 4 forms
+    6. Any higher order linear system of ODEs that can be reduced to one of the 5 forms of systems
+       described above.
 
     The types of systems described above aren't limited by the number of equations, i.e. this
     function can solve the above types irrespective of the number of equations in the system passed.
@@ -1288,7 +1295,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
         system of ODEs to be solved
     funcs : List or None
         List of dependent variables that make up the system of ODEs
-    t : Symbol
+    t : Symbol or None
         Independent variable in the system of ODEs
     ics : Dict or None
         Set of initial boundary/conditions for the system of ODEs
@@ -1373,11 +1380,11 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
         t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
 
     sys_order = _get_func_order(eqs, funcs)
-
     new_funcs = funcs
-    # To add higher order to first order reduction later
-    if not all(sys_order[func] == 1 for func in funcs):
-        eqs, new_funcs = _higher_order_to_first_order(eqs, sys_order, t)
+
+    is_higher_order = not all(sys_order[func] == 1 for func in funcs)
+    if is_higher_order:
+        eqs, new_funcs = _higher_order_to_first_order(eqs, sys_order, t, funcs=funcs)
 
     canon_eqs = canonical_odes(eqs, new_funcs, t)
     sols = []
@@ -1396,7 +1403,14 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
             # To preserve the order corresponding to the
             # funcs list.
             sol_dict = {s.lhs: s.rhs for s in sol}
-            sol = [Eq(var, sol_dict[var]) for var in funcs]
+
+            # Note: Soon, a substitution function like ode_subs
+            # will be created.
+            if is_higher_order:
+                sol = [Eq(var, sol_dict[Function(Dummy('{}_0'.format(var.func.__name__)))(t)])\
+                       for var in funcs]
+            else:
+                sol = [Eq(var, sol_dict[var]) for var in funcs]
 
             variables = Tuple(*eqs).free_symbols
             sol = constant_renumber(sol, variables=variables)

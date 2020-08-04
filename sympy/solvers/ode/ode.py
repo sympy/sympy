@@ -2069,79 +2069,46 @@ def check_linear_2eq_order2(eq, func, func_coef):
                 const[i] += j
     r['f1'] = const[0]
     r['f2'] = const[1]
-    if r['f1']!=0 or r['f2']!=0:
-        if all(not r[k].has(t) for k in 'a1 a2 d1 d2 e1 e2 f1 f2'.split()) \
-        and r['b1']==r['c1']==r['b2']==r['c2']==0:
-            return "type2"
 
-        elif all(not r[k].has(t) for k in 'a1 a2 b1 b2 c1 c2 d1 d2 e1 e1'.split()):
-            p = [S.Zero, S.Zero] ; q = [S.Zero, S.Zero]
-            for n, e in enumerate([r['f1'], r['f2']]):
-                if e.has(t):
-                    tpart = e.as_independent(t, Mul)[1]
-                    for i in Mul.make_args(tpart):
-                        if i.has(exp):
-                            b, e = i.as_base_exp()
-                            co = e.coeff(t)
-                            if co and not co.has(t) and co.has(I):
-                                p[n] = 1
-                            else:
-                                q[n] = 1
-                        else:
-                            q[n] = 1
-                else:
-                    q[n] = 1
+    if r['b1']==r['e1']==r['c2']==r['d2']==0 and all(not r[k].has(t) \
+    for k in 'a1 a2 b2 c1 d1 e2'.split()) and r['c1'] == -r['b2'] and \
+    r['d1'] == r['e2']:
+        return "type3"
 
-            if p[0]==1 and p[1]==1 and q[0]==0 and q[1]==0:
-                    return "type4"
-            else:
-                return None
-        else:
-            return None
+    elif cancel(-r['b2']/r['d2'])==t and cancel(-r['c1']/r['e1'])==t and not \
+    (r['d2']/r['a2']).has(t) and not (r['e1']/r['a1']).has(t) and \
+    r['b1']==r['d1']==r['c2']==r['e2']==0:
+        return "type5"
+
+    elif ((r['a1']/r['d1']).expand()).match((p*(u*t**2+v*t+w)**2).expand()) and not \
+    (cancel(r['a1']*r['d2']/(r['a2']*r['d1']))).has(t) and not (r['d1']/r['e1']).has(t) and not \
+    (r['d2']/r['e2']).has(t) and r['b1'] == r['b2'] == r['c1'] == r['c2'] == 0:
+        return "type10"
+
+    elif not cancel(r['d1']/r['e1']).has(t) and not cancel(r['d2']/r['e2']).has(t) and not \
+    cancel(r['d1']*r['a2']/(r['d2']*r['a1'])).has(t) and r['b1']==r['b2']==r['c1']==r['c2']==0:
+        return "type6"
+
+    elif not cancel(r['b1']/r['c1']).has(t) and not cancel(r['b2']/r['c2']).has(t) and not \
+    cancel(r['b1']*r['a2']/(r['b2']*r['a1'])).has(t) and r['d1']==r['d2']==r['e1']==r['e2']==0:
+        return "type7"
+
+    elif cancel(-r['b2']/r['d2'])==t and cancel(-r['c1']/r['e1'])==t and not \
+    cancel(r['e1']*r['a2']/(r['d2']*r['a1'])).has(t) and r['e1'].has(t) \
+    and r['b1']==r['d1']==r['c2']==r['e2']==0:
+        return "type8"
+
+    elif (r['b1']/r['a1']).match(a/t) and (r['b2']/r['a2']).match(a/t) and not \
+    (r['b1']/r['c1']).has(t) and not (r['b2']/r['c2']).has(t) and \
+    (r['d1']/r['a1']).match(b/t**2) and (r['d2']/r['a2']).match(b/t**2) \
+    and not (r['d1']/r['e1']).has(t) and not (r['d2']/r['e2']).has(t):
+        return "type9"
+
+    elif -r['b1']/r['d1']==-r['c1']/r['e1']==-r['b2']/r['d2']==-r['c2']/r['e2']==t:
+        return "type11"
+
     else:
-        if r['b1']==r['b2']==r['c1']==r['c2']==0 and all(not r[k].has(t) \
-        for k in 'a1 a2 d1 d2 e1 e2'.split()):
-            return "type1"
-
-        elif r['b1']==r['e1']==r['c2']==r['d2']==0 and all(not r[k].has(t) \
-        for k in 'a1 a2 b2 c1 d1 e2'.split()) and r['c1'] == -r['b2'] and \
-        r['d1'] == r['e2']:
-            return "type3"
-
-        elif cancel(-r['b2']/r['d2'])==t and cancel(-r['c1']/r['e1'])==t and not \
-        (r['d2']/r['a2']).has(t) and not (r['e1']/r['a1']).has(t) and \
-        r['b1']==r['d1']==r['c2']==r['e2']==0:
-            return "type5"
-
-        elif ((r['a1']/r['d1']).expand()).match((p*(u*t**2+v*t+w)**2).expand()) and not \
-        (cancel(r['a1']*r['d2']/(r['a2']*r['d1']))).has(t) and not (r['d1']/r['e1']).has(t) and not \
-        (r['d2']/r['e2']).has(t) and r['b1'] == r['b2'] == r['c1'] == r['c2'] == 0:
-            return "type10"
-
-        elif not cancel(r['d1']/r['e1']).has(t) and not cancel(r['d2']/r['e2']).has(t) and not \
-        cancel(r['d1']*r['a2']/(r['d2']*r['a1'])).has(t) and r['b1']==r['b2']==r['c1']==r['c2']==0:
-            return "type6"
-
-        elif not cancel(r['b1']/r['c1']).has(t) and not cancel(r['b2']/r['c2']).has(t) and not \
-        cancel(r['b1']*r['a2']/(r['b2']*r['a1'])).has(t) and r['d1']==r['d2']==r['e1']==r['e2']==0:
-            return "type7"
-
-        elif cancel(-r['b2']/r['d2'])==t and cancel(-r['c1']/r['e1'])==t and not \
-        cancel(r['e1']*r['a2']/(r['d2']*r['a1'])).has(t) and r['e1'].has(t) \
-        and r['b1']==r['d1']==r['c2']==r['e2']==0:
-            return "type8"
-
-        elif (r['b1']/r['a1']).match(a/t) and (r['b2']/r['a2']).match(a/t) and not \
-        (r['b1']/r['c1']).has(t) and not (r['b2']/r['c2']).has(t) and \
-        (r['d1']/r['a1']).match(b/t**2) and (r['d2']/r['a2']).match(b/t**2) \
-        and not (r['d1']/r['e1']).has(t) and not (r['d2']/r['e2']).has(t):
-            return "type9"
-
-        elif -r['b1']/r['d1']==-r['c1']/r['e1']==-r['b2']/r['d2']==-r['c2']/r['e2']==t:
-            return "type11"
-
-        else:
-            return None
+        return None
 
 def check_nonlinear_2eq_order1(eq, func, func_coef):
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
@@ -2599,6 +2566,8 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     return len(str(sol))
 
 
+# Note: To work on getting dependent variables in order
+# even if they are in the same equation
 def _extract_funcs(eqs):
     funcs = []
     for eq in eqs:
@@ -6672,13 +6641,7 @@ def sysode_linear_2eq_order2(match_):
                 const[i] += j
     r['e1'] = -const[0]
     r['e2'] = -const[1]
-    if match_['type_of_equation'] == 'type1':
-        sol = _linear_2eq_order2_type1(x, y, t, r, eq)
-    elif match_['type_of_equation'] == 'type2':
-        gsol = _linear_2eq_order2_type1(x, y, t, r, eq)
-        psol = _linear_2eq_order2_type2(x, y, t, r, eq)
-        sol = [Eq(x(t), gsol[0].rhs+psol[0]), Eq(y(t), gsol[1].rhs+psol[1])]
-    elif match_['type_of_equation'] == 'type3':
+    if match_['type_of_equation'] == 'type3':
         sol = _linear_2eq_order2_type3(x, y, t, r, eq)
     elif match_['type_of_equation'] == 'type4':
         sol = _linear_2eq_order2_type4(x, y, t, r, eq)
@@ -6697,167 +6660,6 @@ def sysode_linear_2eq_order2(match_):
     elif match_['type_of_equation'] == 'type11':
         sol = _linear_2eq_order2_type11(x, y, t, r, eq)
     return sol
-
-def _linear_2eq_order2_type1(x, y, t, r, eq):
-    r"""
-    System of two constant-coefficient second-order linear homogeneous differential equations
-
-    .. math:: x'' = ax + by
-
-    .. math:: y'' = cx + dy
-
-    The characteristic equation for above equations
-
-    .. math:: \lambda^4 - (a + d) \lambda^2 + ad - bc = 0
-
-    whose discriminant is `D = (a - d)^2 + 4bc \neq 0`
-
-    1. When `ad - bc \neq 0`
-
-    1.1. If `D \neq 0`. The characteristic equation has four distinct roots, `\lambda_1, \lambda_2, \lambda_3, \lambda_4`.
-    The general solution of the system is
-
-    .. math:: x = C_1 b e^{\lambda_1 t} + C_2 b e^{\lambda_2 t} + C_3 b e^{\lambda_3 t} + C_4 b e^{\lambda_4 t}
-
-    .. math:: y = C_1 (\lambda_1^{2} - a) e^{\lambda_1 t} + C_2 (\lambda_2^{2} - a) e^{\lambda_2 t} + C_3 (\lambda_3^{2} - a) e^{\lambda_3 t} + C_4 (\lambda_4^{2} - a) e^{\lambda_4 t}
-
-    where `C_1,..., C_4` are arbitrary constants.
-
-    1.2. If `D = 0` and `a \neq d`:
-
-    .. math:: x = 2 C_1 (bt + \frac{2bk}{a - d}) e^{\frac{kt}{2}} + 2 C_2 (bt + \frac{2bk}{a - d}) e^{\frac{-kt}{2}} + 2b C_3 t e^{\frac{kt}{2}} + 2b C_4 t e^{\frac{-kt}{2}}
-
-    .. math:: y = C_1 (d - a) t e^{\frac{kt}{2}} + C_2 (d - a) t e^{\frac{-kt}{2}} + C_3 [(d - a) t + 2k] e^{\frac{kt}{2}} + C_4 [(d - a) t - 2k] e^{\frac{-kt}{2}}
-
-    where `C_1,..., C_4` are arbitrary constants and `k = \sqrt{2 (a + d)}`
-
-    1.3. If `D = 0` and `a = d \neq 0` and `b = 0`:
-
-    .. math:: x = 2 \sqrt{a} C_1 e^{\sqrt{a} t} + 2 \sqrt{a} C_2 e^{-\sqrt{a} t}
-
-    .. math:: y = c C_1 t e^{\sqrt{a} t} - c C_2 t e^{-\sqrt{a} t} + C_3 e^{\sqrt{a} t} + C_4 e^{-\sqrt{a} t}
-
-    1.4. If `D = 0` and `a = d \neq 0` and `c = 0`:
-
-    .. math:: x = b C_1 t e^{\sqrt{a} t} - b C_2 t e^{-\sqrt{a} t} + C_3 e^{\sqrt{a} t} + C_4 e^{-\sqrt{a} t}
-
-    .. math:: y = 2 \sqrt{a} C_1 e^{\sqrt{a} t} + 2 \sqrt{a} C_2 e^{-\sqrt{a} t}
-
-    2. When `ad - bc = 0` and `a^2 + b^2 > 0`. Then the original system becomes
-
-    .. math:: x'' = ax + by
-
-    .. math:: y'' = k (ax + by)
-
-    2.1. If `a + bk \neq 0`:
-
-    .. math:: x = C_1 e^{t \sqrt{a + bk}} + C_2 e^{-t \sqrt{a + bk}} + C_3 bt + C_4 b
-
-    .. math:: y = C_1 k e^{t \sqrt{a + bk}} + C_2 k e^{-t \sqrt{a + bk}} - C_3 at - C_4 a
-
-    2.2. If `a + bk = 0`:
-
-    .. math:: x = C_1 b t^3 + C_2 b t^2 + C_3 t + C_4
-
-    .. math:: y = kx + 6 C_1 t + 2 C_2
-
-    """
-    r['a'] = r['c1']
-    r['b'] = r['d1']
-    r['c'] = r['c2']
-    r['d'] = r['d2']
-    l = Symbol('l')
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    chara_eq = l**4 - (r['a']+r['d'])*l**2 + r['a']*r['d'] - r['b']*r['c']
-    l1 = rootof(chara_eq, 0)
-    l2 = rootof(chara_eq, 1)
-    l3 = rootof(chara_eq, 2)
-    l4 = rootof(chara_eq, 3)
-    D = (r['a'] - r['d'])**2 + 4*r['b']*r['c']
-    if (r['a']*r['d'] - r['b']*r['c']) != 0:
-        if D != 0:
-            gsol1 = C1*r['b']*exp(l1*t) + C2*r['b']*exp(l2*t) + C3*r['b']*exp(l3*t) \
-            + C4*r['b']*exp(l4*t)
-            gsol2 = C1*(l1**2-r['a'])*exp(l1*t) + C2*(l2**2-r['a'])*exp(l2*t) + \
-            C3*(l3**2-r['a'])*exp(l3*t) + C4*(l4**2-r['a'])*exp(l4*t)
-        else:
-            if r['a'] != r['d']:
-                k = sqrt(2*(r['a']+r['d']))
-                mid = r['b']*t+2*r['b']*k/(r['a']-r['d'])
-                gsol1 = 2*C1*mid*exp(k*t/2) + 2*C2*mid*exp(-k*t/2) + \
-                2*r['b']*C3*t*exp(k*t/2) + 2*r['b']*C4*t*exp(-k*t/2)
-                gsol2 = C1*(r['d']-r['a'])*t*exp(k*t/2) + C2*(r['d']-r['a'])*t*exp(-k*t/2) + \
-                C3*((r['d']-r['a'])*t+2*k)*exp(k*t/2) + C4*((r['d']-r['a'])*t-2*k)*exp(-k*t/2)
-            elif r['a'] == r['d'] != 0 and r['b'] == 0:
-                sa = sqrt(r['a'])
-                gsol1 = 2*sa*C1*exp(sa*t) + 2*sa*C2*exp(-sa*t)
-                gsol2 = r['c']*C1*t*exp(sa*t)-r['c']*C2*t*exp(-sa*t)+C3*exp(sa*t)+C4*exp(-sa*t)
-            elif r['a'] == r['d'] != 0 and r['c'] == 0:
-                sa = sqrt(r['a'])
-                gsol1 = r['b']*C1*t*exp(sa*t)-r['b']*C2*t*exp(-sa*t)+C3*exp(sa*t)+C4*exp(-sa*t)
-                gsol2 = 2*sa*C1*exp(sa*t) + 2*sa*C2*exp(-sa*t)
-    elif (r['a']*r['d'] - r['b']*r['c']) == 0 and (r['a']**2 + r['b']**2) > 0:
-        k = r['c']/r['a']
-        if r['a'] + r['b']*k != 0:
-            mid = sqrt(r['a'] + r['b']*k)
-            gsol1 = C1*exp(mid*t) + C2*exp(-mid*t) + C3*r['b']*t + C4*r['b']
-            gsol2 = C1*k*exp(mid*t) + C2*k*exp(-mid*t) - C3*r['a']*t - C4*r['a']
-        else:
-            gsol1 = C1*r['b']*t**3 + C2*r['b']*t**2 + C3*t + C4
-            gsol2 = k*gsol1 + 6*C1*t + 2*C2
-    return [Eq(x(t), gsol1), Eq(y(t), gsol2)]
-
-def _linear_2eq_order2_type2(x, y, t, r, eq):
-    r"""
-    The equations in this type are
-
-    .. math:: x'' = a_1 x + b_1 y + c_1
-
-    .. math:: y'' = a_2 x + b_2 y + c_2
-
-    The general solution of this system is given by the sum of its particular solution
-    and the general solution of the homogeneous system. The general solution is given
-    by the linear system of 2 equation of order 2 and type 1
-
-    1. If `a_1 b_2 - a_2 b_1 \neq 0`. A particular solution will be `x = x_0` and `y = y_0`
-    where the constants `x_0` and `y_0` are determined by solving the linear algebraic system
-
-    .. math:: a_1 x_0 + b_1 y_0 + c_1 = 0, a_2 x_0 + b_2 y_0 + c_2 = 0
-
-    2. If `a_1 b_2 - a_2 b_1 = 0` and `a_1^2 + b_1^2 > 0`. In this case, the system in question becomes
-
-    .. math:: x'' = ax + by + c_1, y'' = k (ax + by) + c_2
-
-    2.1. If `\sigma = a + bk \neq 0`, the particular solution will be
-
-    .. math:: x = \frac{1}{2} b \sigma^{-1} (c_1 k - c_2) t^2 - \sigma^{-2} (a c_1 + b c_2)
-
-    .. math:: y = kx + \frac{1}{2} (c_2 - c_1 k) t^2
-
-    2.2. If `\sigma = a + bk = 0`, the particular solution will be
-
-    .. math:: x = \frac{1}{24} b (c_2 - c_1 k) t^4 + \frac{1}{2} c_1 t^2
-
-    .. math:: y = kx + \frac{1}{2} (c_2 - c_1 k) t^2
-
-    """
-    x0, y0 = symbols('x0, y0')
-    if r['c1']*r['d2'] - r['c2']*r['d1'] != 0:
-        sol = solve((r['c1']*x0+r['d1']*y0+r['e1'], r['c2']*x0+r['d2']*y0+r['e2']), x0, y0)
-        psol = [sol[x0], sol[y0]]
-    elif r['c1']*r['d2'] - r['c2']*r['d1'] == 0 and (r['c1']**2 + r['d1']**2) > 0:
-        k = r['c2']/r['c1']
-        sig = r['c1'] + r['d1']*k
-        if sig != 0:
-            psol1 = r['d1']*sig**-1*(r['e1']*k-r['e2'])*t**2/2 - \
-            sig**-2*(r['c1']*r['e1']+r['d1']*r['e2'])
-            psol2 = k*psol1  + (r['e2'] - r['e1']*k)*t**2/2
-            psol = [psol1, psol2]
-        else:
-            psol1 = r['d1']*(r['e2']-r['e1']*k)*t**4/24 + r['e1']*t**2/2
-            psol2 = k*psol1 + (r['e2']-r['e1']*k)*t**2/2
-            psol = [psol1, psol2]
-    return psol
 
 def _linear_2eq_order2_type3(x, y, t, r, eq):
     r"""
@@ -6881,86 +6683,6 @@ def _linear_2eq_order2_type3(x, y, t, r, eq):
         beta = r['a']/2 - sqrt(r['a']**2 + 4*r['b'])/2
         sol1 = C1*cos(alpha*t) + C2*sin(alpha*t) + C3*cos(beta*t) + C4*sin(beta*t)
         sol2 = -C1*sin(alpha*t) + C2*cos(alpha*t) - C3*sin(beta*t) + C4*cos(beta*t)
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
-def _linear_2eq_order2_type4(x, y, t, r, eq):
-    r"""
-    These equations are found in the theory of oscillations
-
-    .. math:: x'' + a_1 x' + b_1 y' + c_1 x + d_1 y = k_1 e^{i \omega t}
-
-    .. math:: y'' + a_2 x' + b_2 y' + c_2 x + d_2 y = k_2 e^{i \omega t}
-
-    The general solution of this linear nonhomogeneous system of constant-coefficient
-    differential equations is given by the sum of its particular solution and the
-    general solution of the corresponding homogeneous system (with `k_1 = k_2 = 0`)
-
-    1. A particular solution is obtained by the method of undetermined coefficients:
-
-    .. math:: x = A_* e^{i \omega t}, y = B_* e^{i \omega t}
-
-    On substituting these expressions into the original system of differential equations,
-    one arrive at a linear nonhomogeneous system of algebraic equations for the
-    coefficients `A` and `B`.
-
-    2. The general solution of the homogeneous system of differential equations is determined
-    by a linear combination of linearly independent particular solutions determined by
-    the method of undetermined coefficients in the form of exponentials:
-
-    .. math:: x = A e^{\lambda t}, y = B e^{\lambda t}
-
-    On substituting these expressions into the original system and collecting the
-    coefficients of the unknown `A` and `B`, one obtains
-
-    .. math:: (\lambda^{2} + a_1 \lambda + c_1) A + (b_1 \lambda + d_1) B = 0
-
-    .. math:: (a_2 \lambda + c_2) A + (\lambda^{2} + b_2 \lambda + d_2) B = 0
-
-    The determinant of this system must vanish for nontrivial solutions A, B to exist.
-    This requirement results in the following characteristic equation for `\lambda`
-
-    .. math:: (\lambda^2 + a_1 \lambda + c_1) (\lambda^2 + b_2 \lambda + d_2) - (b_1 \lambda + d_1) (a_2 \lambda + c_2) = 0
-
-    If all roots `k_1,...,k_4` of this equation are distinct, the general solution of the original
-    system of the differential equations has the form
-
-    .. math:: x = C_1 (b_1 \lambda_1 + d_1) e^{\lambda_1 t} - C_2 (b_1 \lambda_2 + d_1) e^{\lambda_2 t} - C_3 (b_1 \lambda_3 + d_1) e^{\lambda_3 t} - C_4 (b_1 \lambda_4 + d_1) e^{\lambda_4 t}
-
-    .. math:: y = C_1 (\lambda_1^{2} + a_1 \lambda_1 + c_1) e^{\lambda_1 t} + C_2 (\lambda_2^{2} + a_1 \lambda_2 + c_1) e^{\lambda_2 t} + C_3 (\lambda_3^{2} + a_1 \lambda_3 + c_1) e^{\lambda_3 t} + C_4 (\lambda_4^{2} + a_1 \lambda_4 + c_1) e^{\lambda_4 t}
-
-    """
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    k = Symbol('k')
-    Ra, Ca, Rb, Cb = symbols('Ra, Ca, Rb, Cb')
-    a1 = r['a1'] ; a2 = r['a2']
-    b1 = r['b1'] ; b2 = r['b2']
-    c1 = r['c1'] ; c2 = r['c2']
-    d1 = r['d1'] ; d2 = r['d2']
-    k1 = r['e1'].expand().as_independent(t)[0]
-    k2 = r['e2'].expand().as_independent(t)[0]
-    ew1 = r['e1'].expand().as_independent(t)[1]
-    ew2 = powdenest(ew1).as_base_exp()[1]
-    ew3 = collect(ew2, t).coeff(t)
-    w = cancel(ew3/I)
-    # The particular solution is assumed to be (Ra+I*Ca)*exp(I*w*t) and
-    # (Rb+I*Cb)*exp(I*w*t) for x(t) and y(t) respectively
-    # peq1, peq2, peq3, peq4 unused
-    # peq1 = (-w**2+c1)*Ra - a1*w*Ca + d1*Rb - b1*w*Cb - k1
-    # peq2 = a1*w*Ra + (-w**2+c1)*Ca + b1*w*Rb + d1*Cb
-    # peq3 = c2*Ra - a2*w*Ca + (-w**2+d2)*Rb - b2*w*Cb - k2
-    # peq4 = a2*w*Ra + c2*Ca + b2*w*Rb + (-w**2+d2)*Cb
-    # FIXME: solve for what in what?  Ra, Rb, etc I guess
-    # but then psol not used for anything?
-    # psol = solve([peq1, peq2, peq3, peq4])
-
-    chareq = (k**2+a1*k+c1)*(k**2+b2*k+d2) - (b1*k+d1)*(a2*k+c2)
-    [k1, k2, k3, k4] = roots_quartic(Poly(chareq))
-    sol1 = -C1*(b1*k1+d1)*exp(k1*t) - C2*(b1*k2+d1)*exp(k2*t) - \
-    C3*(b1*k3+d1)*exp(k3*t) - C4*(b1*k4+d1)*exp(k4*t) + (Ra+I*Ca)*exp(I*w*t)
-
-    a1_ = (a1-1)
-    sol2 = C1*(k1**2+a1_*k1+c1)*exp(k1*t) + C2*(k2**2+a1_*k2+c1)*exp(k2*t) + \
-    C3*(k3**2+a1_*k3+c1)*exp(k3*t) + C4*(k4**2+a1_*k4+c1)*exp(k4*t) + (Rb+I*Cb)*exp(I*w*t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type5(x, y, t, r, eq):
