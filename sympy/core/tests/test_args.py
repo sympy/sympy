@@ -1634,6 +1634,20 @@ def test_sympy__stats__joint_rv_types__NegativeMultinomialDistribution():
     from sympy.stats.joint_rv_types import NegativeMultinomialDistribution
     assert _test_args(NegativeMultinomialDistribution(5, [0.5, 0.1, 0.3]))
 
+def test_sympy__stats__mixture_rv__MixturePSpace():
+    from sympy.stats.mixture_rv import MixturePSpace, MixtureDistribution
+    from sympy.stats import Normal
+    from sympy import S
+    M = MixtureDistribution([S.Half, S.Half], [Normal('N', 1, 2), Normal('M', 2, 3)])
+    assert _test_args(MixturePSpace('x', M))
+
+def test_sympy__stats__mixture_rv__MixtureDistribution():
+    from sympy.stats.mixture_rv import MixtureDistribution
+    from sympy.stats import Normal
+    from sympy import S
+    N , M = Normal('N', 1, 2), Normal('M', 2, 3)
+    assert _test_args(MixtureDistribution([S.Half, S.Half], [N, M]))
+
 def test_sympy__stats__rv__RandomIndexedSymbol():
     from sympy.stats.rv import RandomIndexedSymbol, pspace
     from sympy.stats.stochastic_process_types import DiscreteMarkovChain
