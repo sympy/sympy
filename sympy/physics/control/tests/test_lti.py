@@ -628,74 +628,74 @@ def test_TransferFunctionMatrix_construction():
     tf6 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
     tf7 = TransferFunction(p, a0, p)
 
-    tfm1 = TransferFunctionMatrix([TF1, TF2], (2, 1), s)
+    tfm1 = TransferFunctionMatrix([TF1, TF2])
     assert tfm1.shape == (tfm1.outputs, tfm1.inputs) == (2, 1)
-    assert tfm1.args == ([TF1, TF2], (2, 1), s)
+    assert tfm1.args == ([TF1, TF2],)
     assert tfm1.var == s
 
-    tfm2 = TransferFunctionMatrix([-TF1, TF2], (2, 1), s)
+    tfm2 = TransferFunctionMatrix([-TF1, TF2])
     assert tfm2.shape == (tfm2.outputs, tfm2.inputs) == (2, 1)
-    assert tfm2.args == ([-TF1, TF2], (2, 1), s)
+    assert tfm2.args == ([-TF1, TF2],)
     assert tfm2.var == s
 
-    tfm3 = TransferFunctionMatrix([tf7], (1, 1), p)
+    tfm3 = TransferFunctionMatrix([tf7])
     assert tfm3.shape == (tfm3.outputs, tfm3.inputs) == (1, 1)
     assert tfm3.var == p
-    assert tfm3.args == ([tf7], (1, 1), p)
+    assert tfm3.args == ([tf7],)
 
-    tfm4 = TransferFunctionMatrix([TF3, tf5, tf6], (3, 1), s)
+    tfm4 = TransferFunctionMatrix([TF3, tf5, tf6])
     assert tfm4.shape == (tfm4.outputs, tfm4.inputs) == (3, 1)
-    assert tfm4.args == ([TF3, tf5, tf6], (3, 1), s)
+    assert tfm4.args == ([TF3, tf5, tf6],)
     assert tfm4.var == s
 
-    tfm5 = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]], (2, 2), s)
+    tfm5 = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]])
     assert tfm5.shape == (tfm5.outputs, tfm5.inputs) == (2, 2)
-    assert tfm5.args == ([[TF1, -TF2], [TF3, tf5]], (2, 2), s)
+    assert tfm5.args == ([[TF1, -TF2], [TF3, tf5]],)
 
-    tfm6 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, tf6, -tf6]], (2, 3), s)
+    tfm6 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, tf6, -tf6]])
     assert tfm6.shape == (tfm6.outputs, tfm6.inputs) == (2, 3)
-    assert tfm6.args == ([[TF1, TF2, TF3], [tf5, tf6, -tf6]], (2, 3), s)
+    assert tfm6.args == ([[TF1, TF2, TF3], [tf5, tf6, -tf6]],)
 
-    tfm7 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]], (3, 2), s)
+    tfm7 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]])
     assert tfm7.shape == (tfm7.outputs, tfm7.inputs) == (3, 2)
-    assert tfm7.args == ([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]], (3, 2), s)
+    assert tfm7.args == ([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]],)
 
-    raises(TypeError, lambda: TransferFunction(Matrix([1, 2, 3]), (1, 1), s))
-    raises(ValueError, lambda: TransferFunctionMatrix([TF1, TF2, tf4], (3, 1), s))
-    raises(ValueError, lambda: TransferFunctionMatrix([[TF1], [TF3, tf5]], (2, 2), s))
-    raises(TypeError, lambda: TransferFunctionMatrix([[TF1, TF2], [TF3, Matrix([1, 2])]], (2, 2), s))
-    raises(ValueError, lambda: TransferFunctionMatrix([[TF1, tf4], [TF3, tf5]], (2, 2), s))
+    raises(TypeError, lambda: TransferFunction(Matrix([1, 2, 3])))
+    raises(ValueError, lambda: TransferFunctionMatrix([TF1, TF2, tf4]))
+    raises(ValueError, lambda: TransferFunctionMatrix([[TF1], [TF3, tf5]]))
+    raises(TypeError, lambda: TransferFunctionMatrix([[TF1, TF2], [TF3, Matrix([1, 2])]]))
+    raises(ValueError, lambda: TransferFunctionMatrix([[TF1, tf4], [TF3, tf5]]))
 
 
 def test_TransferFunctionMatrix_functions():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
     tf6 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
 
-    tfm1 = TransferFunctionMatrix([TF1, TF2], (2, 1), s)
-    assert -tfm1 == TransferFunctionMatrix([-TF1, -TF2], (2, 1), s)
+    tfm1 = TransferFunctionMatrix([TF1, TF2])
+    assert -tfm1 == TransferFunctionMatrix([-TF1, -TF2])
 
-    tfm2 = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]], (2, 2), s)
-    assert -tfm2 == TransferFunctionMatrix([[-TF1, TF2], [-TF3, -tf5]], (2, 2), s)
+    tfm2 = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]])
+    assert -tfm2 == TransferFunctionMatrix([[-TF1, TF2], [-TF3, -tf5]])
 
-    tfm3 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, -TF1, -TF3]], (2, 3), s)
-    assert -tfm3 == TransferFunctionMatrix([[-TF1, -TF2, -TF3], [-tf5, TF1, TF3]], (2, 3), s)
+    tfm3 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, -TF1, -TF3]])
+    assert -tfm3 == TransferFunctionMatrix([[-TF1, -TF2, -TF3], [-tf5, TF1, TF3]])
 
-    tfm4 = TransferFunctionMatrix([TF1, TF2, TF3], (3, 1), s)
+    tfm4 = TransferFunctionMatrix([TF1, TF2, TF3])
     assert tfm4.is_proper
     assert not tfm4.is_strictly_proper
     assert not tfm4.is_biproper
 
-    tfm5 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]], (3, 2), s)
+    tfm5 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]])
     assert not tfm5.is_proper
     assert not tfm5.is_strictly_proper
     assert not tfm5.is_biproper
 
-    tfm6 = TransferFunctionMatrix([[TF1, TF2], [TF3, -TF3]], (2, 2), s)
+    tfm6 = TransferFunctionMatrix([[TF1, TF2], [TF3, -TF3]])
     assert tfm6.is_proper
     assert not tfm6.is_strictly_proper
     assert not tfm6.is_biproper
 
-    tfm7 = TransferFunctionMatrix([-TF1, -tf6], (2, 1), s)
+    tfm7 = TransferFunctionMatrix([-TF1, -tf6])
     assert not tfm7.is_proper
     assert not tfm7.is_strictly_proper
     assert not tfm7.is_biproper
@@ -703,13 +703,13 @@ def test_TransferFunctionMatrix_functions():
 
 def test_TransferFunctionMatrix_addition_and_subtraction():
     tf = TransferFunction(a0*p, a1*p**2 + a2*p - a0, p)
-    tfm1 = TransferFunctionMatrix([TF1, TF2], (2, 1), s)
-    tfm2 = TransferFunctionMatrix([-TF2, -TF1], (2, 1), s)
-    tfm3 = TransferFunctionMatrix([TF1, TF1], (2, 1), s)
-    tfm4 = TransferFunctionMatrix([tf], (1, 1), p)
-    tfm5 = TransferFunctionMatrix([TF2, TF1, TF3], (3, 1), s)
-    tfm6 = TransferFunctionMatrix([-TF1, TF2, -TF3], (3, 1), s)
-    tfm7 = TransferFunctionMatrix([TF2], (1, 1), s)
+    tfm1 = TransferFunctionMatrix([TF1, TF2])
+    tfm2 = TransferFunctionMatrix([-TF2, -TF1])
+    tfm3 = TransferFunctionMatrix([TF1, TF1])
+    tfm4 = TransferFunctionMatrix([tf])
+    tfm5 = TransferFunctionMatrix([TF2, TF1, TF3])
+    tfm6 = TransferFunctionMatrix([-TF1, TF2, -TF3])
+    tfm7 = TransferFunctionMatrix([TF2])
 
     # addition
     assert tfm1 + tfm2 == Parallel(tfm1, tfm2)
@@ -745,9 +745,9 @@ def test_TransferFunctionMatrix_addition_and_subtraction():
 
 def test_TransferFunctionMatrix_multiplication():
     tf = TransferFunction(a0*s**2, a1*s + a2, s)
-    tfm1 = TransferFunctionMatrix([[TF1, TF2], [TF3, tf]], (2, 2), s)
-    tfm2 = TransferFunctionMatrix([[-TF3, -tf], [TF2, TF1]], (2, 2), s)
-    tfm3 = TransferFunctionMatrix([TF1, TF2, TF3], (3, 1), s)
+    tfm1 = TransferFunctionMatrix([[TF1, TF2], [TF3, tf]])
+    tfm2 = TransferFunctionMatrix([[-TF3, -tf], [TF2, TF1]])
+    tfm3 = TransferFunctionMatrix([TF1, TF2, TF3])
 
     assert tfm1*tfm2 == Series(tfm1, tfm2)
     assert -tfm2*tfm1 == Series(-tfm2, tfm1)

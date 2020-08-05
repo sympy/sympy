@@ -588,7 +588,21 @@ class Series(Basic):
     __radd__ = __add__
 
     def __sub__(self, other):
-        return self + (-other)
+        if isinstance(other, (TransferFunction, Series)):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
+
+            return Parallel(self, -other)
+        elif isinstance(other, Parallel):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
+            arg_list = [-i for i in list(other.args)]
+
+            return Parallel(self, *arg_list)
+        else:
+            raise ValueError("This transfer function expression is invalid.")
 
     def __rsub__(self, other):
         return -self + other
@@ -1181,39 +1195,39 @@ class Feedback(Basic):
 
 class TransferFunctionMatrix(Basic):
 
-    def __new__(cls, arg, shape, var):
+    def __new__(cls, arg):
         if not (isinstance(arg, list) and (all(isinstance(i, list) for i in arg) or
-            all(isinstance(i, (TransferFunction, Series, Parallel)) for i in arg))
-            and isinstance(var, Symbol) and isinstance(shape, tuple)):
-            raise TypeError("Unsupported type for arguments of TransferFunctionMatrix.")
+            all(isinstance(i, TransferFunction) for i in arg))):
+            raise TypeError("Unsupported type for argument of TransferFunctionMatrix.")
 
-        if all(isinstance(i, (TransferFunction, Parallel, Series)) for i in arg):
-            # TFM with 1st argument of the type - [tf1, tf2, tf3, ...]
-            if not all(elem.var == var for elem in arg):
+        obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
+        if all(isinstance(i, TransferFunction) for i in arg):
+            obj._var = arg[0].var
+            if not all(elem.var == obj._var for elem in arg):
                 raise ValueError("All transfer functions should use the same complex"
-                    " variable (var) of the Laplace transform.")
-            if not (shape[0] == len(arg) and shape[1] == 1):
-                raise ValueError("Shape must be equal to ({0}, {1}).".format(len(arg), 1))
-
+                    " variable of the Laplace transform.")
+            obj._inputs, obj._outputs = 1, len(arg)
         else:
-            # TFM with 1st argument of the type - [[tf1, tf2, ...], [tf3, tf4, ...], ...]
-            if not (shape[0] == len(arg) and shape[1] == len(arg[0])):
-                raise ValueError("Shape must be equal to ({0}, {1}).".format(len(arg), len(arg[0])))
-            if not all(len(l) == shape[1] for l in arg):
-                raise ValueError("Length of all the lists in the first argument of"
+            obj._inputs, obj._outputs = len(arg[0]), len(arg)
+            if not all(len(l) == obj._inputs for l in arg):
+                raise ValueError("Length of all the lists in the argument of"
                     " TransferFunctionMatrix should be equal.")
             if not all(isinstance(arg[row][col], (TransferFunction, Series, Parallel))
                 for col in range(shape[1]) for row in range(shape[0])):
                 raise TypeError("All the lists in the first argument of TransferFunctionMatrix"
+            if not all(isinstance(arg[row][col], TransferFunction)
+                for col in range(obj._inputs) for row in range(obj._outputs)):
+                raise TypeError("All the lists in the argument of TransferFunctionMatrix"
                     " only support transfer functions in them.")
-            if not all(arg[row][col].var == var
-                for col in range(shape[1]) for row in range(shape[0])):
-                raise ValueError("All transfer functions should use the same complex"
-                    " variable (var) of the Laplace transform.")
 
-        obj = super(TransferFunctionMatrix, cls).__new__(cls, arg, shape, var)
-        obj._var, obj._shape = var, shape
-        obj._outputs, obj._inputs = obj._shape
+            obj._var = arg[0][0].var
+            if not all(arg[row][col].var == obj._var
+                for col in range(obj._inputs) for row in range(obj._outputs)):
+                raise ValueError("All transfer functions should use the same complex"
+                    " variable of the Laplace transform.")
+        obj._shape = (obj._outputs, obj._inputs)
+        # No. of columns = # of inputs
+        # No. of rows = # of outputs
         return obj
 
     @property
@@ -1265,7 +1279,33 @@ class TransferFunctionMatrix(Basic):
         return self + other
 
     def __sub__(self, other):
-        return self + (-other)
+        if isinstance(other, (TransferFunctionMatrix, Series)):
+            if isinstance(other, Series):
+                if other.is_SISO:
+                    raise ValueError("All the arguments of Series must be either"
+                        " TransferFunctionMatrix or Parallel objects.")
+            if not self.shape == other.shape:
+                raise ShapeError("Shapes of operands are not compatible for subtraction.")
+            if not self.var == other.var:
+                raise ValueError("All the TransferFunctionMatrix objects should use the same"
+                    " complex variable of the Laplace transform.")
+            return Parallel(self, -other)
+
+        elif isinstance(other, Parallel):
+            if other.is_SISO:
+                raise ValueError("All the arguments of Parallel must be either TransferFunctionMatrix"
+                    " or Series objects.")
+            if not self.shape == other.shape:
+                raise ShapeError("Shapes of operands are not compatible for subtraction.")
+            if not self.var == other.var:
+                raise ValueError("All the TransferFunctionMatrix objects should use the same"
+                    " complex variable of the Laplace transform.")
+            arg_list = [-i for i in list(other.args)]
+            return Parallel(self, *arg_list)
+
+        else:
+            raise ValueError("{} cannot be subtracted from a TransferFunctionMatrix."
+                .format(type(other)))
 
     def __rsub__(self, other):
         return -self + other
@@ -1302,7 +1342,7 @@ class TransferFunctionMatrix(Basic):
             neg_args = [-col for col in self.args[0]]
         else:
             neg_args = [[-col for col in row] for row in self.args[0]]
-        return TransferFunctionMatrix(neg_args, self.shape, self.var)
+        return TransferFunctionMatrix(neg_args)
 
     @property
     def is_proper(self):
