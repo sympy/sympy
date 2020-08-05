@@ -42,20 +42,21 @@ class Loop(Quasigroup):
     >>> op = LoopOp()
 
     >>> L = Loop('L', (S,), (op,))
+    >>> L_op = L.operator
 
     Left division and right division exist.
 
-    >>> op_ld, op_rd = op.left_division(), op.right_division()
-    >>> op_ld(a, b)
+    >>> L_ld, L_rd = L.left_division, L.right_division
+    >>> L_ld(a, b)
     a \ b
-    >>> op_rd(a, b)
+    >>> L_rd(a, b)
     a / b
 
     Identity exists.
 
-    >>> op(a, e, evaluate=True)
+    >>> L_op(a, e, evaluate=True)
     a
-    >>> op(e, b, evaluate=True)
+    >>> L_op(e, b, evaluate=True)
     b
 
     """

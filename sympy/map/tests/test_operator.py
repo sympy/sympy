@@ -132,11 +132,11 @@ def test_BinaryOperator():
 
 def test_LeftDivision():
     # left divisibility can be assumed
-    raises(TypeError, lambda: f.left_division())
+    raises(TypeError, lambda: f.left_division_operator())
     with assuming(Q.left_divisible(f)):
-        f.left_division()   # not raise error
+        f.left_division_operator()   # not raise error
 
-    h1_ld = h1.left_division()
+    h1_ld = h1.left_division_operator()
     # domain and codomain is preserved
     assert h1_ld.domain == h1.domain
     assert h1_ld.codomain == h1.codomain
@@ -158,11 +158,11 @@ def test_LeftDivision():
 
 def test_RightDivision():
     # right divisibility can be assumed
-    raises(TypeError, lambda: f.right_division())
+    raises(TypeError, lambda: f.right_division_operator())
     with assuming(Q.right_divisible(f)):
-        f.right_division()   # not raise error
+        f.right_division_operator()   # not raise error
 
-    h2_rd = h2.right_division()
+    h2_rd = h2.right_division_operator()
     # domain and codomain is preserved
     assert h2_rd.domain == h2.domain
     assert h2_rd.codomain == h2.codomain

@@ -16,8 +16,10 @@ class AlgebraicStructure(Set):
 
     Algebraic structure is a mathematical structure which consists of one or more
     nonempty sets, and a collection of operations on these sets [1]. The operations
-    must be closed to the set, i.e. $ f: \mathbb{S}^{n} \rightarrow \mathbb{S} $. where
+    must be closed to the set, i.e. $ f: \mathbb{S}^{n} \rightarrow \mathbb{S} $, where
     $f$ is the operator and $\mathbb{S}$ is the set.
+    If every set of structure $B$ is subset of any set of structure $A$, and every operator
+    of $B$ is restricted operator of $A$, $B$ is substructure of $A$.
 
     Examples
     ========
@@ -114,25 +116,6 @@ class AlgebraicStructure(Set):
                 "%s is not closed on the structure." % o
                 )
 
-
-            # # check domain
-            # if n == 1:
-            #     # special case: domain can be S or S**1
-            #     if (
-            #         not o.domain.is_superset(self.domain**n) and
-            #         not o.domain.is_superset(self.domain)
-            #     ) :
-            #         raise TypeError(
-            #     "%s is not closed on the structure." % o
-            #     )
-
-            # else:
-            #     if not o.domain.is_superset(self.domain**n):
-            #         raise TypeError(
-            #     "%s is not closed on the structure." % o
-            #     )
-
-            # check codomain
             if not o.codomain.is_subset(self.domain):
                 raise TypeError(
                 "%s is not closed on the structure." % o

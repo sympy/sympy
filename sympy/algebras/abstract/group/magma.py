@@ -46,14 +46,15 @@ class Magma(AlgebraicStructure):
     >>> a in M and b in M
     True
 
-    >>> op(a, b)
+    >>> M_op = M.operator
+    >>> M_op(a, b)
     a * b
-    >>> op(a, b) in M
+    >>> M_op(a, b) in M
     True
 
     Operation of magma does not need to be associative.
 
-    >>> op(a, op(b, c), evaluate=True)
+    >>> M_op(a, op(b, c), evaluate=True)
     a * (b * c)
 
     """
@@ -66,3 +67,7 @@ class Magma(AlgebraicStructure):
 
         obj = super().__new__(cls, name, sets, operators)
         return obj
+
+    @property
+    def operator(self):
+        return self.operators[0]

@@ -8,7 +8,7 @@ __all__ = [
     'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'RestrictedMap',
     'AppliedMap',
     'isappliedmap',
-    'BinaryOperator', 'LeftDivision', 'RightDivision',
+    'BinaryOperator', 'LeftDivisionOperator', 'RightDivisionOperator',
     'InverseOperator', 'ExponentOperator',
     'InverseElement', 'ExponentElement',
     'FunctionSet', 'function_set',
@@ -26,7 +26,7 @@ from .map import (
     isappliedmap,
 )
 from .operator import (
-    BinaryOperator, LeftDivision, RightDivision,
+    BinaryOperator, LeftDivisionOperator, RightDivisionOperator,
     InverseOperator, ExponentOperator,
     InverseElement, ExponentElement,
 )

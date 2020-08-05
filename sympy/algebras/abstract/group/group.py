@@ -47,37 +47,35 @@ class Group(Monoid, Loop):
     >>> op = GroupOp()
 
     >>> G = Group('G', (S,), (op,))
+    >>> G_op = G.operator
 
     Operation of group is associative.
 
-    >>> op(a, op(b, c), evaluate=True)
+    >>> G_op(a, op(b, c), evaluate=True)
     a * b * c
 
     Exponent is defined.
 
-    >>> op(a, a, evaluate=True)
+    >>> G_op(a, a, evaluate=True)
     a**2
 
     Operation of group has identity.
 
-    >>> op(a, op(e, b), evaluate=True)
+    >>> G_op(a, G_op(e, b), evaluate=True)
     a * b
 
     Operation of group has inverse element.
 
-    >>> op(a, G.inverse(a), evaluate=True)
+    >>> G_op(a, G.inverse(a), evaluate=True)
     e
-    >>> op(G.inverse(b), b, evaluate=True)
+    >>> G_op(G.inverse(b), b, evaluate=True)
     e
 
     """
     @property
-    def inverse_operator(self):
+    def inverse(self):
         op = self.operators[0]
         return op.inverse_operator()
-
-    def inverse(self, element):
-        return self.inverse_operator(element, evaluate=True)
 
 class AbelianGroup(Group):
     """
@@ -119,10 +117,11 @@ class AbelianGroup(Group):
     >>> op = AbelianGroupOp()
 
     >>> G = AbelianGroup('G', (S,), (op,))
+    >>> G_op = G.operator
 
     Operation of abelian group is similar to natural scalar operations.
 
-    >>> op(a, b, c, G.inverse(a), b, evaluate=True)
+    >>> G_op(a, b, c, G.inverse(a), b, evaluate=True)
     b**2 * c
 
     """

@@ -42,18 +42,19 @@ class LeftQuasigroup(Magma):
     >>> op = Op()
 
     >>> Q = LeftQuasigroup('Q', (S,), (op,))
+    >>> Q_op = Q.operator
 
     Left division exists.
 
-    >>> op_ld = op.left_division()
-    >>> op_ld(a, b)
+    >>> Q_ld = Q.left_division
+    >>> Q_ld(a, b)
     a \ b
 
     Divisions can be cancelled.
 
-    >>> op(a, op_ld(a, b), evaluate=True)
+    >>> Q_op(a, Q_ld(a, b), evaluate=True)
     b
-    >>> op_ld(a, op(a, b), evaluate=True)
+    >>> Q_ld(a, Q_op(a, b), evaluate=True)
     b
 
     """
@@ -64,6 +65,10 @@ class LeftQuasigroup(Magma):
             raise TypeError("Left division of %s does not exist." % op)
 
         return super().__new__(cls, name, sets, operators)
+
+    @property
+    def left_division(self):
+        return self.operator.left_division_operator()
 
 class RightQuasigroup(Magma):
     r"""
@@ -102,18 +107,19 @@ class RightQuasigroup(Magma):
     >>> op = Op()
 
     >>> Q = RightQuasigroup('Q', (S,), (op,))
+    >>> Q_op = Q.operator
 
     Left division exists.
 
-    >>> op_rd = op.right_division()
-    >>> op_rd(a, b)
+    >>> Q_rd = Q.right_division
+    >>> Q_rd(a, b)
     a / b
 
     Divisions can be cancelled.
 
-    >>> op(op_rd(a, b), b, evaluate=True)
+    >>> Q_op(Q_rd(a, b), b, evaluate=True)
     a
-    >>> op_rd(op(a, b), b, evaluate=True)
+    >>> Q_rd(Q_op(a, b), b, evaluate=True)
     a
 
     """
@@ -124,6 +130,10 @@ class RightQuasigroup(Magma):
             raise TypeError("Left division of %s does not exist." % op)
 
         return super().__new__(cls, name, sets, operators)
+
+    @property
+    def right_division(self):
+        return self.operator.right_division_operator()
 
 class Quasigroup(LeftQuasigroup, RightQuasigroup):
     r"""
@@ -162,24 +172,27 @@ class Quasigroup(LeftQuasigroup, RightQuasigroup):
     >>> op = QuasigroupOp()
 
     >>> Q = Quasigroup('Q', (S,), (op,))
+    >>> Q_op = Q.operator
 
     Left division and right division exist.
 
-    >>> op_ld, op_rd = op.left_division(), op.right_division()
-    >>> op_ld(a, b)
+    >>> Q_ld, Q_rd = Q.left_division, Q.right_division
+    >>> Q_ld(a, b)
     a \ b
-    >>> op_rd(a, b)
+    >>> Q_rd(a, b)
     a / b
 
     Divisions can be cancelled.
 
-    >>> op(a, op_ld(a, b), evaluate=True)
+    >>> Q_op(a, Q_ld(a, b), evaluate=True)
     b
-    >>> op_ld(a, op(a, b), evaluate=True)
+    >>> Q_ld(a, Q_op(a, b), evaluate=True)
     b
-    >>> op(op_rd(a, b), b, evaluate=True)
+    >>> Q_op(Q_rd(a, b), b, evaluate=True)
     a
-    >>> op_rd(op(a, b), b, evaluate=True)
+    >>> Q_rd(Q_op(a, b), b, evaluate=True)
     a
 
     """
+    # All attributes are inherited
+    pass

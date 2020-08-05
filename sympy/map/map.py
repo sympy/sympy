@@ -161,6 +161,10 @@ class Map(Expr):
         return composite_op(other, self, evaluate=True)
 
     def inverse(self, evaluate=False):
+        """
+        Returns the inverse function of *self*.
+
+        """
         return InverseMap(self, evaluate=evaluate)
     inv = inverse
 
@@ -601,6 +605,5 @@ def isappliedmap(arg, maps):
                 if arg.map.is_restriction(m):
                     return True
     return False
-
 
 from .composite import function_set, composite_op

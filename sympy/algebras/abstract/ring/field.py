@@ -21,7 +21,7 @@ class Field(CommutativeRing):
 
         add, mul = operators
         obj._add_group = AbelianGroup(name, sets, (add,))
-        obj._mul_group = AbelianGroup(name, sets, (mul,))
+        obj._mul_monoid = obj._mul_group = AbelianGroup(name, sets, (mul,))
         return obj
 
     @property

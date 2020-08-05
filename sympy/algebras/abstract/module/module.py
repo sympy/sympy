@@ -49,7 +49,6 @@ class Module(AlgebraicStructure):
     @property
     def ring(self):
         return self.args[1].args[0]
-    scalars = ring
 
     @property
     def group(self):

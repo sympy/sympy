@@ -63,7 +63,7 @@ class Ring(AlgebraicStructure):
 
         obj = super().__new__(cls, name, sets, operators)
 
-        # this automatically checks the operators
+        # this is in __new__ to automatically checks the operators
         obj._add_group = AbelianGroup(name, sets, (add,))
         obj._mul_monoid = Monoid(name, sets, (mul,))
         return obj
@@ -84,13 +84,12 @@ class Ring(AlgebraicStructure):
     def mul_monoid(self):
         return self._mul_monoid
 
-    def addition(self, *args, evaluate=False):
+    def add(self, *args, evaluate=False):
         return self.add_op(*args, mul_op=self.mul_op, evaluate=evaluate)
-    add = addition
 
-    def multiplication(self, *args, evaluate=False):
+    def multiply(self, *args, evaluate=False):
         return self.mul_op(*args, add_op=self.add_op, evaluate=evaluate)
-    mul = multiplication
+    mul = multiply
 
     def distribute(self, mul, evaluate=False):
         return mul.distribute(add_op=self.add_op, evaluate=evaluate)

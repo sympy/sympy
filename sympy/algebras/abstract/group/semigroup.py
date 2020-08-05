@@ -41,11 +41,12 @@ class Semigroup(Magma):
     ...     is_associative = True
     >>> op = SemigroupOp()
 
-    >>> G = Semigroup('G', (S,), (op,))
+    >>> SG = Semigroup('SG', (S,), (op,))
+    >>> SG_op = SG.operator
 
     Operation of semigroup is associative.
 
-    >>> op(a, op(b, c), evaluate=True)
+    >>> SG_op(a, SG_op(b, c), evaluate=True)
     a * b * c
 
     """

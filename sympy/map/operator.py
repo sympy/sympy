@@ -5,7 +5,7 @@ from sympy.core.sympify import _sympify
 from .map import Map, AppliedMap, IdentityMap, isappliedmap
 
 __all__ = [
-    'BinaryOperator', 'LeftDivision', 'RightDivision',
+    'BinaryOperator', 'LeftDivisionOperator', 'RightDivisionOperator',
     'InverseOperator', 'ExponentOperator',
     'InverseElement', 'ExponentElement',
 ]
@@ -221,23 +221,23 @@ class BinaryOperator(Map):
             newseq.append(o)
         return newseq
 
-    def left_division(self):
+    def left_division_operator(self):
         """
         Return left division operator with respect to *self*
         """
-        return LeftDivision(self)
+        return LeftDivisionOperator(self)
 
-    def right_division(self):
+    def right_division_operator(self):
         """
         Return right division operator with respect to *self*
         """
-        return RightDivision(self)
+        return RightDivisionOperator(self)
 
     def is_left_division(self, other):
         """
         Return ``True`` if *self* is left division operator of *other*.
         """
-        if isinstance(self, LeftDivision) and self.base_op == other:
+        if isinstance(self, LeftDivisionOperator) and self.base_op == other:
             return True
         return False
 
@@ -245,7 +245,7 @@ class BinaryOperator(Map):
         """
         Return ``True`` if *self* is right division operator of *other*.
         """
-        if isinstance(self, RightDivision) and self.base_op == other:
+        if isinstance(self, RightDivisionOperator) and self.base_op == other:
             return True
         return False
 
@@ -363,7 +363,7 @@ class BinaryOperator(Map):
             seq = self.collect_iterated(seq)
         return seq
 
-class LeftDivision(BinaryOperator):
+class LeftDivisionOperator(BinaryOperator):
     r"""
     Left division operator, derived from a binary operation.
 
@@ -388,7 +388,7 @@ class LeftDivision(BinaryOperator):
     ...     name = '*'
     ...     is_left_divisible = True
     >>> op = Op()
-    >>> op_ld = op.left_division()
+    >>> op_ld = op.left_division_operator()
 
     >>> op(b, op_ld(b, a))
     b * (b \ a)
@@ -430,7 +430,7 @@ class LeftDivision(BinaryOperator):
             return base_op(inv_divisor, dividend, **kwargs)
         return super().apply(divisor, dividend, **kwargs)
 
-class RightDivision(BinaryOperator):
+class RightDivisionOperator(BinaryOperator):
     r"""
     Right division operator, derived from a binary operation.
 
@@ -455,7 +455,7 @@ class RightDivision(BinaryOperator):
     ...     name = '*'
     ...     is_right_divisible = True
     >>> op = Op()
-    >>> op_rd = op.right_division()
+    >>> op_rd = op.right_division_operator()
 
     >>> op(op_rd(a, b), b)
     (a / b) * b

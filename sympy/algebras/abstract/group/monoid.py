@@ -43,15 +43,16 @@ class Monoid(Semigroup):
     >>> op = MonoidOp()
 
     >>> M = Monoid('M', (S,), (op,))
+    >>> M_op = M.operator
 
     Operation of monoid is associative.
 
-    >>> op(a, op(b, c), evaluate=True)
+    >>> M_op(a, op(b, c), evaluate=True)
     a * b * c
 
     Operation of monoid has identity.
 
-    >>> op(a, op(e, b), evaluate=True)
+    >>> M_op(a, op(e, b), evaluate=True)
     a * b
 
     """

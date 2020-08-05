@@ -175,4 +175,4 @@ class Multiplication(AppliedMap):
 
 scalar_mul = MultiplicationOperator(S.Complexes**2, S.Complexes, S.One)
 scalar_pow = scalar_mul.exponent_operator()
-scalar_divide = scalar_mul.right_division()
+scalar_divide = scalar_mul.right_division_operator()

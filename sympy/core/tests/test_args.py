@@ -3103,19 +3103,19 @@ def test_sympy__map__composite__IteratedMap():
 def test_sympy__map__operator__BinaryOperator():
     pass
 
-def test_sympy__map__operator__LeftDivision():
-    from sympy.map import BinaryOperator, LeftDivision
+def test_sympy__map__operator__LeftDivisionOperator():
+    from sympy.map import BinaryOperator, LeftDivisionOperator
     class Op(BinaryOperator):
         is_left_divisible = True
     op = Op()
-    assert _test_args(LeftDivision(op))
+    assert _test_args(LeftDivisionOperator(op))
 
-def test_sympy__map__operator__RightDivision():
-    from sympy.map import BinaryOperator, RightDivision
+def test_sympy__map__operator__RightDivisionOperator():
+    from sympy.map import BinaryOperator, RightDivisionOperator
     class Op(BinaryOperator):
         is_right_divisible = True
     op = Op()
-    assert _test_args(RightDivision(op))
+    assert _test_args(RightDivisionOperator(op))
 
 def test_sympy__map__operator__InverseOperator():
     from sympy.map import BinaryOperator, InverseOperator
