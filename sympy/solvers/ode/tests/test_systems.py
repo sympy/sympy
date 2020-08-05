@@ -1297,6 +1297,16 @@ def test_higher_order_to_first_order():
     assert dsolve(eq1) == sol1
     assert checksysodesol(eq1, sol1) == (True, [0, 0])
 
+    eq2 = (Eq(diff(x(t),t,t) - 9*diff(y(t),t) + 7*x(t),0), Eq(diff(y(t),t,t) + 9*diff(x(t),t) + 7*y(t),0))
+    sol2 = [Eq(x(t), (Rational(9, 14) - sqrt(109)/14)*(-C1*sin(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))) + C2*
+               cos(t*sqrt(9*sqrt(109)/2 + Rational(95, 2)))) + (Rational(9, 14) + sqrt(109)/14)*(-C3*sin(t*sqrt(Rational(95, 2)
+               - 9*sqrt(109)/2)) + C4*cos(t*sqrt(Rational(95, 2) - 9*sqrt(109)/2)))),
+            Eq(y(t), sqrt(2)*(C1*cos(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))) + C2*sin(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))))/sqrt(9*
+                sqrt(109) + 95) + sqrt(2)*(C3*cos(t*sqrt(Rational(95, 2) - 9*sqrt(109)/2)) + C4*sin(t*sqrt(Rational(95, 2)
+                - 9*sqrt(109)/2)))/sqrt(95 - 9*sqrt(109)))]
+    assert dsolve(eq2) == sol2
+    assert checksysodesol(eq2, sol2) == (True, [0, 0])
+
     # Note: Solution to be updated after _extract_funcs is fixed
     eq3 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
     # sol3 = [Eq(x(t), C1 + Integral(9*sqrt(133)*C2*exp(-t**2/2 + sqrt(133)*t**2/2)/266 - 9*sqrt(133)*C2*exp(-sqrt(133)*t**2/2
@@ -2076,24 +2086,3 @@ def test_higher_order1_slow1_check():
 
     eq, sol = _higher_order_slow1()
     assert checksysodesol(eq, sol) == (True, [0, 0])
-
-
-# Note: Test case fails not because of higher order reduction
-# but due to type 1 solver's incorrect answer.
-# Given a different order, the solution works.
-# A specific test case will be added soon if it isn't
-# fixed in the current PR.
-@XFAIL
-def test_higher_order_type1_fail():
-    x, y = symbols("x y", cls=Function)
-    t = symbols('t')
-
-    eq2 = (Eq(diff(x(t),t,t) - 9*diff(y(t),t) + 7*x(t),0), Eq(diff(y(t),t,t) + 9*diff(x(t),t) + 7*y(t),0))
-    sol2 = [Eq(x(t), (Rational(9, 14) - sqrt(109)/14)*(-C1*sin(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))) + C2*
-               cos(t*sqrt(9*sqrt(109)/2 + Rational(95, 2)))) + (Rational(9, 14) + sqrt(109)/14)*(-C3*sin(t*sqrt(Rational(95, 2)
-               - 9*sqrt(109)/2)) + C4*cos(t*sqrt(Rational(95, 2) - 9*sqrt(109)/2)))),
-            Eq(y(t), sqrt(2)*(C1*cos(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))) + C2*sin(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))))/sqrt(9*
-                sqrt(109) + 95) + sqrt(2)*(C3*cos(t*sqrt(Rational(95, 2) - 9*sqrt(109)/2)) + C4*sin(t*sqrt(Rational(95, 2)
-                - 9*sqrt(109)/2)))/sqrt(95 - 9*sqrt(109)))]
-    assert dsolve(eq2) == sol2
-    assert checksysodesol(eq2, sol2) == (True, [0, 0])
