@@ -11,7 +11,7 @@ from sympy.sets import ProductSet, FiniteSet
 __all__ = [
     'Map', 'UndefinedMap', 'RestrictedMap', 'InverseMap', 'IdentityMap',
     'AppliedMap',
-    'isapplied'
+    'isappliedmap'
 ]
 
 @sympify_method_args
@@ -564,7 +564,7 @@ class AppliedMap(Expr):
             return self.map._eval_as_base_exp(*self.arguments)
         return self, S.One
 
-def isapplied(arg, maps):
+def isappliedmap(arg, maps):
     """
     Return ``True`` if *arg* is unevaluated applied result of
     *maps* (if *maps* is ``Map``), or one of *maps* (if *maps* is iterable)
@@ -579,15 +579,15 @@ def isapplied(arg, maps):
     Examples
     ========
 
-    >>> from sympy import S, Map, isapplied
+    >>> from sympy import S, Map, isappliedmap
     >>> f = Map('f')
     >>> g = Map('g')
 
-    >>> isapplied(f(1), f)
+    >>> isappliedmap(f(1), f)
     True
-    >>> isapplied(f(1), g)
+    >>> isappliedmap(f(1), g)
     False
-    >>> isapplied(f(1), (f, g))
+    >>> isappliedmap(f(1), (f, g))
     True
 
     """

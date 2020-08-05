@@ -39,7 +39,7 @@ class UndefinedSet(Set):
     True
 
     """
-    def __new__(cls, name, supersets=()):
+    def __new__(cls, name, supersets={}):
         if not isinstance(name, Str):
             name = Str(name)
         supersets = FiniteSet(*[_sympify(s) for s in supersets])

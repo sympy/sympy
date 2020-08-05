@@ -4,7 +4,7 @@ from functools import cmp_to_key
 import itertools
 from sympy.core import Basic, S, Tuple
 from sympy.core.sympify import _sympify
-from .map import AppliedMap, isapplied
+from .map import AppliedMap, isappliedmap
 from .operator import BinaryOperator
 
 __all__ = [
@@ -117,7 +117,7 @@ class MultiplicationOperator(BinaryOperator):
         # discouraged in core/parameters
         terms = []
         for o in seq:
-            if isapplied(o, add_op):
+            if isappliedmap(o, add_op):
                 terms.append(o.arguments)
             else:
                 terms.append((o,))
@@ -148,7 +148,7 @@ class Multiplication(AppliedMap):
         return self.func(self.map, args)
 
     def as_coeff_Mul(self, rational=False, mul_op=None):
-        if mul_op is None or isapplied(self, mul_op):
+        if mul_op is None or isappliedmap(self, mul_op):
             coeff, args = self.arguments[0], self.arguments[1:]
             if coeff.is_Number:
                 if not rational or coeff.is_Rational:

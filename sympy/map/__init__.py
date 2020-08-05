@@ -7,7 +7,7 @@ Includes any maps such as function, differential operator, etc.
 __all__ = [
     'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'RestrictedMap',
     'AppliedMap',
-    'isapplied',
+    'isappliedmap',
     'BinaryOperator', 'LeftDivision', 'RightDivision',
     'InverseOperator', 'ExponentOperator',
     'InverseElement', 'ExponentElement',
@@ -23,7 +23,7 @@ __all__ = [
 from .map import (
     Map, UndefinedMap, InverseMap, IdentityMap, RestrictedMap,
     AppliedMap,
-    isapplied,
+    isappliedmap,
 )
 from .operator import (
     BinaryOperator, LeftDivision, RightDivision,
