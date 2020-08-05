@@ -202,7 +202,10 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 raise OSError(
                     "No viewers found for '%s' output format." % output)
     else:
-        if viewer == "StringIO":
+        if viewer == "file":
+            if filename is None:
+                raise ValueError("filename has to be specified if viewer=\"file\"")
+        elif viewer == "StringIO":
             viewer = "BytesIO"
             if outputbuffer is None:
                 raise ValueError("outputbuffer has to be a BytesIO "
