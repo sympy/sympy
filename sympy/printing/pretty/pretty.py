@@ -2781,7 +2781,8 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_InverseMap(self, e, print_domains=True):
-        pform = self._print(e.base, print_domains=False)**self._print(-1)
+        pretty_base = self.parenthesize(e.base, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        pform = pretty_base**self._print(-1)
         if print_domains:
             pform = self._helper_print_domain(e, pform)
         return pform
@@ -2792,50 +2793,69 @@ class PrettyPrinter(Printer):
             pform = self._helper_print_domain(e, pform)
         return pform
 
-    def _print_CompositeMap(self, e, print_domains=True):
-        if self._use_unicode:
-            ring_op = ' ' + U('RING OPERATOR') + ' '
-            pform = self._print_seq(e.args, delimiter=ring_op, kwargs={'print_domains':False})
-        else:
-            pform = prettyForm(str(e))
-        if print_domains:
-            pform = self._helper_print_domain(e, pform)
-        return pform
+    def _print_AppliedMap(self, e, print_domains=True):
+        from sympy.map import BinaryOperator, Map
 
-    def _print_IteratedMap(self, e, print_domains=True):
-        pform = self._print(e.base, print_domains=False)**self._print(e.iternum)
-        if print_domains:
-            pform = self._helper_print_domain(e, pform)
-        return pform
-
-    def _print_AppliedMap(self, e):
-        from sympy.map.operator import BinaryOperator
-        prettyMap = self.parenthesize(e.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
+        prettyMap = self.parenthesize(e.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
 
         if isinstance(e.map, BinaryOperator):
             infix = ' ' + str(prettyMap) + ' '
-            return self._print_seq(
-                    e.arguments, None, None, infix,
-                    lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"]
-                )
 
-        prettyArgs = self._print_seq(e.arguments, delimiter=', ')
-        prettyArgs = prettyForm(*prettyArgs.parens())
+            args = []
+            for a in e.arguments:
+                if isinstance(a, Map):
+                    args.append(self.parenthesize(a, PRECEDENCE['Mul'], kwargs={'print_domains':False}))
+                else:
+                    args.append(self.parenthesize(a, PRECEDENCE['Mul']))
+            pform = None
+            for item in args:
+                if pform is None:
+                    pform = item
+                else:
+                    pform = prettyForm(*stringPict.next(pform, infix))
+                    pform = prettyForm(*stringPict.next(pform, item))
 
-        pform = prettyForm(binding=prettyForm.FUNC, *prettyForm.next(prettyMap, prettyArgs))
-        pform.prettyFunc = prettyMap
-        pform.prettyArgs = prettyArgs
+        else:
+            args = []
+            for a in e.arguments:
+                if isinstance(a, Map):
+                    args.append(self.parenthesize(a, PRECEDENCE['Mul'], kwargs={'print_domains':False}))
+                else:
+                    args.append(self.parenthesize(a, PRECEDENCE['Mul']))
+            prettyArgs = None
+            for item in args:
+                if prettyArgs is None:
+                    prettyArgs = item
+                else:
+                    prettyArgs = prettyForm(*stringPict.next(prettyArgs, ', '))
+                    prettyArgs = prettyForm(*stringPict.next(prettyArgs, item))
+            prettyArgs = prettyForm(*prettyArgs.parens())
+            pform = prettyForm(binding=prettyForm.FUNC, *prettyForm.next(prettyMap, prettyArgs))
+            pform.prettyFunc = prettyMap
+            pform.prettyArgs = prettyArgs
+
+        if isinstance(e, Map) and print_domains:
+            pform = self._helper_print_domain(e, pform)
         return pform
 
     def _print_InverseElement(self, e):
-        pretty_base = self._print(e.arguments[0])
+        pretty_base = self.parenthesize(e.arguments[0], PRECEDENCE['Pow'])
         return pretty_base**prettyForm('-1')
 
-    def _print_ExponentElement(self, e):
+    def _print_ExponentElement(self, e, print_domains=True):
+        from sympy.map import Map
+
         base, exp = e.as_base_exp(e.map.base_op)
-        pretty_base = self._print(base)
+        if isinstance(base, Map):
+            pretty_base = self.parenthesize(base, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        else:
+            pretty_base = self.parenthesize(base, PRECEDENCE['Pow'])
         pretty_exp = self._print(exp)
-        return pretty_base**pretty_exp
+        pform = pretty_base**pretty_exp
+
+        if isinstance(e, Map) and print_domains:
+            pform = self._helper_print_domain(e, pform)
+        return pform
 
     def _print_AlgebraicStructure(self, e):
         name = e.name.name

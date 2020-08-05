@@ -7264,6 +7264,7 @@ def test_map():
     )
 
     f = Map(name='f')
+    g = Map(name='g')
     assert upretty(f) == 'f : 𝕌 → 𝕌'
     assert pretty(f(x)) == "f(x)"
 
@@ -7273,7 +7274,7 @@ def test_map():
 
     # Inverse map
     assert upretty(f.inv()) == ' -1        \nf   : 𝕌 → 𝕌'
-    assert pretty(f.inv()(x)) == ' -1   \nf  (x)'
+    assert upretty(f.inv()(x)) == '⎛ -1⎞   \n⎝f  ⎠(x)'
 
     # Identity map
     Id = IdentityMap(domain=S.Reals)
@@ -7281,12 +7282,12 @@ def test_map():
     assert pretty(Id(x)) == "id(x)"
 
     # Composite map
-    assert upretty(CompositeMap(f, f)) == 'f ∘ f : 𝕌 → 𝕌'
-    assert upretty(CompositeMap(f, f)(x)) == '(f ∘ f)(x)'
+    assert upretty(f@g) == 'f ∘ g : 𝕌 → 𝕌'
+    assert upretty((f@g)(x)) == '(f ∘ g)(x)'
 
     # Compositional map power
-    assert upretty(IteratedMap(f, 2)) == ' 2        \nf  : 𝕌 → 𝕌'
-    assert pretty(IteratedMap(f, 2)(x)) == ' 2   \nf (x)'
+    assert upretty(f@f) == ' 2        \nf  : 𝕌 → 𝕌'
+    assert upretty((f@f)(x)) == '⎛ 2⎞   \n⎝f ⎠(x)'
 
     # Binary operator
     class Op1(BinaryOperator):
@@ -7303,7 +7304,10 @@ def test_map():
     op2 = Op2()
     assert pretty(op2.inverse_operator()(x)) == ' -1\nx  '
     assert pretty(op2.exponent_operator()(x, 2)) == ' 2\nx '
-    assert pretty(op2.exponent_operator()(op2.inverse_operator()(x), 2)) == ' -2\nx  '
+    assert upretty(op2.inverse_operator()(x*y)) == '     -1\n(x⋅y)  '
+    assert upretty(op2.exponent_operator()(x*y, 2)) == '     2\n(x⋅y) '
+    assert upretty(op2.inverse_operator()(x**2)) == '    -1\n⎛ 2⎞  \n⎝x ⎠  '
+    assert upretty(op2.exponent_operator()(x**2, 2)) == '    2\n⎛ 2⎞ \n⎝x ⎠ '
 
 def test_abstractalgebra():
     from sympy.sets import Set

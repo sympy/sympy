@@ -295,7 +295,7 @@ class BinaryOperator(Map):
                 if a == b.arguments[0]:
                     return [*b.arguments[1:]]
         return [a, b]
-        
+
     def cancel(self, seq):
         # cancel division and inverse
         # this method is deliberately designed to work for len(seq) > 2 case
@@ -426,7 +426,7 @@ class LeftDivision(BinaryOperator):
         base_op = self.base_op
         if base_op.identity is not None and ask(Q.associative(base_op)):
             kwargs["evaluate"] = True
-            inv_divisor = ExponentOperator(base_op)(divisor, -1, **kwargs)
+            inv_divisor = base_op.exponent_operator()(divisor, -1, **kwargs)
             return base_op(inv_divisor, dividend, **kwargs)
         return super().apply(divisor, dividend, **kwargs)
 
@@ -491,7 +491,7 @@ class RightDivision(BinaryOperator):
         base_op = self.base_op
         if base_op.identity is not None and ask(Q.associative(base_op)):
             kwargs["evaluate"] = True
-            inv_divisor = ExponentOperator(base_op)(divisor, -1, **kwargs)
+            inv_divisor = base_op.exponent_operator()(divisor, -1, **kwargs)
             return base_op(dividend, inv_divisor, **kwargs)
         return super().apply(dividend, divisor, **kwargs)
 
@@ -556,7 +556,7 @@ class InverseOperator(Map):
     def apply(self, x, **kwargs):
         base_op = self.base_op
         if ask(Q.associative(base_op)):
-            return ExponentOperator(base_op)(x, -1, **kwargs)
+            return base_op.exponent_operator()(x, -1, **kwargs)
         return super().apply(x, **kwargs)
 
     def eval(self, x):
@@ -650,7 +650,7 @@ class ExponentOperator(Map):
                 raise TypeError("%s does not have identity." % self.base_op)
 
         if kwargs.get("evaluate", False):
-            x = _sympify(x)
+            x, n = _sympify(x), _sympify(n)
             base, exp = x.as_base_exp(self.base_op)
             if exp != 1:
                 # collect x**2**3 to x**6

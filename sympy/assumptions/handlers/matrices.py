@@ -216,7 +216,7 @@ class AskInvertibleHandler(CommonHandler):
 
     @staticmethod
     def CompositeMap(expr, assumptions):
-        seq = expr.args
+        seq = expr.arguments
 
         #1. domains and codomains must match
         for i in range(len(seq)-1):

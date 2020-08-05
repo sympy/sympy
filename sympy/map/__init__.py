@@ -11,12 +11,13 @@ __all__ = [
     'BinaryOperator', 'LeftDivision', 'RightDivision',
     'InverseOperator', 'ExponentOperator',
     'InverseElement', 'ExponentElement',
-    'CompositeMap', 'IteratedMap',
+    'FunctionSet', 'function_set',
+    'CompositionOperator', 'composite_op', 'CompositeMap',
+    'IterationOperator', 'IteratedMap',
     'AdditionOperator', 'Addition',
     'scalar_add',
     'MultiplicationOperator', 'Multiplication',
     'scalar_mul', 'scalar_pow', 'scalar_divide',
-    'FunctionSet',
 ]
 
 from .map import (
@@ -30,7 +31,9 @@ from .operator import (
     InverseElement, ExponentElement,
 )
 from .composite import (
-    FunctionSet, CompositeMap, IteratedMap,
+    FunctionSet, function_set,
+    CompositionOperator, composite_op, CompositeMap,
+    IterationOperator, IteratedMap,
 )
 
 from .add import (

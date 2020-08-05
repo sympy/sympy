@@ -1006,6 +1006,7 @@ def test_map():
     )
 
     f = Map(name='f')
+    g = Map(name='g')
     assert str(f) == 'f : UniversalSet -> UniversalSet'
     assert str(f(x)) == "f(x)"
 
@@ -1015,7 +1016,7 @@ def test_map():
 
     # Inverse map
     assert str(f.inv()) == 'InverseMap(f) : UniversalSet -> UniversalSet'
-    assert str(f.inv()(x)) == "InverseMap(f)(x)"
+    assert str(f.inv()(x)) == 'InverseMap(f)(x)'
 
     # Identity map
     Id = IdentityMap(domain=S.Reals)
@@ -1023,12 +1024,12 @@ def test_map():
     assert str(Id(x)) == 'id(x)'
 
     # Composite map
-    assert str(CompositeMap(f, f)) == 'f@f : UniversalSet -> UniversalSet'
-    assert str(CompositeMap(f, f)(x)) == '(f@f)(x)'
+    assert str(f@g) == 'f @ g : UniversalSet -> UniversalSet'
+    assert str((f@g)(x)) == '(f @ g)(x)'
 
     # Compositional map power
-    assert str(IteratedMap(f, 2)) == 'IteratedMap(f, 2) : UniversalSet -> UniversalSet'
-    assert str(IteratedMap(f, 2)(x)) == 'IteratedMap(f, 2)(x)'
+    assert str(f@f) == 'f**2 : UniversalSet -> UniversalSet'
+    assert str((f@f)(x)) == '(f**2)(x)'
 
     # Binary operator
     class Op1(BinaryOperator):
@@ -1043,9 +1044,12 @@ def test_map():
         identity = S.One
         is_associative = True
     op2 = Op2()
-    assert str(op2.inverse_operator()(x)) == "x**-1"
+    assert str(op2.inverse_operator()(x)) == "x**(-1)"
     assert str(op2.exponent_operator()(x, 2)) == "x**2"
-    assert str(op2.exponent_operator()(op2.inverse_operator()(x), 2)) == "x**-2"
+    assert str(op2.inverse_operator()(x*y)) == "(x*y)**(-1)"
+    assert str(op2.exponent_operator()(x*y, 2)) == "(x*y)**2"
+    assert str(op2.inverse_operator()(x**2)) == "(x**2)**(-1)"
+    assert str(op2.exponent_operator()(x**2, 2)) == "(x**2)**2"
 
 def test_abstractalgebra():
     from sympy.sets import Set

@@ -153,25 +153,26 @@ class Map(Expr):
     @sympify_return([('other', Expr)], NotImplemented)
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
-        return CompositeMap(self, other, evaluate=True)
+        return composite_op(self, other, evaluate=True)
 
     @sympify_return([('other', Expr)], NotImplemented)
     @call_highest_priority('__matmul__')
     def __rmatmul__(self, other):
-        return CompositeMap(other, self, evaluate=True)
+        return composite_op(other, self, evaluate=True)
 
     def inverse(self, evaluate=False):
         return InverseMap(self, evaluate=evaluate)
     inv = inverse
 
     def iterate(self, n, evaluate=False):
-        return IteratedMap(self, n, evaluate=evaluate)
+        iter_op = composite_op.exponent_operator()
+        return iter_op(self, n, evaluate=evaluate)
 
     def _eval_inverse(self):
         return
 
     def composite(self, other, evaluate=False):
-        return CompositeMap(self, other, evaluate=evaluate)
+        return composite_op(self, other, evaluate=evaluate)
 
     def _eval_composite(self, other):
         # define composition with other 'special' map here.
@@ -252,16 +253,6 @@ class Map(Expr):
             return self.func(*args, evaluate=True)
         else:
             return self.func(*self.args, evaluate=True)
-
-    def as_base_iternum(self):
-        """
-        Interprete *self* as iterated map, returning the
-        base and number of iteration.
-
-        """
-        # TODO: Remove this and use the classes from
-        # operator.py for function composition and iteration.
-        return self, S.One
 
 class UndefinedMap(Map):
     """
@@ -550,7 +541,8 @@ class AppliedMap(Expr):
         return self.args[1]
 
     def _new_rawargs(self, *args, **kwargs):
-        return self.func(self.mapping, args)
+        kwargs["evaluate"] = False
+        return self.func(self.map, args, **kwargs)
 
     def _contained(self, other):
         # Let `f(x) in f.codomain` return True
@@ -611,4 +603,4 @@ def isapplied(arg, maps):
     return False
 
 
-from .composite import CompositeMap, IteratedMap
+from .composite import function_set, composite_op

@@ -946,42 +946,54 @@ class StrPrinter(Printer):
             name = self._helper_print_domain(expr, name)
         return name
 
-    def _print_CompositeMap(self, expr, print_domains=True):
-        name = "@".join([self._print(t, print_domains=False) for t in expr.args])
-        if print_domains:
-            name = self._helper_print_domain(expr, name)
-        return name
+    def _print_AppliedMap(self, expr, print_domains=True):
+        from sympy.map import BinaryOperator, Map
 
-    def _print_IteratedMap(self, expr, print_domains=True):
-        name = "IteratedMap(%s, %s)" % (
-            self._print(expr.base, print_domains=False), self._print(expr.iternum)
-        )
-        if print_domains:
-            name = self._helper_print_domain(expr, name)
-        return name
-
-    def _print_AppliedMap(self, expr):
-        from sympy.map.operator import BinaryOperator
-
-        map_str = self.parenthesize(expr.map, PRECEDENCE['Mul'], kwargs={'print_domains':False})
+        map_str = self.parenthesize(expr.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
 
         if isinstance(expr.map, BinaryOperator):
             infix_str = ' ' + map_str + ' '
-            args = [self.parenthesize(a, PRECEDENCE['Mul']) for a in expr.arguments]
-            return infix_str.join(args)
 
-        args_str = self.stringify(expr.arguments, ", ")
-        return "%s(%s)" % (map_str, args_str)
+            args = []
+            for a in expr.arguments:
+                if isinstance(a, Map):
+                    args.append(self.parenthesize(a, PRECEDENCE['Mul'], kwargs={'print_domains':False}))
+                else:
+                    args.append(self.parenthesize(a, PRECEDENCE['Mul']))
+            result = infix_str.join(args)
+
+        else:
+            args = []
+            for a in expr.arguments:
+                if isinstance(a, Map):
+                    args.append(self._print(arg, print_domains=False))
+                else:
+                    args.append(self._print(a))
+            args_str = ', '.join(args)
+            result = "%s(%s)" % (map_str, args_str)
+
+        if isinstance(expr, Map) and print_domains:
+            result = self._helper_print_domain(expr, result)
+        return result
 
     def _print_InverseElement(self, expr):
-        base_str = self._print(expr.arguments[0])
-        return "%s**-1" % base_str
+        base_str = self.parenthesize(expr.arguments[0], PRECEDENCE['Pow'])
+        return "%s**(-1)" % base_str
 
-    def _print_ExponentElement(self, expr):
+    def _print_ExponentElement(self, expr, print_domains=True):
+        from sympy.map import Map
+
         base, exp = expr.as_base_exp(expr.map.base_op)
-        base_str = self._print(base)
-        exp_str = self._print(exp)
-        return "%s**%s" % (base_str, exp_str)
+        if isinstance(base, Map):
+            base_str = self.parenthesize(base, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        else:
+            base_str = self.parenthesize(base, PRECEDENCE['Pow'])
+        exp_str = self.parenthesize(exp, PRECEDENCE['Pow'])
+        result = "%s**%s" % (base_str, exp_str)
+
+        if isinstance(expr, Map) and print_domains:
+            result = self._helper_print_domain(expr, result)
+        return result
 
     def _print_AlgebraicStructure(self, expr):
         name = expr.name.name

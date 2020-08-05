@@ -3078,18 +3078,26 @@ def test_sympy__map__map__AppliedMap():
     assert _test_args(AppliedMap(Map('f'), (x,)))
 
 def test_sympy__map__composite__FunctionSet():
-    from sympy import FunctionSet, S
-    assert _test_args(FunctionSet(S.Reals, S.Integers))
+    from sympy import function_set
+    assert _test_args(function_set)
+
+def test_sympy__map__composite__CompositionOperator():
+    from sympy.map import composite_op
+    assert _test_args(composite_op)
 
 def test_sympy__map__composite__CompositeMap():
-    from sympy.map import Map, CompositeMap
+    from sympy.map import Map, composite_op
     f, g = Map('f'), Map('g')
-    assert _test_args(CompositeMap(f, g))
+    assert _test_args(composite_op(f, g))
+
+def test_sympy__map__composite__IterationOperator():
+    from sympy.map import composite_op
+    assert _test_args(composite_op.exponent_operator())
 
 def test_sympy__map__composite__IteratedMap():
-    from sympy.map import Map, IteratedMap
+    from sympy.map import Map, composite_op
     f = Map('f')
-    assert _test_args(IteratedMap(f, 2))
+    assert _test_args(composite_op.exponent_operator()(f, 2))
 
 @SKIP("abstract class")
 def test_sympy__map__operator__BinaryOperator():

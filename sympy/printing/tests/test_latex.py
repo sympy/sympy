@@ -2668,6 +2668,7 @@ def test_map():
     )
 
     f = Map(name='f')
+    g = Map(name='g')
     assert latex(f) == r"f : \mathbb{U} \rightarrow \mathbb{U}"
     assert latex(f(x)) == r"f{\left(x \right)}"
 
@@ -2677,7 +2678,7 @@ def test_map():
 
     # Inverse map
     assert latex(f.inv()) == r'{f}^{-1} : \mathbb{U} \rightarrow \mathbb{U}'
-    assert latex(f.inv()(x)) == r"{f}^{-1}{\left(x \right)}"
+    assert latex(f.inv()(x)) == r"\left({f}^{-1}\right){\left(x \right)}"
 
     # Identity map
     Id = IdentityMap(domain=S.Reals)
@@ -2685,12 +2686,12 @@ def test_map():
     assert latex(Id(x)) == r"\text{id}_{\mathbb{R}}{\left(x \right)}"
 
     # Composite map
-    assert latex(CompositeMap(f, f)) == r'f \circ f : \mathbb{U} \rightarrow \mathbb{U}'
-    assert latex(CompositeMap(f, f)(x)) == r'\left(f \circ f\right){\left(x \right)}'
+    assert latex(f@g) == r'f \circ g : \mathbb{U} \rightarrow \mathbb{U}'
+    assert latex((f@g)(x)) == r'\left(f \circ g\right){\left(x \right)}'
 
     # Compositional map power
-    assert latex(IteratedMap(f, 2)) == r'{f}^{2} : \mathbb{U} \rightarrow \mathbb{U}'
-    assert latex(IteratedMap(f, 2)(x)) == r'{f}^{2}{\left(x \right)}'
+    assert latex(f@f) == r'{f}^{2} : \mathbb{U} \rightarrow \mathbb{U}'
+    assert latex((f@f)(x)) == r'\left({f}^{2}\right){\left(x \right)}'
 
     # Binary operator
     class Op1(BinaryOperator):
@@ -2705,9 +2706,12 @@ def test_map():
         identity = S.One
         is_associative = True
     op2 = Op2()
-    assert latex(op2.inverse_operator()(x)) == "{x}^{-1}"
-    assert latex(op2.exponent_operator()(x, 2)) == "{x}^{2}"
-    assert latex(op2.exponent_operator()(op2.inverse_operator()(x), 2)) == "{x}^{-2}"
+    assert latex(op2.inverse_operator()(x)) == '{x}^{-1}'
+    assert latex(op2.exponent_operator()(x, 2)) == '{x}^{2}'
+    assert latex(op2.inverse_operator()(x*y)) == r'{\left(x y\right)}^{-1}'
+    assert latex(op2.exponent_operator()(x*y, 2)) == r'{\left(x y\right)}^{2}'
+    assert latex(op2.inverse_operator()(x**2)) == r'{\left(x^{2}\right)}^{-1}'
+    assert latex(op2.exponent_operator()(x**2, 2)) == r'{\left(x^{2}\right)}^{2}'
 
 def test_abstractalgebra():
     from sympy.sets import Set
