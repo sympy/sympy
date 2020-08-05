@@ -2566,13 +2566,15 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     return len(str(sol))
 
 
-# Note: To work on getting dependent variables in order
-# even if they are in the same equation
 def _extract_funcs(eqs):
+    from sympy.core.basic import preorder_traversal
+
     funcs = []
     for eq in eqs:
-        derivs = eq.atoms(Derivative)
-        func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
+        derivs = [node for node in preorder_traversal(eq) if isinstance(node, Derivative)]
+        func = []
+        for d in derivs:
+            func += list(d.atoms(AppliedUndef))
         for func_ in func:
             funcs.append(func_)
     funcs = list(uniq(funcs))

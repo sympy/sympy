@@ -3,6 +3,7 @@ from sympy import (symbols, Symbol, diff, Function, Derivative, Matrix, Rational
 from sympy.core.containers import Tuple
 from sympy.functions import exp, cos, sin, log
 from sympy.matrices import dotprodsimp, NonSquareMatrixError
+from sympy.simplify import simplify
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.ode import constant_renumber
 from sympy.solvers.ode.subscheck import checksysodesol
@@ -1298,28 +1299,32 @@ def test_higher_order_to_first_order():
     assert checksysodesol(eq1, sol1) == (True, [0, 0])
 
     eq2 = (Eq(diff(x(t),t,t) - 9*diff(y(t),t) + 7*x(t),0), Eq(diff(y(t),t,t) + 9*diff(x(t),t) + 7*y(t),0))
-    sol2 = [Eq(x(t), (Rational(9, 14) - sqrt(109)/14)*(-C1*sin(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))) + C2*
-               cos(t*sqrt(9*sqrt(109)/2 + Rational(95, 2)))) + (Rational(9, 14) + sqrt(109)/14)*(-C3*sin(t*sqrt(Rational(95, 2)
-               - 9*sqrt(109)/2)) + C4*cos(t*sqrt(Rational(95, 2) - 9*sqrt(109)/2)))),
-            Eq(y(t), sqrt(2)*(C1*cos(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))) + C2*sin(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))))/sqrt(9*
-                sqrt(109) + 95) + sqrt(2)*(C3*cos(t*sqrt(Rational(95, 2) - 9*sqrt(109)/2)) + C4*sin(t*sqrt(Rational(95, 2)
-                - 9*sqrt(109)/2)))/sqrt(95 - 9*sqrt(109)))]
+    sol2 = [Eq(y(t), (-Rational(9, 14) + sqrt(109)/14)*(-C1*sin(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))) + C2*cos(t*sqrt(9*sqrt(109)/2 +
+                Rational(95, 2)))) + (-sqrt(109)/14 - Rational(9, 14))*(-C3*sin(t*sqrt(Rational(95, 2) - 9*sqrt(109)/2)) +
+                C4*cos(t*sqrt(Rational(95, 2) - 9*sqrt(109)/2)))),
+            Eq(x(t), sqrt(2)*(C1*cos(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))) + C2*sin(t*sqrt(9*sqrt(109)/2 + Rational(95, 2))))/
+                sqrt(9*sqrt(109) + 95) + sqrt(2)*(C3*cos(t*sqrt(Rational(95, 2) - 9*sqrt(109)/2)) + C4*sin(t*sqrt(
+                Rational(95, 2) - 9*sqrt(109)/2)))/sqrt(95 - 9*sqrt(109)))]
     assert dsolve(eq2) == sol2
     assert checksysodesol(eq2, sol2) == (True, [0, 0])
 
-    # Note: Solution to be updated after _extract_funcs is fixed
     eq3 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
-    # sol3 = [Eq(x(t), C1 + Integral(9*sqrt(133)*C2*exp(-t**2/2 + sqrt(133)*t**2/2)/266 - 9*sqrt(133)*C2*exp(-sqrt(133)*t**2/2
-    #             - t**2/2)/266 + 27*sqrt(133)*C3*t**2*exp(-t**2/2 + sqrt(133)*t**2/2)/(133*(-sqrt(133)*t**2/2 - 5*t**2/2))
-    #             - 27*sqrt(133)*C3*t**2*exp(-sqrt(133)*t**2/2 - t**2/2)/(133*(-sqrt(133)*t**2/2 - 5*t**2/2)) +
-    #             C3*exp(-t**2/2 + sqrt(133)*t**2/2), t)),
-    #         Eq(y(t), C4 + Integral(-27*sqrt(133)*C2*t**2*exp(-t**2/2 + sqrt(133)*t**2/2)/(133*(-sqrt(133)*t**2/2 -
-    #             5*t**2/2)) + 27*sqrt(133)*C2*t**2*exp(-sqrt(133)*t**2/2 - t**2/2)/(133*(-5*t**2/2 + sqrt(133)*t**2/2)) -
-    #             162*sqrt(133)*C3*t**4*exp(-t**2/2 + sqrt(133)*t**2/2)/(133*(-sqrt(133)*t**2/2 - 5*t**2/2)**2) -
-    #             6*C3*t**2*exp(-t**2/2 + sqrt(133)*t**2/2)/(-sqrt(133)*t**2/2 - 5*t**2/2) -
-    #             6*sqrt(133)*C3*exp(-sqrt(133)*t**2/2 - t**2/2)/133, t))]
-    # assert dsolve(eq3) == sol3
-    sol3 = dsolve(eq3)
+    sol3 = [Eq(x(t), C1 + Integral(-28620*C2*exp(-t**2/2 + sqrt(133)*t**2/2)/(-105070 + 9566*sqrt(133)) +
+                2808*sqrt(133)*C2*exp(-t**2/2 + sqrt(133)*t**2/2)/(-105070 + 9566*sqrt(133)) -
+                76450*C2*exp(-sqrt(133)*t**2/2 - t**2/2)/(-105070 + 9566*sqrt(133)) +
+                6758*sqrt(133)*C2*exp(-sqrt(133)*t**2/2 - t**2/2)/(-105070 + 9566*sqrt(133)) -
+                3555*sqrt(133)*C3*exp(-t**2/2 + sqrt(133)*t**2/2)/(-105070 + 9566*sqrt(133)) + 43047*C3*exp(-t**2/2
+                + sqrt(133)*t**2/2)/(-105070 + 9566*sqrt(133)) - 43047*C3*exp(-sqrt(133)*t**2/2 - t**2/2)/(-105070 +
+                9566*sqrt(133)) + 3555*sqrt(133)*C3*exp(-sqrt(133)*t**2/2 - t**2/2)/(-105070 + 9566*sqrt(133)), t)),
+            Eq(y(t), C4 + Integral(3990*C2*exp(-t**2/2 + sqrt(133)*t**2/2)/(-10507 + 665*sqrt(133)) -
+                474*sqrt(133)*C2*exp(-t**2/2 + sqrt(133)*t**2/2)/(-10507 + 665*sqrt(133)) +
+                474*sqrt(133)*C2*exp(-sqrt(133)*t**2/2 - t**2/2)/(-10507 + 665*sqrt(133)) -
+                3990*C2*exp(-sqrt(133)*t**2/2 - t**2/2)/(-10507 + 665*sqrt(133)) + 530*sqrt(133)*C3*exp(-t**2/2 +
+                sqrt(133)*t**2/2)/(-10507 + 665*sqrt(133)) - 6916*C3*exp(-t**2/2 + sqrt(133)*t**2/2)/(-10507 +
+                665*sqrt(133)) + 135*sqrt(133)*C3*exp(-sqrt(133)*t**2/2 - t**2/2)/(-10507 + 665*sqrt(133)) -
+                3591*C3*exp(-sqrt(133)*t**2/2 - t**2/2)/(-10507 + 665*sqrt(133)), t))]
+    with dotprodsimp(True):
+        assert dsolve(eq3) == sol3
     assert checksysodesol(eq3, sol3) == (True, [0, 0])
 
 
