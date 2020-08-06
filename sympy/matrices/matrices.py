@@ -819,9 +819,6 @@ class MatrixBase(MatrixDeprecated,
         return self._new(P.multiply(diag(*jordan_cells))
                 .multiply(P.inv()))
 
-    def __repr__(self):
-        return sstr(self)
-
     def __str__(self):
         if self.rows == 0 or self.cols == 0:
             return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
