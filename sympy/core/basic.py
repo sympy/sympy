@@ -2,8 +2,9 @@
 from collections import defaultdict
 from itertools import chain, zip_longest
 
-from .assumptions import BasicMeta, ManagedProperties
+from .assumptions import ManagedProperties
 from .cache import cacheit
+from .core import BasicMeta
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import iterable, ordered, Mapping
 from .singleton import S
