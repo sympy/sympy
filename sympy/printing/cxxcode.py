@@ -7,6 +7,8 @@ from itertools import chain
 from sympy.codegen.ast import Type, none
 from .ccode import C89CodePrinter, C99CodePrinter
 
+# Imported here as well for backwards compatibility
+from sympy.printing.codeprinter import cxxcode # noqa:F401
 
 # from http://en.cppreference.com/w/cpp/keyword
 reserved = {
@@ -163,7 +165,3 @@ cxx_code_printers = {
     'c++11': CXX11CodePrinter,
     'c++17': CXX17CodePrinter
 }
-
-def cxxcode(expr, assign_to=None, standard='c++11', **settings):
-    """ C++ equivalent of :func:`~.ccode`. """
-    return cxx_code_printers[standard.lower()](settings).doprint(expr, assign_to)

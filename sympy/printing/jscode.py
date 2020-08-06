@@ -11,7 +11,6 @@ from __future__ import print_function, division
 
 from typing import Any, Dict
 
-from sympy.codegen.ast import Assignment
 from sympy.core import S
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -146,6 +145,7 @@ class JavascriptCodePrinter(CodePrinter):
         return 'Number.NEGATIVE_INFINITY'
 
     def _print_Piecewise(self, expr):
+        from sympy.codegen.ast import Assignment
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.

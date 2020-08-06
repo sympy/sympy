@@ -15,7 +15,7 @@ from typing import Any, Dict
 
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.mul import _keep_coeff
-from sympy.printing.codeprinter import CodePrinter, Assignment
+from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
 
@@ -264,6 +264,7 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _print_Assignment(self, expr):
+        from sympy.codegen.ast import Assignment
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.tensor.indexed import IndexedBase
         # Copied from codeprinter, but remove special MatrixSymbol treatment
