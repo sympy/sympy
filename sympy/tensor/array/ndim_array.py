@@ -292,27 +292,16 @@ class NDimArray(Printable):
 
         return type(self)(map(f, Flatten(self)), self.shape)
 
-    def __str__(self):
-        """Returns string, allows to use standard functions print() and str().
-
-        Examples
-        ========
-
-        >>> from sympy import MutableDenseNDimArray
-        >>> a = MutableDenseNDimArray.zeros(2, 2)
-        >>> a
-        [[0, 0], [0, 0]]
-
-        """
+    def _sympystr(self, printer):
         def f(sh, shape_left, i, j):
             if len(shape_left) == 1:
-                return "["+", ".join([str(self[self._get_tuple_index(e)]) for e in range(i, j)])+"]"
+                return "["+", ".join([printer._print(self[self._get_tuple_index(e)]) for e in range(i, j)])+"]"
 
             sh //= shape_left[0]
             return "[" + ", ".join([f(sh, shape_left[1:], i+e*sh, i+(e+1)*sh) for e in range(shape_left[0])]) + "]" # + "\n"*len(shape_left)
 
         if self.rank() == 0:
-            return self[()].__str__()
+            return printer._print(self[()])
 
         return f(self._loop_size, self.shape, 0, self._loop_size)
 
