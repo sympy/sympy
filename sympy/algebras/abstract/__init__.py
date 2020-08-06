@@ -45,17 +45,14 @@ class IntegersRing(CommutativeRing, metaclass=Singleton):
     >>> S.IntegersRing
     Z
 
-    >>> S.IntegersRing.add_op
-    + : ProductSet(Integers, Integers) -> Integers
-    >>> S.IntegersRing.add_op.identity
-    0
-
     >>> x = S.IntegersRing.element('x')
 
     >>> x.is_integer
     True
     >>> S.IntegersRing.add(x, x, evaluate=True)
     2*x
+    >>> S.IntegersRing.sub(x, x, evaluate=True)
+    0
     >>> S.IntegersRing.mul(x, -1, evaluate=True)
     (-1)*x
     >>> S.IntegersRing.pow(x, 4, evaluate=True)
@@ -76,6 +73,28 @@ class RealsField(Field, metaclass=Singleton):
     """
     The field of real numbers.
 
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.RealsField
+    R
+
+    >>> x = S.RealsField.element('x')
+
+    >>> x.is_real
+    True
+    >>> S.RealsField.add(x, x, evaluate=True)
+    2*x
+    >>> S.RealsField.sub(x, x, evaluate=True)
+    0
+    >>> S.RealsField.mul(x, -1, evaluate=True)
+    (-1)*x
+    >>> S.RealsField.pow(x, 4, evaluate=True)
+    x**4
+    >>> S.RealsField.div(x, 2, evaluate=True)
+    x*(2**(-1))
+
     """
 
     def __new__(cls, *args, **kwargs):
@@ -90,6 +109,28 @@ class RealsField(Field, metaclass=Singleton):
 class ComplexesField(Field, metaclass=Singleton):
     """
     The field of complex numbers.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.ComplexesField
+    C
+
+    >>> x = S.ComplexesField.element('x')
+
+    >>> x.is_complex
+    True
+    >>> S.ComplexesField.add(x, x, evaluate=True)
+    2*x
+    >>> S.ComplexesField.sub(x, x, evaluate=True)
+    0
+    >>> S.ComplexesField.mul(x, -1, evaluate=True)
+    (-1)*x
+    >>> S.ComplexesField.pow(x, 4, evaluate=True)
+    x**4
+    >>> S.ComplexesField.div(x, 2, evaluate=True)
+    x*(2**(-1))
 
     """
 

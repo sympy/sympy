@@ -13,7 +13,39 @@ class Field(CommutativeRing):
     ===========
 
     Field is a commutative ring whose domain and multiplication operator
-    form Abelian group.
+    form Abelian group. Generalized division can be defined in ring.
+
+    Parameters
+    ==========
+
+    name : str
+        Name of the structure used for printing.
+
+    sets : tuple of Sets
+
+    operators : tuple of two Maps
+        The first one is addition operator, and the
+        second is multiplication operator.
+
+    Examples
+    ========
+
+    >>> from sympy import Field, Set, AdditionOperator, MultiplicationOperator
+
+    Build a purely abstract field with no number involved.
+
+    >>> A = Set('A')
+    >>> a, b, e1, e2 = [A.element(n) for n in ('a', 'b', 'e1', 'e2')]
+
+    >>> add = AdditionOperator(A**2, A, e1)
+    >>> mul = MultiplicationOperator(A**2, A, e2)
+
+    >>> F = Field('F', (A,), (add, mul))
+
+    >>> F.div(a, b)
+    a*(b**(-1))
+    >>> F.div(a, a, evaluate=True)
+    e2
 
     """
     def __new__(cls, name, sets, operators, **kwargs):
@@ -34,14 +66,5 @@ class Field(CommutativeRing):
     div_op = division_operator
 
     def divide(self, a, b, evaluate=False):
-        return self.div_op(a, b, evaluate=evaluate)
+        return self.div_op(a, b, add_op=self.add_op, evaluate=evaluate)
     div = divide
-
-    @property
-    def power_operator(self):
-        return self.mul_op.exponent_operator()
-    pow_op = power_operator
-
-    def power(self, x, n, evaluate=False):
-        return self.pow_op(x, n, evaluate=evaluate)
-    pow = power

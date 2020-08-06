@@ -959,9 +959,9 @@ class StrPrinter(Printer):
             args = []
             for a in expr.arguments:
                 if isinstance(a, Map):
-                    args.append(self.parenthesize(a, PRECEDENCE['Mul'], kwargs={'print_domains':False}))
+                    args.append(self.parenthesize(a, PRECEDENCE['Pow'], kwargs={'print_domains':False}))
                 else:
-                    args.append(self.parenthesize(a, PRECEDENCE['Mul']))
+                    args.append(self.parenthesize(a, PRECEDENCE['Pow']))
             result = infix_str.join(args)
 
         else:

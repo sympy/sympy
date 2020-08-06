@@ -122,7 +122,7 @@ class AbelianGroup(Group):
     Operation of abelian group is similar to natural scalar operations.
 
     >>> G_op(a, b, c, G.inverse(a), b, evaluate=True)
-    b**2*c
+    (b**2)*c
 
     """
     def __new__(cls, name, sets, operators, **kwargs):

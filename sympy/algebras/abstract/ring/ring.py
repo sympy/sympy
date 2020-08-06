@@ -16,7 +16,8 @@ class Ring(AlgebraicStructure):
     Ring is algebraic structure that consists of two binary operation;
     addition and multiplication. Ring must be and abelian group under
     addition, and monoid under multiplication. Also, multiplication must
-    be distributive with respect to addition [1].
+    be distributive with respect to addition [1]. Generalized addition,
+    subtraction, multiplication and power can be defined in ring.
 
     Parameters
     ==========
@@ -57,7 +58,7 @@ class Ring(AlgebraicStructure):
     a
 
     >>> R.sub(a, b)
-    a + -b
+    a + (-b)
     >>> R.sub(a, a, evaluate=True)
     e1
 
@@ -65,6 +66,13 @@ class Ring(AlgebraicStructure):
     a*b
     >>> R.mul(b, e2, evaluate=True)
     b
+
+    >>> R.pow(b, 2)
+    b**2
+    >>> R.pow(b, 1, evaluate=True)
+    b
+    >>> R.pow(b, 0, evaluate=True)
+    e2
 
     Ring knows how to collect the added arguments to multiplication.
 
@@ -131,8 +139,9 @@ class Ring(AlgebraicStructure):
         return self.mul_op.exponent_operator()
     pow_op = power_operator
 
-    def pow(self, x, n, evaluate=False):
+    def power(self, x, n, evaluate=False):
         return self.pow_op(x, n, evaluate=evaluate)
+    pow = power
 
     def distribute(self, mul, evaluate=False):
         return mul.distribute(add_op=self.add_op, evaluate=evaluate)
@@ -161,6 +170,32 @@ class CommutativeRing(Ring):
     operators : tuple of two Maps
         The first one is addition operator, and the
         second is multiplication operator.
+
+    Examples
+    ========
+
+    >>> from sympy import CommutativeRing, Set, AdditionOperator, BinaryOperator
+
+    Build a purely abstract ring with no number involved.
+
+    >>> A = Set('A')
+    >>> a, b, e1, e2 = [A.element(n) for n in ('a', 'b', 'e1', 'e2')]
+
+    >>> add = AdditionOperator(A**2, A, e1)
+    >>> class MonoidOp(BinaryOperator):
+    ...     name = '*'
+    ...     domain = A*A
+    ...     codomain = A
+    ...     is_associative = True
+    ...     is_commutative = True
+    ...     identity = e2
+    >>> mul = MonoidOp()
+
+    >>> R = CommutativeRing('R', (A,), (add, mul))
+
+    >>> R.mul(a, b, evaluate=True) == R.mul(b, a, evaluate=True)
+    True
+
 
     References
     ==========
