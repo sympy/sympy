@@ -11,6 +11,7 @@ from sympy.physics.units import second, joule
 from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
     ZZ_I, QQ_I, lex, grlex)
 from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
+from sympy.algebras.dual import Dual
 
 from sympy.testing.pytest import raises
 
@@ -695,6 +696,20 @@ def test_Quaternion_str_printer():
     assert str(q) == "x + y*i + z*j + t*x*k"
     q = Quaternion(x,y,z,x+t)
     assert str(q) == "x + y*i + z*j + (t + x)*k"
+
+
+def test_Dual_str_printer():
+    q = Dual(x, y)
+    assert str(q) == "x + y*ð"
+    q = Dual(x,x*y)
+    assert str(q) == "x + x*y*ð"
+    q = Dual(x,x+y)
+    assert str(q) == "x + (x + y)*ð"
+    # Nested duals
+    q = Dual(x, y)
+    p = Dual(t, z)
+    n = Dual(q, p)
+    assert str(n) == "(x + y*ð) + (t + z*ð)*ð"
 
 
 def test_Quantity_str():
