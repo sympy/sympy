@@ -2763,6 +2763,15 @@ class LatexPrinter(Printer):
         tex = self._deal_with_super_sub(str(name))
         return tex
 
+    def _print_IntegersRing(self, i):
+        return r"\mathbb{Z}"
+
+    def _print_RealsField(self, i):
+        return r"\mathbb{R}"
+
+    def _print_ComplexesField(self, i):
+        return r"\mathbb{C}"
+
     def emptyPrinter(self, expr):
         # Checks what type of decimal separator to print.
         expr = super().emptyPrinter(expr)
