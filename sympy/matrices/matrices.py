@@ -10,6 +10,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
 from sympy.core.sympify import sympify
+from sympy.core.sympify import _sympify
 from sympy.functions import exp, factorial, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -1531,17 +1532,19 @@ class MatrixBase(MatrixDeprecated,
         """
         from sympy import diff
 
+        f, x = _sympify(f), _sympify(x)
         if not self.is_square:
-            raise NonSquareMatrixError(
-                "Valid only for square matrices")
+            raise NonSquareMatrixError
         if not x.is_symbol:
-            raise ValueError("The parameter for f should be a symbol")
+            raise ValueError("{} must be a symbol.".format(x))
         if x not in f.free_symbols:
-            raise ValueError("x should be a parameter in Function")
+            raise ValueError(
+                "{} must be a parameter of {}.".format(x, f))
         if x in self.free_symbols:
-            raise ValueError("x should be a parameter in Matrix")
-        eigen = self.eigenvals()
+            raise ValueError(
+                "{} must not be a parameter of {}.".format(x, self))
 
+        eigen = self.eigenvals()
         max_mul = max(eigen.values())
         derivative = {}
         dd = f
@@ -1556,9 +1559,11 @@ class MatrixBase(MatrixDeprecated,
         for i in eigen:
             mul = eigen[i]
             f_val[row] = f.subs(x, i)
-            if not f.subs(x, i).free_symbols and not f.subs(x, i).is_complex:
-                raise ValueError("Cannot Evaluate the function is not"
-                                 " analytic at some eigen value")
+            if f_val[row].is_number and not f_val[row].is_complex:
+                raise ValueError(
+                    "Cannot evaluate the function because the "
+                    "function {} is not analytic at the given "
+                    "eigenvalue {}".format(f, f_val[row]))
             val = 1
             for a in range(n):
                 r[row][a] = val
@@ -1570,9 +1575,11 @@ class MatrixBase(MatrixDeprecated,
                     row = row + 1
                     mul -= 1
                     d_i = derivative[deri].subs(x, i)
-                    if not d_i.free_symbols and not d_i.is_complex:
-                        raise ValueError("Cannot Evaluate the function is not"
-                                 " analytic at some eigen value")
+                    if d_i.is_number and not d_i.is_complex:
+                        raise ValueError(
+                            "Cannot evaluate the function because the "
+                            "derivative {} is not analytic at the given "
+                            "eigenvalue {}".format(derivative[deri], d_i))
                     f_val[row] = d_i
                     for a in range(n):
                         if a - deri + 1 <= 0:

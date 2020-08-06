@@ -147,8 +147,8 @@ def _eigenvals(
     Notes
     =====
 
-    Eigenvalues of a matrix `A` can be computed by solving a matrix
-    equation `\det(A - \lambda I) = 0`
+    Eigenvalues of a matrix $A$ can be computed by solving a matrix
+    equation $\det(A - \lambda I) = 0$
     """
     if not M:
         if multiple:
@@ -549,7 +549,7 @@ def _bidiagonal_decomposition(M, upper=True):
     """
     Returns (U,B,V.H)
 
-    `A = UBV^{H}`
+    $A = UBV^{H}$
 
     where A is the input matrix, and B is its Bidiagonalized form
 
@@ -581,9 +581,7 @@ def _bidiagonal_decomposition(M, upper=True):
 
 def _bidiagonalize(M, upper=True):
     """
-    Returns `B`
-
-    where B is the Bidiagonalized form of the input matrix.
+    Returns $B$, the Bidiagonalized form of the input matrix.
 
     Note: Bidiagonal Computation can hang for symbolic matrices.
 
@@ -1007,16 +1005,14 @@ _is_indefinite.__doc__            = _doc_positive_definite
 
 
 def _jordan_form(M, calc_transform=True, **kwargs):
-    """Return ``(P, J)`` where `J` is a Jordan block
-    matrix and `P` is a matrix such that
-
-        ``M == P*J*P**-1``
+    """Return $(P, J)$ where $J$ is a Jordan block
+    matrix and $P$ is a matrix such that $M = P J P^{-1}$
 
     Parameters
     ==========
 
     calc_transform : bool
-        If ``False``, then only `J` is returned.
+        If ``False``, then only $J$ is returned.
 
     chop : bool
         All matrices are converted to exact types when computing

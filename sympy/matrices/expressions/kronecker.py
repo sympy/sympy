@@ -4,8 +4,9 @@
 from sympy.core import Mul, prod, sympify
 from sympy.functions import adjoint
 from sympy.matrices.common import ShapeError
-from sympy.matrices.expressions.matexpr import MatrixExpr, Identity
+from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.transpose import transpose
+from sympy.matrices.expressions.special import Identity
 from sympy.matrices.matrices import MatrixBase
 from sympy.strategies import (
     canon, condition, distribute, do_one, exhaust, flatten, typed, unpack)

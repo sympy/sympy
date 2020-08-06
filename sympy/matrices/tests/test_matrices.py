@@ -1,4 +1,5 @@
 import random
+import concurrent.futures
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, Poly, Pow, PurePoly, Rational,
@@ -13,6 +14,7 @@ from sympy.matrices import (
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
     MatrixSymbol, dotprodsimp)
+from sympy.matrices.utilities import _dotprodsimp_state
 from sympy.core.compatibility import iterable, Hashable
 from sympy.core import Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -2917,3 +2919,16 @@ def test_func():
 
     A = Matrix([[0, 2, 1, 6], [0, 0, 1, 2], [0, 0, 0, 3], [0, 0, 0, 0]])
     assert A.analytic_func(exp(x*t), x) == expand(simplify((A*t).exp()))
+
+
+def test_issue_19809():
+    def f():
+        assert _dotprodsimp_state.state == False
+        m = Matrix([[1]])
+        m = m * m
+        return True
+
+    with dotprodsimp(True):
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(f)
+            assert future.result()
