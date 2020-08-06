@@ -168,6 +168,12 @@ def test_order():
     f = FpGroup(free_group('')[0], [])
     assert f.order() == 1
 
+    # Example 5.4 page 160 of D. Holt et al., Handbook of Computational Group Theory
+    # Fibonacci group F(2,5)
+    F, a, b, c, d, e = free_group("a, b, c, d, e")
+    f = FpGroup(F, [a*b*(c**-1), b*c*(d**-1), c*d*(e**-1), d*e*(a**-1), e*a*(b**-1)])
+    assert f.order() == 11
+
 def test_fp_subgroup():
     def _test_subgroup(K, T, S):
         _gens = T(K.generators)
