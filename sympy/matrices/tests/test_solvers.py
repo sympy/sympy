@@ -467,7 +467,7 @@ def test_gauss_jordan_solve():
     b = M[:, -1:]
     sol, params = A.gauss_jordan_solve(b)
     assert params == Matrix(3, 1, [x0, x1, x2])
-    assert sol == Matrix(5, 1, [x1, 0, x0, _x0, x2])
+    assert sol == Matrix(5, 1, [x0, 0, x1, _x0, x2])
 
     # Rectangular, wide, reduced rank, no solution
     A = Matrix([[1, 2, 3, 4], [5, 6, 7, 8], [2, 4, 6, 8]])
@@ -482,6 +482,16 @@ def test_gauss_jordan_solve():
     assert params == ImmutableMatrix(0, 1, [])
     assert sol.__class__ == ImmutableDenseMatrix
     assert params.__class__ == ImmutableDenseMatrix
+
+    # Test placement of free variables
+    A = Matrix([[1, 0, 0, 0], [0, 0, 0, 1]])
+    b = Matrix([1, 1])
+    sol, params = A.gauss_jordan_solve(b)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert sol == Matrix([[1], [w['tau0']], [w['tau1']], [1]])
+    assert params == Matrix([[w['tau0']], [w['tau1']]])
 
 
 def test_solve():
