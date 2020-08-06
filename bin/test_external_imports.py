@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+o#!/usr/bin/env python
 """
 Test that
 
 from sympy import *
 
-Doesn't import anything other than SymPy, it's hard dependencies (mpmath), and
+doesn't import anything other than SymPy, it's hard dependencies (mpmath), and
 hard optional dependencies (gmpy2). Importing unnecessary libraries
 can accidentally add hard dependencies to SymPy in the worst case, or at best
 slow down the SymPy import time when they are installed.
