@@ -148,7 +148,7 @@ class Map(Expr):
         return
 
     def __call__(self, *args, evaluate=False, **kwargs):
-        return AppliedMap(self, args, evaluate=evaluate)
+        return AppliedMap(self, args, evaluate=evaluate, **kwargs)
 
     @sympify_return([('other', Expr)], NotImplemented)
     @call_highest_priority('__rmatmul__')

@@ -99,7 +99,7 @@ class CompositionOperator(BinaryOperator):
     >>> f = F()
 
     >>> op(f, f)
-    f @ f : UniversalSet -> UniversalSet
+    f@f : UniversalSet -> UniversalSet
 
     Using @ operator returns evaluated composition
 

@@ -48,12 +48,12 @@ class Monoid(Semigroup):
     Operation of monoid is associative.
 
     >>> M_op(a, op(b, c), evaluate=True)
-    a * b * c
+    a*b*c
 
     Operation of monoid has identity.
 
     >>> M_op(a, op(e, b), evaluate=True)
-    a * b
+    a*b
 
     """
     def __new__(cls, name, sets, operators, **kwargs):

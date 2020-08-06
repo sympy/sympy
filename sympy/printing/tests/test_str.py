@@ -999,10 +999,12 @@ def test_diffgeom():
     assert str(b) == "x"
 
 def test_map():
+    from sympy import Set
     from sympy.map import (
         Map, IdentityMap,
         BinaryOperator,
         CompositeMap, IteratedMap,
+        AdditionOperator
     )
 
     f = Map(name='f')
@@ -1024,8 +1026,8 @@ def test_map():
     assert str(Id(x)) == 'id(x)'
 
     # Composite map
-    assert str(f@g) == 'f @ g : UniversalSet -> UniversalSet'
-    assert str((f@g)(x)) == '(f @ g)(x)'
+    assert str(f@g) == 'f@g : UniversalSet -> UniversalSet'
+    assert str((f@g)(x)) == '(f@g)(x)'
 
     # Compositional map power
     assert str(f@f) == 'f**2 : UniversalSet -> UniversalSet'
@@ -1036,8 +1038,8 @@ def test_map():
         name = '+'
     op1 = Op1()
     assert str(op1) == '+ : ProductSet(UniversalSet, UniversalSet) -> UniversalSet'
-    assert str(op1(x+y, x*y)) == '(x + y) + (x*y)'
-    assert str(op1(op1(x,y), y)) == '(x + y) + y'
+    assert str(op1(x+y, x*y)) == '(x + y)+(x*y)'
+    assert str(op1(op1(x,y), y)) == '(x+y)+y'
 
     # inverse and exponent element
     class Op2(BinaryOperator):
@@ -1050,6 +1052,17 @@ def test_map():
     assert str(op2.exponent_operator()(x*y, 2)) == "(x*y)**2"
     assert str(op2.inverse_operator()(x**2)) == "(x**2)**(-1)"
     assert str(op2.exponent_operator()(x**2, 2)) == "(x**2)**2"
+
+    # exponentation of abstract addition
+    A = Set('A')
+    a, e = [A.element(s) for s in 'ae']
+    add = AdditionOperator(A**2, A, e)
+    add_exp = add.exponent_operator()
+    assert str(add_exp(a, -1)) == '-a'
+    assert str(add_exp(a, 1)) == '1*a' # 1 written explicitly to show that unevaluated
+    assert str(add_exp(a, 2)) == '2*a'
+    assert str(add_exp(a, -2)) == '-2*a'
+    assert str(add_exp(a, -x)) == '-x*a'
 
 def test_abstractalgebra():
     from sympy.sets import Set

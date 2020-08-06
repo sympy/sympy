@@ -1,28 +1,57 @@
-from sympy import S, symbols
-from sympy.map import scalar_add, scalar_mul, scalar_pow, scalar_divide
-x, y, z = symbols('x y z')
+from sympy import (
+    AdditionOperator, MultiplicationOperator, Set, S, symbols,
+    NumericMultiplicationOperator
+)
 
-def test_scalar_multiplication():
-    # Nested is always flattened
-    assert scalar_mul(x, scalar_mul(y, z), evaluate=True).arguments == (x, y, z)
+def test_MultiplicationOperator():
+    A = Set('A')
+    a, b, c, e1, e2 = [A.element(n) for n in ('a', 'b', 'c', 'e1', 'e2')]
+    add = AdditionOperator(A**2, A, e1)
+    mul = MultiplicationOperator(A**2, A, e2)
+    pow = mul.exponent_operator()
+    div = mul.right_division_operator()
+
+    # Nested structure is flattened
+    assert mul(a, mul(b, c, add_op=add),  add_op=add, evaluate=True).arguments == (a, b, c)
     # Identity is removed
-    assert scalar_mul(x, 1, y, evaluate=True).arguments == (x, y)
+    assert mul(a, e2, b, add_op=add, evaluate=True).arguments == (a, b)
 
-    # numbers come first
-    assert scalar_mul(x, 2, y, 4, evaluate=True).arguments == (8, x, y)
-
-    # can be distributed
-    assert scalar_mul.distribute(
-        [x, scalar_add(2, y)], add_op= scalar_add, evaluate=True
-    ) == scalar_add(
-        scalar_mul(2, x), scalar_mul(x, y)
-    )
+    # Generalized power
+    assert mul(a, a, add_op=add, evaluate=True) == pow(a, 2)
 
     # as_coeff_Mul
-    assert scalar_mul(2, x, y, evaluate=True).as_coeff_Mul(mul_op=scalar_mul) == (2, scalar_mul(x, y))
+    assert mul(a, b, add_op=add).as_coeff_Mul() == (e2, mul(a, b, add_op=add))
+
+    # distribution
+    assert mul.distribute([a, add(b, c, mul_op=mul)], add_op=add) \
+        == add(mul(a, b, add_op=add), mul(a, c, add_op=add), mul_op=mul)
 
     # inverse
-    assert scalar_divide(1, 3) == scalar_pow(3, -1)
-    assert scalar_divide(3, 1, evaluate=True) == scalar_mul(3, 1, evaluate=True) == 3
-    assert scalar_pow(1, -1, evaluate=True) == scalar_pow(1, x, evaluate=True) == 1
-    assert scalar_divide(1, 1, evaluate=True) == 1
+    assert div(b, e2, add_op=add, evaluate=True) == b
+    assert div(e2, b, add_op=add, evaluate=True) == pow(b, -1)
+    assert div(a, b, add_op=add) == mul(a, pow(b, -1), add_op=add, evaluate=True)
+    assert div(a, a, add_op=add, evaluate=True) == e2
+
+def test_NumericMultiplicationOperator():
+    x, y = symbols('x y', real=True)
+    mul = NumericMultiplicationOperator(S.Reals**2, S.Reals)
+    pow = mul.exponent_operator()
+    div = mul.right_division_operator()
+
+    # normal multiplication
+    assert mul(1, 2, 3, 4, evaluate=True) == 24
+    # numbers come first
+    assert mul(x, 2, y, 4, evaluate=True).arguments == (8, x, y)
+    # Identity is removed
+    assert mul(x, 1, y, evaluate=True).arguments == (x, y)
+
+    # as_coeff_mul
+    assert mul(x, y).as_coeff_Mul() == (1, mul(x,y))
+    assert mul(x, 3).as_coeff_Mul() == (1, mul(x, 3))
+    assert mul(x, 3, evaluate=True).as_coeff_Mul() == (3, x)
+
+    # inverse
+    assert div(1, 3, evaluate=True) == pow(3, -1)
+    assert div(3, 1, evaluate=True) == mul(3, 1, evaluate=True) == 3
+    assert pow(1, -1, evaluate=True) == pow(1, x, evaluate=True) == 1
+    assert div(1, 1, evaluate=True) == 1

@@ -185,10 +185,8 @@ from .map import (Map, UndefinedMap, InverseMap, IdentityMap, RestrictedMap,
         FunctionSet, function_set,
         CompositionOperator, composite_op, CompositeMap,
         IterationOperator, IteratedMap,
-        AdditionOperator, Addition,
-        scalar_add,
-        MultiplicationOperator, Multiplication,
-        scalar_mul, scalar_pow, scalar_divide)
+        AdditionOperator, NumericAdditionOperator, Addition,
+        MultiplicationOperator, NumericMultiplicationOperator, Multiplication,)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         casoratian, diag, eye, hessian, jordan_cell, list2numpy, matrix2numpy,
@@ -435,10 +433,8 @@ __all__ = [
     'FunctionSet', 'function_set',
     'CompositionOperator', 'composite_op', 'CompositeMap',
     'IterationOperator', 'IteratedMap',
-    'AdditionOperator', 'Addition',
-    'scalar_add',
-    'MultiplicationOperator', 'Multiplication',
-    'scalar_mul', 'scalar_pow', 'scalar_divide',
+    'AdditionOperator', 'NumericAdditionOperator', 'Addition',
+    'MultiplicationOperator', 'NumericMultiplicationOperator', 'Multiplication',
 
     # sympy.matrices
     'ShapeError', 'NonSquareMatrixError', 'GramSchmidt', 'casoratian', 'diag',

@@ -30,21 +30,74 @@ from .module import (
 
 ### Defined structures
 
-from sympy.core.singleton import S
-from sympy.map.add import AdditionOperator
-from sympy.map.mul import MultiplicationOperator
+from sympy.core.singleton import S, Singleton
+from sympy.map.add import NumericAdditionOperator
+from sympy.map.mul import NumericMultiplicationOperator
 
-int_add = AdditionOperator(S.Integers**2, S.Integers, S.Zero)
-int_mul = MultiplicationOperator(S.Integers**2, S.Integers, S.One)
-S.Integers_ring = CommutativeRing('Z', (S.Integers,), (int_add, int_mul))
-S.Integers_ring._latex = lambda self, *args, **kwargs: r'\mathbb{Z}'
+class IntegersRing(CommutativeRing, metaclass=Singleton):
+    """
+    The ring of integers.
 
-real_add = AdditionOperator(S.Reals**2, S.Reals, S.Zero)
-real_mul = MultiplicationOperator(S.Reals**2, S.Reals, S.One)
-S.Reals_field = Field('R', (S.Reals,), (real_add, real_mul))
-S.Reals_field._latex = lambda self, *args, **kwargs: r'\mathbb{R}'
+    Examples
+    ========
 
-complexes_add = AdditionOperator(S.Complexes**2, S.Complexes, S.Zero)
-complexes_mul = MultiplicationOperator(S.Complexes**2, S.Complexes, S.One)
-S.Complexes_field = Field('C', (S.Complexes,), (complexes_add, complexes_mul))
-S.Complexes_field._latex = lambda self, *args, **kwargs: r'\mathbb{C}'
+    >>> from sympy import S
+    >>> S.IntegersRing
+    Z
+
+    >>> S.IntegersRing.add_op
+    + : ProductSet(Integers, Integers) -> Integers
+    >>> S.IntegersRing.add_op.identity
+    0
+
+    >>> x = S.IntegersRing.element('x')
+
+    >>> x.is_integer
+    True
+    >>> S.IntegersRing.add(x, x, evaluate=True)
+    2*x
+    >>> S.IntegersRing.mul(x, -1, evaluate=True)
+    (-1)*x
+    >>> S.IntegersRing.pow(x, 4, evaluate=True)
+    x**4
+
+    """
+
+    def __new__(cls, *args, **kwargs):
+        name = 'Z'
+        sets = (S.Integers,)
+        operators = (
+            NumericAdditionOperator(S.Integers**2, S.Integers),
+            NumericMultiplicationOperator(S.Integers**2, S.Integers)
+        )
+        return super().__new__(cls, name, sets, operators)
+
+class RealsField(Field, metaclass=Singleton):
+    """
+    The field of real numbers.
+
+    """
+
+    def __new__(cls, *args, **kwargs):
+        name = 'R'
+        sets = (S.Reals,)
+        operators = (
+            NumericAdditionOperator(S.Reals**2, S.Reals),
+            NumericMultiplicationOperator(S.Reals**2, S.Reals)
+        )
+        return super().__new__(cls, name, sets, operators)
+
+class ComplexesField(Field, metaclass=Singleton):
+    """
+    The field of complex numbers.
+
+    """
+
+    def __new__(cls, *args, **kwargs):
+        name = 'C'
+        sets = (S.Complexes,)
+        operators = (
+            NumericAdditionOperator(S.Complexes**2, S.Complexes),
+            NumericMultiplicationOperator(S.Complexes**2, S.Complexes)
+        )
+        return super().__new__(cls, name, sets, operators)

@@ -946,13 +946,15 @@ class StrPrinter(Printer):
             name = self._helper_print_domain(expr, name)
         return name
 
-    def _print_AppliedMap(self, expr, print_domains=True):
+    def _print_AppliedMap(self, expr, print_domains=True, pad_infix=False):
         from sympy.map import BinaryOperator, Map
 
         map_str = self.parenthesize(expr.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
 
         if isinstance(expr.map, BinaryOperator):
-            infix_str = ' ' + map_str + ' '
+            infix_str = map_str
+            if pad_infix:
+                infix_str = ' ' + infix_str + ' '
 
             args = []
             for a in expr.arguments:
@@ -981,19 +983,34 @@ class StrPrinter(Printer):
         return "%s**(-1)" % base_str
 
     def _print_ExponentElement(self, expr, print_domains=True):
-        from sympy.map import Map
+        from sympy.map import Map, AdditionOperator
+        from sympy.map.mul import _coeff_isneg
 
         base, exp = expr.as_base_exp(expr.map.base_op)
         if isinstance(base, Map):
             base_str = self.parenthesize(base, PRECEDENCE['Pow'], kwargs={'print_domains':False})
         else:
             base_str = self.parenthesize(base, PRECEDENCE['Pow'])
-        exp_str = self.parenthesize(exp, PRECEDENCE['Pow'])
-        result = "%s**%s" % (base_str, exp_str)
+
+        if isinstance(expr.map.base_op, AdditionOperator):
+            if exp == -1:
+                result = '-%s' % base_str
+            elif _coeff_isneg(exp):
+                exp_str = self.parenthesize(-exp, PRECEDENCE['Pow'])
+                result = '-%s*%s' % (exp_str, base_str)
+            else:
+                exp_str = self.parenthesize(exp, PRECEDENCE['Pow'])
+                result = '%s*%s' % (exp_str, base_str)
+        else:
+            exp_str = self.parenthesize(exp, PRECEDENCE['Pow'])
+            result = "%s**%s" % (base_str, exp_str)
 
         if isinstance(expr, Map) and print_domains:
             result = self._helper_print_domain(expr, result)
         return result
+
+    def _print_Addition(self, expr, print_domains=True):
+        return self._print_AppliedMap(expr, print_domains, pad_infix=True)
 
     def _print_AlgebraicStructure(self, expr):
         name = expr.name.name

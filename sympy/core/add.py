@@ -348,7 +348,7 @@ class Add(Expr, AssocOp):
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
-    def as_coeff_Add(self, rational=False, deps=None):
+    def as_coeff_Add(self, rational=False, deps=None, **kwargs):
         """
         Efficiently extract the coefficient of a summation.
         """

@@ -2732,15 +2732,27 @@ class LatexPrinter(Printer):
         return "{%s}^{-1}" % base_tex
 
     def _print_ExponentElement(self, expr, print_domains=True):
-        from sympy.map import Map
+        from sympy.map import Map, AdditionOperator
+        from sympy.map.mul import _coeff_isneg
 
         base, exp = expr.as_base_exp(expr.map.base_op)
         if isinstance(base, Map):
             base_tex = self.parenthesize(base, PRECEDENCE['Pow'], kwargs={'print_domains':False})
         else:
             base_tex = self.parenthesize(base, PRECEDENCE['Pow'])
-        exp_tex = self._print(exp)
-        tex = "{%s}^{%s}" % (base_tex, exp_tex)
+
+        if isinstance(expr.map.base_op, AdditionOperator):
+            if exp == -1:
+                tex = '- %s' % base_tex
+            elif _coeff_isneg(exp):
+                exp_tex = self._print(-exp)
+                tex = '- %s %s' % (exp_tex, base_tex)
+            else:
+                exp_tex = self._print(exp)
+                tex = '%s %s' % (exp_tex, base_tex)
+        else:
+            exp_tex = self._print(exp)
+            tex = "{%s}^{%s}" % (base_tex, exp_tex)
 
         if isinstance(expr, Map) and print_domains:
             tex = self._helper_print_domain(expr, tex)

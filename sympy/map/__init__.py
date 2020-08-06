@@ -14,10 +14,8 @@ __all__ = [
     'FunctionSet', 'function_set',
     'CompositionOperator', 'composite_op', 'CompositeMap',
     'IterationOperator', 'IteratedMap',
-    'AdditionOperator', 'Addition',
-    'scalar_add',
-    'MultiplicationOperator', 'Multiplication',
-    'scalar_mul', 'scalar_pow', 'scalar_divide',
+    'AdditionOperator', 'NumericAdditionOperator', 'Addition',
+    'MultiplicationOperator', 'NumericMultiplicationOperator', 'Multiplication',
 ]
 
 from .map import (
@@ -37,11 +35,9 @@ from .composite import (
 )
 
 from .add import (
-    AdditionOperator, Addition,
-    scalar_add,
+    AdditionOperator, NumericAdditionOperator, Addition,
 )
 
 from .mul import (
-    MultiplicationOperator, Multiplication,
-    scalar_mul, scalar_pow, scalar_divide,
+    MultiplicationOperator, NumericMultiplicationOperator, Multiplication,
 )

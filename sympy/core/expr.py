@@ -1111,7 +1111,7 @@ class Expr(Basic, EvalfMixin):
 
         if order is None and self.is_Add:
             # Spot the special case of Add(Number, Mul(Number, expr)) with the
-            # first number positive and thhe second number nagative
+            # first number positive and the second number nagative
             key = lambda x:not isinstance(x, (Number, NumberSymbol))
             add_args = sorted(Add.make_args(self), key=key)
             if (len(add_args) == 2
@@ -3409,10 +3409,16 @@ class Expr(Basic, EvalfMixin):
 
     def as_coeff_Mul(self, rational=False, **kwargs):
         """Efficiently extract the coefficient of a product. """
+        mul_op = kwargs.get('mul_op', None)
+        if mul_op is not None:
+            return mul_op.identity, self
         return S.One, self
 
-    def as_coeff_Add(self, rational=False):
+    def as_coeff_Add(self, rational=False, **kwargs):
         """Efficiently extract the coefficient of a summation. """
+        add_op = kwargs.get('add_op', None)
+        if add_op is not None:
+            return add_op.identity, self
         return S.Zero, self
 
     def fps(self, x=None, x0=0, dir=1, hyper=True, order=4, rational=True,

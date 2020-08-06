@@ -37,12 +37,12 @@ class BinaryOperator(Map):
     >>> op = Op()
 
     >>> op(a, b)
-    a . b
+    a.b
 
     Binary operation with identity element
 
     >>> op(a, e)
-    a . e
+    a.e
     >>> op(a, e, evaluate=True)
     a
     >>> op(e, b, evaluate=True)
@@ -132,6 +132,8 @@ class BinaryOperator(Map):
         >>> from sympy.map import BinaryOperator
         >>> from sympy.abc import a, b, c
 
+        Make ``a`` and ``b`` as left identity of operator
+
         >>> class Op(BinaryOperator):
         ...     name = '.'
         ...     def _eval_check_left_identity(self, element):
@@ -139,7 +141,7 @@ class BinaryOperator(Map):
         >>> op = Op()
 
         >>> op(c, a, evaluate=True)
-        c . a
+        c.a
         >>> op(a, c, evaluate=True)
         c
         >>> op(b, c, evaluate=True)
@@ -176,6 +178,8 @@ class BinaryOperator(Map):
         >>> from sympy.map import BinaryOperator
         >>> from sympy.abc import a, b, c
 
+        Make ``a`` and ``b`` as right identity of operator
+
         >>> class Op(BinaryOperator):
         ...     name = '.'
         ...     def _eval_check_right_identity(self, element):
@@ -183,7 +187,7 @@ class BinaryOperator(Map):
         >>> op = Op()
 
         >>> op(a, c, evaluate=True)
-        a . c
+        a.c
         >>> op(c, a, evaluate=True)
         c
         >>> op(c, a, evaluate=True)
@@ -227,11 +231,37 @@ class BinaryOperator(Map):
         """
         return LeftDivisionOperator(self)
 
+    def _ldiv_apply(self, ldivop, divisor, dividend, **kwargs):
+        # if self is associative and identity exists,
+        # convert the result to operation between dividend and
+        # inverse element of divisor.
+        if self.identity is not None and ask(Q.associative(self)):
+            inv_divisor = self.exponent_operator()(divisor, -1, **kwargs)
+            return self(inv_divisor, dividend, **kwargs)
+
+        return super(LeftDivisionOperator, LeftDivisionOperator).apply(ldivop, divisor, dividend, **kwargs)
+
+    def _ldiv_eval(self, divisor, dividend):
+        return
+
     def right_division_operator(self):
         """
         Return right division operator with respect to *self*
         """
         return RightDivisionOperator(self)
+
+    def _rdiv_apply(self, rdivop, dividend, divisor, **kwargs):
+        # if base_op is associative and identity exists,
+        # convert the result to operation between dividend and
+        # inverse element of divisor.
+        if self.identity is not None and ask(Q.associative(self)):
+            inv_divisor = self.exponent_operator()(divisor, -1, **kwargs)
+            return self(dividend, inv_divisor, **kwargs)
+
+        return super(RightDivisionOperator, RightDivisionOperator).apply(rdivop, dividend, divisor, **kwargs)
+
+    def _rdiv_eval(self, dividend, divisor):
+        return
 
     def is_left_division(self, other):
         """
@@ -250,11 +280,32 @@ class BinaryOperator(Map):
         return False
 
     def inverse_operator(self):
-        """
-        Return unary operator which returns two-sided inverse element
-        with repect to *self*.
-        """
         return InverseOperator(self)
+
+    def _invop_apply(self, x, **kwargs):
+        # Define the behavior of inverse operator of self
+        if ask(Q.associative(self)):
+            return self.exponent_operator()(x, -1, **kwargs)
+
+        evaluate = kwargs.get('evaluate', False)
+        if evaluate:
+            return self._invop_eval(x)
+
+    def _invop_eval(self, x):
+        # Defined the result of evaluation of inverse operator of self
+        if x == self.identity:
+            return x
+
+        base, exp = x.as_base_exp(self)
+        if exp == -1:
+            return base
+
+    def inverse_element(self, expr, **kwargs):
+        """
+        Return inverse element of *expr* with respect to *self*.
+
+        """
+        return self.inverse_operator()(expr, **kwargs)
 
     def are_inverse(self, a, b):
         """
@@ -276,6 +327,30 @@ class BinaryOperator(Map):
 
         """
         return ExponentOperator(self)
+
+    def _expop_apply(self, x, n, **kwargs):
+        if not ask(Q.positive(n)):
+            if getattr(self, "identity", None) is None:
+                raise TypeError("%s does not have identity." % self)
+
+        evaluate = kwargs.get('evaluate', False)
+
+        if evaluate:
+            x, n = _sympify(x), _sympify(n)
+            base, exp = x.as_base_exp(self)
+            if exp != 1:
+                # collect x**2**3 to x**6
+                x, n = base, exp*n
+                return self.exponent_operator()(x, n, **kwargs)
+            return self._expop_eval(x, n)
+
+    def _expop_eval(self, x, n):
+        if x == self.identity:
+            return x
+        if n == 1:
+            return x
+        if n == 0:
+            return self.identity
 
     def _binary_cancel(self, a, b):
         # attempt to cancel a and b using inverse relation or division relation.
@@ -391,7 +466,7 @@ class LeftDivisionOperator(BinaryOperator):
     >>> op_ld = op.left_division_operator()
 
     >>> op(b, op_ld(b, a))
-    b * (b \ a)
+    b*(b\a)
     >>> op(b, op_ld(b, a), evaluate=True)
     a
 
@@ -420,15 +495,12 @@ class LeftDivisionOperator(BinaryOperator):
         return self.base_op.codomain
 
     def apply(self, divisor, dividend, **kwargs):
-        # if base_op is associative and identity exists,
-        # convert the result to operation between dividend and
-        # inverse element of divisor.
         base_op = self.base_op
-        if base_op.identity is not None and ask(Q.associative(base_op)):
-            kwargs["evaluate"] = True
-            inv_divisor = base_op.exponent_operator()(divisor, -1, **kwargs)
-            return base_op(inv_divisor, dividend, **kwargs)
-        return super().apply(divisor, dividend, **kwargs)
+        return base_op._ldiv_apply(self, divisor, dividend, **kwargs)
+
+    def eval(self, divisor, dividend):
+        base_op = self.base_op
+        return base_op._ldiv_eval(divisor, dividend)
 
 class RightDivisionOperator(BinaryOperator):
     r"""
@@ -458,7 +530,7 @@ class RightDivisionOperator(BinaryOperator):
     >>> op_rd = op.right_division_operator()
 
     >>> op(op_rd(a, b), b)
-    (a / b) * b
+    (a/b)*b
     >>> op(op_rd(a, b), b, evaluate=True)
     a
 
@@ -485,15 +557,12 @@ class RightDivisionOperator(BinaryOperator):
         return self.base_op.codomain
 
     def apply(self, dividend, divisor, **kwargs):
-        # if base_op is associative and identity exists,
-        # convert the result to operation between dividend and
-        # inverse element of divisor.
         base_op = self.base_op
-        if base_op.identity is not None and ask(Q.associative(base_op)):
-            kwargs["evaluate"] = True
-            inv_divisor = base_op.exponent_operator()(divisor, -1, **kwargs)
-            return base_op(dividend, inv_divisor, **kwargs)
-        return super().apply(dividend, divisor, **kwargs)
+        return base_op._rdiv_apply(self, dividend, divisor, **kwargs)
+
+    def eval(self, dividend, divisor):
+        base_op = self.base_op
+        return base_op._rdiv_eval(dividend, divisor)
 
 class InverseOperator(Map):
     """
@@ -555,17 +624,11 @@ class InverseOperator(Map):
 
     def apply(self, x, **kwargs):
         base_op = self.base_op
-        if ask(Q.associative(base_op)):
-            return base_op.exponent_operator()(x, -1, **kwargs)
-        return super().apply(x, **kwargs)
+        return base_op._invop_apply(x, **kwargs)
 
     def eval(self, x):
-        if x == self.base_op.identity:
-            return x
-
-        base, exp = x.as_base_exp(self.base_op)
-        if exp == -1:
-            return base
+        base_op = self.base_op
+        return base_op._invop_eval(x)
 
     def _eval_as_base_exp(self, a):
         return a, S.NegativeOne
@@ -615,6 +678,11 @@ class ExponentOperator(Map):
     >>> op_expop(x, 0, evaluate=True)
     1
 
+    References
+    ==========
+
+    https://en.wikipedia.org/wiki/Exponentiation#Generalizations
+
     """
     def __new__(cls, base_op, **kwargs):
 
@@ -645,28 +713,12 @@ class ExponentOperator(Map):
         return ExponentElement(self, (x, n), evaluate=evaluate)
 
     def apply(self, x, n, **kwargs):
-        if not ask(Q.positive(n)):
-            if getattr(self.base_op, "identity", None) is None:
-                raise TypeError("%s does not have identity." % self.base_op)
-
-        if kwargs.get("evaluate", False):
-            x, n = _sympify(x), _sympify(n)
-            base, exp = x.as_base_exp(self.base_op)
-            if exp != 1:
-                # collect x**2**3 to x**6
-                x, n = base, exp*n
-                return self(x, n, **kwargs)
-
-        return super().apply(x, n, **kwargs)
+        base_op = self.base_op
+        return base_op._expop_apply(x, n, **kwargs)
 
     def eval(self, x, n):
-
-        if x == self.base_op.identity:
-            return x
-        if n == 1:
-            return x
-        if n == 0:
-            return self.base_op.identity
+        base_op = self.base_op
+        return base_op._expop_eval(x, n)
 
     def _eval_as_base_exp(self, x, n):
         return x, n

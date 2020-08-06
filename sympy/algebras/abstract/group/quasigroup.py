@@ -48,7 +48,7 @@ class LeftQuasigroup(Magma):
 
     >>> Q_ld = Q.left_division
     >>> Q_ld(a, b)
-    a \ b
+    a\b
 
     Divisions can be cancelled.
 
@@ -113,7 +113,7 @@ class RightQuasigroup(Magma):
 
     >>> Q_rd = Q.right_division
     >>> Q_rd(a, b)
-    a / b
+    a/b
 
     Divisions can be cancelled.
 
@@ -178,9 +178,9 @@ class Quasigroup(LeftQuasigroup, RightQuasigroup):
 
     >>> Q_ld, Q_rd = Q.left_division, Q.right_division
     >>> Q_ld(a, b)
-    a \ b
+    a\b
     >>> Q_rd(a, b)
-    a / b
+    a/b
 
     Divisions can be cancelled.
 

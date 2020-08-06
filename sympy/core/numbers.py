@@ -826,12 +826,18 @@ class Number(AtomicExpr):
 
     def as_coeff_Mul(self, rational=False, **kwargs):
         """Efficiently extract the coefficient of a product. """
+        mul_op = kwargs.get('mul_op', None)
+        if mul_op is not None:
+            return mul_op.identity, self
         if rational and not self.is_Rational:
             return S.One, self
         return (self, S.One) if self else (S.One, self)
 
-    def as_coeff_Add(self, rational=False):
+    def as_coeff_Add(self, rational=False, **kwargs):
         """Efficiently extract the coefficient of a summation. """
+        add_op = kwargs.get('add_op', None)
+        if add_op is not None:
+            return add_op.identity, self
         if not rational:
             return self, S.Zero
         return S.Zero, self
@@ -2035,10 +2041,16 @@ class Rational(Number):
 
     def as_coeff_Mul(self, rational=False, **kwargs):
         """Efficiently extract the coefficient of a product. """
+        mul_op = kwargs.get('mul_op', None)
+        if mul_op is not None:
+            return mul_op.identity, self
         return self, S.One
 
-    def as_coeff_Add(self, rational=False):
+    def as_coeff_Add(self, rational=False, **kwargs):
         """Efficiently extract the coefficient of a summation. """
+        add_op = kwargs.get('add_op', None)
+        if add_op is not None:
+            return add_op.identity, self
         return self, S.Zero
 
 
@@ -2643,6 +2655,9 @@ class Zero(IntegerConstant, metaclass=Singleton):
 
     def as_coeff_Mul(self, rational=False, **kwargs):  # XXX this routine should be deleted
         """Efficiently extract the coefficient of a summation. """
+        mul_op = kwargs.get('mul_op', None)
+        if mul_op is not None:
+            return mul_op.identity, self
         return S.One, self
 
 

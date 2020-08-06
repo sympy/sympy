@@ -7257,10 +7257,12 @@ def test_diffgeom():
     assert pretty(b) == "x"
 
 def test_map():
+    from sympy import Set
     from sympy.map import (
         Map, IdentityMap,
         BinaryOperator,
         CompositeMap, IteratedMap,
+        AdditionOperator,
     )
 
     f = Map(name='f')
@@ -7282,8 +7284,8 @@ def test_map():
     assert pretty(Id(x)) == "id(x)"
 
     # Composite map
-    assert upretty(f@g) == 'f ∘ g : 𝕌 → 𝕌'
-    assert upretty((f@g)(x)) == '(f ∘ g)(x)'
+    assert upretty(f@g) == 'f∘g : 𝕌 → 𝕌'
+    assert upretty((f@g)(x)) == '(f∘g)(x)'
 
     # Compositional map power
     assert upretty(f@f) == ' 2        \nf  : 𝕌 → 𝕌'
@@ -7294,8 +7296,8 @@ def test_map():
         name = '+'
     op1 = Op1()
     assert upretty(op1) == '     2    \n+ : 𝕌  → 𝕌'
-    assert upretty(op1(x+y, x*y)) == '(x + y) + (x⋅y)'
-    assert pretty(op1(op1(x,y), y)) == '(x + y) + y'
+    assert upretty(op1(x+y, x*y)) == '(x + y)+(x⋅y)'
+    assert pretty(op1(op1(x,y), y)) == '(x+y)+y'
 
     # inverse and exponent element
     class Op2(BinaryOperator):
@@ -7308,6 +7310,17 @@ def test_map():
     assert upretty(op2.exponent_operator()(x*y, 2)) == '     2\n(x⋅y) '
     assert upretty(op2.inverse_operator()(x**2)) == '    -1\n⎛ 2⎞  \n⎝x ⎠  '
     assert upretty(op2.exponent_operator()(x**2, 2)) == '    2\n⎛ 2⎞ \n⎝x ⎠ '
+
+    # exponentation of abstract addition
+    A = Set('A')
+    a, e = [A.element(s) for s in 'ae']
+    add = AdditionOperator(A**2, A, e)
+    add_exp = add.exponent_operator()
+    assert pretty(add_exp(a, -1)) == '-a'
+    assert upretty(add_exp(a, 1)) == '1⋅a' # 1 written explicitly to show that unevaluated
+    assert upretty(add_exp(a, 2)) == '2⋅a'
+    assert upretty(add_exp(a, -2)) == '-2⋅a'
+    assert upretty(add_exp(a, -x)) == '-x⋅a'
 
 def test_abstractalgebra():
     from sympy.sets import Set

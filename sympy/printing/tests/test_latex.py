@@ -2661,10 +2661,12 @@ def test_latex_decimal_separator():
     raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))
 
 def test_map():
+    from sympy import Set
     from sympy.map import (
         Map, IdentityMap,
         BinaryOperator,
         CompositeMap, IteratedMap,
+        AdditionOperator,
     )
 
     f = Map(name='f')
@@ -2712,6 +2714,17 @@ def test_map():
     assert latex(op2.exponent_operator()(x*y, 2)) == r'{\left(x y\right)}^{2}'
     assert latex(op2.inverse_operator()(x**2)) == r'{\left(x^{2}\right)}^{-1}'
     assert latex(op2.exponent_operator()(x**2, 2)) == r'{\left(x^{2}\right)}^{2}'
+
+    # exponentation of abstract addition
+    A = Set('A')
+    a, e = [A.element(s) for s in 'ae']
+    add = AdditionOperator(A**2, A, e)
+    add_exp = add.exponent_operator()
+    assert latex(add_exp(a, -1)) == '- a'
+    assert latex(add_exp(a, 1)) == '1 a' # 1 written explicitly to show that unevaluated
+    assert latex(add_exp(a, 2)) == '2 a'
+    assert latex(add_exp(a, -2)) == '- 2 a'
+    assert latex(add_exp(a, -x)) == '- x a'
 
 def test_abstractalgebra():
     from sympy.sets import Set

@@ -5,7 +5,7 @@ __all__ = [
 ]
 
 class Loop(Quasigroup):
-    """
+    r"""
     A base class for algebraic loop.
 
     Explanation
@@ -48,9 +48,9 @@ class Loop(Quasigroup):
 
     >>> L_ld, L_rd = L.left_division, L.right_division
     >>> L_ld(a, b)
-    a \ b
+    a\b
     >>> L_rd(a, b)
-    a / b
+    a/b
 
     Identity exists.
 

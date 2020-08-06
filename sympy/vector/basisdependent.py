@@ -145,6 +145,9 @@ class BasisDependent(Expr):
 
     def as_coeff_Mul(self, rational=False, **kwargs):
         """Efficiently extract the coefficient of a product. """
+        mul_op = kwargs.get('mul_op', None)
+        if mul_op is not None:
+            return mul_op.identity, self
         return (S.One, self)
 
     def as_coeff_add(self, *deps):

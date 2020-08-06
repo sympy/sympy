@@ -47,7 +47,7 @@ class Semigroup(Magma):
     Operation of semigroup is associative.
 
     >>> SG_op(a, SG_op(b, c), evaluate=True)
-    a * b * c
+    a*b*c
 
     """
     def __new__(cls, name, sets, operators, **kwargs):

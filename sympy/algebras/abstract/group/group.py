@@ -52,7 +52,7 @@ class Group(Monoid, Loop):
     Operation of group is associative.
 
     >>> G_op(a, op(b, c), evaluate=True)
-    a * b * c
+    a*b*c
 
     Exponent is defined.
 
@@ -62,7 +62,7 @@ class Group(Monoid, Loop):
     Operation of group has identity.
 
     >>> G_op(a, G_op(e, b), evaluate=True)
-    a * b
+    a*b
 
     Operation of group has inverse element.
 
@@ -122,7 +122,7 @@ class AbelianGroup(Group):
     Operation of abelian group is similar to natural scalar operations.
 
     >>> G_op(a, b, c, G.inverse(a), b, evaluate=True)
-    b**2 * c
+    b**2*c
 
     """
     def __new__(cls, name, sets, operators, **kwargs):

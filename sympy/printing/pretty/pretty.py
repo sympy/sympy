@@ -2793,13 +2793,15 @@ class PrettyPrinter(Printer):
             pform = self._helper_print_domain(e, pform)
         return pform
 
-    def _print_AppliedMap(self, e, print_domains=True):
+    def _print_AppliedMap(self, e, print_domains=True, pad_infix=False):
         from sympy.map import BinaryOperator, Map
 
         prettyMap = self.parenthesize(e.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
 
         if isinstance(e.map, BinaryOperator):
-            infix = ' ' + str(prettyMap) + ' '
+            infix = str(prettyMap)
+            if pad_infix:
+                infix = ' ' + infix + ' '
 
             args = []
             for a in e.arguments:
@@ -2843,19 +2845,35 @@ class PrettyPrinter(Printer):
         return pretty_base**prettyForm('-1')
 
     def _print_ExponentElement(self, e, print_domains=True):
-        from sympy.map import Map
+        from sympy.map import Map, AdditionOperator
+        from sympy.map.mul import _coeff_isneg
 
         base, exp = e.as_base_exp(e.map.base_op)
         if isinstance(base, Map):
             pretty_base = self.parenthesize(base, PRECEDENCE['Pow'], kwargs={'print_domains':False})
         else:
             pretty_base = self.parenthesize(base, PRECEDENCE['Pow'])
-        pretty_exp = self._print(exp)
-        pform = pretty_base**pretty_exp
+
+        if isinstance(e.map.base_op, AdditionOperator):
+            if exp == -1:
+                pform = prettyForm(*pretty_base.left('-'))
+            elif _coeff_isneg(exp):
+                pretty_exp = self._print(-exp)
+                pretty_exp = prettyForm(*pretty_exp.left('-'))
+                pform = pretty_exp*pretty_base
+            else:
+                pretty_exp = self._print(exp)
+                pform = pretty_exp*pretty_base
+        else:
+            pretty_exp = self._print(exp)
+            pform = pretty_base**pretty_exp
 
         if isinstance(e, Map) and print_domains:
             pform = self._helper_print_domain(e, pform)
         return pform
+
+    def _print_Addition(self, e, print_domains=True):
+        return self._print_AppliedMap(e, print_domains, pad_infix=True)
 
     def _print_AlgebraicStructure(self, e):
         name = e.name.name
