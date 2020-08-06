@@ -898,6 +898,73 @@ def _is_commutative_anti_derivative(A, t):
     return B, is_commuting
 
 
+def _second_order_subs_type1(eqs, funcs, t):
+    r"""
+    For a linear, second order system of ODEs, a particular substitution.
+
+    A system of the below form can be reduced to a linear first order system of
+    ODEs:
+    .. math::
+        X'' = A(t) * (t*X' - X) + b(t)
+
+    By substituting:
+    .. math::  U = t*X' - X
+
+    To get the system:
+    .. math::  U' = t*A(t)*U + b(t)
+
+    Where $U$ is the vector of dependent variables, $X$ is the vector of dependent
+    variables in `funcs` and $X'$ is the first order derivative of $X$ with respect to
+    $t$. It may or may not reduce the system into linear first order system of ODEs.
+
+    Then a check is made to determine if the system passed can be reduced or not, if
+    this substitution works, then the system is reduced and its solved for the new
+    substitution. After we get the solution for $U$:
+
+    .. math::  U = a(t)
+
+    We substitute and return the reduced system:
+
+    .. math::
+        a(t) = t*X' - X
+
+    If the substitution doesn't work, then `None` is returned.
+
+    Parameters
+    ==========
+
+    eqs: List
+        List of second order ODEs
+    funcs: List
+        List of the dependent variables for the second order system
+    t: Symbol
+        Independent variable of the system of ODEs.
+
+    Returns
+    =======
+
+    List or None
+
+    """
+
+    U = [t*func.diff(t) - func for func in funcs]
+
+    # Note: To add the collect_sums or equivalent
+
+    try:
+        (A1, A0), b = linear_ode_to_matrix(eqs, U, t, 1)
+    except (ODEOrderError, ODENonlinearError):
+        return None
+
+    if any(b.has(func.diff(t, i)) for func in funcs for i in range(2)):
+        return None
+
+    sol = linodesolve(A0, t, b)
+    reduced_eqs = [Eq(u, s) for s, u in zip(sol, U)]
+
+    return reduced_eqs
+
+
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
     r"""
     Returns a dictionary with details of the eqs if every equation is constant coefficient
