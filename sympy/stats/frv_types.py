@@ -295,11 +295,11 @@ def Bernoulli(name, p, succ=1, fail=0):
     ==========
 
     p : Rational number between 0 and 1
-       Represents probability of success
+        Represents probability of success
     succ : Integer/symbol/string
-       Represents event of success
+        Represents event of success
     fail : Integer/symbol/string
-       Represents event of failure
+        Represents event of failure
 
     Returns
     =======
@@ -339,7 +339,7 @@ def Coin(name, p=S.Half):
     ==========
 
     p : Rational Numeber between 0 and 1
-      Represents probability of getting "Heads", by default is Half
+        Represents probability of getting "Heads", by default is Half
 
     Returns
     =======
@@ -431,13 +431,13 @@ def Binomial(name, n, p, succ=1, fail=0):
     ==========
 
     n : Positive Integer
-      Represents number of trials
+        Represents number of trials
     p : Rational Number between 0 and 1
-      Represents probability of success
+        Represents probability of success
     succ : Integer/symbol/string
-      Represents event of success, by default is 1
+        Represents event of success, by default is 1
     fail : Integer/symbol/string
-      Represents event of failure, by default is 0
+        Represents event of failure, by default is 0
 
     Returns
     =======
@@ -509,7 +509,7 @@ def BetaBinomial(name, n, alpha, beta):
     ==========
 
     n : Positive Integer
-      Represents number of trials
+        Represents number of trials
     alpha : Real positive number
     beta : Real positive number
 
@@ -582,11 +582,11 @@ def Hypergeometric(name, N, m, n):
     ==========
 
     N : Positive Integer
-      Represents finite population of size N.
+        Represents finite population of size N.
     m : Positive Integer
-      Represents number of trials with required feature.
+        Represents number of trials with required feature.
     n : Positive Integer
-      Represents numbers of draws.
+        Represents numbers of draws.
 
     Returns
     =======

@@ -712,8 +712,8 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     syms: list/tuple/set of symbols
         For identifying each component
     omega: A square matrix
-           Every element of square matrix must be absolute value of
-           square root of correlation coefficient
+        Every element of square matrix must be absolute value of
+        square root of correlation coefficient
     v : Positive real number
     lamda : List of positive real numbers
     mu : List of positive real numbers

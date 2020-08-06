@@ -112,7 +112,7 @@ def entropy(expr, condition=None, **kwargs):
     expression : the random expression whose entropy is to be calculated
     condition : optional, to specify conditions on random expression
     b: base of the logarithm, optional
-       By default, it is taken as Euler's number
+        By default, it is taken as Euler's number
 
     Returns
     =======
@@ -256,7 +256,7 @@ def skewness(X, condition=None, **kwargs):
     ==========
 
     condition : Expr containing RandomSymbols
-            A conditional expression. skewness(X, X>0) is skewness of X given X > 0
+        A conditional expression. skewness(X, X>0) is skewness of X given X > 0
 
     Examples
     ========
@@ -290,7 +290,7 @@ def kurtosis(X, condition=None, **kwargs):
     ==========
 
     condition : Expr containing RandomSymbols
-            A conditional expression. kurtosis(X, X>0) is kurtosis of X given X > 0
+        A conditional expression. kurtosis(X, X>0) is kurtosis of X given X > 0
 
     Examples
     ========
@@ -328,9 +328,8 @@ def factorial_moment(X, n, condition=None, **kwargs):
     ==========
 
     n: A natural number, n-th factorial moment.
-
     condition : Expr containing RandomSymbols
-            A conditional expression.
+        A conditional expression.
 
     Examples
     ========
@@ -424,13 +423,13 @@ def coskewness(X, Y, Z, condition=None, **kwargs):
     ==========
 
     X : RandomSymbol
-            Random Variable used to calculate coskewness
+        Random Variable used to calculate coskewness
     Y : RandomSymbol
-            Random Variable used to calculate coskewness
+        Random Variable used to calculate coskewness
     Z : RandomSymbol
-            Random Variable used to calculate coskewness
+        Random Variable used to calculate coskewness
     condition : Expr containing RandomSymbols
-            A conditional expression
+        A conditional expression
 
     Examples
     ========
