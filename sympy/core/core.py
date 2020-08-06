@@ -102,6 +102,3 @@ class BasicMeta(type):
         if cls.__cmp__(other) == 1:
             return True
         return False
-
-class BasicMeta(type):
-    pass
