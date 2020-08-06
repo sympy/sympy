@@ -305,9 +305,6 @@ class NDimArray(Printable):
 
         return f(self._loop_size, self.shape, 0, self._loop_size)
 
-    def __repr__(self):
-        return self.__str__()
-
     def tolist(self):
         """
         Converting MutableDenseNDimArray to one-dim list
