@@ -365,6 +365,7 @@ class CosetTable(DefaultPrinting):
                     self.modified_coincidence(f, b, f_p**-1*b_p)
                 else:
                     self.coincidence(f, b)
+                return
             elif j == i:
                 # deduction process
                 table[f][A_dict[word[i]]] = b
@@ -642,6 +643,7 @@ class CosetTable(DefaultPrinting):
                 j -= 1
             if j < i:
                 self.coincidence_c(f, b)
+                return
             elif j == i:
                 table[f][A_dict[word[i]]] = b
                 table[b][A_dict_inv[word[i]]] = f
