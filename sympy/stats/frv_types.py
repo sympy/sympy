@@ -89,7 +89,7 @@ def FiniteRV(name, density):
     ==========
 
     density : A dict
-        Dictionary conatining the pdf of finite distribution
+        Dictionary conatining the PMF of finite distribution
 
     Returns
     =======
