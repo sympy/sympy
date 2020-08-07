@@ -178,9 +178,10 @@ def MultivariateNormal(name, mu, sigma):
     Parameters
     ==========
 
-    mu : List representing the mean or the mean vector
+    mu : List
+        The mean or the mean vector
     sigma : Positive definite square matrix
-        Represents covariance Matrix
+        Covariance Matrix
 
     Returns
     =======
@@ -256,9 +257,10 @@ def MultivariateLaplace(name, mu, sigma):
     Parameters
     ==========
 
-    mu : List representing the mean or the mean vector
+    mu : List
+        The mean or the mean vector
     sigma : Positive definite square matrix
-        Represents covariance Matrix
+        Covariance Matrix
 
     Returns
     =======
@@ -336,9 +338,9 @@ def MultivariateT(syms, mu, sigma, v):
     ==========
 
     syms: A symbol/str
-        For identifying the random variable.
+        Identifies the random variable.
     mu: A list/matrix
-        Representing the location vector
+        The location vector
     sigma : The shape matrix for the distribution
 
     Returns
@@ -413,7 +415,7 @@ def NormalGamma(sym, mu, lamda, alpha, beta):
     ==========
 
     sym : symbol/str
-        For identifying the random variable
+        Identifies the random variable
     mu: real number
         The mean of the normal distribution
     lamda : positive integer
@@ -657,7 +659,8 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     Parameters
     ==========
 
-    syms : list/tuple/set of symbols for identifying each component
+    syms : list/tuple/set of symbols
+        Identifies each component
     delta : A constant in range [0, 1]
     v : Positive real number
     lamda : List of positive real numbers
@@ -710,7 +713,7 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     ==========
 
     syms: list/tuple/set of symbols
-        For identifying each component
+        Identifies each component
     omega: A square matrix
         Every element of square matrix must be absolute value of
         square root of correlation coefficient
@@ -805,7 +808,7 @@ def Multinomial(syms, n, *p):
     ==========
 
     n : Positive integer
-        Represents number of trials
+        Number of trials
     p : List of event probabilites
         Must be in the range of [0, 1]
 
@@ -879,7 +882,7 @@ def NegativeMultinomial(syms, k0, *p):
     ==========
 
     k0 : positive integer
-        Represents number of failures before the experiment is stopped
+        Number of failures before the experiment is stopped
     p : List of event probabilites
         Must be in the range of [0, 1]
 

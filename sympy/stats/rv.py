@@ -1043,7 +1043,7 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
     condition : Expr containing RandomSymbols
         A conditional expression
     size : int, tuple
-        Represents size of each sample in numsamples
+        The size of each sample in numsamples
     library : str
         - 'scipy' : Sample using scipy
         - 'numpy' : Sample using numpy
@@ -1130,7 +1130,7 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
     condition: Expr, optional
         A conditional expression
     size : int, tuple
-        Represents size of each sample in numsamples
+        The size of each sample in numsamples
     numsamples: integer, optional
         Length of the iterator (defaults to infinity)
 

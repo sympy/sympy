@@ -888,7 +888,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     failure : Integer/str
         The event which is considered to be failure, by default is 0.
     p : Real Number between 0 and 1
-        Represents the probability of getting success.
+        The probability of success.
 
     References
     ==========

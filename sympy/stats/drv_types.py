@@ -68,11 +68,11 @@ def DiscreteRV(symbol, density, set=S.Integers):
     ==========
 
     symbol : Symbol
-        Represents name of the random variable.
+        Name of the random variable.
     density : Expression containing symbol
-        Represents probability density function.
+        Probability density function.
     set : set
-        Represents the region where the pdf is valid, by default is real line.
+        The region where the pdf is valid, by default is real line.
 
     Examples
     ========

@@ -166,11 +166,11 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     ==========
 
     symbol : Symbol
-        Represents name of the random variable.
+        The name of the random variable.
     density : Expression containing symbol
-        Represents probability density function.
+        The probability density function.
     set : set/Interval
-        Represents the region where the pdf is valid, by default is real line.
+        The region where the pdf is valid, by default is real line.
 
     Returns
     =======
@@ -2167,9 +2167,9 @@ def Laplace(name, mu, b):
     ==========
 
     mu : Real number or a list/matrix
-        the location (mean) or the location vector
+        The location (mean) or the location vector
     b : Real number or a positive definite matrix,
-        representing a scale or the covariance matrix.
+        A scale or the covariance matrix.
 
     Returns
     =======
@@ -2931,7 +2931,8 @@ def Normal(name, mean, std):
     Parameters
     ==========
 
-    mu : Real number or a list representing the mean or the mean vector
+    mu : Real number, list
+        The mean or the mean vector
     sigma : Real number or a positive definite square matrix,
         `\sigma^2 > 0` the variance
 
@@ -3039,8 +3040,10 @@ def GaussianInverse(name, mean, shape):
     Parameters
     ==========
 
-    mu : Positive number representing the mean
-    lambda : Positive number representing the shape parameter
+    mu : Positive number
+        The mean
+    lambda : Positive number
+        The shape parameter
 
     Returns
     =======
