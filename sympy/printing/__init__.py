@@ -16,9 +16,10 @@ from .pycode import pycode
 # these files at top-level import time completely otherwise.
 from . import fcode
 from . import ccode
+from . import cxxcode
 
-from .codeprinter import print_ccode, cxxcode, print_fcode
-from .codeprinter import ccode, fcode # noqa:F811
+from .codeprinter import print_ccode, print_fcode
+from .codeprinter import ccode, fcode, cxxcode # noqa:F811
 
 from .glsl import glsl_code, print_glsl
 
