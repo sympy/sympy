@@ -6,6 +6,8 @@ __all__ = [
     "Module",
 ]
 
+### TODO: Implement LeftModule and RightModule
+
 class Module(AlgebraicStructure):
     """
     A base class for algebraic module.

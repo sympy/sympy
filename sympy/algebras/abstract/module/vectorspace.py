@@ -14,6 +14,43 @@ class VectorSpace(Module):
 
     Vector space is a module whose ring is field.
 
+    Parameters
+    ==========
+
+    name : str
+        Name of the structure used for printing.
+
+    sets : tuple of two structures
+        The first one is scalar field, and the
+        second one is abelian group.
+
+    operators : tuple of one Map
+        This map is scalar multiplication operator.
+
+    Examples
+    ========
+
+    >>> from sympy import (
+    ... Set, VectorAdditionOperator, AbelianGroup,
+    ... ScalarMultiplicationOperator, S, VectorSpace
+    ... )
+
+    >>> R = S.RealsField
+
+    >>> X = Set('X')
+    >>> x, e = [X.element(i) for i in 'xe']
+    >>> op = VectorAdditionOperator(X**2, X, e)
+    >>> G = AbelianGroup('G', (X,), (op,))
+
+    >>> smul = ScalarMultiplicationOperator(R*G, G)
+
+    >>> V = VectorSpace('V', (R, G), (smul,))
+
+    >>> V.div(x, 2, evaluate=True)
+    (2**(-1))*x
+    >>> V.div(x, 1, evaluate=True)
+    x
+
     """
     def __new__(cls, name, sets, operators, **kwargs):
         scalar_field, abelian_group = sets
@@ -26,8 +63,12 @@ class VectorSpace(Module):
     @property
     def field(self):
         return self.args[1].args[0]
-    scalars = field
 
-    @property
-    def vectors(self):
-        return self.args[1].args[1]
+    def divide(self, a, b, evaluate=False):
+
+        if not self.field.contains(b) == True:
+            raise TypeError("Divisor must be scalar.")
+
+        inv_b = self.field.mul_op.inverse_element(b, evaluate=True)
+        return self.mul(a, inv_b, evaluate=True)
+    div = divide

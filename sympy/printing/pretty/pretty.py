@@ -2881,6 +2881,15 @@ class PrettyPrinter(Printer):
         pform = prettyForm(mapping)
         return pform
 
+    def _print_IntegersRing(self, e):
+        return prettyForm(pretty_atom('Integers', printer=self))
+
+    def _print_RealsField(self, e):
+        return prettyForm(pretty_atom('Reals', printer=self))
+
+    def _print_ComplexesField(self, e):
+        return prettyForm(pretty_atom('Complexes', printer=self))
+
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 
