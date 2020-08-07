@@ -147,7 +147,7 @@ class TransferFunction(Basic, EvalfMixin):
             obj._num = num
             obj._den = den
             obj._var = var
-            obj._inputs, obj._outputs = 1, 1
+            obj._num_inputs, obj._num_outputs = 1, 1
             obj._shape = (1, 1) # SISO TF = 1 x 1 TFM
             return obj
         else:
@@ -215,12 +215,12 @@ class TransferFunction(Basic, EvalfMixin):
         return self._var
 
     @property
-    def inputs(self):
-        return self._inputs
+    def num_inputs(self):
+        return self._num_inputs
 
     @property
-    def outputs(self):
-        return self._outputs
+    def num_outputs(self):
+        return self._num_outputs
 
     @property
     def shape(self):
@@ -283,20 +283,7 @@ class TransferFunction(Basic, EvalfMixin):
         return self + other
 
     def __sub__(self, other):
-        if isinstance(other, (TransferFunction, Series)):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-            return Parallel(self, -other)
-        elif isinstance(other, Parallel):
-            if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
-            arg_list = [-i for i in list(other.args)]
-            return Parallel(self, *arg_list)
-        else:
-            raise ValueError("{} cannot be subtracted from a TransferFunction."
-                .format(type(other)))
+        return self + (-other)
 
     def __rsub__(self, other):
         return -self + other
@@ -488,13 +475,13 @@ class Series(Basic):
             else False
         if not obj.is_SISO:
             obj._shape = args[0].shape
-            obj._inputs, obj._outputs = args[0].inputs, args[0].outputs
+            obj._num_inputs, obj._num_outputs = args[0].num_inputs, args[0].num_outputs
             for x in range(len(args) - 1):
                 # input-output sizes should be consistent.
-                if args[x].inputs != args[x + 1].outputs:
+                if args[x].num_inputs != args[x + 1].num_outputs:
                     raise ValueError("Argument {0} of Series has {1} input(s),"
                         " but argument {2} has {3} output(s)."
-                        .format(x + 1, args[x].inputs, x + 2, args[x + 1].outputs))
+                        .format(x + 1, args[x].num_inputs, x + 2, args[x + 1].num_outputs))
 
         tf = "transfer functions" if obj.is_SISO else "TransferFunctionMatrix objects"
         obj._var = args[0].var
@@ -525,12 +512,12 @@ class Series(Basic):
         return self._var
 
     @property
-    def inputs(self):
-        return self._inputs
+    def num_inputs(self):
+        return self._num_inputs
 
     @property
-    def outputs(self):
-        return self._outputs
+    def num_outputs(self):
+        return self._num_outputs
 
     @property
     def shape(self):
@@ -782,7 +769,7 @@ class Parallel(Basic):
             else False
         if not obj.is_SISO:
             obj._shape = args[0].shape
-            obj._inputs, obj._outputs = args[0].inputs, args[0].outputs
+            obj._num_inputs, obj._num_outputs = args[0].num_inputs, args[0].num_outputs
             # All MIMO --> assert matching shapes..
             if not all(arg.shape == obj._shape for arg in args):
                 raise ShapeError("Dimensions of all TransferFunctionMatrix"
@@ -817,12 +804,12 @@ class Parallel(Basic):
         return self._var
 
     @property
-    def inputs(self):
-        return self._inputs
+    def num_inputs(self):
+        return self._num_inputs
 
     @property
-    def outputs(self):
-        return self._outputs
+    def num_outputs(self):
+        return self._num_outputs
 
     @property
     def shape(self):
@@ -857,14 +844,14 @@ class Parallel(Basic):
                     den_ = res.den * arg.den
                     res = TransferFunction(num_, den_, self.var)
                 else:
-                    if self.inputs == 1:
-                        a = [None] * self.outputs
-                        for x in range(self.outputs):
+                    if self.num_inputs == 1:
+                        a = [None] * self.num_outputs
+                        for x in range(self.num_outputs):
                             a[x] = res.args[0][x] + arg.args[0][x]
                     else:
-                        a = [[None] * self.inputs] * self.outputs
-                        for row in range(self.outputs):
-                            for col in range(self.inputs):
+                        a = [[None] * self.num_inputs] * self.num_outputs
+                        for row in range(self.num_outputs):
+                            for col in range(self.num_inputs):
                                 a[row][col] = res.args[0][row][col] + arg.args[0][row][col]
                     res = TransferFunctionMatrix(a, self.shape, self.var)
         return res
@@ -1195,39 +1182,56 @@ class Feedback(Basic):
 
 class TransferFunctionMatrix(Basic):
 
-    def __new__(cls, arg):
+    def __new__(cls, arg, shape=None, var=None):
         if not (isinstance(arg, list) and (all(isinstance(i, list) for i in arg) or
             all(isinstance(i, TransferFunction) for i in arg))):
             raise TypeError("Unsupported type for argument of TransferFunctionMatrix.")
 
+        if shape and var:
+            if not isinstance(shape, tuple):
+                raise TypeError("Shape must be a tuple, not {}.".format(type(shape)))
+            if not isinstance(var, Symbol):
+                raise TypeError("Var must be a Symbol, not {}.".format(type(var)))
+
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         if all(isinstance(i, TransferFunction) for i in arg):
-            obj._var = arg[0].var
-            if not all(elem.var == obj._var for elem in arg):
-                raise ValueError("All transfer functions should use the same complex"
-                    " variable of the Laplace transform.")
-            obj._inputs, obj._outputs = 1, len(arg)
+            # TFM with 1st argument of the type - [tf1, tf2, tf3, ...]
+            if shape and var:
+                if not all(elem.var == var for elem in arg):
+                    raise ValueError("All transfer functions should use the same complex"
+                        " variable (var) of the Laplace transform.")
+                if not (shape[0] == len(arg) and shape[1] == 1):
+                    raise ValueError("Shape must be equal to ({0}, {1}).".format(len(arg), 1))
+                obj._shape, obj._var = shape, var
+            else:
+                obj._var, obj._shape = arg[0].var, (len(arg), 1)
+                if not all(elem.var == obj._var for elem in arg):
+                    raise ValueError("All transfer functions should use the same complex"
+                        " variable of the Laplace transform.")
         else:
-            obj._inputs, obj._outputs = len(arg[0]), len(arg)
-            if not all(len(l) == obj._inputs for l in arg):
+            # TFM with 1st argument of the type - [[tf1, tf2, ...], [tf3, tf4, ...], ...]
+            if not all(isinstance(arg[row][col], (TransferFunction, Series, Parallel))
+                for col in range(len(arg[0])) for row in range(len(arg))):
+                raise TypeError("All the lists in the first argument of TransferFunctionMatrix"
+                    " only support transfer functions, and Series/Parallel objects in them.")
+            if not all(len(l) == len(arg[0]) for l in arg):
                 raise ValueError("Length of all the lists in the argument of"
                     " TransferFunctionMatrix should be equal.")
-            if not all(isinstance(arg[row][col], (TransferFunction, Series, Parallel))
-                for col in range(shape[1]) for row in range(shape[0])):
-                raise TypeError("All the lists in the first argument of TransferFunctionMatrix"
-            if not all(isinstance(arg[row][col], TransferFunction)
-                for col in range(obj._inputs) for row in range(obj._outputs)):
-                raise TypeError("All the lists in the argument of TransferFunctionMatrix"
-                    " only support transfer functions in them.")
-
-            obj._var = arg[0][0].var
-            if not all(arg[row][col].var == obj._var
-                for col in range(obj._inputs) for row in range(obj._outputs)):
-                raise ValueError("All transfer functions should use the same complex"
-                    " variable of the Laplace transform.")
-        obj._shape = (obj._outputs, obj._inputs)
-        # No. of columns = # of inputs
-        # No. of rows = # of outputs
+            if shape and var:
+                if not (shape[0] == len(arg) and shape[1] == len(arg[0])):
+                    raise ValueError("Shape must be equal to ({0}, {1}).".format(len(arg), len(arg[0])))
+                if not all(arg[row][col].var == var
+                    for col in range(shape[1]) for row in range(shape[0])):
+                    raise ValueError("All transfer functions should use the same complex"
+                        " variable (var) of the Laplace transform.")
+                obj._shape, obj._var = shape, var
+            else:
+                obj._var, obj._shape = arg[0][0].var, (len(arg), len(arg[0]))
+                if not all(arg[row][col].var == obj._var
+                    for col in range(len(arg[0])) for row in range(len(arg))):
+                    raise ValueError("All transfer functions should use the same complex"
+                        " variable of the Laplace transform.")
+        obj._num_outputs, obj._num_inputs = obj._shape
         return obj
 
     @property
@@ -1235,12 +1239,12 @@ class TransferFunctionMatrix(Basic):
         return self._var
 
     @property
-    def inputs(self):
-        return self._inputs
+    def num_inputs(self):
+        return self._num_inputs
 
     @property
-    def outputs(self):
-        return self._outputs
+    def num_outputs(self):
+        return self._num_outputs
 
     @property
     def shape(self):
@@ -1312,9 +1316,9 @@ class TransferFunctionMatrix(Basic):
 
     def __mul__(self, other):
         if isinstance(other, TransferFunctionMatrix):
-            if not self.inputs == other.outputs:
+            if not self.num_inputs == other.num_outputs:
                 raise ValueError("C = A * B: A has {0} input(s), but B has {1} output(s)."
-                    .format(self.inputs, other.outputs))
+                    .format(self.num_inputs, other.num_outputs))
             if not self.var == other.var:
                 raise ValueError("Both TransferFunctionMatrix objects should use the same"
                     " complex variable of the Laplace transform.")
@@ -1327,18 +1331,18 @@ class TransferFunctionMatrix(Basic):
 
     def doit(self, **kwargs):
         arg_matrix = self.args[0]
-        if self.inputs == 1:
-            for row in range(self.outputs):
+        if self.num_inputs == 1:
+            for row in range(self.num_outputs):
                 arg_matrix[row] = arg_matrix[row].doit()
         else:
-            for row in range(self.outputs):
-                for col in range(self.inputs):
+            for row in range(self.num_outputs):
+                for col in range(self.num_inputs):
                     arg_matrix[row][col] = arg_matrix[row][col].doit()
 
-        return TransferFunctionMatrix(arg_matrix, self.shape, self.var)
+        return TransferFunctionMatrix(arg_matrix)
 
     def __neg__(self):
-        if self.inputs == 1:
+        if self.num_inputs == 1:
             neg_args = [-col for col in self.args[0]]
         else:
             neg_args = [[-col for col in row] for row in self.args[0]]
@@ -1346,24 +1350,24 @@ class TransferFunctionMatrix(Basic):
 
     @property
     def is_proper(self):
-        if self.inputs == 1:
+        if self.num_inputs == 1:
             return all(elem.is_proper for elem in self.args[0])
         else:
             return all(self.args[0][row][col].is_proper
-                for col in range(self.inputs) for row in range(self.outputs))
+                for col in range(self.num_inputs) for row in range(self.num_outputs))
 
     @property
     def is_strictly_proper(self):
-        if self.inputs == 1:
+        if self.num_inputs == 1:
             return all(elem.is_strictly_proper for elem in self.args[0])
         else:
             return all(self.args[0][row][col].is_strictly_proper
-                for col in range(self.inputs) for row in range(self.outputs))
+                for col in range(self.num_inputs) for row in range(self.num_outputs))
 
     @property
     def is_biproper(self):
-        if self.inputs == 1:
+        if self.num_inputs == 1:
             return all(elem.is_biproper for elem in self.args[0])
         else:
             return all(self.args[0][row][col].is_biproper
-                for col in range(self.inputs) for row in range(self.outputs))
+                for col in range(self.num_inputs) for row in range(self.num_outputs))

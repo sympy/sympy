@@ -14,20 +14,20 @@ def test_TransferFunction_construction():
     assert tf.num == (s + 1)
     assert tf.den == (s**2 + s + 1)
     assert tf.args == (s + 1, s**2 + s + 1, s)
-    assert tf.shape == (tf.outputs, tf.inputs) == (1, 1)
+    assert tf.shape == (tf.num_outputs, tf.num_inputs) == (1, 1)
 
     tf1 = TransferFunction(s + 4, s - 5, s)
     assert tf1.num == (s + 4)
     assert tf1.den == (s - 5)
     assert tf1.args == (s + 4, s - 5, s)
-    assert tf1.shape == (tf1.outputs, tf1.inputs) == (1, 1)
+    assert tf1.shape == (tf1.num_outputs, tf1.num_inputs) == (1, 1)
 
     # using different polynomial variables.
     tf2 = TransferFunction(p + 3, p**2 - 9, p)
     assert tf2.num == (p + 3)
     assert tf2.den == (p**2 - 9)
     assert tf2.args == (p + 3, p**2 - 9, p)
-    assert tf2.shape == (tf2.outputs, tf2.inputs) == (1, 1)
+    assert tf2.shape == (tf2.num_outputs, tf2.num_inputs) == (1, 1)
 
     tf3 = TransferFunction(p**3 + 5*p**2 + 4, p**4 + 3*p + 1, p)
     assert tf3.args == (p**3 + 5*p**2 + 4, p**4 + 3*p + 1, p)
@@ -36,7 +36,7 @@ def test_TransferFunction_construction():
     tf4 = TransferFunction((s + 3)*(s - 1), (s - 1)*(s + 5), s)
     assert tf4.den == (s - 1)*(s + 5)
     assert tf4.args == ((s + 3)*(s - 1), (s - 1)*(s + 5), s)
-    assert tf4.shape == (tf4.outputs, tf4.inputs) == (1, 1)
+    assert tf4.shape == (tf4.num_outputs, tf4.num_inputs) == (1, 1)
 
     tf4_ = TransferFunction(p + 2, p + 2, p)
     assert tf4_.args == (p + 2, p + 2, p)
@@ -56,7 +56,7 @@ def test_TransferFunction_construction():
     assert tf6_.num == 0.5
     assert tf6_.den == 4
     assert tf6_.args == (0.500000000000000, 4, s)
-    assert tf6_.shape == (tf6_.outputs, tf6_.inputs) == (1, 1)
+    assert tf6_.shape == (tf6_.num_outputs, tf6_.num_inputs) == (1, 1)
 
     tf7 = TransferFunction(3*s**2 + 2*p + 4*s, 8*p**2 + 7*s, s)
     tf8 = TransferFunction(3*s**2 + 2*p + 4*s, 8*p**2 + 7*s, p)
@@ -629,35 +629,35 @@ def test_TransferFunctionMatrix_construction():
     tf7 = TransferFunction(p, a0, p)
 
     tfm1 = TransferFunctionMatrix([TF1, TF2])
-    assert tfm1.shape == (tfm1.outputs, tfm1.inputs) == (2, 1)
+    assert tfm1.shape == (tfm1.num_outputs, tfm1.num_inputs) == (2, 1)
     assert tfm1.args == ([TF1, TF2],)
     assert tfm1.var == s
 
     tfm2 = TransferFunctionMatrix([-TF1, TF2])
-    assert tfm2.shape == (tfm2.outputs, tfm2.inputs) == (2, 1)
+    assert tfm2.shape == (tfm2.num_outputs, tfm2.num_inputs) == (2, 1)
     assert tfm2.args == ([-TF1, TF2],)
     assert tfm2.var == s
 
     tfm3 = TransferFunctionMatrix([tf7])
-    assert tfm3.shape == (tfm3.outputs, tfm3.inputs) == (1, 1)
+    assert tfm3.shape == (tfm3.num_outputs, tfm3.num_inputs) == (1, 1)
     assert tfm3.var == p
     assert tfm3.args == ([tf7],)
 
     tfm4 = TransferFunctionMatrix([TF3, tf5, tf6])
-    assert tfm4.shape == (tfm4.outputs, tfm4.inputs) == (3, 1)
+    assert tfm4.shape == (tfm4.num_outputs, tfm4.num_inputs) == (3, 1)
     assert tfm4.args == ([TF3, tf5, tf6],)
     assert tfm4.var == s
 
     tfm5 = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]])
-    assert tfm5.shape == (tfm5.outputs, tfm5.inputs) == (2, 2)
+    assert tfm5.shape == (tfm5.num_outputs, tfm5.num_inputs) == (2, 2)
     assert tfm5.args == ([[TF1, -TF2], [TF3, tf5]],)
 
     tfm6 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, tf6, -tf6]])
-    assert tfm6.shape == (tfm6.outputs, tfm6.inputs) == (2, 3)
+    assert tfm6.shape == (tfm6.num_outputs, tfm6.num_inputs) == (2, 3)
     assert tfm6.args == ([[TF1, TF2, TF3], [tf5, tf6, -tf6]],)
 
     tfm7 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]])
-    assert tfm7.shape == (tfm7.outputs, tfm7.inputs) == (3, 2)
+    assert tfm7.shape == (tfm7.num_outputs, tfm7.num_inputs) == (3, 2)
     assert tfm7.args == ([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]],)
 
     raises(TypeError, lambda: TransferFunction(Matrix([1, 2, 3])))
