@@ -4,6 +4,7 @@ from sympy.sets.undefinedset import UndefinedSet, SetElement
 A = UndefinedSet('A')
 B = UndefinedSet('B', (A,))
 C = UndefinedSet('C', (B,))
+X = UndefinedSet('X')
 
 def test_UndefinedSet():
     assert A == Set('A')
@@ -23,6 +24,16 @@ def test_UndefinedSet():
     assert B.intersection(A) == B
     assert A.union(B) == A
     assert B.union(A) == A
+
+    assert A.union(X).is_superset(A)
+    assert A.union(X).is_superset(X)
+    assert A.is_subset(A.union(X))
+    assert X.is_subset(A.union(X))
+
+    assert A.is_superset(A.intersect(X))
+    assert X.is_superset(A.intersect(X))
+    assert A.intersect(X).is_subset(A)
+    assert A.intersect(X).is_subset(X)
 
     D = UndefinedSet('D', (S.Reals,))
     assert D.is_subset(S.Reals)

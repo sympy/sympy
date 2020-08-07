@@ -403,6 +403,13 @@ class Set(Basic):
             return False
         if self.is_finite_set is False and other.is_finite_set:
             return False
+        if self is S.UniversalSet:
+            return other is S.UniversalSet
+        if other is S.UniversalSet:
+            return True
+        if other.is_Union:
+            if any(self.is_subset(a) for a in other.args):
+                return True
 
         # Dispatch on subclass rules
         ret = self._eval_is_subset(other)

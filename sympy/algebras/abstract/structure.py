@@ -93,13 +93,7 @@ class AlgebraicStructure(Set):
 
     @property
     def domain(self):
-        sets = []
-        for s in self.sets:
-            if isinstance(s, AlgebraicStructure):
-                sets.append(s.domain)
-            else:
-                sets.append(s)
-        return Union(*sets)
+        return Union(*self.sets)
 
     def _check_closure(self):
         for o in self.operators:
@@ -149,7 +143,6 @@ class AlgebraicStructure(Set):
                 return False
 
         return True
-    is_subset = is_substructure
 
     def _eval_is_substructure(self, other):
         return
@@ -176,7 +169,12 @@ class AlgebraicStructure(Set):
                 return False
 
         return True
-    is_superset = is_superstructure
 
     def _eval_is_superstructure(self, other):
         return
+
+    def _eval_is_subset(self, other):
+        return self.domain.is_subset(other)
+
+    def _eval_is_superset(self, other):
+        return self.domain.is_superset(other)

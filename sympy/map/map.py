@@ -495,7 +495,7 @@ class AppliedMap(Expr):
     map : Map
 
     args : tuple of arguments
-        arguments applied to *map*
+        Arguments applied to *map*
 
     evaluate : bool, optional
         If True, returns evaluated application of *map* to *args*
@@ -544,6 +544,40 @@ class AppliedMap(Expr):
     def arguments(self):
         return self.args[1]
 
+    def denest(self, deep=True, **kwargs):
+        """
+        Flatten the nested structure, but do not evaluate it
+
+        Examples
+        ========
+
+        >>> from sympy import S
+        >>> add = S.IntegersRing.add
+        >>> expr = add(1, add(2, add(3, 4)))
+
+        >>> expr
+        1 + (2 + (3 + 4))
+        >>> expr.denest(deep=False)
+        1 + 2 + (3 + 4)
+        >>> expr.denest()
+        1 + 2 + 3 + 4
+
+        """
+        if deep:
+            arguments = []
+            for a in self.arguments:
+                if hasattr(a, 'denest'):
+                    arguments.append(a.denest(deep=True, **kwargs))
+                else:
+                    arguments.append(a)
+        else:
+            arguments = self.arguments
+
+        if hasattr(self.map, 'flatten') and ask(Q.associative(self.map)):
+            arguments = self.map.flatten(arguments)
+
+        return self._new_rawargs(*arguments)
+
     def _new_rawargs(self, *args, **kwargs):
         kwargs["evaluate"] = False
         return self.func(self.map, args, **kwargs)
@@ -556,16 +590,35 @@ class AppliedMap(Expr):
         # Do not return False; allow other to check as well.
 
     def doit(self, **hints):
+        """
+        Evaluate *self*.
+
+        Examples
+        ========
+
+        >>> from sympy import S
+        >>> add = S.IntegersRing.add
+        >>> expr = add(1, add(2, add(3, 4)))
+
+        >>> expr
+        1 + (2 + (3 + 4))
+        >>> expr.doit(deep=False)
+        3 + (3 + 4)
+        >>> expr.doit()
+        10
+
+        """
         deep = hints.get('deep', True)
         if deep:
-            args = (a.doit(**hints) for a in self.args)
+            self = self.denest(**hints)
+            args = [a.doit(**hints) for a in self.args]
             return self.func(*args, evaluate=True)
         else:
             return self.func(*self.args, evaluate=True)
 
     def as_base_exp(self, operator):
         if self.map.is_restriction(operator):
-            return self.map._eval_as_base_exp(*self.arguments)
+            return self.map._eval_as_base_exp(self)
         return self, S.One
 
 def isappliedmap(arg, maps):

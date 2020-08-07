@@ -828,7 +828,8 @@ class Number(AtomicExpr):
         """Efficiently extract the coefficient of a product. """
         mul_op = kwargs.get('mul_op', None)
         if mul_op is not None:
-            return mul_op.identity, self
+            kwargs.update(rational=rational)
+            return mul_op._eval_as_coeff_Mul(self, **kwargs)
         if rational and not self.is_Rational:
             return S.One, self
         return (self, S.One) if self else (S.One, self)
@@ -2043,7 +2044,8 @@ class Rational(Number):
         """Efficiently extract the coefficient of a product. """
         mul_op = kwargs.get('mul_op', None)
         if mul_op is not None:
-            return mul_op.identity, self
+            kwargs.update(rational=rational)
+            return mul_op._eval_as_coeff_Mul(self, **kwargs)
         return self, S.One
 
     def as_coeff_Add(self, rational=False, **kwargs):
@@ -2657,7 +2659,8 @@ class Zero(IntegerConstant, metaclass=Singleton):
         """Efficiently extract the coefficient of a summation. """
         mul_op = kwargs.get('mul_op', None)
         if mul_op is not None:
-            return mul_op.identity, self
+            kwargs.update(rational=rational)
+            return mul_op._eval_as_coeff_Mul(self, **kwargs)
         return S.One, self
 
 

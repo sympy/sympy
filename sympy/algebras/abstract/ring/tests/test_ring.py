@@ -19,6 +19,8 @@ def test_Ring():
 
     assert R.sub(a, a, evaluate=True) == e1
 
+    assert R.add(a, R.sub(b, a)).doit() == b
+
     assert R.mul(b, e2, evaluate=True) == b
     assert R.pow(b, 1, evaluate=True) == b
     assert R.pow(b, 0, evaluate=True) == e2

@@ -47,6 +47,9 @@ def test_AlgebraicStructure():
     assert S_B.is_substructure(S_A)
     assert S_A.is_superstructure(S_B)
 
+    assert S_A.is_subset(A)
+    assert f_A(a,a,a) in A
+
     # check substructure relation with subclasses
     class NewStructure(AlgebraicStructure):
         pass

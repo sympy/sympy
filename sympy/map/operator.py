@@ -105,7 +105,6 @@ class BinaryOperator(Map):
     def flatten(self, seq):
         #Flatten nested structure for associative operator.
         #Other procedures such as inverse cancelling are implemented in other methods
-
         new_seq = []
         for o in seq:
             if isappliedmap(o, self):
@@ -438,6 +437,23 @@ class BinaryOperator(Map):
             seq = self.collect_iterated(seq)
         return seq
 
+    def _eval_as_coeff_Mul(self, expr, **kwargs):
+        # Fallback for the case where *self* is used as
+        # abstract multiplication operator.
+        # specified classes may override this method
+        rational = kwargs.get('rational', False)
+        if isappliedmap(expr, self):
+            coeff, args = expr.arguments[0], expr.arguments[1:]
+            if coeff.is_Number:
+                if not rational or coeff.is_Rational:
+                    if len(args) == 1:
+                        return coeff, args[0]
+                    else:
+                        return coeff, expr._new_rawargs(*args)
+                elif coeff.is_extended_negative:
+                    return -self.identity, expr._new_rawargs(*((-coeff,) + args))
+        return self.identity, expr
+
 class LeftDivisionOperator(BinaryOperator):
     r"""
     Left division operator, derived from a binary operation.
@@ -630,7 +646,8 @@ class InverseOperator(Map):
         base_op = self.base_op
         return base_op._invop_eval(x)
 
-    def _eval_as_base_exp(self, a):
+    def _eval_as_base_exp(self, expr):
+        a, = expr.arguments
         return a, S.NegativeOne
 
     def _eval_iterate(self, n):
@@ -720,7 +737,8 @@ class ExponentOperator(Map):
         base_op = self.base_op
         return base_op._expop_eval(x, n)
 
-    def _eval_as_base_exp(self, x, n):
+    def _eval_as_base_exp(self, expr):
+        x, n = expr.arguments
         return x, n
 
 class InverseElement(AppliedMap):
@@ -730,7 +748,7 @@ class InverseElement(AppliedMap):
     """
     def as_base_exp(self, operator):
         if self.map.base_op.is_restriction(operator):
-            return self.map._eval_as_base_exp(*self.arguments)
+            return self.map._eval_as_base_exp(self)
         return self, S.One
 
 class ExponentElement(AppliedMap):
@@ -741,5 +759,5 @@ class ExponentElement(AppliedMap):
 
     def as_base_exp(self, operator):
         if self.map.base_op.is_restriction(operator):
-            return self.map._eval_as_base_exp(*self.arguments)
+            return self.map._eval_as_base_exp(self)
         return self, S.One

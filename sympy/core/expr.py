@@ -3411,7 +3411,8 @@ class Expr(Basic, EvalfMixin):
         """Efficiently extract the coefficient of a product. """
         mul_op = kwargs.get('mul_op', None)
         if mul_op is not None:
-            return mul_op.identity, self
+            kwargs.update(rational=rational)
+            return mul_op._eval_as_coeff_Mul(self, **kwargs)
         return S.One, self
 
     def as_coeff_Add(self, rational=False, **kwargs):

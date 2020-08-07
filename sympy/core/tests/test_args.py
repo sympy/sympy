@@ -899,44 +899,30 @@ def test_sympy__algebras__abstract__ring__field__Field():
 
 def test_sympy__algebras__abstract__module__module__Module():
     from sympy import (
-        AbelianGroup, Map, Module, BinaryOperator
+        AdditionOperator, AbelianGroup, Map, Module
     )
 
     R = S.IntegersRing
 
-    class Op(BinaryOperator):
-        identity = S.Zero
-        is_left_divisible = is_right_divisible = True
-        is_associative = True
-        is_commutative = True
-        domain = S.UniversalSet**2
-        codomain = S.UniversalSet
-    op = Op()
+    op = AdditionOperator(S.UniversalSet**2, S.UniversalSet, S.Zero)
     G = AbelianGroup('G', (S.UniversalSet,), (op,))
 
-    f = Map('f', domain=R.domain*G.domain, codomain=G.domain)
+    f = Map('f', domain=R*G, codomain=G)
 
     M = Module('M', (R, G), (f,))
     assert _test_args(M)
 
 def test_sympy__algebras__abstract__module__vectorspace__VectorSpace():
     from sympy import (
-        AbelianGroup, Map, VectorSpace, BinaryOperator
+        AdditionOperator, AbelianGroup, Map, VectorSpace
     )
 
     F = S.RealsField
 
-    class Op(BinaryOperator):
-        identity = S.Zero
-        is_left_divisible = is_right_divisible = True
-        is_associative = True
-        is_commutative = True
-        domain = S.UniversalSet**2
-        codomain = S.UniversalSet
-    op = Op()
+    op = AdditionOperator(S.UniversalSet**2, S.UniversalSet, S.Zero)
     G = AbelianGroup('G', (S.UniversalSet,), (op,))
 
-    f = Map('f', domain=F.domain*G.domain, codomain=G.domain)
+    f = Map('f', domain=F*G, codomain=G)
 
     V = VectorSpace('V', (F, G), (f,))
     assert _test_args(V)
@@ -3153,6 +3139,10 @@ def test_sympy__map__add__NumericAdditionOperator():
     from sympy.map import NumericAdditionOperator
     assert _test_args(NumericAdditionOperator(S.Complexes**2, S.Complexes))
 
+def test_sympy__map__add__VectorAdditionOperator():
+    from sympy.map import VectorAdditionOperator
+    assert _test_args(VectorAdditionOperator(S.Complexes**2, S.Complexes, S.Zero))
+
 def test_sympy__map__add__Addition():
     scalar_add = S.RealsField.add_op
     scalar_mul = S.RealsField.mul_op
@@ -3169,6 +3159,10 @@ def test_sympy__map__mul__MultiplicationOperator():
 def test_sympy__map__mul__NumericMultiplicationOperator():
     from sympy.map import NumericMultiplicationOperator
     assert _test_args(NumericMultiplicationOperator(S.Complexes**2, S.Complexes))
+
+def test_sympy__map__mul__ScalarMultiplicationOperator():
+    from sympy.map import ScalarMultiplicationOperator
+    assert _test_args(ScalarMultiplicationOperator(S.Reals*S.Complexes, S.Complexes))
 
 def test_sympy__map__mul__Multiplication():
     scalar_mul = S.RealsField.mul_op

@@ -7,7 +7,9 @@ from .map import AppliedMap
 from .operator import BinaryOperator
 
 __all__ = [
-    "AdditionOperator", "NumericAdditionOperator", "Addition"
+    "AdditionOperator", "NumericAdditionOperator",
+    "VectorAdditionOperator",
+    "Addition",
 ]
 
 class AdditionOperator(BinaryOperator):
@@ -19,7 +21,7 @@ class AdditionOperator(BinaryOperator):
 
     Addition operater forms an abelian group over ring structure, and can be subject to
     distribution by multiplication.
-    When ``AdditionOperator`` instance is called, multiplication operator must be passed
+    When the instance of this class is called, multiplication operator must be passed
     as *mul_op* parameter for this relation. By using ``Ring`` class from algebras module,
     this is done automatically.
 
@@ -89,10 +91,10 @@ class AdditionOperator(BinaryOperator):
         return self.right_division_operator()
 
     def __call__(self, *args, mul_op, evaluate=False, **kwargs):
-        return Addition(self, args, mul_op, evaluate=evaluate, **kwargs)
+        return Addition(self, args, (mul_op,), evaluate=evaluate, **kwargs)
 
-    def apply(self, *args, **kwargs):
-        mul_op = kwargs.get('mul_op')
+    def apply(self, *args, aux, **kwargs):
+        mul_op, = aux
         evaluate = kwargs.get('evaluate', False)
 
         # sympify the arguments
@@ -108,12 +110,12 @@ class AdditionOperator(BinaryOperator):
 
         # return Addition class with processed arguments
         args = Tuple(*[_sympify(a) for a in args])
-
-        result = super(AppliedMap, Addition).__new__(Addition, self, args, mul_op)
+        aux = Tuple(*[_sympify(a) for a in aux])
+        result = super(AppliedMap, Addition).__new__(Addition, self, args, aux)
         return result
 
     def undistribute(self, seq, mul_op, evaluate=False):
-        # collect coefficients, e.g. 2*x + 3*x -> 5*x
+        # collect coefficients, e.g. 2*x + 3*x -> (2+3)*x
         # also, remove the identity element from seq
         terms = {}
         for o in seq:
@@ -145,7 +147,11 @@ class AdditionOperator(BinaryOperator):
         result = []
         expop = self.exponent_operator()
         for base, exp in terms.items():
-            result.append(expop(base, exp, evaluate=evaluate))
+            t = expop(base, exp, evaluate=evaluate)
+            if t == self.identity:
+                pass
+            else:
+                result.append(expop(base, exp, evaluate=evaluate))
         return result
 
     def addition_process(self, seq, mul_op):
@@ -163,6 +169,9 @@ class AdditionOperator(BinaryOperator):
     def _rdiv_apply(self, rdivop, dividend, divisor, **kwargs):
         inv_divisor = self.exponent_operator()(divisor, -1, **kwargs)
         return self(dividend, inv_divisor, **kwargs)
+
+    def _eval_as_base_exp(self, expr):
+        return expr, S.One
 
 class NumericAdditionOperator(AdditionOperator):
     """
@@ -207,7 +216,7 @@ class NumericAdditionOperator(AdditionOperator):
     def __call__(self, *args, evaluate=False, **kwargs):
         kwargs.pop('mul_op', None)
         mul_op = self.mul_op()
-        return Addition(self, args, mul_op, evaluate=evaluate, **kwargs)
+        return Addition(self, args, (mul_op,), evaluate=evaluate, **kwargs)
 
     def undistribute(self, seq, mul_op, evaluate=False):
         terms = {}
@@ -253,25 +262,144 @@ class NumericAdditionOperator(AdditionOperator):
         mul_op = self.mul_op()
         return mul_op(n, x, **kwargs)
 
+class VectorAdditionOperator(AdditionOperator):
+    r"""
+    Class for abstract vector addition operator defined in algebraic module.
+
+    Explanation
+    ===========
+
+    To be called, vector addition operator needs keyword arguments *sv_mul*
+    (scalar-vector multiplication operator), *ss_add* (scalar-scalar addition operator)
+    and *ss_mul(scalar-scalar multiplication operator). This is to perform the
+    collection of vectors, i.e. $\mathbf(v) + \mathbf(v) = \left(1+1 \right) \mathbf(v)$.
+
+    Examples
+    ========
+
+    >>> from sympy import (
+    ... Set, ScalarMultiplicationOperator, AdditionOperator, MultiplicationOperator,
+    ... VectorAdditionOperator
+    ... )
+
+    >>> S, V = Set('S'), Set('V') # scalar set and vector set
+    >>> S_e1, S_e2 = [S.element(i) for i in ('e1', 'e2')]
+    >>> v, V_e = [V.element(i) for i in ('v', 'e')]
+
+    >>> sv_mul = ScalarMultiplicationOperator(S*V, V)
+    >>> ss_add = AdditionOperator(S**2, S, S_e1)
+    >>> ss_mul = MultiplicationOperator(S**2, S, S_e2)
+
+    >>> add = VectorAdditionOperator(V**2, V, V_e)
+
+    >>> add(v, v, sv_mul=sv_mul, ss_add=ss_add, ss_mul=ss_mul)
+    v + v
+    >>> _.doit()
+    (e2 + e2)*v
+
+    """
+    def __call__(self, *args, sv_mul, ss_add, ss_mul, evaluate=False, **kwargs):
+        # sv_mul : scalar-vector mul
+        # ss_add : scalar-scalar add
+        # ss_mul : scalar-scalar mul
+        return Addition(
+            self, args, (sv_mul, ss_add, ss_mul), evaluate=evaluate, **kwargs
+        )
+
+    def apply(self, *args, aux, **kwargs):
+        sv_mul, ss_add, ss_mul = aux
+        evaluate = kwargs.get('evaluate', False)
+
+        # sympify the arguments
+        args = [_sympify(a) for a in args]
+
+        if evaluate:
+            args = self.addition_process(args, sv_mul, ss_add, ss_mul)
+
+            if not args:
+                return self.identity
+            elif len(args) == 1:
+                return args[0]
+
+        # return Addition class with processed arguments
+        args = Tuple(*[_sympify(a) for a in args])
+        aux = Tuple(*[_sympify(a) for a in aux])
+        result = super(AppliedMap, Addition).__new__(
+            Addition, self, args, aux,
+        )
+        return result
+
+    def undistribute(self, seq, sv_mul, ss_add, ss_mul, evaluate=False):
+        # collect coefficients, e.g. 2*x + 3*x -> (2+3)*x
+        # also, remove the identity element from seq
+        terms = {}
+        for o in seq:
+            coeff, term = o.as_coeff_Mul(mul_op=sv_mul, ss_mul=ss_mul)
+            if term not in terms:
+                terms[term] = ss_mul.identity
+            else:
+                terms[term] = ss_add(terms[term], coeff, mul_op=ss_mul, evaluate=evaluate)
+
+        result = []
+        for term, coeff in terms.items():
+            if coeff == self.identity:
+                continue
+            elif coeff == ss_mul.identity:
+                result.append(term)
+            else:
+                result.append(
+                    sv_mul(
+                        coeff, term, vv_add=self, ss_add=ss_add, ss_mul=ss_mul, evaluate=evaluate
+                    )
+                )
+        return result
+
+    def addition_process(self, seq, sv_mul, ss_add, ss_mul):
+        seq = self.flatten(seq)
+        seq = self.remove_identity(seq)
+        seq = self.undistribute(seq, sv_mul, ss_add, ss_mul, evaluate=True)
+        seq.sort(key=cmp_to_key(Basic.compare))
+        return seq
+
 class Addition(AppliedMap):
     """
     Class for the unevaluated result of general addition.
 
-    """
-    def __new__(cls, mapping, args, mul_op, evaluate=False, **kwargs):
-        kwargs.update(
-            evaluate=evaluate,
-            mul_op=mul_op
-        )
+    Parameters
+    ==========
 
-        return super().__new__(cls, mapping, args, **kwargs)
+    map : Map
+
+    args : tuple of arguments
+        Arguments applied to *map*
+
+    aux : tuple of Maps
+        Auxillary operators
+
+    evaluate : bool, optional
+        If True, returns evaluated application of *map* to *args*
+
+    """
+    def __new__(cls, mapping, args, aux, evaluate=False, **kwargs):
+        kwargs.update(evaluate=evaluate)
+
+        # consult mapping.apply
+        result = mapping.apply(*args, aux=aux, **kwargs)
+
+        # check codomain
+        if mapping.codomain.contains(result) == False:
+                    raise TypeError(
+                "%s is not in %s's codomain %s." % (result, mapping, mapping.codomain)
+                )
+
+        return result
 
     @property
-    def mul_op(self):
+    def aux(self):
         return self.args[2]
 
     def _new_rawargs(self, *args, **kwargs):
-        return self.func(self.map, args, self.mul_op)
+        return self.func(self.map, args, self.aux, **kwargs)
 
     def as_coeff_Add(self, rational=False, add_op=None, **kwargs):
         if add_op is None or isappliedmap(self, add_op):
@@ -282,8 +410,3 @@ class Addition(AppliedMap):
                 else:
                     return coeff, self._new_rawargs(*args)
         return self.map.identity, self
-
-    def undistribute(self, mul_op, evaluate=False):
-        # collect coefficients, e.g. 2*x + 3*x -> 5*x
-        seq = [*self.arguments]
-        return self.map.undistribute(seq, mul_op=mul_op, evaluate=evaluate)

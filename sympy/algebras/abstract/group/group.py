@@ -74,7 +74,7 @@ class Group(Monoid, Loop):
     """
     @property
     def inverse(self):
-        op = self.operators[0]
+        op = self.operator
         return op.inverse_operator()
 
 class AbelianGroup(Group):
