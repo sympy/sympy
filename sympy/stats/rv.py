@@ -1044,21 +1044,20 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
         A conditional expression
     size : int, tuple
         The size of each sample in numsamples
-    library : str
+    library : {'scipy', 'numpy', 'pymc3'}
+        Choose any of the available options to sample from as string,
+        default is 'scipy':
         - 'scipy' : Sample using scipy
         - 'numpy' : Sample using numpy
         - 'pymc3' : Sample using PyMC3
-
-        Choose any of the available options to sample from as string,
-        by default is 'scipy'
     numsamples : int
         Number of samples, each with size as ``size``
 
     Returns
     =======
 
-    sample: iterator object
-        iterator object containing the sample/samples of given expr
+    sample : iterator object
+        Iterator object containing the sample/samples of given expr
 
     """
     ### TODO: Remove the user warnings in the future releases
