@@ -1,6 +1,6 @@
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
-from sympy.core.function import Function, ArgumentIndexError, expand_mul
+from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool
 from sympy.core.numbers import igcdex, Rational, pi
 from sympy.core.relational import Ne
@@ -388,6 +388,14 @@ class sin(TrigonometricFunction):
             else:
                 return (-1)**(n//2)*x**(n)/factorial(n)
 
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        arg = self.args[0]
+        if logx is not None:
+            arg = arg.subs(log(x), logx)
+        if arg.subs(x, 0).has(S.NaN, S.ComplexInfinity):
+            raise PoleError("Cannot expand %s around 0" % (self))
+        return Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
+
     def _eval_rewrite_as_exp(self, arg, **kwargs):
         I = S.ImaginaryUnit
         if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
@@ -576,6 +584,9 @@ class cos(TrigonometricFunction):
         elif isinstance(arg, SetExpr):
             return arg._eval_func(cls)
 
+        if arg.is_extended_real and arg.is_finite is False:
+            return AccumBounds(-1, 1)
+
         if arg.could_extract_minus_sign():
             return cls(-arg)
 
@@ -707,6 +718,14 @@ class cos(TrigonometricFunction):
                 return -p*x**2/(n*(n - 1))
             else:
                 return (-1)**(n//2)*x**(n)/factorial(n)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        arg = self.args[0]
+        if logx is not None:
+            arg = arg.subs(log(x), logx)
+        if arg.subs(x, 0).has(S.NaN, S.ComplexInfinity):
+            raise PoleError("Cannot expand %s around 0" % (self))
+        return Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
 
     def _eval_rewrite_as_exp(self, arg, **kwargs):
         I = S.ImaginaryUnit

@@ -861,3 +861,10 @@ def test_issue_15055():
 
 def test_issue_19739():
     assert limit((-S(1)/4)**x, x, oo) == 0
+
+
+def test_issue_19770():
+    m = Symbol('m', real=True)
+    assert limit(cos(m*x)/x, x, oo) == Limit(cos(m*x)/x, x, oo, dir='-') # can be improved to give the correct result 0
+    m = Symbol('m', nonzero=True)
+    assert limit(cos(m*x), x, oo) == AccumBounds(-1, 1)
