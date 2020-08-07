@@ -1389,9 +1389,9 @@ def ExponentialPower(name, mu, alpha, beta):
     Parameters
     ==========
 
-    mu : Real number, 'mu' is a location
-    alpha : Real number, 'alpha > 0' is a scale
-    beta : Real number, 'beta > 0' is a shape
+    mu : Real number, `mu` is a location
+    alpha : Real number, `alpha > 0` is a scale
+    beta : Real number, `beta > 0` is a shape
 
     Returns
     =======
@@ -1931,8 +1931,8 @@ def Gumbel(name, beta, mu, minimum=False):
     Parameters
     ==========
 
-    mu : Real number, 'mu' is a location
-    beta : Real number, 'beta > 0' is a scale
+    mu : Real number, `mu` is a location
+    beta : Real number, `beta > 0` is a scale
     minimum : Boolean, by default, False, set to True for enabling minimum distribution
 
     Returns
@@ -2005,8 +2005,8 @@ def Gompertz(name, b, eta):
     Parameters
     ==========
 
-    b : Real number, 'b > 0' a scale
-    eta : Real number, 'eta > 0' a shape
+    b : Real number, `b > 0` a scale
+    eta : Real number, `eta > 0` a shape
 
     Returns
     =======
@@ -3574,8 +3574,8 @@ def ShiftedGompertz(name, b, eta):
     Parameters
     ==========
 
-    b: Real number, 'b > 0' a scale
-    eta: Real number, 'eta > 0' a shape
+    b: Real number, `b > 0` a scale
+    eta: Real number, `eta > 0` a shape
 
     Returns
     =======
