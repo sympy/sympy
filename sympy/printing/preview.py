@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 import io
-from io import BytesIO
 import os
 from os.path import join
 import shutil
@@ -202,11 +201,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 raise OSError(
                     "No viewers found for '%s' output format." % output)
     else:
-        if viewer == "StringIO":
-            viewer = "BytesIO"
-            if outputbuffer is None:
-                raise ValueError("outputbuffer has to be a BytesIO "
-                                 "compatible object if viewer=\"StringIO\"")
+        if viewer == "file":
+            if filename is None:
+                raise ValueError("filename has to be specified if viewer=\"file\"")
         elif viewer == "BytesIO":
             if outputbuffer is None:
                 raise ValueError("outputbuffer has to be a BytesIO "
@@ -318,13 +315,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
 
         if viewer == "file":
-            if filename is None:
-                buffer = BytesIO()
-                with open(join(workdir, src), 'rb') as fh:
-                    buffer.write(fh.read())
-                return buffer
-            else:
-                shutil.move(join(workdir,src), filename)
+            shutil.move(join(workdir, src), filename)
         elif viewer == "BytesIO":
             with open(join(workdir, src), 'rb') as fh:
                 outputbuffer.write(fh.read())
