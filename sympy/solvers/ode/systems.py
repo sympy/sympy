@@ -898,7 +898,7 @@ def _is_commutative_anti_derivative(A, t):
     return B, is_commuting
 
 
-def _second_order_subs_type1(eqs, funcs, t):
+def _second_order_subs_type1(original_eqs, funcs, t):
     r"""
     For a linear, second order system of ODEs, a particular substitution.
 
@@ -947,14 +947,32 @@ def _second_order_subs_type1(eqs, funcs, t):
 
     """
 
-    U = [t*func.diff(t) - func for func in funcs]
+    U = Matrix([t*func.diff(t) - func for func in funcs])
+    n = len(original_eqs)
 
-    # Note: To add the collect_sums or equivalent
+    eqs = canonical_odes(original_eqs, funcs, t)[0]
+    eqs = [eq.rhs for eq in eqs]
 
-    try:
-        (A1, A0), b = linear_ode_to_matrix(eqs, U, t, 1)
-    except (ODEOrderError, ODENonlinearError):
-        return None
+    for i, eq in enumerate(eqs):
+        coeffs = []
+        for u in U:
+            coeff = [eq.coeff(term) for term in Add.make_args(u)]
+            if len(set(coeff)) != 1:
+                break
+            coeffs.append(coeff[0])
+
+        # If any of the term isn't present in the
+        # desired form and doesn't have 0 as coefficient
+        # then None needs to be returned indicating that
+        # the substitution doesn't work.
+        if len(coeffs) != n:
+            return None
+
+        coeffs = Matrix(coeffs)
+        dot_product = coeffs.dot(U)
+        eqs[i] = -1*((eqs[i] - dot_product).expand() + dot_product)
+
+    (A1, A0), b = linear_ode_to_matrix(eqs, U, t, 1)
 
     if any(b.has(func.diff(t, i)) for func in funcs for i in range(2)):
         return None
@@ -1309,6 +1327,12 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None):
     if funcs is None:
         funcs = sys_order.keys()
 
+    if all(sys_order[func] == 2 for func in funcs):
+        new_eqs = _second_order_subs_type1(eqs, funcs, t)
+        if new_eqs is not None:
+            sys_order = {func: 1 for func in funcs}
+            eqs = new_eqs
+
     for prev_func in funcs:
         func_name = prev_func.func.__name__
         func = Function(Dummy('{}_0'.format(func_name)))(t)
@@ -1448,15 +1472,16 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
 
     sys_order = _get_func_order(eqs, funcs)
     new_funcs = funcs
-
+    sols = []
+    variables = Tuple(*eqs).free_symbols
     is_higher_order = not all(sys_order[func] == 1 for func in funcs)
-    if is_higher_order:
-        eqs, new_funcs = _higher_order_to_first_order(eqs, sys_order, t, funcs=funcs)
 
     canon_eqs = canonical_odes(eqs, new_funcs, t)
-    sols = []
 
     for canon_eq in canon_eqs:
+        if is_higher_order:
+            canon_eq, new_funcs = _higher_order_to_first_order(canon_eq,
+                                                        sys_order, t, funcs=funcs)
         sol = _strong_component_solver(canon_eq, new_funcs, t)
         if sol is None:
             sol = _component_solver(canon_eq, new_funcs, t)
@@ -1479,7 +1504,6 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
             else:
                 sol = [Eq(var, sol_dict[var]) for var in funcs]
 
-            variables = Tuple(*eqs).free_symbols
             sol = constant_renumber(sol, variables=variables)
 
             if ics:
