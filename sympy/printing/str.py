@@ -624,12 +624,6 @@ class StrPrinter(Printer):
         return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False),
                          self.parenthesize(expr.exp, PREC, strict=False))
 
-    def _print_ImmutableDenseNDimArray(self, expr):
-        return str(expr)
-
-    def _print_ImmutableSparseNDimArray(self, expr):
-        return str(expr)
-
     def _print_Integer(self, expr):
         if self._settings.get("sympy_integers", False):
             return "S(%s)" % (expr)
