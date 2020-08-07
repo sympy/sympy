@@ -121,7 +121,7 @@ class AdditionOperator(BinaryOperator):
         for o in seq:
             coeff, term = o.as_coeff_Mul(mul_op=mul_op)
             if term not in terms:
-                terms[term] = mul_op.identity
+                terms[term] = coeff
             else:
                 terms[term] = self(terms[term], coeff, mul_op=mul_op, evaluate=False)
 
@@ -223,7 +223,7 @@ class NumericAdditionOperator(AdditionOperator):
         for o in seq:
             coeff, term = o.as_coeff_Mul(mul_op=mul_op)
             if term not in terms:
-                terms[term] = mul_op.identity
+                terms[term] = coeff
             else:
                 terms[term] += coeff
 
@@ -336,7 +336,7 @@ class VectorAdditionOperator(AdditionOperator):
         for o in seq:
             coeff, term = o.as_coeff_Mul(mul_op=sv_mul, ss_mul=ss_mul)
             if term not in terms:
-                terms[term] = ss_mul.identity
+                terms[term] = coeff
             else:
                 terms[term] = ss_add(terms[term], coeff, mul_op=ss_mul, evaluate=evaluate)
 
@@ -358,6 +358,7 @@ class VectorAdditionOperator(AdditionOperator):
         seq = self.flatten(seq)
         seq = self.remove_identity(seq)
         seq = self.undistribute(seq, sv_mul, ss_add, ss_mul, evaluate=True)
+        seq = self.cancel(seq, evaluate=True)
         seq.sort(key=cmp_to_key(Basic.compare))
         return seq
 

@@ -727,7 +727,8 @@ class ExponentOperator(Map):
         return False
 
     def __call__(self, x, n, evaluate=False, **kwargs):
-        return ExponentElement(self, (x, n), evaluate=evaluate)
+        kwargs.update(evaluate=evaluate)
+        return ExponentElement(self, (x, n), **kwargs)
 
     def apply(self, x, n, **kwargs):
         base_op = self.base_op

@@ -117,11 +117,12 @@ class Module(AlgebraicStructure):
             return self.ring.sub(a, b, evaluate=evaluate)
         # vector subtraction
         if all(self.group.contains(i) == True for i in [a, b]):
+            sv_mul, ss_add, ss_mul = self.smul_op, self.ring.add_op, self.ring.mul_op
             op = self.group.operator
-            inv_b = op.inverse_element(b)
+            inv_b = op.inverse_element(b, sv_mul=sv_mul, ss_add=ss_add, ss_mul=ss_mul)
             return op(
                 a, inv_b,
-                sv_mul=self.smul_op, ss_add=self.ring.add_op, ss_mul=self.ring.mul_op,
+                sv_mul=sv_mul, ss_add=ss_add, ss_mul=ss_mul,
                 evaluate=evaluate
             )
         raise TypeError("Mismatching argument for module subtraction")

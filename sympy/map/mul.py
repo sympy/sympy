@@ -314,7 +314,7 @@ class ScalarMultiplicationOperator(MultiplicationOperator):
 
     def _eval_as_coeff_Mul(self, expr, **kwargs):
         if isappliedmap(expr, self):
-            return self.arguments
+            return expr.arguments
         ss_mul = kwargs.get('ss_mul')
         return ss_mul.identity, expr
 
