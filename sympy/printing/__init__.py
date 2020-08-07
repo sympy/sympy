@@ -10,15 +10,15 @@ from .python import python, print_python
 
 from .pycode import pycode
 
+from .codeprinter import print_ccode, print_fcode
+
 # We have to import these now because otherwise if there are imported later,
-# they will override sympy.printing.ccode and sympy.printing.fcode with the
+# they will override sympy.printing.ccode and so on with the
 # modules. It would be nice to not have to do this as we could avoid importing
 # these files at top-level import time completely otherwise.
 from . import fcode
 from . import ccode
 from . import cxxcode
-
-from .codeprinter import print_ccode, print_fcode
 from .codeprinter import ccode, fcode, cxxcode # noqa:F811
 
 from .glsl import glsl_code, print_glsl
