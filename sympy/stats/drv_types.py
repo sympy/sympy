@@ -555,8 +555,8 @@ def Skellam(name, mu1, mu2):
     Parameters
     ==========
 
-    mu1 : A non-negative value
-    mu2 : A non-negative value
+    mu1 : nonnegative number
+    mu2 : nonnegative number
 
     Returns
     =======
