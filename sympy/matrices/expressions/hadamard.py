@@ -1,8 +1,7 @@
 from sympy.core import Mul, sympify
 from sympy.matrices.common import ShapeError
-from sympy.matrices.expressions.matexpr import (
-    MatrixExpr, OneMatrix, ZeroMatrix
-)
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
 from sympy.strategies import (
     unpack, flatten, condition, exhaust, rm_id, sort
 )
