@@ -1,9 +1,9 @@
-from sympy import Basic, ImmutableMatrix, S, Symbol, Lambda
+from sympy import Basic, S, Symbol, Lambda, Tuple
 from sympy.core.sympify import sympify
 from sympy.stats.rv import _symbol_converter, RandomSymbol, NamedArgsMixin, PSpace
-from sympy.stats.crv import SingleContinuousPSpace
-from sympy.stats.frv import SingleFinitePSpace
-from sympy.stats.drv import SingleDiscretePSpace
+from sympy.stats.crv import SingleContinuousPSpace, ContinuousDistribution
+from sympy.stats.frv import SingleFinitePSpace, SingleFiniteDistribution
+from sympy.stats.drv import SingleDiscretePSpace, DiscreteDistribution
 from sympy.stats.crv_types import ContinuousDistributionHandmade
 from sympy.stats.drv_types import DiscreteDistributionHandmade
 from sympy.stats.frv_types import FiniteDistributionHandmade
@@ -109,56 +109,63 @@ def rv(symbol, cls, args):
 
 class MixtureDistribution(Basic, NamedArgsMixin):
     """Represents the Mixture distribution"""
-    _argnames = ('wts', 'rvs')
+    _argnames = ('wts', 'dists')
 
-    def __new__(cls, wts, rvs):
-        wts = ImmutableMatrix(wts)
-        rvs = ImmutableMatrix(rvs)
-        return Basic.__new__(cls, wts, rvs)
+    def __new__(cls, wts, dists):
+        wts = Tuple(*list(wts))
+        dists = Tuple(*list(dists))
+        return Basic.__new__(cls, wts, dists)
 
     @property
     def set(self):
-        return (self.rvs[0, 0]).pspace.distribution.set
+        return self.dists[0].set
 
     @property
     def is_Continuous(self):
-        return (self.rvs[0, 0]).pspace.is_Continuous
+        return isinstance(self.dists[0], ContinuousDistribution)
 
     @property
     def is_Discrete(self):
-        return (self.rvs[0, 0]).pspace.is_Discrete
+        return isinstance(self.dists[0], DiscreteDistribution)
 
     @property
     def is_Finite(self):
-        return (self.rvs[0, 0]).pspace.is_Finite
+        return isinstance(self.dists[0], SingleFiniteDistribution)
 
     @staticmethod
-    def check(wts, rvs):
-        rvs, wts = list(rvs), list(wts)
-        set_ = rvs[0].pspace.domain.set
-        for rv in rvs:
-            if not isinstance(rv, RandomSymbol):
-                raise TypeError("Each of element should be a random variable")
-            if rv.pspace.domain.set != set_:
-                raise ValueError("Each random variable should be defined on same set")
+    def check(wts, dists):
+        dists, wts = list(dists), list(wts)
+        set_ = dists[0].set
+        if isinstance(dists[0], ContinuousDistribution):
+            parent_dist = ContinuousDistribution
+        elif isinstance(dists[0], DiscreteDistribution):
+            parent_dist = DiscreteDistribution
+        else:
+            parent_dist = SingleFiniteDistribution
+        for dist in dists:
+            if not isinstance(dist, parent_dist):
+                raise TypeError("Each of distribution should be an instance of %s"
+                                % str(parent_dist))
+            if dist.set != set_:
+                raise ValueError("Each distribution should be defined on same set")
         for wt in wts:
             if not wt.is_positive:
                 raise ValueError("Weight of each random variable should be positive")
-        if len(rvs) != len(wts):
+        if len(dists) != len(wts):
             raise ValueError("Weights and RVs should be of same length")
-        if sum(wts) != S.One:
-            raise ValueError("Sum of the weights should be 1")
 
     def pdf(self, x):
         y = Symbol('y')
-        rvs, wts = list(self.rvs), list(self.wts)
+        dists, wts = list(self.dists), list(self.wts)
         pdf_ = S.Zero
+        tot_wt = sum(wts)
+        wts = [wt/S(tot_wt) for wt in wts]
         if self.is_Finite:
-            for rv in range(len(rvs)):
-                pdf_ = pdf_ + wts[rv]*rvs[rv].pspace.distribution.pmf(y)
+            for dist in range(len(dists)):
+                pdf_ = pdf_ + wts[dist]*dists[dist].pmf(y)
         else:
-            for rv in range(len(rvs)):
-                pdf_ = pdf_ + wts[rv]*rvs[rv].pspace.distribution.pdf(y)
+            for dist in range(len(dists)):
+                pdf_ = pdf_ + wts[dist]*dists[dist].pdf(y)
         return Lambda(y, pdf_)(x)
 
 def Mixture(name, wts, rvs):

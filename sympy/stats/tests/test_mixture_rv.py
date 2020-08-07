@@ -1,19 +1,23 @@
 from sympy import (S, symbols, sqrt, Abs, exp, pi, oo, erf, erfc, Integral,
                 Interval, Dummy, factorial, binomial, log, beta, lerchphi,
                 Piecewise, lowergamma, gamma)
-from sympy.stats import (P, E, density, sample, cdf, Normal, Laplace, Mixture,
-                NegativeBinomial, Poisson, Geometric, YuleSimon, Logarithmic,
-                Binomial, Hypergeometric, BetaBinomial)
-from sympy.stats.mixture_rv import MixtureDistribution, MixturePSpace
+from sympy.stats import P, E, density, sample, cdf
+from sympy.stats.crv_types import NormalDistribution, LaplaceDistribution
+from sympy.stats.drv_types import (NegativeBinomialDistribution, PoissonDistribution,
+                                    GeometricDistribution, LogarithmicDistribution,
+                                    YuleSimonDistribution)
+from sympy.stats.frv_types import (BinomialDistribution, HypergeometricDistribution,
+                                BetaBinomialDistribution, Binomial)
+from sympy.stats.mixture_rv import MixtureDistribution, MixturePSpace, Mixture
 from sympy.testing.pytest import raises, skip, ignore_warnings
 from sympy.external import import_module
 
 y, z = symbols('y z')
 def test_continuous_mixture():
-    N = Normal("N", 0, 1)
-    M = Normal('M', 1, 2)
-    Z = Laplace('L', 3, 1)
-    D = Mixture('D', [S(2)/10, S(5)/10, S(3)/10], [N, M, Z])
+    N = NormalDistribution(0, 1)
+    M = NormalDistribution(1, 2)
+    Z = LaplaceDistribution(3, 1)
+    D = Mixture('D', [2, 5, 3], [N, M, Z])
     assert D.pspace.distribution.is_Continuous
     assert isinstance(D.pspace.distribution, MixtureDistribution)
     assert isinstance(D.pspace, MixturePSpace)
@@ -41,9 +45,9 @@ def test_continuous_mixture():
                 assert sam in D.pspace.set
 
 def test_discrete_mixture():
-    X = NegativeBinomial('X', 5, S(1)/3)
-    Y = Poisson('Y', 2)
-    D = Mixture('D', [S(2)/5, S(3)/5], [X, Y])
+    X = NegativeBinomialDistribution(5, S(1)/3)
+    Y = PoissonDistribution(2)
+    D = Mixture('D', [2, 3], [X, Y])
     assert D.pspace.distribution.is_Discrete
     assert D.pspace.set == S.Naturals0
     assert density(D)(z).simplify() == 3*2**z*exp(-2)/(5*factorial(z)) + S(64)*3**(-z)*binomial(z + 4,
@@ -53,9 +57,9 @@ def test_discrete_mixture():
             ) - S(4)*3**(-z)*z**4/3645 - S(64)*3**(-z)*z**3/3645 - S(392)*3**(-z)*z**2/3645 -\
             S(1112)*3**(-z)*z/3645 - S(422)*3**(-z)/1215, z >= 0), (0, True))
     assert P(D > 2).simplify() == S(2813)/3645 - 3*exp(-2)
-    X = Geometric('X', S(2)/5)
-    Y = Logarithmic('Y', S(2)/3)
-    Z = YuleSimon('Z', 3)
+    X = GeometricDistribution(S(2)/5)
+    Y = LogarithmicDistribution(S(2)/3)
+    Z = YuleSimonDistribution(3)
     B = Binomial('B', 2, S(1)/10)
     wts = list(density(B).dict.values())
     D = Mixture('D', wts, [X, Y, Z])
@@ -76,9 +80,9 @@ def test_discrete_mixture():
                 assert sam in D.pspace.set
 
 def test_finite_mixture():
-    X = Hypergeometric('X', 10, 5, 5)
-    Y = BetaBinomial('Y', 5, 1, 2)
-    Z = Binomial('Z', 5, S(2)/3)
+    X = HypergeometricDistribution(10, 5, 5)
+    Y = BetaBinomialDistribution(5, 1, 2)
+    Z = BinomialDistribution(5, S(2)/3, 1, 0)
     B = Binomial('B', 2, S(1)/3)
     wts = list(density(B).dict.values())
     D = Mixture('D', wts, [X, Y, Z])
@@ -100,13 +104,13 @@ def test_finite_mixture():
                 assert sam in D.pspace.set
 
 def test_mixture_raises():
-    wts = [1, 2, 3]
-    X = Hypergeometric('X', 10, 5, 5)
-    Y = BetaBinomial('Y', 5, 1, 2)
-    Z = Binomial('Z', 5, S(2)/3)
-    raises(ValueError, lambda: Mixture('D', wts, [X, Y, Z]))
-    raises(TypeError, lambda: Mixture('D', [S(2)/5, S(3)/5], [X, y]))
-    Z = Binomial('Z', 2, S(2)/3)
-    raises(ValueError, lambda: Mixture('D', wts, [X, Y, Z]))
-    raises(ValueError, lambda: Mixture('D', [-S(2)/5, S(3)/5], [X, Y]))
-    raises(ValueError, lambda: Mixture('D', [S(2)/5, S(2)/5, S(1)/5], [X, Y]))
+    X = HypergeometricDistribution(10, 5, 5)
+    Y = BetaBinomialDistribution(5, 1, 2)
+    Z = BinomialDistribution(5, S(2)/3, 1, 0)
+    raises(TypeError, lambda: Mixture('D', [1, 2], [X, y]))
+    Z = BinomialDistribution(2, S(2)/3, 1, 0)
+    raises(ValueError, lambda: Mixture('D', [1, 2, 3], [X, Y, Z]))
+    raises(ValueError, lambda: Mixture('D', [-2, 3], [X, Y]))
+    raises(ValueError, lambda: Mixture('D', [2, 2, 1], [X, Y]))
+    N = NormalDistribution(0, 1)
+    raises(TypeError, lambda: Mixture('D', [1, 3], [N, Y]))
