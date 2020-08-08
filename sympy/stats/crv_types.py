@@ -157,7 +157,7 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
 
 def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
-    Create a Continuous Random Variable given the following:
+    Create a Continuous Random Variable.
 
     Many common continuous random variable types are already implemented.
     This function should be necessary only very rarely.
