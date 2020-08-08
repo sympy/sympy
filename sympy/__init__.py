@@ -189,7 +189,7 @@ from .map import (Map, UndefinedMap, InverseMap, IdentityMap, RestrictedMap,
         VectorAdditionOperator,
         Addition,
         MultiplicationOperator, NumericMultiplicationOperator,
-        ScalarMultiplicationOperator,
+        ScalarMultiplicationOperator, VectorMultiplicationOperator,
         Multiplication,)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
@@ -248,6 +248,7 @@ from .algebras import (
         Quaternion, AlgebraicStructure, Magma, Semigroup, LeftQuasigroup,
         RightQuasigroup, Quasigroup, Monoid, Loop, Group, AbelianGroup,
         Ring, CommutativeRing, Field, Module, VectorSpace,
+        Algebra,
 )
 
 from .printing import (pager_print, pretty, pretty_print, pprint,
@@ -441,7 +442,7 @@ __all__ = [
     'VectorAdditionOperator',
     'Addition',
     'MultiplicationOperator', 'NumericMultiplicationOperator',
-    'ScalarMultiplicationOperator',
+    'ScalarMultiplicationOperator', 'VectorMultiplicationOperator',
     'Multiplication',
 
     # sympy.matrices
@@ -510,6 +511,7 @@ __all__ = [
     'Quaternion', 'AlgebraicStructure', 'Magma', 'Semigroup', 'LeftQuasigroup',
     'RightQuasigroup', 'Quasigroup', 'Monoid', 'Loop', 'Group', 'AbelianGroup',
     "Ring", "CommutativeRing", "Field", "Module", "VectorSpace",
+    "Algebra",
 
     # sympy.printing
     'pager_print', 'pretty', 'pretty_print', 'pprint', 'pprint_use_unicode',

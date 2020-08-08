@@ -100,12 +100,25 @@ class Module(AlgebraicStructure):
         return self.args[2].args[0]
     smul_op = scalar_multiplication_operator
 
+    def check_vector(self, a):
+        """
+        Return ``True`` if a is vector in *self*.
+        """
+        return self.group.contains(a) == True
+
+    def check_scalar(self, a):
+        """
+        Return ``True`` if a is scalar in *self*.
+        """
+        return self.ring.contains(a) == True
+
     def add(self, *args, evaluate=False):
         # scalar addition
-        if all(self.ring.contains(a) == True for a in args):
+        if all(self.check_scalar(a) == True for a in args):
             return self.ring.add(*args, evaluate=evaluate)
+
         # vector addition
-        if all(self.group.contains(a) == True for a in args):
+        if all(self.check_vector(a) == True for a in args):
             op = self.group.operator
             return op(
                 *args, sv_mul=self.smul_op, ss_add=self.ring.add_op, ss_mul=self.ring.mul_op,
@@ -115,10 +128,11 @@ class Module(AlgebraicStructure):
 
     def subtract(self, a, b, evaluate=False):
         # scalar subtraction
-        if all(self.ring.contains(i) == True for i in [a, b]):
+        if all(self.check_scalar(i) == True for i in [a, b]):
             return self.ring.sub(a, b, evaluate=evaluate)
+
         # vector subtraction
-        if all(self.group.contains(i) == True for i in [a, b]):
+        if all(self.check_vector(i) == True for i in [a, b]):
             sv_mul, ss_add, ss_mul = self.smul_op, self.ring.add_op, self.ring.mul_op
             op = self.group.operator
             inv_b = op.inverse_element(b, sv_mul=sv_mul, ss_add=ss_add, ss_mul=ss_mul)
@@ -132,29 +146,28 @@ class Module(AlgebraicStructure):
 
     def multiply(self, *args, evaluate=False):
         # scalar multiplication
-        if all(self.ring.contains(a) == True for a in args):
+        if all(self.check_scalar(a) == True for a in args):
             return self.ring.mul(*args, evaluate=evaluate)
-        # vector addition
-        vectors = [a for a in args if self.group.contains(a) == True]
+
+        # vector multiplication
+        vectors = [a for a in args if self.check_vector(a) == True]
         if len(vectors) == 1:
-            coeffs = [a for a in args if not self.group.contains(a) == True]
+
+            coeffs = [a for a in args if not self.check_vector(a) == True]
             if len(coeffs) == 0:
                 coeff = self.ring.mul_op.identity
             elif len(coeffs) == 1:
                 coeff, = coeffs
             else:
                 coeff = self.mul(*coeffs, evaluate=evaluate)
+
             vector, = vectors
-            return self.smul_op(
-                coeff, vector,
-                vv_add=self.group.operator, ss_add=self.ring.add_op, ss_mul=self.ring.mul_op,
-                evaluate=evaluate
-            )
+            return self.smul_op(coeff, vector, evaluate=evaluate)
         raise TypeError("Mismatching argument for module multiplication")
     mul = multiply
 
     def power(self, x, n, evaluate=False):
-        if self.ring.contains(x) == True:
+        if self.check_scalar(x) == True:
             return self.ring.pow(x, n, evaluate=evaluate)
         raise TypeError("Mismatching argument for module power")
     pow = power

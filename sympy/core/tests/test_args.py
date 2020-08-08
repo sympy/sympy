@@ -904,8 +904,8 @@ def test_sympy__algebras__abstract__module__module__Module():
 
     R = S.IntegersRing
 
-    op = AdditionOperator(S.UniversalSet**2, S.UniversalSet, S.Zero)
-    G = AbelianGroup('G', (S.UniversalSet,), (op,))
+    op = AdditionOperator(S.Complexes**2, S.Complexes, S.Zero)
+    G = AbelianGroup('G', (S.Complexes,), (op,))
 
     f = Map('f', domain=R*G, codomain=G)
 
@@ -919,13 +919,31 @@ def test_sympy__algebras__abstract__module__vectorspace__VectorSpace():
 
     F = S.RealsField
 
-    op = AdditionOperator(S.UniversalSet**2, S.UniversalSet, S.Zero)
-    G = AbelianGroup('G', (S.UniversalSet,), (op,))
+    op = AdditionOperator(S.Complexes**2, S.Complexes, S.Zero)
+    G = AbelianGroup('G', (S.Complexes,), (op,))
 
     f = Map('f', domain=F*G, codomain=G)
 
     V = VectorSpace('V', (F, G), (f,))
     assert _test_args(V)
+
+def test_sympy__algebras__abstract__algebra__algebra__Algebra():
+    from sympy import (
+        AdditionOperator, AbelianGroup, Map, VectorSpace, Algebra
+    )
+
+    F = S.RealsField
+
+    op = AdditionOperator(S.Complexes**2, S.Complexes, S.Zero)
+    G = AbelianGroup('G', (S.Complexes,), (op,))
+
+    f = Map('f', domain=F*G, codomain=G)
+    V = VectorSpace('V', (F, G), (f,))
+
+    g = Map('g', domain=V*V, codomain=G)
+    A = Algebra('A', (V,), (g,))
+
+    assert _test_args(a)
 
 def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
@@ -3165,8 +3183,29 @@ def test_sympy__map__mul__NumericMultiplicationOperator():
     assert _test_args(NumericMultiplicationOperator(S.Complexes**2, S.Complexes))
 
 def test_sympy__map__mul__ScalarMultiplicationOperator():
+    from sympy import S, Set, VectorAdditionOperator, AbelianGroup
     from sympy.map import ScalarMultiplicationOperator
-    assert _test_args(ScalarMultiplicationOperator(S.Reals*S.Complexes, S.Complexes))
+    S_ring = S.IntegersRing
+    V = Set('V')
+    V_e = V.element('e')
+    vv_add = VectorAdditionOperator(V**2, V, V_e)
+    V_group = AbelianGroup('V', (V,), (vv_add,))
+    assert _test_args(ScalarMultiplicationOperator(S_ring*V_group, V_group))
+
+def test_sympy__map__mul__VectorMultiplicationOperator():
+    from sympy import (
+        S, Set, VectorAdditionOperator, AbelianGroup,
+        ScalarMultiplicationOperator, VectorSpace
+    )
+    from sympy.map import VectorMultiplicationOperator
+    S_field = S.RealsField
+    V = Set('V')
+    V_e = V.element('e')
+    vv_add = VectorAdditionOperator(V**2, V, V_e)
+    V_group = AbelianGroup('V', (V,), (vv_add,))
+    sv_mul = ScalarMultiplicationOperator(S_field*V_group, V_group)
+    VS = VectorSpace('VS', (S_field, V_group), (sv_mul,))
+    assert _test_args(VectorMultiplicationOperator(VS*VS, VS))
 
 def test_sympy__map__mul__Multiplication():
     scalar_mul = S.RealsField.mul_op

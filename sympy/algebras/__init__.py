@@ -11,6 +11,7 @@ from .abstract import (
     Field,
     Module,
     VectorSpace,
+    Algebra,
 )
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "Field",
     "Module",
     "VectorSpace",
+    "Algebra",
 ]

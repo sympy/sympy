@@ -12,8 +12,8 @@ F = Field('F', (A,), (add, mul))
 
 X = Set('X')
 x, e = [X.element(i) for i in 'xe']
-op = VectorAdditionOperator(X**2, X, e)
-G = AbelianGroup('G', (X,), (op,))
+vadd = VectorAdditionOperator(X**2, X, e)
+G = AbelianGroup('G', (X,), (vadd,))
 
 smul = ScalarMultiplicationOperator(F*G, G)
 

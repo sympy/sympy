@@ -9,7 +9,7 @@ from .operator import BinaryOperator
 
 __all__ = [
     "MultiplicationOperator", "NumericMultiplicationOperator",
-    "ScalarMultiplicationOperator",
+    "ScalarMultiplicationOperator", "VectorMultiplicationOperator"
     "Multiplication",
 ]
 
@@ -132,7 +132,7 @@ class MultiplicationOperator(BinaryOperator):
 
 class NumericMultiplicationOperator(MultiplicationOperator):
     """
-    Class for common numeric multiplication operator
+    Class for common numeric multiplication operator.
 
     Explanation
     ===========
@@ -198,7 +198,8 @@ class NumericMultiplicationOperator(MultiplicationOperator):
 
 class ScalarMultiplicationOperator(MultiplicationOperator):
     r"""
-    Class for abstract scalar multiplication operator defined in algebraic module.
+    Class for abstract scalar multiplication operator defined between
+    scalar and vector of algebraic module.
 
     Explanation
     ===========
@@ -206,41 +207,51 @@ class ScalarMultiplicationOperator(MultiplicationOperator):
     To be called, scalar multiplication operator needs keyword arguments *vv_add*
     (vector-vector addition operator), *ss_add* (scalar-scalar addition operator)
     and *ss_mul(scalar-scalar multiplication operator). This is to perform the
-    distribution of vectors, i.e. $\left(1+1 \right) \mathbf(v) = \mathbf(v) + \mathbf(v)$ and
-    $a \left(\mathbf(v) + \mathbf(w) \right) = a \mathbf(v) + a \mathbf(w)$.
+    distribution of vectors, i.e. $\left(1+1 \right) \mathbf{v} = \mathbf{v} + \mathbf{v}$ and
+    $a \left(\mathbf{v} + \mathbf{w} \right) = a \mathbf{v} + a \mathbf{w}$.
+
+    Parameters
+    ==========
+
+    domain : ProductSet
+        Product of scalar ring and vector group
+
+    codomain : AbelianGroup
+        Group of vectors
 
     Examples
     ========
 
     >>> from sympy import (
-    ... Set, VectorAdditionOperator, AdditionOperator, MultiplicationOperator,
+    ... Set, AdditionOperator, MultiplicationOperator, Ring,
+    ... VectorAdditionOperator, AbelianGroup,
     ... ScalarMultiplicationOperator
     ... )
 
-    >>> S, V = Set('S'), Set('V') # scalar set and vector set
-    >>> S_e1, S_e2 = [S.element(i) for i in ('e1', 'e2')]
-    >>> v, V_e = [V.element(i) for i in ('v', 'e')]
+    Build underlying structures
 
-    >>> vv_add = VectorAdditionOperator(V**2, V, V_e)
+    >>> S = Set('S') # scalar set
+    >>> S_e1, S_e2 = [S.element(i) for i in ('e1', 'e2')]
     >>> ss_add = AdditionOperator(S**2, S, S_e1)
     >>> ss_mul = MultiplicationOperator(S**2, S, S_e2)
+    >>> S_ring = Ring('S', (S,), (ss_add, ss_mul))
 
-    >>> mul = ScalarMultiplicationOperator(S*V, V)
+    >>> V = Set('V') # vector set
+    >>> v, V_e = [V.element(i) for i in ('v', 'e')]
+    >>> vv_add = VectorAdditionOperator(V**2, V, V_e)
+    >>> V_group = AbelianGroup('V', (V,), (vv_add,))
 
-    >>> mul(S_e2, v, vv_add=vv_add, ss_add=ss_add, ss_mul=ss_mul)
+    >>> mul = ScalarMultiplicationOperator(S_ring*V_group, V_group)
+
+    >>> mul(S_e2, v)
     e2*v
     >>> _.doit()
     v
 
-    Constructing a Module makes applying the operator easier
+    See Also
+    ========
 
-    >>> from sympy import Ring, AbelianGroup, Module
-    >>> S_ring = Ring('S', (S,), (ss_add, ss_mul))
-    >>> V_group = AbelianGroup('V', (V,), (vv_add,))
-    >>> M = Module('M', (S_ring, V_group), (mul,))
-
-    >>> M.mul(S_e2, v, evaluate=True)
-    v
+    algebras.Module
 
     """
     str_name = '*'
@@ -250,37 +261,44 @@ class ScalarMultiplicationOperator(MultiplicationOperator):
     is_associative = False
 
     def __new__(cls, domain, codomain, **kwargs):
-        domain, codomain = _sympify(domain), _sympify(codomain)
         return super(MultiplicationOperator, cls).__new__(cls, domain, codomain, **kwargs)
 
     @property
-    def scalars(self):
+    def scalar_ring(self):
         return self.domain.args[0]
 
     @property
-    def vectors(self):
+    def vector_group(self):
         return self.domain.args[1]
 
-    def __call__(self, a, b, vv_add, ss_add, ss_mul, evaluate=False, **kwargs):
-        # vv_add : vector-vector add
-        # ss_add : scalar-scalar add
-        # ss_mul : scalar-scalar mul
-        return Multiplication(
-            self, (a, b), (vv_add, ss_add, ss_mul), evaluate=evaluate, **kwargs
-        )
+    @property
+    def vv_add(self):
+        return self.vector_group.operator
+
+    @property
+    def ss_add(self):
+        return self.scalar_ring.add_op
+
+    @property
+    def ss_mul(self):
+        return self.scalar_ring.mul_op
+
+    def __call__(self, a, b, evaluate=False, **kwargs):
+        kwargs.update(evaluate=evaluate)
+        return Multiplication(self, (a, b), (), **kwargs)
 
     def apply(self, a, b, aux, **kwargs):
-        vv_add, ss_add, ss_mul = aux
         evaluate = kwargs.get('evaluate', False)
 
         # sympify the arguments
         args = [_sympify(i) for i in (a, b)]
 
-        a, = [i for i in args if self.scalars.contains(i) == True]
-        b, = [i for i in args if self.vectors.contains(i) == True]
+        # order a and b so that a is scalar and b is vector
+        a, = [i for i in args if self.scalar_ring.contains(i) == True]
+        b, = [i for i in args if self.vector_group.contains(i) == True]
 
         if evaluate:
-            args = self.multiplication_process(args, vv_add, ss_add, ss_mul)
+            args = self.multiplication_process(args)
 
             if len(args) == 1:
                 return args[0]
@@ -291,9 +309,17 @@ class ScalarMultiplicationOperator(MultiplicationOperator):
         result = super(AppliedMap, Multiplication).__new__(Multiplication, self, args, aux)
         return result
 
-    def distribute(self, seq, vv_add, ss_add, ss_mul, evaluate=False):
+    def multiplication_process(self, seq):
+        scalar, vector = seq
+        if scalar == self.ss_mul.identity:
+            return [vector]
+        return seq
+
+    def distribute(self, seq, evaluate=False):
         # not used in construction algorithm because it is
         # discouraged according to core/parameters
+        vv_add, ss_add, ss_mul = self.vv_add, self.ss_add, self.ss_mul
+
         terms = []
         for o in seq:
             if isappliedmap(o, (vv_add, ss_add)):
@@ -301,21 +327,171 @@ class ScalarMultiplicationOperator(MultiplicationOperator):
             else:
                 terms.append((o,))
         terms = [
-            self(*l, vv_add=vv_add, ss_add=ss_add, ss_mul=ss_mul, evaluate=evaluate)
+            self(*l, evaluate=evaluate)
             for l in itertools.product(*terms)
         ]
-        return vv_add(*terms, sv_mul=self, ss_add=ss_add, ss_mul=ss_mul, evaluate=evaluate)
-
-    def multiplication_process(self, seq, vv_add, ss_add, ss_mul):
-        scalar, vector = seq
-        if scalar == ss_mul.identity:
-            return [vector]
-        return seq
+        return vv_add(
+            *terms,
+            sv_mul=self, ss_add=ss_add, ss_mul=ss_mul,
+            evaluate=evaluate
+        )
 
     def _eval_as_coeff_Mul(self, expr, **kwargs):
         if isappliedmap(expr, self):
             return expr.arguments
-        ss_mul = kwargs.get('ss_mul')
+        ss_mul = self.ss_mul
+        return ss_mul.identity, expr
+
+class VectorMultiplicationOperator(MultiplicationOperator):
+    r"""
+    Class for bilinear product operator between two vectors which is
+    defined in an algebra over a vector space [1].
+
+    Parameters
+    ==========
+
+    domain : ProductSet
+        Power set of a vector space
+
+    codomain : VectorSpace
+
+    Examples
+    ========
+
+    >>> from sympy import (
+    ... Set, AdditionOperator, MultiplicationOperator, Field,
+    ... VectorAdditionOperator, AbelianGroup,
+    ... ScalarMultiplicationOperator, VectorSpace,
+    ... VectorMultiplicationOperator
+    ... )
+
+    Build underlying vector space
+
+    >>> S = Set('S') # scalar set
+    >>> S_e1, S_e2 = [S.element(i) for i in ('e1', 'e2')]
+    >>> ss_add = AdditionOperator(S**2, S, S_e1)
+    >>> ss_mul = MultiplicationOperator(S**2, S, S_e2)
+    >>> S_field = Field('S', (S,), (ss_add, ss_mul))
+
+    >>> V = Set('V') # vector set
+    >>> v, V_e = [V.element(i) for i in ('v', 'e')]
+    >>> vv_add = VectorAdditionOperator(V**2, V, V_e)
+    >>> V_group = AbelianGroup('V', (V,), (vv_add,))
+
+    >>> sv_mul = ScalarMultiplicationOperator(S_field*V_group, V_group)
+    >>> VS = VectorSpace('VS', (S_field, V_group), (sv_mul,))
+
+    >>> vv_mul = VectorMultiplicationOperator(VS*VS, V_group)
+
+    >>> vv_mul(v, v)
+    v*v
+
+    See Also
+    ========
+
+    algebras.Algebra
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Algebra_over_a_field
+
+    """
+    str_name = '*'
+    pretty_name = '×'
+    latex_name = r' \times '
+    is_left_divisible = is_right_divisible = False
+    is_associative = False
+    is_commutative = False
+    identity = None # can be overridden to construct unital algebra
+
+    def __new__(cls, domain, codomain, **kwargs):
+        return super(MultiplicationOperator, cls).__new__(cls, domain, codomain, **kwargs)
+
+    @property
+    def vectorspace(self):
+        return self.domain.args[0]
+
+    @property
+    def vv_add(self):
+        return self.vectorspace.group.operator
+
+    @property
+    def ss_add(self):
+        return self.vectorspace.field.add_op
+
+    @property
+    def sv_mul(self):
+        return self.vectorspace.smul_op
+
+    @property
+    def ss_mul(self):
+        return self.vectorspace.field.mul_op
+
+    def __call__(self, a, b, evaluate=False, **kwargs):
+        kwargs.update(evaluate=evaluate)
+        return Multiplication(self, (a, b), (), **kwargs)
+
+    def apply(self, a, b, aux, **kwargs):
+        evaluate = kwargs.get('evaluate', False)
+
+        # sympify the arguments
+        args = [_sympify(i) for i in (a, b)]
+
+        if evaluate:
+            args = self.multiplication_process(args)
+
+            if len(args) == 1:
+                return args[0]
+
+        # return Multiplication class with processed arguments
+        args = Tuple(*[_sympify(a) for a in args])
+        aux = Tuple(*[_sympify(a) for a in aux])
+        result = super(AppliedMap, Multiplication).__new__(Multiplication, self, args, aux)
+        return result
+
+    def multiplication_process(self, seq):
+        seq = self.remove_identity(seq)
+        return seq
+
+    def distribute(self, seq, evaluate=False):
+        # not used in construction algorithm because it is
+        # discouraged according to core/parameters
+        vv_add, ss_add, sv_add, ss_mul = self.vv_add, self.ss_add, self.sv_mul, self.ss_mul
+
+        coeffs = []
+        vectors = []
+        for o in seq:
+            if isappliedmap(o, sv_mul):
+                c, v = o.as_coeff_Mul(mul_op=sv_mul)
+                coeffs.append(c)
+                vectors.append((v,))
+            elif isappliedmap(o, vv_add):
+                vectors.append(o.arguments)
+            else:
+                vectors.append((o,))
+        terms = [
+            self(*l, evaluate=evaluate)
+            for l in itertools.product(*vectors)
+        ]
+        vector = vv_add(
+            *terms,
+            sv_mul=sv_mul, ss_add=ss_add, ss_mul=ss_mul,
+            evaluate=evaluate
+        )
+
+        if len(coeffs) == 0:
+            return vector
+        elif len(coeffs) == 1:
+            coeff, = coeffs
+            return sv_mul(
+                coeff, vector,
+                vv_add=vv_add, ss_add=ss_add, ss_mul=ss_mul,
+                evaluate=evaluate
+            )
+
+    def _eval_as_coeff_Mul(self, expr, **kwargs):
+        ss_mul = self.ss_mul
         return ss_mul.identity, expr
 
 class Multiplication(AppliedMap):

@@ -278,30 +278,32 @@ class VectorAdditionOperator(AdditionOperator):
     ========
 
     >>> from sympy import (
-    ... Set, ScalarMultiplicationOperator, AdditionOperator, MultiplicationOperator,
-    ... VectorAdditionOperator
+    ... Set, AdditionOperator, MultiplicationOperator, Ring,
+    ... VectorAdditionOperator, AbelianGroup,
+    ... ScalarMultiplicationOperator, 
     ... )
 
-    >>> S, V = Set('S'), Set('V') # scalar set and vector set
+    >>> S = Set('S') # scalar set
     >>> S_e1, S_e2 = [S.element(i) for i in ('e1', 'e2')]
-    >>> v, V_e = [V.element(i) for i in ('v', 'e')]
-
-    >>> sv_mul = ScalarMultiplicationOperator(S*V, V)
     >>> ss_add = AdditionOperator(S**2, S, S_e1)
     >>> ss_mul = MultiplicationOperator(S**2, S, S_e2)
+    >>> S_ring = Ring('S', (S,), (ss_add, ss_mul))
 
-    >>> add = VectorAdditionOperator(V**2, V, V_e)
+    >>> V = Set('V') # vector set
+    >>> v, V_e = [V.element(i) for i in ('v', 'e')]
+    >>> vv_add = VectorAdditionOperator(V**2, V, V_e)
+    >>> V_group = AbelianGroup('V', (V,), (vv_add,))
 
-    >>> add(v, v, sv_mul=sv_mul, ss_add=ss_add, ss_mul=ss_mul)
+    >>> sv_mul = ScalarMultiplicationOperator(S_ring*V_group, V_group)
+
+    >>> vv_add(v, v, sv_mul=sv_mul, ss_add=ss_add, ss_mul=ss_mul)
     v + v
     >>> _.doit()
     (e2 + e2)*v
 
     Constructing a Module makes applying the operator easier
 
-    >>> from sympy import Ring, AbelianGroup, Module
-    >>> S_ring = Ring('S', (S,), (ss_add, ss_mul))
-    >>> V_group = AbelianGroup('V', (V,), (add,))
+    >>> from sympy import Module
     >>> M = Module('M', (S_ring, V_group), (sv_mul,))
 
     >>> M.add(v, v, evaluate=True)

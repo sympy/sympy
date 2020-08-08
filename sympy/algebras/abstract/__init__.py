@@ -10,6 +10,7 @@ __all__ = [
     "Field",
     "Module",
     "VectorSpace",
+    "Algebra",
 ]
 
 from .structure import AlgebraicStructure
@@ -26,6 +27,10 @@ from .ring import (
 
 from .module import (
     Module, VectorSpace,
+)
+
+from .algebra import (
+    Algebra,
 )
 
 ### Defined structures

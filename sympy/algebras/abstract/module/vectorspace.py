@@ -64,9 +64,9 @@ class VectorSpace(Module):
     def field(self):
         return self.args[1].args[0]
 
-    def divide(self, a, b, evaluate=False):
+    def divide(self, a, b, **kwargs):
 
-        if not self.field.contains(b) == True:
+        if not self.check_scalar(b) == True:
             raise TypeError("Divisor must be scalar.")
 
         inv_b = self.field.mul_op.inverse_element(b, evaluate=True)

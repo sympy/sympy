@@ -19,7 +19,7 @@ __all__ = [
     'VectorAdditionOperator',
     'Addition',
     'MultiplicationOperator', 'NumericMultiplicationOperator',
-    'ScalarMultiplicationOperator',
+    'ScalarMultiplicationOperator', 'VectorMultiplicationOperator',
     'Multiplication',
 ]
 
@@ -48,6 +48,6 @@ from .add import (
 
 from .mul import (
     MultiplicationOperator, NumericMultiplicationOperator,
-    ScalarMultiplicationOperator,
+    ScalarMultiplicationOperator, VectorMultiplicationOperator,
     Multiplication,
 )
