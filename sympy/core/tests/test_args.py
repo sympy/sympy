@@ -3036,7 +3036,7 @@ def test_sympy__logic__boolalg__Xnor():
     from sympy.logic.boolalg import Xnor
     assert _test_args(Xnor(x, y, 2))
 
-def test_sympy__map__Map__FunctionSet():
+def test_sympy__map__map__FunctionSet():
     from sympy import function_set
     assert _test_args(function_set)
 
