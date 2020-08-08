@@ -7,12 +7,12 @@ from sympy.map import (
     ScalarMultiplicationOperator, VectorMultiplicationOperator, Multiplication,
     ExponentElement,
 )
-from ..module import VectorSpace
 
 __all__ = [
     'FunctionAdditionOperator', 'FunctionAddition',
     'FunctionScalarMultiplicationOperator',
     'FunctionMultiplication',
+    'FunctionVectorMultiplicationOperator',
 ]
 
 class FunctionAdditionOperator(VectorAdditionOperator):
@@ -209,7 +209,7 @@ class FunctionAddition(Addition, Map):
 
 class FunctionScalarMultiplicationOperator(ScalarMultiplicationOperator):
     r"""
-    Class for multiplication operator between scalar function
+    Class for multiplication operator between scalar and function
     whose codomain is vector space [1].
 
     Explanation
@@ -375,3 +375,78 @@ class FunctionMultiplication(Multiplication, Map):
             else:
                 terms.append(a)
         return mul(*terms)
+
+class FunctionVectorMultiplicationOperator(VectorMultiplicationOperator):
+    r"""
+    Class for multiplication operator between two functions
+    whose codomains are algebraic algebra [1].
+
+    Parameters
+    ==========
+
+    domain : ProductSet of two VectorSpace
+
+    codomain : VectorSpace
+
+    Examples
+    ========
+
+    >>> from sympy import (
+    ... S, Set, Map, VectorAdditionOperator, AbelianGroup,
+    ... ScalarMultiplicationOperator, VectorSpace,
+    ... FunctionSet, ConstantMap, FunctionAdditionOperator,
+    ... FunctionScalarMultiplicationOperator,
+    ... FunctionVectorMultiplicationOperator,
+    ... )
+
+    Build underlying vector space
+
+    >>> F = S.RealsField
+    >>> X = Set('X')
+
+    >>> A = Set('A')
+    >>> e = A.element('e')
+    >>> vadd = VectorAdditionOperator(A**2, A, e)
+    >>> G = AbelianGroup('G', (A,), (vadd,))
+    >>> smul = ScalarMultiplicationOperator(F*G, G)
+    >>> V = VectorSpace('V', (F, G), (smul,))
+
+    >>> f, g = Map('f', domain=X, codomain=G), Map('g', domain=X, codomain=G)
+
+    >>> fs = FunctionSet(domain=X, codomain=V)
+    >>> zerofunc = ConstantMap(F.add_op.identity, domain=X)
+
+    >>> fadd = FunctionAdditionOperator(fs**2, fs, zerofunc)
+    >>> fG = AbelianGroup('fG', (fs,), (fadd,))
+    >>> fsmul = FunctionScalarMultiplicationOperator(F*fG, fG)
+
+    >>> FS = VectorSpace('FS', (F, fG), (fsmul,))
+    >>> ff_mul = FunctionVectorMultiplicationOperator(FS*FS, fG)
+
+    >>> ff_mul(f, g)
+    f*g : X -> G
+
+    """
+    def __call__(self, *args, evaluate=False, **kwargs):
+        kwargs.update(evaluate=evaluate)
+        return FunctionMultiplication(self, args, (), **kwargs)
+
+    def apply(self, *args, aux, **kwargs):
+        evaluate = kwargs.get('evaluate', False)
+
+        # sympify the arguments
+        args = [_sympify(i) for i in args]
+
+        if evaluate:
+            args = self.multiplication_process(args)
+
+            if len(args) == 1:
+                return args[0]
+
+        # return Multiplication class with processed arguments
+        args = Tuple(*[_sympify(a) for a in args])
+        aux = Tuple(*[_sympify(a) for a in aux])
+        result = super(AppliedMap, FunctionMultiplication).__new__(
+            FunctionMultiplication, self, args, aux
+        )
+        return result

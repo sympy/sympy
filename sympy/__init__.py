@@ -252,6 +252,7 @@ from .algebras import (
         FunctionAdditionOperator, FunctionAddition,
         FunctionScalarMultiplicationOperator,
         FunctionMultiplication,
+        FunctionVectorMultiplicationOperator,
 )
 
 from .printing import (pager_print, pretty, pretty_print, pprint,
@@ -518,6 +519,7 @@ __all__ = [
     "FunctionAdditionOperator", "FunctionAddition",
     "FunctionScalarMultiplicationOperator",
     "FunctionMultiplication",
+    "FunctionVectorMultiplicationOperator",
 
     # sympy.printing
     'pager_print', 'pretty', 'pretty_print', 'pprint', 'pprint_use_unicode',

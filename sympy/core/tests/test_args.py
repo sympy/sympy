@@ -1034,6 +1034,36 @@ def test_sympy__algebras__abstract__module__functionspace__FunctionMultiplicatio
 
     assert _test_args(mulf)
 
+def test_sympy__algebras__abstract__module__functionspace__FunctionVectorMultiplicationOperator():
+    from sympy import (
+    S, Set, VectorAdditionOperator, AbelianGroup,
+    ScalarMultiplicationOperator, VectorSpace,
+    FunctionSet, ConstantMap, FunctionAdditionOperator,
+    FunctionScalarMultiplicationOperator,
+    FunctionVectorMultiplicationOperator
+    )
+
+    F = S.RealsField
+    X = Set('X')
+
+    A = Set('A')
+    e = A.element('e')
+    vadd = VectorAdditionOperator(A**2, A, e)
+    G = AbelianGroup('G', (A,), (vadd,))
+    smul = ScalarMultiplicationOperator(F*G, G)
+    V = VectorSpace('V', (F, G), (smul,))
+    fs = FunctionSet(domain=X, codomain=V)
+    zerofunc = ConstantMap(F.add_op.identity, domain=X)
+
+    fadd = FunctionAdditionOperator(fs**2, fs, zerofunc)
+    fG = AbelianGroup('fG', (fs,), (fadd,))
+    fsmul = FunctionScalarMultiplicationOperator(F*fG, fG)
+
+    FS = VectorSpace('FS', (F, fG), (fsmul,))
+    ff_mul = FunctionVectorMultiplicationOperator(FS*FS, fG)
+
+    assert _test_args(ff_mul)
+
 def test_sympy__algebras__abstract__algebra__algebra__Algebra():
     from sympy import (
         AdditionOperator, AbelianGroup, Map, VectorSpace, Algebra
