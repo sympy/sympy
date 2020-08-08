@@ -91,9 +91,9 @@ try:
     assert 'Sergey B Kirpichev' == author_name(git_people.pop(226)
         ), 'Sergey B Kirpichev was not found at line 226.'
     assert 'azure-pipelines[bot]' == \
-        author_name(git_people.pop(751)), 'azure-pipelines[bot] was not found at line 751'
+        author_name(git_people.pop(750)), 'azure-pipelines[bot] was not found at line 750'
     assert 'whitesource-bolt-for-github[bot]' == \
-        author_name(git_people.pop(792)), 'whitesource-bolt-for-github[bot] not found at line 792'
+        author_name(git_people.pop(791)), 'whitesource-bolt-for-github[bot] not found at line 791'
 except AssertionError as msg:
     print(red(msg))
     sys.exit(1)
