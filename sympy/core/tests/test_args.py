@@ -927,6 +927,113 @@ def test_sympy__algebras__abstract__module__vectorspace__VectorSpace():
     V = VectorSpace('V', (F, G), (f,))
     assert _test_args(V)
 
+def test_sympy__algebras__abstract__module__functionspace__FunctionAdditionOperator():
+    from sympy import (
+    S, Set, VectorAdditionOperator, AbelianGroup,
+    ScalarMultiplicationOperator, VectorSpace,
+    FunctionSet, ConstantMap, FunctionAdditionOperator,
+    )
+
+    F = S.RealsField
+    X = Set('X')
+
+    A = Set('A')
+    e = A.element('e')
+    vadd = VectorAdditionOperator(A**2, A, e)
+    G = AbelianGroup('G', (A,), (vadd,))
+    smul = ScalarMultiplicationOperator(F*G, G)
+    V = VectorSpace('V', (F, G), (smul,))
+    fs = FunctionSet(domain=X, codomain=V)
+    zerofunc = ConstantMap(F.add_op.identity, domain=X)
+
+    fadd = FunctionAdditionOperator(fs**2, fs, zerofunc)
+    assert _test_args(fadd)
+
+def test_sympy__algebras__abstract__module__functionspace__FunctionAddition():
+    from sympy import (
+    S, Set, Map, VectorAdditionOperator, AbelianGroup,
+    ScalarMultiplicationOperator, VectorSpace,
+    FunctionSet, ConstantMap, FunctionAdditionOperator,
+    FunctionScalarMultiplicationOperator,
+    )
+
+    F = S.RealsField
+    X = Set('X')
+    f, g = Map('f', domain=X, codomain=F), Map('g', domain=X, codomain=F)
+
+    A = Set('A')
+    e = A.element('e')
+    vadd = VectorAdditionOperator(A**2, A, e)
+    G = AbelianGroup('G', (A,), (vadd,))
+    smul = ScalarMultiplicationOperator(F*G, G)
+    V = VectorSpace('V', (F, G), (smul,))
+
+    fs = FunctionSet(domain=X, codomain=V)
+    zerofunc = ConstantMap(F.add_op.identity, domain=X)
+
+    fadd = FunctionAdditionOperator(fs**2, fs, zerofunc)
+    fG = AbelianGroup('fG', (fs,), (fadd,))
+    fsmul = FunctionScalarMultiplicationOperator(F*fG, fG)
+
+    FS = VectorSpace('FS', (F, fG), (fsmul,))
+    addf = FS.add(f, g)
+
+    assert _test_args(addf)
+
+def test_sympy__algebras__abstract__module__functionspace__FunctionScalarMultiplicationOperator():
+    from sympy import (
+    S, Set, VectorAdditionOperator, AbelianGroup,
+    ScalarMultiplicationOperator, VectorSpace,
+    FunctionSet, ConstantMap, FunctionAdditionOperator,
+    FunctionScalarMultiplicationOperator
+    )
+
+    F = S.RealsField
+    X = Set('X')
+
+    A = Set('A')
+    e = A.element('e')
+    vadd = VectorAdditionOperator(A**2, A, e)
+    G = AbelianGroup('G', (A,), (vadd,))
+    smul = ScalarMultiplicationOperator(F*G, G)
+    V = VectorSpace('V', (F, G), (smul,))
+    fs = FunctionSet(domain=X, codomain=V)
+    zerofunc = ConstantMap(F.add_op.identity, domain=X)
+
+    fadd = FunctionAdditionOperator(fs**2, fs, zerofunc)
+    fG = AbelianGroup('fG', (fs,), (fadd,))
+    fsmul = FunctionScalarMultiplicationOperator(F*fG, fG)
+    assert _test_args(fsmul)
+
+def test_sympy__algebras__abstract__module__functionspace__FunctionMultiplication():
+    from sympy import (
+    S, Set, Map, VectorAdditionOperator, AbelianGroup,
+    ScalarMultiplicationOperator, VectorSpace,
+    FunctionSet, ConstantMap, FunctionAdditionOperator,
+    FunctionScalarMultiplicationOperator,
+    )
+
+    F = S.RealsField
+    X = Set('X')
+    f = Map('f', domain=X, codomain=F)
+
+    A = Set('A')
+    e = A.element('e')
+    vadd = VectorAdditionOperator(A**2, A, e)
+    G = AbelianGroup('G', (A,), (vadd,))
+    smul = ScalarMultiplicationOperator(F*G, G)
+    V = VectorSpace('V', (F, G), (smul,))
+
+    fs = FunctionSet(domain=X, codomain=V)
+    zerofunc = ConstantMap(F.add_op.identity, domain=X)
+
+    fadd = FunctionAdditionOperator(fs**2, fs, zerofunc)
+    fG = AbelianGroup('fG', (fs,), (fadd,))
+    fsmul = FunctionScalarMultiplicationOperator(F*fG, fG)
+    mulf = fsmul(2, f)
+
+    assert _test_args(mulf)
+
 def test_sympy__algebras__abstract__algebra__algebra__Algebra():
     from sympy import (
         AdditionOperator, AbelianGroup, Map, VectorSpace, Algebra

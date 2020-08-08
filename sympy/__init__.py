@@ -249,6 +249,9 @@ from .algebras import (
         RightQuasigroup, Quasigroup, Monoid, Loop, Group, AbelianGroup,
         Ring, CommutativeRing, Field, Module, VectorSpace,
         Algebra,
+        FunctionAdditionOperator, FunctionAddition,
+        FunctionScalarMultiplicationOperator,
+        FunctionMultiplication,
 )
 
 from .printing import (pager_print, pretty, pretty_print, pprint,
@@ -512,6 +515,9 @@ __all__ = [
     'RightQuasigroup', 'Quasigroup', 'Monoid', 'Loop', 'Group', 'AbelianGroup',
     "Ring", "CommutativeRing", "Field", "Module", "VectorSpace",
     "Algebra",
+    "FunctionAdditionOperator", "FunctionAddition",
+    "FunctionScalarMultiplicationOperator",
+    "FunctionMultiplication",
 
     # sympy.printing
     'pager_print', 'pretty', 'pretty_print', 'pprint', 'pprint_use_unicode',

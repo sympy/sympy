@@ -27,8 +27,17 @@ class AdditionOperator(BinaryOperator):
 
     .. note::
         Since generalized addition does not have to satisfy the common addition
-        of numbers, repetitive addition or inverse element of addition does not
-        return the result of multiplication.
+        of numbers, repetitive addition or inverse element of addition is not
+        guaranteed to return the result of multiplication.
+
+    Parameters
+    ==========
+
+    domain : ProductSet of Set
+
+    codomain : Set
+
+    identity : identity element
 
     Examples
     ========
@@ -184,6 +193,13 @@ class NumericAdditionOperator(AdditionOperator):
     common addition operator with its identity element fixed to 0. Also, multiplication
     operator does not need to be passed when applying the arguments.
 
+    Parameters
+    ==========
+
+    domain : ProductSet of Set
+
+    codomain : Set
+
     Examples
     ========
 
@@ -273,6 +289,15 @@ class VectorAdditionOperator(AdditionOperator):
     (scalar-vector multiplication operator), *ss_add* (scalar-scalar addition operator)
     and *ss_mul* (scalar-scalar multiplication operator). This is to perform the
     collection of vectors, i.e. $\mathbf(v) + \mathbf(v) = \left(1+1 \right) \mathbf(v)$.
+
+    Parameters
+    ==========
+
+    domain : ProductSet of Set
+
+    codomain : Set
+
+    identity : identity element
 
     Examples
     ========
@@ -381,10 +406,10 @@ class Addition(AppliedMap):
     Parameters
     ==========
 
-    map : Map
+    mapping : Map
 
     args : tuple of arguments
-        Arguments applied to *map*
+        Arguments applied to *mapping*
 
     aux : tuple of Maps
         Auxillary operators

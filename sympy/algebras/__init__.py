@@ -12,6 +12,9 @@ from .abstract import (
     Module,
     VectorSpace,
     Algebra,
+    FunctionAdditionOperator, FunctionAddition,
+    FunctionScalarMultiplicationOperator,
+    FunctionMultiplication,
 )
 
 __all__ = [
@@ -28,4 +31,7 @@ __all__ = [
     "Module",
     "VectorSpace",
     "Algebra",
+    "FunctionAdditionOperator", "FunctionAddition",
+    "FunctionScalarMultiplicationOperator",
+    "FunctionMultiplication",
 ]

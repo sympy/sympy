@@ -27,6 +27,15 @@ class MultiplicationOperator(BinaryOperator):
     as *add_op* parameter for this relation. By using ``Field`` class from algebras module,
     this is done automatically.
 
+    Parameters
+    ==========
+
+    domain : ProductSet of Set
+
+    codomain : Set
+
+    identity : identity element
+
     Examples
     ========
 
@@ -141,6 +150,13 @@ class NumericMultiplicationOperator(MultiplicationOperator):
     common multiplication operator with its identity element fixed to 1. Also, addition
     operator does not need to be passed when applying the arguments.
 
+    Parameters
+    ==========
+
+    domain : ProductSet of Set
+
+    codomain : Set
+
     Examples
     ========
 
@@ -201,23 +217,12 @@ class ScalarMultiplicationOperator(MultiplicationOperator):
     Class for abstract scalar multiplication operator defined between
     scalar and vector of algebraic module.
 
-    Explanation
-    ===========
-
-    To be called, scalar multiplication operator needs keyword arguments *vv_add*
-    (vector-vector addition operator), *ss_add* (scalar-scalar addition operator)
-    and *ss_mul(scalar-scalar multiplication operator). This is to perform the
-    distribution of vectors, i.e. $\left(1+1 \right) \mathbf{v} = \mathbf{v} + \mathbf{v}$ and
-    $a \left(\mathbf{v} + \mathbf{w} \right) = a \mathbf{v} + a \mathbf{w}$.
-
     Parameters
     ==========
 
-    domain : ProductSet
-        Product of scalar ring and vector group
+    domain : ProductSet of Ring and AbelianGroup
 
     codomain : AbelianGroup
-        Group of vectors
 
     Examples
     ========
@@ -350,8 +355,7 @@ class VectorMultiplicationOperator(MultiplicationOperator):
     Parameters
     ==========
 
-    domain : ProductSet
-        Power set of a vector space
+    domain : ProductSet of two VectorSpace
 
     codomain : VectorSpace
 
@@ -428,15 +432,15 @@ class VectorMultiplicationOperator(MultiplicationOperator):
     def ss_mul(self):
         return self.vectorspace.field.mul_op
 
-    def __call__(self, a, b, evaluate=False, **kwargs):
+    def __call__(self, *args, evaluate=False, **kwargs):
         kwargs.update(evaluate=evaluate)
-        return Multiplication(self, (a, b), (), **kwargs)
+        return Multiplication(self, args, (), **kwargs)
 
-    def apply(self, a, b, aux, **kwargs):
+    def apply(self, *args, aux, **kwargs):
         evaluate = kwargs.get('evaluate', False)
 
         # sympify the arguments
-        args = [_sympify(i) for i in (a, b)]
+        args = [_sympify(i) for i in args]
 
         if evaluate:
             args = self.multiplication_process(args)
@@ -501,10 +505,10 @@ class Multiplication(AppliedMap):
     Parameters
     ==========
 
-    map : Map
+    mapping : Map
 
     args : tuple of arguments
-        Arguments applied to *map*
+        Arguments applied to *mapping*
 
     aux : tuple of Maps
         Auxillary operators

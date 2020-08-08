@@ -11,6 +11,11 @@ __all__ = [
     "Module",
     "VectorSpace",
     "Algebra",
+    'Module',
+    'VectorSpace',
+    'FunctionAdditionOperator', 'FunctionAddition',
+    'FunctionScalarMultiplicationOperator',
+    'FunctionMultiplication',
 ]
 
 from .structure import AlgebraicStructure
@@ -26,7 +31,11 @@ from .ring import (
 )
 
 from .module import (
-    Module, VectorSpace,
+    Module,
+    VectorSpace,
+    FunctionAdditionOperator, FunctionAddition,
+    FunctionScalarMultiplicationOperator,
+    FunctionMultiplication,
 )
 
 from .algebra import (

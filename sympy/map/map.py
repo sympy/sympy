@@ -595,10 +595,10 @@ class AppliedMap(Expr):
     Parameters
     ==========
 
-    map : Map
+    mapping : Map
 
     args : tuple of arguments
-        Arguments applied to *map*
+        Arguments applied to *mapping*
 
     evaluate : bool, optional
         If True, returns evaluated application of *map* to *args*
