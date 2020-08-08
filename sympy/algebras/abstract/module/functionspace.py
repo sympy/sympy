@@ -44,38 +44,32 @@ class FunctionAdditionOperator(VectorAdditionOperator):
     ========
 
     >>> from sympy import (
-    ... S, Set, Map, VectorAdditionOperator, AbelianGroup,
-    ... ScalarMultiplicationOperator, VectorSpace,
-    ... FunctionSet, ConstantMap, FunctionAdditionOperator,
+    ... S, Map, FunctionSet, ConstantMap,
+    ... FunctionAdditionOperator, AbelianGroup,
     ... FunctionScalarMultiplicationOperator
     ... )
 
-    Construct underlying structures
+    Construct underlying structures.
+    Although function space needs vector space as codomain, scalar field
+    can be given if no vector is involved.
 
     >>> F = S.RealsField
-    >>> X = Set('X')
+    >>> X = S.Reals
     >>> f, g = Map('f', domain=X, codomain=F), Map('g', domain=X, codomain=F)
 
-    >>> A = Set('A')
-    >>> e = A.element('e')
-    >>> vadd = VectorAdditionOperator(A**2, A, e)
-    >>> G = AbelianGroup('G', (A,), (vadd,))
-    >>> smul = ScalarMultiplicationOperator(F*G, G)
-    >>> V = VectorSpace('V', (F, G), (smul,))
-
-    >>> fs = FunctionSet(domain=X, codomain=V)
+    >>> fs = FunctionSet(domain=X, codomain=F)
     >>> zerofunc = ConstantMap(F.add_op.identity, domain=X)
-
     >>> fadd = FunctionAdditionOperator(fs**2, fs, zerofunc)
     >>> fG = AbelianGroup('fG', (fs,), (fadd,))
+
     >>> fsmul = FunctionScalarMultiplicationOperator(F*fG, fG)
 
     Function addition
 
     >>> fadd(f, g, sv_mul=fsmul)
-    f + g : X -> R
+    f + g : Reals -> R
     >>> fadd(f, f, sv_mul=fsmul, evaluate=True)
-    2*f : X -> R
+    2*f : Reals -> R
 
     Constructing a functions pace makes applying the operator easier
 
@@ -83,9 +77,9 @@ class FunctionAdditionOperator(VectorAdditionOperator):
     >>> FS = VectorSpace('FS', (F, fG), (fsmul,))
 
     >>> FS.add(f, g)
-    f + g : X -> R
+    f + g : Reals -> R
     >>> FS.add(f, f, evaluate=True)
-    2*f : X -> R
+    2*f : Reals -> R
 
     References
     ==========
@@ -156,21 +150,25 @@ class FunctionAddition(Addition, Map):
     ... S, Set, Map, VectorAdditionOperator, AbelianGroup,
     ... ScalarMultiplicationOperator, VectorSpace,
     ... FunctionSet, ConstantMap, FunctionAdditionOperator,
-    ... FunctionScalarMultiplicationOperator, VectorSpace
+    ... FunctionScalarMultiplicationOperator
     ... )
 
     Construct underlying structures
 
     >>> F = S.RealsField
     >>> X = Set('X')
-    >>> f, g = Map('f', domain=X, codomain=F), Map('g', domain=X, codomain=F)
+
+    In this example, functions return vector. Therefore, full vector space
+    must be constructed first.
 
     >>> A = Set('A')
     >>> e = A.element('e')
     >>> vadd = VectorAdditionOperator(A**2, A, e)
     >>> G = AbelianGroup('G', (A,), (vadd,))
     >>> smul = ScalarMultiplicationOperator(F*G, G)
-    >>> V = VectorSpace('V', (F, G), (smul,))
+    >>> V = VectorSpace('V', (F, G), (smul,)) # vector space which is function's codomain
+
+    >>> f, g = Map('f', domain=X, codomain=G), Map('g', domain=X, codomain=G)
 
     >>> fs = FunctionSet(domain=X, codomain=V)
     >>> zerofunc = ConstantMap(F.add_op.identity, domain=X)
@@ -182,8 +180,12 @@ class FunctionAddition(Addition, Map):
     >>> FS = VectorSpace('FS', (F, fG), (fsmul,))
     >>> addf = FS.add(f, g)
 
+    Added function
+
     >>> addf
-    f + g : X -> R
+    f + g : X -> G
+
+    Argument can be applied to added function
 
     >>> x = X.element('x')
     >>> addf(x)
@@ -235,36 +237,30 @@ class FunctionScalarMultiplicationOperator(ScalarMultiplicationOperator):
     ========
 
     >>> from sympy import (
-    ... S, Set, Map, VectorAdditionOperator, AbelianGroup,
-    ... ScalarMultiplicationOperator, VectorSpace,
-    ... FunctionSet, ConstantMap, FunctionAdditionOperator,
+    ... S, Map, FunctionSet, ConstantMap,
+    ... FunctionAdditionOperator, AbelianGroup,
     ... FunctionScalarMultiplicationOperator
     ... )
 
-    Construct underlying structures
+    Construct underlying structures.
+    Although function space needs vector space as codomain, scalar field
+    can be given if no vector is involved.
 
     >>> F = S.RealsField
-    >>> X = Set('X')
+    >>> X = S.Reals
     >>> f = Map('f', domain=X, codomain=F)
 
-    >>> A = Set('A')
-    >>> e = A.element('e')
-    >>> vadd = VectorAdditionOperator(A**2, A, e)
-    >>> G = AbelianGroup('G', (A,), (vadd,))
-    >>> smul = ScalarMultiplicationOperator(F*G, G)
-    >>> V = VectorSpace('V', (F, G), (smul,))
-
-    >>> fs = FunctionSet(domain=X, codomain=V)
+    >>> fs = FunctionSet(domain=X, codomain=F)
     >>> zerofunc = ConstantMap(F.add_op.identity, domain=X)
-
     >>> fadd = FunctionAdditionOperator(fs**2, fs, zerofunc)
     >>> fG = AbelianGroup('fG', (fs,), (fadd,))
+
     >>> fsmul = FunctionScalarMultiplicationOperator(F*fG, fG)
 
     Multiplication of function with scalar
 
     >>> fsmul(2, f)
-    2*f : X -> R
+    2*f : Reals -> R
 
     References
     ==========
@@ -332,14 +328,18 @@ class FunctionMultiplication(Multiplication, Map):
 
     >>> F = S.RealsField
     >>> X = Set('X')
-    >>> f = Map('f', domain=X, codomain=F)
+
+    In this example, functions return vector. Therefore, full vector space
+    must be constructed first.
 
     >>> A = Set('A')
     >>> e = A.element('e')
     >>> vadd = VectorAdditionOperator(A**2, A, e)
     >>> G = AbelianGroup('G', (A,), (vadd,))
     >>> smul = ScalarMultiplicationOperator(F*G, G)
-    >>> V = VectorSpace('V', (F, G), (smul,))
+    >>> V = VectorSpace('V', (F, G), (smul,)) # vector space which is function's codomain
+
+    >>> f, g = Map('f', domain=X, codomain=G), Map('g', domain=X, codomain=G)
 
     >>> fs = FunctionSet(domain=X, codomain=V)
     >>> zerofunc = ConstantMap(F.add_op.identity, domain=X)
@@ -347,10 +347,16 @@ class FunctionMultiplication(Multiplication, Map):
     >>> fadd = FunctionAdditionOperator(fs**2, fs, zerofunc)
     >>> fG = AbelianGroup('fG', (fs,), (fadd,))
     >>> fsmul = FunctionScalarMultiplicationOperator(F*fG, fG)
-    >>> mulf = fsmul(2, f)
+
+    >>> FS = VectorSpace('FS', (F, fG), (fsmul,))
+    >>> mulf = FS.mul(2, f)
+
+    Multiplied function
 
     >>> mulf
-    2*f : X -> R
+    2*f : X -> G
+
+    Argument can be applied to multiplied function
 
     >>> x = X.element('x')
     >>> mulf(x)
@@ -400,42 +406,32 @@ class FunctionVectorMultiplicationOperator(VectorMultiplicationOperator):
     ========
 
     >>> from sympy import (
-    ... S, Set, Map, VectorAdditionOperator, AbelianGroup,
-    ... ScalarMultiplicationOperator, VectorSpace,
-    ... VectorMultiplicationOperator, Algebra,
-    ... FunctionSet, ConstantMap, FunctionAdditionOperator,
+    ... S, Map, FunctionSet, ConstantMap,
+    ... FunctionAdditionOperator, AbelianGroup,
     ... FunctionScalarMultiplicationOperator,
-    ... FunctionVectorMultiplicationOperator,
+    ... VectorSpace, FunctionVectorMultiplicationOperator,
     ... )
 
-    Build underlying vector space
+    Construct underlying structures.
+    Although function space needs vector space as codomain, scalar field
+    can be given if no vector is involved.
 
     >>> F = S.RealsField
-    >>> X = Set('X')
+    >>> X = S.Reals
+    >>> f, g = Map('f', domain=X, codomain=F), Map('g', domain=X, codomain=F)
 
-    >>> A = Set('A')
-    >>> e = A.element('e')
-    >>> vadd = VectorAdditionOperator(A**2, A, e)
-    >>> G = AbelianGroup('G', (A,), (vadd,))
-    >>> smul = ScalarMultiplicationOperator(F*G, G)
-    >>> V = VectorSpace('V', (F, G), (smul,))
-    >>> vv_mul = VectorMultiplicationOperator(V*V, G)
-    >>> A = Algebra('A', (V,), (vv_mul,))
-
-    >>> f, g = Map('f', domain=X, codomain=G), Map('g', domain=X, codomain=G)
-
-    >>> fs = FunctionSet(domain=X, codomain=A)
+    >>> fs = FunctionSet(domain=X, codomain=F)
     >>> zerofunc = ConstantMap(F.add_op.identity, domain=X)
-
     >>> fadd = FunctionAdditionOperator(fs**2, fs, zerofunc)
     >>> fG = AbelianGroup('fG', (fs,), (fadd,))
+
     >>> fsmul = FunctionScalarMultiplicationOperator(F*fG, fG)
 
     >>> FS = VectorSpace('FS', (F, fG), (fsmul,))
     >>> ff_mul = FunctionVectorMultiplicationOperator(FS*FS, fG)
 
     >>> ff_mul(f, g)
-    f*g : X -> G
+    f*g : Reals -> R
 
     >>> x = X.element('x')
     >>> ff_mul(f, g)(x)

@@ -72,6 +72,12 @@ class Group(Monoid, Loop):
     e
 
     """
+
+    @property
+    def group(self):
+        # for compatibility with other structures
+        return self
+
     @property
     def inverse(self):
         op = self.operator

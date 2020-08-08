@@ -101,6 +101,11 @@ class Ring(AlgebraicStructure):
         return obj
 
     @property
+    def ring(self):
+        # for compatibility
+        return self
+
+    @property
     def add_group(self):
         return self._add_group
 
