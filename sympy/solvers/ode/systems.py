@@ -898,7 +898,34 @@ def _is_commutative_anti_derivative(A, t):
     return B, is_commuting
 
 
-def _second_order_subs_type1(original_eqs, funcs, t):
+# Returns list of match dictionaries for each
+# canonical system from the system of ODEs
+# passed.
+def _match_second_order_type(eqs, funcs, t):
+    r"""
+    Works only for second order system in its canonical form.
+
+    Type 0: Constant coefficient matrix, can be simply solved by
+            introducing dummy variables.
+    Type 1: When the substitution: $U = t*X' - X$ works for reducing
+            the second order system to first order system.
+    """
+
+    (A2, A1, A0), b = linear_ode_to_matrix(eqs, funcs, t, 2)
+    match = {"type": "type0"}
+
+    if _matrix_is_constant(A1, t) and _matrix_is_constant(A0, t):
+        return match
+
+    if (A1 + A0*t).applyfunc(expand_mul).is_zero_matrix:
+        match.update({"type": "type1", "A": A1, "b": b})
+
+    return match
+
+
+# Note: To move the test cases from type 5 and type 8 in
+# test_ode to test_systems for this particular method.
+def _second_order_subs_type1(A, b, funcs, t):
     r"""
     For a linear, second order system of ODEs, a particular substitution.
 
@@ -928,57 +955,30 @@ def _second_order_subs_type1(original_eqs, funcs, t):
     .. math::
         a(t) = t*X' - X
 
-    If the substitution doesn't work, then `None` is returned.
-
     Parameters
     ==========
 
-    eqs: List
-        List of second order ODEs
+    A: Matrix
+        Coefficient matrix($A(t)*t$) of the second order system of this form.
+    b: Matrix
+        Non-homogeneous term of the system of ODEs.
     funcs: List
-        List of the dependent variables for the second order system
+        List of dependent variables
     t: Symbol
         Independent variable of the system of ODEs.
 
     Returns
     =======
 
-    List or None
+    List
 
     """
 
     U = Matrix([t*func.diff(t) - func for func in funcs])
-    n = len(original_eqs)
 
-    eqs = canonical_odes(original_eqs, funcs, t)[0]
-    eqs = [eq.rhs for eq in eqs]
-
-    for i, eq in enumerate(eqs):
-        coeffs = []
-        for u in U:
-            coeff = [eq.coeff(term) for term in Add.make_args(u)]
-            if len(set(coeff)) != 1:
-                break
-            coeffs.append(coeff[0])
-
-        # If any of the term isn't present in the
-        # desired form and doesn't have 0 as coefficient
-        # then None needs to be returned indicating that
-        # the substitution doesn't work.
-        if len(coeffs) != n:
-            return None
-
-        coeffs = Matrix(coeffs)
-        dot_product = coeffs.dot(U)
-        eqs[i] = -1*((eqs[i] - dot_product).expand() + dot_product)
-
-    (A1, A0), b = linear_ode_to_matrix(eqs, U, t, 1)
-
-    if any(b.has(func.diff(t, i)) for func in funcs for i in range(2)):
-        return None
-
-    sol = linodesolve(A0, t, b)
+    sol = linodesolve(A, t, b)
     reduced_eqs = [Eq(u, s) for s, u in zip(sol, U)]
+    reduced_eqs = canonical_odes(reduced_eqs, funcs, t)[0]
 
     return reduced_eqs
 
@@ -1321,17 +1321,31 @@ def _component_solver(eqs, funcs, t):
     return sol
 
 
+def _second_order_to_first_order(eqs, funcs, t):
+    r"""
+    Expects the system to be in second order and in canonical form
+    """
+
+    match = _match_second_order_type(eqs, funcs, t)
+    sys_order = {func: 2 for func in funcs}
+
+    if match["type"] == "type1":
+        A = match["A"]
+        b = match["b"]
+        eqs = _second_order_subs_type1(A, b, funcs, t)
+        sys_order = {func: 1 for func in funcs}
+
+    # More types to be added: Euler systems and a method
+    # to factor a term from the second order system.
+
+    return _higher_order_to_first_order(eqs, sys_order, t, funcs=funcs)
+
+
 def _higher_order_to_first_order(eqs, sys_order, t, funcs=None):
     new_funcs = []
 
     if funcs is None:
         funcs = sys_order.keys()
-
-    if all(sys_order[func] == 2 for func in funcs):
-        new_eqs = _second_order_subs_type1(eqs, funcs, t)
-        if new_eqs is not None:
-            sys_order = {func: 1 for func in funcs}
-            eqs = new_eqs
 
     for prev_func in funcs:
         func_name = prev_func.func.__name__
@@ -1475,13 +1489,18 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     sols = []
     variables = Tuple(*eqs).free_symbols
     is_higher_order = not all(sys_order[func] == 1 for func in funcs)
+    is_second_order = all(sys_order[func] == 2 for func in funcs)
+
+    if is_higher_order and not is_second_order:
+        eqs, new_funcs = _higher_order_to_first_order(eqs, sys_order, t, funcs=funcs)
 
     canon_eqs = canonical_odes(eqs, new_funcs, t)
 
     for canon_eq in canon_eqs:
-        if is_higher_order:
-            canon_eq, new_funcs = _higher_order_to_first_order(canon_eq,
-                                                        sys_order, t, funcs=funcs)
+
+        if is_second_order:
+            eqs, new_funcs = _second_order_to_first_order(eqs, new_funcs, t)
+
         sol = _strong_component_solver(canon_eq, new_funcs, t)
         if sol is None:
             sol = _component_solver(canon_eq, new_funcs, t)
