@@ -461,6 +461,9 @@ def test_indices():
     raises(ValueError, lambda: tensor_indices(3, Lorentz))
     raises(ValueError, lambda: A(a,b,c))
 
+    A = TensorHead('a', [Lorentz])
+    assert A('a') == A(TensorIndex('a', Lorentz))
+
 def test_TensorSymmetry():
     assert TensorSymmetry.fully_symmetric(2) == \
         TensorSymmetry(get_symmetric_group_sgs(2))
