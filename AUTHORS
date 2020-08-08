@@ -4,7 +4,7 @@ those who explicitly didn't want to be mentioned. People with a * next
 to their names are not found in the metadata of the git history. This
 file is generated automatically by running `./bin/authors_update.py`.
 
-There are a total of 981 authors.
+There are a total of 978 authors.
 
 Ondřej Čertík <ondrej@certik.cz>
 Fabian Pedregosa <fabian@fseoane.net>
@@ -852,7 +852,6 @@ Abhi58 <abhijithbharadwaj58@gmail.com>
 Tomasz Pytel <tompytel@gmail.com>
 Aadit Kamat <aadit.k12@gmail.com>
 Samesh <samesh.lakhotia@gmail.com>
-Samesh Lakhotia <43701530+sameshl@users.noreply.github.com>
 Velibor Zeli <velibor@mech.kth.se>
 Gabriel Bernardino <gabriel.bernardino@upf.edu>
 Joseph Redfern <joseph@redfern.me>
@@ -860,7 +859,6 @@ Cameron King <v-caking@microsoft.com>
 Miguel Marco <mmarco@unizar.es>
 David Hagen <david@drhagen.com>
 Hannah Kari <hannah.kari@marquette.edu>
-hannah-kari <42753364+hannah-kari@users.noreply.github.com>
 Soniya Nayak <soniyanayak51@gmail.com>
 Harsh Agarwal <hagarwal9200@gmail.com>
 Enric Florit <efz1005@gmail.com>
@@ -923,7 +921,6 @@ Neil <mistersheik@gmail.com>
 V1krant <46847915+V1krant@users.noreply.github.com>
 alejandro <amartinhernan@gmail.com>
 Riyan Dhiman <Riyandhiman14@gmail.com>
-Riyan <43529842+Ryand1234@users.noreply.github.com>
 sbt4104 <sthorat661@gmail.com>
 Seth Troisi <sethtroisi@google.com>
 Bhaskar Gupta <guptabhanu1999@gmail.com>
