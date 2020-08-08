@@ -1759,6 +1759,9 @@ class TensorHead(Basic):
         same way as in matrix multiplication. For matrix behavior, define two
         auto-matrix indices, for vector behavior define just one.
 
+        Indices can also be strings, in which case the attribute
+        ``index_types`` is used to convert them to proper ``TensorIndex``.
+
         Examples
         ========
 
@@ -1771,7 +1774,20 @@ class TensorHead(Basic):
         A(a, -b)
 
         """
-        tensor = Tensor(self, indices, **kw_args)
+
+        updated_indices = []
+        for idx, typ in zip(indices, self.index_types):
+            if isinstance(idx, str):
+                if idx.startswith('-'):
+                    updated_indices.append(-TensorIndex(idx[1:], typ))
+                else:
+                    updated_indices.append(TensorIndex(idx, typ))
+            else:
+                updated_indices.append(idx)
+
+        updated_indices += indices[len(updated_indices):]
+
+        tensor = Tensor(self, updated_indices, **kw_args)
         return tensor.doit()
 
     # Everything below this line is deprecated
