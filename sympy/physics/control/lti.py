@@ -2,6 +2,7 @@ from sympy import Basic, Mul, degree, Symbol, expand, cancel, Expr, exp, ShapeEr
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify, _sympify
+from sympy.matrices import Matrix, ImmutableMatrix
 
 __all__ = ['TransferFunction', 'Series', 'Parallel', 'Feedback', 'TransferFunctionMatrix']
 
@@ -1183,9 +1184,13 @@ class Feedback(Basic):
 class TransferFunctionMatrix(Basic):
 
     def __new__(cls, arg, shape=None, var=None):
-        if not (isinstance(arg, list) and (all(isinstance(i, list) for i in arg) or
+        if not (isinstance(arg, (list, tuple, Matrix, ImmutableMatrix)) and
+            (all(isinstance(i, (list, tuple)) for i in arg) or
             all(isinstance(i, TransferFunction) for i in arg))):
             raise TypeError("Unsupported type for argument of TransferFunctionMatrix.")
+
+        if isinstance(arg, (Matrix, ImmutableMatrix)):
+            arg = _sympify(arg)    # Converting a MutableMatrix into ImmutableMatrix.
 
         if shape and var:
             if not isinstance(shape, tuple):
@@ -1195,27 +1200,33 @@ class TransferFunctionMatrix(Basic):
 
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         if all(isinstance(i, TransferFunction) for i in arg):
-            # TFM with 1st argument of the type - [tf1, tf2, tf3, ...]
+            # TFM with 1st argument of the type - [tf1, tf2, tf3, ...] or (tf1, tf2, ...)
+            # or Matrix([tf1, tf2, tf3, tf4, ...]) or even Matrix([[tf1, tf2, ...], [tf3, tf4, ...]])
             if shape and var:
                 if not all(elem.var == var for elem in arg):
                     raise ValueError("All transfer functions should use the same complex"
                         " variable (var) of the Laplace transform.")
-                if not (shape[0] == len(arg) and shape[1] == 1):
+                if isinstance(arg, ImmutableMatrix):
+                    if not shape == arg.shape:
+                        raise ValueError("Shape must be equal to {0}.".format(arg.shape))
+                elif not (shape[0] == len(arg) and shape[1] == 1):
                     raise ValueError("Shape must be equal to ({0}, {1}).".format(len(arg), 1))
                 obj._shape, obj._var = shape, var
             else:
-                obj._var, obj._shape = arg[0].var, (len(arg), 1)
+                obj._var = arg[0].var
+                obj._shape = arg.shape if isinstance(arg, ImmutableMatrix) else (len(arg), 1)
                 if not all(elem.var == obj._var for elem in arg):
                     raise ValueError("All transfer functions should use the same complex"
                         " variable of the Laplace transform.")
         else:
             # TFM with 1st argument of the type - [[tf1, tf2, ...], [tf3, tf4, ...], ...]
+            # or ((tf1, tf2, ...), (tf3, tf4, ...), ...)
             if not all(isinstance(arg[row][col], (TransferFunction, Series, Parallel))
                 for col in range(len(arg[0])) for row in range(len(arg))):
-                raise TypeError("All the lists in the first argument of TransferFunctionMatrix"
+                raise TypeError("All the lists/tuples in the first argument of TransferFunctionMatrix"
                     " only support transfer functions, and Series/Parallel objects in them.")
             if not all(len(l) == len(arg[0]) for l in arg):
-                raise ValueError("Length of all the lists in the argument of"
+                raise ValueError("Length of all the lists/tuples in the argument of"
                     " TransferFunctionMatrix should be equal.")
             if shape and var:
                 if not (shape[0] == len(arg) and shape[1] == len(arg[0])):
@@ -1251,11 +1262,15 @@ class TransferFunctionMatrix(Basic):
         return self._shape
 
     def __add__(self, other):
-        if isinstance(other, (TransferFunctionMatrix, Series)):
+        if isinstance(other, (TransferFunctionMatrix, Series, Matrix, ImmutableMatrix)):
+            other = _sympify(other)
+            if isinstance(other, ImmutableMatrix):
+                pass
             if isinstance(other, Series):
                 if other.is_SISO:
                     raise ValueError("All the arguments of Series must be either"
                         " TransferFunctionMatrix or Parallel objects.")
+
             if not self.shape == other.shape:
                 raise ShapeError("Shapes of operands are not compatible for addition.")
             if not self.var == other.var:

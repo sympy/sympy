@@ -1,4 +1,5 @@
-from sympy import symbols, Matrix, factor, Function, simplify, exp, pi, ShapeError
+from sympy import symbols, factor, Function, simplify, exp, pi, ShapeError
+from sympy.matrices import Matrix, ImmutableMatrix
 from sympy.physics.control import TransferFunction, Series, Parallel, \
     Feedback, TransferFunctionMatrix
 from sympy.testing.pytest import raises
@@ -628,43 +629,129 @@ def test_TransferFunctionMatrix_construction():
     tf6 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
     tf7 = TransferFunction(p, a0, p)
 
-    tfm1 = TransferFunctionMatrix([TF1, TF2])
+    _tfm1 = TransferFunctionMatrix(Matrix([TF1, TF2]), (2, 1), s)
+    assert _tfm1.shape == (_tfm1.num_outputs, _tfm1.num_inputs) == (2, 1)
+    assert _tfm1.args == (Matrix([TF1, TF2]),)
+    assert _tfm1.var == s
+
+    tfm1 = TransferFunctionMatrix([TF1, TF2], (2, 1), s)
     assert tfm1.shape == (tfm1.num_outputs, tfm1.num_inputs) == (2, 1)
     assert tfm1.args == ([TF1, TF2],)
     assert tfm1.var == s
+
+    tfm1_ = TransferFunctionMatrix((TF2, TF1, TF3), (3, 1), s)
+    assert tfm1_.shape == (tfm1_.num_outputs, tfm1_.num_inputs) == (3, 1)
+    assert tfm1_.args == ((TF2, TF1, TF3),)
+    assert tfm1_.var == s
+
+    _tfm2 = TransferFunctionMatrix(Matrix([-TF1, TF2]))
+    assert _tfm2.shape == (_tfm2.num_outputs, _tfm2.num_inputs) == (2, 1)
+    assert _tfm2.args == (Matrix([-TF1, TF2]),)
+    assert _tfm2.var == s
 
     tfm2 = TransferFunctionMatrix([-TF1, TF2])
     assert tfm2.shape == (tfm2.num_outputs, tfm2.num_inputs) == (2, 1)
     assert tfm2.args == ([-TF1, TF2],)
     assert tfm2.var == s
 
+    tfm2_ = TransferFunctionMatrix((-TF1, TF2), (2, 1), s)
+    assert tfm2_.shape == (tfm2_.num_outputs, tfm2_.num_inputs) == (2, 1)
+    assert tfm2_.args == ((-TF1, TF2),)
+    assert tfm2_.var == s
+
+    _tfm3 = TransferFunctionMatrix(Matrix([tf7]))
+    assert _tfm3.shape == (_tfm3.num_outputs, _tfm3.num_inputs) == (1, 1)
+    assert _tfm3.var == p
+    assert _tfm3.args == (Matrix([tf7]),)
+
     tfm3 = TransferFunctionMatrix([tf7])
     assert tfm3.shape == (tfm3.num_outputs, tfm3.num_inputs) == (1, 1)
     assert tfm3.var == p
     assert tfm3.args == ([tf7],)
+
+    tfm3_ = TransferFunctionMatrix((-TF3,), (1, 1), s)
+    assert tfm3_.shape == (tfm3_.num_outputs, tfm3_.num_inputs) == (1, 1)
+    assert tfm3_.args == ((-TF3,),)
+
+    _tfm4 = TransferFunctionMatrix(Matrix([TF3, tf5, tf6]))
+    assert _tfm4.shape == (_tfm4.num_outputs, _tfm4.num_inputs) == (3, 1)
+    assert _tfm4.args == (ImmutableMatrix([TF3, tf5, tf6]),)
+    assert _tfm4.var == s
 
     tfm4 = TransferFunctionMatrix([TF3, tf5, tf6])
     assert tfm4.shape == (tfm4.num_outputs, tfm4.num_inputs) == (3, 1)
     assert tfm4.args == ([TF3, tf5, tf6],)
     assert tfm4.var == s
 
+    tfm4_ = TransferFunctionMatrix((TF3, tf5, tf6))
+    assert tfm4_.shape == (tfm4_.num_outputs, tfm4_.num_inputs) == (3, 1)
+    assert tfm4_.args == ((TF3, tf5, tf6),)
+
+    _tfm5 = TransferFunctionMatrix(Matrix([[TF1, -TF2], [TF3, tf5]]), (2, 2), s)
+    assert _tfm5.shape == (_tfm5.num_outputs, _tfm5.num_inputs) == (2, 2)
+    assert _tfm5.args == (ImmutableMatrix([[TF1, -TF2], [TF3, tf5]]),)
+
     tfm5 = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]])
     assert tfm5.shape == (tfm5.num_outputs, tfm5.num_inputs) == (2, 2)
     assert tfm5.args == ([[TF1, -TF2], [TF3, tf5]],)
 
-    tfm6 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, tf6, -tf6]])
+    tfm5_ = TransferFunctionMatrix(((TF1, -TF2), (TF3, tf5)), (2, 2), s)
+    assert tfm5_.shape == (tfm5_.num_outputs, tfm5_.num_inputs) == (2, 2)
+    assert tfm5_.args == (((TF1, -TF2), (TF3, tf5)),)
+    assert tfm5_.var == s
+
+    _tfm6 = TransferFunctionMatrix(Matrix([[TF1, TF2, TF3], [tf5, tf6, -tf6]]))
+    assert _tfm6.shape == (_tfm6.num_outputs, _tfm6.num_inputs) == (2, 3)
+    assert _tfm6.args == (ImmutableMatrix([[TF1, TF2, TF3], [tf5, tf6, -tf6]]),)
+
+    tfm6 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, tf6, -tf6]], (2, 3), s)
     assert tfm6.shape == (tfm6.num_outputs, tfm6.num_inputs) == (2, 3)
     assert tfm6.args == ([[TF1, TF2, TF3], [tf5, tf6, -tf6]],)
+
+    tfm6_ = TransferFunctionMatrix(((TF1, TF2, TF3), (tf5, tf6, -tf6)))
+    assert tfm6_.shape == (tfm6_.num_outputs, tfm6_.num_inputs) == (2, 3)
+    assert tfm6_.args == (((TF1, TF2, TF3), (tf5, tf6, -tf6)),)
+
+    _tfm7 = TransferFunctionMatrix(Matrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]]))
+    assert _tfm7.args == (ImmutableMatrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]]),)
+    assert _tfm7.shape == (_tfm7.num_outputs, _tfm7.num_inputs) == (3, 2)
 
     tfm7 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]])
     assert tfm7.shape == (tfm7.num_outputs, tfm7.num_inputs) == (3, 2)
     assert tfm7.args == ([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]],)
 
-    raises(TypeError, lambda: TransferFunction(Matrix([1, 2, 3])))
+    tfm7_ = TransferFunctionMatrix(((TF1, TF2), (TF3, -tf5), (-tf5, TF2)))
+    assert tfm7_.shape == (tfm7_.num_outputs, tfm7_.num_inputs) == (3, 2)
+    assert tfm7_.args == (((TF1, TF2), (TF3, -tf5), (-tf5, TF2)),)
+
+    # all transfer functions will use the same complex variable. tf4 uses 'p'.
     raises(ValueError, lambda: TransferFunctionMatrix([TF1, TF2, tf4]))
-    raises(ValueError, lambda: TransferFunctionMatrix([[TF1], [TF3, tf5]]))
-    raises(TypeError, lambda: TransferFunctionMatrix([[TF1, TF2], [TF3, Matrix([1, 2])]]))
+    raises(ValueError, lambda: TransferFunctionMatrix((TF1, TF2, tf4), (3, 1), s))
     raises(ValueError, lambda: TransferFunctionMatrix([[TF1, tf4], [TF3, tf5]]))
+    raises(ValueError, lambda: TransferFunctionMatrix(((TF1, tf4), (TF3, tf5))))
+    raises(ValueError, lambda: TransferFunctionMatrix(Matrix([[TF1, tf4], [TF3, tf5]])))
+
+    # var provided should be the same complex variable used by all transfer functions.
+    raises(ValueError, lambda: TransferFunctionMatrix(((TF1, TF2), (TF3, tf5)), (2, 2), p))
+    raises(ValueError, lambda: TransferFunctionMatrix([[TF1, TF2], [TF3, tf5]], (2, 2), p))
+    raises(ValueError, lambda: TransferFunctionMatrix(Matrix([[TF1, TF2], [TF3, tf5]]), (2, 2), p))
+
+    # length of all the lists/tuples in the first arg of TFM should be equal.
+    raises(ValueError, lambda: TransferFunctionMatrix([[TF1], [TF3, tf5]]))
+    raises(ValueError, lambda: TransferFunctionMatrix(((TF1,), (TF3, tf5))))
+    raises(ValueError, lambda: TransferFunctionMatrix(Matrix([[TF1], [TF3, tf5]])))
+
+    # Matrix or lists/tuples only support transfer functions in them.
+    raises(TypeError, lambda: TransferFunctionMatrix([[TF1, TF2], [TF3, Matrix([1, 2])]]))
+    raises(TypeError, lambda: TransferFunctionMatrix(((TF1, TF2), (TF3, Matrix([1, 2]))), (2, 2), s))
+    raises(TypeError, lambda: TransferFunctionMatrix(Matrix([[TF1, TF2], [TF3, Matrix([1, 2])]])))
+
+    # Shape provided should be equal to (len(args[0]), 1)
+    raises(ValueError, lambda: TransferFunctionMatrix((-TF2, -TF1), (4, 1), s))
+    # Shape provided should be equal to (len(args[0]), len(args[0][0]))
+    raises(ValueError, lambda: TransferFunctionMatrix(((TF1, TF2), (TF3, tf5)), (3, 4), s))
+    # Shape provided should be equal to args[0].shape
+    raises(ValueError, lambda: TransferFunctionMatrix(Matrix([-TF2, -TF1]), (4, 1), s))
 
 
 def test_TransferFunctionMatrix_functions():
@@ -674,26 +761,50 @@ def test_TransferFunctionMatrix_functions():
     tfm1 = TransferFunctionMatrix([TF1, TF2])
     assert -tfm1 == TransferFunctionMatrix([-TF1, -TF2])
 
+    tfm1_ = TransferFunctionMatrix(Matrix([-TF1, TF2]))
+    assert -tfm1_ == TransferFunctionMatrix(Matrix([TF1, -TF2]))
+
     tfm2 = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]])
     assert -tfm2 == TransferFunctionMatrix([[-TF1, TF2], [-TF3, -tf5]])
 
+    tfm2_ = TransferFunctionMatrix(Matrix([[TF1, -TF2], [TF3, tf5]]), (2, 2), s)
+    assert -tfm2_ == TransferFunctionMatrix(Matrix([[-TF1, TF2], [-TF3, -tf5]]))
+
     tfm3 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, -TF1, -TF3]])
     assert -tfm3 == TransferFunctionMatrix([[-TF1, -TF2, -TF3], [-tf5, TF1, TF3]])
+
+    tfm3_ = TransferFunctionMatrix(Matrix([[TF1, TF2, TF3], [tf5, -TF1, -TF3]]), (2, 3), s)
+    assert tfm3_ == TransferFunctionMatrix(Matrix([[-TF1, -TF2, -TF3], [-tf5, TF1, TF3]]))
 
     tfm4 = TransferFunctionMatrix([TF1, TF2, TF3])
     assert tfm4.is_proper
     assert not tfm4.is_strictly_proper
     assert not tfm4.is_biproper
 
+    tfm4_ = TransferFunctionMatrix(Matrix([TF1, TF2, TF3]))
+    assert tfm4_.is_biproper
+    assert not tfm4_.is_strictly_proper
+    assert not tfm4_.is_biproper
+
     tfm5 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]])
     assert not tfm5.is_proper
     assert not tfm5.is_strictly_proper
     assert not tfm5.is_biproper
 
+    tfm5_ = TransferFunctionMatrix(Matrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]]), (3, 2), s)
+    assert not tfm5_.is_proper
+    assert not tfm5_.is_strictly_proper
+    assert not tfm5_.is_biproper
+
     tfm6 = TransferFunctionMatrix([[TF1, TF2], [TF3, -TF3]])
     assert tfm6.is_proper
     assert not tfm6.is_strictly_proper
     assert not tfm6.is_biproper
+
+    tfm6_ = TransferFunctionMatrix(Matrix([[TF1, TF2], [TF3, -TF3]]))
+    assert tfm6_.is_proper
+    assert not tfm6_.is_strictly_proper
+    assert not tfm6_.is_biproper
 
     tfm7 = TransferFunctionMatrix([-TF1, -tf6])
     assert not tfm7.is_proper
