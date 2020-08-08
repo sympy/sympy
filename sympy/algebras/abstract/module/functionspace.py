@@ -202,6 +202,10 @@ class FunctionAddition(Addition, Map):
     def codomain(self):
         return Union(*[f.codomain for f in self.arguments])
 
+    @property
+    def codomain_structure(self):
+        return self.map.codomain.codomain
+
     def eval(self, *args):
         add = self.map.codomain.codomain.add
         terms = [a(*args) for a in self.arguments]
@@ -366,8 +370,12 @@ class FunctionMultiplication(Multiplication, Map):
         vectors = [a for a in self.arguments if self.map.codomain.contains(a) == True]
         return Union(*[f.codomain for f in vectors])
 
+    @property
+    def codomain_structure(self):
+        return self.map.codomain.domain.codomain
+
     def eval(self, *args):
-        mul = self.map.scalar_ring.mul
+        mul = self.codomain_structure.mul
         terms = []
         for a in self.arguments:
             if self.map.codomain.contains(a) == True:
@@ -394,6 +402,7 @@ class FunctionVectorMultiplicationOperator(VectorMultiplicationOperator):
     >>> from sympy import (
     ... S, Set, Map, VectorAdditionOperator, AbelianGroup,
     ... ScalarMultiplicationOperator, VectorSpace,
+    ... VectorMultiplicationOperator, Algebra,
     ... FunctionSet, ConstantMap, FunctionAdditionOperator,
     ... FunctionScalarMultiplicationOperator,
     ... FunctionVectorMultiplicationOperator,
@@ -410,10 +419,12 @@ class FunctionVectorMultiplicationOperator(VectorMultiplicationOperator):
     >>> G = AbelianGroup('G', (A,), (vadd,))
     >>> smul = ScalarMultiplicationOperator(F*G, G)
     >>> V = VectorSpace('V', (F, G), (smul,))
+    >>> vv_mul = VectorMultiplicationOperator(V*V, G)
+    >>> A = Algebra('A', (V,), (vv_mul,))
 
     >>> f, g = Map('f', domain=X, codomain=G), Map('g', domain=X, codomain=G)
 
-    >>> fs = FunctionSet(domain=X, codomain=V)
+    >>> fs = FunctionSet(domain=X, codomain=A)
     >>> zerofunc = ConstantMap(F.add_op.identity, domain=X)
 
     >>> fadd = FunctionAdditionOperator(fs**2, fs, zerofunc)
@@ -425,6 +436,12 @@ class FunctionVectorMultiplicationOperator(VectorMultiplicationOperator):
 
     >>> ff_mul(f, g)
     f*g : X -> G
+
+    >>> x = X.element('x')
+    >>> ff_mul(f, g)(x)
+    (f*g)(x)
+    >>> ff_mul(f, g)(x, evaluate=True)
+    f(x)*g(x)
 
     """
     def __call__(self, *args, evaluate=False, **kwargs):
