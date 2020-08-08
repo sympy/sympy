@@ -2,7 +2,7 @@ from sympy import symbols, S, assuming, Q, ask
 from sympy.core.symbol import Str
 from sympy.map import (
     Map, UndefinedMap, InverseMap, IdentityMap, AppliedMap,
-    RestrictedMap, isappliedmap
+    ConstantMap, RestrictedMap, isappliedmap
 )
 from sympy.testing.pytest import raises
 
@@ -162,6 +162,10 @@ def test_restriction():
 
     # restriction checked by overriding _map_content
     assert h.is_restriction(f)
+
+def test_ConstantMap():
+    f = ConstantMap(1)
+    assert f(x, evaluate=True) == 1
 
 def test_isappliedmap():
     f1, f2 = Map('f', domain=S.Reals), Map('f', domain=S.Integers)

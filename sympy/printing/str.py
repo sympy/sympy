@@ -946,6 +946,12 @@ class StrPrinter(Printer):
             name = self._helper_print_domain(expr, name)
         return name
 
+    def _print_ConstantMap(self, expr, print_domains=True):
+        name = self._print(expr.output)
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
+        return name
+
     def _print_AppliedMap(self, expr, print_domains=True, pad_infix=False):
         from sympy.map import BinaryOperator, Map
 

@@ -44,8 +44,8 @@ class Module(AlgebraicStructure):
 
     >>> X = Set('X')
     >>> x, y, e = [X.element(i) for i in 'xye']
-    >>> op = VectorAdditionOperator(X**2, X, e)
-    >>> G = AbelianGroup('G', (X,), (op,))
+    >>> vadd = VectorAdditionOperator(X**2, X, e)
+    >>> G = AbelianGroup('G', (X,), (vadd,))
 
     >>> smul = ScalarMultiplicationOperator(R*G, G)
 

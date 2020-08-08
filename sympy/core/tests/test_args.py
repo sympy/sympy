@@ -3036,6 +3036,10 @@ def test_sympy__logic__boolalg__Xnor():
     from sympy.logic.boolalg import Xnor
     assert _test_args(Xnor(x, y, 2))
 
+def test_sympy__map__Map__FunctionSet():
+    from sympy import function_set
+    assert _test_args(function_set)
+
 @SKIP("abstract class")
 def test_sympy__map__map__Map():
     pass
@@ -3056,13 +3060,13 @@ def test_sympy__map__map__IdentityMap():
     from sympy.map import IdentityMap
     assert _test_args(IdentityMap())
 
+def test_sympy__map__map__ConstantMap():
+    from sympy.map import ConstantMap
+    assert _test_args(ConstantMap(1))
+
 def test_sympy__map__map__AppliedMap():
     from sympy.map import Map, AppliedMap
     assert _test_args(AppliedMap(Map('f'), (x,)))
-
-def test_sympy__map__composite__FunctionSet():
-    from sympy import function_set
-    assert _test_args(function_set)
 
 def test_sympy__map__composite__CompositionOperator():
     from sympy.map import composite_op

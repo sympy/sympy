@@ -2793,6 +2793,12 @@ class PrettyPrinter(Printer):
             pform = self._helper_print_domain(e, pform)
         return pform
 
+    def _print_ConstantMap(self, e, print_domains=True):
+        pform = self._print(e.output)
+        if print_domains:
+            pform = self._helper_print_domain(e, pform)
+        return pform
+
     def _print_AppliedMap(self, e, print_domains=True, pad_infix=False):
         from sympy.map import BinaryOperator, Map
 

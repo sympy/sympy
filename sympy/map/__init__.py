@@ -5,13 +5,14 @@ Includes any maps such as function, differential operator, etc.
 """
 
 __all__ = [
+    'FunctionSet', 'function_set',
     'Map', 'UndefinedMap', 'InverseMap', 'IdentityMap', 'RestrictedMap',
+    'ConstantMap',
     'AppliedMap',
     'isappliedmap',
     'BinaryOperator', 'LeftDivisionOperator', 'RightDivisionOperator',
     'InverseOperator', 'ExponentOperator',
     'InverseElement', 'ExponentElement',
-    'FunctionSet', 'function_set',
     'CompositionOperator', 'composite_op', 'CompositeMap',
     'IterationOperator', 'IteratedMap',
     'AdditionOperator', 'NumericAdditionOperator',
@@ -23,7 +24,9 @@ __all__ = [
 ]
 
 from .map import (
+    FunctionSet, function_set,
     Map, UndefinedMap, InverseMap, IdentityMap, RestrictedMap,
+    ConstantMap,
     AppliedMap,
     isappliedmap,
 )
@@ -33,7 +36,6 @@ from .operator import (
     InverseElement, ExponentElement,
 )
 from .composite import (
-    FunctionSet, function_set,
     CompositionOperator, composite_op, CompositeMap,
     IterationOperator, IteratedMap,
 )

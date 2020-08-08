@@ -2695,6 +2695,12 @@ class LatexPrinter(Printer):
             tex = self._helper_print_domain(expr, tex)
         return tex
 
+    def _print_ConstantMap(self, expr, print_domains=True):
+        tex = self._print(expr.output)
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
     def _print_AppliedMap(self, expr, print_domains=True):
         from sympy.map import BinaryOperator, Map
 

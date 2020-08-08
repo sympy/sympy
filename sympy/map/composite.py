@@ -2,70 +2,15 @@ from sympy.assumptions import ask, Q
 from sympy.core import Expr, S, Tuple
 from sympy.core.operations import AssocOp
 from sympy.core.sympify import _sympify
-from sympy.sets import Set
-from .map import Map, IdentityMap, AppliedMap, InverseMap
+from .map import function_set, Map, IdentityMap, AppliedMap, InverseMap
 from .operator import (
     BinaryOperator, ExponentOperator, ExponentElement
 )
 
 __all__ = [
-    "FunctionSet", "function_set",
     "CompositionOperator", "composite_op", "CompositeMap",
     "IterationOperator", "IteratedMap",
 ]
-
-class FunctionSet(Set):
-    """
-    Set of functions who have same domain or codomain.
-
-    Parameters
-    ==========
-
-    domain, codomain : Set, optional
-        Domain and codomain of the maps that belong to the set.
-        Default is ``S.UniversalSet``.
-
-    Examples
-    ========
-
-    >>> from sympy import FunctionSet, Map, S
-
-    >>> fs = FunctionSet(domain=S.Reals)
-    >>> f = Map('f', domain=S.Integers)
-
-    >>> f in fs
-    True
-
-    """
-
-    def __new__(cls, domain=None, codomain=None, **kwargs):
-        if domain is None:
-            domain = S.UniversalSet
-        if codomain is None:
-            codomain = S.UniversalSet
-        return super().__new__(cls, domain, codomain)
-
-    @property
-    def domain(self):
-        return self.args[0]
-
-    @property
-    def codomain(self):
-        return self.args[1]
-
-    def _contains(self, other):
-        return (
-            isinstance(other, Map)
-            and self.domain.is_superset(other.domain)
-            and self.codomain.is_superset(other.codomain)
-        )
-
-    def _element(self, name):
-        from sympy.map import Map
-        return Map(name, domain=self.domain, codomain=self.codomain)
-
-# General set of function
-function_set = FunctionSet(S.UniversalSet, S.UniversalSet)
 
 class CompositionOperator(BinaryOperator):
     """

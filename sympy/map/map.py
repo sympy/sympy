@@ -6,13 +6,68 @@ from sympy.core.decorators import (
 )
 from sympy.core.sympify import _sympify
 from sympy.core.symbol import Str
-from sympy.sets import ProductSet, FiniteSet
+from sympy.sets import Set, ProductSet, FiniteSet
 
 __all__ = [
+    'FunctionSet', 'function_set',
     'Map', 'UndefinedMap', 'RestrictedMap', 'InverseMap', 'IdentityMap',
+    'ConstantMap',
     'AppliedMap',
     'isappliedmap'
 ]
+
+class FunctionSet(Set):
+    """
+    Set of functions who have same domain or codomain.
+
+    Parameters
+    ==========
+
+    domain, codomain : Set, optional
+        Domain and codomain of the maps that belong to the set.
+        Default is ``S.UniversalSet``.
+
+    Examples
+    ========
+
+    >>> from sympy import FunctionSet, Map, S
+
+    >>> fs = FunctionSet(domain=S.Reals)
+    >>> f = Map('f', domain=S.Integers)
+
+    >>> f in fs
+    True
+
+    """
+
+    def __new__(cls, domain=None, codomain=None, **kwargs):
+        if domain is None:
+            domain = S.UniversalSet
+        if codomain is None:
+            codomain = S.UniversalSet
+        return super().__new__(cls, domain, codomain)
+
+    @property
+    def domain(self):
+        return self.args[0]
+
+    @property
+    def codomain(self):
+        return self.args[1]
+
+    def _contains(self, other):
+        return (
+            isinstance(other, Map)
+            and self.domain.is_superset(other.domain)
+            and self.codomain.is_superset(other.codomain)
+        )
+
+    def _element(self, name):
+        from sympy.map import Map
+        return Map(name, domain=self.domain, codomain=self.codomain)
+
+# General set of function
+function_set = FunctionSet(S.UniversalSet, S.UniversalSet)
 
 @sympify_method_args
 class Map(Expr):
@@ -476,6 +531,54 @@ class IdentityMap(Map):
 
     def _map_content(self):
         return self.func
+
+class ConstantMap(Map):
+    """
+    Map which always returns same output.
+
+    Parameters
+    ==========
+
+    output : Output of the constant map
+
+    domain : Set, optional
+        Domain of the map. Default is ``S.UniversalSet``.
+
+    Examples
+    ========
+
+    >>> from sympy import S, ConstantMap, Symbol
+    >>> x = Symbol('x', real=True)
+
+    >>> f = ConstantMap(1, S.Reals)
+    >>> f
+    1 : Reals -> FiniteSet(1)
+
+    >>> f(x)
+    1(x)
+    >>> f(x, evaluate=True)
+    1
+
+    """
+    def __new__(cls, output, domain=S.UniversalSet, **kwargs):
+        output = _sympify(output)
+        domain = _sympify(domain)
+        return super().__new__(cls, output, domain)
+
+    @property
+    def output(self):
+        return self.args[0]
+
+    @property
+    def domain(self):
+        return self.args[1]
+
+    @property
+    def codomain(self):
+        return FiniteSet(self.output)
+
+    def eval(self, *args):
+        return self.output
 
 class AppliedMap(Expr):
     """

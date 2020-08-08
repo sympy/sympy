@@ -35,16 +35,16 @@ class VectorSpace(Module):
     ... ScalarMultiplicationOperator, S, VectorSpace
     ... )
 
-    >>> R = S.RealsField
+    >>> F = S.RealsField
 
     >>> X = Set('X')
     >>> x, e = [X.element(i) for i in 'xe']
-    >>> op = VectorAdditionOperator(X**2, X, e)
-    >>> G = AbelianGroup('G', (X,), (op,))
+    >>> vadd = VectorAdditionOperator(X**2, X, e)
+    >>> G = AbelianGroup('G', (X,), (vadd,))
 
-    >>> smul = ScalarMultiplicationOperator(R*G, G)
+    >>> smul = ScalarMultiplicationOperator(F*G, G)
 
-    >>> V = VectorSpace('V', (R, G), (smul,))
+    >>> V = VectorSpace('V', (F, G), (smul,))
 
     >>> V.div(x, 2, evaluate=True)
     (2**(-1))*x

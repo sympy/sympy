@@ -271,7 +271,7 @@ class VectorAdditionOperator(AdditionOperator):
 
     To be called, vector addition operator needs keyword arguments *sv_mul*
     (scalar-vector multiplication operator), *ss_add* (scalar-scalar addition operator)
-    and *ss_mul(scalar-scalar multiplication operator). This is to perform the
+    and *ss_mul* (scalar-scalar multiplication operator). This is to perform the
     collection of vectors, i.e. $\mathbf(v) + \mathbf(v) = \left(1+1 \right) \mathbf(v)$.
 
     Examples
