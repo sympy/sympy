@@ -58,7 +58,7 @@ class Field(CommutativeRing):
 
     @property
     def mul_group(self):
-        return obj._mul_group
+        return self._mul_group
 
     @property
     def division_operator(self):

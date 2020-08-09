@@ -1105,7 +1105,7 @@ def test_sympy__algebras__abstract__module__functionspace__ReciprocalFunction():
     smul = ScalarMultiplicationOperator(F*G, G)
     V = VectorSpace('V', (F, G), (smul,)) # vector space which is function's codomain
 
-    f, g = Map('f', domain=X, codomain=G), Map('g', domain=X, codomain=G)
+    f = Map('f', domain=X, codomain=G)
 
     fs = FunctionSet(domain=X, codomain=V)
     zerofunc = ConstantMap(F.add_op.identity, domain=X)
@@ -1135,12 +1135,11 @@ def test_sympy__algebras__abstract__algebra__algebra__Algebra():
     g = Map('g', domain=V*V, codomain=G)
     A = Algebra('A', (V,), (g,))
 
-    assert _test_args(a)
+    assert _test_args(A)
 
 def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
     assert _test_args(Equality(x, 2))
-
 
 def test_sympy__core__relational__GreaterThan():
     from sympy.core.relational import GreaterThan
@@ -3294,7 +3293,7 @@ def test_sympy__map__map__UndefinedMap():
     assert _test_args(Map('f'))
 
 def test_sympy__map__map__RestrictedMap():
-    from sympy.map import Map, RestrictedMap
+    from sympy.map import Map
     assert _test_args(Map('f').restrict(S.Reals))
 
 def test_sympy__map__map__InverseMap():
@@ -3365,7 +3364,7 @@ def test_sympy__map__operator__ExponentOperator():
     assert _test_args(ExponentOperator(op))
 
 def test_sympy__map__operator__InverseElement():
-    from sympy.map import BinaryOperator, InverseOperator, InverseElement
+    from sympy.map import BinaryOperator, InverseOperator
     class Op(BinaryOperator):
         identity = S.Zero
         right_divisible = True
@@ -3373,7 +3372,7 @@ def test_sympy__map__operator__InverseElement():
     assert _test_args(InverseOperator(op)(x))
 
 def test_sympy__map__operator__ExponentElement():
-    from sympy.map import BinaryOperator, ExponentOperator, ExponentElement
+    from sympy.map import BinaryOperator, ExponentOperator
     class Op(BinaryOperator):
         identity = S.Zero
         right_divisible = True

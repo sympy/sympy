@@ -855,7 +855,7 @@ def isappliedmap(arg, maps):
     Examples
     ========
 
-    >>> from sympy import S, Map, isappliedmap
+    >>> from sympy import Map, isappliedmap
     >>> f = Map('f')
     >>> g = Map('g')
 
@@ -868,7 +868,6 @@ def isappliedmap(arg, maps):
 
     """
     if isinstance(arg, AppliedMap):
-        arg_map = arg.map
         if not iterable(maps):
             # maps is map
             return arg.map.is_restriction(maps)

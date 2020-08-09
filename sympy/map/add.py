@@ -3,7 +3,7 @@
 from functools import cmp_to_key
 from sympy.core import Basic, S, Tuple
 from sympy.core.sympify import _sympify
-from .map import AppliedMap
+from .map import AppliedMap, isappliedmap
 from .operator import BinaryOperator
 
 __all__ = [

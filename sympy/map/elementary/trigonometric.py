@@ -1,9 +1,7 @@
-from sympy.assumptions import ask, Q
 from sympy import (
-    S, pi, Interval, Rational
+    S, pi, Interval,
 )
-from sympy.core.logic import fuzzy_not
-from sympy.map import Map, AppliedMap, isappliedmap
+from sympy.map import Map, AppliedMap,
 
 __all__ = [
     "Sine", "Cosine", "Tangent", "Cotangent",
@@ -213,4 +211,3 @@ class Cosecant(ReciprocalTrigonometricMap):
         return S.Reals - Interval(-1, 1)
 
 from sympy.core.function import expand_mul
-from sympy.functions.elementary.trigonometric import _pi_coeff, _peeloff_pi

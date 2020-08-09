@@ -1,4 +1,3 @@
-from sympy.assumptions import ask, Q
 from .semigroup import Semigroup
 
 __all__ = [

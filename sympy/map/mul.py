@@ -10,7 +10,7 @@ from .operator import BinaryOperator
 
 __all__ = [
     "MultiplicationOperator", "NumericMultiplicationOperator",
-    "ScalarMultiplicationOperator", "VectorMultiplicationOperator"
+    "ScalarMultiplicationOperator", "VectorMultiplicationOperator",
     "Multiplication",
 ]
 
@@ -460,7 +460,7 @@ class VectorMultiplicationOperator(MultiplicationOperator):
     def distribute(self, seq, evaluate=False):
         # not used in construction algorithm because it is
         # discouraged according to core/parameters
-        vv_add, ss_add, sv_add, ss_mul = self.vv_add, self.ss_add, self.sv_mul, self.ss_mul
+        vv_add, ss_add, sv_mul, ss_mul = self.vv_add, self.ss_add, self.sv_mul, self.ss_mul
 
         coeffs = []
         vectors = []

@@ -135,8 +135,8 @@ def is_subset_sets(a, b): # noqa:F811
 def is_subset_sets(a, b): # noqa:F811
     return False
 
-@dispatch(UndefinedSet, Set)
-def is_subset_sets(a, b):
+@dispatch(UndefinedSet, Set)  # type: ignore # noqa:F811
+def is_subset_sets(a, b): # noqa:F811
     a_supersets = a.supersets
     if b in a_supersets:
         return True

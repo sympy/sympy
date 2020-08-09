@@ -1,4 +1,3 @@
-from sympy.assumptions import ask, Q
 from sympy.core import Tuple
 from sympy.core.sympify import _sympify
 from sympy.sets import Union
@@ -6,7 +5,7 @@ from sympy.map import (
     Map, AppliedMap,
     VectorAdditionOperator, Addition,
     ScalarMultiplicationOperator, VectorMultiplicationOperator, Multiplication,
-    ExponentElement, ConstantMap, ExponentElement, InverseElement,
+    ExponentElement, ConstantMap, InverseElement,
 )
 
 __all__ = [

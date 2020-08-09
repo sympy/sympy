@@ -1,9 +1,8 @@
 from sympy.assumptions import ask, Q
-from sympy.core import Expr, S, Tuple
-from sympy.core.operations import AssocOp
+from sympy.core import S, Tuple
 from sympy.core.sympify import _sympify
 from .map import (
-    FunctionSet, function_set, Map, IdentityMap, AppliedMap, InverseMap
+    function_set, Map, IdentityMap, AppliedMap,
 )
 from .operator import (
     BinaryOperator, ExponentOperator, ExponentElement
@@ -255,7 +254,6 @@ class IterationOperator(ExponentOperator):
     ========
 
     >>> from sympy import Map, composite_op
-    >>> from sympy.abc import x
     >>> class F(Map):
     ...     name = 'f'
     ...     def eval(self, x):

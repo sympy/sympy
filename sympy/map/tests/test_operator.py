@@ -208,7 +208,6 @@ def test_InverseOperator():
 
 def test_ExponentOperator():
     m_expop = m.exponent_operator()
-    m_invop = m.inverse_operator()
     # repetitive arguments are converted to ExponentOperator
     assert m(a1, a1, a1, evaluate=True) == m_expop(a1, 3)
     # n=1 is evaluated to original element

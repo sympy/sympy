@@ -21,6 +21,5 @@ def test_Loop():
 
     L = Loop('L', (A,), (g,))
     L_op = L.operator
-    L_ld, L_rd = L.left_division, L.right_division
     assert L_op(a, e, evaluate=True) == a
     assert L_op(e, b, evaluate=True) == b

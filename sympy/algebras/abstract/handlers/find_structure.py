@@ -12,7 +12,7 @@ True
 
 """
 
-from sympy import S, Expr, Set
+from sympy import S, Expr
 from sympy.core.sympify import _sympify
 from sympy.map import (
     Map, FunctionSet, ConstantMap,
@@ -30,16 +30,16 @@ __all__ = [
     'find_structure'
 ]
 
-@dispatch(object)
-def find_structure(a):
+@dispatch(object)  # type: ignore # noqa:F811
+def find_structure(a): # noqa:F811
     return find_structure(_sympify(a))
 
-@dispatch(Expr)
-def find_structure(a):
+@dispatch(Expr)  # type: ignore # noqa:F811
+def find_structure(a): # noqa:F811
     return S.ComplexesField
 
-@dispatch(Map)
-def find_structure(a):
+@dispatch(Map)  # type: ignore # noqa:F811
+def find_structure(a): # noqa:F811
     X, F = a.domain, a.codomain
 
     if not isinstance(F, Ring):
