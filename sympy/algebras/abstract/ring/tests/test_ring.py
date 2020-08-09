@@ -8,7 +8,7 @@ add = AdditionOperator(A**2, A, e1)
 class MonoidOp(BinaryOperator):
     domain = A*A
     codomain = A
-    is_associative = True
+    associative = True
     identity = e2
 mul = MonoidOp()
 R = Ring('R', (A,), (add, mul))

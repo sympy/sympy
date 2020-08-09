@@ -70,9 +70,9 @@ class MultiplicationOperator(BinaryOperator):
     str_name = '*'
     pretty_name = '⋅'
     latex_name = r' \times '
-    is_left_divisible = is_right_divisible = True
-    is_associative = True
-    is_commutative = True
+    left_divisible = right_divisible = True
+    associative = True
+    commutative = True
 
     def __new__(cls, domain, codomain, identity, **kwargs):
         domain, codomain, identity = _sympify(domain), _sympify(codomain), _sympify(identity)
@@ -263,8 +263,8 @@ class ScalarMultiplicationOperator(MultiplicationOperator):
     str_name = '*'
     pretty_name = ' '
     latex_name = ' '
-    is_left_divisible = is_right_divisible = False
-    is_associative = False
+    left_divisible = right_divisible = False
+    associative = False
 
     def __new__(cls, domain, codomain, **kwargs):
         return super(MultiplicationOperator, cls).__new__(cls, domain, codomain, **kwargs)
@@ -408,9 +408,9 @@ class VectorMultiplicationOperator(MultiplicationOperator):
     str_name = '*'
     pretty_name = '×'
     latex_name = r' \times '
-    is_left_divisible = is_right_divisible = False
-    is_associative = False
-    is_commutative = False
+    left_divisible = right_divisible = False
+    associative = None
+    commutative = None
     identity = None # can be overridden to construct unital algebra
 
     def __new__(cls, domain, codomain, **kwargs):

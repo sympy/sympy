@@ -37,7 +37,7 @@ class Loop(Quasigroup):
     ...     name = '*'
     ...     domain = S*S
     ...     codomain = S
-    ...     is_left_divisible = is_right_divisible = True
+    ...     left_divisible = right_divisible = True
     ...     identity = e
     >>> op = LoopOp()
 

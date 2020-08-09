@@ -9,7 +9,7 @@ f = Map('f', domain=A**2, codomain=A)
 class G(BinaryOperator):
     domain = A*A
     codomain = A
-    is_associative = True
+    associative = True
 g = G()
 
 def test_Semigroup():

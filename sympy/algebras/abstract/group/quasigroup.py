@@ -38,7 +38,7 @@ class LeftQuasigroup(Magma):
     ...     name = '*'
     ...     domain = S*S
     ...     codomain = S
-    ...     is_left_divisible = True
+    ...     left_divisible = True
     >>> op = Op()
 
     >>> Q = LeftQuasigroup('Q', (S,), (op,))
@@ -103,7 +103,7 @@ class RightQuasigroup(Magma):
     ...     name = '*'
     ...     domain = S*S
     ...     codomain = S
-    ...     is_right_divisible = True
+    ...     right_divisible = True
     >>> op = Op()
 
     >>> Q = RightQuasigroup('Q', (S,), (op,))
@@ -168,7 +168,7 @@ class Quasigroup(LeftQuasigroup, RightQuasigroup):
     ...     name = '*'
     ...     domain = S*S
     ...     codomain = S
-    ...     is_left_divisible = is_right_divisible = True
+    ...     left_divisible = right_divisible = True
     >>> op = QuasigroupOp()
 
     >>> Q = Quasigroup('Q', (S,), (op,))

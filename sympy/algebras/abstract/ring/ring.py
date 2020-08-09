@@ -46,7 +46,7 @@ class Ring(AlgebraicStructure):
     ...     name = '*'
     ...     domain = A*A
     ...     codomain = A
-    ...     is_associative = True
+    ...     associative = True
     ...     identity = e2
     >>> mul = MonoidOp()
 
@@ -196,8 +196,8 @@ class CommutativeRing(Ring):
     ...     name = '*'
     ...     domain = A*A
     ...     codomain = A
-    ...     is_associative = True
-    ...     is_commutative = True
+    ...     associative = True
+    ...     commutative = True
     ...     identity = e2
     >>> mul = MonoidOp()
 

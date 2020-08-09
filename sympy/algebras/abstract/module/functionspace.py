@@ -1,3 +1,4 @@
+from sympy.assumptions import ask, Q
 from sympy.core import Tuple
 from sympy.core.sympify import _sympify
 from sympy.sets import Union
@@ -281,6 +282,10 @@ class FunctionScalarMultiplicationOperator(ScalarMultiplicationOperator):
     .. [1] https://en.wikipedia.org/wiki/Function_space
 
     """
+    @property
+    def codomain_structure(self):
+        return self.codomain.domain.codomain
+
     def __call__(self, a, b, evaluate=False, **kwargs):
         kwargs.update(evaluate=evaluate)
         return FunctionMultiplication(self, (a, b), (), **kwargs)
@@ -390,7 +395,7 @@ class FunctionMultiplication(Multiplication, Map):
 
     @property
     def codomain_structure(self):
-        return self.map.codomain.domain.codomain
+        return self.map.codomain_structure
 
     def _contained(self, other):
         return Map._contained(self, other)
@@ -454,7 +459,25 @@ class FunctionVectorMultiplicationOperator(VectorMultiplicationOperator):
     >>> ff_mul(f, g)(x, evaluate=True)
     f(x)*g(x)
 
+    Using infix operator constructs the suitable structure and returns evaluated result.
+
+    >>> f*g
+    f*g : Reals -> R
+
     """
+
+    @property
+    def associative(self):
+        return ask(Q.associative(self.codomain_structure.ring.mul_op))
+
+    @property
+    def commutative(self):
+        return ask(Q.commutative(self.codomain_structure.ring.mul_op))
+
+    @property
+    def codomain_structure(self):
+        return self.codomain.domain.codomain
+
     def __call__(self, *args, evaluate=False, **kwargs):
         kwargs.update(evaluate=evaluate)
         return FunctionMultiplication(self, args, (), **kwargs)

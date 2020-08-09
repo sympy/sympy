@@ -8,13 +8,13 @@ A = Set('A')
 a, b, c = [A.element(i) for i in 'abc']
 
 class F_1(BinaryOperator):
-    is_left_divisible=True
+    left_divisible=True
     domain = A**2
     codomain = A
 f_1 = F_1()
 
 class F_2(BinaryOperator):
-    is_right_divisible=True
+    right_divisible=True
     domain = A**2
     codomain = A
 f_2 = F_2()

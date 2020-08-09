@@ -477,7 +477,7 @@ class LeftDivisionOperator(BinaryOperator):
     >>> from sympy.abc import a, b
     >>> class Op(BinaryOperator):
     ...     name = '*'
-    ...     is_left_divisible = True
+    ...     left_divisible = True
     >>> op = Op()
     >>> op_ld = op.left_division_operator()
 
@@ -490,6 +490,8 @@ class LeftDivisionOperator(BinaryOperator):
 
     latex_name = r'\backslash'
     str_name = '\\'
+    commutative = False
+    associative = False
 
     def __new__(cls, base_op, **kwargs):
 
@@ -541,7 +543,7 @@ class RightDivisionOperator(BinaryOperator):
     >>> from sympy.abc import a, b
     >>> class Op(BinaryOperator):
     ...     name = '*'
-    ...     is_right_divisible = True
+    ...     right_divisible = True
     >>> op = Op()
     >>> op_rd = op.right_division_operator()
 
@@ -552,6 +554,8 @@ class RightDivisionOperator(BinaryOperator):
 
     """
     name = '/'
+    commutative = False
+    associative = False
 
     def __new__(cls, base_op, **kwargs):
 
@@ -683,7 +687,7 @@ class ExponentOperator(Map):
     >>> from sympy.abc import x
     >>> class Op(BinaryOperator):
     ...     identity = S.One
-    ...     is_associative = True
+    ...     associative = True
     >>> op = Op()
     >>> op_expop = ExponentOperator(op)
 
@@ -701,6 +705,10 @@ class ExponentOperator(Map):
     https://en.wikipedia.org/wiki/Exponentiation#Generalizations
 
     """
+
+    commutative = False
+    associative = False
+
     def __new__(cls, base_op, **kwargs):
 
         if ask(Q.associative(base_op)) is False:

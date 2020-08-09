@@ -11,7 +11,7 @@ class MonoidOp(BinaryOperator):
     name = '*'
     domain = A*A
     codomain = A
-    is_associative = True
+    associative = True
     identity = e2
 mul = MonoidOp()
 R = Ring('R', (A,), (add, mul))

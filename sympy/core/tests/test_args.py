@@ -783,7 +783,7 @@ def test_sympy__algebras__abstract__group__semigroup__Semigroup():
     from sympy import Set, Semigroup, BinaryOperator
     A = Set('A')
     class Op(BinaryOperator):
-        is_associative=True
+        associative=True
         domain = A**2
         codomain = A
     op = Op()
@@ -795,7 +795,7 @@ def test_sympy__algebras__abstract__group__quasigroup__LeftQuasigroup():
     from sympy import Set, LeftQuasigroup, BinaryOperator
     A = Set('A')
     class Op(BinaryOperator):
-        is_left_divisible = True
+        left_divisible = True
         domain = A**2
         codomain = A
     op = Op()
@@ -807,7 +807,7 @@ def test_sympy__algebras__abstract__group__quasigroup__RightQuasigroup():
     from sympy import Set, RightQuasigroup, BinaryOperator
     A = Set('A')
     class Op(BinaryOperator):
-        is_right_divisible = True
+        right_divisible = True
         domain = A**2
         codomain = A
     op = Op()
@@ -820,7 +820,7 @@ def test_sympy__algebras__abstract__group__quasigroup__Quasigroup():
     from sympy import Set, Quasigroup, BinaryOperator
     A = Set('A')
     class Op(BinaryOperator):
-        is_left_divisible = is_right_divisible = True
+        left_divisible = right_divisible = True
         domain = A**2
         codomain = A
     op = Op()
@@ -832,7 +832,7 @@ def test_sympy__algebras__abstract__group__monoid__Monoid():
     from sympy import Set, Monoid, BinaryOperator
     A = Set('A')
     class Op(BinaryOperator):
-        is_associative=True
+        associative=True
         identity = A.element('e')
         domain = A**2
         codomain = A
@@ -846,7 +846,7 @@ def test_sympy__algebras__abstract__group__loop__Loop():
     A = Set('A')
     class Op(BinaryOperator):
         identity = A.element('e')
-        is_left_divisible = is_right_divisible = True
+        left_divisible = right_divisible = True
         domain = A**2
         codomain = A
     op = Op()
@@ -859,8 +859,8 @@ def test_sympy__algebras__abstract__group__group__Group():
     A = Set('A')
     class Op(BinaryOperator):
         identity = A.element('e')
-        is_left_divisible = is_right_divisible = True
-        is_associative = True
+        left_divisible = right_divisible = True
+        associative = True
         domain = A**2
         codomain = A
     op = Op()
@@ -873,9 +873,9 @@ def test_sympy__algebras__abstract__group__group__AbelianGroup():
     A = Set('A')
     class Op(BinaryOperator):
         identity = A.element('e')
-        is_left_divisible = is_right_divisible = True
-        is_associative = True
-        is_commutative = True
+        left_divisible = right_divisible = True
+        associative = True
+        commutative = True
         domain = A**2
         codomain = A
     op = Op()
@@ -3248,14 +3248,14 @@ def test_sympy__map__operator__BinaryOperator():
 def test_sympy__map__operator__LeftDivisionOperator():
     from sympy.map import BinaryOperator, LeftDivisionOperator
     class Op(BinaryOperator):
-        is_left_divisible = True
+        left_divisible = True
     op = Op()
     assert _test_args(LeftDivisionOperator(op))
 
 def test_sympy__map__operator__RightDivisionOperator():
     from sympy.map import BinaryOperator, RightDivisionOperator
     class Op(BinaryOperator):
-        is_right_divisible = True
+        right_divisible = True
     op = Op()
     assert _test_args(RightDivisionOperator(op))
 
@@ -3263,14 +3263,14 @@ def test_sympy__map__operator__InverseOperator():
     from sympy.map import BinaryOperator, InverseOperator
     class Op(BinaryOperator):
         identity = S.Zero
-        is_right_divisible = True
+        right_divisible = True
     op = Op()
     assert _test_args(InverseOperator(op))
 
 def test_sympy__map__operator__ExponentOperator():
     from sympy.map import BinaryOperator, ExponentOperator
     class Op(BinaryOperator):
-        is_right_divisible = True
+        right_divisible = True
     op = Op()
     assert _test_args(ExponentOperator(op))
 
@@ -3278,7 +3278,7 @@ def test_sympy__map__operator__InverseElement():
     from sympy.map import BinaryOperator, InverseOperator, InverseElement
     class Op(BinaryOperator):
         identity = S.Zero
-        is_right_divisible = True
+        right_divisible = True
     op = Op()
     assert _test_args(InverseOperator(op)(x))
 
@@ -3286,7 +3286,7 @@ def test_sympy__map__operator__ExponentElement():
     from sympy.map import BinaryOperator, ExponentOperator, ExponentElement
     class Op(BinaryOperator):
         identity = S.Zero
-        is_right_divisible = True
+        right_divisible = True
     op = Op()
     assert _test_args(ExponentOperator(op)(x, 2))
 
@@ -3351,6 +3351,26 @@ def test_sympy__map__mul__Multiplication():
     assert _test_args(scalar_mul(x, y, evaluate=False))
     assert _test_args(scalar_mul(x, x, evaluate=True))
     assert _test_args(scalar_mul(x, x, evaluate=False))
+
+@SKIP("abstract class")
+def test_sympy__map__elementary__trigonometric__TrigonometricMap():
+    pass
+
+def test_sympy__map__elementary__trigonometric__AppliedTrigonometricMap():
+    from sympy.map.elementary.trigonometric import Sin, AppliedTrigonometricMap
+    sin = Sin(S.Reals)
+    assert _test_args(AppliedTrigonometricMap(sin, (x,)))
+def test_sympy__map__elementary__trigonometric__Sin():
+    from sympy.map.elementary.trigonometric import Sin
+    assert _test_args(Sin(S.Reals))
+
+def test_sympy__map__elementary__trigonometric__Cos():
+    from sympy.map.elementary.trigonometric import Cos
+    assert _test_args(Cos(S.Reals))
+
+def test_sympy__map__elementary__trigonometric__Tan():
+    from sympy.map.elementary.trigonometric import Tan
+    assert _test_args(Tan(S.Reals))
 
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector

@@ -28,7 +28,7 @@ class F2(F):
 f2 = F2(A**2, A)
 
 class G(BaseOp):
-    is_associative=True
+    associative=True
     def _eval_check_right_identity(self, element):
         # assume identity is in B (thus in A as well)
         if element == b3:
@@ -42,11 +42,11 @@ class G2(G):
 g2 = G2(A**2, A)
 
 class H1(BaseOp):
-    is_left_divisible = True
+    left_divisible = True
 h1 = H1(A**2, A)
 
 class H2(BaseOp):
-    is_right_divisible = True
+    right_divisible = True
 h2 = H2(A**2, A)
 
 class L(BaseOp):
@@ -54,13 +54,13 @@ class L(BaseOp):
 l = L(A**2, A)
 
 class M(BaseOp):
-    is_associative = True
+    associative = True
     identity = a3
 m = M(A**2, A)
 
 class N(BaseOp):
-    is_associative = True
-    is_commutative = True
+    associative = True
+    commutative = True
     identity = a3
 n = N(A**2, A)
 

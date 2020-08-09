@@ -16,13 +16,13 @@ class F(Map):
     def _eval_restrict(self, domain):
         return H()
 class G(Map):
-    is_commutative = True
+    commutative = True
     def eval(self, x):
         return x-1
     def _eval_inverse(self):
         return F()
 class H(Map):
-    is_commutative = False
+    commutative = False
     def _map_content(self):
         return F()._map_content()
 

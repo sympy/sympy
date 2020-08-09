@@ -5,7 +5,7 @@ from sympy.testing.pytest import raises
 A = Set('A')
 
 class F(BinaryOperator):
-    is_associative=True
+    associative=True
     domain = A**2
     codomain = A
 f = F()

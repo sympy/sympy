@@ -38,7 +38,7 @@ class Monoid(Semigroup):
     ...     name = '*'
     ...     domain = S*S
     ...     codomain = S
-    ...     is_associative = True
+    ...     associative = True
     ...     identity = e
     >>> op = MonoidOp()
 

@@ -61,8 +61,8 @@ class AskCommutativeHandler(CommonHandler):
     @staticmethod
     def Map(expr, assumps):
         assumps = conjuncts(assumps)
-        if expr.is_commutative is not None:
-            return expr.is_commutative and not ~Q.commutative(expr) in assumps
+        if expr.commutative is not None:
+            return expr.commutative and not ~Q.commutative(expr) in assumps
         if Q.commutative(expr) in assumps:
             return True
         elif ~Q.commutative(expr) in assumps:

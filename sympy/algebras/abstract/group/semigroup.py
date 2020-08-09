@@ -38,7 +38,7 @@ class Semigroup(Magma):
     ...     name = '*'
     ...     domain = S*S
     ...     codomain = S
-    ...     is_associative = True
+    ...     associative = True
     >>> op = SemigroupOp()
 
     >>> SG = Semigroup('SG', (S,), (op,))

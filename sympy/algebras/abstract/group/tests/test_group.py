@@ -7,14 +7,14 @@ e = A.element('e')
 a, b, e = [A.element(n) for n in 'abe']
 
 class F1(BinaryOperator):
-    is_left_divisible = is_right_divisible = True
+    left_divisible = right_divisible = True
     identity = e
     domain = A**2
     codomain = A
 f1 = F1()
 
 class F2(BinaryOperator):
-    is_associative = True
+    associative = True
     identity = e
     domain = A**2
     codomain = A
@@ -25,7 +25,7 @@ class G(F1, F2):
 g = G()
 
 class H(G):
-    is_commutative = True
+    commutative = True
 h = H()
 
 def test_Group():

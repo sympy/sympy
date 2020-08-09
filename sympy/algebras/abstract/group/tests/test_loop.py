@@ -6,7 +6,7 @@ A = Set('A')
 a, b, e = [A.element(n) for n in 'abe']
 
 class F(BinaryOperator):
-    is_left_divisible = is_right_divisible = True
+    left_divisible = right_divisible = True
     domain = A**2
     codomain = A
 f = F()

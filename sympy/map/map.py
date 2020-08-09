@@ -142,6 +142,9 @@ class Map(Expr):
     # Map must exceed any old object in priority
     _op_priority = 110
 
+    commutative = None
+    associative = None
+
     # these attributes are designed to be overridden if needed
     # they can be overridden by both class attribute or instance attribute
     domain = codomain = S.UniversalSet
@@ -470,6 +473,15 @@ class RestrictedMap(Map):
     RestrictedMap(f, Integers) : Integers -> Integers
 
     """
+
+    @property
+    def commutative(self):
+        return ask(Q.commutative(self.base))
+
+    @property
+    def associative(self):
+        return ask(Q.associative(self.base))
+
     def __new__(cls, mapping, new_domain, evaluate=False, **kwargs):
 
         new_domain = _sympify(new_domain)
@@ -597,6 +609,10 @@ class IdentityMap(Map):
     (x, y)
 
     """
+
+    commutative = False
+    associative = False
+
     def __new__(cls, domain=S.UniversalSet, **kwargs):
         return super().__new__(cls, domain, **kwargs)
 
@@ -648,6 +664,10 @@ class ConstantMap(Map):
     1
 
     """
+
+    commutative = True
+    associative = True
+
     def __new__(cls, output, domain=S.UniversalSet, **kwargs):
         output = _sympify(output)
         domain = _sympify(domain)

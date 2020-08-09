@@ -6,7 +6,7 @@ class AskAssociativeHandler(CommonHandler):
     """
     @staticmethod
     def BinaryOperator(expr, assumptions):
-        result = getattr(expr, 'is_associative', None)
+        result = getattr(expr, 'associative', None)
         if result is not None:
             return result
 
@@ -27,7 +27,7 @@ class AskLeftDivisibleHandler(CommonHandler):
     """
     @staticmethod
     def BinaryOperator(expr, assumptions):
-        result = getattr(expr, 'is_left_divisible', None)
+        result = getattr(expr, 'left_divisible', None)
         if result is not None:
             return result
 
@@ -40,6 +40,6 @@ class AskRightDivisibleHandler(CommonHandler):
     """
     @staticmethod
     def BinaryOperator(expr, assumptions):
-        result = getattr(expr, 'is_right_divisible', None)
+        result = getattr(expr, 'right_divisible', None)
         if result is not None:
             return result

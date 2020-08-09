@@ -41,8 +41,8 @@ class Group(Monoid, Loop):
     ...     name = '*'
     ...     domain = S*S
     ...     codomain = S
-    ...     is_left_divisible = is_right_divisible = True
-    ...     is_associative = True
+    ...     left_divisible = right_divisible = True
+    ...     associative = True
     ...     identity = e
     >>> op = GroupOp()
 
@@ -120,9 +120,9 @@ class AbelianGroup(Group):
     ...     name = '*'
     ...     domain = S*S
     ...     codomain = S
-    ...     is_left_divisible = is_right_divisible = True
-    ...     is_associative = True
-    ...     is_commutative = True
+    ...     left_divisible = right_divisible = True
+    ...     associative = True
+    ...     commutative = True
     ...     identity = e
     >>> op = AbelianGroupOp()
 

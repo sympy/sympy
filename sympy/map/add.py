@@ -52,7 +52,7 @@ class AdditionOperator(BinaryOperator):
     ...     name = '*'
     ...     domain = A*A
     ...     codomain = A
-    ...     is_associative = True
+    ...     associative = True
     ...     identity = e2
     >>> mul = MonoidOp()
 
@@ -76,9 +76,9 @@ class AdditionOperator(BinaryOperator):
 
     """
     name = '+'
-    is_associative = True
-    is_commutative = True
-    is_left_divisible = is_right_divisible = True
+    associative = True
+    commutative = True
+    left_divisible = right_divisible = True
 
     def __new__(cls, domain, codomain, identity, **kwargs):
         domain, codomain, identity = _sympify(domain), _sympify(codomain), _sympify(identity)

@@ -59,9 +59,8 @@ class CompositionOperator(BinaryOperator):
     latex_name = '\\circ'
     pretty_name = '∘'
     str_name = '@'
-
-    is_associative = True
-    is_commutative = False
+    associative = True
+    commutative = False
 
     def __new__(cls, domain=None, codomain=None, **kwargs):
         if domain is None:
@@ -189,6 +188,14 @@ class CompositeMap(AppliedMap, Map):
     8
 
     """
+
+    @property
+    def commutative(self):
+        return ask(Q.commutative(self.arguments[-1]))
+
+    @property
+    def associative(self):
+        return ask(Q.associative(self.arguments[-1]))
 
     @property
     def domain(self):
