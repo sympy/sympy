@@ -452,6 +452,16 @@ def test_sympy__codegen__fnodes__product_():
     assert _test_args(product_('arr'))
 
 
+def test_sympy__codegen__numpy_nodes__logaddexp():
+    from sympy.codegen.numpy_nodes import logaddexp
+    assert _test_args(logaddexp(x, y))
+
+
+def test_sympy__codegen__numpy_nodes__logaddexp2():
+    from sympy.codegen.numpy_nodes import logaddexp2
+    assert _test_args(logaddexp2(x, y))
+
+
 @XFAIL
 def test_sympy__combinatorics__graycode__GrayCode():
     from sympy.combinatorics.graycode import GrayCode
@@ -1135,6 +1145,11 @@ def test_sympy__stats__rv__ConditionalDomain():
     D = RandomDomain(FiniteSet(x), FiniteSet(1, 2))
     assert _test_args(ConditionalDomain(D, x > 1))
 
+def test_sympy__stats__rv__MatrixDomain():
+    from sympy.stats.rv import MatrixDomain
+    from sympy.matrices import MatrixSet
+    from sympy import S
+    assert _test_args(MatrixDomain(x, MatrixSet(2, 2, S.Reals)))
 
 def test_sympy__stats__rv__PSpace():
     from sympy.stats.rv import PSpace, RandomDomain
