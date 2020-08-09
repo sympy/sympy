@@ -4,7 +4,7 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re, Lambda, asin,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
-                   factorial, binomial, erfi, besselj, besselk)
+                   factorial, binomial, erfi, besselj, besselk, Heaviside)
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
@@ -152,9 +152,9 @@ def test_cdf():
     X = Normal('x', 1, 0)
     d = cdf(X)
     assert d(0.9) == 0
-    assert d(1) == 1
-    assert P(X < 1) == 0
-    assert P(X <= 1) == 1
+    assert d(1) == Heaviside(0)
+    assert P(X < 1) == Heaviside(0)  # probably more natural to make this 0
+    assert P(X <= 1) == Heaviside(0)  # and to make this 1
 
 
 def test_characteristic_function():
