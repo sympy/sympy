@@ -1,6 +1,6 @@
 from sympy import (
     AdditionOperator, MultiplicationOperator, Set, S, symbols,
-    NumericAdditionOperator
+    NumericAdditionOperator, NumericMultiplicationOperator
 )
 
 def test_AdditionOperator():
@@ -36,7 +36,7 @@ def test_NumericAdditionOperator():
     add = NumericAdditionOperator(S.Reals**2, S.Reals)
     add_inv = add.inverse_operator()
     sub = add.subtraction_operator()
-    mul = add.mul_op()
+    mul = NumericMultiplicationOperator(add.domain, add.codomain)
 
     # normal addition
     assert add(1, 2, 3, 4, evaluate=True) == 10

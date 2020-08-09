@@ -1066,17 +1066,13 @@ def test_sympy__algebras__abstract__module__functionspace__FunctionVectorMultipl
 
 def test_sympy__algebras__abstract__module__functionspace__FunctionExponent():
     from sympy import (
-    S, Set, VectorAdditionOperator, AbelianGroup,
-    ScalarMultiplicationOperator, VectorSpace,
-    FunctionSet, ConstantMap, FunctionAdditionOperator,
-    FunctionScalarMultiplicationOperator,
-    FunctionVectorMultiplicationOperator
+    S, Map
     )
 
     F = S.RealsField
     X = S.Reals
 
-    f = Map('f', domain=X, codomain=f)
+    f = Map('f', domain=X, codomain=F)
 
     assert _test_args(f**2)
 

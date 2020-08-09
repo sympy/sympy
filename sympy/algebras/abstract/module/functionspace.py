@@ -532,7 +532,7 @@ class FunctionVectorMultiplicationOperator(VectorMultiplicationOperator):
         result = super()._expop_apply(x, n, **kwargs)
         if result is None:
             result = super(Map, FunctionExponent).__new__(
-                FunctionExponent, self.exponent_operator(), (x, n)
+                FunctionExponent, self.exponent_operator(), Tuple(x, n)
             )
         return result
 
