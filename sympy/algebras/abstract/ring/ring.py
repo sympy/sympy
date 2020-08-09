@@ -109,6 +109,11 @@ class Ring(AlgebraicStructure):
     def add_group(self):
         return self._add_group
 
+    def negate(self, a, evaluate=False):
+        inv_op = self.add_op.inverse_operator()
+        return inv_op(a, evaluate=evaluate)
+    neg = negate
+
     @property
     def addition_operator(self):
         return self.operators[0]

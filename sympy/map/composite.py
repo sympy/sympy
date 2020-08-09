@@ -2,7 +2,9 @@ from sympy.assumptions import ask, Q
 from sympy.core import Expr, S, Tuple
 from sympy.core.operations import AssocOp
 from sympy.core.sympify import _sympify
-from .map import function_set, Map, IdentityMap, AppliedMap, InverseMap
+from .map import (
+    FunctionSet, function_set, Map, IdentityMap, AppliedMap, InverseMap
+)
 from .operator import (
     BinaryOperator, ExponentOperator, ExponentElement
 )
@@ -161,7 +163,7 @@ class CompositionOperator(BinaryOperator):
         return IterationOperator(self)
 
 # General composition operator
-composite_op = CompositionOperator(function_set, function_set)
+composite_op = CompositionOperator(function_set*function_set, function_set)
 
 class CompositeMap(AppliedMap, Map):
     """
@@ -273,6 +275,14 @@ class IterationOperator(ExponentOperator):
 
     def __call__(self, x, n, evaluate=False, **kwargs):
         return IteratedMap(self, (x, n), evaluate=evaluate)
+
+    @property
+    def domain(self):
+        return self.base_op.domain * S.Complexes
+
+    @property
+    def codomain(self):
+        return self.base_op.codomain
 
     def apply(self, x, n, **kwargs):
         if not x.codomain.is_subset(x.domain):

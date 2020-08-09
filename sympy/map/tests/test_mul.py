@@ -1,6 +1,7 @@
 from sympy import (
     AdditionOperator, MultiplicationOperator, Set, S, symbols,
-    NumericMultiplicationOperator
+    NumericMultiplicationOperator, VectorAdditionOperator,
+    ScalarMultiplicationOperator, AbelianGroup,
 )
 
 def test_MultiplicationOperator():
@@ -55,3 +56,11 @@ def test_NumericMultiplicationOperator():
     assert div(3, 1, evaluate=True) == mul(3, 1, evaluate=True) == 3
     assert pow(1, -1, evaluate=True) == pow(1, x, evaluate=True) == 1
     assert div(1, 1, evaluate=True) == 1
+
+def test_ScalarMultiplicationOperator():
+    V = Set('V')
+    v, V_e = [V.element(i) for i in ('v', 'e')]
+    vv_add = VectorAdditionOperator(V**2, V, V_e)
+    V_group = AbelianGroup('V', (V,), (vv_add,))
+    mul = ScalarMultiplicationOperator(S.RealsField*V_group, V_group)
+    assert mul(2, mul(3, v), evaluate=True) == mul(6, v)

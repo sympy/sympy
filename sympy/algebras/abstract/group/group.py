@@ -83,6 +83,10 @@ class Group(Monoid, Loop):
         op = self.operator
         return op.inverse_operator()
 
+    def negate(self, a, evaluate=False):
+        return self.inverse(a, evaluate=evaluate)
+    neg = negate
+
 class AbelianGroup(Group):
     """
     A base class for abelian group.

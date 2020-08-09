@@ -2883,8 +2883,10 @@ class PrettyPrinter(Printer):
 
     def _print_AlgebraicStructure(self, e):
         name = e.name.name
-        mapping = pretty_symbol(name, bold_name=False)
-        pform = prettyForm(mapping)
+        if not str(name): # name is '' (not given)
+            name = e.__class__.__name__[0] # G for Group, F for Field, ...
+        name = pretty_symbol(name, bold_name=False)
+        pform = prettyForm(name)
         return pform
 
     def _print_IntegersRing(self, e):

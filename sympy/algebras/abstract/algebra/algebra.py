@@ -82,6 +82,10 @@ class Algebra(AlgebraicStructure):
     def check_scalar(self, a):
         return self.module.check_scalar(a)
 
+    def negate(self, a, evaluate=False):
+        return self.module.neg(a, evaluate=evaluate)
+    neg = negate
+
     def add(self, *args, evaluate=False):
         return self.module.add(*args, evaluate=evaluate)
 

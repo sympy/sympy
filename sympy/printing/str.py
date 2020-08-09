@@ -1020,6 +1020,8 @@ class StrPrinter(Printer):
 
     def _print_AlgebraicStructure(self, expr):
         name = expr.name.name
+        if not str(name): # name is '' (not given)
+            name = expr.__class__.__name__[0] # G for Group, F for Field, ...
         return name
 
 def sstr(expr, **settings):

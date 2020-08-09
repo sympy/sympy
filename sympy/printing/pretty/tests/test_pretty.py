@@ -7330,6 +7330,8 @@ def test_abstractalgebra():
     )
     A = Set('A')
     f = Map('f', domain=A, codomain=A)
-    S = AlgebraicStructure('S', (A,), (f,))
+    S1 = AlgebraicStructure('Structure', (A,), (f,))
+    S2 = AlgebraicStructure('', (A,), (f,))
 
-    assert pretty(S) == 'S'
+    assert pretty(S1) == 'Structure'
+    assert pretty(S2) == 'A'

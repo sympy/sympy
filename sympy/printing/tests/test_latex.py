@@ -2734,6 +2734,8 @@ def test_abstractalgebra():
     )
     A = Set('A')
     f = Map('f', domain=A, codomain=A)
-    S = AlgebraicStructure('S', (A,), (f,))
+    S1 = AlgebraicStructure('Structure', (A,), (f,))
+    S2 = AlgebraicStructure('', (A,), (f,))
 
-    assert latex(S) == 'S'
+    assert latex(S1) == 'Structure'
+    assert latex(S2) == 'A'

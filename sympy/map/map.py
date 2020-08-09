@@ -138,6 +138,9 @@ class Map(Expr):
 
     """
 
+    # Map must exceed any old object in priority
+    _op_priority = 110
+
     # these attributes are designed to be overridden if needed
     # they can be overridden by both class attribute or instance attribute
     domain = codomain = S.UniversalSet
@@ -155,6 +158,13 @@ class Map(Expr):
             return len(self.domain.args)
         return 1
     nargs = arity
+
+    def _contained(self, other):
+        # Without this method, everything returns very complicated infinite loop
+        from sympy.algebras import AlgebraicStructure
+        if isinstance(other, (FunctionSet, AlgebraicStructure)):
+            return None
+        return False
 
     def apply(self, *args, **kwargs):
         """
@@ -204,6 +214,73 @@ class Map(Expr):
 
     def __call__(self, *args, evaluate=False, **kwargs):
         return AppliedMap(self, args, evaluate=evaluate, **kwargs)
+
+    def __neg__(self):
+        neg = _find_structure(self).neg
+        return neg(self, evaluate=True)
+
+    @sympify_return([('other', Expr)], NotImplemented)
+    @call_highest_priority('__radd__')
+    def __add__(self, other):
+        add = _find_structure(self).add
+        return add(self, other, evaluate=True)
+
+    @sympify_return([('other', Expr)], NotImplemented)
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        add = _find_structure(self).add
+        return add(other, self, evaluate=True)
+
+    @sympify_return([('other', Expr)], NotImplemented)
+    @call_highest_priority('__rsub__')
+    def __sub__(self, other):
+        sub = _find_structure(self).sub
+        return sub(self, other, evaluate=True)
+
+    @sympify_return([('other', Expr)], NotImplemented)
+    @call_highest_priority('__sub__')
+    def __rsub__(self, other):
+        sub = _find_structure(self).sub
+        return sub(other, self, evaluate=True)
+
+    @sympify_return([('other', Expr)], NotImplemented)
+    @call_highest_priority('__rmul__')
+    def __mul__(self, other):
+        mul = _find_structure(self).mul
+        return mul(self, other, evaluate=True)
+
+    @sympify_return([('other', Expr)], NotImplemented)
+    @call_highest_priority('__mul__')
+    def __rmul__(self, other):
+        mul = _find_structure(self).mul
+        return mul(other, self, evaluate=True)
+
+    @sympify_return([('other', Expr)], NotImplemented)
+    @call_highest_priority('__rdiv__')
+    def __div__(self, other):
+        div = _find_structure(self).div
+        return div(self, other, evaluate=True)
+
+    @sympify_return([('other', Expr)], NotImplemented)
+    @call_highest_priority('__div__')
+    def __rdiv__(self, other):
+        div = _find_structure(self).div
+        return div(other, self, evaluate=True)
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
+    @sympify_return([('other', Expr)], NotImplemented)
+    @call_highest_priority('__rpow__')
+    def __pow__(self, other):
+        pow = _find_structure(self).pow
+        return pow(self, other, evaluate=True)
+
+    @sympify_return([('other', Expr)], NotImplemented)
+    @call_highest_priority('__pow__')
+    def __rpow__(self, other):
+        pow = _find_structure(self).pow
+        return pow(other, self, evaluate=True)
 
     @sympify_return([('other', Expr)], NotImplemented)
     @call_highest_priority('__rmatmul__')
@@ -620,6 +697,10 @@ class AppliedMap(Expr):
     x + 2
 
     """
+
+    # AppliedMap must exceed any old object in priority
+    _op_priority = 100
+
     def __new__(cls, mapping, args, evaluate=False, **kwargs):
         kwargs.update(evaluate=evaluate)
 
@@ -761,5 +842,10 @@ def isappliedmap(arg, maps):
                 if arg.map.is_restriction(m):
                     return True
     return False
+
+def _find_structure(a):
+    # avoid circular import
+    from sympy.algebras.abstract.handlers import find_structure
+    return find_structure(a)
 
 from .composite import function_set, composite_op

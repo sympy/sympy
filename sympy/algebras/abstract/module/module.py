@@ -112,6 +112,15 @@ class Module(AlgebraicStructure):
         """
         return self.ring.contains(a) == True
 
+    def negate(self, a, evaluate=False):
+        # scalar negation
+        if self.check_scalar(a) == True:
+            return self.ring.neg(a, evaluate=evaluate)
+        if self.check_vector(a) == True:
+            return self.group.neg(a, evaluate=evaluate)
+        raise TypeError("Mismatching argument for module negation")
+    neg = negate
+
     def add(self, *args, evaluate=False):
         # scalar addition
         if all(self.check_scalar(a) == True for a in args):

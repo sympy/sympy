@@ -2766,7 +2766,10 @@ class LatexPrinter(Printer):
 
     def _print_AlgebraicStructure(self, expr):
         name = expr.name.name
-        tex = self._deal_with_super_sub(str(name))
+        if not str(name): # name is '' (not given)
+            tex = expr.__class__.__name__[0] # G for Group, F for Field, ...
+        else:
+            tex = self._deal_with_super_sub(str(name))
         return tex
 
     def _print_IntegersRing(self, i):

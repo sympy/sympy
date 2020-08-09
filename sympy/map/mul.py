@@ -316,9 +316,11 @@ class ScalarMultiplicationOperator(MultiplicationOperator):
 
     def multiplication_process(self, seq):
         scalar, vector = seq
+        v_s, v_v = vector.as_coeff_Mul(mul_op=self)
+        scalar, vector = self.ss_mul(scalar, v_s, add_op=self.ss_add, evaluate=True), v_v
         if scalar == self.ss_mul.identity:
             return [vector]
-        return seq
+        return [scalar, vector]
 
     def distribute(self, seq, evaluate=False):
         # not used in construction algorithm because it is

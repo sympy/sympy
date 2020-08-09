@@ -71,7 +71,7 @@ class FunctionAdditionOperator(VectorAdditionOperator):
     >>> fadd(f, f, sv_mul=fsmul, evaluate=True)
     2*f : Reals -> R
 
-    Constructing a functions pace makes applying the operator easier
+    Constructing a function space makes applying the operator easier
 
     >>> from sympy import VectorSpace
     >>> FS = VectorSpace('FS', (F, fG), (fsmul,))
@@ -79,6 +79,11 @@ class FunctionAdditionOperator(VectorAdditionOperator):
     >>> FS.add(f, g)
     f + g : Reals -> R
     >>> FS.add(f, f, evaluate=True)
+    2*f : Reals -> R
+
+    Using infix operator constructs the suitable structure and returns evaluated result.
+
+    >>> f + f
     2*f : Reals -> R
 
     References
@@ -208,6 +213,9 @@ class FunctionAddition(Addition, Map):
     def codomain_structure(self):
         return self.map.codomain.codomain
 
+    def _contained(self, other):
+        return Map._contained(self, other)
+
     def eval(self, *args):
         add = self.map.codomain.codomain.add
         terms = [a(*args) for a in self.arguments]
@@ -260,6 +268,11 @@ class FunctionScalarMultiplicationOperator(ScalarMultiplicationOperator):
     Multiplication of function with scalar
 
     >>> fsmul(2, f)
+    2*f : Reals -> R
+
+    Using infix operator constructs the suitable structure and returns evaluated result.
+
+    >>> 2*f
     2*f : Reals -> R
 
     References
@@ -324,13 +337,12 @@ class FunctionMultiplication(Multiplication, Map):
     ... FunctionScalarMultiplicationOperator
     ... )
 
-    Construct underlying structures
+    Construct underlying structures.
+    In this example, functions return vector. Therefore, full vector space
+    must be constructed first.
 
     >>> F = S.RealsField
     >>> X = Set('X')
-
-    In this example, functions return vector. Therefore, full vector space
-    must be constructed first.
 
     >>> A = Set('A')
     >>> e = A.element('e')
@@ -379,6 +391,9 @@ class FunctionMultiplication(Multiplication, Map):
     @property
     def codomain_structure(self):
         return self.map.codomain.domain.codomain
+
+    def _contained(self, other):
+        return Map._contained(self, other)
 
     def eval(self, *args):
         mul = self.codomain_structure.mul
