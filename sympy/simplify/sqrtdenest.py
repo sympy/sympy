@@ -442,7 +442,6 @@ def _sqrt_numeric_denest(a, b, r, d2):
 
     If it cannot be denested, it returns ``None``.
     """
-    from sympy.simplify.radsimp import radsimp
     d = sqrt(d2)
     s = a + d
     # sqrt_depth(res) <= sqrt_depth(s) + 1
@@ -452,8 +451,8 @@ def _sqrt_numeric_denest(a, b, r, d2):
     if sqrt_depth(s) < sqrt_depth(r) + 1 or (s**2).is_Rational:
         s1, s2 = sign(s), sign(b)
         if s1 == s2 == -1:
-            s1 = 1
-        res = s1 * (s + b * sqrt(r)) * radsimp(1 / sqrt(2 * s))
+            s1 = s2 = 1
+        res = (s1 * sqrt(a + d) + s2 * sqrt(a - d)) * sqrt(2) / 2
         return res.expand()
 
 
