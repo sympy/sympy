@@ -209,7 +209,7 @@ class SampleJointPymc:
     def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
 
-        import pymc3 
+        import pymc3
         pymc3_rv_map = {
             'MultivariateNormalDistribution': lambda dist:
                 pymc3.MvNormal('X', mu=matrix2numpy(dist.mu, float).flatten(),
