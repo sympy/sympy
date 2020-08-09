@@ -17,6 +17,7 @@ from sympy.testing.pytest import raises
 from sympy.tensor import IndexedBase
 from sympy.testing.pytest import skip
 from sympy.external import import_module
+from sympy.functions.special.gamma_functions import loggamma
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
@@ -75,6 +76,7 @@ def test_MpmathPrinter():
     assert p.doprint(S.NaN) == 'mpmath.nan'
     assert p.doprint(S.Infinity) == 'mpmath.inf'
     assert p.doprint(S.NegativeInfinity) == 'mpmath.ninf'
+    assert p.doprint(loggamma(x)) == 'mpmath.lgamma(x)'
 
 
 def test_NumPyPrinter():
