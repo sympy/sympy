@@ -4,7 +4,8 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re, Lambda, asin,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
-                   factorial, binomial, erfi, besselj, besselk)
+                   factorial, binomial, erfi, besselj, besselk,
+                   DiracDelta, Heaviside)
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
@@ -148,6 +149,13 @@ def test_cdf():
     Z = Exponential('z', 1)
     f = cdf(Z)
     assert f(z) == Piecewise((1 - exp(-z), z >= 0), (0, True))
+
+    X = Normal('x', 1, 0)
+    d = cdf(X)
+    assert d(0.9) == 0
+    assert d(1) == 1
+    assert P(X < 1) == 0
+    assert P(X <= 1) == 1
 
 
 def test_characteristic_function():
@@ -1328,10 +1336,11 @@ def test_prefab_sampling():
 def test_input_value_assertions():
     a, b = symbols('a b')
     p, q = symbols('p q', positive=True)
-    m, n = symbols('m n', positive=False, real=True)
+    m, n = symbols('m n', nonpositive=True)
+    i, j = symbols('i j', negative=True)
 
-    raises(ValueError, lambda: Normal('x', 3, 0))
-    raises(ValueError, lambda: Normal('x', m, n))
+    raises(ValueError, lambda: Normal('x', i, j))
+    Normal('x', m, n)  # No error raised
     Normal('X', a, p)  # No error raised
     raises(ValueError, lambda: Exponential('x', m))
     Exponential('Ex', p)  # No error raised
@@ -1572,6 +1581,7 @@ def test_sample_numpy():
     distribs_numpy = [
         Beta("B", 1, 1),
         Normal("N", 0, 1),
+        Normal("N", 1, 0),
         Gamma("G", 2, 7),
         Exponential("E", 2),
         LogNormal("LN", 0, 1),
@@ -1601,6 +1611,7 @@ def test_sample_scipy():
         Cauchy("C", 1, 1),
         Chi("C", 1),
         Normal("N", 0, 1),
+        Normal("N", 1, 0),
         Gamma("G", 2, 7),
         GammaInverse("GI", 1, 1),
         GaussianInverse("GUI", 1, 1),
@@ -1634,6 +1645,7 @@ def test_sample_pymc3():
         Beta("B", 1, 1),
         Cauchy("C", 1, 1),
         Normal("N", 0, 1),
+        Normal("N", 1, 0),
         Gamma("G", 2, 7),
         GaussianInverse("GI", 1, 1),
         Exponential("E", 2),
