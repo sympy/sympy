@@ -167,7 +167,7 @@ class CommutativeRing(Ring):
     ===========
 
     Commutative ring is a ring in which the multiplication operation
-    is commutative [1]. 
+    is commutative [1].
 
     Parameters
     ==========

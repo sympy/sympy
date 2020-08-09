@@ -2890,6 +2890,24 @@ class PrettyPrinter(Printer):
     def _print_Addition(self, e, print_domains=True):
         return self._print_AppliedMap(e, print_domains, pad_infix=True)
 
+    def _print_MultiplicationOperator(self, e, print_domains=True):
+        pform = prettyForm(U("DOT OPERATOR"))
+        if print_domains:
+            pform = self._helper_print_domain(e, pform)
+        return pform
+
+    def _print_VectorMultiplicationOperator(self, e, print_domains=True):
+        pform = prettyForm(U('MULTIPLICATION SIGN'))
+        if print_domains:
+            pform = self._helper_print_domain(e, pform)
+        return pform
+
+    def _print_CompositionOperator(self, e, print_domains=True):
+        pform = prettyForm(U("RING OPERATOR"))
+        if print_domains:
+            pform = self._helper_print_domain(e, pform)
+        return pform
+
     def _print_AlgebraicStructure(self, e):
         name = e.name.name
         if not str(name): # name is '' (not given)

@@ -33,7 +33,7 @@ class Algebra(AlgebraicStructure):
     >>> from sympy import (
     ... Set, VectorAdditionOperator, AbelianGroup,
     ... ScalarMultiplicationOperator, S, VectorSpace,
-    ... VectorMultiplicationOperator, Algebra, 
+    ... VectorMultiplicationOperator, Algebra,
     ... )
 
     >>> F = S.RealsField

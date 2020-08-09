@@ -2703,7 +2703,7 @@ def test_map():
     op1 = Op1()
     assert latex(op1) == r"+ : \mathbb{U}^{2} \rightarrow \mathbb{U}"
     assert latex(op1(x+y, x*y)) == r'\left(x + y\right) + \left(x y\right)'
-    assert latex(op1(op1(x,y), y)) == r'\left(x + y\right) + y' 
+    assert latex(op1(op1(x,y), y)) == r'\left(x + y\right) + y'
 
     # inverse and exponent element
     class Op2(BinaryOperator):
@@ -2770,4 +2770,3 @@ def test_emptyPrinter():
 
     # even if they are nested within other objects
     assert latex((MyObject(),)) == r"\left( \mathtt{\text{<MyObject with \{...\}>}},\right)"
-

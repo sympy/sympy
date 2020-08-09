@@ -1089,4 +1089,3 @@ def test_NDimArray():
     assert sstr(NDimArray(1.0), full_prec=False) == '1.0'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=True) == '[1.00000000000000, 2.00000000000000]'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=False) == '[1.0, 2.0]'
-

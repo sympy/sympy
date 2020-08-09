@@ -57,7 +57,6 @@ class CompositionOperator(BinaryOperator):
 
     """
     latex_name = '\\circ'
-    pretty_name = '∘'
     str_name = '@'
     associative = True
     commutative = False
@@ -66,7 +65,7 @@ class CompositionOperator(BinaryOperator):
         if domain is None:
             domain = function_set**2
         if codomain is None:
-            codomain = function_set        
+            codomain = function_set
         return super().__new__(cls, domain, codomain)
 
     @property
@@ -303,7 +302,7 @@ class IterationOperator(ExponentOperator):
                 # collect x**2**3 to x**6
                 x, n = base, exp*n
                 return self(x, n, **kwargs)
-            return self.eval(x, n)   
+            return self.eval(x, n)
 
     def eval(self, x, n):
         result = x._eval_iterate(n)

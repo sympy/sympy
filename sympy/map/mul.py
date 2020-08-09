@@ -68,7 +68,6 @@ class MultiplicationOperator(BinaryOperator):
 
     """
     str_name = '*'
-    pretty_name = '⋅'
     latex_name = r' \times '
     left_divisible = right_divisible = True
     associative = True
@@ -260,8 +259,6 @@ class ScalarMultiplicationOperator(MultiplicationOperator):
     algebras.Module
 
     """
-    str_name = '*'
-    pretty_name = ' '
     latex_name = ' '
     left_divisible = right_divisible = False
     associative = False
@@ -405,9 +402,7 @@ class VectorMultiplicationOperator(MultiplicationOperator):
     .. [1] https://en.wikipedia.org/wiki/Algebra_over_a_field
 
     """
-    str_name = '*'
-    pretty_name = '×'
-    latex_name = r' \times '
+
     left_divisible = right_divisible = False
     associative = None
     commutative = None

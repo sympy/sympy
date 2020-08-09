@@ -194,14 +194,14 @@ class Map(Expr):
         ...     def apply(self, x, **kwargs):
         ...         return x + 1
         >>> f = F()
-    
+
         >>> f(1)
         2
 
         """
         evaluate = kwargs.get('evaluate', False)
         if evaluate:
-            return self.eval(*args)        
+            return self.eval(*args)
 
     def eval(self, *args):
         """

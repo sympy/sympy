@@ -28,7 +28,7 @@ class FunctionAdditionOperator(VectorAdditionOperator):
     are functions whose codomains are $V$. Then, these functions form a vector space
     $V^{*}$ over $F$. In $V^{*}$, elements of $S$ are vectors and element of $F$ are
     scalars.
-    To be called, function addition operator needs keyword arguments *sv_mul*. 
+    To be called, function addition operator needs keyword arguments *sv_mul*.
     This is to perform the collection of vectors, i.e. $f + f = \left(1+1 \right) f$.
 
     Parameters

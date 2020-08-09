@@ -304,7 +304,7 @@ class VectorAdditionOperator(AdditionOperator):
     >>> from sympy import (
     ... Set, AdditionOperator, MultiplicationOperator, Ring,
     ... VectorAdditionOperator, AbelianGroup,
-    ... ScalarMultiplicationOperator, 
+    ... ScalarMultiplicationOperator,
     ... )
 
     >>> S = Set('S') # scalar set
