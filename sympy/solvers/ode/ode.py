@@ -2075,11 +2075,6 @@ def check_linear_2eq_order2(eq, func, func_coef):
     r['d1'] == r['e2']:
         return "type3"
 
-    elif cancel(-r['b2']/r['d2'])==t and cancel(-r['c1']/r['e1'])==t and not \
-    (r['d2']/r['a2']).has(t) and not (r['e1']/r['a1']).has(t) and \
-    r['b1']==r['d1']==r['c2']==r['e2']==0:
-        return "type5"
-
     elif ((r['a1']/r['d1']).expand()).match((p*(u*t**2+v*t+w)**2).expand()) and not \
     (cancel(r['a1']*r['d2']/(r['a2']*r['d1']))).has(t) and not (r['d1']/r['e1']).has(t) and not \
     (r['d2']/r['e2']).has(t) and r['b1'] == r['b2'] == r['c1'] == r['c2'] == 0:
@@ -2093,19 +2088,11 @@ def check_linear_2eq_order2(eq, func, func_coef):
     cancel(r['b1']*r['a2']/(r['b2']*r['a1'])).has(t) and r['d1']==r['d2']==r['e1']==r['e2']==0:
         return "type7"
 
-    elif cancel(-r['b2']/r['d2'])==t and cancel(-r['c1']/r['e1'])==t and not \
-    cancel(r['e1']*r['a2']/(r['d2']*r['a1'])).has(t) and r['e1'].has(t) \
-    and r['b1']==r['d1']==r['c2']==r['e2']==0:
-        return "type8"
-
     elif (r['b1']/r['a1']).match(a/t) and (r['b2']/r['a2']).match(a/t) and not \
     (r['b1']/r['c1']).has(t) and not (r['b2']/r['c2']).has(t) and \
     (r['d1']/r['a1']).match(b/t**2) and (r['d2']/r['a2']).match(b/t**2) \
     and not (r['d1']/r['e1']).has(t) and not (r['d2']/r['e2']).has(t):
         return "type9"
-
-    elif -r['b1']/r['d1']==-r['c1']/r['e1']==-r['b2']/r['d2']==-r['c2']/r['e2']==t:
-        return "type11"
 
     else:
         return None
@@ -6687,57 +6674,6 @@ def _linear_2eq_order2_type3(x, y, t, r, eq):
         sol2 = -C1*sin(alpha*t) + C2*cos(alpha*t) - C3*sin(beta*t) + C4*cos(beta*t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order2_type5(x, y, t, r, eq):
-    r"""
-    The equation which come under this category are
-
-    .. math:: x'' = a (t y' - y)
-
-    .. math:: y'' = b (t x' - x)
-
-    The transformation
-
-    .. math:: u = t x' - x, b = t y' - y
-
-    leads to the first-order system
-
-    .. math:: u' = atv, v' = btu
-
-    The general solution of this system is given by
-
-    If `ab > 0`:
-
-    .. math:: u = C_1 a e^{\frac{1}{2} \sqrt{ab} t^2} + C_2 a e^{-\frac{1}{2} \sqrt{ab} t^2}
-
-    .. math:: v = C_1 \sqrt{ab} e^{\frac{1}{2} \sqrt{ab} t^2} - C_2 \sqrt{ab} e^{-\frac{1}{2} \sqrt{ab} t^2}
-
-    If `ab < 0`:
-
-    .. math:: u = C_1 a \cos(\frac{1}{2} \sqrt{\left|ab\right|} t^2) + C_2 a \sin(-\frac{1}{2} \sqrt{\left|ab\right|} t^2)
-
-    .. math:: v = C_1 \sqrt{\left|ab\right|} \sin(\frac{1}{2} \sqrt{\left|ab\right|} t^2) + C_2 \sqrt{\left|ab\right|} \cos(-\frac{1}{2} \sqrt{\left|ab\right|} t^2)
-
-    where `C_1` and `C_2` are arbitrary constants. On substituting the value of `u` and `v`
-    in above equations and integrating the resulting expressions, the general solution will become
-
-    .. math:: x = C_3 t + t \int \frac{u}{t^2} \,dt, y = C_4 t + t \int \frac{u}{t^2} \,dt
-
-    where `C_3` and `C_4` are arbitrary constants.
-
-    """
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    r['a'] = -r['d1'] ; r['b'] = -r['c2']
-    mul = sqrt(abs(r['a']*r['b']))
-    if r['a']*r['b'] > 0:
-        u = C1*r['a']*exp(mul*t**2/2) + C2*r['a']*exp(-mul*t**2/2)
-        v = C1*mul*exp(mul*t**2/2) - C2*mul*exp(-mul*t**2/2)
-    else:
-        u = C1*r['a']*cos(mul*t**2/2) + C2*r['a']*sin(mul*t**2/2)
-        v = -C1*mul*sin(mul*t**2/2) + C2*mul*cos(mul*t**2/2)
-    sol1 = C3*t + t*Integral(u/t**2, t)
-    sol2 = C4*t + t*Integral(v/t**2, t)
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
 def _linear_2eq_order2_type6(x, y, t, r, eq):
     r"""
     The equations are
@@ -6825,61 +6761,6 @@ def _linear_2eq_order2_type7(x, y, t, r, eq):
     z2 = C3*Integral(exp(k2*F), t) + C4
     sol1 = (k1*z2 - k2*z1 + a1*(z1 - z2))/(a2*(k1-k2))
     sol2 = (z1 - z2)/(k1 - k2)
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
-def _linear_2eq_order2_type8(x, y, t, r, eq):
-    r"""
-    The equation of this category are
-
-    .. math:: x'' = a f(t) (t y' - y)
-
-    .. math:: y'' = b f(t) (t x' - x)
-
-    The transformation
-
-    .. math:: u = t x' - x, v = t y' - y
-
-    leads to the system of first-order equations
-
-    .. math:: u' = a t f(t) v, v' = b t f(t) u
-
-    The general solution of this system has the form
-
-    If `ab > 0`:
-
-    .. math:: u = C_1 a e^{\sqrt{ab} \int t f(t) \,dt} + C_2 a e^{-\sqrt{ab} \int t f(t) \,dt}
-
-    .. math:: v = C_1 \sqrt{ab} e^{\sqrt{ab} \int t f(t) \,dt} - C_2 \sqrt{ab} e^{-\sqrt{ab} \int t f(t) \,dt}
-
-    If `ab < 0`:
-
-    .. math:: u = C_1 a \cos(\sqrt{\left|ab\right|} \int t f(t) \,dt) + C_2 a \sin(-\sqrt{\left|ab\right|} \int t f(t) \,dt)
-
-    .. math:: v = C_1 \sqrt{\left|ab\right|} \sin(\sqrt{\left|ab\right|} \int t f(t) \,dt) + C_2 \sqrt{\left|ab\right|} \cos(-\sqrt{\left|ab\right|} \int t f(t) \,dt)
-
-    where `C_1` and `C_2` are arbitrary constants. On substituting the value of `u` and `v`
-    in above equations and integrating the resulting expressions, the general solution will become
-
-    .. math:: x = C_3 t + t \int \frac{u}{t^2} \,dt, y = C_4 t + t \int \frac{u}{t^2} \,dt
-
-    where `C_3` and `C_4` are arbitrary constants.
-
-    """
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    num, den = cancel(r['d1']/r['c2']).as_numer_denom()
-    f = -r['d1']/num
-    a = num
-    b = den
-    mul = sqrt(abs(a*b))
-    Igral = Integral(t*f, t)
-    if a*b > 0:
-        u = C1*a*exp(mul*Igral) + C2*a*exp(-mul*Igral)
-        v = C1*mul*exp(mul*Igral) - C2*mul*exp(-mul*Igral)
-    else:
-        u = C1*a*cos(mul*Igral) + C2*a*sin(mul*Igral)
-        v = -C1*mul*sin(mul*Igral) + C2*mul*cos(mul*Igral)
-    sol1 = C3*t + t*Integral(u/t**2, t)
-    sol2 = C4*t + t*Integral(v/t**2, t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type9(x, y, t, r, eq):
@@ -6981,38 +6862,6 @@ def _linear_2eq_order2_type10(x, y, t, r, eq):
     + b*v(t)), Eq(diff(v(t),t,t), c*u(t) + (d - dic[p]*dic[s] + dic[q]**2/4)*v(t))])
     sol1 = (msol1.rhs*sqrt(abs(eqz))).subs(t, Integral(1/eqz, t))
     sol2 = (msol2.rhs*sqrt(abs(eqz))).subs(t, Integral(1/eqz, t))
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
-def _linear_2eq_order2_type11(x, y, t, r, eq):
-    r"""
-    The equations which comes under this type are
-
-    .. math:: x'' = f(t) (t x' - x) + g(t) (t y' - y)
-
-    .. math:: y'' = h(t) (t x' - x) + p(t) (t y' - y)
-
-    The transformation
-
-    .. math:: u = t x' - x, v = t y' - y
-
-    leads to the linear system of first-order equations
-
-    .. math:: u' = t f(t) u + t g(t) v, v' = t h(t) u + t p(t) v
-
-    On substituting the value of `u` and `v` in transformed equation gives value of `x` and `y` as
-
-    .. math:: x = C_3 t + t \int \frac{u}{t^2} \,dt , y = C_4 t + t \int \frac{v}{t^2} \,dt.
-
-    where `C_3` and `C_4` are arbitrary constants.
-
-    """
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    u, v = symbols('u, v', cls=Function)
-    f = -r['c1'] ; g = -r['d1']
-    h = -r['c2'] ; p = -r['d2']
-    [msol1, msol2] = dsolve([Eq(diff(u(t),t), t*f*u(t) + t*g*v(t)), Eq(diff(v(t),t), t*h*u(t) + t*p*v(t))])
-    sol1 = C3*t + t*Integral(msol1.rhs/t**2, t)
-    sol2 = C4*t + t*Integral(msol2.rhs/t**2, t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 

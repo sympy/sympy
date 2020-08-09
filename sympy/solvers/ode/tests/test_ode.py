@@ -186,25 +186,6 @@ def test_constant_coeff_circular_atan2():
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
 
-def test_linear_2eq_order2_type5():
-    eqs = [Eq(f(x).diff(x, 2), 2*(x*g(x).diff(x) - g(x))),
-           Eq(g(x).diff(x, 2),-2*(x*f(x).diff(x) - f(x)))]
-    sol = [Eq(f(x), C3*x + x*Integral((2*C1*cos(x**2) + 2*C2*sin(x**2))/x**2, x)),
-           Eq(g(x), C4*x + x*Integral((-2*C1*sin(x**2) + 2*C2*cos(x**2))/x**2, x))]
-    assert dsolve(eqs) == sol
-    assert checksysodesol(eqs, sol) == (True, [0, 0])
-
-
-def test_linear_2eq_order2_type8():
-    eqs = [Eq(f(x).diff(x, 2), 2/x *(x*g(x).diff(x) - g(x))),
-           Eq(g(x).diff(x, 2),-2/x *(x*f(x).diff(x) - f(x)))]
-    # FIXME: This is what is returned but it does not seem correct:
-    sol = [Eq(f(x), C3*x + x*Integral((-C1*cos(Integral(-2, x)) - C2*sin(Integral(-2, x)))/x**2, x)),
-           Eq(g(x), C4*x + x*Integral((-C1*sin(Integral(-2, x)) + C2*cos(Integral(-2, x)))/x**2, x))]
-    assert dsolve(eqs) == sol
-    assert checksysodesol(eqs, sol) == (True, [0, 0]) # Fails here
-
-
 @XFAIL
 def test_nonlinear_3eq_order1_type4():
     eqs = [

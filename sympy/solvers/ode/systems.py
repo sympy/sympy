@@ -1499,7 +1499,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     for canon_eq in canon_eqs:
 
         if is_second_order:
-            eqs, new_funcs = _second_order_to_first_order(eqs, new_funcs, t)
+            canon_eq, new_funcs = _second_order_to_first_order(canon_eq, new_funcs, t)
 
         sol = _strong_component_solver(canon_eq, new_funcs, t)
         if sol is None:

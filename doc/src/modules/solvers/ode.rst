@@ -225,10 +225,6 @@ Linear, 2 equations, Order 2, Type 3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::_linear_2eq_order2_type3
 
-Linear, 2 equations, Order 2, Type 5
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::_linear_2eq_order2_type5
-
 Linear, 2 equations, Order 2, Type 6
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::_linear_2eq_order2_type6
@@ -237,10 +233,6 @@ Linear, 2 equations, Order 2, Type 7
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::_linear_2eq_order2_type7
 
-Linear, 2 equations, Order 2, Type 8
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::_linear_2eq_order2_type8
-
 Linear, 2 equations, Order 2, Type 9
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::_linear_2eq_order2_type9
@@ -248,10 +240,6 @@ Linear, 2 equations, Order 2, Type 9
 Linear, 2 equations, Order 2, Type 10
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::_linear_2eq_order2_type10
-
-Linear, 2 equations, Order 2, Type 11
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::_linear_2eq_order2_type11
 
 Linear ODE to matrix
 ^^^^^^^^^^^^^^^^^^^^

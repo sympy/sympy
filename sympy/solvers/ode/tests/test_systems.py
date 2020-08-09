@@ -1328,6 +1328,27 @@ def test_higher_order_to_first_order():
     assert checksysodesol(eq3, sol3) == (True, [0, 0])
 
 
+def test_second_order_to_first_order():
+    f, g = symbols("f g", cls=Function)
+    x = symbols("x")
+
+    eqs1 = [Eq(f(x).diff(x, 2), 2/x *(x*g(x).diff(x) - g(x))),
+           Eq(g(x).diff(x, 2),-2/x *(x*f(x).diff(x) - f(x)))]
+    sol1 = [Eq(f(x), C1*x + x*Integral(C2*sin(2*x)/x**2 + C3*cos(2*x)/x**2, x)),
+            Eq(g(x), C4*x + x*Integral(C2*cos(2*x)/x**2 - C3*sin(2*x)/x**2, x))]
+    assert dsolve(eqs1) == sol1
+    assert checksysodesol(eqs1, sol1) == (True, [0, 0])
+
+    eqs2 = [Eq(f(x).diff(x, 2), 2*(x*g(x).diff(x) - g(x))),
+            Eq(g(x).diff(x, 2),-2*(x*f(x).diff(x) - f(x)))]
+    sol2 = [Eq(f(x), C1*x + x*Integral(C2*exp(I*x**2)/(2*x**2) + C2*exp(-I*x**2)/(2*x**2) - I*C3*exp(I*x**2)/(2*x**2) +
+                I*C3*exp(-I*x**2)/(2*x**2), x)),
+            Eq(g(x), C4*x + x*Integral(I*C2*exp(I*x**2)/(2*x**2) - I*C2*exp(-I*x**2)/(2*x**2) + C3*exp(I*x**2)/(2*x**2) +
+                C3*exp(-I*x**2)/(2*x**2), x))]
+    assert dsolve(eqs2) == sol2
+    assert checksysodesol(eqs2, sol2) == (True, [0, 0])
+
+
 def test_component_division():
     f, g, h, k = symbols('f g h k', cls=Function)
     x = symbols("x")
