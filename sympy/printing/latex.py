@@ -2733,9 +2733,22 @@ class LatexPrinter(Printer):
             tex = self._helper_print_domain(expr, tex)
         return tex
 
-    def _print_InverseElement(self, expr):
-        base_tex = self.parenthesize(expr.arguments[0], PRECEDENCE['Pow'])
-        return "{%s}^{-1}" % base_tex
+    def _print_InverseElement(self, expr, print_domains=True):
+        from sympy.map import Map
+        from sympy.map.mul import _coeff_isneg
+
+        base = expr.base
+        if isinstance(base, Map):
+            base_str = self.parenthesize(base, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        else:
+            base_str = self.parenthesize(base, PRECEDENCE['Pow'])
+
+        exp_str = '-1'
+        result = "{%s}^{%s}" % (base_str, exp_str)
+
+        if isinstance(expr, Map) and print_domains:
+            result = self._helper_print_domain(expr, result)
+        return result
 
     def _print_ExponentElement(self, expr, print_domains=True):
         from sympy.map import Map, AdditionOperator

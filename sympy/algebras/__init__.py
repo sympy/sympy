@@ -16,7 +16,7 @@ from .abstract import (
     FunctionScalarMultiplicationOperator,
     FunctionMultiplication,
     FunctionVectorMultiplicationOperator,
-    FunctionExponent
+    FunctionExponent, ReciprocalFunction,
 )
 
 __all__ = [
@@ -37,5 +37,5 @@ __all__ = [
     "FunctionScalarMultiplicationOperator",
     "FunctionMultiplication",
     "FunctionVectorMultiplicationOperator",
-    "FunctionExponent",
+    "FunctionExponent", "ReciprocalFunction",
 ]

@@ -2846,9 +2846,22 @@ class PrettyPrinter(Printer):
             pform = self._helper_print_domain(e, pform)
         return pform
 
-    def _print_InverseElement(self, e):
-        pretty_base = self.parenthesize(e.arguments[0], PRECEDENCE['Pow'])
-        return pretty_base**prettyForm('-1')
+    def _print_InverseElement(self, e, print_domains=True):
+        from sympy.map import Map
+        from sympy.map.mul import _coeff_isneg
+
+        base = e.base
+        if isinstance(base, Map):
+            pretty_base = self.parenthesize(base, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        else:
+            pretty_base = self.parenthesize(base, PRECEDENCE['Pow'])
+
+        pretty_exp = self._print(-1)
+        pform = pretty_base**pretty_exp
+
+        if isinstance(e, Map) and print_domains:
+            pform = self._helper_print_domain(e, pform)
+        return pform
 
     def _print_ExponentElement(self, e, print_domains=True):
         from sympy.map import Map, AdditionOperator

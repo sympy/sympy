@@ -254,7 +254,7 @@ from .algebras import (
         FunctionScalarMultiplicationOperator,
         FunctionMultiplication,
         FunctionVectorMultiplicationOperator,
-        FunctionExponent,
+        FunctionExponent, ReciprocalFunction,
 )
 
 from .printing import (pager_print, pretty, pretty_print, pprint,
@@ -523,6 +523,7 @@ __all__ = [
     "FunctionScalarMultiplicationOperator",
     "FunctionMultiplication",
     "FunctionVectorMultiplicationOperator", "FunctionExponent",
+    "ReciprocalFunction",
 
     # sympy.printing
     'pager_print', 'pretty', 'pretty_print', 'pprint', 'pprint_use_unicode',

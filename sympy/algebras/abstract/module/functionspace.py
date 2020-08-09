@@ -6,7 +6,7 @@ from sympy.map import (
     Map, AppliedMap,
     VectorAdditionOperator, Addition,
     ScalarMultiplicationOperator, VectorMultiplicationOperator, Multiplication,
-    ExponentElement, ConstantMap, ExponentElement
+    ExponentElement, ConstantMap, ExponentElement, InverseElement,
 )
 
 __all__ = [
@@ -14,7 +14,7 @@ __all__ = [
     'FunctionScalarMultiplicationOperator',
     'FunctionMultiplication',
     'FunctionVectorMultiplicationOperator',
-    'FunctionExponent',
+    'FunctionExponent', 'ReciprocalFunction',
 ]
 
 class FunctionAdditionOperator(VectorAdditionOperator):
@@ -506,17 +506,20 @@ class FunctionVectorMultiplicationOperator(VectorMultiplicationOperator):
         )
         return result
 
-    def collect_scalarfunc(self, seq):
+    def is_scalarfunction(self, f):
+        """
+        Return ``True`` if *f* is a function which returns scalar.
+        """
+        if f.codomain.is_subset(self.codomain_structure.ring):
+            return True
+        return False
 
-        def is_scalarfunction(f):
-            if f.codomain.is_subset(self.codomain_structure.ring):
-                return True
-            return False
+    def collect_scalarfunc(self, seq):
 
         scalarfuncs = []
         vectorfuncs = []
         for f in seq:
-            if is_scalarfunction(f):
+            if self.is_scalarfunction(f):
                 scalarfuncs.append(f)
             else:
                 vectorfuncs.append(f)
@@ -528,16 +531,29 @@ class FunctionVectorMultiplicationOperator(VectorMultiplicationOperator):
         seq = self.collect_scalarfunc(seq)
         return seq
 
-    def _expop_apply(self, x, n, **kwargs):
-        result = super()._expop_apply(x, n, **kwargs)
+    def _expop_apply(self, f, n, **kwargs):
+        result = super()._expop_apply(f, n, **kwargs)
         if result is None:
             result = super(Map, FunctionExponent).__new__(
-                FunctionExponent, self.exponent_operator(), Tuple(x, n)
+                FunctionExponent, self.exponent_operator(), Tuple(f, n)
+            )
+        return result
+
+    def _invop_apply(self, f, **kwargs):
+        if self.is_scalarfunction(f):
+            return self.exponent_operator()(f, -1, **kwargs)
+        result = super()._invop_apply(f, **kwargs)
+        if result is None:
+            result = super(Map, ReciprocalFunction).__new__(
+                ReciprocalFunction, self.inverse_operator(), Tuple(f)
             )
         return result
 
 class FunctionExponent(ExponentElement, Map):
+    """
+    Multiplicative exponentiation of function.
 
+    """
     @property
     def domain(self):
         return self.base.domain
@@ -556,3 +572,28 @@ class FunctionExponent(ExponentElement, Map):
     def eval(self, *args):
         pow = self.codomain_structure.pow
         return pow(self.base(*args), self.exp)
+
+class ReciprocalFunction(InverseElement, Map):
+    """
+    Multiplicative inverse of function, where the function returns
+    vector and the vector-vector product is not associative.
+
+    """
+    @property
+    def domain(self):
+        return self.base.domain
+
+    @property
+    def codomain(self):
+        return self.base.codomain
+
+    @property
+    def codomain_structure(self):
+        return self.map.base_op.codomain_structure
+
+    def _contained(self, other):
+        return Map._contained(self, other)
+
+    def eval(self, *args):
+        pow = self.codomain_structure.pow
+        return pow(self.base(*args), -1)

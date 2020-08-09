@@ -755,6 +755,10 @@ class InverseElement(AppliedMap):
     Result of InverseOperator applied to element.
 
     """
+    @property
+    def base(self):
+        return self.arguments[0]
+
     def as_base_exp(self, operator):
         if self.map.base_op.is_restriction(operator):
             return self.map._eval_as_base_exp(self)
