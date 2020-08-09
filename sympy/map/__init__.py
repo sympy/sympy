@@ -22,7 +22,8 @@ __all__ = [
     'ScalarMultiplicationOperator', 'VectorMultiplicationOperator',
     'Multiplication',
 
-    'Sin', 'Cos', 'Tan',
+    'Sine', 'Cosine', 'Tangent', "Cotangent",
+    "Secant", "Cosecant",
 ]
 
 from .map import (
@@ -55,5 +56,6 @@ from .mul import (
 )
 
 from .elementary import (
-    Sin, Cos, Tan,
+    Sine, Cosine, Tangent, Cotangent,
+    Secant, Cosecant,
 )

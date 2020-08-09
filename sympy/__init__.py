@@ -191,7 +191,8 @@ from .map import (Map, UndefinedMap, InverseMap, IdentityMap, RestrictedMap,
         MultiplicationOperator, NumericMultiplicationOperator,
         ScalarMultiplicationOperator, VectorMultiplicationOperator,
         Multiplication,
-        Sin, Cos, Tan,)
+        Sine, Cosine, Tangent, Cotangent,
+        Secant, Cosecant,)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         casoratian, diag, eye, hessian, jordan_cell, list2numpy, matrix2numpy,
@@ -450,7 +451,8 @@ __all__ = [
     'MultiplicationOperator', 'NumericMultiplicationOperator',
     'ScalarMultiplicationOperator', 'VectorMultiplicationOperator',
     'Multiplication',
-    'Sin', 'Cos', 'Tan',
+    'Sine', 'Cosine', 'Tangent', 'Cotangent',
+    'Secant', 'Cosecant',
 
     # sympy.matrices
     'ShapeError', 'NonSquareMatrixError', 'GramSchmidt', 'casoratian', 'diag',

@@ -1,7 +1,9 @@
 __all__ = [
-    "Sin", "Cos", "Tan",
+    "Sine", "Cosine", "Tangent", "Cotangent",
+    "Secant", "Cosecant",
 ]
 
 from .trigonometric import (
-    Sin, Cos, Tan,
+    Sine, Cosine, Tangent, Cotangent,
+    Secant, Cosecant,
 )

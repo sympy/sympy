@@ -3402,21 +3402,37 @@ def test_sympy__map__elementary__trigonometric__TrigonometricMap():
     pass
 
 def test_sympy__map__elementary__trigonometric__AppliedTrigonometricMap():
-    from sympy.map.elementary.trigonometric import Sin, AppliedTrigonometricMap
-    sin = Sin(S.Reals)
+    from sympy.map.elementary.trigonometric import Sine, AppliedTrigonometricMap
+    sin = Sine(S.Reals)
     assert _test_args(AppliedTrigonometricMap(sin, (x,)))
 
-def test_sympy__map__elementary__trigonometric__Sin():
-    from sympy.map.elementary.trigonometric import Sin
-    assert _test_args(Sin(S.Reals))
+def test_sympy__map__elementary__trigonometric__Sine():
+    from sympy.map.elementary.trigonometric import Sine
+    assert _test_args(Sine(S.Reals))
 
-def test_sympy__map__elementary__trigonometric__Cos():
-    from sympy.map.elementary.trigonometric import Cos
-    assert _test_args(Cos(S.Reals))
+def test_sympy__map__elementary__trigonometric__Cosine():
+    from sympy.map.elementary.trigonometric import Cosine
+    assert _test_args(Cosine(S.Reals))
 
-def test_sympy__map__elementary__trigonometric__Tan():
-    from sympy.map.elementary.trigonometric import Tan
-    assert _test_args(Tan(S.Reals))
+def test_sympy__map__elementary__trigonometric__Tangent():
+    from sympy.map.elementary.trigonometric import Tangent
+    assert _test_args(Tangent(S.Reals))
+
+def test_sympy__map__elementary__trigonometric__Cotangent():
+    from sympy.map.elementary.trigonometric import Cotangent
+    assert _test_args(Cotangent(S.Reals))
+
+@SKIP("abstract class")
+def test_sympy__map__elementary__trigonometric__ReciprocalTrigonometricMap():
+    pass
+
+def test_sympy__map__elementary__trigonometric__Secant():
+    from sympy.map.elementary.trigonometric import Secant
+    assert _test_args(Secant(S.Reals))
+
+def test_sympy__map__elementary__trigonometric__Cosecant():
+    from sympy.map.elementary.trigonometric import Cosecant
+    assert _test_args(Cosecant(S.Reals))
 
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
