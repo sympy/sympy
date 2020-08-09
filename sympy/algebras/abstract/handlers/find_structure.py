@@ -21,7 +21,8 @@ from sympy.algebras import (
     Ring,
     FunctionAdditionOperator, AbelianGroup,
     FunctionScalarMultiplicationOperator,
-    VectorSpace,
+    VectorSpace, FunctionVectorMultiplicationOperator,
+    Algebra,
 )
 from sympy.multipledispatch import dispatch
 
@@ -50,4 +51,6 @@ def find_structure(a):
     G = AbelianGroup('', (fs,), (fadd,))
     fsmul = FunctionScalarMultiplicationOperator(F*G, G)
     FS = VectorSpace('', (F, G), (fsmul,))
-    return FS
+    ff_mul = FunctionVectorMultiplicationOperator(FS*FS, G)
+    A = Algebra('', (FS,), (ff_mul,))
+    return A

@@ -20,8 +20,8 @@ smul = ScalarMultiplicationOperator(F*G, G)
 V = VectorSpace('V', (F, G), (smul,))
 
 def test_VectorSpace():
-    assert V.div(r, s) == V.mul(r, V.pow(s, -1))
-    assert V.div(x, s) == V.mul(x, V.pow(s, -1))
+    assert V.div(r, s) == V.mul(r, V.pow(s, -1), evaluate=True)
+    assert V.div(x, s) == V.mul(x, V.pow(s, -1), evaluate=True)
     assert V.div(r, e2, evaluate=True) == r
     assert V.div(x, e2, evaluate=True) == x
     assert V.div(e2, r, evaluate=True) == V.pow(r, -1)

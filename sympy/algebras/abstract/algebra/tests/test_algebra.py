@@ -22,4 +22,4 @@ vmul = VectorMultiplicationOperator(V*V, G)
 A = Algebra('A', (V,), (vmul,))
 
 def test_Algebra():
-    assert A.mul(a, x, x, evaluate=True) == smul(a, vmul(x, x))
+    assert A.mul(a, x, x, evaluate=True) == smul(a, vmul(x, x), evaluate=True)
