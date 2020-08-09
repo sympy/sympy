@@ -443,18 +443,13 @@ class RustCodePrinter(CodePrinter):
         else:
             raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
 
+    def _print_SparseMatrix(self, mat):
+        # do not allow sparse matrices to be made dense
+        return self._print_not_supported(mat)
+
     def _print_MatrixElement(self, expr):
         return "%s[%s]" % (expr.parent,
                            expr.j + expr.i*expr.parent.shape[1])
-
-    # FIXME: Str/CodePrinter could define each of these to call the _print
-    # method from higher up the class hierarchy (see _print_NumberSymbol).
-    # Then subclasses like us would not need to repeat all this.
-    _print_Matrix = _print_MatrixBase
-    _print_DenseMatrix = _print_MatrixBase
-    _print_MutableDenseMatrix = _print_MatrixBase
-    _print_ImmutableMatrix = _print_MatrixBase
-    _print_ImmutableDenseMatrix = _print_MatrixBase
 
     def _print_Symbol(self, expr):
 

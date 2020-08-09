@@ -502,7 +502,11 @@ class CodePrinter(StrPrinter):
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
     def _print_not_supported(self, expr):
-        self._not_supported.add(expr)
+        try:
+            self._not_supported.add(expr)
+        except TypeError:
+            # not hashable
+            pass
         return self.emptyPrinter(expr)
 
     # The following can not be simply translated into C or Fortran
@@ -516,10 +520,6 @@ class CodePrinter(StrPrinter):
     _print_Interval = _print_not_supported
     _print_AccumulationBounds = _print_not_supported
     _print_Limit = _print_not_supported
-    _print_Matrix = _print_not_supported
-    _print_ImmutableMatrix = _print_not_supported
-    _print_ImmutableDenseMatrix = _print_not_supported
-    _print_MutableDenseMatrix = _print_not_supported
     _print_MatrixBase = _print_not_supported
     _print_DeferredVector = _print_not_supported
     _print_NaN = _print_not_supported
@@ -528,9 +528,6 @@ class CodePrinter(StrPrinter):
     _print_RootOf = _print_not_supported
     _print_RootsOf = _print_not_supported
     _print_RootSum = _print_not_supported
-    _print_SparseMatrix = _print_not_supported
-    _print_MutableSparseMatrix = _print_not_supported
-    _print_ImmutableSparseMatrix = _print_not_supported
     _print_Uniform = _print_not_supported
     _print_Unit = _print_not_supported
     _print_Wild = _print_not_supported
