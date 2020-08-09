@@ -2844,7 +2844,6 @@ class PrettyPrinter(Printer):
 
     def _print_InverseElement(self, e, print_domains=True):
         from sympy.map import Map
-        from sympy.map.mul import _coeff_isneg
 
         base = e.base
         if isinstance(base, Map):

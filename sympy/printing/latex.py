@@ -2734,7 +2734,7 @@ class LatexPrinter(Printer):
             args = []
             for a in expr.arguments:
                 if isinstance(a, Map):
-                    args.append(self._print(arg, print_domains=False))
+                    args.append(self._print(a, print_domains=False))
                 else:
                     args.append(self._print(a))
             args_str = ', '.join(args)
@@ -2746,7 +2746,6 @@ class LatexPrinter(Printer):
 
     def _print_InverseElement(self, expr, print_domains=True):
         from sympy.map import Map
-        from sympy.map.mul import _coeff_isneg
 
         base = expr.base
         if isinstance(base, Map):

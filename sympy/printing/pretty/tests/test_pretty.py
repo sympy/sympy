@@ -7265,7 +7265,6 @@ def test_map():
     from sympy.map import (
         Map, IdentityMap,
         BinaryOperator,
-        CompositeMap, IteratedMap,
         AdditionOperator,
     )
 
