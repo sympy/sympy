@@ -224,14 +224,11 @@ class NumericAdditionOperator(AdditionOperator):
     def identity(self):
         return S.Zero
 
-    def multiplication_operator(self):
-        from .mul import NumericMultiplicationOperator
-        return NumericMultiplicationOperator(self.domain, self.codomain)
-    mul_op = multiplication_operator
-
     def __call__(self, *args, evaluate=False, **kwargs):
+        from .mul import NumericMultiplicationOperator
+
         kwargs.pop('mul_op', None)
-        mul_op = self.mul_op()
+        mul_op = NumericMultiplicationOperator(self.domain, self.codomain)
         return Addition(self, args, (mul_op,), evaluate=evaluate, **kwargs)
 
     def undistribute(self, seq, mul_op, evaluate=False):
@@ -274,8 +271,10 @@ class NumericAdditionOperator(AdditionOperator):
         return seq
 
     def _expop_apply(self, x, n, **kwargs):
+        from .mul import NumericMultiplicationOperator
+
         kwargs['evaluate'] = True
-        mul_op = self.mul_op()
+        mul_op = NumericMultiplicationOperator(self.domain, self.codomain)
         return mul_op(n, x, **kwargs)
 
 class VectorAdditionOperator(AdditionOperator):

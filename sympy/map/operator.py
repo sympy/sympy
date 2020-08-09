@@ -766,6 +766,14 @@ class ExponentElement(AppliedMap):
 
     """
 
+    @property
+    def base(self):
+        return self.arguments[0]
+
+    @property
+    def exp(self):
+        return self.arguments[1]
+
     def as_base_exp(self, operator):
         if self.map.base_op.is_restriction(operator):
             return self.map._eval_as_base_exp(self)

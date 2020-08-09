@@ -7,7 +7,7 @@ from sympy.core.decorators import (
 )
 from sympy.core.sympify import _sympify
 from sympy.core.symbol import Str
-from sympy.sets import Set, ProductSet, FiniteSet
+from sympy.sets import Set, ProductSet, FiniteSet, Union
 
 __all__ = [
     'FunctionSet', 'function_set',
@@ -176,7 +176,7 @@ class Map(Expr):
     def _contained(self, other):
         # Without this method, everything returns very complicated infinite loop
         from sympy.algebras import AlgebraicStructure
-        if isinstance(other, (FunctionSet, AlgebraicStructure)):
+        if isinstance(other, (FunctionSet, Union, AlgebraicStructure)):
             return None
         return False
 

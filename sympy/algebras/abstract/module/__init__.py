@@ -5,6 +5,7 @@ __all__ = [
     'FunctionScalarMultiplicationOperator',
     'FunctionMultiplication',
     'FunctionVectorMultiplicationOperator',
+    'FunctionExponent',
 ]
 
 from .module import Module
@@ -16,4 +17,5 @@ from .functionspace import (
     FunctionScalarMultiplicationOperator,
     FunctionMultiplication,
     FunctionVectorMultiplicationOperator,
+    FunctionExponent
 )

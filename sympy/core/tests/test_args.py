@@ -1064,6 +1064,22 @@ def test_sympy__algebras__abstract__module__functionspace__FunctionVectorMultipl
 
     assert _test_args(ff_mul)
 
+def test_sympy__algebras__abstract__module__functionspace__FunctionExponent():
+    from sympy import (
+    S, Set, VectorAdditionOperator, AbelianGroup,
+    ScalarMultiplicationOperator, VectorSpace,
+    FunctionSet, ConstantMap, FunctionAdditionOperator,
+    FunctionScalarMultiplicationOperator,
+    FunctionVectorMultiplicationOperator
+    )
+
+    F = S.RealsField
+    X = S.Reals
+
+    f = Map('f', domain=X, codomain=f)
+
+    assert _test_args(f**2)
+
 def test_sympy__algebras__abstract__algebra__algebra__Algebra():
     from sympy import (
         AdditionOperator, AbelianGroup, Map, VectorSpace, Algebra
@@ -3360,6 +3376,7 @@ def test_sympy__map__elementary__trigonometric__AppliedTrigonometricMap():
     from sympy.map.elementary.trigonometric import Sin, AppliedTrigonometricMap
     sin = Sin(S.Reals)
     assert _test_args(AppliedTrigonometricMap(sin, (x,)))
+
 def test_sympy__map__elementary__trigonometric__Sin():
     from sympy.map.elementary.trigonometric import Sin
     assert _test_args(Sin(S.Reals))

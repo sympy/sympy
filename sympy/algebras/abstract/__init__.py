@@ -17,6 +17,7 @@ __all__ = [
     'FunctionScalarMultiplicationOperator',
     'FunctionMultiplication',
     'FunctionVectorMultiplicationOperator',
+    'FunctionExponent',
 ]
 
 from .structure import AlgebraicStructure
@@ -38,6 +39,7 @@ from .module import (
     FunctionScalarMultiplicationOperator,
     FunctionMultiplication,
     FunctionVectorMultiplicationOperator,
+    FunctionExponent,
 )
 
 from .algebra import (

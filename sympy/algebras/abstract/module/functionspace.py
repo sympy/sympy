@@ -6,7 +6,7 @@ from sympy.map import (
     Map, AppliedMap,
     VectorAdditionOperator, Addition,
     ScalarMultiplicationOperator, VectorMultiplicationOperator, Multiplication,
-    ExponentElement,
+    ExponentElement, ConstantMap, ExponentElement
 )
 
 __all__ = [
@@ -14,6 +14,7 @@ __all__ = [
     'FunctionScalarMultiplicationOperator',
     'FunctionMultiplication',
     'FunctionVectorMultiplicationOperator',
+    'FunctionExponent',
 ]
 
 class FunctionAdditionOperator(VectorAdditionOperator):
@@ -464,19 +465,20 @@ class FunctionVectorMultiplicationOperator(VectorMultiplicationOperator):
     >>> f*g
     f*g : Reals -> R
 
+    >>> f*f
+    f**2 : Reals -> R
+
     """
-
-    @property
-    def associative(self):
-        return ask(Q.associative(self.codomain_structure.ring.mul_op))
-
-    @property
-    def commutative(self):
-        return ask(Q.commutative(self.codomain_structure.ring.mul_op))
 
     @property
     def codomain_structure(self):
         return self.codomain.domain.codomain
+
+    @property
+    def identity(self):
+        iden_scalar = self.codomain_structure.ring.mul_op.identity
+        domain = self.codomain.domain.domain
+        return ConstantMap(iden_scalar, domain)
 
     def __call__(self, *args, evaluate=False, **kwargs):
         kwargs.update(evaluate=evaluate)
@@ -491,6 +493,8 @@ class FunctionVectorMultiplicationOperator(VectorMultiplicationOperator):
         if evaluate:
             args = self.multiplication_process(args)
 
+            if len(args) == 0:
+                return self.identity
             if len(args) == 1:
                 return args[0]
 
@@ -501,3 +505,54 @@ class FunctionVectorMultiplicationOperator(VectorMultiplicationOperator):
             FunctionMultiplication, self, args, aux
         )
         return result
+
+    def collect_scalarfunc(self, seq):
+
+        def is_scalarfunction(f):
+            if f.codomain.is_subset(self.codomain_structure.ring):
+                return True
+            return False
+
+        scalarfuncs = []
+        vectorfuncs = []
+        for f in seq:
+            if is_scalarfunction(f):
+                scalarfuncs.append(f)
+            else:
+                vectorfuncs.append(f)
+        combined_sf = self.assoc_comm_process(scalarfuncs)
+        return combined_sf + vectorfuncs
+
+    def multiplication_process(self, seq):
+        seq = self.remove_identity(seq)
+        seq = self.collect_scalarfunc(seq)
+        return seq
+
+    def _expop_apply(self, x, n, **kwargs):
+        result = super()._expop_apply(x, n, **kwargs)
+        if result is None:
+            result = super(Map, FunctionExponent).__new__(
+                FunctionExponent, self.exponent_operator(), (x, n)
+            )
+        return result
+
+class FunctionExponent(ExponentElement, Map):
+
+    @property
+    def domain(self):
+        return self.base.domain
+
+    @property
+    def codomain(self):
+        return self.base.codomain
+
+    @property
+    def codomain_structure(self):
+        return self.map.base_op.codomain_structure
+
+    def _contained(self, other):
+        return Map._contained(self, other)
+
+    def eval(self, *args):
+        pow = self.codomain_structure.pow
+        return pow(self.base(*args), self.exp)
