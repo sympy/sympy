@@ -32,22 +32,21 @@ class SampleDiscreteScipy:
     def _sample_scipy(cls, dist, size):
         """Sample from SciPy."""
 
-        scipy = import_module('scipy')
-
+        from scipy import stats as scipy_stats
         scipy_rv_map = {
-            'GeometricDistribution': lambda dist, size: scipy.stats.geom.rvs(p=float(dist.p),
+            'GeometricDistribution': lambda dist, size: scipy_stats.geom.rvs(p=float(dist.p),
                 size=size),
-            'LogarithmicDistribution': lambda dist, size: scipy.stats.logser.rvs(p=float(dist.p),
+            'LogarithmicDistribution': lambda dist, size: scipy_stats.logser.rvs(p=float(dist.p),
                 size=size),
-            'NegativeBinomialDistribution': lambda dist, size: scipy.stats.nbinom.rvs(n=float(dist.r),
+            'NegativeBinomialDistribution': lambda dist, size: scipy_stats.nbinom.rvs(n=float(dist.r),
                 p=float(dist.p), size=size),
-            'PoissonDistribution': lambda dist, size: scipy.stats.poisson.rvs(mu=float(dist.lamda),
+            'PoissonDistribution': lambda dist, size: scipy_stats.poisson.rvs(mu=float(dist.lamda),
                 size=size),
-            'SkellamDistribution': lambda dist, size: scipy.stats.skellam.rvs(mu1=float(dist.mu1),
+            'SkellamDistribution': lambda dist, size: scipy_stats.skellam.rvs(mu1=float(dist.mu1),
                 mu2=float(dist.mu2), size=size),
-            'YuleSimonDistribution': lambda dist, size: scipy.stats.yulesimon.rvs(alpha=float(dist.rho),
+            'YuleSimonDistribution': lambda dist, size: scipy_stats.yulesimon.rvs(alpha=float(dist.rho),
                 size=size),
-            'ZetaDistribution': lambda dist, size: scipy.stats.zipf.rvs(a=float(dist.s),
+            'ZetaDistribution': lambda dist, size: scipy_stats.zipf.rvs(a=float(dist.s),
                 size=size)
         }
 
@@ -79,8 +78,7 @@ class SampleDiscreteNumpy:
     def _sample_numpy(cls, dist, size):
         """Sample from NumPy."""
 
-        numpy = import_module('numpy')
-
+        import numpy
         numpy_rv_map = {
             'GeometricDistribution': lambda dist, size: numpy.random.geometric(p=float(dist.p),
                 size=size),
@@ -107,8 +105,7 @@ class SampleDiscretePymc:
     def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
 
-        pymc3 = import_module('pymc3')
-
+        import pymc3
         pymc3_rv_map = {
             'GeometricDistribution': lambda dist: pymc3.Geometric('X', p=float(dist.p)),
             'PoissonDistribution': lambda dist: pymc3.Poisson('X', mu=float(dist.lamda)),

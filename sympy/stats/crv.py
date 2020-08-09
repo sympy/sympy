@@ -155,7 +155,6 @@ class SampleContinuousScipy:
     def _sample_scipy(cls, dist, size):
         """Sample from SciPy."""
         # scipy does not require map as it can handle using custom distributions
-        scipy = import_module('scipy')
         from scipy.stats import rv_continuous
         z = Dummy('z')
         handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
@@ -176,8 +175,7 @@ class SampleContinuousNumpy:
     def _sample_numpy(cls, dist, size):
         """Sample from NumPy."""
 
-        numpy = import_module('numpy')
-
+        import numpy
         numpy_rv_map = {
             'BetaDistribution': lambda dist, size: numpy.random.beta(a=float(dist.alpha),
                 b=float(dist.beta), size=size),
@@ -214,8 +212,7 @@ class SampleContinuousPymc:
     def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
 
-        pymc3 = import_module('pymc3')
-
+        import pymc3
         pymc3_rv_map = {
             'BetaDistribution': lambda dist:
                 pymc3.Beta('X', alpha=float(dist.alpha), beta=float(dist.beta)),

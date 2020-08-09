@@ -371,7 +371,7 @@ class SampleFiniteScipy:
     def _sample_scipy(cls, dist, size):
         """Sample from SciPy."""
         # scipy can handle with custom distributions
-        scipy = import_module('scipy')
+
         from scipy.stats import rv_discrete
         density_ = dist.dict
         x, y = [], []
@@ -392,7 +392,7 @@ class SampleFiniteNumpy:
     def _sample_numpy(cls, dist, size):
         """Sample from NumPy."""
 
-        numpy = import_module('numpy')
+        import numpy
         numpy_rv_map = {
             'BinomialDistribution': lambda dist, size: numpy.random.binomial(n=int(dist.n),
                 p=float(dist.p), size=size)
@@ -416,8 +416,7 @@ class SampleFinitePymc:
     def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
 
-        pymc3 = import_module('pymc3')
-
+        import pymc3
         pymc3_rv_map = {
             'BernoulliDistribution': lambda dist: pymc3.Bernoulli('X', p=float(dist.p)),
             'BinomialDistribution': lambda dist: pymc3.Binomial('X', n=int(dist.n),
