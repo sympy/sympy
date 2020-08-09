@@ -2672,7 +2672,7 @@ class LatexPrinter(Printer):
 
     def _helper_print_domain(self, expr, tex):
         result = r"%s : %s \rightarrow %s" % (
-                tex, self._print(expr.domain), self._print(expr.codomain)
+                tex, self._print(expr.domain), self._print(expr.range)
             )
         return result
 

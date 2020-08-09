@@ -160,6 +160,16 @@ class Map(Expr):
         return 1
     nargs = arity
 
+    @property
+    def range(self):
+        result = self._eval_range()
+        if result is not None:
+            return result
+        return self.codomain
+
+    def _eval_range(self):
+        return
+
     def _contained(self, other):
         # Without this method, everything returns very complicated infinite loop
         from sympy.algebras import AlgebraicStructure

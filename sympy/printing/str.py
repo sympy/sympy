@@ -922,7 +922,7 @@ class StrPrinter(Printer):
 
     def _helper_print_domain(self, expr, name):
         result = r"%s : %s -> %s" % (
-                name, self._print(expr.domain), self._print(expr.codomain)
+                name, self._print(expr.domain), self._print(expr.range)
             )
         return result
 

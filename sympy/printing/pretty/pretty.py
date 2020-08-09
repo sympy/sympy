@@ -2761,7 +2761,7 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.right(prettyForm(' : ')))
         pform = prettyForm(*pform.right(self._print(e.domain)))
         pform = prettyForm(*pform.right(rightarrow))
-        pform = prettyForm(*pform.right(self._print(e.codomain)))
+        pform = prettyForm(*pform.right(self._print(e.range)))
         return pform
 
     def _print_RestrictedMap(self, e, print_domains=True):
