@@ -89,6 +89,10 @@ def test_AppliedMap():
     phi = Phi()
     raises(TypeError, lambda: phi(S.One, evaluate=True))
 
+    # commutative map sorts the argument
+    with assuming(Q.commutative(h)):
+        assert h(x, y, evaluate=True) == h(y, x, evaluate=True)
+
 def test_InverseMap():
 
     # cannot invert if mapping is assumed to be non-invertible

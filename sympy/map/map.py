@@ -1,5 +1,6 @@
+from functools import cmp_to_key
 from sympy.assumptions import ask, Q
-from sympy.core import Expr, S, Tuple
+from sympy.core import Expr, S, Tuple, Basic
 from sympy.core.compatibility import iterable
 from sympy.core.decorators import (
     call_highest_priority, sympify_method_args, sympify_return
@@ -704,12 +705,16 @@ class AppliedMap(Expr):
     def __new__(cls, mapping, args, evaluate=False, **kwargs):
         kwargs.update(evaluate=evaluate)
 
+        args = [_sympify(a) for a in args]
+        if evaluate and ask(Q.commutative(mapping)):
+            args.sort(key=cmp_to_key(Basic.compare))
+
         # consult mapping.apply
         result = mapping.apply(*args, **kwargs)
 
         if result is None:
             # generate AppliedMap class
-            args = Tuple(*[_sympify(a) for a in args])
+            args = Tuple(*args)
             result = super().__new__(cls, mapping, args)
 
         # check codomain
