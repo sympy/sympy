@@ -2866,14 +2866,17 @@ def constant_renumber(expr, variables=None, newconstants=None):
     E1 + E2*x + E3*x**2
 
     """
-    if type(expr) in (set, list, tuple):
-        renumbered = [constant_renumber(e, variables, newconstants) for e in expr]
-        return type(expr)(renumbered)
+
+    # System of expressions
+    if isinstance(expr, (set, list, tuple)):
+        return type(expr)(constant_renumber(Tuple(*expr),
+                        variables=variables, newconstants=newconstants))
 
     # Symbols in solution but not ODE are constants
     if variables is not None:
         variables = set(variables)
-        constantsymbols = list(expr.free_symbols - variables)
+        free_symbols = expr.free_symbols
+        constantsymbols = list(free_symbols - variables)
     # Any Cn is a constant...
     else:
         variables = set()
@@ -2886,11 +2889,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     else:
         iter_constants = (sym for sym in newconstants if sym not in variables)
 
-    # XXX: This global newstartnumber hack should be removed
-    global newstartnumber
-    newstartnumber = 1
-    endnumber = len(constantsymbols)
-    constants_found = [None]*(endnumber + 2)
+    constants_found = []
 
     # make a mapping to send all constantsymbols to S.One and use
     # that to make sure that term ordering is not dependent on
@@ -2900,12 +2899,13 @@ def constant_renumber(expr, variables=None, newconstants=None):
 
     def _constant_renumber(expr):
         r"""
-        We need to have an internal recursive function so that
-        newstartnumber maintains its values throughout recursive calls.
-
+        We need to have an internal recursive function
         """
-        # FIXME: Use nonlocal here when support for Py2 is dropped:
-        global newstartnumber
+
+        # For system of expressions
+        if isinstance(expr, Tuple):
+            renumbered = [_constant_renumber(e) for e in expr]
+            return Tuple(*renumbered)
 
         if isinstance(expr, Equality):
             return Eq(
@@ -2921,10 +2921,9 @@ def constant_renumber(expr, variables=None, newconstants=None):
             return expr
         elif expr in constantsymbols:
             if expr not in constants_found:
-                constants_found[newstartnumber] = expr
-                newstartnumber += 1
+                constants_found.append(expr)
             return expr
-        elif expr.is_Function or expr.is_Pow or isinstance(expr, Tuple):
+        elif expr.is_Function or expr.is_Pow:
             return expr.func(
                 *[_constant_renumber(x) for x in expr.args])
         else:
@@ -2937,7 +2936,9 @@ def constant_renumber(expr, variables=None, newconstants=None):
     constants_found = [c for c in constants_found if c not in variables]
 
     # Renumbering happens here
-    expr = expr.subs(zip(constants_found[1:], iter_constants), simultaneous=True)
+    subs_dict = {var: cons for var, cons in zip(constants_found, iter_constants)}
+    expr = expr.subs(subs_dict, simultaneous=True)
+
     return expr
 
 

@@ -1160,11 +1160,6 @@ class PrettyPrinter(Printer):
 
         return self._print(out_expr)
 
-    _print_ImmutableDenseNDimArray = _print_NDimArray
-    _print_ImmutableSparseNDimArray = _print_NDimArray
-    _print_MutableDenseNDimArray = _print_NDimArray
-    _print_MutableSparseNDimArray = _print_NDimArray
-
     def _printer_tensor_indices(self, name, indices, index_map={}):
         center = stringPict(name)
         top = stringPict(" "*center.width())
@@ -2736,6 +2731,7 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
 
+
     def _print_Map(self, e, print_domains=True):
         if hasattr(e, 'pretty_name'):
             name = e.pretty_name
@@ -2910,6 +2906,10 @@ class PrettyPrinter(Printer):
 
     def _print_ComplexesField(self, e):
         return prettyForm(pretty_atom('Complexes', printer=self))
+
+    def _print_Str(self, s):
+        return self._print(s.name)
+
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

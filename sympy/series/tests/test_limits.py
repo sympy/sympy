@@ -859,5 +859,27 @@ def test_issue_15055():
     assert limit(n**3*((-n - 1)*sin(1/n) + (n + 2)*sin(1/(n + 1)))/(-n + 1), n, oo) == 1
 
 
+def test_issue_16708():
+    m, vi = symbols('m vi', positive=True)
+    B, ti, d = symbols('B ti d')
+    assert limit((B*ti*vi - sqrt(m)*sqrt(-2*B*d*vi + m*(vi)**2) + m*vi)/(B*vi), B, 0) == (d + ti*vi)/vi
+
+
 def test_issue_19739():
     assert limit((-S(1)/4)**x, x, oo) == 0
+
+
+def test_issue_19766():
+    assert limit(2**(-x)*sqrt(4**(x + 1) + 1), x, oo) == 2
+
+
+def test_issue_19770():
+    m = Symbol('m')
+    # the result is not 0 for non-real m
+    assert limit(cos(m*x)/x, x, oo) == Limit(cos(m*x)/x, x, oo, dir='-')
+    m = Symbol('m', real=True)
+    # can be improved to give the correct result 0
+    assert limit(cos(m*x)/x, x, oo) == Limit(cos(m*x)/x, x, oo, dir='-')
+    m = Symbol('m', nonzero=True)
+    assert limit(cos(m*x), x, oo) == AccumBounds(-1, 1)
+    assert limit(cos(m*x)/x, x, oo) == 0

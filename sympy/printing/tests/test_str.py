@@ -11,6 +11,7 @@ from sympy.physics.units import second, joule
 from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
     ZZ_I, QQ_I, lex, grlex)
 from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
+from sympy.tensor import NDimArray
 
 from sympy.testing.pytest import raises
 
@@ -982,9 +983,13 @@ def test_str_special_matrices():
     assert str(ZeroMatrix(2, 2)) == '0'
     assert str(OneMatrix(2, 2)) == '1'
 
-
 def test_issue_14567():
     assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error
+
+def test_Str():
+    from sympy.core.symbol import Str
+    assert str(Str('x')) == 'x'
+    assert sstrrepr(Str('x')) == "Str('x')"
 
 def test_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
@@ -997,6 +1002,7 @@ def test_diffgeom():
     assert str(rect) == "rect"
     b = BaseScalarField(rect, 0)
     assert str(b) == "x"
+
 
 def test_map():
     from sympy import Set
@@ -1077,3 +1083,10 @@ def test_abstractalgebra():
 
     assert str(S1) == 'Structure'
     assert str(S2) == 'A'
+
+def test_NDimArray():
+    assert sstr(NDimArray(1.0), full_prec=True) == '1.00000000000000'
+    assert sstr(NDimArray(1.0), full_prec=False) == '1.0'
+    assert sstr(NDimArray([1.0, 2.0]), full_prec=True) == '[1.00000000000000, 2.00000000000000]'
+    assert sstr(NDimArray([1.0, 2.0]), full_prec=False) == '[1.0, 2.0]'
+
