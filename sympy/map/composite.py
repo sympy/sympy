@@ -350,6 +350,14 @@ class IteratedMap(ExponentElement, Map):
 
     """
 
+    @property
+    def domain(self):
+        return self.arguments[0].domain
+
+    @property
+    def codomain(self):
+        return self.arguments[0].domain
+
     def eval(self, arg):
         b, n = self.arguments
         if not n.free_symbols and ask(Q.integer(n)):
