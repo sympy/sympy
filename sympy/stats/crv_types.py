@@ -62,7 +62,8 @@ from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I, asin,
-                   hyper, uppergamma, sinh, Ne, expint, Rational, integrate)
+                   hyper, uppergamma, sinh, Ne, expint, Rational, integrate,
+                   DiracDelta, Heaviside)
 from sympy.matrices import MatrixBase, MatrixExpr
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
 from sympy.stats.rv import _value_check, is_random
@@ -2849,13 +2850,20 @@ class NormalDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(mean, std):
-        _value_check(std > 0, "Standard deviation must be positive")
+        _value_check(std >= 0, "Standard deviation must be nonnegative.")
 
     def pdf(self, x):
+        # https://en.wikipedia.org/wiki/Normal_distribution#Zero-variance%20limit
+        if self.std == 0:
+            return DiracDelta(x - self.mean)
+
         return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
+        if std == 0:
+            return Heaviside(x - mean)
+
         return erf(sqrt(2)*(-mean + x)/(2*std))/2 + S.Half
 
     def _characteristic_function(self, t):
@@ -2869,6 +2877,19 @@ class NormalDistribution(SingleContinuousDistribution):
     def _quantile(self, p):
         mean, std = self.mean, self.std
         return mean + std*sqrt(2)*erfinv(2*p - 1)
+
+    def sample(self, size=(), library='scipy'):
+        if self.std == 0:
+            # Dirac Delta is not implemented in scipy so we must do sampling another way
+            # use another `sample` method instead of returning `[self.mean]*size`
+            # so that return types are consistent and doesn't break with new updates.
+            # import inside function to avoid extra overhead of the overall class.
+            from sympy.stats.frv_types import DiscreteUniform
+            # I'm not sure how else to do this. The Sampling classes are too complex for me.
+            return list(DiscreteUniform('_', [self.mean]).pspace
+                .sample(size=size, library=library).values())[0]
+
+        return super(NormalDistribution, self).sample(size=size, library=library)
 
 def Normal(name, mean, std):
     r"""
