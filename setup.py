@@ -79,7 +79,9 @@ if sys.version_info < (3, 5):
 modules = [
     'sympy.algebras',
     'sympy.algebras.abstract',
+    'sympy.algebras.abstract.algebra',
     'sympy.algebras.abstract.group',
+    'sympy.algebras.abstract.handlers',
     'sympy.algebras.abstract.module',
     'sympy.algebras.abstract.ring',
     'sympy.assumptions',
@@ -117,6 +119,7 @@ modules = [
     'sympy.logic.algorithms',
     'sympy.logic.utilities',
     'sympy.map',
+    'sympy.map.elementary',
     'sympy.matrices',
     'sympy.matrices.benchmarks',
     'sympy.matrices.expressions',
@@ -348,7 +351,10 @@ class sdist_sympy(sdist):
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
 tests = [
+    'sympy.algebras.abstract.algebra.tests',
     'sympy.algebras.abstract.group.tests',
+    'sympy.algebras.abstract.handlers.tests',
+    'sympy.algebras.abstract.module.tests',
     'sympy.algebras.abstract.ring.tests',
     'sympy.algebras.abstract.tests',
     'sympy.algebras.tests',
@@ -376,9 +382,10 @@ tests = [
     'sympy.interactive.tests',
     'sympy.liealgebras.tests',
     'sympy.logic.tests',
+    'sympy.map.elementary.tests',
+    'sympy.map.tests',
     'sympy.matrices.expressions.tests',
     'sympy.matrices.tests',
-    'sympy.map.tests',
     'sympy.multipledispatch.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',

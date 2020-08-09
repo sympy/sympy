@@ -1,7 +1,7 @@
 from sympy import (
     S, pi, Interval,
 )
-from sympy.map import Map, AppliedMap,
+from sympy.map import Map, AppliedMap
 
 __all__ = [
     "Sine", "Cosine", "Tangent", "Cotangent",
