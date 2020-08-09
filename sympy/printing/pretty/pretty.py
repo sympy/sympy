@@ -2827,9 +2827,9 @@ class PrettyPrinter(Printer):
             args = []
             for a in e.arguments:
                 if isinstance(a, Map):
-                    args.append(self.parenthesize(a, PRECEDENCE['Mul'], kwargs={'print_domains':False}))
+                    args.append(self._print(a, print_domains=False))
                 else:
-                    args.append(self.parenthesize(a, PRECEDENCE['Mul']))
+                    args.append(self._print(a))
             prettyArgs = None
             for item in args:
                 if prettyArgs is None:
