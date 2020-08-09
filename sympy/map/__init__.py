@@ -21,6 +21,8 @@ __all__ = [
     'MultiplicationOperator', 'NumericMultiplicationOperator',
     'ScalarMultiplicationOperator', 'VectorMultiplicationOperator',
     'Multiplication',
+
+    'Sin', 'Cos', 'Tan',
 ]
 
 from .map import (
@@ -50,4 +52,8 @@ from .mul import (
     MultiplicationOperator, NumericMultiplicationOperator,
     ScalarMultiplicationOperator, VectorMultiplicationOperator,
     Multiplication,
+)
+
+from .elementary import (
+    Sin, Cos, Tan,
 )
