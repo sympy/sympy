@@ -2,6 +2,7 @@
 
 from functools import cmp_to_key
 import itertools
+from sympy.assumptions import ask, Q
 from sympy.core import Basic, S, Tuple
 from sympy.core.sympify import _sympify
 from .map import AppliedMap, isappliedmap
@@ -95,9 +96,6 @@ class MultiplicationOperator(BinaryOperator):
     def apply(self, *args, aux, **kwargs):
         evaluate = kwargs.get('evaluate', False)
 
-        # sympify the arguments
-        args = [_sympify(a) for a in args]
-
         if evaluate:
             args = self.multiplication_process(args)
 
@@ -106,9 +104,12 @@ class MultiplicationOperator(BinaryOperator):
             elif len(args) == 1:
                 return args[0]
 
+            if ask(Q.commutative(self)):
+                args.sort(key=cmp_to_key(Basic.compare))
+
         # return Multiplication class with processed arguments
-        args = Tuple(*[_sympify(a) for a in args])
-        aux = Tuple(*[_sympify(a) for a in aux])
+        args = Tuple(*args)
+        aux = Tuple(*aux)
         result = super(AppliedMap, Multiplication).__new__(Multiplication, self, args, aux)
         return result
 
@@ -294,9 +295,7 @@ class ScalarMultiplicationOperator(MultiplicationOperator):
 
     def apply(self, a, b, aux, **kwargs):
         evaluate = kwargs.get('evaluate', False)
-
-        # sympify the arguments
-        args = [_sympify(i) for i in (a, b)]
+        args = (a, b)
 
         # order a and b so that a is scalar and b is vector
         a, = [i for i in args if self.scalar_ring.contains(i) == True]
@@ -308,9 +307,12 @@ class ScalarMultiplicationOperator(MultiplicationOperator):
             if len(args) == 1:
                 return args[0]
 
+            if ask(Q.commutative(self)):
+                args.sort(key=cmp_to_key(Basic.compare))
+
         # return Multiplication class with processed arguments
-        args = Tuple(*[_sympify(a) for a in args])
-        aux = Tuple(*[_sympify(a) for a in aux])
+        args = Tuple(*args)
+        aux = Tuple(*aux)
         result = super(AppliedMap, Multiplication).__new__(Multiplication, self, args, aux)
         return result
 
@@ -441,18 +443,18 @@ class VectorMultiplicationOperator(MultiplicationOperator):
     def apply(self, *args, aux, **kwargs):
         evaluate = kwargs.get('evaluate', False)
 
-        # sympify the arguments
-        args = [_sympify(i) for i in args]
-
         if evaluate:
             args = self.multiplication_process(args)
 
             if len(args) == 1:
                 return args[0]
 
+            if ask(Q.commutative(self)):
+                args.sort(key=cmp_to_key(Basic.compare))
+
         # return Multiplication class with processed arguments
-        args = Tuple(*[_sympify(a) for a in args])
-        aux = Tuple(*[_sympify(a) for a in aux])
+        args = Tuple(*args)
+        aux = Tuple(*aux)
         result = super(AppliedMap, Multiplication).__new__(Multiplication, self, args, aux)
         return result
 
@@ -521,6 +523,8 @@ class Multiplication(AppliedMap):
     """
     def __new__(cls, mapping, args, aux, evaluate=False, **kwargs):
         kwargs.update(evaluate=evaluate)
+
+        args = [_sympify(a) for a in args]
 
         # consult mapping.apply
         result = mapping.apply(*args, aux=aux, **kwargs)

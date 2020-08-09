@@ -12,6 +12,9 @@ def test_MultiplicationOperator():
     pow = mul.exponent_operator()
     div = mul.right_division_operator()
 
+    # evaluating commutative multiplication sorts argument
+    assert mul(c, b, a,  add_op=add, evaluate=True).arguments == (a, b, c)
+
     # Nested structure is flattened
     assert mul(a, mul(b, c, add_op=add),  add_op=add, evaluate=True).arguments == (a, b, c)
     # Identity is removed
@@ -30,7 +33,7 @@ def test_MultiplicationOperator():
     # inverse
     assert div(b, e2, add_op=add, evaluate=True) == b
     assert div(e2, b, add_op=add, evaluate=True) == pow(b, -1)
-    assert div(a, b, add_op=add) == mul(a, pow(b, -1), add_op=add, evaluate=True)
+    assert div(a, b, add_op=add, evaluate=True) == mul(a, pow(b, -1), add_op=add, evaluate=True)
     assert div(a, a, add_op=add, evaluate=True) == e2
 
 def test_NumericMultiplicationOperator():
