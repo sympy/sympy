@@ -2889,7 +2889,7 @@ class NormalDistribution(SingleContinuousDistribution):
             return list(DiscreteUniform('_', [self.mean]).pspace
                 .sample(size=size, library=library).values())[0]
 
-        return super(NormalDistribution, self).sample(size=size, library=library)
+        return super().sample(size=size, library=library)
 
 def Normal(name, mean, std):
     r"""
