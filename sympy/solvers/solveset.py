@@ -31,7 +31,7 @@ from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              piecewise_fold, Piecewise)
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
-from sympy.functions.elementary.miscellaneous import real_root
+from sympy.functions.elementary.miscellaneous import root, real_root
 from sympy.logic.boolalg import And
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
@@ -235,12 +235,15 @@ def _invert_real(f, g_ys, symbol):
         expo_has_sym = expo.has(symbol)
 
         if not expo_has_sym:
-            res = imageset(Lambda(n, real_root(n, expo)), g_ys)
+            if expo % 2 == 1 and expo > 0:
+                res = imageset(Lambda(n, real_root(n, expo)), g_ys)
+            else:
+                res = imageset(Lambda(n, root(n, expo)), g_ys)
             if expo.is_rational:
                 numer, denom = expo.as_numer_denom()
                 if denom % 2 == 0:
                     base_positive = solveset(base >= 0, symbol, S.Reals)
-                    res = imageset(Lambda(n, real_root(n, expo)
+                    res = imageset(Lambda(n, root(n, expo)
                         ), g_ys.intersect(
                         Interval.Ropen(S.Zero, S.Infinity)))
                     _inv, _set = _invert_real(base, res, symbol)

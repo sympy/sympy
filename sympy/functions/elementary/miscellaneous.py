@@ -356,11 +356,12 @@ def real_root(arg, n=None, evaluate=None):
     from sympy.functions.elementary.complexes import Abs, im, sign
     from sympy.functions.elementary.piecewise import Piecewise
     if n is not None:
+        #raise error if arg is not real
+        if Eq(im(arg), S.Zero) == False:
+            raise ValueError("The argument '%s' is not a real number." %arg)
         return Piecewise(
-            (root(arg, n, evaluate=evaluate), Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
-            (Mul(sign(arg), root(Abs(arg), n, evaluate=evaluate), evaluate=evaluate),
-            And(Eq(im(arg), S.Zero), Eq(Mod(n, 2), S.One))),
-            (root(arg, n, evaluate=evaluate), True))
+            (arg, Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
+            (Mul(sign(arg), root(Abs(arg), n, evaluate=evaluate), evaluate=evaluate), True))
     rv = sympify(arg)
     n1pow = Transform(lambda x: -(-x.base)**x.exp,
                       lambda x:
