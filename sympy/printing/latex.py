@@ -1628,9 +1628,6 @@ class LatexPrinter(Printer):
                       r'\right' + right_delim
         return out_str % r"\\".join(lines)
 
-    _print_ImmutableDenseMatrix = _print_MatrixBase
-    _print_ImmutableSparseMatrix = _print_MatrixBase
-
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)\
             + '_{%s, %s}' % (self._print(expr.i), self._print(expr.j))
@@ -1806,11 +1803,6 @@ class LatexPrinter(Printer):
             out_str = block_str % out_str
 
         return out_str
-
-    _print_ImmutableDenseNDimArray = _print_NDimArray
-    _print_ImmutableSparseNDimArray = _print_NDimArray
-    _print_MutableDenseNDimArray = _print_NDimArray
-    _print_MutableSparseNDimArray = _print_NDimArray
 
     def _printer_tensor_indices(self, name, indices, index_map={}):
         out_str = self._print(name)

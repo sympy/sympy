@@ -21,7 +21,7 @@ from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt,
 from sympy.codegen.cnodes import restrict
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
-from sympy.matrices import Matrix, MatrixSymbol
+from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
 
 from sympy import ccode
 
@@ -546,6 +546,11 @@ def test_Matrix_printing():
         "M[6] = 2*q[4]/q[1];\n"
         "M[7] = sqrt(q[0]) + 4;\n"
         "M[8] = 0;")
+
+
+def test_sparse_matrix():
+    # gh-15791
+    assert 'Not supported in C' in ccode(SparseMatrix([[1, 2, 3]]))
 
 
 def test_ccode_reserved_words():
