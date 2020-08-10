@@ -1066,6 +1066,7 @@ def test_sysode_linear_neq_order1_type2():
     eq8 = (Eq(Derivative(y(t), t),  x(t)),
         Eq(Derivative(x(t), t), n*( y(t) + 1)))
     assert dsolve(eq8, ics={y(t0): T, x(t0): x0}) == sol
+    assert checksysodesol(eq8, sol) == (True, [0, 0])
 
 
 def test_sysode_linear_neq_order1_type3():
