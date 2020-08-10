@@ -2854,17 +2854,17 @@ class NormalDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         # https://en.wikipedia.org/wiki/Normal_distribution#Zero-variance%20limit
-        if self.std == 0:
-            return DiracDelta(x - self.mean)
+        zero_var_pdf = DiracDelta(x - self.mean, H0=1)
+        positive_var_pdf = exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi) * self.std)
 
-        return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
+        return Piecewise((zero_var_pdf, self.std == 0), (positive_var_pdf, True))
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
-        if std == 0:
-            return Heaviside(x - mean)
+        zero_var_cdf = Heaviside(x - mean, H0=1)
+        positive_var_cdf = erf(sqrt(2) * (-mean + x) / (2 * std)) / 2 + S.Half
 
-        return erf(sqrt(2)*(-mean + x)/(2*std))/2 + S.Half
+        return Piecewise((zero_var_cdf, self.std == 0), (positive_var_cdf, True))
 
     def _characteristic_function(self, t):
         mean, std = self.mean, self.std
