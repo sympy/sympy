@@ -84,5 +84,7 @@ If you are unsure which code is importing {mod}, it may help to add 'raise
 Exception' to sympy/{submodule}/__init__.py and observe the traceback from
 running 'from sympy import *'.""")
 
+    print("No unexpected submodules were imported with 'from sympy import *'")
+
 if __name__ == '__main__':
     test_submodule_imports()
