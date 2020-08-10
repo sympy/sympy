@@ -806,18 +806,14 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
                            'allow_unknown_functions': True,
                            'user_functions': user_functions})
 
-
     if  type(args) is set:
         warnings.warn('WARNING: The list of arguments is a `set`. The outcome of enumerate(args) is used to `lambdify`, but its outcome is not predictable. Lambdify will stop here and return `False`', category=DeprecationWarning)
         return False  # Anything else that block the code would be fine
-
-
 
     # Get the names of the args, for creating a docstring
     if not iterable(args):
         args = (args,)
     names = []
-
 
     # Grab the callers frame, for getting the names by inspection (if needed)
     callers_local_vars = inspect.currentframe().f_back.f_locals.items()
