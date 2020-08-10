@@ -176,6 +176,8 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
        This function uses ``exec``, and thus shouldn't be used on
        unsanitized input.
 
+    .. versionchanged:: 1.7.0
+        Python set is no longer supported type for args
     .. warning::
        This function uses ``enumerate`` on ``args``, thus you should
        provide `args` that is a fixed-ordering iterable, e.g. a sequence,
@@ -807,8 +809,14 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
                            'user_functions': user_functions})
 
     if  type(args) is set:
-        warnings.warn('WARNING: The list of arguments is a `set`. The outcome of enumerate(args) is used to `lambdify`, but its outcome is not predictable. Lambdify will stop here and return `False`', category=DeprecationWarning)
-        return False  # Anything else that block the code would be fine
+        SymPyDeprecationWarning(
+                    feature="The list of arguments is a `set`. This leads to unpredictable results",
+                    useinstead="concvet set into list or tuple",
+                    issue=19735,
+                    deprecated_since_version="1.6.3"
+                ).warn()
+        #warnings.warn('WARNING: The list of arguments is a `set`. The outcome of enumerate(args) is used to `lambdify`, but its outcome is not predictable. Lambdify will stop here and return `False`', category=DeprecationWarning)
+        #return False  # Anything else that block the code would be fine
 
     # Get the names of the args, for creating a docstring
     if not iterable(args):
