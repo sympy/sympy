@@ -316,7 +316,6 @@ def test_root():
 
 def test_real_root():
     assert real_root(-8, 3) == -2
-    assert real_root(-16, 4) == -root(16, 4)
     r = root(-7, 4)
     assert real_root(r) == r
     r1 = root(-1, 3)

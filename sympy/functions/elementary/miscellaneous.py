@@ -359,6 +359,9 @@ def real_root(arg, n=None, evaluate=None):
         #raise error if arg is not real
         if Eq(im(arg), S.Zero) == False:
             raise ValueError("The argument '%s' is not a real number." %arg)
+        if sympify(arg).is_integer and sympify(n).is_integer:
+            if arg < 0 and n % 2 == 0:
+                raise ValueError("The arguments ('%s', '%s') result in an nonreal result" %(arg, n))
         return Piecewise(
             (arg, Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
             (Mul(sign(arg), root(Abs(arg), n, evaluate=evaluate), evaluate=evaluate), True))
