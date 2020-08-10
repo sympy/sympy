@@ -1779,7 +1779,8 @@ class TensorHead(Basic):
         for idx, typ in zip(indices, self.index_types):
             if isinstance(idx, str):
                 if idx.startswith('-'):
-                    updated_indices.append(-TensorIndex(idx[1:], typ))
+                    updated_indices.append(TensorIndex(idx[1:], typ,
+                                           is_up=False))
                 else:
                     updated_indices.append(TensorIndex(idx, typ))
             else:
