@@ -2854,7 +2854,7 @@ class NormalDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         # https://en.wikipedia.org/wiki/Normal_distribution#Zero-variance%20limit
-        zero_var_pdf = DiracDelta(x - self.mean, H0=1)
+        zero_var_pdf = DiracDelta(x - self.mean)
         positive_var_pdf = exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi) * self.std)
 
         return Piecewise((zero_var_pdf, self.std == 0), (positive_var_pdf, True))
