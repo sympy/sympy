@@ -177,12 +177,12 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
        unsanitized input.
 
     .. versionchanged:: 1.7.0
-        Python set is no longer supported type for args
+       Python set is no longer supported type for args
     .. warning::
        This function uses ``enumerate`` on ``args``, thus you should
        provide `args` that is a fixed-ordering iterable, e.g. a sequence,
-        or take responsibility for making sure the args are in the order
-        you want them to be. If a set is passed lambdify will return a False
+       or take responsibility for making sure the args are in the order
+       you want them to be. If a set is passed lambdify will return a False
 
     Explanation
     ===========
