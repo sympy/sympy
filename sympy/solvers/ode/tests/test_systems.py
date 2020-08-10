@@ -1051,6 +1051,8 @@ def test_sysode_linear_neq_order1_type2():
     y = Function('y')
     T = symbols('T')
 
+    eq8 = (Eq(Derivative(y(t), t),  x(t)),
+    Eq(Derivative(x(t), t), n*( y(t) + 1)))
     sol = [
         Eq(y(t),
         (-((-T*sqrt(n)*exp(sqrt(n)*t_0)/2 - n*Integral(exp(sqrt(n)*t_0), t_0)/2 + x_0*exp(sqrt(n)*t_0)/2)/sqrt(n) + Integral(n*exp(sqrt(n)*t)/2, t)/sqrt(n)))*exp(-sqrt(n)*t)
@@ -1063,8 +1065,6 @@ def test_sysode_linear_neq_order1_type2():
         + exp(sqrt(n)*t)*Integral(n*exp(-sqrt(n)*t)/2, t)
         ),
     ]
-    eq8 = (Eq(Derivative(y(t), t),  x(t)),
-        Eq(Derivative(x(t), t), n*( y(t) + 1)))
     assert dsolve(eq8, ics={y(t0): T, x(t0): x0}) == sol
     assert checksysodesol(eq8, sol) == (True, [0, 0])
 
