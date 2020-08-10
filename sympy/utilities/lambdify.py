@@ -9,7 +9,6 @@ import inspect
 import keyword
 import textwrap
 import linecache
-import warnings
 
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
