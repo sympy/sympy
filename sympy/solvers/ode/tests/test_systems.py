@@ -13,7 +13,7 @@ from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, line
                                        _eqs2dict, _dict2graph)
 from sympy.integrals.integrals import Integral
 from sympy.testing.pytest import ON_TRAVIS, raises, slow, skip, XFAIL
-
+from sympy.simplify import simplify
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
 
