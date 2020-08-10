@@ -523,6 +523,10 @@ def test_issue_8208():
     assert limit(n**(Rational(1, 1e9) - 1), n, oo) == 0
 
 
+def test_issue_8229():
+    assert limit((x**Rational(1, 4) - 2)/(sqrt(x) - 4)**Rational(2, 3), x, 16) == 0
+
+
 def test_issue_8433():
     d, t = symbols('d t', positive=True)
     assert limit(erf(1 - t/d), t, oo) == -1
