@@ -29,7 +29,8 @@ from sympy.printing.codeprinter import CodePrinter, requires
 from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
 
-# Imported here as well for backwards compatibility
+# These are defined in the other file so we can avoid importing sympy.codegen
+# from the top-level 'import sympy'. Export them here as well.
 from sympy.printing.codeprinter import ccode, print_ccode # noqa:F401
 
 # dictionary mapping sympy function to (argument_conditions, C_function).

@@ -42,7 +42,8 @@ from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.printing.printer import printer_context
 
-# Imported here as well for backwards compatibility
+# These are defined in the other file so we can avoid importing sympy.codegen
+# from the top-level 'import sympy'. Export them here as well.
 from sympy.printing.codeprinter import fcode, print_fcode # noqa:F401
 
 known_functions = {

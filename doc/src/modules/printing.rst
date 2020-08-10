@@ -54,7 +54,7 @@ when possible.
 C code printers
 ---------------
 
-.. module:: sympy.printing.ccode
+.. module:: sympy.printing.c
 
 This class implements C code printing, i.e. it converts Python expressions
 to strings of C code (see also ``C89CodePrinter``).
@@ -73,53 +73,53 @@ Usage::
     >>> print_ccode(gamma(x**2), standard='C99')
     tgamma(pow(x, 2))
 
-.. autodata:: sympy.printing.ccode::known_functions_C89
-.. autodata:: sympy.printing.ccode::known_functions_C99
+.. autodata:: sympy.printing.c::known_functions_C89
+.. autodata:: sympy.printing.c::known_functions_C99
 
-.. autoclass:: sympy.printing.ccode::C89CodePrinter
+.. autoclass:: sympy.printing.c::C89CodePrinter
    :members:
 
    .. autoattribute:: C89CodePrinter.printmethod
 
-.. autoclass:: sympy.printing.ccode::C99CodePrinter
+.. autoclass:: sympy.printing.c::C99CodePrinter
    :members:
 
    .. autoattribute:: C99CodePrinter.printmethod
 
 
-.. autofunction:: sympy.printing.ccode::ccode
+.. autofunction:: sympy.printing.c::ccode
 
-.. autofunction:: sympy.printing.ccode::print_ccode
+.. autofunction:: sympy.printing.c::print_ccode
 
 C++ code printers
 -----------------
 
-.. module:: sympy.printing.cxxcode
+.. module:: sympy.printing.cxx
 
 This module contains printers for C++ code, i.e. functions to convert
 SymPy expressions to strings of C++ code.
 
 Usage::
 
-    >>> from sympy.printing.cxxcode import cxxcode
+    >>> from sympy.printing import cxxcode
     >>> from sympy.functions import Min, gamma
     >>> from sympy.abc import x
     >>> print(cxxcode(Min(gamma(x) - 1, x), standard='C++11'))
     std::min(x, std::tgamma(x) - 1)
 
-.. autoclass:: sympy.printing.cxxcode::CXX98CodePrinter
+.. autoclass:: sympy.printing.cxx::CXX98CodePrinter
    :members:
 
    .. autoattribute:: CXX98CodePrinter.printmethod
 
 
-.. autoclass:: sympy.printing.cxxcode::CXX11CodePrinter
+.. autoclass:: sympy.printing.cxx::CXX11CodePrinter
    :members:
 
    .. autoattribute:: CXX11CodePrinter.printmethod
 
 
-.. autofunction:: sympy.printing.cxxcode::cxxcode
+.. autofunction:: sympy.printing.codeprinter::cxxcode
 
 
 
@@ -165,7 +165,7 @@ very little) manual tweaking to make it compilable. The optional arguments
 of ``fcode`` can be used to fine-tune the behavior of ``fcode`` in such a way
 that manual changes in the result are no longer needed.
 
-.. module:: sympy.printing.fcode
+.. module:: sympy.printing.fortran
 .. autofunction:: fcode
 .. autofunction:: print_fcode
 .. autoclass:: FCodePrinter

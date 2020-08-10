@@ -5,9 +5,10 @@ from __future__ import (absolute_import, division, print_function)
 
 from itertools import chain
 from sympy.codegen.ast import Type, none
-from .ccode import C89CodePrinter, C99CodePrinter
+from .c import C89CodePrinter, C99CodePrinter
 
-# Imported here as well for backwards compatibility
+# These are defined in the other file so we can avoid importing sympy.codegen
+# from the top-level 'import sympy'. Export them here as well.
 from sympy.printing.codeprinter import cxxcode # noqa:F401
 
 # from http://en.cppreference.com/w/cpp/keyword

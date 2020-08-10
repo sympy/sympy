@@ -11,7 +11,7 @@ from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.testing.pytest import raises, XFAIL
-from sympy.printing.ccode import C89CodePrinter, C99CodePrinter, get_math_macros
+from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
     While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Return,

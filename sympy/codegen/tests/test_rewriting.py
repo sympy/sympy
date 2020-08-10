@@ -1,6 +1,6 @@
 from sympy import log, exp, Symbol, Pow, sin, MatrixSymbol
 from sympy.assumptions import assuming, Q
-from sympy.printing.ccode import ccode
+from sympy.printing import ccode
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log2, exp2, expm1, log1p
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2

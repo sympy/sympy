@@ -671,7 +671,7 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
     }
     A[2] = sin(x);
     """
-    from sympy.printing.ccode import c_code_printers
+    from sympy.printing.c import c_code_printers
     return c_code_printers[standard.lower()](settings).doprint(expr, assign_to)
 
 def print_ccode(expr, **settings):
@@ -794,7 +794,7 @@ def fcode(expr, assign_to=None, **settings):
              end if
           A(3, 1) = sin(x)
     """
-    from sympy.printing.fcode import FCodePrinter
+    from sympy.printing.fortran import FCodePrinter
     return FCodePrinter(settings).doprint(expr, assign_to)
 
 
@@ -807,5 +807,5 @@ def print_fcode(expr, **settings):
 
 def cxxcode(expr, assign_to=None, standard='c++11', **settings):
     """ C++ equivalent of :func:`~.ccode`. """
-    from sympy.printing.cxxcode import cxx_code_printers
+    from sympy.printing.cxx import cxx_code_printers
     return cxx_code_printers[standard.lower()](settings).doprint(expr, assign_to)
