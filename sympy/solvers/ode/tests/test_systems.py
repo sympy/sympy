@@ -1041,6 +1041,36 @@ def test_sysode_linear_neq_order1_type2():
         assert checksysodesol(eq1, sol) == (True, [0, 0])
 
 
+    # test case for issue #19831
+    # https://github.com/sympy/sympy/issues/19831
+    n = symbols('n', positive=True)
+    x0 = symbols('x_0')
+    t0 = symbols('t_0')
+    x_0 = symbols('x_0')
+    t_0 = symbols('t_0')
+    t = symbols('t')
+    x = Function('x')
+    y = Function('y')
+    T = symbols('T')
+
+    eq8 = (Eq(Derivative(y(t), t),  x(t)),
+    Eq(Derivative(x(t), t), n*( y(t) + 1)))
+    sol = [
+        Eq(y(t),
+        (-((-T*sqrt(n)*exp(sqrt(n)*t_0)/2 - n*Integral(exp(sqrt(n)*t_0), t_0)/2 + x_0*exp(sqrt(n)*t_0)/2)/sqrt(n) + Integral(n*exp(sqrt(n)*t)/2, t)/sqrt(n)))*exp(-sqrt(n)*t)
+        + (T*sqrt(n)*exp(-sqrt(n)*t_0)/2 - n*Integral(exp(-sqrt(n)*t_0), t_0)/2 + x_0*exp(-sqrt(n)*t_0)/2)*exp(sqrt(n)*t)/sqrt(n)
+        + exp(sqrt(n)*t)*Integral(n*exp(-sqrt(n)*t)/2, t)/sqrt(n)
+        ),
+        Eq(x(t),
+            (T*sqrt(n)*exp(-sqrt(n)*t_0)/2 - n*Integral(exp(-sqrt(n)*t_0), t_0)/2 + x_0*exp(-sqrt(n)*t_0)/2)*exp(sqrt(n)*t)
+        + (-T*sqrt(n)*exp(sqrt(n)*t_0)/2 - n*Integral(exp(sqrt(n)*t_0), t_0)/2 + x_0*exp(sqrt(n)*t_0)/2 + Integral(n*exp(sqrt(n)*t)/2, t))*exp(-sqrt(n)*t)
+        + exp(sqrt(n)*t)*Integral(n*exp(-sqrt(n)*t)/2, t)
+        ),
+    ]
+    assert dsolve(eq8, ics={y(t0): T, x(t0): x0}) == sol
+    assert checksysodesol(eq8, sol) == (True, [0, 0])
+
+
 def test_sysode_linear_neq_order1_type3():
 
     f, g, h, k = symbols('f g h k', cls=Function)
