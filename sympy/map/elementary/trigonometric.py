@@ -268,6 +268,7 @@ class Sine(TrigonometricMap):
     ========
 
     >>> from sympy import Sine, pi, S
+    >>> from sympy.abc import x
     >>> sin = Sine(S.Reals)
 
     >>> sin(pi, evaluate=True)
@@ -279,6 +280,10 @@ class Sine(TrigonometricMap):
     >>> sin(pi/12, evaluate=True)
     -sqrt(2)/4 + sqrt(6)/4
 
+    >>> sin(x**2).diff(x)
+    2*x*cos(x**2)
+    >>> sin(1).diff(x)
+    0
 
     See Also
     ========
@@ -439,6 +444,12 @@ class Sine(TrigonometricMap):
             x = arg.arguments[0]
             return sqrt(1 - 1/x**2)
 
+    def fdiff(self, i=1):
+        if i == 1:
+            return Cosine(self.domain)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
     def _applied_as_real_imag(self, expr, **hints):
         cos = Cosine(self.domain)
         re, im = super()._applied_as_real_imag(self, expr, **hints)
@@ -455,6 +466,7 @@ class Cosine(TrigonometricMap):
     ========
 
     >>> from sympy import Cosine, pi, S
+    >>> from sympy.abc import x
     >>> cos = Cosine(S.Reals)
 
     >>> cos(pi, evaluate=True)
@@ -465,6 +477,11 @@ class Cosine(TrigonometricMap):
     -1/2
     >>> cos(pi/12, evaluate=True)
     sqrt(2)/4 + sqrt(6)/4
+
+    >>> cos(x**2).diff(x)
+    -2*x*sin(x**2)
+    >>> cos(1).diff(x)
+    0
 
     See Also
     ========
@@ -656,6 +673,15 @@ class Cosine(TrigonometricMap):
         if isappliedmap(arg, asec):
             x = arg.arguments[0]
             return 1/x
+
+    def fdiff(self, i=1):
+        if i == 1:
+            sin = Sine(self.domain)
+            # When operation of function is defined, this will return
+            # sympy object.
+            return lambda x: -(sin(x))
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     def _applied_as_real_imag(self, expr, **hints):
         sin = Sine(self.domain)

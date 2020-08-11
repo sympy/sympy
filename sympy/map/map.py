@@ -1,7 +1,7 @@
 from functools import cmp_to_key
 from sympy.assumptions import ask, Q
-from sympy.core import S, Basic, Expr, Tuple
-from sympy.core.symbol import Str
+from sympy.core import Add, S, Basic, Expr, Tuple
+from sympy.core.symbol import Str, Dummy
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import iterable
 from sympy.sets import FiniteSet, ProductSet, Union
@@ -282,7 +282,12 @@ class Map(Basic):
         else:
             return self.func(*self.args, evaluate=True)
 
-    ### properties of AppliedMap of self
+    ### API methods
+
+    def fdiff(self, i=1):
+        return None
+
+    ### assumptions of AppliedMap of self
 
     def _applied_is_rational(self, expr):
         return self.codomain.is_subset(S.Rationals)
@@ -676,6 +681,10 @@ class AppliedMap(Expr):
     def arguments(self):
         return self.args.args[1]
 
+    @property
+    def free_symbols(self):
+        return self.arguments.free_symbols
+
     def denest(self, deep=True, **kwargs):
         """
         Flatten the nested structure, but do not evaluate it
@@ -759,10 +768,50 @@ class AppliedMap(Expr):
 
     def as_base_exp(self, operator):
         if self.map.is_restriction(operator):
-            return self.map._eval_as_base_exp(self)
+            return self.map._applied_as_base_exp(self)
         return self, S.One
 
-    ### properties
+    ### API methods
+
+    def _eval_derivative(self, s):
+        # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
+        i = 0
+        l = []
+        for a in self.arguments:
+            i += 1
+            da = a.diff(s)
+            if da.is_zero:
+                continue
+            deriv_func = self.map.fdiff(i)
+            if deriv_func is not None:
+                df = deriv_func(*self.arguments)
+            else:
+                df = self.fdiff(i)
+            l.append(df * da)
+        return Add(*l)
+
+    def fdiff(self, argindex=1):
+        if not (1 <= argindex <= len(self.arguments)):
+            raise ArgumentIndexError(self, argindex)
+        ix = argindex - 1
+        A = self.arguments[ix]
+        if A._diff_wrt:
+            if len(self.arguments) == 1 or not A.is_Symbol:
+                return Derivative(self, A)
+            for i, v in enumerate(self.arguments):
+                if i != ix and A in v.free_symbols:
+                    # it can't be in any other argument's free symbols
+                    # issue 8510
+                    break
+            else:
+                    return Derivative(self, A)
+
+        # See issue 4624 and issue 4719, 5600 and 8510
+        D = Dummy('xi_%i' % argindex, dummy_index=hash(A))
+        args = self.arguments[:ix] + (D,) + self.arguments[ix + 1:]
+        return Subs(Derivative(self.map(*args, evaluate=True), D), D, A)
+
+    ### assumptions
 
     def _eval_is_rational(self):
         return self.map._applied_is_rational(self)
@@ -853,4 +902,4 @@ class _DeprecatedArgs(Tuple):
 
 ### imported for Function.__instancecheck__
 
-from sympy.core.function import Function
+from sympy.core.function import ArgumentIndexError, Function, Derivative, Subs
