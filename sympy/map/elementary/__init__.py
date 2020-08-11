@@ -1,21 +1,11 @@
 __all__ = [
-    'Map', 'UndefinedMap',
-    'RestrictedMap', 'InverseMap', 'IdentityMap', 'ConstantMap',
-    'AppliedMap', 'isappliedmap',
-
     'Sine', 'Cosine', 'Tangent', 'Cotangent',
     'Secant', 'Cosecant',
     'ArcSine', 'ArcCosine', 'ArcTangent', 'ArcCotangent',
     'ArcSecant', 'ArcCosecant',
 ]
 
-from .map import (
-    Map, UndefinedMap,
-    RestrictedMap, InverseMap, IdentityMap, ConstantMap,
-    AppliedMap, isappliedmap,
-)
-
-from .elementary import (
+from .trigonometric import (
     Sine, Cosine, Tangent, Cotangent,
     Secant, Cosecant,
     ArcSine, ArcCosine, ArcTangent, ArcCotangent,

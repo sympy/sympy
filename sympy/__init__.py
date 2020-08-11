@@ -179,7 +179,12 @@ from .solvers import (solve, solve_linear_system, solve_linear_system_LU,
 
 from .map import (Map, UndefinedMap,
         RestrictedMap, InverseMap, IdentityMap, ConstantMap,
-        AppliedMap, isappliedmap,)
+        AppliedMap, isappliedmap,
+
+        Sine, Cosine, Tangent, Cotangent,
+        Secant, Cosecant,
+        ArcSine, ArcCosine, ArcTangent, ArcCotangent,
+        ArcSecant, ArcCosecant)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         casoratian, diag, eye, hessian, jordan_cell, list2numpy, matrix2numpy,
@@ -419,6 +424,11 @@ __all__ = [
     'ConstantMap',
     'AppliedMap',
     'isappliedmap',
+
+    'Sine', 'Cosine', 'Tangent', 'Cotangent',
+    'Secant', 'Cosecant',
+    'ArcSine', 'ArcCosine', 'ArcTangent', 'ArcCotangent',
+    'ArcSecant', 'ArcCosecant',
 
     # sympy.matrices
     'ShapeError', 'NonSquareMatrixError', 'GramSchmidt', 'casoratian', 'diag',
