@@ -629,6 +629,9 @@ class AppliedMap(Expr):
             args = Tuple(*args)
             result = super().__new__(cls, map, args)
 
+            # Compatibility with old function
+            result._args = _DeprecatedArgs(map, args)
+
         # check codomain
         if map.codomain.contains(result) == False:
                     raise TypeError(
@@ -639,11 +642,12 @@ class AppliedMap(Expr):
 
     @property
     def map(self):
-        return self.args[0]
+        # When _DeprecatedArgs is removed, change this to self.args[0]
+        return self.args.args[0]
 
     @property
     def arguments(self):
-        return self.args[1]
+        return self.args.args[1]
 
     def denest(self, deep=True, **kwargs):
         """
@@ -775,3 +779,47 @@ def isappliedmap(arg, maps):
                 if arg.map.is_restriction(m):
                     return True
     return False
+
+### Special container for compatibility
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+class _DeprecatedArgs(Tuple):
+    """
+    In old function, arguments are stored in *args* and in many parts of sympy
+    *args* used to access them. However, in ``AppliedMap``, *args* contains maps
+    and arguments. It is *arguments* which really stores the arguments that are
+    applied to the map.
+
+    For backward compatibility, this class is introduced to match the behavior
+    of two objects.
+
+    Examples
+    ========
+
+    >>> from sympy.testing.pytest import warns_deprecated_sympy
+    >>> from sympy import S, Sine, sin as old_sin
+    >>> from sympy.abc import x
+    >>> new_sin = Sine(S.Reals)
+
+    >>> old_sin(x).args
+    (x,)
+
+    >>> new_sin(x).args
+    (sin : Reals -> Interval(-1, 1), (x,))
+    >>> new_sin(x).arguments
+    (x,)
+
+    >>> with warns_deprecated_sympy():
+    ...     print(old_sin(x).args[0] == new_sin(x).args[0] == x)
+    True
+
+    """
+    def __getitem__(self, index):
+        SymPyDeprecationWarning(
+            feature="Accessing arguments of AppliedMap with `args`",
+            useinstead="arguments",
+            issue=12345,
+            deprecated_since_version="1.7"
+        ).warn()
+        return self.args[1][index]

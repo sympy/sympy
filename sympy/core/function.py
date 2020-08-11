@@ -470,6 +470,19 @@ class Function(Application, Expr):
 
         return result
 
+    @property
+    def arguments(self):
+        """
+        Introduced for compatibility with Map.
+
+        See Also
+        ========
+
+        map.map._DeprecatedArgs
+
+        """
+        return self.args
+
     @classmethod
     def _should_evalf(cls, arg):
         """
