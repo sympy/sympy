@@ -268,13 +268,16 @@ class Sine(TrigonometricMap):
     ========
 
     >>> from sympy import Sine, pi, S
-    >>> from sympy.abc import x
     >>> sin = Sine(S.Reals)
 
     >>> sin(pi, evaluate=True)
     0
     >>> sin(pi/2, evaluate=True)
     1
+    >>> sin(pi/6, evaluate=True)
+    1/2
+    >>> sin(pi/12, evaluate=True)
+    -sqrt(2)/4 + sqrt(6)/4
 
 
     See Also
@@ -448,6 +451,34 @@ class Cosine(TrigonometricMap):
     """
     The cosine function.
 
+    Examples
+    ========
+
+    >>> from sympy import Cosine, pi, S
+    >>> cos = Cosine(S.Reals)
+
+    >>> cos(pi, evaluate=True)
+    -1
+    >>> cos(pi/2, evaluate=True)
+    0
+    >>> cos(2*pi/3, evaluate=True)
+    -1/2
+    >>> cos(pi/12, evaluate=True)
+    sqrt(2)/4 + sqrt(6)/4
+
+    See Also
+    ========
+
+    sin, csc, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://dlmf.nist.gov/4.14
+    .. [3] http://functions.wolfram.com/ElementaryFunctions/Cos
+
     """
     name = 'cos'
     latex_name = '\\cos'
@@ -469,6 +500,162 @@ class Cosine(TrigonometricMap):
         if not domain.is_subset(S.Reals):
             return S.Complexes
         return Interval(-1, 1)
+
+    def eval(self, arg):
+        from sympy.functions.special.polynomials import chebyshevt
+        from sympy.calculus.util import AccumBounds
+        from sympy.sets.setexpr import SetExpr
+        sin = Sine(self.domain)
+        asin = Arcsine(self.domain)
+        atan = Arctangent(self.domain)
+        atan2 = Atan2(self.domain**2)
+        acos = Arccosine(self.domain)
+        acot = Arccotangent(self.domain)
+        acsc = Arccosecant(self.domain)
+        asec = Arcsecant(self.domain)
+
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg.is_zero:
+                return S.One
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
+                # In this case it is better to return AccumBounds(-1, 1)
+                # rather than returning S.NaN, since AccumBounds(-1, 1)
+                # preserves the information that sin(oo) is between
+                # -1 and 1, where S.NaN does not do that.
+                return AccumBounds(-1, 1)
+
+        if arg is S.ComplexInfinity:
+            return S.NaN
+
+        if isinstance(arg, AccumBounds):
+            return sin(arg + S.Pi/2, evaluate=True)
+        elif isinstance(arg, SetExpr):
+            return arg._eval_func(self)
+
+        if arg.is_extended_real and arg.is_finite is False:
+            return AccumBounds(-1, 1)
+
+        if arg.could_extract_minus_sign():
+            return self(-arg, evaluate=True)
+
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return cosh(i_coeff)
+
+        pi_coeff = _pi_coeff(arg)
+        if pi_coeff is not None:
+            if pi_coeff.is_integer:
+                return (S.NegativeOne)**pi_coeff
+
+            if (2*pi_coeff).is_integer:
+                # is_even-case handled above as then pi_coeff.is_integer,
+                # so check if known to be not even
+                if pi_coeff.is_even is False:
+                    return S.Zero
+
+            if not pi_coeff.is_Rational:
+                narg = pi_coeff*S.Pi
+                if narg != arg:
+                    return self(narg, evaluate=True)
+                return None
+
+            # cosine formula #####################
+            # https://github.com/sympy/sympy/issues/6048
+            # explicit calculations are performed for
+            # cos(k pi/n) for n = 8,10,12,15,20,24,30,40,60,120
+            # Some other exact values like cos(k pi/240) can be
+            # calculated using a partial-fraction decomposition
+            # by calling cos( X ).rewrite(sqrt)
+            cst_table_some = {
+                3: S.Half,
+                5: (sqrt(5) + 1)/4,
+            }
+            if pi_coeff.is_Rational:
+                q = pi_coeff.q
+                p = pi_coeff.p % (2*q)
+                if p > q:
+                    narg = (pi_coeff - 1)*S.Pi
+                    return -self(narg, evaluate=True)
+                if 2*p > q:
+                    narg = (1 - pi_coeff)*S.Pi
+                    return -self(narg, evaluate=True)
+
+                # If nested sqrt's are worse than un-evaluation
+                # you can require q to be in (1, 2, 3, 4, 6, 12)
+                # q <= 12, q=15, q=20, q=24, q=30, q=40, q=60, q=120 return
+                # expressions with 2 or fewer sqrt nestings.
+                table2 = {
+                    12: (3, 4),
+                    20: (4, 5),
+                    30: (5, 6),
+                    15: (6, 10),
+                    24: (6, 8),
+                    40: (8, 10),
+                    60: (20, 30),
+                    120: (40, 60)
+                    }
+                if q in table2:
+                    a, b = p*S.Pi/table2[q][0], p*S.Pi/table2[q][1]
+                    nvala, nvalb = self(a, evaluate=True), self(b, evaluate=True)
+                    if None == nvala or None == nvalb:
+                        return None
+                    return nvala*nvalb +\
+                        self(S.Pi/2 - a, evaluate=True)*self(S.Pi/2 - b, evaluate=True)
+
+                if q > 12:
+                    return None
+
+                if q in cst_table_some:
+                    cts = cst_table_some[pi_coeff.q]
+                    return chebyshevt(pi_coeff.p, cts).expand()
+
+                if 0 == q % 2:
+                    narg = (pi_coeff*2)*S.Pi
+                    nval = self(narg, evaluate=True)
+                    if None == nval:
+                        return None
+                    x = (2*pi_coeff + 1)/2
+                    sign_cos = (-1)**((-1 if x < 0 else 1)*int(abs(x)))
+                    return sign_cos*sqrt( (1 + nval)/2 )
+            return None
+
+        if arg.is_Add:
+            x, m = _peeloff_pi(arg)
+            if m:
+                return self(m, evaluate=True)*self(x, evaluate=True) -\
+                    sin(m, evaluate=True)*sin(x, evaluate=True)
+
+        if arg.is_zero:
+            return S.One
+
+        if isappliedmap(arg, acos):
+            return arg.arguments[0]
+
+        if isappliedmap(arg, atan):
+            x = arg.arguments[0]
+            return 1/sqrt(1 + x**2)
+
+        if isappliedmap(arg, atan2):
+            y, x = arg.arguments
+            return x/sqrt(x**2 + y**2)
+
+        if isappliedmap(arg, asin):
+            x = arg.arguments[0]
+            return sqrt(1 - x ** 2)
+
+        if isappliedmap(arg, acot):
+            x = arg.arguments[0]
+            return 1/sqrt(1 + 1/x**2)
+
+        if isappliedmap(arg, acsc):
+            x = arg.arguments[0]
+            return sqrt(1 - 1/x**2)
+
+        if isappliedmap(arg, asec):
+            x = arg.arguments[0]
+            return 1/x
 
     def _applied_as_real_imag(self, expr, **hints):
         sin = Sine(self.domain)
