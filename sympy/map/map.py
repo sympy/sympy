@@ -139,15 +139,14 @@ class Map(Expr):
         2
 
         """
-        evaluate = kwargs.get('evaluate', False)
+        evaluate = kwargs.pop('evaluate', False)
         if evaluate:
-            kwargs.pop('evaluate', None)
             return self.eval(*args, **kwargs)
 
     def eval(self, *args, **kwargs):
         """
         Evaluation of the operator on its arguments. This method
-        is called when ``evaluate=True`` is passed.
+        is called by ``apply`` when ``evaluate=True`` is passed.
 
         Examples
         ========
@@ -165,16 +164,29 @@ class Map(Expr):
         2
 
         """
-        seq = [*args]
-        if ask(Q.associative(self)):
-            seq = self.flatten(seq)
-        if ask(Q.commutative(self)):
-            seq.sort(key=cmp_to_key(Basic.compare))
+        return
 
-        if len(seq) != len(args) or any(a!=b for a,b in zip(seq, args)):
-            # args is changed by flattening and commutating
-            kwargs.update(evaluate=True)
-            return self(*seq, **kwargs)
+    def process_args(self, args, **kwargs):
+        """
+        Process the arguments, i.e. flattening or commutating. This
+        method is run when the function is not evaluated by ``apply``
+        and ``eval``.
+
+        """
+        if ask(Q.associative(self)):
+            args = self.flatten(args)
+        if ask(Q.commutative(self)):
+            args.sort(key=cmp_to_key(Basic.compare))
+        return args
+
+    def flatten(self, seq):
+        new_seq = []
+        for o in seq:
+            if isappliedmap(o, self):
+                new_seq.extend(o.arguments)
+            else:
+                new_seq.append(o)
+        return new_seq
 
     def __call__(self, *args, evaluate=False, **kwargs):
         return AppliedMap(self, args, evaluate=evaluate, **kwargs)
@@ -258,15 +270,6 @@ class Map(Expr):
             return self.func(*args, evaluate=True)
         else:
             return self.func(*self.args, evaluate=True)
-
-    def flatten(self, seq):
-        new_seq = []
-        for o in seq:
-            if isappliedmap(o, self):
-                new_seq.extend(o.arguments)
-            else:
-                new_seq.append(o)
-        return new_seq
 
 class UndefinedMap(Map):
     """
@@ -378,8 +381,9 @@ class RestrictedMap(Map):
     def codomain(self):
         return self.base.codomain
 
-    def eval(self, *args):
-        return self.base(*args, evaluate=True)
+    def eval(self, *args, **kwargs):
+        kwargs.update(evaluate=True)
+        return self.base(*args, **kwargs)
 
     def _map_content(self):
         return self.base._map_content()
@@ -496,7 +500,7 @@ class IdentityMap(Map):
     def __call__(self, arg, **kwargs):
         return super().__call__(arg, **kwargs)
 
-    def eval(self, x):
+    def eval(self, x, **kwargs):
         return x
 
     def _eval_inverse(self):
@@ -552,7 +556,7 @@ class ConstantMap(Map):
     def codomain(self):
         return FiniteSet(self.output)
 
-    def eval(self, *args):
+    def eval(self, *args, **kwargs):
         return self.output
 
     def _map_content(self):
@@ -588,7 +592,7 @@ class AppliedMap(Expr):
     >>> from sympy.map import Map, AppliedMap
 
     >>> class F(Map):
-    ...     def eval(self, x):
+    ...     def eval(self, *args):
     ...         return x + 2
     >>> f = F()
 
@@ -599,9 +603,6 @@ class AppliedMap(Expr):
 
     """
 
-    # AppliedMap must exceed any old object in priority
-    _op_priority = 100
-
     def __new__(cls, map, args, evaluate=False, **kwargs):
         kwargs.update(evaluate=evaluate)
         args = [_sympify(a) for a in args]
@@ -610,6 +611,12 @@ class AppliedMap(Expr):
         result = map.apply(*args, **kwargs)
 
         if result is None:
+
+            # Even function cannot be evaluated, arguments still
+            # might can be processed. (i.e. flattening, commutating..)
+            if evaluate:
+                args = map.process_args(args, **kwargs)
+
             # generate AppliedMap class
             args = Tuple(*args)
             result = super().__new__(cls, map, args)
