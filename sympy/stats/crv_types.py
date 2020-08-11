@@ -2878,18 +2878,6 @@ class NormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return mean + std*sqrt(2)*erfinv(2*p - 1)
 
-    def sample(self, size=(), library='scipy'):
-        if self.std == 0:
-            # Dirac Delta is not implemented in scipy so we must do sampling another way
-            # use another `sample` method instead of returning `[self.mean]*size`
-            # so that return types are consistent and doesn't break with new updates.
-            # import inside function to avoid extra overhead of the overall class.
-            from sympy.stats.frv_types import DiscreteUniform
-            # I'm not sure how else to do this. The Sampling classes are too complex for me.
-            return list(DiscreteUniform('_', [self.mean]).pspace
-                .sample(size=size, library=library).values())[0]
-
-        return super().sample(size=size, library=library)
 
 def Normal(name, mean, std):
     r"""

@@ -153,9 +153,6 @@ def test_cdf():
     d = cdf(X)
     assert d(0.9) == 0
     assert d(1) == 1
-    # The following 2 lines should produce the same result,
-    # However, P(X <= 1) integrates the pdf instead of using the cdf
-    # which it should not for computational and efficiency purposes.
     assert P(X < 1) == Heaviside(0)
     assert P(X <= 1) == Heaviside(0)
 
