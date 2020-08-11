@@ -90,6 +90,17 @@ class Map(Expr):
     # they can be overridden by both class attribute or instance attribute
     domain = codomain = S.UniversalSet
 
+    def _corresponding_oldfunc(self):
+        """
+        Introduced for compatibility with Function
+
+        See Also
+        ========
+
+        AppliedMap._allowed_superclasshook
+        """
+        return [Function]
+
     def __new__(cls, *args, **kwargs):
         if cls is Map:
             return UndefinedMap(*args, **kwargs)
@@ -611,6 +622,22 @@ class AppliedMap(Expr):
 
     """
 
+    def _allowed_superclasshook(self):
+        """
+        Introduced for compatibility with Function
+
+        Examples
+        ========
+
+        >>> from sympy import S, Sine, sin
+        >>> from sympy.abc import x
+
+        >>> isinstance(Sine(S.Reals)(x), sin)
+        True
+
+        """
+        return self.map._corresponding_oldfunc()
+
     def __new__(cls, map, args, evaluate=False, **kwargs):
         kwargs.update(evaluate=evaluate)
         args = [_sympify(a) for a in args]
@@ -823,3 +850,7 @@ class _DeprecatedArgs(Tuple):
             deprecated_since_version="1.7"
         ).warn()
         return self.args[1][index]
+
+### imported for Function.__instancecheck__
+
+from sympy.core.function import Function

@@ -4,7 +4,7 @@ from sympy.map import (
     Map, UndefinedMap, InverseMap, IdentityMap, AppliedMap,
     ConstantMap, RestrictedMap, isappliedmap
 )
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 x, y = symbols('x y')
 
@@ -201,3 +201,11 @@ def test_isappliedmap():
     assert not isappliedmap(f1(1), f2)
     assert isappliedmap(f2(1), f1)
     assert isappliedmap(f2(1), (f2, g))
+
+def test_compatibility():
+    from sympy.core.function import Function
+
+    with warns_deprecated_sympy():
+        assert f(x).args[0] == x
+
+    assert isinstance(f(x), Function)

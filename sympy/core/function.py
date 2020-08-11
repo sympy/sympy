@@ -250,6 +250,19 @@ class FunctionClass(ManagedProperties):
     def __repr__(cls):
         return cls.__name__
 
+    def __instancecheck__(cls, instance):
+        """
+        Introduced for compatibility with Map
+
+        See Also
+        ========
+
+        map.AppliedMap._allowed_superclasshook
+        """
+        from sympy.map.map import AppliedMap
+        if isinstance(instance, AppliedMap):
+            return cls in instance._allowed_superclasshook()
+        return super().__instancecheck__(instance)
 
 class Application(Basic, metaclass=FunctionClass):
     """

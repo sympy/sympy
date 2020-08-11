@@ -151,6 +151,10 @@ class TrigonometricMap(Map):
     is_even = None  # type: FuzzyBool
     is_odd = None  # type: FuzzyBool
 
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [TrigonometricFunction]
+
     def __new__(cls, domain=S.Complexes, **kwargs):
         return super().__new__(cls, domain)
 
@@ -298,6 +302,10 @@ class Sine(TrigonometricMap):
 
     is_even = False
     is_odd = True
+
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [sin]
 
     @property
     def reciprocal_of(self):
@@ -452,6 +460,10 @@ class Cosine(TrigonometricMap):
     is_even = True
     is_odd = False
 
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [cos]
+
     @property
     def reciprocal_of(self):
         return Secant(self.domain)
@@ -481,6 +493,10 @@ class Tangent(TrigonometricMap):
 
     is_even = False
     is_odd = True
+
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [tan]
 
     @property
     def reciprocal_of(self):
@@ -520,6 +536,10 @@ class Cotangent(TrigonometricMap):
     is_even = False
     is_odd = True
 
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [cot]
+
     @property
     def reciprocal_of(self):
         return Tangent(self.domain)
@@ -553,6 +573,10 @@ class Cotangent(TrigonometricMap):
 class ReciprocalTrigonometricMap(TrigonometricMap):
     """Base class for reciprocal functions of trigonometric functions. """
 
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [ReciprocalTrigonometricFunction]
+
     def _applied_period(self, expr, symbol):
         f = expand_mul(expr.arguments[0])
         return self.reciprocal_of(f, evaluate=True).period(symbol)
@@ -568,6 +592,10 @@ class Secant(ReciprocalTrigonometricMap):
     The secant function
 
     """
+
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [sec]
 
     @property
     def reciprocal_of(self):
@@ -585,6 +613,10 @@ class Cosecant(ReciprocalTrigonometricMap):
 
     """
 
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [csc]
+
     @property
     def reciprocal_of(self):
         return Sine(self.domain)
@@ -600,6 +632,10 @@ class Cosecant(ReciprocalTrigonometricMap):
 ###############################################################################
 
 class InverseTrigonometricMap(Map):
+
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [InverseTrigonometricFunction]
 
     @staticmethod
     def _asin_table():
@@ -674,22 +710,50 @@ class InverseTrigonometricMap(Map):
         }
 
 class Arcsine(InverseTrigonometricMap):
-    pass
+
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [asin]
 
 class Arccosine(InverseTrigonometricMap):
-    pass
+
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [acos]
 
 class Arctangent(InverseTrigonometricMap):
-    pass
+
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [atan]
 
 class Arccotangent(InverseTrigonometricMap):
-    pass
+
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [acot]
 
 class Arcsecant(InverseTrigonometricMap):
-    pass
+
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [asec]
 
 class Arccosecant(InverseTrigonometricMap):
-    pass
+
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [acsc]
 
 class Atan2(InverseTrigonometricMap):
-    pass
+
+    def _corresponding_oldfunc(self):
+        return super()._corresponding_oldfunc() +\
+            [atan2]
+
+### imported for Function.__instancecheck__
+
+from sympy.functions.elementary.trigonometric import (
+    TrigonometricFunction, sin, cos, tan, cot, ReciprocalTrigonometricFunction,
+    sec, csc, InverseTrigonometricFunction, asin, acos, atan, acot, asec, acsc, atan2
+)
