@@ -2973,6 +2973,38 @@ def test_sympy__map__elementary__trigonometric__Cosecant():
     from sympy.map.elementary.trigonometric import Cosecant
     assert _test_args(Cosecant(S.Reals))
 
+@SKIP("abstract class")
+def test_sympy__map__elementary__trigonometric__InverseTrigonometricMap():
+    pass
+
+def test_sympy__map__elementary__trigonometric__Arcsine():
+    from sympy.map.elementary.trigonometric import Arcsine
+    assert _test_args(Arcsine(S.Reals))
+
+def test_sympy__map__elementary__trigonometric__Arccosine():
+    from sympy.map.elementary.trigonometric import Arccosine
+    assert _test_args(Arccosine(S.Reals))
+
+def test_sympy__map__elementary__trigonometric__Arctangent():
+    from sympy.map.elementary.trigonometric import Arctangent
+    assert _test_args(Arctangent(S.Reals))
+
+def test_sympy__map__elementary__trigonometric__Arccotangent():
+    from sympy.map.elementary.trigonometric import Arccotangent
+    assert _test_args(Arccotangent(S.Reals))
+
+def test_sympy__map__elementary__trigonometric__Arcsecant():
+    from sympy.map.elementary.trigonometric import Arcsecant
+    assert _test_args(Arcsecant(S.Reals))
+
+def test_sympy__map__elementary__trigonometric__Arccosecant():
+    from sympy.map.elementary.trigonometric import Arccosecant
+    assert _test_args(Arccosecant(S.Reals))
+
+def test_sympy__map__elementary__trigonometric__Atan2():
+    from sympy.map.elementary.trigonometric import Atan2
+    assert _test_args(Atan2(S.Reals**2))
+
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector
     assert _test_args(DeferredVector("X"))

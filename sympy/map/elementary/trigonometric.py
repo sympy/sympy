@@ -275,10 +275,6 @@ class Sine(TrigonometricMap):
     0
     >>> sin(pi/2, evaluate=True)
     1
-    >>> sin(pi/6, evaluate=True)
-    1/2
-    >>> sin(pi/12, evaluate=True)
-    -sqrt(2)/4 + sqrt(6)/4
 
 
     See Also
