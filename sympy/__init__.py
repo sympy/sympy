@@ -516,7 +516,6 @@ __all__.extend([
     'algebras',
     'assumptions',
     'calculus',
-    'combinatorics',
     'concrete',
     'deprecated',
     'discrete',

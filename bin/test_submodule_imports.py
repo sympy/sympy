@@ -25,7 +25,6 @@ submodule_whitelist = [
     'algebras',
     'assumptions',
     'calculus',
-    'combinatorics',
     'concrete',
     'core',
     'deprecated',
