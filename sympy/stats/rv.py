@@ -526,9 +526,8 @@ class DependentPSpace(PSpace):
         xrep_dict = {eq.lhs: eq.rhs for eq in assumps.args}
         mu = [sym.pspace.distribution.args[0] for sym in syms]
         sigma = ImmutableMatrix(
-                [[Covariance(s1, s2).doit() for s2 in syms] for s1 in syms]
+                [[Covariance(s1, s2).expand() for s2 in syms] for s1 in syms]
                 ).xreplace(xrep_dict)
-        print(mu, sigma)
         return Normal('_', mu, sigma).pspace.distribution
 
 
@@ -537,7 +536,6 @@ class DependentPSpace(PSpace):
         syms = list(expr.free_symbols)
         z_dist = DependentPSpace._create_MutlivariateNormalDistribution(syms, assumps)
         subs_syms = [sym.symbol for sym in syms]
-        print(subs_syms)
         z_pdf = z_dist.pdf(*subs_syms)
         rv = Dummy('rv', real=True)
         expr = expr.subs({sym: sym.symbol for sym in syms})
