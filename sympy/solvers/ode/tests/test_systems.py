@@ -127,7 +127,11 @@ def test_neq_nth_linear_constant_coeff_match():
     assert neq_nth_linear_constant_coeff_match(eqs_4, funcs_2, t) == answer_4
 
     eqs_5 = (5*x1 + 12*x(t) - 6*(y(t)) + x2, (2*y1 - 11*x(t) + 3*y(t)), (z1 - w(t)), (w1 - z(t)))
-    assert neq_nth_linear_constant_coeff_match(eqs_5, funcs_2, t) is None
+    answer_5 = {'no_of_equation': 4, 'eq': (12*x(t) - 6*y(t) + 5*Derivative(x(t), t) + Derivative(x(t), (t, 2)),
+                -11*x(t) + 3*y(t) + 2*Derivative(y(t), t), -w(t) + Derivative(z(t), t),
+                -z(t) + Derivative(w(t), t)), 'func': [x(t), y(t), z(t), w(t)], 'order': {x(t): 2, y(t): 1, z(t): 1, w(t): 1},
+                'is_linear': True, 'is_homogeneous': True, 'is_general': True, 'is_higher_order': True}
+    assert neq_nth_linear_constant_coeff_match(eqs_5, funcs_2, t) == answer_5
 
     eqs_6 = (Eq(x1, 3*y(t) - 11*z(t)), Eq(y1, 7*z(t) - 3*x(t)), Eq(z1, 11*x(t) - 7*y(t)))
     answer_6 = {'no_of_equation': 3, 'eq': (Eq(Derivative(x(t), t), 3*y(t) - 11*z(t)), Eq(Derivative(y(t), t), -3*x(t) + 7*z(t)),

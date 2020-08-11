@@ -923,8 +923,6 @@ def _match_second_order_type(eqs, funcs, t):
     return match
 
 
-# Note: To move the test cases from type 5 and type 8 in
-# test_ode to test_systems for this particular method.
 def _second_order_subs_type1(A, b, funcs, t):
     r"""
     For a linear, second order system of ODEs, a particular substitution.
@@ -976,7 +974,9 @@ def _second_order_subs_type1(A, b, funcs, t):
 
     U = Matrix([t*func.diff(t) - func for func in funcs])
 
-    sol = linodesolve(A, t, b)
+    # Note: to check the solution
+    # for non-homogeneous system
+    sol = linodesolve(A, t, t*b)
     reduced_eqs = [Eq(u, s) for s, u in zip(sol, U)]
     reduced_eqs = canonical_odes(reduced_eqs, funcs, t)[0]
 
@@ -1069,15 +1069,9 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
     # Getting the func_dict and order using the helper
     # function
     order = _get_func_order(eqs, funcs)
-
-    if not all(order[func] == 1 for func in funcs):
-        return None
-    else:
-
-        # TO be changed when this function is updated.
-        # This will in future be updated as the maximum
-        # order in the system found.
-        system_order = 1
+    system_order = max(order[func] for func in funcs)
+    is_higher_order = system_order > 1
+    is_second_order = system_order == 2 and all(order[func] == 2 for func in funcs)
 
     # Not adding the check if the len(func.args) for
     # every func in funcs is 1
@@ -1085,16 +1079,9 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
     # Linearity check
     try:
 
-        # Note: We can add a is_canon parameter to this
-        # function to check if the equation passed is
-        # already in its canonical form or not. This
-        # can be used to solve big linear first order
-        # system of ODEs using component division.
         canon_eqs = canonical_odes(eqs, funcs, t) if not is_canon else [eqs]
-
         if len(canon_eqs) == 1:
             As, b = linear_ode_to_matrix(canon_eqs[0], funcs, t, system_order)
-            A = As[1]
         else:
 
             match = {
@@ -1111,9 +1098,6 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
 
     is_linear = True
 
-    # Constant coefficient check
-    is_constant = _matrix_is_constant(A, t)
-
     # Homogeneous check
     is_homogeneous = True if b.is_zero_matrix else False
 
@@ -1125,7 +1109,6 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
         'func': funcs,
         'order': order,
         'is_linear': is_linear,
-        'is_constant': is_constant,
         'is_homogeneous': is_homogeneous,
         'is_general': True
     }
@@ -1133,8 +1116,13 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
     # The match['is_linear'] check will be added in the future when this
     # function becomes ready to deal with non-linear systems of ODEs
 
-    if all([order[func] == 1 for func in funcs]):
+    if not is_higher_order:
+        A = As[1]
         match['func_coeff'] = A
+
+        # Constant coefficient check
+        is_constant = _matrix_is_constant(A, t)
+        match['is_constant'] = is_constant
 
         if not is_homogeneous:
             match['rhs'] = b
@@ -1148,6 +1136,20 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
             match['commutative_antiderivative'] = system_info["antiderivative"]
 
         match['type_of_equation'] = system_info["type"]
+
+        return match
+
+    if is_higher_order:
+
+        if is_second_order:
+            A1, A0 = As[1:]
+            match['type_of_equation'] = "type0"
+            match['is_second_order'] = True
+
+            if (A1 + A0 * t).applyfunc(expand_mul).is_zero_matrix:
+                match.update({"type_of_equation": "type1", "A": A1, "b": b})
+
+        match['is_higher_order'] = is_higher_order
 
         return match
 
@@ -1244,6 +1246,11 @@ def _linear_ode_solver(match):
     return sol
 
 
+def _select_equations(eqs, funcs, key=lambda x: x):
+    eq_dict = {e.lhs: e.rhs for e in eqs}
+    return [Eq(f, eq_dict[key(f)]) for f in funcs]
+
+
 # Returns: List of equations or None
 # If None is returned by this solver, then the system
 # of ODEs cannot be solved by dsolve_system.
@@ -1254,6 +1261,25 @@ def _strong_component_solver(eqs, funcs, t):
     # since we are already canonical equations from
     # dsolve_system
     if match:
+        if match.get('is_higher_order', False):
+
+            if match.get('is_second_order', False):
+                new_eqs, new_funcs = _second_order_to_first_order(eqs, funcs, t, match=match)
+            else:
+                new_eqs, new_funcs = _higher_order_to_first_order(eqs, match['order'], t, funcs=funcs)
+
+            new_eqs = _select_equations(new_eqs, [f.diff(t) for f in new_funcs])
+            sol = _strong_component_solver(new_eqs, new_funcs, t)
+
+            # Dividing the system only when it becomes essential
+            if sol is None:
+                sol = _component_solver(new_eqs, new_funcs, t)
+
+            sol = _select_equations(sol, funcs,
+                        key=lambda x: Function(Dummy('{}_0'.format(x.func.__name__)))(t))
+
+            return sol
+
         if match.get('is_linear', False):
             match['t'] = t
             return _linear_ode_solver(match)
@@ -1321,15 +1347,16 @@ def _component_solver(eqs, funcs, t):
     return sol
 
 
-def _second_order_to_first_order(eqs, funcs, t):
+def _second_order_to_first_order(eqs, funcs, t, match=None):
     r"""
     Expects the system to be in second order and in canonical form
     """
 
-    match = _match_second_order_type(eqs, funcs, t)
-    sys_order = {func: 2 for func in funcs}
+    if match is None:
+        match = neq_nth_linear_constant_coeff_match(eqs, funcs, t)
+    sys_order = match['order']
 
-    if match["type"] == "type1":
+    if match["type_of_equation"] == "type1":
         A = match["A"]
         b = match["b"]
         eqs = _second_order_subs_type1(A, b, funcs, t)
@@ -1484,45 +1511,27 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     if t is None:
         t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
 
-    sys_order = _get_func_order(eqs, funcs)
-    new_funcs = funcs
     sols = []
-    variables = Tuple(*eqs).free_symbols
-    is_higher_order = not all(sys_order[func] == 1 for func in funcs)
-    is_second_order = all(sys_order[func] == 2 for func in funcs)
-
-    if is_higher_order and not is_second_order:
-        eqs, new_funcs = _higher_order_to_first_order(eqs, sys_order, t, funcs=funcs)
-
-    canon_eqs = canonical_odes(eqs, new_funcs, t)
+    canon_eqs = canonical_odes(eqs, funcs, t)
 
     for canon_eq in canon_eqs:
+        try:
+            sol = _strong_component_solver(canon_eq, funcs, t)
+        except NotImplementedError:
+            sol = None
 
-        if is_second_order:
-            canon_eq, new_funcs = _second_order_to_first_order(canon_eq, new_funcs, t)
-
-        sol = _strong_component_solver(canon_eq, new_funcs, t)
         if sol is None:
-            sol = _component_solver(canon_eq, new_funcs, t)
+            sol = _component_solver(canon_eq, funcs, t)
+
         sols.append(sol)
 
     if sols:
         final_sols = []
+        variables = Tuple(*eqs).free_symbols
 
         for sol in sols:
 
-            # To preserve the order corresponding to the
-            # funcs list.
-            sol_dict = {s.lhs: s.rhs for s in sol}
-
-            # Note: Soon, a substitution function like ode_subs
-            # will be created.
-            if is_higher_order:
-                sol = [Eq(var, sol_dict[Function(Dummy('{}_0'.format(var.func.__name__)))(t)])\
-                       for var in funcs]
-            else:
-                sol = [Eq(var, sol_dict[var]) for var in funcs]
-
+            sol = _select_equations(sol, funcs)
             sol = constant_renumber(sol, variables=variables)
 
             if ics:
