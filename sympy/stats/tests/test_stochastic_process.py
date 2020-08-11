@@ -398,7 +398,7 @@ def test_GammaProcess_symbolic():
     raises(NotImplementedError, lambda: X[t])
     raises(IndexError, lambda: X(-1))
     assert isinstance(X(t), RandomIndexedSymbol)
-
+    assert X.state_space == Interval(0, oo)
     assert X.distribution(X(t)) == GammaDistribution(g*t, 1/l)
     assert X.joint_distribution(5, X(3)) == JointDistributionHandmade(Lambda(
         (X(5), X(3)), l**(8*g)*exp(-l*X(3))*exp(-l*X(5))*X(3)**(3*g - 1)*X(5)**(5*g

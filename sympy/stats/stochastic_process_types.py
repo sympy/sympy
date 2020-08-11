@@ -1501,7 +1501,6 @@ class WienerProcess(CountingProcess):
     .. [2] https://en.wikipedia.org/wiki/Wiener_process
 
     """
-
     def __new__(cls, sym):
         sym = _symbol_converter(sym)
         return Basic.__new__(cls, sym)
