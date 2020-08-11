@@ -815,8 +815,6 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
                     issue=19735,
                     deprecated_since_version="1.6.3"
                 ).warn()
-        #warnings.warn('WARNING: The list of arguments is a `set`. The outcome of enumerate(args) is used to `lambdify`, but its outcome is not predictable. Lambdify will stop here and return `False`', category=DeprecationWarning)
-        #return False  # Anything else that block the code would be fine
 
     # Get the names of the args, for creating a docstring
     if not iterable(args):
