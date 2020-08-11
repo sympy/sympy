@@ -15,21 +15,21 @@ from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
                    Dummy)
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum, summation
-from sympy.core.compatibility import string_types, iterable
+from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
-from sympy.matrices import ImmutableMatrix
-from sympy.stats.crv import (ContinuousDistribution,
-                             SingleContinuousDistribution, SingleContinuousPSpace)
-from sympy.stats.drv import (DiscreteDistribution,
-                             SingleDiscreteDistribution, SingleDiscretePSpace)
+from sympy.matrices import ImmutableMatrix, matrix2numpy, list2numpy
+from sympy.stats.crv import SingleContinuousDistribution, SingleContinuousPSpace
+from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
                             ProductDomain, RandomSymbol, random_symbols, SingleDomain)
 from sympy.utilities.misc import filldedent
-
+from sympy.external import import_module
 
 # __all__ = ['marginal_distribution']
-
+scipy = import_module('scipy')
+numpy = import_module('numpy')
+pymc3 = import_module('pymc3')
 
 class JointPSpace(ProductPSpace):
     """
@@ -41,7 +41,7 @@ class JointPSpace(ProductPSpace):
             return SingleContinuousPSpace(sym, dist)
         if isinstance(dist, SingleDiscreteDistribution):
             return SingleDiscretePSpace(sym, dist)
-        if isinstance(sym, string_types):
+        if isinstance(sym, str):
             sym = Symbol(sym)
         if not isinstance(sym, Symbol):
             raise TypeError("s should have been string or Symbol")
@@ -70,7 +70,7 @@ class JointPSpace(ProductPSpace):
             return S(len(_set.args))
         elif isinstance(_set, Product):
             return _set.limits[0][-1]
-        return S(1)
+        return S.One
 
     @property
     def pdf(self):
@@ -95,7 +95,7 @@ class JointPSpace(ProductPSpace):
         orig = [Indexed(self.symbol, i) for i in range(count)]
         all_syms = [Symbol(str(i)) for i in orig]
         replace_dict = dict(zip(all_syms, orig))
-        sym = [Symbol(str(Indexed(self.symbol, i))) for i in indices]
+        sym = tuple(Symbol(str(Indexed(self.symbol, i))) for i in indices)
         limits = list([i,] for i in all_syms if i not in sym)
         index = 0
         for i in range(count):
@@ -134,11 +134,107 @@ class JointPSpace(ProductPSpace):
     def compute_density(self, expr):
         raise NotImplementedError()
 
-    def sample(self):
-        raise NotImplementedError()
+    def sample(self, size=(), library='scipy'):
+        """
+        Internal sample method
+
+        Returns dictionary mapping RandomSymbol to realization value.
+        """
+        return {RandomSymbol(self.symbol, self): self.distribution.sample(size,
+                    library=library)}
 
     def probability(self, condition):
         raise NotImplementedError()
+
+
+class SampleJointScipy:
+    """Returns the sample from scipy of the given distribution"""
+    def __new__(cls, dist, size):
+        return cls._sample_scipy(dist, size)
+
+    scipy_rv_map = {
+        'MultivariateNormalDistribution': lambda dist, size: scipy.stats.multivariate_normal.rvs(
+            mean=matrix2numpy(dist.mu).flatten(),
+            cov=matrix2numpy(dist.sigma), size=size),
+        'MultivariateBetaDistribution': lambda dist, size: scipy.stats.dirichlet.rvs(
+            alpha=list2numpy(dist.alpha, float).flatten(), size=size),
+        'MultinomialDistribution': lambda dist, size: scipy.stats.multinomial.rvs(
+            n=int(dist.n), p=list2numpy(dist.p, float).flatten(), size=size)
+    }
+
+    @classmethod
+    def _sample_scipy(cls, dist, size):
+        """Sample from SciPy."""
+
+        dist_list = cls.scipy_rv_map.keys()
+
+        if dist.__class__.__name__ not in dist_list:
+            return None
+
+        return cls.scipy_rv_map[dist.__class__.__name__](dist, size)
+
+class SampleJointNumpy:
+    """Returns the sample from numpy of the given distribution"""
+
+    def __new__(cls, dist, size):
+        return cls._sample_numpy(dist, size)
+
+    numpy_rv_map = {
+        'MultivariateNormalDistribution': lambda dist, size: numpy.random.multivariate_normal(
+            mean=matrix2numpy(dist.mu, float).flatten(),
+            cov=matrix2numpy(dist.sigma, float), size=size),
+        'MultivariateBetaDistribution': lambda dist, size: numpy.random.dirichlet(
+            alpha=list2numpy(dist.alpha, float).flatten(), size=size),
+        'MultinomialDistribution': lambda dist, size: numpy.random.multinomial(
+            n=int(dist.n), pvals=list2numpy(dist.p, float).flatten(), size=size)
+    }
+
+    @classmethod
+    def _sample_numpy(cls, dist, size):
+        """Sample from NumPy."""
+
+        dist_list = cls.numpy_rv_map.keys()
+
+        if dist.__class__.__name__ not in dist_list:
+            return None
+
+        return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
+
+class SampleJointPymc:
+    """Returns the sample from pymc3 of the given distribution"""
+
+    def __new__(cls, dist, size):
+        return cls._sample_pymc3(dist, size)
+
+    pymc3_rv_map = {
+        'MultivariateNormalDistribution': lambda dist:
+            pymc3.MvNormal('X', mu=matrix2numpy(dist.mu, float).flatten(),
+            cov=matrix2numpy(dist.sigma, float), shape=(1, dist.mu.shape[0])),
+        'MultivariateBetaDistribution': lambda dist:
+            pymc3.Dirichlet('X', a=list2numpy(dist.alpha, float).flatten()),
+        'MultinomialDistribution': lambda dist:
+            pymc3.Multinomial('X', n=int(dist.n),
+            p=list2numpy(dist.p, float).flatten(), shape=(1, len(dist.p)))
+    }
+
+    @classmethod
+    def _sample_pymc3(cls, dist, size):
+        """Sample from PyMC3."""
+
+        dist_list = cls.pymc3_rv_map.keys()
+
+        if dist.__class__.__name__ not in dist_list:
+            return None
+
+        with pymc3.Model():
+            cls.pymc3_rv_map[dist.__class__.__name__](dist)
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+
+_get_sample_class_jrv = {
+    'scipy': SampleJointScipy,
+    'pymc3': SampleJointPymc,
+    'numpy': SampleJointNumpy
+}
 
 class JointDistribution(Basic, NamedArgsMixin):
     """
@@ -160,7 +256,7 @@ class JointDistribution(Basic, NamedArgsMixin):
         return ProductDomain(self.symbols)
 
     @property
-    def pdf(self, *args):
+    def pdf(self):
         return self.density.args[1]
 
     def cdf(self, other):
@@ -178,6 +274,25 @@ class JointDistribution(Basic, NamedArgsMixin):
                     other[rvs[i]]))
         return density
 
+    def sample(self, size=(), library='scipy'):
+        """ A random realization from the distribution """
+
+        libraries = ['scipy', 'numpy', 'pymc3']
+        if library not in libraries:
+            raise NotImplementedError("Sampling from %s is not supported yet."
+                                        % str(library))
+        if not import_module(library):
+            raise ValueError("Failed to import %s" % library)
+
+        samps = _get_sample_class_jrv[library](self, size)
+
+        if samps is not None:
+            return samps
+        raise NotImplementedError(
+                "Sampling for %s is not currently implemented from %s"
+                % (self.__class__.__name__, library)
+                )
+
     def __call__(self, *args):
         return self.pdf(*args)
 
@@ -193,89 +308,6 @@ class JointRandomSymbol(RandomSymbol):
                     (self.name, self.pspace.component_count - 1))
             return Indexed(self, key)
 
-class JointDistributionHandmade(JointDistribution, NamedArgsMixin):
-
-    _argnames = ('pdf',)
-    is_Continuous = True
-
-    @property
-    def set(self):
-        return self.args[1]
-
-def marginal_distribution(rv, *indices):
-    """
-    Marginal distribution function of a joint random variable.
-
-    Parameters
-    ==========
-
-    rv: A random variable with a joint probability distribution.
-    indices: component indices or the indexed random symbol
-        for whom the joint distribution is to be calculated
-
-    Returns
-    =======
-
-    A Lambda expression n `sym`.
-
-    Examples
-    ========
-
-    >>> from sympy.stats.crv_types import Normal
-    >>> from sympy.stats.joint_rv import marginal_distribution
-    >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
-    >>> marginal_distribution(m, m[0])(1)
-    1/(2*sqrt(pi))
-
-    """
-    indices = list(indices)
-    for i in range(len(indices)):
-        if isinstance(indices[i], Indexed):
-            indices[i] = indices[i].args[1]
-    prob_space = rv.pspace
-    if not indices:
-        raise ValueError(
-            "At least one component for marginal density is needed.")
-    if hasattr(prob_space.distribution, 'marginal_distribution'):
-        return prob_space.distribution.marginal_distribution(indices, rv.symbol)
-    return prob_space.marginal_distribution(*indices)
-
-
-class CompoundDistribution(Basic, NamedArgsMixin):
-    """
-    Represents a compound probability distribution.
-
-    Constructed using a single probability distribution with a parameter
-    distributed according to some given distribution.
-    """
-    def __new__(cls, dist):
-        if not isinstance(dist, (ContinuousDistribution, DiscreteDistribution)):
-            raise ValueError(filldedent('''CompoundDistribution can only be
-             initialized from ContinuousDistribution or DiscreteDistribution
-             '''))
-        _args = dist.args
-        if not any([isinstance(i, RandomSymbol) for i in _args]):
-            return dist
-        return Basic.__new__(cls, dist)
-
-    @property
-    def latent_distributions(self):
-        return random_symbols(self.args[0])
-
-    def pdf(self, *x):
-        dist = self.args[0]
-        z = Dummy('z')
-        if isinstance(dist, ContinuousDistribution):
-            rv = SingleContinuousPSpace(z, dist).value
-        elif isinstance(dist, DiscreteDistribution):
-            rv = SingleDiscretePSpace(z, dist).value
-        return MarginalDistribution(self, (rv,)).pdf(*x)
-
-    def set(self):
-        return self.args[0].set
-
-    def __call__(self, *args):
-        return self.pdf(*args)
 
 
 class MarginalDistribution(Basic):
@@ -315,16 +347,13 @@ class MarginalDistribution(Basic):
     def pdf(self, *x):
         expr, rvs = self.args[0], self.args[1]
         marginalise_out = [i for i in random_symbols(expr) if i not in rvs]
-        if isinstance(expr, CompoundDistribution):
-            syms = Dummy('x', real=True)
-            expr = expr.args[0].pdf(syms)
-        elif isinstance(expr, JointDistribution):
+        if isinstance(expr, JointDistribution):
             count = len(expr.domain.args)
             x = Dummy('x', real=True, finite=True)
-            syms = [Indexed(x, i) for i in count]
+            syms = tuple(Indexed(x, i) for i in count)
             expr = expr.pdf(syms)
         else:
-            syms = [rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0] for rv in rvs]
+            syms = tuple(rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0] for rv in rvs)
         return Lambda(syms, self.compute_pdf(expr, marginalise_out))(*x)
 
     def compute_pdf(self, expr, rvs):

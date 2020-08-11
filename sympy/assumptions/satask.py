@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import Symbol, S
 from sympy.assumptions.ask_generated import get_all_known_facts
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
@@ -99,10 +97,11 @@ def get_relevant_facts(proposition, assumptions=None,
 
     for expr in exprs:
         for fact in fact_registry[expr.func]:
-            newfact = fact.rcall(expr)
-            relevant_facts.add(newfact)
-            newexprs |= set([key.args[0] for key in
-                newfact.atoms(AppliedPredicate)])
+            cnf_fact = CNF.to_CNF(fact)
+            newfact = cnf_fact.rcall(expr)
+            relevant_facts = relevant_facts._and(newfact)
+            newexprs |= {key.args[0] for key in newfact.all_predicates()
+                             if isinstance(key, AppliedPredicate)}
 
     return newexprs - exprs, relevant_facts
 
@@ -114,7 +113,7 @@ def get_all_relevant_facts(proposition, assumptions=True,
     # we stop getting new things. Hopefully this strategy won't lead to an
     # infinite loop in the future.
     i = 0
-    relevant_facts = set()
+    relevant_facts = CNF()
     exprs = None
     all_exprs = set()
     while exprs != set():
@@ -152,7 +151,6 @@ def get_all_relevant_facts(proposition, assumptions=True,
     else:
         ctx = EncodedCNF()
 
-    for e in relevant_facts:
-        ctx.add_prop(e)
+    ctx.add_from_cnf(relevant_facts)
 
     return ctx

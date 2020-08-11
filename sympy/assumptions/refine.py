@@ -1,7 +1,9 @@
-from __future__ import print_function, division
+from typing import Dict, Callable
 
 from sympy.core import S, Add, Expr, Basic, Mul
-from sympy.assumptions import Q, ask
+from sympy.logic.boolalg import Boolean
+
+from sympy.assumptions import Q, ask  # type: ignore
 
 def refine(expr, assumptions=True):
     """
@@ -51,7 +53,7 @@ def refine_abs(expr, assumptions):
     Examples
     ========
 
-    >>> from sympy import Symbol, Q, refine, Abs
+    >>> from sympy import Q, Abs
     >>> from sympy.assumptions.refine import refine_abs
     >>> from sympy.abc import x
     >>> refine_abs(Abs(x), Q.real(x))
@@ -87,7 +89,7 @@ def refine_Pow(expr, assumptions):
     """
     Handler for instances of Pow.
 
-    >>> from sympy import Symbol, Q
+    >>> from sympy import Q
     >>> from sympy.assumptions.refine import refine_Pow
     >>> from sympy.abc import x,y,z
     >>> refine_Pow((-1)**x, Q.real(x))
@@ -138,8 +140,8 @@ def refine_Pow(expr, assumptions):
 
                 coeff, terms = expr.exp.as_coeff_add()
                 terms = set(terms)
-                even_terms = set([])
-                odd_terms = set([])
+                even_terms = set()
+                odd_terms = set()
                 initial_number_of_terms = len(terms)
 
                 for t in terms:
@@ -188,7 +190,7 @@ def refine_atan2(expr, assumptions):
     Examples
     ========
 
-    >>> from sympy import Symbol, Q, refine, atan2
+    >>> from sympy import Q, atan2
     >>> from sympy.assumptions.refine import refine_atan2
     >>> from sympy.abc import x, y
     >>> refine_atan2(atan2(y,x), Q.real(y) & Q.positive(x))
@@ -256,7 +258,7 @@ def refine_re(expr, assumptions):
     if ask(Q.real(arg), assumptions):
         return arg
     if ask(Q.imaginary(arg), assumptions):
-        return 0
+        return S.Zero
     return _refine_reim(expr, assumptions)
 
 
@@ -274,7 +276,7 @@ def refine_im(expr, assumptions):
     """
     arg = expr.args[0]
     if ask(Q.real(arg), assumptions):
-        return 0
+        return S.Zero
     if ask(Q.imaginary(arg), assumptions):
         return - S.ImaginaryUnit * arg
     return _refine_reim(expr, assumptions)
@@ -291,6 +293,70 @@ def _refine_reim(expr, assumptions):
     return None
 
 
+def refine_sign(expr, assumptions):
+    """
+    Handler for sign
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_sign
+    >>> from sympy import Symbol, Q, sign, im
+    >>> x = Symbol('x', real = True)
+    >>> expr = sign(x)
+    >>> refine_sign(expr, Q.positive(x) & Q.nonzero(x))
+    1
+    >>> refine_sign(expr, Q.negative(x) & Q.nonzero(x))
+    -1
+    >>> refine_sign(expr, Q.zero(x))
+    0
+    >>> y = Symbol('y', imaginary = True)
+    >>> expr = sign(y)
+    >>> refine_sign(expr, Q.positive(im(y)))
+    I
+    >>> refine_sign(expr, Q.negative(im(y)))
+    -I
+    """
+    arg = expr.args[0]
+    if ask(Q.zero(arg), assumptions):
+        return S.Zero
+    if ask(Q.real(arg)):
+        if ask(Q.positive(arg), assumptions):
+            return S.One
+        if ask(Q.negative(arg), assumptions):
+            return S.NegativeOne
+    if ask(Q.imaginary(arg)):
+        arg_re, arg_im = arg.as_real_imag()
+        if ask(Q.positive(arg_im), assumptions):
+            return S.ImaginaryUnit
+        if ask(Q.negative(arg_im), assumptions):
+            return -S.ImaginaryUnit
+    return expr
+
+
+def refine_matrixelement(expr, assumptions):
+    """
+    Handler for symmetric part
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_matrixelement
+    >>> from sympy import Q
+    >>> from sympy.matrices.expressions.matexpr import MatrixSymbol
+    >>> X = MatrixSymbol('X', 3, 3)
+    >>> refine_matrixelement(X[0, 1], Q.symmetric(X))
+    X[0, 1]
+    >>> refine_matrixelement(X[1, 0], Q.symmetric(X))
+    X[0, 1]
+    """
+    from sympy.matrices.expressions.matexpr import MatrixElement
+    matrix, i, j = expr.args
+    if ask(Q.symmetric(matrix), assumptions):
+        if (i - j).could_extract_minus_sign():
+            return expr
+        return MatrixElement(matrix, j, i)
+
 handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -302,5 +368,7 @@ handlers_dict = {
     'StrictGreaterThan': refine_Relational,
     'StrictLessThan': refine_Relational,
     're': refine_re,
-    'im': refine_im
-}
+    'im': refine_im,
+    'sign': refine_sign,
+    'MatrixElement': refine_matrixelement
+}  # type: Dict[str, Callable[[Expr, Boolean], Expr]]

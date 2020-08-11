@@ -12,8 +12,8 @@ from sympy.utilities.autowrap import (autowrap, binary_function,
 from sympy.utilities.codegen import (
     CCodeGen, C99CodeGen, CodeGenArgumentListError, make_routine
 )
-from sympy.utilities.pytest import raises
-from sympy.utilities.tmpfiles import TmpFileManager
+from sympy.testing.pytest import raises
+from sympy.testing.tmpfiles import TmpFileManager
 
 
 def get_string(dump_fn, routines, prefix="file", **kwargs):

@@ -319,7 +319,6 @@ def test_gamma_matrix_trace():
     t = G(m0)*G(m1)*G(m2)*G(m3)
     t1 = gamma_trace(t)
     t2 = -4*g(m0, m2)*g(m1, m3) + 4*g(m0, m1)*g(m2, m3) + 4*g(m0, m3)*g(m1, m2)
-    st2 = str(t2)
     assert _is_tensor_eq(t1, t2)
 
     t = G(m0)*G(m1)*G(m2)*G(m3)*G(m4)*G(m5)

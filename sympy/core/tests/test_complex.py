@@ -1,14 +1,13 @@
 from sympy import (S, Symbol, sqrt, I, Integer, Rational, cos, sin, im, re, Abs,
         exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi, symbols,
         expand_complex, Pow)
-from sympy.core.expr import unchanged
 
 def test_complex():
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
     e = (a + I*b)*(a - I*b)
     assert e.expand() == a**2 + b**2
-    assert sqrt(I) == Pow(I, Rational(1, 2))
+    assert sqrt(I) == Pow(I, S.Half)
 
 
 def test_conjugate():
@@ -196,7 +195,7 @@ def test_real_imag():
 
 
 def test_pow_issue_1724():
-    e = ((-1)**(S(1)/3))
+    e = ((S.NegativeOne)**(S.One/3))
     assert e.conjugate().n() == e.n().conjugate()
     e = S('-2/3 - (-29/54 + sqrt(93)/18)**(1/3) - 1/(9*(-29/54 + sqrt(93)/18)**(1/3))')
     assert e.conjugate().n() == e.n().conjugate()

@@ -1,14 +1,14 @@
 from sympy.core.basic import Basic
 from sympy.core.numbers import Rational
-from sympy.core.singleton import S, Singleton, SingletonRegistry
+from sympy.core.singleton import S, Singleton
 
-from sympy.core.compatibility import with_metaclass, exec_
+from sympy.core.compatibility import exec_
 
 def test_Singleton():
     global instantiated
     instantiated = 0
 
-    class MySingleton(with_metaclass(Singleton, Basic)):
+    class MySingleton(Basic, metaclass=Singleton):
         def __new__(cls):
             global instantiated
             instantiated += 1
@@ -31,12 +31,12 @@ def test_Singleton():
     assert MySingleton_sub() is MySingleton_sub()
 
 def test_singleton_redefinition():
-    class TestSingleton(with_metaclass(Singleton, Basic)):
+    class TestSingleton(Basic, metaclass=Singleton):
         pass
 
     assert TestSingleton() is S.TestSingleton
 
-    class TestSingleton(with_metaclass(Singleton, Basic)):
+    class TestSingleton(Basic, metaclass=Singleton):
         pass
 
     assert TestSingleton() is S.TestSingleton
@@ -83,5 +83,5 @@ def test_names_in_namespace():
             # Accessible by -oo
             continue
 
-        # Use is here because of complications with ==
-        assert any(getattr(S, name) is i or type(getattr(S, name)) is i for i in d.values()), name
+        # Use is here to ensure it is the exact same object
+        assert any(getattr(S, name) is i for i in d.values()), name

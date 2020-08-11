@@ -1,5 +1,6 @@
-Plotting Module
-===============
+========
+Plotting
+========
 
 .. module:: sympy.plotting.plot
 
@@ -27,7 +28,7 @@ argument.
 Plot Class
 ----------
 
-.. autoclass:: sympy.plotting.plot.Plot
+.. autoclass:: sympy.plotting.plot::Plot
    :members:
 
 Plotting Function Reference
@@ -43,52 +44,52 @@ Plotting Function Reference
 
 .. autofunction:: plot3d_parametric_surface
 
-.. autofunction:: sympy.plotting.plot_implicit.plot_implicit
+.. autofunction:: sympy.plotting.plot_implicit::plot_implicit
 
 PlotGrid Class
 --------------
 
-.. autoclass:: sympy.plotting.plot.PlotGrid
+.. autoclass:: sympy.plotting.plot::PlotGrid
    :members:
 
 Series Classes
 --------------
 
-.. autoclass:: sympy.plotting.plot.BaseSeries
+.. autoclass:: sympy.plotting.plot::BaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.Line2DBaseSeries
+.. autoclass:: sympy.plotting.plot::Line2DBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.LineOver1DRangeSeries
+.. autoclass:: sympy.plotting.plot::LineOver1DRangeSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.Parametric2DLineSeries
+.. autoclass:: sympy.plotting.plot::Parametric2DLineSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.Line3DBaseSeries
+.. autoclass:: sympy.plotting.plot::Line3DBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.Parametric3DLineSeries
+.. autoclass:: sympy.plotting.plot::Parametric3DLineSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.SurfaceBaseSeries
+.. autoclass:: sympy.plotting.plot::SurfaceBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.SurfaceOver2DRangeSeries
+.. autoclass:: sympy.plotting.plot::SurfaceOver2DRangeSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.ParametricSurfaceSeries
+.. autoclass:: sympy.plotting.plot::ParametricSurfaceSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot_implicit.ImplicitSeries
+.. autoclass:: sympy.plotting.plot_implicit::ImplicitSeries
    :members:
 
 
 
 
-Pyglet Plotting Module
-======================
+Pyglet Plotting
+---------------
 
 .. module:: sympy.plotting.pygletplot
 
@@ -294,3 +295,8 @@ directly. However a polygon can be plotted through a loop as follows.
 
     In [8]: for i in range(len(t.sides)):
        ....:    p[i] = t.sides[i]
+
+Plotting with ASCII art
+-----------------------
+
+.. autofunction:: sympy.plotting.textplot::textplot

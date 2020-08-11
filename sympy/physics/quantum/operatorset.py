@@ -236,9 +236,12 @@ def state_to_operators(state, **options):
 
 
 def _make_default(expr):
+    # XXX: Catching TypeError like this is a bad way of distinguishing between
+    # classes and instances. The logic using this function should be rewritten
+    # somehow.
     try:
         ret = expr()
-    except Exception:
+    except TypeError:
         ret = expr
 
     return ret

@@ -7,10 +7,7 @@ import inspect
 import textwrap
 import re
 import pydoc
-try:
-    from collections.abc import Mapping
-except ImportError: # Python 2
-    from collections import Mapping
+from collections.abc import Mapping
 import sys
 
 
@@ -228,6 +225,8 @@ class NumpyDocString(Mapping):
             if not name:
                 return
             name, role = parse_item_name(name)
+            if '.' not in name:
+                name = '~.' + name
             items.append((name, list(rest), role))
             del rest[:]
 
@@ -464,10 +463,7 @@ class FunctionDoc(NumpyDocString):
             func, func_name = self.get_func()
             try:
                 # try to read signature
-                if sys.version_info[0] >= 3:
-                    argspec = inspect.getfullargspec(func)
-                else:
-                    argspec = inspect.getargspec(func)
+                argspec = inspect.getfullargspec(func)
                 argspec = inspect.formatargspec(*argspec)
                 argspec = argspec.replace('*', '\*')
                 signature = '%s%s' % (func_name, argspec)

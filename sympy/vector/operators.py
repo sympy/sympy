@@ -11,7 +11,7 @@ from sympy import Add, Mul
 
 def _get_coord_systems(expr):
     g = preorder_traversal(expr)
-    ret = set([])
+    ret = set()
     for i in g:
         if isinstance(i, CoordSys3D):
             ret.add(i)
@@ -358,10 +358,10 @@ def _diff_conditional(expr, base_scalar, coeff_1, coeff_2):
     First re-expresses expr in the system that base_scalar belongs to.
     If base_scalar appears in the re-expressed form, differentiates
     it wrt base_scalar.
-    Else, returns S(0)
+    Else, returns 0
     """
     from sympy.vector.functions import express
     new_expr = express(expr, base_scalar.system, variables=True)
     if base_scalar in new_expr.atoms(BaseScalar):
         return Derivative(coeff_1 * coeff_2 * new_expr, base_scalar)
-    return S(0)
+    return S.Zero

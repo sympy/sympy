@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
@@ -31,7 +29,7 @@ class re(Function):
     ========
 
     >>> from sympy import re, im, I, E
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> re(2*E)
     2*E
     >>> re(2*I + 17)
@@ -48,6 +46,7 @@ class re(Function):
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
+    _singularities = True  # non-holomorphic
 
     @classmethod
     def eval(cls, arg):
@@ -156,6 +155,7 @@ class im(Function):
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
+    _singularities = True  # non-holomorphic
 
     @classmethod
     def eval(cls, arg):
@@ -284,8 +284,8 @@ class sign(Function):
     Abs, conjugate
     """
 
-    is_finite = True
     is_complex = True
+    _singularities = True
 
     def doit(self, **hints):
         if self.args[0].is_zero is False:
@@ -392,10 +392,13 @@ class sign(Function):
     def _eval_rewrite_as_Heaviside(self, arg, **kwargs):
         from sympy.functions.special.delta_functions import Heaviside
         if arg.is_extended_real:
-            return Heaviside(arg)*2 - 1
+            return Heaviside(arg, H0=S(1)/2) * 2 - 1
+
+    def _eval_rewrite_as_Abs(self, arg, **kwargs):
+        return Piecewise((0, Eq(arg, 0)), (arg / Abs(arg), True))
 
     def _eval_simplify(self, **kwargs):
-        return self.func(self.args[0].factor())  # XXX include doit?
+        return self.func(factor_terms(self.args[0]))  # XXX include doit?
 
 
 class Abs(Function):
@@ -440,6 +443,7 @@ class Abs(Function):
     is_extended_negative = False
     is_extended_nonnegative = True
     unbranched = True
+    _singularities = True  # non-holomorphic
 
     def fdiff(self, argindex=1):
         """
@@ -590,8 +594,10 @@ class Abs(Function):
                 return self.args[0]**(exponent - 1)*self
         return
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         direction = self.args[0].leadterm(x)[0]
+        if direction.has(log(x)):
+            direction = direction.subs(log(x), logx)
         s = self.args[0]._eval_nseries(x, n=n, logx=logx)
         when = Eq(direction, 0)
         return Piecewise(
@@ -622,9 +628,14 @@ class Abs(Function):
     def _eval_rewrite_as_Piecewise(self, arg, **kwargs):
         if arg.is_extended_real:
             return Piecewise((arg, arg >= 0), (-arg, True))
+        elif arg.is_imaginary:
+            return Piecewise((I*arg, I*arg >= 0), (-I*arg, True))
 
     def _eval_rewrite_as_sign(self, arg, **kwargs):
         return arg/sign(arg)
+
+    def _eval_rewrite_as_conjugate(self, arg, **kwargs):
+        return (arg*conjugate(arg))**S.Half
 
 
 class arg(Function):
@@ -649,6 +660,7 @@ class arg(Function):
     is_extended_real = True
     is_real = True
     is_finite = True
+    _singularities = True  # non-holomorphic
 
     @classmethod
     def eval(cls, arg):
@@ -709,6 +721,7 @@ class conjugate(Function):
 
     .. [1] https://en.wikipedia.org/wiki/Complex_conjugation
     """
+    _singularities = True  # non-holomorphic
 
     @classmethod
     def eval(cls, arg):
@@ -786,14 +799,14 @@ class adjoint(Function):
         arg = printer._print(self.args[0])
         tex = r'%s^{\dagger}' % arg
         if exp:
-            tex = r'\left(%s\right)^{%s}' % (tex, printer._print(exp))
+            tex = r'\left(%s\right)^{%s}' % (tex, exp)
         return tex
 
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         if printer._use_unicode:
-            pform = pform**prettyForm(u'\N{DAGGER}')
+            pform = pform**prettyForm('\N{DAGGER}')
         else:
             pform = pform**prettyForm('+')
         return pform
@@ -950,7 +963,7 @@ class periodic_argument(Function):
         if period == oo:
             return unbranched
         if period != oo:
-            n = ceiling(unbranched/period - S(1)/2)*period
+            n = ceiling(unbranched/period - S.Half)*period
             if not n.has(ceiling):
                 return unbranched - n
 
@@ -962,7 +975,7 @@ class periodic_argument(Function):
                 return self
             return unbranched._eval_evalf(prec)
         ub = periodic_argument(z, oo)._eval_evalf(prec)
-        return (ub - ceiling(ub/period - S(1)/2)*period)._eval_evalf(prec)
+        return (ub - ceiling(ub/period - S.Half)*period)._eval_evalf(prec)
 
 
 def unbranched_argument(arg):
@@ -1204,10 +1217,3 @@ def unpolarify(eq, subs={}, exponents_only=False):
     # Finally, replacing Exp(0) by 1 is always correct.
     # So is polar_lift(0) -> 0.
     return res.subs({exp_polar(0): 1, polar_lift(0): 0})
-
-
-
-# /cyclic/
-from sympy.core import basic as _
-_.abs_ = Abs
-del _

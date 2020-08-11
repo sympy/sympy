@@ -1,9 +1,7 @@
-from __future__ import print_function, division
-
 from random import randrange, choice
 from math import log
 from sympy.ntheory import primefactors
-from sympy import multiplicity, factorint
+from sympy import multiplicity, factorint, Symbol
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
@@ -13,13 +11,12 @@ from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
     _strip, _strip_af)
 from sympy.core import Basic
-from sympy.core.compatibility import range
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import sieve
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
-from sympy.utilities.randtest import _randrange
+from sympy.testing.randtest import _randrange
 from itertools import islice
-
+from sympy.core.sympify import _sympify
 rmul = Permutation.rmul_with_af
 _af_new = Permutation._af_new
 
@@ -36,8 +33,6 @@ class PermutationGroup(Basic):
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
-    >>> from sympy.combinatorics.permutations import Cycle
     >>> from sympy.combinatorics.polyhedron import Polyhedron
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
 
@@ -183,7 +178,7 @@ class PermutationGroup(Basic):
         return self._generators[i]
 
     def __contains__(self, i):
-        """Return ``True`` if `i` is contained in PermutationGroup.
+        """Return ``True`` if *i* is contained in PermutationGroup.
 
         Examples
         ========
@@ -243,21 +238,21 @@ class PermutationGroup(Basic):
         return True
 
     def __hash__(self):
-        return super(PermutationGroup, self).__hash__()
+        return super().__hash__()
 
     def __mul__(self, other):
-        """Return the direct product of two permutation groups as a permutation
+        """
+        Return the direct product of two permutation groups as a permutation
         group.
 
         This implementation realizes the direct product by shifting the index
-        set for the generators of the second group: so if we have `G` acting
-        on `n1` points and `H` acting on `n2` points, `G*H` acts on `n1 + n2`
-        points.
+        set for the generators of the second group: so if we have ``G`` acting
+        on ``n1`` points and ``H`` acting on ``n2`` points, ``G*H`` acts on
+        ``n1 + n2`` points.
 
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import CyclicGroup
         >>> G = CyclicGroup(5)
         >>> H = G*G
@@ -269,6 +264,8 @@ class PermutationGroup(Basic):
         25
 
         """
+        if isinstance(other, Permutation):
+            return Coset(other, self, dir='+')
         gens1 = [perm._array_form for perm in self.generators]
         gens2 = [perm._array_form for perm in other.generators]
         n1 = self._degree
@@ -830,7 +827,7 @@ class PermutationGroup(Basic):
 
     def _coset_representative(self, g, H):
         """Return the representative of Hg from the transversal that
-        would be computed by `self.coset_transversal(H)`.
+        would be computed by ``self.coset_transversal(H)``.
 
         """
         if H.order() == 1:
@@ -913,7 +910,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(4)
         >>> G = D.center()
@@ -1113,7 +1109,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation, PermutationGroup
-        >>> Permutation.print_cyclic = True
         >>> a = Permutation(0, 1, 3, 7, 6, 4)(2, 5)
         >>> b = Permutation(0, 1, 3, 2)(4, 5, 7, 6)
         >>> G = PermutationGroup([a, b])
@@ -1149,7 +1144,7 @@ class PermutationGroup(Basic):
         See Also
         ========
 
-        util._strip
+        sympy.combinatorics.util._strip
 
         """
         if isinstance(g, (Cycle, Permutation)):
@@ -1238,7 +1233,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation(0, 1, 3, 7, 6, 4)(2, 5)
         >>> b = Permutation(0, 1, 3, 2)(4, 5, 7, 6)
@@ -1306,7 +1300,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([1, 0, 2])
         >>> G = PermutationGroup([a])
@@ -1422,7 +1415,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([1, 0, 2, 4, 3])
         >>> b = Permutation([0, 1, 3, 2, 4])
@@ -1469,8 +1461,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics import PermutationGroup
         >>> from sympy.combinatorics.polyhedron import tetrahedron
 
@@ -1517,7 +1507,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([0, 2, 3, 1])
@@ -1578,7 +1567,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1, 3])
         >>> b = Permutation([0, 2, 3, 1])
@@ -1648,7 +1636,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
@@ -1674,7 +1661,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
 
         >>> a = Permutation(1, 2)
@@ -1707,7 +1693,7 @@ class PermutationGroup(Basic):
         See Also
         ========
 
-        coset_factor, has, in
+        coset_factor, sympy.core.basic.Basic.has, __contains__
 
         """
         if not isinstance(g, Permutation):
@@ -1749,7 +1735,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([0, 2, 1])
         >>> b = Permutation([1, 0, 2])
@@ -1873,6 +1858,73 @@ class PermutationGroup(Basic):
         """
         return self.is_abelian and all(g.order() == p for g in self.generators)
 
+    def _eval_is_alt_sym_naive(self, only_sym=False, only_alt=False):
+        """A naive test using the group order."""
+        if only_sym and only_alt:
+            raise ValueError(
+                "Both {} and {} cannot be set to True"
+                .format(only_sym, only_alt))
+
+        n = self.degree
+        sym_order = 1
+        for i in range(2, n+1):
+            sym_order *= i
+        order = self.order()
+
+        if order == sym_order:
+            self._is_sym = True
+            self._is_alt = False
+            if only_alt:
+                return False
+            return True
+
+        elif 2*order == sym_order:
+            self._is_sym = False
+            self._is_alt = True
+            if only_sym:
+                return False
+            return True
+
+        return False
+
+    def _eval_is_alt_sym_monte_carlo(self, eps=0.05, perms=None):
+        """A test using monte-carlo algorithm.
+
+        Parameters
+        ==========
+
+        eps : float, optional
+            The criterion for the incorrect ``False`` return.
+
+        perms : list[Permutation], optional
+            If explicitly given, it tests over the given candidats
+            for testing.
+
+            If ``None``, it randomly computes ``N_eps`` and chooses
+            ``N_eps`` sample of the permutation from the group.
+
+        See Also
+        ========
+
+        _check_cycles_alt_sym
+        """
+        if perms is None:
+            n = self.degree
+            if n < 17:
+                c_n = 0.34
+            else:
+                c_n = 0.57
+            d_n = (c_n*log(2))/log(n)
+            N_eps = int(-log(eps)/d_n)
+
+            perms = (self.random_pr() for i in range(N_eps))
+            return self._eval_is_alt_sym_monte_carlo(perms=perms)
+
+        for perm in perms:
+            if _check_cycles_alt_sym(perm):
+                return True
+        return False
+
     def is_alt_sym(self, eps=0.05, _random_prec=None):
         r"""Monte Carlo test for the symmetric/alternating group for degrees
         >= 8.
@@ -1901,7 +1953,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(10)
         >>> D.is_alt_sym()
@@ -1913,41 +1964,24 @@ class PermutationGroup(Basic):
         _check_cycles_alt_sym
 
         """
-        if _random_prec is None:
-            if self._is_sym or self._is_alt:
-                return True
-            n = self.degree
-            if n < 8:
-                sym_order = 1
-                for i in range(2, n+1):
-                    sym_order *= i
-                order = self.order()
-                if order == sym_order:
-                    self._is_sym = True
-                    return True
-                elif 2*order == sym_order:
-                    self._is_alt = True
-                    return True
-                return False
-            if not self.is_transitive():
-                return False
-            if n < 17:
-                c_n = 0.34
-            else:
-                c_n = 0.57
-            d_n = (c_n*log(2))/log(n)
-            N_eps = int(-log(eps)/d_n)
-            for i in range(N_eps):
-                perm = self.random_pr()
-                if _check_cycles_alt_sym(perm):
-                    return True
+        if _random_prec is not None:
+            N_eps = _random_prec['N_eps']
+            perms= (_random_prec[i] for i in range(N_eps))
+            return self._eval_is_alt_sym_monte_carlo(perms=perms)
+
+        if self._is_sym or self._is_alt:
+            return True
+        if self._is_sym is False and self._is_alt is False:
             return False
-        else:
-            for i in range(_random_prec['N_eps']):
-                perm = _random_prec[i]
-                if _check_cycles_alt_sym(perm):
-                    return True
-            return False
+
+        n = self.degree
+        if n < 8:
+            return self._eval_is_alt_sym_naive()
+        elif self.is_transitive():
+            return self._eval_is_alt_sym_monte_carlo(eps=eps)
+
+        self._is_sym, self._is_alt = False, False
+        return False
 
     @property
     def is_nilpotent(self):
@@ -2004,7 +2038,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a = Permutation([1, 2, 0])
         >>> b = Permutation([1, 0, 2])
@@ -2063,7 +2096,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(10)
         >>> D.is_primitive()
@@ -2077,6 +2109,10 @@ class PermutationGroup(Basic):
         """
         if self._is_primitive is not None:
             return self._is_primitive
+
+        if self.is_transitive() is False:
+            return False
+
         if randomized:
             random_stab_gens = []
             v = self.schreier_vector(0)
@@ -2154,7 +2190,7 @@ class PermutationGroup(Basic):
                 block = self.minimal_block([0, x])
                 num_block, m = _number_blocks(block)
                 # a representative block (containing 0)
-                rep = set(j for j in range(self.degree) if num_block[j] == 0)
+                rep = {j for j in range(self.degree) if num_block[j] == 0}
                 # check if the system is minimal with
                 # respect to the already discovere ones
                 minimal = True
@@ -2259,6 +2295,10 @@ class PermutationGroup(Basic):
         False
 
         """
+        if isinstance(G, SymmetricPermutationGroup):
+            if self.degree != G.degree:
+                return False
+            return True
         if not isinstance(G, PermutationGroup):
             return False
         if self == G or self.generators[0]==Permutation():
@@ -2470,7 +2510,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> D = DihedralGroup(10)
         >>> D.minimal_block([0, 5])
@@ -2524,6 +2563,92 @@ class PermutationGroup(Basic):
         # rewrite result so that block representatives are minimal
         new_reps = {}
         return [new_reps.setdefault(r, i) for i, r in enumerate(parents)]
+
+    def conjugacy_class(self, x):
+        r"""Return the conjugacy class of an element in the group.
+
+        The conjugacy class of an element ``g`` in a group ``G`` is the set of
+        elements ``x`` in ``G`` that are conjugate with ``g``, i.e. for which
+
+            ``g = xax^{-1}``
+
+        for some ``a`` in ``G``.
+
+        Note that conjugacy is an equivalence relation, and therefore that
+        conjugacy classes are partitions of ``G``. For a list of all the
+        conjugacy classes of the group, use the conjugacy_classes() method.
+
+        In a permutation group, each conjugacy class corresponds to a particular
+        `cycle structure': for example, in ``S_3``, the conjugacy classes are:
+
+            * the identity class, ``{()}``
+            * all transpositions, ``{(1 2), (1 3), (2 3)}``
+            * all 3-cycles, ``{(1 2 3), (1 3 2)}``
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> S3 = SymmetricGroup(3)
+        >>> S3.conjugacy_class(Permutation(0, 1, 2))
+        {(0 1 2), (0 2 1)}
+
+        Notes
+        =====
+
+        This procedure computes the conjugacy class directly by finding the
+        orbit of the element under conjugation in G. This algorithm is only
+        feasible for permutation groups of relatively small order, but is like
+        the orbit() function itself in that respect.
+        """
+        # Ref: "Computing the conjugacy classes of finite groups"; Butler, G.
+        # Groups '93 Galway/St Andrews; edited by Campbell, C. M.
+        new_class = {x}
+        last_iteration = new_class
+
+        while len(last_iteration) > 0:
+            this_iteration = set()
+
+            for y in last_iteration:
+                for s in self.generators:
+                    conjugated = s * y * (~s)
+                    if conjugated not in new_class:
+                        this_iteration.add(conjugated)
+
+            new_class.update(last_iteration)
+            last_iteration = this_iteration
+
+        return new_class
+
+
+    def conjugacy_classes(self):
+        r"""Return the conjugacy classes of the group.
+
+        As described in the documentation for the .conjugacy_class() function,
+        conjugacy is an equivalence relation on a group G which partitions the
+        set of elements. This method returns a list of all these conjugacy
+        classes of G.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import SymmetricGroup
+        >>> SymmetricGroup(3).conjugacy_classes()
+        [{(2)}, {(0 1 2), (0 2 1)}, {(0 2), (1 2), (2)(0 1)}]
+
+        """
+        identity = _af_new(list(range(self.degree)))
+        known_elements = {identity}
+        classes = [known_elements.copy()]
+
+        for x in self.generate():
+            if x not in known_elements:
+                new_class = self.conjugacy_class(x)
+                classes.append(new_class)
+                known_elements.update(new_class)
+
+        return classes
 
     def normal_closure(self, other, k=10):
         r"""Return the normal closure of a subgroup/set of permutations.
@@ -2669,9 +2794,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
         >>> G = AlternatingGroup(5)
         >>> G.orbit_rep(0, 4)
@@ -2712,9 +2834,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
         >>> G.orbit_transversal(0)
@@ -2821,8 +2940,137 @@ class PermutationGroup(Basic):
             return self.order()//H.order()
 
     @property
-    def is_cyclic(self):
+    def is_symmetric(self):
+        """Return ``True`` if the group is symmetric.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import SymmetricGroup
+        >>> g = SymmetricGroup(5)
+        >>> g.is_symmetric
+        True
+
+        >>> from sympy.combinatorics import Permutation, PermutationGroup
+        >>> g = PermutationGroup(
+        ...     Permutation(0, 1, 2, 3, 4),
+        ...     Permutation(2, 3))
+        >>> g.is_symmetric
+        True
+
+        Notes
+        =====
+
+        This uses a naive test involving the computation of the full
+        group order.
+        If you need more quicker taxonomy for large groups, you can use
+        :meth:`PermutationGroup.is_alt_sym`.
+        However, :meth:`PermutationGroup.is_alt_sym` may not be accurate
+        and is not able to distinguish between an alternating group and
+        a symmetric group.
+
+        See Also
+        ========
+
+        is_alt_sym
         """
+        _is_sym = self._is_sym
+        if _is_sym is not None:
+            return _is_sym
+
+        n = self.degree
+        if n >= 8:
+            if self.is_transitive():
+                _is_alt_sym = self._eval_is_alt_sym_monte_carlo()
+                if _is_alt_sym:
+                    if any(g.is_odd for g in self.generators):
+                        self._is_sym, self._is_alt = True, False
+                        return True
+
+                    self._is_sym, self._is_alt = False, True
+                    return False
+
+                return self._eval_is_alt_sym_naive(only_sym=True)
+
+            self._is_sym, self._is_alt = False, False
+            return False
+
+        return self._eval_is_alt_sym_naive(only_sym=True)
+
+
+    @property
+    def is_alternating(self):
+        """Return ``True`` if the group is alternating.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics.named_groups import AlternatingGroup
+        >>> g = AlternatingGroup(5)
+        >>> g.is_alternating
+        True
+
+        >>> from sympy.combinatorics import Permutation, PermutationGroup
+        >>> g = PermutationGroup(
+        ...     Permutation(0, 1, 2, 3, 4),
+        ...     Permutation(2, 3, 4))
+        >>> g.is_alternating
+        True
+
+        Notes
+        =====
+
+        This uses a naive test involving the computation of the full
+        group order.
+        If you need more quicker taxonomy for large groups, you can use
+        :meth:`PermutationGroup.is_alt_sym`.
+        However, :meth:`PermutationGroup.is_alt_sym` may not be accurate
+        and is not able to distinguish between an alternating group and
+        a symmetric group.
+
+        See Also
+        ========
+
+        is_alt_sym
+        """
+        _is_alt = self._is_alt
+        if _is_alt is not None:
+            return _is_alt
+
+        n = self.degree
+        if n >= 8:
+            if self.is_transitive():
+                _is_alt_sym = self._eval_is_alt_sym_monte_carlo()
+                if _is_alt_sym:
+                    if all(g.is_even for g in self.generators):
+                        self._is_sym, self._is_alt = False, True
+                        return True
+
+                    self._is_sym, self._is_alt = True, False
+                    return False
+
+                return self._eval_is_alt_sym_naive(only_alt=True)
+
+            self._is_sym, self._is_alt = False, False
+            return False
+
+        return self._eval_is_alt_sym_naive(only_alt=True)
+
+    @classmethod
+    def _distinct_primes_lemma(cls, primes):
+        """Subroutine to test if there is only one cyclic group for the
+        order."""
+        primes = sorted(primes)
+        l = len(primes)
+        for i in range(l):
+            for j in range(i+1, l):
+                if primes[j] % primes[i] == 1:
+                    return None
+        return True
+
+    @property
+    def is_cyclic(self):
+        r"""
         Return ``True`` if the group is Cyclic.
 
         Examples
@@ -2836,25 +3084,77 @@ class PermutationGroup(Basic):
         >>> G.is_cyclic
         False
 
+        Notes
+        =====
+
+        If the order of a group $n$ can be factored into the distinct
+        primes $p_1, p_2, ... , p_s$ and if
+
+        .. math::
+            \forall i, j \in \{1, 2, \ldots, s \}:
+            p_i \not \equiv 1 \pmod {p_j}
+
+        holds true, there is only one group of the order $n$ which
+        is a cyclic group. [1]_ This is a generalization of the lemma
+        that the group of order $15, 35, ...$ are cyclic.
+
+        And also, these additional lemmas can be used to test if a
+        group is cyclic if the order of the group is already found.
+
+        - If the group is abelian and the order of the group is
+          square-free, the group is cyclic.
+        - If the order of the group is less than $6$ and is not $4$, the
+          group is cyclic.
+        - If the order of the group is prime, the group is cyclic.
+
+        References
+        ==========
+
+        .. [1] 1978: John S. Rose: A Course on Group Theory,
+            Introduction to Finite Group Theory: 1.4
         """
         if self._is_cyclic is not None:
             return self._is_cyclic
-        self._is_cyclic = True
 
         if len(self.generators) == 1:
+            self._is_cyclic = True
+            self._is_abelian = True
             return True
-        if not self._is_abelian:
+
+        if self._is_abelian is False:
             self._is_cyclic = False
             return False
-        for p in primefactors(self.order()):
+
+        order = self.order()
+
+        if order < 6:
+            self._is_abelian == True
+            if order != 4:
+                self._is_cyclic == True
+                return True
+
+        factors = factorint(order)
+        if all(v == 1 for v in factors.values()):
+            if self._is_abelian:
+                self._is_cyclic = True
+                return True
+
+            primes = list(factors.keys())
+            if PermutationGroup._distinct_primes_lemma(primes) is True:
+                self._is_cyclic = True
+                self._is_abelian = True
+                return True
+
+        for p in factors:
             pgens = []
             for g in self.generators:
                 pgens.append(g**p)
             if self.index(self.subgroup(pgens)) != p:
                 self._is_cyclic = False
                 return False
-            else:
-                continue
+
+        self._is_cyclic = True
+        self._is_abelian = True
         return True
 
     def pointwise_stabilizer(self, points, incremental=True):
@@ -2925,7 +3225,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> a, b = [Permutation([1, 0, 3, 2]), Permutation([1, 3, 0, 2])]
         >>> G = PermutationGroup([a, b])
@@ -3119,7 +3418,6 @@ class PermutationGroup(Basic):
         ========
 
         >>> from sympy.combinatorics.named_groups import AlternatingGroup
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.testutil import _verify_bsgs
         >>> A = AlternatingGroup(7)
         >>> base = [2, 3]
@@ -3304,7 +3602,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.testutil import _verify_bsgs
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> S = SymmetricGroup(5)
@@ -3459,9 +3756,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> G = DihedralGroup(6)
         >>> G.stabilizer(5)
@@ -3563,7 +3857,6 @@ class PermutationGroup(Basic):
 
         >>> from sympy.combinatorics.named_groups import (SymmetricGroup,
         ... AlternatingGroup)
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.testutil import _verify_bsgs
         >>> S = SymmetricGroup(7)
         >>> prop_even = lambda x: x.is_even
@@ -3811,7 +4104,7 @@ class PermutationGroup(Basic):
             # if G_k is transitive on the subset excluding b_0,...,b_(k-1)
             # then G is (k+1)-transitive
             for i in range(n):
-                orb = G.orbit((i))
+                orb = G.orbit(i)
                 if len(orb) != n - i:
                     self._transitivity_degree = i
                     return i
@@ -3871,13 +4164,13 @@ class PermutationGroup(Basic):
         the interval [0..n-1] into p equal parts, each of length p^(i-1):
         [0..p^(i-1)-1], [p^(i-1)..2*p^(i-1)-1]...[(p-1)*p^(i-1)..p^i-1].
         Find a p-Sylow subgroup of Sym(p^(i-1)) (treated as a subgroup
-        of `self`) acting on each of the parts. Call the subgroups
+        of ``self``) acting on each of the parts. Call the subgroups
         P_1, P_2...P_p. The generators for the subgroups P_2...P_p
         can be obtained from those of P_1 by applying a "shifting"
         permutation to them, that is, a permutation mapping [0..p^(i-1)-1]
         to the second part (the other parts are obtained by using the shift
         multiple times). The union of this permutation and the generators
-        of P_1 is a p-Sylow subgroup of `self`.
+        of P_1 is a p-Sylow subgroup of ``self``.
 
         For n not equal to a power of p, partition
         [0..n-1] in accordance with how n would be written in base p.
@@ -4162,15 +4455,15 @@ class PermutationGroup(Basic):
 
     def _verify(H, K, phi, z, alpha):
         '''
-        Return a list of relators `rels` in generators `gens_h` that
-        are mapped to `H.generators` by `phi` so that given a finite
-        presentation <gens_k | rels_k> of `K` on a subset of `gens_h`
-        <gens_h | rels_k + rels> is a finite presentation of `H`.
+        Return a list of relators ``rels`` in generators ``gens`_h` that
+        are mapped to ``H.generators`` by ``phi`` so that given a finite
+        presentation <gens_k | rels_k> of ``K`` on a subset of ``gens_h``
+        <gens_h | rels_k + rels> is a finite presentation of ``H``.
 
-        `H` should be generated by the union of `K.generators` and `z`
-        (a single generator), and `H.stabilizer(alpha) == K`; `phi` is a
+        ``H`` should be generated by the union of ``K.generators`` and ``z``
+        (a single generator), and ``H.stabilizer(alpha) == K``; ``phi`` is a
         canonical injection from a free group into a permutation group
-        containing `H`.
+        containing ``H``.
 
         The algorithm is described in [1], Chapter 6.
 
@@ -4212,7 +4505,7 @@ class PermutationGroup(Basic):
 
         # orbit representatives of K_beta
         gammas = [alpha, beta]
-        orbits = list(set(tuple(K_beta.orbit(o)) for o in orbit))
+        orbits = list({tuple(K_beta.orbit(o)) for o in orbit})
         orbit_reps = [orb[0] for orb in orbits]
         for rep in orbit_reps:
             if rep not in gammas:
@@ -4289,7 +4582,6 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.named_groups import DihedralGroup
         >>> P = DihedralGroup(4)
         >>> G = P.strong_presentation()
@@ -4516,6 +4808,21 @@ class PermutationGroup(Basic):
         return G._fp_presentation
 
     def polycyclic_group(self):
+        """
+        Return the PolycyclicGroup instance with below parameters:
+
+        * ``pc_sequence`` : Polycyclic sequence is formed by collecting all
+          the missing generators between the adjacent groups in the
+          derived series of given permutation group.
+
+        * ``pc_series`` : Polycyclic series is formed by adding all the missing
+          generators of ``der[i+1]`` in ``der[i]``, where ``der`` represents
+          the derived series.
+
+        * ``relative_order`` : A list, computed by the ratio of adjacent groups in
+          pc_series.
+
+        """
         from sympy.combinatorics.pc_groups import PolycyclicGroup
         if not self.is_polycyclic:
             raise ValueError("The group must be solvable")
@@ -4625,7 +4932,7 @@ def _orbits(degree, generators):
     ========
 
     >>> from sympy.combinatorics.permutations import Permutation
-    >>> from sympy.combinatorics.perm_groups import PermutationGroup, _orbits
+    >>> from sympy.combinatorics.perm_groups import _orbits
     >>> a = Permutation([0, 2, 1])
     >>> b = Permutation([1, 0, 2])
     >>> _orbits(a.size, [a, b])
@@ -4667,8 +4974,6 @@ def _orbit_transversal(degree, generators, alpha, pairs, af=False, slp=False):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> from sympy.combinatorics.perm_groups import _orbit_transversal
     >>> G = DihedralGroup(6)
@@ -4720,8 +5025,6 @@ def _stabilizer(degree, generators, alpha):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
     >>> from sympy.combinatorics.perm_groups import _stabilizer
     >>> from sympy.combinatorics.named_groups import DihedralGroup
     >>> G = DihedralGroup(6)
@@ -4757,3 +5060,203 @@ def _stabilizer(degree, generators, alpha):
     return [_af_new(x) for x in stab_gens]
 
 PermGroup = PermutationGroup
+
+class SymmetricPermutationGroup(Basic):
+    """
+    The class defining the lazy form of SymmetricGroup.
+
+    deg : int
+
+    """
+
+    def __new__(cls, deg):
+        deg = _sympify(deg)
+        obj = Basic.__new__(cls, deg)
+        obj._deg = deg
+        obj._order = None
+        return obj
+
+    def __contains__(self, i):
+        """Return ``True`` if *i* is contained in SymmetricPermutationGroup.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation, SymmetricPermutationGroup
+        >>> G = SymmetricPermutationGroup(4)
+        >>> Permutation(1, 2, 3) in G
+        True
+
+        """
+        if not isinstance(i, Permutation):
+            raise TypeError("A SymmetricPermutationGroup contains only Permutations as "
+                            "elements, not elements of type %s" % type(i))
+        return i.size == self.degree
+
+    def order(self):
+        """
+        Return the order of the SymmetricPermutationGroup.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import SymmetricPermutationGroup
+        >>> G = SymmetricPermutationGroup(4)
+        >>> G.order()
+        24
+        """
+        if self._order is not None:
+            return self._order
+        n = self._deg
+        self._order = factorial(n)
+        return self._order
+
+    @property
+    def degree(self):
+        """
+        Return the degree of the SymmetricPermutationGroup.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import SymmetricPermutationGroup
+        >>> G = SymmetricPermutationGroup(4)
+        >>> G.degree
+        4
+
+        """
+        return self._deg
+
+    @property
+    def identity(self):
+        '''
+        Return the identity element of the SymmetricPermutationGroup.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import SymmetricPermutationGroup
+        >>> G = SymmetricPermutationGroup(4)
+        >>> G.identity()
+        (3)
+
+        '''
+        return _af_new(list(range(self._deg)))
+
+
+class Coset(Basic):
+    """A left coset of a permutation group with respect to an element.
+
+    Parameters
+    ==========
+
+    g : Permutation
+
+    H : PermutationGroup
+
+    dir : "+" or "-", If not specified by default it will be "+"
+        here ``dir`` specified the type of coset "+" represent the
+        right coset and "-" represent the left coset.
+
+    G : PermutationGroup, optional
+        The group which contains *H* as its subgroup and *g* as its
+        element.
+
+        If not specified, it would automatically become a symmetric
+        group ``SymmetricPermutationGroup(g.size)`` and
+        ``SymmetricPermutationGroup(H.degree)`` if ``g.size`` and ``H.degree``
+        are matching.``SymmetricPermutationGroup`` is a lazy form of SymmetricGroup
+        used for representation purpose.
+
+    """
+
+    def __new__(cls, g, H, G=None, dir="+"):
+        g = _sympify(g)
+        if not isinstance(g, Permutation):
+            raise NotImplementedError
+
+        H = _sympify(H)
+        if not isinstance(H, PermutationGroup):
+            raise NotImplementedError
+
+        if G is not None:
+            G = _sympify(G)
+            if not isinstance(G, PermutationGroup) and not isinstance(G, SymmetricPermutationGroup):
+                raise NotImplementedError
+            if not H.is_subgroup(G):
+                raise ValueError("{} must be a subgroup of {}.".format(H, G))
+            if g not in G:
+                raise ValueError("{} must be an element of {}.".format(g, G))
+        else:
+            g_size = g.size
+            h_degree = H.degree
+            if g_size != h_degree:
+                raise ValueError(
+                    "The size of the permutation {} and the degree of "
+                    "the permutation group {} should be matching "
+                    .format(g, H))
+            G = SymmetricPermutationGroup(g.size)
+
+        if isinstance(dir, str):
+            dir = Symbol(dir)
+        elif not isinstance(dir, Symbol):
+            raise TypeError("dir must be of type basestring or "
+                    "Symbol, not %s" % type(dir))
+        if str(dir) not in ('+', '-'):
+            raise ValueError("dir must be one of '+' or '-' not %s" % dir)
+        obj = Basic.__new__(cls, g, H, G, dir)
+        obj._dir = dir
+        return obj
+
+    @property
+    def is_left_coset(self):
+        """
+        Check if the coset is left coset that is ``gH``.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation, PermutationGroup, Coset
+        >>> a = Permutation(1, 2)
+        >>> b = Permutation(0, 1)
+        >>> G = PermutationGroup([a, b])
+        >>> cst = Coset(a, G, dir="-")
+        >>> cst.is_left_coset
+        True
+
+        """
+        return str(self._dir) == '-'
+
+    @property
+    def is_right_coset(self):
+        """
+        Check if the coset is right coset that is ``Hg``.
+
+        Examples
+        ========
+
+        >>> from sympy.combinatorics import Permutation, PermutationGroup, Coset
+        >>> a = Permutation(1, 2)
+        >>> b = Permutation(0, 1)
+        >>> G = PermutationGroup([a, b])
+        >>> cst = Coset(a, G, dir="+")
+        >>> cst.is_right_coset
+        True
+
+        """
+        return str(self._dir) == '+'
+
+    def as_list(self):
+        """
+        Return all the elements of coset in the form of list.
+        """
+        g = self.args[0]
+        H = self.args[1]
+        cst = []
+        if str(self._dir) == '+':
+            for h in H.elements:
+                cst.append(h*g)
+        else:
+            for h in H.elements:
+                cst.append(g*h)
+        return cst

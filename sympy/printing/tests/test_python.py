@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-
 from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
     log, exp, sqrt, pi, Function, sin, Eq, Ge, Le, Gt, Lt, Ne, Abs, conjugate,
     I, Matrix)
 
 from sympy.printing.python import python
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 
 x, y = symbols('x,y')
 th = Symbol('theta')

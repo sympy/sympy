@@ -1,6 +1,7 @@
 """Singleton mechanism"""
 
-from __future__ import print_function, division
+
+# from typing import Any, Dict, Type
 
 from .core import Registry
 from .assumptions import ManagedProperties
@@ -45,7 +46,8 @@ class SingletonRegistry(Registry):
     When using ``is`` comparison, make sure the argument is sympified. For
     instance,
 
-    >>> 0 is S.Zero
+    >>> x = 0
+    >>> x is S.Zero
     False
 
     This problem is not an issue when using ``==``, which is recommended for
@@ -77,7 +79,7 @@ class SingletonRegistry(Registry):
     ``Integer.__div__``, which knows how to return a ``Rational``.
 
     """
-    __slots__ = []
+    __slots__ = ()
 
     # Also allow things like S(5)
     __call__ = staticmethod(sympify)
@@ -129,15 +131,14 @@ class Singleton(ManagedProperties):
 
     A singleton class has only one instance which is returned every time the
     class is instantiated. Additionally, this instance can be accessed through
-    the global registry object S as S.<class_name>.
+    the global registry object ``S`` as ``S.<class_name>``.
 
     Examples
     ========
 
         >>> from sympy import S, Basic
         >>> from sympy.core.singleton import Singleton
-        >>> from sympy.core.compatibility import with_metaclass
-        >>> class MySingleton(with_metaclass(Singleton, Basic)):
+        >>> class MySingleton(Basic, metaclass=Singleton):
         ...     pass
         >>> Basic() is Basic()
         False
@@ -159,11 +160,11 @@ class Singleton(ManagedProperties):
     subclass may use a subclassed metaclass).
     """
 
-    _instances = {}
+    _instances = {}  ## type: Dict[Type[Any], Any]
     "Maps singleton classes to their instances."
 
     def __new__(cls, *args, **kwargs):
-        result = super(Singleton, cls).__new__(cls, *args, **kwargs)
+        result = super().__new__(cls, *args, **kwargs)
         S.register(result)
         return result
 
@@ -173,7 +174,7 @@ class Singleton(ManagedProperties):
         # __call__ is invoked first, before __new__() and __init__().
         if self not in Singleton._instances:
             Singleton._instances[self] = \
-                super(Singleton, self).__call__(*args, **kwargs)
+                super().__call__(*args, **kwargs)
                 # Invokes the standard constructor of SomeClass.
         return Singleton._instances[self]
 

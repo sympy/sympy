@@ -134,12 +134,12 @@ class PlotModeBase(PlotMode):
     def __init__(self, *args, **kwargs):
         self.verts = []
         self.cverts = []
-        self.bounds = [[S.Infinity, -S.Infinity, 0],
-                       [S.Infinity, -S.Infinity, 0],
-                       [S.Infinity, -S.Infinity, 0]]
-        self.cbounds = [[S.Infinity, -S.Infinity, 0],
-                        [S.Infinity, -S.Infinity, 0],
-                        [S.Infinity, -S.Infinity, 0]]
+        self.bounds = [[S.Infinity, S.NegativeInfinity, 0],
+                       [S.Infinity, S.NegativeInfinity, 0],
+                       [S.Infinity, S.NegativeInfinity, 0]]
+        self.cbounds = [[S.Infinity, S.NegativeInfinity, 0],
+                        [S.Infinity, S.NegativeInfinity, 0],
+                        [S.Infinity, S.NegativeInfinity, 0]]
 
         self._draw_lock = RLock()
 

@@ -16,7 +16,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
-from sympy.utilities.pytest import XFAIL, slow, raises, warns_deprecated_sympy
+from sympy.matrices import Matrix, SparseMatrix
+from sympy.testing.pytest import XFAIL, slow, raises
 from sympy.assumptions.assume import assuming
 import math
 
@@ -568,6 +569,7 @@ def test_I():
     assert ask(Q.real(z)) is True
 
 
+
 def test_bounded():
     x, y, z = symbols('x,y,z')
     assert ask(Q.finite(x)) is None
@@ -798,7 +800,6 @@ def test_bounded():
         Q.finite(a), Q.finite(x) & ~Q.finite(y) & Q.positive(z)) is None
     assert ask(Q.finite(a), Q.finite(x) & Q.positive(y) &
         ~Q.finite(y) & Q.positive(z) & ~Q.finite(z)) is False
-
     assert ask(Q.finite(a), Q.finite(x) &
         Q.positive(y) & ~Q.finite(y) & Q.negative(z)) is None
     assert ask(
@@ -1031,9 +1032,9 @@ def test_bounded():
     assert ask(Q.finite(2**x)) is None
     assert ask(Q.finite(2**x), Q.finite(x)) is True
     assert ask(Q.finite(x**x)) is None
-    assert ask(Q.finite(Rational(1, 2) ** x)) is None
-    assert ask(Q.finite(Rational(1, 2) ** x), Q.positive(x)) is True
-    assert ask(Q.finite(Rational(1, 2) ** x), Q.negative(x)) is None
+    assert ask(Q.finite(S.Half ** x)) is None
+    assert ask(Q.finite(S.Half ** x), Q.positive(x)) is True
+    assert ask(Q.finite(S.Half ** x), Q.negative(x)) is None
     assert ask(Q.finite(2**x), Q.negative(x)) is True
     assert ask(Q.finite(sqrt(x))) is None
     assert ask(Q.finite(2**x), ~Q.finite(x)) is False
@@ -1499,7 +1500,7 @@ def test_imaginary():
     assert ask(Q.imaginary(exp(pi*I/2, evaluate=False))) is True
 
     # issue 7886
-    assert ask(Q.imaginary(Pow(x, S.One/4)), Q.real(x) & Q.negative(x)) is False
+    assert ask(Q.imaginary(Pow(x, Rational(1, 4))), Q.real(x) & Q.negative(x)) is False
 
 
 def test_integer():
@@ -1891,6 +1892,30 @@ def test_real_functions():
     assert ask(Q.real(im(x))) is True
 
 
+def test_matrix():
+
+    # hermitian
+    assert ask(Q.hermitian(Matrix([[2, 2 + I, 4], [2 - I, 3, I], [4, -I, 1]]))) == True
+    assert ask(Q.hermitian(Matrix([[2, 2 + I, 4], [2 + I, 3, I], [4, -I, 1]]))) == False
+    z = symbols('z', complex=True)
+    assert ask(Q.hermitian(Matrix([[2, 2 + I, z], [2 - I, 3, I], [4, -I, 1]]))) == None
+    assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11))))) == True
+    assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, I, 0), (-5, 0, 11))))) == False
+    assert ask(Q.hermitian(SparseMatrix(((25, 15, -5), (15, z, 0), (-5, 0, 11))))) == None
+
+    # antihermitian
+    A = Matrix([[0, -2 - I, 0], [2 - I, 0, -I], [0, -I, 0]])
+    B = Matrix([[-I, 2 + I, 0], [-2 + I, 0, 2 + I], [0, -2 + I, -I]])
+    assert ask(Q.antihermitian(A)) is True
+    assert ask(Q.antihermitian(B)) is True
+    assert ask(Q.antihermitian(A**2)) is False
+    C = (B**3)
+    C.simplify()
+    assert ask(Q.antihermitian(C)) is True
+    _A = Matrix([[0, -2 - I, 0], [z, 0, -I], [0, -I, 0]])
+    assert ask(Q.antihermitian(_A)) is None
+
+
 def test_algebraic():
     assert ask(Q.algebraic(x)) is None
 
@@ -1905,8 +1930,8 @@ def test_algebraic():
     assert ask(Q.algebraic(I*sqrt(3))) is True
     assert ask(Q.algebraic(sqrt(1 + I*sqrt(3)))) is True
 
-    assert ask(Q.algebraic((1 + I*sqrt(3)**(S(17)/31)))) is True
-    assert ask(Q.algebraic((1 + I*sqrt(3)**(S(17)/pi)))) is False
+    assert ask(Q.algebraic(1 + I*sqrt(3)**Rational(17, 31))) is True
+    assert ask(Q.algebraic(1 + I*sqrt(3)**(17/pi))) is False
 
     for f in [exp, sin, tan, asin, atan, cos]:
         assert ask(Q.algebraic(f(7))) is False
@@ -2067,7 +2092,7 @@ def test_compute_known_facts():
                       Implies(Q.real, Q.complex))
     known_facts_keys = {Q.integer, Q.rational, Q.real, Q.complex}
 
-    s = compute_known_facts(known_facts, known_facts_keys)
+    compute_known_facts(known_facts, known_facts_keys)
 
 
 @slow
@@ -2076,7 +2101,7 @@ def test_known_facts_consistent():
     from sympy.assumptions.ask import get_known_facts, get_known_facts_keys
     from os.path import abspath, dirname, join
     filename = join(dirname(dirname(abspath(__file__))), 'ask_generated.py')
-    with open(filename, 'r') as f:
+    with open(filename) as f:
         assert f.read() == \
             compute_known_facts(get_known_facts(), get_known_facts_keys())
 
@@ -2139,15 +2164,6 @@ def test_issue_7246_failing():
     #Move this test to test_issue_7246 once
     #the new assumptions module is improved.
     assert ask(Q.positive(acos(x)), Q.zero(x)) is True
-
-
-def test_deprecated_Q_bounded():
-    with warns_deprecated_sympy():
-        Q.bounded
-
-def test_deprecated_Q_infinity():
-    with warns_deprecated_sympy():
-        Q.infinity
 
 
 def test_check_old_assumption():
@@ -2234,3 +2250,25 @@ def test_autosimp_used_to_fail():
     assert ask(Q.imaginary(0**(-I))) is False
     assert ask(Q.real(0**I)) is False
     assert ask(Q.real(0**(-I))) is False
+
+
+def test_custom_AskHandler():
+    from sympy.assumptions import register_handler, ask, Q
+    from sympy.assumptions.handlers import AskHandler
+    from sympy.logic.boolalg import conjuncts
+    from sympy import Symbol
+
+    class MersenneHandler(AskHandler):
+        @staticmethod
+        def Integer(expr, assumptions):
+            from sympy import log
+            if ask(Q.integer(log(expr + 1, 2))):
+                return True
+        @staticmethod
+        def Symbol(expr, assumptions):
+            if expr in conjuncts(assumptions):
+                return True
+    register_handler('mersenne', MersenneHandler)
+
+    n = Symbol('n', integer=True)
+    assert ask(Q.mersenne(n), Q.mersenne(n))

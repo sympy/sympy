@@ -1,5 +1,6 @@
-Printing System
-===============
+========
+Printing
+========
 
 See the :ref:`tutorial-printing` section in tutorial for introduction into
 printing.
@@ -38,6 +39,8 @@ The module ``pretty_symbology`` provides primitives to construct 2D shapes
 (hline, vline, etc) together with a technique to use unicode automatically
 when possible.
 
+.. module:: sympy.printing.pretty
+
 .. module:: sympy.printing.pretty.pretty
 
 .. autoclass:: PrettyPrinter
@@ -70,23 +73,23 @@ Usage::
     >>> print_ccode(gamma(x**2), standard='C99')
     tgamma(pow(x, 2))
 
-.. autodata:: sympy.printing.ccode.known_functions_C89
-.. autodata:: sympy.printing.ccode.known_functions_C99
+.. autodata:: sympy.printing.ccode::known_functions_C89
+.. autodata:: sympy.printing.ccode::known_functions_C99
 
-.. autoclass:: sympy.printing.ccode.C89CodePrinter
+.. autoclass:: sympy.printing.ccode::C89CodePrinter
    :members:
 
    .. autoattribute:: C89CodePrinter.printmethod
 
-.. autoclass:: sympy.printing.ccode.C99CodePrinter
+.. autoclass:: sympy.printing.ccode::C99CodePrinter
    :members:
 
    .. autoattribute:: C99CodePrinter.printmethod
 
 
-.. autofunction:: sympy.printing.ccode.ccode
+.. autofunction:: sympy.printing.ccode::ccode
 
-.. autofunction:: sympy.printing.ccode.print_ccode
+.. autofunction:: sympy.printing.ccode::print_ccode
 
 C++ code printers
 -----------------
@@ -104,19 +107,19 @@ Usage::
     >>> print(cxxcode(Min(gamma(x) - 1, x), standard='C++11'))
     std::min(x, std::tgamma(x) - 1)
 
-.. autoclass:: sympy.printing.cxxcode.CXX98CodePrinter
+.. autoclass:: sympy.printing.cxxcode::CXX98CodePrinter
    :members:
 
    .. autoattribute:: CXX98CodePrinter.printmethod
 
 
-.. autoclass:: sympy.printing.cxxcode.CXX11CodePrinter
+.. autoclass:: sympy.printing.cxxcode::CXX11CodePrinter
    :members:
 
    .. autoattribute:: CXX11CodePrinter.printmethod
 
 
-.. autofunction:: sympy.printing.cxxcode.cxxcode
+.. autofunction:: sympy.printing.cxxcode::cxxcode
 
 
 
@@ -140,17 +143,17 @@ Usage::
     >>> print_rcode(Abs(x**2))
     abs(x^2)
 
-.. autodata:: sympy.printing.rcode.known_functions
+.. autodata:: sympy.printing.rcode::known_functions
 
-.. autoclass:: sympy.printing.rcode.RCodePrinter
+.. autoclass:: sympy.printing.rcode::RCodePrinter
    :members:
 
    .. autoattribute:: RCodePrinter.printmethod
 
 
-.. autofunction:: sympy.printing.rcode.rcode
+.. autofunction:: sympy.printing.rcode::rcode
 
-.. autofunction:: sympy.printing.rcode.print_rcode
+.. autofunction:: sympy.printing.rcode::print_rcode
 
 Fortran Printing
 ----------------
@@ -300,19 +303,33 @@ Mathematica code printing
 
 .. autofunction:: sympy.printing.mathematica.mathematica_code
 
+Maple code printing
+-------------------
+
+.. module:: sympy.printing.maple
+
+.. autoclass:: sympy.printing.maple.MapleCodePrinter
+   :members:
+
+   .. autoattribute:: MapleCodePrinter.printmethod
+
+.. autofunction:: sympy.printing.maple.maple_code
+
+.. autofunction:: sympy.printing.maple.print_maple_code
+
 Javascript Code printing
 ------------------------
 
 .. module:: sympy.printing.jscode
 
-.. autodata:: sympy.printing.jscode.known_functions
+.. autodata:: sympy.printing.jscode::known_functions
 
-.. autoclass:: sympy.printing.jscode.JavascriptCodePrinter
+.. autoclass:: sympy.printing.jscode::JavascriptCodePrinter
    :members:
 
    .. autoattribute:: JavascriptCodePrinter.printmethod
 
-.. autofunction:: sympy.printing.jscode.jscode
+.. autofunction:: sympy.printing.jscode::jscode
 
 Julia code printing
 ---------------------------------
@@ -373,6 +390,8 @@ Theano Code printing
 .. autofunction:: sympy.printing.theanocode.theano_code
 
 .. autofunction:: sympy.printing.theanocode.theano_function
+
+.. autofunction:: sympy.printing.theanocode.dim_handling
 
 Gtk
 ---
@@ -515,6 +534,8 @@ This module generates readable representations of SymPy expressions.
    :members: parenthesize, stringify, emptyPrinter
 
    .. autoattribute:: StrPrinter.printmethod
+
+.. autofunction:: sstr
 
 .. autofunction:: sstrrepr
 

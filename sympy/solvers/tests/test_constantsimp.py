@@ -4,9 +4,9 @@ should serve as a set of test cases.
 """
 
 from sympy import (acos, cos, cosh, Eq, exp, Function, I, Integral, log, Pow,
-                   S, sin, sinh, sqrt, Symbol, Add)
-from sympy.solvers.ode import constantsimp, constant_renumber
-from sympy.utilities.pytest import XFAIL
+                   S, sin, sinh, sqrt, Symbol)
+from sympy.solvers.ode.ode import constantsimp, constant_renumber
+from sympy.testing.pytest import XFAIL
 
 
 x = Symbol('x')

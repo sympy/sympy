@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, Dummy, pi
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos
@@ -8,7 +6,6 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.polys.orthopolys import (legendre_poly, laguerre_poly,
                                     hermite_poly, jacobi_poly)
 from sympy.polys.rootoftools import RootOf
-from sympy.core.compatibility import range
 
 
 def gauss_legendre(n, n_digits):
@@ -73,7 +70,7 @@ def gauss_legendre(n, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((2/((1-r**2) * pd.subs(x, r)**2)).n(n_digits))
     return xi, w
@@ -142,7 +139,7 @@ def gauss_laguerre(n, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((r/((n+1)**2 * p1.subs(x, r)**2)).n(n_digits))
     return xi, w
@@ -213,7 +210,7 @@ def gauss_hermite(n, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append(((2**(n-1) * factorial(n) * sqrt(pi)) /
                  (n**2 * p1.subs(x, r)**2)).n(n_digits))
@@ -289,7 +286,7 @@ def gauss_gen_laguerre(n, alpha, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((gamma(alpha+n) /
                  (n*gamma(n)*p1.subs(x, r)*p2.subs(x, r))).n(n_digits))
@@ -330,7 +327,6 @@ def gauss_chebyshev_t(n, n_digits):
     Examples
     ========
 
-    >>> from sympy import S
     >>> from sympy.integrals.quadrature import gauss_chebyshev_t
     >>> x, w = gauss_chebyshev_t(3, 5)
     >>> x
@@ -397,7 +393,6 @@ def gauss_chebyshev_u(n, n_digits):
     Examples
     ========
 
-    >>> from sympy import S
     >>> from sympy.integrals.quadrature import gauss_chebyshev_u
     >>> x, w = gauss_chebyshev_u(3, 5)
     >>> x
@@ -505,7 +500,7 @@ def gauss_jacobi(n, alpha, beta, n_digits):
     w = []
     for r in p.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((
             - (2*n+alpha+beta+2) / (n+alpha+beta+S.One) *
@@ -578,7 +573,7 @@ def gauss_lobatto(n, n_digits):
     w = []
     for r in pd.real_roots():
         if isinstance(r, RootOf):
-            r = r.eval_rational(S(1)/10**(n_digits+2))
+            r = r.eval_rational(S.One/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((2/(n*(n-1) * p.subs(x, r)**2)).n(n_digits))
 

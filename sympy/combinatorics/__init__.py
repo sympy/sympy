@@ -6,9 +6,35 @@ from sympy.combinatorics.partitions import (Partition, IntegerPartition,
     RGS_rank, RGS_unrank, RGS_enum)
 from sympy.combinatorics.polyhedron import (Polyhedron, tetrahedron, cube,
     octahedron, dodecahedron, icosahedron)
-from sympy.combinatorics.perm_groups import PermutationGroup
+from sympy.combinatorics.perm_groups import PermutationGroup, Coset, SymmetricPermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.graycode import GrayCode
 from sympy.combinatorics.named_groups import (SymmetricGroup, DihedralGroup,
     CyclicGroup, AlternatingGroup, AbelianGroup, RubikGroup)
 from sympy.combinatorics.pc_groups import PolycyclicGroup, Collector
+
+__all__ = [
+    'Permutation', 'Cycle',
+
+    'Prufer',
+
+    'cyclic', 'alternating', 'symmetric', 'dihedral',
+
+    'Subset',
+
+    'Partition', 'IntegerPartition', 'RGS_rank', 'RGS_unrank', 'RGS_enum',
+
+    'Polyhedron', 'tetrahedron', 'cube', 'octahedron', 'dodecahedron',
+    'icosahedron',
+
+    'PermutationGroup', 'Coset', 'SymmetricPermutationGroup',
+
+    'DirectProduct',
+
+    'GrayCode',
+
+    'SymmetricGroup', 'DihedralGroup', 'CyclicGroup', 'AlternatingGroup',
+    'AbelianGroup', 'RubikGroup',
+
+    'PolycyclicGroup', 'Collector',
+]

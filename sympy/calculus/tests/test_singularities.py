@@ -1,4 +1,4 @@
-from sympy import Symbol, exp, log, oo, S, I, sqrt
+from sympy import Symbol, exp, log, oo, S, I, sqrt, Rational
 from sympy.calculus.singularities import (
     singularities,
     is_increasing,
@@ -8,7 +8,7 @@ from sympy.calculus.singularities import (
     is_monotonic
 )
 from sympy.sets import Interval, FiniteSet
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import raises
 from sympy.abc import x, y
 
 
@@ -24,14 +24,10 @@ def test_singularities():
 
     x = Symbol('x', real=True)
     assert singularities(1/(x**2 + 1), x) == S.EmptySet
-
-
-@XFAIL
-def test_singularities_non_rational():
-    x = Symbol('x', real=True)
-
-    assert singularities(exp(1/x), x) == FiniteSet(0)
-    assert singularities(log((x - 2)**2), x) == FiniteSet(2)
+    assert singularities(exp(1/x), x, S.Reals) == FiniteSet(0)
+    assert singularities(exp(1/x), x, Interval(1, 2)) == S.EmptySet
+    assert singularities(log((x - 2)**2), x, Interval(1, 3)) == FiniteSet(2)
+    raises(NotImplementedError, lambda: singularities(x**-oo, x))
 
 
 def test_is_increasing():
@@ -46,6 +42,8 @@ def test_is_increasing():
     assert is_increasing(-x**2*a, Interval(1, oo), x)
     assert is_increasing(1)
 
+    assert is_increasing(4*x**3 - 6*x**2 - 72*x + 30, Interval(-2, 3)) is False
+
 
 def test_is_strictly_increasing():
     """Test whether is_strictly_increasing returns correct value."""
@@ -58,6 +56,7 @@ def test_is_strictly_increasing():
     assert not is_strictly_increasing(-x**2, Interval(0, oo))
     assert not is_strictly_decreasing(1)
 
+    assert is_strictly_increasing(4*x**3 - 6*x**2 - 72*x + 30, Interval.open(-2, 3)) is False
 
 def test_is_decreasing():
     """Test whether is_decreasing returns correct value."""
@@ -65,7 +64,7 @@ def test_is_decreasing():
 
     assert is_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
     assert is_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
-    assert not is_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))
+    assert not is_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, Rational(3, 2)))
     assert not is_decreasing(-x**2, Interval(-oo, 0))
     assert not is_decreasing(-x**2*b, Interval(-oo, 0), x)
 
@@ -74,7 +73,7 @@ def test_is_strictly_decreasing():
     """Test whether is_strictly_decreasing returns correct value."""
     assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     assert not is_strictly_decreasing(
-        1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))
+        1/(x**2 - 3*x), Interval.Ropen(-oo, Rational(3, 2)))
     assert not is_strictly_decreasing(-x**2, Interval(-oo, 0))
     assert not is_strictly_decreasing(1)
     assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))

@@ -6,15 +6,13 @@ Contains
 
 """
 
-from __future__ import division, print_function
-
 from sympy import Expr, Eq
 from sympy.core import S, pi, sympify
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.compatibility import ordered
-from sympy.core.symbol import Dummy, _uniquely_named_symbol, _symbol
+from sympy.core.symbol import Dummy, uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -119,7 +117,7 @@ class Ellipse(GeometrySet):
                                            self.vradius == o.vradius)
 
     def __hash__(self):
-        return super(Ellipse, self).__hash__()
+        return super().__hash__()
 
     def __new__(
         cls, center=None, hradius=None, vradius=None, eccentricity=None, **kwargs):
@@ -134,7 +132,7 @@ class Ellipse(GeometrySet):
             center = Point(center, dim=2)
 
         if len(center) != 2:
-            raise ValueError('The center of "{0}" must be a two dimensional point'.format(cls))
+            raise ValueError('The center of "{}" must be a two dimensional point'.format(cls))
 
         if len(list(filter(lambda x: x is not None, (hradius, vradius, eccentricity)))) != 2:
             raise ValueError(filldedent('''
@@ -637,7 +635,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Ellipse, Point, Line, sqrt
+        >>> from sympy import Ellipse, Point, Line
         >>> e = Ellipse(Point(0, 0), 5, 7)
         >>> e.intersection(Point(0, 0))
         []
@@ -734,7 +732,7 @@ class Ellipse(GeometrySet):
             if isinstance(intersect, Ellipse):
                 return True
             elif intersect:
-                return all((self.tangent_lines(i)[0]).equals((o.tangent_lines(i)[0])) for i in intersect)
+                return all((self.tangent_lines(i)[0]).equals(o.tangent_lines(i)[0]) for i in intersect)
             else:
                 return False
         elif isinstance(o, Line2D):
@@ -881,7 +879,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Line, Point, Ellipse
+        >>> from sympy import Point, Ellipse
         >>> e = Ellipse((0, 0), 2, 3)
         >>> c = e.center
         >>> e.normal_lines(c + Point(1, 0))
@@ -1018,7 +1016,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Circle, Ellipse, Point, symbols
+        >>> from sympy import Ellipse, Point, symbols
         >>> c = Point(1, 2)
         >>> Ellipse(c, 8, 7).auxiliary_circle()
         Circle(Point2D(1, 2), 8)
@@ -1042,7 +1040,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Circle, Ellipse, Point, symbols
+        >>> from sympy import Ellipse, Point, symbols
         >>> c = Point(3,8)
         >>> Ellipse(c, 7, 9).director_circle()
         Circle(Point2D(3, 8), sqrt(130))
@@ -1096,7 +1094,7 @@ class Ellipse(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Ellipse, Segment
+        >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
         >>> e1.random_point() # gives some random point
         Point2D(...)
@@ -1175,8 +1173,9 @@ class Ellipse(GeometrySet):
             c = c.reflect(line)
             return self.func(c, -self.hradius, self.vradius)
         else:
-            x, y = [_uniquely_named_symbol(
-                name, (self, line), real=True) for name in 'xy']
+            x, y = [uniquely_named_symbol(
+                name, (self, line), modify=lambda s: '_' + s, real=True)
+                for name in 'xy']
             expr = self.equation(x, y)
             p = Point(x, y).reflect(line)
             result = expr.subs(zip((x, y), p.args
@@ -1204,7 +1203,7 @@ class Ellipse(GeometrySet):
         if self.hradius == self.vradius:
             return self.func(self.center.rotate(angle, pt), self.hradius)
         if (angle/S.Pi).is_integer:
-            return super(Ellipse, self).rotate(angle, pt)
+            return super().rotate(angle, pt)
         if (2*angle/S.Pi).is_integer:
             return self.func(self.center.rotate(angle, pt), self.vradius, self.hradius)
         # XXX see https://github.com/sympy/sympy/issues/2815 for general ellipes
@@ -1336,6 +1335,7 @@ class Ellipse(GeometrySet):
         """
         return self.args[2]
 
+
     def second_moment_of_area(self, point=None):
         """Returns the second moment and product moment area of an ellipse.
 
@@ -1383,6 +1383,101 @@ class Ellipse(GeometrySet):
         I_xy = I_xy + self.area*(point[0] - self.center.x)*(point[1] - self.center.y)
 
         return I_xx, I_yy, I_xy
+
+
+    def polar_second_moment_of_area(self):
+        """Returns the polar second moment of area of an Ellipse
+
+        It is a constituent of the second moment of area, linked through
+        the perpendicular axis theorem. While the planar second moment of
+        area describes an object's resistance to deflection (bending) when
+        subjected to a force applied to a plane parallel to the central
+        axis, the polar second moment of area describes an object's
+        resistance to deflection when subjected to a moment applied in a
+        plane perpendicular to the object's central axis (i.e. parallel to
+        the cross-section)
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Polar_moment_of_inertia
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Circle, Ellipse
+        >>> c = Circle((5, 5), 4)
+        >>> c.polar_second_moment_of_area()
+        128*pi
+        >>> a, b = symbols('a, b')
+        >>> e = Ellipse((0, 0), a, b)
+        >>> e.polar_second_moment_of_area()
+        pi*a**3*b/4 + pi*a*b**3/4
+        """
+        second_moment = self.second_moment_of_area()
+        return second_moment[0] + second_moment[1]
+
+
+    def section_modulus(self, point=None):
+        """Returns a tuple with the section modulus of an ellipse
+
+        Section modulus is a geometric property of an ellipse defined as the
+        ratio of second moment of area to the distance of the extreme end of
+        the ellipse from the centroidal axis.
+
+        References
+        ==========
+
+        https://en.wikipedia.org/wiki/Section_modulus
+
+        Parameters
+        ==========
+
+        point : Point, two-tuple of sympifyable objects, or None(default=None)
+            point is the point at which section modulus is to be found.
+            If "point=None" section modulus will be calculated for the
+            point farthest from the centroidal axis of the ellipse.
+
+        Returns
+        =======
+
+        S_x, S_y: numbers or SymPy expressions
+                  S_x is the section modulus with respect to the x-axis
+                  S_y is the section modulus with respect to the y-axis
+                  A negetive sign indicates that the section modulus is
+                  determined for a point below the centroidal axis.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol, Ellipse, Circle, Point2D
+        >>> d = Symbol('d', positive=True)
+        >>> c = Circle((0, 0), d/2)
+        >>> c.section_modulus()
+        (pi*d**3/32, pi*d**3/32)
+        >>> e = Ellipse(Point2D(0, 0), 2, 4)
+        >>> e.section_modulus()
+        (8*pi, 4*pi)
+        >>> e.section_modulus((2, 2))
+        (16*pi, 4*pi)
+        """
+        x_c, y_c = self.center
+        if point is None:
+            # taking x and y as maximum distances from centroid
+            x_min, y_min, x_max, y_max = self.bounds
+            y = max(y_c - y_min, y_max - y_c)
+            x = max(x_c - x_min, x_max - x_c)
+        else:
+            # taking x and y as distances of the given point from the center
+            point = Point2D(point)
+            y = point.y - y_c
+            x = point.x - x_c
+
+        second_moment = self.second_moment_of_area()
+        S_x = second_moment[0]/y
+        S_y = second_moment[1]/x
+
+        return S_x, S_y
 
 
 class Circle(Ellipse):
@@ -1453,8 +1548,8 @@ class Circle(Ellipse):
     def __new__(cls, *args, **kwargs):
         from sympy.geometry.util import find
         from .polygon import Triangle
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
-        if len(args) == 1 and isinstance(args[0], Expr):
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
+        if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
             equation = args[0]
@@ -1493,7 +1588,7 @@ class Circle(Ellipse):
                 # this will prohibit imaginary radius
                 try:
                     r = Point(r, 0, evaluate=evaluate).x
-                except:
+                except ValueError:
                     raise GeometryError("Circle with imaginary radius is not permitted")
 
             if not (c is None or r is None):

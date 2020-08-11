@@ -112,7 +112,7 @@ def express(expr, system, system2=None, variables=False):
                                 Vectors")
         if variables:
             # Given expr is a scalar field
-            system_set = set([])
+            system_set = set()
             expr = sympify(expr)
             # Substitute all the coordinate variables
             for x in expr.atoms(BaseScalar):
@@ -171,7 +171,7 @@ def directional_derivative(field, direction_vector):
     elif isinstance(field, Vector):
         return Vector.zero
     else:
-        return S(0)
+        return S.Zero
 
 
 def laplacian(expr):
@@ -268,7 +268,7 @@ def is_solenoidal(field):
         raise TypeError("field should be a Vector")
     if field == Vector.zero:
         return True
-    return divergence(field).simplify() == S(0)
+    return divergence(field).simplify() is S.Zero
 
 
 def scalar_potential(field, coord_sys):
@@ -305,7 +305,7 @@ def scalar_potential(field, coord_sys):
     if not is_conservative(field):
         raise ValueError("Field is not conservative")
     if field == Vector.zero:
-        return S(0)
+        return S.Zero
     # Express the field exntirely in coord_sys
     # Substitute coordinate variables also
     if not isinstance(coord_sys, CoordSys3D):
@@ -354,7 +354,7 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSys3D, Point
+    >>> from sympy.vector import CoordSys3D
     >>> from sympy.vector import scalar_potential_difference
     >>> R = CoordSys3D('R')
     >>> P = R.origin.locate_new('P', R.x*R.i + R.y*R.j + R.z*R.k)
@@ -483,7 +483,6 @@ def orthogonalize(*vlist, **kwargs):
     ========
 
     >>> from sympy.vector.coordsysrect import CoordSys3D
-    >>> from sympy.vector.vector import Vector, BaseVector
     >>> from sympy.vector.functions import orthogonalize
     >>> C = CoordSys3D('C')
     >>> i, j, k = C.base_vectors()

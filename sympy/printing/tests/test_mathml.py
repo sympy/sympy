@@ -28,9 +28,9 @@ from sympy.physics.quantum import ComplexSpace, HilbertSpace, FockSpace, hbar, D
 from sympy.printing.mathml import mathml, MathMLContentPrinter, \
     MathMLPresentationPrinter, MathMLPrinter
 from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, \
-    SymmetricDifference, Interval, EmptySet
+    SymmetricDifference, Interval, EmptySet, ProductSet
 from sympy.stats.rv import RandomSymbol
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 
 x, y, z, a, b, c, d, e, n = symbols('x:z a:e n')
@@ -540,6 +540,106 @@ def test_content_mathml_logic():
     assert mathml(Xor(x, y)) == '<apply><xor/><ci>x</ci><ci>y</ci></apply>'
     assert mathml(Implies(x, y)) == '<apply><implies/><ci>x</ci><ci>y</ci></apply>'
     assert mathml(Not(x)) == '<apply><not/><ci>x</ci></apply>'
+
+
+def test_content_finite_sets():
+    assert mathml(FiniteSet(a)) == '<set><ci>a</ci></set>'
+    assert mathml(FiniteSet(a, b)) == '<set><ci>a</ci><ci>b</ci></set>'
+    assert mathml(FiniteSet(FiniteSet(a, b), c)) == \
+        '<set><ci>c</ci><set><ci>a</ci><ci>b</ci></set></set>'
+
+    A = FiniteSet(a)
+    B = FiniteSet(b)
+    C = FiniteSet(c)
+    D = FiniteSet(d)
+
+    U1 = Union(A, B, evaluate=False)
+    U2 = Union(C, D, evaluate=False)
+    I1 = Intersection(A, B, evaluate=False)
+    I2 = Intersection(C, D, evaluate=False)
+    C1 = Complement(A, B, evaluate=False)
+    C2 = Complement(C, D, evaluate=False)
+    # XXX ProductSet does not support evaluate keyword
+    P1 = ProductSet(A, B)
+    P2 = ProductSet(C, D)
+
+    assert mathml(U1) == \
+        '<apply><union/><set><ci>a</ci></set><set><ci>b</ci></set></apply>'
+    assert mathml(I1) == \
+        '<apply><intersect/><set><ci>a</ci></set><set><ci>b</ci></set>' \
+        '</apply>'
+    assert mathml(C1) == \
+        '<apply><setdiff/><set><ci>a</ci></set><set><ci>b</ci></set></apply>'
+    assert mathml(P1) == \
+        '<apply><cartesianproduct/><set><ci>a</ci></set><set><ci>b</ci>' \
+        '</set></apply>'
+
+    assert mathml(Intersection(A, U2, evaluate=False)) == \
+        '<apply><intersect/><set><ci>a</ci></set><apply><union/><set>' \
+        '<ci>c</ci></set><set><ci>d</ci></set></apply></apply>'
+    assert mathml(Intersection(U1, U2, evaluate=False)) == \
+        '<apply><intersect/><apply><union/><set><ci>a</ci></set><set>' \
+        '<ci>b</ci></set></apply><apply><union/><set><ci>c</ci></set>' \
+        '<set><ci>d</ci></set></apply></apply>'
+
+    # XXX Does the parenthesis appear correctly for these examples in mathjax?
+    assert mathml(Intersection(C1, C2, evaluate=False)) == \
+        '<apply><intersect/><apply><setdiff/><set><ci>a</ci></set><set>' \
+        '<ci>b</ci></set></apply><apply><setdiff/><set><ci>c</ci></set>' \
+        '<set><ci>d</ci></set></apply></apply>'
+    assert mathml(Intersection(P1, P2, evaluate=False)) == \
+        '<apply><intersect/><apply><cartesianproduct/><set><ci>a</ci></set>' \
+        '<set><ci>b</ci></set></apply><apply><cartesianproduct/><set>' \
+        '<ci>c</ci></set><set><ci>d</ci></set></apply></apply>'
+
+    assert mathml(Union(A, I2, evaluate=False)) == \
+        '<apply><union/><set><ci>a</ci></set><apply><intersect/><set>' \
+        '<ci>c</ci></set><set><ci>d</ci></set></apply></apply>'
+    assert mathml(Union(I1, I2, evaluate=False)) == \
+        '<apply><union/><apply><intersect/><set><ci>a</ci></set><set>' \
+        '<ci>b</ci></set></apply><apply><intersect/><set><ci>c</ci></set>' \
+        '<set><ci>d</ci></set></apply></apply>'
+    assert mathml(Union(C1, C2, evaluate=False)) == \
+        '<apply><union/><apply><setdiff/><set><ci>a</ci></set><set>' \
+        '<ci>b</ci></set></apply><apply><setdiff/><set><ci>c</ci></set>' \
+        '<set><ci>d</ci></set></apply></apply>'
+    assert mathml(Union(P1, P2, evaluate=False)) == \
+        '<apply><union/><apply><cartesianproduct/><set><ci>a</ci></set>' \
+        '<set><ci>b</ci></set></apply><apply><cartesianproduct/><set>' \
+        '<ci>c</ci></set><set><ci>d</ci></set></apply></apply>'
+
+    assert mathml(Complement(A, C2, evaluate=False)) == \
+        '<apply><setdiff/><set><ci>a</ci></set><apply><setdiff/><set>' \
+        '<ci>c</ci></set><set><ci>d</ci></set></apply></apply>'
+    assert mathml(Complement(U1, U2, evaluate=False)) == \
+        '<apply><setdiff/><apply><union/><set><ci>a</ci></set><set>' \
+        '<ci>b</ci></set></apply><apply><union/><set><ci>c</ci></set>' \
+        '<set><ci>d</ci></set></apply></apply>'
+    assert mathml(Complement(I1, I2, evaluate=False)) == \
+        '<apply><setdiff/><apply><intersect/><set><ci>a</ci></set><set>' \
+        '<ci>b</ci></set></apply><apply><intersect/><set><ci>c</ci></set>' \
+        '<set><ci>d</ci></set></apply></apply>'
+    assert mathml(Complement(P1, P2, evaluate=False)) == \
+        '<apply><setdiff/><apply><cartesianproduct/><set><ci>a</ci></set>' \
+        '<set><ci>b</ci></set></apply><apply><cartesianproduct/><set>' \
+        '<ci>c</ci></set><set><ci>d</ci></set></apply></apply>'
+
+    assert mathml(ProductSet(A, P2)) == \
+        '<apply><cartesianproduct/><set><ci>a</ci></set>' \
+        '<apply><cartesianproduct/><set><ci>c</ci></set>' \
+        '<set><ci>d</ci></set></apply></apply>'
+    assert mathml(ProductSet(U1, U2)) == \
+        '<apply><cartesianproduct/><apply><union/><set><ci>a</ci></set>' \
+        '<set><ci>b</ci></set></apply><apply><union/><set><ci>c</ci></set>' \
+        '<set><ci>d</ci></set></apply></apply>'
+    assert mathml(ProductSet(I1, I2)) == \
+        '<apply><cartesianproduct/><apply><intersect/><set><ci>a</ci></set>' \
+        '<set><ci>b</ci></set></apply><apply><intersect/><set>' \
+        '<ci>c</ci></set><set><ci>d</ci></set></apply></apply>'
+    assert mathml(ProductSet(C1, C2)) == \
+        '<apply><cartesianproduct/><apply><setdiff/><set><ci>a</ci></set>' \
+        '<set><ci>b</ci></set></apply><apply><setdiff/><set>' \
+        '<ci>c</ci></set><set><ci>d</ci></set></apply></apply>'
 
 
 def test_presentation_printmethod():
@@ -1230,22 +1330,61 @@ def test_print_SetOp():
     f1 = FiniteSet(x, 1, 3)
     f2 = FiniteSet(y, 2, 4)
 
-    assert mpp.doprint(Union(f1, f2, evaluate=False)) == \
+    prntr = lambda x: mathml(x, printer='presentation')
+
+    assert prntr(Union(f1, f2, evaluate=False)) == \
     '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi>'\
     '</mfenced><mo>&#x222A;</mo><mfenced close="}" open="{"><mn>2</mn>'\
     '<mn>4</mn><mi>y</mi></mfenced></mrow>'
-    assert mpp.doprint(Intersection(f1, f2, evaluate=False)) == \
+    assert prntr(Intersection(f1, f2, evaluate=False)) == \
     '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi>'\
     '</mfenced><mo>&#x2229;</mo><mfenced close="}" open="{"><mn>2</mn>'\
     '<mn>4</mn><mi>y</mi></mfenced></mrow>'
-    assert mpp.doprint(Complement(f1, f2, evaluate=False)) == \
+    assert prntr(Complement(f1, f2, evaluate=False)) == \
     '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi>'\
     '</mfenced><mo>&#x2216;</mo><mfenced close="}" open="{"><mn>2</mn>'\
     '<mn>4</mn><mi>y</mi></mfenced></mrow>'
-    assert mpp.doprint(SymmetricDifference(f1, f2, evaluate=False)) == \
+    assert prntr(SymmetricDifference(f1, f2, evaluate=False)) == \
     '<mrow><mfenced close="}" open="{"><mn>1</mn><mn>3</mn><mi>x</mi>'\
     '</mfenced><mo>&#x2206;</mo><mfenced close="}" open="{"><mn>2</mn>'\
     '<mn>4</mn><mi>y</mi></mfenced></mrow>'
+
+    A = FiniteSet(a)
+    C = FiniteSet(c)
+    D = FiniteSet(d)
+
+    U1 = Union(C, D, evaluate=False)
+    I1 = Intersection(C, D, evaluate=False)
+    C1 = Complement(C, D, evaluate=False)
+    D1 = SymmetricDifference(C, D, evaluate=False)
+    # XXX ProductSet does not support evaluate keyword
+    P1 = ProductSet(C, D)
+
+    assert prntr(Union(A, I1, evaluate=False)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x222A;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x2229;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
+    assert prntr(Intersection(A, C1, evaluate=False)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x2229;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x2216;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
+    assert prntr(Complement(A, D1, evaluate=False)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x2216;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x2206;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
+    assert prntr(SymmetricDifference(A, P1, evaluate=False)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x2206;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x00d7;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
+    assert prntr(ProductSet(A, U1)) == \
+        '<mrow><mfenced close="}" open="{"><mi>a</mi></mfenced>' \
+        '<mo>&#x00d7;</mo><mfenced><mrow><mfenced close="}" open="{">' \
+        '<mi>c</mi></mfenced><mo>&#x222A;</mo><mfenced close="}" open="{">' \
+        '<mi>d</mi></mfenced></mrow></mfenced></mrow>'
 
 
 def test_print_logic():
@@ -1283,17 +1422,17 @@ def test_print_logic():
 
 
 def test_root_notation_print():
-    assert mathml(x**(S(1)/3), printer='presentation') == \
+    assert mathml(x**(S.One/3), printer='presentation') == \
         '<mroot><mi>x</mi><mn>3</mn></mroot>'
-    assert mathml(x**(S(1)/3), printer='presentation', root_notation=False) ==\
+    assert mathml(x**(S.One/3), printer='presentation', root_notation=False) ==\
         '<msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup>'
-    assert mathml(x**(S(1)/3), printer='content') == \
+    assert mathml(x**(S.One/3), printer='content') == \
         '<apply><root/><degree><ci>3</ci></degree><ci>x</ci></apply>'
-    assert mathml(x**(S(1)/3), printer='content', root_notation=False) == \
+    assert mathml(x**(S.One/3), printer='content', root_notation=False) == \
         '<apply><power/><ci>x</ci><apply><divide/><cn>1</cn><cn>3</cn></apply></apply>'
-    assert mathml(x**(-S(1)/3), printer='presentation') == \
+    assert mathml(x**(Rational(-1, 3)), printer='presentation') == \
         '<mfrac><mn>1</mn><mroot><mi>x</mi><mn>3</mn></mroot></mfrac>'
-    assert mathml(x**(-S(1)/3), printer='presentation', root_notation=False) \
+    assert mathml(x**(Rational(-1, 3)), printer='presentation', root_notation=False) \
         == '<mfrac><mn>1</mn><msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup></mfrac>'
 
 
@@ -1858,3 +1997,10 @@ def test_mathml_piecewise():
         '<piecewise><piece><ci>x</ci><apply><leq/><ci>x</ci><cn>1</cn></apply></piece><otherwise><apply><power/><ci>x</ci><cn>2</cn></apply></otherwise></piecewise>'
 
     raises(ValueError, lambda: mathml(Piecewise((x, x <= 1))))
+
+
+def test_issue_17857():
+    assert mathml(Range(-oo, oo), printer='presentation') == \
+        '<mfenced close="}" open="{"><mi>&#8230;</mi><mn>-1</mn><mn>0</mn><mn>1</mn><mi>&#8230;</mi></mfenced>'
+    assert mathml(Range(oo, -oo, -1), printer='presentation') == \
+        '<mfenced close="}" open="{"><mi>&#8230;</mi><mn>1</mn><mn>0</mn><mn>-1</mn><mi>&#8230;</mi></mfenced>'

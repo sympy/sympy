@@ -23,9 +23,7 @@ def psi_n(n, x, m, omega):
     ========
 
     >>> from sympy.physics.qho_1d import psi_n
-    >>> from sympy import var
-    >>> var("x m omega")
-    (x, m, omega)
+    >>> from sympy.abc import m, x, omega
     >>> psi_n(0, x, m, omega)
     (m*omega)**(1/4)*exp(-m*omega*x**2/(2*hbar))/(hbar**(1/4)*pi**(1/4))
 
@@ -35,7 +33,7 @@ def psi_n(n, x, m, omega):
     n, x, m, omega = map(S, [n, x, m, omega])
     nu = m * omega / hbar
     # normalization coefficient
-    C = (nu/pi)**(S(1)/4) * sqrt(1/(2**n*factorial(n)))
+    C = (nu/pi)**Rational(1, 4) * sqrt(1/(2**n*factorial(n)))
 
     return C * exp(-nu* x**2 /2) * hermite(n, sqrt(nu)*x)
 
@@ -58,14 +56,12 @@ def E_n(n, omega):
     ========
 
     >>> from sympy.physics.qho_1d import E_n
-    >>> from sympy import var
-    >>> var("x omega")
-    (x, omega)
+    >>> from sympy.abc import x, omega
     >>> E_n(x, omega)
     hbar*omega*(x + 1/2)
     """
 
-    return hbar * omega*(n + Rational(1, 2))
+    return hbar * omega * (n + S.Half)
 
 
 def coherent_state(n, alpha):

@@ -8,14 +8,13 @@ from sympy.codegen import For, Assignment, aug_assign
 from sympy.codegen.ast import Declaration, Variable, float32, float64, \
         value_const, real, bool_, While, FunctionPrototype, FunctionDefinition, \
         integer, Return
-from sympy.core.compatibility import range
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_printmethod():

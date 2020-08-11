@@ -3,7 +3,7 @@ import itertools
 from functools import reduce
 from collections import defaultdict
 
-from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer, diagonalize_vector, DiagonalizeVector
+from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer, diagonalize_vector, DiagMatrix
 from sympy.combinatorics import Permutation
 from sympy.core.basic import Basic
 from sympy.core.compatibility import accumulate, default_sort_key
@@ -86,6 +86,18 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         obj._shape = shape
         return obj
 
+    def __mul__(self, other):
+        if other == 1:
+            return self
+        else:
+            raise NotImplementedError("Product of N-dim arrays is not uniquely defined. Use another method.")
+
+    def __rmul__(self, other):
+        if other == 1:
+            return self
+        else:
+            raise NotImplementedError("Product of N-dim arrays is not uniquely defined. Use another method.")
+
     @staticmethod
     def _validate(expr, *contraction_indices):
         shape = expr.shape
@@ -94,7 +106,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
 
         # Check that no contraction happens when the shape is mismatched:
         for i in contraction_indices:
-            if len(set(shape[j] for j in i if shape[j] != -1)) != 1:
+            if len({shape[j] for j in i if shape[j] != -1}) != 1:
                 raise ValueError("contracting indices of different dimensions")
 
     @classmethod
@@ -137,7 +149,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
             #
             # Examples:
             #
-            # * `A_ij b_j0 C_jk` ===> `A*DiagonalizeVector(b)*C`
+            # * `A_ij b_j0 C_jk` ===> `A*DiagMatrix(b)*C`
             #
             # Care for:
             # - matrix being diagonalized (i.e. `A_ii`)
@@ -252,7 +264,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         all_inner = [j for i in inner_contraction_indices for j in i]
         all_inner.sort()
         # TODO: add API for total rank and cumulative rank:
-        total_rank = get_rank(expr)
+        total_rank = _get_subrank(expr)
         inner_rank = len(all_inner)
         outer_rank = total_rank - inner_rank
         shifts = [0 for i in range(outer_rank)]
@@ -287,8 +299,8 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         Examples
         ========
 
-        >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
-        >>> from sympy.abc import i, j, k, l, N
+        >>> from sympy import MatrixSymbol
+        >>> from sympy.abc import N
         >>> from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
         >>> A = MatrixSymbol("A", N, N)
         >>> B = MatrixSymbol("B", N, N)
@@ -350,15 +362,15 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         Examples
         ========
 
-        >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
-        >>> from sympy.abc import i, j, k, l, N
-        >>> from sympy.codegen.array_utils import CodegenArrayContraction
+        >>> from sympy import MatrixSymbol
+        >>> from sympy.abc import N
+        >>> from sympy.codegen.array_utils import parse_matrix_expression
         >>> A = MatrixSymbol("A", N, N)
         >>> B = MatrixSymbol("B", N, N)
         >>> C = MatrixSymbol("C", N, N)
         >>> D = MatrixSymbol("D", N, N)
 
-        >>> cg = CodegenArrayContraction.from_MatMul(C*D*A*B)
+        >>> cg = parse_matrix_expression(C*D*A*B)
         >>> cg
         CodegenArrayContraction(CodegenArrayTensorProduct(C, D, A, B), (1, 2), (3, 4), (5, 6))
         >>> cg.sort_args_by_name()
@@ -390,9 +402,9 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         Examples
         ========
 
-        >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
-        >>> from sympy.abc import i, j, k, l, N
-        >>> from sympy.codegen.array_utils import CodegenArrayContraction
+        >>> from sympy import MatrixSymbol
+        >>> from sympy.abc import N
+        >>> from sympy.codegen.array_utils import parse_matrix_expression
         >>> A = MatrixSymbol("A", N, N)
         >>> B = MatrixSymbol("B", N, N)
         >>> C = MatrixSymbol("C", N, N)
@@ -403,7 +415,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
 
         `A_{ij} B_{jk} C_{kl} D_{lm}`
 
-        >>> cg = CodegenArrayContraction.from_MatMul(A*B*C*D)
+        >>> cg = parse_matrix_expression(A*B*C*D)
         >>> cg
         CodegenArrayContraction(CodegenArrayTensorProduct(A, B, C, D), (1, 2), (3, 4), (5, 6))
         >>> cg._get_contraction_links()
@@ -423,22 +435,6 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         args, dlinks = _get_contraction_links([self], self.subranks, *self.contraction_indices)
         return dlinks
 
-    @staticmethod
-    def from_MatMul(expr):
-        args_nonmat = []
-        args = []
-        contractions = []
-        for arg in expr.args:
-            if isinstance(arg, MatrixExpr):
-                args.append(arg)
-            else:
-                args_nonmat.append(arg)
-        contractions = [(2*i+1, 2*i+2) for i in range(len(args)-1)]
-        return Mul.fromiter(args_nonmat)*CodegenArrayContraction(
-                CodegenArrayTensorProduct(*args),
-                *contractions
-            )
-
 
 def get_shape(expr):
     if hasattr(expr, "shape"):
@@ -453,7 +449,7 @@ class CodegenArrayTensorProduct(_CodegenArrayAbstract):
     def __new__(cls, *args):
         args = [_sympify(arg) for arg in args]
         args = cls._flatten(args)
-        ranks = [get_rank(arg) for arg in args]
+        ranks = [_get_subrank(arg) for arg in args]
 
         if len(args) == 1:
             return args[0]
@@ -500,7 +496,7 @@ class CodegenArrayElementwiseAdd(_CodegenArrayAbstract):
             raise ValueError("summing arrays of different ranks")
         obj._subranks = ranks
         shapes = [arg.shape for arg in args]
-        if len(set([i for i in shapes if i is not None])) > 1:
+        if len({i for i in shapes if i is not None}) > 1:
             raise ValueError("mismatching shapes in addition")
         if any(i is None for i in shapes):
             obj._shape = None
@@ -570,8 +566,6 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
 
         >>> from sympy.codegen.array_utils import (CodegenArrayPermuteDims, CodegenArrayTensorProduct, nest_permutation)
         >>> from sympy import MatrixSymbol
-        >>> from sympy.combinatorics import Permutation
-        >>> Permutation.print_cyclic = True
 
         >>> M = MatrixSymbol("M", 3, 3)
         >>> N = MatrixSymbol("N", 3, 3)
@@ -676,7 +670,7 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
         # dimensions:
         shape = expr.shape
         for i in diagonal_indices:
-            if len(set(shape[j] for j in i)) != 1:
+            if len({shape[j] for j in i}) != 1:
                 raise ValueError("diagonalizing indices of different dimensions")
 
     @staticmethod
@@ -697,7 +691,7 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
         all_inner = [j for i in inner_diagonal_indices for j in i]
         all_inner.sort()
         # TODO: add API for total rank and cumulative rank:
-        total_rank = get_rank(expr)
+        total_rank = _get_subrank(expr)
         inner_rank = len(all_inner)
         outer_rank = total_rank - inner_rank
         shifts = [0 for i in range(outer_rank)]
@@ -784,7 +778,7 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
             for arg_ind, arg_pos in tuple_links:
                 mat = args[arg_ind]
                 if 1 in mat.shape and mat.shape != (1, 1):
-                    args_updates[arg_ind] = DiagonalizeVector(mat)
+                    args_updates[arg_ind] = DiagMatrix(mat)
                     last = arg_ind
                 else:
                     expression_is_square = True
@@ -821,7 +815,7 @@ def get_rank(expr):
     if isinstance(expr, (MatrixExpr, MatrixElement)):
         return 2
     if isinstance(expr, _CodegenArrayAbstract):
-        return expr.subrank()
+        return len(expr.shape)
     if isinstance(expr, NDimArray):
         return expr.rank()
     if isinstance(expr, Indexed):
@@ -837,6 +831,12 @@ def get_rank(expr):
     if isinstance(expr, _RecognizeMatMulLines):
         return expr.rank()
     return 0
+
+
+def _get_subrank(expr):
+    if isinstance(expr, _CodegenArrayAbstract):
+        return expr.subrank()
+    return get_rank(expr)
 
 
 def _get_subranks(expr):
@@ -1015,31 +1015,37 @@ def _codegen_array_parse(expr):
             args[i] = CodegenArrayPermuteDims(args[i], permutation)
         return CodegenArrayElementwiseAdd(*args), index0
     return expr, ()
-    raise NotImplementedError("could not recognize expression %s" % expr)
 
 
-def _parse_matrix_expression(expr):
+def parse_matrix_expression(expr: MatrixExpr) -> Basic:
     if isinstance(expr, MatMul):
         args_nonmat = []
         args = []
-        contractions = []
         for arg in expr.args:
             if isinstance(arg, MatrixExpr):
                 args.append(arg)
             else:
                 args_nonmat.append(arg)
         contractions = [(2*i+1, 2*i+2) for i in range(len(args)-1)]
-        return Mul.fromiter(args_nonmat)*CodegenArrayContraction(
-                CodegenArrayTensorProduct(*[_parse_matrix_expression(arg) for arg in args]),
+        scalar = Mul.fromiter(args_nonmat)
+        if scalar == 1:
+            tprod = CodegenArrayTensorProduct(
+                *[parse_matrix_expression(arg) for arg in args])
+        else:
+            tprod = CodegenArrayTensorProduct(
+                scalar,
+                *[parse_matrix_expression(arg) for arg in args])
+        return CodegenArrayContraction(
+                tprod,
                 *contractions
         )
     elif isinstance(expr, MatAdd):
         return CodegenArrayElementwiseAdd(
-                *[_parse_matrix_expression(arg) for arg in expr.args]
+                *[parse_matrix_expression(arg) for arg in expr.args]
         )
     elif isinstance(expr, Transpose):
         return CodegenArrayPermuteDims(
-                _parse_matrix_expression(expr.args[0]), [1, 0]
+                parse_matrix_expression(expr.args[0]), [1, 0]
         )
     else:
         return expr
@@ -1054,8 +1060,6 @@ def parse_indexed_expression(expr, first_indices=None):
 
     >>> from sympy.codegen.array_utils import parse_indexed_expression
     >>> from sympy import MatrixSymbol, Sum, symbols
-    >>> from sympy.combinatorics import Permutation
-    >>> Permutation.print_cyclic = True
 
     >>> i, j, k, d = symbols("i j k d")
     >>> M = MatrixSymbol("M", d, d)
@@ -1111,7 +1115,7 @@ def _has_multiple_lines(expr):
     return False
 
 
-class _RecognizeMatOp(object):
+class _RecognizeMatOp:
     """
     Class to help parsing matrix multiplication lines.
     """
@@ -1167,7 +1171,7 @@ class _RecognizeMatMulLines(list):
         return reduce(lambda x, y: x*y, [get_rank(i) for i in self], S.One)
 
     def __repr__(self):
-        return "_RecognizeMatMulLines(%s)" % super(_RecognizeMatMulLines, self).__repr__()
+        return "_RecognizeMatMulLines(%s)" % super().__repr__()
 
 
 def _support_function_tp1_recognize(contraction_indices, args):
@@ -1244,10 +1248,10 @@ def recognize_matrix_expression(expr):
     Examples
     ========
 
-    >>> from sympy import MatrixSymbol, MatrixExpr, Sum, Symbol
+    >>> from sympy import MatrixSymbol, Sum
     >>> from sympy.abc import i, j, k, l, N
     >>> from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
-    >>> from sympy.codegen.array_utils import recognize_matrix_expression, parse_indexed_expression
+    >>> from sympy.codegen.array_utils import recognize_matrix_expression, parse_indexed_expression, parse_matrix_expression
     >>> A = MatrixSymbol("A", N, N)
     >>> B = MatrixSymbol("B", N, N)
     >>> C = MatrixSymbol("C", N, N)
@@ -1279,6 +1283,7 @@ def recognize_matrix_expression(expr):
     Trace(A)
 
     Recognize some more complex traces:
+
     >>> expr = Sum(A[i, j]*B[j, i], (i, 0, N-1), (j, 0, N-1))
     >>> cg = parse_indexed_expression(expr)
     >>> recognize_matrix_expression(cg)
@@ -1295,7 +1300,7 @@ def recognize_matrix_expression(expr):
     indices, the positions of free indices are returned instead:
 
     >>> expr = A*B
-    >>> cg = CodegenArrayContraction.from_MatMul(expr)
+    >>> cg = parse_matrix_expression(expr)
     >>> recognize_matrix_expression(cg)
     A*B
 
@@ -1389,7 +1394,6 @@ def _suppress_trivial_dims_in_tensor_product(mat_list):
     # That is, add contractions over trivial dimensions:
     mat_11 = []
     mat_k1 = []
-    last_dim = mat_list[0].shape[0]
     for mat in mat_list:
         if mat.shape == (1, 1):
             mat_11.append(mat)

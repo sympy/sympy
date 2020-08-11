@@ -5,7 +5,7 @@ from __future__ import print_function, division
 import math
 
 from sympy.core import S, I, pi
-from sympy.core.compatibility import ordered, range, reduce
+from sympy.core.compatibility import ordered, reduce
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_not
@@ -18,6 +18,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
 from sympy.functions.elementary.miscellaneous import root
 from sympy.ntheory import divisors, isprime, nextprime
+from sympy.polys.domains import EX
 from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,
     DomainError)
 from sympy.polys.polyquinticconst import PolyQuintic
@@ -127,7 +128,7 @@ def roots_cubic(f, trig=False):
         if (D > 0) == True:
             rv = []
             for k in range(3):
-                rv.append(2*sqrt(-p/3)*cos(acos(3*q/2/p*sqrt(-3/p))/3 - k*2*pi/3))
+                rv.append(2*sqrt(-p/3)*cos(acos(q/p*sqrt(-3/p)*Rational(3, 2))/3 - k*pi*Rational(2, 3)))
             return [i - b/3/a for i in rv]
 
     _, a, b, c = f.monic().all_coeffs()
@@ -159,17 +160,17 @@ def roots_cubic(f, trig=False):
 
     coeff = I*sqrt(3)/2
     if u1 is None:
-        u1 = S(1)
-        u2 = -S.Half + coeff
-        u3 = -S.Half - coeff
+        u1 = S.One
+        u2 = Rational(-1, 2) + coeff
+        u3 = Rational(-1, 2) - coeff
         a, b, c, d = S(1), a, b, c
         D0 = b**2 - 3*a*c
         D1 = 2*b**3 - 9*a*b*c + 27*a**2*d
         C = root((D1 + sqrt(D1**2 - 4*D0**3))/2, 3)
         return [-(b + uk*C + D0/C/uk)/3/a for uk in [u1, u2, u3]]
 
-    u2 = u1*(-S.Half + coeff)
-    u3 = u1*(-S.Half - coeff)
+    u2 = u1*(Rational(-1, 2) + coeff)
+    u3 = u1*(Rational(-1, 2) - coeff)
 
     if p is S.Zero:
         return [u1 - aon3, u2 - aon3, u3 - aon3]
@@ -265,7 +266,7 @@ def roots_quartic(f):
     Examples
     ========
 
-        >>> from sympy import Poly, symbols, I
+        >>> from sympy import Poly
         >>> from sympy.polys.polyroots import roots_quartic
 
         >>> r = roots_quartic(Poly('x**4-6*x**3+17*x**2-26*x+20'))
@@ -343,7 +344,7 @@ def roots_quartic(f):
                 return ans
 
             # p == 0 case
-            y1 = -5*e/6 - q**TH
+            y1 = e*Rational(-5, 6) - q**TH
             if p.is_zero:
                 return _ans(y1)
 
@@ -351,7 +352,7 @@ def roots_quartic(f):
             root = sqrt(q**2/4 + p**3/27)
             r = -q/2 + root  # or -q/2 - root
             u = r**TH  # primary root of solve(x**3 - r, x)
-            y2 = -5*e/6 + u - p/u/3
+            y2 = e*Rational(-5, 6) + u - p/u/3
             if fuzzy_not(p.is_zero):
                 return _ans(y2)
 
@@ -470,7 +471,7 @@ def roots_cyclotomic(f, factor=False):
     for n in range(L, U + 1):
         g = cyclotomic_poly(n, f.gen, polys=True)
 
-        if f == g:
+        if f.expr == g.expr:
             break
     else:  # pragma: no cover
         raise RuntimeError("failed to find index of a cyclotomic polynomial")
@@ -625,6 +626,8 @@ def roots_quintic(f):
                 break
         if r2:
             break
+    else:
+        return []  # fall back to normal solve
 
     # Now, we have r's so we can get roots
     x1 = (r1 + r2 + r3 + r4)/5
@@ -870,7 +873,11 @@ def roots(f, *gens, **flags):
         f = Poly(poly, x, field=True)
     else:
         try:
-            f = Poly(f, *gens, **flags)
+            F = Poly(f, *gens, **flags)
+            if not isinstance(f, Poly) and not F.gen.is_Symbol:
+                raise PolynomialError("generator must be a Symbol")
+            else:
+                f = F
             if f.length == 2 and f.degree() != 1:
                 # check for foo**n factors in the constant
                 n = f.degree()
@@ -931,7 +938,7 @@ def roots(f, *gens, **flags):
         if f.is_ground:
             return []
         if f.is_monomial:
-            return [S(0)]*f.degree()
+            return [S.Zero]*f.degree()
 
         if f.length() == 2:
             if f.degree() == 1:
@@ -964,17 +971,25 @@ def roots(f, *gens, **flags):
 
         return result
 
+    # Convert the generators to symbols
+    dumgens = symbols('x:%d' % len(f.gens), cls=Dummy)
+    f = f.per(f.rep, dumgens)
+
     (k,), f = f.terms_gcd()
 
     if not k:
         zeros = {}
     else:
-        zeros = {S(0): k}
+        zeros = {S.Zero: k}
 
     coeff, f = preprocess_roots(f)
 
     if auto and f.get_domain().is_Ring:
         f = f.to_field()
+
+    # Use EX instead of ZZ_I or QQ_I
+    if f.get_domain().is_QQ_I:
+        f = f.per(f.rep.convert(EX))
 
     rescale_x = None
     translate_x = None
@@ -1031,7 +1046,7 @@ def roots(f, *gens, **flags):
         handlers = {
             'Z': lambda r: r.is_Integer,
             'Q': lambda r: r.is_Rational,
-            'R': lambda r: r.is_extended_real,
+            'R': lambda r: all(a.is_real for a in r.as_numer_denom()),
             'I': lambda r: r.is_imaginary,
         }
 

@@ -1,12 +1,12 @@
 from sympy import (symbols, factorial, sqrt, Rational, atan, I, log, fps, O,
                    Sum, oo, S, pi, cos, sin, Function, exp, Derivative, asin,
-                   airyai, acos, acosh, gamma, erf, asech, Add, Integral, Mul,
+                   airyai, acos, acosh, gamma, erf, asech, Add, Mul,
                    integrate)
 from sympy.series.formal import (rational_algorithm, FormalPowerSeries,
                                  FormalPowerSeriesProduct, FormalPowerSeriesCompose,
                                  FormalPowerSeriesInverse, simpleDE,
                                  rational_independent, exp_re, hyper_re)
-from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy.testing.pytest import raises, XFAIL, slow
 
 x, y, z = symbols('x y z')
 n, m, k = symbols('n m k', integer=True)
@@ -29,10 +29,10 @@ def test_rational_algorithm():
     f = x / (1 - x - x**2)
     assert rational_algorithm(f, x, k) is None
     assert rational_algorithm(f, x, k, full=True) == \
-        (((-Rational(1, 2) + sqrt(5)/2)**(-k - 1) *
-         (-sqrt(5)/10 + Rational(1, 2))) +
-         ((-sqrt(5)/2 - Rational(1, 2))**(-k - 1) *
-         (sqrt(5)/10 + Rational(1, 2))), 0, 0)
+        (((Rational(-1, 2) + sqrt(5)/2)**(-k - 1) *
+         (-sqrt(5)/10 + S.Half)) +
+         ((-sqrt(5)/2 - S.Half)**(-k - 1) *
+         (sqrt(5)/10 + S.Half)), 0, 0)
 
     f = 1 / (x**2 + 2*x + 2)
     assert rational_algorithm(f, x, k) is None
@@ -58,7 +58,7 @@ def test_rational_algorithm():
     assert rational_algorithm(f, x, k) is None
     assert rational_algorithm(f, x, k, full=True) == \
         ((-(-1)**(-k) / 2 - (I*I**(-k)) / 2 + (I*(-I)**(-k)) / 2 +
-          Rational(1, 2)) / k, 0, 1)
+          S.Half) / k, 0, 1)
 
     assert rational_algorithm(cos(x), x, k) is None
 
@@ -190,12 +190,12 @@ def test_fps__rational():
 
     f = 1 / ((x - 1)**2 * (x - 2))
     assert fps(f, x).truncate() == \
-        (-Rational(1, 2) - 5*x/4 - 17*x**2/8 - 49*x**3/16 - 129*x**4/32 -
+        (Rational(-1, 2) - x*Rational(5, 4) - 17*x**2/8 - 49*x**3/16 - 129*x**4/32 -
          321*x**5/64 + O(x**6))
 
     f = (1 + x + x**2 + x**3) / ((x - 1) * (x - 2))
     assert fps(f, x).truncate() == \
-        (Rational(1, 2) + 5*x/4 + 17*x**2/8 + 49*x**3/16 + 113*x**4/32 +
+        (S.Half + x*Rational(5, 4) + 17*x**2/8 + 49*x**3/16 + 113*x**4/32 +
          241*x**5/64 + O(x**6))
 
     f = x / (1 - x - x**2)
@@ -204,7 +204,7 @@ def test_fps__rational():
 
     f = 1 / (x**2 + 2*x + 2)
     assert fps(f, x, full=True).truncate() == \
-        Rational(1, 2) - x/2 + x**2/4 - x**4/8 + x**5/8 + O(x**6)
+        S.Half - x/2 + x**2/4 - x**4/8 + x**5/8 + O(x**6)
 
     f = log(1 + x)
     assert fps(f, x).truncate() == \
@@ -286,7 +286,7 @@ def test_fps__hyper():
 def test_fps_shift():
     f = x**-5*sin(x)
     assert fps(f, x).truncate() == \
-        1/x**4 - 1/(6*x**2) + S.One/120 - x**2/5040 + x**4/362880 + O(x**6)
+        1/x**4 - 1/(6*x**2) + Rational(1, 120) - x**2/5040 + x**4/362880 + O(x**6)
 
     f = x**2*atan(x)
     assert fps(f, x, rational=False).truncate() == \
@@ -354,7 +354,7 @@ def test_fps__fractional():
 
     f = atan(sqrt(x)) / x**2
     assert fps(f, x).truncate() == \
-        (x**Rational(-3, 2) - x**Rational(-1, 2)/3 + x**Rational(1, 2)/5 -
+        (x**Rational(-3, 2) - x**Rational(-1, 2)/3 + x**S.Half/5 -
          x**Rational(3, 2)/7 + x**Rational(5, 2)/9 - x**Rational(7, 2)/11 +
          x**Rational(9, 2)/13 - x**Rational(11, 2)/15 + O(x**6))
 
@@ -447,7 +447,7 @@ def test_fps__operations():
     assert (f1 + x) == Add(f1, x)
 
     assert -f2.truncate() == -1 + x**2/2 - x**4/24 + O(x**6)
-    assert (f1 - f1) == S.Zero
+    assert (f1 - f1) is S.Zero
 
     fsub = f1 - f2
     assert fsub.function == sin(x) - cos(x)
@@ -493,9 +493,9 @@ def test_fps__operations():
     f3 = fps(exp(sqrt(x)))
     fd = f3.diff()
     assert fd.truncate().expand() == \
-        (1/(2*sqrt(x)) + S(1)/2 + x/12 + x**2/240 + x**3/10080 + x**4/725760 +
-         x**5/79833600 + sqrt(x)/4 + x**(S(3)/2)/48 + x**(S(5)/2)/1440 +
-         x**(S(7)/2)/80640 + x**(S(9)/2)/7257600 + x**(S(11)/2)/958003200 +
+        (1/(2*sqrt(x)) + S.Half + x/12 + x**2/240 + x**3/10080 + x**4/725760 +
+         x**5/79833600 + sqrt(x)/4 + x**Rational(3, 2)/48 + x**Rational(5, 2)/1440 +
+         x**Rational(7, 2)/80640 + x**Rational(9, 2)/7257600 + x**Rational(11, 2)/958003200 +
          O(x**6))
 
     assert f1.integrate((x, 0, 1)) == -cos(1) + 1

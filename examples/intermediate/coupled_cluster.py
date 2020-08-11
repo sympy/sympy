@@ -51,7 +51,7 @@ def main():
     # setup hamiltonian
     p, q, r, s = symbols('p,q,r,s', cls=Dummy)
     f = AntiSymmetricTensor('f', (p,), (q,))
-    pr = NO((Fd(p)*F(q)))
+    pr = NO(Fd(p)*F(q))
     v = AntiSymmetricTensor('v', (p, q), (r, s))
     pqsr = NO(Fd(p)*Fd(q)*F(s)*F(r))
 

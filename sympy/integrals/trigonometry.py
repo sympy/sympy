@@ -1,6 +1,3 @@
-from __future__ import print_function, division
-
-from sympy.core.compatibility import range
 from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
 from sympy.functions import binomial, sin, cos, Piecewise
 
@@ -31,7 +28,7 @@ _u = Dummy('u')
 def trigintegrate(f, x, conds='piecewise'):
     """Integrate f = Mul(trig) over x
 
-       >>> from sympy import Symbol, sin, cos, tan, sec, csc, cot
+       >>> from sympy import sin, cos, tan, sec
        >>> from sympy.integrals.trigonometry import trigintegrate
        >>> from sympy.abc import x
 
@@ -65,9 +62,9 @@ def trigintegrate(f, x, conds='piecewise'):
         return
 
     n, m = M[n], M[m]
-    if n is S.Zero and m is S.Zero:
+    if n.is_zero and m.is_zero:
         return x
-    zz = x if n is S.Zero else S.Zero
+    zz = x if n.is_zero else S.Zero
 
     a = M[a]
 
@@ -225,7 +222,7 @@ def trigintegrate(f, x, conds='piecewise'):
     else:
         if m == n:
             ##Substitute sin(2x)/2 for sin(x)cos(x) and then Integrate.
-            res = integrate((Rational(1, 2)*sin(2*x))**m, x)
+            res = integrate((sin(2*x)*S.Half)**m, x)
         elif (m == -n):
             if n < 0:
                 # Same as the scheme described above.

@@ -29,13 +29,13 @@ def solve_poly_inequality(poly, rel):
     >>> from sympy.solvers.inequalities import solve_poly_inequality
 
     >>> solve_poly_inequality(Poly(x, x, domain='ZZ'), '==')
-    [{0}]
+    [FiniteSet(0)]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '!=')
     [Interval.open(-oo, -1), Interval.open(-1, 1), Interval.open(1, oo)]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '==')
-    [{-1}, {1}]
+    [FiniteSet(-1), FiniteSet(1)]
 
     See Also
     ========
@@ -44,7 +44,7 @@ def solve_poly_inequality(poly, rel):
     if not isinstance(poly, Poly):
         raise ValueError(
             'For efficiency reasons, `poly` should be a Poly instance')
-    if poly.is_number:
+    if poly.as_expr().is_number:
         t = Relational(poly.as_expr(), 0, rel)
         if t is S.true:
             return [S.Reals]
@@ -141,7 +141,7 @@ def solve_rational_inequalities(eqs):
     >>> solve_rational_inequalities([[
     ... ((Poly(-x + 1), Poly(1, x)), '>='),
     ... ((Poly(-x + 1), Poly(1, x)), '<=')]])
-    {1}
+    FiniteSet(1)
 
     >>> solve_rational_inequalities([[
     ... ((Poly(x), Poly(1, x)), '!='),
@@ -201,7 +201,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     Examples
     ========
 
-    >>> from sympy import Poly, Symbol
+    >>> from sympy import Symbol
     >>> from sympy.solvers.inequalities import reduce_rational_inequalities
 
     >>> x = Symbol('x', real=True)
@@ -374,7 +374,6 @@ def reduce_abs_inequalities(exprs, gen):
     ========
 
     >>> from sympy import Abs, Symbol
-    >>> from sympy.abc import x
     >>> from sympy.solvers.inequalities import reduce_abs_inequalities
     >>> x = Symbol('x', extended_real=True)
 
@@ -417,19 +416,19 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
     NotImplementedError
         The solution of the inequality cannot be determined due to limitation
-        in `solvify`.
+        in :func:`sympy.solvers.solveset.solvify`.
 
     Notes
     =====
 
     Currently, we cannot solve all the inequalities due to limitations in
-    `solvify`. Also, the solution returned for trigonometric inequalities
+    :func:`sympy.solvers.solveset.solvify`. Also, the solution returned for trigonometric inequalities
     are restricted in its periodic interval.
 
     See Also
     ========
 
-    solvify: solver returning solveset solutions with solve's output API
+    sympy.solvers.solveset.solvify: solver returning solveset solutions with solve's output API
 
     Examples
     ========
@@ -456,8 +455,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     from sympy.calculus.util import (continuous_domain, periodicity,
         function_range)
     from sympy.solvers.solvers import denoms
-    from sympy.solvers.solveset import solveset_real, solvify, solveset
-    from sympy.solvers.solvers import solve
+    from sympy.solvers.solveset import solvify, solveset
 
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
@@ -488,7 +486,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     else:
         e = expr.lhs - expr.rhs
         period = periodicity(e, gen)
-        if period is S.Zero:
+        if period == S.Zero:
             e = expand_mul(e)
             const = expr.func(e, 0)
             if const is S.true:
@@ -639,7 +637,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
                 make_real = make_real.intersect(im_sol)
 
-            empty = sol_sets = [S.EmptySet]
+            sol_sets = [S.EmptySet]
 
             start = domain.inf
             if valid(start) and start.is_finite:
@@ -942,7 +940,6 @@ def reduce_inequalities(inequalities, symbols=[]):
     Examples
     ========
 
-    >>> from sympy import sympify as S, Symbol
     >>> from sympy.abc import x, y
     >>> from sympy.solvers.inequalities import reduce_inequalities
 

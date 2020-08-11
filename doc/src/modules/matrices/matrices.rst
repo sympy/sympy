@@ -330,25 +330,25 @@ applying ``gcd`` to the data of the matrix:
 
     >>> from sympy.abc import x, y
     >>> from sympy import gcd
-    >>> m = Matrix([[x, y], [1, x*y]]).inv(); m
-    [  -x*y          y     ]
-    [----------  ----------]
-    [   2           2      ]
-    [- x *y + y  - x *y + y]
-    [                      ]
-    [    1          -x     ]
-    [----------  ----------]
-    [   2           2      ]
-    [- x *y + y  - x *y + y]
+    >>> m = Matrix([[x, y], [1, x*y]]).inv('ADJ'); m
+    [  x*y       -y    ]
+    [--------  --------]
+    [ 2         2      ]
+    [x *y - y  x *y - y]
+    [                  ]
+    [  -1         x    ]
+    [--------  --------]
+    [ 2         2      ]
+    [x *y - y  x *y - y]
     >>> gcd(tuple(_))
-        1
-    ----------
-       2
-    - x *y + y
+       1
+    --------
+     2
+    x *y - y
     >>> m/_
-    [-x*y  y ]
-    [        ]
-    [ 1    -x]
+    [x*y  -y]
+    [       ]
+    [-1   x ]
 
 One more useful matrix-wide entry application function is the substitution function. Let's declare a matrix with symbolic entries then substitute a value. Remember we can substitute anything - even another symbol!:
 
@@ -566,41 +566,41 @@ Matrix Exceptions Reference
 Matrix Functions Reference
 --------------------------
 
-.. autofunction:: sympy.matrices.dense.matrix_multiply_elementwise
+.. autofunction:: sympy.matrices.dense::matrix_multiply_elementwise
 
-.. autofunction:: sympy.matrices.dense.zeros
+.. autofunction:: sympy.matrices.dense::zeros
 
-.. autofunction:: sympy.matrices.dense.ones
+.. autofunction:: sympy.matrices.dense::ones
 
-.. autofunction:: sympy.matrices.dense.eye
+.. autofunction:: sympy.matrices.dense::eye
 
-.. autofunction:: sympy.matrices.dense.diag
+.. autofunction:: sympy.matrices.dense::diag
 
-.. autofunction:: sympy.matrices.dense.jordan_cell
+.. autofunction:: sympy.matrices.dense::jordan_cell
 
-.. autofunction:: sympy.matrices.dense.hessian
+.. autofunction:: sympy.matrices.dense::hessian
 
-.. autofunction:: sympy.matrices.dense.GramSchmidt
+.. autofunction:: sympy.matrices.dense::GramSchmidt
 
-.. autofunction:: sympy.matrices.dense.wronskian
+.. autofunction:: sympy.matrices.dense::wronskian
 
-.. autofunction:: sympy.matrices.dense.casoratian
+.. autofunction:: sympy.matrices.dense::casoratian
 
-.. autofunction:: sympy.matrices.dense.randMatrix
+.. autofunction:: sympy.matrices.dense::randMatrix
 
 Numpy Utility Functions Reference
 ---------------------------------
 
-.. autofunction:: sympy.matrices.dense.list2numpy
+.. autofunction:: sympy.matrices.dense::list2numpy
 
-.. autofunction:: sympy.matrices.dense.matrix2numpy
+.. autofunction:: sympy.matrices.dense::matrix2numpy
 
-.. autofunction:: sympy.matrices.dense.symarray
+.. autofunction:: sympy.matrices.dense::symarray
 
-.. autofunction:: sympy.matrices.dense.rot_axis1
+.. autofunction:: sympy.matrices.dense::rot_axis1
 
-.. autofunction:: sympy.matrices.dense.rot_axis2
+.. autofunction:: sympy.matrices.dense::rot_axis2
 
-.. autofunction:: sympy.matrices.dense.rot_axis3
+.. autofunction:: sympy.matrices.dense::rot_axis3
 
 .. autofunction:: a2idx

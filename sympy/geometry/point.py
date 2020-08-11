@@ -17,8 +17,6 @@ False
 
 """
 
-from __future__ import division, print_function
-
 import warnings
 
 from sympy.core import S, sympify, Expr
@@ -30,7 +28,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import im
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.add import Add
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent, func_name, Undecidable
@@ -106,7 +104,7 @@ class Point(GeometryEntity):
     is_Point = True
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_evaluate[0])
+        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
         on_morph = kwargs.get('on_morph', 'ignore')
 
         # unpack into coords
@@ -162,9 +160,9 @@ class Point(GeometryEntity):
         # Turn any Floats into rationals and simplify
         # any expressions before we instantiate
         if evaluate:
-            coords = coords.xreplace(dict(
-                [(f, simplify(nsimplify(f, rational=True)))
-                 for f in coords.atoms(Float)]))
+            coords = coords.xreplace({
+                f: simplify(nsimplify(f, rational=True))
+                 for f in coords.atoms(Float)})
 
         # return 2D or 3D instances
         if len(coords) == 2:
@@ -277,6 +275,10 @@ class Point(GeometryEntity):
         factor = sympify(factor)
         coords = [simplify(x*factor) for x in self.args]
         return Point(coords, evaluate=False)
+
+    def __rmul__(self, factor):
+        """Multiply a factor by point's coordinates."""
+        return self.__mul__(factor)
 
     def __neg__(self):
         """Negate the point."""
@@ -718,9 +720,9 @@ class Point(GeometryEntity):
         """
         dim = self.ambient_dimension
         # if a coordinate is zero, we can put a 1 there and zeros elsewhere
-        if self[0] == S.Zero:
+        if self[0].is_zero:
             return Point([1] + (dim - 1)*[0])
-        if self[1] == S.Zero:
+        if self[1].is_zero:
             return Point([0,1] + (dim - 2)*[0])
         # if the first two coordinates aren't zero, we can create a non-zero
         # orthogonal vector by swapping them, negating one, and padding with zeros
@@ -930,7 +932,7 @@ class Point2D(Point):
         See Also
         ========
 
-        rotate, scale
+        translate, scale
 
         Examples
         ========
@@ -991,15 +993,14 @@ class Point2D(Point):
 
         See Also
         ========
-        geometry.entity.rotate
-        geometry.entity.scale
-        geometry.entity.translate
+        sympy.geometry.point.Point2D.rotate
+        sympy.geometry.point.Point2D.scale
+        sympy.geometry.point.Point2D.translate
         """
         if not (matrix.is_Matrix and matrix.shape == (3, 3)):
             raise ValueError("matrix must be a 3x3 matrix")
 
         col, row = matrix.shape
-        valid_matrix = matrix.is_square and col == 3
         x, y = self.args
         return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
 
@@ -1009,7 +1010,7 @@ class Point2D(Point):
         See Also
         ========
 
-        rotate, scale
+        sympy.geometry.point.Point2D.rotate, scale
 
         Examples
         ========
@@ -1025,6 +1026,21 @@ class Point2D(Point):
 
         """
         return Point(self.x + x, self.y + y)
+
+    @property
+    def coordinates(self):
+        """
+        Returns the two coordinates of the Point.
+
+        Examples
+        ========
+
+        >>> from sympy import Point2D
+        >>> p = Point2D(0, 1)
+        >>> p.coordinates
+        (0, 1)
+        """
+        return self.args
 
     @property
     def x(self):
@@ -1137,7 +1153,7 @@ class Point3D(Point):
         Examples
         ========
 
-        >>> from sympy import Point3D, Matrix
+        >>> from sympy import Point3D
         >>> from sympy.abc import x
         >>> p1, p2 = Point3D(0, 0, 0), Point3D(1, 1, 1)
         >>> p3, p4, p5 = Point3D(2, 2, 2), Point3D(x, x, x), Point3D(1, 2, 6)
@@ -1270,15 +1286,13 @@ class Point3D(Point):
 
         See Also
         ========
-        geometry.entity.rotate
-        geometry.entity.scale
-        geometry.entity.translate
+        sympy.geometry.point.Point3D.scale
+        sympy.geometry.point.Point3D.translate
         """
         if not (matrix.is_Matrix and matrix.shape == (4, 4)):
             raise ValueError("matrix must be a 4x4 matrix")
 
         col, row = matrix.shape
-        valid_matrix = matrix.is_square and col == 4
         from sympy.matrices.expressions import Transpose
         x, y, z = self.args
         m = Transpose(matrix)
@@ -1290,7 +1304,7 @@ class Point3D(Point):
         See Also
         ========
 
-        rotate, scale
+        scale
 
         Examples
         ========
@@ -1306,6 +1320,21 @@ class Point3D(Point):
 
         """
         return Point3D(self.x + x, self.y + y, self.z + z)
+
+    @property
+    def coordinates(self):
+        """
+        Returns the three coordinates of the Point.
+
+        Examples
+        ========
+
+        >>> from sympy import Point3D
+        >>> p = Point3D(0, 1, 2)
+        >>> p.coordinates
+        (0, 1, 2)
+        """
+        return self.args
 
     @property
     def x(self):

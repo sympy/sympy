@@ -5,7 +5,7 @@ A bicycle
 The bicycle is an interesting system in that it has multiple rigid bodies,
 non-holonomic constraints, and a holonomic constraint. The linearized equations
 of motion are presented in [Meijaard2007]_. This example will go through
-construction of the equations of motion in :mod:`mechanics`. ::
+construction of the equations of motion in :mod:`sympy.physics.mechanics`. ::
 
   >>> from sympy import *
   >>> from sympy.physics.mechanics import *

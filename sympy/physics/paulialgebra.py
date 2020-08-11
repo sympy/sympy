@@ -119,7 +119,7 @@ class Pauli(Symbol):
     -sigma1
     """
 
-    __slots__ = ["i", "label"]
+    __slots__ = ("i", "label")
 
     def __new__(cls, i, label="sigma"):
         if not i in [1, 2, 3]:
@@ -169,7 +169,7 @@ def evaluate_pauli_product(arg):
     >>> evaluate_pauli_product(I*Pauli(1)*Pauli(2))
     -sigma3
 
-    >>> from sympy.abc import x,y
+    >>> from sympy.abc import x
     >>> evaluate_pauli_product(x**2*Pauli(2)*Pauli(1))
     -I*x**2*sigma3
     '''

@@ -2,11 +2,8 @@
 General SymPy exceptions and warnings.
 """
 
-from __future__ import print_function, division
-
 import warnings
 
-from sympy.core.compatibility import string_types
 from sympy.utilities.misc import filldedent
 
 
@@ -168,7 +165,7 @@ https://github.com/sympy/sympy/wiki/Deprecating-policy.\
             "info. ") % issue
 
         if value:
-            if not isinstance(value, string_types):
+            if not isinstance(value, str):
                 value = "(%s)" % repr(value)
             value = " " + value
         else:

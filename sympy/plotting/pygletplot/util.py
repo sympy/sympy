@@ -7,7 +7,6 @@ except ImportError:
 
 import pyglet.gl as pgl
 from sympy.core import S
-from sympy.core.compatibility import range, string_types
 
 
 def get_model_matrix(array_type=c_float, glGetMethod=pgl.glGetFloatv):
@@ -103,9 +102,9 @@ def billboard_matrix():
 
 
 def create_bounds():
-    return [[S.Infinity, -S.Infinity, 0],
-            [S.Infinity, -S.Infinity, 0],
-            [S.Infinity, -S.Infinity, 0]]
+    return [[S.Infinity, S.NegativeInfinity, 0],
+            [S.Infinity, S.NegativeInfinity, 0],
+            [S.Infinity, S.NegativeInfinity, 0]]
 
 
 def update_bounds(b, v):
@@ -164,7 +163,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
 
 
 def parse_option_string(s):
-    if not isinstance(s, string_types):
+    if not isinstance(s, str):
         return None
     options = {}
     for token in s.split(';'):

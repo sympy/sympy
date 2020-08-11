@@ -1,7 +1,7 @@
 """Tests for Gosper's algorithm for hypergeometric summation. """
 
 from sympy import binomial, factorial, gamma, Poly, S, simplify, sqrt, exp, \
-    log, Symbol, pi
+    log, Symbol, pi, Rational
 from sympy.abc import a, b, j, k, m, n, r, x
 from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 
@@ -9,14 +9,14 @@ from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 def test_gosper_normal():
     eq = 4*n + 5, 2*(4*n + 1)*(2*n + 3), n
     assert gosper_normal(*eq) == \
-        (Poly(S(1)/4, n), Poly(n + S(3)/2), Poly(n + S(1)/4))
+        (Poly(Rational(1, 4), n), Poly(n + Rational(3, 2)), Poly(n + Rational(1, 4)))
     assert gosper_normal(*eq, polys=False) == \
-        (S(1)/4, n + S(3)/2, n + S(1)/4)
+        (Rational(1, 4), n + Rational(3, 2), n + Rational(1, 4))
 
 
 def test_gosper_term():
     assert gosper_term((4*k + 1)*factorial(
-        k)/factorial(2*k + 1), k) == (-k - S(1)/2)/(k + S(1)/4)
+        k)/factorial(2*k + 1), k) == (-k - S.Half)/(k + Rational(1, 4))
 
 
 def test_gosper_sum():
@@ -63,9 +63,9 @@ def test_gosper_sum_indefinite():
 
 
 def test_gosper_sum_parametric():
-    assert gosper_sum(binomial(S(1)/2, m - j + 1)*binomial(S(1)/2, m + j), (j, 1, n)) == \
-        n*(1 + m - n)*(-1 + 2*m + 2*n)*binomial(S(1)/2, 1 + m - n)* \
-        binomial(S(1)/2, m + n)/(m*(1 + 2*m))
+    assert gosper_sum(binomial(S.Half, m - j + 1)*binomial(S.Half, m + j), (j, 1, n)) == \
+        n*(1 + m - n)*(-1 + 2*m + 2*n)*binomial(S.Half, 1 + m - n)* \
+        binomial(S.Half, m + n)/(m*(1 + 2*m))
 
 
 def test_gosper_sum_algebraic():
@@ -97,19 +97,19 @@ def test_gosper_sum_AeqB_part1():
     f1e = factorial(3*n)/(factorial(n)*factorial(n + 1)*factorial(n + 2)*27**n)
     f1f = binomial(2*n, n)**2/((n + 1)*4**(2*n))
     f1g = (4*n - 1)*binomial(2*n, n)**2/((2*n - 1)**2*4**(2*n))
-    f1h = n*factorial(n - S(1)/2)**2/factorial(n + 1)**2
+    f1h = n*factorial(n - S.Half)**2/factorial(n + 1)**2
 
     g1a = m*(m + 1)*(2*m + 1)*(3*m**2 + 3*m - 1)/30
     g1b = 26 + 2**(m + 1)*(m**3 - 3*m**2 + 9*m - 13)
     g1c = (m + 1)*(m*(m**2 - 7*m + 3)*sqrt(5) - (
         3*m**3 - 7*m**2 + 19*m - 6))/(2*m**3*sqrt(5) + m**4 + 5*m**2 - 1)/6
-    g1d = -S(2)/231 + 2*4**m*(m + 1)*(63*m**4 + 112*m**3 + 18*m**2 -
+    g1d = Rational(-2, 231) + 2*4**m*(m + 1)*(63*m**4 + 112*m**3 + 18*m**2 -
              22*m + 3)/(693*binomial(2*m, m))
-    g1e = -S(9)/2 + (81*m**2 + 261*m + 200)*factorial(
+    g1e = Rational(-9, 2) + (81*m**2 + 261*m + 200)*factorial(
         3*m + 2)/(40*27**m*factorial(m)*factorial(m + 1)*factorial(m + 2))
     g1f = (2*m + 1)**2*binomial(2*m, m)**2/(4**(2*m)*(m + 1))
     g1g = -binomial(2*m, m)**2/4**(2*m)
-    g1h = 4*pi -(2*m + 1)**2*(3*m + 4)*factorial(m - S(1)/2)**2/factorial(m + 1)**2
+    g1h = 4*pi -(2*m + 1)**2*(3*m + 4)*factorial(m - S.Half)**2/factorial(m + 1)**2
 
     g = gosper_sum(f1a, (n, 0, m))
     assert g is not None and simplify(g - g1a) == 0
@@ -176,10 +176,10 @@ def test_gosper_sum_AeqB_part3():
     # g3a -> no closed form
     g3b = m*(m + 2)/(2*m**2 + 4*m + 3)
     g3c = 2**m/m**2 - 2
-    g3d = S(2)/3 + 4**(m + 1)*(m - 1)/(m + 2)/3
+    g3d = Rational(2, 3) + 4**(m + 1)*(m - 1)/(m + 2)/3
     # g3e -> no closed form
-    g3f = -(-S(1)/16 + 1/((m - 2)**2*(m + 1)**2))  # the AeqB key is wrong
-    g3g = -S(2)/9 + 2**(m + 1)/((m + 1)**2*(m + 3)**2)
+    g3f = -(Rational(-1, 16) + 1/((m - 2)**2*(m + 1)**2))  # the AeqB key is wrong
+    g3g = Rational(-2, 9) + 2**(m + 1)/((m + 1)**2*(m + 3)**2)
 
     g = gosper_sum(f3a, (n, 1, m))
     assert g is None

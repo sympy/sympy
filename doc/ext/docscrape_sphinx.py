@@ -1,5 +1,4 @@
 from __future__ import division, absolute_import, print_function
-from sympy.core.compatibility import string_types
 
 import sys
 import re
@@ -10,11 +9,6 @@ import sphinx
 import collections
 
 from docscrape import NumpyDocString, FunctionDoc, ClassDoc
-
-if sys.version_info[0] >= 3:
-    sixu = lambda s: s
-else:
-    sixu = lambda s: unicode(s, 'unicode_escape')
 
 
 class SphinxDocString(NumpyDocString):
@@ -138,11 +132,11 @@ class SphinxDocString(NumpyDocString):
 
             if others:
                 maxlen_0 = max(3, max([len(x[0]) for x in others]))
-                hdr = sixu("=")*maxlen_0 + sixu("  ") + sixu("=")*10
-                fmt = sixu('%%%ds  %%s  ') % (maxlen_0,)
+                hdr = "="*maxlen_0 + "  " + "="*10
+                fmt = '%%%ds  %%s  ' % (maxlen_0,)
                 out += ['', '', hdr]
                 for param, param_type, desc in others:
-                    desc = sixu(" ").join(x.strip() for x in desc).strip()
+                    desc = " ".join(x.strip() for x in desc).strip()
                     if param_type:
                         desc = "(%s) %s" % (param_type, desc)
                     out += [fmt % (param.strip(), desc)]
@@ -195,7 +189,7 @@ class SphinxDocString(NumpyDocString):
         out = []
         if self['References']:
             out += self._str_header('References')
-            if isinstance(self['References'], string_types):
+            if isinstance(self['References'], str):
                 self['References'] = [self['References']]
             out.extend(self['References'])
             out += ['']

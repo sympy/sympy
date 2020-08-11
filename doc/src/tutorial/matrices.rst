@@ -403,7 +403,7 @@ expensive to calculate.
 
     >>> lamda = symbols('lamda')
     >>> p = M.charpoly(lamda)
-    >>> factor(p)
+    >>> factor(p.as_expr())
            2
     (λ - 5) ⋅(λ - 3)⋅(λ + 2)
 
@@ -437,8 +437,11 @@ They have property ``iszerofunc`` opened up for user to specify zero testing
 method, which can accept any function with single input and boolean output,
 while being defaulted with ``_iszero``.
 
-Here is an example of solving an issue caused by undertested zero.
+Here is an example of solving an issue caused by undertested zero. While the
+output for this particular matrix has since been improved, the technique
+below is still of interest.
 [#zerotestexampleidea-fn]_ [#zerotestexamplediscovery-fn]_
+[#zerotestexampleimproved-fn]_
 
     >>> from sympy import *
     >>> q = Symbol("q", positive = True)
@@ -446,7 +449,7 @@ Here is an example of solving an issue caused by undertested zero.
     ... [-2*cosh(q/3),      exp(-q),            1],
     ... [      exp(q), -2*cosh(q/3),            1],
     ... [           1,            1, -2*cosh(q/3)]])
-    >>> m.nullspace()
+    >>> m.nullspace() # doctest: +SKIP
     []
 
 You can trace down which expression is being underevaluated,
@@ -461,8 +464,8 @@ by injecting a custom zero test with warnings enabled.
     ...         result = None
     ...
     ...     # Warnings if evaluated into None
-    ...     if result == None:
-    ...         warnings.warn("Zero testing of {} evaluated into {}".format(x, result))
+    ...     if result is None:
+    ...         warnings.warn("Zero testing of {} evaluated into None".format(x))
     ...     return result
     ...
     >>> m.nullspace(iszerofunc=my_iszero) # doctest: +SKIP
@@ -487,8 +490,8 @@ while being harmless to other polynomials or transcendental functions.
     ...         result = None
     ...
     ...     # Warnings if evaluated into None
-    ...     if result == None:
-    ...         warnings.warn("Zero testing of {} evaluated into {}".format(x, result))
+    ...     if result is None:
+    ...         warnings.warn("Zero testing of {} evaluated into None".format(x))
     ...     return result
     ...
     >>> m.nullspace(iszerofunc=my_iszero) # doctest: +SKIP
@@ -541,6 +544,8 @@ SymPy issue tracker [#sympyissues-fn]_ to get detailed help from the community.
 .. [#zerotestexampleidea-fn] Inspired by https://gitter.im/sympy/sympy?at=5b7c3e8ee5b40332abdb206c
 
 .. [#zerotestexamplediscovery-fn] Discovered from https://github.com/sympy/sympy/issues/15141
+
+.. [#zerotestexampleimproved-fn] Improved by https://github.com/sympy/sympy/pull/19548
 
 .. [#zerotestsimplifysolution-fn] Suggested from https://github.com/sympy/sympy/issues/10120
 

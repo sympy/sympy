@@ -5,6 +5,7 @@ from itertools import repeat, combinations
 
 from sympy import S, Symbol, Add, Mul, simplify, Pow, exp
 from sympy.stats.symbolic_probability import RandomSymbol, Variance, Covariance
+from sympy.stats.rv import is_random
 
 _arg0_or_var = lambda var: var.args[0] if len(var.args) > 0 else var
 
@@ -58,27 +59,27 @@ def variance_prop(expr, consts=(), include_covar=False):
     args = expr.args
     if len(args) == 0:
         if expr in consts:
-            return S(0)
-        elif isinstance(expr, RandomSymbol):
+            return S.Zero
+        elif is_random(expr):
             return Variance(expr).doit()
         elif isinstance(expr, Symbol):
             return Variance(RandomSymbol(expr)).doit()
         else:
-            return S(0)
+            return S.Zero
     nargs = len(args)
     var_args = list(map(variance_prop, args, repeat(consts, nargs),
                         repeat(include_covar, nargs)))
     if isinstance(expr, Add):
         var_expr = Add(*var_args)
         if include_covar:
-            terms = [2 * Covariance(_arg0_or_var(x), _arg0_or_var(y)).doit() \
+            terms = [2 * Covariance(_arg0_or_var(x), _arg0_or_var(y)).expand() \
                      for x, y in combinations(var_args, 2)]
             var_expr += Add(*terms)
     elif isinstance(expr, Mul):
         terms = [v/a**2 for a, v in zip(args, var_args)]
         var_expr = simplify(expr**2 * Add(*terms))
         if include_covar:
-            terms = [2*Covariance(_arg0_or_var(x), _arg0_or_var(y)).doit()/(a*b) \
+            terms = [2*Covariance(_arg0_or_var(x), _arg0_or_var(y)).expand()/(a*b) \
                      for (a, b), (x, y) in zip(combinations(args, 2),
                                                combinations(var_args, 2))]
             var_expr += Add(*terms)

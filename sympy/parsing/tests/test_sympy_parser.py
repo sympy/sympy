@@ -5,11 +5,10 @@ import sys
 
 
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
-from sympy.core.compatibility import PY3
 from sympy.functions import exp, factorial, factorial2, sin
 from sympy.logic import And
 from sympy.series import Limit
-from sympy.utilities.pytest import raises, skip
+from sympy.testing.pytest import raises, skip
 
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
@@ -253,10 +252,6 @@ def test_split_symbols_numeric():
 
 
 def test_unicode_names():
-    if not PY3:
-        skip("test_unicode_names can only pass in Python 3")
-
-
     assert parse_expr(u'α') == Symbol(u'α')
 
 

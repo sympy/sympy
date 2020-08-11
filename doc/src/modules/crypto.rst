@@ -1,5 +1,6 @@
-Basic Cryptography Module
-=========================
+============
+Cryptography
+============
 
 .. warning::
 
@@ -82,8 +83,6 @@ substitutions at different times in the message.
 
 .. autofunction:: decipher_bifid5
 
-.. autofunction:: bifid5_square
-
 .. autofunction:: encipher_bifid6
 
 .. autofunction:: decipher_bifid6
@@ -130,10 +129,6 @@ substitutions at different times in the message.
 
 .. autofunction:: dh_shared_key
 
-.. autofunction:: encipher_elgamal
-
-.. autofunction:: decipher_elgamal
-
 .. autofunction:: gm_public_key
 
 .. autofunction:: gm_private_key
@@ -141,3 +136,7 @@ substitutions at different times in the message.
 .. autofunction:: encipher_gm
 
 .. autofunction:: decipher_gm
+
+.. autofunction:: encipher_railfence
+
+.. autofunction:: decipher_railfence

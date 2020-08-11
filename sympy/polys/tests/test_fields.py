@@ -5,8 +5,8 @@ from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.orderings import lex
 
-from sympy.utilities.pytest import raises, XFAIL
-from sympy.core import symbols, E, S
+from sympy.testing.pytest import raises, XFAIL
+from sympy.core import symbols, E
 from sympy import sqrt, Rational, exp, log
 
 def test_FracField___init__():
@@ -106,7 +106,7 @@ def test_FracElement_from_expr():
     assert f == X and isinstance(f, F.dtype)
 
     f = F.from_expr(Rational(3,7)*x)
-    assert f == 3*X/7 and isinstance(f, F.dtype)
+    assert f == X*Rational(3, 7) and isinstance(f, F.dtype)
 
     f = F.from_expr(1/x)
     assert f == 1/X and isinstance(f, F.dtype)
@@ -133,8 +133,35 @@ def test_FracElement_from_expr():
         FracElement)
     assert isinstance(ZZ[x**2].get_field().convert(x**(-6)),
         FracElement)
-    assert isinstance(ZZ[exp(S(1)/3)].get_field().convert(E),
+    assert isinstance(ZZ[exp(Rational(1, 3))].get_field().convert(E),
         FracElement)
+
+
+def test_FracField_nested():
+    a, b, x = symbols('a b x')
+    F1 = ZZ.frac_field(a, b)
+    F2 = F1.frac_field(x)
+    frac = F2(a + b)
+    assert frac.numer == F1.poly_ring(x)(a + b)
+    assert frac.numer.coeffs() == [F1(a + b)]
+    assert frac.denom == F1.poly_ring(x)(1)
+
+    F3 = ZZ.poly_ring(a, b)
+    F4 = F3.frac_field(x)
+    frac = F4(a + b)
+    assert frac.numer == F3.poly_ring(x)(a + b)
+    assert frac.numer.coeffs() == [F3(a + b)]
+    assert frac.denom == F3.poly_ring(x)(1)
+
+    frac = F2(F3(a + b))
+    assert frac.numer == F1.poly_ring(x)(a + b)
+    assert frac.numer.coeffs() == [F1(a + b)]
+    assert frac.denom == F1.poly_ring(x)(1)
+
+    frac = F4(F1(a + b))
+    assert frac.numer == F3.poly_ring(x)(a + b)
+    assert frac.numer.coeffs() == [F3(a + b)]
+    assert frac.denom == F3.poly_ring(x)(1)
 
 
 def test_FracElement__lt_le_gt_ge__():
@@ -223,7 +250,7 @@ def test_FracElement___mul__():
 
     F, x,y = field("x,y", ZZ)
     assert x*3 == 3*x
-    assert x*QQ(3,7) == QQ(3,7)*x == 3*x/7
+    assert x*QQ(3,7) == QQ(3,7)*x == x*Rational(3, 7)
 
     Fuv, u,v = field("u,v", ZZ)
     Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
@@ -249,7 +276,7 @@ def test_FracElement___div__():
 
     F, x,y = field("x,y", ZZ)
     assert x*3 == 3*x
-    assert x/QQ(3,7) == (QQ(3,7)/x)**-1 == 7*x/3
+    assert x/QQ(3,7) == (QQ(3,7)/x)**-1 == x*Rational(7, 3)
 
     raises(ZeroDivisionError, lambda: x/0)
     raises(ZeroDivisionError, lambda: 1/(x - x))

@@ -8,7 +8,7 @@ from string import ascii_lowercase, ascii_uppercase
 
 unicode_warnings = ''
 
-from sympy.core.compatibility import unicode, range
+from sympy.core.compatibility import unicode
 
 # first, setup unicodedate environment
 try:
@@ -121,7 +121,6 @@ greek_letters = list(greeks) # make a copy
 greek_letters[greek_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_unicode = {l: (g(l), G(l)) for l in greek_letters}
 greek_unicode = dict((L, g(L)) for L in greek_letters)
 greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
 
@@ -146,7 +145,6 @@ greek_bold_letters = list(greeks) # make a copy, not strictly required here
 greek_bold_letters[greek_bold_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_bold_unicode = {l: (g(l), G(l)) for l in greek_bold_letters}
 greek_bold_unicode = dict((L, g(L)) for L in greek_bold_letters)
 greek_bold_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_bold_letters)
 greek_bold_unicode['lambda'] = greek_unicode['lamda']
@@ -507,7 +505,9 @@ atoms_table = {
     'Union':                   U('UNION'),
     'SymmetricDifference':     U('INCREMENT'),
     'Intersection':            U('INTERSECTION'),
-    'Ring':                    U('RING OPERATOR')
+    'Ring':                    U('RING OPERATOR'),
+    'Modifier Letter Low Ring':U('Modifier Letter Low Ring'),
+    'EmptySequence':           'EmptySequence',
 }
 
 
@@ -612,6 +612,17 @@ def annotated(letter):
         return ucode_pics[letter]
     else:
         return ascii_pics[letter]
+
+def is_combining(sym):
+    """Check whether symbol is a unicode modifier.
+
+    See stringPict.width on usage.
+    """
+    return True if (u'\N{COMBINING GRAVE ACCENT}' <= sym <=
+                    u'\N{COMBINING LATIN SMALL LETTER X}' or
+
+                    u'\N{COMBINING LEFT HARPOON ABOVE}' <= sym <=
+                    u'\N{COMBINING ASTERISK ABOVE}') else False
 
 
 def center_accent(string, accent):

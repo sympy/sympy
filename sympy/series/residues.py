@@ -53,10 +53,7 @@ def residue(expr, x, x0):
     if x0 != 0:
         expr = expr.subs(x, x + x0)
     for n in [0, 1, 2, 4, 8, 16, 32]:
-        if n == 0:
-            s = expr.series(x, n=0)
-        else:
-            s = expr.nseries(x, n=n)
+        s = expr.nseries(x, n=n)
         if not s.has(Order) or s.getn() >= 0:
             break
     s = collect(s.removeO(), x)
@@ -64,7 +61,7 @@ def residue(expr, x, x0):
         args = s.args
     else:
         args = [s]
-    res = S(0)
+    res = S.Zero
     for arg in args:
         c, m = arg.as_coeff_mul(x)
         m = Mul(*m)

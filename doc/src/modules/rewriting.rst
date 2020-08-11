@@ -1,4 +1,5 @@
-Term rewriting
+==============
+Term Rewriting
 ==============
 
 Term rewriting is a very general class of functionalities which are used to

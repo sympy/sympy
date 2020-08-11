@@ -1,21 +1,25 @@
-from __future__ import division, print_function
-
-import copy
 from collections import defaultdict
 
-from sympy.core.compatibility import Callable, as_int, is_sequence, range
+from sympy.core import SympifyError, Add
+from sympy.core.compatibility import Callable, as_int, is_sequence, reduce
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.functions import Abs
-from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import uniq
-from sympy.utilities.misc import filldedent
 
 from .common import a2idx
 from .dense import Matrix
 from .matrices import MatrixBase, ShapeError
 
+from .utilities import _iszero
+
+from .decompositions import (
+    _liupc, _row_structure_symbolic_cholesky, _cholesky_sparse,
+    _LDLdecomposition_sparse)
+
+from .solvers import (
+    _lower_triangular_solve_sparse, _upper_triangular_solve_sparse)
 
 
 class SparseMatrix(MatrixBase):
@@ -99,115 +103,140 @@ class SparseMatrix(MatrixBase):
 
     See Also
     ========
-    sympy.matrices.common.diag
-    sympy.matrices.dense.Matrix
+    DenseMatrix
+    MutableSparseMatrix
+    ImmutableSparseMatrix
     """
 
-    def __new__(cls, *args, **kwargs):
-        self = object.__new__(cls)
-        if len(args) == 1 and isinstance(args[0], SparseMatrix):
-            self.rows = args[0].rows
-            self.cols = args[0].cols
-            self._smat = dict(args[0]._smat)
-            return self
+    @classmethod
+    def _handle_creation_inputs(cls, *args, **kwargs):
+        if len(args) == 1 and isinstance(args[0], MatrixBase):
+            rows = args[0].rows
+            cols = args[0].cols
+            smat = args[0].todok()
+            return rows, cols, smat
 
-        self._smat = {}
-
+        smat = {}
         # autosizing
         if len(args) == 2 and args[0] is None:
-            args = (None,) + args
+            args = [None, None, args[1]]
+
         if len(args) == 3:
             r, c = args[:2]
             if r is c is None:
-                self.rows = self.cols = None
+                rows = cols = None
             elif None in (r, c):
                 raise ValueError(
                     'Pass rows=None and no cols for autosizing.')
             else:
-                self.rows, self.cols = map(as_int, args[:2])
+                rows, cols = as_int(args[0]), as_int(args[1])
 
             if isinstance(args[2], Callable):
                 op = args[2]
-                for i in range(self.rows):
-                    for j in range(self.cols):
-                        value = self._sympify(
-                            op(self._sympify(i), self._sympify(j)))
-                        if value:
-                            self._smat[i, j] = value
+
+                if None in (rows, cols):
+                    raise ValueError(
+                        "{} and {} must be integers for this "
+                        "specification.".format(rows, cols))
+
+                row_indices = [cls._sympify(i) for i in range(rows)]
+                col_indices = [cls._sympify(j) for j in range(cols)]
+
+                for i in row_indices:
+                    for j in col_indices:
+                        value = cls._sympify(op(i, j))
+                        if value != cls.zero:
+                            smat[i, j] = value
+
+                return rows, cols, smat
+
             elif isinstance(args[2], (dict, Dict)):
                 def update(i, j, v):
                     # update self._smat and make sure there are
                     # no collisions
                     if v:
-                        if (i, j) in self._smat and v != self._smat[i, j]:
-                            raise ValueError('collision at %s' % ((i, j),))
-                        self._smat[i, j] = v
+                        if (i, j) in smat and v != smat[i, j]:
+                            raise ValueError(
+                                "There is a collision at {} for {} and {}."
+                                .format((i, j), v, smat[i, j])
+                            )
+                        smat[i, j] = v
+
                 # manual copy, copy.deepcopy() doesn't work
-                for key, v in args[2].items():
-                    r, c = key
-                    if isinstance(v, SparseMatrix):
-                        for (i, j), vij in v._smat.items():
-                            update(r + i, c + j, vij)
+                for (r, c), v in args[2].items():
+                    if isinstance(v, MatrixBase):
+                        for (i, j), vv in v.todok().items():
+                            update(r + i, c + j, vv)
+                    elif isinstance(v, (list, tuple)):
+                        _, _, smat = cls._handle_creation_inputs(v, **kwargs)
+                        for i, j in smat:
+                            update(r + i, c + j, smat[i, j])
                     else:
-                        if isinstance(v, (Matrix, list, tuple)):
-                            v = SparseMatrix(v)
-                            for i, j in v._smat:
-                                update(r + i, c + j, v[i, j])
-                        else:
-                            v = self._sympify(v)
-                            update(r, c, self._sympify(v))
+                        v = cls._sympify(v)
+                        update(r, c, cls._sympify(v))
+
             elif is_sequence(args[2]):
                 flat = not any(is_sequence(i) for i in args[2])
                 if not flat:
-                    s = SparseMatrix(args[2])
-                    self._smat = s._smat
+                    _, _, smat = \
+                        cls._handle_creation_inputs(args[2], **kwargs)
                 else:
-                    if len(args[2]) != self.rows*self.cols:
-                        raise ValueError(
-                            'Flat list length (%s) != rows*columns (%s)' %
-                            (len(args[2]), self.rows*self.cols))
                     flat_list = args[2]
-                    for i in range(self.rows):
-                        for j in range(self.cols):
-                            value = self._sympify(flat_list[i*self.cols + j])
-                            if value:
-                                self._smat[i, j] = value
-            if self.rows is None:  # autosizing
-                k = self._smat.keys()
-                self.rows = max([i[0] for i in k]) + 1 if k else 0
-                self.cols = max([i[1] for i in k]) + 1 if k else 0
+                    if len(flat_list) != rows * cols:
+                        raise ValueError(
+                            "The length of the flat list ({}) does not "
+                            "match the specified size ({} * {})."
+                            .format(len(flat_list), rows, cols)
+                        )
+
+                    for i in range(rows):
+                        for j in range(cols):
+                            value = flat_list[i*cols + j]
+                            value = cls._sympify(value)
+                            if value != cls.zero:
+                                smat[i, j] = value
+
+            if rows is None:  # autosizing
+                keys = smat.keys()
+                rows = max([r for r, _ in keys]) + 1 if keys else 0
+                cols = max([c for _, c in keys]) + 1 if keys else 0
+
             else:
-                for i, j in self._smat.keys():
-                    if i and i >= self.rows or j and j >= self.cols:
-                        r, c = self.shape
-                        raise ValueError(filldedent('''
-                            The location %s is out of designated
-                            range: %s''' % ((i, j), (r - 1, c - 1))))
+                for i, j in smat.keys():
+                    if i and i >= rows or j and j >= cols:
+                        raise ValueError(
+                            "The location {} is out of the designated range"
+                            "[{}, {}]x[{}, {}]"
+                            .format((i, j), 0, rows - 1, 0, cols - 1)
+                        )
+
+            return rows, cols, smat
+
+        elif len(args) == 1 and isinstance(args[0], (list, tuple)):
+            # list of values or lists
+            v = args[0]
+            c = 0
+            for i, row in enumerate(v):
+                if not isinstance(row, (list, tuple)):
+                    row = [row]
+                for j, vv in enumerate(row):
+                    if vv != cls.zero:
+                        smat[i, j] = cls._sympify(vv)
+                c = max(c, len(row))
+            rows = len(v) if c else 0
+            cols = c
+            return rows, cols, smat
+
         else:
-            if (len(args) == 1 and isinstance(args[0], (list, tuple))):
-                # list of values or lists
-                v = args[0]
-                c = 0
-                for i, row in enumerate(v):
-                    if not isinstance(row, (list, tuple)):
-                        row = [row]
-                    for j, vij in enumerate(row):
-                        if vij:
-                            self._smat[i, j] = self._sympify(vij)
-                    c = max(c, len(row))
-                self.rows = len(v) if c else 0
-                self.cols = c
-            else:
-                # handle full matrix forms with _handle_creation_inputs
-                r, c, _list = Matrix._handle_creation_inputs(*args)
-                self.rows = r
-                self.cols = c
-                for i in range(self.rows):
-                    for j in range(self.cols):
-                        value = _list[self.cols*i + j]
-                        if value:
-                            self._smat[i, j] = value
-        return self
+            # handle full matrix forms with _handle_creation_inputs
+            rows, cols, mat = super()._handle_creation_inputs(*args)
+            for i in range(rows):
+                for j in range(cols):
+                    value = mat[cols*i + j]
+                    if value != cls.zero:
+                        smat[i, j] = value
+
+            return rows, cols, smat
 
     def __eq__(self, other):
         self_shape = getattr(self, 'shape', None)
@@ -230,8 +259,7 @@ class SparseMatrix(MatrixBase):
                 return self._smat.get((i, j), S.Zero)
             except (TypeError, IndexError):
                 if isinstance(i, slice):
-                    # XXX remove list() when PY2 support is dropped
-                    i = list(range(self.rows))[i]
+                    i = range(self.rows)[i]
                 elif is_sequence(i):
                     pass
                 elif isinstance(i, Expr) and not i.is_number:
@@ -242,8 +270,7 @@ class SparseMatrix(MatrixBase):
                         raise IndexError('Row index out of bounds')
                     i = [i]
                 if isinstance(j, slice):
-                    # XXX remove list() when PY2 support is dropped
-                    j = list(range(self.cols))[j]
+                    j = range(self.cols)[j]
                 elif is_sequence(j):
                     pass
                 elif isinstance(j, Expr) and not j.is_number:
@@ -270,102 +297,10 @@ class SparseMatrix(MatrixBase):
     def __setitem__(self, key, value):
         raise NotImplementedError()
 
-    def _cholesky_solve(self, rhs):
-        # for speed reasons, this is not uncommented, but if you are
-        # having difficulties, try uncommenting to make sure that the
-        # input matrix is symmetric
-
-        #assert self.is_symmetric()
-        L = self._cholesky_sparse()
-        Y = L._lower_triangular_solve(rhs)
-        rv = L.T._upper_triangular_solve(Y)
-        return rv
-
-    def _cholesky_sparse(self):
-        """Algorithm for numeric Cholesky factorization of a sparse matrix."""
-        Crowstruc = self.row_structure_symbolic_cholesky()
-        C = self.zeros(self.rows)
-        for i in range(len(Crowstruc)):
-            for j in Crowstruc[i]:
-                if i != j:
-                    C[i, j] = self[i, j]
-                    summ = 0
-                    for p1 in Crowstruc[i]:
-                        if p1 < j:
-                            for p2 in Crowstruc[j]:
-                                if p2 < j:
-                                    if p1 == p2:
-                                        summ += C[i, p1]*C[j, p1]
-                                else:
-                                    break
-                            else:
-                                break
-                    C[i, j] -= summ
-                    C[i, j] /= C[j, j]
-                else:
-                    C[j, j] = self[j, j]
-                    summ = 0
-                    for k in Crowstruc[j]:
-                        if k < j:
-                            summ += C[j, k]**2
-                        else:
-                            break
-                    C[j, j] -= summ
-                    C[j, j] = sqrt(C[j, j])
-
-        return C
-
     def _eval_inverse(self, **kwargs):
-        """Return the matrix inverse using Cholesky or LDL (default)
-        decomposition as selected with the ``method`` keyword: 'CH' or 'LDL',
-        respectively.
-
-        Examples
-        ========
-
-        >>> from sympy import SparseMatrix, Matrix
-        >>> A = SparseMatrix([
-        ... [ 2, -1,  0],
-        ... [-1,  2, -1],
-        ... [ 0,  0,  2]])
-        >>> A.inv('CH')
-        Matrix([
-        [2/3, 1/3, 1/6],
-        [1/3, 2/3, 1/3],
-        [  0,   0, 1/2]])
-        >>> A.inv(method='LDL') # use of 'method=' is optional
-        Matrix([
-        [2/3, 1/3, 1/6],
-        [1/3, 2/3, 1/3],
-        [  0,   0, 1/2]])
-        >>> A * _
-        Matrix([
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1]])
-
-        """
-        sym = self.is_symmetric()
-        M = self.as_mutable()
-        I = M.eye(M.rows)
-        if not sym:
-            t = M.T
-            r1 = M[0, :]
-            M = t*M
-            I = t*I
-        method = kwargs.get('method', 'LDL')
-        if method in "LDL":
-            solve = M._LDL_solve
-        elif method == "CH":
-            solve = M._cholesky_solve
-        else:
-            raise NotImplementedError(
-                'Method may be "CH" or "LDL", not %s.' % method)
-        rv = M.hstack(*[solve(I[:, i]) for i in range(I.cols)])
-        if not sym:
-            scale = (r1*rv[:, 0])[0, 0]
-            rv /= scale
-        return self._new(rv)
+        return self.inv(method=kwargs.get('method', 'LDL'),
+                        iszerofunc=kwargs.get('iszerofunc', _iszero),
+                        try_block_diag=kwargs.get('try_block_diag', False))
 
     def _eval_Abs(self):
         return self.applyfunc(lambda x: Abs(x))
@@ -386,7 +321,7 @@ class SparseMatrix(MatrixBase):
 
     def _eval_col_insert(self, icol, other):
         if not isinstance(other, SparseMatrix):
-            other = SparseMatrix(other)
+            other = MutableSparseMatrix(other)
         new_smat = {}
         # make room for the new rows
         for key, val in self._smat.items():
@@ -460,8 +395,9 @@ class SparseMatrix(MatrixBase):
 
     def _eval_matrix_mul(self, other):
         """Fast multiplication exploiting the sparsity of the matrix."""
+
         if not isinstance(other, SparseMatrix):
-            return self*self._new(other)
+            other = self._new(other)
 
         # if we made it here, we're both sparse matrices
         # create quick lookups for rows and cols
@@ -479,13 +415,20 @@ class SparseMatrix(MatrixBase):
                 # these are the only things that need to be multiplied.
                 indices = set(col_lookup[col].keys()) & set(row_lookup[row].keys())
                 if indices:
-                    val = sum(row_lookup[row][k]*col_lookup[col][k] for k in indices)
-                    smat[row, col] = val
+                    vec = [row_lookup[row][k]*col_lookup[col][k] for k in indices]
+                    try:
+                        smat[row, col] = Add(*vec)
+                    except (TypeError, SympifyError):
+                        # Some matrices don't work with `sum` or `Add`
+                        # They don't work with `sum` because `sum` tries to add `0`
+                        # Fall back to a safe way to multiply if the `Add` fails.
+                        smat[row, col] = reduce(lambda a, b: a + b, vec)
+
         return self._new(self.rows, other.cols, smat)
 
     def _eval_row_insert(self, irow, other):
         if not isinstance(other, SparseMatrix):
-            other = SparseMatrix(other)
+            other = MutableSparseMatrix(other)
         new_smat = {}
         # make room for the new rows
         for key, val in self._smat.items():
@@ -504,6 +447,9 @@ class SparseMatrix(MatrixBase):
 
     def _eval_scalar_rmul(self, other):
         return self.applyfunc(lambda x: other*x)
+
+    def _eval_todok(self):
+        return self._smat.copy()
 
     def _eval_transpose(self):
         """Returns the transposed SparseMatrix of this SparseMatrix.
@@ -532,91 +478,11 @@ class SparseMatrix(MatrixBase):
     def _eval_zeros(cls, rows, cols):
         return cls._new(rows, cols, {})
 
-    def _LDL_solve(self, rhs):
-        # for speed reasons, this is not uncommented, but if you are
-        # having difficulties, try uncommenting to make sure that the
-        # input matrix is symmetric
-
-        #assert self.is_symmetric()
-        L, D = self._LDL_sparse()
-        Z = L._lower_triangular_solve(rhs)
-        Y = D._diagonal_solve(Z)
-        return L.T._upper_triangular_solve(Y)
-
-    def _LDL_sparse(self):
-        """Algorithm for numeric LDL factorization, exploiting sparse structure.
-        """
-        Lrowstruc = self.row_structure_symbolic_cholesky()
-        L = self.eye(self.rows)
-        D = self.zeros(self.rows, self.cols)
-
-        for i in range(len(Lrowstruc)):
-            for j in Lrowstruc[i]:
-                if i != j:
-                    L[i, j] = self[i, j]
-                    summ = 0
-                    for p1 in Lrowstruc[i]:
-                        if p1 < j:
-                            for p2 in Lrowstruc[j]:
-                                if p2 < j:
-                                    if p1 == p2:
-                                        summ += L[i, p1]*L[j, p1]*D[p1, p1]
-                                else:
-                                    break
-                        else:
-                            break
-                    L[i, j] -= summ
-                    L[i, j] /= D[j, j]
-                else: # i == j
-                    D[i, i] = self[i, i]
-                    summ = 0
-                    for k in Lrowstruc[i]:
-                        if k < i:
-                            summ += L[i, k]**2*D[k, k]
-                        else:
-                            break
-                    D[i, i] -= summ
-
-        return L, D
-
-    def _lower_triangular_solve(self, rhs):
-        """Fast algorithm for solving a lower-triangular system,
-        exploiting the sparsity of the given matrix.
-        """
-        rows = [[] for i in range(self.rows)]
-        for i, j, v in self.row_list():
-            if i > j:
-                rows[i].append((j, v))
-        X = rhs.as_mutable().copy()
-        for j in range(rhs.cols):
-            for i in range(rhs.rows):
-                for u, v in rows[i]:
-                    X[i, j] -= v*X[u, j]
-                X[i, j] /= self[i, i]
-        return self._new(X)
-
     @property
     def _mat(self):
         """Return a list of matrix elements.  Some routines
         in DenseMatrix use `_mat` directly to speed up operations."""
         return list(self)
-
-    def _upper_triangular_solve(self, rhs):
-        """Fast algorithm for solving an upper-triangular system,
-        exploiting the sparsity of the given matrix.
-        """
-        rows = [[] for i in range(self.rows)]
-        for i, j, v in self.row_list():
-            if i < j:
-                rows[i].append((j, v))
-        X = rhs.as_mutable().copy()
-        for j in range(rhs.cols):
-            for i in reversed(range(rhs.rows)):
-                for u, v in reversed(rows[i]):
-                    X[i, j] -= v*X[u, j]
-                X[i, j] /= self[i, i]
-        return self._new(X)
-
 
     def applyfunc(self, f):
         """Apply a function to each element of the matrix.
@@ -670,38 +536,6 @@ class SparseMatrix(MatrixBase):
         """
         return MutableSparseMatrix(self)
 
-    def cholesky(self):
-        """
-        Returns the Cholesky decomposition L of a matrix A
-        such that L * L.T = A
-
-        A must be a square, symmetric, positive-definite
-        and non-singular matrix
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
-        >>> A.cholesky()
-        Matrix([
-        [ 5, 0, 0],
-        [ 3, 3, 0],
-        [-1, 1, 3]])
-        >>> A.cholesky() * A.cholesky().T == A
-        True
-        """
-
-        from sympy.core.numbers import nan, oo
-        if not self.is_symmetric():
-            raise ValueError('Cholesky decomposition applies only to '
-                'symmetric matrices.')
-        M = self.as_mutable()._cholesky_sparse()
-        if M.has(nan) or M.has(oo):
-            raise ValueError('Cholesky decomposition applies only to '
-                'positive-definite matrices')
-        return self._new(M)
-
     def col_list(self):
         """Returns a column-sorted list of non-zero elements of the matrix.
 
@@ -719,97 +553,13 @@ class SparseMatrix(MatrixBase):
 
         See Also
         ========
-        col_op
-        row_list
+        sympy.matrices.sparse.MutableSparseMatrix.col_op
+        sympy.matrices.sparse.SparseMatrix.row_list
         """
         return [tuple(k + (self[k],)) for k in sorted(list(self._smat.keys()), key=lambda k: list(reversed(k)))]
 
     def copy(self):
         return self._new(self.rows, self.cols, self._smat)
-
-    def LDLdecomposition(self):
-        """
-        Returns the LDL Decomposition (matrices ``L`` and ``D``) of matrix
-        ``A``, such that ``L * D * L.T == A``. ``A`` must be a square,
-        symmetric, positive-definite and non-singular.
-
-        This method eliminates the use of square root and ensures that all
-        the diagonal entries of L are 1.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> A = SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
-        >>> L, D = A.LDLdecomposition()
-        >>> L
-        Matrix([
-        [   1,   0, 0],
-        [ 3/5,   1, 0],
-        [-1/5, 1/3, 1]])
-        >>> D
-        Matrix([
-        [25, 0, 0],
-        [ 0, 9, 0],
-        [ 0, 0, 9]])
-        >>> L * D * L.T == A
-        True
-
-        """
-        from sympy.core.numbers import nan, oo
-        if not self.is_symmetric():
-            raise ValueError('LDL decomposition applies only to '
-                'symmetric matrices.')
-        L, D = self.as_mutable()._LDL_sparse()
-        if L.has(nan) or L.has(oo) or D.has(nan) or D.has(oo):
-            raise ValueError('LDL decomposition applies only to '
-                'positive-definite matrices')
-
-        return self._new(L), self._new(D)
-
-    def liupc(self):
-        """Liu's algorithm, for pre-determination of the Elimination Tree of
-        the given matrix, used in row-based symbolic Cholesky factorization.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> S = SparseMatrix([
-        ... [1, 0, 3, 2],
-        ... [0, 0, 1, 0],
-        ... [4, 0, 0, 5],
-        ... [0, 6, 7, 0]])
-        >>> S.liupc()
-        ([[0], [], [0], [1, 2]], [4, 3, 4, 4])
-
-        References
-        ==========
-
-        Symbolic Sparse Cholesky Factorization using Elimination Trees,
-        Jeroen Van Grondelle (1999)
-        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
-        """
-        # Algorithm 2.4, p 17 of reference
-
-        # get the indices of the elements that are non-zero on or below diag
-        R = [[] for r in range(self.rows)]
-        for r, c, _ in self.row_list():
-            if c <= r:
-                R[r].append(c)
-
-        inf = len(R)  # nothing will be this large
-        parent = [inf]*self.rows
-        virtual = [inf]*self.rows
-        for r in range(self.rows):
-            for c in R[r][:-1]:
-                while virtual[c] < r:
-                    t = virtual[c]
-                    virtual[c] = r
-                    c = t
-                if virtual[c] == inf:
-                    parent[c] = virtual[c] = r
-        return R, parent
 
     def nnz(self):
         """Returns the number of non-zero elements in Matrix."""
@@ -832,46 +582,11 @@ class SparseMatrix(MatrixBase):
 
         See Also
         ========
-        row_op
-        col_list
+        sympy.matrices.sparse.MutableSparseMatrix.row_op
+        sympy.matrices.sparse.SparseMatrix.col_list
         """
         return [tuple(k + (self[k],)) for k in
             sorted(list(self._smat.keys()), key=lambda k: list(k))]
-
-    def row_structure_symbolic_cholesky(self):
-        """Symbolic cholesky factorization, for pre-determination of the
-        non-zero structure of the Cholesky factororization.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> S = SparseMatrix([
-        ... [1, 0, 3, 2],
-        ... [0, 0, 1, 0],
-        ... [4, 0, 0, 5],
-        ... [0, 6, 7, 0]])
-        >>> S.row_structure_symbolic_cholesky()
-        [[0], [], [0], [1, 2]]
-
-        References
-        ==========
-
-        Symbolic Sparse Cholesky Factorization using Elimination Trees,
-        Jeroen Van Grondelle (1999)
-        http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
-        """
-
-        R, parent = self.liupc()
-        inf = len(R)  # this acts as infinity
-        Lrow = copy.deepcopy(R)
-        for k in range(self.rows):
-            for j in R[k]:
-                while j != inf and j != k:
-                    Lrow[k].append(j)
-                    j = parent[j]
-            Lrow[k] = list(sorted(set(Lrow[k])))
-        return Lrow
 
     def scalar_multiply(self, scalar):
         "Scalar element-wise multiplication"
@@ -954,17 +669,49 @@ class SparseMatrix(MatrixBase):
                 raise ValueError('For over-determined system, M, having '
                     'more rows than columns, try M.solve_least_squares(rhs).')
         else:
-            return self.inv(method=method)*rhs
+            return self.inv(method=method).multiply(rhs)
 
     RL = property(row_list, None, None, "Alternate faster representation")
-
     CL = property(col_list, None, None, "Alternate faster representation")
+
+    def liupc(self):
+        return _liupc(self)
+
+    def row_structure_symbolic_cholesky(self):
+        return _row_structure_symbolic_cholesky(self)
+
+    def cholesky(self, hermitian=True):
+        return _cholesky_sparse(self, hermitian=hermitian)
+
+    def LDLdecomposition(self, hermitian=True):
+        return _LDLdecomposition_sparse(self, hermitian=hermitian)
+
+    def lower_triangular_solve(self, rhs):
+        return _lower_triangular_solve_sparse(self, rhs)
+
+    def upper_triangular_solve(self, rhs):
+        return _upper_triangular_solve_sparse(self, rhs)
+
+    liupc.__doc__                           = _liupc.__doc__
+    row_structure_symbolic_cholesky.__doc__ = _row_structure_symbolic_cholesky.__doc__
+    cholesky.__doc__                        = _cholesky_sparse.__doc__
+    LDLdecomposition.__doc__                = _LDLdecomposition_sparse.__doc__
+    lower_triangular_solve.__doc__          = lower_triangular_solve.__doc__
+    upper_triangular_solve.__doc__          = upper_triangular_solve.__doc__
 
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
+
     @classmethod
     def _new(cls, *args, **kwargs):
-        return cls(*args)
+        obj = super().__new__(cls)
+        rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
+        obj.rows = rows
+        obj.cols = cols
+        obj._smat = smat
+        return obj
 
     def __setitem__(self, key, value):
         """Assign value to position designated by key.
@@ -1026,34 +773,11 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
     def as_mutable(self):
         return self.copy()
 
-    __hash__ = None
+    __hash__ = None  # type: ignore
 
-    def col_del(self, k):
-        """Delete the given column of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> M = SparseMatrix([[0, 0], [0, 1]])
-        >>> M
-        Matrix([
-        [0, 0],
-        [0, 1]])
-        >>> M.col_del(0)
-        >>> M
-        Matrix([
-        [0],
-        [1]])
-
-        See Also
-        ========
-
-        row_del
-        """
+    def _eval_col_del(self, k):
         newD = {}
-        k = a2idx(k, self.cols)
-        for (i, j) in self._smat:
+        for i, j in self._smat:
             if j == k:
                 pass
             elif j > k:
@@ -1062,6 +786,18 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                 newD[i, j] = self._smat[i, j]
         self._smat = newD
         self.cols -= 1
+
+    def _eval_row_del(self, k):
+        newD = {}
+        for i, j in self._smat:
+            if i == k:
+                pass
+            elif i > k:
+                newD[i - 1, j] = self._smat[i, j]
+            else:
+                newD[i, j] = self._smat[i, j]
+        self._smat = newD
+        self.rows -= 1
 
     def col_join(self, other):
         """Returns B augmented beneath A (row-wise joining)::
@@ -1242,39 +978,6 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
             self._smat = {(i, j): v
                 for i in range(self.rows) for j in range(self.cols)}
 
-    def row_del(self, k):
-        """Delete the given row of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> M = SparseMatrix([[0, 0], [0, 1]])
-        >>> M
-        Matrix([
-        [0, 0],
-        [0, 1]])
-        >>> M.row_del(0)
-        >>> M
-        Matrix([[0, 1]])
-
-        See Also
-        ========
-
-        col_del
-        """
-        newD = {}
-        k = a2idx(k, self.rows)
-        for (i, j) in self._smat:
-            if i == k:
-                pass
-            elif i > k:
-                newD[i - 1, j] = self._smat[i, j]
-            else:
-                newD[i, j] = self._smat[i, j]
-        self._smat = newD
-        self.rows -= 1
-
     def row_join(self, other):
         """Returns B appended after A (column-wise augmenting)::
 
@@ -1418,3 +1121,5 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
 
         """
         self.row_op(i, lambda v, j: f(v, self[k, j]))
+
+    is_zero = False

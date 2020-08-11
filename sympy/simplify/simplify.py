@@ -2,22 +2,24 @@ from __future__ import print_function, division
 
 from collections import defaultdict
 
-from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify, expand_mul,
+from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_func, Function, Dummy, Expr, factor_terms,
                         expand_power_exp, Eq)
-from sympy.core.compatibility import iterable, ordered, range, as_int
-from sympy.core.evaluate import global_evaluate
-from sympy.core.function import expand_log, count_ops, _mexpand, _coeff_isneg, nfloat
+from sympy.core.compatibility import iterable, ordered, as_int
+from sympy.core.parameters import global_parameters
+from sympy.core.function import (expand_log, count_ops, _mexpand, _coeff_isneg,
+    nfloat, expand_mul)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
+from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
-from sympy.functions import gamma, exp, sqrt, log, exp_polar, piecewise_fold, re
+from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
-from sympy.functions.elementary.complexes import unpolarify
+from sympy.functions.elementary.complexes import unpolarify, Abs
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
-from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessely
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -95,7 +97,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     >>> eq = 2*x + y*sin(x)
     >>> separatevars(eq) == eq
     True
-    >>> separatevars(2*x + y*sin(x), symbols=(x, y), dict=True) == None
+    >>> separatevars(2*x + y*sin(x), symbols=(x, y), dict=True) is None
     True
 
     """
@@ -107,12 +109,14 @@ def separatevars(expr, symbols=[], dict=False, force=False):
 
 
 def _separatevars(expr, force):
-    from sympy.functions.elementary.complexes import Abs
     if isinstance(expr, Abs):
         arg = expr.args[0]
         if arg.is_Mul and not arg.is_number:
             s = separatevars(arg, dict=True, force=force)
-            return Mul(*map(expr.func, s.values()))
+            if s is not None:
+                return Mul(*map(expr.func, s.values()))
+            else:
+                return expr
 
     if len(expr.free_symbols) < 2:
         return expr
@@ -298,6 +302,9 @@ def hypersimp(f, k):
     g = f.subs(k, k + 1) / f
 
     g = g.rewrite(gamma)
+    if g.has(Piecewise):
+        g = piecewise_fold(g)
+        g = g.args[-1][0]
     g = expand_func(g)
     g = powsimp(g, deep=True, combine='exp')
 
@@ -373,12 +380,12 @@ def signsimp(expr, evaluate=None):
 
     """
     if evaluate is None:
-        evaluate = global_evaluate[0]
+        evaluate = global_parameters.evaluate
     expr = sympify(expr)
-    if not isinstance(expr, Expr) or expr.is_Atom:
+    if not isinstance(expr, (Expr, Relational)) or expr.is_Atom:
         return expr
     e = sub_post(sub_pre(expr))
-    if not isinstance(e, Expr) or e.is_Atom:
+    if not isinstance(e, (Expr, Relational)) or e.is_Atom:
         return e
     if e.is_Add:
         return e.func(*[signsimp(a, evaluate) for a in e.args])
@@ -428,7 +435,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     single argument as an expression and return a number such that if
     expression ``a`` is more complex than expression ``b``, then
     ``measure(a) > measure(b)``.  The default measure function is
-    :func:`count_ops`, which returns the total number of operations in the
+    :func:`~.count_ops`, which returns the total number of operations in the
     expression.
 
     For example, if ``ratio=1``, ``simplify`` output can't be longer
@@ -524,9 +531,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     expression. You can avoid this behavior by passing ``doit=False`` as
     an argument.
     """
+
     def shorter(*choices):
-        '''Return the choice that has the fewest ops. In case of a tie,
-        the expression listed first is selected.'''
+        """
+        Return the choice that has the fewest ops. In case of a tie,
+        the expression listed first is selected.
+        """
         if not has_variety(choices):
             return choices[0]
         return min(choices, key=measure)
@@ -543,7 +553,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         inverse=kwargs.get('inverse', inverse),
         doit=kwargs.get('doit', doit))
     # no routine for Expr needs to check for is_zero
-    if isinstance(expr, Expr) and expr.is_zero and expr*0 is S.Zero:
+    if isinstance(expr, Expr) and expr.is_zero:
         return S.Zero
 
     _eval_simplify = getattr(expr, '_eval_simplify', None)
@@ -551,10 +561,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         return _eval_simplify(**kwargs)
 
     original_expr = expr = collect_abs(signsimp(expr))
-
-    from sympy.simplify.hyperexpand import hyperexpand
-    from sympy.functions.special.bessel import BesselBase
-    from sympy import Sum, Product, Integral
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
@@ -586,6 +592,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
 
+
     # rationalize Floats
     floats = False
     if rational is not False and expr.has(Float):
@@ -607,10 +614,46 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     expr = factor_terms(expr, sign=False)
 
-    # hyperexpand automatically only works on hypergeometric terms
-    expr = hyperexpand(expr)
+    from sympy.simplify.hyperexpand import hyperexpand
+    from sympy.functions.special.bessel import BesselBase
+    from sympy import Sum, Product, Integral
+    from sympy.functions.elementary.complexes import sign
 
-    expr = piecewise_fold(expr)
+    # must come before `Piecewise` since this introduces more `Piecewise` terms
+    if expr.has(sign):
+        expr = expr.rewrite(Abs)
+
+    # Deal with Piecewise separately to avoid recursive growth of expressions
+    if expr.has(Piecewise):
+        # Fold into a single Piecewise
+        expr = piecewise_fold(expr)
+        # Apply doit, if doit=True
+        expr = done(expr)
+        # Still a Piecewise?
+        if expr.has(Piecewise):
+            # Fold into a single Piecewise, in case doit lead to some
+            # expressions being Piecewise
+            expr = piecewise_fold(expr)
+            # kroneckersimp also affects Piecewise
+            if expr.has(KroneckerDelta):
+                expr = kroneckersimp(expr)
+            # Still a Piecewise?
+            if expr.has(Piecewise):
+                from sympy.functions.elementary.piecewise import piecewise_simplify
+                # Do not apply doit on the segments as it has already
+                # been done above, but simplify
+                expr = piecewise_simplify(expr, deep=True, doit=False)
+                # Still a Piecewise?
+                if expr.has(Piecewise):
+                    # Try factor common terms
+                    expr = shorter(expr, factor_terms(expr))
+                    # As all expressions have been simplified above with the
+                    # complete simplify, nothing more needs to be done here
+                    return expr
+
+    # hyperexpand automatically only works on hypergeometric terms
+    # Do this after the Piecewise part to avoid recursive expansion
+    expr = hyperexpand(expr)
 
     if expr.has(KroneckerDelta):
         expr = kroneckersimp(expr)
@@ -751,7 +794,7 @@ def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, si
     Examples
     ========
 
-    >>> from sympy import Sum, Integral
+    >>> from sympy import Sum
     >>> from sympy.abc import x, y
     >>> from sympy.simplify.simplify import factor_sum
     >>> s = Sum(x*y, (x, 1, 3))
@@ -1133,8 +1176,8 @@ def kroneckersimp(expr):
     The only simplification currently attempted is to identify multiplicative cancellation:
 
     >>> from sympy import KroneckerDelta, kroneckersimp
-    >>> from sympy.abc import i, j
-    >>> kroneckersimp(1 + KroneckerDelta(0, j) * KroneckerDelta(1, j))
+    >>> from sympy.abc import i
+    >>> kroneckersimp(1 + KroneckerDelta(0, i) * KroneckerDelta(1, i))
     1
     """
     def args_cancel(args1, args2):
@@ -1244,7 +1287,7 @@ def besselsimp(expr):
 
     def expander(fro):
         def repl(nu, z):
-            if (nu % 1) == S(1)/2:
+            if (nu % 1) == S.Half:
                 return simplify(trigsimp(unpolarify(
                         fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
                             func=True)).subs(z0, z)))
@@ -1310,7 +1353,7 @@ def nthroot(expr, n, max_len=4, prec=15):
     ========
 
     >>> from sympy.simplify.simplify import nthroot
-    >>> from sympy import Rational, sqrt
+    >>> from sympy import sqrt
     >>> nthroot(90 + 34*sqrt(7), 3)
     sqrt(7) + 3
 
@@ -1378,7 +1421,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     Examples
     ========
 
-    >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, exp, pi
+    >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, pi
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
     -2 + 2*GoldenRatio
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
@@ -1491,7 +1534,6 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
     Examples
     ========
 
-    >>> from sympy import Rational
     >>> from sympy.simplify.simplify import _real_to_rational
     >>> from sympy.abc import x
 
@@ -1926,3 +1968,169 @@ def nc_simplify(expr, deep=True):
     else:
         simp = simp.doit(inv_expand=False)
     return simp
+
+
+def dotprodsimp(expr, withsimp=False):
+    """Simplification for a sum of products targeted at the kind of blowup that
+    occurs during summation of products. Intended to reduce expression blowup
+    during matrix multiplication or other similar operations. Only works with
+    algebraic expressions and does not recurse into non.
+
+    Parameters
+    ==========
+
+    withsimp : bool, optional
+        Specifies whether a flag should be returned along with the expression
+        to indicate roughly whether simplification was successful. It is used
+        in ``MatrixArithmetic._eval_pow_by_recursion`` to avoid attempting to
+        simplify an expression repetitively which does not simplify.
+    """
+
+    def count_ops_alg(expr):
+        """Optimized count algebraic operations with no recursion into
+        non-algebraic args that ``core.function.count_ops`` does. Also returns
+        whether rational functions may be present according to negative
+        exponents of powers or non-number fractions.
+
+        Returns
+        =======
+
+        ops, ratfunc : int, bool
+            ``ops`` is the number of algebraic operations starting at the top
+            level expression (not recursing into non-alg children). ``ratfunc``
+            specifies whether the expression MAY contain rational functions
+            which ``cancel`` MIGHT optimize.
+        """
+
+        ops     = 0
+        args    = [expr]
+        ratfunc = False
+
+        while args:
+            a = args.pop()
+
+            if not isinstance(a, Basic):
+                continue
+
+            if a.is_Rational:
+                if a is not S.One: # -1/3 = NEG + DIV
+                    ops += bool (a.p < 0) + bool (a.q != 1)
+
+            elif a.is_Mul:
+                if _coeff_isneg(a):
+                    ops += 1
+                    if a.args[0] is S.NegativeOne:
+                        a = a.as_two_terms()[1]
+                    else:
+                        a = -a
+
+                n, d = fraction(a)
+
+                if n.is_Integer:
+                    ops += 1 + bool (n < 0)
+                    args.append(d) # won't be -Mul but could be Add
+
+                elif d is not S.One:
+                    if not d.is_Integer:
+                        args.append(d)
+                        ratfunc=True
+
+                    ops += 1
+                    args.append(n) # could be -Mul
+
+                else:
+                    ops += len(a.args) - 1
+                    args.extend(a.args)
+
+            elif a.is_Add:
+                laargs = len(a.args)
+                negs   = 0
+
+                for ai in a.args:
+                    if _coeff_isneg(ai):
+                        negs += 1
+                        ai    = -ai
+                    args.append(ai)
+
+                ops += laargs - (negs != laargs) # -x - y = NEG + SUB
+
+            elif a.is_Pow:
+                ops += 1
+                args.append(a.base)
+
+                if not ratfunc:
+                    ratfunc = a.exp.is_negative is not False
+
+        return ops, ratfunc
+
+    def nonalg_subs_dummies(expr, dummies):
+        """Substitute dummy variables for non-algebraic expressions to avoid
+        evaluation of non-algebraic terms that ``polys.polytools.cancel`` does.
+        """
+
+        if not expr.args:
+            return expr
+
+        if expr.is_Add or expr.is_Mul or expr.is_Pow:
+            args = None
+
+            for i, a in enumerate(expr.args):
+                c = nonalg_subs_dummies(a, dummies)
+
+                if c is a:
+                    continue
+
+                if args is None:
+                    args = list(expr.args)
+
+                args[i] = c
+
+            if args is None:
+                return expr
+
+            return expr.func(*args)
+
+        return dummies.setdefault(expr, Dummy())
+
+    simplified = False # doesn't really mean simplified, rather "can simplify again"
+
+    if isinstance(expr, Basic) and (expr.is_Add or expr.is_Mul or expr.is_Pow):
+        expr2 = expr.expand(deep=True, modulus=None, power_base=False,
+            power_exp=False, mul=True, log=False, multinomial=True, basic=False)
+
+        if expr2 != expr:
+            expr       = expr2
+            simplified = True
+
+        exprops, ratfunc = count_ops_alg(expr)
+
+        if exprops >= 6: # empirically tested cutoff for expensive simplification
+            if ratfunc:
+                dummies = {}
+                expr2   = nonalg_subs_dummies(expr, dummies)
+
+                if expr2 is expr or count_ops_alg(expr2)[0] >= 6: # check again after substitution
+                    expr3 = cancel(expr2)
+
+                    if expr3 != expr2:
+                        expr       = expr3.subs([(d, e) for e, d in dummies.items()])
+                        simplified = True
+
+        # very special case: x/(x-1) - 1/(x-1) -> 1
+        elif (exprops == 5 and expr.is_Add and expr.args [0].is_Mul and
+                expr.args [1].is_Mul and expr.args [0].args [-1].is_Pow and
+                expr.args [1].args [-1].is_Pow and
+                expr.args [0].args [-1].exp is S.NegativeOne and
+                expr.args [1].args [-1].exp is S.NegativeOne):
+
+            expr2    = together (expr)
+            expr2ops = count_ops_alg(expr2)[0]
+
+            if expr2ops < exprops:
+                expr       = expr2
+                simplified = True
+
+        else:
+            simplified = True
+
+    return (expr, simplified) if withsimp else expr

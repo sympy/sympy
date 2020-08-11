@@ -30,20 +30,20 @@ The ``optims_c99`` imported above is tuple containing the following instances
 
 
 """
-from __future__ import (absolute_import, division, print_function)
 from itertools import chain
 from sympy import log, exp, Max, Min, Wild, expand_log, Dummy
 from sympy.assumptions import Q, ask
 from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core.expr import UnevaluatedExpr
-from sympy.core.mul import Mul
 from sympy.core.power import Pow
+from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
+from sympy.core.mul import Mul
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.utilities.iterables import sift
 
 
-class Optimization(object):
+class Optimization:
     """ Abstract base class for rewriting optimization.
 
     Subclasses should implement ``__call__`` taking an expression
@@ -75,7 +75,7 @@ class ReplaceOptim(Optimization):
     Examples
     ========
 
-    >>> from sympy import Symbol, Pow
+    >>> from sympy import Symbol
     >>> from sympy.codegen.rewriting import ReplaceOptim
     >>> from sympy.codegen.cfunctions import exp2
     >>> x = Symbol('x')
@@ -87,7 +87,7 @@ class ReplaceOptim(Optimization):
     """
 
     def __init__(self, query, value, **kwargs):
-        super(ReplaceOptim, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.query = query
         self.value = value
 
@@ -252,5 +252,10 @@ def _matinv_transform(expr):
 matinv_opt = ReplaceOptim(_matinv_predicate, _matinv_transform)
 
 
+logaddexp_opt = ReplaceOptim(log(exp(_v)+exp(_w)), logaddexp(_v, _w))
+logaddexp2_opt = ReplaceOptim(log(Pow(2, _v)+Pow(2, _w)), logaddexp2(_v, _w)*log(2))
+
 # Collections of optimizations:
 optims_c99 = (expm1_opt, log1p_opt, exp2_opt, log2_opt, log2const_opt)
+
+optims_numpy = (logaddexp_opt, logaddexp2_opt)

@@ -1,8 +1,7 @@
 """Gosper's algorithm for hypergeometric summation. """
-from __future__ import print_function, division
 
 from sympy.core import S, Dummy, symbols
-from sympy.core.compatibility import is_sequence, range
+from sympy.core.compatibility import is_sequence
 from sympy.polys import Poly, parallel_poly_from_expr, factor
 from sympy.solvers import solve
 from sympy.simplify import hypersimp
@@ -120,7 +119,7 @@ def gosper_term(f, n):
     if (N != M) or (A.LC() != B.LC()):
         D = {K - max(N, M)}
     elif not N:
-        D = {K - N + 1, S(0)}
+        D = {K - N + 1, S.Zero}
     else:
         D = {K - N + 1, (B.nth(N - 1) - A.nth(N - 1))/A.LC()}
 
@@ -150,7 +149,7 @@ def gosper_term(f, n):
         if coeff not in solution:
             x = x.subs(coeff, 0)
 
-    if x is S.Zero:
+    if x.is_zero:
         return None    # 'f(n)' is *not* Gosper-summable
     else:
         return B.as_expr()*x/C.as_expr()
@@ -174,7 +173,7 @@ def gosper_sum(f, k):
 
     >>> from sympy.concrete.gosper import gosper_sum
     >>> from sympy.functions import factorial
-    >>> from sympy.abc import i, n, k
+    >>> from sympy.abc import n, k
 
     >>> f = (4*k + 1)*factorial(k)/factorial(2*k + 1)
     >>> gosper_sum(f, (k, 0, n))

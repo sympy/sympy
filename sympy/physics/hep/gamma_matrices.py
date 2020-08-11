@@ -28,13 +28,12 @@
 from sympy import S, Mul, eye, trace
 from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
     TensMul, TensAdd, tensor_mul, Tensor, TensorHead, TensorSymmetry
-from sympy.core.compatibility import range
 
 
-# DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_fmt="S")
+# DiracSpinorIndex = TensorIndexType('DiracSpinorIndex', dim=4, dummy_name="S")
 
 
-LorentzIndex = TensorIndexType('LorentzIndex', dim=4, dummy_fmt="L")
+LorentzIndex = TensorIndexType('LorentzIndex', dim=4, dummy_name="L")
 
 
 GammaMatrix = TensorHead("GammaMatrix", [LorentzIndex],

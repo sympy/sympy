@@ -1,5 +1,5 @@
 from sympy import Symbol, Function, Derivative as D, Eq, cos, sin
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.calculus.euler import euler_equations as euler
 
 

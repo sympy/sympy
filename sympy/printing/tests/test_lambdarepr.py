@@ -1,6 +1,6 @@
 from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify, \
                   Expr, sqrt
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.printing.tensorflow import TensorflowPrinter
 from sympy.printing.lambdarepr import lambdarepr, LambdaPrinter, NumExprPrinter
@@ -228,3 +228,6 @@ def test_printmethod():
     assert LambdaPrinter().doprint(obj) == 'lambda'
     assert TensorflowPrinter().doprint(obj) == 'tensorflow'
     assert NumExprPrinter().doprint(obj) == "evaluate('numexpr', truediv=True)"
+
+    assert NumExprPrinter().doprint(Piecewise((y, x >= 0), (z, x < 0))) == \
+            "evaluate('where((x >= 0), y, z)', truediv=True)"

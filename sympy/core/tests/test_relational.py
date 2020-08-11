@@ -1,12 +1,14 @@
-from sympy.utilities.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.core.logic import fuzzy_and
+from sympy.core.sympify import _sympify
+from sympy.multipledispatch import dispatch
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
-    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
-    log, cos, sin, Add, floor, ceiling, trigsimp)
-from sympy.core.compatibility import range
+                   Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
+                   log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals, Basic, Expr)
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
-                                   Gt, Ge, Ne)
+                                   Gt, Ge, Ne, is_le, is_gt, is_ge, is_lt, is_eq, is_neq)
 from sympy.sets.sets import Interval, FiniteSet
 
 from itertools import combinations
@@ -15,9 +17,9 @@ x, y, z, t = symbols('x,y,z,t')
 
 
 def rel_check(a, b):
-    from sympy.utilities.pytest import raises
+    from sympy.testing.pytest import raises
     assert a.is_number and b.is_number
-    for do in range(len(set([type(a), type(b)]))):
+    for do in range(len({type(a), type(b)})):
         if S.NaN in (a, b):
             v = [(a == b), (a != b)]
             assert len(set(v)) == 1 and v[0] == False
@@ -115,7 +117,7 @@ def test_wrappers():
     assert Ne(y, x + x**2) == res
 
 
-def test_Eq():
+def test_Eq_Ne():
 
     assert Eq(x, x)  # issue 5719
 
@@ -126,8 +128,32 @@ def test_Eq():
     p = Symbol('p', positive=True)
     assert Eq(p, 0) is S.false
 
-    # issue 13348
+    # issue 13348; 19048
+    # SymPy is strict about 0 and 1 not being
+    # interpreted as Booleans
     assert Eq(True, 1) is S.false
+    assert Eq(False, 0) is S.false
+    assert Eq(~x, 0) is S.false
+    assert Eq(~x, 1) is S.false
+    assert Ne(True, 1) is S.true
+    assert Ne(False, 0) is S.true
+    assert Ne(~x, 0) is S.true
+    assert Ne(~x, 1) is S.true
+
+    assert Eq((), 1) is S.false
+    assert Ne((), 1) is S.true
+
+
+def test_as_poly():
+    from sympy.polys.polytools import Poly
+    # Only Eq should have an as_poly method:
+    assert Eq(x, 1).as_poly() == Poly(x - 1, x, domain='ZZ')
+    raises(AttributeError, lambda: Ne(x, 1).as_poly())
+    raises(AttributeError, lambda: Ge(x, 1).as_poly())
+    raises(AttributeError, lambda: Gt(x, 1).as_poly())
+    raises(AttributeError, lambda: Le(x, 1).as_poly())
+    raises(AttributeError, lambda: Lt(x, 1).as_poly())
+
 
 def test_rel_Infinity():
     # NOTE: All of these are actually handled by sympy.core.Number, and do
@@ -156,6 +182,50 @@ def test_rel_Infinity():
     assert (-oo <= oo) is S.true
     assert (-oo <= -oo) is S.true
     assert (-oo <= 1) is S.true
+
+
+def test_infinite_symbol_inequalities():
+    x = Symbol('x', extended_positive=True, infinite=True)
+    y = Symbol('y', extended_positive=True, infinite=True)
+    z = Symbol('z', extended_negative=True, infinite=True)
+    w = Symbol('w', extended_negative=True, infinite=True)
+
+    inf_set = (x, y, oo)
+    ninf_set = (z, w, -oo)
+
+    for inf1 in inf_set:
+        assert (inf1 < 1) is S.false
+        assert (inf1 > 1) is S.true
+        assert (inf1 <= 1) is S.false
+        assert (inf1 >= 1) is S.true
+
+        for inf2 in inf_set:
+            assert (inf1 < inf2) is S.false
+            assert (inf1 > inf2) is S.false
+            assert (inf1 <= inf2) is S.true
+            assert (inf1 >= inf2) is S.true
+
+        for ninf1 in ninf_set:
+            assert (inf1 < ninf1) is S.false
+            assert (inf1 > ninf1) is S.true
+            assert (inf1 <= ninf1) is S.false
+            assert (inf1 >= ninf1) is S.true
+            assert (ninf1 < inf1) is S.true
+            assert (ninf1 > inf1) is S.false
+            assert (ninf1 <= inf1) is S.true
+            assert (ninf1 >= inf1) is S.false
+
+    for ninf1 in ninf_set:
+        assert (ninf1 < 1) is S.true
+        assert (ninf1 > 1) is S.false
+        assert (ninf1 <= 1) is S.true
+        assert (ninf1 >= 1) is S.false
+
+        for ninf2 in ninf_set:
+            assert (ninf1 < ninf2) is S.false
+            assert (ninf1 > ninf2) is S.false
+            assert (ninf1 <= ninf2) is S.true
+            assert (ninf1 >= ninf2) is S.true
 
 
 def test_bool():
@@ -295,10 +365,9 @@ def test_new_relational():
 
     # finally, some fuzz testing
     from random import randint
-    from sympy.core.compatibility import unichr
     for i in range(100):
         while 1:
-            strtype, length = (unichr, 65535) if randint(0, 1) else (chr, 255)
+            strtype, length = (chr, 65535) if randint(0, 1) else (chr, 255)
             relation_type = strtype(randint(0, length))
             if randint(0, 1):
                 relation_type += strtype(randint(0, length))
@@ -315,6 +384,19 @@ def test_new_relational():
     assert all(Relational(x, 0, op).rel_op == '<' for op in ('lt', '<'))
     assert all(Relational(x, 0, op).rel_op == '>=' for op in ('ge', '>='))
     assert all(Relational(x, 0, op).rel_op == '<=' for op in ('le', '<='))
+
+
+def test_relational_arithmetic():
+    for cls in [Eq, Ne, Le, Lt, Ge, Gt]:
+        rel = cls(x, y)
+        raises(TypeError, lambda: 0+rel)
+        raises(TypeError, lambda: 1*rel)
+        raises(TypeError, lambda: 1**rel)
+        raises(TypeError, lambda: rel**1)
+        raises(TypeError, lambda: Add(0, rel))
+        raises(TypeError, lambda: Mul(1, rel))
+        raises(TypeError, lambda: Pow(1, rel))
+        raises(TypeError, lambda: Pow(rel, 1))
 
 
 def test_relational_bool_output():
@@ -487,7 +569,7 @@ def test_nan_equality_exceptions():
     assert Unequality(nan, nan) is S.true
 
     # See issue #7773
-    A = (x, S(0), S(1)/3, pi, oo, -oo)
+    A = (x, S.Zero, S.One/3, pi, oo, -oo)
     assert Equality(nan, random.choice(A)) is S.false
     assert Equality(random.choice(A), nan) is S.false
     assert Unequality(nan, random.choice(A)) is S.true
@@ -497,7 +579,7 @@ def test_nan_equality_exceptions():
 def test_nan_inequality_raise_errors():
     # See discussion in pull request #7776.  We test inequalities with
     # a set including examples of various classes.
-    for q in (x, S(0), S(10), S(1)/3, pi, S(1.3), oo, -oo, nan):
+    for q in (x, S.Zero, S(10), S.One/3, pi, S(1.3), oo, -oo, nan):
         assert_all_ineq_raise_TypeError(q, nan)
 
 
@@ -519,7 +601,7 @@ def test_inequalities_symbol_name_same():
     """Using the operator and functional forms should give same results."""
     # We test all combinations from a set
     # FIXME: could replace with random selection after test passes
-    A = (x, y, S(0), S(1)/3, pi, oo, -oo)
+    A = (x, y, S.Zero, S.One/3, pi, oo, -oo)
     for a in A:
         for b in A:
             assert Gt(a, b) == (a > b)
@@ -527,13 +609,13 @@ def test_inequalities_symbol_name_same():
             assert Ge(a, b) == (a >= b)
             assert Le(a, b) == (a <= b)
 
-    for b in (y, S(0), S(1)/3, pi, oo, -oo):
+    for b in (y, S.Zero, S.One/3, pi, oo, -oo):
         assert Gt(x, b, evaluate=False) == (x > b)
         assert Lt(x, b, evaluate=False) == (x < b)
         assert Ge(x, b, evaluate=False) == (x >= b)
         assert Le(x, b, evaluate=False) == (x <= b)
 
-    for b in (y, S(0), S(1)/3, pi, oo, -oo):
+    for b in (y, S.Zero, S.One/3, pi, oo, -oo):
         assert Gt(b, x, evaluate=False) == (b > x)
         assert Lt(b, x, evaluate=False) == (b < x)
         assert Ge(b, x, evaluate=False) == (b >= x)
@@ -545,7 +627,7 @@ def test_inequalities_symbol_name_same_complex():
     With complex non-real numbers, both should raise errors.
     """
     # FIXME: could replace with random selection after test passes
-    for a in (x, S(0), S(1)/3, pi, oo):
+    for a in (x, S.Zero, S.One/3, pi, oo, Rational(1, 3)):
         raises(TypeError, lambda: Gt(a, I))
         raises(TypeError, lambda: a > I)
         raises(TypeError, lambda: Lt(a, I))
@@ -562,7 +644,7 @@ def test_inequalities_cant_sympify_other():
 
     bar = "foo"
 
-    for a in (x, S(0), S(1)/3, pi, I, zoo, oo, -oo, nan):
+    for a in (x, S.Zero, S.One/3, pi, I, zoo, oo, -oo, nan, Rational(1, 3)):
         for op in (lt, gt, le, ge):
             raises(TypeError, lambda: op(a, bar))
 
@@ -611,7 +693,7 @@ def test_issue_8245():
     r = Rational(str(a.n(29)))
     assert rel_check(a, r)
 
-    assert Eq(log(cos(2)**2 + sin(2)**2), 0) == True
+    assert Eq(log(cos(2)**2 + sin(2)**2), 0) is S.true
 
 
 def test_issue_8449():
@@ -624,7 +706,14 @@ def test_issue_8449():
 
 def test_simplify_relational():
     assert simplify(x*(y + 1) - x*y - x + 1 < x) == (x > 1)
-    r = S(1) < x
+    assert simplify(x*(y + 1) - x*y - x - 1 < x) == (x > -1)
+    assert simplify(x < x*(y + 1) - x*y - x + 1) == (x < 1)
+    q, r = symbols("q r")
+    assert (((-q + r) - (q - r)) <= 0).simplify() == (q >= r)
+    root2 = sqrt(2)
+    equation = ((root2 * (-q + r) - root2 * (q - r)) <= 0).simplify()
+    assert equation == (q >= r)
+    r = S.One < x
     # canonical operations are not the same as simplification,
     # so if there is no simplification, canonicalization will
     # be done unless the measure forbids it
@@ -634,17 +723,68 @@ def test_simplify_relational():
     # this will simplify to S.false and that is the
     # reason for the 'if r.is_Relational' in Relational's
     # _eval_simplify routine
-    assert simplify(-(2**(3*pi/2) + 6**pi)**(1/pi) +
+    assert simplify(-(2**(pi*Rational(3, 2)) + 6**pi)**(1/pi) +
                     2*(2**(pi/2) + 3**pi)**(1/pi) < 0) is S.false
     # canonical at least
-    for f in (Eq, Ne):
-        f(y, x).simplify() == f(x, y)
-        f(x - 1, 0).simplify() == f(x, 1)
-        f(x - 1, x).simplify() == S.false
-        f(2*x - 1, x).simplify() == f(x, 1)
-        f(2*x, 4).simplify() == f(x, 2)
-        z = cos(1)**2 + sin(1)**2 - 1  # z.is_zero is None
-        f(z*x, 0).simplify() == f(z*x, 0)
+    assert Eq(y, x).simplify() == Eq(x, y)
+    assert Eq(x - 1, 0).simplify() == Eq(x, 1)
+    assert Eq(x - 1, x).simplify() == S.false
+    assert Eq(2*x - 1, x).simplify() == Eq(x, 1)
+    assert Eq(2*x, 4).simplify() == Eq(x, 2)
+    z = cos(1)**2 + sin(1)**2 - 1  # z.is_zero is None
+    assert Eq(z*x, 0).simplify() == S.true
+
+    assert Ne(y, x).simplify() == Ne(x, y)
+    assert Ne(x - 1, 0).simplify() == Ne(x, 1)
+    assert Ne(x - 1, x).simplify() == S.true
+    assert Ne(2*x - 1, x).simplify() == Ne(x, 1)
+    assert Ne(2*x, 4).simplify() == Ne(x, 2)
+    assert Ne(z*x, 0).simplify() == S.false
+
+    # No real-valued assumptions
+    assert Ge(y, x).simplify() == Le(x, y)
+    assert Ge(x - 1, 0).simplify() == Ge(x, 1)
+    assert Ge(x - 1, x).simplify() == S.false
+    assert Ge(2*x - 1, x).simplify() == Ge(x, 1)
+    assert Ge(2*x, 4).simplify() == Ge(x, 2)
+    assert Ge(z*x, 0).simplify() == S.true
+    assert Ge(x, -2).simplify() == Ge(x, -2)
+    assert Ge(-x, -2).simplify() == Le(x, 2)
+    assert Ge(x, 2).simplify() == Ge(x, 2)
+    assert Ge(-x, 2).simplify() == Le(x, -2)
+
+    assert Le(y, x).simplify() == Ge(x, y)
+    assert Le(x - 1, 0).simplify() == Le(x, 1)
+    assert Le(x - 1, x).simplify() == S.true
+    assert Le(2*x - 1, x).simplify() == Le(x, 1)
+    assert Le(2*x, 4).simplify() == Le(x, 2)
+    assert Le(z*x, 0).simplify() == S.true
+    assert Le(x, -2).simplify() == Le(x, -2)
+    assert Le(-x, -2).simplify() == Ge(x, 2)
+    assert Le(x, 2).simplify() == Le(x, 2)
+    assert Le(-x, 2).simplify() == Ge(x, -2)
+
+    assert Gt(y, x).simplify() == Lt(x, y)
+    assert Gt(x - 1, 0).simplify() == Gt(x, 1)
+    assert Gt(x - 1, x).simplify() == S.false
+    assert Gt(2*x - 1, x).simplify() == Gt(x, 1)
+    assert Gt(2*x, 4).simplify() == Gt(x, 2)
+    assert Gt(z*x, 0).simplify() == S.false
+    assert Gt(x, -2).simplify() == Gt(x, -2)
+    assert Gt(-x, -2).simplify() == Lt(x, 2)
+    assert Gt(x, 2).simplify() == Gt(x, 2)
+    assert Gt(-x, 2).simplify() == Lt(x, -2)
+
+    assert Lt(y, x).simplify() == Gt(x, y)
+    assert Lt(x - 1, 0).simplify() == Lt(x, 1)
+    assert Lt(x - 1, x).simplify() == S.true
+    assert Lt(2*x - 1, x).simplify() == Lt(x, 1)
+    assert Lt(2*x, 4).simplify() == Lt(x, 2)
+    assert Lt(z*x, 0).simplify() == S.false
+    assert Lt(x, -2).simplify() == Lt(x, -2)
+    assert Lt(-x, -2).simplify() == Gt(x, 2)
+    assert Lt(x, 2).simplify() == Lt(x, 2)
+    assert Lt(-x, 2).simplify() == Gt(x, -2)
 
 
 def test_equals():
@@ -724,11 +864,24 @@ def test_issue_10304():
     assert simplify(Eq(e, 0)) is S.false
 
 
+def test_issue_18412():
+    d = (Rational(1, 6) + z / 4 / y)
+    assert Eq(x, pi * y**3 * d).replace(y**3, z) == Eq(x, pi * z * d)
+
+
 def test_issue_10401():
     x = symbols('x')
     fin = symbols('inf', finite=True)
     inf = symbols('inf', infinite=True)
     inf2 = symbols('inf2', infinite=True)
+    infx = symbols('infx', infinite=True, extended_real=True)
+    # Used in the commented tests below:
+    #infx2 = symbols('infx2', infinite=True, extended_real=True)
+    infnx = symbols('inf~x', infinite=True, extended_real=False)
+    infnx2 = symbols('inf~x2', infinite=True, extended_real=False)
+    infp = symbols('infp', infinite=True, extended_positive=True)
+    infp1 = symbols('infp1', infinite=True, extended_positive=True)
+    infn = symbols('infn', infinite=True, extended_negative=True)
     zero = symbols('z', zero=True)
     nonzero = symbols('nz', zero=False, finite=True)
 
@@ -738,12 +891,36 @@ def test_issue_10401():
 
     T, F = S.true, S.false
     assert Eq(fin, inf) is F
-    assert Eq(inf, inf2) is T and inf != inf2
+    assert Eq(inf, inf2) not in (T, F) and inf != inf2
+    assert Eq(1 + inf, 2 + inf2) not in (T, F) and inf != inf2
+    assert Eq(infp, infp1) is T
+    assert Eq(infp, infn) is F
+    assert Eq(1 + I*oo, I*oo) is F
+    assert Eq(I*oo, 1 + I*oo) is F
+    assert Eq(1 + I*oo, 2 + I*oo) is F
+    assert Eq(1 + I*oo, 2 + I*infx) is F
+    assert Eq(1 + I*oo, 2 + infx) is F
+    # FIXME: The test below fails because (-infx).is_extended_positive is True
+    # (should be None)
+    #assert Eq(1 + I*infx, 1 + I*infx2) not in (T, F) and infx != infx2
+    #
+    assert Eq(zoo, sqrt(2) + I*oo) is F
+    assert Eq(zoo, oo) is F
+    r = Symbol('r', real=True)
+    i = Symbol('i', imaginary=True)
+    assert Eq(i*I, r) not in (T, F)
+    assert Eq(infx, infnx) is F
+    assert Eq(infnx, infnx2) not in (T, F) and infnx != infnx2
+    assert Eq(zoo, oo) is F
     assert Eq(inf/inf2, 0) is F
     assert Eq(inf/fin, 0) is F
     assert Eq(fin/inf, 0) is T
     assert Eq(zero/nonzero, 0) is T and ((zero/nonzero) != 0)
-    assert Eq(inf, -inf) is F
+    # The commented out test below is incorrect because:
+    assert zoo == -zoo
+    assert Eq(zoo, -zoo) is T
+    assert Eq(oo, -oo) is F
+    assert Eq(inf, -inf) not in (T, F)
 
     assert Eq(fin/(fin + 1), 1) is S.false
 
@@ -801,9 +978,16 @@ def test_issues_13081_12583_12534():
     # this should be the same if we reverse the relational
     assert [i for i in range(15, 50) if pi.n(i) < Rational(pi.n(i))] == []
 
+def test_issue_18188():
+    from sympy.sets.conditionset import ConditionSet
+    result1 = Eq(x*cos(x) - 3*sin(x), 0)
+    assert result1.as_set() == ConditionSet(x, Eq(x*cos(x) - 3*sin(x), 0), Reals)
+
+    result2 = Eq(x**2 + sqrt(x*2) + sin(x), 0)
+    assert result2.as_set() == ConditionSet(x, Eq(sqrt(2)*sqrt(x) + x**2 + sin(x), 0), Reals)
 
 def test_binary_symbols():
-    ans = set([x])
+    ans = {x}
     for f in Eq, Ne:
         for t in S.true, S.false:
             eq = f(x, S.true)
@@ -813,13 +997,12 @@ def test_binary_symbols():
 
 
 def test_rel_args():
-    # can't have Boolean args; this is automatic with Python 3
-    # so this test and the __lt__, etc..., definitions in
-    # relational.py and boolalg.py which are marked with ///
-    # can be removed.
+    # can't have Boolean args; this is automatic for True/False
+    # with Python 3 and we confirm that SymPy does the same
+    # for true/false
     for op in ['<', '<=', '>', '>=']:
         for b in (S.true, x < 1, And(x, y)):
-            for v in (0.1, 1, 2**32, t, S(1)):
+            for v in (0.1, 1, 2**32, t, S.One):
                 raises(TypeError, lambda: Relational(b, v, op))
 
 
@@ -906,6 +1089,16 @@ def test_improved_canonical():
     assert (pi >= x).canonical == (x <= pi)
 
 
+def test_set_equality_canonical():
+    a, b, c = symbols('a b c')
+
+    A = Eq(FiniteSet(a, b, c), FiniteSet(1, 2, 3))
+    B = Ne(FiniteSet(a, b, c), FiniteSet(4, 5, 6))
+
+    assert A.canonical == A.reversed
+    assert B.canonical == B.reversed
+
+
 def test_trigsimp():
     # issue 16736
     s, c = sin(2*x), cos(2*x)
@@ -918,3 +1111,79 @@ def test_trigsimp():
     assert changed.subs(x, pi/8) is S.true
     # or an evaluated one
     assert trigsimp(Eq(cos(x)**2 + sin(x)**2, 1)) is S.true
+
+
+def test_polynomial_relation_simplification():
+    assert Ge(3*x*(x + 1) + 4, 3*x).simplify() in [Ge(x**2, -Rational(4,3)), Le(-x**2, Rational(4, 3))]
+    assert Le(-(3*x*(x + 1) + 4), -3*x).simplify() in [Ge(x**2, -Rational(4,3)), Le(-x**2, Rational(4, 3))]
+    assert ((x**2+3)*(x**2-1)+3*x >= 2*x**2).simplify() in [(x**4 + 3*x >= 3), (-x**4 - 3*x <= -3)]
+
+
+def test_multivariate_linear_function_simplification():
+    assert Ge(x + y, x - y).simplify() == Ge(y, 0)
+    assert Le(-x + y, -x - y).simplify() == Le(y, 0)
+    assert Eq(2*x + y, 2*x + y - 3).simplify() == False
+    assert (2*x + y > 2*x + y - 3).simplify() == True
+    assert (2*x + y < 2*x + y - 3).simplify() == False
+    assert (2*x + y < 2*x + y + 3).simplify() == True
+    a, b, c, d, e, f, g = symbols('a b c d e f g')
+    assert Lt(a + b + c + 2*d, 3*d - f + g). simplify() == Lt(a, -b - c + d - f + g)
+
+
+def test_nonpolymonial_relations():
+    assert Eq(cos(x), 0).simplify() == Eq(cos(x), 0)
+
+def test_18778():
+    raises(TypeError, lambda: is_le(Basic(), Basic()))
+    raises(TypeError, lambda: is_gt(Basic(), Basic()))
+    raises(TypeError, lambda: is_ge(Basic(), Basic()))
+    raises(TypeError, lambda: is_lt(Basic(), Basic()))
+
+def test_EvalEq():
+    """
+
+    This test exists to ensure backwards compatibility.
+    The method to use is _eval_is_eq
+    """
+    from sympy import Expr
+
+    class PowTest(Expr):
+        def __new__(cls, base, exp):
+           return Basic.__new__(PowTest, _sympify(base), _sympify(exp))
+
+        def _eval_Eq(lhs, rhs):
+            if type(lhs) == PowTest and type(rhs) == PowTest:
+                return lhs.args[0] == rhs.args[0] and lhs.args[1] == rhs.args[1]
+
+    assert is_eq(PowTest(3, 4), PowTest(3,4))
+    assert is_eq(PowTest(3, 4), _sympify(4)) is None
+    assert is_neq(PowTest(3, 4), PowTest(3,7))
+
+def test_is_eq():
+    class PowTest(Expr):
+        def __new__(cls, base, exp):
+            return Basic.__new__(cls, _sympify(base), _sympify(exp))
+
+    @dispatch(PowTest, PowTest)
+    def _eval_is_eq(lhs, rhs):
+        if type(lhs) == PowTest and type(rhs) == PowTest:
+            return fuzzy_and([is_eq(lhs.args[0], rhs.args[0]), is_eq(lhs.args[1], rhs.args[1])])
+
+    assert is_eq(PowTest(3, 4), PowTest(3,4))
+    assert is_eq(PowTest(3, 4), _sympify(4)) is None
+    assert is_neq(PowTest(3, 4), PowTest(3,7))
+
+def test_is_ge_le():
+    class PowTest(Expr):
+        def __new__(cls, base, exp):
+            return Basic.__new__(cls, _sympify(base), _sympify(exp))
+
+    @dispatch(PowTest, PowTest)
+    def _eval_is_ge(lhs, rhs):
+        if type(lhs) == PowTest and type(rhs) == PowTest:
+            return fuzzy_and([is_ge(lhs.args[0], rhs.args[0]), is_ge(lhs.args[1], rhs.args[1])])
+
+    assert is_ge(PowTest(3, 9), PowTest(3,2))
+    assert is_gt(PowTest(3, 9), PowTest(3,2))
+    assert is_le(PowTest(3, 2), PowTest(3,9))
+    assert is_lt(PowTest(3, 2), PowTest(3,9))

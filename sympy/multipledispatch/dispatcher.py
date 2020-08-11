@@ -1,3 +1,5 @@
+from typing import Set
+
 from warnings import warn
 import inspect
 from .conflict import ordering, ambiguities, super_signature, AmbiguityWarning
@@ -26,7 +28,7 @@ def ambiguity_warn(dispatcher, ambiguities):
     warn(warning_text(dispatcher.name, ambiguities), AmbiguityWarning)
 
 
-_unresolved_dispatchers = set()
+_unresolved_dispatchers = set() # type: Set[Dispatcher]
 _resolve = [True]
 
 
@@ -41,7 +43,7 @@ def restart_ordering(on_ambiguity=ambiguity_warn):
         dispatcher.reorder(on_ambiguity=on_ambiguity)
 
 
-class Dispatcher(object):
+class Dispatcher:
     """ Dispatch methods based on type signature
 
     Use ``dispatch`` to add implementations
@@ -55,7 +57,7 @@ class Dispatcher(object):
     ...     return x + 1
 
     >>> @dispatch(float)
-    ... def f(x):
+    ... def f(x): # noqa: F811
     ...     return x - 1
 
     >>> f(3)

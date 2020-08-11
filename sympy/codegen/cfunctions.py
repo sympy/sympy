@@ -6,7 +6,6 @@ The functions defined in this module allows the user to express functions such a
 as a SymPy function for symbolic manipulation.
 
 """
-
 from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -257,6 +256,9 @@ class log2(Function):
         elif arg.is_Pow and arg.base == _Two:
             return arg.exp
 
+    def _eval_evalf(self, *args, **kwargs):
+        return self.rewrite(log).evalf(*args, **kwargs)
+
     def _eval_expand_func(self, **hints):
         return _log2(*self.args)
 
@@ -304,7 +306,7 @@ class fma(Function):
     def _eval_expand_func(self, **hints):
         return _fma(*self.args)
 
-    def _eval_rewrite_as_tractable(self, arg, **kwargs):
+    def _eval_rewrite_as_tractable(self, arg, limitvar=None, **kwargs):
         return _fma(arg)
 
 
@@ -398,7 +400,7 @@ class Sqrt(Function):  # 'sqrt' already defined in sympy.functions.elementary.mi
         Returns the first derivative of this function.
         """
         if argindex == 1:
-            return Pow(self.args[0], -S.Half)/_Two
+            return Pow(self.args[0], Rational(-1, 2))/_Two
         else:
             raise ArgumentIndexError(self, argindex)
 

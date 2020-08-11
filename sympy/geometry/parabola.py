@@ -5,11 +5,10 @@ Contains
 
 """
 
-from __future__ import division, print_function
 from sympy.core import S
 from sympy.core.compatibility import ordered
 from sympy.core.symbol import _symbol
-from sympy import symbols, simplify, solve
+from sympy import symbols, simplify, solve  # type:ignore
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point, Point2D
 from sympy.geometry.line import Line, Line2D, Ray2D, Segment2D, LinearEntity3D
@@ -183,7 +182,7 @@ class Parabola(GeometrySet):
         The eccentricity for every Parabola is 1 by definition.
 
         """
-        return S(1)
+        return S.One
 
     def equation(self, x='x', y='y'):
         """The equation of the parabola.
@@ -321,7 +320,7 @@ class Parabola(GeometrySet):
             else:
                 return list(ordered([Point(i) for i in solve([parabola_eq, o.equation()], [x, y])]))
         elif isinstance(o, Point2D):
-            if simplify(parabola_eq.subs(([(x, o._args[0]), (y, o._args[1])]))) == 0:
+            if simplify(parabola_eq.subs([(x, o._args[0]), (y, o._args[1])])) == 0:
                 return [o]
             else:
                 return []

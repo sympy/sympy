@@ -281,7 +281,7 @@ def kinetic_energy(frame, *body):
 
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please enter a valid ReferenceFrame')
-    ke_sys = S(0)
+    ke_sys = S.Zero
     for e in body:
         if isinstance(e, (RigidBody, Particle)):
             ke_sys += e.kinetic_energy(frame)
@@ -333,7 +333,7 @@ def potential_energy(*body):
 
     """
 
-    pe_sys = S(0)
+    pe_sys = S.Zero
     for e in body:
         if isinstance(e, (RigidBody, Particle)):
             pe_sys += e.potential_energy

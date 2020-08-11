@@ -1,18 +1,14 @@
 # References :
 # http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
 # https://en.wikipedia.org/wiki/Quaternion
-from __future__ import print_function
-
-from sympy import Rational
-from sympy import re, im, conjugate
+from sympy import S, Rational
+from sympy import re, im, conjugate, sign
 from sympy import sqrt, sin, cos, acos, exp, ln
 from sympy import trigsimp
 from sympy import integrate
-from sympy import Matrix, Add, Mul
+from sympy import Matrix
 from sympy import sympify
-from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.expr import Expr
-from sympy.core.numbers import Integer
 
 
 class Quaternion(Expr):
@@ -39,6 +35,7 @@ class Quaternion(Expr):
     x + x**3*i + x*j + x**2*k
     >>> q2
     (3 + 4*I) + (2 + 5*I)*i + 0*j + (7 + 8*I)*k
+
     """
     _op_priority = 11.0
 
@@ -76,6 +73,7 @@ class Quaternion(Expr):
     @property
     def d(self):
         return self._d
+
     @property
     def real_field(self):
         return self._real_field
@@ -106,12 +104,13 @@ class Quaternion(Expr):
         >>> q = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
         >>> q
         1/2 + 1/2*i + 1/2*j + 1/2*k
+
         """
         (x, y, z) = vector
         norm = sqrt(x**2 + y**2 + z**2)
         (x, y, z) = (x / norm, y / norm, z / norm)
-        s = sin(angle * Rational(1, 2))
-        a = cos(angle * Rational(1, 2))
+        s = sin(angle * S.Half)
+        a = cos(angle * S.Half)
         b = x * s
         c = y * s
         d = z * s
@@ -145,7 +144,8 @@ class Quaternion(Expr):
         >>> M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
         >>> q = trigsimp(Quaternion.from_rotation_matrix(M))
         >>> q
-        sqrt(2)*sqrt(cos(x) + 1)/2 + 0*i + 0*j + sqrt(2 - 2*cos(x))/2*k
+        sqrt(2)*sqrt(cos(x) + 1)/2 + 0*i + 0*j + sqrt(2 - 2*cos(x))*sign(sin(x))/2*k
+
         """
 
         absQ = M.det()**Rational(1, 3)
@@ -155,25 +155,11 @@ class Quaternion(Expr):
         c = sqrt(absQ - M[0, 0] + M[1, 1] - M[2, 2]) / 2
         d = sqrt(absQ - M[0, 0] - M[1, 1] + M[2, 2]) / 2
 
-        try:
-            b = Quaternion.__copysign(b, M[2, 1] - M[1, 2])
-            c = Quaternion.__copysign(c, M[0, 2] - M[2, 0])
-            d = Quaternion.__copysign(d, M[1, 0] - M[0, 1])
-
-        except Exception:
-            pass
+        b = b * sign(M[2, 1] - M[1, 2])
+        c = c * sign(M[0, 2] - M[2, 0])
+        d = d * sign(M[1, 0] - M[0, 1])
 
         return Quaternion(a, b, c, d)
-
-    @staticmethod
-    def __copysign(x, y):
-
-        # Takes the sign from the second term and sets the sign of the first
-        # without altering the magnitude.
-
-        if y == 0:
-            return 0
-        return x if x*y > 0 else -x
 
     def __add__(self, other):
         return self.add(other)
@@ -195,6 +181,16 @@ class Quaternion(Expr):
 
     def __neg__(self):
         return Quaternion(-self._a, -self._b, -self._c, -self.d)
+
+    def __truediv__(self, other):
+        return self * sympify(other)**-1
+
+    __div__ = __truediv__
+
+    def __rtruediv__(self, other):
+        return sympify(other) * self**-1
+
+    __rdiv__ = __rtruediv__
 
     def _eval_Integral(self, *args):
         return self.integrate(*args)
@@ -240,20 +236,19 @@ class Quaternion(Expr):
         >>> q3 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
         >>> q3.add(2 + 3*I)
         (5 + 7*I) + (2 + 5*I)*i + 0*j + (7 + 8*I)*k
+
         """
         q1 = self
         q2 = sympify(other)
 
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
-            if q1.real_field:
-                if q2.is_complex:
-                    return Quaternion(re(q2) + q1.a, im(q2) + q1.b, q1.c, q1.d)
-                else:
-                    # q2 is something strange, do not evaluate:
-                    return Add(q1, q2)
-            else:
+            if q1.real_field and q2.is_complex:
+                return Quaternion(re(q2) + q1.a, im(q2) + q1.b, q1.c, q1.d)
+            elif q2.is_commutative:
                 return Quaternion(q1.a + q2, q1.b, q1.c, q1.d)
+            else:
+                raise ValueError("Only commutative expressions can be added with a Quaternion.")
 
         return Quaternion(q1.a + q2.a, q1.b + q2.b, q1.c + q2.c, q1.d
                           + q2.d)
@@ -295,6 +290,7 @@ class Quaternion(Expr):
         >>> q3 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
         >>> q3.mul(2 + 3*I)
         (2 + 3*I)*(3 + 4*I) + (2 + 3*I)*(2 + 5*I)*i + 0*j + (2 + 3*I)*(7 + 8*I)*k
+
         """
         return self._generic_mul(self, other)
 
@@ -321,14 +317,14 @@ class Quaternion(Expr):
         ========
 
         >>> from sympy.algebras.quaternion import Quaternion
-        >>> from sympy import symbols
+        >>> from sympy import Symbol
         >>> q1 = Quaternion(1, 2, 3, 4)
         >>> q2 = Quaternion(5, 6, 7, 8)
         >>> Quaternion._generic_mul(q1, q2)
         (-60) + 12*i + 30*j + 24*k
         >>> Quaternion._generic_mul(q1, 2)
         2 + 4*i + 6*j + 8*k
-        >>> x = symbols('x', real = True)
+        >>> x = Symbol('x', real = True)
         >>> Quaternion._generic_mul(q1, x)
         x + 2*x*i + 3*x*j + 4*x*k
 
@@ -339,6 +335,7 @@ class Quaternion(Expr):
         >>> q3 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
         >>> Quaternion._generic_mul(q3, 2 + 3*I)
         (2 + 3*I)*(3 + 4*I) + (2 + 3*I)*(2 + 5*I)*i + 0*j + (2 + 3*I)*(7 + 8*I)*k
+
         """
         q1 = sympify(q1)
         q2 = sympify(q2)
@@ -349,24 +346,21 @@ class Quaternion(Expr):
 
         # If q1 is a number or a sympy expression instead of a quaternion
         if not isinstance(q1, Quaternion):
-            if q2.real_field:
-                if q1.is_complex:
-                    return q2 * Quaternion(re(q1), im(q1), 0, 0)
-                else:
-                    return Mul(q1, q2)
-            else:
+            if q2.real_field and q1.is_complex:
+                return Quaternion(re(q1), im(q1), 0, 0) * q2
+            elif q1.is_commutative:
                 return Quaternion(q1 * q2.a, q1 * q2.b, q1 * q2.c, q1 * q2.d)
-
+            else:
+                raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
         # If q2 is a number or a sympy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
-            if q1.real_field:
-                if q2.is_complex:
-                    return q1 * Quaternion(re(q2), im(q2), 0, 0)
-                else:
-                    return Mul(q1, q2)
-            else:
+            if q1.real_field and q2.is_complex:
+                return q1 * Quaternion(re(q2), im(q2), 0, 0)
+            elif q2.is_commutative:
                 return Quaternion(q2 * q1.a, q2 * q1.b, q2 * q1.c, q2 * q1.d)
+            else:
+                raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
         return Quaternion(-q1.b*q2.b - q1.c*q2.c - q1.d*q2.d + q1.a*q2.a,
                           q1.b*q2.a + q1.c*q2.d - q1.d*q2.c + q1.a*q2.b,
@@ -420,23 +414,25 @@ class Quaternion(Expr):
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.pow(4)
         668 + (-224)*i + (-336)*j + (-448)*k
+
         """
+        p = sympify(p)
         q = self
         if p == -1:
             return q.inverse()
         res = 1
 
+        if not p.is_Integer:
+            return NotImplemented
+
         if p < 0:
             q, p = q.inverse(), -p
 
-        if not (isinstance(p, (Integer, SYMPY_INTS))):
-            return NotImplemented
-
         while p > 0:
-            if p & 1:
+            if p % 2 == 1:
                 res = q * res
 
-            p = p >> 1
+            p = p//2
             q = q * q
 
         return res
@@ -460,6 +456,7 @@ class Quaternion(Expr):
         + 2*sqrt(29)*E*sin(sqrt(29))/29*i
         + 3*sqrt(29)*E*sin(sqrt(29))/29*j
         + 4*sqrt(29)*E*sin(sqrt(29))/29*k
+
         """
         # exp(q) = e^a(cos||v|| + v/||v||*sin||v||)
         q = self
@@ -484,6 +481,7 @@ class Quaternion(Expr):
         + 2*sqrt(29)*acos(sqrt(30)/30)/29*i
         + 3*sqrt(29)*acos(sqrt(30)/30)/29*j
         + 4*sqrt(29)*acos(sqrt(30)/30)/29*k
+
         """
         # _ln(q) = _ln||q|| + v/||v||*arccos(a/||q||)
         q = self
@@ -521,6 +519,7 @@ class Quaternion(Expr):
         + 1800*sqrt(29)*sin(4*acos(sqrt(30)/30))/29*i
         + 2700*sqrt(29)*sin(4*acos(sqrt(30)/30))/29*j
         + 3600*sqrt(29)*sin(4*acos(sqrt(30)/30))/29*k
+
         """
         # q = ||q||*(cos(a) + u*sin(a))
         # q^p = ||q||^p * (cos(p*a) + u*sin(p*a))
@@ -531,6 +530,34 @@ class Quaternion(Expr):
         return q2 * (q.norm()**p)
 
     def integrate(self, *args):
+        """Computes integration of quaternion.
+
+        Returns
+        =======
+
+        Quaternion
+            Integration of the quaternion(self) with the given variable.
+
+        Examples
+        ========
+
+        Indefinite Integral of quaternion :
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy.abc import x
+        >>> q = Quaternion(1, 2, 3, 4)
+        >>> q.integrate(x)
+        x + 2*x*i + 3*x*j + 4*x*k
+
+        Definite integral of quaternion :
+
+        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy.abc import x
+        >>> q = Quaternion(1, 2, 3, 4)
+        >>> q.integrate((x, 1, 5))
+        4 + 8*i + 12*j + 16*k
+
+        """
         # TODO: is this expression correct?
         return Quaternion(integrate(self.a, *args), integrate(self.b, *args),
                           integrate(self.c, *args), integrate(self.d, *args))
@@ -543,16 +570,19 @@ class Quaternion(Expr):
         ==========
 
         pin : tuple
-            A 3-element tuple of coordinates of a point. This point will be
-            the axis of rotation.
-        r
-            Angle to be rotated.
+            A 3-element tuple of coordinates of a point which needs to be
+            rotated.
+        r : Quaternion or tuple
+            Axis and angle of rotation.
+
+            It's important to note that when r is a tuple, it must be of the form
+            (axis, angle)
 
         Returns
         =======
 
         tuple
-            The coordinates of the quaternion after rotation.
+            The coordinates of the point after rotation.
 
         Examples
         ========
@@ -566,6 +596,7 @@ class Quaternion(Expr):
         >>> (axis, angle) = q.to_axis_angle()
         >>> trigsimp(Quaternion.rotate_point((1, 1, 1), (axis, angle)))
         (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
+
         """
         if isinstance(r, tuple):
             # if r is of the form (vector, angle)
@@ -595,16 +626,11 @@ class Quaternion(Expr):
         (sqrt(3)/3, sqrt(3)/3, sqrt(3)/3)
         >>> angle
         2*pi/3
+
         """
         q = self
-        try:
-            # Skips it if it doesn't know whether q.a is negative
-            if q.a < 0:
-                # avoid error with acos
-                # axis and angle of rotation of q and q*-1 will be the same
-                q = q * -1
-        except BaseException:
-            pass
+        if q.a.is_negative:
+            q = q * -1
 
         q = q.normalize()
         angle = trigsimp(2 * acos(q.a))
@@ -667,6 +693,7 @@ class Quaternion(Expr):
         [sin(x),  cos(x), 0, -sin(x) - cos(x) + 1],
         [     0,       0, 1,                    0],
         [     0,       0, 0,                    1]])
+
         """
 
         q = self

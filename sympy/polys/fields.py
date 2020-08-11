@@ -2,9 +2,11 @@
 
 from __future__ import print_function, division
 
+from typing import Any, Dict
+
 from operator import add, mul, lt, le, gt, ge
 
-from sympy.core.compatibility import is_sequence, reduce, string_types
+from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod
 from sympy.core.numbers import Exp1
@@ -97,7 +99,7 @@ def sfield(exprs, *symbols, **options):
     else:
         return (_field, fracs)
 
-_field_cache = {}
+_field_cache = {}  # type: Dict[Any, Any]
 
 class FracField(DefaultPrinting):
     """Multivariate distributed rational function field. """
@@ -188,17 +190,33 @@ class FracField(DefaultPrinting):
         if isinstance(element, FracElement):
             if self == element.field:
                 return element
+
+            if isinstance(self.domain, FractionField) and \
+                self.domain.field == element.field:
+                return self.ground_new(element)
+            elif isinstance(self.domain, PolynomialRing) and \
+                self.domain.ring.to_field() == element.field:
+                return self.ground_new(element)
             else:
                 raise NotImplementedError("conversion")
         elif isinstance(element, PolyElement):
             denom, numer = element.clear_denoms()
-            numer = numer.set_ring(self.ring)
+
+            if isinstance(self.domain, PolynomialRing) and \
+                numer.ring == self.domain.ring:
+                numer = self.ring.ground_new(numer)
+            elif isinstance(self.domain, FractionField) and \
+                numer.ring == self.domain.field.to_ring():
+                numer = self.ring.ground_new(numer)
+            else:
+                numer = numer.set_ring(self.ring)
+
             denom = self.ring.ground_new(denom)
             return self.raw_new(numer, denom)
         elif isinstance(element, tuple) and len(element) == 2:
             numer, denom = list(map(self.ring.ring_new, element))
             return self.new(numer, denom)
-        elif isinstance(element, string_types):
+        elif isinstance(element, str):
             raise NotImplementedError("parsing")
         elif isinstance(element, Expr):
             return self.from_expr(element)

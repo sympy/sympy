@@ -11,9 +11,9 @@ http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
 
 from __future__ import print_function, division
 
-from sympy.core import S, Symbol
+from sympy.core import Symbol
 from sympy.core.evalf import N
-from sympy.core.numbers import I
+from sympy.core.numbers import I, Rational
 from sympy.functions import sqrt
 from sympy.polys.polytools import Poly
 from sympy.utilities import public
@@ -25,10 +25,10 @@ class PolyQuintic(object):
     """Special functions for solvable quintics"""
     def __init__(self, poly):
         _, _, self.p, self.q, self.r, self.s = poly.all_coeffs()
-        self.zeta1 = S(-1)/4 + (sqrt(5)/4) + I*sqrt((sqrt(5)/8) + S(5)/8)
-        self.zeta2 = (-sqrt(5)/4) - S(1)/4 + I*sqrt((-sqrt(5)/8) + S(5)/8)
-        self.zeta3 = (-sqrt(5)/4) - S(1)/4 - I*sqrt((-sqrt(5)/8) + S(5)/8)
-        self.zeta4 = S(-1)/4 + (sqrt(5)/4) - I*sqrt((sqrt(5)/8) + S(5)/8)
+        self.zeta1 = Rational(-1, 4) + (sqrt(5)/4) + I*sqrt((sqrt(5)/8) + Rational(5, 8))
+        self.zeta2 = (-sqrt(5)/4) - Rational(1, 4) + I*sqrt((-sqrt(5)/8) + Rational(5, 8))
+        self.zeta3 = (-sqrt(5)/4) - Rational(1, 4) - I*sqrt((-sqrt(5)/8) + Rational(5, 8))
+        self.zeta4 = Rational(-1, 4) + (sqrt(5)/4) - I*sqrt((sqrt(5)/8) + Rational(5, 8))
 
     @property
     def f20(self):
@@ -179,7 +179,7 @@ class PolyQuintic(object):
 
     def uv(self, theta, d):
         c = self.c
-        u = S(-25*self.q/2)
+        u = self.q*Rational(-25, 2)
         v = Poly(c, x).eval(theta)/(2*d*self.F)
         return N(u), N(v)
 

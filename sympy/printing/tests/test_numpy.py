@@ -1,21 +1,23 @@
 from sympy import (
-    Piecewise, lambdify, Equality, Unequality, Sum, Mod, cbrt, sqrt,
+    Piecewise, lambdify, Equality, Unequality, Sum, Mod, sqrt,
     MatrixSymbol, BlockMatrix, Identity
 )
 from sympy import eye
 from sympy.abc import x, i, j, a, b, c, d
+from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
-from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Cbrt, Sqrt
-from sympy.codegen.array_utils import (CodegenArrayContraction,
-        CodegenArrayTensorProduct, CodegenArrayDiagonal,
-        CodegenArrayPermuteDims, CodegenArrayElementwiseAdd)
+from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
+from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
+from sympy.codegen.array_utils import (CodegenArrayTensorProduct, CodegenArrayDiagonal,
+                                       CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, parse_matrix_expression)
 from sympy.printing.lambdarepr import NumPyPrinter
 
-from sympy.utilities.pytest import warns_deprecated_sympy
-from sympy.utilities.pytest import skip, raises
+from sympy.testing.pytest import warns_deprecated_sympy
+from sympy.testing.pytest import skip, raises
 from sympy.external import import_module
 
 np = import_module('numpy')
+
 
 def test_numpy_piecewise_regression():
     """
@@ -23,8 +25,17 @@ def test_numpy_piecewise_regression():
     breaking compatibility with numpy 1.8. This is not necessary in numpy 1.9+.
     See gh-9747 and gh-9749 for details.
     """
+    printer = NumPyPrinter()
     p = Piecewise((1, x < 0), (0, True))
-    assert NumPyPrinter().doprint(p) == 'numpy.select([numpy.less(x, 0),True], [1,0], default=numpy.nan)'
+    assert printer.doprint(p) == \
+        'numpy.select([numpy.less(x, 0),True], [1,0], default=numpy.nan)'
+    assert printer.module_imports == {'numpy': {'select', 'less', 'nan'}}
+
+def test_numpy_logaddexp():
+    lae = logaddexp(a, b)
+    assert NumPyPrinter().doprint(lae) == 'numpy.logaddexp(a, b)'
+    lae2 = logaddexp2(a, b)
+    assert NumPyPrinter().doprint(lae2) == 'numpy.logaddexp2(a, b)'
 
 
 def test_sum():
@@ -67,7 +78,7 @@ def test_codegen_einsum():
     M = MatrixSymbol("M", 2, 2)
     N = MatrixSymbol("N", 2, 2)
 
-    cg = CodegenArrayContraction.from_MatMul(M*N)
+    cg = parse_matrix_expression(M*N)
     f = lambdify((M, N), cg, 'numpy')
 
     ma = np.matrix([[1, 2], [3, 4]])
@@ -176,6 +187,15 @@ def test_mod():
     a_ = np.array([2, 3, 4, 5])
     b_ = np.array([2, 3, 4, 5])
     assert np.array_equal(f(a_, b_), [0, 0, 0, 0])
+
+
+def test_pow():
+    if not np:
+        skip('NumPy not installed')
+
+    expr = Pow(2, -1, evaluate=False)
+    f = lambdify([], expr, 'numpy')
+    assert f() == 0.5
 
 
 def test_expm1():

@@ -1,11 +1,13 @@
-from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
-                               Return, FunctionDefinition, Assignment)
-from sympy.core import Add, Mul, Integer, Float
-from sympy import Symbol
 from sympy.external import import_module
+
 lfortran = import_module('lfortran')
 
 if lfortran:
+    from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
+                                   Return, FunctionDefinition, Assignment)
+    from sympy.core import Add, Mul, Integer, Float
+    from sympy import Symbol
+
     asr_mod = lfortran.asr
     asr = lfortran.asr.asr
     src_to_ast = lfortran.ast.src_to_ast
@@ -53,7 +55,7 @@ if lfortran:
     """
 
 
-    class ASR2PyVisitor(asr.ASTVisitor):
+    class ASR2PyVisitor(asr.ASTVisitor):  # type: ignore
         """
         Visitor Class for LFortran ASR
 
@@ -299,7 +301,7 @@ if lfortran:
             """Returns the AST nodes"""
             return self._py_ast
 else:
-    class ASR2PyVisitor():
+    class ASR2PyVisitor():  # type: ignore
         def __init__(self, *args, **kwargs):
             raise ImportError('lfortran not available')
 
@@ -345,7 +347,7 @@ def src_to_sympy(src):
         A string with the python source code compatible with SymPy
 
     """
-    a_ast = src_to_ast(src,translation_unit=False)
+    a_ast = src_to_ast(src, translation_unit=False)
     a = ast_to_asr(a_ast)
     py_src = call_visitor(a)
     return py_src

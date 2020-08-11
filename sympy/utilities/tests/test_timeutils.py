@@ -1,7 +1,5 @@
 """Tests for simple tools for timing functions' execution. """
 
-import sys
-
 from sympy.utilities.timeutils import timed
 
 def test_timed():
