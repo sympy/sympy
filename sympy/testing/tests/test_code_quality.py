@@ -229,6 +229,7 @@ def test_files():
         "%(sep)splotting%(sep)spygletplot%(sep)s" % sepd,
         # False positive in the docstring
         "%(sep)sbin%(sep)stest_external_imports.py" % sepd,
+        "%(sep)sbin%(sep)stest_submodule_imports.py" % sepd,
         # These are deprecated stubs that can be removed at some point:
         "%(sep)sutilities%(sep)sruntests.py" % sepd,
         "%(sep)sutilities%(sep)spytest.py" % sepd,

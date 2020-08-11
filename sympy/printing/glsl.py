@@ -1,6 +1,5 @@
 from typing import Set
 
-from sympy.codegen.ast import Assignment
 from sympy.core import Basic, S
 from sympy.core.function import _coeff_isneg, Lambda
 from sympy.printing.codeprinter import CodePrinter
@@ -209,6 +208,7 @@ class GLSLPrinter(CodePrinter):
             return self._print_not_supported(func)
 
     def _print_Piecewise(self, expr):
+        from sympy.codegen.ast import Assignment
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
