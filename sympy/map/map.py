@@ -276,7 +276,7 @@ class Map(Expr):
     def _applied_is_rational(self, expr):
         return self.codomain.is_subset(S.Rationals)
 
-    def _appled_is_algebraic(self, expr):
+    def _applied_is_algebraic(self, expr):
         return
 
 class UndefinedMap(Map):
