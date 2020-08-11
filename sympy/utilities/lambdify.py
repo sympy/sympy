@@ -9,8 +9,7 @@ import inspect
 import keyword
 import textwrap
 import linecache
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
+from  .exceptions import SymPyDeprecationWarning
 
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, builtins)
