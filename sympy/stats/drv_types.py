@@ -68,11 +68,11 @@ def DiscreteRV(symbol, density, set=S.Integers):
     ==========
 
     symbol : Symbol
-        Represents name of the random variable.
+        Name of the random variable.
     density : Expression containing symbol
-        Represents probability density function.
+        Probability density function.
     set : set
-        Represents the region where the pdf is valid, by default is real line.
+        The region where the pdf is valid, by default is real line.
 
     Examples
     ========
@@ -132,16 +132,6 @@ def Geometric(name, p):
     .. math::
         f(k) := p (1 - p)^{k - 1}
 
-    Parameters
-    ==========
-
-    p: A probability between 0 and 1
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -161,6 +151,16 @@ def Geometric(name, p):
 
     >>> variance(X)
     20
+
+    Parameters
+    ==========
+
+    p : A probability between 0 and 1
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -215,17 +215,6 @@ def Hermite(name, a1, a2):
         f(x):= e^{-a_1 -a_2}\sum_{j=0}^{\left \lfloor x/2 \right \rfloor}
                     \frac{a_{1}^{x-2j}a_{2}^{j}}{(x-2j)!j!}
 
-    Parameters
-    ==========
-
-    a1: A Positive number greater than equal to 0.
-    a2: A Positive number greater than equal to 0.
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -246,6 +235,17 @@ def Hermite(name, a1, a2):
 
     >>> variance(H)
     21
+
+    Parameters
+    ==========
+
+    a1 : A Positive number greater than equal to 0.
+    a2 : A Positive number greater than equal to 0.
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -291,16 +291,6 @@ def Logarithmic(name, p):
     .. math::
         f(k) := \frac{-p^k}{k \ln{(1 - p)}}
 
-    Parameters
-    ==========
-
-    p: A value between 0 and 1
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -320,6 +310,16 @@ def Logarithmic(name, p):
 
     >>> variance(X)
     -1/((-4*log(5) + 8*log(2))*(-2*log(5) + 4*log(2))) + 1/(-64*log(2)*log(5) + 64*log(2)**2 + 16*log(5)**2) - 10/(-32*log(5) + 64*log(2))
+
+    Parameters
+    ==========
+
+    p : A value between 0 and 1
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -371,17 +371,6 @@ def NegativeBinomial(name, r, p):
     .. math::
         f(k) := \binom{k + r - 1}{k} (1 - p)^r p^k
 
-    Parameters
-    ==========
-
-    r: A positive value
-    p: A value between 0 and 1
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -402,6 +391,17 @@ def NegativeBinomial(name, r, p):
 
     >>> variance(X)
     25/16
+
+    Parameters
+    ==========
+
+    r : A positive value
+    p : A value between 0 and 1
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -444,16 +444,6 @@ def Poisson(name, lamda):
     .. math::
         f(k) := \frac{\lambda^{k} e^{- \lambda}}{k!}
 
-    Parameters
-    ==========
-
-    lamda: Positive number, a rate
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -473,6 +463,16 @@ def Poisson(name, lamda):
 
     >>> simplify(variance(X))
     lambda
+
+    Parameters
+    ==========
+
+    lamda : Positive number, a rate
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -520,25 +520,14 @@ def Skellam(name, mu1, mu2):
     r"""
     Create a discrete random variable with a Skellam distribution.
 
-    The Skellam is the distribution of the difference N1 - N2
-    of two statistically independent random variables N1 and N2
-    each Poisson-distributed with respective expected values mu1 and mu2.
+    The Skellam is the distribution of the difference N1 - N2 of two
+    statistically independent random variables N1 and N2, each
+    Poisson-distributed, with respective expected values ``mu1`` and ``mu2``.
 
     The density of the Skellam distribution is given by
 
     .. math::
         f(k) := e^{-(\mu_1+\mu_2)}(\frac{\mu_1}{\mu_2})^{k/2}I_k(2\sqrt{\mu_1\mu_2})
-
-    Parameters
-    ==========
-
-    mu1: A non-negative value
-    mu2: A non-negative value
-
-    Returns
-    =======
-
-    RandomSymbol
 
     Examples
     ========
@@ -562,6 +551,17 @@ def Skellam(name, mu1, mu2):
     mu1 - mu2
     >>> variance(X).expand()
     mu1 + mu2
+
+    Parameters
+    ==========
+
+    mu1 : nonnegative number
+    mu2 : nonnegative number
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -608,16 +608,6 @@ def YuleSimon(name, rho):
     .. math::
         f(k) := \rho B(k, \rho + 1)
 
-    Parameters
-    ==========
-
-    rho: A positive value
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -637,6 +627,16 @@ def YuleSimon(name, rho):
 
     >>> simplify(variance(X))
     25/48
+
+    Parameters
+    ==========
+
+    rho : A positive value
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -678,16 +678,6 @@ def Zeta(name, s):
     .. math::
         f(k) := \frac{1}{k^s \zeta{(s)}}
 
-    Parameters
-    ==========
-
-    s: A value greater than 1
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -707,6 +697,16 @@ def Zeta(name, s):
 
     >>> variance(X)
     -pi**8/(8100*zeta(5)**2) + zeta(3)/zeta(5)
+
+    Parameters
+    ==========
+
+    s : A value greater than 1
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========

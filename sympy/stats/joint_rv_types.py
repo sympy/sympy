@@ -79,12 +79,7 @@ class JointDistributionHandmade(JointDistribution):
 
 def JointRV(symbol, pdf, _set=None):
     """
-    Create a Joint Random Variable where each of its component is conitinuous,
-    given the following:
-
-    -- a symbol
-    -- a PDF in terms of indexed symbols of the symbol given
-    as the first argument
+    Create a Joint Random Variable where each of its components is continuous.
 
     NOTE: As of now, the set for each component for a `JointRV` is
     equal to the set of all integers, which can not be changed.
@@ -99,6 +94,14 @@ def JointRV(symbol, pdf, _set=None):
     >>> N1 = JointRV('x', pdf) #Multivariate Normal distribution
     >>> density(N1)(1, 2)
     exp(-2)/(2*pi)
+
+    Parameters
+    ==========
+
+    symbol : a symbol
+
+    pdf : a PDF in terms of indexed symbols of the symbol given
+    as the first argument
 
     Returns
     =======
@@ -175,9 +178,10 @@ def MultivariateNormal(name, mu, sigma):
     Parameters
     ==========
 
-    mu : List representing the mean or the mean vector
+    mu : List
+        The mean or the mean vector
     sigma : Positive definite square matrix
-        Represents covariance Matrix
+        Covariance Matrix
 
     Returns
     =======
@@ -253,9 +257,10 @@ def MultivariateLaplace(name, mu, sigma):
     Parameters
     ==========
 
-    mu : List representing the mean or the mean vector
+    mu : List
+        The mean or the mean vector
     sigma : Positive definite square matrix
-        Represents covariance Matrix
+        Covariance Matrix
 
     Returns
     =======
@@ -317,15 +322,6 @@ def MultivariateT(syms, mu, sigma, v):
     """
     Creates a joint random variable with multivariate T-distribution.
 
-    Parameters
-    ==========
-
-    syms: A symbol/str
-        For identifying the random variable.
-    mu: A list/matrix
-        Representing the location vector
-    sigma: The shape matrix for the distribution
-
     Examples
     ========
 
@@ -337,6 +333,15 @@ def MultivariateT(syms, mu, sigma, v):
 
     >>> density(X)(1, 2)
     2/(9*pi)
+
+    Parameters
+    ==========
+
+    syms: A symbol/str
+        Identifies the random variable.
+    mu: A list/matrix
+        The location vector
+    sigma : The shape matrix for the distribution
 
     Returns
     =======
@@ -394,25 +399,6 @@ def NormalGamma(sym, mu, lamda, alpha, beta):
     Creates a bivariate joint random variable with multivariate Normal gamma
     distribution.
 
-    Parameters
-    ==========
-
-    sym: A symbol/str
-        For identifying the random variable.
-    mu: A real number
-        The mean of the normal distribution
-    lamda: A positive integer
-        Parameter of joint distribution
-    alpha: A positive integer
-        Parameter of joint distribution
-    beta: A positive integer
-        Parameter of joint distribution
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -424,6 +410,25 @@ def NormalGamma(sym, mu, lamda, alpha, beta):
 
     >>> density(X)(y, z)
     9*sqrt(2)*z**(3/2)*exp(-3*z)*exp(-y**2*z/2)/(2*sqrt(pi))
+
+    Parameters
+    ==========
+
+    sym : symbol/str
+        Identifies the random variable
+    mu: real number
+        The mean of the normal distribution
+    lamda : positive integer
+        Parameter of joint distribution
+    alpha : positive integer
+        Parameter of joint distribution
+    beta : positive integer
+        Parameter of joint distribution
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -465,17 +470,6 @@ def MultivariateBeta(syms, *alpha):
 
     The density of the dirichlet distribution can be found at [1].
 
-    Parameters
-    ==========
-
-    alpha: Positive real numbers
-        Signifies concentration numbers.
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -491,6 +485,17 @@ def MultivariateBeta(syms, *alpha):
     x**(a1 - 1)*y**(a2 - 1)*gamma(a1 + a2)/(gamma(a1)*gamma(a2))
     >>> marginal_distribution(C, C[0])(x)
     x**(a1 - 1)*gamma(a1 + a2)/(a2*gamma(a1)*gamma(a2))
+
+    Parameters
+    ==========
+
+    alpha : Positive real numbers
+        Signifies concentration numbers.
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -558,19 +563,6 @@ def MultivariateEwens(syms, n, theta):
 
     The density of the said distribution can be found at [1].
 
-    Parameters
-    ==========
-
-    n: Positive integer
-        Size of the sample or the integer whose partitions are considered
-    theta: Positive real number
-        Denotes Mutation rate
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -583,6 +575,19 @@ def MultivariateEwens(syms, n, theta):
     Piecewise((2**(-a2)/(factorial(a1)*factorial(a2)), Eq(a1 + 2*a2, 2)), (0, True))
     >>> marginal_distribution(ed, ed[0])(a1)
     Piecewise((1/factorial(a1), Eq(a1, 2)), (0, True))
+
+    Parameters
+    ==========
+
+    n : Positive integer
+        Size of the sample or the integer whose partitions are considered
+    theta : Positive real number
+        Denotes Mutation rate
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -636,20 +641,6 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
 
     The joint pdf can be found at [1].
 
-    Parameters
-    ==========
-
-    syms: list/tuple/set of symbols for identifying each component
-    delta: A constant in range [0, 1]
-    v: Positive real number
-    lamda: List of positive real numbers
-    mu: List of positive real numbers
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -665,6 +656,21 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     Sum(2**(-n)*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
     exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
 
+    Parameters
+    ==========
+
+    syms : list/tuple/set of symbols
+        Identifies each component
+    delta : A constant in range [0, 1]
+    v : Positive real number
+    lamda : List of positive real numbers
+    mu : List of positive real numbers
+
+    Returns
+    =======
+
+    RandomSymbol
+
     References
     ==========
 
@@ -674,10 +680,11 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     Note
     ====
 
-    If the GeneralizedMultivariateLogGamma is too long to type use,
-    `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG`
-    If you want to pass the matrix omega instead of the constant delta, then use,
-    GeneralizedMultivariateLogGammaOmega.
+    If ``GeneralizedMultivariateLogGamma`` is too long to type, use
+    ``from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG``
+
+    If you want to pass the matrix omega instead of the constant delta, then use
+    ``GeneralizedMultivariateLogGammaOmega``.
 
     """
     return multivariate_rv(GeneralizedMultivariateLogGammaDistribution,
@@ -686,23 +693,6 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
 def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     """
     Extends GeneralizedMultivariateLogGamma.
-
-    Parameters
-    ==========
-
-    syms: list/tuple/set of symbols
-        For identifying each component
-    omega: A square matrix
-           Every element of square matrix must be absolute value of
-           square root of correlation coefficient
-    v: Positive real number
-    lamda: List of positive real numbers
-    mu: List of positive real numbers
-
-    Returns
-    =======
-
-    RandomSymbol
 
     Examples
     ========
@@ -718,6 +708,23 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     >>> density(G)(y[0], y[1], y[2])
     sqrt(2)*Sum((1 - sqrt(2)/2)**n*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) -
     exp(y_2) - exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
+
+    Parameters
+    ==========
+
+    syms: list/tuple/set of symbols
+        Identifies each component
+    omega: A square matrix
+        Every element of square matrix must be absolute value of
+        square root of correlation coefficient
+    v : Positive real number
+    lamda : List of positive real numbers
+    mu : List of positive real numbers
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -783,19 +790,6 @@ def Multinomial(syms, n, *p):
 
     The density of the said distribution can be found at [1].
 
-    Parameters
-    ==========
-
-    n: Positive integer
-        Represents number of trials
-    p: List of event probabilites
-        Must be in the range of [0, 1]
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -809,6 +803,19 @@ def Multinomial(syms, n, *p):
     Eq(x1 + x2 + x3, 3)), (0, True))
     >>> marginal_distribution(M, M[0])(x1).subs(x1, 1)
     3*p1*p2**2 + 6*p1*p2*p3 + 3*p1*p3**2
+
+    Parameters
+    ==========
+
+    n : Positive integer
+        Number of trials
+    p : List of event probabilites
+        Must be in the range of [0, 1]
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -856,19 +863,6 @@ def NegativeMultinomial(syms, k0, *p):
 
     The density of the said distribution can be found at [1].
 
-    Parameters
-    ==========
-
-    k0: positive integer
-        Represents number of failures before the experiment is stopped
-    p: List of event probabilites
-        Must be in the range of [0, 1]
-
-    Returns
-    =======
-
-    RandomSymbol
-
     Examples
     ========
 
@@ -884,6 +878,18 @@ def NegativeMultinomial(syms, k0, *p):
     >>> marginal_distribution(N_c, N_c[0])(1).evalf().round(2)
     0.25
 
+    Parameters
+    ==========
+
+    k0 : positive integer
+        Number of failures before the experiment is stopped
+    p : List of event probabilites
+        Must be in the range of [0, 1]
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========

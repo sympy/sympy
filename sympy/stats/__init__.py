@@ -4,7 +4,7 @@ SymPy statistics module
 Introduces a random variable type into the SymPy language.
 
 Random variables may be declared using prebuilt functions such as
-Normal, Exponential, Coin, Die, etc...  or built with functions like FiniteRV.
+Normal, Exponential, Coin, Die, etc. or built with functions like FiniteRV.
 
 Queries on random expressions can be made using the functions
 
@@ -40,7 +40,7 @@ Examples
 One could also create custom distribution and define custom random variables
 as follows:
 
-1. If the you want to create a Continuous Random Variable:
+1. If you want to create a Continuous Random Variable:
 
 >>> from sympy.stats import ContinuousRV, P, E
 >>> from sympy import exp, Symbol, Interval, oo
@@ -81,7 +81,7 @@ exp(-x)
 >>> dist.pdf(x)
 2**(1 - x)/2
 
-3. If the you want to create a Finite Random Variable:
+3. If you want to create a Finite Random Variable:
 
 >>> from sympy.stats import FiniteRV, P, E
 >>> from sympy import Rational

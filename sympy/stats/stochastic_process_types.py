@@ -584,15 +584,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     """
     Represents discrete time Markov chain.
 
-    Parameters
-    ==========
-
-    sym: Symbol/str
-    state_space: Set
-        Optional, by default, S.Reals
-    trans_probs: Matrix/ImmutableMatrix/MatrixSymbol
-        Optional, by default, None
-
     Examples
     ========
 
@@ -614,6 +605,15 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     T[0, 2]*T[1, 0] + T[1, 1]*T[1, 2] + T[1, 2]*T[2, 2]
     >>> P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2)
     0.36
+
+    Parameters
+    ==========
+
+    sym : Symbol/str
+    state_space : Set
+        Optional, by default, S.Reals
+    trans_probs : Matrix/ImmutableMatrix/MatrixSymbol
+        Optional, by default, None
 
     References
     ==========
@@ -845,17 +845,6 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     are independent of all the rest. Therefore Bernoulli Processs
     is Discrete State and Discrete Time Stochastic Process.
 
-    Parameters
-    ==========
-
-    sym: Symbol/str
-    success: Integer/str
-            The event which is considered to be success, by default is 1.
-    failure: Integer/str
-            The event which is considered to be failure, by default is 0.
-    p: Real Number between 0 and 1
-            Represents the probability of getting success.
-
     Examples
     ========
 
@@ -889,6 +878,17 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     2.10
     >>> P(B[1] < 1).round(2)
     0.30
+
+    Parameters
+    ==========
+
+    sym : Symbol/str
+    success : Integer/str
+        The event which is considered to be success, by default is 1.
+    failure : Integer/str
+        The event which is considered to be failure, by default is 0.
+    p : Real Number between 0 and 1
+        The probability of success.
 
     References
     ==========
@@ -966,10 +966,10 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         ==========
 
         condition: Relational
-                Condition for which probability has to be computed. Must
-                contain a RandomIndexedSymbol of the process.
+            Condition for which probability has to be computed. Must
+            contain a RandomIndexedSymbol of the process.
         given_condition: Relational/And
-                The given conditions under which computations should be done.
+            The given conditions under which computations should be done.
 
         Returns
         =======
@@ -1069,10 +1069,10 @@ class _SubstituteRV:
         ==========
 
         condition: Relational
-                Condition for which probability has to be computed. Must
-                contain a RandomIndexedSymbol of the process.
+            Condition for which probability has to be computed. Must
+            contain a RandomIndexedSymbol of the process.
         given_condition: Relational/And
-                The given conditions under which computations should be done.
+            The given conditions under which computations should be done.
 
         Returns
         =======
