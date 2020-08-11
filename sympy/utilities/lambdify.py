@@ -803,7 +803,7 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
                            'allow_unknown_functions': True,
                            'user_functions': user_functions})
 
-    if  type(args) is set:
+    if isinstance(args, set):
         SymPyDeprecationWarning(
                     feature="The list of arguments is a `set`. This leads to unpredictable results",
                     useinstead="convert set into list or tuple",
