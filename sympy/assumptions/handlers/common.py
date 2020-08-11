@@ -58,6 +58,21 @@ class AskCommutativeHandler(CommonHandler):
     def NaN(expr, assumptions):
         return True
 
+    @staticmethod
+    def Map(expr, assumps):
+        # Unlike other handler, which implies that the object is commutative
+        # with respect to multiplication, this handler implies that this map
+        # commutes the arguments.
+        assumps = conjuncts(assumps)
+        if Q.commutative(expr) in assumps:
+            return True
+        if ~Q.commutative(expr) in assumps:
+            return False
+        if expr.commutative is not None:
+            return expr.commutative
+        # Q.commutative returns True by default. We don't want this for functions,
+        # so return False instead.
+        return False
 
 class TautologicalHandler(AskHandler):
     """Wrapper allowing to query the truth value of a boolean expression."""

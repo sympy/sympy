@@ -7251,3 +7251,27 @@ def test_diffgeom():
     assert pretty(rect) == "rect"
     b = BaseScalarField(rect, 0)
     assert pretty(b) == "x"
+
+def test_map():
+    from sympy import Set
+    from sympy.map import (
+        Map, IdentityMap,
+    )
+
+    f = Map(name='f')
+    g = Map(name='g')
+    assert upretty(f) == 'f : 𝕌 → 𝕌'
+    assert pretty(f(x)) == "f(x)"
+
+    # Restricted map
+    assert upretty(f.restrict(S.Reals)) == 'f│  : ℝ → 𝕌\n │ℝ        '
+    assert upretty(f.restrict(S.Reals)(x)) == 'f│ (x)\n │ℝ   '
+
+    # Inverse map
+    assert upretty(f.inv()) == ' -1        \nf   : 𝕌 → 𝕌'
+    assert upretty(f.inv()(x)) == '⎛ -1⎞   \n⎝f  ⎠(x)'
+
+    # Identity map
+    Id = IdentityMap(domain=S.Reals)
+    assert upretty(Id) == 'id : ℝ → ℝ'
+    assert pretty(Id(x)) == "id(x)"

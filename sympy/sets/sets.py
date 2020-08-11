@@ -40,7 +40,7 @@ tfn = defaultdict(lambda: None, {
 @sympify_method_args
 class Set(Basic):
     """
-    The base class for any kind of set.
+    The base class for any kind of set
 
     This is not meant to be used directly as a container of items. It does not
     behave like the builtin ``set``; see :class:`FiniteSet` for that.
@@ -322,6 +322,13 @@ class Set(Basic):
         False
         """
         other = sympify(other, strict=True)
+
+        # hook to let the element define where it belongs to
+        if hasattr(other, "_contained"):
+            c = other._contained(self)
+            if c is not None:
+                return tfn[c]
+
         c = self._contains(other)
         if isinstance(c, Contains):
             return c
@@ -369,6 +376,13 @@ class Set(Basic):
             return False
         if self.is_finite_set is False and other.is_finite_set:
             return False
+        if self is S.UniversalSet:
+            return other is S.UniversalSet
+        if other is S.UniversalSet:
+            return True
+        if other.is_Union:
+            if any(self.is_subset(a) for a in other.args):
+                return True
 
         # Dispatch on subclass rules
         ret = self._eval_is_subset(other)
@@ -667,6 +681,12 @@ class Set(Basic):
 
     def __contains__(self, other):
         other = _sympify(other)
+
+        if hasattr(other, "_contained"):
+            c = other._contained(self)
+            if c is not None:
+                return c
+
         c = self._contains(other)
         b = tfn[c]
         if b is None:
@@ -674,7 +694,6 @@ class Set(Basic):
             # result with Set use y.contains(x)
             raise TypeError('did not evaluate to a bool: %r' % c)
         return b
-
 
 class ProductSet(Set):
     """
@@ -784,7 +803,7 @@ class ProductSet(Set):
         if not isinstance(element, Tuple) or len(element) != len(self.sets):
             return False
 
-        return fuzzy_and(s._contains(e) for s, e in zip(self.sets, element))
+        return fuzzy_and(s.contains(e) for s, e in zip(self.sets, element))
 
     def as_relational(self, *symbols):
         symbols = [_sympify(s) for s in symbols]

@@ -53,6 +53,16 @@ class PrettyPrinter(Printer):
         elif self._settings['imaginary_unit'] not in ["i", "j"]:
             raise ValueError("'imaginary_unit' must be either 'i' or 'j', not '{}'".format(self._settings['imaginary_unit']))
 
+    def parenthesize(self, item, level, is_neg=False, strict=False, kwargs={}):
+        prec_val = precedence_traditional(item)
+        if is_neg and strict:
+            return prettyForm(*self._print(item, **kwargs).parens())
+
+        if (prec_val < level) or ((not strict) and prec_val <= level):
+            return prettyForm(*self._print(item, **kwargs).parens())
+        else:
+            return self._print(item, **kwargs)
+
     def emptyPrinter(self, expr):
         return prettyForm(xstr(expr))
 
@@ -2203,11 +2213,11 @@ class PrettyPrinter(Printer):
     _print_SeqMul = _print_SeqFormula
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
-            parenthesize=lambda x: False):
+            parenthesize=lambda x: False, kwargs={}):
         s = None
         try:
             for item in seq:
-                pform = self._print(item)
+                pform = self._print(item, **kwargs)
 
                 if parenthesize(item):
                     pform = prettyForm(*pform.parens())
@@ -2228,7 +2238,7 @@ class PrettyPrinter(Printer):
         except AttributeError:
             s = None
             for item in seq:
-                pform = self.doprint(item)
+                pform = self.doprint(item, **kwargs)
                 if parenthesize(item):
                     pform = prettyForm(*pform.parens())
                 if s is None:
@@ -2711,6 +2721,95 @@ class PrettyPrinter(Printer):
         l = self._print(e.lhs)
         r = self._print(e.rhs)
         pform = prettyForm(*stringPict.next(l, op, r))
+        return pform
+
+    def _print_Map(self, e, print_domains=True):
+        if hasattr(e, 'pretty_name'):
+            name = e.pretty_name
+        elif hasattr(e, 'str_name'):
+            name = e.str_name
+        elif hasattr(e, 'name'):
+            name = e.name
+        else:
+            name = e.__class__.__name__
+        if not isinstance(name, str):
+            name = name.name
+        mapping = pretty_symbol(name, bold_name=False)
+        pform = prettyForm(mapping)
+        if print_domains:
+            pform = self._helper_print_domain(e, pform)
+        return pform
+
+    def _helper_print_domain(self, e, pform):
+        if self._use_unicode:
+            rightarrow = prettyForm(' ' + U("RIGHTWARDS ARROW") + ' ')
+        else:
+            rightarrow = prettyForm(' -> ')
+        pform = prettyForm(*pform.right(prettyForm(' : ')))
+        pform = prettyForm(*pform.right(self._print(e.domain)))
+        pform = prettyForm(*pform.right(rightarrow))
+        pform = prettyForm(*pform.right(self._print(e.range)))
+        return pform
+
+    def _print_RestrictedMap(self, e, print_domains=True):
+        pform = self._print(e.base, print_domains=False)
+
+        h = pform.height() if pform.height() > 1 else 2
+        rvert = stringPict(vobj('|', h), baseline=pform.baseline)
+        pform = prettyForm(*pform.right(rvert))
+
+        b = pform.baseline
+        pform.baseline = pform.height() - 1
+        pform = prettyForm(*pform.right(self._print(e.domain)))
+        pform.baseline = b
+        if print_domains:
+            pform = self._helper_print_domain(e, pform)
+
+        return pform
+
+    def _print_InverseMap(self, e, print_domains=True):
+        pretty_base = self.parenthesize(e.base, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        pform = pretty_base**self._print(-1)
+        if print_domains:
+            pform = self._helper_print_domain(e, pform)
+        return pform
+
+    def _print_IdentityMap(self, e, print_domains=True):
+        pform = prettyForm("id")
+        if print_domains:
+            pform = self._helper_print_domain(e, pform)
+        return pform
+
+    def _print_ConstantMap(self, e, print_domains=True):
+        pform = self._print(e.output)
+        if print_domains:
+            pform = self._helper_print_domain(e, pform)
+        return pform
+
+    def _print_AppliedMap(self, e, print_domains=True, pad_infix=False):
+        from sympy.map import Map
+
+        prettyMap = self.parenthesize(e.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        args = []
+        for a in e.arguments:
+            if isinstance(a, Map):
+                args.append(self._print(a, print_domains=False))
+            else:
+                args.append(self._print(a))
+        prettyArgs = None
+        for item in args:
+            if prettyArgs is None:
+                prettyArgs = item
+            else:
+                prettyArgs = prettyForm(*stringPict.next(prettyArgs, ', '))
+                prettyArgs = prettyForm(*stringPict.next(prettyArgs, item))
+        prettyArgs = prettyForm(*prettyArgs.parens())
+        pform = prettyForm(binding=prettyForm.FUNC, *prettyForm.next(prettyMap, prettyArgs))
+        pform.prettyFunc = prettyMap
+        pform.prettyArgs = prettyArgs
+
+        if isinstance(e, Map) and print_domains:
+            pform = self._helper_print_domain(e, pform)
         return pform
 
     def _print_Str(self, s):

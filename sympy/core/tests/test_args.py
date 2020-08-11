@@ -778,7 +778,6 @@ def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
     assert _test_args(Equality(x, 2))
 
-
 def test_sympy__core__relational__GreaterThan():
     from sympy.core.relational import GreaterThan
     assert _test_args(GreaterThan(x, 2))
@@ -2909,6 +2908,33 @@ def test_sympy__logic__boolalg__Xnor():
     from sympy.logic.boolalg import Xnor
     assert _test_args(Xnor(x, y, 2))
 
+@SKIP("abstract class")
+def test_sympy__map__map__Map():
+    pass
+
+def test_sympy__map__map__UndefinedMap():
+    from sympy.map import Map
+    assert _test_args(Map('f'))
+
+def test_sympy__map__map__RestrictedMap():
+    from sympy.map import Map
+    assert _test_args(Map('f').restrict(S.Reals))
+
+def test_sympy__map__map__InverseMap():
+    from sympy.map import Map, InverseMap
+    assert _test_args(InverseMap(Map('f')))
+
+def test_sympy__map__map__IdentityMap():
+    from sympy.map import IdentityMap
+    assert _test_args(IdentityMap())
+
+def test_sympy__map__map__ConstantMap():
+    from sympy.map import ConstantMap
+    assert _test_args(ConstantMap(1))
+
+def test_sympy__map__map__AppliedMap():
+    from sympy.map import Map, AppliedMap
+    assert _test_args(AppliedMap(Map('f'), (x,)))
 
 def test_sympy__matrices__matrices__DeferredVector():
     from sympy.matrices.matrices import DeferredVector

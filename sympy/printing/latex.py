@@ -228,15 +228,15 @@ class LatexPrinter(Printer):
     def _add_parens_lspace(self, s):
         return r"\left( {}\right)".format(s)
 
-    def parenthesize(self, item, level, is_neg=False, strict=False):
+    def parenthesize(self, item, level, is_neg=False, strict=False, kwargs={}):
         prec_val = precedence_traditional(item)
         if is_neg and strict:
-            return self._add_parens(self._print(item))
+            return self._add_parens(self._print(item, **kwargs))
 
         if (prec_val < level) or ((not strict) and prec_val <= level):
-            return self._add_parens(self._print(item))
+            return self._add_parens(self._print(item, **kwargs))
         else:
-            return self._print(item)
+            return self._print(item, **kwargs)
 
     def parenthesize_super(self, s):
         """
@@ -2656,6 +2656,70 @@ class LatexPrinter(Printer):
             return r'\left(\Omega\left(%s\right)\right)^{%s}' % \
                 (self._print(expr.args[0]), exp)
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
+
+    def _print_Map(self, expr, print_domains=True):
+        if hasattr(expr, 'latex_name'):
+            name = expr.latex_name
+        elif hasattr(expr, 'name'):
+            name = expr.name
+        else:
+            name = expr.__class__.__name__
+        if not isinstance(name, str):
+            name = name.name
+        tex = self._deal_with_super_sub(str(name))
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
+    def _helper_print_domain(self, expr, tex):
+        result = r"%s : %s \rightarrow %s" % (
+                tex, self._print(expr.domain), self._print(expr.range)
+            )
+        return result
+
+    def _print_RestrictedMap(self, expr, print_domains=True):
+        temp = r'%s \vert_{%s}'
+        tex = temp % (self._print(expr.base, print_domains=False), self._print(expr.domain))
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
+    def _print_InverseMap(self, expr, print_domains=True):
+        tex = "{%s}^{-1}" % self.parenthesize(expr.base, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
+    def _print_IdentityMap(self, expr, print_domains=False):
+        tex = r"\text{id}_{%s}" % self._print(expr.domain)
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
+    def _print_ConstantMap(self, expr, print_domains=True):
+        tex = self._print(expr.output)
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
+    def _print_AppliedMap(self, expr, print_domains=True):
+        from sympy.map import Map
+
+        map_str = self.parenthesize(expr.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        temp = map_str + r"{\left(%s \right)}"
+
+        args = []
+        for a in expr.arguments:
+            if isinstance(a, Map):
+                args.append(self._print(a, print_domains=False))
+            else:
+                args.append(self._print(a))
+        args_str = ', '.join(args)
+        tex = temp % args_str
+
+        if isinstance(expr, Map) and print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
 
     def _print_Str(self, s):
         return str(s.name)

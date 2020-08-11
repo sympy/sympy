@@ -201,6 +201,15 @@ class AskInvertibleHandler(CommonHandler):
             return None
         return fuzzy_and([ask(Q.invertible(a), assumptions) for a in expr.diag])
 
+    @staticmethod
+    def Map(expr, assumptions):
+        assumps = conjuncts(assumptions)
+        if Q.invertible(expr) in assumps:
+            return True
+        if ~Q.invertible(expr) in assumps:
+            return False
+        if expr.invertible is not None:
+            return expr.invertible
 
 class AskOrthogonalHandler(CommonHandler):
     """

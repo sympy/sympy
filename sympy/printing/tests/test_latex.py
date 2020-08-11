@@ -2653,6 +2653,31 @@ def test_latex_decimal_separator():
     raises(ValueError, lambda: latex(FiniteSet(1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_set'))
     raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))
 
+
+def test_map():
+    from sympy import Set
+    from sympy.map import (
+        Map, IdentityMap,
+    )
+
+    f = Map(name='f')
+    g = Map(name='g')
+    assert latex(f) == r"f : \mathbb{U} \rightarrow \mathbb{U}"
+    assert latex(f(x)) == r"f{\left(x \right)}"
+
+    # Restricted map
+    assert latex(f.restrict(S.Reals)) == r"f \vert_{\mathbb{R}} : \mathbb{R} \rightarrow \mathbb{U}"
+    assert latex(f.restrict(S.Reals)(x)) == r"f \vert_{\mathbb{R}}{\left(x \right)}"
+
+    # Inverse map
+    assert latex(f.inv()) == r'{f}^{-1} : \mathbb{U} \rightarrow \mathbb{U}'
+    assert latex(f.inv()(x)) == r"\left({f}^{-1}\right){\left(x \right)}"
+
+    # Identity map
+    Id = IdentityMap(domain=S.Reals)
+    assert latex(Id) == r"\text{id}_{\mathbb{R}}"
+    assert latex(Id(x)) == r"\text{id}_{\mathbb{R}}{\left(x \right)}"
+
 def test_Str():
     from sympy.core.symbol import Str
     assert str(Str('x')) == 'x'

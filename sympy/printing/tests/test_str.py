@@ -995,6 +995,31 @@ def test_diffgeom():
     b = BaseScalarField(rect, 0)
     assert str(b) == "x"
 
+
+def test_map():
+    from sympy import Set
+    from sympy.map import (
+        Map, IdentityMap,
+    )
+
+    f = Map(name='f')
+    g = Map(name='g')
+    assert str(f) == 'f : UniversalSet -> UniversalSet'
+    assert str(f(x)) == "f(x)"
+
+    # Restricted map
+    assert str(f.restrict(S.Reals)) == 'RestrictedMap(f, Reals) : Reals -> UniversalSet'
+    assert str(f.restrict(S.Reals)(x)) == 'RestrictedMap(f, Reals)(x)'
+
+    # Inverse map
+    assert str(f.inv()) == 'InverseMap(f) : UniversalSet -> UniversalSet'
+    assert str(f.inv()(x)) == 'InverseMap(f)(x)'
+
+    # Identity map
+    Id = IdentityMap(domain=S.Reals)
+    assert str(Id) == 'id : Reals -> Reals'
+    assert str(Id(x)) == 'id(x)'
+
 def test_NDimArray():
     assert sstr(NDimArray(1.0), full_prec=True) == '1.00000000000000'
     assert sstr(NDimArray(1.0), full_prec=False) == '1.0'

@@ -50,6 +50,7 @@ PRECEDENCE_VALUES = {
     "KroneckerProduct": PRECEDENCE["Mul"],
     "Equality": PRECEDENCE["Mul"],
     "Unequality": PRECEDENCE["Mul"],
+    "AppliedMap": PRECEDENCE["Func"],
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a
@@ -157,6 +158,7 @@ PRECEDENCE_TRADITIONAL['Intersection'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['Complement'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['SymmetricDifference'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['ProductSet'] = PRECEDENCE['Xor']
+PRECEDENCE_TRADITIONAL['InverseMap'] = PRECEDENCE["Pow"]
 
 
 def precedence_traditional(item):

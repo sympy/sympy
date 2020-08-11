@@ -30,11 +30,11 @@ class StrPrinter(Printer):
 
     _relationals = dict()  # type: Dict[str, str]
 
-    def parenthesize(self, item, level, strict=False):
+    def parenthesize(self, item, level, strict=False, kwargs={}):
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
-            return "(%s)" % self._print(item)
+            return "(%s)" % self._print(item, **kwargs)
         else:
-            return self._print(item)
+            return self._print(item, **kwargs)
 
     def stringify(self, args, sep, level=0):
         return sep.join([self.parenthesize(item, level) for item in args])
@@ -869,6 +869,69 @@ class StrPrinter(Printer):
     def _print_Tr(self, expr):
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
+
+    def _print_Map(self, expr, print_domains=True):
+        if hasattr(expr, 'str_name'):
+            name = expr.str_name
+        elif hasattr(expr, 'name'):
+            name = expr.name
+        else:
+            name = expr.__class__.__name__
+        if not isinstance(name, str):
+            name = name.name
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
+        return name
+
+    def _helper_print_domain(self, expr, name):
+        result = r"%s : %s -> %s" % (
+                name, self._print(expr.domain), self._print(expr.range)
+            )
+        return result
+
+    def _print_RestrictedMap(self, expr, print_domains=True):
+        name = "RestrictedMap(%s, %s)" % (
+            self._print(expr.base, print_domains=False), self._print(expr.domain)
+        )
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
+        return name
+
+    def _print_InverseMap(self, expr, print_domains=True):
+        name = "InverseMap(%s)" % self._print(expr.base, print_domains=False)
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
+        return name
+
+    def _print_IdentityMap(self, expr, print_domains=True):
+        name = 'id'
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
+        return name
+
+    def _print_ConstantMap(self, expr, print_domains=True):
+        name = self._print(expr.output)
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
+        return name
+
+    def _print_AppliedMap(self, expr, print_domains=True, pad_infix=False):
+        from sympy.map import Map
+
+        map_str = self.parenthesize(expr.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+
+        args = []
+        for a in expr.arguments:
+            if isinstance(a, Map):
+                args.append(self._print(a, print_domains=False))
+            else:
+                args.append(self._print(a))
+        args_str = ', '.join(args)
+        result = "%s(%s)" % (map_str, args_str)
+
+        if isinstance(expr, Map) and print_domains:
+            result = self._helper_print_domain(expr, result)
+        return result
 
     def _print_Str(self, s):
         return self._print(s.name)
