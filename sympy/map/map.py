@@ -846,7 +846,7 @@ class _DeprecatedArgs(Tuple):
         SymPyDeprecationWarning(
             feature="Accessing arguments of AppliedMap with `args`",
             useinstead="arguments",
-            issue=12345,
+            issue=19953,
             deprecated_since_version="1.7"
         ).warn()
         return self.args[1][index]
