@@ -5,8 +5,9 @@ __all__ = [
 
     'Sine', 'Cosine', 'Tangent', 'Cotangent',
     'Secant', 'Cosecant',
-    'ArcSine', 'ArcCosine', 'ArcTangent', 'ArcCotangent',
-    'ArcSecant', 'ArcCosecant',
+    'Arcsine', 'Arccosine', 'Arctangent', 'Arccotangent',
+    'Arcsecant', 'Arccosecant',
+    'Atan2',
 ]
 
 from .map import (
@@ -18,6 +19,7 @@ from .map import (
 from .elementary import (
     Sine, Cosine, Tangent, Cotangent,
     Secant, Cosecant,
-    ArcSine, ArcCosine, ArcTangent, ArcCotangent,
-    ArcSecant, ArcCosecant,
+    Arcsine, Arccosine, Arctangent, Arccotangent,
+    Arcsecant, Arccosecant,
+    Atan2,
 )

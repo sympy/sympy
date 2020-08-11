@@ -271,6 +271,14 @@ class Map(Expr):
         else:
             return self.func(*self.args, evaluate=True)
 
+    ### properties of AppliedMap of self
+
+    def _applied_is_rational(self, expr):
+        return self.codomain.is_subset(S.Rationals)
+
+    def _appled_is_algebraic(self, expr):
+        return
+
 class UndefinedMap(Map):
     """
     A class for undefined maps.
@@ -722,6 +730,14 @@ class AppliedMap(Expr):
         if self.map.is_restriction(operator):
             return self.map._eval_as_base_exp(self)
         return self, S.One
+
+    ### properties
+
+    def _eval_is_rational(self):
+        return self.map._applied_is_rational(self)
+
+    def _eval_is_algebraic(self):
+        return self.map._applied_is_algebraic(self)
 
 def isappliedmap(arg, maps):
     """

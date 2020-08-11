@@ -183,8 +183,9 @@ from .map import (Map, UndefinedMap,
 
         Sine, Cosine, Tangent, Cotangent,
         Secant, Cosecant,
-        ArcSine, ArcCosine, ArcTangent, ArcCotangent,
-        ArcSecant, ArcCosecant)
+        Arcsine, Arccosine, Arctangent, Arccotangent,
+        Arcsecant, Arccosecant,
+        Atan2)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         casoratian, diag, eye, hessian, jordan_cell, list2numpy, matrix2numpy,
@@ -427,8 +428,9 @@ __all__ = [
 
     'Sine', 'Cosine', 'Tangent', 'Cotangent',
     'Secant', 'Cosecant',
-    'ArcSine', 'ArcCosine', 'ArcTangent', 'ArcCotangent',
-    'ArcSecant', 'ArcCosecant',
+    'Arcsine', 'Arccosine', 'Arctangent', 'Arccotangent',
+    'Arcsecant', 'Arccosecant',
+    'Atan2',
 
     # sympy.matrices
     'ShapeError', 'NonSquareMatrixError', 'GramSchmidt', 'casoratian', 'diag',

@@ -1,16 +1,27 @@
-from sympy import S, pi, Interval, Add, Rational
+from sympy import Add, Interval, Ne, pi, Rational, S, Symbol
+from sympy.core.cache import cacheit
+from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool
+from sympy.core.numbers import igcdex
 from sympy.core.sympify import _sympify
-from sympy.core.logic import fuzzy_not
 from sympy.map import Map, AppliedMap, isappliedmap
-# Belows will be substituted to Map object
+from sympy.sets import FiniteSet
+from sympy.utilities.iterables import numbered_symbols
+# Belows will be substituted to objects in map module
+from sympy.core.function import ArgumentIndexError, PoleError, expand_mul
+from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.elementary.exponential import log, exp
-from sympy.functions.elementary.hyperbolic import cosh, sinh
+from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, cosh,
+    coth, HyperbolicFunction, sinh, tanh)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
+from sympy.functions.elementary.piecewise import Piecewise
 
 __all__ = [
     'Sine', 'Cosine', 'Tangent', 'Cotangent',
     'Secant', 'Cosecant',
-    'ArcSine', 'ArcCosine', 'ArcTangent', 'ArcCotangent',
-    'ArcSecant', 'ArcCosecant',
+    'Arcsine', 'Arccosine', 'Arctangent', 'Arccotangent',
+    'Arcsecant', 'Arccosecant',
+    'Atan2',
 ]
 
 def _peeloff_pi(arg):
@@ -229,12 +240,6 @@ class AppliedTrigonometricMap(AppliedMap):
     def _singularities(self):
         return self.map.singularities
 
-    def _eval_is_rational(self):
-        return self.map._applied_is_rational(self)
-
-    def _eval_is_algebraic(self):
-        return self.map._applied_is_algebraic(self)
-
     def _eval_expand_complex(self, deep=True, **hints):
         hints.update(deep=deep)
         re_part, im_part = self.map._applied_expand_complex(self, **hints)
@@ -255,6 +260,37 @@ class Sine(TrigonometricMap):
     """
     The sine function.
 
+    Examples
+    ========
+
+    >>> from sympy import Sine, pi, S
+    >>> from sympy.abc import x
+    >>> sin = Sine(S.Reals)
+
+    >>> sin(pi, evaluate=True)
+    0
+    >>> sin(pi/2, evaluate=True)
+    1
+    >>> sin(pi/6, evaluate=True)
+    1/2
+    >>> sin(pi/12, evaluate=True)
+    -sqrt(2)/4 + sqrt(6)/4
+
+
+    See Also
+    ========
+
+    csc, cos, sec, tan, cot
+    asin, acsc, acos, asec, atan, acot, atan2
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
+    .. [2] http://dlmf.nist.gov/4.14
+    .. [3] http://functions.wolfram.com/ElementaryFunctions/Sin
+    .. [4] http://mathworld.wolfram.com/TrigonometryAngles.html
+
     """
     name = 'sin'
     latex_name = '\\sin'
@@ -272,6 +308,129 @@ class Sine(TrigonometricMap):
         if not domain.is_subset(S.Reals):
             return S.Complexes
         return Interval(-1, 1)
+
+    def eval(self, arg):
+        from sympy.calculus import AccumBounds
+        from sympy.sets.setexpr import SetExpr
+        cos = Cosine(self.domain)
+        asin = Arcsine(self.domain)
+        atan = Arctangent(self.domain)
+        atan2 = Atan2(self.domain**2)
+        acos = Arccosine(self.domain)
+        acot = Arccotangent(self.domain)
+        acsc = Arccosecant(self.domain)
+        asec = Arcsecant(self.domain)
+
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg.is_zero:
+                return S.Zero
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
+                return AccumBounds(-1, 1)
+
+        if arg is S.ComplexInfinity:
+            return S.NaN
+
+        if isinstance(arg, AccumBounds):
+            min, max = arg.min, arg.max
+            d = floor(min/(2*S.Pi))
+            if min is not S.NegativeInfinity:
+                min = min - d*2*S.Pi
+            if max is not S.Infinity:
+                max = max - d*2*S.Pi
+            if AccumBounds(min, max).intersection(FiniteSet(S.Pi/2, S.Pi*Rational(5, 2))) \
+                    is not S.EmptySet and \
+                    AccumBounds(min, max).intersection(FiniteSet(S.Pi*Rational(3, 2),
+                        S.Pi*Rational(7, 2))) is not S.EmptySet:
+                return AccumBounds(-1, 1)
+            elif AccumBounds(min, max).intersection(FiniteSet(S.Pi/2, S.Pi*Rational(5, 2))) \
+                    is not S.EmptySet:
+                return AccumBounds(Min(self(min, evaluate=True), self(max, evaluate=True)), 1)
+            elif AccumBounds(min, max).intersection(FiniteSet(S.Pi*Rational(3, 2), S.Pi*Rational(8, 2))) \
+                        is not S.EmptySet:
+                return AccumBounds(-1, Max(self(min, evaluate=True), self(max, evaluate=True)))
+            else:
+                return AccumBounds(Min(self(min, evaluate=True), self(max, evaluate=True)),
+                                Max(self(min, evaluate=True), self(max, evaluate=True)))
+        elif isinstance(arg, SetExpr):
+            return arg._eval_func(self)
+
+        if arg.could_extract_minus_sign():
+            return -self(-arg, evaluate=True)
+
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return S.ImaginaryUnit*sinh(i_coeff)
+
+        pi_coeff = _pi_coeff(arg)
+        if pi_coeff is not None:
+            if pi_coeff.is_integer:
+                return S.Zero
+
+            if (2*pi_coeff).is_integer:
+                # is_even-case handled above as then pi_coeff.is_integer,
+                # so check if known to be not even
+                if pi_coeff.is_even is False:
+                    return S.NegativeOne**(pi_coeff - S.Half)
+
+            if not pi_coeff.is_Rational:
+                narg = pi_coeff*S.Pi
+                if narg != arg:
+                    return self(narg, evaluate=True)
+                return None
+
+            # https://github.com/sympy/sympy/issues/6048
+            # transform a sine to a cosine, to avoid redundant code
+            if pi_coeff.is_Rational:
+                x = pi_coeff % 2
+                if x > 1:
+                    return -self((x % 1)*S.Pi, evaluate=True)
+                if 2*x > 1:
+                    return self((1 - x)*S.Pi, evaluate=True)
+                narg = ((pi_coeff + Rational(3, 2)) % 2)*S.Pi
+                result = cos(narg, evaluate=True)
+                if not isappliedmap(result, cos):
+                    return result
+                if pi_coeff*S.Pi != arg:
+                    return self(pi_coeff*S.Pi, evaluate=True)
+                return None
+
+        if arg.is_Add:
+            x, m = _peeloff_pi(arg)
+            if m:
+                return self(m, evaluate=True)*cos(x, evaluate=True)+ \
+                    cos(m, evaluate=True)*self(x, evaluate=True)
+
+        if arg.is_zero:
+            return S.Zero
+
+        if isappliedmap(arg, asin):
+            return arg.arguments[0]
+
+        if isappliedmap(arg, atan):
+            x = arg.arguments[0]
+            return x/sqrt(1 + x**2)
+
+        if isappliedmap(arg, atan2):
+            y, x = arg.arguments
+            return y/sqrt(x**2 + y**2)
+
+        if isappliedmap(arg, acos):
+            x = arg.arguments[0]
+            return sqrt(1 - x**2)
+
+        if isappliedmap(arg, acot):
+            x = arg.arguments[0]
+            return 1/(sqrt(1 + 1/x**2)*x)
+
+        if isappliedmap(arg, acsc):
+            x = arg.arguments[0]
+            return 1/x
+
+        if isappliedmap(arg, asec):
+            x = arg.arguments[0]
+            return sqrt(1 - 1/x**2)
 
     def _applied_as_real_imag(self, expr, **hints):
         cos = Cosine(self.domain)
@@ -514,22 +673,23 @@ class InverseTrigonometricMap(Map):
             -(sqrt(6) - sqrt(2)): S.Pi*Rational(-5, 12)
         }
 
-class ArcSine(InverseTrigonometricMap):
+class Arcsine(InverseTrigonometricMap):
     pass
 
-class ArcCosine(InverseTrigonometricMap):
+class Arccosine(InverseTrigonometricMap):
     pass
 
-class ArcTangent(InverseTrigonometricMap):
+class Arctangent(InverseTrigonometricMap):
     pass
 
-class ArcCotangent(InverseTrigonometricMap):
+class Arccotangent(InverseTrigonometricMap):
     pass
 
-class ArcSecant(InverseTrigonometricMap):
+class Arcsecant(InverseTrigonometricMap):
     pass
 
-class ArcCosecant(InverseTrigonometricMap):
+class Arccosecant(InverseTrigonometricMap):
     pass
 
-from sympy.core.function import expand_mul
+class Atan2(InverseTrigonometricMap):
+    pass
