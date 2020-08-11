@@ -12,7 +12,7 @@ __all__ = [
     'AppliedMap', 'isappliedmap',
 ]
 
-class Map(Expr):
+class Map(Basic):
     """
     Abstract base class for general mathematical maps, which also serves
     as a constructor for undefined map classes.
