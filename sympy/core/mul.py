@@ -317,8 +317,13 @@ class Mul(Expr, AssocOp):
                         # combined below, but don't combine negatives unless
                         # the exponent is an integer
                         if e.is_Rational:
+
                             if e.is_Integer:
-                                coeff *= Pow(b, e)  # it is an unevaluated power
+                                c = Pow(b, e)
+                                if c.is_Number:
+                                    coeff *= c
+                                else:
+                                    c_part.append(c)
                                 continue
                             elif e.is_negative:    # also a sign of an unevaluated power
                                 seq.append(Pow(b, e))
@@ -487,12 +492,15 @@ class Mul(Expr, AssocOp):
         num_rat = []
         for e, b in comb_e.items():
             b = cls(*b)
-            if e.q == 1:
-                coeff *= Pow(b, e)
+            c = Pow(b, e)
+            if e.q == 1 and c.is_Number:
+                coeff *= c
                 continue
             if e.p > e.q:
                 e_i, ep = divmod(e.p, e.q)
-                coeff *= Pow(b, e_i)
+                c = Pow(b, e_i)
+                if c.is_Number:
+                    coeff *= Pow(b, e_i)
                 e = Rational(ep, e.q)
             num_rat.append((b, e))
         del comb_e

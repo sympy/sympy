@@ -1,3 +1,4 @@
+from sympy import Add
 from sympy.core import (
     Basic, Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
     Expr, I, nan, pi, symbols, oo, zoo, N)
@@ -234,7 +235,7 @@ def test_power_rewrite_exp():
     assert expr.rewrite(exp) == exp((6 + 7*I)*log(5))
     assert expr.rewrite(exp).expand() == 15625*exp(7*I*log(5))
 
-    assert Pow(123, 789, evaluate=False).rewrite(exp) == 123**789
+    assert Pow(12, 78, evaluate=False).rewrite(exp) == 12**78
     assert (1**I).rewrite(exp) == 1**I
     assert (0**I).rewrite(exp) == 0**I
 
@@ -555,3 +556,13 @@ def test_issue_18762():
     e, p = symbols('e p')
     g0 = sqrt(1 + e**2 - 2*e*cos(p))
     assert len(g0.series(e, 1, 3).args) == 4
+
+def test_mul_add_unevaluated():
+    m = Mul(Pow(200, 200, evaluate=False), 2)
+    assert m.args[1] == Pow(200, 200, evaluate=False)
+    a = Add(Pow(200, 200, evaluate=False), 2)
+    assert a.args[1] == Pow(200, 200, evaluate=False)
+
+def test_pow_large_comparison():
+    assert Pow(200, 300) > Pow(200, 100)
+    assert Pow(200, 300) < Pow(200, 500)

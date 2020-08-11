@@ -2078,7 +2078,7 @@ def test_issue_5160_6087_6089_6090():
 
 
 def test_float_int_round():
-    assert int(float(sqrt(10))) == int(sqrt(10))
+    assert int(float(sqrt(5))) == int(sqrt(5))
     assert int(pi**1000) % 10 == 2
     assert int(Float('1.123456789012345678901234567890e20', '')) == \
         int(112345678901234567890)

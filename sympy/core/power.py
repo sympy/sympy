@@ -17,6 +17,7 @@ from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 
 from math import sqrt as _sqrt
 
+from ..multipledispatch import dispatch
 
 
 def isqrt(n):
@@ -288,6 +289,10 @@ class Pow(Expr):
                 issue=19445,
                 deprecated_since_version="1.7"
             ).warn()
+
+        if e.is_Number and (not e is S.NaN) and e >= S(100):
+            if b.is_Number and (not b is S.NaN) and b >= S(100):
+                evaluate = False
 
         if evaluate:
             if e is S.ComplexInfinity:
@@ -1732,6 +1737,12 @@ class Pow(Expr):
             new_e = e.subs(n, n + step)
             return (b**(new_e - e) - 1) * self
 
+@dispatch(Pow, Pow)
+def _eval_is_ge(a, b):
+    from sympy.core.relational import is_ge
+    if is_ge(a.base, S.One) and is_ge(b.base, S.One):
+        if is_ge(a.base, b.base) and is_ge(a.exp, b.exp):
+            return True
 
 from .add import Add
 from .numbers import Integer
