@@ -2936,6 +2936,18 @@ def test_sympy__map__map__AppliedMap():
     from sympy.map import Map, AppliedMap
     assert _test_args(AppliedMap(Map('f'), (x,)))
 
+def test_sympy__map__derivative__DiffOp():
+    from sympy.map import DiffOp
+    assert _test_args(DiffOp(1))
+    assert _test_args(DiffOp(1,2))
+    assert _test_args(DiffOp((1,2),2))
+    assert _test_args(DiffOp((1,2),(2,3)))
+
+def test_sympy__map__derivative__DerivativeFunction():
+    from sympy.map import Map, DiffOp
+    f = Map('f')
+    assert _test_args(DiffOp(1)(f))
+
 @SKIP("abstract class")
 def test_sympy__map__elementary__trigonometric__TrigonometricMap():
     pass
@@ -2945,19 +2957,19 @@ def test_sympy__map__elementary__trigonometric__AppliedTrigonometricMap():
     sin = Sin(S.Reals)
     assert _test_args(AppliedTrigonometricMap(sin, (x,)))
 
-def test_sympy__map__elementary__trigonometric__Sine():
+def test_sympy__map__elementary__trigonometric__Sin():
     from sympy.map.elementary.trigonometric import Sin
     assert _test_args(Sin(S.Reals))
 
-def test_sympy__map__elementary__trigonometric__Cosine():
+def test_sympy__map__elementary__trigonometric__Cos():
     from sympy.map.elementary.trigonometric import Cos
     assert _test_args(Cos(S.Reals))
 
-def test_sympy__map__elementary__trigonometric__Tangent():
+def test_sympy__map__elementary__trigonometric__Tan():
     from sympy.map.elementary.trigonometric import Tan
     assert _test_args(Tan(S.Reals))
 
-def test_sympy__map__elementary__trigonometric__Cotangent():
+def test_sympy__map__elementary__trigonometric__Cot():
     from sympy.map.elementary.trigonometric import Cot
     assert _test_args(Cot(S.Reals))
 
@@ -2965,11 +2977,11 @@ def test_sympy__map__elementary__trigonometric__Cotangent():
 def test_sympy__map__elementary__trigonometric__ReciprocalTrigonometricMap():
     pass
 
-def test_sympy__map__elementary__trigonometric__Secant():
+def test_sympy__map__elementary__trigonometric__Sec():
     from sympy.map.elementary.trigonometric import Sec
     assert _test_args(Sec(S.Reals))
 
-def test_sympy__map__elementary__trigonometric__Cosecant():
+def test_sympy__map__elementary__trigonometric__Csc():
     from sympy.map.elementary.trigonometric import Csc
     assert _test_args(Csc(S.Reals))
 
@@ -2977,27 +2989,27 @@ def test_sympy__map__elementary__trigonometric__Cosecant():
 def test_sympy__map__elementary__trigonometric__InverseTrigonometricMap():
     pass
 
-def test_sympy__map__elementary__trigonometric__Arcsine():
+def test_sympy__map__elementary__trigonometric__Asin():
     from sympy.map.elementary.trigonometric import Asin
     assert _test_args(Asin(S.Reals))
 
-def test_sympy__map__elementary__trigonometric__Arccosine():
+def test_sympy__map__elementary__trigonometric__Acos():
     from sympy.map.elementary.trigonometric import Acos
     assert _test_args(Acos(S.Reals))
 
-def test_sympy__map__elementary__trigonometric__Arctangent():
+def test_sympy__map__elementary__trigonometric__Atan():
     from sympy.map.elementary.trigonometric import Atan
     assert _test_args(Atan(S.Reals))
 
-def test_sympy__map__elementary__trigonometric__Arccotangent():
+def test_sympy__map__elementary__trigonometric__Acot():
     from sympy.map.elementary.trigonometric import Acot
     assert _test_args(Acot(S.Reals))
 
-def test_sympy__map__elementary__trigonometric__Arcsecant():
+def test_sympy__map__elementary__trigonometric__Asec():
     from sympy.map.elementary.trigonometric import Asec
     assert _test_args(Asec(S.Reals))
 
-def test_sympy__map__elementary__trigonometric__Arccosecant():
+def test_sympy__map__elementary__trigonometric__Acsc():
     from sympy.map.elementary.trigonometric import Acsc
     assert _test_args(Acsc(S.Reals))
 
