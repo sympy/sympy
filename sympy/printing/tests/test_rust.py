@@ -354,9 +354,8 @@ def test_user_functions():
 
 def test_matrix():
     assert rust_code(Matrix([1, 2, 3])) == '[1, 2, 3]'
-    with raises(ValueError):
-        rust_code(Matrix([[1, 2, 3]]))
-
+    assert rust_code(Matrix([[1, 2, 3]])) == '[1, 2, 3]'
+    assert rust_code(Matrix([[1], [2], [3]])) == '[1, 2, 3]'
 
 def test_sparse_matrix():
     # gh-15791

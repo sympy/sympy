@@ -438,7 +438,7 @@ class RustCodePrinter(CodePrinter):
         return self._print(_piecewise)
 
     def _print_MatrixBase(self, A):
-        if A.cols == 1:
+        if A.cols == 1 or A.rows == 1:
             return "[%s]" % ", ".join(self._print(a) for a in A)
         else:
             mat = "{\n" + "let mut out1 = [[0.0_f64; {}]; {}];\n".format(A.cols, A.rows)
