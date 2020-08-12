@@ -4,7 +4,7 @@ from sympy.core import Add, S, Basic, Expr, Tuple
 from sympy.core.symbol import Str, Dummy
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import iterable
-from sympy.sets import FiniteSet, ProductSet, Union
+from sympy.sets import FiniteSet, ProductSet, Interval
 
 __all__ = [
     'Map', 'UndefinedMap',
@@ -42,16 +42,16 @@ class Map(Basic):
 
     Constructing undefined map:
 
-    >>> f = Map('f', S.Reals, S.Reals**2)
+    >>> f = Map('f', S.Reals**2, S.Reals)
 
     >>> f
-    f : Reals -> ProductSet(Reals, Reals)
+    f : ProductSet(Reals, Reals) -> Reals
     >>> f.domain
-    Reals
-    >>> f.codomain
     ProductSet(Reals, Reals)
+    >>> f.codomain
+    Reals
     >>> f.arity
-    1
+    2
 
     >>> f(x)
     f(x)
@@ -127,9 +127,9 @@ class Map(Basic):
 
     def _contained(self, other):
         # Without this, it results complicated infinite loop.
-        if isinstance(other, Union):
-            return None
-        return False
+        if isinstance(other, Interval):
+            return False
+        return True
 
     def apply(self, *args, **kwargs):
         """
@@ -607,7 +607,8 @@ class AppliedMap(Expr):
         Arguments applied to *map*
 
     evaluate : bool, optional
-        If True, returns evaluated application of *map* to *args*
+        If True, returns evaluated application of *map* to *args*.
+        Default is False.
 
     Examples
     ========
