@@ -23,9 +23,6 @@ from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
                             sumsets, rv_subs, NamedArgsMixin, Density)
 from sympy.external import import_module
 
-numpy = import_module('numpy')
-scipy = import_module('scipy')
-pymc3 = import_module('pymc3')
 
 class FiniteDensity(dict):
     """
@@ -374,12 +371,14 @@ class SampleFiniteScipy:
     def _sample_scipy(cls, dist, size):
         """Sample from SciPy."""
         # scipy can handle with custom distributions
+
+        from scipy.stats import rv_discrete
         density_ = dist.dict
         x, y = [], []
         for k, v in density_.items():
             x.append(int(k))
             y.append(float(v))
-        scipy_rv = scipy.stats.rv_discrete(name='scipy_rv', values=(x, y))
+        scipy_rv = rv_discrete(name='scipy_rv', values=(x, y))
         return scipy_rv.rvs(size=size)
 
 
@@ -389,21 +388,22 @@ class SampleFiniteNumpy:
     def __new__(cls, dist, size):
         return cls._sample_numpy(dist, size)
 
-    numpy_rv_map = {
-        'BinomialDistribution': lambda dist, size: numpy.random.binomial(n=int(dist.n),
-            p=float(dist.p), size=size)
-    }
-
     @classmethod
     def _sample_numpy(cls, dist, size):
         """Sample from NumPy."""
 
-        dist_list = cls.numpy_rv_map.keys()
+        import numpy
+        numpy_rv_map = {
+            'BinomialDistribution': lambda dist, size: numpy.random.binomial(n=int(dist.n),
+                p=float(dist.p), size=size)
+        }
+
+        dist_list = numpy_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
+        return numpy_rv_map[dist.__class__.__name__](dist, size)
 
 
 class SampleFinitePymc:
@@ -412,23 +412,24 @@ class SampleFinitePymc:
     def __new__(cls, dist, size):
         return cls._sample_pymc3(dist, size)
 
-    pymc3_rv_map = {
-        'BernoulliDistribution': lambda dist: pymc3.Bernoulli('X', p=float(dist.p)),
-        'BinomialDistribution': lambda dist: pymc3.Binomial('X', n=int(dist.n),
-            p=float(dist.p))
-    }
-
     @classmethod
     def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
 
-        dist_list = cls.pymc3_rv_map.keys()
+        import pymc3
+        pymc3_rv_map = {
+            'BernoulliDistribution': lambda dist: pymc3.Bernoulli('X', p=float(dist.p)),
+            'BinomialDistribution': lambda dist: pymc3.Binomial('X', n=int(dist.n),
+                p=float(dist.p))
+        }
+
+        dist_list = pymc3_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
         with pymc3.Model():
-            cls.pymc3_rv_map[dist.__class__.__name__](dist)
+            pymc3_rv_map[dist.__class__.__name__](dist)
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 _get_sample_class_frv = {
