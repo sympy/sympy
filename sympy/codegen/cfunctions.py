@@ -256,6 +256,9 @@ class log2(Function):
         elif arg.is_Pow and arg.base == _Two:
             return arg.exp
 
+    def _eval_evalf(self, *args, **kwargs):
+        return self.rewrite(log).evalf(*args, **kwargs)
+
     def _eval_expand_func(self, **hints):
         return _log2(*self.args)
 
@@ -303,7 +306,7 @@ class fma(Function):
     def _eval_expand_func(self, **hints):
         return _fma(*self.args)
 
-    def _eval_rewrite_as_tractable(self, arg, **kwargs):
+    def _eval_rewrite_as_tractable(self, arg, limitvar=None, **kwargs):
         return _fma(arg)
 
 

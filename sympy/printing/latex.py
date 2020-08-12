@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 import itertools
 
-from sympy.core import Add, Mod, Mul, Number, S, Symbol
+from sympy.core import Add, Float, Mod, Mul, Number, S, Symbol
 from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg, AppliedUndef, Derivative
@@ -119,6 +119,21 @@ _between_two_numbers_p = (
     re.compile(r'[0-9][} ]*$'),  # search
     re.compile(r'[{ ]*[-+0-9]'),  # match
 )
+
+
+def latex_escape(s):
+    """
+    Escape a string such that latex interprets it as plaintext.
+
+    We can't use verbatim easily with mathjax, so escaping is easier.
+    Rules from https://tex.stackexchange.com/a/34586/41112.
+    """
+    s = s.replace('\\', r'\textbackslash')
+    for c in '&%$#_{}':
+        s = s.replace(c, '\\' + c)
+    s = s.replace('~', r'\textasciitilde')
+    s = s.replace('^', r'\textasciicircum')
+    return s
 
 
 class LatexPrinter(Printer):
@@ -1613,9 +1628,6 @@ class LatexPrinter(Printer):
                       r'\right' + right_delim
         return out_str % r"\\".join(lines)
 
-    _print_ImmutableDenseMatrix = _print_MatrixBase
-    _print_ImmutableSparseMatrix = _print_MatrixBase
-
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)\
             + '_{%s, %s}' % (self._print(expr.i), self._print(expr.j))
@@ -1791,11 +1803,6 @@ class LatexPrinter(Printer):
             out_str = block_str % out_str
 
         return out_str
-
-    _print_ImmutableDenseNDimArray = _print_NDimArray
-    _print_ImmutableSparseNDimArray = _print_NDimArray
-    _print_MutableDenseNDimArray = _print_NDimArray
-    _print_MutableSparseNDimArray = _print_NDimArray
 
     def _printer_tensor_indices(self, name, indices, index_map={}):
         out_str = self._print(name)
@@ -2405,6 +2412,55 @@ class LatexPrinter(Printer):
         codomain = self._print(morphism.codomain)
         return "%s\\rightarrow %s" % (domain, codomain)
 
+    def _print_TransferFunction(self, expr):
+        from sympy.core import Mul, Pow
+        num, den = expr.num, expr.den
+        res = Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
+        return self._print_Mul(res)
+
+    def _print_Series(self, expr):
+        args = list(expr.args)
+        parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
+                                             False)
+        return ' '.join(map(parens, args))
+
+    def _print_Parallel(self, expr):
+        args = list(expr.args)
+        parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
+                                             False)
+        return ' '.join(map(parens, args))
+
+    def _print_Feedback(self, expr):
+        from sympy.physics.control import TransferFunction, Parallel, Series
+
+        num, tf = expr.num, TransferFunction(1, 1, expr.num.var)
+        num_arg_list = list(num.args) if isinstance(num, Series) else [num]
+        den_arg_list = list(expr.den.args) if isinstance(expr.den, Series) else [expr.den]
+
+        if isinstance(num, Series) and isinstance(expr.den, Series):
+            den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+        elif isinstance(num, Series) and isinstance(expr.den, TransferFunction):
+            if expr.den == tf:
+                den = Parallel(tf, Series(*num_arg_list))
+            else:
+                den = Parallel(tf, Series(*num_arg_list, expr.den))
+        elif isinstance(num, TransferFunction) and isinstance(expr.den, Series):
+            if num == tf:
+                den = Parallel(tf, Series(*den_arg_list))
+            else:
+                den = Parallel(tf, Series(num, *den_arg_list))
+        else:
+            if num == tf:
+                den = Parallel(tf, *den_arg_list)
+            elif expr.den == tf:
+                den = Parallel(tf, *num_arg_list)
+            else:
+                den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+
+        numer = self._print(num)
+        denom = self._print(den)
+        return r"\frac{%s}{%s}" % (numer, denom)
+
     def _print_NamedMorphism(self, morphism):
         pretty_name = self._print(Symbol(morphism.name))
         pretty_morphism = self._print_Morphism(morphism)
@@ -2506,31 +2562,47 @@ class LatexPrinter(Printer):
             self._print(h.domain), self._print(h.codomain))
 
     def _print_Manifold(self, manifold):
-        return r'\text{%s}' % manifold.name
+        string = manifold.name.name
+        if '{' in string:
+            name, supers, subs = string, [], []
+        else:
+            name, supers, subs = split_super_sub(string)
+
+            name = translate(name)
+            supers = [translate(sup) for sup in supers]
+            subs = [translate(sub) for sub in subs]
+
+        name = r'\text{%s}' % name
+        if supers:
+            name += "^{%s}" % " ".join(supers)
+        if subs:
+            name += "_{%s}" % " ".join(subs)
+
+        return name
 
     def _print_Patch(self, patch):
-        return r'\text{%s}_{\text{%s}}' % (patch.name, patch.manifold.name)
+        return r'\text{%s}_{%s}' % (self._print(patch.name), self._print(patch.manifold))
 
-    def _print_CoordSystem(self, coords):
-        return r'\text{%s}^{\text{%s}}_{\text{%s}}' % (
-            coords.name, coords.patch.name, coords.patch.manifold.name
+    def _print_CoordSystem(self, coordsys):
+        return r'\text{%s}^{\text{%s}}_{%s}' % (
+            self._print(coordsys.name), self._print(coordsys.patch.name), self._print(coordsys.manifold)
         )
 
     def _print_CovarDerivativeOp(self, cvd):
         return r'\mathbb{\nabla}_{%s}' % self._print(cvd._wrt)
 
     def _print_BaseScalarField(self, field):
-        string = field._coord_sys._names[field._index]
+        string = field._coord_sys.symbols[field._index].name
         return r'\mathbf{{{}}}'.format(self._print(Symbol(string)))
 
     def _print_BaseVectorField(self, field):
-        string = field._coord_sys._names[field._index]
+        string = field._coord_sys.symbols[field._index].name
         return r'\partial_{{{}}}'.format(self._print(Symbol(string)))
 
     def _print_Differential(self, diff):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
-            string = field._coord_sys._names[field._index]
+            string = field._coord_sys.symbols[field._index].name
             return r'\operatorname{{d}}{}'.format(self._print(Symbol(string)))
         else:
             string = self._print(field)
@@ -2585,12 +2657,27 @@ class LatexPrinter(Printer):
                 (self._print(expr.args[0]), exp)
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
+    def _print_Str(self, s):
+        return str(s.name)
+
+    def _print_float(self, expr):
+        return self._print(Float(expr))
+
+    def _print_int(self, expr):
+        return str(expr)
+
+    def _print_mpz(self, expr):
+        return str(expr)
+
+    def _print_mpq(self, expr):
+        return str(expr)
+
     def emptyPrinter(self, expr):
-        # Checks what type of decimal separator to print.
-        expr = super().emptyPrinter(expr)
-        if self._settings['decimal_separator'] == 'comma':
-            expr = expr.replace('.', '{,}')
-        return expr
+        # default to just printing as monospace, like would normally be shown
+        s = super().emptyPrinter(expr)
+
+        return r"\mathtt{\text{%s}}" % latex_escape(s)
+
 
 def translate(s):
     r'''
@@ -2811,11 +2898,24 @@ def latex(expr, full_prec=False, min=None, max=None, fold_frac_powers=False,
     >>> print(latex(log(10), ln_notation=True))
     \ln{\left(10 \right)}
 
-    ``latex()`` also supports the builtin container types list, tuple, and
-    dictionary.
+    ``latex()`` also supports the builtin container types :class:`list`,
+    :class:`tuple`, and :class:`dict`:
 
     >>> print(latex([2/x, y], mode='inline'))
     $\left[ 2 / x, \  y\right]$
+
+    Unsupported types are rendered as monospaced plaintext:
+
+    >>> print(latex(int))
+    \mathtt{\text{<class 'int'>}}
+    >>> print(latex("plain % text"))
+    \mathtt{\text{plain \% text}}
+
+    See :ref:`printer_method_example` for an example of how to override
+    this behavior for your own types by implementing ``_latex``.
+
+    .. versionchanged:: 1.7.0
+        Unsupported types no longer have their ``str`` representation treated as valid latex.
 
     """
     if symbol_names is None:

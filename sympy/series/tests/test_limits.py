@@ -5,7 +5,7 @@ from sympy import (
     atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
-    acos, erf, erfi, LambertW, factorial, digamma, Ei, EulerGamma,
+    acos, erf, erfc, erfi, LambertW, factorial, digamma, Ei, EulerGamma,
     asin, atanh, acot, acoth, asec, acsc, cbrt)
 
 from sympy.calculus.util import AccumBounds
@@ -276,6 +276,12 @@ def test_issue_5164():
     assert limit(x**(-0.5), x, 4) == S(4)**(-0.5)
 
 
+def test_issue_14793():
+    expr = ((x + S(1)/2) * log(x) - x + log(2*pi)/2 - \
+        log(factorial(x)) + S(1)/(12*x))*x**3
+    assert limit(expr, x, oo) == S(1)/360
+
+
 def test_issue_5183():
     # using list(...) so py.test can recalculate values
     tests = list(cartes([x, -x],
@@ -517,6 +523,15 @@ def test_issue_8208():
     assert limit(n**(Rational(1, 1e9) - 1), n, oo) == 0
 
 
+def test_issue_8229():
+    assert limit((x**Rational(1, 4) - 2)/(sqrt(x) - 4)**Rational(2, 3), x, 16) == 0
+
+
+def test_issue_8433():
+    d, t = symbols('d t', positive=True)
+    assert limit(erf(1 - t/d), t, oo) == -1
+
+
 def test_issue_8481():
     k = Symbol('k', integer=True, nonnegative=True)
     lamda = Symbol('lamda', real=True, positive=True)
@@ -536,6 +551,11 @@ def test_issue_10801():
     assert limit(16**k / (k * binomial(2*k, k)**2), k, oo) == pi
 
 
+def test_issue_10976():
+    s, x = symbols('s x', real=True)
+    assert limit(erf(s*x)/erf(s), s, 0) == x
+
+
 def test_issue_9041():
     assert limit(factorial(n) / ((n/exp(1))**n * sqrt(2*pi*n)), n, oo) == 1
 
@@ -551,6 +571,10 @@ def test_issue_9205():
 def test_issue_9471():
     assert limit((((27**(log(n,3))))/n**3),n,oo) == 1
     assert limit((((27**(log(n,3)+1)))/n**3),n,oo) == 27
+
+
+def test_issue_11496():
+    assert limit(erfc(log(1/x)), x, oo) == 2
 
 
 def test_issue_11879():
@@ -630,6 +654,12 @@ def test_issue_13416():
 
 def test_issue_13462():
     assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x*(x - 2)*(x - 1)/24
+
+
+def test_issue_13750():
+    a = Symbol('a')
+    assert limit(erf(a - x), x, oo) == -1
+    assert limit(erf(sqrt(x) - x), x, oo) == -1
 
 
 def test_issue_14514():
@@ -794,6 +824,12 @@ def test_issue_18508():
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)
 
 
+def test_issue_18969():
+    a, b = symbols('a b', positive=True)
+    assert limit(LambertW(a), a, b) == LambertW(b)
+    assert limit(exp(LambertW(a)), a, b) == exp(LambertW(b))
+
+
 def test_issue_18992():
     assert limit(n/(factorial(n)**(1/n)), n, oo) == exp(1)
 
@@ -825,3 +861,29 @@ def test_issue_13715():
 
 def test_issue_15055():
     assert limit(n**3*((-n - 1)*sin(1/n) + (n + 2)*sin(1/(n + 1)))/(-n + 1), n, oo) == 1
+
+
+def test_issue_16708():
+    m, vi = symbols('m vi', positive=True)
+    B, ti, d = symbols('B ti d')
+    assert limit((B*ti*vi - sqrt(m)*sqrt(-2*B*d*vi + m*(vi)**2) + m*vi)/(B*vi), B, 0) == (d + ti*vi)/vi
+
+
+def test_issue_19739():
+    assert limit((-S(1)/4)**x, x, oo) == 0
+
+
+def test_issue_19766():
+    assert limit(2**(-x)*sqrt(4**(x + 1) + 1), x, oo) == 2
+
+
+def test_issue_19770():
+    m = Symbol('m')
+    # the result is not 0 for non-real m
+    assert limit(cos(m*x)/x, x, oo) == Limit(cos(m*x)/x, x, oo, dir='-')
+    m = Symbol('m', real=True)
+    # can be improved to give the correct result 0
+    assert limit(cos(m*x)/x, x, oo) == Limit(cos(m*x)/x, x, oo, dir='-')
+    m = Symbol('m', nonzero=True)
+    assert limit(cos(m*x), x, oo) == AccumBounds(-1, 1)
+    assert limit(cos(m*x)/x, x, oo) == 0

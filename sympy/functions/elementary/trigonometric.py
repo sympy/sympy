@@ -1,6 +1,6 @@
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
-from sympy.core.function import Function, ArgumentIndexError, expand_mul
+from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool
 from sympy.core.numbers import igcdex, Rational, pi
 from sympy.core.relational import Ne
@@ -107,20 +107,25 @@ def _peeloff_pi(arg):
     (x + pi*y + pi/6, pi/2)
 
     """
+    pi_coeff = S.Zero
+    rest_terms = []
     for a in Add.make_args(arg):
-        if a is S.Pi:
-            K = S.One
-            break
-        elif a.is_Mul:
-            K, p = a.as_two_terms()
-            if p is S.Pi and K.is_Rational:
-                break
-    else:
+        K = a.coeff(S.Pi)
+        if K and K.is_rational:
+            pi_coeff += K
+        else:
+            rest_terms.append(a)
+
+    if pi_coeff is S.Zero:
         return arg, S.Zero
 
-    m1 = (K % S.Half)*S.Pi
-    m2 = K*S.Pi - m1
-    return arg - m2, m2
+    m1 = (pi_coeff % S.Half)*S.Pi
+    m2 = pi_coeff*S.Pi - m1
+    final_coeff = m2 / S.Pi
+    if final_coeff.is_integer or ((2*final_coeff).is_integer
+        and final_coeff.is_even is False):
+            return Add(*(rest_terms + [m1])), m2
+    return arg, S.Zero
 
 
 def _pi_coeff(arg, cycles=1):
@@ -383,6 +388,14 @@ class sin(TrigonometricFunction):
             else:
                 return (-1)**(n//2)*x**(n)/factorial(n)
 
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        arg = self.args[0]
+        if logx is not None:
+            arg = arg.subs(log(x), logx)
+        if arg.subs(x, 0).has(S.NaN, S.ComplexInfinity):
+            raise PoleError("Cannot expand %s around 0" % (self))
+        return Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
+
     def _eval_rewrite_as_exp(self, arg, **kwargs):
         I = S.ImaginaryUnit
         if isinstance(arg, TrigonometricFunction) or isinstance(arg, HyperbolicFunction):
@@ -571,6 +584,9 @@ class cos(TrigonometricFunction):
         elif isinstance(arg, SetExpr):
             return arg._eval_func(cls)
 
+        if arg.is_extended_real and arg.is_finite is False:
+            return AccumBounds(-1, 1)
+
         if arg.could_extract_minus_sign():
             return cls(-arg)
 
@@ -702,6 +718,14 @@ class cos(TrigonometricFunction):
                 return -p*x**2/(n*(n - 1))
             else:
                 return (-1)**(n//2)*x**(n)/factorial(n)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        arg = self.args[0]
+        if logx is not None:
+            arg = arg.subs(log(x), logx)
+        if arg.subs(x, 0).has(S.NaN, S.ComplexInfinity):
+            raise PoleError("Cannot expand %s around 0" % (self))
+        return Function._eval_nseries(self, x, n=n, logx=logx, cdir=cdir)
 
     def _eval_rewrite_as_exp(self, arg, **kwargs):
         I = S.ImaginaryUnit

@@ -14,7 +14,6 @@ from __future__ import print_function, division
 
 from typing import Any, Dict
 
-from sympy.codegen.ast import Assignment
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.mul import _keep_coeff
 from sympy.printing.codeprinter import CodePrinter
@@ -266,6 +265,7 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_Assignment(self, expr):
+        from sympy.codegen.ast import Assignment
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.tensor.indexed import IndexedBase
         # Copied from codeprinter, but remove special MatrixSymbol treatment
@@ -349,20 +349,6 @@ class OctaveCodePrinter(CodePrinter):
         AIJ = Matrix([[k[2] for k in L]])
         return "sparse(%s, %s, %s, %s, %s)" % (self._print(I), self._print(J),
                                             self._print(AIJ), A.rows, A.cols)
-
-
-    # FIXME: Str/CodePrinter could define each of these to call the _print
-    # method from higher up the class hierarchy (see _print_NumberSymbol).
-    # Then subclasses like us would not need to repeat all this.
-    _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
-    _print_MutableSparseMatrix = \
-        _print_ImmutableSparseMatrix = \
-        _print_SparseMatrix
 
 
     def _print_MatrixElement(self, expr):

@@ -3,7 +3,7 @@ from sympy.physics.units.systems.si import dimsys_SI
 from sympy import S, Symbol, sqrt
 from sympy.physics.units.dimensions import Dimension
 from sympy.physics.units.definitions.dimension_definitions import (
-    length, time
+    length, time, mass, force, pressure
 )
 from sympy.physics.units import foot
 from sympy.testing.pytest import raises
@@ -66,6 +66,13 @@ def test_Dimension_add_sub():
     e = length + 1
     assert e == 1 + length == 1 - length and e.is_Add and set(e.args) == {length, 1}
 
+    assert  dimsys_SI.get_dimensional_dependencies(mass * length / time**2 + force) == \
+            {'length': 1, 'mass': 1, 'time': -2}
+    assert  dimsys_SI.get_dimensional_dependencies(mass * length / time**2 + force -
+                                                   pressure * length**2) == \
+            {'length': 1, 'mass': 1, 'time': -2}
+
+    raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(mass * length / time**2 + pressure))
 
 def test_Dimension_mul_div_exp():
     assert 2*length == length*2 == length/2 == length
@@ -101,3 +108,10 @@ def test_Dimension_mul_div_exp():
 
     length_0 = length ** 0
     assert dimsys_SI.get_dimensional_dependencies(length_0) == {}
+
+    # issue 18738
+    a = Symbol('a')
+    b = Symbol('b')
+    c = sqrt(a**2 + b**2)
+    c_dim = c.subs({a: length, b: length})
+    assert dimsys_SI.equivalent_dims(c_dim, length)

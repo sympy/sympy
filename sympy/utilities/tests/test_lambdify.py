@@ -6,15 +6,18 @@ import mpmath
 from sympy.testing.pytest import raises
 from sympy import (
     symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
-    Float, Matrix, Lambda, Piecewise, exp, E, Integral, oo, I, Abs, Function,
+    Float, Lambda, Piecewise, exp, E, Integral, oo, I, Abs, Function,
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
     digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
-    MatrixSymbol, fresnelc, fresnels)
+    fresnelc, fresnels)
+from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
+from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.functions.elementary.complexes import re, im, arg
 from sympy.functions.special.polynomials import \
     chebyshevt, chebyshevu, legendre, hermite, laguerre, gegenbauer, \
     assoc_legendre, assoc_laguerre, jacobi
+from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.pycode import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
@@ -29,7 +32,7 @@ import sympy
 MutableDenseMatrix = Matrix
 
 numpy = import_module('numpy')
-scipy = import_module('scipy')
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 
@@ -431,6 +434,15 @@ def test_numpy_old_matrix():
     f = lambdify((x, y, z), A, [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy'])
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     assert isinstance(f(1, 2, 3), numpy.matrix)
+
+
+def test_scipy_sparse_matrix():
+    if not scipy:
+        skip("scipy not installed.")
+    A = SparseMatrix([[x, 0], [0, y]])
+    f = lambdify((x, y), A, modules="scipy")
+    B = f(1, 2)
+    assert isinstance(B, scipy.sparse.coo_matrix)
 
 
 def test_python_div_zero_issue_11306():
@@ -949,10 +961,10 @@ def test_Indexed():
 
 def test_issue_12173():
     #test for issue 12173
-    exp1 = lambdify((x, y), uppergamma(x, y),"mpmath")(1, 2)
-    exp2 = lambdify((x, y), lowergamma(x, y),"mpmath")(1, 2)
-    assert exp1 == uppergamma(1, 2).evalf()
-    assert exp2 == lowergamma(1, 2).evalf()
+    expr1 = lambdify((x, y), uppergamma(x, y),"mpmath")(1, 2)
+    expr2 = lambdify((x, y), lowergamma(x, y),"mpmath")(1, 2)
+    assert expr1 == uppergamma(1, 2).evalf()
+    assert expr2 == lowergamma(1, 2).evalf()
 
 
 def test_issue_13642():
@@ -1265,3 +1277,28 @@ def test_beta_math():
     F = lambdify((x, y), f, modules='math')
 
     assert abs(beta(1.3, 2.3) - F(1.3, 2.3)) <= 1e-10
+
+
+def test_numpy_special_math():
+    if not numpy:
+        skip("numpy not installed")
+
+    funcs = [expm1, log1p, exp2, log2, log10, hypot, logaddexp, logaddexp2]
+    for func in funcs:
+        if 2 in func.nargs:
+            expr = func(x, y)
+            args = (x, y)
+            num_args = (0.3, 0.4)
+        elif 1 in func.nargs:
+            expr = func(x)
+            args = (x,)
+            num_args = (0.3,)
+        else:
+            raise NotImplementedError("Need to handle other than unary & binary functions in test")
+        f = lambdify(args, expr)
+        result = f(*num_args)
+        reference = expr.subs(dict(zip(args, num_args))).evalf()
+        assert numpy.allclose(result, float(reference))
+
+    lae2 = lambdify((x, y), logaddexp2(log2(x), log2(y)))
+    assert abs(2.0**lae2(1e-50, 2.5e-50) - 3.5e-50) < 1e-62  # from NumPy's docstring

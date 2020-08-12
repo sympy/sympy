@@ -215,7 +215,12 @@ class erf(Function):
     def _eval_rewrite_as_expint(self, z, **kwargs):
         return sqrt(z**2)/z - z*expint(S.Half, z**2)/sqrt(S.Pi)
 
-    def _eval_rewrite_as_tractable(self, z, **kwargs):
+    def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
+        from sympy.series.limits import limit
+        if limitvar:
+            lim = limit(z, limitvar, S.Infinity)
+            if lim is S.NegativeInfinity:
+                return S.NegativeOne + _erfs(-z)*exp(-z**2)
         return S.One - _erfs(z)*exp(-z**2)
 
     def _eval_rewrite_as_erfc(self, z, **kwargs):
@@ -229,7 +234,7 @@ class erf(Function):
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
-            return 2*x/sqrt(pi)
+            return 2*arg/sqrt(pi)
         else:
             return self.func(arg)
 
@@ -377,8 +382,8 @@ class erfc(Function):
     def _eval_is_real(self):
         return self.args[0].is_extended_real
 
-    def _eval_rewrite_as_tractable(self, z, **kwargs):
-        return self.rewrite(erf).rewrite("tractable", deep=True)
+    def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
+        return self.rewrite(erf).rewrite("tractable", deep=True, limitvar=limitvar)
 
     def _eval_rewrite_as_erf(self, z, **kwargs):
         return S.One - erf(z)
@@ -557,8 +562,8 @@ class erfi(Function):
         if self.args[0].is_zero:
             return True
 
-    def _eval_rewrite_as_tractable(self, z, **kwargs):
-        return self.rewrite(erf).rewrite("tractable", deep=True)
+    def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
+        return self.rewrite(erf).rewrite("tractable", deep=True, limitvar=limitvar)
 
     def _eval_rewrite_as_erf(self, z, **kwargs):
         return -I*erf(I*z)
@@ -1149,7 +1154,7 @@ class Ei(Function):
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
 
-    def _eval_rewrite_as_tractable(self, z, **kwargs):
+    def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return exp(z) * _eis(z)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
@@ -1530,7 +1535,7 @@ class li(Function):
         return (-log(-log(z)) - S.Half*(log(S.One/log(z)) - log(log(z)))
                 - meijerg(((), (1,)), ((0, 0), ()), -log(z)))
 
-    def _eval_rewrite_as_tractable(self, z, **kwargs):
+    def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return z * _eis(log(z))
 
     def _eval_is_zero(self):
@@ -1623,7 +1628,7 @@ class Li(Function):
     def _eval_rewrite_as_li(self, z, **kwargs):
         return li(z) - li(2)
 
-    def _eval_rewrite_as_tractable(self, z, **kwargs):
+    def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return self.rewrite(li).rewrite("tractable", deep=True)
 
 ###############################################################################
@@ -2468,6 +2473,10 @@ class _erfs(Function):
     tractable for the Gruntz algorithm.
 
     """
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_zero:
+            return S.One
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy import Order

@@ -6,10 +6,12 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
 from sympy.core import Expr, Mul
+from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.units import second, joule
 from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
     ZZ_I, QQ_I, lex, grlex)
 from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
+from sympy.tensor import NDimArray
 
 from sympy.testing.pytest import raises
 
@@ -644,6 +646,49 @@ def test_tuple():
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
 
 
+def test_Series_str():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert str(Series(tf1, tf2)) == \
+        "Series(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y))"
+    assert str(Series(tf1, tf2, tf3)) == \
+        "Series(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y), TransferFunction(t*x**2 - t**w*x + w, t - y, y))"
+    assert str(Series(-tf2, tf1)) == \
+        "Series(TransferFunction(-x + y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y))"
+
+
+def test_TransferFunction_str():
+    tf1 = TransferFunction(x - 1, x + 1, x)
+    assert str(tf1) == "TransferFunction(x - 1, x + 1, x)"
+    tf2 = TransferFunction(x + 1, 2 - y, x)
+    assert str(tf2) == "TransferFunction(x + 1, 2 - y, x)"
+    tf3 = TransferFunction(y, y**2 + 2*y + 3, y)
+    assert str(tf3) == "TransferFunction(y, y**2 + 2*y + 3, y)"
+
+
+def test_Parallel_str():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert str(Parallel(tf1, tf2)) == \
+        "Parallel(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y))"
+    assert str(Parallel(tf1, tf2, tf3)) == \
+        "Parallel(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y), TransferFunction(t*x**2 - t**w*x + w, t - y, y))"
+    assert str(Parallel(-tf2, tf1)) == \
+        "Parallel(TransferFunction(-x + y, x + y, y), TransferFunction(x*y**2 - z, -t**3 + y**3, y))"
+
+
+def test_Feedback_str():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert str(Feedback(tf1*tf2, tf3)) == \
+        "Feedback(Series(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(x - y, x + y, y)), TransferFunction(t*x**2 - t**w*x + w, t - y, y))"
+    assert str(Feedback(tf1, TransferFunction(1, 1, y))) == \
+        "Feedback(TransferFunction(x*y**2 - z, -t**3 + y**3, y), TransferFunction(1, 1, y))"
+
+
 def test_Quaternion_str_printer():
     q = Quaternion(x, y, z, t)
     assert str(q) == "x + y*i + z*j + t*k"
@@ -930,17 +975,28 @@ def test_str_special_matrices():
     assert str(ZeroMatrix(2, 2)) == '0'
     assert str(OneMatrix(2, 2)) == '1'
 
-
 def test_issue_14567():
     assert factorial(Sum(-1, (x, 0, 0))) + y  # doesn't raise an error
 
+def test_Str():
+    from sympy.core.symbol import Str
+    assert str(Str('x')) == 'x'
+    assert sstrrepr(Str('x')) == "Str('x')"
+
 def test_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
+    x,y = symbols('x y', real=True)
     m = Manifold('M', 2)
     assert str(m) == "M"
     p = Patch('P', m)
     assert str(p) == "P"
-    rect = CoordSystem('rect', p)
+    rect = CoordSystem('rect', p, [x, y])
     assert str(rect) == "rect"
     b = BaseScalarField(rect, 0)
-    assert str(b) == "rect_0"
+    assert str(b) == "x"
+
+def test_NDimArray():
+    assert sstr(NDimArray(1.0), full_prec=True) == '1.00000000000000'
+    assert sstr(NDimArray(1.0), full_prec=False) == '1.0'
+    assert sstr(NDimArray([1.0, 2.0]), full_prec=True) == '[1.00000000000000, 2.00000000000000]'
+    assert sstr(NDimArray([1.0, 2.0]), full_prec=False) == '[1.0, 2.0]'

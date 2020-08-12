@@ -6,7 +6,7 @@ from sympy.matrices.expressions import (
     Adjoint, Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Trace,
     ZeroMatrix, trace, MatPow, MatAdd, MatMul
 )
-from sympy.matrices.expressions.matexpr import OneMatrix
+from sympy.matrices.expressions.special import OneMatrix
 from sympy.testing.pytest import raises
 
 n = symbols('n', integer=True)

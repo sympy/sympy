@@ -142,7 +142,10 @@ __all__ = [
     'joint_eigen_distribution', 'JointEigenDistribution',
     'level_spacing_distribution',
 
-    'Probability', 'Expectation', 'Variance', 'Covariance',
+    'MatrixGamma', 'Wishart', 'MatrixNormal',
+
+    'Probability', 'Expectation', 'Variance', 'Covariance', 'Moment',
+    'CentralMoment',
 
     'ExpectationMatrix', 'VarianceMatrix', 'CrossCovarianceMatrix'
 
@@ -188,8 +191,10 @@ from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         GaussianSymplecticEnsemble, joint_eigen_distribution,
         JointEigenDistribution, level_spacing_distribution)
 
+from .matrix_distributions import MatrixGamma, Wishart, MatrixNormal
+
 from .symbolic_probability import (Probability, Expectation, Variance,
-        Covariance)
+        Covariance, Moment, CentralMoment)
 
 from .symbolic_multivariate_probability import (ExpectationMatrix, VarianceMatrix,
         CrossCovarianceMatrix)

@@ -17,6 +17,10 @@ dsolve
 ^^^^^^
 .. autofunction:: sympy.solvers.ode::dsolve
 
+dsolve_system
+^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.systems::dsolve_system
+
 classify_ode
 ^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode::classify_ode
@@ -324,13 +328,6 @@ Nonlinear, 3 equations, Order 1, Type 4
 Nonlinear, 3 equations, Order 1, Type 5
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::_nonlinear_3eq_order1_type5
-
-Other useful functions
-----------------------
-
-checksysodesol
-^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.subscheck::checksysodesol
 
 Information on the ode module
 -----------------------------

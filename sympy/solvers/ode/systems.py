@@ -1,9 +1,11 @@
 from sympy.core import Add, Mul
+from sympy.core.containers import Tuple
+from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Equality
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.function import expand_mul, expand
+from sympy.core.function import expand_mul, expand, Derivative, AppliedUndef
 from sympy.functions import exp, im, cos, sin, re, Piecewise, piecewise_fold
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase
@@ -11,8 +13,8 @@ from sympy.polys import Poly
 from sympy.simplify import simplify, collect, powsimp, ratsimp
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError
-from sympy.utilities import numbered_symbols, default_sort_key
-from sympy.utilities.iterables import ordered, uniq
+from sympy.utilities import default_sort_key
+from sympy.utilities.iterables import ordered
 from sympy.utilities.misc import filldedent
 from sympy.integrals.integrals import Integral, integrate
 
@@ -172,7 +174,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     matrix differential equation [1]. For example the system $x' = x + y + 1$
     and $y' = x - y$ can be represented as
 
-    .. math:: A_1 X' + A_0 X = b
+    .. math:: A_1 X' = A0 X + b
 
     where $A_1$ and $A_0$ are $2 \times 2$ matrices and $b$, $X$ and $X'$ are
     $2 \times 1$ matrices with $X = [x, y]^T$.
@@ -180,7 +182,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Higher-order systems are represented with additional matrices e.g. a
     second-order system would look like
 
-    .. math:: A_2 X'' + A_1 X' + A_0 X = b
+    .. math:: A_2 X'' =  A_1 X' + A_0 X  + b
 
     Examples
     ========
@@ -210,8 +212,8 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     [0, 1]])
     >>> A0
     Matrix([
-    [-1, -1],
-    [-1,  1]])
+    [1, 1],
+    [1,  -1]])
     >>> b
     Matrix([
     [1],
@@ -221,7 +223,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
     >>> eqs_mat = Matrix([eq.lhs - eq.rhs for eq in eqs])
     >>> X = Matrix(funcs)
-    >>> A1 * X.diff(t) + A0 * X - b == eqs_mat
+    >>> A1 * X.diff(t) - A0 * X - b == eqs_mat
     True
 
     If the system of equations has a maximum order greater than the
@@ -306,7 +308,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
         Ai = Ai.applyfunc(expand_mul)
 
-        As.append(Ai)
+        As.append(Ai if o == order else -Ai)
 
         if o:
             eqs = [-eq for eq in b]
@@ -589,7 +591,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
 
     >>> from sympy import symbols, Function, Eq
     >>> from sympy.solvers.ode.systems import canonical_odes, linear_ode_to_matrix, linodesolve, linodesolve_type
-    >>> from sympy.solvers.ode.subscheck import checksysodesol
+    >>> from sympy.solvers.ode.subscheck import checkodesol
     >>> f, g = symbols("f, g", cls=Function)
     >>> x, a = symbols("x, a")
     >>> funcs = [f(x), g(x)]
@@ -601,13 +603,14 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
 
     >>> eqs = canonical_odes(eqs, funcs, x)
     >>> eqs
-    [Eq(Derivative(f(x), x), a*g(x) + f(x) + 1), Eq(Derivative(g(x), x), a*f(x) - g(x))]
+    [[Eq(Derivative(f(x), x), a*g(x) + f(x) + 1), Eq(Derivative(g(x), x), a*f(x) - g(x))]]
 
     Now, we will use :obj:`sympy.solvers.ode.systems.linear_ode_to_matrix()` to get the coefficient matrix and the
     non-homogeneous term if it is there.
 
+    >>> eqs = eqs[0]
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
-    >>> A = -A0
+    >>> A = A0
 
     We have the coefficient matrices and the non-homogeneous term ready. Now, we can use
     :obj:`sympy.solvers.ode.systems.linodesolve_type()` to get the information for the system of ODEs
@@ -616,10 +619,10 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     >>> system_info = linodesolve_type(A, x, b=b)
     >>> sol_vector = linodesolve(A, x, b=b, B=system_info['antiderivative'], type=system_info['type'])
 
-    Now, we can prove if the solution is correct or not by using :obj:`sympy.solvers.ode.subscheck.checksysodesol()`
+    Now, we can prove if the solution is correct or not by using :obj:`sympy.solvers.ode.checkodesol()`
 
     >>> sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
-    >>> checksysodesol(eqs, sol)
+    >>> checkodesol(eqs, sol)
     (True, [0, 0])
 
     We can also use the doit method to evaluate the solutions passed by the function.
@@ -633,9 +636,9 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     The system defined above is already in the desired form, so we don't have to convert it.
 
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
-    >>> A = -A0
+    >>> A = A0
 
-    A user can also pass the commutative antidervative required for type3 and type4 system of ODEs.
+    A user can also pass the commutative antiderivative required for type3 and type4 system of ODEs.
     Passing an incorrect one will lead to incorrect results. If the coefficient matrix is not commutative
     with its antiderivative, then :obj:`sympy.solvers.ode.systems.linodesolve_type()` raises a NotImplementedError.
     If it does have a commutative antiderivative, then the function just returns the information about the system.
@@ -650,7 +653,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     Once again, we can verify the solution obtained.
 
     >>> sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
-    >>> checksysodesol(eqs, sol)
+    >>> checkodesol(eqs, sol)
     (True, [0, 0])
 
     Returns
@@ -725,8 +728,8 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
 
     n = A.rows
 
-    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
-    Cvect = Matrix(list(next(constants) for _ in range(n)))
+    # constants = numbered_symbols(prefix='C', cls=Dummy, start=const_idx+1)
+    Cvect = Matrix(list(Dummy() for _ in range(n)))
 
     if (type == "type2" or type == "type4") and b is None:
         b = zeros(n, 1)
@@ -816,7 +819,7 @@ def canonical_odes(eqs, funcs, t):
 
     >>> canonical_eqs = canonical_odes(eqs, funcs, x)
     >>> canonical_eqs
-    [Eq(Derivative(f(x), x), 7*f(x) + 12*g(x)), Eq(Derivative(g(x), x), 20*f(x) - g(x))]
+    [[Eq(Derivative(f(x), x), 7*f(x) + 12*g(x)), Eq(Derivative(g(x), x), 20*f(x) - g(x))]]
 
     >>> system = [Eq(Derivative(f(x), x)**2 - 2*Derivative(f(x), x) + 1, 4), Eq(-y*f(x) + Derivative(g(x), x), 0)]
 
@@ -840,9 +843,6 @@ def canonical_odes(eqs, funcs, t):
     for eq in canon_eqs:
         system = [Eq(func.diff(t, order[func]), eq[func.diff(t, order[func])]) for func in funcs]
         systems.append(system)
-
-    if len(canon_eqs) == 1:
-        systems = systems[0]
 
     return systems
 
@@ -898,7 +898,7 @@ def _is_commutative_anti_derivative(A, t):
     return B, is_commuting
 
 
-def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
+def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
     r"""
     Returns a dictionary with details of the eqs if every equation is constant coefficient
     and linear else returns None
@@ -926,6 +926,9 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         List of dependent variables
     t: Symbol
         Independent variable of the equations in eqs
+    is_canon: Boolean
+        If True, then this function won't try to get the
+        system in canonical form. Default value is False
 
     Returns
     =======
@@ -968,13 +971,6 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
     # Error for i == 0 can be added but isn't for now
 
-    # Removing the duplicates from the list of funcs
-    # meanwhile maintaining the order. This is done
-    # since the line in classify_sysode: list(set(funcs)
-    # cause some test cases to fail when gives different
-    # results in different versions of Python.
-    funcs = list(uniq(funcs))
-
     # Check for len(funcs) == len(eqs)
     if len(funcs) != len(eqs):
         raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
@@ -1003,18 +999,25 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
 
     # Linearity check
     try:
-        canon_eqs = canonical_odes(eqs, funcs, t)
 
-        if isinstance(canon_eqs[0], Eq):
-            As, b = linear_ode_to_matrix(canon_eqs, funcs, t, system_order)
+        # Note: We can add a is_canon parameter to this
+        # function to check if the equation passed is
+        # already in its canonical form or not. This
+        # can be used to solve big linear first order
+        # system of ODEs using component division.
+        canon_eqs = canonical_odes(eqs, funcs, t) if not is_canon else [eqs]
+
+        if len(canon_eqs) == 1:
+            As, b = linear_ode_to_matrix(canon_eqs[0], funcs, t, system_order)
             A = As[1]
         else:
-            matchs = []
-            for canon_eq in canon_eqs:
-                match = neq_nth_linear_constant_coeff_match(canon_eq, funcs, t)
-                if match is not None:
-                    matchs.append(match)
-            return matchs if matchs else None
+
+            match = {
+                'is_implicit': True,
+                'canon_eqs': canon_eqs
+            }
+
+            return match
 
     # When the system of ODEs is non-linear, an ODENonlinearError is raised.
     # This function catches the error and None is returned.
@@ -1052,7 +1055,7 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
             match['rhs'] = b
 
         try:
-            system_info = linodesolve_type(-A, t, b=b)
+            system_info = linodesolve_type(A, t, b=b)
         except NotImplementedError:
             return None
 
@@ -1064,3 +1067,329 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t):
         return match
 
     return None
+
+
+def _preprocess_eqs(eqs):
+    processed_eqs = []
+    for eq in eqs:
+        processed_eqs.append(eq if isinstance(eq, Equality) else Eq(eq, 0))
+
+    return processed_eqs
+
+
+def _eqs2dict(eqs, funcs):
+    eqsorig = {}
+    eqsmap = {}
+    funcset = set(funcs)
+    for eq in eqs:
+        f1, = eq.lhs.atoms(AppliedUndef)
+        f2s = (eq.rhs.atoms(AppliedUndef) - {f1}) & funcset
+        eqsmap[f1] = f2s
+        eqsorig[f1] = eq
+    return eqsmap, eqsorig
+
+
+def _dict2graph(d):
+    nodes = list(d)
+    edges = [(f1, f2) for f1, f2s in d.items() for f2 in f2s]
+    G = (nodes, edges)
+    return G
+
+
+def _is_type1(scc, t):
+    eqs, funcs = scc
+
+    try:
+        (A1, A0), b = linear_ode_to_matrix(eqs, funcs, t, 1)
+    except (ODENonlinearError, ODEOrderError):
+        return False
+
+    if _matrix_is_constant(A0, t) and b.is_zero_matrix:
+        return True
+
+    return False
+
+
+def _combine_type1_subsystems(subsystem, funcs, t):
+    indices = [i for i, sys in enumerate(zip(subsystem, funcs)) if _is_type1(sys, t)]
+    remove = set()
+    for ip, i in enumerate(indices):
+        for j in indices[ip+1:]:
+            if any(eq2.has(funcs[i]) for eq2 in subsystem[j]):
+                subsystem[j] = subsystem[i] + subsystem[j]
+                remove.add(i)
+    subsystem = [sys for i, sys in enumerate(subsystem) if i not in remove]
+    return subsystem
+
+
+def _component_division(eqs, funcs, t):
+    from sympy.utilities.iterables import connected_components, strongly_connected_components
+
+    # Assuming that each eq in eqs is in canonical form,
+    # that is, [f(x).diff(x) = .., g(x).diff(x) = .., etc]
+    # and that the system passed is in its first order
+    eqsmap, eqsorig = _eqs2dict(eqs, funcs)
+
+    subsystems = []
+    for cc in connected_components(_dict2graph(eqsmap)):
+        eqsmap_c = {f: eqsmap[f] for f in cc}
+        sccs = strongly_connected_components(_dict2graph(eqsmap_c))
+        subsystem = [[eqsorig[f] for f in scc] for scc in sccs]
+        subsystem = _combine_type1_subsystems(subsystem, sccs, t)
+        subsystems.append(subsystem)
+
+    return subsystems
+
+
+# Returns: List of equations
+def _linear_ode_solver(match):
+    t = match['t']
+    funcs = match['func']
+
+    rhs = match.get('rhs', None)
+    A = match['func_coeff']
+    B = match.get('commutative_antiderivative', None)
+    type_of_equation = match['type_of_equation']
+
+    sol_vector = linodesolve(A, t, b=rhs, B=B,
+                             type=type_of_equation)
+
+    sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
+
+    return sol
+
+
+# Returns: List of equations or None
+# If None is returned by this solver, then the system
+# of ODEs cannot be solved by dsolve_system.
+def _strong_component_solver(eqs, funcs, t):
+    match = neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=True)
+
+    # Assuming that we can't get an implicit system
+    # since we are already canonical equations from
+    # dsolve_system
+    if match:
+        if match.get('is_linear', False):
+            match['t'] = t
+            return _linear_ode_solver(match)
+
+        # To add non-linear case here in future
+
+    return None
+
+
+def _get_funcs_from_canon(eqs):
+    return [eq.lhs.args[0] for eq in eqs]
+
+
+# Returns: List of Equations(a solution)
+def _weak_component_solver(wcc, t):
+
+    # We will divide the systems into sccs
+    # only when the wcc cannot be solved as
+    # a whole
+    eqs = []
+    for scc in wcc:
+        eqs += scc
+    funcs = _get_funcs_from_canon(eqs)
+
+    sol = _strong_component_solver(eqs, funcs, t)
+    if sol:
+        return sol
+
+    sol = []
+
+    for j, scc in enumerate(wcc):
+        eqs = scc
+        funcs = _get_funcs_from_canon(eqs)
+
+        # Substituting solutions for the dependent
+        # variables solved in previous SCC, if any solved.
+        comp_eqs = [eq.subs({s.lhs: s.rhs for s in sol}) for eq in eqs]
+        scc_sol = _strong_component_solver(comp_eqs, funcs, t)
+
+        if scc_sol is None:
+            raise NotImplementedError(filldedent('''
+                The system of ODEs passed cannot be solved by dsolve_system.
+            '''))
+
+        # scc_sol: List of equations
+        # scc_sol is a solution
+        sol += scc_sol
+
+    return sol
+
+
+# Returns: List of Equations(a solution)
+# To add test cases for component division
+# when we have a nonlinear sysode solver
+def _component_solver(eqs, funcs, t):
+    components = _component_division(eqs, funcs, t)
+    sol = []
+
+    for wcc in components:
+
+        # wcc_sol: List of Equations
+        sol += _weak_component_solver(wcc, t)
+
+    # sol: List of Equations
+    return sol
+
+
+def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
+    r"""
+    Solves any(supported) system of Ordinary Differential Equations
+
+    Explanation
+    ===========
+
+    This function takes a system of ODEs as an input, determines if the
+    it is solvable by this function, and returns the solution if found any.
+
+    This function can handle:
+    1. Linear, First Order, Constant coefficient homogeneous system of ODEs
+    2. Linear, First Order, Constant coefficient non-homogeneous system of ODEs
+    3. Linear, First Order, non-constant coefficient homogeneous system of ODEs
+    4. Linear, First Order, non-constant coefficient non-homogeneous system of ODEs
+    5. Any implicit system which can be divided into system of ODEs which is of the above 4 forms
+
+    The types of systems described above aren't limited by the number of equations, i.e. this
+    function can solve the above types irrespective of the number of equations in the system passed.
+
+    This function returns a list of solutions. Each solution is a list of equations where LHS is
+    the dependent variable and RHS is an expression in terms of the independent variable.
+
+    Parameters
+    ==========
+
+    eqs : List
+        system of ODEs to be solved
+    funcs : List or None
+        List of dependent variables that make up the system of ODEs
+    t : Symbol
+        Independent variable in the system of ODEs
+    ics : Dict or None
+        Set of initial boundary/conditions for the system of ODEs
+    doit : Boolean
+        Evaluate the solutions if True. Default value is False
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Eq, Function
+    >>> from sympy.solvers.ode.systems import dsolve_system
+    >>> f, g = symbols("f g", cls=Function)
+    >>> x = symbols("x")
+
+    >>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
+    >>> dsolve_system(eqs)
+    [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
+
+    You can also pass the initial conditions for the system of ODEs:
+    >>> dsolve_system(eqs, ics={f(0): 1, g(0): 0})
+    [[Eq(f(x), exp(x)/2 + exp(-x)/2), Eq(g(x), exp(x)/2 - exp(-x)/2)]]
+
+    Optionally, you can pass the dependent variables and the independent
+    variable for which the system is to be solved:
+    >>> funcs = [f(x), g(x)]
+    >>> dsolve_system(eqs, funcs=funcs, t=x)
+    [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
+
+    Lets look at an implicit system of ODEs:
+    >>> eqs = [Eq(f(x).diff(x)**2, g(x)**2), Eq(g(x).diff(x), g(x))]
+    >>> dsolve_system(eqs)
+    [[Eq(f(x), C1 - C2*exp(x)), Eq(g(x), C2*exp(x))], [Eq(f(x), C1 + C2*exp(x)), Eq(g(x), C2*exp(x))]]
+
+    Returns
+    =======
+
+    List of List of Equations
+
+    Raises
+    ======
+
+    NotImplementedError
+        When the system of ODEs is not solvable by this function.
+    ValueError
+        When the parameters passed aren't in the required form.
+
+    """
+    from sympy.solvers.ode.ode import solve_ics, _extract_funcs, constant_renumber
+
+    if not iterable(eqs):
+        raise ValueError(filldedent('''
+            List of equations should be passed. The input is not valid.
+        '''))
+
+    eqs = _preprocess_eqs(eqs)
+
+    if funcs is not None and not isinstance(funcs, list):
+        raise ValueError(filldedent('''
+            Input to the funcs should be a list of functions.
+        '''))
+
+    if funcs is None:
+        funcs = _extract_funcs(eqs)
+
+    if any(len(func.args) != 1 for func in funcs):
+        raise ValueError(filldedent('''
+            dsolve_system can solve a system of ODEs with only one independent
+            variable.
+        '''))
+
+    if len(eqs) != len(funcs):
+        raise ValueError(filldedent('''
+            Number of equations and number of functions don't match
+        '''))
+
+    if t is not None and not isinstance(t, Symbol):
+        raise ValueError(filldedent('''
+            The indepedent variable must be of type Symbol
+        '''))
+
+    if t is None:
+        t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
+
+    sys_order = _get_func_order(eqs, funcs)
+
+    # To add higher order to first order reduction later
+    if not all(sys_order[func] == 1 for func in funcs):
+        raise NotImplementedError(filldedent('''
+            Higher order ODEs aren't solvable by dsolve_system
+        '''))
+
+    canon_eqs = canonical_odes(eqs, funcs, t)
+    sols = []
+
+    for canon_eq in canon_eqs:
+        sol = _strong_component_solver(canon_eq, funcs, t)
+        if sol is None:
+            sol = _component_solver(canon_eq, funcs, t)
+        sols.append(sol)
+
+    if sols:
+        final_sols = []
+
+        for sol in sols:
+
+            # To preserve the order corresponding to the
+            # funcs list.
+            sol_dict = {s.lhs: s.rhs for s in sol}
+            sol = [Eq(var, sol_dict[var]) for var in funcs]
+
+            variables = Tuple(*eqs).free_symbols
+            sol = constant_renumber(sol, variables=variables)
+
+            if ics:
+                constants = Tuple(*sol).free_symbols - variables
+                solved_constants = solve_ics(sol, funcs, constants, ics)
+                sol = [s.subs(solved_constants) for s in sol]
+
+            if doit:
+                sol = [s.doit() for s in sol]
+
+            final_sols.append(sol)
+
+        sols = final_sols
+
+    return sols

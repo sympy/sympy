@@ -862,30 +862,15 @@ def _update_docs(docs_location=None):
 
     git pull
 
-    # See the README of the docs repo. We have to remove the old redirects,
-    # move in the new docs, and create redirects.
-    print("Removing redirects from previous version")
-    rm -r @(previous_version)
-    print("Moving previous latest docs to old version")
-    mv latest @(previous_version)
-
     print("Unzipping docs into repo")
     unzip @(docs_zip) > /dev/null
-    mv @(get_tarball_name('html-nozip')) @(version)
-
-    print("Writing new version to releases.txt")
-    with open(os.path.join(docs_location, "releases.txt"), 'a') as f:
-        f.write("{version}:SymPy {version}\n".format(version=current_version))
+    mv @(get_tarball_name('html-nozip')) latest
 
     print("Generating indexes")
     ./generate_indexes.py
-    mv @(current_version) latest
-
-    print("Generating redirects")
-    ./generate_redirects.py latest @(current_version)
 
     print("Committing")
-    git add -A @(version) latest
+    git add -A latest
     git commit -a -m @('Updating docs to {version}'.format(version=current_version))
 
     print("Pushing")

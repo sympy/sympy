@@ -435,7 +435,7 @@ def limitinf(e, x, leadsimp=False):
         p = Dummy('p', positive=True)
         e = e.subs(x, p)
         x = p
-    e = e.rewrite('tractable', deep=True)
+    e = e.rewrite('tractable', deep=True, limitvar=x)
     e = powdenest(e)
     c0, e0 = mrv_leadterm(e, x)
     sig = sign(e0, x)
