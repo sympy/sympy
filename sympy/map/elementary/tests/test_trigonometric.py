@@ -1,16 +1,16 @@
 from sympy import S, symbols, pi, Interval, Rational
 from sympy.map import (
-    Sine, Cosine, Tangent, Cotangent,
-    Secant, Cosecant,
+    Sin, Cos, Tan, Cot,
+    Sec, Csc,
 )
 from sympy.testing.pytest import raises
 
-sin = Sine(S.Complexes)
-cos = Cosine(S.Complexes)
-tan = Tangent(S.Complexes)
-cot = Cotangent(S.Complexes)
-sec = Secant(S.Complexes)
-csc = Cosecant(S.Complexes)
+sin = Sin(S.Complexes)
+cos = Cos(S.Complexes)
+tan = Tan(S.Complexes)
+cot = Cot(S.Complexes)
+sec = Sec(S.Complexes)
+csc = Csc(S.Complexes)
 
 def test_Sin():
     x, y = symbols('x y')
@@ -18,47 +18,47 @@ def test_Sin():
     assert sin.nargs == 1
 
 def test_trig_domain():
-    assert Sine(S.Complexes).domain == S.Complexes
-    assert Sine(S.Complexes).codomain == S.Complexes
-    assert Sine(S.Complexes).range == S.Complexes
-    assert Sine(S.Reals).domain == S.Reals
-    assert Sine(S.Reals).codomain == S.Reals
-    assert Sine(S.Reals).range == Interval(-1, 1)
+    assert Sin(S.Complexes).domain == S.Complexes
+    assert Sin(S.Complexes).codomain == S.Complexes
+    assert Sin(S.Complexes).range == S.Complexes
+    assert Sin(S.Reals).domain == S.Reals
+    assert Sin(S.Reals).codomain == S.Reals
+    assert Sin(S.Reals).range == Interval(-1, 1)
 
-    assert Cosine(S.Complexes).domain == S.Complexes
-    assert Cosine(S.Complexes).codomain == S.Complexes
-    assert Cosine(S.Complexes).range == S.Complexes
-    assert Cosine(S.Reals).domain == S.Reals
-    assert Cosine(S.Reals).codomain == S.Reals
-    assert Cosine(S.Reals).range == Interval(-1, 1)
+    assert Cos(S.Complexes).domain == S.Complexes
+    assert Cos(S.Complexes).codomain == S.Complexes
+    assert Cos(S.Complexes).range == S.Complexes
+    assert Cos(S.Reals).domain == S.Reals
+    assert Cos(S.Reals).codomain == S.Reals
+    assert Cos(S.Reals).range == Interval(-1, 1)
 
-    assert Tangent(S.Complexes).domain == S.Complexes
-    assert Tangent(S.Complexes).codomain == S.Complexes
-    assert Tangent(S.Complexes).range == S.Complexes
-    assert Tangent(S.Reals).domain == S.Reals
-    assert Tangent(S.Reals).codomain == S.Reals
-    assert Tangent(S.Reals).range == S.Reals
+    assert Tan(S.Complexes).domain == S.Complexes
+    assert Tan(S.Complexes).codomain == S.Complexes
+    assert Tan(S.Complexes).range == S.Complexes
+    assert Tan(S.Reals).domain == S.Reals
+    assert Tan(S.Reals).codomain == S.Reals
+    assert Tan(S.Reals).range == S.Reals
 
-    assert Cotangent(S.Complexes).domain == S.Complexes
-    assert Cotangent(S.Complexes).codomain == S.Complexes
-    assert Cotangent(S.Complexes).range == S.Complexes
-    assert Cotangent(S.Reals).domain == S.Reals
-    assert Cotangent(S.Reals).codomain == S.Reals
-    assert Cotangent(S.Reals).range == S.Reals
+    assert Cot(S.Complexes).domain == S.Complexes
+    assert Cot(S.Complexes).codomain == S.Complexes
+    assert Cot(S.Complexes).range == S.Complexes
+    assert Cot(S.Reals).domain == S.Reals
+    assert Cot(S.Reals).codomain == S.Reals
+    assert Cot(S.Reals).range == S.Reals
 
-    assert Secant(S.Complexes).domain == S.Complexes
-    assert Secant(S.Complexes).codomain == S.Complexes
-    assert Secant(S.Complexes).range == S.Complexes
-    assert Secant(S.Reals).domain == S.Reals
-    assert Secant(S.Reals).codomain == S.Reals
-    assert Secant(S.Reals).range == S.Reals - Interval(-1, 1)
+    assert Sec(S.Complexes).domain == S.Complexes
+    assert Sec(S.Complexes).codomain == S.Complexes
+    assert Sec(S.Complexes).range == S.Complexes
+    assert Sec(S.Reals).domain == S.Reals
+    assert Sec(S.Reals).codomain == S.Reals
+    assert Sec(S.Reals).range == S.Reals - Interval(-1, 1)
 
-    assert Cosecant(S.Complexes).domain == S.Complexes
-    assert Cosecant(S.Complexes).codomain == S.Complexes
-    assert Cosecant(S.Complexes).range == S.Complexes
-    assert Cosecant(S.Reals).domain == S.Reals
-    assert Cosecant(S.Reals).codomain == S.Reals
-    assert Cosecant(S.Reals).range == S.Reals - Interval(-1, 1)
+    assert Csc(S.Complexes).domain == S.Complexes
+    assert Csc(S.Complexes).codomain == S.Complexes
+    assert Csc(S.Complexes).range == S.Complexes
+    assert Csc(S.Reals).domain == S.Reals
+    assert Csc(S.Reals).codomain == S.Reals
+    assert Csc(S.Reals).range == S.Reals - Interval(-1, 1)
 
 def test_trig_period():
     x, y = symbols('x y')

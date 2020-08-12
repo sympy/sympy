@@ -183,10 +183,10 @@ from .map import (Map, UndefinedMap,
 
         DiffOp, DerivativeFunction,
 
-        Sine, Cosine, Tangent, Cotangent,
-        Secant, Cosecant,
-        Arcsine, Arccosine, Arctangent, Arccotangent,
-        Arcsecant, Arccosecant,
+        Sin, Cos, Tan, Cot,
+        Sec, Csc,
+        Asin, Acos, Atan, Acot,
+        Asec, Acsc,
         Atan2)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
@@ -430,10 +430,10 @@ __all__ = [
 
     'DiffOp', 'DerivativeFunction',
 
-    'Sine', 'Cosine', 'Tangent', 'Cotangent',
-    'Secant', 'Cosecant',
-    'Arcsine', 'Arccosine', 'Arctangent', 'Arccotangent',
-    'Arcsecant', 'Arccosecant',
+    'Sin', 'Cos', 'Tan', 'Cot',
+    'Sec', 'Csc',
+    'Asin', 'Acos', 'Atan', 'Acot',
+    'Asec', 'Acsc',
     'Atan2',
 
     # sympy.matrices

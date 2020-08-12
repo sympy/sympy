@@ -3,10 +3,10 @@ __all__ = [
     'RestrictedMap', 'InverseMap', 'IdentityMap', 'ConstantMap',
     'AppliedMap', 'isappliedmap',
 
-    'Sine', 'Cosine', 'Tangent', 'Cotangent',
-    'Secant', 'Cosecant',
-    'Arcsine', 'Arccosine', 'Arctangent', 'Arccotangent',
-    'Arcsecant', 'Arccosecant',
+    'Sin', 'Cos', 'Tan', 'Cot',
+    'Sec', 'Csc',
+    'Asin', 'Acos', 'Atan', 'Acot',
+    'Asec', 'Acsc',
     'Atan2',
 ]
 
@@ -21,9 +21,9 @@ from .derivative import (
 )
 
 from .elementary import (
-    Sine, Cosine, Tangent, Cotangent,
-    Secant, Cosecant,
-    Arcsine, Arccosine, Arctangent, Arccotangent,
-    Arcsecant, Arccosecant,
+    Sin, Cos, Tan, Cot,
+    Sec, Csc,
+    Asin, Acos, Atan, Acot,
+    Asec, Acsc,
     Atan2,
 )

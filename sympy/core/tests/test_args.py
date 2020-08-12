@@ -2941,65 +2941,65 @@ def test_sympy__map__elementary__trigonometric__TrigonometricMap():
     pass
 
 def test_sympy__map__elementary__trigonometric__AppliedTrigonometricMap():
-    from sympy.map.elementary.trigonometric import Sine, AppliedTrigonometricMap
-    sin = Sine(S.Reals)
+    from sympy.map.elementary.trigonometric import Sin, AppliedTrigonometricMap
+    sin = Sin(S.Reals)
     assert _test_args(AppliedTrigonometricMap(sin, (x,)))
 
 def test_sympy__map__elementary__trigonometric__Sine():
-    from sympy.map.elementary.trigonometric import Sine
-    assert _test_args(Sine(S.Reals))
+    from sympy.map.elementary.trigonometric import Sin
+    assert _test_args(Sin(S.Reals))
 
 def test_sympy__map__elementary__trigonometric__Cosine():
-    from sympy.map.elementary.trigonometric import Cosine
-    assert _test_args(Cosine(S.Reals))
+    from sympy.map.elementary.trigonometric import Cos
+    assert _test_args(Cos(S.Reals))
 
 def test_sympy__map__elementary__trigonometric__Tangent():
-    from sympy.map.elementary.trigonometric import Tangent
-    assert _test_args(Tangent(S.Reals))
+    from sympy.map.elementary.trigonometric import Tan
+    assert _test_args(Tan(S.Reals))
 
 def test_sympy__map__elementary__trigonometric__Cotangent():
-    from sympy.map.elementary.trigonometric import Cotangent
-    assert _test_args(Cotangent(S.Reals))
+    from sympy.map.elementary.trigonometric import Cot
+    assert _test_args(Cot(S.Reals))
 
 @SKIP("abstract class")
 def test_sympy__map__elementary__trigonometric__ReciprocalTrigonometricMap():
     pass
 
 def test_sympy__map__elementary__trigonometric__Secant():
-    from sympy.map.elementary.trigonometric import Secant
-    assert _test_args(Secant(S.Reals))
+    from sympy.map.elementary.trigonometric import Sec
+    assert _test_args(Sec(S.Reals))
 
 def test_sympy__map__elementary__trigonometric__Cosecant():
-    from sympy.map.elementary.trigonometric import Cosecant
-    assert _test_args(Cosecant(S.Reals))
+    from sympy.map.elementary.trigonometric import Csc
+    assert _test_args(Csc(S.Reals))
 
 @SKIP("abstract class")
 def test_sympy__map__elementary__trigonometric__InverseTrigonometricMap():
     pass
 
 def test_sympy__map__elementary__trigonometric__Arcsine():
-    from sympy.map.elementary.trigonometric import Arcsine
-    assert _test_args(Arcsine(S.Reals))
+    from sympy.map.elementary.trigonometric import Asin
+    assert _test_args(Asin(S.Reals))
 
 def test_sympy__map__elementary__trigonometric__Arccosine():
-    from sympy.map.elementary.trigonometric import Arccosine
-    assert _test_args(Arccosine(S.Reals))
+    from sympy.map.elementary.trigonometric import Acos
+    assert _test_args(Acos(S.Reals))
 
 def test_sympy__map__elementary__trigonometric__Arctangent():
-    from sympy.map.elementary.trigonometric import Arctangent
-    assert _test_args(Arctangent(S.Reals))
+    from sympy.map.elementary.trigonometric import Atan
+    assert _test_args(Atan(S.Reals))
 
 def test_sympy__map__elementary__trigonometric__Arccotangent():
-    from sympy.map.elementary.trigonometric import Arccotangent
-    assert _test_args(Arccotangent(S.Reals))
+    from sympy.map.elementary.trigonometric import Acot
+    assert _test_args(Acot(S.Reals))
 
 def test_sympy__map__elementary__trigonometric__Arcsecant():
-    from sympy.map.elementary.trigonometric import Arcsecant
-    assert _test_args(Arcsecant(S.Reals))
+    from sympy.map.elementary.trigonometric import Asec
+    assert _test_args(Asec(S.Reals))
 
 def test_sympy__map__elementary__trigonometric__Arccosecant():
-    from sympy.map.elementary.trigonometric import Arccosecant
-    assert _test_args(Arccosecant(S.Reals))
+    from sympy.map.elementary.trigonometric import Acsc
+    assert _test_args(Acsc(S.Reals))
 
 def test_sympy__map__elementary__trigonometric__Atan2():
     from sympy.map.elementary.trigonometric import Atan2

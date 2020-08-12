@@ -1,15 +1,15 @@
 __all__ = [
-    'Sine', 'Cosine', 'Tangent', 'Cotangent',
-    'Secant', 'Cosecant',
-    'Arcsine', 'Arccosine', 'Arctangent', 'Arccotangent',
-    'Arcsecant', 'Arccosecant',
+    'Sin', 'Cos', 'Tan', 'Cot',
+    'Sec', 'Csc',
+    'Asin', 'Acos', 'Atan', 'Acot',
+    'Asec', 'Acsc',
     'Atan2',
 ]
 
 from .trigonometric import (
-    Sine, Cosine, Tangent, Cotangent,
-    Secant, Cosecant,
-    Arcsine, Arccosine, Arctangent, Arccotangent,
-    Arcsecant, Arccosecant,
+    Sin, Cos, Tan, Cot,
+    Sec, Csc,
+    Asin, Acos, Atan, Acot,
+    Asec, Acsc,
     Atan2,
 )

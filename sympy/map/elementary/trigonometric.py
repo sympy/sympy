@@ -17,10 +17,10 @@ from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 
 __all__ = [
-    'Sine', 'Cosine', 'Tangent', 'Cotangent',
-    'Secant', 'Cosecant',
-    'Arcsine', 'Arccosine', 'Arctangent', 'Arccotangent',
-    'Arcsecant', 'Arccosecant',
+    'Sin', 'Cos', 'Tan', 'Cot',
+    'Sec', 'Csc',
+    'Asin', 'Acos', 'Atan', 'Acot',
+    'Asec', 'Acsc',
     'Atan2',
 ]
 
@@ -260,16 +260,16 @@ class AppliedTrigonometricMap(AppliedMap):
 ########################## TRIGONOMETRIC FUNCTIONS ############################
 ###############################################################################
 
-class Sine(TrigonometricMap):
+class Sin(TrigonometricMap):
     """
     The sine function.
 
     Examples
     ========
 
-    >>> from sympy import Sine, pi, S
+    >>> from sympy import Sin, pi, S
     >>> from sympy.abc import x
-    >>> sin = Sine(S.Reals)
+    >>> sin = Sin(S.Reals)
 
     >>> sin(pi, evaluate=True)
     0
@@ -313,7 +313,7 @@ class Sine(TrigonometricMap):
 
     @property
     def reciprocal_of(self):
-        return Secant(self.domain)
+        return Sec(self.domain)
 
     def _eval_range(self):
         domain = self.domain
@@ -324,14 +324,14 @@ class Sine(TrigonometricMap):
     def eval(self, arg):
         from sympy.calculus import AccumBounds
         from sympy.sets.setexpr import SetExpr
-        cos = Cosine(self.domain)
-        asin = Arcsine(self.domain)
-        atan = Arctangent(self.domain)
+        cos = Cos(self.domain)
+        asin = Asin(self.domain)
+        atan = Atan(self.domain)
         atan2 = Atan2(self.domain**2)
-        acos = Arccosine(self.domain)
-        acot = Arccotangent(self.domain)
-        acsc = Arccosecant(self.domain)
-        asec = Arcsecant(self.domain)
+        acos = Acos(self.domain)
+        acot = Acot(self.domain)
+        acsc = Acsc(self.domain)
+        asec = Asec(self.domain)
 
         if arg.is_Number:
             if arg is S.NaN:
@@ -446,28 +446,28 @@ class Sine(TrigonometricMap):
 
     def fdiff(self, i=1):
         if i == 1:
-            return Cosine(self.domain)
+            return Cos(self.domain)
         else:
             raise ArgumentIndexError(self, i)
 
     def _applied_as_real_imag(self, expr, **hints):
-        cos = Cosine(self.domain)
+        cos = Cos(self.domain)
         re, im = super()._applied_as_real_imag(self, expr, **hints)
         return (
             self(re, evaluate=True)*cosh(im, evaluate=True),
             cos(re, evaluate=True)*sinh(im, evaluate=True)
         )
 
-class Cosine(TrigonometricMap):
+class Cos(TrigonometricMap):
     """
     The cosine function.
 
     Examples
     ========
 
-    >>> from sympy import Cosine, pi, S
+    >>> from sympy import Cos, pi, S
     >>> from sympy.abc import x
-    >>> cos = Cosine(S.Reals)
+    >>> cos = Cos(S.Reals)
 
     >>> cos(pi, evaluate=True)
     -1
@@ -510,7 +510,7 @@ class Cosine(TrigonometricMap):
 
     @property
     def reciprocal_of(self):
-        return Secant(self.domain)
+        return Sec(self.domain)
 
     def _eval_range(self):
         domain = self.domain
@@ -522,14 +522,14 @@ class Cosine(TrigonometricMap):
         from sympy.functions.special.polynomials import chebyshevt
         from sympy.calculus.util import AccumBounds
         from sympy.sets.setexpr import SetExpr
-        sin = Sine(self.domain)
-        asin = Arcsine(self.domain)
-        atan = Arctangent(self.domain)
+        sin = Sin(self.domain)
+        asin = Asin(self.domain)
+        atan = Atan(self.domain)
         atan2 = Atan2(self.domain**2)
-        acos = Arccosine(self.domain)
-        acot = Arccotangent(self.domain)
-        acsc = Arccosecant(self.domain)
-        asec = Arcsecant(self.domain)
+        acos = Acos(self.domain)
+        acot = Acot(self.domain)
+        acsc = Acsc(self.domain)
+        asec = Asec(self.domain)
 
         if arg.is_Number:
             if arg is S.NaN:
@@ -676,7 +676,7 @@ class Cosine(TrigonometricMap):
 
     def fdiff(self, i=1):
         if i == 1:
-            sin = Sine(self.domain)
+            sin = Sin(self.domain)
             # When operation of function is defined, this will return
             # sympy object.
             return lambda x: -(sin(x))
@@ -684,14 +684,14 @@ class Cosine(TrigonometricMap):
             raise ArgumentIndexError(self, i)
 
     def _applied_as_real_imag(self, expr, **hints):
-        sin = Sine(self.domain)
+        sin = Sin(self.domain)
         re, im = super()._applied_as_real_imag(self, expr, **hints)
         return (
             self(re, evaluate=True)*cosh(im, evaluate=True),
             -sin(re, evaluate=True)*sinh(im, evaluate=True)
         )
 
-class Tangent(TrigonometricMap):
+class Tan(TrigonometricMap):
     """
     The tangent function
 
@@ -709,7 +709,7 @@ class Tangent(TrigonometricMap):
 
     @property
     def reciprocal_of(self):
-        return Cotangent(self.domain)
+        return Cot(self.domain)
 
     def _eval_range(self):
         domain = self.domain
@@ -718,8 +718,8 @@ class Tangent(TrigonometricMap):
         return S.Reals
 
     def _applied_as_real_imag(self, expr, **hints):
-        cos = Cosine(self.domain)
-        sin = Sine(self.domain)
+        cos = Cos(self.domain)
+        sin = Sin(self.domain)
         re, im = super()._applied_as_real_imag(self, expr, **hints)
         if im:
             denom = cos(2*re, evaluate=True) + cosh(2*im, evaluate=True)
@@ -733,7 +733,7 @@ class Tangent(TrigonometricMap):
                 S.Zero
             )
 
-class Cotangent(TrigonometricMap):
+class Cot(TrigonometricMap):
     """
     The cotangent function
 
@@ -751,7 +751,7 @@ class Cotangent(TrigonometricMap):
 
     @property
     def reciprocal_of(self):
-        return Tangent(self.domain)
+        return Tan(self.domain)
 
     def _eval_range(self):
         domain = self.domain
@@ -760,8 +760,8 @@ class Cotangent(TrigonometricMap):
         return S.Reals
 
     def _applied_as_real_imag(self, expr, **hints):
-        cos = Cosine(self.domain)
-        sin = Sine(self.domain)
+        cos = Cos(self.domain)
+        sin = Sin(self.domain)
         re, im = super()._applied_as_real_imag(self, expr, **hints)
         if im:
             denom = cos(2*re, evaluate=True) - cosh(2*im, evaluate=True)
@@ -796,7 +796,7 @@ class ReciprocalTrigonometricMap(TrigonometricMap):
         frac = 1/denom
         return frac.as_real_imag(**hints)
 
-class Secant(ReciprocalTrigonometricMap):
+class Sec(ReciprocalTrigonometricMap):
     """
     The secant function
 
@@ -808,7 +808,7 @@ class Secant(ReciprocalTrigonometricMap):
 
     @property
     def reciprocal_of(self):
-        return Cosine(self.domain)
+        return Cos(self.domain)
 
     def _eval_range(self):
         domain = self.domain
@@ -816,7 +816,7 @@ class Secant(ReciprocalTrigonometricMap):
             return S.Complexes
         return S.Reals - Interval(-1, 1)
 
-class Cosecant(ReciprocalTrigonometricMap):
+class Csc(ReciprocalTrigonometricMap):
     """
     The secant function
 
@@ -828,7 +828,7 @@ class Cosecant(ReciprocalTrigonometricMap):
 
     @property
     def reciprocal_of(self):
-        return Sine(self.domain)
+        return Sin(self.domain)
 
     def _eval_range(self):
         domain = self.domain
@@ -918,37 +918,37 @@ class InverseTrigonometricMap(Map):
             -(sqrt(6) - sqrt(2)): S.Pi*Rational(-5, 12)
         }
 
-class Arcsine(InverseTrigonometricMap):
+class Asin(InverseTrigonometricMap):
 
     def _corresponding_oldfunc(self):
         return super()._corresponding_oldfunc() +\
             [asin]
 
-class Arccosine(InverseTrigonometricMap):
+class Acos(InverseTrigonometricMap):
 
     def _corresponding_oldfunc(self):
         return super()._corresponding_oldfunc() +\
             [acos]
 
-class Arctangent(InverseTrigonometricMap):
+class Atan(InverseTrigonometricMap):
 
     def _corresponding_oldfunc(self):
         return super()._corresponding_oldfunc() +\
             [atan]
 
-class Arccotangent(InverseTrigonometricMap):
+class Acot(InverseTrigonometricMap):
 
     def _corresponding_oldfunc(self):
         return super()._corresponding_oldfunc() +\
             [acot]
 
-class Arcsecant(InverseTrigonometricMap):
+class Asec(InverseTrigonometricMap):
 
     def _corresponding_oldfunc(self):
         return super()._corresponding_oldfunc() +\
             [asec]
 
-class Arccosecant(InverseTrigonometricMap):
+class Acsc(InverseTrigonometricMap):
 
     def _corresponding_oldfunc(self):
         return super()._corresponding_oldfunc() +\
