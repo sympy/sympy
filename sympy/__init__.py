@@ -181,6 +181,8 @@ from .map import (Map, UndefinedMap,
         RestrictedMap, InverseMap, IdentityMap, ConstantMap,
         AppliedMap, isappliedmap,
 
+        DiffOp, DerivativeFunction,
+
         Sine, Cosine, Tangent, Cotangent,
         Secant, Cosecant,
         Arcsine, Arccosine, Arctangent, Arccotangent,
@@ -425,6 +427,8 @@ __all__ = [
     'ConstantMap',
     'AppliedMap',
     'isappliedmap',
+
+    'DiffOp', 'DerivativeFunction',
 
     'Sine', 'Cosine', 'Tangent', 'Cotangent',
     'Secant', 'Cosecant',

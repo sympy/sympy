@@ -915,7 +915,7 @@ class StrPrinter(Printer):
             name = self._helper_print_domain(expr, name)
         return name
 
-    def _print_AppliedMap(self, expr, print_domains=True, pad_infix=False):
+    def _print_AppliedMap(self, expr, print_domains=True):
         from sympy.map import Map
 
         map_str = self.parenthesize(expr.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
@@ -932,6 +932,22 @@ class StrPrinter(Printer):
         if isinstance(expr, Map) and print_domains:
             result = self._helper_print_domain(expr, result)
         return result
+
+    def _print_DiffOp(self, expr, print_domains=True):
+        indices = expr.indices
+        derivatives = []
+        for i, count in indices:
+            d_str = 'D(%s)' % i
+            if count != 1:
+                d_str = '%s**%s' % (d_str, self.parenthesize(count, PRECEDENCE['Pow']))
+                if len(indices) > 1:
+                    d_str = '(%s)' % d_str
+            derivatives.append(d_str)
+        result = ''.join(derivatives)
+        # since function space is not introduced, do not print the domains yet.
+        return result
+
+    _print_DerivativeFunction = _print_AppliedMap
 
     def _print_Str(self, s):
         return self._print(s.name)

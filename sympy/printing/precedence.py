@@ -51,6 +51,8 @@ PRECEDENCE_VALUES = {
     "Equality": PRECEDENCE["Mul"],
     "Unequality": PRECEDENCE["Mul"],
     "AppliedMap": PRECEDENCE["Func"],
+    "DiffOp": PRECEDENCE["Mul"],
+    "DerivativeFunction": PRECEDENCE["Mul"],
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a
@@ -107,6 +109,12 @@ def precedence_UnevaluatedExpr(item):
     return precedence(item.args[0])
 
 
+def precedence_DiffOp(item):
+    if len(item.indices) > 1:
+        return PRECEDENCE["Mul"]
+    return PRECEDENCE["Atom"]
+
+
 PRECEDENCE_FUNCTIONS = {
     "Integer": precedence_Integer,
     "Mul": precedence_Mul,
@@ -115,6 +123,7 @@ PRECEDENCE_FUNCTIONS = {
     "PolyElement": precedence_PolyElement,
     "FracElement": precedence_FracElement,
     "UnevaluatedExpr": precedence_UnevaluatedExpr,
+    "DiffOp": precedence_DiffOp,
 }
 
 

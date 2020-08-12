@@ -16,6 +16,10 @@ from .map import (
     AppliedMap, isappliedmap,
 )
 
+from .derivative import (
+    DiffOp, DerivativeFunction
+)
+
 from .elementary import (
     Sine, Cosine, Tangent, Cotangent,
     Secant, Cosecant,

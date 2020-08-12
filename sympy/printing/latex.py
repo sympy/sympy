@@ -2705,8 +2705,8 @@ class LatexPrinter(Printer):
     def _print_AppliedMap(self, expr, print_domains=True):
         from sympy.map import Map
 
-        map_str = self.parenthesize(expr.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
-        temp = map_str + r"{\left(%s \right)}"
+        map_tex = self.parenthesize(expr.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        temp = map_tex + r"{\left(%s \right)}"
 
         args = []
         for a in expr.arguments:
@@ -2718,6 +2718,26 @@ class LatexPrinter(Printer):
         tex = temp % args_str
 
         if isinstance(expr, Map) and print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
+    def _print_DiffOp(self, expr, print_domains=True):
+        indices = expr.indices
+        derivatives = []
+        for i, count in indices:
+            d_str = r'\partial_{%s}' % i
+            if count != 1:
+                d_str = '{{%s}^{%s}}' % (d_str, self.parenthesize(count, PRECEDENCE['Pow']))
+            derivatives.append(d_str)
+        result = ''.join(derivatives)
+        # since function space is not introduced, do not print the domains yet.
+        return result
+
+    def _print_DerivativeFunction(self, expr, print_domains=True):
+        map_tex = self.parenthesize(expr.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        func_tex = self.parenthesize(expr.function, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        tex = '%s%s' % (map_tex, func_tex)
+        if print_domains:
             tex = self._helper_print_domain(expr, tex)
         return tex
 

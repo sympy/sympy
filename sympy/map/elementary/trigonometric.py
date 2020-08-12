@@ -448,7 +448,7 @@ class Sine(TrigonometricMap):
         if i == 1:
             return Cosine(self.domain)
         else:
-            raise ArgumentIndexError(self, argindex)
+            raise ArgumentIndexError(self, i)
 
     def _applied_as_real_imag(self, expr, **hints):
         cos = Cosine(self.domain)
@@ -681,7 +681,7 @@ class Cosine(TrigonometricMap):
             # sympy object.
             return lambda x: -(sin(x))
         else:
-            raise ArgumentIndexError(self, argindex)
+            raise ArgumentIndexError(self, i)
 
     def _applied_as_real_imag(self, expr, **hints):
         sin = Sine(self.domain)

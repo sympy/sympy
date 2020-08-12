@@ -2812,6 +2812,36 @@ class PrettyPrinter(Printer):
             pform = self._helper_print_domain(e, pform)
         return pform
 
+    def _print_DiffOp(self, e, print_domains=True):
+        from .pretty_symbology import DSUB
+        indices = e.indices
+        derivatives = []
+        for i, count in indices:
+            d_str = U('PARTIAL DIFFERENTIAL')
+            for digit in str(i):
+                d_str = d_str + DSUB(digit)
+            prettyD = prettyForm(d_str)
+            if count != 1:
+                prettyD = prettyD ** self.parenthesize(count, PRECEDENCE['Pow'])
+                if len(indices) > 1:
+                    prettyD = self.parenthesize(prettyD, PRECEDENCE['Pow'])
+            derivatives.append(prettyD)
+        for i,p in enumerate(derivatives):
+            if i == 0:
+                pform = p
+            else:
+                pform = prettyForm(*stringPict.next(pform, p))
+        # since function space is not introduced, do not print the domains yet.
+        return pform
+
+    def _print_DerivativeFunction(self, e, print_domains=True):
+        pmap = self.parenthesize(e.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        pfunc = self.parenthesize(e.function, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        pform = prettyForm(*stringPict.next(pmap, pfunc))
+        if print_domains:
+            pform = self._helper_print_domain(e, pform)
+        return pform
+
     def _print_Str(self, s):
         return self._print(s.name)
 
