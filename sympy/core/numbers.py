@@ -1629,10 +1629,8 @@ class Rational(Number):
                         return Rational(p.numerator, p.denominator, 1)
 
 
-                # if p is a Real sympy type, then go in and put it over one but not rational, we
-                # still can put it over one.
-                # allows us to handle unevaluated objects
-                if not isinstance(p, Rational) and not p is Pow:
+                # if p is a Real sympy type but not rational, then go in and put it over one
+                if not isinstance(p, Rational):
                     raise TypeError('invalid input: %s' % p)
 
             q = 1
