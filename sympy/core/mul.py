@@ -500,7 +500,7 @@ class Mul(Expr, AssocOp):
                 e_i, ep = divmod(e.p, e.q)
                 c = Pow(b, e_i)
                 if c.is_Number:
-                    coeff *= Pow(b, e_i)
+                    coeff *= c
                 e = Rational(ep, e.q)
             num_rat.append((b, e))
         del comb_e
