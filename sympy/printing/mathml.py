@@ -16,7 +16,7 @@ from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer
 
 import mpmath.libmp as mlib
-from mpmath.libmp import prec_to_dps
+from mpmath.libmp import prec_to_dps, repr_dps, to_str as mlib_to_str
 
 
 class MathMLPrinterBase(Printer):
@@ -483,6 +483,12 @@ class MathMLContentPrinter(MathMLPrinterBase):
     def _print_Number(self, e):
         x = self.dom.createElement(self.mathml_tag(e))
         x.appendChild(self.dom.createTextNode(str(e)))
+        return x
+
+    def _print_Float(self, e):
+        x = self.dom.createElement(self.mathml_tag(e))
+        repr_e = mlib_to_str(e._mpf_, repr_dps(e._prec))
+        x.appendChild(self.dom.createTextNode(repr_e))
         return x
 
     def _print_Derivative(self, e):
