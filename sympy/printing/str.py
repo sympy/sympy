@@ -933,6 +933,20 @@ class StrPrinter(Printer):
             result = self._helper_print_domain(expr, result)
         return result
 
+    def _print_CompositeMap(self, expr, print_domains=True):
+        name = "@".join([self._print(t, print_domains=False) for t in expr.args])
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
+        return name
+
+    def _print_IteratedMap(self, expr, print_domains=True):
+        name = "IteratedMap(%s, %s)" % (
+            self._print(expr.base, print_domains=False), self._print(expr.iternum)
+        )
+        if print_domains:
+            name = self._helper_print_domain(expr, name)
+        return name
+
     def _print_DiffOp(self, expr, print_domains=True):
         indices = expr.indices
         derivatives = []

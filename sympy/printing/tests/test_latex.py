@@ -2653,15 +2653,13 @@ def test_latex_decimal_separator():
     raises(ValueError, lambda: latex(FiniteSet(1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_set'))
     raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))
 
-
 def test_map():
-    from sympy import Set
     from sympy.map import (
         Map, IdentityMap,
+        CompositeMap, IteratedMap,
     )
 
     f = Map(name='f')
-    g = Map(name='g')
     assert latex(f) == r"f : \mathbb{U} \rightarrow \mathbb{U}"
     assert latex(f(x)) == r"f{\left(x \right)}"
 
@@ -2678,6 +2676,13 @@ def test_map():
     assert latex(Id) == r"\text{id}_{\mathbb{R}}"
     assert latex(Id(x)) == r"\text{id}_{\mathbb{R}}{\left(x \right)}"
 
+    # Composite map
+    assert latex(CompositeMap(f, f)) == r'f \circ f : \mathbb{U} \rightarrow \mathbb{U}'
+    assert latex(CompositeMap(f, f)(x)) == r'\left(f \circ f\right){\left(x \right)}'
+
+    # Compositional map power
+    assert latex(IteratedMap(f, 2)) == r'{f}^{2} : \mathbb{U} \rightarrow \mathbb{U}'
+    assert latex(IteratedMap(f, 2)(x)) == r'{f}^{2}{\left(x \right)}'
 def test_Str():
     from sympy.core.symbol import Str
     assert str(Str('x')) == 'x'

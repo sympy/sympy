@@ -181,6 +181,8 @@ from .map import (Map, UndefinedMap,
         RestrictedMap, InverseMap, IdentityMap, ConstantMap,
         AppliedMap, isappliedmap,
 
+        CompositeMap, IteratedMap,
+
         DiffOp, DerivativeFunction,
 
         Sin, Cos, Tan, Cot,
@@ -427,6 +429,8 @@ __all__ = [
     'ConstantMap',
     'AppliedMap',
     'isappliedmap',
+
+    'CompositeMap', 'IteratedMap',
 
     'DiffOp', 'DerivativeFunction',
 

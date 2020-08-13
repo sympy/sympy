@@ -995,15 +995,13 @@ def test_diffgeom():
     b = BaseScalarField(rect, 0)
     assert str(b) == "x"
 
-
 def test_map():
-    from sympy import Set
     from sympy.map import (
         Map, IdentityMap,
+        CompositeMap, IteratedMap,
     )
 
     f = Map(name='f')
-    g = Map(name='g')
     assert str(f) == 'f : UniversalSet -> UniversalSet'
     assert str(f(x)) == "f(x)"
 
@@ -1019,6 +1017,14 @@ def test_map():
     Id = IdentityMap(domain=S.Reals)
     assert str(Id) == 'id : Reals -> Reals'
     assert str(Id(x)) == 'id(x)'
+
+    # Composite map
+    assert str(CompositeMap(f, f)) == 'f@f : UniversalSet -> UniversalSet'
+    assert str(CompositeMap(f, f)(x)) == '(f@f)(x)'
+
+    # Compositional map power
+    assert str(IteratedMap(f, 2)) == 'IteratedMap(f, 2) : UniversalSet -> UniversalSet'
+    assert str(IteratedMap(f, 2)(x)) == 'IteratedMap(f, 2)(x)'
 
 def test_NDimArray():
     assert sstr(NDimArray(1.0), full_prec=True) == '1.00000000000000'

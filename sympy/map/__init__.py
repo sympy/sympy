@@ -3,6 +3,8 @@ __all__ = [
     'RestrictedMap', 'InverseMap', 'IdentityMap', 'ConstantMap',
     'AppliedMap', 'isappliedmap',
 
+    'CompositeMap', 'IteratedMap',
+
     'Sin', 'Cos', 'Tan', 'Cot',
     'Sec', 'Csc',
     'Asin', 'Acos', 'Atan', 'Acot',
@@ -14,6 +16,10 @@ from .map import (
     Map, UndefinedMap,
     RestrictedMap, InverseMap, IdentityMap, ConstantMap,
     AppliedMap, isappliedmap,
+)
+
+from .composite import (
+    CompositeMap, IteratedMap
 )
 
 from .derivative import (

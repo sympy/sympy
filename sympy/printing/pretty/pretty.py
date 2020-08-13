@@ -2812,6 +2812,22 @@ class PrettyPrinter(Printer):
             pform = self._helper_print_domain(e, pform)
         return pform
 
+    def _print_CompositeMap(self, e, print_domains=True):
+        if self._use_unicode:
+            ring_op = ' ' + U('RING OPERATOR') + ' '
+            pform = self._print_seq(e.args, delimiter=ring_op, kwargs={'print_domains':False})
+        else:
+            pform = prettyForm(str(e))
+        if print_domains:
+            pform = self._helper_print_domain(e, pform)
+        return pform
+
+    def _print_IteratedMap(self, e, print_domains=True):
+        pform = self._print(e.base, print_domains=False)**self._print(e.iternum)
+        if print_domains:
+            pform = self._helper_print_domain(e, pform)
+        return pform
+
     def _print_DiffOp(self, e, print_domains=True):
         from .pretty_symbology import DSUB
         indices = e.indices

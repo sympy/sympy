@@ -2721,6 +2721,18 @@ class LatexPrinter(Printer):
             tex = self._helper_print_domain(expr, tex)
         return tex
 
+    def _print_CompositeMap(self, expr, print_domains=True):
+        tex = r" \circ ".join([self._print(t, print_domains=False) for t in expr.args])
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
+    def _print_IteratedMap(self, expr, print_domains=True):
+        tex = "{%s}^{%s}" % (self._print(expr.base, print_domains=False), self._print(expr.iternum))
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
     def _print_DiffOp(self, expr, print_domains=True):
         indices = expr.indices
         derivatives = []

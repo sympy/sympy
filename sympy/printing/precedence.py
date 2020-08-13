@@ -51,6 +51,7 @@ PRECEDENCE_VALUES = {
     "Equality": PRECEDENCE["Mul"],
     "Unequality": PRECEDENCE["Mul"],
     "AppliedMap": PRECEDENCE["Func"],
+    "CompositeMap": PRECEDENCE["Mul"],
     "DiffOp": PRECEDENCE["Mul"],
     "DerivativeFunction": PRECEDENCE["Mul"],
 }
@@ -168,6 +169,7 @@ PRECEDENCE_TRADITIONAL['Complement'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['SymmetricDifference'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['ProductSet'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['InverseMap'] = PRECEDENCE["Pow"]
+PRECEDENCE_TRADITIONAL['CompositeMap'] = PRECEDENCE["Mul"] - 1
 
 
 def precedence_traditional(item):

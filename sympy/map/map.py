@@ -1,6 +1,7 @@
 from functools import cmp_to_key
 from sympy.assumptions import ask, Q
 from sympy.core import Add, S, Basic, Expr, Tuple
+from sympy.core.decorators import call_highest_priority, sympify_method_args
 from sympy.core.symbol import Str, Dummy
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import iterable
@@ -12,6 +13,7 @@ __all__ = [
     'AppliedMap', 'isappliedmap',
 ]
 
+@sympify_method_args
 class Map(Basic):
     """
     Abstract base class for general mathematical maps, which also serves
@@ -79,6 +81,8 @@ class Map(Basic):
     .. [1] https://en.wikipedia.org/wiki/Function_(mathematics)
 
     """
+
+    _op_priority = 11
 
     # since sympy's is_commutative stands for the element being commutative to multiplication,
     # we use these attributes for the operator being commutative and associative.
@@ -268,6 +272,21 @@ class Map(Basic):
         # Used for restricted function identification
         return self.func
 
+    def composite(self, other, **kwargs):
+        return CompositeMap(self, other, **kwargs)
+
+    def _eval_composite(self, other):
+        return
+
+    def iterate(self, n, **kwargs):
+        return IteratedMap(self, n, **kwargs)
+
+    def _eval_iterate(self, n):
+        return
+
+    def as_base_iternum(self):
+        return self, S.One
+
     def doit(self, **hints):
         deep = hints.get('deep', True)
         if deep:
@@ -276,18 +295,29 @@ class Map(Basic):
         else:
             return self.func(*self.args, evaluate=True)
 
-    ### API methods
-
     def fdiff(self, i=1):
         return None
 
     ### assumptions of AppliedMap of self
+
+    def _applied_is_commutative(self, expr):
+        return
 
     def _applied_is_rational(self, expr):
         return self.codomain.is_subset(S.Rationals)
 
     def _applied_is_algebraic(self, expr):
         return
+
+    ### operator overriding
+
+    @call_highest_priority('__rmatmul__')
+    def __matmul__(self, other):
+        return CompositeMap(self, other, evaluate=True)
+
+    @call_highest_priority('__matmul__')
+    def __rmatmul__(self, other):
+        return CompositeMap(other, self, evaluate=True)
 
 class UndefinedMap(Map):
     """
@@ -468,6 +498,9 @@ class InverseMap(Map):
 
     def _eval_inverse(self):
         return self.base
+
+    def as_base_iternum(self):
+        return self.base, S.NegativeOne
 
 class IdentityMap(Map):
     """
@@ -759,8 +792,6 @@ class AppliedMap(Expr):
             return self.map._applied_as_base_exp(self)
         return self, S.One
 
-    ### API methods
-
     def _eval_derivative(self, s):
         # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
         i = 0
@@ -800,6 +831,9 @@ class AppliedMap(Expr):
         return Subs(Derivative(self.map(*args, evaluate=True), D), D, A)
 
     ### assumptions
+
+    def _eval_is_commutative(self):
+        return self.map._applied_is_commutative(self)
 
     def _eval_is_rational(self):
         return self.map._applied_is_rational(self)
@@ -843,6 +877,8 @@ def isappliedmap(arg, maps):
                 if arg.map.is_restriction(m):
                     return True
     return False
+
+from .composite import CompositeMap, IteratedMap
 
 ### Special container for compatibility
 
