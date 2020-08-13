@@ -125,12 +125,6 @@ class Map(Basic):
     def _eval_range(self):
         return
 
-    def _contained(self, other):
-        # Without this, it results complicated infinite loop.
-        if isinstance(other, Interval):
-            return False
-        return True
-
     def apply(self, *args, **kwargs):
         """
         Action of the operator on arguments. This method is always
@@ -727,13 +721,6 @@ class AppliedMap(Expr):
 
     def _new_rawargs(self, *args, **kwargs):
         return self.func(self.map, args, **kwargs)
-
-    def _contained(self, other):
-        # Let `f(x) in f.codomain` return True
-        # see Set.contains and Set.__contains__ methods.
-        if other.is_superset(self.map.codomain):
-            return True
-        # Do not return False; allow other to check as well.
 
     def doit(self, **hints):
         """

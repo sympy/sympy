@@ -321,13 +321,15 @@ class Set(Basic):
         >>> _ is S.true
         False
         """
+        from sympy.map import AppliedMap
         other = sympify(other, strict=True)
 
-        # hook to let the element define where it belongs to
-        if hasattr(other, "_contained"):
-            c = other._contained(self)
-            if c is not None:
-                return tfn[c]
+        # Make AppliedMap ALWAYS be contained in
+        # its map's codomain
+        if isinstance(other, AppliedMap):
+            result = self.is_superset(other.map.codomain)
+            if result is not None:
+                return tfn[result]
 
         c = self._contains(other)
         if isinstance(c, Contains):
@@ -680,12 +682,16 @@ class Set(Basic):
         return Complement(self, other)
 
     def __contains__(self, other):
-        other = _sympify(other)
+        from sympy.map import AppliedMap
+        other = sympify(other, strict=True)
 
-        if hasattr(other, "_contained"):
-            c = other._contained(self)
-            if c is not None:
-                return c
+        # Make AppliedMap ALWAYS be contained in
+        # its map's codomain
+        if isinstance(other, AppliedMap):
+            result = self.is_superset(other.map.codomain)
+            if result is None:
+                raise TypeError('did not evaluate to a bool: %r' % c)
+            return result
 
         c = self._contains(other)
         b = tfn[c]
