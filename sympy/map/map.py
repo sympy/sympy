@@ -629,10 +629,10 @@ class AppliedMap(Expr):
         Examples
         ========
 
-        >>> from sympy import S, Sine, sin
+        >>> from sympy import S, Sin, sin
         >>> from sympy.abc import x
 
-        >>> isinstance(Sine(S.Reals)(x), sin)
+        >>> isinstance(Sin(S.Reals)(x), sin)
         True
 
         """
@@ -862,9 +862,9 @@ class _DeprecatedArgs(Tuple):
     ========
 
     >>> from sympy.testing.pytest import warns_deprecated_sympy
-    >>> from sympy import S, Sine, sin as old_sin
+    >>> from sympy import S, Sin, sin as old_sin
     >>> from sympy.abc import x
-    >>> new_sin = Sine(S.Reals)
+    >>> new_sin = Sin(S.Reals)
 
     >>> old_sin(x).args
     (x,)
