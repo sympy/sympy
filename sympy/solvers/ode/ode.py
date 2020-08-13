@@ -2075,15 +2075,6 @@ def check_linear_2eq_order2(eq, func, func_coef):
     r['d1'] == r['e2']:
         return "type3"
 
-    elif ((r['a1']/r['d1']).expand()).match((p*(u*t**2+v*t+w)**2).expand()) and not \
-    (cancel(r['a1']*r['d2']/(r['a2']*r['d1']))).has(t) and not (r['d1']/r['e1']).has(t) and not \
-    (r['d2']/r['e2']).has(t) and r['b1'] == r['b2'] == r['c1'] == r['c2'] == 0:
-        return "type10"
-
-    elif not cancel(r['d1']/r['e1']).has(t) and not cancel(r['d2']/r['e2']).has(t) and not \
-    cancel(r['d1']*r['a2']/(r['d2']*r['a1'])).has(t) and r['b1']==r['b2']==r['c1']==r['c2']==0:
-        return "type6"
-
     elif not cancel(r['b1']/r['c1']).has(t) and not cancel(r['b2']/r['c2']).has(t) and not \
     cancel(r['b1']*r['a2']/(r['b2']*r['a1'])).has(t) and r['d1']==r['d2']==r['e1']==r['e2']==0:
         return "type7"
@@ -6674,47 +6665,6 @@ def _linear_2eq_order2_type3(x, y, t, r, eq):
         sol2 = -C1*sin(alpha*t) + C2*cos(alpha*t) - C3*sin(beta*t) + C4*cos(beta*t)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
-def _linear_2eq_order2_type6(x, y, t, r, eq):
-    r"""
-    The equations are
-
-    .. math:: x'' = f(t) (a_1 x + b_1 y)
-
-    .. math:: y'' = f(t) (a_2 x + b_2 y)
-
-    If `k_1` and `k_2` are roots of the quadratic equation
-
-    .. math:: k^2 - (a_1 + b_2) k + a_1 b_2 - a_2 b_1 = 0
-
-    Then by multiplying appropriate constants and adding together original equations
-    we obtain two independent equations:
-
-    .. math:: z_1'' = k_1 f(t) z_1, z_1 = a_2 x + (k_1 - a_1) y
-
-    .. math:: z_2'' = k_2 f(t) z_2, z_2 = a_2 x + (k_2 - a_1) y
-
-    Solving the equations will give the values of `x` and `y` after obtaining the value
-    of `z_1` and `z_2` by solving the differential equation and substituting the result.
-
-    """
-    k = Symbol('k')
-    z = Function('z')
-    num, den = cancel(
-        (r['c1']*x(t) + r['d1']*y(t))/
-        (r['c2']*x(t) + r['d2']*y(t))).as_numer_denom()
-    f = r['c1']/num.coeff(x(t))
-    a1 = num.coeff(x(t))
-    b1 = num.coeff(y(t))
-    a2 = den.coeff(x(t))
-    b2 = den.coeff(y(t))
-    chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
-    k1, k2 = [rootof(chareq, k) for k in range(Poly(chareq).degree())]
-    z1 = dsolve(diff(z(t),t,t) - k1*f*z(t)).rhs
-    z2 = dsolve(diff(z(t),t,t) - k2*f*z(t)).rhs
-    sol1 = (k1*z2 - k2*z1 + a1*(z1 - z2))/(a2*(k1-k2))
-    sol2 = (z1 - z2)/(k1 - k2)
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
 def _linear_2eq_order2_type7(x, y, t, r, eq):
     r"""
     The equations are given as
@@ -6819,49 +6769,6 @@ def _linear_2eq_order2_type9(x, y, t, r, eq):
     sol2 = C1*(k1**2+a1_*k1+c1)*exp(k1*log(t)) + C2*(k2**2+a1_*k2+c1)*exp(k2*log(t)) \
     + C3*(k3**2+a1_*k3+c1)*exp(k3*log(t)) + C4*(k4**2+a1_*k4+c1)*exp(k4*log(t))
 
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
-def _linear_2eq_order2_type10(x, y, t, r, eq):
-    r"""
-    The equation of this category are
-
-    .. math:: (\alpha t^2 + \beta t + \gamma)^{2} x'' = ax + by
-
-    .. math:: (\alpha t^2 + \beta t + \gamma)^{2} y'' = cx + dy
-
-    The transformation
-
-    .. math:: \tau = \int \frac{1}{\alpha t^2 + \beta t + \gamma} \,dt , u = \frac{x}{\sqrt{\left|\alpha t^2 + \beta t + \gamma\right|}} , v = \frac{y}{\sqrt{\left|\alpha t^2 + \beta t + \gamma\right|}}
-
-    leads to a constant coefficient linear system of equations
-
-    .. math:: u'' = (a - \alpha \gamma + \frac{1}{4} \beta^{2}) u + b v
-
-    .. math:: v'' = c u + (d - \alpha \gamma + \frac{1}{4} \beta^{2}) v
-
-    These system of equations obtained can be solved by type1 of System of two
-    constant-coefficient second-order linear homogeneous differential equations.
-
-    """
-    # FIXME: This function is equivalent to type6 (and broken). Should be removed...
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    u, v = symbols('u, v', cls=Function)
-    assert False
-    p = Wild('p', exclude=[t, t**2])
-    q = Wild('q', exclude=[t, t**2])
-    s = Wild('s', exclude=[t, t**2])
-    n = Wild('n', exclude=[t, t**2])
-    num, den = r['c1'].as_numer_denom()
-    dic = den.match((n*(p*t**2+q*t+s)**2).expand())
-    eqz = dic[p]*t**2 + dic[q]*t + dic[s]
-    a = num/dic[n]
-    b = cancel(r['d1']*eqz**2)
-    c = cancel(r['c2']*eqz**2)
-    d = cancel(r['d2']*eqz**2)
-    [msol1, msol2] = dsolve([Eq(diff(u(t), t, t), (a - dic[p]*dic[s] + dic[q]**2/4)*u(t) \
-    + b*v(t)), Eq(diff(v(t),t,t), c*u(t) + (d - dic[p]*dic[s] + dic[q]**2/4)*v(t))])
-    sol1 = (msol1.rhs*sqrt(abs(eqz))).subs(t, Integral(1/eqz, t))
-    sol2 = (msol2.rhs*sqrt(abs(eqz))).subs(t, Integral(1/eqz, t))
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 

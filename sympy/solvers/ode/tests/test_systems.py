@@ -1334,8 +1334,9 @@ def test_higher_order_to_first_order():
 
 def test_second_order_to_first_order():
     f, g = symbols("f g", cls=Function)
-    x = symbols("x")
+    x, t, d = symbols("x t d")
 
+    # Type 1
     eqs1 = [Eq(f(x).diff(x, 2), 2/x *(x*g(x).diff(x) - g(x))),
            Eq(g(x).diff(x, 2),-2/x *(x*f(x).diff(x) - f(x)))]
     sol1 = [Eq(f(x), C1*x + x*Integral(C2*sin(2*x)/x**2 + C3*cos(2*x)/x**2, x)),
@@ -1351,6 +1352,13 @@ def test_second_order_to_first_order():
                 C3*exp(-I*x**2)/(2*x**2), x))]
     assert dsolve(eqs2) == sol2
     assert checksysodesol(eqs2, sol2) == (True, [0, 0])
+
+    # Type 2
+    eqs1 = [Eq(Derivative(f(t), (t, 2)), f(t)/t**4), Eq(Derivative(g(t), (t, 2)), d*g(t)/t**4)]
+    sol1 = [Eq(f(t), (C1*exp(-1/t) - C2*exp(1/t))*sqrt(t**2)),
+            Eq(g(t), (C3*exp(-sqrt(d)/t)/sqrt(d) - C4*exp(sqrt(d)/t)/sqrt(d))*sqrt(t**2))]
+    assert dsolve(eqs1) == sol1
+    assert checksysodesol(eqs1, sol1) == (True, [0, 0])
 
 
 def test_component_division():

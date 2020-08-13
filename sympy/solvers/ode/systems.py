@@ -6,11 +6,12 @@ from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.function import expand_mul, expand, Derivative, AppliedUndef, Function
-from sympy.functions import exp, im, cos, sin, re, Piecewise, piecewise_fold
+from sympy.functions import exp, im, cos, sin, re, Piecewise, piecewise_fold, sqrt
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase
+from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase, eye
 from sympy.polys import Poly
 from sympy.simplify import simplify, collect, powsimp, ratsimp
+from sympy.simplify.powsimp import powdenest
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError
 from sympy.utilities import default_sort_key
@@ -898,10 +899,52 @@ def _is_commutative_anti_derivative(A, t):
     return B, is_commuting
 
 
+def _is_second_order_type2(A, t):
+    term = None
+    for element in A:
+        temp_term = element.as_independent(t)[1]
+        if temp_term != 0:
+            term = temp_term
+            break
+
+    is_type2 = False
+    if term is not None:
+        is_type2 = _matrix_is_constant(A/term, t)
+        term = 1/term
+        is_type2 = term.is_polynomial() and is_type2
+
+    if is_type2:
+        poly = Poly(term.expand(), t)
+        monoms = poly.monoms()
+
+        if monoms[0][0] == 4 or monoms[0][0] == 2:
+            cs = _get_poly_coeffs(poly, 4)
+            a, b, c, d, e = cs
+
+            a1 = powdenest(sqrt(a), force=True)
+            c1 = powdenest(sqrt(e), force=True)
+            b1 = powdenest(sqrt(c - 2*a1*c1), force=True)
+
+            is_type2 = (b == 2*a1*b1) and (d == 2*b1*c1)
+            term = a1*t**2 + b1*t + c1
+
+        else:
+            is_type2 = False
+
+    return is_type2, term
+
+
+def _get_poly_coeffs(poly, order):
+    cs = [0 for _ in range(order+1)]
+    for c, m in zip(poly.coeffs(), poly.monoms()):
+        cs[-1-m[0]] = c
+    return cs
+
+
 # Returns list of match dictionaries for each
 # canonical system from the system of ODEs
 # passed.
-def _match_second_order_type(eqs, funcs, t):
+def _match_second_order_type(A1, A0, t, b=None):
     r"""
     Works only for second order system in its canonical form.
 
@@ -909,16 +952,30 @@ def _match_second_order_type(eqs, funcs, t):
             introducing dummy variables.
     Type 1: When the substitution: $U = t*X' - X$ works for reducing
             the second order system to first order system.
-    """
+    Type 2: When the system is of the form: $poly * X'' = A*X$ where
+            $poly$ is square of a quadratic polynomial with respect to
+            *t* and $A$ is a constant coefficient matrix.
 
-    (A2, A1, A0), b = linear_ode_to_matrix(eqs, funcs, t, 2)
-    match = {"type": "type0"}
+    """
+    match = {"type_of_equation": "type0"}
+    n = A1.shape[0]
 
     if _matrix_is_constant(A1, t) and _matrix_is_constant(A0, t):
         return match
 
     if (A1 + A0*t).applyfunc(expand_mul).is_zero_matrix:
-        match.update({"type": "type1", "A": A1, "b": b})
+        match.update({"type_of_equation": "type1", "A1": A1})
+
+    elif A1.is_zero_matrix and (b is None or b.is_zero_matrix):
+        is_type2, term = _is_second_order_type2(A0, t)
+        if is_type2:
+            a, b, c = _get_poly_coeffs(Poly(term, t), 2)
+            A = (A0*(term**2).expand()).applyfunc(ratsimp) + (b**2/4 - a*c)*eye(n, n)
+            tau = integrate(1/term, t)
+            t_ = Symbol("{}_".format(t))
+            match.update({"type_of_equation": "type2", "A0": A,
+                          "g(t)": sqrt(term), "tau": tau, "is_transformed": True,
+                          "t_": t_})
 
     return match
 
@@ -936,7 +993,7 @@ def _second_order_subs_type1(A, b, funcs, t):
     .. math::  U = t*X' - X
 
     To get the system:
-    .. math::  U' = t*A(t)*U + b(t)
+    .. math::  U' = t*(A(t)*U + b(t))
 
     Where $U$ is the vector of dependent variables, $X$ is the vector of dependent
     variables in `funcs` and $X'$ is the first order derivative of $X$ with respect to
@@ -959,7 +1016,7 @@ def _second_order_subs_type1(A, b, funcs, t):
     A: Matrix
         Coefficient matrix($A(t)*t$) of the second order system of this form.
     b: Matrix
-        Non-homogeneous term of the system of ODEs.
+        Non-homogeneous term($b(t)$) of the system of ODEs.
     funcs: List
         List of dependent variables
     t: Symbol
@@ -981,6 +1038,48 @@ def _second_order_subs_type1(A, b, funcs, t):
     reduced_eqs = canonical_odes(reduced_eqs, funcs, t)[0]
 
     return reduced_eqs
+
+
+def _second_order_subs_type2(A, funcs, t_):
+    r"""
+    Returns a second order system based on the coefficient matrix passed.
+
+    Explanation
+    ===========
+
+    This function returns a system of second order ODE of the following form:
+
+    .. math::
+        X'' = A * X
+
+    Here, $X$ is the vector of dependent variables, but a bit modified, $A$ is the
+    coefficient matrix passed.
+
+    Along with returning the second order system, this function also returns the new
+    dependent variables with the new independent variable `t_` passed.
+
+    Parameters
+    ==========
+
+    A: Matrix
+        Coefficient matrix of the system
+    funcs: List
+        List of old dependent variables
+    t_: Symbol
+        New independent variable
+
+    Returns
+    =======
+
+    List, List
+
+    """
+    func_names = [func.func.__name__ for func in funcs]
+    new_funcs = [Function("{}_".format(name))(t_) for name in func_names]
+    rhss = A * Matrix(new_funcs)
+    new_eqs = [Eq(func.diff(t_, 2), rhs) for func, rhs in zip(new_funcs, rhss)]
+
+    return new_eqs, new_funcs
 
 
 def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
@@ -1143,11 +1242,11 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
 
         if is_second_order:
             A1, A0 = As[1:]
-            match['type_of_equation'] = "type0"
-            match['is_second_order'] = True
 
-            if (A1 + A0 * t).applyfunc(expand_mul).is_zero_matrix:
-                match.update({"type_of_equation": "type1", "A": A1, "b": b})
+            match_second_order = _match_second_order_type(A1, A0, t)
+            match.update(match_second_order)
+
+            match['is_second_order'] = True
 
         match['is_higher_order'] = is_higher_order
 
@@ -1261,22 +1360,47 @@ def _strong_component_solver(eqs, funcs, t):
     # since we are already canonical equations from
     # dsolve_system
     if match:
-        if match.get('is_higher_order', False):
+        is_higher_order = match.get('is_higher_order', False)
+        is_second_order = match.get('is_second_order', False)
+        if is_higher_order:
 
-            if match.get('is_second_order', False):
-                new_eqs, new_funcs = _second_order_to_first_order(eqs, funcs, t, match=match)
+            if is_second_order:
+                new_eqs, new_funcs = _second_order_to_first_order(eqs, funcs, t,
+                                         A1=match.get("A1", None), A0=match.get("A0", None),
+                                         b=match.get("b", None), type=match["type_of_equation"],
+                                         t_=match.get("t_", None))
             else:
                 new_eqs, new_funcs = _higher_order_to_first_order(eqs, match['order'], t, funcs=funcs)
 
+            if match.get("is_transformed", False):
+                t = match["t_"]
+
             new_eqs = _select_equations(new_eqs, [f.diff(t) for f in new_funcs])
-            sol = _strong_component_solver(new_eqs, new_funcs, t)
+
+            # NotImplementedError may be raised when the system may be actually
+            # solvable if it can be just divided into sub-systems
+            try:
+                sol = _strong_component_solver(new_eqs, new_funcs, t)
+            except NotImplementedError:
+                sol = None
 
             # Dividing the system only when it becomes essential
             if sol is None:
                 sol = _component_solver(new_eqs, new_funcs, t)
 
+            is_second_order_type2 = is_second_order and match['type_of_equation'] == "type2"
+
+            underscores = '__' if is_second_order_type2 else '_'
+
             sol = _select_equations(sol, funcs,
-                        key=lambda x: Function(Dummy('{}_0'.format(x.func.__name__)))(t))
+                        key=lambda x: Function(Dummy('{}{}0'.format(x.func.__name__,
+                                        underscores)))(t))
+
+            if match.get("is_transformed", False):
+                if is_second_order_type2:
+                    g_t = match["g(t)"]
+                    tau = match["tau"]
+                    sol = [Eq(s.lhs, s.rhs.subs(t, tau)*g_t) for s in sol]
 
             return sol
 
@@ -1347,20 +1471,69 @@ def _component_solver(eqs, funcs, t):
     return sol
 
 
-def _second_order_to_first_order(eqs, funcs, t, match=None):
+def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
+                                 A0=None, b=None, t_=None):
     r"""
     Expects the system to be in second order and in canonical form
+
+    Explanation
+    ===========
+
+    Reduces a second order system into a first order one depending on the type of second
+    order system.
+    1. "type0": If this is passed, then the system will be reduced to first order by
+                introducing dummy variables.
+    2. "type1": If this is passed, then a particular substitution will be used to reduce the
+                the system into first order.
+    3. "type2": If this is passed, then the system will be transformed with new dependent
+                variables and independent variables. This transformation is a part of solving
+                the corresponding system of ODEs.
+
+    `A1` and `A0` are the coefficient matrices from the system and it is assumed that the
+    second order system has the form given below:
+
+    .. math::
+        A2 * X'' = A1 * X' + A0 * X + b
+
+    Here, $A2$ is the coefficient matrix for the vector $X''$ and $b$ is the non-homogeneous
+    term.
+
+    Default value for `b` is None but if `A1` and `A0` are passed and `b` isn't passed, then the
+    system will be assumed homogeneous.
+
     """
+    is_a1 = A1 is None
+    is_a0 = A0 is None
 
-    if match is None:
-        match = neq_nth_linear_constant_coeff_match(eqs, funcs, t)
-    sys_order = match['order']
+    if (type == "type1" and is_a1) or (type == "type2" and is_a0)\
+        or (type == "auto" and (is_a1 or is_a0)):
+        (A2, A1, A0), b = linear_ode_to_matrix(eqs, funcs, t, 2)
 
-    if match["type_of_equation"] == "type1":
-        A = match["A"]
-        b = match["b"]
-        eqs = _second_order_subs_type1(A, b, funcs, t)
+        if not A2.is_Identity:
+            raise ValueError(filldedent('''
+                The system must be in its canonical form.
+            '''))
+
+    if type == "auto":
+        match = _match_second_order_type(A1, A0, t)
+        type = match["type_of_equation"]
+        A1 = match.get("A1", None)
+        A0 = match.get("A0", None)
+
+    sys_order = {func: 2 for func in funcs}
+
+    if type == "type1":
+        if b is None:
+            b = zeros(len(eqs))
+        eqs = _second_order_subs_type1(A1, b, funcs, t)
         sys_order = {func: 1 for func in funcs}
+
+    if type == "type2":
+        if t_ is None:
+            t_ = Symbol("{}_".format(t))
+        t = t_
+        eqs, funcs = _second_order_subs_type2(A0, funcs, t_)
+        sys_order = {func: 2 for func in funcs}
 
     # More types to be added: Euler systems and a method
     # to factor a term from the second order system.
