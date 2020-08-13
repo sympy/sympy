@@ -494,6 +494,39 @@ def test_gauss_jordan_solve():
     assert params == Matrix([[w['tau0']], [w['tau1']]])
 
 
+def test_issue_19815():
+    #Test placement of free variables as per issue 19815
+    A = Matrix([[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]])
+    B  = Matrix([1, 2, 1, 1, 1, 1, 1, 2])
+    sol, params = A.gauss_jordan_solve(B)
+    w = {}
+    for s in sol.atoms(Symbol):
+        w[s.name] = s
+    assert params == Matrix([[w['tau0']], [w['tau1']], [w['tau2']],
+                             [w['tau3']], [w['tau4']], [w['tau5']]])
+    assert sol == Matrix([[1 - 1*w['tau2']],
+                          [w['tau2']],
+                          [1 - 1*w['tau0'] + w['tau1']],
+                          [w['tau0']],
+                          [w['tau3'] + w['tau4']],
+                          [-1*w['tau3'] - 1*w['tau4'] - 1*w['tau1']],
+                          [1 - 1*w['tau2']],
+                          [w['tau1']],
+                          [w['tau2']],
+                          [w['tau3']],
+                          [w['tau4']],
+                          [1 - 1*w['tau5']],
+                          [w['tau5']],
+                          [1]])
+
+
 def test_solve():
     A = Matrix([[1,2], [2,4]])
     b = Matrix([[3], [4]])
