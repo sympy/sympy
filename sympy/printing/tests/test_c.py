@@ -752,6 +752,7 @@ def test_C99CodePrinter_custom_type():
     assert p128.doprint(Rational(1, 2)) == '1.0Q/2.0Q'
     assert p128.doprint(sin(x)) == 'sinf128(x)'
     assert p128.doprint(cos(2., evaluate=False)) == 'cosf128(2.0Q)'
+    assert p128.doprint(x**-1.0) == '1.0Q/x'
 
     var5 = Variable(x, f128, attrs={value_const})
 

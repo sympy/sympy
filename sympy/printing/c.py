@@ -281,7 +281,8 @@ class C89CodePrinter(CodePrinter):
         PREC = precedence(expr)
         suffix = self._get_func_suffix(real)
         if expr.exp == -1:
-            return '1.0%s/%s' % (suffix.upper(), self.parenthesize(expr.base, PREC))
+            literal_suffix = self._get_literal_suffix(real)
+            return '1.0%s/%s' % (literal_suffix, self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             return '%ssqrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
         elif expr.exp == S.One/3 and self.standard != 'C89':
