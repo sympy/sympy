@@ -518,7 +518,7 @@ class IndependentProductPSpace(ProductPSpace):
 class DependentPSpace(PSpace):
 
     @staticmethod
-    def _create_MutlivariateNormalDistribution(syms, assumps):
+    def _create_MultivariateNormalDistribution(syms, assumps):
         from sympy.stats.symbolic_probability import Covariance, Variance
         from sympy.stats.crv_types import Normal
         assumps = assumps & And.fromiter([Eq(Variance(sym), sym.pspace.distribution.args[1])
@@ -534,7 +534,7 @@ class DependentPSpace(PSpace):
     @staticmethod
     def compute_density(expr, assumps):
         syms = list(expr.free_symbols)
-        z_dist = DependentPSpace._create_MutlivariateNormalDistribution(syms, assumps)
+        z_dist = DependentPSpace._create_MultivariateNormalDistribution(syms, assumps)
         subs_syms = [sym.symbol for sym in syms]
         z_pdf = z_dist.pdf(*subs_syms)
         rv = Dummy('rv', real=True)
@@ -880,8 +880,6 @@ class Density(Basic):
             else:
                 assumps = And.fromiter(cond for cond in condition.args if cond.has(*dependent_hints))
             return DependentPSpace.compute_density(_sympify(expr), assumps)
-        if _sympify(expr).has(RandomMatrixSymbol):
-            return pspace(expr).compute_density(expr)
         if isinstance(expr, SingleFiniteDistribution):
             return expr.dict
         if condition is not None:
