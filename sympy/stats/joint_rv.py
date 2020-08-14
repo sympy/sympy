@@ -119,13 +119,12 @@ class JointPSpace(ProductPSpace):
         rep = {}
         for jrv in j_rvs:
             if isinstance(jrv, JointRandomSymbol):
-                rep[jrv] = ImmutableMatrix([Indexed(str(jrv.symbol), i)
-                        for i in range(jrv.pspace.component_count)])
+                rep[jrv] = jrv.to_vector()
         expr = expr.xreplace(rep)
         limits = tuple((Indexed(str(rv.base),rv.args[1]),
             self.distribution.set.args[rv.args[1]]) for rv in syms)
         if isinstance(expr, MatrixBase):
-            return ImmutableMatrix([Integral(arg, *limits) for arg in expr])
+            return expr.applyfunc(lambda arg: Integral(arg, *limits))
         return Integral(expr, *limits)
 
     def where(self, condition):
@@ -311,7 +310,9 @@ class JointRandomSymbol(RandomSymbol):
                     (self.name, self.pspace.component_count - 1))
             return Indexed(self, key)
 
-
+    def to_vector(self):
+        return ImmutableMatrix([Indexed(str(self.symbol), i)
+                for i in range(self.pspace.component_count)])
 
 class MarginalDistribution(Basic):
     """
