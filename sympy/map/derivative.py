@@ -12,6 +12,26 @@ class DiffOp(Map):
     After function space, topology, etc are implemented as SymPy object,
     this class will be enhanced.
 
+    Explanation
+    ===========
+
+    Differential operator maps a function to another function. Its indices
+    consists of tuples; the first element is the index of function's argument
+    and the second one is how many times that the function will be derivated
+    with respect to that argument.
+
+    Examples
+    ========
+
+    >>> from sympy import DiffOp, Sin, S
+    >>> sin = Sin(S.Reals)
+    >>> D = DiffOp(1)
+
+    >>> D
+    D(1)
+    >>> D(sin, evaluate=True)
+    cos : Reals -> Interval(-1, 1)
+
     """
 
     # Will be changed after function space is introduced as SymPy object
@@ -73,10 +93,7 @@ class DiffOp(Map):
     def eval(self, f, **kwargs):
         diff_f = f
         for index, count in self.indices:
-            for i in range(count):
-                diff_f = diff_f.fdiff(index)
-                if not isinstance(diff_f, Basic):
-                    return None
+            diff_f = diff_f._eval_derivative_n_times(index, count)
         return diff_f
 
     def _eval_subs(self, old, new):
@@ -84,7 +101,34 @@ class DiffOp(Map):
         return self
 
 class DerivativeFunction(Map, AppliedMap):
+    """
+    The rudimentary implementation of unevaluated derivative of a function.
+    After function space, topology, etc are implemented as SymPy object,
+    this class will be enhanced.
 
+    Explanation
+    ===========
+
+    In common notation for function, $f(x)$, $x$ stands for the first argument
+    of $f$. However, since $Map$ does not contain any symbol, every differentiation
+    logic is based on the numeric index of the argument.
+
+    Examples
+    ========
+
+    >>> from sympy import DiffOp, Sin, S
+    >>> sin = Sin(S.Reals)
+    >>> D = DiffOp(1)
+    >>> D_sin = D(sin)
+
+    >>> D_sin
+    D(1)(sin) : Reals -> Reals
+    >>> D_sin(x)
+    (D(1)(sin))(x)
+    >>> D_sin(x, evaluate=True)
+    cos(x)
+
+    """
     def _corresponding_oldfunc(self):
         return super()._corresponding_oldfunc() +\
             [Derivative]
@@ -112,12 +156,6 @@ class DerivativeFunction(Map, AppliedMap):
         fdiff = self.doit(deep=False)
         if fdiff != self:
             return fdiff(*args, evaluate=True)
-
-        # Since we don't know what symbol corresponds to
-        # nth index, we can't call Derivative to do the job.
-        # (This can be avoided if coordinate system from
-        # diffgeom module is integrated with Map.)
-        raise NotImplementedError
 
 ### imported for Function.__instancecheck__
 

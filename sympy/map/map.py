@@ -304,6 +304,23 @@ class Map(Basic):
         else:
             return self.func(*self.args, evaluate=True)
 
+    def diff(self, *indices, evaluate=False):
+        diffop = DiffOp(*indices)
+        return diffop(self, evaluate=evaluate)
+
+    def _eval_derivative_n_times(self, index, count):
+        from sympy import Integer
+        if isinstance(count, (int, Integer)):
+            obj = self
+            for i in range(count):
+                obj2 = obj.fdiff(index)
+                if obj == obj2 or obj2 is None:
+                    break
+                obj = obj2
+            return obj2
+        else:
+            return None
+
     def fdiff(self, i=1):
         return None
 
@@ -938,6 +955,7 @@ def isappliedmap(arg, maps):
 
 from .composite import CompositeMap, IteratedMap
 from .mapop import MapAdd, MapMul, MapPow
+from .derivative import DiffOp, DerivativeFunction
 
 ### Special container for compatibility
 
