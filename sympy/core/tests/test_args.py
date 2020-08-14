@@ -2938,11 +2938,24 @@ def test_sympy__map__map__AppliedMap():
 
 def test_sympy__map__composite__CompositeMap():
     from sympy.map import Map, CompositeMap
-    assert CompositeMap(Map('f'), Map('g'))
+    assert _test_args(CompositeMap(Map('f'), Map('g')))
 
 def test_sympy__map__composite__IteratedMap():
     from sympy.map import Map, IteratedMap
-    assert IteratedMap(Map('f'), 2)
+    assert _test_args(IteratedMap(Map('f'), 2))
+
+def test_sympy__map__mapop__MapAdd():
+    from sympy.map import Map, MapAdd
+    assert _test_args(MapAdd(Map('f'), Map('g')))
+
+def test_sympy__map__mapop__MapMul():
+    from sympy.map import Map, MapMul
+    assert _test_args(MapMul(Map('f'), 2))
+    assert _test_args(MapMul(Map('f'), Map('g')))
+
+def test_sympy__map__mapop__MapPow():
+    from sympy.map import Map, MapPow
+    assert _test_args(MapPow(Map('f'), 2))
 
 def test_sympy__map__derivative__DiffOp():
     from sympy.map import DiffOp

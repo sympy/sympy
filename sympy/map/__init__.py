@@ -5,6 +5,8 @@ __all__ = [
 
     'CompositeMap', 'IteratedMap',
 
+    'MapAdd', 'MapMul', 'MapPow',
+
     'Sin', 'Cos', 'Tan', 'Cot',
     'Sec', 'Csc',
     'Asin', 'Acos', 'Atan', 'Acot',
@@ -20,6 +22,10 @@ from .map import (
 
 from .composite import (
     CompositeMap, IteratedMap
+)
+
+from .mapop import (
+    MapAdd, MapMul, MapPow,
 )
 
 from .derivative import (

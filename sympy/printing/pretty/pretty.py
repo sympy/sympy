@@ -2828,6 +2828,60 @@ class PrettyPrinter(Printer):
             pform = self._helper_print_domain(e, pform)
         return pform
 
+    def _print_MapAdd(self, expr, print_domains=True):
+        for i, term in enumerate(expr.args):
+            if i == 0:
+                pform = self.parenthesize(term, PRECEDENCE['Add'], kwargs={'print_domains':False})
+                continue
+            elif _coeff_isneg(term):
+                pform = prettyForm(*stringPict.next(pform, prettyForm(" - ")))
+                result = -term
+            else:
+                pform = prettyForm(*stringPict.next(pform, prettyForm(" + ")))
+            pterm = self.parenthesize(term, PRECEDENCE['Add'], kwargs={'print_domains':False})
+            pform = prettyForm(*stringPict.next(pform, pterm))
+        if print_domains:
+            pform = self._helper_print_domain(expr, pform)
+        return pform
+
+    def _print_MapMul(self, expr, print_domains=True):
+        from sympy.map import Map
+
+        for i, term in enumerate(expr.args):
+
+            if isinstance(term, Map):
+                pterm = self.parenthesize(term, PRECEDENCE['Mul'], kwargs={'print_domains':False})
+            else:
+                pterm = self.parenthesize(term, PRECEDENCE['Mul'])
+
+            if i == 0:
+                pform = pterm
+            else:
+                pform = prettyForm(*stringPict.next(pform, prettyForm(U("DOT OPERATOR"))))
+                pform = prettyForm(*stringPict.next(pform, pterm))
+
+        if print_domains:
+            pform = self._helper_print_domain(expr, pform)
+        return pform
+
+    def _print_MapPow(self, expr, print_domains=True):
+        from sympy.map import Map
+
+        b_e = []
+        for arg in expr.args:
+            if isinstance(arg, Map):
+                parg = self.parenthesize(arg, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+            else:
+                parg = self.parenthesize(arg, PRECEDENCE['Pow'])
+            b_e.append(parg)
+        pb, pe = b_e
+
+        pform = pb**pe
+
+        if print_domains:
+            pform = self._helper_print_domain(expr, pform)
+        return pform
+
     def _print_DiffOp(self, e, print_domains=True):
         from .pretty_symbology import DSUB
         indices = e.indices

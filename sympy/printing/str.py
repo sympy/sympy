@@ -8,6 +8,7 @@ from typing import Any, Dict
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
+from sympy.core.function import _coeff_isneg
 from .printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -946,6 +947,58 @@ class StrPrinter(Printer):
         if print_domains:
             name = self._helper_print_domain(expr, name)
         return name
+
+    def _print_MapAdd(self, expr, print_domains=True):
+        result = ""
+        for i, term in enumerate(expr.args):
+            if i == 0:
+                pass
+            elif _coeff_isneg(term):
+                result += " - "
+                result = -term
+            else:
+                result += " + "
+            result += self.parenthesize(term, PRECEDENCE['Add'], kwargs={'print_domains':False})
+        if print_domains:
+            result = self._helper_print_domain(expr, result)
+        return result
+
+    def _print_MapMul(self, expr, print_domains=True):
+        from sympy.map import Map
+
+        for i, term in enumerate(expr.args):
+
+            if isinstance(term, Map):
+                term_str = self.parenthesize(term, PRECEDENCE['Mul'], kwargs={'print_domains':False})
+            else:
+                term_str = self.parenthesize(term, PRECEDENCE['Mul'])
+
+            if i == 0:
+                result = term_str
+            else:
+                result += '*'
+                result += term_str
+
+        if print_domains:
+            result = self._helper_print_domain(expr, result)
+        return result
+
+    def _print_MapPow(self, expr, print_domains=True):
+        from sympy.map import Map
+
+        b_e = []
+        for arg in expr.args:
+            if isinstance(arg, Map):
+                arg_str = self.parenthesize(arg, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+            else:
+                arg_str = self.parenthesize(arg, PRECEDENCE['Pow'])
+            b_e.append(arg_str)
+
+        result = '**'.join(b_e)
+
+        if print_domains:
+            result = self._helper_print_domain(expr, result)
+        return result
 
     def _print_DiffOp(self, expr, print_domains=True):
         indices = expr.indices

@@ -40,7 +40,7 @@ class CompositeMap(Map, AssocOp):
     >>> f.composite(f.inv(), evaluate=True)
     id : UniversalSet -> UniversalSet
 
-   @ operator returns evaluated composition
+    @ operator returns evaluated composition
 
     >>> f@(f.inv())
     id : UniversalSet -> UniversalSet

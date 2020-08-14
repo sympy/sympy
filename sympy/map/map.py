@@ -287,6 +287,15 @@ class Map(Basic):
     def as_base_iternum(self):
         return self, S.One
 
+    def as_coeff_Mul(self, *args, **kwargs):
+        return S.One, self
+
+    def as_base_exp(self):
+        return self, S.One
+
+    def _eval_power(self, other):
+        return
+
     def doit(self, **hints):
         deep = hints.get('deep', True)
         if deep:
@@ -310,6 +319,60 @@ class Map(Basic):
         return
 
     ### operator overriding
+
+    def __pos__(self):
+        return self
+
+    def __neg__(self):
+        return MapMul(S.NegativeOne, self, evaluate=True)
+
+    @call_highest_priority('__radd__')
+    def __add__(self, other):
+        return MapAdd(self, other, evaluate=True)
+
+    @call_highest_priority('__add__')
+    def __radd__(self, other):
+        return MapAdd(other, self, evaluate=True)
+
+    @call_highest_priority('__rsub__')
+    def __sub__(self, other):
+        return MapAdd(self, -other, evaluate=True)
+
+    @call_highest_priority('__sub__')
+    def __rsub__(self, other):
+        return MapAdd(other, -self, evaluate=True)
+
+    @call_highest_priority('__rmul__')
+    def __mul__(self, other):
+        return MapMul(self, other, evaluate=True)
+
+    @call_highest_priority('__mul__')
+    def __rmul__(self, other):
+        return MapMul(other, self, evaluate=True)
+
+    @call_highest_priority('__rpow__')
+    def __pow__(self, other):
+        return MapPow(self, other, evaluate=True)
+
+    @call_highest_priority('__pow__')
+    def __rpow__(self, other):
+        return MapPow(other, self, evaluate=True)
+
+    @call_highest_priority('__rdiv__')
+    def __div__(self, other):
+        denom = MapPow(other, S.NegativeOne, evaluate=True)
+        if isinstance(self, ConstantMap) and self.output is S.One:
+            return denom
+        else:
+            return MapMul(self, denom, evaluate=True)
+
+    @call_highest_priority('__div__')
+    def __rdiv__(self, other):
+        denom = MapPow(self, S.NegativeOne, evaluate=True)
+        if isinstance(other, ConstantMap) and other.output is S.One:
+            return denom
+        else:
+            return MapMul(denom, other, evaluate=True)
 
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
@@ -879,6 +942,7 @@ def isappliedmap(arg, maps):
     return False
 
 from .composite import CompositeMap, IteratedMap
+from .mapop import MapAdd, MapMul, MapPow
 
 ### Special container for compatibility
 

@@ -2733,6 +2733,59 @@ class LatexPrinter(Printer):
             tex = self._helper_print_domain(expr, tex)
         return tex
 
+    def _print_MapAdd(self, expr, print_domains=True):
+        tex = ""
+        for i, term in enumerate(expr.args):
+            if i == 0:
+                pass
+            elif _coeff_isneg(term):
+                tex += " - "
+                term = -term
+            else:
+                tex += " + "
+            tex += self.parenthesize(term, PRECEDENCE['Add'], kwargs={'print_domains':False})
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
+    def _print_MapMul(self, expr, print_domains=True):
+        from sympy.map import Map
+
+        for i, term in enumerate(expr.args):
+
+            if isinstance(term, Map):
+                term_tex = self.parenthesize(term, PRECEDENCE['Mul'], kwargs={'print_domains':False})
+            else:
+                term_tex = self.parenthesize(term, PRECEDENCE['Mul'])
+
+            if i == 0:
+                tex = term_tex
+            else:
+                tex += ' '
+                tex += term_tex
+
+        if print_domains:
+            tex = self._helper_print_domain(expr, tex)
+        return tex
+
+    def _print_MapPow(self, expr, print_domains=True):
+        from sympy.map import Map
+
+        b_e = []
+        for arg in expr.args:
+            if isinstance(arg, Map):
+                arg_tex = self.parenthesize(arg, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+            else:
+                arg_tex = self.parenthesize(arg, PRECEDENCE['Pow'])
+            b_e.append(arg_tex)
+        b_tex, e_tex = b_e
+
+        result = '{%s}^{%s}' % (b_tex, e_tex)
+
+        if print_domains:
+            result = self._helper_print_domain(expr, result)
+        return result
+
     def _print_DiffOp(self, expr, print_domains=True):
         indices = expr.indices
         derivatives = []

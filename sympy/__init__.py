@@ -183,6 +183,8 @@ from .map import (Map, UndefinedMap,
 
         CompositeMap, IteratedMap,
 
+        MapAdd, MapMul, MapPow,
+
         DiffOp, DerivativeFunction,
 
         Sin, Cos, Tan, Cot,
@@ -431,6 +433,8 @@ __all__ = [
     'isappliedmap',
 
     'CompositeMap', 'IteratedMap',
+
+    'MapAdd', 'MapMul', 'MapPow',
 
     'DiffOp', 'DerivativeFunction',
 
