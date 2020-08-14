@@ -328,31 +328,39 @@ def test_Series_construction():
     tf2 = TransferFunction(a2*p - s, a2*s + p, s)
     tf3 = TransferFunction(a0*p + p**a1 - s, p, p)
     tf4 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    tf5 = TransferFunction(a1*p, p + a0, p)
     inp = Function('X_d')(s)
     out = Function('X')(s)
 
+    # SISO transfer function in the arguments.
     s0 = Series(tf, tf2)
     assert s0.args == (tf, tf2)
     assert s0.var == s
+    assert s0.is_SISO
 
     s1 = Series(Parallel(tf, -tf2), tf2)
     assert s1.args == (Parallel(tf, -tf2), tf2)
     assert s1.var == s
+    assert s1.is_SISO
 
     tf3_ = TransferFunction(inp, 1, s)
     tf4_ = TransferFunction(-out, 1, s)
     s2 = Series(tf, Parallel(tf3_, tf4_), tf2)
     assert s2.args == (tf, Parallel(tf3_, tf4_), tf2)
+    assert s2.is_SISO
 
     s3 = Series(tf, tf2, tf4)
     assert s3.args == (tf, tf2, tf4)
+    assert s3.is_SISO
 
     s4 = Series(tf3_, tf4_)
     assert s4.args == (tf3_, tf4_)
     assert s4.var == s
+    assert s4.is_SISO
 
     s6 = Series(tf2, tf4, Parallel(tf2, -tf), tf4)
     assert s6.args == (tf2, tf4, Parallel(tf2, -tf), tf4)
+    assert s6.is_SISO
 
     s7 = Series(tf, tf2)
     assert s0 == s7
@@ -364,6 +372,63 @@ def test_Series_construction():
     raises(TypeError, lambda: Series(2, tf, tf4))
     raises(TypeError, lambda: Series(s**2 + p*s, tf3, tf2))
     raises(TypeError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
+
+    # Transfer function matrix in the arguments.
+    tfm1 = TransferFunctionMatrix([[tf, tf2, tf4], [-tf4, -tf2, tf]], (2, 3), s)
+    tfm2 = TransferFunctionMatrix([-tf, -tf2, -tf4], (3, 1), s)
+    tfm3 = TransferFunctionMatrix([-tf4], (1, 1), s)
+    tfm4 = TransferFunctionMatrix(Matrix([[TF1, TF2], [-TF2, TF3]]), (2, 2), s)
+    tfm5 = TransferFunctionMatrix([TF2, TF1, tf4], (3, 1), s)
+    tfm6 = TransferFunctionMatrix([[-TF3, -TF2], [TF1, -tf]])
+    tfm7 = TransferFunctionMatrix([[tf3, tf5], [-tf5, -tf3]], (2, 2), p)
+
+    s8 = Series(tfm1, tfm2)
+    assert s8.args == (tfm1, tfm2)
+    assert s8.var == s
+    assert not s8.is_SISO # .is_SISO gives either True or False, not None.
+    assert s8.shape == (s8.num_outputs, s8.num_inputs) == (2, 1)
+
+    s9 = Series(tfm1, tfm2, tfm3)
+    assert s9.args == (tfm1, tfm2, tfm3)
+    assert s9.var == s
+    assert not s9.is_SISO
+    # (2, 3) x (3, 1) x (1, 1) will give (2, 1)
+    assert s9.shape == (s9.num_outputs, s9.num_inputs) == (2, 1)
+
+    s10 = Series(Parallel(tfm2, tfm5), tfm3)
+    assert s10.args == (Parallel(tfm2, tfm5), tfm3)
+    assert s10.var == s
+    assert not s10.is_SISO
+    # ((3, 1) + (3, 1)) x (1, 1) will give (3, 1)
+    assert s10.shape == (s10.num_outputs, s10.num_inputs) == (3, 1)
+
+    s11 = Series(tfm1, Parallel(-tfm2, -tfm5), tfm3)
+    assert s11.args == (tfm1, Parallel(-tfm2, -tfm5), tfm3)
+    assert not s11.is_SISO
+    # (2, 3) x ((3, 1) + (3, 1)) x (1, 1) will give (2, 1)
+    assert s11.shape == (s11.num_outputs, s11.num_inputs) == (2, 1)
+
+    s12 = Series(tfm4, tfm6)
+    assert s12.args == (tfm4, tfm6)
+    assert not s12.is_SISO
+    # (2, 2) x (2, 2) will give (2, 2)
+    assert s12.shape == (s12.num_outputs, s12.num_inputs) == (2, 2)
+
+    s13 = Series(tfm4, -tfm1, Parallel(-tfm5, tfm2), -tfm3)
+    assert s13.args == (tfm4, -tfm1, Parallel(-tfm5, tfm2), -tfm3)
+    # (2, 2) x (2, 3) x ((3, 1) + (3, 1)) x (1, 1) will give (2, 1)
+    assert s13.shape == (s13.num_outputs, s13.num_inputs) == (2, 1)
+
+    # for all the adjascent transfer function matrices:
+    # no. of inputs of first TFM must be equal to the no. of outputs of the second TFM.
+    raises(ValueError, lambda: Series(tfm1, tfm2, -tfm1))
+
+    # all the TFMs must use the same complex variable.
+    raises(ValueError, lambda: Series(tfm4, tfm7))
+
+    # Number or expression not allowed in the arguments.
+    raises(TypeError, lambda: Series(2, tfm5, tfm3))
+    raises(TypeError, lambda: Series(s**2 + p*s, -tfm5, tfm3))
 
 
 def test_Series_functions():
@@ -524,8 +589,8 @@ def test_Parallel_construction():
     raises(ValueError, lambda: Parallel(tfm2, -tfm1, tfm7))
 
     # Number or expression not allowed in the arguments.
-    raises(TypeError, lambda: Parallel(2, tf, tf4))
-    raises(TypeError, lambda: Parallel(s**2 + p*s, tf3, tf2))
+    raises(TypeError, lambda: Parallel(2, tfm1, tfm4))
+    raises(TypeError, lambda: Parallel(s**2 + p*s, -tfm4, tfm2))
 
 
 def test_Parallel_functions():
