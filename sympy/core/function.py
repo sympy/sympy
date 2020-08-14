@@ -259,6 +259,12 @@ class FunctionClass(ManagedProperties):
         map.AppliedMap._allowed_superclasshook
         """
         from sympy.map.map import AppliedMap
+        SymPyDeprecationWarning(
+            feature="Using `isinstance` on AppliedMap",
+            useinstead="`isappliedmap`",
+            issue=19953,
+            deprecated_since_version="1.7"
+        ).warn()
         if isinstance(instance, AppliedMap):
             return cls in instance._allowed_superclasshook()
         return super().__instancecheck__(instance)
@@ -1057,8 +1063,30 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
         repl_dict[self] = expr
         return repl_dict
 
+class _MapCompatibility(ManagedProperties):
 
-class Derivative(Expr):
+    def __instancecheck__(cls, instance):
+        """
+        Introduced for compatibility with Map
+
+        See Also
+        ========
+
+        map.AppliedMap._allowed_superclasshook
+        """
+        from sympy.map.map import AppliedMap
+        if isinstance(instance, AppliedMap):
+            SymPyDeprecationWarning(
+                feature="Using `isinstance` on AppliedMap",
+                useinstead="`isappliedmap`",
+                issue=19953,
+                deprecated_since_version="1.7"
+            ).warn()
+            return cls in instance._allowed_superclasshook()
+        return super().__instancecheck__(instance)
+
+
+class Derivative(Expr, metaclass=_MapCompatibility):
     """
     Carries out differentiation of the given expression with respect to symbols.
 
