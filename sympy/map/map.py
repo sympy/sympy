@@ -850,11 +850,6 @@ class AppliedMap(Expr):
         else:
             return self.func(*self.args, evaluate=True)
 
-    def as_base_exp(self, operator):
-        if self.map.is_restriction(operator):
-            return self.map._applied_as_base_exp(self)
-        return self, S.One
-
     def _eval_derivative(self, s):
         # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
         i = 0

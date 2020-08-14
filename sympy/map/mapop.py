@@ -10,9 +10,6 @@ __all__ = [
     'MapAdd', 'MapMul', 'MapPow',
 ]
 
-def _is_numberfunc(o):
-    return isinstance(o, ConstantMap) and o.output.is_Number
-
 class MapAdd(Map, Add):
     r"""
     Vector addition between functions.
@@ -58,11 +55,11 @@ class MapAdd(Map, Add):
     def __new__(cls, *args, **options):
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
+        args, _, _ = cls.flatten(args)
         if len(args) == 0:
             return cls.identity
         if len(args) == 1:
             return args[0]
-        args, _, _ = cls.flatten(args)
         obj = Basic.__new__(cls, *args)
         return obj
 
@@ -77,8 +74,9 @@ class MapAdd(Map, Add):
                 seq.extend(o.args)
                 continue
 
-            elif _is_numberfunc(o):
+            elif isinstance(o, ConstantMap):
                 coeff += o.output
+                continue
 
             elif isinstance(o, MapMul):
                 c, s = o.as_coeff_Mul()
@@ -173,11 +171,11 @@ class MapMul(Map, Mul):
     def __new__(cls, *args, **options):
         args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
+        args, _, _ = cls.flatten(args)
         if len(args) == 0:
             return cls.identity
         if len(args) == 1:
             return args[0]
-        args, _, _ = cls.flatten(args)
         obj = Basic.__new__(cls, *args)
         return obj
 
@@ -189,16 +187,18 @@ class MapMul(Map, Mul):
 
         for o in seq:
 
-            if not isinstance(o, Map):
+            if not isinstance(o, Map) or isinstance(o, ConstantMap):
+
+                if isinstance(o, ConstantMap):
+                    o = o.output
+
                 coeff *= o
+                if coeff == 0:
+                    return [ConstantMap(0)], [], None
                 continue
 
             elif isinstance(o, cls):
                 seq.extend(o.args)
-                continue
-
-            elif isinstance(o, ConstantMap):
-                coeff *= o.output
                 continue
 
             b, e = o.as_base_exp()
@@ -217,7 +217,9 @@ class MapMul(Map, Mul):
 
         _mulsort(newseq)
 
-        if coeff is not S.One:
+        if not newseq:
+            newseq = [ConstantMap(coeff)]
+        elif coeff is not S.One:
             newseq.insert(0, coeff)
 
         return newseq, [], None
@@ -225,7 +227,7 @@ class MapMul(Map, Mul):
     def as_coeff_Mul(self, *args, **kwargs):
         coeff, args = self.args[0], self.args[1:]
         if not isinstance(coeff, Map):
-            return coeff, args
+            return coeff, self.func(*args)
         return S.One, self
 
     def eval(self, *args, **kwargs):
@@ -285,9 +287,9 @@ class MapPow(Map, Pow):
 
     @classmethod
     def _new_eval(cls, b, e):
-        if e is S.Zero or (isinstance(e, ConstantMap) and e.output is S.Zero):
+        if e is S.Zero:
             return ConstantMap(S.One)
-        elif e is S.One or (isinstance(e, ConstantMap) and e.output is S.One):
+        elif e is S.One:
             return b
         obj = b._eval_power(e)
         if obj is not None:
