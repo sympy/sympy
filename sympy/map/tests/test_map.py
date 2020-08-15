@@ -115,6 +115,15 @@ def test_AppliedMap():
     with assuming(Q.commutative(h)):
         assert h(x, y, evaluate=True) == h(y, x, evaluate=True)
 
+    # differentiation
+    a, b, c = Map('a', domain=S.Reals**2), Map('b', codomain=S.Reals), Map('c', codomain=S.Reals)
+    assert a(x,y).diff(x) == a.diff(1)(x,y)
+    assert a(y,x).diff(x) == a.diff(2)(y,x)
+    assert b(x).diff(x) == b.diff(1)(x)
+    assert b(c(x)).diff(x) == b.diff(1)(c(x)) * c.diff(1)(x)
+    assert a(b(x), c(x)).diff(x) == \
+        a.diff(1)(b(x), c(x))*b.diff(1)(x) + a.diff(2)(b(x), c(x))*c.diff(1)(x)
+
 def test_InverseMap():
 
     # cannot invert if mapping is assumed to be non-invertible

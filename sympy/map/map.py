@@ -314,7 +314,7 @@ class Map(Basic):
 
     ### DerivativeFunction related
 
-    def diff(self, *indices, evaluate=False):
+    def diff(self, *indices, evaluate=True):
         diffop = DiffOp(*indices)
         return diffop(self, evaluate=evaluate)
 
@@ -764,8 +764,7 @@ class AppliedMap(Expr):
         >>> from sympy.testing.pytest import warns_deprecated_sympy
         >>> from sympy.abc import x
 
-        >>> with warns_deprecated_sympy():
-        ...     print(isinstance(Sin(S.Reals)(x), sin))
+        >>> isinstance(Sin(S.Reals)(x), sin)
         True
 
         """
@@ -888,7 +887,7 @@ class AppliedMap(Expr):
             return self.func(*self.args, evaluate=True)
 
     def _eval_derivative(self, s):
-        # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
+        # f(x).diff(s) -> x.diff(s) * f.diff(1)(s)
         i = 0
         l = []
         for a in self.arguments:
@@ -896,34 +895,10 @@ class AppliedMap(Expr):
             da = a.diff(s)
             if da.is_zero:
                 continue
-            deriv_func = self.map.fdiff(i)
-            if deriv_func is not None:
-                df = deriv_func(*self.arguments)
-            else:
-                df = self.fdiff(i)
+            deriv_func = self.map.diff(i)
+            df = deriv_func(*self.arguments)
             l.append(df * da)
         return Add(*l)
-
-    def fdiff(self, argindex=1):
-        if not (1 <= argindex <= len(self.arguments)):
-            raise ArgumentIndexError(self, argindex)
-        ix = argindex - 1
-        A = self.arguments[ix]
-        if A._diff_wrt:
-            if len(self.arguments) == 1 or not A.is_Symbol:
-                return Derivative(self, A)
-            for i, v in enumerate(self.arguments):
-                if i != ix and A in v.free_symbols:
-                    # it can't be in any other argument's free symbols
-                    # issue 8510
-                    break
-            else:
-                    return Derivative(self, A)
-
-        # See issue 4624 and issue 4719, 5600 and 8510
-        D = Dummy('xi_%i' % argindex, dummy_index=hash(A))
-        args = self.arguments[:ix] + (D,) + self.arguments[ix + 1:]
-        return Subs(Derivative(self.map(*args, evaluate=True), D), D, A)
 
     ### assumptions
 

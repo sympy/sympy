@@ -85,6 +85,10 @@ def test_CompositeMap():
     # __matmul__ returns evaluated composition
     assert A()@f1 == f2
 
+    # differentiation
+    a, b = Map('a'), Map('b')
+    assert (a@b).diff(1) == a.diff(1)@b * b.diff(1)
+
 def test_IteratedMap():
 
     # 0 and 1 exponents
@@ -139,3 +143,9 @@ def test_IteratedMap():
     assert IteratedMap(A(), -1)(x).doit() == h1(x)
     assert IteratedMap(A(), S.One/2)(x).doit() == h2(x)
     assert IteratedMap(A(), -2)(x).doit() == IteratedMap(h1, 2)(x)
+
+    # differentiation
+    a = Map('a')
+    assert a.iterate(2).diff(1) == a.diff(1)@a * a.diff(1)
+    a_inv = a.inverse()
+    assert a.iterate(-2).diff(1) == a_inv.diff(1)@a_inv * a_inv.diff(1)

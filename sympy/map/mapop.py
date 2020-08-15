@@ -357,7 +357,6 @@ class MapPow(Map, Pow):
     def codomain(self):
         return self.base.codomain
 
-
     def as_base_exp(self):
         return self.args
 

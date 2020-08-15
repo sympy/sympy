@@ -127,16 +127,13 @@ class DerivativeFunction(Map, AppliedMap):
     >>> D_sin = D(sin)
 
     >>> D_sin
-    D(1)(sin) : Reals -> Reals
+    sin' : Reals -> Reals
     >>> D_sin(x)
-    (D(1)(sin))(x)
+    (sin')(x)
     >>> D_sin(x, evaluate=True)
     cos(x)
 
     """
-    def _corresponding_oldfunc(self):
-        return super()._corresponding_oldfunc() +\
-            [Derivative]
 
     def __new__(cls, map, args, **kwargs):
         return super(Map, DerivativeFunction).__new__(cls, map, args, **kwargs)
@@ -161,6 +158,12 @@ class DerivativeFunction(Map, AppliedMap):
         fdiff = self.doit(deep=False)
         if fdiff != self:
             return fdiff(*args, evaluate=True)
+
+    def _eval_derivative_n_times(self, index, count):
+        indices = [*self.operator.indices]
+        indices.append((index, count))
+        new_diffop = DiffOp(*indices)
+        return new_diffop(self.function, evaluate=True)
 
 ### imported for Function.__instancecheck__
 

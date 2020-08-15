@@ -175,6 +175,13 @@ class CompositeMap(Map, AssocOp):
     def _map_content(self):
         return self.func, tuple(a._map_content() for a in self.args)
 
+    def fdiff(self, index):
+        firstfunc, others = self.args[0], self.args[1:]
+        otherfunc = self.func._new_rawargs(others)
+        df_g = firstfunc.diff(index, evaluate=True)@otherfunc
+        dg = otherfunc.diff(index, evaluate=True)
+        return df_g * dg
+
 class IteratedMap(Map):
     """
     A class for n-th iterated function.
@@ -286,3 +293,10 @@ class IteratedMap(Map):
 
     def _map_content(self):
         return self.func, self.base._map_content(), self.iternum
+
+    def fdiff(self, index):
+        self = self.doit(deep=False)
+        firstfunc, otherfunc = self.base, self.func(self.base, self.iternum-1, evaluate=True)
+        df_g = firstfunc.diff(index, evaluate=True)@otherfunc
+        dg = otherfunc.diff(index, evaluate=True)
+        return df_g * dg
