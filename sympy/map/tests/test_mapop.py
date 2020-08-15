@@ -32,7 +32,7 @@ def test_MapMul():
     assert (f*g)(x, evaluate=True) == f(x)*g(x)
 
     # differentiation
-    assert (f*g).diff(1, evaluate=True) == f.diff(1)*g + f*g.diff(1)
+    assert (f*g).diff(1, evaluate=True).doit() == f.diff(1)*g + f*g.diff(1)
     assert (2*f).diff(1, evaluate=True) == 2*f.diff(1)
 
 def test_MapPow():

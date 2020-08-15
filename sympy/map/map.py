@@ -129,6 +129,19 @@ class Map(Basic):
     def _eval_range(self):
         return
 
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
+        if deep:
+            args = (a.doit(**hints) for a in self.args)
+            return self.func(*args, evaluate=True)
+        else:
+            return self.func(*self.args, evaluate=True)
+
+    ### AppliedMap related
+
+    def __call__(self, *args, evaluate=False, **kwargs):
+        return AppliedMap(self, args, evaluate=evaluate, **kwargs)
+
     def apply(self, *args, **kwargs):
         """
         Action of the operator on arguments. This method is always
@@ -197,8 +210,7 @@ class Map(Basic):
                 new_seq.append(o)
         return new_seq
 
-    def __call__(self, *args, evaluate=False, **kwargs):
-        return AppliedMap(self, args, evaluate=evaluate, **kwargs)
+    ### InverseMap related
 
     def inverse(self, evaluate=False):
         """
@@ -210,6 +222,8 @@ class Map(Basic):
 
     def _eval_inverse(self):
         return
+
+    ### RestrictedMap related
 
     def restrict(self, new_domain, evaluate=False):
         """
@@ -272,6 +286,8 @@ class Map(Basic):
         # Used for restricted function identification
         return self.func
 
+    ### mapop related
+
     def composite(self, other, **kwargs):
         return CompositeMap(self, other, **kwargs)
 
@@ -296,13 +312,7 @@ class Map(Basic):
     def _eval_power(self, other):
         return
 
-    def doit(self, **hints):
-        deep = hints.get('deep', True)
-        if deep:
-            args = (a.doit(**hints) for a in self.args)
-            return self.func(*args, evaluate=True)
-        else:
-            return self.func(*self.args, evaluate=True)
+    ### DerivativeFunction related
 
     def diff(self, *indices, evaluate=False):
         diffop = DiffOp(*indices)
@@ -751,9 +761,11 @@ class AppliedMap(Expr):
         ========
 
         >>> from sympy import S, Sin, sin
+        >>> from sympy.testing.pytest import warns_deprecated_sympy
         >>> from sympy.abc import x
 
-        >>> isinstance(Sin(S.Reals)(x), sin)
+        >>> with warns_deprecated_sympy():
+        ...     print(isinstance(Sin(S.Reals)(x), sin))
         True
 
         """

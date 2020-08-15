@@ -117,6 +117,7 @@ class DerivativeFunction(Map, AppliedMap):
     ========
 
     >>> from sympy import DiffOp, Sin, S
+    >>> from sympy.abc import x
     >>> sin = Sin(S.Reals)
     >>> D = DiffOp(1)
     >>> D_sin = D(sin)

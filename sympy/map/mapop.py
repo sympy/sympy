@@ -41,25 +41,50 @@ class MapAdd(Map, Add):
     -1
 
     """
+
+    identity = None # identity depends on the domain
+
+    @cacheit
+    def __new__(cls, *args, evaluate=False, **options):
+
+        if not args:
+            raise ValueError("No argument given to %s" % cls)
+
+        domain = Intersection(*[a.domain for a in args])
+        codomain = Union(*[a.codomain for a in args])
+
+        if evaluate:
+            args, _, _ = cls.flatten(list(args))
+
+        if len(args) == 0:
+            return ConstantMap(0, domain=domain)
+        if len(args) == 1:
+            return args[0]
+
+        obj = cls._from_args(args)
+        obj._domain = domain
+        obj._codomain = codomain
+        return obj
+
+    @classmethod
+    def _from_args(cls, args, **kwargs):
+        if not args:
+            raise ValueError("No argument given to %s" % cls)
+        elif len(args) == 1:
+            return args[0]
+
+        obj = Basic.__new__(cls, *args)
+        obj.is_commutative = None
+        return obj
+    _new_rawargs = _from_args
+
     @property
     def domain(self):
-        return Intersection(*[a.domain for a in self.args])
+        return self._domain
 
     @property
     def codomain(self):
-        return Union(*[a.codomain for a in self.args])
-
-    @cacheit
-    def __new__(cls, *args, **options):
-        args = list(map(_sympify, args))
-        args = [a for a in args if a is not cls.identity]
-        args, _, _ = cls.flatten(args)
-        if len(args) == 0:
-            return cls.identity
-        if len(args) == 1:
-            return args[0]
-        obj = Basic.__new__(cls, *args)
-        return obj
+        return self._codomain
 
     @classmethod
     def flatten(cls, seq):
@@ -159,27 +184,51 @@ class MapMul(Map, Mul):
     .. [1] https://en.wikipedia.org/wiki/Algebra_over_a_field
 
     """
-    identity = ConstantMap(1)
+
+    identity = None # identity depends on the domain
+
+    @cacheit
+    def __new__(cls, *args, evaluate=False, **options):
+
+        if not args:
+            raise ValueError("No argument given to %s" % cls)
+
+        args = list(map(_sympify, args))
+        domain = Intersection(*[a.domain for a in args if hasattr(a, 'domain')])
+        codomain = Union(*[a.codomain for a in args if hasattr(a, 'codomain')])
+
+        if evaluate:
+            args, _, _ = cls.flatten(args)
+
+        if len(args) == 0:
+            return ConstantMap(1, domain=domain)
+        if len(args) == 1:
+            return args[0]
+
+        obj = cls._from_args(args)
+        obj._domain = domain
+        obj._codomain = codomain
+        return obj
+
+    @classmethod
+    def _from_args(cls, args, **kwargs):
+        if not args:
+            raise ValueError("No argument given to %s" % cls)
+        elif len(args) == 1:
+            return args[0]
+
+        obj = Basic.__new__(cls, *args)
+        obj.is_commutative = None
+        return obj
+    _new_rawargs = _from_args
 
     @property
     def domain(self):
-        return Intersection(*[a.domain for a in self.args if hasattr(a, 'domain')])
+        return self._domain
 
     @property
     def codomain(self):
-        return Union(*[a.codomain for a in self.args if hasattr(a, 'codomain')])
-
-    @cacheit
-    def __new__(cls, *args, **options):
-        args = list(map(_sympify, args))
-        args = [a for a in args if a is not cls.identity]
-        args, _, _ = cls.flatten(args)
-        if len(args) == 0:
-            return cls.identity
-        if len(args) == 1:
-            return args[0]
-        obj = Basic.__new__(cls, *args)
-        return obj
+        return self._codomain
 
     @classmethod
     def flatten(cls, seq):
@@ -281,14 +330,6 @@ class MapPow(Map, Pow):
 
     """
 
-    @property
-    def domain(self):
-        return self.base.domain
-
-    @property
-    def codomain(self):
-        return self.base.codomain
-
     @cacheit
     def __new__(cls, b, e, evaluate=False):
         e = _sympify(e)
@@ -307,6 +348,15 @@ class MapPow(Map, Pow):
         obj = b._eval_power(e)
         if obj is not None:
             return obj
+
+    @property
+    def domain(self):
+        return self.base.domain
+
+    @property
+    def codomain(self):
+        return self.base.codomain
+
 
     def as_base_exp(self):
         return self.args

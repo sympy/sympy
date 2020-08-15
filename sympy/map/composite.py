@@ -1,5 +1,5 @@
 from sympy.assumptions import ask, Q
-from sympy.core import Expr, S
+from sympy.core import Basic, S
 from sympy.core.operations import AssocOp
 from sympy.core.sympify import _sympify
 from .map import Map, IdentityMap, AppliedMap
@@ -53,18 +53,34 @@ class CompositeMap(Map, AssocOp):
     """
     def __new__(cls, *args, evaluate=False, **options):
 
-        domain = args[0].domain
+        if not args:
+            raise ValueError("No argument given to %s" % cls)
+
+        domain = args[-1].domain
 
         if evaluate:
-            _, args, _ = cls.flatten(list(args))
+            args, _, _ = cls.flatten(list(args))
 
-            if len(args) == 0:
-                # all mappings are cancelled out by inverse composition
-                return IdentityMap(domain=domain)
-            elif len(args) == 1:
-                return args[0]
+        if len(args) == 0:
+            # all mappings are cancelled out by inverse composition
+            return IdentityMap(domain=domain)
+        elif len(args) == 1:
+            return args[0]
 
-        return Expr.__new__(cls, *args)
+        obj = cls._from_args(args)
+        return obj
+
+    @classmethod
+    def _from_args(cls, args, **kwargs):
+        if not args:
+            raise ValueError("No argument given to %s" % cls)
+        elif len(args) == 1:
+            return args[0]
+
+        obj = Basic.__new__(cls, *args)
+        obj.is_commutative = None
+        return obj
+    _new_rawargs = _from_args
 
     @classmethod
     def flatten(cls, seq):
@@ -122,7 +138,7 @@ class CompositeMap(Map, AssocOp):
             newseq.append(o1)
             newseq.append(o2)
 
-        return [], newseq, None
+        return newseq, [], None
 
     @property
     def domain(self):
@@ -134,16 +150,11 @@ class CompositeMap(Map, AssocOp):
 
     def eval(self, arg):
 
-        #1. denest mappings
-
-        _, self_args, _ = self.flatten([*self.args])
-
-        #2. f(g(h(x))) -> CompositeMap(f,g,h)(x)
-
+        # f(g(h(x))) -> CompositeMap(f,g,h)(x)
         mappings = [] # store unresolved mappings
         innermost_arg = arg
         result = arg
-        for m in reversed(self_args):
+        for m in reversed(self.args):
             m_eval = m(result, evaluate=True)
             if isinstance(m_eval, AppliedMap):
                 mappings.insert(0, m)
