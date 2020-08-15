@@ -2411,6 +2411,14 @@ def test_pretty_Parallel():
     tf1 = TransferFunction(x + y, x - 2*y, y)
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(x**2 + y, y - x, y)
+    tf4 = TransferFunction(y**2 - x, x**3 + x, y)
+
+    tfm1 = TransferFunctionMatrix([tf1, tf2], (2, 1), y)
+    tfm2 = TransferFunctionMatrix([-tf3, -tf2], (2, 1), y)
+    tfm3 = TransferFunctionMatrix([-tf2, -tf1], (2, 1), y)
+    tfm4 = TransferFunctionMatrix([[tf1, tf2], [tf3, -tf4], [-tf2, -tf1]], (3, 2), y)
+    tfm5 = TransferFunctionMatrix([[-tf2, -tf1], [tf4, -tf3], [tf1, tf2]], (3, 2), y)
+    tfm6 = TransferFunctionMatrix([[-tf1, tf2], [-tf3, tf4], [tf2, tf1]])
     expected1 = \
 u("""\
  x + y    x - y\n\
@@ -2437,10 +2445,85 @@ u("""\
 ⎜───────⎟⋅⎜─────⎟ + ⎜─────⎟⋅⎜──────⎟\n\
 ⎝x - 2⋅y⎠ ⎝x + y⎠   ⎝x + y⎠ ⎝-x + y⎠\
 """)
+    expected5 = \
+u("""\
+            ⎡   2    ⎤\n\
+⎡ x + y ⎤   ⎢- x  - y⎥\n\
+⎢───────⎥   ⎢────────⎥\n\
+⎢x - 2⋅y⎥   ⎢ -x + y ⎥\n\
+⎢       ⎥ + ⎢        ⎥\n\
+⎢ x - y ⎥   ⎢ -x + y ⎥\n\
+⎢ ───── ⎥   ⎢ ────── ⎥\n\
+⎣ x + y ⎦   ⎣ x + y  ⎦\
+""")
+    expected6 = \
+u("""\
+                        ⎡   2    ⎤\n\
+⎡-x + y ⎤   ⎡ x + y ⎤   ⎢- x  - y⎥\n\
+⎢────── ⎥   ⎢───────⎥   ⎢────────⎥\n\
+⎢x + y  ⎥   ⎢x - 2⋅y⎥   ⎢ -x + y ⎥\n\
+⎢       ⎥ + ⎢       ⎥ + ⎢        ⎥\n\
+⎢ -x - y⎥   ⎢ x - y ⎥   ⎢ -x + y ⎥\n\
+⎢───────⎥   ⎢ ───── ⎥   ⎢ ────── ⎥\n\
+⎣x - 2⋅y⎦   ⎣ x + y ⎦   ⎣ x + y  ⎦\
+""")
+    expected7 = \
+u("""\
+⎡ x + y    x - y ⎤   ⎡-x + y    -x - y ⎤\n\
+⎢───────   ───── ⎥   ⎢──────   ─────── ⎥\n\
+⎢x - 2⋅y   x + y ⎥   ⎢x + y    x - 2⋅y ⎥\n\
+⎢                ⎥   ⎢                 ⎥\n\
+⎢ 2            2 ⎥   ⎢      2     2    ⎥\n\
+⎢x  + y   x - y  ⎥   ⎢-x + y   - x  - y⎥\n\
+⎢──────   ────── ⎥ + ⎢───────  ────────⎥\n\
+⎢-x + y    3     ⎥   ⎢  3       -x + y ⎥\n\
+⎢         x  + x ⎥   ⎢ x  + x          ⎥\n\
+⎢                ⎥   ⎢                 ⎥\n\
+⎢-x + y    -x - y⎥   ⎢ x + y    x - y  ⎥\n\
+⎢──────   ───────⎥   ⎢───────   ─────  ⎥\n\
+⎣x + y    x - 2⋅y⎦   ⎣x - 2⋅y   x + y  ⎦\
+""")
+    expected8 = \
+u("""\
+⎡ x + y   -x + y ⎤   ⎡ x - y    x + y ⎤   ⎡ x + y    x - y ⎤\n\
+⎢───────  ────── ⎥   ⎢ ─────   ───────⎥   ⎢───────   ───── ⎥\n\
+⎢x - 2⋅y  x + y  ⎥   ⎢ x + y   x - 2⋅y⎥   ⎢x - 2⋅y   x + y ⎥\n\
+⎢                ⎥   ⎢                ⎥   ⎢                ⎥\n\
+⎢ 2            2 ⎥   ⎢     2    2     ⎥   ⎢ 2            2 ⎥\n\
+⎢x  + y   x - y  ⎥   ⎢x - y    x  + y ⎥   ⎢x  + y   x - y  ⎥\n\
+⎢──────   ────── ⎥ + ⎢──────   ────── ⎥ + ⎢──────   ────── ⎥\n\
+⎢-x + y    3     ⎥   ⎢ 3       -x + y ⎥   ⎢-x + y    3     ⎥\n\
+⎢         x  + x ⎥   ⎢x  + x          ⎥   ⎢         x  + x ⎥\n\
+⎢                ⎥   ⎢                ⎥   ⎢                ⎥\n\
+⎢-x + y    -x - y⎥   ⎢ -x - y  -x + y ⎥   ⎢-x + y    -x - y⎥\n\
+⎢──────   ───────⎥   ⎢───────  ────── ⎥   ⎢──────   ───────⎥\n\
+⎣x + y    x - 2⋅y⎦   ⎣x - 2⋅y  x + y  ⎦   ⎣x + y    x - 2⋅y⎦\
+""")
+    expected9 = \
+u("""\
+⎡ x + y    x - y    x + y    -x + y    x + y    x - y ⎤\n\
+⎢─────── + ───── + ───────   ────── + ─────── + ───── ⎥\n\
+⎢x - 2⋅y   x + y   x - 2⋅y   x + y    x - 2⋅y   x + y ⎥\n\
+⎢                                                     ⎥\n\
+⎢ 2            2    2             2    2            2 ⎥\n\
+⎢x  + y   x - y    x  + y    x - y    x  + y   x - y  ⎥\n\
+⎢────── + ────── + ──────    ────── + ────── + ────── ⎥\n\
+⎢-x + y    3       -x + y     3       -x + y    3     ⎥\n\
+⎢         x  + x             x  + x            x  + x ⎥\n\
+⎢                                                     ⎥\n\
+⎢-x + y    -x - y   -x + y   -x - y   -x + y    -x - y⎥\n\
+⎢────── + ─────── + ──────  ─────── + ────── + ───────⎥\n\
+⎣x + y    x - 2⋅y   x + y   x - 2⋅y   x + y    x - 2⋅y⎦\
+""")
     assert upretty(Parallel(tf1, tf2)) == expected1
     assert upretty(Parallel(-tf2, -tf1)) == expected2
     assert upretty(Parallel(tf3, tf1, Series(-tf1, tf2))) == expected3
     assert upretty(Parallel(Series(tf1, tf2), Series(tf2, tf3))) == expected4
+    assert upretty(Parallel(tfm1, tfm2)) == expected5
+    assert upretty(Parallel(tfm3, tfm1, tfm2)) == expected6
+    assert upretty(Parallel(tfm4, tfm5)) == expected7
+    assert upretty(Parallel(-tfm6, -tfm5, tfm4)) == expected8
+    assert pretty(Parallel(-tfm6, -tfm5, tfm4).doit()) == expected9
 
 
 def test_pretty_Feedback():

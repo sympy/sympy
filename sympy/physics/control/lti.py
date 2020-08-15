@@ -824,8 +824,10 @@ class Parallel(Basic):
                 res = arg
             else:
                 if self.is_SISO:
-                    num_ = res.num * arg.den + res.den * arg.num
-                    den_ = res.den * arg.den
+                    if res.den == arg.den:
+                        num_, den_ = res.num + arg.num, res.den
+                    else:
+                        num_, den_ = res.num * arg.den + res.den * arg.num, res.den * arg.den
                     res = TransferFunction(num_, den_, self.var)
                 else:
                     if self.num_inputs == 1:
@@ -833,7 +835,7 @@ class Parallel(Basic):
                         for x in range(self.num_outputs):
                             a[x] = res.args[0][x] + arg.args[0][x]
                     else:
-                        a = [[None] * self.num_inputs] * self.num_outputs
+                        a = [[None] * self.num_inputs for _ in range(self.num_outputs)]
                         for row in range(self.num_outputs):
                             for col in range(self.num_inputs):
                                 a[row][col] = res.args[0][row][col] + arg.args[0][row][col]
@@ -1169,7 +1171,7 @@ class TransferFunctionMatrix(Basic):
     def __new__(cls, arg, shape=None, var=None):
         if not (isinstance(arg, (list, tuple, MatrixBase)) and
             (all(isinstance(i, (list, tuple)) for i in arg) or
-            all(isinstance(i, TransferFunction) for i in arg))):
+            all(isinstance(i, (TransferFunction, Parallel, Series)) for i in arg))):
             raise TypeError("Unsupported type for argument of TransferFunctionMatrix.")
 
         if isinstance(arg, MatrixBase):
@@ -1182,7 +1184,7 @@ class TransferFunctionMatrix(Basic):
                 raise TypeError("Var must be a Symbol, not {}.".format(type(var)))
 
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
-        if all(isinstance(i, TransferFunction) for i in arg):
+        if all(isinstance(i, (TransferFunction, Series, Parallel)) for i in arg):
             # TFM with 1st argument of the type - [tf1, tf2, tf3, ...] or (tf1, tf2, ...)
             # or Matrix([tf1, tf2, tf3, tf4, ...]) or even Matrix([[tf1, tf2, ...], [tf3, tf4, ...]])
             if shape and var:
