@@ -896,7 +896,7 @@ class AppliedMap(Expr):
             if da.is_zero:
                 continue
             deriv_func = self.map.diff(i)
-            df = deriv_func(*self.arguments)
+            df = deriv_func(*self.arguments, evaluate=True)
             l.append(df * da)
         return Add(*l)
 

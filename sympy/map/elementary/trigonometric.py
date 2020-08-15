@@ -677,9 +677,7 @@ class Cos(TrigonometricMap):
     def fdiff(self, i=1):
         if i == 1:
             sin = Sin(self.domain)
-            # When operation of function is defined, this will return
-            # sympy object.
-            return lambda x: -(sin(x))
+            return -sin
         else:
             raise ArgumentIndexError(self, i)
 
