@@ -2905,9 +2905,16 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_DerivativeFunction(self, e, print_domains=True):
-        pmap = self.parenthesize(e.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
         pfunc = self.parenthesize(e.function, PRECEDENCE['Pow'], kwargs={'print_domains':False})
-        pform = prettyForm(*stringPict.next(pmap, pfunc))
+        if e.function.nargs == 1:
+            dcount = e.operator.derivative_count
+            for i in range(dcount):
+                pprime = prettyForm("'")
+                pfunc = prettyForm(*stringPict.next(pfunc, pprime))
+            pform = pfunc
+        else:
+            pmap = self.parenthesize(e.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+            pform = prettyForm(*stringPict.next(pmap, pfunc))
         if print_domains:
             pform = self._helper_print_domain(e, pform)
         return pform

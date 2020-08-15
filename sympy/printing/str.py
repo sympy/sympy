@@ -1014,7 +1014,16 @@ class StrPrinter(Printer):
         # since function space is not introduced, do not print the domains yet.
         return result
 
-    _print_DerivativeFunction = _print_AppliedMap
+    def _print_DerivativeFunction(self, expr, print_domains=True):
+        func_str = self.parenthesize(expr.function, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+        if expr.function.nargs == 1:
+            dcount = expr.operator.derivative_count
+            result = '%s%s' % (func_str, "'"*dcount)
+        else:
+            result = self._print_AppliedMap(expr, print_domains=False)
+        if print_domains:
+            result = self._helper_print_domain(expr, result)
+        return result
 
     def _print_Str(self, s):
         return self._print(s.name)

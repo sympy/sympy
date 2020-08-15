@@ -2799,9 +2799,13 @@ class LatexPrinter(Printer):
         return result
 
     def _print_DerivativeFunction(self, expr, print_domains=True):
-        map_tex = self.parenthesize(expr.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
         func_tex = self.parenthesize(expr.function, PRECEDENCE['Pow'], kwargs={'print_domains':False})
-        tex = '%s%s' % (map_tex, func_tex)
+        if expr.function.nargs == 1:
+            dcount = expr.operator.derivative_count
+            tex = '%s%s' % (func_tex, "'"*dcount)
+        else:
+            map_tex = self.parenthesize(expr.map, PRECEDENCE['Pow'], kwargs={'print_domains':False})
+            tex = '%s%s' % (map_tex, func_tex)
         if print_domains:
             tex = self._helper_print_domain(expr, tex)
         return tex

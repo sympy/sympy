@@ -77,6 +77,10 @@ class DiffOp(Map):
         return self.args[0]
 
     @property
+    def derivative_count(self):
+        return sum([count for i, count in self.indices], 0)
+
+    @property
     def free_symbols(self):
         return {}
 
