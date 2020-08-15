@@ -194,6 +194,14 @@ class VarianceMatrix(Variance, MatrixExpr):
         # this expression contains a RandomSymbol somehow:
         return self
 
+    def _eval_rewrite_as_Expectation(self, arg, condition=None, **kwargs):
+        from sympy.stats.joint_rv import JointRandomSymbol
+        mu = ExpectationMatrix(arg, condition)
+        if isinstance(arg, JointRandomSymbol):
+            arg = arg.to_vector()
+        x = (arg - mu)*(arg - mu).transpose()
+        return ExpectationMatrix(x, condition)
+
 class CrossCovarianceMatrix(Covariance, MatrixExpr):
     """
     Covariance of a random matrix probability expression.

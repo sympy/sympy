@@ -119,7 +119,8 @@ class JointPSpace(ProductPSpace):
         rep = {}
         for jrv in j_rvs:
             if isinstance(jrv, JointRandomSymbol):
-                rep[jrv] = jrv.to_vector()
+                rep[jrv] = ImmutableMatrix([Indexed(str(jrv.symbol), i)
+                        for i in range(jrv.pspace.component_count)])
         expr = expr.xreplace(rep)
         limits = tuple((Indexed(str(rv.base),rv.args[1]),
             self.distribution.set.args[rv.args[1]]) for rv in syms)
@@ -309,10 +310,16 @@ class JointRandomSymbol(RandomSymbol):
                 raise ValueError("Index keys for %s can only up to %s." %
                     (self.name, self.pspace.component_count - 1))
             return Indexed(self, key)
+            #return RandomIndexedSymbol(idx_obj, self.pspace)
+
 
     def to_vector(self):
-        return ImmutableMatrix([Indexed(str(self.symbol), i)
+        return ImmutableMatrix([Indexed(self, i)
                 for i in range(self.pspace.component_count)])
+
+    @property
+    def shape(self):
+        return (self.pspace.component_count, 1)
 
 class MarginalDistribution(Basic):
     """

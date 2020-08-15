@@ -6,6 +6,7 @@ from .rv import (probability, expectation, density, where, given, pspace, cdf, P
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile, is_random,
                  sample_stochastic_process)
+from sympy.stats.symbolic_probability import Moment, CentralMoment, Variance, Covariance
 
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
@@ -34,7 +35,6 @@ def moment(X, n, c=0, condition=None, **kwargs):
     >>> moment(X, 1) == E(X)
     True
     """
-    from sympy.stats.symbolic_probability import Moment
     if kwargs.pop('evaluate', True):
         return Moment(X, n, c, condition).doit()
     return Moment(X, n, c, condition).rewrite(Integral)
@@ -62,11 +62,10 @@ def variance(X, condition=None, **kwargs):
     >>> simplify(variance(B))
     p*(1 - p)
     """
-    if is_random(X) and pspace(X) == PSpace():
-        from sympy.stats.symbolic_probability import Variance
+    if (is_random(X) and pspace(X) == PSpace()
+            ) or kwargs.get('evaluate', True) == False:
         return Variance(X, condition)
-
-    return cmoment(X, 2, condition, **kwargs)
+    return Variance(X, condition, **kwargs).doit()
 
 
 def standard_deviation(X, condition=None, **kwargs):
@@ -157,14 +156,10 @@ def covariance(X, Y, condition=None, **kwargs):
     >>> covariance(X, Y + rate*X)
     1/lambda
     """
-    if (is_random(X) and pspace(X) == PSpace()) or (is_random(Y) and pspace(Y) == PSpace()):
-        from sympy.stats.symbolic_probability import Covariance
+    if (is_random(X) and pspace(X) == PSpace()) or (is_random(Y) and pspace(Y) == PSpace()
+            ) or kwargs.get('evaluate', True) == False:
         return Covariance(X, Y, condition)
-
-    return expectation(
-        (X - expectation(X, condition, **kwargs)) *
-        (Y - expectation(Y, condition, **kwargs)),
-        condition, **kwargs)
+    return Covariance(X, Y, condition).doit()
 
 
 def correlation(X, Y, condition=None, **kwargs):
@@ -215,7 +210,6 @@ def cmoment(X, n, condition=None, **kwargs):
     >>> cmoment(X, 2) == variance(X)
     True
     """
-    from sympy.stats.symbolic_probability import CentralMoment
     if kwargs.pop('evaluate', True):
         return CentralMoment(X, n, condition).doit()
     return CentralMoment(X, n, condition).rewrite(Integral)
