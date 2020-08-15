@@ -110,8 +110,8 @@ class DerivativeFunction(Map, AppliedMap):
     ===========
 
     In common notation for function, $f(x)$, $x$ stands for the first argument
-    of $f$. However, since $Map$ does not contain any symbol, every differentiation
-    logic is based on the numeric index of the argument.
+    of $f$. However, since ``Map`` does not contain any symbol, every differentiation
+    logic is based on the numerical index of the argument.
 
     Examples
     ========

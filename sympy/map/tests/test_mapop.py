@@ -4,6 +4,7 @@ from sympy.abc import x
 f, g = Map('f'), Map('g')
 
 def test_MapAdd():
+    # flattening
     assert MapAdd(f, g, evaluate=True) == f+g
     assert MapAdd(f, f, evaluate=True) == MapMul(2, f) == f+f == 2*f
     assert f+g+f+g == 2*f + 2*g
@@ -12,7 +13,11 @@ def test_MapAdd():
     assert ConstantMap(2) + ConstantMap(3) == ConstantMap(5)
     assert ConstantMap(2) + ConstantMap(x) == ConstantMap(2+x)
 
+    # applying argument
     assert (f+g)(x, evaluate=True) == f(x) + g(x)
+
+    # differentiation
+    assert (f+g).diff(1, evaluate=True) == f.diff(1) + g.diff(1)
 
 def test_MapMul():
     assert MapMul(f, g, evaluate=True) == f*g
@@ -26,9 +31,16 @@ def test_MapMul():
 
     assert (f*g)(x, evaluate=True) == f(x)*g(x)
 
+    # differentiation
+    assert (f*g).diff(1, evaluate=True) == f.diff(1)*g + f*g.diff(1)
+    assert (2*f).diff(1, evaluate=True) == 2*f.diff(1)
+
 def test_MapPow():
     assert MapPow(f, 2, evaluate=True) == f**2
     assert f**0 == ConstantMap(1)
     assert f**1 == f
 
     assert (f**2)(x, evaluate=True) == f(x)**2
+
+    # differentiation
+    assert (f**2).diff(1, evaluate=True) == 2*f*f.diff(1)

@@ -207,5 +207,4 @@ def test_compatibility():
 
     with warns_deprecated_sympy():
         assert f(x).args[0] == x
-
-    assert isinstance(f(x), Function)
+        assert isinstance(f(x), Function)

@@ -41,8 +41,6 @@ class MapAdd(Map, Add):
     -1
 
     """
-    identity = ConstantMap(0)
-
     @property
     def domain(self):
         return Intersection(*[a.domain for a in self.args])
@@ -115,6 +113,10 @@ class MapAdd(Map, Add):
         kwargs.update(evaluate=True)
         terms = [a(*args, **kwargs) for a in self.args]
         return Add(*terms, evaluate=True)
+
+    def _eval_derivative_n_times(self, index, count):
+        args = [a.diff((index, count), evaluate=True) for a in self.args]
+        return self.func(*args)
 
 class MapMul(Map, Mul):
     r"""
@@ -241,6 +243,17 @@ class MapMul(Map, Mul):
             terms.append(term)
         return Mul(*terms, evaluate=True)
 
+    def fdiff(self, index):
+        terms = []
+        for i, ith in enumerate(self.args):
+            if not isinstance(ith, Map):
+                continue
+            deriv_ith = ith.diff(index, evaluate=True)
+            args = [*self.args[:i]] + [deriv_ith] + [*self.args[i+1:]]
+            term = self.func(*args)
+            terms.append(term)
+        return MapAdd(*terms)
+
 class MapPow(Map, Pow):
     r"""
     Multiplicational power of function.
@@ -308,3 +321,7 @@ class MapPow(Map, Pow):
                 term = a
             terms.append(term)
         return Pow(*terms, evaluate=True)
+
+    def fdiff(self, index):
+        dbase = self.base.diff(index, evaluate=True)
+        return self * dbase * self.exp/self.base

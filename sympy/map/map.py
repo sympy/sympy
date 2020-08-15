@@ -382,6 +382,7 @@ class Map(Basic):
             return denom
         else:
             return MapMul(self, denom, evaluate=True)
+    __truediv__ = __div__
 
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
@@ -390,6 +391,7 @@ class Map(Basic):
             return denom
         else:
             return MapMul(denom, other, evaluate=True)
+    __rtruediv__ = __rdiv__
 
     @call_highest_priority('__rmatmul__')
     def __matmul__(self, other):
@@ -637,6 +639,9 @@ class IdentityMap(Map):
     def _eval_inverse(self):
         return self
 
+    def fdiff(self, i=1):
+        return ConstantMap(1, self.domain)
+
 class ConstantMap(Map):
     """
     Map which always returns same output.
@@ -692,6 +697,9 @@ class ConstantMap(Map):
 
     def _map_content(self):
         return self.func, self.output
+
+    def fdiff(self, i=1):
+        return self.func(0, self.domain)
 
 class AppliedMap(Expr):
     """

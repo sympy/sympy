@@ -259,13 +259,13 @@ class FunctionClass(ManagedProperties):
         map.AppliedMap._allowed_superclasshook
         """
         from sympy.map.map import AppliedMap
-        SymPyDeprecationWarning(
-            feature="Using `isinstance` on AppliedMap",
-            useinstead="`isappliedmap`",
-            issue=19953,
-            deprecated_since_version="1.7"
-        ).warn()
         if isinstance(instance, AppliedMap):
+            SymPyDeprecationWarning(
+                feature="Using `isinstance` on AppliedMap",
+                useinstead="`isappliedmap`",
+                issue=19953,
+                deprecated_since_version="1.7"
+            ).warn()
             return cls in instance._allowed_superclasshook()
         return super().__instancecheck__(instance)
 
