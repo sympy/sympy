@@ -48,6 +48,10 @@ Ntheory Functions Reference
 
 .. autofunction:: pollard_pm1
 
+.. autofunction:: ecm
+
+.. autofunction:: qs
+
 .. autofunction:: factorint
 
 .. autofunction:: factorrat
