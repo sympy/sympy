@@ -206,7 +206,7 @@ group:
 
 abs_group: BAR expr BAR;
 
-atom: (LETTER | SYMBOL) subexpr? | NUMBER | DIFFERENTIAL | mathit;
+atom: (LETTER | SYMBOL) subexpr? | NUMBER | DIFFERENTIAL | mathit | bra | ket;
 
 bra: L_ANGLE expr (R_BAR | BAR);
 ket: (L_BAR | BAR) expr R_ANGLE;
