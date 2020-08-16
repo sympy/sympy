@@ -1,5 +1,6 @@
 from sympy.assumptions import ask, Q
-from sympy.core import Basic, S, Tuple
+from sympy.core import Basic, S
+from sympy.core.compatibility import iterable
 from sympy.core.operations import AssocOp
 from sympy.core.sympify import _sympify
 from .map import Map, IdentityMap, AppliedMap
@@ -168,7 +169,7 @@ class CompositeMap(Map, AssocOp):
         innermost_arg = args
         result = args
         for m in reversed(self.args):
-            if isinstance(result, (tuple, Tuple)):
+            if iterable(result):
                 m_eval = m(*result, evaluate=True)
             else:
                 m_eval = m(result, evaluate=True)
