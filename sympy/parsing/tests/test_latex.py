@@ -114,6 +114,7 @@ GOOD_PAIRS = [
     ("f(x, y, z)", f(x, y, z)),
     ("\\frac{d f(x)}{dx}", Derivative(f(x), x)),
     ("\\frac{d\\theta(x)}{dx}", Derivative(Function('theta')(x), x)),
+    ("x \\neq y", Unequality(x, y)),
     ("|x|", _Abs(x)),
     ("||x||", _Abs(Abs(x))),
     ("|x||y|", _Abs(x)*_Abs(y)),
