@@ -1331,6 +1331,16 @@ def test_higher_order_to_first_order():
         assert dsolve(eq3) == sol3
     assert checksysodesol(eq3, sol3) == (True, [0, 0])
 
+    # Euler Systems
+    eqs1 = [Eq(Derivative(f(t), (t, 2)), Derivative(f(t), t)/t + f(t)/t**2 + g(t)/t**2),
+            Eq(Derivative(g(t), (t, 2)), g(t)/t**2)]
+    sol1 = [Eq(f(t), C1*t**(1/2 - sqrt(5)/2)*(-3/2 - sqrt(5)/2) + C2*t**(1/2 + sqrt(5)/2)*(-3/2 + sqrt(5)/2) +
+               C3*t**(1 - sqrt(2))*(-sqrt(2) - 1) + C4*t**(1 + sqrt(2))*(-1 + sqrt(2))),
+            Eq(g(t), C1*t**(Rational(1, 2) - sqrt(5)/2)*(-sqrt(5)/2 - Rational(1, 2)) + C2*t**(Rational(1, 2) +
+               sqrt(5)/2)*(-Rational(1, 2) + sqrt(5)/2))]
+    assert dsolve(eqs1) == sol1
+    assert checksysodesol(eqs1, sol1) == (True, [0, 0])
+
 
 def test_second_order_to_first_order():
     f, g = symbols("f g", cls=Function)
@@ -1352,6 +1362,25 @@ def test_second_order_to_first_order():
                 C3*exp(-I*x**2)/(2*x**2), x))]
     assert dsolve(eqs2) == sol2
     assert checksysodesol(eqs2, sol2) == (True, [0, 0])
+
+    eqs3 = (Eq(diff(f(t),t,t), 9*t*diff(g(t),t)-9*g(t)), Eq(diff(g(t),t,t),7*t*diff(f(t),t)-7*f(t)))
+    sol3 = [Eq(f(t),
+                C1*t + t*Integral(C2*exp(3*sqrt(7)*t**2/2)/(2*t**2) + C2*exp(-3*sqrt(7)*t**2/2)/(2*t**2) +
+                3*sqrt(7)*C3*exp(3*sqrt(7)*t**2/2)/(14*t**2) - 3*sqrt(7)*C3*exp(-3*sqrt(7)*t**2/2)/(14*t**2), t)),
+            Eq(g(t),
+                C4*t + t*Integral(sqrt(7)*C2*exp(3*sqrt(7)*t**2/2)/(6*t**2) - sqrt(7)*C2*exp(-3*sqrt(7)*t**2/2)/(6*t**2) +
+                C3*exp(3*sqrt(7)*t**2/2)/(2*t**2) + C3*exp(-3*sqrt(7)*t**2/2)/(2*t**2), t))]
+    assert dsolve(eqs3) == sol3
+    assert checksysodesol(eqs3, sol3) == (True, [0, 0])
+
+    eqs4 = [Eq(Derivative(f(t), (t, 2)), t*sin(t)*Derivative(g(t), t) - g(t)*sin(t)),
+            Eq(Derivative(g(t), (t, 2)), t*sin(t)*Derivative(f(t), t) - f(t)*sin(t))]
+    sol4 = [Eq(f(t), C1*t + t*Integral(C2*exp(t*cos(t))*exp(-sin(t))/(2*t**2) + C2*exp(-t*cos(t))*exp(sin(t))/(2*t**2) -
+                C3*exp(t*cos(t))*exp(-sin(t))/(2*t**2) + C3*exp(-t*cos(t))*exp(sin(t))/(2*t**2), t)),
+            Eq(g(t), C4*t + t*Integral(-C2*exp(t*cos(t))*exp(-sin(t))/(2*t**2) + C2*exp(-t*cos(t))*exp(sin(t))/(2*t**2) +
+                C3*exp(t*cos(t))*exp(-sin(t))/(2*t**2) + C3*exp(-t*cos(t))*exp(sin(t))/(2*t**2), t))]
+    assert dsolve(eqs4) == sol4
+    assert checksysodesol(eqs4, sol4) == (True, [0, 0])
 
     # Type 2
     eqs1 = [Eq(Derivative(f(t), (t, 2)), f(t)/t**4), Eq(Derivative(g(t), (t, 2)), d*g(t)/t**4)]

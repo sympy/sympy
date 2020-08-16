@@ -2079,12 +2079,6 @@ def check_linear_2eq_order2(eq, func, func_coef):
     cancel(r['b1']*r['a2']/(r['b2']*r['a1'])).has(t) and r['d1']==r['d2']==r['e1']==r['e2']==0:
         return "type7"
 
-    elif (r['b1']/r['a1']).match(a/t) and (r['b2']/r['a2']).match(a/t) and not \
-    (r['b1']/r['c1']).has(t) and not (r['b2']/r['c2']).has(t) and \
-    (r['d1']/r['a1']).match(b/t**2) and (r['d2']/r['a2']).match(b/t**2) \
-    and not (r['d1']/r['e1']).has(t) and not (r['d2']/r['e2']).has(t):
-        return "type9"
-
     else:
         return None
 
@@ -6623,22 +6617,10 @@ def sysode_linear_2eq_order2(match_):
     r['e2'] = -const[1]
     if match_['type_of_equation'] == 'type3':
         sol = _linear_2eq_order2_type3(x, y, t, r, eq)
-    elif match_['type_of_equation'] == 'type4':
-        sol = _linear_2eq_order2_type4(x, y, t, r, eq)
-    elif match_['type_of_equation'] == 'type5':
-        sol = _linear_2eq_order2_type5(x, y, t, r, eq)
-    elif match_['type_of_equation'] == 'type6':
-        sol = _linear_2eq_order2_type6(x, y, t, r, eq)
     elif match_['type_of_equation'] == 'type7':
         sol = _linear_2eq_order2_type7(x, y, t, r, eq)
-    elif match_['type_of_equation'] == 'type8':
-        sol = _linear_2eq_order2_type8(x, y, t, r, eq)
     elif match_['type_of_equation'] == 'type9':
         sol = _linear_2eq_order2_type9(x, y, t, r, eq)
-    elif match_['type_of_equation'] == 'type10':
-        sol = _linear_2eq_order2_type10(x, y, t, r, eq)
-    elif match_['type_of_equation'] == 'type11':
-        sol = _linear_2eq_order2_type11(x, y, t, r, eq)
     return sol
 
 def _linear_2eq_order2_type3(x, y, t, r, eq):
@@ -6711,64 +6693,6 @@ def _linear_2eq_order2_type7(x, y, t, r, eq):
     z2 = C3*Integral(exp(k2*F), t) + C4
     sol1 = (k1*z2 - k2*z1 + a1*(z1 - z2))/(a2*(k1-k2))
     sol2 = (z1 - z2)/(k1 - k2)
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
-def _linear_2eq_order2_type9(x, y, t, r, eq):
-    r"""
-    .. math:: t^2 x'' + a_1 t x' + b_1 t y' + c_1 x + d_1 y = 0
-
-    .. math:: t^2 y'' + a_2 t x' + b_2 t y' + c_2 x + d_2 y = 0
-
-    These system of equations are euler type.
-
-    The substitution of `t = \sigma e^{\tau} (\sigma \neq 0)` leads to the system of constant
-    coefficient linear differential equations
-
-    .. math:: x'' + (a_1 - 1) x' + b_1 y' + c_1 x + d_1 y = 0
-
-    .. math:: y'' + a_2 x' + (b_2 - 1) y' + c_2 x + d_2 y = 0
-
-    The general solution of the homogeneous system of differential equations is determined
-    by a linear combination of linearly independent particular solutions determined by
-    the method of undetermined coefficients in the form of exponentials
-
-    .. math:: x = A e^{\lambda t}, y = B e^{\lambda t}
-
-    On substituting these expressions into the original system and collecting the
-    coefficients of the unknown `A` and `B`, one obtains
-
-    .. math:: (\lambda^{2} + (a_1 - 1) \lambda + c_1) A + (b_1 \lambda + d_1) B = 0
-
-    .. math:: (a_2 \lambda + c_2) A + (\lambda^{2} + (b_2 - 1) \lambda + d_2) B = 0
-
-    The determinant of this system must vanish for nontrivial solutions A, B to exist.
-    This requirement results in the following characteristic equation for `\lambda`
-
-    .. math:: (\lambda^2 + (a_1 - 1) \lambda + c_1) (\lambda^2 + (b_2 - 1) \lambda + d_2) - (b_1 \lambda + d_1) (a_2 \lambda + c_2) = 0
-
-    If all roots `k_1,...,k_4` of this equation are distinct, the general solution of the original
-    system of the differential equations has the form
-
-    .. math:: x = C_1 (b_1 \lambda_1 + d_1) e^{\lambda_1 t} - C_2 (b_1 \lambda_2 + d_1) e^{\lambda_2 t} - C_3 (b_1 \lambda_3 + d_1) e^{\lambda_3 t} - C_4 (b_1 \lambda_4 + d_1) e^{\lambda_4 t}
-
-    .. math:: y = C_1 (\lambda_1^{2} + (a_1 - 1) \lambda_1 + c_1) e^{\lambda_1 t} + C_2 (\lambda_2^{2} + (a_1 - 1) \lambda_2 + c_1) e^{\lambda_2 t} + C_3 (\lambda_3^{2} + (a_1 - 1) \lambda_3 + c_1) e^{\lambda_3 t} + C_4 (\lambda_4^{2} + (a_1 - 1) \lambda_4 + c_1) e^{\lambda_4 t}
-
-    """
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    k = Symbol('k')
-    a1 = -r['a1']*t; a2 = -r['a2']*t
-    b1 = -r['b1']*t; b2 = -r['b2']*t
-    c1 = -r['c1']*t**2; c2 = -r['c2']*t**2
-    d1 = -r['d1']*t**2; d2 = -r['d2']*t**2
-    eq = (k**2+(a1-1)*k+c1)*(k**2+(b2-1)*k+d2)-(b1*k+d1)*(a2*k+c2)
-    [k1, k2, k3, k4] = roots_quartic(Poly(eq))
-    sol1 = -C1*(b1*k1+d1)*exp(k1*log(t)) - C2*(b1*k2+d1)*exp(k2*log(t)) - \
-    C3*(b1*k3+d1)*exp(k3*log(t)) - C4*(b1*k4+d1)*exp(k4*log(t))
-
-    a1_ = (a1-1)
-    sol2 = C1*(k1**2+a1_*k1+c1)*exp(k1*log(t)) + C2*(k2**2+a1_*k2+c1)*exp(k2*log(t)) \
-    + C3*(k3**2+a1_*k3+c1)*exp(k3*log(t)) + C4*(k4**2+a1_*k4+c1)*exp(k4*log(t))
-
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 
