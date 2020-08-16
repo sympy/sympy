@@ -77,6 +77,11 @@ FUNC_ARSINH: '\\arsinh';
 FUNC_ARCOSH: '\\arcosh';
 FUNC_ARTANH: '\\artanh';
 
+L_FLOOR: '\\lfloor';
+R_FLOOR: '\\rfloor';
+L_CEIL: '\\lceil';
+R_CEIL: '\\rceil';
+
 FUNC_SQRT: '\\sqrt';
 
 CMD_TIMES: '\\times';
@@ -175,14 +180,16 @@ comp:
     | func
     | atom
     | frac
-    | binom;
+    | binom
+    | floor;
 
 comp_nofunc:
     group
     | abs_group
     | atom
     | frac
-    | binom;
+    | binom
+    | floor;
 
 group:
     L_PAREN expr R_PAREN
@@ -210,6 +217,9 @@ binom:
     R_BRACE L_BRACE
     k=expr
     R_BRACE;
+
+floor: L_FLOOR val = expr R_FLOOR;
+ceil: L_CEIL val = expr R_CEIL;
 
 func_normal:
     FUNC_EXP | FUNC_LOG | FUNC_LN
