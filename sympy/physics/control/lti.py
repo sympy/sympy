@@ -474,13 +474,15 @@ class Series(Basic):
         obj.is_SISO = True if all(isinstance(arg.doit(), TransferFunction) for arg in args) \
             else False
         if not obj.is_SISO:
-            obj._num_inputs, obj._num_outputs = args[0].num_inputs, args[0].num_outputs
+            obj._num_outputs, obj._num_inputs = args[0].num_outputs, args[-1].num_inputs
             for x in range(len(args) - 1):
                 # input-output sizes should be consistent.
                 if args[x].num_inputs != args[x + 1].num_outputs:
                     raise ValueError("Argument {0} of Series has {1} input(s),"
                         " but argument {2} has {3} output(s)."
                         .format(x + 1, args[x].num_inputs, x + 2, args[x + 1].num_outputs))
+        else:
+            obj._num_outputs, obj._num_inputs = 1, 1
 
         tf = "transfer functions" if obj.is_SISO else "TransferFunctionMatrix objects"
         obj._var = args[0].var
@@ -758,6 +760,8 @@ class Parallel(Basic):
             if not all(arg.shape == args[0].shape for arg in args):
                 raise ShapeError("Dimensions of all TransferFunctionMatrix"
                     " objects should match.")
+        else:
+            obj._num_inputs, obj._num_outputs = 1, 1
 
         tf = "transfer functions" if obj.is_SISO else "TransferFunctionMatrix objects"
         obj._var = args[0].var

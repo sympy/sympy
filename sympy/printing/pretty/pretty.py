@@ -972,10 +972,23 @@ class PrettyPrinter(Printer):
             return self._print(1)/self._print(expr.den)
 
     def _print_Series(self, expr):
-        args = list(expr.args)
-        for i, a in enumerate(expr.args):
-            args[i] = prettyForm(*self._print(a).parens())
-        return prettyForm.__mul__(*args)
+        from sympy.physics.control import Parallel
+        if expr.is_SISO:
+            args = list(expr.args)
+            for i, a in enumerate(expr.args):
+                args[i] = prettyForm(*self._print(a).parens())
+            return prettyForm.__mul__(*args)
+        else:
+            s = None
+            for item in expr.args:
+                pform =  prettyForm(*self._print(item).parens()) if isinstance(item, Parallel) \
+                    else self._print(item)
+                if s is None:
+                    s = pform   # First element
+                else:
+                    s = prettyForm(*stringPict.next(s, ' x '))
+                    s = prettyForm(*stringPict.next(s, pform))
+            return s
 
     def _print_Parallel(self, expr):
         s = None

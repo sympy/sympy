@@ -337,30 +337,36 @@ def test_Series_construction():
     assert s0.args == (tf, tf2)
     assert s0.var == s
     assert s0.is_SISO
+    assert s0.shape == (s0.num_outputs, s0.num_inputs) == (1, 1)
 
     s1 = Series(Parallel(tf, -tf2), tf2)
     assert s1.args == (Parallel(tf, -tf2), tf2)
     assert s1.var == s
     assert s1.is_SISO
+    assert s1.shape == (s1.num_outputs, s1.num_inputs) == (1, 1)
 
     tf3_ = TransferFunction(inp, 1, s)
     tf4_ = TransferFunction(-out, 1, s)
     s2 = Series(tf, Parallel(tf3_, tf4_), tf2)
     assert s2.args == (tf, Parallel(tf3_, tf4_), tf2)
     assert s2.is_SISO
+    assert s2.shape == (s2.num_outputs, s2.num_inputs) == (1, 1)
 
     s3 = Series(tf, tf2, tf4)
     assert s3.args == (tf, tf2, tf4)
     assert s3.is_SISO
+    assert s3.shape == (s3.num_outputs, s3.num_inputs) == (1, 1)
 
     s4 = Series(tf3_, tf4_)
     assert s4.args == (tf3_, tf4_)
     assert s4.var == s
     assert s4.is_SISO
+    assert s4.shape == (s4.num_outputs, s4.num_inputs) == (1, 1)
 
     s6 = Series(tf2, tf4, Parallel(tf2, -tf), tf4)
     assert s6.args == (tf2, tf4, Parallel(tf2, -tf), tf4)
     assert s6.is_SISO
+    assert s6.shape == (s6.num_outputs, s6.num_inputs) == (1, 1)
 
     s7 = Series(tf, tf2)
     assert s0 == s7
@@ -503,25 +509,30 @@ def test_Parallel_construction():
     assert p0.args == (tf, tf2)
     assert p0.var == s
     assert p0.is_SISO
+    assert p0.shape == (p0.num_outputs, p0.num_inputs) == (1, 1)
 
     p1 = Parallel(Series(tf, -tf2), tf2)
     assert p1.args == (Series(tf, -tf2), tf2)
     assert p1.var == s
     assert p1.is_SISO
+    assert p1.shape == (p1.num_outputs, p1.num_inputs) == (1, 1)
 
     tf3_ = TransferFunction(inp, 1, s)
     tf4_ = TransferFunction(-out, 1, s)
     p2 = Parallel(tf, Series(tf3_, -tf4_), tf2)
     assert p2.args == (tf, Series(tf3_, -tf4_), tf2)
     assert p2.is_SISO
+    assert p2.shape == (p2.num_outputs, p2.num_inputs) == (1, 1)
 
     p3 = Parallel(tf, tf2, tf4)
     assert p3.args == (tf, tf2, tf4)
     assert p3.is_SISO
+    assert p3.shape == (p3.num_outputs, p3.num_inputs) == (1, 1)
 
     p4 = Parallel(tf3_, tf4_)
     assert p4.args == (tf3_, tf4_)
     assert p4.var == s
+    assert p4.shape == (p4.num_outputs, p4.num_inputs) == (1, 1)
 
     p5 = Parallel(tf, tf2)
     assert p0 == p5
@@ -529,10 +540,12 @@ def test_Parallel_construction():
 
     p6 = Parallel(tf2, tf4, Series(tf2, -tf4))
     assert p6.args == (tf2, tf4, Series(tf2, -tf4))
+    assert p6.shape == (p6.num_outputs, p6.num_inputs) == (1, 1)
 
     p7 = Parallel(tf2, tf4, Series(tf2, -tf), tf4)
     assert p7.args == (tf2, tf4, Series(tf2, -tf), tf4)
     assert p7.is_SISO
+    assert p7.shape == (p7.num_outputs, p7.num_inputs) == (1, 1)
 
     raises(ValueError, lambda: Parallel(tf, tf3))
     raises(ValueError, lambda: Parallel(tf, tf2, tf3, tf4))
