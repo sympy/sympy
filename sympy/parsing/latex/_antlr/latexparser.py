@@ -15,10 +15,11 @@ from antlr4 import *
 from io import StringIO
 import sys
 
+
 def serializedATN():
     with StringIO() as buf:
         buf.write(u"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3")
-        buf.write(u"K\u01b2\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t")
+        buf.write(u"P\u01b2\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t")
         buf.write(u"\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t\13\4\f\t\f\4\r\t\r")
         buf.write(u"\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22\4")
         buf.write(u"\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30")
@@ -62,13 +63,13 @@ def serializedATN():
         buf.write(u" \u0194\n \3!\3!\3\"\3\"\3\"\3\"\3\"\3\"\5\"\u019e\n")
         buf.write(u"\"\3#\3#\3#\3#\3#\3#\5#\u01a6\n#\3$\3$\3$\3$\3$\3%\3")
         buf.write(u"%\3%\3%\3%\3%\2\b\4\n\f\16 \"&\2\4\6\b\n\f\16\20\22\24")
-        buf.write(u"\26\30\32\34\36 \"$&(*,.\60\62\64\668:<>@BDFH\2\t\3\2")
-        buf.write(u"EI\3\2\r\16\5\2\17\20\679AA\4\2CCKK\3\2;=\3\2!\65\3\2")
-        buf.write(u"\37 \2\u01cb\2J\3\2\2\2\4L\3\2\2\2\6W\3\2\2\2\b[\3\2")
-        buf.write(u"\2\2\n]\3\2\2\2\fh\3\2\2\2\16s\3\2\2\2\20\u0085\3\2\2")
-        buf.write(u"\2\22\u0090\3\2\2\2\24\u0092\3\2\2\2\26\u0099\3\2\2\2")
-        buf.write(u"\30\u00a2\3\2\2\2\32\u00a4\3\2\2\2\34\u00ac\3\2\2\2\36")
-        buf.write(u"\u00b4\3\2\2\2 \u00bc\3\2\2\2\"\u00d0\3\2\2\2$\u00ea")
+        buf.write(u"\26\30\32\34\36 \"$&(*,.\60\62\64\668:<>@BDFH\2\t\4\2")
+        buf.write(u"EHKL\3\2\r\16\5\2\17\20\679AA\4\2CCPP\3\2;=\3\2!\65\3")
+        buf.write(u"\2\37 \2\u01cb\2J\3\2\2\2\4L\3\2\2\2\6W\3\2\2\2\b[\3")
+        buf.write(u"\2\2\2\n]\3\2\2\2\fh\3\2\2\2\16s\3\2\2\2\20\u0085\3\2")
+        buf.write(u"\2\2\22\u0090\3\2\2\2\24\u0092\3\2\2\2\26\u0099\3\2\2")
+        buf.write(u"\2\30\u00a2\3\2\2\2\32\u00a4\3\2\2\2\34\u00ac\3\2\2\2")
+        buf.write(u"\36\u00b4\3\2\2\2 \u00bc\3\2\2\2\"\u00d0\3\2\2\2$\u00ea")
         buf.write(u"\3\2\2\2&\u00f1\3\2\2\2(\u0103\3\2\2\2*\u0105\3\2\2\2")
         buf.write(u",\u0110\3\2\2\2.\u0112\3\2\2\2\60\u011a\3\2\2\2\62\u011d")
         buf.write(u"\3\2\2\2\64\u0125\3\2\2\2\66\u012d\3\2\2\28\u0178\3\2")
@@ -100,7 +101,7 @@ def serializedATN():
         buf.write(u"\"\22\2\u009a\u009c\5\30\r\2\u009b\u009a\3\2\2\2\u009c")
         buf.write(u"\u009f\3\2\2\2\u009d\u009b\3\2\2\2\u009d\u009e\3\2\2")
         buf.write(u"\2\u009e\27\3\2\2\2\u009f\u009d\3\2\2\2\u00a0\u00a3\7")
-        buf.write(u"J\2\2\u00a1\u00a3\5\32\16\2\u00a2\u00a0\3\2\2\2\u00a2")
+        buf.write(u"O\2\2\u00a1\u00a3\5\32\16\2\u00a2\u00a0\3\2\2\2\u00a2")
         buf.write(u"\u00a1\3\2\2\2\u00a3\31\3\2\2\2\u00a4\u00aa\7\33\2\2")
         buf.write(u"\u00a5\u00ab\5\36\20\2\u00a6\u00ab\5\34\17\2\u00a7\u00a8")
         buf.write(u"\5\36\20\2\u00a8\u00a9\5\34\17\2\u00a9\u00ab\3\2\2\2")
@@ -252,8 +253,9 @@ class LaTeXParser ( Parser ):
                      u"'\\sqrt'", u"'\\times'", u"'\\cdot'", u"'\\div'",
                      u"'\\frac'", u"'\\binom'", u"'\\dbinom'", u"'\\tbinom'",
                      u"'\\mathit'", u"'_'", u"'^'", u"':'", u"<INVALID>",
-                     u"<INVALID>", u"<INVALID>", u"'='", u"'<'", u"'\\leq'",
-                     u"'>'", u"'\\geq'", u"'!'" ]
+                     u"<INVALID>", u"<INVALID>", u"'='", u"'\\neq'", u"'<'",
+                     u"<INVALID>", u"'\\leqq'", u"'\\leqslant'", u"'>'",
+                     u"<INVALID>", u"'\\geqq'", u"'\\geqslant'", u"'!'" ]
 
     symbolicNames = [ u"<INVALID>", u"<INVALID>", u"WS", u"THINSPACE", u"MEDSPACE",
                       u"THICKSPACE", u"QUAD", u"QQUAD", u"NEGTHINSPACE",
@@ -271,8 +273,9 @@ class LaTeXParser ( Parser ):
                       u"CMD_TIMES", u"CMD_CDOT", u"CMD_DIV", u"CMD_FRAC",
                       u"CMD_BINOM", u"CMD_DBINOM", u"CMD_TBINOM", u"CMD_MATHIT",
                       u"UNDERSCORE", u"CARET", u"COLON", u"DIFFERENTIAL",
-                      u"LETTER", u"NUMBER", u"EQUAL", u"LT", u"LTE", u"GT",
-                      u"GTE", u"BANG", u"SYMBOL" ]
+                      u"LETTER", u"NUMBER", u"EQUAL", u"NEQ", u"LT", u"LTE",
+                      u"LTE_Q", u"LTE_S", u"GT", u"GTE", u"GTE_Q", u"GTE_S",
+                      u"BANG", u"SYMBOL" ]
 
     RULE_math = 0
     RULE_relation = 1
@@ -388,18 +391,24 @@ class LaTeXParser ( Parser ):
     LETTER=65
     NUMBER=66
     EQUAL=67
-    LT=68
-    LTE=69
-    GT=70
-    GTE=71
-    BANG=72
-    SYMBOL=73
+    NEQ=68
+    LT=69
+    LTE=70
+    LTE_Q=71
+    LTE_S=72
+    GT=73
+    GTE=74
+    GTE_Q=75
+    GTE_S=76
+    BANG=77
+    SYMBOL=78
 
     def __init__(self, input, output=sys.stdout):
         super(LaTeXParser, self).__init__(input, output=output)
-        self.checkVersion("4.7.1")
+        self.checkVersion("4.8")
         self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
         self._predicates = None
+
 
 
 
@@ -435,6 +444,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class RelationContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -466,6 +476,9 @@ class LaTeXParser ( Parser ):
 
         def GTE(self):
             return self.getToken(LaTeXParser.GTE, 0)
+
+        def NEQ(self):
+            return self.getToken(LaTeXParser.NEQ, 0)
 
         def getRuleIndex(self):
             return LaTeXParser.RULE_relation
@@ -501,7 +514,7 @@ class LaTeXParser ( Parser ):
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
                     self.state = 78
                     _la = self._input.LA(1)
-                    if not(((((_la - 67)) & ~0x3f) == 0 and ((1 << (_la - 67)) & ((1 << (LaTeXParser.EQUAL - 67)) | (1 << (LaTeXParser.LT - 67)) | (1 << (LaTeXParser.LTE - 67)) | (1 << (LaTeXParser.GT - 67)) | (1 << (LaTeXParser.GTE - 67)))) != 0)):
+                    if not(((((_la - 67)) & ~0x3f) == 0 and ((1 << (_la - 67)) & ((1 << (LaTeXParser.EQUAL - 67)) | (1 << (LaTeXParser.NEQ - 67)) | (1 << (LaTeXParser.LT - 67)) | (1 << (LaTeXParser.LTE - 67)) | (1 << (LaTeXParser.GT - 67)) | (1 << (LaTeXParser.GTE - 67)))) != 0)):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -519,6 +532,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.unrollRecursionContexts(_parentctx)
         return localctx
+
 
     class EqualityContext(ParserRuleContext):
 
@@ -562,6 +576,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class ExprContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -593,6 +608,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class AdditiveContext(ParserRuleContext):
 
@@ -669,6 +685,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.unrollRecursionContexts(_parentctx)
         return localctx
+
 
     class MpContext(ParserRuleContext):
 
@@ -758,6 +775,7 @@ class LaTeXParser ( Parser ):
             self.unrollRecursionContexts(_parentctx)
         return localctx
 
+
     class Mp_nofuncContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -846,6 +864,7 @@ class LaTeXParser ( Parser ):
             self.unrollRecursionContexts(_parentctx)
         return localctx
 
+
     class UnaryContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -923,6 +942,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class Unary_nofuncContext(ParserRuleContext):
 
@@ -1005,6 +1025,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class PostfixContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -1054,6 +1075,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class Postfix_nofuncContext(ParserRuleContext):
 
@@ -1105,6 +1127,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class Postfix_opContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -1152,6 +1175,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class Eval_atContext(ParserRuleContext):
 
@@ -1212,6 +1236,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class Eval_at_subContext(ParserRuleContext):
 
@@ -1276,6 +1301,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class Eval_at_supContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -1338,6 +1364,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class ExpContext(ParserRuleContext):
 
@@ -1445,6 +1472,7 @@ class LaTeXParser ( Parser ):
             self.unrollRecursionContexts(_parentctx)
         return localctx
 
+
     class Exp_nofuncContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -1551,6 +1579,7 @@ class LaTeXParser ( Parser ):
             self.unrollRecursionContexts(_parentctx)
         return localctx
 
+
     class CompContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -1640,6 +1669,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class Comp_nofuncContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -1715,6 +1745,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class GroupContext(ParserRuleContext):
 
@@ -1811,6 +1842,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class Abs_groupContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -1852,6 +1884,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class AtomContext(ParserRuleContext):
 
@@ -1938,6 +1971,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class MathitContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -1985,6 +2019,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class Mathit_textContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -2027,6 +2062,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class FracContext(ParserRuleContext):
 
@@ -2091,6 +2127,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class BinomContext(ParserRuleContext):
 
@@ -2167,6 +2204,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class Func_normalContext(ParserRuleContext):
 
@@ -2264,6 +2302,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class FuncContext(ParserRuleContext):
 
@@ -2594,6 +2633,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class ArgsContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -2646,6 +2686,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class Limit_subContext(ParserRuleContext):
 
@@ -2747,6 +2788,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class Func_argContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -2800,6 +2842,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class Func_arg_noparensContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -2831,6 +2874,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class SubexprContext(ParserRuleContext):
 
@@ -2895,6 +2939,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class SupexprContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -2958,6 +3003,7 @@ class LaTeXParser ( Parser ):
             self.exitRule()
         return localctx
 
+
     class SubeqContext(ParserRuleContext):
 
         def __init__(self, parser, parent=None, invokingState=-1):
@@ -3004,6 +3050,7 @@ class LaTeXParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
+
 
     class SupeqContext(ParserRuleContext):
 
