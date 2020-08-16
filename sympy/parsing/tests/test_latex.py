@@ -88,6 +88,8 @@ GOOD_PAIRS = [
     ("0+1", Add(0, 1, evaluate=False)),
     ("1*2", Mul(1, 2, evaluate=False)),
     ("0*1", Mul(0, 1, evaluate=False)),
+    ("\\lfloor x \\rfloor",sympy.floor(x)),
+    ("\\lceil x \\rceil",sympy.ceil(x)),
     ("\\sin \\theta", sin(theta)),
     ("\\sin(\\theta)", sin(theta)),
     ("\\sin^{-1} a", asin(a)),
