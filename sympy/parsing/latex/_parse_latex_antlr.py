@@ -281,6 +281,10 @@ def convert_comp(comp):
         return convert_frac(comp.frac())
     elif comp.binom():
         return convert_binom(comp.binom())
+    elif comp.floor():
+        return convert_floor(comp.floor())
+    elif comp.ceil():
+        return convert_ceil(comp.ceil())
     elif comp.func():
         return convert_func(comp.func())
 
@@ -330,6 +334,13 @@ def rule2text(ctx):
 
     return stream.getText(startIdx, stopIdx)
 
+def convert_floor(floor):
+    val = convert_expr(floor.val)
+    return sympy.floor(val, evaluate=False)
+
+def convert_ceil(ceil):
+    val = convert_expr(ceil.val)
+    return sympy.ceiling(val, evaluate=False)
 
 def convert_frac(frac):
     diff_op = False
