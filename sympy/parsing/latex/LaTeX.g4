@@ -50,8 +50,8 @@ BAR: '|';
 FUNC_LIM:  '\\lim';
 LIM_APPROACH_SYM: '\\to' | '\\rightarrow' | '\\Rightarrow' | '\\longrightarrow' | '\\Longrightarrow';
 FUNC_INT:  '\\int';
-FUNC_SUM:  '\\sum';
-FUNC_PROD: '\\prod';
+FUNC_SUM: ('\\sum' | SIGMA);
+FUNC_PROD: ('\\prod' | PI);
 
 FUNC_EXP:  '\\exp';
 FUNC_LOG:  '\\log';
@@ -76,6 +76,9 @@ FUNC_TANH: '\\tanh';
 FUNC_ARSINH: '\\arsinh';
 FUNC_ARCOSH: '\\arcosh';
 FUNC_ARTANH: '\\artanh';
+
+SIGMA: '\\Sigma';
+PI: '\\Pi';
 
 FUNC_SQRT: '\\sqrt';
 
