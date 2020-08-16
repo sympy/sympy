@@ -76,7 +76,16 @@ class MapAdd(Map, Add):
         obj = Basic.__new__(cls, *args)
         obj.is_commutative = None
         return obj
-    _new_rawargs = _from_args
+
+    def _new_rawargs(cls, *args, **kwargs):
+        if not args:
+            raise ValueError("No argument given to %s" % cls)
+        elif len(args) == 1:
+            return args[0]
+
+        obj = Basic.__new__(cls, *args)
+        obj.is_commutative = None
+        return obj
 
     @property
     def domain(self):
@@ -220,7 +229,16 @@ class MapMul(Map, Mul):
         obj = Basic.__new__(cls, *args)
         obj.is_commutative = None
         return obj
-    _new_rawargs = _from_args
+
+    def _new_rawargs(cls, *args, **kwargs):
+        if not args:
+            raise ValueError("No argument given to %s" % cls)
+        elif len(args) == 1:
+            return args[0]
+
+        obj = Basic.__new__(cls, *args)
+        obj.is_commutative = None
+        return obj
 
     @property
     def domain(self):
