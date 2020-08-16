@@ -76,7 +76,7 @@ class BesselBase(Function):
             return None
         z0 = z.subs(x, a)
         if nu.is_integer:
-            if isinstance(self, (besselj, besseli, jn, yn)) or not nu.is_zero:
+            if isinstance(self, (besselj, besseli, hn1, hn2, jn, yn)) or not nu.is_zero:
                 return fuzzy_not(z0.is_infinite)
         return fuzzy_not(fuzzy_or([z0.is_zero, z0.is_infinite]))
 
