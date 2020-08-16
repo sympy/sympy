@@ -34,6 +34,9 @@ SUB: '-';
 MUL: '*';
 DIV: '/';
 
+PM: '\\pm'; 
+MP: '\\mp';
+
 L_PAREN: '(';
 R_PAREN: ')';
 L_BRACE: '{';
@@ -46,6 +49,17 @@ CMD_LEFT: '\\left' -> skip;
 CMD_RIGHT: '\\right' -> skip;
 
 BAR: '|';
+
+R_BAR: '\\right|';
+L_BAR: '\\left|';
+LEFT_BRACKET: '\\left[';
+RIGHT_BRACKET: '\\right]';
+
+L_ANGLE: '\\langle';
+R_ANGLE: '\\rangle';
+
+L_L_ANGLE: '\\left\\angle';
+R_R_ANGLE: '\\right\\angle';
 
 FUNC_LIM:  '\\lim';
 LIM_APPROACH_SYM: '\\to' | '\\rightarrow' | '\\Rightarrow' | '\\longrightarrow' | '\\Longrightarrow';
@@ -192,7 +206,10 @@ group:
 
 abs_group: BAR expr BAR;
 
-atom: (LETTER | SYMBOL) subexpr? | NUMBER | DIFFERENTIAL | mathit;
+atom: (LETTER | SYMBOL) subexpr? | NUMBER | DIFFERENTIAL | mathit | bra | ket;
+
+bra: L_ANGLE expr (R_BAR | BAR);
+ket: (L_BAR | BAR) expr R_ANGLE;
 
 mathit: CMD_MATHIT L_BRACE mathit_text R_BRACE;
 mathit_text: LETTER*;
