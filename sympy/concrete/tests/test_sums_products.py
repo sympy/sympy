@@ -1091,6 +1091,10 @@ def test_issue_10156():
         8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))
 
 
+def test_issue_10973():
+    assert Sum((-n + (n**3 + 1)**(S(1)/3))/log(n), (n, 1, oo)).is_convergent() is S.true
+
+
 def test_issue_14129():
     assert Sum( k*x**k, (k, 0, n-1)).doit() == \
         Piecewise((n**2/2 - n/2, Eq(x, 1)), ((n*x*x**n -
@@ -1344,6 +1348,10 @@ def test_issue_17165():
     assert ssimp == Piecewise((-1/(x - 1), Abs(x) < 1),
                               (x*Sum(x**n, (n, -1, oo)), True))
     assert ssimp == ssimp.simplify()
+
+
+def test_issue_19379():
+    assert Sum(factorial(n)/factorial(n + 2), (n, 1, oo)).is_convergent() is S.true
 
 
 def test__dummy_with_inherited_properties_concrete():

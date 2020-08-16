@@ -419,8 +419,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sym = self.limits[0][0]
         lower_limit = self.limits[0][1]
         upper_limit = self.limits[0][2]
-        sequence_term = simplify(self.function)
-
+        sequence_term = self.function.simplify()
 
         if len(sequence_term.free_symbols) > 1:
             raise NotImplementedError("convergence checking for more than one symbol "
@@ -445,7 +444,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         interval = Interval(lower_limit, upper_limit)
 
-
         # Piecewise function handle
         if sequence_term.is_Piecewise:
             for func, cond in sequence_term.args:
@@ -462,7 +460,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                return S.false
         except NotImplementedError:
             pass
-
 
         try:
             lim_val_abs = limit_seq(abs(sequence_term), sym)
