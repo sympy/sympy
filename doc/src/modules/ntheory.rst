@@ -148,6 +148,8 @@ Ntheory Functions Reference
 
 .. autofunction:: isprime
 
+.. autofunction:: is_gaussian_prime
+
 .. module:: sympy.ntheory.residue_ntheory
 
 .. autofunction:: n_order
@@ -175,6 +177,9 @@ Ntheory Functions Reference
 .. autofunction:: discrete_log
 
 .. automodule:: sympy.ntheory.continued_fraction
+   :members:
+
+.. automodule:: sympy.ntheory.digits
    :members:
 
 .. autoclass:: sympy.ntheory.mobius

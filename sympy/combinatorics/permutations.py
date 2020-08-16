@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 import random
 from collections import defaultdict
 
@@ -10,13 +8,12 @@ from sympy.core.compatibility import \
     is_sequence, reduce, as_int, Iterable
 from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
-from sympy.logic.boolalg import as_Boolean
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
 from mpmath.libmp.libintmath import ifac
-
+from sympy.multipledispatch import dispatch
 
 def _af_rmul(a, b):
     """
@@ -315,8 +312,7 @@ class Cycle(dict):
         return as_int(arg)
 
     def __iter__(self):
-        for i in self.list():
-            yield i
+        yield from self.list()
 
     def __call__(self, *other):
         """Return product of cycles processed from R to L.
@@ -325,7 +321,6 @@ class Cycle(dict):
         ========
 
         >>> from sympy.combinatorics.permutations import Cycle as C
-        >>> from sympy.combinatorics.permutations import Permutation as Perm
         >>> C(1, 2)(2, 3)
         (1 3 2)
 
@@ -358,7 +353,6 @@ class Cycle(dict):
         ========
 
         >>> from sympy.combinatorics.permutations import Cycle
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Cycle(2, 3)(4, 5)
         >>> p.list()
         [0, 1, 3, 2, 5, 4]
@@ -611,7 +605,7 @@ class Permutation(Atom):
     trigger an error. For this reason, it is better to start the cycle
     with the singleton:
 
-    The following fails because there is is no element 3:
+    The following fails because there is no element 3:
 
     >>> Permutation(1, 2)(3)
     Traceback (most recent call last):
@@ -955,16 +949,6 @@ class Permutation(Atom):
 
         return cls._af_new(aform)
 
-    def _eval_Eq(self, other):
-        other = _sympify(other)
-        if not isinstance(other, Permutation):
-            return None
-
-        if self._size != other._size:
-            return None
-
-        return as_Boolean(self._array_form == other._array_form)
-
     @classmethod
     def _af_new(cls, perm):
         """A method to produce a Permutation object from a list;
@@ -986,7 +970,7 @@ class Permutation(Atom):
         Permutation([2, 1, 3, 0])
 
         """
-        p = super(Permutation, cls).__new__(cls)
+        p = super().__new__(cls)
         p._array_form = perm
         p._size = len(perm)
         return p
@@ -1198,7 +1182,7 @@ class Permutation(Atom):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
+        >>> from sympy.combinatorics.permutations import Permutation
 
         >>> a, b = [1, 0, 2], [0, 2, 1]
         >>> a = Permutation(a); b = Permutation(b)
@@ -1307,6 +1291,9 @@ class Permutation(Atom):
         (1 3 2)
 
         """
+        from sympy.combinatorics.perm_groups import PermutationGroup, Coset
+        if isinstance(other, PermutationGroup):
+            return Coset(self, other, dir='-')
         a = self.array_form
         # __rmul__ makes sure the other is a Permutation
         b = other.array_form
@@ -1547,8 +1534,7 @@ class Permutation(Atom):
         >>> list(Permutation(range(3)))
         [0, 1, 2]
         """
-        for i in self.array_form:
-            yield i
+        yield from self.array_form
 
     def __repr__(self):
         from sympy.printing.repr import srepr
@@ -3021,5 +3007,12 @@ class AppliedPermutation(Expr):
             if x.is_Integer:
                 return perm.apply(x)
 
-        obj = super(AppliedPermutation, cls).__new__(cls, perm, x)
+        obj = super().__new__(cls, perm, x)
         return obj
+
+
+@dispatch(Permutation, Permutation)
+def _eval_is_eq(lhs, rhs):
+    if lhs._size != rhs._size:
+        return None
+    return lhs._array_form == rhs._array_form

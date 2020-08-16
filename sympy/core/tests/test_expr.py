@@ -16,7 +16,7 @@ from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
 
-class DummyNumber(object):
+class DummyNumber:
     """
     Minimal implementation of a number that works with SymPy.
 
@@ -160,7 +160,7 @@ def test_ibasic():
     assert dotest(s)
 
 
-class NonBasic(object):
+class NonBasic:
     '''This class represents an object that knows how to implement binary
     operations like +, -, etc with Expr but is not a subclass of Basic itself.
     The NonExpr subclass below does subclass Basic but not Expr.
@@ -508,7 +508,7 @@ def test_atoms():
     assert (2*(x**(y**x))).atoms() == {S(2), x, y}
 
     assert S.Half.atoms() == {S.Half}
-    assert S.Half.atoms(Symbol) == set([])
+    assert S.Half.atoms(Symbol) == set()
 
     assert sin(oo).atoms(oo) == set()
 
@@ -619,6 +619,34 @@ def test_is_rational_function():
     assert (S.NegativeInfinity).is_rational_function() is False
     assert (S.ComplexInfinity).is_rational_function() is False
 
+def test_is_meromorphic():
+    f = a/x**2 + b + x + c*x**2
+    assert f.is_meromorphic(x, 0) is True
+    assert f.is_meromorphic(x, 1) is True
+    assert f.is_meromorphic(x, zoo) is True
+
+    g = 3 + 2*x**(log(3)/log(2) - 1)
+    assert g.is_meromorphic(x, 0) is False
+    assert g.is_meromorphic(x, 1) is True
+    assert g.is_meromorphic(x, zoo) is False
+
+    n = Symbol('n', integer=True)
+    h = sin(1/x)**n*x
+    assert h.is_meromorphic(x, 0) is False
+    assert h.is_meromorphic(x, 1) is True
+    assert h.is_meromorphic(x, zoo) is False
+
+    e = log(x)**pi
+    assert e.is_meromorphic(x, 0) is False
+    assert e.is_meromorphic(x, 1) is False
+    assert e.is_meromorphic(x, 2) is True
+    assert e.is_meromorphic(x, zoo) is False
+
+    assert (log(x)**a).is_meromorphic(x, 0) is False
+    assert (log(x)**a).is_meromorphic(x, 1) is False
+    assert (a**log(x)).is_meromorphic(x, 0) is None
+    assert (3**log(x)).is_meromorphic(x, 0) is False
+    assert (3**log(x)).is_meromorphic(x, 1) is True
 
 def test_is_algebraic_expr():
     assert sqrt(3).is_algebraic_expr(x) is True
@@ -651,7 +679,7 @@ def test_SAGE1():
 
 
 def test_SAGE2():
-    class MyInt(object):
+    class MyInt:
         def __int__(self):
             return 5
     assert sympify(MyInt()) == 5
@@ -881,7 +909,8 @@ def test_replace():
     # if not simultaneous then y*sin(x) -> y*sin(x)/y = sin(x) -> sin(x)/y
     assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y,
         simultaneous=False) == sin(x)/y
-    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e) == O(1, x)
+    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e
+        ) == x**2/2 + O(x**3)
     assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e,
         simultaneous=False) == x**2/2 + O(x**3)
     assert (x*(x*y + 3)).replace(lambda x: x.is_Mul, lambda x: 2 + x) == \
@@ -1389,7 +1418,7 @@ def test_coeff2():
     psi = Function("psi")
     g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
     g = g.expand()
-    assert g.coeff((psi(r).diff(r))) == 2/r
+    assert g.coeff(psi(r).diff(r)) == 2/r
 
 
 def test_coeff2_0():
@@ -1430,7 +1459,7 @@ def test_issue_4963():
 
 
 def test_action_verbs():
-    assert nsimplify((1/(exp(3*pi*x/5) + 1))) == \
+    assert nsimplify(1/(exp(3*pi*x/5) + 1)) == \
         (1/(exp(3*pi*x/5) + 1)).nsimplify()
     assert ratsimp(1/x + 1/y) == (1/x + 1/y).ratsimp()
     assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep=True)
@@ -2096,7 +2125,7 @@ def test_non_string_equality():
     # Make sure == doesn't try to convert the resulting expression to a string
     # (e.g., by calling sympify() instead of _sympify())
 
-    class BadRepr(object):
+    class BadRepr:
         def __repr__(self):
             raise RuntimeError
 

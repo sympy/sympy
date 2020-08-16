@@ -1,7 +1,5 @@
 """Tools for setting up printing in interactive sessions. """
 
-from __future__ import print_function, division
-
 import sys
 from distutils.version import LooseVersion as V
 from io import BytesIO
@@ -9,6 +7,7 @@ from io import BytesIO
 from sympy import latex as default_latex
 from sympy import preview
 from sympy.utilities.misc import debug
+from sympy.printing.defaults import Printable
 
 
 def _init_python_printing(stringify_func, **settings):
@@ -87,7 +86,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
     def _print_plain(arg, p, cycle):
         """caller for pretty, for use in IPython 0.11"""
-        if _can_print_latex(arg):
+        if _can_print(arg):
             p.text(stringify_func(arg))
         else:
             p.text(IPython.lib.pretty.pretty(arg))
@@ -136,20 +135,15 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             return None
 
 
-    from sympy import Basic
-    from sympy.matrices import MatrixBase
-    from sympy.physics.vector import Vector, Dyadic
-    from sympy.tensor.array import NDimArray
+    # Hook methods for builtin sympy printers
+    printing_hooks = ('_latex', '_sympystr', '_pretty', '_sympyrepr')
 
-    # These should all have _repr_latex_ and _repr_latex_orig. If you update
-    # this also update printable_types below.
-    sympy_latex_types = (Basic, MatrixBase, Vector, Dyadic, NDimArray)
 
-    def _can_print_latex(o):
-        """Return True if type o can be printed with LaTeX.
+    def _can_print(o):
+        """Return True if type o can be printed with one of the sympy printers.
 
         If o is a container type, this is True if and only if every element of
-        o can be printed with LaTeX.
+        o can be printed in this way.
         """
 
         try:
@@ -163,14 +157,16 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 if (type(o).__str__ not in (i.__str__ for i in builtin_types) or
                     type(o).__repr__ not in (i.__repr__ for i in builtin_types)):
                     return False
-                return all(_can_print_latex(i) for i in o)
+                return all(_can_print(i) for i in o)
             elif isinstance(o, dict):
-                return all(_can_print_latex(i) and _can_print_latex(o[i]) for i in o)
+                return all(_can_print(i) and _can_print(o[i]) for i in o)
             elif isinstance(o, bool):
                 return False
-            # TODO : Investigate if "elif hasattr(o, '_latex')" is more useful
-            # to use here, than these explicit imports.
-            elif isinstance(o, sympy_latex_types):
+            elif isinstance(o, Printable):
+                # types known to sympy
+                return True
+            elif any(hasattr(o, hook) for hook in printing_hooks):
+                # types which add support themselves
                 return True
             elif isinstance(o, (float, int)) and print_builtin:
                 return True
@@ -186,7 +182,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function that returns a png rendered by an external latex
         distribution, falling back to matplotlib rendering
         """
-        if _can_print_latex(o):
+        if _can_print(o):
             s = latex(o, mode=latex_mode, **settings)
             if latex_mode == 'plain':
                 s = '$\\displaystyle %s$' % s
@@ -204,7 +200,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         A function that returns a svg rendered by an external latex
         distribution, no fallback available.
         """
-        if _can_print_latex(o):
+        if _can_print(o):
             s = latex(o, mode=latex_mode, **settings)
             if latex_mode == 'plain':
                 s = '$\\displaystyle %s$' % s
@@ -218,7 +214,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         A function that returns a png rendered by mathtext
         """
-        if _can_print_latex(o):
+        if _can_print(o):
             s = latex(o, mode='inline', **settings)
             return _matplotlib_wrapper(s)
 
@@ -226,7 +222,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         """
         A function to generate the latex representation of sympy expressions.
         """
-        if _can_print_latex(o):
+        if _can_print(o):
             s = latex(o, mode=latex_mode, **settings)
             if latex_mode == 'plain':
                 return '$\\displaystyle %s$' % s
@@ -252,17 +248,19 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
     import IPython
     if V(IPython.__version__) >= '0.11':
-        from sympy.core.basic import Basic
-        from sympy.matrices.matrices import MatrixBase
-        from sympy.physics.vector import Vector, Dyadic
-        from sympy.tensor.array import NDimArray
 
-        printable_types = [Basic, MatrixBase, float, tuple, list, set,
-                frozenset, dict, Vector, Dyadic, NDimArray, int]
+        # Printable is our own type, so we handle it with methods instead of
+        # the approach required by builtin types. This allows downstream
+        # packages to override the methods in their own subclasses of Printable,
+        # which avoids the effects of gh-16002.
+        printable_types = [float, tuple, list, set, frozenset, dict, int]
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
-        for cls in printable_types:
+        # Exception to the rule above: IPython has better dispatching rules
+        # for plaintext printing (xref ipython/ipython#8938), and we can't
+        # use `_repr_pretty_` without hitting a recursion error in _print_plain.
+        for cls in printable_types + [Printable]:
             plaintext_formatter.for_type(cls, _print_plain)
 
         svg_formatter = ip.display_formatter.formatters['image/svg+xml']
@@ -270,6 +268,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             debug("init_printing: using svg formatter")
             for cls in printable_types:
                 svg_formatter.for_type(cls, _print_latex_svg)
+            Printable._repr_svg_ = _print_latex_svg
         else:
             debug("init_printing: not using any svg formatter")
             for cls in printable_types:
@@ -277,16 +276,19 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 #png_formatter.for_type(cls, None)
                 if cls in svg_formatter.type_printers:
                     svg_formatter.type_printers.pop(cls)
+            Printable._repr_svg_ = Printable._repr_disabled
 
         png_formatter = ip.display_formatter.formatters['image/png']
         if use_latex in (True, 'png'):
             debug("init_printing: using png formatter")
             for cls in printable_types:
                 png_formatter.for_type(cls, _print_latex_png)
+            Printable._repr_png_ = _print_latex_png
         elif use_latex == 'matplotlib':
             debug("init_printing: using matplotlib formatter")
             for cls in printable_types:
                 png_formatter.for_type(cls, _print_latex_matplotlib)
+            Printable._repr_png_ = _print_latex_matplotlib
         else:
             debug("init_printing: not using any png formatter")
             for cls in printable_types:
@@ -294,14 +296,14 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 #png_formatter.for_type(cls, None)
                 if cls in png_formatter.type_printers:
                     png_formatter.type_printers.pop(cls)
+            Printable._repr_png_ = Printable._repr_disabled
 
         latex_formatter = ip.display_formatter.formatters['text/latex']
         if use_latex in (True, 'mathjax'):
             debug("init_printing: using mathjax formatter")
             for cls in printable_types:
                 latex_formatter.for_type(cls, _print_latex_text)
-            for typ in sympy_latex_types:
-                typ._repr_latex_ = typ._repr_latex_orig
+            Printable._repr_latex_ = _print_latex_text
         else:
             debug("init_printing: not using text/latex formatter")
             for cls in printable_types:
@@ -309,9 +311,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 #latex_formatter.for_type(cls, None)
                 if cls in latex_formatter.type_printers:
                     latex_formatter.type_printers.pop(cls)
-
-            for typ in sympy_latex_types:
-                typ._repr_latex_ = None
+            Printable._repr_latex_ = Printable._repr_disabled
 
     else:
         ip.set_hook('result_display', _result_display)

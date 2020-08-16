@@ -22,6 +22,8 @@ class Point(object):
     ========
 
     >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
     >>> N = ReferenceFrame('N')
     >>> O = Point('O')
     >>> P = Point('P')
@@ -33,6 +35,8 @@ class Point(object):
     symbols() can be used to create multiple Points in a single step, for example:
 
     >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
     >>> from sympy import symbols
     >>> N = ReferenceFrame('N')
     >>> u1, u2 = dynamicsymbols('u1 u2')
@@ -110,7 +114,9 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame
-        >>> from sympy.physics.vector import Vector, dynamicsymbols
+        >>> from sympy.physics.vector import dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)
@@ -164,6 +170,8 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
         >>> N = ReferenceFrame('N')
@@ -387,7 +395,9 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame
-        >>> from sympy.physics.vector import Vector, dynamicsymbols
+        >>> from sympy.physics.vector import dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)
@@ -438,6 +448,8 @@ class Point(object):
         ========
 
         >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> q = dynamicsymbols('q')
         >>> qd = dynamicsymbols('q', 1)
         >>> N = ReferenceFrame('N')

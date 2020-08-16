@@ -2,10 +2,12 @@
 
 from __future__ import print_function, division
 
+from sympy import Basic
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
     symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered
+from sympy.core.relational import is_le
 from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -21,10 +23,12 @@ from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
     dup_isolate_real_roots_sqf)
-from sympy.utilities import lambdify, public, sift
+from sympy.utilities import lambdify, public, sift, numbered_symbols
 
 from mpmath import mpf, mpc, findroot, workprec
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
+from sympy.multipledispatch import dispatch
+from itertools import chain
 
 
 __all__ = ['CRootOf']
@@ -41,7 +45,7 @@ class _pure_key_dict(object):
     Only the following actions are guaranteed:
 
     >>> from sympy.polys.rootoftools import _pure_key_dict
-    >>> from sympy import S, PurePoly
+    >>> from sympy import PurePoly
     >>> from sympy.abc import x, y
 
     1) creation
@@ -733,13 +737,22 @@ class ComplexRootOf(RootOf):
         """Return postprocessed roots of specified kind. """
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
-
+        # get rid of gen and it's free symbol
+        d = Dummy()
+        poly = poly.subs(poly.gen, d)
+        x = symbols('x')
+        # see what others are left and select x or a numbered x
+        # that doesn't clash
+        free_names = {str(i) for i in poly.free_symbols}
+        for x in chain((symbols('x'),), numbered_symbols('x')):
+            if x.name not in free_names:
+                poly = poly.xreplace({d: x})
+                break
         coeff, poly = cls._preprocess_roots(poly)
         roots = []
 
         for root in getattr(cls, method)(poly):
             roots.append(coeff*cls._postprocess_root(root, radicals))
-
         return roots
 
     @classmethod
@@ -896,7 +909,7 @@ class ComplexRootOf(RootOf):
         ensure the decimal representation of the approximation will be
         correct (including rounding) to 6 digits:
 
-        >>> from sympy import S, legendre_poly, Symbol
+        >>> from sympy import legendre_poly, Symbol
         >>> x = Symbol("x")
         >>> p = legendre_poly(4, x, polys=True)
         >>> r = p.real_roots()[-1]
@@ -959,41 +972,47 @@ class ComplexRootOf(RootOf):
         self._set_interval(interval)
         return real + I*imag
 
-    def _eval_Eq(self, other):
-        # CRootOf represents a Root, so if other is that root, it should set
-        # the expression to zero *and* it should be in the interval of the
-        # CRootOf instance. It must also be a number that agrees with the
-        # is_real value of the CRootOf instance.
-        if type(self) == type(other):
-            return sympify(self == other)
-        if not other.is_number:
-            return None
-        if not other.is_finite:
-            return S.false
-        z = self.expr.subs(self.expr.free_symbols.pop(), other).is_zero
-        if z is False:  # all roots will make z True but we don't know
-                        # whether this is the right root if z is True
-            return S.false
-        o = other.is_real, other.is_imaginary
-        s = self.is_real, self.is_imaginary
-        assert None not in s  # this is part of initial refinement
-        if o != s and None not in o:
-            return S.false
-        re, im = other.as_real_imag()
-        if self.is_real:
-            if im:
-                return S.false
-            i = self._get_interval()
-            a, b = [Rational(str(_)) for _ in (i.a, i.b)]
-            return sympify(a <= other and other <= b)
-        i = self._get_interval()
-        r1, r2, i1, i2 = [Rational(str(j)) for j in (
-            i.ax, i.bx, i.ay, i.by)]
-        return sympify((
-            r1 <= re and re <= r2) and (
-            i1 <= im and im <= i2))
 
 CRootOf = ComplexRootOf
+
+
+@dispatch(ComplexRootOf, ComplexRootOf)
+def _eval_is_eq(lhs, rhs): # noqa:F811
+    # if we use is_eq to check here, we get infinite recurion
+    return lhs == rhs
+
+
+@dispatch(ComplexRootOf, Basic)
+def _eval_is_eq(lhs, rhs): # noqa:F811
+    # CRootOf represents a Root, so if rhs is that root, it should set
+    # the expression to zero *and* it should be in the interval of the
+    # CRootOf instance. It must also be a number that agrees with the
+    # is_real value of the CRootOf instance.
+    if not rhs.is_number:
+        return None
+    if not rhs.is_finite:
+        return False
+    z = lhs.expr.subs(lhs.expr.free_symbols.pop(), rhs).is_zero
+    if z is False:  # all roots will make z True but we don't know
+        # whether this is the right root if z is True
+        return False
+    o = rhs.is_real, rhs.is_imaginary
+    s = lhs.is_real, lhs.is_imaginary
+    assert None not in s  # this is part of initial refinement
+    if o != s and None not in o:
+        return False
+    re, im = rhs.as_real_imag()
+    if lhs.is_real:
+        if im:
+            return False
+        i = lhs._get_interval()
+        a, b = [Rational(str(_)) for _ in (i.a, i.b)]
+        return sympify(a <= rhs and rhs <= b)
+    i = lhs._get_interval()
+    r1, r2, i1, i2 = [Rational(str(j)) for j in (
+        i.ax, i.bx, i.ay, i.by)]
+    return is_le(r1, re) and is_le(re,r2) and is_le(i1,im) and is_le(im,i2)
+
 
 @public
 class RootSum(Expr):

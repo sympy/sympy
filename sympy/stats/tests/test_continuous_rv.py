@@ -2,9 +2,9 @@ from sympy import E as e
 from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
-                   besseli, floor, expand_func, Rational, I, re, Lambda,
+                   besseli, floor, expand_func, Rational, I, re, Lambda, asin,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
-                   factorial, binomial, erfi, besselj)
+                   factorial, binomial, erfi, besselj, besselk)
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
@@ -17,14 +17,16 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
                          LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
-                         Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull,
-                         WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile)
+                         Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
+                         WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile,
+                         Lomax, BoundedPareto)
 
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
-
-from sympy.stats.crv import SingleContinuousPSpace
-from sympy.stats.joint_rv import JointPSpace
-from sympy.testing.pytest import raises, XFAIL, slow, skip
+from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, MultivariateNormalDistribution
+from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
+from sympy.stats.compound_rv import CompoundPSpace
+from sympy.stats.symbolic_probability import Probability
+from sympy.testing.pytest import raises, XFAIL, slow, skip, ignore_warnings
 from sympy.testing.randtest import verify_numerically as tn
 
 oo = S.Infinity
@@ -321,10 +323,15 @@ def test_moment_generating_function():
 
 def test_sample_continuous():
     Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
-    assert sample(Z) in Z.pspace.domain.set
+    assert density(Z)(-1) == 0
+
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert next(sample(Z)) in Z.pspace.domain.set
     sym, val = list(Z.pspace.sample().items())[0]
     assert sym == Z and val in Interval(0, oo)
-    assert density(Z)(-1) == 0
 
 
 def test_ContinuousRV():
@@ -335,10 +342,14 @@ def test_ContinuousRV():
 
     assert variance(X) == variance(Y)
     assert P(X > 0) == P(Y > 0)
+    Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
+    assert Z.pspace.domain.set == Interval(0, oo)
+    assert E(Z) == 1
+    assert P(Z > 5) == exp(-5)
+    raises(ValueError, lambda: ContinuousRV(z, exp(-z), set=Interval(0, 10)))
 
 
 def test_arcsin():
-    from sympy import asin
 
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
@@ -348,7 +359,7 @@ def test_arcsin():
     assert cdf(X)(x) == Piecewise((0, a > x),
                             (2*asin(sqrt((-a + x)/(-a + b)))/pi, b >= x),
                             (1, True))
-
+    assert pspace(X).domain.set == Interval(a, b)
 
 def test_benini():
     alpha = Symbol("alpha", positive=True)
@@ -359,6 +370,8 @@ def test_benini():
     assert density(X)(x) == ((alpha/x + 2*beta*log(x/sigma)/x)
                           *exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2))
 
+    assert pspace(X).domain.set == Interval(sigma, oo)
+    raises(NotImplementedError, lambda: moment_generating_function(X))
     alpha = Symbol("alpha", nonpositive=True)
     raises(ValueError, lambda: Benini('x', alpha, beta, sigma))
 
@@ -440,6 +453,27 @@ def test_betaprime():
     X = BetaPrime('x', 1, 1)
     assert median(X) == FiniteSet(1)
 
+
+def test_BoundedPareto():
+    L, H = symbols('L, H', negative=True)
+    raises(ValueError, lambda: BoundedPareto('X', 1, L, H))
+    L, H = symbols('L, H', real=False)
+    raises(ValueError, lambda: BoundedPareto('X', 1, L, H))
+    L, H = symbols('L, H', positive=True)
+    raises(ValueError, lambda: BoundedPareto('X', -1, L, H))
+
+    X = BoundedPareto('X', 2, L, H)
+    assert X.pspace.domain.set == Interval(L, H)
+    assert density(X)(x) == 2*L**2/(x**3*(1 - L**2/H**2))
+    assert cdf(X)(x) == Piecewise((-H**2*L**2/(x**2*(H**2 - L**2)) \
+                            + H**2/(H**2 - L**2), L <= x), (0, True))
+    assert E(X).simplify() == 2*H*L/(H + L)
+    X = BoundedPareto('X', 1, 2, 4)
+    assert E(X).simplify() == log(16)
+    assert median(X) == FiniteSet(Rational(8, 3))
+    assert variance(X).simplify() == 8 - 16*log(2)**2
+
+
 def test_cauchy():
     x0 = Symbol("x0", real=True)
     gamma = Symbol("gamma", positive=True)
@@ -448,7 +482,7 @@ def test_cauchy():
     X = Cauchy('x', x0, gamma)
     # Tests the characteristic function
     assert characteristic_function(X)(x) == exp(-gamma*Abs(x) + I*x*x0)
-
+    raises(NotImplementedError, lambda: moment_generating_function(X))
     assert density(X)(x) == 1/(pi*gamma*(1 + (x - x0)**2/gamma**2))
     assert diff(cdf(X)(x), x) == density(X)(x)
     assert quantile(X)(p) == gamma*tan(pi*(p - S.Half)) + x0
@@ -583,7 +617,7 @@ def test_exgaussian():
 def test_exponential():
     rate = Symbol('lambda', positive=True)
     X = Exponential('x', rate)
-    p = Symbol("p", positive=True, real=True,finite=True)
+    p = Symbol("p", positive=True, real=True, finite=True)
 
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
@@ -610,11 +644,18 @@ def test_exponential():
     _z = Dummy('_z')
     b = SingleContinuousPSpace(x, ExponentialDistribution(2))
 
-    expected1 = Integral(2*exp(-2*_z), (_z, 3, oo))
-    assert b.probability(x > 3, evaluate=False).dummy_eq(expected1) is True
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        expected1 = Integral(2*exp(-2*_z), (_z, 3, oo))
+        assert b.probability(x > 3, evaluate=False).rewrite(Integral).dummy_eq(expected1)
 
-    expected2 = Integral(2*exp(-2*_z), (_z, 0, 4))
-    assert b.probability(x < 4, evaluate=False).dummy_eq(expected2) is True
+        expected2 = Integral(2*exp(-2*_z), (_z, 0, 4))
+        assert b.probability(x < 4, evaluate=False).rewrite(Integral).dummy_eq(expected2)
+    Y = Exponential('y', 2*rate)
+    assert coskewness(X, X, X) == skewness(X)
+    assert coskewness(X, Y + rate*X, Y + 2*rate*X) == \
+                        4/(sqrt(1 + 1/(4*rate**2))*sqrt(4 + 1/(4*rate**2)))
+    assert coskewness(X + 2*Y, Y + X, Y + 2*X, X > 3) == \
+                        sqrt(170)*Rational(9, 85)
 
 def test_exponential_power():
     mu = Symbol('mu')
@@ -640,6 +681,7 @@ def test_f_distribution():
     assert density(X)(x) == (d2**(d2/2)*sqrt((d1*x)**d1*(d1*x + d2)**(-d1 - d2))
                              /(x*beta(d1/2, d2/2)))
 
+    raises(NotImplementedError, lambda: moment_generating_function(X))
     d1 = Symbol("d1", nonpositive=True)
     raises(ValueError, lambda: FDistribution('x', d1, d1))
 
@@ -671,7 +713,7 @@ def test_frechet():
     assert density(X)(x) == a*((x - m)/s)**(-a - 1)*exp(-((x - m)/s)**(-a))/s
     assert cdf(X)(x) == Piecewise((exp(-((-m + x)/s)**(-a)), m <= x), (0, True))
 
-
+@slow
 def test_gamma():
     k = Symbol("k", positive=True)
     theta = Symbol("theta", positive=True)
@@ -697,6 +739,10 @@ def test_gamma():
     assert skewness(X).expand() == 2/sqrt(k)
     assert kurtosis(X).expand() == 3 + 6/k
 
+    Y = Gamma('y', 2*k, 3*theta)
+    assert coskewness(X, theta*X + Y, k*X + Y).simplify() == \
+        2*531441**(-k)*sqrt(k)*theta*(3*3**(12*k) - 2*531441**k) \
+        /(sqrt(k**2 + 18)*sqrt(theta**2 + 18))
 
 def test_gamma_inverse():
     a = Symbol("a", positive=True)
@@ -704,13 +750,17 @@ def test_gamma_inverse():
     X = GammaInverse("x", a, b)
     assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
     assert cdf(X)(x) == Piecewise((uppergamma(a, b/x)/gamma(a), x > 0), (0, True))
+    assert characteristic_function(X)(x) == 2 * (-I*b*x)**(a/2) \
+            * besselk(a, 2*sqrt(b)*sqrt(-I*x))/gamma(a)
+    raises(NotImplementedError, lambda: moment_generating_function(X))
 
 def test_sampling_gamma_inverse():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy not installed. Abort tests for sampling of gamma inverse.')
     X = GammaInverse("x", 1, 1)
-    assert sample(X) in X.pspace.domain.set
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert next(sample(X)) in X.pspace.domain.set
 
 def test_gompertz():
     b = Symbol("b", positive=True)
@@ -736,6 +786,7 @@ def test_gumbel():
     exp(-mu/beta)*exp(y/beta)*exp(-exp(-mu/beta)*exp(y/beta))/beta
     assert cdf(X)(x).expand() == \
     exp(-exp(mu/beta)*exp(-x/beta))
+    assert characteristic_function(X)(x) == exp(I*mu*x)*gamma(-I*beta*x + 1)
 
 def test_kumaraswamy():
     a = Symbol("a", positive=True)
@@ -760,6 +811,8 @@ def test_laplace():
     assert density(X)(x) == exp(-Abs(x - mu)/b)/(2*b)
     assert cdf(X)(x) == Piecewise((exp((-mu + x)/b)/2, mu > x),
                             (-exp((mu - x)/b)/2 + 1, True))
+    X = Laplace('x', [1, 2], [[1, 0], [0, 1]])
+    assert isinstance(pspace(X).distribution, MultivariateLaplaceDistribution)
 
 def test_levy():
     mu = Symbol("mu", real=True)
@@ -770,6 +823,7 @@ def test_levy():
     assert density(X)(x) == sqrt(c/(2*pi))*exp(-c/(2*(x - mu)))/((x - mu)**(S.One + S.Half))
     assert cdf(X)(x) == erfc(sqrt(c/(2*(x - mu))))
 
+    raises(NotImplementedError, lambda: moment_generating_function(X))
     mu = Symbol("mu", real=False)
     raises(ValueError, lambda: Levy('x',mu,c))
 
@@ -829,18 +883,22 @@ def test_lognormal():
     #assert variance(X) == (exp(std**2)-1) * exp(2*mean + std**2)
 
     # Right now, only density function and sampling works
-
-    for i in range(3):
-        X = LogNormal('x', i, 1)
-        assert sample(X) in X.pspace.domain.set
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        for i in range(3):
+            X = LogNormal('x', i, 1)
+            assert next(sample(X)) in X.pspace.domain.set
 
     size = 5
-    samps = sample(X, size=size)
-    for samp in samps:
-        assert samp in X.pspace.domain.set
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        samps = next(sample(X, size=size))
+        for samp in samps:
+            assert samp in X.pspace.domain.set
     # The sympy integrator can't do this too well
     #assert E(X) ==
-
+    raises(NotImplementedError, lambda: moment_generating_function(X))
     mu = Symbol("mu", real=True)
     sigma = Symbol("sigma", positive=True)
 
@@ -855,6 +913,23 @@ def test_lognormal():
     X = LogNormal('x', 0, 1)  # Mean 0, standard deviation 1
     assert density(X)(x) == sqrt(2)*exp(-log(x)**2/2)/(2*x*sqrt(pi))
 
+
+def test_Lomax():
+    a, l = symbols('a, l', negative=True)
+    raises(ValueError, lambda: Lomax('X', a , l))
+    a, l = symbols('a, l', real=False)
+    raises(ValueError, lambda: Lomax('X', a , l))
+
+    a, l = symbols('a, l', positive=True)
+    X = Lomax('X', a, l)
+    assert X.pspace.domain.set == Interval(0, oo)
+    assert density(X)(x) == a*(1 + x/l)**(-a - 1)/l
+    assert cdf(X)(x) == Piecewise((1 - (1 + x/l)**(-a), x >= 0), (0, True))
+    a = 3
+    X = Lomax('X', a, l)
+    assert E(X) == l/2
+    assert median(X) == FiniteSet(l*(-1 + 2**Rational(1, 3)))
+    assert variance(X) == 3*l**2/4
 
 
 def test_maxwell():
@@ -940,7 +1015,8 @@ def test_sampling_gaussian_inverse():
     if not scipy:
         skip('Scipy not installed. Abort tests for sampling of Gaussian inverse.')
     X = GaussianInverse("x", 1, 1)
-    assert sample(X) in X.pspace.domain.set
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert next(sample(X, library='scipy')) in X.pspace.domain.set
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True)
@@ -1007,6 +1083,7 @@ def test_raised_cosine():
 
     X = RaisedCosine("x", mu, s)
 
+    assert pspace(X).domain.set == Interval(mu - s, mu + s)
     #Tests characteristics_function
     assert characteristic_function(X)(x) == \
            Piecewise((exp(-I*pi*mu/s)/2, Eq(x, -pi/s)), (exp(I*pi*mu/s)/2, Eq(x, pi/s)), (pi**2*exp(I*mu*x)*sin(s*x)/(s*x*(-s**2*x**2 + pi**2)), True))
@@ -1064,6 +1141,7 @@ def test_studentt():
     assert density(X)(x) == (1 + x**2/nu)**(-nu/2 - S.Half)/(sqrt(nu)*beta(S.Half, nu/2))
     assert cdf(X)(x) == S.Half + x*gamma(nu/2 + S.Half)*hyper((S.Half, nu/2 + S.Half),
                                 (Rational(3, 2),), -x**2/nu)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))
+    raises(NotImplementedError, lambda: moment_generating_function(X))
 
 def test_trapezoidal():
     a = Symbol("a", real=True)
@@ -1089,12 +1167,15 @@ def test_triangular():
     c = Symbol("c")
 
     X = Triangular('x', a, b, c)
+    assert pspace(X).domain.set == Interval(a, b)
     assert str(density(X)(x)) == ("Piecewise(((-2*a + 2*x)/((-a + b)*(-a + c)), (a <= x) & (c > x)), "
     "(2/(-a + b), Eq(c, x)), ((2*b - 2*x)/((-a + b)*(b - c)), (b >= x) & (c < x)), (0, True))")
 
     #Tests moment_generating_function
     assert moment_generating_function(X)(x).expand() == \
     ((-2*(-a + b)*exp(c*x) + 2*(-a + c)*exp(b*x) + 2*(b - c)*exp(a*x))/(x**2*(-a + b)*(-a + c)*(b - c))).expand()
+    assert str(characteristic_function(X)(x)) == \
+    '(2*(-a + b)*exp(I*c*x) - 2*(-a + c)*exp(I*b*x) - 2*(b - c)*exp(I*a*x))/(x**2*(-a + b)*(-a + c)*(b - c))'
 
 def test_quadratic_u():
     a = Symbol("a", real=True)
@@ -1103,10 +1184,12 @@ def test_quadratic_u():
     X = QuadraticU("x", a, b)
     Y = QuadraticU("x", 1, 2)
 
+    assert pspace(X).domain.set == Interval(a, b)
     # Tests _moment_generating_function
     assert moment_generating_function(Y)(1)  == -15*exp(2) + 27*exp(1)
     assert moment_generating_function(Y)(2) == -9*exp(4)/2 + 21*exp(2)/2
 
+    assert characteristic_function(Y)(1) == 3*I*(-1 + 4*I)*exp(I*exp(2*I))
     assert density(X)(x) == (Piecewise((12*(x - a/2 - b/2)**2/(-a + b)**3,
                           And(x <= b, a <= x)), (0, True)))
 
@@ -1208,6 +1291,7 @@ def test_wignersemicircle():
     R = Symbol("R", positive=True)
 
     X = WignerSemicircle('x', R)
+    assert pspace(X).domain.set == Interval(-R, R)
     assert density(X)(x) == 2*sqrt(-x**2 + R**2)/(pi*R**2)
     assert E(X) == 0
 
@@ -1218,6 +1302,9 @@ def test_wignersemicircle():
 
 
 def test_prefab_sampling():
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
     N = Normal('X', 0, 1)
     L = LogNormal('L', 0, 1)
     E = Exponential('Ex', 1)
@@ -1230,12 +1317,13 @@ def test_prefab_sampling():
     variables = [N, L, E, P, W, U, B, G]
     niter = 10
     size = 5
-    for var in variables:
-        for i in range(niter):
-            assert sample(var) in var.pspace.domain.set
-            samps = sample(var, size=size)
-            for samp in samps:
-                assert samp in var.pspace.domain.set
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        for var in variables:
+            for i in range(niter):
+                assert next(sample(var)) in var.pspace.domain.set
+                samps = next(sample(var, size=size))
+                for samp in samps:
+                    assert samp in var.pspace.domain.set
 
 def test_input_value_assertions():
     a, b = symbols('a b')
@@ -1255,21 +1343,21 @@ def test_input_value_assertions():
 
 def test_unevaluated():
     X = Normal('x', 0, 1)
-    assert str(E(X, evaluate=False)) == ("Integral(sqrt(2)*x*exp(-x**2/2)/"
-    "(2*sqrt(pi)), (x, -oo, oo))")
+    k = Dummy('k')
+    expr1 = Integral(sqrt(2)*k*exp(-k**2/2)/(2*sqrt(pi)), (k, -oo, oo))
+    expr2 = Integral(sqrt(2)*exp(-k**2/2)/(2*sqrt(pi)), (k, 0, oo))
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert E(X, evaluate=False).rewrite(Integral).dummy_eq(expr1)
+        assert E(X + 1, evaluate=False).rewrite(Integral).dummy_eq(expr1 + 1)
+        assert P(X > 0, evaluate=False).rewrite(Integral).dummy_eq(expr2)
 
-    assert str(E(X + 1, evaluate=False)) == ("Integral(sqrt(2)*x*exp(-x**2/2)/"
-    "(2*sqrt(pi)), (x, -oo, oo)) + 1")
-
-    assert str(P(X > 0, evaluate=False)) == ("Integral(sqrt(2)*exp(-_z**2/2)/"
-    "(2*sqrt(pi)), (_z, 0, oo))")
-
-    assert P(X > 0, X**2 < 1, evaluate=False) == S.Half
+    assert P(X > 0, X**2 < 1) == S.Half
 
 
 def test_probability_unevaluated():
     T = Normal('T', 30, 3)
-    assert type(P(T > 33, evaluate=False)) == Integral
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert type(P(T > 33, evaluate=False)) == Probability
 
 
 def test_density_unevaluated():
@@ -1282,7 +1370,6 @@ def test_NormalDistribution():
     nd = NormalDistribution(0, 1)
     x = Symbol('x')
     assert nd.cdf(x) == erf(sqrt(2)*x/2)/2 + S.Half
-    assert isinstance(nd.sample(), float) or nd.sample().is_Number
     assert nd.expectation(1, x) == 1
     assert nd.expectation(x, x) == 0
     assert nd.expectation(x**2, x) == 1
@@ -1309,9 +1396,10 @@ def test_random_parameters():
     mu = Normal('mu', 2, 3)
     meas = Normal('T', mu, 1)
     assert density(meas, evaluate=False)(z)
-    assert isinstance(pspace(meas), JointPSpace)
-    #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
-    #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)
+    assert isinstance(pspace(meas), CompoundPSpace)
+    X = Normal('x', [1, 2], [[1, 0], [0, 1]])
+    assert isinstance(pspace(X).distribution, MultivariateNormalDistribution)
+    assert density(meas)(z).simplify() == sqrt(5)*exp(-z**2/20 + z/5 - S(1)/5)/(10*sqrt(pi))
 
 
 def test_random_parameters_given():
@@ -1478,3 +1566,97 @@ def test_ContinuousDistributionHandmade():
     assert median(space.value) == Interval(1, 2)
     assert E(space.value) == Rational(3, 2)
     assert variance(space.value) == Rational(13, 12)
+
+
+def test_sample_numpy():
+    distribs_numpy = [
+        Beta("B", 1, 1),
+        Normal("N", 0, 1),
+        Gamma("G", 2, 7),
+        Exponential("E", 2),
+        LogNormal("LN", 0, 1),
+        Pareto("P", 1, 1),
+        ChiSquared("CS", 2),
+        Uniform("U", 0, 1)
+    ]
+    size = 3
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy is not installed. Abort tests for _sample_numpy.')
+    else:
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+            for X in distribs_numpy:
+                samps = next(sample(X, size=size, library='numpy'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
+            raises(NotImplementedError,
+                lambda: next(sample(Chi("C", 1), library='numpy')))
+    raises(NotImplementedError,
+            lambda: Chi("C", 1).pspace.distribution.sample(library='tensorflow'))
+
+def test_sample_scipy():
+    distribs_scipy = [
+        Beta("B", 1, 1),
+        BetaPrime("BP", 1, 1),
+        Cauchy("C", 1, 1),
+        Chi("C", 1),
+        Normal("N", 0, 1),
+        Gamma("G", 2, 7),
+        GammaInverse("GI", 1, 1),
+        GaussianInverse("GUI", 1, 1),
+        Exponential("E", 2),
+        LogNormal("LN", 0, 1),
+        Pareto("P", 1, 1),
+        StudentT("S", 2),
+        ChiSquared("CS", 2),
+        Uniform("U", 0, 1)
+    ]
+    size = 3
+    numsamples = 5
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests for _sample_scipy.')
+    else:
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+            g_sample = list(sample(Gamma("G", 2, 7), size=size, numsamples=numsamples))
+            assert len(g_sample) == numsamples
+            for X in distribs_scipy:
+                samps = next(sample(X, size=size, library='scipy'))
+                samps2 = next(sample(X, size=(2, 2), library='scipy'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
+                for i in range(2):
+                    for j in range(2):
+                        assert samps2[i][j] in X.pspace.domain.set
+
+def test_sample_pymc3():
+    distribs_pymc3 = [
+        Beta("B", 1, 1),
+        Cauchy("C", 1, 1),
+        Normal("N", 0, 1),
+        Gamma("G", 2, 7),
+        GaussianInverse("GI", 1, 1),
+        Exponential("E", 2),
+        LogNormal("LN", 0, 1),
+        Pareto("P", 1, 1),
+        ChiSquared("CS", 2),
+        Uniform("U", 0, 1)
+    ]
+    size = 3
+    pymc3 = import_module('pymc3')
+    if not pymc3:
+        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
+    else:
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+            for X in distribs_pymc3:
+                samps = next(sample(X, size=size, library='pymc3'))
+                for sam in samps:
+                    assert sam in X.pspace.domain.set
+            raises(NotImplementedError,
+                lambda: next(sample(Chi("C", 1), library='pymc3')))
+
+
+def test_issue_16318():
+    #test compute_expectation function of the SingleContinuousDomain
+    N = SingleContinuousDomain(x, Interval(0, 1))
+    raises (ValueError, lambda: SingleContinuousDomain.compute_expectation(N, x+1, {x, y}))

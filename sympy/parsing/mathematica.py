@@ -8,13 +8,20 @@ from sympy import sympify
 
 
 def mathematica(s, additional_translations=None):
-    '''Users can add their own translation dictionary
-    # Example
-    In [1]: mathematica('Log3[9]', {'Log3[x]':'log(x,3)'})
-    Out[1]: 2
-    In [2]: mathematica('F[7,5,3]', {'F[*x]':'Max(*x)*Min(*x)'})
-    Out[2]: 21
-    variable-length argument needs '*' character '''
+    '''
+    Users can add their own translation dictionary.
+    variable-length argument needs '*' character.
+
+    Examples
+    ========
+
+    >>> from sympy.parsing.mathematica import mathematica
+    >>> mathematica('Log3[9]', {'Log3[x]':'log(x,3)'})
+    2
+    >>> mathematica('F[7,5,3]', {'F[*x]':'Max(*x)*Min(*x)'})
+    21
+
+    '''
 
     parser = MathematicaParser(additional_translations)
     return sympify(parser.parse(s))
@@ -41,6 +48,19 @@ class MathematicaParser(object):
         'Mod[x,y]': 'Mod(x,y)',
         'Max[*x]': 'Max(*x)',
         'Min[*x]': 'Min(*x)',
+        'Pochhammer[x,y]':'rf(x,y)',
+        'ArcTan[x,y]':'atan2(y,x)',
+        'ExpIntegralEi[x]': 'Ei(x)',
+        'SinIntegral[x]': 'Si(x)',
+        'CosIntegral[x]': 'Ci(x)',
+        'AiryAi[x]': 'airyai(x)',
+        'AiryAiPrime[x]': 'airyaiprime(x)',
+        'AiryBi[x]' :'airybi(x)',
+        'AiryBiPrime[x]' :'airybiprime(x)',
+        'LogIntegral[x]':' li(x)',
+        'PrimePi[x]': 'primepi(x)',
+        'Prime[x]': 'prime(x)',
+        'PrimeQ[x]': 'isprime(x)'
     }
 
     # trigonometric, e.t.c.

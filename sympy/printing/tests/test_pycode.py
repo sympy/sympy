@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
 from sympy.codegen.matrix_nodes import MatrixSolve
-from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
+from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
 from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt
@@ -15,6 +15,8 @@ from sympy.printing.pycode import (
 )
 from sympy.testing.pytest import raises
 from sympy.tensor import IndexedBase
+from sympy.testing.pytest import skip
+from sympy.external import import_module
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
@@ -110,12 +112,33 @@ def test_NumPyPrinter():
     assert p.doprint(x**-1) == 'x**(-1.0)'
     assert p.doprint(x**-2) == 'x**(-2.0)'
 
+    expr = Pow(2, -1, evaluate=False)
+    assert p.doprint(expr) == "2**(-1.0)"
+
     assert p.doprint(S.Exp1) == 'numpy.e'
     assert p.doprint(S.Pi) == 'numpy.pi'
     assert p.doprint(S.EulerGamma) == 'numpy.euler_gamma'
     assert p.doprint(S.NaN) == 'numpy.nan'
     assert p.doprint(S.Infinity) == 'numpy.PINF'
     assert p.doprint(S.NegativeInfinity) == 'numpy.NINF'
+
+
+def test_issue_18770():
+    numpy = import_module('numpy')
+    if not numpy:
+        skip("numpy not installed.")
+
+    from sympy import lambdify, Min, Max
+
+    expr1 = Min(0.1*x + 3, x + 1, 0.5*x + 1)
+    func = lambdify(x, expr1, "numpy")
+    assert (func(numpy.linspace(0, 3, 3)) == [1.0 , 1.75, 2.5 ]).all()
+    assert  func(4) == 3
+
+    expr1 = Max(x**2 , x**3)
+    func = lambdify(x,expr1, "numpy")
+    assert (func(numpy.linspace(-1 , 2, 4)) == [1, 0, 1, 8] ).all()
+    assert func(4) == 64
 
 
 def test_SciPyPrinter():
@@ -126,7 +149,8 @@ def test_SciPyPrinter():
     assert 'numpy' in p.module_imports
     assert not any(m.startswith('scipy') for m in p.module_imports)
     smat = SparseMatrix(2, 5, {(0, 1): 3})
-    assert p.doprint(smat) == 'scipy.sparse.coo_matrix([3], ([0], [1]), shape=(2, 5))'
+    assert p.doprint(smat) == \
+        'scipy.sparse.coo_matrix(([3], ([0], [1])), shape=(2, 5))'
     assert 'scipy.sparse' in p.module_imports
 
     assert p.doprint(S.GoldenRatio) == 'scipy.constants.golden_ratio'
@@ -264,3 +288,39 @@ def test_beta():
 
     prntr = MpmathPrinter()
     assert prntr.doprint(expr) ==  'mpmath.beta(x, y)'
+
+def test_airy():
+    from sympy import airyai, airybi
+
+    expr1 = airyai(x)
+    expr2 = airybi(x)
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr1) == 'scipy.special.airy(x)[0]'
+    assert prntr.doprint(expr2) == 'scipy.special.airy(x)[2]'
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # airyai\nairyai(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # airybi\nairybi(x)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # airyai\nairyai(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # airybi\nairybi(x)'
+
+def test_airy_prime():
+    from sympy import airyaiprime, airybiprime
+
+    expr1 = airyaiprime(x)
+    expr2 = airybiprime(x)
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr1) == 'scipy.special.airy(x)[1]'
+    assert prntr.doprint(expr2) == 'scipy.special.airy(x)[3]'
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # airyaiprime\nairyaiprime(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # airybiprime\nairybiprime(x)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # airyaiprime\nairyaiprime(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # airybiprime\nairybiprime(x)'

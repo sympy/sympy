@@ -1,13 +1,12 @@
-from __future__ import (absolute_import, print_function)
-
 from sympy import log, exp, Symbol, Pow, sin, MatrixSymbol
 from sympy.assumptions import assuming, Q
-from sympy.printing.ccode import ccode
+from sympy.printing import ccode
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log2, exp2, expm1, log1p
+from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.rewriting import (
     optimize, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
-    create_expand_pow_optimization, matinv_opt
+    create_expand_pow_optimization, matinv_opt, logaddexp_opt, logaddexp2_opt
 )
 from sympy.testing.pytest import XFAIL
 
@@ -184,3 +183,21 @@ def test_matsolve():
     with assuming(Q.fullrank(A)):
         assert optimize(A**(-1) * x, [matinv_opt]) == MatrixSolve(A, x)
         assert optimize(A**(-1) * x + x, [matinv_opt]) == MatrixSolve(A, x) + x
+
+
+def test_logaddexp_opt():
+    x, y = map(Symbol, 'x y'.split())
+    expr1 = log(exp(x) + exp(y))
+    opt1 = optimize(expr1, [logaddexp_opt])
+    assert logaddexp(x, y) - opt1 == 0
+    assert logaddexp(y, x) - opt1 == 0
+    assert opt1.rewrite(log) == expr1
+
+
+def test_logaddexp2_opt():
+    x, y = map(Symbol, 'x y'.split())
+    expr1 = log(2**x + 2**y)/log(2)
+    opt1 = optimize(expr1, [logaddexp2_opt])
+    assert logaddexp2(x, y) - opt1 == 0
+    assert logaddexp2(y, x) - opt1 == 0
+    assert opt1.rewrite(log) == expr1

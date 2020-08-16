@@ -1,4 +1,3 @@
-import sys
 import inspect
 import copy
 import pickle
@@ -10,7 +9,7 @@ from sympy.testing.pytest import XFAIL
 from sympy.core.basic import Atom, Basic
 from sympy.core.core import BasicMeta
 from sympy.core.singleton import SingletonRegistry
-from sympy.core.symbol import Dummy, Symbol, Wild
+from sympy.core.symbol import Str, Dummy, Symbol, Wild
 from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
         Rational, Float)
 from sympy.core.relational import (Equality, GreaterThan, LessThan, Relational,
@@ -31,21 +30,17 @@ from sympy import symbols, S
 from sympy.external import import_module
 cloudpickle = import_module('cloudpickle')
 
-excluded_attrs = set([
+excluded_attrs = {
     '_assumptions',  # This is a local cache that isn't automatically filled on creation
     '_mhash',   # Cached after __hash__ is called but set to None after creation
-    'message',   # This is an exception attribute that is present but deprecated in Py2 (can be removed when Py2 support is dropped
     'is_EmptySet',  # Deprecated from SymPy 1.5. This can be removed when is_EmptySet is removed.
-    ])
+    }
 
 
 def check(a, exclude=[], check_attr=True):
     """ Check that pickling and copying round-trips.
     """
-    protocols = [0, 1, 2, copy.copy, copy.deepcopy]
-    # Python 2.x doesn't support the third pickling protocol
-    if sys.version_info >= (3,):
-        protocols.extend([3, 4])
+    protocols = [0, 1, 2, copy.copy, copy.deepcopy, 3, 4]
     if cloudpickle:
         protocols.extend([cloudpickle])
 
@@ -97,6 +92,8 @@ def test_core_basic():
               SingletonRegistry, S):
         check(c)
 
+def test_core_Str():
+    check(Str('x'))
 
 def test_core_symbol():
     # make the Symbol a unique name that doesn't class with any other
@@ -180,9 +177,7 @@ def test_core_multidimensional():
 
 
 def test_Singletons():
-    protocols = [0, 1, 2]
-    if sys.version_info >= (3,):
-        protocols.extend([3, 4])
+    protocols = [0, 1, 2, 3, 4]
     copiers = [copy.copy, copy.deepcopy]
     copiers += [lambda x: pickle.loads(pickle.dumps(x, proto))
             for proto in protocols]
@@ -694,3 +689,6 @@ def test_concrete():
 def test_deprecation_warning():
     w = SymPyDeprecationWarning('value', 'feature', issue=12345, deprecated_since_version='1.0')
     check(w)
+
+def test_issue_18438():
+    assert pickle.loads(pickle.dumps(S.Half)) == 1/2

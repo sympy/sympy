@@ -1,7 +1,5 @@
 """Hypergeometric and Meijer G-functions"""
 
-from __future__ import print_function, division
-
 from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.compatibility import reduce
@@ -219,6 +217,34 @@ class hyper(TupleParametersBase):
         coeff = Mul(*rfap) / Mul(*rfbq)
         return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+
+        from sympy.functions import factorial, RisingFactorial
+        from sympy import Order, Add
+
+        arg = self.args[2]
+        x0 = arg.limit(x, 0)
+        ap = self.args[0]
+        bq = self.args[1]
+
+        if x0 != 0:
+            return super()._eval_nseries(x, n, logx)
+
+        terms = []
+
+        for i in range(n):
+            num = 1
+            den = 1
+            for a in ap:
+                num *= RisingFactorial(a, i)
+
+            for b in bq:
+                den *= RisingFactorial(b, i)
+
+            terms.append(((num/den) * (arg**i)) / factorial(i))
+
+        return (Add(*terms) + Order(x**n,x))
 
     @property
     def argument(self):
@@ -1073,6 +1099,25 @@ class appellf1(Function):
         F_1(a,b_1,b_2,c,x,y) = \sum_{m=0}^{\infty} \sum_{n=0}^{\infty}
         \frac{(a)_{m+n} (b_1)_m (b_2)_n}{(c)_{m+n}}
         \frac{x^m y^n}{m! n!}.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.special.hyper import appellf1
+    >>> from sympy import symbols
+    >>> x, y, a, b1, b2, c = symbols('x y a b1 b2 c')
+    >>> appellf1(2., 1., 6., 4., 5., 6.)
+    0.0063339426292673
+    >>> appellf1(12., 12., 6., 4., 0.5, 0.12)
+    172870711.659936
+    >>> appellf1(40, 2, 6, 4, 15, 60)
+    appellf1(40, 2, 6, 4, 15, 60)
+    >>> appellf1(20., 12., 10., 3., 0.5, 0.12)
+    15605338197184.4
+    >>> appellf1(40, 2, 6, 4, x, y)
+    appellf1(40, 2, 6, 4, x, y)
+    >>> appellf1(a, b1, b2, c, x, y)
+    appellf1(a, b1, b2, c, x, y)
 
     References
     ==========

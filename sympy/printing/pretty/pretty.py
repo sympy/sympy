@@ -6,7 +6,7 @@ from sympy.core import S
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg
 from sympy.core.mul import Mul
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Number, Rational
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import SympifyError
@@ -52,7 +52,9 @@ class PrettyPrinter(Printer):
             raise TypeError("'imaginary_unit' must a string, not {}".format(self._settings['imaginary_unit']))
         elif self._settings['imaginary_unit'] not in ["i", "j"]:
             raise ValueError("'imaginary_unit' must be either 'i' or 'j', not '{}'".format(self._settings['imaginary_unit']))
-        self.emptyPrinter = lambda x: prettyForm(xstr(x))
+
+    def emptyPrinter(self, expr):
+        return prettyForm(xstr(expr))
 
     @property
     def _use_unicode(self):
@@ -763,8 +765,6 @@ class PrettyPrinter(Printer):
         D.baseline = D.height()//2
         D = prettyForm(*D.parens('[', ']'))
         return D
-    _print_ImmutableMatrix = _print_MatrixBase
-    _print_Matrix = _print_MatrixBase
 
     def _print_TensorProduct(self, expr):
         # This should somehow share the code with _print_WedgeProduct:
@@ -810,18 +810,21 @@ class PrettyPrinter(Printer):
 
     def _print_MatrixSlice(self, m):
         # XXX works only for applied functions
+        from sympy.matrices import MatrixSymbol
         prettyFunc = self._print(m.parent)
-        def ppslice(x):
+        if not isinstance(m.parent, MatrixSymbol):
+            prettyFunc = prettyForm(*prettyFunc.parens())
+        def ppslice(x, dim):
             x = list(x)
             if x[2] == 1:
                 del x[2]
-            if x[1] == x[0] + 1:
-                del x[1]
             if x[0] == 0:
                 x[0] = ''
+            if x[1] == dim:
+                x[1] = ''
             return prettyForm(*self._print_seq(x, delimiter=':'))
-        prettyArgs = self._print_seq((ppslice(m.rowslice),
-            ppslice(m.colslice)), delimiter=', ').parens(left='[', right=']')[0]
+        prettyArgs = self._print_seq((ppslice(m.rowslice, m.parent.rows),
+            ppslice(m.colslice, m.parent.cols)), delimiter=', ').parens(left='[', right=']')[0]
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
@@ -958,6 +961,60 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('[', ']'))
         return D
 
+    def _print_TransferFunction(self, expr):
+        if not expr.num == 1:
+            num, den = expr.num, expr.den
+            res = Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
+            return self._print_Mul(res)
+        else:
+            return self._print(1)/self._print(expr.den)
+
+    def _print_Series(self, expr):
+        args = list(expr.args)
+        for i, a in enumerate(expr.args):
+            args[i] = prettyForm(*self._print(a).parens())
+        return prettyForm.__mul__(*args)
+
+    def _print_Parallel(self, expr):
+        s = None
+        for item in expr.args:
+            pform = self._print(item)
+            if s is None:
+                s = pform     # First element
+            else:
+                s = prettyForm(*stringPict.next(s, ' + '))
+                s = prettyForm(*stringPict.next(s, pform))
+        return s
+
+    def _print_Feedback(self, expr):
+        from sympy.physics.control import TransferFunction, Parallel, Series
+
+        num, tf = expr.num, TransferFunction(1, 1, expr.num.var)
+        num_arg_list = list(num.args) if isinstance(num, Series) else [num]
+        den_arg_list = list(expr.den.args) if isinstance(expr.den, Series) else [expr.den]
+
+        if isinstance(num, Series) and isinstance(expr.den, Series):
+            den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+        elif isinstance(num, Series) and isinstance(expr.den, TransferFunction):
+            if expr.den == tf:
+                den = Parallel(tf, Series(*num_arg_list))
+            else:
+                den = Parallel(tf, Series(*num_arg_list, expr.den))
+        elif isinstance(num, TransferFunction) and isinstance(expr.den, Series):
+            if num == tf:
+                den = Parallel(tf, Series(*den_arg_list))
+            else:
+                den = Parallel(tf, Series(num, *den_arg_list))
+        else:
+            if num == tf:
+                den = Parallel(tf, *den_arg_list)
+            elif expr.den == tf:
+                den = Parallel(tf, *num_arg_list)
+            else:
+                den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+
+        return self._print(num)/self._print(den)
+
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
 
@@ -1090,11 +1147,6 @@ class PrettyPrinter(Printer):
             out_expr = mat([out_expr])
 
         return self._print(out_expr)
-
-    _print_ImmutableDenseNDimArray = _print_NDimArray
-    _print_ImmutableSparseNDimArray = _print_NDimArray
-    _print_MutableDenseNDimArray = _print_NDimArray
-    _print_MutableSparseNDimArray = _print_NDimArray
 
     def _printer_tensor_indices(self, name, indices, index_map={}):
         center = stringPict(name)
@@ -1704,10 +1756,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Add(self, expr, order=None):
-        if self.order == 'none':
-            terms = list(expr.args)
-        else:
-            terms = self._as_ordered_terms(expr, order=order)
+        terms = self._as_ordered_terms(expr, order=order)
         pforms, indices = [], []
 
         def pretty_negative(pform, index):
@@ -1734,7 +1783,11 @@ class PrettyPrinter(Printer):
         for i, term in enumerate(terms):
             if term.is_Mul and _coeff_isneg(term):
                 coeff, other = term.as_coeff_mul(rational=False)
-                pform = self._print(Mul(-coeff, *other, evaluate=False))
+                if coeff == -1:
+                    negterm = Mul(*other, evaluate=False)
+                else:
+                    negterm = Mul(-coeff, *other, evaluate=False)
+                pform = self._print(negterm)
                 pforms.append(pretty_negative(pform, i))
             elif term.is_Rational and term.q > 1:
                 pforms.append(None)
@@ -1776,6 +1829,25 @@ class PrettyPrinter(Printer):
 
     def _print_Mul(self, product):
         from sympy.physics.units import Quantity
+
+        # Check for unevaluated Mul. In this case we need to make sure the
+        # identities are visible, multiple Rational factors are not combined
+        # etc so we display in a straight-forward form that fully preserves all
+        # args and their order.
+        args = product.args
+        if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]):
+            strargs = list(map(self._print, args))
+            # XXX: This is a hack to work around the fact that
+            # prettyForm.__mul__ absorbs a leading -1 in the args. Probably it
+            # would be better to fix this in prettyForm.__mul__ instead.
+            negone = strargs[0] == '-1'
+            if negone:
+                strargs[0] = prettyForm('1', 0, 0)
+            obj = prettyForm.__mul__(*strargs)
+            if negone:
+                obj = prettyForm('-' + obj.s, obj.baseline, obj.binding)
+            return obj
+
         a = []  # items in the numerator
         b = []  # items that are in the denominator (if any)
 
@@ -1933,8 +2005,7 @@ class PrettyPrinter(Printer):
 
     def _print_ProductSet(self, p):
         if len(p.sets) >= 1 and not has_variety(p.sets):
-            from sympy import Pow
-            return self._print(Pow(p.sets[0], len(p.sets), evaluate=False))
+            return self._print(p.sets[0]) ** self._print(len(p.sets))
         else:
             prod_char = u"\N{MULTIPLICATION SIGN}" if self._use_unicode else 'x'
             return self._print_seq(p.sets, None, None, ' %s ' % prod_char,
@@ -2574,18 +2645,27 @@ class PrettyPrinter(Printer):
             ' %s> ' % hobj('-', 2), self._print(h.codomain)))
         return pform
 
+    def _print_Manifold(self, manifold):
+        return self._print(manifold.name)
+
+    def _print_Patch(self, patch):
+        return self._print(patch.name)
+
+    def _print_CoordSystem(self, coords):
+        return self._print(coords.name)
+
     def _print_BaseScalarField(self, field):
-        string = field._coord_sys._names[field._index]
+        string = field._coord_sys.symbols[field._index].name
         return self._print(pretty_symbol(string))
 
     def _print_BaseVectorField(self, field):
-        s = U('PARTIAL DIFFERENTIAL') + '_' + field._coord_sys._names[field._index]
+        s = U('PARTIAL DIFFERENTIAL') + '_' + field._coord_sys.symbols[field._index].name
         return self._print(pretty_symbol(s))
 
     def _print_Differential(self, diff):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
-            string = field._coord_sys._names[field._index]
+            string = field._coord_sys.symbols[field._index].name
             return self._print(u'\N{DOUBLE-STRUCK ITALIC SMALL D} ' + pretty_symbol(string))
         else:
             pform = self._print(field)
@@ -2633,6 +2713,8 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
 
+    def _print_Str(self, s):
+        return self._print(s.name)
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

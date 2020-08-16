@@ -10,14 +10,14 @@ from sympy.stats import (GaussianUnitaryEnsemble as GUE, density,
                          JointEigenDistribution,
                          level_spacing_distribution,
                          Normal, Beta)
-from sympy.stats.joint_rv import JointDistributionHandmade
-from sympy.stats.rv import RandomMatrixSymbol, Density
+from sympy.stats.joint_rv_types import JointDistributionHandmade
+from sympy.stats.rv import RandomMatrixSymbol
 from sympy.stats.random_matrix_models import GaussianEnsemble
 from sympy.testing.pytest import raises
 
 def test_GaussianEnsemble():
     G = GaussianEnsemble('G', 3)
-    assert density(G) == Density(G)
+    assert density(G) == G.pspace.model
     raises(ValueError, lambda: GaussianEnsemble('G', 3.5))
 
 def test_GaussianUnitaryEnsemble():

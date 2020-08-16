@@ -8,7 +8,7 @@ import random
 import ast
 
 from sympy.testing.pytest import raises
-from sympy.testing.quality_unicode import test_this_file_encoding
+from sympy.testing.quality_unicode import _test_this_file_encoding
 
 # System path separator (usually slash or backslash) to be
 # used with excluded files, e.g.
@@ -145,7 +145,7 @@ def test_files():
         with open(fname, "rt", encoding="utf8") as test_file:
             test_this_file(fname, test_file)
         with open(fname, 'rt', encoding='utf8') as test_file:
-            test_this_file_encoding(fname, test_file)
+            _test_this_file_encoding(fname, test_file)
 
     def test_this_file(fname, test_file):
         line = None  # to flag the case where there were no lines in file
@@ -229,6 +229,7 @@ def test_files():
         "%(sep)splotting%(sep)spygletplot%(sep)s" % sepd,
         # False positive in the docstring
         "%(sep)sbin%(sep)stest_external_imports.py" % sepd,
+        "%(sep)sbin%(sep)stest_submodule_imports.py" % sepd,
         # These are deprecated stubs that can be removed at some point:
         "%(sep)sutilities%(sep)sruntests.py" % sepd,
         "%(sep)sutilities%(sep)spytest.py" % sepd,
@@ -420,60 +421,60 @@ def test_test_unicode_encoding():
 
     fname = 'abc'
     test_file = ['α']
-    raises(AssertionError, lambda: test_this_file_encoding(
+    raises(AssertionError, lambda: _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist))
 
     fname = 'abc'
     test_file = ['# coding=utf-8', 'α']
-    raises(AssertionError, lambda: test_this_file_encoding(
+    raises(AssertionError, lambda: _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist))
 
     fname = 'abc'
     test_file = ['# coding=utf-8', 'abc']
-    raises(AssertionError, lambda: test_this_file_encoding(
+    raises(AssertionError, lambda: _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist))
 
     fname = 'abc'
     test_file = ['abc']
-    test_this_file_encoding(
+    _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist)
 
     fname = 'foo'
     test_file = ['α']
-    raises(AssertionError, lambda: test_this_file_encoding(
+    raises(AssertionError, lambda: _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist))
 
     fname = 'foo'
     test_file = ['# coding=utf-8', 'α']
-    test_this_file_encoding(
+    _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist)
 
     fname = 'foo'
     test_file = ['# coding=utf-8', 'abc']
-    raises(AssertionError, lambda: test_this_file_encoding(
+    raises(AssertionError, lambda: _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist))
 
     fname = 'foo'
     test_file = ['abc']
-    raises(AssertionError, lambda: test_this_file_encoding(
+    raises(AssertionError, lambda: _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist))
 
     fname = 'bar'
     test_file = ['α']
-    raises(AssertionError, lambda: test_this_file_encoding(
+    raises(AssertionError, lambda: _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist))
 
     fname = 'bar'
     test_file = ['# coding=utf-8', 'α']
-    test_this_file_encoding(
+    _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist)
 
     fname = 'bar'
     test_file = ['# coding=utf-8', 'abc']
-    test_this_file_encoding(
+    _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist)
 
     fname = 'bar'
     test_file = ['abc']
-    test_this_file_encoding(
+    _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist)

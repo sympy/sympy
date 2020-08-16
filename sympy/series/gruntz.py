@@ -260,14 +260,21 @@ def mrv(e, x):
         s2, e2 = mrv(b, x)
         return mrv_max1(s1, s2, e.func(i, e1, e2), x)
     elif e.is_Pow:
-        b, e = e.as_base_exp()
-        if b == 1:
-            return SubsSet(), b
-        if e.has(x):
-            return mrv(exp(e * log(b)), x)
+        e1 = S.One
+        while e.is_Pow:
+            b1 = e.base
+            e1 *= e.exp
+            e = b1
+        if b1 == 1:
+            return SubsSet(), b1
+        if e1.has(x):
+            base_lim = limitinf(b1, x)
+            if base_lim is S.One:
+                return mrv(exp(e1 * (b1 - 1)), x)
+            return mrv(exp(e1 * log(b1)), x)
         else:
-            s, expr = mrv(b, x)
-            return s, expr**e
+            s, expr = mrv(b1, x)
+            return s, expr**e1
     elif isinstance(e, log):
         s, expr = mrv(e.args[0], x)
         return s, log(expr)
@@ -416,19 +423,20 @@ def limitinf(e, x, leadsimp=False):
     ``e`` cannot be simplified.
     """
     # rewrite e in terms of tractable functions only
-    e = e.rewrite('tractable', deep=True)
 
     if not e.has(x):
         return e  # e is a constant
     if e.has(Order):
         e = e.expand().removeO()
-    if not x.is_positive:
-        # We make sure that x.is_positive is True so we
-        # get all the correct mathematical behavior from the expression.
+    if not x.is_positive or x.is_integer:
+        # We make sure that x.is_positive is True and x.is_integer is None
+        # so we get all the correct mathematical behavior from the expression.
         # We need a fresh variable.
-        p = Dummy('p', positive=True, finite=True)
+        p = Dummy('p', positive=True)
         e = e.subs(x, p)
         x = p
+    e = e.rewrite('tractable', deep=True, limitvar=x)
+    e = powdenest(e)
     c0, e0 = mrv_leadterm(e, x)
     sig = sign(e0, x)
     if sig == 1:
@@ -495,11 +503,7 @@ def mrv_leadterm(e, x):
         Omega, exps = mrv(e, x)
     if not Omega:
         # e really does not depend on x after simplification
-        series = calculate_series(e, x)
-        c0, e0 = series.leadterm(x)
-        if e0 != 0:
-            raise ValueError("e0 should be 0")
-        return c0, e0
+        return exps, S.Zero
     if x in Omega:
         # move the whole omega up (exponentiate each term):
         Omega_up = moveup2(Omega, x)
@@ -516,7 +520,7 @@ def mrv_leadterm(e, x):
     # For limits of complex functions, the algorithm would have to be
     # improved, or just find limits of Re and Im components separately.
     #
-    w = Dummy("w", real=True, positive=True, finite=True)
+    w = Dummy("w", real=True, positive=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
     return series.leadterm(w)
@@ -627,7 +631,7 @@ def rewrite(e, Omega, x, wsym):
     # Some parts of sympy have difficulty computing series expansions with
     # non-integral exponents. The following heuristic improves the situation:
     exponent = reduce(ilcm, denominators, 1)
-    f = f.xreplace({wsym: wsym**exponent})
+    f = f.subs({wsym: wsym**exponent})
     logw /= exponent
 
     return f, logw

@@ -98,7 +98,6 @@ class AbstractPythonCodePrinter(CodePrinter):
     def __init__(self, settings=None):
         super(AbstractPythonCodePrinter, self).__init__(settings)
 
-        # XXX Remove after dropping python 2 support.
         # Python standard handler
         std = self._settings['standard']
         if std is None:
@@ -353,7 +352,6 @@ class AbstractPythonCodePrinter(CodePrinter):
         if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
 
-        # XXX Remove after dropping python 2 support.
         if self.standard == 'python2':
             return 'print %s' % print_args
         return 'print(%s)' % print_args
@@ -447,7 +445,6 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._hprint_Pow(expr, rational=rational)
 
     def _print_Rational(self, expr):
-        # XXX Remove after dropping python 2 support.
         if self.standard == 'python2':
             return '{}./{}.'.format(expr.p, expr.q)
         return '{}/{}'.format(expr.p, expr.q)
@@ -596,6 +593,8 @@ _known_functions_numpy = dict(_in_numpy, **{
     'atanh': 'arctanh',
     'exp2': 'exp2',
     'sign': 'sign',
+    'logaddexp': 'logaddexp',
+    'logaddexp2': 'logaddexp2',
 })
 _known_constants_numpy = {
     'Exp1': 'e',
@@ -768,16 +767,16 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_Pow(self, expr, rational=False):
         # XXX Workaround for negative integer power error
+        from sympy.core.power import Pow
         if expr.exp.is_integer and expr.exp.is_negative:
-            expr = expr.base ** expr.exp.evalf()
+            expr = Pow(expr.base, expr.exp.evalf(), evaluate=False)
         return self._hprint_Pow(expr, rational=rational, sqrt='numpy.sqrt')
 
     def _print_Min(self, expr):
-        return '{0}(({1}))'.format(self._module_format('numpy.amin'), ','.join(self._print(i) for i in expr.args))
+        return '{0}(({1}), axis=0)'.format(self._module_format('numpy.amin'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Max(self, expr):
-        return '{0}(({1}))'.format(self._module_format('numpy.amax'), ','.join(self._print(i) for i in expr.args))
-
+        return '{0}(({1}), axis=0)'.format(self._module_format('numpy.amax'), ','.join(self._print(i) for i in expr.args))
 
     def _print_arg(self, expr):
         return "%s(%s)" % (self._module_format('numpy.angle'), self._print(expr.args[0]))
@@ -932,7 +931,7 @@ class SciPyPrinter(NumPyPrinter):
             j.append(c)
             data.append(v)
 
-        return "{name}({data}, ({i}, {j}), shape={shape})".format(
+        return "{name}(({data}, ({i}, {j})), shape={shape})".format(
             name=self._module_format('scipy.sparse.coo_matrix'),
             data=data, i=i, j=j, shape=expr.shape
         )
@@ -969,6 +968,26 @@ class SciPyPrinter(NumPyPrinter):
     def _print_fresnelc(self, expr):
         return "{0}({1})[1]".format(
                 self._module_format("scipy.special.fresnel"),
+                self._print(expr.args[0]))
+
+    def _print_airyai(self, expr):
+        return "{0}({1})[0]".format(
+                self._module_format("scipy.special.airy"),
+                self._print(expr.args[0]))
+
+    def _print_airyaiprime(self, expr):
+        return "{0}({1})[1]".format(
+                self._module_format("scipy.special.airy"),
+                self._print(expr.args[0]))
+
+    def _print_airybi(self, expr):
+        return "{0}({1})[2]".format(
+                self._module_format("scipy.special.airy"),
+                self._print(expr.args[0]))
+
+    def _print_airybiprime(self, expr):
+        return "{0}({1})[3]".format(
+                self._module_format("scipy.special.airy"),
                 self._print(expr.args[0]))
 
 

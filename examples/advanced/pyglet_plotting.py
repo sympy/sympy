@@ -195,7 +195,7 @@ def main():
 
     def help_str():
         s = ("\nPlot p has been created. Useful commands: \n"
-             "    help(p), p[1] = x**2, print p, p.clear() \n\n"
+             "    help(p), p[1] = x**2, print(p), p.clear() \n\n"
              "Available examples (see source in plotting.py):\n\n")
         for i in range(len(examples)):
             s += "(%i) %s\n" % (i, examples[i].__name__)

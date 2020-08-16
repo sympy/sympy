@@ -1,17 +1,14 @@
-from __future__ import print_function, division
-
-from typing import Dict, Type, Union
+# from typing import Dict, Union, Type
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from .add import _unevaluated_Add, Add
-from .basic import S
+from .basic import S, Atom
 from .compatibility import ordered
 from .basic import Basic
-from .expr import Expr
 from .evalf import EvalfMixin
-from .sympify import _sympify
+from .function import AppliedUndef
+from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
-
+from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
 from sympy.logic.boolalg import Boolean, BooleanAtom
 
 __all__ = (
@@ -20,10 +17,21 @@ __all__ = (
     'StrictGreaterThan', 'GreaterThan',
 )
 
+from .expr import Expr
+from sympy.multipledispatch import dispatch
+from .containers import Tuple
+from .symbol import Symbol
+
+
+def _nontrivBool(side):
+    return isinstance(side, Boolean) and \
+           not isinstance(side, Atom)
 
 
 # Note, see issue 4986.  Ideally, we wouldn't want to subclass both Boolean
 # and Expr.
+# from .. import Expr
+
 
 def _canonical(cond):
     # return a condition in which all relationals are canonical
@@ -57,7 +65,7 @@ class Relational(Boolean, EvalfMixin):
     """
     __slots__ = ()
 
-    ValidRelationOperator = {}  # type: Dict[Union[str, None], Type[Relational]]
+    ValidRelationOperator = {}  ## type: Dict[Union[str, None], Type[Relational]]
 
     is_Relational = True
 
@@ -78,27 +86,18 @@ class Relational(Boolean, EvalfMixin):
         if cls is None:
             raise ValueError("Invalid relational operator symbol: %r" % rop)
 
-        # XXX: Why should the below be removed when Py2 is not supported?
-        #
-        # /// drop when Py2 is no longer supported
         if not issubclass(cls, (Eq, Ne)):
             # validate that Booleans are not being used in a relational
             # other than Eq/Ne;
             # Note: Symbol is a subclass of Boolean but is considered
             # acceptable here.
-            from sympy.core.symbol import Symbol
-            from sympy.logic.boolalg import Boolean
-            def unacceptable(side):
-                return isinstance(side, Boolean) and not isinstance(side, Symbol)
-
-            if unacceptable(lhs) or unacceptable(rhs):
+            if any(map(_nontrivBool, (lhs, rhs))):
                 from sympy.utilities.misc import filldedent
                 raise TypeError(filldedent('''
                     A Boolean argument can only be used in
                     Eq and Ne; all other relationals expect
                     real expressions.
                 '''))
-        # \\\
 
         return cls(lhs, rhs, **assumptions)
 
@@ -199,9 +198,9 @@ class Relational(Boolean, EvalfMixin):
     @property
     def canonical(self):
         """Return a canonical form of the relational by putting a
-        Number on the rhs else ordering the args. The relation is also changed
-        so that the left-hand side expression does not start with a ``-``.
-        No other simplification is attempted.
+        number on the rhs, canonically removing a sign or else
+        ordering the args canonically. No other simplification is
+        attempted.
 
         Examples
         ========
@@ -215,6 +214,8 @@ class Relational(Boolean, EvalfMixin):
         x > -y
         >>> (-y > x).canonical
         x < -y
+        >>> (-y < -x).canonical
+        x < y
         """
         args = self.args
         r = self
@@ -296,6 +297,7 @@ class Relational(Boolean, EvalfMixin):
                 return left
 
     def _eval_simplify(self, **kwargs):
+        from .add import Add
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
         if r.is_Relational:
@@ -323,9 +325,9 @@ class Relational(Boolean, EvalfMixin):
                         if m.is_negative:
                             # Dividing with a negative number, so change order of arguments
                             # canonical will put the symbol back on the lhs later
-                            r = r.func(-b/m, x)
+                            r = r.func(-b / m, x)
                         else:
-                            r = r.func(x, -b/m)
+                            r = r.func(x, -b / m)
                     else:
                         r = r.func(b, S.zero)
                 except ValueError:
@@ -337,8 +339,8 @@ class Relational(Boolean, EvalfMixin):
                         constant = c[-1]
                         c[-1] = 0
                         scale = gcd(c)
-                        c = [ctmp/scale for ctmp in c]
-                        r = r.func(Poly.from_list(c, x).as_expr(), -constant/scale)
+                        c = [ctmp / scale for ctmp in c]
+                        r = r.func(Poly.from_list(c, x).as_expr(), -constant / scale)
                     except PolynomialError:
                         pass
             elif len(free) >= 2:
@@ -351,18 +353,18 @@ class Relational(Boolean, EvalfMixin):
                     constant = m[-1]
                     del m[-1]
                     scale = gcd(m)
-                    m = [mtmp/scale for mtmp in m]
+                    m = [mtmp / scale for mtmp in m]
                     nzm = list(filter(lambda f: f[0] != 0, list(zip(m, free))))
                     if scale.is_zero is False:
                         if constant != 0:
                             # lhs: expression, rhs: constant
-                            newexpr = Add(*[i*j for i, j in nzm])
-                            r = r.func(newexpr, -constant/scale)
+                            newexpr = Add(*[i * j for i, j in nzm])
+                            r = r.func(newexpr, -constant / scale)
                         else:
                             # keep first term on lhs
-                            lhsterm = nzm[0][0]*nzm[0][1]
+                            lhsterm = nzm[0][0] * nzm[0][1]
                             del nzm[0]
-                            newexpr = Add(*[i*j for i, j in nzm])
+                            newexpr = Add(*[i * j for i, j in nzm])
                             r = r.func(lhsterm, -newexpr)
 
                     else:
@@ -372,7 +374,7 @@ class Relational(Boolean, EvalfMixin):
         # Did we get a simplified result?
         r = r.canonical
         measure = kwargs['measure']
-        if measure(r) < kwargs['ratio']*measure(self):
+        if measure(r) < kwargs['ratio'] * measure(self):
             return r
         else:
             return self
@@ -453,6 +455,12 @@ class Equality(Relational):
     Notes
     =====
 
+    Python treats 1 and True (and 0 and False) as being equal; SymPy
+    does not. And integer will always compare as unequal to a Boolean:
+
+    >>> Eq(True, 1), True == 1
+    (False, True)
+
     This class is not the same as the == operator.  The == operator tests
     for exact structural equality between two expressions; this class
     compares expressions mathematically.
@@ -474,12 +482,6 @@ class Equality(Relational):
     is_Equality = True
 
     def __new__(cls, lhs, rhs=None, **options):
-        from sympy.core.add import Add
-        from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
-        from sympy.core.expr import _n2
-        from sympy.functions.elementary.complexes import arg
-        from sympy.simplify.simplify import clear_coefficients
-        from sympy.utilities.iterables import sift
 
         if rhs is None:
             SymPyDeprecationWarning(
@@ -489,118 +491,25 @@ class Equality(Relational):
                 deprecated_since_version="1.5"
             ).warn()
             rhs = 0
-
+        evaluate = options.pop('evaluate', global_parameters.evaluate)
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
-
-        evaluate = options.pop('evaluate', global_parameters.evaluate)
-
         if evaluate:
-            # If one expression has an _eval_Eq, return its results.
-            if hasattr(lhs, '_eval_Eq'):
-                r = lhs._eval_Eq(rhs)
-                if r is not None:
-                    return r
-            if hasattr(rhs, '_eval_Eq'):
-                r = rhs._eval_Eq(lhs)
-                if r is not None:
-                    return r
-            # If expressions have the same structure, they must be equal.
-            if lhs == rhs:
-                return S.true  # e.g. True == True
-            elif all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
-                return S.false  # True != False
-            elif not (lhs.is_Symbol or rhs.is_Symbol) and (
-                    isinstance(lhs, Boolean) !=
-                    isinstance(rhs, Boolean)):
-                return S.false  # only Booleans can equal Booleans
+            val = is_eq(lhs, rhs)
+            if val is None:
+                return cls(lhs, rhs, evaluate=False)
+            else:
+                return _sympify(val)
 
-            if lhs.is_infinite or rhs.is_infinite:
-                if fuzzy_xor([lhs.is_infinite, rhs.is_infinite]):
-                    return S.false
-                if fuzzy_xor([lhs.is_extended_real, rhs.is_extended_real]):
-                    return S.false
-                if fuzzy_and([lhs.is_extended_real, rhs.is_extended_real]):
-                    r = fuzzy_xor([lhs.is_extended_positive, fuzzy_not(rhs.is_extended_positive)])
-                    return S(r)
-
-                # Try to split real/imaginary parts and equate them
-                I = S.ImaginaryUnit
-
-                def split_real_imag(expr):
-                    real_imag = lambda t: (
-                            'real' if t.is_extended_real else
-                            'imag' if (I*t).is_extended_real else None)
-                    return sift(Add.make_args(expr), real_imag)
-
-                lhs_ri = split_real_imag(lhs)
-                if not lhs_ri[None]:
-                    rhs_ri = split_real_imag(rhs)
-                    if not rhs_ri[None]:
-                        eq_real = Eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']))
-                        eq_imag = Eq(I*Add(*lhs_ri['imag']), I*Add(*rhs_ri['imag']))
-                        res = fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
-                        if res is not None:
-                            return S(res)
-
-                # Compare e.g. zoo with 1+I*oo by comparing args
-                arglhs = arg(lhs)
-                argrhs = arg(rhs)
-                # Guard against Eq(nan, nan) -> False
-                if not (arglhs == S.NaN and argrhs == S.NaN):
-                    res = fuzzy_bool(Eq(arglhs, argrhs))
-                    if res is not None:
-                        return S(res)
-
-                return Relational.__new__(cls, lhs, rhs, **options)
-
-            if all(isinstance(i, Expr) for i in (lhs, rhs)):
-                # see if the difference evaluates
-                dif = lhs - rhs
-                z = dif.is_zero
-                if z is not None:
-                    if z is False and dif.is_commutative:  # issue 10728
-                        return S.false
-                    if z:
-                        return S.true
-                # evaluate numerically if possible
-                n2 = _n2(lhs, rhs)
-                if n2 is not None:
-                    return _sympify(n2 == 0)
-                # see if the ratio evaluates
-                n, d = dif.as_numer_denom()
-                rv = None
-                if n.is_zero:
-                    rv = d.is_nonzero
-                elif n.is_finite:
-                    if d.is_infinite:
-                        rv = S.true
-                    elif n.is_zero is False:
-                        rv = d.is_infinite
-                        if rv is None:
-                            # if the condition that makes the denominator
-                            # infinite does not make the original expression
-                            # True then False can be returned
-                            l, r = clear_coefficients(d, S.Infinity)
-                            args = [_.subs(l, r) for _ in (lhs, rhs)]
-                            if args != [lhs, rhs]:
-                                rv = fuzzy_bool(Eq(*args))
-                                if rv is True:
-                                    rv = None
-                elif any(a.is_infinite for a in Add.make_args(n)):
-                    # (inf or nan)/x != 0
-                    rv = S.false
-                if rv is not None:
-                    return _sympify(rv)
-
-        return Relational.__new__(cls, lhs, rhs, **options)
+        return Relational.__new__(cls, lhs, rhs)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
 
     def _eval_rewrite_as_Add(self, *args, **kwargs):
-        """return Eq(L, R) as L - R. To control the evaluation of
+        """
+        return Eq(L, R) as L - R. To control the evaluation of
         the result set pass `evaluate=True` to give L - R;
         if `evaluate=None` then terms in L and R will not cancel
         but they will be listed in canonical order; otherwise
@@ -619,6 +528,7 @@ class Equality(Relational):
         >>> eq.rewrite(Add, evaluate=False).args
         (b, x, b, -x)
         """
+        from .add import _unevaluated_Add, Add
         L, R = args
         evaluate = kwargs.get('evaluate', True)
         if evaluate:
@@ -635,15 +545,16 @@ class Equality(Relational):
     def binary_symbols(self):
         if S.true in self.args or S.false in self.args:
             if self.lhs.is_Symbol:
-                return set([self.lhs])
+                return {self.lhs}
             elif self.rhs.is_Symbol:
-                return set([self.rhs])
+                return {self.rhs}
         return set()
 
     def _eval_simplify(self, **kwargs):
+        from .add import Add
         from sympy.solvers.solveset import linear_coeffs
         # standard simplify
-        e = super(Equality, self)._eval_simplify(**kwargs)
+        e = super()._eval_simplify(**kwargs)
         if not isinstance(e, Equality):
             return e
         free = self.free_symbols
@@ -653,11 +564,11 @@ class Equality(Relational):
                 m, b = linear_coeffs(
                     e.rewrite(Add, evaluate=False), x)
                 if m.is_zero is False:
-                    enew = e.func(x, -b/m)
+                    enew = e.func(x, -b / m)
                 else:
-                    enew = e.func(m*x, -b)
+                    enew = e.func(m * x, -b)
                 measure = kwargs['measure']
-                if measure(enew) <= kwargs['ratio']*measure(e):
+                if measure(enew) <= kwargs['ratio'] * measure(e):
                     e = enew
             except ValueError:
                 pass
@@ -675,7 +586,7 @@ class Equality(Relational):
         ========
 
         >>> from sympy import Eq
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
         >>> Eq(x**2, 1).as_poly(x)
         Poly(x**2 - 1, x, domain='ZZ')
         '''
@@ -722,13 +633,13 @@ class Unequality(Relational):
     def __new__(cls, lhs, rhs, **options):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
-
         evaluate = options.pop('evaluate', global_parameters.evaluate)
-
         if evaluate:
-            is_equal = Equality(lhs, rhs)
-            if isinstance(is_equal, BooleanAtom):
-                return is_equal.negated
+            val = is_neq(lhs, rhs)
+            if val is None:
+                return cls(lhs, rhs, evaluate=False)
+            else:
+                return _sympify(val)
 
         return Relational.__new__(cls, lhs, rhs, **options)
 
@@ -740,9 +651,9 @@ class Unequality(Relational):
     def binary_symbols(self):
         if S.true in self.args or S.false in self.args:
             if self.lhs.is_Symbol:
-                return set([self.lhs])
+                return {self.lhs}
             elif self.rhs.is_Symbol:
-                return set([self.rhs])
+                return {self.rhs}
         return set()
 
     def _eval_simplify(self, **kwargs):
@@ -767,12 +678,20 @@ class _Inequality(Relational):
     __slots__ = ()
 
     def __new__(cls, lhs, rhs, **options):
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
+
+        try:
+            lhs = _sympify(lhs)
+            rhs = _sympify(rhs)
+        except SympifyError:
+            return NotImplemented
 
         evaluate = options.pop('evaluate', global_parameters.evaluate)
-
         if evaluate:
+            for me in (lhs, rhs):
+                if me.is_extended_real is False:
+                    raise TypeError("Invalid comparison of non-real %s" % me)
+                if me is S.NaN:
+                    raise TypeError("Invalid NaN comparison")
             # First we invoke the appropriate inequality method of `lhs`
             # (e.g., `lhs.__lt__`).  That method will try to reduce to
             # boolean or raise an exception.  It may keep calling
@@ -781,15 +700,19 @@ class _Inequality(Relational):
             # nor a subclass was able to reduce to boolean or raise an
             # exception).  In that case, it must call us with
             # `evaluate=False` to prevent infinite recursion.
-            r = cls._eval_relation(lhs, rhs)
-            if r is not None:
-                return r
-            # Note: not sure r could be None, perhaps we never take this
-            # path?  In principle, could use this to shortcut out if a
-            # class realizes the inequality cannot be evaluated further.
+            return cls._eval_relation(lhs, rhs, **options)
 
         # make a "non-evaluated" Expr for the inequality
         return Relational.__new__(cls, lhs, rhs, **options)
+
+    @classmethod
+    def _eval_relation(cls, lhs, rhs, **options):
+        val = cls._eval_fuzzy_relation(lhs, rhs)
+        if val is None:
+            return cls(lhs, rhs, evaluate=False)
+        else:
+            return _sympify(val)
+
 
 class _Greater(_Inequality):
     """Not intended for general use
@@ -1057,9 +980,8 @@ class GreaterThan(_Greater):
     rel_op = '>='
 
     @classmethod
-    def _eval_relation(cls, lhs, rhs):
-        # We don't use the op symbol here: workaround issue #7951
-        return _sympify(lhs.__ge__(rhs))
+    def _eval_fuzzy_relation(cls, lhs, rhs):
+        return is_ge(lhs, rhs)
 
 
 Ge = GreaterThan
@@ -1072,9 +994,8 @@ class LessThan(_Less):
     rel_op = '<='
 
     @classmethod
-    def _eval_relation(cls, lhs, rhs):
-        # We don't use the op symbol here: workaround issue #7951
-        return _sympify(lhs.__le__(rhs))
+    def _eval_fuzzy_relation(cls, lhs, rhs):
+        return is_le(lhs, rhs)
 
 
 Le = LessThan
@@ -1087,9 +1008,8 @@ class StrictGreaterThan(_Greater):
     rel_op = '>'
 
     @classmethod
-    def _eval_relation(cls, lhs, rhs):
-        # We don't use the op symbol here: workaround issue #7951
-        return _sympify(lhs.__gt__(rhs))
+    def _eval_fuzzy_relation(cls, lhs, rhs):
+        return is_gt(lhs, rhs)
 
 
 Gt = StrictGreaterThan
@@ -1102,13 +1022,11 @@ class StrictLessThan(_Less):
     rel_op = '<'
 
     @classmethod
-    def _eval_relation(cls, lhs, rhs):
-        # We don't use the op symbol here: workaround issue #7951
-        return _sympify(lhs.__lt__(rhs))
+    def _eval_fuzzy_relation(cls, lhs, rhs):
+        return is_lt(lhs, rhs)
 
 
 Lt = StrictLessThan
-
 
 # A class-specific (not object-specific) data item used for a minor speedup.
 # It is defined here, rather than directly in the class, because the classes
@@ -1129,3 +1047,356 @@ Relational.ValidRelationOperator = {
     '<': StrictLessThan,
     'lt': StrictLessThan,
 }
+
+
+def _n2(a, b):
+    """Return (a - b).evalf(2) if a and b are comparable, else None.
+    This should only be used when a and b are already sympified.
+    """
+    # /!\ it is very important (see issue 8245) not to
+    # use a re-evaluated number in the calculation of dif
+    if a.is_comparable and b.is_comparable:
+        dif = (a - b).evalf(2)
+        if dif.is_comparable:
+            return dif
+
+
+@dispatch(Expr, Expr)
+def _eval_is_ge(lhs, rhs):
+    return None
+
+
+@dispatch(Basic, Basic)
+def _eval_is_eq(lhs, rhs):
+    return None
+
+
+@dispatch(Tuple, Expr)
+def _eval_is_eq(lhs, rhs):  # noqa:F811
+    return False
+
+
+@dispatch(Tuple, AppliedUndef)
+def _eval_is_eq(lhs, rhs):  # noqa:F811
+    return None
+
+
+@dispatch(Tuple, Symbol)
+def _eval_is_eq(lhs, rhs):  # noqa:F811
+    return None
+
+
+@dispatch(Tuple, Tuple)
+def _eval_is_eq(lhs, rhs):  # noqa:F811
+    if len(lhs) != len(rhs):
+        return False
+
+    return fuzzy_and(fuzzy_bool(is_eq(s, o)) for s, o in zip(lhs, rhs))
+
+
+def is_lt(lhs, rhs):
+    """Fuzzy bool for lhs is strictly less than rhs.
+
+    See the docstring for is_ge for more
+    """
+    return fuzzy_not(is_ge(lhs, rhs))
+
+
+def is_gt(lhs, rhs):
+    """Fuzzy bool for lhs is strictly greater than rhs.
+
+    See the docstring for is_ge for more
+    """
+    return fuzzy_not(is_le(lhs, rhs))
+
+
+def is_le(lhs, rhs):
+    """Fuzzy bool for lhs is less than or equal to rhs.
+    is_gt calls is_lt
+    See the docstring for is_ge for more
+    """
+    return is_ge(rhs, lhs)
+
+
+def is_ge(lhs, rhs):
+    """
+    Fuzzy bool for lhs is greater than or equal to rhs.
+
+    :param lhs: the left-hand side of the expression, must be sympified, and an instance of expression
+                Throws an exception if lhs is not an instance of expression
+    :param rhs: the right-hand side of the expression, must be sympified and an instance of expression
+                Throws an exception if lhs is not an instance of expression
+    :return: True if lhs is greater than or equal to rhs, false is lhs is less than rhs, and
+            None if the comparison between lhs and rhs is indeterminate
+
+    The four comparison functions ``is_le``, ``is_lt``, ``is_ge``, and ``is_gt`` are
+    each implemented in terms of ``is_ge`` in the following way:
+
+    is_ge(x, y) := is_ge(x, y)
+    is_le(x, y) := is_ge(y, x)
+    is_lt(x, y) := fuzzy_not(is_ge(x, y))
+    is_gt(x, y) = fuzzy_not(is_ge(y, x))
+
+    To maintain these equivalences in fuzzy logic it is important that in cases where
+    either x or y is non-real all comparisons will give None.
+
+    InEquality classes, such as Lt, Gt, etc. Use one of is_ge, is_le, etc.
+    To implement comparisons with ``Gt(a, b)`` or ``a > b`` etc for an ``Expr`` subclass
+    it is only necessary to define a dispatcher method for ``_eval_is_ge`` like
+
+    >>> from sympy.core.relational import is_ge, is_lt, is_gt
+    >>> from sympy.abc import x
+    >>> from sympy import S, Expr, sympify
+    >>> from sympy.multipledispatch import dispatch
+    >>> class MyExpr(Expr):
+    ...     def __new__(cls, arg):
+    ...         return Expr.__new__(cls, sympify(arg))
+    ...     @property
+    ...     def value(self):
+    ...         return self.args[0]
+    ...
+    >>> @dispatch(MyExpr, MyExpr)
+    ... def _eval_is_ge(a, b):
+    ...     return is_ge(a.value, b.value)
+    ...
+    >>> a = MyExpr(1)
+    >>> b = MyExpr(2)
+    >>> a < b
+    True
+    >>> a <= b
+    True
+    >>> a > b
+    False
+    >>> is_lt(a, b)
+    True
+
+    Examples
+    ========
+
+
+    >>> is_ge(S(2), S(0))
+    True
+    >>> is_ge(S(0), S(2))
+    False
+    >>> is_ge(S(0), x)
+
+    >>> is_gt(S(2), S(0))
+    True
+    >>> is_gt(S(0), S(2))
+    False
+    >>> is_lt(S(0), S(2))
+    True
+    >>> is_lt(S(2), S(0))
+    False
+
+   """
+    if not (isinstance(lhs, Expr) and isinstance(rhs, Expr)):
+        raise TypeError("Can only compare inequalities with Expr")
+
+    retval = _eval_is_ge(lhs, rhs)
+
+    if retval is not None:
+        return retval
+    else:
+        n2 = _n2(lhs, rhs)
+        if n2 is not None:
+            # use float comparison for infinity.
+            # otherwise get stuck in infinite recursion
+            if n2 in (S.Infinity, S.NegativeInfinity):
+                n2 = float(n2)
+            return _sympify(n2 >= 0)
+        if lhs.is_extended_real and rhs.is_extended_real:
+            if (lhs.is_infinite and lhs.is_extended_positive) or (rhs.is_infinite and rhs.is_extended_negative):
+                return True
+            diff = lhs - rhs
+            if diff is not S.NaN:
+                rv = diff.is_extended_nonnegative
+                if rv is not None:
+                    return rv
+
+
+def is_neq(lhs, rhs):
+    """Fuzzy bool for lhs does not equal rhs.
+
+    See the docstring for is_eq for more
+    """
+    return fuzzy_not(is_eq(lhs, rhs))
+
+
+def is_eq(lhs, rhs):
+    """
+    Fuzzy bool representing mathematical equality between lhs and rhs.
+
+    :param lhs: the left-hand side of the expression, must be sympified
+    :param rhs: the right-hand side of the expression, must be sympified
+    :return: True if lhs is equal to rhs, false is lhs is not equal to rhs, and
+            None if the comparison between lhs and rhs is indeterminate
+
+    Notes:
+
+    This function is intended to give a relatively fast determination and deliberately does not attempt slow
+    calculations that might help in obtaining a determination of True or False in more difficult cases.
+
+    InEquality classes, such as Lt, Gt, etc. Use one of is_ge, is_le, etc.
+    To implement comparisons with ``Gt(a, b)`` or ``a > b`` etc for an ``Expr`` subclass
+    it is only necessary to define a dispatcher method for ``_eval_is_ge`` like
+
+    >>> from sympy.core.relational import is_eq
+    >>> from sympy.core.relational import is_neq
+    >>> from sympy import S, Basic, Eq, sympify
+    >>> from sympy.abc import x
+    >>> from sympy.multipledispatch import dispatch
+    >>> class MyBasic(Basic):
+    ...     def __new__(cls, arg):
+    ...         return Basic.__new__(cls, sympify(arg))
+    ...     @property
+    ...     def value(self):
+    ...         return self.args[0]
+    ...
+    >>> @dispatch(MyBasic, MyBasic)
+    ... def _eval_is_eq(a, b):
+    ...     return is_eq(a.value, b.value)
+    ...
+    >>> a = MyBasic(1)
+    >>> b = MyBasic(1)
+    >>> a == b
+    True
+    >>> Eq(a, b)
+    True
+    >>> a != b
+    False
+    >>> is_eq(a, b)
+    True
+
+
+    Examples
+    ========
+
+
+
+    >>> is_eq(S(0), S(0))
+    True
+    >>> Eq(0, 0)
+    True
+    >>> is_neq(S(0), S(0))
+    False
+    >>> is_eq(S(0), S(2))
+    False
+    >>> Eq(0, 2)
+    False
+    >>> is_neq(S(0), S(2))
+    True
+    >>> is_eq(S(0), x)
+
+    >>> Eq(S(0), x)
+    Eq(0, x)
+
+
+
+    """
+    from sympy.core.add import Add
+    from sympy.functions.elementary.complexes import arg
+    from sympy.simplify.simplify import clear_coefficients
+    from sympy.utilities.iterables import sift
+
+    # here, _eval_Eq is only called for backwards compatibility
+    # new code should use is_eq with multiple dispatch as
+    # outlined in the docstring
+    for side1, side2 in (lhs, rhs), (rhs, lhs):
+        eval_func = getattr(side1, '_eval_Eq', None)
+        if eval_func is not None:
+            retval = eval_func(side2)
+            if retval is not None:
+                return retval
+
+    retval = _eval_is_eq(lhs, rhs)
+    if retval is not None:
+        return retval
+
+    if dispatch(type(lhs), type(rhs)) != dispatch(type(rhs), type(lhs)):
+        retval = _eval_is_eq(rhs, lhs)
+        if retval is not None:
+            return retval
+
+    # retval is still None, so go through the equality logic
+    # If expressions have the same structure, they must be equal.
+    if lhs == rhs:
+        return True  # e.g. True == True
+    elif all(isinstance(i, BooleanAtom) for i in (rhs, lhs)):
+        return False  # True != False
+    elif not (lhs.is_Symbol or rhs.is_Symbol) and (
+        isinstance(lhs, Boolean) !=
+        isinstance(rhs, Boolean)):
+        return False  # only Booleans can equal Booleans
+
+    if lhs.is_infinite or rhs.is_infinite:
+        if fuzzy_xor([lhs.is_infinite, rhs.is_infinite]):
+            return False
+        if fuzzy_xor([lhs.is_extended_real, rhs.is_extended_real]):
+            return False
+        if fuzzy_and([lhs.is_extended_real, rhs.is_extended_real]):
+            return fuzzy_xor([lhs.is_extended_positive, fuzzy_not(rhs.is_extended_positive)])
+
+        # Try to split real/imaginary parts and equate them
+        I = S.ImaginaryUnit
+
+        def split_real_imag(expr):
+            real_imag = lambda t: (
+                'real' if t.is_extended_real else
+                'imag' if (I * t).is_extended_real else None)
+            return sift(Add.make_args(expr), real_imag)
+
+        lhs_ri = split_real_imag(lhs)
+        if not lhs_ri[None]:
+            rhs_ri = split_real_imag(rhs)
+            if not rhs_ri[None]:
+                eq_real = Eq(Add(*lhs_ri['real']), Add(*rhs_ri['real']))
+                eq_imag = Eq(I * Add(*lhs_ri['imag']), I * Add(*rhs_ri['imag']))
+                return fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
+
+        # Compare e.g. zoo with 1+I*oo by comparing args
+        arglhs = arg(lhs)
+        argrhs = arg(rhs)
+        # Guard against Eq(nan, nan) -> Falsesymp
+        if not (arglhs == S.NaN and argrhs == S.NaN):
+            return fuzzy_bool(Eq(arglhs, argrhs))
+
+    if all(isinstance(i, Expr) for i in (lhs, rhs)):
+        # see if the difference evaluates
+        dif = lhs - rhs
+        z = dif.is_zero
+        if z is not None:
+            if z is False and dif.is_commutative:  # issue 10728
+                return False
+            if z:
+                return True
+
+        n2 = _n2(lhs, rhs)
+        if n2 is not None:
+            return _sympify(n2 == 0)
+
+        # see if the ratio evaluates
+        n, d = dif.as_numer_denom()
+        rv = None
+        if n.is_zero:
+            rv = d.is_nonzero
+        elif n.is_finite:
+            if d.is_infinite:
+                rv = True
+            elif n.is_zero is False:
+                rv = d.is_infinite
+                if rv is None:
+                    # if the condition that makes the denominator
+                    # infinite does not make the original expression
+                    # True then False can be returned
+                    l, r = clear_coefficients(d, S.Infinity)
+                    args = [_.subs(l, r) for _ in (lhs, rhs)]
+                    if args != [lhs, rhs]:
+                        rv = fuzzy_bool(Eq(*args))
+                        if rv is True:
+                            rv = None
+        elif any(a.is_infinite for a in Add.make_args(n)):
+            # (inf or nan)/x != 0
+            rv = False
+        if rv is not None:
+            return rv

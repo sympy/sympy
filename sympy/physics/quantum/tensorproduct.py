@@ -71,7 +71,7 @@ class TensorProduct(Expr):
 
     Start with a simple tensor product of sympy matrices::
 
-        >>> from sympy import I, Matrix, symbols
+        >>> from sympy import Matrix
         >>> from sympy.physics.quantum import TensorProduct
 
         >>> m1 = Matrix([[1,2],[3,4]])
@@ -149,13 +149,12 @@ class TensorProduct(Expr):
         return TensorProduct(*terms).expand(tensorproduct=True)
 
     def _sympystr(self, printer, *args):
-        from sympy.printing.str import sstr
         length = len(self.args)
         s = ''
         for i in range(length):
             if isinstance(self.args[i], (Add, Pow, Mul)):
                 s = s + '('
-            s = s + sstr(self.args[i])
+            s = s + printer._print(self.args[i])
             if isinstance(self.args[i], (Add, Pow, Mul)):
                 s = s + ')'
             if i != length - 1:

@@ -241,7 +241,7 @@ class Reals(Interval, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import S, Interval, Rational, pi, I
+    >>> from sympy import S, Rational, pi, I
     >>> 5 in S.Reals
     True
     >>> Rational(-1, 2) in S.Reals
@@ -728,6 +728,12 @@ class Range(Set):
         if dif.is_infinite:
             return S.Infinity
         return Integer(abs(dif//self.step))
+
+    @property
+    def is_finite_set(self):
+        if self.start.is_integer and self.stop.is_integer:
+            return True
+        return self.size.is_finite
 
     def __nonzero__(self):
         return self.start != self.stop
@@ -1417,7 +1423,9 @@ class Complexes(CartesianComplexRegion, metaclass=Singleton):
     is_finite_set = False
 
     # Override property from superclass since Complexes has no args
-    sets = ProductSet(S.Reals, S.Reals)
+    @property
+    def sets(self):
+        return ProductSet(S.Reals, S.Reals)
 
     def __new__(cls):
         return Set.__new__(cls)

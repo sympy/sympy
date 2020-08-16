@@ -1,7 +1,5 @@
 """Miscellaneous stuff that doesn't really fit anywhere else."""
 
-from __future__ import print_function, division
-
 from typing import List
 
 import sys
@@ -10,6 +8,7 @@ import re as _re
 import struct
 from textwrap import fill, dedent
 from sympy.core.compatibility import get_function_name, as_int
+from sympy.core.decorators import deprecated
 
 
 class Undecidable(ValueError):
@@ -229,7 +228,7 @@ def debug_decorator(func):
         _debug_tmp = oldtmp
         _debug_tmp.append(s)
         if _debug_iter == 0:
-            print((_debug_tmp[0]))
+            print(_debug_tmp[0])
             _debug_tmp = []
         return r
 
@@ -248,6 +247,10 @@ def debug(*args):
         print(*args, file=sys.stderr)
 
 
+@deprecated(
+    useinstead="the builtin ``shutil.which`` function",
+    issue=19634,
+    deprecated_since_version="1.7")
 def find_executable(executable, path=None):
     """Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to

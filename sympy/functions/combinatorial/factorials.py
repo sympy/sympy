@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import List
 
 from sympy.core import S, sympify, Dummy, Mod
@@ -235,7 +233,7 @@ class factorial(CombinatorialFunction):
 
                     return S(fc % q)
 
-    def _eval_rewrite_as_gamma(self, n, **kwargs):
+    def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
         from sympy import gamma
         return gamma(n + 1)
 
@@ -268,7 +266,7 @@ class factorial(CombinatorialFunction):
         if x.is_nonnegative or x.is_noninteger:
             return True
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import Order
         arg = self.args[0]
         arg_1 = arg.as_leading_term(x)
@@ -365,6 +363,16 @@ class subfactorial(CombinatorialFunction):
         if self.args[0].is_integer and self.args[0].is_nonnegative:
             return True
 
+    def _eval_rewrite_as_factorial(self, arg, **kwargs):
+        from sympy import summation
+        i = Dummy('i')
+        f = S.NegativeOne**i / factorial(i)
+        return factorial(arg) * summation(f, (i, 0, arg))
+
+    def _eval_rewrite_as_gamma(self, arg, piecewise=True, **kwargs):
+        from sympy import exp, gamma, I, lowergamma
+        return ((-1)**(arg + 1)*exp(-I*pi*arg)*lowergamma(arg + 1, -1) + gamma(arg + 1))*exp(-1)
+
     def _eval_rewrite_as_uppergamma(self, arg, **kwargs):
         from sympy import uppergamma
         return uppergamma(arg + 1, -1)/S.Exp1
@@ -398,7 +406,8 @@ class factorial2(CombinatorialFunction):
     ========
 
     >>> from sympy import factorial2, var
-    >>> var('n')
+    >>> n = var('n')
+    >>> n
     n
     >>> factorial2(n + 1)
     factorial2(n + 1)
@@ -484,7 +493,7 @@ class factorial2(CombinatorialFunction):
             if n.is_odd:
                 return ((n + 1) / 2).is_even
 
-    def _eval_rewrite_as_gamma(self, n, **kwargs):
+    def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
         from sympy import gamma, Piecewise, sqrt
         return 2**(n/2)*gamma(n/2 + 1) * Piecewise((1, Eq(Mod(n, 2), 0)),
                 (sqrt(2/pi), Eq(Mod(n, 2), 1)))
@@ -516,9 +525,8 @@ class RisingFactorial(CombinatorialFunction):
     Examples
     ========
 
-    >>> from sympy import rf, symbols, factorial, ff, binomial, Poly
+    >>> from sympy import rf, Poly
     >>> from sympy.abc import x
-    >>> n, k = symbols('n k', integer=True)
     >>> rf(x, 0)
     1
     >>> rf(1, 5)
@@ -528,14 +536,22 @@ class RisingFactorial(CombinatorialFunction):
     >>> rf(Poly(x**3, x), 2)
     Poly(x**6 + 3*x**5 + 3*x**4 + x**3, x, domain='ZZ')
 
-    Rewrite
+    Rewriting is complicated unless the relationship between
+    the arguments is known, but rising factorial can
+    be rewritten in terms of gamma, factorial and binomial
+    and falling factorial.
 
-    >>> rf(x, k).rewrite(ff)
-    FallingFactorial(k + x - 1, k)
-    >>> rf(x, k).rewrite(binomial)
-    binomial(k + x - 1, k)*factorial(k)
-    >>> rf(n, k).rewrite(factorial)
-    factorial(k + n - 1)/factorial(n - 1)
+    >>> from sympy import Symbol, factorial, ff, binomial, gamma
+    >>> n = Symbol('n', integer=True, positive=True)
+    >>> R = rf(n, n + 2)
+    >>> for i in (rf, ff, factorial, binomial, gamma):
+    ...  R.rewrite(i)
+    ...
+    RisingFactorial(n, n + 2)
+    FallingFactorial(2*n + 1, n + 2)
+    factorial(2*n + 1)/factorial(n - 1)
+    binomial(2*n + 1, n + 2)*factorial(n + 2)
+    gamma(2*n + 2)/gamma(n)
 
     See Also
     ========
@@ -608,20 +624,39 @@ class RisingFactorial(CombinatorialFunction):
             if x.is_integer and x.is_negative:
                 return S.Zero
 
-    def _eval_rewrite_as_gamma(self, x, k, **kwargs):
-        from sympy import gamma
-        return gamma(x + k) / gamma(x)
+    def _eval_rewrite_as_gamma(self, x, k, piecewise=True, **kwargs):
+        from sympy import gamma, Piecewise
+        if not piecewise:
+            if (x <= 0) == True:
+                return (-1)**k*gamma(1 - x) / gamma(-k - x + 1)
+            return gamma(x + k) / gamma(x)
+        return Piecewise(
+            (gamma(x + k) / gamma(x), x > 0),
+            ((-1)**k*gamma(1 - x) / gamma(-k - x + 1), True))
 
     def _eval_rewrite_as_FallingFactorial(self, x, k, **kwargs):
         return FallingFactorial(x + k - 1, k)
 
     def _eval_rewrite_as_factorial(self, x, k, **kwargs):
+        from sympy import Piecewise
         if x.is_integer and k.is_integer:
-            return factorial(k + x - 1) / factorial(x - 1)
+            return Piecewise(
+                (factorial(k + x - 1)/factorial(x - 1), x > 0),
+                ((-1)**k*factorial(-x)/factorial(-k - x), True))
 
     def _eval_rewrite_as_binomial(self, x, k, **kwargs):
         if k.is_integer:
             return factorial(k) * binomial(x + k - 1, k)
+
+    def _eval_rewrite_as_tractable(self, x, k, limitvar=None, **kwargs):
+        from sympy import gamma
+        if limitvar:
+            k_lim = k.subs(limitvar, S.Infinity)
+            if k_lim is S.Infinity:
+                return (gamma(x + k).rewrite('tractable', deep=True) / gamma(x))
+            elif k_lim is S.NegativeInfinity:
+                return ((-1)**k*gamma(1 - x) / gamma(-k - x + 1).rewrite('tractable', deep=True))
+        return self.rewrite(gamma).rewrite('tractable', deep=True)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
@@ -651,30 +686,37 @@ class FallingFactorial(CombinatorialFunction):
     Factorial Factorization and Symbolic Summation", Journal of
     Symbolic Computation, vol. 20, pp. 235-268, 1995.
 
-    >>> from sympy import ff, factorial, rf, gamma, polygamma, binomial, symbols, Poly
-    >>> from sympy.abc import x, k
-    >>> n, m = symbols('n m', integer=True)
+    >>> from sympy import ff, Poly, Symbol
+    >>> from sympy.abc import x
+    >>> n = Symbol('n', integer=True)
+
     >>> ff(x, 0)
     1
     >>> ff(5, 5)
     120
-    >>> ff(x, 5) == x*(x-1)*(x-2)*(x-3)*(x-4)
+    >>> ff(x, 5) == x*(x - 1)*(x - 2)*(x - 3)*(x - 4)
     True
     >>> ff(Poly(x**2, x), 2)
     Poly(x**4 - 2*x**3 + x**2, x, domain='ZZ')
     >>> ff(n, n)
     factorial(n)
 
-    Rewrite
+    Rewriting is complicated unless the relationship between
+    the arguments is known, but falling factorial can
+    be rewritten in terms of gamma, factorial and binomial
+    and rising factorial.
 
-    >>> ff(x, k).rewrite(gamma)
-    (-1)**k*gamma(k - x)/gamma(-x)
-    >>> ff(x, k).rewrite(rf)
-    RisingFactorial(-k + x + 1, k)
-    >>> ff(x, m).rewrite(binomial)
-    binomial(x, m)*factorial(m)
-    >>> ff(n, m).rewrite(factorial)
-    factorial(n)/factorial(-m + n)
+    >>> from sympy import factorial, rf, gamma, binomial, Symbol
+    >>> n = Symbol('n', integer=True, positive=True)
+    >>> F = ff(n, n - 2)
+    >>> for i in (rf, ff, factorial, binomial, gamma):
+    ...  F.rewrite(i)
+    ...
+    RisingFactorial(3, n - 2)
+    FallingFactorial(n, n - 2)
+    factorial(n)/2
+    binomial(n, n - 2)*factorial(n - 2)
+    gamma(n + 1)/2
 
     See Also
     ========
@@ -741,9 +783,15 @@ class FallingFactorial(CombinatorialFunction):
                             return 1/reduce(lambda r, i: r*(x + i),
                                             range(1, abs(int(k)) + 1), 1)
 
-    def _eval_rewrite_as_gamma(self, x, k, **kwargs):
-        from sympy import gamma
-        return (-1)**k*gamma(k - x) / gamma(-x)
+    def _eval_rewrite_as_gamma(self, x, k, piecewise=True, **kwargs):
+        from sympy import gamma, Piecewise
+        if not piecewise:
+            if (x < 0) == True:
+                return (-1)**k*gamma(k - x) / gamma(-x)
+            return gamma(x + 1) / gamma(x - k + 1)
+        return Piecewise(
+            (gamma(x + 1) / gamma(x - k + 1), x >= 0),
+            ((-1)**k*gamma(k - x) / gamma(-x), True))
 
     def _eval_rewrite_as_RisingFactorial(self, x, k, **kwargs):
         return rf(x - k + 1, k)
@@ -753,8 +801,21 @@ class FallingFactorial(CombinatorialFunction):
             return factorial(k) * binomial(x, k)
 
     def _eval_rewrite_as_factorial(self, x, k, **kwargs):
+        from sympy import Piecewise
         if x.is_integer and k.is_integer:
-            return factorial(x) / factorial(x - k)
+            return Piecewise(
+                (factorial(x)/factorial(-k + x), x >= 0),
+                ((-1)**k*factorial(k - x - 1)/factorial(-x - 1), True))
+
+    def _eval_rewrite_as_tractable(self, x, k, limitvar=None, **kwargs):
+        from sympy import gamma
+        if limitvar:
+            k_lim = k.subs(limitvar, S.Infinity)
+            if k_lim is S.Infinity:
+                return ((-1)**k*gamma(k - x).rewrite('tractable', deep=True) / gamma(-x))
+            elif k_lim is S.NegativeInfinity:
+                return (gamma(x + 1) / gamma(x - k + 1).rewrite('tractable', deep=True))
+        return self.rewrite(gamma).rewrite('tractable', deep=True)
 
     def _eval_is_integer(self):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
@@ -1012,7 +1073,7 @@ class binomial(CombinatorialFunction):
             return binomial(*self.args)
 
         k = self.args[1]
-        if k.is_Add and n in k.args:
+        if (n-k).is_Integer:
             k = n - k
 
         if k.is_Integer:
@@ -1032,11 +1093,11 @@ class binomial(CombinatorialFunction):
     def _eval_rewrite_as_factorial(self, n, k, **kwargs):
         return factorial(n)/(factorial(k)*factorial(n - k))
 
-    def _eval_rewrite_as_gamma(self, n, k, **kwargs):
+    def _eval_rewrite_as_gamma(self, n, k, piecewise=True, **kwargs):
         from sympy import gamma
         return gamma(n + 1)/(gamma(k + 1)*gamma(n - k + 1))
 
-    def _eval_rewrite_as_tractable(self, n, k, **kwargs):
+    def _eval_rewrite_as_tractable(self, n, k, limitvar=None, **kwargs):
         return self._eval_rewrite_as_gamma(n, k).rewrite('tractable')
 
     def _eval_rewrite_as_FallingFactorial(self, n, k, **kwargs):

@@ -1,17 +1,16 @@
 from __future__ import print_function, division
 
-from typing import Any
-
 from sympy import Basic
 from sympy import S
 from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import SYMPY_INTS, Iterable
+from sympy.printing.defaults import Printable
 
 import itertools
 
-class NDimArray(object):
+class NDimArray(Printable):
     """
 
     Examples
@@ -293,51 +292,18 @@ class NDimArray(object):
 
         return type(self)(map(f, Flatten(self)), self.shape)
 
-    def __str__(self):
-        """Returns string, allows to use standard functions print() and str().
-
-        Examples
-        ========
-
-        >>> from sympy import MutableDenseNDimArray
-        >>> a = MutableDenseNDimArray.zeros(2, 2)
-        >>> a
-        [[0, 0], [0, 0]]
-
-        """
+    def _sympystr(self, printer):
         def f(sh, shape_left, i, j):
             if len(shape_left) == 1:
-                return "["+", ".join([str(self[self._get_tuple_index(e)]) for e in range(i, j)])+"]"
+                return "["+", ".join([printer._print(self[self._get_tuple_index(e)]) for e in range(i, j)])+"]"
 
             sh //= shape_left[0]
             return "[" + ", ".join([f(sh, shape_left[1:], i+e*sh, i+(e+1)*sh) for e in range(shape_left[0])]) + "]" # + "\n"*len(shape_left)
 
         if self.rank() == 0:
-            return self[()].__str__()
+            return printer._print(self[()])
 
         return f(self._loop_size, self.shape, 0, self._loop_size)
-
-    def __repr__(self):
-        return self.__str__()
-
-    # We don't define _repr_png_ here because it would add a large amount of
-    # data to any notebook containing SymPy expressions, without adding
-    # anything useful to the notebook. It can still enabled manually, e.g.,
-    # for the qtconsole, with init_printing().
-    def _repr_latex_(self):
-        """
-        IPython/Jupyter LaTeX printing
-
-        To change the behavior of this (e.g., pass in some settings to LaTeX),
-        use init_printing(). init_printing() will also enable LaTeX printing
-        for built in numeric types like ints and container types that contain
-        SymPy objects, like lists and dictionaries of expressions.
-        """
-        from sympy.printing.latex import latex
-        s = latex(self, mode='plain')
-        return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_  # type: Any
 
     def tolist(self):
         """

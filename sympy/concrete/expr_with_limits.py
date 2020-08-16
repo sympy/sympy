@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.add import Add
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
@@ -69,7 +67,7 @@ def _common_new(cls, function, *symbols, **assumptions):
     # top level. We only fold Piecewise that contain the integration
     # variable.
     reps = {}
-    symbols_of_integration = set([i[0] for i in limits])
+    symbols_of_integration = {i[0] for i in limits}
     for p in function.atoms(Piecewise):
         if not p.has(*symbols_of_integration):
             reps[p] = Dummy()
