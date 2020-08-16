@@ -48,17 +48,17 @@ class Map(Basic):
 
     >>> f
     f : ProductSet(Reals, Reals) -> Reals
+    >>> f(x)
+    f(x)
     >>> f.domain
     ProductSet(Reals, Reals)
     >>> f.codomain
     Reals
+
+    Since domain of ``f`` is binary cartesian product, its arity is 2.
+
     >>> f.arity
     2
-
-    >>> f(x)
-    f(x)
-    >>> f(x).doit()
-    f(x)
 
     Subclassing for defined map:
 

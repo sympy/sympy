@@ -18,7 +18,7 @@ module.
 Function vs Expression
 ----------------------
 
-Frequently, function $f: X \rightarrow Y$ is written as $f(x)$. Here, $f(x)$ is not the
+Frequently, map $f: X \rightarrow Y$ is written as $f(x)$. Here, $f(x)$ is not the
 function itself - it's an expression which represents $f$. It implies that the domain of
 $f$ is one-dimensional line, and $x$ is an arbitrary point on it.  
 The difference is clear when you are applying a fixed value - say, $3$ - on $f$. With
@@ -36,3 +36,106 @@ Prime notation is only valid for unary function. For n-ary function, we often en
 $\partial_{x} f$ for $f: X \times Y \rightarrow Z$. However, this is possible only when there is an
 agreement on the relation between a symbol and a set. More general notation for partial derivative
 is to denote with the index of argument - such as $\partial_{1} f$ or $\partial_{2} f$.
+
+map
+---
+
+.. module:: sympy.map.map
+
+This module contains basic classes for mathematical maps.
+
+Map
+^^^
+
+.. autoclass:: Map
+   :members:
+
+AppliedMap
+^^^^^^^^^^
+
+.. autoclass:: AppliedMap
+   :members:
+
+.. autofunction:: isappliedmap
+
+RestrictedMap
+^^^^^^^^^^^^^
+
+.. autoclass:: RestrictedMap
+   :members:
+
+InverseMap
+^^^^^^^^^^
+
+.. autoclass:: InverseMap
+   :members:
+
+IdentityMap
+^^^^^^^^^^^
+
+.. autoclass:: IdentityMap
+   :members:
+
+ConstantMap
+^^^^^^^^^^^
+
+.. autoclass:: ConstantMap
+   :members:
+
+mapop
+-----
+
+Operations between functions, e.g. addition and multiplication, are implemented
+in this module.
+
+MapAdd
+^^^^^^
+
+.. autoclass:: MapAdd
+   :members:
+
+MapMul
+^^^^^^
+
+.. autoclass:: MapMul
+   :members:
+
+MapPow
+^^^^^^
+
+.. autoclass:: MapPow
+   :members:
+
+composite
+---------
+
+Module for function composition and function iteration.
+
+CompositeMap
+^^^^^^^^^^^^
+
+.. autoclass:: CompositeMap
+   :members:
+
+IteratedMap
+^^^^^^^^^^^
+
+.. autoclass:: IteratedMap
+   :members:
+
+derivative
+----------
+
+Module for differential operator and function derivative.
+
+DiffOp
+^^^^^^
+
+.. autoclass:: DiffOp
+   :members:
+
+DerivativeFunction
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: DerivativeFunction
+   :members:
