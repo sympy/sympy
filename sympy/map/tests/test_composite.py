@@ -63,18 +63,6 @@ def test_CompositeMap():
     assert CompositeMap(f1, f2)(x, evaluate=True) == 3*x + 2
     assert CompositeMap(f2, f1)(x, evaluate=True) == 3*x + 6
 
-    # multivariate
-    class F3(Map):
-        domain = S.Reals**2
-        def eval(self, a, b):
-            return a+b
-    class F4(Map):
-        domain = S.Reals**2
-        def eval(self, a, b):
-            return (a+1, b+1)
-    f3, f4 = F3(), F4()
-    assert CompositeMap(f2, f3, f4)(1, 2, evaluate=True) == 15
-
     # composition can be defined
     class A(Map):
         def _eval_composite(self, other):
@@ -82,27 +70,12 @@ def test_CompositeMap():
                 return f2
     assert CompositeMap(A(), f1, evaluate=True) == f2
 
-    # composition of multivariate function
-    class M(Map):
-        domain = S.Reals**2
-        def eval(self, a, b):
-            return a+b
-    m = M()
-    class N(Map):
-        domain = S.Reals
-        def eval(self, x):
-            return (x+1, 2*x)
-    n = N()
-    assert (m@n)(x, evaluate=True) == (x+1)+(2*x)
-
     # __matmul__ returns evaluated composition
     assert A()@f1 == f2
 
     # differentiation
     a, b = Map('a'), Map('b')
     assert (a@b).diff(1) == a.diff(1)@b * b.diff(1)
-    c, d = Map('c', domain=S.Reals**2), Map('d', codomain=S.Reals**2)
-    assert (c@d).diff(1) == (c.diff(1)@d)*(d.diff(1)) + (c.diff(2)@d)*(d.diff(1))
 
 def test_IteratedMap():
 
