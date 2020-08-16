@@ -21,6 +21,9 @@ class CompositeMap(Map, AssocOp):
     is subset of domain of $g$ [1]. The composition of functions is always
     associative [1].
 
+    .. notes::
+       Partial composition of multivariate function is not supported yet.
+
     Examples
     ========
 
@@ -42,22 +45,6 @@ class CompositeMap(Map, AssocOp):
 
     >>> f@(f.inv())
     id : UniversalSet -> UniversalSet
-
-    To compose multivariate function, tuple-returning function is needed.
-
-    >>> class G(Map):
-    ...     domain = S.Reals**2
-    ...     def eval(self, a, b):
-    ...         return a+b
-    >>> g = G()
-    >>> class H(Map):
-    ...     domain = S.Reals
-    ...     def eval(self, x):
-    ...         return (x+1, 2*x)
-    >>> h = H()
-
-    >>> (g@h)(x, evaluate=True)
-    3*x + 1
 
     References
     ==========
@@ -162,17 +149,14 @@ class CompositeMap(Map, AssocOp):
     def codomain(self):
         return self.args[0].codomain
 
-    def eval(self, *args):
+    def eval(self, arg):
 
         # f(g(h(x))) -> CompositeMap(f,g,h)(x)
         mappings = [] # store unresolved mappings
-        innermost_arg = args
-        result = args
+        innermost_arg = arg
+        result = arg
         for m in reversed(self.args):
-            if iterable(result):
-                m_eval = m(*result, evaluate=True)
-            else:
-                m_eval = m(result, evaluate=True)
+            m_eval = m(result, evaluate=True)
             if isinstance(m_eval, AppliedMap):
                 mappings.insert(0, m)
             else:
@@ -195,12 +179,9 @@ class CompositeMap(Map, AssocOp):
     def fdiff(self, index):
         firstfunc, others = self.args[0], self.args[1:]
         otherfunc = self.func._new_rawargs(others)
-        terms = []
-        for i in range(1, firstfunc.nargs+1):
-            df_g = firstfunc.diff(i, evaluate=True)@otherfunc
-            dg = otherfunc.diff(index, evaluate=True)
-            terms.append(df_g*dg)
-        return MapAdd(*terms, evaluate=True)
+        df_g = firstfunc.diff(index, evaluate=True)@otherfunc
+        dg = otherfunc.diff(index, evaluate=True)
+        return df_g*dg
 
 class IteratedMap(Map):
     """
