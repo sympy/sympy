@@ -144,6 +144,8 @@ GOOD_PAIRS = [
      Integral(3*_Pow(theta, -1), theta)),
     ("\\int \\frac{1}{x} + 1 dx", Integral(_Add(_Pow(x, -1), 1), x)),
     ("x_0", Symbol('x_{0}')),
+    ("\langle x |", Bra('x')),
+    ("| x \rangle", Ket('x')),
     ("x_{1}", Symbol('x_{1}')),
     ("x_a", Symbol('x_{a}')),
     ("x_{b}", Symbol('x_{b}')),
