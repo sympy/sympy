@@ -325,7 +325,7 @@ def convert_atom(atom):
     elif atom.ket():
         val = convert_expr(atom.ket().expr())
         return Ket(val)
-    
+
 
 def rule2text(ctx):
     stream = ctx.start.getInputStream()
