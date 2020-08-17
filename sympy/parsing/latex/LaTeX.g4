@@ -52,8 +52,6 @@ BAR: '|';
 
 R_BAR: '\\right|';
 L_BAR: '\\left|';
-LEFT_BRACKET: '\\left[';
-RIGHT_BRACKET: '\\right]';
 
 L_ANGLE: '\\langle';
 R_ANGLE: '\\rangle';
