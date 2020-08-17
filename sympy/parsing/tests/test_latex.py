@@ -6,7 +6,7 @@ from sympy import (
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
     GreaterThan, Sum, Product, E, log, tan, Function, binomial, exp,
-    floor, ceil,
+    floor, ceiling,
 )
 from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
@@ -90,7 +90,7 @@ GOOD_PAIRS = [
     ("1*2", Mul(1, 2, evaluate=False)),
     ("0*1", Mul(0, 1, evaluate=False)),
     ("\\lfloor x \\rfloor",floor(x)),
-    ("\\lceil x \\rceil",ceil(x)),
+    ("\\lceil x \\rceil",ceiling(x)),
     ("\\sin \\theta", sin(theta)),
     ("\\sin(\\theta)", sin(theta)),
     ("\\sin^{-1} a", asin(a)),
