@@ -19,7 +19,7 @@ import sys
 def serializedATN():
     with StringIO() as buf:
         buf.write(u"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3")
-        buf.write(u"U\u01c0\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t")
+        buf.write(u"S\u01c0\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t")
         buf.write(u"\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t\13\4\f\t\f\4\r\t\r")
         buf.write(u"\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22\4")
         buf.write(u"\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30")
@@ -64,13 +64,13 @@ def serializedATN():
         buf.write(u"\3$\3$\3$\3$\3$\5$\u01ac\n$\3%\3%\3%\3%\3%\3%\5%\u01b4")
         buf.write(u"\n%\3&\3&\3&\3&\3&\3\'\3\'\3\'\3\'\3\'\3\'\2\b\4\n\f")
         buf.write(u"\16 \"(\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(")
-        buf.write(u"*,.\60\62\64\668:<>@BDFHJL\2\13\3\2OS\3\2\r\16\5\2\17")
-        buf.write(u"\20ACKK\4\2MMUU\3\2\35\36\4\2\35\35\37\37\3\2EG\3\2+")
-        buf.write(u"?\3\2)*\2\u01d9\2N\3\2\2\2\4P\3\2\2\2\6[\3\2\2\2\b_\3")
-        buf.write(u"\2\2\2\na\3\2\2\2\fl\3\2\2\2\16w\3\2\2\2\20\u0089\3\2")
-        buf.write(u"\2\2\22\u0094\3\2\2\2\24\u0096\3\2\2\2\26\u009d\3\2\2")
-        buf.write(u"\2\30\u00a6\3\2\2\2\32\u00a8\3\2\2\2\34\u00b0\3\2\2\2")
-        buf.write(u"\36\u00b8\3\2\2\2 \u00c0\3\2\2\2\"\u00d4\3\2\2\2$\u00ee")
+        buf.write(u"*,.\60\62\64\668:<>@BDFHJL\2\13\3\2MQ\3\2\r\16\5\2\17")
+        buf.write(u"\20?AII\4\2KKSS\3\2\35\36\4\2\35\35\37\37\3\2CE\3\2)")
+        buf.write(u"=\3\2\'(\2\u01d9\2N\3\2\2\2\4P\3\2\2\2\6[\3\2\2\2\b_")
+        buf.write(u"\3\2\2\2\na\3\2\2\2\fl\3\2\2\2\16w\3\2\2\2\20\u0089\3")
+        buf.write(u"\2\2\2\22\u0094\3\2\2\2\24\u0096\3\2\2\2\26\u009d\3\2")
+        buf.write(u"\2\2\30\u00a6\3\2\2\2\32\u00a8\3\2\2\2\34\u00b0\3\2\2")
+        buf.write(u"\2\36\u00b8\3\2\2\2 \u00c0\3\2\2\2\"\u00d4\3\2\2\2$\u00ee")
         buf.write(u"\3\2\2\2&\u00f5\3\2\2\2(\u0107\3\2\2\2*\u0109\3\2\2\2")
         buf.write(u",\u0116\3\2\2\2.\u0118\3\2\2\2\60\u011c\3\2\2\2\62\u0120")
         buf.write(u"\3\2\2\2\64\u0128\3\2\2\2\66\u012b\3\2\2\28\u0133\3\2")
@@ -79,7 +79,7 @@ def serializedATN():
         buf.write(u"H\u01ad\3\2\2\2J\u01b5\3\2\2\2L\u01ba\3\2\2\2NO\5\4\3")
         buf.write(u"\2O\3\3\2\2\2PQ\b\3\1\2QR\5\b\5\2RX\3\2\2\2ST\f\4\2\2")
         buf.write(u"TU\t\2\2\2UW\5\4\3\5VS\3\2\2\2WZ\3\2\2\2XV\3\2\2\2XY")
-        buf.write(u"\3\2\2\2Y\5\3\2\2\2ZX\3\2\2\2[\\\5\b\5\2\\]\7O\2\2]^")
+        buf.write(u"\3\2\2\2Y\5\3\2\2\2ZX\3\2\2\2[\\\5\b\5\2\\]\7M\2\2]^")
         buf.write(u"\5\b\5\2^\7\3\2\2\2_`\5\n\6\2`\t\3\2\2\2ab\b\6\1\2bc")
         buf.write(u"\5\f\7\2ci\3\2\2\2de\f\4\2\2ef\t\3\2\2fh\5\n\6\5gd\3")
         buf.write(u"\2\2\2hk\3\2\2\2ig\3\2\2\2ij\3\2\2\2j\13\3\2\2\2ki\3")
@@ -103,21 +103,21 @@ def serializedATN():
         buf.write(u"\u009a\3\2\2\2\u009d\u00a1\5\"\22\2\u009e\u00a0\5\30")
         buf.write(u"\r\2\u009f\u009e\3\2\2\2\u00a0\u00a3\3\2\2\2\u00a1\u009f")
         buf.write(u"\3\2\2\2\u00a1\u00a2\3\2\2\2\u00a2\27\3\2\2\2\u00a3\u00a1")
-        buf.write(u"\3\2\2\2\u00a4\u00a7\7T\2\2\u00a5\u00a7\5\32\16\2\u00a6")
+        buf.write(u"\3\2\2\2\u00a4\u00a7\7R\2\2\u00a5\u00a7\5\32\16\2\u00a6")
         buf.write(u"\u00a4\3\2\2\2\u00a6\u00a5\3\2\2\2\u00a7\31\3\2\2\2\u00a8")
         buf.write(u"\u00ae\7\35\2\2\u00a9\u00af\5\36\20\2\u00aa\u00af\5\34")
         buf.write(u"\17\2\u00ab\u00ac\5\36\20\2\u00ac\u00ad\5\34\17\2\u00ad")
         buf.write(u"\u00af\3\2\2\2\u00ae\u00a9\3\2\2\2\u00ae\u00aa\3\2\2")
         buf.write(u"\2\u00ae\u00ab\3\2\2\2\u00af\33\3\2\2\2\u00b0\u00b1\7")
-        buf.write(u"I\2\2\u00b1\u00b4\7\25\2\2\u00b2\u00b5\5\b\5\2\u00b3")
+        buf.write(u"G\2\2\u00b1\u00b4\7\25\2\2\u00b2\u00b5\5\b\5\2\u00b3")
         buf.write(u"\u00b5\5\6\4\2\u00b4\u00b2\3\2\2\2\u00b4\u00b3\3\2\2")
         buf.write(u"\2\u00b5\u00b6\3\2\2\2\u00b6\u00b7\7\26\2\2\u00b7\35")
-        buf.write(u"\3\2\2\2\u00b8\u00b9\7J\2\2\u00b9\u00bc\7\25\2\2\u00ba")
+        buf.write(u"\3\2\2\2\u00b8\u00b9\7H\2\2\u00b9\u00bc\7\25\2\2\u00ba")
         buf.write(u"\u00bd\5\b\5\2\u00bb\u00bd\5\6\4\2\u00bc\u00ba\3\2\2")
         buf.write(u"\2\u00bc\u00bb\3\2\2\2\u00bd\u00be\3\2\2\2\u00be\u00bf")
         buf.write(u"\7\26\2\2\u00bf\37\3\2\2\2\u00c0\u00c1\b\21\1\2\u00c1")
         buf.write(u"\u00c2\5$\23\2\u00c2\u00d1\3\2\2\2\u00c3\u00c4\f\4\2")
-        buf.write(u"\2\u00c4\u00ca\7J\2\2\u00c5\u00cb\5,\27\2\u00c6\u00c7")
+        buf.write(u"\2\u00c4\u00ca\7H\2\2\u00c5\u00cb\5,\27\2\u00c6\u00c7")
         buf.write(u"\7\25\2\2\u00c7\u00c8\5\b\5\2\u00c8\u00c9\7\26\2\2\u00c9")
         buf.write(u"\u00cb\3\2\2\2\u00ca\u00c5\3\2\2\2\u00ca\u00c6\3\2\2")
         buf.write(u"\2\u00cb\u00cd\3\2\2\2\u00cc\u00ce\5F$\2\u00cd\u00cc")
@@ -125,7 +125,7 @@ def serializedATN():
         buf.write(u"\u00c3\3\2\2\2\u00d0\u00d3\3\2\2\2\u00d1\u00cf\3\2\2")
         buf.write(u"\2\u00d1\u00d2\3\2\2\2\u00d2!\3\2\2\2\u00d3\u00d1\3\2")
         buf.write(u"\2\2\u00d4\u00d5\b\22\1\2\u00d5\u00d6\5&\24\2\u00d6\u00e5")
-        buf.write(u"\3\2\2\2\u00d7\u00d8\f\4\2\2\u00d8\u00de\7J\2\2\u00d9")
+        buf.write(u"\3\2\2\2\u00d7\u00d8\f\4\2\2\u00d8\u00de\7H\2\2\u00d9")
         buf.write(u"\u00df\5,\27\2\u00da\u00db\7\25\2\2\u00db\u00dc\5\b\5")
         buf.write(u"\2\u00dc\u00dd\7\26\2\2\u00dd\u00df\3\2\2\2\u00de\u00d9")
         buf.write(u"\3\2\2\2\u00de\u00da\3\2\2\2\u00df\u00e1\3\2\2\2\u00e0")
@@ -152,19 +152,19 @@ def serializedATN():
         buf.write(u")\3\2\2\2\u0109\u010a\7\35\2\2\u010a\u010b\5\b\5\2\u010b")
         buf.write(u"\u010c\7\35\2\2\u010c+\3\2\2\2\u010d\u010f\t\5\2\2\u010e")
         buf.write(u"\u0110\5F$\2\u010f\u010e\3\2\2\2\u010f\u0110\3\2\2\2")
-        buf.write(u"\u0110\u0117\3\2\2\2\u0111\u0117\7N\2\2\u0112\u0117\7")
-        buf.write(u"L\2\2\u0113\u0117\5\62\32\2\u0114\u0117\5.\30\2\u0115")
+        buf.write(u"\u0110\u0117\3\2\2\2\u0111\u0117\7L\2\2\u0112\u0117\7")
+        buf.write(u"J\2\2\u0113\u0117\5\62\32\2\u0114\u0117\5.\30\2\u0115")
         buf.write(u"\u0117\5\60\31\2\u0116\u010d\3\2\2\2\u0116\u0111\3\2")
         buf.write(u"\2\2\u0116\u0112\3\2\2\2\u0116\u0113\3\2\2\2\u0116\u0114")
         buf.write(u"\3\2\2\2\u0116\u0115\3\2\2\2\u0117-\3\2\2\2\u0118\u0119")
-        buf.write(u"\7\"\2\2\u0119\u011a\5\b\5\2\u011a\u011b\t\6\2\2\u011b")
+        buf.write(u"\7 \2\2\u0119\u011a\5\b\5\2\u011a\u011b\t\6\2\2\u011b")
         buf.write(u"/\3\2\2\2\u011c\u011d\t\7\2\2\u011d\u011e\5\b\5\2\u011e")
-        buf.write(u"\u011f\7#\2\2\u011f\61\3\2\2\2\u0120\u0121\7H\2\2\u0121")
+        buf.write(u"\u011f\7!\2\2\u011f\61\3\2\2\2\u0120\u0121\7F\2\2\u0121")
         buf.write(u"\u0122\7\25\2\2\u0122\u0123\5\64\33\2\u0123\u0124\7\26")
-        buf.write(u"\2\2\u0124\63\3\2\2\2\u0125\u0127\7M\2\2\u0126\u0125")
+        buf.write(u"\2\2\u0124\63\3\2\2\2\u0125\u0127\7K\2\2\u0126\u0125")
         buf.write(u"\3\2\2\2\u0127\u012a\3\2\2\2\u0128\u0126\3\2\2\2\u0128")
         buf.write(u"\u0129\3\2\2\2\u0129\65\3\2\2\2\u012a\u0128\3\2\2\2\u012b")
-        buf.write(u"\u012c\7D\2\2\u012c\u012d\7\25\2\2\u012d\u012e\5\b\5")
+        buf.write(u"\u012c\7B\2\2\u012c\u012d\7\25\2\2\u012d\u012e\5\b\5")
         buf.write(u"\2\u012e\u012f\7\26\2\2\u012f\u0130\7\25\2\2\u0130\u0131")
         buf.write(u"\5\b\5\2\u0131\u0132\7\26\2\2\u0132\67\3\2\2\2\u0133")
         buf.write(u"\u0134\t\b\2\2\u0134\u0135\7\25\2\2\u0135\u0136\5\b\5")
@@ -184,15 +184,15 @@ def serializedATN():
         buf.write(u"\u0155\t\5\2\2\u0154\u0156\5F$\2\u0155\u0154\3\2\2\2")
         buf.write(u"\u0155\u0156\3\2\2\2\u0156\u0157\3\2\2\2\u0157\u0158")
         buf.write(u"\7\23\2\2\u0158\u0159\5> \2\u0159\u015a\7\24\2\2\u015a")
-        buf.write(u"\u0187\3\2\2\2\u015b\u0162\7(\2\2\u015c\u015d\5F$\2\u015d")
+        buf.write(u"\u0187\3\2\2\2\u015b\u0162\7&\2\2\u015c\u015d\5F$\2\u015d")
         buf.write(u"\u015e\5H%\2\u015e\u0163\3\2\2\2\u015f\u0160\5H%\2\u0160")
         buf.write(u"\u0161\5F$\2\u0161\u0163\3\2\2\2\u0162\u015c\3\2\2\2")
         buf.write(u"\u0162\u015f\3\2\2\2\u0162\u0163\3\2\2\2\u0163\u016a")
         buf.write(u"\3\2\2\2\u0164\u0166\5\n\6\2\u0165\u0164\3\2\2\2\u0165")
-        buf.write(u"\u0166\3\2\2\2\u0166\u0167\3\2\2\2\u0167\u016b\7L\2\2")
+        buf.write(u"\u0166\3\2\2\2\u0166\u0167\3\2\2\2\u0167\u016b\7J\2\2")
         buf.write(u"\u0168\u016b\5\66\34\2\u0169\u016b\5\n\6\2\u016a\u0165")
         buf.write(u"\3\2\2\2\u016a\u0168\3\2\2\2\u016a\u0169\3\2\2\2\u016b")
-        buf.write(u"\u0187\3\2\2\2\u016c\u0171\7@\2\2\u016d\u016e\7\31\2")
+        buf.write(u"\u0187\3\2\2\2\u016c\u0171\7>\2\2\u016d\u016e\7\31\2")
         buf.write(u"\2\u016e\u016f\5\b\5\2\u016f\u0170\7\32\2\2\u0170\u0172")
         buf.write(u"\3\2\2\2\u0171\u016d\3\2\2\2\u0171\u0172\3\2\2\2\u0172")
         buf.write(u"\u0173\3\2\2\2\u0173\u0174\7\25\2\2\u0174\u0175\5\b\5")
@@ -201,31 +201,31 @@ def serializedATN():
         buf.write(u"\3\2\2\2\u017b\u017c\5H%\2\u017c\u017d\5J&\2\u017d\u017f")
         buf.write(u"\3\2\2\2\u017e\u0178\3\2\2\2\u017e\u017b\3\2\2\2\u017f")
         buf.write(u"\u0180\3\2\2\2\u0180\u0181\5\f\7\2\u0181\u0187\3\2\2")
-        buf.write(u"\2\u0182\u0183\7&\2\2\u0183\u0184\5@!\2\u0184\u0185\5")
+        buf.write(u"\2\u0182\u0183\7$\2\2\u0183\u0184\5@!\2\u0184\u0185\5")
         buf.write(u"\f\7\2\u0185\u0187\3\2\2\2\u0186\u013d\3\2\2\2\u0186")
         buf.write(u"\u0153\3\2\2\2\u0186\u015b\3\2\2\2\u0186\u016c\3\2\2")
         buf.write(u"\2\u0186\u0177\3\2\2\2\u0186\u0182\3\2\2\2\u0187=\3\2")
         buf.write(u"\2\2\u0188\u0189\5\b\5\2\u0189\u018a\7\3\2\2\u018a\u018b")
         buf.write(u"\5> \2\u018b\u018e\3\2\2\2\u018c\u018e\5\b\5\2\u018d")
         buf.write(u"\u0188\3\2\2\2\u018d\u018c\3\2\2\2\u018e?\3\2\2\2\u018f")
-        buf.write(u"\u0190\7I\2\2\u0190\u0191\7\25\2\2\u0191\u0192\t\5\2")
-        buf.write(u"\2\u0192\u0193\7\'\2\2\u0193\u0198\5\b\5\2\u0194\u0195")
-        buf.write(u"\7J\2\2\u0195\u0196\7\25\2\2\u0196\u0197\t\3\2\2\u0197")
+        buf.write(u"\u0190\7G\2\2\u0190\u0191\7\25\2\2\u0191\u0192\t\5\2")
+        buf.write(u"\2\u0192\u0193\7%\2\2\u0193\u0198\5\b\5\2\u0194\u0195")
+        buf.write(u"\7H\2\2\u0195\u0196\7\25\2\2\u0196\u0197\t\3\2\2\u0197")
         buf.write(u"\u0199\7\26\2\2\u0198\u0194\3\2\2\2\u0198\u0199\3\2\2")
         buf.write(u"\2\u0199\u019a\3\2\2\2\u019a\u019b\7\26\2\2\u019bA\3")
         buf.write(u"\2\2\2\u019c\u01a2\5\b\5\2\u019d\u019e\5\b\5\2\u019e")
         buf.write(u"\u019f\7\3\2\2\u019f\u01a0\5B\"\2\u01a0\u01a2\3\2\2\2")
         buf.write(u"\u01a1\u019c\3\2\2\2\u01a1\u019d\3\2\2\2\u01a2C\3\2\2")
         buf.write(u"\2\u01a3\u01a4\5\16\b\2\u01a4E\3\2\2\2\u01a5\u01ab\7")
-        buf.write(u"I\2\2\u01a6\u01ac\5,\27\2\u01a7\u01a8\7\25\2\2\u01a8")
+        buf.write(u"G\2\2\u01a6\u01ac\5,\27\2\u01a7\u01a8\7\25\2\2\u01a8")
         buf.write(u"\u01a9\5\b\5\2\u01a9\u01aa\7\26\2\2\u01aa\u01ac\3\2\2")
         buf.write(u"\2\u01ab\u01a6\3\2\2\2\u01ab\u01a7\3\2\2\2\u01acG\3\2")
-        buf.write(u"\2\2\u01ad\u01b3\7J\2\2\u01ae\u01b4\5,\27\2\u01af\u01b0")
+        buf.write(u"\2\2\u01ad\u01b3\7H\2\2\u01ae\u01b4\5,\27\2\u01af\u01b0")
         buf.write(u"\7\25\2\2\u01b0\u01b1\5\b\5\2\u01b1\u01b2\7\26\2\2\u01b2")
         buf.write(u"\u01b4\3\2\2\2\u01b3\u01ae\3\2\2\2\u01b3\u01af\3\2\2")
-        buf.write(u"\2\u01b4I\3\2\2\2\u01b5\u01b6\7I\2\2\u01b6\u01b7\7\25")
+        buf.write(u"\2\u01b4I\3\2\2\2\u01b5\u01b6\7G\2\2\u01b6\u01b7\7\25")
         buf.write(u"\2\2\u01b7\u01b8\5\6\4\2\u01b8\u01b9\7\26\2\2\u01b9K")
-        buf.write(u"\3\2\2\2\u01ba\u01bb\7I\2\2\u01bb\u01bc\7\25\2\2\u01bc")
+        buf.write(u"\3\2\2\2\u01ba\u01bb\7G\2\2\u01bb\u01bc\7\25\2\2\u01bc")
         buf.write(u"\u01bd\5\6\4\2\u01bd\u01be\7\26\2\2\u01beM\3\2\2\2.X")
         buf.write(u"it\177\u0087\u0089\u0091\u0094\u009a\u00a1\u00a6\u00ae")
         buf.write(u"\u00b4\u00bc\u00ca\u00cd\u00d1\u00de\u00e1\u00e5\u00ee")
@@ -251,9 +251,8 @@ class LaTeXParser ( Parser ):
                      u"'*'", u"'/'", u"'\\pm'", u"'\\mp'", u"'('", u"')'",
                      u"'{'", u"'}'", u"'\\{'", u"'\\}'", u"'['", u"']'",
                      u"'\\left'", u"'\\right'", u"'|'", u"'\\right|'", u"'\\left|'",
-                     u"'\\left['", u"'\\right]'", u"'\\langle'", u"'\\rangle'",
-                     u"'\\left\\angle'", u"'\\right\\angle'", u"'\\lim'",
-                     u"<INVALID>", u"'\\int'", u"'\\sum'", u"'\\prod'",
+                     u"'\\langle'", u"'\\rangle'", u"'\\left\\angle'", u"'\\right\\angle'",
+                     u"'\\lim'", u"<INVALID>", u"'\\int'", u"'\\sum'", u"'\\prod'",
                      u"'\\exp'", u"'\\log'", u"'\\ln'", u"'\\sin'", u"'\\cos'",
                      u"'\\tan'", u"'\\csc'", u"'\\sec'", u"'\\cot'", u"'\\arcsin'",
                      u"'\\arccos'", u"'\\arctan'", u"'\\arccsc'", u"'\\arcsec'",
@@ -271,19 +270,19 @@ class LaTeXParser ( Parser ):
                       u"MUL", u"DIV", u"PM", u"MP", u"L_PAREN", u"R_PAREN",
                       u"L_BRACE", u"R_BRACE", u"L_BRACE_LITERAL", u"R_BRACE_LITERAL",
                       u"L_BRACKET", u"R_BRACKET", u"CMD_LEFT", u"CMD_RIGHT",
-                      u"BAR", u"R_BAR", u"L_BAR", u"LEFT_BRACKET", u"RIGHT_BRACKET",
-                      u"L_ANGLE", u"R_ANGLE", u"L_L_ANGLE", u"R_R_ANGLE",
-                      u"FUNC_LIM", u"LIM_APPROACH_SYM", u"FUNC_INT", u"FUNC_SUM",
-                      u"FUNC_PROD", u"FUNC_EXP", u"FUNC_LOG", u"FUNC_LN",
-                      u"FUNC_SIN", u"FUNC_COS", u"FUNC_TAN", u"FUNC_CSC",
-                      u"FUNC_SEC", u"FUNC_COT", u"FUNC_ARCSIN", u"FUNC_ARCCOS",
-                      u"FUNC_ARCTAN", u"FUNC_ARCCSC", u"FUNC_ARCSEC", u"FUNC_ARCCOT",
-                      u"FUNC_SINH", u"FUNC_COSH", u"FUNC_TANH", u"FUNC_ARSINH",
-                      u"FUNC_ARCOSH", u"FUNC_ARTANH", u"FUNC_SQRT", u"CMD_TIMES",
-                      u"CMD_CDOT", u"CMD_DIV", u"CMD_FRAC", u"CMD_BINOM",
-                      u"CMD_DBINOM", u"CMD_TBINOM", u"CMD_MATHIT", u"UNDERSCORE",
-                      u"CARET", u"COLON", u"DIFFERENTIAL", u"LETTER", u"NUMBER",
-                      u"EQUAL", u"LT", u"LTE", u"GT", u"GTE", u"BANG", u"SYMBOL" ]
+                      u"BAR", u"R_BAR", u"L_BAR", u"L_ANGLE", u"R_ANGLE",
+                      u"L_L_ANGLE", u"R_R_ANGLE", u"FUNC_LIM", u"LIM_APPROACH_SYM",
+                      u"FUNC_INT", u"FUNC_SUM", u"FUNC_PROD", u"FUNC_EXP",
+                      u"FUNC_LOG", u"FUNC_LN", u"FUNC_SIN", u"FUNC_COS",
+                      u"FUNC_TAN", u"FUNC_CSC", u"FUNC_SEC", u"FUNC_COT",
+                      u"FUNC_ARCSIN", u"FUNC_ARCCOS", u"FUNC_ARCTAN", u"FUNC_ARCCSC",
+                      u"FUNC_ARCSEC", u"FUNC_ARCCOT", u"FUNC_SINH", u"FUNC_COSH",
+                      u"FUNC_TANH", u"FUNC_ARSINH", u"FUNC_ARCOSH", u"FUNC_ARTANH",
+                      u"FUNC_SQRT", u"CMD_TIMES", u"CMD_CDOT", u"CMD_DIV",
+                      u"CMD_FRAC", u"CMD_BINOM", u"CMD_DBINOM", u"CMD_TBINOM",
+                      u"CMD_MATHIT", u"UNDERSCORE", u"CARET", u"COLON",
+                      u"DIFFERENTIAL", u"LETTER", u"NUMBER", u"EQUAL", u"LT",
+                      u"LTE", u"GT", u"GTE", u"BANG", u"SYMBOL" ]
 
     RULE_math = 0
     RULE_relation = 1
@@ -363,60 +362,58 @@ class LaTeXParser ( Parser ):
     BAR=27
     R_BAR=28
     L_BAR=29
-    LEFT_BRACKET=30
-    RIGHT_BRACKET=31
-    L_ANGLE=32
-    R_ANGLE=33
-    L_L_ANGLE=34
-    R_R_ANGLE=35
-    FUNC_LIM=36
-    LIM_APPROACH_SYM=37
-    FUNC_INT=38
-    FUNC_SUM=39
-    FUNC_PROD=40
-    FUNC_EXP=41
-    FUNC_LOG=42
-    FUNC_LN=43
-    FUNC_SIN=44
-    FUNC_COS=45
-    FUNC_TAN=46
-    FUNC_CSC=47
-    FUNC_SEC=48
-    FUNC_COT=49
-    FUNC_ARCSIN=50
-    FUNC_ARCCOS=51
-    FUNC_ARCTAN=52
-    FUNC_ARCCSC=53
-    FUNC_ARCSEC=54
-    FUNC_ARCCOT=55
-    FUNC_SINH=56
-    FUNC_COSH=57
-    FUNC_TANH=58
-    FUNC_ARSINH=59
-    FUNC_ARCOSH=60
-    FUNC_ARTANH=61
-    FUNC_SQRT=62
-    CMD_TIMES=63
-    CMD_CDOT=64
-    CMD_DIV=65
-    CMD_FRAC=66
-    CMD_BINOM=67
-    CMD_DBINOM=68
-    CMD_TBINOM=69
-    CMD_MATHIT=70
-    UNDERSCORE=71
-    CARET=72
-    COLON=73
-    DIFFERENTIAL=74
-    LETTER=75
-    NUMBER=76
-    EQUAL=77
-    LT=78
-    LTE=79
-    GT=80
-    GTE=81
-    BANG=82
-    SYMBOL=83
+    L_ANGLE=30
+    R_ANGLE=31
+    L_L_ANGLE=32
+    R_R_ANGLE=33
+    FUNC_LIM=34
+    LIM_APPROACH_SYM=35
+    FUNC_INT=36
+    FUNC_SUM=37
+    FUNC_PROD=38
+    FUNC_EXP=39
+    FUNC_LOG=40
+    FUNC_LN=41
+    FUNC_SIN=42
+    FUNC_COS=43
+    FUNC_TAN=44
+    FUNC_CSC=45
+    FUNC_SEC=46
+    FUNC_COT=47
+    FUNC_ARCSIN=48
+    FUNC_ARCCOS=49
+    FUNC_ARCTAN=50
+    FUNC_ARCCSC=51
+    FUNC_ARCSEC=52
+    FUNC_ARCCOT=53
+    FUNC_SINH=54
+    FUNC_COSH=55
+    FUNC_TANH=56
+    FUNC_ARSINH=57
+    FUNC_ARCOSH=58
+    FUNC_ARTANH=59
+    FUNC_SQRT=60
+    CMD_TIMES=61
+    CMD_CDOT=62
+    CMD_DIV=63
+    CMD_FRAC=64
+    CMD_BINOM=65
+    CMD_DBINOM=66
+    CMD_TBINOM=67
+    CMD_MATHIT=68
+    UNDERSCORE=69
+    CARET=70
+    COLON=71
+    DIFFERENTIAL=72
+    LETTER=73
+    NUMBER=74
+    EQUAL=75
+    LT=76
+    LTE=77
+    GT=78
+    GTE=79
+    BANG=80
+    SYMBOL=81
 
     def __init__(self, input, output=sys.stdout):
         super(LaTeXParser, self).__init__(input, output=output)
@@ -526,7 +523,7 @@ class LaTeXParser ( Parser ):
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
                     self.state = 82
                     _la = self._input.LA(1)
-                    if not(((((_la - 77)) & ~0x3f) == 0 and ((1 << (_la - 77)) & ((1 << (LaTeXParser.EQUAL - 77)) | (1 << (LaTeXParser.LT - 77)) | (1 << (LaTeXParser.LTE - 77)) | (1 << (LaTeXParser.GT - 77)) | (1 << (LaTeXParser.GTE - 77)))) != 0)):
+                    if not(((((_la - 75)) & ~0x3f) == 0 and ((1 << (_la - 75)) & ((1 << (LaTeXParser.EQUAL - 75)) | (1 << (LaTeXParser.LT - 75)) | (1 << (LaTeXParser.LTE - 75)) | (1 << (LaTeXParser.GT - 75)) | (1 << (LaTeXParser.GTE - 75)))) != 0)):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -2317,7 +2314,7 @@ class LaTeXParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 305
             _la = self._input.LA(1)
-            if not(((((_la - 67)) & ~0x3f) == 0 and ((1 << (_la - 67)) & ((1 << (LaTeXParser.CMD_BINOM - 67)) | (1 << (LaTeXParser.CMD_DBINOM - 67)) | (1 << (LaTeXParser.CMD_TBINOM - 67)))) != 0)):
+            if not(((((_la - 65)) & ~0x3f) == 0 and ((1 << (_la - 65)) & ((1 << (LaTeXParser.CMD_BINOM - 65)) | (1 << (LaTeXParser.CMD_DBINOM - 65)) | (1 << (LaTeXParser.CMD_TBINOM - 65)))) != 0)):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
