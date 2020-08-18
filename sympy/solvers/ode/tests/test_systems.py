@@ -3,7 +3,6 @@ from sympy import (symbols, Symbol, diff, Function, Derivative, Matrix, Rational
 from sympy.core.containers import Tuple
 from sympy.functions import exp, cos, sin, log
 from sympy.matrices import dotprodsimp, NonSquareMatrixError
-from sympy.simplify import simplify
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.ode import constant_renumber
 from sympy.solvers.ode.subscheck import checksysodesol
@@ -270,9 +269,9 @@ def test_neq_nth_linear_constant_coeff_match():
     eq2 = [Eq(x1, t*x(t) + t*y(t) + t), Eq(y1, t*x(t) + t*y(t) + cos(t))]
     sol2 = {'no_of_equation': 2, 'eq': [Eq(Derivative(x(t), t), t*x(t) + t*y(t) + t), Eq(Derivative(y(t), t),
             t*x(t) + t*y(t) + cos(t))], 'func': [x(t), y(t)], 'order': {x(t): 1, y(t): 1}, 'is_linear': True,
-            'is_constant': False, 'is_homogeneous': False, 'is_general': True, 'func_coeff': -Matrix([ [-t, -t],
-            [-t, -t]]), 'commutative_antiderivative': Matrix([ [t**2/2, t**2/2], [t**2/2, t**2/2]]), 'rhs':
-            Matrix([ [     t], [cos(t)]]), 'type_of_equation': 'type4'}
+            'is_homogeneous': False, 'is_general': True, 'rhs': Matrix([ [     t], [cos(t)]]), 'func_coeff':
+            Matrix([ [t, t], [t, t]]), 'is_constant': False, 'type_of_equation': 'type4',
+            'commutative_antiderivative': Matrix([ [t**2/2, t**2/2], [t**2/2, t**2/2]])}
     assert neq_nth_linear_constant_coeff_match(eq2, funcs, t) == sol2
 
     eq3 = [Eq(x1, t*(x(t) + y(t) + z(t) + 1)), Eq(y1, t*(x(t) + y(t) + z(t))), Eq(z1, t*(x(t) + y(t) + z(t)))]
@@ -309,7 +308,7 @@ def test_neq_nth_linear_constant_coeff_match():
     # Multiple matchs
 
     f, g = symbols("f g", cls=Function)
-    y = symbols("y")
+    y, t_ = symbols("y t_")
     funcs = [f(t), g(t)]
 
     eq1 = [Eq(Derivative(f(t), t)**2 - 2*Derivative(f(t), t) + 1, 4),
@@ -320,6 +319,22 @@ def test_neq_nth_linear_constant_coeff_match():
     assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
 
     raises(ValueError, lambda: neq_nth_linear_constant_coeff_match(eq1, funcs[:1], t))
+
+    eq2 = [Eq(Derivative(f(t), t), (2*f(t) + g(t) + 1)/t), Eq(Derivative(g(t), t), (f(t) + 2*g(t))/t)]
+    sol2 = {'no_of_equation': 2, 'eq': [Eq(Derivative(f(t), t), (2*f(t) + g(t) + 1)/t), Eq(Derivative(g(t), t),
+            (f(t) + 2*g(t))/t)], 'func': [f(t), g(t)], 'order': {f(t): 1, g(t): 1}, 'is_linear': True,
+            'is_homogeneous': False, 'is_general': True, 'rhs': Matrix([ [1], [0]]), 'func_coeff': Matrix([ [2,
+            1], [1, 2]]), 'is_constant': False, 'type_of_equation': 'type6', 't_': t_, 'tau': log(t),
+            'commutative_antiderivative': Matrix([ [2*log(t),   log(t)], [  log(t), 2*log(t)]])}
+    assert neq_nth_linear_constant_coeff_match(eq2, funcs, t) == sol2
+
+    eq3 = [Eq(Derivative(f(t), t), (2*f(t) + g(t))/t), Eq(Derivative(g(t), t), (f(t) + 2*g(t))/t)]
+    sol3 = {'no_of_equation': 2, 'eq': [Eq(Derivative(f(t), t), (2*f(t) + g(t))/t), Eq(Derivative(g(t), t),
+            (f(t) + 2*g(t))/t)], 'func': [f(t), g(t)], 'order': {f(t): 1, g(t): 1}, 'is_linear': True,
+            'is_homogeneous': True, 'is_general': True, 'func_coeff': Matrix([ [2, 1], [1, 2]]), 'is_constant':
+            False, 'type_of_equation': 'type5', 't_': t_, 'rhs': Matrix([ [0], [0]]), 'tau': log(t),
+            'commutative_antiderivative': Matrix([ [2*log(t),   log(t)], [  log(t), 2*log(t)]])}
+    assert neq_nth_linear_constant_coeff_match(eq3, funcs, t) == sol3
 
 
 def test_matrix_exp():

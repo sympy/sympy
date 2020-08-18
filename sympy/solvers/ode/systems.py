@@ -14,8 +14,9 @@ from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase, eye
 from sympy.polys import Poly
 from sympy.simplify import simplify, collect, powsimp, ratsimp
 from sympy.simplify.powsimp import powdenest
+from sympy.sets.sets import FiniteSet
 from sympy.solvers.deutils import ode_order
-from sympy.solvers.solveset import NonlinearError
+from sympy.solvers.solveset import NonlinearError, solveset
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import ordered
 from sympy.utilities.misc import filldedent
@@ -78,9 +79,16 @@ def linodesolve_type(A, t, b=None):
     and returns the type of the equation that can be solved by :obj:`sympy.solvers.ode.systems.linodesolve()`.
 
     If the system is constant coefficient homogeneous, then "type1" is returned
+
     If the system is constant coefficient non-homogeneous, then "type2" is returned
+
     If the system is non-constant coefficient homogeneous, then "type3" is returned
+
     If the system is non-constnt coefficient non-homogeneous, then "type4" is returned
+
+    If the system has a non-constant coefficient matrix which can be factorized into constant
+    coefficient matrix, then "type5" or "type6" is returned for when the system is homogeneous or
+    non-homogeneous respectively.
 
     Note that, if the system of ODEs is of "type3" or "type4", then along with the type,
     the commutative antiderivative of the coefficient matrix is also returned.
@@ -150,11 +158,14 @@ def linodesolve_type(A, t, b=None):
 
     """
 
+    match = {}
     is_non_constant = not _matrix_is_constant(A, t)
     is_non_homogeneous = not (b is None or b.is_zero_matrix)
     type = "type{}".format(int("{}{}".format(int(is_non_constant), int(is_non_homogeneous)), 2) + 1)
 
     B = None
+    match.update({"type_of_equation": type, "antiderivative": B})
+
     if is_non_constant:
         B, is_commuting = _is_commutative_anti_derivative(A, t)
         if not is_commuting:
@@ -163,7 +174,35 @@ def linodesolve_type(A, t, b=None):
                 by linodesolve.
             '''))
 
-    return {"type": type, "antiderivative": B}
+        match['antiderivative'] = B
+        match.update(_first_order_type5_6_subs(A, t, b=b))
+
+    return match
+
+
+def _first_order_type5_6_subs(A, t, b=None):
+    match = {}
+
+    factor_terms = _factor_matrix(A, t)
+    is_homogeneous = b is None or b.is_zero_matrix
+
+    if factor_terms is not None:
+        t_ = Symbol("{}_".format(t))
+        F_t = integrate(factor_terms[0], t)
+        inverse = solveset(Eq(t_, F_t), t)
+
+        # Note: A simple way to check if a function is invertible
+        # or not.
+        if isinstance(inverse, FiniteSet) and len(inverse) == 1:
+            A = factor_terms[1]
+            if not is_homogeneous:
+                b = b / factor_terms[0]
+                b = b.subs(t, list(inverse)[0])
+            type = "type{}".format(5 + (not is_homogeneous))
+            match.update({'func_coeff': A, 'tau': F_t,
+                          't_': t_, 'type_of_equation': type, 'rhs': b})
+
+    return match
 
 
 def linear_ode_to_matrix(eqs, funcs, t, order):
@@ -514,7 +553,8 @@ def matrix_exp_jordan_form(A, t):
     return P, expJ
 
 
-def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
+# Note: To add a docstring example with tau
+def linodesolve(A, t, b=None, B=None, type="auto", doit=False, tau=None):
     r"""
     System of n equations linear first-order differential equations
 
@@ -533,7 +573,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     differently.
 
     When $A(t)$ is constant coefficient matrix and $b(t)$ is zero vector i.e. system is homogeneous,
-    the solution is:
+    the system is "type1". The solution is:
 
     .. math::
         X(t) = \exp(A t) C
@@ -541,25 +581,57 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     Here, $C$ is a vector of constants and $A$ is the constant coefficient matrix.
 
     When $A(t)$ is constant coefficient matrix and $b(t)$ is non-zero i.e. system is non-homogeneous,
-    the solution is:
+    the system is "type2". The solution is:
 
     .. math::
         X(t) = e^{A t} ( \int e^{- A t} b \,dt + C)
 
     When $A(t)$ is coefficient matrix such that its commutative with its antiderivative $B(t)$ and
-    $b(t)$ is a zero vector i.e. system is homogeneous, the solution is:
+    $b(t)$ is a zero vector i.e. system is homogeneous, the system is "type3". The solution is:
 
     .. math::
         X(t) = \exp(B(t)) C
 
     When $A(t)$ is commutative with its antiderivative $B(t)$ and $b(t)$ is non-zero i.e. system is
-    non-homogeneous, the solution is:
+    non-homogeneous, the system is "type4". The solution is:
 
     .. math::
         X(t) =  e^{B(t)} ( \int e^{-B(t)} b(t) \,dt + C)
 
+    When $A(t)$ is a coefficient matrix such that it can be factorized into a scalar and a constant
+    coefficient matrix:
+
+    .. math::
+        A(t) = f(t) * A
+
+    Where $f(t)$ is a scalar expression in the independent variable $t$ and $A$ is a constant matrix,
+    then we can do the following substitutions:
+
+    .. math::
+        tau = \int f(t) dt, X(t) = Y(tau), b(t) = b(f^{-1}(tau))
+
+    Here, the substitution for the non-homogeneous term is done only when its non-zero.
+    Using these substitutions, our original system becomes:
+
+    .. math::
+        Y'(tau) = A * Y(tau) + b(tau)/f(tau)
+
+    The above system can be easily solved using the solution for "type1" or "type2" depending
+    on the homogeneity of the system. After we get the solution for $Y(tau)$, we substitute the
+    solution for $tau$ as $t$ to get back $X(t)$
+
+    .. math::
+        X(t) = Y(tau)
+
+    Systems of "type5" and "type6" have a commutative antiderivative but we use this solution
+    because its faster to compute.
+
     The final solution is the general solution for all the four equations since a constant coefficient
     matrix is always commutative with its antidervative.
+
+    An additional feature of this function is, if someone wants to substitute for value of the independent
+    variable, they can pass the substitution `tau` and the solution will have the independent variable
+    substituted with the passed expression.
 
     Parameters
     ==========
@@ -580,11 +652,16 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
         solution is evaluated. The type values allowed and the corresponding
         system it solves are: "type1" for constant coefficient homogeneous
         "type2" for constant coefficient non-homogeneous, "type3" for non-constant
-        coefficient homogeneous and "type4" for non-constant coefficient non-homogeneous.
+        coefficient homogeneous, "type4" for non-constant coefficient non-homogeneous,
+        "type5" and "type6" for non-constant coefficient homogeneous and non-homogeneous
+        systems respectively where the coefficient matrix can be factorized to a constant
+        coefficient matrix.
         The default value is "auto" which will let the solver decide the correct type of
         the system passed.
     doit : Boolean
         Evaluate the solution if True, default value is False
+    tau: Expression
+        Used to substitute for the value of `t` after we get the solution of the system.
 
     Examples
     ========
@@ -724,7 +801,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
                         The coefficient matrix and its antiderivative should have same dimensions
                     '''))
 
-    if not any(type == "type{}".format(i) for i in range(1, 5)) and not type == "auto":
+    if not any(type == "type{}".format(i) for i in range(1, 7)) and not type == "auto":
         raise ValueError(filldedent('''\
                     The input type should be a valid one
                 '''))
@@ -734,19 +811,37 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
     # constants = numbered_symbols(prefix='C', cls=Dummy, start=const_idx+1)
     Cvect = Matrix(list(Dummy() for _ in range(n)))
 
-    if (type == "type2" or type == "type4") and b is None:
+    if any(type == typ for typ in ["type2", "type4", "type6"]) and b is None:
         b = zeros(n, 1)
+
+    is_transformed = False
+    passed_type = type
 
     if type == "auto":
         system_info = linodesolve_type(A, t, b=b)
-        type = system_info["type"]
+        type = system_info["type_of_equation"]
         B = system_info["antiderivative"]
 
-    if type == "type1" or type == "type2":
+    if type == "type5" or type == "type6":
+        is_transformed = True
+        if passed_type != "auto":
+            if tau is None:
+                system_info = _first_order_type5_6_subs(A, t, b=b)
+                if not system_info:
+                    raise ValueError(filldedent('''
+                        The system passed isn't {}.
+                    '''.format(type)))
+
+                tau = system_info['tau']
+                t = system_info['t_']
+                A = system_info['A']
+                b = system_info['b']
+
+    if any(type == typ for typ in ["type1", "type2", "type5", "type6"]):
         P, J = matrix_exp_jordan_form(A, t)
         P = simplify(P)
 
-        if type == "type1":
+        if type == "type1" or type == "type5":
             sol_vector = P * (J * Cvect)
         else:
             sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
@@ -759,6 +854,9 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False):
             sol_vector = B.exp() * Cvect
         else:
             sol_vector = B.exp() * (((-B).exp() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+
+    if is_transformed:
+        sol_vector = sol_vector.subs(t, tau)
 
     gens = sol_vector.atoms(exp)
 
@@ -901,19 +999,29 @@ def _is_commutative_anti_derivative(A, t):
     return B, is_commuting
 
 
-def _is_second_order_type2(A, t):
+def _factor_matrix(A, t):
     term = None
     for element in A:
         temp_term = element.as_independent(t)[1]
-        if temp_term != 0:
+        if temp_term.has(t):
             term = temp_term
             break
 
-    is_type2 = False
     if term is not None:
-        is_type2 = _matrix_is_constant(A/term, t)
-        term = 1/term
-        is_type2 = term.is_polynomial() and is_type2
+        A_factored = (A/term).applyfunc(ratsimp)
+        can_factor = _matrix_is_constant(A_factored, t)
+        term = (term, A_factored) if can_factor else None
+
+    return term
+
+
+def _is_second_order_type2(A, t):
+    term = _factor_matrix(A, t)
+    is_type2 = False
+
+    if term is not None:
+        term = 1/term[0]
+        is_type2 = term.is_polynomial()
 
     if is_type2:
         poly = Poly(term.expand(), t)
@@ -1241,10 +1349,11 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
         except NotImplementedError:
             return None
 
-        if not is_constant:
-            match['commutative_antiderivative'] = system_info["antiderivative"]
+        match.update(system_info)
+        antiderivative = match.pop("antiderivative")
 
-        match['type_of_equation'] = system_info["type"]
+        if not is_constant:
+            match['commutative_antiderivative'] = antiderivative
 
         return match
 
@@ -1352,12 +1461,14 @@ def _linear_ode_solver(match):
     funcs = match['func']
 
     rhs = match.get('rhs', None)
+    tau = match.get('tau', None)
+    t = match['t_'] if 't_' in match else t
     A = match['func_coeff']
     B = match.get('commutative_antiderivative', None)
-    type_of_equation = match['type_of_equation']
+    type = match['type_of_equation']
 
     sol_vector = linodesolve(A, t, b=rhs, B=B,
-                             type=type_of_equation)
+                             type=type, tau=tau)
 
     sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
 
@@ -1373,20 +1484,20 @@ def _higher_order_ode_solver(match):
     eqs = match["eq"]
     funcs = match["func"]
     t = match["t"]
-    type_of_equation = match.get('type_of_equation', "type0")
+    type = match.get('type_of_equation', "type0")
 
     is_second_order = match.get('is_second_order', False)
     is_transformed = match.get('is_transformed', False)
-    is_euler = is_transformed and type_of_equation == "type1"
+    is_euler = is_transformed and type == "type1"
 
     if is_second_order and not is_euler:
         new_eqs, new_funcs = _second_order_to_first_order(eqs, funcs, t,
                                                           A1=match.get("A1", None), A0=match.get("A0", None),
-                                                          b=match.get("rhs", None), type_of_equation=type_of_equation,
+                                                          b=match.get("rhs", None), type=type,
                                                           t_=match.get("t_", None))
     else:
         new_eqs, new_funcs = _higher_order_to_first_order(eqs, match['order'], t, funcs=funcs,
-                                                          type_of_equation=type_of_equation)
+                                                          type=type)
 
     if match.get("is_transformed", False):
         t = match['t_']
@@ -1402,7 +1513,13 @@ def _higher_order_ode_solver(match):
 
     # Dividing the system only when it becomes essential
     if sol is None:
-        sol = _component_solver(new_eqs, new_funcs, t)
+        try:
+            sol = _component_solver(new_eqs, new_funcs, t)
+        except NotImplementedError:
+            sol = None
+
+    if sol is None:
+        return sol
 
     is_second_order_type2 = is_second_order and type == "type2"
 
@@ -1506,7 +1623,7 @@ def _component_solver(eqs, funcs, t):
     return sol
 
 
-def _second_order_to_first_order(eqs, funcs, t, type_of_equation="auto", A1=None,
+def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
                                  A0=None, b=None, t_=None):
     r"""
     Expects the system to be in second order and in canonical form
@@ -1540,8 +1657,8 @@ def _second_order_to_first_order(eqs, funcs, t, type_of_equation="auto", A1=None
     is_a1 = A1 is None
     is_a0 = A0 is None
 
-    if (type_of_equation == "type1" and is_a1) or (type_of_equation == "type2" and is_a0)\
-        or (type_of_equation == "auto" and (is_a1 or is_a0)):
+    if (type == "type1" and is_a1) or (type == "type2" and is_a0)\
+        or (type == "auto" and (is_a1 or is_a0)):
         (A2, A1, A0), b = linear_ode_to_matrix(eqs, funcs, t, 2)
 
         if not A2.is_Identity:
@@ -1549,21 +1666,21 @@ def _second_order_to_first_order(eqs, funcs, t, type_of_equation="auto", A1=None
                 The system must be in its canonical form.
             '''))
 
-    if type_of_equation == "auto":
+    if type == "auto":
         match = _match_second_order_type(A1, A0, t)
-        type_of_equation = match["type_of_equation"]
+        type = match["type_of_equation"]
         A1 = match.get("A1", None)
         A0 = match.get("A0", None)
 
     sys_order = {func: 2 for func in funcs}
 
-    if type_of_equation == "type1":
+    if type == "type1":
         if b is None:
             b = zeros(len(eqs))
         eqs = _second_order_subs_type1(A1, b, funcs, t)
         sys_order = {func: 1 for func in funcs}
 
-    if type_of_equation == "type2":
+    if type == "type2":
         if t_ is None:
             t_ = Symbol("{}_".format(t))
         t = t_
@@ -1576,11 +1693,11 @@ def _second_order_to_first_order(eqs, funcs, t, type_of_equation="auto", A1=None
     return _higher_order_to_first_order(eqs, sys_order, t, funcs=funcs)
 
 
-def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type_of_equation="type0"):
+def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0"):
     if funcs is None:
         funcs = sys_order.keys()
 
-    if type_of_equation == "type1":
+    if type == "type1":
         t_ = Symbol('{}_'.format(t))
         new_funcs = [Function(Dummy('{}_'.format(f.func.__name__)))(t_) for f in funcs]
         max_order = max(sys_order[func] for func in funcs)
