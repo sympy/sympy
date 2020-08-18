@@ -6,6 +6,7 @@ from sympy import (
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
     GreaterThan, Sum, Product, E, log, tan, Function, binomial, exp,
+    floor, ceiling, 
 )
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.abc import x, y, z, a, b, c, t, k, n
@@ -97,6 +98,8 @@ GOOD_PAIRS = [
     ("x \\geq y", Ge(x, y)),
     ("x \\le y", Le(x, y)),
     ("x \\ge y", Ge(x, y)),
+    ("\\lfloor x \\rfloor", floor(x)),
+    ("\\lceil x \\rceil", ceiling(x)),
     ("\\sin \\theta", sin(theta)),
     ("\\sin(\\theta)", sin(theta)),
     ("\\sin^{-1} a", asin(a)),

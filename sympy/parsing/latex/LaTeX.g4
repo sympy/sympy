@@ -96,6 +96,11 @@ FUNC_ARSINH: '\\arsinh';
 FUNC_ARCOSH: '\\arcosh';
 FUNC_ARTANH: '\\artanh';
 
+L_FLOOR: '\\lfloor';
+R_FLOOR: '\\rfloor';
+L_CEIL: '\\lceil';
+R_CEIL: '\\rceil';
+
 FUNC_SQRT: '\\sqrt';
 
 CMD_TIMES: '\\times';
@@ -189,9 +194,24 @@ exp_nofunc:
 	exp_nofunc CARET (atom | L_BRACE expr R_BRACE) subexpr?
 	| comp_nofunc;
 
-comp: group | abs_group | func | atom | frac | binom;
+comp:
+	group
+	| abs_group
+	| func
+	| atom
+	| frac
+	| binom
+	| floor
+	| ceil;
 
-comp_nofunc: group | abs_group | atom | frac | binom;
+comp_nofunc:
+	group
+	| abs_group
+	| atom
+	| frac
+	| binom
+	| floor
+	| ceil;
 
 group:
 	L_PAREN expr R_PAREN
@@ -214,6 +234,9 @@ frac:
 
 binom:
 	(CMD_BINOM | CMD_DBINOM | CMD_TBINOM) L_BRACE n = expr R_BRACE L_BRACE k = expr R_BRACE;
+
+floor: L_FLOOR val = expr R_FLOOR;
+ceil: L_CEIL val = expr R_CEIL;
 
 func_normal:
 	FUNC_EXP

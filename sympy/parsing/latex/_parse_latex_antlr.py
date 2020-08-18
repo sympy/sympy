@@ -283,6 +283,10 @@ def convert_comp(comp):
         return convert_frac(comp.frac())
     elif comp.binom():
         return convert_binom(comp.binom())
+    elif comp.floor():
+        return convert_floor(comp.floor())
+    elif comp.ceil():
+        return convert_ceil(comp.ceil())
     elif comp.func():
         return convert_func(comp.func())
 
@@ -383,6 +387,14 @@ def convert_binom(binom):
     expr_n = convert_expr(binom.n)
     expr_k = convert_expr(binom.k)
     return sympy.binomial(expr_n, expr_k, evaluate=False)
+
+def convert_floor(floor):
+    val = convert_expr(floor.val)
+    return sympy.floor(val, evaluate=False)
+
+def convert_ceil(ceil):
+    val = convert_expr(ceil.val)
+    return sympy.ceiling(val, evaluate=False)
 
 def convert_func(func):
     if func.func_normal():
