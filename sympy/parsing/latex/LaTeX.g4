@@ -61,6 +61,11 @@ R_BRACKET: ']';
 
 BAR: '|';
 
+R_BAR: '\\right|';
+L_BAR: '\\left|';
+
+L_ANGLE: '\\langle';
+R_ANGLE: '\\rangle';
 FUNC_LIM: '\\lim';
 LIM_APPROACH_SYM:
 	'\\to'
@@ -69,8 +74,8 @@ LIM_APPROACH_SYM:
 	| '\\longrightarrow'
 	| '\\Longrightarrow';
 FUNC_INT: '\\int';
-FUNC_SUM: '\\sum';
-FUNC_PROD: '\\prod';
+FUNC_SUM: ('\\sum' | '\\Sigma');
+FUNC_PROD: ('\\prod' | '\\Pi');
 
 FUNC_EXP: '\\exp';
 FUNC_LOG: '\\log';
@@ -224,7 +229,12 @@ abs_group: BAR expr BAR;
 atom: (LETTER | SYMBOL) subexpr?
 	| NUMBER
 	| DIFFERENTIAL
-	| mathit;
+	| mathit
+	| bra
+	| ket;
+
+bra: L_ANGLE expr (R_BAR | BAR);
+ket: (L_BAR | BAR) expr R_ANGLE;
 
 mathit: CMD_MATHIT L_BRACE mathit_text R_BRACE;
 mathit_text: LETTER*;

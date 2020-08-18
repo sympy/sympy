@@ -2,13 +2,14 @@ from sympy.testing.pytest import raises, XFAIL
 from sympy.external import import_module
 
 from sympy import (
-    Symbol, Mul, Add, Eq, Abs, sin, asin, cos, Pow,
+    Symbol, Mul, Add, Abs, sin, asin, cos, Pow,
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
     GreaterThan, Sum, Product, E, log, tan, Function, binomial, exp,
-    floor, ceiling, 
+    floor, ceiling
 )
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
+from sympy.physics.quantum.state import Bra, Ket
 from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
 
@@ -100,6 +101,8 @@ GOOD_PAIRS = [
     ("x \\ge y", Ge(x, y)),
     ("\\lfloor x \\rfloor", floor(x)),
     ("\\lceil x \\rceil", ceiling(x)),
+    ("\\langle x |", Bra('x')),
+    ("| x \\rangle", Ket('x')),
     ("\\sin \\theta", sin(theta)),
     ("\\sin(\\theta)", sin(theta)),
     ("\\sin^{-1} a", asin(a)),
@@ -189,10 +192,13 @@ GOOD_PAIRS = [
     ("\\sum_{k = 1}^{10} k^2", Sum(k**2, (k, 1, 10))),
     ("\\sum_{n = 0}^{\\infty} \\frac{1}{n!}",
      Sum(_Pow(_factorial(n), -1), (n, 0, oo))),
+    ("\\Sigma_{n = 0}^{\\infty} \\frac{1}{n!}",
+     Sum(_Pow(_factorial(n), -1), (n, 0, oo))),
     ("\\prod_{a = b}^{c} x", Product(x, (a, b, c))),
     ("\\prod_{a = b}^c x", Product(x, (a, b, c))),
     ("\\prod^{c}_{a = b} x", Product(x, (a, b, c))),
     ("\\prod^c_{a = b} x", Product(x, (a, b, c))),
+    ("\\Pi^c_{a = b} x", Product(x, (a, b, c))),
     ("\\exp x", _exp(x)),
     ("\\exp(x)", _exp(x)),
     ("\\ln x", _log(x, E)),

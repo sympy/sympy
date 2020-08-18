@@ -5,6 +5,7 @@
 import sympy
 from sympy.external import import_module
 from sympy.printing.str import StrPrinter
+from sympy.physics.quantum.state import Bra, Ket
 
 from .errors import LaTeXParsingError
 
@@ -325,6 +326,12 @@ def convert_atom(atom):
     elif atom.mathit():
         text = rule2text(atom.mathit().mathit_text())
         return sympy.Symbol(text)
+    elif atom.bra():
+        val = convert_expr(atom.bra().expr())
+        return Bra(val)
+    elif atom.ket():
+        val = convert_expr(atom.ket().expr())
+        return Ket(val)
 
 
 def rule2text(ctx):
