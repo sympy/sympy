@@ -3893,6 +3893,18 @@ I = S.ImaginaryUnit
 def _eval_is_eq(self, other): # noqa: F811
     return False
 
+@dispatch(Number, Number)
+def _eval_is_ge(lhs, rhs):
+    if lhs.is_comparable and rhs.is_comparable:
+        dif = (lhs - rhs).evalf(2)
+
+        if not dif.is_comparable:
+            return None
+
+        if dif in (S.Infinity, S.NegativeInfinity):
+            dif = float(dif)
+        return dif >= 0
+
 def sympify_fractions(f):
     return Rational(f.numerator, f.denominator, 1)
 

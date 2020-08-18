@@ -841,7 +841,7 @@ class Expr(Basic, EvalfMixin):
             if self.is_extended_real is False:
                 return False
 
-            # check to see that we can get a value
+            # # check to see that we can get a value
             try:
                 n2 = self._eval_evalf(2)
             # XXX: This shouldn't be caught here

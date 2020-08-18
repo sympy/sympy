@@ -1741,8 +1741,10 @@ class Pow(Expr):
 def _eval_is_ge(a, b):
     from sympy.core.relational import is_ge
     if is_ge(a.base, S.One) and is_ge(b.base, S.One):
-        if is_ge(a.base, b.base) and is_ge(a.exp, b.exp):
-            return True
+        base_greater = is_ge(a.base, b.base)
+        exp_greater = is_ge(a.exp, b.exp)
+        if (not base_greater is None) and (not exp_greater is None):
+            return base_greater and exp_greater
 
 from .add import Add
 from .numbers import Integer
