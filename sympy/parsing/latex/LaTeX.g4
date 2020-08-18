@@ -121,11 +121,18 @@ NUMBER:
 	DIGIT+ (',' DIGIT DIGIT DIGIT)*
 	| DIGIT* (',' DIGIT DIGIT DIGIT)* '.' DIGIT+;
 
-EQUAL: '=';
+EQUAL: (('&' WS_CHAR*?)? '=') | ('=' (WS_CHAR*? '&')?);
+NEQ: '\\neq';
+
 LT: '<';
-LTE: '\\leq';
+LTE: ('\\leq' | '\\le' | LTE_Q | LTE_S);
+LTE_Q: '\\leqq';
+LTE_S: '\\leqslant';
+
 GT: '>';
-GTE: '\\geq';
+GTE: ('\\geq' | '\\ge' | GTE_Q | GTE_S);
+GTE_Q: '\\geqq';
+GTE_S: '\\geqslant';
 
 BANG: '!';
 
@@ -134,7 +141,7 @@ SYMBOL: '\\' [a-zA-Z]+;
 math: relation;
 
 relation:
-	relation (EQUAL | LT | LTE | GT | GTE) relation
+	relation (EQUAL | LT | LTE | GT | GTE | NEQ) relation
 	| expr;
 
 equality: expr EQUAL expr;

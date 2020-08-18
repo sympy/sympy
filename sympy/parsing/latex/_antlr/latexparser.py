@@ -19,7 +19,7 @@ import sys
 def serializedATN():
     with StringIO() as buf:
         buf.write(u"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3")
-        buf.write(u"L\u01b2\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t")
+        buf.write(u"Q\u01b2\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t")
         buf.write(u"\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t\13\4\f\t\f\4\r\t\r")
         buf.write(u"\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22\4")
         buf.write(u"\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30")
@@ -63,17 +63,17 @@ def serializedATN():
         buf.write(u" \u0194\n \3!\3!\3\"\3\"\3\"\3\"\3\"\3\"\5\"\u019e\n")
         buf.write(u"\"\3#\3#\3#\3#\3#\3#\5#\u01a6\n#\3$\3$\3$\3$\3$\3%\3")
         buf.write(u"%\3%\3%\3%\3%\2\b\4\n\f\16 \"&\2\4\6\b\n\f\16\20\22\24")
-        buf.write(u"\26\30\32\34\36 \"$&(*,.\60\62\64\668:<>@BDFH\2\t\3\2")
-        buf.write(u"FJ\3\2\20\21\5\2\22\238:BB\4\2DDLL\3\2<>\3\2\"\66\3\2")
-        buf.write(u" !\2\u01cb\2J\3\2\2\2\4L\3\2\2\2\6W\3\2\2\2\b[\3\2\2")
-        buf.write(u"\2\n]\3\2\2\2\fh\3\2\2\2\16s\3\2\2\2\20\u0085\3\2\2\2")
-        buf.write(u"\22\u0090\3\2\2\2\24\u0092\3\2\2\2\26\u0099\3\2\2\2\30")
-        buf.write(u"\u00a2\3\2\2\2\32\u00a4\3\2\2\2\34\u00ac\3\2\2\2\36\u00b4")
-        buf.write(u"\3\2\2\2 \u00bc\3\2\2\2\"\u00d0\3\2\2\2$\u00ea\3\2\2")
-        buf.write(u"\2&\u00f1\3\2\2\2(\u0103\3\2\2\2*\u0105\3\2\2\2,\u0110")
-        buf.write(u"\3\2\2\2.\u0112\3\2\2\2\60\u011a\3\2\2\2\62\u011d\3\2")
-        buf.write(u"\2\2\64\u0125\3\2\2\2\66\u012d\3\2\2\28\u0178\3\2\2\2")
-        buf.write(u":\u017f\3\2\2\2<\u0181\3\2\2\2>\u0193\3\2\2\2@\u0195")
+        buf.write(u"\26\30\32\34\36 \"$&(*,.\60\62\64\668:<>@BDFH\2\t\4\2")
+        buf.write(u"FILM\3\2\20\21\5\2\22\238:BB\4\2DDQQ\3\2<>\3\2\"\66\3")
+        buf.write(u"\2 !\2\u01cb\2J\3\2\2\2\4L\3\2\2\2\6W\3\2\2\2\b[\3\2")
+        buf.write(u"\2\2\n]\3\2\2\2\fh\3\2\2\2\16s\3\2\2\2\20\u0085\3\2\2")
+        buf.write(u"\2\22\u0090\3\2\2\2\24\u0092\3\2\2\2\26\u0099\3\2\2\2")
+        buf.write(u"\30\u00a2\3\2\2\2\32\u00a4\3\2\2\2\34\u00ac\3\2\2\2\36")
+        buf.write(u"\u00b4\3\2\2\2 \u00bc\3\2\2\2\"\u00d0\3\2\2\2$\u00ea")
+        buf.write(u"\3\2\2\2&\u00f1\3\2\2\2(\u0103\3\2\2\2*\u0105\3\2\2\2")
+        buf.write(u",\u0110\3\2\2\2.\u0112\3\2\2\2\60\u011a\3\2\2\2\62\u011d")
+        buf.write(u"\3\2\2\2\64\u0125\3\2\2\2\66\u012d\3\2\2\28\u0178\3\2")
+        buf.write(u"\2\2:\u017f\3\2\2\2<\u0181\3\2\2\2>\u0193\3\2\2\2@\u0195")
         buf.write(u"\3\2\2\2B\u0197\3\2\2\2D\u019f\3\2\2\2F\u01a7\3\2\2\2")
         buf.write(u"H\u01ac\3\2\2\2JK\5\4\3\2K\3\3\2\2\2LM\b\3\1\2MN\5\b")
         buf.write(u"\5\2NT\3\2\2\2OP\f\4\2\2PQ\t\2\2\2QS\5\4\3\5RO\3\2\2")
@@ -101,7 +101,7 @@ def serializedATN():
         buf.write(u"\"\22\2\u009a\u009c\5\30\r\2\u009b\u009a\3\2\2\2\u009c")
         buf.write(u"\u009f\3\2\2\2\u009d\u009b\3\2\2\2\u009d\u009e\3\2\2")
         buf.write(u"\2\u009e\27\3\2\2\2\u009f\u009d\3\2\2\2\u00a0\u00a3\7")
-        buf.write(u"K\2\2\u00a1\u00a3\5\32\16\2\u00a2\u00a0\3\2\2\2\u00a2")
+        buf.write(u"P\2\2\u00a1\u00a3\5\32\16\2\u00a2\u00a0\3\2\2\2\u00a2")
         buf.write(u"\u00a1\3\2\2\2\u00a3\31\3\2\2\2\u00a4\u00aa\7\34\2\2")
         buf.write(u"\u00a5\u00ab\5\36\20\2\u00a6\u00ab\5\34\17\2\u00a7\u00a8")
         buf.write(u"\5\36\20\2\u00a8\u00a9\5\34\17\2\u00a9\u00ab\3\2\2\2")
@@ -253,8 +253,10 @@ class LaTeXParser ( Parser ):
                      u"'\\artanh'", u"'\\sqrt'", u"'\\times'", u"'\\cdot'",
                      u"'\\div'", u"'\\frac'", u"'\\binom'", u"'\\dbinom'",
                      u"'\\tbinom'", u"'\\mathit'", u"'_'", u"'^'", u"':'",
-                     u"<INVALID>", u"<INVALID>", u"<INVALID>", u"'='", u"'<'",
-                     u"'\\leq'", u"'>'", u"'\\geq'", u"'!'" ]
+                     u"<INVALID>", u"<INVALID>", u"<INVALID>", u"<INVALID>",
+                     u"'\\neq'", u"'<'", u"<INVALID>", u"'\\leqq'", u"'\\leqslant'",
+                     u"'>'", u"<INVALID>", u"'\\geqq'", u"'\\geqslant'",
+                     u"'!'" ]
 
     symbolicNames = [ u"<INVALID>", u"<INVALID>", u"WS", u"THINSPACE", u"MEDSPACE",
                       u"THICKSPACE", u"QUAD", u"QQUAD", u"NEGTHINSPACE",
@@ -272,7 +274,8 @@ class LaTeXParser ( Parser ):
                       u"CMD_CDOT", u"CMD_DIV", u"CMD_FRAC", u"CMD_BINOM",
                       u"CMD_DBINOM", u"CMD_TBINOM", u"CMD_MATHIT", u"UNDERSCORE",
                       u"CARET", u"COLON", u"DIFFERENTIAL", u"LETTER", u"NUMBER",
-                      u"EQUAL", u"LT", u"LTE", u"GT", u"GTE", u"BANG", u"SYMBOL" ]
+                      u"EQUAL", u"NEQ", u"LT", u"LTE", u"LTE_Q", u"LTE_S",
+                      u"GT", u"GTE", u"GTE_Q", u"GTE_S", u"BANG", u"SYMBOL" ]
 
     RULE_math = 0
     RULE_relation = 1
@@ -389,12 +392,17 @@ class LaTeXParser ( Parser ):
     LETTER=66
     NUMBER=67
     EQUAL=68
-    LT=69
-    LTE=70
-    GT=71
-    GTE=72
-    BANG=73
-    SYMBOL=74
+    NEQ=69
+    LT=70
+    LTE=71
+    LTE_Q=72
+    LTE_S=73
+    GT=74
+    GTE=75
+    GTE_Q=76
+    GTE_S=77
+    BANG=78
+    SYMBOL=79
 
     def __init__(self, input, output=sys.stdout):
         super(LaTeXParser, self).__init__(input, output=output)
@@ -470,6 +478,9 @@ class LaTeXParser ( Parser ):
         def GTE(self):
             return self.getToken(LaTeXParser.GTE, 0)
 
+        def NEQ(self):
+            return self.getToken(LaTeXParser.NEQ, 0)
+
         def getRuleIndex(self):
             return LaTeXParser.RULE_relation
 
@@ -504,7 +515,7 @@ class LaTeXParser ( Parser ):
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
                     self.state = 78
                     _la = self._input.LA(1)
-                    if not(((((_la - 68)) & ~0x3f) == 0 and ((1 << (_la - 68)) & ((1 << (LaTeXParser.EQUAL - 68)) | (1 << (LaTeXParser.LT - 68)) | (1 << (LaTeXParser.LTE - 68)) | (1 << (LaTeXParser.GT - 68)) | (1 << (LaTeXParser.GTE - 68)))) != 0)):
+                    if not(((((_la - 68)) & ~0x3f) == 0 and ((1 << (_la - 68)) & ((1 << (LaTeXParser.EQUAL - 68)) | (1 << (LaTeXParser.NEQ - 68)) | (1 << (LaTeXParser.LT - 68)) | (1 << (LaTeXParser.LTE - 68)) | (1 << (LaTeXParser.GT - 68)) | (1 << (LaTeXParser.GTE - 68)))) != 0)):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
