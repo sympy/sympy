@@ -1198,13 +1198,7 @@ def is_ge(lhs, rhs):
     if retval is not None:
         return retval
     else:
-        # n2 = _n2(lhs, rhs)
-        # if n2 is not None:
-        #     # use float comparison for infinity.
-        #     # otherwise get stuck in infinite recursion
-        #     if n2 in (S.Infinity, S.NegativeInfinity):
-        #         n2 = float(n2)
-        #     return _sympify(n2 >= 0)
+        
         if lhs.is_extended_real and rhs.is_extended_real:
             if (lhs.is_infinite and lhs.is_extended_positive) or (rhs.is_infinite and rhs.is_extended_negative):
                 return True
