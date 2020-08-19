@@ -694,6 +694,10 @@ def test_piecewise_solveset():
 
     assert solveset(Piecewise((x - 1, Ne(x, I)), (x, True)), x) == FiniteSet(1)
 
+    # issue 19718
+    g = Piecewise((1, x > 10), (0, True))
+    assert solveset(g > 0, x, S.Reals) == Interval.open(10, oo)
+
 
 def test_solveset_complex_polynomial():
     assert solveset_complex(a*x**2 + b*x + c, x) == \

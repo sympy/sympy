@@ -969,6 +969,10 @@ def _solveset(f, symbol, domain, _check=False):
     given symbol."""
     # _check controls whether the answer is checked or not
     from sympy.simplify.simplify import signsimp
+    from sympy.logic.boolalg import BooleanTrue
+
+    if isinstance(f, BooleanTrue):
+        return domain
 
     orig_f = f
     if f.is_Mul:
@@ -1008,7 +1012,6 @@ def _solveset(f, symbol, domain, _check=False):
         a = f.args[0]
         result = solveset_real(a > 0, symbol)
     elif f.is_Piecewise:
-        result = EmptySet
         expr_set_pairs = f.as_expr_set_pairs(domain)
         for (expr, in_set) in expr_set_pairs:
             if in_set.is_Relational:
