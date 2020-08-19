@@ -2379,10 +2379,9 @@ def test_pretty_Series():
     tfm1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
     tfm2 = TransferFunctionMatrix([tf3, -tf4], (2, 1), y)
     tfm3 = TransferFunctionMatrix([-tf1], (1, 1), y)
-    tfm4 = TransferFunctionMatrix([[tf1, -tf2, -tf3], [tf3, -tf4, tf2]], (2, 3), y)
+    tfm4 = TransferFunctionMatrix(((tf1, -tf2, -tf3), (tf3, -tf4, tf2)), (2, 3), y)
     tfm5 = TransferFunctionMatrix([[tf1, tf2], [tf3, -tf4], [-tf2, -tf1]], (3, 2), y)
-    tfm6 = TransferFunctionMatrix([[-tf2, -tf1], [tf4, -tf3], [tf1, tf2]], (3, 2), y)
-    tfm7 = TransferFunctionMatrix([[-tf1, tf2], [-tf3, tf4], [tf2, tf1]])
+    tfm6 = TransferFunctionMatrix(((-tf2, -tf1), (tf4, -tf3), (tf1, tf2)), (3, 2), y)
 
     expected1 = \
 u("""\
@@ -2741,14 +2740,12 @@ u("""\
 ⎣    y + 5        x - y       2     ⎦\
 """)
     assert upretty(TransferFunctionMatrix([tf1, tf2])) == expected1 == \
-        upretty(TransferFunctionMatrix(Matrix([tf1, tf2]))) == upretty(TransferFunctionMatrix((tf1, tf2)))
+        upretty(TransferFunctionMatrix((tf1, tf2)))
     assert upretty(TransferFunctionMatrix([tf1, tf2, -tf3])) == expected2 == \
-        upretty(TransferFunctionMatrix(Matrix([tf1, tf2, -tf3]))) == \
         upretty(TransferFunctionMatrix((tf1, tf2, -tf3)))
     assert upretty(TransferFunctionMatrix([[tf1, tf2], [tf3, tf4], [tf5, tf6]])) == expected3 == \
         upretty(TransferFunctionMatrix(((tf1, tf2), (tf3, tf4), (tf5, tf6))))
-    assert upretty(TransferFunctionMatrix([[tf2, tf1, tf4], [-tf3, -tf5, -tf6]])) == expected4 == \
-        upretty(TransferFunctionMatrix(Matrix([[tf2, tf1, tf4], [-tf3, -tf5, -tf6]])))
+    assert upretty(TransferFunctionMatrix([[tf2, tf1, tf4], [-tf3, -tf5, -tf6]])) == expected4
 
 
 def test_pretty_order():
