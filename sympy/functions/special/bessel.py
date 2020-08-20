@@ -464,6 +464,8 @@ class besselk(BesselBase):
             return S.Zero
 
         if nu.is_integer:
+            if z is S.Infinity:
+                return S.Zero
             if nu.could_extract_minus_sign():
                 return besselk(-nu, z)
 

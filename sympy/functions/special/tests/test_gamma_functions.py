@@ -140,6 +140,9 @@ def test_lowergamma():
     assert conjugate(lowergamma(x, 0)) == 0
     assert unchanged(conjugate, lowergamma(x, -oo))
 
+    assert lowergamma(x, 1).series(x, oo, 3) == \
+        (1 + 1/(x + 1))*exp(-1)/x + O(x**(-3), (x, oo))
+
     assert lowergamma(
         x, y).rewrite(expint) == -y**x*expint(-x + 1, y) + gamma(x)
     k = Symbol('k', integer=True)

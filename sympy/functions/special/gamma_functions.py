@@ -364,6 +364,16 @@ class lowergamma(Function):
         if x not in (S.Zero, S.NegativeInfinity):
             return self.func(self.args[0].conjugate(), x.conjugate())
 
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy import O
+        s, z = self.args
+        if args0[0] is S.Infinity and not z.has(x):
+            coeff = z**s*exp(-z)
+            sum_expr = sum(z**k/rf(s, k + 1) for k in range(n - 1))
+            o = O(s**(-n - 1))
+            return coeff*sum_expr + o
+        return super()._eval_aseries(n, args0, x, logx)
+
     def _eval_rewrite_as_uppergamma(self, s, x, **kwargs):
         return gamma(s) - uppergamma(s, x)
 
@@ -525,6 +535,9 @@ class uppergamma(Function):
 
     def _eval_rewrite_as_lowergamma(self, s, x, **kwargs):
         return gamma(s) - lowergamma(s, x)
+
+    def _eval_rewrite_as_tractable(self, s, x, **kwargs):
+        return exp(loggamma(s)) - lowergamma(s, x)
 
     def _eval_rewrite_as_expint(self, s, x, **kwargs):
         from sympy import expint
