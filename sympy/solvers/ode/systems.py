@@ -115,22 +115,22 @@ def linodesolve_type(A, t, b=None):
     >>> b = Matrix([t, 1])
 
     >>> linodesolve_type(A, t)
-    {'antiderivative': None, 'type': 'type1'}
+    {'antiderivative': None, 'type_of_equation': 'type1'}
 
     >>> linodesolve_type(A, t, b=b)
-    {'antiderivative': None, 'type': 'type2'}
+    {'antiderivative': None, 'type_of_equation': 'type2'}
 
     >>> A_t = Matrix([[1, t], [-t, 1]])
 
     >>> linodesolve_type(A_t, t)
     {'antiderivative': Matrix([
     [      t, t**2/2],
-    [-t**2/2,      t]]), 'type': 'type3'}
+    [-t**2/2,      t]]), 'type_of_equation': 'type3'}
 
     >>> linodesolve_type(A_t, t, b=b)
     {'antiderivative': Matrix([
     [      t, t**2/2],
-    [-t**2/2,      t]]), 'type': 'type4'}
+    [-t**2/2,      t]]), 'type_of_equation': 'type4'}
 
     >>> A_non_commutative = Matrix([[1, t], [t, -1]])
     >>> linodesolve_type(A_non_commutative, t)
@@ -193,7 +193,9 @@ def _first_order_type5_6_subs(A, t, b=None):
 
         # Note: A simple way to check if a function is invertible
         # or not.
-        if isinstance(inverse, FiniteSet) and len(inverse) == 1:
+        if isinstance(inverse, FiniteSet) and not inverse.has(Piecewise)\
+            and len(inverse) == 1:
+
             A = factor_terms[1]
             if not is_homogeneous:
                 b = b / factor_terms[0]
@@ -554,7 +556,8 @@ def matrix_exp_jordan_form(A, t):
 
 
 # Note: To add a docstring example with tau
-def linodesolve(A, t, b=None, B=None, type="auto", doit=False, tau=None):
+def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
+                tau=None):
     r"""
     System of n equations linear first-order differential equations
 
@@ -631,7 +634,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False, tau=None):
 
     An additional feature of this function is, if someone wants to substitute for value of the independent
     variable, they can pass the substitution `tau` and the solution will have the independent variable
-    substituted with the passed expression.
+    substituted with the passed expression(`tau`).
 
     Parameters
     ==========
@@ -697,7 +700,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False, tau=None):
     to finally pass it to the solver.
 
     >>> system_info = linodesolve_type(A, x, b=b)
-    >>> sol_vector = linodesolve(A, x, b=b, B=system_info['antiderivative'], type=system_info['type'])
+    >>> sol_vector = linodesolve(A, x, b=b, B=system_info['antiderivative'], type=system_info['type_of_equation'])
 
     Now, we can prove if the solution is correct or not by using :obj:`sympy.solvers.ode.checkodesol()`
 
@@ -814,7 +817,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False, tau=None):
     if any(type == typ for typ in ["type2", "type4", "type6"]) and b is None:
         b = zeros(n, 1)
 
-    is_transformed = False
+    is_transformed = tau is not None
     passed_type = type
 
     if type == "auto":
@@ -1141,8 +1144,6 @@ def _second_order_subs_type1(A, b, funcs, t):
 
     U = Matrix([t*func.diff(t) - func for func in funcs])
 
-    # Note: to check the solution
-    # for non-homogeneous system
     sol = linodesolve(A, t, t*b)
     reduced_eqs = [Eq(u, s) for s, u in zip(sol, U)]
     reduced_eqs = canonical_odes(reduced_eqs, funcs, t)[0]
@@ -1464,6 +1465,9 @@ def _linear_ode_solver(match):
     tau = match.get('tau', None)
     t = match['t_'] if 't_' in match else t
     A = match['func_coeff']
+
+    # Note: To make B None when the matrix has constant
+    # coefficient
     B = match.get('commutative_antiderivative', None)
     type = match['type_of_equation']
 
@@ -1517,6 +1521,8 @@ def _higher_order_ode_solver(match):
             sol = _component_solver(new_eqs, new_funcs, t)
         except NotImplementedError:
             sol = None
+
+    # Note: To add solving with dsolve for one equation systems.
 
     if sol is None:
         return sol

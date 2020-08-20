@@ -6619,10 +6619,9 @@ def sysode_linear_2eq_order2(match_):
         sol = _linear_2eq_order2_type3(x, y, t, r, eq)
     elif match_['type_of_equation'] == 'type7':
         sol = _linear_2eq_order2_type7(x, y, t, r, eq)
-    elif match_['type_of_equation'] == 'type9':
-        sol = _linear_2eq_order2_type9(x, y, t, r, eq)
     return sol
 
+# Note: To remove type 3 solver completely.
 def _linear_2eq_order2_type3(x, y, t, r, eq):
     r"""
     These type of equation is used for describing the horizontal motion of a pendulum
