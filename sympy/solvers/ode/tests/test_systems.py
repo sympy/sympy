@@ -11,6 +11,7 @@ from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, line
                                        _is_commutative_anti_derivative, linodesolve,
                                        canonical_odes, dsolve_system, _component_division,
                                        _eqs2dict, _dict2graph)
+from sympy.functions import airyai, airybi
 from sympy.integrals.integrals import Integral
 from sympy.testing.pytest import ON_TRAVIS, raises, slow, skip, XFAIL
 
@@ -1409,6 +1410,12 @@ def test_higher_order_to_first_order():
                C3*t**(1 - sqrt(2))*(-sqrt(2) - 1) + C4*t**(1 + sqrt(2))*(-1 + sqrt(2))),
             Eq(g(t), C1*t**(ot - sqrt(5)/2)*(-sqrt(5)/2 - ot) + C2*t**(ot +
                sqrt(5)/2)*(-ot + sqrt(5)/2))]
+    assert dsolve(eqs1) == sol1
+    assert checksysodesol(eqs1, sol1) == (True, [0, 0])
+
+    # Solving systems using dsolve separately
+    eqs1 = [Eq(Derivative(f(t), (t, 2)), t*f(t)), Eq(Derivative(g(t), (t, 2)), t*g(t))]
+    sol1 = [Eq(f(t), C1*airyai(t) + C2*airybi(t)), Eq(g(t), C1*airyai(t) + C2*airybi(t))]
     assert dsolve(eqs1) == sol1
     assert checksysodesol(eqs1, sol1) == (True, [0, 0])
 

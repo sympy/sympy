@@ -244,7 +244,7 @@ from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs, _mexpand)
 from sympy.core.multidimensional import vectorize
-from sympy.core.numbers import NaN, zoo, I, Number
+from sympy.core.numbers import NaN, zoo, Number
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
@@ -258,7 +258,6 @@ from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import wronskian
 from sympy.polys import (Poly, RootOf, rootof, terms_gcd,
                          PolynomialError, lcm, roots, gcd)
-from sympy.polys.polyroots import roots_quartic
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
 from sympy.series.series import series
@@ -2051,12 +2050,6 @@ def check_linear_2eq_order2(eq, func, func_coef):
     fc = func_coef
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     r = dict()
-    a = Wild('a', exclude=[1/t])
-    b = Wild('b', exclude=[1/t**2])
-    u = Wild('u', exclude=[t, t**2])
-    v = Wild('v', exclude=[t, t**2])
-    w = Wild('w', exclude=[t, t**2])
-    p = Wild('p', exclude=[t, t**2])
     r['a1'] = fc[0,x(t),2] ; r['a2'] = fc[1,y(t),2]
     r['b1'] = fc[0,x(t),1] ; r['b2'] = fc[1,x(t),1]
     r['c1'] = fc[0,y(t),1] ; r['c2'] = fc[1,y(t),1]

@@ -1485,6 +1485,8 @@ def _select_equations(eqs, funcs, key=lambda x: x):
 
 
 def _higher_order_ode_solver(match):
+    from sympy.solvers.ode.ode import dsolve
+
     eqs = match["eq"]
     funcs = match["func"]
     t = match["t"]
@@ -1522,9 +1524,13 @@ def _higher_order_ode_solver(match):
         except NotImplementedError:
             sol = None
 
-    # Note: To add solving with dsolve for one equation systems.
-
     if sol is None:
+        if len(eqs) == 1:
+            try:
+                sol = [dsolve(eqs[0], func=funcs[0])]
+            except NotImplementedError:
+                sol = None
+
         return sol
 
     is_second_order_type2 = is_second_order and type == "type2"
