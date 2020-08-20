@@ -1422,7 +1422,7 @@ def test_higher_order_to_first_order():
 
 def test_second_order_to_first_order():
     f, g = symbols("f g", cls=Function)
-    x, t, x_, t_, d = symbols("x t x_ t_ d")
+    x, t, x_, t_, d, a, m = symbols("x t x_ t_ d a m")
 
     # Type 1
     # Note: These test cases will be edited when its decided
@@ -1465,6 +1465,14 @@ def test_second_order_to_first_order():
                 exp(-sin(exp(t_)))/2 + C3*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2, (t_, log(t))))]
     assert dsolve(eqs4) == sol4
     assert checksysodesol(eqs4, sol4) == (True, [0, 0])
+
+    # Regression Test case for sympy#19238
+    # https://github.com/sympy/sympy/issues/19238
+    eqs5 = [Eq(Derivative(g(t), (t, 2)), a*m), Eq(Derivative(f(t), (t, 2)), 0)]
+    sol5 = [Eq(g(t), C1 + C2*t + t*Integral(a*m*exp(-t_), (t_, log(t))) + Integral(-a*m, (t_, log(t)))),
+            Eq(f(t), C3 + C4*t + t*Integral(0, (t_, log(t))) + Integral(0, (t_, log(t))))]
+    assert dsolve(eqs5) == sol5
+    assert checksysodesol(eqs5, sol5) == (True, [0, 0])
 
     # Type 2
     eqs1 = [Eq(Derivative(f(t), (t, 2)), f(t)/t**4), Eq(Derivative(g(t), (t, 2)), d*g(t)/t**4)]
