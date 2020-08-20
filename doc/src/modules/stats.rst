@@ -141,7 +141,6 @@ Interface
 .. autofunction:: kurtosis
 .. autofunction:: skewness
 .. autofunction:: correlation
-.. autofunction:: entropy
 .. autofunction:: sympy.stats.rv.sampling_density
 .. autofunction:: sympy.stats.rv.sampling_P
 .. autofunction:: sympy.stats.rv.sampling_E
