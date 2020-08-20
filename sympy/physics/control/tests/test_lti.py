@@ -939,7 +939,6 @@ def test_TransferFunctionMatrix_addition_and_subtraction():
     # subtraction
     assert tfm1 - tfm2 == Parallel(tfm1, -tfm2)
     assert tfm3 - tfm1 == Parallel(tfm3, -tfm1)
-    assert tfm2 - (tfm3 + tfm1) == Parallel(tfm2, -tfm3, -tfm1)
 
     raises(ValueError, lambda: tfm1 - Matrix([1, 2, 3]))
     raises(ValueError, lambda: tfm2 - c)

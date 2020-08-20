@@ -562,6 +562,31 @@ class Series(Basic):
                                 a[0] = res.args[0][0][i] * arg.args[0][i]
                             else:
                                 a[0] += res.args[0][0][i] * arg.args[0][i]
+
+                    elif res.num_outputs == 1 or arg.num_inputs == 1:
+                        if res.num_outputs == 1:
+                            a = [[None] * arg.num_inputs]
+
+                            for j in range(arg.num_inputs):
+                                for k in range(arg.num_outputs):
+                                    if a[0][j] is None:
+                                        a[0][j] = res.args[0][0][j] * arg.args[0][k][j]
+                                    else:
+                                        a[0][j] += res.args[0][0][j] * arg.args[0][k][j]
+
+                        else:
+                            a = [None] * res.num_outputs
+
+                            for i in range(res.num_outputs):
+                                for k in range(arg.num_outputs):
+                                    if a[i] is None:
+                                        if res.num_inputs == 1:
+                                            a[i] = res.args[0][i] * arg.args[0][k]
+                                        else:
+                                            a[i] = res.args[0][i][k] * arg.args[0][k]
+                                    else:
+                                        a[i] += res.args[0][i][k] * arg.args[0][k]
+
                     else:
                         a = [[None] * arg.num_inputs for _ in range(res.num_outputs)]
                         for i in range(res.num_outputs):
@@ -1334,11 +1359,15 @@ class TransferFunctionMatrix(Basic):
     __rmul__ = __mul__
 
     def doit(self, **kwargs):
-        arg_matrix = self.args[0]
         if self.num_inputs == 1:
+            arg_matrix = list(self.args[0])
             for row in range(self.num_outputs):
                 arg_matrix[row] = arg_matrix[row].doit()
         else:
+            arg_matrix = []
+            for row in range(self.num_outputs):
+                arg_matrix.append(list(self.args[0][row]))
+
             for row in range(self.num_outputs):
                 for col in range(self.num_inputs):
                     arg_matrix[row][col] = arg_matrix[row][col].doit()
