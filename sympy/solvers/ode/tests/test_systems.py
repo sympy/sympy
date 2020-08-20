@@ -58,12 +58,13 @@ def test_linear_ode_to_matrix():
 
 def test_neq_nth_linear_constant_coeff_match():
     x, y, z, w = symbols('x, y, z, w', cls=Function)
-    t = Symbol('t')
+    t, k, l = symbols('t k l')
     x1 = diff(x(t), t)
     y1 = diff(y(t), t)
     z1 = diff(z(t), t)
     w1 = diff(w(t), t)
     x2 = diff(x(t), t, t)
+    y2 = diff(y(t), t, t)
     funcs = [x(t), y(t)]
     funcs_2 = funcs + [z(t), w(t)]
 
@@ -324,8 +325,8 @@ def test_neq_nth_linear_constant_coeff_match():
     sol2 = {'no_of_equation': 2, 'eq': (Eq((4*t**2 + 7*t + 1)**2*Derivative(x(t), (t, 2)), 5*x(t) + 35*y(t)),
             Eq((4*t**2 + 7*t + 1)**2*Derivative(y(t), (t, 2)), x(t) + 9*y(t))), 'func': [x(t), y(t)], 'order':
             {x(t): 2, y(t): 2}, 'is_linear': True, 'is_homogeneous': True, 'is_general': True,
-            'type_of_equation': 'type2', 'A0': Matrix([ [53/4,   35], [   1, 69/4]]), 'g(t)': sqrt(4*t**2 + 7*t
-            + 1), 'tau': sqrt(33)*log(t - sqrt(33)/8 + 7/8)/33 - sqrt(33)*log(t + sqrt(33)/8 + 7/8)/33,
+            'type_of_equation': 'type2', 'A0': Matrix([ [Rational(53, 4),   35], [   1, Rational(69, 4)]]), 'g(t)': sqrt(4*t**2 + 7*t
+            + 1), 'tau': sqrt(33)*log(t - sqrt(33)/8 + Rational(7, 8))/33 - sqrt(33)*log(t + sqrt(33)/8 + Rational(7, 8))/33,
             'is_transformed': True, 't_': t_, 'is_second_order': True, 'is_higher_order': True}
     assert neq_nth_linear_constant_coeff_match(eq2, funcs, t) == sol2
 
@@ -338,6 +339,14 @@ def test_neq_nth_linear_constant_coeff_match():
             Matrix([ [-t*log(t), -t*exp(t)], [    -t**3,     -t**2]]), 'is_second_order': True,
             'is_higher_order': True}
     assert neq_nth_linear_constant_coeff_match(eq3, funcs, t) == sol3
+
+    eq4 = (Eq(x2, k*x(t) - l*y1), Eq(y2, l*x1 + k*y(t)))
+    sol4 = {'no_of_equation': 2, 'eq': (Eq(Derivative(x(t), (t, 2)), k*x(t) - l*Derivative(y(t), t)),
+            Eq(Derivative(y(t), (t, 2)), k*y(t) + l*Derivative(x(t), t))), 'func': [x(t), y(t)], 'order': {x(t):
+            2, y(t): 2}, 'is_linear': True, 'is_homogeneous': True, 'is_general': True, 'type_of_equation':
+            'type0', 'is_second_order': True, 'is_higher_order': True}
+    assert neq_nth_linear_constant_coeff_match(eq4, funcs, t) == sol4
+
 
     # Multiple matchs
 
@@ -1033,6 +1042,7 @@ def test_sysode_linear_neq_order1_type2():
     assert checksysodesol(eq9, sol9) == (True, [0, 0, 0])
 
     # Simpsol and Solsimp testing
+    # Note: To remove these dependencies
     _x1 = sqrt(2)
     _x2 = exp(2*_x1*t/(a*b))
     _x3 = 4*C3*_x2*a*b
@@ -1402,7 +1412,17 @@ def test_higher_order_to_first_order():
         assert dsolve(eq3) == sol3
     assert checksysodesol(eq3, sol3) == (True, [0, 0])
 
+    eqs4 = [Eq(4*x(t) + Derivative(x(t), (t, 2)) + 8*Derivative(y(t), t), 0), Eq(4*y(t) - 8*Derivative(x(t), t) +
+                Derivative(y(t), (t, 2)), 0)]
+    sol4 = [Eq(y(t), (1 - sqrt(5)/2)*(-C1*sin(2*t*sqrt(4*sqrt(5) + 9)) + C2*cos(2*t*sqrt(4*sqrt(5) + 9))) + (1
+                + sqrt(5)/2)*(-C3*sin(2*t*sqrt(9 - 4*sqrt(5))) + C4*cos(2*t*sqrt(9 - 4*sqrt(5))))),
+            Eq(x(t), (C1*cos(2*t*sqrt(4*sqrt(5) + 9)) + C2*sin(2*t*sqrt(4*sqrt(5) + 9)))/(2*sqrt(4*sqrt(5) + 9)) +
+                (C3*cos(2*t*sqrt(9 - 4*sqrt(5))) + C4*sin(2*t*sqrt(9 - 4*sqrt(5))))/(2*sqrt(9 - 4*sqrt(5))))]
+    assert dsolve(eqs4) == sol4
+    assert checksysodesol(eqs4, sol4) == (True, [0, 0])
+
     # Euler Systems
+    # Note: To add examples of euler systems solver with non-homogeneous term.
     ot = Rational(1, 2)
     eqs1 = [Eq(Derivative(f(t), (t, 2)), Derivative(f(t), t)/t + f(t)/t**2 + g(t)/t**2),
             Eq(Derivative(g(t), (t, 2)), g(t)/t**2)]
@@ -1425,8 +1445,6 @@ def test_second_order_to_first_order():
     x, t, x_, t_, d, a, m = symbols("x t x_ t_ d a m")
 
     # Type 1
-    # Note: These test cases will be edited when its decided
-    # what is to be done with these types of system(type6 first order)
 
     eqs1 = [Eq(f(x).diff(x, 2), 2/x *(x*g(x).diff(x) - g(x))),
            Eq(g(x).diff(x, 2),-2/x *(x*f(x).diff(x) - f(x)))]
@@ -1468,9 +1486,11 @@ def test_second_order_to_first_order():
 
     # Regression Test case for sympy#19238
     # https://github.com/sympy/sympy/issues/19238
+    # Note: When the doit method is removed, these particular types of systems
+    # can be divided first so that we have lesser number of big matrices.
     eqs5 = [Eq(Derivative(g(t), (t, 2)), a*m), Eq(Derivative(f(t), (t, 2)), 0)]
-    sol5 = [Eq(g(t), C1 + C2*t + t*Integral(a*m*exp(-t_), (t_, log(t))) + Integral(-a*m, (t_, log(t)))),
-            Eq(f(t), C3 + C4*t + t*Integral(0, (t_, log(t))) + Integral(0, (t_, log(t))))]
+    sol5 = [Eq(g(t), C1 + C2*t + t*Integral(a*m, t) + Integral(-a*m*t, t)),
+            Eq(f(t), C3 + C4*t + t*Integral(0, t) + Integral(0, t))]
     assert dsolve(eqs5) == sol5
     assert checksysodesol(eqs5, sol5) == (True, [0, 0])
 
@@ -2245,3 +2265,23 @@ def test_higher_order1_slow1_check():
 
     eq, sol = _higher_order_slow1()
     assert checksysodesol(eq, sol) == (True, [0, 0])
+
+
+# Note: To be fixed later by introducing a new way to
+# solve X'' = f(t)*A*X
+def test_second_order_raises1():
+    x, y, z = symbols('x, y, z', cls=Function)
+    t, l = symbols('t, l')
+
+    # Not solvable by the new method
+    # Note: To add a new technique for solving systems of type: X'' = t*A*X + b
+    eq8 = (Eq(diff(x(t),t,t), t*(4*x(t) + 9*y(t))), Eq(diff(y(t),t,t), t*(12*x(t) - 6*y(t))))
+
+    # sol8 = [Eq(x(t), -sqrt(133)*(-4*C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + 4*C1*airyai(-t*(1 + \
+    # sqrt(133))**(S(1)/3)) - 4*C2*airybi(t*(-1 + sqrt(133))**(S(1)/3)) + 4*C2*airybi(-t*(1 + sqrt(133))**(S(1)/3)) +\
+    # (-sqrt(133) - 1)*(C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + C2*airybi(t*(-1 + sqrt(133))**(S(1)/3))) - (-1 +\
+    # sqrt(133))*(C1*airyai(-t*(1 + sqrt(133))**(S(1)/3)) + C2*airybi(-t*(1 + sqrt(133))**(S(1)/3))))/3192), \
+    # Eq(y(t), -sqrt(133)*(-C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + C1*airyai(-t*(1 + sqrt(133))**(S(1)/3)) -\
+    # C2*airybi(t*(-1 + sqrt(133))**(S(1)/3)) + C2*airybi(-t*(1 + sqrt(133))**(S(1)/3)))/266)]
+
+    raises(NotImplementedError, dsolve_system(eq8))

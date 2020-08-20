@@ -2063,12 +2063,7 @@ def check_linear_2eq_order2(eq, func, func_coef):
     r['f1'] = const[0]
     r['f2'] = const[1]
 
-    if r['b1']==r['e1']==r['c2']==r['d2']==0 and all(not r[k].has(t) \
-    for k in 'a1 a2 b2 c1 d1 e2'.split()) and r['c1'] == -r['b2'] and \
-    r['d1'] == r['e2']:
-        return "type3"
-
-    elif not cancel(r['b1']/r['c1']).has(t) and not cancel(r['b2']/r['c2']).has(t) and not \
+    if not cancel(r['b1']/r['c1']).has(t) and not cancel(r['b2']/r['c2']).has(t) and not \
     cancel(r['b1']*r['a2']/(r['b2']*r['a1'])).has(t) and r['d1']==r['d2']==r['e1']==r['e2']==0:
         return "type7"
 
@@ -6608,36 +6603,9 @@ def sysode_linear_2eq_order2(match_):
                 const[i] += j
     r['e1'] = -const[0]
     r['e2'] = -const[1]
-    if match_['type_of_equation'] == 'type3':
-        sol = _linear_2eq_order2_type3(x, y, t, r, eq)
-    elif match_['type_of_equation'] == 'type7':
+    if match_['type_of_equation'] == 'type7':
         sol = _linear_2eq_order2_type7(x, y, t, r, eq)
     return sol
-
-# Note: To remove type 3 solver completely.
-def _linear_2eq_order2_type3(x, y, t, r, eq):
-    r"""
-    These type of equation is used for describing the horizontal motion of a pendulum
-    taking into account the Earth rotation.
-    The solution is given with `a^2 + 4b > 0`:
-
-    .. math:: x = C_1 \cos(\alpha t) + C_2 \sin(\alpha t) + C_3 \cos(\beta t) + C_4 \sin(\beta t)
-
-    .. math:: y = -C_1 \sin(\alpha t) + C_2 \cos(\alpha t) - C_3 \sin(\beta t) + C_4 \cos(\beta t)
-
-    where `C_1,...,C_4` and
-
-    .. math:: \alpha = \frac{1}{2} a + \frac{1}{2} \sqrt{a^2 + 4b}, \beta = \frac{1}{2} a - \frac{1}{2} \sqrt{a^2 + 4b}
-
-    """
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    if r['b1']**2 - 4*r['c1'] > 0:
-        r['a'] = r['b1'] ; r['b'] = -r['c1']
-        alpha = r['a']/2 + sqrt(r['a']**2 + 4*r['b'])/2
-        beta = r['a']/2 - sqrt(r['a']**2 + 4*r['b'])/2
-        sol1 = C1*cos(alpha*t) + C2*sin(alpha*t) + C3*cos(beta*t) + C4*sin(beta*t)
-        sol2 = -C1*sin(alpha*t) + C2*cos(alpha*t) - C3*sin(beta*t) + C4*cos(beta*t)
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 def _linear_2eq_order2_type7(x, y, t, r, eq):
     r"""

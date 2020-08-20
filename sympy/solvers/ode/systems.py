@@ -84,7 +84,7 @@ def linodesolve_type(A, t, b=None):
 
     If the system is non-constant coefficient homogeneous, then "type3" is returned
 
-    If the system is non-constnt coefficient non-homogeneous, then "type4" is returned
+    If the system is non-constant coefficient non-homogeneous, then "type4" is returned
 
     If the system has a non-constant coefficient matrix which can be factorized into constant
     coefficient matrix, then "type5" or "type6" is returned for when the system is homogeneous or
@@ -516,7 +516,7 @@ def matrix_exp_jordan_form(A, t):
 
     eigenchains = jordan_chains(A)
 
-    # Needed for consistency across Python versions:
+    # Needed for consistency across Python versions
     eigenchains_iter = sorted(eigenchains.items(), key=default_sort_key)
     isreal = not A.has(I)
 
@@ -1054,9 +1054,6 @@ def _get_poly_coeffs(poly, order):
     return cs
 
 
-# Returns list of match dictionaries for each
-# canonical system from the system of ODEs
-# passed.
 def _match_second_order_type(A1, A0, t, b=None):
     r"""
     Works only for second order system in its canonical form.
@@ -1334,6 +1331,8 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
     if not is_homogeneous:
         match['rhs'] = b
 
+    is_constant = all(_matrix_is_constant(A_, t) for A_ in As)
+
     # The match['is_linear'] check will be added in the future when this
     # function becomes ready to deal with non-linear systems of ODEs
 
@@ -1370,7 +1369,10 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
 
             match['is_second_order'] = True
 
-        if match['type_of_equation'] == "type0":
+        # If system is constant, then no need to check if its in euler
+        # form or not. It will be easier and faster to directly proceed
+        # to solve it.
+        if match['type_of_equation'] == "type0" and not is_constant:
             is_euler = _is_euler_system(As, t)
             if is_euler:
                 t_ = Symbol('{}_'.format(t))
@@ -1556,7 +1558,7 @@ def _higher_order_ode_solver(match):
 
 # Returns: List of equations or None
 # If None is returned by this solver, then the system
-# of ODEs cannot be solved by dsolve_system.
+# of ODEs cannot be solved directly by dsolve_system.
 def _strong_component_solver(eqs, funcs, t):
     match = neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=True)
 
@@ -1620,8 +1622,6 @@ def _weak_component_solver(wcc, t):
 
 
 # Returns: List of Equations(a solution)
-# To add test cases for component division
-# when we have a nonlinear sysode solver
 def _component_solver(eqs, funcs, t):
     components = _component_division(eqs, funcs, t)
     sol = []
@@ -1699,9 +1699,6 @@ def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
         eqs, funcs = _second_order_subs_type2(A0, funcs, t_)
         sys_order = {func: 2 for func in funcs}
 
-    # More types to be added: Euler systems and a method
-    # to factor a term from the second order system.
-
     return _higher_order_to_first_order(eqs, sys_order, t, funcs=funcs)
 
 
@@ -1713,7 +1710,7 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0"):
         t_ = Symbol('{}_'.format(t))
         new_funcs = [Function(Dummy('{}_'.format(f.func.__name__)))(t_) for f in funcs]
         max_order = max(sys_order[func] for func in funcs)
-        subs_dict = {func: new_func * t**max_order for func, new_func in zip(funcs, new_funcs)}
+        subs_dict = {func: new_func for func, new_func in zip(funcs, new_funcs)}
         subs_dict[t] = exp(t_)
 
         free_function = Function(Dummy())
@@ -1747,7 +1744,7 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0"):
             coeff_dict = _get_coeffs_from_subs_expression(expr)
             coeffs = [coeff_dict[order] if order in coeff_dict else 0 for order in range(o + 1)]
             expr_to_subs = sum(free_function(t_).diff(t_, i) * c for i, c in
-                        enumerate(coeffs)) * t**(max_order - o)
+                        enumerate(coeffs)) / t**o
             subs_dict.update({f.diff(t, o): expr_to_subs.subs(free_function(t_), nf)
                               for f, nf in zip(funcs, new_funcs)})
 
