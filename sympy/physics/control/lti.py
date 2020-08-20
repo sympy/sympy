@@ -547,9 +547,36 @@ class Series(Basic):
             if res is None:
                 res = arg
             else:
-                num_ = arg.num * res.num
-                den_ = arg.den * res.den
-                res = TransferFunction(num_, den_, self.var)
+                if self.is_SISO:
+                    num_ = arg.num * res.num
+                    den_ = arg.den * res.den
+                    res = TransferFunction(num_, den_, self.var)
+                else:
+                    # Now we multiply two transfer function matrices...
+                    # If we have two TFMs with shape (a, b) and (b, d), respectively,
+                    # then the resultant TFM will be of shape (a, d).
+                    if res.num_outputs == 1 and arg.num_inputs == 1:
+                        a = [None]
+                        for i in range(res.num_inputs):
+                            if a[0] is None:
+                                a[0] = res.args[0][0][i] * arg.args[0][i]
+                            else:
+                                a[0] += res.args[0][0][i] * arg.args[0][i]
+                    else:
+                        a = [[None] * arg.num_inputs for _ in range(res.num_outputs)]
+                        for i in range(res.num_outputs):
+                            for j in range(arg.num_inputs):
+                                for k in range(arg.num_outputs):
+                                    if a[i][j] is None:     # First operation.
+                                        if res.num_inputs == 1:
+                                            a[i][j] = res.args[0][i] * arg.args[0][k][j]
+                                        else:
+                                            a[i][j] = res.args[0][i][k] * arg.args[0][k][j]
+                                    else:
+                                        a[i][j] += res.args[0][i][k] * arg.args[0][k][j]
+
+                    res = TransferFunctionMatrix(a, (res.num_outputs, arg.num_inputs), arg.var)
+
         return res
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
@@ -557,6 +584,13 @@ class Series(Basic):
 
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series)):
+            if isinstance(other, Series):
+                if ((self.is_SISO and not other.is_SISO) or (not self.is_SISO and other.is_SISO)):
+                    raise ValueError("Both Series objects should either handle SISO or MIMO"
+                        " transfer function.")
+
+            if not self.shape == other.shape:
+                raise ShapeError("Shapes of operands are not compatible for addition.")
             if not self.var == other.var:
                 raise ValueError("All the transfer functions should use the same complex variable "
                     "of the Laplace transform.")
