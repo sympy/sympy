@@ -460,12 +460,10 @@ class besselk(BesselBase):
                 return S.ComplexInfinity
             elif re(nu).is_zero:
                 return S.NaN
-        if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
+        if z in (S.Infinity, I*S.Infinity, I*S.NegativeInfinity):
             return S.Zero
 
         if nu.is_integer:
-            if z is S.Infinity:
-                return S.Zero
             if nu.could_extract_minus_sign():
                 return besselk(-nu, z)
 

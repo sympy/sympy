@@ -140,8 +140,27 @@ def test_lowergamma():
     assert conjugate(lowergamma(x, 0)) == 0
     assert unchanged(conjugate, lowergamma(x, -oo))
 
-    assert lowergamma(x, 1).series(x, oo, 3) == \
-        (1 + 1/(x + 1))*exp(-1)/x + O(x**(-3), (x, oo))
+    assert lowergamma(0, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(S(1)/3, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(1, x, evaluate=False)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(x, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(x + 1, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(1/x, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(0, x + 1)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(S(1)/3, x + 1)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(1, x + 1, evaluate=False)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(x, x + 1)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(x + 1, x + 1)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(1/x, x + 1)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(0, 1/x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(S(1)/3, 1/x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(1, 1/x, evaluate=False)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(x, 1/x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(x + 1, 1/x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(1/x, 1/x)._eval_is_meromorphic(x, 0) == False
+
+    assert lowergamma(x, 2).series(x, oo, 3) == \
+        2**x*(1 + 2/(x + 1))*exp(-2)/x + O(exp(x*log(2))/x**3, (x, oo))
 
     assert lowergamma(
         x, y).rewrite(expint) == -y**x*expint(-x + 1, y) + gamma(x)
