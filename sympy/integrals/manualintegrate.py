@@ -535,14 +535,14 @@ def _parts_rule(integrand, symbol):
 
         return pull_out_u_rl
 
-    liate_rules = [pull_out_u(sympy.log), pull_out_u(sympy.atan, sympy.asin, sympy.acos),
+    liate_rules = [pull_out_u(sympy.log), pull_out_u(sympy.atan, sympy.asin, sympy.acos, sympy.acot, sympy.acsc, sympy.asec),
                    pull_out_algebraic, pull_out_u(sympy.sin, sympy.cos),
                    pull_out_u(sympy.exp)]
 
 
     dummy = sympy.Dummy("temporary")
     # we can integrate log(x) and atan(x) by setting dv = 1
-    if isinstance(integrand, (sympy.log, sympy.atan, sympy.asin, sympy.acos)):
+    if isinstance(integrand, (sympy.log, sympy.atan, sympy.asin, sympy.acos, sympy.acsc, sympy.asec, sympy.acot)):
         integrand = dummy * integrand
 
     for index, rule in enumerate(liate_rules):
@@ -1272,6 +1272,7 @@ def integral_steps(integrand, symbol, **options):
         else:
             for cls in (sympy.Pow, sympy.Symbol, sympy.exp, sympy.log,
                         sympy.Add, sympy.Mul, sympy.atan, sympy.asin,
+                        sympy.asec, sympy.acsc, sympy.acot,
                         sympy.acos, sympy.Heaviside, OrthogonalPolynomial):
                 if isinstance(integrand, cls):
                     return cls
@@ -1312,7 +1313,9 @@ def integral_steps(integrand, symbol, **options):
                     integral_is_subclass(sympy.Mul, sympy.Pow),
                     cancel_rule),
                 condition(
-                    integral_is_subclass(sympy.Mul, sympy.log, sympy.atan, sympy.asin, sympy.acos),
+                    integral_is_subclass(sympy.Mul, sympy.log,
+                    sympy.atan, sympy.asin, sympy.acos,
+                    sympy.acsc, sympy.asec, sympy.acot),
                     parts_rule),
                 condition(
                     integral_is_subclass(sympy.Mul, sympy.Pow),
@@ -1430,6 +1433,8 @@ def eval_piecewise(substeps, integrand, symbol):
 @evaluates(TrigSubstitutionRule)
 def eval_trigsubstitution(theta, func, rewritten, substep, restriction, integrand, symbol):
     func = func.subs(sympy.sec(theta), 1/sympy.cos(theta))
+    func = func.subs(sympy.csc(theta), 1/sympy.sin(theta))
+    func = func.subs(sympy.cot(theta), 1/sympy.tan(theta))
 
     trig_function = list(func.find(TrigonometricFunction))
     assert len(trig_function) == 1
