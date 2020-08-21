@@ -605,6 +605,19 @@ class Series(Basic):
         return res
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        """ Series(tfm1, tfm2, Parallel(tfm3, tfm4, ...), ...) not allowed. """
+        if not self.is_SISO:
+            raise ValueError("Only transfer functions or a collection of transfer functions"
+                " is allowed in the arguments.")
+
+        return self.doit()
+
+    def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
+        """ Series(tf1, tf2, Parallel(tf3, tf4, ...), ...) not allowed. """
+        if self.is_SISO:
+            raise ValueError("Only transfer function matrices or a collection of transfer function"
+                " matrices is allowed in the arguments.")
+
         return self.doit()
 
     def __add__(self, other):
@@ -905,6 +918,19 @@ class Parallel(Basic):
         return res
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        """ Parallel(tfm1, tfm2, Series(tfm3, tfm4, ...), ...) not allowed. """
+        if not self.is_SISO:
+            raise ValueError("Only transfer functions or a collection of transfer functions"
+                " is allowed in the arguments.")
+
+        return self.doit()
+
+    def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
+        """ Parallel(tf1, tf2, Series(tf3, tf4, ...), ...) not allowed. """
+        if self.is_SISO:
+            raise ValueError("Only transfer function matrices or a collection of transfer function"
+                " matrices is allowed in the arguments.")
+
         return self.doit()
 
     def __add__(self, other):
