@@ -362,7 +362,7 @@ def real_root(arg, n=None, evaluate=None):
             if arg < 0 and n % 2 == 0:
                 raise ValueError("The arguments ('%s', '%s') result in an nonreal result" %(arg, n))
         return Piecewise(
-            (arg, Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
+            (root(arg, n, evaluate=evaluate), Or(Eq(n, S.One), Eq(n, S.NegativeOne))),
             (Mul(sign(arg), root(Abs(arg), n, evaluate=evaluate), evaluate=evaluate), True))
     rv = sympify(arg)
     n1pow = Transform(lambda x: -(-x.base)**x.exp,
