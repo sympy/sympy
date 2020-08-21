@@ -2421,17 +2421,6 @@ u("""\
 ⎢──────     ─  ⎥   ⎢ ───  ⎥\n\
 ⎣-x + y     3  ⎦   ⎣  3   ⎦\
 """)
-    expected6 = \
-u("""\
-⎡ x + y   x - y⎤   ⎡ 2    ⎤            \n\
-⎢───────  ─────⎥   ⎢x  + y⎥            \n\
-⎢x - 2⋅y  x + y⎥   ⎢──────⎥            \n\
-⎢              ⎥   ⎢-x + y⎥   ⎡ -x - y⎤\n\
-⎢ 2            ⎥ x ⎢      ⎥ x ⎢───────⎥\n\
-⎢x  + y     2  ⎥   ⎢ -2   ⎥   ⎣x - 2⋅y⎦\n\
-⎢──────     ─  ⎥   ⎢ ───  ⎥            \n\
-⎣-x + y     3  ⎦   ⎣  3   ⎦            \
-""")
     expected7 = \
 u("""\
                                                  ⎛⎡ x + y    x - y ⎤   ⎡ x - y    x + y ⎤⎞\n\
@@ -2447,13 +2436,53 @@ u("""\
                    ⎣-x + y     3      x + y  ⎦   ⎜⎢──────   ───────⎥   ⎢───────  ────── ⎥⎟\n\
                                                  ⎝⎣x + y    x - 2⋅y⎦   ⎣x - 2⋅y  x + y  ⎦⎠\
 """)
+    expected6 = \
+u("""\
+⎡ x + y   x - y⎤   ⎡ 2    ⎤            \n\
+⎢───────  ─────⎥   ⎢x  + y⎥            \n\
+⎢x - 2⋅y  x + y⎥   ⎢──────⎥            \n\
+⎢              ⎥   ⎢-x + y⎥   ⎡ -x - y⎤\n\
+⎢ 2            ⎥ x ⎢      ⎥ x ⎢───────⎥\n\
+⎢x  + y     2  ⎥   ⎢ -2   ⎥   ⎣x - 2⋅y⎦\n\
+⎢──────     ─  ⎥   ⎢ ───  ⎥            \n\
+⎣-x + y     3  ⎦   ⎣  3   ⎦            \
+""")
+    expected8 = \
+u("""\
+⎡⎛          ⎛ 2    ⎞                ⎞          ⎤\n\
+⎢⎜⎛ x + y ⎞ ⎜x  + y⎟   ⎛x - y⎞ ⎛-2 ⎞⎟ ⎛ -x - y⎞⎥\n\
+⎢⎜⎜───────⎟⋅⎜──────⎟ + ⎜─────⎟⋅⎜───⎟⎟⋅⎜───────⎟⎥\n\
+⎢⎝⎝x - 2⋅y⎠ ⎝-x + y⎠   ⎝x + y⎠ ⎝ 3 ⎠⎠ ⎝x - 2⋅y⎠⎥\n\
+⎢                                              ⎥\n\
+⎢  ⎛⎛ 2    ⎞ ⎛ 2    ⎞            ⎞             ⎥\n\
+⎢  ⎜⎜x  + y⎟ ⎜x  + y⎟   ⎛2⎞ ⎛-2 ⎞⎟ ⎛ -x - y⎞   ⎥\n\
+⎢  ⎜⎜──────⎟⋅⎜──────⎟ + ⎜─⎟⋅⎜───⎟⎟⋅⎜───────⎟   ⎥\n\
+⎣  ⎝⎝-x + y⎠ ⎝-x + y⎠   ⎝3⎠ ⎝ 3 ⎠⎠ ⎝x - 2⋅y⎠   ⎦\
+""")
+    expected9 = \
+u("""\
+                            ⎡ -x - y   -x + y ⎤\n\
+                            ⎢───────   ────── ⎥\n\
+⎡                  2    ⎤   ⎢x - 2⋅y   x + y  ⎥\n\
+⎢ -x - y   x - y  x  + y⎥   ⎢                 ⎥\n\
+⎢───────   ─────  ──────⎥   ⎢   2             ⎥\n\
+⎢x - 2⋅y   x + y  -x + y⎥   ⎢- x  - y     2   ⎥\n\
+⎢                       ⎥ x ⎢────────     ─   ⎥\n\
+⎢   2                   ⎥   ⎢ -x + y      3   ⎥\n\
+⎢- x  - y    2    -x + y⎥   ⎢                 ⎥\n\
+⎢────────    ─    ──────⎥   ⎢ x - y     x + y ⎥\n\
+⎣ -x + y     3    x + y ⎦   ⎢ ─────    ───────⎥\n\
+                            ⎣ x + y    x - 2⋅y⎦\
+""")
     assert upretty(Series(tf1, tf3)) == expected1
     assert upretty(Series(-tf2, -tf1)) == expected2
     assert upretty(Series(tf3, tf1, Parallel(-tf1, tf2))) == expected3
     assert upretty(Series(Parallel(tf1, tf2), Parallel(tf2, tf3))) == expected4
     assert upretty(Series(tfm1, tfm2)) == expected5
-    assert upretty(Series(tfm1, tfm2, tfm3)) == expected6
     assert upretty(Series(tfm1, tfm4, Parallel(tfm5, -tfm6))) == expected7
+    assert upretty(Series(tfm1, tfm2, tfm3)) == expected6
+    assert upretty(Series(tfm1, tfm2, tfm3).doit()) == expected8
+    assert upretty(Series(-tfm4, -tfm5)) == expected9
 
 
 def test_pretty_Parallel():
