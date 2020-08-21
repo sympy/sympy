@@ -120,7 +120,7 @@ def test_symbolic():
     assert E(X + Y) == mu1 + mu2
     assert E(a*X + b) == a*E(X) + b
     assert variance(X) == s1**2
-    assert variance(X + a*Y + b) == variance(X) + a**2*variance(Y)
+    assert variance(X + a*Y + b).simplify() == variance(X) + a**2*variance(Y)
 
     assert E(Z) == 1/rate
     assert E(a*Z + b) == a*E(Z) + b
@@ -652,9 +652,9 @@ def test_exponential():
         assert b.probability(x < 4, evaluate=False).rewrite(Integral).dummy_eq(expected2)
     Y = Exponential('y', 2*rate)
     assert coskewness(X, X, X) == skewness(X)
-    assert coskewness(X, Y + rate*X, Y + 2*rate*X) == \
-                        4/(sqrt(1 + 1/(4*rate**2))*sqrt(4 + 1/(4*rate**2)))
-    assert coskewness(X + 2*Y, Y + X, Y + 2*X, X > 3) == \
+    assert coskewness(X, Y + rate*X, Y + 2*rate*X).simplify() == \
+                        (4/(sqrt(1 + 1/(4*rate**2))*sqrt(4 + 1/(4*rate**2)))).simplify()
+    assert coskewness(X + 2*Y, Y + X, Y + 2*X, X > 3).simplify() == \
                         sqrt(170)*Rational(9, 85)
 
 def test_exponential_power():

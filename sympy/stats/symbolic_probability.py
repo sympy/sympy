@@ -556,6 +556,9 @@ class Covariance(Expr):
         return self.rewrite(Expectation).doit(**hints)
 
     def _eval_rewrite_as_Expectation(self, arg1, arg2, condition=None, **kwargs):
+        if arg1.is_Matrix and arg2.is_Matrix:
+            from sympy.stats.symbolic_multivariate_probability import CrossCovarianceMatrix
+            return CrossCovarianceMatrix(arg1, arg2, condition).rewrite(Expectation)
         e1 = Expectation(arg1*arg2, condition)
         e2 = Expectation(arg1, condition)*Expectation(arg2, condition)
         return e1 - e2

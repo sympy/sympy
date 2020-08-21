@@ -1,6 +1,7 @@
 from sympy.stats import Expectation, Normal, Variance, Covariance
 from sympy.testing.pytest import raises
-from sympy import symbols, MatrixSymbol, Matrix, ZeroMatrix, ShapeError
+from sympy import (symbols, MatrixSymbol, Matrix, ZeroMatrix, ShapeError, MatMul, MatAdd,
+                    Transpose)
 from sympy.stats.rv import RandomMatrixSymbol
 from sympy.stats.symbolic_multivariate_probability import (ExpectationMatrix,
                             VarianceMatrix, CrossCovarianceMatrix)
@@ -100,12 +101,15 @@ def test_multivariate_variance():
 
     expr = Variance(A*X)
     assert expr == VarianceMatrix(A*X)
-    assert expr.expand() == A*VarianceMatrix(X)*A.T
+    assert expr.expand() == MatMul(A, VarianceMatrix(X), A.T)
     assert isinstance(expr, VarianceMatrix)
     assert expr.shape == (k, k)
 
     expr = Variance(A*B*X)
-    assert expr.expand() == A*B*VarianceMatrix(X)*B.T*A.T
+    t1 = MatMul(A, B)
+    t2 = VarianceMatrix(X)
+    t3 = Transpose(t1)
+    assert expr.expand() == MatMul(t1, t2, t3)
 
     expr = Variance(m1*X2)
     assert expr.expand() == expr
@@ -115,8 +119,8 @@ def test_multivariate_variance():
     assert expr.expand() == expr
 
     expr = Variance(A*X + B*Y)
-    assert expr.expand() == 2*A*CrossCovarianceMatrix(X, Y)*B.T +\
-                    A*VarianceMatrix(X)*A.T + B*VarianceMatrix(Y)*B.T
+    assert expr.expand() == 2*(A*CrossCovarianceMatrix(X, Y)*B.T) + \
+                (A)*VarianceMatrix(X)*A.T + (B)*VarianceMatrix(Y)*B.T
 
 def test_multivariate_crosscovariance():
     raises(ShapeError, lambda: Covariance(X, Y.T))
@@ -148,7 +152,9 @@ def test_multivariate_crosscovariance():
 
     expr = Covariance(X + Y, Z)
     assert isinstance(expr, CrossCovarianceMatrix)
-    assert expr.expand() == CrossCovarianceMatrix(X, Z) + CrossCovarianceMatrix(Y, Z)
+    t1 =  MatMul(1 , CrossCovarianceMatrix(X, Z), 1)
+    t2 =  MatMul(1 , CrossCovarianceMatrix(Y, Z), 1)
+    assert expr.expand() == MatAdd(t1, t2)
 
     expr = Covariance(A*X , Y)
     assert isinstance(expr, CrossCovarianceMatrix)

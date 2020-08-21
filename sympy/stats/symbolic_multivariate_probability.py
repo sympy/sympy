@@ -1,7 +1,7 @@
 import itertools
 
-from sympy import (MatrixExpr, Expr, ShapeError, ZeroMatrix,
-                    Add, Mul, MatMul, S, expand as _expand)
+from sympy import (MatrixExpr, Expr, ShapeError, ZeroMatrix, Transpose,
+                    Add, Mul, MatMul, S, expand as _expand, MatAdd, MatrixBase)
 from sympy.stats.rv import RandomSymbol, is_random
 from sympy.core.sympify import _sympify
 from sympy.stats.symbolic_probability import Variance, Covariance, Expectation
@@ -129,9 +129,9 @@ class VarianceMatrix(Variance, MatrixExpr):
     To expand the variance in its expression, use ``expand()``:
 
     >>> VarianceMatrix(A*X).expand()
-    A*VarianceMatrix(X)*A.T
+    (A)*VarianceMatrix(X)*A.T
     >>> VarianceMatrix(A*X + B*Y).expand()
-    2*A*CrossCovarianceMatrix(X, Y)*B.T + A*VarianceMatrix(X)*A.T + B*VarianceMatrix(Y)*B.T
+    2*(A*CrossCovarianceMatrix(X, Y)*B.T) + (A)*VarianceMatrix(X)*A.T + (B)*VarianceMatrix(Y)*B.T
     """
     def __new__(cls, arg, condition=None):
         arg = _sympify(arg)
@@ -168,10 +168,10 @@ class VarianceMatrix(Variance, MatrixExpr):
             for a in arg.args:
                 if is_random(a):
                     rv.append(a)
-            variances = Add(*map(lambda xv: Variance(xv, condition).expand(), rv))
-            map_to_covar = lambda x: 2*Covariance(*x, condition=condition).expand()
-            covariances = Add(*map(map_to_covar, itertools.combinations(rv, 2)))
-            return variances + covariances
+            variances = MatAdd(*map(lambda xv: Variance(xv, condition).expand(), rv))
+            map_to_covar = lambda x: MatMul(2, Covariance(*x, condition=condition).expand())
+            covariances = MatAdd(*map(map_to_covar, itertools.combinations(rv, 2)))
+            return MatAdd(variances, covariances)
         elif isinstance(arg, (Mul, MatMul)):
             nonrv = []
             rv = []
@@ -188,8 +188,8 @@ class VarianceMatrix(Variance, MatrixExpr):
             # Variance of many multiple matrix products is not implemented:
             if len(rv) > 1:
                 return self
-            return Mul.fromiter(nonrv)*Variance(Mul.fromiter(rv),
-                            condition)*(Mul.fromiter(nonrv)).transpose()
+            return MatMul(Mul.fromiter(nonrv), Variance(Mul.fromiter(rv),
+                            condition), Transpose(Mul.fromiter(nonrv)))
 
         # this expression contains a RandomSymbol somehow:
         return self
@@ -225,9 +225,9 @@ class CrossCovarianceMatrix(Covariance, MatrixExpr):
     To expand the covariance in its expression, use ``expand()``:
 
     >>> CrossCovarianceMatrix(X + Y, Z).expand()
-    CrossCovarianceMatrix(X, Z) + CrossCovarianceMatrix(Y, Z)
+    1*CrossCovarianceMatrix(X, Z)*1 + 1*CrossCovarianceMatrix(Y, Z)*1
     >>> CrossCovarianceMatrix(A*X , Y).expand()
-    A*CrossCovarianceMatrix(X, Y)
+    A*CrossCovarianceMatrix(X, Y)*1
     >>> CrossCovarianceMatrix(A*X, B.T*Y).expand()
     A*CrossCovarianceMatrix(X, Y)*B
     >>> CrossCovarianceMatrix(A*X + B*Y, C.T*Z + D.T*W).expand()
@@ -274,9 +274,13 @@ class CrossCovarianceMatrix(Covariance, MatrixExpr):
         coeff_rv_list1 = self._expand_single_argument(arg1.expand())
         coeff_rv_list2 = self._expand_single_argument(arg2.expand())
 
-        addends = [a*CrossCovarianceMatrix(r1, r2, condition=condition)*b.transpose()
-                   for (a, r1) in coeff_rv_list1 for (b, r2) in coeff_rv_list2]
-        return Add.fromiter(addends)
+        addends = []
+        for (a, r1) in coeff_rv_list1:
+            for (b, r2) in coeff_rv_list2:
+                if isinstance(b, MatrixBase):
+                    b = Transpose(b)
+                addends.append(MatMul(a, CrossCovarianceMatrix(r1, r2, condition=condition), b))
+        return MatAdd.fromiter(addends)
 
     @classmethod
     def _expand_single_argument(cls, expr):
@@ -306,4 +310,9 @@ class CrossCovarianceMatrix(Covariance, MatrixExpr):
                 rv.append(a)
             else:
                 nonrv.append(a)
-        return (Mul.fromiter(nonrv), Mul.fromiter(rv))
+        return (MatMul.fromiter(nonrv), MatMul.fromiter(rv))
+
+    def _eval_rewrite_as_Expectation(self, arg1, arg2, condition=None, **kwargs):
+        mu1 = ExpectationMatrix(arg1, condition)
+        mu2 = ExpectationMatrix(arg2, condition)
+        return ExpectationMatrix((arg1 - mu1)*(arg2 - mu2).transpose(), condition)

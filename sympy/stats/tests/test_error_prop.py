@@ -27,7 +27,7 @@ def test_variance_prop():
         }
     for inp, out in cases.items():
         obs = variance_prop(inp, consts=consts)
-        assert out == obs
+        assert (out - obs).simplify() == 0
 
 def test_variance_prop_with_covar():
     x, y, z = symbols('x y z')
@@ -55,4 +55,4 @@ def test_variance_prop_with_covar():
         }
     for inp, out in cases.items():
         obs = variance_prop(inp, consts=consts, include_covar=True)
-        assert out == obs
+        assert (out - obs).simplify() == 0
