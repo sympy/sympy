@@ -85,10 +85,10 @@ def _coeff_isneg(a):
     >>> _coeff_isneg(sqrt(2)*A)
     False
     """
-
+    if a.is_MatMul:
+        a = a.args[0]
     if a.is_Mul:
         a = a.args[0]
-        return _coeff_isneg(a)
     return a.is_Number and a.is_extended_negative
 
 
