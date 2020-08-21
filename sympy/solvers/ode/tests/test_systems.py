@@ -2284,4 +2284,4 @@ def test_second_order_raises1():
     # Eq(y(t), -sqrt(133)*(-C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + C1*airyai(-t*(1 + sqrt(133))**(S(1)/3)) -\
     # C2*airybi(t*(-1 + sqrt(133))**(S(1)/3)) + C2*airybi(-t*(1 + sqrt(133))**(S(1)/3)))/266)]
 
-    raises(NotImplementedError, dsolve_system(eq8))
+    raises(NotImplementedError, lambda: dsolve_system(eq8))

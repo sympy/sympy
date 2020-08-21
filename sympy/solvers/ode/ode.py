@@ -1956,8 +1956,6 @@ def classify_sysode(eq, funcs=None, **kwargs):
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
                     type_of_equation = check_linear_2eq_order1(eq, funcs, func_coef)
-                elif order_eq == 2:
-                    type_of_equation = check_linear_2eq_order2(eq, funcs, func_coef)
 
             # If the equation doesn't match up with any of the
             # general case solvers in systems.py and the number
@@ -2042,34 +2040,6 @@ def check_linear_2eq_order1(eq, func, func_coef):
             else:
                 # Equations for type 7 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), h(t)*x(t) + p(t)*y(t))
                 return "type7"
-
-
-def check_linear_2eq_order2(eq, func, func_coef):
-    x = func[0].func
-    y = func[1].func
-    fc = func_coef
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    r = dict()
-    r['a1'] = fc[0,x(t),2] ; r['a2'] = fc[1,y(t),2]
-    r['b1'] = fc[0,x(t),1] ; r['b2'] = fc[1,x(t),1]
-    r['c1'] = fc[0,y(t),1] ; r['c2'] = fc[1,y(t),1]
-    r['d1'] = fc[0,x(t),0] ; r['d2'] = fc[1,x(t),0]
-    r['e1'] = fc[0,y(t),0] ; r['e2'] = fc[1,y(t),0]
-    const = [S.Zero, S.Zero]
-    for i in range(2):
-        for j in Add.make_args(eq[i]):
-            if not (j.has(x(t)) or j.has(y(t))):
-                const[i] += j
-    r['f1'] = const[0]
-    r['f2'] = const[1]
-
-    if not cancel(r['b1']/r['c1']).has(t) and not cancel(r['b2']/r['c2']).has(t) and not \
-    cancel(r['b1']*r['a2']/(r['b2']*r['a1'])).has(t) and r['d1']==r['d2']==r['e1']==r['e2']==0:
-        return "type7"
-
-    else:
-        return None
-
 def check_nonlinear_2eq_order1(eq, func, func_coef):
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     f = Wild('f')
@@ -6574,85 +6544,6 @@ def _linear_2eq_order1_type7(x, y, t, r, eq):
         P = exp(Integral(r['d'],t))
         sol1 = C1*x0 + C2*x0*Integral(r['b']*F*P/x0**2, t)
         sol2 = C1*y0 + C2*(F*P/x0 + y0*Integral(r['b']*F*P/x0**2, t))
-    return [Eq(x(t), sol1), Eq(y(t), sol2)]
-
-
-def sysode_linear_2eq_order2(match_):
-    x = match_['func'][0].func
-    y = match_['func'][1].func
-    func = match_['func']
-    fc = match_['func_coeff']
-    eq = match_['eq']
-    r = dict()
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    for i in range(2):
-        eqs = []
-        for terms in Add.make_args(eq[i]):
-            eqs.append(terms/fc[i,func[i],2])
-        eq[i] = Add(*eqs)
-    # for equations Eq(diff(x(t),t,t), a1*diff(x(t),t)+b1*diff(y(t),t)+c1*x(t)+d1*y(t)+e1)
-    # and Eq(a2*diff(y(t),t,t), a2*diff(x(t),t)+b2*diff(y(t),t)+c2*x(t)+d2*y(t)+e2)
-    r['a1'] = -fc[0,x(t),1]/fc[0,x(t),2] ; r['a2'] = -fc[1,x(t),1]/fc[1,y(t),2]
-    r['b1'] = -fc[0,y(t),1]/fc[0,x(t),2] ; r['b2'] = -fc[1,y(t),1]/fc[1,y(t),2]
-    r['c1'] = -fc[0,x(t),0]/fc[0,x(t),2] ; r['c2'] = -fc[1,x(t),0]/fc[1,y(t),2]
-    r['d1'] = -fc[0,y(t),0]/fc[0,x(t),2] ; r['d2'] = -fc[1,y(t),0]/fc[1,y(t),2]
-    const = [S.Zero, S.Zero]
-    for i in range(2):
-        for j in Add.make_args(eq[i]):
-            if not (j.has(x(t)) or j.has(y(t))):
-                const[i] += j
-    r['e1'] = -const[0]
-    r['e2'] = -const[1]
-    if match_['type_of_equation'] == 'type7':
-        sol = _linear_2eq_order2_type7(x, y, t, r, eq)
-    return sol
-
-def _linear_2eq_order2_type7(x, y, t, r, eq):
-    r"""
-    The equations are given as
-
-    .. math:: x'' = f(t) (a_1 x' + b_1 y')
-
-    .. math:: y'' = f(t) (a_2 x' + b_2 y')
-
-    If `k_1` and 'k_2` are roots of the quadratic equation
-
-    .. math:: k^2 - (a_1 + b_2) k + a_1 b_2 - a_2 b_1 = 0
-
-    Then the system can be reduced by adding together the two equations multiplied
-    by appropriate constants give following two independent equations:
-
-    .. math:: z_1'' = k_1 f(t) z_1', z_1 = a_2 x + (k_1 - a_1) y
-
-    .. math:: z_2'' = k_2 f(t) z_2', z_2 = a_2 x + (k_2 - a_1) y
-
-    Integrating these and returning to the original variables, one arrives at a linear
-    algebraic system for the unknowns `x` and `y`:
-
-    .. math:: a_2 x + (k_1 - a_1) y = C_1 \int e^{k_1 F(t)} \,dt + C_2
-
-    .. math:: a_2 x + (k_2 - a_1) y = C_3 \int e^{k_2 F(t)} \,dt + C_4
-
-    where `C_1,...,C_4` are arbitrary constants and `F(t) = \int f(t) \,dt`
-
-    """
-    C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
-    k = Symbol('k')
-    num, den = cancel(
-        (r['a1']*x(t) + r['b1']*y(t))/
-        (r['a2']*x(t) + r['b2']*y(t))).as_numer_denom()
-    f = r['a1']/num.coeff(x(t))
-    a1 = num.coeff(x(t))
-    b1 = num.coeff(y(t))
-    a2 = den.coeff(x(t))
-    b2 = den.coeff(y(t))
-    chareq = k**2 - (a1 + b2)*k + a1*b2 - a2*b1
-    [k1, k2] = [rootof(chareq, k) for k in range(Poly(chareq).degree())]
-    F = Integral(f, t)
-    z1 = C1*Integral(exp(k1*F), t) + C2
-    z2 = C3*Integral(exp(k2*F), t) + C4
-    sol1 = (k1*z2 - k2*z1 + a1*(z1 - z2))/(a2*(k1-k2))
-    sol2 = (z1 - z2)/(k1 - k2)
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 

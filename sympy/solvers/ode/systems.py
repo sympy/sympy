@@ -840,7 +840,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
                 A = system_info['A']
                 b = system_info['b']
 
-    if any(type == typ for typ in ["type1", "type2", "type5", "type6"]):
+    if type in ["type1", "type2", "type5", "type6"]:
         P, J = matrix_exp_jordan_form(A, t)
         P = simplify(P)
 
@@ -1794,8 +1794,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     3. Linear, First Order, non-constant coefficient homogeneous system of ODEs
     4. Linear, First Order, non-constant coefficient non-homogeneous system of ODEs
     5. Any implicit system which can be divided into system of ODEs which is of the above 4 forms
-    6. Any higher order linear system of ODEs that can be reduced to one of the 5 forms of systems
-       described above.
+    6. Any higher order linear system of ODEs that can be reduced to one of the 5 forms of systems described above.
 
     The types of systems described above aren't limited by the number of equations, i.e. this
     function can solve the above types irrespective of the number of equations in the system passed.

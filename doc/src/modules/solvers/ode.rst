@@ -221,10 +221,6 @@ Linear, 2 equations, Order 1, Type 7
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode::_linear_2eq_order1_type7
 
-Linear, 2 equations, Order 2, Type 7
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode::_linear_2eq_order2_type7
-
 Linear ODE to matrix
 ^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.systems::linear_ode_to_matrix
