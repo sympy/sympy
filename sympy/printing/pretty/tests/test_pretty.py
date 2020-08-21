@@ -2497,6 +2497,8 @@ def test_pretty_Parallel():
     tfm4 = TransferFunctionMatrix([[tf1, tf2], [tf3, -tf4], [-tf2, -tf1]], (3, 2), y)
     tfm5 = TransferFunctionMatrix([[-tf2, -tf1], [tf4, -tf3], [tf1, tf2]], (3, 2), y)
     tfm6 = TransferFunctionMatrix([[-tf1, tf2], [-tf3, tf4], [tf2, tf1]])
+    tfm7 = TransferFunctionMatrix([[-tf1, -tf2], [-tf3, -tf4]])
+    tfm8 = TransferFunctionMatrix(((tf3, tf2), (tf4, tf1)))
     expected1 = \
 u("""\
  x + y    x - y\n\
@@ -2593,6 +2595,22 @@ u("""\
 ⎢────── + ─────── + ──────  ─────── + ────── + ───────⎥\n\
 ⎣x + y    x - 2⋅y   x + y   x - 2⋅y   x + y    x - 2⋅y⎦\
 """)
+    expected10 = \
+u("""\
+⎡-x + y    -x - y ⎤   ⎡ x - y    x + y ⎤                     \n\
+⎢──────   ─────── ⎥   ⎢ ─────   ───────⎥                     \n\
+⎢x + y    x - 2⋅y ⎥   ⎢ x + y   x - 2⋅y⎥   ⎡ -x - y   -x + y⎤\n\
+⎢                 ⎥   ⎢                ⎥   ⎢───────   ──────⎥\n\
+⎢      2     2    ⎥   ⎢     2    2     ⎥   ⎢x - 2⋅y   x + y ⎥\n\
+⎢-x + y   - x  - y⎥   ⎢x - y    x  + y ⎥   ⎢                ⎥\n\
+⎢───────  ────────⎥ + ⎢──────   ────── ⎥ x ⎢   2           2⎥\n\
+⎢  3       -x + y ⎥   ⎢ 3       -x + y ⎥   ⎢- x  - y  x - y ⎥\n\
+⎢ x  + x          ⎥   ⎢x  + x          ⎥   ⎢────────  ──────⎥\n\
+⎢                 ⎥   ⎢                ⎥   ⎢ -x + y    3    ⎥\n\
+⎢ x + y    x - y  ⎥   ⎢ -x - y  -x + y ⎥   ⎣          x  + x⎦\n\
+⎢───────   ─────  ⎥   ⎢───────  ────── ⎥                     \n\
+⎣x - 2⋅y   x + y  ⎦   ⎣x - 2⋅y  x + y  ⎦                     \
+""")
     assert upretty(Parallel(tf1, tf2)) == expected1
     assert upretty(Parallel(-tf2, -tf1)) == expected2
     assert upretty(Parallel(tf3, tf1, Series(-tf1, tf2))) == expected3
@@ -2602,6 +2620,7 @@ u("""\
     assert upretty(Parallel(tfm4, tfm5)) == expected7
     assert upretty(Parallel(-tfm6, -tfm5, tfm4)) == expected8
     assert upretty(Parallel(-tfm6, -tfm5, tfm4).doit()) == expected9
+    assert upretty(Parallel(tfm5, Series(-tfm5, tfm7))) == expected10
 
 
 def test_pretty_Feedback():

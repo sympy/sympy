@@ -656,6 +656,12 @@ def test_Parallel_functions():
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
 
+    tfm1 = TransferFunctionMatrix([TF1, TF2, TF3], (3, 1), s)
+    tfm2 = TransferFunctionMatrix((-TF2, tf5, -TF1), (3, 1), s)
+    tfm3 = TransferFunctionMatrix((tf5, -tf5, TF2))
+    tfm4 = TransferFunctionMatrix([[TF2, -tf5], [TF1, tf5]])
+    tfm5 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5]])
+
     assert TF1 + TF2 + TF3 == Parallel(TF1, TF2, TF3)
     assert TF1 + TF2 + TF3 + tf5 == Parallel(TF1, TF2, TF3, tf5)
     assert TF1 + TF2 - TF3 - tf5 == Parallel(TF1, TF2, -TF3, -tf5)
@@ -701,6 +707,7 @@ def test_Parallel_functions():
     assert Parallel(TF2, TF1, -TF3).rewrite(TransferFunction) == \
         TransferFunction(-(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*(k*(s**2 + 2*s*wn*zeta + wn**2) + 1), \
         (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+    raises(ValueError, lambda:  Parallel(TF1, TF2).rewrite(TransferFunctionMatrix))
 
     P1 = Parallel(Series(TF1, TF2), Series(TF2, TF3))
     assert P1.is_proper
@@ -716,6 +723,39 @@ def test_Parallel_functions():
     assert P3.is_proper
     assert not P3.is_strictly_proper
     assert P3.is_biproper
+
+    # transfer function matrix in the arguments.
+    assert Parallel(tfm1, tfm2, evaluate=True) == Parallel(tfm1, tfm2).doit() == \
+        TransferFunctionMatrix([Parallel(TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s), TransferFunction(-k, 1, s)), Parallel(TransferFunction(k, 1, s), TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s)), Parallel(TransferFunction(a2*p - s, a2*s + p, s), TransferFunction(-1, s**2 + 2*s*wn*zeta + wn**2, s))])
+
+    assert Parallel(tfm1, -tfm2, -tfm3, evaluate=True) == Parallel(tfm1, -tfm2, -tfm3).doit() == \
+        TransferFunctionMatrix([Parallel(TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s), TransferFunction(k, 1, s), TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s)), Parallel(TransferFunction(k, 1, s), TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s), TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s)), Parallel(TransferFunction(a2*p - s, a2*s + p, s), TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s), TransferFunction(-k, 1, s))])
+
+    # both tfm4 and tfm5 have shape (2, 2).
+    assert Parallel(tfm4, -tfm5, evaluate=True) == Parallel(tfm4, -tfm5).doit() == \
+        TransferFunctionMatrix([[Parallel(TransferFunction(k, 1, s), TransferFunction(-1, s**2 + 2*s*wn*zeta + wn**2, s)), Parallel(TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s), TransferFunction(-k, 1, s))], [Parallel(TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s), TransferFunction(-a2*p + s, a2*s + p, s)), Parallel(TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s), TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s))]])
+
+    assert Parallel(tfm4, Series(-tfm4, tfm5), evaluate=True) == Parallel(tfm4, Series(-tfm4, tfm5)).doit() == \
+        TransferFunctionMatrix([[Parallel(TransferFunction(k, 1, s), Series(TransferFunction(-k, 1, s), TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s)), Series(TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s), TransferFunction(a2*p - s, a2*s + p, s))), Parallel(TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s), Series(TransferFunction(-k, 1, s), TransferFunction(k, 1, s)), Series(TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s), TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s)))], [Parallel(TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s), Series(TransferFunction(-1, s**2 + 2*s*wn*zeta + wn**2, s), TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s)), Series(TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s), TransferFunction(a2*p - s, a2*s + p, s))), Parallel(TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s), Series(TransferFunction(-1, s**2 + 2*s*wn*zeta + wn**2, s), TransferFunction(k, 1, s)), Series(TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s), TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s)))]])
+
+    assert Parallel(Series(tfm4, tfm5), Series(-tfm5, tfm4)).doit() == \
+        TransferFunctionMatrix([[Parallel(Series(TransferFunction(k, 1, s), TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s)), Series(TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s), TransferFunction(a2*p - s, a2*s + p, s)), Series(TransferFunction(-1, s**2 + 2*s*wn*zeta + wn**2, s), TransferFunction(k, 1, s)), Series(TransferFunction(-k, 1, s), TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s))), Parallel(Series(TransferFunction(k, 1, s), TransferFunction(k, 1, s)), Series(TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s), TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s)), Series(TransferFunction(-1, s**2 + 2*s*wn*zeta + wn**2, s), TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s)), Series(TransferFunction(-k, 1, s), TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s)))], [Parallel(Series(TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s), TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s)), Series(TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s), TransferFunction(a2*p - s, a2*s + p, s)), Series(TransferFunction(-a2*p + s, a2*s + p, s), TransferFunction(k, 1, s)), Series(TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s), TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s))), Parallel(Series(TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s), TransferFunction(k, 1, s)), Series(TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s), TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s)), Series(TransferFunction(-a2*p + s, a2*s + p, s), TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s)), Series(TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s), TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s)))]])
+
+    assert Parallel(tfm1, -tfm3, tfm2).rewrite(TransferFunctionMatrix) == \
+        TransferFunctionMatrix([Parallel(TransferFunction(1, s**2 + 2*s*wn*zeta + wn**2, s), TransferFunction(a0 - a1*s**2 - a2*s, a0 + s, s), TransferFunction(-k, 1, s)), Parallel(TransferFunction(k, 1, s), TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s), TransferFunction(-a0 + a1*s**2 + a2*s, a0 + s, s)), Parallel(TransferFunction(a2*p - s, a2*s + p, s), TransferFunction(-k, 1, s), TransferFunction(-1, s**2 + 2*s*wn*zeta + wn**2, s))])
+    assert Parallel(tfm4, Series(-tfm4, tfm5)).doit() == Parallel(tfm4, Series(-tfm4, tfm5)).rewrite(TransferFunctionMatrix)
+    raises(ValueError, lambda: Parallel(tfm4, Series(-tfm4, tfm5)).rewrite(TransferFunction))
+    raises(ValueError, lambda: Parallel(Series(tfm4, tfm5), Series(-tfm5, tfm4)).rewrite(TransferFunction))
+
+    P4 = Parallel(tfm1, tfm3, -tfm2)
+    assert not P4.is_proper
+    assert not P4.is_strictly_proper
+    assert not P4.is_biproper
+
+    P5 = Parallel(Series(tfm4, tfm5), Series(-tfm5, tfm4))
+    assert not P5.is_proper
+    assert not P5.is_strictly_proper
+    assert not P5.is_biproper
 
 
 def test_Feedback_construction():
