@@ -208,8 +208,7 @@ class AskInvertibleHandler(CommonHandler):
             return True
         if ~Q.invertible(expr) in assumps:
             return False
-        if expr.invertible is not None:
-            return expr.invertible
+        return expr.is_invertible
 
     @staticmethod
     def CompositeMap(expr, assumptions):

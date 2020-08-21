@@ -86,9 +86,9 @@ class Map(Basic):
 
     # since sympy's is_commutative stands for the element being commutative to multiplication,
     # we use these attributes for the operator being commutative and associative.
-    commutative = None
-    associative = None
-    invertible = None
+    is_commutative_map = None
+    is_associative = None
+    is_invertible = None
 
     # these attributes are designed to be overridden if needed
     # they can be overridden by both class attribute or instance attribute
@@ -197,7 +197,7 @@ class Map(Basic):
         """
         if ask(Q.associative(self)):
             args = self.flatten(args)
-        if ask(Q.commutative(self)):
+        if ask(Q.commutative_map(self)):
             args.sort(key=cmp_to_key(Basic.compare))
         return args
 
@@ -482,11 +482,11 @@ class RestrictedMap(Map):
     """
 
     @property
-    def commutative(self):
-        return ask(Q.commutative(self.base))
+    def is_commutative_map(self):
+        return ask(Q.commutative_map(self.base))
 
     @property
-    def associative(self):
+    def is_associative(self):
         return ask(Q.associative(self.base))
 
     @property
@@ -563,7 +563,7 @@ class InverseMap(Map):
 
     """
     # invertible function can be always inverted back
-    invertible = True
+    is_invertible = True
 
     def __new__(cls, base, evaluate=False, **kwargs):
 
@@ -625,9 +625,9 @@ class IdentityMap(Map):
 
     """
 
-    commutative = False
-    associative = False
-    invertible = True
+    is_commutative_map = False
+    is_associative = False
+    is_invertible = True
 
     def __new__(cls, domain=S.UniversalSet, **kwargs):
         return super().__new__(cls, domain, **kwargs)
@@ -681,9 +681,9 @@ class ConstantMap(Map):
 
     """
 
-    commutative = True
-    associative = True
-    invertible = False
+    is_commutative_map = True
+    is_associative = True
+    is_invertible = False
 
     def __new__(cls, output, domain=S.UniversalSet, **kwargs):
         output = _sympify(output)
@@ -822,7 +822,7 @@ class AppliedMap(Expr):
         >>> from sympy import Map, Add
         >>> class F(Map):
         ...     name = 'f'
-        ...     associative = True
+        ...     is_associative = True
         ...     def eval(self, *args):
         ...         return Add(*args, evaluate=True)
         >>> f = F()
@@ -864,7 +864,7 @@ class AppliedMap(Expr):
         >>> from sympy import Map, Add
         >>> class F(Map):
         ...     name = 'f'
-        ...     associative = True
+        ...     is_associative = True
         ...     def eval(self, *args):
         ...         return Add(*args, evaluate=True)
         >>> f = F()

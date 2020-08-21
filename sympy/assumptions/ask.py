@@ -1452,6 +1452,7 @@ _handlers = [
     ("real_elements",     "matrices.AskRealElementsHandler"),
     ("complex_elements",  "matrices.AskComplexElementsHandler"),
     ("associative",       "map.AskAssociativeHandler"),
+    ("commutative_map",   "map.AskCommutativeMapHandler"),
 ]
 
 for name, value in _handlers:

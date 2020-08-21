@@ -16,17 +16,17 @@ class F(Map):
     def _eval_restrict(self, domain):
         return H()
 class G(Map):
-    invertible = True
-    commutative = True
-    associative = False
+    is_invertible = True
+    is_commutative_map = True
+    is_associative = False
     def eval(self, x):
         return x-1
     def _eval_inverse(self):
         return F()
 class H(Map):
-    invertible = False
-    commutative = False
-    associative = True
+    is_invertible = False
+    is_commutative_map = False
+    is_associative = True
     def _map_content(self):
         return F()._map_content()
 
@@ -57,14 +57,14 @@ def test_Map():
     assert ask(Q.invertible(h), Q.invertible(h)) is True
 
     # commutativity cannot be determined by default
-    assert ask(Q.commutative(f)) is False
+    assert ask(Q.commutative_map(f)) is None
     # commutativity can be set
-    assert ask(Q.commutative(g)) is True
-    assert ask(Q.commutative(h)) is False
+    assert ask(Q.commutative_map(g)) is True
+    assert ask(Q.commutative_map(h)) is False
     # commutativity can be assumed
-    assert ask(Q.commutative(f), Q.commutative(f)) is True
-    assert ask(Q.commutative(g), ~Q.commutative(g)) is False
-    assert ask(Q.commutative(h), Q.commutative(h)) is True
+    assert ask(Q.commutative_map(f), Q.commutative_map(f)) is True
+    assert ask(Q.commutative_map(g), ~Q.commutative_map(g)) is False
+    assert ask(Q.commutative_map(h), Q.commutative_map(h)) is True
 
     # associativity cannot be determined by default
     assert ask(Q.associative(f)) is None
@@ -110,10 +110,6 @@ def test_AppliedMap():
             return x/2
     phi = Phi()
     raises(TypeError, lambda: phi(S.One, evaluate=True))
-
-    # commutative map sorts the argument
-    with assuming(Q.commutative(h)):
-        assert h(x, y, evaluate=True) == h(y, x, evaluate=True)
 
     # differentiation
     a, b, c = Map('a', domain=S.Reals**2), Map('b', codomain=S.Reals), Map('c', codomain=S.Reals)
