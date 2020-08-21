@@ -3,6 +3,8 @@ from sympy.core.power import integer_log
 from sympy.core.compatibility import as_int
 import random
 
+rgen = random.Random()
+
 #----------------------------------------------------------------------------#
 #                                                                            #
 #                   Lenstra's Elliptic Curve Factorization                   #
@@ -149,7 +151,7 @@ class Point:
         return Q
 
 
-def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
+def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
@@ -213,7 +215,7 @@ def ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
         curve += 1
 
         #Suyama's Paramatrization
-        sigma = random.randint(6, n - 1)
+        sigma = rgen.randint(6, n - 1)
         u = (sigma*sigma - 5) % n
         v = (4*sigma) % n
         diff = v - u
@@ -302,10 +304,10 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
             _factors.add(prime)
             while(n % prime == 0):
                 n //= prime
-    random.seed(seed)
+    rgen.seed(seed)
     while(n > 1):
         try:
-            factor = ecm_one_factor(n, B1, B2, max_curve)
+            factor = _ecm_one_factor(n, B1, B2, max_curve)
         except ValueError:
             raise ValueError("Increase the bounds")
         _factors.add(factor)
