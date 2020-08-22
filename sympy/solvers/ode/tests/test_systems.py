@@ -1427,23 +1427,13 @@ def test_higher_order_to_first_order():
     assert dsolve(eq2) == sol2
     assert checksysodesol(eq2, sol2) == (True, [0, 0])
 
-    eq3 = (Eq(diff(x(t),t,t), t*(4*diff(x(t),t) + 9*diff(y(t),t))), Eq(diff(y(t),t,t), t*(12*diff(x(t),t) - 6*diff(y(t),t))))
-    sol3 = [Eq(x(t), C1 + Integral(-28620*C2*exp(-t**2/2 + sqrt(133)*t**2/2)/(-105070 + 9566*sqrt(133)) +
-                2808*sqrt(133)*C2*exp(-t**2/2 + sqrt(133)*t**2/2)/(-105070 + 9566*sqrt(133)) -
-                76450*C2*exp(-sqrt(133)*t**2/2 - t**2/2)/(-105070 + 9566*sqrt(133)) +
-                6758*sqrt(133)*C2*exp(-sqrt(133)*t**2/2 - t**2/2)/(-105070 + 9566*sqrt(133)) -
-                3555*sqrt(133)*C3*exp(-t**2/2 + sqrt(133)*t**2/2)/(-105070 + 9566*sqrt(133)) + 43047*C3*exp(-t**2/2
-                + sqrt(133)*t**2/2)/(-105070 + 9566*sqrt(133)) - 43047*C3*exp(-sqrt(133)*t**2/2 - t**2/2)/(-105070 +
-                9566*sqrt(133)) + 3555*sqrt(133)*C3*exp(-sqrt(133)*t**2/2 - t**2/2)/(-105070 + 9566*sqrt(133)), t)),
-            Eq(y(t), C4 + Integral(3990*C2*exp(-t**2/2 + sqrt(133)*t**2/2)/(-10507 + 665*sqrt(133)) -
-                474*sqrt(133)*C2*exp(-t**2/2 + sqrt(133)*t**2/2)/(-10507 + 665*sqrt(133)) +
-                474*sqrt(133)*C2*exp(-sqrt(133)*t**2/2 - t**2/2)/(-10507 + 665*sqrt(133)) -
-                3990*C2*exp(-sqrt(133)*t**2/2 - t**2/2)/(-10507 + 665*sqrt(133)) + 530*sqrt(133)*C3*exp(-t**2/2 +
-                sqrt(133)*t**2/2)/(-10507 + 665*sqrt(133)) - 6916*C3*exp(-t**2/2 + sqrt(133)*t**2/2)/(-10507 +
-                665*sqrt(133)) + 135*sqrt(133)*C3*exp(-sqrt(133)*t**2/2 - t**2/2)/(-10507 + 665*sqrt(133)) -
-                3591*C3*exp(-sqrt(133)*t**2/2 - t**2/2)/(-10507 + 665*sqrt(133)), t))]
-    with dotprodsimp(True):
-        assert dsolve(eq3) == sol3
+    eq3 = (Eq(Derivative(x(t), (t, 2)), t*(4*Derivative(x(t), t) + 8*Derivative(y(t), t))),
+           Eq(Derivative(y(t), (t, 2)), t*(12*Derivative(x(t), t) - 6*Derivative(y(t), t))))
+    sol3 = [Eq(x(t), C1 + Integral(4*C2*exp(5*t**2)/11 - 4*C2*exp(-6*t**2)/11 + 8*C3*exp(5*t**2)/11 +
+                3*C3*exp(-6*t**2)/11, t)),
+            Eq(y(t), C4 + Integral(3*C2*exp(5*t**2)/11 + 8*C2*exp(-6*t**2)/11 + 6*C3*exp(5*t**2)/11 -
+                6*C3*exp(-6*t**2)/11, t))]
+    assert dsolve(eq3) == sol3
     assert checksysodesol(eq3, sol3) == (True, [0, 0])
 
     eqs4 = [Eq(4*x(t) + Derivative(x(t), (t, 2)) + 8*Derivative(y(t), t), 0), Eq(4*y(t) - 8*Derivative(x(t), t) +
