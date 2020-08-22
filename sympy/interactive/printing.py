@@ -249,12 +249,18 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     import IPython
     if V(IPython.__version__) >= '0.11':
 
-        printable_types = [Printable, float, tuple, list, set,
-                frozenset, dict, int]
+        # Printable is our own type, so we handle it with methods instead of
+        # the approach required by builtin types. This allows downstream
+        # packages to override the methods in their own subclasses of Printable,
+        # which avoids the effects of gh-16002.
+        printable_types = [float, tuple, list, set, frozenset, dict, int]
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
-        for cls in printable_types:
+        # Exception to the rule above: IPython has better dispatching rules
+        # for plaintext printing (xref ipython/ipython#8938), and we can't
+        # use `_repr_pretty_` without hitting a recursion error in _print_plain.
+        for cls in printable_types + [Printable]:
             plaintext_formatter.for_type(cls, _print_plain)
 
         svg_formatter = ip.display_formatter.formatters['image/svg+xml']
@@ -262,6 +268,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             debug("init_printing: using svg formatter")
             for cls in printable_types:
                 svg_formatter.for_type(cls, _print_latex_svg)
+            Printable._repr_svg_ = _print_latex_svg
         else:
             debug("init_printing: not using any svg formatter")
             for cls in printable_types:
@@ -269,16 +276,19 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 #png_formatter.for_type(cls, None)
                 if cls in svg_formatter.type_printers:
                     svg_formatter.type_printers.pop(cls)
+            Printable._repr_svg_ = Printable._repr_disabled
 
         png_formatter = ip.display_formatter.formatters['image/png']
         if use_latex in (True, 'png'):
             debug("init_printing: using png formatter")
             for cls in printable_types:
                 png_formatter.for_type(cls, _print_latex_png)
+            Printable._repr_png_ = _print_latex_png
         elif use_latex == 'matplotlib':
             debug("init_printing: using matplotlib formatter")
             for cls in printable_types:
                 png_formatter.for_type(cls, _print_latex_matplotlib)
+            Printable._repr_png_ = _print_latex_matplotlib
         else:
             debug("init_printing: not using any png formatter")
             for cls in printable_types:
@@ -286,13 +296,14 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 #png_formatter.for_type(cls, None)
                 if cls in png_formatter.type_printers:
                     png_formatter.type_printers.pop(cls)
+            Printable._repr_png_ = Printable._repr_disabled
 
         latex_formatter = ip.display_formatter.formatters['text/latex']
         if use_latex in (True, 'mathjax'):
             debug("init_printing: using mathjax formatter")
             for cls in printable_types:
                 latex_formatter.for_type(cls, _print_latex_text)
-            Printable._repr_latex_ = Printable._repr_latex_orig
+            Printable._repr_latex_ = _print_latex_text
         else:
             debug("init_printing: not using text/latex formatter")
             for cls in printable_types:
@@ -300,8 +311,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 #latex_formatter.for_type(cls, None)
                 if cls in latex_formatter.type_printers:
                     latex_formatter.type_printers.pop(cls)
-
-            Printable._repr_latex_ = None
+            Printable._repr_latex_ = Printable._repr_disabled
 
     else:
         ip.set_hook('result_display', _result_display)

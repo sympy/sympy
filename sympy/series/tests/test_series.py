@@ -212,6 +212,23 @@ def test_issue_12578():
         3472*x**14 - 17318*x**16 + O(x**17)
 
 
+def test_issue_12791():
+    beta = symbols('beta', real=True, positive=True)
+    theta, varphi = symbols('theta varphi', real=True)
+
+    expr = (-beta**2*varphi*sin(theta) + beta**2*cos(theta) + \
+        beta*varphi*sin(theta) - beta*cos(theta) - beta + 1)/(beta*cos(theta) - 1)**2
+
+    sol = 0.5/(0.5*cos(theta) - 1)**2 - 0.25*cos(theta)/(0.5*cos(theta) - 1)**2 \
+        + (beta - 0.5)*(-0.5*varphi*sin(theta)*cos(theta)/((0.5*cos(theta) - 1) \
+        **2*(0.5*cos(theta) - 1.0)) - 1/(0.5*cos(theta) - 1)**2 + 0.5*cos(theta) \
+        **2/((0.5*cos(theta) - 1)**2*(0.5*cos(theta) - 1.0)) - 1.0*cos(theta) \
+        /((0.5*cos(theta) - 1)**2*(0.5*cos(theta) - 1.0))) + 0.25*varphi* \
+        sin(theta)/(0.5*cos(theta) - 1)**2 + O((beta - 0.5)**2, (beta, 0.5))
+
+    assert expr.series(beta, 0.5, 2) == sol
+
+
 def test_issue_14885():
     assert series(x**Rational(-3, 2)*exp(x), x, 0) == (x**Rational(-3, 2) + 1/sqrt(x) +
         sqrt(x)/2 + x**Rational(3, 2)/6 + x**Rational(5, 2)/24 + x**Rational(7, 2)/120 +
@@ -284,6 +301,12 @@ def test_issue_19534():
     assert N(expr.series(dt, 0, 8), 20) == -0.00092592592592592596126*dt**7 + 0.0027777777777777783175*dt**6 + \
     0.016666666666666656027*dt**5 + 0.083333333333333300952*dt**4 + 0.33333333333333337034*dt**3 + \
     1.0*dt**2 + 1.0*dt + 1.0
+
+
+def test_issue_11407():
+    a, b, c, x = symbols('a b c x')
+    assert series(sqrt(a + b + c*x), x, 0, 1) == sqrt(a + b) + O(x)
+    assert series(sqrt(a + b + c + c*x), x, 0, 1) == sqrt(a + b + c) + O(x)
 
 
 def test_issue_14037():

@@ -8,7 +8,7 @@ from sympy.matrices import MutableDenseMatrix
 from sympy.polys.domains import EX
 from sympy.polys.rings import sring
 from sympy.polys.polyerrors import NotInvertible
-from sympy.polys.polymatrix import DomainMatrix
+from sympy.polys.domainmatrix import DomainMatrix
 
 
 class PolyNonlinearError(Exception):
@@ -72,8 +72,8 @@ def eqs_to_matrix(eqs_coeffs, eqs_rhs, gens, domain):
     rows = [[domain.zero] * ncols for _ in range(nrows)]
     for row, eq_coeff, eq_rhs in zip(rows, eqs_coeffs, eqs_rhs):
         for sym, coeff in eq_coeff.items():
-            row[sym2index[sym]] = coeff
-        row[-1] = -eq_rhs
+            row[sym2index[sym]] = domain.convert(coeff)
+        row[-1] = -domain.convert(eq_rhs)
 
     return DomainMatrix(rows, (nrows, ncols), domain)
 
@@ -346,6 +346,10 @@ def _solve_lin_sys_component(eqs_coeffs, eqs_rhs, ring):
     # transform from equations to matrix form
     matrix = eqs_to_matrix(eqs_coeffs, eqs_rhs, ring.gens, ring.domain)
 
+    # convert to a field for rref
+    if not matrix.domain.is_Field:
+        matrix = matrix.to_field()
+
     # solve by row-reduction
     echelon, pivots = matrix.rref()
 
@@ -357,14 +361,14 @@ def _solve_lin_sys_component(eqs_coeffs, eqs_rhs, ring):
 
     if len(pivots) == len(keys):
         sol = []
-        for s in [row[-1] for row in echelon.rows]:
+        for s in [row[-1] for row in echelon.rep]:
             a = s
             sol.append(a)
         sols = dict(zip(keys, sol))
     else:
         sols = {}
         g = ring.gens
-        echelon = echelon.rows
+        echelon = echelon.rep
         for i, p in enumerate(pivots):
             v = echelon[i][-1] - sum(echelon[i][j]*g[j] for j in range(p+1, len(g)))
             sols[keys[p]] = v

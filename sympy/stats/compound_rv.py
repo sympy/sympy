@@ -1,6 +1,6 @@
-from sympy import Basic, integrate, Sum, Dummy, Lambda
+from sympy import Basic, Sum, Dummy, Lambda, Integral
 from sympy.stats.rv import (NamedArgsMixin, random_symbols, _symbol_converter,
-                        PSpace, RandomSymbol)
+                        PSpace, RandomSymbol, is_random)
 from sympy.stats.crv import ContinuousDistribution, SingleContinuousPSpace
 from sympy.stats.drv import DiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.frv import SingleFiniteDistribution, SingleFinitePSpace
@@ -38,6 +38,18 @@ class CompoundPSpace(PSpace):
         return self.args[0]
 
     @property
+    def is_Continuous(self):
+        return self.distribution.is_Continuous
+
+    @property
+    def is_Finite(self):
+        return self.distribution.is_Finite
+
+    @property
+    def is_Discrete(self):
+        return self.distribution.is_Discrete
+
+    @property
     def distribution(self):
         return self.args[1]
 
@@ -53,11 +65,11 @@ class CompoundPSpace(PSpace):
     def domain(self):
         return self._get_newpspace().domain
 
-    def _get_newpspace(self):
+    def _get_newpspace(self, evaluate=False):
         x = Dummy('x')
         parent_dist = self.distribution.args[0]
-        new_pspace = self._transform_pspace(self.symbol, parent_dist,
-                            Lambda(x, self.distribution.pdf(x)))
+        func = Lambda(x, self.distribution.pdf(x, evaluate))
+        new_pspace = self._transform_pspace(self.symbol, parent_dist, func)
         if new_pspace is not None:
             return new_pspace
         message = ("Compound Distribution for %s is not implemeted yet" % str(parent_dist))
@@ -79,17 +91,17 @@ class CompoundPSpace(PSpace):
             return SingleFinitePSpace(sym, FiniteDistributionHandmade(dens))
 
     def compute_density(self, expr, **kwargs):
-        new_pspace = self._get_newpspace()
+        new_pspace = self._get_newpspace(kwargs.pop('compound_evaluate', True))
         expr = expr.subs({self.value: new_pspace.value})
         return new_pspace.compute_density(expr, **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
-        new_pspace = self._get_newpspace()
+        new_pspace = self._get_newpspace(kwargs.pop('compound_evaluate', True))
         expr = expr.subs({self.value: new_pspace.value})
         return new_pspace.compute_cdf(expr, **kwargs)
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
-        new_pspace = self._get_newpspace()
+        new_pspace = self._get_newpspace(evaluate)
         expr = expr.subs({self.value: new_pspace.value})
         if rvs:
             rvs = rvs.subs({self.value: new_pspace.value})
@@ -98,12 +110,12 @@ class CompoundPSpace(PSpace):
         return new_pspace.compute_expectation(expr, rvs, evaluate, **kwargs)
 
     def probability(self, condition, **kwargs):
-        new_pspace = self._get_newpspace()
+        new_pspace = self._get_newpspace(kwargs.pop('compound_evaluate', True))
         condition = condition.subs({self.value: new_pspace.value})
         return new_pspace.probability(condition)
 
     def conditional_space(self, condition, **kwargs):
-        new_pspace = self._get_newpspace()
+        new_pspace = self._get_newpspace(kwargs.pop('compound_evaluate', True))
         condition = condition.subs({self.value: new_pspace.value})
         return new_pspace.conditional_space(condition)
 
@@ -130,7 +142,7 @@ class CompoundDistribution(Basic, NamedArgsMixin):
     >>> C = CompoundDistribution(N)
     >>> C.set
     Interval(-oo, oo)
-    >>> C.pdf(x).simplify()
+    >>> C.pdf(x, evaluate=True).simplify()
     exp(-x**2/64 + x/16 - 1/16)/(8*sqrt(pi))
 
     References
@@ -140,18 +152,9 @@ class CompoundDistribution(Basic, NamedArgsMixin):
 
     """
 
-    is_Finite = None
-    is_Continuous = None
-    is_Discrete = None
-
     def __new__(cls, dist):
-        if isinstance(dist, ContinuousDistribution):
-            cls.is_Continuous = True
-        elif isinstance(dist, DiscreteDistribution):
-            cls.is_Discrete = True
-        elif isinstance(dist, SingleFiniteDistribution):
-            cls.is_Finite = True
-        else:
+        if not isinstance(dist, (ContinuousDistribution,
+                SingleFiniteDistribution, DiscreteDistribution)):
             message = "Compound Distribution for %s is not implemeted yet" % str(dist)
             raise NotImplementedError(message)
         if not cls._compound_check(dist):
@@ -162,33 +165,46 @@ class CompoundDistribution(Basic, NamedArgsMixin):
     def set(self):
         return self.args[0].set
 
-    def pdf(self, x):
+    @property
+    def is_Continuous(self):
+        return isinstance(self.args[0], ContinuousDistribution)
+
+    @property
+    def is_Finite(self):
+        return isinstance(self.args[0], SingleFiniteDistribution)
+
+    @property
+    def is_Discrete(self):
+        return isinstance(self.args[0], DiscreteDistribution)
+
+    def pdf(self, x, evaluate=False):
         dist = self.args[0]
-        randoms = []
-        for arg in dist.args:
-            randoms.extend(random_symbols(arg))
-        if len(randoms) > 1:
-            raise NotImplementedError("Compound Distributions for more than"
-                " one random argument is not implemeted yet.")
-        rand_sym = randoms[0]
+        randoms = [rv for rv in dist.args if is_random(rv)]
         if isinstance(dist, SingleFiniteDistribution):
             y = Dummy('y', integer=True, negative=False)
-            _pdf = dist.pmf(y)
+            expr = dist.pmf(y)
         else:
             y = Dummy('y')
-            _pdf = dist.pdf(y)
-        if isinstance(rand_sym.pspace.distribution, SingleFiniteDistribution):
-            rand_dens = rand_sym.pspace.distribution.pmf(rand_sym)
+            expr = dist.pdf(y)
+        for rv in randoms:
+            expr = self._marginalise(expr, rv, evaluate)
+        return Lambda(y, expr)(x)
+
+    def _marginalise(self, expr, rv, evaluate):
+        if isinstance(rv.pspace.distribution, SingleFiniteDistribution):
+            rv_dens = rv.pspace.distribution.pmf(rv)
         else:
-            rand_dens = rand_sym.pspace.distribution.pdf(rand_sym)
-        rand_sym_dom = rand_sym.pspace.domain.set
-        if rand_sym.pspace.is_Discrete or rand_sym.pspace.is_Finite:
-            _pdf = Sum(_pdf*rand_dens, (rand_sym, rand_sym_dom._inf,
-                    rand_sym_dom._sup)).doit()
+            rv_dens = rv.pspace.distribution.pdf(rv)
+        rv_dom = rv.pspace.domain.set
+        if rv.pspace.is_Discrete or rv.pspace.is_Finite:
+            expr = Sum(expr*rv_dens, (rv, rv_dom._inf,
+                    rv_dom._sup))
         else:
-            _pdf = integrate(_pdf*rand_dens, (rand_sym, rand_sym_dom._inf,
-                    rand_sym_dom._sup))
-        return Lambda(y, _pdf)(x)
+            expr = Integral(expr*rv_dens, (rv, rv_dom._inf,
+                    rv_dom._sup))
+        if evaluate:
+            return expr.doit()
+        return expr
 
     @classmethod
     def _compound_check(self, dist):

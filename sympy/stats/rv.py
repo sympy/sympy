@@ -20,7 +20,7 @@ from typing import Tuple as tTuple
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify, Or,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, Integral)
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
@@ -103,6 +103,24 @@ class SingleDomain(RandomDomain):
             return False
         sym, val = tuple(other)[0]
         return self.symbol == sym and val in self.set
+
+
+class MatrixDomain(RandomDomain):
+    """
+    A Random Matrix variable and its domain
+
+    """
+    def __new__(cls, symbol, set):
+        symbol, set = _symbol_converter(symbol), _sympify(set)
+        return Basic.__new__(cls, symbol, set)
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def symbols(self):
+        return FiniteSet(self.symbol)
 
 
 class ConditionalDomain(RandomDomain):
@@ -757,7 +775,12 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     from sympy.stats.symbolic_probability import Expectation
     if evaluate:
         return Expectation(expr, condition).doit(**kwargs)
-    return Expectation(expr, condition).rewrite(Integral) # will return Sum in case of discrete RV
+    ### TODO: Remove the user warnings in the future releases
+    message = ("Since version 1.7, using `evaluate=False` returns `Expectation` "
+              "object. If you want unevaluated Integral/Sum use "
+              "`E(expr, condition, evaluate=False).rewrite(Integral)`")
+    warnings.warn(filldedent(message))
+    return Expectation(expr, condition)
 
 
 def probability(condition, given_condition=None, numsamples=None,
@@ -796,7 +819,12 @@ def probability(condition, given_condition=None, numsamples=None,
     from sympy.stats.symbolic_probability import Probability
     if evaluate:
         return Probability(condition, given_condition).doit(**kwargs)
-    return Probability(condition, given_condition).rewrite(Integral) # will return Sum in case of discrete RV
+    ### TODO: Remove the user warnings in the future releases
+    message = ("Since version 1.7, using `evaluate=False` returns `Probability` "
+              "object. If you want unevaluated Integral/Sum use "
+              "`P(condition, given_condition, evaluate=False).rewrite(Integral)`")
+    warnings.warn(filldedent(message))
+    return Probability(condition, given_condition)
 
 
 class Density(Basic):
@@ -813,6 +841,7 @@ class Density(Basic):
         from sympy.stats.random_matrix import RandomMatrixPSpace
         from sympy.stats.joint_rv import JointPSpace
         from sympy.stats.matrix_distributions import MatrixPSpace
+        from sympy.stats.compound_rv import CompoundPSpace
         from sympy.stats.frv import SingleFiniteDistribution
         expr, condition = self.expr, self.condition
 
@@ -829,6 +858,8 @@ class Density(Basic):
                 return expr.pspace.distribution
             elif isinstance(expr.pspace, RandomMatrixPSpace):
                 return expr.pspace.model
+        if isinstance(pspace(expr), CompoundPSpace):
+            kwargs['compound_evaluate'] = evaluate
         result = pspace(expr).compute_density(expr, **kwargs)
 
         if evaluate and hasattr(result, 'doit'):
@@ -1026,11 +1057,13 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
     Examples
     ========
 
-    >>> from sympy.stats import Die, sample, Normal
-    >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6)
+    >>> from sympy.stats import Die, sample, Normal, Geometric
+    >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6) # Finite Random Variable
 
     >>> die_roll = sample(X + Y + Z) # doctest: +SKIP
-    >>> N = Normal('N', 3, 4)
+    >>> next(die_roll) # doctest: +SKIP
+    6
+    >>> N = Normal('N', 3, 4) # Continuous Random Variable
     >>> samp = next(sample(N)) # doctest: +SKIP
     >>> samp in N.pspace.domain.set # doctest: +SKIP
     True
@@ -1040,6 +1073,22 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
     >>> samp_list = next(sample(N, size=4)) # doctest: +SKIP
     >>> [sam in N.pspace.domain.set for sam in samp_list] # doctest: +SKIP
     [True, True, True, True]
+    >>> G = Geometric('G', 0.5) # Discrete Random Variable
+    >>> samp_list = next(sample(G, size=3)) # doctest: +SKIP
+    >>> samp_list # doctest: +SKIP
+    array([10,  4,  1])
+    >>> [sam in G.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    [True, True, True]
+    >>> MN = Normal("MN", [3, 4], [[2, 1], [1, 2]]) # Joint Random Variable
+    >>> samp_list = next(sample(MN, size=4)) # doctest: +SKIP
+    >>> samp_list # doctest: +SKIP
+    array([[4.22564264, 3.23364418],
+           [3.41002011, 4.60090908],
+           [3.76151866, 4.77617143],
+           [4.71440865, 2.65714157]])
+    >>> [tuple(sam) in MN.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    [True, True, True, True]
+
 
     Returns
     =======
@@ -1048,6 +1097,7 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
         iterator object containing the sample/samples of given expr
 
     """
+    ### TODO: Remove the user warnings in the future releases
     message = ("The return type of sample has been changed to return an "
                   "iterator object since version 1.7. For more information see "
                   "https://github.com/sympy/sympy/issues/19061")
@@ -1144,6 +1194,7 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
     sampling_E
 
     """
+    from sympy.stats.joint_rv import JointRandomSymbol
     if not import_module(library):
         raise ValueError("Failed to import %s" % library)
 
@@ -1153,6 +1204,15 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
         ps = pspace(expr)
 
     rvs = list(ps.values)
+    if isinstance(expr, JointRandomSymbol):
+        expr = expr.subs({expr: RandomSymbol(expr.symbol, expr.pspace)})
+    else:
+        sub = {}
+        for arg in expr.args:
+            if isinstance(arg, JointRandomSymbol):
+                sub[arg] = RandomSymbol(arg.symbol, arg.pspace)
+        expr = expr.subs(sub)
+
     if library == 'pymc3':
         # Currently unable to lambdify in pymc3
         # TODO : Remove 'pymc3' when lambdify accepts 'pymc3' as module

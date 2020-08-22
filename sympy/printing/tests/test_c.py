@@ -11,7 +11,7 @@ from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.testing.pytest import raises, XFAIL
-from sympy.printing.ccode import C89CodePrinter, C99CodePrinter, get_math_macros
+from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
     While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Return,
@@ -21,7 +21,7 @@ from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt,
 from sympy.codegen.cnodes import restrict
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
-from sympy.matrices import Matrix, MatrixSymbol
+from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
 
 from sympy import ccode
 
@@ -548,6 +548,11 @@ def test_Matrix_printing():
         "M[8] = 0;")
 
 
+def test_sparse_matrix():
+    # gh-15791
+    assert 'Not supported in C' in ccode(SparseMatrix([[1, 2, 3]]))
+
+
 def test_ccode_reserved_words():
     x, y = symbols('x, if')
     with raises(ValueError):
@@ -747,6 +752,7 @@ def test_C99CodePrinter_custom_type():
     assert p128.doprint(Rational(1, 2)) == '1.0Q/2.0Q'
     assert p128.doprint(sin(x)) == 'sinf128(x)'
     assert p128.doprint(cos(2., evaluate=False)) == 'cosf128(2.0Q)'
+    assert p128.doprint(x**-1.0) == '1.0Q/x'
 
     var5 = Variable(x, f128, attrs={value_const})
 

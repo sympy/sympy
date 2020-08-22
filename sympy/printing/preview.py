@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 import io
-from io import BytesIO
 import os
 from os.path import join
 import shutil
@@ -12,11 +11,76 @@ try:
 except ImportError:
     pass
 
-from sympy.core.compatibility import unicode, u_decode
 from sympy.utilities.decorator import doctest_depends_on
 from .latex import latex
 
 __doctest_requires__ = {('preview',): ['pyglet']}
+
+
+def _check_output_no_window(*args, **kwargs):
+    # Avoid showing a cmd.exe window when running this
+    # on Windows
+    if os.name == 'nt':
+        creation_flag = 0x08000000 # CREATE_NO_WINDOW
+    else:
+        creation_flag = 0 # Default value
+    return check_output(*args, creationflags=creation_flag, **kwargs)
+
+
+def _run_pyglet(fname, fmt):
+    from pyglet import window, image, gl
+    from pyglet.window import key
+
+    if fmt == "png":
+        from pyglet.image.codecs.png import PNGImageDecoder
+        img = image.load(fname, decoder=PNGImageDecoder())
+    else:
+        raise ValueError("pyglet preview works only for 'png' files.")
+
+    offset = 25
+
+    config = gl.Config(double_buffer=False)
+    win = window.Window(
+        width=img.width + 2*offset,
+        height=img.height + 2*offset,
+        caption="sympy",
+        resizable=False,
+        config=config
+    )
+
+    win.set_vsync(False)
+
+    try:
+        def on_close():
+            win.has_exit = True
+
+        win.on_close = on_close
+
+        def on_key_press(symbol, modifiers):
+            if symbol in [key.Q, key.ESCAPE]:
+                on_close()
+
+        win.on_key_press = on_key_press
+
+        def on_expose():
+            gl.glClearColor(1.0, 1.0, 1.0, 1.0)
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+
+            img.blit(
+                (win.width - img.width) / 2,
+                (win.height - img.height) / 2
+            )
+
+        win.on_expose = on_expose
+
+        while not win.has_exit:
+            win.dispatch_events()
+            win.flip()
+    except KeyboardInterrupt:
+        pass
+
+    win.close()
+
 
 @doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
             disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
@@ -137,11 +201,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 raise OSError(
                     "No viewers found for '%s' output format." % output)
     else:
-        if viewer == "StringIO":
-            viewer = "BytesIO"
-            if outputbuffer is None:
-                raise ValueError("outputbuffer has to be a BytesIO "
-                                 "compatible object if viewer=\"StringIO\"")
+        if viewer == "file":
+            if filename is None:
+                raise ValueError("filename has to be specified if viewer=\"file\"")
         elif viewer == "BytesIO":
             if outputbuffer is None:
                 raise ValueError("outputbuffer has to be a BytesIO "
@@ -166,7 +228,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if packages:
             raise ValueError("The \"packages\" keyword must not be set if a "
                              "custom LaTeX preamble was specified")
-    latex_main = preamble + '\n%s\n\n' + r"\end{document}"
 
     if isinstance(expr, str):
         latex_string = expr
@@ -175,11 +236,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                         latex(expr, mode='plain', **latex_settings) +
                         '$')
 
-    try:
-        workdir = tempfile.mkdtemp()
+    latex_main = preamble + '\n' + latex_string + '\n\n' + r"\end{document}"
 
+    with tempfile.TemporaryDirectory() as workdir:
         with io.open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
-            fh.write(unicode(latex_main) % u_decode(latex_string))
+            fh.write(latex_main)
 
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
@@ -188,17 +249,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             raise RuntimeError("latex program is not installed")
 
         try:
-            # Avoid showing a cmd.exe window when running this
-            # on Windows
-            if os.name == 'nt':
-                creation_flag = 0x08000000 # CREATE_NO_WINDOW
-            else:
-                creation_flag = 0 # Default value
-            check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
-                          'texput.tex'],
-                         cwd=workdir,
-                         stderr=STDOUT,
-                         creationflags=creation_flag)
+            _check_output_no_window(
+                ['latex', '-halt-on-error', '-interaction=nonstopmode',
+                 'texput.tex'],
+                cwd=workdir,
+                stderr=STDOUT)
         except CalledProcessError as e:
             raise RuntimeError(
                 "'latex' exited abnormally with the following output:\n%s" %
@@ -252,14 +307,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             cmd.extend(commandend[cmd_variant])
 
             try:
-                # Avoid showing a cmd.exe window when running this
-                # on Windows
-                if os.name == 'nt':
-                    creation_flag = 0x08000000 # CREATE_NO_WINDOW
-                else:
-                    creation_flag = 0 # Default value
-                check_output(cmd, cwd=workdir, stderr=STDOUT,
-                             creationflags=creation_flag)
+                _check_output_no_window(cmd, cwd=workdir, stderr=STDOUT)
             except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s' exited abnormally with the following output:\n%s" %
@@ -267,89 +315,22 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
 
         if viewer == "file":
-            if filename is None:
-                buffer = BytesIO()
-                with open(join(workdir, src), 'rb') as fh:
-                    buffer.write(fh.read())
-                return buffer
-            else:
-                shutil.move(join(workdir,src), filename)
+            shutil.move(join(workdir, src), filename)
         elif viewer == "BytesIO":
             with open(join(workdir, src), 'rb') as fh:
                 outputbuffer.write(fh.read())
         elif viewer == "pyglet":
             try:
-                from pyglet import window, image, gl
-                from pyglet.window import key
+                import pyglet  # noqa: F401
             except ImportError:
                 raise ImportError("pyglet is required for preview.\n visit http://www.pyglet.org/")
 
-            if output == "png":
-                from pyglet.image.codecs.png import PNGImageDecoder
-                img = image.load(join(workdir, src), decoder=PNGImageDecoder())
-            else:
-                raise ValueError("pyglet preview works only for 'png' files.")
-
-            offset = 25
-
-            config = gl.Config(double_buffer=False)
-            win = window.Window(
-                width=img.width + 2*offset,
-                height=img.height + 2*offset,
-                caption="sympy",
-                resizable=False,
-                config=config
-            )
-
-            win.set_vsync(False)
-
-            try:
-                def on_close():
-                    win.has_exit = True
-
-                win.on_close = on_close
-
-                def on_key_press(symbol, modifiers):
-                    if symbol in [key.Q, key.ESCAPE]:
-                        on_close()
-
-                win.on_key_press = on_key_press
-
-                def on_expose():
-                    gl.glClearColor(1.0, 1.0, 1.0, 1.0)
-                    gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-
-                    img.blit(
-                        (win.width - img.width) / 2,
-                        (win.height - img.height) / 2
-                    )
-
-                win.on_expose = on_expose
-
-                while not win.has_exit:
-                    win.dispatch_events()
-                    win.flip()
-            except KeyboardInterrupt:
-                pass
-
-            win.close()
+            return _run_pyglet(join(workdir, src), fmt=output)
         else:
             try:
-                # Avoid showing a cmd.exe window when running this
-                # on Windows
-                if os.name == 'nt':
-                    creation_flag = 0x08000000 # CREATE_NO_WINDOW
-                else:
-                    creation_flag = 0 # Default value
-                check_output([viewer, src], cwd=workdir, stderr=STDOUT,
-                             creationflags=creation_flag)
+                _check_output_no_window(
+                    [viewer, src], cwd=workdir, stderr=STDOUT)
             except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s %s' exited abnormally with the following output:\n%s" %
                     (viewer, src, e.output))
-    finally:
-        try:
-            shutil.rmtree(workdir) # delete directory
-        except OSError as e:
-            if e.errno != 2: # code 2 - no such file or directory
-                raise
