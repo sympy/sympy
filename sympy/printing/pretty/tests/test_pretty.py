@@ -2474,6 +2474,21 @@ u("""\
 ⎣ -x + y     3    x + y ⎦   ⎢ ─────    ───────⎥\n\
                             ⎣ x + y    x - 2⋅y⎦\
 """)
+    expected10 = \
+u("""\
+                                         ⎡ -x - y   -x + y ⎤\n\
+                                         ⎢───────   ────── ⎥\n\
+             ⎡                  2    ⎤   ⎢x - 2⋅y   x + y  ⎥\n\
+             ⎢ -x - y   x - y  x  + y⎥   ⎢                 ⎥\n\
+             ⎢───────   ─────  ──────⎥   ⎢   2             ⎥\n\
+⎡-1   -1 ⎤   ⎢x - 2⋅y   x + y  -x + y⎥   ⎢- x  - y     2   ⎥\n\
+⎢───  ───⎥ x ⎢                       ⎥ x ⎢────────     ─   ⎥\n\
+⎣ 1    1 ⎦   ⎢   2                   ⎥   ⎢ -x + y      3   ⎥\n\
+             ⎢- x  - y    2    -x + y⎥   ⎢                 ⎥\n\
+             ⎢────────    ─    ──────⎥   ⎢ x - y     x + y ⎥\n\
+             ⎣ -x + y     3    x + y ⎦   ⎢ ─────    ───────⎥\n\
+                                         ⎣ x + y    x - 2⋅y⎦\
+""")
     assert upretty(Series(tf1, tf3)) == expected1
     assert upretty(Series(-tf2, -tf1)) == expected2
     assert upretty(Series(tf3, tf1, Parallel(-tf1, tf2))) == expected3
@@ -2483,6 +2498,7 @@ u("""\
     assert upretty(Series(tfm1, tfm2, tfm3)) == expected6
     assert upretty(Series(tfm1, tfm2, tfm3).doit()) == expected8
     assert upretty(Series(-tfm4, -tfm5)) == expected9
+    assert upretty(-Series(-tfm4, -tfm5)) == expected10
 
 
 def test_pretty_Parallel():
@@ -2498,7 +2514,6 @@ def test_pretty_Parallel():
     tfm5 = TransferFunctionMatrix([[-tf2, -tf1], [tf4, -tf3], [tf1, tf2]], (3, 2), y)
     tfm6 = TransferFunctionMatrix([[-tf1, tf2], [-tf3, tf4], [tf2, tf1]])
     tfm7 = TransferFunctionMatrix([[-tf1, -tf2], [-tf3, -tf4]])
-    tfm8 = TransferFunctionMatrix(((tf3, tf2), (tf4, tf1)))
     expected1 = \
 u("""\
  x + y    x - y\n\
@@ -2611,6 +2626,70 @@ u("""\
 ⎢───────   ─────  ⎥   ⎢───────  ────── ⎥                     \n\
 ⎣x - 2⋅y   x + y  ⎦   ⎣x - 2⋅y  x + y  ⎦                     \
 """)
+    expected11 = \
+u("""\
+⎡ -x - y   -x + y ⎤   ⎡ x - y    x + y ⎤\n\
+⎢───────   ────── ⎥   ⎢ ─────   ───────⎥\n\
+⎢x - 2⋅y   x + y  ⎥   ⎢ x + y   x - 2⋅y⎥\n\
+⎢                 ⎥   ⎢                ⎥\n\
+⎢   2            2⎥   ⎢     2    2     ⎥\n\
+⎢- x  - y  -x + y ⎥   ⎢x - y    x  + y ⎥\n\
+⎢────────  ───────⎥ + ⎢──────   ────── ⎥\n\
+⎢ -x + y     3    ⎥   ⎢ 3       -x + y ⎥\n\
+⎢           x  + x⎥   ⎢x  + x          ⎥\n\
+⎢                 ⎥   ⎢                ⎥\n\
+⎢ x - y     x + y ⎥   ⎢ -x - y  -x + y ⎥\n\
+⎢ ─────    ───────⎥   ⎢───────  ────── ⎥\n\
+⎣ x + y    x - 2⋅y⎦   ⎣x - 2⋅y  x + y  ⎦\
+""")
+    expected12 = \
+u("""\
+⎡  -x - y   x - y   -x + y    x + y ⎤\n\
+⎢ ─────── + ─────   ────── + ───────⎥\n\
+⎢ x - 2⋅y   x + y   x + y    x - 2⋅y⎥\n\
+⎢                                   ⎥\n\
+⎢   2            2        2    2    ⎥\n\
+⎢- x  - y   x - y   -x + y    x  + y⎥\n\
+⎢──────── + ──────  ─────── + ──────⎥\n\
+⎢ -x + y     3        3       -x + y⎥\n\
+⎢           x  + x   x  + x         ⎥\n\
+⎢                                   ⎥\n\
+⎢ x - y    -x - y    x + y    -x + y⎥\n\
+⎢ ───── + ───────   ─────── + ──────⎥\n\
+⎣ x + y   x - 2⋅y   x - 2⋅y   x + y ⎦\
+""")
+    expected13 = \
+u("""\
+⎡ -x - y    x - y ⎤   ⎡-x + y    -x - y ⎤   ⎡ -x - y   -x + y ⎤\n\
+⎢───────    ───── ⎥   ⎢──────   ─────── ⎥   ⎢───────   ────── ⎥\n\
+⎢x - 2⋅y    x + y ⎥   ⎢x + y    x - 2⋅y ⎥   ⎢x - 2⋅y   x + y  ⎥\n\
+⎢                 ⎥   ⎢                 ⎥   ⎢                 ⎥\n\
+⎢   2            2⎥   ⎢      2     2    ⎥   ⎢   2            2⎥\n\
+⎢- x  - y  -x + y ⎥   ⎢-x + y   - x  - y⎥   ⎢- x  - y  -x + y ⎥\n\
+⎢────────  ───────⎥ + ⎢───────  ────────⎥ + ⎢────────  ───────⎥\n\
+⎢ -x + y     3    ⎥   ⎢  3       -x + y ⎥   ⎢ -x + y     3    ⎥\n\
+⎢           x  + x⎥   ⎢ x  + x          ⎥   ⎢           x  + x⎥\n\
+⎢                 ⎥   ⎢                 ⎥   ⎢                 ⎥\n\
+⎢ x - y     x + y ⎥   ⎢ x + y    x - y  ⎥   ⎢ x - y     x + y ⎥\n\
+⎢ ─────    ───────⎥   ⎢───────   ─────  ⎥   ⎢ ─────    ───────⎥\n\
+⎣ x + y    x - 2⋅y⎦   ⎣x - 2⋅y   x + y  ⎦   ⎣ x + y    x - 2⋅y⎦\
+""")
+    expected14 = \
+u("""\
+⎡  -x - y   -x + y    -x - y      x - y    -x - y   -x + y  ⎤\n\
+⎢ ─────── + ────── + ───────      ───── + ─────── + ──────  ⎥\n\
+⎢ x - 2⋅y   x + y    x - 2⋅y      x + y   x - 2⋅y   x + y   ⎥\n\
+⎢                                                           ⎥\n\
+⎢   2             2      2            2      2             2⎥\n\
+⎢- x  - y   -x + y    - x  - y  -x + y    - x  - y   -x + y ⎥\n\
+⎢──────── + ─────── + ────────  ─────── + ──────── + ───────⎥\n\
+⎢ -x + y      3        -x + y     3        -x + y      3    ⎥\n\
+⎢            x  + x              x  + x               x  + x⎥\n\
+⎢                                                           ⎥\n\
+⎢   x - y    x + y    x - y       x + y    x - y    x + y   ⎥\n\
+⎢   ───── + ─────── + ─────      ─────── + ───── + ───────  ⎥\n\
+⎣   x + y   x - 2⋅y   x + y      x - 2⋅y   x + y   x - 2⋅y  ⎦\
+""")
     assert upretty(Parallel(tf1, tf2)) == expected1
     assert upretty(Parallel(-tf2, -tf1)) == expected2
     assert upretty(Parallel(tf3, tf1, Series(-tf1, tf2))) == expected3
@@ -2618,8 +2697,12 @@ u("""\
     assert upretty(Parallel(tfm1, tfm2)) == expected5
     assert upretty(Parallel(tfm3, tfm1, tfm2)) == expected6
     assert upretty(Parallel(tfm4, tfm5)) == expected7
+    assert upretty(-Parallel(tfm4, tfm5)) == expected11
+    assert upretty((-Parallel(tfm4, tfm5)).doit()) == expected12
     assert upretty(Parallel(-tfm6, -tfm5, tfm4)) == expected8
     assert upretty(Parallel(-tfm6, -tfm5, tfm4).doit()) == expected9
+    assert upretty(-Parallel(-tfm6, -tfm5, tfm4)) == expected13
+    assert upretty((-Parallel(-tfm6, -tfm5, tfm4)).doit()) == expected14
     assert upretty(Parallel(tfm5, Series(-tfm5, tfm7))) == expected10
 
 

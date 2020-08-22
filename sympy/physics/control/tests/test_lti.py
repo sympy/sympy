@@ -752,7 +752,7 @@ def test_Parallel_functions():
     assert not P4.is_strictly_proper
     assert not P4.is_biproper
 
-    P5 = Parallel(Series(tfm4, tfm5), Series(-tfm5, tfm4))
+    P5 = Parallel(Series(tfm4, tfm5), tfm4)
     assert not P5.is_proper
     assert not P5.is_strictly_proper
     assert not P5.is_biproper

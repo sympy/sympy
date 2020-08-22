@@ -691,7 +691,11 @@ class Series(Basic):
             raise ValueError("This transfer function expression is invalid.")
 
     def __neg__(self):
-        return Series(TransferFunction(-1, 1, self.var), self)
+        if self.is_SISO:
+            return Series(TransferFunction(-1, 1, self.var), self)
+        else:
+            neg_tfm = [[TransferFunction(-1, 1, self.var)] * self.num_outputs]
+            return Series(TransferFunctionMatrix(neg_tfm), self)
 
     @property
     def is_proper(self):
@@ -977,8 +981,8 @@ class Parallel(Basic):
         if self.is_SISO:
             return Series(TransferFunction(-1, 1, self.var), self)
         else:
-            neg_tfm = [[TransferFunction(-1, 1, self.var)] * self.num_outputs]
-            return Series(TransferFunctionMatrix(neg_tfm), self)
+            neg_args = [-arg for arg in self.args]
+            return Parallel(*neg_args)
 
     @property
     def is_proper(self):
