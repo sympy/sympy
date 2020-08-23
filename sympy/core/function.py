@@ -39,7 +39,7 @@ from .cache import cacheit
 from .compatibility import iterable, is_sequence, as_int, ordered, Iterable
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
-from .numbers import Rational, Float
+from .numbers import Rational, Float, I
 from .operations import LatticeOp
 from .rules import Transform
 from .singleton import S
@@ -559,14 +559,14 @@ class Function(Application, Expr):
                 cast_to_complex = not self.is_real
             else:
                 cast_to_complex = False
-            from mpmath import mpf, mpc, workdps
+            from mpmath import re, im, workdps
             try:
                 num = imp(*[i.evalf(prec) for i in self.args])
                 with workdps(prec):
                     if cast_to_complex:
-                        return sympify(mpc(num))
+                        return Float(re(num), prec) + Float(im(num), prec) * I
                     else:
-                        return sympify(mpf(num))
+                        return Float(num, prec)
             except (TypeError, ValueError):
                 return None
 

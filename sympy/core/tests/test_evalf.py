@@ -346,6 +346,14 @@ def test_implemented_function_evalf():
     assert fc(x).evalf() == fc(x)
     del fc._imp_    # XXX: due to caching _imp_ would influence all other tests
 
+    # this one is more involved then it looks like
+    # since mpf(np.int64(1)) raises "TypeError: cannot create mpf from 1"
+    fi = Function('fi', real=False)
+    fi = implemented_function(fi, lambda x: 1)
+    assert conjugate(fi(1)).evalf() == 1
+    assert fi(x).evalf() == 1
+    del fi._imp_    # XXX: due to caching _imp_ would influence all other tests
+
 
 def test_evaluate_false():
     for no in [0, False]:
