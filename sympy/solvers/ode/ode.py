@@ -1956,7 +1956,8 @@ def classify_sysode(eq, funcs=None, **kwargs):
             if matching_hints['no_of_equation'] == 2:
                 if order_eq == 1:
                     type_of_equation = check_linear_2eq_order1(eq, funcs, func_coef)
-
+                else:
+                    type_of_equation = None
             # If the equation doesn't match up with any of the
             # general case solvers in systems.py and the number
             # of equations is greater than 2, then NotImplementedError

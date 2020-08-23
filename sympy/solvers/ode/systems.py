@@ -1194,10 +1194,10 @@ def _is_euler_system(As, t):
     return all(_matrix_is_constant((A*t**i).applyfunc(ratsimp), t) for i, A in enumerate(As))
 
 
-def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
+def _classify_linear_system(eqs, funcs, t, is_canon=False):
     r"""
-    Returns a dictionary with details of the eqs if every equation is constant coefficient
-    and linear else returns None
+    Returns a dictionary with details of the eqs if the system passed is linear
+    and can be classified by this function else returns None
 
     Explanation
     ===========
@@ -1378,6 +1378,16 @@ def neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=False):
                 t_ = Symbol('{}_'.format(t))
                 match.update({'is_transformed': True, 'type_of_equation': 'type1',
                               't_': t_})
+            else:
+                is_jordan = lambda M: M == Matrix.jordan_block(M.shape[0], M[0, 0])
+                terms = _factor_matrix(As[-1], t)
+                if all(A.is_zero_matrix for A in As[1:-1]) and terms is not None and not is_jordan(terms[1]):
+                    P, J = terms[1].jordan_form()
+                    match.update({'type_of_equation': 'type2', 'J': J,
+                                  'f(t)': terms[0], 'P': P, 'is_transformed': True})
+
+            if match['type_of_equation'] != 'type0' and is_second_order:
+                match.pop('is_second_order', None)
 
         match['is_higher_order'] = is_higher_order
 
@@ -1487,35 +1497,40 @@ def _select_equations(eqs, funcs, key=lambda x: x):
 
 
 def _higher_order_ode_solver(match):
-    from sympy.solvers.ode.ode import dsolve
-
     eqs = match["eq"]
     funcs = match["func"]
     t = match["t"]
+    sysorder = match['order']
     type = match.get('type_of_equation', "type0")
 
     is_second_order = match.get('is_second_order', False)
     is_transformed = match.get('is_transformed', False)
     is_euler = is_transformed and type == "type1"
+    is_higher_order_type2 = is_transformed and type == "type2" and 'P' in match
 
-    if is_second_order and not is_euler:
+    if is_second_order:
         new_eqs, new_funcs = _second_order_to_first_order(eqs, funcs, t,
                                                           A1=match.get("A1", None), A0=match.get("A0", None),
                                                           b=match.get("rhs", None), type=type,
                                                           t_=match.get("t_", None))
     else:
-        new_eqs, new_funcs = _higher_order_to_first_order(eqs, match['order'], t, funcs=funcs,
-                                                          type=type)
+        new_eqs, new_funcs = _higher_order_to_first_order(eqs, sysorder, t, funcs=funcs,
+                                                          type=type, J=match.get('J', None),
+                                                          f_t=match.get('f(t)', None))
 
-    if match.get("is_transformed", False):
-        t = match['t_']
+    if is_transformed:
+        t = match.get('t_', t)
 
-    new_eqs = _select_equations(new_eqs, [f.diff(t) for f in new_funcs])
+    if not is_higher_order_type2:
+        new_eqs = _select_equations(new_eqs, [f.diff(t) for f in new_funcs])
+
+    sol = None
 
     # NotImplementedError may be raised when the system may be actually
     # solvable if it can be just divided into sub-systems
     try:
-        sol = _strong_component_solver(new_eqs, new_funcs, t)
+        if not is_higher_order_type2:
+            sol = _strong_component_solver(new_eqs, new_funcs, t)
     except NotImplementedError:
         sol = None
 
@@ -1527,12 +1542,6 @@ def _higher_order_ode_solver(match):
             sol = None
 
     if sol is None:
-        if len(eqs) == 1:
-            try:
-                sol = [dsolve(eqs[0], func=funcs[0])]
-            except NotImplementedError:
-                sol = None
-
         return sol
 
     is_second_order_type2 = is_second_order and type == "type2"
@@ -1540,8 +1549,7 @@ def _higher_order_ode_solver(match):
     underscores = '__' if is_transformed else '_'
 
     sol = _select_equations(sol, funcs,
-                            key=lambda x: Function(Dummy('{}{}0'.format(x.func.__name__,
-                                                                        underscores)))(t))
+                            key=lambda x: Function(Dummy('{}{}0'.format(x.func.__name__, underscores)))(t))
 
     if match.get("is_transformed", False):
         if is_second_order_type2:
@@ -1552,6 +1560,10 @@ def _higher_order_ode_solver(match):
             t = match['t']
             tau = match['t_']
             sol = [s.subs(tau, log(t)) for s in sol]
+        elif is_higher_order_type2:
+            P = match['P']
+            sol_vector = P * Matrix([s.rhs for s in sol])
+            sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
 
     return sol
 
@@ -1560,7 +1572,10 @@ def _higher_order_ode_solver(match):
 # If None is returned by this solver, then the system
 # of ODEs cannot be solved directly by dsolve_system.
 def _strong_component_solver(eqs, funcs, t):
-    match = neq_nth_linear_constant_coeff_match(eqs, funcs, t, is_canon=True)
+    from sympy.solvers.ode.ode import dsolve, constant_renumber
+
+    match = _classify_linear_system(eqs, funcs, t, is_canon=True)
+    sol = None
 
     # Assuming that we can't get an implicit system
     # since we are already canonical equations from
@@ -1569,14 +1584,23 @@ def _strong_component_solver(eqs, funcs, t):
         match['t'] = t
 
         if match.get('is_higher_order', False):
-            return _higher_order_ode_solver(match)
+            sol = _higher_order_ode_solver(match)
 
-        if match.get('is_linear', False):
-            return _linear_ode_solver(match)
+        elif match.get('is_linear', False):
+            sol = _linear_ode_solver(match)
+
+        # Note: For now, only linear systems are handled by this function
+        # hence, the match condition is added. This can be removed later.
+        if sol is None and len(eqs) == 1:
+            sol = dsolve(eqs[0], func=funcs[0])
+            variables = Tuple(eqs[0]).free_symbols
+            new_constants = [Dummy() for _ in range(ode_order(eqs[0], funcs[0]))]
+            sol = constant_renumber(sol, variables=variables, newconstants=new_constants)
+            sol = [sol]
 
         # To add non-linear case here in future
 
-    return None
+    return sol
 
 
 def _get_funcs_from_canon(eqs):
@@ -1702,10 +1726,27 @@ def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
     return _higher_order_to_first_order(eqs, sys_order, t, funcs=funcs)
 
 
-def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0"):
+def _higher_order_type2_to_sub_systems(J, f_t, funcs, t, max_order):
+
+    # Note: To add a test for this ValueError
+    if J is None or f_t is None or not _matrix_is_constant(J, t):
+        raise ValueError(filldedent('''
+            Correctly input for args 'A' and 'f_t' for Linear, Higher Order,
+            Type 2
+        '''))
+
+    new_funcs = Matrix([Function(Dummy('{}__0'.format(f.func.__name__)))(t) for f in funcs])
+    new_eqs = new_funcs.diff(t, max_order) - f_t * J * new_funcs
+    new_eqs = canonical_odes(new_eqs, new_funcs, t)[0]
+
+    return new_eqs, new_funcs
+
+
+def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **kwargs):
     if funcs is None:
         funcs = sys_order.keys()
 
+    # Standard Cauchy Euler system
     if type == "type1":
         t_ = Symbol('{}_'.format(t))
         new_funcs = [Function(Dummy('{}_'.format(f.func.__name__)))(t_) for f in funcs]
@@ -1754,6 +1795,21 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0"):
         new_eqs = canonical_odes(new_eqs, new_funcs, t_)[0]
 
         return _higher_order_to_first_order(new_eqs, new_sys_order, t_, funcs=new_funcs)
+
+    # Systems of the form: X(n)(t) = f(t)*A*X + b
+    # where X(n)(t) is the nth derivative of the vector of dependent variables
+    # with respect to the independent variable and A is a constant matrix.
+    if type == "type2":
+        J = kwargs.get('J', None)
+        f_t = kwargs.get('f_t', None)
+        max_order = max(sys_order[func] for func in funcs)
+
+        return _higher_order_type2_to_sub_systems(J, f_t, funcs, t, max_order)
+
+        # Note: To be changed to this after doit option is disabled for default cases
+        # new_sysorder = _get_func_order(new_eqs, new_funcs)
+        #
+        # return _higher_order_to_first_order(new_eqs, new_sysorder, t, funcs=new_funcs)
 
     new_funcs = []
 

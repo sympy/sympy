@@ -6,7 +6,7 @@ from sympy.matrices import dotprodsimp, NonSquareMatrixError
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.ode import constant_renumber
 from sympy.solvers.ode.subscheck import checksysodesol
-from sympy.solvers.ode.systems import (neq_nth_linear_constant_coeff_match, linear_ode_to_matrix,
+from sympy.solvers.ode.systems import (_classify_linear_system, linear_ode_to_matrix,
                                        ODEOrderError, ODENonlinearError, _simpsol, _solsimp,
                                        _is_commutative_anti_derivative, linodesolve,
                                        canonical_odes, dsolve_system, _component_division,
@@ -56,7 +56,7 @@ def test_linear_ode_to_matrix():
     raises(ODENonlinearError, lambda: linear_ode_to_matrix(eqs_6, funcs[:-1], t, 1))
 
 
-def test_neq_nth_linear_constant_coeff_match():
+def test__classify_linear_system():
     x, y, z, w = symbols('x, y, z, w', cls=Function)
     t, k, l = symbols('t k l')
     x1 = diff(x(t), t)
@@ -69,7 +69,7 @@ def test_neq_nth_linear_constant_coeff_match():
     funcs_2 = funcs + [z(t), w(t)]
 
     eqs_1 = (5 * x1 + 12 * x(t) - 6 * (y(t)), (2 * y1 - 11 * t * x(t) + 3 * y(t) + t))
-    assert neq_nth_linear_constant_coeff_match(eqs_1, funcs, t) is None
+    assert _classify_linear_system(eqs_1, funcs, t) is None
 
     eqs_2 = (5 * (x1**2) + 12 * x(t) - 6 * (y(t)), (2 * y1 - 11 * t * x(t) + 3 * y(t) + t))
     sol2 = {'is_implicit': True,
@@ -77,15 +77,15 @@ def test_neq_nth_linear_constant_coeff_match():
             Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)],
             [Eq(Derivative(x(t), t), sqrt(-12*x(t)/5 + 6*y(t)/5)),
             Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)]]}
-    assert neq_nth_linear_constant_coeff_match(eqs_2, funcs, t) == sol2
+    assert _classify_linear_system(eqs_2, funcs, t) == sol2
 
     eqs_2_1 = [Eq(Derivative(x(t), t), -sqrt(-12*x(t)/5 + 6*y(t)/5)),
             Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)]
-    assert neq_nth_linear_constant_coeff_match(eqs_2_1, funcs, t) is None
+    assert _classify_linear_system(eqs_2_1, funcs, t) is None
 
     eqs_2_2 = [Eq(Derivative(x(t), t), sqrt(-12*x(t)/5 + 6*y(t)/5)),
             Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)]
-    assert neq_nth_linear_constant_coeff_match(eqs_2_2, funcs, t) is None
+    assert _classify_linear_system(eqs_2_2, funcs, t) is None
 
     eqs_3 = (5 * x1 + 12 * x(t) - 6 * (y(t)), (2 * y1 - 11 * x(t) + 3 * y(t)), (5 * w1 + z(t)), (z1 + w(t)))
     answer_3 = {'no_of_equation': 4,
@@ -105,7 +105,7 @@ def test_neq_nth_linear_constant_coeff_match():
      [0, 0, Rational(1, 5), 0]]),
      'type_of_equation': 'type1',
      'is_general': True}
-    assert neq_nth_linear_constant_coeff_match(eqs_3, funcs_2, t) == answer_3
+    assert _classify_linear_system(eqs_3, funcs_2, t) == answer_3
 
     eqs_4 = (5 * x1 + 12 * x(t) - 6 * (y(t)), (2 * y1 - 11 * x(t) + 3 * y(t)), (z1 - w(t)), (w1 - z(t)))
     answer_4 = {'no_of_equation': 4,
@@ -125,14 +125,14 @@ def test_neq_nth_linear_constant_coeff_match():
          [0, 0, -1, 0]]),
      'type_of_equation': 'type1',
      'is_general': True}
-    assert neq_nth_linear_constant_coeff_match(eqs_4, funcs_2, t) == answer_4
+    assert _classify_linear_system(eqs_4, funcs_2, t) == answer_4
 
     eqs_5 = (5*x1 + 12*x(t) - 6*(y(t)) + x2, (2*y1 - 11*x(t) + 3*y(t)), (z1 - w(t)), (w1 - z(t)))
     answer_5 = {'no_of_equation': 4, 'eq': (12*x(t) - 6*y(t) + 5*Derivative(x(t), t) + Derivative(x(t), (t, 2)),
                 -11*x(t) + 3*y(t) + 2*Derivative(y(t), t), -w(t) + Derivative(z(t), t), -z(t) + Derivative(w(t),
                 t)), 'func': [x(t), y(t), z(t), w(t)], 'order': {x(t): 2, y(t): 1, z(t): 1, w(t): 1}, 'is_linear':
                 True, 'is_homogeneous': True, 'is_general': True, 'type_of_equation': 'type0', 'is_higher_order': True}
-    assert neq_nth_linear_constant_coeff_match(eqs_5, funcs_2, t) == answer_5
+    assert _classify_linear_system(eqs_5, funcs_2, t) == answer_5
 
     eqs_6 = (Eq(x1, 3*y(t) - 11*z(t)), Eq(y1, 7*z(t) - 3*x(t)), Eq(z1, 11*x(t) - 7*y(t)))
     answer_6 = {'no_of_equation': 3, 'eq': (Eq(Derivative(x(t), t), 3*y(t) - 11*z(t)), Eq(Derivative(y(t), t), -3*x(t) + 7*z(t)),
@@ -144,7 +144,7 @@ def test_neq_nth_linear_constant_coeff_match():
                          [-11,  7,  0]]),
             'type_of_equation': 'type1', 'is_general': True}
 
-    assert neq_nth_linear_constant_coeff_match(eqs_6, funcs_2[:-1], t) == answer_6
+    assert _classify_linear_system(eqs_6, funcs_2[:-1], t) == answer_6
 
     eqs_7 = (Eq(x1, y(t)), Eq(y1, x(t)))
     answer_7 = {'no_of_equation': 2, 'eq': (Eq(Derivative(x(t), t), y(t)), Eq(Derivative(y(t), t), x(t))),
@@ -153,7 +153,7 @@ def test_neq_nth_linear_constant_coeff_match():
                                                         [ 0, -1],
                                                         [-1,  0]]),
                 'type_of_equation': 'type1', 'is_general': True}
-    assert neq_nth_linear_constant_coeff_match(eqs_7, funcs, t) == answer_7
+    assert _classify_linear_system(eqs_7, funcs, t) == answer_7
 
     eqs_8 = (Eq(x1, 21*x(t)), Eq(y1, 17*x(t) + 3*y(t)), Eq(z1, 5*x(t) + 7*y(t) + 9*z(t)))
     answer_8 = {'no_of_equation': 3, 'eq': (Eq(Derivative(x(t), t), 21*x(t)), Eq(Derivative(y(t), t), 17*x(t) + 3*y(t)),
@@ -165,7 +165,7 @@ def test_neq_nth_linear_constant_coeff_match():
                             [ -5, -7, -9]]),
             'type_of_equation': 'type1', 'is_general': True}
 
-    assert neq_nth_linear_constant_coeff_match(eqs_8, funcs_2[:-1], t) == answer_8
+    assert _classify_linear_system(eqs_8, funcs_2[:-1], t) == answer_8
 
     eqs_9 = (Eq(x1, 4*x(t) + 5*y(t) + 2*z(t)), Eq(y1, x(t) + 13*y(t) + 9*z(t)), Eq(z1, 32*x(t) + 41*y(t) + 11*z(t)))
     answer_9 = {'no_of_equation': 3, 'eq': (Eq(Derivative(x(t), t), 4*x(t) + 5*y(t) + 2*z(t)),
@@ -177,7 +177,7 @@ def test_neq_nth_linear_constant_coeff_match():
                             [ -1, -13,  -9],
                             [-32, -41, -11]]),
                 'type_of_equation': 'type1', 'is_general': True}
-    assert neq_nth_linear_constant_coeff_match(eqs_9, funcs_2[:-1], t) == answer_9
+    assert _classify_linear_system(eqs_9, funcs_2[:-1], t) == answer_9
 
     eqs_10 = (Eq(3*x1, 4*5*(y(t) - z(t))), Eq(4*y1, 3*5*(z(t) - x(t))), Eq(5*z1, 3*4*(x(t) - y(t))))
     answer_10 = {'no_of_equation': 3, 'eq': (Eq(3*Derivative(x(t), t), 20*y(t) - 20*z(t)),
@@ -189,14 +189,14 @@ def test_neq_nth_linear_constant_coeff_match():
                                 [Rational(15, 4),     0, Rational(-15, 4)],
                                 [Rational(-12, 5), Rational(12, 5),  0]]),
                 'type_of_equation': 'type1', 'is_general': True}
-    assert neq_nth_linear_constant_coeff_match(eqs_10, funcs_2[:-1], t) == answer_10
+    assert _classify_linear_system(eqs_10, funcs_2[:-1], t) == answer_10
 
     eq11 = (Eq(x1, 3*y(t) - 11*z(t)), Eq(y1, 7*z(t) - 3*x(t)), Eq(z1, 11*x(t) - 7*y(t)))
     sol11 = {'no_of_equation': 3, 'eq': (Eq(Derivative(x(t), t), 3*y(t) - 11*z(t)), Eq(Derivative(y(t), t), -3*x(t) + 7*z(t)),
             Eq(Derivative(z(t), t), 11*x(t) - 7*y(t))), 'func': [x(t), y(t), z(t)], 'order': {x(t): 1, y(t): 1, z(t): 1},
             'is_linear': True, 'is_constant': True, 'is_homogeneous': True, 'func_coeff': -Matrix([
             [  0, -3, 11], [  3,  0, -7], [-11,  7,  0]]), 'type_of_equation': 'type1', 'is_general': True}
-    assert neq_nth_linear_constant_coeff_match(eq11, funcs_2[:-1], t) == sol11
+    assert _classify_linear_system(eq11, funcs_2[:-1], t) == sol11
 
     eq12 = (Eq(Derivative(x(t), t), y(t)), Eq(Derivative(y(t), t), x(t)))
     sol12 = {'no_of_equation': 2, 'eq': (Eq(Derivative(x(t), t), y(t)), Eq(Derivative(y(t), t), x(t))),
@@ -204,7 +204,7 @@ def test_neq_nth_linear_constant_coeff_match():
              'is_homogeneous': True, 'func_coeff': -Matrix([
             [0, -1],
             [-1, 0]]), 'type_of_equation': 'type1', 'is_general': True}
-    assert neq_nth_linear_constant_coeff_match(eq12, [x(t), y(t)], t) == sol12
+    assert _classify_linear_system(eq12, [x(t), y(t)], t) == sol12
 
     eq13 = (Eq(Derivative(x(t), t), 21*x(t)), Eq(Derivative(y(t), t), 17*x(t) + 3*y(t)),
             Eq(Derivative(z(t), t), 5*x(t) + 7*y(t) + 9*z(t)))
@@ -216,7 +216,7 @@ def test_neq_nth_linear_constant_coeff_match():
                  [-21, 0, 0],
                  [-17, -3, 0],
                  [-5, -7, -9]]), 'type_of_equation': 'type1', 'is_general': True}
-    assert neq_nth_linear_constant_coeff_match(eq13, [x(t), y(t), z(t)], t) == sol13
+    assert _classify_linear_system(eq13, [x(t), y(t), z(t)], t) == sol13
 
     eq14 = (
         Eq(Derivative(x(t), t), 4*x(t) + 5*y(t) + 2*z(t)), Eq(Derivative(y(t), t), x(t) + 13*y(t) + 9*z(t)),
@@ -229,7 +229,7 @@ def test_neq_nth_linear_constant_coeff_match():
                  [-4, -5, -2],
                  [-1, -13, -9],
                  [-32, -41, -11]]), 'type_of_equation': 'type1', 'is_general': True}
-    assert neq_nth_linear_constant_coeff_match(eq14, [x(t), y(t), z(t)], t) == sol14
+    assert _classify_linear_system(eq14, [x(t), y(t), z(t)], t) == sol14
 
     eq15 = (Eq(3*Derivative(x(t), t), 20*y(t) - 20*z(t)), Eq(4*Derivative(y(t), t), -15*x(t) + 15*z(t)),
             Eq(5*Derivative(z(t), t), 12*x(t) - 12*y(t)))
@@ -241,7 +241,7 @@ def test_neq_nth_linear_constant_coeff_match():
                  [0, Rational(-20, 3), Rational(20, 3)],
                  [Rational(15, 4), 0, Rational(-15, 4)],
                  [Rational(-12, 5), Rational(12, 5), 0]]), 'type_of_equation': 'type1', 'is_general': True}
-    assert neq_nth_linear_constant_coeff_match(eq15, [x(t), y(t), z(t)], t) == sol15
+    assert _classify_linear_system(eq15, [x(t), y(t), z(t)], t) == sol15
 
     # Constant coefficient homogeneous ODEs
     eq1 = (Eq(diff(x(t), t), x(t) + y(t) + 9), Eq(diff(y(t), t), 2*x(t) + 5*y(t) + 23))
@@ -249,7 +249,7 @@ def test_neq_nth_linear_constant_coeff_match():
         Eq(Derivative(y(t), t), 2*x(t) + 5*y(t) + 23)), 'func': [x(t), y(t)],
         'order': {x(t): 1, y(t): 1}, 'is_linear': True, 'is_constant': True, 'is_homogeneous': False, 'is_general': True,
         'func_coeff': -Matrix([[-1, -1], [-2, -5]]), 'rhs': Matrix([[ 9], [23]]), 'type_of_equation': 'type2'}
-    assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
+    assert _classify_linear_system(eq1, funcs, t) == sol1
 
     # Non constant coefficient homogeneous ODEs
     eq1 = (Eq(diff(x(t), t), 5*t*x(t) + 2*y(t)), Eq(diff(y(t), t), 2*x(t) + 5*t*y(t)))
@@ -257,7 +257,7 @@ def test_neq_nth_linear_constant_coeff_match():
             'func': [x(t), y(t)], 'order': {x(t): 1, y(t): 1}, 'is_linear': True, 'is_constant': False,
             'is_homogeneous': True, 'func_coeff': -Matrix([ [-5*t,   -2], [  -2, -5*t]]), 'commutative_antiderivative': Matrix([
             [5*t**2/2,      2*t], [     2*t, 5*t**2/2]]), 'type_of_equation': 'type3', 'is_general': True}
-    assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
+    assert _classify_linear_system(eq1, funcs, t) == sol1
 
     # Non constant coefficient non-homogeneous ODEs
     eq1 = [Eq(x1, x(t) + t*y(t) + t), Eq(y1, t*x(t) + y(t))]
@@ -266,7 +266,7 @@ def test_neq_nth_linear_constant_coeff_match():
             'is_constant': False, 'is_homogeneous': False, 'is_general': True, 'func_coeff': -Matrix([ [-1, -t],
             [-t, -1]]), 'commutative_antiderivative': Matrix([ [     t, t**2/2], [t**2/2,      t]]), 'rhs':
             Matrix([ [t], [0]]), 'type_of_equation': 'type4'}
-    assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
+    assert _classify_linear_system(eq1, funcs, t) == sol1
 
     eq2 = [Eq(x1, t*x(t) + t*y(t) + t), Eq(y1, t*x(t) + t*y(t) + cos(t))]
     sol2 = {'no_of_equation': 2, 'eq': [Eq(Derivative(x(t), t), t*x(t) + t*y(t) + t), Eq(Derivative(y(t), t),
@@ -274,7 +274,7 @@ def test_neq_nth_linear_constant_coeff_match():
             'is_homogeneous': False, 'is_general': True, 'rhs': Matrix([ [     t], [cos(t)]]), 'func_coeff':
             Matrix([ [t, t], [t, t]]), 'is_constant': False, 'type_of_equation': 'type4',
             'commutative_antiderivative': Matrix([ [t**2/2, t**2/2], [t**2/2, t**2/2]])}
-    assert neq_nth_linear_constant_coeff_match(eq2, funcs, t) == sol2
+    assert _classify_linear_system(eq2, funcs, t) == sol2
 
     eq3 = [Eq(x1, t*(x(t) + y(t) + z(t) + 1)), Eq(y1, t*(x(t) + y(t) + z(t))), Eq(z1, t*(x(t) + y(t) + z(t)))]
     sol3 = {'no_of_equation': 3, 'eq': [Eq(Derivative(x(t), t), t*(x(t) + y(t) + z(t) + 1)),
@@ -284,7 +284,7 @@ def test_neq_nth_linear_constant_coeff_match():
             -t], [-t, -t, -t]]), 'commutative_antiderivative': Matrix([ [t**2/2, t**2/2, t**2/2], [t**2/2,
             t**2/2, t**2/2], [t**2/2, t**2/2, t**2/2]]), 'rhs': Matrix([ [t], [0], [0]]), 'type_of_equation':
             'type4'}
-    assert neq_nth_linear_constant_coeff_match(eq3, funcs_2[:-1], t) == sol3
+    assert _classify_linear_system(eq3, funcs_2[:-1], t) == sol3
 
     eq4 = [Eq(x1, x(t) + y(t) + t*z(t) + 1), Eq(y1, x(t) + t*y(t) + z(t) + 10), Eq(z1, t*x(t) + y(t) + z(t) + t)]
     sol4 = {'no_of_equation': 3, 'eq': [Eq(Derivative(x(t), t), t*z(t) + x(t) + y(t) + 1), Eq(Derivative(y(t),
@@ -293,7 +293,7 @@ def test_neq_nth_linear_constant_coeff_match():
             'is_homogeneous': False, 'is_general': True, 'func_coeff': -Matrix([ [-1, -1, -t], [-1, -t, -1], [-t,
             -1, -1]]), 'commutative_antiderivative': Matrix([ [     t,      t, t**2/2], [     t, t**2/2,
             t], [t**2/2,      t,      t]]), 'rhs': Matrix([ [ 1], [10], [ t]]), 'type_of_equation': 'type4'}
-    assert neq_nth_linear_constant_coeff_match(eq4, funcs_2[:-1], t) == sol4
+    assert _classify_linear_system(eq4, funcs_2[:-1], t) == sol4
 
     sum_terms = t*(x(t) + y(t) + z(t) + w(t))
     eq5 = [Eq(x1, sum_terms), Eq(y1, sum_terms), Eq(z1, sum_terms + 1), Eq(w1, sum_terms)]
@@ -305,7 +305,7 @@ def test_neq_nth_linear_constant_coeff_match():
             -t], [-t, -t, -t, -t], [-t, -t, -t, -t]]), 'commutative_antiderivative': Matrix([ [t**2/2, t**2/2,
             t**2/2, t**2/2], [t**2/2, t**2/2, t**2/2, t**2/2], [t**2/2, t**2/2, t**2/2, t**2/2], [t**2/2,
             t**2/2, t**2/2, t**2/2]]), 'rhs': Matrix([ [0], [0], [1], [0]]), 'type_of_equation': 'type4'}
-    assert neq_nth_linear_constant_coeff_match(eq5, funcs_2, t) == sol5
+    assert _classify_linear_system(eq5, funcs_2, t) == sol5
 
     # Second Order
     t_ = symbols("t_")
@@ -318,7 +318,7 @@ def test_neq_nth_linear_constant_coeff_match():
             {x(t): 2, y(t): 2}, 'is_linear': True, 'is_homogeneous': False, 'is_general': True, 'rhs': Matrix([
             [11*exp(I*t)], [ 2*exp(I*t)]]), 'type_of_equation': 'type0', 'is_second_order': True,
             'is_higher_order': True}
-    assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
+    assert _classify_linear_system(eq1, funcs, t) == sol1
 
     eq2 = (Eq((4*t**2 + 7*t + 1)**2*Derivative(x(t), (t, 2)), 5*x(t) + 35*y(t)),
            Eq((4*t**2 + 7*t + 1)**2*Derivative(y(t), (t, 2)), x(t) + 9*y(t)))
@@ -328,7 +328,7 @@ def test_neq_nth_linear_constant_coeff_match():
             'type_of_equation': 'type2', 'A0': Matrix([ [Rational(53, 4),   35], [   1, Rational(69, 4)]]), 'g(t)': sqrt(4*t**2 + 7*t
             + 1), 'tau': sqrt(33)*log(t - sqrt(33)/8 + Rational(7, 8))/33 - sqrt(33)*log(t + sqrt(33)/8 + Rational(7, 8))/33,
             'is_transformed': True, 't_': t_, 'is_second_order': True, 'is_higher_order': True}
-    assert neq_nth_linear_constant_coeff_match(eq2, funcs, t) == sol2
+    assert _classify_linear_system(eq2, funcs, t) == sol2
 
     eq3 = ((t*Derivative(x(t), t) - x(t))*log(t) + (t*Derivative(y(t), t) - y(t))*exp(t) + Derivative(x(t), (t, 2)),
             t**2*(t*Derivative(x(t), t) - x(t)) + t*(t*Derivative(y(t), t) - y(t)) + Derivative(y(t), (t, 2)))
@@ -338,14 +338,14 @@ def test_neq_nth_linear_constant_coeff_match():
             'is_linear': True, 'is_homogeneous': True, 'is_general': True, 'type_of_equation': 'type1', 'A1':
             Matrix([ [-t*log(t), -t*exp(t)], [    -t**3,     -t**2]]), 'is_second_order': True,
             'is_higher_order': True}
-    assert neq_nth_linear_constant_coeff_match(eq3, funcs, t) == sol3
+    assert _classify_linear_system(eq3, funcs, t) == sol3
 
     eq4 = (Eq(x2, k*x(t) - l*y1), Eq(y2, l*x1 + k*y(t)))
     sol4 = {'no_of_equation': 2, 'eq': (Eq(Derivative(x(t), (t, 2)), k*x(t) - l*Derivative(y(t), t)),
             Eq(Derivative(y(t), (t, 2)), k*y(t) + l*Derivative(x(t), t))), 'func': [x(t), y(t)], 'order': {x(t):
             2, y(t): 2}, 'is_linear': True, 'is_homogeneous': True, 'is_general': True, 'type_of_equation':
             'type0', 'is_second_order': True, 'is_higher_order': True}
-    assert neq_nth_linear_constant_coeff_match(eq4, funcs, t) == sol4
+    assert _classify_linear_system(eq4, funcs, t) == sol4
 
 
     # Multiple matchs
@@ -359,9 +359,9 @@ def test_neq_nth_linear_constant_coeff_match():
     sol1 = {'is_implicit': True,
              'canon_eqs': [[Eq(Derivative(f(t), t), -1), Eq(Derivative(g(t), t), y*f(t))],
               [Eq(Derivative(f(t), t), 3), Eq(Derivative(g(t), t), y*f(t))]]}
-    assert neq_nth_linear_constant_coeff_match(eq1, funcs, t) == sol1
+    assert _classify_linear_system(eq1, funcs, t) == sol1
 
-    raises(ValueError, lambda: neq_nth_linear_constant_coeff_match(eq1, funcs[:1], t))
+    raises(ValueError, lambda: _classify_linear_system(eq1, funcs[:1], t))
 
     eq2 = [Eq(Derivative(f(t), t), (2*f(t) + g(t) + 1)/t), Eq(Derivative(g(t), t), (f(t) + 2*g(t))/t)]
     sol2 = {'no_of_equation': 2, 'eq': [Eq(Derivative(f(t), t), (2*f(t) + g(t) + 1)/t), Eq(Derivative(g(t), t),
@@ -369,7 +369,7 @@ def test_neq_nth_linear_constant_coeff_match():
             'is_homogeneous': False, 'is_general': True, 'rhs': Matrix([ [1], [0]]), 'func_coeff': Matrix([ [2,
             1], [1, 2]]), 'is_constant': False, 'type_of_equation': 'type6', 't_': t_, 'tau': log(t),
             'commutative_antiderivative': Matrix([ [2*log(t),   log(t)], [  log(t), 2*log(t)]])}
-    assert neq_nth_linear_constant_coeff_match(eq2, funcs, t) == sol2
+    assert _classify_linear_system(eq2, funcs, t) == sol2
 
     eq3 = [Eq(Derivative(f(t), t), (2*f(t) + g(t))/t), Eq(Derivative(g(t), t), (f(t) + 2*g(t))/t)]
     sol3 = {'no_of_equation': 2, 'eq': [Eq(Derivative(f(t), t), (2*f(t) + g(t))/t), Eq(Derivative(g(t), t),
@@ -377,7 +377,7 @@ def test_neq_nth_linear_constant_coeff_match():
             'is_homogeneous': True, 'is_general': True, 'func_coeff': Matrix([ [2, 1], [1, 2]]), 'is_constant':
             False, 'type_of_equation': 'type5', 't_': t_, 'rhs': Matrix([ [0], [0]]), 'tau': log(t),
             'commutative_antiderivative': Matrix([ [2*log(t),   log(t)], [  log(t), 2*log(t)]])}
-    assert neq_nth_linear_constant_coeff_match(eq3, funcs, t) == sol3
+    assert _classify_linear_system(eq3, funcs, t) == sol3
 
 
 def test_matrix_exp():
@@ -1427,15 +1427,6 @@ def test_higher_order_to_first_order():
     assert dsolve(eq2) == sol2
     assert checksysodesol(eq2, sol2) == (True, [0, 0])
 
-    eq3 = (Eq(Derivative(x(t), (t, 2)), t*(4*Derivative(x(t), t) + 8*Derivative(y(t), t))),
-           Eq(Derivative(y(t), (t, 2)), t*(12*Derivative(x(t), t) - 6*Derivative(y(t), t))))
-    sol3 = [Eq(x(t), C1 + Integral(4*C2*exp(5*t**2)/11 - 4*C2*exp(-6*t**2)/11 + 8*C3*exp(5*t**2)/11 +
-                3*C3*exp(-6*t**2)/11, t)),
-            Eq(y(t), C4 + Integral(3*C2*exp(5*t**2)/11 + 8*C2*exp(-6*t**2)/11 + 6*C3*exp(5*t**2)/11 -
-                6*C3*exp(-6*t**2)/11, t))]
-    assert dsolve(eq3) == sol3
-    assert checksysodesol(eq3, sol3) == (True, [0, 0])
-
     eqs4 = [Eq(4*x(t) + Derivative(x(t), (t, 2)) + 8*Derivative(y(t), t), 0), Eq(4*y(t) - 8*Derivative(x(t), t) +
                 Derivative(y(t), (t, 2)), 0)]
     sol4 = [Eq(y(t), (1 - sqrt(5)/2)*(-C1*sin(2*t*sqrt(4*sqrt(5) + 9)) + C2*cos(2*t*sqrt(4*sqrt(5) + 9))) + (1
@@ -1459,9 +1450,18 @@ def test_higher_order_to_first_order():
 
     # Solving systems using dsolve separately
     eqs1 = [Eq(Derivative(f(t), (t, 2)), t*f(t)), Eq(Derivative(g(t), (t, 2)), t*g(t))]
-    sol1 = [Eq(f(t), C1*airyai(t) + C2*airybi(t)), Eq(g(t), C1*airyai(t) + C2*airybi(t))]
+    sol1 = [Eq(f(t), C1*airyai(t) + C2*airybi(t)), Eq(g(t), C3*airyai(t) + C4*airybi(t))]
     assert dsolve(eqs1) == sol1
     assert checksysodesol(eqs1, sol1) == (True, [0, 0])
+
+    eqs2 = (Eq(Derivative(x(t), (t, 2)), t*(4*Derivative(x(t), t) + 8*Derivative(y(t), t))),
+           Eq(Derivative(y(t), (t, 2)), t*(12*Derivative(x(t), t) - 6*Derivative(y(t), t))))
+    sol2 = [Eq(x(t), C1 + Integral(4*C2*exp(5*t**2)/11 - 4*C2*exp(-6*t**2)/11 + 8*C3*exp(5*t**2)/11 +
+                3*C3*exp(-6*t**2)/11, t)),
+           Eq(y(t), C4 + Integral(3*C2*exp(5*t**2)/11 + 8*C2*exp(-6*t**2)/11 + 6*C3*exp(5*t**2)/11 -
+                6*C3*exp(-6*t**2)/11, t))]
+    assert dsolve(eqs2) == sol2
+    assert checksysodesol(eqs2, sol2) == (True, [0, 0])
 
 
 def test_second_order_to_first_order():
@@ -1600,6 +1600,10 @@ def test_component_division():
     assert [set(l) for l in _dict2graph(eqsdict3[0])] == graph3
     assert dsolve(eqs3) == sol3
     assert checksysodesol(eqs3, sol3) == (True, [0, 0, 0, 0])
+
+    # Note: To be uncommented when the default option to call dsolve first for
+    # single ODE system can be rearranged. This can be done after the doit
+    # option in dsolve is made False by default.
 
     eqs4 = [Eq(Derivative(f(x), x), x*f(x) + 2*g(x)),
             Eq(Derivative(g(x), x), f(x) + x*g(x) + x),
@@ -2291,21 +2295,18 @@ def test_higher_order1_slow1_check():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
 
-# Note: To be fixed later by introducing a new way to
-# solve X'' = f(t)*A*X
-def test_second_order_raises1():
+@slow
+def test_second_order_type2_slow1():
     x, y, z = symbols('x, y, z', cls=Function)
     t, l = symbols('t, l')
 
-    # Not solvable by the new method
-    # Note: To add a new technique for solving systems of type: X'' = t*A*X + b
-    eq8 = (Eq(diff(x(t),t,t), t*(4*x(t) + 9*y(t))), Eq(diff(y(t),t,t), t*(12*x(t) - 6*y(t))))
+    ot = Rational(1, 3)
+    eqs = (Eq(Derivative(x(t), (t, 2)), t*(2*x(t) + y(t))), Eq(Derivative(y(t), (t, 2)), t*(-x(t) + 2*y(t))))
+    sol = [Eq(x(t), I*(C1*airyai(t*(2 - I)**(ot)) + C2*airybi(t*(2 - I)**(ot))) - I*(C3*airyai(t*(2 +
+                I)**(ot)) + C4*airybi(t*(2 + I)**(ot)))),
+            Eq(y(t), C1*airyai(t*(2 - I)**(ot)) + C3*airyai(t*(2 + I)**(ot)) + C2*airybi(t*(2 - I)**(ot)) +
+                C4*airybi(t*(2 + I)**(ot)))]
 
-    # sol8 = [Eq(x(t), -sqrt(133)*(-4*C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + 4*C1*airyai(-t*(1 + \
-    # sqrt(133))**(S(1)/3)) - 4*C2*airybi(t*(-1 + sqrt(133))**(S(1)/3)) + 4*C2*airybi(-t*(1 + sqrt(133))**(S(1)/3)) +\
-    # (-sqrt(133) - 1)*(C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + C2*airybi(t*(-1 + sqrt(133))**(S(1)/3))) - (-1 +\
-    # sqrt(133))*(C1*airyai(-t*(1 + sqrt(133))**(S(1)/3)) + C2*airybi(-t*(1 + sqrt(133))**(S(1)/3))))/3192), \
-    # Eq(y(t), -sqrt(133)*(-C1*airyai(t*(-1 + sqrt(133))**(S(1)/3)) + C1*airyai(-t*(1 + sqrt(133))**(S(1)/3)) -\
-    # C2*airybi(t*(-1 + sqrt(133))**(S(1)/3)) + C2*airybi(-t*(1 + sqrt(133))**(S(1)/3)))/266)]
-
-    raises(NotImplementedError, lambda: dsolve_system(eq8))
+    # Note: dsolve call in dsolve_system makes solving this system slow.
+    assert dsolve(eqs) == sol
+    assert checksysodesol(eqs, sol) == (True, [0, 0])
