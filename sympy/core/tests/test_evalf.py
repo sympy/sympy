@@ -1,6 +1,6 @@
 from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
-    integrate, log, Mul, N, oo, pi, Pow, product, Product,
+    integrate, log, Mul, N, oo, pi, Pow, product, Product, conjugate,
     Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
@@ -339,6 +339,12 @@ def test_implemented_function_evalf():
     f = implemented_function(Function('sin'), lambda x: x + 1)
     assert f(2).evalf() != sin(2)
     del f._imp_     # XXX: due to caching _imp_ would influence all other tests
+
+    fc = Function('fc', real=False)
+    fc = implemented_function(fc, lambda x: x + 1j)
+    assert conjugate(fc(2)).evalf() == 2-1j
+    assert fc(x).evalf() == fc(x)
+    del fc._imp_    # XXX: due to caching _imp_ would influence all other tests
 
 
 def test_evaluate_false():

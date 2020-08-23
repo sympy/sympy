@@ -555,8 +555,18 @@ class Function(Application, Expr):
             imp = getattr(self, '_imp_', None)
             if imp is None:
                 return None
+            if isinstance(self.is_real, bool):
+                cast_to_complex = not self.is_real
+            else:
+                cast_to_complex = False
+            from mpmath import mpf, mpc, workdps
             try:
-                return Float(imp(*[i.evalf(prec) for i in self.args]), prec)
+                num = imp(*[i.evalf(prec) for i in self.args])
+                with workdps(prec):
+                    if cast_to_complex:
+                        return sympify(mpc(num))
+                    else:
+                        return sympify(mpf(num))
             except (TypeError, ValueError):
                 return None
 
