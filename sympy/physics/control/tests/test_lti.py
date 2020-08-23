@@ -217,6 +217,7 @@ def test_TransferFunction_addition_and_subtraction():
     tf2 = TransferFunction(s + 3, s + 1, s)
     tf3 = TransferFunction(s + 1, s**2 + s + 1, s)
     tf4 = TransferFunction(p, 2 - p, p)
+    tfm1 = TransferFunctionMatrix([tf1, tf2, tf3])
 
     # addition
     assert tf1 + tf2 == Parallel(tf1, tf2)
@@ -231,6 +232,8 @@ def test_TransferFunction_addition_and_subtraction():
     raises(ValueError, lambda: tf1 + (s - 1))
     raises(ValueError, lambda: tf1 + 8)
     raises(ValueError, lambda: (1 - p**3) + tf1)
+    raises(ValueError, lambda: tf1 + tfm1)
+    raises(ValueError, lambda: tf1 - tf2 + tfm1)
 
     # subtraction
     assert tf1 - tf2 == Parallel(tf1, -tf2)
@@ -997,7 +1000,11 @@ def test_TransferFunctionMatrix_functions():
 
 
 def test_TransferFunctionMatrix_addition_and_subtraction():
+    _tf = TransferFunction(-1, 1, s)
     tf = TransferFunction(a0*p, a1*p**2 + a2*p - a0, p)
+    tf_ = TransferFunction(p**3 + a1, p - a2, p)
+
+    tfm = TransferFunctionMatrix([[_tf, _tf]])
     tfm1 = TransferFunctionMatrix([TF1, TF2])
     tfm2 = TransferFunctionMatrix([-TF2, -TF1])
     tfm3 = TransferFunctionMatrix([TF1, TF1])
@@ -1005,36 +1012,55 @@ def test_TransferFunctionMatrix_addition_and_subtraction():
     tfm5 = TransferFunctionMatrix([TF2, TF1, TF3])
     tfm6 = TransferFunctionMatrix([-TF1, TF2, -TF3])
     tfm7 = TransferFunctionMatrix([TF2])
+    tfm8 = TransferFunctionMatrix([tf, tf_])
 
-    # addition
+    # addition & subtraction.
     assert tfm1 + tfm2 == Parallel(tfm1, tfm2)
     assert tfm3 + tfm1 == Parallel(tfm3, tfm1)
-    assert tfm2 + (tfm3 + tfm1) == Parallel(tfm2, tfm3, tfm1)
-    assert tfm1 + tfm3*tfm7 == Parallel(tfm1, Series(tfm3, tfm7))
-
-    c = symbols("c", commutative=False)
-    raises(ValueError, lambda: tfm1 + Matrix([1, 2, 3]))
-    raises(ValueError, lambda: tfm2 + c)
-    raises(ValueError, lambda: tfm3 + tfm4)
-    raises(ValueError, lambda: tfm1 + (s - 1))
-    raises(ValueError, lambda: tfm1 + 8)
-    raises(ValueError, lambda: (1 - p**3) + tfm1)
-    raises(ValueError, lambda: tfm1 + (TF1 + TF2))
-    raises(ShapeError, lambda: tfm2 + (tfm5 + tfm6))
-
-    # subtraction
     assert tfm1 - tfm2 == Parallel(tfm1, -tfm2)
     assert tfm3 - tfm1 == Parallel(tfm3, -tfm1)
+    assert tfm2 + (tfm3 + tfm1) == Parallel(tfm2, tfm3, tfm1)
+    assert tfm2 + (tfm1 - tfm3) == Parallel(tfm2, tfm1, -tfm3)
+    assert tfm1 + tfm3 + tfm2 == Parallel(tfm1, tfm3, tfm2)
+    assert tfm1 - tfm2 - tfm3 == Parallel(tfm1, -tfm2, -tfm3)
+    assert tfm1 + tfm3*tfm7 == Parallel(tfm1, Series(tfm3, tfm7))
+    assert tfm7 - tfm3*tfm7 == Parallel(tfm7, -Series(tfm3, tfm7))
 
+    c = symbols("c", commutative=False)
+    # Operation with a matrix not supported (for now).
+    raises(ValueError, lambda: tfm1 + Matrix([1, 2, 3]))
     raises(ValueError, lambda: tfm1 - Matrix([1, 2, 3]))
-    raises(ValueError, lambda: tfm2 - c)
+
+    # shape should be equal.
+    raises(ValueError, lambda: tfm3 + tfm4)
     raises(ValueError, lambda: tfm3 - tfm4)
+
+    # Operation with a constant, expression or a symbol not allowed.
+    raises(ValueError, lambda: tfm2 + c)
+    raises(ValueError, lambda: tfm2 - c)
+    raises(ValueError, lambda: tfm1 + (s - 1))
     raises(ValueError, lambda: tfm1 - (s - 1))
-    raises(ValueError, lambda: tfm1 - 8)
     raises(ValueError, lambda: (s + 5) - tfm2)
+    raises(ValueError, lambda: tfm1 + 8)
+    raises(ValueError, lambda: tfm1 - 8)
+    raises(ValueError, lambda: (1 - p**3) + tfm1)
     raises(ValueError, lambda: (1 + p**4) - tfm1)
+
+    # Parallel object should have all TFM as arguments.
+    raises(ValueError, lambda: tfm1 + (TF1 + TF2))
     raises(ValueError, lambda: tfm2 - (TF2 + TF1))
+
+    # Series object should have all TFM as arguments.
+    raises(ValueError, lambda: tfm1 + TF1*TF2)
+    raises(ValueError, lambda: tfm1 - TF1*TF2)
+
+    # tfm2 has (2, 1) shape while (tfm5 +/- tfm6) has (3, 1) shape.
+    raises(ShapeError, lambda: tfm1 + (tfm5 + tfm6))
     raises(ShapeError, lambda: tfm1 - (tfm6 - tfm5))
+    # Both TFM should use the same complex variable.
+    raises(ValueError, lambda: tfm1 + tfm8)
+    # Both Parallel object and TFM should have the same shape for addition.
+    raises(ShapeError, lambda: (tfm5 + tfm6) + tfm1)
 
 
 def test_TransferFunctionMatrix_multiplication():

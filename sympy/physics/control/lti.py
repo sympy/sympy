@@ -956,6 +956,20 @@ class Parallel(Basic):
                 self_arg_list.append(elem)
 
             return Parallel(*self_arg_list)
+
+        elif isinstance(other, TransferFunctionMatrix):
+            if self.is_SISO:
+                raise ValueError("Only transfer function matrices are allowed in the "
+                    "parallel configuration.")
+            if not self.var == other.var:
+                raise ValueError("All the transfer function matrices should use the same complex variable "
+                    "of the Laplace transform.")
+            if not self.shape == other.shape:
+                raise ShapeError("Shapes of operands are not compatible for addition.")
+            arg_list = list(self.args)
+            arg_list.append(other)
+
+            return Parallel(*arg_list)
         else:
             raise ValueError("This transfer function expression is invalid.")
 
