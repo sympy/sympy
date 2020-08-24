@@ -621,12 +621,16 @@ class Series(Basic):
         return self.doit()
 
     def __add__(self, other):
-        if isinstance(other, (TransferFunction, Series)):
+        if isinstance(other, (TransferFunction, Series, TransferFunctionMatrix)):
             if isinstance(other, Series):
                 if ((self.is_SISO and not other.is_SISO) or (not self.is_SISO and other.is_SISO)):
                     raise ValueError("Both Series objects should either handle SISO or MIMO"
                         " transfer function.")
 
+            if isinstance(other, TransferFunctionMatrix):
+                if self.is_SISO:
+                    raise ValueError("Series object should handle MIMO transfer function to"
+                        " perform this addition.")
             if not self.shape == other.shape:
                 raise ShapeError("Shapes of operands are not compatible for addition.")
             if not self.var == other.var:
@@ -635,6 +639,12 @@ class Series(Basic):
 
             return Parallel(self, other)
         elif isinstance(other, Parallel):
+            if ((self.is_SISO and not other.is_SISO) or (not self.is_SISO and other.is_SISO)):
+                raise ValueError("Both Series and Parallel objects should either handle SISO or MIMO"
+                    " transfer function.")
+
+            if not self.shape == other.shape:
+                raise ShapeError("Shapes of operands are not compatible for addition.")
             if not self.var == other.var:
                 raise ValueError("All the transfer functions should use the same complex variable "
                     "of the Laplace transform.")
@@ -642,7 +652,7 @@ class Series(Basic):
 
             return Parallel(self, *arg_list)
         else:
-            raise ValueError("This transfer function expression is invalid.")
+            raise ValueError("This expression is invalid.")
 
     __radd__ = __add__
 
@@ -653,7 +663,19 @@ class Series(Basic):
         return -self + other
 
     def __mul__(self, other):
-        if isinstance(other, (TransferFunction, Parallel)):
+        if isinstance(other, (TransferFunction, Parallel, TransferFunctionMatrix)):
+            if isinstance(other, Parallel):
+                if ((self.is_SISO and not other.is_SISO) or (not self.is_SISO and other.is_SISO)):
+                    raise ValueError("Both Series and Parallel objects should either handle SISO or MIMO"
+                        " transfer function.")
+            if isinstance(other, TransferFunctionMatrix):
+                if self.is_SISO:
+                    raise ValueError("Series object should only handle MIMO transfer function to"
+                        " perform this multiplication.")
+
+            if not self.num_inputs == other.num_outputs:
+                raise ValueError("C = A * B: A has {0} input(s), but B has {1} output(s)."
+                    .format(self.num_inputs, other.num_outputs))
             if not self.var == other.var:
                 raise ValueError("All the transfer functions should use the same complex variable "
                     "of the Laplace transform.")
@@ -661,6 +683,13 @@ class Series(Basic):
 
             return Series(*arg_list, other)
         elif isinstance(other, Series):
+            if ((self.is_SISO and not other.is_SISO) or (not self.is_SISO and other.is_SISO)):
+                raise ValueError("Both Series objects should either handle SISO or MIMO"
+                    " transfer function.")
+
+            if not self.num_inputs == other.num_outputs:
+                raise ValueError("C = A * B: A has {0} input(s), but B has {1} output(s)."
+                    .format(self.num_inputs, other.num_outputs))
             if not self.var == other.var:
                 raise ValueError("All the transfer functions should use the same complex variable "
                     "of the Laplace transform.")
@@ -669,7 +698,7 @@ class Series(Basic):
 
             return Series(*self_arg_list, *other_arg_list)
         else:
-            raise ValueError("This transfer function expression is invalid.")
+            raise ValueError("This expression is invalid.")
 
     def __truediv__(self, other):
         if (isinstance(other, Parallel) and len(other.args) == 2
@@ -688,7 +717,7 @@ class Series(Basic):
             else:
                 return Feedback(self, Series(*res))
         else:
-            raise ValueError("This transfer function expression is invalid.")
+            raise ValueError("This expression is invalid.")
 
     def __neg__(self):
         if self.is_SISO:
@@ -971,7 +1000,7 @@ class Parallel(Basic):
 
             return Parallel(*arg_list)
         else:
-            raise ValueError("This transfer function expression is invalid.")
+            raise ValueError("This expression is invalid.")
 
     def __sub__(self, other):
         return self + (-other)
@@ -989,7 +1018,7 @@ class Parallel(Basic):
             arg_list = list(other.args)
             return Series(self, *arg_list)
         else:
-            raise ValueError("This transfer function expression is invalid.")
+            raise ValueError("This expression is invalid.")
 
     def __neg__(self):
         if self.is_SISO:

@@ -448,6 +448,10 @@ def test_Series_functions():
     tfm3 = TransferFunctionMatrix([-tf5], (1, 1), s)
     tfm4 = TransferFunctionMatrix([[-TF2, -TF3], [-TF1, TF2]])
     tfm5 = TransferFunctionMatrix([[tf5, -tf5], [-TF3, -TF2]])
+    tfm6 = TransferFunctionMatrix([-tf5, TF1], (2, 1), s)
+    tfm7 = TransferFunctionMatrix((-TF3, -TF2))
+    tfm8 = TransferFunctionMatrix((-tf4, tf4), (2, 1), p)
+    tfm9 = TransferFunctionMatrix([-tf4], (1, 1), p)
 
     assert TF1*TF2*TF3 == Series(TF1, TF2, TF3)
     assert TF1*(TF2 + TF3) == Series(TF1, Parallel(TF2, TF3))
@@ -504,6 +508,47 @@ def test_Series_functions():
     assert S3.is_proper
     assert S3.is_strictly_proper
     assert not S3.is_biproper
+
+    assert tfm1*tfm2 + tfm6 == Parallel(Series(tfm1, tfm2), tfm6)
+    assert tfm1*tfm2 - tfm6 == Parallel(Series(tfm1, tfm2), -tfm6)
+    assert tfm1*tfm2 + tfm7 + tfm6 == Parallel(Series(tfm1, tfm2), tfm7, tfm6)
+    assert tfm1*tfm2 - tfm6 - tfm7 == Parallel(Series(tfm1, tfm2), -tfm6, -tfm7)
+    assert tfm4*tfm5 + (tfm4 - tfm5) == Parallel(Series(tfm4, tfm5), tfm4, -tfm5)
+    assert tfm4*-tfm6 + (-tfm4*tfm6) == Parallel(Series(tfm4, -tfm6), Series(-tfm4, tfm6))
+    raises(ValueError, lambda: tfm1*tfm2 + TF1)
+    raises(ValueError, lambda: tfm1*tfm2 + a0)
+    raises(ValueError, lambda: tfm4*tfm6 - (s - 1))
+    raises(ValueError, lambda: tfm4*-tfm6 - 8)
+    raises(ValueError, lambda: (-1 + p**5) + tfm1*tfm2)
+    # Both Series object and TFM should use the same complex var.
+    raises(ValueError, lambda: tfm1*-tfm2 + tfm8)
+    raises(ValueError, lambda: tfm4*tfm6 - tfm8)
+    # (-tfm1*tfm2) has (2, 1) shape while tfm4 has (2, 2) shape.
+    raises(ShapeError, lambda: -tfm1*tfm2 + tfm4)
+    raises(ShapeError, lambda: tfm1*tfm2 - tfm4 + tfm5)
+    raises(ShapeError, lambda: tfm1*tfm2 - tfm4*tfm5)
+
+    assert tfm1*tfm2*-tfm3 == Series(tfm1, tfm2, -tfm3)
+    assert (tfm1*-tfm2)*tfm3 == Series(tfm1, -tfm2, tfm3)
+    assert (tfm1*tfm2)*tfm3*-tfm3 == Series(tfm1, tfm2, tfm3, -tfm3)
+    assert -tfm1*-tfm2*-tfm3*-tfm3 == Series(-tfm1, -tfm2, -tfm3, -tfm3)
+    assert tfm4*-tfm6*(tfm3 + tfm3) == Series(tfm4, -tfm6, Parallel(tfm3, tfm3))
+    assert tfm4*tfm6*-(tfm3 + (-tfm3)) == Series(tfm4, tfm6, -Parallel(tfm3, -tfm3))
+    # Multiplication of a Series object with a SISO TF not allowed.
+    raises(ValueError, lambda: tfm4*tfm5*TF1)
+    raises(ValueError, lambda: tfm4*tfm5*a1)
+    raises(ValueError, lambda: tfm4*-tfm5*(s - 2))
+    raises(ValueError, lambda: tfm5*tfm4*9)
+    raises(ValueError, lambda: (-p**3 + 1)*tfm5*tfm4)
+    # All TFMs must use the same complex var.
+    raises(ValueError, lambda: tfm1*-tfm2*-tfm3*tfm9)
+    raises(ValueError, lambda: -tfm1*-tfm2*-tfm9)
+    # (-tfm1*tfm2) has (2, 1) shape while tfm4 has (2, 2) shape.
+    # (# of inputs) of the first operand must be equal to
+    # (# of outputs) of the second operand.
+    raises(ValueError, lambda: -tfm1*tfm2*tfm4)
+    # tfm5*tfm4 has (2, 2) shape while (tfm3 + tfm3) has (1, 1) shape.
+    raises(ValueError, lambda: tfm5*tfm4*(tfm3 + tfm3))
 
     # Transfer function matrix in the arguments.
     assert Series(tfm1, tfm2, evaluate=True) == Series(tfm1, tfm2).doit() == \
