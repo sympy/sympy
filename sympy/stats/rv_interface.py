@@ -19,7 +19,11 @@ __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
 
 def moment(X, n, c=0, condition=None, **kwargs):
     """
-    Return the nth moment of a random expression about c i.e. E((X-c)**n)
+    Return the nth moment of a random expression about c.
+
+    .. math::
+        moment(X, c, n) = E((X-c)^{n})
+
     Default value of c is 0.
 
     Examples
@@ -44,7 +48,8 @@ def variance(X, condition=None, **kwargs):
     """
     Variance of a random expression
 
-    Expectation of (X-E(X))**2
+    .. math::
+        variance(X) = E((X-E(X))^{2})
 
     Examples
     ========
@@ -73,7 +78,8 @@ def standard_deviation(X, condition=None, **kwargs):
     """
     Standard Deviation of a random expression
 
-    Square root of the Expectation of (X-E(X))**2
+    .. math::
+        std(X) = \sqrt(E((X-E(X))^{2}))
 
     Examples
     ========
@@ -138,7 +144,8 @@ def covariance(X, Y, condition=None, **kwargs):
 
     The expectation that the two variables will rise and fall together
 
-    Covariance(X,Y) = E( (X-E(X)) * (Y-E(Y)) )
+    .. math::
+        covariance(X,Y) = E((X-E(X)) (Y-E(Y)))
 
     Examples
     ========
@@ -175,7 +182,8 @@ def correlation(X, Y, condition=None, **kwargs):
     The normalized expectation that the two variables will rise
     and fall together
 
-    Correlation(X,Y) = E( (X-E(X)) * (Y-E(Y)) / (sigma(X) * sigma(Y)) )
+    .. math::
+        correlation(X,Y) = E((X-E(X))(Y-E(Y)) / (\sigma_x  \sigma_y))
 
     Examples
     ========
@@ -200,8 +208,10 @@ def correlation(X, Y, condition=None, **kwargs):
 
 def cmoment(X, n, condition=None, **kwargs):
     """
-    Return the nth central moment of a random expression about its mean
-    i.e. E((X - E(X))**n)
+    Return the nth central moment of a random expression about its mean.
+
+    .. math::
+        cmoment(X, n) = E((X - E(X))^{n})
 
     Examples
     ========
@@ -250,7 +260,8 @@ def skewness(X, condition=None, **kwargs):
     Positive skew indicates that most of the values lie to the right of
     the mean.
 
-    skewness(X) = E(((X - E(X))/sigma)**3)
+    .. math::
+        skewness(X) = E(((X - E(X))/sigma)^{3})
 
     Parameters
     ==========
@@ -284,7 +295,8 @@ def kurtosis(X, condition=None, **kwargs):
     3 means that the distribution produces fewer and less extreme outliers
     than the normal distribution.
 
-    kurtosis(X) = E(((X - E(X))/sigma)**4)
+    .. math::
+        kurtosis(X) = E(((X - E(X))/sigma)^{4})
 
     Parameters
     ==========
@@ -322,7 +334,8 @@ def factorial_moment(X, n, condition=None, **kwargs):
     The factorial moment is a mathematical quantity defined as the expectation
     or average of the falling factorial of a random variable.
 
-    factorial_moment(X, n) = E(X*(X - 1)*(X - 2)*...*(X - n + 1))
+    .. math::
+        factorial-moment(X, n) = E(X(X - 1)(X - 2)...(X - n + 1))
 
     Parameters
     ==========
