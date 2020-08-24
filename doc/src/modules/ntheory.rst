@@ -50,8 +50,41 @@ Ntheory Functions Reference
 
 .. autofunction:: ecm
 
+The ecm function is a subexponential factoring algorithm capable of factoring
+numbers of around ~35 digits comfortably within few seconds. The time complexity
+of ecm is dependent on the smalled proper factor of the number. So even if the
+number is really large but its factors are comparatively smaller then ecm will
+can easily factor them. For example we take N with 15 digit factors
+{15154262241479, 15423094826093, 799333555511111, 809709509409109, 888888877777777,
+914148152112161}. Now N is a 87 digit number. Ecm takes under 30secs to factorize
+this.
+
+For example:
+ >>> from sympy import ecm
+ >>> ecm(7060005655815754299976961394452809, B1=100000, B2=1000000)
+ {6988699669998001, 1010203040506070809}
+ >>> ecm(122921448543883967430908091422761898618349713604256384403202282756086473494959648313841, B1=100000, B2=1000000)
+ {15154262241479,
+ 15423094826093,
+ 799333555511111,
+ 809709509409109,
+ 888888877777777,
+ 914148152112161}
+
 .. autofunction:: qs
 
+The qs functio is a subexponential factoring algorithm, the fastest factoring
+factoring algorithm for numbers within 100 digits. The time complexity of
+qs is dependent on the size of the number so it is used if the number contains
+large factors. Due to this while factoring numbers first ecm is used to get
+smaller factors of around ~15digits then qs is used to get larger factors.
+For 2709077133180915240135586837960864768806330782747 is a semi-prime number
+with two 25 digit factors. qs is able to factorize this within 5 mins.
+
+For example:
+ >>> from sympy import qs
+ >>> qs(2709077133180915240135586837960864768806330782747, 20000, 100000)
+ {1369313697137091371113751, 1978419655660313589123997}
 .. autofunction:: factorint
 
 .. autofunction:: factorrat
