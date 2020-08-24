@@ -175,7 +175,7 @@ def covariance(X, Y, condition=None, **kwargs):
 
 
 def correlation(X, Y, condition=None, **kwargs):
-    """
+    r"""
     Correlation of two random expressions, also known as correlation
     coefficient or Pearson's correlation
 
@@ -232,9 +232,11 @@ def cmoment(X, n, condition=None, **kwargs):
 
 
 def smoment(X, n, condition=None, **kwargs):
-    """
-    Return the nth Standardized moment of a random expression i.e.
-    E(((X - mu)/sigma(X))**n)
+    r"""
+    Return the nth Standardized moment of a random expression.
+
+    .. math::
+        smoment(X, n) = E(((X - \mu)/\sigma_X)^{n})
 
     Examples
     ========
@@ -254,14 +256,14 @@ def smoment(X, n, condition=None, **kwargs):
     return (1/sigma)**n*cmoment(X, n, condition, **kwargs)
 
 def skewness(X, condition=None, **kwargs):
-    """
+    r"""
     Measure of the asymmetry of the probability distribution.
 
     Positive skew indicates that most of the values lie to the right of
     the mean.
 
     .. math::
-        skewness(X) = E(((X - E(X))/sigma)^{3})
+        skewness(X) = E(((X - E(X))/\sigma_X)^{3})
 
     Parameters
     ==========
@@ -288,7 +290,7 @@ def skewness(X, condition=None, **kwargs):
     return smoment(X, 3, condition=condition, **kwargs)
 
 def kurtosis(X, condition=None, **kwargs):
-    """
+    r"""
     Characterizes the tails/outliers of a probability distribution.
 
     Kurtosis of any univariate normal distribution is 3. Kurtosis less than
@@ -296,7 +298,7 @@ def kurtosis(X, condition=None, **kwargs):
     than the normal distribution.
 
     .. math::
-        kurtosis(X) = E(((X - E(X))/sigma)^{4})
+        kurtosis(X) = E(((X - E(X))/\sigma_X)^{4})
 
     Parameters
     ==========
