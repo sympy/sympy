@@ -1425,7 +1425,7 @@ class PoissonProcess(CountingProcess):
     References
     ==========
 
-    .. [1] https://www.probabilitycourse.com
+    .. [1] https://www.probabilitycourse.com/chapter11/11_0_0_intro.php
     .. [2] https://en.wikipedia.org/wiki/Poisson_point_process
 
     """
@@ -1497,7 +1497,7 @@ class WienerProcess(CountingProcess):
     References
     ==========
 
-    .. [1] https://www.probabilitycourse.com
+    .. [1] https://www.probabilitycourse.com/chapter11/11_4_0_brownian_motion_wiener_process.php
     .. [2] https://en.wikipedia.org/wiki/Wiener_process
 
     """

@@ -362,7 +362,7 @@ def median(X, evaluate=True, **kwargs):
     values of `m` for which the following condition is satisfied
 
     .. math::
-        P(X\geq m)\geq 1/2 \hspace{5pt} \text{and} \hspace{5pt} P(X\leq m)\geq 1/2
+        P(X\leq m) \geq  \frac{1}{2} \text{ and} \text{ } P(X\geq m)\geq \frac{1}{2}
 
     Parameters
     ==========
