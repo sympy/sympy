@@ -75,7 +75,7 @@ def variance(X, condition=None, **kwargs):
 
 
 def standard_deviation(X, condition=None, **kwargs):
-    """
+    r"""
     Standard Deviation of a random expression
 
     .. math::
