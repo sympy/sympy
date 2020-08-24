@@ -709,6 +709,8 @@ def test_Parallel_functions():
     tfm3 = TransferFunctionMatrix((tf5, -tf5, TF2))
     tfm4 = TransferFunctionMatrix([[TF2, -tf5], [TF1, tf5]])
     tfm5 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5]])
+    tfm6 = TransferFunctionMatrix([-TF2], (1, 1), s)
+    tfm7 = TransferFunctionMatrix([tf4, -tf4, tf4], (3, 1), p)
 
     assert TF1 + TF2 + TF3 == Parallel(TF1, TF2, TF3)
     assert TF1 + TF2 + TF3 + tf5 == Parallel(TF1, TF2, TF3, tf5)
@@ -771,6 +773,39 @@ def test_Parallel_functions():
     assert P3.is_proper
     assert not P3.is_strictly_proper
     assert P3.is_biproper
+
+    assert tfm1 + tfm2 + tfm3 == Parallel(tfm1, tfm2, tfm3)
+    assert tfm2 - tfm1 - tfm3 == Parallel(tfm2, -tfm1, -tfm3)
+    assert tfm2 - tfm3 + (-tfm1*tfm6*-tfm6) == Parallel(tfm2, -tfm3, Series(-tfm1, tfm6, -tfm6))
+    assert tfm6 + tfm6 - (-tfm1*tfm6) == Parallel(tfm6, tfm6, -Series(-tfm1, tfm6))
+    assert tfm2 - tfm3 - tfm1 + tfm2 == Parallel(tfm2, -tfm3, -tfm1, tfm2)
+    assert tfm1 + tfm2 - tfm3 - tfm1 == Parallel(tfm1, tfm2, -tfm3, -tfm1)
+    raises(ValueError, lambda: tfm1 + tfm2 + TF2)
+    raises(ValueError, lambda: tfm1 - tfm2 - a1)
+    raises(ValueError, lambda: tfm2 - tfm3 - (s - 1))
+    raises(ValueError, lambda: -tfm3 - tfm2 - 9)
+    raises(ValueError, lambda: (1 - p**3) - tfm3 - tfm2)
+    # All TFMs must use the same complex var. tfm7 uses 'p'.
+    raises(ValueError, lambda: tfm3 - tfm2 - tfm7)
+    raises(ValueError, lambda: tfm2 - tfm1 + tfm7)
+    # (tfm1 +/- tfm2) has (3, 1) shape while tfm4 has (2, 2) shape.
+    raises(ShapeError, lambda: tfm1 + tfm2 + tfm4)
+    raises(ShapeError, lambda: (tfm1 - tfm2) - tfm4)
+
+    assert (tfm1 + tfm2)*tfm6 == Series(Parallel(tfm1, tfm2), tfm6)
+    assert (tfm2 - tfm3)*tfm6*-tfm6 == Series(Parallel(tfm2, -tfm3), tfm6, -tfm6)
+    assert (tfm2 - tfm1 - tfm3)*(tfm6 + tfm6) == Series(Parallel(tfm2, -tfm1, -tfm3), Parallel(tfm6, tfm6))
+    raises(ValueError, lambda: (tfm4 + tfm5)*TF1)
+    raises(ValueError, lambda: (tfm2 - tfm3)*a2)
+    raises(ValueError, lambda: (tfm3 + tfm2)*(s - 6))
+    raises(ValueError, lambda: (tfm1 + tfm2 + tfm3)*0)
+    raises(ValueError, lambda: (1 - p**3)*(tfm1 + tfm3))
+    # All TFMs must use the same complex var. tfm7 uses 'p'.
+    raises(ValueError, lambda: (tfm4 + tfm5)*tfm7)
+    # (tfm3 - tfm2) has (3, 1) shape while tfm4*tfm5 has (2, 2) shape.
+    raises(ValueError, lambda: (tfm3 - tfm2)*tfm4*tfm5)
+    # (tfm1 - tfm2) has (3, 1) shape while tfm5 has (2, 2) shape.
+    raises(ValueError, lambda: (tfm1 - tfm2)*tfm5)
 
     # transfer function matrix in the arguments.
     assert Parallel(tfm1, tfm2, evaluate=True) == Parallel(tfm1, tfm2).doit() == \
