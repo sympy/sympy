@@ -1000,11 +1000,9 @@ def test_TransferFunctionMatrix_functions():
 
 
 def test_TransferFunctionMatrix_addition_and_subtraction():
-    _tf = TransferFunction(-1, 1, s)
     tf = TransferFunction(a0*p, a1*p**2 + a2*p - a0, p)
     tf_ = TransferFunction(p**3 + a1, p - a2, p)
 
-    tfm = TransferFunctionMatrix([[_tf, _tf]])
     tfm1 = TransferFunctionMatrix([TF1, TF2])
     tfm2 = TransferFunctionMatrix([-TF2, -TF1])
     tfm3 = TransferFunctionMatrix([TF1, TF1])
@@ -1065,15 +1063,38 @@ def test_TransferFunctionMatrix_addition_and_subtraction():
 
 def test_TransferFunctionMatrix_multiplication():
     tf = TransferFunction(a0*s**2, a1*s + a2, s)
+    tf_ = TransferFunction(a0*p**2, a1 - p, p)
+    tfm = TransferFunctionMatrix([tf_, -tf_], (2, 1), p)
     tfm1 = TransferFunctionMatrix([[TF1, TF2], [TF3, tf]])
     tfm2 = TransferFunctionMatrix([[-TF3, -tf], [TF2, TF1]])
     tfm3 = TransferFunctionMatrix([TF1, TF2, TF3])
+    tfm5 = TransferFunctionMatrix((-TF2, -TF3))
 
     assert tfm1*tfm2 == Series(tfm1, tfm2)
     assert -tfm2*tfm1 == Series(-tfm2, tfm1)
+    assert tfm1*(tfm2*tfm5) == Series(tfm1, tfm2, tfm5)
+    assert -tfm2*(-tfm1*-tfm5) == Series(-tfm2, -tfm1, -tfm5)
+    assert tfm1*(tfm2 + (-tfm1)) == Series(tfm1, Parallel(tfm2, -tfm1))
+    assert tfm2*(-tfm1 - tfm2) == Series(tfm2, Parallel(-tfm1, -tfm2))
 
+    raises(ValueError, lambda: tfm1 * TF2)
+
+    # Only TFMs are allowed in the parallel/series configurations.
+    raises(ValueError, lambda: tfm2 * Parallel(TF1, -TF2))
+    raises(ValueError, lambda: tfm2 * Series(tf, TF2))
+
+    # Multiplication of TFM with a Matrix not allowed (for now).
     raises(ValueError, lambda: tfm2 * Matrix([1, 2, 3]))
+
+    # Operation with a constant, Symbol or expression also not supported.
     raises(ValueError, lambda: tfm2 * a0)
-    raises(ValueError, lambda: tfm2 * tfm3)
-    raises(ValueError, lambda: tfm2 * (s - 1))
     raises(ValueError, lambda: 9 * tfm3)
+    raises(ValueError, lambda: tfm2 * (s - 1))
+
+    # tfm2 has (2, 2) shape while tfm3 has (3, 1) shape.
+    # No. of inputs of the first TFM must be equal to
+    # the no. of outputs of the second TFM.
+    raises(ValueError, lambda: tfm2 * tfm3)
+
+    # Both TFM should use the same complex variable.
+    raises(ValueError, lambda: tfm1 * tfm)

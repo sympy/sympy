@@ -1388,7 +1388,11 @@ class TransferFunctionMatrix(Basic):
         return -self + other
 
     def __mul__(self, other):
-        if isinstance(other, TransferFunctionMatrix):
+        if isinstance(other, (TransferFunctionMatrix, Parallel)):
+            if isinstance(other, Parallel):
+                if other.is_SISO:
+                    raise ValueError("Only transfer function matrices are allowed in the "
+                        "parallel configuration.")
             if not self.num_inputs == other.num_outputs:
                 raise ValueError("C = A * B: A has {0} input(s), but B has {1} output(s)."
                     .format(self.num_inputs, other.num_outputs))
@@ -1396,6 +1400,20 @@ class TransferFunctionMatrix(Basic):
                 raise ValueError("Both TransferFunctionMatrix objects should use the same"
                     " complex variable of the Laplace transform.")
             return Series(self, other)
+
+        elif isinstance(other, Series):
+            if other.is_SISO:
+                raise ValueError("Only transfer function matrices are allowed in the "
+                    "series configuration.")
+            if not self.num_inputs == other.num_outputs:
+                raise ValueError("C = A * B: A has {0} input(s), but B has {1} output(s)."
+                    .format(self.num_inputs, other.num_outputs))
+            if not self.var == other.var:
+                raise ValueError("All the TransferFunctionMatrix objects should use the same"
+                    " complex variable of the Laplace transform.")
+            arg_list = list(other.args)
+
+            return Series(self, *arg_list)
         else:
             raise ValueError("TransferFunctionMatrix cannot be multiplied with {}."
                 .format(type(other)))
