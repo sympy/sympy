@@ -1508,6 +1508,8 @@ def _higher_order_ode_solver(match):
     is_euler = is_transformed and type == "type1"
     is_higher_order_type2 = is_transformed and type == "type2" and 'P' in match
 
+    print(match.get('rhs', None))
+
     if is_second_order:
         new_eqs, new_funcs = _second_order_to_first_order(eqs, funcs, t,
                                                           A1=match.get("A1", None), A0=match.get("A0", None),
@@ -1516,7 +1518,8 @@ def _higher_order_ode_solver(match):
     else:
         new_eqs, new_funcs = _higher_order_to_first_order(eqs, sysorder, t, funcs=funcs,
                                                           type=type, J=match.get('J', None),
-                                                          f_t=match.get('f(t)', None))
+                                                          f_t=match.get('f(t)', None),
+                                                          P=match.get('P', None), b=match.get('rhs', None))
 
     if is_transformed:
         t = match.get('t_', t)
@@ -1592,6 +1595,7 @@ def _strong_component_solver(eqs, funcs, t):
         # Note: For now, only linear systems are handled by this function
         # hence, the match condition is added. This can be removed later.
         if sol is None and len(eqs) == 1:
+            print(eqs)
             sol = dsolve(eqs[0], func=funcs[0])
             variables = Tuple(eqs[0]).free_symbols
             new_constants = [Dummy() for _ in range(ode_order(eqs[0], funcs[0]))]
@@ -1726,7 +1730,7 @@ def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
     return _higher_order_to_first_order(eqs, sys_order, t, funcs=funcs)
 
 
-def _higher_order_type2_to_sub_systems(J, f_t, funcs, t, max_order):
+def _higher_order_type2_to_sub_systems(J, f_t, funcs, t, max_order, b=None, P=None):
 
     # Note: To add a test for this ValueError
     if J is None or f_t is None or not _matrix_is_constant(J, t):
@@ -1735,8 +1739,17 @@ def _higher_order_type2_to_sub_systems(J, f_t, funcs, t, max_order):
             Type 2
         '''))
 
+    if P is None and b is not None and not b.is_zero_matrix:
+        raise ValueError(filldedent('''
+            Provide the keyword 'P' for matrix P in A = P * J * P-1.
+        '''))
+
     new_funcs = Matrix([Function(Dummy('{}__0'.format(f.func.__name__)))(t) for f in funcs])
     new_eqs = new_funcs.diff(t, max_order) - f_t * J * new_funcs
+
+    if b is not None and not b.is_zero_matrix:
+        new_eqs -= P.inv() * b
+
     new_eqs = canonical_odes(new_eqs, new_funcs, t)[0]
 
     return new_eqs, new_funcs
@@ -1802,9 +1815,11 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **
     if type == "type2":
         J = kwargs.get('J', None)
         f_t = kwargs.get('f_t', None)
+        b = kwargs.get('b', None)
+        P = kwargs.get('P', None)
         max_order = max(sys_order[func] for func in funcs)
 
-        return _higher_order_type2_to_sub_systems(J, f_t, funcs, t, max_order)
+        return _higher_order_type2_to_sub_systems(J, f_t, funcs, t, max_order, P=P, b=b)
 
         # Note: To be changed to this after doit option is disabled for default cases
         # new_sysorder = _get_func_order(new_eqs, new_funcs)
