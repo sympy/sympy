@@ -153,6 +153,7 @@ def vector_integrate(field, *region):
     12
 
     Integrals over special regions can also be calculated using geometry module.
+
     >>> from sympy.geometry import Point, Circle, Triangle
     >>> c = Circle(Point(0, 2), 5)
     >>> vector_integrate(C.x**2 + C.y**2, c)
