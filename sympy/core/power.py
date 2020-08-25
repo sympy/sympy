@@ -1743,8 +1743,7 @@ def _eval_is_ge(a, b):
     if is_ge(a.base, S.One) and is_ge(b.base, S.One):
         base_greater = is_ge(a.base, b.base)
         exp_greater = is_ge(a.exp, b.exp)
-        if (not base_greater is None) and (not exp_greater is None):
-            return base_greater and exp_greater
+        return fuzzy_and([base_greater, exp_greater])
 
 from .add import Add
 from .numbers import Integer

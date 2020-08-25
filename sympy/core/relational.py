@@ -1198,7 +1198,6 @@ def is_ge(lhs, rhs):
     if retval is not None:
         return retval
     else:
-        
         if lhs.is_extended_real and rhs.is_extended_real:
             if (lhs.is_infinite and lhs.is_extended_positive) or (rhs.is_infinite and rhs.is_extended_negative):
                 return True
