@@ -86,7 +86,7 @@ with two 25 digit factors. qs is able to factorize this within 5 mins.
 For example:
  >>> from sympy.ntheory import qs
  >>> qs(5915587277*3267000013, 1000, 10000)
- {1369313697137091371113751, 1978419655660313589123997}
+ {3267000013, 5915587277}
 
 .. autofunction:: factorint
 
