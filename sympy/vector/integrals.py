@@ -142,8 +142,8 @@ def vector_integrate(field, *region):
     Compute the integral of a vector/scalar field
     over a a region or a set of parameters.
 
-    Examples:
-    =========
+    Examples
+    ========
     >>> from sympy.vector import CoordSys3D, ParametricRegion, vector_integrate
     >>> from sympy.abc import t
     >>> C = CoordSys3D('C')
