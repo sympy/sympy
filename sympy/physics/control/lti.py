@@ -1512,6 +1512,27 @@ class TransferFunctionMatrix(Basic):
 
     @property
     def is_biproper(self):
+        """
+        Returns True if degree of the numerator polynomial is equal to
+        degree of the denominator polynomial for all the SISO transfer
+        functions in a transfer function matrix, else False.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(-b*p**4 - a*s**2, a - s**2, s)
+        >>> tf3 = TransferFunction(s**2, s + a, s)
+        >>> TFM1 = TransferFunctionMatrix([tf1, -tf2])
+        >>> TFM1.is_biproper
+        True
+        >>> TFM2 = TransferFunctionMatrix(((tf1, tf2), (tf3, -tf2)))
+        >>> TFM2.is_biproper
+        False
+
+        """
         if self.num_inputs == 1:
             return all(elem.is_biproper for elem in self.args[0])
         else:
