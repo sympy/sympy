@@ -36,6 +36,7 @@ class ParametricRegion(Basic):
 
     Dimension of a parametric region determines whether a region is a curve, surface
     or volume region. It does not represent its dimensions in space.
+
     >>> circle.dimensions
     1
 
@@ -44,8 +45,8 @@ class ParametricRegion(Basic):
 
     definition : tuple to define base scalars in terms of parameters.
 
-    bounds : Parameter or a tuple of length 3 to define parameter and
-            corresponding lower and upper bound
+    bounds : Parameter or a tuple of length 3 to define parameter and corresponding lower and upper bound.
+
     """
     def __new__(cls, definition, *bounds):
         parameters = ()
