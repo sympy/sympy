@@ -470,8 +470,7 @@ class Series(Basic):
             raise TypeError("Unsupported type of argument(s) for Series.")
 
         obj = super(Series, cls).__new__(cls, *args)
-        obj.is_SISO = True if all(isinstance(arg.doit(), TransferFunction) for arg in args) \
-            else False
+        obj.is_SISO = all(isinstance(arg.doit(), TransferFunction) for arg in args)
         if not obj.is_SISO:
             obj._num_outputs, obj._num_inputs = args[0].num_outputs, args[-1].num_inputs
             for x in range(len(args) - 1):
@@ -623,7 +622,7 @@ class Series(Basic):
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series, TransferFunctionMatrix)):
             if isinstance(other, Series):
-                if ((self.is_SISO and not other.is_SISO) or (not self.is_SISO and other.is_SISO)):
+                if self.is_SISO != other.is_SISO:
                     raise ValueError("Both Series objects should either handle SISO or MIMO"
                         " transfer function.")
 
@@ -639,7 +638,7 @@ class Series(Basic):
 
             return Parallel(self, other)
         elif isinstance(other, Parallel):
-            if ((self.is_SISO and not other.is_SISO) or (not self.is_SISO and other.is_SISO)):
+            if self.is_SISO != other.is_SISO:
                 raise ValueError("Both Series and Parallel objects should either handle SISO or MIMO"
                     " transfer function.")
 
@@ -665,7 +664,7 @@ class Series(Basic):
     def __mul__(self, other):
         if isinstance(other, (TransferFunction, Parallel, TransferFunctionMatrix)):
             if isinstance(other, Parallel):
-                if ((self.is_SISO and not other.is_SISO) or (not self.is_SISO and other.is_SISO)):
+                if self.is_SISO != other.is_SISO:
                     raise ValueError("Both Series and Parallel objects should either handle SISO or MIMO"
                         " transfer function.")
             if isinstance(other, TransferFunctionMatrix):
@@ -683,7 +682,7 @@ class Series(Basic):
 
             return Series(*arg_list, other)
         elif isinstance(other, Series):
-            if ((self.is_SISO and not other.is_SISO) or (not self.is_SISO and other.is_SISO)):
+            if self.is_SISO != other.is_SISO:
                 raise ValueError("Both Series objects should either handle SISO or MIMO"
                     " transfer function.")
 
@@ -856,8 +855,7 @@ class Parallel(Basic):
             raise TypeError("Unsupported type of argument(s) for Parallel.")
 
         obj = super(Parallel, cls).__new__(cls, *args)
-        obj.is_SISO = True if all(isinstance(arg.doit(), TransferFunction) for arg in args) \
-            else False
+        obj.is_SISO = all(isinstance(arg.doit(), TransferFunction) for arg in args)
         if not obj.is_SISO:
             obj._num_inputs, obj._num_outputs = args[0].num_inputs, args[0].num_outputs
             # All MIMO --> assert matching shapes..
