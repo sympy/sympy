@@ -7,14 +7,15 @@ from sympy.integrals.intpoly import (decompose, best_origin, distance_to_side,
                                      hyperplane_parameters, main_integrate3d,
                                      main_integrate, polygon_integrate,
                                      lineseg_integrate, integration_reduction,
-                                     integration_reduction_dynamic, is_vertex)
+                                     integration_reduction_dynamic, is_vertex,
+                                     intersection)
 
-from sympy.geometry.line import Segment2D
+from sympy.geometry.line import Segment2D, Segment3D
 from sympy.geometry.polygon import Polygon
 from sympy.geometry.point import Point, Point2D
 from sympy.abc import x, y, z
 
-from sympy.testing.pytest import slow
+from sympy.testing.pytest import raises, slow
 
 
 def test_decompose():
@@ -496,6 +497,19 @@ def test_polytope_integrate():
          y * z: 3125 / S(4), z ** 2: 3125 / S(3), y ** 2: 3125 / S(3),
          z: 625 / S(2), x * y: 3125 / S(4), x ** 2: 3125 / S(3)}
 
+    raises(TypeError, lambda: polytope_integrate([1, 2, 3, 4], clockwise=True))
+
+    raises(NotImplementedError, lambda: polytope_integrate(
+        [[[0, 0, 0], [1, 2, 0]], [[0, 2, 0], [3, 4, 0]]]))
+
+    raises(TypeError, lambda: polytope_integrate(
+        [[[0, 0, 0], [1, 2, 0], [3, 2, 1]], [[0, 2, 0], [3, 4, 0], [3, 2, -1]]]))
+
+    raises(TypeError, lambda: polytope_integrate(cube2, expr="Poop input string", max_degree=2))
+
+    raises(TypeError, lambda: polytope_integrate(
+        Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))))
+
 def test_point_sort():
     assert point_sort([Point(0, 0), Point(1, 0), Point(1, 1)]) == \
         [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
@@ -559,6 +573,8 @@ def test_polygon_integrate():
     vertices = cube[0]
     assert polygon_integrate(facet, [(0, 1, 0), 5], 0, facets, vertices, 1, 0) == -25
 
+    assert polygon_integrate(facet, [(0, 1, 0), 5], 0, facets, vertices, 0, 0) == S.Zero
+
 
 def test_distance_to_side():
     point = (0, 0, 0)
@@ -600,3 +616,10 @@ def test_is_vertex():
     assert is_vertex(Point(2, 3)) is True
     assert is_vertex((2, 3, 4)) is True
     assert is_vertex((2, 3, 4, 5)) is False
+
+def test_intersection():
+    l1 = Segment3D(Point(1, 1, 0), Point(3, 5, 0))
+    l2 = Segment3D(Point(2, 0, 0), Point(2, 5, 0))
+
+    assert intersection(l1, l2, "segment3D") == (2, 3, 0)
+
