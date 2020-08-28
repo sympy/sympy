@@ -4,11 +4,14 @@ from sympy import erf, Integral, Symbol
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.utilities.codegen import (
-    codegen, make_routine, CCodeGen, C89CodeGen, C99CodeGen, InputArgument,
-    CodeGenError, FCodeGen, CodeGenArgumentListError, OutputArgument,
-    InOutArgument)
+    codegen, make_routine, get_code_generator, CCodeGen, C89CodeGen,
+    C99CodeGen, InputArgument, CodeGenError, FCodeGen,
+    CodeGenArgumentListError, OutputArgument, InOutArgument, Routine, Result,
+    Variable)
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
+from sympy.abc import x, y, z
+
 
 #FIXME: Fails due to circular import in with core
 # from sympy import codegen
@@ -1575,3 +1578,26 @@ def test_fcode_complex():
         )
     assert source==expected
     sympy.utilities.codegen.COMPLEX_ALLOWED = False
+
+def test_Routine_constructor():
+    raises(ValueError, lambda: Routine("name", ["bad args be here"], [], [], []))
+    raises(ValueError, lambda: Routine("name", [InputArgument(x)], ["bad results yay!"], [], []))
+    raises(ValueError, lambda: Routine("name", [InputArgument(x)], [Result(y)], [], []))
+
+def test_Variable_constructor():
+    raises(TypeError, lambda: Variable())
+    raises(TypeError, lambda: Variable("invalid name"))
+    raises(TypeError, lambda: Variable(x, datatype="bad data type"))
+    raises(TypeError, lambda: Variable(x, dimensions="bad dimensions"))
+    # raises(TypeError, lambda: Variable(x, precision="bad precision"))
+    raises(CodeGenError, lambda: Variable(x).get_datatype("I'm an invalid language!"))
+
+def test_Result_constructor():
+    raises(TypeError, lambda: Result("I'm not a Sympy expression :P"))
+
+# def test_FCodeGen():
+#     args = FCodeGen()._declare_arguments(Routine("routine", [InputArgument(x)], [], [], []))
+#     # raises(CodeGenError, lambda: FCodeGen()._declare_arguments(Routine("routine", )))
+
+def test_get_code_generator():
+    raises(ValueError, lambda: get_code_generator("invalid language name"))
