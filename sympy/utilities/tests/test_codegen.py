@@ -1579,25 +1579,25 @@ def test_fcode_complex():
     assert source==expected
     sympy.utilities.codegen.COMPLEX_ALLOWED = False
 
+
 def test_Routine_constructor():
     raises(ValueError, lambda: Routine("name", ["bad args be here"], [], [], []))
     raises(ValueError, lambda: Routine("name", [InputArgument(x)], ["bad results yay!"], [], []))
     raises(ValueError, lambda: Routine("name", [InputArgument(x)], [Result(y)], [], []))
+
 
 def test_Variable_constructor():
     raises(TypeError, lambda: Variable())
     raises(TypeError, lambda: Variable("invalid name"))
     raises(TypeError, lambda: Variable(x, datatype="bad data type"))
     raises(TypeError, lambda: Variable(x, dimensions="bad dimensions"))
-    # raises(TypeError, lambda: Variable(x, precision="bad precision"))
+    raises(TypeError, lambda: Variable(x, precision="bad precision"))
     raises(CodeGenError, lambda: Variable(x).get_datatype("I'm an invalid language!"))
+
 
 def test_Result_constructor():
     raises(TypeError, lambda: Result("I'm not a Sympy expression :P"))
 
-# def test_FCodeGen():
-#     args = FCodeGen()._declare_arguments(Routine("routine", [InputArgument(x)], [], [], []))
-#     # raises(CodeGenError, lambda: FCodeGen()._declare_arguments(Routine("routine", )))
 
 def test_get_code_generator():
     raises(ValueError, lambda: get_code_generator("invalid language name"))
