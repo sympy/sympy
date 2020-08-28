@@ -240,6 +240,37 @@ class Particle(object):
                 deprecated_since_version="1.5", issue=9800).warn()
         self.potential_energy = scalar
 
+
+    def total_mechanical_energy(self, frame):
+        """ Returns the total mechanical energy of the particle
+
+        Total Mechanical Energy = Kinetic Energy + Potential Energy
+
+        Parameters
+        ==========
+
+        frame : ReferenceFrame
+            The Particle's velocity is typically defined with respect to
+            an inertial frame but any relevant frame in which the velocity is
+            known can be supplied.
+
+         Examples
+         ========
+
+        >>> from sympy.physics.mechanics import Particle, Point, ReferenceFrame
+        >>> from sympy import symbols
+        >>> m, v, g, h = symbols('m v g h')
+        >>> N = ReferenceFrame('N')
+        >>> O = Point('O')
+        >>> P = Particle('P', O, m)
+        >>> P.potential_energy = m * g * h
+        >>> P.point.set_vel(N, v * N.y)
+        >>> E = total_mechanical_energy(N)
+
+        """
+        return self.kinetic_energy(self, frame) + self.potential_energy
+
+
     def parallel_axis(self, point, frame):
         """Returns an inertia dyadic of the particle with respect to another
         point and frame.
