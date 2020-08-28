@@ -2,6 +2,7 @@
 Physical quantities.
 """
 
+from __future__ import division
 
 from sympy import AtomicExpr, Symbol, sympify
 from sympy.physics.units.dimensions import _QuantityMapper
@@ -209,4 +210,4 @@ class Quantity(AtomicExpr):
     @property
     def free_symbols(self):
         """Return free symbols from quantity."""
-        return set()
+        return set([])

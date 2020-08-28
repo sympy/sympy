@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 __all__ = ['Linearizer']
 
 from sympy.core.backend import Matrix, eye, zeros
@@ -9,7 +11,7 @@ from sympy.physics.mechanics.functions import msubs
 
 from collections import namedtuple
 
-class Linearizer:
+class Linearizer(object):
     """This object holds the general model form for a dynamic system.
     This model is used for computing the linearized form of the system,
     while properly dealing with constraints leading to  dependent

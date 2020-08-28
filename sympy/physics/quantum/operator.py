@@ -9,6 +9,7 @@ TODO:
   AntiCommutator, represent, apply_operators.
 """
 
+from __future__ import print_function, division
 
 from sympy import Derivative, Expr, Integer, oo, Mul, expand, Add
 from sympy.printing.pretty.stringpict import prettyForm
@@ -119,7 +120,7 @@ class Operator(QExpr):
         if len(self.label) == 1:
             return self._print_label(printer, *args)
         else:
-            return '{}({})'.format(
+            return '%s(%s)' % (
                 self._print_operator_name(printer, *args),
                 self._print_label(printer, *args)
             )
@@ -133,14 +134,14 @@ class Operator(QExpr):
             label_pform = prettyForm(
                 *label_pform.parens(left='(', right=')')
             )
-            pform = prettyForm(*pform.right(label_pform))
+            pform = prettyForm(*pform.right((label_pform)))
             return pform
 
     def _print_contents_latex(self, printer, *args):
         if len(self.label) == 1:
             return self._print_label_latex(printer, *args)
         else:
-            return r'{}\left({}\right)'.format(
+            return r'%s\left(%s\right)' % (
                 self._print_operator_name_latex(printer, *args),
                 self._print_label_latex(printer, *args)
             )
@@ -460,7 +461,7 @@ class OuterProduct(Operator):
         return printer._print(self.ket) + printer._print(self.bra)
 
     def _sympyrepr(self, printer, *args):
-        return '{}({},{})'.format(self.__class__.__name__,
+        return '%s(%s,%s)' % (self.__class__.__name__,
             printer._print(self.ket, *args), printer._print(self.bra, *args))
 
     def _pretty(self, printer, *args):
@@ -628,7 +629,7 @@ class DifferentialOperator(Operator):
     #-------------------------------------------------------------------------
 
     def _print(self, printer, *args):
-        return '{}({})'.format(
+        return '%s(%s)' % (
             self._print_operator_name(printer, *args),
             self._print_label(printer, *args)
         )
@@ -639,5 +640,5 @@ class DifferentialOperator(Operator):
         label_pform = prettyForm(
             *label_pform.parens(left='(', right=')')
         )
-        pform = prettyForm(*pform.right(label_pform))
+        pform = prettyForm(*pform.right((label_pform)))
         return pform

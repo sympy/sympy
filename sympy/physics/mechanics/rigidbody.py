@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core.backend import sympify
 from sympy.physics.vector import Point, ReferenceFrame, Dyadic
 
@@ -7,7 +9,7 @@ __all__ = ['RigidBody']
 
 
 
-class RigidBody:
+class RigidBody(object):
     """An idealized rigid body.
 
     This is essentially a container which holds the various components which

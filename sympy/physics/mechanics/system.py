@@ -5,7 +5,7 @@ from sympy.physics.mechanics.functions import find_dynamicsymbols
 __all__ = ['SymbolicSystem']
 
 
-class SymbolicSystem:
+class SymbolicSystem(object):
     """SymbolicSystem is a class that contains all the information about a
     system in a symbolic format such as the equations of motions and the bodies
     and loads in the system.

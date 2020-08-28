@@ -11,6 +11,7 @@ Todo:
 * Fix the printing of Rk gates in plotting.
 """
 
+from __future__ import print_function, division
 
 from sympy import Expr, Matrix, exp, I, pi, Integer, Symbol
 from sympy.functions import sqrt
@@ -38,8 +39,8 @@ __all__ = [
 
 class RkGate(OneQubitGate):
     """This is the R_k gate of the QTF."""
-    gate_name = 'Rk'
-    gate_name_latex = 'R'
+    gate_name = u'Rk'
+    gate_name_latex = u'R'
 
     def __new__(cls, *args):
         if len(args) != 2:
@@ -78,7 +79,7 @@ class RkGate(OneQubitGate):
 
     @property
     def gate_name_plot(self):
-        return r'${}_{}$'.format(self.gate_name_latex, str(self.k))
+        return r'$%s_%s$' % (self.gate_name_latex, str(self.k))
 
     def get_target_matrix(self, format='sympy'):
         if format == 'sympy':
@@ -156,8 +157,8 @@ class Fourier(Gate):
 class QFT(Fourier):
     """The forward quantum Fourier transform."""
 
-    gate_name = 'QFT'
-    gate_name_latex = 'QFT'
+    gate_name = u'QFT'
+    gate_name_latex = u'QFT'
 
     def decompose(self):
         """Decomposes QFT into elementary gates."""
@@ -186,8 +187,8 @@ class QFT(Fourier):
 class IQFT(Fourier):
     """The inverse quantum Fourier transform."""
 
-    gate_name = 'IQFT'
-    gate_name_latex = '{QFT^{-1}}'
+    gate_name = u'IQFT'
+    gate_name_latex = u'{QFT^{-1}}'
 
     def decompose(self):
         """Decomposes IQFT into elementary gates."""

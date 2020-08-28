@@ -9,6 +9,7 @@ References
 .. [1] https://en.wikipedia.org/wiki/Pauli_matrices
 """
 
+from __future__ import print_function, division
 
 from sympy import Symbol, I, Mul, Pow, Add
 from sympy.physics.quantum import TensorProduct
@@ -144,11 +145,11 @@ class Pauli(Symbol):
                     + I*epsilon(j, k, 1)*Pauli(1,jlab) \
                     + I*epsilon(j, k, 2)*Pauli(2,jlab) \
                     + I*epsilon(j, k, 3)*Pauli(3,jlab)
-        return super().__mul__(other)
+        return super(Pauli, self).__mul__(other)
 
     def _eval_power(b, e):
         if e.is_Integer and e.is_positive:
-            return super().__pow__(int(e) % 2)
+            return super(Pauli, b).__pow__(int(e) % 2)
 
 
 def evaluate_pauli_product(arg):

@@ -4,6 +4,7 @@ MKS unit system.
 MKS stands for "meter, kilogram, second, ampere".
 """
 
+from __future__ import division
 
 from typing import List
 

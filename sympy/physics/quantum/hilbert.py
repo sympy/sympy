@@ -5,6 +5,7 @@ Authors:
 * Matt Curry
 """
 
+from __future__ import print_function, division
 
 from sympy import Basic, Interval, oo, sympify
 from sympy.printing.pretty.stringpict import prettyForm
@@ -97,10 +98,10 @@ class HilbertSpace(Basic):
             return False
 
     def _sympystr(self, printer, *args):
-        return 'H'
+        return u'H'
 
     def _pretty(self, printer, *args):
-        ustr = '\N{LATIN CAPITAL LETTER H}'
+        ustr = u'\N{LATIN CAPITAL LETTER H}'
         return prettyForm(ustr)
 
     def _latex(self, printer, *args):
@@ -167,14 +168,14 @@ class ComplexSpace(HilbertSpace):
         return self.args[0]
 
     def _sympyrepr(self, printer, *args):
-        return "{}({})".format(self.__class__.__name__,
+        return "%s(%s)" % (self.__class__.__name__,
                            printer._print(self.dimension, *args))
 
     def _sympystr(self, printer, *args):
         return "C(%s)" % printer._print(self.dimension, *args)
 
     def _pretty(self, printer, *args):
-        ustr = '\N{LATIN CAPITAL LETTER C}'
+        ustr = u'\N{LATIN CAPITAL LETTER C}'
         pform_exp = printer._print(self.dimension, *args)
         pform_base = prettyForm(ustr)
         return pform_base**pform_exp
@@ -226,8 +227,8 @@ class L2(HilbertSpace):
         return "L2(%s)" % printer._print(self.interval, *args)
 
     def _pretty(self, printer, *args):
-        pform_exp = prettyForm('2')
-        pform_base = prettyForm('L')
+        pform_exp = prettyForm(u'2')
+        pform_base = prettyForm(u'L')
         return pform_base**pform_exp
 
     def _latex(self, printer, *args):
@@ -273,7 +274,7 @@ class FockSpace(HilbertSpace):
         return "F"
 
     def _pretty(self, printer, *args):
-        ustr = '\N{LATIN CAPITAL LETTER F}'
+        ustr = u'\N{LATIN CAPITAL LETTER F}'
         return prettyForm(ustr)
 
     def _latex(self, printer, *args):
@@ -418,7 +419,7 @@ class TensorProductHilbertSpace(HilbertSpace):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(' ' + '\N{N-ARY CIRCLED TIMES OPERATOR}' + ' '))
+                    pform = prettyForm(*pform.right(u' ' + u'\N{N-ARY CIRCLED TIMES OPERATOR}' + u' '))
                 else:
                     pform = prettyForm(*pform.right(' x '))
         return pform
@@ -528,7 +529,7 @@ class DirectSumHilbertSpace(HilbertSpace):
             pform = prettyForm(*pform.right(next_pform))
             if i != length - 1:
                 if printer._use_unicode:
-                    pform = prettyForm(*pform.right(' \N{CIRCLED PLUS} '))
+                    pform = prettyForm(*pform.right(u' \N{CIRCLED PLUS} '))
                 else:
                     pform = prettyForm(*pform.right(' + '))
         return pform
@@ -629,17 +630,17 @@ class TensorPowerHilbertSpace(HilbertSpace):
             return self.base.dimension**self.exp
 
     def _sympyrepr(self, printer, *args):
-        return "TensorPowerHilbertSpace({},{})".format(printer._print(self.base,
+        return "TensorPowerHilbertSpace(%s,%s)" % (printer._print(self.base,
         *args), printer._print(self.exp, *args))
 
     def _sympystr(self, printer, *args):
-        return "{}**{}".format(printer._print(self.base, *args),
+        return "%s**%s" % (printer._print(self.base, *args),
         printer._print(self.exp, *args))
 
     def _pretty(self, printer, *args):
         pform_exp = printer._print(self.exp, *args)
         if printer._use_unicode:
-            pform_exp = prettyForm(*pform_exp.left(prettyForm('\N{N-ARY CIRCLED TIMES OPERATOR}')))
+            pform_exp = prettyForm(*pform_exp.left(prettyForm(u'\N{N-ARY CIRCLED TIMES OPERATOR}')))
         else:
             pform_exp = prettyForm(*pform_exp.left(prettyForm('x')))
         pform_base = printer._print(self.base, *args)
@@ -648,4 +649,4 @@ class TensorPowerHilbertSpace(HilbertSpace):
     def _latex(self, printer, *args):
         base = printer._print(self.base, *args)
         exp = printer._print(self.exp, *args)
-        return r'{{{}}}^{{\otimes {}}}'.format(base, exp)
+        return r'{%s}^{\otimes %s}' % (base, exp)

@@ -1,5 +1,6 @@
 """Symbolic inner product."""
 
+from __future__ import print_function, division
 
 from sympy import Expr, conjugate
 from sympy.printing.pretty.stringpict import prettyForm
@@ -93,13 +94,13 @@ class InnerProduct(Expr):
         return InnerProduct(Dagger(self.ket), Dagger(self.bra))
 
     def _sympyrepr(self, printer, *args):
-        return '{}({},{})'.format(self.__class__.__name__,
+        return '%s(%s,%s)' % (self.__class__.__name__,
             printer._print(self.bra, *args), printer._print(self.ket, *args))
 
     def _sympystr(self, printer, *args):
         sbra = printer._print(self.bra)
         sket = printer._print(self.ket)
-        return '{}|{}'.format(sbra[:-1], sket[1:])
+        return '%s|%s' % (sbra[:-1], sket[1:])
 
     def _pretty(self, printer, *args):
         # Print state contents
@@ -120,7 +121,7 @@ class InnerProduct(Expr):
     def _latex(self, printer, *args):
         bra_label = self.bra._print_contents_latex(printer, *args)
         ket = printer._print(self.ket, *args)
-        return r'\left\langle {} \right. {}'.format(bra_label, ket)
+        return r'\left\langle %s \right. %s' % (bra_label, ket)
 
     def doit(self, **hints):
         try:

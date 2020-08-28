@@ -1,5 +1,6 @@
 """Quantum mechanical angular momemtum."""
 
+from __future__ import print_function, division
 
 from sympy import (Add, binomial, cos, exp, Expr, factorial, I, Integer, Mul,
                    pi, Rational, S, sin, simplify, sqrt, Sum, symbols, sympify,
@@ -65,7 +66,7 @@ def m_values(j):
 #-----------------------------------------------------------------------------
 
 
-class SpinOpBase:
+class SpinOpBase(object):
     """Base class for spin operators."""
 
     @classmethod
@@ -78,7 +79,7 @@ class SpinOpBase:
         return self.args[0]
 
     def _print_contents(self, printer, *args):
-        return '{}{}'.format(unicode(self.name), self._coord)
+        return '%s%s' % (unicode(self.name), self._coord)
 
     def _print_contents_pretty(self, printer, *args):
         a = stringPict(unicode(self.name))
@@ -86,7 +87,7 @@ class SpinOpBase:
         return self._print_subscript_pretty(a, b)
 
     def _print_contents_latex(self, printer, *args):
-        return r'{}_{}'.format(unicode(self.name), self._coord)
+        return r'%s_%s' % ((unicode(self.name), self._coord))
 
     def _represent_base(self, basis, **options):
         j = options.get('j', S.Half)
@@ -405,7 +406,7 @@ class J2Op(SpinOpBase, HermitianOperator):
 
     def _print_contents_pretty(self, printer, *args):
         a = prettyForm(unicode(self.name))
-        b = prettyForm('2')
+        b = prettyForm(u'2')
         return a**b
 
     def _print_contents_latex(self, printer, *args):
@@ -501,7 +502,7 @@ class Rotation(UnitaryOperator):
 
     def _print_operator_name_pretty(self, printer, *args):
         if printer._use_unicode:
-            return prettyForm('\N{SCRIPT CAPITAL R}' + ' ')
+            return prettyForm(u'\N{SCRIPT CAPITAL R}' + u' ')
         else:
             return prettyForm("R ")
 
@@ -926,9 +927,9 @@ class SpinState(State):
                     'm must be integer or half-integer, got: %s' % m)
         if j.is_number and m.is_number:
             if abs(m) > j:
-                raise ValueError('Allowed values for m are -j <= m <= j, got j, m: {}, {}'.format(j, m))
+                raise ValueError('Allowed values for m are -j <= m <= j, got j, m: %s, %s' % (j, m))
             if int(j - m) != j - m:
-                raise ValueError('Both j and m must be integer or half-integer, got j, m: {}, {}'.format(j, m))
+                raise ValueError('Both j and m must be integer or half-integer, got j, m: %s, %s' % (j, m))
         return State.__new__(cls, j, m)
 
     @property
@@ -1417,7 +1418,7 @@ class CoupledSpinState(SpinState):
                 i, printer._print(ji)
             ))
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
-            label.append('j({})={}'.format(
+            label.append('j(%s)=%s' % (
                 ','.join(str(i) for i in sorted(n1 + n2)), printer._print(jn)
             ))
         return ','.join(label)
@@ -1448,7 +1449,7 @@ class CoupledSpinState(SpinState):
             label.append('j_{%d}=%s' % (i, printer._print(ji, *args)) )
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             n = ','.join(str(i) for i in sorted(n1 + n2))
-            label.append('j_{{{}}}={}'.format(n, printer._print(jn, *args)) )
+            label.append('j_{%s}=%s' % (n, printer._print(jn, *args)) )
         return self._label_separator.join(label)
 
     @property
