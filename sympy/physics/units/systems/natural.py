@@ -6,7 +6,6 @@ point of view it means that we use velocity and action instead of length and
 time. Moreover instead of mass we use energy.
 """
 
-from __future__ import division
 
 from sympy.physics.units import DimensionSystem
 from sympy.physics.units.definitions import c, eV, hbar

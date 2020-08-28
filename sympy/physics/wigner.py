@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 r"""
 Wigner, Clebsch-Gordan, Racah, and Gaunt coefficients
 
@@ -45,7 +44,6 @@ AUTHORS:
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 
 """
-from __future__ import print_function, division
 
 from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm, zeros,
                    Function, sin, cos, exp, I, factorial, binomial,
@@ -753,7 +751,7 @@ def dot_rot_grad_Ynm(j, p, l, m, theta, phi):
 
 
 def wigner_d_small(J, beta):
-    u"""Return the small Wigner d matrix for angular momentum J.
+    """Return the small Wigner d matrix for angular momentum J.
 
     INPUT:
 
@@ -889,7 +887,7 @@ def wigner_d_small(J, beta):
 
 
 def wigner_d(J, alpha, beta, gamma):
-    u"""Return the Wigner D matrix for angular momentum J.
+    """Return the Wigner D matrix for angular momentum J.
 
     INPUT:
 
