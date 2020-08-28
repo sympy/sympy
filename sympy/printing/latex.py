@@ -131,7 +131,7 @@ def latex_escape(s):
     s = s.replace('\\', r'\textbackslash')
     for c in '&%$#_{}':
         s = s.replace(c, '\\' + c)
-    s=s.replace('_','')    
+    s = s.replace('_', '') 
     s = s.replace('~', r'\textasciitilde')
     s = s.replace('^', r'\textasciicircum')
     return s
