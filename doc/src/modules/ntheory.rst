@@ -195,18 +195,20 @@ Ntheory Functions Reference
 
 .. module:: sympy.ntheory.ecm
 
-.. autofunction:: ecm
-
 The ecm function is a subexponential factoring algorithm capable of factoring
 numbers of around ~35 digits comfortably within few seconds. The time complexity
 of ecm is dependent on the smalled proper factor of the number. So even if the
-number is really large but its factors are comparatively smaller then ecm will
+number is really large but its factors are comparatively smaller then `ecm`
 can easily factor them. For example we take N with 15 digit factors
-{15154262241479, 15423094826093, 799333555511111, 809709509409109, 888888877777777,
-914148152112161}. Now N is a 87 digit number. Ecm takes under 30secs to factorize
+`{15154262241479, 15423094826093, 799333555511111, 809709509409109, 888888877777777,
+914148152112161}`. Now N is a 87 digit number. `ECM` takes under 30s to factorise
 this.
 
-For example:
+.. autofunction:: ecm
+
+Examples:
+=========
+
  >>> from sympy.ntheory import ecm
  >>> ecm(7060005655815754299976961394452809, B1=100000, B2=1000000)
  {6988699669998001, 1010203040506070809}
@@ -220,18 +222,20 @@ For example:
 
 .. module:: sympy.ntheory.qs
 
-.. autofunction:: qs
-
-The qs function is a subexponential factoring algorithm, the fastest factoring
+The `qs `function is a subexponential factoring algorithm, the fastest
 factoring algorithm for numbers within 100 digits. The time complexity of
-qs is dependent on the size of the number so it is used if the number contains
+`qs` is dependent on the size of the number so it is used if the number contains
 large factors. Due to this while factoring numbers first ecm is used to get
 smaller factors of around ~15digits then qs is used to get larger factors.
 
-For factoring 2709077133180915240135586837960864768806330782747 which is a semi-prime number
+For factoring `2709077133180915240135586837960864768806330782747` which is a semi-prime number
 with two 25 digit factors. qs is able to factorize this within 5 mins.
 
-For example:
+.. autofunction:: qs
+
+Examples:
+=========
+
  >>> from sympy.ntheory import qs
  >>> qs(5915587277*3267000013, 1000, 10000)
  {3267000013, 5915587277}
