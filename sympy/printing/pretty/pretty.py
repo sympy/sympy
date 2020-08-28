@@ -1030,7 +1030,7 @@ class PrettyPrinter(Printer):
 
     def _print_TransferFunctionMatrix(self, expr):
         from sympy.matrices import Matrix
-        return self._print_Matrix(Matrix(expr.args[0]))
+        return self._print(Matrix(expr.args[0]))
 
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector

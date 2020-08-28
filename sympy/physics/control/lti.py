@@ -397,7 +397,20 @@ class TransferFunction(Basic, EvalfMixin):
         return self + other
 
     def __sub__(self, other):
-        return self + (-other)
+        if isinstance(other, (TransferFunction, Series)):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
+            return Parallel(self, -other)
+        elif isinstance(other, Parallel):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
+            arg_list = [-i for i in list(other.args)]
+            return Parallel(self, *arg_list)
+        else:
+            raise ValueError("{} cannot be subtracted from a TransferFunction."
+                .format(type(other)))
 
     def __rsub__(self, other):
         return -self + other
@@ -1086,7 +1099,7 @@ class Parallel(Basic):
                     raise ValueError("Only transfer function matrices are allowed in the "
                         "parallel configuration.")
             if isinstance(other, Series):
-                if ((self.is_SISO and not other.is_SISO) or (not self.is_SISO and other.is_SISO)):
+                if self.is_SISO != other.is_SISO:
                     raise ValueError("Both Series and Parallel objects should either handle SISO or MIMO"
                         " transfer function.")
             if not self.shape == other.shape:
@@ -1100,7 +1113,7 @@ class Parallel(Basic):
 
             return Parallel(*arg_list)
         elif isinstance(other, Parallel):
-            if ((self.is_SISO and not other.is_SISO) or (not self.is_SISO and other.is_SISO)):
+            if self.is_SISO != other.is_SISO:
                 raise ValueError("Both Parallel objects should either handle SISO or MIMO"
                     " transfer function.")
             if not self.shape == other.shape:
@@ -1124,7 +1137,7 @@ class Parallel(Basic):
     def __mul__(self, other):
         if isinstance(other, (TransferFunction, Parallel, TransferFunctionMatrix)):
             if isinstance(other, Parallel):
-                if ((self.is_SISO and not other.is_SISO) or (not self.is_SISO and other.is_SISO)):
+                if self.is_SISO != other.is_SISO:
                     raise ValueError("Both Parallel objects should either handle SISO or MIMO"
                         " transfer function.")
             if isinstance(other, TransferFunctionMatrix):
@@ -1140,7 +1153,7 @@ class Parallel(Basic):
 
             return Series(self, other)
         elif isinstance(other, Series):
-            if ((self.is_SISO and not other.is_SISO) or (not self.is_SISO and other.is_SISO)):
+            if self.is_SISO != other.is_SISO:
                 raise ValueError("Both Series and Parallel objects should either handle SISO or MIMO"
                     " transfer function.")
             if not self.num_inputs == other.num_outputs:
@@ -1464,7 +1477,8 @@ class TransferFunctionMatrix(Basic):
                     raise ValueError("All transfer functions should use the same complex"
                         " variable (var) of the Laplace transform.")
                 if not (shape[0] == len(arg) and shape[1] == 1):
-                    raise ValueError("Shape must be equal to ({0}, {1}).".format(len(arg), 1))
+                    raise ValueError("The provided Shape does not match the shape of the input."
+                        " Shape must be equal to ({0}, {1}).".format(len(arg), 1))
                 obj._num_outputs, obj._num_inputs, obj._var = shape[0], shape[1], var
             else:
                 obj._var = arg[0].var
@@ -1484,7 +1498,8 @@ class TransferFunctionMatrix(Basic):
                     " TransferFunctionMatrix should be equal.")
             if shape and var:
                 if not (shape[0] == len(arg) and shape[1] == len(arg[0])):
-                    raise ValueError("Shape must be equal to ({0}, {1}).".format(len(arg), len(arg[0])))
+                    raise ValueError("The provided Shape does not match the shape of the input."
+                        " Shape must be equal to ({0}, {1}).".format(len(arg), len(arg[0])))
                 if not all(arg[row][col].var == var
                     for col in range(shape[1]) for row in range(shape[0])):
                     raise ValueError("All transfer functions should use the same complex"
