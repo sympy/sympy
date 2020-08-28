@@ -32,6 +32,7 @@ from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, \
 from sympy.stats.rv import RandomSymbol
 from sympy.testing.pytest import raises
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
+from sympy import sympify
 
 x, y, z, a, b, c, d, e, n = symbols('x:z a:e n')
 mp = MathMLContentPrinter()
@@ -2004,3 +2005,9 @@ def test_issue_17857():
         '<mfenced close="}" open="{"><mi>&#8230;</mi><mn>-1</mn><mn>0</mn><mn>1</mn><mi>&#8230;</mi></mfenced>'
     assert mathml(Range(oo, -oo, -1), printer='presentation') == \
         '<mfenced close="}" open="{"><mi>&#8230;</mi><mn>1</mn><mn>0</mn><mn>-1</mn><mi>&#8230;</mi></mfenced>'
+
+
+def test_float_roundtrip():
+    x = sympify(0.8975979010256552)
+    y = sympify(mp.doprint(x).strip('</cn>'))
+    assert x == y
