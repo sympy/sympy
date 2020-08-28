@@ -79,6 +79,15 @@ FUNC_ARTANH: '\\artanh';
 
 FUNC_SQRT: '\\sqrt';
 
+O_INT: '\\oint';
+O_TIMES: '\\otimes';
+O_PLUS: '\\oplus';
+O_MINUS: '\\ominus';
+O_DOT: '\\odot';
+BIG_O_PLUS: '\\bigoplus';
+BIG_O_TIMES: '\\bigotimes';
+O_SLASH: '\\oslash';
+
 CMD_TIMES: '\\times';
 CMD_CDOT:  '\\cdot';
 CMD_DIV:   '\\div';
@@ -92,6 +101,13 @@ CMD_MATHIT: '\\mathit';
 UNDERSCORE: '_';
 CARET: '^';
 COLON: ':';
+
+TILDE: '\\tilde';
+VEC: '\\vec';
+HAT: '\\hat';
+HBAR: '\\hbar';
+DAGGER: '\\dagger';
+STAR: '\\star';
 
 fragment WS_CHAR: [ \t\r\n];
 DIFFERENTIAL: 'd' WS_CHAR*? ([a-zA-Z] | '\\' [a-zA-Z]+);
@@ -218,7 +234,8 @@ func_normal:
     | FUNC_ARCSIN | FUNC_ARCCOS | FUNC_ARCTAN
     | FUNC_ARCCSC | FUNC_ARCSEC | FUNC_ARCCOT
     | FUNC_SINH | FUNC_COSH | FUNC_TANH
-    | FUNC_ARSINH | FUNC_ARCOSH | FUNC_ARTANH;
+    | FUNC_ARSINH | FUNC_ARCOSH | FUNC_ARTANH
+    | VEC | HAT;
 
 func:
     func_normal
