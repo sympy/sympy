@@ -13,6 +13,7 @@ from sympy import (
     fresnelc, fresnels)
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
+from sympy.codegen.scipy_nodes import cosm1
 from sympy.functions.elementary.complexes import re, im, arg
 from sympy.functions.special.polynomials import \
     chebyshevt, chebyshevu, legendre, hermite, laguerre, gegenbauer, \
@@ -1302,3 +1303,11 @@ def test_numpy_special_math():
 
     lae2 = lambdify((x, y), logaddexp2(log2(x), log2(y)))
     assert abs(2.0**lae2(1e-50, 2.5e-50) - 3.5e-50) < 1e-62  # from NumPy's docstring
+
+
+def test_scipy_special_math():
+    if not scipy:
+        skip("scipy not installed")
+
+    cm1 = lambdify((x,), cosm1(x), modules='scipy')
+    assert abs(cm1(1e-20) + 5e-41) < 1e-200

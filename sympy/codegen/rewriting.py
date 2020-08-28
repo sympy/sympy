@@ -31,13 +31,14 @@ The ``optims_c99`` imported above is tuple containing the following instances
 
 """
 from itertools import chain
-from sympy import log, exp, Max, Min, Wild, expand_log, Dummy
+from sympy import cos, exp, log, Max, Min, Wild, expand_log, Dummy
 from sympy.assumptions import Q, ask
 from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.power import Pow
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
+from sympy.codegen.scipy_nodes import cosm1
 from sympy.core.mul import Mul
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.utilities.iterables import sift
@@ -159,37 +160,41 @@ logsumexp_2terms_opt = ReplaceOptim(
 )
 
 
-def _try_expm1(expr):
-    protected, old_new =  expr.replace(exp, lambda arg: Dummy(), map=True)
-    factored = protected.factor()
-    new_old = {v: k for k, v in old_new.items()}
-    return factored.replace(_d - 1, lambda d: expm1(new_old[d].args[0])).xreplace(new_old)
+class _FuncMinusOne:
+    def __init__(self, func, func_m_1):
+        self.func = func
+        self.func_m_1 = func_m_1
 
+    def _try_func_m_1(self, ex_pr):
+        protected, old_new =  ex_pr.replace(self.func, lambda arg: Dummy(), map=True)
+        factored = protected.factor()
+        new_old = {v: k for k, v in old_new.items()}
+        return factored.replace(_d - 1, lambda d: self.func_m_1(new_old[d].args[0])).xreplace(new_old)
 
-def _expm1_value(e):
-    numbers, non_num = sift(e.args, lambda arg: arg.is_number, binary=True)
-    non_num_exp, non_num_other = sift(non_num, lambda arg: arg.has(exp),
-        binary=True)
-    numsum = sum(numbers)
-    new_exp_terms, done = [], False
-    for exp_term in non_num_exp:
-        if done:
-            new_exp_terms.append(exp_term)
-        else:
-            looking_at = exp_term + numsum
-            attempt = _try_expm1(looking_at)
-            if looking_at == attempt:
-                new_exp_terms.append(exp_term)
+    def __call__(self, e):
+        numbers, non_num = sift(e.args, lambda arg: arg.is_number, binary=True)
+        non_num_func, non_num_other = sift(non_num, lambda arg: arg.has(self.func),
+            binary=True)
+        numsum = sum(numbers)
+        new_func_terms, done = [], False
+        for func_term in non_num_func:
+            if done:
+                new_func_terms.append(func_term)
             else:
-                done = True
-                new_exp_terms.append(attempt)
-    if not done:
-        new_exp_terms.append(numsum)
-    return e.func(*chain(new_exp_terms, non_num_other))
+                looking_at = func_term + numsum
+                attempt = self._try_func_m_1(looking_at)
+                if looking_at == attempt:
+                    new_func_terms.append(func_term)
+                else:
+                    done = True
+                    new_func_terms.append(attempt)
+        if not done:
+            new_func_terms.append(numsum)
+        return e.func(*chain(new_func_terms, non_num_other))
 
 
-expm1_opt = ReplaceOptim(lambda e: e.is_Add, _expm1_value)
-
+expm1_opt = ReplaceOptim(lambda e: e.is_Add, _FuncMinusOne(exp, expm1))
+cosm1_opt = ReplaceOptim(lambda e: e.is_Add, _FuncMinusOne(cos, cosm1))
 
 log1p_opt = ReplaceOptim(
     lambda e: isinstance(e, log),
@@ -259,3 +264,5 @@ logaddexp2_opt = ReplaceOptim(log(Pow(2, _v)+Pow(2, _w)), logaddexp2(_v, _w)*log
 optims_c99 = (expm1_opt, log1p_opt, exp2_opt, log2_opt, log2const_opt)
 
 optims_numpy = (logaddexp_opt, logaddexp2_opt)
+
+optims_scipy = (cosm1_opt,)
