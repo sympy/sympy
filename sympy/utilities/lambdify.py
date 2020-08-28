@@ -176,7 +176,8 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
        unsanitized input.
 
     .. versionchanged:: 1.7.0
-       Passing a set for the *args* parameter is deprecated as sets are unordered. Use an ordered iterable such as a list or tuple.
+       Passing a set for the *args* parameter is deprecated as sets are
+       unordered. Use an ordered iterable such as a list or tuple.
 
     Explanation
     ===========
