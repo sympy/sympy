@@ -7569,6 +7569,10 @@ def test_issue_18272():
     '⎪                 ⎜⎜⎪   ─     otherwise⎟          ⎟⎪\n'\
     '⎩                 ⎝⎝⎩   2              ⎠          ⎠⎭'
 
+def test_Str():
+    from sympy.core.symbol import Str
+    assert pretty(Str('x')) == 'x'
+
 def test_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
     x,y = symbols('x y', real=True)

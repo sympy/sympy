@@ -1,9 +1,21 @@
-from sympy import Basic, Mul, degree, Symbol, expand, cancel, Expr, exp, ShapeError
+from sympy import Basic, Mul, Pow, degree, Symbol, expand, cancel, Expr, exp, roots, ShapeError
 from sympy.core.evalf import EvalfMixin
+from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify, _sympify
+from sympy.polys import Poly, rootof
+from sympy.series import limit
 
 __all__ = ['TransferFunction', 'Series', 'Parallel', 'Feedback', 'TransferFunctionMatrix']
+
+
+def _roots(poly, var):
+    """ like roots, but works on higher-order polynomials. """
+    r = roots(poly, var, multiple=True)
+    n = degree(poly)
+    if len(r) != n:
+        r = [rootof(poly, var, k) for k in range(n)]
+    return r
 
 
 class TransferFunction(Basic, EvalfMixin):
@@ -261,6 +273,109 @@ class TransferFunction(Basic, EvalfMixin):
 
         """
         return TransferFunction(expand(self.num), expand(self.den), self.var)
+
+    def dc_gain(self):
+        """
+        Computes the gain of the response as the frequency approaches zero.
+
+        The DC gain is infinite for systems with pure integrators.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> tf1 = TransferFunction(s + 3, s**2 - 9, s)
+        >>> tf1.dc_gain()
+        -1/3
+        >>> tf2 = TransferFunction(p**2, p - 3 + p**3, p)
+        >>> tf2.dc_gain()
+        0
+        >>> tf3 = TransferFunction(a*p**2 - b, s + b, s)
+        >>> tf3.dc_gain()
+        (a*p**2 - b)/b
+        >>> tf4 = TransferFunction(1, s, s)
+        >>> tf4.dc_gain()
+        oo
+
+        """
+        m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
+        return limit(m, self.var, 0)
+
+    def poles(self):
+        """
+        Returns the poles of a transfer function.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> tf1 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
+        >>> tf1.poles()
+        [-5, 1]
+        >>> tf2 = TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
+        >>> tf2.poles()
+        [I, I, -I, -I]
+        >>> tf3 = TransferFunction(s**2, a*s + p, s)
+        >>> tf3.poles()
+        [-p/a]
+
+        """
+        return _roots(Poly(self.den, self.var), self.var)
+
+    def zeros(self):
+        """
+        Returns the zeros of a transfer function.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> tf1 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
+        >>> tf1.zeros()
+        [-3, 1]
+        >>> tf2 = TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
+        >>> tf2.zeros()
+        [1, 1]
+        >>> tf3 = TransferFunction(s**2, a*s + p, s)
+        >>> tf3.zeros()
+        [0, 0]
+
+        """
+        return _roots(Poly(self.num, self.var), self.var)
+
+    def is_stable(self):
+        """
+        Returns True if the transfer function is asymptotically stable; else False.
+
+        This would not check the marginal or conditional stability of the system.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.core.symbol import symbols
+        >>> q, r = symbols('q, r', negative=True)
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> tf1 = TransferFunction((1 - s)**2, (s + 1)**2, s)
+        >>> tf1.is_stable()
+        True
+        >>> tf2 = TransferFunction((1 - p)**2, (s**2 + 1)**2, s)
+        >>> tf2.is_stable()
+        False
+        >>> tf3 = TransferFunction(4, q*s - r, s)
+        >>> tf3.is_stable()
+        False
+
+        # not enough info about the symbols to determine stability
+        >>> tf4 = TransferFunction(p + 1, a*p - s**2, p)
+        >>> tf4.is_stable() is None
+        True
+
+        """
+        return fuzzy_and(pole.as_real_imag()[0].is_negative for pole in self.poles())
 
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series)):

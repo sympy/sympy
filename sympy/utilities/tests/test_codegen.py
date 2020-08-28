@@ -1472,7 +1472,7 @@ def test_global_vars():
     assert source == expected
 
 def test_custom_codegen():
-    from sympy.printing.ccode import C99CodePrinter
+    from sympy.printing.c import C99CodePrinter
     from sympy.functions.elementary.exponential import exp
 
     printer = C99CodePrinter(settings={'user_functions': {'exp': 'fastexp'}})
@@ -1519,7 +1519,7 @@ def test_custom_codegen():
 
 def test_c_with_printer():
     #issue 13586
-    from sympy.printing.ccode import C99CodePrinter
+    from sympy.printing.c import C99CodePrinter
     class CustomPrinter(C99CodePrinter):
         def _print_Pow(self, expr):
             return "fastpow({}, {})".format(self._print(expr.base),

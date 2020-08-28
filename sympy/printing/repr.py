@@ -168,30 +168,6 @@ class ReprPrinter(Printer):
                 l[-1].append(expr[i, j])
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
 
-    def _print_MutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_SparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_Matrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_DenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_MutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
     def _print_BooleanTrue(self, expr):
         return "true"
 

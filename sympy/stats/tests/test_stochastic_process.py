@@ -10,7 +10,7 @@ from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
-from sympy.testing.pytest import raises, skip
+from sympy.testing.pytest import raises, skip, ignore_warnings
 from sympy.external import import_module
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.drv_types import PoissonDistribution
@@ -57,7 +57,8 @@ def test_DiscreteMarkovChain():
     assert P(Eq(YS[3], 3), Eq(YS[1], 1)) is S.Zero
     TO = Matrix([[0.25, 0.75, 0],[0, 0.25, 0.75],[0.75, 0, 0.25]])
     assert P(Eq(Y[3], 2), Eq(Y[1], 1) & TransitionMatrixOf(Y, TO)).round(3) == Float(0.375, 3)
-    assert E(Y[3], evaluate=False) == Expectation(Y[3])
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert E(Y[3], evaluate=False) == Expectation(Y[3])
     assert E(Y[3], Eq(Y[2], 1)).round(2) == Float(1.1, 3)
     TSO = MatrixSymbol('T', 4, 4)
     raises(ValueError, lambda: str(P(Eq(YS[3], 2), Eq(YS[1], 1) & TransitionMatrixOf(YS, TSO))))
@@ -152,7 +153,8 @@ def test_ContinuousMarkovChain():
     assert C2.transition_probabilities(A)(t) == Matrix([[S.Half + exp(-2*t)/2, S.Half - exp(-2*t)/2, 0],
                                                        [S.Half - exp(-2*t)/2, S.Half + exp(-2*t)/2, 0],
                                                        [S.Half - exp(-t) + exp(-2*t)/2, S.Half - exp(-2*t)/2, exp(-t)]])
-    assert P(Eq(C2(1), 1), Eq(C2(0), 1), evaluate=False) == Probability(Eq(C2(1), 1))
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert P(Eq(C2(1), 1), Eq(C2(0), 1), evaluate=False) == Probability(Eq(C2(1), 1), Eq(C2(0), 1))
     assert P(Eq(C2(1), 1), Eq(C2(0), 1)) == exp(-2)/2 + S.Half
     assert P(Eq(C2(1), 0) & Eq(C2(2), 1) & Eq(C2(3), 1),
                 Eq(P(Eq(C2(1), 0)), S.Half)) == (Rational(1, 4) - exp(-2)/4)*(exp(-2)/2 + S.Half)
@@ -348,7 +350,7 @@ def test_PoissonProcess():
 
 def test_WienerProcess():
     X = WienerProcess("X")
-    assert X.state_space == Interval(0, oo)
+    assert X.state_space == S.Reals
     assert X.index_set == Interval(0, oo)
 
     t, d, x, y = symbols('t d x y', positive=True)
@@ -396,7 +398,7 @@ def test_GammaProcess_symbolic():
     raises(NotImplementedError, lambda: X[t])
     raises(IndexError, lambda: X(-1))
     assert isinstance(X(t), RandomIndexedSymbol)
-
+    assert X.state_space == Interval(0, oo)
     assert X.distribution(X(t)) == GammaDistribution(g*t, 1/l)
     assert X.joint_distribution(5, X(3)) == JointDistributionHandmade(Lambda(
         (X(5), X(3)), l**(8*g)*exp(-l*X(3))*exp(-l*X(5))*X(3)**(3*g - 1)*X(5)**(5*g

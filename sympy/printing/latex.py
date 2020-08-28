@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 import itertools
 
-from sympy.core import Add, Mod, Mul, Number, S, Symbol
+from sympy.core import Add, Float, Mod, Mul, Number, S, Symbol
 from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
 from sympy.core.function import _coeff_isneg, AppliedUndef, Derivative
@@ -119,6 +119,21 @@ _between_two_numbers_p = (
     re.compile(r'[0-9][} ]*$'),  # search
     re.compile(r'[{ ]*[-+0-9]'),  # match
 )
+
+
+def latex_escape(s):
+    """
+    Escape a string such that latex interprets it as plaintext.
+
+    We can't use verbatim easily with mathjax, so escaping is easier.
+    Rules from https://tex.stackexchange.com/a/34586/41112.
+    """
+    s = s.replace('\\', r'\textbackslash')
+    for c in '&%$#_{}':
+        s = s.replace(c, '\\' + c)
+    s = s.replace('~', r'\textasciitilde')
+    s = s.replace('^', r'\textasciicircum')
+    return s
 
 
 class LatexPrinter(Printer):
@@ -1613,9 +1628,6 @@ class LatexPrinter(Printer):
                       r'\right' + right_delim
         return out_str % r"\\".join(lines)
 
-    _print_ImmutableDenseMatrix = _print_MatrixBase
-    _print_ImmutableSparseMatrix = _print_MatrixBase
-
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)\
             + '_{%s, %s}' % (self._print(expr.i), self._print(expr.j))
@@ -1791,11 +1803,6 @@ class LatexPrinter(Printer):
             out_str = block_str % out_str
 
         return out_str
-
-    _print_ImmutableDenseNDimArray = _print_NDimArray
-    _print_ImmutableSparseNDimArray = _print_NDimArray
-    _print_MutableDenseNDimArray = _print_NDimArray
-    _print_MutableSparseNDimArray = _print_NDimArray
 
     def _printer_tensor_indices(self, name, indices, index_map={}):
         out_str = self._print(name)
@@ -2654,12 +2661,27 @@ class LatexPrinter(Printer):
                 (self._print(expr.args[0]), exp)
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
+    def _print_Str(self, s):
+        return str(s.name)
+
+    def _print_float(self, expr):
+        return self._print(Float(expr))
+
+    def _print_int(self, expr):
+        return str(expr)
+
+    def _print_mpz(self, expr):
+        return str(expr)
+
+    def _print_mpq(self, expr):
+        return str(expr)
+
     def emptyPrinter(self, expr):
-        # Checks what type of decimal separator to print.
-        expr = super().emptyPrinter(expr)
-        if self._settings['decimal_separator'] == 'comma':
-            expr = expr.replace('.', '{,}')
-        return expr
+        # default to just printing as monospace, like would normally be shown
+        s = super().emptyPrinter(expr)
+
+        return r"\mathtt{\text{%s}}" % latex_escape(s)
+
 
 def translate(s):
     r'''
@@ -2880,11 +2902,24 @@ def latex(expr, full_prec=False, min=None, max=None, fold_frac_powers=False,
     >>> print(latex(log(10), ln_notation=True))
     \ln{\left(10 \right)}
 
-    ``latex()`` also supports the builtin container types list, tuple, and
-    dictionary.
+    ``latex()`` also supports the builtin container types :class:`list`,
+    :class:`tuple`, and :class:`dict`:
 
     >>> print(latex([2/x, y], mode='inline'))
     $\left[ 2 / x, \  y\right]$
+
+    Unsupported types are rendered as monospaced plaintext:
+
+    >>> print(latex(int))
+    \mathtt{\text{<class 'int'>}}
+    >>> print(latex("plain % text"))
+    \mathtt{\text{plain \% text}}
+
+    See :ref:`printer_method_example` for an example of how to override
+    this behavior for your own types by implementing ``_latex``.
+
+    .. versionchanged:: 1.7.0
+        Unsupported types no longer have their ``str`` representation treated as valid latex.
 
     """
     if symbol_names is None:

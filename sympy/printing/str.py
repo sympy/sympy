@@ -225,31 +225,6 @@ class StrPrinter(Printer):
     def _print_MatrixBase(self, expr):
         return expr._format_str(self)
 
-    def _print_MutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_SparseMatrix(self, expr):
-        from sympy.matrices import Matrix
-        return self._print(Matrix(expr))
-
-    def _print_ImmutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_Matrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_DenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_MutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
             + '[%s, %s]' % (self._print(expr.i), self._print(expr.j))
@@ -624,12 +599,6 @@ class StrPrinter(Printer):
         return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False),
                          self.parenthesize(expr.exp, PREC, strict=False))
 
-    def _print_ImmutableDenseNDimArray(self, expr):
-        return str(expr)
-
-    def _print_ImmutableSparseNDimArray(self, expr):
-        return str(expr)
-
     def _print_Integer(self, expr):
         if self._settings.get("sympy_integers", False):
             return "S(%s)" % (expr)
@@ -876,13 +845,13 @@ class StrPrinter(Printer):
         return 'Category("%s")' % category.name
 
     def _print_Manifold(self, manifold):
-        return self._print(manifold.name)
+        return manifold.name.name
 
     def _print_Patch(self, patch):
-        return self._print(patch.name)
+        return patch.name.name
 
     def _print_CoordSystem(self, coords):
-        return self._print(coords.name)
+        return coords.name.name
 
     def _print_BaseScalarField(self, field):
         return field._coord_sys.symbols[field._index].name
@@ -900,6 +869,9 @@ class StrPrinter(Printer):
     def _print_Tr(self, expr):
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
+
+    def _print_Str(self, s):
+        return self._print(s.name)
 
 def sstr(expr, **settings):
     """Returns the expression as a string.
@@ -928,6 +900,10 @@ class StrReprPrinter(StrPrinter):
 
     def _print_str(self, s):
         return repr(s)
+
+    def _print_Str(self, s):
+        # Str does not to be printed same as str here
+        return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
 
 
 def sstrrepr(expr, **settings):

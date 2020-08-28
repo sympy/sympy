@@ -765,8 +765,6 @@ class PrettyPrinter(Printer):
         D.baseline = D.height()//2
         D = prettyForm(*D.parens('[', ']'))
         return D
-    _print_ImmutableMatrix = _print_MatrixBase
-    _print_Matrix = _print_MatrixBase
 
     def _print_TensorProduct(self, expr):
         # This should somehow share the code with _print_WedgeProduct:
@@ -1166,11 +1164,6 @@ class PrettyPrinter(Printer):
             out_expr = mat([out_expr])
 
         return self._print(out_expr)
-
-    _print_ImmutableDenseNDimArray = _print_NDimArray
-    _print_ImmutableSparseNDimArray = _print_NDimArray
-    _print_MutableDenseNDimArray = _print_NDimArray
-    _print_MutableSparseNDimArray = _print_NDimArray
 
     def _printer_tensor_indices(self, name, indices, index_map={}):
         center = stringPict(name)
@@ -2736,6 +2729,9 @@ class PrettyPrinter(Printer):
         r = self._print(e.rhs)
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
+
+    def _print_Str(self, s):
+        return self._print(s.name)
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

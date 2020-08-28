@@ -40,7 +40,7 @@ Examples
 One could also create custom distribution and define custom random variables
 as follows:
 
-1. If the you want to create a Continuous Random Variable:
+1. If you want to create a Continuous Random Variable:
 
 >>> from sympy.stats import ContinuousRV, P, E
 >>> from sympy import exp, Symbol, Interval, oo
@@ -81,7 +81,7 @@ exp(-x)
 >>> dist.pdf(x)
 2**(1 - x)/2
 
-3. If the you want to create a Finite Random Variable:
+3. If you want to create a Finite Random Variable:
 
 >>> from sympy.stats import FiniteRV, P, E
 >>> from sympy import Rational
@@ -142,7 +142,10 @@ __all__ = [
     'joint_eigen_distribution', 'JointEigenDistribution',
     'level_spacing_distribution',
 
-    'Probability', 'Expectation', 'Variance', 'Covariance', 'Moment', 'CentralMoment',
+    'MatrixGamma', 'Wishart', 'MatrixNormal',
+
+    'Probability', 'Expectation', 'Variance', 'Covariance', 'Moment',
+    'CentralMoment',
 
     'ExpectationMatrix', 'VarianceMatrix', 'CrossCovarianceMatrix'
 
@@ -187,6 +190,8 @@ from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         GaussianEnsemble, GaussianUnitaryEnsemble, GaussianOrthogonalEnsemble,
         GaussianSymplecticEnsemble, joint_eigen_distribution,
         JointEigenDistribution, level_spacing_distribution)
+
+from .matrix_distributions import MatrixGamma, Wishart, MatrixNormal
 
 from .symbolic_probability import (Probability, Expectation, Variance,
         Covariance, Moment, CentralMoment)
