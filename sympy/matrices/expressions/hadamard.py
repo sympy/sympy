@@ -152,7 +152,7 @@ def validate(*args):
     A = args[0]
     for B in args[1:]:
         if A.shape != B.shape:
-            raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
+            raise ShapeError("Matrices {} and {} are not aligned".format(A, B))
 
 
 # TODO Implement algorithm for rewriting Hadamard product as diagonal matrix

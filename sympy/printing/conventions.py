@@ -2,7 +2,6 @@
 A few practical conventions common to all printers.
 """
 
-from __future__ import print_function, division
 
 import re
 

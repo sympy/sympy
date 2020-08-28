@@ -46,7 +46,6 @@ For the sake of completeness, `f(n)` can be:
     [2] a rational function        -> rsolve_ratio
     [3] a hypergeometric function  -> rsolve_hyper
 """
-from __future__ import print_function, division
 
 from collections import defaultdict
 
@@ -736,7 +735,7 @@ def rsolve(f, y, init=None):
                     h_part[int(result[k])].append(coeff)
                     continue
             raise ValueError(
-                "'%s(%s + k)' expected, got '%s'" % (y.func, n, h))
+                "'{}({} + k)' expected, got '{}'".format(y.func, n, h))
     for k in h_part:
         h_part[k] = Add(*h_part[k])
     h_part.default_factory = lambda: 0

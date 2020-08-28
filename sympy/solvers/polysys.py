@@ -1,6 +1,5 @@
 """Solvers of systems of polynomial equations. """
 
-from __future__ import print_function, division
 
 from sympy.core import S
 from sympy.polys import Poly, groebner, roots
@@ -352,7 +351,7 @@ def solve_triangulated(polys, *gens, **args):
     dom = f.get_domain()
 
     zeros = f.ground_roots()
-    solutions = set([])
+    solutions = set()
 
     for zero in zeros:
         solutions.add(((zero,), dom))
@@ -361,7 +360,7 @@ def solve_triangulated(polys, *gens, **args):
     vars_seq = postfixes(gens[1:])
 
     for var, vars in zip(var_seq, vars_seq):
-        _solutions = set([])
+        _solutions = set()
 
         for values, dom in solutions:
             H, mapping = [], list(zip(vars, values))

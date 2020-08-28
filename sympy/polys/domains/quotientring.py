@@ -1,6 +1,5 @@
 """Implementation of :class:`QuotientRing` class."""
 
-from __future__ import print_function, division
 
 from sympy.polys.agca.modules import FreeModuleQuotientRing
 from sympy.polys.domains.ring import Ring
@@ -13,7 +12,7 @@ from sympy.utilities import public
 # - division by non-units in integral domains?
 
 @public
-class QuotientRingElement(object):
+class QuotientRingElement:
     """
     Class representing elements of (commutative) quotient rings.
 
@@ -120,7 +119,7 @@ class QuotientRing(Ring):
 
     def __init__(self, ring, ideal):
         if not ideal.ring == ring:
-            raise ValueError('Ideal must belong to %s, got %s' % (ring, ideal))
+            raise ValueError('Ideal must belong to {}, got {}'.format(ring, ideal))
         self.ring = ring
         self.base_ideal = ideal
         self.zero = self(self.ring.zero)
@@ -181,7 +180,7 @@ class QuotientRing(Ring):
         try:
             return self(I.in_terms_of_generators(1)[0])
         except ValueError:  # 1 not in I
-            raise NotReversible('%s not a unit in %r' % (a, self))
+            raise NotReversible('{} not a unit in {!r}'.format(a, self))
 
     def is_zero(self, a):
         return self.base_ideal.contains(a.data)

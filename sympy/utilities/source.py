@@ -29,7 +29,7 @@ def get_class(lookup_view):
                 __import__(mod_name, {}, {}, ['*']), func_name)
             if not callable(lookup_view):
                 raise AttributeError(
-                    "'%s.%s' is not a callable." % (mod_name, func_name))
+                    "'{}.{}' is not a callable.".format(mod_name, func_name))
     return lookup_view
 
 

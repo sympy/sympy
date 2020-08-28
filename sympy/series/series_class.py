@@ -3,7 +3,6 @@ Contains the base class for series
 Made using sequences in mind
 """
 
-from __future__ import print_function, division
 
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
@@ -44,14 +43,14 @@ class SeriesBase(Expr):
         This method returns the symbols in the object, excluding those
         that take on a specific value (i.e. the dummy symbols).
         """
-        return (set(j for i in self.args for j in i.free_symbols)
+        return ({j for i in self.args for j in i.free_symbols}
                 .difference(self.variables))
 
     @cacheit
     def term(self, pt):
         """Term at point pt of a series"""
         if pt < self.start or pt > self.stop:
-            raise IndexError("Index %s out of bounds %s" % (pt, self.interval))
+            raise IndexError("Index {} out of bounds {}".format(pt, self.interval))
         return self._eval_term(pt)
 
     def _eval_term(self, pt):

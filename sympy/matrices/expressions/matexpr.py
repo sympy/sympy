@@ -292,7 +292,7 @@ class MatrixExpr(Expr):
             if self.valid_index(i, j) != False:
                 return self._entry(i, j)
             else:
-                raise IndexError("Invalid indices (%s, %s)" % (i, j))
+                raise IndexError("Invalid indices ({}, {})".format(i, j))
         elif isinstance(key, (SYMPY_INTS, Integer)):
             # row-wise decomposition of matrix
             rows, cols = self.shape
@@ -891,7 +891,7 @@ class _LeftRightArgs:
 
     def __repr__(self):
         built = [self._build(i) for i in self._lines]
-        return "_LeftRightArgs(lines=%s, higher=%s)" % (
+        return "_LeftRightArgs(lines={}, higher={})".format(
             built,
             self.higher,
         )

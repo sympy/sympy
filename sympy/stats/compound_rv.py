@@ -87,7 +87,7 @@ class CompoundPSpace(PSpace):
         elif isinstance(dist, DiscreteDistribution):
             return SingleDiscretePSpace(sym, DiscreteDistributionHandmade(pdf, _set))
         elif isinstance(dist, SingleFiniteDistribution):
-            dens = dict((k, pdf(k)) for k in _set)
+            dens = {k: pdf(k) for k in _set}
             return SingleFinitePSpace(sym, FiniteDistributionHandmade(dens))
 
     def compute_density(self, expr, **kwargs):

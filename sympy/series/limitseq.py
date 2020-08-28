@@ -1,6 +1,5 @@
 """Limits of sequences"""
 
-from __future__ import print_function, division
 
 from sympy.core.add import Add
 from sympy.core.function import PoleError

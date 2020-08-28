@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import is_sequence, iterable, ordered
@@ -97,14 +95,14 @@ class SeqBase(Basic):
         >>> SeqFormula(m*n**2, (n, 0, 5)).free_symbols
         {m}
         """
-        return (set(j for i in self.args for j in i.free_symbols
-                   .difference(self.variables)))
+        return ({j for i in self.args for j in i.free_symbols
+                   .difference(self.variables)})
 
     @cacheit
     def coeff(self, pt):
         """Returns the coefficient at point pt"""
         if pt < self.start or pt > self.stop:
-            raise IndexError("Index %s out of bounds %s" % (pt, self.interval))
+            raise IndexError("Index {} out of bounds {}".format(pt, self.interval))
         return self._eval_coeff(pt)
 
     def _eval_coeff(self, pt):

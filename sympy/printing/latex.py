@@ -2,7 +2,6 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
@@ -79,8 +78,8 @@ tex_greek_dictionary = {
     'vartheta': r'\vartheta',
 }
 
-other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
-                     'hslash', 'mho', 'wp', ])
+other_symbols = {'aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
+                     'hslash', 'mho', 'wp'}
 
 # Variable name modifiers
 modifier_dict = {
@@ -263,7 +262,7 @@ class LatexPrinter(Printer):
             return r"$$%s$$" % tex
         else:
             env_str = self._settings['mode']
-            return r"\begin{%s}%s\end{%s}" % (env_str, tex, env_str)
+            return r"\begin{{{}}}{}\end{{{}}}".format(env_str, tex, env_str)
 
     def _needs_brackets(self, expr):
         """
@@ -352,7 +351,7 @@ class LatexPrinter(Printer):
 
     def _do_exponent(self, expr, exp):
         if exp is not None:
-            return r"\left(%s\right)^{%s}" % (expr, exp)
+            return r"\left({}\right)^{{{}}}".format(expr, exp)
         else:
             return expr
 
@@ -437,7 +436,7 @@ class LatexPrinter(Printer):
 
     def _print_AppliedPermutation(self, expr):
         perm, var = expr.args
-        return r"\sigma_{%s}(%s)" % (self._print(perm), self._print(var))
+        return r"\sigma_{{{}}}({})".format(self._print(perm), self._print(var))
 
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
@@ -459,7 +458,7 @@ class LatexPrinter(Printer):
             if self._settings['decimal_separator'] == 'comma':
                 mant = mant.replace('.','{,}')
 
-            return r"%s%s10^{%s}" % (mant, separator, exp)
+            return r"{}{}10^{{{}}}".format(mant, separator, exp)
         elif str_real == "+inf":
             return r"\infty"
         elif str_real == "-inf":
@@ -472,7 +471,7 @@ class LatexPrinter(Printer):
     def _print_Cross(self, expr):
         vec1 = expr._expr1
         vec2 = expr._expr2
-        return r"%s \times %s" % (self.parenthesize(vec1, PRECEDENCE['Mul']),
+        return r"{} \times {}".format(self.parenthesize(vec1, PRECEDENCE['Mul']),
                                   self.parenthesize(vec2, PRECEDENCE['Mul']))
 
     def _print_Curl(self, expr):
@@ -486,7 +485,7 @@ class LatexPrinter(Printer):
     def _print_Dot(self, expr):
         vec1 = expr._expr1
         vec2 = expr._expr2
-        return r"%s \cdot %s" % (self.parenthesize(vec1, PRECEDENCE['Mul']),
+        return r"{} \cdot {}".format(self.parenthesize(vec1, PRECEDENCE['Mul']),
                                  self.parenthesize(vec2, PRECEDENCE['Mul']))
 
     def _print_Gradient(self, expr):
@@ -577,9 +576,9 @@ class LatexPrinter(Printer):
                     "^" not in sdenom:
                 # handle short fractions
                 if self._needs_mul_brackets(numer, last=False):
-                    tex += r"\left(%s\right) / %s" % (snumer, sdenom)
+                    tex += r"\left({}\right) / {}".format(snumer, sdenom)
                 else:
-                    tex += r"%s / %s" % (snumer, sdenom)
+                    tex += r"{} / {}".format(snumer, sdenom)
             elif ratio is not None and \
                     len(snumer.split()) > ratio*ldenom:
                 # handle long fractions
@@ -604,9 +603,9 @@ class LatexPrinter(Printer):
                         tex += r"\frac{%s}{%s}%s%s" \
                             % (convert(a), sdenom, separator, convert(b))
                 else:
-                    tex += r"\frac{1}{%s}%s%s" % (sdenom, separator, snumer)
+                    tex += r"\frac{{1}}{{{}}}{}{}".format(sdenom, separator, snumer)
             else:
-                tex += r"\frac{%s}{%s}" % (snumer, sdenom)
+                tex += r"\frac{{{}}}{{{}}}".format(snumer, sdenom)
 
         if include_parens:
             tex += ")"
@@ -639,13 +638,13 @@ class LatexPrinter(Printer):
             if expr.base.is_Symbol:
                 base = self.parenthesize_super(base)
             if expr.base.is_Function:
-                return self._print(expr.base, exp="%s/%s" % (p, q))
-            return r"%s^{%s/%s}" % (base, p, q)
+                return self._print(expr.base, exp="{}/{}".format(p, q))
+            return r"{}^{{{}/{}}}".format(base, p, q)
         elif expr.exp.is_Rational and expr.exp.is_negative and \
                 expr.base.is_commutative:
             # special case for 1^(-x), issue 9216
             if expr.base == 1:
-                return r"%s^{%s}" % (expr.base, expr.exp)
+                return r"{}^{{{}}}".format(expr.base, expr.exp)
             # things like 1/x
             return self._print_Mul(expr)
         else:
@@ -761,24 +760,24 @@ class LatexPrinter(Printer):
         for x, num in reversed(expr.variable_count):
             dim += num
             if num == 1:
-                tex += r"%s %s" % (diff_symbol, self._print(x))
+                tex += r"{} {}".format(diff_symbol, self._print(x))
             else:
-                tex += r"%s %s^{%s}" % (diff_symbol,
+                tex += r"{} {}^{{{}}}".format(diff_symbol,
                                         self.parenthesize_super(self._print(x)),
                                         self._print(num))
 
         if dim == 1:
-            tex = r"\frac{%s}{%s}" % (diff_symbol, tex)
+            tex = r"\frac{{{}}}{{{}}}".format(diff_symbol, tex)
         else:
-            tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
+            tex = r"\frac{{{}^{{{}}}}}{{{}}}".format(diff_symbol, self._print(dim), tex)
 
         if any(_coeff_isneg(i) for i in expr.args):
-            return r"%s %s" % (tex, self.parenthesize(expr.expr,
+            return r"{} {}".format(tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
                                                   is_neg=True,
                                                   strict=True))
 
-        return r"%s %s" % (tex, self.parenthesize(expr.expr,
+        return r"{} {}".format(tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
                                                   is_neg=False,
                                                   strict=True))
@@ -790,7 +789,7 @@ class LatexPrinter(Printer):
         latex_new = (self._print(e) for e in new)
         latex_subs = r'\\ '.join(
             e[0] + '=' + e[1] for e in zip(latex_old, latex_new))
-        return r'\left. %s \right|_{\substack{ %s }}' % (latex_expr,
+        return r'\left. {} \right|_{{\substack{{ {} }}}}'.format(latex_expr,
                                                          latex_subs)
 
     def _print_Integral(self, expr):
@@ -815,14 +814,14 @@ class LatexPrinter(Printer):
                         tex += r"\limits"
 
                     if len(lim) == 3:
-                        tex += "_{%s}^{%s}" % (self._print(lim[1]),
+                        tex += "_{{{}}}^{{{}}}".format(self._print(lim[1]),
                                                self._print(lim[2]))
                     if len(lim) == 2:
                         tex += "^{%s}" % (self._print(lim[1]))
 
                 symbols.insert(0, r"\, d%s" % self._print(symbol))
 
-        return r"%s %s%s" % (tex, self.parenthesize(expr.function,
+        return r"{} {}{}".format(tex, self.parenthesize(expr.function,
                                                     PRECEDENCE["Mul"],
                                                     is_neg=any(_coeff_isneg(i) for i in expr.args),
                                                     strict=True),
@@ -835,12 +834,12 @@ class LatexPrinter(Printer):
         if str(dir) == '+-' or z0 in (S.Infinity, S.NegativeInfinity):
             tex += r"%s}" % self._print(z0)
         else:
-            tex += r"%s^%s}" % (self._print(z0), self._print(dir))
+            tex += r"{}^{}}}".format(self._print(z0), self._print(dir))
 
         if isinstance(e, AssocOp):
-            return r"%s\left(%s\right)" % (tex, self._print(e))
+            return r"{}\left({}\right)".format(tex, self._print(e))
         else:
-            return r"%s %s" % (tex, self._print(e))
+            return r"{} {}".format(tex, self._print(e))
 
     def _hprint_Function(self, func):
         r'''
@@ -916,7 +915,7 @@ class LatexPrinter(Printer):
             elif exp is not None:
                 func_tex = self._hprint_Function(func)
                 func_tex = self.parenthesize_super(func_tex)
-                name = r'%s^{%s}' % (func_tex, exp)
+                name = r'{}^{{{}}}'.format(func_tex, exp)
             else:
                 name = self._hprint_Function(func)
 
@@ -939,7 +938,7 @@ class LatexPrinter(Printer):
         return self._hprint_Function(str(expr))
 
     def _print_ElementwiseApplyFunction(self, expr):
-        return r"{%s}_{\circ}\left({%s}\right)" % (
+        return r"{{{}}}_{{\circ}}\left({{{}}}\right)".format(
             self._print(expr.function),
             self._print(expr.expr),
         )
@@ -972,7 +971,7 @@ class LatexPrinter(Printer):
         else:
             symbols = self._print(tuple(symbols))
 
-        tex = r"\left( %s \mapsto %s \right)" % (symbols, self._print(expr))
+        tex = r"\left( {} \mapsto {} \right)".format(symbols, self._print(expr))
 
         return tex
 
@@ -982,10 +981,10 @@ class LatexPrinter(Printer):
     def _hprint_variadic_function(self, expr, exp=None):
         args = sorted(expr.args, key=default_sort_key)
         texargs = [r"%s" % self._print(symbol) for symbol in args]
-        tex = r"\%s\left(%s\right)" % (str(expr.func).lower(),
+        tex = r"\{}\left({}\right)".format(str(expr.func).lower(),
                                        ", ".join(texargs))
         if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
+            return r"{}^{{{}}}".format(tex, exp)
         else:
             return tex
 
@@ -995,7 +994,7 @@ class LatexPrinter(Printer):
         tex = r"\left\lfloor{%s}\right\rfloor" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
+            return r"{}^{{{}}}".format(tex, exp)
         else:
             return tex
 
@@ -1003,7 +1002,7 @@ class LatexPrinter(Printer):
         tex = r"\left\lceil{%s}\right\rceil" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
+            return r"{}^{{{}}}".format(tex, exp)
         else:
             return tex
 
@@ -1014,7 +1013,7 @@ class LatexPrinter(Printer):
             tex = r"\ln{\left(%s \right)}" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
+            return r"{}^{{{}}}".format(tex, exp)
         else:
             return tex
 
@@ -1022,7 +1021,7 @@ class LatexPrinter(Printer):
         tex = r"\left|{%s}\right|" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
+            return r"{}^{{{}}}".format(tex, exp)
         else:
             return tex
     _print_Determinant = _print_Abs
@@ -1063,9 +1062,9 @@ class LatexPrinter(Printer):
 
         for arg in args[1:]:
             if arg.is_Boolean and not arg.is_Not:
-                tex += r" %s \left(%s\right)" % (char, self._print(arg))
+                tex += r" {} \left({}\right)".format(char, self._print(arg))
             else:
-                tex += r" %s %s" % (char, self._print(arg))
+                tex += r" {} {}".format(char, self._print(arg))
 
         return tex
 
@@ -1092,7 +1091,7 @@ class LatexPrinter(Printer):
         tex = r"\overline{%s}" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
+            return r"{}^{{{}}}".format(tex, exp)
         else:
             return tex
 
@@ -1101,9 +1100,9 @@ class LatexPrinter(Printer):
         arg = r"{\left(%s \right)}" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"%s^{%s}%s" % (func, exp, arg)
+            return r"{}^{{{}}}{}".format(func, exp, arg)
         else:
-            return r"%s%s" % (func, arg)
+            return r"{}{}".format(func, arg)
 
     def _print_ExpBase(self, expr, exp=None):
         # TODO should exp_polar be printed differently?
@@ -1114,7 +1113,7 @@ class LatexPrinter(Printer):
     def _print_elliptic_k(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
         if exp is not None:
-            return r"K^{%s}%s" % (exp, tex)
+            return r"K^{{{}}}{}".format(exp, tex)
         else:
             return r"K%s" % tex
 
@@ -1122,7 +1121,7 @@ class LatexPrinter(Printer):
         tex = r"\left(%s\middle| %s\right)" % \
             (self._print(expr.args[0]), self._print(expr.args[1]))
         if exp is not None:
-            return r"F^{%s}%s" % (exp, tex)
+            return r"F^{{{}}}{}".format(exp, tex)
         else:
             return r"F%s" % tex
 
@@ -1133,7 +1132,7 @@ class LatexPrinter(Printer):
         else:
             tex = r"\left(%s\right)" % self._print(expr.args[0])
         if exp is not None:
-            return r"E^{%s}%s" % (exp, tex)
+            return r"E^{{{}}}{}".format(exp, tex)
         else:
             return r"E%s" % tex
 
@@ -1146,34 +1145,34 @@ class LatexPrinter(Printer):
             tex = r"\left(%s\middle| %s\right)" % \
                 (self._print(expr.args[0]), self._print(expr.args[1]))
         if exp is not None:
-            return r"\Pi^{%s}%s" % (exp, tex)
+            return r"\Pi^{{{}}}{}".format(exp, tex)
         else:
             return r"\Pi%s" % tex
 
     def _print_beta(self, expr, exp=None):
-        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+        tex = r"\left({}, {}\right)".format(self._print(expr.args[0]),
                                         self._print(expr.args[1]))
 
         if exp is not None:
-            return r"\operatorname{B}^{%s}%s" % (exp, tex)
+            return r"\operatorname{{B}}^{{{}}}{}".format(exp, tex)
         else:
             return r"\operatorname{B}%s" % tex
 
     def _print_uppergamma(self, expr, exp=None):
-        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+        tex = r"\left({}, {}\right)".format(self._print(expr.args[0]),
                                         self._print(expr.args[1]))
 
         if exp is not None:
-            return r"\Gamma^{%s}%s" % (exp, tex)
+            return r"\Gamma^{{{}}}{}".format(exp, tex)
         else:
             return r"\Gamma%s" % tex
 
     def _print_lowergamma(self, expr, exp=None):
-        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+        tex = r"\left({}, {}\right)".format(self._print(expr.args[0]),
                                         self._print(expr.args[1]))
 
         if exp is not None:
-            return r"\gamma^{%s}%s" % (exp, tex)
+            return r"\gamma^{{{}}}{}".format(exp, tex)
         else:
             return r"\gamma%s" % tex
 
@@ -1181,9 +1180,9 @@ class LatexPrinter(Printer):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"%s^{%s}%s" % (self._print(expr.func), exp, tex)
+            return r"{}^{{{}}}{}".format(self._print(expr.func), exp, tex)
         else:
-            return r"%s%s" % (self._print(expr.func), tex)
+            return r"{}{}".format(self._print(expr.func), tex)
 
     _print_gamma = _hprint_one_arg_func
 
@@ -1191,7 +1190,7 @@ class LatexPrinter(Printer):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"\operatorname{Chi}^{%s}%s" % (exp, tex)
+            return r"\operatorname{{Chi}}^{{{}}}{}".format(exp, tex)
         else:
             return r"\operatorname{Chi}%s" % tex
 
@@ -1200,15 +1199,15 @@ class LatexPrinter(Printer):
         nu = self._print(expr.args[0])
 
         if exp is not None:
-            return r"\operatorname{E}_{%s}^{%s}%s" % (nu, exp, tex)
+            return r"\operatorname{{E}}_{{{}}}^{{{}}}{}".format(nu, exp, tex)
         else:
-            return r"\operatorname{E}_{%s}%s" % (nu, tex)
+            return r"\operatorname{{E}}_{{{}}}{}".format(nu, tex)
 
     def _print_fresnels(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"S^{%s}%s" % (exp, tex)
+            return r"S^{{{}}}{}".format(exp, tex)
         else:
             return r"S%s" % tex
 
@@ -1216,7 +1215,7 @@ class LatexPrinter(Printer):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"C^{%s}%s" % (exp, tex)
+            return r"C^{{{}}}{}".format(exp, tex)
         else:
             return r"C%s" % tex
 
@@ -1224,7 +1223,7 @@ class LatexPrinter(Printer):
         tex = r"!%s" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
 
         if exp is not None:
-            return r"\left(%s\right)^{%s}" % (tex, exp)
+            return r"\left({}\right)^{{{}}}".format(tex, exp)
         else:
             return tex
 
@@ -1232,7 +1231,7 @@ class LatexPrinter(Printer):
         tex = r"%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
 
         if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
+            return r"{}^{{{}}}".format(tex, exp)
         else:
             return tex
 
@@ -1240,16 +1239,16 @@ class LatexPrinter(Printer):
         tex = r"%s!!" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
 
         if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
+            return r"{}^{{{}}}".format(tex, exp)
         else:
             return tex
 
     def _print_binomial(self, expr, exp=None):
-        tex = r"{\binom{%s}{%s}}" % (self._print(expr.args[0]),
+        tex = r"{{\binom{{{}}}{{{}}}}}".format(self._print(expr.args[0]),
                                      self._print(expr.args[1]))
 
         if exp is not None:
-            return r"%s^{%s}" % (tex, exp)
+            return r"{}^{{{}}}".format(tex, exp)
         else:
             return tex
 
@@ -1257,7 +1256,7 @@ class LatexPrinter(Printer):
         n, k = expr.args
         base = r"%s" % self.parenthesize(n, PRECEDENCE['Func'])
 
-        tex = r"{%s}^{\left(%s\right)}" % (base, self._print(k))
+        tex = r"{{{}}}^{{\left({}\right)}}".format(base, self._print(k))
 
         return self._do_exponent(tex, exp)
 
@@ -1265,7 +1264,7 @@ class LatexPrinter(Printer):
         n, k = expr.args
         sub = r"%s" % self.parenthesize(k, PRECEDENCE['Func'])
 
-        tex = r"{\left(%s\right)}_{%s}" % (self._print(n), sub)
+        tex = r"{{\left({}\right)}}_{{{}}}".format(self._print(n), sub)
 
         return self._do_exponent(tex, exp)
 
@@ -1275,11 +1274,11 @@ class LatexPrinter(Printer):
         need_exp = False
         if exp is not None:
             if tex.find('^') == -1:
-                tex = r"%s^{%s}" % (tex, exp)
+                tex = r"{}^{{{}}}".format(tex, exp)
             else:
                 need_exp = True
 
-        tex = r"%s_{%s}\left(%s\right)" % (tex, self._print(expr.order),
+        tex = r"{}_{{{}}}\left({}\right)".format(tex, self._print(expr.order),
                                            self._print(expr.argument))
 
         if need_exp:
@@ -1329,17 +1328,17 @@ class LatexPrinter(Printer):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"%s^{%s}%s" % (notation, exp, tex)
+            return r"{}^{{{}}}{}".format(notation, exp, tex)
         else:
-            return r"%s%s" % (notation, tex)
+            return r"{}{}".format(notation, tex)
 
     def _hprint_airy_prime(self, expr, exp=None, notation=""):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"{%s^\prime}^{%s}%s" % (notation, exp, tex)
+            return r"{{{}^\prime}}^{{{}}}{}".format(notation, exp, tex)
         else:
-            return r"%s^\prime%s" % (notation, tex)
+            return r"{}^\prime{}".format(notation, tex)
 
     def _print_airyai(self, expr, exp=None):
         return self._hprint_airy(expr, exp, 'Ai')
@@ -1361,7 +1360,7 @@ class LatexPrinter(Printer):
               self._print(expr.argument))
 
         if exp is not None:
-            tex = r"{%s}^{%s}" % (tex, exp)
+            tex = r"{{{}}}^{{{}}}".format(tex, exp)
         return tex
 
     def _print_meijerg(self, expr, exp=None):
@@ -1374,13 +1373,13 @@ class LatexPrinter(Printer):
               self._print(expr.argument))
 
         if exp is not None:
-            tex = r"{%s}^{%s}" % (tex, exp)
+            tex = r"{{{}}}^{{{}}}".format(tex, exp)
         return tex
 
     def _print_dirichlet_eta(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
         if exp is not None:
-            return r"\eta^{%s}%s" % (exp, tex)
+            return r"\eta^{{{}}}{}".format(exp, tex)
         return r"\eta%s" % tex
 
     def _print_zeta(self, expr, exp=None):
@@ -1389,7 +1388,7 @@ class LatexPrinter(Printer):
         else:
             tex = r"\left(%s\right)" % self._print(expr.args[0])
         if exp is not None:
-            return r"\zeta^{%s}%s" % (exp, tex)
+            return r"\zeta^{{{}}}{}".format(exp, tex)
         return r"\zeta%s" % tex
 
     def _print_stieltjes(self, expr, exp=None):
@@ -1398,95 +1397,95 @@ class LatexPrinter(Printer):
         else:
             tex = r"_{%s}" % self._print(expr.args[0])
         if exp is not None:
-            return r"\gamma%s^{%s}" % (tex, exp)
+            return r"\gamma{}^{{{}}}".format(tex, exp)
         return r"\gamma%s" % tex
 
     def _print_lerchphi(self, expr, exp=None):
         tex = r"\left(%s, %s, %s\right)" % tuple(map(self._print, expr.args))
         if exp is None:
             return r"\Phi%s" % tex
-        return r"\Phi^{%s}%s" % (exp, tex)
+        return r"\Phi^{{{}}}{}".format(exp, tex)
 
     def _print_polylog(self, expr, exp=None):
         s, z = map(self._print, expr.args)
         tex = r"\left(%s\right)" % z
         if exp is None:
-            return r"\operatorname{Li}_{%s}%s" % (s, tex)
-        return r"\operatorname{Li}_{%s}^{%s}%s" % (s, exp, tex)
+            return r"\operatorname{{Li}}_{{{}}}{}".format(s, tex)
+        return r"\operatorname{{Li}}_{{{}}}^{{{}}}{}".format(s, exp, tex)
 
     def _print_jacobi(self, expr, exp=None):
         n, a, b, x = map(self._print, expr.args)
-        tex = r"P_{%s}^{\left(%s,%s\right)}\left(%s\right)" % (n, a, b, x)
+        tex = r"P_{{{}}}^{{\left({},{}\right)}}\left({}\right)".format(n, a, b, x)
         if exp is not None:
             tex = r"\left(" + tex + r"\right)^{%s}" % (exp)
         return tex
 
     def _print_gegenbauer(self, expr, exp=None):
         n, a, x = map(self._print, expr.args)
-        tex = r"C_{%s}^{\left(%s\right)}\left(%s\right)" % (n, a, x)
+        tex = r"C_{{{}}}^{{\left({}\right)}}\left({}\right)".format(n, a, x)
         if exp is not None:
             tex = r"\left(" + tex + r"\right)^{%s}" % (exp)
         return tex
 
     def _print_chebyshevt(self, expr, exp=None):
         n, x = map(self._print, expr.args)
-        tex = r"T_{%s}\left(%s\right)" % (n, x)
+        tex = r"T_{{{}}}\left({}\right)".format(n, x)
         if exp is not None:
             tex = r"\left(" + tex + r"\right)^{%s}" % (exp)
         return tex
 
     def _print_chebyshevu(self, expr, exp=None):
         n, x = map(self._print, expr.args)
-        tex = r"U_{%s}\left(%s\right)" % (n, x)
+        tex = r"U_{{{}}}\left({}\right)".format(n, x)
         if exp is not None:
             tex = r"\left(" + tex + r"\right)^{%s}" % (exp)
         return tex
 
     def _print_legendre(self, expr, exp=None):
         n, x = map(self._print, expr.args)
-        tex = r"P_{%s}\left(%s\right)" % (n, x)
+        tex = r"P_{{{}}}\left({}\right)".format(n, x)
         if exp is not None:
             tex = r"\left(" + tex + r"\right)^{%s}" % (exp)
         return tex
 
     def _print_assoc_legendre(self, expr, exp=None):
         n, a, x = map(self._print, expr.args)
-        tex = r"P_{%s}^{\left(%s\right)}\left(%s\right)" % (n, a, x)
+        tex = r"P_{{{}}}^{{\left({}\right)}}\left({}\right)".format(n, a, x)
         if exp is not None:
             tex = r"\left(" + tex + r"\right)^{%s}" % (exp)
         return tex
 
     def _print_hermite(self, expr, exp=None):
         n, x = map(self._print, expr.args)
-        tex = r"H_{%s}\left(%s\right)" % (n, x)
+        tex = r"H_{{{}}}\left({}\right)".format(n, x)
         if exp is not None:
             tex = r"\left(" + tex + r"\right)^{%s}" % (exp)
         return tex
 
     def _print_laguerre(self, expr, exp=None):
         n, x = map(self._print, expr.args)
-        tex = r"L_{%s}\left(%s\right)" % (n, x)
+        tex = r"L_{{{}}}\left({}\right)".format(n, x)
         if exp is not None:
             tex = r"\left(" + tex + r"\right)^{%s}" % (exp)
         return tex
 
     def _print_assoc_laguerre(self, expr, exp=None):
         n, a, x = map(self._print, expr.args)
-        tex = r"L_{%s}^{\left(%s\right)}\left(%s\right)" % (n, a, x)
+        tex = r"L_{{{}}}^{{\left({}\right)}}\left({}\right)".format(n, a, x)
         if exp is not None:
             tex = r"\left(" + tex + r"\right)^{%s}" % (exp)
         return tex
 
     def _print_Ynm(self, expr, exp=None):
         n, m, theta, phi = map(self._print, expr.args)
-        tex = r"Y_{%s}^{%s}\left(%s,%s\right)" % (n, m, theta, phi)
+        tex = r"Y_{{{}}}^{{{}}}\left({},{}\right)".format(n, m, theta, phi)
         if exp is not None:
             tex = r"\left(" + tex + r"\right)^{%s}" % (exp)
         return tex
 
     def _print_Znm(self, expr, exp=None):
         n, m, theta, phi = map(self._print, expr.args)
-        tex = r"Z_{%s}^{%s}\left(%s,%s\right)" % (n, m, theta, phi)
+        tex = r"Z_{{{}}}^{{{}}}\left({},{}\right)".format(n, m, theta, phi)
         if exp is not None:
             tex = r"\left(" + tex + r"\right)^{%s}" % (exp)
         return tex
@@ -1495,7 +1494,7 @@ class LatexPrinter(Printer):
         a, q, z = map(self._print, args)
         sup = r"^{\prime}" if prime else ""
         exp = "" if not exp else "^{%s}" % exp
-        return r"%s%s\left(%s, %s, %s\right)%s" % (character, sup, a, q, z, exp)
+        return r"{}{}\left({}, {}, {}\right){}".format(character, sup, a, q, z, exp)
 
     def _print_mathieuc(self, expr, exp=None):
         return self.__print_mathieu_functions("C", expr.args, exp=exp)
@@ -1585,11 +1584,11 @@ class LatexPrinter(Printer):
             "!=": r"\neq",
         }
 
-        return "%s %s %s" % (self._print(expr.lhs),
+        return "{} {} {}".format(self._print(expr.lhs),
                              charmap[expr.rel_op], self._print(expr.rhs))
 
     def _print_Piecewise(self, expr):
-        ecpairs = [r"%s & \text{for}\: %s" % (self._print(e), self._print(c))
+        ecpairs = [r"{} & \text{{for}}\: {}".format(self._print(e), self._print(c))
                    for e, c in expr.args[:-1]]
         if expr.args[-1].cond == true:
             ecpairs.append(r"%s & \text{otherwise}" %
@@ -1630,7 +1629,7 @@ class LatexPrinter(Printer):
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)\
-            + '_{%s, %s}' % (self._print(expr.i), self._print(expr.j))
+            + '_{{{}, {}}}'.format(self._print(expr.i), self._print(expr.j))
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x, dim):
@@ -1696,7 +1695,7 @@ class LatexPrinter(Printer):
                 (self.parenthesize(expr.args[0], PRECEDENCE['Mul'],
                                    strict=True), self._print(expr.args[1]),
                  exp)
-        return r'%s\bmod{%s}' % (self.parenthesize(expr.args[0],
+        return r'{}\bmod{{{}}}'.format(self.parenthesize(expr.args[0],
                                  PRECEDENCE['Mul'], strict=True),
                                  self._print(expr.args[1]))
 
@@ -1727,10 +1726,10 @@ class LatexPrinter(Printer):
         base, exp = expr.base, expr.exp
         from sympy.matrices import MatrixSymbol
         if not isinstance(base, MatrixSymbol):
-            return "\\left(%s\\right)^{%s}" % (self._print(base),
+            return "\\left({}\\right)^{{{}}}".format(self._print(base),
                                               self._print(exp))
         else:
-            return "%s^{%s}" % (self._print(base), self._print(exp))
+            return "{}^{{{}}}".format(self._print(base), self._print(exp))
 
     def _print_MatrixSymbol(self, expr):
         return self._print_Symbol(expr, style=self._settings[
@@ -1861,19 +1860,19 @@ class LatexPrinter(Printer):
         return s
 
     def _print_TensorIndex(self, expr):
-        return "{}%s{%s}" % (
+        return "{{}}{}{{{}}}".format(
             "^" if expr.is_up else "_",
             self._print(expr.args[0])
         )
 
     def _print_PartialDerivative(self, expr):
         if len(expr.variables) == 1:
-            return r"\frac{\partial}{\partial {%s}}{%s}" % (
+            return r"\frac{{\partial}}{{\partial {{{}}}}}{{{}}}".format(
                 self._print(expr.variables[0]),
                 self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
             )
         else:
-            return r"\frac{\partial^{%s}}{%s}{%s}" % (
+            return r"\frac{{\partial^{{{}}}}}{{{}}}{{{}}}".format(
                 len(expr.variables),
                 " ".join([r"\partial {%s}" % self._print(i) for i in expr.variables]),
                 self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
@@ -1886,7 +1885,7 @@ class LatexPrinter(Printer):
         if exp is None:
             return r"\operatorname{frac}{\left(%s\right)}" % self._print(expr.args[0])
         else:
-            return r"\operatorname{frac}{\left(%s\right)}^{%s}" % (
+            return r"\operatorname{{frac}}{{\left({}\right)}}^{{{}}}".format(
                     self._print(expr.args[0]), exp)
 
     def _print_tuple(self, expr):
@@ -1932,7 +1931,7 @@ class LatexPrinter(Printer):
 
         for key in keys:
             val = d[key]
-            items.append("%s : %s" % (self._print(key), self._print(val)))
+            items.append("{} : {}".format(self._print(key), self._print(val)))
 
         return r"\left\{ %s\right\}" % r", \  ".join(items)
 
@@ -1943,33 +1942,33 @@ class LatexPrinter(Printer):
         if len(expr.args) == 1 or expr.args[1] == 0:
             tex = r"\delta\left(%s\right)" % self._print(expr.args[0])
         else:
-            tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (
+            tex = r"\delta^{{\left( {} \right)}}\left( {} \right)".format(
                 self._print(expr.args[1]), self._print(expr.args[0]))
         if exp:
-            tex = r"\left(%s\right)^{%s}" % (tex, exp)
+            tex = r"\left({}\right)^{{{}}}".format(tex, exp)
         return tex
 
     def _print_SingularityFunction(self, expr):
         shift = self._print(expr.args[0] - expr.args[1])
         power = self._print(expr.args[2])
-        tex = r"{\left\langle %s \right\rangle}^{%s}" % (shift, power)
+        tex = r"{{\left\langle {} \right\rangle}}^{{{}}}".format(shift, power)
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
         tex = r"\theta\left(%s\right)" % self._print(expr.args[0])
         if exp:
-            tex = r"\left(%s\right)^{%s}" % (tex, exp)
+            tex = r"\left({}\right)^{{{}}}".format(tex, exp)
         return tex
 
     def _print_KroneckerDelta(self, expr, exp=None):
         i = self._print(expr.args[0])
         j = self._print(expr.args[1])
         if expr.args[0].is_Atom and expr.args[1].is_Atom:
-            tex = r'\delta_{%s %s}' % (i, j)
+            tex = r'\delta_{{{} {}}}'.format(i, j)
         else:
-            tex = r'\delta_{%s, %s}' % (i, j)
+            tex = r'\delta_{{{}, {}}}'.format(i, j)
         if exp is not None:
-            tex = r'\left(%s\right)^{%s}' % (tex, exp)
+            tex = r'\left({}\right)^{{{}}}'.format(tex, exp)
         return tex
 
     def _print_LeviCivita(self, expr, exp=None):
@@ -1979,7 +1978,7 @@ class LatexPrinter(Printer):
         else:
             tex = r'\varepsilon_{%s}' % ", ".join(indices)
         if exp:
-            tex = r'\left(%s\right)^{%s}' % (tex, exp)
+            tex = r'\left({}\right)^{{{}}}'.format(tex, exp)
         return tex
 
     def _print_RandomDomain(self, d):
@@ -2039,15 +2038,15 @@ class LatexPrinter(Printer):
     def __print_number_polynomial(self, expr, letter, exp=None):
         if len(expr.args) == 2:
             if exp is not None:
-                return r"%s_{%s}^{%s}\left(%s\right)" % (letter,
+                return r"{}_{{{}}}^{{{}}}\left({}\right)".format(letter,
                             self._print(expr.args[0]), exp,
                             self._print(expr.args[1]))
-            return r"%s_{%s}\left(%s\right)" % (letter,
+            return r"{}_{{{}}}\left({}\right)".format(letter,
                         self._print(expr.args[0]), self._print(expr.args[1]))
 
-        tex = r"%s_{%s}" % (letter, self._print(expr.args[0]))
+        tex = r"{}_{{{}}}".format(letter, self._print(expr.args[0]))
         if exp is not None:
-            tex = r"%s^{%s}" % (tex, exp)
+            tex = r"{}^{{{}}}".format(tex, exp)
         return tex
 
     def _print_bernoulli(self, expr, exp=None):
@@ -2055,12 +2054,12 @@ class LatexPrinter(Printer):
 
     def _print_bell(self, expr, exp=None):
         if len(expr.args) == 3:
-            tex1 = r"B_{%s, %s}" % (self._print(expr.args[0]),
+            tex1 = r"B_{{{}, {}}}".format(self._print(expr.args[0]),
                                 self._print(expr.args[1]))
             tex2 = r"\left(%s\right)" % r", ".join(self._print(el) for
                                                el in expr.args[2])
             if exp is not None:
-                tex = r"%s^{%s}%s" % (tex1, exp, tex2)
+                tex = r"{}^{{{}}}{}".format(tex1, exp, tex2)
             else:
                 tex = tex1 + tex2
             return tex
@@ -2073,7 +2072,7 @@ class LatexPrinter(Printer):
     def _print_lucas(self, expr, exp=None):
         tex = r"L_{%s}" % self._print(expr.args[0])
         if exp is not None:
-            tex = r"%s^{%s}" % (tex, exp)
+            tex = r"{}^{{{}}}".format(tex, exp)
         return tex
 
     def _print_tribonacci(self, expr, exp=None):
@@ -2082,7 +2081,7 @@ class LatexPrinter(Printer):
     def _print_SeqFormula(self, s):
         dots = object()
         if len(s.start.free_symbols) > 0 or len(s.stop.free_symbols) > 0:
-            return r"\left\{%s\right\}_{%s=%s}^{%s}" % (
+            return r"\left\{{{}\right\}}_{{{}={}}}^{{{}}}".format(
                 self._print(s.formula),
                 self._print(s.variables[0]),
                 self._print(s.start),
@@ -2181,7 +2180,7 @@ class LatexPrinter(Printer):
         sig = s.lamda.signature
         xys = ((self._print(x), self._print(y)) for x, y in zip(sig, s.base_sets))
         xinys = r" , ".join(r"%s \in %s" % xy for xy in xys)
-        return r"\left\{%s\; |\; %s\right\}" % (self._print(expr), xinys)
+        return r"\left\{{{}\; |\; {}\right\}}".format(self._print(expr), xinys)
 
     def _print_ConditionSet(self, s):
         vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
@@ -2189,7 +2188,7 @@ class LatexPrinter(Printer):
             return r"\left\{%s \mid %s \right\}" % \
                 (vars_print, self._print(s.condition))
 
-        return r"\left\{%s \mid %s \in %s \wedge %s \right\}" % (
+        return r"\left\{{{} \mid {} \in {} \wedge {} \right\}}".format(
             vars_print,
             vars_print,
             self._print(s.base_set),
@@ -2197,7 +2196,7 @@ class LatexPrinter(Printer):
 
     def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.variables])
-        return r"\left\{%s\; |\; %s \in %s \right\}" % (
+        return r"\left\{{{}\; |\; {} \in {} \right\}}".format(
             self._print(s.expr),
             vars_print,
             self._print(s.sets))
@@ -2229,12 +2228,12 @@ class LatexPrinter(Printer):
     def _print_PolynomialRing(self, expr):
         domain = self._print(expr.domain)
         symbols = ", ".join(map(self._print, expr.symbols))
-        return r"%s\left[%s\right]" % (domain, symbols)
+        return r"{}\left[{}\right]".format(domain, symbols)
 
     def _print_FractionField(self, expr):
         domain = self._print(expr.domain)
         symbols = ", ".join(map(self._print, expr.symbols))
-        return r"%s\left(%s\right)" % (domain, symbols)
+        return r"{}\left({}\right)".format(domain, symbols)
 
     def _print_PolynomialRingBase(self, expr):
         domain = self._print(expr.domain)
@@ -2242,7 +2241,7 @@ class LatexPrinter(Printer):
         inv = ""
         if not expr.is_Poly:
             inv = r"S_<^{-1}"
-        return r"%s%s\left[%s\right]" % (inv, domain, symbols)
+        return r"{}{}\left[{}\right]".format(inv, domain, symbols)
 
     def _print_Poly(self, poly):
         cls = poly.__class__.__name__
@@ -2295,9 +2294,9 @@ class LatexPrinter(Printer):
 
         args = ", ".join([expr] + gens + [domain])
         if cls in accepted_latex_functions:
-            tex = r"\%s {\left(%s \right)}" % (cls, args)
+            tex = r"\{} {{\left({} \right)}}".format(cls, args)
         else:
-            tex = r"\operatorname{%s}{\left( %s \right)}" % (cls, args)
+            tex = r"\operatorname{{{}}}{{\left( {} \right)}}".format(cls, args)
 
         return tex
 
@@ -2321,9 +2320,9 @@ class LatexPrinter(Printer):
             args.append(self._print(expr.fun))
 
         if cls in accepted_latex_functions:
-            return r"\%s {\left(%s\right)}" % (cls, ", ".join(args))
+            return r"\{} {{\left({}\right)}}".format(cls, ", ".join(args))
         else:
-            return r"\operatorname{%s} {\left(%s\right)}" % (cls,
+            return r"\operatorname{{{}}} {{\left({}\right)}}".format(cls,
                                                              ", ".join(args))
 
     def _print_PolyElement(self, poly):
@@ -2336,21 +2335,21 @@ class LatexPrinter(Printer):
         else:
             numer = self._print(frac.numer)
             denom = self._print(frac.denom)
-            return r"\frac{%s}{%s}" % (numer, denom)
+            return r"\frac{{{}}}{{{}}}".format(numer, denom)
 
     def _print_euler(self, expr, exp=None):
         m, x = (expr.args[0], None) if len(expr.args) == 1 else expr.args
         tex = r"E_{%s}" % self._print(m)
         if exp is not None:
-            tex = r"%s^{%s}" % (tex, exp)
+            tex = r"{}^{{{}}}".format(tex, exp)
         if x is not None:
-            tex = r"%s\left(%s\right)" % (tex, self._print(x))
+            tex = r"{}\left({}\right)".format(tex, self._print(x))
         return tex
 
     def _print_catalan(self, expr, exp=None):
         tex = r"C_{%s}" % self._print(expr.args[0])
         if exp is not None:
-            tex = r"%s^{%s}" % (tex, exp)
+            tex = r"{}^{{{}}}".format(tex, exp)
         return tex
 
     def _print_UnifiedTransform(self, expr, s, inverse=False):
@@ -2410,7 +2409,7 @@ class LatexPrinter(Printer):
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)
         codomain = self._print(morphism.codomain)
-        return "%s\\rightarrow %s" % (domain, codomain)
+        return "{}\\rightarrow {}".format(domain, codomain)
 
     def _print_TransferFunction(self, expr):
         from sympy.core import Mul, Pow
@@ -2459,12 +2458,12 @@ class LatexPrinter(Printer):
 
         numer = self._print(num)
         denom = self._print(den)
-        return r"\frac{%s}{%s}" % (numer, denom)
+        return r"\frac{{{}}}{{{}}}".format(numer, denom)
 
     def _print_NamedMorphism(self, morphism):
         pretty_name = self._print(Symbol(morphism.name))
         pretty_morphism = self._print_Morphism(morphism)
-        return "%s:%s" % (pretty_name, pretty_morphism)
+        return "{}:{}".format(pretty_name, pretty_morphism)
 
     def _print_IdentityMorphism(self, morphism):
         from sympy.categories import NamedMorphism
@@ -2581,10 +2580,10 @@ class LatexPrinter(Printer):
         return name
 
     def _print_Patch(self, patch):
-        return r'\text{%s}_{%s}' % (self._print(patch.name), self._print(patch.manifold))
+        return r'\text{{{}}}_{{{}}}'.format(self._print(patch.name), self._print(patch.manifold))
 
     def _print_CoordSystem(self, coordsys):
-        return r'\text{%s}^{\text{%s}}_{%s}' % (
+        return r'\text{{{}}}^{{\text{{{}}}}}_{{{}}}'.format(
             self._print(coordsys.name), self._print(coordsys.patch.name), self._print(coordsys.manifold)
         )
 
@@ -2632,7 +2631,7 @@ class LatexPrinter(Printer):
         else:
             tex = r"\left(%s\right)" % self._print(expr.args[0])
         if exp is not None:
-            return r"\sigma^{%s}%s" % (exp, tex)
+            return r"\sigma^{{{}}}{}".format(exp, tex)
         return r"\sigma%s" % tex
 
     def _print_udivisor_sigma(self, expr, exp=None):
@@ -2642,7 +2641,7 @@ class LatexPrinter(Printer):
         else:
             tex = r"\left(%s\right)" % self._print(expr.args[0])
         if exp is not None:
-            return r"\sigma^*^{%s}%s" % (exp, tex)
+            return r"\sigma^*^{{{}}}{}".format(exp, tex)
         return r"\sigma^*%s" % tex
 
     def _print_primenu(self, expr, exp=None):

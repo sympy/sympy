@@ -789,4 +789,4 @@ def test_issue_19760():
 
     for comp in (True, False):
         mp = Poly(minimal_polynomial(e, compose=comp))
-        assert mp(x) == mp_expected, "minimal_polynomial(e, compose=%s) = %s; %s expected" % (comp, mp(x), mp_expected)
+        assert mp(x) == mp_expected, "minimal_polynomial(e, compose={}) = {}; {} expected".format(comp, mp(x), mp_expected)

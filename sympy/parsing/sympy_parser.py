@@ -1,6 +1,5 @@
 """Transform a string with Python-like source code into SymPy expression. """
 
-from __future__ import print_function, division
 
 from tokenize import (generate_tokens, untokenize, TokenError,
     NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN, NEWLINE)
@@ -79,7 +78,7 @@ def _add_factorial_tokens(name, result):
     return result
 
 
-class AppliedFunction(object):
+class AppliedFunction:
     """
     A group of tokens representing a function and its arguments.
 
@@ -104,7 +103,7 @@ class AppliedFunction(object):
         return getattr(self, self.items[index])
 
     def __repr__(self):
-        return "AppliedFunction(%s, %s, %s)" % (self.function, self.args,
+        return "AppliedFunction({}, {}, {})".format(self.function, self.args,
                                                 self.exponent)
 
 

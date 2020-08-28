@@ -63,7 +63,7 @@ def digits(n, b=10, digits=None):
         if digits is not None:
             if ndig > digits:
                 raise ValueError(
-                    "For %s, at least %s digits are needed." % (n, ndig))
+                    "For {}, at least {} digits are needed.".format(n, ndig))
             elif ndig < digits:
                 y[1:1] = [0]*(digits - ndig)
         return y

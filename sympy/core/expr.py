@@ -3362,7 +3362,7 @@ class Expr(Basic, EvalfMixin):
         obj = self._eval_as_leading_term(x, cdir=cdir)
         if obj is not None:
             return powsimp(obj, deep=True, combine='exp')
-        raise NotImplementedError('as_leading_term(%s, %s)' % (self, x))
+        raise NotImplementedError('as_leading_term({}, {})'.format(self, x))
 
     def _eval_as_leading_term(self, x, cdir=0):
         return self
@@ -3402,8 +3402,8 @@ class Expr(Basic, EvalfMixin):
         if x in c.free_symbols:
             from sympy.utilities.misc import filldedent
             raise ValueError(filldedent("""
-                cannot compute leadterm(%s, %s). The coefficient
-                should have been free of %s but got %s""" % (self, x, x, c)))
+                cannot compute leadterm({}, {}). The coefficient
+                should have been free of {} but got {}""".format(self, x, x, c)))
         c = c.subs(d, log(x))
         return c, e
 

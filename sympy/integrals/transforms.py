@@ -32,7 +32,7 @@ class IntegralTransformError(NotImplementedError):
     """
     def __init__(self, transform, function, msg):
         super().__init__(
-            "%s Transform could not be computed: %s." % (transform, msg))
+            "{} Transform could not be computed: {}.".format(transform, msg))
         self.function = function
 
 

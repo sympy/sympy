@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from sympy import Symbol, Piecewise, Eq
 from sympy.printing.preview import preview
 

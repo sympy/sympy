@@ -32,7 +32,7 @@ def render_as_module(definitions, name, declarations=(), printer_settings=None):
         raise ValueError("This function expects to construct a module on its own.")
     mod = Module(name, chain(declarations, [dummy]), definitions)
     fstr = printer.doprint(mod)
-    module_use_str = '   %s\n' % '   \n'.join(['use %s, only: %s' % (k, ', '.join(v)) for
+    module_use_str = '   %s\n' % '   \n'.join(['use {}, only: {}'.format(k, ', '.join(v)) for
                                                 k, v in printer.module_uses.items()])
     module_use_str += '   implicit none\n'
     module_use_str += '   private\n'

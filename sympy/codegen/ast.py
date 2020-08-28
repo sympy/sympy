@@ -1490,7 +1490,7 @@ class Variable(Node):
         try:
             rhs = _sympify(rhs)
         except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, rhs))
+            raise TypeError("Invalid comparison {} < {}".format(self, rhs))
         return op(self, rhs, evaluate=False)
 
     __lt__ = lambda self, other: self._relation(other, Lt)

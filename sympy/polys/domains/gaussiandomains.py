@@ -48,7 +48,7 @@ class GaussianElement(DomainElement):
         return self.new(-self.x, -self.y)
 
     def __repr__(self):
-        return "%s(%s, %s)" % (self._parent.rep, self.x, self.y)
+        return "{}({}, {})".format(self._parent.rep, self.x, self.y)
 
     def __str__(self):
         return str(self._parent.to_sympy(self))

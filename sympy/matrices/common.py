@@ -570,7 +570,7 @@ class MatrixShaping(MatrixRequired):
             c += 1
         if not rv:
             raise ValueError(filldedent('''
-            The %s diagonal is out of range [%s, %s]''' % (
+            The {} diagonal is out of range [{}, {}]'''.format(
             k, 1 - self.rows, self.cols - 1)))
         return self._new(1, len(rv), rv)
 
@@ -1290,11 +1290,11 @@ class MatrixProperties(MatrixRequired):
 
     def _has_positive_diagonals(self):
         diagonal_entries = (self[i, i] for i in range(self.rows))
-        return fuzzy_and((x.is_positive for x in diagonal_entries))
+        return fuzzy_and(x.is_positive for x in diagonal_entries)
 
     def _has_nonnegative_diagonals(self):
         diagonal_entries = (self[i, i] for i in range(self.rows))
-        return fuzzy_and((x.is_nonnegative for x in diagonal_entries))
+        return fuzzy_and(x.is_nonnegative for x in diagonal_entries)
 
     def atoms(self, *types):
         """Returns the atoms that form the current object.
@@ -1522,7 +1522,7 @@ class MatrixProperties(MatrixRequired):
                     summation += Abs(self[i, j])
             return (Abs(self[i, i]) - summation).is_nonnegative
 
-        return fuzzy_and((test_row(i) for i in range(rows)))
+        return fuzzy_and(test_row(i) for i in range(rows))
 
     @property
     def is_strongly_diagonally_dominant(self):
@@ -1572,7 +1572,7 @@ class MatrixProperties(MatrixRequired):
                     summation += Abs(self[i, j])
             return (Abs(self[i, i]) - summation).is_positive
 
-        return fuzzy_and((test_row(i) for i in range(rows)))
+        return fuzzy_and(test_row(i) for i in range(rows))
 
     @property
     def is_hermitian(self):
@@ -2542,7 +2542,7 @@ class MatrixArithmetic(MatrixRequired):
         # our first sanity check.
         if hasattr(other, 'shape'):
             if self.shape != other.shape:
-                raise ShapeError("Matrix size mismatch: %s + %s" % (
+                raise ShapeError("Matrix size mismatch: {} + {}".format(
                     self.shape, other.shape))
 
         # honest sympy matrices defer to their class's routine
@@ -2556,7 +2556,7 @@ class MatrixArithmetic(MatrixRequired):
         if getattr(other, 'is_MatrixLike', False):
             return MatrixArithmetic._eval_add(self, other)
 
-        raise TypeError('cannot add %s and %s' % (type(self), type(other)))
+        raise TypeError('cannot add {} and {}'.format(type(self), type(other)))
 
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
@@ -2624,7 +2624,7 @@ class MatrixArithmetic(MatrixRequired):
             (getattr(other, 'is_Matrix', True) or
              getattr(other, 'is_MatrixLike', True))):
             if self.shape[1] != other.shape[0]:
-                raise ShapeError("Matrix size mismatch: %s * %s." % (
+                raise ShapeError("Matrix size mismatch: {} * {}.".format(
                     self.shape, other.shape))
 
         # honest sympy matrices defer to their class's routine
@@ -3023,12 +3023,12 @@ def a2idx(j, n=None):
         if jindex is not None:
             j = jindex()
         else:
-            raise IndexError("Invalid index a[%r]" % (j,))
+            raise IndexError("Invalid index a[{!r}]".format(j))
     if n is not None:
         if j < 0:
             j += n
         if not (j >= 0 and j < n):
-            raise IndexError("Index out of range: a[%s]" % (j,))
+            raise IndexError("Index out of range: a[{}]".format(j))
     return int(j)
 
 
@@ -3066,4 +3066,4 @@ def classof(A, B):
         if isinstance(B, numpy.ndarray):
             return A.__class__
 
-    raise TypeError("Incompatible classes %s, %s" % (A.__class__, B.__class__))
+    raise TypeError("Incompatible classes {}, {}".format(A.__class__, B.__class__))

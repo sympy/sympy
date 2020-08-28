@@ -34,7 +34,7 @@ def test_all_classes_are_tested():
             if not file.endswith(".py"):
                 continue
 
-            with open(os.path.join(root, file), "r", encoding='utf-8') as f:
+            with open(os.path.join(root, file), encoding='utf-8') as f:
                 text = f.read()
 
             submodule = module + '.' + file[:-3]

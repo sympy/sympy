@@ -102,11 +102,11 @@ class CodeWrapper:
 
     @property
     def filename(self):
-        return "%s_%s" % (self._filename, CodeWrapper._module_counter)
+        return "{}_{}".format(self._filename, CodeWrapper._module_counter)
 
     @property
     def module_name(self):
-        return "%s_%s" % (self._module_basename, CodeWrapper._module_counter)
+        return "{}_{}".format(self._module_basename, CodeWrapper._module_counter)
 
     def __init__(self, generator, filepath=None, flags=[], verbose=False):
         """
@@ -167,7 +167,7 @@ class CodeWrapper:
             retoutput = check_output(command, stderr=STDOUT)
         except CalledProcessError as e:
             raise CodeWrapError(
-                "Error while executing command: %s. Command output is:\n%s" % (
+                "Error while executing command: {}. Command output is:\n{}".format(
                     " ".join(command), e.output.decode('utf-8')))
         if not self.quiet:
             print(retoutput)
@@ -308,7 +308,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     def _prepare_files(self, routine, build_dir=os.curdir):
         # NOTE : build_dir is used for testing purposes.
         pyxfilename = self.module_name + '.pyx'
-        codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
+        codefilename = "{}.{}".format(self.filename, self.generator.code_extension)
 
         # pyx
         with open(os.path.join(build_dir, pyxfilename), 'w') as f:
@@ -387,11 +387,11 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             args_c = ", ".join([self._call_arg(a) for a in routine.arguments])
             rets = ", ".join([self._string_var(r.name) for r in py_rets])
             if routine.results:
-                body = '    return %s(%s)' % (routine.name, args_c)
+                body = '    return {}({})'.format(routine.name, args_c)
                 if rets:
                     body = body + ', ' + rets
             else:
-                body = '    %s(%s)\n' % (routine.name, args_c)
+                body = '    {}({})\n'.format(routine.name, args_c)
                 body = body + '    return ' + rets
 
             functions.append(self.pyx_func.format(name=name, arg_string=arg_string,
@@ -445,7 +445,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             mtype = np_types[t]
             return mat_dec.format(mtype=mtype, ndim=ndim, name=self._string_var(arg.name))
         else:
-            return "%s %s" % (t, self._string_var(arg.name))
+            return "{} {}".format(t, self._string_var(arg.name))
 
     def _declare_arg(self, arg):
         proto = self._prototype_arg(arg)

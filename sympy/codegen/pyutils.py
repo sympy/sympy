@@ -19,6 +19,6 @@ def render_as_module(content, standard='python3'):
     if printer._settings['fully_qualified_modules']:
         module_imports_str = '\n'.join('import %s' % k for k in printer.module_imports)
     else:
-        module_imports_str = '\n'.join(['from %s import %s' % (k, ', '.join(v)) for
+        module_imports_str = '\n'.join(['from {} import {}'.format(k, ', '.join(v)) for
                                         k, v in printer.module_imports.items()])
     return module_imports_str + '\n\n' + pystr

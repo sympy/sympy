@@ -126,7 +126,7 @@ def deduce_alpha_implications(implications):
         na = Not(a)
         if na in impl:
             raise ValueError(
-                'implications are inconsistent: %s -> %s %s' % (a, na, impl))
+                'implications are inconsistent: {} -> {} {}'.format(a, na, impl))
 
     return res
 
@@ -465,7 +465,7 @@ class FactRules:
 class InconsistentAssumptions(ValueError):
     def __str__(self):
         kb, fact, value = self.args
-        return "%s, %s=%s" % (kb, fact, value)
+        return "{}, {}={}".format(kb, fact, value)
 
 
 class FactKB(dict):

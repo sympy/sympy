@@ -372,14 +372,14 @@ def as_int(n, strict=True):
                 raise TypeError
             return operator.index(n)
         except TypeError:
-            raise ValueError('%s is not an integer' % (n,))
+            raise ValueError('{} is not an integer'.format(n))
     else:
         try:
             result = int(n)
         except TypeError:
-            raise ValueError('%s is not an integer' % (n,))
+            raise ValueError('{} is not an integer'.format(n))
         if n != result:
-            raise ValueError('%s is not an integer' % (n,))
+            raise ValueError('{} is not an integer'.format(n))
         return result
 
 

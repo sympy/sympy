@@ -1,5 +1,4 @@
 """ Generic SymPy-Independent Strategies """
-from __future__ import print_function, division
 
 from sympy.core.compatibility import get_function_name
 

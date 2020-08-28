@@ -56,7 +56,6 @@ It is described in great(er) detail in the Sphinx documentation.
 # o Deciding if one index quadruple is reachable from another is tricky. For
 #   this reason, we use hand-built routines to match and instantiate formulas.
 #
-from __future__ import print_function, division
 
 from collections import defaultdict
 from itertools import product
@@ -481,7 +480,7 @@ class Hyper_Function(Expr):
     """ A generalized hypergeometric function. """
 
     def __new__(cls, ap, bq):
-        obj = super(Hyper_Function, cls).__new__(cls)
+        obj = super().__new__(cls)
         obj.ap = Tuple(*list(map(expand, ap)))
         obj.bq = Tuple(*list(map(expand, bq)))
         return obj
@@ -504,7 +503,7 @@ class Hyper_Function(Expr):
         return sum(bool(x.is_integer and x.is_negative) for x in self.ap)
 
     def _hashable_content(self):
-        return super(Hyper_Function, self)._hashable_content() + (self.ap,
+        return super()._hashable_content() + (self.ap,
                 self.bq)
 
     def __call__(self, arg):
@@ -607,7 +606,7 @@ class G_Function(Expr):
     """ A Meijer G-function. """
 
     def __new__(cls, an, ap, bm, bq):
-        obj = super(G_Function, cls).__new__(cls)
+        obj = super().__new__(cls)
         obj.an = Tuple(*list(map(expand, an)))
         obj.ap = Tuple(*list(map(expand, ap)))
         obj.bm = Tuple(*list(map(expand, bm)))
@@ -619,7 +618,7 @@ class G_Function(Expr):
         return (self.an, self.ap, self.bm, self.bq)
 
     def _hashable_content(self):
-        return super(G_Function, self)._hashable_content() + self.args
+        return super()._hashable_content() + self.args
 
     def __call__(self, z):
         return meijerg(self.an, self.ap, self.bm, self.bq, z)
@@ -666,7 +665,7 @@ class G_Function(Expr):
 # Dummy variable.
 _x = Dummy('x')
 
-class Formula(object):
+class Formula:
     """
     This class represents hypergeometric formulae.
 
@@ -762,7 +761,7 @@ class Formula(object):
         base_repl = [dict(list(zip(self.symbols, values)))
                 for values in product(*symbol_values)]
         abuckets, bbuckets = [sift(params, _mod1) for params in [ap, bq]]
-        a_inv, b_inv = [dict((a, len(vals)) for a, vals in bucket.items())
+        a_inv, b_inv = [{a: len(vals) for a, vals in bucket.items()}
                 for bucket in [abuckets, bbuckets]]
         critical_values = [[0] for _ in self.symbols]
         result = []
@@ -800,7 +799,7 @@ class Formula(object):
 
 
 
-class FormulaCollection(object):
+class FormulaCollection:
     """ A collection of formulae to use as origins. """
 
     def __init__(self):
@@ -876,7 +875,7 @@ class FormulaCollection(object):
         return None
 
 
-class MeijerFormula(object):
+class MeijerFormula:
     """
     This class represents a Meijer G-function formula.
 
@@ -917,7 +916,7 @@ class MeijerFormula(object):
                                  self.M.subs(subs), None)
 
 
-class MeijerFormulaCollection(object):
+class MeijerFormulaCollection:
     """
     This class holds a collection of meijer g formulae.
     """
@@ -940,7 +939,7 @@ class MeijerFormulaCollection(object):
                 return res
 
 
-class Operator(object):
+class Operator:
     """
     Base class for operators to be applied to our functions.
 
@@ -1060,7 +1059,7 @@ class UnShiftA(Operator):
         self._poly = Poly((n - m)/b0, _x)
 
     def __str__(self):
-        return '<Decrement upper index #%s of %s, %s.>' % (self._i,
+        return '<Decrement upper index #{} of {}, {}.>'.format(self._i,
                                                         self._ap, self._bq)
 
 
@@ -1102,7 +1101,7 @@ class UnShiftB(Operator):
         self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
-        return '<Increment lower index #%s of %s, %s.>' % (self._i,
+        return '<Increment lower index #{} of {}, {}.>'.format(self._i,
                                                         self._ap, self._bq)
 
 
@@ -1192,7 +1191,7 @@ class MeijerUnShiftA(Operator):
         self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
-        return '<Decrement upper b index #%s of %s, %s, %s, %s.>' % (self._i,
+        return '<Decrement upper b index #{} of {}, {}, {}, {}.>'.format(self._i,
                                       self._an, self._ap, self._bm, self._bq)
 
 
@@ -1239,7 +1238,7 @@ class MeijerUnShiftB(Operator):
         self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
-        return '<Increment upper a index #%s of %s, %s, %s, %s.>' % (self._i,
+        return '<Increment upper a index #{} of {}, {}, {}, {}.>'.format(self._i,
                                       self._an, self._ap, self._bm, self._bq)
 
 
@@ -1290,7 +1289,7 @@ class MeijerUnShiftC(Operator):
         self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
-        return '<Decrement lower b index #%s of %s, %s, %s, %s.>' % (self._i,
+        return '<Decrement lower b index #{} of {}, {}, {}, {}.>'.format(self._i,
                                       self._an, self._ap, self._bm, self._bq)
 
 
@@ -1339,7 +1338,7 @@ class MeijerUnShiftD(Operator):
         self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
-        return '<Increment lower a index #%s of %s, %s, %s, %s.>' % (self._i,
+        return '<Increment lower a index #{} of {}, {}, {}, {}.>'.format(self._i,
                                       self._an, self._ap, self._bm, self._bq)
 
 
@@ -1559,7 +1558,7 @@ def devise_plan(target, origin, z):
 
     if len(list(abuckets.keys())) != len(list(nabuckets.keys())) or \
             len(list(bbuckets.keys())) != len(list(nbbuckets.keys())):
-        raise ValueError('%s not reachable from %s' % (target, origin))
+        raise ValueError('{} not reachable from {}'.format(target, origin))
 
     ops = []
 
@@ -1602,7 +1601,7 @@ def devise_plan(target, origin, z):
             bk = bbuckets[r]
             nbk = nbbuckets[r]
         if len(al) != len(nal) or len(bk) != len(nbk):
-            raise ValueError('%s not reachable from %s' % (target, origin))
+            raise ValueError('{} not reachable from {}'.format(target, origin))
 
         al, nal, bk, nbk = [sorted(list(w), key=default_sort_key)
             for w in [al, nal, bk, nbk]]

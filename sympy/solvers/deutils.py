@@ -8,7 +8,6 @@ ode_order
 _desolve
 
 """
-from __future__ import print_function, division
 
 from sympy.core import Pow
 from sympy.core.function import Derivative, AppliedUndef
@@ -248,7 +247,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
                       match=hints[hints['default']], xi=xi, eta=eta, n=terms, type=type)
     elif hint in ('all', 'all_Integral', 'best'):
         retdict = {}
-        gethints = set(hints) - set(['order', 'default', 'ordered_hints'])
+        gethints = set(hints) - {'order', 'default', 'ordered_hints'}
         if hint == 'all_Integral':
             for i in hints:
                 if i.endswith('_Integral'):

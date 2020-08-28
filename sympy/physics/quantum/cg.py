@@ -4,7 +4,6 @@
 # -Implement new simpifications
 """Clebsch-Gordon Coefficients."""
 
-from __future__ import print_function, division
 
 from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
                    symbols, sympify, Wild)

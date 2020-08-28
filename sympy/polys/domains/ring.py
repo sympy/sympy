@@ -1,6 +1,5 @@
 """Implementation of :class:`Ring` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.domain import Domain
 from sympy.polys.polyerrors import ExactQuotientFailed, NotInvertible, NotReversible

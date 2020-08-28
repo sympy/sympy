@@ -329,7 +329,7 @@ class Variable:
         self.precision = precision
 
     def __str__(self):
-        return "%s(%r)" % (self.__class__.__name__, self.name)
+        return "{}({!r})".format(self.__class__.__name__, self.name)
 
     __repr__ = __str__
 
@@ -385,7 +385,7 @@ class ResultBase:
         self.result_var = result_var
 
     def __str__(self):
-        return "%s(%r, %r)" % (self.__class__.__name__, self.expr,
+        return "{}({!r}, {!r})".format(self.__class__.__name__, self.expr,
             self.result_var)
 
     __repr__ = __str__
@@ -432,7 +432,7 @@ class OutputArgument(Argument, ResultBase):
         ResultBase.__init__(self, expr, result_var)
 
     def __str__(self):
-        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.result_var, self.expr)
+        return "{}({!r}, {!r}, {!r})".format(self.__class__.__name__, self.name, self.result_var, self.expr)
 
     __repr__ = __str__
 
@@ -449,7 +449,7 @@ class InOutArgument(Argument, ResultBase):
 
 
     def __str__(self):
-        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.expr,
+        return "{}({!r}, {!r}, {!r})".format(self.__class__.__name__, self.name, self.expr,
             self.result_var)
 
     __repr__ = __str__
@@ -524,7 +524,7 @@ class Result(Variable, ResultBase):
         ResultBase.__init__(self, expr, result_var)
 
     def __str__(self):
-        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.expr, self.name,
+        return "{}({!r}, {!r}, {!r})".format(self.__class__.__name__, self.expr, self.name,
             self.result_var)
 
     __repr__ = __str__
@@ -779,13 +779,13 @@ class CodeGen:
         """
         if to_files:
             for dump_fn in self.dump_fns:
-                filename = "%s.%s" % (prefix, dump_fn.extension)
+                filename = "{}.{}".format(prefix, dump_fn.extension)
                 with open(filename, "w") as f:
                     dump_fn(self, routines, f, prefix, header, empty)
         else:
             result = []
             for dump_fn in self.dump_fns:
-                filename = "%s.%s" % (prefix, dump_fn.extension)
+                filename = "{}.{}".format(prefix, dump_fn.extension)
                 contents = StringIO()
                 dump_fn(self, routines, contents, prefix, header, empty)
                 result.append((filename, contents.getvalue()))
@@ -919,7 +919,7 @@ class CCodeGen(CodeGen):
             else:
                 type_args.append((arg.get_datatype('C'), name))
         arguments = ", ".join([ "%s %s" % t for t in type_args])
-        return "%s %s(%s)" % (ctype, routine.name, arguments)
+        return "{} {}({})".format(ctype, routine.name, arguments)
 
     def _preprocessor_statements(self, prefix):
         code_lines = []
@@ -976,7 +976,7 @@ class CCodeGen(CodeGen):
                 result.expr, assign_to=assign_to)
 
             for name, value in sorted(constants, key=str):
-                code_lines.append("double const %s = %s;\n" % (name, value))
+                code_lines.append("double const {} = {};\n".format(name, value))
 
             code_lines.append("{}{}\n".format(prefix, c_expr))
 
@@ -1010,13 +1010,13 @@ class CCodeGen(CodeGen):
             except AssignmentError:
                 assign_to = result.result_var
                 code_lines.append(
-                    "%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
+                    "{} {};\n".format(result.get_datatype('c'), str(assign_to)))
                 constants, not_c, c_expr = self._printer_method_with_settings(
                     'doprint', dict(human=False, dereference=dereference),
                     result.expr, assign_to=assign_to)
 
             for name, value in sorted(constants, key=str):
-                code_lines.append("double const %s = %s;\n" % (name, value))
+                code_lines.append("double const {} = {};\n".format(name, value))
             code_lines.append("%s\n" % c_expr)
 
         if return_val:
@@ -1060,7 +1060,7 @@ class CCodeGen(CodeGen):
         """
         if header:
             print(''.join(self._get_header()), file=f)
-        guard_name = "%s__%s__H" % (self.project.replace(
+        guard_name = "{}__{}__H".format(self.project.replace(
             " ", "_").upper(), prefix.replace("/", "_").upper())
         # include guards
         if empty:
@@ -1167,13 +1167,13 @@ class FCodeGen(CodeGen):
 
             if arg.dimensions:
                 # fortran arrays start at 1
-                dimstr = ", ".join(["%s:%s" % (
+                dimstr = ", ".join(["{}:{}".format(
                     fprint(dim[0] + 1), fprint(dim[1] + 1))
                     for dim in arg.dimensions])
                 typeinfo += ", dimension(%s)" % dimstr
-                array_list.append("%s :: %s\n" % (typeinfo, fprint(arg.name)))
+                array_list.append("{} :: {}\n".format(typeinfo, fprint(arg.name)))
             else:
-                scalar_list.append("%s :: %s\n" % (typeinfo, fprint(arg.name)))
+                scalar_list.append("{} :: {}\n".format(typeinfo, fprint(arg.name)))
 
         # scalars first, because they can be used in array declarations
         code_list.extend(scalar_list)
@@ -1190,7 +1190,7 @@ class FCodeGen(CodeGen):
         code_list = []
         for var in sorted(routine.local_vars, key=str):
             typeinfo = get_default_datatype(var)
-            code_list.append("%s :: %s\n" % (
+            code_list.append("{} :: {}\n".format(
                 typeinfo.fname, self._get_symbol(var)))
         return code_list
 
@@ -1235,14 +1235,14 @@ class FCodeGen(CodeGen):
             for obj, v in sorted(constants, key=str):
                 t = get_default_datatype(obj)
                 declarations.append(
-                    "%s, parameter :: %s = %s\n" % (t.fname, obj, v))
+                    "{}, parameter :: {} = {}\n".format(t.fname, obj, v))
             for obj in sorted(not_fortran, key=str):
                 t = get_default_datatype(obj)
                 if isinstance(obj, Function):
                     name = obj.func
                 else:
                     name = obj
-                declarations.append("%s :: %s\n" % (t.fname, name))
+                declarations.append("{} :: {}\n".format(t.fname, name))
 
             code_lines.append("%s\n" % f_expr)
         return declarations + code_lines
@@ -1440,7 +1440,7 @@ class JuliaCodeGen(CodeGen):
             if isinstance(arg, (InputArgument, InOutArgument)):
                 args.append("%s" % self._get_symbol(arg.name))
         args = ", ".join(args)
-        code_list.append("%s(%s)\n" % (routine.name, args))
+        code_list.append("{}({})\n".format(routine.name, args))
         code_list = [ "".join(code_list) ]
 
         return code_list
@@ -1479,7 +1479,7 @@ class JuliaCodeGen(CodeGen):
 
             for obj, v in sorted(constants, key=str):
                 declarations.append(
-                    "%s = %s\n" % (obj, v))
+                    "{} = {}\n".format(obj, v))
             for obj in sorted(not_supported, key=str):
                 if isinstance(obj, Function):
                     name = obj.func
@@ -1663,7 +1663,7 @@ class OctaveCodeGen(CodeGen):
             if isinstance(arg, InputArgument):
                 args.append("%s" % self._get_symbol(arg.name))
         args = ", ".join(args)
-        code_list.append("%s(%s)\n" % (routine.name, args))
+        code_list.append("{}({})\n".format(routine.name, args))
         code_list = [ "".join(code_list) ]
 
         return code_list
@@ -1697,7 +1697,7 @@ class OctaveCodeGen(CodeGen):
 
             for obj, v in sorted(constants, key=str):
                 declarations.append(
-                    "  %s = %s;  %% constant\n" % (obj, v))
+                    "  {} = {};  % constant\n".format(obj, v))
             for obj in sorted(not_supported, key=str):
                 if isinstance(obj, Function):
                     name = obj.func
@@ -1888,7 +1888,7 @@ class RustCodeGen(CodeGen):
             else:
                 type_args.append((name, arg.get_datatype('Rust')))
         arguments = ", ".join([ "%s: %s" % t for t in type_args])
-        return "fn %s(%s)%s" % (routine.name, arguments, rstype)
+        return "fn {}({}){}".format(routine.name, arguments, rstype)
 
     def _preprocessor_statements(self, prefix):
         code_lines = []
@@ -1936,7 +1936,7 @@ class RustCodeGen(CodeGen):
                 'doprint', dict(human=False), result.expr, assign_to=assign_to)
 
             for name, value in sorted(constants, key=str):
-                declarations.append("const %s: f64 = %s;\n" % (name, value))
+                declarations.append("const {}: f64 = {};\n".format(name, value))
 
             for obj in sorted(not_supported, key=str):
                 if isinstance(obj, Function):

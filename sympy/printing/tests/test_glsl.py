@@ -407,9 +407,9 @@ def test_1xN_vecs():
         assert gl(A,mat_transpose=True) == gl(A)
         if i > 1:
             if i <= 4:
-                assert gl(A) == 'vec%s(%s)' % (i,', '.join(str(s) for s in range(i)))
+                assert gl(A) == 'vec{}({})'.format(i,', '.join(str(s) for s in range(i)))
             else:
-                assert gl(A) == 'float[%s](%s)' % (i,', '.join(str(s) for s in range(i)))
+                assert gl(A) == 'float[{}]({})'.format(i,', '.join(str(s) for s in range(i)))
 
 def test_MxN_mats():
     generatedAssertions='def test_misc_mats():\n'
@@ -443,8 +443,8 @@ def test_MxN_mats():
                 assert glTransposed.startswith('float[%s](' % (i*j))
                 glNested = glsl_code(A,mat_nested=True)
                 glNestedTransposed = glsl_code(A,mat_transpose=True,mat_nested=True)
-                assert glNested.startswith('float[%s][%s]' % (i,j))
-                assert glNestedTransposed.startswith('float[%s][%s]' % (j,i))
+                assert glNested.startswith('float[{}][{}]'.format(i,j))
+                assert glNestedTransposed.startswith('float[{}][{}]'.format(j,i))
                 generatedAssertions+='    glNested = \'\'\''+glNested+'\'\'\'\n'
                 generatedAssertions+='    glNestedTransposed = \'\'\''+glNestedTransposed+'\'\'\'\n\n'
                 generatedAssertions+='    assert glsl_code(mat,mat_nested=True) == glNested\n'

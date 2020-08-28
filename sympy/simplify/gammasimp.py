@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Function, S, Mul, Pow, Add
 from sympy.core.compatibility import ordered, default_sort_key
 from sympy.core.function import count_ops, expand_func
@@ -417,7 +415,7 @@ def _gammasimp(expr, as_comb):
                 if expr in inv:
                     return inv[expr]
                 return (expr.free_symbols, expr.atoms(Function).union(
-                        set(e.exp for e in expr.atoms(Pow))))
+                        {e.exp for e in expr.atoms(Pow)}))
 
             def update_ST(expr):
                 inv[expr] = compute_ST(expr)

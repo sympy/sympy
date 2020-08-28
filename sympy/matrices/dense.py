@@ -849,7 +849,7 @@ def symarray(prefix, shape, **kwargs):  # pragma: no cover
     from numpy import empty, ndindex
     arr = empty(shape, dtype=object)
     for index in ndindex(shape):
-        arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))),
+        arr[index] = Symbol('{}_{}'.format(prefix, '_'.join(map(str, index))),
                             **kwargs)
     return arr
 

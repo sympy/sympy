@@ -1,6 +1,5 @@
 """Implementation of :class:`CompositeDomain` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.domain import Domain
 from sympy.polys.polyerrors import GeneratorsError
@@ -20,4 +19,4 @@ class CompositeDomain(Domain):
         if not (set(self.symbols) & set(symbols)):
             return self.__class__(self.domain, self.symbols + symbols, self.order)
         else:
-            raise GeneratorsError("common generators in %s and %s" % (self.symbols, symbols))
+            raise GeneratorsError("common generators in {} and {}".format(self.symbols, symbols))

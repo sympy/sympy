@@ -1,6 +1,5 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
-from __future__ import print_function, division
 
 from itertools import combinations_with_replacement, product
 from textwrap import dedent
@@ -131,8 +130,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
                         powers[variable] += 1
                 if max(powers.values()) >= min_degree:
                     monomials_list_comm.append(Mul(*item))
-            for mon in set(monomials_list_comm):
-                yield mon
+            yield from set(monomials_list_comm)
         else:
             monomials_list_non_comm = []
             for item in product(variables, repeat=max_degree):
@@ -144,8 +142,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
                         powers[variable] += 1
                 if max(powers.values()) >= min_degree:
                     monomials_list_non_comm.append(Mul(*item))
-            for mon in set(monomials_list_non_comm):
-                yield mon
+            yield from set(monomials_list_non_comm)
     else:
         if any(min_degrees[i] > max_degrees[i] for i in range(n)):
             raise ValueError('min_degrees[i] must be <= max_degrees[i] for all i')
@@ -400,7 +397,7 @@ def term_div(a, b, domain):
         else:
             return None
 
-class MonomialOps(object):
+class MonomialOps:
     """Code generator of fast monomial arithmetic functions. """
 
     def __init__(self, ngens):
@@ -412,7 +409,7 @@ class MonomialOps(object):
         return ns[name]
 
     def _vars(self, name):
-        return [ "%s%s" % (name, i) for i in range(self.ngens) ]
+        return [ "{}{}".format(name, i) for i in range(self.ngens) ]
 
     def mul(self):
         name = "monomial_mul"
@@ -424,7 +421,7 @@ class MonomialOps(object):
         """)
         A = self._vars("a")
         B = self._vars("b")
-        AB = [ "%s + %s" % (a, b) for a, b in zip(A, B) ]
+        AB = [ "{} + {}".format(a, b) for a, b in zip(A, B) ]
         code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
         return self._build(code, name)
 
@@ -450,7 +447,7 @@ class MonomialOps(object):
         """)
         A = self._vars("a")
         B = self._vars("b")
-        ABk = [ "%s + %s*k" % (a, b) for a, b in zip(A, B) ]
+        ABk = [ "{} + {}*k".format(a, b) for a, b in zip(A, B) ]
         code = template % dict(name=name, A=", ".join(A), B=", ".join(B), ABk=", ".join(ABk))
         return self._build(code, name)
 
@@ -464,7 +461,7 @@ class MonomialOps(object):
         """)
         A = self._vars("a")
         B = self._vars("b")
-        AB = [ "%s - %s" % (a, b) for a, b in zip(A, B) ]
+        AB = [ "{} - {}".format(a, b) for a, b in zip(A, B) ]
         code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
         return self._build(code, name)
 
@@ -494,7 +491,7 @@ class MonomialOps(object):
         """)
         A = self._vars("a")
         B = self._vars("b")
-        AB = [ "%s if %s >= %s else %s" % (a, a, b, b) for a, b in zip(A, B) ]
+        AB = [ "{} if {} >= {} else {}".format(a, a, b, b) for a, b in zip(A, B) ]
         code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
         return self._build(code, name)
 
@@ -508,7 +505,7 @@ class MonomialOps(object):
         """)
         A = self._vars("a")
         B = self._vars("b")
-        AB = [ "%s if %s <= %s else %s" % (a, a, b, b) for a, b in zip(A, B) ]
+        AB = [ "{} if {} <= {} else {}".format(a, a, b, b) for a, b in zip(A, B) ]
         code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
         return self._build(code, name)
 
@@ -546,9 +543,9 @@ class Monomial(PicklableWithSlots):
 
     def __str__(self):
         if self.gens:
-            return "*".join([ "%s**%s" % (gen, exp) for gen, exp in zip(self.gens, self.exponents) ])
+            return "*".join([ "{}**{}".format(gen, exp) for gen, exp in zip(self.gens, self.exponents) ])
         else:
-            return "%s(%s)" % (self.__class__.__name__, self.exponents)
+            return "{}({})".format(self.__class__.__name__, self.exponents)
 
     def as_expr(self, *gens):
         """Convert a monomial instance to a SymPy expression. """

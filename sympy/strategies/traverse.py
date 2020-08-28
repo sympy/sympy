@@ -1,5 +1,4 @@
 """Strategies to Traverse a Tree."""
-from __future__ import print_function, division
 
 from sympy.strategies.util import basic_fns
 from sympy.strategies.core import chain, do_one

@@ -88,7 +88,7 @@ class LinearEntity(GeometrySet):
             return result
         else:
             raise Undecidable(
-                "can't decide whether '%s' contains '%s'" % (self, other))
+                "can't decide whether '{}' contains '{}'".format(self, other))
 
     def _span_test(self, other):
         """Test whether the point `other` lies in the positive span of `self`.
@@ -974,7 +974,7 @@ class LinearEntity(GeometrySet):
             return projected
 
         raise GeometryError(
-            "Do not know how to project %s onto %s" % (other, self))
+            "Do not know how to project {} onto {}".format(other, self))
 
     def random_point(self, seed=None):
         """A random point on a LinearEntity.
@@ -1172,7 +1172,7 @@ class Line(LinearEntity):
                 return Line((0, -c/b), slope=-a/b)
             if a:
                 return Line((-c/a, 0), slope=oo)
-            raise ValueError('neither %s nor %s were found in the equation' % (xin, yin))
+            raise ValueError('neither {} nor {} were found in the equation'.format(xin, yin))
 
         else:
             if len(args) > 0:

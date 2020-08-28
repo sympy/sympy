@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import Any, Dict, Set, Tuple
 
 from functools import wraps
@@ -14,7 +12,7 @@ from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 
 
-class requires(object):
+class requires:
     """ Decorator for registering requirements on print methods. """
     def __init__(self, **kwargs):
         self._req = kwargs
@@ -65,7 +63,7 @@ class CodePrinter(StrPrinter):
 
     def __init__(self, settings=None):
 
-        super(CodePrinter, self).__init__(settings=settings)
+        super().__init__(settings=settings)
         if not hasattr(self, 'reserved_words'):
             self.reserved_words = set()
 
@@ -91,7 +89,7 @@ class CodePrinter(StrPrinter):
             else:
                 assign_to = Symbol(assign_to)
         elif not isinstance(assign_to, (Basic, type(None))):
-            raise TypeError("{0} cannot assign to object of type {1}".format(
+            raise TypeError("{} cannot assign to object of type {}".format(
                     type(self).__name__, type(assign_to)))
 
         if assign_to:
@@ -112,7 +110,7 @@ class CodePrinter(StrPrinter):
             frontlines = []
             if self._not_supported:
                 frontlines.append(self._get_comment(
-                        "Not supported in {0}:".format(self.language)))
+                        "Not supported in {}:".format(self.language)))
                 for expr in sorted(self._not_supported, key=str):
                     frontlines.append(self._get_comment(type(expr).__name__))
             for name, value in sorted(self._number_symbols, key=str):
@@ -122,7 +120,7 @@ class CodePrinter(StrPrinter):
             result = "\n".join(lines)
         else:
             lines = self._format_code(lines)
-            num_syms = set([(k, self._print(v)) for k, v in self._number_symbols])
+            num_syms = {(k, self._print(v)) for k, v in self._number_symbols}
             result = (num_syms, self._not_supported, "\n".join(lines))
         self._not_supported = set()
         self._number_symbols = set()
@@ -158,7 +156,7 @@ class CodePrinter(StrPrinter):
         if text != lhs_printed:
             lines.extend(openloop)
             if assign_to is not None:
-                text = self._get_statement("%s = %s" % (lhs_printed, text))
+                text = self._get_statement("{} = {}".format(lhs_printed, text))
             lines.append(text)
             lines.extend(closeloop)
 
@@ -199,7 +197,7 @@ class CodePrinter(StrPrinter):
 
                         lines.extend(openloop)
                         lines.extend(openloop_d)
-                        text = "%s = %s" % (lhs_printed, StrPrinter.doprint(
+                        text = "{} = {}".format(lhs_printed, StrPrinter.doprint(
                             self, assign_to + term))
                         lines.append(self._get_statement(text))
                         lines.extend(closeloop_d)
@@ -334,17 +332,17 @@ class CodePrinter(StrPrinter):
         else:
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
-            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+            return self._get_statement("{} = {}".format(lhs_code, rhs_code))
 
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
-        return self._get_statement("{0} {1} {2}".format(
+        return self._get_statement("{} {} {}".format(
             *map(lambda arg: self._print(arg),
                  [lhs_code, expr.op, rhs_code])))
 
     def _print_FunctionCall(self, expr):
-        return '%s(%s)' % (
+        return '{}({})'.format(
             expr.name,
             ', '.join(map(lambda arg: self._print(arg),
                           expr.function_args)))
@@ -358,7 +356,7 @@ class CodePrinter(StrPrinter):
 
     def _print_Symbol(self, expr):
 
-        name = super(CodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
 
         if name in self.reserved_words:
             if self._settings['error_on_reserved']:
@@ -383,7 +381,7 @@ class CodePrinter(StrPrinter):
                 try:
                     return func(*[self.parenthesize(item, 0) for item in expr.args])
                 except TypeError:
-                    return "%s(%s)" % (func, self.stringify(expr.args, ", "))
+                    return "{}({})".format(func, self.stringify(expr.args, ", "))
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
@@ -392,7 +390,7 @@ class CodePrinter(StrPrinter):
             # Simple rewrite to supported function possible
             return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
         elif expr.is_Function and self._settings.get('allow_unknown_functions', False):
-            return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
+            return '{}({})'.format(self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:
             return self._print_not_supported(expr)
 

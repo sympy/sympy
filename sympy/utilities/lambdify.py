@@ -143,7 +143,7 @@ def _import(module, reload=False):
                 pass
 
         raise ImportError(
-            "can't import '%s' with '%s' command" % (module, import_command))
+            "can't import '{}' with '{}' command".format(module, import_command))
 
     # Add translated names to namespace
     for sympyname, translation in translations.items():
@@ -829,14 +829,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
         for k in keys:
             if k not in namespace:
-                ln = "from %s import %s" % (mod, k)
+                ln = "from {} import {}".format(mod, k)
                 try:
                     exec_(ln, {}, namespace)
                 except ImportError:
                     # Tensorflow 2.0 has issues with importing a specific
                     # function from its submodule.
                     # https://github.com/tensorflow/tensorflow/issues/33022
-                    ln = "%s = %s.%s" % (k, mod, k)
+                    ln = "{} = {}.{}".format(k, mod, k)
                     exec_(ln, {}, namespace)
                 imp_mod_lines.append(ln)
 
@@ -989,7 +989,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
 
         lstr = lambdastr(flatten(args), expr, printer=printer, dummify=dummify)
 
-        return 'lambda %s: (%s)(%s)' % (','.join(dum_args), lstr, indexed_args)
+        return 'lambda {}: ({})({})'.format(','.join(dum_args), lstr, indexed_args)
 
     dummies_dict = {}
     if dummify:
@@ -1007,7 +1007,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
         else:
             expr = sub_expr(expr, dummies_dict)
     expr = lambdarepr(expr)
-    return "lambda %s: (%s)" % (args, expr)
+    return "lambda {}: ({})".format(args, expr)
 
 class _EvaluatorPrinter:
     def __init__(self, printer=None, dummify=False):

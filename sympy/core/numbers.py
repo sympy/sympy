@@ -550,7 +550,7 @@ def mod_inverse(a, m):
         elif big:
             c = 1/a
     if c is None:
-        raise ValueError('inverse of %s (mod %s) does not exist' % (a, m))
+        raise ValueError('inverse of {} (mod {}) does not exist'.format(a, m))
     return c
 
 
@@ -778,7 +778,7 @@ class Number(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, other))
+            raise TypeError("Invalid comparison {} < {}".format(self, other))
         raise NotImplementedError('%s needs .__lt__() method' %
             (self.__class__.__name__))
 
@@ -786,7 +786,7 @@ class Number(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s <= %s" % (self, other))
+            raise TypeError("Invalid comparison {} <= {}".format(self, other))
         raise NotImplementedError('%s needs .__le__() method' %
             (self.__class__.__name__))
 
@@ -794,14 +794,14 @@ class Number(AtomicExpr):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s > %s" % (self, other))
+            raise TypeError("Invalid comparison {} > {}".format(self, other))
         return _sympify(other).__lt__(self)
 
     def __ge__(self, other):
         try:
             other = _sympify(other)
         except SympifyError:
-            raise TypeError("Invalid comparison %s >= %s" % (self, other))
+            raise TypeError("Invalid comparison {} >= {}".format(self, other))
         return _sympify(other).__le__(self)
 
     def __hash__(self):
@@ -1174,7 +1174,7 @@ class Float(Number):
                             num[1] >= 0,
                             all(type(i) in (int, int) for i in num)
                             )):
-                        raise ValueError('malformed mpf: %s' % (num,))
+                        raise ValueError('malformed mpf: {}'.format(num))
                     # don't compute number or else it may
                     # over/underflow
                     return Float._new(

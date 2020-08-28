@@ -1,6 +1,5 @@
 """Real and complex root isolation and refinement algorithms. """
 
-from __future__ import print_function, division
 
 from sympy.polys.densearith import (
     dup_neg, dup_rshift, dup_rem)
@@ -241,7 +240,7 @@ def dup_outer_refine_real_root(f, s, t, K, eps=None, steps=None, disjoint=None, 
                          dup_strip([c, d]), K)
 
     if dup_sign_variations(f, K) != 1:
-        raise RefinementFailed("there should be exactly one root in (%s, %s) interval" % (s, t))
+        raise RefinementFailed("there should be exactly one root in ({}, {}) interval".format(s, t))
 
     return dup_inner_refine_real_root(f, (a, b, c, d), K, eps=eps, steps=steps, disjoint=disjoint, fast=fast)
 
@@ -264,7 +263,7 @@ def dup_refine_real_root(f, s, t, K, eps=None, steps=None, disjoint=None, fast=F
         if t <= 0:
             f, s, t, negative = dup_mirror(f, K), -t, -s, True
         else:
-            raise ValueError("can't refine a real root in (%s, %s)" % (s, t))
+            raise ValueError("can't refine a real root in ({}, {})".format(s, t))
 
     if negative and disjoint is not None:
         if disjoint < 0:
@@ -1657,7 +1656,7 @@ def dup_isolate_all_roots(f, K, eps=None, inf=None, sup=None, fast=False):
     else:
         raise NotImplementedError( "only trivial square-free polynomials are supported")
 
-class RealInterval(object):
+class RealInterval:
     """A fully qualified representation of a real isolation interval. """
 
     def __init__(self, data, f, dom):
@@ -1671,7 +1670,7 @@ class RealInterval(object):
                 if t <= 0:
                     f, s, t, self.neg = dup_mirror(f, dom), -t, -s, True
                 else:
-                    raise ValueError("can't refine a real root in (%s, %s)" % (s, t))
+                    raise ValueError("can't refine a real root in ({}, {})".format(s, t))
 
             a, b, c, d = _mobius_from_interval((s, t), dom.get_field())
 
@@ -1738,7 +1737,7 @@ class RealInterval(object):
         return (self.a, self.b)
 
     def __repr__(self):
-        return "(%s, %s)" % (self.a, self.b)
+        return "({}, {})".format(self.a, self.b)
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """
@@ -1787,7 +1786,7 @@ class RealInterval(object):
         return self._inner_refine()
 
 
-class ComplexInterval(object):
+class ComplexInterval:
     """A fully qualified representation of a complex isolation interval.
     The printed form is shown as (ax, bx) x (ay, by) where (ax, ay)
     and (bx, by) are the coordinates of the southwest and northeast
@@ -1996,7 +1995,7 @@ class ComplexInterval(object):
         return ((self.ax, self.ay), (self.bx, self.by))
 
     def __repr__(self):
-        return "(%s, %s) x (%s, %s)" % (self.ax, self.bx, self.ay, self.by)
+        return "({}, {}) x ({}, {})".format(self.ax, self.bx, self.ay, self.by)
 
     def conjugate(self):
         """This complex interval really is located in lower half-plane. """

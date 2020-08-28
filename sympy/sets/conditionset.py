@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import S
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -129,7 +127,7 @@ class ConditionSet(Set):
                 raise ValueError('`%s` is not symbol-like' % i)
 
         if base_set.contains(sym) is S.false:
-            raise TypeError('sym `%s` is not in base_set `%s`' % (sym, base_set))
+            raise TypeError('sym `{}` is not in base_set `{}`'.format(sym, base_set))
 
         know = None
         if isinstance(base_set, FiniteSet):

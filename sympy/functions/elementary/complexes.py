@@ -799,7 +799,7 @@ class adjoint(Function):
         arg = printer._print(self.args[0])
         tex = r'%s^{\dagger}' % arg
         if exp:
-            tex = r'\left(%s\right)^{%s}' % (tex, exp)
+            tex = r'\left({}\right)^{{{}}}'.format(tex, exp)
         return tex
 
     def _pretty(self, printer, *args):

@@ -111,7 +111,7 @@ class SingletonRegistry(Registry):
         it as an attribute of the given name, and unregisters the class."""
         if name not in self._classes_to_install:
             raise AttributeError(
-                "Attribute '%s' was not installed on SymPy registry %s" % (
+                "Attribute '{}' was not installed on SymPy registry {}".format(
                 name, self))
         class_to_install = self._classes_to_install[name]
         value_to_install = class_to_install()

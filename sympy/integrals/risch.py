@@ -279,7 +279,7 @@ class DifferentialExtension:
     def __getattr__(self, attr):
         # Avoid AttributeErrors when debugging
         if attr not in self.__slots__:
-            raise AttributeError("%s has no attribute %s" % (repr(self), repr(attr)))
+            raise AttributeError("{} has no attribute {}".format(repr(self), repr(attr)))
         return None
 
     def _rewrite_exps_pows(self, exps, pows, numpows,
@@ -793,7 +793,7 @@ def frac_in(f, t, **kwargs):
     if cancel:
         fa, fd = fa.cancel(fd, include=True)
     if fa is None or fd is None:
-        raise ValueError("Could not turn %s into a fraction in %s." % (f, t))
+        raise ValueError("Could not turn {} into a fraction in {}.".format(f, t))
     return (fa, fd)
 
 
@@ -826,7 +826,7 @@ def as_poly_1t(p, t, z):
         # XXX: Is there a better Poly exception that we could raise here?
         # Either way, if you see this (from the Risch Algorithm) it indicates
         # a bug.
-        raise PolynomialError("%s is not an element of K[%s, 1/%s]." % (p, t, t))
+        raise PolynomialError("{} is not an element of K[{}, 1/{}].".format(p, t, t))
     d = pd.degree(t)
     one_t_part = pa.slice(0, d + 1)
     r = pd.degree() - pa.degree()

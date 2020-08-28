@@ -99,10 +99,10 @@ except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
 from Cython.Build import cythonize
-cy_opts = {}
+cy_opts = {{}}
 
 ext_mods = [Extension(
-    'wrapper_module_%(num)s', ['wrapper_module_%(num)s.pyx', 'wrapped_code_%(num)s.c'],
+    'wrapper_module_{num}', ['wrapper_module_{num}.pyx', 'wrapped_code_{num}.c'],
     include_dirs=[],
     library_dirs=[],
     libraries=[],
@@ -110,7 +110,7 @@ ext_mods = [Extension(
     extra_link_args=[]
 )]
 setup(ext_modules=cythonize(ext_mods, **cy_opts))
-""" % {'num': CodeWrapper._module_counter}
+""".format(num=CodeWrapper._module_counter)
 
     temp_dir = tempfile.mkdtemp()
     TmpFileManager.tmp_folder(temp_dir)
@@ -137,10 +137,10 @@ except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
 from Cython.Build import cythonize
-cy_opts = {'compiler_directives': {'boundscheck': False}}
+cy_opts = {{'compiler_directives': {{'boundscheck': False}}}}
 
 ext_mods = [Extension(
-    'wrapper_module_%(num)s', ['wrapper_module_%(num)s.pyx', 'wrapped_code_%(num)s.c'],
+    'wrapper_module_{num}', ['wrapper_module_{num}.pyx', 'wrapped_code_{num}.c'],
     include_dirs=['/usr/local/include', '/opt/booger/include'],
     library_dirs=['/user/local/lib'],
     libraries=['thelib', 'nilib'],
@@ -148,7 +148,7 @@ ext_mods = [Extension(
     extra_link_args=['-lswamp', '-ltrident']
 )]
 setup(ext_modules=cythonize(ext_mods, **cy_opts))
-""" % {'num': CodeWrapper._module_counter}
+""".format(num=CodeWrapper._module_counter)
 
     code_gen._prepare_files(routine, build_dir=temp_dir)
     with open(setup_file_path) as f:
@@ -163,11 +163,11 @@ except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
 from Cython.Build import cythonize
-cy_opts = {'compiler_directives': {'boundscheck': False}}
+cy_opts = {{'compiler_directives': {{'boundscheck': False}}}}
 import numpy as np
 
 ext_mods = [Extension(
-    'wrapper_module_%(num)s', ['wrapper_module_%(num)s.pyx', 'wrapped_code_%(num)s.c'],
+    'wrapper_module_{num}', ['wrapper_module_{num}.pyx', 'wrapped_code_{num}.c'],
     include_dirs=['/usr/local/include', '/opt/booger/include', np.get_include()],
     library_dirs=['/user/local/lib'],
     libraries=['thelib', 'nilib'],
@@ -175,7 +175,7 @@ ext_mods = [Extension(
     extra_link_args=['-lswamp', '-ltrident']
 )]
 setup(ext_modules=cythonize(ext_mods, **cy_opts))
-""" % {'num': CodeWrapper._module_counter}
+""".format(num=CodeWrapper._module_counter)
 
     code_gen._need_numpy = True
     code_gen._prepare_files(routine, build_dir=temp_dir)
@@ -288,12 +288,12 @@ def test_ufuncify_source():
 #include "numpy/halffloat.h"
 #include "file.h"
 
-static PyMethodDef wrapper_module_%(num)sMethods[] = {
-        {NULL, NULL, 0, NULL}
-};
+static PyMethodDef wrapper_module_{num}Methods[] = {{
+        {{NULL, NULL, 0, NULL}}
+}};
 
 static void test_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
-{
+{{
     npy_intp i;
     npy_intp n = dimensions[0];
     char *in0 = args[0];
@@ -304,66 +304,66 @@ static void test_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void*
     npy_intp in1_step = steps[1];
     npy_intp in2_step = steps[2];
     npy_intp out0_step = steps[3];
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; i++) {{
         *((double *)out0) = test(*(double *)in0, *(double *)in1, *(double *)in2);
         in0 += in0_step;
         in1 += in1_step;
         in2 += in2_step;
         out0 += out0_step;
-    }
-}
-PyUFuncGenericFunction test_funcs[1] = {&test_ufunc};
-static char test_types[4] = {NPY_DOUBLE, NPY_DOUBLE, NPY_DOUBLE, NPY_DOUBLE};
-static void *test_data[1] = {NULL};
+    }}
+}}
+PyUFuncGenericFunction test_funcs[1] = {{&test_ufunc}};
+static char test_types[4] = {{NPY_DOUBLE, NPY_DOUBLE, NPY_DOUBLE, NPY_DOUBLE}};
+static void *test_data[1] = {{NULL}};
 
 #if PY_VERSION_HEX >= 0x03000000
-static struct PyModuleDef moduledef = {
+static struct PyModuleDef moduledef = {{
     PyModuleDef_HEAD_INIT,
-    "wrapper_module_%(num)s",
+    "wrapper_module_{num}",
     NULL,
     -1,
-    wrapper_module_%(num)sMethods,
+    wrapper_module_{num}Methods,
     NULL,
     NULL,
     NULL,
     NULL
-};
+}};
 
-PyMODINIT_FUNC PyInit_wrapper_module_%(num)s(void)
-{
+PyMODINIT_FUNC PyInit_wrapper_module_{num}(void)
+{{
     PyObject *m, *d;
     PyObject *ufunc0;
     m = PyModule_Create(&moduledef);
-    if (!m) {
+    if (!m) {{
         return NULL;
-    }
+    }}
     import_array();
     import_umath();
     d = PyModule_GetDict(m);
     ufunc0 = PyUFunc_FromFuncAndData(test_funcs, test_data, test_types, 1, 3, 1,
-            PyUFunc_None, "wrapper_module_%(num)s", "Created in SymPy with Ufuncify", 0);
+            PyUFunc_None, "wrapper_module_{num}", "Created in SymPy with Ufuncify", 0);
     PyDict_SetItemString(d, "test", ufunc0);
     Py_DECREF(ufunc0);
     return m;
-}
+}}
 #else
-PyMODINIT_FUNC initwrapper_module_%(num)s(void)
-{
+PyMODINIT_FUNC initwrapper_module_{num}(void)
+{{
     PyObject *m, *d;
     PyObject *ufunc0;
-    m = Py_InitModule("wrapper_module_%(num)s", wrapper_module_%(num)sMethods);
-    if (m == NULL) {
+    m = Py_InitModule("wrapper_module_{num}", wrapper_module_{num}Methods);
+    if (m == NULL) {{
         return;
-    }
+    }}
     import_array();
     import_umath();
     d = PyModule_GetDict(m);
     ufunc0 = PyUFunc_FromFuncAndData(test_funcs, test_data, test_types, 1, 3, 1,
-            PyUFunc_None, "wrapper_module_%(num)s", "Created in SymPy with Ufuncify", 0);
+            PyUFunc_None, "wrapper_module_{num}", "Created in SymPy with Ufuncify", 0);
     PyDict_SetItemString(d, "test", ufunc0);
     Py_DECREF(ufunc0);
-}
-#endif""" % {'num': CodeWrapper._module_counter}
+}}
+#endif""".format(num=CodeWrapper._module_counter)
     assert source == expected
 
 
@@ -382,12 +382,12 @@ def test_ufuncify_source_multioutput():
 #include "numpy/halffloat.h"
 #include "file.h"
 
-static PyMethodDef wrapper_module_%(num)sMethods[] = {
-        {NULL, NULL, 0, NULL}
-};
+static PyMethodDef wrapper_module_{num}Methods[] = {{
+        {{NULL, NULL, 0, NULL}}
+}};
 
 static void multitest_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, void* data)
-{
+{{
     npy_intp i;
     npy_intp n = dimensions[0];
     char *in0 = args[0];
@@ -402,7 +402,7 @@ static void multitest_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, 
     npy_intp out0_step = steps[3];
     npy_intp out1_step = steps[4];
     npy_intp out2_step = steps[5];
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; i++) {{
         *((double *)out0) = func0(*(double *)in0, *(double *)in1, *(double *)in2);
         *((double *)out1) = func1(*(double *)in0, *(double *)in1, *(double *)in2);
         *((double *)out2) = func2(*(double *)in0, *(double *)in1, *(double *)in2);
@@ -412,58 +412,58 @@ static void multitest_ufunc(char **args, npy_intp *dimensions, npy_intp* steps, 
         out0 += out0_step;
         out1 += out1_step;
         out2 += out2_step;
-    }
-}
-PyUFuncGenericFunction multitest_funcs[1] = {&multitest_ufunc};
-static char multitest_types[6] = {NPY_DOUBLE, NPY_DOUBLE, NPY_DOUBLE, NPY_DOUBLE, NPY_DOUBLE, NPY_DOUBLE};
-static void *multitest_data[1] = {NULL};
+    }}
+}}
+PyUFuncGenericFunction multitest_funcs[1] = {{&multitest_ufunc}};
+static char multitest_types[6] = {{NPY_DOUBLE, NPY_DOUBLE, NPY_DOUBLE, NPY_DOUBLE, NPY_DOUBLE, NPY_DOUBLE}};
+static void *multitest_data[1] = {{NULL}};
 
 #if PY_VERSION_HEX >= 0x03000000
-static struct PyModuleDef moduledef = {
+static struct PyModuleDef moduledef = {{
     PyModuleDef_HEAD_INIT,
-    "wrapper_module_%(num)s",
+    "wrapper_module_{num}",
     NULL,
     -1,
-    wrapper_module_%(num)sMethods,
+    wrapper_module_{num}Methods,
     NULL,
     NULL,
     NULL,
     NULL
-};
+}};
 
-PyMODINIT_FUNC PyInit_wrapper_module_%(num)s(void)
-{
+PyMODINIT_FUNC PyInit_wrapper_module_{num}(void)
+{{
     PyObject *m, *d;
     PyObject *ufunc0;
     m = PyModule_Create(&moduledef);
-    if (!m) {
+    if (!m) {{
         return NULL;
-    }
+    }}
     import_array();
     import_umath();
     d = PyModule_GetDict(m);
     ufunc0 = PyUFunc_FromFuncAndData(multitest_funcs, multitest_data, multitest_types, 1, 3, 3,
-            PyUFunc_None, "wrapper_module_%(num)s", "Created in SymPy with Ufuncify", 0);
+            PyUFunc_None, "wrapper_module_{num}", "Created in SymPy with Ufuncify", 0);
     PyDict_SetItemString(d, "multitest", ufunc0);
     Py_DECREF(ufunc0);
     return m;
-}
+}}
 #else
-PyMODINIT_FUNC initwrapper_module_%(num)s(void)
-{
+PyMODINIT_FUNC initwrapper_module_{num}(void)
+{{
     PyObject *m, *d;
     PyObject *ufunc0;
-    m = Py_InitModule("wrapper_module_%(num)s", wrapper_module_%(num)sMethods);
-    if (m == NULL) {
+    m = Py_InitModule("wrapper_module_{num}", wrapper_module_{num}Methods);
+    if (m == NULL) {{
         return;
-    }
+    }}
     import_array();
     import_umath();
     d = PyModule_GetDict(m);
     ufunc0 = PyUFunc_FromFuncAndData(multitest_funcs, multitest_data, multitest_types, 1, 3, 3,
-            PyUFunc_None, "wrapper_module_%(num)s", "Created in SymPy with Ufuncify", 0);
+            PyUFunc_None, "wrapper_module_{num}", "Created in SymPy with Ufuncify", 0);
     PyDict_SetItemString(d, "multitest", ufunc0);
     Py_DECREF(ufunc0);
-}
-#endif""" % {'num': CodeWrapper._module_counter}
+}}
+#endif""".format(num=CodeWrapper._module_counter)
     assert source == expected

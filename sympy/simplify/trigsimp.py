@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
 
 from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
@@ -323,7 +321,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
             x = gcd*Mul(*key)
             r = build_ideal(x, terms)
             res.extend(r)
-            newgens.extend(set(fn(v*x) for fn, v in terms))
+            newgens.extend({fn(v*x) for fn, v in terms})
 
         # Add generators for compound expressions from iterables
         for fn, args in iterables:

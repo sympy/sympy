@@ -644,8 +644,8 @@ class Function(Application, Expr):
         """
         from sympy.utilities.misc import filldedent
         raise PoleError(filldedent('''
-            Asymptotic expansion of %s around %s is
-            not implemented.''' % (type(self), args0)))
+            Asymptotic expansion of {} around {} is
+            not implemented.'''.format(type(self), args0)))
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         """
@@ -843,7 +843,7 @@ class AppliedUndef(Function):
         args = list(map(sympify, args))
         u = [a.name for a in args if isinstance(a, UndefinedFunction)]
         if u:
-            raise TypeError('Invalid argument: expecting an expression, not UndefinedFunction%s: %s' % (
+            raise TypeError('Invalid argument: expecting an expression, not UndefinedFunction{}: {}'.format(
                 's'*(len(u) > 1), ', '.join(u)))
         obj = super().__new__(cls, *args, **options)
         return obj
@@ -1354,7 +1354,7 @@ class Derivative(Expr):
             if not v._diff_wrt:
                 __ = ''  # filler to make error message neater
                 raise ValueError(filldedent('''
-                    Can't calculate derivative wrt %s.%s''' % (v,
+                    Can't calculate derivative wrt {}.{}'''.format(v,
                     __)))
 
         # We make a special case for 0th derivative, because there is no
@@ -2054,7 +2054,7 @@ class Lambda(Expr):
                     symargmap[par] = arg
                 elif isinstance(par, Tuple):
                     if not isinstance(arg, (tuple, Tuple)) or len(args) != len(pars):
-                        raise BadArgumentsError("Can't match %s and %s" % (args, pars))
+                        raise BadArgumentsError("Can't match {} and {}".format(args, pars))
                     rmatch(par, arg)
 
         rmatch(sig, args)

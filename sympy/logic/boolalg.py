@@ -469,9 +469,9 @@ class BooleanFunction(Application, Boolean):
                             reps[r] = S.false
                     else:
                         raise TypeError(filldedent('''
-                            Incompatible use of binary symbol `%s` as a
-                            real variable in `%s`
-                            ''' % (x, r)))
+                            Incompatible use of binary symbol `{}` as a
+                            real variable in `{}`
+                            '''.format(x, r)))
         return [i.subs(reps) for i in args]
 
     def to_nnf(self, simplify=True):

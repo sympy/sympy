@@ -4,7 +4,6 @@
 * Medium
 """
 
-from __future__ import division
 from sympy.physics.units import second, meter, kilogram, ampere
 
 __all__ = ['Medium']
@@ -66,7 +65,7 @@ class Medium(Symbol):
     """
 
     def __new__(cls, name, permittivity=None, permeability=None, n=None):
-        obj = super(Medium, cls).__new__(cls, name)
+        obj = super().__new__(cls, name)
         obj._permittivity = sympify(permittivity)
         obj._permeability = sympify(permeability)
         obj._n = sympify(n)

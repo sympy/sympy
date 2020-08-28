@@ -695,7 +695,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumpt
         cls = Symbol
 
     while True:
-        name = '%s%s' % (prefix, start)
+        name = '{}{}'.format(prefix, start)
         s = cls(name, *args, **assumptions)
         if s not in exclude:
             yield s

@@ -1,6 +1,5 @@
 """Tools for solving inequalities and systems of inequalities. """
 
-from __future__ import print_function, division
 
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.compatibility import iterable

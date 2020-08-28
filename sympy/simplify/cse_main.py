@@ -1,6 +1,5 @@
 """ Tools for doing common subexpression elimination.
 """
-from __future__ import print_function, division
 
 from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol
 from sympy.core.compatibility import iterable
@@ -141,7 +140,7 @@ def postprocess_for_cse(expr, optimizations):
     return expr
 
 
-class FuncArgTracker(object):
+class FuncArgTracker:
     """
     A class which manages a mapping from functions to arguments and an inverse
     mapping from arguments to functions.
@@ -230,7 +229,7 @@ class FuncArgTracker(object):
             if func_i in larger_funcs_container:
                 count_map[func_i] += 1
 
-        return dict((k, v) for k, v in count_map.items() if v >= 2)
+        return {k: v for k, v in count_map.items() if v >= 2}
 
     def get_subset_candidates(self, argset, restrict_to_funcset=None):
         """
@@ -267,7 +266,7 @@ class FuncArgTracker(object):
         self.func_to_argset[func_i].update(new_args)
 
 
-class Unevaluated(object):
+class Unevaluated:
 
     def __init__(self, func, args):
         self.func = func

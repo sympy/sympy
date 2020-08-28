@@ -252,4 +252,4 @@ if __name__ == '__main__':
     timings.sort(key=lambda x: -x[0])
 
     for ti, string in timings:
-        print('%.2fs %s' % (ti, string))
+        print('{:.2f}s {}'.format(ti, string))

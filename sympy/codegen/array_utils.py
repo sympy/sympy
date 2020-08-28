@@ -900,7 +900,7 @@ def _get_argindex(subindices, ind):
             return i
         if isinstance(sind, (set, frozenset)) and ind in sind:
             return i
-    raise IndexError("%s not found in %s" % (ind, subindices))
+    raise IndexError("{} not found in {}".format(ind, subindices))
 
 
 def _codegen_array_parse(expr):
@@ -1142,7 +1142,7 @@ class _RecognizeMatOp:
             s = "+"
         else:
             s = op.__name__
-            return "_RecognizeMatOp(%s, %s)" % (s, repr(self.args))
+            return "_RecognizeMatOp({}, {})".format(s, repr(self.args))
         return "_RecognizeMatOp(%s)" % (s.join(repr(i) for i in self.args))
 
     def __eq__(self, other):

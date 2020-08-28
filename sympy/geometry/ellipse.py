@@ -1183,7 +1183,7 @@ class Ellipse(GeometrySet):
             raise NotImplementedError(filldedent(
                 'General Ellipse is not supported but the equation '
                 'of the reflected Ellipse is given by the zeros of: ' +
-                "f(%s, %s) = %s" % (str(x), str(y), str(result))))
+                "f({}, {}) = {}".format(str(x), str(y), str(result))))
 
     def rotate(self, angle=0, pt=None):
         """Rotate ``angle`` radians counterclockwise about Point ``pt``.

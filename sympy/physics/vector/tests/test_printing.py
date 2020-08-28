@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from sympy import symbols, sin, asin, cos, sqrt, Function
 from sympy.core.compatibility import u_decode as u
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols, Dyadic

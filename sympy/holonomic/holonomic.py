@@ -468,10 +468,10 @@ class HolonomicFunction:
 
     def __str__(self):
         if self._have_init_cond():
-            str_sol = 'HolonomicFunction(%s, %s, %s, %s)' % (str(self.annihilator),\
+            str_sol = 'HolonomicFunction({}, {}, {}, {})'.format(str(self.annihilator),\
                 sstr(self.x), sstr(self.x0), sstr(self.y0))
         else:
-            str_sol = 'HolonomicFunction(%s, %s)' % (str(self.annihilator),\
+            str_sol = 'HolonomicFunction({}, {})'.format(str(self.annihilator),\
                 sstr(self.x))
 
         return str_sol

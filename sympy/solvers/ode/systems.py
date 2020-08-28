@@ -491,7 +491,7 @@ def matrix_exp_jordan_form(A, t):
 
     N, M = A.shape
     if N != M:
-        raise ValueError('Needed square matrix but got shape (%s, %s)' % (N, M))
+        raise ValueError('Needed square matrix but got shape ({}, {})'.format(N, M))
     elif A.has(t):
         raise ValueError('Matrix A should not depend on t')
 

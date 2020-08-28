@@ -104,7 +104,6 @@ See the appropriate docstrings for a detailed explanation of the output.
 #      - Idx with stepsize != 1
 #      - Idx with step determined by function call
 
-from __future__ import print_function, division
 
 from sympy import Number
 from sympy.core.assumptions import StdFactKB
@@ -176,7 +175,7 @@ class Indexed(Expr):
         return obj
 
     def _hashable_content(self):
-        return super(Indexed, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
+        return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
     def name(self):
@@ -338,7 +337,7 @@ class Indexed(Expr):
 
     def _sympystr(self, p):
         indices = list(map(p.doprint, self.indices))
-        return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
+        return "{}[{}]".format(p.doprint(self.base), ", ".join(indices))
 
     @property
     def free_symbols(self):
@@ -474,7 +473,7 @@ class IndexedBase(Expr, NotIterable):
         return self._name
 
     def _hashable_content(self):
-        return super(IndexedBase, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
+        return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
     def assumptions0(self):

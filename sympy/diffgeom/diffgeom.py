@@ -248,7 +248,7 @@ class CoordSystem(Atom):
             names = kwargs.get('names', None)
             if names is None:
                 symbols = Tuple(
-                    *[Symbol('%s_%s' % (name.name, i), real=True) for i in range(patch.dim)]
+                    *[Symbol('{}_{}'.format(name.name, i), real=True) for i in range(patch.dim)]
                 )
             else:
                 SymPyDeprecationWarning(
@@ -2038,7 +2038,7 @@ def metric_to_Ricci_components(expr):
 # Classes for deprecation
 ###############################################################################
 
-class _deprecated_container(object):
+class _deprecated_container:
     # This class gives deprecation warning.
     # When deprecated features are completely deleted, this should be removed as well.
     # See https://github.com/sympy/sympy/pull/19368

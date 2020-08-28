@@ -211,7 +211,7 @@ class DiracDelta(Function):
         k = sympify(k)
         if not k.is_Integer or k.is_negative:
             raise ValueError("Error: the second argument of DiracDelta must be \
-            a non-negative integer, %s given instead." % (k,))
+            a non-negative integer, {} given instead.".format(k))
         arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN
@@ -220,7 +220,7 @@ class DiracDelta(Function):
         if fuzzy_not(im(arg).is_zero):
             raise ValueError(filldedent('''
                 Function defined only for Real Values.
-                Complex part: %s  found in %s .''' % (
+                Complex part: {}  found in {} .'''.format(
                 repr(im(arg)), repr(arg))))
         c, nc = arg.args_cnc()
         if c and c[0] is S.NegativeOne:
@@ -566,7 +566,7 @@ class Heaviside(Function):
         elif arg is S.NaN:
             return S.NaN
         elif fuzzy_not(im(arg).is_zero):
-            raise ValueError("Function defined only for Real Values. Complex part: %s  found in %s ." % (repr(im(arg)), repr(arg)) )
+            raise ValueError("Function defined only for Real Values. Complex part: {}  found in {} .".format(repr(im(arg)), repr(arg)) )
 
     def _eval_rewrite_as_Piecewise(self, arg, H0=None, **kwargs):
         """

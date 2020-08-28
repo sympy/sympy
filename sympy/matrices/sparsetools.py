@@ -272,9 +272,9 @@ def banded(*args, **kwargs):
     smat = s._smat
     # check for dim errors here
     if rows is not None and rows < s.rows:
-        raise ValueError('Designated rows %s < needed %s' % (rows, s.rows))
+        raise ValueError('Designated rows {} < needed {}'.format(rows, s.rows))
     if cols is not None and cols < s.cols:
-        raise ValueError('Designated cols %s < needed %s' % (cols, s.cols))
+        raise ValueError('Designated cols {} < needed {}'.format(cols, s.cols))
     if rows is cols is None:
         rows = s.rows
         cols = s.cols
@@ -287,7 +287,7 @@ def banded(*args, **kwargs):
         # no collisions
         if v:
             if (i, j) in smat and smat[i, j] not in (tba, v):
-                raise ValueError('collision at %s' % ((i, j),))
+                raise ValueError('collision at {}'.format((i, j)))
             smat[i, j] = v
     if undone:
         for d, vi in undone:

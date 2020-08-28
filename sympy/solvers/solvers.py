@@ -12,7 +12,6 @@ This module contain solvers for all kinds of equations:
 
 """
 
-from __future__ import print_function, division
 
 from sympy import divisors, binomial, expand_func
 from sympy.core.assumptions import check_assumptions
@@ -283,10 +282,10 @@ def checksol(f, symbol, sol=None, **flags):
         # if f(y) == 0, x=3 does not set f(y) to zero...nor does it not
         return None
 
-    illegal = set([S.NaN,
+    illegal = {S.NaN,
                S.ComplexInfinity,
                S.Infinity,
-               S.NegativeInfinity])
+               S.NegativeInfinity}
     if any(sympify(v).atoms() & illegal for k, v in sol.items()):
         return False
 
@@ -1332,7 +1331,7 @@ def _solve(f, *symbols, **flags):
             return soln
         # find first successful solution
         failed = []
-        got_s = set([])
+        got_s = set()
         result = []
         for s in symbols:
             xi, v = solve_linear(f, symbols=[s])
@@ -1379,7 +1378,7 @@ def _solve(f, *symbols, **flags):
     if f.is_Mul:
         result = set()
         for m in f.args:
-            if m in set([S.NegativeInfinity, S.ComplexInfinity, S.Infinity]):
+            if m in {S.NegativeInfinity, S.ComplexInfinity, S.Infinity}:
                 result = set()
                 break
             soln = _solve(m, symbol, **flags)
@@ -1519,10 +1518,10 @@ def _solve(f, *symbols, **flags):
             bases = set(bases)
 
             if len(bases) > 1 or not all(q == 1 for q in qs):
-                funcs = set(b for b in bases if b.is_Function)
+                funcs = {b for b in bases if b.is_Function}
 
-                trig = set([_ for _ in funcs if
-                    isinstance(_, TrigonometricFunction)])
+                trig = {_ for _ in funcs if
+                    isinstance(_, TrigonometricFunction)}
                 other = funcs - trig
                 if not other and len(funcs.intersection(trig)) > 1:
                     newf = None
@@ -2112,13 +2111,13 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
             if len(bad) == 1:
                 bad = bad[0]
             if len(symbols) == 1:
-                eg = 'solve(%s, %s)' % (eq, symbols[0])
+                eg = 'solve({}, {})'.format(eq, symbols[0])
             else:
-                eg = 'solve(%s, *%s)' % (eq, list(symbols))
+                eg = 'solve({}, *{})'.format(eq, list(symbols))
             raise ValueError(filldedent('''
-                solve_linear only handles symbols, not %s. To isolate
-                non-symbols use solve, e.g. >>> %s <<<.
-                             ''' % (bad, eg)))
+                solve_linear only handles symbols, not {}. To isolate
+                non-symbols use solve, e.g. >>> {} <<<.
+                             '''.format(bad, eg)))
         symbols = free.intersection(symbols)
     symbols = symbols.difference(exclude)
     if not symbols:
@@ -2724,8 +2723,8 @@ def _tsolve(eq, sym, **flags):
                         inversion = _tsolve(g - u, sym, **flags)
                         if inversion:
                             sol = _solve(p, u, **flags)
-                            return list(ordered(set([i.subs(u, s)
-                                for i in inversion for s in sol])))
+                            return list(ordered({i.subs(u, s)
+                                for i in inversion for s in sol}))
                     except NotImplementedError:
                         pass
                 else:

@@ -190,7 +190,7 @@ class Dyadic(Printable):
     def _pretty(self, printer):
         e = self
 
-        class Fake(object):
+        class Fake:
             baseline = 0
 
             def render(self, *args, **kwargs):
@@ -198,19 +198,19 @@ class Dyadic(Printable):
                 mpp = printer
                 if len(ar) == 0:
                     return unicode(0)
-                bar = u"\N{CIRCLED TIMES}" if printer._use_unicode else "|"
+                bar = "\N{CIRCLED TIMES}" if printer._use_unicode else "|"
                 ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1
                     if ar[i][0] == 1:
-                        ol.extend([u" + ",
+                        ol.extend([" + ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
 
                     # if the coef of the dyadic is -1, we skip the 1
                     elif ar[i][0] == -1:
-                        ol.extend([u" - ",
+                        ol.extend([" - ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
@@ -223,18 +223,18 @@ class Dyadic(Printable):
                                 ar[i][0]).parens()[0]
                         else:
                             arg_str = mpp.doprint(ar[i][0])
-                        if arg_str.startswith(u"-"):
+                        if arg_str.startswith("-"):
                             arg_str = arg_str[1:]
-                            str_start = u" - "
+                            str_start = " - "
                         else:
-                            str_start = u" + "
-                        ol.extend([str_start, arg_str, u" ",
+                            str_start = " + "
+                        ol.extend([str_start, arg_str, " ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
 
-                outstr = u"".join(ol)
-                if outstr.startswith(u" + "):
+                outstr = "".join(ol)
+                if outstr.startswith(" + "):
                     outstr = outstr[3:]
                 elif outstr.startswith(" "):
                     outstr = outstr[1:]

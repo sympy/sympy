@@ -300,7 +300,7 @@ def multiplicity(p, n):
                 isinstance(n.args[0], Integer) and
                 n.args[0] >= 0):
             return multiplicity_in_factorial(p, n.args[0])
-        raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
+        raise ValueError('expecting ints or fractions, got {} and {}'.format(p, n))
 
     if n == 0:
         raise ValueError('no such integer exists: multiplicity of %s is not-defined' %(n))

@@ -229,7 +229,6 @@ code is tested extensively in ``test_ode.py``, so if anything is broken, one
 of those tests will surely fail.
 
 """
-from __future__ import print_function, division
 
 from collections import defaultdict
 from itertools import islice
@@ -4929,7 +4928,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
         else:
             return False
 
-    def _get_trial_set(expr, x, exprs=set([])):
+    def _get_trial_set(expr, x, exprs=set()):
         r"""
         Returns a set of trial terms for undetermined coefficients.
 
@@ -4965,7 +4964,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
         else:
             term = _remove_coefficient(expr, x)
             tmpset = exprs.union({term})
-            oldset = set([])
+            oldset = set()
             while tmpset != oldset:
                 # If you get stuck in this loop, then _test_term is probably
                 # broken
@@ -4992,7 +4991,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
         # then they will need to be multiplied by sufficient x to make them so.
         # This function DOES NOT do that (it doesn't even look at the
         # homogeneous equation).
-        temp_set = set([])
+        temp_set = set()
         for i in Add.make_args(expr):
             act = _get_trial_set(i,x)
             if eq_homogeneous is not S.Zero:
@@ -5895,7 +5894,7 @@ def lie_heuristic_bivariate(match, comp=False):
                     etared = etaeq.subs(soldict)
                     # Scaling is done by substituting one for the parameters
                     # This can be any number except zero.
-                    dict_ = dict((sym, 1) for sym in symset)
+                    dict_ = {sym: 1 for sym in symset}
                     inf = {eta: etared.subs(dict_).subs(y, func),
                         xi: xired.subs(dict_).subs(y, func)}
                     return [inf]
@@ -5958,7 +5957,7 @@ def lie_heuristic_chi(match, comp=False):
                         soldict = soldict[0]
                     if any(soldict.values()):
                         chieq = chieq.subs(soldict)
-                        dict_ = dict((sym, 1) for sym in solsyms)
+                        dict_ = {sym: 1 for sym in solsyms}
                         chieq = chieq.subs(dict_)
                         # After finding chi, the main aim is to find out
                         # eta, xi by the equation eta = xi*h + chi

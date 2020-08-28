@@ -106,7 +106,7 @@ def tensorcontraction(array, *contraction_axes):
     array = _arrayfy(array)
 
     # Verify contraction_axes:
-    taken_dims = set([])
+    taken_dims = set()
     for axes_group in contraction_axes:
         if not isinstance(axes_group, Iterable):
             raise ValueError("collections of contraction axes expected")

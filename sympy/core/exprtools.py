@@ -409,7 +409,7 @@ class Factors:
 
     def __repr__(self):  # Factors
         return "Factors({%s})" % ', '.join(
-            ['%s: %s' % (k, v) for k, v in ordered(self.factors.items())])
+            ['{}: {}'.format(k, v) for k, v in ordered(self.factors.items())])
 
     @property
     def is_zero(self):  # Factors
@@ -855,7 +855,7 @@ class Term:
         return hash((self.coeff, self.numer, self.denom))
 
     def __repr__(self):  # Term
-        return "Term(%s, %s, %s)" % (self.coeff, self.numer, self.denom)
+        return "Term({}, {}, {})".format(self.coeff, self.numer, self.denom)
 
     def as_expr(self):  # Term
         return self.coeff*(self.numer.as_expr()/self.denom.as_expr())

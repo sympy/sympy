@@ -2659,7 +2659,7 @@ def encipher_elgamal(i, key, seed=None):
     p, r, e = key
     if i < 0 or i >= p:
         raise ValueError(
-            'Message (%s) should be in range(%s)' % (i, p))
+            'Message ({}) should be in range({})'.format(i, p))
     randrange = _randrange(seed)
     a = randrange(2, p)
     return pow(r, a, p), i*pow(e, a, p) % p

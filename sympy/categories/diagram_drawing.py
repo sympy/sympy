@@ -1482,7 +1482,7 @@ class ArrowStringDescription:
             curving_str = ""
 
         if self.looping_start and self.looping_end:
-            looping_str = "@(%s,%s)" % (self.looping_start, self.looping_end)
+            looping_str = "@({},{})".format(self.looping_start, self.looping_end)
         else:
             looping_str = ""
 

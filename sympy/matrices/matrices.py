@@ -597,7 +597,7 @@ class MatrixDeprecated(MatrixCommon):
             if is_sequence(b):
                 if len(b) != self.cols and len(b) != self.rows:
                     raise ShapeError(
-                        "Dimensions incorrect for dot product: %s, %s" % (
+                        "Dimensions incorrect for dot product: {}, {}".format(
                             self.shape, len(b)))
                 return self.dot(Matrix(b))
             else:
@@ -617,7 +617,7 @@ class MatrixDeprecated(MatrixCommon):
         elif mat.rows == b.rows:
             return mat.T.dot(b)
         else:
-            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (
+            raise ShapeError("Dimensions incorrect for dot product: {}, {}".format(
                 self.shape, b.shape))
 
 
@@ -812,7 +812,7 @@ class MatrixBase(MatrixDeprecated,
 
     def __str__(self):
         if self.rows == 0 or self.cols == 0:
-            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
+            return 'Matrix({}, {}, [])'.format(self.rows, self.cols)
         return "Matrix(%s)" % str(self.tolist())
 
     def _format_str(self, printer=None):
@@ -821,7 +821,7 @@ class MatrixBase(MatrixDeprecated,
             printer = StrPrinter()
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
-            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
+            return 'Matrix({}, {}, [])'.format(self.rows, self.cols)
         if self.rows == 1:
             return "Matrix([%s])" % self.table(printer, rowsep=',\n')
         return "Matrix([\n%s])" % self.table(printer, rowsep=',\n')
@@ -1352,7 +1352,7 @@ class MatrixBase(MatrixDeprecated,
             if is_sequence(b):
                 if len(b) != self.cols and len(b) != self.rows:
                     raise ShapeError(
-                        "Dimensions incorrect for dot product: %s, %s" % (
+                        "Dimensions incorrect for dot product: {}, {}".format(
                             self.shape, len(b)))
                 return self.dot(Matrix(b))
             else:
@@ -1369,7 +1369,7 @@ class MatrixBase(MatrixDeprecated,
                 useinstead="* to take matrix products").warn()
             return mat._legacy_array_dot(b)
         if len(mat) != len(b):
-            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
+            raise ShapeError("Dimensions incorrect for dot product: {}, {}".format(self.shape, b.shape))
         n = len(mat)
         if mat.shape != (1, n):
             mat = mat.reshape(1, n)

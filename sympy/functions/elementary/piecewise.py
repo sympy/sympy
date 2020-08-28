@@ -697,7 +697,7 @@ class Piecewise(Function):
                 if rv.args[0] != sym or sym in free:
                     raise NotImplementedError(filldedent('''
                         Unable to solve relational
-                        %s for %s.''' % (r, sym)))
+                        {} for {}.'''.format(r, sym)))
                 if rv.rel_op == '==':
                     # this equality has been affirmed to have the form
                     # Eq(sym, rhs) where rhs is sym-free; it represents
@@ -718,7 +718,7 @@ class Piecewise(Function):
         def nonsymfail(cond):
             raise NotImplementedError(filldedent('''
                 A condition not involving
-                %s appeared: %s''' % (sym, cond)))
+                {} appeared: {}'''.format(sym, cond)))
 
         # make self canonical wrt Relationals
         reps = {

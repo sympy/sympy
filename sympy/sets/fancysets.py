@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from functools import reduce
 
 from sympy.core.basic import Basic
@@ -341,7 +339,7 @@ class ImageSet(Set):
             raise TypeError("Set arguments to ImageSet should of type Set")
 
         if not all(cls._check_sig(sg, st) for sg, st in zip(signature, sets)):
-            raise ValueError("Signature %s does not match sets %s" % (signature, sets))
+            raise ValueError("Signature {} does not match sets {}".format(signature, sets))
 
         if flambda is S.IdentityFunction and len(sets) == 1:
             return sets[0]

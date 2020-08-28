@@ -1158,7 +1158,7 @@ def define_schreier_generators(C, homomorphism=False):
             if homomorphism:
                 tau[beta] = tau[alpha]*x
         elif x in X and C.P[alpha][C.A_dict[x]] is None:
-            y_alpha_x = '%s_%s' % (x, alpha)
+            y_alpha_x = '{}_{}'.format(x, alpha)
             y.append(y_alpha_x)
             C.P[alpha][C.A_dict[x]] = y_alpha_x
             if homomorphism:

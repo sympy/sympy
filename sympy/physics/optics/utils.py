@@ -13,7 +13,6 @@
 * transverse_magnification
 """
 
-from __future__ import division
 
 __all__ = ['refraction_angle',
            'deviation',

@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from operator import mul
 
 from sympy.core.sympify import _sympify
@@ -45,7 +43,7 @@ class DDM(list):
     def __str__(self):
         cls = type(self).__name__
         rows = list.__str__(self)
-        return '%s(%s, %s, %s)' % (cls, rows, self.shape, self.domain)
+        return '{}({}, {}, {})'.format(cls, rows, self.shape, self.domain)
 
     def __eq__(self, other):
         if not isinstance(other, DDM):
@@ -102,10 +100,10 @@ class DDM(list):
     @classmethod
     def _check(cls, a, op, b, ashape, bshape):
         if a.domain != b.domain:
-            msg = "Domain mismatch: %s %s %s" % (a.domain, op, b.domain)
+            msg = "Domain mismatch: {} {} {}".format(a.domain, op, b.domain)
             raise DDMDomainError(msg)
         if ashape != bshape:
-            msg = "Shape mismatch: %s %s %s" % (a.shape, op, b.shape)
+            msg = "Shape mismatch: {} {} {}".format(a.shape, op, b.shape)
             raise DDMShapeError(msg)
 
     def add(a, b):
@@ -541,7 +539,7 @@ class DomainMatrix:
     def __repr__(self):
         rows_str = ['[%s]' % (', '.join(map(str, row))) for row in self.rep]
         rowstr = '[%s]' % ', '.join(rows_str)
-        return 'DomainMatrix(%s, %r, %r)' % (rowstr, self.shape, self.domain)
+        return 'DomainMatrix({}, {!r}, {!r})'.format(rowstr, self.shape, self.domain)
 
     def __add__(A, B):
         if not isinstance(B, DomainMatrix):

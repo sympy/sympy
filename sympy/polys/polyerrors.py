@@ -1,6 +1,5 @@
 """Definitions of common exceptions for `polys` module. """
 
-from __future__ import print_function, division
 
 from sympy.utilities import public
 
@@ -21,9 +20,9 @@ class ExactQuotientFailed(BasePolynomialError):
         from sympy.printing.str import sstr
 
         if self.dom is None:
-            return "%s does not divide %s" % (sstr(self.g), sstr(self.f))
+            return "{} does not divide {}".format(sstr(self.g), sstr(self.f))
         else:
-            return "%s does not divide %s in %s" % (sstr(self.g), sstr(self.f), sstr(self.dom))
+            return "{} does not divide {} in {}".format(sstr(self.g), sstr(self.f), sstr(self.dom))
 
     def new(self, f, g):
         return self.__class__(f, g, self.dom)
@@ -63,7 +62,7 @@ class OperationNotSupported(BasePolynomialError):
         self.func = func
 
     def __str__(self):  # pragma: no cover
-        return "`%s` operation not supported by %s representation" % (self.func, self.poly.rep.__class__.__name__)
+        return "`{}` operation not supported by {} representation".format(self.func, self.poly.rep.__class__.__name__)
 
 @public
 class HeuristicGCDFailed(BasePolynomialError):
@@ -137,7 +136,7 @@ class ComputationFailed(BasePolynomialError):
         self.exc = exc
 
     def __str__(self):
-        return "%s(%s) failed without generators" % (self.func, ', '.join(map(str, self.exc.exprs[:self.nargs])))
+        return "{}({}) failed without generators".format(self.func, ', '.join(map(str, self.exc.exprs[:self.nargs])))
 
 @public
 class UnivariatePolynomialError(PolynomialError):
