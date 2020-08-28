@@ -1496,6 +1496,28 @@ class TransferFunctionMatrix(Basic):
 
     @property
     def is_proper(self):
+        """
+        Returns True if degree of the numerator polynomial is less than or equal
+        to degree of the denominator polynomial for all the SISO transfer functions
+        in a transfer function matrix; else False.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
+        >>> tf1 = TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
+        >>> tf2 = TransferFunction(p**2 - 4*p, p**3 + 3*p + 2, p)
+        >>> tf3 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf4 = TransferFunction(1, p**2, p)
+        >>> TFM1 = TransferFunctionMatrix((-tf1, tf3), (2, 1), s)
+        >>> TFM1.is_proper
+        False
+        >>> TFM2 = TransferFunctionMatrix([[tf2, tf4, -tf2], [-tf4, tf2, tf4]], (2, 3), p)
+        >>> TFM2.is_proper
+        True
+
+        """
         if self.num_inputs == 1:
             return all(elem.is_proper for elem in self.args[0])
         else:
@@ -1504,6 +1526,27 @@ class TransferFunctionMatrix(Basic):
 
     @property
     def is_strictly_proper(self):
+        """
+        Returns True if degree of the numerator polynomial is strictly less than
+        degree of the denominator polynomial for all the SISO transfer functions
+        in a transfer function matrix; else False.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
+        >>> tf3 = TransferFunction(a, s**2 + b, s)
+        >>> TFM1 = TransferFunctionMatrix([-tf1, tf2, -tf3])
+        >>> TFM1.is_strictly_proper
+        False
+        >>> TFM2 = TransferFunctionMatrix([[tf2, tf3], [-tf3, -tf2]])
+        >>> TFM2.is_strictly_proper
+        True
+
+        """
         if self.num_inputs == 1:
             return all(elem.is_strictly_proper for elem in self.args[0])
         else:
@@ -1515,7 +1558,7 @@ class TransferFunctionMatrix(Basic):
         """
         Returns True if degree of the numerator polynomial is equal to
         degree of the denominator polynomial for all the SISO transfer
-        functions in a transfer function matrix, else False.
+        functions in a transfer function matrix; else False.
 
         Examples
         ========
