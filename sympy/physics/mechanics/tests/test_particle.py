@@ -3,12 +3,6 @@ from sympy.physics.mechanics import Point, Particle, ReferenceFrame, inertia
 
 from sympy.testing.pytest import raises
 
-<<<<<<< HEAD
-=======
-
-
-
->>>>>>> parent of b8dce15e46... Apply suggestions from code review
 def test_particle():
     m, m2, v1, v2, v3, r, g, h = symbols('m m2 v1 v2 v3 r g h')
     P = Point('P')
@@ -44,6 +38,7 @@ def test_particle():
     p.potential_energy = m * g * h
     assert p.potential_energy == m * g * h
     # TODO make the result not be system-dependent
+    assert(p.total_mechanical_energy(N)) == g*h*m + m2*v1**2/2 + m2*v2**2/2 + m2*v3**2/2
     assert p.kinetic_energy(
         N) in [m2*(v1**2 + v2**2 + v3**2)/2,
         m2 * v1**2 / 2 + m2 * v2**2 / 2 + m2 * v3**2 / 2]
