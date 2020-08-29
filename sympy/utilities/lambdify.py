@@ -807,7 +807,7 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
         SymPyDeprecationWarning(
                     feature="The list of arguments is a `set`. This leads to unpredictable results",
                     useinstead=": Convert set into list or tuple",
-                    issue=19735,
+                    issue=20013,
                     deprecated_since_version="1.6.3"
                 ).warn()
 
