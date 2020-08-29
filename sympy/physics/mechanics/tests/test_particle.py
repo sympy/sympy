@@ -3,6 +3,12 @@ from sympy.physics.mechanics import Point, Particle, ReferenceFrame, inertia
 
 from sympy.testing.pytest import raises
 
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> parent of b8dce15e46... Apply suggestions from code review
 def test_particle():
     m, m2, v1, v2, v3, r, g, h = symbols('m m2 v1 v2 v3 r g h')
     P = Point('P')
@@ -53,3 +59,4 @@ def test_parallel_axis():
     Ip_expected = inertia(N, m * b**2, m * a**2, m * (a**2 + b**2),
                           ixy=-m * a * b)
     assert Ip == Ip_expected
+
