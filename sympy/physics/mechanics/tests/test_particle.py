@@ -3,9 +3,6 @@ from sympy.physics.mechanics import Point, Particle, ReferenceFrame, inertia
 
 from sympy.testing.pytest import raises
 
-
-
-
 def test_particle():
     m, m2, v1, v2, v3, r, g, h = symbols('m m2 v1 v2 v3 r g h')
     P = Point('P')
@@ -45,6 +42,7 @@ def test_particle():
         N) in [m2*(v1**2 + v2**2 + v3**2)/2,
         m2 * v1**2 / 2 + m2 * v2**2 / 2 + m2 * v3**2 / 2]
     assert(p.total_mechanical_energy(N)) == g*h*m + m2*v1**2/2 + m2*v2**2/2 + m2*v3**2/2
+    print(p.total_mechanical_energy(N))
 
 
 def test_parallel_axis():
@@ -58,3 +56,4 @@ def test_parallel_axis():
                           ixy=-m * a * b)
     assert Ip == Ip_expected
 
+test_particle()
