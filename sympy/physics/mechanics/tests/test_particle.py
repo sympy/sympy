@@ -42,8 +42,6 @@ def test_particle():
         N) in [m2*(v1**2 + v2**2 + v3**2)/2,
         m2 * v1**2 / 2 + m2 * v2**2 / 2 + m2 * v3**2 / 2]
     assert(p.total_mechanical_energy(N)) == g*h*m + m2*v1**2/2 + m2*v2**2/2 + m2*v3**2/2
-    print(p.total_mechanical_energy(N))
-
 
 def test_parallel_axis():
     N = ReferenceFrame('N')
@@ -55,5 +53,3 @@ def test_parallel_axis():
     Ip_expected = inertia(N, m * b**2, m * a**2, m * (a**2 + b**2),
                           ixy=-m * a * b)
     assert Ip == Ip_expected
-
-test_particle()
