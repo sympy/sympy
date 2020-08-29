@@ -698,6 +698,10 @@ def test_piecewise_solveset():
     g = Piecewise((1, x > 10), (0, True))
     assert solveset(g > 0, x, S.Reals) == Interval.open(10, oo)
 
+    from sympy.logic.boolalg import BooleanTrue
+    f = BooleanTrue()
+    assert solveset(f, x, domain=Interval(-3, 10)) == Interval(-3, 10)
+
 
 def test_solveset_complex_polynomial():
     assert solveset_complex(a*x**2 + b*x + c, x) == \
