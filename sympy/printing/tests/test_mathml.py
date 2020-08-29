@@ -2009,5 +2009,5 @@ def test_issue_17857():
 
 def test_float_roundtrip():
     x = sympify(0.8975979010256552)
-    y = sympify(mp.doprint(x).strip('</cn>'))
+    y = float(mp.doprint(x).strip('</cn>'))
     assert x == y
