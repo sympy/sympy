@@ -109,4 +109,4 @@ def test_JointEigenDistribution():
 def test_issue_19841():
     G1 = GUE('U', 2)
     G2 = G1.xreplace({2: 2})
-    assert G1 == G2
+    assert G1.args == G2.args
