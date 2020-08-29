@@ -27,7 +27,7 @@ def _(x):
     return True
 
 
-class RandomMatrixEnsemble(Basic):
+class RandomMatrixEnsembleModel(Basic):
     """
     Base class for random matrix ensembles.
     It acts as an umbrella and contains
@@ -39,9 +39,7 @@ class RandomMatrixEnsemble(Basic):
         if dim.is_integer == False:
             raise ValueError("Dimension of the random matrices must be "
                                 "integers, received %s instead."%(dim))
-        self = Basic.__new__(cls, sym, dim)
-        rmp = RandomMatrixPSpace(sym, model=self)
-        return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
+        return Basic.__new__(cls, sym, dim)
 
     symbol = property(lambda self: self.args[0])
     dimension = property(lambda self: self.args[1])
@@ -52,7 +50,7 @@ class RandomMatrixEnsemble(Basic):
     def __call__(self, expr):
         return self.density(expr)
 
-class GaussianEnsemble(RandomMatrixEnsemble):
+class GaussianEnsembleModel(RandomMatrixEnsembleModel):
     """
     Abstract class for Gaussian ensembles.
     Contains the properties common to all the
@@ -101,7 +99,7 @@ class GaussianEnsemble(RandomMatrixEnsemble):
         syms = ArrayComprehension(l[k], (k, 1, n)).doit()
         return Lambda(tuple(syms), (term1 * term2)/Zbn)
 
-class GaussianUnitaryEnsemble(GaussianEnsemble):
+class GaussianUnitaryEnsembleModel(GaussianEnsembleModel):
     """
     Represents Gaussian Unitary Ensembles.
 
@@ -134,7 +132,7 @@ class GaussianUnitaryEnsemble(GaussianEnsemble):
         f = (32/pi**2)*(s**2)*exp((-4/pi)*s**2)
         return Lambda(s, f)
 
-class GaussianOrthogonalEnsemble(GaussianEnsemble):
+class GaussianOrthogonalEnsembleModel(GaussianEnsembleModel):
     """
     Represents Gaussian Orthogonal Ensembles.
 
@@ -168,7 +166,7 @@ class GaussianOrthogonalEnsemble(GaussianEnsemble):
         f = (pi/2)*s*exp((-pi/4)*s**2)
         return Lambda(s, f)
 
-class GaussianSymplecticEnsemble(GaussianEnsemble):
+class GaussianSymplecticEnsembleModel(GaussianEnsembleModel):
     """
     Represents Gaussian Symplectic Ensembles.
 
@@ -202,7 +200,31 @@ class GaussianSymplecticEnsemble(GaussianEnsemble):
         f = ((S(2)**18)/((S(3)**6)*(pi**3)))*(s**4)*exp((-64/(9*pi))*s**2)
         return Lambda(s, f)
 
-class CircularEnsemble(RandomMatrixEnsemble):
+def GaussianEnsemble(sym, dim):
+    sym, dim = _symbol_converter(sym), _sympify(dim)
+    model = GaussianEnsembleModel(sym, dim)
+    rmp = RandomMatrixPSpace(sym, model=model)
+    return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
+
+def GaussianUnitaryEnsemble(sym, dim):
+    sym, dim = _symbol_converter(sym), _sympify(dim)
+    model = GaussianUnitaryEnsembleModel(sym, dim)
+    rmp = RandomMatrixPSpace(sym, model=model)
+    return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
+
+def GaussianOrthogonalEnsemble(sym, dim):
+    sym, dim = _symbol_converter(sym), _sympify(dim)
+    model = GaussianOrthogonalEnsembleModel(sym, dim)
+    rmp = RandomMatrixPSpace(sym, model=model)
+    return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
+
+def GaussianSymplecticEnsemble(sym, dim):
+    sym, dim = _symbol_converter(sym), _sympify(dim)
+    model = GaussianSymplecticEnsembleModel(sym, dim)
+    rmp = RandomMatrixPSpace(sym, model=model)
+    return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
+
+class CircularEnsembleModel(RandomMatrixEnsembleModel):
     """
     Abstract class for Circular ensembles.
     Contains the properties and methods
@@ -236,7 +258,7 @@ class CircularEnsemble(RandomMatrixEnsemble):
                     (k, 1, n - 1)).doit()
         return Lambda(tuple(syms), f/Zbn)
 
-class CircularUnitaryEnsemble(CircularEnsemble):
+class CircularUnitaryEnsembleModel(CircularEnsembleModel):
     """
     Represents Cicular Unitary Ensembles.
 
@@ -259,7 +281,7 @@ class CircularUnitaryEnsemble(CircularEnsemble):
     def joint_eigen_distribution(self):
         return self._compute_joint_eigen_distribution(S(2))
 
-class CircularOrthogonalEnsemble(CircularEnsemble):
+class CircularOrthogonalEnsembleModel(CircularEnsembleModel):
     """
     Represents Cicular Orthogonal Ensembles.
 
@@ -282,7 +304,7 @@ class CircularOrthogonalEnsemble(CircularEnsemble):
     def joint_eigen_distribution(self):
         return self._compute_joint_eigen_distribution(S.One)
 
-class CircularSymplecticEnsemble(CircularEnsemble):
+class CircularSymplecticEnsembleModel(CircularEnsembleModel):
     """
     Represents Cicular Symplectic Ensembles.
 
@@ -305,6 +327,30 @@ class CircularSymplecticEnsemble(CircularEnsemble):
 
     def joint_eigen_distribution(self):
         return self._compute_joint_eigen_distribution(S(4))
+
+def CircularEnsemble(sym, dim):
+    sym, dim = _symbol_converter(sym), _sympify(dim)
+    model = CircularEnsembleModel(sym, dim)
+    rmp = RandomMatrixPSpace(sym, model=model)
+    return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
+
+def CircularUnitaryEnsemble(sym, dim):
+    sym, dim = _symbol_converter(sym), _sympify(dim)
+    model = CircularUnitaryEnsembleModel(sym, dim)
+    rmp = RandomMatrixPSpace(sym, model=model)
+    return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
+
+def CircularOrthogonalEnsemble(sym, dim):
+    sym, dim = _symbol_converter(sym), _sympify(dim)
+    model = CircularOrthogonalEnsembleModel(sym, dim)
+    rmp = RandomMatrixPSpace(sym, model=model)
+    return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
+
+def CircularSymplecticEnsemble(sym, dim):
+    sym, dim = _symbol_converter(sym), _sympify(dim)
+    model = CircularSymplecticEnsembleModel(sym, dim)
+    rmp = RandomMatrixPSpace(sym, model=model)
+    return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
 
 def joint_eigen_distribution(mat):
     """
