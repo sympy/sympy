@@ -268,7 +268,7 @@ class Particle(object):
         >>> E = total_mechanical_energy(N)
 
         """
-        return self.kinetic_energy(self, frame) + self.potential_energy
+        return self.kinetic_energy(frame) + self.potential_energy
 
 
     def parallel_axis(self, point, frame):
