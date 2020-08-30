@@ -254,8 +254,8 @@ class Particle(object):
             an inertial frame but any relevant frame in which the velocity is
             known can be supplied.
 
-         Examples
-         ========
+        Examples
+        ========
 
         >>> from sympy.physics.mechanics import Particle, Point, ReferenceFrame
         >>> from sympy import symbols
