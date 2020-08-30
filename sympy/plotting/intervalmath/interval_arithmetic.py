@@ -31,7 +31,6 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # A It will not affect most of the plots. The interval arithmetic
 # module based suffers the same problems as that of floating point
 # arithmetic.
-from __future__ import print_function, division
 
 from sympy.core.logic import fuzzy_and
 from sympy.simplify.simplify import nsimplify
@@ -39,7 +38,7 @@ from sympy.simplify.simplify import nsimplify
 from .interval_membership import intervalMembership
 
 
-class interval(object):
+class interval:
     """ Represents an interval containing floating points as start and
     end of the interval
     The is_valid variable tracks whether the interval obtained as the
@@ -86,10 +85,10 @@ class interval(object):
         return self.end - self.start
 
     def __repr__(self):
-        return "interval(%f, %f)" % (self.start, self.end)
+        return "interval({:f}, {:f})".format(self.start, self.end)
 
     def __str__(self):
-        return "[%f, %f]" % (self.start, self.end)
+        return "[{:f}, {:f}]".format(self.start, self.end)
 
     def __lt__(self, other):
         if isinstance(other, (int, float)):
