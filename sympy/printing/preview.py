@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 
 import io
-from io import BytesIO
 import os
 from os.path import join
 import shutil
@@ -12,7 +11,6 @@ try:
 except ImportError:
     pass
 
-from sympy.core.compatibility import unicode, u_decode
 from sympy.utilities.decorator import doctest_depends_on
 from .latex import latex
 
@@ -288,18 +286,15 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     if viewer is None:
         viewer = system_default_viewer
 
-    if viewer == "StringIO":
-        viewer = "BytesIO"
-        if outputbuffer is None:
-            raise ValueError("outputbuffer has to be a BytesIO "
-                             "compatible object if viewer=\"StringIO\"")
+    if viewer == "file":
+        if filename is None:
+            raise ValueError("filename has to be specified if viewer=\"file\"")
     elif viewer == "BytesIO":
         if outputbuffer is None:
             raise ValueError("outputbuffer has to be a BytesIO "
                              "compatible object if viewer=\"BytesIO\"")
     elif not callable(viewer) and not shutil.which(viewer):
         raise OSError("Unrecognized viewer: %s" % viewer)
-
 
     if preamble is None:
         actual_packages = packages + ("amsmath", "amsfonts")
@@ -317,7 +312,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if packages:
             raise ValueError("The \"packages\" keyword must not be set if a "
                              "custom LaTeX preamble was specified")
-    latex_main = preamble + '\n%s\n\n' + r"\end{document}"
 
     if isinstance(expr, str):
         latex_string = expr
@@ -326,9 +320,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                         latex(expr, mode='plain', **latex_settings) +
                         '$')
 
+    latex_main = preamble + '\n' + latex_string + '\n\n' + r"\end{document}"
+
     with tempfile.TemporaryDirectory() as workdir:
         with io.open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
-            fh.write(unicode(latex_main) % u_decode(latex_string))
+            fh.write(latex_main)
 
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
@@ -403,13 +399,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
 
         if viewer == "file":
-            if filename is None:
-                buffer = BytesIO()
-                with open(join(workdir, src), 'rb') as fh:
-                    buffer.write(fh.read())
-                return buffer
-            else:
-                shutil.move(join(workdir,src), filename)
+            shutil.move(join(workdir, src), filename)
         elif viewer == "BytesIO":
             with open(join(workdir, src), 'rb') as fh:
                 outputbuffer.write(fh.read())

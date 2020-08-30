@@ -419,7 +419,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sym = self.limits[0][0]
         lower_limit = self.limits[0][1]
         upper_limit = self.limits[0][2]
-        sequence_term = self.function
+        sequence_term = self.function.simplify()
 
         if len(sequence_term.free_symbols) > 1:
             raise NotImplementedError("convergence checking for more than one symbol "
@@ -455,9 +455,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ###  -------- Divergence test ----------- ###
         try:
-            lim_val = limit_seq(sequence_term, sym)
-            if lim_val is not None and lim_val.is_zero is False:
-                return S.false
+           lim_val = limit_seq(sequence_term, sym)
+           if lim_val is not None and lim_val.is_zero is False:
+               return S.false
         except NotImplementedError:
             pass
 
@@ -508,7 +508,22 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 if abs(lim_ratio) < 1:
                     return S.true
         except NotImplementedError:
-            pass
+            lim_ratio = None
+
+        ### ---------- Raabe's test -------------- ###
+        if lim_ratio == 1:  # ratio test inconclusive
+            test_val = sym*(sequence_term/
+                         sequence_term.subs(sym, sym + 1) - 1)
+            test_val = test_val.gammasimp()
+            try:
+                lim_val = limit_seq(test_val, sym)
+                if lim_val is not None and lim_val.is_number:
+                    if lim_val > 1:
+                        return S.true
+                    if lim_val < 1:
+                        return S.false
+            except NotImplementedError:
+                pass
 
         ### ----------- root test ---------------- ###
         # lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
@@ -526,7 +541,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         dict_val = sequence_term.match((-1)**(sym + p)*q)
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true
-
 
         ### ------------- integral test -------------- ###
         check_interval = None

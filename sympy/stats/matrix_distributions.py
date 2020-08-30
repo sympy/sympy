@@ -1,11 +1,16 @@
 from sympy import S, Basic, exp, multigamma, pi
 from sympy.core.sympify import sympify, _sympify
 from sympy.matrices import (ImmutableMatrix, Inverse, Trace, Determinant,
-                            MatrixSymbol, MatrixBase, Transpose, MatrixSet)
+                            MatrixSymbol, MatrixBase, Transpose, MatrixSet,
+                            matrix2numpy)
 from sympy.stats.rv import (_value_check, RandomMatrixSymbol, NamedArgsMixin, PSpace,
-                            _symbol_converter)
+                            _symbol_converter, MatrixDomain)
+from sympy.external import import_module
 
 
+################################################################################
+#------------------------Matrix Probability Space------------------------------#
+################################################################################
 class MatrixPSpace(PSpace):
     """
     Represents probability space for
@@ -22,8 +27,16 @@ class MatrixPSpace(PSpace):
     symbol = property(lambda self: self.args[0])
 
     @property
+    def domain(self):
+        return MatrixDomain(self.symbol, self.distribution.set)
+
+    @property
     def value(self):
         return RandomMatrixSymbol(self.symbol, self.args[2], self.args[3], self)
+
+    @property
+    def values(self):
+        return {self.value}
 
     def compute_density(self, expr, *args):
         rms = expr.atoms(RandomMatrixSymbol)
@@ -32,6 +45,14 @@ class MatrixPSpace(PSpace):
                     "implemented to handle general expressions containing "
                     "multiple matrix distributions.")
         return self.distribution.pdf(expr)
+
+    def sample(self, size=(), library='scipy'):
+        """
+        Internal sample method
+
+        Returns dictionary mapping RandomMatrixSymbol to realization value.
+        """
+        return {self.value: self.distribution.sample(size, library=library)}
 
 
 def rv(symbol, cls, args):
@@ -42,6 +63,95 @@ def rv(symbol, cls, args):
     pspace = MatrixPSpace(symbol, dist, dim[0], dim[1])
     return pspace.value
 
+
+class SampleMatrixScipy:
+    """Returns the sample from scipy of the given distribution"""
+    def __new__(cls, dist, size):
+        return cls._sample_scipy(dist, size)
+
+    @classmethod
+    def _sample_scipy(cls, dist, size):
+        """Sample from SciPy."""
+
+        from scipy import stats as scipy_stats
+        scipy_rv_map = {
+            'WishartDistribution': lambda dist, size: scipy_stats.wishart.rvs(
+                df=int(dist.n), scale=matrix2numpy(dist.scale_matrix, float), size=size),
+            'MatrixNormalDistribution': lambda dist, size: scipy_stats.matrix_normal.rvs(
+                mean=matrix2numpy(dist.location_matrix, float),
+                rowcov=matrix2numpy(dist.scale_matrix_1, float),
+                colcov=matrix2numpy(dist.scale_matrix_2, float), size=size)
+        }
+
+        dist_list = scipy_rv_map.keys()
+
+        if dist.__class__.__name__ not in dist_list:
+            return None
+
+        return scipy_rv_map[dist.__class__.__name__](dist, size)
+
+
+class SampleMatrixNumpy:
+    """Returns the sample from numpy of the given distribution"""
+
+    ### TODO: Add tests after adding matrix distributions in numpy_rv_map
+    def __new__(cls, dist, size):
+        return cls._sample_numpy(dist, size)
+
+    @classmethod
+    def _sample_numpy(cls, dist, size):
+        """Sample from NumPy."""
+
+        numpy_rv_map = {
+        }
+
+        dist_list = numpy_rv_map.keys()
+
+        if dist.__class__.__name__ not in dist_list:
+            return None
+
+        return numpy_rv_map[dist.__class__.__name__](dist, size)
+
+
+class SampleMatrixPymc:
+    """Returns the sample from pymc3 of the given distribution"""
+
+    def __new__(cls, dist, size):
+        return cls._sample_pymc3(dist, size)
+
+    @classmethod
+    def _sample_pymc3(cls, dist, size):
+        """Sample from PyMC3."""
+
+        import pymc3
+        pymc3_rv_map = {
+            'MatrixNormalDistribution': lambda dist: pymc3.MatrixNormal('X',
+                mu=matrix2numpy(dist.location_matrix, float),
+                rowcov=matrix2numpy(dist.scale_matrix_1, float),
+                colcov=matrix2numpy(dist.scale_matrix_2, float),
+                shape=dist.location_matrix.shape),
+            'WishartDistribution': lambda dist: pymc3.WishartBartlett('X',
+                nu=int(dist.n), S=matrix2numpy(dist.scale_matrix, float))
+        }
+
+        dist_list = pymc3_rv_map.keys()
+
+        if dist.__class__.__name__ not in dist_list:
+            return None
+
+        with pymc3.Model():
+            pymc3_rv_map[dist.__class__.__name__](dist)
+            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+
+_get_sample_class_matrixrv = {
+    'scipy': SampleMatrixScipy,
+    'pymc3': SampleMatrixPymc,
+    'numpy': SampleMatrixNumpy
+}
+
+################################################################################
+#-------------------------Matrix Distribution----------------------------------#
+################################################################################
 
 class MatrixDistribution(Basic, NamedArgsMixin):
     """
@@ -60,10 +170,32 @@ class MatrixDistribution(Basic, NamedArgsMixin):
             expr = ImmutableMatrix(expr)
         return self.pdf(expr)
 
+    def sample(self, size=(), library='scipy'):
+        """
+        Internal sample method
 
-########################################
-#--------Matrix Distributions----------#
-########################################
+        Returns dictionary mapping RandomSymbol to realization value.
+        """
+
+        libraries = ['scipy', 'numpy', 'pymc3']
+        if library not in libraries:
+            raise NotImplementedError("Sampling from %s is not supported yet."
+                                        % str(library))
+        if not import_module(library):
+            raise ValueError("Failed to import %s" % library)
+
+        samps = _get_sample_class_matrixrv[library](self, size)
+
+        if samps is not None:
+            return samps
+        raise NotImplementedError(
+                "Sampling for %s is not currently implemented from %s"
+                % (self.__class__.__name__, library)
+                )
+
+################################################################################
+#------------------------Matrix Distribution Types-----------------------------#
+################################################################################
 
 #-------------------------------------------------------------------------------
 # Matrix Gamma distribution ----------------------------------------------------

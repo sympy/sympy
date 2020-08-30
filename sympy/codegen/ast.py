@@ -109,7 +109,7 @@ Newton's method::
 
 If we want to generate Fortran code for the same while loop we simple call ``fcode``::
 
-    >>> from sympy.printing.fcode import fcode
+    >>> from sympy.printing import fcode
     >>> print(fcode(whl, standard=2003, source_format='free'))
     do while (abs(delta) > tol)
        delta = (val**3 - cos(val))/(-3*val**2 - sin(val))
@@ -968,7 +968,7 @@ class Type(Token):
       ...
     ValueError: Casting gives a significantly different value.
     >>> boost_mp50 = Type('boost::multiprecision::cpp_dec_float_50')
-    >>> from sympy.printing.cxxcode import cxxcode
+    >>> from sympy.printing import cxxcode
     >>> from sympy.codegen.ast import Declaration, Variable
     >>> cxxcode(Declaration(Variable('x', type=boost_mp50)))
     'boost::multiprecision::cpp_dec_float_50 x'
@@ -1709,7 +1709,7 @@ class FunctionPrototype(Node):
 
     >>> from sympy import symbols
     >>> from sympy.codegen.ast import real, FunctionPrototype
-    >>> from sympy.printing.ccode import ccode
+    >>> from sympy.printing import ccode
     >>> x, y = symbols('x y', real=True)
     >>> fp = FunctionPrototype(real, 'foo', [x, y])
     >>> ccode(fp)
@@ -1757,7 +1757,7 @@ class FunctionDefinition(FunctionPrototype):
 
     >>> from sympy import symbols
     >>> from sympy.codegen.ast import real, FunctionPrototype
-    >>> from sympy.printing.ccode import ccode
+    >>> from sympy.printing import ccode
     >>> x, y = symbols('x y', real=True)
     >>> fp = FunctionPrototype(real, 'foo', [x, y])
     >>> ccode(fp)
