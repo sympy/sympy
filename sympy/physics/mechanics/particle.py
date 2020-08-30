@@ -264,7 +264,7 @@ class Particle(object):
         >>> P = Particle('P', O, m)
         >>> P.potential_energy = m * g * h
         >>> P.point.set_vel(N, v * N.y)
-        >>> E = total_mechanical_energy(N)
+        >>> total_mechanical_energy(N)
 
         """
         return self.kinetic_energy(frame) + self.potential_energy
