@@ -240,7 +240,6 @@ class Particle(object):
                 deprecated_since_version="1.5", issue=9800).warn()
         self.potential_energy = scalar
 
-
     def total_mechanical_energy(self, frame):
         """ Returns the total mechanical energy of the particle
 
@@ -254,8 +253,8 @@ class Particle(object):
             an inertial frame but any relevant frame in which the velocity is
             known can be supplied.
 
-         Examples
-         ========
+        Examples
+        ========
 
         >>> from sympy.physics.mechanics import Particle, Point, ReferenceFrame
         >>> from sympy import symbols
@@ -268,8 +267,7 @@ class Particle(object):
         >>> E = total_mechanical_energy(N)
 
         """
-        return sympify( self.kinetic_energy(frame) + self.potential_energy )
-
+        return self.kinetic_energy(frame) + self.potential_energy
 
     def parallel_axis(self, point, frame):
         """Returns an inertia dyadic of the particle with respect to another
