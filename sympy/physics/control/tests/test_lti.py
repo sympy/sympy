@@ -402,42 +402,43 @@ def test_Series_construction():
     s0 = Series(tf, tf2)
     assert s0.args == (tf, tf2)
     assert s0.var == s
-    assert s0.is_SISO
+    assert s0._is_not_matrix
     assert s0.shape == (s0.num_outputs, s0.num_inputs) == (1, 1)
 
     s1 = Series(Parallel(tf, -tf2), tf2)
     assert s1.args == (Parallel(tf, -tf2), tf2)
     assert s1.var == s
-    assert s1.is_SISO
+    assert s1._is_not_matrix
     assert s1.shape == (s1.num_outputs, s1.num_inputs) == (1, 1)
 
     tf3_ = TransferFunction(inp, 1, s)
     tf4_ = TransferFunction(-out, 1, s)
     s2 = Series(tf, Parallel(tf3_, tf4_), tf2)
     assert s2.args == (tf, Parallel(tf3_, tf4_), tf2)
-    assert s2.is_SISO
+    assert s2._is_not_matrix
     assert s2.shape == (s2.num_outputs, s2.num_inputs) == (1, 1)
 
     s3 = Series(tf, tf2, tf4)
     assert s3.args == (tf, tf2, tf4)
-    assert s3.is_SISO
+    assert s3._is_not_matrix
     assert s3.shape == (s3.num_outputs, s3.num_inputs) == (1, 1)
 
     s4 = Series(tf3_, tf4_)
     assert s4.args == (tf3_, tf4_)
     assert s4.var == s
-    assert s4.is_SISO
+    assert s4._is_not_matrix
     assert s4.shape == (s4.num_outputs, s4.num_inputs) == (1, 1)
 
     s6 = Series(tf2, tf4, Parallel(tf2, -tf), tf4)
     assert s6.args == (tf2, tf4, Parallel(tf2, -tf), tf4)
-    assert s6.is_SISO
+    assert s6._is_not_matrix
     assert s6.shape == (s6.num_outputs, s6.num_inputs) == (1, 1)
 
     s7 = Series(tf, tf2)
     assert s0 == s7
     assert not s0 == s2
 
+    raises(ValueError, lambda: Series())
     raises(ValueError, lambda: Series(tf, tf3))
     raises(ValueError, lambda: Series(tf, tf2, tf3, tf4))
     raises(ValueError, lambda: Series(-tf3, tf2))
@@ -457,32 +458,32 @@ def test_Series_construction():
     s8 = Series(tfm1, tfm2)
     assert s8.args == (tfm1, tfm2)
     assert s8.var == s
-    assert not s8.is_SISO # .is_SISO gives either True or False, not None.
+    assert not s8._is_not_matrix # ._is_not_matrix gives either True or False, not None.
     assert s8.shape == (s8.num_outputs, s8.num_inputs) == (2, 1)
 
     s9 = Series(tfm1, tfm2, tfm3)
     assert s9.args == (tfm1, tfm2, tfm3)
     assert s9.var == s
-    assert not s9.is_SISO
+    assert not s9._is_not_matrix
     # (2, 3) x (3, 1) x (1, 1) will give (2, 1)
     assert s9.shape == (s9.num_outputs, s9.num_inputs) == (2, 1)
 
     s10 = Series(Parallel(tfm2, tfm5), tfm3)
     assert s10.args == (Parallel(tfm2, tfm5), tfm3)
     assert s10.var == s
-    assert not s10.is_SISO
+    assert not s10._is_not_matrix
     # ((3, 1) + (3, 1)) x (1, 1) will give (3, 1)
     assert s10.shape == (s10.num_outputs, s10.num_inputs) == (3, 1)
 
     s11 = Series(tfm1, Parallel(-tfm2, -tfm5), tfm3)
     assert s11.args == (tfm1, Parallel(-tfm2, -tfm5), tfm3)
-    assert not s11.is_SISO
+    assert not s11._is_not_matrix
     # (2, 3) x ((3, 1) + (3, 1)) x (1, 1) will give (2, 1)
     assert s11.shape == (s11.num_outputs, s11.num_inputs) == (2, 1)
 
     s12 = Series(tfm4, tfm6)
     assert s12.args == (tfm4, tfm6)
-    assert not s12.is_SISO
+    assert not s12._is_not_matrix
     # (2, 2) x (2, 2) will give (2, 2)
     assert s12.shape == (s12.num_outputs, s12.num_inputs) == (2, 2)
 
@@ -666,25 +667,25 @@ def test_Parallel_construction():
     p0 = Parallel(tf, tf2)
     assert p0.args == (tf, tf2)
     assert p0.var == s
-    assert p0.is_SISO
+    assert p0._is_not_matrix
     assert p0.shape == (p0.num_outputs, p0.num_inputs) == (1, 1)
 
     p1 = Parallel(Series(tf, -tf2), tf2)
     assert p1.args == (Series(tf, -tf2), tf2)
     assert p1.var == s
-    assert p1.is_SISO
+    assert p1._is_not_matrix
     assert p1.shape == (p1.num_outputs, p1.num_inputs) == (1, 1)
 
     tf3_ = TransferFunction(inp, 1, s)
     tf4_ = TransferFunction(-out, 1, s)
     p2 = Parallel(tf, Series(tf3_, -tf4_), tf2)
     assert p2.args == (tf, Series(tf3_, -tf4_), tf2)
-    assert p2.is_SISO
+    assert p2._is_not_matrix
     assert p2.shape == (p2.num_outputs, p2.num_inputs) == (1, 1)
 
     p3 = Parallel(tf, tf2, tf4)
     assert p3.args == (tf, tf2, tf4)
-    assert p3.is_SISO
+    assert p3._is_not_matrix
     assert p3.shape == (p3.num_outputs, p3.num_inputs) == (1, 1)
 
     p4 = Parallel(tf3_, tf4_)
@@ -702,9 +703,10 @@ def test_Parallel_construction():
 
     p7 = Parallel(tf2, tf4, Series(tf2, -tf), tf4)
     assert p7.args == (tf2, tf4, Series(tf2, -tf), tf4)
-    assert p7.is_SISO
+    assert p7._is_not_matrix
     assert p7.shape == (p7.num_outputs, p7.num_inputs) == (1, 1)
 
+    raises(ValueError, lambda: Parallel())
     raises(ValueError, lambda: Parallel(tf, tf3))
     raises(ValueError, lambda: Parallel(tf, tf2, tf3, tf4))
     raises(ValueError, lambda: Parallel(-tf3, tf4))
@@ -724,29 +726,29 @@ def test_Parallel_construction():
     p8 = Parallel(tfm1, tfm2)
     assert p8.args == (tfm1, tfm2)
     assert p8.var == s
-    assert not p8.is_SISO # .is_SISO gives either True or False, not None.
+    assert not p8._is_not_matrix # ._is_not_matrix gives either True or False, not None.
     assert p8.shape == (p8.num_outputs, p8.num_inputs) == (3, 1)
 
     p9 = Parallel(Series(tfm1, tfm3), tfm2)
     assert p9.args == (Series(tfm1, tfm3), tfm2)
     assert p9.var == s
-    assert not p9.is_SISO
+    assert not p9._is_not_matrix
     assert p9.shape == (p9.num_outputs, p9.num_inputs) == (3, 1)
 
     p10 = Parallel(tfm1, Series(tfm4, tfm3), tfm2)
     assert p10.args == (tfm1, Series(tfm4, tfm3), tfm2)
     assert p10.var == s
-    assert not p10.is_SISO
+    assert not p10._is_not_matrix
     assert p10.shape == (p10.num_outputs, p10.num_inputs) == (3, 1)
 
     p11 = Parallel(tfm2, tfm1, tfm4)
     assert p11.args == (tfm2, tfm1, tfm4)
-    assert not p11.is_SISO
+    assert not p11._is_not_matrix
     assert p11.shape == (p11.num_outputs, p11.num_inputs) == (3, 1)
 
     p12 = Parallel(tfm6, tfm5)
     assert p12.args == (tfm6, tfm5)
-    assert not p12.is_SISO
+    assert not p12._is_not_matrix
     assert p12.shape == (p12.num_outputs, p12.num_inputs) == (2, 2)
 
     p13 = Parallel(tfm2, tfm4, Series(tfm4, -tfm3), -tfm4)

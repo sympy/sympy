@@ -593,13 +593,15 @@ class Series(Basic):
 
     """
     def __new__(cls, *args, evaluate=False):
+        if len(args) == 0:
+            raise ValueError("Needs at least 1 argument.")
         if not all(isinstance(arg, (TransferFunction, TransferFunctionMatrix, Parallel, Series))
             for arg in args):
             raise TypeError("Unsupported type of argument(s) for Series.")
 
         obj = super(Series, cls).__new__(cls, *args)
-        obj.is_SISO = all(isinstance(arg.doit(), TransferFunction) for arg in args)
-        if not obj.is_SISO:
+        obj._is_not_matrix = all(isinstance(arg.doit(), TransferFunction) for arg in args)
+        if not obj._is_not_matrix:
             obj._num_outputs, obj._num_inputs = args[0].num_outputs, args[-1].num_inputs
             for x in range(len(args) - 1):
                 # input-output sizes should be consistent.
@@ -610,7 +612,7 @@ class Series(Basic):
         else:
             obj._num_outputs, obj._num_inputs = 1, 1
 
-        tf = "transfer functions" if obj.is_SISO else "TransferFunctionMatrix objects"
+        tf = "transfer functions" if obj._is_not_matrix else "TransferFunctionMatrix objects"
         obj._var = args[0].var
         if not all(arg.var == obj._var for arg in args):
             raise ValueError("All {0} should use the same complex"
@@ -674,7 +676,7 @@ class Series(Basic):
             if res is None:
                 res = arg
             else:
-                if self.is_SISO:
+                if self._is_not_matrix:
                     num_ = arg.num * res.num
                     den_ = arg.den * res.den
                     res = TransferFunction(num_, den_, self.var)
@@ -733,7 +735,7 @@ class Series(Basic):
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
         """ Series(tfm1, tfm2, Parallel(tfm3, tfm4, ...), ...) not allowed. """
-        if not self.is_SISO:
+        if not self._is_not_matrix:
             raise ValueError("Only transfer functions or a collection of transfer functions"
                 " is allowed in the arguments.")
 
@@ -741,7 +743,7 @@ class Series(Basic):
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
         """ Series(tf1, tf2, Parallel(tf3, tf4, ...), ...) not allowed. """
-        if self.is_SISO:
+        if self._is_not_matrix:
             raise ValueError("Only transfer function matrices or a collection of transfer function"
                 " matrices is allowed in the arguments.")
 
@@ -750,12 +752,12 @@ class Series(Basic):
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series, TransferFunctionMatrix)):
             if isinstance(other, Series):
-                if self.is_SISO != other.is_SISO:
+                if self._is_not_matrix != other._is_not_matrix:
                     raise ValueError("Both Series objects should either handle SISO or MIMO"
                         " transfer function.")
 
             if isinstance(other, TransferFunctionMatrix):
-                if self.is_SISO:
+                if self._is_not_matrix:
                     raise ValueError("Series object should handle MIMO transfer function to"
                         " perform this addition.")
             if not self.shape == other.shape:
@@ -766,7 +768,7 @@ class Series(Basic):
 
             return Parallel(self, other)
         elif isinstance(other, Parallel):
-            if self.is_SISO != other.is_SISO:
+            if self._is_not_matrix != other._is_not_matrix:
                 raise ValueError("Both Series and Parallel objects should either handle SISO or MIMO"
                     " transfer function.")
 
@@ -792,11 +794,11 @@ class Series(Basic):
     def __mul__(self, other):
         if isinstance(other, (TransferFunction, Parallel, TransferFunctionMatrix)):
             if isinstance(other, Parallel):
-                if self.is_SISO != other.is_SISO:
+                if self._is_not_matrix != other._is_not_matrix:
                     raise ValueError("Both Series and Parallel objects should either handle SISO or MIMO"
                         " transfer function.")
             if isinstance(other, TransferFunctionMatrix):
-                if self.is_SISO:
+                if self._is_not_matrix:
                     raise ValueError("Series object should only handle MIMO transfer function to"
                         " perform this multiplication.")
 
@@ -810,7 +812,7 @@ class Series(Basic):
 
             return Series(*arg_list, other)
         elif isinstance(other, Series):
-            if self.is_SISO != other.is_SISO:
+            if self._is_not_matrix != other._is_not_matrix:
                 raise ValueError("Both Series objects should either handle SISO or MIMO"
                     " transfer function.")
 
@@ -847,7 +849,7 @@ class Series(Basic):
             raise ValueError("This expression is invalid.")
 
     def __neg__(self):
-        if self.is_SISO:
+        if self._is_not_matrix:
             return Series(TransferFunction(-1, 1, self.var), self)
         else:
             neg_tfm = [[TransferFunction(-1, 1, self.var)] * self.num_outputs]
@@ -978,13 +980,15 @@ class Parallel(Basic):
 
     """
     def __new__(cls, *args, evaluate=False):
+        if len(args) == 0:
+            raise ValueError("Needs at least 1 argument.")
         if not all(isinstance(arg, (TransferFunction, TransferFunctionMatrix, Series, Parallel))
             for arg in args):
             raise TypeError("Unsupported type of argument(s) for Parallel.")
 
         obj = super(Parallel, cls).__new__(cls, *args)
-        obj.is_SISO = all(isinstance(arg.doit(), TransferFunction) for arg in args)
-        if not obj.is_SISO:
+        obj._is_not_matrix = all(isinstance(arg.doit(), TransferFunction) for arg in args)
+        if not obj._is_not_matrix:
             obj._num_inputs, obj._num_outputs = args[0].num_inputs, args[0].num_outputs
             # All MIMO --> assert matching shapes..
             if not all(arg.shape == args[0].shape for arg in args):
@@ -993,7 +997,7 @@ class Parallel(Basic):
         else:
             obj._num_inputs, obj._num_outputs = 1, 1
 
-        tf = "transfer functions" if obj.is_SISO else "TransferFunctionMatrix objects"
+        tf = "transfer functions" if obj._is_not_matrix else "TransferFunctionMatrix objects"
         obj._var = args[0].var
         if not all(arg.var == obj._var for arg in args):
             raise ValueError("All {0} should use the same complex"
@@ -1057,7 +1061,7 @@ class Parallel(Basic):
             if res is None:
                 res = arg
             else:
-                if self.is_SISO:
+                if self._is_not_matrix:
                     if res.den == arg.den:
                         num_, den_ = res.num + arg.num, res.den
                     else:
@@ -1078,7 +1082,7 @@ class Parallel(Basic):
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
         """ Parallel(tfm1, tfm2, Series(tfm3, tfm4, ...), ...) not allowed. """
-        if not self.is_SISO:
+        if not self._is_not_matrix:
             raise ValueError("Only transfer functions or a collection of transfer functions"
                 " is allowed in the arguments.")
 
@@ -1086,7 +1090,7 @@ class Parallel(Basic):
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
         """ Parallel(tf1, tf2, Series(tf3, tf4, ...), ...) not allowed. """
-        if self.is_SISO:
+        if self._is_not_matrix:
             raise ValueError("Only transfer function matrices or a collection of transfer function"
                 " matrices is allowed in the arguments.")
 
@@ -1095,11 +1099,11 @@ class Parallel(Basic):
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series, TransferFunctionMatrix)):
             if isinstance(other, TransferFunctionMatrix):
-                if self.is_SISO:
+                if self._is_not_matrix:
                     raise ValueError("Only transfer function matrices are allowed in the "
                         "parallel configuration.")
             if isinstance(other, Series):
-                if self.is_SISO != other.is_SISO:
+                if self._is_not_matrix != other._is_not_matrix:
                     raise ValueError("Both Series and Parallel objects should either handle SISO or MIMO"
                         " transfer function.")
             if not self.shape == other.shape:
@@ -1113,7 +1117,7 @@ class Parallel(Basic):
 
             return Parallel(*arg_list)
         elif isinstance(other, Parallel):
-            if self.is_SISO != other.is_SISO:
+            if self._is_not_matrix != other._is_not_matrix:
                 raise ValueError("Both Parallel objects should either handle SISO or MIMO"
                     " transfer function.")
             if not self.shape == other.shape:
@@ -1137,11 +1141,11 @@ class Parallel(Basic):
     def __mul__(self, other):
         if isinstance(other, (TransferFunction, Parallel, TransferFunctionMatrix)):
             if isinstance(other, Parallel):
-                if self.is_SISO != other.is_SISO:
+                if self._is_not_matrix != other._is_not_matrix:
                     raise ValueError("Both Parallel objects should either handle SISO or MIMO"
                         " transfer function.")
             if isinstance(other, TransferFunctionMatrix):
-                if self.is_SISO:
+                if self._is_not_matrix:
                     raise ValueError("The Parallel object should only handle MIMO transfer function to"
                         " perform this multiplication.")
             if not self.num_inputs == other.num_outputs:
@@ -1153,7 +1157,7 @@ class Parallel(Basic):
 
             return Series(self, other)
         elif isinstance(other, Series):
-            if self.is_SISO != other.is_SISO:
+            if self._is_not_matrix != other._is_not_matrix:
                 raise ValueError("Both Series and Parallel objects should either handle SISO or MIMO"
                     " transfer function.")
             if not self.num_inputs == other.num_outputs:
@@ -1171,7 +1175,7 @@ class Parallel(Basic):
     __rmul__ = __mul__
 
     def __neg__(self):
-        if self.is_SISO:
+        if self._is_not_matrix:
             return Series(TransferFunction(-1, 1, self.var), self)
         else:
             neg_args = [-arg for arg in self.args]
@@ -1515,24 +1519,116 @@ class TransferFunctionMatrix(Basic):
 
     @property
     def var(self):
+        """
+        Returns the complex variable used by all the transfer functions or
+        ``Series``/``Parallel`` objects in a transfer function matrix.
+
+        If explicitly provided as the third argument of ``TransferFunctionMatrix``, then returns
+        the same, else, ``TransferFunctionMatrix`` automatically looks up the ``var`` used by
+        transfer functions inside the list/tuple provided as the first argument and returns that.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import p, s
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix, Series, Parallel
+        >>> G1 = TransferFunction(p**2 + 2*p + 4, p - 6, p)
+        >>> G2 = TransferFunction(p, 4 - p, p)
+        >>> G3 = TransferFunction(0, p**4 - 1, p)
+        >>> G4 = TransferFunction(s + 1, s**2 + s + 1, s)
+        >>> S1 = Series(G1, G2)
+        >>> S2 = Series(-G3, Parallel(G2, -G1))
+        >>> tfm1 = TransferFunctionMatrix([G1, G2, G3], (3, 1), p)
+        >>> tfm1.var
+        p
+        >>> tfm2 = TransferFunctionMatrix(((-S1, -S2), (S1, S2)), (2, 2), p)
+        >>> tfm2.var
+        p
+        >>> tfm3 = TransferFunctionMatrix([[G4]], (1, 1), s)
+        >>> tfm3.var
+        s
+
+        """
         return self._var
 
     @property
     def num_inputs(self):
+        """
+        Returns the number of inputs of the system.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
+        >>> G1 = TransferFunction(s + 3, s**2 - 3, s)
+        >>> G2 = TransferFunction(4, s**2, s)
+        >>> G3 = TransferFunction(p**2 + s**2, p - 3, s)
+        >>> tfm1 = TransferFunctionMatrix((G1, G2), (2, 1), s)
+        >>> tfm1.num_inputs
+        1
+        >>> tfm2 = TransferFunctionMatrix([[G2, -G1, G3], [-G2, -G1, -G3]])
+        >>> tfm2.num_inputs
+        3
+
+        """
         return self._num_inputs
 
     @property
     def num_outputs(self):
+        """
+        Returns the number of outputs of the system.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel, TransferFunctionMatrix
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
+        >>> tf3 = TransferFunction(a*s - 4, s**4 + 1, s)
+        >>> S1, S2 = Series(tf1, -tf2), Series(tf2, tf3, -tf1)
+        >>> TFM1 = TransferFunctionMatrix([tf1, tf2, tf3])
+        >>> TFM1.num_outputs
+        3
+        >>> TFM2 = TransferFunctionMatrix(((S1, S2), (-S2, -S1)))
+        >>> TFM2.num_outputs
+        2
+
+        """
         return self._num_outputs
 
     @property
     def shape(self):
+        """
+        Returns the shape of the transfer function matrix, that is, ``(# of outputs, # of inputs)``.
+
+        If explicitly provided as the second argument of ``TransferFunctionMatrix``, then returns the same,
+        else, ``TransferFunctionMatrix`` automatically looks up the shape from the list/tuple provided as
+        the first argument and returns that.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
+        >>> tf1 = TransferFunction(p**2 - 1, s**4 + s**3 - p, p)
+        >>> tf2 = TransferFunction(1 - p, p**2 - 3*p + 7, p)
+        >>> tf3 = TransferFunction(3, 4, p)
+        >>> tfm1 = TransferFunctionMatrix([[tf1, -tf2]], (1, 2), p)
+        >>> tfm1.shape
+        (1, 2)
+        >>> tfm2 = TransferFunctionMatrix(((-tf2, tf3), (tf1, -tf1)))
+        >>> tfm2.shape
+        (2, 2)
+
+        """
         return self._num_outputs, self._num_inputs
 
     def __add__(self, other):
         if isinstance(other, (TransferFunctionMatrix, Series)):
             if isinstance(other, Series):
-                if other.is_SISO:
+                if other._is_not_matrix:
                     raise ValueError("All the arguments of Series must be either"
                         " TransferFunctionMatrix or Parallel objects.")
 
@@ -1544,7 +1640,7 @@ class TransferFunctionMatrix(Basic):
             return Parallel(self, other)
 
         elif isinstance(other, Parallel):
-            if other.is_SISO:
+            if other._is_not_matrix:
                 raise ValueError("All the arguments of Parallel must be either TransferFunctionMatrix"
                     " or Series objects.")
             if not self.shape == other.shape:
@@ -1571,7 +1667,7 @@ class TransferFunctionMatrix(Basic):
     def __mul__(self, other):
         if isinstance(other, (TransferFunctionMatrix, Parallel)):
             if isinstance(other, Parallel):
-                if other.is_SISO:
+                if other._is_not_matrix:
                     raise ValueError("Only transfer function matrices are allowed in the "
                         "parallel configuration.")
             if not self.num_inputs == other.num_outputs:
@@ -1583,7 +1679,7 @@ class TransferFunctionMatrix(Basic):
             return Series(self, other)
 
         elif isinstance(other, Series):
-            if other.is_SISO:
+            if other._is_not_matrix:
                 raise ValueError("Only transfer function matrices are allowed in the "
                     "series configuration.")
             if not self.num_inputs == other.num_outputs:
@@ -1602,6 +1698,33 @@ class TransferFunctionMatrix(Basic):
     __rmul__ = __mul__
 
     def doit(self, **kwargs):
+        """
+        Returns the resultant transfer function matrix obtained after evaluating
+        the transfer functions in series or parallel configurations (if any present)
+        for all entries in a transfer function matrix.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, Series, Parallel, TransferFunctionMatrix
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
+        >>> tf3 = TransferFunction(a*s - 4, s**4 + 1, s)
+        >>> S1, S2 = Series(tf1, -tf2), Series(tf2, tf3, -tf1)
+        >>> P1, P2 = Parallel(tf2, -tf3), Parallel(-tf1, tf3, -tf2)
+        >>> # doit() converts S1, S2, P1, P2 into their resultant transfer functions inside a transfer function matrix.
+        >>> tfm1 = TransferFunctionMatrix([S1, S2, -P1])
+        >>> tfm1.doit()
+        TransferFunctionMatrix([TransferFunction((2 - s**3)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((s**3 - 2)*(-a*p**2 - b*s)*(a*s - 4), (-p + s)*(s**4 + 1)*(s**4 + 5*s + 6), s), TransferFunction(-(s**3 - 2)*(s**4 + 1) - (-a*s + 4)*(s**4 + 5*s + 6), (s**4 + 1)*(s**4 + 5*s + 6), s)])
+        >>> tfm2 = TransferFunctionMatrix([[tf1, -tf3, -P2]], (1, 3), s)
+        >>> tfm2.doit()
+        TransferFunctionMatrix([[TransferFunction(a*p**2 + b*s, -p + s, s), TransferFunction(-a*s + 4, s**4 + 1, s), TransferFunction(-(2 - s**3)*(-p + s)*(s**4 + 1) - ((-p + s)*(a*s - 4) + (s**4 + 1)*(-a*p**2 - b*s))*(s**4 + 5*s + 6), (-p + s)*(s**4 + 1)*(s**4 + 5*s + 6), s)]])
+        >>> tfm3 = TransferFunctionMatrix(((tf2, P1, P2), (S1, S2, -tf3)), (2, 3), s)
+        >>> tfm3.doit()
+        TransferFunctionMatrix([[TransferFunction(s**3 - 2, s**4 + 5*s + 6, s), TransferFunction((s**3 - 2)*(s**4 + 1) + (-a*s + 4)*(s**4 + 5*s + 6), (s**4 + 1)*(s**4 + 5*s + 6), s), TransferFunction((2 - s**3)*(-p + s)*(s**4 + 1) + ((-p + s)*(a*s - 4) + (s**4 + 1)*(-a*p**2 - b*s))*(s**4 + 5*s + 6), (-p + s)*(s**4 + 1)*(s**4 + 5*s + 6), s)], [TransferFunction((2 - s**3)*(a*p**2 + b*s), (-p + s)*(s**4 + 5*s + 6), s), TransferFunction((s**3 - 2)*(-a*p**2 - b*s)*(a*s - 4), (-p + s)*(s**4 + 1)*(s**4 + 5*s + 6), s), TransferFunction(-a*s + 4, s**4 + 1, s)]])
+
+        """
         if self.num_inputs == 1:
             arg_matrix = list(self.args[0])
             for row in range(self.num_outputs):
