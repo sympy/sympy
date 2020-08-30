@@ -264,7 +264,8 @@ class Particle(object):
         >>> P = Particle('P', O, m)
         >>> P.potential_energy = m * g * h
         >>> P.point.set_vel(N, v * N.y)
-        >>> total_mechanical_energy(N)
+        >>> P.total_mechanical_energy(N)
+        g*h*m + m*v**2/2
 
         """
 
