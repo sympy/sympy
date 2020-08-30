@@ -63,7 +63,7 @@ else:
         >>> from sympy.testing.pytest import raises
 
         >>> raises(ZeroDivisionError, lambda: 1/0)
-        <ExceptionInfo ZeroDivisionError('division by zero')>
+        <ExceptionInfo ZeroDivisionError(...)>
         >>> raises(ZeroDivisionError, lambda: 1/2)
         Traceback (most recent call last):
         ...
