@@ -241,9 +241,9 @@ class Particle(object):
         self.potential_energy = scalar
 
     def total_mechanical_energy(self, frame):
-        """ Returns the total mechanical energy of the particle
+        """ Returns the total mechanical energy of the particle.
 
-        Total Mechanical Energy = Kinetic Energy + Potential Energy
+        'Total Mechanical Energy = Kinetic Energy + Potential Energy'
 
         Parameters
         ==========
