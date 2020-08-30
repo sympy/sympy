@@ -2,10 +2,47 @@
 Applications of Vector Integrals
 ================================
 
+To integrate a scalar or vector field over a region, we have to first define a region. SymPy provides three methods for defining a region. 
+
+1. Using Parametric Equations.
+
+2. Using Implicit Equation.
+
+3. Using objects of geometry module.
+
+The vector_integrate method is used to integrate scalar or vector field over any type of region. It automatically determines the type of integration (line, surface or volume) depending on the nature of the object.
+
+Importing necessary classes and functions:
+
+>>> from sympy.vector import pi
+>>> from sympy.vector import ParametricRegion, vector_integrate
+>>> from sympy.abc import r, x, y, z, theta, phi
+>>> C = CoordSys3D('C')
     
 Calculation of Perimeter, Surface Area and Volume
 =================================================
+To calculate the perimeter of circle, we need to define a circle, Lets define it using its parametric equation.
 
+>>> circle = ParametricRegion((4*cos(theta), 4*sin(theta)), (theta, 0, 2*pi))
+
+To calculate the perimeter of the circle, we can integrate it over a scalar field of unit magnitude.
+
+>>> vector_integrate(1, circle)
+8*pi
+
+Suppose a user wants to calculate the perimeter of triangle. Determining the parametric representation of triangle can be difficult. Instead, the user can use an object of Polygon class in the geometry module.
+
+>>> from sympy.geometry import Point, Polygon. 
+>>> triangle = Polygon(Point(1, 2), (3, 5), (1,6))
+>>> vector_integrate(1, triangle)
+sqrt(5) + sqrt(13) + 4
+
+To define a solid sphere, we need to use three parameters (r, theta and phi).
+
+>>> sphere = ParametricRegion((r*sin(phi)*cos(theta),r*sin(phi)*sin(theta), r*cos(phi)),
+... (theta, 0, pi), (phi, 0, pi), (r, 0, 3))
+>>> vector_integrate(1, sphere)
+-18*pi
 
 Calculation of charge on a body
 ===============================
@@ -17,11 +54,7 @@ Calculation of Flux
 
 Verifying Stoke's Theorem
 =========================
-Importing necessary classes and functions
-    >>> from sympy.vector import pi
-    >>> from sympy.vector import ParametricRegion, vector_integrate
-    >>> from sympy.abc import r, x, y, z, theta, phi
-    >>> C = CoordSys3D('C')
+
 
 Example 1
     >>> curve = ParametricRegion((cos(theta), sin(theta)), (theta, 0, pi/2))
