@@ -355,10 +355,8 @@ class TransferFunction(Basic, EvalfMixin):
         >>> tf3 = TransferFunction(4, q*s - r, s)
         >>> tf3.is_stable()
         False
-
-        # not enough info about the symbols to determine stability
         >>> tf4 = TransferFunction(p + 1, a*p - s**2, p)
-        >>> tf4.is_stable() is None
+        >>> tf4.is_stable() is None   # Not enough info about the symbols to determine stability
         True
 
         """
