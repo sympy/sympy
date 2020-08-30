@@ -82,7 +82,7 @@ def test_expm1_opt():
     assert opt5.rewrite(exp) == expr5
 
 
-@XFAIL
+@XFAIL  # ideally this test should pass: need to improve `expm1_opt`
 def test_expm1_two_exp_terms():
     x, y = map(Symbol, 'x y'.split())
     expr1 = exp(x) + exp(y) - 2
@@ -117,7 +117,7 @@ def test_cosm1_opt():
     assert opt5.rewrite(cos) == expr5
 
 
-@XFAIL
+@XFAIL  # ideally this test should pass: need to improve `cosm1_opt`
 def test_cosm1_two_cos_terms():
     x, y = map(Symbol, 'x y'.split())
     expr1 = cos(x) + cos(y) - 2
@@ -125,7 +125,7 @@ def test_cosm1_two_cos_terms():
     assert opt1 == cosm1(x) + cosm1(y)
 
 
-@XFAIL
+@XFAIL  # ideally this test should pass: need to add a new combined expm1_cosm1_opt?
 def test_expm1_cosm1_mixed():
     x = Symbol('x')
     expr1 = exp(x) + cos(x) - 2
