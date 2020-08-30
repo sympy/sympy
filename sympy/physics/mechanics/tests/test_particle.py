@@ -53,10 +53,3 @@ def test_parallel_axis():
     Ip_expected = inertia(N, m * b**2, m * a**2, m * (a**2 + b**2),
                           ixy=-m * a * b)
     assert Ip == Ip_expected
-'''m, v, g, h = symbols('m v g h')
-N = ReferenceFrame('N')
-O = Point('O')
-P = Particle('P', O, m)
-P.potential_energy = m * g * h
-P.point.set_vel(N, v * N.y)
-total_mechanical_energy(N)'''
