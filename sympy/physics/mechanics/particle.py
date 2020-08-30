@@ -240,7 +240,7 @@ class Particle(object):
                 deprecated_since_version="1.5", issue=9800).warn()
         self.potential_energy = scalar
 
-    def total_mechanical_energy(self, frame):
+    '''def total_mechanical_energy(self, frame):
         """ Returns the total mechanical energy of the particle
 
         Total Mechanical Energy = Kinetic Energy + Potential Energy
@@ -267,7 +267,7 @@ class Particle(object):
         >>> total_mechanical_energy(N)
 
         """
-        return self.kinetic_energy(frame) + self.potential_energy
+        return self.kinetic_energy(frame) + self.potential_energy'''
 
     def parallel_axis(self, point, frame):
         """Returns an inertia dyadic of the particle with respect to another
