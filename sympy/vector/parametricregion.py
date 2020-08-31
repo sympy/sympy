@@ -1,5 +1,5 @@
 from functools import singledispatch
-from sympy import pi, tan, oo
+from sympy import pi, tan
 from sympy.simplify import trigsimp
 from sympy.core import Basic, Tuple
 from sympy.core.symbol import _symbol
