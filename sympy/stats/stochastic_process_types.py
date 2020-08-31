@@ -581,28 +581,6 @@ class MarkovProcess(StochasticProcess):
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(expr, condition))
 
-# TODO: add tests
-"""
-Errors with existing code:
-misidentifies some recurrent communication classes as transient if they dont have prob
-of 1 returning to itself eg Matrix([[0, 1], [1, 0]])
-
-The limiting distribution is not the same as the stationary distribution
-
-State space argument is not useful: it can only take the form of range(n)
-since if you insert [2, 1, 3], the states will be sorted (and hence incorrect)
-Also string values cannot be used which would probably be the most common use of it
-
-
-Questions
-Is it fine to remove the state space parameter?
-Matrices can't be indexed with custom indexes as far as I know
-
-Type hints
-
-Since stochastic processes will get very large,
-maybe put them into classes like dsp.py and csp.py
-"""
 
 class CommunicationClass:
     def __init__(self, states: list, recurrent: bool = None, period: int = None):
