@@ -22,6 +22,7 @@ if you care at all about performance. A new backend instance is initialized
 every time you call ``show()`` and the old one is left to the garbage collector.
 """
 
+from __future__ import print_function, division
 
 import warnings
 
@@ -56,7 +57,7 @@ def unset_show():
 ##############################################################################
 
 
-class Plot:
+class Plot(object):
     """The central class of the plotting module.
 
     For interactive work the function ``plot`` is better suited.
@@ -149,7 +150,7 @@ class Plot:
         xscale='linear', yscale='linear', legend=False, autoscale=True,
         margin=0, annotations=None, markers=None, rectangles=None,
         fill=None, backend='default', **kwargs):
-        super().__init__()
+        super(Plot, self).__init__()
 
         # Options for the graph as a whole.
         # The possible values for each option are described in the docstring of
@@ -305,7 +306,7 @@ class Plot:
             raise TypeError('Expecting Plot or sequence of BaseSeries')
 
 
-class PlotGrid:
+class PlotGrid(object):
     """This class helps to plot subplots from already created sympy plots
     in a single figure.
 
@@ -446,7 +447,7 @@ class PlotGrid:
 #TODO more general way to calculate aesthetics (see get_color_array)
 
 ### The base class for all series
-class BaseSeries:
+class BaseSeries(object):
     """Base class for the data objects containing stuff to be plotted.
 
     The backend should check if it supports the data series that it's given.
@@ -503,7 +504,7 @@ class BaseSeries:
     # used for calculation aesthetics
 
     def __init__(self):
-        super().__init__()
+        super(BaseSeries, self).__init__()
 
     @property
     def is_3D(self):
@@ -536,7 +537,7 @@ class Line2DBaseSeries(BaseSeries):
     _dim = 2
 
     def __init__(self):
-        super().__init__()
+        super(Line2DBaseSeries, self).__init__()
         self.label = None
         self.steps = False
         self.only_integers = False
@@ -578,7 +579,7 @@ class List2DSeries(Line2DBaseSeries):
 
     def __init__(self, list_x, list_y):
         np = import_module('numpy')
-        super().__init__()
+        super(List2DSeries, self).__init__()
         self.list_x = np.array(list_x)
         self.list_y = np.array(list_y)
         self.label = 'list'
@@ -594,7 +595,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
     """Representation for a line consisting of a SymPy expression over a range."""
 
     def __init__(self, expr, var_start_end, **kwargs):
-        super().__init__()
+        super(LineOver1DRangeSeries, self).__init__()
         self.expr = sympify(expr)
         self.label = kwargs.get('label', None) or str(self.expr)
         self.var = sympify(var_start_end[0])
@@ -607,7 +608,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         self.xscale = kwargs.get('xscale', 'linear')
 
     def __str__(self):
-        return 'cartesian line: {} for {} over {}'.format(
+        return 'cartesian line: %s for %s over %s' % (
             str(self.expr), str(self.var), str((self.start, self.end)))
 
     def get_segments(self):
@@ -627,7 +628,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         """
 
         if self.only_integers or not self.adaptive:
-            return super().get_segments()
+            return super(LineOver1DRangeSeries, self).get_segments()
         else:
             f = lambdify([self.var], self.expr)
             list_segments = []
@@ -714,11 +715,11 @@ class Parametric2DLineSeries(Line2DBaseSeries):
     is_parametric = True
 
     def __init__(self, expr_x, expr_y, var_start_end, **kwargs):
-        super().__init__()
+        super(Parametric2DLineSeries, self).__init__()
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.label = kwargs.get('label', None) or \
-                            "({}, {})".format(str(self.expr_x), str(self.expr_y))
+                            "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
@@ -728,7 +729,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         self.line_color = kwargs.get('line_color', None)
 
     def __str__(self):
-        return 'parametric cartesian line: ({}, {}) for {} over {}'.format(
+        return 'parametric cartesian line: (%s, %s) for %s over %s' % (
             str(self.expr_x), str(self.expr_y), str(self.var),
             str((self.start, self.end)))
 
@@ -759,7 +760,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
         """
         if not self.adaptive:
-            return super().get_segments()
+            return super(Parametric2DLineSeries, self).get_segments()
 
         f_x = lambdify([self.var], self.expr_x)
         f_y = lambdify([self.var], self.expr_y)
@@ -838,7 +839,7 @@ class Line3DBaseSeries(Line2DBaseSeries):
     _dim = 3
 
     def __init__(self):
-        super().__init__()
+        super(Line3DBaseSeries, self).__init__()
 
 
 class Parametric3DLineSeries(Line3DBaseSeries):
@@ -846,12 +847,12 @@ class Parametric3DLineSeries(Line3DBaseSeries):
     expressions and a range."""
 
     def __init__(self, expr_x, expr_y, expr_z, var_start_end, **kwargs):
-        super().__init__()
+        super(Parametric3DLineSeries, self).__init__()
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.expr_z = sympify(expr_z)
         self.label = kwargs.get('label', None) or \
-                        "({}, {})".format(str(self.expr_x), str(self.expr_y))
+                        "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
@@ -859,7 +860,7 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         self.line_color = kwargs.get('line_color', None)
 
     def __str__(self):
-        return '3D parametric cartesian line: ({}, {}, {}) for {} over {}'.format(
+        return '3D parametric cartesian line: (%s, %s, %s) for %s over %s' % (
             str(self.expr_x), str(self.expr_y), str(self.expr_z),
             str(self.var), str((self.start, self.end)))
 
@@ -899,7 +900,7 @@ class SurfaceBaseSeries(BaseSeries):
     is_3Dsurface = True
 
     def __init__(self):
-        super().__init__()
+        super(SurfaceBaseSeries, self).__init__()
         self.surface_color = None
 
     def get_color_array(self):
@@ -929,7 +930,7 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
     """Representation for a 3D surface consisting of a sympy expression and 2D
     range."""
     def __init__(self, expr, var_start_end_x, var_start_end_y, **kwargs):
-        super().__init__()
+        super(SurfaceOver2DRangeSeries, self).__init__()
         self.expr = sympify(expr)
         self.var_x = sympify(var_start_end_x[0])
         self.start_x = float(var_start_end_x[1])
@@ -976,7 +977,7 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
     def __init__(
         self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v,
             **kwargs):
-        super().__init__()
+        super(ParametricSurfaceSeries, self).__init__()
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.expr_z = sympify(expr_z)
@@ -1044,7 +1045,7 @@ class ContourSeries(BaseSeries):
     is_contour = True
 
     def __init__(self, expr, var_start_end_x, var_start_end_y):
-        super().__init__()
+        super(ContourSeries, self).__init__()
         self.nb_of_points_x = 50
         self.nb_of_points_y = 50
         self.expr = sympify(expr)
@@ -1083,9 +1084,9 @@ class ContourSeries(BaseSeries):
 # Backends
 ##############################################################################
 
-class BaseBackend:
+class BaseBackend(object):
     def __init__(self, parent):
-        super().__init__()
+        super(BaseBackend, self).__init__()
         self.parent = parent
 
 
@@ -1093,7 +1094,7 @@ class BaseBackend:
 # we will only be using this backend if we can successfully import matploblib
 class MatplotlibBackend(BaseBackend):
     def __init__(self, parent):
-        super().__init__(parent)
+        super(MatplotlibBackend, self).__init__(parent)
         self.matplotlib = import_module('matplotlib',
             import_kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
             min_module_version='1.1.0', catch=(RuntimeError,))
@@ -1342,7 +1343,7 @@ class MatplotlibBackend(BaseBackend):
 
 class TextBackend(BaseBackend):
     def __init__(self, parent):
-        super().__init__(parent)
+        super(TextBackend, self).__init__(parent)
 
     def show(self):
         if not _show:

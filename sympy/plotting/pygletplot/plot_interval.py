@@ -1,8 +1,10 @@
+from __future__ import print_function, division
+
 from sympy import Symbol, sympify
 from sympy.core.numbers import Integer
 
 
-class PlotInterval:
+class PlotInterval(object):
     """
     """
     _v, _v_min, _v_max, _v_steps = None, None, None, None

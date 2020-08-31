@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from threading import RLock
 
 # it is sufficient to import "pyglet" here once
@@ -23,7 +25,7 @@ from os import getcwd, listdir
 import ctypes
 
 @doctest_depends_on(modules=('pyglet',))
-class PygletPlot:
+class PygletPlot(object):
     """
     Plot Examples
     =============
