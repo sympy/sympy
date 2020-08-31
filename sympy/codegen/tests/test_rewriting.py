@@ -1,11 +1,12 @@
-from sympy import log, exp, Symbol, Pow, sin, MatrixSymbol
+from sympy import log, exp, cos, Symbol, Pow, sin, MatrixSymbol
 from sympy.assumptions import assuming, Q
 from sympy.printing import ccode
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log2, exp2, expm1, log1p
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
+from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.rewriting import (
-    optimize, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
+    optimize, cosm1_opt, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
     create_expand_pow_optimization, matinv_opt, logaddexp_opt, logaddexp2_opt
 )
 from sympy.testing.pytest import XFAIL
@@ -81,12 +82,55 @@ def test_expm1_opt():
     assert opt5.rewrite(exp) == expr5
 
 
-@XFAIL
+@XFAIL  # ideally this test should pass: need to improve `expm1_opt`
 def test_expm1_two_exp_terms():
     x, y = map(Symbol, 'x y'.split())
     expr1 = exp(x) + exp(y) - 2
     opt1 = optimize(expr1, [expm1_opt])
     assert opt1 == expm1(x) + expm1(y)
+
+
+def test_cosm1_opt():
+    x = Symbol('x')
+
+    expr1 = cos(x) - 1
+    opt1 = optimize(expr1, [cosm1_opt])
+    assert cosm1(x) - opt1 == 0
+    assert opt1.rewrite(cos) == expr1
+
+    expr2 = 3*cos(x) - 3
+    opt2 = optimize(expr2, [cosm1_opt])
+    assert 3*cosm1(x) == opt2
+    assert opt2.rewrite(cos) == expr2
+
+    expr3 = 3*cos(x) - 5
+    assert expr3 == optimize(expr3, [cosm1_opt])
+
+    expr4 = 3*cos(x) + log(x) - 3
+    opt4 = optimize(expr4, [cosm1_opt])
+    assert 3*cosm1(x) + log(x) == opt4
+    assert opt4.rewrite(cos) == expr4
+
+    expr5 = 3*cos(2*x) - 3
+    opt5 = optimize(expr5, [cosm1_opt])
+    assert 3*cosm1(2*x) == opt5
+    assert opt5.rewrite(cos) == expr5
+
+
+@XFAIL  # ideally this test should pass: need to improve `cosm1_opt`
+def test_cosm1_two_cos_terms():
+    x, y = map(Symbol, 'x y'.split())
+    expr1 = cos(x) + cos(y) - 2
+    opt1 = optimize(expr1, [cosm1_opt])
+    assert opt1 == cosm1(x) + cosm1(y)
+
+
+@XFAIL  # ideally this test should pass: need to add a new combined expm1_cosm1_opt?
+def test_expm1_cosm1_mixed():
+    x = Symbol('x')
+    expr1 = exp(x) + cos(x) - 2
+    opt1 = optimize(expr1, [expm1_opt, cosm1_opt])  # need a combined opt pass?
+    assert opt1 == cosm1(x) + expm1(x)
 
 
 def test_log1p_opt():
