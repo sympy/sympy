@@ -1,7 +1,7 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda, erf,
                    Piecewise, factorial, Interval, oo, Contains, sqrt, pi,
-                   gamma, lowergamma, Sum)
+                   gamma, lowergamma, Sum, FunctionMatrix, Range)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
                          BernoulliProcess, PoissonProcess, WienerProcess,
@@ -15,6 +15,7 @@ from sympy.external import import_module
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.drv_types import PoissonDistribution
 from sympy.stats.crv_types import NormalDistribution, GammaDistribution
+from sympy.stats.stochastic_process_types import CommunicationClass
 
 
 def test_DiscreteMarkovChain():
@@ -29,15 +30,24 @@ def test_DiscreteMarkovChain():
     assert E(X[0]) == Expectation(X[0])
     raises(TypeError, lambda: DiscreteMarkovChain(1))
     raises(NotImplementedError, lambda: X(t))
+    assert X.communication_classes() is None
+    assert X.stationary_distribution() is None
+    assert X.limiting_distribution() is None
 
     raises(ValueError, lambda: sample_stochastic_process(t))
     raises(ValueError, lambda: next(sample_stochastic_process(X)))
+
     # pass name and state_space
     Y = DiscreteMarkovChain("Y", [1, 2, 3])
     assert Y.transition_probabilities == None
     assert Y.state_space == FiniteSet(1, 2, 3)
     assert P(Eq(Y[2], 1), Eq(Y[0], 2)) == Probability(Eq(Y[2], 1), Eq(Y[0], 2))
     assert E(X[0]) == Expectation(X[0])
+
+    assert Y.communication_classes() is None
+    assert Y.stationary_distribution() is None
+    assert Y.limiting_distribution() is None
+
     raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
     raises(ValueError, lambda: next(sample_stochastic_process(Y)))
 
@@ -51,9 +61,8 @@ def test_DiscreteMarkovChain():
     assert Y.joint_distribution(1, Y[2], 3) == JointDistribution(Y[1], Y[2], Y[3])
     raises(ValueError, lambda: Y.joint_distribution(Y[1].symbol, Y[2].symbol))
     assert P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2) == Float(0.36, 2)
-    assert str(P(Eq(YS[3], 2), Eq(YS[1], 1))) == \
-        "T[0, 2]*T[1, 0] + T[1, 1]*T[1, 2] + T[1, 2]*T[2, 2]"
-    assert P(Eq(YS[1], 1), Eq(YS[2], 2)) == Probability(Eq(YS[1], 1))
+    assert str(P(Eq(YS[3], 2), Eq(YS[1], 1))) == "T[0, 2]*T[1, 0] + T[1, 1]*T[1, 2] + T[1, 2]*T[2, 2]"
+    assert P(Eq(YS[1], 1), Eq(YS[2], 2)) == Probability(Eq(YS[1], 1))  # but Y[1] and Y[2] are not independent
     assert P(Eq(YS[3], 3), Eq(YS[1], 1)) is S.Zero
     TO = Matrix([[0.25, 0.75, 0],[0, 0.25, 0.75],[0.75, 0, 0.25]])
     assert P(Eq(Y[3], 2), Eq(Y[1], 1) & TransitionMatrixOf(Y, TO)).round(3) == Float(0.375, 3)
@@ -86,23 +95,78 @@ def test_DiscreteMarkovChain():
     Y2 = DiscreteMarkovChain('Y', trans_probs=TO2)
     Y3 = DiscreteMarkovChain('Y', trans_probs=TO3)
     assert Y3._transient2absorbing() == None
-    raises (ValueError, lambda: Y3.fundamental_matrix())
     assert Y2.is_absorbing_chain() == True
     assert Y3.is_absorbing_chain() == False
+
+    assert not Y2.is_irreducible
+    assert Y3.is_irreducible
+
+    p = Y2.stationary_distribution()
+    l = Y2.limiting_distribution()
+    assert p * TO2 == p == l
+    p = Y3.stationary_distribution()
+    l = Y3.limiting_distribution()
+    assert p * TO3 == p == l
+    assert Y2.communication_classes() == [CommunicationClass([0], True, 1),
+                                          CommunicationClass([1, 2], False, 1)]
+    assert Y3.communication_classes() == [CommunicationClass([0, 1, 2], True, 1)]
+    assert Y2.canonical_form() == ([0, 1, 2], TO2)
+    assert Y3.canonical_form() == ([0, 1, 2], TO3)
+    assert Y2.decompose() == ([0, 1, 2], TO2[0:1, 0:1], TO2[1:3, 0:1], TO2[1:3, 1:3])
+    assert Y3.decompose() == ([0, 1, 2], TO3, Matrix(0, 3, []), Matrix(0, 0, []))
+
+    assert Y2.fundamental_matrix() == Matrix([[3, 4], [3, 8]])
+    assert Y3.fundamental_matrix() == Matrix(0, 0, [])
+    assert Y2.limiting_transient_matrix() == Y2.fundamental_matrix()*TO2[1:3, 0:1] == Y2.absorbing_probabilites()
+    assert Y3.limiting_transient_matrix() == Y3.fundamental_matrix()*Matrix(0, 3, []) == Y3.absorbing_probabilites()
+
+    assert Y2.expected_time_to_absorption() == Matrix([[6], [10]])
+    assert Y3.expected_time_to_absorption() == Matrix(0, 1, [])
+
+    assert Y2.first_passage_matrix(1) == Y2.transition_probabilities
+    assert Y2.first_passage_matrix(2) == Matrix([[0, 0, 0], [S(1)/9, S(1)/12, S(1)/9], [S(1)/12, S(3)/16, S(1)/12]])
+    assert Y3.first_passage_matrix(1) == Y3.transition_probabilities
+    assert Y3.first_passage_matrix(2) == Matrix([[S(1)/4, S(3)/16, S(1)/4], [S(1)/9, S(1)/3, S(1)/9], [S(1)/12, S(3)/16, S(1)/12]])
+
+    assert Y2.first_passage_matrix(2, 2, 1) == S(3)/16
+    assert Y2.first_passage_matrix(2, 1, 1) == S(1)/12
+    assert Y3.first_passage_matrix(2, 2, 1) == S(3)/16
+    assert Y3.first_passage_matrix(2, 1, 1) == S(1)/3
+    assert (Y2.first_passage_matrix(t, 1, 2) - 3**-t).simplify() == 0
+
     TO4 = Matrix([[Rational(1, 5), Rational(2, 5), Rational(2, 5)], [Rational(1, 10), S.Half, Rational(2, 5)], [Rational(3, 5), Rational(3, 10), Rational(1, 10)]])
     Y4 = DiscreteMarkovChain('Y', trans_probs=TO4)
     w = ImmutableMatrix([[Rational(11, 39), Rational(16, 39), Rational(4, 13)]])
-    assert Y4.limiting_distribution == w
+    assert Y4.limiting_distribution() == w
     assert Y4.is_regular() == True
     TS1 = MatrixSymbol('T', 3, 3)
     Y5 = DiscreteMarkovChain('Y', trans_probs=TS1)
-    assert Y5.limiting_distribution(w, TO4).doit() == True
+    assert Y5.limiting_distribution()(w, TO4).doit() == True
     TO6 = Matrix([[S.One, 0, 0, 0, 0],[S.Half, 0, S.Half, 0, 0],[0, S.Half, 0, S.Half, 0], [0, 0, S.Half, 0, S.Half], [0, 0, 0, 0, 1]])
     Y6 = DiscreteMarkovChain('Y', trans_probs=TO6)
     assert Y6._transient2absorbing() == ImmutableMatrix([[S.Half, 0], [0, 0], [0, S.Half]])
     assert Y6._transient2transient() == ImmutableMatrix([[0, S.Half, 0], [S.Half, 0, S.Half], [0, S.Half, 0]])
     assert Y6.fundamental_matrix() == ImmutableMatrix([[Rational(3, 2), S.One, S.Half], [S.One, S(2), S.One], [S.Half, S.One, Rational(3, 2)]])
     assert Y6.absorbing_probabilites() == ImmutableMatrix([[Rational(3, 4), Rational(1, 4)], [S.Half, S.Half], [Rational(1, 4), Rational(3, 4)]])
+
+    # symbolic sized transition matrix (limited support currently)
+    i, j, n = symbols('i j n', integer=True, positive=True)
+    TO7 = FunctionMatrix(n, n, Lambda((i, j), (i + j)/(n*(i+1))))
+    Y7 = DiscreteMarkovChain('Y', trans_probs=TO7)
+    assert Y7.state_space == Range(0, n)
+    Y7.stationary_distribution()
+    raises(NotImplementedError, lambda: Y7.communication_classes())
+    raises(NotImplementedError, lambda: Y7.canonical_form())
+    raises(NotImplementedError, lambda: Y7.decompose())
+
+    # periodic chain
+    TO8 = Matrix([[0, 1, 0, 0], [1, 0, 0, 0], [S.Half, 0, S.Half, 0], [0, 0, S.Half, S.Half]])
+    Y8 = DiscreteMarkovChain('Y', trans_probs=TO8)
+    p = Y8.stationary_distribution()
+    l1 = Y8.limiting_distribution()
+    l2 = Y8.limiting_distribution(Matrix([[0, 0, 0, 1]]))
+    assert p * TO8 == p != l1 != l2
+    assert Y8.decompose() == ([0, 1, 2, 3], TO8[0:2, 0:2], TO8[2:4, 0:2], TO8[2:4, 2:4])
 
     # testing miscellaneous queries
     T = Matrix([[S.Half, Rational(1, 4), Rational(1, 4)],
