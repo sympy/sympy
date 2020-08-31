@@ -2,7 +2,7 @@
 Applications of Vector Integrals
 ================================
 
-To integrate a scalar or vector field over a region, we have to first define a region. SymPy provides three methods for defining a region. 
+To integrate a scalar or vector field over a region, we have to first define a region. SymPy provides three methods for defining a region:
 
 1. Using Parametric Equations.
 
@@ -10,18 +10,19 @@ To integrate a scalar or vector field over a region, we have to first define a r
 
 3. Using objects of geometry module.
 
-The vector_integrate method is used to integrate scalar or vector field over any type of region. It automatically determines the type of integration (line, surface or volume) depending on the nature of the object.
+The :func:`~sympy.vector.integrals.vector_integrate` function is used to integrate scalar or vector field over any type of region. It automatically determines the type of integration (line, surface or volume) depending on the nature of the object.
 
 Importing necessary classes and functions:
 
->>> from sympy.vector import pi
->>> from sympy.vector import ParametricRegion, vector_integrate
+>>> from sympy import sin, cos, exp, pi
+>>> from sympy.vector import CoordSys3D, ParametricRegion, vector_integrate
 >>> from sympy.abc import r, x, y, z, theta, phi
 >>> C = CoordSys3D('C')
     
 Calculation of Perimeter, Surface Area and Volume
 =================================================
-To calculate the perimeter of circle, we need to define a circle, Lets define it using its parametric equation.
+
+To calculate the perimeter of circle, we need to define a circle. Let's define it using its parametric equation.
 
 >>> circle = ParametricRegion((4*cos(theta), 4*sin(theta)), (theta, 0, 2*pi))
 
@@ -30,9 +31,9 @@ To calculate the perimeter of the circle, we can integrate it over a scalar fiel
 >>> vector_integrate(1, circle)
 8*pi
 
-Suppose a user wants to calculate the perimeter of triangle. Determining the parametric representation of triangle can be difficult. Instead, the user can use an object of Polygon class in the geometry module.
+Suppose a user wants to calculate the perimeter of triangle. Determining the parametric representation of triangle can be difficult. Instead, the user can use an object of :class:`~sympy.geometry.polygon.Polygon` class in the geometry module.
 
->>> from sympy.geometry import Point, Polygon. 
+>>> from sympy.geometry import Point, Polygon 
 >>> triangle = Polygon(Point(1, 2), (3, 5), (1,6))
 >>> vector_integrate(1, triangle)
 sqrt(5) + sqrt(13) + 4
@@ -57,6 +58,7 @@ Verifying Stoke's Theorem
 
 
 Example 1
+    >>> from sympy.vector import curl
     >>> curve = ParametricRegion((cos(theta), sin(theta)), (theta, 0, pi/2))
     >>> surface = ParametricRegion((r*cos(theta), r*sin(theta)), (r, 0, 1), (theta, 0, pi/2))
     >>> F = C.y*C.i + C.z*C.k + C.x*C.k
@@ -70,8 +72,7 @@ Example 2
     >>> circle = ParametricRegion((cos(theta), sin(theta), 1), (theta, 0, 2*pi))
     >>> cone = ParametricRegion((r*cos(theta), r*sin(theta), r), (r, 0, 1), (theta, 0, 2*pi))
     >>> cone = ParametricRegion((r*cos(theta), r*sin(theta), r), (r, 0, 1), (theta, 0, 2*pi))
-    >>> f
-    (-C.y**3/3 + sin(C.x))*C.i + (C.x**3/3 + cos(C.y))*C.j + C.x*C.y*C.z*C.k
+    >>> f = (-C.y**3/3 + sin(C.x))*C.i + (C.x**3/3 + cos(C.y))*C.j + C.x*C.y*C.z*C.k
     >>> vector_integrate(f,  circle)
     pi/2
     >>> vector_integrate(curl(f),  cone)
@@ -81,6 +82,7 @@ Example 2
 Verifying Divergence Theorem
 ============================
 Example 1
+    >>> from sympy.vector import divergence
     >>> sphere = ParametricRegion((4*sin(phi)*cos(theta),4*sin(phi)*sin(theta), 4*cos(phi)),
     ...     (theta, 0, 2*pi), (phi, 0, pi))
     >>> solidsphere = ParametricRegion((r*sin(phi)*cos(theta),r*sin(phi)*sin(theta), r*cos(phi)),
