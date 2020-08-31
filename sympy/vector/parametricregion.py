@@ -1,5 +1,5 @@
 from functools import singledispatch
-from sympy import pi, tan
+from sympy import pi, tan, oo
 from sympy.simplify import trigsimp
 from sympy.core import Basic, Tuple
 from sympy.core.symbol import _symbol
@@ -178,6 +178,7 @@ def _(obj, parameters=('t', 's')):
     bounds = []
 
     for i in range(len(obj.variables) - 1):
+        # Each parameter is replaced by its tangent to simplify intergation
         parameter = _symbol(parameters[i], real=True)
         definition = [trigsimp(elem.subs(parameter, tan(parameter))) for elem in definition]
         bounds.append((parameter, 0, 2*pi),)

@@ -162,6 +162,14 @@ def vector_integrate(field, *region):
     >>> vector_integrate(3*C.x**2*C.y*C.i + C.j, triangle)
     -8
 
+    Integrals over some simple implicit regions can be computed. But in most cases,
+    it takes too long to compute over them.
+    >>> from sympy.abc import x, y
+    >>> from sympy.vector import ImplicitRegion
+    >>> c2 = ImplicitRegion((x, y), (x - 2)**2 + (y - 1)**2 - 9)
+    >>> vector_integrate(1, c2)
+    12*pi
+
     >>> vector_integrate(12*C.y**3, (C.y, 1, 3))
     240
     >>> vector_integrate(C.x**2*C.z, C.x)

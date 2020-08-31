@@ -3,6 +3,7 @@ from sympy.testing.pytest import raises
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.integrals import ParametricIntegral, vector_integrate
 from sympy.vector.parametricregion import ParametricRegion
+from sympy.vector.implicitregion import ImplicitRegion
 from sympy.abc import x, y, z, u, v, r, t, theta, phi
 from sympy.geometry import Point, Segment, Curve, Circle, Polygon, Plane
 
@@ -89,6 +90,11 @@ def test_vector_integrate():
 
     point = Point(2, 3)
     assert vector_integrate(C.i*C.y - C.z, point) == ParametricIntegral(C.y*C.i, ParametricRegion((2, 3)))
+
+    c3 = ImplicitRegion((x, y), x**2 + y**2 - 4)
+    assert vector_integrate(45, c3) == 360*pi
+    c4 = ImplicitRegion((x, y), (x - 3)**2 + (y - 4)**2 - 9)
+    assert vector_integrate(1, c4) == 12*pi
 
     pl = Plane(Point(1, 1, 1), Point(2, 3, 4), Point(2, 2, 2))
     raises(ValueError, lambda: vector_integrate(C.x*C.z*C.i + C.k, pl))
