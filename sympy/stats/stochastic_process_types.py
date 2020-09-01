@@ -835,6 +835,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                 return Lambda(wm, Eq(wm * trans_probs, wm))
             return Lambda((wm, trans_probs), Eq(wm*trans_probs, wm))
 
+        if n == 0:
+            return Matrix([[]])
+
         # numeric matrix version
         a = Matrix(trans_probs - Identity(n)).T
         a[0, 0:n] = ones(rows=1, cols=n)
@@ -849,7 +852,12 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             pi_ = None
         return pi_
 
-    def limiting_distribution(self, p0=None):
+    @property
+    def limiting_distribution(self):
+        """A wrapper property for the function ``limiting_dist()``."""
+        return self.limiting_dist()
+
+    def limiting_dist(self, p0=None):
         """
         The limiting distribution is the row vector
         equal to :math:`lim_{t \\rightarrow \\infty} p^{(n)}`.
@@ -874,7 +882,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             The inital state vector as a row Matrix. This
             is only needed for reducible or periodic
             Markov Chains. If None is given, it defaults
-            to ``1/n`` for each of the ``n`` states.
+            to a ``MatrixSymbol`` of size 1 by n.
 
         Examples
         ========
@@ -888,7 +896,13 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         ...             [S(2)/5, S(1)/5, S(2)/5],
         ...             [S(1)/5, S(3)/5, S(1)/5]])
         >>> X = DiscreteMarkovChain('X', trans_probs=T)
-        >>> X.limiting_distribution()
+        >>> X.limiting_distribution
+        Matrix([[2/5, 2/5, 1/5]])
+
+        The following has the same effect.
+        This however lets you specify an argument ``p0`` if needed.
+
+        >>> X.limiting_dist()
         Matrix([[2/5, 2/5, 1/5]])
 
         A reducible aperiodic Markov Chain
@@ -896,7 +910,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         ...             [S(4)/5, S(1)/5, 0],
         ...             [1, 0, 0]])
         >>> X = DiscreteMarkovChain('X', trans_probs=T)
-        >>> X.limiting_distribution()
+        >>> X.limiting_distribution
         Matrix([[8/13, 5/13, 0]])
 
         An irreducible prediodic Markov Chain if the limit cannot be found
@@ -904,7 +918,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         >>> T = Matrix([[0, 1],
         ...             [1, 0]])
         >>> X = DiscreteMarkovChain('X', trans_probs=T)
-        >>> X.limiting_distribution(Matrix([[S(2)/3, S(1)/3]]))
+        >>> X.limiting_dist(Matrix([[S(2)/3, S(1)/3]]))
         Matrix([[AccumBounds(1/3, 2/3), AccumBounds(1/3, 2/3)]])
 
         References
@@ -950,17 +964,37 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         if isinstance(trans_probs, MatrixSymbol):
             raise NotImplementedError("Limits on MatrixSymbol is not implemented.")
 
-        if p0 is None:
-            p0 = Matrix([[S(1) / n] * n])
+        if n == 0:  # a zero by zero matrix to any power is just itself
+            return Matrix([[]])
+
+        p0_is_given = p0 is not None  # whether or not the user gave their own p0.
+        # using p0_is_given will give more refined AccumBounds in the example.
+        # If we treat p0 the same way as whether it was given or not,
+        # the lower and upper bounds will be wider than necessary for a given p0.
+        # The last example in the docstring would give
+        # Matrix([[AccumBounds(0, 1), AccumBounds(0, 1)]]).
+        # so if p0 is given, we add it into the mix as soon as possible.
+
+        if not p0_is_given:
+            p0 = MatrixSymbol('p_0', 1, n)  # implicitly row-stochastic
 
         _n = Dummy("n", positive=True, integer=True)
-        pn = p0*Matrix(trans_probs) ** _n
-        for row in range(pn.shape[0]):
-            for col in range(pn.shape[1]):
+        if p0_is_given:
+            P_to_the_n = p0 * Matrix(trans_probs) ** _n
+        else:
+            P_to_the_n = Matrix(trans_probs) ** _n
+
+        for row in range(P_to_the_n.shape[0]):
+            for col in range(P_to_the_n.shape[1]):
                 try:  # try to limit pn but it sometimes does not work
-                    pn[row, col] = limit_seq(pn[row, col], _n)
+                    P_to_the_n[row, col] = limit_seq(P_to_the_n[row, col], _n)
                 except NotImplementedError:
                     pass
+
+        if p0_is_given:
+            pn = P_to_the_n
+        else:
+            pn = p0 * P_to_the_n
         return pn
 
     def communication_classes(self):
