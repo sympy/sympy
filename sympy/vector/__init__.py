@@ -13,7 +13,8 @@ from sympy.vector.functions import (express, matrix_to_vector,
 from sympy.vector.point import Point
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-from sympy.vector.operators import Gradient, Divergence, Curl, Laplacian, gradient, curl, divergence
+from sympy.vector.operators import (Gradient, Divergence, Curl, Laplacian, gradient,
+                                    curl, divergence, gradient_vectorfield)
 from sympy.vector.parametricregion import (ParametricRegion, parametric_region_list)
 from sympy.vector.implicitregion import ImplicitRegion
 from sympy.vector.integrals import (ParametricIntegral, vector_integrate)
@@ -39,7 +40,7 @@ __all__ = [
     'AxisOrienter', 'BodyOrienter', 'SpaceOrienter', 'QuaternionOrienter',
 
     'Gradient', 'Divergence', 'Curl', 'Laplacian', 'gradient', 'curl',
-    'divergence',
+    'divergence', 'gradient_vectorfield',
 
     'ParametricRegion', 'parametric_region_list', 'ImplicitRegion',
 

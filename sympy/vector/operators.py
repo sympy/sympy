@@ -7,6 +7,7 @@ from sympy.vector.scalar import BaseScalar
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative
 from sympy import Add, Mul
+from sympy.matrices import Matrix
 
 
 def _get_coord_systems(expr):
@@ -325,6 +326,38 @@ def gradient(scalar_field, coord_sys=None, doit=True):
             s = _split_mul_args_wrt_coordsys(scalar_field)
             return VectorAdd.fromiter(scalar_field / i * gradient(i) for i in s)
         return Gradient(scalar_field)
+
+
+def gradient_vectorfield(vector_field, coord_sys=None):
+    """
+    Returns the gradient of a vector field wrt base scalars
+    of the given coordinate system.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSys3D, gradient_vectorfield
+    >>> R = CoordSys3D('R')
+    >>> v = R.x*R.y*(R.i + R.j)
+    >>> gradient_vectorfield(v)
+    Matrix([
+    [R.y, R.x, 0],
+    [R.y, R.x, 0],
+    [  0,   0, 0]])
+
+    """
+
+    coord_sys = _get_coord_sys_from_expr(vector_field, coord_sys)
+
+    if len(coord_sys) == 1:
+        coord_sys = next(iter(coord_sys))
+        x, y, z = coord_sys.base_scalars()
+        mat = (vector_field.to_matrix(coord_sys))
+        d = Matrix([x, y, z])
+
+        return mat.jacobian(d)
+    else:
+        raise ValueError("Vector fields with multiple coordinate system components not supported")
 
 
 class Laplacian(Expr):

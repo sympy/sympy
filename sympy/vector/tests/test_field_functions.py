@@ -1,4 +1,5 @@
 from sympy.core.function import Derivative
+from sympy.matrices import Matrix
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.simplify import simplify
@@ -6,7 +7,8 @@ from sympy.core.symbol import symbols
 from sympy.core import S
 from sympy import sin, cos
 from sympy.vector.vector import Dot
-from sympy.vector.operators import curl, divergence, gradient, Gradient, Divergence, Cross
+from sympy.vector.operators import (curl, divergence, gradient, Gradient,
+                                    Divergence, Cross, gradient_vectorfield)
 from sympy.vector.deloperator import Del
 from sympy.vector.functions import (is_conservative, is_solenoidal,
                                     scalar_potential, directional_derivative,
@@ -320,3 +322,20 @@ def test_mixed_coordinates():
                 a.x**2*b.x*Dot(a.i, c.i) +\
                 b.x**2*c.x*Dot(b.i, a.i) +\
                 a.x*b.x**2*Dot(b.i, c.i)
+
+def test_gradient_vectorfield():
+    assert gradient_vectorfield(C.x*C.i - C.z**2*C.j + C.y**3*C.k) == \
+            Matrix([
+            [1,        0,      0],
+            [0,        0, -2*C.z],
+            [0, 3*C.y**2,      0]])
+    assert gradient_vectorfield(C.x*C.y*C.z*C.i + C.x/3*C.j) == \
+            Matrix([
+            [C.y*C.z, C.x*C.z, C.x*C.y],
+            [    S(1)/3,       0,       0],
+            [      0,       0,       0]])
+    assert gradient_vectorfield((C.x*3*C.y**4*C.i - C.x**2*C.k).cross(C.i + C.y**2*C.j)) == \
+            Matrix([
+            [2*C.x*C.y**2,  2*C.x**2*C.y, 0],
+            [      -2*C.x,             0, 0],
+            [    3*C.y**6, 18*C.x*C.y**5, 0]])
