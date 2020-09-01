@@ -240,7 +240,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             out = stringify_func(arg)
 
             if '\n' in out:
-                print
+                print()
 
             print(out)
         else:

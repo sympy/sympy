@@ -919,6 +919,7 @@ class log(Function):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
         from sympy import im, cancel, I, Order, logcombine
+        from itertools import product
         if not logx:
             logx = log(x)
         if self.args[0] == x:
@@ -932,6 +933,20 @@ class log(Function):
                 r = log(k) + l*logx  # XXX true regardless of assumptions?
                 return r
 
+        def coeff_exp(term, x):
+            coeff, exp = S.One, S.Zero
+            for factor in Mul.make_args(term):
+                if factor.has(x):
+                    base, exp = factor.as_base_exp()
+                    if base != x:
+                        try:
+                            return term.leadterm(x)
+                        except ValueError:
+                            return term, S.Zero
+                else:
+                    coeff *= factor
+            return coeff, exp
+
         # TODO new and probably slow
         try:
             a, b = arg.leadterm(x)
@@ -942,22 +957,49 @@ class log(Function):
                 n += 1
                 s = arg.nseries(x, n=n, logx=logx)
         a, b = s.removeO().leadterm(x)
-        p = cancel(s/(a*x**b) - 1)
+        p = cancel(s/(a*x**b) - 1).expand().powsimp()
         if p.has(exp):
             p = logcombine(p)
-        g = None
-        l = []
-        for i in range(n + 2):
-            g = log.taylor_term(i, p, g)
-            g = g.nseries(x, n=n, logx=logx)
-            l.append(g)
+        if isinstance(p, Order):
+            n = p.getn()
+        _, d = coeff_exp(p, x)
+        if not d.is_positive:
+            return log(a) + b*logx + Order(x**n, x)
+
+        def mul(d1, d2):
+            res = {}
+            for e1, e2 in product(d1, d2):
+                ex = e1 + e2
+                if ex < n:
+                    res[ex] = res.get(ex, S.Zero) + d1[e1]*d2[e2]
+            return res
+
+        pterms = {}
+
+        for term in Add.make_args(p):
+            co1, e1 = coeff_exp(term, x)
+            pterms[e1] = pterms.get(e1, S.Zero) + co1.removeO()
+
+        k = S.One
+        terms = {}
+        pk = pterms
+
+        while k*d < n:
+            coeff = -(-1)**k/k
+            for ex in pk:
+                terms[ex] = terms.get(ex, S.Zero) + coeff*pk[ex]
+            pk = mul(pk, pterms)
+            k += S.One
 
         res = log(a) + b*logx
+        for ex in terms:
+            res += terms[ex]*x**(ex)
+
         if cdir != 0:
             cdir = self.args[0].dir(x, cdir)
         if a.is_real and a.is_negative and im(cdir) < 0:
             res -= 2*I*S.Pi
-        return res + Add(*l) + Order(p**n, x)
+        return res + Order(x**n, x)
 
     def _eval_as_leading_term(self, x, cdir=0):
         from sympy import I, im

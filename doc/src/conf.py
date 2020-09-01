@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # SymPy documentation build configuration file, created by
 # sphinx-quickstart.py on Sat Mar 22 19:34:32 2008.
@@ -229,7 +228,7 @@ graphviz_output_format = 'svg'
 commit_hash_filepath = '../commit_hash.txt'
 commit_hash = None
 if os.path.isfile(commit_hash_filepath):
-    with open(commit_hash_filepath, 'r') as f:
+    with open(commit_hash_filepath) as f:
         commit_hash = f.readline()
 
 # Get commit hash from the external file.

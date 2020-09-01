@@ -6,7 +6,7 @@ from sympy import (
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
     GreaterThan, Sum, Product, E, log, tan, Function, binomial, exp,
-    floor, ceiling
+    floor, ceiling, Unequality
 )
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum.state import Bra, Ket
@@ -129,6 +129,7 @@ GOOD_PAIRS = [
     ("f(x, y, z)", f(x, y, z)),
     ("\\frac{d f(x)}{dx}", Derivative(f(x), x)),
     ("\\frac{d\\theta(x)}{dx}", Derivative(Function('theta')(x), x)),
+    ("x \\neq y", Unequality(x, y)),
     ("|x|", _Abs(x)),
     ("||x||", _Abs(Abs(x))),
     ("|x||y|", _Abs(x)*_Abs(y)),
