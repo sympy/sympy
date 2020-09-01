@@ -38,12 +38,12 @@ Suppose a user wants to calculate the perimeter of triangle. Determining the par
 >>> vector_integrate(1, triangle)
 sqrt(5) + sqrt(13) + 4
 
-To define a solid sphere, we need to use three parameters (r, theta and phi).
+To define a solid sphere, we need to use three parameters (r, theta and phi). 
 
->>> sphere = ParametricRegion((r*sin(phi)*cos(theta),r*sin(phi)*sin(theta), r*cos(phi)),
-... (theta, 0, pi), (phi, 0, pi), (r, 0, 3))
->>> vector_integrate(1, sphere)
--18*pi
+>>> solidsphere = ParametricRegion((r*sin(phi)*cos(theta),r*sin(phi)*sin(theta), r*cos(phi)),
+... (phi, 0, pi), (theta, 0, 2*pi), (r, 0, 3))
+>>> vector_integrate(1, solidsphere)
+-36*pi
 
 Calculation of charge on a body
 ===============================
