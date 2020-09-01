@@ -1167,6 +1167,9 @@ def test_solveset():
     # issue 13825
     assert solveset(x**2 + f(0) + 1, x) == {-sqrt(-f(0) - 1), sqrt(-f(0) - 1)}
 
+    # issue 19977
+    assert solveset(atan(log(x)) > 0, x, domain=Interval.open(0, oo)) == Interval.open(1, oo)
+
 
 def test__solveset_multi():
     from sympy.solvers.solveset import _solveset_multi
