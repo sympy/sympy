@@ -10,7 +10,7 @@ from sympy.utilities.codegen import (
     Variable)
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
-from sympy.abc import x, y, z
+from sympy.abc import x, y
 
 
 #FIXME: Fails due to circular import in with core

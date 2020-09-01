@@ -617,9 +617,9 @@ def test_is_vertex():
     assert is_vertex((2, 3, 4)) is True
     assert is_vertex((2, 3, 4, 5)) is False
 
+
 def test_intersection():
     l1 = Segment3D(Point(1, 1, 0), Point(3, 5, 0))
     l2 = Segment3D(Point(2, 0, 0), Point(2, 5, 0))
 
     assert intersection(l1, l2, "segment3D") == (2, 3, 0)
-
