@@ -5,8 +5,8 @@ from sympy import (
     atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I,
     tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
     binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
-    acos, erf, erfc, erfi, LambertW, factorial, digamma, Ei, EulerGamma,
-    asin, atanh, acot, acoth, asec, acsc, cbrt)
+    acos, erf, erfc, erfi, LambertW, factorial, digamma, uppergamma,
+    Ei, EulerGamma, asin, atanh, acot, acoth, asec, acsc, cbrt, besselk)
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.add import Add
@@ -705,6 +705,10 @@ def test_issue_15984():
     assert limit((-x + log(exp(x) + 1))/x, x, oo, dir='-').doit() == 0
 
 
+def test_issue_13571():
+    assert limit(uppergamma(x, 1) / gamma(x), x, oo) == 1
+
+
 def test_issue_13575():
     assert limit(acos(erfi(x)), x, 1).cancel() == acos(-I*erf(I))
 
@@ -750,6 +754,10 @@ def test_issue_14556():
 
 def test_issue_14811():
     assert limit(((1 + ((S(2)/3)**(x + 1)))**(2**x))/(2**((S(4)/3)**(x - 1))), x, oo) == oo
+
+
+def test_issue_14874():
+    assert limit(besselk(0, x), x, oo) == 0
 
 
 def test_issue_16222():
