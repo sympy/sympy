@@ -3,8 +3,8 @@ import random
 
 import itertools
 
-from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic,
-                   Set, And, Eq, FiniteSet, ImmutableMatrix,
+from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Integer,
+                   Set, And, Eq, FiniteSet, ImmutableMatrix, MatrixExpr, MatrixBase,
                    Lambda, Mul, Dummy, IndexedBase, Add, Interval, oo,
                    linsolve, Or, Not, Intersection, factorial, Contains,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
@@ -95,9 +95,9 @@ def _sym_sympify(arg):
         return _sympify(arg)
 
 def _matrix_checks(matrix):
-    if not isinstance(matrix, (Matrix, MatrixSymbol, ImmutableMatrix, FunctionMatrix)):
+    if not isinstance(matrix, (MatrixBase, MatrixExpr)):
         raise TypeError("Transition probabilities either should "
-                            "be a Matrix or a MatrixSymbol.")
+                            "be a some type of Matrix.")
     if matrix.shape[0] != matrix.shape[1]:
         raise NonSquareMatrixError("%s is not a square matrix"%(matrix))
     if isinstance(matrix, Matrix):
@@ -721,11 +721,10 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         A Markov Chain is irreducible iff it consists of exactly
         one communication class.
         """
-        trans_probs = self.transition_probabilities
-        if isinstance(trans_probs, MatrixSymbol):
+        if self._is_numeric:
+            return len(self.communication_classes()) == 1
+        else:
             return None  # cannot be known
-        return len(self.communication_classes()) == 1
-
 
     def _transient2transient(self):
         """
@@ -772,6 +771,26 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                for si in trans_states]
 
         return ImmutableMatrix(t2a)
+
+    def _is_numeric(self, raise_str=None):
+        """Checks whether the transition matrix has a numeric type and shape"""
+        trans_probs = self.transition_probabilities
+        n = self.num_states
+
+        if (trans_probs is None) or (n is None):
+            return False
+
+        if not isinstance(_sympify(n), Integer):
+            if raise_str is not None:
+                raise NotImplementedError(raise_str)
+            return False
+
+        if isinstance(trans_probs, MatrixSymbol):
+            if raise_str is not None:
+                raise NotImplementedError(raise_str)
+            return False
+
+        return True
 
     def stationary_distribution(self):
         """
@@ -822,18 +841,20 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         sympy.stats.stochastic_processes_types.DiscreteMarkovChain.limiting_distribution
         """
         trans_probs = self.transition_probabilities
-        if trans_probs is None:
-            return None
         n = self.num_states
 
+        # none version
+        if (trans_probs is None) or (n is None):
+            return None
+
         # matrix symbol version
-        if isinstance(trans_probs, MatrixSymbol) or isinstance(n, Symbol):
+        if not self._is_numeric():
             wm = MatrixSymbol('wm', 1, n)
-            # the following throws an error when checking `w in set.subs(T_symbol, T_numeric)`
-            # return ConditionSet(wm, Eq(wm*trans_probs, wm))  # and wm must be row stochastic
             if isinstance(trans_probs, FunctionMatrix):
                 return Lambda(wm, Eq(wm * trans_probs, wm))
             return Lambda((wm, trans_probs), Eq(wm*trans_probs, wm))
+        # still would be preferable to have something like
+        # ConditionSet(wm, Eq(wm*trans_probs, wm))
 
         if n == 0:
             return Matrix([[]])
@@ -934,10 +955,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         trans_probs = self.transition_probabilities
         n = self.num_states
-        if (trans_probs is None) or (n is None):
-            return None
 
-        if isinstance(trans_probs, MatrixSymbol) or isinstance(n, Symbol):
+        if not self._is_numeric():
             return self.stationary_distribution()
 
         comm_classes = self.communication_classes()
@@ -956,13 +975,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         # If the chain is reducible or periodic, the
         # limiting distribution might not be unique or exist.
         # It would depend on the time 0 marginal
-        # state probability vector and we choose it
-        # to simply be uniform.
-        if trans_probs is None:
-            return None
-
-        if isinstance(trans_probs, MatrixSymbol):
-            raise NotImplementedError("Limits on MatrixSymbol is not implemented.")
+        # state probability vector.
 
         if n == 0:  # a zero by zero matrix to any power is just itself
             return Matrix([[]])
@@ -1035,11 +1048,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         trans_probs = self.transition_probabilities
         n = self.num_states
-        if (trans_probs is None) or (n is None):
-            return None
 
-        if isinstance(trans_probs, MatrixSymbol) or isinstance(n, Symbol):
-            raise NotImplementedError("The transient and recurrent states cannot be determined.")
+        if not self._is_numeric('The transient and recurrent states cannot be determined.'):
+            return None
 
         temp_Pn = Identity(n)
         periods = [-1] * n
@@ -1144,11 +1155,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         trans_probs = self.transition_probabilities
         n = self.num_states
-        if (trans_probs is None) or (n is None):
-            return None
 
-        if isinstance(trans_probs, MatrixSymbol) or isinstance(n, Symbol):
-            raise NotImplementedError("The transient and recurrent states cannot be determined.")
+        if not self._is_numeric('The transient and recurrent states cannot be determined.'):
+            return None
 
         classes = self.communication_classes()
         r_states = []
@@ -1239,12 +1248,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         """
         trans_probs = self.transition_probabilities
-        if trans_probs is None:
-            return None
-        n = self.num_states
 
-        if isinstance(trans_probs, MatrixSymbol) or isinstance(n, Symbol):
-            raise NotImplementedError("The transient and recurrent states cannot be determined.")
+        if not self._is_numeric('The transient and recurrent states cannot be determined.'):
+            return None
 
         classes = self.communication_classes()
         r_states = []
@@ -1532,8 +1538,15 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         P = self.transition_probabilities
         n = self.num_states
-        if isinstance(n, Symbol):
-            raise NotImplementedError("Cannot yet find Ft for symbolic sized transition matrix.")
+
+        if not self._is_numeric('Cannot yet find Ft for symbolic sized transition matrix.'):
+            return None
+
+        if n == 0:
+            if (i is not None) and (j is not None):
+                return None
+            else:
+                return Matrix([[]])
 
         js_ = list(range(n))  # the columns to loop through
         calc_i_ne_j = True  # calculate the off-diagonals
@@ -1574,10 +1587,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                 F = P0**(t - 1)*Pnew
 
                 Ft[j, j] = F[n+j, j]
-
-        # there seem to be these popping up along the diagonals
-        # if isinstance(t, Symbol):
-            # Ft = Ft.replace(0**(t - 1), 0)
 
         if (i is not None) and (j is not None):
             return Ft[i, j]
