@@ -710,8 +710,10 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         The number of states in the Markov Chain. Can be symbolic.
         """
-        return self.transition_probabilities.shape[0] \
-            if self.transition_probabilities is not None else None
+        if self.transition_probabilities is None:
+            return None
+        else:
+            return self.transition_probabilities.shape[0]
 
     @property
     def is_irreducible(self):
