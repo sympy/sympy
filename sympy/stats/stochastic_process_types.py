@@ -1160,10 +1160,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                 t_states += c.states
 
         states = r_states + t_states
-        P_new = Matrix(trans_probs)
-        for row in range(n):
-            for col in range(n):
-                P_new[row, col] = trans_probs[states[row], states[col]]
+        P_new = Matrix(n, n, lambda i, j: trans_probs[states[i], states[j]])
 
         # convert states to the user's states
         states = [self.state_space.args[state] for state in states]
@@ -1259,20 +1256,15 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                 t_states += c.states
 
         states = r_states + t_states
-        A = zeros(rows=len(r_states), cols=len(r_states))
-        for row in range(len(r_states)):
-            for col in range(len(r_states)):
-                A[row, col] = trans_probs[states[row], states[col]]
 
-        B = zeros(rows=len(t_states), cols=len(r_states))
-        for row in range(len(t_states)):
-            for col in range(len(r_states)):
-                B[row, col] = trans_probs[states[len(r_states) + row], states[col]]
+        A = Matrix(len(r_states), len(r_states),
+                   lambda i, j: trans_probs[states[i], states[j]])
 
-        C = zeros(rows=len(t_states), cols=len(t_states))
-        for row in range(len(t_states)):
-            for col in range(len(t_states)):
-                C[row, col] = trans_probs[states[len(r_states) + row], states[len(r_states) + col]]
+        B = Matrix(len(t_states), len(r_states),
+                   lambda i, j: trans_probs[states[len(r_states) + i], states[j]])
+
+        C = Matrix(len(t_states), len(t_states),
+                   lambda i, j: trans_probs[states[len(r_states) + i], states[len(r_states) + j]])
 
         return states, A, B, C
 
@@ -1346,10 +1338,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         M = Matrix(self.fundamental_matrix(C))
 
         _n = Dummy("n", positive=True, integer=True)
-        Q = A**_n
-        for row in range(Q.shape[0]):
-            for col in range(Q.shape[1]):
-                Q[row, col] = limit_seq(Q[row, col], _n)
+        Q_ = A**_n
+        Q = Matrix(Q_.shape[0], Q_.shape[1],
+                   lambda i, j: limit_seq(Q_[i, j], _n))
         return M*B*Q
 
     # Change to exit_probability_matrix in the future.
