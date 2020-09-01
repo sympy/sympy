@@ -1700,6 +1700,10 @@ def test_sympy__stats__stochastic_process_types__StochasticStateSpaceOf():
     DMC = DiscreteMarkovChain("Y")
     assert _test_args(StochasticStateSpaceOf(DMC, [0, 1, 2]))
 
+def test_sympy__stats__stochastic_process_types__CommunicationClass():
+    from sympy.stats.stochastic_process_types import CommunicationClass
+    assert _test_args(CommunicationClass([0, 1, 2], True, 1))
+
 def test_sympy__stats__stochastic_process_types__DiscreteMarkovChain():
     from sympy.stats.stochastic_process_types import DiscreteMarkovChain
     from sympy import MatrixSymbol
