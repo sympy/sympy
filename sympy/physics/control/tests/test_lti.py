@@ -1,8 +1,9 @@
-from sympy import symbols, Matrix, factor, Function, simplify, exp, pi
+from sympy import symbols, Matrix, factor, Function, simplify, exp, pi, oo, I, \
+    Rational, sqrt, CRootOf
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.testing.pytest import raises
 
-a, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2 = symbols('a, b, s, g, d, p, k, a0:3, b0:3')
+a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2 = symbols('a, x, b, s, g, d, p, k, a0:3, b0:3')
 
 
 def test_TransferFunction_construction():
@@ -162,6 +163,68 @@ def test_TransferFunction_functions():
     assert SP4.subs({a0: -1, a1: -7}) == expect4_
     assert SP4.subs({a0: -1, a1: -7}).evalf() == expect4
     assert expect4_.evalf() == expect4
+
+    # Low-frequency (or DC) gain.
+    assert tf0.dc_gain() == 1
+    assert tf1.dc_gain() == Rational(3, 5)
+    assert SP2.dc_gain() == 0
+    assert expect4.dc_gain() == -1
+    assert expect2_.dc_gain() == 0
+    assert TransferFunction(1, s, s).dc_gain() == oo
+
+    # Poles of a transfer function.
+    tf_ = TransferFunction(x**3 - k, k, x)
+    _tf = TransferFunction(k, x**4 - k, x)
+    TF_ = TransferFunction(x**2, x**10 + x + x**2, x)
+    _TF = TransferFunction(x**10 + x + x**2, x**2, x)
+    assert G1.poles() == [I, I, -I, -I]
+    assert G2.poles() == []
+    assert tf1.poles() == [-5, 1]
+    assert expect4_.poles() == [s]
+    assert SP4.poles() == [-a0*s]
+    assert expect3.poles() == [-0.25*p]
+    assert str(expect2.poles()) == str([0.729001428685125, -0.564500714342563 - 0.710198984796332*I, -0.564500714342563 + 0.710198984796332*I])
+    assert str(expect1.poles()) == str([-0.4 - 0.66332495807108*I, -0.4 + 0.66332495807108*I])
+    assert _tf.poles() == [k**(Rational(1, 4)), -k**(Rational(1, 4)), I*k**(Rational(1, 4)), -I*k**(Rational(1, 4))]
+    assert TF_.poles() == [CRootOf(x**9 + x + 1, 0), 0, CRootOf(x**9 + x + 1, 1), CRootOf(x**9 + x + 1, 2),
+        CRootOf(x**9 + x + 1, 3), CRootOf(x**9 + x + 1, 4), CRootOf(x**9 + x + 1, 5), CRootOf(x**9 + x + 1, 6),
+        CRootOf(x**9 + x + 1, 7), CRootOf(x**9 + x + 1, 8)]
+    raises(NotImplementedError, lambda: TransferFunction(x**2, a0*x**10 + x + x**2, x).poles())
+
+    # Stability of a transfer function.
+    q, r = symbols('q, r', negative=True)
+    t = symbols('t', positive=True)
+    TF_ = TransferFunction(s**2 + a0 - a1*p, q*s - r, s)
+    stable_tf = TransferFunction(s**2 + a0 - a1*p, q*s - 1, s)
+    stable_tf_ = TransferFunction(s**2 + a0 - a1*p, q*s - t, s)
+
+    assert G1.is_stable() is False
+    assert G2.is_stable() is True
+    assert tf1.is_stable() is False   # as one pole is +ve, and the other is -ve.
+    assert expect2.is_stable() is False
+    assert expect1.is_stable() is True
+    assert stable_tf.is_stable() is True
+    assert stable_tf_.is_stable() is True
+    assert TF_.is_stable() is False
+    assert expect4_.is_stable() is None   # no assumption provided for the only pole 's'.
+    assert SP4.is_stable() is None
+
+    # Zeros of a transfer function.
+    assert G1.zeros() == [1, 1]
+    assert G2.zeros() == []
+    assert tf1.zeros() == [-3, 1]
+    assert expect4_.zeros() == [7**(Rational(2, 3))*(-s)**(Rational(1, 3))/7, -7**(Rational(2, 3))*(-s)**(Rational(1, 3))/14 -
+        sqrt(3)*7**(Rational(2, 3))*I*(-s)**(Rational(1, 3))/14, -7**(Rational(2, 3))*(-s)**(Rational(1, 3))/14 + sqrt(3)*7**(Rational(2, 3))*I*(-s)**(Rational(1, 3))/14]
+    assert SP4.zeros() == [(s/a1)**(Rational(1, 3)), -(s/a1)**(Rational(1, 3))/2 - sqrt(3)*I*(s/a1)**(Rational(1, 3))/2,
+        -(s/a1)**(Rational(1, 3))/2 + sqrt(3)*I*(s/a1)**(Rational(1, 3))/2]
+    assert str(expect3.zeros()) == str([0.125 - 1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0),
+        1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0) + 0.125])
+    assert tf_.zeros() == [k**(Rational(1, 3)), -k**(Rational(1, 3))/2 - sqrt(3)*I*k**(Rational(1, 3))/2,
+        -k**(Rational(1, 3))/2 + sqrt(3)*I*k**(Rational(1, 3))/2]
+    assert _TF.zeros() == [CRootOf(x**9 + x + 1, 0), 0, CRootOf(x**9 + x + 1, 1), CRootOf(x**9 + x + 1, 2),
+        CRootOf(x**9 + x + 1, 3), CRootOf(x**9 + x + 1, 4), CRootOf(x**9 + x + 1, 5), CRootOf(x**9 + x + 1, 6),
+        CRootOf(x**9 + x + 1, 7), CRootOf(x**9 + x + 1, 8)]
+    raises(NotImplementedError, lambda: TransferFunction(a0*x**10 + x + x**2, x**2, x).zeros())
 
     # negation of TF.
     tf2 = TransferFunction(s + 3, s**2 - s**3 + 9, s)
