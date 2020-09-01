@@ -1,7 +1,9 @@
 from __future__ import print_function, division
 
 from sympy.core.backend import sympify
-from sympy.physics.vector import Point
+from sympy.physics.vector import Point, Vector
+
+from sympy.physics.units.definitions.unit_definitions import G
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -239,6 +241,59 @@ class Particle(object):
                     "Particle.potential_energy",
                 deprecated_since_version="1.5", issue=9800).warn()
         self.potential_energy = scalar
+
+    def __calc_gforce(self, p):
+        """Function to calculate Gravitational Force between
+        two particles.
+
+        """
+
+        vect_dist = p.point.pos_from(self.point)
+        return ( (self.mass * p.mass * G) / vect_dist.magnitude() ** 3) * vect_dist
+
+    def G_Force(self, *particles):
+        """Newton's law of universal gravitation is usually stated
+        as that every particle attracts every other particle in the
+        universe with a force that is directly proportional to the
+        product of their masses and inversely proportional to the
+        square of the distance between their centers.
+
+        The equation for universal gravitation thus takes the form:
+
+        .. math::
+            F = \frac{G m_1 m_2}{r^2}
+
+        where F is the gravitational force acting between two objects,
+        m1 and m2 are the masses of the objects, r is the distance between
+        the point masses and G is the gravitational constant.
+
+        Parameters
+        ==========
+        Particle1, Particle2 .... : Particle
+            The particles in the system.
+
+        Examples
+        ========
+        >>> from sympy.physics.mechanics import Particle, Point, ReferenceFrame
+        >>> from sympy import symbols
+        >>> m1, m2 = symbols('m1 m2')
+        >>> N = ReferenceFrame('N')
+        >>> O1 = Point('O1')
+        >>> P1 = Particle('P1', O1, m1)
+        >>> O2 = Point('O2')
+        >>> O2.set_pos(O1, 10 * N.x)
+        >>> P2 = Particle('P2', O2, m2)
+        >>> P1.G_Force(P2)
+        gravitational_constant*m1*m2/100*N.x
+
+        """
+
+        total_gforce = Vector(0)
+        for p in particles:
+            if not isinstance(p, (Point, Particle)):
+                raise TypeError("Particle point attribute must be a Point object.")
+            total_gforce += self.__calc_gforce(p)
+        return total_gforce
 
     def parallel_axis(self, point, frame):
         """Returns an inertia dyadic of the particle with respect to another

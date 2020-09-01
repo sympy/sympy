@@ -1,11 +1,12 @@
 from sympy import symbols
 from sympy.physics.mechanics import Point, Particle, ReferenceFrame, inertia
+from sympy.physics.units.definitions.unit_definitions import G
 
 from sympy.testing.pytest import raises
 
 
 def test_particle():
-    m, m2, v1, v2, v3, r, g, h = symbols('m m2 v1 v2 v3 r g h')
+    m, m1, m2, v1, v2, v3, r, g, h = symbols('m m1 m2 v1 v2 v3 r g h')
     P = Point('P')
     P2 = Point('P2')
     p = Particle('pa', P, m)
@@ -42,7 +43,18 @@ def test_particle():
     assert p.kinetic_energy(
         N) in [m2*(v1**2 + v2**2 + v3**2)/2,
         m2 * v1**2 / 2 + m2 * v2**2 / 2 + m2 * v3**2 / 2]
-
+    # Test the Gravitational Force function
+    O1 = Point('O1')
+    P1 = Particle('P1', O1, m1)
+    O2 = Point('O2')
+    O2.set_pos(O1, 10 * N.x)
+    P2 = Particle('P2', O2, m2)
+    assert P1.G_Force(P2) == G * m1 * m2 / 100 * N.x
+    O3 = Point('O3')
+    O3.set_pos(O1, -10 * N.x)
+    P3 = Particle('P3', O3, m2)
+    assert P1.G_Force(P2, P3) == 0
+    raises(TypeError, lambda: P1.G_Force(r))
 
 def test_parallel_axis():
     N = ReferenceFrame('N')
