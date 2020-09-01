@@ -582,8 +582,8 @@ class MarkovProcess(StochasticProcess):
                                 "implemented yet."%(expr, condition))
 
 
-class CommunicationClass:
-    def __init__(self, states: list, recurrent: bool = None, period: int = None):
+class CommunicationClass(Basic):
+    def __new__(cls, states: list, recurrent: bool = None, period: int = None):
         """Represents a single communication class for a Markov Chain.
 
         Parameters
@@ -596,9 +596,12 @@ class CommunicationClass:
         period: int, optional
             The period of the states. None if it is transient.
         """
+        # shamefully stolen from MutableDenseMatrix
+        self = Basic.__new__(cls)
         self.states = states
         self.recurrent = recurrent
         self.period = period
+        return self
 
     def __add__(self, other):
         """Finds the union of two communication classes"""
