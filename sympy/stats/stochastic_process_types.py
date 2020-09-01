@@ -343,7 +343,7 @@ class MarkovProcess(StochasticProcess):
             if len(rand_var) == 1:
                 state_space = rand_var[0].pspace.set
         if not FiniteSet(*[i for i in range(trans_probs.shape[0])]).is_subset(state_space):
-            raise ValueError("state space is not compatible with the transition probabilites.")
+            raise ValueError("state space is not compatible with the transition probabilities.")
         state_space = FiniteSet(*[i for i in range(trans_probs.shape[0])])
         return state_space
 
@@ -588,6 +588,7 @@ class CommunicationClass:
 
         Parameters
         ==========
+
         states : list
             The list of integer states that are part of the equivalence class.
         recurrent : bool, optional
@@ -785,6 +786,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         Examples
         ========
+
         >>> from sympy.stats import DiscreteMarkovChain
         >>> from sympy import Matrix, S
 
@@ -808,11 +810,13 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         References
         ==========
+
         .. [1] https://www.probabilitycourse.com/chapter11/11_2_6_stationary_and_limiting_distributions.php
         .. [2] https://galton.uchicago.edu/~yibi/teaching/stat317/2014/Lectures/Lecture4_6up.pdf
 
         See Also
         ========
+
         sympy.stats.stochastic_processes_types.DiscreteMarkovChain.limiting_distribution
         """
         trans_probs = self.transition_probabilities
@@ -863,14 +867,16 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         Parameters
         ==========
+
         p0
             The inital state vector as a row Matrix. This
-            is only needed for reducible or perioidic
+            is only needed for reducible or periodic
             Markov Chains. If None is given, it defaults
             to ``1/n`` for each of the ``n`` states.
 
         Examples
         ========
+
         >>> from sympy.stats import DiscreteMarkovChain
         >>> from sympy import Matrix, S
 
@@ -883,7 +889,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         >>> X.limiting_distribution()
         Matrix([[2/5, 2/5, 1/5]])
 
-        A reducible aperioidic Markov Chain
+        A reducible aperiodic Markov Chain
         >>> T = Matrix([[S(1)/2, S(1)/2, 0],
         ...             [S(4)/5, S(1)/5, 0],
         ...             [1, 0, 0]])
@@ -901,11 +907,13 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         References
         ==========
+
         .. [1] https://www.probabilitycourse.com/chapter11/11_2_6_stationary_and_limiting_distributions.php
         .. [2] https://galton.uchicago.edu/~yibi/teaching/stat317/2014/Lectures/Lecture4_6up.pdf
 
         See Also
         ========
+
         sympy.stats.stochastic_processes_types.DiscreteMarkovChain.stationary_distribution
         """
         trans_probs = self.transition_probabilities
@@ -961,12 +969,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         Returns
         =======
+
         classes : List of CommunicationClass, optional
             The list of communication classes that make up the
             Markov Chain.
 
         Notes
         =====
+
         This method uses the following algorithm:
 
         To find the periods of each state, take the one-step transition
@@ -1047,6 +1057,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         Returns
         =======
+
         (states, P_new)
             ``states`` is the list that describes the order of the
             new states in the matrix
@@ -1056,6 +1067,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         Examples
         ========
+
         >>> from sympy.stats import DiscreteMarkovChain
         >>> from sympy import Matrix, S
 
@@ -1091,7 +1103,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         See Also
         ========
-        sympy.stats.DiscreteMarkovChain.decompose
+
+        sympy.stats.stochastic_processes_types.DiscreteMarkovChain.decompose
         """
         trans_probs = self.transition_probabilities
         n = self.num_states
@@ -1131,6 +1144,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         Returns
         =======
+
         (states, A, B, C)
 
             ``states`` - a list of state names with the first being
@@ -1143,6 +1157,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         Examples
         ========
+
         >>> from sympy.stats import DiscreteMarkovChain
         >>> from sympy import Matrix, S
 
@@ -1154,16 +1169,23 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         ...             [0, 0, S(1)/2, S(1)/2, 0],
         ...             [S(1)/2, 0, 0, 0, S(1)/2]])
         >>> X = DiscreteMarkovChain('X', trans_probs=T)
-        >>> X.decompose()
-        ([2, 0, 1, 3, 4], Matrix([[1]]), Matrix([
+        >>> states, A, B, C = X.decompose()
+        >>> states
+        [2, 0, 1, 3, 4]
+        >>> A   # recurrent to recurrent
+        Matrix([[1]])
+        >>> B  # transient to recurrent
+        Matrix([
         [  0],
         [2/5],
         [1/2],
-        [  0]]), Matrix([
+        [  0]])
+        >>> C  # transient to transient
+        Matrix([
         [1/2, 1/2,   0,   0],
         [2/5, 1/5,   0,   0],
         [  0,   0, 1/2,   0],
-        [1/2,   0,   0, 1/2]]))
+        [1/2,   0,   0, 1/2]])
 
         This means that state 2 is the only absorbing state
         (since A is a 1x1 matrix). B is a 4x1 matrix since
@@ -1173,10 +1195,12 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         See Also
         ========
-        sympy.stats.DiscreteMarkovChain.canonical_form
+
+        sympy.stats.stochastic_processes_types.DiscreteMarkovChain.canonical_form
 
         References
         ==========
+
         .. [1] https://en.wikipedia.org/wiki/Absorbing_Markov_chain
         .. [2] http://people.brandeis.edu/~igusa/Math56aS08/Math56a_S08_notes015.pdf
 
@@ -1225,6 +1249,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         Parameters
         ==========
+
         C
             The submatrix of the transition matrix that
             has probabilities of transitions from transient
@@ -1259,6 +1284,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         Examples
         ========
+
         >>> from sympy.stats import DiscreteMarkovChain
         >>> from sympy import Matrix, S
 
@@ -1305,6 +1331,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         Examples
         ========
+
         >>> from sympy.stats import DiscreteMarkovChain
         >>> from sympy import Matrix, S
 
@@ -1345,6 +1372,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         Examples
         ========
+
         >>> from sympy.stats import DiscreteMarkovChain
         >>> from sympy import Matrix, S
 
@@ -1370,6 +1398,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         References
         ==========
+
+        .. [1] https://www.stat.auckland.ac.nz/~fewster/325/notes/ch8.pdf
         """
         states, A, B, C = self.decompose()
         new_from_old = states
@@ -1391,6 +1421,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         Parameters
         ==========
+
         t : int, Symbol
             The number of time steps for which to calculate the
             first passage probability matrix. This can be an int or Symbol.
@@ -1407,12 +1438,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         Returns
         =======
+
         Ft : Matrix, Expr
             The first passage probability matrix for time step t. If i and j are
             specified, an expression is given intstead.
 
         Examples
         ========
+
         >>> from sympy.stats import DiscreteMarkovChain
         >>> from sympy import Matrix, S, symbols
 
@@ -1454,7 +1487,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         [0**(t - 1)*(1 - a) + b*(0**(t - 1)*a/(b - 1) - a*(1 - b)**(t - 1)/(b - 1)),                                                         a*(1 - a)**(t - 1)],
         [                                                        b*(1 - b)**(t - 1), 0**(t - 1)*(1 - b) + a*(0**(t - 1)*b/(a - 1) - b*(1 - a)**(t - 1)/(a - 1))]])
 
-        Specify i, j for quicker evauluation
+        Specify i, j for quicker evaluation
 
         >>> T = Matrix([[S(1)/2, S(1)/2, 0, 0],
         ...             [S(4)/5, S(1)/5, 0, 0],
@@ -1466,6 +1499,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         References
         ==========
+
         .. [1] https://scholar.uwindsor.ca/cgi/viewcontent.cgi?article=1125&context=major-papers
         .. [2] http://maths.dur.ac.uk/stats/courses/ProbMC2H/_files/handouts/1516MarkovChains2H.pdf
         """
