@@ -1,9 +1,11 @@
 from functools import singledispatch
-from sympy import pi
+from sympy import pi, tan
+from sympy.simplify import trigsimp
 from sympy.core import Basic, Tuple
 from sympy.core.symbol import _symbol
 from sympy.solvers import solve
 from sympy.geometry import Point, Segment, Curve, Ellipse, Polygon
+from sympy.vector import ImplicitRegion
 
 
 class ParametricRegion(Basic):
@@ -169,3 +171,18 @@ def _(obj, parameter='t'):
 def _(obj, parameter='t'):
     l = [parametric_region_list(side, parameter)[0] for side in obj.sides]
     return l
+
+
+@parametric_region_list.register(ImplicitRegion)
+def _(obj, parameters=('t', 's')):
+    definition = obj.rational_parametrization(parameters)
+    bounds = []
+
+    for i in range(len(obj.variables) - 1):
+        # Each parameter is replaced by its tangent to simplify intergation
+        parameter = _symbol(parameters[i], real=True)
+        definition = [trigsimp(elem.subs(parameter, tan(parameter))) for elem in definition]
+        bounds.append((parameter, 0, 2*pi),)
+
+    definition = Tuple(*definition)
+    return [ParametricRegion(definition, *bounds)]
