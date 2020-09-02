@@ -72,7 +72,7 @@ def test_MatrixNormal():
     assert M.pspace.distribution.set == MatrixSet(1, 2, S.Reals)
     X = MatrixSymbol('X', 1, 2)
     term1 = exp(-Trace(Matrix([[ S(2)/3, -S(1)/3], [-S(1)/3, S(2)/3]])*(
-            Matrix([[-5], [-6]]) + X.T)*Matrix([[1/4]])*(Matrix([[-5, -6]]) + X))/2)
+            Matrix([[-5], [-6]]) + X.T)*Matrix([[S(1)/4]])*(Matrix([[-5, -6]]) + X))/2)
     assert density(M)(X).doit() == term1/(24*pi)
     assert density(M)([[7, 8]]).doit() == exp(-S(1)/3)/(24*pi)
     d, n = symbols('d n', positive=True, integer=True)
