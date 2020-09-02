@@ -39,6 +39,17 @@ class re(Function):
     >>> re(im(x) + x*I + 2)
     2
 
+    Parameters
+    ==========
+    val : expression
+        real, complex or mixed expression
+
+    Returns
+    =======
+    val : int
+        integer value of real part of expression
+
+
     See Also
     ========
     im
