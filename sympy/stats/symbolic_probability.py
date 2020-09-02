@@ -7,7 +7,6 @@ from sympy.core.parameters import global_parameters
 from sympy.core.sympify import _sympify
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
-from sympy.stats import variance, covariance
 from sympy.stats.rv import (RandomSymbol, pspace, dependent,
                             given, sampling_E, RandomIndexedSymbol, is_random,
                             PSpace, sampling_P, random_symbols)
@@ -410,7 +409,14 @@ class Variance(Expr):
         # this expression contains a RandomSymbol somehow:
         return self
 
+    def doit(self, **hints):
+        return self.rewrite(Expectation).doit(**hints)
+
     def _eval_rewrite_as_Expectation(self, arg, condition=None, **kwargs):
+            from sympy.stats.joint_rv import JointRandomSymbol
+            if isinstance(arg, JointRandomSymbol):
+                from sympy.stats.symbolic_multivariate_probability import VarianceMatrix
+                return VarianceMatrix(arg, condition).rewrite(Expectation)
             e1 = Expectation(arg**2, condition)
             e2 = Expectation(arg, condition)**2
             return e1 - e2
@@ -419,7 +425,7 @@ class Variance(Expr):
         return self.rewrite(Expectation).rewrite(Probability)
 
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
-        return variance(self.args[0], self._condition, evaluate=False)
+        return self.rewrite(Expectation).rewrite(Integral)
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
@@ -546,7 +552,13 @@ class Covariance(Expr):
                 nonrv.append(a)
         return (Mul.fromiter(nonrv), Mul.fromiter(rv))
 
+    def doit(self, **hints):
+        return self.rewrite(Expectation).doit(**hints)
+
     def _eval_rewrite_as_Expectation(self, arg1, arg2, condition=None, **kwargs):
+        if arg1.is_Matrix and arg2.is_Matrix:
+            from sympy.stats.symbolic_multivariate_probability import CrossCovarianceMatrix
+            return CrossCovarianceMatrix(arg1, arg2, condition).rewrite(Expectation)
         e1 = Expectation(arg1*arg2, condition)
         e2 = Expectation(arg1, condition)*Expectation(arg2, condition)
         return e1 - e2
@@ -555,7 +567,7 @@ class Covariance(Expr):
         return self.rewrite(Expectation).rewrite(Probability)
 
     def _eval_rewrite_as_Integral(self, arg1, arg2, condition=None, **kwargs):
-        return covariance(self.args[0], self.args[1], self._condition, evaluate=False)
+        return self.rewrite(Expectation).rewrite(Integral)
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 

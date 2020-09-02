@@ -3,7 +3,7 @@ from __future__ import print_function, division
 
 from itertools import repeat, combinations
 
-from sympy import S, Symbol, Add, Mul, simplify, Pow, exp
+from sympy import S, Symbol, Add, Mul, Pow, exp
 from sympy.stats.symbolic_probability import RandomSymbol, Variance, Covariance
 from sympy.stats.rv import is_random
 
@@ -45,7 +45,7 @@ def variance_prop(expr, consts=(), include_covar=False):
     Variance(x) + Variance(y)
 
     >>> variance_prop(x * y)
-    x**2*Variance(y) + y**2*Variance(x)
+    x**2*y**2*(Variance(y)/y**2 + Variance(x)/x**2)
 
     >>> variance_prop(exp(2*x))
     4*exp(4*x)*Variance(x)
@@ -61,9 +61,9 @@ def variance_prop(expr, consts=(), include_covar=False):
         if expr in consts:
             return S.Zero
         elif is_random(expr):
-            return Variance(expr).doit()
+            return Variance(expr).expand()
         elif isinstance(expr, Symbol):
-            return Variance(RandomSymbol(expr)).doit()
+            return Variance(RandomSymbol(expr)).expand()
         else:
             return S.Zero
     nargs = len(args)
@@ -77,7 +77,7 @@ def variance_prop(expr, consts=(), include_covar=False):
             var_expr += Add(*terms)
     elif isinstance(expr, Mul):
         terms = [v/a**2 for a, v in zip(args, var_args)]
-        var_expr = simplify(expr**2 * Add(*terms))
+        var_expr = expr**2 * Add(*terms)
         if include_covar:
             terms = [2*Covariance(_arg0_or_var(x), _arg0_or_var(y)).expand()/(a*b) \
                      for (a, b), (x, y) in zip(combinations(args, 2),
@@ -86,9 +86,9 @@ def variance_prop(expr, consts=(), include_covar=False):
     elif isinstance(expr, Pow):
         b = args[1]
         v = var_args[0] * (expr * b / args[0])**2
-        var_expr = simplify(v)
+        var_expr = v
     elif isinstance(expr, exp):
-        var_expr = simplify(var_args[0] * expr**2)
+        var_expr = var_args[0] * expr**2
     else:
         # unknown how to proceed, return variance of whole expr.
         var_expr = Variance(expr)

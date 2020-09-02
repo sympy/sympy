@@ -18,7 +18,7 @@ from sympy.concrete.summations import Sum, summation
 from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
-from sympy.matrices import ImmutableMatrix, matrix2numpy, list2numpy
+from sympy.matrices import ImmutableMatrix, matrix2numpy, list2numpy, MatrixBase
 from sympy.stats.crv import SingleContinuousDistribution, SingleContinuousPSpace
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
@@ -115,14 +115,17 @@ class JointPSpace(ProductPSpace):
         for rv in rvs:
             if isinstance(rv, Indexed):
                 expr = expr.xreplace({rv: Indexed(str(rv.base), rv.args[1])})
-            elif isinstance(rv, RandomSymbol):
-                expr = expr.xreplace({rv: rv.symbol})
-        if self.value in random_symbols(expr):
-            raise NotImplementedError(filldedent('''
-            Expectations of expression with unindexed joint random symbols
-            cannot be calculated yet.'''))
+        j_rvs = random_symbols(expr)
+        rep = {}
+        for jrv in j_rvs:
+            if isinstance(jrv, JointRandomSymbol):
+                rep[jrv] = ImmutableMatrix([Indexed(str(jrv.symbol), i)
+                        for i in range(jrv.pspace.component_count)])
+        expr = expr.xreplace(rep)
         limits = tuple((Indexed(str(rv.base),rv.args[1]),
             self.distribution.set.args[rv.args[1]]) for rv in syms)
+        if isinstance(expr, MatrixBase):
+            return expr.applyfunc(lambda arg: Integral(arg, *limits))
         return Integral(expr, *limits)
 
     def where(self, condition):
@@ -307,8 +310,16 @@ class JointRandomSymbol(RandomSymbol):
                 raise ValueError("Index keys for %s can only up to %s." %
                     (self.name, self.pspace.component_count - 1))
             return Indexed(self, key)
+            #return RandomIndexedSymbol(idx_obj, self.pspace)
 
 
+    def to_vector(self):
+        return ImmutableMatrix([Indexed(self, i)
+                for i in range(self.pspace.component_count)])
+
+    @property
+    def shape(self):
+        return (self.pspace.component_count, 1)
 
 class MarginalDistribution(Basic):
     """

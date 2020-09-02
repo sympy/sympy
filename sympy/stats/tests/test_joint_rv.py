@@ -3,18 +3,19 @@ from sympy import (symbols, pi, oo, S, exp, sqrt, besselk, Indexed, Sum, simplif
                    IndexedBase, RisingFactorial, polar_lift, ProductSet, Range)
 from sympy.core.numbers import comp
 from sympy.integrals.integrals import integrate
-from sympy.matrices import Matrix, MatrixSymbol
-from sympy.stats import density, median, marginal_distribution, Normal, Laplace, E, sample
+from sympy.matrices import Matrix, MatrixSymbol, diagonalize_vector
+from sympy.stats import (density, median, marginal_distribution, Normal, Laplace,
+                        E, sample, variance)
 from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
                 JointDistributionHandmade, MultivariateT, NormalGamma,
                 GeneralizedMultivariateLogGammaOmega as GMVLGO, MultivariateBeta,
                 GeneralizedMultivariateLogGamma as GMVLG, MultivariateEwens,
                 Multinomial, NegativeMultinomial, MultivariateNormal,
                 MultivariateLaplace)
-from sympy.testing.pytest import raises, XFAIL, ignore_warnings, skip
+from sympy.testing.pytest import raises, ignore_warnings, skip, slow
 from sympy.external import import_module
 
-x, y, z, a, b = symbols('x y z a b')
+x, y, z, a, b, c = symbols('x y z a b c')
 
 def test_Normal():
     m = Normal('A', [1, 2], [[1, 0], [0, 1]])
@@ -236,11 +237,28 @@ def test_expectation():
     m = Normal('A', [x, y], [[1, 0], [0, 1]])
     assert simplify(E(m[1])) == y
 
-@XFAIL
+
 def test_joint_vector_expectation():
     m = Normal('A', [x, y], [[1, 0], [0, 1]])
-    assert E(m) == (x, y)
+    assert E(m).simplify() == Matrix([[x], [y]])
 
+    # issue 19552
+    s1, s2, s3, s4, s5, s6 = symbols('sigma1:7', positive=True)
+    N = Normal("N", [x, y, z], diagonalize_vector(Matrix([s1, s2, s3])))
+    M = Normal("M", [a, b, c], diagonalize_vector(Matrix([s4, s5, s6])))
+    result  = E(N).simplify()
+    assert result == Matrix([[x], [y], [z]])
+    for i in range(3):
+        assert E(N[i]).simplify() == result[i]
+    assert E(N + M).simplify() == Matrix([[a + x], [b + y], [c + z]])
+
+@slow
+def test_variance():
+    # issue 19952
+    s1, s2, s3 = symbols('sigma1:4', positive=True)
+    N = Normal("N", [x, y, z], diagonalize_vector(Matrix([s1, s2, s3])))
+    result = variance(N)
+    assert result.simplify() == Matrix([[s1, 0, 0], [0, s2, 0], [0, 0, s3]])
 
 def test_sample_numpy():
     distribs_numpy = [

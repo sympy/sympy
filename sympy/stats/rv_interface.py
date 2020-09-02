@@ -1,4 +1,5 @@
 from __future__ import print_function, division
+import warnings
 from sympy.sets import FiniteSet
 from sympy import (sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy,
                 piecewise_fold, solveset, Integral)
@@ -6,6 +7,7 @@ from .rv import (probability, expectation, density, where, given, pspace, cdf, P
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile, is_random,
                  sample_stochastic_process)
+from sympy.stats.symbolic_probability import Moment, CentralMoment, Variance, Covariance
 
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
@@ -38,10 +40,14 @@ def moment(X, n, c=0, condition=None, **kwargs):
     >>> moment(X, 1) == E(X)
     True
     """
-    from sympy.stats.symbolic_probability import Moment
     if kwargs.pop('evaluate', True):
         return Moment(X, n, c, condition).doit()
-    return Moment(X, n, c, condition).rewrite(Integral)
+    ### TODO: Remove the user warnings in the future releases
+    message = ("Since version 1.7, using `evaluate=False` returns `Moment` "
+              "object. If you want unevaluated Integral/Sum use "
+              "`moment(X, n, c, evaluate=False).rewrite(Integral)`")
+    warnings.warn(filldedent(message))
+    return Moment(X, n, c, condition)
 
 
 def variance(X, condition=None, **kwargs):
@@ -67,11 +73,15 @@ def variance(X, condition=None, **kwargs):
     >>> simplify(variance(B))
     p*(1 - p)
     """
-    if is_random(X) and pspace(X) == PSpace():
-        from sympy.stats.symbolic_probability import Variance
+    if (is_random(X) and pspace(X) == PSpace()
+            ) or kwargs.get('evaluate', True) == False:
+        ### TODO: Remove the user warnings in the future releases
+        message = ("Since version 1.7, using `evaluate=False` returns `Variance` "
+                  "object. If you want unevaluated Integral/Sum use "
+                  "`variance(X, condition, evaluate=False).rewrite(Integral)`")
+        warnings.warn(filldedent(message))
         return Variance(X, condition)
-
-    return cmoment(X, 2, condition, **kwargs)
+    return Variance(X, condition, **kwargs).doit()
 
 
 def standard_deviation(X, condition=None, **kwargs):
@@ -161,17 +171,17 @@ def covariance(X, Y, condition=None, **kwargs):
     lambda**(-2)
     >>> covariance(X, Y)
     0
-    >>> covariance(X, Y + rate*X)
+    >>> covariance(X, Y + rate*X).simplify()
     1/lambda
     """
-    if (is_random(X) and pspace(X) == PSpace()) or (is_random(Y) and pspace(Y) == PSpace()):
-        from sympy.stats.symbolic_probability import Covariance
+    if (is_random(X) and pspace(X) == PSpace()) or (is_random(Y) and pspace(Y) == PSpace()
+            ) or kwargs.get('evaluate', True) == False:
+        ### TODO: Remove the user warnings in the future releases
+        message = ("Since version 1.7, using `evaluate=False` returns `Covariance` "
+                  "object. If you want unevaluated Integral/Sum use "
+                  "`covariance(X, Y, condition, evaluate=False).rewrite(Integral)`")
         return Covariance(X, Y, condition)
-
-    return expectation(
-        (X - expectation(X, condition, **kwargs)) *
-        (Y - expectation(Y, condition, **kwargs)),
-        condition, **kwargs)
+    return Covariance(X, Y, condition).doit()
 
 
 def correlation(X, Y, condition=None, **kwargs):
@@ -199,8 +209,8 @@ def correlation(X, Y, condition=None, **kwargs):
     1
     >>> correlation(X, Y)
     0
-    >>> correlation(X, Y + rate*X)
-    1/sqrt(1 + lambda**(-2))
+    >>> correlation(X, Y + rate*X).simplify()
+    lambda/sqrt(lambda**2 + 1)
     """
     return covariance(X, Y, condition, **kwargs)/(std(X, condition, **kwargs)
      * std(Y, condition, **kwargs))
@@ -225,10 +235,13 @@ def cmoment(X, n, condition=None, **kwargs):
     >>> cmoment(X, 2) == variance(X)
     True
     """
-    from sympy.stats.symbolic_probability import CentralMoment
     if kwargs.pop('evaluate', True):
         return CentralMoment(X, n, condition).doit()
-    return CentralMoment(X, n, condition).rewrite(Integral)
+    ### TODO: Remove the user warnings in the future releases
+    message = ("Since version 1.7, using `evaluate=False` returns `CentralMoment` "
+              "object. If you want unevaluated Integral/Sum use "
+              "`cmoment(X, n, condition, evaluate=False).rewrite(Integral)`")
+    return CentralMoment(X, n, condition)
 
 
 def smoment(X, n, condition=None, **kwargs):
@@ -459,12 +472,12 @@ def coskewness(X, Y, Z, condition=None, **kwargs):
     0
     >>> coskewness(X, Y + X, Y + 2*X)
     16*sqrt(85)/85
-    >>> coskewness(X + 2*Y, Y + X, Y + 2*X, X > 3)
+    >>> coskewness(X + 2*Y, Y + X, Y + 2*X, X > 3).simplify()
     9*sqrt(170)/85
     >>> coskewness(Y, Y, Y) == skewness(Y)
     True
-    >>> coskewness(X, Y + p*X, Y + 2*p*X)
-    4/(sqrt(1 + 1/(4*p**2))*sqrt(4 + 1/(4*p**2)))
+    >>> coskewness(X, Y + p*X, Y + 2*p*X).simplify()
+    16*p**2/sqrt(64*p**4 + 20*p**2 + 1)
 
     Returns
     =======
