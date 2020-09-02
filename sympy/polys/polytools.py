@@ -155,7 +155,6 @@ class Poly(Basic):
 
     __slots__ = ('rep', 'gens')
 
-    is_commutative = True
     is_Poly = True
     _op_priority = 10.001
 
@@ -5376,11 +5375,11 @@ def gcd(f, g=None, *gens, **args):
 
         # gcd for domain Q[irrational] (purely algebraic irrational)
         a, b = map(sympify, (f, g))
-        if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
-            frc = (a/b).ratsimp()
-            if frc.is_rational:
-                # abs ensures that the returned gcd is always non-negative
-                return abs(a/frc.as_numer_denom()[0])
+        if isinstance(a, Expr) and isinstance(b, Expr):
+            if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
+                frc = (a/b).ratsimp()
+                if frc.is_rational:
+                    return abs(a/frc.as_numer_denom()[0])
 
     except PolificationFailed as exc:
         domain, (a, b) = construct_domain(exc.exprs)
@@ -5505,7 +5504,7 @@ def lcm(f, g=None, *gens, **args):
         (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
 
         # lcm for domain Q[irrational] (purely algebraic irrational)
-        a, b = map(sympify, (f, g))
+        a, b = F.as_expr(), G.as_expr()
         if a.is_algebraic and a.is_irrational and b.is_algebraic and b.is_irrational:
             frc = (a/b).ratsimp()
             if frc.is_rational:

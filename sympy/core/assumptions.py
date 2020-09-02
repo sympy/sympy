@@ -462,6 +462,31 @@ def check_assumptions(expr, against=None, **assume):
     return known
 
 
+class EmptyKB(FactKB):
+    """A FactKB specialized for the built-in rules
+
+    This is the only kind of FactKB that Basic objects should use.
+    """
+    def __init__(self, facts=None):
+        super().__init__(FactRules([]))
+        # save a copy of the facts dict
+        if not facts:
+            self._generator = {}
+        elif not isinstance(facts, FactKB):
+            self._generator = facts.copy()
+        else:
+            self._generator = facts.generator
+        if facts:
+            self.deduce_all_facts(facts)
+
+    def copy(self):
+        return self.__class__(self)
+
+    @property
+    def generator(self):
+        return self._generator.copy()
+
+
 class StdFactKB(FactKB):
     """A FactKB specialized for the built-in rules
 
@@ -634,7 +659,12 @@ class ManagedProperties(BasicMeta):
         defs.update(local_defs)
 
         cls._explicit_class_assumptions = defs
-        cls.default_assumptions = StdFactKB(defs)
+        if 'Expr' not in [c.__name__ for c in cls.mro()]:
+            cls.default_assumptions = EmptyKB(defs)
+            is_expr = False
+        else:
+            cls.default_assumptions = StdFactKB(defs)
+            is_expr = True
 
         cls._prop_handler = {}
         for k in _assume_defined:
@@ -660,7 +690,8 @@ class ManagedProperties(BasicMeta):
                 setattr(cls, pname, make_property(fact))
 
         # Finally, add any missing automagic property (e.g. for Basic)
-        for fact in _assume_defined:
-            pname = as_property(fact)
-            if not hasattr(cls, pname):
-                setattr(cls, pname, make_property(fact))
+        if is_expr:
+            for fact in _assume_defined:
+                pname = as_property(fact)
+                if not hasattr(cls, pname):
+                    setattr(cls, pname, make_property(fact))

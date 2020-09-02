@@ -159,7 +159,7 @@ class Mul(Expr, AssocOp):
     MatMul
 
     """
-    __slots__ = ()
+    __slots__ = ('is_commutative')
 
     args: tTuple[Expr]
 
@@ -1017,6 +1017,9 @@ class Mul(Expr, AssocOp):
 
     def matches(self, expr, repl_dict=None, old=False):
         expr = sympify(expr)
+        if not isinstance(expr, Expr):
+            return None
+        repl_dict = repl_dict.copy()
         if self.is_commutative and expr.is_commutative:
             return self._matches_commutative(expr, repl_dict, old)
         elif self.is_commutative is not expr.is_commutative:

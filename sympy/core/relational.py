@@ -1521,6 +1521,9 @@ def is_eq(lhs, rhs, assumptions=None):
     _lhs = AssumptionsWrapper(lhs, assumptions)
     _rhs = AssumptionsWrapper(rhs, assumptions)
 
+    if not (isinstance(lhs, Expr) and isinstance(rhs, Expr)):
+        return None
+
     if _lhs.is_infinite or _rhs.is_infinite:
         if fuzzy_xor([_lhs.is_infinite, _rhs.is_infinite]):
             return False
@@ -1554,6 +1557,7 @@ def is_eq(lhs, rhs, assumptions=None):
         if not (arglhs == S.NaN and argrhs == S.NaN):
             return fuzzy_bool(is_eq(arglhs, argrhs, assumptions))
 
+    # XXX: This check isn't needed any more
     if all(isinstance(i, Expr) for i in (lhs, rhs)):
         # see if the difference evaluates
         dif = lhs - rhs

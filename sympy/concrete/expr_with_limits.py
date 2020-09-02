@@ -555,7 +555,9 @@ class AddWithLimits(ExprWithLimits):
         arglist = [orientation*function]  # orientation not used in ExprWithLimits
         arglist.extend(limits)
         obj._args = tuple(arglist)
-        obj.is_commutative = function.is_commutative  # limits already checked
+        # XXX: This is just needed for Integral(Poly) which is deprecated.
+        is_commutative = getattr(function, 'is_commutative', None)
+        obj.is_commutative = is_commutative  # limits already checked
 
         return obj
 

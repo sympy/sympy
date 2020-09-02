@@ -1407,6 +1407,8 @@ class Float(Number):
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
+        if not isinstance(other, Expr):
+            return NotImplemented
         if other.is_Rational:
             # test self*other.q <?> other.p without losing precision
             '''
