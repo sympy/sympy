@@ -12,10 +12,9 @@ To integrate a scalar or vector field over a region, we have to first define a r
 
 The :func:`~sympy.vector.integrals.vector_integrate` function is used to integrate scalar or vector field over any type of region. It automatically determines the type of integration (line, surface or volume) depending on the nature of the object.
 
-Importing necessary classes and functions:
-
->>> from sympy import sin, cos, exp, pi
->>> from sympy.vector import CoordSys3D, ParametricRegion, vector_integrate
+We define a coordinate system and make necesssary imports for examples.
+>>> from sympy import sin, cos, exp, pi, symbols
+>>> from sympy.vector import CoordSys3D, ParametricRegion, ImplicitRegion, vector_integrate
 >>> from sympy.abc import r, x, y, z, theta, phi
 >>> C = CoordSys3D('C')
     
@@ -24,11 +23,17 @@ Calculation of Perimeter, Surface Area and Volume
 
 To calculate the perimeter of circle, we need to define a circle. Let's define it using its parametric equation.
 
->>> circle = ParametricRegion((4*cos(theta), 4*sin(theta)), (theta, 0, 2*pi))
+>>> param_circle = ParametricRegion((4*cos(theta), 4*sin(theta)), (theta, 0, 2*pi))
 
-To calculate the perimeter of the circle, we can integrate it over a scalar field of unit magnitude.
+We can also define circle using its implicit equation.
 
->>> vector_integrate(1, circle)
+>>> implicit_circle = ImplicitRegion((x, y), x**2 + y**2 - 4)
+
+Perimeter of a figure is equal to the absolute value of its integral over a unit scalar field. 
+
+>>> vector_integrate(1, param_circle)
+8*pi
+>>> vector_integrate(1, implicit_circle)
 8*pi
 
 Suppose a user wants to calculate the perimeter of triangle. Determining the parametric representation of triangle can be difficult. Instead, the user can use an object of :class:`~sympy.geometry.polygon.Polygon` class in the geometry module.
@@ -42,20 +47,56 @@ To define a solid sphere, we need to use three parameters (r, theta and phi).
 
 >>> solidsphere = ParametricRegion((r*sin(phi)*cos(theta),r*sin(phi)*sin(theta), r*cos(phi)),
 ... (phi, 0, pi), (theta, 0, 2*pi), (r, 0, 3))
->>> vector_integrate(1, solidsphere)
--36*pi
+>>> abs(vector_integrate(1, solidsphere))
+36*pi
 
-Calculation of charge on a body
-===============================
+Calculation of mass of a body
+=============================
 
+Consider a triangular lamina 𝑅  with vertices (0,0), (0, 5), (5,0) and with density :math:`\rho(x, y) = xy\:kg/m^2`. Find the total mass.
+
+>>> triangle = ParametricRegion((x, y), (x, 0, 5), (y, 0, 5 - x))
+>>> vector_integrate(C.x*C.y, triangle)
+625/24
+
+Find the mass of a cylinder centered on the z-axis which has height h, radius a and density :math:`\rho = x^2 + y^2\:kg/m^2`.
+
+>>> a, h = symbols('a h', positive=True)
+>>> cylinder = ParametricRegion((r*cos(theta), r*sin(theta), z),
+...                     (theta, 0, 2*pi), (z, 0, h), (r, 0, a))
+>>> vector_integrate(C.x**2 + C.y**2, cylinder)
+pi*a**4*h/2
 
 Calculation of Flux
 ===================
+                   
+1. Consider a region of space in which there is a constant vectorfield 
+:math:`E(x, y, z) = a\mathbf{\hat{k}}`.
+A  hemisphere  of  radius  r  lies  on  the  x-y plane. What is the flux of the field through the sphere?
 
+>>> semisphere = ParametricRegion((r*sin(phi)*cos(theta), r*sin(phi)*sin(theta), r*cos(phi)),\
+...                             (theta, 0, 2*pi), (phi, 0, pi/2))
+>>> flux = vector_integrate(a*C.k, semisphere)
+>>> flux
+pi*a*r**2
+
+2. Consider  a  region  of  space  in  which  there  is  a  vector  field 
+:math:`E(x, y, z) = x^2 \mathbf{\hat{k}}` above the x-y plane, and a field 
+:math:`E(x, y, z) = y^2 \mathbf{\hat{k}}` below the x-y plane. What is the flux of that vector field through a cube of side length L with its centre at the origin?”
+
+The field is parallel to the z-axis so only the top and bottom face of box will contribute to flux.
+
+>>> L = symbols('L', positive=True)
+>>> top_face = ParametricRegion((x, y, L/2), (x, -L/2, L/2), (y, -L/2, L/2)) 
+>>> bottom_face = ParametricRegion((x, y, -L/2), (x, -L/2, L/2), (y, -L/2, L/2)) 
+>>> flux = vector_integrate(C.x**2*C.k, top_face) + vector_integrate(C.y**2*C.k, bottom_face)
+>>> flux
+L**4/6
 
 Verifying Stoke's Theorem
 =========================
 
+See https://en.wikipedia.org/wiki/Stokes%27_theorem
 
 Example 1
     >>> from sympy.vector import curl
@@ -81,6 +122,9 @@ Example 2
 
 Verifying Divergence Theorem
 ============================
+
+See https://en.wikipedia.org/wiki/Divergence_theorem
+
 Example 1
     >>> from sympy.vector import divergence
     >>> sphere = ParametricRegion((4*sin(phi)*cos(theta),4*sin(phi)*sin(theta), 4*cos(phi)),
