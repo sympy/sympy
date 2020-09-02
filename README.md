@@ -184,7 +184,7 @@ Our issue tracker is at <https://github.com/sympy/sympy/issues>. Please
 report any bugs that you find. Or, even better, fork the repository on
 GitHub and create a pull request. We welcome all changes, big or small,
 and we will help you make the pull request if you are new to git (just
-ask on our mailing list or Gitter Channel. If you further have any queries, you can find answers
+ask on our mailing list or Gitter Channel). If you further have any queries, you can find answers
 on Stack Overflow using the [sympy](https://stackoverflow.com/questions/tagged/sympy) tag.
 
 ## Brief History
