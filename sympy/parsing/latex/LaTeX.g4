@@ -74,8 +74,8 @@ LIM_APPROACH_SYM:
 	| '\\longrightarrow'
 	| '\\Longrightarrow';
 FUNC_INT: '\\int';
-FUNC_SUM: ('\\sum' | '\\Sigma');
-FUNC_PROD: ('\\prod' | '\\Pi');
+FUNC_SUM: '\\sum';
+FUNC_PROD: '\\prod';
 
 FUNC_EXP: '\\exp';
 FUNC_LOG: '\\log';
