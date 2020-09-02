@@ -776,15 +776,6 @@ class MatrixBase(MatrixDeprecated,
         """
         return self.rows * self.cols
 
-    def __mathml__(self):
-        mml = ""
-        for i in range(self.rows):
-            mml += "<matrixrow>"
-            for j in range(self.cols):
-                mml += self[i, j].__mathml__()
-            mml += "</matrixrow>"
-        return "<matrix>" + mml + "</matrix>"
-
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
         from sympy import binomial
@@ -820,9 +811,6 @@ class MatrixBase(MatrixDeprecated,
             jordan_cells[n] = jordan_cell_power(j, num)
         return self._new(P.multiply(diag(*jordan_cells))
                 .multiply(P.inv()))
-
-    def __repr__(self):
-        return sstr(self)
 
     def __str__(self):
         if self.rows == 0 or self.cols == 0:

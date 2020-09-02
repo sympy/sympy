@@ -578,18 +578,22 @@ class Moment(Expr):
     >>> M = Moment(X, 3, 1)
 
     To evaluate the result of Moment use `doit`:
+
     >>> M.doit()
     mu**3 - 3*mu**2 + 3*mu*sigma**2 + 3*mu - 3*sigma**2 - 1
 
     Rewrite the Moment expression in terms of Expectation:
+
     >>> M.rewrite(Expectation)
     Expectation((X - 1)**3)
 
     Rewrite the Moment expression in terms of Probability:
+
     >>> M.rewrite(Probability)
     Integral((x - 1)**3*Probability(Eq(X, x)), (x, -oo, oo))
 
     Rewrite the Moment expression in terms of Integral:
+
     >>> M.rewrite(Integral)
     Integral(sqrt(2)*(X - 1)**3*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo))
 
@@ -632,18 +636,22 @@ class CentralMoment(Expr):
     >>> CM = CentralMoment(X, 4)
 
     To evaluate the result of CentralMoment use `doit`:
+
     >>> CM.doit().simplify()
     3*sigma**4
 
     Rewrite the CentralMoment expression in terms of Expectation:
+
     >>> CM.rewrite(Expectation)
     Expectation((X - Expectation(X))**4)
 
     Rewrite the CentralMoment expression in terms of Probability:
+
     >>> CM.rewrite(Probability)
     Integral((x - Integral(x*Probability(True), (x, -oo, oo)))**4*Probability(Eq(X, x)), (x, -oo, oo))
 
     Rewrite the CentralMoment expression in terms of Integral:
+
     >>> CM.rewrite(Integral)
     Integral(sqrt(2)*(X - Integral(sqrt(2)*X*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo)))**4*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo))
 

@@ -1,5 +1,5 @@
 from sympy.core.symbol import symbols
-from sympy.printing.ccode import ccode
+from sympy.printing import ccode
 from sympy.codegen.ast import Declaration, Variable, float64, int64, String
 from sympy.codegen.cnodes import (
     alignof, CommaOperator, goto, Label, PreDecrement, PostDecrement, PreIncrement, PostIncrement,

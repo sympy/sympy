@@ -4,8 +4,6 @@ Base class to provide str and repr hooks that `init_printing` can overwrite.
 This is exposed publicly in the `printing.defaults` module,
 but cannot be defined there without causing circular imports.
 """
-from typing import Any
-
 
 class Printable:
     """
@@ -27,10 +25,27 @@ class Printable:
 
     __repr__ = __str__
 
-    # We don't define _repr_png_ here because it would add a large amount of
+    def _repr_disabled(self):
+        """
+        No-op repr function used to disable jupyter display hooks.
+
+        When :func:`sympy.init_printing` is used to disable certain display
+        formats, this function is copied into the appropriate ``_repr_*_``
+        attributes.
+
+        While we could just set the attributes to `None``, doing it this way
+        allows derived classes to call `super()`.
+        """
+        return None
+
+    # We don't implement _repr_png_ here because it would add a large amount of
     # data to any notebook containing SymPy expressions, without adding
     # anything useful to the notebook. It can still enabled manually, e.g.,
     # for the qtconsole, with init_printing().
+    _repr_png_ = _repr_disabled
+
+    _repr_svg_ = _repr_disabled
+
     def _repr_latex_(self):
         """
         IPython/Jupyter LaTeX printing
@@ -43,5 +58,3 @@ class Printable:
         from sympy.printing.latex import latex
         s = latex(self, mode='plain')
         return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_  # type: Any

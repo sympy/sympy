@@ -12,7 +12,6 @@ from __future__ import print_function, division
 
 from typing import Any, Dict
 
-from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
@@ -179,6 +178,8 @@ class RCodePrinter(CodePrinter):
         return '-Inf'
 
     def _print_Assignment(self, expr):
+        from sympy.codegen.ast import Assignment
+
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.tensor.indexed import IndexedBase
         lhs = expr.lhs

@@ -694,6 +694,14 @@ def test_piecewise_solveset():
 
     assert solveset(Piecewise((x - 1, Ne(x, I)), (x, True)), x) == FiniteSet(1)
 
+    # issue 19718
+    g = Piecewise((1, x > 10), (0, True))
+    assert solveset(g > 0, x, S.Reals) == Interval.open(10, oo)
+
+    from sympy.logic.boolalg import BooleanTrue
+    f = BooleanTrue()
+    assert solveset(f, x, domain=Interval(-3, 10)) == Interval(-3, 10)
+
 
 def test_solveset_complex_polynomial():
     assert solveset_complex(a*x**2 + b*x + c, x) == \
@@ -1158,6 +1166,9 @@ def test_solveset():
                                                   S.Integers))
     # issue 13825
     assert solveset(x**2 + f(0) + 1, x) == {-sqrt(-f(0) - 1), sqrt(-f(0) - 1)}
+
+    # issue 19977
+    assert solveset(atan(log(x)) > 0, x, domain=Interval.open(0, oo)) == Interval.open(1, oo)
 
 
 def test__solveset_multi():

@@ -1184,10 +1184,6 @@ class CountingProcess(ContinuousTimeStochasticProcess):
     index_set = _set_converter(Interval(0, oo))
 
     @property
-    def state_space(self):
-        return _set_converter(Interval(0, oo))
-
-    @property
     def symbol(self):
         return self.args[0]
 
@@ -1429,7 +1425,7 @@ class PoissonProcess(CountingProcess):
     References
     ==========
 
-    .. [1] https://www.probabilitycourse.com
+    .. [1] https://www.probabilitycourse.com/chapter11/11_0_0_intro.php
     .. [2] https://en.wikipedia.org/wiki/Poisson_point_process
 
     """
@@ -1486,7 +1482,7 @@ class WienerProcess(CountingProcess):
     >>> from sympy import symbols, Contains, Interval
     >>> X = WienerProcess("X")
     >>> X.state_space
-    Interval(0, oo)
+    Reals
     >>> t1, t2 = symbols('t1 t2', positive=True)
     >>> P(X(t1) < 7).simplify()
     erf(7*sqrt(2)/(2*sqrt(t1)))/2 + 1/2
@@ -1501,13 +1497,17 @@ class WienerProcess(CountingProcess):
     References
     ==========
 
-    .. [1] https://www.probabilitycourse.com
+    .. [1] https://www.probabilitycourse.com/chapter11/11_4_0_brownian_motion_wiener_process.php
     .. [2] https://en.wikipedia.org/wiki/Wiener_process
 
     """
     def __new__(cls, sym):
         sym = _symbol_converter(sym)
         return Basic.__new__(cls, sym)
+
+    @property
+    def state_space(self):
+        return S.Reals
 
     def distribution(self, rv):
         return NormalDistribution(0, sqrt(rv.key))
@@ -1574,6 +1574,10 @@ class GammaProcess(CountingProcess):
     @property
     def gamma(self):
         return self.args[2]
+
+    @property
+    def state_space(self):
+        return _set_converter(Interval(0, oo))
 
     def distribution(self, rv):
         return GammaDistribution(self.gamma*rv.key, 1/self.lamda)

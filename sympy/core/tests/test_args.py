@@ -462,6 +462,11 @@ def test_sympy__codegen__numpy_nodes__logaddexp2():
     assert _test_args(logaddexp2(x, y))
 
 
+def test_sympy__codegen__scipy_nodes__cosm1():
+    from sympy.codegen.scipy_nodes import cosm1
+    assert _test_args(cosm1(x))
+
+
 @XFAIL
 def test_sympy__combinatorics__graycode__GrayCode():
     from sympy.combinatorics.graycode import GrayCode
@@ -1732,44 +1737,45 @@ def test_sympy__stats__stochastic_process_types__GammaProcess():
 
 def test_sympy__stats__random_matrix__RandomMatrixPSpace():
     from sympy.stats.random_matrix import RandomMatrixPSpace
-    from sympy.stats.random_matrix_models import RandomMatrixEnsemble
-    assert _test_args(RandomMatrixPSpace('P', RandomMatrixEnsemble('R', 3)))
+    from sympy.stats.random_matrix_models import RandomMatrixEnsembleModel
+    model = RandomMatrixEnsembleModel('R', 3)
+    assert _test_args(RandomMatrixPSpace('P', model=model))
 
-def test_sympy__stats__random_matrix_models__RandomMatrixEnsemble():
-    from sympy.stats.random_matrix_models import RandomMatrixEnsemble
-    assert _test_args(RandomMatrixEnsemble('R', 3))
+def test_sympy__stats__random_matrix_models__RandomMatrixEnsembleModel():
+    from sympy.stats.random_matrix_models import RandomMatrixEnsembleModel
+    assert _test_args(RandomMatrixEnsembleModel('R', 3))
 
-def test_sympy__stats__random_matrix_models__GaussianEnsemble():
-    from sympy.stats.random_matrix_models import GaussianEnsemble
-    assert _test_args(GaussianEnsemble('G', 3))
+def test_sympy__stats__random_matrix_models__GaussianEnsembleModel():
+    from sympy.stats.random_matrix_models import GaussianEnsembleModel
+    assert _test_args(GaussianEnsembleModel('G', 3))
 
-def test_sympy__stats__random_matrix_models__GaussianUnitaryEnsemble():
-    from sympy.stats import GaussianUnitaryEnsemble
-    assert _test_args(GaussianUnitaryEnsemble('U', 3))
+def test_sympy__stats__random_matrix_models__GaussianUnitaryEnsembleModel():
+    from sympy.stats.random_matrix_models import GaussianUnitaryEnsembleModel
+    assert _test_args(GaussianUnitaryEnsembleModel('U', 3))
 
-def test_sympy__stats__random_matrix_models__GaussianOrthogonalEnsemble():
-    from sympy.stats import GaussianOrthogonalEnsemble
-    assert _test_args(GaussianOrthogonalEnsemble('U', 3))
+def test_sympy__stats__random_matrix_models__GaussianOrthogonalEnsembleModel():
+    from sympy.stats.random_matrix_models import GaussianOrthogonalEnsembleModel
+    assert _test_args(GaussianOrthogonalEnsembleModel('U', 3))
 
-def test_sympy__stats__random_matrix_models__GaussianSymplecticEnsemble():
-    from sympy.stats import GaussianSymplecticEnsemble
-    assert _test_args(GaussianSymplecticEnsemble('U', 3))
+def test_sympy__stats__random_matrix_models__GaussianSymplecticEnsembleModel():
+    from sympy.stats.random_matrix_models import GaussianSymplecticEnsembleModel
+    assert _test_args(GaussianSymplecticEnsembleModel('U', 3))
 
-def test_sympy__stats__random_matrix_models__CircularEnsemble():
-    from sympy.stats import CircularEnsemble
-    assert _test_args(CircularEnsemble('C', 3))
+def test_sympy__stats__random_matrix_models__CircularEnsembleModel():
+    from sympy.stats.random_matrix_models import CircularEnsembleModel
+    assert _test_args(CircularEnsembleModel('C', 3))
 
-def test_sympy__stats__random_matrix_models__CircularUnitaryEnsemble():
-    from sympy.stats import CircularUnitaryEnsemble
-    assert _test_args(CircularUnitaryEnsemble('U', 3))
+def test_sympy__stats__random_matrix_models__CircularUnitaryEnsembleModel():
+    from sympy.stats.random_matrix_models import CircularUnitaryEnsembleModel
+    assert _test_args(CircularUnitaryEnsembleModel('U', 3))
 
-def test_sympy__stats__random_matrix_models__CircularOrthogonalEnsemble():
-    from sympy.stats import CircularOrthogonalEnsemble
-    assert _test_args(CircularOrthogonalEnsemble('O', 3))
+def test_sympy__stats__random_matrix_models__CircularOrthogonalEnsembleModel():
+    from sympy.stats.random_matrix_models import CircularOrthogonalEnsembleModel
+    assert _test_args(CircularOrthogonalEnsembleModel('O', 3))
 
-def test_sympy__stats__random_matrix_models__CircularSymplecticEnsemble():
-    from sympy.stats import CircularSymplecticEnsemble
-    assert _test_args(CircularSymplecticEnsemble('S', 3))
+def test_sympy__stats__random_matrix_models__CircularSymplecticEnsembleModel():
+    from sympy.stats.random_matrix_models import CircularSymplecticEnsembleModel
+    assert _test_args(CircularSymplecticEnsembleModel('S', 3))
 
 def test_sympy__stats__symbolic_multivariate_probability__ExpectationMatrix():
     from sympy.stats import ExpectationMatrix
