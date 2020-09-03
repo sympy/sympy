@@ -45,13 +45,13 @@ class re(Function):
     ==========
 
     exp : expression
-        real, complex or mixed expression
+        Real, complex or mixed expression.
 
     Returns
     =======
 
     value : int
-        integer value of real part of expression
+        Integer value of real part of expression.
 
     See Also
     ========
@@ -193,13 +193,13 @@ class im(Function):
     ==========
 
     exp : expression
-        real, complex or mixed expression
+        Real, complex or mixed expression.
 
     Returns
     =======
 
     value : int
-        integer value of imaginary part of expression
+        Integer value of imaginary part of expression.
 
     See Also
     ========
