@@ -1,5 +1,5 @@
 from sympy.core.function import expand_mul
-from sympy.core.symbol import Dummy, _uniquely_named_symbol, symbols
+from sympy.core.symbol import Dummy, uniquely_named_symbol, symbols
 from sympy.utilities.iterables import numbered_symbols
 
 from .common import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
@@ -541,31 +541,29 @@ def _gauss_jordan_solve(M, B, freevar=False):
     pivots    = list(filter(lambda p: p < col, pivots))
     rank      = len(pivots)
 
-    # Bring to block form
-    permutation = Matrix(range(col)).T
+    # Get index of free symbols (free parameters)
+    # non-pivots columns are free variables
+    free_var_index = [c for c in range(A.cols) if c not in pivots]
 
-    for i, c in enumerate(pivots):
-        permutation.col_swap(i, c)
+    # Bring to block form
+    permutation = Matrix(pivots + free_var_index).T
 
     # check for existence of solutions
     # rank of aug Matrix should be equal to rank of coefficient matrix
     if not v[rank:, :].is_zero_matrix:
         raise ValueError("Linear system has no solution")
 
-    # Get index of free symbols (free parameters)
-    # non-pivots columns are free variables
-    free_var_index = permutation[len(pivots):]
-
     # Free parameters
     # what are current unnumbered free symbol names?
-    name = _uniquely_named_symbol('tau', aug,
-            compare=lambda i: str(i).rstrip('1234567890')).name
+    name = uniquely_named_symbol('tau', aug,
+            compare=lambda i: str(i).rstrip('1234567890'),
+            modify=lambda s: '_' + s).name
     gen  = numbered_symbols(name)
     tau  = Matrix([next(gen) for k in range((col - rank)*B_cols)]).reshape(
             col - rank, B_cols)
 
     # Full parametric solution
-    V        = A[:rank, [c for c in range(A.cols) if c not in pivots]]
+    V        = A[:rank, free_var_index]
     vt       = v[:rank, :]
     free_sol = tau.vstack(vt - V * tau, tau)
 

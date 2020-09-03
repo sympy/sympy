@@ -1,5 +1,6 @@
 from sympy.core import S, Basic, Dict, Symbol, Tuple, sympify
 from sympy.core.compatibility import iterable
+from sympy.core.symbol import Str
 from sympy.sets import Set, FiniteSet, EmptySet
 
 
@@ -196,8 +197,8 @@ class NamedMorphism(Morphism):
         if not name:
             raise ValueError("Empty morphism names not allowed.")
 
-        if not isinstance(name, Symbol):
-            name = Symbol(name)
+        if not isinstance(name, Str):
+            name = Str(name)
 
         return Basic.__new__(cls, domain, codomain, name)
 
@@ -449,17 +450,17 @@ class Category(Basic):
     ========
     Diagram
     """
-    def __new__(cls, symbol, objects=EmptySet, commutative_diagrams=EmptySet):
-        if not symbol:
+    def __new__(cls, name, objects=EmptySet, commutative_diagrams=EmptySet):
+        if not name:
             raise ValueError("A Category cannot have an empty name.")
 
-        if not isinstance(symbol, Symbol):
-            symbol = Symbol(symbol)
+        if not isinstance(name, Str):
+            name = Str(name)
 
         if not isinstance(objects, Class):
             objects = Class(objects)
 
-        new_category = Basic.__new__(cls, symbol, objects,
+        new_category = Basic.__new__(cls, name, objects,
                                      FiniteSet(*commutative_diagrams))
         return new_category
 
@@ -563,7 +564,7 @@ class Diagram(Basic):
     ========
 
     >>> from sympy.categories import Object, NamedMorphism, Diagram
-    >>> from sympy import FiniteSet, pprint, default_sort_key
+    >>> from sympy import pprint, default_sort_key
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")

@@ -40,7 +40,7 @@ Examples
 One could also create custom distribution and define custom random variables
 as follows:
 
-1. If the you want to create a Continuous Random Variable:
+1. If you want to create a Continuous Random Variable:
 
 >>> from sympy.stats import ContinuousRV, P, E
 >>> from sympy import exp, Symbol, Interval, oo
@@ -81,7 +81,7 @@ exp(-x)
 >>> dist.pdf(x)
 2**(1 - x)/2
 
-3. If the you want to create a Finite Random Variable:
+3. If you want to create a Finite Random Variable:
 
 >>> from sympy.stats import FiniteRV, P, E
 >>> from sympy import Rational
@@ -106,18 +106,18 @@ __all__ = [
     'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'independent',
     'random_symbols', 'correlation', 'factorial_moment', 'moment', 'cmoment',
     'sampling_density', 'moment_generating_function', 'smoment', 'quantile',
-    'coskewness',
+    'coskewness', 'sample_stochastic_process',
 
     'FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin', 'Binomial',
     'BetaBinomial', 'Hypergeometric', 'Rademacher',
     'FiniteDistributionHandmade',
 
     'ContinuousRV', 'Arcsin', 'Benini', 'Beta', 'BetaNoncentral', 'BetaPrime',
-    'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Erlang',
+    'BoundedPareto', 'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Erlang',
     'ExGaussian', 'Exponential', 'ExponentialPower', 'FDistribution',
     'FisherZ', 'Frechet', 'Gamma', 'GammaInverse', 'Gompertz', 'Gumbel',
-    'Kumaraswamy', 'Laplace', 'Levy', 'Logistic', 'LogLogistic', 'LogNormal', 'Moyal',
-    'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto', 'PowerFunction',
+    'Kumaraswamy', 'Laplace', 'Levy', 'Logistic', 'LogLogistic', 'LogNormal', 'Lomax',
+    'Moyal', 'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto', 'PowerFunction',
     'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal', 'StudentT', 'ShiftedGompertz',
     'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
     'Weibull', 'WignerSemicircle', 'ContinuousDistributionHandmade',
@@ -128,11 +128,12 @@ __all__ = [
     'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
     'GeneralizedMultivariateLogGammaOmega', 'Multinomial', 'MultivariateBeta',
     'MultivariateEwens', 'MultivariateT', 'NegativeMultinomial',
-    'NormalGamma',
+    'NormalGamma', 'MultivariateNormal', 'MultivariateLaplace', 'marginal_distribution',
 
     'StochasticProcess', 'DiscreteTimeStochasticProcess',
     'DiscreteMarkovChain', 'TransitionMatrixOf', 'StochasticStateSpaceOf',
     'GeneratorMatrixOf', 'ContinuousMarkovChain', 'BernoulliProcess',
+    'PoissonProcess', 'WienerProcess', 'GammaProcess',
 
     'CircularEnsemble', 'CircularUnitaryEnsemble',
     'CircularOrthogonalEnsemble', 'CircularSymplecticEnsemble',
@@ -141,24 +142,30 @@ __all__ = [
     'joint_eigen_distribution', 'JointEigenDistribution',
     'level_spacing_distribution',
 
-    'Probability', 'Expectation', 'Variance', 'Covariance',
+    'MatrixGamma', 'Wishart', 'MatrixNormal',
+
+    'Probability', 'Expectation', 'Variance', 'Covariance', 'Moment',
+    'CentralMoment',
+
+    'ExpectationMatrix', 'VarianceMatrix', 'CrossCovarianceMatrix'
 
 ]
 from .rv_interface import (P, E, H, density, where, given, sample, cdf, median,
         characteristic_function, pspace, sample_iter, variance, std, skewness,
         kurtosis, covariance, dependent, entropy, independent, random_symbols,
         correlation, factorial_moment, moment, cmoment, sampling_density,
-        moment_generating_function, smoment, quantile, coskewness)
+        moment_generating_function, smoment, quantile, coskewness,
+        sample_stochastic_process)
 
 from .frv_types import (FiniteRV, DiscreteUniform, Die, Bernoulli, Coin,
         Binomial, BetaBinomial, Hypergeometric, Rademacher,
         FiniteDistributionHandmade)
 
 from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
-        BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared, Dagum, Erlang,
+        BetaPrime, BoundedPareto, Cauchy, Chi, ChiNoncentral, ChiSquared, Dagum, Erlang,
         ExGaussian, Exponential, ExponentialPower, FDistribution, FisherZ,
         Frechet, Gamma, GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace,
-        Levy, Logistic, LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal,
+        Levy, Logistic, LogLogistic, LogNormal, Lomax, Maxwell, Moyal, Nakagami, Normal,
         GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, StudentT,
         PowerFunction, ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
         VonMises, Wald, Weibull, WignerSemicircle, ContinuousDistributionHandmade)
@@ -169,12 +176,14 @@ from .drv_types import (Geometric, Hermite, Logarithmic, NegativeBinomial, Poiss
 from .joint_rv_types import (JointRV, Dirichlet,
         GeneralizedMultivariateLogGamma, GeneralizedMultivariateLogGammaOmega,
         Multinomial, MultivariateBeta, MultivariateEwens, MultivariateT,
-        NegativeMultinomial, NormalGamma)
+        NegativeMultinomial, NormalGamma, MultivariateNormal, MultivariateLaplace,
+        marginal_distribution)
 
 from .stochastic_process_types import (StochasticProcess,
         DiscreteTimeStochasticProcess, DiscreteMarkovChain,
         TransitionMatrixOf, StochasticStateSpaceOf, GeneratorMatrixOf,
-        ContinuousMarkovChain, BernoulliProcess)
+        ContinuousMarkovChain, BernoulliProcess, PoissonProcess, WienerProcess,
+        GammaProcess)
 
 from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         CircularOrthogonalEnsemble, CircularSymplecticEnsemble,
@@ -182,5 +191,10 @@ from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         GaussianSymplecticEnsemble, joint_eigen_distribution,
         JointEigenDistribution, level_spacing_distribution)
 
+from .matrix_distributions import MatrixGamma, Wishart, MatrixNormal
+
 from .symbolic_probability import (Probability, Expectation, Variance,
-        Covariance)
+        Covariance, Moment, CentralMoment)
+
+from .symbolic_multivariate_probability import (ExpectationMatrix, VarianceMatrix,
+        CrossCovarianceMatrix)

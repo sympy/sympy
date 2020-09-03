@@ -138,7 +138,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     >>> [simplify(c) for c in  mycoeffs] #doctest: +NORMALIZE_WHITESPACE
     [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4,
     (-sqrt(2)*h**3 - 4*h**2*x + 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
-    6*x/h**2 - 8*x**3/h**4,
+    (6*h**2*x - 8*x**3)/h**4,
     (sqrt(2)*h**3 - 4*h**2*x - 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
     (-h**3/2 + h**2*x + 3*h*x**2 - 4*x**3)/h**4]
 
@@ -441,7 +441,7 @@ def differentiate_finite(expr, *symbols,
     Examples
     ========
 
-    >>> from sympy import cos, sin, Function, differentiate_finite
+    >>> from sympy import sin, Function, differentiate_finite
     >>> from sympy.abc import x, y, h
     >>> f, g = Function('f'), Function('g')
     >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h])

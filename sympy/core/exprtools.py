@@ -49,7 +49,7 @@ def _monotonic_sign(self):
     ========
 
     >>> from sympy.core.exprtools import _monotonic_sign as F
-    >>> from sympy import Dummy, S
+    >>> from sympy import Dummy
     >>> nn = Dummy(integer=True, nonnegative=True)
     >>> p = Dummy(integer=True, positive=True)
     >>> p2 = Dummy(integer=True, positive=True)
@@ -1282,7 +1282,7 @@ def _mask_nc(eq, name=None):
     ========
 
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
-    >>> from sympy import symbols, Mul
+    >>> from sympy import symbols
     >>> from sympy.core.exprtools import _mask_nc
     >>> from sympy.abc import x, y
     >>> A, B, C = symbols('A,B,C', commutative=False)
@@ -1315,22 +1315,6 @@ def _mask_nc(eq, name=None):
     >>> eq = A*Commutator(A, B) + B*Commutator(A, C)
     >>> _mask_nc(eq, 'd')
     (A*_d0 + B*_d1, {_d0: Commutator(A, B), _d1: Commutator(A, C)}, [_d0, _d1, A, B])
-
-    If there is an object that:
-
-        - doesn't contain nc-symbols
-        - but has arguments which derive from Basic, not Expr
-        - and doesn't define an _eval_is_commutative routine
-
-    then it will give False (or None?) for the is_commutative test. Such
-    objects are also removed by this routine:
-
-    >>> from sympy import Basic
-    >>> eq = (1 + Mul(Basic(), Basic(), evaluate=False))
-    >>> eq.is_commutative
-    False
-    >>> _mask_nc(eq, 'd')
-    (_d0**2 + 1, {_d0: Basic()}, [])
 
     """
     name = name or 'mask'

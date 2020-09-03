@@ -29,7 +29,7 @@ class re(Function):
     ========
 
     >>> from sympy import re, im, I, E
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> re(2*E)
     2*E
     >>> re(2*I + 17)
@@ -46,6 +46,7 @@ class re(Function):
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
+    _singularities = True  # non-holomorphic
 
     @classmethod
     def eval(cls, arg):
@@ -154,6 +155,7 @@ class im(Function):
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
+    _singularities = True  # non-holomorphic
 
     @classmethod
     def eval(cls, arg):
@@ -283,6 +285,7 @@ class sign(Function):
     """
 
     is_complex = True
+    _singularities = True
 
     def doit(self, **hints):
         if self.args[0].is_zero is False:
@@ -391,8 +394,11 @@ class sign(Function):
         if arg.is_extended_real:
             return Heaviside(arg, H0=S(1)/2) * 2 - 1
 
+    def _eval_rewrite_as_Abs(self, arg, **kwargs):
+        return Piecewise((0, Eq(arg, 0)), (arg / Abs(arg), True))
+
     def _eval_simplify(self, **kwargs):
-        return self.func(self.args[0].factor())  # XXX include doit?
+        return self.func(factor_terms(self.args[0]))  # XXX include doit?
 
 
 class Abs(Function):
@@ -437,6 +443,7 @@ class Abs(Function):
     is_extended_negative = False
     is_extended_nonnegative = True
     unbranched = True
+    _singularities = True  # non-holomorphic
 
     def fdiff(self, argindex=1):
         """
@@ -587,7 +594,7 @@ class Abs(Function):
                 return self.args[0]**(exponent - 1)*self
         return
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         direction = self.args[0].leadterm(x)[0]
         if direction.has(log(x)):
             direction = direction.subs(log(x), logx)
@@ -653,6 +660,7 @@ class arg(Function):
     is_extended_real = True
     is_real = True
     is_finite = True
+    _singularities = True  # non-holomorphic
 
     @classmethod
     def eval(cls, arg):
@@ -713,6 +721,7 @@ class conjugate(Function):
 
     .. [1] https://en.wikipedia.org/wiki/Complex_conjugation
     """
+    _singularities = True  # non-holomorphic
 
     @classmethod
     def eval(cls, arg):
@@ -790,7 +799,7 @@ class adjoint(Function):
         arg = printer._print(self.args[0])
         tex = r'%s^{\dagger}' % arg
         if exp:
-            tex = r'\left(%s\right)^{%s}' % (tex, printer._print(exp))
+            tex = r'\left(%s\right)^{%s}' % (tex, exp)
         return tex
 
     def _pretty(self, printer, *args):

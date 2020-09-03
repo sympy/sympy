@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
+from sympy.codegen.cfunctions import expm1, log1p
+from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.numbers import pi
@@ -17,6 +19,7 @@ from sympy.testing.pytest import raises
 from sympy.tensor import IndexedBase
 from sympy.testing.pytest import skip
 from sympy.external import import_module
+from sympy.functions.special.gamma_functions import loggamma
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
@@ -75,6 +78,7 @@ def test_MpmathPrinter():
     assert p.doprint(S.NaN) == 'mpmath.nan'
     assert p.doprint(S.Infinity) == 'mpmath.inf'
     assert p.doprint(S.NegativeInfinity) == 'mpmath.ninf'
+    assert p.doprint(loggamma(x)) == 'mpmath.loggamma(x)'
 
 
 def test_NumPyPrinter():
@@ -149,7 +153,8 @@ def test_SciPyPrinter():
     assert 'numpy' in p.module_imports
     assert not any(m.startswith('scipy') for m in p.module_imports)
     smat = SparseMatrix(2, 5, {(0, 1): 3})
-    assert p.doprint(smat) == 'scipy.sparse.coo_matrix([3], ([0], [1]), shape=(2, 5))'
+    assert p.doprint(smat) == \
+        'scipy.sparse.coo_matrix(([3], ([0], [1])), shape=(2, 5))'
     assert 'scipy.sparse' in p.module_imports
 
     assert p.doprint(S.GoldenRatio) == 'scipy.constants.golden_ratio'
@@ -323,3 +328,10 @@ def test_airy_prime():
     prntr = PythonCodePrinter()
     assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # airyaiprime\nairyaiprime(x)'
     assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # airybiprime\nairybiprime(x)'
+
+
+def test_numerical_accuracy_functions():
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expm1(x)) == 'numpy.expm1(x)'
+    assert prntr.doprint(log1p(x)) == 'numpy.log1p(x)'
+    assert prntr.doprint(cosm1(x)) == 'scipy.special.cosm1(x)'

@@ -207,16 +207,6 @@ class MapleCodePrinter(CodePrinter):
     def _print_SparseMatrix(self, expr):
         return self._get_matrix(expr, sparse=True)
 
-    _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
-    _print_MutableSparseMatrix = \
-        _print_ImmutableSparseMatrix = \
-        _print_SparseMatrix
-
     def _print_Identity(self, expr):
         if isinstance(expr.rows, Integer) or isinstance(expr.rows, IntegerConstant):
             return self._print(sympy.SparseMatrix(expr))

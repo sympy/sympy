@@ -2,7 +2,7 @@ from types import FunctionType
 
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
-from sympy.core.symbol import _uniquely_named_symbol
+from sympy.core.symbol import uniquely_named_symbol
 from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
@@ -232,8 +232,8 @@ def _berkowitz_toeplitz_matrix(M):
     # compute -R * A**n * C.
     diags = [C]
     for i in range(M.rows - 2):
-        diags.append(A.multiply(diags[i], dotprodsimp=True))
-    diags = [(-R).multiply(d, dotprodsimp=True)[0, 0] for d in diags]
+        diags.append(A.multiply(diags[i], dotprodsimp=None))
+    diags = [(-R).multiply(d, dotprodsimp=None)[0, 0] for d in diags]
     diags = [M.one, -a] + diags
 
     def entry(i,j):
@@ -289,7 +289,7 @@ def _berkowitz_vector(M):
 
     submat, toeplitz = _berkowitz_toeplitz_matrix(M)
 
-    return toeplitz.multiply(_berkowitz_vector(submat), dotprodsimp=True)
+    return toeplitz.multiply(_berkowitz_vector(submat), dotprodsimp=None)
 
 
 def _adjugate(M, method="berkowitz"):
@@ -401,14 +401,14 @@ def _charpoly(M, x='lambda', simplify=_simplify):
         raise NonSquareMatrixError()
     if M.is_lower or M.is_upper:
         diagonal_elements = M.diagonal()
-        x = _uniquely_named_symbol(x, diagonal_elements)
+        x = uniquely_named_symbol(x, diagonal_elements, modify=lambda s: '_' + s)
         m = 1
         for i in diagonal_elements:
             m = m * (x - simplify(i))
         return PurePoly(m, x)
 
     berk_vector = _berkowitz_vector(M)
-    x = _uniquely_named_symbol(x, berk_vector)
+    x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
 
     return PurePoly([simplify(a) for a in berk_vector], x)
 
@@ -542,10 +542,15 @@ def _det(M, method="bareiss", iszerofunc=None):
     Examples
     ========
 
-    >>> from sympy import Matrix, MatrixSymbol, eye, det
+    >>> from sympy import Matrix, eye, det
+    >>> I3 = eye(3)
+    >>> det(I3)
+    1
     >>> M = Matrix([[1, 2], [3, 4]])
-    >>> M.det()
+    >>> det(M)
     -2
+    >>> det(M) == M.det()
+    True
     """
 
     # sanitize `method`

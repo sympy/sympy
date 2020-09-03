@@ -61,6 +61,12 @@ def test_combsimp():
     assert combsimp(6*RisingFactorial(4, -n - 1)/factorial(-n - 1)) == \
         -n*(n - 1)*(n - 2)
 
+
+def test_issue_6878():
+    n = symbols('n', integer=True)
+    assert combsimp(RisingFactorial(-10, n)) == 3628800*(-1)**n/factorial(10 - n)
+
+
 def test_issue_14528():
     p = symbols("p", integer=True, positive=True)
     assert combsimp(binomial(1,p)) == 1/(factorial(p)*factorial(1-p))

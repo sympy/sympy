@@ -130,7 +130,8 @@ class AntiCommutator(Expr):
         )
 
     def _sympystr(self, printer, *args):
-        return "{%s,%s}" % (self.args[0], self.args[1])
+        return "{%s,%s}" % (
+            printer._print(self.args[0]), printer._print(self.args[1]))
 
     def _pretty(self, printer, *args):
         pform = printer._print(self.args[0], *args)

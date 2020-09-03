@@ -78,7 +78,7 @@ def count_digits(n, b=10):
     Examples
     ========
 
-    >>> from sympy.ntheory import count_digits, digits
+    >>> from sympy.ntheory import count_digits
 
     >>> count_digits(1111339)
     {1: 4, 3: 2, 9: 1}

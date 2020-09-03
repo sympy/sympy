@@ -502,6 +502,7 @@ _known_functions_mpmath = dict(_in_mpmath, **{
     'fresnelc': 'fresnelc',
     'fresnels': 'fresnels',
     'sign': 'sign',
+    'loggamma': 'loggamma',
 })
 _known_constants_mpmath = {
     'Exp1': 'e',
@@ -593,6 +594,8 @@ _known_functions_numpy = dict(_in_numpy, **{
     'atanh': 'arctanh',
     'exp2': 'exp2',
     'sign': 'sign',
+    'logaddexp': 'logaddexp',
+    'logaddexp2': 'logaddexp2',
 })
 _known_constants_numpy = {
     'Exp1': 'e',
@@ -887,6 +890,7 @@ _known_functions_scipy_special = {
     'bessely': 'yv',
     'besseli': 'iv',
     'besselk': 'kv',
+    'cosm1': 'cosm1',
     'factorial': 'factorial',
     'gamma': 'gamma',
     'loggamma': 'gammaln',
@@ -929,7 +933,7 @@ class SciPyPrinter(NumPyPrinter):
             j.append(c)
             data.append(v)
 
-        return "{name}({data}, ({i}, {j}), shape={shape})".format(
+        return "{name}(({data}, ({i}, {j})), shape={shape})".format(
             name=self._module_format('scipy.sparse.coo_matrix'),
             data=data, i=i, j=j, shape=expr.shape
         )

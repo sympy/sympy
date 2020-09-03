@@ -34,6 +34,15 @@ else:
     # Not using pytest so define the things that would have been imported from
     # there.
 
+    # _pytest._code.code.ExceptionInfo
+    class ExceptionInfo:
+        def __init__(self, value):
+            self.value = value
+
+        def __repr__(self):
+            return "<ExceptionInfo {!r}>".format(self.value)
+
+
     def raises(expectedException, code=None):
         """
         Tests that ``code`` raises the exception ``expectedException``.
@@ -54,6 +63,7 @@ else:
         >>> from sympy.testing.pytest import raises
 
         >>> raises(ZeroDivisionError, lambda: 1/0)
+        <ExceptionInfo ZeroDivisionError(...)>
         >>> raises(ZeroDivisionError, lambda: 1/2)
         Traceback (most recent call last):
         ...
@@ -92,8 +102,8 @@ else:
         elif callable(code):
             try:
                 code()
-            except expectedException:
-                return
+            except expectedException as e:
+                return ExceptionInfo(e)
             raise Failed("DID NOT RAISE")
         elif isinstance(code, str):
             raise TypeError(
@@ -222,8 +232,6 @@ def warns_deprecated_sympy():
 
     >>> from sympy.testing.pytest import warns_deprecated_sympy
     >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
-    >>> import warnings
-
     >>> with warns_deprecated_sympy():
     ...     SymPyDeprecationWarning("Don't use", feature="old thing",
     ...         deprecated_since_version="1.0", issue=123).warn()

@@ -6,10 +6,10 @@ from sympy import eye
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
+from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
-from sympy.codegen.array_utils import (CodegenArrayContraction,
-        CodegenArrayTensorProduct, CodegenArrayDiagonal,
-        CodegenArrayPermuteDims, CodegenArrayElementwiseAdd)
+from sympy.codegen.array_utils import (CodegenArrayTensorProduct, CodegenArrayDiagonal,
+                                       CodegenArrayPermuteDims, CodegenArrayElementwiseAdd, parse_matrix_expression)
 from sympy.printing.lambdarepr import NumPyPrinter
 
 from sympy.testing.pytest import warns_deprecated_sympy
@@ -30,6 +30,12 @@ def test_numpy_piecewise_regression():
     assert printer.doprint(p) == \
         'numpy.select([numpy.less(x, 0),True], [1,0], default=numpy.nan)'
     assert printer.module_imports == {'numpy': {'select', 'less', 'nan'}}
+
+def test_numpy_logaddexp():
+    lae = logaddexp(a, b)
+    assert NumPyPrinter().doprint(lae) == 'numpy.logaddexp(a, b)'
+    lae2 = logaddexp2(a, b)
+    assert NumPyPrinter().doprint(lae2) == 'numpy.logaddexp2(a, b)'
 
 
 def test_sum():
@@ -72,7 +78,7 @@ def test_codegen_einsum():
     M = MatrixSymbol("M", 2, 2)
     N = MatrixSymbol("N", 2, 2)
 
-    cg = CodegenArrayContraction.from_MatMul(M*N)
+    cg = parse_matrix_expression(M*N)
     f = lambdify((M, N), cg, 'numpy')
 
     ma = np.matrix([[1, 2], [3, 4]])

@@ -729,20 +729,15 @@ def _minpoly_groebner(ex, x, cls):
             return Mul(*[ bottom_up_scan(g) for g in ex.args ])
         elif ex.is_Pow:
             if ex.exp.is_Rational:
-                if ex.exp < 0 and ex.base.is_Add:
-                    coeff, terms = ex.base.as_coeff_add()
-                    elt, _ = primitive_element(terms, polys=True)
-
-                    alg = ex.base - coeff
-
-                    # XXX: turn this into eval()
-                    inverse = invert(elt.gen + coeff, elt).as_expr()
-                    base = inverse.subs(elt.gen, alg).expand()
+                if ex.exp < 0:
+                    minpoly_base = _minpoly_groebner(ex.base, x, cls)
+                    inverse = invert(x, minpoly_base).as_expr()
+                    base_inv = inverse.subs(x, ex.base).expand()
 
                     if ex.exp == -1:
-                        return bottom_up_scan(base)
+                        return bottom_up_scan(base_inv)
                     else:
-                        ex = base**(-ex.exp)
+                        ex = base_inv**(-ex.exp)
                 if not ex.exp.is_Integer:
                     base, exp = (
                         ex.base**ex.exp.p).expand(), Rational(1, ex.exp.q)

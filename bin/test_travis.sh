@@ -24,8 +24,13 @@ if [[ "${TEST_SPHINX}" == "true" ]]; then
     make man
     make latex
     cd _build/latex
-    export LATEXOPTIONS="-interaction=nonstopmode"
-    make all
+    export LATEXMKOPTS="-halt-on-error -xelatex -silent"
+    make all || {
+        echo "An error had occured during the LaTeX build";
+        tail -n 1000 *.log;
+        sleep 1; # A guard against travis running tail concurrently.
+        exit -1;
+    }
 fi
 
 if [[ "${TEST_SAGE}" == "true" ]]; then
@@ -42,6 +47,7 @@ fi
 
 if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     python bin/test_external_imports.py
+    python bin/test_submodule_imports.py
     python bin/test_executable.py
 fi
 

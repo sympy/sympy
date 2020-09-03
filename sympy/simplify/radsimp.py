@@ -46,7 +46,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     ========
 
     >>> from sympy import S, collect, expand, factor, Wild
-    >>> from sympy.abc import a, b, c, x, y, z
+    >>> from sympy.abc import a, b, c, x, y
 
     This function can collect symbolic coefficients in polynomials or
     rational expressions. It will manage to find all integer or rational
@@ -178,7 +178,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         if not isinstance(rv, dict):
             return rv.xreplace(urep)
         else:
-            return {urep.get(k, k): v for k, v in rv.items()}
+            return {urep.get(k, k).xreplace(urep): v.xreplace(urep)
+                    for k, v in rv.items()}
 
     if evaluate is None:
         evaluate = global_parameters.evaluate
@@ -634,7 +635,7 @@ def collect_const(expr, *vars, **kwargs):
     ========
 
     >>> from sympy import sqrt
-    >>> from sympy.abc import a, s, x, y, z
+    >>> from sympy.abc import s, x, y, z
     >>> from sympy.simplify.radsimp import collect_const
     >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
     sqrt(3)*(sqrt(2) + 2)
@@ -757,7 +758,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     Examples
     ========
 
-    >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
+    >>> from sympy import radsimp, sqrt, Symbol, pprint
     >>> from sympy import factor_terms, fraction, signsimp
     >>> from sympy.simplify.radsimp import collect_sqrt
     >>> from sympy.abc import a, b, c
@@ -1085,20 +1086,18 @@ def fraction(expr, exact=False):
                 numer.append(term)
             elif not exact and ex.is_Mul:
                 n, d = term.as_numer_denom()
-                numer.append(n)
+                if n != 1:
+                    numer.append(n)
                 denom.append(d)
             else:
                 numer.append(term)
-        elif term.is_Rational:
-            n, d = term.as_numer_denom()
-            numer.append(n)
-            denom.append(d)
+        elif term.is_Rational and not term.is_Integer:
+            if term.p != 1:
+                numer.append(term.p)
+            denom.append(term.q)
         else:
             numer.append(term)
-    if exact:
-        return Mul(*numer, evaluate=False), Mul(*denom, evaluate=False)
-    else:
-        return Mul(*numer), Mul(*denom)
+    return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
 
 
 def numer(expr):

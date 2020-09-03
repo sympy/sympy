@@ -15,7 +15,7 @@ from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
-from sympy.functions.elementary.complexes import unpolarify
+from sympy.functions.elementary.complexes import unpolarify, Abs
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
@@ -109,7 +109,6 @@ def separatevars(expr, symbols=[], dict=False, force=False):
 
 
 def _separatevars(expr, force):
-    from sympy.functions.elementary.complexes import Abs
     if isinstance(expr, Abs):
         arg = expr.args[0]
         if arg.is_Mul and not arg.is_number:
@@ -303,6 +302,9 @@ def hypersimp(f, k):
     g = f.subs(k, k + 1) / f
 
     g = g.rewrite(gamma)
+    if g.has(Piecewise):
+        g = piecewise_fold(g)
+        g = g.args[-1][0]
     g = expand_func(g)
     g = powsimp(g, deep=True, combine='exp')
 
@@ -551,7 +553,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         inverse=kwargs.get('inverse', inverse),
         doit=kwargs.get('doit', doit))
     # no routine for Expr needs to check for is_zero
-    if isinstance(expr, Expr) and expr.is_zero and expr*0 == S.Zero:
+    if isinstance(expr, Expr) and expr.is_zero:
         return S.Zero
 
     _eval_simplify = getattr(expr, '_eval_simplify', None)
@@ -615,6 +617,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
     from sympy import Sum, Product, Integral
+    from sympy.functions.elementary.complexes import sign
+
+    # must come before `Piecewise` since this introduces more `Piecewise` terms
+    if expr.has(sign):
+        expr = expr.rewrite(Abs)
 
     # Deal with Piecewise separately to avoid recursive growth of expressions
     if expr.has(Piecewise):
@@ -787,7 +794,7 @@ def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, si
     Examples
     ========
 
-    >>> from sympy import Sum, Integral
+    >>> from sympy import Sum
     >>> from sympy.abc import x, y
     >>> from sympy.simplify.simplify import factor_sum
     >>> s = Sum(x*y, (x, 1, 3))
@@ -1169,8 +1176,8 @@ def kroneckersimp(expr):
     The only simplification currently attempted is to identify multiplicative cancellation:
 
     >>> from sympy import KroneckerDelta, kroneckersimp
-    >>> from sympy.abc import i, j
-    >>> kroneckersimp(1 + KroneckerDelta(0, j) * KroneckerDelta(1, j))
+    >>> from sympy.abc import i
+    >>> kroneckersimp(1 + KroneckerDelta(0, i) * KroneckerDelta(1, i))
     1
     """
     def args_cancel(args1, args2):
@@ -1346,7 +1353,7 @@ def nthroot(expr, n, max_len=4, prec=15):
     ========
 
     >>> from sympy.simplify.simplify import nthroot
-    >>> from sympy import Rational, sqrt
+    >>> from sympy import sqrt
     >>> nthroot(90 + 34*sqrt(7), 3)
     sqrt(7) + 3
 
@@ -1414,7 +1421,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     Examples
     ========
 
-    >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, exp, pi
+    >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, pi
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
     -2 + 2*GoldenRatio
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
@@ -1527,7 +1534,6 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
     Examples
     ========
 
-    >>> from sympy import Rational
     >>> from sympy.simplify.simplify import _real_to_rational
     >>> from sympy.abc import x
 

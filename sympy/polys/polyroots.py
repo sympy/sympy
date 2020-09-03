@@ -18,6 +18,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
 from sympy.functions.elementary.miscellaneous import root
 from sympy.ntheory import divisors, isprime, nextprime
+from sympy.polys.domains import EX
 from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,
     DomainError)
 from sympy.polys.polyquinticconst import PolyQuintic
@@ -265,7 +266,7 @@ def roots_quartic(f):
     Examples
     ========
 
-        >>> from sympy import Poly, symbols, I
+        >>> from sympy import Poly
         >>> from sympy.polys.polyroots import roots_quartic
 
         >>> r = roots_quartic(Poly('x**4-6*x**3+17*x**2-26*x+20'))
@@ -970,6 +971,10 @@ def roots(f, *gens, **flags):
 
         return result
 
+    # Convert the generators to symbols
+    dumgens = symbols('x:%d' % len(f.gens), cls=Dummy)
+    f = f.per(f.rep, dumgens)
+
     (k,), f = f.terms_gcd()
 
     if not k:
@@ -981,6 +986,10 @@ def roots(f, *gens, **flags):
 
     if auto and f.get_domain().is_Ring:
         f = f.to_field()
+
+    # Use EX instead of ZZ_I or QQ_I
+    if f.get_domain().is_QQ_I:
+        f = f.per(f.rep.convert(EX))
 
     rescale_x = None
     translate_x = None

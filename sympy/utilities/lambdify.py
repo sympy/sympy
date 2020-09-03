@@ -3,8 +3,6 @@ This module provides convenient functions to transform sympy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 import inspect
@@ -12,6 +10,7 @@ import keyword
 import textwrap
 import linecache
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, builtins)
 from sympy.utilities.misc import filldedent
@@ -167,7 +166,7 @@ def _import(module, reload=False):
 _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
-def lambdify(args, expr, modules=None, printer=None, use_imps=True,
+def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
              dummify=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
@@ -175,6 +174,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     .. warning::
        This function uses ``exec``, and thus shouldn't be used on
        unsanitized input.
+
+    .. versionchanged:: 1.7.0
+       Passing a set for the *args* parameter is deprecated as sets are
+       unordered. Use an ordered iterable such as a list or tuple.
 
     Explanation
     ===========
@@ -325,6 +328,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         (if ``args`` is not a string) - for example, to ensure that the
         arguments do not redefine any built-in names.
 
+
     Examples
     ========
 
@@ -353,7 +357,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     functions. This may be preferable to using ``evalf`` (which uses mpmath on
     the backend) in some cases.
 
-    >>> import mpmath
     >>> f = lambdify(x, sin(x), 'mpmath')
     >>> f(1)
     0.8414709848078965
@@ -800,10 +803,19 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                            'allow_unknown_functions': True,
                            'user_functions': user_functions})
 
+    if isinstance(args, set):
+        SymPyDeprecationWarning(
+                    feature="The list of arguments is a `set`. This leads to unpredictable results",
+                    useinstead=": Convert set into list or tuple",
+                    issue=20013,
+                    deprecated_since_version="1.6.3"
+                ).warn()
+
     # Get the names of the args, for creating a docstring
     if not iterable(args):
         args = (args,)
     names = []
+
     # Grab the callers frame, for getting the names by inspection (if needed)
     callers_local_vars = inspect.currentframe().f_back.f_locals.items()
     for n, var in enumerate(args):
@@ -858,7 +870,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     func = funclocals[funcname]
 
     # Apply the docstring
-    sig = "func({0})".format(", ".join(str(i) for i in names))
+    sig = "func({})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
     expr_str = str(expr)
     if len(expr_str) > 78:
@@ -1012,7 +1024,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
     expr = lambdarepr(expr)
     return "lambda %s: (%s)" % (args, expr)
 
-class _EvaluatorPrinter(object):
+class _EvaluatorPrinter:
     def __init__(self, printer=None, dummify=False):
         self._dummify = dummify
 
@@ -1088,7 +1100,7 @@ class _EvaluatorPrinter(object):
         """
         from sympy import Dummy, Function, flatten, Derivative, ordered, Basic
         from sympy.matrices import DeferredVector
-        from sympy.core.symbol import _uniquely_named_symbol
+        from sympy.core.symbol import uniquely_named_symbol
         from sympy.core.expr import Expr
 
         # Args of type Dummy can cause name collisions with args
@@ -1108,7 +1120,8 @@ class _EvaluatorPrinter(object):
                 if dummify or not self._is_safe_ident(s):
                     dummy = Dummy()
                     if isinstance(expr, Expr):
-                        dummy = _uniquely_named_symbol(dummy.name, expr)
+                        dummy = uniquely_named_symbol(
+                            dummy.name, expr, modify=lambda s: '_' + s)
                     s = self._argrepr(dummy)
                     expr = self._subexpr(expr, {arg: dummy})
             elif dummify or isinstance(arg, (Function, Derivative)):
@@ -1289,7 +1302,6 @@ def implemented_function(symfunc, implementation):
 
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
-    >>> from sympy import Function
     >>> f = implemented_function('f', lambda x: x+1)
     >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)

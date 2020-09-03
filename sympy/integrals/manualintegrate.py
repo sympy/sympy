@@ -174,6 +174,9 @@ def manual_subs(expr, *args):
 # Method based on that on SIN, described in "Symbolic Integration: The
 # Stormy Decade"
 
+inverse_trig_functions = (sympy.atan, sympy.asin, sympy.acos, sympy.acot, sympy.acsc, sympy.asec)
+
+
 def find_substitutions(integrand, symbol, u_var):
     results = []
 
@@ -213,7 +216,7 @@ def find_substitutions(integrand, symbol, u_var):
 
     def possible_subterms(term):
         if isinstance(term, (TrigonometricFunction,
-                             sympy.asin, sympy.acos, sympy.atan,
+                             *inverse_trig_functions,
                              sympy.exp, sympy.log, sympy.Heaviside)):
             return [term.args[0]]
         elif isinstance(term, (sympy.chebyshevt, sympy.chebyshevu,
@@ -535,14 +538,14 @@ def _parts_rule(integrand, symbol):
 
         return pull_out_u_rl
 
-    liate_rules = [pull_out_u(sympy.log), pull_out_u(sympy.atan, sympy.asin, sympy.acos),
+    liate_rules = [pull_out_u(sympy.log), pull_out_u(*inverse_trig_functions),
                    pull_out_algebraic, pull_out_u(sympy.sin, sympy.cos),
                    pull_out_u(sympy.exp)]
 
 
     dummy = sympy.Dummy("temporary")
     # we can integrate log(x) and atan(x) by setting dv = 1
-    if isinstance(integrand, (sympy.log, sympy.atan, sympy.asin, sympy.acos)):
+    if isinstance(integrand, (sympy.log, *inverse_trig_functions)):
         integrand = dummy * integrand
 
     for index, rule in enumerate(liate_rules):
@@ -1213,7 +1216,7 @@ def integral_steps(integrand, symbol, **options):
     Examples
     ========
 
-    >>> from sympy import exp, sin, cos
+    >>> from sympy import exp, sin
     >>> from sympy.integrals.manualintegrate import integral_steps
     >>> from sympy.abc import x
     >>> print(repr(integral_steps(exp(x) / (1 + exp(2 * x)), x))) \
@@ -1271,8 +1274,8 @@ def integral_steps(integrand, symbol, **options):
             return sympy.Number
         else:
             for cls in (sympy.Pow, sympy.Symbol, sympy.exp, sympy.log,
-                        sympy.Add, sympy.Mul, sympy.atan, sympy.asin,
-                        sympy.acos, sympy.Heaviside, OrthogonalPolynomial):
+                        sympy.Add, sympy.Mul, *inverse_trig_functions,
+                        sympy.Heaviside, OrthogonalPolynomial):
                 if isinstance(integrand, cls):
                     return cls
 
@@ -1312,7 +1315,8 @@ def integral_steps(integrand, symbol, **options):
                     integral_is_subclass(sympy.Mul, sympy.Pow),
                     cancel_rule),
                 condition(
-                    integral_is_subclass(sympy.Mul, sympy.log, sympy.atan, sympy.asin, sympy.acos),
+                    integral_is_subclass(sympy.Mul, sympy.log,
+                    *inverse_trig_functions),
                     parts_rule),
                 condition(
                     integral_is_subclass(sympy.Mul, sympy.Pow),
@@ -1430,6 +1434,8 @@ def eval_piecewise(substeps, integrand, symbol):
 @evaluates(TrigSubstitutionRule)
 def eval_trigsubstitution(theta, func, rewritten, substep, restriction, integrand, symbol):
     func = func.subs(sympy.sec(theta), 1/sympy.cos(theta))
+    func = func.subs(sympy.csc(theta), 1/sympy.sin(theta))
+    func = func.subs(sympy.cot(theta), 1/sympy.tan(theta))
 
     trig_function = list(func.find(TrigonometricFunction))
     assert len(trig_function) == 1

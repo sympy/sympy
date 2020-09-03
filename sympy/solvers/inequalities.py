@@ -201,7 +201,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     Examples
     ========
 
-    >>> from sympy import Poly, Symbol
+    >>> from sympy import Symbol
     >>> from sympy.solvers.inequalities import reduce_rational_inequalities
 
     >>> x = Symbol('x', real=True)
@@ -374,7 +374,6 @@ def reduce_abs_inequalities(exprs, gen):
     ========
 
     >>> from sympy import Abs, Symbol
-    >>> from sympy.abc import x
     >>> from sympy.solvers.inequalities import reduce_abs_inequalities
     >>> x = Symbol('x', extended_real=True)
 
@@ -512,7 +511,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
             inf, sup = domain.inf, domain.sup
             if sup - inf is S.Infinity:
-                domain = Interval(0, period, False, True)
+                domain = Interval(0, period, False, True).intersect(_domain)
+                _domain = domain
 
         if rv is None:
             n, d = e.as_numer_denom()
@@ -641,7 +641,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             sol_sets = [S.EmptySet]
 
             start = domain.inf
-            if valid(start) and start.is_finite:
+            if start in domain and valid(start) and start.is_finite:
                 sol_sets.append(FiniteSet(start))
 
             for x in reals:
@@ -664,7 +664,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 start = end
 
             end = domain.sup
-            if valid(end) and end.is_finite:
+            if end in domain and valid(end) and end.is_finite:
                 sol_sets.append(FiniteSet(end))
 
             if valid(_pt(start, end)):
@@ -941,7 +941,6 @@ def reduce_inequalities(inequalities, symbols=[]):
     Examples
     ========
 
-    >>> from sympy import sympify as S, Symbol
     >>> from sympy.abc import x, y
     >>> from sympy.solvers.inequalities import reduce_inequalities
 

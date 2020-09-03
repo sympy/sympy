@@ -1,10 +1,10 @@
 from sympy import (
-    Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
+    Abs, And, binomial, Catalan, combsimp, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, oo, pi, Piecewise, Product, product, Rational, S, simplify, Identity,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma,
     Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range, floor,
-    RisingFactorial, MatrixSymbol)
+    rf, MatrixSymbol)
 from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic, _dummy_with_inherited_properties_concrete
 from sympy.concrete.expr_with_intlimits import ReorderError
@@ -476,12 +476,12 @@ def test_simple_products():
 
 
 def test_rational_products():
-    assert simplify(product(1 + 1/n, (n, a, b))) == (1 + b)/a
-    assert simplify(product(n + 1, (n, a, b))) == gamma(2 + b)/gamma(1 + a)
-    assert simplify(product((n + 1)/(n - 1), (n, a, b))) == b*(1 + b)/(a*(a - 1))
-    assert simplify(product(n/(n + 1)/(n + 2), (n, a, b))) == \
+    assert combsimp(product(1 + 1/n, (n, a, b))) == (1 + b)/a
+    assert combsimp(product(n + 1, (n, a, b))) == gamma(2 + b)/gamma(1 + a)
+    assert combsimp(product((n + 1)/(n - 1), (n, a, b))) == b*(1 + b)/(a*(a - 1))
+    assert combsimp(product(n/(n + 1)/(n + 2), (n, a, b))) == \
         a*gamma(a + 2)/(b + 1)/gamma(b + 3)
-    assert simplify(product(n*(n + 1)/(n - 1)/(n - 2), (n, a, b))) == \
+    assert combsimp(product(n*(n + 1)/(n - 1)/(n - 2), (n, a, b))) == \
         b**2*(b - 1)*(1 + b)/(a - 1)**2/(a*(a - 2))
 
 
@@ -996,6 +996,9 @@ def test_is_convergent():
     assert Sum((-1)**n, (n, 1, oo)).is_convergent() is S.false
     assert Sum(log(1/n), (n, 2, oo)).is_convergent() is S.false
 
+    # Raabe's test --
+    assert Sum(Product((3*m),(m,1,n))/Product((3*m+4),(m,1,n)),(n,1,oo)).is_convergent() is S.true
+
     # root test --
     assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() is S.false
 
@@ -1006,6 +1009,9 @@ def test_is_convergent():
     assert Sum(1/n**Rational(6, 5), (n, 1, oo)).is_convergent() is S.true
     assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() is S.true
     assert Sum(1/(sqrt(n)*sqrt(n)), (n, 2, oo)).is_convergent() is S.false
+    assert Sum(factorial(n) / factorial(n+2), (n, 1, oo)).is_convergent() is S.true
+    assert Sum(rf(5,n)/rf(7,n),(n,1,oo)).is_convergent() is S.true
+    assert Sum((rf(1, n)*rf(2, n))/(rf(3, n)*factorial(n)),(n,1,oo)).is_convergent() is S.false
 
     # comparison test --
     assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
@@ -1050,6 +1056,12 @@ def test_is_convergent():
     assert Sum(1/(x**3), (x, 1, oo)).is_convergent() is S.true
     assert Sum(1/(x**S.Half), (x, 1, oo)).is_convergent() is S.false
 
+    # issue 19545
+    assert Sum(1/n - 3/(3*n +2), (n, 1, oo)).is_convergent() is S.true
+
+    # issue 19836
+    assert Sum(4/(n + 2) - 5/(n + 1) + 1/n,(n, 7, oo)).is_convergent() is S.true
+
 
 def test_is_absolutely_convergent():
     assert Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent() is S.false
@@ -1077,6 +1089,10 @@ def test_issue_10156():
     e = 2*y*Sum(2*cx*x**2, (x, 1, 9))
     assert e.factor() == \
         8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))
+
+
+def test_issue_10973():
+    assert Sum((-n + (n**3 + 1)**(S(1)/3))/log(n), (n, 1, oo)).is_convergent() is S.true
 
 
 def test_issue_14129():
@@ -1315,9 +1331,12 @@ def test_issue_14313():
     assert Sum(S.Half**floor(n/2), (n, 1, oo)).is_convergent()
 
 
-@XFAIL
+def test_issue_16735():
+    assert Sum(5**n/gamma(n+1), (n, 1, oo)).is_convergent() is S.true
+
+
 def test_issue_14871():
-    assert Sum((Rational(1, 10))**x*RisingFactorial(0, x)/factorial(x), (x, 0, oo)).rewrite(factorial).doit() == 1
+    assert Sum((Rational(1, 10))**n*rf(0, n)/factorial(n), (n, 0, oo)).rewrite(factorial).doit() == 1
 
 
 def test_issue_17165():
@@ -1329,6 +1348,10 @@ def test_issue_17165():
     assert ssimp == Piecewise((-1/(x - 1), Abs(x) < 1),
                               (x*Sum(x**n, (n, -1, oo)), True))
     assert ssimp == ssimp.simplify()
+
+
+def test_issue_19379():
+    assert Sum(factorial(n)/factorial(n + 2), (n, 1, oo)).is_convergent() is S.true
 
 
 def test__dummy_with_inherited_properties_concrete():
