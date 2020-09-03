@@ -182,8 +182,6 @@ class im(Function):
     im(y)
     >>> im(x + y*I)
     re(y) + im(x)
-    >>> im(21*I + 50).as_real_imag(deep=True)
-    (21, 0)
 
     Parameters
     ==========
@@ -256,6 +254,8 @@ class im(Function):
         >>> from sympy import I
         >>> im(2 + 3*I).as_real_imag()
         (3, 0)
+        >>> im(21*I + 50).as_real_imag(deep=True)
+        (21, 0)
         """
         return (self, S.Zero)
 
