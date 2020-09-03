@@ -29,7 +29,7 @@ class re(Function):
     ========
 
     >>> from sympy import re, im, I, E
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> re(2*E)
     2*E
     >>> re(2*I + 17)
@@ -107,7 +107,7 @@ class re(Function):
 
         Examples
         ========
-        >>> from sympy import re, im, I, E
+        >>> from sympy import re, I
         >>> from sympy.abc import x, y
         >>> re(10 + 20*I).as_real_imag()
         (10, 0)
