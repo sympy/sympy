@@ -28,8 +28,8 @@ class re(Function):
     Examples
     ========
 
-    >>> from sympy import re, im, I, E
-    >>> from sympy.abc import x
+    >>> from sympy import re, im, I, E, symbols
+    >>> x, y = symbols('x y', real=True)
     >>> re(2*E)
     2*E
     >>> re(2*I + 17)
@@ -40,6 +40,16 @@ class re(Function):
     2
     >>> re(5 + I + 2)
     7
+    >>> re(10 + 20*I).as_real_imag()
+    (10, 0)
+    >>> re(10).as_real_imag()
+    (10, 0)
+    >>> re(40*I).as_real_imag()
+    (0, 0)
+    >>> re(x+y*I).as_real_imag()
+    (x, 0)
+    >>> re(im(x) + x*I + 2)._eval_derivative(2)
+    1
 
     Parameters
     ==========
@@ -51,7 +61,7 @@ class re(Function):
     =======
 
     value : int
-        Integer value of real part of expression.
+        Integer or float value of real part of expression.
 
     See Also
     ========
@@ -108,34 +118,10 @@ class re(Function):
         """
         Returns the real number with a zero imaginary part.
 
-        Examples
-        ========
-
-        >>> from sympy import re, I
-        >>> from sympy.abc import x, y
-        >>> re(10 + 20*I).as_real_imag()
-        (10, 0)
-        >>> re(10).as_real_imag()
-        (10, 0)
-        >>> re(40*I).as_real_imag()
-        (0, 0)
-        >>> re(x+y*I).as_real_imag()
-        (re(x) - im(y), 0)
-
         """
         return (self, S.Zero)
 
     def _eval_derivative(self, x):
-        '''
-        Examples
-        ========
-
-        >>> from sympy import re, im, I
-        >>> from sympy.abc import x
-        >>> re(im(x) + x*I + 2)._eval_derivative(2)
-        1
-
-        '''
         if x.is_extended_real or self.args[0].is_extended_real:
             return re(Derivative(self.args[0], x, evaluate=True))
         if x.is_imaginary or self.args[0].is_imaginary:
@@ -188,6 +174,10 @@ class im(Function):
     im(y)
     >>> im(x + y*I)
     re(y) + im(x)
+    >>> im(2 + 3*I).as_real_imag()
+    (3, 0)
+    >>> im(21*I + 50).as_real_imag(deep=True)
+    (21, 0)
 
     Parameters
     ==========
@@ -199,7 +189,7 @@ class im(Function):
     =======
 
     value : int
-        Integer value of imaginary part of expression.
+        Integer or float value of imaginary part of expression.
 
     See Also
     ========
@@ -255,15 +245,6 @@ class im(Function):
         """
         Return the imaginary part with a zero real part.
 
-        Examples
-        ========
-
-        >>> from sympy.functions import im
-        >>> from sympy import I
-        >>> im(2 + 3*I).as_real_imag()
-        (3, 0)
-        >>> im(21*I + 50).as_real_imag(deep=True)
-        (21, 0)
         """
         return (self, S.Zero)
 
@@ -712,7 +693,9 @@ class arg(Function):
     pi/4
     >>> arg(sqrt(3)/2 + I/2)
     pi/6
-    >>> arg(4/5 + 3*I/5)
+    >>> arg(4 + 3*I)
+    atan(3/4)
+    >>> arg(0.8 + 0.6*I)
     0.643501108793284
 
     """
