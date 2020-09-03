@@ -74,26 +74,27 @@ def _set_converter(itr):
 def _state_converter(itr):
     """
     Helper function for converting list/tuple/set/Range/Tuple/FiniteSet
-    to Tuple/Range.
+    to tuple/Range.
     """
-    # make the state space a tuple if possible
-    if isinstance(itr, Tuple):
-        return itr
-
-    elif isinstance(itr, (set, FiniteSet)):
-        itr = Tuple(*itr)
+    # Make the state space a tuple if possible.
+    # Use default tuple rather than sympy Tuple
+    # since Tuple sympifies each argument.
+    # This can be set to false but it still causes
+    # problems with E(Y[0]) == Expectation(Y[0]).
+    if isinstance(itr, (Tuple, set, FiniteSet)):
+        itr = tuple(itr)
 
     elif isinstance(itr, (list, tuple)):
         # check if states are unique
         if len(set(itr)) != len(itr):
             raise ValueError('The state space must have unique elements.')
-        itr = Tuple(*itr)
+        itr = tuple(itr)
 
     elif isinstance(itr, Range):
         # the only ordered set in sympy I know of
         # try to convert to tuple
         try:
-            itr = Tuple(*itr)
+            itr = tuple(itr)
         except ValueError:
             pass
 
@@ -629,7 +630,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     state_space: list/tuple/set/FiniteSet/Range
         Optional, by default, Range(n)
     trans_probs: Matrix/ImmutableMatrix/MatrixSymbol
-        Optional, by default, None
+        Optional, by default, MatrixSymbol('_T', n, n)
 
     Examples
     ========
@@ -664,9 +665,10 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     This gives the same answer as the ``[0, 1, 2]`` state space.
     Currently, there is no support for state names within probability
-    and expectation statements. It might be supported in the future
-    in the form of a keyword argument ``names=True``.
-    (how would P(X > 'Sunny') work?)
+    and expectation statements. Here is a work-around using ``index_of``:
+
+    >>> P(Eq(Y[3], Y.index_of['Rainy']), Eq(Y[1], Y.index_of['Cloudy'])).round(2)
+    0.36
 
     References
     ==========
@@ -715,9 +717,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     @property
     def index_of(self):
-        """Converts a state name to a state index."""
+        """Converts a state name to a state index i.e. inverts self.state_space."""
         if self._is_numeric:
-            indexes = {state: index for index, state in self.state_space}
+            indexes = {state: index for index, state in enumerate(self.state_space)}
             return indexes
         else:
             if self.state_space == Range(self.num_states):
