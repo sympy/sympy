@@ -376,7 +376,7 @@ class MarkovProcess(StochasticProcess):
         # `not None` is `True`. So the old test fails for symbolic sizes.
         # Need to build the statement differently.
         if FiniteSet(*[i for i in range(trans_probs.shape[0])]).is_subset(state_index) is False:
-            raise ValueError("state space is not compatible with the transition probabilites.")
+            raise ValueError("state space is not compatible with the transition probabilities.")
         state_index = FiniteSet(*[i for i in range(trans_probs.shape[0])])
         return state_index
 
@@ -765,7 +765,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         Computes the one step probabilities of transient
         states to transient states. Used in finding
-        fundamental matrix, absorbing probabilties.
+        fundamental matrix, absorbing probabilities.
         """
         trans_probs = self.transition_probabilities
         if not isinstance(trans_probs, ImmutableMatrix):
@@ -781,7 +781,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         Computes the one step probabilities of transient
         states to absorbing states. Used in finding
-        fundamental matrix, absorbing probabilties.
+        fundamental matrix, absorbing probabilities.
         """
         trans_probs = self.transition_probabilities
         if not isinstance(trans_probs, ImmutableMatrix):
@@ -812,7 +812,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             raise ValueError("Fundamental matrix doesn't exists.")
         return ImmutableMatrix((I - Q).inv().tolist())
 
-    def absorbing_probabilites(self):
+    def absorbing_probabilities(self):
         """
         Computes the absorbing probabilities, i.e.,
         the ij-th entry of the matrix denotes the
@@ -824,6 +824,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         if R == None or N == None:
             return None
         return N*R
+
+    absorbing_probabilites = absorbing_probabilities
 
     def is_regular(self):
         w = self.fixed_row_vector()
