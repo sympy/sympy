@@ -1,7 +1,7 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda, erf,
                    Piecewise, factorial, Interval, oo, Contains, sqrt, pi,
-                   gamma, lowergamma, Sum)
+                   gamma, lowergamma, Sum, Range, Tuple, ImmutableDenseMatrix)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
                          BernoulliProcess, PoissonProcess, WienerProcess,
@@ -21,9 +21,9 @@ def test_DiscreteMarkovChain():
 
     # pass only the name
     X = DiscreteMarkovChain("X")
-    assert X.state_space == S.Reals
+    assert isinstance(X.state_space, Range)
     assert X.index_set == S.Naturals0
-    assert X.transition_probabilities == None
+    assert isinstance(X.transition_probabilities, MatrixSymbol)
     t = symbols('t', positive=True, integer=True)
     assert isinstance(X[t], RandomIndexedSymbol)
     assert E(X[0]) == Expectation(X[0])
@@ -32,19 +32,39 @@ def test_DiscreteMarkovChain():
 
     raises(ValueError, lambda: sample_stochastic_process(t))
     raises(ValueError, lambda: next(sample_stochastic_process(X)))
+
     # pass name and state_space
-    Y = DiscreteMarkovChain("Y", [1, 2, 3])
-    assert Y.transition_probabilities == None
-    assert Y.state_space == FiniteSet(1, 2, 3)
-    assert P(Eq(Y[2], 1), Eq(Y[0], 2)) == Probability(Eq(Y[2], 1), Eq(Y[0], 2))
-    assert E(X[0]) == Expectation(X[0])
+    sym = symbols('a', real=True)
+    # any hashable object should be a valid state
+    state_spaces = [[1, 2, 3], [-1, pi, None], ['Hello', sym, DiscreteMarkovChain]]
+    chains = [DiscreteMarkovChain("Y", state_spaces[0]),
+              DiscreteMarkovChain("Y", state_spaces[1]),
+              DiscreteMarkovChain("Y", state_spaces[2])]
+    for i, Y in enumerate(chains):
+        assert isinstance(Y.transition_probabilities, MatrixSymbol)
+        assert Y.state_space == Tuple(*state_spaces[i])
+
+        with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
+            assert P(Eq(Y[2], 1), Eq(Y[0], 2), evaluate=False) == Probability(Eq(Y[2], 1), Eq(Y[0], 2))
+        assert E(Y[0]) == Expectation(Y[0])
+
+        raises(ValueError, lambda: next(sample_stochastic_process(Y)))
+
     raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
-    raises(ValueError, lambda: next(sample_stochastic_process(Y)))
+
+    # pass name and transition_probabilities
+    chains = [DiscreteMarkovChain("Y", trans_probs=Matrix([[]])),
+              DiscreteMarkovChain("Y", trans_probs=Matrix([[0, 1], [1, 0]])),
+              DiscreteMarkovChain("Y", trans_probs=Matrix([[pi, 1-pi], [sym, 1-sym]]))]
+    for Z in chains:
+        assert Z.num_states == Z.transition_probabilities.shape[0]
+        assert isinstance(Z.transition_probabilities, ImmutableDenseMatrix)
+        assert isinstance(Z.state_space, Tuple)
 
     # pass name, state_space and transition_probabilities
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
     TS = MatrixSymbol('T', 3, 3)
-    Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    Y = DiscreteMarkovChain("Y", [1, 2, 3], T)  # old version failed if it did not start from 0
     YS = DiscreteMarkovChain("Y", [0, 1, 2], TS)
     assert YS._transient2transient() == None
     assert YS._transient2absorbing() == None
