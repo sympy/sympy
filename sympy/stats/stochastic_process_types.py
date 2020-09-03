@@ -326,7 +326,7 @@ class MarkovProcess(StochasticProcess):
         """
         if isinstance(self, DiscreteMarkovChain):
             trans_probs = self.transition_probabilities
-            state_index = self.state_index
+            state_index = self._state_index
         elif isinstance(self, ContinuousMarkovChain):
             trans_probs = self.generator_matrix
             state_index = self.state_space
@@ -727,7 +727,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                                       % self.state_space)
 
     @property
-    def state_index(self):
+    def _state_index(self):
         """
         A property used for probability queries
         since those expect the state space in the form
