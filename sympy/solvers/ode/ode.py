@@ -664,56 +664,55 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             return _helper_simplify(eq, hint, hints, simplify, ics=ics)
 
 def picards_iteration(x0, y0, func, n, var1=Symbol('x'), var2=Symbol('y')):
-	r'''
-	Brief Description
-	=================
-	The Picard’s iterative method gives a sequence of approximations Y1(x), Y2(x), …Yk(x) to the solution of differential equations such that the nth approximation is obtained from one or more previous approximations.
-	if dy/dx = func(x,y) or precisely dvar2/dvar1 = func(var1, var2)
-	and given that when y = y0, x= x0
-	given these things approximation can be made of the function
-	yn+1 = y0 + integration(func,(x,yn), (x, x0, x))
-	where yn+1 is n+1th approximation
-	
-	Arguments
-	========
-	*x0*
-	it is given value of x0
-	*y0*
-	it is given value of y0 when x = x0
-	*func*
-	dy/dx = func(x,y) so here func = func(x,y)
-	*n*
-	number upto whic the result is required. for eg y5 is reqired so n would be 5.
-	*var1*
-	if the variable choosed are not x then variable can be specified here. Conventionally x is taken.
-	*var2*
-	if the variable choosed are not y then variable can be specified here. Conventially y is taken.
+    r'''
+    Brief Description
+    =================
+    The Picard’s iterative method gives a sequence of approximations Y1(x), Y2(x), …Yk(x) to the solution of differential equations such that the nth approximation is obtained from one or more previous approximations.
+    if dy/dx = func(x,y) or precisely dvar2/dvar1 = func(var1, var2)
+    and given that when y = y0, x= x0
+    given these things approximation can be made of the function
+    yn+1 = y0 + integration(func,(x,yn), (x, x0, x))
+    where yn+1 is n+1th approximation
+    
+    Arguments
+    ========
+    *x0*
+    it is given value of x0
+    *y0*
+    it is given value of y0 when x = x0
+    *func*
+    dy/dx = func(x,y) so here func = func(x,y)
+    *n*
+    number upto whic the result is required. for eg y5 is reqired so n would be 5.
+    *var1*
+    if the variable choosed are not x then variable can be specified here. Conventionally x is taken.
+    *var2*
+    if the variable choosed are not y then variable can be specified here. Conventially y is taken.
 	
 
 
-	Examples
-	========
-	>>> from sympy import *
-	>>> import sympy.solvers.ode
-	>>> x,y = symbols('x y')
-	>>> ode.picards_iteration(0, 0, sin(x+y**2) ,4)
-	x**3/6 - x + sin(x)
+    Examples
+    ========
+    >>> from sympy import *
+    >>> import sympy.solvers.ode
+    >>> x,y = symbols('x y')
+    >>> ode.picards_iteration(0, 0, sin(x+y**2) ,4)
+    x**3/6 - x + sin(x)
 
-	>>> from sympy import *
-	>>> import sympy.solvers.ode
-	>>> a,b = symbols('a b')
-	>>> ode.picards_iteration(0, 0, a+b ,4,var1=a,var2=b)
-	a**5/120
-	
-	Refernces
-	=========
-	https://en.wikipedia.org/wiki/Picard%E2%80%93Lindel%C3%B6f_theorem#Example_of_Picard_iteration
-	
-	'''
-	if n == 0:
-		return func.subs(var2,y0)
-	else:
-		return (y0 + integrate(picards_iteration(x0, y0, func, n-1, var1, var2), (var1, x0, var1)))
+    >>> from sympy import *
+    >>> import sympy.solvers.ode
+    >>> a,b = symbols('a b')
+    >>> ode.picards_iteration(0, 0, a+b ,4,var1=a,var2=b)
+    a**5/120
+
+    Refernces
+    =========
+    https://en.wikipedia.org/wiki/Picard%E2%80%93Lindel%C3%B6f_theorem#Example_of_Picard_iteration
+    '''
+    if n == 0:
+        return func.subs(var2,y0)
+    else:
+        return (y0 + integrate(picards_iteration(x0, y0, func, n-1, var1, var2), (var1, x0, var1)))
 
 def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
     r"""
