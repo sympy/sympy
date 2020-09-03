@@ -43,16 +43,19 @@ class re(Function):
 
     Parameters
     ==========
+
     exp : expression
         real, complex or mixed expression
 
     Returns
     =======
+
     value : int
         integer value of real part of expression
 
     See Also
     ========
+
     im
     """
 
@@ -107,6 +110,7 @@ class re(Function):
 
         Examples
         ========
+
         >>> from sympy import re, I
         >>> from sympy.abc import x, y
         >>> re(10 + 20*I).as_real_imag()
@@ -117,6 +121,7 @@ class re(Function):
         (0, 0)
         >>> re(x+y*I).as_real_imag()
         (re(x) - im(y), 0)
+
         """
         return (self, S.Zero)
 
@@ -124,6 +129,7 @@ class re(Function):
         '''
         Examples
         ========
+
         >>> from sympy import re, im, I
         >>> from sympy.abc import x
         >>> re(im(x) + x*I + 2)._eval_derivative(2)
@@ -185,11 +191,13 @@ class im(Function):
 
     Parameters
     ==========
+
     exp : expression
         real, complex or mixed expression
 
     Returns
     =======
+
     value : int
         integer value of imaginary part of expression
 
