@@ -139,6 +139,9 @@ class Ellipse(GeometrySet):
                 Exactly two arguments of "hradius", "vradius", and
                 "eccentricity" must not be None.'''))
 
+        if eccentricity > 1:
+            raise GeometryError("eccentricity of ellipse/circle can only be less than or equal to 1")
+
         if eccentricity is not None:
             if hradius is None:
                 hradius = vradius / sqrt(1 - eccentricity**2)
