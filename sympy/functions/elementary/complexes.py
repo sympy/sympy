@@ -54,14 +54,14 @@ class re(Function):
     Parameters
     ==========
 
-    exp : expression
+    arg : Expr
         Real, complex or mixed expression.
 
     Returns
     =======
 
-    value : int
-        Integer or float value of real part of expression.
+    expr : Expr
+        Real part of expression.
 
     See Also
     ========
@@ -182,14 +182,14 @@ class im(Function):
     Parameters
     ==========
 
-    exp : expression
+    arg : Expr
         Real, complex or mixed expression.
 
     Returns
     =======
 
-    value : int
-        Integer or float value of imaginary part of expression.
+    expr : Expr
+        Imaginary part of expression.
 
     See Also
     ========
@@ -284,6 +284,9 @@ class sign(Function):
     """
     Returns the complex sign of an expression:
 
+    Explanation
+    ===========
+
     If the expression is real the sign will be:
 
         * 1 if expression is positive
@@ -314,6 +317,18 @@ class sign(Function):
     sign(1 + I)
     >>> _.evalf()
     0.707106781186548 + 0.707106781186548*I
+
+    Parameters
+    ==========
+
+    arg : Expr
+        Real, imaginary or mixed expression.
+
+    Returns
+    =======
+
+    expr : Expr
+        Complex sign of expression.
 
     See Also
     ========
@@ -449,7 +464,7 @@ class Abs(Function):
     Examples
     ========
 
-    >>> from sympy import Abs, Symbol, S
+    >>> from sympy import Abs, Symbol, S, I
     >>> Abs(-1)
     1
     >>> x = Symbol('x', real=True)
@@ -459,6 +474,12 @@ class Abs(Function):
     x**2
     >>> abs(-x) # The Python built-in
     Abs(x)
+    >>> Abs(3*x + 2*I)
+    sqrt(9*x**2 + 4)
+    >>> Abs(8*I)
+    8
+    >>> Abs(-x).fdiff()
+    sign(x)
 
     Note that the Python built-in will return either an Expr or int depending on
     the argument::
@@ -469,6 +490,19 @@ class Abs(Function):
         <class 'sympy.core.numbers.One'>
 
     Abs will always return a sympy object.
+
+    Parameters
+    ==========
+
+    arg : Expr
+        Real, complex or mixed expression.
+
+    Returns
+    =======
+
+    expr : Expr
+        Absolute value returned can be an expression or integer depending on
+        input arg.
 
     See Also
     ========
@@ -486,13 +520,6 @@ class Abs(Function):
         """
         Get the first derivative of the argument to Abs().
 
-        Examples
-        ========
-
-        >>> from sympy.abc import x
-        >>> from sympy.functions import Abs
-        >>> Abs(-x).fdiff()
-        sign(x)
         """
         if argindex == 1:
             return sign(self.args[0])
@@ -698,6 +725,18 @@ class arg(Function):
     >>> arg(0.8 + 0.6*I)
     0.643501108793284
 
+    Parameters
+    ==========
+
+    arg : Expr
+        Real, imaginary or mixed expression.
+
+    Returns
+    =======
+
+    value : Expr
+        Returns arc tangent of arg measured in radians.
+
     """
 
     is_extended_real = True
@@ -755,6 +794,20 @@ class conjugate(Function):
     -I
     >>> conjugate(3+2*I)
     3 - 2*I
+    >>> conjugate(5-I)
+    5 + I
+
+    Parameters
+    ==========
+
+    arg : Expr
+        Real, imaginary or mixed expression.
+
+    Returns
+    =======
+
+    arg : Expr
+        Complex conjugate of arg as real, imaginary or mixed expression.
 
     See Also
     ========
@@ -799,6 +852,35 @@ class conjugate(Function):
 class transpose(Function):
     """
     Linear map transposition.
+
+    Examples
+    ========
+
+    >>> from sympy.functions import transpose
+    >>> from sympy.matrices import MatrixSymbol
+    >>> A = MatrixSymbol('A', 25, 9)
+    >>> transpose(A)
+    A.T
+    >>> B = MatrixSymbol('B', 9, 22)
+    >>> transpose(B)
+    B.T
+    >>> transpose(A*B)
+    B.T*A.T
+
+    Parameters
+    ==========
+
+    arg : MatrixSymbol
+        Symbolic representation of a Matrix Object.
+
+    Returns
+    =======
+
+    value : MatrixExpr
+        MatrixExpr is the superclass for matric expressions.
+        Represent abstract matrices, linear transformations
+        represented within a particular basis.
+
     """
 
     @classmethod
@@ -820,6 +902,30 @@ class transpose(Function):
 class adjoint(Function):
     """
     Conjugate transpose or Hermite conjugation.
+
+    Examples
+    ========
+
+    >>> from sympy import adjoint
+    >>> from sympy.matrices import MatrixSymbol
+    >>> A = MatrixSymbol('A', 10, 5)
+    >>> adjoint(A)
+    Adjoint(A)
+
+    Parameters
+    ==========
+
+    arg : MatrixSymbol
+        Symbolic representation of a Matrix Object.
+
+    Returns
+    =======
+
+    value : MatrixExpr
+        MatrixExpr is the superclass for matric expressions.
+        Represent abstract matrices, linear transformations
+        represented within a particular basis.
+
     """
 
     @classmethod
@@ -866,6 +972,9 @@ class polar_lift(Function):
     Lift argument to the Riemann surface of the logarithm, using the
     standard branch.
 
+    Examples
+    ========
+
     >>> from sympy import Symbol, polar_lift, I
     >>> p = Symbol('p', polar=True)
     >>> x = Symbol('x')
@@ -882,6 +991,12 @@ class polar_lift(Function):
     4*polar_lift(x)
     >>> polar_lift(4*p)
     4*p
+
+    Parameters
+    ==========
+
+    arg : Expr
+        Real, complex or mixed expression.
 
     See Also
     ========
@@ -941,6 +1056,9 @@ class periodic_argument(Function):
     logarithm. That is, given a period P, always return a value in
     (-P/2, P/2], by using exp(P*I) == 1.
 
+    Examples
+    ========
+
     >>> from sympy import exp, exp_polar, periodic_argument, unbranched_argument
     >>> from sympy import I, pi
     >>> unbranched_argument(exp(5*I*pi))
@@ -953,6 +1071,13 @@ class periodic_argument(Function):
     -pi
     >>> periodic_argument(exp_polar(5*I*pi), pi)
     0
+
+    Parameters
+    ==========
+
+    arg : exp_polar, exp
+        Exp_polar class represents a polar number.
+        Exp represents an exponential expression.
 
     See Also
     ========
