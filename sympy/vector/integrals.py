@@ -79,7 +79,7 @@ class ParametricIntegral(Basic):
             result = integrate(integrand, (parameter, lower, upper))
 
         elif parametricregion.dimensions == 2:
-            u, v = cls._bounds_case(parametricregion.limits)
+            u, v = cls._bounds_case(parametricregion.parameters, parametricregion.limits)
 
             r_u = diff(r, u)
             r_v = diff(r, v)
@@ -98,7 +98,7 @@ class ParametricIntegral(Basic):
             result = integrate(integrand, (u, lower_u, upper_u), (v, lower_v, upper_v))
 
         else:
-            variables = cls._bounds_case(parametricregion.limits)
+            variables = cls._bounds_case(parametricregion.parameters, parametricregion.limits)
             coeff = Matrix(parametricregion.definition).jacobian(variables).det()
             integrand = simplify(parametricfield*coeff)
 
@@ -111,7 +111,7 @@ class ParametricIntegral(Basic):
             return super().__new__(cls, field, parametricregion)
 
     @classmethod
-    def _bounds_case(cls, limits):
+    def _bounds_case(cls, parameters, limits):
 
         V = list(limits.keys())
         E = list()
@@ -127,7 +127,11 @@ class ParametricIntegral(Basic):
                     continue
                 if lower_p.issuperset(set([q])) or upper_p.issuperset(set([q])):
                     E.append((p, q))
-        return topological_sort((V, E), key=default_sort_key)
+
+        if not E:
+            return parameters
+        else:
+            return topological_sort((V, E), key=default_sort_key)
 
     @property
     def field(self):

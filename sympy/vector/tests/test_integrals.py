@@ -49,9 +49,12 @@ def test_parametric_volumeintegrals():
     cube = ParametricRegion((x, y, z), (x, 0, 1), (y, 0, 1), (z, 0, 1))
     assert ParametricIntegral(1, cube) == 1
 
-    solidsphere = ParametricRegion((r*sin(phi)*cos(theta), r*sin(phi)*sin(theta), r*cos(phi)),\
+    solidsphere1 = ParametricRegion((r*sin(phi)*cos(theta), r*sin(phi)*sin(theta), r*cos(phi)),\
                             (r, 0, 2), (theta, 0, 2*pi), (phi, 0, pi))
-    assert ParametricIntegral(C.x**2 + C.y**2, solidsphere) == -256*pi/15
+    solidsphere2 = ParametricRegion((r*sin(phi)*cos(theta), r*sin(phi)*sin(theta), r*cos(phi)),\
+                            (r, 0, 2), (phi, 0, pi), (theta, 0, 2*pi))
+    assert ParametricIntegral(C.x**2 + C.y**2, solidsphere1) == -256*pi/15
+    assert ParametricIntegral(C.x**2 + C.y**2, solidsphere2) == 256*pi/15
 
     region_under_plane1 = ParametricRegion((x, y, z), (x, 0, 3), (y, 0, -2*x/3 + 2),\
                                     (z, 0, 6 - 2*x - 3*y))
