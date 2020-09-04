@@ -43,7 +43,7 @@ def test_DiscreteMarkovChain():
               DiscreteMarkovChain("Y", state_spaces[2])]
     for i, Y in enumerate(chains):
         assert isinstance(Y.transition_probabilities, MatrixSymbol)
-        assert Y.state_space == tuple(state_spaces[i])
+        assert Y.state_space == Tuple(*state_spaces[i])
 
         with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
             assert P(Eq(Y[2], 1), Eq(Y[0], 2), evaluate=False) == Probability(Eq(Y[2], 1), Eq(Y[0], 2))
@@ -60,7 +60,7 @@ def test_DiscreteMarkovChain():
     for Z in chains:
         assert Z.num_states == Z.transition_probabilities.shape[0]
         assert isinstance(Z.transition_probabilities, ImmutableDenseMatrix)
-        assert isinstance(Z.state_space, tuple)
+        assert isinstance(Z.state_space, Tuple)
 
     # pass name, state_space and transition_probabilities
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])

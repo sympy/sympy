@@ -82,19 +82,19 @@ def _state_converter(itr):
     # This can be set to false but it still causes
     # problems with E(Y[0]) == Expectation(Y[0]).
     if isinstance(itr, (Tuple, set, FiniteSet)):
-        itr = tuple(itr)
+        itr = Tuple(*itr)
 
     elif isinstance(itr, (list, tuple)):
         # check if states are unique
         if len(set(itr)) != len(itr):
             raise ValueError('The state space must have unique elements.')
-        itr = tuple(itr)
+        itr = Tuple(*itr)
 
     elif isinstance(itr, Range):
         # the only ordered set in sympy I know of
         # try to convert to tuple
         try:
-            itr = tuple(itr)
+            itr = Tuple(*itr)
         except ValueError:
             pass
 
