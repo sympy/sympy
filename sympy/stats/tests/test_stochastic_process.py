@@ -32,11 +32,12 @@ def test_DiscreteMarkovChain():
 
     raises(ValueError, lambda: sample_stochastic_process(t))
     raises(ValueError, lambda: next(sample_stochastic_process(X)))
-
     # pass name and state_space
-    sym = symbols('a', real=True)
     # any hashable object should be a valid state
-    state_spaces = [[1, 2, 3], [-1, pi, None], ['Hello', sym, DiscreteMarkovChain]]
+    # states should be valid as a tuple/set/list/Tuple/Range
+    sym = symbols('a', real=True)
+    state_spaces = [(1, 2, 3), ['Hello', sym, DiscreteMarkovChain],
+                    Tuple(1, exp(sym), 'World', sympify=False), Range(-1, 7, 2)]
     chains = [DiscreteMarkovChain("Y", state_spaces[0]),
               DiscreteMarkovChain("Y", state_spaces[1]),
               DiscreteMarkovChain("Y", state_spaces[2])]
@@ -64,8 +65,8 @@ def test_DiscreteMarkovChain():
     # pass name, state_space and transition_probabilities
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
     TS = MatrixSymbol('T', 3, 3)
-    Y = DiscreteMarkovChain("Y", [1, 2, 3], T)  # old version failed if it did not start from 0
-    YS = DiscreteMarkovChain("Y", [0, 1, 2], TS)
+    Y = DiscreteMarkovChain("Y", [1, 2, 'Three'], T)  # old version failed if it did not start from 0
+    YS = DiscreteMarkovChain("Y", ['One', 'Two', 3], TS)
     assert YS._transient2transient() == None
     assert YS._transient2absorbing() == None
     assert Y.joint_distribution(1, Y[2], 3) == JointDistribution(Y[1], Y[2], Y[3])
@@ -96,8 +97,12 @@ def test_DiscreteMarkovChain():
             Probability(Eq(Y[0], 0))/4
     assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
         StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
+    assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
+             StochasticStateSpaceOf(X, [None, 'None', 1]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
     assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
         StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) is S.Zero
+    assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
+             StochasticStateSpaceOf(X, [None, 'None', 1]) & TransitionMatrixOf(X, TO1)) is S.Zero
     assert P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)), Eq(Y[1], 1)) == 0.1*Probability(Eq(Y[0], 0))
 
     # testing properties of Markov chain
@@ -128,7 +133,7 @@ def test_DiscreteMarkovChain():
     T = Matrix([[S.Half, Rational(1, 4), Rational(1, 4)],
                 [Rational(1, 3), 0, Rational(2, 3)],
                 [S.Half, S.Half, 0]])
-    X = DiscreteMarkovChain('X', [0, 1, 2], T)
+    X = DiscreteMarkovChain('X', ['A', 'B', 'C'], T)
     assert P(Eq(X[1], 2) & Eq(X[2], 1) & Eq(X[3], 0),
     Eq(P(Eq(X[1], 0)), Rational(1, 4)) & Eq(P(Eq(X[1], 1)), Rational(1, 4))) == Rational(1, 12)
     assert P(Eq(X[2], 1) | Eq(X[2], 2), Eq(X[1], 1)) == Rational(2, 3)
@@ -148,7 +153,7 @@ def test_sample_stochastic_process():
     if numpy:
         numpy.random.seed(0) # scipy uses numpy to sample so to set its seed
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
-    Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    Y = DiscreteMarkovChain("Y", ['A', 2, 3], T)
     for samps in range(10):
         assert next(sample_stochastic_process(Y)) in Y.state_space
 

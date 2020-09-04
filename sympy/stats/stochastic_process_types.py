@@ -309,11 +309,20 @@ class StochasticStateSpaceOf(Boolean):
         if not isinstance(process, (DiscreteMarkovChain, ContinuousMarkovChain)):
             raise ValueError("Currently only DiscreteMarkovChain and ContinuousMarkovChain "
                                 "support StochasticStateSpaceOf.")
-        state_space = _set_converter(state_space)
-        return Basic.__new__(cls, process, state_space)
+        if isinstance(process, DiscreteMarkovChain):
+            state_space = _state_converter(state_space)
+            if isinstance(state_space, Range):
+                ss_size = (state_space.stop - state_space.start) // state_space.step
+            else:
+                ss_size = len(state_space)
+            state_index = Range(ss_size)
+        else:
+            state_space = _set_converter(state_space)
+            state_index = state_space
+        return Basic.__new__(cls, process, state_index)
 
     process = property(lambda self: self.args[0])
-    state_space = property(lambda self: self.args[1])
+    state_index = property(lambda self: self.args[1])
 
 class MarkovProcess(StochasticProcess):
     """
@@ -338,14 +347,14 @@ class MarkovProcess(StochasticProcess):
                 if isinstance(gc, TransitionMatrixOf):
                     trans_probs = gc.matrix
                 if isinstance(gc, StochasticStateSpaceOf):
-                    state_index = gc.state_space
+                    state_index = gc.state_index
                 if isinstance(gc, Relational):
                     given_condition = given_condition & gc
         if isinstance(given_condition, TransitionMatrixOf):
             trans_probs = given_condition.matrix
             given_condition = S.true
         if isinstance(given_condition, StochasticStateSpaceOf):
-            state_index = given_condition.state_space
+            state_index = given_condition.state_index
             given_condition = S.true
         return trans_probs, state_index, given_condition
 
@@ -601,7 +610,7 @@ class MarkovProcess(StochasticProcess):
             lhsg, rhsg = condition.lhs, condition.rhs
             if not isinstance(lhsg, RandomIndexedSymbol):
                 lhsg, rhsg = (rhsg, lhsg)
-            if rhsg not in self.state_space:
+            if rhsg not in state_index:
                 raise ValueError("%s state is not in the state space."%(rhsg))
             if rv.key < lhsg.key:
                 raise ValueError("Incorrect given condition is given, expectation "
@@ -685,8 +694,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         # This helps a lot if we get it done at the start.
         if (state_space is None) and (trans_probs is None):
             _n = Dummy('n', integer=True, nonnegative=True)
-            state_space = Range(_n)
-            trans_probs = MatrixSymbol('_T', _n, _n)
+            state_space = _state_converter(Range(_n))
+            trans_probs = _matrix_checks(MatrixSymbol('_T', _n, _n))
 
         elif state_space is None:
             trans_probs = _matrix_checks(trans_probs)
