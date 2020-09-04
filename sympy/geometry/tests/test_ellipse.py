@@ -1,4 +1,4 @@
-from sympy import Eq, Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, Abs
+from sympy import Eq, Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, Abs, sec
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
@@ -331,6 +331,11 @@ def test_construction():
     # eccentricity would be filtered out in this case and the constructor would throw an error
     e4 = Ellipse(Point(0, 0), hradius=1, eccentricity=0)
     assert e4.vradius == 1
+
+    #tests for eccentricity > 1
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity=sqrt(3)-sqrt(2) +0.6899))
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity=sec(5)))
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity=S.Pi-S(2)))
 
 
 def test_ellipse_random_point():
