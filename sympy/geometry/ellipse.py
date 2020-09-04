@@ -140,7 +140,7 @@ class Ellipse(GeometrySet):
                 "eccentricity" must not be None.'''))
 
         if eccentricity > 1:
-            raise GeometryError("eccentricity of ellipse/circle can only be less than or equal to 1")
+            raise GeometryError("eccentricity of ellipse/circle can only be less than 1")
 
         if eccentricity is not None:
             if hradius is None:
