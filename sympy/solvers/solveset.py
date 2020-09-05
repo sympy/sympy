@@ -2877,12 +2877,15 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                     if complement_set:
                         new_value = Complement(new_value, complement_set)
                     if new_value is S.EmptySet:
-                        res_copy = {}
+                        res_copy = None
+                        break
                     elif new_value.is_FiniteSet and len(new_value) == 1:
                         res_copy[key_res] = set(new_value).pop()
                     else:
                         res_copy[key_res] = new_value
-            final_result.append(res_copy)
+
+            if res_copy is not None:
+                final_result.append(res_copy)
         return final_result
     # end of def add_intersection_complement()
 
