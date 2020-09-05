@@ -333,7 +333,7 @@ def test_construction():
     assert e4.vradius == 1
 
     #tests for eccentricity > 1
-    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity=sqrt(3)-sqrt(2) +0.6899))
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity = S(3)/2))
     raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity=sec(5)))
     raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity=S.Pi-S(2)))
 

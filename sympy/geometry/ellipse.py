@@ -140,13 +140,12 @@ class Ellipse(GeometrySet):
                 "eccentricity" must not be None.'''))
 
         if eccentricity is not None:
-            if eccentricity.is_real == True and eccentricity > 1:
+            if eccentricity.is_real is True and eccentricity >= 1:
                 raise GeometryError("eccentricity of ellipse/circle can only be less than 1")
             elif hradius is None:
                 hradius = vradius / sqrt(1 - eccentricity**2)
             elif vradius is None:
                 vradius = hradius * sqrt(1 - eccentricity**2)
-
 
         if hradius == vradius:
             return Circle(center, hradius, **kwargs)
