@@ -1,50 +1,48 @@
 language: python
+os:
+  - linux
+
 stages:
-- quality
-- baseline
-- test
-- allowed_failures
+  - quality
+  - baseline
+  - test
+  - allowed_failures
 
 env:
-  matrix:
-  - TEST_SYMPY="true" SPLIT="1/2"
-  - TEST_SYMPY="true" SPLIT="2/2"
-  - TEST_DOCTESTS="true" TEST_SETUP="true" TEST_EXAMPLES="true"
+  jobs:
+    - TEST_SYMPY="true" SPLIT="1/2"
+    - TEST_SYMPY="true" SPLIT="2/2"
+    - TEST_DOCTESTS="true" TEST_SETUP="true" TEST_EXAMPLES="true"
 dist: trusty
 
 python:
   - 3.5
 
-matrix:
+jobs:
   fast_finish: true
   include:
     - stage: quality
       python: 3.8
       dist: xenial
-      sudo: true
       script: bin/test quality
       env:
         - TEST_QUALITY="true"
     - python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_FLAKE8="true"
 
     - stage: baseline
       python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_DOCTESTS="true" TEST_SETUP="true" TEST_EXAMPLES="true"
     - python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_SYMPY="true" SPLIT="1/2"
     - python: 3.8
       dist: xenial
-      sudo: true
       env:
         - TEST_SYMPY="true" SPLIT="2/2"
     - python: 3.7
@@ -69,7 +67,6 @@ matrix:
     - stage: test
       python: 2.7
       dist: xenial
-      sudo: true
       env:
         - TEST_PY2_IMPORT="true"
     - python: 3.7
@@ -87,17 +84,14 @@ matrix:
 
     - python: 3.9-dev
       dist: xenial
-      sudo: true
       env:
         - SPLIT="1/2" TEST_SYMPY="true"
     - python: 3.9-dev
       dist: xenial
-      sudo: true
       env:
         - SPLIT="2/2" TEST_SYMPY="true"
     - python: 3.9-dev
       dist: xenial
-      sudo: true
       env:
         - TEST_DOCTESTS="true" TEST_SETUP="true" TEST_EXAMPLES="true"
 
@@ -210,14 +204,14 @@ before_install:
   - set -e
   - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
-      pip install coverage;
-      coverage debug sys;
+    pip install coverage;
+    coverage debug sys;
     fi
   - if [[ "${TEST_FLAKE8}" == "true" ]]; then
-      pip install flake8;
+    pip install flake8;
     fi
   - if [ "$TRAVIS_PYTHON_VERSION" == "3.8" ]; then
-        pip uninstall -y Cython;
+    pip uninstall -y Cython;
     fi
   - |
     if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
@@ -250,23 +244,21 @@ before_install:
         fi
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      pip install sphinx "docutils" doctr matplotlib sphinx-math-dollar;
+    pip install sphinx "docutils" doctr matplotlib sphinx-math-dollar;
     fi
   - if [[ "${BENCHMARK}" == "true" ]]; then
-      pip install asv;
-      git submodule add https://github.com/sympy/sympy_benchmarks.git;
+    pip install asv;
+    git submodule add https://github.com/sympy/sympy_benchmarks.git;
     fi
 
 install:
   # If a command fails, fail the build.
   - set -e
   - if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ];
-      then virtualenv -p /usr/bin/pypy3 ~/.venv;
-           . ~/.venv/bin/activate;
+    then virtualenv -p /usr/bin/pypy3 ~/.venv;
+    . ~/.venv/bin/activate;
     fi
-  # Once https://github.com/fredrik-johansson/mpmath/pull/403 is in a released
-  # version of mpmath remove this line.
-  - pip install mpmath
+
   # -We:invalid makes invalid escape sequences error in Python 3.6. See
   # -#12028.
   # SyntaxWarning flag for catching errors in Python3.8
@@ -294,15 +286,15 @@ script:
   - set -e
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-        doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
+    doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
     fi
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
-        bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports";
+    bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports";
     fi
   - if [[ "${BENCHMARK}" == "true" ]]; then
-        asv machine --yes --config asv.conf.travis.json;
-        asv run --config asv.conf.travis.json;
-        asv compare master HEAD --config asv.conf.travis.json --factor 1.5;
+    asv machine --yes --config asv.conf.travis.json;
+    asv run --config asv.conf.travis.json;
+    asv compare master HEAD --config asv.conf.travis.json --factor 1.5;
     fi
 notifications:
   email: false
