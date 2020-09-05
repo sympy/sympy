@@ -15,6 +15,7 @@ from sympy.external import import_module
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.drv_types import PoissonDistribution
 from sympy.stats.crv_types import NormalDistribution, GammaDistribution
+from sympy.core.symbol import Str
 
 
 def test_DiscreteMarkovChain():
@@ -36,14 +37,14 @@ def test_DiscreteMarkovChain():
     # any hashable object should be a valid state
     # states should be valid as a tuple/set/list/Tuple/Range
     sym = symbols('a', real=True)
-    state_spaces = [(1, 2, 3), ['Hello', sym, DiscreteMarkovChain],
-                    Tuple(1, exp(sym), 'World', sympify=False), Range(-1, 7, 2)]
+    state_spaces = [(1, 2, 3), [Str('Hello'), sym, DiscreteMarkovChain],
+                    Tuple(1, exp(sym), Str('World'), sympify=False), Range(-1, 7, 2)]
     chains = [DiscreteMarkovChain("Y", state_spaces[0]),
               DiscreteMarkovChain("Y", state_spaces[1]),
               DiscreteMarkovChain("Y", state_spaces[2])]
     for i, Y in enumerate(chains):
         assert isinstance(Y.transition_probabilities, MatrixSymbol)
-        assert Y.state_space == Tuple(*state_spaces[i], sympify=False)
+        assert Y.state_space == Tuple(*state_spaces[i])
 
         with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
             assert P(Eq(Y[2], 1), Eq(Y[0], 2), evaluate=False) == Probability(Eq(Y[2], 1), Eq(Y[0], 2))
