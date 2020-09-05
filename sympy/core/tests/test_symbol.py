@@ -6,10 +6,13 @@ from sympy.testing.pytest import raises
 from sympy.core.symbol import disambiguate
 
 def test_Str():
-    a1 = Str('a')
-    a2 = Str('a')
-    b = Str('b')
-    assert a1 == a2 != b
+    a1_str = 'a'
+    a2_str = 'a'
+    b_str = 'b'
+    a1_Str = Str(a1_str)
+    a2_Str = Str(a2_str)
+    b_Str = Str(b_str)
+    assert a1_str == a2_str == a1_Str == a2_Str != b_str == b_Str
     raises(TypeError, lambda: Str())
 
 def test_Symbol():

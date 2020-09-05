@@ -22,6 +22,7 @@ from sympy.stats.frv_types import Bernoulli, BernoulliDistribution, FiniteRV
 from sympy.stats.drv_types import Poisson, PoissonDistribution
 from sympy.stats.crv_types import Normal, NormalDistribution, Gamma, GammaDistribution
 from sympy.core.sympify import _sympify
+from sympy.core.symbol import Str
 
 __all__ = [
     'StochasticProcess',
@@ -76,25 +77,20 @@ def _state_converter(itr):
     Helper function for converting list/tuple/set/Range/Tuple/FiniteSet
     to tuple/Range.
     """
-    # Make the state space a tuple if possible.
-    # Use default tuple rather than sympy Tuple
-    # since Tuple sympifies each argument.
-    # This can be set to false but it still causes
-    # problems with E(Y[0]) == Expectation(Y[0]).
     if isinstance(itr, (Tuple, set, FiniteSet)):
-        itr = Tuple(*itr)
+        itr = Tuple(*(Str(i) if isinstance(i, str) else i for i in itr))
 
     elif isinstance(itr, (list, tuple)):
         # check if states are unique
         if len(set(itr)) != len(itr):
             raise ValueError('The state space must have unique elements.')
-        itr = Tuple(*itr)
+        itr = Tuple(*(Str(i) if isinstance(i, str) else i for i in itr))
 
     elif isinstance(itr, Range):
         # the only ordered set in sympy I know of
         # try to convert to tuple
         try:
-            itr = Tuple(*itr)
+            itr = Tuple(*(Str(i) if isinstance(i, str) else i for i in itr))
         except ValueError:
             pass
 
@@ -636,7 +632,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     ==========
 
     sym: Symbol/str
-    state_space: list/tuple/set/FiniteSet/Range
+    state_space: list/Range/tuple/Tuple/set/FiniteSet
         Optional, by default, Range(n)
     trans_probs: Matrix/ImmutableMatrix/MatrixSymbol
         Optional, by default, MatrixSymbol('_T', n, n)
@@ -729,6 +725,10 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """Converts a state name to a state index i.e. inverts self.state_space."""
         if self._is_numeric:
             indexes = {state: index for index, state in enumerate(self.state_space)}
+            # add `str` values to the keys as well
+            for index, state in enumerate(self.state_space):
+                if isinstance(state, Str):
+                    indexes[str(state)] = index
             return indexes
         else:
             if self.state_space == Range(self.num_states):

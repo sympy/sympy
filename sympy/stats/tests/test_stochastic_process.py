@@ -43,7 +43,7 @@ def test_DiscreteMarkovChain():
               DiscreteMarkovChain("Y", state_spaces[2])]
     for i, Y in enumerate(chains):
         assert isinstance(Y.transition_probabilities, MatrixSymbol)
-        assert Y.state_space == Tuple(*state_spaces[i])
+        assert Y.state_space == Tuple(*state_spaces[i], sympify=False)
 
         with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
             assert P(Eq(Y[2], 1), Eq(Y[0], 2), evaluate=False) == Probability(Eq(Y[2], 1), Eq(Y[0], 2))
@@ -133,13 +133,24 @@ def test_DiscreteMarkovChain():
     T = Matrix([[S.Half, Rational(1, 4), Rational(1, 4)],
                 [Rational(1, 3), 0, Rational(2, 3)],
                 [S.Half, S.Half, 0]])
-    X = DiscreteMarkovChain('X', ['A', 'B', 'C'], T)
+    X = DiscreteMarkovChain('X', [0, 1, 2], T)
     assert P(Eq(X[1], 2) & Eq(X[2], 1) & Eq(X[3], 0),
     Eq(P(Eq(X[1], 0)), Rational(1, 4)) & Eq(P(Eq(X[1], 1)), Rational(1, 4))) == Rational(1, 12)
     assert P(Eq(X[2], 1) | Eq(X[2], 2), Eq(X[1], 1)) == Rational(2, 3)
     assert P(Eq(X[2], 1) & Eq(X[2], 2), Eq(X[1], 1)) is S.Zero
     assert P(Ne(X[2], 2), Eq(X[1], 1)) == Rational(1, 3)
     assert E(X[1]**2, Eq(X[0], 1)) == Rational(8, 3)
+    assert variance(X[1], Eq(X[0], 1)) == Rational(8, 9)
+    raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
+
+    # testing miscellaneous queries with different state space
+    X = DiscreteMarkovChain('X', ['A', 'B', 'C'], T)
+    assert P(Eq(X[1], 2) & Eq(X[2], 1) & Eq(X[3], 0),
+    Eq(P(Eq(X[1], 0)), Rational(1, 4)) & Eq(P(Eq(X[1], 1)), Rational(1, 4))) == Rational(1, 12)
+    assert P(Eq(X[2], 1) | Eq(X[2], 2), Eq(X[1], 1)) == Rational(2, 3)
+    assert P(Eq(X[2], 1) & Eq(X[2], 2), Eq(X[1], 1)) is S.Zero
+    assert P(Ne(X[2], 2), Eq(X[1], 1)) == Rational(1, 3)
+    assert E(X[1] ** 2, Eq(X[0], 1)) == Rational(8, 3)
     assert variance(X[1], Eq(X[0], 1)) == Rational(8, 9)
     raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
 
@@ -153,9 +164,12 @@ def test_sample_stochastic_process():
     if numpy:
         numpy.random.seed(0) # scipy uses numpy to sample so to set its seed
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
-    Y = DiscreteMarkovChain("Y", ['A', 2, 3], T)
+    Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     for samps in range(10):
         assert next(sample_stochastic_process(Y)) in Y.state_space
+    Z = DiscreteMarkovChain("Z", ['1', 1, None], T)
+    for samps in range(10):
+        assert next(sample_stochastic_process(Z)) in Z.state_space
 
     T = Matrix([[S.Half, Rational(1, 4), Rational(1, 4)],
                 [Rational(1, 3), 0, Rational(2, 3)],
@@ -163,6 +177,9 @@ def test_sample_stochastic_process():
     X = DiscreteMarkovChain('X', [0, 1, 2], T)
     for samps in range(10):
         assert next(sample_stochastic_process(X)) in X.state_space
+    W = DiscreteMarkovChain('W', [1, pi, oo], T)
+    for samps in range(10):
+        assert next(sample_stochastic_process(W)) in W.state_space
 
 
 def test_ContinuousMarkovChain():

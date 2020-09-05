@@ -42,6 +42,15 @@ class Str(Atom):
     def _hashable_content(self):
         return (self.name,)
 
+    def __eq__(self, other):
+        if isinstance(other, str):
+            other = Str(other)
+
+        return super().__eq__(other)
+
+    def __hash__(self):
+        return super().__hash__()
+
 def _filter_assumptions(kwargs):
     """Split the given dict into assumptions and non-assumptions.
     Keys are taken as assumptions if they correspond to an
