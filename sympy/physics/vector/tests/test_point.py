@@ -1,5 +1,6 @@
 from sympy.physics.vector import dynamicsymbols, Point, ReferenceFrame
 from sympy.testing.pytest import raises
+from sympy import Derivative
 
 
 def test_point_v1pt_theorys():
@@ -82,6 +83,18 @@ def test_point_funcs():
     assert P.vel(B) == qd * B.x + q2d * B.y
     O.set_vel(N, 0)
     assert O.vel(N) == 0
+    Q = Point('Q')
+    Q.set_pos(O, q * N.x)
+    assert Q.vel(N) == Derivative(q)*N.x
+    raises(ValueError , lambda : Q.vel(B))
+    a = Point('a')
+    b = Point('b')
+    b.set_pos(a, q * N.x)
+    raises(ValueError , lambda : b.vel(N))
+    raises(ValueError , lambda : a.vel(N))
+    a.set_pos(Q, q * N.x)
+    assert a.vel(N) == 2 * Derivative(q) * N.x
+
     assert P.a1pt_theory(O, N, B) == ((-25 * q + qdd) * B.x + (q2dd) * B.y +
                                (-10 * qd) * B.z)
 

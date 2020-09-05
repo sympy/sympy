@@ -480,22 +480,41 @@ class Point(object):
         frame : ReferenceFrame
             The frame in which the returned velocity vector will be defined in
 
+        otherpoint : Point
+            The point w.r.t which self's position is defined, works as initial
+            point.
+
         Examples
         ========
 
-        >>> from sympy.physics.vector import Point, ReferenceFrame
+        >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p1.set_vel(N, 10 * N.x)
         >>> p1.vel(N)
         10*N.x
+        >>> p = Point('p')
+        >>> q = dynamicsymbols('q')
+        >>> p.set_vel(N, 10 * N.x)
+        >>> p2 = Point('p2')
+        >>> p2.set_pos(p, q*N.x)
+        >>> p2.vel(N)
+        (Derivative(q(t), t) + 10)*N.x
 
         """
 
         _check_frame(frame)
         if not (frame in self._vel_dict):
-            raise ValueError('Velocity of point ' + self.name + ' has not been'
-                             ' defined in ReferenceFrame ' + frame.name)
+            for p, p_rel_pos in self._pos_dict.items():
+                try:
+                    p_abs_vel = p._vel_dict[frame]
+                except KeyError:
+                    continue
+                self._vel_dict[frame] = p_abs_vel + p_rel_pos.dt(frame)
+                break
+            else:
+                raise ValueError('Velocity of point ' + self.name + ' has not been'
+                    ' defined in ReferenceFrame ' + frame.name)
         return self._vel_dict[frame]
 
     def partial_velocity(self, frame, *gen_speeds):
