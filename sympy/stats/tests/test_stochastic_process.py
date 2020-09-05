@@ -23,6 +23,7 @@ def test_DiscreteMarkovChain():
     # pass only the name
     X = DiscreteMarkovChain("X")
     assert isinstance(X.state_space, Range)
+    assert not X._is_numeric
     assert X.index_set == S.Naturals0
     assert isinstance(X.transition_probabilities, MatrixSymbol)
     t = symbols('t', positive=True, integer=True)
@@ -45,6 +46,11 @@ def test_DiscreteMarkovChain():
     for i, Y in enumerate(chains):
         assert isinstance(Y.transition_probabilities, MatrixSymbol)
         assert Y.state_space == Tuple(*state_spaces[i])
+        assert Y.num_states == 3
+        assert not Y._is_numeric  # because no transition matrix is provided
+        assert Y.index_of[state_spaces[i][0]] == 0
+        assert Y.index_of[state_spaces[i][1]] == 1
+        assert Y.index_of[state_spaces[i][2]] == 2
 
         with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
             assert P(Eq(Y[2], 1), Eq(Y[0], 2), evaluate=False) == Probability(Eq(Y[2], 1), Eq(Y[0], 2))
@@ -62,6 +68,7 @@ def test_DiscreteMarkovChain():
         assert Z.num_states == Z.transition_probabilities.shape[0]
         assert isinstance(Z.transition_probabilities, ImmutableDenseMatrix)
         assert isinstance(Z.state_space, Tuple)
+        assert Z._is_numeric
 
     # pass name, state_space and transition_probabilities
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])

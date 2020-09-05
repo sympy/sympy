@@ -640,9 +640,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     Examples
     ========
 
-    >>> from sympy.stats import DiscreteMarkovChain, TransitionMatrixOf
-    >>> from sympy import Matrix, MatrixSymbol, Eq
-    >>> from sympy.stats import P
+    >>> from sympy.stats import DiscreteMarkovChain, TransitionMatrixOf, P
+    >>> from sympy import Matrix, MatrixSymbol, Eq, symbols
     >>> T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     >>> YS = DiscreteMarkovChain("Y")
@@ -662,7 +661,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     Probabilities will be calculated based on indexes rather
     than state names. For example, with the Sunny-Cloudy-Rainy
-    model:
+    model with string state names:
 
     >>> Y = DiscreteMarkovChain("Y", ['Sunny', 'Cloudy', 'Rainy'], T)
     >>> P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2)
@@ -674,6 +673,21 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     >>> P(Eq(Y[3], Y.index_of['Rainy']), Eq(Y[1], Y.index_of['Cloudy'])).round(2)
     0.36
+
+    Symbol state names can also be used:
+
+    >>> sunny, cloudy, rainy = symbols('Sunny, Cloudy, Rainy')
+    >>> Y = DiscreteMarkovChain("Y", [sunny, cloudy, rainy], T)
+    >>> P(Eq(Y[3], Y.index_of[rainy]), Eq(Y[1], Y.index_of[cloudy])).round(2)
+    0.36
+
+    There is limited support for arbitrarily sized states:
+
+    >>> n = symbols('n', nonnegative=True, integer=True)
+    >>> T = MatrixSymbol('T', n, n)
+    >>> Y = DiscreteMarkovChain("Y", trans_probs=T)
+    >>> Y.state_space
+    Range(0, n, 1)
 
     References
     ==========
@@ -723,7 +737,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     @property
     def index_of(self):
         """Converts a state name to a state index i.e. inverts self.state_space."""
-        if self._is_numeric:
+        if isinstance(self.num_states, Integer):
             indexes = {state: index for index, state in enumerate(self.state_space)}
             # add `str` values to the keys as well
             for index, state in enumerate(self.state_space):
