@@ -191,7 +191,7 @@ def test_Sample():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
         assert isinstance(next(sample(X + Y)), float)
 
@@ -366,7 +366,8 @@ def test_issue_12283():
     x = symbols('x')
     X = RandomSymbol(x)
     Y = RandomSymbol('Y')
-    Z = RandomMatrixSymbol('Z', 2, 3)
+    Z = RandomMatrixSymbol('Z', 2, 1)
+    W = RandomMatrixSymbol('W', 2, 1)
     RI = RandomIndexedSymbol(Indexed('RI', 3))
     assert pspace(Z) == PSpace()
     assert pspace(RI) == PSpace()
@@ -376,7 +377,7 @@ def test_issue_12283():
     assert variance(X) == Variance(X)
     assert variance(RI) == Variance(RI)
     assert covariance(X, Y) == Covariance(X, Y)
-    assert covariance(X, Z) == Covariance(X, Z)
+    assert covariance(W, Z) == Covariance(W, Z)
 
 def test_issue_6810():
     X = Die('X', 6)

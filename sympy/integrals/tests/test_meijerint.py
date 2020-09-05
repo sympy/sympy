@@ -629,7 +629,7 @@ def test_messy():
 
     # where should the logs be simplified?
     assert laplace_transform(Chi(x), x, s) == \
-        ((log(s**(-2)) - log((s**2 - 1)/s**2))/(2*s), 1, True)
+        ((log(s**(-2)) - log(1 - 1/s**2))/(2*s), 1, True)
 
     # TODO maybe simplify the inequalities?
     assert laplace_transform(besselj(a, x), x, s)[1:] == \

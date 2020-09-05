@@ -10,6 +10,7 @@ import keyword
 import textwrap
 import linecache
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, builtins)
 from sympy.utilities.misc import filldedent
@@ -165,7 +166,7 @@ def _import(module, reload=False):
 _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
-def lambdify(args, expr, modules=None, printer=None, use_imps=True,
+def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
              dummify=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
@@ -173,6 +174,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     .. warning::
        This function uses ``exec``, and thus shouldn't be used on
        unsanitized input.
+
+    .. versionchanged:: 1.7.0
+       Passing a set for the *args* parameter is deprecated as sets are
+       unordered. Use an ordered iterable such as a list or tuple.
 
     Explanation
     ===========
@@ -322,6 +327,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         Set ``dummify=True`` to replace all arguments with dummy symbols
         (if ``args`` is not a string) - for example, to ensure that the
         arguments do not redefine any built-in names.
+
 
     Examples
     ========
@@ -797,10 +803,19 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                            'allow_unknown_functions': True,
                            'user_functions': user_functions})
 
+    if isinstance(args, set):
+        SymPyDeprecationWarning(
+                    feature="The list of arguments is a `set`. This leads to unpredictable results",
+                    useinstead=": Convert set into list or tuple",
+                    issue=20013,
+                    deprecated_since_version="1.6.3"
+                ).warn()
+
     # Get the names of the args, for creating a docstring
     if not iterable(args):
         args = (args,)
     names = []
+
     # Grab the callers frame, for getting the names by inspection (if needed)
     callers_local_vars = inspect.currentframe().f_back.f_locals.items()
     for n, var in enumerate(args):

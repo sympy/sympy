@@ -1598,12 +1598,14 @@ class Beam(object):
             >>> b.apply_support(50, "pin")
             >>> b.apply_support(0, "fixed")
             >>> b.apply_support(20, "roller")
-            >>> b.draw()
+            >>> p = b.draw()
+            >>> p
             Plot object containing:
             [0]: cartesian line: 25*SingularityFunction(x, 5, 0) - 25*SingularityFunction(x, 23, 0)
             + SingularityFunction(x, 30, 1) - 20*SingularityFunction(x, 50, 0)
             - SingularityFunction(x, 50, 1) + 5 for x over (0.0, 50.0)
             [1]: cartesian line: 5 for x over (0.0, 50.0)
+            >>> p.show()
 
         """
         if not numpy:
@@ -1803,7 +1805,7 @@ class Beam3D(Beam):
     is restricted.
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam3D
-    >>> from sympy import symbols, simplify, collect
+    >>> from sympy import symbols, simplify, collect, factor
     >>> l, E, G, I, A = symbols('l, E, G, I, A')
     >>> b = Beam3D(l, E, G, I, A)
     >>> x, q, m = symbols('x, q, m')
@@ -1816,9 +1818,9 @@ class Beam3D(Beam):
     >>> b.bc_slope = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.solve_slope_deflection()
-    >>> b.slope()
-    [0, 0, x*(l*(-l*q + 3*l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) + 3*m)/6
-        + q*x**2/6 + x*(-l*(A*G*l**2*q - 2*A*G*l*m + 12*E*I*q)/(2*(A*G*l**2 + 12*E*I)) - m)/2)/(E*I)]
+    >>> factor(b.slope())
+    [0, 0, x*(-l + x)*(-A*G*l**3*q + 2*A*G*l**2*q*x - 12*E*I*l*q
+        - 72*E*I*m + 24*E*I*q*x)/(12*E*I*(A*G*l**2 + 12*E*I))]
     >>> dx, dy, dz = b.deflection()
     >>> dy = collect(simplify(dy), x)
     >>> dx == dz == 0

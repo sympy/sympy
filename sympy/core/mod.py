@@ -57,6 +57,8 @@ class Mod(Function):
 
             # by ratio
             r = p/q
+            if r.is_integer:
+                return S.Zero
             try:
                 d = int(r)
             except TypeError:

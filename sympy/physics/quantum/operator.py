@@ -109,7 +109,7 @@ class Operator(QExpr):
     _label_separator = ','
 
     def _print_operator_name(self, printer, *args):
-        return printer._print(self.__class__.__name__, *args)
+        return self.__class__.__name__
 
     _print_operator_name_latex = _print_operator_name
 
@@ -307,7 +307,7 @@ class IdentityOperator(Operator):
 
     def __mul__(self, other):
 
-        if isinstance(other, Operator):
+        if isinstance(other, (Operator, Dagger)):
             return other
 
         return Mul(self, other)

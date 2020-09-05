@@ -790,17 +790,17 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         zm = ring.zero_monom
         sexpvs = []
         for expv, coeff in self.terms():
-            positive = ring.domain.is_positive(coeff)
-            sign = " + " if positive else " - "
+            negative = ring.domain.is_negative(coeff)
+            sign = " - " if negative else " + "
             sexpvs.append(sign)
             if expv == zm:
                 scoeff = printer._print(coeff)
-                if scoeff.startswith("-"):
+                if negative and scoeff.startswith("-"):
                     scoeff = scoeff[1:]
             else:
-                if not positive:
+                if negative:
                     coeff = -coeff
-                if coeff != 1:
+                if coeff != self.ring.one:
                     scoeff = printer.parenthesize(coeff, prec_mul, strict=True)
                 else:
                     scoeff = ''

@@ -29,6 +29,7 @@ from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerP
 from sympy.matrices.expressions import hadamard_power
 
 from sympy.physics import mechanics
+from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
 from sympy.printing.pretty.pretty_symbology import center_accent, is_combining
@@ -52,7 +53,7 @@ import sympy as sym
 class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
 
-a, b, c, d, x, y, z, k, n = symbols('a,b,c,d,x,y,z,k,n')
+a, b, c, d, x, y, z, k, n, s, p = symbols('a,b,c,d,x,y,z,k,n,s,p')
 f = Function("f")
 th = Symbol('theta')
 ph = Symbol('phi')
@@ -2357,6 +2358,192 @@ u("""\
 """)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+
+def test_pretty_TransferFunction():
+    tf1 = TransferFunction(s - 1, s + 1, s)
+    assert upretty(tf1) == u"s - 1\n─────\ns + 1"
+    tf2 = TransferFunction(2*s + 1, 3 - p, s)
+    assert upretty(tf2) == u"2⋅s + 1\n───────\n 3 - p "
+    tf3 = TransferFunction(p, p + 1, p)
+    assert upretty(tf3) == u"  p  \n─────\np + 1"
+
+
+def test_pretty_Series():
+    tf1 = TransferFunction(x + y, x - 2*y, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(x**2 + y, y - x, y)
+    expected1 = \
+u("""\
+          ⎛ 2    ⎞\n\
+⎛ x + y ⎞ ⎜x  + y⎟\n\
+⎜───────⎟⋅⎜──────⎟\n\
+⎝x - 2⋅y⎠ ⎝-x + y⎠\
+""")
+    expected2 = \
+u("""\
+⎛-x + y⎞ ⎛ -x - y⎞\n\
+⎜──────⎟⋅⎜───────⎟\n\
+⎝x + y ⎠ ⎝x - 2⋅y⎠\
+""")
+    expected3 = \
+u("""\
+⎛ 2    ⎞                            \n\
+⎜x  + y⎟ ⎛ x + y ⎞ ⎛ -x - y   x - y⎞\n\
+⎜──────⎟⋅⎜───────⎟⋅⎜─────── + ─────⎟\n\
+⎝-x + y⎠ ⎝x - 2⋅y⎠ ⎝x - 2⋅y   x + y⎠\
+""")
+    expected4 = \
+u("""\
+                  ⎛         2    ⎞\n\
+⎛ x + y    x - y⎞ ⎜x - y   x  + y⎟\n\
+⎜─────── + ─────⎟⋅⎜───── + ──────⎟\n\
+⎝x - 2⋅y   x + y⎠ ⎝x + y   -x + y⎠\
+""")
+    assert upretty(Series(tf1, tf3)) == expected1
+    assert upretty(Series(-tf2, -tf1)) == expected2
+    assert upretty(Series(tf3, tf1, Parallel(-tf1, tf2))) == expected3
+    assert upretty(Series(Parallel(tf1, tf2), Parallel(tf2, tf3))) == expected4
+
+
+def test_pretty_Parallel():
+    tf1 = TransferFunction(x + y, x - 2*y, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(x**2 + y, y - x, y)
+    expected1 = \
+u("""\
+ x + y    x - y\n\
+─────── + ─────\n\
+x - 2⋅y   x + y\
+""")
+    expected2 = \
+u("""\
+-x + y    -x - y\n\
+────── + ───────\n\
+x + y    x - 2⋅y\
+""")
+    expected3 = \
+u("""\
+ 2                                  \n\
+x  + y    x + y    ⎛ -x - y⎞ ⎛x - y⎞\n\
+────── + ─────── + ⎜───────⎟⋅⎜─────⎟\n\
+-x + y   x - 2⋅y   ⎝x - 2⋅y⎠ ⎝x + y⎠\
+""")
+    expected4 = \
+u("""\
+                            ⎛ 2    ⎞\n\
+⎛ x + y ⎞ ⎛x - y⎞   ⎛x - y⎞ ⎜x  + y⎟\n\
+⎜───────⎟⋅⎜─────⎟ + ⎜─────⎟⋅⎜──────⎟\n\
+⎝x - 2⋅y⎠ ⎝x + y⎠   ⎝x + y⎠ ⎝-x + y⎠\
+""")
+    assert upretty(Parallel(tf1, tf2)) == expected1
+    assert upretty(Parallel(-tf2, -tf1)) == expected2
+    assert upretty(Parallel(tf3, tf1, Series(-tf1, tf2))) == expected3
+    assert upretty(Parallel(Series(tf1, tf2), Series(tf2, tf3))) == expected4
+
+
+def test_pretty_Feedback():
+    tf = TransferFunction(1, 1, y)
+    tf1 = TransferFunction(x + y, x - 2*y, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(y**2 - 2*y + 1, y + 5, y)
+    tf4 = TransferFunction(x - 2*y**3, x + y, x)
+    tf5 = TransferFunction(1 - x, x - y, y)
+    tf6 = TransferFunction(2, 2, x)
+    expected1 = \
+u("""\
+    ⎛1⎞    \n\
+    ⎜─⎟    \n\
+    ⎝1⎠    \n\
+───────────\n\
+1    x + y \n\
+─ + ───────\n\
+1   x - 2⋅y\
+""")
+    expected2 = \
+u("""\
+                ⎛1⎞                 \n\
+                ⎜─⎟                 \n\
+                ⎝1⎠                 \n\
+────────────────────────────────────\n\
+                      ⎛ 2          ⎞\n\
+1   ⎛x - y⎞ ⎛ x + y ⎞ ⎜y  - 2⋅y + 1⎟\n\
+─ + ⎜─────⎟⋅⎜───────⎟⋅⎜────────────⎟\n\
+1   ⎝x + y⎠ ⎝x - 2⋅y⎠ ⎝   y + 5    ⎠\
+""")
+    expected3 = \
+u("""\
+                 ⎛ x + y ⎞                  \n\
+                 ⎜───────⎟                  \n\
+                 ⎝x - 2⋅y⎠                  \n\
+────────────────────────────────────────────\n\
+                      ⎛ 2          ⎞        \n\
+1   ⎛ x + y ⎞ ⎛x - y⎞ ⎜y  - 2⋅y + 1⎟ ⎛1 - x⎞\n\
+─ + ⎜───────⎟⋅⎜─────⎟⋅⎜────────────⎟⋅⎜─────⎟\n\
+1   ⎝x - 2⋅y⎠ ⎝x + y⎠ ⎝   y + 5    ⎠ ⎝x - y⎠\
+""")
+    expected4 = \
+u("""\
+  ⎛ x + y ⎞ ⎛x - y⎞  \n\
+  ⎜───────⎟⋅⎜─────⎟  \n\
+  ⎝x - 2⋅y⎠ ⎝x + y⎠  \n\
+─────────────────────\n\
+1   ⎛ x + y ⎞ ⎛x - y⎞\n\
+─ + ⎜───────⎟⋅⎜─────⎟\n\
+1   ⎝x - 2⋅y⎠ ⎝x + y⎠\
+""")
+    expected5 = \
+u("""\
+      ⎛ x + y ⎞ ⎛x - y⎞      \n\
+      ⎜───────⎟⋅⎜─────⎟      \n\
+      ⎝x - 2⋅y⎠ ⎝x + y⎠      \n\
+─────────────────────────────\n\
+1   ⎛ x + y ⎞ ⎛x - y⎞ ⎛1 - x⎞\n\
+─ + ⎜───────⎟⋅⎜─────⎟⋅⎜─────⎟\n\
+1   ⎝x - 2⋅y⎠ ⎝x + y⎠ ⎝x - y⎠\
+""")
+    expected6 = \
+u("""\
+           ⎛ 2          ⎞                   \n\
+           ⎜y  - 2⋅y + 1⎟ ⎛1 - x⎞           \n\
+           ⎜────────────⎟⋅⎜─────⎟           \n\
+           ⎝   y + 5    ⎠ ⎝x - y⎠           \n\
+────────────────────────────────────────────\n\
+    ⎛ 2          ⎞                          \n\
+1   ⎜y  - 2⋅y + 1⎟ ⎛1 - x⎞ ⎛x - y⎞ ⎛ x + y ⎞\n\
+─ + ⎜────────────⎟⋅⎜─────⎟⋅⎜─────⎟⋅⎜───────⎟\n\
+1   ⎝   y + 5    ⎠ ⎝x - y⎠ ⎝x + y⎠ ⎝x - 2⋅y⎠\
+""")
+    expected7 = \
+u("""\
+    ⎛       3⎞    \n\
+    ⎜x - 2⋅y ⎟    \n\
+    ⎜────────⎟    \n\
+    ⎝ x + y  ⎠    \n\
+──────────────────\n\
+    ⎛       3⎞    \n\
+1   ⎜x - 2⋅y ⎟ ⎛2⎞\n\
+─ + ⎜────────⎟⋅⎜─⎟\n\
+1   ⎝ x + y  ⎠ ⎝2⎠\
+""")
+    expected8 = \
+u("""\
+ ⎛1 - x⎞ \n\
+ ⎜─────⎟ \n\
+ ⎝x - y⎠ \n\
+─────────\n\
+1   1 - x\n\
+─ + ─────\n\
+1   x - y\
+""")
+    assert upretty(Feedback(tf, tf1)) == expected1
+    assert upretty(Feedback(tf, tf2*tf1*tf3)) == expected2
+    assert upretty(Feedback(tf1, tf2*tf3*tf5)) == expected3
+    assert upretty(Feedback(tf1*tf2, tf)) == expected4
+    assert upretty(Feedback(tf1*tf2, tf5)) == expected5
+    assert upretty(Feedback(tf3*tf5, tf2*tf1)) == expected6
+    assert upretty(Feedback(tf4, tf6)) == expected7
+    assert upretty(Feedback(tf5, tf)) == expected8
 
 
 def test_pretty_order():
@@ -7049,13 +7236,18 @@ def test_issue_18272():
     '⎪                 ⎜⎜⎪   ─     otherwise⎟          ⎟⎪\n'\
     '⎩                 ⎝⎝⎩   2              ⎠          ⎠⎭'
 
+def test_Str():
+    from sympy.core.symbol import Str
+    assert pretty(Str('x')) == 'x'
+
 def test_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
+    x,y = symbols('x y', real=True)
     m = Manifold('M', 2)
     assert pretty(m) == 'M'
     p = Patch('P', m)
     assert pretty(p) == "P"
-    rect = CoordSystem('rect', p)
+    rect = CoordSystem('rect', p, [x, y])
     assert pretty(rect) == "rect"
     b = BaseScalarField(rect, 0)
-    assert pretty(b) == "rect_0"
+    assert pretty(b) == "x"

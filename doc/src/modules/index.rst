@@ -35,7 +35,6 @@ access any SymPy module, or use the list below:
    functions/index.rst
    geometry/index.rst
    holonomic/index.rst
-   simplify/hyperexpand.rst
    solvers/inequalities.rst
    integrals/integrals.rst
    integrals/g-functions.rst
@@ -55,7 +54,7 @@ access any SymPy module, or use the list below:
    rewriting.rst
    series/index.rst
    sets.rst
-   simplify/simplify.rst
+   simplify/index.rst
    solvers/solvers.rst
    solvers/solveset.rst
    stats.rst

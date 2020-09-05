@@ -1,5 +1,5 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, log, sqrt, Symbol, Subs, pi, symbols, atan, LambertW, Rational
+    Function, PoleError, log, sqrt, N, Symbol, Subs, pi, symbols, atan, LambertW, Rational
 from sympy.abc import x, y, n, k
 from sympy.testing.pytest import raises
 from sympy.series.gruntz import calculate_series
@@ -58,7 +58,7 @@ def test_issue_5223():
     assert (1 + x + O(x**2)).getn() == 2
     assert (1 + x).getn() is None
 
-    assert ((1/sin(x))**oo).series() is oo
+    raises(PoleError, lambda: ((1/sin(x))**oo).series())
     logx = Symbol('logx')
     assert ((sin(x))**y).nseries(x, n=1, logx=logx) == \
         exp(y*logx) + O(x*exp(y*logx), x)
@@ -197,8 +197,36 @@ def test_issue_8805():
     assert series(1, n=8) == 1
 
 
+def test_issue_9549():
+    y = (x**2 + x + 1) / (x**3 + x**2)
+    assert series(y, x, oo) == x**(-5) - 1/x**4 + x**(-3) + 1/x + O(x**(-6), (x, oo))
+
+
 def test_issue_10761():
     assert series(1/(x**-2 + x**-3), x, 0) == x**3 - x**4 + x**5 + O(x**6)
+
+
+def test_issue_12578():
+    y = (1 - 1/(x/2 - 1/(2*x))**4)**(S(1)/8)
+    assert y.series(x, 0, n=17) == 1 - 2*x**4 - 8*x**6 - 34*x**8 - 152*x**10 - 714*x**12 - \
+        3472*x**14 - 17318*x**16 + O(x**17)
+
+
+def test_issue_12791():
+    beta = symbols('beta', real=True, positive=True)
+    theta, varphi = symbols('theta varphi', real=True)
+
+    expr = (-beta**2*varphi*sin(theta) + beta**2*cos(theta) + \
+        beta*varphi*sin(theta) - beta*cos(theta) - beta + 1)/(beta*cos(theta) - 1)**2
+
+    sol = 0.5/(0.5*cos(theta) - 1)**2 - 0.25*cos(theta)/(0.5*cos(theta) - 1)**2 \
+        + (beta - 0.5)*(-0.5*varphi*sin(theta)*cos(theta)/((0.5*cos(theta) - 1) \
+        **2*(0.5*cos(theta) - 1.0)) - 1/(0.5*cos(theta) - 1)**2 + 0.5*cos(theta) \
+        **2/((0.5*cos(theta) - 1)**2*(0.5*cos(theta) - 1.0)) - 1.0*cos(theta) \
+        /((0.5*cos(theta) - 1)**2*(0.5*cos(theta) - 1.0))) + 0.25*varphi* \
+        sin(theta)/(0.5*cos(theta) - 1)**2 + O((beta - 0.5)**2, (beta, 0.5))
+
+    assert expr.series(beta, 0.5, 2) == sol
 
 
 def test_issue_14885():
@@ -221,3 +249,71 @@ def test_issue_7259():
 
 def test_issue_11884():
     assert cos(x).series(x, 1, n=1) == cos(1) + O(x - 1, (x, 1))
+
+
+def test_issue_18008():
+    y = x*(1 + x*(1 - x))/((1 + x*(1 - x)) - (1 - x)*(1 - x))
+    assert y.series(x, oo, n=4) == -9/(32*x**3) - 3/(16*x**2) - 1/(8*x) + S(1)/4 + x/2 + \
+        O(x**(-4), (x, oo))
+
+
+def test_issue_18842():
+    f = log(x/(1 - x))
+    assert f.series(x, 0.491, n=1).removeO().nsimplify() ==  \
+        -S(180019443780011)/5000000000000000
+
+
+def test_issue_19534():
+    dt = symbols('dt', real=True)
+    expr = 16*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0)/45 + \
+            49*dt*(-0.049335189898860408029*dt*(2.0*dt + 1.0) + \
+            0.29601113939316244817*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) - \
+            0.12564355335492979587*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) + 0.051640768506639183825*dt + \
+            dt*(1/2 - sqrt(21)/14) + 1.0)/180 + 49*dt*(-0.23637909581542530626*dt*(2.0*dt + 1.0) - \
+            0.74817562366625959291*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.88085458023927036857*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) + \
+            2.1165151389911680013*dt*(-0.049335189898860408029*dt*(2.0*dt + 1.0) + \
+            0.29601113939316244817*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) - \
+            0.12564355335492979587*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) + 0.22431393315265061193*dt + 1.0) - \
+            1.1854881643947648988*dt + dt*(sqrt(21)/14 + 1/2) + 1.0)/180 + \
+            dt*(0.66666666666666666667*dt*(2.0*dt + 1.0) + \
+            6.0173399699313066769*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) - \
+            4.1117044797036320069*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) - \
+            7.0189140975801991157*dt*(-0.049335189898860408029*dt*(2.0*dt + 1.0) + \
+            0.29601113939316244817*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) - \
+            0.12564355335492979587*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) + 0.22431393315265061193*dt + 1.0) + \
+            0.94010945196161777522*dt*(-0.23637909581542530626*dt*(2.0*dt + 1.0) - \
+            0.74817562366625959291*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.88085458023927036857*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) + \
+            2.1165151389911680013*dt*(-0.049335189898860408029*dt*(2.0*dt + 1.0) + \
+            0.29601113939316244817*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) - \
+            0.12564355335492979587*dt*(0.074074074074074074074*dt*(2.0*dt + 1.0) + \
+            0.2962962962962962963*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0) + \
+            0.96296296296296296296*dt + 1.0) + 0.22431393315265061193*dt + 1.0) - \
+            0.35816132904077632692*dt + 1.0) + 5.5065024887242400038*dt + 1.0)/20 + dt/20 + 1
+
+    assert N(expr.series(dt, 0, 8), 20) == -0.00092592592592592596126*dt**7 + 0.0027777777777777783175*dt**6 + \
+    0.016666666666666656027*dt**5 + 0.083333333333333300952*dt**4 + 0.33333333333333337034*dt**3 + \
+    1.0*dt**2 + 1.0*dt + 1.0
+
+
+def test_issue_11407():
+    a, b, c, x = symbols('a b c x')
+    assert series(sqrt(a + b + c*x), x, 0, 1) == sqrt(a + b) + O(x)
+    assert series(sqrt(a + b + c + c*x), x, 0, 1) == sqrt(a + b + c) + O(x)
+
+
+def test_issue_14037():
+    assert (sin(x**50)/x**51).series(x, n=0) == 1/x + O(1, x)

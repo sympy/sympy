@@ -47,6 +47,7 @@ fi
 
 if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     python bin/test_external_imports.py
+    python bin/test_submodule_imports.py
     python bin/test_executable.py
 fi
 

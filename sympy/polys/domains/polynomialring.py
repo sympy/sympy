@@ -92,6 +92,14 @@ class PolynomialRing(Ring, CompositeDomain):
         """Convert a GMPY `mpq` object to `dtype`. """
         return K1(K1.domain.convert(a, K0))
 
+    def from_GaussianIntegerRing(K1, a, K0):
+        """Convert a `GaussianInteger` object to `dtype`. """
+        return K1(K1.domain.convert(a, K0))
+
+    def from_GaussianRationalField(K1, a, K0):
+        """Convert a `GaussianRational` object to `dtype`. """
+        return K1(K1.domain.convert(a, K0))
+
     def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.domain.convert(a, K0))

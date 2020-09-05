@@ -765,8 +765,6 @@ class PrettyPrinter(Printer):
         D.baseline = D.height()//2
         D = prettyForm(*D.parens('[', ']'))
         return D
-    _print_ImmutableMatrix = _print_MatrixBase
-    _print_Matrix = _print_MatrixBase
 
     def _print_TensorProduct(self, expr):
         # This should somehow share the code with _print_WedgeProduct:
@@ -963,6 +961,60 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('[', ']'))
         return D
 
+    def _print_TransferFunction(self, expr):
+        if not expr.num == 1:
+            num, den = expr.num, expr.den
+            res = Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
+            return self._print_Mul(res)
+        else:
+            return self._print(1)/self._print(expr.den)
+
+    def _print_Series(self, expr):
+        args = list(expr.args)
+        for i, a in enumerate(expr.args):
+            args[i] = prettyForm(*self._print(a).parens())
+        return prettyForm.__mul__(*args)
+
+    def _print_Parallel(self, expr):
+        s = None
+        for item in expr.args:
+            pform = self._print(item)
+            if s is None:
+                s = pform     # First element
+            else:
+                s = prettyForm(*stringPict.next(s, ' + '))
+                s = prettyForm(*stringPict.next(s, pform))
+        return s
+
+    def _print_Feedback(self, expr):
+        from sympy.physics.control import TransferFunction, Parallel, Series
+
+        num, tf = expr.num, TransferFunction(1, 1, expr.num.var)
+        num_arg_list = list(num.args) if isinstance(num, Series) else [num]
+        den_arg_list = list(expr.den.args) if isinstance(expr.den, Series) else [expr.den]
+
+        if isinstance(num, Series) and isinstance(expr.den, Series):
+            den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+        elif isinstance(num, Series) and isinstance(expr.den, TransferFunction):
+            if expr.den == tf:
+                den = Parallel(tf, Series(*num_arg_list))
+            else:
+                den = Parallel(tf, Series(*num_arg_list, expr.den))
+        elif isinstance(num, TransferFunction) and isinstance(expr.den, Series):
+            if num == tf:
+                den = Parallel(tf, Series(*den_arg_list))
+            else:
+                den = Parallel(tf, Series(num, *den_arg_list))
+        else:
+            if num == tf:
+                den = Parallel(tf, *den_arg_list)
+            elif expr.den == tf:
+                den = Parallel(tf, *num_arg_list)
+            else:
+                den = Parallel(tf, Series(*num_arg_list, *den_arg_list))
+
+        return self._print(num)/self._print(den)
+
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
 
@@ -1095,11 +1147,6 @@ class PrettyPrinter(Printer):
             out_expr = mat([out_expr])
 
         return self._print(out_expr)
-
-    _print_ImmutableDenseNDimArray = _print_NDimArray
-    _print_ImmutableSparseNDimArray = _print_NDimArray
-    _print_MutableDenseNDimArray = _print_NDimArray
-    _print_MutableSparseNDimArray = _print_NDimArray
 
     def _printer_tensor_indices(self, name, indices, index_map={}):
         center = stringPict(name)
@@ -2608,17 +2655,17 @@ class PrettyPrinter(Printer):
         return self._print(coords.name)
 
     def _print_BaseScalarField(self, field):
-        string = field._coord_sys._names[field._index]
+        string = field._coord_sys.symbols[field._index].name
         return self._print(pretty_symbol(string))
 
     def _print_BaseVectorField(self, field):
-        s = U('PARTIAL DIFFERENTIAL') + '_' + field._coord_sys._names[field._index]
+        s = U('PARTIAL DIFFERENTIAL') + '_' + field._coord_sys.symbols[field._index].name
         return self._print(pretty_symbol(s))
 
     def _print_Differential(self, diff):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
-            string = field._coord_sys._names[field._index]
+            string = field._coord_sys.symbols[field._index].name
             return self._print(u'\N{DOUBLE-STRUCK ITALIC SMALL D} ' + pretty_symbol(string))
         else:
             pform = self._print(field)
@@ -2665,6 +2712,9 @@ class PrettyPrinter(Printer):
         r = self._print(e.rhs)
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
+
+    def _print_Str(self, s):
+        return self._print(s.name)
 
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

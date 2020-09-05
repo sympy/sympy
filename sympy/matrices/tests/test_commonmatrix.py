@@ -1,4 +1,5 @@
 from sympy.assumptions import Q
+from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.function import Function
 from sympy.core.numbers import I, Integer, oo, pi, Rational
@@ -126,10 +127,10 @@ def test_tolist():
 
 def test_row_col_del():
     e = ShapingOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
-    raises(ValueError, lambda: e.row_del(5))
-    raises(ValueError, lambda: e.row_del(-5))
-    raises(ValueError, lambda: e.col_del(5))
-    raises(ValueError, lambda: e.col_del(-5))
+    raises(IndexError, lambda: e.row_del(5))
+    raises(IndexError, lambda: e.row_del(-5))
+    raises(IndexError, lambda: e.col_del(5))
+    raises(IndexError, lambda: e.col_del(-5))
 
     assert e.row_del(2) == e.row_del(-1) == Matrix([[1, 2, 3], [4, 5, 6]])
     assert e.col_del(2) == e.col_del(-1) == Matrix([[1, 2], [4, 5], [7, 8]])
@@ -731,6 +732,22 @@ def test_matmul():
         pass
 
 
+def test_non_matmul():
+    """
+    Test that if explicitly specified as non-matrix, mul reverts
+    to scalar multiplication.
+    """
+    class foo(Expr):
+        is_Matrix=False
+        is_MatrixLike=False
+        shape = (1, 1)
+
+    A = Matrix([[1, 2], [3, 4]])
+    b = foo()
+    assert b*A == Matrix([[b, 2*b], [3*b, 4*b]])
+    assert A*b == Matrix([[b, 2*b], [3*b, 4*b]])
+
+
 def test_power():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2))**2)
 
@@ -1028,3 +1045,17 @@ def test_issue_10589():
     M2 = Matrix([[x, x, x, x, x], [x, x, x, x, x], [x, x, x, x, x]])
     M2 = M2.subs(zip([x], [1]))
     assert M2 == Matrix([[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]])
+
+def test_rmul_pr19860():
+    class Foo(ImmutableDenseMatrix):
+        _op_priority = MutableDenseMatrix._op_priority + 0.01
+
+    a = Matrix(2, 2, [1, 2, 3, 4])
+    b = Foo(2, 2, [1, 2, 3, 4])
+
+    # This would throw a RecursionError: maximum recursion depth
+    # since b always has higher priority even after a.as_mutable()
+    c = a*b
+
+    assert isinstance(c, Foo)
+    assert c == Matrix([[7, 10], [15, 22]])

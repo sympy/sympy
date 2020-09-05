@@ -10,14 +10,14 @@ from sympy.stats import (GaussianUnitaryEnsemble as GUE, density,
                          JointEigenDistribution,
                          level_spacing_distribution,
                          Normal, Beta)
-from sympy.stats.joint_rv import JointDistributionHandmade
-from sympy.stats.rv import RandomMatrixSymbol, Density
+from sympy.stats.joint_rv_types import JointDistributionHandmade
+from sympy.stats.rv import RandomMatrixSymbol
 from sympy.stats.random_matrix_models import GaussianEnsemble
 from sympy.testing.pytest import raises
 
 def test_GaussianEnsemble():
     G = GaussianEnsemble('G', 3)
-    assert density(G) == Density(G)
+    assert density(G) == G.pspace.model
     raises(ValueError, lambda: GaussianEnsemble('G', 3.5))
 
 def test_GaussianUnitaryEnsemble():
@@ -105,3 +105,8 @@ def test_JointEigenDistribution():
     JointDistributionHandmade(-sqrt(A[0, 0]**2 - 2*A[0, 0]*A[1, 1] + 4*A[0, 1]*A[1, 0] + A[1, 1]**2)/2 +
     A[0, 0]/2 + A[1, 1]/2, sqrt(A[0, 0]**2 - 2*A[0, 0]*A[1, 1] + 4*A[0, 1]*A[1, 0] + A[1, 1]**2)/2 + A[0, 0]/2 + A[1, 1]/2)
     raises(ValueError, lambda: JointEigenDistribution(Matrix([[1, 0], [2, 1]])))
+
+def test_issue_19841():
+    G1 = GUE('U', 2)
+    G2 = G1.xreplace({2: 2})
+    assert G1.args == G2.args

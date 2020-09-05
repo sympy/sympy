@@ -6,6 +6,7 @@ from sympy import (
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
     GreaterThan, Sum, Product, E, log, tan, Function, binomial, exp,
+    Unequality,
 )
 from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
@@ -78,6 +79,12 @@ GOOD_PAIRS = [
     ("a + b", a + b),
     ("a + b - a", _Add(a+b, -a)),
     ("a^2 + b^2 = c^2", Eq(a**2 + b**2, c**2)),
+    ("(x + y) z", _Mul(_Add(x, y), z)),
+    ("\\left(x + y\\right) z", _Mul(_Add(x, y), z)),
+    ("\\left( x + y\\right ) z", _Mul(_Add(x, y), z)),
+    ("\\left(  x + y\\right ) z", _Mul(_Add(x, y), z)),
+    ("\\left[x + y\\right] z", _Mul(_Add(x, y), z)),
+    ("\\left\\{x + y\\right\\} z", _Mul(_Add(x, y), z)),
     ("1+1", Add(1, 1, evaluate=False)),
     ("0+1", Add(0, 1, evaluate=False)),
     ("1*2", Mul(1, 2, evaluate=False)),
@@ -108,6 +115,7 @@ GOOD_PAIRS = [
     ("f(x, y, z)", f(x, y, z)),
     ("\\frac{d f(x)}{dx}", Derivative(f(x), x)),
     ("\\frac{d\\theta(x)}{dx}", Derivative(Function('theta')(x), x)),
+    ("x \\neq y", Unequality(x, y)),
     ("|x|", _Abs(x)),
     ("||x||", _Abs(Abs(x))),
     ("|x||y|", _Abs(x)*_Abs(y)),

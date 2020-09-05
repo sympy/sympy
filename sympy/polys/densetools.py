@@ -1112,6 +1112,11 @@ def dmp_lift(f, u, K):
     x**8 + 2*x**6 + 9*x**4 - 8*x**2 + 16
 
     """
+    if K.is_GaussianField:
+        K1 = K.as_AlgebraicField()
+        f = dmp_convert(f, u, K, K1)
+        K = K1
+
     if not K.is_Algebraic:
         raise DomainError(
             'computation can be done only in an algebraic domain')

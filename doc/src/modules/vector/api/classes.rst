@@ -30,3 +30,24 @@ Del
 
 .. autoclass:: sympy.vector.deloperator.Del
    :members:
+   
+
+ParametricRegion
+================
+
+.. autoclass:: sympy.vector.parametricregion.ParametricRegion
+   :members:
+
+
+ImplicitRegion
+==============
+
+.. autoclass:: sympy.vector.implicitregion.ImplicitRegion
+   :members:
+      
+
+ParametricIntegral
+==================
+
+.. autoclass:: sympy.vector.integrals.ParametricIntegral
+   :members:

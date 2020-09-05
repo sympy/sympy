@@ -38,8 +38,12 @@ L_PAREN: '(';
 R_PAREN: ')';
 L_BRACE: '{';
 R_BRACE: '}';
+L_BRACE_LITERAL: '\\{';
+R_BRACE_LITERAL: '\\}';
 L_BRACKET: '[';
 R_BRACKET: ']';
+CMD_LEFT: '\\left' -> skip;
+CMD_RIGHT: '\\right' -> skip;
 
 BAR: '|';
 
@@ -99,10 +103,17 @@ NUMBER:
     | DIGIT* (',' DIGIT DIGIT DIGIT)* '.' DIGIT+;
 
 EQUAL: '=';
+NEQ: '\\neq';
+
 LT: '<';
-LTE: '\\leq';
+LTE: ('\\leq' | 'le' | LTE_Q | LTE_S);
+LTE_Q: '\\leqq';
+LTE_S: '\\leqslant';
+
 GT: '>';
-GTE: '\\geq';
+GTE: ('\\geq' | 'ge' | GTE_Q | GTE_S);
+GTE_Q: '\\geqq';
+GTE_S: '\\geqslant';
 
 BANG: '!';
 
@@ -111,7 +122,7 @@ SYMBOL: '\\' [a-zA-Z]+;
 math: relation;
 
 relation:
-    relation (EQUAL | LT | LTE | GT | GTE) relation
+    relation (EQUAL | LT | LTE | GT | GTE | NEQ) relation
     | expr;
 
 equality:
@@ -183,7 +194,8 @@ comp_nofunc:
 group:
     L_PAREN expr R_PAREN
     | L_BRACKET expr R_BRACKET
-    | L_BRACE expr R_BRACE;
+    | L_BRACE expr R_BRACE
+    | L_BRACE_LITERAL expr R_BRACE_LITERAL;
 
 abs_group: BAR expr BAR;
 
