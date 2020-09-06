@@ -347,10 +347,6 @@ def test_construction():
     raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity = -3))
     raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity = -0.5))
 
-    # tests for hradius/ vradius negative
-    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=1, vradius = -3))
-    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=-4, vradius = 1))
-
 def test_ellipse_random_point():
     y1 = Symbol('y1', real=True)
     e3 = Ellipse(Point(0, 0), y1, y1)

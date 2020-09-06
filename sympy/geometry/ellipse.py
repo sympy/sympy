@@ -6,7 +6,7 @@ Contains
 
 """
 
-from sympy import Expr, Eq
+from sympy import Expr, Eq, zoo
 from sympy.core import S, pi, sympify
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
@@ -159,9 +159,8 @@ class Ellipse(GeometrySet):
         if simplify(hradius).is_real and hradius !=0 and vradius == 0:
             raise GeometryError("Eccentricity of ellipse/circle should lie between [0, 1)")
 
-        if (simplify(hradius).is_real is True and hradius<0) or (simplify(vradius).is_real is True and vradius<0):
-            raise GeometryError("hradius or vradius cannot be negative.")
-
+        if hradius is zoo or vradius is zoo:
+            raise GeometryError("Eccentricity of ellipse/circle should lie between [0, 1)")
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
 
     def _svg(self, scale_factor=1., fill_color="#66cc99"):
