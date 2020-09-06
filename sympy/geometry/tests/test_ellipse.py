@@ -341,7 +341,7 @@ def test_construction():
     #if vradius is not defined
     assert Ellipse(None, 1, None, 1).length == 2
     #if hradius is not defined
-    raises(GeometryError, lambda: Ellipse(None, 1, eccentricity = 1))
+    raises(GeometryError, lambda: Ellipse(None, None, 1, eccentricity = 1))
 
     #tests for eccentricity < 0
     raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity = -3))
