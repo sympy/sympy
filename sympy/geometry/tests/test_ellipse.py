@@ -337,6 +337,19 @@ def test_construction():
     raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity=sec(5)))
     raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity=S.Pi-S(2)))
 
+    #tests for eccentricity = 1
+    #if vradius is not defined
+    assert Ellipse(None, 1, None, 1).length == 2
+    #if hradius is not defined
+    raises(GeometryError, lambda: Ellipse(None, 1, eccentricity = 1))
+
+    #tests for eccentricity < 0
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity = -3))
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity = -0.5))
+
+    # tests for hradius/ vradius negative
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=1, vradius = -3))
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=-4, vradius = 1))
 
 def test_ellipse_random_point():
     y1 = Symbol('y1', real=True)
@@ -494,9 +507,6 @@ def test_circumference():
     assert Ellipse(Point(0, 0), M, m).circumference == 4 * M * elliptic_e((M ** 2 - m ** 2) / M**2)
 
     assert Ellipse(Point(0, 0), 5, 4).circumference == 20 * elliptic_e(S(9) / 25)
-
-    # degenerate ellipse
-    assert Ellipse(None, 1, None, 1).length == 2
 
     # circle
     assert Ellipse(None, 1, None, 0).circumference == 2*pi
