@@ -159,7 +159,7 @@ class Ellipse(GeometrySet):
         if simplify(hradius).is_real and hradius !=0 and vradius == 0:
             raise GeometryError("Eccentricity of ellipse/circle should lie between [0, 1)")
 
-        if (simplify(hradius).isreal is True and hradius<0) or (simplify(vradius).isreal is True and vradius<0):
+        if (simplify(hradius).is_real is True and hradius<0) or (simplify(vradius).is_real is True and vradius<0):
             raise GeometryError("hradius or vradius cannot be negative.")
 
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
