@@ -17,7 +17,7 @@ from __future__ import print_function, division
 
 from sympy import (Basic, factorial, exp, S, sympify, I, zeta, polylog, log, beta,
                    hyper, binomial, Piecewise, floor, besseli, sqrt, Sum, Dummy,
-                   Lambda)
+                   Lambda, summation, Symbol)
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import _value_check, is_random
 
@@ -433,6 +433,11 @@ class PoissonDistribution(SingleDiscreteDistribution):
 
     def _moment_generating_function(self, t):
         return exp(self.lamda * (exp(t) - 1))
+
+    def _distribution_function(self, t):
+        s = Symbol("s")
+        t_summation = summation((1/factorial(s)) * ((self.lamda) ** s), (s, 0, floor(t)))
+        return exp((-self.lamda) * (t_summation))
 
 
 def Poisson(name, lamda):
