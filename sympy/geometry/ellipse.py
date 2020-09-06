@@ -153,13 +153,13 @@ class Ellipse(GeometrySet):
         if hradius == 0 or vradius == 0:
             return Segment(Point(center[0] - hradius, center[1] - vradius), Point(center[0] + hradius, center[1] + vradius))
 
-        if hradius.is_real is False or vradius.is_real is False:
+        if (hradius.is_complex is True and hradius.is_real is False) or (vradius.is_complex is True and vradius.is_real is False):
             raise GeometryError("Eccentricity of ellipse/circle should lie between [0, 1)")
 
         if hradius !=0 and vradius == 0:
             raise GeometryError("Eccentricity of ellipse/circle should lie between [0, 1)")
 
-        if hradius<0 or vradius<0:
+        if (hradius.isreal is True and hradius<0) or (vradius.isreal is True and vradius<0):
             raise GeometryError("hradius or vradius cannot be negative.")
 
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
