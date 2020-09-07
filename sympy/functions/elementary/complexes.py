@@ -1086,7 +1086,7 @@ class periodic_argument(Function):
     ar : Expr
         Expression which can represent a exponent or exponent representing a polar
         number.
-    
+
     period : Expr
         Returns value in the interval (-period/2,period/2].
 
@@ -1187,7 +1187,7 @@ class principal_branch(Function):
     x : Expr
         Expression which can be an exponent or exponent representing a polar
         number.
-    
+
     period : Positive real number.
 
     See Also
