@@ -55,7 +55,7 @@ class re(Function):
     ==========
 
     arg : Expr
-        Real, complex or mixed expression.
+        Real or complex expression.
 
     Returns
     =======
@@ -183,7 +183,7 @@ class im(Function):
     ==========
 
     arg : Expr
-        Real, complex or mixed expression.
+        Real or complex expression.
 
     Returns
     =======
@@ -322,7 +322,7 @@ class sign(Function):
     ==========
 
     arg : Expr
-        Real, imaginary or mixed expression.
+        Real or imaginary expression.
 
     Returns
     =======
@@ -495,7 +495,7 @@ class Abs(Function):
     ==========
 
     arg : Expr
-        Real, complex or mixed expression.
+        Real or complex expression.
 
     Returns
     =======
@@ -729,7 +729,7 @@ class arg(Function):
     ==========
 
     arg : Expr
-        Real, imaginary or mixed expression.
+        Real or complex expression.
 
     Returns
     =======
@@ -801,7 +801,7 @@ class conjugate(Function):
     ==========
 
     arg : Expr
-        Real, imaginary or mixed expression.
+        Real or complex expression.
 
     Returns
     =======
@@ -858,6 +858,7 @@ class transpose(Function):
 
     >>> from sympy.functions import transpose
     >>> from sympy.matrices import MatrixSymbol
+    >>> from sympy import Matrix
     >>> A = MatrixSymbol('A', 25, 9)
     >>> transpose(A)
     A.T
@@ -866,20 +867,27 @@ class transpose(Function):
     B.T
     >>> transpose(A*B)
     B.T*A.T
+    >>> Matrix([[4, 5], [2, 1], [90, 12]])
+    Matrix([
+    [ 4,  5],
+    [ 2,  1],
+    [90, 12]])
+    >>> transpose(Matrix([[4, 5], [2, 1], [90, 12]]))
+    Matrix([
+    [4, 2, 90],
+    [5, 1, 12]])
 
     Parameters
     ==========
 
-    arg : MatrixSymbol
-        Symbolic representation of a Matrix Object.
+    arg : MatrixExpr
+        Matrix Object.
 
     Returns
     =======
 
     value : MatrixExpr
-        MatrixExpr is the superclass for matric expressions.
-        Represent abstract matrices, linear transformations
-        represented within a particular basis.
+        Returns transpose of matrix expression.
 
     """
 
@@ -1075,9 +1083,12 @@ class periodic_argument(Function):
     Parameters
     ==========
 
-    arg : exp_polar, exp
-        Exp_polar class represents a polar number.
-        Exp represents an exponential expression.
+    ar : Expr
+        Expression which can represent a exponent or exponent representing a polar
+        number.
+    
+    period : Expr
+        Returns value in the interval (-period/2,period/2].
 
     See Also
     ========
@@ -1169,6 +1180,15 @@ class principal_branch(Function):
     3*exp_polar(0)
     >>> principal_branch(exp_polar(2*pi*I)*3*z, 2*pi)
     3*principal_branch(z, 2*pi)
+
+    Parameters
+    ==========
+
+    x : Expr
+        Expression which can be an exponent or exponent representing a polar
+        number.
+    
+    period : Positive real number.
 
     See Also
     ========
