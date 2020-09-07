@@ -153,14 +153,12 @@ class Ellipse(GeometrySet):
         if hradius == 0 or vradius == 0:
             return Segment(Point(center[0] - hradius, center[1] - vradius), Point(center[0] + hradius, center[1] + vradius))
 
-        if (simplify(hradius).is_complex is True and simplify(hradius).is_real is False) or (simplify(vradius).is_complex is True and simplify(vradius).is_real is False):
-            raise GeometryError("Eccentricity of ellipse/circle should lie between [0, 1)")
-
-        if simplify(hradius).is_real and hradius !=0 and vradius == 0:
-            raise GeometryError("Eccentricity of ellipse/circle should lie between [0, 1)")
+        if (hradius.is_complex is True and hradius.is_real is False) or (vradius.is_complex is True and vradius.is_real is False):
+            raise GeometryError("Invalid value encountered when computing hradius / vradius.")
 
         if hradius is zoo or vradius is zoo:
-            raise GeometryError("Eccentricity of ellipse/circle should lie between [0, 1)")
+            raise GeometryError("Invalid value encountered when computing hradius / vradius.")
+        
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
 
     def _svg(self, scale_factor=1., fill_color="#66cc99"):
