@@ -158,7 +158,7 @@ class Ellipse(GeometrySet):
 
         if hradius is zoo or vradius is zoo:
             raise GeometryError("Invalid value encountered when computing hradius / vradius.")
-        
+
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
 
     def _svg(self, scale_factor=1., fill_color="#66cc99"):
