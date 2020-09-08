@@ -1,6 +1,6 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda, erf,
-                   Piecewise, factorial, Interval, oo, Contains, sqrt, pi,
+                   Piecewise, factorial, Interval, oo, Contains, sqrt, pi, ceiling,
                    gamma, lowergamma, Sum, Range, Tuple, ImmutableDenseMatrix)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
@@ -24,6 +24,7 @@ def test_DiscreteMarkovChain():
     X = DiscreteMarkovChain("X")
     with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
         assert isinstance(X.state_space, Range)
+        assert isinstance(X.index_of, Range)
     assert not X._is_numeric
     assert X.index_set == S.Naturals0
     assert isinstance(X.transition_probabilities, MatrixSymbol)
@@ -62,6 +63,10 @@ def test_DiscreteMarkovChain():
         raises(ValueError, lambda: next(sample_stochastic_process(Y)))
 
     raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
+    Y = DiscreteMarkovChain("Y", Range(1, t, 2))
+    with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
+        assert Y.number_of_states == ceiling((t-1)/2)
+        raises(NotImplementedError, lambda: Y.index_of)
 
     # pass name and transition_probabilities
     chains = [DiscreteMarkovChain("Y", trans_probs=Matrix([[]])),
@@ -154,6 +159,7 @@ def test_DiscreteMarkovChain():
     assert E(X[1]**2, Eq(X[0], 1)) == Rational(8, 3)
     assert variance(X[1], Eq(X[0], 1)) == Rational(8, 9)
     raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
+    raises(ValueError, lambda: DiscreteMarkovChain('X', [0, 1], T))
 
     # testing miscellaneous queries with different state space
     X = DiscreteMarkovChain('X', ['A', 'B', 'C'], T)

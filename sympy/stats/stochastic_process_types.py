@@ -8,7 +8,8 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    Lambda, Mul, Dummy, IndexedBase, Add, Interval, oo,
                    linsolve, eye, Or, Not, Intersection, factorial, Contains,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
-                   Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet)
+                   Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
+                   ceiling)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.stats.joint_rv import JointDistribution
@@ -716,7 +717,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         elif trans_probs is None:
             state_space = _state_converter(state_space)
             if isinstance(state_space, Range):
-                _n = (state_space.stop - state_space.start) // state_space.step
+                _n = ceiling((state_space.stop - state_space.start) / state_space.step)
             else:
                 _n = len(state_space)
             trans_probs = MatrixSymbol('_T', _n, _n)
