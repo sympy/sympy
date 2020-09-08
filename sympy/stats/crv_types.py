@@ -1684,7 +1684,8 @@ class GammaDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         k, theta = self.k, self.theta
-        return x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
+        expr = x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
+        return Piecewise((expr, self.set.as_relational(k)), (0, True))
 
     def _cdf(self, x):
         k, theta = self.k, self.theta
