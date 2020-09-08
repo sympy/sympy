@@ -437,7 +437,7 @@ class PoissonDistribution(SingleDiscreteDistribution):
     def _cdf(self, t):
         s = Symbol("s")
         t_summation = summation((1/factorial(s)) * ((self.lamda) ** s), (s, 0, floor(t)))
-        return exp((-self.lamda) * (t_summation))
+        return exp(-self.lamda) * (t_summation)
 
 
 def Poisson(name, lamda):
