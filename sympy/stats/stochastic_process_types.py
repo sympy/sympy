@@ -766,9 +766,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     @property
     def _state_index(self):
         """
-        A property used for probability queries
-        since those expect the state space in the form
-        of FiniteSet(*range(n)). Luckily Range is a Set.
+        Returns state index as Range.
         """
         return Range(self.number_of_states)
 
