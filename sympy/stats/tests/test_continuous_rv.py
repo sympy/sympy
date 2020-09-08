@@ -723,12 +723,11 @@ def test_gamma():
     # Tests characteristic function
     assert characteristic_function(X)(x) == ((-I*theta*x + 1)**(-k))
 
-    assert density(X)(x) == x**(k - 1)*theta**(-k)*exp(-x/theta)/gamma(k)
-    assert cdf(X, meijerg=True)(z) == Piecewise(
-            (-k*lowergamma(k, 0)/gamma(k + 1) +
-                k*lowergamma(k, z/theta)/gamma(k + 1), z >= 0),
-            (0, True))
+    assert density(X)(x) == Piecewise((theta**(-k)*x**(k - 1)*exp(-x/theta)/gamma(k), (x >= 0) & (x < oo)), (0, True))
 
+    assert cdf(X, meijerg=True)(z) == Piecewise(
+            (Piecewise((0, z < 0), (k*lowergamma(k, z/theta)/gamma(k + 1), True)),
+             z >= 0), (0, True))
     # assert simplify(variance(X)) == k*theta**2  # handled numerically below
     assert E(X) == moment(X, 1)
 
@@ -740,9 +739,11 @@ def test_gamma():
     assert kurtosis(X).expand() == 3 + 6/k
 
     Y = Gamma('y', 2*k, 3*theta)
+
     assert coskewness(X, theta*X + Y, k*X + Y).simplify() == \
-        2*531441**(-k)*sqrt(k)*theta*(3*3**(12*k) - 2*531441**k) \
-        /(sqrt(k**2 + 18)*sqrt(theta**2 + 18))
+        Piecewise((2*9**(-k)*sqrt(k)*theta*(3*3**(2*k) - 2*9**k)/(sqrt(k**2 + 18)*sqrt(theta**2 + 18)),
+            (x >= 0) & (y >= 0) & (x < oo)
+    & (y < oo)), (1/(sqrt(k)*theta), True))
 
 def test_gamma_inverse():
     a = Symbol("a", positive=True)

@@ -1685,7 +1685,7 @@ class GammaDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         k, theta = self.k, self.theta
         expr = x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
-        return Piecewise((expr, self.set.as_relational(k)), (0, True))
+        return Piecewise((expr, self.set.as_relational(x)), (0, True))
 
     def _cdf(self, x):
         k, theta = self.k, self.theta
@@ -1735,22 +1735,27 @@ def Gamma(name, k, theta):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                      -z
-                    -----
-         -k  k - 1  theta
-    theta  *z     *e
-    ---------------------
-           Gamma(k)
+    /                 -z
+    |                -----
+    |     -k  k - 1  theta
+    |theta  *z     *e
+    <---------------------  for And(z >= 0, z < oo)
+    |       Gamma(k)
+    |
+    |          0                   otherwise
+    \
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
-    /            /     z  \
-    |k*lowergamma|k, -----|
-    |            \   theta/
-    <----------------------  for z >= 0
-    |     Gamma(k + 1)
+    //          0             for z < 0
+    ||
+    ||            /     z  \
+    |<k*lowergamma|k, -----|             for z >= 0
+    <|            \   theta/
+    ||----------------------  otherwise
+    |\     Gamma(k + 1)
     |
-    \          0             otherwise
+    \                0                   otherwise
 
     >>> E(X)
     k*theta

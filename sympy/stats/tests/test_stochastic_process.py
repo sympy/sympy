@@ -1,7 +1,7 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda, erf,
                    Piecewise, factorial, Interval, oo, Contains, sqrt, pi,
-                   gamma, lowergamma, Sum)
+                   gamma, lowergamma, Sum, Integral)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
                          BernoulliProcess, PoissonProcess, WienerProcess,
@@ -413,7 +413,7 @@ def test_GammaProcess_symbolic():
             2*g/l + (g**2 + g)/l**2 + (g**3 + 3*g**2 + 2*g)/l**3
 
     assert P(X(t) > 3, Contains(t, Interval.Lopen(3, 4))).simplify() == \
-                                1 - lowergamma(g, 3*l)/gamma(g) # equivalent to P(X(1)>3)
+                                Integral(Piecewise((_z**(g - 1)*l**g*exp(-_z*l)/gamma(g), _z >= 0), (0, True)), (_z, 3, oo)) # equivalent to P(X(1)>3)
 
 def test_GammaProcess_numeric():
     t, d, x, y = symbols('t d x y', positive=True)
@@ -441,3 +441,5 @@ def test_GammaProcess_numeric():
 
     assert E(X(t)) == 2*t # E(X(t)) == gamma*t/l
     assert E(X(2) + x*E(X(5))) == 10*x + 4
+
+test_GammaProcess_symbolic()
