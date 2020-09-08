@@ -82,7 +82,7 @@ def test_DiscreteMarkovChain():
     # pass name, state_space and transition_probabilities
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
     TS = MatrixSymbol('T', 3, 3)
-    Y = DiscreteMarkovChain("Y", [1, 2, 'Three'], T)  # old version failed if it did not start from 0
+    Y = DiscreteMarkovChain("Y", [1, 2, 'Three'], T)
     YS = DiscreteMarkovChain("Y", ['One', 'Two', 3], TS)
     assert YS._transient2transient() == None
     assert YS._transient2absorbing() == None
