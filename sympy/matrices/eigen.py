@@ -80,7 +80,7 @@ def _eigenvects_mpmath(M):
 def _eigenvals(
     M, error_when_incomplete=True, *, simplify=False, multiple=False,
     rational=False, **flags):
-    r"""Return eigenvalues using the Berkowitz agorithm to compute
+    r"""Return eigenvalues using the Berkowitz algorithm to compute
     the characteristic polynomial.
 
     Parameters
