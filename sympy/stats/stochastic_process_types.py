@@ -784,7 +784,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     @property
     def number_of_states(self):
         """
-        The number of states in the Markov Chain. Can be symbolic.
+        The number of states in the Markov Chain.
         """
         return _sympify(self.transition_probabilities.shape[0])
 
