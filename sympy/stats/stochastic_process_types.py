@@ -737,7 +737,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     @property
     def index_of(self):
         """Converts a state name to a state index i.e. inverts self.state_space."""
-        if isinstance(self.num_states, Integer):
+        if isinstance(self.number_of_states, Integer):
             indexes = {state: index for index, state in enumerate(self.state_space)}
             # add `str` values to the keys as well
             for index, state in enumerate(self.state_space):
@@ -745,7 +745,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                     indexes[str(state)] = index
             return indexes
         else:
-            if self.state_space == Range(self.num_states):
+            if self.state_space == Range(self.number_of_states):
                 return self.state_space
             # I'm sure there's a way to invert Range(a, b, c) but idk how
             raise NotImplementedError('Cannot find the inverse mapping of %s.'
@@ -758,13 +758,13 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         since those expect the state space in the form
         of FiniteSet(*range(n)). Luckily Range is a Set.
         """
-        return Range(self.num_states)
+        return Range(self.number_of_states)
 
     @property
     def _is_numeric(self):
         """Checks whether the transition matrix has a numeric type and shape."""
         trans_probs = self.transition_probabilities
-        n = self.num_states
+        n = self.number_of_states
         if not isinstance(n, Integer):
             return False
         if isinstance(trans_probs, MatrixSymbol):
@@ -772,7 +772,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return True
 
     @property
-    def num_states(self):
+    def number_of_states(self):
         """
         The number of states in the Markov Chain. Can be symbolic.
         """

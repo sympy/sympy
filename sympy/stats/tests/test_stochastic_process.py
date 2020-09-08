@@ -46,7 +46,7 @@ def test_DiscreteMarkovChain():
     for i, Y in enumerate(chains):
         assert isinstance(Y.transition_probabilities, MatrixSymbol)
         assert Y.state_space == Tuple(*state_spaces[i])
-        assert Y.num_states == 3
+        assert Y.number_of_states == 3
         assert not Y._is_numeric  # because no transition matrix is provided
         assert Y.index_of[state_spaces[i][0]] == 0
         assert Y.index_of[state_spaces[i][1]] == 1
@@ -65,7 +65,7 @@ def test_DiscreteMarkovChain():
               DiscreteMarkovChain("Y", trans_probs=Matrix([[0, 1], [1, 0]])),
               DiscreteMarkovChain("Y", trans_probs=Matrix([[pi, 1-pi], [sym, 1-sym]]))]
     for Z in chains:
-        assert Z.num_states == Z.transition_probabilities.shape[0]
+        assert Z.number_of_states == Z.transition_probabilities.shape[0]
         assert isinstance(Z.transition_probabilities, ImmutableDenseMatrix)
         assert isinstance(Z.state_space, Tuple)
         assert Z._is_numeric
