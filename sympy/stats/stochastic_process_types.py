@@ -759,7 +759,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         else:
             if self.state_space == Range(self.number_of_states):
                 return self.state_space
-            # I'm sure there's a way to invert Range(a, b, c) but idk how
+            # TODO: find an object that maps state spaces to state indexes
             raise NotImplementedError('Cannot find the inverse mapping of %s.'
                                       % self.state_space)
 
