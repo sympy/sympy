@@ -4128,15 +4128,12 @@ class Poly(Basic):
         return g.quo(f)
 
     @_sympifyit('g', NotImplemented)
-    def __div__(f, g):
+    def __truediv__(f, g):
         return f.as_expr()/g.as_expr()
 
     @_sympifyit('g', NotImplemented)
-    def __rdiv__(f, g):
+    def __rtruediv__(f, g):
         return g.as_expr()/f.as_expr()
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     @_sympifyit('other', NotImplemented)
     def __eq__(self, other):

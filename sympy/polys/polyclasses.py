@@ -960,7 +960,7 @@ class DMP(PicklableWithSlots, CantSympify):
                         pass
                 return NotImplemented
 
-    def __div__(f, g):
+    def __truediv__(f, g):
         if isinstance(g, DMP):
             return f.exquo(g)
         else:
@@ -976,7 +976,7 @@ class DMP(PicklableWithSlots, CantSympify):
                         pass
                 return NotImplemented
 
-    def __rdiv__(f, g):
+    def __rtruediv__(f, g):
         if isinstance(g, DMP):
             return g.exquo(f)
         elif f.ring is not None:
@@ -985,9 +985,6 @@ class DMP(PicklableWithSlots, CantSympify):
             except (CoercionFailed, NotImplementedError):
                 pass
         return NotImplemented
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def __rmul__(f, g):
         return f.__mul__(g)
@@ -1423,7 +1420,7 @@ class DMF(PicklableWithSlots, CantSympify):
     def __pow__(f, n):
         return f.pow(n)
 
-    def __div__(f, g):
+    def __truediv__(f, g):
         if isinstance(g, (DMP, DMF)):
             return f.quo(g)
 
@@ -1439,15 +1436,12 @@ class DMF(PicklableWithSlots, CantSympify):
                     pass
             return NotImplemented
 
-    def __rdiv__(self, g):
+    def __rtruediv__(self, g):
         r = self.invert(check=False)*g
         if self.ring and r not in self.ring:
             from sympy.polys.polyerrors import ExactQuotientFailed
             raise ExactQuotientFailed(g, self, self.ring)
         return r
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def __eq__(f, g):
         try:
@@ -1725,7 +1719,7 @@ class ANP(PicklableWithSlots, CantSympify):
     def __mod__(f, g):
         return f.rem(g)
 
-    def __div__(f, g):
+    def __truediv__(f, g):
         if isinstance(g, ANP):
             return f.quo(g)
         else:
@@ -1733,8 +1727,6 @@ class ANP(PicklableWithSlots, CantSympify):
                 return f.quo(f.per(g))
             except (CoercionFailed, TypeError):
                 return NotImplemented
-
-    __truediv__ = __div__
 
     def __eq__(f, g):
         try:

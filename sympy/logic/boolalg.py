@@ -203,9 +203,7 @@ class BooleanAtom(Boolean):
     __rmul__ = _noop
     __pow__ = _noop
     __rpow__ = _noop
-    __rdiv__ = _noop
     __truediv__ = _noop
-    __div__ = _noop
     __rtruediv__ = _noop
     __mod__ = _noop
     __rmod__ = _noop

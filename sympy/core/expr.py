@@ -235,8 +235,8 @@ class Expr(Basic, EvalfMixin):
         return Pow(other, self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
         denom = Pow(other, S.NegativeOne)
         if self is S.One:
             return denom
@@ -244,16 +244,13 @@ class Expr(Basic, EvalfMixin):
             return Mul(self, denom)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
+    @call_highest_priority('__truediv__')
+    def __rtruediv__(self, other):
         denom = Pow(self, S.NegativeOne)
         if other is S.One:
             return denom
         else:
             return Mul(other, denom)
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmod__')

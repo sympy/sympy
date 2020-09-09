@@ -187,7 +187,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
 
         return self.__class__(p, q, _gcd=False)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         from sympy.polys.domains.groundtypes import python_gcd as gcd
         if isinstance(other, PythonRational):
             ap, aq, bp, bq = self.p, self.q, other.p, other.q
@@ -203,9 +203,7 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
 
         return self.__class__(p, q, _gcd=False)
 
-    __truediv__ = __div__
-
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         from sympy.polys.domains.groundtypes import python_gcd as gcd
         if not isinstance(other, int):
             return NotImplemented
@@ -215,8 +213,6 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         q = self.p//x
 
         return self.__class__(p, q)
-
-    __rtruediv__ = __rdiv__
 
     def __mod__(self, other):
         return self.__class__(0)

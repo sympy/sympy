@@ -551,8 +551,6 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         else:
             return f.new(f.numer*g_denom, f.denom*g_numer)
 
-    __div__ = __truediv__
-
     def __rtruediv__(f, c):
         if not f:
             raise ZeroDivisionError
@@ -567,8 +565,6 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return NotImplemented
         else:
             return f.new(f.denom*g_numer, f.numer*g_denom)
-
-    __rdiv__ = __rtruediv__
 
     def __pow__(f, n):
         """Raise ``f`` to a non-negative power ``n``. """

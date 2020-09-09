@@ -185,12 +185,8 @@ class Quaternion(Expr):
     def __truediv__(self, other):
         return self * sympify(other)**-1
 
-    __div__ = __truediv__
-
     def __rtruediv__(self, other):
         return sympify(other) * self**-1
-
-    __rdiv__ = __rtruediv__
 
     def _eval_Integral(self, *args):
         return self.integrate(*args)

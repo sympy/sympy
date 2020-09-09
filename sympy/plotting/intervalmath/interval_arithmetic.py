@@ -269,16 +269,16 @@ class interval(object):
         else:
             return self.start <= other.start and other.end <= self.end
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         if isinstance(other, (int, float)):
             other = interval(other)
-            return other.__div__(self)
+            return other.__truediv__(self)
         elif isinstance(other, interval):
-            return other.__div__(self)
+            return other.__truediv__(self)
         else:
             return NotImplemented
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         # Both None and False are handled
         if not self.is_valid:
             # Don't divide as the value is not valid
@@ -318,9 +318,6 @@ class interval(object):
                 return interval(start, end)
         else:
             return NotImplemented
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def __pow__(self, other):
         # Implements only power to an integer.

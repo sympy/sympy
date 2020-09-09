@@ -1203,7 +1203,7 @@ class AccumulationBounds(AtomicExpr):
     __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Expr):
             if isinstance(other, AccumBounds):
                 if other.min.is_positive or other.max.is_negative:
@@ -1262,10 +1262,8 @@ class AccumulationBounds(AtomicExpr):
 
         return NotImplemented
 
-    __truediv__ = __div__
-
     @_sympifyit('other', NotImplemented)
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         if isinstance(other, Expr):
             if other.is_extended_real:
                 if other.is_zero:
@@ -1288,8 +1286,6 @@ class AccumulationBounds(AtomicExpr):
             return Mul(other, 1 / self, evaluate=False)
         else:
             return NotImplemented
-
-    __rtruediv__ = __rdiv__
 
     @_sympifyit('other', NotImplemented)
     def __pow__(self, other):

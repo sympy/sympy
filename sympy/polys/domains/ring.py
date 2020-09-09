@@ -115,7 +115,5 @@ class Ring(Domain):
             e = self.ideal(*e)
         return QuotientRing(self, e)
 
-    def __div__(self, e):
+    def __truediv__(self, e):
         return self.quotient_ring(e)
-
-    __truediv__ = __div__

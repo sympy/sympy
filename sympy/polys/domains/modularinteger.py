@@ -99,7 +99,7 @@ class ModularInteger(PicklableWithSlots, DomainElement):
     def __rmul__(self, other):
         return self.__mul__(other)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         val = self._get_val(other)
 
         if val is not None:
@@ -107,11 +107,8 @@ class ModularInteger(PicklableWithSlots, DomainElement):
         else:
             return NotImplemented
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         return self.invert().__mul__(other)
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def __mod__(self, other):
         val = self._get_val(other)
