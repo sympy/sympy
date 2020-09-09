@@ -1166,6 +1166,8 @@ class periodic_argument(Function):
 
 def unbranched_argument(arg):
     '''
+    Returns periodic argument of arg with period as infinity.
+
     Examples
     ========
 
@@ -1177,6 +1179,11 @@ def unbranched_argument(arg):
     pi
     >>> unbranched_argument(exp_polar(7*I*pi))
     7*pi
+
+    See also
+    ========
+
+    periodic_argument
     '''
     return periodic_argument(arg, oo)
 
