@@ -1004,7 +1004,7 @@ class polar_lift(Function):
     ==========
 
     arg : Expr
-        Real, complex or mixed expression.
+        Real or complex expression.
 
     See Also
     ========
@@ -1073,12 +1073,6 @@ class periodic_argument(Function):
     pi
     >>> unbranched_argument(exp_polar(5*I*pi))
     5*pi
-    >>> periodic_argument(exp_polar(5*I*pi), 2*pi)
-    pi
-    >>> periodic_argument(exp_polar(5*I*pi), 3*pi)
-    -pi
-    >>> periodic_argument(exp_polar(5*I*pi), pi)
-    0
 
     Parameters
     ==========
@@ -1088,7 +1082,13 @@ class periodic_argument(Function):
         number.
 
     period : Expr
-        Returns value in the interval (-period/2,period/2].
+
+        >>> periodic_argument(exp_polar(5*I*pi), 2*pi)
+        pi
+        >>> periodic_argument(exp_polar(5*I*pi), 3*pi)
+        -pi
+        >>> periodic_argument(exp_polar(5*I*pi), pi)
+        0
 
     See Also
     ========
@@ -1168,9 +1168,15 @@ class principal_branch(Function):
     Represent a polar number reduced to its principal branch on a quotient
     of the Riemann surface of the logarithm.
 
+    Explanation
+    ===========
+
     This is a function of two arguments. The first argument is a polar
     number `z`, and the second one a positive real number of infinity, `p`.
     The result is "z mod exp_polar(I*p)".
+
+    Examples
+    ========
 
     >>> from sympy import exp_polar, principal_branch, oo, I, pi
     >>> from sympy.abc import z
@@ -1185,10 +1191,10 @@ class principal_branch(Function):
     ==========
 
     x : Expr
-        Expression which can be an exponent or exponent representing a polar
-        number.
+        A polar number.
 
-    period : Positive real number.
+    period : Expr
+        Positive real number of infinity.
 
     See Also
     ========
