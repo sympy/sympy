@@ -9,9 +9,8 @@ from sympy.codegen.array_utils import (CodegenArrayContraction,
 from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices import Trace, MatAdd, MatMul, Transpose
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 from sympy.tensor.array import permutedims, tensorproduct, tensorcontraction
 from sympy.matrices.expressions.diagonal import DiagMatrix
 
@@ -397,7 +396,7 @@ def test_codegen_array_doit():
     expr = CodegenArrayElementwiseAdd(M, N)
     assert expr.doit() == M + N
 
-    
+
 def test_push_indices_up_and_down():
 
     indices = list(range(10))
@@ -532,4 +531,3 @@ def test_recognize_diagonalized_vectors():
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(a, b, A), (0, 2, 4), (1, 3))
     assert cg.split_multiple_contractions() == cg
-

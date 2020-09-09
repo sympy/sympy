@@ -27,7 +27,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         sympy.floor: "tensorflow.math.floor",
         sympy.log: "tensorflow.math.log",
         sympy.exp: "tensorflow.math.exp",
-        sympy.sqrt: "tensorflow.math.sqrt",
+        Sqrt: "tensorflow.math.sqrt",
         sympy.cos: "tensorflow.math.cos",
         sympy.acos: "tensorflow.math.acos",
         sympy.sin: "tensorflow.math.sin",

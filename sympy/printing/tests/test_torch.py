@@ -1,9 +1,9 @@
 import random
 
 from sympy.printing.torch import torch_code
-from sympy import (eye, symbols, MatrixSymbol, Symbol, Matrix, tensorproduct)
+from sympy import (eye, MatrixSymbol, Matrix)
 from sympy.tensor.array import NDimArray
-from sympy.codegen.array_utils import (CodegenArrayContraction,
+from sympy.codegen.array_utils import (
         CodegenArrayTensorProduct, CodegenArrayElementwiseAdd,
         CodegenArrayPermuteDims, CodegenArrayDiagonal, _CodegenArrayAbstract)
 from sympy.utilities.lambdify import lambdify
@@ -64,10 +64,10 @@ def test_codegen_extra():
     N = MatrixSymbol("N", 2, 2)
     P = MatrixSymbol("P", 2, 2)
     Q = MatrixSymbol("Q", 2, 2)
-    ma = torch.FloatTensor([[1, 2], [3, 4]])
-    mb = torch.FloatTensor([[1,-2], [-1, 3]])
-    mc = torch.FloatTensor([[2, 0], [1, 2]])
-    md = torch.FloatTensor([[1,-1], [4, 7]])
+    # ma = torch.FloatTensor([[1, 2], [3, 4]])
+    # mb = torch.FloatTensor([[1,-2], [-1, 3]])
+    # mc = torch.FloatTensor([[2, 0], [1, 2]])
+    # md = torch.FloatTensor([[1,-1], [4, 7]])
 
     cg = CodegenArrayTensorProduct(M, N)
     assert torch_code(cg) == 'torch.einsum("ab,cd", [M, N])'
