@@ -6,7 +6,7 @@ Contains
 
 """
 
-from sympy import Expr, Eq, zoo
+from sympy import Expr, Eq, zoo, oo
 from sympy.core import S, pi, sympify
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
@@ -157,6 +157,12 @@ class Ellipse(GeometrySet):
             raise GeometryError("Invalid value encountered when computing hradius / vradius.")
 
         if hradius is zoo or vradius is zoo:
+            raise GeometryError("Invalid value encountered when computing hradius / vradius.")
+
+        if hradius is oo or vradius is oo:
+            raise GeometryError("Invalid value encountered when computing hradius / vradius.")
+
+        if hradius is -oo or vradius is -oo:
             raise GeometryError("Invalid value encountered when computing hradius / vradius.")
 
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
