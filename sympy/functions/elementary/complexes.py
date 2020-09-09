@@ -1067,12 +1067,8 @@ class periodic_argument(Function):
     Examples
     ========
 
-    >>> from sympy import exp, exp_polar, periodic_argument, unbranched_argument
+    >>> from sympy import exp, exp_polar, periodic_argument
     >>> from sympy import I, pi
-    >>> unbranched_argument(exp(5*I*pi))
-    pi
-    >>> unbranched_argument(exp_polar(5*I*pi))
-    5*pi
     >>> periodic_argument(exp_polar(10*I*pi), 2*pi)
     0
     >>> periodic_argument(exp_polar(5*I*pi), 4*pi)
