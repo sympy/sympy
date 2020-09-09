@@ -389,7 +389,8 @@ def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
     return {}
 
 
-def theano_function(inputs, outputs, scalar=False, **kwargs):
+def theano_function(inputs, outputs, scalar=False, *,
+        dim=None, dims=None, broadcastables=None, **kwargs):
     """
     Create a Theano function from SymPy expressions.
 
@@ -485,10 +486,7 @@ def theano_function(inputs, outputs, scalar=False, **kwargs):
     dtypes = kwargs.pop('dtypes', {})
 
     broadcastables = dim_handling(
-        inputs,
-        dim=kwargs.pop('dim', None),
-        dims=kwargs.pop('dims', None),
-        broadcastables=kwargs.pop('broadcastables', None),
+        inputs, dim=dim, dims=dims, broadcastables=broadcastables,
     )
 
     # Print inputs/outputs

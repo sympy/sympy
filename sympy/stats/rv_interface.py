@@ -17,7 +17,7 @@ __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
 
 
 
-def moment(X, n, c=0, condition=None, **kwargs):
+def moment(X, n, c=0, condition=None, *, evaluate=True, **kwargs):
     """
     Return the nth moment of a random expression about c.
 
@@ -39,7 +39,7 @@ def moment(X, n, c=0, condition=None, **kwargs):
     True
     """
     from sympy.stats.symbolic_probability import Moment
-    if kwargs.pop('evaluate', True):
+    if evaluate:
         return Moment(X, n, c, condition).doit()
     return Moment(X, n, c, condition).rewrite(Integral)
 
@@ -206,7 +206,7 @@ def correlation(X, Y, condition=None, **kwargs):
      * std(Y, condition, **kwargs))
 
 
-def cmoment(X, n, condition=None, **kwargs):
+def cmoment(X, n, condition=None, *, evaluate=True, **kwargs):
     """
     Return the nth central moment of a random expression about its mean.
 
@@ -226,7 +226,7 @@ def cmoment(X, n, condition=None, **kwargs):
     True
     """
     from sympy.stats.symbolic_probability import CentralMoment
-    if kwargs.pop('evaluate', True):
+    if evaluate:
         return CentralMoment(X, n, condition).doit()
     return CentralMoment(X, n, condition).rewrite(Integral)
 

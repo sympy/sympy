@@ -91,7 +91,7 @@ class AssocOp(Basic):
         obj.is_commutative = is_commutative
         return obj
 
-    def _new_rawargs(self, *args, **kwargs):
+    def _new_rawargs(self, *args, reeval=True, **kwargs):
         """Create new instance of own class with args exactly as provided by
         caller but returning the self class identity if args is empty.
 
@@ -131,7 +131,7 @@ class AssocOp(Basic):
            self is non-commutative and kwarg `reeval=False` has not been
            passed.
         """
-        if kwargs.pop('reeval', True) and self.is_commutative is False:
+        if reeval and self.is_commutative is False:
             is_commutative = None
         else:
             is_commutative = self.is_commutative

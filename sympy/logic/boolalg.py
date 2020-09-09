@@ -1051,9 +1051,8 @@ class Xor(BooleanFunction):
     x
 
     """
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, remove_true=True, **kwargs):
         argset = set()
-        remove_true = kwargs.pop('remove_true', True)
         obj = super().__new__(cls, *args, **kwargs)
         for arg in obj._args:
             if isinstance(arg, Number) or arg in (True, False):

@@ -822,7 +822,7 @@ class Permutation(Atom):
     _size = None
     _rank = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, size=None, **kwargs):
         """
         Constructor for the Permutation object from a list or a
         list of lists in which all elements of the permutation may
@@ -869,7 +869,6 @@ class Permutation(Atom):
         >>> _.array_form
         [0, 4, 3, 5, 1, 2, 6, 7, 8, 9]
         """
-        size = kwargs.pop('size', None)
         if size is not None:
             size = int(size)
 

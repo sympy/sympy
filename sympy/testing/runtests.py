@@ -358,7 +358,7 @@ def run_all_tests(test_args=(), test_kwargs=None,
         sys.exit(1)
 
 
-def test(*paths, **kwargs):
+def test(*paths, subprocess=True, rerun=0, **kwargs):
     """
     Run tests in the specified test_*.py files.
 
@@ -500,8 +500,6 @@ def test(*paths, **kwargs):
     as well as the same architecture (32-bit vs. 64-bit).
 
     """
-    subprocess = kwargs.pop("subprocess", True)
-    rerun = kwargs.pop("rerun", 0)
     # count up from 0, do not print 0
     print_counter = lambda i : (print("rerun %d" % (rerun-i))
                                 if rerun-i else None)
@@ -606,7 +604,7 @@ def _test(*paths, **kwargs):
         enhance_asserts=enhance_asserts, fail_on_timeout=fail_on_timeout))
 
 
-def doctest(*paths, **kwargs):
+def doctest(*paths, subprocess=True, rerun=0, **kwargs):
     r"""
     Runs doctests in all \*.py files in the sympy directory which match
     any of the given strings in ``paths`` or all tests if paths=[].
@@ -654,8 +652,6 @@ def doctest(*paths, **kwargs):
     ``test()``.  See the docstring of that function for more information.
 
     """
-    subprocess = kwargs.pop("subprocess", True)
-    rerun = kwargs.pop("rerun", 0)
     # count up from 0, do not print 0
     print_counter = lambda i : (print("rerun %d" % (rerun-i))
                                 if rerun-i else None)
