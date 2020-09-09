@@ -5,7 +5,7 @@ from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed, NotRever
 
 from sympy.abc import x, y
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_build_order():

@@ -1,7 +1,7 @@
 Welcome to SymPy API reference
 ==============================
 
-This is an automaticaly generated API documentation from SymPy sources.
+This is an automatically generated API documentation from SymPy sources.
 
 Click the  "modules" (:ref:`modindex`) link in the top right corner to
 browse the modules.

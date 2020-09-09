@@ -27,10 +27,10 @@ class MaximaHelpers:
         return 1/cos(expr)
 
 sub_dict = {
-    'pi': re.compile('%pi'),
-    'E': re.compile('%e'),
-    'I': re.compile('%i'),
-    '**': re.compile('\^'),
+    'pi': re.compile(r'%pi'),
+    'E': re.compile(r'%e'),
+    'I': re.compile(r'%i'),
+    '**': re.compile(r'\^'),
     'oo': re.compile(r'\binf\b'),
     '-oo': re.compile(r'\bminf\b'),
     "'-'": re.compile(r'\bminus\b'),
@@ -44,7 +44,7 @@ sub_dict = {
     'maxima_sec': re.compile(r'\bsec\b')
 }
 
-var_name = re.compile('^\s*(\w+)\s*:')
+var_name = re.compile(r'^\s*(\w+)\s*:')
 
 
 def parse_maxima(str, globals=None, name_dict={}):

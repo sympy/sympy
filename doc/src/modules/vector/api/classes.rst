@@ -1,14 +1,14 @@
-=============================================
-Essential Classes in sympy.vector (doctrings)
-=============================================
+==============================================
+Essential Classes in sympy.vector (docstrings)
+==============================================
 
-CoordSysCartesian
+CoordSys3D
 =================
 
-.. autoclass:: sympy.vector.coordsysrect.CoordSysCartesian
+.. autoclass:: sympy.vector.coordsysrect.CoordSys3D
    :members:
 
-   .. automethod:: sympy.vector.coordsysrect.CoordSysCartesian.__init__
+   .. automethod:: sympy.vector.coordsysrect.CoordSys3D.__init__
 
 
 Vector
@@ -29,4 +29,25 @@ Del
 ===
 
 .. autoclass:: sympy.vector.deloperator.Del
+   :members:
+   
+
+ParametricRegion
+================
+
+.. autoclass:: sympy.vector.parametricregion.ParametricRegion
+   :members:
+
+
+ImplicitRegion
+==============
+
+.. autoclass:: sympy.vector.implicitregion.ImplicitRegion
+   :members:
+      
+
+ParametricIntegral
+==================
+
+.. autoclass:: sympy.vector.integrals.ParametricIntegral
    :members:

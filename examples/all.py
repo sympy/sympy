@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
 
 DESCRIPTION = """
 Runs all the examples for testing purposes and reports successes and failures
@@ -72,13 +71,6 @@ TERMINAL_EXAMPLES = [
     "advanced.pidigits",
     "advanced.qft",
     "advanced.relativity",
-    "galgebra.eval_check",
-    "galgebra.exp_check",
-    "galgebra.manifold_check",
-    "galgebra.mv_setup_options",
-    "galgebra.prob_not_solenoidal",
-    "galgebra.simple_check",
-    "galgebra.terminal_check",
 ]
 
 WINDOWED_EXAMPLES = [
@@ -89,14 +81,6 @@ WINDOWED_EXAMPLES = [
     "advanced.autowrap_integrators",
     "advanced.autowrap_ufuncify",
     "advanced.pyglet_plotting",
-    "galgebra.latex_check",
-    "galgebra.manifold_check_latex",
-    "galgebra.matrix_latex",
-    "galgebra.physics_check_latex",
-    "galgebra.print_check_latex",
-    "galgebra.products_latex",
-    "galgebra.simple_check_latex",
-    "galgebra.spherical_latex",
 ]
 
 EXAMPLE_DIR = os.path.dirname(__file__)
@@ -135,7 +119,7 @@ def load_example_module(example):
     return mod
 
 
-def run_examples(windowed=False, quiet=False, summary=True):
+def run_examples(*, windowed=False, quiet=False, summary=True):
     """Run all examples in the list of modules.
 
     Returns a boolean value indicating whether all the examples were
@@ -148,7 +132,7 @@ def run_examples(windowed=False, quiet=False, summary=True):
         examples += WINDOWED_EXAMPLES
 
     if quiet:
-        from sympy.utilities.runtests import PyTestReporter
+        from sympy.testing.runtests import PyTestReporter
         reporter = PyTestReporter()
         reporter.write("Testing Examples\n")
         reporter.write("-" * reporter.terminal_width)
@@ -167,7 +151,7 @@ def run_examples(windowed=False, quiet=False, summary=True):
     return len(failures) == 0
 
 
-def run_example(example, reporter=None):
+def run_example(example, *, reporter=None):
     """Run a specific example.
 
     Returns a boolean value indicating whether the example was successful.
@@ -186,6 +170,8 @@ def run_example(example, reporter=None):
         else:
             mod.main()
         return True
+    except KeyboardInterrupt as e:
+        raise e
     except:
         if reporter:
             reporter.write("[FAIL]", "Red", align="right")
@@ -193,7 +179,7 @@ def run_example(example, reporter=None):
         return False
 
 
-class DummyFile(object):
+class DummyFile:
     def write(self, x):
         pass
 
@@ -208,7 +194,7 @@ def suppress_output(fn):
         sys.stdout = save_stdout
 
 
-def show_summary(successes, failures, reporter=None):
+def show_summary(successes, failures, *, reporter=None):
     """Shows a summary detailing which examples were successful and which failed."""
     if reporter:
         reporter.write("-" * reporter.terminal_width)

@@ -51,7 +51,7 @@ class Operator(QExpr):
     Create an operator and examine its attributes::
 
         >>> from sympy.physics.quantum import Operator
-        >>> from sympy import symbols, I
+        >>> from sympy import I
         >>> A = Operator('A')
         >>> A
         A
@@ -94,8 +94,8 @@ class Operator(QExpr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Operator_%28physics%29
-    .. [2] http://en.wikipedia.org/wiki/Observable
+    .. [1] https://en.wikipedia.org/wiki/Operator_%28physics%29
+    .. [2] https://en.wikipedia.org/wiki/Observable
     """
 
     @classmethod
@@ -109,7 +109,7 @@ class Operator(QExpr):
     _label_separator = ','
 
     def _print_operator_name(self, printer, *args):
-        return printer._print(self.__class__.__name__, *args)
+        return self.__class__.__name__
 
     _print_operator_name_latex = _print_operator_name
 
@@ -307,7 +307,7 @@ class IdentityOperator(Operator):
 
     def __mul__(self, other):
 
-        if isinstance(other, Operator):
+        if isinstance(other, (Operator, Dagger)):
             return other
 
         return Mul(self, other)
@@ -384,7 +384,7 @@ class OuterProduct(Operator):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Outer_product
+    .. [1] https://en.wikipedia.org/wiki/Outer_product
     """
     is_commutative = False
 
@@ -458,7 +458,7 @@ class OuterProduct(Operator):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
     def _sympystr(self, printer, *args):
-        return str(self.ket) + str(self.bra)
+        return printer._print(self.ket) + printer._print(self.bra)
 
     def _sympyrepr(self, printer, *args):
         return '%s(%s,%s)' % (self.__class__.__name__,
@@ -579,7 +579,7 @@ class DifferentialOperator(Operator):
     @property
     def expr(self):
         """
-        Returns the arbitary expression which is to have the Wavefunction
+        Returns the arbitrary expression which is to have the Wavefunction
         substituted into it
 
         Examples

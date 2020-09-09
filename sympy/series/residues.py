@@ -34,7 +34,7 @@ def residue(expr, x, x0):
     References
     ==========
 
-    1. http://en.wikipedia.org/wiki/Residue_theorem
+    .. [1] https://en.wikipedia.org/wiki/Residue_theorem
     """
     # The current implementation uses series expansion to
     # calculate it. A more general implementation is explained in
@@ -53,23 +53,15 @@ def residue(expr, x, x0):
     if x0 != 0:
         expr = expr.subs(x, x + x0)
     for n in [0, 1, 2, 4, 8, 16, 32]:
-        if n == 0:
-            s = expr.series(x, n=0)
-        else:
-            s = expr.nseries(x, n=n)
-        if s.has(Order) and s.removeO() == 0:
-            # bug in nseries
-            continue
+        s = expr.nseries(x, n=n)
         if not s.has(Order) or s.getn() >= 0:
             break
-    if s.has(Order) and s.getn() < 0:
-        raise NotImplementedError('Bug in nseries?')
     s = collect(s.removeO(), x)
     if s.is_Add:
         args = s.args
     else:
         args = [s]
-    res = S(0)
+    res = S.Zero
     for arg in args:
         c, m = arg.as_coeff_mul(x)
         m = Mul(*m)

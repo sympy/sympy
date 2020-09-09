@@ -13,7 +13,7 @@ def test_fermionoperator():
     assert c.is_annihilation
     assert not Dagger(c).is_annihilation
 
-    assert FermionOp("c") == FermionOp("c")
+    assert FermionOp("c") == FermionOp("c", True)
     assert FermionOp("c") != FermionOp("d")
     assert FermionOp("c", True) != FermionOp("c", False)
 

@@ -3,7 +3,7 @@ from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
 
 
-class AskHandler(object):
+class AskHandler:
     """Base class that all Ask Handlers must inherit"""
     pass
 
@@ -18,6 +18,10 @@ class CommonHandler(AskHandler):
     @staticmethod
     def AlwaysFalse(expr, assumptions):
         return False
+
+    @staticmethod
+    def AlwaysNone(expr, assumptions):
+        return None
 
     NaN = AlwaysFalse
 
@@ -46,7 +50,13 @@ class AskCommutativeHandler(CommonHandler):
                 return False
         return True
 
-    Number, NaN = [staticmethod(CommonHandler.AlwaysTrue)]*2
+    @staticmethod
+    def Number(expr, assumptions):
+        return True
+
+    @staticmethod
+    def NaN(expr, assumptions):
+        return True
 
 
 class TautologicalHandler(AskHandler):

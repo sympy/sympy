@@ -16,25 +16,18 @@ It will:
 .. [1] https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
 
 """
-from __future__ import division, absolute_import, print_function
 
 import sys
 import re
 import pydoc
 import sphinx
 import inspect
-import collections
+from collections.abc import Callable
 
 if sphinx.__version__ < '1.0.1':
     raise RuntimeError("Sphinx 1.0.1 or newer is required")
 
 from docscrape_sphinx import get_doc_object, SphinxDocString
-from sphinx.util.compat import Directive
-
-if sys.version_info[0] >= 3:
-    sixu = lambda s: s
-else:
-    sixu = lambda s: unicode(s, 'unicode_escape')
 
 
 def mangle_docstrings(app, what, name, obj, options, lines,
@@ -46,12 +39,12 @@ def mangle_docstrings(app, what, name, obj, options, lines,
            app.config.numpydoc_show_inherited_class_members,
            'class_members_toctree': app.config.numpydoc_class_members_toctree}
 
-    u_NL = sixu('\n')
+    u_NL = '\n'
     if what == 'module':
         # Strip top title
         pattern = '^\\s*[#*=]{4,}\\n[a-z0-9 -]+\\n[#*=]{4,}\\s*'
-        title_re = re.compile(sixu(pattern), re.I | re.S)
-        lines[:] = title_re.sub(sixu(''), u_NL.join(lines)).split(u_NL)
+        title_re = re.compile(pattern, re.I | re.S)
+        lines[:] = title_re.sub('', u_NL.join(lines)).split(u_NL)
     else:
         doc = get_doc_object(obj, what, u_NL.join(lines), config=cfg)
         if sys.version_info[0] >= 3:
@@ -63,18 +56,18 @@ def mangle_docstrings(app, what, name, obj, options, lines,
     if (app.config.numpydoc_edit_link and hasattr(obj, '__name__') and
             obj.__name__):
         if hasattr(obj, '__module__'):
-            v = dict(full_name=sixu("%s.%s") % (obj.__module__, obj.__name__))
+            v = dict(full_name="{}.{}".format(obj.__module__, obj.__name__))
         else:
             v = dict(full_name=obj.__name__)
-        lines += [sixu(''), sixu('.. htmlonly::'), sixu('')]
-        lines += [sixu('    %s') % x for x in
+        lines += ['', '.. htmlonly::', '']
+        lines += ['    %s' % x for x in
                   (app.config.numpydoc_edit_link % v).split("\n")]
 
     # replace reference numbers so that there are no duplicates
     references = []
     for line in lines:
         line = line.strip()
-        m = re.match(sixu('^.. \\[([a-z0-9_.-])\\]'), line, re.I)
+        m = re.match('^.. \\[([a-z0-9_.-])\\]', line, re.I)
         if m:
             references.append(m.group(1))
 
@@ -83,14 +76,14 @@ def mangle_docstrings(app, what, name, obj, options, lines,
     if references:
         for i, line in enumerate(lines):
             for r in references:
-                if re.match(sixu('^\\d+$'), r):
-                    new_r = sixu("R%d") % (reference_offset[0] + int(r))
+                if re.match('^\\d+$', r):
+                    new_r = "R%d" % (reference_offset[0] + int(r))
                 else:
-                    new_r = sixu("%s%d") % (r, reference_offset[0])
-                lines[i] = lines[i].replace(sixu('[%s]_') % r,
-                                            sixu('[%s]_') % new_r)
-                lines[i] = lines[i].replace(sixu('.. [%s]') % r,
-                                            sixu('.. [%s]') % new_r)
+                    new_r = "%s%d" % (r, reference_offset[0])
+                lines[i] = lines[i].replace('[%s]_' % r,
+                                            '[%s]_' % new_r)
+                lines[i] = lines[i].replace('.. [%s]' % r,
+                                            '.. [%s]' % new_r)
 
     reference_offset[0] += len(references)
 
@@ -102,7 +95,7 @@ def mangle_signature(app, what, name, obj, options, sig, retann):
             'initializes x; see ' in pydoc.getdoc(obj.__init__))):
         return '', ''
 
-    if not (isinstance(obj, collections.Callable) or
+    if not (isinstance(obj, Callable) or
             hasattr(obj, '__argspec_is_invalid_')):
         return
 
@@ -111,8 +104,8 @@ def mangle_signature(app, what, name, obj, options, sig, retann):
 
     doc = SphinxDocString(pydoc.getdoc(obj))
     if doc['Signature']:
-        sig = re.sub(sixu("^[^(]*"), sixu(""), doc['Signature'])
-        return sig, sixu('')
+        sig = re.sub("^[^(]*", "", doc['Signature'])
+        return sig, ''
 
 
 def setup(app, get_doc_object_=get_doc_object):
@@ -143,11 +136,11 @@ from sphinx.domains.c import CDomain
 from sphinx.domains.python import PythonDomain
 
 
-class ManglingDomainBase(object):
+class ManglingDomainBase:
     directive_mangling_map = {}
 
     def __init__(self, *a, **kw):
-        super(ManglingDomainBase, self).__init__(*a, **kw)
+        super().__init__(*a, **kw)
         self.wrap_mangling_directives()
 
     def wrap_mangling_directives(self):

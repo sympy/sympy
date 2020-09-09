@@ -2,6 +2,9 @@ from sympy import symbols
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer, inertia
 from sympy.physics.mechanics import inertia_of_point_mass
+from sympy.core.backend import expand
+
+from sympy.testing.pytest import raises
 
 
 def test_rigidbody():
@@ -22,6 +25,11 @@ def test_rigidbody():
     B.frame = A2
     B.masscenter = P2
     B.inertia = (I2, B.masscenter)
+    raises(TypeError, lambda: RigidBody(P, P, A, m, (I, P)))
+    raises(TypeError, lambda: RigidBody('B', P, P, m, (I, P)))
+    raises(TypeError, lambda: RigidBody('B', P, A, m, (P, P)))
+    raises(TypeError, lambda: RigidBody('B', P, A, m, (I, I)))
+    assert B.__str__() == 'B'
     assert B.mass == m2
     assert B.frame == A2
     assert B.masscenter == P2
@@ -52,7 +60,7 @@ def test_rigidbody2():
     assert B.angular_momentum(O, N) == omega * b.x - M*v*r*b.z
     B.potential_energy = M * g * h
     assert B.potential_energy == M * g * h
-    assert B.kinetic_energy(N) == (omega**2 + M * v**2) / 2
+    assert expand(2 * B.kinetic_energy(N)) == omega**2 + M * v**2
 
 def test_rigidbody3():
     q1, q2, q3, q4 = dynamicsymbols('q1:5')
@@ -104,3 +112,16 @@ def test_pendulum_angular_momentum():
 
     assert (4 * m * a**2 / 3 * q.diff() * R.z -
             S.angular_momentum(O, R).express(R)) == 0
+
+
+def test_parallel_axis():
+    N = ReferenceFrame('N')
+    m, Ix, Iy, Iz, a, b = symbols('m, I_x, I_y, I_z, a, b')
+    Io = inertia(N, Ix, Iy, Iz)
+    o = Point('o')
+    p = o.locatenew('p', a * N.x + b * N.y)
+    R = RigidBody('R', o, N, m, (Io, o))
+    Ip = R.parallel_axis(p)
+    Ip_expected = inertia(N, Ix + m * b**2, Iy + m * a**2,
+                          Iz + m * (a**2 + b**2), ixy=-m * a * b)
+    assert Ip == Ip_expected

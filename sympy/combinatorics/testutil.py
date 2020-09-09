@@ -1,8 +1,5 @@
-from __future__ import print_function, division
-
-from sympy.core.compatibility import range
-from sympy.combinatorics.util import _distribute_gens_by_base
 from sympy.combinatorics import Permutation
+from sympy.combinatorics.util import _distribute_gens_by_base
 
 rmul = Permutation.rmul
 
@@ -29,8 +26,8 @@ def _cmp_perm_lists(first, second):
     True
 
     """
-    return set([tuple(a) for a in first]) == \
-        set([tuple(a) for a in second])
+    return {tuple(a) for a in first} == \
+           {tuple(a) for a in second}
 
 
 def _naive_list_centralizer(self, other, af=False):
@@ -218,7 +215,7 @@ def canonicalize_naive(g, dummies, sym, *v):
 
     >>> from sympy.combinatorics.testutil import canonicalize_naive
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
-    >>> from sympy.combinatorics import Permutation, PermutationGroup
+    >>> from sympy.combinatorics import Permutation
     >>> g = Permutation([1, 3, 2, 0, 4, 5])
     >>> base2, gens2 = get_symmetric_group_sgs(2)
     >>> canonicalize_naive(g, [2, 3], 0, (base2, gens2, 2, 0))

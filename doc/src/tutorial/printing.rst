@@ -37,7 +37,7 @@ environment.
 
 .. sidebar:: Quick Tip
 
-   You an also change the printer used in SymPy Live.  Just change the "Output
+   You can also change the printer used in SymPy Live. Just change the "Output
    Format" in the settings.
 
 If you plan to work in an interactive calculator-type session, the
@@ -65,17 +65,17 @@ create some common Symbols, setup plotting, and run ``init_printing()``.
 
 In any case, this is what will happen:
 
-- In the IPython QTConsole, if `\LaTeX` is installed, it will enable a printer
-  that uses `\LaTeX`.
+- In the IPython QTConsole, if `\mathrm{\LaTeX}` is installed, it will enable a printer
+  that uses `\mathrm{\LaTeX}`.
 
   .. image:: ../pics/ipythonqtconsole.png
      :height: 500
 
-  If `\LaTeX` is not installed, but Matplotlib is installed, it will use the
+  If `\mathrm{\LaTeX}` is not installed, but Matplotlib is installed, it will use the
   Matplotlib rendering engine. If Matplotlib is not installed, it uses the
   Unicode pretty printer.
 
-- In the IPython notebook, it will use MathJax to render `\LaTeX`.
+- In the IPython notebook, it will use MathJax to render `\mathrm{\LaTeX}`.
 
   .. image:: ../pics/ipythonnotebook.png
      :height: 250
@@ -92,7 +92,7 @@ In any case, this is what will happen:
   .. image:: ../pics/consoleascii.png
      :width: 700
 
-To explicitly not use `\LaTeX`, pass ``use_latex=False`` to ``init_printing()``
+To explicitly not use `\mathrm{\LaTeX}`, pass ``use_latex=False`` to ``init_printing()``
 or ``init_session()``.  To explicitly not use Unicode, pass
 ``use_unicode=False``.
 
@@ -169,7 +169,7 @@ Unicode Pretty Printer
 ----------------------
 
 The Unicode pretty printer is also accessed from ``pprint()`` and
-``pretty()``.  It the terminal supports Unicode, it is used automatically.  If
+``pretty()``.  If the terminal supports Unicode, it is used automatically.  If
 ``pprint()`` is not able to detect that the terminal supports unicode, you can
 pass ``use_unicode=True`` to force it to use Unicode.
 
@@ -183,10 +183,10 @@ pass ``use_unicode=True`` to force it to use Unicode.
 
 .. _LaTeX:
 
-`\LaTeX`
---------
+`\mathrm{\LaTeX}`
+-----------------
 
-To get the `\LaTeX` form of an expression, use ``latex()``.
+To get the `\mathrm{\LaTeX}` form of an expression, use ``latex()``.
 
     >>> print(latex(Integral(sqrt(1/x), x)))
     \int \sqrt{\frac{1}{x}}\, dx
@@ -221,6 +221,7 @@ imported from ``sympy.printing.mathml``.
 ``print_mathml()`` prints the output.  If you want the string, use the
 function ``mathml()``.
 
+
 Dot
 ---
 
@@ -228,6 +229,33 @@ The ``dotprint()`` function in ``sympy.printing.dot`` prints output to dot
 format, which can be rendered with Graphviz.  See the
 :ref:`tutorial-manipulation` section for some examples of the output of this
 printer.
+
+Here is an example of the raw output of the ``dotprint()`` function
+
+    >>> from sympy.printing.dot import dotprint
+    >>> from sympy.abc import x
+    >>> print(dotprint(x+2))
+    digraph{
+    <BLANKLINE>
+    # Graph style
+    "ordering"="out"
+    "rankdir"="TD"
+    <BLANKLINE>
+    #########
+    # Nodes #
+    #########
+    <BLANKLINE>
+    "Add(Integer(2), Symbol('x'))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
+    "Integer(2)_(0,)" ["color"="black", "label"="2", "shape"="ellipse"];
+    "Symbol('x')_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
+    <BLANKLINE>
+    #########
+    # Edges #
+    #########
+    <BLANKLINE>
+    "Add(Integer(2), Symbol('x'))_()" -> "Integer(2)_(0,)";
+    "Add(Integer(2), Symbol('x'))_()" -> "Symbol('x')_(1,)";
+    }
 
 .. rubric:: Footnotes
 

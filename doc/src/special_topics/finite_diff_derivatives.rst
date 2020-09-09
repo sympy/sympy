@@ -63,7 +63,7 @@ Then we have two equations:
 .. math::
 	F_{i+2} = F_{i} + c_{1}* (2h) + \frac{1}{2}*c_{2}*(2h)^2 + \frac{1}{3!}*c_{3}*(2h)^3 + ...
 
-If we again want to find the first derivative (`c_{1}`), we can do that by eliminating the term involving `c_{2}` from 
+If we again want to find the first derivative (`c_{1}`), we can do that by eliminating the term involving `c_{2}` from
 the two equations.  We show how to do it using SymPy.
 
 
@@ -101,7 +101,7 @@ Coefficients of `c_i` evaluated at `x_i + 2*h`:
 	>>> m32 = P(x0+2*h, x0, c, n).diff(c[1])
 	>>> m33 = P(x0+2*h, x0, c, n).diff(c[2])
 
-Matrix of the coeffcients is 3x3 in this case:
+Matrix of the coefficients is 3x3 in this case:
 
 	>>> M = Matrix([[m11, m12, m13], [m21, m22, m23], [m31, m32, m33]])
 
@@ -143,7 +143,7 @@ at `x_i` and thus using points at `x_{i-1}`,  `x_{i}`,  and `x_{i+1}`. So here i
 	>>> m31 = P(x0+h, x0, c, n).diff(c[0])
 	>>> m32 = P(x0+h, x0, c, n).diff(c[1])
 	>>> m33 = P(x0+h, x0, c, n).diff(c[2])
-	>>> # matrix of the coeffcients is 3x3 in this case
+	>>> # matrix of the coefficients is 3x3 in this case
 	>>> M = Matrix([[m11, m12, m13], [m21, m22, m23], [m31, m32, m33]])
 
 Now that we have the matrix of coefficients we next form the right-hand-side and solve by inverting `M`:
@@ -155,8 +155,8 @@ Now that we have the matrix of coefficients we next form the right-hand-side and
 	>>> X =  M.inv() * R
 	>>> # note that all three coefficients make up the solution
 	>>> # the first derivative is coefficient c_1 which is X[1].
-	>>> print("The second-order accurate approximation for the first derivative is: ") 
-	The second-order accurate approximation for the first derivative is: 
+	>>> print("The second-order accurate approximation for the first derivative is: ")
+	The second-order accurate approximation for the first derivative is:
 	>>> print(together(X[1]))
 	(F_{i+1} - F_{i-1})/(2*h)
 
@@ -182,7 +182,7 @@ check:
 Thus we see that indeed the derivative is `c_1` with the next term in the series of order `h^2`.
 
 However,  it can quickly become rather tedious to generalize the direct method as presented above when attempting
-to generate a derivative approximation to high order,  such as 6 or 8 although the method certainly works and using 
+to generate a derivative approximation to high order,  such as 6 or 8 although the method certainly works and using
 the present method is certainly less tedious than performing the calculations by hand.
 
 As we have seen in the discussion above,  the simple centered approximation for the first derivative only uses two
@@ -204,7 +204,7 @@ and `(x_{N-2},F_{N-2})` and center the approximation at `(x_{N},F_{N})`. Here is
 	>>> def P(x, x0, c, n):
 	...     return sum( ((1/factorial(i))*c[i] * (x-x0)**i for i in range(n)) )
 
-Now we make a matrix consisting of the coefficients of the `c_i` in the dth 
+Now we make a matrix consisting of the coefficients of the `c_i` in the dth
 degree polynomial P coefficients of `c_i` evaluated at `x_i, x_{i-1},` and `x_{i+1}`:
 
     >>> m11 = P(xN , xN, c, n).diff(c[0])
@@ -218,8 +218,8 @@ degree polynomial P coefficients of `c_i` evaluated at `x_i, x_{i-1},` and `x_{i
     >>> m31 = P(xN-2*h, xN, c, n).diff(c[0])
     >>> m32 = P(xN-2*h, xN, c, n).diff(c[1])
     >>> m33 = P(xN-2*h, xN, c, n).diff(c[2])
-	
-Next we construct the `3 \times 3` matrix of the coeffcients:
+
+Next we construct the `3 \times 3` matrix of the coefficients:
 
     >>> M = Matrix([[m11, m12, m13], [m21, m22, m23], [m31, m32, m33]])
     >>> # matrix of the function values...actually a vector of right hand sides
@@ -232,7 +232,7 @@ directly inverting `M`:
 
     >>> X =  M.inv() * R
 
-The first derivative is coefficient `c_1` which is `X[1]`. Thus the second order accurate 
+The first derivative is coefficient `c_1` which is `X[1]`. Thus the second order accurate
 approximation for the first derivative is:
 
     >>> print("The first derivative centered at the last point on the right is:")
@@ -247,7 +247,8 @@ Also,  we note that output of formats appropriate to Fortran,  C,  etc. may be d
 given above.
 
 Next we show how to perform these and many other discritizations of derivatives,  but using a
-much more efficient approach originally due to Bengt Fornberg and now incorported into SymPy.
+much more efficient approach originally due to Bengt Fornberg and now incorporated into SymPy.
 
+:ref:`calculus-finite-differences`
 
-
+:ref:`Finite difference weights <finite_diff>`

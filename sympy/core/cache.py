@@ -1,7 +1,4 @@
 """ Caching facility for SymPy """
-from __future__ import print_function, division
-
-from distutils.version import LooseVersion as V
 
 class _cache(list):
     """ List of cached functions """
@@ -34,112 +31,56 @@ class _cache(list):
                 else:
                     myfunc = myfunc.__wrapped__
 
+
 # global cache registry:
 CACHE = _cache()
 # make clear and print methods available
 print_cache = CACHE.print_cache
 clear_cache = CACHE.clear_cache
 
-from sympy.core.compatibility import lru_cache
-from functools import update_wrapper
+from functools import lru_cache
 
-try:
-    import fastcache
-    from warnings import warn
-    # the version attribute __version__ is not present for all versions
-    if not hasattr(fastcache, '__version__'):
-        warn("fastcache version >= 0.4.0 required", UserWarning)
-        raise ImportError
-        # ensure minimum required version of fastcache is present
-    if V(fastcache.__version__) < '0.4.0':
-        warn("fastcache version >= 0.4.0 required, detected {}"\
-             .format(fastcache.__version__), UserWarning)
-        raise ImportError
-    # Do not use fastcache if running under pypy
-    import platform
-    if platform.python_implementation() == 'PyPy':
-        raise ImportError
+def __cacheit(maxsize):
+    """caching decorator.
 
-except ImportError:
-
-    def __cacheit(maxsize):
-        """caching decorator.
-
-           important: the result of cached function must be *immutable*
+        important: the result of cached function must be *immutable*
 
 
-           Examples
-           ========
+        Examples
+        ========
 
-           >>> from sympy.core.cache import cacheit
-           >>> @cacheit
-           ... def f(a, b):
-           ...    return a+b
+        >>> from sympy.core.cache import cacheit
+        >>> @cacheit
+        ... def f(a, b):
+        ...    return a+b
 
-           >>> @cacheit
-           ... def f(a, b):
-           ...    return [a, b] # <-- WRONG, returns mutable object
+        >>> @cacheit
+        ... def f(a, b): # noqa: F811
+        ...    return [a, b] # <-- WRONG, returns mutable object
 
-           to force cacheit to check returned results mutability and consistency,
-           set environment variable SYMPY_USE_CACHE to 'debug'
-        """
-        def func_wrapper(func):
-            cfunc = lru_cache(maxsize, typed=True)(func)
+        to force cacheit to check returned results mutability and consistency,
+        set environment variable SYMPY_USE_CACHE to 'debug'
+    """
+    def func_wrapper(func):
+        from .decorators import wraps
 
-            # wraps here does not propagate all the necessary info
-            # for py2.7, use update_wrapper below
-            def wrapper(*args, **kwargs):
-                try:
-                    retval = cfunc(*args, **kwargs)
-                except TypeError:
-                    retval = func(*args, **kwargs)
-                return retval
+        cfunc = lru_cache(maxsize, typed=True)(func)
 
-            wrapper.cache_info = cfunc.cache_info
-            wrapper.cache_clear = cfunc.cache_clear
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                retval = cfunc(*args, **kwargs)
+            except TypeError:
+                retval = func(*args, **kwargs)
+            return retval
 
-            # Some versions of update_wrapper erroneously assign the final
-            # function of the wrapper chain to __wrapped__, see
-            # https://bugs.python.org/issue17482 .
-            # To work around this, we need to call update_wrapper first, then
-            # assign to wrapper.__wrapped__.
-            update_wrapper(wrapper, func)
-            wrapper.__wrapped__ = cfunc.__wrapped__
+        wrapper.cache_info = cfunc.cache_info
+        wrapper.cache_clear = cfunc.cache_clear
 
-            CACHE.append(wrapper)
-            return wrapper
+        CACHE.append(wrapper)
+        return wrapper
 
-        return func_wrapper
-else:
-
-    def __cacheit(maxsize):
-        """caching decorator.
-
-           important: the result of cached function must be *immutable*
-
-
-           Examples
-           ========
-
-           >>> from sympy.core.cache import cacheit
-           >>> @cacheit
-           ... def f(a, b):
-           ...    return a+b
-
-           >>> @cacheit
-           ... def f(a, b):
-           ...    return [a, b] # <-- WRONG, returns mutable object
-
-           to force cacheit to check returned results mutability and consistency,
-           set environment variable SYMPY_USE_CACHE to 'debug'
-        """
-        def func_wrapper(func):
-
-            cfunc = fastcache.clru_cache(maxsize, typed=True, unhashable='ignore')(func)
-            CACHE.append(cfunc)
-            return cfunc
-
-        return func_wrapper
+    return func_wrapper
 ########################################
 
 

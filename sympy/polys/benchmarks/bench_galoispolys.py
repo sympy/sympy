@@ -5,7 +5,6 @@ from __future__ import print_function, division
 from sympy.polys.galoistools import gf_from_dict, gf_factor_sqf
 from sympy.polys.domains import ZZ
 from sympy import pi, nextprime
-from sympy.core.compatibility import range
 
 
 def gathen_poly(n, p, K):

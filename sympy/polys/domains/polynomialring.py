@@ -33,6 +33,11 @@ class PolynomialRing(Ring, CompositeDomain):
         self.symbols = ring.symbols
         self.domain = ring.domain
 
+
+        if symbols:
+            if ring.domain.is_Field and ring.domain.is_Exact and len(symbols)==1:
+                self.is_PID = True
+
         # TODO: remove this
         self.dom = self.domain
 
@@ -55,12 +60,13 @@ class PolynomialRing(Ring, CompositeDomain):
         return str(self.domain) + '[' + ','.join(map(str, self.symbols)) + ']'
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype, self.domain, self.symbols))
+        return hash((self.__class__.__name__, self.dtype.ring, self.domain, self.symbols))
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
         return isinstance(other, PolynomialRing) and \
-            self.dtype == other.dtype and self.ring == other.ring
+            (self.dtype.ring, self.domain, self.symbols) == \
+            (other.dtype.ring, other.domain, other.symbols)
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
@@ -86,6 +92,14 @@ class PolynomialRing(Ring, CompositeDomain):
         """Convert a GMPY `mpq` object to `dtype`. """
         return K1(K1.domain.convert(a, K0))
 
+    def from_GaussianIntegerRing(K1, a, K0):
+        """Convert a `GaussianInteger` object to `dtype`. """
+        return K1(K1.domain.convert(a, K0))
+
+    def from_GaussianRationalField(K1, a, K0):
+        """Convert a `GaussianRational` object to `dtype`. """
+        return K1(K1.domain.convert(a, K0))
+
     def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.domain.convert(a, K0))
@@ -104,10 +118,10 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def from_FractionField(K1, a, K0):
         """Convert a rational function to ``dtype``. """
-        denom = K0.denom(a)
+        q, r = K0.numer(a).div(K0.denom(a))
 
-        if denom.is_ground:
-            return K1.from_PolynomialRing(K0.numer(a)/denom, K0.field.ring.to_domain())
+        if r.is_zero:
+            return K1.from_PolynomialRing(q, K0.field.ring.to_domain())
         else:
             return None
 
