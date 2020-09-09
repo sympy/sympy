@@ -1081,8 +1081,10 @@ class periodic_argument(Function):
         Expression which can represent a exponent or exponent representing a polar
         number.
 
-    period : Expr
+    period : 
 
+        >>> from sympy import exp_polar, periodic_argument
+        >>> from sympy import I, pi
         >>> periodic_argument(exp_polar(5*I*pi), 2*pi)
         pi
         >>> periodic_argument(exp_polar(5*I*pi), 3*pi)
