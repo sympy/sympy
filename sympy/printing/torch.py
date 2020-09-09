@@ -1,8 +1,106 @@
 from sympy.printing.pycode import AbstractPythonCodePrinter
+from sympy.external import import_module
+import sympy
+
+torch = import_module('torch')
 
 
 class TorchPrinter(AbstractPythonCodePrinter):
     printmethod = "_torchcode"
+
+    mapping = {
+        sympy.Abs: "torch.abs",
+        sympy.sign: "torch.sign",
+
+        # XXX May raise error for ints.
+        sympy.ceiling: "torch.ceil",
+        sympy.floor: "torch.floor",
+        sympy.log: "torch.log",
+        sympy.exp: "torch.exp",
+        sympy.sqrt: "torch.sqrt",
+        sympy.cos: "torch.cos",
+        sympy.acos: "torch.acos",
+        sympy.sin: "torch.sin",
+        sympy.asin: "torch.asin",
+        sympy.tan: "torch.tan",
+        sympy.atan: "torch.atan",
+        sympy.atan2: "torch.atan2",
+        # XXX Also may give NaN for complex results.
+        sympy.cosh: "torch.cosh",
+        sympy.acosh: "torch.acosh",
+        sympy.sinh: "torch.sinh",
+        sympy.asinh: "torch.asinh",
+        sympy.tanh: "torch.tanh",
+        sympy.atanh: "torch.atanh",
+        sympy.Pow: "torch.pow",
+
+        sympy.re: "torch.real",
+        sympy.im: "torch.imag",
+        sympy.arg: "torch.angle",
+
+        # XXX May raise error for ints and complexes
+        sympy.erf: "torch.erf",
+        sympy.loggamma: "torch.lgamma",
+
+        sympy.Eq: "torch.eq",
+        sympy.Ne: "torch.ne",
+        sympy.StrictGreaterThan: "torch.gt",
+        sympy.StrictLessThan: "torch.lt",
+        sympy.LessThan: "torch.le",
+        sympy.GreaterThan: "torch.ge",
+
+        sympy.And: "torch.logical_and",
+        sympy.Or: "torch.logical_or",
+        sympy.Not: "torch.logical_not",
+        sympy.Max: "torch.max",
+        sympy.Min: "torch.min",
+
+        # Matrices
+        sympy.MatAdd: "torch.addmm",
+        sympy.HadamardProduct: "torch.mm",
+        sympy.Trace: "torch.trace",
+
+        # XXX May raise error for integer matrices.
+        sympy.Determinant: "torch.det",
+    }
+
+    _default_settings = dict(
+        AbstractPythonCodePrinter._default_settings,
+        tensorflow_version=None
+    )
+
+    def __init__(self, settings=None):
+        super(TorchPrinter, self).__init__(settings)
+
+        version = self._settings['torch_version']
+        if version is None and torch:
+            version = torch.__version__
+        self.tensorflow_version = version
+
+    def _print_Function(self, expr):
+        op = self.mapping.get(type(expr), None)
+        if op is None:
+            return super(TorchPrinter, self)._print_Basic(expr)
+        children = [self._print(arg) for arg in expr.args]
+        if len(children) == 1:
+            return "%s(%s)" % (
+                self._module_format(op),
+                children[0]
+            )
+        else:
+            return self._expand_fold_binary_op(op, children)
+
+    _print_Expr = _print_Function
+    _print_Application = _print_Function
+    _print_MatrixExpr = _print_Function
+    # TODO: a better class structure would avoid this mess:
+    _print_Relational = _print_Function
+    _print_Not = _print_Function
+    _print_And = _print_Function
+    _print_Or = _print_Function
+    _print_HadamardProduct = _print_Function
+    _print_Trace = _print_Function
+    _print_Determinant = _print_Function
 
     def _print_MatMul(self, expr):
         return self._expand_fold_binary_op("torch.mm", expr.args)
