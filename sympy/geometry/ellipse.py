@@ -6,7 +6,7 @@ Contains
 
 """
 
-from sympy import Expr, Eq, zoo, oo
+from sympy import Expr, Eq, zoo
 from sympy.core import S, pi, sympify
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
