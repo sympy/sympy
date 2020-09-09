@@ -104,7 +104,7 @@ NUMEXPR_TRANSLATIONS = {}  # type: Dict[str, str]
 
 # Available modules:
 MODULES = {
-    "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
+    "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("import math; from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
