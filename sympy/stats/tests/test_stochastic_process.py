@@ -411,9 +411,9 @@ def test_GammaProcess_symbolic():
     assert E(X(t)**2 + X(d)*2 + X(y)**3, Contains(t, Interval.Lopen(0, 1))
         & Contains(d, Interval.Lopen(1, 2)) & Contains(y, Interval.Ropen(3, 4))) == \
             2*g/l + (g**2 + g)/l**2 + (g**3 + 3*g**2 + 2*g)/l**3
-    #This test fails , unknown variable z
-    '''assert P(X(t) > 3, Contains(t, Interval.Lopen(3, 4))).simplify() == \
-                                Integral(Piecewise((_z**(g - 1)*l**g*exp(-_z*l)/gamma(g), _z >= 0), (0, True)), (_z, 3, oo)) # equivalent to P(X(1)>3)'''
+
+    assert P(X(t) > 3, Contains(t, Interval.Lopen(3, 4))).simplify() == \
+                                Integral(Piecewise((_z**(g - 1)*l**g*exp(-_z*l)/gamma(g), _z >= 0), (0, True)), (_z, 3, oo)) # equivalent to P(X(1)>3)
 
 def test_GammaProcess_numeric():
     t, d, x, y = symbols('t d x y', positive=True)
