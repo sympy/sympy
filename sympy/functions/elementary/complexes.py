@@ -1175,8 +1175,8 @@ def unbranched_argument(arg):
     >>> from sympy import I, pi
     >>> unbranched_argument(exp(10*I*pi))
     0
-    >>> unbranched_argument(exp(25*I*pi))
-    pi
+    >>> unbranched_argument(exp_polar(15*I*pi))
+    15*pi
     >>> unbranched_argument(exp_polar(7*I*pi))
     7*pi
 
