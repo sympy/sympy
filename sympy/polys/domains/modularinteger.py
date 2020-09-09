@@ -166,10 +166,8 @@ class ModularInteger(PicklableWithSlots, DomainElement):
     def __ge__(self, other):
         return self._compare(other, operator.ge)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.val)
-
-    __bool__ = __nonzero__
 
     @classmethod
     def _invert(cls, value):

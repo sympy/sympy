@@ -1282,10 +1282,8 @@ class Float(Number):
     def _eval_is_zero(self):
         return self._mpf_ == fzero
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self._mpf_ != fzero
-
-    __bool__ = __nonzero__
 
     def __neg__(self):
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
@@ -1383,8 +1381,6 @@ class Float(Number):
         if self._mpf_ == fzero:
             return 0
         return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
-
-    __long__ = __int__
 
     def __eq__(self, other):
         from sympy.logic.boolalg import Boolean
@@ -1851,8 +1847,6 @@ class Rational(Number):
             return -int(-p//q)
         return int(p//q)
 
-    __long__ = __int__
-
     def floor(self):
         return Integer(self.p // self.q)
 
@@ -2116,8 +2110,6 @@ class Integer(Rational):
     # Arithmetic operations are here for efficiency
     def __int__(self):
         return self.p
-
-    __long__ = __int__
 
     def floor(self):
         return Integer(self.p)
@@ -2636,10 +2628,8 @@ class Zero(IntegerConstant, metaclass=Singleton):
         # Order(0,x) -> 0
         return self
 
-    def __nonzero__(self):
+    def __bool__(self):
         return False
-
-    __bool__ = __nonzero__
 
     def as_coeff_Mul(self, rational=False):  # XXX this routine should be deleted
         """Efficiently extract the coefficient of a summation. """
@@ -3405,9 +3395,6 @@ class NumberSymbol(AtomicExpr):
     def __int__(self):
         # subclass with appropriate return value
         raise NotImplementedError
-
-    def __long__(self):
-        return self.__int__()
 
     def __hash__(self):
         return super().__hash__()

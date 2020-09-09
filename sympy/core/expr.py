@@ -326,7 +326,6 @@ class Expr(Basic, EvalfMixin):
             if diff_sign != isign:
                 i -= isign
         return i
-    __long__ = __int__
 
     def __float__(self):
         # Don't bother testing if it's a number; if it's not this is going

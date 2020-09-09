@@ -4160,10 +4160,8 @@ class Poly(Basic):
     def __ne__(f, g):
         return not f == g
 
-    def __nonzero__(f):
+    def __bool__(f):
         return not f.is_zero
-
-    __bool__ = __nonzero__
 
     def eq(f, g, strict=False):
         if not strict:

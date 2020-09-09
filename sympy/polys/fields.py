@@ -335,10 +335,8 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
     def __ne__(f, g):
         return not f == g
 
-    def __nonzero__(f):
+    def __bool__(f):
         return bool(f.numer)
-
-    __bool__ = __nonzero__
 
     def sort_key(self):
         return (self.denom.sort_key(), self.numer.sort_key())

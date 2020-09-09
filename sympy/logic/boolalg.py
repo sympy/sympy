@@ -318,10 +318,8 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanFalse
 
     """
-    def __nonzero__(self):
+    def __bool__(self):
         return True
-
-    __bool__ = __nonzero__
 
     def __hash__(self):
         return hash(True)
@@ -388,10 +386,8 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanTrue
 
     """
-    def __nonzero__(self):
+    def __bool__(self):
         return False
-
-    __bool__ = __nonzero__
 
     def __hash__(self):
         return hash(False)

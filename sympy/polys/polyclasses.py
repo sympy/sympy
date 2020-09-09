@@ -1054,10 +1054,8 @@ class DMP(PicklableWithSlots, CantSympify):
         _, _, _, F, G = f.unify(g)
         return F >= G
 
-    def __nonzero__(f):
+    def __bool__(f):
         return not dmp_zero_p(f.rep, f.lev)
-
-    __bool__ = __nonzero__
 
 
 def init_normal_DMF(num, den, lev, dom):
@@ -1501,10 +1499,8 @@ class DMF(PicklableWithSlots, CantSympify):
         _, _, _, F, G = f.frac_unify(g)
         return F >= G
 
-    def __nonzero__(f):
+    def __bool__(f):
         return not dmp_zero_p(f.num, f.lev)
-
-    __bool__ = __nonzero__
 
 
 def init_normal_ANP(rep, mod, dom):
@@ -1772,7 +1768,5 @@ class ANP(PicklableWithSlots, CantSympify):
         _, _, F, G, _ = f.unify(g)
         return F >= G
 
-    def __nonzero__(f):
+    def __bool__(f):
         return bool(f.rep)
-
-    __bool__ = __nonzero__
