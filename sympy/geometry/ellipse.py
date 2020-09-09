@@ -140,7 +140,7 @@ class Ellipse(GeometrySet):
                 "eccentricity" must not be None.'''))
 
         if eccentricity is not None:
-            if eccentricity.is_real is True and eccentricity < 0:
+            if simplify(eccentricity).is_negative == True:
                 raise GeometryError("Eccentricity of ellipse/circle should lie between [0, 1)")
             elif hradius is None:
                 hradius = vradius / sqrt(1 - eccentricity**2)
