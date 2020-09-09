@@ -2,17 +2,17 @@
 Generating and counting primes.
 
 """
-from __future__ import print_function, division
 
 import random
 from bisect import bisect
+from itertools import count
 # Using arrays for sieving instead of lists greatly reduces
 # memory consumption
 from array import array as _array
 
-from .primetest import isprime
-from sympy.core.compatibility import as_int, range
 from sympy import Function, S
+from sympy.core.compatibility import as_int
+from .primetest import isprime
 
 
 def _azeros(n):
@@ -118,10 +118,10 @@ class Sieve:
     def extend_to_no(self, i):
         """Extend to include the ith prime number.
 
-        i must be an integer.
+        Parameters
+        ==========
 
-        The list is extended by 50% if it is too short, so it is
-        likely that it will be longer than requested.
+        i : integer
 
         Examples
         ========
@@ -131,6 +131,12 @@ class Sieve:
         >>> sieve.extend_to_no(9)
         >>> sieve._list
         array('l', [2, 3, 5, 7, 11, 13, 17, 19, 23])
+
+        Notes
+        =====
+
+        The list is extended by 50% if it is too short, so it is
+        likely that it will be longer than requested.
         """
         i = as_int(i)
         while len(self._list) < i:
@@ -206,6 +212,15 @@ class Sieve:
 
     def mobiusrange(self, a, b):
         """Generate all mobius numbers for the range [a, b).
+
+        Parameters
+        ==========
+
+        a : integer
+            First number in range
+
+        b : integer
+            First number outside of range
 
         Examples
         ========
@@ -287,12 +302,27 @@ class Sieve:
         a, b = self.search(n)
         return a == b
 
+    def __iter__(self):
+        for n in count(1):
+            yield self[n]
+
     def __getitem__(self, n):
         """Return the nth prime number"""
         if isinstance(n, slice):
             self.extend_to_no(n.stop)
-            return self._list[n.start - 1:n.stop - 1:n.step]
+            # Python 2.7 slices have 0 instead of None for start, so
+            # we can't default to 1.
+            start = n.start if n.start is not None else 0
+            if start < 1:
+                # sieve[:5] would be empty (starting at -1), let's
+                # just be explicit and raise.
+                raise IndexError("Sieve indices start at 1.")
+            return self._list[start - 1:n.stop - 1:n.step]
         else:
+            if n < 1:
+                # offset is one, so forbid explicit access to sieve[0]
+                # (would surprisingly return the last one).
+                raise IndexError("Sieve indices start at 1.")
             n = as_int(n)
             self.extend_to_no(n)
             return self._list[n - 1]
@@ -325,13 +355,6 @@ def prime(nth):
         For the inputs this implementation can handle, we will have to test
         primality for at max about 10**5 numbers, to get our answer.
 
-        References
-        ==========
-
-        - https://en.wikipedia.org/wiki/Prime_number_theorem#Table_of_.CF.80.28x.29.2C_x_.2F_log_x.2C_and_li.28x.29
-        - https://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
-        - https://en.wikipedia.org/wiki/Skewes%27_number
-
         Examples
         ========
 
@@ -349,6 +372,13 @@ def prime(nth):
         sympy.ntheory.primetest.isprime : Test if n is prime
         primerange : Generate all primes in a given range
         primepi : Return the number of primes less than or equal to n
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Prime_number_theorem#Table_of_.CF.80.28x.29.2C_x_.2F_log_x.2C_and_li.28x.29
+        .. [2] https://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
+        .. [3] https://en.wikipedia.org/wiki/Skewes%27_number
     """
     n = as_int(nth)
     if n < 1:
@@ -616,6 +646,20 @@ def primerange(a, b):
         be returned from there; otherwise values will be returned
         but will not modify the sieve.
 
+        Examples
+        ========
+
+        >>> from sympy import primerange, sieve
+        >>> print([i for i in primerange(1, 30)])
+        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
+        The Sieve method, primerange, is generally faster but it will
+        occupy more memory as the sieve stores values. The default
+        instance of Sieve, named sieve, can be used:
+
+        >>> list(sieve.primerange(1, 30))
+        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
         Notes
         =====
 
@@ -637,26 +681,6 @@ def primerange(a, b):
         numbers are arbitrarily large, e.g. the numbers in the sequence
         n! + 2, n! + 3 ... n! + n are all composite.
 
-        References
-        ==========
-
-        1. https://en.wikipedia.org/wiki/Prime_number
-        2. http://primes.utm.edu/notes/gaps.html
-
-        Examples
-        ========
-
-        >>> from sympy import primerange, sieve
-        >>> print([i for i in primerange(1, 30)])
-        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
-
-        The Sieve method, primerange, is generally faster but it will
-        occupy more memory as the sieve stores values. The default
-        instance of Sieve, named sieve, can be used:
-
-        >>> list(sieve.primerange(1, 30))
-        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
-
         See Also
         ========
 
@@ -667,6 +691,12 @@ def primerange(a, b):
         Sieve.primerange : return range from already computed primes
                            or extend the sieve to contain the requested
                            range.
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Prime_number
+        .. [2] http://primes.utm.edu/notes/gaps.html
     """
     from sympy.functions.elementary.integers import ceiling
 
@@ -674,8 +704,7 @@ def primerange(a, b):
         return
     # if we already have the range, return it
     if b <= sieve._list[-1]:
-        for i in sieve.primerange(a, b):
-            yield i
+        yield from sieve.primerange(a, b)
         return
     # otherwise compute, without storing, the desired range.
 
@@ -697,11 +726,6 @@ def randprime(a, b):
         Bertrand's postulate assures that
         randprime(a, 2*a) will always succeed for a > 1.
 
-        References
-        ==========
-
-        - https://en.wikipedia.org/wiki/Bertrand's_postulate
-
         Examples
         ========
 
@@ -715,6 +739,11 @@ def randprime(a, b):
         ========
 
         primerange : Generate all primes in a given range
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Bertrand's_postulate
 
     """
     if a >= b:
@@ -734,7 +763,10 @@ def primorial(n, nth=True):
     Returns the product of the first n primes (default) or
     the primes less than or equal to n (when ``nth=False``).
 
-    >>> from sympy.ntheory.generate import primorial, randprime, primerange
+    Examples
+    ========
+
+    >>> from sympy.ntheory.generate import primorial, primerange
     >>> from sympy import factorint, Mul, primefactors, sqrt
     >>> primorial(4) # the first 4 primes are 2, 3, 5, 7
     210

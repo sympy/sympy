@@ -3,7 +3,7 @@ FROM continuumio/anaconda3
 WORKDIR /root
 
 RUN apt-get update \
-    && apt-get install -y libc6-i386 libc6 linux-headers-amd64 git make zip graphviz inkscape texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x latexmk \
+    && apt-get install -y libc6-i386 libc6 linux-headers-amd64 git make zip graphviz inkscape texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x latexmk libatlas-dev libatlas-base-dev liblapack-dev gfortran gcc \
     && apt-get -y clean
 
 RUN conda config --add channels conda-forge

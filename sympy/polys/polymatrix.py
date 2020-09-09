@@ -1,8 +1,8 @@
 from __future__ import print_function
 
 from sympy.matrices.dense import MutableDenseMatrix
-from sympy.polys.polytools import Poly
 
+from sympy.polys.polytools import Poly
 from sympy.polys.domains import EX
 
 
@@ -56,9 +56,9 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
         self.ring = ring
 
     def _eval_matrix_mul(self, other):
-        self_rows, self_cols = self.rows, self.cols
+        self_cols = self.cols
         other_rows, other_cols = other.rows, other.cols
-        other_len = other_rows * other_cols
+        other_len = other_rows*other_cols
         new_mat_rows = self.rows
         new_mat_cols = other.cols
 

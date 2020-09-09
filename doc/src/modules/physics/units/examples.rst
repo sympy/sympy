@@ -30,9 +30,10 @@ to determine the dimension of the Newton's constant :math:`G`. The result
 should be :math:`L^3 M^{-1} T^{-2}`.
 
     >>> from sympy import symbols
+    >>> from sympy.physics.units.systems import SI
     >>> from sympy.physics.units import length, mass, acceleration, force
     >>> from sympy.physics.units import gravitational_constant as G
-    >>> from sympy.physics.units.dimensions import dimsys_SI
+    >>> from sympy.physics.units.systems.si import dimsys_SI
     >>> F = mass*acceleration
     >>> F
     Dimension(acceleration*mass)
@@ -85,14 +86,14 @@ variables (taken from Wikipedia). The result should be 224.701 days.
 
     Specify the dimension and scale in SI units:
 
-    >>> a.set_dimension(length, "SI")
-    >>> a.set_scale_factor(108208000e3*meter, "SI")
+    >>> SI.set_quantity_dimension(a, length)
+    >>> SI.set_quantity_scale_factor(a, 108208000e3*meter)
 
     Add the solar mass as quantity:
 
     >>> M = Quantity("solar_mass")
-    >>> M.set_dimension(mass, "SI")
-    >>> M.set_scale_factor(1.9891e30*kilogram, "SI")
+    >>> SI.set_quantity_dimension(M, mass)
+    >>> SI.set_quantity_scale_factor(M, 1.9891e30*kilogram)
 
     Now Kepler's law:
 
@@ -108,9 +109,9 @@ the outcoming result):
 
     >>> from sympy.physics.units import convert_to
     >>> convert_to(q, day)
-    71.5123904642338*pi*day
+    71.5112118495813*pi*day
     >>> convert_to(q, day).n()
-    224.662800523082*day
+    224.659097795948*day
 
 We could also have the solar mass and the day as units coming from the
 astrophysical system, but we wanted to show how to create a unit that one needs.

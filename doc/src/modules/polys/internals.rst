@@ -703,6 +703,21 @@ Groebner basis algorithms for modules are also provided:
 .. autofunction:: sdm_nf_mora
 .. autofunction:: sdm_groebner
 
+Options
+=======
+
+.. automodule:: sympy.polys.polyoptions
+
+.. autoclass:: sympy.polys.polyoptions.Options
+.. autofunction:: sympy.polys.polyoptions.build_options
+
+Configuration
+=============
+
+.. automodule:: sympy.polys.polyconfig
+
+.. autofunction:: sympy.polys.polyconfig.setup
+
 Exceptions
 ==========
 
@@ -749,6 +764,7 @@ Modular GCD
 .. autofunction:: modgcd_univariate
 .. autofunction:: modgcd_bivariate
 .. autofunction:: modgcd_multivariate
+.. autofunction:: _modgcd_multivariate_p
 .. autofunction:: func_field_modgcd
 
 Undocumented

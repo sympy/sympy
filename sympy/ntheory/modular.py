@@ -1,8 +1,6 @@
-from __future__ import print_function, division
-
-from sympy.core.numbers import igcdex, igcd
-from sympy.core.mul import prod
 from sympy.core.compatibility import as_int, reduce
+from sympy.core.mul import prod
+from sympy.core.numbers import igcdex, igcd
 from sympy.ntheory.primetest import isprime
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
@@ -38,10 +36,13 @@ def crt(m, v, symmetric=False, check=True):
     The keyword ``check`` can be set to False if it is known that the moduli
     are coprime.
 
+    Examples
+    ========
+
     As an example consider a set of residues ``U = [49, 76, 65]``
     and a set of moduli ``M = [99, 97, 95]``. Then we have::
 
-       >>> from sympy.ntheory.modular import crt, solve_congruence
+       >>> from sympy.ntheory.modular import crt
 
        >>> crt([99, 97, 95], [49, 76, 65])
        (639985, 912285)

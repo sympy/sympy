@@ -58,7 +58,7 @@ def test_allresults():
     inc = lambda x: x+1
     dec = lambda x: x-1
     double = lambda x: x*2
-    square = lambda x: x**2
+    # square = lambda x: x**2
 
     assert set(allresults(inc)(3)) == {inc(3)}
     assert set(allresults([inc, dec])(3)) == {2, 4}

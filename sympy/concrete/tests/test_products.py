@@ -1,6 +1,7 @@
-from sympy import (symbols, Symbol, product, factorial, rf, sqrt, cos,
-                   Function, Product, Rational, Sum, oo, exp, log, S, pi)
-from sympy.utilities.pytest import raises
+from sympy import (symbols, Symbol, product, combsimp, factorial, rf, sqrt, cos,
+                   Function, Product, Rational, Sum, oo, exp, log, S, pi,
+                   KroneckerDelta)
+from sympy.testing.pytest import raises
 from sympy import simplify
 
 a, k, n, m, x = symbols('a,k,n,m,x', integer=True)
@@ -35,7 +36,7 @@ def test_karr_convention():
 
     i = Symbol("i", integer=True)
     k = Symbol("k", integer=True)
-    j = Symbol("j", integer=True)
+    j = Symbol("j", integer=True, positive=True)
 
     # A simple example with a concrete factors and symbolic limits.
 
@@ -55,7 +56,7 @@ def test_karr_convention():
     b = n - 1
     S2 = Product(i**2, (i, a, b)).doit()
 
-    assert simplify(S1 * S2) == 1
+    assert S1 * S2 == 1
 
     # Test the empty product: m = k and n = k and therefore m = n:
     m = k
@@ -102,9 +103,7 @@ def test_karr_convention():
 
 def test_karr_proposition_2a():
     # Test Karr, page 309, proposition 2, part a
-    i = Symbol("i", integer=True)
-    u = Symbol("u", integer=True)
-    v = Symbol("v", integer=True)
+    i, u, v = symbols('i u v', integer=True)
 
     def test_the_product(m, n):
         # g
@@ -116,22 +115,19 @@ def test_karr_proposition_2a():
         b = n - 1
         P = Product(f, (i, a, b)).doit()
         # Test if Product_{m <= i < n} f(i) = g(n) / g(m)
-        assert simplify(P / (g.subs(i, n) / g.subs(i, m))) == 1
+        assert combsimp(P / (g.subs(i, n) / g.subs(i, m))) == 1
 
     # m < n
-    test_the_product(u, u+v)
+    test_the_product(u, u + v)
     # m = n
     test_the_product(u, u)
     # m > n
-    test_the_product(u+v, u)
+    test_the_product(u + v, u)
 
 
 def test_karr_proposition_2b():
     # Test Karr, page 309, proposition 2, part b
-    i = Symbol("i", integer=True)
-    u = Symbol("u", integer=True)
-    v = Symbol("v", integer=True)
-    w = Symbol("w", integer=True)
+    i, u, v, w = symbols('i u v w', integer=True)
 
     def test_the_product(l, n, m):
         # Productmand
@@ -149,26 +145,26 @@ def test_karr_proposition_2b():
         b = n - 1
         S3 = Product(s, (i, a, b)).doit()
         # Test if S1 = S2 * S3 as required
-        assert simplify(S1 / (S2 * S3)) == 1
+        assert combsimp(S1 / (S2 * S3)) == 1
 
     # l < m < n
-    test_the_product(u, u+v, u+v+w)
+    test_the_product(u, u + v, u + v + w)
     # l < m = n
-    test_the_product(u, u+v, u+v)
+    test_the_product(u, u + v, u + v)
     # l < m > n
-    test_the_product(u, u+v+w, v)
+    test_the_product(u, u + v + w, v)
     # l = m < n
-    test_the_product(u, u, u+v)
+    test_the_product(u, u, u + v)
     # l = m = n
     test_the_product(u, u, u)
     # l = m > n
-    test_the_product(u+v, u+v, u)
+    test_the_product(u + v, u + v, u)
     # l > m < n
-    test_the_product(u+v, u, u+w)
+    test_the_product(u + v, u, u + w)
     # l > m = n
-    test_the_product(u+v, u, u)
+    test_the_product(u + v, u, u)
     # l > m > n
-    test_the_product(u+v+w, u+v, u)
+    test_the_product(u + v + w, u + v, u)
 
 
 def test_simple_products():
@@ -194,7 +190,7 @@ def test_simple_products():
     raises(ValueError, lambda: Product(n, (k, 1)))
 
     assert product(1, (n, 1, oo)) == 1  # issue 8301
-    assert product(2, (n, 1, oo)) == oo
+    assert product(2, (n, 1, oo)) is oo
     assert product(-1, (n, 1, oo)).func is Product
 
 
@@ -220,7 +216,7 @@ def test_rational_products():
 def test_special_products():
     # Wallis product
     assert product((4*k)**2 / (4*k**2 - 1), (k, 1, n)) == \
-        4**n*factorial(n)**2/rf(Rational(1, 2), n)/rf(Rational(3, 2), n)
+        4**n*factorial(n)**2/rf(S.Half, n)/rf(Rational(3, 2), n)
 
     # Euler's product formula for sin
     assert product(1 + a/k**2, (k, 1, n)) == \
@@ -234,6 +230,12 @@ def test__eval_product():
     assert product(2*a(i), (i, 1, n)) == 2**n * Product(a(i), (i, 1, n))
     # issue 4810
     assert product(2**i, (i, 1, n)) == 2**(n/2 + n**2/2)
+    k, m = symbols('k m', integer=True)
+    assert product(2**i, (i, k, m)) == 2**(-k**2/2 + k/2 + m**2/2 + m/2)
+    n = Symbol('n', negative=True, integer=True)
+    p = Symbol('p', positive=True, integer=True)
+    assert product(2**i, (i, n, p)) == 2**(-n**2/2 + n/2 + p**2/2 + p/2)
+    assert product(2**i, (i, p, n)) == 2**(n**2/2 + n/2 - p**2/2 + p/2)
 
 
 def test_product_pow():
@@ -259,23 +261,28 @@ def test_conjugate_transpose():
     assert p.conjugate().doit() == p.doit().conjugate()
     assert p.transpose().doit() == p.doit().transpose()
 
+    p = Product(B**k*A, (k, 1, 3))
+    assert p.adjoint().doit() == p.doit().adjoint()
+    assert p.conjugate().doit() == p.doit().conjugate()
+    assert p.transpose().doit() == p.doit().transpose()
 
-def test_simplify():
+def test_simplify_prod():
     y, t, b, c = symbols('y, t, b, c', integer = True)
 
-    assert simplify(Product(x*y, (x, n, m), (y, a, k)) * \
+    _simplify = lambda e: simplify(e, doit=False)
+    assert _simplify(Product(x*y, (x, n, m), (y, a, k)) * \
         Product(y, (x, n, m), (y, a, k))) == \
             Product(x*y**2, (x, n, m), (y, a, k))
-    assert simplify(3 * y* Product(x, (x, n, m)) * Product(x, (x, m + 1, a))) \
+    assert _simplify(3 * y* Product(x, (x, n, m)) * Product(x, (x, m + 1, a))) \
         == 3 * y * Product(x, (x, n, a))
-    assert simplify(Product(x, (x, k + 1, a)) * Product(x, (x, n, k))) == \
+    assert _simplify(Product(x, (x, k + 1, a)) * Product(x, (x, n, k))) == \
         Product(x, (x, n, a))
-    assert simplify(Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))) == \
+    assert _simplify(Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))) == \
         Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))
-    assert simplify(Product(x, (t, a, b)) * Product(y, (t, a, b)) * \
+    assert _simplify(Product(x, (t, a, b)) * Product(y, (t, a, b)) * \
         Product(x, (t, b+1, c))) == Product(x*y, (t, a, b)) * \
             Product(x, (t, b+1, c))
-    assert simplify(Product(x, (t, a, b)) * Product(x, (t, b+1, c)) * \
+    assert _simplify(Product(x, (t, a, b)) * Product(x, (t, b+1, c)) * \
         Product(y, (t, a, b))) == Product(x*y, (t, a, b)) * \
             Product(x, (t, b+1, c))
 
@@ -350,16 +357,16 @@ def test_reverse_order():
 
 def test_issue_9983():
     n = Symbol('n', integer=True, positive=True)
-    p = Product(1 + 1/n**(S(2)/3), (n, 1, oo))
+    p = Product(1 + 1/n**Rational(2, 3), (n, 1, oo))
     assert p.is_convergent() is S.false
-    assert product(1 + 1/n**(S(2)/3), (n, 1, oo)) == p.doit()
+    assert product(1 + 1/n**Rational(2, 3), (n, 1, oo)) == p.doit()
 
 
 def test_issue_13546():
     n = Symbol('n')
     k = Symbol('k')
     p = Product(n + 1 / 2**k, (k, 0, n-1)).doit()
-    assert p.subs(n, 2).doit() == S(15)/2
+    assert p.subs(n, 2).doit() == Rational(15, 2)
 
 
 def test_issue_14036():
@@ -370,3 +377,8 @@ def test_issue_14036():
 def test_rewrite_Sum():
     assert Product(1 - S.Half**2/k**2, (k, 1, oo)).rewrite(Sum) == \
         exp(Sum(log(1 - 1/(4*k**2)), (k, 1, oo)))
+
+
+def test_KroneckerDelta_Product():
+    y = Symbol('y')
+    assert Product(x*KroneckerDelta(x, y), (x, 0, 1)).doit() == 0

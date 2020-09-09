@@ -20,7 +20,6 @@ k[t].
 See Chapter 6 of "Symbolic Integration I: Transcendental Functions" by
 Manuel Bronstein.  See also the docstring of risch.py.
 """
-from __future__ import print_function, division
 
 from operator import mul
 
@@ -30,8 +29,10 @@ from sympy.core.symbol import Dummy
 
 from sympy.polys import Poly, gcd, ZZ, cancel
 
+from sympy import sqrt, re, im
+
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-    splitfactor, NonElementaryIntegralException, DecrementLevel)
+    splitfactor, NonElementaryIntegralException, DecrementLevel, recognize_log_derivative)
 
 # TODO: Add messages to NonElementaryIntegralException errors
 
@@ -120,7 +121,7 @@ def weak_normalizer(a, d, DE, z=None):
         d1.as_poly(DE.t))
     r = Poly(r, z)
 
-    if not r.has(z):
+    if not r.expr.has(z):
         return (Poly(1, DE.t), (a, d))
 
     N = [i for i in r.real_roots() if i in ZZ and i > 0]
@@ -233,8 +234,8 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
                 betaa, betad = frac_in(re(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
                 etaa, etad = frac_in(dcoeff, DE.t)
 
-                if recognize_log_derivative(2*betaa, betad, DE):
-                    A = parametric_log_deriv(alphaa*sqrt(-1)*betad+alphad*betaa, alphad*betad, etaa, etad, DE)
+                if recognize_log_derivative(Poly(2, DE.t)*betaa, betad, DE):
+                    A = parametric_log_deriv(alphaa*Poly(sqrt(-1), DE.t)*betad+alphad*betaa, alphad*betad, etaa, etad, DE)
                     if A is not None:
                        Q, m, z = A
                        if Q == 1:
@@ -713,7 +714,7 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
 
             else:
                 raise NotImplementedError("Other Poly (P)RDE cancellation "
-                    "cases are not yet implemented (%s)." % case)
+                    "cases are not yet implemented (%s)." % DE.case)
 
         if parametric:
             raise NotImplementedError("Remaining cases for Poly PRDE not yet "

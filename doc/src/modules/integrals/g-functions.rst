@@ -1,3 +1,5 @@
+.. _g-functions:
+
 Computing Integrals using Meijer G-Functions
 ********************************************
 
@@ -506,3 +508,10 @@ of deriving new formulae improve. Of course it has to grow whenever a new class
 of special functions is to be dealt with.
 
 .. automodule:: sympy.integrals.meijerint_doc
+
+Internal API Reference
+**********************
+
+.. automodule:: sympy.integrals.meijerint
+   :members:
+   :private-members:

@@ -1,14 +1,15 @@
 # This file contains tests that exercise multiple AST nodes
 
+import tempfile
+
 from sympy.external import import_module
-from sympy.printing.ccode import ccode
+from sympy.printing import ccode
 from sympy.utilities._compilation import compile_link_import_strings, has_c
-from sympy.utilities._compilation.util import TemporaryDirectory, may_xfail
-from sympy.utilities.pytest import skip
-from sympy.sets import Range
+from sympy.utilities._compilation.util import may_xfail
+from sympy.testing.pytest import skip
 from sympy.codegen.ast import (
     FunctionDefinition, FunctionPrototype, Variable, Pointer, real, Assignment,
-    integer, Variable, CodeBlock, While
+    integer, CodeBlock, While
 )
 from sympy.codegen.cnodes import void, PreIncrement
 from sympy.codegen.cutils import render_as_source_file
@@ -29,7 +30,8 @@ def _render_compile_import(funcdef, build_dir):
     declar = ccode(FunctionPrototype.from_FunctionDefinition(funcdef))
     return compile_link_import_strings([
         ('our_test_func.c', code_str),
-        ('_our_test_func.pyx', ("cdef extern {declar}\n"
+        ('_our_test_func.pyx', ("#cython: language_level={}\n".format("3") +
+                                "cdef extern {declar}\n"
                                 "def _{fname}({typ}[:] inp, {typ}[:] out):\n"
                                 "    {fname}(inp.size, &inp[0], &out[0])").format(
                                     declar=declar, fname=funcdef.name, typ='double'
@@ -47,7 +49,7 @@ def test_copying_function():
         skip("Cython not found.")
 
     info = None
-    with TemporaryDirectory() as folder:
+    with tempfile.TemporaryDirectory() as folder:
         mod, info = _render_compile_import(_mk_func1(), build_dir=folder)
         inp = np.arange(10.0)
         out = np.empty_like(inp)

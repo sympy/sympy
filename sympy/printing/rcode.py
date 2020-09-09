@@ -10,9 +10,8 @@ using the functions defined in math.h where possible.
 
 from __future__ import print_function, division
 
-from sympy.core import S
-from sympy.core.compatibility import string_types, range
-from sympy.codegen.ast import Assignment
+from typing import Any, Dict
+
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
@@ -90,7 +89,7 @@ class RCodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-    }
+    }  # type: Dict[str, Any]
     _operators = {
        'and': '&',
         'or': '|',
@@ -98,7 +97,7 @@ class RCodePrinter(CodePrinter):
     }
 
     _relationals = {
-    }
+    }  # type: Dict[str, str]
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -179,13 +178,15 @@ class RCodePrinter(CodePrinter):
         return '-Inf'
 
     def _print_Assignment(self, expr):
-        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.codegen.ast import Assignment
+
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.tensor.indexed import IndexedBase
         lhs = expr.lhs
         rhs = expr.rhs
         # We special case assignments that take multiple lines
         #if isinstance(expr.rhs, Piecewise):
+        #    from sympy.functions.elementary.piecewise import Piecewise
         #    # Here we modify Piecewise so each expression is now
         #    # an Assignment, and then continue on the print.
         #    expressions = []
@@ -247,7 +248,7 @@ class RCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return ("{0} {1} {2}").format(lhs_code, op, rhs_code)
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
     def _print_sinc(self, expr):
         from sympy.functions.elementary.trigonometric import sin
@@ -278,7 +279,7 @@ class RCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 

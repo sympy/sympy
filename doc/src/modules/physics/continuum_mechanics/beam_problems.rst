@@ -5,7 +5,7 @@ Solving Beam Bending Problems using Singularity Functions
 To make this document easier to read, enable pretty printing:
 
 .. plot::
-   :context:
+   :context: reset
    :format: doctest
    :include-source: True
 
@@ -175,7 +175,7 @@ final loading can be displayed:
        - 258⋅<x>   + 52⋅<x>   - 8⋅<x>  + 50⋅<x - 5>   + 8⋅<x - 5>  - 12⋅<x - 9>
 
 At this point, the beam is fully defined and the internal shear and bending
-moments are calculated like so:
+moments are calculated:
 
 .. plot::
    :context:
@@ -246,7 +246,7 @@ Example 2
 ---------
 
 There is a beam of length 30 meters. A moment of magnitude 120 Nm is
-applied in the clockwise direction at the end of the beam. A pointload
+applied in the clockwise direction at the end of the beam. A point load
 of magnitude 8 N is applied from the top of the beam at the starting
 point. There are two simple supports below the beam. One at the end
 and another one at a distance of 10 meters from the start. The
@@ -308,12 +308,12 @@ Example 3
 
 A beam of length 6 meters is having a roller support at the start and a hinged
 support at the end. A counterclockwise moment of 1.5 kN-m is applied at the mid
-of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m is
+of the beam. A constant distributed load of 3 kN/m and a ramp load of 1 kN/m/m is
 applied from the mid till the end of the beam.
 
 ::
 
-                              ramp load = 1 KN/m
+                              ramp load = 1 KN/m/m
                             constant load = 3 KN/m
                          |------------------------|
                        ⭯ 1.5 KN-m
@@ -328,48 +328,73 @@ applied from the mid till the end of the beam.
     Using the sign convention of upward forces and counterclockwise moment
     being positive.
 
->>> from sympy.physics.continuum_mechanics.beam import Beam
->>> from sympy import symbols
->>> E, I = symbols('E, I')
->>> R1, R2 = symbols('R1, R2')
->>> b = Beam(6, E, I)
->>> b.apply_load(R1, 0, -1)
->>> b.apply_load(1.5, 3, -2)
->>> b.apply_load(-3, 3, 0)
->>> b.apply_load(-1, 3, 1)
->>> b.apply_load(R2, 6, -1)
->>> b.bc_deflection.append((0, 0))
->>> b.bc_deflection.append((6, 0))
->>> b.solve_for_reaction_loads(R1, R2)
->>> b.reaction_loads
-    {R₁: 2.75, R₂: 10.75}
->>> b.load
-            -1              -2            0          1                -1
-    2.75⋅<x>   + 1.5⋅<x - 3>   - 3⋅<x - 3>  - <x - 3>  + 10.75⋅<x - 6>
->>> b.shear_force()
-                                                    2
-            0              -1            1   <x - 3>                 0
-    2.75⋅<x>  + 1.5⋅<x - 3>   - 3⋅<x - 3>  - ──────── + 10.75⋅<x - 6>
-                                                2
->>> b.bending_moment()
-                                        2          3
-            1              0   3⋅<x - 3>    <x - 3>                 1
-    2.75⋅<x>  + 1.5⋅<x - 3>  - ────────── - ──────── + 10.75⋅<x - 6>
-                                   2           6
->>> b.slope()
-                                       3          4
-             2              1   <x - 3>    <x - 3>                 2
-    1.375⋅<x>  + 1.5⋅<x - 3>  - ──────── - ──────── + 5.375⋅<x - 6>  - 15.6
-                                   2          24
-    ───────────────────────────────────────────────────────────────────────
-                                      E⋅I
->>> b.deflection()
-                                                              4          5
-                                   3               2   <x - 3>    <x - 3>                            3
-    -15.6⋅x + 0.458333333333333⋅<x>  + 0.75⋅<x - 3>  - ──────── - ──────── + 1.79166666666667⋅<x - 6>
-                                                          8         120
-    ──────────────────────────────────────────────────────────────────────────────────────────────────
-                                                   E⋅I
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+
+   >>> from sympy.physics.continuum_mechanics.beam import Beam
+   >>> from sympy import symbols, plot, S
+   >>> E, I = symbols('E, I')
+   >>> R1, R2 = symbols('R1, R2')
+   >>> b = Beam(6, E, I)
+   >>> b.apply_load(R1, 0, -1)
+   >>> b.apply_load(-S(3)/2, 3, -2)
+   >>> b.apply_load(3, 3, 0)
+   >>> b.apply_load(1, 3, 1)
+   >>> b.apply_load(R2, 6, -1)
+   >>> b.bc_deflection.append((0, 0))
+   >>> b.bc_deflection.append((6, 0))
+   >>> b.solve_for_reaction_loads(R1, R2)
+   >>> b.reaction_loads
+      {R₁: -11/4, R₂: -43/4}
+
+   >>> b.load
+               -1            -2                                     -1
+         11⋅<x>     3⋅<x - 3>              0          1   43⋅<x - 6>
+       - ──────── - ─────────── + 3⋅<x - 3>  + <x - 3>  - ────────────
+            4            2                                     4
+
+.. plot::
+   :context:
+   :format: doctest
+   :include-source: True
+
+   >>> plot(b.load)  # doctest: +SKIP
+
+.. plot::
+   :context: close-figs
+   :format: doctest
+   :include-source: True
+
+   >>> b.shear_force()
+               0            -1                       2             0
+         11⋅<x>    3⋅<x - 3>              1   <x - 3>    43⋅<x - 6>
+       - ─────── - ─────────── + 3⋅<x - 3>  + ──────── - ───────────
+            4           2                        2            4
+
+   >>> b.bending_moment()
+               1            0            2          3             1
+         11⋅<x>    3⋅<x - 3>    3⋅<x - 3>    <x - 3>    43⋅<x - 6>
+       - ─────── - ────────── + ────────── + ──────── - ───────────
+            4          2            2           6            4
+
+   >>> b.slope()
+               2            1          3          4             2
+         11⋅<x>    3⋅<x - 3>    <x - 3>    <x - 3>    43⋅<x - 6>    78
+       - ─────── - ────────── + ──────── + ──────── - ─────────── + ──
+            8          2           2          24           8        5
+       ───────────────────────────────────────────────────────────────
+                                    E⋅I
+
+
+   >>> b.deflection()
+                    3            2          4          5             3
+       78⋅x   11⋅<x>    3⋅<x - 3>    <x - 3>    <x - 3>    43⋅<x - 6>
+       ──── - ─────── - ────────── + ──────── + ──────── - ───────────
+        5        24         4           8         120           24
+       ───────────────────────────────────────────────────────────────
+                                    E⋅I
 
 Example 4
 ---------
@@ -377,7 +402,7 @@ Example 4
 An overhanging beam of length 8 meters is pinned at 1 meter from starting point
 and supported by a roller 1 meter before the other end. It is subjected
 to a distributed constant load of 10 KN/m from the starting point till
-2 meters away from it. Two pointloads of 20KN and 8KN are applied at
+2 meters away from it. Two point loads of 20KN and 8KN are applied at
 5 meters and 7.5 meters away from the starting point respectively.
 
 ::
@@ -443,7 +468,7 @@ Example 5
 
 A cantilever beam of length 6 meters is under downward distributed constant
 load with magnitude of 4.0 KN/m from starting point till 2 meters away
-from it. A ramp load of 1 kN/m applied from the mid till the end of
+from it. A ramp load of 1 kN/m/m applied from the mid till the end of
 the beam. A point load of 12KN is also applied in same direction 4 meters
 away from start.
 
@@ -455,7 +480,7 @@ away from start.
                              |   . | | |
                              V . | | | |
   \\\\|   4 KN/m             . | | | | |
-  \\\\|___________         . 1 KN/m  | |
+  \\\\|___________         . 1 KN/m/m| |
   \\\\|| | | | | |       . V V V V V V V
   \\\\|V V V V V V     |---------------|
   \\\\|________________________________
@@ -738,7 +763,7 @@ Example 9
 ---------
 
 There is a cantilever beam of length 4 meters. For first 2 meters
-its moment of inertia is ``1.5*I`` and ``I`` for the other end.
+its moment of inertia is ``1.5*I`` and ``I`` for the rest.
 A pointload of magnitude 20 N is applied from the top at its free end.
 
 ::
@@ -791,7 +816,7 @@ Example 10
 
 A combined beam, with constant flexural rigidity ``E*I``, is formed by joining
 a Beam of length ``2*l`` to the right of another Beam of length ``l``. The whole beam
-is fixed at both of its both end. A point load of magnitude ``P`` is also applied
+is fixed at both of its ends. A point load of magnitude ``P`` is also applied
 from the top at a distance of ``2*l`` from starting point.
 
 ::
@@ -866,7 +891,7 @@ from the top at a distance of ``2*l`` from starting point.
                         E⋅I                                               E⋅I                                                                             E⋅I
 
 Example 11
-==========
+----------
 
 Any type of load defined by a polynomial can be applied to the beam. This
 allows approximation of arbitrary load distributions. The following example

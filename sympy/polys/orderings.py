@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 
+from typing import Optional
+
 __all__ = ["lex", "grlex", "grevlex", "ilex", "igrlex", "igrevlex"]
 
 from sympy.core import Symbol
@@ -10,8 +12,8 @@ from sympy.core.compatibility import iterable
 class MonomialOrder(object):
     """Base class for monomial orderings. """
 
-    alias = None
-    is_global = None
+    alias = None  # type: Optional[str]
+    is_global = None  # type: Optional[bool]
     is_default = False
 
     def __repr__(self):
@@ -111,12 +113,12 @@ class ProductOrder(MonomialOrder):
         return tuple(O(lamda(monomial)) for (O, lamda) in self.args)
 
     def __repr__(self):
-        from sympy.core import Tuple
-        return self.__class__.__name__ + repr(Tuple(*[x[0] for x in self.args]))
+        contents = [repr(x[0]) for x in self.args]
+        return self.__class__.__name__ + '(' + ", ".join(contents) + ')'
 
     def __str__(self):
-        from sympy.core import Tuple
-        return self.__class__.__name__ + str(Tuple(*[x[0] for x in self.args]))
+        contents = [str(x[0]) for x in self.args]
+        return self.__class__.__name__ + '(' + ", ".join(contents) + ')'
 
     def __eq__(self, other):
         if not isinstance(other, ProductOrder):
@@ -264,7 +266,7 @@ def build_product_order(arg, gens):
 
     For example, build a product of two grlex orders:
 
-    >>> from sympy.polys.orderings import grlex, build_product_order
+    >>> from sympy.polys.orderings import build_product_order
     >>> from sympy.abc import x, y, z, t
 
     >>> O = build_product_order((("grlex", x, y), ("grlex", z, t)), [x, y, z, t])

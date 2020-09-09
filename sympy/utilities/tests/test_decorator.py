@@ -1,6 +1,6 @@
-from sympy.utilities.decorator import threaded, xthreaded
+from sympy.utilities.decorator import threaded, xthreaded, memoize_property
 
-from sympy import Eq, Matrix
+from sympy import Eq, Matrix, Basic
 
 from sympy.abc import x, y
 from sympy.core.decorators import wraps
@@ -50,3 +50,15 @@ def test_wraps():
     assert new_my_func.__doc__ == 'My function. '
     assert hasattr(new_my_func, 'is_my_func')
     assert new_my_func.is_my_func is True
+
+
+def test_memoize_property():
+    class TestMemoize(Basic):
+        @memoize_property
+        def prop(self):
+            return Basic()
+
+    member = TestMemoize()
+    obj1 = member.prop
+    obj2 = member.prop
+    assert obj1 is obj2

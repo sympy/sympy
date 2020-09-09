@@ -2,17 +2,19 @@
 
 from __future__ import print_function, division
 
-from sympy.core.sympify import sympify
-from sympy.core.singleton import S
 from sympy.core.add import Add
-from sympy.core.power import Pow
-from sympy.core.symbol import Dummy
 from sympy.core.function import PoleError
-from sympy.series.limits import Limit
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.numbers import fibonacci
+from sympy.functions.combinatorial.factorials import factorial, subfactorial
+from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.series.limits import Limit
 
 
 def difference_delta(expr, n=None, step=1):
@@ -92,12 +94,12 @@ def dominant(expr, n):
     for t in terms[:-1]:
         e = (term0 / t).gammasimp()
         l = limit_seq(e, n)
-        if l is S.Zero:
+        if l is None:
+            return None
+        elif l.is_zero:
             term0 = t
             comp = [term0]
-        elif l is None:
-            return None
-        elif l not in [S.Infinity, -S.Infinity]:
+        elif l not in [S.Infinity, S.NegativeInfinity]:
             comp.append(t)
     if len(comp) > 1:
         return None
@@ -211,6 +213,7 @@ def limit_seq(expr, n=None, trials=5):
         return expr
 
     expr = expr.rewrite(fibonacci, S.GoldenRatio)
+    expr = expr.rewrite(factorial, subfactorial, gamma)
     n_ = Dummy("n", integer=True, positive=True)
     n1 = Dummy("n", odd=True, positive=True)
     n2 = Dummy("n", even=True, positive=True)
@@ -242,5 +245,6 @@ def limit_seq(expr, n=None, trials=5):
         # Maybe the absolute value is easier to deal with (though not if
         # it has a Sum). If it tends to 0, the limit is 0.
         elif not expr.has(Sum):
-            if _limit_seq(Abs(expr.xreplace({n: n_})), n_, trials) is S.Zero:
+            lim = _limit_seq(Abs(expr.xreplace({n: n_})), n_, trials)
+            if lim is not None and lim.is_zero:
                 return S.Zero

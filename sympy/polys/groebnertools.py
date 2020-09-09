@@ -2,7 +2,6 @@
 
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
 from sympy.core.symbol import Dummy
 from sympy.polys.monomials import monomial_mul, monomial_lcm, monomial_divides, term_div
 from sympy.polys.orderings import lex
@@ -15,8 +14,8 @@ def groebner(seq, ring, method=None):
 
     Wrapper around the (default) improved Buchberger and the other algorithms
     for computing Groebner bases. The choice of algorithm can be changed via
-    ``method`` argument or :func:`setup` from :mod:`sympy.polys.polyconfig`,
-    where ``method`` can be either ``buchberger`` or ``f5b``.
+    ``method`` argument or :func:`sympy.polys.polyconfig.setup`, where
+    ``method`` can be either ``buchberger`` or ``f5b``.
 
     """
     if method is None:
@@ -777,7 +776,7 @@ def is_reduced(G, ring):
         if g.LC != domain.one:
             return False
 
-        for term in g:
+        for term in g.terms():
             for h in G[:i] + G[i + 1:]:
                 if monomial_divides(h.LM, term[0]):
                     return False

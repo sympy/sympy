@@ -1,6 +1,7 @@
 .. _evalf-label:
 
-Numerical evaluation
+====================
+Numerical Evaluation
 ====================
 
 Basics

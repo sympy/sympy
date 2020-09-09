@@ -2,7 +2,6 @@
 
 from __future__ import print_function, division
 
-from sympy.core.compatibility import range
 from sympy.polys.densebasic import (
     dup_slice,
     dup_LC, dmp_LC,
@@ -1449,6 +1448,12 @@ def dup_ff_div(f, g, K):
 
         if dr < dg:
             break
+        elif dr == _dr and not K.is_Exact:
+            # remove leading term created by rounding error
+            r = dup_strip(r[1:])
+            dr = dup_degree(r)
+            if dr < dg:
+                break
         elif not (dr < _dr):
             raise PolynomialDivisionFailed(f, g, K)
 

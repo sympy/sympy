@@ -1,5 +1,5 @@
-from sympy.tensor.tensor import (Tensor, TensorIndex, TensorIndexType,
-        tensor_indices, tensorhead, TensorElement)
+from sympy.tensor.tensor import (Tensor, TensorIndexType, TensorSymmetry,
+        tensor_indices, TensorHead, TensorElement)
 from sympy.tensor import Array
 from sympy import Symbol
 
@@ -8,7 +8,7 @@ def test_tensor_element():
     L = TensorIndexType("L")
     i, j, k, l, m, n = tensor_indices("i j k l m n", L)
 
-    A = tensorhead("A", [L, L], [[1], [1]])
+    A = TensorHead("A", [L, L], TensorSymmetry.no_symmetry(2))
 
     a = A(i, j)
 

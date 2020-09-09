@@ -5,7 +5,7 @@ the expression E**(pi*I) will be converted into -1
 the expression (x+x)**2 will be converted into 4*x**2
 """
 from .simplify import (simplify, hypersimp, hypersimilar,
-    logcombine, separatevars, posify, besselsimp,
+    logcombine, separatevars, posify, besselsimp, kroneckersimp,
     signsimp, bottom_up, nsimplify)
 
 from .fu import FU, fu
@@ -31,3 +31,34 @@ from .combsimp import combsimp
 from .gammasimp import gammasimp
 
 from .ratsimp import ratsimp, ratsimpmodprime
+
+__all__ = [
+    'simplify', 'hypersimp', 'hypersimilar', 'logcombine', 'separatevars',
+    'posify', 'besselsimp', 'kroneckersimp', 'signsimp', 'bottom_up',
+    'nsimplify',
+
+    'FU', 'fu',
+
+    'sqrtdenest',
+
+    'cse',
+
+    'use',
+
+    'epath', 'EPath',
+
+    'hyperexpand',
+
+    'collect', 'rcollect', 'radsimp', 'collect_const', 'fraction', 'numer',
+    'denom',
+
+    'trigsimp', 'exptrigsimp',
+
+    'powsimp', 'powdenest',
+
+    'combsimp',
+
+    'gammasimp',
+
+    'ratsimp', 'ratsimpmodprime',
+]

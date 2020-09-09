@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import is_sequence, string_types
+from sympy.core.compatibility import is_sequence
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.matrixutils import (
@@ -61,7 +61,7 @@ def __qsympify_sequence_helper(seq):
     if not is_sequence(seq):
         if isinstance(seq, Matrix):
             return seq
-        elif isinstance(seq, string_types):
+        elif isinstance(seq, str):
             return Symbol(seq)
         else:
             return sympify(seq)
@@ -89,7 +89,7 @@ class QExpr(Expr):
     # derive from args.
 
     # The Hilbert space a quantum Object belongs to.
-    __slots__ = ['hilbert_space']
+    __slots__ = ('hilbert_space')
 
     is_commutative = False
 
@@ -100,7 +100,7 @@ class QExpr(Expr):
     def free_symbols(self):
         return {self}
 
-    def __new__(cls, *args, **old_assumptions):
+    def __new__(cls, *args, **kwargs):
         """Construct a new quantum object.
 
         Parameters
@@ -129,10 +129,10 @@ class QExpr(Expr):
         """
 
         # First compute args and call Expr.__new__ to create the instance
-        args = cls._eval_args(args)
+        args = cls._eval_args(args, **kwargs)
         if len(args) == 0:
-            args = cls._eval_args(tuple(cls.default_args()))
-        inst = Expr.__new__(cls, *args, **old_assumptions)
+            args = cls._eval_args(tuple(cls.default_args()), **kwargs)
+        inst = Expr.__new__(cls, *args)
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst

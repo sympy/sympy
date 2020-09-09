@@ -3,7 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol
-from sympy.core.compatibility import iterable, range
+from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple, OrderedSet
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _coeff_isneg
@@ -362,7 +362,6 @@ def match_common_args(func_class, funcs, opt_subs):
                 # do not compare equal to the evaluated equivalent. So
                 # tree_cse() won't mark funcs[i] as a CSE if we use an
                 # unevaluated version.
-                com_func = funcs[i]
                 com_func_number = arg_tracker.get_or_add_value_number(funcs[i])
 
             diff_j = arg_tracker.func_to_argset[j].difference(com_args)
@@ -501,6 +500,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
         Substitutions containing any Symbol from ``ignore`` will be ignored.
     """
     from sympy.matrices.expressions import MatrixExpr, MatrixSymbol, MatMul, MatAdd
+    from sympy.polys.rootoftools import RootOf
 
     if opt_subs is None:
         opt_subs = dict()
@@ -514,6 +514,9 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
 
     def _find_repeated(expr):
         if not isinstance(expr, (Basic, Unevaluated)):
+            return
+
+        if isinstance(expr, RootOf):
             return
 
         if isinstance(expr, Basic) and (expr.is_Atom or expr.is_Order):

@@ -1,4 +1,4 @@
-"""Implementaton of :class:`GMPYRationalField` class. """
+"""Implementation of :class:`GMPYRationalField` class. """
 
 from __future__ import print_function, division
 
@@ -58,6 +58,11 @@ class GMPYRationalField(RationalField):
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
         return a
+
+    def from_GaussianRationalField(K1, a, K0):
+        """Convert a `GaussianElement` object to `dtype`. """
+        if a.y == 0:
+            return GMPYRational(a.x)
 
     def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """

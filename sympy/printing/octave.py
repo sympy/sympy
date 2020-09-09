@@ -11,10 +11,11 @@ complete source code files.
 """
 
 from __future__ import print_function, division
+
+from typing import Any, Dict
+
 from sympy.core import Mul, Pow, S, Rational
-from sympy.core.compatibility import string_types, range
 from sympy.core.mul import _keep_coeff
-from sympy.codegen.ast import Assignment
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
@@ -29,13 +30,14 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "besseli", "besselj", "besselk", "bessely",
                    "bernoulli", "beta", "euler", "exp", "factorial", "floor",
                    "fresnelc", "fresnels", "gamma", "harmonic", "log",
-                   "polylog", "sign", "zeta"]
+                   "polylog", "sign", "zeta", "legendre"]
 
 # These functions have different names ("Sympy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).
 known_fcns_src2 = {
     "Abs": "abs",
     "arg": "angle",  # arg/angle ok in Octave but only angle in Matlab
+    "binomial": "bincoeff",
     "ceiling": "ceil",
     "chebyshevu": "chebyshevU",
     "chebyshevt": "chebyshevT",
@@ -51,6 +53,7 @@ known_fcns_src2 = {
     "loggamma": "gammaln",
     "Max": "max",
     "Min": "min",
+    "Mod": "mod",
     "polygamma": "psi",
     "re": "real",
     "RisingFactorial": "pochhammer",
@@ -81,7 +84,7 @@ class OctaveCodePrinter(CodePrinter):
         'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
-    }
+    }  # type: Dict[str, Any]
     # Note: contract is for expressing tensors as loops (if True), or just
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Octave.
@@ -197,7 +200,7 @@ class OctaveCodePrinter(CodePrinter):
                 r = r + mulsym + a_str[i]
             return r
 
-        if len(b) == 0:
+        if not b:
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
             divsym = '/' if b[0].is_number else './'
@@ -207,6 +210,11 @@ class OctaveCodePrinter(CodePrinter):
             return (sign + multjoin(a, a_str) +
                     divsym + "(%s)" % multjoin(b, b_str))
 
+    def _print_Relational(self, expr):
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        op = expr.rel_op
+        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
 
     def _print_Pow(self, expr):
         powsymbol = '^' if all([x.is_number for x in expr.args]) else '.^'
@@ -233,6 +241,10 @@ class OctaveCodePrinter(CodePrinter):
         return '%s^%s' % (self.parenthesize(expr.base, PREC),
                           self.parenthesize(expr.exp, PREC))
 
+    def _print_MatrixSolve(self, expr):
+        PREC = precedence(expr)
+        return "%s \\ %s" % (self.parenthesize(expr.matrix, PREC),
+                             self.parenthesize(expr.vector, PREC))
 
     def _print_Pi(self, expr):
         return 'pi'
@@ -253,6 +265,7 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_Assignment(self, expr):
+        from sympy.codegen.ast import Assignment
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.tensor.indexed import IndexedBase
         # Copied from codeprinter, but remove special MatrixSymbol treatment
@@ -338,20 +351,6 @@ class OctaveCodePrinter(CodePrinter):
                                             self._print(AIJ), A.rows, A.cols)
 
 
-    # FIXME: Str/CodePrinter could define each of these to call the _print
-    # method from higher up the class hierarchy (see _print_NumberSymbol).
-    # Then subclasses like us would not need to repeat all this.
-    _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
-    _print_MutableSparseMatrix = \
-        _print_ImmutableSparseMatrix = \
-        _print_SparseMatrix
-
-
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
             + '(%s, %s)' % (expr.i + 1, expr.j + 1)
@@ -392,6 +391,16 @@ class OctaveCodePrinter(CodePrinter):
         return "double(%s == %s)" % tuple(self.parenthesize(x, prec)
                                           for x in expr.args)
 
+    def _print_HadamardProduct(self, expr):
+        return '.*'.join([self.parenthesize(arg, precedence(expr))
+                          for arg in expr.args])
+
+    def _print_HadamardPower(self, expr):
+        PREC = precedence(expr)
+        return '.**'.join([
+            self.parenthesize(expr.base, PREC),
+            self.parenthesize(expr.exp, PREC)
+            ])
 
     def _print_Identity(self, expr):
         shape = expr.shape
@@ -401,14 +410,15 @@ class OctaveCodePrinter(CodePrinter):
         return "eye(" + s + ")"
 
 
-    def _print_uppergamma(self, expr):
-        return "gammainc(%s, %s, 'upper')" % (self._print(expr.args[1]),
-                                              self._print(expr.args[0]))
-
-
     def _print_lowergamma(self, expr):
-        return "gammainc(%s, %s, 'lower')" % (self._print(expr.args[1]),
-                                              self._print(expr.args[0]))
+        # Octave implements regularized incomplete gamma function
+        return "(gammainc({1}, {0}).*gamma({0}))".format(
+            self._print(expr.args[0]), self._print(expr.args[1]))
+
+
+    def _print_uppergamma(self, expr):
+        return "(gammainc({1}, {0}, 'upper').*gamma({0}))".format(
+            self._print(expr.args[0]), self._print(expr.args[1]))
 
 
     def _print_sinc(self, expr):
@@ -534,7 +544,7 @@ class OctaveCodePrinter(CodePrinter):
         """Accepts a string of code or a list of code lines"""
 
         # code mostly copied from ccode
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
@@ -607,7 +617,7 @@ def octave_code(expr, assign_to=None, **settings):
     >>> octave_code(sin(x).series(x).removeO())
     'x.^5/120 - x.^3/6 + x'
 
-    >>> from sympy import Rational, ceiling, Abs
+    >>> from sympy import Rational, ceiling
     >>> x, y, tau = symbols("x, y, tau")
     >>> octave_code((2*tau)**Rational(7, 2))
     '8*sqrt(2)*tau.^(7/2)'
@@ -688,7 +698,7 @@ def octave_code(expr, assign_to=None, **settings):
     ``contract=False`` will just print the assignment expression that should be
     looped over:
 
-    >>> from sympy import Eq, IndexedBase, Idx, ccode
+    >>> from sympy import Eq, IndexedBase, Idx
     >>> len_y = 5
     >>> y = IndexedBase('y', shape=(len_y,))
     >>> t = IndexedBase('t', shape=(len_y,))

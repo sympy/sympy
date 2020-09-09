@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function)
-
 import math
-from itertools import product
-from sympy import Add, Symbol, sin, Abs, oo, Interval
-from sympy.core.function import UndefinedFunction
+from sympy import Interval
 from sympy.calculus.singularities import is_increasing, is_decreasing
 from sympy.codegen.rewriting import Optimization
+from sympy.core.function import UndefinedFunction
 
 """
 This module collects classes useful for approimate rewriting of expressions.
@@ -23,6 +19,7 @@ class SumApprox(Optimization):
 
     Parameters
     ==========
+
     bounds : dict
         Mapping expressions to length 2 tuple of bounds (low, high).
     reltol : number
@@ -51,7 +48,7 @@ class SumApprox(Optimization):
     """
 
     def __init__(self, bounds, reltol, **kwargs):
-        super(SumApprox, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.bounds = bounds
         self.reltol = reltol
 
@@ -104,6 +101,7 @@ class SeriesApprox(Optimization):
 
     Parameters
     ==========
+
     bounds : dict
         Mapping expressions to length 2 tuple of bounds (low, high).
     reltol : number
@@ -137,7 +135,7 @@ class SeriesApprox(Optimization):
 
     """
     def __init__(self, bounds, reltol, max_order=4, n_point_checks=4, **kwargs):
-        super(SeriesApprox, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.bounds = bounds
         self.reltol = reltol
         self.max_order = max_order

@@ -1,11 +1,11 @@
-from sympy import Rational, Symbol, S
-from sympy.geometry import Circle, Line, Point, Polygon, Segment, Parabola
+from sympy import Rational, S
+from sympy.geometry import Circle, Line, Point, Polygon, Segment
 from sympy.sets import FiniteSet, Union, Intersection, EmptySet
 
 
 def test_booleans():
     """ test basic unions and intersections """
-    half = Rational(1, 2)
+    half = S.Half
 
     p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
     p5, p6, p7 = map(Point, [(3, 2), (1, -1), (0, 2)])
@@ -19,13 +19,13 @@ def test_booleans():
     assert Union(l1, l2).equals(l1)
     assert Intersection(l1, l2).equals(l1)
     assert Intersection(l1, l4) == FiniteSet(Point(1,1))
-    assert Intersection(Union(l1, l4), l3) == FiniteSet(Point(-S(1)/3, -S(1)/3), Point(5, 1))
-    assert Intersection(l1, FiniteSet(Point(7,-7))) == EmptySet()
+    assert Intersection(Union(l1, l4), l3) == FiniteSet(Point(Rational(-1, 3), Rational(-1, 3)), Point(5, 1))
+    assert Intersection(l1, FiniteSet(Point(7,-7))) == EmptySet
     assert Intersection(Circle(Point(0,0), 3), Line(p1,p2)) == FiniteSet(Point(-3,0), Point(3,0))
     assert Intersection(l1, FiniteSet(p1)) == FiniteSet(p1)
     assert Union(l1, FiniteSet(p1)) == l1
 
-    fs = FiniteSet(Point(S(1)/3, 1), Point(S(2)/3, 0), Point(S(9)/5, S(1)/5), Point(S(7)/3, 1))
+    fs = FiniteSet(Point(Rational(1, 3), 1), Point(Rational(2, 3), 0), Point(Rational(9, 5), Rational(1, 5)), Point(Rational(7, 3), 1))
     # test the intersection of polygons
     assert Intersection(poly1, poly2) == fs
     # make sure if we union polygons with subsets, the subsets go away
@@ -34,4 +34,4 @@ def test_booleans():
     # that the points in the intersection stop being listed
     assert Union(poly1, FiniteSet(Point(0,0), Point(3,5))) == Union(poly1, FiniteSet(Point(3,5)))
     # intersect two polygons that share an edge
-    assert Intersection(poly1, poly3) == Union(FiniteSet(Point(S(3)/2, 1), Point(2, 1)), Segment(Point(0, 0), Point(1, 0)))
+    assert Intersection(poly1, poly3) == Union(FiniteSet(Point(Rational(3, 2), 1), Point(2, 1)), Segment(Point(0, 0), Point(1, 0)))

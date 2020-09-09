@@ -1,7 +1,6 @@
 """Heuristic polynomial GCD algorithm (HEUGCD). """
 
 from __future__ import print_function, division
-from sympy.core.compatibility import range
 from .polyerrors import HeuristicGCDFailed
 
 HEU_GCD_MAX = 6
@@ -69,7 +68,7 @@ def heugcd(f, g):
 
     x = max(min(B, 99*domain.sqrt(B)),
             2*min(f_norm // abs(f.LC),
-                  g_norm // abs(g.LC)) + 2)
+                  g_norm // abs(g.LC)) + 4)
 
     for i in range(0, HEU_GCD_MAX):
         ff = f.evaluate(x0, x)

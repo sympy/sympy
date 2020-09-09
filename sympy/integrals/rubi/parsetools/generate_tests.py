@@ -2,23 +2,28 @@ from sympy.integrals.rubi.parsetools.parse import generate_sympy_from_parsed, pa
 from sympy import sympify
 from sympy.integrals.rubi.utility_function import List, If
 import os, inspect
+
+
 def rubi_sstr(a):
     return rubi_printer(a, sympy_integers=True)
+
 
 def generate_test_file():
     '''
     This function is assuming the name of file containing the fullform is test_1.m.
     It can be changes as per use.
-    See `rubi_parsing_guide.md` in `parsetools` for more details.
+
+    For more details, see
+    `https://github.com/sympy/sympy/wiki/Rubi-parsing-guide#parsing-tests`
     '''
     res =[]
     file_name = 'test_1.m'
-    with open(file_name, 'r') as myfile:
+    with open(file_name) as myfile:
         fullform =myfile.read().replace('\n', '')
     fullform = fullform.replace('$VersionNumber', 'version_number')
     fullform = fullform.replace('Defer[Int][', 'Integrate[')
     path_header = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    h = open(os.path.join(path_header, "header.py.txt"), "r").read()
+    h = open(os.path.join(path_header, "header.py.txt")).read()
     header = "import sys\nfrom sympy.external import import_module\nmatchpy = import_module({})".format('\"matchpy\"')
     header += "\nif not matchpy:\n    disabled = True\n"
     header += "if sys.version_info[:2] < (3, 6):\n    disabled = True\n"
@@ -47,5 +52,5 @@ def generate_test_file():
             t += '\n    assert rubi_test({}, {}, {}, expand=True, _diff=True, _numerical=True)'.format(r, rubi_sstr(a[1]), rubi_sstr(a[3]))
     t = header+t+'\n'
     test = open('parsed_tests.py', 'w')
-    test.write((t))
+    test.write(t)
     test.close()

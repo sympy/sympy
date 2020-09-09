@@ -1,6 +1,6 @@
 from sympy.core.logic import (fuzzy_not, Logic, And, Or, Not, fuzzy_and,
-    fuzzy_or, _fuzzy_group, _torf)
-from sympy.utilities.pytest import raises
+    fuzzy_or, _fuzzy_group, _torf, fuzzy_nand, fuzzy_xor)
+from sympy.testing.pytest import raises
 
 T = True
 F = False
@@ -11,20 +11,19 @@ def test_torf():
     from sympy.utilities.iterables import cartes
     v = [T, F, U]
     for i in cartes(*[v]*3):
-        assert _torf(i) is (
-            True if all(j for j in i) else (False if all(j is False for j in i) else None))
+        assert _torf(i) is (True if all(j for j in i) else
+                            (False if all(j is False for j in i) else None))
 
 
 def test_fuzzy_group():
     from sympy.utilities.iterables import cartes
     v = [T, F, U]
     for i in cartes(*[v]*3):
-        assert _fuzzy_group(i) is (
-            None if None in i else (
-            True if all(j for j in i) else False))
-        assert _fuzzy_group(i, quick_exit=True) is (
-            None if (i.count(False) > 1) else (None if None in i else (
-            True if all(j for j in i) else False)))
+        assert _fuzzy_group(i) is (None if None in i else
+                                   (True if all(j for j in i) else False))
+        assert _fuzzy_group(i, quick_exit=True) is \
+            (None if (i.count(False) > 1) else
+             (None if None in i else (True if all(j for j in i) else False)))
     it = (True if (i == 0) else None for i in range(2))
     assert _torf(it) is None
     it = (True if (i == 1) else None for i in range(2))
@@ -75,6 +74,10 @@ def test_logic_cmp():
     assert And('a', 'b', 'c') == And('c', 'b', 'a')
     assert And('a', 'b', 'c') == And('c', 'a', 'b')
 
+    assert Not('a') < Not('b')
+    assert (Not('b') < Not('a')) is False
+    assert (Not('a') < 2) is False
+
 
 def test_logic_onearg():
     assert And() is True
@@ -115,11 +118,11 @@ def test_logic_combine_args():
     assert And('a', 'b', 'a') == And('a', 'b')
     assert Or('a', 'b', 'a') == Or('a', 'b')
 
-    assert And( And('a', 'b'), And('c', 'd') ) == And('a', 'b', 'c', 'd')
-    assert Or( Or('a', 'b'), Or('c', 'd') ) == Or('a', 'b', 'c', 'd')
+    assert And(And('a', 'b'), And('c', 'd')) == And('a', 'b', 'c', 'd')
+    assert Or(Or('a', 'b'), Or('c', 'd')) == Or('a', 'b', 'c', 'd')
 
-    assert Or( 't', And('n', 'p', 'r'), And('n', 'r'), And('n', 'p', 'r'), 't', And('n', 'r') ) == \
-        Or('t', And('n', 'p', 'r'), And('n', 'r'))
+    assert Or('t', And('n', 'p', 'r'), And('n', 'r'), And('n', 'p', 'r'), 't',
+              And('n', 'r')) == Or('t', And('n', 'p', 'r'), And('n', 'r'))
 
 
 def test_logic_expand():
@@ -155,16 +158,22 @@ def test_logic_fromstring():
     raises(ValueError, lambda: S('a|b'))
     raises(ValueError, lambda: S('!'))
     raises(ValueError, lambda: S('! a'))
+    raises(ValueError, lambda: S('!(a + 1)'))
+    raises(ValueError, lambda: S(''))
 
 
 def test_logic_not():
     assert Not('a') != '!a'
     assert Not('!a') != 'a'
+    assert Not(True) == False
+    assert Not(False) == True
 
     # NOTE: we may want to change default Not behaviour and put this
     # functionality into some method.
     assert Not(And('a', 'b')) == Or(Not('a'), Not('b'))
     assert Not(Or('a', 'b')) == And(Not('a'), Not('b'))
+
+    raises(ValueError, lambda: Not(1))
 
 
 def test_formatting():
@@ -172,3 +181,17 @@ def test_formatting():
     raises(ValueError, lambda: S('a&b'))
     raises(ValueError, lambda: S('a|b'))
     raises(ValueError, lambda: S('! a'))
+
+
+def test_fuzzy_xor():
+    assert fuzzy_xor((None,)) is None
+    assert fuzzy_xor((None, True)) is None
+    assert fuzzy_xor((None, False)) is None
+    assert fuzzy_xor((True, False)) is True
+    assert fuzzy_xor((True, True)) is False
+    assert fuzzy_xor((True, True, False)) is False
+    assert fuzzy_xor((True, True, False, True)) is True
+
+def test_fuzzy_nand():
+    for args in [(1, 0), (1, 1), (0, 0)]:
+        assert fuzzy_nand(args) == fuzzy_not(fuzzy_and(args))

@@ -1,8 +1,9 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, S
+from sympy.core import S
 from sympy.core.relational import Eq, Ne
 from sympy.logic.boolalg import BooleanFunction
+from sympy.utilities.misc import func_name
 
 
 class Contains(BooleanFunction):
@@ -31,10 +32,8 @@ class Contains(BooleanFunction):
     def eval(cls, x, s):
         from sympy.sets.sets import Set
 
-        if not isinstance(x, Basic):
-            raise TypeError
         if not isinstance(s, Set):
-            raise TypeError
+            raise TypeError('expecting Set, not %s' % func_name(s))
 
         ret = s.contains(x)
         if not isinstance(ret, Contains) and (
@@ -49,4 +48,4 @@ class Contains(BooleanFunction):
             isinstance(i, (Eq, Ne))])
 
     def as_set(self):
-        return self
+        raise NotImplementedError()

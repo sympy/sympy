@@ -1,14 +1,15 @@
-# -*- coding: utf-8 -*-
-from __future__ import (absolute_import, print_function)
-
-from sympy import log, exp, Symbol, Pow, sin
-from sympy.printing.ccode import ccode
+from sympy import log, exp, cos, Symbol, Pow, sin, MatrixSymbol
+from sympy.assumptions import assuming, Q
+from sympy.printing import ccode
+from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log2, exp2, expm1, log1p
+from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
+from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.rewriting import (
-    optimize, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
-    create_expand_pow_optimization
+    optimize, cosm1_opt, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
+    create_expand_pow_optimization, matinv_opt, logaddexp_opt, logaddexp2_opt
 )
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 
 def test_log2_opt():
@@ -81,12 +82,55 @@ def test_expm1_opt():
     assert opt5.rewrite(exp) == expr5
 
 
-@XFAIL
+@XFAIL  # ideally this test should pass: need to improve `expm1_opt`
 def test_expm1_two_exp_terms():
     x, y = map(Symbol, 'x y'.split())
     expr1 = exp(x) + exp(y) - 2
     opt1 = optimize(expr1, [expm1_opt])
     assert opt1 == expm1(x) + expm1(y)
+
+
+def test_cosm1_opt():
+    x = Symbol('x')
+
+    expr1 = cos(x) - 1
+    opt1 = optimize(expr1, [cosm1_opt])
+    assert cosm1(x) - opt1 == 0
+    assert opt1.rewrite(cos) == expr1
+
+    expr2 = 3*cos(x) - 3
+    opt2 = optimize(expr2, [cosm1_opt])
+    assert 3*cosm1(x) == opt2
+    assert opt2.rewrite(cos) == expr2
+
+    expr3 = 3*cos(x) - 5
+    assert expr3 == optimize(expr3, [cosm1_opt])
+
+    expr4 = 3*cos(x) + log(x) - 3
+    opt4 = optimize(expr4, [cosm1_opt])
+    assert 3*cosm1(x) + log(x) == opt4
+    assert opt4.rewrite(cos) == expr4
+
+    expr5 = 3*cos(2*x) - 3
+    opt5 = optimize(expr5, [cosm1_opt])
+    assert 3*cosm1(2*x) == opt5
+    assert opt5.rewrite(cos) == expr5
+
+
+@XFAIL  # ideally this test should pass: need to improve `cosm1_opt`
+def test_cosm1_two_cos_terms():
+    x, y = map(Symbol, 'x y'.split())
+    expr1 = cos(x) + cos(y) - 2
+    opt1 = optimize(expr1, [cosm1_opt])
+    assert opt1 == cosm1(x) + cosm1(y)
+
+
+@XFAIL  # ideally this test should pass: need to add a new combined expm1_cosm1_opt?
+def test_expm1_cosm1_mixed():
+    x = Symbol('x')
+    expr1 = exp(x) + cos(x) - 2
+    opt1 = optimize(expr1, [expm1_opt, cosm1_opt])  # need a combined opt pass?
+    assert opt1 == cosm1(x) + expm1(x)
 
 
 def test_log1p_opt():
@@ -159,15 +203,45 @@ def test_optims_c99():
 
 
 def test_create_expand_pow_optimization():
-    my_opt = create_expand_pow_optimization(4)
+    cc = lambda x: ccode(
+        optimize(x, [create_expand_pow_optimization(4)]))
     x = Symbol('x')
+    assert cc(x**4) == 'x*x*x*x'
+    assert cc(x**4 + x**2) == 'x*x + x*x*x*x'
+    assert cc(x**5 + x**4) == 'pow(x, 5) + x*x*x*x'
+    assert cc(sin(x)**4) == 'pow(sin(x), 4)'
+    # gh issue 15335
+    assert cc(x**(-4)) == '1.0/(x*x*x*x)'
+    assert cc(x**(-5)) == 'pow(x, -5)'
+    assert cc(-x**4) == '-x*x*x*x'
+    assert cc(x**4 - x**2) == '-x*x + x*x*x*x'
+    i = Symbol('i', integer=True)
+    assert cc(x**i - x**2) == 'pow(x, i) - x*x'
 
-    assert ccode(optimize(x**4, [my_opt])) == 'x*x*x*x'
 
-    x5x4 = x**5 + x**4
-    assert ccode(optimize(x5x4, [my_opt])) == 'pow(x, 5) + x*x*x*x'
+def test_matsolve():
+    n = Symbol('n', integer=True)
+    A = MatrixSymbol('A', n, n)
+    x = MatrixSymbol('x', n, 1)
 
-    sin4x = sin(x)**4
-    assert ccode(optimize(sin4x, [my_opt])) == 'pow(sin(x), 4)'
+    with assuming(Q.fullrank(A)):
+        assert optimize(A**(-1) * x, [matinv_opt]) == MatrixSolve(A, x)
+        assert optimize(A**(-1) * x + x, [matinv_opt]) == MatrixSolve(A, x) + x
 
-    assert ccode(optimize((x**(-4)), [my_opt])) == 'pow(x, -4)'
+
+def test_logaddexp_opt():
+    x, y = map(Symbol, 'x y'.split())
+    expr1 = log(exp(x) + exp(y))
+    opt1 = optimize(expr1, [logaddexp_opt])
+    assert logaddexp(x, y) - opt1 == 0
+    assert logaddexp(y, x) - opt1 == 0
+    assert opt1.rewrite(log) == expr1
+
+
+def test_logaddexp2_opt():
+    x, y = map(Symbol, 'x y'.split())
+    expr1 = log(2**x + 2**y)/log(2)
+    opt1 = optimize(expr1, [logaddexp2_opt])
+    assert logaddexp2(x, y) - opt1 == 0
+    assert logaddexp2(y, x) - opt1 == 0
+    assert opt1.rewrite(log) == expr1

@@ -13,23 +13,21 @@ LaTeXParser = LaTeXLexer = MathErrorListener = None
 
 try:
     LaTeXParser = import_module('sympy.parsing.latex._antlr.latexparser',
-                                __import__kwargs={'fromlist': ['LaTeXParser']}).LaTeXParser
+                                import_kwargs={'fromlist': ['LaTeXParser']}).LaTeXParser
     LaTeXLexer = import_module('sympy.parsing.latex._antlr.latexlexer',
-                               __import__kwargs={'fromlist': ['LaTeXLexer']}).LaTeXLexer
+                               import_kwargs={'fromlist': ['LaTeXLexer']}).LaTeXLexer
 except Exception:
     pass
 
 ErrorListener = import_module('antlr4.error.ErrorListener',
                               warn_not_installed=True,
-                              __import__kwargs={'fromlist': ['ErrorListener']}
+                              import_kwargs={'fromlist': ['ErrorListener']}
                               )
 
 
 
-if ErrorListener is None:
-    pass
-else:
-    class MathErrorListener(ErrorListener.ErrorListener):
+if ErrorListener:
+    class MathErrorListener(ErrorListener.ErrorListener):  # type: ignore
         def __init__(self, src):
             super(ErrorListener.ErrorListener, self).__init__()
             self.src = src
@@ -104,6 +102,8 @@ def convert_relation(rel):
         return sympy.GreaterThan(lh, rh)
     elif rel.EQUAL():
         return sympy.Eq(lh, rh)
+    elif rel.NEQ():
+        return sympy.Ne(lh, rh)
 
 
 def convert_expr(expr):
@@ -161,7 +161,12 @@ def convert_unary(unary):
     if unary.ADD():
         return convert_unary(nested_unary)
     elif unary.SUB():
-        return sympy.Mul(-1, convert_unary(nested_unary), evaluate=False)
+        numabs = convert_unary(nested_unary)
+        if numabs == 1:
+            # Use Integer(-1) instead of Mul(-1, 1)
+            return -numabs
+        else:
+            return sympy.Mul(-1, convert_unary(nested_unary), evaluate=False)
     elif postfix:
         return convert_postfix_list(postfix)
 
@@ -276,6 +281,8 @@ def convert_comp(comp):
         return convert_atom(comp.atom())
     elif comp.frac():
         return convert_frac(comp.frac())
+    elif comp.binom():
+        return convert_binom(comp.binom())
     elif comp.func():
         return convert_func(comp.func())
 
@@ -366,9 +373,16 @@ def convert_frac(frac):
 
     expr_top = convert_expr(frac.upper)
     expr_bot = convert_expr(frac.lower)
-    return sympy.Mul(
-        expr_top, sympy.Pow(expr_bot, -1, evaluate=False), evaluate=False)
+    inverse_denom = sympy.Pow(expr_bot, -1, evaluate=False)
+    if expr_top == 1:
+        return inverse_denom
+    else:
+        return sympy.Mul(expr_top, inverse_denom, evaluate=False)
 
+def convert_binom(binom):
+    expr_n = convert_expr(binom.n)
+    expr_k = convert_expr(binom.k)
+    return sympy.binomial(expr_n, expr_k, evaluate=False)
 
 def convert_func(func):
     if func.func_normal():
@@ -388,6 +402,9 @@ def convert_func(func):
         if name in ["arsinh", "arcosh", "artanh"]:
             name = "a" + name[2:]
             expr = getattr(sympy.functions, name)(arg, evaluate=False)
+
+        if name == "exp":
+            expr = sympy.exp(arg, evaluate=False)
 
         if (name == "log" or name == "ln"):
             if func.subexpr():

@@ -1,5 +1,6 @@
+========
 Simplify
-********
+========
 
 .. currentmodule:: sympy.simplify.simplify
 
@@ -14,6 +15,10 @@ separatevars
 nthroot
 -------
 .. autofunction:: nthroot
+
+kroneckersimp
+-------------
+.. autofunction:: kroneckersimp
 
 besselsimp
 ----------
@@ -123,11 +128,11 @@ cse
 
 opt_cse
 ^^^^^^^
-.. autofunction:: sympy.simplify.cse_main.opt_cse
+.. autofunction:: sympy.simplify.cse_main::opt_cse
 
 tree_cse
 ^^^^^^^^
-.. autofunction:: sympy.simplify.cse_main.tree_cse
+.. autofunction:: sympy.simplify.cse_main::tree_cse
 
 Hypergeometric Function Expansion
 ---------------------------------

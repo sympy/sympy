@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 
 from sympy import MatrixBase, I, Expr, Integer
-from sympy.core.compatibility import range
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
 
@@ -31,9 +30,9 @@ if not np:
     class numpy_ndarray(object):
         pass
 else:
-    numpy_ndarray = np.ndarray
+    numpy_ndarray = np.ndarray  # type: ignore
 
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 if not scipy:
     class scipy_sparse_matrix(object):
         pass
@@ -43,10 +42,10 @@ else:
     # Try to find spmatrix.
     if hasattr(sparse, 'base'):
         # Newer versions have it under scipy.sparse.base.
-        scipy_sparse_matrix = sparse.base.spmatrix
+        scipy_sparse_matrix = sparse.base.spmatrix  # type: ignore
     elif hasattr(sparse, 'sparse'):
         # Older versions have it under scipy.sparse.sparse.
-        scipy_sparse_matrix = sparse.sparse.spmatrix
+        scipy_sparse_matrix = sparse.sparse.spmatrix  # type: ignore
 
 
 def sympy_to_numpy(m, **options):
@@ -234,8 +233,6 @@ def _scipy_sparse_zeros(m, n, **options):
 def matrix_zeros(m, n, **options):
     """"Get a zeros matrix for a given format."""
     format = options.get('format', 'sympy')
-    dtype = options.get('dtype', 'float64')
-    spmatrix = options.get('spmatrix', 'csr')
     if format == 'sympy':
         return zeros(m, n)
     elif format == 'numpy':

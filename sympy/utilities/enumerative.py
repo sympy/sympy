@@ -1,6 +1,3 @@
-from __future__ import print_function, division
-from sympy.core.compatibility import range
-
 """
 Algorithms and classes to support enumerative combinatorics.
 
@@ -92,7 +89,7 @@ time that would be spent skipping over zeros.
 
 """
 
-class PartComponent(object):
+class PartComponent:
     """Internal class used in support of the multiset partitions
     enumerators and the associated visitor functions.
 
@@ -160,7 +157,7 @@ def multiset_partitions_taocp(multiplicities):
 
     state
         Internal data structure which encodes a particular partition.
-        This output is then usually processed by a vistor function
+        This output is then usually processed by a visitor function
         which combines the information from this data structure with
         the components themselves to produce an actual partition.
 
@@ -395,7 +392,7 @@ class MultisetPartitionTraverser():
     ========
 
     multiset_partitions_taocp
-    sympy.utilities.iterables.multiset_partititions
+    sympy.utilities.iterables.multiset_partitions
 
     References
     ==========
@@ -424,14 +421,17 @@ class MultisetPartitionTraverser():
         self.p1 = 0
 
     def db_trace(self, msg):
-        """Useful for usderstanding/debugging the algorithms.  Not
+        """Useful for understanding/debugging the algorithms.  Not
         generally activated in end-user code."""
         if self.debug:
-            letters = 'abcdefghijklmnopqrstuvwxyz'
-            state = [self.f, self.lpart, self.pstack]
-            print("DBG:", msg,
-                  ["".join(part) for part in list_visitor(state, letters)],
-                  animation_visitor(state))
+            # XXX: animation_visitor is undefined... Clearly this does not
+            # work and was not tested. Previous code in comments below.
+            raise RuntimeError
+            #letters = 'abcdefghijklmnopqrstuvwxyz'
+            #state = [self.f, self.lpart, self.pstack]
+            #print("DBG:", msg,
+            #      ["".join(part) for part in list_visitor(state, letters)],
+            #      animation_visitor(state))
 
     #
     # Helper methods for enumeration
@@ -486,7 +486,7 @@ class MultisetPartitionTraverser():
         """
         plen = len(part)
         for j in range(plen - 1, -1, -1):
-            if (j == 0 and part[j].v > 1) or (j > 0 and part[j].v > 0):
+            if j == 0 and part[j].v > 1 or j > 0 and part[j].v > 0:
                 # found val to decrement
                 part[j].v -= 1
                 # Reset trailing parts back to maximum
@@ -552,11 +552,11 @@ class MultisetPartitionTraverser():
         plen = len(part)
         for j in range(plen - 1, -1, -1):
             # Knuth's mod, (answer to problem 7.2.1.5.69)
-            if (j == 0) and (part[0].v - 1)*(ub - self.lpart) < part[0].u:
+            if j == 0 and (part[0].v - 1)*(ub - self.lpart) < part[0].u:
                 self.k1 += 1
                 return False
 
-            if (j == 0 and part[j].v > 1) or (j > 0 and part[j].v > 0):
+            if j == 0 and part[j].v > 1 or j > 0 and part[j].v > 0:
                 # found val to decrement
                 part[j].v -= 1
                 # Reset trailing parts back to maximum
@@ -568,7 +568,7 @@ class MultisetPartitionTraverser():
                 # that turns out to be surprisingly common - exactly
                 # enough room to expand the leading component, but no
                 # room for the second component, which has v=0.
-                if (plen > 1 and (part[1].v == 0) and
+                if (plen > 1 and part[1].v == 0 and
                     (part[0].u - part[0].v) ==
                         ((ub - self.lpart - 1) * part[0].v)):
                     self.k2 += 1

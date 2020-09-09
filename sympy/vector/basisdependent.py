@@ -1,8 +1,10 @@
+from typing import Any, Dict
+
 from sympy.simplify import simplify as simp, trigsimp as tsimp
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.assumptions import StdFactKB
 from sympy import factor as fctr, diff as df, Integral
-from sympy.core import S, Add, Mul, count_ops
+from sympy.core import S, Add, Mul
 from sympy.core.expr import Expr
 
 
@@ -41,7 +43,7 @@ class BasisDependent(Expr):
         return self._mul_func(other, self)
 
     def __neg__(self):
-        return self._mul_func(S(-1), self)
+        return self._mul_func(S.NegativeOne, self)
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
@@ -55,7 +57,7 @@ class BasisDependent(Expr):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
-    def evalf(self, prec=None, **options):
+    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """
         Implements the SymPy evalf routine for this quantity.
 
@@ -63,16 +65,18 @@ class BasisDependent(Expr):
         =====================
 
         """
+        options = {'subs':subs, 'maxn':maxn, 'chop':chop, 'strict':strict,
+                'quad':quad, 'verbose':verbose}
         vec = self.zero
         for k, v in self.components.items():
-            vec += v.evalf(prec, **options) * k
+            vec += v.evalf(n, **options) * k
         return vec
 
-    evalf.__doc__ += Expr.evalf.__doc__
+    evalf.__doc__ += Expr.evalf.__doc__  # type: ignore
 
     n = evalf
 
-    def simplify(self, ratio=1.7, measure=count_ops, rational=False, inverse=False):
+    def simplify(self, **kwargs):
         """
         Implements the SymPy simplify routine for this quantity.
 
@@ -80,12 +84,11 @@ class BasisDependent(Expr):
         ========================
 
         """
-        simp_components = [simp(v, ratio=ratio, measure=measure,
-                           rational=rational, inverse=inverse) * k for
+        simp_components = [simp(v, **kwargs) * k for
                            k, v in self.components.items()]
         return self._add_func(*simp_components)
 
-    simplify.__doc__ += simp.__doc__
+    simplify.__doc__ += simp.__doc__  # type: ignore
 
     def trigsimp(self, **opts):
         """
@@ -99,10 +102,10 @@ class BasisDependent(Expr):
                            k, v in self.components.items()]
         return self._add_func(*trig_components)
 
-    trigsimp.__doc__ += tsimp.__doc__
+    trigsimp.__doc__ += tsimp.__doc__  # type: ignore
 
-    def _eval_simplify(self, ratio, measure, rational, inverse):
-        return self.simplify(ratio=ratio, measure=measure, rational=rational, inverse=inverse)
+    def _eval_simplify(self, **kwargs):
+        return self.simplify(**kwargs)
 
     def _eval_trigsimp(self, **opts):
         return self.trigsimp(**opts)
@@ -123,7 +126,7 @@ class BasisDependent(Expr):
         expression -> a/b -> a, b
 
         """
-        return self, 1
+        return self, S.One
 
     def factor(self, *args, **kwargs):
         """
@@ -138,11 +141,11 @@ class BasisDependent(Expr):
                            k, v in self.components.items()]
         return self._add_func(*fctr_components)
 
-    factor.__doc__ += fctr.__doc__
+    factor.__doc__ += fctr.__doc__  # type: ignore
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product. """
-        return (S(1), self)
+        return (S.One, self)
 
     def as_coeff_add(self, *deps):
         """Efficiently extract the coefficient of a summation. """
@@ -164,7 +167,7 @@ class BasisDependent(Expr):
                            k, v in self.components.items()]
         return self._add_func(*diff_components)
 
-    diff.__doc__ += df.__doc__
+    diff.__doc__ += df.__doc__  # type: ignore
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Dyadic"""
@@ -211,8 +214,7 @@ class BasisDependentAdd(BasisDependent, Add):
 
         # Build object
         newargs = [x * components[x] for x in components]
-        obj = super(BasisDependentAdd, cls).__new__(cls,
-                                                    *newargs, **options)
+        obj = super().__new__(cls, *newargs, **options)
         if isinstance(obj, Mul):
             return cls._mul_func(*obj.args)
         assumptions = {'commutative': True}
@@ -221,8 +223,6 @@ class BasisDependentAdd(BasisDependent, Add):
         obj._sys = (list(components.keys()))[0]._sys
 
         return obj
-
-    __init__ = Add.__init__
 
 
 class BasisDependentMul(BasisDependent, Mul):
@@ -233,7 +233,7 @@ class BasisDependentMul(BasisDependent, Mul):
     def __new__(cls, *args, **options):
         from sympy.vector import Cross, Dot, Curl, Gradient
         count = 0
-        measure_number = S(1)
+        measure_number = S.One
         zeroflag = False
         extra_args = []
 
@@ -244,7 +244,7 @@ class BasisDependentMul(BasisDependent, Mul):
             if isinstance(arg, cls._zero_func):
                 count += 1
                 zeroflag = True
-            elif arg == S(0):
+            elif arg == S.Zero:
                 zeroflag = True
             elif isinstance(arg, (cls._base_func, cls._mul_func)):
                 count += 1
@@ -273,10 +273,10 @@ class BasisDependentMul(BasisDependent, Mul):
                        x in expr.args]
             return cls._add_func(*newargs)
 
-        obj = super(BasisDependentMul, cls).__new__(cls, measure_number,
-                                                    expr._base_instance,
-                                                    *extra_args,
-                                                    **options)
+        obj = super().__new__(cls, measure_number,
+                              expr._base_instance,
+                              *extra_args,
+                              **options)
         if isinstance(obj, Add):
             return cls._add_func(*obj.args)
         obj._base_instance = expr._base_instance
@@ -288,30 +288,27 @@ class BasisDependentMul(BasisDependent, Mul):
 
         return obj
 
-    __init__ = Mul.__init__
-
-    def __str__(self, printer=None):
-        measure_str = self._measure_number.__str__()
+    def _sympystr(self, printer):
+        measure_str = printer._print(self._measure_number)
         if ('(' in measure_str or '-' in measure_str or
                 '+' in measure_str):
             measure_str = '(' + measure_str + ')'
-        return measure_str + '*' + self._base_instance.__str__(printer)
-
-    __repr__ = __str__
-    _sympystr = __str__
+        return measure_str + '*' + printer._print(self._base_instance)
 
 
 class BasisDependentZero(BasisDependent):
     """
     Class to denote a zero basis dependent instance.
     """
-    components = {}
+    # XXX: Can't type the keys as BaseVector because of cyclic import
+    # problems.
+    components = {}  # type: Dict[Any, Expr]
 
     def __new__(cls):
-        obj = super(BasisDependentZero, cls).__new__(cls)
+        obj = super().__new__(cls)
         # Pre-compute a specific hash value for the zero vector
         # Use the same one always
-        obj._hash = tuple([S(0), cls]).__hash__()
+        obj._hash = tuple([S.Zero, cls]).__hash__()
         return obj
 
     def __hash__(self):
@@ -360,8 +357,5 @@ class BasisDependentZero(BasisDependent):
         """
         return self
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return '0'
-
-    __repr__ = __str__
-    _sympystr = __str__

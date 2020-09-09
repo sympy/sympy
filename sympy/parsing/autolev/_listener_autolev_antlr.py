@@ -1,19 +1,19 @@
 import collections
-import sys
 import warnings
 
 from sympy.external import import_module
 
-AutolevParser = AutolevLexer = AutolevListener = None
-try:
-    AutolevParser = import_module('sympy.parsing.autolev._antlr.autolevparser',
-                                  __import__kwargs={'fromlist': ['AutolevParser']}).AutolevParser
-    AutolevLexer = import_module('sympy.parsing.autolev._antlr.autolevlexer',
-                                 __import__kwargs={'fromlist': ['AutolevLexer']}).AutolevLexer
-    AutolevListener = import_module('sympy.parsing.autolev._antlr.autolevlistener',
-                                    __import__kwargs={'fromlist': ['AutolevListener']}).AutolevListener
-except AttributeError:
-    pass
+autolevparser = import_module('sympy.parsing.autolev._antlr.autolevparser',
+                              import_kwargs={'fromlist': ['AutolevParser']})
+autolevlexer = import_module('sympy.parsing.autolev._antlr.autolevlexer',
+                             import_kwargs={'fromlist': ['AutolevLexer']})
+autolevlistener = import_module('sympy.parsing.autolev._antlr.autolevlistener',
+                                import_kwargs={'fromlist': ['AutolevListener']})
+
+AutolevParser = getattr(autolevparser, 'AutolevParser', None)
+AutolevLexer = getattr(autolevlexer, 'AutolevLexer', None)
+AutolevListener = getattr(autolevlistener, 'AutolevListener', None)
+
 
 def strfunc(z):
     if z == 0:
@@ -399,7 +399,7 @@ def writeImaginary(self, ctx):
     self.var_list = []
 
 if AutolevListener:
-    class MyListener(AutolevListener):
+    class MyListener(AutolevListener):  # type: ignore
         def __init__(self, include_numeric=False):
             # Stores data in tree nodes(tree annotation). Especially useful for expr reconstruction.
             self.tree_property = {}
@@ -1172,7 +1172,7 @@ if AutolevListener:
             elif func_name == "mass":
                 l = []
                 try:
-                    a = ch.ID(0).getText().lower()
+                    ch.ID(0).getText().lower()
                     for i in range((ch.getChildCount()-1)//2):
                         l.append(self.symbol_table2[ch.ID(i).getText().lower()] + ".mass")
                     self.setValue(ctx, "+".join(l))
@@ -2045,7 +2045,7 @@ if AutolevListener:
         def exitInertiaDecl(self, ctx):
             inertia_list = []
             try:
-                a = ctx.ID(1).getText()
+                ctx.ID(1).getText()
                 num = 5
             except Exception:
                 num = 2

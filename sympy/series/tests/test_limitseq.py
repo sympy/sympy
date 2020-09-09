@@ -1,8 +1,8 @@
-from sympy import (symbols, Symbol, oo, Sum, harmonic, Add, S, binomial,
-    factorial, log, fibonacci, sin, cos, pi, I, sqrt)
+from sympy import (symbols, Symbol, oo, Sum, harmonic, exp, Add, S, binomial,
+    factorial, log, fibonacci, subfactorial, sin, cos, pi, I, sqrt, Rational, gamma)
 from sympy.series.limitseq import limit_seq
 from sympy.series.limitseq import difference_delta as dd
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.calculus.util import AccumulationBounds
 
 n, m, k = symbols('n m k', integer=True)
@@ -79,7 +79,7 @@ def test_limit_seq():
     assert limit_seq(e, n) == S(84375) / 83351
 
     e = Sum(harmonic(k)**2/k, (k, 1, 2*n)) / harmonic(n)**3
-    assert limit_seq(e, n) == S(1) / 3
+    assert limit_seq(e, n) == S.One / 3
 
     raises(ValueError, lambda: limit_seq(e * m))
 
@@ -90,8 +90,8 @@ def test_alternating_sign():
     assert limit_seq((2*n + (-1)**n)/(n + 1), n) == 2
     assert limit_seq(sin(pi*n), n) == 0
     assert limit_seq(cos(2*pi*n), n) == 1
-    assert limit_seq((S(-1)/5)**n, n) == 0
-    assert limit_seq((-1/5)**n, n) == 0
+    assert limit_seq((S.NegativeOne/5)**n, n) == 0
+    assert limit_seq((Rational(-1, 5))**n, n) == 0
     assert limit_seq((I/3)**n, n) == 0
     assert limit_seq(sqrt(n)*(I/2)**n, n) == 0
     assert limit_seq(n**7*(I/3)**n, n) == 0
@@ -109,16 +109,32 @@ def test_accum_bounds():
 def test_limitseq_sum():
     from sympy.abc import x, y, z
     assert limit_seq(Sum(1/x, (x, 1, y)) - log(y), y) == S.EulerGamma
-    assert limit_seq(Sum(1/x, (x, 1, y)) - 1/y, y) == S.Infinity
+    assert limit_seq(Sum(1/x, (x, 1, y)) - 1/y, y) is S.Infinity
     assert (limit_seq(binomial(2*x, x) / Sum(binomial(2*y, y), (y, 1, x)), x) ==
             S(3) / 4)
     assert (limit_seq(Sum(y**2 * Sum(2**z/z, (z, 1, y)), (y, 1, x)) /
                   (2**x*x), x) == 4)
 
 
+def test_issue_9308():
+    assert limit_seq(subfactorial(n)/factorial(n), n) == exp(-1)
+
+
 def test_issue_10382():
     n = Symbol('n', integer=True)
     assert limit_seq(fibonacci(n+1)/fibonacci(n), n) == S.GoldenRatio
+
+
+def test_issue_11672():
+    assert limit_seq(Rational(-1, 2)**n, n) == 0
+
+
+def test_issue_16735():
+    assert limit_seq(5**n/factorial(n), n) == 0
+
+
+def test_issue_19868():
+    assert limit_seq(1/gamma(n + S.One/2), n) == 0
 
 
 @XFAIL

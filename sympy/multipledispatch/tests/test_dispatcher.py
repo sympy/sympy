@@ -1,7 +1,7 @@
 from sympy.multipledispatch.dispatcher import (Dispatcher, MDNotImplementedError,
                                          MethodDispatcher, halt_ordering,
                                          restart_ordering)
-from sympy.utilities.pytest import raises, XFAIL, warns
+from sympy.testing.pytest import raises, warns
 
 
 def identity(x):
@@ -41,11 +41,11 @@ def test_dispatcher_as_decorator():
     f = Dispatcher('f')
 
     @f.register(int)
-    def inc(x):
+    def inc(x): # noqa:F811
         return x + 1
 
-    @f.register(float)
-    def inc(x):
+    @f.register(float) # noqa:F811
+    def inc(x): # noqa:F811
         return x - 1
 
     assert f(1) == 2
@@ -54,7 +54,7 @@ def test_dispatcher_as_decorator():
 
 def test_register_instance_method():
 
-    class Test(object):
+    class Test:
         __init__ = MethodDispatcher('f')
 
         @__init__.register(list)
@@ -88,7 +88,6 @@ def test_on_ambiguity():
     assert ambiguities[0]
 
 
-@XFAIL
 def test_raise_error_on_non_class():
     f = Dispatcher('f')
     assert raises(TypeError, lambda: f.add((1,), inc))
@@ -165,7 +164,6 @@ def test_source():
     assert 'x - y' in f._source(1.0, 1.0)
 
 
-@XFAIL
 def test_source_raises_on_missing_function():
     f = Dispatcher('f')
 
@@ -194,16 +192,14 @@ def test_halt_method_resolution():
 
     assert g == [1]
 
-    assert set(f.ordering) == set([(int, object), (object, int)])
+    assert set(f.ordering) == {(int, object), (object, int)}
 
 
-@XFAIL
 def test_no_implementations():
     f = Dispatcher('f')
     assert raises(NotImplementedError, lambda: f('hello'))
 
 
-@XFAIL
 def test_register_stacking():
     f = Dispatcher('f')
 
@@ -238,7 +234,6 @@ def test_dispatch_method():
     assert f.dispatch(int, int) is add
 
 
-@XFAIL
 def test_not_implemented():
     f = Dispatcher('f')
 
@@ -259,7 +254,6 @@ def test_not_implemented():
     assert raises(NotImplementedError, lambda: f(1, 2))
 
 
-@XFAIL
 def test_not_implemented_error():
     f = Dispatcher('f')
 

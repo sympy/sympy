@@ -1,13 +1,15 @@
 from sympy import (
     sqrt, Derivative, symbols, collect, Function, factor, Wild, S,
     collect_const, log, fraction, I, cos, Add, O,sin, rcollect,
-    Mul, radsimp, diff, root, Symbol, Rational, exp)
+    Mul, Pow, radsimp, diff, root, Symbol, Rational, exp, Abs)
 
+from sympy.core.expr import unchanged
 from sympy.core.mul import _unevaluated_Mul as umul
-from sympy.simplify.radsimp import _unevaluated_Add, collect_sqrt, fraction_expand
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.simplify.radsimp import (_unevaluated_Add,
+    collect_sqrt, fraction_expand, collect_abs)
+from sympy.testing.pytest import raises
 
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
+from sympy.abc import x, y, z, a, b, c, d
 
 
 def test_radsimp():
@@ -85,11 +87,11 @@ def test_radsimp():
     # issue 5994
     e = S('-(2 + 2*sqrt(2) + 4*2**(1/4))/'
         '(1 + 2**(3/4) + 3*2**(1/4) + 3*sqrt(2))')
-    assert radsimp(e).expand() == -2*2**(S(3)/4) - 2*2**(S(1)/4) + 2 + 2*sqrt(2)
+    assert radsimp(e).expand() == -2*2**Rational(3, 4) - 2*2**Rational(1, 4) + 2 + 2*sqrt(2)
 
     # issue 5986 (modifications to radimp didn't initially recognize this so
     # the test is included here)
-    assert radsimp(1/(-sqrt(5)/2 - S(1)/2 + (-sqrt(5)/2 - S(1)/2)**2)) == 1
+    assert radsimp(1/(-sqrt(5)/2 - S.Half + (-sqrt(5)/2 - S.Half)**2)) == 1
 
     # from issue 5934
     eq = (
@@ -187,7 +189,7 @@ def test_collect_3():
     f = Function('f')
     x, y, z, n = symbols('x,y,z,n')
 
-    assert collect(-x/8 + x*y, -x) == x*(y - S(1)/8)
+    assert collect(-x/8 + x*y, -x) == x*(y - Rational(1, 8))
 
     assert collect( 1 + x*(y**2), x*y ) == 1 + x*(y**2)
     assert collect( x*y + a*x*y, x*y) == x*y*(1 + a)
@@ -219,6 +221,12 @@ def test_collect_5():
         z*(1 + a) + x**2*y**4*(1 + z) ]
     assert collect((1 + (x + y) + (x + y)**2).expand(),
                    [x, y]) == 1 + y + x*(1 + 2*y) + x**2 + y**2
+
+
+def test_collect_pr19431():
+    """Unevaluated collect with respect to a product"""
+    a = symbols('a')
+    assert collect(a**2*(a**2 + 1), a**2, evaluate=False)[a**2] == (a**2 + 1)
 
 
 def test_collect_D():
@@ -290,15 +298,12 @@ def test_rcollect():
     assert rcollect(sqrt(-((x + 1)*(y + 1))), z) == sqrt(-((x + 1)*(y + 1)))
 
 
-@XFAIL
 def test_collect_D_0():
     D = Derivative
     f = Function('f')
     x, a, b = symbols('x,a,b')
     fxx = D(f(x), x, x)
 
-    # collect does not distinguish nested derivatives, so it returns
-    #                                           -- (a + b)*D(D(f, x), x)
     assert collect(a*fxx + b*fxx, fxx) == (a + b)*fxx
 
 
@@ -333,7 +338,7 @@ def test_collect_const():
     # issue 5290
     assert collect_const(2*x + 2*y + 1, 2) == \
         collect_const(2*x + 2*y + 1) == \
-        Add(S(1), Mul(2, x + y, evaluate=False), evaluate=False)
+        Add(S.One, Mul(2, x + y, evaluate=False), evaluate=False)
     assert collect_const(-y - z) == Mul(-1, y + z, evaluate=False)
     assert collect_const(2*x - 2*y - 2*z, 2) == \
         Mul(2, x - y - z, evaluate=False)
@@ -344,6 +349,9 @@ def test_collect_const():
     eq = (sqrt(15 + 5*sqrt(2))*x + sqrt(3 + sqrt(2))*y)*2
     assert collect_sqrt(eq + 2) == \
         2*sqrt(sqrt(2) + 3)*(sqrt(5)*x + y) + 2
+
+    # issue 16296
+    assert collect_const(a + b + x/2 + y/2) == a + b + Mul(S.Half, x + y, evaluate=False)
 
 
 def test_issue_13143():
@@ -361,8 +369,8 @@ def test_issue_13143():
 
 
 def test_issue_6097():
-    assert collect(a*y**(2.0*x) + b*y**(2.0*x), y**x) == y**(2.0*x)*(a + b)
-    assert collect(a*2**(2.0*x) + b*2**(2.0*x), 2**x) == 2**(2.0*x)*(a + b)
+    assert collect(a*y**(2.0*x) + b*y**(2.0*x), y**x) == (a + b)*(y**x)**2.0
+    assert collect(a*2**(2.0*x) + b*2**(2.0*x), 2**x) == (a + b)*(2**x)**2.0
 
 
 def test_fraction_expand():
@@ -375,7 +383,7 @@ def test_fraction():
     x, y, z = map(Symbol, 'xyz')
     A = Symbol('A', commutative=False)
 
-    assert fraction(Rational(1, 2)) == (1, 2)
+    assert fraction(S.Half) == (1, 2)
 
     assert fraction(x) == (x, 1)
     assert fraction(1/x) == (1, x)
@@ -404,6 +412,16 @@ def test_fraction():
     p = symbols('p', positive=True)
     assert fraction(exp(-p)*log(p), exact=True) == (exp(-p)*log(p), 1)
 
+    m = Mul(1, 1, S.Half, evaluate=False)
+    assert fraction(m) == (1, 2)
+    assert fraction(m, exact=True) == (Mul(1, 1, evaluate=False), 2)
+
+    m = Mul(1, 1, S.Half, S.Half, Pow(1, -1, evaluate=False), evaluate=False)
+    assert fraction(m) == (1, 4)
+    assert fraction(m, exact=True) == \
+            (Mul(1, 1, evaluate=False), Mul(2, 2, 1, evaluate=False))
+
+
 def test_issue_5615():
     aA, Re, a, b, D = symbols('aA Re a b D')
     e = ((D**3*a + b*aA**3)/Re).expand()
@@ -423,3 +441,29 @@ def test_issue_14608():
     raises(AttributeError, lambda: collect(a*b + b*a, a))
     assert collect(x*y + y*(x+1), a) == x*y + y*(x+1)
     assert collect(x*y + y*(x+1) + a*b + b*a, y) == y*(2*x + 1) + a*b + b*a
+
+
+def test_collect_abs():
+    s = abs(x) + abs(y)
+    assert collect_abs(s) == s
+    assert unchanged(Mul, abs(x), abs(y))
+    ans = Abs(x*y)
+    assert isinstance(ans, Abs)
+    assert collect_abs(abs(x)*abs(y)) == ans
+    assert collect_abs(1 + exp(abs(x)*abs(y))) == 1 + exp(ans)
+
+    # See https://github.com/sympy/sympy/issues/12910
+    p = Symbol('p', positive=True)
+    assert collect_abs(p/abs(1-p)).is_commutative is True
+
+
+def test_issue_19149():
+    eq = exp(3*x/4)
+    assert collect(eq, exp(x)) == eq
+
+def test_issue_19719():
+    a, b = symbols('a, b')
+    expr = a**2 * (b + 1) + (7 + 1/b)/a
+    collected = collect(expr, (a**2, 1/a), evaluate=False)
+    # Would return {_Dummy_20**(-2): b + 1, 1/a: 7 + 1/b} without xreplace
+    assert collected == {a**2: b + 1, 1/a: 7 + 1/b}
