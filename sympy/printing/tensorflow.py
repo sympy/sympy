@@ -209,13 +209,6 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
             ret.append(self._print(subexpr))
         return "\n".join(ret)
 
-    def _get_letter_generator_for_einsum(self):
-        for i in range(97, 123):
-            yield chr(i)
-        for i in range(65, 91):
-            yield chr(i)
-        raise ValueError("out of letters")
-
     def _print_CodegenArrayTensorProduct(self, expr):
         letters = self._get_letter_generator_for_einsum()
         contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in expr.subranks])

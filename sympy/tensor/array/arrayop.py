@@ -271,6 +271,8 @@ def permutedims(expr, perm):
     from sympy.tensor.array import SparseNDimArray
 
     if not isinstance(expr, NDimArray):
+        expr = ImmutableDenseNDimArray(expr)
+    if not isinstance(expr, NDimArray):
         raise TypeError("expression has to be an N-dim array")
 
     from sympy.combinatorics import Permutation

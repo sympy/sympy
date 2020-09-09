@@ -185,6 +185,13 @@ class AbstractPythonCodePrinter(CodePrinter):
                 self._expand_reduce_binary_op(args[Nhalf:]),
             )
 
+    def _get_letter_generator_for_einsum(self):
+        for i in range(97, 123):
+            yield chr(i)
+        for i in range(65, 91):
+            yield chr(i)
+        raise ValueError("out of letters")
+
     def _get_einsum_string(self, subranks, contraction_indices):
         letters = self._get_letter_generator_for_einsum()
         contraction_string = ""

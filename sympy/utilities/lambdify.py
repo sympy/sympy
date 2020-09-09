@@ -18,14 +18,26 @@ from sympy.utilities.decorator import doctest_depends_on
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
+# These are the namespaces the lambda functions will use.
+MATH = {}
+MPMATH = {}
+NUMPY = {}
+SCIPY = {}
+TENSORFLOW = {}
+TORCH = {}
+SYMPY = {}
+NUMEXPR = {}
+
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
+
 MATH_DEFAULT = {}  # type: Dict[str, Any]
 MPMATH_DEFAULT = {}  # type: Dict[str, Any]
 NUMPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
 SCIPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
 TENSORFLOW_DEFAULT = {}  # type: Dict[str, Any]
 SYMPY_DEFAULT = {}  # type: Dict[str, Any]
+TORCH_DEFAULT = {}
 NUMEXPR_DEFAULT = {}  # type: Dict[str, Any]
 
 # These are the namespaces the lambda functions will use.
@@ -37,6 +49,7 @@ MPMATH = MPMATH_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
 TENSORFLOW = TENSORFLOW_DEFAULT.copy()
+TORCH = TORCH_DEFAULT.copy()
 SYMPY = SYMPY_DEFAULT.copy()
 NUMEXPR = NUMEXPR_DEFAULT.copy()
 
@@ -84,7 +97,10 @@ SCIPY_TRANSLATIONS = {}  # type: Dict[str, str]
 
 TENSORFLOW_TRANSLATIONS = {}  # type: Dict[str, str]
 
+
+TORCH_TRANSLATIONS = {}
 NUMEXPR_TRANSLATIONS = {}  # type: Dict[str, str]
+
 
 # Available modules:
 MODULES = {
@@ -93,6 +109,8 @@ MODULES = {
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
+    "torch": (TORCH, TORCH_DEFAULT, TORCH_TRANSLATIONS, ("import torch",)),
+
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
@@ -792,6 +810,8 @@ def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.tensorflow import TensorflowPrinter as Printer
         elif _module_present('sympy', namespaces):
             from sympy.printing.pycode import SymPyPrinter as Printer
+        elif _module_present('torch', namespaces):
+            from sympy.printing.torch import TorchPrinter as Printer
         else:
             from sympy.printing.pycode import PythonCodePrinter as Printer
         user_functions = {}

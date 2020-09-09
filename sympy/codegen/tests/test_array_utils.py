@@ -9,9 +9,13 @@ from sympy.codegen.array_utils import (CodegenArrayContraction,
 from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.matrices.expressions.diagonal import DiagMatrix
+from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices import Trace, MatAdd, MatMul, Transpose
-from sympy.testing.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
+from sympy.tensor.array import permutedims, tensorproduct, tensorcontraction
+from sympy.matrices.expressions.diagonal import DiagMatrix
+
+
 
 
 A, B = symbols("A B", cls=IndexedBase)
@@ -370,6 +374,30 @@ def test_special_matrices():
     assert recognize_matrix_expression(cg) == a.T*b
 
 
+def test_codegen_array_doit():
+    M = MatrixSymbol("M", 2, 2)
+    N = MatrixSymbol("N", 2, 2)
+    P = MatrixSymbol("P", 2, 2)
+    Q = MatrixSymbol("Q", 2, 2)
+
+    M = M.as_explicit()
+    N = N.as_explicit()
+    P = P.as_explicit()
+    Q = Q.as_explicit()
+
+    expr = CodegenArrayTensorProduct(M, N, P, Q)
+    assert expr.doit() == tensorproduct(M, N, P, Q)
+    expr2 = CodegenArrayContraction(expr, (0, 1))
+    assert expr2.doit() == tensorcontraction(tensorproduct(M, N, P, Q), (0, 1))
+    expr2 = CodegenArrayDiagonal(expr, (0, 1))
+    #assert expr2 = ... # TODO: not implemented
+    expr = CodegenArrayTensorProduct(M, N)
+    exprp = CodegenArrayPermuteDims(expr, [2, 1, 3, 0])
+    assert exprp.doit() == permutedims(tensorproduct(M, N), [2, 1, 3, 0])
+    expr = CodegenArrayElementwiseAdd(M, N)
+    assert expr.doit() == M + N
+
+    
 def test_push_indices_up_and_down():
 
     indices = list(range(10))
@@ -504,3 +532,4 @@ def test_recognize_diagonalized_vectors():
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(a, b, A), (0, 2, 4), (1, 3))
     assert cg.split_multiple_contractions() == cg
+
