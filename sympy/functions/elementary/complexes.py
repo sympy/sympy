@@ -1078,10 +1078,9 @@ class periodic_argument(Function):
     ==========
 
     ar : Expr
-        Expression which can represent a exponent or exponent representing a polar
-        number.
+        A polar number.
 
-    period : 
+    period : Expr
 
         >>> from sympy import exp_polar, periodic_argument
         >>> from sympy import I, pi
@@ -1319,6 +1318,9 @@ def polarify(eq, subs=True, lift=False):
     changed to their polar_lift()ed versions.
     Note that lift=True implies subs=False.
 
+    Examples
+    ========
+
     >>> from sympy import polarify, sin, I
     >>> from sympy.abc import x, y
     >>> expr = (-x)**y
@@ -1387,6 +1389,9 @@ def unpolarify(eq, subs={}, exponents_only=False):
     p(eq') == p(eq).
     Also apply the substitution subs in the end. (This is a convenience, since
     ``unpolarify``, in a certain sense, undoes polarify.)
+
+    Examples
+    ========
 
     >>> from sympy import unpolarify, polar_lift, sin, I
     >>> unpolarify(polar_lift(I + 2))
