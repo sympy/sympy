@@ -16,7 +16,7 @@ from sympy.core.compatibility import (exec_, is_sequence, iterable,
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
-__doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
+__doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow', 'torch']}
 
 # These are the namespaces the lambda functions will use.
 MATH = {}
@@ -37,7 +37,7 @@ NUMPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
 SCIPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
 TENSORFLOW_DEFAULT = {}  # type: Dict[str, Any]
 SYMPY_DEFAULT = {}  # type: Dict[str, Any]
-TORCH_DEFAULT = {}
+TORCH_DEFAULT = {}  # type: Dict[str, Any]
 NUMEXPR_DEFAULT = {}  # type: Dict[str, Any]
 
 # These are the namespaces the lambda functions will use.
@@ -97,14 +97,13 @@ SCIPY_TRANSLATIONS = {}  # type: Dict[str, str]
 
 TENSORFLOW_TRANSLATIONS = {}  # type: Dict[str, str]
 
-
-TORCH_TRANSLATIONS = {}
+TORCH_TRANSLATIONS = {}  # type: Dict[str, str]
 NUMEXPR_TRANSLATIONS = {}  # type: Dict[str, str]
 
 
 # Available modules:
 MODULES = {
-    "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("import math; from math import *",)),
+    "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
@@ -115,7 +114,7 @@ MODULES = {
         "from sympy.functions import *",
         "from sympy.matrices import *",
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
-    "numexpr" : (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS,
+    "numexpr": (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS,
                  ("import_module('numexpr')", )),
 }
 
@@ -183,7 +182,7 @@ def _import(module, reload=False):
 # linecache.
 _lambdify_generated_counter = 1
 
-@doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
+@doctest_depends_on(modules=('numpy', 'tensorflow', 'torch',), python_version=(3,))
 def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
              dummify=False):
     """Convert a SymPy expression into a function that allows for fast

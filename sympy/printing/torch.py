@@ -5,7 +5,16 @@ import sympy
 torch = import_module('torch')
 
 
+
+
 class TorchPrinter(AbstractPythonCodePrinter):
+
+    def _get_loop_opening_ending(self, indices):
+        pass
+
+    def _rate_index_position(self, p):
+        pass
+
     printmethod = "_torchcode"
 
     mapping = {
@@ -66,7 +75,7 @@ class TorchPrinter(AbstractPythonCodePrinter):
 
     _default_settings = dict(
         AbstractPythonCodePrinter._default_settings,
-        tensorflow_version=None
+        torch_version=None
     )
 
     def __init__(self, settings=None):
@@ -75,7 +84,7 @@ class TorchPrinter(AbstractPythonCodePrinter):
         version = self._settings['torch_version']
         if version is None and torch:
             version = torch.__version__
-        self.tensorflow_version = version
+        self.torch_version = version
 
     def _print_Function(self, expr):
         op = self.mapping.get(type(expr), None)

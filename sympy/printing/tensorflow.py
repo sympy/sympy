@@ -10,6 +10,7 @@ import sympy
 
 tensorflow = import_module('tensorflow')
 
+
 class TensorflowPrinter(AbstractPythonCodePrinter):
     """
     Tensorflow printer which handles vectorized piecewise functions,
@@ -26,7 +27,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         sympy.floor: "tensorflow.math.floor",
         sympy.log: "tensorflow.math.log",
         sympy.exp: "tensorflow.math.exp",
-        Sqrt: "tensorflow.math.sqrt",
+        sympy.sqrt: "tensorflow.math.sqrt",
         sympy.cos: "tensorflow.math.cos",
         sympy.acos: "tensorflow.math.acos",
         sympy.sin: "tensorflow.math.sin",
