@@ -77,7 +77,7 @@ class TorchPrinter(AbstractPythonCodePrinter):
     )
 
     def __init__(self, settings=None):
-        super(TorchPrinter, self).__init__(settings)
+        super().__init__(settings)
 
         version = self._settings['torch_version']
         if version is None and torch:
