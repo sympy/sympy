@@ -63,8 +63,8 @@ class TorchPrinter(AbstractPythonCodePrinter):
         sympy.Min: "torch.min",
 
         # Matrices
-        sympy.MatAdd: "torch.addmm",
-        sympy.HadamardProduct: "torch.mm",
+        sympy.MatAdd: "torch.add",
+        sympy.HadamardProduct: "torch.mul",
         sympy.Trace: "torch.trace",
 
         # XXX May raise error for integer matrices.
@@ -158,9 +158,9 @@ class TorchPrinter(AbstractPythonCodePrinter):
             # possibly by creating the possibility of unfolding the
             # CodegenArrayDiagonal object into nested ones. Same reasoning for
             # the array contraction.
-            raise NotImplementedError
+            raise NotImplementedError("no implementation for diagonal yet")
         if len(diagonal_indices[0]) != 2:
-            raise NotImplementedError
+            raise NotImplementedError("no implementation for diagonal yet")
         if isinstance(expr.expr, CodegenArrayTensorProduct):
             subranks = expr.expr.subranks
             elems = expr.expr.args
