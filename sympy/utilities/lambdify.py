@@ -16,17 +16,8 @@ from sympy.core.compatibility import (exec_, is_sequence, iterable,
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
-__doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow', 'torch']}
+__doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
-# These are the namespaces the lambda functions will use.
-MATH = {}
-MPMATH = {}
-NUMPY = {}
-SCIPY = {}
-TENSORFLOW = {}
-TORCH = {}
-SYMPY = {}
-NUMEXPR = {}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -182,7 +173,7 @@ def _import(module, reload=False):
 # linecache.
 _lambdify_generated_counter = 1
 
-@doctest_depends_on(modules=('numpy', 'tensorflow', 'torch',), python_version=(3,))
+@doctest_depends_on(modules=('numpy', 'tensorflow',), python_version=(3,))
 def lambdify(args: iterable, expr, modules=None, printer=None, use_imps=True,
              dummify=False):
     """Convert a SymPy expression into a function that allows for fast
