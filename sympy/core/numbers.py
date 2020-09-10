@@ -756,15 +756,13 @@ class Number(AtomicExpr):
         return AtomicExpr.__mul__(self, other)
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             if other is S.NaN:
                 return S.NaN
             elif other is S.Infinity or other is S.NegativeInfinity:
                 return S.Zero
-        return AtomicExpr.__div__(self, other)
-
-    __truediv__ = __div__
+        return AtomicExpr.__truediv__(self, other)
 
     def __eq__(self, other):
         raise NotImplementedError('%s needs .__eq__() method' %
@@ -1282,10 +1280,8 @@ class Float(Number):
     def _eval_is_zero(self):
         return self._mpf_ == fzero
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self._mpf_ != fzero
-
-    __bool__ = __nonzero__
 
     def __neg__(self):
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
@@ -1312,13 +1308,11 @@ class Float(Number):
         return Number.__mul__(self, other)
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Number) and other != 0 and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_div(self._mpf_, rhs, prec, rnd), prec)
-        return Number.__div__(self, other)
-
-    __truediv__ = __div__
+        return Number.__truediv__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __mod__(self, other):
@@ -1383,8 +1377,6 @@ class Float(Number):
         if self._mpf_ == fzero:
             return 0
         return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
-
-    __long__ = __int__
 
     def __eq__(self, other):
         from sympy.logic.boolalg import Boolean
@@ -1751,7 +1743,7 @@ class Rational(Number):
     __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
                 if self.p and other.p == S.Zero:
@@ -1763,10 +1755,10 @@ class Rational(Number):
             elif isinstance(other, Float):
                 return self*(1/other)
             else:
-                return Number.__div__(self, other)
-        return Number.__div__(self, other)
+                return Number.__truediv__(self, other)
+        return Number.__truediv__(self, other)
     @_sympifyit('other', NotImplemented)
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
                 return Rational(other.p*self.q, self.p, igcd(self.p, other.p))
@@ -1775,9 +1767,8 @@ class Rational(Number):
             elif isinstance(other, Float):
                 return other*(1/self)
             else:
-                return Number.__rdiv__(self, other)
-        return Number.__rdiv__(self, other)
-    __truediv__ = __div__
+                return Number.__rtruediv__(self, other)
+        return Number.__rtruediv__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __mod__(self, other):
@@ -1850,8 +1841,6 @@ class Rational(Number):
         if p < 0:
             return -int(-p//q)
         return int(p//q)
-
-    __long__ = __int__
 
     def floor(self):
         return Integer(self.p // self.q)
@@ -2116,8 +2105,6 @@ class Integer(Rational):
     # Arithmetic operations are here for efficiency
     def __int__(self):
         return self.p
-
-    __long__ = __int__
 
     def floor(self):
         return Integer(self.p)
@@ -2636,10 +2623,8 @@ class Zero(IntegerConstant, metaclass=Singleton):
         # Order(0,x) -> 0
         return self
 
-    def __nonzero__(self):
+    def __bool__(self):
         return False
-
-    __bool__ = __nonzero__
 
     def as_coeff_Mul(self, rational=False):  # XXX this routine should be deleted
         """Efficiently extract the coefficient of a summation. """
@@ -2890,7 +2875,7 @@ class Infinity(Number, metaclass=Singleton):
     __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             if other is S.Infinity or \
                 other is S.NegativeInfinity or \
@@ -2899,9 +2884,7 @@ class Infinity(Number, metaclass=Singleton):
             if other.is_extended_nonnegative:
                 return self
             return S.NegativeInfinity
-        return Number.__div__(self, other)
-
-    __truediv__ = __div__
+        return Number.__truediv__(self, other)
 
     def __abs__(self):
         return S.Infinity
@@ -3058,7 +3041,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
     __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             if other is S.Infinity or \
                 other is S.NegativeInfinity or \
@@ -3067,9 +3050,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
             if other.is_extended_nonnegative:
                 return self
             return S.Infinity
-        return Number.__div__(self, other)
-
-    __truediv__ = __div__
+        return Number.__truediv__(self, other)
 
     def __abs__(self):
         return S.Infinity
@@ -3236,10 +3217,8 @@ class NaN(Number, metaclass=Singleton):
         return self
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         return self
-
-    __truediv__ = __div__
 
     def floor(self):
         return self
@@ -3405,9 +3384,6 @@ class NumberSymbol(AtomicExpr):
     def __int__(self):
         # subclass with appropriate return value
         raise NotImplementedError
-
-    def __long__(self):
-        return self.__int__()
 
     def __hash__(self):
         return super().__hash__()

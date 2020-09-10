@@ -390,7 +390,7 @@ class NDimArray(Printable):
         result_list = [other*i for i in Flatten(self)]
         return type(self)(result_list, self.shape)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         from sympy.matrices.matrices import MatrixBase
         from sympy.tensor.array import SparseNDimArray
         from sympy.tensor.array.arrayop import Flatten
@@ -405,7 +405,7 @@ class NDimArray(Printable):
         result_list = [i/other for i in Flatten(self)]
         return type(self)(result_list, self.shape)
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         raise NotImplementedError('unsupported operation on NDimArray')
 
     def __neg__(self):
@@ -463,9 +463,6 @@ class NDimArray(Printable):
 
     def __ne__(self, other):
         return not self == other
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def _eval_transpose(self):
         if self.rank() != 2:

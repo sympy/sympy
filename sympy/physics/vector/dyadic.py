@@ -97,11 +97,9 @@ class Dyadic(Printable):
                 ol += v[0] * v[1] * (v[2] & other)
         return ol
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         """Divides the Dyadic by a sympifyable expression. """
         return self.__mul__(1 / other)
-
-    __truediv__ = __div__
 
     def __eq__(self, other):
         """Tests for equality.

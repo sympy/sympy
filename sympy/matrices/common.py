@@ -2562,8 +2562,8 @@ class MatrixArithmetic(MatrixRequired):
 
         raise TypeError('cannot add %s and %s' % (type(self), type(other)))
 
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
         return self * (self.one / other)
 
     @call_highest_priority('__rmatmul__')
@@ -2842,10 +2842,6 @@ class MatrixArithmetic(MatrixRequired):
     @call_highest_priority('__rsub__')
     def __sub__(self, a):
         return self + (-a)
-
-    @call_highest_priority('__rtruediv__')
-    def __truediv__(self, other):
-        return self.__div__(other)
 
 
 class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,

@@ -60,20 +60,16 @@ class QuotientRingElement(object):
 
     __rmul__ = __mul__
 
-    def __rdiv__(self, o):
+    def __rtruediv__(self, o):
         return self.ring.revert(self)*o
 
-    __rtruediv__ = __rdiv__
-
-    def __div__(self, o):
+    def __truediv__(self, o):
         if not isinstance(o, self.__class__):
             try:
                 o = self.ring.convert(o)
             except (NotImplementedError, CoercionFailed):
                 return NotImplemented
         return self.ring.revert(o)*self
-
-    __truediv__ = __div__
 
     def __pow__(self, oth):
         return self.ring(self.data**oth)

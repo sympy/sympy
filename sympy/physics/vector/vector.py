@@ -106,11 +106,9 @@ class Vector(Printable):
         else:
             return sympify(out)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         """This uses mul and inputs self and 1 divided by other. """
         return self.__mul__(sympify(1) / other)
-
-    __truediv__ = __div__
 
     def __eq__(self, other):
         """Tests for equality.

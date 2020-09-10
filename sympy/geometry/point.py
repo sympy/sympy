@@ -222,7 +222,7 @@ class Point(GeometryEntity):
     def __contains__(self, item):
         return item in self.args
 
-    def __div__(self, divisor):
+    def __truediv__(self, divisor):
         """Divide point's coordinates by a factor."""
         divisor = sympify(divisor)
         coords = [simplify(x/divisor) for x in self.args]
@@ -853,8 +853,6 @@ class Point(GeometryEntity):
         return self / abs(self)
 
     n = evalf
-
-    __truediv__ = __div__
 
 class Point2D(Point):
     """A point in a 2-dimensional Euclidean space.

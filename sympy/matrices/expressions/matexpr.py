@@ -1,4 +1,3 @@
-from typing import Any, Callable
 from sympy.core.logic import FuzzyBool
 
 from functools import wraps, reduce
@@ -135,18 +134,15 @@ class MatrixExpr(Expr):
         raise NotImplementedError("Matrix Power not defined")
 
     @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
         return self * other**S.NegativeOne
 
     @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
+    @call_highest_priority('__truediv__')
+    def __rtruediv__(self, other):
         raise NotImplementedError()
         #return MatMul(other, Pow(self, S.NegativeOne))
-
-    __truediv__ = __div__  # type: Callable[[MatrixExpr, Any], Any]
-    __rtruediv__ = __rdiv__  # type: Callable[[MatrixExpr, Any], Any]
 
     @property
     def rows(self):

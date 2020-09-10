@@ -1922,13 +1922,13 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
     def __rmul__(self, other):
         return TensMul(other, self).doit()
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         other = _sympify(other)
         if isinstance(other, TensExpr):
             raise ValueError('cannot divide by a tensor')
         return TensMul(self, S.One/other).doit()
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         raise ValueError('cannot divide by a tensor')
 
     def __pow__(self, other):
@@ -1953,9 +1953,6 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
 
     def __rpow__(self, other):
         raise NotImplementedError
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     @property
     @abstractmethod

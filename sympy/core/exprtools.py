@@ -790,10 +790,8 @@ class Factors:
     def __divmod__(self, other):  # Factors
         return self.div(other)
 
-    def __div__(self, other):  # Factors
+    def __truediv__(self, other):  # Factors
         return self.quo(other)
-
-    __truediv__ = __div__
 
     def __mod__(self, other):  # Factors
         return self.rem(other)
@@ -899,13 +897,11 @@ class Term:
         else:
             return NotImplemented
 
-    def __div__(self, other):  # Term
+    def __truediv__(self, other):  # Term
         if isinstance(other, Term):
             return self.quo(other)
         else:
             return NotImplemented
-
-    __truediv__ = __div__
 
     def __pow__(self, other):  # Term
         if isinstance(other, SYMPY_INTS):
