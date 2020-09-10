@@ -1167,7 +1167,7 @@ def unbranched_argument(arg):
     Examples
     ========
 
-    >>> from sympy import exp, exp_polar, unbranched_argument
+    >>> from sympy import exp_polar, unbranched_argument
     >>> from sympy import I, pi
     >>> unbranched_argument(exp_polar(15*I*pi))
     15*pi
