@@ -7,12 +7,6 @@ torch = import_module('torch')
 
 class TorchPrinter(AbstractPythonCodePrinter):
 
-    def _get_loop_opening_ending(self, indices):
-        pass
-
-    def _rate_index_position(self, p):
-        pass
-
     printmethod = "_torchcode"
 
     mapping = {
