@@ -1067,7 +1067,7 @@ class periodic_argument(Function):
     Examples
     ========
 
-    >>> from sympy import exp, exp_polar, periodic_argument
+    >>> from sympy import exp_polar, periodic_argument
     >>> from sympy import I, pi
     >>> periodic_argument(exp_polar(10*I*pi), 2*pi)
     0
