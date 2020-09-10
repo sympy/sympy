@@ -185,6 +185,6 @@ class TorchPrinter(AbstractPythonCodePrinter):
         return self._expand_fold_binary_op('torch.add', expr.args)
 
 
-def torch_code(expr):
+def torch_code(expr, **settings):
     printer = TorchPrinter()
-    return printer.doprint(expr)
+    return printer.doprint(expr, **settings)
