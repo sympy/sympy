@@ -127,10 +127,11 @@ __all__ = ['ContinuousRV',
 def _(x):
     return any([is_random(i) for i in x])
 
-def rv(symbol, cls, args):
+def rv(symbol, cls, args, **kwargs):
     args = list(map(sympify, args))
     dist = cls(*args)
-    dist.check(*args)
+    if kwargs.pop('check', True):
+        dist.check(*args)
     pspace = SingleContinuousPSpace(symbol, dist)
     if any(is_random(arg) for arg in args):
         from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
@@ -141,7 +142,7 @@ def rv(symbol, cls, args):
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
     _argnames = ('pdf',)
 
-    def __new__(cls, pdf, set=Interval(-oo, oo)):
+    def __new__(cls, pdf, set=Interval(-oo, oo), check=True):
         return Basic.__new__(cls, pdf, set)
 
     @property
@@ -155,7 +156,7 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
         _value_check(val == S.One, "The pdf on the given set is incorrect.")
 
 
-def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
+def ContinuousRV(symbol, density, set=Interval(-oo, oo), **kwargs):
     """
     Create a Continuous Random Variable given the following:
 
@@ -168,6 +169,16 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
         Represents probability density function.
     set : set/Interval
         Represents the region where the pdf is valid, by default is real line.
+
+
+    Other Parameters
+    ================
+
+    check : bool
+        If True, it will check whether the given density
+        integrates to 1 over the given set. If False, it
+        will not perform this check. Default is True.
+
 
     Returns
     =======
@@ -196,7 +207,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
     pdf = Lambda(symbol, pdf)
-    return rv(symbol.name, ContinuousDistributionHandmade, (pdf, set))
+    return rv(symbol.name, ContinuousDistributionHandmade, (pdf, set), **kwargs)
 
 ########################################
 # Continuous Probability Distributions #

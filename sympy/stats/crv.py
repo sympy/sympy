@@ -333,7 +333,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
-        cf = integrate(exp(I*t*x)*pdf, (x, -oo, oo))
+        cf = integrate(exp(I*t*x)*pdf, (x, self.set))
         return Lambda(t, cf)
 
     def _characteristic_function(self, t):
@@ -355,7 +355,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
-        mgf = integrate(exp(t * x) * pdf, (x, -oo, oo))
+        mgf = integrate(exp(t * x) * pdf, (x, self.set))
         return Lambda(t, mgf)
 
     def _moment_generating_function(self, t):
