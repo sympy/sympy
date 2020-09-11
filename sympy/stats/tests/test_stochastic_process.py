@@ -82,7 +82,7 @@ def test_DiscreteMarkovChain():
     # pass name, state_space and transition_probabilities
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
     TS = MatrixSymbol('T', 3, 3)
-    Y = DiscreteMarkovChain("Y", [1, 2, 'Three'], T)
+    Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     YS = DiscreteMarkovChain("Y", ['One', 'Two', 3], TS)
     assert YS._transient2transient() == None
     assert YS._transient2absorbing() == None
@@ -97,7 +97,7 @@ def test_DiscreteMarkovChain():
     assert P(Eq(Y[3], 2), Eq(Y[1], 1) & TransitionMatrixOf(Y, TO)).round(3) == Float(0.375, 3)
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert E(Y[3], evaluate=False) == Expectation(Y[3])
-    assert E(Y[3], Eq(Y[2], 1)).round(2) == Float(1.1, 3)
+        assert E(Y[3], Eq(Y[2], 1)).round(2) == Float(1.1, 3)
     TSO = MatrixSymbol('T', 4, 4)
     raises(ValueError, lambda: str(P(Eq(YS[3], 2), Eq(YS[1], 1) & TransitionMatrixOf(YS, TSO))))
     raises(TypeError, lambda: DiscreteMarkovChain("Z", [0, 1, 2], symbols('M')))
@@ -156,8 +156,9 @@ def test_DiscreteMarkovChain():
     assert P(Eq(X[2], 1) | Eq(X[2], 2), Eq(X[1], 1)) == Rational(2, 3)
     assert P(Eq(X[2], 1) & Eq(X[2], 2), Eq(X[1], 1)) is S.Zero
     assert P(Ne(X[2], 2), Eq(X[1], 1)) == Rational(1, 3)
-    assert E(X[1]**2, Eq(X[0], 1)) == Rational(8, 3)
-    assert variance(X[1], Eq(X[0], 1)) == Rational(8, 9)
+    with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
+        assert E(X[1]**2, Eq(X[0], 1)) == Rational(8, 3)
+        assert variance(X[1], Eq(X[0], 1)) == Rational(8, 9)
     raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
     raises(ValueError, lambda: DiscreteMarkovChain('X', [0, 1], T))
 
@@ -168,9 +169,10 @@ def test_DiscreteMarkovChain():
     assert P(Eq(X[2], 1) | Eq(X[2], 2), Eq(X[1], 1)) == Rational(2, 3)
     assert P(Eq(X[2], 1) & Eq(X[2], 2), Eq(X[1], 1)) is S.Zero
     assert P(Ne(X[2], 2), Eq(X[1], 1)) == Rational(1, 3)
-    assert E(X[1] ** 2, Eq(X[0], 1)) == Rational(8, 3)
-    assert variance(X[1], Eq(X[0], 1)) == Rational(8, 9)
-    raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
+    with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
+        assert str(E(X[1] ** 2, Eq(X[0], 1))) == "A**2/3 + 2*C**2/3"
+        assert str(variance(X[1], Eq(X[0], 1))) == "2*(-A/3 + C/3)**2/3 + (2*A/3 - 2*C/3)**2/3"
+        raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
 
 
 def test_sample_stochastic_process():

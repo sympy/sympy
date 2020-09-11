@@ -22,8 +22,7 @@ from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution, FiniteRV
 from sympy.stats.drv_types import Poisson, PoissonDistribution
 from sympy.stats.crv_types import Normal, NormalDistribution, Gamma, GammaDistribution
-from sympy.core.sympify import _sympify
-from sympy.core.symbol import Str
+from sympy.core.sympify import _sympify, sympify
 from sympy.utilities.misc import filldedent
 import warnings
 
@@ -81,19 +80,19 @@ def _state_converter(itr):
     to tuple/Range.
     """
     if isinstance(itr, (Tuple, set, FiniteSet)):
-        itr = Tuple(*(Str(i) if isinstance(i, str) else i for i in itr))
+        itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
 
     elif isinstance(itr, (list, tuple)):
         # check if states are unique
         if len(set(itr)) != len(itr):
             raise ValueError('The state space must have unique elements.')
-        itr = Tuple(*(Str(i) if isinstance(i, str) else i for i in itr))
+        itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
 
     elif isinstance(itr, Range):
         # the only ordered set in sympy I know of
         # try to convert to tuple
         try:
-            itr = Tuple(*(Str(i) if isinstance(i, str) else i for i in itr))
+            itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
         except ValueError:
             pass
 
@@ -617,7 +616,10 @@ class MarkovProcess(StochasticProcess):
             mat_of = TransitionMatrixOf(self, mat) if isinstance(self, DiscreteMarkovChain) else GeneratorMatrixOf(self, mat)
             cond = condition & mat_of & \
                     StochasticStateSpaceOf(self, state_index)
-            func = lambda s: self.probability(Eq(rv, s), cond)*expr.subs(rv, s)
+            if isinstance(self, DiscreteMarkovChain):
+                func = lambda s: self.probability(Eq(rv, s), cond) * expr.subs(rv, self.state_space[s])
+            else:
+                func = lambda s: self.probability(Eq(rv, s), cond)*expr.subs(rv, s)
             return sum([func(s) for s in state_index])
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
@@ -643,7 +645,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     Examples
     ========
 
-    >>> from sympy.stats import DiscreteMarkovChain, TransitionMatrixOf, P
+    >>> from sympy.stats import DiscreteMarkovChain, TransitionMatrixOf, P, E
     >>> from sympy import Matrix, MatrixSymbol, Eq, symbols
     >>> T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
@@ -683,6 +685,11 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> Y = DiscreteMarkovChain("Y", [sunny, cloudy, rainy], T)
     >>> P(Eq(Y[3], Y.index_of[rainy]), Eq(Y[1], Y.index_of[cloudy])).round(2) # doctest: +SKIP
     0.36
+
+    Expectations will be calculated as follows:
+
+    >>> E(Y[3], Eq(Y[1], Y.index_of[cloudy])) # doctest: +SKIP
+    0.38*Cloudy + 0.36*Rainy + 0.26*Sunny
 
     There is limited support for arbitrarily sized states:
 
@@ -751,9 +758,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """Converts a state name to a state index i.e. inverts self.state_space."""
         if isinstance(self.number_of_states, Integer):
             indexes = {state: index for index, state in enumerate(self.state_space)}
-            # add `str` values to the keys as well
+            # add `Symbol` values to the keys as well
             for index, state in enumerate(self.state_space):
-                if isinstance(state, Str):
+                if isinstance(state, Symbol):
                     indexes[str(state)] = index
             return indexes
         else:
