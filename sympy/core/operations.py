@@ -29,7 +29,8 @@ class AssocOp(Basic):
     Parameters
     ==========
 
-    *args : Arguments which are operated
+    *args :
+        Arguments which are operated
 
     sympify : bool, optional
         Default is ``True``. ``False`` may be passed only when all arguments are
@@ -619,7 +620,8 @@ class AssocOpDispatcher:
         Parameters
         ==========
 
-        *args : Arguments which are operated
+        *args :
+            Arguments which are operated
 
         sympify : bool, optional
             Default is ``True``. ``False`` may be passed only when all arguments are
