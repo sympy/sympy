@@ -66,8 +66,8 @@ class PlotController(object):
         key.F8: 'save_image'
     }
 
-    def __init__(self, window, **kwargs):
-        self.invert_mouse_zoom = kwargs.pop('invert_mouse_zoom', False)
+    def __init__(self, window, *, invert_mouse_zoom=False, **kwargs):
+        self.invert_mouse_zoom = invert_mouse_zoom
         self.window = window
         self.camera = window.camera
         self.action = {

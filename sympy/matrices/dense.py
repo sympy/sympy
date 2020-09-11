@@ -915,7 +915,7 @@ def eye(*args, **kwargs):
     return Matrix.eye(*args, **kwargs)
 
 
-def diag(*values, **kwargs):
+def diag(*values, strict=True, unpack=False, **kwargs):
     """Returns a matrix with the provided values placed on the
     diagonal. If non-square matrices are included, they will
     produce a block-diagonal matrix.
@@ -949,12 +949,7 @@ def diag(*values, **kwargs):
     .common.MatrixCommon.diag
     .expressions.blockmatrix.BlockMatrix
     """
-    # Extract any setting so we don't duplicate keywords sent
-    # as named parameters:
-    kw = kwargs.copy()
-    strict = kw.pop('strict', True)  # lists will be converted to Matrices
-    unpack = kw.pop('unpack', False)
-    return Matrix.diag(*values, strict=strict, unpack=unpack, **kw)
+    return Matrix.diag(*values, strict=strict, unpack=unpack, **kwargs)
 
 
 def GramSchmidt(vlist, orthonormal=False):

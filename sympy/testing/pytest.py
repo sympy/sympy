@@ -184,7 +184,7 @@ else:
         return func
 
     @contextlib.contextmanager
-    def warns(warningcls, **kwargs):
+    def warns(warningcls, *, match=''):
         '''Like raises but tests that warnings are emitted.
 
         >>> from sympy.testing.pytest import warns
@@ -200,10 +200,6 @@ else:
         Failed: DID NOT WARN. No warnings of type UserWarning\
         was emitted. The list of emitted warnings is: [].
         '''
-        match = kwargs.pop('match', '')
-        if kwargs:
-            raise TypeError('Invalid keyword arguments: %s' % kwargs)
-
         # Absorbs all warnings in warnrec
         with warnings.catch_warnings(record=True) as warnrec:
             # Hide all warnings but make sure that our warning is emitted

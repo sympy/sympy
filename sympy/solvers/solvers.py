@@ -2756,7 +2756,7 @@ def _tsolve(eq, sym, **flags):
 # TODO: option for calculating J numerically
 
 @conserve_mpmath_dps
-def nsolve(*args, **kwargs):
+def nsolve(*args, dict=False, **kwargs):
     r"""
     Solve a nonlinear equation system numerically: ``nsolve(f, [args,] x0,
     modules=['mpmath'], **kwargs)``.
@@ -2881,7 +2881,8 @@ def nsolve(*args, **kwargs):
         prec = None
 
     # keyword argument to return result as a dictionary
-    as_dict = kwargs.pop('dict', False)
+    as_dict = dict
+    from builtins import dict  # to unhide the builtin
 
     # interpret arguments
     if len(args) == 3:

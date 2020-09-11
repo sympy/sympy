@@ -382,7 +382,7 @@ class PlotGrid(object):
         [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
 
     """
-    def __init__(self, nrows, ncolumns, *args, **kwargs):
+    def __init__(self, nrows, ncolumns, *args, show=True, **kwargs):
         """
         Parameters
         ==========
@@ -418,7 +418,6 @@ class PlotGrid(object):
         for arg in args:
             self._series.append(arg._series)
         self.backend = DefaultBackend
-        show = kwargs.pop('show', True)
         if show:
             self.show()
 
@@ -1439,7 +1438,7 @@ def _matplotlib_list(interval_list):
 # TODO: Add more plotting options for 3d plots.
 # TODO: Adaptive sampling for 3D plots.
 
-def plot(*args, **kwargs):
+def plot(*args, show=True, **kwargs):
     """Plots a function of a single variable as a curve.
 
     Parameters
@@ -1636,7 +1635,6 @@ def plot(*args, **kwargs):
     x = free.pop() if free else Symbol('x')
     kwargs.setdefault('xlabel', x.name)
     kwargs.setdefault('ylabel', 'f(%s)' % x.name)
-    show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 1)
     series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
@@ -1647,7 +1645,7 @@ def plot(*args, **kwargs):
     return plots
 
 
-def plot_parametric(*args, **kwargs):
+def plot_parametric(*args, show=True, **kwargs):
     """
     Plots a 2D parametric curve.
 
@@ -1826,7 +1824,6 @@ def plot_parametric(*args, **kwargs):
     Plot, Parametric2DLineSeries
     """
     args = list(map(sympify, args))
-    show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 2, 1)
     series = [Parametric2DLineSeries(*arg, **kwargs) for arg in plot_expr]
@@ -1836,7 +1833,7 @@ def plot_parametric(*args, **kwargs):
     return plots
 
 
-def plot3d_parametric_line(*args, **kwargs):
+def plot3d_parametric_line(*args, show=True, **kwargs):
     """
     Plots a 3D parametric line plot.
 
@@ -1940,7 +1937,6 @@ def plot3d_parametric_line(*args, **kwargs):
 
     """
     args = list(map(sympify, args))
-    show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 3, 1)
     series = [Parametric3DLineSeries(*arg, **kwargs) for arg in plot_expr]
@@ -1950,7 +1946,7 @@ def plot3d_parametric_line(*args, **kwargs):
     return plots
 
 
-def plot3d(*args, **kwargs):
+def plot3d(*args, show=True, **kwargs):
     """
     Plots a 3D surface plot.
 
@@ -2072,7 +2068,6 @@ def plot3d(*args, **kwargs):
     """
 
     args = list(map(sympify, args))
-    show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 2)
     series = [SurfaceOver2DRangeSeries(*arg, **kwargs) for arg in plot_expr]
@@ -2082,7 +2077,7 @@ def plot3d(*args, **kwargs):
     return plots
 
 
-def plot3d_parametric_surface(*args, **kwargs):
+def plot3d_parametric_surface(*args, show=True, **kwargs):
     """
     Plots a 3D parametric surface plot.
 
@@ -2177,7 +2172,6 @@ def plot3d_parametric_surface(*args, **kwargs):
     """
 
     args = list(map(sympify, args))
-    show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 3, 2)
     series = [ParametricSurfaceSeries(*arg, **kwargs) for arg in plot_expr]
@@ -2186,7 +2180,7 @@ def plot3d_parametric_surface(*args, **kwargs):
         plots.show()
     return plots
 
-def plot_contour(*args, **kwargs):
+def plot_contour(*args, show=True, **kwargs):
     """
     Draws contour plot of a function
 
@@ -2257,7 +2251,6 @@ def plot_contour(*args, **kwargs):
     """
 
     args = list(map(sympify, args))
-    show = kwargs.pop('show', True)
     plot_expr = check_arguments(args, 1, 2)
     series = [ContourSeries(*arg) for arg in plot_expr]
     plot_contours = Plot(*series, **kwargs)

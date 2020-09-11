@@ -5066,7 +5066,7 @@ def subresultants(f, g, *gens, **args):
 
 
 @public
-def resultant(f, g, *gens, **args):
+def resultant(f, g, *gens, includePRS=False, **args):
     """
     Compute resultant of ``f`` and ``g``.
 
@@ -5080,7 +5080,6 @@ def resultant(f, g, *gens, **args):
     4
 
     """
-    includePRS = args.pop('includePRS', False)
     options.allowed_flags(args, ['polys'])
 
     try:
@@ -6278,7 +6277,7 @@ def factor_list(f, *gens, **args):
 
 
 @public
-def factor(f, *gens, **args):
+def factor(f, *gens, deep=False, **args):
     """
     Compute the factorization of expression, ``f``, into irreducibles. (To
     factor an integer into primes, use ``factorint``.)
@@ -6346,7 +6345,7 @@ def factor(f, *gens, **args):
 
     """
     f = sympify(f)
-    if args.pop('deep', False):
+    if deep:
         from sympy.simplify.simplify import bottom_up
         def _try_factor(expr):
             """

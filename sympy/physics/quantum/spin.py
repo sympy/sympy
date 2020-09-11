@@ -623,7 +623,7 @@ class Rotation(UnitaryOperator):
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
-    def _apply_operator_uncoupled(self, state, ket, **options):
+    def _apply_operator_uncoupled(self, state, ket, *, dummy=True, **options):
         a = self.alpha
         b = self.beta
         g = self.gamma
@@ -639,7 +639,7 @@ class Rotation(UnitaryOperator):
                 s.append(z*state(j, mp))
             return Add(*s)
         else:
-            if options.pop('dummy', True):
+            if dummy:
                 mp = Dummy('mp')
             else:
                 mp = symbols('mp')
@@ -654,7 +654,7 @@ class Rotation(UnitaryOperator):
     def _apply_operator_JzKet(self, ket, **options):
         return self._apply_operator_uncoupled(JzKet, ket, **options)
 
-    def _apply_operator_coupled(self, state, ket, **options):
+    def _apply_operator_coupled(self, state, ket, *, dummy=True, **options):
         a = self.alpha
         b = self.beta
         g = self.gamma
@@ -672,7 +672,7 @@ class Rotation(UnitaryOperator):
                 s.append(z*state(j, mp, jn, coupling))
             return Add(*s)
         else:
-            if options.pop('dummy', True):
+            if dummy:
                 mp = Dummy('mp')
             else:
                 mp = symbols('mp')

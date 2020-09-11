@@ -604,7 +604,7 @@ def exptrigsimp(expr):
 
 #-------------------- the old trigsimp routines ---------------------
 
-def trigsimp_old(expr, **opts):
+def trigsimp_old(expr, *, first=True, **opts):
     """
     reduces expression by using known trig identities
 
@@ -663,7 +663,6 @@ def trigsimp_old(expr, **opts):
 
     """
     old = expr
-    first = opts.pop('first', True)
     if first:
         if not expr.has(*_trigs):
             return expr
@@ -1066,7 +1065,7 @@ def __trigsimp(expr, deep=False):
 #------------------- end of old trigsimp routines --------------------
 
 
-def futrig(e, **kwargs):
+def futrig(e, *, hyper=True, **kwargs):
     """Return simplified ``e`` using Fu-like transformations.
     This is not the "Fu" algorithm. This is called by default
     from ``trigsimp``. By default, hyperbolics subexpressions
@@ -1100,7 +1099,7 @@ def futrig(e, **kwargs):
     old = e
     e = bottom_up(e, _futrig)
 
-    if kwargs.pop('hyper', True) and e.has(HyperbolicFunction):
+    if hyper and e.has(HyperbolicFunction):
         e, f = hyper_as_trig(e)
         e = f(bottom_up(e, _futrig))
 

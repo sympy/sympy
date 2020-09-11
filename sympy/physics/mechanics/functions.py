@@ -544,7 +544,7 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
             i.free_symbols == t_set]) - exclude_set
 
 
-def msubs(expr, *sub_dicts, **kwargs):
+def msubs(expr, *sub_dicts, smart=False, **kwargs):
     """A custom subs for use on expressions derived in physics.mechanics.
 
     Traverses the expression tree once, performing the subs found in sub_dicts.
@@ -582,7 +582,6 @@ def msubs(expr, *sub_dicts, **kwargs):
     """
 
     sub_dict = dict_merge(*sub_dicts)
-    smart = kwargs.pop('smart', False)
     if smart:
         func = _smart_subs
     elif hasattr(expr, 'msubs'):

@@ -787,7 +787,16 @@ def preprocess_roots(poly):
 
 
 @public
-def roots(f, *gens, **flags):
+def roots(f, *gens,
+        auto=True,
+        cubics=True,
+        trig=False,
+        quartics=True,
+        quintics=False,
+        multiple=False,
+        filter=None,
+        predicate=None,
+        **flags):
     """
     Computes symbolic roots of a univariate polynomial.
 
@@ -849,15 +858,6 @@ def roots(f, *gens, **flags):
     """
     from sympy.polys.polytools import to_rational_coeffs
     flags = dict(flags)
-
-    auto = flags.pop('auto', True)
-    cubics = flags.pop('cubics', True)
-    trig = flags.pop('trig', False)
-    quartics = flags.pop('quartics', True)
-    quintics = flags.pop('quintics', False)
-    multiple = flags.pop('multiple', False)
-    filter = flags.pop('filter', None)
-    predicate = flags.pop('predicate', None)
 
     if isinstance(f, list):
         if gens:
@@ -1088,7 +1088,7 @@ def roots(f, *gens, **flags):
         return zeros
 
 
-def root_factors(f, *gens, **args):
+def root_factors(f, *gens, filter=None, **args):
     """
     Returns all factors of a univariate polynomial.
 
@@ -1103,7 +1103,6 @@ def root_factors(f, *gens, **args):
 
     """
     args = dict(args)
-    filter = args.pop('filter', None)
 
     F = Poly(f, *gens, **args)
 

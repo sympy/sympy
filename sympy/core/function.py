@@ -2734,14 +2734,13 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     ...         args = sympify(args)
     ...         return Expr.__new__(cls, *args)
     ...
-    ...     def _eval_expand_double(self, **hints):
+    ...     def _eval_expand_double(self, *, force=False, **hints):
     ...         '''
     ...         Doubles the args of MyClass.
     ...
     ...         If there more than four args, doubling is not performed,
     ...         unless force=True is also used (False by default).
     ...         '''
-    ...         force = hints.pop('force', False)
     ...         if not force and len(self.args) > 4:
     ...             return self
     ...         return self.func(*(self.args + self.args))

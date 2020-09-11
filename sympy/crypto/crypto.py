@@ -1485,7 +1485,7 @@ def _decipher_rsa_crt(i, d, factors):
     return result[0]
 
 
-def _rsa_key(*args, **kwargs):
+def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, multipower=None):
     r"""A private subroutine to generate RSA key
 
     Parameters
@@ -1502,12 +1502,6 @@ def _rsa_key(*args, **kwargs):
     """
     from sympy.ntheory import totient as _euler
     from sympy.ntheory import reduced_totient as _carmichael
-
-    public = kwargs.pop('public', True)
-    private = kwargs.pop('private', True)
-    totient = kwargs.pop('totient', 'Euler')
-    index = kwargs.pop('index', None)
-    multipower = kwargs.pop('multipower', None)
 
     if len(args) < 2:
         return False

@@ -276,12 +276,11 @@ class Token(Basic):
         else:
             return _print(v)
 
-    def _sympyrepr(self, printer, *args, **kwargs):
+    def _sympyrepr(self, printer, *args, joiner=', ', **kwargs):
         from sympy.printing.printer import printer_context
         exclude = kwargs.get('exclude', ())
         values = [getattr(self, k) for k in self.__slots__]
         indent_level = printer._context.get('indent_level', 0)
-        joiner = kwargs.pop('joiner', ', ')
 
         arg_reprs = []
 

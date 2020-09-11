@@ -57,8 +57,8 @@ class interval(object):
     of two 3-valued logic values.
     """
 
-    def __init__(self, *args, **kwargs):
-        self.is_valid = kwargs.pop('is_valid', True)
+    def __init__(self, *args, is_valid=True, **kwargs):
+        self.is_valid = is_valid
         if len(args) == 1:
             if isinstance(args[0], interval):
                 self.start, self.end = args[0].start, args[0].end
