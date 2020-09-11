@@ -3443,7 +3443,7 @@ class Expr(Basic, EvalfMixin):
 
     def diff(self, *symbols, **assumptions):
         assumptions.setdefault("evaluate", True)
-        return Derivative(self, *symbols, **assumptions)
+        return _derivative_dispatch(self, *symbols, **assumptions)
 
     ###########################################################################
     ###################### EXPRESSION EXPANSION METHODS #######################
@@ -4016,7 +4016,7 @@ class ExprBuilder:
 from .mul import Mul
 from .add import Add
 from .power import Pow
-from .function import Derivative, Function
+from .function import Derivative, Function, _derivative_dispatch
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational
