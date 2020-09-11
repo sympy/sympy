@@ -1,3 +1,5 @@
+import itertools
+from operator import attrgetter
 from typing import Tuple
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -8,7 +10,9 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered
 from sympy.core.logic import fuzzy_and
 from sympy.core.parameters import global_parameters
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import sift, tied_max
+from sympy.multipledispatch.dispatcher import (Dispatcher, ambiguity_register_error,
+    str_signature)
 
 
 class AssocOp(Basic):
@@ -21,6 +25,19 @@ class AssocOp(Basic):
 
     This is an abstract base class, concrete derived classes must define
     the attribute `identity`.
+
+    Parameters
+    ==========
+
+    *args : Arguments which are operated
+
+    sympify : bool, optional
+        Default is ``True``. ``False`` may be passed only when all arguments are
+            already sympified, for faster processing.
+
+    evaluate : bool, optional
+        Default is ``True``. If ``False``, do not evaluate the operation.
+
     """
 
     # for performance reason, we don't let is_commutative go to assumptions,
@@ -30,9 +47,13 @@ class AssocOp(Basic):
     _args_type = None
 
     @cacheit
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, sympify=True, **options):
         from sympy import Order
-        args = list(map(_sympify, args))
+
+        # Allow faster processing by passing ``sympify=False``, if all arguments
+        # are already sympified.
+        if sympify:
+            args = list(map(_sympify, args))
 
         # Disallow non-Expr args in Add/Mul
         typ = cls._args_type
@@ -504,3 +525,187 @@ class LatticeOp(AssocOp):
     @staticmethod
     def _compare_pretty(a, b):
         return (str(a) > str(b)) - (str(a) < str(b))
+
+class AssocOpDispatcher:
+    """
+    Handler dispatcher for associative operators
+
+    .. notes::
+       This approach is experimental, and can be replaced or deleted in the future.
+       See https://github.com/sympy/sympy/pull/19463.
+
+    Explanation
+    ===========
+
+    If arguments of different kind are passed, their ``_op_priority`` are compared to
+    choose the type with the highest priority. If this is ambiguous, priority relations
+    which are registered by ``register_priority`` method are referred to.
+    Once a type is selected, handler method of the type, which is a static method, is used
+    to perform the operation.
+
+    Priority registration is unordered. You cannot make ``A*B`` and ``B*A`` use different
+    handler method. All logic dealing with the order of arguments must be implemented in
+    the handler method.
+
+    Examples
+    ========
+
+    >>> from sympy import Add, Expr, Symbol
+    >>> from sympy.core.add import add
+
+    >>> class NewExpr(Expr):
+    ...     @staticmethod
+    ...     def _add_handler(*args, **kwargs):
+    ...         return NewAdd(*args, **kwargs)
+    >>> class NewAdd(NewExpr, Add):
+    ...     pass
+
+    >>> @add.register_priority(Expr, NewExpr)
+    ... @add.register_priority(NewExpr, NewExpr)
+    ... def _(_1, _2):
+    ...     return NewExpr
+
+    >>> a, b = Symbol('a'), NewExpr()
+    >>> add(a, b) == NewAdd(a, b)
+    True
+
+    Registered priority selector can return any type.
+
+    >>> class Foo(Expr):
+    ...     @staticmethod
+    ...     def _add_handler(*args, **kwargs):
+    ...         raise NotImplementedError
+    >>> class Bar(Expr):
+    ...     @staticmethod
+    ...     def _add_handler(*args, **kwargs):
+    ...         raise NotImplementedError
+    >>> class FooBar(Expr):
+    ...     @staticmethod
+    ...     def _add_handler(*args, **kwargs):
+    ...         return NewAdd(*args, **kwargs)
+
+    >>> @add.register_priority(Foo, Bar)
+    ... def _(_1, _2):
+    ...     return FooBar
+
+    >>> add(Foo(), Bar()) == NewAdd(Foo(), Bar())
+    True
+
+    """
+    def __init__(self, name, doc=None):
+        self.name = name
+        self.doc = doc
+        self.handlermethod = "_%s_handler" % name
+        self._handlergetter = attrgetter(self.handlermethod)
+        self._dispatcher = Dispatcher(name)
+
+    def __repr__(self):
+        return "<dispatched %s>" % self.name
+
+    def register_priority(self, cls1, cls2, on_ambiguity=ambiguity_register_error):
+        """
+        Register the priority between two types, in both straight and reversed order.
+        Registered function must return the class which has the handler that is to be used.
+        """
+        def _(func):
+            self._dispatcher.add((cls1, cls2), func, on_ambiguity=on_ambiguity)
+            self._dispatcher.add((cls2, cls1), func, on_ambiguity=on_ambiguity)
+            return func
+        return _
+
+    @cacheit
+    def __call__(self, *args, sympify=True, **kwargs):
+        """
+        Parameters
+        ==========
+
+        *args : Arguments which are operated
+
+        sympify : bool, optional
+            Default is ``True``. ``False`` may be passed only when all arguments are
+            already sympified, for faster processing.
+        """
+        if sympify:
+            args = tuple(map(_sympify, args))
+        types = frozenset(map(type, args))
+
+        # If sympify=True was passed, no need to sympify again so pass sympify=False.
+        # If sympify=False was passed, all args are already sympified so pass sympify=False.
+        return self.dispatch(types)(*args, sympify=False, **kwargs)
+
+    @cacheit
+    def dispatch(self, types):
+        """
+        Select the type with highest priority, and return its handler.
+        """
+
+        # Quick exit for the case where all arguments are of same type
+        # or all handlermethods are same
+        handlers = set(map(self._handlergetter, types))
+        if len(handlers) == 1:
+            h, = handlers
+            return h
+
+        # Sieve the types with low op_priority or no handler
+        # This makes it faster than using dispatcher on every types.
+        sieved_data = tied_max(
+            types, key=lambda typ: getattr(typ, '_op_priority', 0)
+        )
+
+        # Only one type remains
+        if len(sieved_data) == 1:
+            typ, = sieved_data
+            return self._handlergetter(typ)
+
+        # Recursively select with registered binary priority
+        for i, typ in enumerate(sieved_data):
+            if i == 0:
+                result_type = typ
+            else:
+                dispatched_selector = self._dispatcher.dispatch(result_type, typ)
+                selected_type = dispatched_selector(result_type, typ)
+
+                if not isinstance(selected_type, type):
+                    raise RuntimeError(
+                        "Dispatcher for {!r} and {!r} must return a type, but got {!r}".format(
+                        result_type, typ, selected_type
+                    ))
+
+                handler = self._handlergetter(selected_type)
+                if handler is None:
+                    raise RuntimeError(
+                        "Dispatcher for {!r} and {!r} returned {!r} which does not have {!r} method.".format(
+                        result_type, typ, selected_type, self.handlermethod
+                    ))
+
+                result_type = selected_type
+
+        # return handler method of selected argument
+        return handler
+
+    @property
+    def __doc__(self):
+        docs = [
+            "Multiply dispatched associative operator: %s" % self.name,
+            "Note that support for this is experimental, see the docs for :class:`AssocOpDispatcher` for details"
+        ]
+
+        if self.doc:
+            docs.append(self.doc)
+
+        docs.append("Registered priority relations are as follows:")
+
+        other = []
+        for func, sigs in itertools.groupby(self._dispatcher.ordering[::-1], lambda sig: self._dispatcher.funcs[sig]):
+            if func.__doc__:
+                s = 'Inputs: %s\n' % ', '.join('<%s>' % str_signature(sig) for sig in sigs)
+                s += '-' * len(s) + '\n'
+                s += func.__doc__.strip()
+                docs.append(s)
+            else:
+                other += list(sigs)
+
+        if other:
+            docs.append('Other signatures:\n    ' + '\n    '.join(other))
+
+        return '\n\n'.join(docs)

@@ -1,4 +1,5 @@
 from sympy.core import I, symbols, Basic, Mul, S
+from sympy.core.mul import mul
 from sympy.functions import adjoint, transpose
 from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
         eye, ImmutableMatrix)
@@ -152,6 +153,11 @@ def test_issue_12950():
 def test_construction_with_Mul():
     assert Mul(C, D) == MatMul(C, D)
     assert Mul(D, C) == MatMul(D, C)
+
+def test_construction_with_mul():
+    assert mul(C, D) == MatMul(C, D)
+    assert mul(D, C) == MatMul(D, C)
+    assert mul(C, D) != MatMul(D, C)
 
 def test_generic_identity():
     assert MatMul.identity == GenericIdentity()

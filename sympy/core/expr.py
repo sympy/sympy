@@ -163,6 +163,18 @@ class Expr(Basic, EvalfMixin):
     # something better and more powerful.  See issue 5510.
     _op_priority = 10.0
 
+    # Handler methods for dispatching
+    # See operations.AssocOpDispatcher
+    @staticmethod
+    def _add_handler(*args, **kwargs):
+        from .add import Add
+        return Add(*args, **kwargs)
+
+    @staticmethod
+    def _mul_handler(*args, **kwargs):
+        from .mul import Mul
+        return Mul(*args, **kwargs)
+
     def __pos__(self):
         return self
 

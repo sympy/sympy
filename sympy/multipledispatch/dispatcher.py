@@ -28,6 +28,34 @@ def ambiguity_warn(dispatcher, ambiguities):
     warn(warning_text(dispatcher.name, ambiguities), AmbiguityWarning)
 
 
+def ambiguity_register_error(dispatcher, ambiguities):
+    """
+    Automatically register function which raises error when ambiguous types
+    are registered.
+
+    Parameters
+    ----------
+    dispatcher : Dispatcher
+        The dispatcher on which the ambiguity was detected
+    ambiguities : set
+        Set of type signature pairs that are ambiguous within this dispatcher
+
+    See Also:
+        Dispatcher.add
+        ambiguity_warn
+    """
+    for amb in ambiguities:
+        @dispatcher.register(*super_signature(amb))
+        def _(*args, **kwargs):
+            """ Unimplemented handler """
+            types = tuple(type(a) for a in args)
+            raise NotImplementedError(
+                "Ambiguous signature for %s: <%s>" % (
+                    dispatcher.name, str_signature(types)
+                )
+            )
+
+
 _unresolved_dispatchers = set() # type: Set[Dispatcher]
 _resolve = [True]
 

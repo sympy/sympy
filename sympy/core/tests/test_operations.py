@@ -1,8 +1,9 @@
-from sympy import Integer, S, symbols, Mul
+from sympy import Integer, S, Symbol, symbols, Expr
 from sympy.core.operations import AssocOp, LatticeOp
 from sympy.testing.pytest import raises
 from sympy.core.sympify import SympifyError
-from sympy.core.add import Add
+from sympy.core.add import Add, add
+from sympy.core.mul import Mul, mul
 
 # create the simplest possible Lattice class
 
@@ -64,3 +65,69 @@ def test_AssocOp_flatten():
     assert v.args == (u, d)
     # like Add, any unevaluated outer call will flatten inner args
     assert MyAssoc(a, v).args == (a, b, c, d)
+
+def test_add_dispatcher():
+
+    class NewBase1(Expr):
+        @staticmethod
+        def _add_handler(*args, **kwargs):
+            return NewAdd1(*args, **kwargs)
+    class NewAdd1(NewBase1, Add):
+        pass
+    class NewBase2(Expr):
+        _op_priority = 11
+        @staticmethod
+        def _add_handler(*args, **kwargs):
+            return NewAdd2(*args, **kwargs)
+    class NewAdd2(NewBase2, Add):
+        pass
+    a, b, c = Symbol('a'), NewBase1(), NewBase2()
+
+    @add.register_priority(Expr, NewBase1)
+    @add.register_priority(NewBase1, NewBase1)
+    def _(_1, _2):
+        return NewBase1
+
+    # Add called as fallback
+    assert add(1, 2) == Add(1, 2)
+    assert add(a, a) == Add(a, a)
+
+    # selection by registered priority
+    assert add(a,b,a) == NewAdd1(2*a, b)
+
+    # selection by _op_priority
+    assert add(a,c,a) == NewAdd2(2*a, c)
+    assert add(a,b,c) == NewAdd2(a,b,c)
+
+def test_mul_dispatcher():
+
+    class NewBase1(Expr):
+        @staticmethod
+        def _mul_handler(*args, **kwargs):
+            return NewMul1(*args, **kwargs)
+    class NewMul1(NewBase1, Mul):
+        pass
+    class NewBase2(Expr):
+        _op_priority = 11
+        @staticmethod
+        def _mul_handler(*args, **kwargs):
+            return NewMul2(*args, **kwargs)
+    class NewMul2(NewBase2, Mul):
+        pass
+    a, b, c = Symbol('a'), NewBase1(), NewBase2()
+
+    @mul.register_priority(Expr, NewBase1)
+    @mul.register_priority(NewBase1, NewBase1)
+    def _(_1, _2):
+        return NewBase1
+
+    # Mul called as fallback
+    assert mul(1, 2) == Mul(1, 2)
+    assert mul(a, a) == Mul(a, a)
+
+    # selection by registered priority
+    assert mul(a,b,a) == NewMul1(a**2, b)
+
+    # selection by _op_priority
+    assert mul(a,c,a) == NewMul2(a**2, c)
+    assert mul(a,b,c) == NewMul2(a,b,c)

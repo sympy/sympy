@@ -5,6 +5,8 @@ from functools import wraps, reduce
 import collections
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Mul, Add
+from sympy.core.add import add
+from sympy.core.mul import mul
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import SYMPY_INTS, default_sort_key
 from sympy.core.sympify import SympifyError, _sympify
@@ -593,6 +595,14 @@ class MatrixExpr(Expr):
         from .applyfunc import ElementwiseApplyFunction
         return ElementwiseApplyFunction(func, self)
 
+    @staticmethod
+    def _add_handler(*args, **kwargs):
+        return MatAdd(*args, **kwargs)
+
+    @staticmethod
+    def _mul_handler(*args, **kwargs):
+        return MatMul(*args, **kwargs)
+
 @dispatch(MatrixExpr, Expr)
 def _eval_is_eq(lhs, rhs): # noqa:F811
     return False
@@ -648,6 +658,13 @@ Basic._constructor_postprocessor_mapping[MatrixExpr] = {
     "Add": [get_postprocessor(Add)],
 }
 
+@add.register_priority(Expr, MatrixExpr)
+@add.register_priority(MatrixExpr, MatrixExpr)
+@mul.register_priority(Expr, MatrixExpr)
+@mul.register_priority(MatrixExpr, MatrixExpr)
+def _(_1, _2):
+    "Use MatrixExpr's handler method."
+    return MatrixExpr
 
 def _matrix_derivative(expr, x):
     from sympy import Derivative

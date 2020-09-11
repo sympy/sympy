@@ -5,7 +5,7 @@ import operator
 from .sympify import sympify
 from .basic import Basic
 from .singleton import S
-from .operations import AssocOp
+from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group, fuzzy_and
 from .compatibility import reduce
@@ -1901,6 +1901,7 @@ class Mul(Expr, AssocOp):
     def _sorted_args(self):
         return tuple(self.as_ordered_factors())
 
+mul = AssocOpDispatcher('mul')
 
 def prod(a, start=1):
     """Return product of elements of a. Start with int 1 so if only
