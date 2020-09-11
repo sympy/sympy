@@ -49,7 +49,7 @@ def test_particle():
     O2 = Point('O2')
     O2.set_pos(O1, 10 * N.x)
     P2 = Particle('P2', O2, m2)
-    assert P1.G_Force(P2) == G * m1 * m2 / 100 * N.x
+    assert P1.G_Force(P2)/G == m1 * m2 / 100 * N.x
     O3 = Point('O3')
     O3.set_pos(O1, -10 * N.x)
     P3 = Particle('P3', O3, m2)
