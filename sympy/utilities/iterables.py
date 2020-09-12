@@ -819,37 +819,6 @@ def sift(seq, keyfunc, binary=False):
     return T, F
 
 
-def tied_max(iterable, *, key):
-    """
-    Return the list of items from *iterable* which returns
-    highest value when *key* is applied.
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.iterables import tied_max
-    >>> iterable = ['abc', 'de', 'fgh', 'i']
-    >>> tied_max(iterable, key=len)
-    ['abc', 'fgh']
-
-    """
-    it = iter(iterable)
-    try:
-        first = next(it)
-    except StopIteration:
-        return []
-    max_key = key(first)
-    max_vals = [first]
-    for val in it:
-        k = key(val)
-        if k == max_key:
-            max_vals.append(val)
-        elif k > max_key:
-            max_key = k
-            max_vals = [val]
-    return max_vals
-
-
 def take(iter, n):
     """Return ``n`` items from ``iter`` iterator. """
     return [ value for _, value in zip(range(n), iter) ]

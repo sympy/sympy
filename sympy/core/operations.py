@@ -10,7 +10,7 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered
 from sympy.core.logic import fuzzy_and
 from sympy.core.parameters import global_parameters
-from sympy.utilities.iterables import sift, tied_max
+from sympy.utilities.iterables import sift
 from sympy.multipledispatch.dispatcher import (Dispatcher, ambiguity_register_error,
     str_signature)
 
@@ -537,9 +537,8 @@ class AssocOpDispatcher:
     Explanation
     ===========
 
-    If arguments of different kind are passed, their ``_op_priority`` are compared to
-    choose the type with the highest priority. If this is ambiguous, priority relations
-    which are registered by ``register_priority`` method are referred to.
+    If arguments of different kind are passed, priority relations which are registered by
+    ``register_priority`` method are referred to.
     Once a type is selected, handler method of the type, which is a static method, is used
     to perform the operation.
 
@@ -646,19 +645,8 @@ class AssocOpDispatcher:
             h, = handlers
             return h
 
-        # Sieve the types with low op_priority or no handler
-        # This makes it faster than using dispatcher on every types.
-        sieved_data = tied_max(
-            types, key=lambda typ: getattr(typ, '_op_priority', 0)
-        )
-
-        # Only one type remains
-        if len(sieved_data) == 1:
-            typ, = sieved_data
-            return self._handlergetter(typ)
-
         # Recursively select with registered binary priority
-        for i, typ in enumerate(sieved_data):
+        for i, typ in enumerate(types):
             if i == 0:
                 result_type = typ
             else:
@@ -680,7 +668,7 @@ class AssocOpDispatcher:
 
                 result_type = selected_type
 
-        # return handler method of selected argument
+        # return handler method of selected type
         return handler
 
     @property

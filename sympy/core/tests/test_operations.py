@@ -66,6 +66,7 @@ def test_AssocOp_flatten():
     # like Add, any unevaluated outer call will flatten inner args
     assert MyAssoc(a, v).args == (a, b, c, d)
 
+
 def test_add_dispatcher():
 
     class NewBase1(Expr):
@@ -74,14 +75,8 @@ def test_add_dispatcher():
             return NewAdd1(*args, **kwargs)
     class NewAdd1(NewBase1, Add):
         pass
-    class NewBase2(Expr):
-        _op_priority = 11
-        @staticmethod
-        def _add_handler(*args, **kwargs):
-            return NewAdd2(*args, **kwargs)
-    class NewAdd2(NewBase2, Add):
-        pass
-    a, b, c = Symbol('a'), NewBase1(), NewBase2()
+
+    a, b = Symbol('a'), NewBase1()
 
     @add.register_priority(Expr, NewBase1)
     @add.register_priority(NewBase1, NewBase1)
@@ -95,9 +90,6 @@ def test_add_dispatcher():
     # selection by registered priority
     assert add(a,b,a) == NewAdd1(2*a, b)
 
-    # selection by _op_priority
-    assert add(a,c,a) == NewAdd2(2*a, c)
-    assert add(a,b,c) == NewAdd2(a,b,c)
 
 def test_mul_dispatcher():
 
@@ -107,14 +99,8 @@ def test_mul_dispatcher():
             return NewMul1(*args, **kwargs)
     class NewMul1(NewBase1, Mul):
         pass
-    class NewBase2(Expr):
-        _op_priority = 11
-        @staticmethod
-        def _mul_handler(*args, **kwargs):
-            return NewMul2(*args, **kwargs)
-    class NewMul2(NewBase2, Mul):
-        pass
-    a, b, c = Symbol('a'), NewBase1(), NewBase2()
+
+    a, b = Symbol('a'), NewBase1()
 
     @mul.register_priority(Expr, NewBase1)
     @mul.register_priority(NewBase1, NewBase1)
@@ -127,7 +113,3 @@ def test_mul_dispatcher():
 
     # selection by registered priority
     assert mul(a,b,a) == NewMul1(a**2, b)
-
-    # selection by _op_priority
-    assert mul(a,c,a) == NewMul2(a**2, c)
-    assert mul(a,b,c) == NewMul2(a,b,c)
