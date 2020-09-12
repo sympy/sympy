@@ -115,6 +115,8 @@ class ArrayDerivative(Derivative):
                 return None
             else:
                 result = derive_by_array(expr, v)
+        if result is None:
+            return None
         if count == 1:
             return result
         else:
