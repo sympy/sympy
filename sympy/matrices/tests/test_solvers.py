@@ -526,7 +526,6 @@ def test_linsolve_underdetermined_AND_gauss_jordan_solve():
                           [w['tau5']],
                           [1]])
 
-                          
     from sympy.abc import j,f
     # https://github.com/sympy/sympy/issues/20046
     A = Matrix([
