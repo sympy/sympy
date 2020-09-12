@@ -4016,7 +4016,7 @@ class ExprBuilder:
 from .mul import Mul
 from .add import Add
 from .power import Pow
-from .function import Derivative, Function, _derivative_dispatch
+from .function import Function, _derivative_dispatch
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational

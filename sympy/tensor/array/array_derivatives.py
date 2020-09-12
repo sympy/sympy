@@ -1,4 +1,10 @@
-from sympy import Derivative, Integer
+from sympy import Derivative, Integer, Expr
+from sympy.matrices.common import MatrixCommon
+from .ndim_array import NDimArray
+from .arrayop import derive_by_array
+from sympy import MatrixExpr
+from sympy import ZeroMatrix
+from sympy.matrices.expressions.matexpr import _matrix_derivative
 
 
 class ArrayDerivative(Derivative):
@@ -27,13 +33,9 @@ class ArrayDerivative(Derivative):
 
     @classmethod
     def _get_zero_with_shape_like(cls, expr):
-        from sympy.matrices.common import MatrixCommon
-        from sympy import NDimArray
-        from sympy import MatrixExpr
         if isinstance(expr, (MatrixCommon, NDimArray)):
             return expr.zeros(*expr.shape)
         elif isinstance(expr, MatrixExpr):
-            from sympy import ZeroMatrix
             return ZeroMatrix(*expr.shape)
 
     @staticmethod
@@ -42,8 +44,6 @@ class ArrayDerivative(Derivative):
 
     @staticmethod
     def _call_derive_scalar_by_matexpr(expr, v):  # type: (Expr, MatrixExpr) -> Expr
-        from sympy import ZeroMatrix
-        from sympy.matrices.expressions.matexpr import _matrix_derivative
         if expr.has(v):
             return _matrix_derivative(expr, v)
         else:
@@ -55,7 +55,6 @@ class ArrayDerivative(Derivative):
 
     @staticmethod
     def _call_derive_matrix_by_scalar(expr, v):  # type: (MatrixCommon, Expr) -> Expr
-        from sympy.matrices.expressions.matexpr import _matrix_derivative
         return _matrix_derivative(expr, v)
 
     @staticmethod
@@ -68,7 +67,6 @@ class ArrayDerivative(Derivative):
 
     @staticmethod
     def _call_derive_default(expr, v):  # type: (Expr, Expr) -> Expr
-        from sympy.matrices.expressions.matexpr import _matrix_derivative
         if expr.has(v):
             return _matrix_derivative(expr, v)
         else:
@@ -84,9 +82,6 @@ class ArrayDerivative(Derivative):
         if not isinstance(count, (int, Integer)) or ((count <= 0) == True):
             return None
 
-        from sympy.matrices.common import MatrixCommon
-        from sympy import NDimArray
-        from sympy import MatrixExpr
         # TODO: this could be done with multiple-dispatching:
         if expr.is_scalar:
             if isinstance(v, MatrixCommon):
@@ -111,7 +106,6 @@ class ArrayDerivative(Derivative):
                 return None
         else:
             # Both `expr` and `v` are some array/matrix type:
-            from sympy import derive_by_array
             if isinstance(expr, MatrixCommon) or isinstance(expr, MatrixCommon):
                 result = derive_by_array(expr, v)
             elif isinstance(expr, MatrixExpr) and isinstance(v, MatrixExpr):

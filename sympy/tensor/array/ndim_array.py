@@ -7,7 +7,6 @@ from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import SYMPY_INTS, Iterable
 from sympy.printing.defaults import Printable
-from sympy.tensor.array.array_derivatives import ArrayDerivative
 
 import itertools
 
@@ -242,7 +241,7 @@ class NDimArray(Printable):
         [[1, 0], [0, y]]
 
         """
-        from sympy import Derivative
+        from sympy.tensor.array.array_derivatives import ArrayDerivative
         kwargs.setdefault('evaluate', True)
         return ArrayDerivative(self.as_immutable(), *args, **kwargs)
 

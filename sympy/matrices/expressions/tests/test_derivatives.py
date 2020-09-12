@@ -4,7 +4,7 @@ Some examples have been taken from:
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from sympy import (MatrixSymbol, Inverse, symbols, Determinant, Trace,
-                   Derivative, sin, exp, cos, tan, log, S, sqrt,
+                   sin, exp, cos, tan, log, S, sqrt,
                    hadamard_product, DiagMatrix, OneMatrix,
                    HadamardProduct, HadamardPower, KroneckerDelta, Sum,
                    Rational)
