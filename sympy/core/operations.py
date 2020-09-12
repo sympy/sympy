@@ -29,7 +29,8 @@ class AssocOp(Basic):
     Parameters
     ==========
 
-    *args : Arguments which are operated
+    *args :
+        Arguments which are operated
 
     evaluate : bool, optional
         Default is ``True``. If ``False``, do not evaluate the operation.
