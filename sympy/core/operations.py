@@ -677,7 +677,6 @@ class AssocOpDispatcher:
 
         docs.append("Registered handler classes are as follows:")
 
-        other = []
         for typ, sigs in itertools.groupby(self._dispatcher.ordering[::-1], lambda sig: self._dispatcher.funcs[sig]):
             s = 'Inputs: %s\n' % ', '.join('<%s>' % str_signature(sig) for sig in sigs)
             s += '-' * len(s) + '\n'
