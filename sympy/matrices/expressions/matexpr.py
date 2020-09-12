@@ -658,13 +658,10 @@ Basic._constructor_postprocessor_mapping[MatrixExpr] = {
     "Add": [get_postprocessor(Add)],
 }
 
-@add.register_priority(Expr, MatrixExpr)
-@add.register_priority(MatrixExpr, MatrixExpr)
-@mul.register_priority(Expr, MatrixExpr)
-@mul.register_priority(MatrixExpr, MatrixExpr)
-def _(_1, _2):
-    "Use MatrixExpr's handler method."
-    return MatrixExpr
+add.register_handlerclass((Expr, MatrixExpr), MatrixExpr)
+add.register_handlerclass((MatrixExpr, MatrixExpr), MatrixExpr)
+mul.register_handlerclass((Expr, MatrixExpr), MatrixExpr)
+mul.register_handlerclass((MatrixExpr, MatrixExpr), MatrixExpr)
 
 def _matrix_derivative(expr, x):
     from sympy import Derivative

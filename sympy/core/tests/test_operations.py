@@ -75,13 +75,10 @@ def test_add_dispatcher():
             return NewAdd1(*args, **kwargs)
     class NewAdd1(NewBase1, Add):
         pass
+    add.register_handlerclass((Expr, NewBase1), NewBase1)
+    add.register_handlerclass((NewBase1, NewBase1), NewBase1)
 
     a, b = Symbol('a'), NewBase1()
-
-    @add.register_priority(Expr, NewBase1)
-    @add.register_priority(NewBase1, NewBase1)
-    def _(_1, _2):
-        return NewBase1
 
     # Add called as fallback
     assert add(1, 2) == Add(1, 2)
@@ -99,13 +96,10 @@ def test_mul_dispatcher():
             return NewMul1(*args, **kwargs)
     class NewMul1(NewBase1, Mul):
         pass
+    mul.register_handlerclass((Expr, NewBase1), NewBase1)
+    mul.register_handlerclass((NewBase1, NewBase1), NewBase1)
 
     a, b = Symbol('a'), NewBase1()
-
-    @mul.register_priority(Expr, NewBase1)
-    @mul.register_priority(NewBase1, NewBase1)
-    def _(_1, _2):
-        return NewBase1
 
     # Mul called as fallback
     assert mul(1, 2) == Mul(1, 2)

@@ -45,7 +45,7 @@ def ambiguity_register_error(dispatcher, ambiguities):
         ambiguity_warn
     """
     for amb in ambiguities:
-        @dispatcher.register(*super_signature(amb))
+        @dispatcher.register(*super_signature(amb), on_ambiguity=ambiguity_register_error)
         def _(*args, **kwargs):
             """ Unimplemented handler """
             types = tuple(type(a) for a in args)

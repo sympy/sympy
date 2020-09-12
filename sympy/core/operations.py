@@ -533,14 +533,13 @@ class AssocOpDispatcher:
     Explanation
     ===========
 
-    If arguments of different kind are passed, priority relations which are registered by
-    ``register_priority`` method are referred to.
-    Once a type is selected, handler method of the type, which is a static method, is used
-    to perform the operation.
+    If arguments of different kind are passed, a class which represents every argument is
+    selected. This class can be registered by ``register_handlerclass`` method. After then,
+    handler method of the class, which is a static method, is used to perform the operation.
 
-    Priority registration is unordered. You cannot make ``A*B`` and ``B*A`` use different
-    handler method. All logic dealing with the order of arguments must be implemented in
-    the handler method.
+    Priority registration is unordered. You cannot make ``A*B`` and ``B*A`` refer to
+    different handler classes. All logic dealing with the order of arguments must be implemented
+    in the handler method.
 
     Examples
     ========
@@ -555,16 +554,14 @@ class AssocOpDispatcher:
     >>> class NewAdd(NewExpr, Add):
     ...     pass
 
-    >>> @add.register_priority(Expr, NewExpr)
-    ... @add.register_priority(NewExpr, NewExpr)
-    ... def _(_1, _2):
-    ...     return NewExpr
+    >>> add.register_handlerclass((Expr, NewExpr), NewExpr)
+    >>> add.register_handlerclass((NewExpr, NewExpr), NewExpr)
 
     >>> a, b = Symbol('a'), NewExpr()
     >>> add(a, b) == NewAdd(a, b)
     True
 
-    Registered priority selector can return any type.
+    Registered handler class can be any type.
 
     >>> class Foo(Expr):
     ...     @staticmethod
@@ -579,9 +576,7 @@ class AssocOpDispatcher:
     ...     def _add_handler(*args, **kwargs):
     ...         return NewAdd(*args, **kwargs)
 
-    >>> @add.register_priority(Foo, Bar)
-    ... def _(_1, _2):
-    ...     return FooBar
+    >>> add.register_handlerclass((Foo, Bar), FooBar)
 
     >>> add(Foo(), Bar()) == NewAdd(Foo(), Bar())
     True
@@ -597,16 +592,22 @@ class AssocOpDispatcher:
     def __repr__(self):
         return "<dispatched %s>" % self.name
 
-    def register_priority(self, cls1, cls2, on_ambiguity=ambiguity_register_error):
+    def register_handlerclass(self, classes, typ, on_ambiguity=ambiguity_register_error):
         """
-        Register the priority between two types, in both straight and reversed order.
-        Registered function must return the class which has the handler that is to be used.
+        Register the handler class for two classes, in both straight and reversed order.
+
+        Paramteters
+        ===========
+
+        classes : tuple of two types
+            Classes who are compared with each other.
+
+        typ:
+            Class which is registered to represent *cls1* and *cls2*.
+            Handler method of *self* must be implemented in this class.
         """
-        def _(func):
-            self._dispatcher.add((cls1, cls2), func, on_ambiguity=on_ambiguity)
-            self._dispatcher.add((cls2, cls1), func, on_ambiguity=on_ambiguity)
-            return func
-        return _
+        self._dispatcher.add(tuple(classes), typ, on_ambiguity=on_ambiguity)
+        self._dispatcher.add(tuple(reversed(classes)), typ, on_ambiguity=on_ambiguity)
 
     @cacheit
     def __call__(self, *args, **kwargs):
@@ -614,7 +615,8 @@ class AssocOpDispatcher:
         Parameters
         ==========
 
-        *args : Arguments which are operated
+        *args :
+            Arguments which are operated
         """
         if kwargs.get('_sympify', True):
             args = tuple(map(_sympify, args))
@@ -628,7 +630,7 @@ class AssocOpDispatcher:
     @cacheit
     def dispatch(self, types):
         """
-        Select the type with highest priority, and return its handler.
+        Select the handler class, and return its handler method.
         """
 
         # Quick exit for the case where all arguments are of same type
@@ -643,8 +645,7 @@ class AssocOpDispatcher:
             if i == 0:
                 result_type = typ
             else:
-                dispatched_selector = self._dispatcher.dispatch(result_type, typ)
-                selected_type = dispatched_selector(result_type, typ)
+                selected_type = self._dispatcher.dispatch(result_type, typ)
 
                 if not isinstance(selected_type, type):
                     raise RuntimeError(
@@ -674,19 +675,13 @@ class AssocOpDispatcher:
         if self.doc:
             docs.append(self.doc)
 
-        docs.append("Registered priority relations are as follows:")
+        docs.append("Registered handler classes are as follows:")
 
         other = []
-        for func, sigs in itertools.groupby(self._dispatcher.ordering[::-1], lambda sig: self._dispatcher.funcs[sig]):
-            if func.__doc__:
-                s = 'Inputs: %s\n' % ', '.join('<%s>' % str_signature(sig) for sig in sigs)
-                s += '-' * len(s) + '\n'
-                s += func.__doc__.strip()
-                docs.append(s)
-            else:
-                other += list(sigs)
-
-        if other:
-            docs.append('Other signatures:\n    ' + '\n    '.join(other))
+        for typ, sigs in itertools.groupby(self._dispatcher.ordering[::-1], lambda sig: self._dispatcher.funcs[sig]):
+            s = 'Inputs: %s\n' % ', '.join('<%s>' % str_signature(sig) for sig in sigs)
+            s += '-' * len(s) + '\n'
+            s += typ.__name__
+            docs.append(s)
 
         return '\n\n'.join(docs)
