@@ -17,7 +17,7 @@ from __future__ import print_function, division
 
 from sympy import (Basic, factorial, exp, S, sympify, I, zeta, polylog, log, beta,
                    hyper, binomial, Piecewise, floor, besseli, sqrt, Sum, Dummy,
-                   Lambda, summation, Symbol)
+                   Lambda, uppergamma)
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import _value_check, is_random
 
@@ -435,9 +435,7 @@ class PoissonDistribution(SingleDiscreteDistribution):
         return exp(self.lamda * (exp(t) - 1))
 
     def _cdf(self, t):
-        s = Symbol("s")
-        t_summation = summation((1/factorial(s)) * ((self.lamda) ** s), (s, 0, floor(t)))
-        return exp(-self.lamda) * (t_summation)
+        return uppergamma(t+1, self.lamda)/ factorial(t)
 
 
 def Poisson(name, lamda):
