@@ -31,13 +31,8 @@ class AssocOp(Basic):
 
     *args : Arguments which are operated
 
-    sympify : bool, optional
-        Default is ``True``. ``False`` may be passed only when all arguments are
-            already sympified, for faster processing.
-
     evaluate : bool, optional
         Default is ``True``. If ``False``, do not evaluate the operation.
-
     """
 
     # for performance reason, we don't let is_commutative go to assumptions,
@@ -47,12 +42,12 @@ class AssocOp(Basic):
     _args_type = None
 
     @cacheit
-    def __new__(cls, *args, sympify=True, **options):
+    def __new__(cls, *args, **options):
         from sympy import Order
 
-        # Allow faster processing by passing ``sympify=False``, if all arguments
+        # Allow faster processing by passing ``_sympify=False``, if all arguments
         # are already sympified.
-        if sympify:
+        if options.get('_sympify', True):
             args = list(map(_sympify, args))
 
         # Disallow non-Expr args in Add/Mul
@@ -613,24 +608,21 @@ class AssocOpDispatcher:
         return _
 
     @cacheit
-    def __call__(self, *args, sympify=True, **kwargs):
+    def __call__(self, *args, **kwargs):
         """
         Parameters
         ==========
 
         *args : Arguments which are operated
-
-        sympify : bool, optional
-            Default is ``True``. ``False`` may be passed only when all arguments are
-            already sympified, for faster processing.
         """
-        if sympify:
+        if kwargs.get('_sympify', True):
             args = tuple(map(_sympify, args))
         types = frozenset(map(type, args))
 
-        # If sympify=True was passed, no need to sympify again so pass sympify=False.
-        # If sympify=False was passed, all args are already sympified so pass sympify=False.
-        return self.dispatch(types)(*args, sympify=False, **kwargs)
+        # If _sympify=True was passed, no need to sympify again so pass _sympify=False.
+        # If _sympify=False was passed, all args are already sympified so pass _sympify=False.
+        kwargs.update(_sympify=False)
+        return self.dispatch(types)(*args, **kwargs)
 
     @cacheit
     def dispatch(self, types):
