@@ -23,8 +23,6 @@ from sympy.stats.frv_types import Bernoulli, BernoulliDistribution, FiniteRV
 from sympy.stats.drv_types import Poisson, PoissonDistribution
 from sympy.stats.crv_types import Normal, NormalDistribution, Gamma, GammaDistribution
 from sympy.core.sympify import _sympify, sympify
-from sympy.utilities.misc import filldedent
-import warnings
 
 __all__ = [
     'StochasticProcess',
@@ -164,6 +162,9 @@ class StochasticProcess(Basic):
 
     @property
     def state_space(self):
+        """Since version 1.7, using `state_space` returns a
+        `Tuple` or a `Range` object for `DiscreteMarkovChain`.
+        If you want a `FiniteSet`, use `FiniteSet(*state_space)`."""
         return self.args[1]
 
     @property
@@ -651,7 +652,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     >>> YS = DiscreteMarkovChain("Y")
 
-    >>> Y.state_space # doctest: +SKIP
+    >>> Y.state_space
     (0, 1, 2)
     >>> Y.transition_probabilities
     Matrix([
@@ -676,19 +677,19 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     Currently, there is no support for state names within probability
     and expectation statements. Here is a work-around using ``index_of``:
 
-    >>> P(Eq(Y[3], Y.index_of['Rainy']), Eq(Y[1], Y.index_of['Cloudy'])).round(2) # doctest: +SKIP
+    >>> P(Eq(Y[3], Y.index_of['Rainy']), Eq(Y[1], Y.index_of['Cloudy'])).round(2)
     0.36
 
     Symbol state names can also be used:
 
     >>> sunny, cloudy, rainy = symbols('Sunny, Cloudy, Rainy')
     >>> Y = DiscreteMarkovChain("Y", [sunny, cloudy, rainy], T)
-    >>> P(Eq(Y[3], Y.index_of[rainy]), Eq(Y[1], Y.index_of[cloudy])).round(2) # doctest: +SKIP
+    >>> P(Eq(Y[3], Y.index_of[rainy]), Eq(Y[1], Y.index_of[cloudy])).round(2)
     0.36
 
     Expectations will be calculated as follows:
 
-    >>> E(Y[3], Eq(Y[1], Y.index_of[cloudy])) # doctest: +SKIP
+    >>> E(Y[3], Eq(Y[1], Y.index_of[cloudy]))
     0.38*Cloudy + 0.36*Rainy + 0.26*Sunny
 
     There is limited support for arbitrarily sized states:
@@ -696,7 +697,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> n = symbols('n', nonnegative=True, integer=True)
     >>> T = MatrixSymbol('T', n, n)
     >>> Y = DiscreteMarkovChain("Y", trans_probs=T)
-    >>> Y.state_space # doctest: +SKIP
+    >>> Y.state_space
     Range(0, n, 1)
 
     References
@@ -743,15 +744,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                                  'rows of the transition matrix must be the same.')
 
         return Basic.__new__(cls, sym, state_space, trans_probs)
-
-    @property
-    def state_space(self):
-        # TODO: Remove the user warnings in the future releases
-        message = ("Since version 1.7, using `state_space` returns a "
-                   "`Tuple` or a `Range` object. "
-                   "If you want a `FiniteSet`, use `FiniteSet(*state_space).`")
-        warnings.warn(filldedent(message))
-        return super().state_space
 
     @property
     def index_of(self):

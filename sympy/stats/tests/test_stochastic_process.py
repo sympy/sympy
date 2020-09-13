@@ -22,9 +22,8 @@ def test_DiscreteMarkovChain():
 
     # pass only the name
     X = DiscreteMarkovChain("X")
-    with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
-        assert isinstance(X.state_space, Range)
-        assert isinstance(X.index_of, Range)
+    assert isinstance(X.state_space, Range)
+    assert isinstance(X.index_of, Range)
     assert not X._is_numeric
     assert X.index_set == S.Naturals0
     assert isinstance(X.transition_probabilities, MatrixSymbol)
@@ -47,14 +46,12 @@ def test_DiscreteMarkovChain():
               DiscreteMarkovChain("Y", state_spaces[2])]
     for i, Y in enumerate(chains):
         assert isinstance(Y.transition_probabilities, MatrixSymbol)
-        with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
-            assert Y.state_space == Tuple(*state_spaces[i])
+        assert Y.state_space == Tuple(*state_spaces[i])
         assert Y.number_of_states == 3
         assert not Y._is_numeric  # because no transition matrix is provided
-        with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
-            assert Y.index_of[state_spaces[i][0]] == 0
-            assert Y.index_of[state_spaces[i][1]] == 1
-            assert Y.index_of[state_spaces[i][2]] == 2
+        assert Y.index_of[state_spaces[i][0]] == 0
+        assert Y.index_of[state_spaces[i][1]] == 1
+        assert Y.index_of[state_spaces[i][2]] == 2
 
         with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
             assert P(Eq(Y[2], 1), Eq(Y[0], 2), evaluate=False) == Probability(Eq(Y[2], 1), Eq(Y[0], 2))
@@ -64,9 +61,8 @@ def test_DiscreteMarkovChain():
 
     raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
     Y = DiscreteMarkovChain("Y", Range(1, t, 2))
-    with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
-        assert Y.number_of_states == ceiling((t-1)/2)
-        raises(NotImplementedError, lambda: Y.index_of)
+    assert Y.number_of_states == ceiling((t-1)/2)
+    raises(NotImplementedError, lambda: Y.index_of)
 
     # pass name and transition_probabilities
     chains = [DiscreteMarkovChain("Y", trans_probs=Matrix([[]])),
@@ -75,8 +71,7 @@ def test_DiscreteMarkovChain():
     for Z in chains:
         assert Z.number_of_states == Z.transition_probabilities.shape[0]
         assert isinstance(Z.transition_probabilities, ImmutableDenseMatrix)
-        with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
-            assert isinstance(Z.state_space, Tuple)
+        assert isinstance(Z.state_space, Tuple)
         assert Z._is_numeric
 
     # pass name, state_space and transition_probabilities
@@ -156,9 +151,8 @@ def test_DiscreteMarkovChain():
     assert P(Eq(X[2], 1) | Eq(X[2], 2), Eq(X[1], 1)) == Rational(2, 3)
     assert P(Eq(X[2], 1) & Eq(X[2], 2), Eq(X[1], 1)) is S.Zero
     assert P(Ne(X[2], 2), Eq(X[1], 1)) == Rational(1, 3)
-    with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
-        assert E(X[1]**2, Eq(X[0], 1)) == Rational(8, 3)
-        assert variance(X[1], Eq(X[0], 1)) == Rational(8, 9)
+    assert E(X[1]**2, Eq(X[0], 1)) == Rational(8, 3)
+    assert variance(X[1], Eq(X[0], 1)) == Rational(8, 9)
     raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
     raises(ValueError, lambda: DiscreteMarkovChain('X', [0, 1], T))
 
@@ -169,10 +163,9 @@ def test_DiscreteMarkovChain():
     assert P(Eq(X[2], 1) | Eq(X[2], 2), Eq(X[1], 1)) == Rational(2, 3)
     assert P(Eq(X[2], 1) & Eq(X[2], 2), Eq(X[1], 1)) is S.Zero
     assert P(Ne(X[2], 2), Eq(X[1], 1)) == Rational(1, 3)
-    with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
-        assert str(E(X[1] ** 2, Eq(X[0], 1))) == "A**2/3 + 2*C**2/3"
-        assert str(variance(X[1], Eq(X[0], 1))) == "2*(-A/3 + C/3)**2/3 + (2*A/3 - 2*C/3)**2/3"
-        raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
+    assert str(E(X[1] ** 2, Eq(X[0], 1))) == "A**2/3 + 2*C**2/3"
+    assert str(variance(X[1], Eq(X[0], 1))) == "2*(-A/3 + C/3)**2/3 + (2*A/3 - 2*C/3)**2/3"
+    raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
 
 
 def test_sample_stochastic_process():
@@ -186,24 +179,20 @@ def test_sample_stochastic_process():
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     for samps in range(10):
-        with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
-            assert next(sample_stochastic_process(Y)) in Y.state_space
+        assert next(sample_stochastic_process(Y)) in Y.state_space
     Z = DiscreteMarkovChain("Z", ['1', 1, None], T)
     for samps in range(10):
-        with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
-            assert next(sample_stochastic_process(Z)) in Z.state_space
+        assert next(sample_stochastic_process(Z)) in Z.state_space
 
     T = Matrix([[S.Half, Rational(1, 4), Rational(1, 4)],
                 [Rational(1, 3), 0, Rational(2, 3)],
                 [S.Half, S.Half, 0]])
     X = DiscreteMarkovChain('X', [0, 1, 2], T)
     for samps in range(10):
-        with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
-            assert next(sample_stochastic_process(X)) in X.state_space
+        assert next(sample_stochastic_process(X)) in X.state_space
     W = DiscreteMarkovChain('W', [1, pi, oo], T)
     for samps in range(10):
-        with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
-            assert next(sample_stochastic_process(W)) in W.state_space
+        assert next(sample_stochastic_process(W)) in W.state_space
 
 
 def test_ContinuousMarkovChain():
