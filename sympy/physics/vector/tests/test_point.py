@@ -148,5 +148,3 @@ def test_point_partial_velocity():
     assert p.partial_velocity(N, u1) == A.x
     assert p.partial_velocity(N, u1, u2) == (A.x, N.y)
     raises(ValueError, lambda: p.partial_velocity(A, u1))
-
-test_point_funcs()
