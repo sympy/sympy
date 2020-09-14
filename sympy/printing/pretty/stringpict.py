@@ -15,7 +15,6 @@ TODO:
 from __future__ import print_function, division
 
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, is_combining
-from sympy.core.compatibility import unicode
 
 class stringPict(object):
     """An ASCII picture.
@@ -349,10 +348,7 @@ class stringPict(object):
         return super(stringPict, self).__hash__()
 
     def __str__(self):
-        return str.join('\n', self.picture)
-
-    def __unicode__(self):
-        return unicode.join(u'\n', self.picture)
+        return '\n'.join(self.picture)
 
     def __repr__(self):
         return "stringPict(%r,%d)" % ('\n'.join(self.picture), self.baseline)
@@ -388,7 +384,20 @@ class prettyForm(stringPict):
         """Initialize from stringPict and binding power."""
         stringPict.__init__(self, s, baseline)
         self.binding = binding
-        self.unicode = unicode or s
+        if unicode is not None:
+            SymPyDeprecationWarning(
+                feature="``unicode`` argument to ``prettyForm``",
+                useinstead="the ``s`` argument",
+                deprecated_since_version="1.7").warn()
+        self._unicode = unicode or s
+
+    @property
+    def unicode(self):
+        SymPyDeprecationWarning(
+            feature="``prettyForm.unicode`` attribute",
+            useinstead="``stringPrict.s`` attribute",
+            deprecated_since_version="1.7").warn()
+        return self._unicode
 
     # Note: code to handle subtraction is in _print_Add
 

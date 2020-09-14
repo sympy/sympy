@@ -36,23 +36,23 @@ _straight_bracket = "|"
 
 # Unicode brackets
 # MATHEMATICAL ANGLE BRACKETS
-_lbracket_ucode = u"\N{MATHEMATICAL LEFT ANGLE BRACKET}"
-_rbracket_ucode = u"\N{MATHEMATICAL RIGHT ANGLE BRACKET}"
+_lbracket_ucode = "\N{MATHEMATICAL LEFT ANGLE BRACKET}"
+_rbracket_ucode = "\N{MATHEMATICAL RIGHT ANGLE BRACKET}"
 # LIGHT VERTICAL BAR
-_straight_bracket_ucode = u"\N{LIGHT VERTICAL BAR}"
+_straight_bracket_ucode = "\N{LIGHT VERTICAL BAR}"
 
 # Other options for unicode printing of <, > and | for Dirac notation.
 
 # LEFT-POINTING ANGLE BRACKET
-# _lbracket = u"\u2329"
-# _rbracket = u"\u232A"
+# _lbracket = "\u2329"
+# _rbracket = "\u232A"
 
 # LEFT ANGLE BRACKET
-# _lbracket = u"\u3008"
-# _rbracket = u"\u3009"
+# _lbracket = "\u3008"
+# _rbracket = "\u3009"
 
 # VERTICAL LINE
-# _straight_bracket = u"\u007C"
+# _straight_bracket = "\u007C"
 
 
 class StateBase(QExpr):

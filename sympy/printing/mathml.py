@@ -1452,7 +1452,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mi
 
     def _print_Range(self, s):
-        dots = u"\u2026"
+        dots = "\u2026"
         brac = self.dom.createElement('mfenced')
         brac.setAttribute('close', '}')
         brac.setAttribute('open', '{')

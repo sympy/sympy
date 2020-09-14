@@ -37,8 +37,7 @@ import warnings
 from contextlib import contextmanager
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (exec_, PY3, unwrap,
-        unicode)
+from sympy.core.compatibility import (exec_, PY3, unwrap)
 from sympy.external import import_module
 
 IS_WINDOWS = (os.name == 'nt')
@@ -107,10 +106,6 @@ def _indent(s, indent=4):
     If the string ``s`` is Unicode, it is encoded using the stdout
     encoding and the ``backslashreplace`` error handler.
     """
-    # After a 2to3 run the below code is bogus, so wrap it with a version check
-    if not PY3:
-        if isinstance(s, unicode):
-            s = s.encode(pdoctest._encoding, 'backslashreplace')
     # This regexp matches the start of non-blank lines:
     return re.sub('(?m)^(?!$)', indent*' ', s)
 

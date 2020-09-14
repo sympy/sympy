@@ -106,11 +106,11 @@ def pretty_try_use_unicode():
 
 
 def xstr(*args):
-    """call str or unicode depending on current mode"""
-    if _use_unicode:
-        return unicode(*args)
-    else:
-        return str(*args)
+    SymPyDeprecationWarning(
+        feature="``xstr`` function",
+        useinstead="``str``",
+        deprecated_since_version="1.7").warn()
+    return str(*args)
 
 # GREEK
 g = lambda l: U('GREEK SMALL LETTER %s' % l.upper())

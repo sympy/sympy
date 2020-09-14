@@ -19,7 +19,7 @@ from sympy.utilities.iterables import has_variety
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
-from sympy.printing.pretty.pretty_symbology import xstr, hobj, vobj, xobj, \
+from sympy.printing.pretty.pretty_symbology import hobj, vobj, xobj, \
     xsym, pretty_symbol, pretty_atom, pretty_use_unicode, greek_unicode, U, \
     pretty_try_use_unicode,  annotated
 
@@ -54,7 +54,7 @@ class PrettyPrinter(Printer):
             raise ValueError("'imaginary_unit' must be either 'i' or 'j', not '{}'".format(self._settings['imaginary_unit']))
 
     def emptyPrinter(self, expr):
-        return prettyForm(xstr(expr))
+        return prettyForm(str(expr))
 
     @property
     def _use_unicode(self):
@@ -234,14 +234,14 @@ class PrettyPrinter(Printer):
             arg = e.args[0]
             pform = self._print(arg)
             if isinstance(arg, Equivalent):
-                return self._print_Equivalent(arg, altchar=u"\N{LEFT RIGHT DOUBLE ARROW WITH STROKE}")
+                return self._print_Equivalent(arg, altchar="\N{LEFT RIGHT DOUBLE ARROW WITH STROKE}")
             if isinstance(arg, Implies):
-                return self._print_Implies(arg, altchar=u"\N{RIGHTWARDS ARROW WITH STROKE}")
+                return self._print_Implies(arg, altchar="\N{RIGHTWARDS ARROW WITH STROKE}")
 
             if arg.is_Boolean and not arg.is_Not:
                 pform = prettyForm(*pform.parens())
 
-            return prettyForm(*pform.left(u"\N{NOT SIGN}"))
+            return prettyForm(*pform.left("\N{NOT SIGN}"))
         else:
             return self._print_Function(e)
 
@@ -268,43 +268,43 @@ class PrettyPrinter(Printer):
 
     def _print_And(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\N{LOGICAL AND}")
+            return self.__print_Boolean(e, "\N{LOGICAL AND}")
         else:
             return self._print_Function(e, sort=True)
 
     def _print_Or(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\N{LOGICAL OR}")
+            return self.__print_Boolean(e, "\N{LOGICAL OR}")
         else:
             return self._print_Function(e, sort=True)
 
     def _print_Xor(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\N{XOR}")
+            return self.__print_Boolean(e, "\N{XOR}")
         else:
             return self._print_Function(e, sort=True)
 
     def _print_Nand(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\N{NAND}")
+            return self.__print_Boolean(e, "\N{NAND}")
         else:
             return self._print_Function(e, sort=True)
 
     def _print_Nor(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\N{NOR}")
+            return self.__print_Boolean(e, "\N{NOR}")
         else:
             return self._print_Function(e, sort=True)
 
     def _print_Implies(self, e, altchar=None):
         if self._use_unicode:
-            return self.__print_Boolean(e, altchar or u"\N{RIGHTWARDS ARROW}", sort=False)
+            return self.__print_Boolean(e, altchar or "\N{RIGHTWARDS ARROW}", sort=False)
         else:
             return self._print_Function(e)
 
     def _print_Equivalent(self, e, altchar=None):
         if self._use_unicode:
-            return self.__print_Boolean(e, altchar or u"\N{LEFT RIGHT DOUBLE ARROW}")
+            return self.__print_Boolean(e, altchar or "\N{LEFT RIGHT DOUBLE ARROW}")
         else:
             return self._print_Function(e, sort=True)
 
@@ -774,7 +774,7 @@ class PrettyPrinter(Printer):
 
     def _print_WedgeProduct(self, expr):
         # This should somehow share the code with _print_TensorProduct:
-        wedge_symbol = u"\u2227"
+        wedge_symbol = "\u2227"
         return self._print_seq(expr.args, None, None, wedge_symbol,
             parenthesize=lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"])
 
@@ -1036,11 +1036,11 @@ class PrettyPrinter(Printer):
                 #if the coef of the basis vector is 1
                 #we skip the 1
                 if v == 1:
-                    o1.append(u"" +
+                    o1.append("" +
                               k._pretty_form)
                 #Same for -1
                 elif v == -1:
-                    o1.append(u"(-1) " +
+                    o1.append("(-1) " +
                               k._pretty_form)
                 #For a general expr
                 else:
@@ -1053,7 +1053,7 @@ class PrettyPrinter(Printer):
                 vectstrs.append(k._pretty_form)
 
         #outstr = u("").join(o1)
-        if o1[0].startswith(u" + "):
+        if o1[0].startswith(" + "):
             o1[0] = o1[0][3:]
         elif o1[0].startswith(" "):
             o1[0] = o1[0][1:]
@@ -1595,7 +1595,7 @@ class PrettyPrinter(Printer):
         expr = e.expr
         sig = e.signature
         if self._use_unicode:
-            arrow = u" \N{RIGHTWARDS ARROW FROM BAR} "
+            arrow = " \N{RIGHTWARDS ARROW FROM BAR} "
         else:
             arrow = " -> "
         if len(sig) == 1 and sig[0].is_symbol:
@@ -1614,7 +1614,7 @@ class PrettyPrinter(Printer):
             elif len(expr.variables):
                 pform = prettyForm(*pform.right(self._print(expr.variables[0])))
             if self._use_unicode:
-                pform = prettyForm(*pform.right(u" \N{RIGHTWARDS ARROW} "))
+                pform = prettyForm(*pform.right(" \N{RIGHTWARDS ARROW} "))
             else:
                 pform = prettyForm(*pform.right(" -> "))
             if len(expr.point) > 1:
@@ -2007,7 +2007,7 @@ class PrettyPrinter(Printer):
         if len(p.sets) >= 1 and not has_variety(p.sets):
             return self._print(p.sets[0]) ** self._print(len(p.sets))
         else:
-            prod_char = u"\N{MULTIPLICATION SIGN}" if self._use_unicode else 'x'
+            prod_char = "\N{MULTIPLICATION SIGN}" if self._use_unicode else 'x'
             return self._print_seq(p.sets, None, None, ' %s ' % prod_char,
                                    parenthesize=lambda set: set.is_Union or
                                    set.is_Intersection or set.is_ProductSet)
@@ -2019,7 +2019,7 @@ class PrettyPrinter(Printer):
     def _print_Range(self, s):
 
         if self._use_unicode:
-            dots = u"\N{HORIZONTAL ELLIPSIS}"
+            dots = "\N{HORIZONTAL ELLIPSIS}"
         else:
             dots = '...'
 
@@ -2098,7 +2098,7 @@ class PrettyPrinter(Printer):
 
     def _print_ImageSet(self, ts):
         if self._use_unicode:
-            inn = u"\N{SMALL ELEMENT OF}"
+            inn = "\N{SMALL ELEMENT OF}"
         else:
             inn = 'in'
         fun = ts.lamda
@@ -2114,10 +2114,10 @@ class PrettyPrinter(Printer):
 
     def _print_ConditionSet(self, ts):
         if self._use_unicode:
-            inn = u"\N{SMALL ELEMENT OF}"
+            inn = "\N{SMALL ELEMENT OF}"
             # using _and because and is a keyword and it is bad practice to
             # overwrite them
-            _and = u"\N{LOGICAL AND}"
+            _and = "\N{LOGICAL AND}"
         else:
             inn = 'in'
             _and = 'and'
@@ -2143,7 +2143,7 @@ class PrettyPrinter(Printer):
 
     def _print_ComplexRegion(self, ts):
         if self._use_unicode:
-            inn = u"\N{SMALL ELEMENT OF}"
+            inn = "\N{SMALL ELEMENT OF}"
         else:
             inn = 'in'
         variables = self._print_seq(ts.variables)
@@ -2156,7 +2156,7 @@ class PrettyPrinter(Printer):
     def _print_Contains(self, e):
         var, set = e.args
         if self._use_unicode:
-            el = u" \N{ELEMENT OF} "
+            el = " \N{ELEMENT OF} "
             return prettyForm(*stringPict.next(self._print(var),
                                                el, self._print(set)), binding=8)
         else:
@@ -2164,7 +2164,7 @@ class PrettyPrinter(Printer):
 
     def _print_FourierSeries(self, s):
         if self._use_unicode:
-            dots = u"\N{HORIZONTAL ELLIPSIS}"
+            dots = "\N{HORIZONTAL ELLIPSIS}"
         else:
             dots = '...'
         return self._print_Add(s.truncate()) + self._print(dots)
@@ -2179,7 +2179,7 @@ class PrettyPrinter(Printer):
 
     def _print_SeqFormula(self, s):
         if self._use_unicode:
-            dots = u"\N{HORIZONTAL ELLIPSIS}"
+            dots = "\N{HORIZONTAL ELLIPSIS}"
         else:
             dots = '...'
 
@@ -2308,7 +2308,7 @@ class PrettyPrinter(Printer):
 
     def _print_UniversalSet(self, s):
         if self._use_unicode:
-            return prettyForm(u"\N{MATHEMATICAL DOUBLE-STRUCK CAPITAL U}")
+            return prettyForm("\N{MATHEMATICAL DOUBLE-STRUCK CAPITAL U}")
         else:
             return prettyForm('UniversalSet')
 
@@ -2670,7 +2670,7 @@ class PrettyPrinter(Printer):
         else:
             pform = self._print(field)
             pform = prettyForm(*pform.parens())
-            return prettyForm(*pform.left(u"\N{DOUBLE-STRUCK ITALIC SMALL D}"))
+            return prettyForm(*pform.left("\N{DOUBLE-STRUCK ITALIC SMALL D}"))
 
     def _print_Tr(self, p):
         #TODO: Handle indices
@@ -2699,7 +2699,7 @@ class PrettyPrinter(Printer):
 
     def _print_Quantity(self, e):
         if e.name.name == 'degree':
-            pform = self._print(u"\N{DEGREE SIGN}")
+            pform = self._print("\N{DEGREE SIGN}")
             return pform
         else:
             return self.emptyPrinter(e)
