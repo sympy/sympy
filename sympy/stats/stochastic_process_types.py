@@ -12,6 +12,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    ceiling)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
@@ -859,7 +860,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             return None
         return N*R
 
-    absorbing_probabilites = absorbing_probabilities
+    def absorbing_probabilites(self):
+        SymPyDeprecationWarning(
+            feature="absorbing_probabilites",
+            useinstead="absorbing_probabilities",
+            issue=20042,
+            deprecated_since_version="1.7"
+        ).warn()
+        return self.absorbing_probabilities()
 
     def is_regular(self):
         w = self.fixed_row_vector()
