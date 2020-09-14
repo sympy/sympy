@@ -31,7 +31,7 @@ The ``optims_c99`` imported above is tuple containing the following instances
 
 """
 from itertools import chain
-from sympy import cos, exp, log, Max, Min, Wild, expand_log, Dummy
+from sympy import cos, exp, log, Max, Min, Wild, expand_log, Dummy, sin, sinc
 from sympy.assumptions import Q, ask
 from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
 from sympy.codegen.matrix_nodes import MatrixSolve
@@ -133,11 +133,20 @@ exp2_opt = ReplaceOptim(
     lambda p: exp2(p.exp)
 )
 
+
 _d = Wild('d', properties=[lambda x: x.is_Dummy])
 _u = Wild('u', properties=[lambda x: not x.is_number and not x.is_Add])
 _v = Wild('v')
 _w = Wild('w')
+_n = Wild('n', properties=[lambda x: x.is_number])
 
+sinc_opt1 = ReplaceOptim(
+    sin(_w)/_w, sinc(_w)
+)
+sinc_opt2 = ReplaceOptim(
+    sin(_n*_w)/_w, _n*sinc(_n*_w)
+)
+sinc_opts = (sinc_opt1, sinc_opt2)
 
 log2_opt = ReplaceOptim(_v*log(_w)/log(2), _v*log2(_w), cost_function=lambda expr: expr.count(
     lambda e: (  # division & eval of transcendentals are expensive floating point operations...
@@ -263,6 +272,6 @@ logaddexp2_opt = ReplaceOptim(log(Pow(2, _v)+Pow(2, _w)), logaddexp2(_v, _w)*log
 # Collections of optimizations:
 optims_c99 = (expm1_opt, log1p_opt, exp2_opt, log2_opt, log2const_opt)
 
-optims_numpy = (logaddexp_opt, logaddexp2_opt)
+optims_numpy = (logaddexp_opt, logaddexp2_opt,) + sinc_opts
 
 optims_scipy = (cosm1_opt,)

@@ -1,4 +1,4 @@
-from sympy import log, exp, cos, Symbol, Pow, sin, MatrixSymbol
+from sympy import log, exp, cos, Symbol, Pow, sin, MatrixSymbol, sinc
 from sympy.assumptions import assuming, Q
 from sympy.printing import ccode
 from sympy.codegen.matrix_nodes import MatrixSolve
@@ -7,7 +7,8 @@ from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.rewriting import (
     optimize, cosm1_opt, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
-    create_expand_pow_optimization, matinv_opt, logaddexp_opt, logaddexp2_opt
+    create_expand_pow_optimization, matinv_opt, logaddexp_opt, logaddexp2_opt,
+    optims_numpy
 )
 from sympy.testing.pytest import XFAIL
 
@@ -245,3 +246,15 @@ def test_logaddexp2_opt():
     assert logaddexp2(x, y) - opt1 == 0
     assert logaddexp2(y, x) - opt1 == 0
     assert opt1.rewrite(log) == expr1
+
+
+def test_optims_numpy():
+    x = Symbol('x')
+    e1 = sin(x)/x
+    assert optimize(e1, optims_numpy) - sinc(x) == 0
+    e2 = sin(2*x)/(2*x)
+    assert optimize(e2, optims_numpy) - sinc(2*x) == 0
+    e3 = sin(3*x)/x
+    assert optimize(e3, optims_numpy) - 3*sinc(3*x) == 0
+    e4 = x*sin(x)
+    assert optimize(e4, optims_numpy) - x*sin(x) == 0
