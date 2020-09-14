@@ -533,13 +533,13 @@ class AssocOpDispatcher:
     Explanation
     ===========
 
-    If arguments of different kind are passed, a class which represents every argument is
-    selected. This class can be registered by ``register_handlerclass`` method. After then,
-    handler method of the class, which is a static method, is used to perform the operation.
+    If arguments of different types are passed, the classes which handle the operation for each type
+    are collected. Then, a class which performs the operation is selected by recursive binary dispatching.
+    Dispatching relation can be registered by ``register_handlerclass`` method.
 
     Priority registration is unordered. You cannot make ``A*B`` and ``B*A`` refer to
     different handler classes. All logic dealing with the order of arguments must be implemented
-    in the handler method.
+    in the handler class.
 
     Examples
     ========
@@ -548,45 +548,23 @@ class AssocOpDispatcher:
     >>> from sympy.core.add import add
 
     >>> class NewExpr(Expr):
-    ...     @staticmethod
-    ...     def _add_handler(*args, **kwargs):
-    ...         return NewAdd(*args, **kwargs)
+    ...     pass
     >>> class NewAdd(NewExpr, Add):
     ...     pass
+    >>> NewExpr._add_handler = NewAdd
 
-    >>> add.register_handlerclass((Expr, NewExpr), NewExpr)
-    >>> add.register_handlerclass((NewExpr, NewExpr), NewExpr)
+    >>> add.register_handlerclass((Add, NewAdd), NewAdd)
 
     >>> a, b = Symbol('a'), NewExpr()
     >>> add(a, b) == NewAdd(a, b)
-    True
-
-    Registered handler class can be any type.
-
-    >>> class Foo(Expr):
-    ...     @staticmethod
-    ...     def _add_handler(*args, **kwargs):
-    ...         raise NotImplementedError
-    >>> class Bar(Expr):
-    ...     @staticmethod
-    ...     def _add_handler(*args, **kwargs):
-    ...         raise NotImplementedError
-    >>> class FooBar(Expr):
-    ...     @staticmethod
-    ...     def _add_handler(*args, **kwargs):
-    ...         return NewAdd(*args, **kwargs)
-
-    >>> add.register_handlerclass((Foo, Bar), FooBar)
-
-    >>> add(Foo(), Bar()) == NewAdd(Foo(), Bar())
     True
 
     """
     def __init__(self, name, doc=None):
         self.name = name
         self.doc = doc
-        self.handlermethod = "_%s_handler" % name
-        self._handlergetter = attrgetter(self.handlermethod)
+        self.handlerattr = "_%s_handler" % name
+        self._handlergetter = attrgetter(self.handlerattr)
         self._dispatcher = Dispatcher(name)
 
     def __repr__(self):
@@ -633,36 +611,27 @@ class AssocOpDispatcher:
         Select the handler class, and return its handler method.
         """
 
-        # Quick exit for the case where all arguments are of same type
-        # or all handlermethods are same
+        # Quick exit for the case where all handlers are same
         handlers = set(map(self._handlergetter, types))
         if len(handlers) == 1:
             h, = handlers
             return h
 
         # Recursively select with registered binary priority
-        for i, typ in enumerate(types):
+        for i, typ in enumerate(handlers):
             if i == 0:
-                result_type = typ
+                handler = typ
             else:
-                selected_type = self._dispatcher.dispatch(result_type, typ)
+                prev_handler = handler
+                handler = self._dispatcher.dispatch(prev_handler, typ)
 
-                if not isinstance(selected_type, type):
+                if not isinstance(handler, type):
                     raise RuntimeError(
                         "Dispatcher for {!r} and {!r} must return a type, but got {!r}".format(
-                        result_type, typ, selected_type
+                        prev_handler, typ, handler
                     ))
 
-                handler = self._handlergetter(selected_type)
-                if handler is None:
-                    raise RuntimeError(
-                        "Dispatcher for {!r} and {!r} returned {!r} which does not have {!r} method.".format(
-                        result_type, typ, selected_type, self.handlermethod
-                    ))
-
-                result_type = selected_type
-
-        # return handler method of selected type
+        # return handler class
         return handler
 
     @property

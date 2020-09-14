@@ -69,41 +69,37 @@ def test_AssocOp_flatten():
 
 def test_add_dispatcher():
 
-    class NewBase1(Expr):
-        @staticmethod
-        def _add_handler(*args, **kwargs):
-            return NewAdd1(*args, **kwargs)
-    class NewAdd1(NewBase1, Add):
+    class NewBase(Expr):
         pass
-    add.register_handlerclass((Expr, NewBase1), NewBase1)
-    add.register_handlerclass((NewBase1, NewBase1), NewBase1)
+    class NewAdd(NewBase, Add):
+        pass
+    NewBase._add_handler = NewAdd
+    add.register_handlerclass((Add, NewAdd), NewAdd)
 
-    a, b = Symbol('a'), NewBase1()
+    a, b = Symbol('a'), NewBase()
 
     # Add called as fallback
     assert add(1, 2) == Add(1, 2)
     assert add(a, a) == Add(a, a)
 
     # selection by registered priority
-    assert add(a,b,a) == NewAdd1(2*a, b)
+    assert add(a,b,a) == NewAdd(2*a, b)
 
 
 def test_mul_dispatcher():
 
-    class NewBase1(Expr):
-        @staticmethod
-        def _mul_handler(*args, **kwargs):
-            return NewMul1(*args, **kwargs)
-    class NewMul1(NewBase1, Mul):
+    class NewBase(Expr):
         pass
-    mul.register_handlerclass((Expr, NewBase1), NewBase1)
-    mul.register_handlerclass((NewBase1, NewBase1), NewBase1)
+    class NewMul(NewBase, Mul):
+        pass
+    NewBase._mul_handler = NewMul
+    mul.register_handlerclass((Mul, NewMul), NewMul)
 
-    a, b = Symbol('a'), NewBase1()
+    a, b = Symbol('a'), NewBase()
 
     # Mul called as fallback
     assert mul(1, 2) == Mul(1, 2)
     assert mul(a, a) == Mul(a, a)
 
     # selection by registered priority
-    assert mul(a,b,a) == NewMul1(a**2, b)
+    assert mul(a,b,a) == NewMul(a**2, b)

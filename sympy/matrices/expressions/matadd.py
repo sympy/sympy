@@ -1,7 +1,8 @@
 from sympy.core.compatibility import reduce
-from operator import add
+import operator
 
 from sympy.core import Add, Basic, sympify
+from sympy.core.add import add
 from sympy.functions import adjoint
 from sympy.matrices.common import ShapeError
 from sympy.matrices.matrices import MatrixBase
@@ -85,6 +86,8 @@ class MatAdd(MatrixExpr, Add):
         add_lines = [arg._eval_derivative_matrix_lines(x) for arg in self.args]
         return [j for i in add_lines for j in i]
 
+MatrixExpr._add_handler = MatAdd
+add.register_handlerclass((Add, MatAdd), MatAdd)
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
@@ -127,7 +130,7 @@ def merge_explicit(matadd):
     """
     groups = sift(matadd.args, lambda arg: isinstance(arg, MatrixBase))
     if len(groups[True]) > 1:
-        return MatAdd(*(groups[False] + [reduce(add, groups[True])]))
+        return MatAdd(*(groups[False] + [reduce(operator.add, groups[True])]))
     else:
         return matadd
 

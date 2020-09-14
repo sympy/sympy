@@ -1,5 +1,6 @@
 from sympy import Number
 from sympy.core import Mul, Basic, sympify, S
+from sympy.core.mul import mul
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
@@ -207,6 +208,8 @@ class MatMul(MatrixExpr, Mul):
 
         return lines
 
+MatrixExpr._mul_handler = MatMul
+mul.register_handlerclass((Mul, MatMul), MatMul)
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """

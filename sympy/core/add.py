@@ -1126,6 +1126,8 @@ class Add(Expr, AssocOp):
             return super().__neg__()
         return Add(*[-i for i in self.args])
 
+Expr._add_handler = Add
+
 add = AssocOpDispatcher('add')
 
 from .mul import Mul, _keep_coeff, prod

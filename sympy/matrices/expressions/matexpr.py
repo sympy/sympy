@@ -595,14 +595,6 @@ class MatrixExpr(Expr):
         from .applyfunc import ElementwiseApplyFunction
         return ElementwiseApplyFunction(func, self)
 
-    @staticmethod
-    def _add_handler(*args, **kwargs):
-        return MatAdd(*args, **kwargs)
-
-    @staticmethod
-    def _mul_handler(*args, **kwargs):
-        return MatMul(*args, **kwargs)
-
 @dispatch(MatrixExpr, Expr)
 def _eval_is_eq(lhs, rhs): # noqa:F811
     return False
@@ -657,11 +649,6 @@ Basic._constructor_postprocessor_mapping[MatrixExpr] = {
     "Mul": [get_postprocessor(Mul)],
     "Add": [get_postprocessor(Add)],
 }
-
-add.register_handlerclass((Expr, MatrixExpr), MatrixExpr)
-add.register_handlerclass((MatrixExpr, MatrixExpr), MatrixExpr)
-mul.register_handlerclass((Expr, MatrixExpr), MatrixExpr)
-mul.register_handlerclass((MatrixExpr, MatrixExpr), MatrixExpr)
 
 def _matrix_derivative(expr, x):
     from sympy import Derivative
