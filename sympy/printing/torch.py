@@ -172,7 +172,7 @@ class TorchPrinter(AbstractPythonCodePrinter):
     def _print_CodegenArrayPermuteDims(self, expr):
         return "%s.permute(%s)" % (
             self._print(expr.expr),
-            ", ".join([self._print(i) for i in expr.permutation.args[0]]),
+            ", ".join([self._print(i) for i in expr.permutation.array_form]),
         )
 
     def _print_CodegenArrayElementwiseAdd(self, expr):

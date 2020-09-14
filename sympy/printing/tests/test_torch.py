@@ -8,7 +8,7 @@ from sympy.codegen.array_utils import (
         CodegenArrayPermuteDims, CodegenArrayDiagonal, _CodegenArrayAbstract)
 from sympy.utilities.lambdify import lambdify
 
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 from sympy.external import import_module
 
 torch = import_module("torch")
@@ -93,3 +93,6 @@ def test_codegen_extra():
     assert torch_code(cg) == 'torch.einsum("ab,bc->acb", [M, N])'
     # TODO: no implemented for diagonal
     #_compare_torch_matrix((M, N), cg)
+
+
+test_codegen_extra()
