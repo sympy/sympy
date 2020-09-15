@@ -87,7 +87,6 @@ class MatAdd(MatrixExpr, Add):
         return [j for i in add_lines for j in i]
 
 add.register_handlerclass((Add, MatAdd), MatAdd)
-add.register_handlerclass((MatAdd, MatAdd), MatAdd)
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):

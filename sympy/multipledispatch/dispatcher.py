@@ -11,6 +11,8 @@ class MDNotImplementedError(NotImplementedError):
     """ A NotImplementedError for multiple dispatch """
 
 
+### Functions for on_ambiguity
+
 def ambiguity_warn(dispatcher, ambiguities):
     """ Raise warning when ambiguity is detected
 
@@ -30,8 +32,8 @@ def ambiguity_warn(dispatcher, ambiguities):
 
 def ambiguity_register_error(dispatcher, ambiguities):
     """
-    Automatically register function which raises error when ambiguous types
-    are registered.
+    When ambiguity is detected, automatically register
+    ``raise_NotImplementedError``, which raises error when arguments are passed.
 
     Parameters
     ----------
@@ -45,15 +47,21 @@ def ambiguity_register_error(dispatcher, ambiguities):
         ambiguity_warn
     """
     for amb in ambiguities:
-        @dispatcher.register(*super_signature(amb), on_ambiguity=ambiguity_register_error)
-        def _(*args, **kwargs):
-            """ Unimplemented handler """
-            types = tuple(type(a) for a in args)
-            raise NotImplementedError(
-                "Ambiguous signature for %s: <%s>" % (
-                    dispatcher.name, str_signature(types)
-                )
-            )
+        signature = tuple(super_signature(amb))
+        dispatcher.add(
+            signature, raise_NotImplementedError, on_ambiguity=ambiguity_register_error
+        )
+
+def raise_NotImplementedError(*args, **kwargs):
+    """Raise ``NotImplementedError``."""
+    types = tuple(type(a) for a in args)
+    raise NotImplementedError(
+        "Ambiguous signature for %s: <%s>" % (
+            dispatcher.name, str_signature(types)
+        )
+    )
+
+###
 
 
 _unresolved_dispatchers = set() # type: Set[Dispatcher]

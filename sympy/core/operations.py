@@ -12,7 +12,7 @@ from sympy.core.logic import fuzzy_and
 from sympy.core.parameters import global_parameters
 from sympy.utilities.iterables import sift
 from sympy.multipledispatch.dispatcher import (Dispatcher, ambiguity_register_error,
-    str_signature)
+    str_signature, raise_NotImplementedError)
 
 
 class AssocOp(Basic):
@@ -522,6 +522,7 @@ class LatticeOp(AssocOp):
     def _compare_pretty(a, b):
         return (str(a) > str(b)) - (str(a) < str(b))
 
+
 class AssocOpDispatcher:
     """
     Handler dispatcher for associative operators
@@ -584,6 +585,15 @@ class AssocOpDispatcher:
             Class which is registered to represent *cls1* and *cls2*.
             Handler method of *self* must be implemented in this class.
         """
+        if not len(classes) == 2:
+            raise RuntimeError(
+                "Only binary dispatch is supported, but got %s types: <%s>." % (
+                len(classes), str_signature(classes)
+            ))
+        if len(set(classes)) == 1:
+            raise RuntimeError(
+                "Duplicate types <%s> cannot be dispatched." % str_signature(classes)
+            )
         self._dispatcher.add(tuple(classes), typ, on_ambiguity=on_ambiguity)
         self._dispatcher.add(tuple(reversed(classes)), typ, on_ambiguity=on_ambiguity)
 
@@ -649,12 +659,30 @@ class AssocOpDispatcher:
         if self.doc:
             docs.append(self.doc)
 
-        docs.append("Registered handler classes are as follows:")
+        s = "Registered handler classes\n"
+        s += '=' * len(s)
+        docs.append(s)
 
+        amb_sigs = []
         for typ, sigs in itertools.groupby(self._dispatcher.ordering[::-1], lambda sig: self._dispatcher.funcs[sig]):
-            s = 'Inputs: %s\n' % ', '.join('<%s>' % str_signature(sig) for sig in sigs)
+
+            sigs_str = ', '.join('<%s>' % str_signature(sig) for sig in sigs)
+
+            if typ is raise_NotImplementedError:
+                amb_sigs.append(sigs_str)
+                continue
+
+            s = 'Inputs: %s\n' % sigs_str
             s += '-' * len(s) + '\n'
             s += typ.__name__
+            docs.append(s)
+
+        if amb_sigs:
+            s = "Ambiguous handler classes\n"
+            s += '=' * len(s)
+            docs.append(s)
+
+            s = '\n'.join(amb_sigs)
             docs.append(s)
 
         return '\n\n'.join(docs)
