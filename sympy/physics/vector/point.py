@@ -56,6 +56,7 @@ class Point(object):
         self._pos_dict = {}
         self._vel_dict = {}
         self._acc_dict = {}
+        self._vel_dict_pos = {}
         self._pdlist = [self._pos_dict, self._vel_dict, self._acc_dict]
 
     def __str__(self):
@@ -474,6 +475,7 @@ class Point(object):
     def _calc_vel(self, frame, rel_pos):
         if len(self._pos_dict) == 1:
             return False
+        self._vel_dict_pos = self._vel_dict.copy()
         for p, p_rel_pos in self._pos_dict.items():
             if p_rel_pos == -rel_pos:
                 continue
@@ -485,10 +487,10 @@ class Point(object):
                     if not cond:
                         continue
                     else:
-                        p_abs_vel = p._vel_dict[frame]
+                        p_abs_vel = p._vel_dict_pos[frame]
                 else:
                     continue
-            self._vel_dict[frame] = p_abs_vel + p_rel_pos.dt(frame)
+            self._vel_dict_pos[frame] = p_abs_vel + p_rel_pos.dt(frame)
             return True
         return False
 
@@ -526,6 +528,7 @@ class Point(object):
 
         _check_frame(frame)
         if not (frame in self._vel_dict):
+            self._vel_dict_pos = self._vel_dict.copy()
             for p, p_rel_pos in self._pos_dict.items():
                 try:
                     p_abs_vel = p._vel_dict[frame]
@@ -535,11 +538,11 @@ class Point(object):
                         if not p_abs_vel_check:
                             continue
                         else:
-                            p_abs_vel = p._vel_dict[frame]
+                            p_abs_vel = p._vel_dict_pos[frame]
                     else:
                         continue
-                self._vel_dict[frame] = p_abs_vel + p_rel_pos.dt(frame)
-                break
+                self._vel_dict_pos[frame] = p_abs_vel + p_rel_pos.dt(frame)
+                return self._vel_dict_pos[frame]
             else:
                 raise ValueError('Velocity of point ' + self.name + ' has not been'
                     ' defined in ReferenceFrame ' + frame.name)

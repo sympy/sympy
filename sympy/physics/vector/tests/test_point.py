@@ -138,7 +138,7 @@ def test_point_vel():
     Q.set_pos(O, q1 * N.x)
     raises(ValueError , lambda : Q.vel(N))
     O.set_vel(N, q2 * N.y)
-    assert Q.vel(N) == Derivative(q1) *N.x + q2 * N.y
+    assert Q.vel(N) == Derivative(q1) * N.x + q2 * N.y
     P1 = Point('P1')
     P1.set_pos(O, q1 * B.x)
     raises(ValueError, lambda : P1.vel(B))
@@ -149,4 +149,16 @@ def test_point_vel():
     P3.set_pos(P2, q1 * B.x)
     raises(ValueError, lambda : P3.vel(B))
     P1.set_vel(B, 10 * q1 * B.x)
-    assert P3.vel(B) == (10 * q1 + Derivative(q1))*B.x + Derivative(q2)*B.z
+    assert P3.vel(B) == (10 * q1 + Derivative(q1)) * B.x + Derivative(q2) * B.z
+    Q1 = Point('Q1')
+    Q1.set_vel(N, q1 * N.x)
+    Q2 = Point('Q2')
+    Q3 = Point('Q3')
+    Q4 = Point('Q4')
+    Q2.set_pos(Q1, q2 * N.x)
+    Q3.set_pos(Q2, q1 * N.x)
+    Q4.set_pos(Q3, q2 * N.x)
+    assert Q4.vel(N) == (q1 + Derivative(q1) + 2 * Derivative(q2)) * N.x
+    Q3.set_vel(N, q1 * N.x)
+    assert Q3.vel(N) == q1 * N.x
+    assert Q4.vel(N) == (q1 + Derivative(q2)) * N.x
