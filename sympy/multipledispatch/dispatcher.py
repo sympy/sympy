@@ -30,27 +30,6 @@ def ambiguity_warn(dispatcher, ambiguities):
     warn(warning_text(dispatcher.name, ambiguities), AmbiguityWarning)
 
 
-def ambiguity_register_error(dispatcher, ambiguities):
-    """
-    Register instance of ``RaiseNotImplementedError`` for ambiguous types.
-
-    Parameters
-    ----------
-    dispatcher : Dispatcher
-        The dispatcher on which the ambiguity was detected
-    ambiguities : set
-        Set of type signature pairs that are ambiguous within this dispatcher
-
-    See Also:
-        Dispatcher.add
-        ambiguity_warn
-    """
-    for amb in ambiguities:
-        signature = tuple(super_signature(amb))
-        dispatcher.add(
-            signature, RaiseNotImplementedError(dispatcher), on_ambiguity=ambiguity_register_error
-        )
-
 class RaiseNotImplementedError:
     """Raise ``NotImplementedError`` when called."""
 
@@ -63,7 +42,6 @@ class RaiseNotImplementedError:
             "Ambiguous signature for %s: <%s>" % (
             self.dispatcher.name, str_signature(types)
         ))
-
 
 def ambiguity_register_error_ignore_dup(dispatcher, ambiguities):
     """
