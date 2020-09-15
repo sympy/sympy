@@ -8,7 +8,7 @@ from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.rewriting import (
     optimize, cosm1_opt, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
     create_expand_pow_optimization, matinv_opt, logaddexp_opt, logaddexp2_opt,
-    optims_numpy
+    optims_numpy, sinc_opts
 )
 from sympy.testing.pytest import XFAIL
 
@@ -248,13 +248,49 @@ def test_logaddexp2_opt():
     assert opt1.rewrite(log) == expr1
 
 
-def test_optims_numpy():
+def test_sinc_opts():
+    def check(d):
+        for k, v in d.items():
+            assert optimize(k, sinc_opts) == v
+
     x = Symbol('x')
-    e1 = sin(x)/x
-    assert optimize(e1, optims_numpy) - sinc(x) == 0
-    e2 = sin(2*x)/(2*x)
-    assert optimize(e2, optims_numpy) - sinc(2*x) == 0
-    e3 = sin(3*x)/x
-    assert optimize(e3, optims_numpy) - 3*sinc(3*x) == 0
-    e4 = x*sin(x)
-    assert optimize(e4, optims_numpy) - x*sin(x) == 0
+    check({
+        sin(x)/x       : sinc(x),
+        sin(2*x)/(2*x) : sinc(2*x),
+        sin(3*x)/x     : 3*sinc(3*x),
+        x*sin(x)       : x*sin(x)
+    })
+
+    y = Symbol('y')
+    check({
+        sin(x*y)/(x*y)       : sinc(x*y),
+        y*sin(x/y)/x         : sinc(x/y),
+        sin(sin(x))/sin(x)   : sinc(sin(x)),
+        sin(3*sin(x))/sin(x) : 3*sinc(3*sin(x)),
+        sin(x)/y             : sin(x)/y
+    })
+
+
+def test_optims_numpy():
+    def check(d):
+        for k, v in d.items():
+            assert optimize(k, optims_numpy) == v
+
+    x = Symbol('x')
+    check({
+        sin(2*x)/(2*x) + exp(2*x) - 1: sinc(2*x) + expm1(2*x),
+        log(x+3)/log(2) + log(x**2 + 1): log1p(x**2) + log2(x+3)
+    })
+
+
+@XFAIL  # room for improvement, ideally this test case should pass.
+def test_optims_numpy_TODO():
+    def check(d):
+        for k, v in d.items():
+            assert optimize(k, optims_numpy) == v
+
+    x, y = map(Symbol, 'x y'.split())
+    check({
+        log(x*y)*sin(x*y)*log(x*y+1)/(log(2)*x*y): log2(x*y)*sinc(x*y)*log1p(x*y),
+        exp(x*sin(y)/y) - 1: expm1(x*sinc(y))
+    })

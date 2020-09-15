@@ -272,6 +272,6 @@ logaddexp2_opt = ReplaceOptim(log(Pow(2, _v)+Pow(2, _w)), logaddexp2(_v, _w)*log
 # Collections of optimizations:
 optims_c99 = (expm1_opt, log1p_opt, exp2_opt, log2_opt, log2const_opt)
 
-optims_numpy = (logaddexp_opt, logaddexp2_opt,) + sinc_opts
+optims_numpy = optims_c99 + (logaddexp_opt, logaddexp2_opt,) + sinc_opts
 
 optims_scipy = (cosm1_opt,)
