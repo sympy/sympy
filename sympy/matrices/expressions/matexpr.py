@@ -78,6 +78,15 @@ class MatrixExpr(Expr):
         return Basic.__new__(cls, *args, **kwargs)
 
     # The following is adapted from the core Expr object
+
+    @property
+    def _add_handler(self):
+        return MatAdd
+
+    @property
+    def _mul_handler(self):
+        return MatMul
+
     def __neg__(self):
         return MatMul(S.NegativeOne, self).doit()
 
@@ -647,6 +656,7 @@ Basic._constructor_postprocessor_mapping[MatrixExpr] = {
     "Mul": [get_postprocessor(Mul)],
     "Add": [get_postprocessor(Add)],
 }
+
 
 def _matrix_derivative(expr, x):
     from sympy import Derivative

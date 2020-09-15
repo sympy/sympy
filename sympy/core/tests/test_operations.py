@@ -70,10 +70,11 @@ def test_AssocOp_flatten():
 def test_add_dispatcher():
 
     class NewBase(Expr):
-        pass
+        @property
+        def _add_handler(self):
+            return NewAdd
     class NewAdd(NewBase, Add):
         pass
-    NewBase._add_handler = NewAdd
     add.register_handlerclass((Add, NewAdd), NewAdd)
 
     a, b = Symbol('a'), NewBase()
@@ -89,10 +90,11 @@ def test_add_dispatcher():
 def test_mul_dispatcher():
 
     class NewBase(Expr):
-        pass
+        @property
+        def _mul_handler(self):
+            return NewMul
     class NewMul(NewBase, Mul):
         pass
-    NewBase._mul_handler = NewMul
     mul.register_handlerclass((Mul, NewMul), NewMul)
 
     a, b = Symbol('a'), NewBase()

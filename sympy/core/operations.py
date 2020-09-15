@@ -548,11 +548,11 @@ class AssocOpDispatcher:
     >>> from sympy.core.add import add
 
     >>> class NewExpr(Expr):
-    ...     pass
+    ...     @property
+    ...     def _add_handler(self):
+    ...         return NewAdd
     >>> class NewAdd(NewExpr, Add):
     ...     pass
-    >>> NewExpr._add_handler = NewAdd
-
     >>> add.register_handlerclass((Add, NewAdd), NewAdd)
 
     >>> a, b = Symbol('a'), NewExpr()
@@ -598,21 +598,20 @@ class AssocOpDispatcher:
         """
         if kwargs.get('_sympify', True):
             args = tuple(map(_sympify, args))
-        types = frozenset(map(type, args))
+        handlers = frozenset(map(self._handlergetter, args))
 
         # If _sympify=True was passed, no need to sympify again so pass _sympify=False.
         # If _sympify=False was passed, all args are already sympified so pass _sympify=False.
         kwargs.update(_sympify=False)
-        return self.dispatch(types)(*args, **kwargs)
+        return self.dispatch(handlers)(*args, **kwargs)
 
     @cacheit
-    def dispatch(self, types):
+    def dispatch(self, handlers):
         """
         Select the handler class, and return its handler method.
         """
 
         # Quick exit for the case where all handlers are same
-        handlers = set(map(self._handlergetter, types))
         if len(handlers) == 1:
             h, = handlers
             return h

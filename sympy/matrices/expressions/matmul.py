@@ -208,8 +208,8 @@ class MatMul(MatrixExpr, Mul):
 
         return lines
 
-MatrixExpr._mul_handler = MatMul
 mul.register_handlerclass((Mul, MatMul), MatMul)
+mul.register_handlerclass((MatMul, MatMul), MatMul)
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """

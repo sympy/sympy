@@ -1901,8 +1901,6 @@ class Mul(Expr, AssocOp):
     def _sorted_args(self):
         return tuple(self.as_ordered_factors())
 
-Expr._mul_handler = Mul
-
 mul = AssocOpDispatcher('mul')
 
 def prod(a, start=1):
