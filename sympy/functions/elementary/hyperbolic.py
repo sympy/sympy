@@ -1056,7 +1056,7 @@ class asinh(InverseHyperbolicFunction):
     Examples
     ========
 
-    >>> from sympy import asinh, sqrt
+    >>> from sympy import asinh
     >>> from sympy.abc import x
     >>> asinh(x).diff(x)
     1/sqrt(x**2 + 1)
@@ -1175,7 +1175,7 @@ class acosh(InverseHyperbolicFunction):
     Examples
     ========
 
-    >>> from sympy import acosh, sqrt
+    >>> from sympy import acosh
     >>> from sympy.abc import x
     >>> acosh(x).diff(x)
     1/sqrt(x**2 - 1)
