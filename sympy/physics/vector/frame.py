@@ -159,9 +159,9 @@ class ReferenceFrame(object):
             self.str_vecs = [(name + '[\'' + indices[0] + '\']'),
                              (name + '[\'' + indices[1] + '\']'),
                              (name + '[\'' + indices[2] + '\']')]
-            self.pretty_vecs = [(name.lower() + u"_" + indices[0]),
-                                (name.lower() + u"_" + indices[1]),
-                                (name.lower() + u"_" + indices[2])]
+            self.pretty_vecs = [(name.lower() + "_" + indices[0]),
+                                (name.lower() + "_" + indices[1]),
+                                (name.lower() + "_" + indices[2])]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
                                indices[0])), (r"\mathbf{\hat{%s}_{%s}}" %
                                (name.lower(), indices[1])),
@@ -171,9 +171,9 @@ class ReferenceFrame(object):
         # Second case, when no custom indices are supplied
         else:
             self.str_vecs = [(name + '.x'), (name + '.y'), (name + '.z')]
-            self.pretty_vecs = [name.lower() + u"_x",
-                                name.lower() + u"_y",
-                                name.lower() + u"_z"]
+            self.pretty_vecs = [name.lower() + "_x",
+                                name.lower() + "_y",
+                                name.lower() + "_z"]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_x}" % name.lower()),
                                (r"\mathbf{\hat{%s}_y}" % name.lower()),
                                (r"\mathbf{\hat{%s}_z}" % name.lower())]

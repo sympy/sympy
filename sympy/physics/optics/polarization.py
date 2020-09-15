@@ -291,7 +291,7 @@ def stokes_vector(psi, chi, p=1, I=1):
 
 
 def jones_2_stokes(e):
-    u"""Return the Stokes vector for a Jones vector `e`.
+    """Return the Stokes vector for a Jones vector `e`.
 
     Parameters
     ----------
