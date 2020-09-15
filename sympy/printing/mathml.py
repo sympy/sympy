@@ -2,8 +2,6 @@
 A MathML printer.
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy import sympify, S, Mul
@@ -13,7 +11,7 @@ from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import \
     precedence_traditional, PRECEDENCE, PRECEDENCE_TRADITIONAL
 from sympy.printing.pretty.pretty_symbology import greek_unicode
-from sympy.printing.printer import Printer
+from sympy.printing.printer import Printer, print_function
 
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
@@ -2069,6 +2067,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
 
+@print_function(MathMLPrinterBase)
 def mathml(expr, printer='content', **settings):
     """Returns the MathML representation of expr. If printer is presentation
     then prints Presentation MathML else prints content MathML.
