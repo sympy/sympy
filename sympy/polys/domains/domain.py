@@ -406,15 +406,15 @@ class Domain(object):
         else:
             return self.poly_ring(symbols)
 
-    def poly_ring(self, *symbols, **kwargs):
+    def poly_ring(self, *symbols, order=lex):
         """Returns a polynomial ring, i.e. `K[X]`. """
         from sympy.polys.domains.polynomialring import PolynomialRing
-        return PolynomialRing(self, symbols, kwargs.get("order", lex))
+        return PolynomialRing(self, symbols, order)
 
-    def frac_field(self, *symbols, **kwargs):
+    def frac_field(self, *symbols, order=lex):
         """Returns a fraction field, i.e. `K(X)`. """
         from sympy.polys.domains.fractionfield import FractionField
-        return FractionField(self, symbols, kwargs.get("order", lex))
+        return FractionField(self, symbols, order)
 
     def old_poly_ring(self, *symbols, **kwargs):
         """Returns a polynomial ring, i.e. `K[X]`. """

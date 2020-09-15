@@ -295,11 +295,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         return cls._new(*args, **kwargs)
 
     @classmethod
-    def _new(cls, *args, **kwargs):
-        # if the `copy` flag is set to False, the input
-        # was rows, cols, [list].  It should be used directly
-        # without creating a copy.
-        if kwargs.get('copy', True) is False:
+    def _new(cls, *args, copy=True, **kwargs):
+        if copy is False:
+            # The input was rows, cols, [list].
+            # It should be used directly without creating a copy.
             if len(args) != 3:
                 raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
             rows, cols, flat_list = args
