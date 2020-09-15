@@ -81,7 +81,7 @@ class SpinOpBase(object):
         return '%s%s' % (self.name, self._coord)
 
     def _print_contents_pretty(self, printer, *args):
-        a = stringPict(self.name)
+        a = stringPict(str(self.name))
         b = stringPict(self._coord)
         return self._print_subscript_pretty(a, b)
 
@@ -404,7 +404,7 @@ class J2Op(SpinOpBase, HermitianOperator):
         return self._represent_base(basis, **options)
 
     def _print_contents_pretty(self, printer, *args):
-        a = prettyForm(self.name)
+        a = prettyForm(str(self.name))
         b = prettyForm('2')
         return a**b
 
