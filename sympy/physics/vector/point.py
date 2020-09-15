@@ -472,19 +472,23 @@ class Point(object):
         return self.vel(outframe)
 
     def _calc_vel(self, frame):
+        if len(self._pos_dict) == 1:
+            return False
         for p, p_rel_pos in self._pos_dict.items():
             try:
                 p_abs_vel = p._vel_dict[frame]
             except KeyError:
-                cond = p._calc_vel(frame)
-                if not cond:
-                    continue
+                if not p_rel_pos.dt(frame) == 0:
+                    cond = p._calc_vel(frame)
+                    if not cond:
+                        continue
+                    else:
+                        p_abs_vel = p._vel_dict[frame]
                 else:
-                    p_abs_vel = p._vel_dict[frame]
+                    continue
             self._vel_dict[frame] = p_abs_vel + p_rel_pos.dt(frame)
             return True
-        else:
-            return False
+        return False
 
     def vel(self, frame):
         """The velocity Vector of this Point in the ReferenceFrame.
@@ -524,11 +528,14 @@ class Point(object):
                 try:
                     p_abs_vel = p._vel_dict[frame]
                 except KeyError:
-                    p_abs_vel_check = p._calc_vel(frame)
-                    if not p_abs_vel_check:
-                        continue
+                    if not p_rel_pos.dt(frame) == 0:
+                        p_abs_vel_check = p._calc_vel(frame)
+                        if not p_abs_vel_check:
+                            continue
+                        else:
+                            p_abs_vel = p._vel_dict[frame]
                     else:
-                        p_abs_vel = p._vel_dict[frame]
+                        continue
                 self._vel_dict[frame] = p_abs_vel + p_rel_pos.dt(frame)
                 break
             else:

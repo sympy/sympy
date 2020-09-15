@@ -83,26 +83,6 @@ def test_point_funcs():
     assert P.vel(B) == qd * B.x + q2d * B.y
     O.set_vel(N, 0)
     assert O.vel(N) == 0
-    Q = Point('Q')
-    Q.set_pos(O, q * N.x)
-    assert Q.vel(N) == Derivative(q)*N.x
-    raises(ValueError , lambda : Q.vel(B))
-    a = Point('a')
-    b = Point('b')
-    b.set_pos(a, q * N.x)
-    raises(ValueError , lambda : b.vel(N))
-    raises(ValueError , lambda : a.vel(N))
-    a.set_pos(Q, q * N.x)
-    assert a.vel(N) == 2 * Derivative(q) * N.x
-    p = Point('p')
-    q = dynamicsymbols('q')
-    r = dynamicsymbols('r')
-    p.set_vel(N, 10 * N.x)
-    p2 = Point('p2')
-    p2.set_pos(p, q*N.x)
-    p3 = Point('p3')
-    p3.set_pos(p2, r*N.x)
-    assert p3.vel(N) == (Derivative(q) + Derivative(r) + 10) * N.x
 
     assert P.a1pt_theory(O, N, B) == ((-25 * q + qdd) * B.x + (q2dd) * B.y +
                                (-10 * qd) * B.z)
@@ -148,3 +128,25 @@ def test_point_partial_velocity():
     assert p.partial_velocity(N, u1) == A.x
     assert p.partial_velocity(N, u1, u2) == (A.x, N.y)
     raises(ValueError, lambda: p.partial_velocity(A, u1))
+
+def test_point_vel():
+    q1, q2 = dynamicsymbols('q1 q2')
+    N = ReferenceFrame('N')
+    B = ReferenceFrame('B')
+    O = Point('O')
+    Q = Point('Q')
+    Q.set_pos(O, q1 * N.x)
+    raises(ValueError , lambda : Q.vel(N))
+    O.set_vel(N, q2 * N.y)
+    assert Q.vel(N) == Derivative(q1) *N.x + q2 * N.y
+    P1 = Point('P1')
+    P1.set_pos(O, q1 * B.x)
+    raises(ValueError, lambda : P1.vel(B))
+    P2 = Point('P2')
+    P2.set_pos(P1, q2 * B.z)
+    raises(ValueError, lambda : P2.vel(B))
+    P3 = Point('P3')
+    P3.set_pos(P2, q1 * B.x)
+    raises(ValueError, lambda : P3.vel(B))
+    P1.set_vel(B, 10 * q1 * B.x)
+    assert P3.vel(B) == (10 * q1 + Derivative(q1))*B.x + Derivative(q2)*B.z
