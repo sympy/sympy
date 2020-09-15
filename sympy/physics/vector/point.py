@@ -471,15 +471,17 @@ class Point(object):
         self.set_vel(outframe, v + (omega ^ dist))
         return self.vel(outframe)
 
-    def _calc_vel(self, frame):
+    def _calc_vel(self, frame, rel_pos):
         if len(self._pos_dict) == 1:
             return False
         for p, p_rel_pos in self._pos_dict.items():
+            if p_rel_pos == -rel_pos:
+                continue
             try:
                 p_abs_vel = p._vel_dict[frame]
             except KeyError:
                 if not p_rel_pos.dt(frame) == 0:
-                    cond = p._calc_vel(frame)
+                    cond = p._calc_vel(frame, p_rel_pos)
                     if not cond:
                         continue
                     else:
@@ -529,7 +531,7 @@ class Point(object):
                     p_abs_vel = p._vel_dict[frame]
                 except KeyError:
                     if not p_rel_pos.dt(frame) == 0:
-                        p_abs_vel_check = p._calc_vel(frame)
+                        p_abs_vel_check = p._calc_vel(frame, p_rel_pos)
                         if not p_abs_vel_check:
                             continue
                         else:
