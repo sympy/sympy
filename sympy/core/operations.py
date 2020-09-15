@@ -1,6 +1,6 @@
-import itertools
 from operator import attrgetter
 from typing import Tuple
+from collections import defaultdict
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -665,7 +665,13 @@ class AssocOpDispatcher:
         docs.append(s)
 
         amb_sigs = []
-        for typ, sigs in itertools.groupby(self._dispatcher.ordering[::-1], lambda sig: self._dispatcher.funcs[sig]):
+
+        typ_sigs = defaultdict(list)
+        for sigs in self._dispatcher.ordering[::-1]:
+            key = self._dispatcher.funcs[sigs]
+            typ_sigs[key].append(sigs)
+
+        for typ, sigs in typ_sigs.items():
 
             sigs_str = ', '.join('<%s>' % str_signature(sig) for sig in sigs)
 
