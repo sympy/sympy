@@ -172,12 +172,8 @@ class im(Function):
     re(x)
     >>> im(re(x) + y)
     im(y)
-    >>> im(x + y*I)
-    re(y) + im(x)
     >>> im(2 + 3*I).as_real_imag()
     (3, 0)
-    >>> im(21*I + 50).as_real_imag(deep=True)
-    (21, 0)
 
     Parameters
     ==========
@@ -478,8 +474,6 @@ class Abs(Function):
     sqrt(9*x**2 + 4)
     >>> Abs(8*I)
     8
-    >>> Abs(-x).fdiff()
-    sign(x)
 
     Note that the Python built-in will return either an Expr or int depending on
     the argument::
@@ -792,9 +786,9 @@ class conjugate(Function):
     2
     >>> conjugate(I)
     -I
-    >>> conjugate(3+2*I)
+    >>> conjugate(3 + 2*I)
     3 - 2*I
-    >>> conjugate(5-I)
+    >>> conjugate(5 - I)
     5 + I
 
     Parameters
@@ -867,12 +861,13 @@ class transpose(Function):
     B.T
     >>> transpose(A*B)
     B.T*A.T
-    >>> Matrix([[4, 5], [2, 1], [90, 12]])
+    >>> M = Matrix([[4, 5], [2, 1], [90, 12]])
+    >>> M
     Matrix([
     [ 4,  5],
     [ 2,  1],
     [90, 12]])
-    >>> transpose(Matrix([[4, 5], [2, 1], [90, 12]]))
+    >>> transpose(M)
     Matrix([
     [4, 2, 90],
     [5, 1, 12]])
@@ -931,8 +926,8 @@ class adjoint(Function):
 
     value : MatrixExpr
         MatrixExpr is the superclass for matric expressions.
-        Represent abstract matrices, linear transformations
-        represented within a particular basis.
+        Here is represents the conjugate transpose or Hermite
+        conjugation of arg.
 
     """
 
@@ -1061,7 +1056,7 @@ class polar_lift(Function):
 class periodic_argument(Function):
     """
     Represent the argument on a quotient of the Riemann surface of the
-    logarithm. That is, given a period P, always return a value in
+    logarithm. That is, given a period $P$, always return a value in
     (-P/2, P/2], by using exp(P*I) == 1.
 
     Examples
@@ -1073,6 +1068,14 @@ class periodic_argument(Function):
     0
     >>> periodic_argument(exp_polar(5*I*pi), 4*pi)
     pi
+    >>> from sympy import exp_polar, periodic_argument
+    >>> from sympy import I, pi
+    >>> periodic_argument(exp_polar(5*I*pi), 2*pi)
+    pi
+    >>> periodic_argument(exp_polar(5*I*pi), 3*pi)
+    -pi
+    >>> periodic_argument(exp_polar(5*I*pi), pi)
+    0
 
     Parameters
     ==========
@@ -1080,16 +1083,8 @@ class periodic_argument(Function):
     ar : Expr
         A polar number.
 
-    period : Expr
-
-        >>> from sympy import exp_polar, periodic_argument
-        >>> from sympy import I, pi
-        >>> periodic_argument(exp_polar(5*I*pi), 2*pi)
-        pi
-        >>> periodic_argument(exp_polar(5*I*pi), 3*pi)
-        -pi
-        >>> periodic_argument(exp_polar(5*I*pi), pi)
-        0
+    period : ExprT
+        The period $P$.
 
     See Also
     ========
@@ -1213,7 +1208,7 @@ class principal_branch(Function):
         A polar number.
 
     period : Expr
-        Positive real number of infinity.
+        Positive real number or infinity.
 
     See Also
     ========
