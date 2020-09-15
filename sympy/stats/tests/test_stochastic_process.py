@@ -84,8 +84,8 @@ def test_DiscreteMarkovChain():
     assert Y.joint_distribution(1, Y[2], 3) == JointDistribution(Y[1], Y[2], Y[3])
     raises(ValueError, lambda: Y.joint_distribution(Y[1].symbol, Y[2].symbol))
     assert P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2) == Float(0.36, 2)
-    assert str(P(Eq(YS[3], 2), Eq(YS[1], 1))) == \
-        "T[0, 2]*T[1, 0] + T[1, 1]*T[1, 2] + T[1, 2]*T[2, 2]"
+    assert (P(Eq(YS[3], 2), Eq(YS[1], 1)) -
+            (TS[0, 2]*TS[1, 0] + TS[1, 1]*TS[1, 2] + TS[1, 2]*TS[2, 2])).simplify() == 0
     assert P(Eq(YS[1], 1), Eq(YS[2], 2)) == Probability(Eq(YS[1], 1))
     assert P(Eq(YS[3], 3), Eq(YS[1], 1)) is S.Zero
     TO = Matrix([[0.25, 0.75, 0],[0, 0.25, 0.75],[0.75, 0, 0.25]])
@@ -163,8 +163,10 @@ def test_DiscreteMarkovChain():
     assert P(Eq(X[2], 1) | Eq(X[2], 2), Eq(X[1], 1)) == Rational(2, 3)
     assert P(Eq(X[2], 1) & Eq(X[2], 2), Eq(X[1], 1)) is S.Zero
     assert P(Ne(X[2], 2), Eq(X[1], 1)) == Rational(1, 3)
-    assert str(E(X[1] ** 2, Eq(X[0], 1))) == "A**2/3 + 2*C**2/3"
-    assert str(variance(X[1], Eq(X[0], 1))) == "2*(-A/3 + C/3)**2/3 + (2*A/3 - 2*C/3)**2/3"
+    a = X.state_space.args[0]
+    c = X.state_space.args[2]
+    assert (E(X[1] ** 2, Eq(X[0], 1)) - (a**2/3 + 2*c**2/3)).simplify() == 0
+    assert (variance(X[1], Eq(X[0], 1)) - (2*(-a/3 + c/3)**2/3 + (2*a/3 - 2*c/3)**2/3)).simplify() == 0
     raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
 
 
