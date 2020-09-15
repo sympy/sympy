@@ -11,7 +11,8 @@ from sympy.core.compatibility import ordered
 from sympy.core.logic import fuzzy_and
 from sympy.core.parameters import global_parameters
 from sympy.utilities.iterables import sift
-from sympy.multipledispatch.dispatcher import (Dispatcher, ambiguity_register_error,
+from sympy.multipledispatch.dispatcher import (Dispatcher,
+    ambiguity_register_error_ignore_dup,
     str_signature, raise_NotImplementedError)
 
 
@@ -571,7 +572,7 @@ class AssocOpDispatcher:
     def __repr__(self):
         return "<dispatched %s>" % self.name
 
-    def register_handlerclass(self, classes, typ, on_ambiguity=ambiguity_register_error):
+    def register_handlerclass(self, classes, typ, on_ambiguity=ambiguity_register_error_ignore_dup):
         """
         Register the handler class for two classes, in both straight and reversed order.
 

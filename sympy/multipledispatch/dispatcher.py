@@ -32,8 +32,7 @@ def ambiguity_warn(dispatcher, ambiguities):
 
 def ambiguity_register_error(dispatcher, ambiguities):
     """
-    When ambiguity is detected, automatically register
-    ``raise_NotImplementedError``, which raises error when arguments are passed.
+    Register ``raise_NotImplementedError`` for ambiguous types.
 
     Parameters
     ----------
@@ -57,9 +56,34 @@ def raise_NotImplementedError(*args, **kwargs):
     types = tuple(type(a) for a in args)
     raise NotImplementedError(
         "Ambiguous signature for %s: <%s>" % (
-            dispatcher.name, str_signature(types)
+        dispatcher.name, str_signature(types)
+    ))
+
+
+def ambiguity_register_error_ignore_dup(dispatcher, ambiguities):
+    """
+    If super signature for ambiguous types is duplicate types, ignore it.
+    Else, register ``raise_NotImplementedError`` for ambiguous types.
+
+    Parameters
+    ----------
+    dispatcher : Dispatcher
+        The dispatcher on which the ambiguity was detected
+    ambiguities : set
+        Set of type signature pairs that are ambiguous within this dispatcher
+
+    See Also:
+        Dispatcher.add
+        ambiguity_warn
+    """
+    for amb in ambiguities:
+        signature = tuple(super_signature(amb))
+        if len(set(signature)) == 1:
+            continue
+        dispatcher.add(
+            signature, raise_NotImplementedError,
+            on_ambiguity=ambiguity_register_error
         )
-    )
 
 ###
 
