@@ -32,7 +32,7 @@ def ambiguity_warn(dispatcher, ambiguities):
 
 def ambiguity_register_error(dispatcher, ambiguities):
     """
-    Register ``raise_NotImplementedError`` for ambiguous types.
+    Register instance of ``RaiseNotImplementedError`` for ambiguous types.
 
     Parameters
     ----------
@@ -48,22 +48,27 @@ def ambiguity_register_error(dispatcher, ambiguities):
     for amb in ambiguities:
         signature = tuple(super_signature(amb))
         dispatcher.add(
-            signature, raise_NotImplementedError, on_ambiguity=ambiguity_register_error
+            signature, RaiseNotImplementedError(dispatcher), on_ambiguity=ambiguity_register_error
         )
 
-def raise_NotImplementedError(*args, **kwargs):
-    """Raise ``NotImplementedError``."""
-    types = tuple(type(a) for a in args)
-    raise NotImplementedError(
-        "Ambiguous signature for %s: <%s>" % (
-        dispatcher.name, str_signature(types)
-    ))
+class RaiseNotImplementedError:
+    """Raise ``NotImplementedError`` when called."""
+
+    def __init__(self, dispatcher):
+        self.dispatcher = dispatcher
+
+    def __call__(self, *args, **kwargs):
+        types = tuple(type(a) for a in args)
+        raise NotImplementedError(
+            "Ambiguous signature for %s: <%s>" % (
+            self.dispatcher.name, str_signature(types)
+        ))
 
 
 def ambiguity_register_error_ignore_dup(dispatcher, ambiguities):
     """
     If super signature for ambiguous types is duplicate types, ignore it.
-    Else, register ``raise_NotImplementedError`` for ambiguous types.
+    Else, register instance of ``RaiseNotImplementedError`` for ambiguous types.
 
     Parameters
     ----------
@@ -81,8 +86,8 @@ def ambiguity_register_error_ignore_dup(dispatcher, ambiguities):
         if len(set(signature)) == 1:
             continue
         dispatcher.add(
-            signature, raise_NotImplementedError,
-            on_ambiguity=ambiguity_register_error
+            signature, RaiseNotImplementedError(dispatcher),
+            on_ambiguity=ambiguity_register_error_ignore_dup
         )
 
 ###

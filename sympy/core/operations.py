@@ -13,7 +13,7 @@ from sympy.core.parameters import global_parameters
 from sympy.utilities.iterables import sift
 from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_register_error_ignore_dup,
-    str_signature, raise_NotImplementedError)
+    str_signature, RaiseNotImplementedError)
 
 
 class AssocOp(Basic):
@@ -669,7 +669,7 @@ class AssocOpDispatcher:
 
             sigs_str = ', '.join('<%s>' % str_signature(sig) for sig in sigs)
 
-            if typ is raise_NotImplementedError:
+            if isinstance(typ, RaiseNotImplementedError):
                 amb_sigs.append(sigs_str)
                 continue
 
