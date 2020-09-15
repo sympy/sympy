@@ -73,7 +73,14 @@ class sinh(HyperbolicFunction):
     r"""
     The hyperbolic sine function, `\frac{e^x - e^{-x}}{2}`.
 
-    * sinh(x) -> Returns the hyperbolic sine of x
+    * sinh(x) -> Returns the hyperbolic sine of x.
+
+    Examples
+    ========
+
+    >>> from sympy import sinh
+    >>> sinh(1.2)
+    1.50946135541217
 
     See Also
     ========
@@ -268,7 +275,14 @@ class cosh(HyperbolicFunction):
     r"""
     The hyperbolic cosine function, `\frac{e^x + e^{-x}}{2}`.
 
-    * cosh(x) -> Returns the hyperbolic cosine of x
+    * cosh(x) -> Returns the hyperbolic cosine of x.
+
+    Examples
+    ========
+
+    >>> from sympy import cosh
+    >>> cosh(1.4)
+    2.15089846539314
 
     See Also
     ========
@@ -492,6 +506,13 @@ class tanh(HyperbolicFunction):
 
     * tanh(x) -> Returns the hyperbolic tangent of x
 
+    Examples
+    ========
+
+    >>> from sympy import tanh
+    >>> tanh(2.1)
+    0.970451936613454
+
     See Also
     ========
 
@@ -677,6 +698,18 @@ class coth(HyperbolicFunction):
     The hyperbolic cotangent function, `\frac{\cosh(x)}{\sinh(x)}`.
 
     * coth(x) -> Returns the hyperbolic cotangent of x
+
+    Examples
+    ========
+
+    >>> from sympy import coth
+    >>> coth(1.3)
+    1.16046550355788
+
+    See Also
+    ========
+
+    sinh, cosh, acoth
     """
 
     def fdiff(self, argindex=1):
@@ -893,6 +926,13 @@ class csch(ReciprocalHyperbolicFunction):
 
     * csch(x) -> Returns the hyperbolic cosecant of x
 
+    Examples
+    ========
+
+    >>> from sympy import csch
+    >>> csch(3.7)
+    0.0494772960745175
+
     See Also
     ========
 
@@ -950,7 +990,14 @@ class sech(ReciprocalHyperbolicFunction):
     r"""
     The hyperbolic secant function, `\frac{2}{e^x + e^{-x}}`
 
-    * sech(x) -> Returns the hyperbolic secant of x
+    * sech(x) -> Returns the hyperbolic secant of x.
+
+    Examples
+    ========
+
+    >>> from sympy import sech
+    >>> sech(0.2)
+    0.980327997644725
 
     See Also
     ========
@@ -1005,6 +1052,18 @@ class asinh(InverseHyperbolicFunction):
     The inverse hyperbolic sine function.
 
     * asinh(x) -> Returns the inverse hyperbolic sine of x
+
+    Examples
+    ========
+
+    >>> from sympy import asinh, sqrt
+    >>> from sympy.abc import x
+    >>> asinh(x).diff(x)
+    1/sqrt(x**2 + 1)
+    >>> asinh(1).diff(x)
+    0
+    >>> asinh(1)
+    log(1 + sqrt(2))
 
     See Also
     ========
@@ -1112,6 +1171,16 @@ class acosh(InverseHyperbolicFunction):
     The inverse hyperbolic cosine function.
 
     * acosh(x) -> Returns the inverse hyperbolic cosine of x
+
+    Examples
+    ========
+
+    >>> from sympy import acosh, sqrt
+    >>> from sympy.abc import x
+    >>> acosh(x).diff(x)
+    1/sqrt(x**2 - 1)
+    >>> acosh(1)
+    0
 
     See Also
     ========
