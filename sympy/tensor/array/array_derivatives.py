@@ -38,7 +38,7 @@ class ArrayDerivative(Derivative):
         elif isinstance(expr, MatrixExpr):
             return ZeroMatrix(*expr.shape)
         else:
-            raise RuntimeError("...")
+            raise RuntimeError("Unable to determine shape of array-derivative.")
 
     @staticmethod
     def _call_derive_scalar_by_matrix(expr, v):  # type: (Expr, MatrixCommon) -> Expr
