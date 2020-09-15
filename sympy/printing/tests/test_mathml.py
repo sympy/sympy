@@ -450,7 +450,7 @@ def test_content_symbol():
 def test_content_mathml_greek():
     mml = mp._print(Symbol('alpha'))
     assert mml.nodeName == 'ci'
-    assert mml.childNodes[0].nodeValue == u'\N{GREEK SMALL LETTER ALPHA}'
+    assert mml.childNodes[0].nodeValue == '\N{GREEK SMALL LETTER ALPHA}'
 
     assert mp.doprint(Symbol('alpha')) == '<ci>&#945;</ci>'
     assert mp.doprint(Symbol('beta')) == '<ci>&#946;</ci>'
@@ -1036,7 +1036,7 @@ def test_presentation_symbol():
 def test_presentation_mathml_greek():
     mml = mpp._print(Symbol('alpha'))
     assert mml.nodeName == 'mi'
-    assert mml.childNodes[0].nodeValue == u'\N{GREEK SMALL LETTER ALPHA}'
+    assert mml.childNodes[0].nodeValue == '\N{GREEK SMALL LETTER ALPHA}'
 
     assert mpp.doprint(Symbol('alpha')) == '<mi>&#945;</mi>'
     assert mpp.doprint(Symbol('beta')) == '<mi>&#946;</mi>'

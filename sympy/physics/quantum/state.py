@@ -135,9 +135,9 @@ class StateBase(QExpr):
         # Setup for unicode vs ascii
         if use_unicode:
             lbracket, rbracket = self.lbracket_ucode, self.rbracket_ucode
-            slash, bslash, vert = u'\N{BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT}', \
-                                  u'\N{BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT}', \
-                                  u'\N{BOX DRAWINGS LIGHT VERTICAL}'
+            slash, bslash, vert = '\N{BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT}', \
+                                  '\N{BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT}', \
+                                  '\N{BOX DRAWINGS LIGHT VERTICAL}'
         else:
             lbracket, rbracket = self.lbracket, self.rbracket
             slash, bslash, vert = '/', '\\', '|'

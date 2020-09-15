@@ -15,6 +15,7 @@ TODO:
 from __future__ import print_function, division
 
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, is_combining
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 class stringPict(object):
     """An ASCII picture.
@@ -443,7 +444,7 @@ class prettyForm(stringPict):
         Parentheses are needed around +, - and neg.
         """
         quantity = {
-            'degree': u"\N{DEGREE SIGN}"
+            'degree': "\N{DEGREE SIGN}"
         }
 
         if len(others) == 0:

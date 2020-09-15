@@ -261,7 +261,7 @@ class PrettyPrinter(Printer):
             if arg.is_Boolean and not arg.is_Not:
                 pform_arg = prettyForm(*pform_arg.parens())
 
-            pform = prettyForm(*pform.right(u' %s ' % char))
+            pform = prettyForm(*pform.right(' %s ' % char))
             pform = prettyForm(*pform.right(pform_arg))
 
         return pform
@@ -511,7 +511,7 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             # use unicode corners
             horizontal_chr = xobj('-', 1)
-            corner_chr = u'\N{BOX DRAWINGS LIGHT DOWN AND HORIZONTAL}'
+            corner_chr = '\N{BOX DRAWINGS LIGHT DOWN AND HORIZONTAL}'
 
         func_height = pretty_func.height()
 
@@ -673,7 +673,7 @@ class PrettyPrinter(Printer):
 
         LimArg = self._print(z)
         if self._use_unicode:
-            LimArg = prettyForm(*LimArg.right(u'\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{RIGHTWARDS ARROW}'))
+            LimArg = prettyForm(*LimArg.right('\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{RIGHTWARDS ARROW}'))
         else:
             LimArg = prettyForm(*LimArg.right('->'))
         LimArg = prettyForm(*LimArg.right(self._print(z0)))
@@ -682,7 +682,7 @@ class PrettyPrinter(Printer):
             dir = ""
         else:
             if self._use_unicode:
-                dir = u'\N{SUPERSCRIPT PLUS SIGN}' if str(dir) == "+" else u'\N{SUPERSCRIPT MINUS}'
+                dir = '\N{SUPERSCRIPT PLUS SIGN}' if str(dir) == "+" else '\N{SUPERSCRIPT MINUS}'
 
         LimArg = prettyForm(*LimArg.right(self._print(dir)))
 
@@ -846,7 +846,7 @@ class PrettyPrinter(Printer):
     def _print_Adjoint(self, expr):
         pform = self._print(expr.arg)
         if self._use_unicode:
-            dag = prettyForm(u'\N{DAGGER}')
+            dag = prettyForm('\N{DAGGER}')
         else:
             dag = prettyForm('+')
         from sympy.matrices import MatrixSymbol
@@ -891,19 +891,19 @@ class PrettyPrinter(Printer):
 
     def _print_Identity(self, expr):
         if self._use_unicode:
-            return prettyForm(u'\N{MATHEMATICAL DOUBLE-STRUCK CAPITAL I}')
+            return prettyForm('\N{MATHEMATICAL DOUBLE-STRUCK CAPITAL I}')
         else:
             return prettyForm('I')
 
     def _print_ZeroMatrix(self, expr):
         if self._use_unicode:
-            return prettyForm(u'\N{MATHEMATICAL DOUBLE-STRUCK DIGIT ZERO}')
+            return prettyForm('\N{MATHEMATICAL DOUBLE-STRUCK DIGIT ZERO}')
         else:
             return prettyForm('0')
 
     def _print_OneMatrix(self, expr):
         if self._use_unicode:
-            return prettyForm(u'\N{MATHEMATICAL DOUBLE-STRUCK DIGIT ONE}')
+            return prettyForm('\N{MATHEMATICAL DOUBLE-STRUCK DIGIT ONE}')
         else:
             return prettyForm('1')
 
@@ -950,7 +950,7 @@ class PrettyPrinter(Printer):
     def _print_KroneckerProduct(self, expr):
         from sympy import MatAdd, MatMul
         if self._use_unicode:
-            delim = u' \N{N-ARY CIRCLED TIMES OPERATOR} '
+            delim = ' \N{N-ARY CIRCLED TIMES OPERATOR} '
         else:
             delim = ' x '
         return self._print_seq(expr.args, None, None, delim,
@@ -1067,21 +1067,21 @@ class PrettyPrinter(Printer):
             if '\n' in partstr:
                 tempstr = partstr
                 tempstr = tempstr.replace(vectstrs[i], '')
-                if u'\N{right parenthesis extension}' in tempstr:   # If scalar is a fraction
+                if '\N{right parenthesis extension}' in tempstr:   # If scalar is a fraction
                     for paren in range(len(tempstr)):
                         flag[i] = 1
-                        if tempstr[paren] == u'\N{right parenthesis extension}':
-                            tempstr = tempstr[:paren] + u'\N{right parenthesis extension}'\
+                        if tempstr[paren] == '\N{right parenthesis extension}':
+                            tempstr = tempstr[:paren] + '\N{right parenthesis extension}'\
                                          + ' '  + vectstrs[i] + tempstr[paren + 1:]
                             break
-                elif u'\N{RIGHT PARENTHESIS LOWER HOOK}' in tempstr:
+                elif '\N{RIGHT PARENTHESIS LOWER HOOK}' in tempstr:
                     flag[i] = 1
-                    tempstr = tempstr.replace(u'\N{RIGHT PARENTHESIS LOWER HOOK}',
-                                        u'\N{RIGHT PARENTHESIS LOWER HOOK}'
+                    tempstr = tempstr.replace('\N{RIGHT PARENTHESIS LOWER HOOK}',
+                                        '\N{RIGHT PARENTHESIS LOWER HOOK}'
                                         + ' ' + vectstrs[i])
                 else:
-                    tempstr = tempstr.replace(u'\N{RIGHT PARENTHESIS UPPER HOOK}',
-                                        u'\N{RIGHT PARENTHESIS UPPER HOOK}'
+                    tempstr = tempstr.replace('\N{RIGHT PARENTHESIS UPPER HOOK}',
+                                        '\N{RIGHT PARENTHESIS UPPER HOOK}'
                                         + ' ' + vectstrs[i])
                 o1[i] = tempstr
 
@@ -1113,7 +1113,7 @@ class PrettyPrinter(Printer):
                                            3*(len(lengths)-1)))
                     strs[j] += ' '*(lengths[-1]+3)
 
-        return prettyForm(u'\n'.join([s[:-3] for s in strs]))
+        return prettyForm('\n'.join([s[:-3] for s in strs]))
 
     def _print_NDimArray(self, expr):
         from sympy import ImmutableMatrix
@@ -1912,7 +1912,7 @@ class PrettyPrinter(Printer):
             and expt is S.Half and bpretty.height() == 1
             and (bpretty.width() == 1
                  or (base.is_Integer and base.is_nonnegative))):
-            return prettyForm(*bpretty.left(u'\N{SQUARE ROOT}'))
+            return prettyForm(*bpretty.left('\N{SQUARE ROOT}'))
 
         # Construct root sign, start with the \/ shape
         _zZ = xobj('/', 1)
@@ -2352,7 +2352,7 @@ class PrettyPrinter(Printer):
 
     def _print_FiniteField(self, expr):
         if self._use_unicode:
-            form = u'\N{DOUBLE-STRUCK CAPITAL Z}_%d'
+            form = '\N{DOUBLE-STRUCK CAPITAL Z}_%d'
         else:
             form = 'GF(%d)'
 
@@ -2360,19 +2360,19 @@ class PrettyPrinter(Printer):
 
     def _print_IntegerRing(self, expr):
         if self._use_unicode:
-            return prettyForm(u'\N{DOUBLE-STRUCK CAPITAL Z}')
+            return prettyForm('\N{DOUBLE-STRUCK CAPITAL Z}')
         else:
             return prettyForm('ZZ')
 
     def _print_RationalField(self, expr):
         if self._use_unicode:
-            return prettyForm(u'\N{DOUBLE-STRUCK CAPITAL Q}')
+            return prettyForm('\N{DOUBLE-STRUCK CAPITAL Q}')
         else:
             return prettyForm('QQ')
 
     def _print_RealField(self, domain):
         if self._use_unicode:
-            prefix = u'\N{DOUBLE-STRUCK CAPITAL R}'
+            prefix = '\N{DOUBLE-STRUCK CAPITAL R}'
         else:
             prefix = 'RR'
 
@@ -2383,7 +2383,7 @@ class PrettyPrinter(Printer):
 
     def _print_ComplexField(self, domain):
         if self._use_unicode:
-            prefix = u'\N{DOUBLE-STRUCK CAPITAL C}'
+            prefix = '\N{DOUBLE-STRUCK CAPITAL C}'
         else:
             prefix = 'CC'
 
@@ -2503,7 +2503,7 @@ class PrettyPrinter(Printer):
 
     def _print_stieltjes(self, e):
         if self._use_unicode:
-            return self._print_number_function(e, u'\N{GREEK SMALL LETTER GAMMA}')
+            return self._print_number_function(e, '\N{GREEK SMALL LETTER GAMMA}')
         else:
             return self._print_number_function(e, "stieltjes")
 
@@ -2666,7 +2666,7 @@ class PrettyPrinter(Printer):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
             string = field._coord_sys.symbols[field._index].name
-            return self._print(u'\N{DOUBLE-STRUCK ITALIC SMALL D} ' + pretty_symbol(string))
+            return self._print('\N{DOUBLE-STRUCK ITALIC SMALL D} ' + pretty_symbol(string))
         else:
             pform = self._print(field)
             pform = prettyForm(*pform.parens())
