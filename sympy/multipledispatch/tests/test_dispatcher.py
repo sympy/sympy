@@ -1,7 +1,7 @@
 from sympy.multipledispatch.dispatcher import (Dispatcher, MDNotImplementedError,
                                          MethodDispatcher, halt_ordering,
                                          restart_ordering,
-                                         ambiguity_register_error)
+                                         ambiguity_register_error_ignore_dup)
 from sympy.testing.pytest import raises, warns
 
 
@@ -264,12 +264,21 @@ def test_not_implemented_error():
 
     assert raises(NotImplementedError, lambda: f(1.0))
 
-def test_ambiguity_register_error():
-    f = Dispatcher('add')
+def test_ambiguity_register_error_ignore_dup():
+    f = Dispatcher('f')
+
+    class A:
+        pass
+    class B(A):
+        pass
+    class C(A):
+        pass
 
     # suppress warning for registering ambiguous signal
-    f.add((int, object), lambda x,y: x+y, ambiguity_register_error)
-    f.add((object, int), lambda x,y: x+y, ambiguity_register_error)
+    f.add((A, B), lambda x,y: None, ambiguity_register_error_ignore_dup)
+    f.add((B, A), lambda x,y: None, ambiguity_register_error_ignore_dup)
+    f.add((A, C), lambda x,y: None, ambiguity_register_error_ignore_dup)
+    f.add((C, A), lambda x,y: None, ambiguity_register_error_ignore_dup)
 
     # raises error if ambiguous signal is passed
-    assert raises(NotImplementedError, lambda: f(1,2))
+    assert raises(NotImplementedError, lambda: f(B(), C()))
