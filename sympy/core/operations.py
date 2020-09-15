@@ -614,10 +614,16 @@ class AssocOpDispatcher:
         # Quick exit for the case where all handlers are same
         if len(handlers) == 1:
             h, = handlers
+            if not isinstance(h, type):
+                raise RuntimeError("Handler {!r} is not a type.".format(h))
             return h
 
         # Recursively select with registered binary priority
         for i, typ in enumerate(handlers):
+
+            if not isinstance(typ, type):
+                raise RuntimeError("Handler {!r} is not a type.".format(typ))
+
             if i == 0:
                 handler = typ
             else:
