@@ -151,7 +151,6 @@ class VectorPrettyPrinter(PrettyPrinter):
             d['picture'][0] += apostrophes + "(t)"
         else:
             d['picture'] = [center_accent(d['picture'][0], dots[dot_i])]
-        d['unicode'] =  center_accent(d['unicode'], dots[dot_i])
         return pform
 
     def _print_Function(self, e):
