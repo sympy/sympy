@@ -11,7 +11,7 @@ whether they are commutative or not.
 
 The general reference work this module tries to follow is
 
-  [JoyOfCats] J. Adamek, H. Herrlich. G. E. Strecker: Abstract and Concrete Categories. The Joy of Cats.
+.. [JoyOfCats] J. Adamek, H. Herrlich. G. E. Strecker: Abstract and Concrete Categories. The Joy of Cats.
 
 The latest version of this book should be available for free download
 from
