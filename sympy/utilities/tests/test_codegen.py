@@ -1592,6 +1592,7 @@ def test_Variable_constructor():
     raises(TypeError, lambda: Variable(x, datatype="bad data type"))
     raises(TypeError, lambda: Variable(x, dimensions="bad dimensions"))
     raises(TypeError, lambda: Variable(x, precision="bad precision"))
+    raises(ValueError, lambda: Variable(x, precision=0))
     raises(CodeGenError, lambda: Variable(x).get_datatype("I'm an invalid language!"))
 
 

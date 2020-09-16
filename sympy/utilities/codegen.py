@@ -309,6 +309,13 @@ class Variable:
             raise TypeError("The first argument must be a sympy symbol.")
         if datatype is None:
             datatype = get_default_datatype(name)
+        if precision is not None:
+            if not isinstance(precision, int):
+                raise TypeError("The (optional) `precision' argument must "
+                                "be a positive integer.")
+            if precision <= 0:
+                raise ValueError("The (optional) `precision' argument must "
+                                 "be a positive integer.")
         elif not isinstance(datatype, DataType):
             raise TypeError("The (optional) `datatype' argument must be an "
                             "instance of the DataType class.")
