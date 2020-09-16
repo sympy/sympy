@@ -42,7 +42,7 @@ example
     sqrt(x**2)
 
 It might look as if that should simplify to ``x`` but it does not even if
-``simplify`` is used:
+:func:`~.simplify` is used:
 
     >>> simplify(sqrt(x**2))
     sqrt(x**2)
@@ -163,11 +163,12 @@ query and should not presume that a definite answer will always be given.
 
 The assumptions system is not just for symbols or for complex expressions. It
 can also be used for plain SymPy integers and other objects. The assumptions
-predicates are available on any instance of ``Basic`` which is the superclass
-for most classes of SymPy objects. A plain Python ``int`` is not a ``Basic``
-instance and will can not be used to query assumptions predicates. We can
-"sympify" regular Python objects to become SymPy objects with ``sympify`` or
-``S`` and then the assumptions system can be used:
+predicates are available on any instance of :class:`~.Basic` which is the superclass
+for most classes of SymPy objects. A plain Python :class:`int` is not a
+:class:`~.Basic` instance and will can not be used to query assumptions
+predicates. We can "sympify" regular Python objects to become SymPy objects
+with :func:`~.sympify` or ``S`` (:class:`~.SingletonRegistry`) and then the
+assumptions system can be used:
 
     >>> from sympy import S
     >>> x = 2
@@ -209,10 +210,10 @@ to represent distinct symbols:
     >>> x1 == x2
     False
 
-One way to simplify an expression is to use the ``posify`` function which will
-replace all symbols in an expression with symbols that have the assumption
-``positive=True`` (unless that contradicts any existing assumptions for the
-symbol):
+One way to simplify an expression is to use the :func:`~.posify` function
+which will replace all symbols in an expression with symbols that have the
+assumption ``positive=True`` (unless that contradicts any existing assumptions
+for the symbol):
 
     >>> from sympy import posify, exp
     >>> x = Symbol('x')
@@ -225,11 +226,11 @@ symbol):
     >>> expr2
     exp(_x)
 
-The ``posify`` function returns the expression with all symbols replaced
+The :func:`~.posify` function returns the expression with all symbols replaced
 (which might lead to simplifications) and also a dict which maps the new
-symbols to the old that can be used with ``.subs``. This is useful because
-otherwise the new expression with the new symbols having the ``positive=True``
-assumption will not compare equal to the old:
+symbols to the old that can be used with :py:meth:`~.Basic.subs`. This is
+useful because otherwise the new expression with the new symbols having the
+``positive=True`` assumption will not compare equal to the old:
 
     >>> expr2
     exp(_x)
@@ -244,9 +245,9 @@ assumption will not compare equal to the old:
 Applying assumptions to string inputs
 =====================================
 
-We have seen how to set assumptions when calling the ``Symbol`` or
-``symbols`` functions explicitly. A natural question to ask is: in what other
-situations can we assign assumptions to an object?
+We have seen how to set assumptions when calling the :class:`~.Symbol` or
+:func:`~.symbols` functions explicitly. A natural question to ask is in what
+other situations can we assign assumptions to an object?
 
 It is common for users to use strings as input to SymPy functions (although
 the general feeling among SymPy developers is that this should be discouraged)
@@ -257,7 +258,7 @@ e.g.:
     [-1, 1]
 
 When creating symbols explicitly it would be possible to assign assumptions
-that would affect the behaviour of ``solve``:
+that would affect the behaviour of :func:`~.solve`:
 
     >>> x = Symbol('x', positive=True)
     >>> solve(x**2 - 1)
@@ -266,8 +267,8 @@ that would affect the behaviour of ``solve``:
 When using string input SymPy will create the expression and create all of the
 symbolc implicitly so the question arises how can the assumptions be
 specified? The answer is that rather than depending on implicit string
-cponversion it is better to use the ``parse_expr`` function explicitly and
-then it is possible to provide assumptions for the symbols e.g.:
+cponversion it is better to use the :func:`~.parse_expr` function explicitly
+and then it is possible to provide assumptions for the symbols e.g.:
 
     >>> from sympy import parse_expr
     >>> parse_expr('x**2 - 1')
@@ -276,7 +277,7 @@ then it is possible to provide assumptions for the symbols e.g.:
     >>> solve(eq)
     [1]
 
-.. note:: The solve function is unusual as a high level API in that it
+.. note:: The :func:`~.solve` function is unusual as a high level API in that it
           actually checks the assumptions on any input symbols (the unknowns)
           and uses that to tailor its output. The assumptions system otherwise
           affects low-level evaluation but is not necessarily handled
@@ -656,9 +657,9 @@ a basic meaning in mathematics but can also have more general meanings. For
 example when dealing with matrices a matrix of all zeros might be referred to
 as "zero". The predicates in the assumptions system do not allow any
 generalizations such as this. The predicate ``zero`` is strictly reserved for
-the plain number $0$. Instead matrices have an ``is_zero_matrix`` property for
-this purpose (although that property is not strictly part of the assumptions
-system):
+the plain number $0$. Instead matrices have an
+:py:meth:`~.MatrixCommon.is_zero_matrix` property for this purpose (although
+that property is not strictly part of the assumptions system):
 
     >>> from sympy import Matrix
     >>> M = Matrix([[0, 0], [0, 0]])
@@ -840,9 +841,9 @@ Symbolic Boolean vs fuzzy bool
 ==============================
 
 Assumptions queries give fuzzy bool ``True``, ``False`` or ``None`` results.
-These are low-level Python objects rather than SymPy's symbolic ``Boolean``
-expressions. As an example an inequality in SymPy is a ``Boolean`` and can
-represent indeterminate results symbolically:
+These are low-level Python objects rather than SymPy's symbolic
+``Boolean`` expressions. As an example an inequality in SymPy is a
+``Boolean`` and can represent indeterminate results symbolically:
 
     >>> xpos = Symbol('xpos', positive=True)
     >>> xneg = Symbol('xneg', negative=True)
@@ -861,12 +862,12 @@ represent indeterminate results symbolically:
     x > 0
 
 The last example shows what happens when an inequality is indeterminate: we
-get an instance of ``StrictGreaterThan`` which represents the inequality as a
-symbolic expression. Internally when attempting to evaluate an inequality like
-``a > b`` SymPy will compute ``(a - b).is_positive``. If the result is
-``True`` or ``False`` then SymPy's symbolic ``S.true`` or ``S.false`` will be
-returned. If the result is ``None`` then an unevaluated ``StrictGreaterThan``
-is returned as show for ``x > 0`` above.
+get an instance of :class:`~.StrictGreaterThan` which represents the
+inequality as a symbolic expression. Internally when attempting to evaluate an
+inequality like ``a > b`` SymPy will compute ``(a - b).is_positive``. If the
+result is ``True`` or ``False`` then SymPy's symbolic ``S.true`` or
+``S.false`` will be returned. If the result is ``None`` then an unevaluated
+:class:`~.StrictGreaterThan` is returned as show for ``x > 0`` above.
 
 It is not obvious that queries like ``xpos > 0`` return ``S.true`` rather than
 ``True`` because both objects display in the same way but we can check this
@@ -884,8 +885,8 @@ using the Python ``is`` operator:
 
 There is no general symbolic analogue of ``None`` in SymPy. In the cases where
 a low-level assumptions query gives ``None`` the symbolic query will result in
-an unevaluated symbolic ``Boolean`` (e.g, ``x > 0``).  We can use a symbolic
-``Boolean`` as part of a symbolic expression:
+an unevaluated symbolic ``Boolean`` (e.g, ``x > 0``).  We can use a
+symbolic ``Boolean`` as part of a symbolic expression:
 
     >>> from sympy import Piecewise
     >>> p = Piecewise((1, x > 0), (2, True))
@@ -898,7 +899,7 @@ Here ``p`` represents an expression that will be equal to ``1`` if ``x > 0``
 or otherwise it will be equal to ``2``. The unevaluated ``Boolean`` inequality
 ``x > 0`` represents the condition for deciding the value of the expression
 symbolically. When we substitute a value for ``x`` the inequality will resolve
-to ``S.true`` and then the ``Piecewise`` can evaluate to ``1`` or ``2``.
+to ``S.true`` and then the :class:`~.Piecewise` can evaluate to ``1`` or ``2``.
 
 The same will not work when using a fuzzy-bool instead of a symbolic
 ``Boolean``:
@@ -908,13 +909,13 @@ The same will not work when using a fuzzy-bool instead of a symbolic
     ...
     TypeError: Second argument must be a Boolean, not `NoneType`
 
-The ``Piecewise`` can not use ``None`` as the condition because unlike the
+The :class:`~.Piecewise` can not use ``None`` as the condition because unlike the
 inequality ``x > 0`` it gives no information. With the inequality it is
 possible to decide in future if the condition might ``True`` or ``False``
 once a value for ``x`` is known. A value of ``None`` can not be used in that
 way so it is rejected.
 
-.. note:: We can use ``True`` in the ``Piecewise`` because ``True`` sympifies
+.. note:: We can use ``True`` in the :class:`~.Piecewise` because ``True`` sympifies
           to ``S.true``. Sympifying ``None`` just gives ``None`` again which
           is not a valid symbolic SymPy object.
 
@@ -987,7 +988,7 @@ either of the ``is_positive`` queries gives ``None``:
 
 .. note:: We need to sympify the arguments this function using ``S`` because
           the assumptions are only defined on SymPy objects and not regular
-          Python ``int`` objects.
+          Python :class:`int` objects.
 
 Here ``False`` is incorrect because it is *possible* that ``x`` is positive in
 which case both arguments would be positive. We get ``False`` here because
@@ -1037,7 +1038,7 @@ know whether the statement "``x`` is positive" is ``True`` or ``False`` then
 we also do not know whether its negation "``x`` is not positive" is ``True``
 or ``False``. The reason this happens is again because ``None`` is considered
 "falsey" in Python so when used with a logical operator such as ``not`` it
-will first be converted to a ``bool`` and then negated:
+will first be converted to a :class:`bool` and then negated:
 
     >>> bool(None)
     False
@@ -1101,7 +1102,7 @@ to end up with a logic error. However instead the indeterminate case will
 often lead to an exception if not implemented carefully.
 
 We will try to implement the ``both_positive`` function this time using
-symbolic ``Booleans``:
+symbolic ``Boolean``:
 
     >>> def both_positive(a, b):
     ...     """ask whether a and b are both positive"""
@@ -1144,15 +1145,15 @@ statement implicitly calls ``bool(x > 0)`` which raises.
 
 The Python expression ``x > 0`` creates a SymPy ``Boolean``. Since in this
 case the ``Boolean`` can not evaluate to ``True`` or ``False`` we get an
-unevaluated ``StrictGreaterThan``. Attempting to force that into a ``bool``
-with ``bool(x > 0)`` raises an exception. That is because a regular Python
-``bool`` must be either ``True`` or ``False`` and neither of those would be
-correct in this case.
+unevaluated :class:`~.StrictGreaterThan`. Attempting to force that into a
+``bool`` with ``bool(x > 0)`` raises an exception. That is because a regular
+Python ``bool`` must be either ``True`` or ``False`` and neither of those
+would be correct in this case.
 
 The same kind of issue arises when using ``and``, ``or`` or ``not`` with
-symbolic ``Boolean``. The solution is to use SymPy's symbolic ``And``, ``Or``
-and ``Not`` or equivalently Python's bitwise logical operators ``&``, ``|``
-and ``~``:
+symbolic ``Boolean``. The solution is to use SymPy's symbolic :class:`~.And`,
+:class:`~.Or` and :class:`~.Not` or equivalently Python's bitwise logical
+operators ``&``, ``|`` and ``~``:
 
     >>> from sympy import And, Or, Not
     >>> x > 0
@@ -1200,8 +1201,8 @@ under which the statement "``a`` and ``b`` are both positive" would be true:
     >>> both_positive_better(x, S(3))
     x > 0
 
-The last case shows that actually using the ``And`` with a condition that is
-known to be true simplifies the ``And``. In fact we have
+The last case shows that actually using the :class:`~.And` with a condition that is
+known to be true simplifies the :class:`~.And`. In fact we have
 
     >>> And(x > 0, 3 > 0)
     x > 0
@@ -1212,7 +1213,7 @@ known to be true simplifies the ``And``. In fact we have
 
 What this means is that we can improve ``both_positive_better``. The
 different cases are not needed at all. Instead we can simply return the
-``And`` and let it simplify if possible:
+:class:`~.And` and let it simplify if possible:
 
     >>> def both_positive_best(a, b):
     ...     """ask whether a and b are both positive"""
@@ -1239,8 +1240,8 @@ particular values:
 The idea when working with symbolic ``Boolean`` objects is as much as possible
 to avoid trying to branch on them with ``if/else`` and other logical operators
 like ``and`` etc. Instead think of computing a condition and passing it around
-as a variable. The elementary symbolic operations like ``And``, ``Or`` and
-``Not`` can then take care of the logic for you.
+as a variable. The elementary symbolic operations like :class:`~.And`,
+:class:`~.Or` and :class:`~.Not` can then take care of the logic for you.
 
 
 Other is_* properties
@@ -1250,8 +1251,8 @@ There are many properties and attributes in sympy that that have names
 beginning with ``is_`` that look similar to the properties used in the
 (old) assumptions system but are not in fact part of the assumptions system.
 Some of these have a similar meaning and usage as those of the assumptions
-system such as the ``Matrix.is_zero_matrix`` property shown above. Another
-example is the ``is_empty`` property of sets:
+system such as the :py:meth:`~.MatrixCommon.is_zero_matrix` property shown
+above.  Another example is the ``is_empty`` property of sets:
 
     >>> from sympy import FiniteSet, Intersection
     >>> S1 = FiniteSet(1, 2)
@@ -1266,12 +1267,12 @@ example is the ``is_empty`` property of sets:
     None
 
 The ``is_empty`` property gives a fuzzy bool indicating whether or not a
-``Set`` is the empty set. In the example of ``S2`` it is not possible to know
+:class:`~.Set` is the empty set. In the example of ``S2`` it is not possible to know
 whether or not the set is empty without knowing whether or not ``x`` is equal
 to ``1`` so ``S2.is_empty`` gives ``None``. The ``is_empty`` property for sets
 plays a similar role to the ``is_zero`` property for numbers in the
 assumptions system: ``is_empty`` is normally only ``True`` for the
-``EmptySet`` object but it is still useful to be able to distinguish between
+:class:`~.EmptySet` object but it is still useful to be able to distinguish between
 ``empty=False`` and ``empty=None``.
 
 Although ``is_zero_matrix`` and ``is_empty`` are used for similar purposes to
@@ -1279,19 +1280,20 @@ the assumptions properties such as ``is_zero`` they are not part of the
 (old) assumptions system. There are no associated inference rules connecting
 e.g.  ``Set.is_empty`` and ``Set.is_finite_set`` because the inference rules
 are part of the (old) assumptions system which only deals with the predicates
-listed in the table above. It is not possible to declare a ``MatrixSymbol``
-with e.g. ``zero_matrix=False`` and there is no ``SetSymbol`` class but if
-there was it would not have a system for understanding predicates like
-``empty=False``.
+listed in the table above. It is not possible to declare a
+:class:`~.MatrixSymbol` with e.g. ``zero_matrix=False`` and there is no
+``SetSymbol`` class but if there was it would not have a system for
+understanding predicates like ``empty=False``.
 
-The properties ``is_zero_matrix`` and ``is_empty`` are similar to those of the
-assumptions system because they concern *semantic* aspects of an
+The properties py:meth:`~.is_zero_matrix` and ``is_empty`` are similar to
+those of the assumptions system because they concern *semantic* aspects of an
 expression. There are a large number of other properties that focus on
-*structural* aspects such as ``is_Number``, ``is_number``,
-``is_comparable``. Since these properties refer to structural aspects of an
-expression they will always give ``True`` or ``False`` rather than a fuzzy
-bool that also has the possibility of being ``None``. Capitalised properties
-such as ``is_Number`` are usually shorthands for ``isinstance`` checks e.g.:
+*structural* aspects such as ``is_Number``, :py:meth:`~.Expr.is_number`,
+:py:meth:`~.Basic.is_comparable`. Since these properties refer to structural
+aspects of an expression they will always give ``True`` or ``False`` rather
+than a fuzzy bool that also has the possibility of being ``None``. Capitalised
+properties such as ``is_Number`` are usually shorthands for ``isinstance``
+checks e.g.:
 
     >>> from sympy import Number, Rational
     >>> x = Rational(1, 2)
@@ -1305,18 +1307,19 @@ such as ``is_Number`` are usually shorthands for ``isinstance`` checks e.g.:
     >>> y.is_Number
     False
 
-The ``Number`` class is the superclass for ``Integer``, ``Rational`` and
-``Float`` so any instance of ``Number`` represents a concrete number with a
-known value. A symbol such as ``y`` that is declared with ``rational=True``
-might represent the same value as ``x`` but it is not a concrete number with a
-known value so this is a structural rather than a semantic distinction.
-Properties like ``is_Number`` are sometimes used in SymPy in place of
-``isinstance`` because they do not have problems with circular imports and
-checking ``x.is_Number`` can be faster than a call to ``isinstance``.
+The :class:`~.Number` class is the superclass for :class:`~.Integer`,
+:class:`~.Rational` and :class:`~.Float` so any instance of :class:`~.Number`
+represents a concrete number with a known value. A symbol such as ``y`` that
+is declared with ``rational=True`` might represent the same value as ``x`` but
+it is not a concrete number with a known value so this is a structural rather
+than a semantic distinction.  Properties like ``is_Number`` are sometimes used
+in SymPy in place of ``isinstance`` because they do not have problems with
+circular imports and checking ``x.is_Number`` can be faster than a call to
+``isinstance``.
 
-The ``is_number`` (lower-case) property is ``True`` for any expression that
-can be numerically evaluated to a floating point complex number with
-``.evalf``.
+The :py:meth:`~.Expr.is_number` (lower-case) property is ``True`` for any
+expression that can be numerically evaluated to a floating point complex
+number with :py:meth:`~.EvalfMixin.evalf`:
 
     >>> expr1 = I + sqrt(2)
     >>> expr1
@@ -1335,11 +1338,13 @@ can be numerically evaluated to a floating point complex number with
     x + 1.0
 
 The primary reason for checking ``expr.is_number`` is to predict whether a
-call to ``.evalf`` will fully evaluate. The ``is_comparable`` property is
-similar to ``is_number`` except that if ``is_comparable`` gives ``True`` then
-the expression is guaranteed to numerically evaluate to a *real* ``Float``.
-When ``a.is_comparable`` and ``b.is_comparable`` the inequality ``a < b``
-should be resolvable as something like ``a.evalf() < b.evalf()``.
+call to py:meth:`~.evalf` will fully evaluate. The
+:py:meth:`~.Basic.is_comparable` property is similar to
+:py:meth:`~.Expr.is_number` except that if ``is_comparable`` gives ``True``
+then the expression is guaranteed to numerically evaluate to a *real*
+:class:`~.Float`.  When ``a.is_comparable`` and ``b.is_comparable`` the
+inequality ``a < b`` should be resolvable as something like ``a.evalf() <
+b.evalf()``.
 
 The full set of ``is_*`` properties, attributes and methods in SymPy is
 large. It is important to be clear though that only those that are listed in
@@ -1396,7 +1401,7 @@ we will define an ``expreal`` function which is restricted to real arguments.
     ...     def _eval_is_zero(self):
     ...         return fuzzy_and([self.x.is_infinite, self.x.is_extended_negative])
 
-The ``eval`` method is used to pick up on special values of the function so
+The ``Function.eval`` method is used to pick up on special values of the function so
 that we can return a different object if it would be a simplification. When
 ``expreal(x)`` is called the ``expreal.__new__`` class method (defined in the
 superclass ``Function``) will call ``expreal.eval(x)``. If ``expreal.eval``
@@ -1547,18 +1552,18 @@ assumptions system. Breifly these are:
 1. At import time the assumptions rules defined in
    ``sympy/core/assumptions.py`` are processed into a canonical form ready for
    efficiently applying the implication rules. This happens once when sympy is
-   imported before even the ``Basic`` class is defined.
+   imported before even the :class:`~.Basic` class is defined.
 
 2. The ``ManagedProperties`` metaclass is defined which is the metaclass for
-   all ``Basic`` subclasses. This class will post-process every ``Basic``
-   subclass to add the relevant properties needed for assumptions queries.
-   This also adds the ``default_assumptions`` attribute to the class. This
-   happens each time a ``Basic`` subclass is defined.
+   all :class:`~.Basic` subclasses. This class will post-process every
+   :class:`~.Basic` subclass to add the relevant properties needed for
+   assumptions queries.  This also adds the ``default_assumptions`` attribute
+   to the class. This happens each time a :class:`~.Basic` subclass is defined.
 
-3. Every ``Basic`` instance initially uses the ``default_assumptions`` class
-   attribute. When an assumptions query is made on a ``Basic`` instance in the
-   first instance the query will be answered from the ``default_assumptions``
-   for the class.
+3. Every :class:`~.Basic` instance initially uses the ``default_assumptions`` class
+   attribute. When an assumptions query is made on a :class:`~.Basic` instance
+   in the first instance the query will be answered from the
+   ``default_assumptions`` for the class.
 
 4. If there is no cached value for the assumptions query in the
    ``default_assumptions`` for the class then the default assumptions will be
@@ -1582,7 +1587,7 @@ assumptions system. Breifly these are:
 The assumptions rules defined in ``sympy/core/assumptions.py`` are given in
 forms like ``real ==  negative | zero | positive``. When this module is
 imported these are converted into a ``FactRules`` instance called
-``_assumr_rules``. This preprocesses the implication rules into the form of
+``_assume_rules``. This preprocesses the implication rules into the form of
 "A" and "B" rules that can be used for the implications resolver. This is
 explained in the code in ``sympy/core/facts.py``. We can access this internal
 object directly like (full output omitted):
@@ -1660,7 +1665,7 @@ set of all such assumptions for class ``A`` can be seen in
      'real': True,
      'zero': False}
 
-When an instance of any ``Basic`` subclass is created ``Basic.__new__`` will
+When an instance of any :class:`~.Basic` subclass is created ``Basic.__new__`` will
 assign its ``_assumptions`` attribute which will initially be a reference to
 ``cls.default_assumptions`` shared amongst all instances of the same class.
 The instance will use this to resolve any assumptions queries until that fails
@@ -1783,10 +1788,10 @@ We can also easily query whether two conditions are jointly satisfied with
     >>> x.is_positive and x.is_integer
     True
 
-However there is no way in the old assumptions to create a ``Symbol`` with
-assumptions predicates combined with *or*. For example if we wanted to say
-that "x is positive or x is an integer" then it is not possible to create a
-``Symbol`` with those assumptions.
+However there is no way in the old assumptions to create a :class:`~.Symbol`
+with assumptions predicates combined with *or*. For example if we wanted to
+say that "x is positive or x is an integer" then it is not possible to create
+a :class:`~.Symbol` with those assumptions.
 
 It is also not possible to ask an assumptions query based on *or* e.g. "is
 expr an expression that is positive or an integer". We can use e.g.
