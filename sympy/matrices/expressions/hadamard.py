@@ -58,9 +58,8 @@ class HadamardProduct(MatrixExpr):
     """
     is_HadamardProduct = True
 
-    def __new__(cls, *args, evaluate=False, **kwargs):
+    def __new__(cls, *args, evaluate=False, check=True):
         args = list(map(sympify, args))
-        check = kwargs.get('check', True)
         if check:
             validate(*args)
 

@@ -805,7 +805,7 @@ class MatrixSpecial(MatrixRequired):
         return cls._new(rows, cols, entry)
 
     @classmethod
-    def diag(kls, *args, **kwargs):
+    def diag(kls, *args, strict=False, unpack=True, rows=None, cols=None, **kwargs):
         """Returns a matrix with the specified diagonal.
         If matrices are passed, a block-diagonal matrix
         is created (i.e. the "direct sum" of the matrices).
@@ -900,8 +900,6 @@ class MatrixSpecial(MatrixRequired):
         from sympy.matrices.dense import Matrix
         from sympy.matrices.sparse import SparseMatrix
         klass = kwargs.get('cls', kls)
-        strict = kwargs.get('strict', False) # lists -> Matrices
-        unpack = kwargs.get('unpack', True)  # unpack single sequence
         if unpack and len(args) == 1 and is_sequence(args[0]) and \
                 not isinstance(args[0], MatrixBase):
             args = args[0]
@@ -936,8 +934,6 @@ class MatrixSpecial(MatrixRequired):
                     diag_entries[(i + rmax, j + cmax)] = _
             rmax += r
             cmax += c
-        rows = kwargs.get('rows', None)
-        cols = kwargs.get('cols', None)
         if rows is None:
             rows, cols = cols, rows
         if rows is None:
