@@ -454,9 +454,9 @@ class MatrixCalculus(MatrixCommon):
         limit
         """
         # XXX this should be handled here rather than in Derivative
-        from sympy import Derivative
+        from sympy.tensor.array.array_derivatives import ArrayDerivative
         kwargs.setdefault('evaluate', True)
-        deriv = Derivative(self, *args, evaluate=True)
+        deriv = ArrayDerivative(self, *args, evaluate=True)
         if not isinstance(self, Basic):
             return deriv.as_mutable()
         else:
@@ -464,18 +464,6 @@ class MatrixCalculus(MatrixCommon):
 
     def _eval_derivative(self, arg):
         return self.applyfunc(lambda x: x.diff(arg))
-
-    def _accept_eval_derivative(self, s):
-        return s._visit_eval_derivative_array(self)
-
-    def _visit_eval_derivative_scalar(self, base):
-        # Types are (base: scalar, self: matrix)
-        return self.applyfunc(lambda x: base.diff(x))
-
-    def _visit_eval_derivative_array(self, base):
-        # Types are (base: array/matrix, self: matrix)
-        from sympy import derive_by_array
-        return derive_by_array(base, self)
 
     def integrate(self, *args, **kwargs):
         """Integrate each element of the matrix.  ``args`` will

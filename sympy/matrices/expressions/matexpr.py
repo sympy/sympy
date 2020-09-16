@@ -191,35 +191,16 @@ class MatrixExpr(Expr):
         from sympy.matrices.expressions.adjoint import Adjoint
         return Adjoint(self)
 
-    def _eval_derivative_array(self, x):
-        if isinstance(x, MatrixExpr):
-            return _matrix_derivative(self, x)
-        else:
-            return self._eval_derivative(x)
-
     def _eval_derivative_n_times(self, x, n):
         return Basic._eval_derivative_n_times(self, x, n)
 
-    def _visit_eval_derivative_scalar(self, x):
+    def _eval_derivative(self, x):
         # `x` is a scalar:
-        if x.has(self):
-            return _matrix_derivative(x, self)
+        if self.has(x):
+            # See if there are other methods using it:
+            return super(MatrixExpr, self)._eval_derivative(x)
         else:
             return ZeroMatrix(*self.shape)
-
-    def _visit_eval_derivative_array(self, x):
-        if x.has(self):
-            return _matrix_derivative(x, self)
-        else:
-            from sympy import Derivative
-            return Derivative(x, self)
-
-    def _accept_eval_derivative(self, s):
-        from sympy import MatrixBase, NDimArray
-        if isinstance(s, (MatrixBase, NDimArray, MatrixExpr)):
-            return s._visit_eval_derivative_array(self)
-        else:
-            return s._visit_eval_derivative_scalar(self)
 
     @classmethod
     def _check_dim(cls, dim):
@@ -646,7 +627,7 @@ Basic._constructor_postprocessor_mapping[MatrixExpr] = {
 
 
 def _matrix_derivative(expr, x):
-    from sympy import Derivative
+    from sympy.tensor.array.array_derivatives import ArrayDerivative
     lines = expr._eval_derivative_matrix_lines(x)
 
     parts = [i.build() for i in lines]
@@ -689,7 +670,7 @@ def _matrix_derivative(expr, x):
     if rank <= 2:
         return Add.fromiter([contract_one_dims(i) for i in parts])
 
-    return Derivative(expr, x)
+    return ArrayDerivative(expr, x)
 
 
 class MatrixElement(Expr):
