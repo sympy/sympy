@@ -1186,7 +1186,7 @@ class principal_branch(Function):
     ===========
 
     This is a function of two arguments. The first argument is a polar
-    number `z`, and the second one a positive real number of infinity, `p`.
+    number `z`, and the second one a positive real number or infinity, `p`.
     The result is "z mod exp_polar(I*p)".
 
     Examples
