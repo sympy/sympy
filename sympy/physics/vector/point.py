@@ -482,13 +482,14 @@ class Point(object):
             try:
                 p_abs_vel = p._vel_dict[frame]
             except KeyError:
-                if not p_rel_pos.dt(frame) == 0:
+                try:
+                    p_rel_pos.dt(frame)
                     cond = p._calc_vel(frame, p_rel_pos)
                     if not cond:
                         continue
                     else:
                         p_abs_vel = p._vel_dict_pos[frame]
-                else:
+                except ValueError:
                     continue
             self._vel_dict_pos[frame] = p_abs_vel + p_rel_pos.dt(frame)
             return True
@@ -533,13 +534,14 @@ class Point(object):
                 try:
                     p_abs_vel = p._vel_dict[frame]
                 except KeyError:
-                    if not p_rel_pos.dt(frame) == 0:
+                    try:
+                        p_rel_pos.dt(frame)
                         p_abs_vel_check = p._calc_vel(frame, p_rel_pos)
                         if not p_abs_vel_check:
                             continue
                         else:
                             p_abs_vel = p._vel_dict_pos[frame]
-                    else:
+                    except ValueError:
                         continue
                 self._vel_dict_pos[frame] = p_abs_vel + p_rel_pos.dt(frame)
                 return self._vel_dict_pos[frame]
