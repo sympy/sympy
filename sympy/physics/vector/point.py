@@ -472,26 +472,33 @@ class Point(object):
         self.set_vel(outframe, v + (omega ^ dist))
         return self.vel(outframe)
 
-    def _calc_vel(self, frame, rel_pos):
+    def _calc_vel(self, frame, pos_vect):
         if len(self._pos_dict) == 1:
             return False
         self._vel_dict_pos = self._vel_dict.copy()
-        for p, p_rel_pos in self._pos_dict.items():
-            if p_rel_pos == -rel_pos:
+        for p, p_pos in self._pos_dict.items():
+            try:
+                p_vel = p._vel_dict[frame]
+                p_pos.dt(frame)
+            except KeyError:
+                continue
+            except ValueError:
+                continue
+            self._vel_dict_pos[frame] = p_vel + p_pos.dt(frame)
+            return True
+        for p, p_pos in self._pos_dict.items():
+            if p_pos == -pos_vect:
                 continue
             try:
-                p_abs_vel = p._vel_dict[frame]
-            except KeyError:
-                try:
-                    p_rel_pos.dt(frame)
-                    cond = p._calc_vel(frame, p_rel_pos)
-                    if not cond:
-                        continue
-                    else:
-                        p_abs_vel = p._vel_dict_pos[frame]
-                except ValueError:
+                p_pos.dt(frame)
+                cond = p._calc_vel(frame, p_pos)
+                if not cond:
                     continue
-            self._vel_dict_pos[frame] = p_abs_vel + p_rel_pos.dt(frame)
+                else:
+                    p_vel = p._vel_dict_pos[frame]
+            except ValueError:
+                continue
+            self._vel_dict_pos[frame] = p_vel + p_pos.dt(frame)
             return True
         return False
 
@@ -503,10 +510,6 @@ class Point(object):
 
         frame : ReferenceFrame
             The frame in which the returned velocity vector will be defined in
-
-        otherpoint : Point
-            The point w.r.t which self's position is defined, works as initial
-            point.
 
         Examples
         ========
@@ -530,20 +533,27 @@ class Point(object):
         _check_frame(frame)
         if not (frame in self._vel_dict):
             self._vel_dict_pos = self._vel_dict.copy()
-            for p, p_rel_pos in self._pos_dict.items():
+            for p, p_pos in self._pos_dict.items():
                 try:
-                    p_abs_vel = p._vel_dict[frame]
+                    p_vel = p._vel_dict[frame]
+                    p_pos.dt(frame)
                 except KeyError:
-                    try:
-                        p_rel_pos.dt(frame)
-                        p_abs_vel_check = p._calc_vel(frame, p_rel_pos)
-                        if not p_abs_vel_check:
-                            continue
-                        else:
-                            p_abs_vel = p._vel_dict_pos[frame]
-                    except ValueError:
+                    continue
+                except ValueError:
+                    continue
+                self._vel_dict_pos[frame] = p_vel + p_pos.dt(frame)
+                return self._vel_dict_pos[frame]
+            for p, p_pos in self._pos_dict.items():
+                try:
+                    p_pos.dt(frame)
+                    p_vel_check = p._calc_vel(frame, p_pos)
+                    if not p_vel_check:
                         continue
-                self._vel_dict_pos[frame] = p_abs_vel + p_rel_pos.dt(frame)
+                    else:
+                        p_vel = p._vel_dict_pos[frame]
+                except ValueError:
+                    continue
+                self._vel_dict_pos[frame] = p_vel + p_pos.dt(frame)
                 return self._vel_dict_pos[frame]
             else:
                 raise ValueError('Velocity of point ' + self.name + ' has not been'

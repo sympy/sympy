@@ -133,23 +133,32 @@ def test_point_vel():
     q1, q2 = dynamicsymbols('q1 q2')
     N = ReferenceFrame('N')
     B = ReferenceFrame('B')
+    S = ReferenceFrame('S')
     O = Point('O')
     Q = Point('Q')
     Q.set_pos(O, q1 * N.x)
-    raises(ValueError , lambda : Q.vel(N))
+    raises(ValueError , lambda : Q.vel(N)) #Velocity of Q is not defined
     O.set_vel(N, q2 * N.y)
-    assert Q.vel(N) == Derivative(q1) * N.x + q2 * N.y
+    assert Q.vel(N) == Derivative(q1) * N.x + q2 * N.y  # Velocity of Q using O
     P1 = Point('P1')
     P1.set_pos(O, q1 * B.x)
-    raises(ValueError, lambda : P1.vel(B))
+    raises(ValueError, lambda : P1.vel(B)) # O's velocity is defined in different frame
+    raises(ValueError, lambda : P1.vel(N)) # Pos vector is defined in different frame
     P2 = Point('P2')
     P2.set_pos(P1, q2 * B.z)
-    raises(ValueError, lambda : P2.vel(B))
+    raises(ValueError, lambda : P2.vel(B)) # O's velocity is defined in different frame, and no
+    #point in between has its velocity defined
     P3 = Point('P3')
     P3.set_pos(P2, q1 * B.x)
-    raises(ValueError, lambda : P3.vel(B))
-    P1.set_vel(B, 10 * q1 * B.x)
-    assert P3.vel(B) == (10 * q1 + Derivative(q1)) * B.x + Derivative(q2) * B.z
+    raises(ValueError, lambda : P3.vel(B)) # O's velocity is defined in different frame, and no
+    #point in between has its velocity defined
+    P1.set_vel(B, 10 * q1 * B.x) #Defined P1's velocity
+    assert P3.vel(B) == (10 * q1 + Derivative(q1)) * B.x + Derivative(q2) * B.z # Tree traversal upto P1
+    # Vel of P3 = Vel of P1 + Calculated Vel of P2 + time derivative of pos vector
+    P5 = Point('P5')
+    P5.set_vel(B, q1 * B.x)
+    P3.set_pos(P5, q2 * B.y)
+    assert P3.vel(B) == q1 * B.x + Derivative(q2) * B.y # P5 closer in tree than P1
     Q1 = Point('Q1')
     Q1.set_vel(N, q1 * N.x)
     Q2 = Point('Q2')
@@ -158,7 +167,28 @@ def test_point_vel():
     Q2.set_pos(Q1, q2 * N.x)
     Q3.set_pos(Q2, q1 * N.x)
     Q4.set_pos(Q3, q2 * N.x)
-    assert Q4.vel(N) == (q1 + Derivative(q1) + 2 * Derivative(q2)) * N.x
+    assert Q4.vel(N) == (q1 + Derivative(q1) + 2 * Derivative(q2)) * N.x # Calculated velocity using
+    # Q1, Q2, Q3
     Q3.set_vel(N, q1 * N.x)
-    assert Q3.vel(N) == q1 * N.x
-    assert Q4.vel(N) == (q1 + Derivative(q2)) * N.x
+    assert Q3.vel(N) == q1 * N.x # Outputs user defined velocity
+    assert Q4.vel(N) == (q1 + Derivative(q2)) * N.x # If vel of one point in tree is changed the
+    # resulting velocity is changed
+    assert Q3.vel(N) == q1 * N.x # Automated vel calculation doesnt overwrite user defined vel
+    #Complex Operations
+    T1 = Point('T1')
+    T1.set_vel(S, q1 * S.x)
+    T2 = Point('T2')
+    T2.set_pos(T1, q2 * S.x)
+    T2.set_vel(N, q1 * N.y)
+    T3 = Point('T3')
+    T3.set_vel(B, q1 * B.z)
+    T3.set_pos(T2, q1 * B.x + q2 * B.y)
+    T3.set_pos(T1, q2 * S.x)
+    T4 = Point('T4')
+    T4.set_pos(T3, q1 * S.z)
+    T5 = Point('T5')
+    T5.set_pos(T4, q2 * S.y)
+    T6 = Point('T6')
+    T6.set_pos(T3, q1 * B.z)
+    T6.set_pos(T2, q1 * S.z)
+    assert T6.vel(S) + T6.vel(B) + T5.vel(S) + T2.vel(N) == q1*N.y + (q1 + Derivative(q1))*B.z + (2*q1 + 2*Derivative(q2))*S.x + Derivative(q2)*S.y + 2*Derivative(q1)*S.z
