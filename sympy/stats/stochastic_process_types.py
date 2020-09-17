@@ -2,6 +2,7 @@ from __future__ import print_function, division
 import random
 
 import itertools
+from typing import Sequence as tSequence, Union as tUnion
 
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    Set, And, Eq, FiniteSet, ImmutableMatrix, Integer,
@@ -9,7 +10,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    linsolve, eye, Or, Not, Intersection, factorial, Contains,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
-                   ceiling)
+                   ceiling, MatrixBase, MatrixExpr)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -73,7 +74,7 @@ def _set_converter(itr):
         raise TypeError("%s is not an instance of list/tuple/set."%(itr))
     return itr
 
-def _state_converter(itr):
+def _state_converter(itr: tSequence) -> tUnion[Tuple, Range]:
     """
     Helper function for converting list/tuple/set/Range/Tuple/FiniteSet
     to tuple/Range.
@@ -708,8 +709,10 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     .. [2] https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
     """
     index_set = S.Naturals0
+    state_space: tUnion[Tuple, Range]
 
-    def __new__(cls, sym, state_space=None, trans_probs=None):
+    def __new__(cls, sym: tUnion[str, Symbol], state_space: tSequence = None,
+                trans_probs: tUnion[MatrixBase, MatrixExpr] = None):
         sym = _symbol_converter(sym)
 
         # Try to never have None as state_space or trans_probs.
@@ -737,7 +740,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             # Range object doesn't want to give a symbolic size
             # so we do it ourselves.
             if isinstance(state_space, Range):
-                ss_size = (state_space.stop - state_space.start)//state_space.step
+                ss_size = ceiling((state_space.stop - state_space.start) / state_space.step)
             else:
                 ss_size = len(state_space)
             if ss_size != trans_probs.shape[0]:
@@ -747,7 +750,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return Basic.__new__(cls, sym, state_space, trans_probs)
 
     @property
-    def index_of(self):
+    def index_of(self) -> tSequence:
         """Converts a state name to a state index i.e. inverts self.state_space."""
         if isinstance(self.number_of_states, Integer):
             indexes = {state: index for index, state in enumerate(self.state_space)}
@@ -764,14 +767,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                                       % self.state_space)
 
     @property
-    def _state_index(self):
+    def _state_index(self) -> Range:
         """
         Returns state index as Range.
         """
         return Range(self.number_of_states)
 
     @property
-    def _is_numeric(self):
+    def _is_numeric(self) -> bool:
         """Checks whether the transition matrix has a numeric type and shape."""
         trans_probs = self.transition_probabilities
         n = self.number_of_states
@@ -782,14 +785,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return True
 
     @property
-    def number_of_states(self):
+    def number_of_states(self) -> tUnion[Integer, Symbol]:
         """
         The number of states in the Markov Chain.
         """
         return _sympify(self.transition_probabilities.shape[0])
 
     @property
-    def transition_probabilities(self):
+    def transition_probabilities(self) -> tUnion[MatrixBase, MatrixExpr]:
         """
         Transition probabilities of discrete Markov chain,
         either an instance of Matrix or MatrixSymbol.
