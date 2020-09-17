@@ -142,7 +142,7 @@ def rv(symbol, cls, args, **kwargs):
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
     _argnames = ('pdf',)
 
-    def __new__(cls, pdf, set=Interval(-oo, oo), check=True):
+    def __new__(cls, pdf, set=Interval(-oo, oo)):
         return Basic.__new__(cls, pdf, set)
 
     @property
