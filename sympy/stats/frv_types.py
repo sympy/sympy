@@ -653,17 +653,16 @@ def Rademacher(name):
 
 class IdealSolitonDistribution(SingleFiniteDistribution):
     _argnames = ('k',)
-    
-    
+
     @staticmethod
     def check(k):
          _value_check((k.is_integer, k.is_positive),
                     "'k' must be a positive integer.")
-    
+
     @property
     def low(self):
         return S.One
-    
+
     @property
     def high(self):
         return self.k
@@ -671,11 +670,11 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
     @property
     def set(self):
         return set(list(range(1,self.k+1)))
-    
+
     @property
     def is_symbolic(self):
         return not self.k.is_number
-    
+
     @property
     @cacheit
     def dict(self):
@@ -684,57 +683,57 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
         d={1:Rational(1,self.k)}
         d.update(dict((i,Rational(1,i*(i-1))) for i in range(2,self.k+1)))
         return d
-    
+
     def pmf(self,x):
         x=sympify(x)
-        if not (x.is_number or x.is_Symbol or False):#is_random(x)):
+        if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
         cond1 = Eq(x,1) & x.is_integer
         cond2 = Ge(x,1) & Le(x,self.k) & x.is_integer
         return Piecewise((Rational(1,self.k),cond1),(Rational(1,x*(x-1)),cond2),(S.Zero,True))
-    
+
 def IdealSoliton(name,k):
     r"""
     Create a Finite Random Variable of Ideal Soliton Distribution
-    
+
     Parameters
     ==========
-    
+
     k : Positive Integer
         Represents the number of input symbols in an LT (Luby Transform) code.
 
     Examples
     ========
-    
+
     >>> from sympy.stats import IdealSoliton, Symbol, density, P, E
     >>> sol=IdealSoliton('sol',10)
     >>> density(sol).dict
     {1: 1/5, 2: 1/2, 3: 1/6, 4: 1/12, 5: 1/20}
     >>> density(sol).set
     {1, 2, 3, 4, 5}
-    
+
     >>> k = Symbol('k', positive=True, integer=True)
     >>> sol = IdealSoliton('sol',k)
     >>> density(sol).dict
     Density(IdealSolitonDistribution(k))
     >>> density(sol).dict.subs(k, 10).doit()
     {1: 1/10, 2: 1/2, 3: 1/6, 4: 1/12, 5: 1/20, 6: 1/30, 7: 1/42, 8: 1/56, 9: 1/72, 10: 1/90}
-    
+
     >>> E(sol.subs(k,10))
     7381/2520
 
     >>> P(sol.subs(k,4)>2)
     1/4
-    
+
     Returns
     =======
-    
+
     RandomSymbol
-     
+
     References
     ==========
-    
+
     .. [1] https://en.wikipedia.org/wiki/Soliton_distribution#Ideal_distribution
     .. [2] http://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
 
@@ -743,7 +742,7 @@ def IdealSoliton(name,k):
 
 class RobustSolitonDistribution(SingleFiniteDistribution):
     _argnames= ('k','delta','c')
-    
+
     @staticmethod
     def check(k,delta,c):
         _value_check((k.is_integer, k.is_positive),
@@ -752,7 +751,7 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
                     "'delta' must be a real number in the interval (0,1)")
         _value_check((c.is_positive),
                     "'c' must be a positive real number.")
-        
+
     @property
     def R(self):
         return self.c*log(self.k/self.delta)*self.k**0.5
@@ -768,7 +767,7 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
     @property
     def low(self):
         return S.One
-    
+
     @property
     def high(self):
         return self.k
@@ -776,14 +775,14 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
     @property
     def set(self):
         return set(list(range(1,self.k+1)))
-    
+
     @property
     def is_symbolic(self):
         return not all([self.k.is_number, self.c.is_number, self.delta.is_number])
-    
+
     def pmf(self,x):
         x=sympify(x)
-        if not (x.is_number or x.is_Symbol or False):#is_random(x)):
+        if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
 
@@ -813,14 +812,14 @@ def RobustSoliton(name,k,delta,c):
 
     Examples
     ========
-    from frv_types import RobustSoliton
+
     >>> from sympy.stats import RobustSoliton, density, P, E
     >>> robSol=RobustSoliton('robSol',5,0.5,0.01)
     >>> density(robSol).dict
     {1: 0.204253668152708, 2: 0.490631107897393, 3: 0.165210624506162, 4: 0.0834387731899302, 5: 0.0505633404760675}
     >>> density(robSol).set
     {1, 2, 3, 4, 5}
-    
+
     >>> from sympy import Symbol
     >>> k = Symbol('k', positive=True, integer=True)
     >>> robSol = RobustSoliton('robSol',k,0.5,0.03)
@@ -829,7 +828,7 @@ def RobustSoliton(name,k,delta,c):
     >>> density(robSol).dict.subs(k, 10).doit()
     {1: 0.116641095387194, 2: 0.467045731687165, 3: 0.159984123349381, 4: 0.0821431680681869, 5: 0.0505765646770100,
     6: 0.0345781523420719, 7: 0.0253132820710503, 8: 0.0194459129233227, 9: 0.0154831166726115, 10: 0.0126733075238887}
-    
+
     >>> E(robSol.subs(k,10))
     3.00454104235916
 
@@ -838,12 +837,12 @@ def RobustSoliton(name,k,delta,c):
 
     Returns
     =======
-    
+
     RandomSymbol
-     
+
     References
     ==========
-    
+
     .. [1] https://en.wikipedia.org/wiki/Soliton_distribution#Robust_distribution
     .. [2] http://www.inference.org.uk/mackay/itprnn/ps/588.596.pdf
     .. [3] http://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
