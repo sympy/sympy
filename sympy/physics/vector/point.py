@@ -90,12 +90,14 @@ class Point(object):
                          ' and ' + self.name)
 
     def a1pt_theory(self, otherpoint, outframe, interframe):
-        """Sets the acceleration of this point with the 1-point theory.
+        r"""Sets the acceleration of this point with the 1-point theory.
 
         The 1-point theory for point acceleration looks like this:
 
-        ^N a^P = ^B a^P + ^N a^O + ^N alpha^B x r^OP + ^N omega^B x (^N omega^B
-        x r^OP) + 2 ^N omega^B x ^B v^P
+        .. math::
+            {}^Na^P = {}^Ba^P + {}^N a^O + {}^N\alpha^B \times r^{OP}
+                    + {}^N\omega^B \times ({}^N\omega^B \times r^{OP})
+                    + 2 {}^N\omega^B \times {}^Bv^P
 
         where O is a point fixed in B, P is a point moving in B, and B is
         rotating in frame N.
@@ -147,11 +149,13 @@ class Point(object):
         return self.acc(outframe)
 
     def a2pt_theory(self, otherpoint, outframe, fixedframe):
-        """Sets the acceleration of this point with the 2-point theory.
+        r"""Sets the acceleration of this point with the 2-point theory.
 
         The 2-point theory for point acceleration looks like this:
 
-        ^N a^P = ^N a^O + ^N alpha^B x r^OP + ^N omega^B x (^N omega^B x r^OP)
+        ..math::
+            {}^N a^P = {}^N a^O + {}^N \alpha^B \times r^{OP}
+                     + {}^N \omega^B x (^N \omega^B \times r^{OP})
 
         where O and P are both points fixed in frame B, which is rotating in
         frame N.
@@ -372,11 +376,11 @@ class Point(object):
         self._vel_dict.update({frame: value})
 
     def v1pt_theory(self, otherpoint, outframe, interframe):
-        """Sets the velocity of this point with the 1-point theory.
+        r"""Sets the velocity of this point with the 1-point theory.
 
         The 1-point theory for point velocity looks like this:
 
-        ^N v^P = ^B v^P + ^N v^O + ^N omega^B x r^OP
+        .. math:: {}^Nv^P = {}^Bv^P + {}^Nv^O + {}^N\omega^B \times r^{OP}
 
         where O is a point fixed in B, P is a point moving in B, and B is
         rotating in frame N.
@@ -425,11 +429,11 @@ class Point(object):
         return self.vel(outframe)
 
     def v2pt_theory(self, otherpoint, outframe, fixedframe):
-        """Sets the velocity of this point with the 2-point theory.
+        r"""Sets the velocity of this point with the 2-point theory.
 
         The 2-point theory for point velocity looks like this:
 
-        ^N v^P = ^N v^O + ^N omega^B x r^OP
+        .. math:: {}^Nv^P = {}^Nv^O + {}^N\omega^B \times r^{OP}
 
         where O and P are both points fixed in frame B, which is rotating in
         frame N.
