@@ -155,7 +155,7 @@ class Point(object):
 
         ..math::
             {}^N a^P = {}^N a^O + {}^N \alpha^B \times r^{OP}
-                     + {}^N \omega^B x (^N \omega^B \times r^{OP})
+                     + {}^N \omega^B \times (^N \omega^B \times r^{OP})
 
         where O and P are both points fixed in frame B, which is rotating in
         frame N.
