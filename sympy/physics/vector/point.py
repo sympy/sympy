@@ -68,7 +68,32 @@ class Point(object):
             raise TypeError('A Point must be supplied')
 
     def _pdict_list(self, other, num):
-        """Creates a list from self to other using _dcm_dict. """
+        """Returns a list of points that gives the shortest path with respect
+        to position, velocity, or acceleration from this point to the provided
+        point.
+
+        Parameters
+        ==========
+        other : Point
+            A point that may be related to this point by position, velocity, or
+            acceleration.
+        num : integer
+            0 for searching the position tree, 1 for searching the velocity
+            tree, and 2 for searching the acceleration tree.
+
+        Returns
+        =======
+        list of Points
+            A sequence of points from self to other.
+
+        Notes
+        =====
+
+        It isn't clear if num = 1 or num = 2 actually works because the keys to
+        ``_vel_dict`` and ``_acc_dict`` are :class:`ReferenceFrame` objects which
+        do not have the ``_pdlist`` attribute.
+
+        """
         outlist = [[self]]
         oldlist = [[]]
         while outlist != oldlist:
