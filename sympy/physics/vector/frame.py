@@ -258,9 +258,9 @@ class ReferenceFrame(object):
             for i, v in enumerate(outlist):
                 templist = v[-1]._dlist[num].keys()
                 for i2, v2 in enumerate(templist):
-                    if not v.__contains__(v2):
+                    if v2 not in v:
                         littletemplist = v + [v2]
-                        if not outlist.__contains__(littletemplist):
+                        if littletemplist not in outlist:
                             outlist.append(littletemplist)
         for i, v in enumerate(oldlist):
             if v[-1] != other:
