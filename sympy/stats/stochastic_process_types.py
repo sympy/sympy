@@ -163,7 +163,7 @@ class StochasticProcess(Basic):
         return self.args[0]
 
     @property
-    def state_space(self):
+    def state_space(self) -> tUnion[FiniteSet, Tuple, Range]:
         """Since version 1.7, using `state_space` returns a
         `Tuple` or a `Range` object for `DiscreteMarkovChain`.
         If you want a `FiniteSet`, use `FiniteSet(*state_space)`."""
@@ -709,7 +709,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     .. [2] https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
     """
     index_set = S.Naturals0
-    state_space: tUnion[Tuple, Range]
 
     def __new__(cls, sym: tUnion[str, Symbol], state_space: tSequence = None,
                 trans_probs: tUnion[MatrixBase, MatrixExpr] = None):
