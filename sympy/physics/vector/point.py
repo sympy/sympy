@@ -91,7 +91,7 @@ class Point(object):
 
         It isn't clear if num = 1 or num = 2 actually works because the keys to
         ``_vel_dict`` and ``_acc_dict`` are :class:`ReferenceFrame` objects which
-        frames do not have the ``_pdlist`` attribute.
+        do not have the ``_pdlist`` attribute.
 
         """
         outlist = [[self]]
