@@ -640,9 +640,10 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     ==========
 
     sym: Symbol/str
+        The name given to the Markov Chain
     state_space: list/Range/tuple/Tuple/set/FiniteSet
         Optional, by default, Range(n)
-    trans_probs: Matrix/ImmutableMatrix/MatrixSymbol
+    trans_probs: Matrix/ImmutableMatrix/MatrixSymbol/MatrixExpr/MatrixBase
         Optional, by default, MatrixSymbol('_T', n, n)
 
     Examples

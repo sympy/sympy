@@ -918,7 +918,8 @@ class Piecewise(Function):
                             Inequalities in the complex domain are
                             not supported. Try the real domain by
                             setting domain=S.Reals'''))
-            cond_int = U.intersect(cond.as_set())
+            from sympy import solveset
+            cond_int = U.intersect(solveset(cond, domain=U))
             U = U - cond_int
             exp_sets.append((expr, cond_int))
         return exp_sets
