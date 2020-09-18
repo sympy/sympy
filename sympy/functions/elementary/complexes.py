@@ -40,7 +40,7 @@ class re(Function):
     2
     >>> re(5 + I + 2)
     7
-    
+
     Parameters
     ==========
 
@@ -162,8 +162,8 @@ class im(Function):
     re(x)
     >>> im(re(x) + y)
     im(y)
-    >>> im(2 + 3*I).as_real_imag()
-    (3, 0)
+    >>> im(2 + 3*I)
+    3
 
     Parameters
     ==========
@@ -442,6 +442,9 @@ class sign(Function):
 class Abs(Function):
     """
     Return the absolute value of the argument.
+
+    Explanation
+    ===========
 
     This is an extension of the built-in function abs() to accept symbolic
     values.  If you pass a SymPy expression to the built-in abs(), it will
