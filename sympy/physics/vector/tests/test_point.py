@@ -1,6 +1,5 @@
 from sympy.physics.vector import dynamicsymbols, Point, ReferenceFrame
 from sympy.testing.pytest import raises
-from sympy import Derivative
 
 
 def test_point_v1pt_theorys():
@@ -129,52 +128,69 @@ def test_point_partial_velocity():
     assert p.partial_velocity(N, u1, u2) == (A.x, N.y)
     raises(ValueError, lambda: p.partial_velocity(A, u1))
 
-def test_point_vel():
+def test_point_vel(): #Basic functionality
     q1, q2 = dynamicsymbols('q1 q2')
     N = ReferenceFrame('N')
     B = ReferenceFrame('B')
-    S = ReferenceFrame('S')
-    O = Point('O')
     Q = Point('Q')
+    O = Point('O')
     Q.set_pos(O, q1 * N.x)
     raises(ValueError , lambda : Q.vel(N)) #Velocity of Q is not defined
     O.set_vel(N, q2 * N.y)
-    assert Q.vel(N) == Derivative(q1) * N.x + q2 * N.y  # Velocity of Q using O
+    assert O.vel(N) == q2 * N.y
+    raises(ValueError , lambda : O.vel(B)) #Velocity of O is not defined in B
+
+def test_auto_point_vel():
+    t = dynamicsymbols._t
+    q1, q2 = dynamicsymbols('q1 q2')
+    N = ReferenceFrame('N')
+    B = ReferenceFrame('B')
+    O = Point('O')
+    Q = Point('Q')
+    Q.set_pos(O, q1 * N.x)
+    O.set_vel(N, q2 * N.y)
+    assert Q.vel(N) == q1.diff(t) * N.x + q2 * N.y  # Velocity of Q using O
     P1 = Point('P1')
     P1.set_pos(O, q1 * B.x)
-    raises(ValueError, lambda : P1.vel(B)) # O's velocity is defined in different frame
-    raises(ValueError, lambda : P1.vel(N)) # Pos vector is defined in different frame
     P2 = Point('P2')
     P2.set_pos(P1, q2 * B.z)
     raises(ValueError, lambda : P2.vel(B)) # O's velocity is defined in different frame, and no
     #point in between has its velocity defined
+
+def test_auto_point_vel_shortest_path():
+    t = dynamicsymbols._t
+    q1, q2 = dynamicsymbols('q1 q2')
+    B = ReferenceFrame('B')
+    P = Point('P')
+    P.set_vel(B, q1 * B.x)
+    P1 = Point('P1')
+    P1.set_pos(P, q2 * B.y)
+    P1.set_vel(B, q1 * B.z)
+    P2 = Point('P2')
+    P2.set_pos(P1, q1 * B.z)
     P3 = Point('P3')
-    P3.set_pos(P2, q1 * B.x)
-    raises(ValueError, lambda : P3.vel(B)) # O's velocity is defined in different frame, and no
-    #point in between has its velocity defined
-    P1.set_vel(B, 10 * q1 * B.x) #Defined P1's velocity
-    assert P3.vel(B) == (10 * q1 + Derivative(q1)) * B.x + Derivative(q2) * B.z # Tree traversal upto P1
-    # Vel of P3 = Vel of P1 + Calculated Vel of P2 + time derivative of pos vector
-    P5 = Point('P5')
-    P5.set_vel(B, q1 * B.x)
-    P3.set_pos(P5, q2 * B.y)
-    assert P3.vel(B) == q1 * B.x + Derivative(q2) * B.y # P5 closer in tree than P1
-    Q1 = Point('Q1')
-    Q1.set_vel(N, q1 * N.x)
-    Q2 = Point('Q2')
-    Q3 = Point('Q3')
-    Q4 = Point('Q4')
-    Q2.set_pos(Q1, q2 * N.x)
-    Q3.set_pos(Q2, q1 * N.x)
-    Q4.set_pos(Q3, q2 * N.x)
-    assert Q4.vel(N) == (q1 + Derivative(q1) + 2 * Derivative(q2)) * N.x # Calculated velocity using
-    # Q1, Q2, Q3
-    Q3.set_vel(N, q1 * N.x)
-    assert Q3.vel(N) == q1 * N.x # Outputs user defined velocity
-    assert Q4.vel(N) == (q1 + Derivative(q2)) * N.x # If vel of one point in tree is changed the
-    # resulting velocity is changed
-    assert Q3.vel(N) == q1 * N.x # Automated vel calculation doesnt overwrite user defined vel
-    #Complex Operations
+    P3.set_pos(P2, 10 * q1 * B.y)
+    assert P3.vel(B) == 10 * q1.diff(t) * B.y + (q1 + q1.diff(t)) * B.z
+
+def test_auto_vel_dont_overwrite():
+    t = dynamicsymbols._t
+    q1, q2 = dynamicsymbols('q1 q2')
+    N = ReferenceFrame('N')
+    P = Point('P1')
+    P.set_vel(N, q1 * N.x)
+    P1 = Point('P1')
+    P1.set_pos(P, q2 * N.y)
+    assert P1.vel(N) == q2.diff(t) * N.y + q1 * N.x
+    assert P.vel(N) == q1 * N.x
+    P1.set_vel(N, q1 * N.z)
+    assert P1.vel(N) == q1 * N.z
+
+def test_auto_point_vel_multiple_frames():
+    t = dynamicsymbols._t
+    q1, q2 = dynamicsymbols('q1 q2')
+    B = ReferenceFrame('B')
+    S = ReferenceFrame('S')
+    N = ReferenceFrame('N')
     T1 = Point('T1')
     T1.set_vel(S, q1 * S.x)
     T2 = Point('T2')
@@ -189,6 +205,18 @@ def test_point_vel():
     T5 = Point('T5')
     T5.set_pos(T4, q2 * S.y)
     T6 = Point('T6')
-    T6.set_pos(T3, q1 * B.z)
     T6.set_pos(T2, q1 * S.z)
-    assert T6.vel(S) + T6.vel(B) + T5.vel(S) + T2.vel(N) == q1*N.y + (q1 + Derivative(q1))*B.z + (2*q1 + 2*Derivative(q2))*S.x + Derivative(q2)*S.y + 2*Derivative(q1)*S.z
+    assert T6.vel(S) == (q1 + q2.diff(t)) * S.x + q1.diff(t) * S.z
+    T6.set_pos(T3, q1 * B.z)
+    assert T6.vel(B) == (q1 + q1.diff(t)) * B.z
+
+def test_auto_point_vel_if_tree_has_vel_but_inappropriate_pos_vector():
+    q1, q2 = dynamicsymbols('q1 q2')
+    B = ReferenceFrame('B')
+    S = ReferenceFrame('S')
+    P = Point('P')
+    P.set_vel(B, q1 * B.x)
+    P1 = Point('P1')
+    P1.set_pos(P, S.y)
+    raises(ValueError, lambda : P1.vel(B)) # pos vector not according to frame
+    raises(ValueError, lambda : P1.vel(S)) #velocity not defined wrt frame in tree

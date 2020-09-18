@@ -56,7 +56,6 @@ class Point(object):
         self._pos_dict = {}
         self._vel_dict = {}
         self._acc_dict = {}
-        self._vel_dict_pos = {}
         self._pdlist = [self._pos_dict, self._vel_dict, self._acc_dict]
 
     def __str__(self):
@@ -472,44 +471,6 @@ class Point(object):
         self.set_vel(outframe, v + (omega ^ dist))
         return self.vel(outframe)
 
-    def _calc_vel(self, frame, pos_vect):
-        # Helper Function for velocty
-        if len(self._pos_dict) == 1:
-        #If len of post_dict is one it implies it only has that point from which it's being called
-        #Stops infinite recursion
-            return False
-        #Copies vel_dict of current point(the one through which it's called, self for this function)
-        self._vel_dict_pos = self._vel_dict.copy()
-        #Loop 1 for checking all points at same level in self's pos_dict(to find nearest point in Tree)
-        for p, p_pos in self._pos_dict.items():
-            try:
-                p_vel = p._vel_dict[frame] #Checks if the point's velocity is defined wrt req frame, if not throws Keyerror
-                p_pos.dt(frame) #Checks if pos vector in defined with req frame, if not throws ValueError
-            except KeyError:
-                continue
-            except ValueError:
-                continue
-            self._vel_dict_pos[frame] = p_vel + p_pos.dt(frame) #Updates current point's copied dict
-            return True #Returns True, this point has it's velocity defined in appropriate ref frame
-        for p, p_pos in self._pos_dict.items():
-            #Loop 2 for searching in next level, if not found in same level
-            if p_pos == -pos_vect:
-            #If pos of this point is equal and negative of pos passed, this implies, referring back to point through which funct is called.
-            #Prevents infinite recursion
-                continue
-            try:
-                p_pos.dt(frame) #Checks if pos vector in defined with req frame, if not throws ValueError
-                cond = p._calc_vel(frame, p_pos) # IF pos vector's condition is satisfied, calls helper function(recursive call)
-                if not cond: # If funct returns False, next iteration takes place
-                    continue
-                else: #If funct returned True , upto current point velocities have been calculated in Tree(not of current point)
-                    p_vel = p._vel_dict_pos[frame]
-            except ValueError:
-                continue
-            self._vel_dict_pos[frame] = p_vel + p_pos.dt(frame) # Updates Velocity of current point in copied dict
-            return True # Returns True to main funt, implies using current points calculated velocity thr req point's velocity can be calculated.
-        return False #Return False to main funct for next iteration
-
     def vel(self, frame):
         """The velocity Vector of this Point in the ReferenceFrame.
 
@@ -539,37 +500,29 @@ class Point(object):
         """
 
         _check_frame(frame)
-        if not (frame in self._vel_dict):#If required point doesn't have its velocity defined in req frame.
-            #Copies vel_dict so that velocity calculation doesn't affect user defined velocity.
-            self._vel_dict_pos = self._vel_dict.copy()
-            # p being point in pos_dit and p_pos being pos vector
-            for p, p_pos in self._pos_dict.items():
-            #Loop 1 for checking all points at same level in self's pos_dict(to find nearest point in Tree)
-                try:
-                    p_vel = p._vel_dict[frame] #Checks if the point's velocity is defined wrt req frame, if not throws Keyerror
-                    p_pos.dt(frame) #Checks if pos vector in defined with req frame, if not throws ValueError
-                except KeyError:
-                    continue
-                except ValueError:
-                    continue
-                self._vel_dict_pos[frame] = p_vel + p_pos.dt(frame) #Updates new dict(copied one)
-                return self._vel_dict_pos[frame]
-            #Loop 2 for searching in next level, if not found in same level
-            for p, p_pos in self._pos_dict.items():
-                try:
-                    p_pos.dt(frame) #Checks if pos vector in defined with req frame, if not throws ValueError
-                    p_vel_check = p._calc_vel(frame, p_pos) #If position vector is satisfied calls helper funct
-                    if not p_vel_check:
-                        continue # If helper function returns False next point is iterated
-                    else:
-                        p_vel = p._vel_dict_pos[frame] #If helper function returns True, velocity upto this particle(p) is calculated.
-                except ValueError:
-                    continue
-                self._vel_dict_pos[frame] = p_vel + p_pos.dt(frame) #  Self's Copied dict is updated with the required velocity value.
-                return self._vel_dict_pos[frame]
-            else: #If no point satisfies condition
+        if not (frame in self._vel_dict):
+            visited = []
+            queue = [self]
+            while queue: #BFS to find nearest point
+                node = queue.pop(0)
+                if node not in visited:
+                    visited.append(node)
+                    for neighbor, neighbor_pos in node._pos_dict.items():
+                        try:
+                            neighbor_pos.express(frame) #Checks if pos vector is valid
+                        except ValueError:
+                            continue
+                        try :
+                            neighbor._vel_dict[frame] #Checks if point has its vel defined in req frame
+                        except KeyError:
+                            queue.append(neighbor)
+                            continue
+                        self._vel_dict[frame] =  self.pos_from(neighbor).dt(frame) + neighbor.vel(frame)
+                        return self._vel_dict[frame]
+            else:
                 raise ValueError('Velocity of point ' + self.name + ' has not been'
-                    ' defined in ReferenceFrame ' + frame.name)
+                             ' defined in ReferenceFrame ' + frame.name)
+
         return self._vel_dict[frame]
 
     def partial_velocity(self, frame, *gen_speeds):
