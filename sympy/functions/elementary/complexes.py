@@ -40,17 +40,7 @@ class re(Function):
     2
     >>> re(5 + I + 2)
     7
-    >>> re(10 + 20*I).as_real_imag()
-    (10, 0)
-    >>> re(10).as_real_imag()
-    (10, 0)
-    >>> re(40*I).as_real_imag()
-    (0, 0)
-    >>> re(x+y*I).as_real_imag()
-    (x, 0)
-    >>> re(im(x) + x*I + 2)._eval_derivative(2)
-    1
-
+    
     Parameters
     ==========
 
@@ -918,15 +908,14 @@ class adjoint(Function):
     Parameters
     ==========
 
-    arg : MatrixSymbol
-        Symbolic representation of a Matrix Object.
+    arg : Matrix
+        Matrix or matrix expression to take the adjoint of.
 
     Returns
     =======
 
-    value : MatrixExpr
-        MatrixExpr is the superclass for matric expressions.
-        Here is represents the conjugate transpose or Hermite
+    value : Matrix
+        Represents the conjugate transpose or Hermite
         conjugation of arg.
 
     """
