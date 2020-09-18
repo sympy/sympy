@@ -691,7 +691,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
                         "'RandomSymbol' not %s" % (type(x)))
         cond1 = Eq(x,1) & x.is_integer
         cond2 = Ge(x,1) & Le(x,self.k) & x.is_integer
-        return Piecewise((Rational(1,self.k),cond1),(Rational(1,x*(x-1)),cond2),(S.Zero,True))
+        return Piecewise((1/self.k,cond1),(1/(x*(x-1)),cond2),(S.Zero,True))
 
 def IdealSoliton(name,k):
     r"""
@@ -706,13 +706,14 @@ def IdealSoliton(name,k):
     Examples
     ========
 
-    >>> from sympy.stats import IdealSoliton, Symbol, density, P, E
-    >>> sol=IdealSoliton('sol',10)
+    >>> from sympy.stats import IdealSoliton, density, P, E
+    >>> sol=IdealSoliton('sol',5)
     >>> density(sol).dict
     {1: 1/5, 2: 1/2, 3: 1/6, 4: 1/12, 5: 1/20}
     >>> density(sol).set
     {1, 2, 3, 4, 5}
 
+    >>> from sympy import Symbol
     >>> k = Symbol('k', positive=True, integer=True)
     >>> sol = IdealSoliton('sol',k)
     >>> density(sol).dict
@@ -822,18 +823,19 @@ def RobustSoliton(name,k,delta,c):
 
     >>> from sympy import Symbol
     >>> k = Symbol('k', positive=True, integer=True)
-    >>> robSol = RobustSoliton('robSol',k,0.5,0.03)
+    >>> c = Symbol('c', positive=True)
+    >>> robSol = RobustSoliton('robSol',k,0.5,c)
     >>> density(robSol).dict
-    Density(RobustSolitonDistribution(k, 0.5, 0.03))
-    >>> density(robSol).dict.subs(k, 10).doit()
+    Density(RobustSolitonDistribution(k, 0.5, c))
+    >>> density(robSol).dict.subs(k, 10).subs(c,0.03).doit()
     {1: 0.116641095387194, 2: 0.467045731687165, 3: 0.159984123349381, 4: 0.0821431680681869, 5: 0.0505765646770100,
     6: 0.0345781523420719, 7: 0.0253132820710503, 8: 0.0194459129233227, 9: 0.0154831166726115, 10: 0.0126733075238887}
 
-    >>> E(robSol.subs(k,10))
-    3.00454104235916
+    >>> E(robSol.subs(k,10).subs(c,0.05))
+    2.91358846104106
 
-    >>> P(robSol.subs(k,4)>2)
-    0.241252996948061
+    >>> P(robSol.subs(k,4).subs(c,0.1)>2)
+    0.243650614389834
 
     Returns
     =======

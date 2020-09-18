@@ -1,13 +1,13 @@
 from sympy import (FiniteSet, S, Symbol, sqrt, nan, beta, Rational, symbols,
                    simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-                   cancel, exp, I, Piecewise, Sum, Dummy)
+                   cancel, exp, I, Piecewise, Sum, Dummy, harmonic)
 from sympy.external import import_module
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
-                         Hypergeometric, Rademacher, P, E, variance, covariance, skewness,
-                         sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
-                         cmoment, smoment, characteristic_function, moment_generating_function,
-                         quantile,  kurtosis, median, coskewness)
+                         Hypergeometric, Rademacher, IdealSoliton, RobustSoliton, P, E, variance,
+                         covariance, skewness, sample, density, where, FiniteRV, pspace, cdf,
+                         correlation, moment, cmoment, smoment, characteristic_function,
+                         moment_generating_function, quantile,  kurtosis, median, coskewness)
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
     HypergeometricDistribution
 from sympy.stats.rv import Density
@@ -381,6 +381,46 @@ def test_rademacher():
     assert characteristic_function(X)(t) == exp(I*t)/2 + exp(-I*t)/2
     assert moment_generating_function(X)(t) == exp(t) / 2 + exp(-t) / 2
 
+def test_ideal_soliton():
+    raises(ValueError,lambda : IdealSoliton('sol',-12))
+    raises(ValueError,lambda : IdealSoliton('sol', 13.2))
+    raises(ValueError,lambda : IdealSoliton('sol', 0))
+
+    k=Symbol('k',integer=True,positive=True)
+    x=Symbol('x',integer=True,positive=True)
+    t=Symbol('t')
+    sol=IdealSoliton('sol',k)
+
+    k_vals=[5,20,50,100,1000]
+    for i in k_vals:
+        assert E(sol.subs(k,i)) == harmonic(i) == moment(sol.subs(k,i),1)
+        assert variance(sol.subs(k,i)) == (i-1)+ harmonic(i) - harmonic(i)**2 == cmoment(sol.subs(k,i),2)
+        assert skewness(sol.subs(k,i)) == smoment(sol.subs(k,i),3)
+        assert kurtosis(sol.subs(k,i)) == smoment(sol.subs(k,i),4)
+
+    assert exp(I*t)/10+ Sum(exp(I*t*x)/(x*x-x),(x,2,k)).subs(k,10).doit() == characteristic_function(sol.subs(k,10))(t)
+    assert exp(t)/10+ Sum(exp(t*x)/(x*x-x),(x,2,k)).subs(k,10).doit() == moment_generating_function(sol.subs(k,10))(t)
+
+def test_robust_soliton():
+    raises(ValueError,lambda : RobustSoliton('robSol',-12, 0.1, 0.02))
+    raises(ValueError,lambda : RobustSoliton('robSol', 13, 1.89, 0.1))
+    raises(ValueError,lambda : RobustSoliton('robSol', 15, 0.6,-2.31))
+
+    k=Symbol('k',integer=True,positive=True)
+    delta=Symbol('delta',positive=True)
+    c=Symbol('c',positive=True)
+    robSol=RobustSoliton('robSol',k,delta,c)
+
+    k_vals=[10,20,50,100]
+    delta_vals=[0.2,0.4,0.6,0.8]
+    c_vals=[0.01,0.03,0.05,0.1]
+    for x in k_vals:
+        for y in delta_vals:
+            for z in c_vals:
+                assert E(robSol.subs(k,x).subs(delta,y).subs(c,z)) == moment(robSol.subs(k,x).subs(delta,y).subs(c,z),1)
+                assert variance(robSol.subs(k,x).subs(delta,y).subs(c,z)) == cmoment(robSol.subs(k,x).subs(delta,y).subs(c,z),2)
+                assert skewness(robSol.subs(k,x).subs(delta,y).subs(c,z)) == smoment(robSol.subs(k,x).subs(delta,y).subs(c,z),3)
+                assert kurtosis(robSol.subs(k,x).subs(delta,y).subs(c,z)) == smoment(robSol.subs(k,x).subs(delta,y).subs(c,z),4)
 
 def test_FiniteRV():
     F = FiniteRV('F', {1: S.Half, 2: Rational(1, 4), 3: Rational(1, 4)})

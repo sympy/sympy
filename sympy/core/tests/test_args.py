@@ -1271,6 +1271,13 @@ def test_sympy__stats__frv_types__RademacherDistribution():
     from sympy.stats.frv_types import RademacherDistribution
     assert _test_args(RademacherDistribution())
 
+def test_sympy__stats__frv_types__IdealSolitonDistribution():
+    from sympy.stats.frv_types import IdealSolitonDistribution
+    assert _test_args(IdealSolitonDistribution(10))
+
+def test_sympy__stats__frv_types__RobustSolitonDistribution():
+    from sympy.stats.frv_types import RobustSolitonDistribution
+    assert _test_args(RobustSolitonDistribution(1000,0.5,0.1))
 
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
