@@ -10,7 +10,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    linsolve, eye, Or, Not, Intersection, factorial, Contains,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
-                   ceiling, MatrixBase, MatrixExpr)
+                   ceiling, MatrixBase)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -643,7 +643,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         The name given to the Markov Chain
     state_space: list/Range/tuple/Tuple/set/FiniteSet
         Optional, by default, Range(n)
-    trans_probs: Matrix/ImmutableMatrix/MatrixSymbol/MatrixExpr/MatrixBase
+    trans_probs: Matrix/ImmutableMatrix/MatrixSymbol
         Optional, by default, MatrixSymbol('_T', n, n)
 
     Examples
@@ -712,7 +712,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     index_set = S.Naturals0
 
     def __new__(cls, sym: tUnion[str, Symbol], state_space: tSequence = None,
-                trans_probs: tUnion[MatrixBase, MatrixExpr] = None):
+                trans_probs: tUnion[MatrixBase, MatrixSymbol] = None):
         sym = _symbol_converter(sym)
 
         # Try to never have None as state_space or trans_probs.
@@ -792,7 +792,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return _sympify(self.transition_probabilities.shape[0])
 
     @property
-    def transition_probabilities(self) -> tUnion[MatrixBase, MatrixExpr]:
+    def transition_probabilities(self) -> tUnion[MatrixBase, MatrixSymbol]:
         """
         Transition probabilities of discrete Markov chain,
         either an instance of Matrix or MatrixSymbol.
