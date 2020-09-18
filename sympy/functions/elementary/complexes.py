@@ -865,14 +865,14 @@ class transpose(Function):
     Parameters
     ==========
 
-    arg : MatrixExpr
-        Matrix Object.
+    arg : Matrix
+         Matrix or matrix expression to take the transpose of.
 
     Returns
     =======
 
-    value : MatrixExpr
-        Returns transpose of matrix expression.
+    value : Matrix
+        Transpose of arg.
 
     """
 
