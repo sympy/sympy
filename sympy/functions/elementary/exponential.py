@@ -206,12 +206,13 @@ class exp(ExpBase):
 
     >>> from sympy.functions import exp
     >>> from sympy.abc import x
+    >>> from sympy import I, pi
     >>> exp(x)
     exp(x)
-    >>> exp(x**2 + 2*x + 1)
-    exp(x**2 + 2*x + 1)
-    >>> exp(x + 2)
-    exp(x + 2)
+    >>> exp(x).diff(x)
+    exp(x)
+    >>> exp(I*pi)
+    -1
 
     Parameters
     ==========
