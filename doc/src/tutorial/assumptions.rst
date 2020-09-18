@@ -267,7 +267,7 @@ that would affect the behaviour of :func:`~.solve`:
 When using string input SymPy will create the expression and create all of the
 symbolc implicitly so the question arises how can the assumptions be
 specified? The answer is that rather than depending on implicit string
-cponversion it is better to use the :func:`~.parse_expr` function explicitly
+conversion it is better to use the :func:`~.parse_expr` function explicitly
 and then it is possible to provide assumptions for the symbols e.g.:
 
     >>> from sympy import parse_expr
@@ -518,7 +518,7 @@ A full table of the possible predicates and their definitions is given below.
 
     * - ``nonnegative``
       - A nonnegative real number, $x\in\mathbb{R}, x\ge 0$. All ``nonnegative``
-        numbers are ``finite`` so ``-oo`` is not ``nonnegative``.
+        numbers are ``finite`` so ``oo`` is not ``nonnegative``.
         [positive]_
       - | ``== (real & !negative)``
         | ``== (extended_nonnegative & finite)``
@@ -709,10 +709,10 @@ belong to any of these sets and is not even known to be finite:
     >>> print(x.is_finite)
     None
 
-It is hard for sympy to know what it can do with such a symbol that is not
+It is hard for SymPy to know what it can do with such a symbol that is not
 even known to be finite or complex so it is generally better to give some
-assumptions to the symbol explicitly. Many parts of sympy will implicitly
-treat such a symbol as complex and in some cases sympy will permit
+assumptions to the symbol explicitly. Many parts of SymPy will implicitly
+treat such a symbol as complex and in some cases SymPy will permit
 manipulations that would not strictly be valid given that ``x`` is not known
 to be finite. In a formal sense though very little is known about a vanilla
 symbol which makes manipulations involving it difficult.
@@ -921,7 +921,7 @@ way so it is rejected.
 
 There are many other symbolic ``Boolean`` types in SymPy. The same
 considerations about the differences between fuzzy bool and symbolic
-``Boolean`` apply to all other sympy ``Boolean`` types. Just to give a
+``Boolean`` apply to all other SymPy ``Boolean`` types. Just to give a
 different example there is ``Contains`` which represents the statement that an
 object is contained in a set:
 
@@ -1024,7 +1024,7 @@ the statement "``a`` and ``b`` are both positive" is true, false or unknown:
     >>> print(both_positive_better(S(1), y))
     True
 
-Another case that we need to careful of when using fuzzy bools is negation
+Another case that we need to careful of when using fuzzy-bools is negation
 with Python's ``not`` operator e.g.:
 
     >>> x = Symbol('x')
@@ -1065,7 +1065,7 @@ use things like ``x.is_positive is False``.  What we need to be careful of
 though is using Python's binary logic operators like ``not`` or ``and`` etc.
 
 In fact SymPy has internal functions that are designed to correctly handle
-fuzzy bools:
+fuzzy-bools:
 
     >>> from sympy.core.logic import fuzzy_not, fuzzy_and
     >>> print(fuzzy_not(True))
@@ -1247,14 +1247,14 @@ as a variable. The elementary symbolic operations like :class:`~.And`,
 Other is_* properties
 ---------------------
 
-There are many properties and attributes in sympy that that have names
+There are many properties and attributes in SymPy that that have names
 beginning with ``is_`` that look similar to the properties used in the
 (old) assumptions system but are not in fact part of the assumptions system.
 Some of these have a similar meaning and usage as those of the assumptions
 system such as the :py:meth:`~.MatrixCommon.is_zero_matrix` property shown
 above.  Another example is the ``is_empty`` property of sets:
 
-    >>> from sympy import FiniteSet, Intersection
+    >>> from SymPy import FiniteSet, Intersection
     >>> S1 = FiniteSet(1, 2)
     >>> S1
     FiniteSet(1, 2)
@@ -1266,7 +1266,7 @@ above.  Another example is the ``is_empty`` property of sets:
     >>> print(S2.is_empty)
     None
 
-The ``is_empty`` property gives a fuzzy bool indicating whether or not a
+The ``is_empty`` property gives a fuzzy-bool indicating whether or not a
 :class:`~.Set` is the empty set. In the example of ``S2`` it is not possible to know
 whether or not the set is empty without knowing whether or not ``x`` is equal
 to ``1`` so ``S2.is_empty`` gives ``None``. The ``is_empty`` property for sets
@@ -1285,15 +1285,15 @@ listed in the table above. It is not possible to declare a
 ``SetSymbol`` class but if there was it would not have a system for
 understanding predicates like ``empty=False``.
 
-The properties py:meth:`~.is_zero_matrix` and ``is_empty`` are similar to
-those of the assumptions system because they concern *semantic* aspects of an
-expression. There are a large number of other properties that focus on
-*structural* aspects such as ``is_Number``, :py:meth:`~.Expr.is_number`,
-:py:meth:`~.Basic.is_comparable`. Since these properties refer to structural
-aspects of an expression they will always give ``True`` or ``False`` rather
-than a fuzzy bool that also has the possibility of being ``None``. Capitalised
-properties such as ``is_Number`` are usually shorthands for ``isinstance``
-checks e.g.:
+The properties :py:meth:`~.MatrixCommon.is_zero_matrix` and ``is_empty`` are
+similar to those of the assumptions system because they concern *semantic*
+aspects of an expression. There are a large number of other properties that
+focus on *structural* aspects such as ``is_Number``,
+:py:meth:`~.Expr.is_number`, :py:meth:`~.Basic.is_comparable`. Since these
+properties refer to structural aspects of an expression they will always give
+``True`` or ``False`` rather than a fuzzy bool that also has the possibility
+of being ``None``. Capitalised properties such as ``is_Number`` are usually
+shorthand for ``isinstance`` checks e.g.:
 
     >>> from sympy import Number, Rational
     >>> x = Rational(1, 2)
@@ -1356,7 +1356,7 @@ the assumptions system which is explained below.
 Implementing assumptions handlers
 ---------------------------------
 
-We will now work through an example of how to implement a sympy symbolic
+We will now work through an example of how to implement a SymPy symbolic
 function so that we can see how the old assumptions are used internally. SymPy
 already has an ``exp`` function which is defined for all complex numbers but
 we will define an ``expreal`` function which is restricted to real arguments.
@@ -1547,11 +1547,11 @@ evaluation of elementary expressions.
 
 There are several stages in the implementation of the assumptions system
 within a SymPy process that lead up to the evaluation of a single query in the
-assumptions system. Breifly these are:
+assumptions system. Briefly these are:
 
 1. At import time the assumptions rules defined in
    ``sympy/core/assumptions.py`` are processed into a canonical form ready for
-   efficiently applying the implication rules. This happens once when sympy is
+   efficiently applying the implication rules. This happens once when SymPy is
    imported before even the :class:`~.Basic` class is defined.
 
 2. The ``ManagedProperties`` metaclass is defined which is the metaclass for
@@ -1720,7 +1720,7 @@ will try all possibilities to use the implication rules and any other handler
 methods such as ``_eval_is_integer``, ``_eval_is_algebraic`` etc that might
 possibly be able to give an answer to the original query. If any method leads
 to a definite result being known for the original query then that is returned.
-Otherwise once all posibilities for using a handler and the implication rules
+Otherwise once all possibilities for using a handler and the implication rules
 to resolve the query are exhausted ``None`` will be cached and returned.
 
     >>> b = A()
