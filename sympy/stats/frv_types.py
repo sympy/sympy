@@ -19,7 +19,7 @@ RobustSoliton
 from __future__ import print_function, division
 
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
-                   Dummy, Eq, Intersection, Interval, log,
+                   Dummy, Eq, Intersection, Interval, log, Range,
                    Symbol, Lambda, Piecewise, Or, Gt, Lt, Ge, Le, Contains)
 from sympy import beta as beta_fn
 from sympy.stats.frv import (SingleFiniteDistribution,
@@ -656,7 +656,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
 
     @staticmethod
     def check(k):
-         _value_check((k.is_integer, k.is_positive),
+         _value_check(k.is_integer and k.is_positive,
                     "'k' must be a positive integer.")
 
     @property
@@ -669,31 +669,27 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return set(list(range(1,self.k+1)))
-
-    @property
-    def is_symbolic(self):
-        return not self.k.is_number
+        return set(list(Range(1,self.k+1)))
 
     @property
     @cacheit
     def dict(self):
-        if self.is_symbolic:
+        if self.k.is_Symbol:
             return Density(self)
-        d={1:Rational(1,self.k)}
-        d.update(dict((i,Rational(1,i*(i-1))) for i in range(2,self.k+1)))
+        d={1: Rational(1, self.k)}
+        d.update(dict((i, Rational(1, i*(i - 1))) for i in range(2, self.k + 1)))
         return d
 
-    def pmf(self,x):
-        x=sympify(x)
+    def pmf(self, x):
+        x = sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
-        cond1 = Eq(x,1) & x.is_integer
-        cond2 = Ge(x,1) & Le(x,self.k) & x.is_integer
-        return Piecewise((1/self.k,cond1),(1/(x*(x-1)),cond2),(S.Zero,True))
+        cond1 = Eq(x, 1) & x.is_integer
+        cond2 = Ge(x, 1) & Le(x, self.k) & x.is_integer
+        return Piecewise((1/self.k, cond1), (1/(x*(x - 1)), cond2), (S.Zero, True))
 
-def IdealSoliton(name,k):
+def IdealSoliton(name, k):
     r"""
     Create a Finite Random Variable of Ideal Soliton Distribution
 
@@ -707,7 +703,7 @@ def IdealSoliton(name,k):
     ========
 
     >>> from sympy.stats import IdealSoliton, density, P, E
-    >>> sol=IdealSoliton('sol',5)
+    >>> sol=IdealSoliton('sol', 5)
     >>> density(sol).dict
     {1: 1/5, 2: 1/2, 3: 1/6, 4: 1/12, 5: 1/20}
     >>> density(sol).set
@@ -715,16 +711,16 @@ def IdealSoliton(name,k):
 
     >>> from sympy import Symbol
     >>> k = Symbol('k', positive=True, integer=True)
-    >>> sol = IdealSoliton('sol',k)
+    >>> sol = IdealSoliton('sol', k)
     >>> density(sol).dict
     Density(IdealSolitonDistribution(k))
     >>> density(sol).dict.subs(k, 10).doit()
     {1: 1/10, 2: 1/2, 3: 1/6, 4: 1/12, 5: 1/20, 6: 1/30, 7: 1/42, 8: 1/56, 9: 1/72, 10: 1/90}
 
-    >>> E(sol.subs(k,10))
+    >>> E(sol.subs(k, 10))
     7381/2520
 
-    >>> P(sol.subs(k,4)>2)
+    >>> P(sol.subs(k, 4) > 2)
     1/4
 
     Returns
@@ -742,15 +738,15 @@ def IdealSoliton(name,k):
     return rv(name,IdealSolitonDistribution,k)
 
 class RobustSolitonDistribution(SingleFiniteDistribution):
-    _argnames= ('k','delta','c')
+    _argnames= ('k', 'delta', 'c')
 
     @staticmethod
-    def check(k,delta,c):
-        _value_check((k.is_integer, k.is_positive),
+    def check(k, delta, c):
+        _value_check(k.is_integer and k.is_positive,
                     "'k' must be a positive integer")
-        _value_check((Gt(delta,0),Le(delta,1)),
+        _value_check(Gt(delta,0) and Le(delta,1),
                     "'delta' must be a real number in the interval (0,1)")
-        _value_check((c.is_positive),
+        _value_check(c.is_positive,
                     "'c' must be a positive real number.")
 
     @property
@@ -759,10 +755,10 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
 
     @property
     def Z(self):
-        z=0
-        for i in range(1,round(self.k/self.R)):
-            z+=(1/i)
-        z+=log(self.R/self.delta)
+        z = 0
+        for i in Range(1, round(self.k/self.R)):
+            z += (1/i)
+        z += log(self.R/self.delta)
         return 1 + z*self.R/self.k
 
     @property
@@ -775,29 +771,29 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return set(list(range(1,self.k+1)))
+        return set(list(Range(1, self.k+1)))
 
     @property
     def is_symbolic(self):
         return not all([self.k.is_number, self.c.is_number, self.delta.is_number])
 
-    def pmf(self,x):
-        x=sympify(x)
+    def pmf(self, x):
+        x = sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
 
-        cond1 = Eq(x,1) & x.is_integer
-        cond2 = Ge(x,1) & Le(x,self.k) & x.is_integer
-        rho = Piecewise((Rational(1,self.k),cond1),(Rational(1,x*(x-1)),cond2),(S.Zero,True))
+        cond1 = Eq(x, 1) & x.is_integer
+        cond2 = Ge(x, 1) & Le(x, self.k) & x.is_integer
+        rho = Piecewise((Rational(1, self.k), cond1), (Rational(1, x*(x-1)), cond2), (S.Zero, True))
 
-        cond1 = Ge(x,1) & Le(x,round(self.k/self.R)-1)
-        cond2 = Eq(x,round(self.k/self.R))
-        tau = Piecewise((self.R/(self.k*x),cond1),(self.R*log(self.R/self.delta)/self.k,cond2),(S.Zero,True))
+        cond1 = Ge(x, 1) & Le(x, round(self.k/self.R)-1)
+        cond2 = Eq(x, round(self.k/self.R))
+        tau = Piecewise((self.R/(self.k*x), cond1), (self.R*log(self.R/self.delta)/self.k, cond2), (S.Zero, True))
 
         return (rho + tau)/self.Z
 
-def RobustSoliton(name,k,delta,c):
+def RobustSoliton(name, k, delta, c):
     r'''
     Create a Finite Random Variable of Robust Soliton Distribution
 
@@ -815,7 +811,7 @@ def RobustSoliton(name,k,delta,c):
     ========
 
     >>> from sympy.stats import RobustSoliton, density, P, E
-    >>> robSol=RobustSoliton('robSol',5,0.5,0.01)
+    >>> robSol=RobustSoliton('robSol', 5, 0.5, 0.01)
     >>> density(robSol).dict
     {1: 0.204253668152708, 2: 0.490631107897393, 3: 0.165210624506162, 4: 0.0834387731899302, 5: 0.0505633404760675}
     >>> density(robSol).set
@@ -824,17 +820,17 @@ def RobustSoliton(name,k,delta,c):
     >>> from sympy import Symbol
     >>> k = Symbol('k', positive=True, integer=True)
     >>> c = Symbol('c', positive=True)
-    >>> robSol = RobustSoliton('robSol',k,0.5,c)
+    >>> robSol = RobustSoliton('robSol', k, 0.5, c)
     >>> density(robSol).dict
     Density(RobustSolitonDistribution(k, 0.5, c))
     >>> density(robSol).dict.subs(k, 10).subs(c,0.03).doit()
     {1: 0.116641095387194, 2: 0.467045731687165, 3: 0.159984123349381, 4: 0.0821431680681869, 5: 0.0505765646770100,
     6: 0.0345781523420719, 7: 0.0253132820710503, 8: 0.0194459129233227, 9: 0.0154831166726115, 10: 0.0126733075238887}
 
-    >>> E(robSol.subs(k,10).subs(c,0.05))
+    >>> E(robSol.subs(k, 10).subs(c, 0.05))
     2.91358846104106
 
-    >>> P(robSol.subs(k,4).subs(c,0.1)>2)
+    >>> P(robSol.subs(k, 4).subs(c, 0.1)>2)
     0.243650614389834
 
     Returns
