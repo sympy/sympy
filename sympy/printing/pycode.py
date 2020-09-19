@@ -51,7 +51,7 @@ _known_functions_math = {
     'Sqrt': 'sqrt',
     'tan': 'tan',
     'tanh': 'tanh'
-}  # Not used from ``math``: [copysign isclose isfinite isinf isnan ldexp frexp pow modf
+}  # Not used from ``math``: [copysign isclose isfinite isinf isnan ldexp frexp pow
 # radians trunc fmod fsum gcd degrees fabs]
 _known_constants_math = {
     'Exp1': 'e',
@@ -452,6 +452,9 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
     def _print_Half(self, expr):
         return self._print_Rational(expr)
 
+    def _print_frac(self, expr):
+        return "%s(%s)[0]" % (self._module_format("math.modf"), self._print(expr.args[0]))
+
     _print_lowergamma = CodePrinter._print_not_supported
     _print_uppergamma = CodePrinter._print_not_supported
     _print_fresnelc = CodePrinter._print_not_supported
@@ -499,6 +502,7 @@ _not_in_mpmath = 'log1p log2'.split()
 _in_mpmath = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_mpmath]
 _known_functions_mpmath = dict(_in_mpmath, **{
     'beta': 'beta',
+    'frac': 'frac',
     'fresnelc': 'fresnelc',
     'fresnels': 'fresnels',
     'sign': 'sign',
@@ -782,6 +786,9 @@ class NumPyPrinter(PythonCodePrinter):
     def _print_arg(self, expr):
         return "%s(%s)" % (self._module_format('numpy.angle'), self._print(expr.args[0]))
 
+    def _print_frac(self, expr):
+        return "%s(%s)[0]" % (self._module_format('numpy.modf'), self._print(expr.args[0]))
+
     def _print_im(self, expr):
         return "%s(%s)" % (self._module_format('numpy.imag'), self._print(expr.args[0]))
 
@@ -1016,3 +1023,6 @@ class SymPyPrinter(PythonCodePrinter):
 
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational, sqrt='sympy.sqrt')
+
+    def _print_frac(self, expr):
+        return "%s(%s)" % (self._module_format('sympy.frac'), self._print(expr.args[0]))
