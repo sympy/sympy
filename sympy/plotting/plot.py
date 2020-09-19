@@ -117,7 +117,8 @@ class Plot(object):
     - aspect_ratio : tuple of two floats or {'auto'}
     - autoscale : bool
     - margin : float in [0, 1]
-    - backend : {'default', 'matplotlib', 'text'}
+    - backend : {'default', 'matplotlib', 'text'} or a subclass of BaseBackend
+    - size : optional tuple of two floats, (width, height); default: None
 
     The per data series options and aesthetics are:
     There are none in the base series. See below for options for subclasses.
@@ -149,7 +150,7 @@ class Plot(object):
         xlim=None, ylim=None, axis_center='auto', axis=True,
         xscale='linear', yscale='linear', legend=False, autoscale=True,
         margin=0, annotations=None, markers=None, rectangles=None,
-        fill=None, backend='default', **kwargs):
+        fill=None, backend='default', size=None, **kwargs):
         super(Plot, self).__init__()
 
         # Options for the graph as a whole.
@@ -179,31 +180,36 @@ class Plot(object):
         # The backend type. On every show() a new backend instance is created
         # in self._backend which is tightly coupled to the Plot instance
         # (thanks to the parent attribute of the backend).
-        self.backend = plot_backends[backend]
+        if isinstance(backend, str):
+            self.backend = plot_backends[backend]
+        elif (type(backend) == type) and issubclass(backend, BaseBackend):
+            self.backend = backend
+        else:
+            raise TypeError(
+                "backend must be either a string or a subclass of BaseBackend")
 
         is_real = \
             lambda lim: all(getattr(i, 'is_real', True) for i in lim)
         is_finite = \
             lambda lim: all(getattr(i, 'is_finite', True) for i in lim)
 
+        # reduce code repetition
+        def check_and_set(t_name, t):
+            if t:
+                if not is_real(t):
+                    raise ValueError(
+                    "All numbers from {}={} must be real".format(t_name, t))
+                if not is_finite(t):
+                    raise ValueError(
+                    "All numbers from {}={} must be finite".format(t_name, t))
+                setattr(self, t_name, (float(t[0]), float(t[1])))
+
         self.xlim = None
+        check_and_set("xlim", xlim)
         self.ylim = None
-        if xlim:
-            if not is_real(xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be real".format(xlim))
-            if not is_finite(xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be finite".format(xlim))
-            self.xlim = (float(xlim[0]), float(xlim[1]))
-        if ylim:
-            if not is_real(ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be real".format(ylim))
-            if not is_finite(ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be finite".format(ylim))
-            self.ylim = (float(ylim[0]), float(ylim[1]))
+        check_and_set("ylim", ylim)
+        self.size = None
+        check_and_set("size", size)
 
 
     def show(self):
@@ -382,7 +388,7 @@ class PlotGrid(object):
         [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
 
     """
-    def __init__(self, nrows, ncolumns, *args, show=True, **kwargs):
+    def __init__(self, nrows, ncolumns, *args, show=True, size=None, **kwargs):
         """
         Parameters
         ==========
@@ -410,6 +416,10 @@ class PlotGrid(object):
                of the ``PlotGrid`` class can then be used to save or display the
                plot by calling the ``save()`` and ``show()`` methods
                respectively.
+        size : (float, float), optional
+            A tuple in the form (width, height) in inches to specify the size of
+            the overall figure. The default value is set to ``None``, meaning
+            the size will be set by the default backend.
         """
         self.nrows = nrows
         self.ncolumns = ncolumns
@@ -418,6 +428,7 @@ class PlotGrid(object):
         for arg in args:
             self._series.append(arg._series)
         self.backend = DefaultBackend
+        self.size = size
         if show:
             self.show()
 
@@ -1112,7 +1123,7 @@ class MatplotlibBackend(BaseBackend):
             series_list = self.parent._series
 
         self.ax = []
-        self.fig = self.plt.figure()
+        self.fig = self.plt.figure(figsize=parent.size)
 
         for i, series in enumerate(series_list):
             are_3D = [s.is_3D for s in series]
@@ -1558,6 +1569,11 @@ def plot(*args, show=True, **kwargs):
         If the ``adaptive`` flag is set to ``True``, this will be
         ignored.
 
+    size : (float, float), optional
+        A tuple in the form (width, height) in inches to specify the size of
+        the overall figure. The default value is set to ``None``, meaning
+        the size will be set by the default backend.
+
     Examples
     ========
 
@@ -1731,6 +1747,11 @@ def plot_parametric(*args, show=True, **kwargs):
     ylim : (float, float), optional
         Denotes the y-axis limits, ``(min, max)```.
 
+    size : (float, float), optional
+        A tuple in the form (width, height) in inches to specify the size of
+        the overall figure. The default value is set to ``None``, meaning
+        the size will be set by the default backend.
+
     Examples
     ========
 
@@ -1892,6 +1913,11 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
 
     ``title`` : str. Title of the plot.
 
+    ``size`` : (float, float), optional
+        A tuple in the form (width, height) in inches to specify the size of
+        the overall figure. The default value is set to ``None``, meaning
+        the size will be set by the default backend.
+
     Examples
     ========
 
@@ -2008,6 +2034,10 @@ def plot3d(*args, show=True, **kwargs):
     Arguments for ``Plot`` class:
 
     ``title`` : str. Title of the plot.
+    ``size`` : (float, float), optional
+        A tuple in the form (width, height) in inches to specify the size of
+        the overall figure. The default value is set to ``None``, meaning
+        the size will be set by the default backend.
 
     Examples
     ========
@@ -2138,6 +2168,10 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
     Arguments for ``Plot`` class:
 
     ``title`` : str. Title of the plot.
+    ``size`` : (float, float), optional
+        A tuple in the form (width, height) in inches to specify the size of
+        the overall figure. The default value is set to ``None``, meaning
+        the size will be set by the default backend.
 
     Examples
     ========
@@ -2242,6 +2276,10 @@ def plot_contour(*args, show=True, **kwargs):
     Arguments for ``Plot`` class:
 
     ``title`` : str. Title of the plot.
+    ``size`` : (float, float), optional
+        A tuple in the form (width, height) in inches to specify the size of
+        the overall figure. The default value is set to ``None``, meaning
+        the size will be set by the default backend.
 
     See Also
     ========

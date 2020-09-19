@@ -12,7 +12,7 @@ from sympy.plotting.plot import (
     plot3d_parametric_surface)
 from sympy.plotting.plot import (
     unset_show, plot_contour, PlotGrid, DefaultBackend, MatplotlibBackend,
-    TextBackend)
+    TextBackend, BaseBackend)
 from sympy.testing.pytest import skip, raises, warns
 from sympy.utilities import lambdify as lambdify_
 
@@ -22,6 +22,13 @@ unset_show()
 
 matplotlib = import_module(
     'matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+
+
+class DummyBackend(BaseBackend):
+    """ Used to verify if users can create their own backends.
+    """
+    def show(self):
+        pass
 
 
 def test_plot_and_save_1():
@@ -581,6 +588,16 @@ def test_issue_13516():
     assert p.backend == DefaultBackend
     assert len(p[0].get_segments()) >= 30
 
+    # verify the capability to use custom backends
+    with raises(TypeError):
+        p = plot(sin(x), backend=Plot)
+    p2 = plot(sin(x), backend=MatplotlibBackend, show=False)
+    assert p2.backend == MatplotlibBackend
+    assert len(p2[0].get_segments()) >= 30
+    p3 = plot(sin(x), backend=DummyBackend, show=False)
+    assert p3.backend == DummyBackend
+    assert len(p3[0].get_segments()) >= 30
+
 
 def test_plot_limits():
     if not matplotlib:
@@ -631,3 +648,22 @@ def test_plot3d_parametric_line_limits():
     zmin, zmax = backend.ax[0].get_zlim()
     assert abs(zmin + 10) < 1e-2
     assert abs(zmax - 10) < 1e-2
+
+def test_plot_size():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+
+    p1 = plot(sin(x), backend="matplotlib", size=(8, 4))
+    s1 = p1._backend.fig.get_size_inches()
+    assert (s1[0] == 8) and (s1[1] == 4)
+    p2 = plot(sin(x), backend="matplotlib", size=(5, 10))
+    s2 = p2._backend.fig.get_size_inches()
+    assert (s2[0] == 5) and (s2[1] == 10)
+    p3 = PlotGrid(2, 1, p1, p2, size=(6, 2))
+    s3 = p3._backend.fig.get_size_inches()
+    assert (s3[0] == 6) and (s3[1] == 2)
+
+    with raises(ValueError):
+        p4 = plot(sin(x), backend="matplotlib", size=(-1, 3))
