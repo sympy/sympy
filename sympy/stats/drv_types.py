@@ -435,7 +435,7 @@ class PoissonDistribution(SingleDiscreteDistribution):
         return exp(self.lamda * (exp(t) - 1))
 
     def _cdf(self, t):
-        return uppergamma(t+1, self.lamda)/ factorial(t)
+        return uppergamma(floor(t + 1), self.lamda)/ factorial(floor(t))
 
 
 def Poisson(name, lamda):
