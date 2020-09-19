@@ -2,7 +2,7 @@ from sympy.core.expr import unchanged
 from sympy.sets import (ConditionSet, Intersection, FiniteSet,
     EmptySet, Union, Contains, ImageSet)
 from sympy import (Symbol, Eq, Ne, S, Abs, sin, asin, pi, Interval,
-    And, Mod, oo, Function, Lambda, symbols)
+    And, Mod, oo, Function, Lambda, symbols, Matrix, MatrixSymbol)
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
@@ -24,6 +24,8 @@ def test_CondSet():
     # in this case, 0 is not part of the base set so
     # it can't be in any subset selected by the condition
     assert 0 not in ConditionSet(x, y > 5, Interval(1, 7))
+    assert oo not in sin_sols_principal
+    assert f not in sin_sols_principal
     # since 'in' requires a true/false, the following raises
     # an error because the given value provides no information
     # for the condition to evaluate (since the condition does
@@ -32,6 +34,13 @@ def test_CondSet():
     # Piecewise((Interval(1, 7), y > 5), (S.EmptySet, True)).
     raises(TypeError, lambda: 6 in ConditionSet(x, y > 5,
         Interval(1, 7)))
+
+    X = MatrixSymbol('X', 2, 2)
+    matrix_set = ConditionSet(X, Eq(X*Matrix([[1, 1], [1, 1]]), X))
+    X = Matrix([[0, 0], [0, 0]])
+    assert X in matrix_set
+    X = Matrix([[1, 2], [3, 4]])
+    assert X not in matrix_set
 
     assert isinstance(ConditionSet(x, x < 1, {x, y}).base_set,
         FiniteSet)
@@ -245,3 +254,17 @@ def test_as_relational():
         ) == (x > 1) & Contains((x, y), S.Integers**2)
     assert ConditionSet(x, x > 1, S.Integers).as_relational(x
         ) == Contains(x, S.Integers) & (x > 1)
+
+def test_flatten():
+    """Tests whether there is basic denesting functionality"""
+    inner = ConditionSet(x, sin(x) + x > 0)
+    outer = ConditionSet(x, Contains(x, inner), S.Reals)
+    assert outer == ConditionSet(x, sin(x) + x > 0, S.Reals)
+
+    inner = ConditionSet(y, sin(y) + y > 0)
+    outer = ConditionSet(x, Contains(y, inner), S.Reals)
+    assert outer != ConditionSet(x, sin(x) + x > 0, S.Reals)
+
+    inner = ConditionSet(x, sin(x) + x > 0).intersect(Interval(-1, 1))
+    outer = ConditionSet(x, Contains(x, inner), S.Reals)
+    assert outer == ConditionSet(x, sin(x) + x > 0, Interval(-1, 1))

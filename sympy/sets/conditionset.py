@@ -161,6 +161,11 @@ class ConditionSet(Set):
                 condition = And(condition.xreplace(reps), c)
                 base_set = b
 
+        # flatten ConditionSet(Contains(ConditionSet())) expressions
+        if isinstance(condition, Contains) and (sym == condition.args[0]):
+                if isinstance(condition.args[1], Set):
+                    return condition.args[1].intersect(base_set)
+
         rv = Basic.__new__(cls, sym, condition, base_set)
         return rv if know is None else Union(know, rv)
 
@@ -190,11 +195,33 @@ class ConditionSet(Set):
                 ok_sig(i, j) for i, j in zip(a, b))
         if not ok_sig(self.sym, other):
             return S.false
+        # if either argument of And is False,
+        # we must return False even if we
+        # get a TypeError on the other
+
+        # try doing base_cond first and return
+        # False immediately if it is False
         try:
-            return And(
-                Contains(other, self.base_set),
-                Lambda((self.sym,), self.condition)(other))
+            base_cond = Contains(other, self.base_set)
+            base_error = False
         except TypeError:
+            base_cond = None
+            base_error = True
+        if (not base_error) and (base_cond is S.false):
+            return False
+
+        try:
+            lambda_cond = Lambda((self.sym,), self.condition)(other)
+            lambda_error = False
+        except TypeError:
+            lambda_cond = None
+            lambda_error = True
+        if (not lambda_error) and (lambda_cond is S.false):
+            return False
+
+        if (not base_error) and (not lambda_error):
+            return And(base_cond, lambda_cond.doit())
+        else:
             return Contains(other, self, evaluate=False)
 
     def as_relational(self, other):

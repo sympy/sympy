@@ -920,7 +920,8 @@ class Piecewise(Function):
                             setting domain=S.Reals'''))
             cond_int = U.intersect(cond.as_set())
             U = U - cond_int
-            exp_sets.append((expr, cond_int))
+            if cond_int != S.EmptySet:
+                exp_sets.append((expr, cond_int))
         return exp_sets
 
     def _eval_rewrite_as_ITE(self, *args, **kwargs):
