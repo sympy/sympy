@@ -711,8 +711,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     """
     index_set = S.Naturals0
 
-    def __new__(cls, sym: tUnion[str, Symbol], state_space: tSequence = None,
-                trans_probs: tUnion[MatrixBase, MatrixSymbol] = None):
+    def __new__(cls, sym, state_space=None, trans_probs=None):
+        # type: (Basic, tUnion[str, Symbol], tSequence, tUnion[MatrixBase, MatrixSymbol]) -> DiscreteMarkovChain
         sym = _symbol_converter(sym)
 
         # Try to never have None as state_space or trans_probs.
