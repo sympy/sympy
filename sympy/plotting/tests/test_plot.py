@@ -666,4 +666,4 @@ def test_plot_size():
     assert (s3[0] == 6) and (s3[1] == 2)
 
     with raises(ValueError):
-        p4 = plot(sin(x), backend="matplotlib", size=(-1, 3))
+        plot(sin(x), backend="matplotlib", size=(-1, 3))
