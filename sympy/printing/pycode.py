@@ -453,7 +453,8 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._print_Rational(expr)
 
     def _print_frac(self, expr):
-        return "%s(%s)[0]" % (self._module_format("math.modf"), self._print(expr.args[0]))
+        from sympy import Mod
+        return self._print_Mod(Mod(expr.args[0], 1))
 
     _print_lowergamma = CodePrinter._print_not_supported
     _print_uppergamma = CodePrinter._print_not_supported
@@ -785,9 +786,6 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_arg(self, expr):
         return "%s(%s)" % (self._module_format('numpy.angle'), self._print(expr.args[0]))
-
-    def _print_frac(self, expr):
-        return "%s(%s)[0]" % (self._module_format('numpy.modf'), self._print(expr.args[0]))
 
     def _print_im(self, expr):
         return "%s(%s)" % (self._module_format('numpy.imag'), self._print(expr.args[0]))

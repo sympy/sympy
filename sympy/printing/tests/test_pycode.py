@@ -206,13 +206,13 @@ def test_frac():
     expr = frac(x)
 
     prntr = NumPyPrinter()
-    assert prntr.doprint(expr) == 'numpy.modf(x)[0]'
+    assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
 
     prntr = SciPyPrinter()
-    assert prntr.doprint(expr) == 'numpy.modf(x)[0]'
+    assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
 
     prntr = PythonCodePrinter()
-    assert prntr.doprint(expr) == 'math.modf(x)[0]'
+    assert prntr.doprint(expr) == 'x % 1'
 
     prntr = MpmathPrinter()
     assert prntr.doprint(expr) == 'mpmath.frac(x)'
