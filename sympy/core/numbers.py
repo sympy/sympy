@@ -233,16 +233,17 @@ def _most_sig(x):
         return 0
 
     x = (0,) + x[1:]
-    i = mlib.libmpf.to_int(x)
-    if 1 > i:
-        # fall back to log for values < 1
-        prec = max(30, x[3])
-        return mlib.to_int(mlib.mpf_div(
-            mlib.mpf_log(x, prec), mlib.mpf_ln10(prec), prec
-        ))
-    # a bit dirty, but is not slower compared to
-    # log and gives a much cleaner result
-    return len(str(i))
+    prec = x[3] + 3
+
+    return mlib.to_int(mlib.mpf_floor(mlib.mpf_div(
+        mlib.mpf_log(x, prec), mlib.mpf_ln10(prec), prec
+    )))
+    # if 1 > i:
+    #     # fall back to log for values < 1
+    #
+    # # a bit dirty, but is not slower compared to
+    # # log and gives a much cleaner result
+    # return len(str(i))
 
 
 def _significants(x):
@@ -260,14 +261,22 @@ def _significants_helper(f, other):
     # handle zero
     if f.is_zero:
         if other.is_Rational:
+            # if other is a rational zero, return Float precision zero
             if other.is_zero:
                 return prec_to_dps(f._prec), 0
-            sig = len(str(int(other)))
-            return sig, -prec_to_dps(f._prec)
+
+            # since f is zero, most significant = least significant = precision
+            sig_f = -prec_to_dps(f._prec)
+            return max(sig_f, _most_sig(other._as_mpf_val())), sig_f
+
         if other.is_zero:
             # if both are zero, return zero with least precision
             return prec_to_dps(min(f._prec, other._prec)), 0
-        return _significants(other)
+
+        sig_other = _significants(other)
+        sig_f = -prec_to_dps(f._prec)
+        return max(sig_f, sig_other[0]), max(sig_f, sig_other[1])
+
     if other.is_zero:
         return _significants(f)
 
@@ -275,10 +284,10 @@ def _significants_helper(f, other):
 
     # only check other
     if other.is_Rational:
-        return max(sig_f[0], len(str(int(other)))), sig_f[1]
+        return max(sig_f[0], _most_sig(other._as_mpf_val())), sig_f[1]
 
     sig_other = _significants(other)
-    return max(sig_f[0], sig_other[0]), max(sig_f[1], sig_other[1]),
+    return max(sig_f[0], sig_other[0]), max(sig_f[1], sig_other[1])
 
 # (a,b) -> gcd(a,b)
 
