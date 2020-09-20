@@ -211,7 +211,7 @@ class ConditionSet(Set):
             return False
 
         try:
-            lambda_cond = Lambda((self.sym,), self.condition)(other)
+            lambda_cond = (Lambda((self.sym,), self.condition)(other)).doit()
             lambda_error = False
         except TypeError:
             lambda_cond = None
@@ -220,7 +220,7 @@ class ConditionSet(Set):
             return False
 
         if (not base_error) and (not lambda_error):
-            return And(base_cond, lambda_cond.doit())
+            return And(base_cond, lambda_cond)
         else:
             return Contains(other, self, evaluate=False)
 
