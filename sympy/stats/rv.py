@@ -216,10 +216,7 @@ class SinglePSpace(PSpace):
     attributed to a single variable/symbol.
     """
     def __new__(cls, s, distribution):
-        if isinstance(s, str):
-            s = Symbol(s)
-        if not isinstance(s, Symbol):
-            raise TypeError("s should have been string or Symbol")
+        s = _symbol_converter(s)
         return Basic.__new__(cls, s, distribution)
 
     @property
