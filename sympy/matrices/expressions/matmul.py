@@ -33,9 +33,7 @@ class MatMul(MatrixExpr, Mul):
 
     identity = GenericIdentity()
 
-    def __new__(cls, *args, evaluate=False, **kwargs):
-        check = kwargs.get('check', True)
-
+    def __new__(cls, *args, evaluate=False, check=True):
         if not args:
             return cls.identity
 

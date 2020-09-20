@@ -37,8 +37,7 @@ import warnings
 from contextlib import contextmanager
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (exec_, PY3, unwrap,
-        unicode)
+from sympy.core.compatibility import (exec_, PY3, unwrap)
 from sympy.external import import_module
 
 IS_WINDOWS = (os.name == 'nt')
@@ -107,10 +106,6 @@ def _indent(s, indent=4):
     If the string ``s`` is Unicode, it is encoded using the stdout
     encoding and the ``backslashreplace`` error handler.
     """
-    # After a 2to3 run the below code is bogus, so wrap it with a version check
-    if not PY3:
-        if isinstance(s, unicode):
-            s = s.encode(pdoctest._encoding, 'backslashreplace')
     # This regexp matches the start of non-blank lines:
     return re.sub('(?m)^(?!$)', indent*' ', s)
 
@@ -525,7 +520,12 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
             return val
 
 
-def _test(*paths, **kwargs):
+def _test(*paths,
+        verbose=False, tb="short", kw=None, pdb=False, colors=True,
+        force_colors=False, sort=True, seed=None, timeout=False,
+        fail_on_timeout=False, slow=False, enhance_asserts=False, split=None,
+        time_balance=True, blacklist=('sympy/integrals/rubi/rubi_tests/tests',),
+        fast_threshold=None, slow_threshold=None):
     """
     Internal function that actually runs the tests.
 
@@ -535,36 +535,21 @@ def _test(*paths, **kwargs):
     Returns 0 if tests passed and 1 if they failed.  See the docstring of
     ``test()`` for more information.
     """
-    verbose = kwargs.get("verbose", False)
-    tb = kwargs.get("tb", "short")
-    kw = kwargs.get("kw", None) or ()
+    kw = kw or ()
     # ensure that kw is a tuple
     if isinstance(kw, str):
-        kw = (kw, )
-    post_mortem = kwargs.get("pdb", False)
-    colors = kwargs.get("colors", True)
-    force_colors = kwargs.get("force_colors", False)
-    sort = kwargs.get("sort", True)
-    seed = kwargs.get("seed", None)
+        kw = (kw,)
+    post_mortem = pdb
     if seed is None:
         seed = random.randrange(100000000)
-    timeout = kwargs.get("timeout", False)
-    fail_on_timeout = kwargs.get("fail_on_timeout", False)
     if ON_TRAVIS and timeout is False:
         # Travis times out if no activity is seen for 10 minutes.
         timeout = 595
         fail_on_timeout = True
-    slow = kwargs.get("slow", False)
-    enhance_asserts = kwargs.get("enhance_asserts", False)
-    split = kwargs.get('split', None)
-    time_balance = kwargs.get('time_balance', True)
-    blacklist = kwargs.get('blacklist', ['sympy/integrals/rubi/rubi_tests/tests'])
     if ON_TRAVIS:
         # pyglet does not work on Travis
-        blacklist.extend(['sympy/plotting/pygletplot/tests'])
+        blacklist = list(blacklist) + ['sympy/plotting/pygletplot/tests']
     blacklist = convert_to_native_paths(blacklist)
-    fast_threshold = kwargs.get('fast_threshold', None)
-    slow_threshold = kwargs.get('slow_threshold', None)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors, split=split)
     t = SymPyTests(r, kw, post_mortem, seed,

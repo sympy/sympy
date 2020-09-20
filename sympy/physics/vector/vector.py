@@ -2,7 +2,6 @@ from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
     ImmutableMatrix as Matrix)
 from sympy import trigsimp
 from sympy.printing.defaults import Printable
-from sympy.core.compatibility import unicode
 from sympy.utilities.misc import filldedent
 
 __all__ = ['Vector']
@@ -256,7 +255,7 @@ class Vector(Printable):
             def render(self, *args, **kwargs):
                 ar = e.args  # just to shorten things
                 if len(ar) == 0:
-                    return unicode(0)
+                    return str(0)
                 pforms = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     for j in 0, 1, 2:

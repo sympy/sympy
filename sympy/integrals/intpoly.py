@@ -24,7 +24,7 @@ from sympy.polys.polytools import LC, gcd_list, degree_list
 from sympy.simplify.simplify import nsimplify
 
 
-def polytope_integrate(poly, expr=None, **kwargs):
+def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
     """Integrates polynomials over 2/3-Polytopes.
 
     This function accepts the polytope in `poly` and the function in `expr`
@@ -57,9 +57,6 @@ def polytope_integrate(poly, expr=None, **kwargs):
     >>> polytope_integrate(polygon, polys, max_degree=3)
     {1: 1, x: 1/2, y: 1/2, x*y: 1/4, x*y**2: 1/6, x**2*y: 1/6}
     """
-    clockwise = kwargs.get('clockwise', False)
-    max_degree = kwargs.get('max_degree', None)
-
     if clockwise:
         if isinstance(poly, Polygon):
             poly = Polygon(*point_sort(poly.vertices), evaluate=False)

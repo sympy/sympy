@@ -8,6 +8,7 @@ from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, as_int
+from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
@@ -58,19 +59,20 @@ def as_Boolean(e):
     raise TypeError('expecting bool or Boolean, not `%s`.' % e)
 
 
+@sympify_method_args
 class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
 
     __slots__ = ()
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __and__(self, other):
-        """Overloading for & operator"""
         return And(self, other)
 
     __rand__ = __and__
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __or__(self, other):
-        """Overloading for |"""
         return Or(self, other)
 
     __ror__ = __or__
@@ -79,17 +81,18 @@ class Boolean(Basic):
         """Overloading for ~"""
         return Not(self)
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __rshift__(self, other):
-        """Overloading for >>"""
         return Implies(self, other)
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __lshift__(self, other):
-        """Overloading for <<"""
         return Implies(other, self)
 
     __rrshift__ = __lshift__
     __rlshift__ = __rshift__
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __xor__(self, other):
         return Xor(self, other)
 
