@@ -102,19 +102,27 @@ or ``evalf`` a ``Rational``:
     0.100000000000000000000000000000
 
 
-The precision of a number determines 1) the precision to use when performing
-arithmetic with the number, and 2) the number of digits to display when printing
-the number. When two numbers with different precision are used together in an
-arithmetic operation, the higher of the precisions is used for the result. The
-product of 0.1 +/- 0.001 and 3.1415 +/- 0.0001 has an uncertainty of about 0.003
-and yet 5 digits of precision are shown.
+The precision of a number determines:
 
-    >>> Float(0.1, 3)*Float(3.1415, 5)
-    0.31417
+1) the precision to use when performing arithmetic with the number, and
 
-So the displayed precision should not be used as a model of error propagation or
-significance arithmetic; rather, this scheme is employed to ensure stability of
-numerical algorithms.
+2) the number of digits to display when printing the number.
+
+When two Floating-point numbers with different precision are used together in an
+arithmetic operation, significance arithmetic is employed to reduce errors
+in calculation.
+
+    >>> Float(0.1, 3) * Float(3.1415, 5)
+    0.314
+    >>> Float(123.25, 5) + Float(46, 3)
+    169.3
+    >>> Float(990.12, 5) + Float(10.3, 3)
+    1000.4
+    >>> Float(990.12, 5) - Float(900.3, 4)
+    89.8
+    >>> Float(100, 1) - Float(1, 1)
+    1.e+2
+
 
 ``N`` and ``evalf`` can be used to change the precision of existing
 floating-point numbers:
@@ -209,7 +217,7 @@ imaginary portions of a number with exact zeros:
 In situations where you wish to remove meaningless digits, re-evaluation or
 the use of the ``round`` method are useful:
 
-    >>> Float('.1', '')*Float('.12345', '')
+    >>> Float(.1, 5) * Float('.12345', 5)
     0.012297
     >>> ans = _
     >>> N(ans, 1)
