@@ -513,11 +513,11 @@ class Point(object):
                         except ValueError:
                             continue
                         try :
-                            neighbor._vel_dict[frame] #Checks if point has its vel defined in req frame
+                            neighbor_velocity = neighbor._vel_dict[frame] #Checks if point has its vel defined in req frame
                         except KeyError:
                             queue.append(neighbor)
                             continue
-                        self._vel_dict[frame] =  self.pos_from(neighbor).dt(frame) + neighbor.vel(frame)
+                        self._vel_dict[frame] =  self.pos_from(neighbor).dt(frame) + neighbor_velocity
                         return self._vel_dict[frame]
             else:
                 raise ValueError('Velocity of point ' + self.name + ' has not been'

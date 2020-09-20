@@ -135,7 +135,7 @@ def test_point_vel(): #Basic functionality
     Q = Point('Q')
     O = Point('O')
     Q.set_pos(O, q1 * N.x)
-    raises(ValueError , lambda : Q.vel(N)) #Velocity of Q is not defined
+    raises(ValueError , lambda: Q.vel(N)) #Velocity of Q is not defined
     O.set_vel(N, q2 * N.y)
     assert O.vel(N) == q2 * N.y
     raises(ValueError , lambda : O.vel(B)) #Velocity of O is not defined in B
@@ -156,6 +156,7 @@ def test_auto_point_vel():
     P2.set_pos(P1, q2 * B.z)
     raises(ValueError, lambda : P2.vel(B)) # O's velocity is defined in different frame, and no
     #point in between has its velocity defined
+    raises(ValueError, lambda: P2.vel(N)) # Pos vector defined in different frame
 
 def test_auto_point_vel_shortest_path():
     t = dynamicsymbols._t
