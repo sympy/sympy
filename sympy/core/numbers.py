@@ -885,7 +885,7 @@ class Float(Number):
     It may be preferable to enter high-precision decimal numbers
     as strings:
 
-    Float('1.23456789123456789')
+    >>> Float('1.23456789123456789')
     1.23456789123456789
 
     The desired number of digits can also be specified:
