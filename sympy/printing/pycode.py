@@ -51,7 +51,7 @@ _known_functions_math = {
     'Sqrt': 'sqrt',
     'tan': 'tan',
     'tanh': 'tanh'
-}  # Not used from ``math``: [copysign isclose isfinite isinf isnan ldexp frexp pow
+}  # Not used from ``math``: [copysign isclose isfinite isinf isnan ldexp frexp pow modf
 # radians trunc fmod fsum gcd degrees fabs]
 _known_constants_math = {
     'Exp1': 'e',
