@@ -218,7 +218,7 @@ def test_frac():
     assert prntr.doprint(expr) == 'mpmath.frac(x)'
 
     prntr = SymPyPrinter()
-    assert prntr.doprint(expr) == 'sympy.frac(x)'
+    assert prntr.doprint(expr) == 'sympy.functions.elementary.integers.frac(x)'
 
 
 class CustomPrintedObject(Expr):
