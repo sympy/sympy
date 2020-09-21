@@ -133,7 +133,7 @@ __all__ = [
     'StochasticProcess', 'DiscreteTimeStochasticProcess',
     'DiscreteMarkovChain', 'TransitionMatrixOf', 'StochasticStateSpaceOf',
     'GeneratorMatrixOf', 'ContinuousMarkovChain', 'BernoulliProcess',
-    'PoissonProcess', 'WienerProcess', 'GammaProcess',
+    'PoissonProcess', 'WienerProcess', 'GammaProcess', 'RandomWalk',
 
     'CircularEnsemble', 'CircularUnitaryEnsemble',
     'CircularOrthogonalEnsemble', 'CircularSymplecticEnsemble',
@@ -183,7 +183,7 @@ from .stochastic_process_types import (StochasticProcess,
         DiscreteTimeStochasticProcess, DiscreteMarkovChain,
         TransitionMatrixOf, StochasticStateSpaceOf, GeneratorMatrixOf,
         ContinuousMarkovChain, BernoulliProcess, PoissonProcess, WienerProcess,
-        GammaProcess)
+        GammaProcess, RandomWalk)
 
 from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         CircularOrthogonalEnsemble, CircularSymplecticEnsemble,
