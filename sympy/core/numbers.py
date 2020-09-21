@@ -1413,7 +1413,7 @@ class Float(Number):
             if result_most_sig == least_sig:
                 # if most significant digit is an uncertainty,
                 # round one digit higher
-                result_most_sig += 1
+                return round(Float._new(mpf_result, 10), -1 - result_most_sig)
             return Float._new(mpf_result, dps_to_prec(result_most_sig - least_sig))
         return Number.__add__(self, other)
 
@@ -1425,7 +1425,7 @@ class Float(Number):
             mpf_result = mlib.mpf_sub(self._mpf_, other._as_mpf_val(prec), prec, rnd)
             result_most_sig = _most_sig(mpf_result)
             if result_most_sig == least_sig:
-                result_most_sig += 1
+                return round(Float._new(mpf_result, 10), -1 - result_most_sig)
             return Float._new(mpf_result, dps_to_prec(result_most_sig - least_sig))
         return Number.__sub__(self, other)
 
