@@ -225,8 +225,19 @@ def _literal_float(f):
 
 
 def _most_sig(x):
-    """Return the most significant digit's distance from the
-       decimal point of an _mpf_ value.
+    """
+    Return the most significant digit's distance from the
+    one's place of an _mpf_ value.
+
+    Equivalent to floor(log(value)).
+
+    >>> from sympy.core.numbers import Float, _most_sig
+    >>> _most_sig(Float('1.01', '')._mpf_)
+    0
+    >>> _most_sig(Float('99901', '')._mpf_)
+    4
+    >>> _most_sig(Float('.007', '')._mpf_)
+    -3
     """
     # return 0 if mpf precision < 1
     if x[3] < 1:
@@ -238,25 +249,54 @@ def _most_sig(x):
     return mlib.to_int(mlib.mpf_floor(mlib.mpf_div(
         mlib.mpf_log(x, prec), mlib.mpf_ln10(prec), prec
     )))
-    # if 1 > i:
-    #     # fall back to log for values < 1
-    #
-    # # a bit dirty, but is not slower compared to
-    # # log and gives a much cleaner result
-    # return len(str(i))
 
 
 def _significants(x):
-    """Returns the most significant and least uncertain digits'
-       distance from the decimal point.
+    """
+    Returns the most significant and least uncertain digits'
+    distance from the one's place.
+
+    >>> from sympy.core.numbers import Float, _significants
+    >>> _significants(Float('0.0123', ''))
+    (-2, -5)
+    >>> _significants(Float('999', ''))
+    (2, -1)
+    >>> _significants(Float('980.001', ''))
+    (2, -4)
     """
     most_sig = _most_sig(x._as_mpf_val(x._prec))
     return most_sig, most_sig - prec_to_dps(x._prec)
 
 
 def _significants_helper(f, other):
-    """Helper function to figure out significant digits and
-       working precision for addition/subtraction b/w Floats.
+    """
+    Calculates most significant and least uncertain digits
+    postision in the result of an addition/subtraction
+    between a Float and a Number.
+
+    >>> from sympy.core.numbers import Float, _significants_helper
+    >>> _significants_helper(Float('123.12', ''), Float('93.1', ''))
+    (2, -2)
+
+    Also works with Rationals:
+    >>> from sympy.core.numbers import Rational, Integer
+    >>> _significants_helper(Float('1.12', ''), Rational('2/3'))
+    (0, -3)
+    >>> _significants_helper(Float('1.12', ''), Rational('40/3'))
+    (1, -3)
+    >>> _significants_helper(Float('0.01', ''), Integer(100))
+    (2, -3)
+
+    This function does not account for a carry/lost digit.
+
+    Addition of these two numbers will result in 3 digit number,
+    but _significants_helper will still indicate a 2-digit number.
+    >>> _significants_helper(Float('43', ''), Float('93', ''))
+    (1, -1)
+
+    Similarly for subtraction:
+    >>> _significants_helper(Float('10.045', ''), Float('9.0123', ''))
+    (1, -4)
     """
     # handle zero
     if f.is_zero:
@@ -267,7 +307,7 @@ def _significants_helper(f, other):
 
             # since f is zero, most significant = least significant = precision
             sig_f = -prec_to_dps(f._prec)
-            return max(sig_f, _most_sig(other._as_mpf_val())), sig_f
+            return max(sig_f, _most_sig(other._as_mpf_val(f._prec))), sig_f
 
         if other.is_zero:
             # if both are zero, return zero with least precision
@@ -277,16 +317,18 @@ def _significants_helper(f, other):
         sig_f = -prec_to_dps(f._prec)
         return max(sig_f, sig_other[0]), max(sig_f, sig_other[1])
 
-    if other.is_zero:
-        return _significants(f)
-
     sig_f = _significants(f)
 
-    # only check other
     if other.is_Rational:
-        return max(sig_f[0], _most_sig(other._as_mpf_val())), sig_f[1]
+        return max(sig_f[0], _most_sig(other._as_mpf_val(f._prec))), sig_f[1]
+
+    if other.is_zero:
+        # other = 0 => most significant = least significant = precision
+        sig_other = -prec_to_dps(other._prec)
+        return max(sig_f[0], sig_other), max(sig_f[1], sig_other)
 
     sig_other = _significants(other)
+
     return max(sig_f[0], sig_other[0]), max(sig_f[1], sig_other[1])
 
 # (a,b) -> gcd(a,b)
