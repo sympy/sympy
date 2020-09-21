@@ -82,7 +82,6 @@ def test_point_funcs():
     assert P.vel(B) == qd * B.x + q2d * B.y
     O.set_vel(N, 0)
     assert O.vel(N) == 0
-
     assert P.a1pt_theory(O, N, B) == ((-25 * q + qdd) * B.x + (q2dd) * B.y +
                                (-10 * qd) * B.z)
 
@@ -135,7 +134,7 @@ def test_point_vel(): #Basic functionality
     Q = Point('Q')
     O = Point('O')
     Q.set_pos(O, q1 * N.x)
-    raises(ValueError , lambda: Q.vel(N)) #Velocity of Q is not defined
+    raises(ValueError , lambda: Q.vel(N)) # Velocity of O in N is not defined
     O.set_vel(N, q2 * N.y)
     assert O.vel(N) == q2 * N.y
     raises(ValueError , lambda : O.vel(B)) #Velocity of O is not defined in B
@@ -156,9 +155,9 @@ def test_auto_point_vel():
     P2.set_pos(P1, q2 * B.z)
     raises(ValueError, lambda : P2.vel(B)) # O's velocity is defined in different frame, and no
     #point in between has its velocity defined
-    raises(ValueError, lambda: P2.vel(N)) # Pos vector defined in different frame
+    raises(ValueError, lambda: P2.vel(N)) # Velocity of O not defined in N
 
-def test_auto_point_vel_shortest_path():
+def test_auto_point_vel_multiple_point_path():
     t = dynamicsymbols._t
     q1, q2 = dynamicsymbols('q1 q2')
     B = ReferenceFrame('B')
@@ -175,41 +174,16 @@ def test_auto_point_vel_shortest_path():
 
 def test_auto_vel_dont_overwrite():
     t = dynamicsymbols._t
-    q1, q2 = dynamicsymbols('q1 q2')
+    q1, q2, u1 = dynamicsymbols('q1, q2, u1')
     N = ReferenceFrame('N')
     P = Point('P1')
-    P.set_vel(N, q1 * N.x)
+    P.set_vel(N, u1 * N.x)
     P1 = Point('P1')
     P1.set_pos(P, q2 * N.y)
-    assert P1.vel(N) == q2.diff(t) * N.y + q1 * N.x
-    assert P.vel(N) == q1 * N.x
-    P1.set_vel(N, q1 * N.z)
-    assert P1.vel(N) == q1 * N.z
-
-def test_auto_point_vel_multiple_frames():
-    t = dynamicsymbols._t
-    q1, q2 = dynamicsymbols('q1 q2')
-    B = ReferenceFrame('B')
-    S = ReferenceFrame('S')
-    N = ReferenceFrame('N')
-    T1 = Point('T1')
-    T1.set_vel(S, q1 * S.x)
-    T2 = Point('T2')
-    T2.set_pos(T1, q2 * S.x)
-    T2.set_vel(N, q1 * N.y)
-    T3 = Point('T3')
-    T3.set_vel(B, q1 * B.z)
-    T3.set_pos(T2, q1 * B.x + q2 * B.y)
-    T3.set_pos(T1, q2 * S.x)
-    T4 = Point('T4')
-    T4.set_pos(T3, q1 * S.z)
-    T5 = Point('T5')
-    T5.set_pos(T4, q2 * S.y)
-    T6 = Point('T6')
-    T6.set_pos(T2, q1 * S.z)
-    assert T6.vel(S) == (q1 + q2.diff(t)) * S.x + q1.diff(t) * S.z
-    T6.set_pos(T3, q1 * B.z)
-    assert T6.vel(B) == (q1 + q1.diff(t)) * B.z
+    assert P1.vel(N) == q2.diff(t) * N.y + u1 * N.x
+    assert P.vel(N) == u1 * N.x
+    P1.set_vel(N, u1 * N.z)
+    assert P1.vel(N) == u1 * N.z
 
 def test_auto_point_vel_if_tree_has_vel_but_inappropriate_pos_vector():
     q1, q2 = dynamicsymbols('q1 q2')
@@ -219,5 +193,40 @@ def test_auto_point_vel_if_tree_has_vel_but_inappropriate_pos_vector():
     P.set_vel(B, q1 * B.x)
     P1 = Point('P1')
     P1.set_pos(P, S.y)
-    raises(ValueError, lambda : P1.vel(B)) # pos vector not according to frame
-    raises(ValueError, lambda : P1.vel(S)) #velocity not defined wrt frame in tree
+    raises(ValueError, lambda : P1.vel(B)) # P1.pos_from(P) can't be expressed in B
+    raises(ValueError, lambda : P1.vel(S)) # P.vel(S) not defined
+
+def test_auto_point_vel_shortest_path():
+    t = dynamicsymbols._t
+    q1, q2, u1, u2 = dynamicsymbols('q1 q2 u1 u2')
+    B = ReferenceFrame('B')
+    P = Point('P')
+    P.set_vel(B, u1 * B.x)
+    P1 = Point('P1')
+    P1.set_pos(P, q2 * B.y)
+    P1.set_vel(B, q1 * B.z)
+    P2 = Point('P2')
+    P2.set_pos(P1, q1 * B.z)
+    P3 = Point('P3')
+    P3.set_pos(P2, 10 * q1 * B.y)
+    P4 = Point('P4')
+    P4.set_pos(P3, q1 * B.x)
+    O = Point('O')
+    O.set_vel(B, u2 * B.y)
+    O1 = Point('O1')
+    O1.set_pos(O, q2 * B.z)
+    P4.set_pos(O1, q1 * B.x + q2 * B.z)
+    assert P4.vel(B) == q1.diff(t) * B.x + u2 * B.y + 2 * q2.diff(t) * B.z
+
+def test_auto_point_vel_connected_frames():
+    t = dynamicsymbols._t
+    q, q1, q2, u = dynamicsymbols('q q1 q2 u')
+    N = ReferenceFrame('N')
+    B = ReferenceFrame('B')
+    O = Point('O')
+    O.set_vel(N, u * N.x)
+    P = Point('P')
+    P.set_pos(O, q1 * N.x + q2 * B.y)
+    raises(ValueError, lambda: P.vel(N))
+    N.orient(B, 'Axis', (q, B.x))
+    assert P.vel(N) == (u + q1.diff(t)) * N.x + q2.diff(t) * B.y - q2 * q.diff(t) * B.z

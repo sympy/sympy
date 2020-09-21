@@ -489,6 +489,9 @@ class Point(object):
         >>> p1.set_vel(N, 10 * N.x)
         >>> p1.vel(N)
         10*N.x
+
+        Velocities will be automatically calculated if possible, otherwise a ``ValueError`` will be returned.
+
         >>> p = Point('p')
         >>> q = dynamicsymbols('q')
         >>> p.set_vel(N, 10 * N.x)
@@ -517,7 +520,7 @@ class Point(object):
                         except KeyError:
                             queue.append(neighbor)
                             continue
-                        self._vel_dict[frame] =  self.pos_from(neighbor).dt(frame) + neighbor_velocity
+                        self.set_vel(frame, self.pos_from(neighbor).dt(frame) + neighbor_velocity)
                         return self._vel_dict[frame]
             else:
                 raise ValueError('Velocity of point ' + self.name + ' has not been'
