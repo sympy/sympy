@@ -77,6 +77,15 @@ class MatrixExpr(Expr):
         return Basic.__new__(cls, *args, **kwargs)
 
     # The following is adapted from the core Expr object
+
+    @property
+    def _add_handler(self):
+        return MatAdd
+
+    @property
+    def _mul_handler(self):
+        return MatMul
+
     def __neg__(self):
         return MatMul(S.NegativeOne, self).doit()
 
