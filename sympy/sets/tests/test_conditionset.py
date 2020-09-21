@@ -19,13 +19,13 @@ def test_CondSet():
     assert pi in sin_sols_principal
     assert pi/2 not in sin_sols_principal
     assert 3*pi not in sin_sols_principal
+    assert oo not in sin_sols_principal
+    assert f not in sin_sols_principal
     assert 5 in ConditionSet(x, x**2 > 4, S.Reals)
     assert 1 not in ConditionSet(x, x**2 > 4, S.Reals)
     # in this case, 0 is not part of the base set so
     # it can't be in any subset selected by the condition
     assert 0 not in ConditionSet(x, y > 5, Interval(1, 7))
-    assert oo not in sin_sols_principal
-    assert f not in sin_sols_principal
     # since 'in' requires a true/false, the following raises
     # an error because the given value provides no information
     # for the condition to evaluate (since the condition does
@@ -37,10 +37,10 @@ def test_CondSet():
 
     X = MatrixSymbol('X', 2, 2)
     matrix_set = ConditionSet(X, Eq(X*Matrix([[1, 1], [1, 1]]), X))
-    X = Matrix([[0, 0], [0, 0]])
-    assert X in matrix_set
-    X = Matrix([[1, 2], [3, 4]])
-    assert X not in matrix_set
+    Y = Matrix([[0, 0], [0, 0]])
+    assert matrix_set.contains(Y).doit() is S.true
+    Z = Matrix([[1, 2], [3, 4]])
+    assert matrix_set.contains(Z).doit() is S.false
 
     assert isinstance(ConditionSet(x, x < 1, {x, y}).base_set,
         FiniteSet)

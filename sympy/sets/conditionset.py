@@ -195,34 +195,22 @@ class ConditionSet(Set):
                 ok_sig(i, j) for i, j in zip(a, b))
         if not ok_sig(self.sym, other):
             return S.false
-        # if either argument of And is False,
-        # we must return False even if we
-        # get a TypeError on the other
 
         # try doing base_cond first and return
         # False immediately if it is False
-        try:
-            base_cond = Contains(other, self.base_set)
-            base_error = False
-        except TypeError:
-            base_cond = None
-            base_error = True
-        if (not base_error) and (base_cond is S.false):
-            return False
+        base_cond = Contains(other, self.base_set)
+        if base_cond is S.false:
+            return S.false
 
+        # Substitute other into condition. This could raise e.g. for
+        # ConditionSet(x, 1/x >= 0, Reals).contains(0)
+        lmbda = Lambda((self.sym,), self.condition)
         try:
-            lambda_cond = (Lambda((self.sym,), self.condition)(other)).doit()
-            lambda_error = False
+            lambda_cond = lmbda(other)
         except TypeError:
-            lambda_cond = None
-            lambda_error = True
-        if (not lambda_error) and (lambda_cond is S.false):
-            return False
-
-        if (not base_error) and (not lambda_error):
-            return And(base_cond, lambda_cond)
-        else:
             return Contains(other, self, evaluate=False)
+        else:
+            return And(base_cond, lambda_cond)
 
     def as_relational(self, other):
         f = Lambda(self.sym, self.condition)
