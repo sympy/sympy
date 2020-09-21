@@ -899,7 +899,7 @@ class Basic(Printable, metaclass=ManagedProperties):
                 # when old is a string we prefer Symbol
                 s = Symbol(s[0]), s[1]
             try:
-                s = [sympify(_, strict=not isinstance(_, str))
+                s = [sympify(_, strict=not isinstance(_, (str, type)))
                      for _ in s]
             except SympifyError:
                 # if it can't be sympified, skip it
@@ -1216,7 +1216,8 @@ class Basic(Printable, metaclass=ManagedProperties):
             return any(f.func == pattern or f == pattern
             for f in self.atoms(Function, UndefinedFunction))
 
-        pattern = _sympify(pattern)
+        if not (isinstance(pattern, type) and issubclass(pattern, Basic)):
+            pattern = _sympify(pattern)
         if isinstance(pattern, BasicMeta):
             return any(isinstance(arg, pattern)
             for arg in preorder_traversal(self))
