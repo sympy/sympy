@@ -267,10 +267,7 @@ class RandomSymbol(Expr):
         if pspace is None:
             # Allow single arg, representing pspace == PSpace()
             pspace = PSpace()
-        if isinstance(symbol, str):
-            symbol = Symbol(symbol)
-        if not isinstance(symbol, Symbol):
-            raise TypeError("symbol should be of type Symbol or string")
+        symbol = _symbol_converter(symbol)
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")
         if cls == JointRandomSymbol and isinstance(pspace, SinglePSpace):
