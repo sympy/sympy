@@ -36,10 +36,11 @@ __all__ = ['FiniteRV',
 'Rademacher'
 ]
 
-def rv(name, cls, *args):
+def rv(name, cls, *args, **kwargs):
     args = list(map(sympify, args))
     dist = cls(*args)
-    dist.check(*args)
+    if kwargs.pop('check', True):
+        dist.check(*args)
     pspace = SingleFinitePSpace(name, dist)
     if any(is_random(arg) for arg in args):
         from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
@@ -68,7 +69,7 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
                         "Probability at a point must be between 0 and 1.")
         _value_check(Eq(sum(density.values()), 1), "Total Probability must be 1.")
 
-def FiniteRV(name, density):
+def FiniteRV(name, density, **kwargs):
     r"""
     Create a Finite Random Variable given a dict representing the density.
 
@@ -77,6 +78,14 @@ def FiniteRV(name, density):
 
     density: A dict
         Dictionary conatining the pdf of finite distribution
+
+    Other Parameters
+    ================
+
+    check : bool
+        If True, it will check whether the given density
+        integrates to 1 over the given set. If False, it
+        will not perform this check. Default is True.
 
     Examples
     ========
@@ -97,7 +106,7 @@ def FiniteRV(name, density):
     RandomSymbol
 
     """
-    return rv(name, FiniteDistributionHandmade, density)
+    return rv(name, FiniteDistributionHandmade, density, **kwargs)
 
 class DiscreteUniformDistribution(SingleFiniteDistribution):
 

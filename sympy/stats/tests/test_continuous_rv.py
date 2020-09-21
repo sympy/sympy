@@ -348,9 +348,10 @@ def test_ContinuousRV():
     assert P(Z > 5) == exp(-5)
     raises(ValueError, lambda: ContinuousRV(z, exp(-z), set=Interval(0, 10)))
 
+    # the correct pdf for Gamma(k, theta) but the integral in `check`
+    # integrates to something equivalent to 1 and not to 1 exactly
     _x, k, theta = symbols("x k theta", positive=True)
     pdf = 1/(gamma(k)*theta**k)*_x**(k-1)*exp(-_x/theta)
-    raises(ValueError, lambda: ContinuousRV(x, pdf, set=Interval(0, oo)))
     X = ContinuousRV(_x, pdf, set=Interval(0, oo), check=False)
     Y = Gamma('y', k, theta)
     assert (E(X) - E(Y)).simplify() == 0

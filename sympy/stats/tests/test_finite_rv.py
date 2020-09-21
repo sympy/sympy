@@ -400,6 +400,12 @@ def test_FiniteRV():
     raises(ValueError, lambda: FiniteRV('F', {1: S.One, 2: Rational(3, 2), 3: S.Zero,\
         4: Rational(-1, 2), 5: Rational(-3, 4), 6: Rational(-1, 4)}))
 
+    # purposeful invalid pmf but it should not raise since check=False
+    # see test_drv_types.test_ContinuousRV for explanation
+    X = FiniteRV('X', {1: 1, 2: 2}, check=False)
+    assert E(X) == 5
+    assert P(X <= 2) + P(X > 2) != 1
+
 def test_density_call():
     from sympy.abc import p
     x = Bernoulli('x', p)

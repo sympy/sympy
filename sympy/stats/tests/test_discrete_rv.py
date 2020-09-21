@@ -1,6 +1,6 @@
 from sympy import (S, Symbol, Sum, I, lambdify, re, im, log, simplify, sqrt,
                    zeta, pi, besseli, Dummy, oo, Piecewise, Rational, beta,
-                   floor, FiniteSet)
+                   floor, FiniteSet, binomial)
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.exponential import exp
 from sympy.logic.boolalg import Or
@@ -183,6 +183,12 @@ def test_DiscreteRV():
     assert P(D > 3) == S(1)/8
     assert D.pspace.domain.set == S.Naturals
     raises(ValueError, lambda: DiscreteRV(x, x, FiniteSet(*range(4))))
+
+    # purposeful invalid pmf but it should not raise since check=False
+    # see test_drv_types.test_ContinuousRV for explanation
+    X = DiscreteRV(x, 1/x, S.Naturals, check=False)
+    assert P(X < 2) == 1
+    assert E(X) == oo
 
 def test_precomputed_characteristic_functions():
     import mpmath
