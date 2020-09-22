@@ -33,7 +33,7 @@ class MatAdd(MatrixExpr, Add):
 
     identity = GenericZeroMatrix()
 
-    def __new__(cls, *args, evaluate=False, **kwargs):
+    def __new__(cls, *args, evaluate=False, check=False, _sympify=True):
         if not args:
             return cls.identity
 
@@ -41,7 +41,6 @@ class MatAdd(MatrixExpr, Add):
         # TypeErrors from GenericZeroMatrix().shape
         args = filter(lambda i: cls.identity != i, args)
         args = list(map(sympify, args))
-        check = kwargs.get('check', False)
 
         obj = Basic.__new__(cls, *args)
 
