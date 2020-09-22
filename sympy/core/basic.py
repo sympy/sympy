@@ -1216,11 +1216,11 @@ class Basic(Printable, metaclass=ManagedProperties):
             return any(f.func == pattern or f == pattern
             for f in self.atoms(Function, UndefinedFunction))
 
-        if not (isinstance(pattern, type) and issubclass(pattern, Basic)):
-            pattern = _sympify(pattern)
         if isinstance(pattern, BasicMeta):
-            return any(isinstance(arg, pattern)
-            for arg in preorder_traversal(self))
+            subtrees = preorder_traversal(self)
+            return any(isinstance(arg, pattern) for arg in subtrees)
+
+        pattern = _sympify(pattern)
 
         _has_matcher = getattr(pattern, '_has_matcher', None)
         if _has_matcher is not None:
