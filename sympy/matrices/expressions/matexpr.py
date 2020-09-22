@@ -776,24 +776,13 @@ class MatrixSymbol(MatrixExpr):
         obj = Basic.__new__(cls, name, n, m)
         return obj
 
-    def _hashable_content(self):
-        return (self.name, self.shape)
-
     @property
     def shape(self):
-        return self.args[1:3]
+        return self.args[1], self.args[2]
 
     @property
     def name(self):
         return self.args[0].name
-
-    def _eval_subs(self, old, new):
-        # only do substitutions in shape
-        shape = Tuple(*self.shape)._subs(old, new)
-        return MatrixSymbol(self.args[0], *shape)
-
-    def __call__(self, *args):
-        raise TypeError("%s object is not callable" % self.__class__)
 
     def _entry(self, i, j, **kwargs):
         return MatrixElement(self, i, j)
@@ -801,13 +790,6 @@ class MatrixSymbol(MatrixExpr):
     @property
     def free_symbols(self):
         return {self}
-
-    def doit(self, **hints):
-        if hints.get('deep', True):
-            return type(self)(self.args[0], self.args[1].doit(**hints),
-                    self.args[2].doit(**hints))
-        else:
-            return self
 
     def _eval_simplify(self, **kwargs):
         return self
