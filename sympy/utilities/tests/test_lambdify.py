@@ -296,6 +296,22 @@ def test_trig():
     assert -prec < d[0] + 1 < prec
     assert -prec < d[1] < prec
 
+
+def test_integral():
+    f = Lambda(x, exp(-x**2))
+    l = lambdify(y, Integral(f(x), (x, y, oo)))
+    d = l(-oo)
+    assert 1.77245385 < d < 1.772453851
+
+
+def test_double_integral():
+    # example from http://mpmath.org/doc/current/calculus/integration.html
+    i = Integral(1/(1 - x**2*y**2), (x, 0, 1), (y, 0, z))
+    l = lambdify([z], i)
+    d = l(1)
+    assert 1.23370055 < d < 1.233700551
+
+
 #================== Test vectors ===================================
 
 
@@ -697,12 +713,6 @@ def test_tensorflow_array_arg():
 #================== Test symbolic ==================================
 
 
-def test_integral():
-    f = Lambda(x, exp(-x**2))
-    l = lambdify(x, Integral(f(x), (x, -oo, oo)), modules="sympy")
-    assert l(x) == Integral(exp(-x**2), (x, -oo, oo))
-
-
 def test_sym_single_arg():
     f = lambdify(x, x * y)
     assert f(z) == z * y
@@ -716,6 +726,7 @@ def test_sym_list_args():
 def test_sym_integral():
     f = Lambda(x, exp(-x**2))
     l = lambdify(x, Integral(f(x), (x, -oo, oo)), modules="sympy")
+    assert l(y) == Integral(exp(-y**2), (y, -oo, oo))
     assert l(y).doit() == sqrt(pi)
 
 
