@@ -82,6 +82,7 @@ class AppliedPredicate(Boolean):
         x + 1
 
         """
+
         return self._args[1]
 
     @property
