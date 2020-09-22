@@ -508,19 +508,49 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import Point, ReferenceFrame
+        >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p1.set_vel(N, 10 * N.x)
         >>> p1.vel(N)
         10*N.x
 
+        Velocities will be automatically calculated if possible, otherwise a ``ValueError`` will be returned. If it is possible to calculate multiple different velocities from the relative points, the points defined most directly relative to this point will be used. In the case of inconsistent relative positions of points, incorrect velocities may be returned. It is up to the user to define prior relative positions and velocities of points in a self-consistent way.
+
+        >>> p = Point('p')
+        >>> q = dynamicsymbols('q')
+        >>> p.set_vel(N, 10 * N.x)
+        >>> p2 = Point('p2')
+        >>> p2.set_pos(p, q*N.x)
+        >>> p2.vel(N)
+        (Derivative(q(t), t) + 10)*N.x
+
         """
 
         _check_frame(frame)
         if not (frame in self._vel_dict):
-            raise ValueError('Velocity of point ' + self.name + ' has not been'
+            visited = []
+            queue = [self]
+            while queue: #BFS to find nearest point
+                node = queue.pop(0)
+                if node not in visited:
+                    visited.append(node)
+                    for neighbor, neighbor_pos in node._pos_dict.items():
+                        try:
+                            neighbor_pos.express(frame) #Checks if pos vector is valid
+                        except ValueError:
+                            continue
+                        try :
+                            neighbor_velocity = neighbor._vel_dict[frame] #Checks if point has its vel defined in req frame
+                        except KeyError:
+                            queue.append(neighbor)
+                            continue
+                        self.set_vel(frame, self.pos_from(neighbor).dt(frame) + neighbor_velocity)
+                        return self._vel_dict[frame]
+            else:
+                raise ValueError('Velocity of point ' + self.name + ' has not been'
                              ' defined in ReferenceFrame ' + frame.name)
+
         return self._vel_dict[frame]
 
     def partial_velocity(self, frame, *gen_speeds):
