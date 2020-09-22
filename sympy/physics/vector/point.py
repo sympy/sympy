@@ -490,7 +490,7 @@ class Point(object):
         >>> p1.vel(N)
         10*N.x
 
-        Velocities will be automatically calculated if possible, otherwise a ``ValueError`` will be returned.
+        Velocities will be automatically calculated if possible, otherwise a ``ValueError`` will be returned. If it is possible to calculate multiple different velocities from the relative points, the points defined most directly relative to this point will be used. In the case of inconsistent relative positions of points, incorrect velocities may be returned. It is up to the user to define prior relative positions and velocities of points in a self-consistent way.
 
         >>> p = Point('p')
         >>> q = dynamicsymbols('q')
