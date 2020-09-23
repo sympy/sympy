@@ -6,6 +6,7 @@ import collections
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Mul, Add
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import SYMPY_INTS, default_sort_key
+from sympy.core.symbol import Str
 from sympy.core.sympify import SympifyError, _sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -772,7 +773,7 @@ class MatrixSymbol(MatrixExpr):
         cls._check_dim(n)
 
         if isinstance(name, str):
-            name = Symbol(name)
+            name = Str(name)
         obj = Basic.__new__(cls, name, n, m)
         return obj
 
