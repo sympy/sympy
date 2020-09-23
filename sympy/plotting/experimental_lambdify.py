@@ -174,6 +174,9 @@ class vectorized_lambdify(object):
 class lambdify(object):
     """Returns the lambdified function.
 
+    Explanation
+    ===========
+
     This function uses experimental_lambdify to create a lambdified
     expression. It uses cmath to lambdify the expression. If the function
     is not implemented in python cmath, python cmath calls evalf on those
@@ -493,6 +496,9 @@ class Lambdifier(object):
 
     def str2tree(self, exprstr):
         """Converts an expression string to a tree.
+
+        Explanation
+        ===========
 
         Functions are represented by ('func_name(', tree_of_arguments).
         Other expressions are (head_string, mid_tree, tail_str).
