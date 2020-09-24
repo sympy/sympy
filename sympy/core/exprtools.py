@@ -1,8 +1,8 @@
 """Tools for manipulating of large commutative expressions. """
 
-from sympy.core.add import Add
+from sympy.core.add import Add, add
 from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
-from sympy.core.mul import Mul, _keep_coeff
+from sympy.core.mul import Mul, mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
 from sympy.core.expr import Expr
@@ -10,7 +10,6 @@ from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, Integer, Number, I
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
-from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
@@ -815,10 +814,6 @@ class Term:
 
     def __init__(self, term, numer=None, denom=None):  # Term
         if numer is None and denom is None:
-            if not term.is_commutative:
-                raise NonCommutativeExpression(
-                    'commutative expression expected')
-
             coeff, factors = term.as_coeff_mul()
             numer, denom = defaultdict(int), defaultdict(int)
 
@@ -968,7 +963,7 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
             denom = Term(S.One).numer
 
         cont = cont.as_expr()
-        numer = Add(*numers)
+        numer = add(*numers, evaluate=True, _sympify=False)
         denom = denom.as_expr()
 
     if not isprimitive and numer.is_Add:
@@ -1038,11 +1033,11 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         reps = []
         for i, (c, nc) in enumerate(args):
             if nc:
-                nc = Mul(*nc)
-                d = Dummy()
+                nc = mul(*nc, evaluate=True, _sympify=False)
+                d = nc.create_dummy('Dummy')
                 reps.append((d, nc))
                 c.append(d)
-                args[i] = Mul(*c)
+                args[i] = mul(*c, evaluate=True, _sympify=False)
             else:
                 args[i] = c
         return args, dict(reps)

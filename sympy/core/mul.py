@@ -1973,7 +1973,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
                 r = c/q
                 if r == int(r):
                     return coeff*factors
-        return Mul(coeff, factors, evaluate=False)
+        return mul(coeff, factors, evaluate=False, _sympify=False)
     elif factors.is_Mul:
         margs = list(factors.args)
         if margs[0].is_Number:
@@ -1982,7 +1982,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
                 margs.pop(0)
         else:
             margs.insert(0, coeff)
-        return Mul._from_args(margs)
+        return mul(*margs, evaluate=False, _sympify=False)
     else:
         return coeff*factors
 
