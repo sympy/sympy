@@ -102,7 +102,7 @@ def test_Matrix_and_non_basics():
 #########
 
 "MatrixSymbol(Str('X'), Symbol('n'), Symbol('n'))_()" ["color"="black", "label"="MatrixSymbol", "shape"="ellipse"];
-"Str('X')_(0,)" ["color"="black", "label"="X", "shape"="ellipse"];
+"Str('X')_(0,)" ["color"="blue", "label"="X", "shape"="ellipse"];
 "Symbol('n')_(1,)" ["color"="black", "label"="n", "shape"="ellipse"];
 "Symbol('n')_(2,)" ["color"="black", "label"="n", "shape"="ellipse"];
 
