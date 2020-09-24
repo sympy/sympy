@@ -108,7 +108,7 @@ class Expr(Basic, EvalfMixin):
 
         return expr.class_key(), args, exp, coeff
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys
         h = self._mhash

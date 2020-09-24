@@ -42,7 +42,7 @@ __all__ = [
 def _(x):
     return is_random(x.base)
 
-@is_random.register(RandomIndexedSymbol)
+@is_random.register(RandomIndexedSymbol)  # type: ignore
 def _(x):
     return True
 

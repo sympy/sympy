@@ -1,6 +1,8 @@
 """sympify -- convert objects SymPy internal format"""
 
-# from typing import Any, Callable, Dict, Type
+import typing
+if typing.TYPE_CHECKING:
+    from typing import Any, Callable, Dict, Type
 
 from inspect import getmro
 
@@ -23,7 +25,7 @@ class SympifyError(ValueError):
 
 
 # See sympify docstring.
-converter = {}  ## type: Dict[Type[Any], Callable[[Any], Basic]]
+converter = {}  # type: Dict[Type[Any], Callable[[Any], Basic]]
 
 
 class CantSympify:
@@ -603,4 +605,4 @@ def kernS(s):
 
 
 # Avoid circular import
-# from .basic import Basic
+from .basic import Basic

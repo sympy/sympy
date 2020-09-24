@@ -356,7 +356,7 @@ class MatrixSubspaces(MatrixReductions):
     rowspace.__doc__      = _rowspace.__doc__
     orthogonalize.__doc__ = _orthogonalize.__doc__
 
-    orthogonalize         = classmethod(orthogonalize)
+    orthogonalize         = classmethod(orthogonalize)  # type:ignore
 
 
 class MatrixEigen(MatrixSubspaces):

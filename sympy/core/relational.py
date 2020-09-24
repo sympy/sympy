@@ -1,4 +1,4 @@
-# from typing import Dict, Union, Type
+from typing import Dict, Union, Type
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .basic import S, Atom
@@ -65,7 +65,7 @@ class Relational(Boolean, EvalfMixin):
     """
     __slots__ = ()
 
-    ValidRelationOperator = {}  ## type: Dict[Union[str, None], Type[Relational]]
+    ValidRelationOperator = {}  # type: Dict[Union[str, None], Type[Relational]]
 
     is_Relational = True
 
@@ -1069,22 +1069,22 @@ def _eval_is_eq(lhs, rhs):
     return None
 
 
-@dispatch(Tuple, Expr)
+@dispatch(Tuple, Expr) # type: ignore
 def _eval_is_eq(lhs, rhs):  # noqa:F811
     return False
 
 
-@dispatch(Tuple, AppliedUndef)
+@dispatch(Tuple, AppliedUndef) # type: ignore
 def _eval_is_eq(lhs, rhs):  # noqa:F811
     return None
 
 
-@dispatch(Tuple, Symbol)
+@dispatch(Tuple, Symbol) # type: ignore
 def _eval_is_eq(lhs, rhs):  # noqa:F811
     return None
 
 
-@dispatch(Tuple, Tuple)
+@dispatch(Tuple, Tuple) # type: ignore
 def _eval_is_eq(lhs, rhs):  # noqa:F811
     if len(lhs) != len(rhs):
         return False
