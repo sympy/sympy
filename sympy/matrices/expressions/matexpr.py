@@ -5,6 +5,7 @@ import collections
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Mul, Add
 from sympy.core.add import add
+from sympy.core.mul import mul
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import SYMPY_INTS, default_sort_key
 from sympy.core.sympify import SympifyError, _sympify
@@ -432,24 +433,47 @@ class MatrixExpr(Expr):
 
         def remove_matelement(expr, i1, i2):
 
-            def repl_match(pos):
-                def func(x):
-                    if not isinstance(x, MatrixElement):
+            def is_replable_matelem(x, pos):
+                # pos must be 1 or 2
+                # Return True if x is adequate MatrixElement
+                # that can be replaced to matrix.
+                if not isinstance(x, MatrixElement):
+                    return False
+                if x.args[pos] != i1:
+                    return False
+                if x.args[3-pos] == 0:
+                    if x.args[0].shape[2-pos] == 1:
+                        return True
+                    else:
                         return False
-                    if x.args[pos] != i1:
-                        return False
-                    if x.args[3-pos] == 0:
-                        if x.args[0].shape[2-pos] == 1:
-                            return True
-                        else:
-                            return False
-                    return True
-                return func
+                return True
 
-            expr = expr.replace(repl_match(1),
-                lambda x: x.args[0])
-            expr = expr.replace(repl_match(2),
-                lambda x: transpose(x.args[0]))
+            def matelem_to_matrix(expr, pos):
+                # pos must be 1 or 2
+
+                # Replace replaceable MatrixElement to its head.
+                if is_replable_matelem(expr, pos):
+                    if pos == 1:
+                        return expr.args[0]
+                    elif pos == 2:
+                        return transpose(expr.args[0])
+
+                # Apply recursively.
+                # Also, if Mul is encountered, pass the arguments to mul.
+                func = mul if expr.func is Mul else expr.func
+                args = getattr(expr, 'args', None)
+                if args is not None:
+                    if args:
+                        newargs = tuple([matelem_to_matrix(a, pos) for a in args])
+                        if func != expr.func or args != newargs:
+                            try:
+                                return func(*newargs, evaluate=True)
+                            except TypeError:
+                                return func(*newargs)
+                return expr
+
+            expr = matelem_to_matrix(expr, 1)
+            expr = matelem_to_matrix(expr, 2)
 
             # Make sure that all Mul are transformed to MatMul and that they
             # are flattened:
