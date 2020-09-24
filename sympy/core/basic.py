@@ -1782,13 +1782,8 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @classmethod
     def _exec_constructor_postprocessors(cls, obj):
-        # WARNING: This API is experimental.
-
-        # This is an experimental API that introduces constructor
-        # postprosessors for SymPy Core elements. If an argument of a SymPy
-        # expression has a `_constructor_postprocessor_mapping` attribute, it will
-        # be interpreted as a dictionary containing lists of postprocessing
-        # functions for matching expression node names.
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        # WARNING: This API is deprecated.
 
         clsname = obj.__class__.__name__
         postprocessors = defaultdict(list)
@@ -1804,10 +1799,20 @@ class Basic(Printable, metaclass=ManagedProperties):
             except TypeError:
                 pass
 
-        for f in postprocessors.get(clsname, []):
+        processors = postprocessors.get(clsname, [])
+        if processors:
+            SymPyDeprecationWarning(
+                    feature="Basic._exec_constructor_postprocessors",
+                    useinstead="Dispatched add/mul/pow",
+                    issue=20137,
+                    deprecated_since_version="1.7"
+                ).warn()
+
+        for f in processors:
             obj = f(obj)
 
         return obj
+
 
 class Atom(Basic):
     """

@@ -1261,7 +1261,6 @@
         ],
         "sympy/matrices/expressions/tests/test_matexpr.py": [
             "test_Identity",
-            "test_MatMul_postprocessor",
             "test_MatrixSymbol_determinant"
         ],
         "sympy/matrices/expressions/tests/test_matmul.py": [
