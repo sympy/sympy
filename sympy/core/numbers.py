@@ -34,7 +34,6 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 rnd = mlib.round_nearest
 
 _LOG2 = math.log(2)
-_LOG10 = math.log(10)
 
 
 def comp(z1, z2, tol=None):
@@ -239,7 +238,7 @@ def _most_sig(x, prec=None):
         mlib.mpf_log(x, prec), mlib.mpf_ln10(prec), prec
     )))
 
-    binary_prec = math.copysign(abs(dps_to_prec(decimal_digits + 1)), decimal_digits)
+    binary_prec = math.copysign(dps_to_prec(abs(decimal_digits) + 1), decimal_digits)
 
     return int(binary_prec - 4)
 
