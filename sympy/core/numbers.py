@@ -224,107 +224,59 @@ def _literal_float(f):
     return bool(_floatpat.match(f))
 
 
-def _most_sig(x):
-    """
-    Return the most significant digit's distance from the
-    one's place of an _mpf_ value.
-
-    Equivalent to floor(log(value)).
-
-    >>> from sympy.core.numbers import Float, _most_sig
-    >>> _most_sig(Float('1.01', '')._mpf_)
-    0
-    >>> _most_sig(Float('99901', '')._mpf_)
-    4
-    >>> _most_sig(Float('.007', '')._mpf_)
-    -3
-    """
+def _most_sig(x, prec=None):
     # return 0 if mpf precision < 1
     if x[3] < 1:
         return 0
 
     x = (0,) + x[1:]
-    prec = x[3] + 3
 
-    return mlib.to_int(mlib.mpf_floor(mlib.mpf_div(
+    if not prec:
+        prec = x[3]
+    prec += 20
+
+    decimal_digits = mlib.to_int(mlib.mpf_floor(mlib.mpf_div(
         mlib.mpf_log(x, prec), mlib.mpf_ln10(prec), prec
     )))
 
+    binary_prec = math.copysign(abs(dps_to_prec(decimal_digits + 1)), decimal_digits)
+
+    return int(binary_prec - 4)
+
 
 def _significants(x):
-    """
-    Returns the most significant and least uncertain digits'
-    distance from the one's place.
-
-    >>> from sympy.core.numbers import Float, _significants
-    >>> _significants(Float('0.0123', ''))
-    (-2, -5)
-    >>> _significants(Float('999', ''))
-    (2, -1)
-    >>> _significants(Float('980.001', ''))
-    (2, -4)
-    """
-    most_sig = _most_sig(x._as_mpf_val(x._prec))
-    return most_sig, most_sig - prec_to_dps(x._prec)
+    most_sig = _most_sig(x._as_mpf_val(x._prec), x._prec)
+    return most_sig, most_sig - x._prec + 4
 
 
 def _significants_helper(f, other):
-    """
-    Calculates most significant and least uncertain digits
-    postision in the result of an addition/subtraction
-    between a Float and a Number.
-
-    >>> from sympy.core.numbers import Float, _significants_helper
-    >>> _significants_helper(Float('123.12', ''), Float('93.1', ''))
-    (2, -2)
-
-    Also works with Rationals:
-    >>> from sympy.core.numbers import Rational, Integer
-    >>> _significants_helper(Float('1.12', ''), Rational('2/3'))
-    (0, -3)
-    >>> _significants_helper(Float('1.12', ''), Rational('40/3'))
-    (1, -3)
-    >>> _significants_helper(Float('0.01', ''), Integer(100))
-    (2, -3)
-
-    This function does not account for a carry/lost digit.
-
-    Addition of these two numbers will result in 3 digit number,
-    but _significants_helper will still indicate a 2-digit number.
-    >>> _significants_helper(Float('43', ''), Float('93', ''))
-    (1, -1)
-
-    Similarly for subtraction:
-    >>> _significants_helper(Float('10.045', ''), Float('9.0123', ''))
-    (1, -4)
-    """
     # handle zero
     if f.is_zero:
         if other.is_Rational:
             # if other is a rational zero, return Float precision zero
             if other.is_zero:
-                return prec_to_dps(f._prec), 0
+                return f._prec - 4, 0
 
             # since f is zero, most significant = least significant = precision
-            sig_f = -prec_to_dps(f._prec)
-            return max(sig_f, _most_sig(other._as_mpf_val(f._prec))), sig_f
+            sig_f = -f._prec + 4
+            return max(sig_f, _most_sig(other._as_mpf_val(f._prec), f._prec)), sig_f
 
         if other.is_zero:
             # if both are zero, return zero with least precision
-            return prec_to_dps(min(f._prec, other._prec)), 0
+            return min(f._prec, other._prec) - 4, 0
 
         sig_other = _significants(other)
-        sig_f = -prec_to_dps(f._prec)
+        sig_f = -f._prec + 4
         return max(sig_f, sig_other[0]), max(sig_f, sig_other[1])
 
     sig_f = _significants(f)
 
     if other.is_Rational:
-        return max(sig_f[0], _most_sig(other._as_mpf_val(f._prec))), sig_f[1]
+        return max(sig_f[0], _most_sig(other._as_mpf_val(f._prec), f._prec)), sig_f[1]
 
     if other.is_zero:
         # other = 0 => most significant = least significant = precision
-        sig_other = -prec_to_dps(other._prec)
+        sig_other = -other._prec + 4
         return max(sig_f[0], sig_other), max(sig_f[1], sig_other)
 
     sig_other = _significants(other)
@@ -1399,34 +1351,27 @@ class Float(Number):
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
-            # calculate significant digits
             most_sig, least_sig = _significants_helper(self, other)
-
-            # allocate extra precision for carry digit
-            prec = dps_to_prec(most_sig - least_sig + 1)
-
-            # compute result with required precision
+            prec = most_sig - least_sig + 7
             mpf_result = mlib.mpf_add(self._mpf_, other._as_mpf_val(prec), prec, rnd)
-
-            # reduce precision to most significant digit before returning
-            result_most_sig = _most_sig(mpf_result)
+            result_most_sig = _most_sig(mpf_result, prec)
             if result_most_sig == least_sig:
-                # if most significant digit is an uncertainty,
-                # round one digit higher
-                return round(Float._new(mpf_result, 10), -1 - result_most_sig)
-            return Float._new(mpf_result, dps_to_prec(result_most_sig - least_sig))
+                round_factor = -math.copysign(prec_to_dps(abs(result_most_sig) + 4), result_most_sig) - 1
+                return round(Float._new(mpf_result, 10), int(round_factor))
+            return Float._new(mpf_result, result_most_sig - least_sig + 4)
         return Number.__add__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             most_sig, least_sig = _significants_helper(self, other)
-            prec = dps_to_prec(most_sig - least_sig + 1)
+            prec = most_sig - least_sig + 7
             mpf_result = mlib.mpf_sub(self._mpf_, other._as_mpf_val(prec), prec, rnd)
-            result_most_sig = _most_sig(mpf_result)
+            result_most_sig = _most_sig(mpf_result, prec)
             if result_most_sig == least_sig:
-                return round(Float._new(mpf_result, 10), -1 - result_most_sig)
-            return Float._new(mpf_result, dps_to_prec(result_most_sig - least_sig))
+                round_factor = -math.copysign(prec_to_dps(abs(result_most_sig) + 4), result_most_sig) - 1
+                return round(Float._new(mpf_result, 10), int(round_factor))
+            return Float._new(mpf_result, result_most_sig - least_sig + 4)
         return Number.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
