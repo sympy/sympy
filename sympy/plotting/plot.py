@@ -401,35 +401,36 @@ class PlotGrid(object):
         [0]: cartesian line: x**3 for x over (-5.0, 5.0)
         Plot[3]:Plot object containing:
         [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+    """
+    def __init__(self, nrows, ncolumns, *args, **kwargs):
+        """
+        Parameters
+        ==========
 
-    Parameters
-    ==========
+        nrows : The number of rows that should be in the grid of the
+            required subplot.
+        ncolumns : The number of columns that should be in the grid
+            of the required subplot.
 
-    nrows : The number of rows that should be in the grid of the
-            required subplot
-    ncolumns : The number of columns that should be in the grid
-                of the required subplot
+        nrows and ncolumns together define the required grid.
 
-    nrows and ncolumns together define the required grid
+        Arguments
+        =========
 
-    Arguments
-    =========
+        A list of predefined plot objects entered in a row-wise sequence
+        i.e. plot objects which are to be in the top row of the required
+        grid are written first, then the second row objects and so on
 
-    A list of predefined plot objects entered in a row-wise sequence
-    i.e. plot objects which are to be in the top row of the required
-    grid are written first, then the second row objects and so on
+        Keyword arguments
+        =================
 
-    Keyword arguments
-    =================
-
-    show : Boolean
+        show : Boolean
             The default value is set to ``True``. Set show to ``False`` and
             the function will not display the subplot. The returned instance
             of the ``PlotGrid`` class can then be used to save or display the
             plot by calling the ``save()`` and ``show()`` methods
             respectively.
-    """
-    def __init__(self, nrows, ncolumns, *args, **kwargs):
+        """
         self.nrows = nrows
         self.ncolumns = ncolumns
         self._series = []
@@ -862,10 +863,10 @@ class Line3DBaseSeries(Line2DBaseSeries):
     """A base class for 3D lines.
 
     Most of the stuff is derived from Line2DBaseSeries.
-    
+
     See also
     ========
-    
+
     Line2DBaseSeries
     """
 
