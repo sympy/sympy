@@ -41,8 +41,8 @@ def test_generic_identity():
 
 
 def test_zero_matrix_add():
-    assert Add(ZeroMatrix(2, 2), ZeroMatrix(2, 2)) == ZeroMatrix(2, 2)
+    assert add(ZeroMatrix(2, 2), ZeroMatrix(2, 2), evaluate=True) == ZeroMatrix(2, 2)
 
 @XFAIL
 def test_matrix_Add_with_scalar():
-    raises(TypeError, lambda: Add(0, ZeroMatrix(2, 2)))
+    raises(TypeError, lambda: add(0, ZeroMatrix(2, 2)))

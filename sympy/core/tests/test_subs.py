@@ -32,6 +32,8 @@ def test_subs_Matrix():
     # Issue #15528
     assert Mul(Matrix([[3]]), x).subs(x, 2.0) == Matrix([[6.0]])
     # Does not raise a TypeError, see comment on the MatAdd postprocessor
+    # XXX: Adding (1, 1)-shaped matrix and 2.0 does not make sense at all...
+    # XXX: non-commutative Symbol must not be added with matrix. MatrixSymbol must be used instead.
     assert Add(Matrix([[3]]), x).subs(x, 2.0) == Add(Matrix([[3]]), 2.0)
 
 def test_subs_AccumBounds():

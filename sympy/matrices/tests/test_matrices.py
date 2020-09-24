@@ -2351,12 +2351,6 @@ def test_invertible_check():
     raises(ValueError, lambda: m.inv(method="LU"))
 
 
-def test_issue_3959():
-    x, y = symbols('x, y')
-    e = x*y
-    assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y
-
-
 def test_issue_5964():
     assert str(Matrix([[1, 2], [3, 4]])) == 'Matrix([[1, 2], [3, 4]])'
 

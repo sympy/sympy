@@ -150,10 +150,6 @@ def test_issue_12950():
     M = Matrix([[Symbol("x")]]) * MatrixSymbol("A", 1, 1)
     assert MatrixSymbol("A", 1, 1).as_explicit()[0]*Symbol('x') == M.as_explicit()[0]
 
-def test_construction_with_Mul():
-    assert Mul(C, D) == MatMul(C, D)
-    assert Mul(D, C) == MatMul(D, C)
-
 def test_construction_with_mul():
     assert mul(C, D) == MatMul(C, D)
     assert mul(D, C) == MatMul(D, C)

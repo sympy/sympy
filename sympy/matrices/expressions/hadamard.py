@@ -1,4 +1,5 @@
 from sympy.core import Mul, sympify
+from sympy.core.add import add
 from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
@@ -95,13 +96,12 @@ class HadamardProduct(MatrixExpr):
         return canonicalize(expr)
 
     def _eval_derivative(self, x):
-        from sympy import Add
         terms = []
         args = list(self.args)
         for i in range(len(args)):
             factors = args[:i] + [args[i].diff(x)] + args[i+1:]
             terms.append(hadamard_product(*factors))
-        return Add.fromiter(terms)
+        return add(*terms, evaluate=True, _sympify=False)
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.core.expr import ExprBuilder

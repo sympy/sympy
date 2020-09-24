@@ -4,6 +4,7 @@ from functools import wraps, reduce
 import collections
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Mul, Add
+from sympy.core.add import add
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import SYMPY_INTS, default_sort_key
 from sympy.core.sympify import SympifyError, _sympify
@@ -426,7 +427,7 @@ class MatrixExpr(Expr):
         >>> MatrixExpr.from_index_summation(expr)
         A*B.T*A.T
         """
-        from sympy import Sum, Mul, Add, MatMul, transpose, trace
+        from sympy import Sum, Mul, MatMul, transpose, trace
         from sympy.strategies.traverse import bottom_up
 
         def remove_matelement(expr, i1, i2):
@@ -530,7 +531,7 @@ class MatrixExpr(Expr):
                         indices = tuple(sorted(indices, key=default_sort_key))
                         d[indices].append(scalar*remove_matelement(elem, *indices))
                         scalar = 1
-                return [(MatrixElement(Add.fromiter(v), *k), k) for k, v in d.items()]
+                return [(MatrixElement(add(*v, evaluate=True), *k), k) for k, v in d.items()]
             elif isinstance(expr, KroneckerDelta):
                 i1, i2 = expr.args
                 if dimensions is not None:
@@ -677,7 +678,7 @@ def _matrix_derivative(expr, x):
                 return pbase*Mul.fromiter(parts[2:])
 
     if rank <= 2:
-        return Add.fromiter([contract_one_dims(i) for i in parts])
+        return add(*[contract_one_dims(i) for i in parts], evaluate=True)
 
     return ArrayDerivative(expr, x)
 
