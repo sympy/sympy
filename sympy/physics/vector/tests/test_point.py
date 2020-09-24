@@ -234,7 +234,7 @@ def test_auto_point_vel_connected_frames():
     N.orient(B, 'Axis', (q, B.x))
     assert P.vel(N) == (u + q1.diff(t)) * N.x + q2.diff(t) * B.y - q2 * q.diff(t) * B.z
 
-def test_auto_point_vel_multiple_short_paths():
+def test_auto_point_vel_multiple_paths_warning_arises():
     q, u = dynamicsymbols('q u')
     N = ReferenceFrame('N')
     O = Point('O')
@@ -251,7 +251,7 @@ def test_auto_point_vel_multiple_short_paths():
         warnings.simplefilter("error")
         raises(UserWarning ,lambda: O.vel(N))
 
-def test_auto_vel_cyclic_warning():
+def test_auto_vel_cyclic_warning_arises():
     P = Point('P')
     P1 = Point('P1')
     P2 = Point('P2')
@@ -265,3 +265,36 @@ def test_auto_vel_cyclic_warning():
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         raises(UserWarning ,lambda: P2.vel(N))
+
+def test_auto_vel_cyclic_warning_msg():
+    P = Point('P')
+    P1 = Point('P1')
+    P2 = Point('P2')
+    P3 = Point('P3')
+    N = ReferenceFrame('N')
+    P.set_vel(N, N.x)
+    P1.set_pos(P, N.x)
+    P2.set_pos(P1, N.y)
+    P3.set_pos(P2, N.z)
+    P1.set_pos(P3, N.x + N.y)
+    with warnings.catch_warnings(record = True) as w:
+        warnings.simplefilter("always")
+        P2.vel(N)
+        assert issubclass(w[-1].category, UserWarning)
+        assert 'Multiple points have their position defined with respect to one point.' in str(w[-1].message)
+
+def test_auto_vel_multiple_path_warning_msg():
+    N = ReferenceFrame('N')
+    O = Point('O')
+    P = Point('P')
+    Q = Point('Q')
+    P.set_vel(N, N.x)
+    Q.set_vel(N, N.y)
+    O.set_pos(P, N.z)
+    O.set_pos(Q, N.y)
+    with warnings.catch_warnings(record = True) as w:
+        warnings.simplefilter("always")
+        O.vel(N)
+        assert issubclass(w[-1].category, UserWarning)
+        assert 'Velocity automatically calculated based on point' in str(w[-1].message)
+        assert 'Velocities from these points are not the same.' in str(w[-1].message)
