@@ -6,7 +6,7 @@ from .companion import CompanionMatrix
 from .funcmatrix import FunctionMatrix
 from .inverse import Inverse
 from .matadd import MatAdd
-from .matexpr import MatrixExpr, MatrixSymbol, matrix_symbols
+from .matexpr import MatrixExpr, MatrixSymbol, matrix_symbols, MatrixDummy
 from .matmul import MatMul
 from .matpow import MatPow
 from .trace import Trace, trace
@@ -34,7 +34,7 @@ __all__ = [
     'MatAdd',
 
     'Identity', 'MatrixExpr', 'MatrixSymbol', 'ZeroMatrix', 'OneMatrix',
-    'matrix_symbols', 'MatrixSet',
+    'matrix_symbols', 'MatrixSet', 'MatrixDummy',
 
     'MatMul',
 

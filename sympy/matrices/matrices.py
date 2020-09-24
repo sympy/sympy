@@ -2165,6 +2165,10 @@ class MatrixBase(MatrixDeprecated,
     def connected_components_decomposition(self):
         return _connected_components_decomposition(self)
 
+    def create_dummy(self, name):
+        from .expressions import MatrixDummy
+        return MatrixDummy(name, *self.shape)
+
     rank_decomposition.__doc__     = _rank_decomposition.__doc__
     cholesky.__doc__               = _cholesky.__doc__
     LDLdecomposition.__doc__       = _LDLdecomposition.__doc__

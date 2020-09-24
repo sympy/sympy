@@ -5,6 +5,7 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
+from sympy.matrices import MatrixDummy
 from sympy.core import Expr, Mul
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.units import second, joule
@@ -941,6 +942,10 @@ def test_MatrixSymbol_printing():
     assert str(A*B - (A+B)) == "-(A + B) + A*B"
     assert str(A**(-1)) == "A**(-1)"
     assert str(A**3) == "A**3"
+
+def test_MatrixDummy_printing():
+    A = MatrixDummy("A", 3, 3)
+    assert str(A) == "_A"
 
 
 def test_MatrixExpressions():

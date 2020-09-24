@@ -2381,6 +2381,16 @@ class Expr(Basic, EvalfMixin):
         """
         return {j for i in self.args for j in i.expr_free_symbols}
 
+    def create_dummy(self, name=None):
+        """
+        Create a dummy expression which can represent *self*.
+        This method must be overridden if *self* is not scalar. For example,
+        ``MatrixDummy`` is returned if *self* is a matrix.
+        """
+        from .symbol import Dummy
+        return Dummy(name) if self.is_commutative is not False \
+            else Dummy(name, commutative=self.is_commutative)
+
     def could_extract_minus_sign(self):
         """Return True if self is not in a canonical form with respect
         to its sign.

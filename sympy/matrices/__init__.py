@@ -23,7 +23,7 @@ SparseMatrix = MutableSparseMatrix
 
 from .expressions import (
     MatrixSlice, BlockDiagMatrix, BlockMatrix, FunctionMatrix, Identity,
-    Inverse, MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol, Trace,
+    Inverse, MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol, MatrixDummy, Trace,
     Transpose, ZeroMatrix, OneMatrix, blockcut, block_collapse, matrix_symbols, Adjoint,
     hadamard_product, HadamardProduct, HadamardPower, Determinant, det,
     diagonalize_vector, DiagMatrix, DiagonalMatrix, DiagonalOf, trace,
@@ -56,7 +56,7 @@ __all__ = [
 
     'MatrixSlice', 'BlockDiagMatrix', 'BlockMatrix', 'FunctionMatrix',
     'Identity', 'Inverse', 'MatAdd', 'MatMul', 'MatPow', 'MatrixExpr',
-    'MatrixSymbol', 'Trace', 'Transpose', 'ZeroMatrix', 'OneMatrix',
+    'MatrixSymbol', 'MatrixDummy', 'Trace', 'Transpose', 'ZeroMatrix', 'OneMatrix',
     'blockcut', 'block_collapse', 'matrix_symbols', 'Adjoint',
     'hadamard_product', 'HadamardProduct', 'HadamardPower', 'Determinant',
     'det', 'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',

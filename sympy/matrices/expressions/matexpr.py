@@ -2,9 +2,11 @@ from sympy.core.logic import FuzzyBool
 
 from functools import wraps, reduce
 import collections
+import random
 
 from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Mul, Add
 from sympy.core.add import add
+from sympy.core.cache import cacheit
 from sympy.core.mul import mul
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import SYMPY_INTS, default_sort_key
@@ -385,6 +387,9 @@ class MatrixExpr(Expr):
 
     def as_coeff_mmul(self):
         return 1, MatMul(self)
+
+    def create_dummy(self, name):
+        return MatrixDummy(name, *self.shape)
 
     @staticmethod
     def from_index_summation(expr, first_index=None, last_index=None, dimensions=None):
@@ -801,9 +806,6 @@ class MatrixSymbol(MatrixExpr):
         obj = Basic.__new__(cls, name, n, m)
         return obj
 
-    def _hashable_content(self):
-        return (self.name, self.shape)
-
     @property
     def shape(self):
         return self.args[1:3]
@@ -855,6 +857,54 @@ class MatrixSymbol(MatrixExpr):
                 [first, second],
             )]
 
+
+class MatrixDummy(MatrixSymbol):
+    """
+    Unique dummy symbol for matrix.
+    """
+    _count = 0
+    _prng = random.Random()
+    _base_dummy_index = _prng.randint(10**6, 9*10**6)
+
+    is_Dummy = True
+
+    def __new__(cls, name, n, m, dummy_index=None):
+        if dummy_index is None:
+            dummy_index = MatrixDummy._base_dummy_index + MatrixDummy._count
+            MatrixDummy._count += 1
+        dummy_index = _sympify(dummy_index)
+
+        n, m, dummy_index = _sympify(n), _sympify(m), _sympify(dummy_index)
+
+        cls._check_dim(m)
+        cls._check_dim(n)
+
+        if isinstance(name, str):
+            name = Symbol(name)
+        obj = Basic.__new__(cls, name, n, m, dummy_index)
+        return obj
+
+    @property
+    def dummy_index(self):
+        return self.args[3]
+
+    @cacheit
+    def sort_key(self, order=None):
+        coeff = S.One
+        len_args = len(self.args)
+        args = tuple(a.sort_key(order=order) for a in self.args)
+        args = (len_args, args)
+        exp = S.One.sort_key(order=order)
+        return self.class_key(), args, exp, coeff
+
+    def doit(self, **kwargs):
+        deep = kwargs.get('deep', True)
+        if not deep:
+            return self
+        args = tuple(arg.doit(**kwargs) for arg in self.args)
+        if self.args == args:
+            return self
+        return self.func(*args[:-1])
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]

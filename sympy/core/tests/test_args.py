@@ -3021,6 +3021,10 @@ def test_sympy__matrices__expressions__matexpr__MatrixSymbol():
     from sympy.matrices.expressions.matexpr import MatrixSymbol
     assert _test_args(MatrixSymbol('A', 3, 5))
 
+def test_sympy__matrices__expressions__matexpr__MatrixDummy():
+    from sympy.matrices.expressions.matexpr import MatrixDummy
+    assert _test_args(MatrixDummy('A', 3, 5))
+
 
 def test_sympy__matrices__expressions__special__OneMatrix():
     from sympy.matrices.expressions.special import OneMatrix
