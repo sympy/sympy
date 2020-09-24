@@ -562,8 +562,9 @@ class AssocOpDispatcher:
     True
 
     """
-    def __init__(self, name, doc=None):
+    def __init__(self, name, identity, doc=None):
         self.name = name
+        self.identity = identity
         self.doc = doc
         self.handlerattr = "_%s_handler" % name
         self._handlergetter = attrgetter(self.handlerattr)
@@ -607,6 +608,9 @@ class AssocOpDispatcher:
         *args :
             Arguments which are operated
         """
+        if not args:
+            return _sympify(self.identity)
+
         if kwargs.get('_sympify', True):
             args = tuple(map(_sympify, args))
         handlers = frozenset(map(self._handlergetter, args))

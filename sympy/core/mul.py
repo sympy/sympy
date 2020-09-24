@@ -1900,7 +1900,7 @@ class Mul(Expr, AssocOp):
     def _sorted_args(self):
         return tuple(self.as_ordered_factors())
 
-mul = AssocOpDispatcher('mul')
+mul = AssocOpDispatcher('mul', 1)
 
 def prod(a, start=1):
     """Return product of elements of a. Start with int 1 so if only

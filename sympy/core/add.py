@@ -1126,7 +1126,7 @@ class Add(Expr, AssocOp):
             return super().__neg__()
         return Add(*[-i for i in self.args])
 
-add = AssocOpDispatcher('add')
+add = AssocOpDispatcher('add', 0)
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational
