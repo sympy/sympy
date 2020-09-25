@@ -2,6 +2,7 @@ import numbers
 import decimal
 import fractions
 import math
+from math import floor, log10
 import re as regex
 
 from .containers import Tuple
@@ -223,58 +224,48 @@ def _literal_float(f):
     return bool(_floatpat.match(f))
 
 
-def _most_sig(x, prec=None):
+def _most_sig(x):
     # return 0 if mpf precision < 1
     if x[3] < 1:
         return 0
 
     x = (0,) + x[1:]
 
-    if not prec:
-        prec = x[3]
-    prec += 20
+    fx = mlib.to_float(x)
+    try:
+        decimal_digits = floor(log10(fx))
+    except (ValueError, OverflowError):
+        # 53 should be enough
+        decimal_digits = mlib.to_int(mlib.mpf_floor(mlib.mpf_div(
+            mlib.mpf_log(x, 53), mlib.mpf_ln10(53), 53
+        )))
 
-    decimal_digits = mlib.to_int(mlib.mpf_floor(mlib.mpf_div(
-        mlib.mpf_log(x, prec), mlib.mpf_ln10(prec), prec
-    )))
+    # check for error
+    if fx < 10**decimal_digits:
+        decimal_digits -= 1
 
-    binary_prec = math.copysign(dps_to_prec(abs(decimal_digits) + 1), decimal_digits)
+    if decimal_digits == 0:
+        return 0
 
-    return int(binary_prec - 4)
+    binary_prec = math.copysign(dps_to_prec(abs(decimal_digits)) - 4, decimal_digits)
+    return int(binary_prec)
 
 
 def _significants(x):
-    most_sig = _most_sig(x._as_mpf_val(x._prec), x._prec)
+    most_sig = _most_sig(x._as_mpf_val(x._prec))
     return most_sig, most_sig - x._prec + 4
 
 
 def _significants_helper(f, other):
-    # handle zero
-    if f.is_zero:
-        if other.is_Rational:
-            # if other is a rational zero, return Float precision zero
-            if other.is_zero:
-                return f._prec - 4, 0
-
-            # since f is zero, most significant = least significant = precision
-            sig_f = -f._prec + 4
-            return max(sig_f, _most_sig(other._as_mpf_val(f._prec), f._prec)), sig_f
-
-        if other.is_zero:
-            # if both are zero, return zero with least precision
-            return min(f._prec, other._prec) - 4, 0
-
-        sig_other = _significants(other)
-        sig_f = -f._prec + 4
-        return max(sig_f, sig_other[0]), max(sig_f, sig_other[1])
-
-    sig_f = _significants(f)
+    if mlib.to_float(f._mpf_) == 0:
+        sig_f = (0, -f._prec + 4)
+    else:
+        sig_f = _significants(f)
 
     if other.is_Rational:
-        return max(sig_f[0], _most_sig(other._as_mpf_val(f._prec), f._prec)), sig_f[1]
+        return max(sig_f[0], _most_sig(other._as_mpf_val(f._prec))), sig_f[1]
 
-    if other.is_zero:
-        # other = 0 => most significant = least significant = precision
+    if mlib.to_float(other._mpf_) == 0:
         sig_other = -other._prec + 4
         return max(sig_f[0], sig_other), max(sig_f[1], sig_other)
 
@@ -1366,7 +1357,9 @@ class Float(Number):
             most_sig, least_sig = _significants_helper(self, other)
             prec = most_sig - least_sig + 7
             mpf_result = mlib.mpf_add(self._mpf_, other._as_mpf_val(prec), prec, rnd)
-            result_most_sig = _most_sig(mpf_result, prec)
+            result_most_sig = _most_sig(mpf_result)
+            if least_sig > result_most_sig:
+                return Float._new(mpf_result, 1)
             if result_most_sig == least_sig:
                 round_factor = -math.copysign(prec_to_dps(abs(result_most_sig) + 4), result_most_sig) - 1
                 return round(Float._new(mpf_result, 10), int(round_factor))
@@ -1379,7 +1372,9 @@ class Float(Number):
             most_sig, least_sig = _significants_helper(self, other)
             prec = most_sig - least_sig + 7
             mpf_result = mlib.mpf_sub(self._mpf_, other._as_mpf_val(prec), prec, rnd)
-            result_most_sig = _most_sig(mpf_result, prec)
+            result_most_sig = _most_sig(mpf_result)
+            if least_sig > result_most_sig:
+                return Float._new(mpf_result, 1)
             if result_most_sig == least_sig:
                 round_factor = -math.copysign(prec_to_dps(abs(result_most_sig) + 4), result_most_sig) - 1
                 return round(Float._new(mpf_result, 10), int(round_factor))
