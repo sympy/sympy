@@ -516,6 +516,25 @@ _known_constants_mpmath = {
 }
 
 
+def _unpack_integral_limits(integral_expr):
+    """ helper function for _print_Integral that
+        - accepts an Integral expression
+        - returns a tuple of
+           - a list variables of integration
+           - a list of tuples of the upper and lower limits of integration
+    """
+    integration_vars = []
+    limits = []
+    for integration_range in integral_expr.limits:
+        if len(integration_range) == 3:
+            integration_var, lower_limit, upper_limit = integration_range
+        else:
+            raise NotImplementedError("Only definite integrals are supported")
+        integration_vars.append(integration_var)
+        limits.append((lower_limit, upper_limit))
+    return integration_vars, limits
+
+
 class MpmathPrinter(PythonCodePrinter):
     """
     Lambda printer for mpmath which maintains precision for floats
@@ -573,6 +592,15 @@ class MpmathPrinter(PythonCodePrinter):
 
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational, sqrt='mpmath.sqrt')
+
+    def _print_Integral(self, e):
+        integration_vars, limits = _unpack_integral_limits(e)
+
+        return "{0}(lambda {1}: {2}, {3})".format(
+                self._module_format("mpmath.quad"),
+                ", ".join(map(self._print, integration_vars)),
+                self._print(e.args[0]),
+                ", ".join("(%s, %s)" % tuple(map(self._print, l)) for l in limits))
 
 
 for k in MpmathPrinter._kf:
@@ -991,6 +1019,24 @@ class SciPyPrinter(NumPyPrinter):
         return "{0}({1})[3]".format(
                 self._module_format("scipy.special.airy"),
                 self._print(expr.args[0]))
+
+    def _print_Integral(self, e):
+        integration_vars, limits = _unpack_integral_limits(e)
+
+        if len(limits) == 1:
+            # nicer (but not necessary) to prefer quad over nquad for 1D case
+            module_str = self._module_format("scipy.integrate.quad")
+            limit_str = "%s, %s" % tuple(map(self._print, limits[0]))
+        else:
+            module_str = self._module_format("scipy.integrate.nquad")
+            limit_str = "({})".format(", ".join(
+                "(%s, %s)" % tuple(map(self._print, l)) for l in limits))
+
+        return "{0}(lambda {1}: {2}, {3})[0]".format(
+                module_str,
+                ", ".join(map(self._print, integration_vars)),
+                self._print(e.args[0]),
+                limit_str)
 
 
 for k in SciPyPrinter._kf:
