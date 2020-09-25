@@ -866,7 +866,7 @@ class MatrixDummy(MatrixSymbol):
         cls._check_dim(n)
 
         if isinstance(name, str):
-            name = Symbol(name)
+            name = Str(name)
         obj = Basic.__new__(cls, name, n, m, dummy_index)
         return obj
 
