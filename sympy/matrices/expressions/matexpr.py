@@ -10,6 +10,7 @@ from sympy.core.cache import cacheit
 from sympy.core.mul import mul
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import SYMPY_INTS, default_sort_key
+from sympy.core.symbol import Str
 from sympy.core.sympify import SympifyError, _sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -802,25 +803,17 @@ class MatrixSymbol(MatrixExpr):
         cls._check_dim(n)
 
         if isinstance(name, str):
-            name = Symbol(name)
+            name = Str(name)
         obj = Basic.__new__(cls, name, n, m)
         return obj
 
     @property
     def shape(self):
-        return self.args[1:3]
+        return self.args[1], self.args[2]
 
     @property
     def name(self):
         return self.args[0].name
-
-    def _eval_subs(self, old, new):
-        # only do substitutions in shape
-        shape = Tuple(*self.shape)._subs(old, new)
-        return MatrixSymbol(self.args[0], *shape)
-
-    def __call__(self, *args):
-        raise TypeError("%s object is not callable" % self.__class__)
 
     def _entry(self, i, j, **kwargs):
         return MatrixElement(self, i, j)
@@ -828,13 +821,6 @@ class MatrixSymbol(MatrixExpr):
     @property
     def free_symbols(self):
         return {self}
-
-    def doit(self, **hints):
-        if hints.get('deep', True):
-            return type(self)(self.args[0], self.args[1].doit(**hints),
-                    self.args[2].doit(**hints))
-        else:
-            return self
 
     def _eval_simplify(self, **kwargs):
         return self
