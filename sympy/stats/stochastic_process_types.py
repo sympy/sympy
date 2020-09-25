@@ -421,6 +421,18 @@ class MarkovProcess(StochasticProcess):
 
         return is_insufficient, trans_probs, state_index, given_condition
 
+    def replace_with_index(self, condition):
+        if isinstance(condition, Relational):
+            if condition.rhs.is_symbol:
+                try:
+                    return Eq(condition.lhs, self.state_space.index(condition.rhs))
+                except (NameError, ValueError) as e:
+                    raise NameError('%s not found in the state space'%condition.rhs)
+            else:
+                return condition
+        else:
+            return condition
+
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
         Handles probability queries for Markov process.
@@ -457,6 +469,9 @@ class MarkovProcess(StochasticProcess):
             trans_probs = self.transition_probabilities(mat)
         elif isinstance(self, DiscreteMarkovChain):
             trans_probs = mat
+            condition=self.replace_with_index(condition)
+            given_condition=self.replace_with_index(given_condition)
+            new_given_condition=self.replace_with_index(new_given_condition)
 
         if isinstance(condition, Relational):
             rv, states = (list(condition.atoms(RandomIndexedSymbol))[0], condition.as_set())
@@ -607,6 +622,8 @@ class MarkovProcess(StochasticProcess):
         if isinstance(expr, Expr) and isinstance(condition, Eq) \
             and len(rvs) == 1:
             # handle queries similar to E(f(X[i]), Eq(X[i-m], <some-state>))
+            condition=self.replace_with_index(condition)
+            state_index=self.replace_with_index(state_index)
             rv = list(rvs)[0]
             lhsg, rhsg = condition.lhs, condition.rhs
             if not isinstance(lhsg, RandomIndexedSymbol):
