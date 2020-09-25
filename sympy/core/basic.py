@@ -1799,16 +1799,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             except TypeError:
                 pass
 
-        processors = postprocessors.get(clsname, [])
-        if processors:
-            SymPyDeprecationWarning(
-                    feature="Basic._exec_constructor_postprocessors",
-                    useinstead="Dispatched add/mul/pow",
-                    issue=20137,
-                    deprecated_since_version="1.7"
-                ).warn()
-
-        for f in processors:
+        for f in postprocessors.get(clsname, []):
             obj = f(obj)
 
         return obj

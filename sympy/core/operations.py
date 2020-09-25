@@ -46,6 +46,7 @@ class AssocOp(Basic):
     @cacheit
     def __new__(cls, *args, **options):
         from sympy import Order
+        from sympy.matrices import MatrixBase, MatrixExpr
 
         # Allow faster processing by passing ``_sympify=False``, if all arguments
         # are already sympified.
@@ -65,6 +66,14 @@ class AssocOp(Basic):
                     feature="Add/Mul with non-Expr args",
                     useinstead="Expr args",
                     issue=19445,
+                    deprecated_since_version="1.7"
+                ).warn()
+    
+            if any(isinstance(arg, (MatrixBase, MatrixExpr)) for arg in args):
+                SymPyDeprecationWarning(
+                    feature="Passing matrix to Add/Mul",
+                    useinstead="MatAdd/MatMul or dispatched add/mul",
+                    issue=20137,
                     deprecated_since_version="1.7"
                 ).warn()
 
