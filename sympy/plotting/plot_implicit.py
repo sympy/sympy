@@ -1,5 +1,8 @@
 """Implicit plotting module for SymPy
 
+Explanation
+===========
+
 The module implements a data series called ImplicitSeries which is used by
 ``Plot`` class to plot implicit plots for different backends. The module,
 by default, implements plotting using interval arithmetic. It switches to a
@@ -207,8 +210,8 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
                   points=300, line_color="blue", show=True, **kwargs):
     """A plot function to plot implicit equations / inequalities.
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
     - ``expr`` : The equation / inequality that is to be plotted.
     - ``x_var`` (optional) : symbol to plot on x-axis or tuple giving symbol

@@ -104,20 +104,41 @@ class Plot(object):
 
     The global options for a figure are:
 
-    - title : str
-    - xlabel : str
-    - ylabel : str
-    - legend : bool
-    - xscale : {'linear', 'log'}
-    - yscale : {'linear', 'log'}
-    - axis : bool
-    - axis_center : tuple of two floats or {'center', 'auto'}
-    - xlim : tuple of two floats
-    - ylim : tuple of two floats
-    - aspect_ratio : tuple of two floats or {'auto'}
-    - autoscale : bool
-    - margin : float in [0, 1]
-    - backend : {'default', 'matplotlib', 'text'}
+    title : str
+        Used to add a title to the plot.
+
+    xlabel : str
+        Used to set the label for the x-axis of plot.
+
+    ylabel : str
+        Used to set the label for the y-axis of plot.
+
+    legend : bool
+        Used to place a legend. The legend contains
+        a sample of the color next to the corresponding
+        text label.
+
+    xscale : {'linear', 'log'}
+        Used to set the x-axis scale.
+
+    yscale : {'linear', 'log'}
+        Used to set the y-axis scale.
+
+    axis : bool
+
+    axis_center : tuple of two floats or {'center', 'auto'}
+
+    xlim : tuple of two floats
+
+    ylim : tuple of two floats
+
+    aspect_ratio : tuple of two floats or {'auto'}
+
+    autoscale : bool
+
+    margin : float in [0, 1]
+
+    backend : {'default', 'matplotlib', 'text'}
 
     The per data series options and aesthetics are:
     There are none in the base series. See below for options for subclasses.
@@ -129,7 +150,7 @@ class Plot(object):
 
     Aesthetics:
 
-    - line_color : function which returns a float.
+    line_color : function which returns a float.
 
     options:
 
@@ -380,7 +401,6 @@ class PlotGrid(object):
         [0]: cartesian line: x**3 for x over (-5.0, 5.0)
         Plot[3]:Plot object containing:
         [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
-
     """
     def __init__(self, nrows, ncolumns, *args, show=True, **kwargs):
         """
@@ -388,11 +408,11 @@ class PlotGrid(object):
         ==========
 
         nrows : The number of rows that should be in the grid of the
-                required subplot
+            required subplot.
         ncolumns : The number of columns that should be in the grid
-                   of the required subplot
+            of the required subplot.
 
-        nrows and ncolumns together define the required grid
+        nrows and ncolumns together define the required grid.
 
         Arguments
         =========
@@ -405,11 +425,11 @@ class PlotGrid(object):
         =================
 
         show : Boolean
-               The default value is set to ``True``. Set show to ``False`` and
-               the function will not display the subplot. The returned instance
-               of the ``PlotGrid`` class can then be used to save or display the
-               plot by calling the ``save()`` and ``show()`` methods
-               respectively.
+            The default value is set to ``True``. Set show to ``False`` and
+            the function will not display the subplot. The returned instance
+            of the ``PlotGrid`` class can then be used to save or display the
+            plot by calling the ``save()`` and ``show()`` methods
+            respectively.
         """
         self.nrows = nrows
         self.ncolumns = ncolumns
@@ -447,7 +467,11 @@ class PlotGrid(object):
 
 ### The base class for all series
 class BaseSeries(object):
-    """Base class for the data objects containing stuff to be plotted.
+    """
+    Base class for the data objects containing stuff to be plotted.
+
+    Explanation
+    ===========
 
     The backend should check if it supports the data series that it's given.
     (eg TextBackend supports only LineOver1DRange).
@@ -614,6 +638,9 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         """
         Adaptively gets segments for plotting.
 
+        Explanation
+        ===========
+
         The adaptive sampling is done by recursively checking if three
         points are almost collinear. If they are not collinear, then more
         points are added between those points.
@@ -748,6 +775,9 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         """
         Adaptively gets segments for plotting.
 
+        Explanation
+        ===========
+
         The adaptive sampling is done by recursively checking if three
         points are almost collinear. If they are not collinear, then more
         points are added between those points.
@@ -831,7 +861,13 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 class Line3DBaseSeries(Line2DBaseSeries):
     """A base class for 3D lines.
 
-    Most of the stuff is derived from Line2DBaseSeries."""
+    Most of the stuff is derived from Line2DBaseSeries.
+
+    See also
+    ========
+
+    Line2DBaseSeries
+    """
 
     is_2Dline = False
     is_3Dline = True
