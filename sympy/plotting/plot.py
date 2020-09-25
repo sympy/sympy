@@ -2035,9 +2035,9 @@ def plot3d(*args, show=True, **kwargs):
 
     ``title`` : str. Title of the plot.
     ``size`` : (float, float), optional
-        A tuple in the form (width, height) in inches to specify the size of
-        the overall figure. The default value is set to ``None``, meaning
-        the size will be set by the default backend.
+    A tuple in the form (width, height) in inches to specify the size of the
+    overall figure. The default value is set to ``None``, meaning the size will
+    be set by the default backend.
 
     Examples
     ========
@@ -2169,9 +2169,9 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
 
     ``title`` : str. Title of the plot.
     ``size`` : (float, float), optional
-        A tuple in the form (width, height) in inches to specify the size of
-        the overall figure. The default value is set to ``None``, meaning
-        the size will be set by the default backend.
+    A tuple in the form (width, height) in inches to specify the size of the
+    overall figure. The default value is set to ``None``, meaning the size will
+    be set by the default backend.
 
     Examples
     ========
