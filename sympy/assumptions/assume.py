@@ -62,11 +62,9 @@ class AppliedPredicate(Boolean):
     """
     __slots__ = ()
 
-    def __new__(cls, predicate, *args):
-        if predicate.arity != len(args):
-            raise TypeError("%s takes %d argument but %d were given" % (predicate, predicate.arity, len(args)))
-        args = Tuple(*[_sympify(a) for a in args])
-        return Boolean.__new__(cls, predicate, args)
+    def __new__(cls, predicate, arg):
+        arg = _sympify(arg)
+        return Boolean.__new__(cls, predicate, arg)
 
     is_Atom = True  # do not attempt to decompose this
 
@@ -102,7 +100,7 @@ class AppliedPredicate(Boolean):
                 S.One.sort_key(), S.One)
 
     def __eq__(self, other):
-        if type(other) is AppliedPredicate:
+        if type(self) is type(other):
             return self._args == other._args
         return False
 
@@ -122,11 +120,18 @@ class AppliedPredicate(Boolean):
         return set()
 
 class PolyadicAppliedPredicate(AppliedPredicate):
-    def __new__(cls, predicate, *args):
+    def __new__(cls, predicate, args):
         if predicate.arity != len(args):
             raise TypeError("%s takes %d argument but %d were given" % (predicate, predicate.arity, len(args)))
         args = Tuple(*[_sympify(a) for a in args])
         return Boolean.__new__(cls, predicate, args)
+
+    @property
+    def args(self):
+        return self.arg
+
+    def _eval_ask(self, assumptions):
+        return self.func.polyadic_eval(self.arg, assumptions)
 
 
 class Predicate(Boolean):
@@ -218,6 +223,27 @@ class Predicate(Boolean):
                     if _res != res:
                         raise ValueError('incompatible resolutors')
                 break
+        return res
+
+    def polyadic_eval(self, args, assumptions=True):
+        """
+        Evaluate ``self(*args)`` under the given assumptions using multipledispatch.
+        This method is for polyadic predicates. For monadic predicates,
+        use ``eval`` method.
+
+        This uses only direct resolution methods, not logical inference.
+        """
+        args_types = [type(a) for a in args]
+        handlers = [h for h in self.handlers]
+        while handlers:
+            handler = handlers.pop(0)
+            dispatcher = get_class(handler)
+            try:
+                res = dispatcher(*args, assumptions=assumptions)
+            except NotImplementedError as error:
+                if handlers:
+                    continue
+                return None
         return res
 
 

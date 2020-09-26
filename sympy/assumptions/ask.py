@@ -1245,8 +1245,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     if isinstance(proposition, AppliedPredicate):
         key, expr = proposition.func, sympify(proposition.arg)
+        args = proposition.args
     else:
         key, expr = Q.is_true, sympify(proposition)
+        args = (expr,)
 
     assump = CNF.from_prop(assumptions)
     assump.extend(context)
@@ -1281,7 +1283,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
                     return False
 
     # direct resolution method, no logic
-    res = key(expr)._eval_ask(assumptions)
+    res = key(*args)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
     # using satask (still costly)
@@ -1301,7 +1303,7 @@ def ask_full_inference(proposition, assumptions, known_facts_cnf):
     return None
 
 
-def register_handler(key, handler):
+def register_handler(key, handler, arity=1):
     """
     Register a handler in the ask system. key must be a string and handler a
     class inheriting from AskHandler::
@@ -1325,7 +1327,7 @@ def register_handler(key, handler):
     if Qkey is not None:
         Qkey.add_handler(handler)
     else:
-        setattr(Q, key, Predicate(key, handlers=[handler]))
+        setattr(Q, key, Predicate(key, handlers=[handler], arity=arity))
 
 
 def remove_handler(key, handler):
@@ -1416,7 +1418,7 @@ def compute_known_facts(known_facts, known_facts_keys):
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
     ("antihermitian",     "sets.AskAntiHermitianHandler"),
-    ("finite",           "calculus.AskFiniteHandler"),
+    ("finite",            "calculus.AskFiniteHandler"),
     ("commutative",       "AskCommutativeHandler"),
     ("complex",           "sets.AskComplexHandler"),
     ("composite",         "ntheory.AskCompositeHandler"),
@@ -1451,10 +1453,16 @@ _handlers = [
     ("integer_elements",  "matrices.AskIntegerElementsHandler"),
     ("real_elements",     "matrices.AskRealElementsHandler"),
     ("complex_elements",  "matrices.AskComplexElementsHandler"),
+    ("coprime",           "ntheory.AskCoprimeHandler",              2),
 ]
 
-for name, value in _handlers:
-    register_handler(name, _val_template % value)
+for tup in _handlers:
+    if len(tup) == 2:
+        name, value = tup
+        arity = 1
+    else:
+        name, value, arity = tup
+    register_handler(name, _val_template % value, arity)
 
 @cacheit
 def get_known_facts_keys():
