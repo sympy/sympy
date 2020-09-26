@@ -426,7 +426,7 @@ class MarkovProcess(StochasticProcess):
             if condition.rhs.is_symbol:
                 try:
                     return Eq(condition.lhs, self.state_space.index(condition.rhs))
-                except:
+                except NameError:
                     raise NameError('%s not found in the state space'%condition.rhs)
         return condition
 
