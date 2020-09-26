@@ -1,4 +1,5 @@
 import inspect
+from sympy.core.containers import Tuple
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
@@ -61,9 +62,11 @@ class AppliedPredicate(Boolean):
     """
     __slots__ = ()
 
-    def __new__(cls, predicate, arg):
-        arg = _sympify(arg)
-        return Boolean.__new__(cls, predicate, arg)
+    def __new__(cls, predicate, *args):
+        if predicate.arity != len(args):
+            raise TypeError("%s takes %d argument but %d were given" % (predicate, predicate.arity, len(args)))
+        args = Tuple(*[_sympify(a) for a in args])
+        return Boolean.__new__(cls, predicate, args)
 
     is_Atom = True  # do not attempt to decompose this
 
@@ -82,6 +85,7 @@ class AppliedPredicate(Boolean):
         x + 1
 
         """
+
         return self._args[1]
 
     @property
@@ -149,10 +153,11 @@ class Predicate(Boolean):
 
     is_Atom = True
 
-    def __new__(cls, name, handlers=None):
+    def __new__(cls, name, handlers=None, arity=1):
         obj = Boolean.__new__(cls)
         obj.name = name
         obj.handlers = handlers or []
+        obj.arity = arity
         return obj
 
     def _hashable_content(self):
@@ -161,8 +166,8 @@ class Predicate(Boolean):
     def __getnewargs__(self):
         return (self.name,)
 
-    def __call__(self, expr):
-        return AppliedPredicate(self, expr)
+    def __call__(self, *args):
+        return AppliedPredicate(self, *args)
 
     def add_handler(self, handler):
         self.handlers.append(handler)
