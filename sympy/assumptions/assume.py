@@ -121,6 +121,13 @@ class AppliedPredicate(Boolean):
                 return i.binary_symbols
         return set()
 
+class PolyadicAppliedPredicate(AppliedPredicate):
+    def __new__(cls, predicate, *args):
+        if predicate.arity != len(args):
+            raise TypeError("%s takes %d argument but %d were given" % (predicate, predicate.arity, len(args)))
+        args = Tuple(*[_sympify(a) for a in args])
+        return Boolean.__new__(cls, predicate, args)
+
 
 class Predicate(Boolean):
     """A predicate is a function that returns a boolean value.
@@ -167,7 +174,10 @@ class Predicate(Boolean):
         return (self.name,)
 
     def __call__(self, *args):
-        return AppliedPredicate(self, *args)
+        if len(args) == 1:
+            arg, = args
+            return AppliedPredicate(self, arg)
+        return PolyadicAppliedPredicate(self, args)
 
     def add_handler(self, handler):
         self.handlers.append(handler)
