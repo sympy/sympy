@@ -704,12 +704,12 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     >>> sunny, cloudy, rainy = symbols('Sunny, Cloudy, Rainy')
     >>> Y = DiscreteMarkovChain("Y", [sunny, cloudy, rainy], T)
-    >>> P(Eq(Y[3], Y.index_of[rainy]), Eq(Y[1], Y.index_of[cloudy])).round(2)
+    >>> P(Eq(Y[3], rainy), Eq(Y[1], cloudy)).round(2)
     0.36
 
     Expectations will be calculated as follows:
 
-    >>> E(Y[3], Eq(Y[1], Y.index_of[cloudy]))
+    >>> E(Y[3], Eq(Y[1], cloudy))
     0.38*Cloudy + 0.36*Rainy + 0.26*Sunny
 
     There is limited support for arbitrarily sized states:
