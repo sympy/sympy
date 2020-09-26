@@ -62,11 +62,9 @@ class AppliedPredicate(Boolean):
     """
     __slots__ = ()
 
-    def __new__(cls, predicate, *args):
-        if predicate.arity != len(args):
-            raise TypeError("%s takes %d argument but %d were given" % (predicate, predicate.arity, len(args)))
-        args = Tuple(*[_sympify(a) for a in args])
-        return Boolean.__new__(cls, predicate, args)
+    def __new__(cls, predicate, arg):
+        arg = _sympify(arg)
+        return Boolean.__new__(cls, predicate, arg)
 
     is_Atom = True  # do not attempt to decompose this
 
@@ -122,7 +120,7 @@ class AppliedPredicate(Boolean):
         return set()
 
 class PolyadicAppliedPredicate(AppliedPredicate):
-    def __new__(cls, predicate, *args):
+    def __new__(cls, predicate, args):
         if predicate.arity != len(args):
             raise TypeError("%s takes %d argument but %d were given" % (predicate, predicate.arity, len(args)))
         args = Tuple(*[_sympify(a) for a in args])
