@@ -5,7 +5,11 @@ Handlers for keys related to number theory: prime, even, odd, etc.
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.ntheory import isprime
-from sympy.core import S, Float
+from sympy.core import S, Float, Integer, Expr
+from sympy.core.logic import fuzzy_nand
+from sympy.logic.boolalg import conjuncts
+from sympy.polys import gcd
+from sympy.multipledispatch import Dispatcher
 
 
 class AskPrimeHandler(CommonHandler):
@@ -246,3 +250,30 @@ class AskOddHandler(CommonHandler):
                 return None
             return not _even
         return _integer
+
+
+AskCoprimeHandler = Dispatcher('AskCoprimeHandler')
+
+@AskCoprimeHandler.register(Expr, Expr)
+def Expr_Expr(x, y, *, assumptions):
+    if x == y:
+        return False
+
+    assumps = conjuncts(assumptions)
+    if Q.coprime(x,y) in assumps:
+        return True
+    if ~Q.coprime(x,y) in assumps:
+        return False
+    # detect even number or odd number
+    # other logics are not implemented yet
+    even_x, even_y = ask(Q.even(x), assumptions), ask(Q.even(y), assumptions)
+    if not even_x and not even_y:
+        return None
+    return fuzzy_nand([even_x, even_y])
+
+@AskCoprimeHandler.register(Integer, Integer)
+def Integer_Integer(x, y, *, assumptions):
+    gcdivisor = gcd(x,y)
+    if gcdivisor == 1:
+        return True
+    return False

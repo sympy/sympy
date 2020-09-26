@@ -2272,3 +2272,22 @@ def test_custom_AskHandler():
 
     n = Symbol('n', integer=True)
     assert ask(Q.mersenne(n), Q.mersenne(n))
+
+
+def test_coprime_query():
+    a, b = symbols('a b', integer=True, even=True)
+    c, d = symbols('c d', integer=True, odd=True)
+    e, f = symbols('e f', integer=True)
+
+    assert ask(Q.coprime(2, 3)) is True
+    assert ask(Q.coprime(6, 8)) is False
+
+    assert ask(Q.coprime(a, b)) is False
+    assert ask(Q.coprime(a, c)) is True
+    assert ask(Q.coprime(c, d)) is None
+    assert ask(Q.coprime(a, e)) is None
+    assert ask(Q.coprime(c, e)) is None
+    assert ask(Q.coprime(e, f)) is None
+
+    assert ask(Q.coprime(e, f), Q.coprime(e, f)) is True
+    assert ask(Q.coprime(e, f), ~Q.coprime(e, f)) is False

@@ -1453,6 +1453,7 @@ _handlers = [
     ("integer_elements",  "matrices.AskIntegerElementsHandler"),
     ("real_elements",     "matrices.AskRealElementsHandler"),
     ("complex_elements",  "matrices.AskComplexElementsHandler"),
+    ("coprime",           "ntheory.AskCoprimeHandler",              2),
 ]
 
 for tup in _handlers:

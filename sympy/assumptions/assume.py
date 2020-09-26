@@ -100,7 +100,7 @@ class AppliedPredicate(Boolean):
                 S.One.sort_key(), S.One)
 
     def __eq__(self, other):
-        if type(other) is AppliedPredicate:
+        if type(self) is type(other):
             return self._args == other._args
         return False
 
@@ -243,7 +243,7 @@ class Predicate(Boolean):
             except NotImplementedError as error:
                 if handlers:
                     continue
-                raise error
+                return None
         return res
 
 
