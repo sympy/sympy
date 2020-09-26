@@ -14,7 +14,7 @@ from sympy.external import import_module
 Python 2 and Python 3 compatible imports
 
 String and Unicode compatible changes:
-    * $unicode()$ removed in Python 3, import `unicode` for Python 2/3
+    * `unicode()` removed in Python 3, import `unicode` for Python 2/3
       compatible function
     * Use `u()` for escaped unicode sequences (e.g. u'\u2020' -> u('\u2020'))
     * Use `u_decode()` to decode utf-8 formatted unicode strings
