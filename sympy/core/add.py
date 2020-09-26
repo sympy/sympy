@@ -5,7 +5,7 @@ from .compatibility import reduce, is_sequence
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
-from .operations import AssocOp
+from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
@@ -65,7 +65,6 @@ def _unevaluated_Add(*args):
     if co:
         newargs.insert(0, co)
     return Add._from_args(newargs)
-
 
 class Add(Expr, AssocOp):
 
@@ -1127,6 +1126,7 @@ class Add(Expr, AssocOp):
             return super().__neg__()
         return Add(*[-i for i in self.args])
 
+add = AssocOpDispatcher('add')
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational
