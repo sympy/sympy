@@ -187,6 +187,9 @@ test_list = [
     'sympy/logic',
     'sympy/assumptions',
 
+    # numba
+    '*numba*',
+
 ]
 
 blacklist = [
