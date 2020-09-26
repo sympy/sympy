@@ -87,7 +87,9 @@ class StrPrinter(Printer):
         return self.stringify(expr.args, " ^ ", PRECEDENCE["BitwiseXor"])
 
     def _print_AppliedPredicate(self, expr):
-        return '%s(%s)' % (self._print(expr.func), self._print(expr.arg))
+        return '%s(%s)' % (
+            self._print(expr.func), self.stringify(expr.args, ", ")
+        )
 
     def _print_Basic(self, expr):
         l = [self._print(o) for o in expr.args]

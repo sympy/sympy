@@ -244,7 +244,9 @@ class ReprPrinter(Printer):
         return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
 
     def _print_AppliedPredicate(self, expr):
-        return "%s(%s, %s)" % (expr.__class__.__name__, expr.func, expr.arg)
+        return "%s(%s, %s)" % (
+            expr.__class__.__name__, expr.func, self.reprify(expr.args, ", ")
+        )
 
     def _print_str(self, expr):
         return repr(expr)
