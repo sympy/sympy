@@ -233,14 +233,13 @@ class Predicate(Boolean):
 
         This uses only direct resolution methods, not logical inference.
         """
-        args_types = [type(a) for a in args]
         handlers = [h for h in self.handlers]
         while handlers:
             handler = handlers.pop(0)
             dispatcher = get_class(handler)
             try:
                 res = dispatcher(*args, assumptions=assumptions)
-            except NotImplementedError as error:
+            except NotImplementedError:
                 if handlers:
                     continue
                 return None
