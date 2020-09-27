@@ -80,18 +80,12 @@ class Add(Expr, AssocOp):
         """
         Takes the sequence "seq" of nested Adds and returns a flatten list.
 
-        Explanation
-        ===========
+        Returns: (commutative_part, noncommutative_part, order_symbols)
 
         Applies associativity, all terms are commutable with respect to
         addition.
 
-        The removal of 0 is already handled by AssocOp.__new__.
-
-        Returns
-        =======
-
-        (commutative_part, noncommutative_part, order_symbols)
+        NB: the removal of 0 is already handled by AssocOp.__new__
 
         See also
         ========
@@ -301,10 +295,6 @@ class Add(Expr, AssocOp):
 
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.
-
-        Explanation
-        ===========
-
         Since the dictionary is a defaultdict, inquiries about terms which
         were not present will return a coefficient of 0. If an expression is
         not an Add it is considered to have a single term.
@@ -455,9 +445,6 @@ class Add(Expr, AssocOp):
     def as_two_terms(self):
         """Return head and tail of self.
 
-        Explanation
-        ===========
-
         This is the most efficient way to get the head and tail of an
         expression.
 
@@ -467,9 +454,6 @@ class Add(Expr, AssocOp):
           the arguments of the tail when treated as an Add.
         - if you want the coefficient when self is treated as a Mul
           then use self.as_coeff_mul()[0]
-
-        Examples
-        ========
 
         >>> from sympy.abc import x, y
         >>> (3*x - 2*y + 5).as_two_terms()
@@ -992,7 +976,8 @@ class Add(Expr, AssocOp):
         >>> ((2 + 2*x)*x + 2).as_content_primitive()
         (2, x*(x + 1) + 1)
 
-        See also : primitive() function in polytools.py
+        See also: primitive() function in polytools.py
+
         """
 
         terms = []
@@ -1042,12 +1027,7 @@ class Add(Expr, AssocOp):
 
     def as_content_primitive(self, radical=False, clear=True):
         """Return the tuple (R, self/R) where R is the positive Rational
-        extracted from self.
-
-        Explanation
-        ===========
-
-        If radical is True (default is False) then
+        extracted from self. If radical is True (default is False) then
         common radicals will be removed and included as a factor of the
         primitive expression.
 
@@ -1063,7 +1043,7 @@ class Add(Expr, AssocOp):
         >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive(radical=True)
         (2, sqrt(2)*(1 + 2*sqrt(5)))
 
-        See Also: Expr.as_content_primitive()
+        See docstring of Expr.as_content_primitive for more examples.
         """
         con, prim = self.func(*[_keep_coeff(*a.as_content_primitive(
             radical=radical, clear=clear)) for a in self.args]).primitive()
