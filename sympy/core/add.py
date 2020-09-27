@@ -1063,10 +1063,7 @@ class Add(Expr, AssocOp):
         >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive(radical=True)
         (2, sqrt(2)*(1 + 2*sqrt(5)))
 
-        See Also
-        ========
-
-        as_content_primitive
+        See Also: Expr.as_content_primitive()
         """
         con, prim = self.func(*[_keep_coeff(*a.as_content_primitive(
             radical=radical, clear=clear)) for a in self.args]).primitive()
