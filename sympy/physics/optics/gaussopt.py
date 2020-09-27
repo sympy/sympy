@@ -31,6 +31,7 @@ __all__ = [
     'FlatMirror',
     'CurvedMirror',
     'ThinLens',
+    'ThickLens',
     'GeometricRay',
     'BeamParameter',
     'waist2rayleigh',
@@ -99,7 +100,7 @@ class RayTransferMatrix(MutableDenseMatrix):
 
     GeometricRay, BeamParameter,
     FreeSpace, FlatRefraction, CurvedRefraction,
-    FlatMirror, CurvedMirror, ThinLens
+    FlatMirror, CurvedMirror, ThinLens, ThickLens
 
     References
     ==========
@@ -368,6 +369,44 @@ class ThinLens(RayTransferMatrix):
     def __new__(cls, f):
         f = sympify(f)
         return RayTransferMatrix.__new__(cls, 1, 0, -1/f, 1)
+
+
+class ThickLens(RayTransferMatrix):
+    """
+    Ray Transfer Matrix for a thick lens.
+
+    Parameters
+    ==========
+
+    n1 : refractive index outside of the lens.
+    n2 : refractive index of the lens itself (inside the lens).
+    R1 : Radius of curvature of First surface. (positive for convex)
+    R2 : Radius of curvature of Second surface. (positive for concave)
+    t : center thickness of lens.
+
+    See Also
+    ========
+
+    RayTransferMatrix
+
+    Examples
+    ========
+
+    >>> from sympy.physics.optics import ThickLens
+    >>> from sympy import symbols
+    >>> n1, n2, R1, R2, t = symbols('n1 n2 R1 R2 t')
+    >>> ThickLens(n1, n2, R1, R2, t)
+    Matrix([
+    [                                     (R1*n2 + t*(n1 - n2))/(R1*n2),                       n1*t/n2],
+    [(R1*n2*(-n1 + n2) + (n1 - n2)*(R2*n2 - t*(n1 - n2)))/(R1*R2*n1*n2), (R2*n2 - t*(n1 - n2))/(R2*n2)]])
+    """
+    def __new__(cls, n1, n2, R1, R2, t):
+        n1, n2, R1, R2, t = map(sympify, (n1, n2, R1, R2, t))
+        A = (R1 * n2 + t * (n1 - n2)) / (R1 * n2)
+        B = n1 * t / n2
+        C = (R1 * n2 * (n2 - n1) + (n1 - n2) * (R2 * n2 - t * (n1 - n2))) / (R1 * R2 * n1 * n2)
+        D = (R2 * n2 - t * (n1 - n2)) / (R2 * n2)
+        return RayTransferMatrix.__new__(cls, A, B, C, D)
 
 
 ###

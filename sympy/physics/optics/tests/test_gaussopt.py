@@ -2,7 +2,7 @@ from sympy import atan2, factor, Float, I, Matrix, N, oo, pi, sqrt, symbols
 
 from sympy.physics.optics import (BeamParameter, CurvedMirror,
   CurvedRefraction, FlatMirror, FlatRefraction, FreeSpace, GeometricRay,
-  RayTransferMatrix, ThinLens, conjugate_gauss_beams,
+  RayTransferMatrix, ThinLens, ThickLens, conjugate_gauss_beams,
   gaussian_conj, geometric_conj_ab, geometric_conj_af, geometric_conj_bf,
   rayleigh2waist, waist2rayleigh)
 
@@ -89,3 +89,14 @@ def test_gauss_opt():
     assert p.divergence == l/(pi*w)
     assert p.gouy == atan2(z, pi*w**2/l)
     assert p.waist_approximation_limit == 2*l/pi
+
+def test_gauss_opt_thick_lens():
+    n1, n2, R1, R2, t = symbols('n1 n2 R1 R2 t')
+    lens = ThickLens(n1, n2, R1, R2, t)
+    assert lens == Matrix([[(R1*n2 + t*(n1 - n2))/(R1*n2), n1*t/n2],
+                            [(R1*n2*(-n1 + n2) + (n1 - n2)*(R2*n2 - t*(n1 - n2)))/(R1*R2*n1*n2),
+                            (R2*n2 - t*(n1 - n2))/(R2*n2)]])
+    assert lens.B == (n1 * t) / n2
+    assert lens.A == (R1 * n2 + t * (n1 - n2)) / (R1 * n2)
+    assert lens.C == (R1 * n2 * (n2 - n1) + (n1 - n2) * (R2 * n2 - t * (n1 - n2))) / (R1 * R2 * n1 * n2)
+    assert lens.D == (R2 * n2 - t * (n1 - n2)) / (R2 * n2)
