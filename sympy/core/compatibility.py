@@ -122,6 +122,9 @@ else:
     def unwrap(func, stop=None):
         """Get the object wrapped by *func*.
 
+        Explanation
+        ===========
+
        Follows the chain of :attr:`__wrapped__` attributes returning the last
        object in the chain.
 
@@ -162,6 +165,9 @@ else:
 def with_metaclass(meta, *bases):
     """
     Create a base class with a metaclass.
+
+    Examples
+    ========
 
     For example, if you have the metaclass
 
@@ -224,6 +230,9 @@ def iterable(i, exclude=(str, dict, NotIterable)):
     True also indicates that the iterator is finite, e.g. you can
     call list(...) on the instance.
 
+    Explanation
+    ===========
+
     When SymPy is working with iterables, it is almost always assuming
     that the iterable is not a string or a mapping, so those are excluded
     by default. If you want a pure Python definition, make exclude=None. To
@@ -237,8 +246,6 @@ def iterable(i, exclude=(str, dict, NotIterable)):
     the Python sense but does not desire this behavior (e.g., because its
     iteration is not finite, or because iteration might induce an unwanted
     computation), it should disable it by setting the _iterable attribute to False.
-
-    See also: is_sequence
 
     Examples
     ========
@@ -264,6 +271,10 @@ def iterable(i, exclude=(str, dict, NotIterable)):
     >>> iterable("no", exclude=str)
     False
 
+    See also
+    ========
+
+    is_sequence
     """
     if hasattr(i, '_iterable'):
         return i._iterable
@@ -280,15 +291,16 @@ def is_sequence(i, include=None):
     """
     Return a boolean indicating whether ``i`` is a sequence in the SymPy
     sense. If anything that fails the test below should be included as
-    being a sequence for your application, set 'include' to that object's
+    being a sequence for your application, set ``include`` to that object's
     type; multiple types should be passed as a tuple of types.
 
-    Note: although generators can generate a sequence, they often need special
+    Explanation
+    ===========
+
+    Although generators can generate a sequence, they often need special
     handling to make sure their elements are captured before the generator is
     exhausted, so these are not included by default in the definition of a
     sequence.
-
-    See also: iterable
 
     Examples
     ========
@@ -309,6 +321,10 @@ def is_sequence(i, include=None):
     >>> is_sequence(generator, include=(str, GeneratorType))
     True
 
+    See also
+    ========
+
+    iterable
     """
     return (hasattr(i, '__getitem__') and
             iterable(i) or
@@ -319,6 +335,9 @@ def is_sequence(i, include=None):
 def as_int(n, strict=True):
     """
     Convert the argument to a builtin integer.
+
+    Explanation
+    ===========
 
     The return value is guaranteed to be equal to the input. ValueError is
     raised if the input has a non-integral value. When ``strict`` is True, this
@@ -386,6 +405,9 @@ def as_int(n, strict=True):
 def default_sort_key(item, order=None):
     """Return a key that can be used for sorting.
 
+    Explanation
+    ===========
+
     The key has the structure:
 
     (class_key, (len(args), args), exponent.sort_key(), coefficient)
@@ -394,6 +416,9 @@ def default_sort_key(item, order=None):
     ``item`` is a Basic object or an object (other than a string) that
     sympifies to a Basic object. Otherwise, this function produces the
     key.
+
+    Parameters
+    ==========
 
     The ``order`` argument is passed along to the sort_key routine and is
     used to determine how the terms *within* an expression are ordered.
@@ -446,7 +471,7 @@ def default_sort_key(item, order=None):
     2
 
     Note
-    ----
+    ====
 
     The key returned is useful for getting items into a canonical order
     that will be the same across platforms. It is not directly useful for
@@ -571,6 +596,9 @@ def ordered(seq, keys=None, default=True, warn=False):
     """Return an iterator of the seq where keys are used to break ties in
     a conservative fashion: if, after applying a key, there are no ties
     then no other keys will be computed.
+
+    Explanation
+    ===========
 
     Two default keys will be applied if 1) keys are not provided or 2) the
     given keys don't resolve all ties (but only if ``default`` is True). The
