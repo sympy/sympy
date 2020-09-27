@@ -87,7 +87,7 @@ def fastlog(x):
 
     Explanation
     ===========
-    
+
     Calculated as exponent + width of mantissa. This is an
     approximation for two reasons: 1) it gives the ceil(log2(abs(x)))
     value and 2) it is too high by 1 in the case that x is an exact
@@ -1071,7 +1071,7 @@ def check_convergence(numer, denom, n):
     """
     Returns
     =======
-    
+
     (h, g, p) where
     -- h is:
         > 0 for convergence of rate 1/factorial(n)**h
