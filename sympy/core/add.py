@@ -992,10 +992,7 @@ class Add(Expr, AssocOp):
         >>> ((2 + 2*x)*x + 2).as_content_primitive()
         (2, x*(x + 1) + 1)
 
-        See also
-        ========
-
-        primitive() function in polytools.py
+        See also : primitive() function in polytools.py
         """
 
         terms = []
