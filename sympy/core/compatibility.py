@@ -341,7 +341,7 @@ def as_int(n, strict=True):
 
     The return value is guaranteed to be equal to the input. ValueError is
     raised if the input has a non-integral value. When ``strict`` is True, this
-    uses ``__index__ <https://docs.python.org/3/reference/datamodel.html#object.__index__>``_
+    uses `__index__ <https://docs.python.org/3/reference/datamodel.html#object.__index__>`_
     and when it is False it uses ``int``.
 
 
