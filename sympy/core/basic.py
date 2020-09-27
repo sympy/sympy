@@ -29,8 +29,8 @@ class Basic(Printable, metaclass=ManagedProperties):
     """
     Base class for all SymPy objects.
 
-    Notes and conventions
-    =====================
+    Examples
+    ========
 
     1) Always use ``.args``, when accessing parameters of some instance:
 
@@ -155,6 +155,9 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         Return object `type` assumptions.
 
+        Explanation
+        ===========
+
         For example:
 
           Symbol('x', real=True)
@@ -185,6 +188,9 @@ class Basic(Printable, metaclass=ManagedProperties):
     def compare(self, other):
         """
         Return -1, 0, 1 if the object is smaller, equal, or greater than other.
+
+        Explanation
+        ===========
 
         Not in the mathematical sense. If the object is of a different type
         from the "other" then their classes are ordered according to
@@ -260,6 +266,9 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         Create a new object from an iterable.
 
+        Explanation
+        ===========
+
         This is a convenience function that allows one to create objects from
         any iterable, without having to convert to a list or tuple first.
 
@@ -315,8 +324,8 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         This is the same as a.compare(b) == 0 but faster.
 
-        Notes
-        =====
+        Explanation
+        ===========
 
         If a class that overrides __eq__() needs to retain the
         implementation of __hash__() from a parent class, the
@@ -415,6 +424,9 @@ class Basic(Printable, metaclass=ManagedProperties):
     def atoms(self, *types):
         """Returns the atoms that form the current object.
 
+        Explanation
+        ===========
+
         By default, only objects that are truly atomic and can't
         be divided into smaller pieces are returned: symbols, numbers,
         and number symbols like I and pi. It is possible to request
@@ -494,6 +506,9 @@ class Basic(Printable, metaclass=ManagedProperties):
     @property
     def free_symbols(self):
         """Return from the atoms of self those which are free symbols.
+
+        Explanation
+        ===========
 
         For most expressions, all symbols are free symbols. For some classes
         this is not true. e.g. Integrals use Symbols for the dummy variables
@@ -590,12 +605,18 @@ class Basic(Printable, metaclass=ManagedProperties):
     def rcall(self, *args):
         """Apply on the argument recursively through the expression tree.
 
+        Explanation
+        ===========
+
         This method is used to simulate a common abuse of notation for
         operators. For instance in SymPy the the following will not work:
 
         ``(x+Lambda(y, 2*y))(z) == x+2*z``,
 
         however you can use
+
+        Examples
+        ========
 
         >>> from sympy import Lambda
         >>> from sympy.abc import x, y, z
@@ -684,6 +705,9 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         The top-level function in an expression.
 
+        Explanation
+        ===========
+
         The following should hold for all objects::
 
             >> x == x.func(*x.args)
@@ -760,6 +784,9 @@ class Basic(Printable, metaclass=ManagedProperties):
     def subs(self, *args, **kwargs):
         """
         Substitutes old for new in an expression after sympifying args.
+
+        Parameters
+        ==========
 
         `args` is either:
           - two arguments, e.g. foo.subs(old, new)
@@ -863,6 +890,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         See Also
         ========
+
         replace: replacement capable of doing wildcard-like matching,
                  parsing of match, and conditional replacements
         xreplace: exact node replacement in expr tree; also capable of
@@ -954,17 +982,20 @@ class Basic(Printable, metaclass=ManagedProperties):
     def _subs(self, old, new, **hints):
         """Substitutes an expression old -> new.
 
+        Explanation
+        ===========
+
         If self is not equal to old then _eval_subs is called.
         If _eval_subs doesn't want to make any special replacement
         then a None is received which indicates that the fallback
         should be applied wherein a search for replacements is made
         amongst the arguments of self.
 
-        >>> from sympy import Add
-        >>> from sympy.abc import x, y, z
-
         Examples
         ========
+
+        >>> from sympy import Add
+        >>> from sympy.abc import x, y, z
 
         Add's _eval_subs knows how to target x + y in the following
         so it makes the change:
@@ -1235,6 +1266,9 @@ class Basic(Printable, metaclass=ManagedProperties):
     def replace(self, query, value, map=False, simultaneous=True, exact=None):
         """
         Replace matching subexpressions of ``self`` with ``value``.
+
+        Explanation
+        ===========
 
         If ``map = True`` then also return the mapping {old: new} where ``old``
         was a sub-expression found with query and ``new`` is the replacement
@@ -1555,6 +1589,9 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         Pattern matching.
 
+        Explanation
+        ===========
+
         Wild symbols match all.
 
         Return ``None`` when expression (self) does not match
@@ -1644,6 +1681,9 @@ class Basic(Printable, metaclass=ManagedProperties):
         evaluated recursively, unless some species were excluded via 'hints'
         or unless the 'deep' hint was set to 'False'.
 
+        Examples
+        ========
+
         >>> from sympy import Integral
         >>> from sympy.abc import x
 
@@ -1726,6 +1766,9 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def rewrite(self, *args, **hints):
         """ Rewrite functions in terms of other functions.
+
+        Explanation
+        ===========
 
         Rewrites expression containing applications of functions
         of one kind in terms of functions of different kind. For
@@ -1957,6 +2000,9 @@ class preorder_traversal:
     """
     Do a pre-order traversal of a tree.
 
+    Explanation
+    ===========
+
     This iterator recursively yields nodes that it has visited in a pre-order
     fashion. That is, it yields the current node then descends through the
     tree breadth-first to yield all of a node's children's pre-order
@@ -1968,6 +2014,7 @@ class preorder_traversal:
 
     Parameters
     ==========
+
     node : sympy expression
         The expression to traverse.
     keys : (default None) sort key(s)
@@ -1977,8 +2024,9 @@ class preorder_traversal:
         arguments; if ``key`` is simply True then the default keys of ordered
         will be used.
 
-    Yields
-    ======
+    Returns
+    =======
+
     subtree : sympy expression
         All of the subtrees in the tree.
 
