@@ -465,9 +465,6 @@ def _ask(fact, obj):
     """
     Find the truth value for a property of an object.
 
-    Explanation
-    ===========
-
     This function is called when a request is made to see what a fact
     value is.
 
