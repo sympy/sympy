@@ -12,13 +12,11 @@ from sympy.external import import_module
 
 """
 Python 2 and Python 3 compatible imports
-
 String and Unicode compatible changes:
     * `unicode()` removed in Python 3, import `unicode` for Python 2/3
       compatible function
     * Use `u()` for escaped unicode sequences (e.g. u'\u2020' -> u('\u2020'))
     * Use `u_decode()` to decode utf-8 formatted unicode strings
-
 Renamed function attributes:
     * Python 2 `.func_code`, Python 3 `.__func__`, access with
       `get_function_code()`
@@ -26,16 +24,13 @@ Renamed function attributes:
       `get_function_globals()`
     * Python 2 `.func_name`, Python 3 `.__name__`, access with
       `get_function_name()`
-
 Moved modules:
     * `reduce()`
     * `StringIO()`
     * `cStringIO()` (same as `StingIO()` in Python 3)
     * Python 2 `__builtin__`, access with Python 3 name, `builtins`
-
 exec:
     * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
-
 Metaclasses:
     * Use `with_metaclass()`, examples below
         * Define class `Foo` with metaclass `Meta`, and no parent:
@@ -121,22 +116,15 @@ else:
 
     def unwrap(func, stop=None):
         """Get the object wrapped by *func*.
-
-        Explanation
-        ===========
-
        Follows the chain of :attr:`__wrapped__` attributes returning the last
        object in the chain.
-
        *stop* is an optional callback accepting an object in the wrapper chain
        as its sole argument that allows the unwrapping to be terminated early if
        the callback returns a true value. If the callback never returns a true
        value, the last object in the chain is returned as usual. For example,
        :func:`signature` uses this to stop unwrapping if any object in the
        chain has a ``__signature__`` attribute defined.
-
        :exc:`ValueError` is raised if a cycle is encountered.
-
         """
         if stop is None:
             def _is_wrapper(f):
@@ -165,40 +153,26 @@ else:
 def with_metaclass(meta, *bases):
     """
     Create a base class with a metaclass.
-
-    Examples
-    ========
-
     For example, if you have the metaclass
-
     >>> class Meta(type):
     ...     pass
-
     Use this as the metaclass by doing
-
     >>> from sympy.core.compatibility import with_metaclass
     >>> class MyClass(with_metaclass(Meta, object)):
     ...     pass
-
     This is equivalent to the Python 2::
-
         class MyClass(object):
             __metaclass__ = Meta
-
     or Python 3::
-
         class MyClass(object, metaclass=Meta):
             pass
-
     That is, the first argument is the metaclass, and the remaining arguments
     are the base classes. Note that if the base class is just ``object``, you
     may omit it.
-
     >>> MyClass.__mro__
     (<class '...MyClass'>, <... 'object'>)
     >>> type(MyClass)
     <class '...Meta'>
-
     """
     # This requires a bit of explanation: the basic idea is to make a dummy
     # metaclass for one level of class instantiation that replaces itself with
@@ -229,27 +203,20 @@ def iterable(i, exclude=(str, dict, NotIterable)):
     Return a boolean indicating whether ``i`` is SymPy iterable.
     True also indicates that the iterator is finite, e.g. you can
     call list(...) on the instance.
-
-    Explanation
-    ===========
-
     When SymPy is working with iterables, it is almost always assuming
     that the iterable is not a string or a mapping, so those are excluded
     by default. If you want a pure Python definition, make exclude=None. To
     exclude multiple items, pass them as a tuple.
-
     You can also set the _iterable attribute to True or False on your class,
     which will override the checks here, including the exclude test.
-
     As a rule of thumb, some SymPy functions use this to check if they should
     recursively map over an object. If an object is technically iterable in
     the Python sense but does not desire this behavior (e.g., because its
     iteration is not finite, or because iteration might induce an unwanted
     computation), it should disable it by setting the _iterable attribute to False.
-
+    See also: is_sequence
     Examples
     ========
-
     >>> from sympy.utilities.iterables import iterable
     >>> from sympy import Tuple
     >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
@@ -263,18 +230,12 @@ def iterable(i, exclude=(str, dict, NotIterable)):
     False <... 'dict'>
     False <... 'str'>
     False <... 'int'>
-
     >>> iterable({}, exclude=None)
     True
     >>> iterable({}, exclude=str)
     True
     >>> iterable("no", exclude=str)
     False
-
-    See also
-    ========
-
-    is_sequence
     """
     if hasattr(i, '_iterable'):
         return i._iterable
@@ -291,20 +252,15 @@ def is_sequence(i, include=None):
     """
     Return a boolean indicating whether ``i`` is a sequence in the SymPy
     sense. If anything that fails the test below should be included as
-    being a sequence for your application, set ``include`` to that object's
+    being a sequence for your application, set 'include' to that object's
     type; multiple types should be passed as a tuple of types.
-
-    Explanation
-    ===========
-
-    Although generators can generate a sequence, they often need special
+    Note: although generators can generate a sequence, they often need special
     handling to make sure their elements are captured before the generator is
     exhausted, so these are not included by default in the definition of a
     sequence.
-
+    See also: iterable
     Examples
     ========
-
     >>> from sympy.utilities.iterables import is_sequence
     >>> from types import GeneratorType
     >>> is_sequence([])
@@ -320,11 +276,6 @@ def is_sequence(i, include=None):
     False
     >>> is_sequence(generator, include=(str, GeneratorType))
     True
-
-    See also
-    ========
-
-    iterable
     """
     return (hasattr(i, '__getitem__') and
             iterable(i) or
@@ -335,33 +286,22 @@ def is_sequence(i, include=None):
 def as_int(n, strict=True):
     """
     Convert the argument to a builtin integer.
-
-    Explanation
-    ===========
-
     The return value is guaranteed to be equal to the input. ValueError is
     raised if the input has a non-integral value. When ``strict`` is True, this
     uses `__index__ <https://docs.python.org/3/reference/datamodel.html#object.__index__>`_
     and when it is False it uses ``int``.
-
-
     Examples
     ========
-
     >>> from sympy.core.compatibility import as_int
     >>> from sympy import sqrt, S
-
     The function is primarily concerned with sanitizing input for
     functions that need to work with builtin integers, so anything that
     is unambiguously an integer should be returned as an int:
-
     >>> as_int(S(3))
     3
-
     Floats, being of limited precision, are not assumed to be exact and
     will raise an error unless the ``strict`` flag is False. This
     precision issue becomes apparent for large floating point numbers:
-
     >>> big = 1e23
     >>> type(big) is float
     True
@@ -373,10 +313,8 @@ def as_int(n, strict=True):
     ValueError: ... is not an integer
     >>> as_int(big, strict=False)
     99999999999999991611392
-
     Input that might be a complex representation of an integer value is
     also rejected by default:
-
     >>> one = sqrt(3 + 2*sqrt(2)) - sqrt(2)
     >>> int(one) == 1
     True
@@ -404,42 +342,26 @@ def as_int(n, strict=True):
 
 def default_sort_key(item, order=None):
     """Return a key that can be used for sorting.
-
-    Explanation
-    ===========
-
     The key has the structure:
-
     (class_key, (len(args), args), exponent.sort_key(), coefficient)
-
     This key is supplied by the sort_key routine of Basic objects when
     ``item`` is a Basic object or an object (other than a string) that
     sympifies to a Basic object. Otherwise, this function produces the
     key.
-
-    Parameters
-    ==========
-
     The ``order`` argument is passed along to the sort_key routine and is
     used to determine how the terms *within* an expression are ordered.
     (See examples below) ``order`` options are: 'lex', 'grlex', 'grevlex',
     and reversed values of the same (e.g. 'rev-lex'). The default order
     value is None (which translates to 'lex').
-
     Examples
     ========
-
     >>> from sympy import S, I, default_sort_key, sin, cos, sqrt
     >>> from sympy.core.function import UndefinedFunction
     >>> from sympy.abc import x
-
     The following are equivalent ways of getting the key for an object:
-
     >>> x.sort_key() == default_sort_key(x)
     True
-
     Here are some examples of the key that is produced:
-
     >>> default_sort_key(UndefinedFunction('f'))
     ((0, 0, 'UndefinedFunction'), (1, ('f',)), ((1, 0, 'Number'),
         (0, ()), (), 1), 1)
@@ -449,45 +371,33 @@ def default_sort_key(item, order=None):
     ((1, 0, 'Number'), (0, ()), (), 1)
     >>> default_sort_key(2)
     ((1, 0, 'Number'), (0, ()), (), 2)
-
-
     While sort_key is a method only defined for SymPy objects,
     default_sort_key will accept anything as an argument so it is
     more robust as a sorting key. For the following, using key=
     lambda i: i.sort_key() would fail because 2 doesn't have a sort_key
     method; that's why default_sort_key is used. Note, that it also
     handles sympification of non-string items likes ints:
-
     >>> a = [2, I, -I]
     >>> sorted(a, key=default_sort_key)
     [2, -I, I]
-
     The returned key can be used anywhere that a key can be specified for
     a function, e.g. sort, min, max, etc...:
-
     >>> a.sort(key=default_sort_key); a[0]
     2
     >>> min(a, key=default_sort_key)
     2
-
     Note
-    ====
-
+    ----
     The key returned is useful for getting items into a canonical order
     that will be the same across platforms. It is not directly useful for
     sorting lists of expressions:
-
     >>> a, b = x, 1/x
-
     Since ``a`` has only 1 term, its value of sort_key is unaffected by
     ``order``:
-
     >>> a.sort_key() == a.sort_key('rev-lex')
     True
-
     If ``a`` and ``b`` are combined then the key will differ because there
     are terms that can be ordered:
-
     >>> eq = a + b
     >>> eq.sort_key() == eq.sort_key('rev-lex')
     False
@@ -495,32 +405,24 @@ def default_sort_key(item, order=None):
     [x, 1/x]
     >>> eq.as_ordered_terms('rev-lex')
     [1/x, x]
-
     But since the keys for each of these terms are independent of ``order``'s
     value, they don't sort differently when they appear separately in a list:
-
     >>> sorted(eq.args, key=default_sort_key)
     [1/x, x]
     >>> sorted(eq.args, key=lambda i: default_sort_key(i, order='rev-lex'))
     [1/x, x]
-
     The order of terms obtained when using these keys is the order that would
     be obtained if those terms were *factors* in a product.
-
     Although it is useful for quickly putting expressions in canonical order,
     it does not sort expressions based on their complexity defined by the
     number of operations, power of variables and others:
-
     >>> sorted([sin(x)*cos(x), sin(x)], key=default_sort_key)
     [sin(x)*cos(x), sin(x)]
     >>> sorted([x, x**2, sqrt(x), x**3], key=default_sort_key)
     [sqrt(x), x, x**2, x**3]
-
     See Also
     ========
-
     ordered, sympy.core.expr.as_ordered_factors, sympy.core.expr.as_ordered_terms
-
     """
 
     from .singleton import S
@@ -596,62 +498,44 @@ def ordered(seq, keys=None, default=True, warn=False):
     """Return an iterator of the seq where keys are used to break ties in
     a conservative fashion: if, after applying a key, there are no ties
     then no other keys will be computed.
-
-    Explanation
-    ===========
-
     Two default keys will be applied if 1) keys are not provided or 2) the
     given keys don't resolve all ties (but only if ``default`` is True). The
     two keys are ``_nodes`` (which places smaller expressions before large) and
     ``default_sort_key`` which (if the ``sort_key`` for an object is defined
     properly) should resolve any ties.
-
     If ``warn`` is True then an error will be raised if there were no
     keys remaining to break ties. This can be used if it was expected that
     there should be no ties between items that are not identical.
-
     Examples
     ========
-
     >>> from sympy.utilities.iterables import ordered
     >>> from sympy import count_ops
     >>> from sympy.abc import x, y
-
     The count_ops is not sufficient to break ties in this list and the first
     two items appear in their original order (i.e. the sorting is stable):
-
     >>> list(ordered([y + 2, x + 2, x**2 + y + 3],
     ...    count_ops, default=False, warn=False))
     ...
     [y + 2, x + 2, x**2 + y + 3]
-
     The default_sort_key allows the tie to be broken:
-
     >>> list(ordered([y + 2, x + 2, x**2 + y + 3]))
     ...
     [x + 2, y + 2, x**2 + y + 3]
-
     Here, sequences are sorted by length, then sum:
-
     >>> seq, keys = [[[1, 2, 1], [0, 3, 1], [1, 1, 3], [2], [1]], [
     ...    lambda x: len(x),
     ...    lambda x: sum(x)]]
     ...
     >>> list(ordered(seq, keys, default=False, warn=False))
     [[1], [2], [1, 2, 1], [0, 3, 1], [1, 1, 3]]
-
     If ``warn`` is True, an error will be raised if there were not
     enough keys to break ties:
-
     >>> list(ordered(seq, keys, default=False, warn=True))
     Traceback (most recent call last):
     ...
     ValueError: not enough keys to break ties
-
-
     Notes
     =====
-
     The decorated sort is one of the fastest ways to sort a sequence for
     which special item comparison is desired: the sequence is decorated,
     sorted on the basis of the decoration (e.g. making all letters lower
@@ -662,7 +546,6 @@ def ordered(seq, keys=None, default=True, warn=False):
     values need to be decorated. This function applies keys successively
     only when needed to break ties. By yielding an iterator, use of the
     tie-breaker is delayed as long as possible.
-
     This function is best used in cases when use of the first key is
     expected to be a good hashing function; if there are no unique hashes
     from application of a key, then that key should not have been used. The
@@ -673,7 +556,6 @@ def ordered(seq, keys=None, default=True, warn=False):
     there were several criteria used to define the sort order, then this
     function would be good at returning that quickly if the first group
     of candidates is small relative to the number of items being processed.
-
     """
     d = defaultdict(list)
     if keys:
