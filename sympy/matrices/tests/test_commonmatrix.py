@@ -20,6 +20,7 @@ from sympy.matrices import (Matrix, diag, eye,
 from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy import Array
 
 from sympy.abc import x, y, z
 
@@ -1059,3 +1060,8 @@ def test_rmul_pr19860():
 
     assert isinstance(c, Foo)
     assert c == Matrix([[7, 10], [15, 22]])
+
+def test_issue_18956():
+    A = Array([[1, 2], [3, 4]])
+    B = Matrix([[1,2],[3,4]])
+    raises(TypeError, lambda: B + A)
