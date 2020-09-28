@@ -213,6 +213,9 @@ def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.
 
+    Explanation
+    ===========
+
     This is strictly only valid if the exponent from which
     the integer is extracted is itself an integer or the
     base is positive. These conditions are assumed and not
@@ -925,12 +928,17 @@ class Term:
 def _gcd_terms(terms, isprimitive=False, fraction=True):
     """Helper function for :func:`gcd_terms`.
 
-    If ``isprimitive`` is True then the call to primitive
-    for an Add will be skipped. This is useful when the
-    content has already been extrated.
+    Parameters
+    ==========
 
-    If ``fraction`` is True then the expression will appear over a common
-    denominator, the lcm of all term denominators.
+    isprimitive : boolean, optional
+        If ``isprimitive`` is True then the call to primitive
+        for an Add will be skipped. This is useful when the
+        content has already been extrated.
+
+    fraction : boolean, optional
+        If ``fraction`` is True then the expression will appear over a common
+        denominator, the lcm of all term denominators.
     """
 
     if isinstance(terms, Basic) and not isinstance(terms, Tuple):
@@ -985,19 +993,26 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
 def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     """Compute the GCD of ``terms`` and put them together.
 
-    ``terms`` can be an expression or a non-Basic sequence of expressions
-    which will be handled as though they are terms from a sum.
+    Parameters
+    ==========
 
-    If ``isprimitive`` is True the _gcd_terms will not run the primitive
-    method on the terms.
+    terms : Expr
+        Can be an expression or a non-Basic sequence of expressions
+        which will be handled as though they are terms from a sum.
 
-    ``clear`` controls the removal of integers from the denominator of an Add
-    expression. When True (default), all numerical denominator will be cleared;
-    when False the denominators will be cleared only if all terms had numerical
-    denominators other than 1.
+    isprimitive : boolean, optional
+        If ``isprimitive`` is True the _gcd_terms will not run the primitive
+        method on the terms.
 
-    ``fraction``, when True (default), will put the expression over a common
-    denominator.
+    clear : boolean, optional
+        It controls the removal of integers from the denominator of an Add
+        expression. When True (default), all numerical denominator will be cleared;
+        when False the denominators will be cleared only if all terms had numerical
+        denominators other than 1.
+
+    fraction : boolean, optional
+        When True (default), will put the expression over a common
+        denominator.
 
     Examples
     ========
@@ -1032,6 +1047,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
 
     See Also
     ========
+
     factor_terms, sympy.polys.polytools.terms_gcd
 
     """
@@ -1153,18 +1169,25 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutatives) is performed.
 
-    If radical=True then a radical common to all terms will be factored
-    out of any Add sub-expressions of the expr.
+    Parameters
+    ==========
 
-    If clear=False (default) then coefficients will not be separated
-    from a single Add if they can be distributed to leave one or more
-    terms with integer coefficients.
+    radical: boolean, optional
+        If radical=True then a radical common to all terms will be factored
+        out of any Add sub-expressions of the expr.
 
-    If fraction=True (default is False) then a common denominator will be
-    constructed for the expression.
+    clear : boolean, optional
+        If clear=False (default) then coefficients will not be separated
+        from a single Add if they can be distributed to leave one or more
+        terms with integer coefficients.
 
-    If sign=True (default) then even if the only factor in common is a -1,
-    it will be factored out of the expression.
+    fraction : True, optional
+        If fraction=True (default is False) then a common denominator will be
+        constructed for the expression.
+
+    sign : boolean
+        If sign=True (default) then even if the only factor in common is a -1,
+        it will be factored out of the expression.
 
     Examples
     ========
@@ -1198,6 +1221,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
 
     See Also
     ========
+
     gcd_terms, sympy.polys.polytools.terms_gcd
 
     """
@@ -1262,12 +1286,9 @@ def _mask_nc(eq, name=None):
     and cannot be made commutative. The third value returned is a list
     of any non-commutative symbols that appear in the returned equation.
 
-    ``name``, if given, is the name that will be used with numbered Dummy
-    variables that will replace the non-commutative objects and is mainly
-    used for doctesting purposes.
+    Explanation
+    ===========
 
-    Notes
-    =====
     All non-commutative objects other than Symbols are replaced with
     a non-commutative Symbol. Identical objects will be identified
     by identical symbols.
@@ -1277,6 +1298,14 @@ def _mask_nc(eq, name=None):
     entities are retained and the calling routine should handle
     replacements in this case since some care must be taken to keep
     track of the ordering of symbols when they occur within Muls.
+
+    Parameters
+    ==========
+
+    name : str
+        ``name``, if given, is the name that will be used with numbered Dummy
+        variables that will replace the non-commutative objects and is mainly
+        used for doctesting purposes.
 
     Examples
     ========
