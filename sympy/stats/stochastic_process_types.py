@@ -25,6 +25,7 @@ from sympy.stats.frv_types import Bernoulli, BernoulliDistribution, FiniteRV
 from sympy.stats.drv_types import Poisson, PoissonDistribution
 from sympy.stats.crv_types import Normal, NormalDistribution, Gamma, GammaDistribution
 from sympy.core.sympify import _sympify, sympify
+from sympy.core.symbol import Str
 
 __all__ = [
     'StochasticProcess',
@@ -423,11 +424,16 @@ class MarkovProcess(StochasticProcess):
 
     def replace_with_index(self, condition):
         if isinstance(condition, Relational):
-            if condition.rhs.is_symbol:
+            if isinstance(condition.rhs, Symbol) or isinstance(condition.rhs, Str):
                 try:
-                    return Eq(condition.lhs, self.state_space.index(condition.rhs))
+                    condition = type(condition)(condition.lhs, self.index_of[condition.rhs])
                 except NameError:
                     raise NameError('%s not found in the state space'%condition.rhs)
+            if isinstance(condition.lhs, Symbol) or isinstance(condition.rhs, Str):
+                try:
+                    condition = type(condition)(self.index_of[condition.lhs], condition.rhs)
+                except NameError:
+                    raise NameError('%s not found in the state space'%condition.lhs)
         return condition
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
@@ -767,11 +773,12 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     def index_of(self) -> tSequence:
         """Converts a state name to a state index i.e. inverts self.state_space."""
         if isinstance(self.number_of_states, Integer):
-            indexes = {state: index for index, state in enumerate(self.state_space)}
+            indexes = {}
             # add `Symbol` values to the keys as well
             for index, state in enumerate(self.state_space):
                 if isinstance(state, Symbol):
-                    indexes[str(state)] = index
+                    indexes.update({Str(str(state)) : index})
+                indexes.update({state : index})
             return indexes
         else:
             if self.state_space == Range(self.number_of_states):

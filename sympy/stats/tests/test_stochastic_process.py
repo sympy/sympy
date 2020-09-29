@@ -1,5 +1,5 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
-                   ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda, erf,
+                   ImmutableMatrix, Ne, Lt, Le, Gt, Ge, exp, Not, Rational, Lambda, erf,
                    Piecewise, factorial, Interval, oo, Contains, sqrt, pi, ceiling,
                    gamma, lowergamma, Sum, Range, Tuple, ImmutableDenseMatrix)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
@@ -38,12 +38,12 @@ def test_DiscreteMarkovChain():
     # pass name and state_space
     # any hashable object should be a valid state
     # states should be valid as a tuple/set/list/Tuple/Range
-    sym = symbols('a', real=True)
+    sym, rainy, cloudy, sunny = symbols('a Rainy Cloudy Sunny', real=True)
     state_spaces = [(1, 2, 3), [Str('Hello'), sym, DiscreteMarkovChain],
-                    Tuple(1, exp(sym), Str('World'), sympify=False), Range(-1, 7, 2)]
-    chains = [DiscreteMarkovChain("Y", state_spaces[0]),
-              DiscreteMarkovChain("Y", state_spaces[1]),
-              DiscreteMarkovChain("Y", state_spaces[2])]
+                    Tuple(1, exp(sym), Str('World'), sympify=False), Range(-1, 5, 2),
+                    [rainy, cloudy, sunny]]
+    chains = [DiscreteMarkovChain("Y", state_space) for state_space in state_spaces]
+
     for i, Y in enumerate(chains):
         assert isinstance(Y.transition_probabilities, MatrixSymbol)
         assert Y.state_space == Tuple(*state_spaces[i])
@@ -58,6 +58,8 @@ def test_DiscreteMarkovChain():
         assert E(Y[0]) == Expectation(Y[0])
 
         raises(ValueError, lambda: next(sample_stochastic_process(Y)))
+
+    assert P(Ge(rainy, Y[3]), Eq(Y[1], cloudy)) == P(Le(Y[3], 0), Eq(Y[1], Str("Cloudy")))
 
     raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
     Y = DiscreteMarkovChain("Y", Range(1, t, 2))
