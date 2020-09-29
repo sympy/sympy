@@ -230,6 +230,9 @@ def _literal_float(f):
 def igcd(*args):
     """Computes nonnegative integer greatest common divisor.
 
+    Explanation
+    ===========
+
     The algorithm is based on the well known Euclid's algorithm. To
     improve speed, igcd() has its own caching mechanism implemented.
 
@@ -279,6 +282,9 @@ except ImportError:
 BIGBITS = 5000
 def igcd_lehmer(a, b):
     """Computes greatest common divisor of two integers.
+
+    Explanation
+    ===========
 
     Euclid's algorithm for the computation of the greatest
     common divisor  gcd(a, b)  of two (positive) integers
@@ -449,17 +455,20 @@ def ilcm(*args):
 def igcdex(a, b):
     """Returns x, y, g such that g = x*a + y*b = gcd(a, b).
 
-       >>> from sympy.core.numbers import igcdex
-       >>> igcdex(2, 3)
-       (-1, 1, 1)
-       >>> igcdex(10, 12)
-       (-1, 1, 2)
+    Examples
+    ========
 
-       >>> x, y, g = igcdex(100, 2004)
-       >>> x, y, g
-       (-20, 1, 4)
-       >>> x*100 + y*2004
-       4
+    >>> from sympy.core.numbers import igcdex
+    >>> igcdex(2, 3)
+    (-1, 1, 1)
+    >>> igcdex(10, 12)
+    (-1, 1, 2)
+
+    >>> x, y, g = igcdex(100, 2004)
+    >>> x, y, g
+    (-20, 1, 4)
+    >>> x*100 + y*2004
+    4
 
     """
     if (not a) and (not b):
@@ -525,6 +534,7 @@ def mod_inverse(a, m):
 
     References
     ==========
+
     - https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
     - https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
     """
@@ -556,6 +566,9 @@ def mod_inverse(a, m):
 
 class Number(AtomicExpr):
     """Represents atomic numbers in SymPy.
+
+    Explanation
+    ===========
 
     Floating point numbers are represented by the Float class.
     Rational numbers (of any size) are represented by the Rational class.
@@ -1672,6 +1685,9 @@ class Rational(Number):
     def limit_denominator(self, max_denominator=1000000):
         """Closest Rational to self with denominator at most max_denominator.
 
+        Examples
+        ========
+
         >>> from sympy import Rational
         >>> Rational('3.141592653589793').limit_denominator(10)
         22/7
@@ -2302,7 +2318,10 @@ class Integer(Rational):
         """
         Tries to do some simplifications on self**expt
 
-        Returns None if no further simplifications can be done
+        Returns None if no further simplifications can be done.
+
+        Explanation
+        ===========
 
         When exponent is a fraction (so we have for example a square root),
         we try to find a simpler representation by factoring the argument
@@ -2795,6 +2814,9 @@ class Half(RationalConstant, metaclass=Singleton):
 class Infinity(Number, metaclass=Singleton):
     r"""Positive infinite quantity.
 
+    Explanation
+    ===========
+
     In real analysis the symbol `\infty` denotes an unbounded
     limit: `x\to\infty` means that `x` grows without bound.
 
@@ -3156,6 +3178,9 @@ class NaN(Number, metaclass=Singleton):
     """
     Not a Number.
 
+    Explanation
+    ===========
+
     This serves as a place holder for numeric values that are indeterminate.
     Most operations on NaN, produce another NaN.  Most indeterminate forms,
     such as ``0/0`` or ``oo - oo` produce NaN.  Two exceptions are ``0**0``
@@ -3278,6 +3303,9 @@ def _eval_is_eq(a, b): # noqa:F811
 
 class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     r"""Complex infinity.
+
+    Explanation
+    ===========
 
     In complex analysis the symbol `\tilde\infty`, called "complex
     infinity", represents a quantity with infinite magnitude, but
@@ -3415,6 +3443,9 @@ class NumberSymbol(AtomicExpr):
 class Exp1(NumberSymbol, metaclass=Singleton):
     r"""The `e` constant.
 
+    Explanation
+    ===========
+
     The transcendental number `e = 2.718281828\ldots` is the base of the
     natural logarithm and of the exponential function, `e = \exp(1)`.
     Sometimes called Euler's number or Napier's constant.
@@ -3489,6 +3520,9 @@ E = S.Exp1
 class Pi(NumberSymbol, metaclass=Singleton):
     r"""The `\pi` constant.
 
+    Explanation
+    ===========
+
     The transcendental number `\pi = 3.141592654\ldots` represents the ratio
     of a circle's circumference to its diameter, the area of the unit circle,
     the half-period of trigonometric functions, and many other things
@@ -3557,6 +3591,9 @@ pi = S.Pi
 class GoldenRatio(NumberSymbol, metaclass=Singleton):
     r"""The golden ratio, `\phi`.
 
+    Explanation
+    ===========
+
     `\phi = \frac{1 + \sqrt{5}}{2}` is algebraic number.  Two quantities
     are in the golden ratio if their ratio is the same as the ratio of
     their sum to the larger of the two quantities, i.e. their maximum.
@@ -3620,6 +3657,9 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
 
 class TribonacciConstant(NumberSymbol, metaclass=Singleton):
     r"""The tribonacci constant.
+
+    Explanation
+    ===========
 
     The tribonacci numbers are like the Fibonacci numbers, but instead
     of starting with two predetermined terms, the sequence starts with
@@ -3688,6 +3728,9 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
 class EulerGamma(NumberSymbol, metaclass=Singleton):
     r"""The Euler-Mascheroni constant.
 
+    Explanation
+    ===========
+
     `\gamma = 0.5772157\ldots` (also called Euler's constant) is a mathematical
     constant recurring in analysis and number theory.  It is defined as the
     limiting difference between the harmonic series and the
@@ -3747,6 +3790,9 @@ class EulerGamma(NumberSymbol, metaclass=Singleton):
 
 class Catalan(NumberSymbol, metaclass=Singleton):
     r"""Catalan's constant.
+
+    Explanation
+    ===========
 
     `K = 0.91596559\ldots` is given by the infinite series
 
