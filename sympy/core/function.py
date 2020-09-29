@@ -117,6 +117,9 @@ class BadArgumentsError(TypeError):
 def arity(cls):
     """Return the arity of the function if it is known, else None.
 
+    Explanation
+    ===========
+
     When default values are specified for some arguments, they are
     optional and the arity is reported as a tuple of possible values.
 
@@ -255,6 +258,9 @@ class Application(Basic, metaclass=FunctionClass):
     """
     Base class for applied functions.
 
+    Explanation
+    ===========
+
     Instances of Application represent the result of applying an application of
     any type to any object.
     """
@@ -310,6 +316,9 @@ class Application(Basic, metaclass=FunctionClass):
     def eval(cls, *args):
         """
         Returns a canonical form of cls applied to arguments args.
+
+        Explanation
+        ===========
 
         The eval() method is called when the class cls is about to be
         instantiated and it should return either some simplified instance
@@ -474,6 +483,9 @@ class Function(Application, Expr):
     def _should_evalf(cls, arg):
         """
         Decide if the function should automatically evalf().
+
+        Explanation
+        ===========
 
         By default (in this implementation), this happens if (and only if) the
         ARG is a floating point number.
@@ -1832,6 +1844,7 @@ class Derivative(Expr):
 
         Parameters
         ==========
+
         points : sequence or coefficient, optional
             If sequence: discrete values (length >= order+1) of the
             independent variable used for generating the finite
@@ -1839,9 +1852,11 @@ class Derivative(Expr):
             If it is a coefficient, it will be used as the step-size
             for generating an equidistant sequence of length order+1
             centered around ``x0``. Default: 1 (step-size 1)
+
         x0 : number or Symbol, optional
             the value of the independent variable (``wrt``) at which the
             derivative is to be approximated. Default: same as ``wrt``.
+
         wrt : Symbol, optional
             "with respect to" the variable for which the (partial)
             derivative is to be approximated for. If not provided it
@@ -1850,6 +1865,7 @@ class Derivative(Expr):
 
         Examples
         ========
+
         >>> from sympy import symbols, Function, exp, sqrt, Symbol
         >>> x, h = symbols('x h')
         >>> f = Function('f')
@@ -2071,9 +2087,20 @@ class Subs(Expr):
     """
     Represents unevaluated substitutions of an expression.
 
-    ``Subs(expr, x, x0)`` receives 3 arguments: an expression, a variable or
-    list of distinct variables and a point or list of evaluation points
-    corresponding to those variables.
+    ``Subs(expr, x, x0)`` receives 3 arguments.
+
+    Paramters
+    =========
+
+    expr : Expr
+        An expression.
+
+    x : tuple, variable
+        A variable or list of distinct variables.
+
+    x0 : tuple or list of tuples
+        A point or list of evaluation points
+        corresponding to those variables.
 
     ``Subs`` objects are generally useful to represent unevaluated derivatives
     calculated at a point.
@@ -2384,6 +2411,9 @@ def diff(f, *symbols, **kwargs):
     """
     Differentiate f with respect to symbols.
 
+    Explanation
+    ===========
+
     This is just a wrapper to unify .diff() and the Derivative class; its
     interface is similar to that of integrate().  You can use the same
     shortcuts for multiple variables as with Derivative.  For example,
@@ -2451,6 +2481,9 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
         mul=True, log=True, multinomial=True, basic=True, **hints):
     r"""
     Expand an expression using methods given as hints.
+
+    Explanation
+    ===========
 
     Hints evaluated unless explicitly set to False are:  ``basic``, ``log``,
     ``multinomial``, ``mul``, ``power_base``, and ``power_exp`` The following
@@ -2927,8 +2960,6 @@ def expand_power_base(expr, deep=True, force=False):
     """
     Wrapper around expand that only uses the power_base hint.
 
-    See the expand docstring for more information.
-
     A wrapper to expand(power_base=True) which separates a power with a base
     that is a Mul into a product of powers, without performing any other
     expansions, provided that assumptions about the power's base and exponent
@@ -2982,6 +3013,11 @@ def expand_power_base(expr, deep=True, force=False):
     >>> ((2*y)**(1+z)).expand()
     2*2**z*y*y**z
 
+    See Also
+    ========
+
+    expand
+
     """
     return sympify(expr).expand(deep=deep, log=False, mul=False,
         power_exp=False, power_base=True, multinomial=False,
@@ -3010,15 +3046,19 @@ def count_ops(expr, visual=False):
     """
     Return a representation (integer or expression) of the operations in expr.
 
-    If ``visual`` is ``False`` (default) then the sum of the coefficients of the
-    visual expression will be returned.
+    Parameters
+    ==========
 
-    If ``visual`` is ``True`` then the number of each type of operation is shown
-    with the core class types (or their virtual equivalent) multiplied by the
-    number of times they occur.
+    expr : Expr
+        If expr is an iterable, the sum of the op counts of the
+        items will be returned.
 
-    If expr is an iterable, the sum of the op counts of the
-    items will be returned.
+    visual : bool, optional
+        If False`` (default) then the sum of the coefficients of the
+        visual expression will be returned.
+        If ``True`` then the number of each type of operation is shown
+        with the core class types (or their virtual equivalent) multiplied by the
+        number of times they occur.
 
     Examples
     ========
