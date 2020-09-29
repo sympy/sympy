@@ -698,11 +698,15 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     This gives the same answer as the ``[0, 1, 2]`` state space.
     Currently, there is no support for state names within probability
-    and expectation statements. Here is a work-around using ``index_of``:
+    and expectation statements. Here is a work-around using ``Str``:
 
-    >>> P(Eq(Y[3], Y.index_of['Rainy']), Eq(Y[1], Y.index_of['Cloudy'])).round(2)
+    >>> from sympy.core.symbol import Str
+    >>> P(Eq(Y[3], Str('Rainy')), Eq(Y[1], Str('Cloudy'))).round(2)
     0.36
 
+    >>> E(Y[3], Eq(Y[1], Str("Cloudy")))
+    0.38*Cloudy + 0.36*Rainy + 0.26*Sunny
+    
     Symbol state names can also be used:
 
     >>> sunny, cloudy, rainy = symbols('Sunny, Cloudy, Rainy')
