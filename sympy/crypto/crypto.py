@@ -81,10 +81,9 @@ bifid10 = printable
 
 def padded_key(key, symbols):
     """Return a string of the distinct characters of ``symbols`` with
-    those of ``key`` appearing first, omitting characters in ``key``
-    that are not in ``symbols``. A ValueError is raised if a) there are
-    duplicate characters in ``symbols`` or b) there are characters
-    in ``key`` that are  not in ``symbols``.
+    those of ``key`` appearing first. A ValueError is raised if
+    a) there are duplicate characters in ``symbols`` or
+    b) there are characters in ``key`` that are  not in ``symbols``.
 
     Examples
     ========
