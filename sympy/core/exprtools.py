@@ -1000,17 +1000,17 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         Can be an expression or a non-Basic sequence of expressions
         which will be handled as though they are terms from a sum.
 
-    isprimitive : boolean, optional
+    isprimitive : bool, optional
         If ``isprimitive`` is True the _gcd_terms will not run the primitive
         method on the terms.
 
-    clear : boolean, optional
+    clear : bool, optional
         It controls the removal of integers from the denominator of an Add
         expression. When True (default), all numerical denominator will be cleared;
         when False the denominators will be cleared only if all terms had numerical
         denominators other than 1.
 
-    fraction : boolean, optional
+    fraction : bool, optional
         When True (default), will put the expression over a common
         denominator.
 
@@ -1172,20 +1172,20 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     Parameters
     ==========
 
-    radical: boolean, optional
+    radical: bool, optional
         If radical=True then a radical common to all terms will be factored
         out of any Add sub-expressions of the expr.
 
-    clear : boolean, optional
+    clear : bool, optional
         If clear=False (default) then coefficients will not be separated
         from a single Add if they can be distributed to leave one or more
         terms with integer coefficients.
 
-    fraction : True, optional
+    fraction : bool, optional
         If fraction=True (default is False) then a common denominator will be
         constructed for the expression.
 
-    sign : boolean
+    sign : bool, optional
         If sign=True (default) then even if the only factor in common is a -1,
         it will be factored out of the expression.
 
