@@ -714,6 +714,9 @@ class Mul(Expr, AssocOp):
         - if you want the coefficient when self is treated as an Add
           then use self.as_coeff_add()[0]
 
+        Examples
+        ========
+
         >>> from sympy.abc import x, y
         >>> (3*x*y).as_two_terms()
         (3, x*y)
@@ -1401,6 +1404,9 @@ class Mul(Expr, AssocOp):
     def _eval_is_extended_positive(self):
         """Return True if self is positive, False if not, and None if it
         cannot be determined.
+
+        Explanation
+        ===========
 
         This algorithm is non-recursive and works by keeping track of the
         sign which changes when a negative or nonpositive is encountered.
