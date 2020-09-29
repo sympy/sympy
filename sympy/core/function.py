@@ -2087,9 +2087,10 @@ class Subs(Expr):
     """
     Represents unevaluated substitutions of an expression.
 
-    ``Subs(expr, x, x0)`` receives 3 arguments.
+    ``Subs(expr, x, x0)`` represents the expression resulting
+    from substituting x with x0 in expr.
 
-    Paramters
+    Parameters
     =========
 
     expr : Expr
