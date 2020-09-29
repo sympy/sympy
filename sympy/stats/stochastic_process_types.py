@@ -706,7 +706,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     >>> E(Y[3], Eq(Y[1], Str("Cloudy")))
     0.38*Cloudy + 0.36*Rainy + 0.26*Sunny
-    
+
     Symbol state names can also be used:
 
     >>> sunny, cloudy, rainy = symbols('Sunny, Cloudy, Rainy')
