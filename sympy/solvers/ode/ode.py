@@ -580,7 +580,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         # changed to show the systems that haven't
         # been solved.
         try:
-            sol = dsolve_system(eq, funcs=func, ics=ics)
+            sol = dsolve_system(eq, funcs=func, ics=ics, doit=True)
             return sol[0] if len(sol) == 1 else sol
         except NotImplementedError:
             pass

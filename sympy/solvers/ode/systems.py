@@ -1,4 +1,4 @@
-from sympy.core import Add, Mul
+from sympy.core import Add, Mul, S
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
@@ -119,13 +119,25 @@ def simpsol(sol, wrt1, wrt2, doit=True):
 
     def simp_coeff_dep(expr, wrt1, wrt2=None):
         """Split rhs into terms, split terms into dep and coeff and collect on dep"""
-        terms = Add.make_args(expand_mul(expr))
+        add_dep_terms = lambda e: e.is_Add and e.has(*wrt1)
+        expandable = lambda e: e.is_Mul and any(map(add_dep_terms, e.args))
+        expand_func = lambda e: expand_mul(e, deep=False)
+        expand_mul_mod = lambda e: e.replace(expandable, expand_func)
+        terms = Add.make_args(expand_mul_mod(expr))
         dc = {}
         for term in terms:
             coeff, dep = term.as_independent(*wrt1, as_Add=False)
             # Collect together the coefficients for terms that have the same
             # dependence on wrt1 (after dep is normalised using simpdep).
             dep = simpdep(dep, wrt1)
+
+            # See if the dependence on t cancels out...
+            if dep is not S.One:
+                dep2 = factor_terms(dep)
+                if not dep2.has(*wrt1):
+                    coeff *= dep2
+                    dep = S.One
+
             if dep not in dc:
                 dc[dep] = coeff
             else:
@@ -149,10 +161,7 @@ def simpsol(sol, wrt1, wrt2, doit=True):
             num, den = a.as_numer_denom()
             num = expand_mul(num)
             num = collect(num, wrt1)
-            if den != 1:
-                return Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
-            else:
-                return num
+            return num / den
 
         term = powsimp(term)
         rep = {e: exp(canonicalise(e.args[0])) for e in term.atoms(exp)}
