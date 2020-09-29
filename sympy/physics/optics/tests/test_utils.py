@@ -178,3 +178,26 @@ def test_transverse_magnification():
     si, so = symbols('si, so')
     assert transverse_magnification(si, so) == -si/so
     assert transverse_magnification(30, 15) == -2
+
+def test_lens_makers_formula_thick_lens():
+    n1, n2 = symbols('n1, n2')
+    m1 = Medium('m1', permittivity=e0, n=1)
+    m2 = Medium('m2', permittivity=e0, n=1.33)
+    assert ae(lens_makers_formula(m1, m2, 10, -10, d=1, lens=2), -19.82, 2)
+    assert lens_makers_formula(n1, n2, 1, -1, d=0.1, lens=2) == n2/((2 - (0.1*n1 - 0.1*n2)/n1)*(n1 - n2))
+    raises(ValueError, lambda: lens_makers_formula(1,2,1,d=1,lens=2))
+    raises(ValueError, lambda: lens_makers_formula(1,2,1,1,lens=2))
+
+def test_lens_makers_formula_plano_lens():
+    n1, n2 = symbols('n1, n2')
+    m1 = Medium('m1', permittivity=e0, n=1)
+    m2 = Medium('m2', permittivity=e0, n=1.33)
+    assert ae(lens_makers_formula(m1, m2, 10, lens=1), -40.30, 2)
+    assert lens_makers_formula(n1, n2, 10,lens=1) == 10*n2/(n1 - n2)
+    raises(ValueError, lambda: lens_makers_formula(1,2,1,d=1,lens=1))
+    raises(ValueError, lambda: lens_makers_formula(1,2,1,1,lens=1))
+
+def test_lens_makers_formula_errors():
+    raises(ValueError, lambda: lens_makers_formula(1,1,1,1,lens=5))
+    raises(ValueError, lambda: lens_makers_formula(1,2,1,1,d=9))
+    raises(ValueError, lambda: lens_makers_formula(1,2,1))
