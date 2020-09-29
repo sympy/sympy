@@ -7,7 +7,7 @@ from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.ode import constant_renumber
 from sympy.solvers.ode.subscheck import checksysodesol
 from sympy.solvers.ode.systems import (_classify_linear_system, linear_ode_to_matrix,
-                                       ODEOrderError, ODENonlinearError, _simpsol, _solsimp,
+                                       ODEOrderError, ODENonlinearError, _simpsol,
                                        _is_commutative_anti_derivative, linodesolve,
                                        canonical_odes, dsolve_system, _component_division,
                                        _eqs2dict, _dict2graph)
