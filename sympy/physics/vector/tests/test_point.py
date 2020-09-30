@@ -216,7 +216,7 @@ def test_auto_point_vel_shortest_path():
     O1 = Point('O1')
     O1.set_pos(O, q2 * B.z)
     P4.set_pos(O1, q1 * B.x + q2 * B.z)
-    with warnings.catch_warnings(): #Multipath warning
+    with warnings.catch_warnings(): #There are two possible paths in this point tree, thus a warning is raised
         warnings.simplefilter('error')
         with ignore_warnings(UserWarning):
             assert P4.vel(B) == q1.diff(t) * B.x + u2 * B.y + 2 * q2.diff(t) * B.z
@@ -247,7 +247,7 @@ def test_auto_point_vel_multiple_paths_warning_arises():
     O.set_pos(P, q * N.z)
     O.set_pos(Q, q * N.y)
     O.set_pos(R, q * N.x)
-    with warnings.catch_warnings():
+    with warnings.catch_warnings(): #There are two possible paths in this point tree, thus a warning is raised
         warnings.simplefilter("error")
         raises(UserWarning ,lambda: O.vel(N))
 
@@ -262,7 +262,7 @@ def test_auto_vel_cyclic_warning_arises():
     P2.set_pos(P1, N.y)
     P3.set_pos(P2, N.z)
     P1.set_pos(P3, N.x + N.y)
-    with warnings.catch_warnings():
+    with warnings.catch_warnings(): #The path is cyclic at P1, thus a warning is raised
         warnings.simplefilter("error")
         raises(UserWarning ,lambda: P2.vel(N))
 
@@ -277,7 +277,7 @@ def test_auto_vel_cyclic_warning_msg():
     P2.set_pos(P1, N.y)
     P3.set_pos(P2, N.z)
     P1.set_pos(P3, N.x + N.y)
-    with warnings.catch_warnings(record = True) as w:
+    with warnings.catch_warnings(record = True) as w: #The path is cyclic at P1, thus a warning is raised
         warnings.simplefilter("always")
         P2.vel(N)
         assert issubclass(w[-1].category, UserWarning)
@@ -292,7 +292,7 @@ def test_auto_vel_multiple_path_warning_msg():
     Q.set_vel(N, N.y)
     O.set_pos(P, N.z)
     O.set_pos(Q, N.y)
-    with warnings.catch_warnings(record = True) as w:
+    with warnings.catch_warnings(record = True) as w: #There are two possible paths in this point tree, thus a warning is raised
         warnings.simplefilter("always")
         O.vel(N)
         assert issubclass(w[-1].category, UserWarning)
