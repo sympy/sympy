@@ -4,7 +4,8 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice,
+    Q,)
 from sympy.core import Expr, Mul
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.units import second, joule
@@ -1000,3 +1001,7 @@ def test_NDimArray():
     assert sstr(NDimArray(1.0), full_prec=False) == '1.0'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=True) == '[1.00000000000000, 2.00000000000000]'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=False) == '[1.0, 2.0]'
+
+
+def test_AppliedPredicate():
+    assert sstr(Q.even(x)) == 'Q.even(x)'
