@@ -2,9 +2,9 @@ from __future__ import print_function, division
 import random
 
 import itertools
-from typing import Sequence as tSequence, Union as tUnion
+from typing import Iterable, Sequence, Type, Union as tUnion
 
-from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
+from sympy import (Matrix, MatrixSymbol, S, Indexed, Integer, Basic, Tuple, Range,
                    Set, And, Eq, FiniteSet, ImmutableMatrix, Integer,
                    Lambda, Mul, Dummy, IndexedBase, Add, Interval, oo,
                    linsolve, eye, Or, Not, Intersection, factorial, Contains,
@@ -74,31 +74,33 @@ def _set_converter(itr):
         raise TypeError("%s is not an instance of list/tuple/set."%(itr))
     return itr
 
-def _state_converter(itr: tSequence) -> tUnion[Tuple, Range]:
+def _state_converter(itr: Iterable) -> tUnion[Tuple, Range]:
     """
     Helper function for converting list/tuple/set/Range/Tuple/FiniteSet
     to tuple/Range.
     """
+    ret: tUnion[Tuple, Range]
+
     if isinstance(itr, (Tuple, set, FiniteSet)):
-        itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
+        ret = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
 
     elif isinstance(itr, (list, tuple)):
         # check if states are unique
         if len(set(itr)) != len(itr):
             raise ValueError('The state space must have unique elements.')
-        itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
+        ret = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
 
     elif isinstance(itr, Range):
         # the only ordered set in sympy I know of
         # try to convert to tuple
         try:
-            itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
+            ret = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
         except ValueError:
-            pass
+            ret = itr
 
     else:
         raise TypeError("%s is not an instance of list/tuple/set/Range/Tuple/FiniteSet." % (itr))
-    return itr
+    return ret
 
 def _sym_sympify(arg):
     """
@@ -712,45 +714,46 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     index_set = S.Naturals0
 
     def __new__(cls, sym, state_space=None, trans_probs=None):
-        # type: (Basic, tUnion[str, Symbol], tSequence, tUnion[MatrixBase, MatrixSymbol]) -> DiscreteMarkovChain
+        # type: (Type[Basic], tUnion[str, Symbol], Sequence, tUnion[MatrixBase, MatrixSymbol]) -> DiscreteMarkovChain
         sym = _symbol_converter(sym)
+        _n: Expr
 
         # Try to never have None as state_space or trans_probs.
         # This helps a lot if we get it done at the start.
         if (state_space is None) and (trans_probs is None):
             _n = Dummy('n', integer=True, nonnegative=True)
-            state_space = _state_converter(Range(_n))
-            trans_probs = _matrix_checks(MatrixSymbol('_T', _n, _n))
+            v_state_space = _state_converter(Range(_n))
+            v_trans_probs = _matrix_checks(MatrixSymbol('_T', _n, _n))
 
         elif state_space is None:
-            trans_probs = _matrix_checks(trans_probs)
-            state_space = _state_converter(Range(trans_probs.shape[0]))
+            v_trans_probs = _matrix_checks(trans_probs)
+            v_state_space = _state_converter(Range(v_trans_probs.shape[0]))
 
         elif trans_probs is None:
-            state_space = _state_converter(state_space)
+            v_state_space = _state_converter(state_space)
             if isinstance(state_space, Range):
                 _n = ceiling((state_space.stop - state_space.start) / state_space.step)
             else:
-                _n = len(state_space)
-            trans_probs = MatrixSymbol('_T', _n, _n)
+                _n = Integer(len(state_space))
+            v_trans_probs = MatrixSymbol('_T', _n, _n)
 
         else:
-            state_space = _state_converter(state_space)
-            trans_probs = _matrix_checks(trans_probs)
+            v_state_space = _state_converter(state_space)
+            v_trans_probs = _matrix_checks(trans_probs)
             # Range object doesn't want to give a symbolic size
             # so we do it ourselves.
             if isinstance(state_space, Range):
                 ss_size = ceiling((state_space.stop - state_space.start) / state_space.step)
             else:
                 ss_size = len(state_space)
-            if ss_size != trans_probs.shape[0]:
+            if ss_size != v_trans_probs.shape[0]:
                 raise ValueError('The size of the state space and the number of '
                                  'rows of the transition matrix must be the same.')
 
-        return Basic.__new__(cls, sym, state_space, trans_probs)
+        return Basic.__new__(cls, sym, v_state_space, v_trans_probs)
 
     @property
-    def index_of(self) -> tSequence:
+    def index_of(self):
         """Converts a state name to a state index i.e. inverts self.state_space."""
         if isinstance(self.number_of_states, Integer):
             indexes = {state: index for index, state in enumerate(self.state_space)}
