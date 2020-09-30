@@ -216,7 +216,7 @@ def test_auto_point_vel_shortest_path():
     O1 = Point('O1')
     O1.set_pos(O, q2 * B.z)
     P4.set_pos(O1, q1 * B.x + q2 * B.z)
-    with warnings.catch_warnings():
+    with warnings.catch_warnings(): #Multipath warning
         warnings.simplefilter('error')
         with ignore_warnings(UserWarning):
             assert P4.vel(B) == q1.diff(t) * B.x + u2 * B.y + 2 * q2.diff(t) * B.z
@@ -281,7 +281,7 @@ def test_auto_vel_cyclic_warning_msg():
         warnings.simplefilter("always")
         P2.vel(N)
         assert issubclass(w[-1].category, UserWarning)
-        assert 'Multiple points have their position defined with respect to one point.' in str(w[-1].message)
+        assert 'Kinematic loops are defined among the positions of points. This is likely not desired and may cause errors in your calculations.' in str(w[-1].message)
 
 def test_auto_vel_multiple_path_warning_msg():
     N = ReferenceFrame('N')
@@ -297,4 +297,4 @@ def test_auto_vel_multiple_path_warning_msg():
         O.vel(N)
         assert issubclass(w[-1].category, UserWarning)
         assert 'Velocity automatically calculated based on point' in str(w[-1].message)
-        assert 'Velocities from these points are not the same.' in str(w[-1].message)
+        assert 'Velocities from these points are not necessarily the same. This may cause errors in your calculations.' in str(w[-1].message)

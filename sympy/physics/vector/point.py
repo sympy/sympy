@@ -558,11 +558,11 @@ class Point(object):
                             self.set_vel(frame, self.pos_from(neighbor).dt(frame) + neighbor_velocity)
                             valid_neighbor_found = True
             if is_cyclic:
-                warn('Multiple points have their position defined with respect to one point.')
+                warn('Kinematic loops are defined among the positions of points. This is likely not desired and may cause errors in your calculations.')
             if len(candidate_neighbor) > 1:
                 warn('Velocity automatically calculated based on point ' +
-                    candidate_neighbor[0].name + ' but it is also possible from ' +
-                    str(candidate_neighbor[1:]) + '. Velocities from these points are not the same.')
+                    candidate_neighbor[0].name + ' but it is also possible from points(s):' +
+                    str(candidate_neighbor[1:]) + '. Velocities from these points are not necessarily the same. This may cause errors in your calculations.')
             if valid_neighbor_found:
                 return self._vel_dict[frame]
             else:
