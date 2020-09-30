@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sympy import Derivative, Integer, Expr
 from sympy.matrices.common import MatrixCommon
 from .ndim_array import NDimArray
@@ -68,7 +70,7 @@ class ArrayDerivative(Derivative):
         return expr.applyfunc(lambda x: x.diff(v))
 
     @staticmethod
-    def _call_derive_default(expr, v):  # type: (Expr, Expr) -> Expr
+    def _call_derive_default(expr, v):  # type: (Expr, Expr) -> Optional[Expr]
         if expr.has(v):
             return _matrix_derivative(expr, v)
         else:

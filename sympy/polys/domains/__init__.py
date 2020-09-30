@@ -11,6 +11,8 @@ __all__ = [
     'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX',
 ]
 
+from typing import Tuple, Type
+
 from .domain import Domain
 from .finitefield import FiniteField
 from .integerring import IntegerRing
@@ -49,7 +51,7 @@ _GROUND_TYPES_MAP = {
 }
 
 try:
-    FF, ZZ, QQ = _GROUND_TYPES_MAP[GROUND_TYPES]
+    FF, ZZ, QQ = _GROUND_TYPES_MAP[GROUND_TYPES]  # type: Tuple[Type[FiniteField], Domain, Domain]
 except KeyError:
     raise ValueError("invalid ground types: %s" % GROUND_TYPES)
 

@@ -335,7 +335,7 @@ class RandomIndexedSymbol(RandomSymbol):
             return free_syms
         return {self}
 
-class RandomMatrixSymbol(RandomSymbol, MatrixSymbol):
+class RandomMatrixSymbol(RandomSymbol, MatrixSymbol): # type: ignore
     def __new__(cls, symbol, n, m, pspace=None):
         n, m = _sympify(n), _sympify(m)
         symbol = _symbol_converter(symbol)

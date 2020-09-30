@@ -4,6 +4,7 @@ from sympy.core.numbers import I
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.domains.algebraicfield import AlgebraicField
+from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.ring import Ring
@@ -11,8 +12,8 @@ from sympy.polys.domains.ring import Ring
 
 class GaussianElement(DomainElement):
     """Base class for elements of Gaussian type domains."""
-    base = None  # base ring
-    _parent = None
+    base = None  # type: Domain
+    _parent = None  # type: Domain
 
     __slots__ = ('x', 'y')
 
@@ -218,7 +219,7 @@ class GaussianRational(GaussianElement):
 
 class GaussianDomain():
     """Base class for Gaussian domains."""
-    dom = None  # base domain, ZZ or QQ
+    dom = None  # type: Domain
 
     is_Numerical = True
     is_Exact = True

@@ -1,3 +1,5 @@
+from typing import Tuple as tTuple
+
 from sympy.core.logic import FuzzyBool
 
 from functools import wraps, reduce
@@ -78,6 +80,10 @@ class MatrixExpr(Expr):
         return Basic.__new__(cls, *args, **kwargs)
 
     # The following is adapted from the core Expr object
+
+    @property
+    def shape(self) -> tTuple[Expr, Expr]:
+        raise NotImplementedError
 
     @property
     def _add_handler(self):
@@ -584,7 +590,7 @@ class MatrixExpr(Expr):
 def _eval_is_eq(lhs, rhs): # noqa:F811
     return False
 
-@dispatch(MatrixExpr, MatrixExpr)
+@dispatch(MatrixExpr, MatrixExpr)  # type: ignore
 def _eval_is_eq(lhs, rhs): # noqa:F811
     if lhs.shape != rhs.shape:
         return False
@@ -953,14 +959,6 @@ class _LeftRightArgs:
 
     def append_second(self, other):
         self.second_pointer *= other
-
-    def __hash__(self):
-        return hash((self.first, self.second))
-
-    def __eq__(self, other):
-        if not isinstance(other, _LeftRightArgs):
-            return False
-        return (self.first == other.first) and (self.second == other.second)
 
 
 def _make_matrix(x):
