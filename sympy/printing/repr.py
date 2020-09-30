@@ -241,8 +241,7 @@ class ReprPrinter(Printer):
             )
 
     def _print_Predicate(self, expr):
-        args = (expr.name, expr.handlers) if expr.handlers else (expr.name,)
-        return "%s(%s)" % (expr.__class__.__name__, self.reprify(args, ","))
+        return "Q.%s" % expr.name
 
     def _print_AppliedPredicate(self, expr):
         args = (expr.func,) + expr.args

@@ -338,11 +338,7 @@ def test_set():
 
 
 def test_Predicate():
-    sT(Q.even, "Predicate('even', ['sympy.assumptions.handlers.ntheory.AskEvenHandler'])")
-    sT(Predicate('test'), "Predicate('test')")
+    sT(Q.even, "Q.even")
 
 def test_AppliedPredicate():
-    sT(
-        Q.even(Symbol('z')),
-        "AppliedPredicate(Predicate('even', ['sympy.assumptions.handlers.ntheory.AskEvenHandler']), Symbol('z'))"
-    )
+    sT(Q.even(Symbol('z')), "AppliedPredicate(Q.even, Symbol('z'))")
