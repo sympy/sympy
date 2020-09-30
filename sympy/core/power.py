@@ -871,6 +871,9 @@ class Pow(Expr):
     def as_base_exp(self):
         """Return base and exp of self.
 
+        Explnation
+        ==========
+
         If base is 1/Integer, then return Integer, -exp. If this extra
         processing is not needed, the base and exp properties will
         give the raw arguments

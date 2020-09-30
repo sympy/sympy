@@ -113,6 +113,9 @@ class AssocOp(Basic):
         """Create new instance of own class with args exactly as provided by
         caller but returning the self class identity if args is empty.
 
+        Examples
+        ========
+
            This is handy when we want to optimize things, e.g.
 
                >>> from sympy import Mul, S
@@ -182,7 +185,8 @@ class AssocOp(Basic):
 
         This function is the main workhorse for Add/Mul.
 
-        For instance:
+        Examples
+        ========
 
         >>> from sympy import symbols, Wild, sin
         >>> a = Wild("a")
@@ -405,6 +409,9 @@ class AssocOp(Basic):
         """
         Return a sequence of elements `args` such that cls(*args) == expr
 
+        Examples
+        ========
+
         >>> from sympy import Symbol, Mul, Add
         >>> x, y = map(Symbol, 'xy')
 
@@ -436,6 +443,9 @@ class LatticeOp(AssocOp):
     """
     Join/meet operations of an algebraic lattice[1].
 
+    Explanation
+    ===========
+
     These binary operations are associative (op(op(a, b), c) = op(a, op(b, c))),
     commutative (op(a, b) = op(b, a)) and idempotent (op(a, a) = op(a) = a).
     Common examples are AND, OR, Union, Intersection, max or min. They have an
@@ -444,6 +454,9 @@ class LatticeOp(AssocOp):
 
     This is an abstract base class, concrete derived classes must declare
     attributes zero and identity. All defining properties are then respected.
+
+    Examples
+    ========
 
     >>> from sympy import Integer
     >>> from sympy.core.operations import LatticeOp
@@ -461,7 +474,7 @@ class LatticeOp(AssocOp):
 
     References:
 
-    [1] - https://en.wikipedia.org/wiki/Lattice_%28order%29
+    .. [1] https://en.wikipedia.org/wiki/Lattice_%28order%29
     """
 
     is_commutative = True
