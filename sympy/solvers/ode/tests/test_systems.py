@@ -669,6 +669,11 @@ def test_sysode_linear_neq_order1_type1():
     assert dsolve(eqs22) == sol22
     assert checksysodesol(eqs22, sol22) == (True, [0, 0])
 
+
+@slow
+def test_sysode_linear_neq_order1_type1_slow():
+
+    t = Symbol('t')
     Z0 = Function('Z0')
     Z1 = Function('Z1')
     Z2 = Function('Z2')
@@ -805,6 +810,9 @@ def test_sysode_linear_neq_order1_type1():
              Eq(y(t), C2*exp(-t*(k2 + k3)))]
     assert dsolve(eqs12) == sol12
     assert checksysodesol(eqs12, sol12) == (True, [0, 0, 0])
+
+    f, g, h = symbols('f, g, h', cls=Function)
+    a, b, c = symbols('a, b, c')
 
     # Regression test case for issue #15474
     # https://github.com/sympy/sympy/issues/15474
@@ -1205,6 +1213,7 @@ def test_sysode_linear_neq_order1_type3():
     assert checksysodesol(eqs7, sol7) == (True, [0, 0])
 
 
+@slow
 def test_sysode_linear_neq_order1_type4():
 
     f, g, h, k = symbols('f g h k', cls=Function)
@@ -1405,23 +1414,6 @@ def test_higher_order_to_first_order():
     assert dsolve(eqs8) == sol8
     assert checksysodesol(eqs8, sol8) == (True, [0, 0])
 
-    eqs9 = [f(x) + g(x) - 2*exp(I*x) + 2*Derivative(f(x), x) + Derivative(f(x), (x, 2)),
-            f(x) + g(x) - 2*exp(I*x) + 2*Derivative(g(x), x) + Derivative(g(x), (x, 2))]
-    sol9 = [Eq(f(x), -C1 + C2*exp(-2*x)/2 + (C3/2 + C4/2)*exp(-x)*sin(x) + (2 +
-             I)*exp(I*x)*sin(x)**2*Rational(-1, 5) + (1 - 2*I)*exp(I*x)*sin(x)*cos(x)*Rational(2, 5) + (4 -
-             3*I)*exp(I*x)*cos(x)**2/5 + exp(-x)*sin(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) +
-             exp(x)*exp(I*x)*sin(x) + exp(x)*exp(I*x)/cos(x), x) -
-             exp(-x)*cos(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
-             exp(x)*exp(I*x)/cos(x), x) - exp(-x)*cos(x)*(C3/2 + C4*Rational(-1, 2))),
-            Eq(g(x), C1 + C2*exp(-2*x)*Rational(-1, 2) + (C3/2 + C4/2)*exp(-x)*sin(x) + (2 +
-             I)*exp(I*x)*sin(x)**2*Rational(-1, 5) + (1 - 2*I)*exp(I*x)*sin(x)*cos(x)*Rational(2, 5) + (4 -
-             3*I)*exp(I*x)*cos(x)**2/5 + exp(-x)*sin(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) +
-             exp(x)*exp(I*x)*sin(x) + exp(x)*exp(I*x)/cos(x), x) -
-             exp(-x)*cos(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
-             exp(x)*exp(I*x)/cos(x), x) - exp(-x)*cos(x)*(C3/2 + C4*Rational(-1, 2)))]
-    assert dsolve(eqs9) == sol9
-    assert checksysodesol(eqs9, sol9) == (True, [0, 0])
-
     x, y = symbols('x, y', cls=Function)
     t, l = symbols('t, l')
 
@@ -1451,17 +1443,6 @@ def test_higher_order_to_first_order():
     assert dsolve(eqs11) == sol11
     assert checksysodesol(eqs11, sol11) == (True, [0, 0])
 
-    eqs12 = [Eq(4*x(t) + Derivative(x(t), (t, 2)) + 8*Derivative(y(t), t), 0),
-             Eq(4*y(t) - 8*Derivative(x(t), t) + Derivative(y(t), (t, 2)), 0)]
-    sol12 = [Eq(y(t), C1*(2 - sqrt(5))*sin(2*t*sqrt(4*sqrt(5) + 9))*Rational(-1, 2) + C2*(2 -
-              sqrt(5))*cos(2*t*sqrt(4*sqrt(5) + 9))/2 + C3*(2 + sqrt(5))*sin(2*t*sqrt(9 - 4*sqrt(5)))*Rational(-1,
-              2) + C4*(2 + sqrt(5))*cos(2*t*sqrt(9 - 4*sqrt(5)))/2),
-             Eq(x(t), C1*(2 - sqrt(5))*cos(2*t*sqrt(4*sqrt(5) + 9))*Rational(-1, 2) + C2*(2 -
-              sqrt(5))*sin(2*t*sqrt(4*sqrt(5) + 9))*Rational(-1, 2) + C3*(2 + sqrt(5))*cos(2*t*sqrt(9 -
-              4*sqrt(5)))/2 + C4*(2 + sqrt(5))*sin(2*t*sqrt(9 - 4*sqrt(5)))/2)]
-    assert dsolve(eqs12) == sol12
-    assert checksysodesol(eqs12, sol12) == (True, [0, 0])
-
     # Euler Systems
     # Note: To add examples of euler systems solver with non-homogeneous term.
     eqs13 = [Eq(Derivative(f(t), (t, 2)), Derivative(f(t), t)/t + f(t)/t**2 + g(t)/t**2),
@@ -1484,6 +1465,7 @@ def test_higher_order_to_first_order():
     assert dsolve(eqs14) == sol14
     assert checksysodesol(eqs14, sol14) == (True, [0, 0])
 
+
     eqs15 = [Eq(Derivative(x(t), (t, 2)), t*(4*Derivative(x(t), t) + 8*Derivative(y(t), t))),
              Eq(Derivative(y(t), (t, 2)), t*(12*Derivative(x(t), t) - 6*Derivative(y(t), t)))]
     sol15 = [Eq(x(t), C1 - erf(sqrt(6)*t)*(sqrt(6)*sqrt(pi)*C2/33 + sqrt(6)*sqrt(pi)*C3*Rational(-1, 44)) +
@@ -1494,18 +1476,52 @@ def test_higher_order_to_first_order():
     assert checksysodesol(eqs15, sol15) == (True, [0, 0])
 
 
-def test_second_order_to_first_order():
+@slow
+def test_higher_order_to_first_order_9():
+    f, g = symbols('f g', cls=Function)
+    x = symbols('x')
+
+    eqs9 = [f(x) + g(x) - 2*exp(I*x) + 2*Derivative(f(x), x) + Derivative(f(x), (x, 2)),
+            f(x) + g(x) - 2*exp(I*x) + 2*Derivative(g(x), x) + Derivative(g(x), (x, 2))]
+    sol9 = [Eq(f(x), -C1 + C2*exp(-2*x)/2 + (C3/2 + C4/2)*exp(-x)*sin(x) + (2 +
+             I)*exp(I*x)*sin(x)**2*Rational(-1, 5) + (1 - 2*I)*exp(I*x)*sin(x)*cos(x)*Rational(2, 5) + (4 -
+             3*I)*exp(I*x)*cos(x)**2/5 + exp(-x)*sin(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) +
+             exp(x)*exp(I*x)*sin(x) + exp(x)*exp(I*x)/cos(x), x) -
+             exp(-x)*cos(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
+             exp(x)*exp(I*x)/cos(x), x) - exp(-x)*cos(x)*(C3/2 + C4*Rational(-1, 2))),
+            Eq(g(x), C1 + C2*exp(-2*x)*Rational(-1, 2) + (C3/2 + C4/2)*exp(-x)*sin(x) + (2 +
+             I)*exp(I*x)*sin(x)**2*Rational(-1, 5) + (1 - 2*I)*exp(I*x)*sin(x)*cos(x)*Rational(2, 5) + (4 -
+             3*I)*exp(I*x)*cos(x)**2/5 + exp(-x)*sin(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) +
+             exp(x)*exp(I*x)*sin(x) + exp(x)*exp(I*x)/cos(x), x) -
+             exp(-x)*cos(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
+             exp(x)*exp(I*x)/cos(x), x) - exp(-x)*cos(x)*(C3/2 + C4*Rational(-1, 2)))]
+    assert dsolve(eqs9) == sol9
+    assert checksysodesol(eqs9, sol9) == (True, [0, 0])
+
+
+@slow
+def test_higher_order_to_first_order_12():
+    f, g = symbols('f g', cls=Function)
+    x = symbols('x')
+
+    x, y = symbols('x, y', cls=Function)
+    t, l = symbols('t, l')
+
+    eqs12 = [Eq(4*x(t) + Derivative(x(t), (t, 2)) + 8*Derivative(y(t), t), 0),
+             Eq(4*y(t) - 8*Derivative(x(t), t) + Derivative(y(t), (t, 2)), 0)]
+    sol12 = [Eq(y(t), C1*(2 - sqrt(5))*sin(2*t*sqrt(4*sqrt(5) + 9))*Rational(-1, 2) + C2*(2 -
+              sqrt(5))*cos(2*t*sqrt(4*sqrt(5) + 9))/2 + C3*(2 + sqrt(5))*sin(2*t*sqrt(9 - 4*sqrt(5)))*Rational(-1,
+              2) + C4*(2 + sqrt(5))*cos(2*t*sqrt(9 - 4*sqrt(5)))/2),
+             Eq(x(t), C1*(2 - sqrt(5))*cos(2*t*sqrt(4*sqrt(5) + 9))*Rational(-1, 2) + C2*(2 -
+              sqrt(5))*sin(2*t*sqrt(4*sqrt(5) + 9))*Rational(-1, 2) + C3*(2 + sqrt(5))*cos(2*t*sqrt(9 -
+              4*sqrt(5)))/2 + C4*(2 + sqrt(5))*sin(2*t*sqrt(9 - 4*sqrt(5)))/2)]
+    assert dsolve(eqs12) == sol12
+    assert checksysodesol(eqs12, sol12) == (True, [0, 0])
+
+
+def test_second_order_to_first_order_2():
     f, g = symbols("f g", cls=Function)
     x, t, x_, t_, d, a, m = symbols("x t x_ t_ d a m")
-
-    # Type 1
-
-    eqs1 = [Eq(f(x).diff(x, 2), 2/x *(x*g(x).diff(x) - g(x))),
-           Eq(g(x).diff(x, 2),-2/x *(x*f(x).diff(x) - f(x)))]
-    sol1 = [Eq(f(x), C1*x + 2*C2*x*Ci(2*x) - C2*sin(2*x) - 2*C3*x*Si(2*x) - C3*cos(2*x)),
-            Eq(g(x), -2*C2*x*Si(2*x) - C2*cos(2*x) - 2*C3*x*Ci(2*x) + C3*sin(2*x) + C4*x)]
-    assert dsolve(eqs1) == sol1
-    assert checksysodesol(eqs1, sol1) == (True, [0, 0])
 
     eqs2 = [Eq(f(x).diff(x, 2), 2*(x*g(x).diff(x) - g(x))),
             Eq(g(x).diff(x, 2),-2*(x*f(x).diff(x) - f(x)))]
@@ -1528,19 +1544,6 @@ def test_second_order_to_first_order():
     assert dsolve_system(eqs3, simplify=False, doit=False) == [sol3]
     assert checksysodesol(eqs3, sol3) == (True, [0, 0])
 
-    eqs4 = [Eq(Derivative(f(t), (t, 2)), t*sin(t)*Derivative(g(t), t) - g(t)*sin(t)),
-            Eq(Derivative(g(t), (t, 2)), t*sin(t)*Derivative(f(t), t) - f(t)*sin(t))]
-    sol4 = [Eq(f(t), C1*t + t*Integral(C2*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*exp(-sin(exp(t_)))/2 +
-                C2*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2 - C3*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*
-                exp(-sin(exp(t_)))/2 +
-                C3*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2, (t_, log(t)))),
-            Eq(g(t), C4*t + t*Integral(-C2*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*exp(-sin(exp(t_)))/2 +
-                C2*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2 + C3*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*
-                exp(-sin(exp(t_)))/2 + C3*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2, (t_, log(t))))]
-    # XXX: dsolve hangs for this in integration
-    assert dsolve_system(eqs4, simplify=False, doit=False) == [sol4]
-    assert checksysodesol(eqs4, sol4) == (True, [0, 0])
-
     # Regression Test case for sympy#19238
     # https://github.com/sympy/sympy/issues/19238
     # Note: When the doit method is removed, these particular types of systems
@@ -1560,6 +1563,40 @@ def test_second_order_to_first_order():
              C4*sqrt(t**2)*exp(sqrt(d)/t)*d**Rational(-1, 2))]
     assert dsolve(eqs6) == sol6
     assert checksysodesol(eqs6, sol6) == (True, [0, 0])
+
+
+@slow
+def test_second_order_to_first_order_slow1():
+    f, g = symbols("f g", cls=Function)
+    x, t, x_, t_, d, a, m = symbols("x t x_ t_ d a m")
+
+    # Type 1
+
+    eqs1 = [Eq(f(x).diff(x, 2), 2/x *(x*g(x).diff(x) - g(x))),
+           Eq(g(x).diff(x, 2),-2/x *(x*f(x).diff(x) - f(x)))]
+    sol1 = [Eq(f(x), C1*x + 2*C2*x*Ci(2*x) - C2*sin(2*x) - 2*C3*x*Si(2*x) - C3*cos(2*x)),
+            Eq(g(x), -2*C2*x*Si(2*x) - C2*cos(2*x) - 2*C3*x*Ci(2*x) + C3*sin(2*x) + C4*x)]
+    assert dsolve(eqs1) == sol1
+    assert checksysodesol(eqs1, sol1) == (True, [0, 0])
+
+
+@slow
+def test_second_order_to_first_order_slow4():
+    f, g = symbols("f g", cls=Function)
+    x, t, x_, t_, d, a, m = symbols("x t x_ t_ d a m")
+
+    eqs4 = [Eq(Derivative(f(t), (t, 2)), t*sin(t)*Derivative(g(t), t) - g(t)*sin(t)),
+            Eq(Derivative(g(t), (t, 2)), t*sin(t)*Derivative(f(t), t) - f(t)*sin(t))]
+    sol4 = [Eq(f(t), C1*t + t*Integral(C2*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*exp(-sin(exp(t_)))/2 +
+                C2*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2 - C3*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*
+                exp(-sin(exp(t_)))/2 +
+                C3*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2, (t_, log(t)))),
+            Eq(g(t), C4*t + t*Integral(-C2*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*exp(-sin(exp(t_)))/2 +
+                C2*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2 + C3*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*
+                exp(-sin(exp(t_)))/2 + C3*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2, (t_, log(t))))]
+    # XXX: dsolve hangs for this in integration
+    assert dsolve_system(eqs4, simplify=False, doit=False) == [sol4]
+    assert checksysodesol(eqs4, sol4) == (True, [0, 0])
 
 
 def test_component_division():
