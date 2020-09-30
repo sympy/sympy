@@ -241,18 +241,12 @@ class ReprPrinter(Printer):
             )
 
     def _print_Predicate(self, expr):
-        name_repr = self._print(expr.name)
-        if expr.handlers:
-            handlers_repr = self._print(expr.handlers)
-            args_repr = ', '.join([name_repr, handlers_repr])
-        else:
-            args_repr = name_repr
-        return "%s(%s)" % (expr.__class__.__name__, args_repr)
+        args = (expr.name, expr.handlers) if expr.handlers else (expr.name,)
+        return "%s(%s)" % (expr.__class__.__name__, self.reprify(args, ","))
 
     def _print_AppliedPredicate(self, expr):
-        return "%s(%s)" % (
-            expr.__class__.__name__, self.reprify((expr.func,) + expr.args, ", ")
-        )
+        args = (expr.func,) + expr.args
+        return "%s(%s)" % (expr.__class__.__name__, self.reprify(args, ", "))
 
     def _print_str(self, expr):
         return repr(expr)
