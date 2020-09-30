@@ -88,12 +88,10 @@ class Module(object):
         """Generate a quotient module."""
         raise NotImplementedError
 
-    def __div__(self, e):
+    def __truediv__(self, e):
         if not isinstance(e, Module):
             e = self.submodule(*e)
         return self.quotient_module(e)
-
-    __truediv__ = __div__
 
     def contains(self, elem):
         """Return True if ``elem`` is an element of this module."""
@@ -234,15 +232,13 @@ class ModuleElement(object):
 
     __rmul__ = __mul__
 
-    def __div__(self, o):
+    def __truediv__(self, o):
         if not isinstance(o, self.module.ring.dtype):
             try:
                 o = self.module.ring.convert(o)
             except CoercionFailed:
                 return NotImplemented
         return self.__class__(self.module, self.div(self.data, o))
-
-    __truediv__ = __div__
 
     def __eq__(self, om):
         if not isinstance(om, self.__class__) or om.module != self.module:

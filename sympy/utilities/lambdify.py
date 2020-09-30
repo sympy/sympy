@@ -3,13 +3,14 @@ This module provides convenient functions to transform sympy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, Iterable
 
 import inspect
 import keyword
 import textwrap
 import linecache
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, builtins)
 from sympy.utilities.misc import filldedent
@@ -165,7 +166,7 @@ def _import(module, reload=False):
 _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
-def lambdify(args, expr, modules=None, printer=None, use_imps=True,
+def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
              dummify=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
@@ -173,6 +174,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     .. warning::
        This function uses ``exec``, and thus shouldn't be used on
        unsanitized input.
+
+    .. versionchanged:: 1.7.0
+       Passing a set for the *args* parameter is deprecated as sets are
+       unordered. Use an ordered iterable such as a list or tuple.
 
     Explanation
     ===========
@@ -322,6 +327,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         Set ``dummify=True`` to replace all arguments with dummy symbols
         (if ``args`` is not a string) - for example, to ensure that the
         arguments do not redefine any built-in names.
+
 
     Examples
     ========
@@ -761,7 +767,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
-    namespace = {}
+    namespace = {} # type: Dict[str, Any]
     for m in namespaces[::-1]:
         buf = _get_namespace(m)
         namespace.update(buf)
@@ -775,19 +781,19 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     if printer is None:
         if _module_present('mpmath', namespaces):
-            from sympy.printing.pycode import MpmathPrinter as Printer
+            from sympy.printing.pycode import MpmathPrinter as Printer # type: ignore
         elif _module_present('scipy', namespaces):
-            from sympy.printing.pycode import SciPyPrinter as Printer
+            from sympy.printing.pycode import SciPyPrinter as Printer # type: ignore
         elif _module_present('numpy', namespaces):
-            from sympy.printing.pycode import NumPyPrinter as Printer
+            from sympy.printing.pycode import NumPyPrinter as Printer # type: ignore
         elif _module_present('numexpr', namespaces):
-            from sympy.printing.lambdarepr import NumExprPrinter as Printer
+            from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):
-            from sympy.printing.tensorflow import TensorflowPrinter as Printer
+            from sympy.printing.tensorflow import TensorflowPrinter as Printer # type: ignore
         elif _module_present('sympy', namespaces):
-            from sympy.printing.pycode import SymPyPrinter as Printer
+            from sympy.printing.pycode import SymPyPrinter as Printer # type: ignore
         else:
-            from sympy.printing.pycode import PythonCodePrinter as Printer
+            from sympy.printing.pycode import PythonCodePrinter as Printer # type: ignore
         user_functions = {}
         for m in namespaces[::-1]:
             if isinstance(m, dict):
@@ -797,12 +803,21 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                            'allow_unknown_functions': True,
                            'user_functions': user_functions})
 
+    if isinstance(args, set):
+        SymPyDeprecationWarning(
+                    feature="The list of arguments is a `set`. This leads to unpredictable results",
+                    useinstead=": Convert set into list or tuple",
+                    issue=20013,
+                    deprecated_since_version="1.6.3"
+                ).warn()
+
     # Get the names of the args, for creating a docstring
     if not iterable(args):
         args = (args,)
     names = []
+
     # Grab the callers frame, for getting the names by inspection (if needed)
-    callers_local_vars = inspect.currentframe().f_back.f_locals.items()
+    callers_local_vars = inspect.currentframe().f_back.f_locals.items() # type: ignore
     for n, var in enumerate(args):
         if hasattr(var, 'name'):
             names.append(var.name)
@@ -819,7 +834,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # Create the function definition code and execute it
     funcname = '_lambdifygenerated'
     if _module_present('tensorflow', namespaces):
-        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
+        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
     funcstr = funcprinter.doprint(funcname, args, expr)
@@ -843,14 +858,14 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
 
-    funclocals = {}
+    funclocals = {} # type: Dict[str, Any]
     global _lambdify_generated_counter
     filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
     _lambdify_generated_counter += 1
     c = compile(funcstr, filename, 'exec')
     exec_(c, namespace, funclocals)
     # mtime has to be None or else linecache.checkcache will remove it
-    linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename)
+    linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename) # type: ignore
 
     func = funclocals[funcname]
 

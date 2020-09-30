@@ -1,4 +1,4 @@
-# from typing import Dict, Union, Type
+from typing import Dict, Union, Type
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .basic import S, Atom
@@ -65,7 +65,7 @@ class Relational(Boolean, EvalfMixin):
     """
     __slots__ = ()
 
-    ValidRelationOperator = {}  ## type: Dict[Union[str, None], Type[Relational]]
+    ValidRelationOperator = {}  # type: Dict[Union[str, None], Type[Relational]]
 
     is_Relational = True
 
@@ -387,10 +387,8 @@ class Relational(Boolean, EvalfMixin):
         args = (arg.expand(**kwargs) for arg in self.args)
         return self.func(*args)
 
-    def __nonzero__(self):
+    def __bool__(self):
         raise TypeError("cannot determine truth value of Relational")
-
-    __bool__ = __nonzero__
 
     def _eval_as_set(self):
         # self is univariate and periodicity(self, x) in (0, None)
@@ -962,11 +960,11 @@ class GreaterThan(_Greater):
         (1) x > y > z
         (2) (x > y) and (y > z)
         (3) (GreaterThanObject) and (y > z)
-        (4) (GreaterThanObject.__nonzero__()) and (y > z)
+        (4) (GreaterThanObject.__bool__()) and (y > z)
         (5) TypeError
 
        Because of the "and" added at step 2, the statement gets turned into a
-       weak ternary statement, and the first object's __nonzero__ method will
+       weak ternary statement, and the first object's __bool__ method will
        raise TypeError.  Thus, creating a chained inequality is not possible.
 
            In Python, there is no way to override the ``and`` operator, or to
@@ -1071,22 +1069,22 @@ def _eval_is_eq(lhs, rhs):
     return None
 
 
-@dispatch(Tuple, Expr)
+@dispatch(Tuple, Expr) # type: ignore
 def _eval_is_eq(lhs, rhs):  # noqa:F811
     return False
 
 
-@dispatch(Tuple, AppliedUndef)
+@dispatch(Tuple, AppliedUndef) # type: ignore
 def _eval_is_eq(lhs, rhs):  # noqa:F811
     return None
 
 
-@dispatch(Tuple, Symbol)
+@dispatch(Tuple, Symbol) # type: ignore
 def _eval_is_eq(lhs, rhs):  # noqa:F811
     return None
 
 
-@dispatch(Tuple, Tuple)
+@dispatch(Tuple, Tuple) # type: ignore
 def _eval_is_eq(lhs, rhs):  # noqa:F811
     if len(lhs) != len(rhs):
         return False

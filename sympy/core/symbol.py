@@ -42,6 +42,7 @@ class Str(Atom):
     def _hashable_content(self):
         return (self.name,)
 
+
 def _filter_assumptions(kwargs):
     """Split the given dict into assumptions and non-assumptions.
     Keys are taken as assumptions if they correspond to an
@@ -531,7 +532,7 @@ class Wild(Symbol):
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
-def symbols(names, **args):
+def symbols(names, *, cls=Symbol, **args):
     r"""
     Transform strings into instances of :class:`Symbol` class.
 
@@ -682,7 +683,6 @@ def symbols(names, **args):
         for i in range(len(names) - 1, -1, -1):
             names[i: i + 1] = names[i].split()
 
-        cls = args.pop('cls', Symbol)
         seq = args.pop('seq', as_seq)
 
         for name in names:

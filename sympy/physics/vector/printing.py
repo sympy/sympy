@@ -136,11 +136,11 @@ class VectorPrettyPrinter(PrettyPrinter):
             return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
 
         # Deal with special symbols
-        dots = {0 : u"",
-                1 : u"\N{COMBINING DOT ABOVE}",
-                2 : u"\N{COMBINING DIAERESIS}",
-                3 : u"\N{COMBINING THREE DOTS ABOVE}",
-                4 : u"\N{COMBINING FOUR DOTS ABOVE}"}
+        dots = {0 : "",
+                1 : "\N{COMBINING DOT ABOVE}",
+                2 : "\N{COMBINING DIAERESIS}",
+                3 : "\N{COMBINING THREE DOTS ABOVE}",
+                4 : "\N{COMBINING FOUR DOTS ABOVE}"}
 
         d = pform.__dict__
         #if unicode is false then calculate number of apostrophes needed and add to output
@@ -151,7 +151,6 @@ class VectorPrettyPrinter(PrettyPrinter):
             d['picture'][0] += apostrophes + "(t)"
         else:
             d['picture'] = [center_accent(d['picture'][0], dots[dot_i])]
-        d['unicode'] =  center_accent(d['unicode'], dots[dot_i])
         return pform
 
     def _print_Function(self, e):

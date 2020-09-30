@@ -30,7 +30,7 @@ There are three types of functions implemented in SymPy:
 
 """
 
-from typing import Any, Dict as tDict, Optional, Set as tSet
+from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union
 
 from .add import Add
 from .assumptions import ManagedProperties
@@ -47,7 +47,7 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.parameters import global_parameters
-from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not
+from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not, FuzzyBool
 from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import has_dups, sift
@@ -614,7 +614,7 @@ class Function(Application, Expr):
 
         return fuzzy_not(type(self).is_singular(arg.subs(x, a)))
 
-    _singularities = None  # indeterminate
+    _singularities = None  # type: Union[FuzzyBool, tTuple[Expr, ...]]
 
     @classmethod
     def is_singular(cls, a):
@@ -768,14 +768,14 @@ class Function(Application, Expr):
         A = self.args[ix]
         if A._diff_wrt:
             if len(self.args) == 1 or not A.is_Symbol:
-                return Derivative(self, A)
+                return _derivative_dispatch(self, A)
             for i, v in enumerate(self.args):
                 if i != ix and A in v.free_symbols:
                     # it can't be in any other argument's free symbols
                     # issue 8510
                     break
             else:
-                    return Derivative(self, A)
+                    return _derivative_dispatch(self, A)
 
         # See issue 4624 and issue 4719, 5600 and 8510
         D = Dummy('xi_%i' % argindex, dummy_index=hash(A))
@@ -1400,13 +1400,7 @@ class Derivative(Expr):
                             zero = True
                             break
             if zero:
-                if isinstance(expr, (MatrixCommon, NDimArray)):
-                    return expr.zeros(*expr.shape)
-                elif isinstance(expr, MatrixExpr):
-                    from sympy import ZeroMatrix
-                    return ZeroMatrix(*expr.shape)
-                elif expr.is_scalar:
-                    return S.Zero
+                return cls._get_zero_with_shape_like(expr)
 
             # make the order of symbols canonical
             #TODO: check if assumption of discontinuous derivatives exist
@@ -1416,7 +1410,7 @@ class Derivative(Expr):
         if isinstance(expr, Derivative):
             variable_count = list(expr.variable_count) + variable_count
             expr = expr.expr
-            return Derivative(expr, *variable_count, **kwargs)
+            return _derivative_dispatch(expr, *variable_count, **kwargs)
 
         # we return here if evaluate is False or if there is no
         # _eval_derivative method
@@ -1459,11 +1453,7 @@ class Derivative(Expr):
                     # _eval_derivative defined
                     expr *= old_v.diff(old_v)
 
-            # Evaluate the derivative `n` times.  If
-            # `_eval_derivative_n_times` is not overridden by the current
-            # object, the default in `Basic` will call a loop over
-            # `_eval_derivative`:
-            obj = expr._eval_derivative_n_times(v, count)
+            obj = cls._dispatch_eval_derivative_n_times(expr, v, count)
             if obj is not None and obj.is_zero:
                 return obj
 
@@ -1734,7 +1724,7 @@ class Derivative(Expr):
             old_vars = Counter(dict(reversed(old.variable_count)))
             self_vars = Counter(dict(reversed(self.variable_count)))
             if _subset(old_vars, self_vars):
-                return Derivative(new, *(self_vars - old_vars).items()).canonical
+                return _derivative_dispatch(new, *(self_vars - old_vars).items()).canonical
 
         args = list(self.args)
         newargs = list(x._subs(old, new) for x in args)
@@ -1742,7 +1732,7 @@ class Derivative(Expr):
             # complete replacement of self.expr
             # we already checked that the new is valid so we know
             # it won't be a problem should it appear in variables
-            return Derivative(*newargs)
+            return _derivative_dispatch(*newargs)
 
         if newargs[0] != args[0]:
             # case (1) can't change expr by introducing something that is in
@@ -1797,7 +1787,7 @@ class Derivative(Expr):
                 return Subs(Derivative(newe, *vc), *zip(*subs))
 
         # everything was ok
-        return Derivative(*newargs)
+        return _derivative_dispatch(*newargs)
 
     def _eval_lseries(self, x, logx, cdir=0):
         dx = self.variables
@@ -1911,6 +1901,29 @@ class Derivative(Expr):
         """
         from ..calculus.finite_diff import _as_finite_diff
         return _as_finite_diff(self, points, x0, wrt)
+
+    @classmethod
+    def _get_zero_with_shape_like(cls, expr):
+        return S.Zero
+
+    @classmethod
+    def _dispatch_eval_derivative_n_times(cls, expr, v, count):
+        # Evaluate the derivative `n` times.  If
+        # `_eval_derivative_n_times` is not overridden by the current
+        # object, the default in `Basic` will call a loop over
+        # `_eval_derivative`:
+        return expr._eval_derivative_n_times(v, count)
+
+
+def _derivative_dispatch(expr, *variables, **kwargs):
+    from sympy.matrices.common import MatrixCommon
+    from sympy import MatrixExpr
+    from sympy import NDimArray
+    array_types = (MatrixCommon, MatrixExpr, NDimArray, list, tuple, Tuple)
+    if isinstance(expr, array_types) or any(isinstance(i[0], array_types) if isinstance(i, (tuple, list, Tuple)) else isinstance(i, array_types) for i in variables):
+        from sympy.tensor.array.array_derivatives import ArrayDerivative
+        return ArrayDerivative(expr, *variables, **kwargs)
+    return Derivative(expr, *variables, **kwargs)
 
 
 class Lambda(Expr):
@@ -2444,7 +2457,7 @@ def diff(f, *symbols, **kwargs):
     if hasattr(f, 'diff'):
         return f.diff(*symbols, **kwargs)
     kwargs.setdefault('evaluate', True)
-    return Derivative(f, *symbols, **kwargs)
+    return _derivative_dispatch(f, *symbols, **kwargs)
 
 
 def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
@@ -2734,14 +2747,13 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     ...         args = sympify(args)
     ...         return Expr.__new__(cls, *args)
     ...
-    ...     def _eval_expand_double(self, **hints):
+    ...     def _eval_expand_double(self, *, force=False, **hints):
     ...         '''
     ...         Doubles the args of MyClass.
     ...
     ...         If there more than four args, doubling is not performed,
     ...         unless force=True is also used (False by default).
     ...         '''
-    ...         force = hints.pop('force', False)
     ...         if not force and len(self.args) > 4:
     ...             return self
     ...         return self.func(*(self.args + self.args))

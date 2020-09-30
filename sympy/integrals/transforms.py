@@ -201,8 +201,7 @@ def _noconds_(default):
         from sympy.core.decorators import wraps
 
         @wraps(func)
-        def wrapper(*args, **kwargs):
-            noconds = kwargs.pop('noconds', default)
+        def wrapper(*args, noconds=default, **kwargs):
             res = func(*args, **kwargs)
             if noconds:
                 return res[0]

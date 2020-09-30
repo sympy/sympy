@@ -1,7 +1,7 @@
 """Singleton mechanism"""
 
 
-# from typing import Any, Dict, Type
+from typing import Any, Dict, Type
 
 from .core import Registry
 from .assumptions import ManagedProperties
@@ -76,7 +76,7 @@ class SingletonRegistry(Registry):
     as ``x + Rational(1, 2)``, but this is a lot more typing. A shorter
     version is ``x + S(1)/2``. Since ``S(1)`` returns ``Integer(1)``, the
     division will return a ``Rational`` type, since it will call
-    ``Integer.__div__``, which knows how to return a ``Rational``.
+    ``Integer.__truediv__``, which knows how to return a ``Rational``.
 
     """
     __slots__ = ()
@@ -160,7 +160,7 @@ class Singleton(ManagedProperties):
     subclass may use a subclassed metaclass).
     """
 
-    _instances = {}  ## type: Dict[Type[Any], Any]
+    _instances = {}  # type: Dict[Type[Any], Any]
     "Maps singleton classes to their instances."
 
     def __new__(cls, *args, **kwargs):

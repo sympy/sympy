@@ -8,8 +8,9 @@ from sympy.core.sympify import sympify
 from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import exp
 from sympy.series import Order
-from sympy.simplify import (simplify, trigsimp, posify,
-                            besselsimp, sqrtdenest) # type: ignore
+from sympy.simplify.simplify import simplify, posify, besselsimp
+from sympy.simplify.trigsimp import trigsimp
+from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.solvers import solve
 
 from sympy.solvers.deutils import _preprocess, ode_order

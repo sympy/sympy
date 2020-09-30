@@ -209,18 +209,16 @@ an expression when customizing a printer. Mistakes include:
 
 """
 
-from __future__ import print_function, division
-
-from typing import Any, Dict
-
+from typing import Any, Dict, Type
+import inspect
 from contextlib import contextmanager
+from functools import cmp_to_key, update_wrapper
 
 from sympy import Basic, Add
 
 from sympy.core.core import BasicMeta
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
 
-from functools import cmp_to_key
 
 
 @contextmanager
@@ -248,15 +246,19 @@ class Printer(object):
 
     printmethod = None  # type: str
 
+    @classmethod
+    def _get_initial_settings(cls):
+        settings = cls._default_settings.copy()
+        for key, val in cls._global_settings.items():
+            if key in cls._default_settings:
+                settings[key] = val
+        return settings
+
     def __init__(self, settings=None):
         self._str = str
 
-        self._settings = self._default_settings.copy()
+        self._settings = self._get_initial_settings()
         self._context = dict()  # mutable during printing
-
-        for key, val in self._global_settings.items():
-            if key in self._default_settings:
-                self._settings[key] = val
 
         if settings is not None:
             self._settings.update(settings)
@@ -343,3 +345,41 @@ class Printer(object):
             return list(expr.args)
         else:
             return expr.as_ordered_terms(order=order)
+
+
+class _PrintFunction:
+    """
+    Function wrapper to replace ``**settings`` in the signature with printer defaults
+    """
+    def __init__(self, f, print_cls: Type[Printer]):
+        # find all the non-setting arguments
+        params = list(inspect.signature(f).parameters.values())
+        assert params.pop(-1).kind == inspect.Parameter.VAR_KEYWORD
+        self.__other_params = params
+
+        self.__print_cls = print_cls
+        update_wrapper(self, f)
+
+    def __repr__(self) -> str:
+        return repr(self.__wrapped__)  # type:ignore
+
+    def __call__(self, *args, **kwargs):
+        return self.__wrapped__(*args, **kwargs)
+
+    @property
+    def __signature__(self) -> inspect.Signature:
+        settings = self.__print_cls._get_initial_settings()
+        return inspect.Signature(
+            parameters=self.__other_params + [
+                inspect.Parameter(k, inspect.Parameter.KEYWORD_ONLY, default=v)
+                for k, v in settings.items()
+            ],
+            return_annotation=self.__wrapped__.__annotations__.get('return', inspect.Signature.empty)  # type:ignore
+        )
+
+
+def print_function(print_cls):
+    """ A decorator to replace kwargs with the printer settings in __signature__ """
+    def decorator(f):
+        return _PrintFunction(f, print_cls)
+    return decorator

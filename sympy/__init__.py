@@ -13,8 +13,8 @@ See the webpage for more information and documentation:
 
 
 import sys
-if sys.version_info < (3, 5):
-    raise ImportError("Python version 3.5 or above is required for SymPy.")
+if sys.version_info < (3, 6):
+    raise ImportError("Python version 3.6 or above is required for SymPy.")
 del sys
 
 

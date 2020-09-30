@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.add import Add
 from sympy.core.assumptions import check_assumptions
 from sympy.core.containers import Tuple
@@ -160,7 +158,7 @@ class DiophantineEquationType:
     dimension
         The number of symbols being solved for
     """
-    name = None
+    name = None  # type: str
 
     def __init__(self, equation, free_symbols=None):
         self.equation = _sympify(equation).expand(force=True)

@@ -2,8 +2,6 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 import itertools
@@ -18,7 +16,7 @@ from sympy.logic.boolalg import true
 
 # sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
-from sympy.printing.printer import Printer
+from sympy.printing.printer import Printer, print_function
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -2709,13 +2707,9 @@ def translate(s):
         return s
 
 
-def latex(expr, full_prec=False, min=None, max=None, fold_frac_powers=False,
-          fold_func_brackets=False, fold_short_frac=None, inv_trig_style="abbreviated",
-          itex=False, ln_notation=False, long_frac_ratio=None,
-          mat_delim="[", mat_str=None, mode="plain", mul_symbol=None,
-          order=None, symbol_names=None, root_notation=True,
-          mat_symbol_style="plain", imaginary_unit="i", gothic_re_im=False,
-          decimal_separator="period", perm_cyclic=True, parenthesize_super=True):
+
+@print_function(LatexPrinter)
+def latex(expr, **settings):
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -2918,35 +2912,6 @@ def latex(expr, full_prec=False, min=None, max=None, fold_frac_powers=False,
         Unsupported types no longer have their ``str`` representation treated as valid latex.
 
     """
-    if symbol_names is None:
-        symbol_names = {}
-
-    settings = {
-        'full_prec': full_prec,
-        'fold_frac_powers': fold_frac_powers,
-        'fold_func_brackets': fold_func_brackets,
-        'fold_short_frac': fold_short_frac,
-        'inv_trig_style': inv_trig_style,
-        'itex': itex,
-        'ln_notation': ln_notation,
-        'long_frac_ratio': long_frac_ratio,
-        'mat_delim': mat_delim,
-        'mat_str': mat_str,
-        'mode': mode,
-        'mul_symbol': mul_symbol,
-        'order': order,
-        'symbol_names': symbol_names,
-        'root_notation': root_notation,
-        'mat_symbol_style': mat_symbol_style,
-        'imaginary_unit': imaginary_unit,
-        'gothic_re_im': gothic_re_im,
-        'decimal_separator': decimal_separator,
-        'perm_cyclic' : perm_cyclic,
-        'parenthesize_super' : parenthesize_super,
-        'min': min,
-        'max': max,
-    }
-
     return LatexPrinter(settings).doprint(expr)
 
 

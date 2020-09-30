@@ -797,8 +797,7 @@ def test_straight_line():
 
 def test_sort_variable():
     vsort = Derivative._sort_variable_count
-    def vsort0(*v, **kw):
-        reverse = kw.get('reverse', False)
+    def vsort0(*v, reverse=False):
         return [i[0] for i in vsort([(i, 0) for i in (
             reversed(v) if reverse else v)])]
 
