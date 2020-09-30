@@ -535,8 +535,8 @@ def mod_inverse(a, m):
     References
     ==========
 
-    - https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
-    - https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
+    .. [1] https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
+    .. [2] https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
     """
     c = None
     try:
