@@ -156,10 +156,10 @@ class Predicate(Boolean):
         return obj
 
     def _hashable_content(self):
-        return (self.name,)
+        return (self.name, tuple(self.handlers))
 
     def __getnewargs__(self):
-        return (self.name,)
+        return (self.name, self.handlers)
 
     def __call__(self, expr):
         return AppliedPredicate(self, expr)

@@ -1003,5 +1003,8 @@ def test_NDimArray():
     assert sstr(NDimArray([1.0, 2.0]), full_prec=False) == '[1.0, 2.0]'
 
 
+def test_Predicate():
+    assert sstr(Q.even) == 'Q.even'
+
 def test_AppliedPredicate():
     assert sstr(Q.even(x)) == 'Q.even(x)'
