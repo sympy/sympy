@@ -1261,7 +1261,7 @@ def is_eq(lhs, rhs):
 
     Returns
     =======
-    
+
     True if lhs is equal to rhs, false is lhs is not equal to rhs, and
     None if the comparison between lhs and rhs is indeterminate.
 
