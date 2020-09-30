@@ -156,7 +156,7 @@ class Predicate(Boolean):
         return obj
 
     def _hashable_content(self):
-        return (self.name, tuple(self.handlers))
+        return (self.name,)
 
     def __getnewargs__(self):
         return (self.name, self.handlers)
