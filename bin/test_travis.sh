@@ -9,6 +9,10 @@ if [[ "${TEST_FLAKE8}" == "true" ]]; then
     flake8 sympy;
 fi
 
+if [[ "${TEST_MYPY}" == "true" ]]; then
+    mypy sympy;
+fi
+
 if [[ "${TEST_SETUP}" == "true" ]]; then
     python bin/test_setup.py
 fi

@@ -31,6 +31,10 @@ jobs:
       dist: xenial
       env:
         - TEST_FLAKE8="true"
+    - python: 3.8
+      dist: xenial
+      env:
+        - TEST_MYPY="true"
 
     - stage: baseline
       python: 3.8
@@ -200,6 +204,9 @@ before_install:
     fi
   - if [[ "${TEST_FLAKE8}" == "true" ]]; then
     pip install flake8;
+    fi
+  - if [[ "${TEST_MYPY}" == "true" ]]; then
+    pip install mypy;
     fi
   - if [ "$TRAVIS_PYTHON_VERSION" == "3.8" ]; then
     pip uninstall -y Cython;
