@@ -2179,7 +2179,7 @@ def _higher_order_slow1():
 def test_higher_order_slow1():
     eq, sol = _higher_order_slow1()
 
-    assert dsolve(eq) == sol
+    assert dsolve_system(eq, simplify=False, doit=False) == [sol]
 
 
 @slow
@@ -2196,13 +2196,11 @@ def test_second_order_type2_slow1():
     x, y, z = symbols('x, y, z', cls=Function)
     t, l = symbols('t, l')
 
-    ot = Rational(1, 3)
-    eqs = (Eq(Derivative(x(t), (t, 2)), t*(2*x(t) + y(t))), Eq(Derivative(y(t), (t, 2)), t*(-x(t) + 2*y(t))))
-    sol = [Eq(x(t), I*(C1*airyai(t*(2 - I)**(ot)) + C2*airybi(t*(2 - I)**(ot))) - I*(C3*airyai(t*(2 +
-                I)**(ot)) + C4*airybi(t*(2 + I)**(ot)))),
-            Eq(y(t), C1*airyai(t*(2 - I)**(ot)) + C3*airyai(t*(2 + I)**(ot)) + C2*airybi(t*(2 - I)**(ot)) +
-                C4*airybi(t*(2 + I)**(ot)))]
-
-    # Note: dsolve call in dsolve_system makes solving this system slow.
-    assert dsolve(eqs) == sol
-    assert checksysodesol(eqs, sol) == (True, [0, 0])
+    eqs1 = [Eq(Derivative(x(t), (t, 2)), t*(2*x(t) + y(t))),
+            Eq(Derivative(y(t), (t, 2)), t*(-x(t) + 2*y(t)))]
+    sol1 = [Eq(x(t), I*C1*airyai(t*(2 - I)**(S(1)/3)) + I*C2*airybi(t*(2 - I)**(S(1)/3)) - I*C3*airyai(t*(2 +
+             I)**(S(1)/3)) - I*C4*airybi(t*(2 + I)**(S(1)/3))),
+            Eq(y(t), C1*airyai(t*(2 - I)**(S(1)/3)) + C2*airybi(t*(2 - I)**(S(1)/3)) + C3*airyai(t*(2 + I)**(S(1)/3)) +
+             C4*airybi(t*(2 + I)**(S(1)/3)))]
+    assert dsolve(eqs1) == sol1
+    assert checksysodesol(eqs1, sol1) == (True, [0, 0])
