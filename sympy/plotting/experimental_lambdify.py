@@ -105,43 +105,48 @@ class vectorized_lambdify(object):
     types of errors to expect.
     """
     def __init__(self, args, expr):
+        from sympy.utilities.lambdify import lambdify
+
         self.args = args
         self.expr = expr
         self.np = import_module('numpy')
 
-        self.lambda_func_1 = experimental_lambdify(
-            args, expr, use_np=True)
-        self.vector_func_1 = self.lambda_func_1
+        lambda_func_1 = lambdify(args, expr)
+        vector_func_1 = self.np.vectorize(
+            lambda_func_1, otypes=[self.np.complex])
 
-        self.lambda_func_2 = experimental_lambdify(
+        lambda_func_2 = lambdify(args, expr, modules='mpmath')
+        vector_func_2 = self.np.vectorize(
+            lambda_func_2, otypes=[self.np.complex])
+
+        lambda_func_3 = experimental_lambdify(
             args, expr, use_python_cmath=True)
-        self.vector_func_2 = self.np.vectorize(
-            self.lambda_func_2, otypes=[self.np.complex])
+        vector_func_3 = self.np.vectorize(
+            lambda_func_3, otypes=[self.np.complex])
 
-        self.vector_func = self.vector_func_1
-        self.failure = False
+        self.candidates = [vector_func_1, vector_func_2, vector_func_3]
 
     def __call__(self, *args):
         np = self.np
 
         try:
             temp_args = (np.array(a, dtype=np.complex) for a in args)
-            results = self.vector_func(*temp_args)
+            results = self.candidates[0](*temp_args)
             results = np.ma.masked_where(
                 np.abs(results.imag) > 1e-7 * np.abs(results),
                 results.real, copy=False)
             return results
-        except ValueError:
-            if self.failure:
+        except (ValueError, TypeError):
+            self.candidates.pop(0)
+            if not self.candidates:
                 raise
 
-            self.failure = True
-            self.vector_func = self.vector_func_2
-            warnings.warn(
-                'The evaluation of the expression is problematic. '
-                'We are trying a failback method that may still work. '
-                'Please report this as a bug.')
-            return self.__call__(*args)
+            if len(self.candidates) == 2:
+                warnings.warn(
+                    'The evaluation of the expression {} is problematic. '
+                    'We are trying a failback method that may still work. '
+                    'Please report this as a bug.'.format(self.expr))
+            return self.__call__(args)
 
 
 class lambdify(object):
@@ -154,41 +159,41 @@ class lambdify(object):
     """
 
     def __init__(self, args, expr):
+        from sympy.utilities.lambdify import lambdify
         self.args = args
         self.expr = expr
-        self.lambda_func_1 = experimental_lambdify(
+
+        func_1 = lambdify(args, expr)
+        func_2 = lambdify(args, expr, modules='mpmath')
+        func_3 = experimental_lambdify(
             args, expr, use_python_cmath=True, use_evalf=True)
-        self.lambda_func_2 = experimental_lambdify(
+        func_4 = experimental_lambdify(
             args, expr, use_python_math=True, use_evalf=True)
-        self.lambda_func_3 = experimental_lambdify(
+        func_5 = experimental_lambdify(
             args, expr, use_evalf=True, complex_wrap_evalf=True)
-        self.lambda_func = self.lambda_func_1
-        self.failure = False
+
+        self.candidates = [func_1, func_2, func_3, func_4, func_5]
 
     def __call__(self, args):
         try:
             #The result can be sympy.Float. Hence wrap it with complex type.
-            result = complex(self.lambda_func(args))
+            result = self.candidates[0](args)
+            result = complex(result)
             if abs(result.imag) > 1e-7 * abs(result):
                 return None
             return result.real
-        except (ZeroDivisionError, TypeError) as e:
+        except (ZeroDivisionError, TypeError, NameError) as e:
             if isinstance(e, ZeroDivisionError):
                 return None
 
-            if self.failure:
+            self.candidates.pop(0)
+            if not self.candidates:
                 raise e
-
-            if self.lambda_func == self.lambda_func_1:
-                self.lambda_func = self.lambda_func_2
-                return self.__call__(args)
-
-            self.failure = True
-            self.lambda_func = self.lambda_func_3
-            warnings.warn(
-                'The evaluation of the expression is problematic. '
-                'We are trying a failback method that may still work. '
-                'Please report this as a bug.')
+            if len(self.candidates) == 3:
+                warnings.warn(
+                    'The evaluation of the expression {} is problematic. '
+                    'We are trying a failback method that may still work. '
+                    'Please report this as a bug.'.format(self.expr))
             return self.__call__(args)
 
 
