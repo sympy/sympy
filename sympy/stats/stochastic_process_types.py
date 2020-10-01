@@ -433,7 +433,9 @@ class MarkovProcess(StochasticProcess):
 
         # `not None` is `True`. So the old test fails for symbolic sizes.
         # Need to build the statement differently.
-        if FiniteSet(*[i for i in range(trans_probs.shape[0])]).is_subset(FiniteSet(*[j for j in state_index])) is False:
+        cond1 = (not isinstance(state_index, Range) and
+                 FiniteSet(*[i for i in range(trans_probs.shape[0])]).is_subset(FiniteSet(*[j for j in state_index])) is False)
+        if cond1:
             raise ValueError("state space is not compatible with the transition probabilities.")
         state_index = FiniteSet(*[i for i in range(trans_probs.shape[0])])
         return state_index
@@ -741,9 +743,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> from sympy.core.symbol import Str
     >>> P(Eq(Y[3], Str('Rainy')), Eq(Y[1], Str('Cloudy'))).round(2)
     0.36
-
-    >>> E(Y[3], Eq(Y[1], Str("Cloudy")))
-    0.38*Cloudy + 0.36*Rainy + 0.26*Sunny
 
     Symbol state names can also be used:
 
