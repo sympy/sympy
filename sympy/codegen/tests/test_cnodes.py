@@ -31,20 +31,20 @@ def test_goto_Label():
 
     l1 = Label(s)
     assert ccode(l1) == 'early_exit:'
-    assert l1 == Label(s)
+    assert l1 == Label('early_exit')
     assert l1 != Label('foobar')
 
     body = [PreIncrement(x)]
     l2 = Label(s, body)
     assert l2.name == String("early_exit")
-    assert l2.body == CodeBlock(*body)
+    assert l2.body == CodeBlock(PreIncrement(x))
     assert ccode(l2) == ("early_exit:\n"
         "++(x);")
 
     body = [PreIncrement(x), PreDecrement(y)]
     l2 = Label(s, body)
     assert l2.name == String("early_exit")
-    assert l2.body == CodeBlock(*body)
+    assert l2.body == CodeBlock(PreIncrement(x), PreDecrement(y))
     assert ccode(l2) == ("early_exit:\n"
         "{\n   ++(x);\n   --(y);\n}")
 
