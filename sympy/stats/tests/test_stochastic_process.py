@@ -1,7 +1,7 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Le, Gt, Ge, exp, Not, Rational, Lambda, erf,
                    Piecewise, factorial, Interval, oo, Contains, sqrt, pi, ceiling,
-                   gamma, lowergamma, Sum, Range, Tuple, ImmutableDenseMatrix)
+                   gamma, lowergamma, Sum, Range, Tuple, ImmutableDenseMatrix, Symbol)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
                          BernoulliProcess, PoissonProcess, WienerProcess,
@@ -23,8 +23,6 @@ def test_DiscreteMarkovChain():
     # pass only the name
     X = DiscreteMarkovChain("X")
     assert isinstance(X.state_space, Range)
-    assert isinstance(X.index_of, Range)
-    assert not X._is_numeric
     assert X.index_set == S.Naturals0
     assert isinstance(X.transition_probabilities, MatrixSymbol)
     t = symbols('t', positive=True, integer=True)
@@ -48,7 +46,6 @@ def test_DiscreteMarkovChain():
         assert isinstance(Y.transition_probabilities, MatrixSymbol)
         assert Y.state_space == Tuple(*state_spaces[i])
         assert Y.number_of_states == 3
-        assert not Y._is_numeric  # because no transition matrix is provided
         assert Y.index_of[state_spaces[i][0]] == 0
         assert Y.index_of[state_spaces[i][1]] == 1
         assert Y.index_of[state_spaces[i][2]] == 2
@@ -59,12 +56,9 @@ def test_DiscreteMarkovChain():
 
         raises(ValueError, lambda: next(sample_stochastic_process(Y)))
 
-    assert P(Ge(rainy, Y[3]), Eq(Y[1], cloudy)) == P(Le(Y[3], 0), Eq(Y[1], Str("Cloudy")))
-
     raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
     Y = DiscreteMarkovChain("Y", Range(1, t, 2))
     assert Y.number_of_states == ceiling((t-1)/2)
-    raises(NotImplementedError, lambda: Y.index_of)
 
     # pass name and transition_probabilities
     chains = [DiscreteMarkovChain("Y", trans_probs=Matrix([[]])),
@@ -74,7 +68,6 @@ def test_DiscreteMarkovChain():
         assert Z.number_of_states == Z.transition_probabilities.shape[0]
         assert isinstance(Z.transition_probabilities, ImmutableDenseMatrix)
         assert isinstance(Z.state_space, Tuple)
-        assert Z._is_numeric
 
     # pass name, state_space and transition_probabilities
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
@@ -89,7 +82,7 @@ def test_DiscreteMarkovChain():
     assert (P(Eq(YS[3], 2), Eq(YS[1], 1)) -
             (TS[0, 2]*TS[1, 0] + TS[1, 1]*TS[1, 2] + TS[1, 2]*TS[2, 2])).simplify() == 0
     assert P(Eq(YS[1], 1), Eq(YS[2], 2)) == Probability(Eq(YS[1], 1))
-    assert P(Eq(YS[3], 3), Eq(YS[1], 1)) is S.Zero
+    assert P(Eq(YS[3], 3), Eq(YS[1], 1)) == TS[0, 2]*TS[1, 0] + TS[1, 1]*TS[1, 2] + TS[1, 2]*TS[2, 2]
     TO = Matrix([[0.25, 0.75, 0],[0, 0.25, 0.75],[0.75, 0, 0.25]])
     assert P(Eq(Y[3], 2), Eq(Y[1], 1) & TransitionMatrixOf(Y, TO)).round(3) == Float(0.375, 3)
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
@@ -229,6 +222,10 @@ def test_ContinuousMarkovChain():
     CS1 = ContinuousMarkovChain('C', [0, 1, 2], TS1)
     A = CS1.generator_matrix
     assert CS1.transition_probabilities(A)(t) == exp(t*A)
+
+    C3 = ContinuousMarkovChain('C', [Symbol('0'), Symbol('1'), Symbol('2')], T2)
+    assert P(Eq(C3(1), 1), Eq(C3(0), 1)) == exp(-2)/2 + S.Half
+    assert P(Eq(C3(1), Symbol('1')), Eq(C3(0), Symbol('1'))) == exp(-2)/2 + S.Half
 
 def test_BernoulliProcess():
 
