@@ -433,8 +433,8 @@ class MarkovProcess(StochasticProcess):
 
         # `not None` is `True`. So the old test fails for symbolic sizes.
         # Need to build the statement differently.
-        cond1 = (not isinstance(state_index, Range) and
-                 FiniteSet(*[i for i in range(trans_probs.shape[0])]).is_subset(FiniteSet(*[j for j in state_index])) is False)
+        sym_cond = isinstance((state_index.args[1] - state_index.args[0]) // state_index.args[2], Symbol)
+        cond1 = not sym_cond and len(state_index) != trans_probs.shape[0]
         if cond1:
             raise ValueError("state space is not compatible with the transition probabilities.")
         state_index = FiniteSet(*[i for i in range(trans_probs.shape[0])])
@@ -732,7 +732,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     than state names. For example, with the Sunny-Cloudy-Rainy
     model with string state names:
 
-    >>> Y = DiscreteMarkovChain("Y", ['Sunny', 'Cloudy', 'Rainy'], T)
+    >>> from sympy.core.symbol import Str
+    >>> Y = DiscreteMarkovChain("Y", [Str('Sunny'), Str('Cloudy'), Str('Rainy')], T)
     >>> P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2)
     0.36
 
@@ -740,7 +741,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     Currently, there is no support for state names within probability
     and expectation statements. Here is a work-around using ``Str``:
 
-    >>> from sympy.core.symbol import Str
     >>> P(Eq(Y[3], Str('Rainy')), Eq(Y[1], Str('Cloudy'))).round(2)
     0.36
 
