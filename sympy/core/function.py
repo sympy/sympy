@@ -2091,7 +2091,7 @@ class Subs(Expr):
     from substituting x with x0 in expr.
 
     Parameters
-    =========
+    ==========
 
     expr : Expr
         An expression.
@@ -3055,7 +3055,7 @@ def count_ops(expr, visual=False):
         items will be returned.
 
     visual : bool, optional
-        If False`` (default) then the sum of the coefficients of the
+        If ``False`` (default) then the sum of the coefficients of the
         visual expression will be returned.
         If ``True`` then the number of each type of operation is shown
         with the core class types (or their virtual equivalent) multiplied by the
