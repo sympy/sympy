@@ -334,14 +334,14 @@ class MarkovProcess(StochasticProcess):
         The number of states in the Markov Chain.
         """
         return _sympify(self.args[2].shape[0])
-    
+
     @property
     def _state_index(self) -> Range:
         """
         Returns state index as Range.
         """
         return Range(self.number_of_states)
-    
+
     @classmethod
     def _sanity_checks(cls, state_space, trans_probs):
         # Try to never have None as state_space or trans_probs.
@@ -375,7 +375,7 @@ class MarkovProcess(StochasticProcess):
             if ss_size != trans_probs.shape[0]:
                 raise ValueError('The size of the state space and the number of '
                                  'rows of the transition matrix must be the same.')
-        
+
         return state_space, trans_probs
 
     def _extract_information(self, given_condition):
@@ -471,7 +471,7 @@ class MarkovProcess(StochasticProcess):
 
     def replace_with_index(self, condition):
         if isinstance(condition, Relational):
-            condition = type(condition)(self.index_of.get(condition.lhs, condition.lhs), 
+            condition = type(condition)(self.index_of.get(condition.lhs, condition.lhs),
                                         self.index_of.get(condition.rhs, condition.rhs))
         return condition
 
