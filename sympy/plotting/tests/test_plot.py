@@ -13,7 +13,7 @@ from sympy.plotting.plot import (
 from sympy.plotting.plot import (
     unset_show, plot_contour, PlotGrid, DefaultBackend, MatplotlibBackend,
     TextBackend)
-from sympy.testing.pytest import skip, raises, warns
+from sympy.testing.pytest import skip, raises
 from sympy.utilities import lambdify as lambdify_
 
 
