@@ -64,7 +64,11 @@ class GroupHomomorphism:
         '''
         Return an element of the preimage of `g` or of each element
         of `g` if `g` is a list.
-        NOTE: If the codomain is an FpGroup, the inverse for equal
+
+        Explanation
+        ===========
+
+        If the codomain is an FpGroup, the inverse for equal
         elements might not always be the same unless the FpGroup's
         rewriting system is confluent. However, making a system
         confluent can be time-consuming. If it's important, try
@@ -276,7 +280,7 @@ def homomorphism(domain, codomain, gens, images=[], check=True):
     If the given images of the generators do not define a homomorphism,
     an exception is raised.
 
-    If `check` is `False`, don't check whether the given images actually
+    If ``check`` is ``False``, don't check whether the given images actually
     define a homomorphism.
 
     '''
@@ -368,7 +372,7 @@ def _check_homomorphism(domain, codomain, images):
 def orbit_homomorphism(group, omega):
     '''
     Return the homomorphism induced by the action of the permutation
-    group `group` on the set `omega` that is closed under the action.
+    group group` on the set `omega` that is closed under the action.
 
     '''
     from sympy.combinatorics import Permutation
@@ -428,11 +432,16 @@ def group_isomorphism(G, H, isomorphism=True):
     Parameters
     ==========
 
-        G (a finite `FpGroup` or a `PermutationGroup`) -- First group
-        H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
-        isomorphism (boolean) -- This is used to avoid the computation of homomorphism
-                                 when the user only wants to check if there exists
-                                 an isomorphism between the groups.
+    G : A finite `FpGroup` or a `PermutationGroup`.
+        First group.
+
+    H : A finite `FpGroup` or a `PermutationGroup`Second group
+        Second group.
+
+    isomorphism : bool
+        This is used to avoid the computation of homomorphism
+        when the user only wants to check if there exists
+        an isomorphism between the groups.
 
     Returns
     =======
@@ -540,8 +549,11 @@ def is_isomorphic(G, H):
     Parameters
     ==========
 
-        G (a finite `FpGroup` or a `PermutationGroup`) -- First group
-        H (a finite `FpGroup` or a `PermutationGroup`) -- Second group
+    G : A finite `FpGroup` or a `PermutationGroup`
+        First group.
+
+    H : A finite `FpGroup` or a `PermutationGroup`
+        Second group.
 
     Returns
     =======
