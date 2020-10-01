@@ -4,7 +4,7 @@ import random
 import itertools
 from typing import Iterable, Sequence, Type, Union as tUnion
 
-from sympy import (Matrix, MatrixSymbol, S, Indexed, Integer, Basic, Tuple, Range,
+from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    Set, And, Eq, FiniteSet, ImmutableMatrix, Integer,
                    Lambda, Mul, Dummy, IndexedBase, Add, Interval, oo,
                    linsolve, eye, Or, Not, Intersection, factorial, Contains,
