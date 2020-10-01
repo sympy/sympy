@@ -12,8 +12,10 @@ from sympy.functions import (exp, im, cos, sin, re, Piecewise,
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase, eye
 from sympy.polys import Poly
-from sympy.simplify import simplify, collect, powsimp, ratsimp
-from sympy.simplify.powsimp import powdenest
+from sympy.simplify import collect
+from sympy.simplify.powsimp import powdenest, powsimp
+from sympy.simplify.ratsimp import ratsimp
+from sympy.simplify.simplify import simplify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError, solveset

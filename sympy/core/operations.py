@@ -1,5 +1,5 @@
 from operator import attrgetter
-from typing import Tuple
+from typing import Tuple, Type
 from collections import defaultdict
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -41,7 +41,7 @@ class AssocOp(Basic):
     # and keep it right here
     __slots__ = ('is_commutative',)  # type: Tuple[str, ...]
 
-    _args_type = None
+    _args_type = None  # type: Type[Basic]
 
     @cacheit
     def __new__(cls, *args, **options):

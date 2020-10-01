@@ -764,7 +764,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
     return None
 
 
-@dispatch(Idx, Number)
+@dispatch(Idx, Number)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
 
     other_upper = rhs
@@ -777,7 +777,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
     return None
 
 
-@dispatch(Number, Idx)
+@dispatch(Number, Idx)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
 
     other_upper = lhs

@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 from .vector import Vector, _check_vector
 from .frame import _check_frame
+from warnings import warn
 
 __all__ = ['Point']
 
@@ -529,24 +530,41 @@ class Point(object):
 
         _check_frame(frame)
         if not (frame in self._vel_dict):
+            valid_neighbor_found = False
+            is_cyclic = False
             visited = []
             queue = [self]
+            candidate_neighbor = []
             while queue: #BFS to find nearest point
                 node = queue.pop(0)
                 if node not in visited:
                     visited.append(node)
                     for neighbor, neighbor_pos in node._pos_dict.items():
+                        if neighbor in visited:
+                            continue
                         try:
                             neighbor_pos.express(frame) #Checks if pos vector is valid
                         except ValueError:
                             continue
+                        if neighbor in queue:
+                            is_cyclic = True
                         try :
                             neighbor_velocity = neighbor._vel_dict[frame] #Checks if point has its vel defined in req frame
                         except KeyError:
                             queue.append(neighbor)
                             continue
-                        self.set_vel(frame, self.pos_from(neighbor).dt(frame) + neighbor_velocity)
-                        return self._vel_dict[frame]
+                        candidate_neighbor.append(neighbor)
+                        if not valid_neighbor_found:
+                            self.set_vel(frame, self.pos_from(neighbor).dt(frame) + neighbor_velocity)
+                            valid_neighbor_found = True
+            if is_cyclic:
+                warn('Kinematic loops are defined among the positions of points. This is likely not desired and may cause errors in your calculations.')
+            if len(candidate_neighbor) > 1:
+                warn('Velocity automatically calculated based on point ' +
+                    candidate_neighbor[0].name + ' but it is also possible from points(s):' +
+                    str(candidate_neighbor[1:]) + '. Velocities from these points are not necessarily the same. This may cause errors in your calculations.')
+            if valid_neighbor_found:
+                return self._vel_dict[frame]
             else:
                 raise ValueError('Velocity of point ' + self.name + ' has not been'
                              ' defined in ReferenceFrame ' + frame.name)

@@ -20,8 +20,12 @@ def _is_scalar(e):
 def _cycle_permute(l):
     """ Cyclic permutations based on canonical ordering
 
+    Explanation
+    ===========
+
     This method does the sort based ascii values while
     a better approach would be to used lexicographic sort.
+
     TODO: Handle condition such as symbols have subscripts/superscripts
     in case of lexicographic sort
 
@@ -180,6 +184,7 @@ class Tr(Expr):
 
         Parameters
         ==========
+
         pos : integer, if positive, shift-right, else shift-left
 
         Examples

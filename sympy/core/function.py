@@ -30,7 +30,7 @@ There are three types of functions implemented in SymPy:
 
 """
 
-from typing import Any, Dict as tDict, Optional, Set as tSet
+from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union
 
 from .add import Add
 from .assumptions import ManagedProperties
@@ -47,7 +47,7 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.parameters import global_parameters
-from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not
+from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not, FuzzyBool
 from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import has_dups, sift
@@ -614,7 +614,7 @@ class Function(Application, Expr):
 
         return fuzzy_not(type(self).is_singular(arg.subs(x, a)))
 
-    _singularities = None  # indeterminate
+    _singularities = None  # type: Union[FuzzyBool, tTuple[Expr, ...]]
 
     @classmethod
     def is_singular(cls, a):

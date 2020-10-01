@@ -289,7 +289,7 @@ def _force_mutable(x):
 
 
 class MutableDenseMatrix(DenseMatrix, MatrixBase):
-    __hash__ = None
+    __hash__ = None  # type: ignore
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)

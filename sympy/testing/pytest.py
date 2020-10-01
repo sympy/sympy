@@ -137,7 +137,7 @@ else:
     class Skipped(Exception):
         pass
 
-    class Failed(Exception):
+    class Failed(Exception):  # type: ignore
         pass
 
     def XFAIL(func):
