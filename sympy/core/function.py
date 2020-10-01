@@ -2103,6 +2103,9 @@ class Subs(Expr):
         A point or list of evaluation points
         corresponding to those variables.
 
+    Notes
+    =====
+
     ``Subs`` objects are generally useful to represent unevaluated derivatives
     calculated at a point.
 
