@@ -315,12 +315,9 @@ class NDimArray(Printable):
 
     def __add__(self, other):
         from sympy.tensor.array.arrayop import Flatten
-        from sympy.matrices import Matrix
 
         if not isinstance(other, NDimArray):
-            if isinstance(other, Matrix):
-                return NotImplemented
-            raise TypeError(str(other))
+            return NotImplemented
 
         if self.shape != other.shape:
             raise ValueError("array shape mismatch")

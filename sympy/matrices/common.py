@@ -2536,9 +2536,9 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        if isinstance(other, NDimArray):
-            return NotImplemented
         """Return self + other, raising ShapeError if shapes don't match."""
+        if isinstance(other, NDimArray): # Matrix and array addition is currently not implemented
+            return NotImplemented
         other = _matrixify(other)
         # matrix-like objects can have shapes.  This is
         # our first sanity check.
