@@ -1,5 +1,5 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
-                   ImmutableMatrix, Ne, Lt, Le, Gt, Ge, exp, Not, Rational, Lambda, erf,
+                   ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda, erf,
                    Piecewise, factorial, Interval, oo, Contains, sqrt, pi, ceiling,
                    gamma, lowergamma, Sum, Range, Tuple, ImmutableDenseMatrix, Symbol)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
