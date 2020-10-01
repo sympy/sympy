@@ -177,7 +177,7 @@ class lambdify(object):
     def __call__(self, args):
         try:
             #The result can be sympy.Float. Hence wrap it with complex type.
-            result = self.candidates[0](args)
+            result = self.candidates[0](complex(args))
             result = complex(result)
             if abs(result.imag) > 1e-7 * abs(result):
                 return None
