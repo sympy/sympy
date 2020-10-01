@@ -675,7 +675,10 @@ class Factorable(SingleODESolver):
         self.eqs = []
         eq = eq.collect(f(x), func = cancel)
         eq = fraction(factor(eq))[0]
-        roots = factor_list(eq)[1]
+        try:
+            roots = factor_list(eq)[1]
+        except:
+          return False 
         if len(roots)>1 or roots[0][1]>1:
             for base,expo in roots:
                 if base.has(f(x)):
