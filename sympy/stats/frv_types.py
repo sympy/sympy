@@ -76,12 +76,10 @@ def FiniteRV(name, density, **kwargs):
     Parameters
     ==========
 
+    name : Symbol
+        Represents name of the random variable.
     density: A dict
         Dictionary conatining the pdf of finite distribution
-
-    Other Parameters
-    ================
-
     check : bool
         If True, it will check whether the given density
         integrates to 1 over the given set. If False, it
