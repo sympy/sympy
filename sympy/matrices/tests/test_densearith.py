@@ -56,5 +56,5 @@ def test_mulmatscaler():
     assert mulmatscaler(b, ZZ(1), ZZ) == [[ZZ(3), ZZ(7), ZZ(4)], [ZZ(2), ZZ(4), ZZ(5)], [ZZ(6), ZZ(2), ZZ(3)]]
 
 def test_eq():
-    assert Matrix([[1]]) != object() #Earlier gave Syntax and SympifyError , now returns False
-    assert Matrix([[1]]) != "Matrix([[1]])"  # Earlier returned True, now returns False
+    assert Matrix([[1]]) != object()
+    assert Matrix([[1]]) != "Matrix([[1]])"
