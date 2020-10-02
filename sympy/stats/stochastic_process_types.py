@@ -163,10 +163,9 @@ class StochasticProcess(Basic):
         return self.args[0]
 
     @property
-    def state_space(self) -> tUnion[FiniteSet, Tuple, Range]:
-        """Since version 1.7, using `state_space` returns a
-        `Tuple` or a `Range` object for `DiscreteMarkovChain`.
-        If you want a `FiniteSet`, use `FiniteSet(*state_space)`."""
+    def state_space(self) -> tUnion[FiniteSet, Range]:
+        if not isinstance(self.args[1], (FiniteSet, Range)):
+            return FiniteSet(*self.args[1])
         return self.args[1]
 
     @property
@@ -339,7 +338,7 @@ class MarkovProcess(StochasticProcess):
         """
         Returns state index as Range.
         """
-        return Range(self.number_of_states)
+        return self.args[1]
 
     @classmethod
     def _sanity_checks(cls, state_space, trans_probs):
@@ -387,7 +386,7 @@ class MarkovProcess(StochasticProcess):
             state_index = self._state_index
         elif isinstance(self, ContinuousMarkovChain):
             trans_probs = self.generator_matrix
-            state_index = self.state_space
+            state_index = self._state_index
         if isinstance(given_condition, And):
             gcs = given_condition.args
             given_condition = S.true
@@ -683,10 +682,7 @@ class MarkovProcess(StochasticProcess):
             mat_of = TransitionMatrixOf(self, mat) if isinstance(self, DiscreteMarkovChain) else GeneratorMatrixOf(self, mat)
             cond = condition & mat_of & \
                     StochasticStateSpaceOf(self, state_index)
-            if isinstance(self, DiscreteMarkovChain):
-                func = lambda s: self.probability(Eq(rv, s), cond) * expr.subs(rv, self.state_space[s])
-            else:
-                func = lambda s: self.probability(Eq(rv, s), cond)*expr.subs(rv, s)
+            func = lambda s: self.probability(Eq(rv, s), cond) * expr.subs(rv, self._state_index[s])
             return sum([func(s) for s in state_index])
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
@@ -720,7 +716,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> YS = DiscreteMarkovChain("Y")
 
     >>> Y.state_space
-    (0, 1, 2)
+    FiniteSet(0, 1, 2)
     >>> Y.transition_probabilities
     Matrix([
     [0.5, 0.2, 0.3],
@@ -785,7 +781,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         obj = Basic.__new__(cls, sym, state_space, trans_probs)
         indices = dict()
         if isinstance(obj.number_of_states, Integer):
-            for index, state in enumerate(obj.state_space):
+            for index, state in enumerate(obj._state_index):
                 indices[state] = index
         obj.index_of = indices
         return obj
