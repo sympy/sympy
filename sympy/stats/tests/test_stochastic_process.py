@@ -31,6 +31,12 @@ def test_DiscreteMarkovChain():
     raises(TypeError, lambda: DiscreteMarkovChain(1))
     raises(NotImplementedError, lambda: X(t))
 
+    nz = Symbol('n', integer=True)
+    TZ = MatrixSymbol('M', nz, nz)
+    SZ = Range(nz)
+    YZ = DiscreteMarkovChain('Y', SZ, TZ)
+    assert P(Eq(YZ[2], 1), Eq(YZ[1], 0)) == TZ[0, 1]
+
     raises(ValueError, lambda: sample_stochastic_process(t))
     raises(ValueError, lambda: next(sample_stochastic_process(X)))
     # pass name and state_space
@@ -96,7 +102,7 @@ def test_DiscreteMarkovChain():
     raises(ValueError, lambda: E(Y[2], Eq(Y[3], 1)))
 
 
-    # extended tests for probability queries
+    # extended tests for probability queriess
     TO1 = Matrix([[Rational(1, 4), Rational(3, 4), 0],[Rational(1, 3), Rational(1, 3), Rational(1, 3)],[0, Rational(1, 4), Rational(3, 4)]])
     assert P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)),
             Eq(Probability(Eq(Y[0], 0)), Rational(1, 4)) & TransitionMatrixOf(Y, TO1)) == Rational(1, 16)

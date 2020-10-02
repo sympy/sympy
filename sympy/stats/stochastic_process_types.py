@@ -430,14 +430,16 @@ class MarkovProcess(StochasticProcess):
                         given_condition.atoms(RandomIndexedSymbol))
             if len(rand_var) == 1:
                 state_index = rand_var[0].pspace.set
+                print(state_index)
 
         # `not None` is `True`. So the old test fails for symbolic sizes.
         # Need to build the statement differently.
-        sym_cond = isinstance((state_index.args[1] - state_index.args[0]) // state_index.args[2], Symbol)
+        sym_cond = isinstance(self.number_of_states, Symbol)
         cond1 = not sym_cond and len(state_index) != trans_probs.shape[0]
         if cond1:
             raise ValueError("state space is not compatible with the transition probabilities.")
-        state_index = FiniteSet(*[i for i in range(trans_probs.shape[0])])
+        if not isinstance(trans_probs.shape[0], Symbol):
+            state_index = FiniteSet(*[i for i in range(trans_probs.shape[0])])
         return state_index
 
     @cacheit
@@ -547,7 +549,7 @@ class MarkovProcess(StochasticProcess):
 
             if any((k not in self.index_set) for k in (rv.key, min_key_rv.key)):
                 raise IndexError("The timestamps of the process are not in it's index set.")
-            states = Intersection(states, state_index)
+            states = Intersection(states, state_index) if not isinstance(self.number_of_states, Symbol) else states
             for state in Union(states, FiniteSet(gstate)):
                 if not isinstance(state, (int, Integer)) or Ge(state, mat.shape[0]) is True:
                     raise IndexError("No information is available for (%s, %s) in "
