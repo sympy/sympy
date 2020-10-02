@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from sympy import Integral, latex, Function
 from sympy import pretty as xpretty
 from sympy.vector import CoordSys3D, Vector, express
