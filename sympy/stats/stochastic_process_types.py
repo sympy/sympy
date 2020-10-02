@@ -312,7 +312,7 @@ class StochasticStateSpaceOf(Boolean):
                                 "support StochasticStateSpaceOf.")
         state_space = _state_converter(state_space)
         if isinstance(state_space, Range):
-            ss_size = (state_space.stop - state_space.start) // state_space.step
+            ss_size = ceiling((state_space.stop - state_space.start) / state_space.step)
         else:
             ss_size = len(state_space)
         state_index = Range(ss_size)
@@ -430,7 +430,6 @@ class MarkovProcess(StochasticProcess):
                         given_condition.atoms(RandomIndexedSymbol))
             if len(rand_var) == 1:
                 state_index = rand_var[0].pspace.set
-                print(state_index)
 
         # `not None` is `True`. So the old test fails for symbolic sizes.
         # Need to build the statement differently.
@@ -474,8 +473,11 @@ class MarkovProcess(StochasticProcess):
 
     def replace_with_index(self, condition):
         if isinstance(condition, Relational):
-            condition = type(condition)(self.index_of.get(condition.lhs, condition.lhs),
-                                        self.index_of.get(condition.rhs, condition.rhs))
+            lhs, rhs = condition.lhs, condition.rhs
+            if not isinstance(lhs, RandomIndexedSymbol):
+                lhs, rhs = rhs, lhs
+            condition = type(condition)(self.index_of.get(lhs, lhs),
+                                        self.index_of.get(rhs, rhs))
         return condition
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
@@ -743,7 +745,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     Currently, there is no support for state names within probability
     and expectation statements. Here is a work-around using ``Str``:
 
-    >>> P(Eq(Y[3], Str('Rainy')), Eq(Y[1], Str('Cloudy'))).round(2)
+    >>> P(Eq(Str('Rainy'), Y[3]), Eq(Y[1], Str('Cloudy'))).round(2)
     0.36
 
     Symbol state names can also be used:
