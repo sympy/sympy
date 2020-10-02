@@ -580,6 +580,7 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> G = SymmetricGroup(3)
         >>> PcGroup = G.polycyclic_group()
