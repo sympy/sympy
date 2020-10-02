@@ -83,6 +83,7 @@ that we can query the assumptions on any expression using the corresponding
 
 We can query assumptions on any expression not just a symbol:
 
+    >>> x = Symbol('x', positive=True)
     >>> expr = 1 + x**2
     >>> expr
     x**2 + 1
@@ -109,14 +110,21 @@ interpreted as meaning that the result is *unknown*.
           value ``None`` does not display by default in the Python
           interpretter.
 
-There are two reasons why an assumptions query might give ``None``. It is
+There are several reasons why an assumptions query might give ``None``. It is
 possible that the query is *unknowable* as in the case of ``x`` above. Since
 ``x`` does not have any assumptions declared it roughly represents an
 arbitrary complex number. An arbitrary complex number *might* be a positive
 real number but it also might *not* be. Without further information there is
 no way to resolve the query ``x.is_positive``.
 
-The other reason that an assumptions query might give ``None`` is just that
+Another reason why an assumptions query might give ``None`` is that there does
+in many cases the problem of determining whether an expression is e.g.
+positive is *undecidable*. That means that there does not exist an algorithm
+for answering the query in general. For some cases an algorithm or at least a
+simple check would be possible but has not yet been implemented although it
+could be added to SymPy.
+
+The final reason that an assumptions query might give ``None`` is just that
 the assumptions system does not try very hard to answer complicated queries.
 The system is intended to be fast and uses simple heuristic methods to
 conclude a ``True`` or ``False`` answer in common cases. For example any sum
@@ -165,7 +173,7 @@ The assumptions system is not just for symbols or for complex expressions. It
 can also be used for plain SymPy integers and other objects. The assumptions
 predicates are available on any instance of :class:`~.Basic` which is the superclass
 for most classes of SymPy objects. A plain Python :class:`int` is not a
-:class:`~.Basic` instance and will can not be used to query assumptions
+:class:`~.Basic` instance and can not be used to query assumptions
 predicates. We can "sympify" regular Python objects to become SymPy objects
 with :func:`~.sympify` or ``S`` (:class:`~.SingletonRegistry`) and then the
 assumptions system can be used:
@@ -202,7 +210,7 @@ However if the symbols have different assumptions then they will be considered
 to represent distinct symbols:
 
     >>> x1 = Symbol('x', positive=True)
-    >>> x2 = Symbol('x', )
+    >>> x2 = Symbol('x')
     >>> x1
     x
     >>> x2
@@ -245,9 +253,9 @@ useful because otherwise the new expression with the new symbols having the
 Applying assumptions to string inputs
 =====================================
 
-We have seen how to set assumptions when calling the :class:`~.Symbol` or
-:func:`~.symbols` functions explicitly. A natural question to ask is in what
-other situations can we assign assumptions to an object?
+We have seen how to set assumptions when  :class:`~.Symbol` or
+:func:`~.symbols` explicitly. A natural question to ask is in what other
+situations can we assign assumptions to an object?
 
 It is common for users to use strings as input to SymPy functions (although
 the general feeling among SymPy developers is that this should be discouraged)
@@ -860,12 +868,14 @@ These are low-level Python objects rather than SymPy's symbolic
     False
     >>> x > 0
     x > 0
+    >>> type(x > 0)
+    <class 'sympy.core.relational.StrictGreaterThan'>
 
 The last example shows what happens when an inequality is indeterminate: we
 get an instance of :class:`~.StrictGreaterThan` which represents the
 inequality as a symbolic expression. Internally when attempting to evaluate an
-inequality like ``a > b`` SymPy will compute ``(a - b).is_positive``. If the
-result is ``True`` or ``False`` then SymPy's symbolic ``S.true`` or
+inequality like ``a > b`` SymPy will compute ``(a - b).is_extended_positive``.
+If the result is ``True`` or ``False`` then SymPy's symbolic ``S.true`` or
 ``S.false`` will be returned. If the result is ``None`` then an unevaluated
 :class:`~.StrictGreaterThan` is returned as show for ``x > 0`` above.
 
@@ -921,9 +931,9 @@ way so it is rejected.
 
 There are many other symbolic ``Boolean`` types in SymPy. The same
 considerations about the differences between fuzzy bool and symbolic
-``Boolean`` apply to all other SymPy ``Boolean`` types. Just to give a
-different example there is ``Contains`` which represents the statement that an
-object is contained in a set:
+``Boolean`` apply to all other SymPy ``Boolean`` types. To give a different
+example there is ``Contains`` which represents the statement that an object is
+contained in a set:
 
     >>> from sympy import Reals, Contains
     >>> x = Symbol('x', real=True)
@@ -958,7 +968,7 @@ The exception can be avoided by using ``Contains(x, Reals)`` or
 Three-valued logic with fuzzy bools
 ===================================
 
-Whether we use the fuzzy-bool or symbolic ``Boolean`` we need to be always
+Whether we use the fuzzy-bool or symbolic ``Boolean`` we always need to be
 aware of the possibility that a query might be indeterminate. How to write
 code that handles this is different in the two cases though. We will look at
 fuzzy-bools first.
@@ -986,9 +996,9 @@ either of the ``is_positive`` queries gives ``None``:
     >>> print(both_positive(S(1), x))
     False
 
-.. note:: We need to sympify the arguments this function using ``S`` because
-          the assumptions are only defined on SymPy objects and not regular
-          Python :class:`int` objects.
+.. note:: We need to sympify the arguments to this function using ``S``
+          because the assumptions are only defined on SymPy objects and not
+          regular Python :class:`int` objects.
 
 Here ``False`` is incorrect because it is *possible* that ``x`` is positive in
 which case both arguments would be positive. We get ``False`` here because
@@ -1036,9 +1046,9 @@ with Python's ``not`` operator e.g.:
 The correct negation of a fuzzy bool ``None`` is ``None`` again. If we do not
 know whether the statement "``x`` is positive" is ``True`` or ``False`` then
 we also do not know whether its negation "``x`` is not positive" is ``True``
-or ``False``. The reason this happens is again because ``None`` is considered
-"falsey" in Python so when used with a logical operator such as ``not`` it
-will first be converted to a :class:`bool` and then negated:
+or ``False``. The reason we get ``True`` instead is again because ``None`` is
+considered "falsey". When ``None`` is used with a logical operator such as
+``not`` it will first be converted to a :class:`bool` and then negated:
 
     >>> bool(None)
     False
@@ -1062,10 +1072,11 @@ Provided we understand that an alternate condition branch refers to two cases
 (``False`` and ``None``) then this can be a useful way of writing
 conditionals.  When we really do need to distinguish all cases then we need to
 use things like ``x.is_positive is False``.  What we need to be careful of
-though is using Python's binary logic operators like ``not`` or ``and`` etc.
+though is using Python's binary logic operators like ``not`` or ``and`` with
+fuzzy bools as they will not handle the indeterminate case correctly.
 
-In fact SymPy has internal functions that are designed to correctly handle
-fuzzy-bools:
+In fact SymPy has internal functions that are designed to handle fuzzy-bools
+correctly:
 
     >>> from sympy.core.logic import fuzzy_not, fuzzy_and
     >>> print(fuzzy_not(True))
@@ -1099,7 +1110,7 @@ Three-valued logic with symbolic Booleans
 When working with symbolic ``Boolean`` rather than fuzzy-bool the issue of
 ``None`` silently being treated as falsey does not arise so it is easier not
 to end up with a logic error. However instead the indeterminate case will
-often lead to an exception if not implemented carefully.
+often lead to an exception being raised if not implemented carefully.
 
 We will try to implement the ``both_positive`` function this time using
 symbolic ``Boolean``:
@@ -1148,7 +1159,7 @@ case the ``Boolean`` can not evaluate to ``True`` or ``False`` we get an
 unevaluated :class:`~.StrictGreaterThan`. Attempting to force that into a
 ``bool`` with ``bool(x > 0)`` raises an exception. That is because a regular
 Python ``bool`` must be either ``True`` or ``False`` and neither of those
-would be correct in this case.
+are known to be correct in this case.
 
 The same kind of issue arises when using ``and``, ``or`` or ``not`` with
 symbolic ``Boolean``. The solution is to use SymPy's symbolic :class:`~.And`,
@@ -1254,7 +1265,7 @@ Some of these have a similar meaning and usage as those of the assumptions
 system such as the :py:meth:`~.MatrixCommon.is_zero_matrix` property shown
 above.  Another example is the ``is_empty`` property of sets:
 
-    >>> from SymPy import FiniteSet, Intersection
+    >>> from sympy import FiniteSet, Intersection
     >>> S1 = FiniteSet(1, 2)
     >>> S1
     FiniteSet(1, 2)
@@ -1273,7 +1284,7 @@ to ``1`` so ``S2.is_empty`` gives ``None``. The ``is_empty`` property for sets
 plays a similar role to the ``is_zero`` property for numbers in the
 assumptions system: ``is_empty`` is normally only ``True`` for the
 :class:`~.EmptySet` object but it is still useful to be able to distinguish between
-``empty=False`` and ``empty=None``.
+the cases where ``is_empty=False`` and ``is_empty=None``.
 
 Although ``is_zero_matrix`` and ``is_empty`` are used for similar purposes to
 the assumptions properties such as ``is_zero`` they are not part of the
@@ -1313,13 +1324,14 @@ represents a concrete number with a known value. A symbol such as ``y`` that
 is declared with ``rational=True`` might represent the same value as ``x`` but
 it is not a concrete number with a known value so this is a structural rather
 than a semantic distinction.  Properties like ``is_Number`` are sometimes used
-in SymPy in place of ``isinstance`` because they do not have problems with
-circular imports and checking ``x.is_Number`` can be faster than a call to
-``isinstance``.
+in SymPy in place of e.g. ``isinstance(obj, Number)`` because they do not have
+problems with circular imports and checking ``x.is_Number`` can be faster than
+a call to ``isinstance``.
 
-The :py:meth:`~.Expr.is_number` (lower-case) property is ``True`` for any
-expression that can be numerically evaluated to a floating point complex
-number with :py:meth:`~.EvalfMixin.evalf`:
+The :py:meth:`~.Expr.is_number` (lower-case) property is very different from
+``is_Number``. The `~.Expr.is_number` property is ``True`` for any expression
+that can be numerically evaluated to a floating point complex number with
+:py:meth:`~.EvalfMixin.evalf`:
 
     >>> expr1 = I + sqrt(2)
     >>> expr1
@@ -1338,7 +1350,7 @@ number with :py:meth:`~.EvalfMixin.evalf`:
     x + 1.0
 
 The primary reason for checking ``expr.is_number`` is to predict whether a
-call to py:meth:`~.evalf` will fully evaluate. The
+call to :py:meth:`~.EvalfMixin.evalf` will fully evaluate. The
 :py:meth:`~.Basic.is_comparable` property is similar to
 :py:meth:`~.Expr.is_number` except that if ``is_comparable`` gives ``True``
 then the expression is guaranteed to numerically evaluate to a *real*
@@ -1724,7 +1736,7 @@ Otherwise once all possibilities for using a handler and the implication rules
 to resolve the query are exhausted ``None`` will be cached and returned.
 
     >>> b = A()
-    >>> b.is_algebraic    # calls _eval_is_rational indirectly
+    >>> b.is_algebraic    # called _eval_is_rational indirectly
     !!! calling _eval_is_rational
     True
     >>> c = A()
