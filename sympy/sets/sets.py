@@ -323,14 +323,6 @@ class Set(Basic):
         """
         other = sympify(other, strict=True)
 
-        # Any element of a Set must be of type Basic. Normally sympify always
-        # returns Basic but a Function like sin or cos will sympify to itself
-        # even though it is not Basic e.g.
-        # >>> sin in FiniteSet(1, 2)
-        # Allowing non-Basic instances through can lead to bugs down the line.
-        if not isinstance(other, Basic):
-            return S.false
-
         c = self._contains(other)
         if isinstance(c, Contains):
             return c

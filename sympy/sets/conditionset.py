@@ -163,8 +163,8 @@ class ConditionSet(Set):
 
         # flatten ConditionSet(Contains(ConditionSet())) expressions
         if isinstance(condition, Contains) and (sym == condition.args[0]):
-                if isinstance(condition.args[1], Set):
-                    return condition.args[1].intersect(base_set)
+            if isinstance(condition.args[1], Set):
+                return condition.args[1].intersect(base_set)
 
         rv = Basic.__new__(cls, sym, condition, base_set)
         return rv if know is None else Union(know, rv)
@@ -204,9 +204,9 @@ class ConditionSet(Set):
 
         # Substitute other into condition. This could raise e.g. for
         # ConditionSet(x, 1/x >= 0, Reals).contains(0)
-        lmbda = Lambda((self.sym,), self.condition)
+        lamda = Lambda((self.sym,), self.condition)
         try:
-            lambda_cond = lmbda(other)
+            lambda_cond = lamda(other)
         except TypeError:
             return Contains(other, self, evaluate=False)
         else:
