@@ -1,6 +1,5 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
-from __future__ import print_function, division
 
 from itertools import combinations_with_replacement, product
 from textwrap import dedent
@@ -131,8 +130,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
                         powers[variable] += 1
                 if max(powers.values()) >= min_degree:
                     monomials_list_comm.append(Mul(*item))
-            for mon in set(monomials_list_comm):
-                yield mon
+            yield from set(monomials_list_comm)
         else:
             monomials_list_non_comm = []
             for item in product(variables, repeat=max_degree):
@@ -144,8 +142,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
                         powers[variable] += 1
                 if max(powers.values()) >= min_degree:
                     monomials_list_non_comm.append(Mul(*item))
-            for mon in set(monomials_list_non_comm):
-                yield mon
+            yield from set(monomials_list_non_comm)
     else:
         if any(min_degrees[i] > max_degrees[i] for i in range(n)):
             raise ValueError('min_degrees[i] must be <= max_degrees[i] for all i')
@@ -400,7 +397,7 @@ def term_div(a, b, domain):
         else:
             return None
 
-class MonomialOps(object):
+class MonomialOps:
     """Code generator of fast monomial arithmetic functions. """
 
     def __init__(self, ngens):

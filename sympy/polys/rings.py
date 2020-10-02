@@ -1,6 +1,5 @@
 """Sparse polynomial rings. """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
