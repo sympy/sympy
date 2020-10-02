@@ -1,6 +1,5 @@
 """Tools for constructing domains for expressions. """
 
-from __future__ import print_function, division
 
 from sympy.core import sympify
 from sympy.core.evalf import pure_complex
@@ -78,7 +77,7 @@ def _construct_algebraic(coeffs, opt):
     """We know that coefficients are algebraic so construct the extension. """
     from sympy.polys.numberfields import primitive_element
 
-    result, exts = [], set([])
+    result, exts = [], set()
 
     for coeff in coeffs:
         if coeff.is_Rational:
@@ -135,7 +134,7 @@ def _construct_composite(coeffs, opt):
         if any(gen.is_number and gen.is_algebraic for gen in gens):
             return None # generators are number-like so lets better use EX
 
-        all_symbols = set([])
+        all_symbols = set()
 
         for gen in gens:
             symbols = gen.free_symbols
@@ -161,7 +160,7 @@ def _construct_composite(coeffs, opt):
                 fractions = True
                 break
 
-    coeffs = set([])
+    coeffs = set()
 
     if not fractions:
         for numer, denom in zip(numers, denoms):

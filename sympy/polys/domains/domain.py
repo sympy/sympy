@@ -1,6 +1,5 @@
 """Implementation of :class:`Domain` class. """
 
-from __future__ import print_function, division
 
 from typing import Any, Optional, Type
 
@@ -14,7 +13,7 @@ from sympy.polys.polyutils import _unify_gens, _not_a_coeff
 from sympy.utilities import default_sort_key, public
 
 @public
-class Domain(object):
+class Domain:
     """Represents an abstract domain. """
 
     dtype = None  # type: Optional[Type]

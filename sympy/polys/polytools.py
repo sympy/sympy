@@ -1,6 +1,5 @@
 """User-friendly public interface to polynomial functions. """
 
-from __future__ import print_function, division
 
 from functools import wraps, reduce
 from operator import mul
@@ -303,7 +302,7 @@ class Poly(Basic):
         return cls.new(DMP.from_list(rep, level, domain), *gens)
 
     def __hash__(self):
-        return super(Poly, self).__hash__()
+        return super().__hash__()
 
     @property
     def free_symbols(self):
@@ -4182,7 +4181,7 @@ class PurePoly(Poly):
         return (self.rep,)
 
     def __hash__(self):
-        return super(PurePoly, self).__hash__()
+        return super().__hash__()
 
     @property
     def free_symbols(self):
@@ -5970,7 +5969,7 @@ def _symbolic_factor_list(expr, opt, method):
                 factors.append((_factors_product(other), exp))
     if method == 'sqf':
         factors = [(reduce(mul, (f for f, _ in factors if _ == k)), k)
-                   for k in set(i for _, i in factors)]
+                   for k in {i for _, i in factors}]
 
     return coeff, factors
 

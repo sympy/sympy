@@ -1,6 +1,5 @@
 """Sparse rational function fields. """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
