@@ -62,7 +62,7 @@ class GroupHomomorphism:
 
     def invert(self, g):
         '''
-        Return an element of the preimage of `g` or of each element
+        Return an element of the preimage of ``g`` or of each element
         of ``g`` if ``g`` is a list.
 
         Explanation
