@@ -473,7 +473,8 @@ class KanesMethod(object):
         return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
                 q_d, u_i, u_d, r)
 
-    def linearize(self, **kwargs):
+    # TODO : Remove `new_method` after 1.1 has been released.
+    def linearize(self, *, new_method=None, **kwargs):
         """ Linearize the equations of motion about a symbolic operating point.
 
         If kwarg A_and_B is False (default), returns M, A, B, r for the
@@ -497,10 +498,6 @@ class KanesMethod(object):
         you can specify beforehand, the faster this computation will run.
 
         For more documentation, please see the ``Linearizer`` class."""
-
-        # TODO : Remove this after 1.1 has been released.
-        _ = kwargs.pop('new_method', None)
-
         linearizer = self.to_linearizer()
         result = linearizer.linearize(**kwargs)
         return result + (linearizer.r,)

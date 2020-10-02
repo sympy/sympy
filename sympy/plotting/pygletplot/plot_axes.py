@@ -12,18 +12,24 @@ from sympy.plotting.pygletplot.util import billboard_matrix, dot_product, \
 
 class PlotAxes(PlotObject):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args,
+            style='', none=None, frame=None, box=None, ordinate=None,
+            stride=0.25,
+            visible='', overlay='', colored='', label_axes='', label_ticks='',
+            tick_length=0.1,
+            font_face='Arial', font_size=28,
+            **kwargs):
         # initialize style parameter
-        style = kwargs.pop('style', '').lower()
+        style = style.lower()
 
         # allow alias kwargs to override style kwarg
-        if kwargs.pop('none', None) is not None:
+        if none is not None:
             style = 'none'
-        if kwargs.pop('frame', None) is not None:
+        if frame is not None:
             style = 'frame'
-        if kwargs.pop('box', None) is not None:
+        if box is not None:
             style = 'box'
-        if kwargs.pop('ordinate', None) is not None:
+        if ordinate is not None:
             style = 'ordinate'
 
         if style in ['', 'ordinate']:
@@ -36,7 +42,6 @@ class PlotAxes(PlotObject):
             raise ValueError(("Unrecognized axes style %s.") % (style))
 
         # initialize stride parameter
-        stride = kwargs.pop('stride', 0.25)
         try:
             stride = eval(stride)
         except TypeError:
@@ -47,7 +52,7 @@ class PlotAxes(PlotObject):
             self._stride = stride
         else:
             self._stride = [stride, stride, stride]
-        self._tick_length = float(kwargs.pop('tick_length', 0.1))
+        self._tick_length = float(tick_length)
 
         # setup bounding box and ticks
         self._origin = [0, 0, 0]
@@ -63,17 +68,15 @@ class PlotAxes(PlotObject):
             return default
 
         # initialize remaining parameters
-        self.visible = flexible_boolean(kwargs.pop('visible', ''), True)
-        self._overlay = flexible_boolean(kwargs.pop('overlay', ''), True)
-        self._colored = flexible_boolean(kwargs.pop('colored', ''), False)
-        self._label_axes = flexible_boolean(
-            kwargs.pop('label_axes', ''), False)
-        self._label_ticks = flexible_boolean(
-            kwargs.pop('label_ticks', ''), True)
+        self.visible = flexible_boolean(kwargs, True)
+        self._overlay = flexible_boolean(overlay, True)
+        self._colored = flexible_boolean(colored, False)
+        self._label_axes = flexible_boolean(label_axes, False)
+        self._label_ticks = flexible_boolean(label_ticks, True)
 
         # setup label font
-        self.font_face = kwargs.pop('font_face', 'Arial')
-        self.font_size = kwargs.pop('font_size', 28)
+        self.font_face = font_face
+        self.font_size = font_size
 
         # this is also used to reinit the
         # font on window close/reopen

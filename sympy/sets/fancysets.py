@@ -735,10 +735,8 @@ class Range(Set):
             return True
         return self.size.is_finite
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.start != self.stop
-
-    __bool__ = __nonzero__
 
     def __getitem__(self, i):
         from sympy.functions.elementary.integers import ceiling

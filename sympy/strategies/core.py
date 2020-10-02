@@ -95,7 +95,7 @@ def switch(key, ruledict):
         return rl(expr)
     return switch_rl
 
-def minimize(*rules, **kwargs):
+def minimize(*rules, objective=identity):
     """ Select result of rules that minimizes objective
 
     >>> from sympy.strategies import minimize
@@ -110,7 +110,6 @@ def minimize(*rules, **kwargs):
     5
     """
 
-    objective = kwargs.get('objective', identity)
     def minrule(expr):
         return min([rule(expr) for rule in rules], key=objective)
     return minrule

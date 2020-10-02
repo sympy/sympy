@@ -131,7 +131,7 @@ class PlotModeBase(PlotMode):
         raise NotImplementedError()
 
     ## Base member functions
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, bounds_callback=None, **kwargs):
         self.verts = []
         self.cverts = []
         self.bounds = [[S.Infinity, S.NegativeInfinity, 0],
@@ -163,7 +163,7 @@ class PlotModeBase(PlotMode):
         self.use_lambda_eval = self.options.pop('use_sympy_eval', None) is None
         self.style = self.options.pop('style', '')
         self.color = self.options.pop('color', 'rainbow')
-        self.bounds_callback = kwargs.pop('bounds_callback', None)
+        self.bounds_callback = bounds_callback
 
         self._on_calculate()
 

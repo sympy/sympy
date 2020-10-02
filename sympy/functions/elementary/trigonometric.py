@@ -1,5 +1,8 @@
+from typing import Tuple
+
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
+from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool
 from sympy.core.numbers import igcdex, Rational, pi
@@ -209,8 +212,8 @@ class sin(TrigonometricFunction):
 
     Returns the sine of x (measured in radians).
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     This function will evaluate automatically in the
     case x/pi is some rational number [4]_.  For example,
@@ -512,8 +515,8 @@ class cos(TrigonometricFunction):
 
     Returns the cosine of x (measured in radians).
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     See :func:`sin` for notes about automatic evaluation.
 
@@ -961,8 +964,8 @@ class tan(TrigonometricFunction):
 
     Returns the tangent of x (measured in radians).
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     See :func:`sin` for notes about automatic evaluation.
 
@@ -1299,8 +1302,8 @@ class cot(TrigonometricFunction):
 
     Returns the cotangent of x (measured in radians).
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     See :func:`sin` for notes about automatic evaluation.
 
@@ -1727,8 +1730,8 @@ class sec(ReciprocalTrigonometricFunction):
 
     Returns the secant of x (measured in radians).
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     See :func:`sin` for notes about automatic evaluation.
 
@@ -1822,8 +1825,8 @@ class csc(ReciprocalTrigonometricFunction):
 
     Returns the cosecant of x (measured in radians).
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     See :func:`sin` for notes about automatic evaluation.
 
@@ -1945,6 +1948,11 @@ class sinc(Function):
     >>> sinc(x).rewrite(jn)
     jn(0, x)
 
+    See also
+    ========
+
+    sin
+
     References
     ==========
 
@@ -2003,7 +2011,7 @@ class sinc(Function):
 
 class InverseTrigonometricFunction(Function):
     """Base class for inverse trigonometric functions."""
-    _singularities = (1, -1, 0, S.ComplexInfinity)
+    _singularities = (S.One, S.NegativeOne, S.Zero, S.ComplexInfinity)  # type: Tuple[Expr, ...]
 
     @staticmethod
     def _asin_table():
@@ -2084,8 +2092,8 @@ class asin(InverseTrigonometricFunction):
 
     Returns the arcsine of x in radians.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     ``asin(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
     ``0``, ``1``, ``-1`` and for some instances when the result is a rational
@@ -2300,8 +2308,8 @@ class acos(InverseTrigonometricFunction):
 
     Returns the arc cosine of x (measured in radians).
 
-    Notes
-    =====
+    Examples
+    ========
 
     ``acos(x)`` will evaluate automatically in the cases
     ``oo``, ``-oo``, ``0``, ``1``, ``-1`` and for some instances when
@@ -2515,8 +2523,8 @@ class atan(InverseTrigonometricFunction):
 
     Returns the arc tangent of x (measured in radians).
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     ``atan(x)`` will evaluate automatically in the cases
     ``oo``, ``-oo``, ``0``, ``1``, ``-1`` and for some instances when the
@@ -2708,8 +2716,8 @@ class acot(InverseTrigonometricFunction):
 
     Returns the arc cotangent of x (measured in radians).
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     ``acot(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
     ``zoo``, ``0``, ``1``, ``-1`` and for some instances when the result is a
@@ -2910,8 +2918,8 @@ class asec(InverseTrigonometricFunction):
 
     Returns the arc secant of x (measured in radians).
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     ``asec(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
     ``0``, ``1``, ``-1`` and for some instances when the result is a rational
@@ -3092,8 +3100,8 @@ class acsc(InverseTrigonometricFunction):
 
     Returns the arc cosecant of x (measured in radians).
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     ``acsc(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
     ``0``, ``1``, ``-1`` and for some instances when the result is a rational

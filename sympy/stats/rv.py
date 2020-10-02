@@ -216,10 +216,7 @@ class SinglePSpace(PSpace):
     attributed to a single variable/symbol.
     """
     def __new__(cls, s, distribution):
-        if isinstance(s, str):
-            s = Symbol(s)
-        if not isinstance(s, Symbol):
-            raise TypeError("s should have been string or Symbol")
+        s = _symbol_converter(s)
         return Basic.__new__(cls, s, distribution)
 
     @property
@@ -270,10 +267,7 @@ class RandomSymbol(Expr):
         if pspace is None:
             # Allow single arg, representing pspace == PSpace()
             pspace = PSpace()
-        if isinstance(symbol, str):
-            symbol = Symbol(symbol)
-        if not isinstance(symbol, Symbol):
-            raise TypeError("symbol should be of type Symbol or string")
+        symbol = _symbol_converter(symbol)
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")
         if cls == JointRandomSymbol and isinstance(pspace, SinglePSpace):
@@ -335,7 +329,7 @@ class RandomIndexedSymbol(RandomSymbol):
             return free_syms
         return {self}
 
-class RandomMatrixSymbol(RandomSymbol, MatrixSymbol):
+class RandomMatrixSymbol(RandomSymbol, MatrixSymbol): # type: ignore
     def __new__(cls, symbol, n, m, pspace=None):
         n, m = _sympify(n), _sympify(m)
         symbol = _symbol_converter(symbol)

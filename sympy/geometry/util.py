@@ -604,7 +604,7 @@ def idiff(eq, y, x, n=1):
         dydx = dydx.diff(x)
 
 
-def intersection(*entities, **kwargs):
+def intersection(*entities, pairwise=False, **kwargs):
     """The intersection of a collection of GeometryEntity instances.
 
     Parameters
@@ -667,8 +667,6 @@ def intersection(*entities, **kwargs):
 
     from .entity import GeometryEntity
     from .point import Point
-
-    pairwise = kwargs.pop('pairwise', False)
 
     if len(entities) <= 1:
         return []

@@ -1,6 +1,8 @@
 """sympify -- convert objects SymPy internal format"""
 
-# from typing import Any, Callable, Dict, Type
+import typing
+if typing.TYPE_CHECKING:
+    from typing import Any, Callable, Dict, Type
 
 from inspect import getmro
 
@@ -23,7 +25,7 @@ class SympifyError(ValueError):
 
 
 # See sympify docstring.
-converter = {}  ## type: Dict[Type[Any], Callable[[Any], Basic]]
+converter = {}  # type: Dict[Type[Any], Callable[[Any], Basic]]
 
 
 class CantSympify:
@@ -130,7 +132,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> sympify("x***2")
     Traceback (most recent call last):
     ...
-    SympifyError: SympifyError: "could not parse u'x***2'"
+    SympifyError: SympifyError: "could not parse 'x***2'"
 
     Locals
     ------
@@ -333,8 +335,16 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         and the result will be returned.
 
     """
+    # XXX: If a is a Basic subclass rather than instance (e.g. sin rather than
+    # sin(x)) then a.__sympy__ will be the property. Only on the instance will
+    # a.__sympy__ give the *value* of the property (True). Since sympify(sin)
+    # was used for a long time we allow it to pass. However if strict=True as
+    # is the case in internal calls to _sympify then we only allow
+    # is_sympy=True.
+    #
+    # https://github.com/sympy/sympy/issues/20124
     is_sympy = getattr(a, '__sympy__', None)
-    if is_sympy is not None:
+    if is_sympy is True or (is_sympy is not None and not strict):
         return a
 
     if isinstance(a, CantSympify):
@@ -603,4 +613,4 @@ def kernS(s):
 
 
 # Avoid circular import
-# from .basic import Basic
+from .basic import Basic

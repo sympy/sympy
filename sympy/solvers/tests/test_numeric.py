@@ -70,8 +70,7 @@ def test_issue_6408():
     assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0.0
 
 
-@XFAIL
-def test_issue_6408_fail():
+def test_issue_6408_integral():
     x, y = symbols('x y')
     assert nsolve(Integral(x*y, (x, 0, 5)), y, 2) == 0.0
 

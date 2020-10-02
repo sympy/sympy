@@ -1,5 +1,6 @@
 from sympy import Number
 from sympy.core import Mul, Basic, sympify, S
+from sympy.core.mul import mul
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
@@ -33,16 +34,15 @@ class MatMul(MatrixExpr, Mul):
 
     identity = GenericIdentity()
 
-    def __new__(cls, *args, evaluate=False, **kwargs):
-        check = kwargs.get('check', True)
-
+    def __new__(cls, *args, evaluate=False, check=True, _sympify=True):
         if not args:
             return cls.identity
 
         # This must be removed aggressively in the constructor to avoid
         # TypeErrors from GenericIdentity().shape
-        args = filter(lambda i: cls.identity != i, args)
-        args = list(map(sympify, args))
+        args = list(filter(lambda i: cls.identity != i, args))
+        if _sympify:
+            args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
 
@@ -207,6 +207,7 @@ class MatMul(MatrixExpr, Mul):
 
         return lines
 
+mul.register_handlerclass((Mul, MatMul), MatMul)
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """

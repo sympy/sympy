@@ -602,7 +602,7 @@ def collect_abs(expr):
             lambda x: _abs(x))
 
 
-def collect_const(expr, *vars, **kwargs):
+def collect_const(expr, *vars, Numbers=True):
     """A non-greedy collection of terms with similar number coefficients in
     an Add expr. If ``vars`` is given then only those constants will be
     targeted. Although any Number can also be targeted, if this is not
@@ -620,8 +620,8 @@ def collect_const(expr, *vars, **kwargs):
         Specifies the constants to target for collection. Can be multiple in
         number.
 
-    kwargs : ``Numbers`` is the only possible argument to pass.
-        Numbers (default=True) specifies to target all instance of
+    Numbers : bool
+        Specifies to target all instance of
         :class:`sympy.core.numbers.Number` class. If ``Numbers=False``, then
         no Float or Rational will be collected.
 
@@ -668,7 +668,6 @@ def collect_const(expr, *vars, **kwargs):
         return expr
 
     recurse = False
-    Numbers = kwargs.get('Numbers', True)
 
     if not vars:
         recurse = True

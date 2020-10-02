@@ -775,7 +775,7 @@ def gcdex_diophantine(a, b, c):
     return (s, t)
 
 
-def frac_in(f, t, **kwargs):
+def frac_in(f, t, *, cancel=False, **kwargs):
     """
     Returns the tuple (fa, fd), where fa and fd are Polys in t.
 
@@ -784,7 +784,6 @@ def frac_in(f, t, **kwargs):
     where fa and fd are either basic expressions or Polys, and f == fa/fd.
     **kwargs are applied to Poly.
     """
-    cancel = kwargs.pop('cancel', False)
     if type(f) is tuple:
         fa, fd = f
         f = fa.as_expr()/fd.as_expr()

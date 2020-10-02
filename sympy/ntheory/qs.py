@@ -4,6 +4,7 @@ from sympy.ntheory import isprime
 from math import log, sqrt
 import random
 
+rgen = random.Random()
 
 class SievePolynomial:
     def __init__(self, modified_coeff=[], a=None, b=None):
@@ -96,7 +97,7 @@ def _generate_factor_base(prime_bound, n):
     return idx_1000, idx_5000, factor_base
 
 
-def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000):
+def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=None):
     """This step is the initialization of the 1st sieve polynomial.
     Here `a` is selected as a product of several primes of the factor_base
     such that `a` is about to ``sqrt(2*N) / M``. Other initial values of
@@ -115,7 +116,10 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000):
     factor_base : factor_base primes
     idx_1000 : index of prime numbe in the factor_base near 1000
     idx_5000 : index of primenumber in the factor_base near to 5000
+    seed : Generate pseudoprime numbers
     """
+    if seed is not None:
+        rgen.seed(seed)
     approx_val = sqrt(2*N) / M
     # `a` is a parameter of the sieve polynomial and `q` is the prime factors of `a`
     # randomly search for a combination of primes whose multiplication is close to approx_val
@@ -130,7 +134,7 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000):
         while(a < approx_val):
             rand_p = 0
             while(rand_p == 0 or rand_p in q):
-                rand_p = random.randint(start, end)
+                rand_p = rgen.randint(start, end)
             p = factor_base[rand_p].prime
             a *= p
             q.append(rand_p)
@@ -472,7 +476,7 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     .. [2] https://www.rieselprime.de/ziki/Self-initializing_quadratic_sieve
     """
     ERROR_TERM*=2**10
-    random.seed(seed)
+    rgen.seed(seed)
     idx_1000, idx_5000, factor_base = _generate_factor_base(prime_bound, N)
     smooth_relations = []
     ith_poly = 0

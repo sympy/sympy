@@ -3,9 +3,8 @@ import itertools
 from sympy import S, Tuple, diff, Basic
 
 from sympy.core.compatibility import Iterable
-from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
-from sympy.tensor.array.dense_ndim_array import DenseNDimArray
+from sympy.tensor.array.dense_ndim_array import DenseNDimArray, ImmutableDenseNDimArray
 from sympy.tensor.array.sparse_ndim_array import SparseNDimArray
 
 

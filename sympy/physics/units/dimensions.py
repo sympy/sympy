@@ -245,14 +245,11 @@ class Dimension(Expr):
     def __rmul__(self, other):
         return self.__mul__(other)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         return self*Pow(other, -1)
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         return other * pow(self, -1)
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     @classmethod
     def _from_dimensional_dependencies(cls, dependencies):

@@ -321,13 +321,11 @@ class ModuleHomomorphism(object):
     # NOTE: _compose will never be called from rmul
     __rmul__ = __mul__
 
-    def __div__(self, oth):
+    def __truediv__(self, oth):
         try:
             return self._mul_scalar(1/self.ring.convert(oth))
         except CoercionFailed:
             return NotImplemented
-
-    __truediv__ = __div__
 
     def __add__(self, oth):
         if self._check_hom(oth):

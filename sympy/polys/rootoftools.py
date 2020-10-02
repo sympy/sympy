@@ -982,7 +982,7 @@ def _eval_is_eq(lhs, rhs): # noqa:F811
     return lhs == rhs
 
 
-@dispatch(ComplexRootOf, Basic)
+@dispatch(ComplexRootOf, Basic)  # type:ignore
 def _eval_is_eq(lhs, rhs): # noqa:F811
     # CRootOf represents a Root, so if rhs is that root, it should set
     # the expression to zero *and* it should be in the interval of the
