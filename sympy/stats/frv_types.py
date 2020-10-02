@@ -68,7 +68,7 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
             _value_check((p >= 0, p <= 1),
                         "Probability at a point must be between 0 and 1.")
         val = sum(density.values())
-        _value_check(Eq(val, 1) is S.false, "Total Probability must be 1.")
+        _value_check(Eq(val, 1) != S.false, "Total Probability must be 1.")
 
 def FiniteRV(name, density, **kwargs):
     r"""

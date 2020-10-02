@@ -59,7 +59,7 @@ class DiscreteDistributionHandmade(SingleDiscreteDistribution):
     def check(pdf, set):
         x = Dummy('x')
         val = Sum(pdf(x), (x, set._inf, set._sup)).doit()
-        _value_check(Eq(val, 1) is S.false, "The pdf is incorrect on the given set.")
+        _value_check(Eq(val, 1) != S.false, "The pdf is incorrect on the given set.")
 
 def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
     """
