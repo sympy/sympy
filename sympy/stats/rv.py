@@ -13,7 +13,6 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
-from __future__ import print_function, division
 
 from functools import singledispatch
 from typing import Tuple as tTuple
@@ -134,8 +133,8 @@ class ConditionalDomain(RandomDomain):
     sympy.stats.frv.ConditionalFiniteDomain
     """
     def __new__(cls, fulldomain, condition):
-        condition = condition.xreplace(dict((rs, rs.symbol)
-            for rs in random_symbols(condition)))
+        condition = condition.xreplace({rs: rs.symbol
+            for rs in random_symbols(condition)})
         return Basic.__new__(cls, fulldomain, condition)
 
     @property
@@ -389,7 +388,7 @@ class IndependentProductPSpace(ProductPSpace):
     @property
     def pdf(self):
         p = Mul(*[space.pdf for space in self.spaces])
-        return p.subs(dict((rv, rv.symbol) for rv in self.values))
+        return p.subs({rv: rv.symbol for rv in self.values})
 
     @property
     def rs_space_dict(self):
@@ -484,7 +483,7 @@ class IndependentProductPSpace(ProductPSpace):
 
     def conditional_space(self, condition, normalize=True, **kwargs):
         rvs = random_symbols(condition)
-        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        condition = condition.xreplace({rv: rv.symbol for rv in self.values})
         if any([pspace(rv).is_Continuous for rv in rvs]):
             from sympy.stats.crv import (ConditionalContinuousDomain,
                 ContinuousPSpace)
@@ -543,8 +542,8 @@ class ProductDomain(RandomDomain):
 
     @property
     def sym_domain_dict(self):
-        return dict((symbol, domain) for domain in self.domains
-                                     for symbol in domain.symbols)
+        return {symbol: domain for domain in self.domains
+                                     for symbol in domain.symbols}
 
     @property
     def symbols(self):
@@ -1424,7 +1423,7 @@ def rv_subs(expr, symbols=None):
     swapdict = {rv: rv.symbol for rv in symbols}
     return expr.subs(swapdict)
 
-class NamedArgsMixin(object):
+class NamedArgsMixin:
     _argnames = ()  # type: tTuple[str, ...]
 
     def __getattr__(self, attr):

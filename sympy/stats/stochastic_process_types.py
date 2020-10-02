@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import random
 
 import itertools
@@ -933,7 +932,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             densities[state] = {states[i]: Tlist[state][i]
                         for i in range(len(states))}
         while time < S.Infinity:
-            samps.append((next(sample_iter(FiniteRV("_", densities[samps[time - 1]])))))
+            samps.append(next(sample_iter(FiniteRV("_", densities[samps[time - 1]]))))
             yield samps[time]
             time += 1
 
