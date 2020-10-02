@@ -17,7 +17,7 @@ from __future__ import print_function, division
 
 from sympy import (Basic, factorial, exp, S, sympify, I, zeta, polylog, log, beta,
                    hyper, binomial, Piecewise, floor, besseli, sqrt, Sum, Dummy,
-                   Lambda)
+                   Lambda, Eq)
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import _value_check, is_random
 
@@ -59,7 +59,7 @@ class DiscreteDistributionHandmade(SingleDiscreteDistribution):
     def check(pdf, set):
         x = Dummy('x')
         val = Sum(pdf(x), (x, set._inf, set._sup)).doit()
-        _value_check(val == S.One, "The pdf is incorrect on the given set.")
+        _value_check(Eq(val, 1) is S.false, "The pdf is incorrect on the given set.")
 
 def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
     """

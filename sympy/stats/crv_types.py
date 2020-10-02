@@ -153,7 +153,7 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
     def check(pdf, set):
         x = Dummy('x')
         val = integrate(pdf(x), (x, set))
-        _value_check(val == S.One, "The pdf on the given set is incorrect.")
+        _value_check(Eq(val, 1) is S.false, "The pdf on the given set is incorrect.")
 
 
 def ContinuousRV(symbol, density, set=Interval(-oo, oo), **kwargs):
