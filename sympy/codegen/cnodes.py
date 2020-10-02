@@ -51,7 +51,7 @@ class Label(Node):
 
     >>> from sympy import Symbol
     >>> from sympy.codegen.cnodes import Label, PreIncrement
-    >>> from sympy.printing.ccode import ccode
+    >>> from sympy.printing import ccode
     >>> print(ccode(Label('foo')))
     foo:
     >>> print(ccode(Label('bar', [PreIncrement(Symbol('a'))])))
