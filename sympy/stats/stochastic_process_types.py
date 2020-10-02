@@ -549,7 +549,7 @@ class MarkovProcess(StochasticProcess):
                 raise IndexError("The timestamps of the process are not in it's index set.")
             states = Intersection(states, state_index)
             for state in Union(states, FiniteSet(gstate)):
-                if Ge(state, mat.shape[0]) == True:
+                if not isinstance(state, (int, Integer)) or Ge(state, mat.shape[0]) is True:
                     raise IndexError("No information is available for (%s, %s) in "
                         "transition probabilities of shape, (%s, %s). "
                         "State space is zero indexed."
