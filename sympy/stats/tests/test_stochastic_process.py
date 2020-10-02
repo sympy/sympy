@@ -123,7 +123,6 @@ def test_DiscreteMarkovChain():
     Y2 = DiscreteMarkovChain('Y', trans_probs=TO2)
     Y3 = DiscreteMarkovChain('Y', trans_probs=TO3)
     assert Y3._transient2absorbing() == None
-    raises (ValueError, lambda: Y3.fundamental_matrix())
     assert Y2.is_absorbing_chain() == True
     assert Y3.is_absorbing_chain() == False
     TO4 = Matrix([[Rational(1, 5), Rational(2, 5), Rational(2, 5)], [Rational(1, 10), S.Half, Rational(2, 5)], [Rational(3, 5), Rational(3, 10), Rational(1, 10)]])

@@ -846,9 +846,16 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         if Q == None:
             return None
         I = eye(Q.shape[0])
-        if (I - Q).det() == 0:
-            raise ValueError("Fundamental matrix doesn't exists.")
-        return ImmutableMatrix((I - Q).inv().tolist())
+        if (self.is_absorbing_chain()):
+            if (I - Q).det() == 0:
+                raise ValueError("Fundamental matrix doesn't exists.")
+            return ImmutableMatrix((I - Q).inv().tolist())
+        else:
+            w = self.fixed_row_vector()
+            W = Matrix([list(w) for i in range(0, Q.shape[0])])
+            if (I - Q + W).det() == 0:
+                raise ValueError("Fundamental matrix doesn't exists.")
+            return ImmutableMatrix((I - Q + W).inv().tolist())
 
     def absorbing_probabilities(self):
         """
