@@ -10,7 +10,6 @@ ever support anything else than sympy expressions (no Matrices, dictionaries
 and so on).
 """
 
-from __future__ import print_function, division
 
 import re
 from sympy import Symbol, NumberSymbol, I, zoo, oo
@@ -79,7 +78,7 @@ import warnings
 #TODO debugging output
 
 
-class vectorized_lambdify(object):
+class vectorized_lambdify:
     """ Return a sufficiently smart, vectorized and lambdified function.
 
     Returns only reals.
@@ -144,7 +143,7 @@ class vectorized_lambdify(object):
             return self.__call__(*args)
 
 
-class lambdify(object):
+class lambdify:
     """Returns the lambdified function.
 
     This function uses experimental_lambdify to create a lambdified
@@ -197,7 +196,7 @@ def experimental_lambdify(*args, **kwargs):
     return l
 
 
-class Lambdifier(object):
+class Lambdifier:
     def __init__(self, args, expr, print_lambda=False, use_evalf=False,
                  float_wrap_evalf=False, complex_wrap_evalf=False,
                  use_np=False, use_python_math=False, use_python_cmath=False,

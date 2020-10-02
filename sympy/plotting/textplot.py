@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.numbers import Float
 from sympy.core.symbol import Dummy
 from sympy.utilities.lambdify import lambdify
