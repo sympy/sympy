@@ -98,7 +98,7 @@ def test_DiscreteMarkovChain():
     raises(ValueError, lambda: E(Y[2], Eq(Y[3], 1)))
 
 
-    # extended tests for probability queriess
+    # extended tests for probability queries
     TO1 = Matrix([[Rational(1, 4), Rational(3, 4), 0],[Rational(1, 3), Rational(1, 3), Rational(1, 3)],[0, Rational(1, 4), Rational(3, 4)]])
     assert P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)),
             Eq(Probability(Eq(Y[0], 0)), Rational(1, 4)) & TransitionMatrixOf(Y, TO1)) == Rational(1, 16)
