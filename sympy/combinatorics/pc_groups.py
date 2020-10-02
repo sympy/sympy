@@ -200,6 +200,7 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.free_groups import free_group
         >>> G = SymmetricGroup(4)
@@ -240,6 +241,7 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.free_groups import free_group
         >>> G = SymmetricGroup(3)
@@ -293,6 +295,7 @@ class Collector(DefaultPrinting):
 
         Examples
         ========
+
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
         >>> from sympy.combinatorics.free_groups import free_group
@@ -604,6 +607,9 @@ class Collector(DefaultPrinting):
     def leading_exponent(self, element):
         r"""
         Return the leading non-zero exponent.
+
+        Explanation
+        ===========
 
         The leading exponent for a given element `g` is defined
         by `\mathrm{leading\_exponent}[g]` `= e_i`, if `\mathrm{depth}[g] = i`.
