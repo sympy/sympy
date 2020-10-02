@@ -6,7 +6,8 @@ from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.core.sympify import sympify, _sympify
+from sympy.core.sympify import sympify
+from sympy.core.decorators import sympify_return, sympify_method_args
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError
@@ -35,6 +36,7 @@ def _compare_sequence(a, b):
     # tuple
     return tuple(a) == tuple(b)
 
+@sympify_method_args
 class DenseMatrix(MatrixBase):
 
     is_MatrixExpr = False  # type: bool
@@ -42,11 +44,8 @@ class DenseMatrix(MatrixBase):
     _op_priority = 10.01
     _class_priority = 4
 
+    @sympify_return([('other', 'Matrix')], NotImplemented)
     def __eq__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return NotImplemented
         self_shape = getattr(self, 'shape', None)
         other_shape = getattr(other, 'shape', None)
         if None in (self_shape, other_shape):

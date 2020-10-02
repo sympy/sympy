@@ -57,4 +57,4 @@ def test_mulmatscaler():
 
 def test_eq():
     assert Matrix([[1]]) != object() #Earlier gave Syntax and SympifyError , now returns False
-    assert Matrix([[1]]) != "Matrix([[1]])"  # Earlier returned True, noe returns False
+    assert Matrix([[1]]) != "Matrix([[1]])"  # Earlier returned True, now returns False
