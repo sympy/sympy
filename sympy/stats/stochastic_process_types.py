@@ -1,7 +1,7 @@
 import random
 
 import itertools
-from typing import Sequence as tSequence, Union as tUnion
+from typing import Sequence as tSequence, Union as tUnion, List as tList, Tuple as tTuple
 
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    Set, And, Eq, FiniteSet, ImmutableMatrix, Integer, igcd,
@@ -836,7 +836,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         return ImmutableMatrix(t2a)
 
-    def communication_classes(self):
+    def communication_classes(self) -> tTuple[tList[tList], tList[bool], tList[Integer]]:
         """
         Returns the list of communication classes that partition
         the states of the markov chain.
@@ -957,7 +957,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         # convert back to the user's state names
         classes = [[self._state_index[i] for i in class_] for class_ in classes]
 
-        return classes, recurrence, periods
+        return sympify((classes, recurrence, periods))
 
     def fundamental_matrix(self):
         Q = self._transient2transient()
