@@ -200,6 +200,27 @@ def test_sqrt():
     assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
 
 
+def test_frac():
+    from sympy import frac
+
+    expr = frac(x)
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr) == 'x % 1'
+
+    prntr = MpmathPrinter()
+    assert prntr.doprint(expr) == 'mpmath.frac(x)'
+
+    prntr = SymPyPrinter()
+    assert prntr.doprint(expr) == 'sympy.functions.elementary.integers.frac(x)'
+
+
 class CustomPrintedObject(Expr):
     def _numpycode(self, printer):
         return 'numpy'

@@ -367,22 +367,6 @@ class AbstractPythonCodePrinter(CodePrinter):
     def _print_NoneToken(self, arg):
         return 'None'
 
-
-class PythonCodePrinter(AbstractPythonCodePrinter):
-
-    def _print_sign(self, e):
-        return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
-            f=self._module_format('math.copysign'), e=self._print(e.args[0]))
-
-    def _print_Not(self, expr):
-        PREC = precedence(expr)
-        return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
-
-    def _print_Indexed(self, expr):
-        base = expr.args[0]
-        index = expr.args[1:]
-        return "{}[{}]".format(str(base), ", ".join([self._print(ind) for ind in index]))
-
     def _hprint_Pow(self, expr, rational=False, sqrt='math.sqrt'):
         """Printing helper function for ``Pow``
 
@@ -441,6 +425,22 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         exp_str = self.parenthesize(expr.exp, PREC, strict=False)
         return "{}**{}".format(base_str, exp_str)
 
+
+class PythonCodePrinter(AbstractPythonCodePrinter):
+
+    def _print_sign(self, e):
+        return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
+            f=self._module_format('math.copysign'), e=self._print(e.args[0]))
+
+    def _print_Not(self, expr):
+        PREC = precedence(expr)
+        return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
+
+    def _print_Indexed(self, expr):
+        base = expr.args[0]
+        index = expr.args[1:]
+        return "{}[{}]".format(str(base), ", ".join([self._print(ind) for ind in index]))
+
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational)
 
@@ -451,6 +451,10 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
 
     def _print_Half(self, expr):
         return self._print_Rational(expr)
+
+    def _print_frac(self, expr):
+        from sympy import Mod
+        return self._print_Mod(Mod(expr.args[0], 1))
 
     _print_lowergamma = CodePrinter._print_not_supported
     _print_uppergamma = CodePrinter._print_not_supported
@@ -499,6 +503,7 @@ _not_in_mpmath = 'log1p log2'.split()
 _in_mpmath = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_mpmath]
 _known_functions_mpmath = dict(_in_mpmath, **{
     'beta': 'beta',
+    'frac': 'frac',
     'fresnelc': 'fresnelc',
     'fresnels': 'fresnels',
     'sign': 'sign',
@@ -1046,14 +1051,9 @@ for k in SciPyPrinter._kc:
     setattr(SciPyPrinter, '_print_%s' % k, _print_known_const)
 
 
-class SymPyPrinter(PythonCodePrinter):
+class SymPyPrinter(AbstractPythonCodePrinter):
 
     language = "Python with SymPy"
-
-    _kf = {k: 'sympy.' + v for k, v in chain(
-        _known_functions.items(),
-        _known_functions_math.items()
-    )}
 
     def _print_Function(self, expr):
         mod = expr.func.__module__ or ''
