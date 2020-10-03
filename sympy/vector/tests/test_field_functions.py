@@ -162,8 +162,8 @@ def test_product_rules():
 
     # Sixth product rule
     lhs = (delop ^ (u ^ v)).doit()
-    rhs = ((u * (delop & v) - v * (delop & u) +
-           (v & delop)(u) - (u & delop)(v))).doit()
+    rhs = (u * (delop & v) - v * (delop & u) +
+           (v & delop)(u) - (u & delop)(v)).doit()
     assert simplify(lhs) == simplify(rhs)
 
 

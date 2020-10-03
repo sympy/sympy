@@ -125,7 +125,7 @@ class ParametricIntegral(Basic):
             for q in V:
                 if p == q:
                     continue
-                if lower_p.issuperset(set([q])) or upper_p.issuperset(set([q])):
+                if lower_p.issuperset({q}) or upper_p.issuperset({q}):
                     E.append((p, q))
 
         if not E:
