@@ -14,7 +14,6 @@ Hypergeometric
 Rademacher
 """
 
-from __future__ import print_function, division
 
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
                    Dummy, Eq, Intersection, Interval,
@@ -125,7 +124,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
     @property  # type: ignore
     @cacheit
     def dict(self):
-        return dict((k, self.p) for k in self.set)
+        return {k: self.p for k in self.set}
 
     @property
     def set(self):
@@ -262,7 +261,7 @@ class BernoulliDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return set([self.succ, self.fail])
+        return {self.succ, self.fail}
 
     def pmf(self, x):
         if isinstance(self.succ, Symbol) and isinstance(self.fail, Symbol):
@@ -403,8 +402,8 @@ class BinomialDistribution(SingleFiniteDistribution):
     def dict(self):
         if self.is_symbolic:
             return Density(self)
-        return dict((k*self.succ + (self.n-k)*self.fail, self.pmf(k))
-                    for k in range(0, self.n + 1))
+        return {k*self.succ + (self.n-k)*self.fail: self.pmf(k)
+                    for k in range(0, self.n + 1)}
 
 def Binomial(name, n, p, succ=1, fail=0):
     r"""
@@ -559,7 +558,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
         N, m, n = self.N, self.m, self.n
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(self.low, self.high))
-        return set([i for i in range(max(0, n + m - N), min(n, m) + 1)])
+        return {i for i in range(max(0, n + m - N), min(n, m) + 1)}
 
     def pmf(self, k):
         N, m, n = self.N, self.m, self.n
@@ -609,7 +608,7 @@ class RademacherDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return set([-1, 1])
+        return {-1, 1}
 
     @property
     def pmf(self):

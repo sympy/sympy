@@ -5,17 +5,17 @@ from sympy.multipledispatch import dispatch
 from sympy.sets.sets import tfn, ProductSet, Interval, FiniteSet
 
 
-@dispatch(Interval, FiniteSet)
+@dispatch(Interval, FiniteSet) # type:ignore
 def _eval_is_eq(lhs, rhs): # noqa: F811
     return False
 
 
-@dispatch(FiniteSet, Interval)
+@dispatch(FiniteSet, Interval) # type:ignore
 def _eval_is_eq(lhs, rhs): # noqa: F811
     return False
 
 
-@dispatch(Interval, Interval)
+@dispatch(Interval, Interval) # type:ignore
 def _eval_is_eq(lhs, rhs): # noqa: F811
     return And(Eq(lhs.left, rhs.left),
                Eq(lhs.right, rhs.right),
@@ -23,12 +23,12 @@ def _eval_is_eq(lhs, rhs): # noqa: F811
                lhs.right_open == rhs.right_open)
 
 
-@dispatch(FiniteSet, Interval)
+@dispatch(FiniteSet, Interval) # type:ignore
 def _eval_is_eq(lhs, rhs): # noqa: F811
     return False
 
 
-@dispatch(FiniteSet, FiniteSet)
+@dispatch(FiniteSet, FiniteSet) # type:ignore
 def _eval_is_eq(lhs, rhs): # noqa: F811
     def all_in_both():
         s_set = set(lhs.args)
@@ -39,7 +39,7 @@ def _eval_is_eq(lhs, rhs): # noqa: F811
     return tfn[fuzzy_and(all_in_both())]
 
 
-@dispatch(ProductSet, ProductSet)
+@dispatch(ProductSet, ProductSet) # type:ignore
 def _eval_is_eq(lhs, rhs): # noqa: F811
     if len(lhs.sets) != len(rhs.sets):
         return False

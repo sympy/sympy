@@ -1,8 +1,7 @@
 """Implementation of :class:`Domain` class. """
 
-from __future__ import print_function, division
 
-from typing import Any, Optional
+from typing import Any, Optional, Type
 
 from sympy.core import Basic, sympify
 from sympy.core.compatibility import HAS_GMPY, is_sequence
@@ -14,10 +13,10 @@ from sympy.polys.polyutils import _unify_gens, _not_a_coeff
 from sympy.utilities import default_sort_key, public
 
 @public
-class Domain(object):
+class Domain:
     """Represents an abstract domain. """
 
-    dtype = None  ## type: Optional[Type]
+    dtype = None  # type: Optional[Type]
     zero = None  # type: Optional[Any]
     one = None  # type: Optional[Any]
 
@@ -406,15 +405,15 @@ class Domain(object):
         else:
             return self.poly_ring(symbols)
 
-    def poly_ring(self, *symbols, **kwargs):
+    def poly_ring(self, *symbols, order=lex):
         """Returns a polynomial ring, i.e. `K[X]`. """
         from sympy.polys.domains.polynomialring import PolynomialRing
-        return PolynomialRing(self, symbols, kwargs.get("order", lex))
+        return PolynomialRing(self, symbols, order)
 
-    def frac_field(self, *symbols, **kwargs):
+    def frac_field(self, *symbols, order=lex):
         """Returns a fraction field, i.e. `K(X)`. """
         from sympy.polys.domains.fractionfield import FractionField
-        return FractionField(self, symbols, kwargs.get("order", lex))
+        return FractionField(self, symbols, order)
 
     def old_poly_ring(self, *symbols, **kwargs):
         """Returns a polynomial ring, i.e. `K[X]`. """

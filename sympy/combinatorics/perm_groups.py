@@ -117,7 +117,7 @@ class PermutationGroup(Basic):
     """
     is_group = True
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, dups=True, **kwargs):
         """The default constructor. Accepts Cycle and Permutation forms.
         Removes duplicates unless ``dups`` keyword is ``False``.
         """
@@ -136,7 +136,7 @@ class PermutationGroup(Basic):
             for i in range(len(args)):
                 if args[i].size != degree:
                     args[i] = Permutation(args[i], size=degree)
-        if kwargs.pop('dups', True):
+        if dups:
             args = list(uniq([_af_new(list(a)) for a in args]))
         if len(args) > 1:
             args = [g for g in args if not g.is_identity]

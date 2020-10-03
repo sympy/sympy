@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from threading import RLock
 
 # it is sufficient to import "pyglet" here once
@@ -25,7 +23,7 @@ from os import getcwd, listdir
 import ctypes
 
 @doctest_depends_on(modules=('pyglet',))
-class PygletPlot(object):
+class PygletPlot:
     """
     Plot Examples
     =============
@@ -410,10 +408,8 @@ class ScreenShot:
         self.invisibleMode = False
         self.flag = 0
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.screenshot_requested
-
-    __bool__ = __nonzero__
 
     def _execute_saving(self):
         if self.flag < 3:

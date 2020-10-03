@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
+from sympy.codegen.cfunctions import expm1, log1p
+from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.numbers import pi
@@ -17,6 +19,7 @@ from sympy.testing.pytest import raises
 from sympy.tensor import IndexedBase
 from sympy.testing.pytest import skip
 from sympy.external import import_module
+from sympy.functions.special.gamma_functions import loggamma
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
@@ -75,6 +78,7 @@ def test_MpmathPrinter():
     assert p.doprint(S.NaN) == 'mpmath.nan'
     assert p.doprint(S.Infinity) == 'mpmath.inf'
     assert p.doprint(S.NegativeInfinity) == 'mpmath.ninf'
+    assert p.doprint(loggamma(x)) == 'mpmath.loggamma(x)'
 
 
 def test_NumPyPrinter():
@@ -246,6 +250,27 @@ def test_issue_16535_16536():
     assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # uppergamma\nuppergamma(a, x)'
 
 
+def test_Integral():
+    from sympy import Integral, exp
+
+    single = Integral(exp(-x), (x, 0, oo))
+    double = Integral(x**2*exp(x*y), (x, -z, z), (y, 0, z))
+    indefinite = Integral(x**2, x)
+    evaluateat = Integral(x**2, (x, 1))
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(single) == 'scipy.integrate.quad(lambda x: numpy.exp(-x), 0, numpy.PINF)[0]'
+    assert prntr.doprint(double) == 'scipy.integrate.nquad(lambda x, y: x**2*numpy.exp(x*y), ((-z, z), (0, z)))[0]'
+    raises(NotImplementedError, lambda: prntr.doprint(indefinite))
+    raises(NotImplementedError, lambda: prntr.doprint(evaluateat))
+
+    prntr = MpmathPrinter()
+    assert prntr.doprint(single) == 'mpmath.quad(lambda x: mpmath.exp(-x), (0, mpmath.inf))'
+    assert prntr.doprint(double) == 'mpmath.quad(lambda x, y: x**2*mpmath.exp(x*y), (-z, z), (0, z))'
+    raises(NotImplementedError, lambda: prntr.doprint(indefinite))
+    raises(NotImplementedError, lambda: prntr.doprint(evaluateat))
+
+
 def test_fresnel_integrals():
     from sympy import fresnelc, fresnels
 
@@ -324,3 +349,10 @@ def test_airy_prime():
     prntr = PythonCodePrinter()
     assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # airyaiprime\nairyaiprime(x)'
     assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # airybiprime\nairybiprime(x)'
+
+
+def test_numerical_accuracy_functions():
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expm1(x)) == 'numpy.expm1(x)'
+    assert prntr.doprint(log1p(x)) == 'numpy.log1p(x)'
+    assert prntr.doprint(cosm1(x)) == 'scipy.special.cosm1(x)'

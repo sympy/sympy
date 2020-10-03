@@ -10,6 +10,7 @@ from sympy.printing.defaults import Printable
 
 import itertools
 
+
 class NDimArray(Printable):
     """
 
@@ -64,6 +65,7 @@ class NDimArray(Printable):
     """
 
     _diff_wrt = True
+    is_scalar = False
 
     def __new__(cls, iterable, shape=None, **kwargs):
         from sympy.tensor.array import ImmutableDenseNDimArray
@@ -239,37 +241,16 @@ class NDimArray(Printable):
         [[1, 0], [0, y]]
 
         """
-        from sympy import Derivative
+        from sympy.tensor.array.array_derivatives import ArrayDerivative
         kwargs.setdefault('evaluate', True)
-        return Derivative(self.as_immutable(), *args, **kwargs)
+        return ArrayDerivative(self.as_immutable(), *args, **kwargs)
 
-    def _accept_eval_derivative(self, s):
-        return s._visit_eval_derivative_array(self)
-
-    def _visit_eval_derivative_scalar(self, base):
+    def _eval_derivative(self, base):
         # Types are (base: scalar, self: array)
         return self.applyfunc(lambda x: base.diff(x))
 
-    def _visit_eval_derivative_array(self, base):
-        # Types are (base: array/matrix, self: array)
-        from sympy import derive_by_array
-        return derive_by_array(base, self)
-
     def _eval_derivative_n_times(self, s, n):
         return Basic._eval_derivative_n_times(self, s, n)
-
-    def _eval_derivative(self, arg):
-        return self.applyfunc(lambda x: x.diff(arg))
-
-    def _eval_derivative_array(self, arg):
-        from sympy import derive_by_array
-        from sympy import Tuple
-        from sympy.matrices.common import MatrixCommon
-
-        if isinstance(arg, (Iterable, Tuple, MatrixCommon, NDimArray)):
-            return derive_by_array(self, arg)
-        else:
-            return self.applyfunc(lambda x: x.diff(arg))
 
     def applyfunc(self, f):
         """Apply a function to each element of the N-dim array.
@@ -390,7 +371,7 @@ class NDimArray(Printable):
         result_list = [other*i for i in Flatten(self)]
         return type(self)(result_list, self.shape)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         from sympy.matrices.matrices import MatrixBase
         from sympy.tensor.array import SparseNDimArray
         from sympy.tensor.array.arrayop import Flatten
@@ -405,7 +386,7 @@ class NDimArray(Printable):
         result_list = [i/other for i in Flatten(self)]
         return type(self)(result_list, self.shape)
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         raise NotImplementedError('unsupported operation on NDimArray')
 
     def __neg__(self):
@@ -463,9 +444,6 @@ class NDimArray(Printable):
 
     def __ne__(self, other):
         return not self == other
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def _eval_transpose(self):
         if self.rank() != 2:

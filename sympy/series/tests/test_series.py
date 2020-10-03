@@ -257,6 +257,12 @@ def test_issue_18008():
         O(x**(-4), (x, oo))
 
 
+def test_issue_18842():
+    f = log(x/(1 - x))
+    assert f.series(x, 0.491, n=1).removeO().nsimplify() ==  \
+        -S(180019443780011)/5000000000000000
+
+
 def test_issue_19534():
     dt = symbols('dt', real=True)
     expr = 16*dt*(0.125*dt*(2.0*dt + 1.0) + 0.875*dt + 1.0)/45 + \

@@ -12,8 +12,8 @@ class ImplicitRegion(Basic):
     """
     Represents an implicit region in space.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy import Eq
     >>> from sympy.abc import x, y, z, t
@@ -43,9 +43,9 @@ class ImplicitRegion(Basic):
     Parameters
     ==========
 
-    variables: tuple to map variables in implicit equation to base scalars.
+    variables : tuple to map variables in implicit equation to base scalars.
 
-    equation: An expression or Eq denoting the implicit equation of the region.
+    equation : An expression or Eq denoting the implicit equation of the region.
 
     """
     def __new__(cls, variables, equation):
@@ -89,11 +89,11 @@ class ImplicitRegion(Basic):
         (-10, -10, 20)
 
         References
-        =========
+        ==========
 
         - Erik Hillgarter, "Rational Points on Conics", Diploma Thesis, RISC-Linz,
-        J. Kepler Universitat Linz, 1996. Availaible:
-        https://www3.risc.jku.at/publications/download/risc_1355/Rational%20Points%20on%20Conics.pdf
+          J. Kepler Universitat Linz, 1996. Availaible:
+          https://www3.risc.jku.at/publications/download/risc_1355/Rational%20Points%20on%20Conics.pdf
 
         """
         equation = self.equation
@@ -374,11 +374,11 @@ class ImplicitRegion(Basic):
         (0.75 - 0.5/(t**2 + 1), -0.5*t/(t**2 + 1))
 
         References
-        =========
+        ==========
 
         - Christoph M. Hoffmann, "Conversion Methods between Parametric and
-        Implicit Curves and Surfaces", Purdue e-Pubs, 1990. Available:
-        https://docs.lib.purdue.edu/cgi/viewcontent.cgi?article=1827&context=cstech
+          Implicit Curves and Surfaces", Purdue e-Pubs, 1990. Available:
+          https://docs.lib.purdue.edu/cgi/viewcontent.cgi?article=1827&context=cstech
 
         """
         equation = self.equation

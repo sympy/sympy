@@ -1,6 +1,5 @@
 """Implementation of :class:`RealField` class. """
 
-from __future__ import print_function, division
 
 from sympy.core.numbers import Float
 from sympy.polys.domains.field import Field

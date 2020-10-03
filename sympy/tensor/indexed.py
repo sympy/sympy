@@ -434,7 +434,7 @@ class IndexedBase(Expr, NotIterable):
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = tmp_asm_copy  # Issue #8873
 
-    def __new__(cls, label, shape=None, **kw_args):
+    def __new__(cls, label, shape=None, *, offset=S.Zero, strides=None, **kw_args):
         from sympy import MatrixBase, NDimArray
 
         assumptions, kw_args = _filter_assumptions(kw_args)
@@ -453,9 +453,6 @@ class IndexedBase(Expr, NotIterable):
             shape = Tuple(*shape)
         elif shape is not None:
             shape = Tuple(shape)
-
-        offset = kw_args.pop('offset', S.Zero)
-        strides = kw_args.pop('strides', None)
 
         if shape is not None:
             obj = Expr.__new__(cls, label, shape)
@@ -767,7 +764,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
     return None
 
 
-@dispatch(Idx, Number)
+@dispatch(Idx, Number)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
 
     other_upper = rhs
@@ -780,7 +777,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
     return None
 
 
-@dispatch(Number, Idx)
+@dispatch(Number, Idx)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
 
     other_upper = lhs
