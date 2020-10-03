@@ -84,7 +84,7 @@ def FiniteRV(name, density, **kwargs):
     check : bool
         If True, it will check whether the given density
         integrates to 1 over the given set. If False, it
-        will not perform this check. Default is True.
+        will not perform this check. Default is False.
 
     Examples
     ========
@@ -105,6 +105,8 @@ def FiniteRV(name, density, **kwargs):
     RandomSymbol
 
     """
+    # have a default of False while `rv` should have a default of True
+    kwargs['check'] = kwargs.pop('check', False)
     return rv(name, FiniteDistributionHandmade, density, **kwargs)
 
 class DiscreteUniformDistribution(SingleFiniteDistribution):

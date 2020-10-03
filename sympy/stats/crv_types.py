@@ -172,7 +172,7 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo), **kwargs):
     check : bool
         If True, it will check whether the given density
         integrates to 1 over the given set. If False, it
-        will not perform this check. Default is True.
+        will not perform this check. Default is False.
 
 
     Returns
@@ -202,6 +202,8 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo), **kwargs):
     """
     pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
     pdf = Lambda(symbol, pdf)
+    # have a default of False while `rv` should have a default of True
+    kwargs['check'] = kwargs.pop('check', False)
     return rv(symbol.name, ContinuousDistributionHandmade, (pdf, set), **kwargs)
 
 ########################################
