@@ -376,6 +376,19 @@ class MarkovProcess(StochasticProcess):
 
         return state_space, trans_probs
 
+    @property
+    def _is_numeric(self) -> bool:
+        """
+        Checks whether the transition matrix has a numeric type and shape.
+        """
+        trans_matrix = self.args[2]
+        n = self.number_of_states
+        if not isinstance(n, Integer):
+            return False
+        if isinstance(trans_matrix, MatrixSymbol):
+            return False
+        return True
+
     def _extract_information(self, given_condition):
         """
         Helper function to extract information, like,
@@ -902,8 +915,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         condition_set : bool
             If the has symbolic sizes or transition matrices,
-            it will return a Lambda if False and return a
-            ConditionSet if True.
+            it will return a ``Lambda`` if ``False`` and return a
+            ``ConditionSet`` if ``True``.
 
         Examples
         ========
@@ -951,11 +964,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         n = self.number_of_states
 
         if n == 0:
-            return Matrix([[]])
+            return ImmutableMatrix(Matrix([[]]))
 
         # symbolic matrix version
-        # one day when MatrixSymbol etc. have RowInsert() and RowDel(),
-        # this if block will not be needed
         if not self._is_numeric:
             wm = MatrixSymbol('wm', 1, n)
             if condition_set:
@@ -971,30 +982,25 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                     return Lambda(wm, Eq(wm * trans_probs, wm))
                 return Lambda((wm, trans_probs), Eq(wm * trans_probs, wm))
 
-
         # numeric matrix version
-        # one day...
-        # a = (trans_probs - Identity(n)).T
-        # a = a.row_del(0)
-        # a = a.row_insert(0, OneMatrix(1, n))
         a = Matrix(trans_probs - Identity(n)).T
         a[0, 0:n] = ones(1, n)
 
-        # b = ZeroMatrix(n, 1)
         b = zeros(n, 1)
-
         b[0, 0] = 1
 
         try:
             pi_, params = a.gauss_jordan_solve(b)
-            pi_ = pi_.T
+            pi_ = ImmutableMatrix(pi_.T)
         except ValueError:
             wm = MatrixSymbol('wm', 1, n)
-            pi_ = ConditionSet(wm, And(Eq(wm*trans_probs, wm), Eq(sum(wm), 1)))
+            pi_ = ConditionSet(wm, Eq(wm*trans_probs, wm))
         return pi_
 
     def fixed_row_vector(self):
-        """Wrapper for stationary_distribution()"""
+        """
+        A wrapper for ``stationary_distribution()``.
+        """
         return self.stationary_distribution()
 
     @property
