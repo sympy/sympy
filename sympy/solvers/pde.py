@@ -228,7 +228,7 @@ def _handle_Integral(expr, func, order, hint):
         return expr
 
 
-def classify_pde(eq, func=None, dict=False, **kwargs):
+def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
     """
     Returns a tuple of possible pdsolve() classifications for a PDE.
 
@@ -266,8 +266,6 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     >>> classify_pde(eq)
     ('1st_linear_constant_coeff_homogeneous',)
     """
-
-    prep = kwargs.pop('prep', True)
 
     if func and len(func.args) != 2:
         raise NotImplementedError("Right now only partial "

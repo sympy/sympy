@@ -9,7 +9,6 @@ sympy.stats.crv
 sympy.stats.drv
 """
 
-from __future__ import print_function, division
 
 from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
                    Dummy)
@@ -22,7 +21,7 @@ from sympy.matrices import ImmutableMatrix, matrix2numpy, list2numpy
 from sympy.stats.crv import SingleContinuousDistribution, SingleContinuousPSpace
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
-                            ProductDomain, RandomSymbol, random_symbols, SingleDomain)
+                            ProductDomain, RandomSymbol, random_symbols, SingleDomain, _symbol_converter)
 from sympy.utilities.misc import filldedent
 from sympy.external import import_module
 
@@ -38,10 +37,7 @@ class JointPSpace(ProductPSpace):
             return SingleContinuousPSpace(sym, dist)
         if isinstance(dist, SingleDiscreteDistribution):
             return SingleDiscretePSpace(sym, dist)
-        if isinstance(sym, str):
-            sym = Symbol(sym)
-        if not isinstance(sym, Symbol):
-            raise TypeError("s should have been string or Symbol")
+        sym = _symbol_converter(sym)
         return Basic.__new__(cls, sym, dist)
 
     @property
@@ -342,7 +338,7 @@ class MarginalDistribution(Basic):
     @property
     def symbols(self):
         rvs = self.args[1]
-        return set([rv.pspace.symbol for rv in rvs])
+        return {rv.pspace.symbol for rv in rvs}
 
     def pdf(self, *x):
         expr, rvs = self.args[0], self.args[1]

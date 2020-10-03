@@ -288,10 +288,15 @@ def test__sympify():
 
     # positive _sympify
     assert _sympify(x) is x
-    assert _sympify(f) is f
     assert _sympify(1) == Integer(1)
     assert _sympify(0.5) == Float("0.5")
     assert _sympify(1 + 1j) == 1.0 + I*1.0
+
+    # Function f is not Basic and can't sympify to Basic. We allow it to pass
+    # with sympify but not with _sympify.
+    # https://github.com/sympy/sympy/issues/20124
+    assert sympify(f) is f
+    raises(SympifyError, lambda: _sympify(f))
 
     class A:
         def _sympy_(self):

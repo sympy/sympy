@@ -1,6 +1,5 @@
 """User-friendly public interface to polynomial functions. """
 
-from __future__ import print_function, division
 
 from functools import wraps, reduce
 from operator import mul
@@ -303,7 +302,7 @@ class Poly(Basic):
         return cls.new(DMP.from_list(rep, level, domain), *gens)
 
     def __hash__(self):
-        return super(Poly, self).__hash__()
+        return super().__hash__()
 
     @property
     def free_symbols(self):
@@ -4128,15 +4127,12 @@ class Poly(Basic):
         return g.quo(f)
 
     @_sympifyit('g', NotImplemented)
-    def __div__(f, g):
+    def __truediv__(f, g):
         return f.as_expr()/g.as_expr()
 
     @_sympifyit('g', NotImplemented)
-    def __rdiv__(f, g):
+    def __rtruediv__(f, g):
         return g.as_expr()/f.as_expr()
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     @_sympifyit('other', NotImplemented)
     def __eq__(self, other):
@@ -4160,10 +4156,8 @@ class Poly(Basic):
     def __ne__(f, g):
         return not f == g
 
-    def __nonzero__(f):
+    def __bool__(f):
         return not f.is_zero
-
-    __bool__ = __nonzero__
 
     def eq(f, g, strict=False):
         if not strict:
@@ -4187,7 +4181,7 @@ class PurePoly(Poly):
         return (self.rep,)
 
     def __hash__(self):
-        return super(PurePoly, self).__hash__()
+        return super().__hash__()
 
     @property
     def free_symbols(self):
@@ -5071,7 +5065,7 @@ def subresultants(f, g, *gens, **args):
 
 
 @public
-def resultant(f, g, *gens, **args):
+def resultant(f, g, *gens, includePRS=False, **args):
     """
     Compute resultant of ``f`` and ``g``.
 
@@ -5085,7 +5079,6 @@ def resultant(f, g, *gens, **args):
     4
 
     """
-    includePRS = args.pop('includePRS', False)
     options.allowed_flags(args, ['polys'])
 
     try:
@@ -5976,7 +5969,7 @@ def _symbolic_factor_list(expr, opt, method):
                 factors.append((_factors_product(other), exp))
     if method == 'sqf':
         factors = [(reduce(mul, (f for f, _ in factors if _ == k)), k)
-                   for k in set(i for _, i in factors)]
+                   for k in {i for _, i in factors}]
 
     return coeff, factors
 
@@ -6283,7 +6276,7 @@ def factor_list(f, *gens, **args):
 
 
 @public
-def factor(f, *gens, **args):
+def factor(f, *gens, deep=False, **args):
     """
     Compute the factorization of expression, ``f``, into irreducibles. (To
     factor an integer into primes, use ``factorint``.)
@@ -6351,7 +6344,7 @@ def factor(f, *gens, **args):
 
     """
     f = sympify(f)
-    if args.pop('deep', False):
+    if deep:
         from sympy.simplify.simplify import bottom_up
         def _try_factor(expr):
             """

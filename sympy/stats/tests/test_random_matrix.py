@@ -1,5 +1,5 @@
 from sympy import (sqrt, exp, Trace, pi, S, Integral, MatrixSymbol, Lambda,
-                    Dummy, Product, Abs, IndexedBase, Matrix, I, Rational)
+                   Dummy, Product, Abs, IndexedBase, Matrix, I, Rational)
 from sympy.stats import (GaussianUnitaryEnsemble as GUE, density,
                          GaussianOrthogonalEnsemble as GOE,
                          GaussianSymplecticEnsemble as GSE,
@@ -12,7 +12,7 @@ from sympy.stats import (GaussianUnitaryEnsemble as GUE, density,
                          Normal, Beta)
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import RandomMatrixSymbol
-from sympy.stats.random_matrix_models import GaussianEnsemble
+from sympy.stats.random_matrix_models import GaussianEnsemble, RandomMatrixPSpace
 from sympy.testing.pytest import raises
 
 def test_GaussianEnsemble():
@@ -105,3 +105,20 @@ def test_JointEigenDistribution():
     JointDistributionHandmade(-sqrt(A[0, 0]**2 - 2*A[0, 0]*A[1, 1] + 4*A[0, 1]*A[1, 0] + A[1, 1]**2)/2 +
     A[0, 0]/2 + A[1, 1]/2, sqrt(A[0, 0]**2 - 2*A[0, 0]*A[1, 1] + 4*A[0, 1]*A[1, 0] + A[1, 1]**2)/2 + A[0, 0]/2 + A[1, 1]/2)
     raises(ValueError, lambda: JointEigenDistribution(Matrix([[1, 0], [2, 1]])))
+
+def test_issue_19841():
+    G1 = GUE('U', 2)
+    G2 = G1.xreplace({2: 2})
+    assert G1.args == G2.args
+
+    X = MatrixSymbol('X', 2, 2)
+    G = GSE('U', 2)
+    h_pspace = RandomMatrixPSpace('P', model=density(G))
+    H = RandomMatrixSymbol('H', 2, 2, pspace=h_pspace)
+    H2 = RandomMatrixSymbol('H', 2, 2, pspace=None)
+    assert H.doit() == H
+
+    assert (2*H).xreplace({H: X}) == 2*X
+    assert (2*H).xreplace({H2: X}) == 2*H
+    assert (2*H2).xreplace({H: X}) == 2*H2
+    assert (2*H2).xreplace({H2: X}) == 2*X

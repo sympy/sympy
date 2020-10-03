@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.utilities import dict_merge
 from sympy.utilities.iterables import iterable
 from sympy.physics.vector import (Dyadic, Vector, ReferenceFrame,
@@ -540,11 +538,11 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
                              "vector expression, got %s." % reference_frame)
         else:
             expression = expression.to_matrix(reference_frame)
-    return set([i for i in expression.atoms(AppliedUndef, Derivative) if
-            i.free_symbols == t_set]) - exclude_set
+    return {i for i in expression.atoms(AppliedUndef, Derivative) if
+            i.free_symbols == t_set} - exclude_set
 
 
-def msubs(expr, *sub_dicts, **kwargs):
+def msubs(expr, *sub_dicts, smart=False, **kwargs):
     """A custom subs for use on expressions derived in physics.mechanics.
 
     Traverses the expression tree once, performing the subs found in sub_dicts.
@@ -582,7 +580,6 @@ def msubs(expr, *sub_dicts, **kwargs):
     """
 
     sub_dict = dict_merge(*sub_dicts)
-    smart = kwargs.pop('smart', False)
     if smart:
         func = _smart_subs
     elif hasattr(expr, 'msubs'):

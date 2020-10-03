@@ -293,11 +293,8 @@ class DifferentialOperator:
     def __neg__(self):
         return -1 * self
 
-    def __div__(self, other):
-        return self * (S.One / other)
-
     def __truediv__(self, other):
-        return self.__div__(other)
+        return self * (S.One / other)
 
     def __pow__(self, n):
         if n == 1:
@@ -1120,11 +1117,8 @@ class HolonomicFunction:
     def __neg__(self):
         return -1 * self
 
-    def __div__(self, other):
-        return self * (S.One / other)
-
     def __truediv__(self, other):
-        return self.__div__(other)
+        return self * (S.One / other)
 
     def __pow__(self, n):
         if self.annihilator.order <= 1:

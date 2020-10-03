@@ -27,7 +27,7 @@ from sympy.ntheory.factor_ import udivisor_sigma
 from sympy.abc import mu, tau
 from sympy.printing.latex import (latex, translate, greek_letters_set,
                                   tex_greek_dictionary, multiline_latex,
-                                  latex_escape)
+                                  latex_escape, LatexPrinter)
 from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 ImmutableSparseNDimArray,
                                 MutableSparseNDimArray,
@@ -2681,3 +2681,24 @@ def test_emptyPrinter():
 
     # even if they are nested within other objects
     assert latex((MyObject(),)) == r"\left( \mathtt{\text{<MyObject with \{...\}>}},\right)"
+
+def test_global_settings():
+    import inspect
+
+    # settings should be visible in the signature of `latex`
+    assert inspect.signature(latex).parameters['imaginary_unit'].default == 'i'
+    assert latex(I) == 'i'
+    try:
+        # but changing the defaults...
+        LatexPrinter.set_global_settings(imaginary_unit='j')
+        # ... should change the signature
+        assert inspect.signature(latex).parameters['imaginary_unit'].default == 'j'
+        assert latex(I) == 'j'
+    finally:
+        # there's no public API to undo this, but we need to make sure we do
+        # so as not to impact other tests
+        del LatexPrinter._global_settings['imaginary_unit']
+
+    # check we really did undo it
+    assert inspect.signature(latex).parameters['imaginary_unit'].default == 'i'
+    assert latex(I) == 'i'

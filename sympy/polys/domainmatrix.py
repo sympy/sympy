@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from operator import mul
 
 from sympy.core.sympify import _sympify

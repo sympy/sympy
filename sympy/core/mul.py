@@ -5,7 +5,7 @@ import operator
 from .sympify import sympify
 from .basic import Basic
 from .singleton import S
-from .operations import AssocOp
+from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group, fuzzy_and
 from .compatibility import reduce
@@ -714,6 +714,9 @@ class Mul(Expr, AssocOp):
         - if you want the coefficient when self is treated as an Add
           then use self.as_coeff_add()[0]
 
+        Examples
+        ========
+
         >>> from sympy.abc import x, y
         >>> (3*x*y).as_two_terms()
         (3, x*y)
@@ -756,12 +759,11 @@ class Mul(Expr, AssocOp):
         return d
 
     @cacheit
-    def as_coeff_mul(self, *deps, **kwargs):
+    def as_coeff_mul(self, *deps, rational=True, **kwargs):
         if deps:
             from sympy.utilities.iterables import sift
             l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
             return self._new_rawargs(*l2), tuple(l1)
-        rational = kwargs.pop('rational', True)
         args = self.args
         if args[0].is_Number:
             if not rational or args[0].is_Rational:
@@ -1402,6 +1404,9 @@ class Mul(Expr, AssocOp):
         """Return True if self is positive, False if not, and None if it
         cannot be determined.
 
+        Explanation
+        ===========
+
         This algorithm is non-recursive and works by keeping track of the
         sign which changes when a negative or nonpositive is encountered.
         Whether a nonpositive or nonnegative is seen is also tracked since
@@ -1901,6 +1906,7 @@ class Mul(Expr, AssocOp):
     def _sorted_args(self):
         return tuple(self.as_ordered_factors())
 
+mul = AssocOpDispatcher('mul')
 
 def prod(a, start=1):
     """Return product of elements of a. Start with int 1 so if only

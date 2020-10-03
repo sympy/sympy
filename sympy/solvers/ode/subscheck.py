@@ -8,7 +8,9 @@ from sympy.core.sympify import sympify
 from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import exp
 from sympy.series import Order
-from sympy.simplify import (simplify, trigsimp, posify, besselsimp) # type: ignore
+from sympy.simplify.simplify import simplify, posify, besselsimp
+from sympy.simplify.trigsimp import trigsimp
+from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.solvers import solve
 
 from sympy.solvers.deutils import _preprocess, ode_order
@@ -381,6 +383,8 @@ def checksysodesol(eqs, sols, func=None):
         ss = simplify(eq)
         if ss != 0:
             eq = ss.expand(force=True)
+            if eq != 0:
+                eq = sqrtdenest(eq).simplify()
         else:
             eq = 0
         checkeq.append(eq)

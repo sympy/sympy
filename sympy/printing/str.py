@@ -2,13 +2,11 @@
 A Printer for generating readable representation of most sympy classes.
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
-from .printer import Printer
+from .printer import Printer, print_function
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
@@ -873,6 +871,7 @@ class StrPrinter(Printer):
     def _print_Str(self, s):
         return self._print(s.name)
 
+@print_function(StrPrinter)
 def sstr(expr, **settings):
     """Returns the expression as a string.
 
@@ -906,6 +905,7 @@ class StrReprPrinter(StrPrinter):
         return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
 
 
+@print_function(StrReprPrinter)
 def sstrrepr(expr, **settings):
     """return expr in mixed str/repr form
 

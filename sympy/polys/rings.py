@@ -1,6 +1,5 @@
 """Sparse polynomial rings. """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
@@ -1349,8 +1348,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def __rtruediv__(p1, p2):
         return NotImplemented
 
-    __floordiv__ = __div__ = __truediv__
-    __rfloordiv__ = __rdiv__ = __rtruediv__
+    __floordiv__ = __truediv__
+    __rfloordiv__ = __rtruediv__
 
     # TODO: use // (__floordiv__) for exquo()?
 

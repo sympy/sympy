@@ -364,6 +364,33 @@ class lowergamma(Function):
         if x not in (S.Zero, S.NegativeInfinity):
             return self.func(self.args[0].conjugate(), x.conjugate())
 
+    def _eval_is_meromorphic(self, x, a):
+        # By https://en.wikipedia.org/wiki/Incomplete_gamma_function#Holomorphic_extension,
+        #    lowergamma(s, z) = z**s*gamma(s)*gammastar(s, z),
+        # where gammastar(s, z) is holomorphic for all s and z.
+        # Hence the singularities of lowergamma are z = 0  (branch
+        # point) and nonpositive integer values of s (poles of gamma(s)).
+        s, z = self.args
+        args_merom = fuzzy_and([z._eval_is_meromorphic(x, a),
+            s._eval_is_meromorphic(x, a)])
+        if not args_merom:
+            return args_merom
+        z0 = z.subs(x, a)
+        if s.is_integer:
+            return fuzzy_and([s.is_positive, z0.is_finite])
+        s0 = s.subs(x, a)
+        return fuzzy_and([s0.is_finite, z0.is_finite, fuzzy_not(z0.is_zero)])
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy import O
+        s, z = self.args
+        if args0[0] is S.Infinity and not z.has(x):
+            coeff = z**s*exp(-z)
+            sum_expr = sum(z**k/rf(s, k + 1) for k in range(n - 1))
+            o = O(z**s*s**(-n))
+            return coeff*sum_expr + o
+        return super()._eval_aseries(n, args0, x, logx)
+
     def _eval_rewrite_as_uppergamma(self, s, x, **kwargs):
         return gamma(s) - uppergamma(s, x)
 
@@ -523,8 +550,14 @@ class uppergamma(Function):
         if not z in (S.Zero, S.NegativeInfinity):
             return self.func(self.args[0].conjugate(), z.conjugate())
 
+    def _eval_is_meromorphic(self, x, a):
+        return lowergamma._eval_is_meromorphic(self, x, a)
+
     def _eval_rewrite_as_lowergamma(self, s, x, **kwargs):
         return gamma(s) - lowergamma(s, x)
+
+    def _eval_rewrite_as_tractable(self, s, x, **kwargs):
+        return exp(loggamma(s)) - lowergamma(s, x)
 
     def _eval_rewrite_as_expint(self, s, x, **kwargs):
         from sympy import expint
