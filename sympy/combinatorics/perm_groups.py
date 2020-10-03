@@ -1516,7 +1516,7 @@ class PermutationGroup(Basic):
           method='coset'  using the Schreier-Sims coset representation
           method='dimino' using the Dimino method
 
-        If ``af`` = ``True`` it yields the array form of the permutations
+        If ``af = True`` it yields the array form of the permutations
 
         Examples
         ========
@@ -2525,8 +2525,8 @@ class PermutationGroup(Basic):
     def max_div(self):
         """Maximum proper divisor of the degree of a permutation group.
 
-        Explanations
-        ============
+        Explanation
+        ===========
 
         Obviously, this is the degree divided by its minimal proper divisor
         (larger than ``1``, if one exists). As it is guaranteed to be prime,
