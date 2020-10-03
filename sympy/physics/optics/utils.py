@@ -481,7 +481,7 @@ def lens_makers_formula(n_lens, n_surr, r1, r2=None, *, d=None, lens='thin'):
     """
     valid_lens = ['thin','thick','plano']
     if lens not in valid_lens :
-        raise ValueError('Parameter lens takes value : 1, 2 or 3 but ' + str(lens) + ' was provided')
+        raise ValueError("Parameter lens takes value : 'thick', 'thin' or 'plano' but " + str(lens) + " was provided.")
     if isinstance(n_lens, Medium):
         n_lens = n_lens.refractive_index
     else:
