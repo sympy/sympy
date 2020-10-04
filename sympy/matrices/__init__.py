@@ -28,7 +28,9 @@ from .expressions import (
     hadamard_product, HadamardProduct, HadamardPower, Determinant, det,
     diagonalize_vector, DiagMatrix, DiagonalMatrix, DiagonalOf, trace,
     DotProduct, kronecker_product, KroneckerProduct,
-    PermutationMatrix, MatrixPermute)
+    PermutationMatrix, MatrixPermute, MatrixSet)
+
+from .utilities import dotprodsimp
 
 __all__ = [
     'ShapeError', 'NonSquareMatrixError',
@@ -59,5 +61,7 @@ __all__ = [
     'hadamard_product', 'HadamardProduct', 'HadamardPower', 'Determinant',
     'det', 'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
-    'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute',
+    'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute', 'MatrixSet',
+
+    'dotprodsimp',
 ]

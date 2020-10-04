@@ -34,12 +34,6 @@ class DummyNumber:
             return a + self.number
         return NotImplemented
 
-    def __truediv__(a, b):
-        return a.__div__(b)
-
-    def __rtruediv__(a, b):
-        return a.__rdiv__(b)
-
     def __add__(self, a):
         if isinstance(a, (int, float, DummyNumber)):
             return self.number + a
@@ -65,12 +59,12 @@ class DummyNumber:
             return self.number * a
         return NotImplemented
 
-    def __rdiv__(self, a):
+    def __rtruediv__(self, a):
         if isinstance(a, (int, float)):
             return a / self.number
         return NotImplemented
 
-    def __div__(self, a):
+    def __truediv__(self, a):
         if isinstance(a, (int, float, DummyNumber)):
             return self.number / a
         return NotImplemented
@@ -189,14 +183,11 @@ class NonBasic:
     def __rmul__(self, other):
         return SpecialOp('*', other, self)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         return SpecialOp('/', self, other)
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         return SpecialOp('/', other, self)
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def __floordiv__(self, other):
         return SpecialOp('//', self, other)
@@ -619,6 +610,34 @@ def test_is_rational_function():
     assert (S.NegativeInfinity).is_rational_function() is False
     assert (S.ComplexInfinity).is_rational_function() is False
 
+def test_is_meromorphic():
+    f = a/x**2 + b + x + c*x**2
+    assert f.is_meromorphic(x, 0) is True
+    assert f.is_meromorphic(x, 1) is True
+    assert f.is_meromorphic(x, zoo) is True
+
+    g = 3 + 2*x**(log(3)/log(2) - 1)
+    assert g.is_meromorphic(x, 0) is False
+    assert g.is_meromorphic(x, 1) is True
+    assert g.is_meromorphic(x, zoo) is False
+
+    n = Symbol('n', integer=True)
+    h = sin(1/x)**n*x
+    assert h.is_meromorphic(x, 0) is False
+    assert h.is_meromorphic(x, 1) is True
+    assert h.is_meromorphic(x, zoo) is False
+
+    e = log(x)**pi
+    assert e.is_meromorphic(x, 0) is False
+    assert e.is_meromorphic(x, 1) is False
+    assert e.is_meromorphic(x, 2) is True
+    assert e.is_meromorphic(x, zoo) is False
+
+    assert (log(x)**a).is_meromorphic(x, 0) is False
+    assert (log(x)**a).is_meromorphic(x, 1) is False
+    assert (a**log(x)).is_meromorphic(x, 0) is None
+    assert (3**log(x)).is_meromorphic(x, 0) is False
+    assert (3**log(x)).is_meromorphic(x, 1) is True
 
 def test_is_algebraic_expr():
     assert sqrt(3).is_algebraic_expr(x) is True
@@ -881,7 +900,8 @@ def test_replace():
     # if not simultaneous then y*sin(x) -> y*sin(x)/y = sin(x) -> sin(x)/y
     assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y,
         simultaneous=False) == sin(x)/y
-    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e) == O(1, x)
+    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e
+        ) == x**2/2 + O(x**3)
     assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e,
         simultaneous=False) == x**2/2 + O(x**3)
     assert (x*(x*y + 3)).replace(lambda x: x.is_Mul, lambda x: 2 + x) == \

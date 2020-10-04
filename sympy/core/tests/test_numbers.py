@@ -187,6 +187,8 @@ def test_divmod():
     assert [divmod(i, -OO) for i in range(-2, 3)] == ANS
     assert divmod(S(3.5), S(-2)) == divmod(3.5, -2)
     assert divmod(-S(3.5), S(-2)) == divmod(-3.5, -2)
+    assert divmod(S(0.0), S(9)) == divmod(0.0, 9)
+    assert divmod(S(0), S(9.0)) == divmod(0, 9.0)
 
 
 def test_igcd():

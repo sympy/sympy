@@ -29,16 +29,16 @@ import doctest as pdoctest  # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
 import random
 import subprocess
+import shutil
 import signal
 import stat
 import tempfile
+import warnings
+from contextlib import contextmanager
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (exec_, PY3, unwrap,
-        unicode)
-from sympy.utilities.misc import find_executable
+from sympy.core.compatibility import (exec_, PY3, unwrap)
 from sympy.external import import_module
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 IS_WINDOWS = (os.name == 'nt')
 ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
@@ -62,7 +62,27 @@ ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 #         delays.append(time() - tic)
 #     tot = sum(delays)
 #     print([round(x / tot, 4) for x in delays])
-SPLIT_DENSITY = [0.0185, 0.0047, 0.0155, 0.02, 0.0311, 0.0098, 0.0045, 0.0102, 0.0127, 0.0532, 0.0171, 0.097, 0.0906, 0.0007, 0.0086, 0.0013, 0.0143, 0.0068, 0.0252, 0.0128, 0.0043, 0.0043, 0.0118, 0.016, 0.0073, 0.0476, 0.0042, 0.0102, 0.012, 0.002, 0.0019, 0.0409, 0.054, 0.0237, 0.1236, 0.0973, 0.0032, 0.0047, 0.0081, 0.0685]
+SPLIT_DENSITY = [
+    0.0059, 0.0027, 0.0068, 0.0011, 0.0006,
+    0.0058, 0.0047, 0.0046, 0.004, 0.0257,
+    0.0017, 0.0026, 0.004, 0.0032, 0.0016,
+    0.0015, 0.0004, 0.0011, 0.0016, 0.0014,
+    0.0077, 0.0137, 0.0217, 0.0074, 0.0043,
+    0.0067, 0.0236, 0.0004, 0.1189, 0.0142,
+    0.0234, 0.0003, 0.0003, 0.0047, 0.0006,
+    0.0013, 0.0004, 0.0008, 0.0007, 0.0006,
+    0.0139, 0.0013, 0.0007, 0.0051, 0.002,
+    0.0004, 0.0005, 0.0213, 0.0048, 0.0016,
+    0.0012, 0.0014, 0.0024, 0.0015, 0.0004,
+    0.0005, 0.0007, 0.011, 0.0062, 0.0015,
+    0.0021, 0.0049, 0.0006, 0.0006, 0.0011,
+    0.0006, 0.0019, 0.003, 0.0044, 0.0054,
+    0.0057, 0.0049, 0.0016, 0.0006, 0.0009,
+    0.0006, 0.0012, 0.0006, 0.0149, 0.0532,
+    0.0076, 0.0041, 0.0024, 0.0135, 0.0081,
+    0.2209, 0.0459, 0.0438, 0.0488, 0.0137,
+    0.002, 0.0003, 0.0008, 0.0039, 0.0024,
+    0.0005, 0.0004, 0.003, 0.056, 0.0026]
 SPLIT_DENSITY_SLOW = [0.0086, 0.0004, 0.0568, 0.0003, 0.0032, 0.0005, 0.0004, 0.0013, 0.0016, 0.0648, 0.0198, 0.1285, 0.098, 0.0005, 0.0064, 0.0003, 0.0004, 0.0026, 0.0007, 0.0051, 0.0089, 0.0024, 0.0033, 0.0057, 0.0005, 0.0003, 0.001, 0.0045, 0.0091, 0.0006, 0.0005, 0.0321, 0.0059, 0.1105, 0.216, 0.1489, 0.0004, 0.0003, 0.0006, 0.0483]
 
 class Skipped(Exception):
@@ -86,10 +106,6 @@ def _indent(s, indent=4):
     If the string ``s`` is Unicode, it is encoded using the stdout
     encoding and the ``backslashreplace`` error handler.
     """
-    # After a 2to3 run the below code is bogus, so wrap it with a version check
-    if not PY3:
-        if isinstance(s, unicode):
-            s = s.encode(pdoctest._encoding, 'backslashreplace')
     # This regexp matches the start of non-blank lines:
     return re.sub('(?m)^(?!$)', indent*' ', s)
 
@@ -155,6 +171,21 @@ def setup_pprint():
     # Prevent init_printing() in doctests from affecting other doctests
     interactive_printing.NO_GLOBAL = True
     return use_unicode_prev
+
+
+@contextmanager
+def raise_on_deprecated():
+    """Context manager to make DeprecationWarning raise an error
+
+    This is to catch SymPyDeprecationWarning from library code while running
+    tests and doctests. It is important to use this context manager around
+    each individual test/doctest in case some tests modify the warning
+    filters.
+    """
+    with warnings.catch_warnings():
+        warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
+        yield
+
 
 def run_in_subprocess_with_hash_randomization(
         function, function_args=(),
@@ -322,7 +353,7 @@ def run_all_tests(test_args=(), test_kwargs=None,
         sys.exit(1)
 
 
-def test(*paths, **kwargs):
+def test(*paths, subprocess=True, rerun=0, **kwargs):
     """
     Run tests in the specified test_*.py files.
 
@@ -464,8 +495,6 @@ def test(*paths, **kwargs):
     as well as the same architecture (32-bit vs. 64-bit).
 
     """
-    subprocess = kwargs.pop("subprocess", True)
-    rerun = kwargs.pop("rerun", 0)
     # count up from 0, do not print 0
     print_counter = lambda i : (print("rerun %d" % (rerun-i))
                                 if rerun-i else None)
@@ -491,7 +520,12 @@ def test(*paths, **kwargs):
             return val
 
 
-def _test(*paths, **kwargs):
+def _test(*paths,
+        verbose=False, tb="short", kw=None, pdb=False, colors=True,
+        force_colors=False, sort=True, seed=None, timeout=False,
+        fail_on_timeout=False, slow=False, enhance_asserts=False, split=None,
+        time_balance=True, blacklist=('sympy/integrals/rubi/rubi_tests/tests',),
+        fast_threshold=None, slow_threshold=None):
     """
     Internal function that actually runs the tests.
 
@@ -501,46 +535,26 @@ def _test(*paths, **kwargs):
     Returns 0 if tests passed and 1 if they failed.  See the docstring of
     ``test()`` for more information.
     """
-    verbose = kwargs.get("verbose", False)
-    tb = kwargs.get("tb", "short")
-    kw = kwargs.get("kw", None) or ()
+    kw = kw or ()
     # ensure that kw is a tuple
     if isinstance(kw, str):
-        kw = (kw, )
-    post_mortem = kwargs.get("pdb", False)
-    colors = kwargs.get("colors", True)
-    force_colors = kwargs.get("force_colors", False)
-    sort = kwargs.get("sort", True)
-    seed = kwargs.get("seed", None)
+        kw = (kw,)
+    post_mortem = pdb
     if seed is None:
         seed = random.randrange(100000000)
-    timeout = kwargs.get("timeout", False)
-    fail_on_timeout = kwargs.get("fail_on_timeout", False)
     if ON_TRAVIS and timeout is False:
         # Travis times out if no activity is seen for 10 minutes.
         timeout = 595
         fail_on_timeout = True
-    slow = kwargs.get("slow", False)
-    enhance_asserts = kwargs.get("enhance_asserts", False)
-    split = kwargs.get('split', None)
-    time_balance = kwargs.get('time_balance', True)
-    blacklist = kwargs.get('blacklist', ['sympy/integrals/rubi/rubi_tests/tests'])
     if ON_TRAVIS:
         # pyglet does not work on Travis
-        blacklist.extend(['sympy/plotting/pygletplot/tests'])
+        blacklist = list(blacklist) + ['sympy/plotting/pygletplot/tests']
     blacklist = convert_to_native_paths(blacklist)
-    fast_threshold = kwargs.get('fast_threshold', None)
-    slow_threshold = kwargs.get('slow_threshold', None)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors, split=split)
     t = SymPyTests(r, kw, post_mortem, seed,
                    fast_threshold=fast_threshold,
                    slow_threshold=slow_threshold)
-
-    # Show deprecation warnings
-    import warnings
-    warnings.simplefilter("error", SymPyDeprecationWarning)
-    warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
 
     test_files = t.get_test_files('sympy')
 
@@ -575,7 +589,7 @@ def _test(*paths, **kwargs):
         enhance_asserts=enhance_asserts, fail_on_timeout=fail_on_timeout))
 
 
-def doctest(*paths, **kwargs):
+def doctest(*paths, subprocess=True, rerun=0, **kwargs):
     r"""
     Runs doctests in all \*.py files in the sympy directory which match
     any of the given strings in ``paths`` or all tests if paths=[].
@@ -623,8 +637,6 @@ def doctest(*paths, **kwargs):
     ``test()``.  See the docstring of that function for more information.
 
     """
-    subprocess = kwargs.pop("subprocess", True)
-    rerun = kwargs.pop("rerun", 0)
     # count up from 0, do not print 0
     print_counter = lambda i : (print("rerun %d" % (rerun-i))
                                 if rerun-i else None)
@@ -785,11 +797,6 @@ def _doctest(*paths, **kwargs):
     # Disable showing up of plots
     from sympy.plotting.plot import unset_show
     unset_show()
-
-    # Show deprecation warnings
-    import warnings
-    warnings.simplefilter("error", SymPyDeprecationWarning)
-    warnings.filterwarnings('error', '.*', DeprecationWarning, module='sympy.*')
 
     r = PyTestReporter(verbose, split=split, colors=colors,\
                        force_colors=force_colors)
@@ -1278,11 +1285,12 @@ class SymPyTests(object):
             try:
                 if getattr(f, '_slow', False) and not slow:
                     raise Skipped("Slow")
-                if timeout:
-                    self._timeout(f, timeout, fail_on_timeout)
-                else:
-                    random.seed(self._seed)
-                    f()
+                with raise_on_deprecated():
+                    if timeout:
+                        self._timeout(f, timeout, fail_on_timeout)
+                    else:
+                        random.seed(self._seed)
+                        f()
             except KeyboardInterrupt:
                 if getattr(f, '_slow', False):
                     reporter.test_skip("KeyboardInterrupt")
@@ -1310,10 +1318,14 @@ class SymPyTests(object):
                 reporter.test_pass()
             taken = time.time() - start
             if taken > self._slow_threshold:
-                reporter.slow_test_functions.append((f.__name__, taken))
+                filename = os.path.relpath(filename, reporter._root_dir)
+                reporter.slow_test_functions.append(
+                    (filename + "::" + f.__name__, taken))
             if getattr(f, '_slow', False) and slow:
                 if taken < self._fast_threshold:
-                    reporter.fast_test_functions.append((f.__name__, taken))
+                    filename = os.path.relpath(filename, reporter._root_dir)
+                    reporter.fast_test_functions.append(
+                        (filename + "::" + f.__name__, taken))
         reporter.leaving_filename()
 
     def _timeout(self, function, timeout, fail_on_timeout):
@@ -1518,7 +1530,7 @@ class SymPyDocTests(object):
         """
 
         for executable in executables:
-            if not find_executable(executable):
+            if not shutil.which(executable):
                 raise DependencyError("Could not find %s" % executable)
 
         for module in modules:
@@ -1828,15 +1840,17 @@ class SymPyDocTestRunner(DocTestRunner):
         self.save_linecache_getlines = pdoctest.linecache.getlines
         linecache.getlines = self.__patched_linecache_getlines
 
-        try:
-            test.globs['print_function'] = print_function
-            return self.__run(test, compileflags, out)
-        finally:
-            sys.stdout = save_stdout
-            pdb.set_trace = save_set_trace
-            linecache.getlines = self.save_linecache_getlines
-            if clear_globs:
-                test.globs.clear()
+        # Fail for deprecation warnings
+        with raise_on_deprecated():
+            try:
+                test.globs['print_function'] = print_function
+                return self.__run(test, compileflags, out)
+            finally:
+                sys.stdout = save_stdout
+                pdb.set_trace = save_set_trace
+                linecache.getlines = self.save_linecache_getlines
+                if clear_globs:
+                    test.globs.clear()
 
 
 # We have to override the name mangled methods.

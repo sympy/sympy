@@ -98,7 +98,7 @@ def test_PythonRational__mul__():
     assert 2 * QQ(1, 2) == QQ(1)
     assert QQ(1, 2) * 2 == QQ(1)
 
-def test_PythonRational__div__():
+def test_PythonRational__truediv__():
     assert QQ(-1, 2) / QQ( 1, 2) == QQ(-1)
     assert QQ( 1, 2) / QQ(-1, 2) == QQ(-1)
 

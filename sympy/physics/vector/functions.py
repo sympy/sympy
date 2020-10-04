@@ -65,6 +65,8 @@ def express(expr, frame, frame2=None, variables=False):
     ========
 
     >>> from sympy.physics.vector import ReferenceFrame, outer, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
     >>> B = N.orientnew('B', 'Axis', [q, N.z])
@@ -75,7 +77,7 @@ def express(expr, frame, frame2=None, variables=False):
     >>> express(B.x, N)
     cos(q)*N.x + sin(q)*N.y
     >>> express(N[0], B, variables=True)
-    B_x*cos(q(t)) - B_y*sin(q(t))
+    B_x*cos(q) - B_y*sin(q)
 
     """
 
@@ -160,6 +162,8 @@ def time_derivative(expr, frame, order=1):
     ========
 
     >>> from sympy.physics.vector import ReferenceFrame, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
     >>> from sympy import Symbol
     >>> q1 = Symbol('q1')
     >>> u1 = dynamicsymbols('u1')
@@ -171,7 +175,7 @@ def time_derivative(expr, frame, order=1):
     >>> time_derivative(v, N)
     u1'*N.x
     >>> time_derivative(u1*A[0], N)
-    N_x*Derivative(u1(t), t)
+    N_x*u1'
     >>> B = N.orientnew('B', 'Axis', [u1, N.z])
     >>> from sympy.physics.vector import outer
     >>> d = outer(N.x, N.x)
@@ -420,6 +424,8 @@ def get_motion_params(frame, **kwargs):
     ========
 
     >>> from sympy.physics.vector import ReferenceFrame, get_motion_params, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
     >>> from sympy import symbols
     >>> R = ReferenceFrame('R')
     >>> v1, v2, v3 = dynamicsymbols('v1 v2 v3')

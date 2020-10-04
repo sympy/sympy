@@ -1,7 +1,8 @@
 from sympy.core.basic import Basic
 from sympy import (sympify, eye, sin, cos, rot_axis1, rot_axis2,
-                   rot_axis3, ImmutableMatrix as Matrix, Symbol)
+                   rot_axis3, ImmutableMatrix as Matrix)
 from sympy.core.cache import cacheit
+from sympy.core.symbol import Str
 import sympy.vector
 
 
@@ -28,8 +29,7 @@ class AxisOrienter(Orienter):
             raise TypeError("axis should be a Vector")
         angle = sympify(angle)
 
-        obj = super(AxisOrienter, cls).__new__(cls, angle,
-                                               axis)
+        obj = super().__new__(cls, angle, axis)
         obj._angle = angle
         obj._axis = axis
 
@@ -105,7 +105,7 @@ class ThreeAngleOrienter(Orienter):
     """
 
     def __new__(cls, angle1, angle2, angle3, rot_order):
-        if isinstance(rot_order, Symbol):
+        if isinstance(rot_order, Str):
             rot_order = rot_order.name
 
         approved_orders = ('123', '231', '312', '132', '213',
@@ -137,8 +137,8 @@ class ThreeAngleOrienter(Orienter):
                              _rot(a1, angle1))
         parent_orient = parent_orient.T
 
-        obj = super(ThreeAngleOrienter, cls).__new__(
-            cls, angle1, angle2, angle3, Symbol(rot_order))
+        obj = super().__new__(
+            cls, angle1, angle2, angle3, Str(rot_order))
         obj._angle1 = angle1
         obj._angle2 = angle2
         obj._angle3 = angle3
@@ -321,7 +321,7 @@ class QuaternionOrienter(Orienter):
                                   q2 ** 2 + q3 ** 2]]))
         parent_orient = parent_orient.T
 
-        obj = super(QuaternionOrienter, cls).__new__(cls, q0, q1, q2, q3)
+        obj = super().__new__(cls, q0, q1, q2, q3)
         obj._q0 = q0
         obj._q1 = q1
         obj._q2 = q2

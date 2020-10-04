@@ -155,6 +155,53 @@ class AskInvertibleHandler(CommonHandler):
         else:
             return ask(Q.invertible(expr.parent), assumptions)
 
+    @staticmethod
+    def MatrixBase(expr, assumptions):
+        if not expr.is_square:
+            return False
+        return expr.rank() == expr.rows
+
+    @staticmethod
+    def MatrixExpr(expr, assumptions):
+        if not expr.is_square:
+            return False
+        return None
+
+    @staticmethod
+    def BlockMatrix(expr, assumptions):
+        from sympy.matrices.expressions.blockmatrix import reblock_2x2
+        if not expr.is_square:
+            return False
+        if expr.blockshape == (1, 1):
+            return ask(Q.invertible(expr.blocks[0, 0]), assumptions)
+        expr = reblock_2x2(expr)
+        if expr.blockshape == (2, 2):
+            [[A, B], [C, D]] = expr.blocks.tolist()
+            if ask(Q.invertible(A), assumptions) == True:
+                invertible = ask(Q.invertible(D - C * A.I * B), assumptions)
+                if invertible is not None:
+                    return invertible
+            if ask(Q.invertible(B), assumptions) == True:
+                invertible = ask(Q.invertible(C - D * B.I * A), assumptions)
+                if invertible is not None:
+                    return invertible
+            if ask(Q.invertible(C), assumptions) == True:
+                invertible = ask(Q.invertible(B - A * C.I * D), assumptions)
+                if invertible is not None:
+                    return invertible
+            if ask(Q.invertible(D), assumptions) == True:
+                invertible = ask(Q.invertible(A - B * D.I * C), assumptions)
+                if invertible is not None:
+                    return invertible
+        return None
+
+    @staticmethod
+    def BlockDiagMatrix(expr, assumptions):
+        if expr.rowblocksizes != expr.colblocksizes:
+            return None
+        return fuzzy_and([ask(Q.invertible(a), assumptions) for a in expr.diag])
+
+
 class AskOrthogonalHandler(CommonHandler):
     """
     Handler for key 'orthogonal'

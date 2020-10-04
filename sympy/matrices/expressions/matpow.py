@@ -1,7 +1,6 @@
-from __future__ import print_function, division
-
 from sympy.matrices.common import NonSquareMatrixError
-from .matexpr import MatrixExpr, Identity
+from .matexpr import MatrixExpr
+from .special import Identity
 from sympy.core import S
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase

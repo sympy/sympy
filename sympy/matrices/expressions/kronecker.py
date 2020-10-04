@@ -1,12 +1,12 @@
 """Implementation of the Kronecker product"""
 
-from __future__ import division, print_function
 
 from sympy.core import Mul, prod, sympify
 from sympy.functions import adjoint
 from sympy.matrices.common import ShapeError
-from sympy.matrices.expressions.matexpr import MatrixExpr, Identity
+from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.transpose import transpose
+from sympy.matrices.expressions.special import Identity
 from sympy.matrices.matrices import MatrixBase
 from sympy.strategies import (
     canon, condition, distribute, do_one, exhaust, flatten, typed, unpack)
@@ -104,7 +104,7 @@ class KroneckerProduct(MatrixExpr):
     """
     is_KroneckerProduct = True
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, check=True):
         args = list(map(sympify, args))
         if all(a.is_Identity for a in args):
             ret = Identity(prod(a.rows for a in args))
@@ -113,10 +113,9 @@ class KroneckerProduct(MatrixExpr):
             else:
                 return ret
 
-        check = kwargs.get('check', True)
         if check:
             validate(*args)
-        return super(KroneckerProduct, cls).__new__(cls, *args)
+        return super().__new__(cls, *args)
 
     @property
     def shape(self):

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict, OrderedDict
 from itertools import (
     combinations, combinations_with_replacement, permutations,
@@ -294,8 +292,7 @@ def iproduct(*iterables):
         for e in iterables[0]:
             yield (e,)
     elif len(iterables) == 2:
-        for e12 in _iproduct2(*iterables):
-            yield e12
+        yield from _iproduct2(*iterables)
     else:
         first, others = iterables[0], iterables[1:]
         for ef, eo in _iproduct2(first, iproduct(*others)):
@@ -375,12 +372,10 @@ def postorder_traversal(node, keys=None):
             else:
                 args = ordered(args)
         for arg in args:
-            for subtree in postorder_traversal(arg, keys):
-                yield subtree
+            yield from postorder_traversal(arg, keys)
     elif iterable(node):
         for item in node:
-            for subtree in postorder_traversal(item, keys):
-                yield subtree
+            yield from postorder_traversal(item, keys)
     yield node
 
 
@@ -428,7 +423,7 @@ def interactive_traversal(expr):
         for i, arg in enumerate(args):
             cprint(GREEN, "[", BGREEN, i, GREEN, "] ", BLUE, type(arg), END)
             pprint(arg)
-            print
+            print()
 
         if n_args == 1:
             choices = '0'
@@ -586,14 +581,12 @@ def variations(seq, n, repetition=False):
         seq = tuple(seq)
         if len(seq) < n:
             return
-        for i in permutations(seq, n):
-            yield i
+        yield from permutations(seq, n)
     else:
         if n == 0:
             yield ()
         else:
-            for i in product(seq, repeat=n):
-                yield i
+            yield from product(seq, repeat=n)
 
 
 def subsets(seq, k=None, repetition=False):
@@ -638,15 +631,12 @@ def subsets(seq, k=None, repetition=False):
     """
     if k is None:
         for k in range(len(seq) + 1):
-            for i in subsets(seq, k, repetition):
-                yield i
+            yield from subsets(seq, k, repetition)
     else:
         if not repetition:
-            for i in combinations(seq, k):
-                yield i
+            yield from combinations(seq, k)
         else:
-            for i in combinations_with_replacement(seq, k):
-                yield i
+            yield from combinations_with_replacement(seq, k)
 
 
 def filter_symbols(iterator, exclude):
@@ -1748,21 +1738,6 @@ def partitions(n, m=None, k=None, size=False):
     {2: 1, 4: 1}
     {3: 2}
 
-    Note that the _same_ dictionary object is returned each time.
-    This is for speed:  generating each partition goes quickly,
-    taking constant time, independent of n.
-
-    >>> [p for p in partitions(6, k=2)]
-    [{1: 6}, {1: 6}, {1: 6}, {1: 6}]
-
-    If you want to build a list of the returned dictionaries then
-    make a copy of them:
-
-    >>> [p.copy() for p in partitions(6, k=2)]  # doctest: +SKIP
-    [{2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
-    >>> [(M, p.copy()) for M, p in partitions(6, k=2, size=True)]  # doctest: +SKIP
-    [(3, {2: 3}), (4, {1: 2, 2: 2}), (5, {1: 4, 2: 1}), (6, {1: 6})]
-
     References
     ==========
 
@@ -1812,9 +1787,9 @@ def partitions(n, m=None, k=None, size=False):
         keys.append(r)
     room = m - q - bool(r)
     if size:
-        yield sum(ms.values()), ms
+        yield sum(ms.values()), ms.copy()
     else:
-        yield ms
+        yield ms.copy()
 
     while keys != [1]:
         # Reuse any 1's.
@@ -1852,9 +1827,9 @@ def partitions(n, m=None, k=None, size=False):
             break
         room -= need
         if size:
-            yield sum(ms.values()), ms
+            yield sum(ms.values()), ms.copy()
         else:
-            yield ms
+            yield ms.copy()
 
 
 def ordered_partitions(n, m=None, sort=True):
@@ -2146,11 +2121,9 @@ def uniq(seq, result=None):
             check()
             result.append(s)
         if hasattr(seq, '__getitem__'):
-            for s in uniq(seq[i + 1:], result):
-                yield s
+            yield from uniq(seq[i + 1:], result)
         else:
-            for s in uniq(seq, result):
-                yield s
+            yield from uniq(seq, result)
 
 
 def generate_bell(n):
@@ -2227,8 +2200,7 @@ def generate_bell(n):
         yield (0, 1)
         yield (1, 0)
     elif n == 3:
-        for li in [(0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]:
-            yield li
+        yield from [(0, 1, 2), (0, 2, 1), (2, 0, 1), (2, 1, 0), (1, 2, 0), (1, 0, 2)]
     else:
         m = n - 1
         op = [0] + [-1]*m
@@ -2548,12 +2520,12 @@ def kbins(l, k, ordered=None):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import kbins
+    >>> from __future__ import print_function
 
     The default is to give the items in the same order, but grouped
     into k partitions without any reordering:
 
-    >>> from __future__ import print_function
+    >>> from sympy.utilities.iterables import kbins
     >>> for p in kbins(list(range(5)), 2):
     ...     print(p)
     ...
@@ -2578,9 +2550,9 @@ def kbins(l, k, ordered=None):
         10 means A == D
         11 means A == A
 
-    >>> for ordered in [None, 0, 1, 10, 11]:
-    ...     print('ordered = %s' % ordered)
-    ...     for p in kbins(list(range(3)), 2, ordered=ordered):
+    >>> for ordered_flag in [None, 0, 1, 10, 11]:
+    ...     print('ordered = %s' % ordered_flag)
+    ...     for p in kbins(list(range(3)), 2, ordered=ordered_flag):
     ...         print('     %s' % p)
     ...
     ordered = None
@@ -2637,16 +2609,13 @@ def kbins(l, k, ordered=None):
                         yield [lista[:i]] + part
 
     if ordered is None:
-        for p in partition(l, k):
-            yield p
+        yield from partition(l, k)
     elif ordered == 11:
         for pl in multiset_permutations(l):
             pl = list(pl)
-            for p in partition(pl, k):
-                yield p
+            yield from partition(pl, k)
     elif ordered == 00:
-        for p in multiset_partitions(l, k):
-            yield p
+        yield from multiset_partitions(l, k)
     elif ordered == 10:
         for p in multiset_partitions(l, k):
             for perm in permutations(p):

@@ -444,7 +444,7 @@ def trigsimp(expr, **opts):
     ========
 
     >>> from sympy import trigsimp, sin, cos, log
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e)
     2
@@ -604,7 +604,7 @@ def exptrigsimp(expr):
 
 #-------------------- the old trigsimp routines ---------------------
 
-def trigsimp_old(expr, **opts):
+def trigsimp_old(expr, *, first=True, **opts):
     """
     reduces expression by using known trig identities
 
@@ -638,8 +638,8 @@ def trigsimp_old(expr, **opts):
     Examples
     ========
 
-    >>> from sympy import trigsimp, sin, cos, log, cosh, sinh, tan, cot
-    >>> from sympy.abc import x, y
+    >>> from sympy import trigsimp, sin, cos, log, cot
+    >>> from sympy.abc import x
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e, old=True)
     2
@@ -663,7 +663,6 @@ def trigsimp_old(expr, **opts):
 
     """
     old = expr
-    first = opts.pop('first', True)
     if first:
         if not expr.has(*_trigs):
             return expr
@@ -1066,7 +1065,7 @@ def __trigsimp(expr, deep=False):
 #------------------- end of old trigsimp routines --------------------
 
 
-def futrig(e, **kwargs):
+def futrig(e, *, hyper=True, **kwargs):
     """Return simplified ``e`` using Fu-like transformations.
     This is not the "Fu" algorithm. This is called by default
     from ``trigsimp``. By default, hyperbolics subexpressions
@@ -1098,11 +1097,11 @@ def futrig(e, **kwargs):
         return e
 
     old = e
-    e = bottom_up(e, lambda x: _futrig(x, **kwargs))
+    e = bottom_up(e, _futrig)
 
-    if kwargs.pop('hyper', True) and e.has(HyperbolicFunction):
+    if hyper and e.has(HyperbolicFunction):
         e, f = hyper_as_trig(e)
-        e = f(_futrig(e))
+        e = f(bottom_up(e, _futrig))
 
     if e != old and e.is_Mul and e.args[0].is_Rational:
         # redistribute leading coeff on 2-arg Add
@@ -1110,7 +1109,7 @@ def futrig(e, **kwargs):
     return e
 
 
-def _futrig(e, **kwargs):
+def _futrig(e):
     """Helper for futrig."""
     from sympy.simplify.fu import (
         TR1, TR2, TR3, TR2i, TR10, L, TR10i,

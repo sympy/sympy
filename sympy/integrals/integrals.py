@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -9,7 +7,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
-from sympy.core.numbers import oo, pi, Float
+from sympy.core.numbers import oo, pi
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
@@ -196,8 +194,8 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy.abc import a, b, c, d, x, u, y
-        >>> from sympy import Integral, S, cos, sqrt
+        >>> from sympy.abc import a, x, u
+        >>> from sympy import Integral, cos, sqrt
 
         >>> i = Integral(x*cos(x**2 - 1), (x, 0, 1))
 
@@ -320,8 +318,8 @@ class Integral(AddWithLimits):
                 raise ValueError('no solution for solve(F(x) - f(u), u)')
             F = [fi.subs(xvar, d) for fi in soln]
 
-        newfuncs = set([(self.function.subs(xvar, fi)*fi.diff(d)
-                        ).subs(d, uvar) for fi in f])
+        newfuncs = {(self.function.subs(xvar, fi)*fi.diff(d)
+                        ).subs(d, uvar) for fi in f}
         if len(newfuncs) > 1:
             raise ValueError(filldedent('''
             The mapping between F(x) and f(u) did not give
@@ -378,7 +376,7 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import Integral, Piecewise, S
+        >>> from sympy import Piecewise, S
         >>> from sympy.abc import x, t
         >>> p = x**2 + Piecewise((0, x/t < 0), (1, True))
         >>> p.integrate((t, S(4)/5, 1), (x, -1, 1))
@@ -395,12 +393,6 @@ class Integral(AddWithLimits):
         from sympy.concrete.summations import Sum
         if not hints.get('integrals', True):
             return self
-
-        if self.has(Float):
-            fvals = self.atoms(Float)
-            fsubs = {f: Dummy() for f in fvals}
-            rsubs = {s: f for f, s in fsubs.items()}
-            return self.subs(fsubs).doit(**hints).subs(rsubs)
 
         deep = hints.get('deep', True)
         meijerg = hints.get('meijerg', None)
@@ -486,7 +478,7 @@ class Integral(AddWithLimits):
             if d:
                 reps[x] = d
         if reps:
-            undo = dict([(v, k) for k, v in reps.items()])
+            undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
             if type(did) is tuple:  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])
@@ -1135,7 +1127,7 @@ class Integral(AddWithLimits):
 
         return Add(*parts)
 
-    def _eval_lseries(self, x, logx):
+    def _eval_lseries(self, x, logx, cdir=0):
         expr = self.as_dummy()
         symb = x
         for l in expr.limits:
@@ -1145,7 +1137,7 @@ class Integral(AddWithLimits):
         for term in expr.function.lseries(symb, logx):
             yield integrate(term, *expr.limits)
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         expr = self.as_dummy()
         symb = x
         for l in expr.limits:
@@ -1157,7 +1149,7 @@ class Integral(AddWithLimits):
         order = [o.subs(symb, x) for o in order]
         return integrate(terms, *expr.limits) + Add(*order)*x
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         series_gen = self.args[0].lseries(x)
         for leading_term in series_gen:
             if leading_term != 0:
@@ -1341,10 +1333,9 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import Dummy, symbols, integrate, limit, oo
+        >>> from sympy import oo
         >>> from sympy.integrals.integrals import Integral
-        >>> from sympy.calculus.singularities import singularities
-        >>> x = symbols('x')
+        >>> from sympy.abc import x
         >>> Integral(x+1, (x, -oo, oo)).principal_value()
         oo
         >>> f = 1 / (x**3)
@@ -1390,7 +1381,7 @@ class Integral(AddWithLimits):
 
 
 
-def integrate(*args, **kwargs):
+def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs):
     """integrate(f, var, ...)
 
     Compute definite or indefinite integral of one or more variables
@@ -1541,11 +1532,11 @@ def integrate(*args, **kwargs):
     """
     doit_flags = {
         'deep': False,
-        'meijerg': kwargs.pop('meijerg', None),
-        'conds': kwargs.pop('conds', 'piecewise'),
-        'risch': kwargs.pop('risch', None),
-        'heurisch': kwargs.pop('heurisch', None),
-        'manual': kwargs.pop('manual', None)
+        'meijerg': meijerg,
+        'conds': conds,
+        'risch': risch,
+        'heurisch': heurisch,
+        'manual': manual
         }
     integral = Integral(*args, **kwargs)
 

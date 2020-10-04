@@ -314,7 +314,7 @@ def continued_fraction_convergents(cf):
     Examples
     ========
 
-    >>> from sympy.core import Rational, pi
+    >>> from sympy.core import pi
     >>> from sympy import S
     >>> from sympy.ntheory.continued_fraction import \
             continued_fraction_convergents, continued_fraction_iterator

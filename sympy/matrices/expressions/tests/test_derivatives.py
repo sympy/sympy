@@ -4,11 +4,12 @@ Some examples have been taken from:
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from sympy import (MatrixSymbol, Inverse, symbols, Determinant, Trace,
-                   Derivative, sin, exp, cos, tan, log, S, sqrt,
+                   sin, exp, cos, tan, log, S, sqrt,
                    hadamard_product, DiagMatrix, OneMatrix,
                    HadamardProduct, HadamardPower, KroneckerDelta, Sum,
                    Rational)
 from sympy import MatAdd, Identity, MatMul, ZeroMatrix
+from sympy.tensor.array.array_derivatives import ArrayDerivative
 from sympy.matrices.expressions import hadamard_power
 
 k = symbols("k")
@@ -56,7 +57,8 @@ def test_matrix_derivative_by_scalar():
     assert (x*x.T).diff(i) == ZeroMatrix(k, k)
     assert (x + y).diff(i) == ZeroMatrix(k, 1)
     assert hadamard_power(x, 2).diff(i) == ZeroMatrix(k, 1)
-    assert hadamard_power(x, i).diff(i) == HadamardProduct(x.applyfunc(log), HadamardPower(x, i))
+    assert hadamard_power(x, i).diff(i).dummy_eq(
+        HadamardProduct(x.applyfunc(log), HadamardPower(x, i)))
     assert hadamard_product(x, y).diff(i) == ZeroMatrix(k, 1)
     assert hadamard_product(i*OneMatrix(k, 1), x, y).diff(i) == hadamard_product(x, y)
     assert (i*x).diff(i) == x
@@ -71,17 +73,17 @@ def test_matrix_derivative_by_scalar():
 
 def test_matrix_derivative_non_matrix_result():
     # This is a 4-dimensional array:
-    assert A.diff(A) == Derivative(A, A)
-    assert A.T.diff(A) == Derivative(A.T, A)
-    assert (2*A).diff(A) == Derivative(2*A, A)
-    assert MatAdd(A, A).diff(A) == Derivative(MatAdd(A, A), A)
-    assert (A + B).diff(A) == Derivative(A + B, A)  # TODO: `B` can be removed.
+    assert A.diff(A) == ArrayDerivative(A, A)
+    assert A.T.diff(A) == ArrayDerivative(A.T, A)
+    assert (2*A).diff(A) == ArrayDerivative(2*A, A)
+    assert MatAdd(A, A).diff(A) == ArrayDerivative(MatAdd(A, A), A)
+    assert (A + B).diff(A) == ArrayDerivative(A + B, A)  # TODO: `B` can be removed.
 
 
 def test_matrix_derivative_trivial_cases():
     # Cookbook example 33:
     # TODO: find a way to represent a four-dimensional zero-array:
-    assert X.diff(A) == Derivative(X, A)
+    assert X.diff(A) == ArrayDerivative(X, A)
 
 
 def test_matrix_derivative_with_inverse():
@@ -158,7 +160,7 @@ def test_matrix_derivative_vectors_and_scalars():
 def test_matrix_derivatives_of_traces():
 
     expr = Trace(A)*A
-    assert expr.diff(A) == Derivative(Trace(A)*A, A)
+    assert expr.diff(A) == ArrayDerivative(Trace(A)*A, A)
     assert expr[i, j].diff(A[m, n]).doit() == (
         KDelta(i, m)*KDelta(j, n)*Trace(A) +
         KDelta(m, n)*A[i, j]
@@ -322,7 +324,7 @@ def test_mixed_deriv_mixed_expressions():
 
     expr = Trace(A)*A
     # TODO: this is not yet supported:
-    assert expr.diff(A) == Derivative(expr, A)
+    assert expr.diff(A) == ArrayDerivative(expr, A)
 
     expr = Trace(Trace(A)*A)
     assert expr.diff(A) == (2*Trace(A))*Identity(k)
@@ -360,41 +362,46 @@ def test_derivatives_elementwise_applyfunc():
     from sympy.matrices.expressions.diagonal import DiagMatrix
 
     expr = x.applyfunc(tan)
-    assert expr.diff(x) == DiagMatrix(x.applyfunc(lambda x: tan(x)**2 + 1))
+    assert expr.diff(x).dummy_eq(
+        DiagMatrix(x.applyfunc(lambda x: tan(x)**2 + 1)))
     assert expr[i, 0].diff(x[m, 0]).doit() == (tan(x[i, 0])**2 + 1)*KDelta(i, m)
     _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
 
     expr = (i**2*x).applyfunc(sin)
-    assert expr.diff(i) == HadamardProduct((2*i)*x, (i**2*x).applyfunc(cos))
+    assert expr.diff(i).dummy_eq(
+        HadamardProduct((2*i)*x, (i**2*x).applyfunc(cos)))
     assert expr[i, 0].diff(i).doit() == 2*i*x[i, 0]*cos(i**2*x[i, 0])
     _check_derivative_with_explicit_matrix(expr, i, expr.diff(i))
 
     expr = (log(i)*A*B).applyfunc(sin)
-    assert expr.diff(i) == HadamardProduct(A*B/i, (log(i)*A*B).applyfunc(cos))
+    assert expr.diff(i).dummy_eq(
+        HadamardProduct(A*B/i, (log(i)*A*B).applyfunc(cos)))
     _check_derivative_with_explicit_matrix(expr, i, expr.diff(i))
 
     expr = A*x.applyfunc(exp)
-    assert expr.diff(x) == DiagMatrix(x.applyfunc(exp))*A.T
+    assert expr.diff(x).dummy_eq(DiagMatrix(x.applyfunc(exp))*A.T)
     _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
 
     expr = x.T*A*x + k*y.applyfunc(sin).T*x
-    assert expr.diff(x) == A.T*x + A*x + k*y.applyfunc(sin)
+    assert expr.diff(x).dummy_eq(A.T*x + A*x + k*y.applyfunc(sin))
     _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
 
     expr = x.applyfunc(sin).T*y
-    assert expr.diff(x) == DiagMatrix(x.applyfunc(cos))*y
+    assert expr.diff(x).dummy_eq(DiagMatrix(x.applyfunc(cos))*y)
     _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
 
     expr = (a.T * X * b).applyfunc(sin)
-    assert expr.diff(X) == a*(a.T*X*b).applyfunc(cos)*b.T
+    assert expr.diff(X).dummy_eq(a*(a.T*X*b).applyfunc(cos)*b.T)
     _check_derivative_with_explicit_matrix(expr, X, expr.diff(X))
 
     expr = a.T * X.applyfunc(sin) * b
-    assert expr.diff(X) == DiagMatrix(a)*X.applyfunc(cos)*DiagMatrix(b)
+    assert expr.diff(X).dummy_eq(
+        DiagMatrix(a)*X.applyfunc(cos)*DiagMatrix(b))
     _check_derivative_with_explicit_matrix(expr, X, expr.diff(X))
 
     expr = a.T * (A*X*B).applyfunc(sin) * b
-    assert expr.diff(X) == A.T*DiagMatrix(a)*(A*X*B).applyfunc(cos)*DiagMatrix(b)*B.T
+    assert expr.diff(X).dummy_eq(
+        A.T*DiagMatrix(a)*(A*X*B).applyfunc(cos)*DiagMatrix(b)*B.T)
     _check_derivative_with_explicit_matrix(expr, X, expr.diff(X))
 
     expr = a.T * (A*X*b).applyfunc(sin) * b.T
@@ -403,7 +410,8 @@ def test_derivatives_elementwise_applyfunc():
     #_check_derivative_with_explicit_matrix(expr, X, expr.diff(X))
 
     expr = a.T*A*X.applyfunc(sin)*B*b
-    assert expr.diff(X) == DiagMatrix(A.T*a)*X.applyfunc(cos)*DiagMatrix(B*b)
+    assert expr.diff(X).dummy_eq(
+        DiagMatrix(A.T*a)*X.applyfunc(cos)*DiagMatrix(B*b))
 
     expr = a.T * (A*X.applyfunc(sin)*B).applyfunc(log) * b
     # TODO: wrong

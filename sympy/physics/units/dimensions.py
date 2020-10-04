@@ -245,14 +245,11 @@ class Dimension(Expr):
     def __rmul__(self, other):
         return self.__mul__(other)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         return self*Pow(other, -1)
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         return other * pow(self, -1)
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     @classmethod
     def _from_dimensional_dependencies(cls, dependencies):
@@ -411,6 +408,11 @@ class DimensionSystem(Basic, _QuantityMapper):
         return self.args[2]
 
     def _get_dimensional_dependencies_for_name(self, name):
+        if isinstance(name, Dimension):
+            name = name.name
+
+        if isinstance(name, str):
+            name = Symbol(name)
 
         if name.is_Symbol:
             # Dimensions not included in the dependencies are considered
@@ -430,6 +432,12 @@ class DimensionSystem(Basic, _QuantityMapper):
                     ret[k] += v
             return {k: v for (k, v) in ret.items() if v != 0}
 
+        if name.is_Add:
+            dicts = [get_for_name(i) for i in name.args]
+            if all([d == dicts[0] for d in dicts[1:]]):
+                return dicts[0]
+            raise TypeError("Only equivalent dimensions can be added or subtracted.")
+
         if name.is_Pow:
             dim = get_for_name(name.base)
             return {k: v*name.exp for (k, v) in dim.items()}
@@ -446,12 +454,9 @@ class DimensionSystem(Basic, _QuantityMapper):
             else:
                 return get_for_name(result)
 
-    def get_dimensional_dependencies(self, name, mark_dimensionless=False):
-        if isinstance(name, Dimension):
-            name = name.name
-        if isinstance(name, str):
-            name = Symbol(name)
+        raise TypeError("Type {0} not implemented for get_dimensional_dependencies".format(type(name)))
 
+    def get_dimensional_dependencies(self, name, mark_dimensionless=False):
         dimdep = self._get_dimensional_dependencies_for_name(name)
         if mark_dimensionless and dimdep == {}:
             return {'dimensionless': 1}

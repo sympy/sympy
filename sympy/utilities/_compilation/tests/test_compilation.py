@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import shutil
 from sympy.external import import_module
 from sympy.testing.pytest import skip

@@ -288,10 +288,15 @@ def test__sympify():
 
     # positive _sympify
     assert _sympify(x) is x
-    assert _sympify(f) is f
     assert _sympify(1) == Integer(1)
     assert _sympify(0.5) == Float("0.5")
     assert _sympify(1 + 1j) == 1.0 + I*1.0
+
+    # Function f is not Basic and can't sympify to Basic. We allow it to pass
+    # with sympify but not with _sympify.
+    # https://github.com/sympy/sympy/issues/20124
+    assert sympify(f) is f
+    raises(SympifyError, lambda: _sympify(f))
 
     class A:
         def _sympy_(self):
@@ -497,7 +502,8 @@ def test_kernS():
     ss = kernS(s)
     assert ss != -1 and ss.simplify() == -1
     # issue 6687
-    assert kernS('Interval(-1,-2 - 4*(-3))') == Interval(-1, 10)
+    assert (kernS('Interval(-1,-2 - 4*(-3))')
+        == Interval(-1, Add(-2, Mul(12, 1, evaluate=False), evaluate=False)))
     assert kernS('_kern') == Symbol('_kern')
     assert kernS('E**-(x)') == exp(-x)
     e = 2*(x + y)*y
@@ -511,6 +517,7 @@ def test_kernS():
     assert kernS('(1-2.*(1-y)*x)') == 1 - 2.*x*(1 - y)
     one = kernS('x - (x - 1)')
     assert one != 1 and one.expand() == 1
+    assert kernS("(2*x)/(x-1)") == 2*x/(x-1)
 
 
 def test_issue_6540_6552():

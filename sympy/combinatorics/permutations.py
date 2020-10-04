@@ -8,13 +8,12 @@ from sympy.core.compatibility import \
     is_sequence, reduce, as_int, Iterable
 from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
-from sympy.logic.boolalg import as_Boolean
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
 from mpmath.libmp.libintmath import ifac
-
+from sympy.multipledispatch import dispatch
 
 def _af_rmul(a, b):
     """
@@ -322,7 +321,6 @@ class Cycle(dict):
         ========
 
         >>> from sympy.combinatorics.permutations import Cycle as C
-        >>> from sympy.combinatorics.permutations import Permutation as Perm
         >>> C(1, 2)(2, 3)
         (1 3 2)
 
@@ -355,7 +353,6 @@ class Cycle(dict):
         ========
 
         >>> from sympy.combinatorics.permutations import Cycle
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Cycle(2, 3)(4, 5)
         >>> p.list()
         [0, 1, 3, 2, 5, 4]
@@ -825,7 +822,7 @@ class Permutation(Atom):
     _size = None
     _rank = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, size=None, **kwargs):
         """
         Constructor for the Permutation object from a list or a
         list of lists in which all elements of the permutation may
@@ -872,7 +869,6 @@ class Permutation(Atom):
         >>> _.array_form
         [0, 4, 3, 5, 1, 2, 6, 7, 8, 9]
         """
-        size = kwargs.pop('size', None)
         if size is not None:
             size = int(size)
 
@@ -951,16 +947,6 @@ class Permutation(Atom):
             aform.extend(list(range(len(aform), size)))
 
         return cls._af_new(aform)
-
-    def _eval_Eq(self, other):
-        other = _sympify(other)
-        if not isinstance(other, Permutation):
-            return None
-
-        if self._size != other._size:
-            return None
-
-        return as_Boolean(self._array_form == other._array_form)
 
     @classmethod
     def _af_new(cls, perm):
@@ -1195,7 +1181,7 @@ class Permutation(Atom):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
+        >>> from sympy.combinatorics.permutations import Permutation
 
         >>> a, b = [1, 0, 2], [0, 2, 1]
         >>> a = Permutation(a); b = Permutation(b)
@@ -3022,3 +3008,10 @@ class AppliedPermutation(Expr):
 
         obj = super().__new__(cls, perm, x)
         return obj
+
+
+@dispatch(Permutation, Permutation)
+def _eval_is_eq(lhs, rhs):
+    if lhs._size != rhs._size:
+        return None
+    return lhs._array_form == rhs._array_form

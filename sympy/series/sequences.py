@@ -188,7 +188,7 @@ class SeqBase(Basic):
         Examples
         ========
 
-        >>> from sympy import S, oo, SeqFormula
+        >>> from sympy import SeqFormula
         >>> from sympy.abc import n
         >>> SeqFormula(n**2).coeff_mul(2)
         SeqFormula(2*n**2, (n, 0, oo))
@@ -208,7 +208,7 @@ class SeqBase(Basic):
         Examples
         ========
 
-        >>> from sympy import S, oo, SeqFormula
+        >>> from sympy import SeqFormula
         >>> from sympy.abc import n
         >>> SeqFormula(n**2) + SeqFormula(n**3)
         SeqFormula(n**3 + n**2, (n, 0, oo))
@@ -229,7 +229,7 @@ class SeqBase(Basic):
         Examples
         ========
 
-        >>> from sympy import S, oo, SeqFormula
+        >>> from sympy import SeqFormula
         >>> from sympy.abc import n
         >>> SeqFormula(n**2) - (SeqFormula(n))
         SeqFormula(n**2 - n, (n, 0, oo))
@@ -248,7 +248,7 @@ class SeqBase(Basic):
         Examples
         ========
 
-        >>> from sympy import S, oo, SeqFormula
+        >>> from sympy import SeqFormula
         >>> from sympy.abc import n
         >>> -SeqFormula(n**2)
         SeqFormula(-n**2, (n, 0, oo))
@@ -264,7 +264,7 @@ class SeqBase(Basic):
         Examples
         ========
 
-        >>> from sympy import S, oo, SeqFormula
+        >>> from sympy import SeqFormula
         >>> from sympy.abc import n
         >>> SeqFormula(n**2) * (SeqFormula(n))
         SeqFormula(n**3, (n, 0, oo))
@@ -379,7 +379,7 @@ class EmptySequence(SeqBase, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import EmptySequence, SeqPer, oo
+    >>> from sympy import EmptySequence, SeqPer
     >>> from sympy.abc import x
     >>> EmptySequence
     EmptySequence
@@ -917,7 +917,7 @@ def sequence(seq, limits=None):
     Examples
     ========
 
-    >>> from sympy import sequence, SeqPer, SeqFormula
+    >>> from sympy import sequence
     >>> from sympy.abc import n
     >>> sequence(n**2, (n, 0, 5))
     SeqFormula(n**2, (n, 0, 5))

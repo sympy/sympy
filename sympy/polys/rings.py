@@ -1,6 +1,5 @@
 """Sparse polynomial rings. """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
@@ -115,7 +114,7 @@ def vring(symbols, domain, order=lex):
 
     >>> vring("x,y,z", ZZ, lex)
     Polynomial ring in x, y, z over ZZ with lex order
-    >>> x + y + z
+    >>> x + y + z # noqa:
     x + y + z
     >>> type(_)
     <class 'sympy.polys.rings.PolyElement'>
@@ -141,8 +140,6 @@ def sring(exprs, *symbols, **options):
 
     >>> from sympy.core import symbols
     >>> from sympy.polys.rings import sring
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.orderings import lex
 
     >>> x, y, z = symbols("x,y,z")
     >>> R, f = sring(x + 2*y + 3*z)
@@ -792,17 +789,17 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         zm = ring.zero_monom
         sexpvs = []
         for expv, coeff in self.terms():
-            positive = ring.domain.is_positive(coeff)
-            sign = " + " if positive else " - "
+            negative = ring.domain.is_negative(coeff)
+            sign = " - " if negative else " + "
             sexpvs.append(sign)
             if expv == zm:
                 scoeff = printer._print(coeff)
-                if scoeff.startswith("-"):
+                if negative and scoeff.startswith("-"):
                     scoeff = scoeff[1:]
             else:
-                if not positive:
+                if negative:
                     coeff = -coeff
-                if coeff != 1:
+                if coeff != self.ring.one:
                     scoeff = printer.parenthesize(coeff, prec_mul, strict=True)
                 else:
                     scoeff = ''
@@ -1351,8 +1348,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def __rtruediv__(p1, p2):
         return NotImplemented
 
-    __floordiv__ = __div__ = __truediv__
-    __rfloordiv__ = __rdiv__ = __rtruediv__
+    __floordiv__ = __truediv__
+    __rfloordiv__ = __rtruediv__
 
     # TODO: use // (__floordiv__) for exquo()?
 

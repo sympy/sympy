@@ -40,7 +40,7 @@ relative order.
 Attributes of PolycyclicGroup
 `````````````````````````````
 
-* ``pc_sequence`` : Polycyclic sequence is formed by collecting all the missing 
+* ``pc_sequence`` : Polycyclic sequence is formed by collecting all the missing
   generators between the adjacent groups in the derived series of given
   permutation group.
 
@@ -251,7 +251,7 @@ polycyclic generating sequence. Hence, the length of exponent vector is equal to
 the length of the pcgs.
 
 A given generator ``g`` of the polycyclic group, can be represented as
-`g = x_1^{e_1} \ldots x_n^{e_n}`, where `x_i` represents polycyclic generators 
+`g = x_1^{e_1} \ldots x_n^{e_n}`, where `x_i` represents polycyclic generators
 and ``n`` is the number of generators in the free_group equal to the length of pcgs.
 
 >>> from sympy.combinatorics.named_groups import SymmetricGroup

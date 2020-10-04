@@ -41,7 +41,7 @@ structured in the following manner.
 
   - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve`
 
-    - :py:meth:`~sympy.solvers.diophantine.classify_diop`
+    - :py:meth:`~sympy.solvers.diophantine.diophantine.classify_diop`
     - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_linear`
     - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_quadratic`
     - :py:meth:`~sympy.solvers.diophantine.diophantine.diop_ternary_quadratic`
@@ -58,10 +58,10 @@ factor by calling :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve` s
 Then all the results are combined using :py:meth:`~sympy.solvers.diophantine.diophantine.merge_solution`.
 
 :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve` internally uses
-:py:meth:`~sympy.solvers.diophantine.classify_diop`
+:py:meth:`~sympy.solvers.diophantine.diophantine.classify_diop`
 to find the type of the equation(and some other details) given to it and then
 calls the appropriate solver function based on the type returned. For example,
-if :py:meth:`~sympy.solvers.diophantine.classify_diop` returned "linear" as the
+if :py:meth:`~sympy.solvers.diophantine.diophantine.classify_diop` returned "linear" as the
 type of the equation, then :py:meth:`~sympy.solvers.diophantine.diophantine.diop_solve`
 calls :py:meth:`~sympy.solvers.diophantine.diophantine.diop_linear` to solve the equation.
 
@@ -334,13 +334,13 @@ with ``from sympy import *``:
 
 diophantine
 ^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.diophantine
+.. autofunction:: sympy.solvers.diophantine.diophantine::diophantine
 
 And this function is imported with ``from sympy.solvers.diophantine import *``:
 
 classify_diop
 ^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.classify_diop
+.. autofunction:: sympy.solvers.diophantine.diophantine::classify_diop
 
 Internal Functions
 ------------------
@@ -349,136 +349,136 @@ These functions are intended for internal use in the Diophantine module.
 
 diop_solve
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.diop_solve
+.. autofunction:: sympy.solvers.diophantine.diophantine::diop_solve
 
 diop_linear
 ^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.diop_linear
+.. autofunction:: sympy.solvers.diophantine.diophantine::diop_linear
 
 base_solution_linear
 ^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.base_solution_linear
+.. autofunction:: sympy.solvers.diophantine.diophantine::base_solution_linear
 
 diop_quadratic
 ^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.diop_quadratic
+.. autofunction:: sympy.solvers.diophantine.diophantine::diop_quadratic
 
 diop_DN
 ^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.diop_DN
+.. autofunction:: sympy.solvers.diophantine.diophantine::diop_DN
 
 cornacchia
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.cornacchia
+.. autofunction:: sympy.solvers.diophantine.diophantine::cornacchia
 
 diop_bf_DN
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.diop_bf_DN
+.. autofunction:: sympy.solvers.diophantine.diophantine::diop_bf_DN
 
 transformation_to_DN
 ^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.transformation_to_DN
+.. autofunction:: sympy.solvers.diophantine.diophantine::transformation_to_DN
 
 transformation_to_normal
 ^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.transformation_to_normal
+.. autofunction:: sympy.solvers.diophantine.diophantine::transformation_to_normal
 
 find_DN
 ^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.find_DN
+.. autofunction:: sympy.solvers.diophantine.diophantine::find_DN
 
 diop_ternary_quadratic
 ^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.diop_ternary_quadratic
+.. autofunction:: sympy.solvers.diophantine.diophantine::diop_ternary_quadratic
 
 square_factor
 ^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.square_factor
+.. autofunction:: sympy.solvers.diophantine.diophantine::square_factor
 
 descent
 ^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.descent
+.. autofunction:: sympy.solvers.diophantine.diophantine::descent
 
 diop_general_pythagorean
 ^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.diop_general_pythagorean
+.. autofunction:: sympy.solvers.diophantine.diophantine::diop_general_pythagorean
 
 diop_general_sum_of_squares
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.diop_general_sum_of_squares
+.. autofunction:: sympy.solvers.diophantine.diophantine::diop_general_sum_of_squares
 
 diop_general_sum_of_even_powers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.diop_general_sum_of_even_powers
+.. autofunction:: sympy.solvers.diophantine.diophantine::diop_general_sum_of_even_powers
 
 power_representation
 ^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.power_representation
+.. autofunction:: sympy.solvers.diophantine.diophantine::power_representation
 
 partition
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.partition
+.. autofunction:: sympy.solvers.diophantine.diophantine::partition
 
 sum_of_three_squares
 ^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.sum_of_three_squares
+.. autofunction:: sympy.solvers.diophantine.diophantine::sum_of_three_squares
 
 sum_of_four_squares
 ^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.sum_of_four_squares
+.. autofunction:: sympy.solvers.diophantine.diophantine::sum_of_four_squares
 
 sum_of_powers
 ^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.sum_of_powers
+.. autofunction:: sympy.solvers.diophantine.diophantine::sum_of_powers
 
 sum_of_squares
 ^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.sum_of_squares
+.. autofunction:: sympy.solvers.diophantine.diophantine::sum_of_squares
 
 merge_solution
 ^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.merge_solution
+.. autofunction:: sympy.solvers.diophantine.diophantine::merge_solution
 
 divisible
 ^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.divisible
+.. autofunction:: sympy.solvers.diophantine.diophantine::divisible
 
 PQa
 ^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.PQa
+.. autofunction:: sympy.solvers.diophantine.diophantine::PQa
 
 equivalent
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.equivalent
+.. autofunction:: sympy.solvers.diophantine.diophantine::equivalent
 
 parametrize_ternary_quadratic
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.parametrize_ternary_quadratic
+.. autofunction:: sympy.solvers.diophantine.diophantine::parametrize_ternary_quadratic
 
 diop_ternary_quadratic_normal
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.diop_ternary_quadratic_normal
+.. autofunction:: sympy.solvers.diophantine.diophantine::diop_ternary_quadratic_normal
 
 ldescent
 ^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.ldescent
+.. autofunction:: sympy.solvers.diophantine.diophantine::ldescent
 
 gaussian_reduce
 ^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.gaussian_reduce
+.. autofunction:: sympy.solvers.diophantine.diophantine::gaussian_reduce
 
 holzer
 ^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.holzer
+.. autofunction:: sympy.solvers.diophantine.diophantine::holzer
 
 prime_as_sum_of_two_squares
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.prime_as_sum_of_two_squares
+.. autofunction:: sympy.solvers.diophantine.diophantine::prime_as_sum_of_two_squares
 
 sqf_normal
 ^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.sqf_normal
+.. autofunction:: sympy.solvers.diophantine.diophantine::sqf_normal
 
 reconstruct
 ^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diophantine.reconstruct
+.. autofunction:: sympy.solvers.diophantine.diophantine::reconstruct

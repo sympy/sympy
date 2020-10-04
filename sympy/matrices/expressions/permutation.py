@@ -1,10 +1,9 @@
-from __future__ import print_function, division
-
 from sympy.core import S
 from sympy.core.sympify import _sympify
 from sympy.functions import KroneckerDelta
 
-from .matexpr import MatrixExpr, Identity, ZeroMatrix, OneMatrix
+from .matexpr import MatrixExpr
+from .special import ZeroMatrix, Identity, OneMatrix
 
 
 class PermutationMatrix(MatrixExpr):
@@ -65,7 +64,7 @@ class PermutationMatrix(MatrixExpr):
             raise ValueError(
                 "{} must be a SymPy Permutation instance.".format(perm))
 
-        return super(PermutationMatrix, cls).__new__(cls, perm)
+        return super().__new__(cls, perm)
 
     @property
     def shape(self):
@@ -250,7 +249,7 @@ class MatrixPermute(MatrixExpr):
                     "and cannot be converted."
                     .format(perm, mat, axis))
 
-        return super(MatrixPermute, cls).__new__(cls, mat, perm, axis)
+        return super().__new__(cls, mat, perm, axis)
 
     def doit(self, deep=True):
         mat, perm, axis = self.args

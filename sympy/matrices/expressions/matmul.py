@@ -1,7 +1,6 @@
-from __future__ import print_function, division
-
 from sympy import Number
 from sympy.core import Mul, Basic, sympify, S
+from sympy.core.mul import mul
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
@@ -9,11 +8,11 @@ from sympy.matrices.common import ShapeError, NonInvertibleMatrixError
 from sympy.matrices.matrices import MatrixBase
 
 from .inverse import Inverse
-from .matexpr import \
-    MatrixExpr, Identity, ZeroMatrix, OneMatrix, GenericIdentity
+from .matexpr import MatrixExpr
 from .matpow import MatPow
 from .transpose import transpose
 from .permutation import PermutationMatrix
+from .special import ZeroMatrix, Identity, GenericIdentity, OneMatrix
 
 
 # XXX: MatMul should perhaps not subclass directly from Mul
@@ -35,16 +34,15 @@ class MatMul(MatrixExpr, Mul):
 
     identity = GenericIdentity()
 
-    def __new__(cls, *args, evaluate=False, **kwargs):
-        check = kwargs.get('check', True)
-
+    def __new__(cls, *args, evaluate=False, check=True, _sympify=True):
         if not args:
             return cls.identity
 
         # This must be removed aggressively in the constructor to avoid
         # TypeErrors from GenericIdentity().shape
-        args = filter(lambda i: cls.identity != i, args)
-        args = list(map(sympify, args))
+        args = list(filter(lambda i: cls.identity != i, args))
+        if _sympify:
+            args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
 
@@ -209,6 +207,7 @@ class MatMul(MatrixExpr, Mul):
 
         return lines
 
+mul.register_handlerclass((Mul, MatMul), MatMul)
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
@@ -235,7 +234,7 @@ def any_zeros(mul):
 def merge_explicit(matmul):
     """ Merge explicit MatrixBase arguments
 
-    >>> from sympy import MatrixSymbol, eye, Matrix, MatMul, pprint
+    >>> from sympy import MatrixSymbol, Matrix, MatMul, pprint
     >>> from sympy.matrices.expressions.matmul import merge_explicit
     >>> A = MatrixSymbol('A', 2, 2)
     >>> B = Matrix([[1, 1], [1, 1]])

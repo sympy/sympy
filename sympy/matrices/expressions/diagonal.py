@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.sympify import _sympify
 
 from sympy.matrices.expressions import MatrixExpr
@@ -50,7 +48,7 @@ class DiagonalMatrix(MatrixExpr):
     """
     arg = property(lambda self: self.args[0])
 
-    shape = property(lambda self: self.arg.shape)
+    shape = property(lambda self: self.arg.shape)  # type:ignore
 
     @property
     def diagonal_length(self):

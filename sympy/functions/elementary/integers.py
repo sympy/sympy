@@ -1,14 +1,17 @@
+
 from __future__ import print_function, division
+
+from sympy import Basic, Expr
 
 from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import Integer
-from sympy.core.relational import Gt, Lt, Ge, Le, Relational
+from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
-
+from sympy.multipledispatch import dispatch
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################
@@ -131,7 +134,7 @@ class floor(RoundFunction):
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[0]
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         r = self.subs(x, 0)
         args = self.args[0]
         args0 = args.subs(x, 0)
@@ -156,11 +159,7 @@ class floor(RoundFunction):
     def _eval_rewrite_as_frac(self, arg, **kwargs):
         return arg - frac(arg)
 
-    def _eval_Eq(self, other):
-        if isinstance(self, floor):
-            if (self.rewrite(ceiling) == other) or \
-                    (self.rewrite(frac) == other):
-                return S.true
+
 
     def __le__(self, other):
         other = S(other)
@@ -218,6 +217,11 @@ class floor(RoundFunction):
 
         return Lt(self, other, evaluate=False)
 
+@dispatch(floor, Expr)
+def _eval_is_eq(lhs, rhs): # noqa:F811
+   return is_eq(lhs.rewrite(ceiling), rhs) or \
+        is_eq(lhs.rewrite(frac),rhs)
+
 class ceiling(RoundFunction):
     """
     Ceiling is a univariate function which returns the smallest integer
@@ -266,7 +270,7 @@ class ceiling(RoundFunction):
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[1]
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         r = self.subs(x, 0)
         args = self.args[0]
         args0 = args.subs(x, 0)
@@ -291,11 +295,7 @@ class ceiling(RoundFunction):
     def _eval_is_nonpositive(self):
         return self.args[0].is_nonpositive
 
-    def _eval_Eq(self, other):
-        if isinstance(self, ceiling):
-            if (self.rewrite(floor) == other) or \
-                    (self.rewrite(frac) == other):
-                return S.true
+
 
     def __lt__(self, other):
         other = S(other)
@@ -353,6 +353,10 @@ class ceiling(RoundFunction):
 
         return Le(self, other, evaluate=False)
 
+@dispatch(ceiling, Basic)  # type:ignore
+def _eval_is_eq(lhs, rhs): # noqa:F811
+    return is_eq(lhs.rewrite(floor), rhs) or is_eq(lhs.rewrite(frac),rhs)
+
 class frac(Function):
     r"""Represents the fractional part of x
 
@@ -364,7 +368,7 @@ class frac(Function):
     Examples
     ========
 
-    >>> from sympy import Symbol, frac, Rational, floor, ceiling, I
+    >>> from sympy import Symbol, frac, Rational, floor, I
     >>> frac(Rational(4, 3))
     1/3
     >>> frac(-Rational(4, 3))
@@ -444,18 +448,7 @@ class frac(Function):
     def _eval_rewrite_as_ceiling(self, arg, **kwargs):
         return arg + ceiling(-arg)
 
-    def _eval_Eq(self, other):
-        if isinstance(self, frac):
-            if (self.rewrite(floor) == other) or \
-                    (self.rewrite(ceiling) == other):
-                return S.true
-            # Check if other < 0
-            if other.is_extended_negative:
-                return S.false
-            # Check if other >= 1
-            res = self._value_one_or_more(other)
-            if res is not None:
-                return S.false
+
 
     def _eval_is_finite(self):
         return True
@@ -531,3 +524,16 @@ class frac(Function):
                     return S.true
             if other.is_integer and other.is_positive:
                 return S.true
+
+@dispatch(frac, Basic)  # type:ignore
+def _eval_is_eq(lhs, rhs): # noqa:F811
+    if (lhs.rewrite(floor) == rhs) or \
+        (lhs.rewrite(ceiling) == rhs):
+        return True
+    # Check if other < 0
+    if rhs.is_extended_negative:
+        return False
+    # Check if other >= 1
+    res = lhs._value_one_or_more(rhs)
+    if res is not None:
+        return False

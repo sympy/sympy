@@ -50,10 +50,10 @@ class SymPyExpression(object):  # type: ignore
     ... '''
     >>> a = SymPyExpression(src, 'c')
     >>> a.return_expr()
-    [Declaration(Variable(a, type=integer, value=0)),
-    Declaration(Variable(b, type=integer, value=0)),
-    Declaration(Variable(c, type=real, value=2.0)),
-    Declaration(Variable(d, type=real, value=4.0))]
+    [Declaration(Variable(a, type=intc)),
+    Declaration(Variable(b, type=intc)),
+    Declaration(Variable(c, type=float32, value=2.0)),
+    Declaration(Variable(d, type=float32, value=4.0))]
 
     An example of variable definiton:
 

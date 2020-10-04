@@ -1,7 +1,6 @@
 """
 Boolean algebra module for SymPy
 """
-from __future__ import print_function, division
 
 from collections import defaultdict
 from itertools import chain, combinations, product
@@ -9,6 +8,7 @@ from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, as_int
+from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
@@ -28,6 +28,8 @@ def as_Boolean(e):
     >>> from sympy import true, false, nan
     >>> from sympy.logic.boolalg import as_Boolean
     >>> from sympy.abc import x
+    >>> as_Boolean(0) is false
+    True
     >>> as_Boolean(1) is true
     True
     >>> as_Boolean(x)
@@ -36,6 +38,10 @@ def as_Boolean(e):
     Traceback (most recent call last):
     ...
     TypeError: expecting bool or Boolean, not `2`.
+    >>> as_Boolean(nan)
+    Traceback (most recent call last):
+    ...
+    TypeError: expecting bool or Boolean, not `nan`.
 
     """
     from sympy.core.symbol import Symbol
@@ -53,19 +59,20 @@ def as_Boolean(e):
     raise TypeError('expecting bool or Boolean, not `%s`.' % e)
 
 
+@sympify_method_args
 class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
 
     __slots__ = ()
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __and__(self, other):
-        """Overloading for & operator"""
         return And(self, other)
 
     __rand__ = __and__
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __or__(self, other):
-        """Overloading for |"""
         return Or(self, other)
 
     __ror__ = __or__
@@ -74,17 +81,18 @@ class Boolean(Basic):
         """Overloading for ~"""
         return Not(self)
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __rshift__(self, other):
-        """Overloading for >>"""
         return Implies(self, other)
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __lshift__(self, other):
-        """Overloading for <<"""
         return Implies(other, self)
 
     __rrshift__ = __lshift__
     __rlshift__ = __rshift__
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __xor__(self, other):
         return Xor(self, other)
 
@@ -198,9 +206,7 @@ class BooleanAtom(Boolean):
     __rmul__ = _noop
     __pow__ = _noop
     __rpow__ = _noop
-    __rdiv__ = _noop
     __truediv__ = _noop
-    __div__ = _noop
     __rtruediv__ = _noop
     __mod__ = _noop
     __rmod__ = _noop
@@ -313,10 +319,8 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanFalse
 
     """
-    def __nonzero__(self):
+    def __bool__(self):
         return True
-
-    __bool__ = __nonzero__
 
     def __hash__(self):
         return hash(True)
@@ -383,10 +387,8 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanTrue
 
     """
-    def __nonzero__(self):
+    def __bool__(self):
         return False
-
-    __bool__ = __nonzero__
 
     def __hash__(self):
         return hash(False)
@@ -478,7 +480,7 @@ class BooleanFunction(Application, Boolean):
     @classmethod
     def _to_nnf(cls, *args, **kwargs):
         simplify = kwargs.get('simplify', True)
-        argset = set([])
+        argset = set()
         for arg in args:
             if not is_literal(arg):
                 arg = arg.to_nnf(simplify)
@@ -498,7 +500,7 @@ class BooleanFunction(Application, Boolean):
     @classmethod
     def _to_anf(cls, *args, **kwargs):
         deep = kwargs.get('deep', True)
-        argset = set([])
+        argset = set()
         for arg in args:
             if deep:
                 if not is_literal(arg) or isinstance(arg, Not):
@@ -652,7 +654,6 @@ class And(LatticeOp, BooleanFunction):
     Examples
     ========
 
-    >>> from sympy.core import symbols
     >>> from sympy.abc import x, y
     >>> from sympy.logic.boolalg import And
     >>> x & y
@@ -717,7 +718,7 @@ class And(LatticeOp, BooleanFunction):
         from sympy.core.relational import Equality, Relational
         from sympy.solvers.solveset import linear_coeffs
         # standard simplify
-        rv = super(And, self)._eval_simplify(**kwargs)
+        rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, And):
             return rv
 
@@ -799,7 +800,6 @@ class Or(LatticeOp, BooleanFunction):
     Examples
     ========
 
-    >>> from sympy.core import symbols
     >>> from sympy.abc import x, y
     >>> from sympy.logic.boolalg import Or
     >>> x | y
@@ -866,7 +866,7 @@ class Or(LatticeOp, BooleanFunction):
 
     def _eval_simplify(self, **kwargs):
         # standard simplify
-        rv = super(Or, self)._eval_simplify(**kwargs)
+        rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, Or):
             return rv
         patterns = simplify_patterns_or()
@@ -1048,10 +1048,9 @@ class Xor(BooleanFunction):
     x
 
     """
-    def __new__(cls, *args, **kwargs):
-        argset = set([])
-        remove_true = kwargs.pop('remove_true', True)
-        obj = super(Xor, cls).__new__(cls, *args, **kwargs)
+    def __new__(cls, *args, remove_true=True, **kwargs):
+        argset = set()
+        obj = super().__new__(cls, *args, **kwargs)
         for arg in obj._args:
             if isinstance(arg, Number) or arg in (True, False):
                 if arg:
@@ -1324,7 +1323,7 @@ class Equivalent(BooleanFunction):
     ========
 
     >>> from sympy.logic.boolalg import Equivalent, And
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> Equivalent(False, False, False)
     True
     >>> Equivalent(True, False, False)
@@ -1368,7 +1367,7 @@ class Equivalent(BooleanFunction):
             argset.discard(False)
             return And(*[~arg for arg in argset])
         _args = frozenset(argset)
-        obj = super(Equivalent, cls).__new__(cls, _args)
+        obj = super().__new__(cls, _args)
         obj._argset = _args
         return obj
 
@@ -2013,7 +2012,7 @@ def to_int_repr(clauses, symbols):
         else:
             return symbols[arg]
 
-    return [set(append_symbol(arg, symbols) for arg in Or.make_args(c))
+    return [{append_symbol(arg, symbols) for arg in Or.make_args(c)}
             for c in clauses]
 
 
@@ -2601,7 +2600,7 @@ def anf_coeffs(truthvalues):
 
     """
 
-    s = '{0:b}'.format(len(truthvalues))
+    s = '{:b}'.format(len(truthvalues))
     n = len(s) - 1
 
     if len(truthvalues) != 2**n:

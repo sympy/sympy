@@ -138,7 +138,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     >>> [simplify(c) for c in  mycoeffs] #doctest: +NORMALIZE_WHITESPACE
     [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4,
     (-sqrt(2)*h**3 - 4*h**2*x + 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
-    6*x/h**2 - 8*x**3/h**4,
+    (6*h**2*x - 8*x**3)/h**4,
     (sqrt(2)*h**3 - 4*h**2*x - 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
     (-h**3/2 + h**2*x + 3*h*x**2 - 4*x**3)/h**4]
 
@@ -422,8 +422,7 @@ as_finite_diff.__doc__ = """
 
 
 def differentiate_finite(expr, *symbols,
-                         # points=1, x0=None, wrt=None, evaluate=True, #Py2:
-                         **kwargs):
+                         points=1, x0=None, wrt=None, evaluate=False):
     r""" Differentiate expr and replace Derivatives with finite differences.
 
     Parameters
@@ -441,7 +440,7 @@ def differentiate_finite(expr, *symbols,
     Examples
     ========
 
-    >>> from sympy import cos, sin, Function, differentiate_finite
+    >>> from sympy import sin, Function, differentiate_finite
     >>> from sympy.abc import x, y, h
     >>> f, g = Function('f'), Function('g')
     >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h])
@@ -468,15 +467,8 @@ def differentiate_finite(expr, *symbols,
     g(x + dx(x)/2 + dx(x + dx(x)/2)/2)/dx(x + dx(x)/2))*f(x + dx(x)/2)/dx(x)
 
     """
-    # Key-word only arguments only available in Python 3
-    points = kwargs.pop('points', 1)
-    x0 = kwargs.pop('x0', None)
-    wrt = kwargs.pop('wrt', None)
-    evaluate = kwargs.pop('evaluate', False)
     if any(term.is_Derivative for term in list(preorder_traversal(expr))):
         evaluate = False
-    if kwargs:
-        raise ValueError("Unknown kwargs: %s" % kwargs)
 
     Dexpr = expr.diff(*symbols, evaluate=evaluate)
     if evaluate:

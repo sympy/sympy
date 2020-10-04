@@ -68,9 +68,9 @@ def test_trailing_bitcount():
     assert trailing(7) == 0
     assert trailing(-7) == 0
     for i in range(100):
-        assert trailing((1 << i)) == i
+        assert trailing(1 << i) == i
         assert trailing((1 << i) * 31337) == i
-    assert trailing((1 << 1000001)) == 1000001
+    assert trailing(1 << 1000001) == 1000001
     assert trailing((1 << 273956)*7**37) == 273956
     # issue 12709
     big = small_trailing[-1]*2
@@ -165,7 +165,8 @@ def test_factorint():
     assert factorint(5951757) == {3: 1, 7: 1, 29: 2, 337: 1}
     assert factorint(64015937) == {7993: 1, 8009: 1}
     assert factorint(2**(2**6) + 1) == {274177: 1, 67280421310721: 1}
-
+    #issue 19683
+    assert factorint(10**38 - 1) == {3: 2, 11: 1, 909090909090909091: 1, 1111111111111111111: 1}
     #issue 17676
     assert factorint(28300421052393658575) == {3: 1, 5: 2, 11: 2, 43: 1, 2063: 2, 4127: 1, 4129: 1}
     assert factorint(2063**2 * 4127**1 * 4129**1) == {2063: 2, 4127: 1, 4129: 1}

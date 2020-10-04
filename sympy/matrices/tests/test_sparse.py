@@ -4,6 +4,16 @@ from sympy.matrices import \
     ones, zeros, ShapeError
 from sympy.testing.pytest import raises
 
+
+def test_sparse_creation():
+    a = SparseMatrix(2, 2, {(0, 0): [[1, 2], [3, 4]]})
+    assert a == SparseMatrix([[1, 2], [3, 4]])
+    a = SparseMatrix(2, 2, {(0, 0): [[1, 2]]})
+    assert a == SparseMatrix([[1, 2], [0, 0]])
+    a = SparseMatrix(2, 2, {(0, 0): [1, 2]})
+    assert a == SparseMatrix([[1, 0], [2, 0]])
+
+
 def test_sparse_matrix():
     def sparse_eye(n):
         return SparseMatrix.eye(n)
@@ -464,8 +474,8 @@ def test_sparse_matrix():
     x = Symbol('x')
     y = Symbol('y')
     sparse_eye3 = sparse_eye(3)
-    assert sparse_eye3.charpoly(x) == PurePoly(((x - 1)**3))
-    assert sparse_eye3.charpoly(y) == PurePoly(((y - 1)**3))
+    assert sparse_eye3.charpoly(x) == PurePoly((x - 1)**3)
+    assert sparse_eye3.charpoly(y) == PurePoly((y - 1)**3)
 
     # test values
     M = Matrix([( 0, 1, -1),
@@ -528,7 +538,7 @@ def test_errors():
     raises(IndexError, lambda: SparseMatrix([[1, 2], [3, 4]])[5])
     raises(ValueError, lambda: SparseMatrix([[1, 2], [3, 4]])[1, 2, 3])
     raises(TypeError,
-        lambda: SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([])))
+        lambda: SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set()))
     raises(
         IndexError, lambda: SparseMatrix([[1, 2], [3, 4]])[1, 2])
     raises(TypeError, lambda: SparseMatrix([1, 2, 3]).cross(1))
