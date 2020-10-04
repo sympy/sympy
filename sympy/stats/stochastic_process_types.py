@@ -836,7 +836,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         return ImmutableMatrix(t2a)
 
-    def communication_classes(self) -> tTuple[tList[tList], tList[Boolean], tList[Integer]]:
+    def communication_classes(self) -> tList[tTuple[tList[Basic], Boolean, Integer]]:
         """
         Returns the list of communication classes that partition
         the states of the markov chain.
@@ -869,13 +869,16 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         ...             [1, 0, 0],
         ...             [1, 0, 0]])
         >>> X = DiscreteMarkovChain('X', [1, 2, 3], T)
-        >>> classes, recurrence, periods = X.communication_classes()
-        >>> classes
-        [[1, 2], [3]]
-        >>> recurrence
-        [True, False]
-        >>> periods
-        [2, 1]
+        >>> classes = X.communication_classes()
+        >>> for states, is_recurrent, period in classes:
+        ...     states, is_recurrent, period
+        ([1, 2], True, 2)
+        ([3], False, 1)
+
+        From this we can see that states ``1`` and ``2``
+        communicate, are recurrent and have a period
+        of 2. We can also see state ``3`` is transient
+        with a period of 1.
 
         Notes
         =====
@@ -959,7 +962,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         # convert back to the user's state names
         classes = [[self._state_index[i] for i in class_] for class_ in classes]
 
-        return sympify((classes, recurrence, periods))
+        return sympify(list(zip(classes, recurrence, periods)))
 
     def fundamental_matrix(self):
         Q = self._transient2transient()
