@@ -6,8 +6,6 @@ from sympy import (
 )
 from sympy.abc import x, y
 
-from sympy.matrices import Matrix
-
 array_types = [
     ImmutableDenseNDimArray,
     ImmutableSparseNDimArray,
