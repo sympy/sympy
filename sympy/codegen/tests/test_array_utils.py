@@ -1,17 +1,18 @@
-from sympy import symbols, IndexedBase, Identity, cos, Inverse
+from sympy import symbols, IndexedBase, Identity, cos, Inverse, tensorcontraction, permutedims, tensorproduct, Array
 from sympy.codegen.array_utils import (CodegenArrayContraction,
                                        CodegenArrayTensorProduct, CodegenArrayDiagonal,
                                        CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
                                        _codegen_array_parse, _recognize_matrix_expression, _RecognizeMatOp,
                                        _RecognizeMatMulLines, _unfold_recognized_expr,
                                        parse_indexed_expression, recognize_matrix_expression,
-                                       parse_matrix_expression)
+                                       parse_matrix_expression, nest_permutation)
 from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions.diagonal import DiagMatrix
 from sympy.matrices import Trace, MatAdd, MatMul, Transpose
 from sympy.testing.pytest import raises
+import random
 
 
 A, B = symbols("A B", cls=IndexedBase)
@@ -296,31 +297,31 @@ def test_codegen_array_parse_out_of_bounds():
 
 def test_codegen_permutedims_sink():
 
-    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [0, 1, 3, 2])
-    sunk = cg.nest_permutation()
+    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [0, 1, 3, 2], nest_permutation=False)
+    sunk = nest_permutation(cg)
     assert sunk == CodegenArrayTensorProduct(M, CodegenArrayPermuteDims(N, [1, 0]))
     assert recognize_matrix_expression(sunk) == [M, N.T]
 
-    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 0, 3, 2])
-    sunk = cg.nest_permutation()
+    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 0, 3, 2], nest_permutation=False)
+    sunk = nest_permutation(cg)
     assert sunk == CodegenArrayTensorProduct(CodegenArrayPermuteDims(M, [1, 0]), CodegenArrayPermuteDims(N, [1, 0]))
     assert recognize_matrix_expression(sunk) == [M.T, N.T]
 
-    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [3, 2, 1, 0])
-    sunk = cg.nest_permutation()
+    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [3, 2, 1, 0], nest_permutation=False)
+    sunk = nest_permutation(cg)
     assert sunk == CodegenArrayTensorProduct(CodegenArrayPermuteDims(N, [1, 0]), CodegenArrayPermuteDims(M, [1, 0]))
     assert recognize_matrix_expression(sunk) == [N.T, M.T]
 
-    cg = CodegenArrayPermuteDims(CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2)), [1, 0])
-    sunk = cg.nest_permutation()
+    cg = CodegenArrayPermuteDims(CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2)), [1, 0], nest_permutation=False)
+    sunk = nest_permutation(cg)
     assert sunk == CodegenArrayContraction(CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [[0, 3]]), (1, 2))
 
-    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 0, 3, 2])
-    sunk = cg.nest_permutation()
+    cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 0, 3, 2], nest_permutation=False)
+    sunk = nest_permutation(cg)
     assert sunk == CodegenArrayTensorProduct(CodegenArrayPermuteDims(M, [1, 0]), CodegenArrayPermuteDims(N, [1, 0]))
 
-    cg = CodegenArrayPermuteDims(CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P), (1, 2), (3, 4)), [1, 0])
-    sunk = cg.nest_permutation()
+    cg = CodegenArrayPermuteDims(CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P), (1, 2), (3, 4)), [1, 0], nest_permutation=False)
+    sunk = nest_permutation(cg)
     assert sunk == CodegenArrayContraction(CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N, P), [[0, 5]]), (1, 2), (3, 4))
 
 
@@ -504,3 +505,157 @@ def test_recognize_diagonalized_vectors():
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(a, b, A), (0, 2, 4), (1, 3))
     assert cg.split_multiple_contractions() == cg
+
+
+def test_nested_permutations():
+
+    cg = CodegenArrayPermuteDims(CodegenArrayPermuteDims(M, (1, 0)), (1, 0))
+    assert cg == M
+
+    plist1 = list(range(6))
+    plist2 = list(range(6))
+
+    random.shuffle(plist1)
+    random.shuffle(plist2)
+
+    p1 = Permutation(plist1)
+    p2 = Permutation(plist2)
+
+    cg = CodegenArrayPermuteDims(
+        CodegenArrayPermuteDims(
+            CodegenArrayTensorProduct(M, N, P),
+            p1),
+        p2
+    )
+    result = CodegenArrayPermuteDims(
+        CodegenArrayTensorProduct(M, N, P),
+        p2*p1
+    )
+    assert cg == result
+
+    # Check that `permutedims` behaves the same way with explicit-component arrays:
+    Me = M.subs(k, 3).as_explicit()
+    Ne = N.subs(k, 3).as_explicit()
+    Pe = P.subs(k, 3).as_explicit()
+    cge = tensorproduct(Me, Ne, Pe)
+    result1 = permutedims(permutedims(cge, p1), p2)
+    result2 = permutedims(cge, p2*p1)
+    assert result1 == result2
+
+
+def test_contraction_permutation_mix():
+
+    Me = M.subs(k, 3).as_explicit()
+    Ne = N.subs(k, 3).as_explicit()
+    Pe = P.subs(k, 3).as_explicit()
+    Qe = Q.subs(k, 3).as_explicit()
+
+    cg1 = CodegenArrayContraction(CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), Permutation([0, 2, 1, 3])), (2, 3))
+    cg2 = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 3))
+    assert cg1 == cg2
+    assert recognize_matrix_expression(cg2) == M*N.T
+    cge1 = tensorcontraction(permutedims(tensorproduct(Me, Ne), Permutation([0, 2, 1, 3])), (2, 3))
+    cge2 = tensorcontraction(tensorproduct(Me, Ne), (1, 3))
+    assert cge1 == cge2
+
+    cg1 = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), Permutation([0, 1, 3, 2]))
+    cg2 = CodegenArrayTensorProduct(M, CodegenArrayPermuteDims(N, Permutation([1, 0])))
+    assert cg1 == cg2
+    assert recognize_matrix_expression(cg1) == [M, N.T]
+    assert recognize_matrix_expression(cg2) == [M, N.T]
+
+    cg1 = CodegenArrayContraction(
+        CodegenArrayPermuteDims(
+            CodegenArrayTensorProduct(M, N, P, Q), Permutation([0, 2, 3, 1, 4, 5, 7, 6])),
+        (1, 2), (3, 5)
+    )
+    cg2 = CodegenArrayContraction(
+        CodegenArrayTensorProduct(M, N, P, CodegenArrayPermuteDims(Q, Permutation([1, 0]))),
+        (1, 5), (2, 3)
+    )
+    assert cg1 == cg2
+    """
+    cge1 = tensorcontraction(
+        permutedims(
+            tensorproduct(Me, Ne, Pe, Qe), Permutation([0, 2, 3, 1, 4, 5, 7, 6])
+        ),
+        (1, 2), (3, 5)
+    )
+    cge2 = tensorcontraction(
+        tensorproduct(Me, tensorcontraction(Ne, (0, 1)), Pe, permutedims(Array(Qe), (1, 0))),
+        (1, 3)
+    )
+    assert cge1 == cge2.applyfunc(lambda x: x.expand())
+    """
+    assert recognize_matrix_expression(cg1) == [M*P.T*Trace(N), Q.T]
+    assert recognize_matrix_expression(cg2) == [M*P.T*Trace(N), Q.T]
+
+    cg1 = CodegenArrayContraction(
+        CodegenArrayPermuteDims(
+            CodegenArrayTensorProduct(M, N, P, Q), Permutation([1, 0, 4, 6, 2, 7, 5, 3])),
+        (0, 1), (2, 6), (3, 7)
+    )
+    cg2 = CodegenArrayContraction(
+        CodegenArrayTensorProduct(M, N, P, Q),
+        (0, 1), (3, 6), (4, 5)
+    )
+    # TODO: remove permute-dims if all dims are later contracted?
+    assert cg1 == cg2
+    """
+    cge1 = tensorcontraction(
+        permutedims(
+            tensorproduct(Me, Ne, Pe, Qe), Permutation([1, 0, 4, 6, 2, 7, 5, 3])
+        ),
+        (0, 1), (2, 6), (3, 7)
+    )
+    cge2 = tensorcontraction(
+        tensorproduct(tensorcontraction(Me, (0, 1)), Ne, tensorcontraction(Pe, (0, 1)), Qe),
+        (1, 2)
+    )
+    assert cge1 == cge2.applyfunc(lambda x: x.expand())
+    print(cge1, cge2)
+    """
+
+    cg1 = CodegenArrayContraction(
+        CodegenArrayPermuteDims(
+            CodegenArrayTensorProduct(M, N, P, Q), Permutation([1, 0, 4, 6, 7, 2, 5, 3])),
+        (0, 1), (2, 6), (3, 7)
+    )
+    cg2 = CodegenArrayPermuteDims(
+        CodegenArrayContraction(
+            CodegenArrayTensorProduct(CodegenArrayPermuteDims(M, [1, 0]), N, P, Q),
+            (0, 1), (3, 6), (4, 5)
+        ),
+        Permutation([1, 0])
+    )
+    assert cg1 == cg2
+    """
+    cge1 = tensorcontraction(
+        permutedims(
+            tensorproduct(Me, Ne, Pe, Qe), Permutation([1, 0, 4, 6, 7, 2, 5, 3])
+        ),
+        (0, 1), (2, 6), (3, 7)
+    )
+    cge2 = permutedims(tensorcontraction(
+        tensorproduct(tensorcontraction(Me, (0, 1)), Ne, tensorcontraction(Pe, (0, 1)), Qe),
+        (1, 2)
+    ), Permutation([1, 0]))
+    assert cge1 == cge2.applyfunc(lambda x: x.expand())
+    print(cge1, cge2)
+    """
+
+
+def test_permute_tensor_product():
+    cg1 = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N, P, Q), Permutation([2, 3, 1, 0, 5, 4, 6, 7]))
+    cg2 = CodegenArrayTensorProduct(CodegenArrayPermuteDims(N, [1, 0]), M,
+                                    CodegenArrayPermuteDims(P, [1, 0]), Q)
+    assert cg1 == cg2
+
+    # TODO: reverse operation starting with `CodegenArrayPermuteDims` and getting down to `bb`...
+    cg1 = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N, P, Q), Permutation([2, 3, 4, 5, 0, 1, 6, 7]))
+    cg2 = CodegenArrayTensorProduct(P, M, N, Q)
+    assert cg1 == cg2
+
+    cg1 = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N, P, Q), Permutation([2, 3, 4, 6, 5, 7, 0, 1]))
+    assert cg1.expr == CodegenArrayTensorProduct(M, N, P, Q)
+    assert cg1.permutation == Permutation([2, 3, 4, 6, 5, 7, 0, 1])
