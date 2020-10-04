@@ -139,6 +139,11 @@ def test_DiscreteMarkovChain():
     assert Y6.fundamental_matrix() == ImmutableMatrix([[Rational(3, 2), S.One, S.Half], [S.One, S(2), S.One], [S.Half, S.One, Rational(3, 2)]])
     assert Y6.absorbing_probabilities() == ImmutableMatrix([[Rational(3, 4), Rational(1, 4)], [S.Half, S.Half], [Rational(1, 4), Rational(3, 4)]])
 
+    # test for zero-sized matrix functionality
+    X = DiscreteMarkovChain('X', trans_probs=Matrix([[]]))
+    assert X.number_of_states == 0
+    assert X.stationary_distribution() == Matrix([[]])
+
     # testing miscellaneous queries
     T = Matrix([[S.Half, Rational(1, 4), Rational(1, 4)],
                 [Rational(1, 3), 0, Rational(2, 3)],

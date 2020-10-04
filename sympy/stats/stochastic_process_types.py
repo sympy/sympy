@@ -9,8 +9,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    linsolve, eye, Or, Not, Intersection, factorial, Contains,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
-                   ceiling, MatrixBase, ConditionSet, FunctionMatrix,
-                   ones, zeros, Identity)
+                   ceiling, MatrixBase, ConditionSet, ones, zeros, Identity)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -957,15 +956,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         if isinstance(trans_probs, MatrixSymbol) or not isinstance(n, Integer):
             wm = MatrixSymbol('wm', 1, n)
             if condition_set:
-                # fails when n is symbolic
-                # return ConditionSet(wm, And(Eq(wm*trans_probs, wm), Eq(sum(wm), 1)))
-                # fails when n is an integer
-                # return ConditionSet(wm, And(Eq(wm * trans_probs, wm), Eq(wm * OneMatrix(n, 1), Matrix([[1]]))))
-                # fails when n is symbolic
-                # return ConditionSet(wm, And(Eq(wm * trans_probs, wm), Eq(wm * ones(n, 1), Matrix([[1]]))))
                 return ConditionSet(wm, Eq(wm * trans_probs, wm))
             else:
-                if isinstance(trans_probs, FunctionMatrix):
+                if not trans_probs.is_symbol:  # Lambda only takes symbol-like objects
                     return Lambda(wm, Eq(wm * trans_probs, wm))
                 return Lambda((wm, trans_probs), Eq(wm * trans_probs, wm))
 
