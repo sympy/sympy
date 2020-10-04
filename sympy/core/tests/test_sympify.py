@@ -769,3 +769,9 @@ def test_issue_14706():
     raises(SympifyError, lambda: sympify(numpy.array([1]), strict=True))
     raises(SympifyError, lambda: sympify(z1, strict=True))
     raises(SympifyError, lambda: sympify(z2, strict=True))
+
+def test_sympify_expected_type():
+    assert _sympify(5, Integer) == Integer(5)
+    raises(SympifyError, lambda: _sympify({1}, set))
+    assert _sympify(1.7, Float) == Float(1.7)
+    raises(SympifyError, lambda: _sympify(1.7, float))

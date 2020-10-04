@@ -479,7 +479,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     return expr
 
 
-def _sympify(a):
+def _sympify(a, expected_type = None):
     """
     Short version of sympify for internal usage for __add__ and __eq__ methods
     where it is ok to allow some things (like Python integers and floats) in
@@ -505,6 +505,11 @@ def _sympify(a):
     see: sympify
 
     """
+    if expected_type is not None:
+        symp = sympify(a, strict=True)
+        if type(symp) is expected_type:
+            return symp
+        raise SympifyError('Sympified object of type ' + str(expected_type) + ' was expected. But found of type ' + str(type(symp)))
     return sympify(a, strict=True)
 
 
