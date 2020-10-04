@@ -160,6 +160,12 @@ def test_minimal_polynomial():
     48*x - 19*(19 - 3*sqrt(33))**Rational(2, 3) - 3*sqrt(33)*(19 - 3*sqrt(33))**Rational(2, 3) \
     - 16*(19 - 3*sqrt(33))**Rational(1, 3) - 16
 
+    # AlgebraicNumber with an alias.
+    # Wester H24
+    phi = AlgebraicNumber(S.GoldenRatio.expand(func=True), alias='phi')
+    minimal_polynomial(phi, x) == x**2 - x - 1
+
+
 def test_minimal_polynomial_hi_prec():
     p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + Rational(1, 10)**30)
     mp = minimal_polynomial(p, x)
