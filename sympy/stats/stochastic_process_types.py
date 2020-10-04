@@ -836,7 +836,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         return ImmutableMatrix(t2a)
 
-    def communication_classes(self) -> tTuple[tList[tList], tList[bool], tList[Integer]]:
+    def communication_classes(self) -> tTuple[tList[tList], tList[Boolean], tList[Integer]]:
         """
         Returns the list of communication classes that partition
         the states of the markov chain.
@@ -845,17 +845,20 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         such that every state in that set is reachable from
         every other state in that set. Due to its properties
         this forms a class in the mathematical sense.
+        Communication classes are also known as recurrence
+        classes.
 
         Returns
         =======
-        classes, recurrence, periods : List of List of states, List of bool, List of Integer
+
+        classes, recurrence, periods : List of List of states, List of Boolean, List of Integer
             The ``classes`` are a list each containing a
             single communication class. This partitions
             the state space. The ``recurrence`` is a list
             where the ith item specifies whether the ith
             communication class is recurrent. The ``periods``
             is a list where the ith item is the period
-            of the ith communication class
+            of the ith communication class.
 
         Examples
         ========
@@ -882,9 +885,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         It uses Tarjan's algorithm to find the classes
         themselves and then it uses a breadth-first search
         algorithm to find each class's periodicity.
-        Most of the algorithms components approach ``O(n)``
-        the closer the transition matrix is to the identity
-        matrix.
+        Most of the algorithm's components approach ``O(n)``
+        as the matrix becomes more and more sparse.
 
         References
         ==========
@@ -892,7 +894,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         .. [1] http://www.columbia.edu/~ww2040/4701Sum07/4701-06-Notes-MCII.pdf
         .. [2] http://cecas.clemson.edu/~shierd/Shier/markov.pdf
         .. [3] https://ujcontent.uj.ac.za/vital/access/services/Download/uj:7506/CONTENT1
-        .. [4] https://www.mathworks.com/help/econ/dtmc.classify.html#d122e135589
+        .. [4] https://www.mathworks.com/help/econ/dtmc.classify.html
         """
         n = self.number_of_states
         T = self.transition_probabilities
