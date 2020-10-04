@@ -897,7 +897,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return any(self.is_absorbing_state(state) == True
                     for state in range(trans_probs.shape[0]))
 
-    def stationary_distribution(self, condition_set=False):
+    def stationary_distribution(self, condition_set=False) -> ImmutableMatrix:
         """
         The stationary distribution is any row vector, p, that solves p = pP,
         is row stochastic and each element in p must be nonnegative.
@@ -914,7 +914,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         ==========
 
         condition_set : bool
-            If the has symbolic sizes or transition matrices,
+            If the chain has a symbolic size or transition matrix,
             it will return a ``Lambda`` if ``False`` and return a
             ``ConditionSet`` if ``True``.
 
@@ -985,17 +985,11 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         # numeric matrix version
         a = Matrix(trans_probs - Identity(n)).T
         a[0, 0:n] = ones(1, n)
-
         b = zeros(n, 1)
         b[0, 0] = 1
 
-        try:
-            pi_, params = a.gauss_jordan_solve(b)
-            pi_ = ImmutableMatrix(pi_.T)
-        except ValueError:
-            wm = MatrixSymbol('wm', 1, n)
-            pi_ = ConditionSet(wm, Eq(wm*trans_probs, wm))
-        return pi_
+        soln = list(linsolve((a, b)))[0]
+        return ImmutableMatrix([[sol for sol in soln]])
 
     def fixed_row_vector(self):
         """
