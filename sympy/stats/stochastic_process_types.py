@@ -376,19 +376,6 @@ class MarkovProcess(StochasticProcess):
 
         return state_space, trans_probs
 
-    @property
-    def _is_numeric(self) -> bool:
-        """
-        Checks whether the transition matrix has a numeric type and shape.
-        """
-        trans_matrix = self.args[2]
-        n = self.number_of_states
-        if not isinstance(n, Integer):
-            return False
-        if isinstance(trans_matrix, MatrixSymbol):
-            return False
-        return True
-
     def _extract_information(self, given_condition):
         """
         Helper function to extract information, like,
@@ -897,7 +884,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return any(self.is_absorbing_state(state) == True
                     for state in range(trans_probs.shape[0]))
 
-    def stationary_distribution(self, condition_set=False) -> ImmutableMatrix:
+    def stationary_distribution(self, condition_set=False) -> tUnion[ImmutableMatrix, ConditionSet, Lambda]:
         """
         The stationary distribution is any row vector, p, that solves p = pP,
         is row stochastic and each element in p must be nonnegative.
@@ -967,7 +954,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             return ImmutableMatrix(Matrix([[]]))
 
         # symbolic matrix version
-        if not self._is_numeric:
+        if isinstance(trans_probs, MatrixSymbol) or not isinstance(n, Integer):
             wm = MatrixSymbol('wm', 1, n)
             if condition_set:
                 # fails when n is symbolic
