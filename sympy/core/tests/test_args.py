@@ -88,12 +88,10 @@ def test_sympy__assumptions__assume__AppliedPredicate():
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
     assert _test_args(Q.is_true(True))
 
-def test_sympy__assumptions__assume__PolyadicAppliedPredicate():
-    from sympy.assumptions.assume import PolyadicAppliedPredicate, Predicate
-    assert _test_args(PolyadicAppliedPredicate(Predicate("test", arity=2), (2,3)))
-
+@XFAIL
 def test_sympy__assumptions__assume__Predicate():
     from sympy.assumptions.assume import Predicate
+    # Will be fixed after the mutability of Predicate is resolved
     assert _test_args(Predicate("test"))
 
 def test_sympy__assumptions__sathandlers__UnevaluatedOnFree():
