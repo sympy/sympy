@@ -441,12 +441,12 @@ def _gauss_jordan_solve(M, B, freevar=False):
         The right hand side of the equation to be solved for.  Must have
         the same number of rows as matrix A.
 
-    freevar : boolean
-        If the system is underdetermined (e.g. A has more columns than
-        rows), infinite solutions are possible, in terms of arbitrary
-        values of free variables. Then the indices of the free variables
-        in the solutions (column Matrix) will be returned by freevar, if
-        the flag `freevar` is set to `True`.
+    freevar : boolean, default=False
+        Flag, when set to `True` will return the indices of the free
+        variables in the solutions (column Matrix), for a system that is
+        undetermined (e.g. A has more columns than rows), for which
+        infinite solutions are possible, in terms of arbitrary
+        values of free variables.
 
     Returns
     =======
