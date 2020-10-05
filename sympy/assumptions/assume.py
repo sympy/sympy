@@ -165,12 +165,16 @@ class Predicate(Boolean):
 
     is_Atom = True
 
-    def __new__(cls, name, handlers=None, arity=1):
-        obj = Boolean.__new__(cls)
+    def __new__(cls, name, handlers=None, arity=S.One):
+        arity = _sympify(arity)
+        obj = Boolean.__new__(cls, arity)
         obj.name = name
         obj.handlers = handlers or []
-        obj.arity = arity
         return obj
+
+    @property
+    def arity(self):
+        return self.args[0]
 
     def _hashable_content(self):
         return (self.name,)
