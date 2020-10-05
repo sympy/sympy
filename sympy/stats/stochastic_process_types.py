@@ -842,6 +842,17 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return ImmutableMatrix(t2a)
 
     def fundamental_matrix(self):
+        """
+        Each entry fundamental matrix can be interpreted as
+        the expected number of times the chains is in state j
+        if it started in state i.
+
+        References
+        ==========
+
+        .. [1] https://lips.cs.princeton.edu/the-fundamental-matrix-of-a-finite-markov-chain/
+
+        """
         Q = self._transient2transient()
         if Q == None:
             return None

@@ -139,7 +139,11 @@ def test_DiscreteMarkovChain():
     assert Y6._transient2transient() == ImmutableMatrix([[0, S.Half, 0], [S.Half, 0, S.Half], [0, S.Half, 0]])
     assert Y6.fundamental_matrix() == ImmutableMatrix([[Rational(3, 2), S.One, S.Half], [S.One, S(2), S.One], [S.Half, S.One, Rational(3, 2)]])
     assert Y6.absorbing_probabilities() == ImmutableMatrix([[Rational(3, 4), Rational(1, 4)], [S.Half, S.Half], [Rational(1, 4), Rational(3, 4)]])
-
+    TO7 = Matrix([[Rational(1, 2), Rational(1, 4), Rational(1, 4)], [Rational(1, 2), 0, Rational(1, 2)], [Rational(1, 4), Rational(1, 4), Rational(1, 2)]])
+    Y7 = DiscreteMarkovChain('Y', trans_probs=TO7)
+    assert Y7._transient2absorbing() == None
+    assert Y7.is_absorbing_chain() == False
+    assert Y7.fundamental_matrix() == ImmutableDenseMatrix([[Rational(86, 75), Rational(1, 25), Rational(-14, 75)], [Rational(2, 25), Rational(21, 25), Rational(2, 25)], [Rational(-14, 75), Rational(1, 25), Rational(86, 75)]])
     # testing miscellaneous queries
     T = Matrix([[S.Half, Rational(1, 4), Rational(1, 4)],
                 [Rational(1, 3), 0, Rational(2, 3)],
