@@ -121,6 +121,7 @@ if cin:
                     self._py_nodes.append(self.transform(child))
                 else:
                     pass
+            return self._py_nodes
 
         def parse(self, filename, flags):
             """Function to parse a file with C source code
@@ -153,8 +154,8 @@ if cin:
                 args=flags,
                 options=cin.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
             )
-            self.traverse_translation_unit()
-            return self._py_nodes
+            
+            return self.traverse_translation_unit()
 
         def parse_cpp_str(self, source, flags):
             """Function to parse a string with C++ source code
@@ -182,13 +183,13 @@ if cin:
 
             """
             self.tu = self.index.parse(
-                'temp.c',
+                'temp.cpp',
                 args=flags,
-                unsaved_files = [('temp.c', source)],
+                unsaved_files = [('temp.cpp', source)],
                 options=cin.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
             )
-            self.traverse_translation_unit()
-            return self._py_nodes
+            
+            return self.traverse_translation_unit()
 
         def parse_c_str(self, source, flags):
             """Function to parse a string with C source code
@@ -216,13 +217,13 @@ if cin:
 
             """
             self.tu = self.index.parse(
-                'test.cpp',
+                'test.c',
                 args=flags,
-                unsaved_files = [('test.cpp', source)],
+                unsaved_files = [('test.c', source)],
                 options=cin.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
             )
-            self.traverse_translation_unit()
-            return self._py_nodes
+            
+            return self.traverse_translation_unit()
 
         def transform(self, node):
             """Transformation Function for Clang AST nodes
@@ -1056,3 +1057,41 @@ else:
     class CCodeConverter():  # type: ignore
         def __init__(self, *args, **kwargs):
             raise ImportError("Clang is not installed, cannot parse C code")
+
+def parse_c(source):
+    """Function for converting a C source code
+
+    The function reads the source code present in the given file and parses it
+    to give out SymPy Expressions
+
+    Returns
+    =======
+    src : list
+        List of Python expression strings
+
+    """
+    converter = CCodeConverter()
+    if os.path.exists(source):
+        src = converter.parse(source, flags = [])
+    else:
+        src = converter.parse_c_str(source, flags = [])
+    return src
+
+def parse_cpp(source):
+    """Function for converting a C source code
+
+    The function reads the source code present in the given file and parses it
+    to give out SymPy Expressions
+
+    Returns
+    =======
+    src : list
+        List of Python expression strings
+
+    """
+    converter = CCodeConverter()
+    if os.path.exists(source):
+        src = converter.parse(source, flags = [])
+    else:
+        src = converter.parse_cpp_str(source, flags = [])
+    return src

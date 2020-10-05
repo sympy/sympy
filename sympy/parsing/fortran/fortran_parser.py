@@ -9,6 +9,8 @@ if lfortran:
     from sympy import Symbol
 
     asr = lfortran.asr.asr
+    src_to_ast = lfortran.ast.src_to_ast
+    ast_to_asr = lfortran.semantic.ast_to_asr.ast_to_asr
 
     """
     This module contains all the necessary Classes and Function used to Parse
@@ -76,6 +78,7 @@ if lfortran:
                 self._py_ast.append(self.visit(sym))
             for item in node.items:
                 self._py_ast.append(self.visit(item))
+            return self._py_ast
 
         def visit_Assignment(self, node):
             """Visitor Function for Assignment
@@ -285,3 +288,41 @@ else:
     class ASR2PyVisitor():  # type: ignore
         def __init__(self, *args, **kwargs):
             raise ImportError('LFortran is not installed, cannot parse Fortran code')
+
+def call_visitor(fort_node):
+    """Calls the AST Visitor on the Module
+
+    This function is used to call the AST visitor for a program or module
+    It imports all the required modules and calls the visit() function
+    on the given node
+
+    Parameters
+    ==========
+    fort_node : LFortran ASR object
+        Node for the operation for which the NodeVisitor is called
+
+    Returns
+    =======
+    res_ast : list
+        list of sympy AST Nodes
+    
+    """
+    return ASR2PyVisitor().visit(fort_node)
+
+def src_to_sympy(src):
+    """Wrapper function to convert the given Fortran source code to SymPy Expressions
+
+    Parameters
+    ==========
+    src : string
+        A string with the Fortran source code
+
+    Returns
+    =======
+    py_src : string
+        A string with the python source code compatible with SymPy
+
+    """
+    a = ast_to_asr(src_to_ast(src, translation_unit=False))
+    py_src = call_visitor(a)
+    return py_src

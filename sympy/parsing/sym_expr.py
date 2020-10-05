@@ -7,10 +7,7 @@ import os
 
 lfortran = import_module('lfortran')
 cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
-
-if lfortran:
-    src_to_ast = lfortran.ast.src_to_ast
-    ast_to_asr = lfortran.semantic.ast_to_asr.ast_to_asr
+from sympy.parsing.fortran.fortran_parser import src_to_sympy
 
 
 @doctest_depends_on(modules=['lfortran', 'clang.cindex'])
@@ -152,9 +149,7 @@ class SymPyExpression(object):  # type: ignore
 
         """
         if mode.lower() == 'f':
-            vis = ASR2PyVisitor()
-            vis.visit(ast_to_asr(src_to_ast(src_code, translation_unit=False)))
-            self._expr = vis.ret_ast()
+            self._expr = src_to_sympy(src_code)
         elif mode.lower() in ['c', 'cpp']:
             converter = CCodeConverter()
             if 'flags' in kwargs:
