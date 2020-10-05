@@ -851,14 +851,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         Returns
         =======
 
-        classes, recurrence, periods : List of List of states, List of Boolean, List of Integer
-            The ``classes`` are a list each containing a
-            single communication class. This partitions
-            the state space. The ``recurrence`` is a list
-            where the ith item specifies whether the ith
-            communication class is recurrent. The ``periods``
-            is a list where the ith item is the period
-            of the ith communication class.
+        classes : List of Tuple of List, Boolean, Intger
+            The ``classes`` are a list of tuples. Each
+            tuple represents a single communication class
+            with its properties. The first element in the
+            tuple is the list of states in the class, the
+            second element is whether the class is recurrent
+            and the third element is the period of the
+            communication class.
 
         Examples
         ========
