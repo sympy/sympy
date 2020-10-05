@@ -2,7 +2,6 @@ from sympy.printing import pycode, ccode, fcode
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.parsing.c.c_parser import CCodeConverter
-from sympy.parsing.fortran.fortran_parser import ASR2PyVisitor
 import os
 
 lfortran = import_module('lfortran')
