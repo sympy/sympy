@@ -305,7 +305,7 @@ def call_visitor(fort_node):
     =======
     res_ast : list
         list of sympy AST Nodes
-    
+
     """
     return ASR2PyVisitor().visit(fort_node)
 

@@ -154,7 +154,7 @@ if cin:
                 args=flags,
                 options=cin.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
             )
-            
+
             return self.traverse_translation_unit()
 
         def parse_cpp_str(self, source, flags):
@@ -188,7 +188,7 @@ if cin:
                 unsaved_files = [('temp.cpp', source)],
                 options=cin.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
             )
-            
+
             return self.traverse_translation_unit()
 
         def parse_c_str(self, source, flags):
@@ -222,7 +222,7 @@ if cin:
                 unsaved_files = [('test.c', source)],
                 options=cin.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
             )
-            
+
             return self.traverse_translation_unit()
 
         def transform(self, node):
