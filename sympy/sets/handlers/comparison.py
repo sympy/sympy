@@ -1,8 +1,9 @@
 from sympy.core.relational import Eq, is_eq
+from sympy.core.basic import Basic
 from sympy.core.logic import fuzzy_and, fuzzy_bool
 from sympy.logic.boolalg import And
 from sympy.multipledispatch import dispatch
-from sympy.sets.sets import tfn, ProductSet, Interval, FiniteSet
+from sympy.sets.sets import tfn, ProductSet, Interval, FiniteSet, Set
 
 
 @dispatch(Interval, FiniteSet) # type:ignore
@@ -46,3 +47,13 @@ def _eval_is_eq(lhs, rhs): # noqa: F811
 
     eqs = (is_eq(x, y) for x, y in zip(lhs.sets, rhs.sets))
     return tfn[fuzzy_and(map(fuzzy_bool, eqs))]
+
+
+@dispatch(Set, Basic) # type:ignore
+def _eval_is_eq(lhs, rhs): # noqa: F811
+    return False
+
+
+@dispatch(Set, Set) # type:ignore
+def _eval_is_eq(lhs, rhs): # noqa: F811
+    return None

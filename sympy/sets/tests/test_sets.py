@@ -1581,3 +1581,11 @@ def test_DisjointUnion_len():
     assert len(DisjointUnion(FiniteSet(3, 5, 7, 9), FiniteSet(x, y, z))) == 7
     assert len(DisjointUnion(S.EmptySet, S.EmptySet, FiniteSet(x, y, z), S.EmptySet)) == 3
     raises(ValueError, lambda: len(DisjointUnion(Interval(0, 1), S.EmptySet)))
+
+def test_issue_20089():
+    B = FiniteSet(FiniteSet(1, 2), FiniteSet(1))
+    assert not 1 in B
+    assert Eq(1, FiniteSet(1, 2)) == False
+    assert FiniteSet(1) in B
+    A = FiniteSet(1, 2)
+    assert not A.issubset(B)
