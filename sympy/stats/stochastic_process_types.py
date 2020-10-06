@@ -13,11 +13,8 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-<<<<<<< HEAD
 from sympy.stats import P
-=======
 from sympy.utilities.iterables import strongly_connected_components
->>>>>>> a106f4782a9dbe7f8fd16030f15401d977e03ae9
 from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
@@ -797,12 +794,15 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     can also be calculated provided there is only 1 RandomIndexedSymbol
     in the given condition.
 
+    >>> from sympy import Gt, Le
     >>> T = Matrix([[0.5, 0.3, 0.2], [0.2, 0.7, 0.1], [0.3, 0.3, 0.4]])
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     >>> P(Eq(Y[3], Y[1]), Eq(Y[0], 0)).round(3)
     0.409
     >>> P(Gt(Y[3], Y[1]), Eq(Y[0], 0)).round(2)
     0.36
+    >>> P(Le(Y[15], Y[10]), Eq(Y[8], 2)).round(7)
+    0.6963328
 
     There is limited support for arbitrarily sized states:
 

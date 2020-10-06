@@ -1,7 +1,8 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
                    ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda, erf,
                    Piecewise, factorial, Interval, oo, Contains, sqrt, pi, ceiling,
-                   gamma, lowergamma, Sum, Range, Tuple, ImmutableDenseMatrix, Symbol)
+                   gamma, lowergamma, Sum, Range, Tuple, ImmutableDenseMatrix, Symbol,
+                   Le, Ge)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
                          BernoulliProcess, PoissonProcess, WienerProcess,
@@ -222,8 +223,12 @@ def test_DiscreteMarkovChain():
     #testing queries with multiple RandomIndexedSymbols
     T = Matrix([[0.5, 0.3, 0.2], [0.2, 0.7, 0.1], [0.3, 0.3, 0.4]])
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
-    P(Eq(Y[3], Y[1]), Eq(Y[0], 0)) == 0.409
-    P(Gt(Y[3], Y[1]), Eq(Y[0], 0)) == 0.36
+    assert P(Eq(Y[7], Y[5]), Eq(Y[2], 0)).round(5) == Float(0.44428, 5)
+    assert P(Gt(Y[3], Y[1]), Eq(Y[0], 0)).round(2) == Float(0.36, 2)
+    assert P(Le(Y[5], Y[10]), Eq(Y[4], 2)).round(6) == Float(0.739072, 6)
+    assert Float(P(Eq(Y[500], Y[240]), Eq(Y[120], 1)), 14) == Float(1 - P(Ne(Y[500], Y[240]), Eq(Y[120], 1)), 14)
+    assert Float(P(Gt(Y[350], Y[100]), Eq(Y[75], 2)), 14) == Float(1 - P(Le(Y[350], Y[100]), Eq(Y[75], 2)), 14)
+    assert Float(P(Lt(Y[400], Y[210]), Eq(Y[161], 0)), 14) == Float(1 - P(Ge(Y[400], Y[210]), Eq(Y[161], 0)), 14)
 
 def test_sample_stochastic_process():
     if not import_module('scipy'):
