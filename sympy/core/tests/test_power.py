@@ -579,3 +579,7 @@ def test_power_dispatcher():
     assert power(a, b) == NewPow(a, b)
     assert power(b, a) == NewPow(b, a)
     assert power(b, b) == NewPow(b, b)
+
+def test_issue_19572():
+    assert 0 ** -oo is zoo
+    assert power(0, -oo) is zoo
