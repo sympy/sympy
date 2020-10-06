@@ -1,10 +1,10 @@
 import random
 
 import itertools
-from typing import Sequence as tSequence, Union as tUnion
+from typing import Sequence as tSequence, Union as tUnion, List as tList, Tuple as tTuple
 
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
-                   Set, And, Eq, FiniteSet, ImmutableMatrix, Integer,
+                   Set, And, Eq, FiniteSet, ImmutableMatrix, Integer, igcd,
                    Lambda, Mul, Dummy, IndexedBase, Add, Interval, oo,
                    linsolve, eye, Or, Not, Intersection, factorial, Contains,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
@@ -13,7 +13,11 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+<<<<<<< HEAD
 from sympy.stats import P
+=======
+from sympy.utilities.iterables import strongly_connected_components
+>>>>>>> a106f4782a9dbe7f8fd16030f15401d977e03ae9
 from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
@@ -879,6 +883,134 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                 for si in trans_states]
 
         return ImmutableMatrix(t2a)
+
+    def communication_classes(self) -> tList[tTuple[tList[Basic], Boolean, Integer]]:
+        """
+        Returns the list of communication classes that partition
+        the states of the markov chain.
+
+        A communication class is defined to be a set of states
+        such that every state in that set is reachable from
+        every other state in that set. Due to its properties
+        this forms a class in the mathematical sense.
+        Communication classes are also known as recurrence
+        classes.
+
+        Returns
+        =======
+
+        classes : List of Tuple of List, Boolean, Intger
+            The ``classes`` are a list of tuples. Each
+            tuple represents a single communication class
+            with its properties. The first element in the
+            tuple is the list of states in the class, the
+            second element is whether the class is recurrent
+            and the third element is the period of the
+            communication class.
+
+        Examples
+        ========
+
+        >>> from sympy.stats import DiscreteMarkovChain
+        >>> from sympy import Matrix
+        >>> T = Matrix([[0, 1, 0],
+        ...             [1, 0, 0],
+        ...             [1, 0, 0]])
+        >>> X = DiscreteMarkovChain('X', [1, 2, 3], T)
+        >>> classes = X.communication_classes()
+        >>> for states, is_recurrent, period in classes:
+        ...     states, is_recurrent, period
+        ([1, 2], True, 2)
+        ([3], False, 1)
+
+        From this we can see that states ``1`` and ``2``
+        communicate, are recurrent and have a period
+        of 2. We can also see state ``3`` is transient
+        with a period of 1.
+
+        Notes
+        =====
+
+        The algorithm used is of order ``O(n**2)`` where
+        ``n`` is the number of states in the markov chain.
+        It uses Tarjan's algorithm to find the classes
+        themselves and then it uses a breadth-first search
+        algorithm to find each class's periodicity.
+        Most of the algorithm's components approach ``O(n)``
+        as the matrix becomes more and more sparse.
+
+        References
+        ==========
+
+        .. [1] http://www.columbia.edu/~ww2040/4701Sum07/4701-06-Notes-MCII.pdf
+        .. [2] http://cecas.clemson.edu/~shierd/Shier/markov.pdf
+        .. [3] https://ujcontent.uj.ac.za/vital/access/services/Download/uj:7506/CONTENT1
+        .. [4] https://www.mathworks.com/help/econ/dtmc.classify.html
+        """
+        n = self.number_of_states
+        T = self.transition_probabilities
+
+        # begin Tarjan's algorithm
+        V = Range(n)
+        # don't use state names. Rather use state
+        # indexes since we use them for matrix
+        # indexing here and later onward
+        E = [(i, j) for i in V for j in V if T[i, j] != 0]
+        classes = strongly_connected_components((V, E))
+        # end Tarjan's algorithm
+
+        recurrence = []
+        periods = []
+        for class_ in classes:
+            # begin recurrent check (similar to self._check_trans_probs())
+            submatrix = T[class_, class_]  # get the submatrix with those states
+            is_recurrent = S.true
+            rows = submatrix.tolist()
+            for row in rows:
+                if (sum(row) - 1) != 0:
+                    is_recurrent = S.false
+                    break
+            recurrence.append(is_recurrent)
+            # end recurrent check
+
+            # begin breadth-first search
+            non_tree_edge_values = set()
+            visited = {class_[0]}
+            newly_visited = {class_[0]}
+            level = {class_[0]: 0}
+            current_level = 0
+            done = False  # imitate a do-while loop
+            while not done:  # runs at most len(class_) times
+                done = len(visited) == len(class_)
+                current_level += 1
+
+                # this loop and the while loop above run a combined len(class_) number of times.
+                # so this triple nested loop runs through each of the n states once.
+                for i in newly_visited:
+
+                    # the loop below runs len(class_) number of times
+                    # complexity is around about O(n * avg(len(class_)))
+                    newly_visited = {j for j in class_ if T[i, j] != 0}
+
+                    new_tree_edges = newly_visited.difference(visited)
+                    for j in new_tree_edges:
+                        level[j] = current_level
+
+                    new_non_tree_edges = newly_visited.intersection(visited)
+                    new_non_tree_edge_values = {level[i]-level[j]+1 for j in new_non_tree_edges}
+
+                    non_tree_edge_values = non_tree_edge_values.union(new_non_tree_edge_values)
+                    visited = visited.union(new_tree_edges)
+
+            # igcd needs at least 2 arguments
+            g = igcd(len(class_), len(class_), *{val_e for val_e in non_tree_edge_values if val_e > 0})
+            periods.append(g)
+            # end breadth-first search
+
+        # convert back to the user's state names
+        classes = [[self._state_index[i] for i in class_] for class_ in classes]
+
+        return sympify(list(zip(classes, recurrence, periods)))
 
     def fundamental_matrix(self):
         Q = self._transient2transient()
