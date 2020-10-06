@@ -9,10 +9,11 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    linsolve, eye, Or, Not, Intersection, factorial, Contains,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
-                   ceiling, MatrixBase)
+                   ceiling, MatrixBase, Float, Gt, Lt, Ne)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.stats import P
 from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
@@ -412,7 +413,7 @@ class MarkovProcess(StochasticProcess):
         if not isinstance(trans_probs, MatrixSymbol):
             rows = trans_probs.tolist()
             for row in rows:
-                if (sum(row) - row_sum) != 0:
+                if abs(sum(row) - row_sum) > 1e-5:
                     raise ValueError("Values in a row must sum to %s. "
                     "If you are using Float or floats then please use Rational."%(row_sum))
 
@@ -519,20 +520,53 @@ class MarkovProcess(StochasticProcess):
         new_given_condition=self.replace_with_index(new_given_condition)
 
         if isinstance(condition, Relational):
-            rv, states = (list(condition.atoms(RandomIndexedSymbol))[0], condition.as_set())
             if isinstance(new_given_condition, And):
                 gcs = new_given_condition.args
             else:
                 gcs = (new_given_condition, )
-            grvs = new_given_condition.atoms(RandomIndexedSymbol)
+            min_key_rv = list(new_given_condition.atoms(RandomIndexedSymbol))
+            rv = list(condition.atoms(RandomIndexedSymbol))
 
-            min_key_rv = None
-            for grv in grvs:
-                if grv.key <= rv.key:
-                    min_key_rv = grv
-            if min_key_rv == None:
+            if len(min_key_rv):
+                min_key_rv = min_key_rv[0]
+                for r in rv:
+                    if min_key_rv.key > r.key:
+                        return Probability(condition)
+            else:
+                min_key_rv = None
                 return Probability(condition)
 
+            if len(rv) > 1:
+                rv = rv[:2]
+                if rv[0].key < rv[1].key:
+                        rv[0], rv[1] = rv[1], rv[0]
+                s = Float(0)
+                n = len(self.state_space)
+
+                if isinstance(condition, Eq) or isinstance(condition, Ne):
+                    for i in range(0, n):
+                        s += P(Eq(rv[0], i), Eq(rv[1], i)) * P(Eq(rv[1], i), new_given_condition)
+                    return s if isinstance(condition, Eq) else 1-s
+                else:
+                    upper = 0
+                    greater = False
+                    if isinstance(condition, Ge) or isinstance(condition, Lt):
+                        upper = 1
+                    if isinstance(condition, Gt) or isinstance(condition, Ge):
+                        greater = True
+
+                    for i in range(0, n):
+                        if i <= n//2:
+                            for j in range(0, i + upper):
+                                s += P(Eq(rv[0], i), Eq(rv[1], j)) * P(Eq(rv[1], j), new_given_condition)
+                        else:
+                            s+=P(Eq(rv[0], i), new_given_condition)
+                            for j in range(i + upper, n):
+                                s -= P(Eq(rv[0], i), Eq(rv[1], j)) * P(Eq(rv[1], j), new_given_condition)
+                    return s if greater else 1-s
+
+            rv = rv[0]
+            states = condition.as_set()
             prob, gstate = dict(), None
             for gc in gcs:
                 if gc.has(min_key_rv):
@@ -754,6 +788,17 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     >>> E(Y[3], Eq(Y[1], cloudy))
     0.38*Cloudy + 0.36*Rainy + 0.26*Sunny
+
+    Probability of expressions with multiple RandomIndexedSymbols
+    can also be calculated provided there is only 1 RandomIndexedSymbol
+    in the given condition.
+
+    >>> T = Matrix([[0.5, 0.3, 0.2], [0.2, 0.7, 0.1], [0.3, 0.3, 0.4]])
+    >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    >>> P(Eq(Y[3], Y[1]), Eq(Y[0], 0)).round(3)
+    0.409
+    >>> P(Gt(Y[3], Y[1]), Eq(Y[0], 0)).round(2)
+    0.36
 
     There is limited support for arbitrarily sized states:
 
