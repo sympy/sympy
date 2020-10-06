@@ -266,6 +266,9 @@ def test_zero():
     assert 0**(2*x*y) == 0**(x*y)
     assert 0**(-2*x*y) == S.ComplexInfinity**(x*y)
 
+    #Test issue 19572
+    assert 0 ** -oo is zoo
+    assert power(0, -oo) is zoo
 
 def test_pow_as_base_exp():
     x = Symbol('x')
@@ -579,7 +582,3 @@ def test_power_dispatcher():
     assert power(a, b) == NewPow(a, b)
     assert power(b, a) == NewPow(b, a)
     assert power(b, b) == NewPow(b, b)
-
-def test_issue_19572():
-    assert 0 ** -oo is zoo
-    assert power(0, -oo) is zoo
