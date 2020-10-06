@@ -953,13 +953,11 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             return ImmutableMatrix(Matrix([[]]))
 
         # symbolic matrix version
-        if isinstance(trans_probs, MatrixSymbol) or not isinstance(n, Integer):
+        if isinstance(trans_probs, MatrixSymbol):
             wm = MatrixSymbol('wm', 1, n)
             if condition_set:
                 return ConditionSet(wm, Eq(wm * trans_probs, wm))
             else:
-                if not trans_probs.is_symbol:  # Lambda only takes symbol-like objects
-                    return Lambda(wm, Eq(wm * trans_probs, wm))
                 return Lambda((wm, trans_probs), Eq(wm * trans_probs, wm))
 
         # numeric matrix version
