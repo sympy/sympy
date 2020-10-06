@@ -1585,7 +1585,14 @@ def test_DisjointUnion_len():
 def test_issue_20089():
     B = FiniteSet(FiniteSet(1, 2), FiniteSet(1))
     assert not 1 in B
-    assert Eq(1, FiniteSet(1, 2)) == False
+    assert not 1.0 in B
+    assert not Eq(1, FiniteSet(1, 2))
     assert FiniteSet(1) in B
     A = FiniteSet(1, 2)
+    assert A in B
+    assert B.issubset(B)
     assert not A.issubset(B)
+    assert 1 in A
+    C = FiniteSet(FiniteSet(1, 2), FiniteSet(1), 1, 2)
+    assert A.issubset(C)
+    assert B.issubset(C)
