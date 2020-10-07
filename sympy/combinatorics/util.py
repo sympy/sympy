@@ -445,10 +445,9 @@ def _strip(g, base, orbits, transversals):
     See Also
     ========
 
-    sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims
-
+    sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims,
     sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims_random
-
+    
     """
     h = g._array_form
     base_len = len(base)
