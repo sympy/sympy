@@ -15,7 +15,7 @@ def main():
     e = ( a*b*b + 2*b*a*b )**c
 
     print('')
-    pprint(e)
+    print(e)
     print('')
 
 if __name__ == "__main__":
