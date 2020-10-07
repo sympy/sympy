@@ -203,6 +203,14 @@ def canonicalize_naive(g, dummies, sym, *v):
     """
     Canonicalize tensor formed by tensors of the different types.
 
+    Explanation
+    ===========
+
+    sym_i symmetry under exchange of two component tensors of type `i`
+          None  no symmetry
+          0     commuting
+          1     anticommuting
+
     Parameters
     ==========
 
@@ -213,15 +221,10 @@ def canonicalize_naive(g, dummies, sym, *v):
         base_i, gens_i BSGS for tensors of this type
         n_i  number ot tensors of type `i`
 
-    Explanation
-    ===========
+    Returns
+    =======
 
-    sym_i symmetry under exchange of two component tensors of type `i`
-          None  no symmetry
-          0     commuting
-          1     anticommuting
-
-    Return 0 if the tensor is zero, else return the array form of
+    Returns 0 if the tensor is zero, else returns the array form of
     the permutation representing the canonical form of the tensor.
 
     Examples

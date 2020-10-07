@@ -267,11 +267,11 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     stabilizers.
     ``transversals_only`` - bool
         A flag switching between returning only the
-        transversals/ both orbits and transversals.
+        transversals and both orbits and transversals.
     ``slp`` -
         If ``True``, return a list of dictionaries containing the
         generator presentations of the elements of the transversals,
-        i.e. the list of indices of generators from `strong_gens_distr[i]`
+        i.e. the list of indices of generators from ``strong_gens_distr[i]``
         such that their product is the relevant transversal element.
 
     Examples
@@ -439,13 +439,12 @@ def _strip(g, base, orbits, transversals):
     References
     ==========
 
-    .. [1] Holt, D., Eick, B., O'Brien, E.
-    "Handbook of computational group theory"
+    .. [1] Holt, D., Eick, B., O'Brien, E."Handbook of computational group theory"
 
     See Also
     ========
 
-    sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims,
+    sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims
     sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims_random
 
     """

@@ -27,6 +27,7 @@ class Polyhedron(Basic):
     ==========
 
     .. [1] http://mathworld.wolfram.com/PolyhedralGroup.html
+
     """
     _edges = None
 
@@ -675,6 +676,7 @@ def _pgroup_calcs():
     ==========
 
     .. [1] http://dogschool.tripod.com/trianglegroup.html
+
     """
     def _pgroup_of_double(polyh, ordered_faces, pgroup):
         n = len(ordered_faces[0])
