@@ -329,7 +329,7 @@ class NDimArray(Printable):
         from sympy.tensor.array.arrayop import Flatten
 
         if not isinstance(other, NDimArray):
-            raise NotImplemented
+            raise NotImplementedError('Unsupported operand type(s) for - : ' + str(type(other)) + ' and ' + str(type(self)))
 
         if self.shape != other.shape:
             raise ValueError("array shape mismatch")
