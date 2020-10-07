@@ -447,7 +447,7 @@ def _strip(g, base, orbits, transversals):
 
     sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims,
     sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims_random
-    
+
     """
     h = g._array_form
     base_len = len(base)
@@ -468,6 +468,7 @@ def _strip_af(h, base, orbits, transversals, j, slp=[], slps={}):
     if the stripped elements is the identity, it returns False, base_len + 1
 
     j    h[base[i]] == base[i] for i <= j
+
     """
     base_len = len(base)
     for i in range(j+1, base_len):
