@@ -36,6 +36,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
+from sympy.core.relational import Eq
 from sympy.simplify import hyperexpand, powdenest, collect
 from sympy.simplify.fu import sincos_to_sum
 from sympy.logic.boolalg import And, Or, BooleanAtom
@@ -1640,7 +1641,7 @@ def meijerint_indefinite(f, x):
 
 def _meijerint_indefinite_1(f, x):
     """ Helper that does not attempt any substitution. """
-    from sympy import Integral, piecewise_fold, nan, zoo
+    from sympy import Integral, piecewise_fold, nan, zoo, solve
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
 
     gs = _rewrite1(f, x)
@@ -1659,6 +1660,18 @@ def _meijerint_indefinite_1(f, x):
         # we do a substitution t=a*x**b, get integrand fac*t**rho*g
         fac_ = fac * C / (b*a**((1 + c)/b))
         rho = (c + 1)/b - 1
+
+        # handle zero denominators in the above substitution
+        special_results = []
+        for den in (a, b):
+            if not den.is_Number and not den.is_nonzero:
+                zero_sol = solve(den, dict=True)
+                for sol in zero_sol:
+                    zero_res = _meijerint_indefinite_1(f.subs(sol), x)
+                    zero_cond = cond
+                    for vz, sz in sol.items():
+                        zero_cond = And(zero_cond, Eq(vz, sz))
+                    special_results.append(Piecewise((zero_res, zero_cond)))
 
         # we now use t**rho*G(params, t) = G(params + rho, t)
         # [L, page 150, equation (4)]
@@ -1689,6 +1702,9 @@ def _meijerint_indefinite_1(f, x):
         # now substitute back
         # Note: we really do want the powers of x to combine.
         res += powdenest(fac_*r, polar=True)
+
+        for sr in special_results:
+            res = Piecewise(*(sr.args + ((res, S.true),)))
 
     def _clean(res):
         """This multiplies out superfluous powers of x we created, and chops off
