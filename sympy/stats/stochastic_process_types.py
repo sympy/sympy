@@ -414,7 +414,7 @@ class MarkovProcess(StochasticProcess):
         if not isinstance(trans_probs, MatrixSymbol):
             rows = trans_probs.tolist()
             for row in rows:
-                if abs(sum(row) - row_sum) > 1e-5:
+                if sum(row) - row_sum != 0:
                     raise ValueError("Values in a row must sum to %s. "
                     "If you are using Float or floats then please use Rational."%(row_sum))
 
@@ -792,10 +792,13 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     Probability of expressions with multiple RandomIndexedSymbols
     can also be calculated provided there is only 1 RandomIndexedSymbol
-    in the given condition.
+    in the given condition. It is always better to use Rational instead
+    of floating point numbers for the probabilities in the
+    transition matrix to avoid errors.
 
     >>> from sympy import Gt, Le
-    >>> T = Matrix([[0.5, 0.3, 0.2], [0.2, 0.7, 0.1], [0.3, 0.3, 0.4]])
+    >>> from sympy.core.numbers import Rational
+    >>> T = Matrix([[Rational(5, 10), Rational(3, 10), Rational(2, 10)], [Rational(2, 10), Rational(7, 10), Rational(1, 10)], [Rational(3, 10), Rational(3, 10), Rational(4, 10)]])
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     >>> P(Eq(Y[3], Y[1]), Eq(Y[0], 0)).round(3)
     0.409
