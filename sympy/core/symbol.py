@@ -169,9 +169,9 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
         return _symbol(x, default, **assumptions)
     if not is_sequence(exprs):
         exprs = [exprs]
-    names = set().union((
+    names = set().union(
         [i.name for e in exprs for i in e.atoms(Symbol)] +
-        [i.func.name for e in exprs for i in e.atoms(AppliedUndef)]))
+        [i.func.name for e in exprs for i in e.atoms(AppliedUndef)])
     if modify is None:
         modify = numbered_string_incr
     while any(x == compare(s) for s in names):

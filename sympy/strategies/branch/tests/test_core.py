@@ -26,8 +26,7 @@ def inc(x):
     yield x + 1
 
 def one_to_n(n):
-    for i in range(n):
-        yield i
+    yield from range(n)
 
 def test_exhaust():
     brl = exhaust(branch5)
@@ -56,7 +55,7 @@ def test_multiplex():
 def test_condition():
     brl = condition(even, branch5)
     assert set(brl(4)) == set(branch5(4))
-    assert set(brl(5)) == set([])
+    assert set(brl(5)) == set()
 
 def test_sfilter():
     brl = sfilter(even, one_to_n)

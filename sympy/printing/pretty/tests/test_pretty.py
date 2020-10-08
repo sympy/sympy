@@ -4024,7 +4024,7 @@ def test_pretty_sets():
     assert pretty(s(*range(1, 6))) == "{1, 2, 3, 4, 5}"
     assert pretty(s(*range(1, 13))) == "{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
 
-    assert pretty(set([x*y, x**2])) == \
+    assert pretty({x*y, x**2}) == \
 """\
   2      \n\
 {x , x*y}\
@@ -4724,7 +4724,7 @@ def test_pretty_class():
     class C:
         pass   # C has no .__class__ and this was causing problems
 
-    class D(object):
+    class D:
         pass
 
     assert pretty( C ) == str( C )

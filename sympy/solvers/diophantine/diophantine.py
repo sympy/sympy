@@ -112,7 +112,7 @@ class DiophantineSolutionSet(set):
     def add(self, solution):
         if len(solution) != len(self.symbols):
             raise ValueError("Solution should have a length of %s, not %s" % (len(self.symbols), len(solution)))
-        super(DiophantineSolutionSet, self).add(Tuple(*solution))
+        super().add(Tuple(*solution))
 
     def update(self, *solutions):
         for solution in solutions:
@@ -350,7 +350,7 @@ all_diop_classes = [
     GeneralSumOfEvenPowers,
 ]
 
-diop_known = set([diop_class.name for diop_class in all_diop_classes])
+diop_known = {diop_class.name for diop_class in all_diop_classes}
 
 
 def _is_int(i):
@@ -604,7 +604,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
             return diophantine(eq/fl[0], param=param, syms=syms, permute=permute)
         terms = fl[1]
 
-    sols = set([])
+    sols = set()
 
     for term in terms:
 
@@ -638,7 +638,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     # if there is no solution, return trivial solution
     if not sols and eq.subs(zip(var, null)).is_zero:
         sols.add(null)
-    final_soln = set([])
+    final_soln = set()
     for sol in sols:
         if all(_is_int(s) for s in sol):
             if do_permute_signs:
@@ -1161,8 +1161,8 @@ def diop_univariate(eq):
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type == Univariate.name:
-        return set([(int(i),) for i in solveset_real(
-            eq, var[0]).intersect(S.Integers)])
+        return {(int(i),) for i in solveset_real(
+            eq, var[0]).intersect(S.Integers)}
 
 
 def divisible(a, b):
@@ -3580,12 +3580,10 @@ def pow_rep_recursive(n_i, k, n_remaining, terms, p):
         yield tuple(terms)
     else:
         if n_i >= 1 and k > 0:
-            for t in pow_rep_recursive(n_i - 1, k, n_remaining, terms, p):
-                yield t
+            yield from pow_rep_recursive(n_i - 1, k, n_remaining, terms, p)
             residual = n_remaining - pow(n_i, p)
             if residual >= 0:
-                for t in pow_rep_recursive(n_i, k - 1, residual, terms + [n_i], p):
-                    yield t
+                yield from pow_rep_recursive(n_i, k - 1, residual, terms + [n_i], p)
 
 
 def sum_of_squares(n, k, zeros=False):
@@ -3632,8 +3630,7 @@ def sum_of_squares(n, k, zeros=False):
     ========
     sympy.utilities.iterables.signed_permutations
     """
-    for t in power_representation(n, 2, k, zeros):
-        yield t
+    yield from power_representation(n, 2, k, zeros)
 
 
 def _can_do_sum_of_squares(n, k):

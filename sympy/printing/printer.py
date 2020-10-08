@@ -231,7 +231,7 @@ def printer_context(printer, **kwargs):
         printer._context = original
 
 
-class Printer(object):
+class Printer:
     """ Generic printer
 
     Its job is to provide infrastructure for implementing new printers easily.

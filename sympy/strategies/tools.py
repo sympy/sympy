@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from . import rl
 from .core import do_one, exhaust, switch
 from .traverse import top_down

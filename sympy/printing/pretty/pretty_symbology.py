@@ -1,7 +1,5 @@
 """Symbolic primitives + unicode/ASCII abstraction for pretty.py"""
 
-from __future__ import print_function, division
-
 import sys
 import warnings
 from string import ascii_lowercase, ascii_uppercase
@@ -120,7 +118,7 @@ greek_letters = list(greeks) # make a copy
 greek_letters[greek_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_unicode = dict((L, g(L)) for L in greek_letters)
+greek_unicode = {L: g(L) for L in greek_letters}
 greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
 
 # aliases
@@ -132,7 +130,7 @@ greek_unicode['varsigma'] = '\N{GREEK SMALL LETTER FINAL SIGMA}'
 b = lambda l: U('MATHEMATICAL BOLD SMALL %s' % l.upper())
 B = lambda l: U('MATHEMATICAL BOLD CAPITAL %s' % l.upper())
 
-bold_unicode = dict((l, b(l)) for l in ascii_lowercase)
+bold_unicode = {l: b(l) for l in ascii_lowercase}
 bold_unicode.update((L, B(L)) for L in ascii_uppercase)
 
 # GREEK BOLD
@@ -144,7 +142,7 @@ greek_bold_letters = list(greeks) # make a copy, not strictly required here
 greek_bold_letters[greek_bold_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_bold_unicode = dict((L, g(L)) for L in greek_bold_letters)
+greek_bold_unicode = {L: g(L) for L in greek_bold_letters}
 greek_bold_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_bold_letters)
 greek_bold_unicode['lambda'] = greek_unicode['lamda']
 greek_bold_unicode['Lambda'] = greek_unicode['Lamda']
