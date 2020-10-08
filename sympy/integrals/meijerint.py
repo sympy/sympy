@@ -1641,7 +1641,7 @@ def meijerint_indefinite(f, x):
 
 def _meijerint_indefinite_1(f, x):
     """ Helper that does not attempt any substitution. """
-    from sympy import Integral, piecewise_fold, nan, zoo, solve, integrate
+    from sympy import Integral, piecewise_fold, nan, zoo, solve
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
 
     gs = _rewrite1(f, x)
@@ -1667,10 +1667,11 @@ def _meijerint_indefinite_1(f, x):
             if not den.is_Number and den.is_zero is not False:
                 zero_sol = solve(den, dict=True)
                 for sol in zero_sol:
-                    zero_res = integrate(f.subs(sol), x)
+                    zero_res = Integral(f.subs(sol), x)
                     zero_cond = cond
                     for vz, sz in sol.items():
                         zero_cond = And(zero_cond, Eq(vz, sz))
+                    zero_cond = _my_unpolarify(zero_cond)
                     special_results.append(Piecewise((zero_res, zero_cond)))
 
         # we now use t**rho*G(params, t) = G(params + rho, t)

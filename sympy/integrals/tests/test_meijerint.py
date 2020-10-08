@@ -1,6 +1,7 @@
 from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh, sinc,
                    hyperexpand, exp, simplify, sqrt, pi, erf, erfc, sin, cos,
-                   exp_polar, polygamma, hyper, log, expand_func, Rational)
+                   exp_polar, polygamma, hyper, log, expand_func, Rational,
+                   Eq, Piecewise)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
         meijerint_indefinite, _inflate_g, _create_lookup_table,
         meijerint_definite, meijerint_inversion)
@@ -725,3 +726,12 @@ def test_issue_6462():
     # exception
     assert integrate(cos(x**n)/x**n, x, meijerg=True).subs(n, 2).equals(
             integrate(cos(x**2)/x**2, x, meijerg=True))
+
+
+def test_issue_5949_ensure_unpolarified_special_case_integrand():
+    # Based on test_issue_15124:
+    # In the handling of the special case Eq(a, -b) below we must ensure
+    # Integral(1, x) is evaluated rather than the unpolarified
+    # Integral(exp(I*x*(-n*exp_polar(0) + n)), x) which currently raises:
+    assert meijerint_indefinite(exp(x*I*(a + b)), x) == \
+        Piecewise((x, Eq(a, -b)), (-I*exp(I*a*x)*exp(I*b*x)/(a + b), True))
