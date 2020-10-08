@@ -45,4 +45,4 @@ def test_issue_18361():
 def test_issue_20222():
     A = Array([[1, 2], [3, 4]])
     B = Matrix([[1,2],[3,4]])
-    raises(NotImplementedError, lambda: A - B)
+    raises(TypeError, lambda: A - B)
