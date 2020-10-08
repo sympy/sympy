@@ -505,12 +505,10 @@ def _sympify(a, expected_type = None):
     see: sympify
 
     """
-    if expected_type is not None:
-        symp = sympify(a, strict=True)
-        if type(symp) is expected_type:
-            return symp
+    symp = sympify(a, strict=True)
+    if expected_type is not None and type(symp) is not expected_type:
         raise SympifyError('Sympified object of type ' + str(expected_type) + ' was expected. But found of type ' + str(type(symp)))
-    return sympify(a, strict=True)
+    return symp
 
 
 def kernS(s):
