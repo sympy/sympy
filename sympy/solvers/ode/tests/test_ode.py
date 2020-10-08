@@ -2579,3 +2579,13 @@ def test_issue_9446():
     [Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))]
 
     assert integrate(-asin(f(2*x)+pi), x) == -Integral(asin(pi + f(2*x)), x)
+
+def test_issue_20192():
+    # kamke ode 1.1
+    a0,a1,a2,a3,a4 = symbols('a0, a1, a2, a3, a4')
+
+    eq = f(x).diff(x)-(a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(-1/2)
+    sol = Eq(f(x), C1 + Integral(1/sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4), x))
+
+    assert sol == dsolve(eq,hint='factorable')
+    assert checkodesol(eq, sol) == (True, 0)

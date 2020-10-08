@@ -143,6 +143,58 @@ def test_DiscreteMarkovChain():
     X = DiscreteMarkovChain('X', trans_probs=Matrix([[]]))
     assert X.number_of_states == 0
     assert X.stationary_distribution() == Matrix([[]])
+    # test communication_class
+    # see https://drive.google.com/drive/folders/1HbxLlwwn2b3U8Lj7eb_ASIUb5vYaNIjg?usp=sharing
+    # tutorial 2.pdf
+    TO7 = Matrix([[0, 5, 5, 0, 0],
+                  [0, 0, 0, 10, 0],
+                  [5, 0, 5, 0, 0],
+                  [0, 10, 0, 0, 0],
+                  [0, 3, 0, 3, 4]])/10
+    Y7 = DiscreteMarkovChain('Y', trans_probs=TO7)
+    tuples = Y7.communication_classes()
+    classes, recurrence, periods = list(zip(*tuples))
+    assert classes == ([1, 3], [0, 2], [4])
+    assert recurrence == (True, False, False)
+    assert periods == (2, 1, 1)
+
+    TO8 = Matrix([[0, 0, 0, 10, 0, 0],
+                  [5, 0, 5, 0, 0, 0],
+                  [0, 4, 0, 0, 0, 6],
+                  [10, 0, 0, 0, 0, 0],
+                  [0, 10, 0, 0, 0, 0],
+                  [0, 0, 0, 5, 5, 0]])/10
+    Y8 = DiscreteMarkovChain('Y', trans_probs=TO8)
+    tuples = Y8.communication_classes()
+    classes, recurrence, periods = list(zip(*tuples))
+    assert classes == ([0, 3], [1, 2, 5, 4])
+    assert recurrence == (True, False)
+    assert periods == (2, 2)
+
+    TO9 = Matrix([[2, 0, 0, 3, 0, 0, 3, 2, 0, 0],
+                  [0, 10, 0, 0, 0, 0, 0, 0, 0, 0],
+                  [0, 2, 2, 0, 0, 0, 0, 0, 3, 3],
+                  [0, 0, 0, 3, 0, 0, 6, 1, 0, 0],
+                  [0, 0, 0, 0, 5, 5, 0, 0, 0, 0],
+                  [0, 0, 0, 0, 0, 10, 0, 0, 0, 0],
+                  [4, 0, 0, 5, 0, 0, 1, 0, 0, 0],
+                  [2, 0, 0, 4, 0, 0, 2, 2, 0, 0],
+                  [3, 0, 1, 0, 0, 0, 0, 0, 4, 2],
+                  [0, 0, 4, 0, 0, 0, 0, 0, 3, 3]])/10
+    Y9 = DiscreteMarkovChain('Y', trans_probs=TO9)
+    tuples = Y9.communication_classes()
+    classes, recurrence, periods = list(zip(*tuples))
+    assert classes == ([0, 3, 6, 7], [1], [2, 8, 9], [5], [4])
+    assert recurrence == (True, True, False, True, False)
+    assert periods == (1, 1, 1, 1, 1)
+
+    # test custom state space
+    Y10 = DiscreteMarkovChain('Y', [1, 2, 3], TO2)
+    tuples = Y10.communication_classes()
+    classes, recurrence, periods = list(zip(*tuples))
+    assert classes == ([1], [2, 3])
+    assert recurrence == (True, False)
+    assert periods == (1, 1)
 
     # testing miscellaneous queries
     T = Matrix([[S.Half, Rational(1, 4), Rational(1, 4)],

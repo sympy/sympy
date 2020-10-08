@@ -26,6 +26,7 @@ from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
+from sympy.tensor.array import NDimArray
 
 from .utilities import _get_intermediate_simp_bool
 
@@ -2536,6 +2537,8 @@ class MatrixArithmetic(MatrixRequired):
     @call_highest_priority('__radd__')
     def __add__(self, other):
         """Return self + other, raising ShapeError if shapes don't match."""
+        if isinstance(other, NDimArray): # Matrix and array addition is currently not implemented
+            return NotImplemented
         other = _matrixify(other)
         # matrix-like objects can have shapes.  This is
         # our first sanity check.
