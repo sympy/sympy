@@ -17,9 +17,10 @@ from sympy.core.function import AppliedUndef, Derivative, Function, expand
 from sympy.core.numbers import Float
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
+from sympy.core.mul import Mul
 from sympy.functions import exp, sqrt, tan, log
 from sympy.integrals import Integral
-from sympy.polys.polytools import cancel, factor, factor_list
+from sympy.polys.polytools import cancel, factor
 from sympy.simplify.simplify import simplify
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
@@ -675,7 +676,8 @@ class Factorable(SingleODESolver):
         self.eqs = []
         eq = eq.collect(f(x), func = cancel)
         eq = fraction(factor(eq))[0]
-        roots = factor_list(eq)[1]
+        factors = Mul.make_args(factor(eq))
+        roots = [fac.as_base_exp() for fac in factors if len(fac.args)!=0]
         if len(roots)>1 or roots[0][1]>1:
             for base,expo in roots:
                 if base.has(f(x)):

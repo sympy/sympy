@@ -9,7 +9,8 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    linsolve, eye, Or, Not, Intersection, factorial, Contains,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
-                   ceiling, MatrixBase, Float, Gt, Lt, Ne)
+                   ceiling, MatrixBase, Float, Gt, Lt, Ne, ConditionSet,
+                   ones, zeros, Identity)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -516,9 +517,9 @@ class MarkovProcess(StochasticProcess):
             trans_probs = self.transition_probabilities(mat)
         elif isinstance(self, DiscreteMarkovChain):
             trans_probs = mat
-        condition=self.replace_with_index(condition)
-        given_condition=self.replace_with_index(given_condition)
-        new_given_condition=self.replace_with_index(new_given_condition)
+        condition = self.replace_with_index(condition)
+        given_condition = self.replace_with_index(given_condition)
+        new_given_condition = self.replace_with_index(new_given_condition)
 
         if isinstance(condition, Relational):
             if isinstance(new_given_condition, And):
@@ -547,7 +548,7 @@ class MarkovProcess(StochasticProcess):
                 if isinstance(condition, Eq) or isinstance(condition, Ne):
                     for i in range(0, n):
                         s += P(Eq(rv[0], i), Eq(rv[1], i)) * P(Eq(rv[1], i), new_given_condition)
-                    return s if isinstance(condition, Eq) else 1-s
+                    return s if isinstance(condition, Eq) else 1 - s
                 else:
                     upper = 0
                     greater = False
@@ -561,10 +562,10 @@ class MarkovProcess(StochasticProcess):
                             for j in range(0, i + upper):
                                 s += P(Eq(rv[0], i), Eq(rv[1], j)) * P(Eq(rv[1], j), new_given_condition)
                         else:
-                            s+=P(Eq(rv[0], i), new_given_condition)
+                            s += P(Eq(rv[0], i), new_given_condition)
                             for j in range(i + upper, n):
                                 s -= P(Eq(rv[0], i), Eq(rv[1], j)) * P(Eq(rv[1], j), new_given_condition)
-                    return s if greater else 1-s
+                    return s if greater else 1 - s
 
             rv = rv[0]
             states = condition.as_set()
@@ -1063,20 +1064,97 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return any(self.is_absorbing_state(state) == True
                     for state in range(trans_probs.shape[0]))
 
-    def fixed_row_vector(self):
+    def stationary_distribution(self, condition_set=False) -> tUnion[ImmutableMatrix, ConditionSet, Lambda]:
+        """
+        The stationary distribution is any row vector, p, that solves p = pP,
+        is row stochastic and each element in p must be nonnegative.
+        That means in matrix form: :math:`(P-I)^T p^T = 0` and
+        :math:`(1, ..., 1) p = 1`
+        where ``P`` is the one-step transition matrix.
+
+        All time-homogeneous Markov Chains with a finite state space
+        have at least one stationary distribution. In addition, if
+        a finite time-homogeneous Markov Chain is irreducible, the
+        stationary distribution is unique.
+
+        Parameters
+        ==========
+
+        condition_set : bool
+            If the chain has a symbolic size or transition matrix,
+            it will return a ``Lambda`` if ``False`` and return a
+            ``ConditionSet`` if ``True``.
+
+        Examples
+        ========
+
+        >>> from sympy.stats import DiscreteMarkovChain
+        >>> from sympy import Matrix, S
+
+        An irreducible Markov Chain
+
+        >>> T = Matrix([[S(1)/2, S(1)/2, 0],
+        ...             [S(4)/5, S(1)/5, 0],
+        ...             [1, 0, 0]])
+        >>> X = DiscreteMarkovChain('X', trans_probs=T)
+        >>> X.stationary_distribution()
+        Matrix([[8/13, 5/13, 0]])
+
+        A reducible Markov Chain
+
+        >>> T = Matrix([[S(1)/2, S(1)/2, 0],
+        ...             [S(4)/5, S(1)/5, 0],
+        ...             [0, 0, 1]])
+        >>> X = DiscreteMarkovChain('X', trans_probs=T)
+        >>> X.stationary_distribution()
+        Matrix([[8/13 - 8*tau0/13, 5/13 - 5*tau0/13, tau0]])
+
+        >>> Y = DiscreteMarkovChain('Y')
+        >>> Y.stationary_distribution()
+        Lambda((wm, _T), Eq(wm*_T, wm))
+
+        >>> Y.stationary_distribution(condition_set=True)
+        ConditionSet(wm, Eq(wm*_T, wm))
+
+        References
+        ==========
+
+        .. [1] https://www.probabilitycourse.com/chapter11/11_2_6_stationary_and_limiting_distributions.php
+        .. [2] https://galton.uchicago.edu/~yibi/teaching/stat317/2014/Lectures/Lecture4_6up.pdf
+
+        See Also
+        ========
+
+        sympy.stats.stochastic_process_types.DiscreteMarkovChain.limiting_distribution
+        """
         trans_probs = self.transition_probabilities
-        if trans_probs == None:
-            return None
+        n = self.number_of_states
+
+        if n == 0:
+            return ImmutableMatrix(Matrix([[]]))
+
+        # symbolic matrix version
         if isinstance(trans_probs, MatrixSymbol):
-            wm = MatrixSymbol('wm', 1, trans_probs.shape[0])
-            return Lambda((wm, trans_probs), Eq(wm*trans_probs, wm))
-        w = IndexedBase('w')
-        wi = [w[i] for i in range(trans_probs.shape[0])]
-        wm = Matrix([wi])
-        eqs = (wm*trans_probs - wm).tolist()[0]
-        eqs.append(sum(wi) - 1)
-        soln = list(linsolve(eqs, wi))[0]
+            wm = MatrixSymbol('wm', 1, n)
+            if condition_set:
+                return ConditionSet(wm, Eq(wm * trans_probs, wm))
+            else:
+                return Lambda((wm, trans_probs), Eq(wm * trans_probs, wm))
+
+        # numeric matrix version
+        a = Matrix(trans_probs - Identity(n)).T
+        a[0, 0:n] = ones(1, n)
+        b = zeros(n, 1)
+        b[0, 0] = 1
+
+        soln = list(linsolve((a, b)))[0]
         return ImmutableMatrix([[sol for sol in soln]])
+
+    def fixed_row_vector(self):
+        """
+        A wrapper for ``stationary_distribution()``.
+        """
+        return self.stationary_distribution()
 
     @property
     def limiting_distribution(self):
