@@ -131,6 +131,7 @@ def test_DiscreteMarkovChain():
     TS1 = MatrixSymbol('T', 3, 3)
     Y5 = DiscreteMarkovChain('Y', trans_probs=TS1)
     assert Y5.limiting_distribution(w, TO4).doit() == True
+    assert Y5.stationary_distribution(condition_set=True).subs(TS1, TO4).contains(w).doit() == S.true
     TO6 = Matrix([[S.One, 0, 0, 0, 0],[S.Half, 0, S.Half, 0, 0],[0, S.Half, 0, S.Half, 0], [0, 0, S.Half, 0, S.Half], [0, 0, 0, 0, 1]])
     Y6 = DiscreteMarkovChain('Y', trans_probs=TO6)
     assert Y6._transient2absorbing() == ImmutableMatrix([[S.Half, 0], [0, 0], [0, S.Half]])
@@ -138,6 +139,10 @@ def test_DiscreteMarkovChain():
     assert Y6.fundamental_matrix() == ImmutableMatrix([[Rational(3, 2), S.One, S.Half], [S.One, S(2), S.One], [S.Half, S.One, Rational(3, 2)]])
     assert Y6.absorbing_probabilities() == ImmutableMatrix([[Rational(3, 4), Rational(1, 4)], [S.Half, S.Half], [Rational(1, 4), Rational(3, 4)]])
 
+    # test for zero-sized matrix functionality
+    X = DiscreteMarkovChain('X', trans_probs=Matrix([[]]))
+    assert X.number_of_states == 0
+    assert X.stationary_distribution() == Matrix([[]])
     # test communication_class
     # see https://drive.google.com/drive/folders/1HbxLlwwn2b3U8Lj7eb_ASIUb5vYaNIjg?usp=sharing
     # tutorial 2.pdf
