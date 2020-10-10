@@ -1118,6 +1118,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     def decompose(self) -> tTuple[tList[Basic], ImmutableMatrix, ImmutableMatrix, ImmutableMatrix]:
         """
+        Decomposes the transition matrix into submatrices with
+        special properties.
+
         The transition matrix can be decomposed into 4 submatrices:
         - A - the submatrix from recurrent states to recurrent states.
         - B - the submatrix from transient to recurrent states.
@@ -1219,10 +1222,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         Reorders the one-step transition matrix
         so that recurrent states appear first and transient
-        states appear last. Other notations include inserting
-        transient states first and recurrent states last but
-        that method creates n-step transition matrix with
-        poor visual appeal.
+        states appear last. Other representations include inserting
+        transient states first and recurrent states last.
 
         Returns
         =======
@@ -1278,15 +1279,37 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         [1/2,   0,   0, 1/2,   0],
         [  0, 1/2,   0,   0, 1/2]])
 
-        The output should be the same as the first
-        call but setting a state space results in that
-        state space being sorted instead of kept in place.
+        This is not limited to absorbing chains:
+
+        >>> T = Matrix([[0, 5,  5, 0,  0],
+        ...             [0, 0,  0, 10, 0],
+        ...             [5, 0,  5, 0,  0],
+        ...             [0, 10, 0, 0,  0],
+        ...             [0, 3,  0, 3,  4]])/10
+        >>> X = DiscreteMarkovChain('X', trans_probs=T)
+        >>> states, new_matrix = X.canonical_form()
+        >>> states
+        [1, 3, 0, 2, 4]
+
+        >>> new_matrix
+        Matrix([
+        [   0,    1,   0,   0,   0],
+        [   1,    0,   0,   0,   0],
+        [ 1/2,    0,   0, 1/2,   0],
+        [   0,    0, 1/2, 1/2,   0],
+        [3/10, 3/10,   0,   0, 2/5]])
 
         See Also
         ========
 
         sympy.stats.stochastic_process_types.DiscreteMarkovChain.communication_classes
         sympy.stats.stochastic_process_types.DiscreteMarkovChain.decompose
+
+        References
+        ==========
+
+        .. [1] https://onlinelibrary.wiley.com/doi/pdf/10.1002/9780470316887.app1
+        .. [2] http://www.columbia.edu/~ww2040/6711F12/lect1023big.pdf
         """
         states, A, B, C = self.decompose()
         O = zeros(A.shape[0], C.shape[1])
