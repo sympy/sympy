@@ -1419,14 +1419,14 @@ def test_higher_order_to_first_order():
 
     eqs10 = [Eq(Derivative(x(t), (t, 2)), 5*x(t) + 43*y(t)),
              Eq(Derivative(y(t), (t, 2)), x(t) + 9*y(t))]
-    sol10 = [Eq(x(t), C1*sqrt(7 - sqrt(47))*(61 + 9*sqrt(47))*exp(-t*sqrt(7 - sqrt(47)))/2 + C2*sqrt(7 -
-              sqrt(47))*(61 + 9*sqrt(47))*exp(t*sqrt(7 - sqrt(47)))*Rational(-1, 2) + C3*(61 -
-              9*sqrt(47))*sqrt(sqrt(47) + 7)*exp(-t*sqrt(sqrt(47) + 7))/2 + C4*(61 - 9*sqrt(47))*sqrt(sqrt(47) +
-              7)*exp(t*sqrt(sqrt(47) + 7))*Rational(-1, 2)),
-             Eq(y(t), C1*sqrt(7 - sqrt(47))*(sqrt(47) + 7)*exp(-t*sqrt(7 - sqrt(47)))*Rational(-1, 2) + C2*sqrt(7
-              - sqrt(47))*(sqrt(47) + 7)*exp(t*sqrt(7 - sqrt(47)))/2 + C3*(7 - sqrt(47))*sqrt(sqrt(47) +
-              7)*exp(-t*sqrt(sqrt(47) + 7))*Rational(-1, 2) + C4*(7 - sqrt(47))*sqrt(sqrt(47) +
-              7)*exp(t*sqrt(sqrt(47) + 7))/2)]
+    sol10 = [Eq(x(t), C1*(61 - 9*sqrt(47))*sqrt(sqrt(47) + 7)*exp(-t*sqrt(sqrt(47) + 7))/2 + C2*sqrt(7 -
+              sqrt(47))*(61 + 9*sqrt(47))*exp(-t*sqrt(7 - sqrt(47)))/2 + C3*(61 - 9*sqrt(47))*sqrt(sqrt(47) +
+              7)*exp(t*sqrt(sqrt(47) + 7))*Rational(-1, 2) + C4*sqrt(7 - sqrt(47))*(61 + 9*sqrt(47))*exp(t*sqrt(7
+              - sqrt(47)))*Rational(-1, 2)),
+             Eq(y(t), C1*(7 - sqrt(47))*sqrt(sqrt(47) + 7)*exp(-t*sqrt(sqrt(47) + 7))*Rational(-1, 2) + C2*sqrt(7
+              - sqrt(47))*(sqrt(47) + 7)*exp(-t*sqrt(7 - sqrt(47)))*Rational(-1, 2) + C3*(7 -
+              sqrt(47))*sqrt(sqrt(47) + 7)*exp(t*sqrt(sqrt(47) + 7))/2 + C4*sqrt(7 - sqrt(47))*(sqrt(47) +
+              7)*exp(t*sqrt(7 - sqrt(47)))/2)]
     assert dsolve(eqs10) == sol10
     assert checksysodesol(eqs10, sol10) == (True, [0, 0])
 
@@ -1807,15 +1807,16 @@ def test_linodesolve():
     ceq = canonical_odes(eq, func, t)
     (A1, A0), b = linear_ode_to_matrix(ceq[0], func, t, 1)
     A = A0
-    sol = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
-                - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 +
-                sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5, t)/2 + sqrt(5)*exp(-t/2 +
-                sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 -
-                t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2 - exp(-sqrt(5)*t/2 -
-                t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2,
-            C1*exp(-t/2 + sqrt(5)*t/2) +
-                C2*exp(-sqrt(5)*t/2 - t/2) + exp(-t/2 + sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5,
-                t) + exp(-sqrt(5)*t/2 - t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)]
+    sol = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2 -
+          t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 + sqrt(5)*t/2)*Integral(t*exp(-sqrt(5)*t/2 +
+          t/2)/(-5 + sqrt(5)) - sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/(-5 + sqrt(5)), t)/2 + sqrt(5)*exp(-t/2 +
+          sqrt(5)*t/2)*Integral(t*exp(-sqrt(5)*t/2 + t/2)/(-5 + sqrt(5)) - sqrt(5)*t*exp(-sqrt(5)*t/2 +
+          t/2)/(-5 + sqrt(5)), t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*Integral(-sqrt(5)*t*exp(t/2 +
+          sqrt(5)*t/2)/5, t)/2 - exp(-sqrt(5)*t/2 - t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2,
+         C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2) + exp(-t/2 +
+          sqrt(5)*t/2)*Integral(t*exp(-sqrt(5)*t/2 + t/2)/(-5 + sqrt(5)) - sqrt(5)*t*exp(-sqrt(5)*t/2 +
+          t/2)/(-5 + sqrt(5)), t) + exp(-sqrt(5)*t/2 -
+              t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)]
     assert constant_renumber(linodesolve(A, t, b=b), variables=[t]) == sol
 
     # non-homogeneous term assumed to be 0
