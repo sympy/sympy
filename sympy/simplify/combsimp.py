@@ -15,6 +15,9 @@ def combsimp(expr):
     r"""
     Simplify combinatorial expressions.
 
+    Explanation
+    ===========
+
     This function takes as input an expression containing factorials,
     binomials, Pochhammer symbol and other "combinatorial" functions,
     and tries to minimize the number of those functions and reduce

@@ -284,6 +284,9 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
     r"""
     Manipulate parts of an expression selected by a path.
 
+    Explanation
+    ===========
+
     This function allows to manipulate large nested expressions in single
     line of code, utilizing techniques to those applied in XML processing
     standards (e.g. XPath).
