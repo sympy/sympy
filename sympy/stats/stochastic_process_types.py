@@ -9,12 +9,11 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    linsolve, eye, Or, Not, Intersection, factorial, Contains,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
-                   ceiling, MatrixBase, Float, Gt, Lt, Ne, ConditionSet,
-                   ones, zeros, Identity)
+                   ceiling, MatrixBase, ConditionSet, ones, zeros, Identity,
+                   Rational, Lt, Gt, Ne, Le)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.stats import P
 from sympy.utilities.iterables import strongly_connected_components
 from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
@@ -415,7 +414,7 @@ class MarkovProcess(StochasticProcess):
         if not isinstance(trans_probs, MatrixSymbol):
             rows = trans_probs.tolist()
             for row in rows:
-                if sum(row) - row_sum != 0:
+                if (sum(row) - row_sum) != 0:
                     raise ValueError("Values in a row must sum to %s. "
                     "If you are using Float or floats then please use Rational."%(row_sum))
 
@@ -542,12 +541,12 @@ class MarkovProcess(StochasticProcess):
                 rv = rv[:2]
                 if rv[0].key < rv[1].key:
                         rv[0], rv[1] = rv[1], rv[0]
-                s = Float(0)
+                s = Rational(0, 1)
                 n = len(self.state_space)
 
                 if isinstance(condition, Eq) or isinstance(condition, Ne):
                     for i in range(0, n):
-                        s += P(Eq(rv[0], i), Eq(rv[1], i)) * P(Eq(rv[1], i), new_given_condition)
+                        s += self.probability(Eq(rv[0], i), Eq(rv[1], i)) * self.probability(Eq(rv[1], i), new_given_condition)
                     return s if isinstance(condition, Eq) else 1 - s
                 else:
                     upper = 0
@@ -560,11 +559,11 @@ class MarkovProcess(StochasticProcess):
                     for i in range(0, n):
                         if i <= n//2:
                             for j in range(0, i + upper):
-                                s += P(Eq(rv[0], i), Eq(rv[1], j)) * P(Eq(rv[1], j), new_given_condition)
+                                s += self.probability(Eq(rv[0], i), Eq(rv[1], j)) * self.probability(Eq(rv[1], j), new_given_condition)
                         else:
-                            s += P(Eq(rv[0], i), new_given_condition)
+                            s += self.probability(Eq(rv[0], i), new_given_condition)
                             for j in range(i + upper, n):
-                                s -= P(Eq(rv[0], i), Eq(rv[1], j)) * P(Eq(rv[1], j), new_given_condition)
+                                s -= self.probability(Eq(rv[0], i), Eq(rv[1], j)) * self.probability(Eq(rv[1], j), new_given_condition)
                     return s if greater else 1 - s
 
             rv = rv[0]
@@ -797,8 +796,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     of floating point numbers for the probabilities in the
     transition matrix to avoid errors.
 
-    >>> from sympy import Gt, Le
-    >>> from sympy.core.numbers import Rational
+    >>> from sympy import Gt, Le, Rational
     >>> T = Matrix([[Rational(5, 10), Rational(3, 10), Rational(2, 10)], [Rational(2, 10), Rational(7, 10), Rational(1, 10)], [Rational(3, 10), Rational(3, 10), Rational(4, 10)]])
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     >>> P(Eq(Y[3], Y[1]), Eq(Y[0], 0)).round(3)
