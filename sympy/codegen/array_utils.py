@@ -323,7 +323,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
             cyclic_form_shifted = [[k + cumulative_subranks[i] for k in j] for j in cyclic_form]
             new_cyclic_form = []
             for j, cycl in enumerate(cyclic_form_shifted):
-                if all(any(k in p for p in contraction_indices) for k in cycl):
+                if any(all(k in p for k in cycl) for p in contraction_indices):
                     pass
                 else:
                     new_cyclic_form.append(cyclic_form[j])
@@ -577,10 +577,13 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         expr = _sympify(expr)
         permutation = Permutation(permutation)
         if isinstance(expr, CodegenArrayPermuteDims):
-            permutation = permutation * expr.permutation
-            expr = expr.expr
-        if nest_permutation and isinstance(expr, CodegenArrayTensorProduct):
-            expr, permutation = cls._check_permutation_mapping(expr, permutation)
+            subexpr, subperm = expr._lift_permutation()
+            permutation = subperm * permutation
+            expr = subexpr
+        if isinstance(expr, CodegenArrayTensorProduct):
+            expr, permutation = cls._check_lift_permutation(expr, permutation)
+        # if nest_permutation and isinstance(expr, CodegenArrayTensorProduct):
+            # expr, permutation = cls._check_permutation_mapping(expr, permutation)
         plist = permutation.array_form
         if plist == sorted(plist):
             return expr
@@ -600,6 +603,38 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
     @property
     def permutation(self):
         return self.args[1]
+
+    def _lift_permutation(self):
+        if not isinstance(self.expr, CodegenArrayTensorProduct):
+            return self.expr, self.permutation
+        args = list(self.expr.args)
+        cumul = list(accumulate([0] + self.expr.subranks))
+        cycles = []
+        for i, arg in enumerate(self.expr.args):
+            if not isinstance(arg, CodegenArrayPermuteDims):
+                continue
+            subpermarray = [j + cumul[i] for j in arg.permutation.array_form]
+            cycles.append(subpermarray)
+            args[i] = arg.expr
+        subpermutation = Permutation(cycles)
+        return CodegenArrayTensorProduct(*args), subpermutation*self.permutation
+
+    @classmethod
+    def _check_lift_permutation(cls, expr, permutation):
+        # type: (CodegenArrayTensorProduct, Permutation) -> (CodegenArrayTensorProduct, Permutation)
+        subranks = expr.subranks
+        # permutation_af = permutation.array_form  # type: List[int]
+        cumul = list(accumulate([0] + subranks))
+        args = list(expr.args)
+        for i, arg in enumerate(expr.args):
+            if not isinstance(arg, CodegenArrayPermuteDims):
+                continue
+            subpermutation = [j + cumul[i] for j in arg.permutation.array_form]
+            #
+            if any([not (cumul[i] <= permutation(j) < cumul[i+1]) for j in subpermutation]):
+                permutation = Permutation([subpermutation]) * permutation
+                args[i] = arg.expr
+        return CodegenArrayTensorProduct(*args), permutation
 
     @classmethod
     def _check_permutation_mapping(cls, expr, permutation):

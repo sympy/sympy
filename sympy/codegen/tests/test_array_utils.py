@@ -512,35 +512,44 @@ def test_nested_permutations():
     cg = CodegenArrayPermuteDims(CodegenArrayPermuteDims(M, (1, 0)), (1, 0))
     assert cg == M
 
-    plist1 = list(range(6))
-    plist2 = list(range(6))
+    times = 3
+    plist1 = [list(range(6)) for i in range(times)]  # type: List[List[int]]
+    plist2 = [list(range(6)) for i in range(times)]  # type: List[List[int]]
 
-    random.shuffle(plist1)
-    random.shuffle(plist2)
+    for i in range(times):
+        random.shuffle(plist1[i])
+        random.shuffle(plist2[i])
 
-    p1 = Permutation(plist1)
-    p2 = Permutation(plist2)
+    plist1.append([2, 5, 4, 0, 3, 1])
+    plist2.append([3, 0, 5, 1, 2, 4])
 
-    cg = CodegenArrayPermuteDims(
-        CodegenArrayPermuteDims(
+    plist1.append([5, 4, 2, 0, 3, 1])
+    plist2.append([4, 5, 0, 2, 3, 1])
+
+    for permutation_array1, permutation_array2 in zip(plist1, plist2):
+        p1 = Permutation(permutation_array1)
+        p2 = Permutation(permutation_array2)
+
+        cg = CodegenArrayPermuteDims(
+            CodegenArrayPermuteDims(
+                CodegenArrayTensorProduct(M, N, P),
+                p1),
+            p2
+        )
+        result = CodegenArrayPermuteDims(
             CodegenArrayTensorProduct(M, N, P),
-            p1),
-        p2
-    )
-    result = CodegenArrayPermuteDims(
-        CodegenArrayTensorProduct(M, N, P),
-        p2*p1
-    )
-    assert cg == result
+            p1*p2
+        )
+        assert cg == result
 
-    # Check that `permutedims` behaves the same way with explicit-component arrays:
-    Me = M.subs(k, 3).as_explicit()
-    Ne = N.subs(k, 3).as_explicit()
-    Pe = P.subs(k, 3).as_explicit()
-    cge = tensorproduct(Me, Ne, Pe)
-    result1 = permutedims(permutedims(cge, p1), p2)
-    result2 = permutedims(cge, p2*p1)
-    assert result1 == result2
+        # Check that `permutedims` behaves the same way with explicit-component arrays:
+        Me = M.subs(k, 3).as_explicit()
+        Ne = N.subs(k, 3).as_explicit()
+        Pe = P.subs(k, 3).as_explicit()
+        cge = tensorproduct(Me, Ne, Pe)
+        result1 = permutedims(permutedims(cge, p1), p2)
+        result2 = permutedims(cge, p2*p1)
+        assert result1 == result2
 
 
 def test_contraction_permutation_mix():
