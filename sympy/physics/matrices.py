@@ -2,6 +2,7 @@
 
 from sympy import Matrix, I, pi, sqrt
 from sympy.functions import exp
+from sympy.core.decorators import deprecated
 
 
 def msigma(i):
@@ -154,6 +155,9 @@ minkowski_tensor = Matrix( (
     (0, 0, 0, -1)
 ))
 
+
+@deprecated(issue=20246, useinstead="DFT(n) or DFT(n).as_explicit()",
+            deprecated_since_version="1.7")
 def mdft(n):
     r"""
     Returns an expression of a discrete Fourier transform as a matrix multiplication.
