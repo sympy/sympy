@@ -2374,14 +2374,14 @@ def SOPform(variables, minterms, dontcares=None):
     ...             [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
     >>> dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
     >>> SOPform([w, x, y, z], minterms, dontcares)
-    (y & z) | (z & ~w)
+    (y & z) | (~w & ~x)
 
     The terms can also be represented as integers:
 
     >>> minterms = [1, 3, 7, 11, 15]
     >>> dontcares = [0, 2, 5]
     >>> SOPform([w, x, y, z], minterms, dontcares)
-    (y & z) | (z & ~w)
+    (y & z) | (~w & ~x)
 
     They can also be specified using dicts, which does not have to be fully
     specified:
@@ -2395,7 +2395,7 @@ def SOPform(variables, minterms, dontcares=None):
     >>> minterms = [4, 7, 11, [1, 1, 1, 1]]
     >>> dontcares = [{w : 0, x : 0, y: 0}, 5]
     >>> SOPform([w, x, y, z], minterms, dontcares)
-    (w & y & z) | (x & y & z) | (~w & ~y)
+    (w & y & z) | (~w & ~y) | (x & z & ~w)
 
     References
     ==========
