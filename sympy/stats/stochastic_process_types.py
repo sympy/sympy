@@ -9,7 +9,8 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    linsolve, eye, Or, Not, Intersection, factorial, Contains,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
-                   ceiling, MatrixBase, ConditionSet, ones, zeros, Identity)
+                   ceiling, MatrixBase, ConditionSet, ones, zeros, Identity,
+                   Rational, Lt, Gt, Ne)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -515,25 +516,58 @@ class MarkovProcess(StochasticProcess):
             trans_probs = self.transition_probabilities(mat)
         elif isinstance(self, DiscreteMarkovChain):
             trans_probs = mat
-        condition=self.replace_with_index(condition)
-        given_condition=self.replace_with_index(given_condition)
-        new_given_condition=self.replace_with_index(new_given_condition)
+        condition = self.replace_with_index(condition)
+        given_condition = self.replace_with_index(given_condition)
+        new_given_condition = self.replace_with_index(new_given_condition)
 
         if isinstance(condition, Relational):
-            rv, states = (list(condition.atoms(RandomIndexedSymbol))[0], condition.as_set())
             if isinstance(new_given_condition, And):
                 gcs = new_given_condition.args
             else:
                 gcs = (new_given_condition, )
-            grvs = new_given_condition.atoms(RandomIndexedSymbol)
+            min_key_rv = list(new_given_condition.atoms(RandomIndexedSymbol))
+            rv = list(condition.atoms(RandomIndexedSymbol))
 
-            min_key_rv = None
-            for grv in grvs:
-                if grv.key <= rv.key:
-                    min_key_rv = grv
-            if min_key_rv == None:
+            if len(min_key_rv):
+                min_key_rv = min_key_rv[0]
+                for r in rv:
+                    if min_key_rv.key > r.key:
+                        return Probability(condition)
+            else:
+                min_key_rv = None
                 return Probability(condition)
 
+            if len(rv) > 1:
+                rv = rv[:2]
+                if rv[0].key < rv[1].key:
+                        rv[0], rv[1] = rv[1], rv[0]
+                s = Rational(0, 1)
+                n = len(self.state_space)
+
+                if isinstance(condition, Eq) or isinstance(condition, Ne):
+                    for i in range(0, n):
+                        s += self.probability(Eq(rv[0], i), Eq(rv[1], i)) * self.probability(Eq(rv[1], i), new_given_condition)
+                    return s if isinstance(condition, Eq) else 1 - s
+                else:
+                    upper = 0
+                    greater = False
+                    if isinstance(condition, Ge) or isinstance(condition, Lt):
+                        upper = 1
+                    if isinstance(condition, Gt) or isinstance(condition, Ge):
+                        greater = True
+
+                    for i in range(0, n):
+                        if i <= n//2:
+                            for j in range(0, i + upper):
+                                s += self.probability(Eq(rv[0], i), Eq(rv[1], j)) * self.probability(Eq(rv[1], j), new_given_condition)
+                        else:
+                            s += self.probability(Eq(rv[0], i), new_given_condition)
+                            for j in range(i + upper, n):
+                                s -= self.probability(Eq(rv[0], i), Eq(rv[1], j)) * self.probability(Eq(rv[1], j), new_given_condition)
+                    return s if greater else 1 - s
+
+            rv = rv[0]
+            states = condition.as_set()
             prob, gstate = dict(), None
             for gc in gcs:
                 if gc.has(min_key_rv):
@@ -755,6 +789,22 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     >>> E(Y[3], Eq(Y[1], cloudy))
     0.38*Cloudy + 0.36*Rainy + 0.26*Sunny
+
+    Probability of expressions with multiple RandomIndexedSymbols
+    can also be calculated provided there is only 1 RandomIndexedSymbol
+    in the given condition. It is always better to use Rational instead
+    of floating point numbers for the probabilities in the
+    transition matrix to avoid errors.
+
+    >>> from sympy import Gt, Le, Rational
+    >>> T = Matrix([[Rational(5, 10), Rational(3, 10), Rational(2, 10)], [Rational(2, 10), Rational(7, 10), Rational(1, 10)], [Rational(3, 10), Rational(3, 10), Rational(4, 10)]])
+    >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    >>> P(Eq(Y[3], Y[1]), Eq(Y[0], 0)).round(3)
+    0.409
+    >>> P(Gt(Y[3], Y[1]), Eq(Y[0], 0)).round(2)
+    0.36
+    >>> P(Le(Y[15], Y[10]), Eq(Y[8], 2)).round(7)
+    0.6963328
 
     There is limited support for arbitrarily sized states:
 
