@@ -2,7 +2,10 @@
 AST nodes specific to the C family of languages
 """
 
-from sympy.codegen.ast import Attribute, Declaration, Node, String, Token, Type, none, FunctionCall
+from sympy.codegen.ast import (
+    Attribute, Declaration, Node, String, Token, Type, none,
+    FunctionCall, CodeBlock
+    )
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.sympify import sympify
@@ -40,18 +43,33 @@ class CommaOperator(Basic):
         return Basic.__new__(cls, *[sympify(arg) for arg in args])
 
 
-class Label(String):
+class Label(Node):
     """ Label for use with e.g. goto statement.
 
     Examples
     ========
 
-    >>> from sympy.codegen.cnodes import Label
+    >>> from sympy import Symbol
+    >>> from sympy.codegen.cnodes import Label, PreIncrement
     >>> from sympy.printing import ccode
     >>> print(ccode(Label('foo')))
     foo:
+    >>> print(ccode(Label('bar', [PreIncrement(Symbol('a'))])))
+    bar:
+    ++(a);
 
     """
+    __slots__ = ('name', 'body')
+    defaults = {'body': none}
+    _construct_name = String
+
+    @classmethod
+    def _construct_body(cls, itr):
+        if isinstance(itr, CodeBlock):
+            return itr
+        else:
+            return CodeBlock(*itr)
+
 
 class goto(Token):
     """ Represents goto in C """
