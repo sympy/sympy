@@ -253,14 +253,14 @@ def test_simplification():
     dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
     assert (
         SOPform([w, x, y, z], minterms, dontcares) ==
-        Or(And(Not(w), z), And(y, z)))
+        Or(And(y, z), And(Not(w), Not(x))))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
     minterms = [1, 3, 7, 11, 15]
     dontcares = [0, 2, 5]
     assert (
         SOPform([w, x, y, z], minterms, dontcares) ==
-        Or(And(Not(w), z), And(y, z)))
+        Or(And(y, z), And(Not(w), Not(x))))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
     minterms = [1, [0, 0, 1, 1], 7, [1, 0, 1, 1],
@@ -268,14 +268,14 @@ def test_simplification():
     dontcares = [0, [0, 0, 1, 0], 5]
     assert (
         SOPform([w, x, y, z], minterms, dontcares) ==
-        Or(And(Not(w), z), And(y, z)))
+        Or(And(y, z), And(Not(w), Not(x))))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
     minterms = [1, {y: 1, z: 1}]
     dontcares = [0, [0, 0, 1, 0], 5]
     assert (
         SOPform([w, x, y, z], minterms, dontcares) ==
-        Or(And(Not(w), z), And(y, z)))
+        Or(And(y, z), And(Not(w), Not(x))))
     assert POSform([w, x, y, z], minterms, dontcares) == And(Or(Not(w), y), z)
 
 

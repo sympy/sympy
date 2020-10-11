@@ -2211,11 +2211,14 @@ def _simplified_pairs(terms):
     Reduces a set of minterms, if possible, to a simplified set of minterms
     with one less variable in the terms using QM method.
     """
+    if not terms:
+        return []
+
     simplified_terms = []
     todo = list(range(len(terms)))
 
     # Count number of ones as _check_pair can only potentially match if there
-    # is a difference of at most a single one
+    # is at most a difference of a single one
     def ones_count(term):
         return sum([1 for t in term if t == 1])
     termdict = defaultdict(list)
@@ -2238,6 +2241,11 @@ def _simplified_pairs(terms):
                     # Add if not already there
                     if newterm not in simplified_terms:
                         simplified_terms.append(newterm)
+
+    if simplified_terms:
+        # Further simplifications only among the new terms
+        simplified_terms = _simplified_pairs(simplified_terms)
+
     # Add remaining, non-simplified, terms
     simplified_terms.extend(
         [terms[i] for i in [_ for _ in todo if _ is not None]])
@@ -2413,11 +2421,7 @@ def SOPform(variables, minterms, dontcares=None):
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)
 
-    old = None
-    new = minterms + dontcares
-    while new != old:
-        old = new
-        new = _simplified_pairs(old)
+    new = _simplified_pairs(minterms + dontcares)
     essential = _rem_redundancy(new, minterms)
     return Or(*[_convert_to_varsSOP(x, variables) for x in essential])
 
@@ -2492,11 +2496,8 @@ def POSform(variables, minterms, dontcares=None):
         t = list(t)
         if (t not in minterms) and (t not in dontcares):
             maxterms.append(t)
-    old = None
-    new = maxterms + dontcares
-    while new != old:
-        old = new
-        new = _simplified_pairs(old)
+
+    new = _simplified_pairs(maxterms + dontcares)
     essential = _rem_redundancy(new, maxterms)
     return And(*[_convert_to_varsPOS(x, variables) for x in essential])
 
