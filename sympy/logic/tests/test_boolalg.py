@@ -16,7 +16,8 @@ from sympy.logic.boolalg import (
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
     BooleanAtom, is_literal, term_to_integer, integer_to_term,
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
-    anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial)
+    anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
+    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
@@ -1191,3 +1192,18 @@ def test_bool_monomial():
     x, y = symbols('x,y')
     assert bool_monomial(1, [x, y]) == y
     assert bool_monomial([1, 1], [x, y]) == And(x, y)
+
+
+def test_check_pair():
+    assert _check_pair([0, 1, 0], [0, 1, 1]) == 2
+    assert _check_pair([0, 1, 0], [1, 1, 1]) == -1
+
+
+def test_convert_to_varsSOP():
+    assert _convert_to_varsSOP([0, 1, 0], [x, y, z]) ==  And(Not(x), y, Not(z))
+    assert _convert_to_varsSOP([3, 1, 0], [x, y, z]) ==  And(y, Not(z))
+
+
+def test_convert_to_varsPOS():
+    assert _convert_to_varsPOS([0, 1, 0], [x, y, z]) == Or(x, Not(y), z)
+    assert _convert_to_varsPOS([3, 1, 0], [x, y, z]) ==  Or(Not(y), z)

@@ -2138,9 +2138,11 @@ def _check_pair(minterm1, minterm2):
     Checks if a pair of minterms differs by only one bit. If yes, returns
     index, else returns -1.
     """
+    # Early termination seems to be faster than list comprehension,
+    # at least for large examples.
     index = -1
-    for x, (i, j) in enumerate(zip(minterm1, minterm2)):
-        if i != j:
+    for x, i in enumerate(minterm1):  # zip(minterm1, minterm2) is slower
+        if i != minterm2[x]:
             if index == -1:
                 index = x
             else:
@@ -2153,14 +2155,8 @@ def _convert_to_varsSOP(minterm, variables):
     Converts a term in the expansion of a function from binary to its
     variable form (for SOP).
     """
-    temp = []
-    for i, m in enumerate(minterm):
-        if m == 0:
-            temp.append(Not(variables[i]))
-        elif m == 1:
-            temp.append(variables[i])
-        else:
-            pass  # ignore the 3s
+    temp = [variables[n] if val == 1 else Not(variables[n])
+            for n, val in enumerate(minterm) if val != 3]
     return And(*temp)
 
 
@@ -2169,14 +2165,8 @@ def _convert_to_varsPOS(maxterm, variables):
     Converts a term in the expansion of a function from binary to its
     variable form (for POS).
     """
-    temp = []
-    for i, m in enumerate(maxterm):
-        if m == 1:
-            temp.append(Not(variables[i]))
-        elif m == 0:
-            temp.append(variables[i])
-        else:
-            pass  # ignore the 3s
+    temp = [variables[n] if val == 0 else Not(variables[n])
+            for n, val in enumerate(maxterm) if val != 3]
     return Or(*temp)
 
 
@@ -2192,15 +2182,10 @@ def _convert_to_varsANF(term, variables):
     variables : list of variables
 
     """
-    temp = []
-    for i, m in enumerate(term):
-        if m == 1:
-            temp.append(variables[i])
-        else:
-            pass # ignore 0s
+    temp = [variables[n] for n, t in enumerate(term) if t == 1]
 
-    if temp == []:
-        return BooleanTrue()
+    if not temp:
+        return true
 
     return And(*temp)
 
@@ -2210,12 +2195,7 @@ def _get_odd_parity_terms(n):
     Returns a list of lists, with all possible combinations of n zeros and ones
     with an odd number of ones.
     """
-    op = []
-    for i in range(1, 2**n):
-        e = ibin(i, n)
-        if sum(e) % 2 == 1:
-            op.append(e)
-    return op
+    return [e for e in [ibin(i, n) for i in range(2**n)] if sum(e) % 2 == 1]
 
 
 def _get_even_parity_terms(n):
@@ -2223,12 +2203,7 @@ def _get_even_parity_terms(n):
     Returns a list of lists, with all possible combinations of n zeros and ones
     with an even number of ones.
     """
-    op = []
-    for i in range(2**n):
-        e = ibin(i, n)
-        if sum(e) % 2 == 0:
-            op.append(e)
-    return op
+    return [e for e in [ibin(i, n) for i in range(2**n)] if sum(e) % 2 == 0]
 
 
 def _simplified_pairs(terms):
@@ -2238,15 +2213,32 @@ def _simplified_pairs(terms):
     """
     simplified_terms = []
     todo = list(range(len(terms)))
-    for i, ti in enumerate(terms[:-1]):
-        for j_i, tj in enumerate(terms[(i + 1):]):
-            index = _check_pair(ti, tj)
-            if index != -1:
-                todo[i] = todo[j_i + i + 1] = None
-                newterm = ti[:]
-                newterm[index] = 3
-                if newterm not in simplified_terms:
-                    simplified_terms.append(newterm)
+
+    # Count number of ones as _check_pair can only potentially match if there
+    # is a difference of at most a single one
+    def ones_count(term):
+        return sum([1 for t in term if t == 1])
+    termdict = defaultdict(list)
+    for n, term in enumerate(terms):
+        ones = ones_count(term)
+        termdict[ones].append(n)
+
+    variables = len(terms[0])
+    for k in range(variables):
+        for i in termdict[k]:
+            for j in termdict[k+1]:
+                index = _check_pair(terms[i], terms[j])
+                if index != -1:
+                    # Mark terms handled
+                    todo[i] = todo[j] = None
+                    # Copy old term
+                    newterm = terms[i][:]
+                    # Set differing position to don't care
+                    newterm[index] = 3
+                    # Add if not already there
+                    if newterm not in simplified_terms:
+                        simplified_terms.append(newterm)
+    # Add remaining, non-simplified, terms
     simplified_terms.extend(
         [terms[i] for i in [_ for _ in todo if _ is not None]])
     return simplified_terms
@@ -2257,8 +2249,8 @@ def _compare_term(minterm, term):
     Return True if a binary term is satisfied by the given term. Used
     for recognizing prime implicants.
     """
-    for i, x in enumerate(term):
-        if x != 3 and x != minterm[i]:
+    for m, t in zip(minterm, term):
+        if t != 3 and m != t:
             return False
     return True
 
@@ -2270,58 +2262,65 @@ def _rem_redundancy(l1, terms):
     and return the essential arguments.
     """
 
-    if len(terms):
-        # Create dominating matrix
-        dommatrix = [[0]*len(l1) for n in range(len(terms))]
-        for primei, prime in enumerate(l1):
-            for termi, term in enumerate(terms):
-                if _compare_term(term, prime):
-                    dommatrix[termi][primei] = 1
-
-        # Non-dominated prime implicants, dominated set to None
-        ndprimeimplicants = list(range(len(l1)))
-        # Non-dominated terms, dominated set to None
-        ndterms = list(range(len(terms)))
-
-        # Mark dominated rows and columns
-        oldndterms = None
-        oldndprimeimplicants = None
-        while ndterms != oldndterms or \
-                ndprimeimplicants != oldndprimeimplicants:
-            oldndterms = ndterms[:]
-            oldndprimeimplicants = ndprimeimplicants[:]
-            for rowi, row in enumerate(dommatrix):
-                if ndterms[rowi] is not None:
-                    row = [row[i] for i in
-                           [_ for _ in ndprimeimplicants if _ is not None]]
-                    for row2i, row2 in enumerate(dommatrix):
-                        if rowi != row2i and ndterms[row2i] is not None:
-                            row2 = [row2[i] for i in
-                                    [_ for _ in ndprimeimplicants
-                                     if _ is not None]]
-                            if all(a >= b for (a, b) in zip(row2, row)):
-                                # row2 dominating row, keep row
-                                ndterms[row2i] = None
-            for coli in range(len(l1)):
-                if ndprimeimplicants[coli] is not None:
-                    col = [dommatrix[a][coli] for a in range(len(terms))]
-                    col = [col[i] for i in
-                           [_ for _ in oldndterms if _ is not None]]
-                    for col2i in range(len(l1)):
-                        if coli != col2i and \
-                                ndprimeimplicants[col2i] is not None:
-                            col2 = [dommatrix[a][col2i]
-                                    for a in range(len(terms))]
-                            col2 = [col2[i] for i in
-                                    [_ for _ in oldndterms if _ is not None]]
-                            if all(a >= b for (a, b) in zip(col, col2)):
-                                # col dominating col2, keep col
-                                ndprimeimplicants[col2i] = None
-        l1 = [l1[i] for i in [_ for _ in ndprimeimplicants if _ is not None]]
-
-        return l1
-    else:
+    if not terms:
         return []
+
+    nterms = len(terms)
+    nl1 = len(l1)
+    # Create dominating matrix
+    dommatrix = [[0]*nl1 for n in range(nterms)]
+    for primei, prime in enumerate(l1):
+        for termi, term in enumerate(terms):
+            if _compare_term(term, prime):
+                dommatrix[termi][primei] = 1
+
+    # Non-dominated prime implicants, dominated to be removed
+    ndprimeimplicants = set(range(nl1))
+
+    # Non-dominated terms, dominated to be removed
+    ndterms = set(range(nterms))
+
+    # Keep track if anything changed
+    anythingchanged = True
+    # Then, go again
+    while anythingchanged:
+        anythingchanged = False
+
+        # Make copy for iteration
+        oldndterms = ndterms.copy()
+        # Filter matrix to only get non-dominated items
+        filteredrows = [[dommatrix[rowi][i] for i in list(ndprimeimplicants)]
+                        for rowi in oldndterms]
+        for n, rowi in enumerate(oldndterms):
+            # Still non-dominated?
+            if rowi in ndterms:
+                row = filteredrows[n]
+                for n2, row2i in enumerate(oldndterms):
+                    # Still non-dominated?
+                    if n != n2 and row2i in ndterms:
+                        if all(a >= b for (a, b) in zip(filteredrows[n2], row)):
+                            # row2 dominating row, remove row2
+                            ndterms.remove(row2i)
+                            anythingchanged = True
+
+        # Make copy for iteration
+        oldndprimeimplicants = ndprimeimplicants.copy()
+        # Filter matrix to only get non-dominated items
+        filteredcols = [[dommatrix[i][coli] for i in list(ndterms)]
+                        for coli in oldndprimeimplicants]
+        for n, coli in enumerate(oldndprimeimplicants):
+            # Still non-dominated?
+            if coli in ndprimeimplicants:
+                col = filteredcols[n]
+                for n2, col2i in enumerate(oldndprimeimplicants):
+                    # Still non-dominated?
+                    if coli != col2i and col2i in ndprimeimplicants:
+                        if all(a >= b for (a, b) in zip(col, filteredcols[n2])):
+                            # col dominating col2, remove col2
+                            ndprimeimplicants.remove(col2i)
+                            anythingchanged = True
+
+    return [l1[i] for i in ndprimeimplicants]
 
 
 def _input_to_binlist(inputlist, variables):
