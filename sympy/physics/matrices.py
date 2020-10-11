@@ -172,6 +172,9 @@ def mdft(n):
     ========
 
     >>> from sympy.physics.matrices import mdft
+    >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
+    >>> import warnings
+    >>> warnings.simplefilter("ignore", SymPyDeprecationWarning)
     >>> mdft(3)
     Matrix([
     [sqrt(3)/3,                sqrt(3)/3,                sqrt(3)/3],
