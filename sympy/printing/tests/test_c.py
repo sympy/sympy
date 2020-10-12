@@ -835,3 +835,7 @@ def test_ccode_codegen_ast():
         'pwer(x);',
         'return x;',
     ])
+
+def test_ccode_submodule():
+    # Test the compatibility sympy.printing.ccode module imports
+    import sympy.printing.ccode # noqa:F401
