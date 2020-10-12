@@ -804,3 +804,7 @@ def test_FunctionDefinition_print():
     # Should be changed to proper test once multi-line generation is working
     # see https://github.com/sympy/sympy/issues/15824
     raises(NotImplementedError, lambda: fcode(fd1))
+
+def test_fcode_submodule():
+    # Test the compatibility sympy.printing.fcode module imports
+    import sympy.printing.fcode # noqa:F401
