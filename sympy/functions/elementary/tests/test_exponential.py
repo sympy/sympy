@@ -683,3 +683,8 @@ def test_issue_9116():
 
     assert ln(n).is_nonnegative is True
     assert log(n).is_nonnegative is True
+
+
+def test_issue_19774():
+    assert exp(x/2).evalf() == exp(0.5 * x)
+    assert exp(x/2 + y/2).evalf() == exp(0.5 * x + 0.5 * y)

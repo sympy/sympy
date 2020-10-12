@@ -352,6 +352,7 @@ class exp(ExpBase):
                     out.append(newa)
             if out or argchanged:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
+            return None
 
         elif isinstance(arg, MatrixBase):
             return arg.exp()

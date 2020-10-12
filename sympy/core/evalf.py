@@ -727,6 +727,12 @@ def evalf_pow(v, prec, options):
         # Positive square root
         return mpf_sqrt(xre, prec), None, prec, None
 
+    # Evaluate terms in exponential
+    if base is S.Exp1 and (exp.is_Add or exp.is_Mul):
+        from sympy.core.power import Pow
+        exp = exp.evalf()
+        return Pow(base, exp), None, None, None
+
     # We first evaluate the exponent to find its magnitude
     # This determines the working precision that must be used
     prec += 10
@@ -1446,7 +1452,7 @@ class EvalfMixin:
         >>> (x + y - z).evalf(subs=values)
         1.00000000000000
         """
-        from sympy import Float, Number
+        from sympy import Float, Number, exp
         n = n if n is not None else 15
 
         if subs and is_sequence(subs):
@@ -1485,6 +1491,8 @@ class EvalfMixin:
                 # Probably contains symbols or unknown functions
                 return v
         re, im, re_acc, im_acc = result
+        if type(re) is exp:
+            return re
         if re:
             p = max(min(prec, re_acc), 1)
             re = Float._new(re, p)
