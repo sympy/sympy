@@ -1,5 +1,5 @@
 from sympy import S, I, ask, Q, Abs, simplify, exp, sqrt, Rational
-from sympy.core.symbol import symbols
+from sympy.core.symbol import Symbol
 from sympy.matrices.expressions.fourier import DFT, IDFT
 from sympy.matrices import det, Matrix, Identity
 from sympy.testing.pytest import raises
@@ -12,11 +12,11 @@ def test_dft_creation():
     raises(ValueError, lambda: DFT(2.0))
     raises(ValueError, lambda: DFT(2 + 1j))
 
-    n = symbols('n')
+    n = Symbol('n')
     assert DFT(n)
-    n = symbols('n', integer=False)
+    n = Symbol('n', integer=False)
     raises(ValueError, lambda: DFT(n))
-    n = symbols('n', negative=True)
+    n = Symbol('n', negative=True)
     raises(ValueError, lambda: DFT(n))
 
 
@@ -28,6 +28,7 @@ def test_dft():
     assert DFT(n)*IDFT(n) == Identity(n)
     assert DFT(n)[i, j] == exp(-2*S.Pi*I/n)**(i*j) / sqrt(n)
 
+
 def test_dft2():
     assert DFT(1).as_explicit() == Matrix([[1]])
     assert DFT(2).as_explicit() == 1/sqrt(2)*Matrix([[1,1],[1,-1]])
@@ -35,3 +36,16 @@ def test_dft2():
                                            [S.Half, -I/2, Rational(-1,2),  I/2],
                                            [S.Half, Rational(-1,2),  S.Half, Rational(-1,2)],
                                            [S.Half,  I/2, Rational(-1,2), -I/2]])
+
+
+def test_unitary():
+    assert DFT(2, unitary=False).as_explicit() == Matrix([[1,1],[1,-1]])
+    assert DFT(2, unitary=False)*IDFT(2, unitary=False) == Identity(2)
+    assert DFT(2)*IDFT(2, unitary=False) == sqrt(2)/2*Identity(2)
+
+
+def test_twiddle():
+    w = Symbol('w')
+    assert DFT(3, twiddle=w).as_explicit() == Matrix([[sqrt(3)/3, sqrt(3)/3, sqrt(3)/3],
+                                                      [sqrt(3)/3, sqrt(3)*w/3, sqrt(3)*w**2/3],
+                                                      [sqrt(3)/3, sqrt(3)*w**2/3, sqrt(3)*w**4/3]])
