@@ -3,6 +3,8 @@ from sympy.functions import beta, Ei, zeta, Max, Min, sqrt
 from sympy.printing.cxx import CXX98CodePrinter, CXX11CodePrinter, CXX17CodePrinter, cxxcode
 from sympy.codegen.cfunctions import log1p
 
+from sympy.testing.pytest import warns_deprecated_sympy
+
 x, y = symbols('x y')
 
 
@@ -57,4 +59,5 @@ def test_cxxcode():
 
 def test_cxxcode_submodule():
     # Test the compatibility sympy.printing.cxxcode module imports
-    import sympy.printing.cxxcode # noqa:F401
+    with warns_deprecated_sympy():
+        import sympy.printing.cxxcode # noqa:F401

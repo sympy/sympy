@@ -14,7 +14,7 @@ from sympy.matrices import Matrix, MatrixSymbol
 from sympy.printing.fortran import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 def test_printmethod():
@@ -807,4 +807,5 @@ def test_FunctionDefinition_print():
 
 def test_fcode_submodule():
     # Test the compatibility sympy.printing.fcode module imports
-    import sympy.printing.fcode # noqa:F401
+    with warns_deprecated_sympy():
+        import sympy.printing.fcode # noqa:F401
