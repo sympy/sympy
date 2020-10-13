@@ -675,6 +675,9 @@ def _get_doctest_blacklist():
         "sympy/matrices/densearith.py", # raises deprecation warning
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
+        "sympy/printing/ccode.py", # backwards compatibility shim, importing it breaks the codegen doctests
+        "sympy/printing/fcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
+        "sympy/printing/cxxcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
