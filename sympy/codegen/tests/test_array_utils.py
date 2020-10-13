@@ -606,7 +606,8 @@ def test_contraction_permutation_mix():
     )
     cg2 = CodegenArrayContraction(
         CodegenArrayTensorProduct(M, N, P, Q),
-        (0, 1), (3, 6), (4, 5)
+        (0, 1), (2, 7), (4, 5)
+        # (0, 1), (3, 6), (4, 5)
     )
     # TODO: remove permute-dims if all dims are later contracted?
     assert cg1 == cg2
@@ -617,6 +618,9 @@ def test_contraction_permutation_mix():
         ),
         (0, 1), (2, 6), (3, 7)
     )
+    cge2 = tensorcontraction(
+        tensorproduct(Me, Qe, Pe, Ne), (0, 1), (2, 7), (4, 5))
+        
     cge2 = tensorcontraction(
         tensorproduct(tensorcontraction(Me, (0, 1)), Ne, tensorcontraction(Pe, (0, 1)), Qe),
         (1, 2)
@@ -666,5 +670,5 @@ def test_permute_tensor_product():
     assert cg1 == cg2
 
     cg1 = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N, P, Q), Permutation([2, 3, 4, 6, 5, 7, 0, 1]))
-    assert cg1.expr == CodegenArrayTensorProduct(M, N, P, Q)
-    assert cg1.permutation == Permutation([2, 3, 4, 6, 5, 7, 0, 1])
+    assert cg1.expr == CodegenArrayTensorProduct(Q, M, N, P)
+    assert cg1.permutation == Permutation([0, 1, 2, 3, 4, 6, 5, 7])

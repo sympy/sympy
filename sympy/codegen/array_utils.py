@@ -490,6 +490,16 @@ class CodegenArrayTensorProduct(_CodegenArrayAbstract):
         args = cls._flatten(args)
         ranks = [_get_subrank(arg) for arg in args]
 
+        # Check if there are nested permutation and lift them up:
+        permutation_cycles = []
+        for i, arg in enumerate(args):
+            if not isinstance(arg, CodegenArrayPermuteDims):
+                continue
+            permutation_cycles.extend([[k + sum(ranks[:i]) for k in j] for j in arg.permutation.cyclic_form])
+            args[i] = arg.expr
+        if permutation_cycles:
+            return CodegenArrayPermuteDims(CodegenArrayTensorProduct(*args), Permutation(sum(ranks)-1)*Permutation(permutation_cycles))
+
         if len(args) == 1:
             return args[0]
 
@@ -584,6 +594,8 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
             expr, permutation = cls._check_lift_permutation(expr, permutation)
         # if nest_permutation and isinstance(expr, CodegenArrayTensorProduct):
             # expr, permutation = cls._check_permutation_mapping(expr, permutation)
+        if isinstance(expr, CodegenArrayTensorProduct):
+            expr, permutation = cls._sort_components(expr, permutation)
         plist = permutation.array_form
         if plist == sorted(plist):
             return expr
@@ -603,6 +615,26 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
     @property
     def permutation(self):
         return self.args[1]
+
+    @classmethod
+    def _sort_components(cls, expr, permutation):
+        parray = permutation.array_form
+        args = list(expr.args)
+        cumul = list(accumulate([0] + expr.subranks))
+        parray_components = [parray[cumul[i]:cumul[i+1]] for i in range(len(args))]
+        map2 = [i for i in range(len(args)) for j in range(expr.subranks[i])]
+        # Create an index, target-position-key array:
+        ps = [(i, sorted(map2[j] for j in comp)) for i, comp in enumerate(parray_components)]
+        # Sort the array according to the target-position-key:
+        ps.sort(key=lambda x: x[1])
+        # Read the inverse-permutation (i.e. image-form) of the args:
+        new_pos1 = [i[0] for i in ps]
+        # Apply the args-permutation to the `args`:
+        args_sorted = [args[i] for i in new_pos1]
+        # Apply the args-permutation to the array-form of the permutation of the axes (of `expr`):
+        parray_components_sorted = [parray_components[i] for i in new_pos1]
+        new_permutation = Permutation([j for i in parray_components_sorted for j in i])
+        return CodegenArrayTensorProduct(*args_sorted), new_permutation
 
     def _lift_permutation(self):
         if not isinstance(self.expr, CodegenArrayTensorProduct):
@@ -1520,8 +1552,26 @@ def _recognize_matrix_expression(expr):
             newargs.sort(key=lambda x: x[1])
             newargs = [i[0] for i in newargs]
             return _RecognizeMatMulLines(newargs)
+        elif isinstance(expr.expr, CodegenArrayContraction):
+            mat_mul_lines = _recognize_matrix_expression(expr.expr)
+            if not isinstance(mat_mul_lines, _RecognizeMatMulLines):
+                raise NotImplementedError()
+            permutation = Permutation(2*len(mat_mul_lines)-1)*expr.permutation
+            permuted = [permutation(i) for i in range(2*len(mat_mul_lines))]
+            args_array = [None for i in mat_mul_lines]
+            for i in range(len(mat_mul_lines)):
+                p1 = permuted[2*i]
+                p2 = permuted[2*i+1]
+                if p1 // 2 != p2 // 2:
+                    raise NotImplementedError("permutation mixes the axes in a way that cannot be represented by matrices")
+                pos = p1 // 2
+                if p1 > p2:
+                    args_array[i] = _RecognizeMatOp(Transpose, mat_mul_lines[pos])
+                else:
+                    args_array[i] = mat_mul_lines[pos]
+            return _RecognizeMatMulLines(args_array)
         else:
-            raise NotImplementedError
+            raise NotImplementedError()
     elif isinstance(expr, CodegenArrayTensorProduct):
         args = [_recognize_matrix_expression(arg) for arg in expr.args]
         multiple_lines = [_has_multiple_lines(arg) for arg in args]
