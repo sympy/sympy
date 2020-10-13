@@ -5,18 +5,14 @@ from sympy import S, I, sqrt, exp
 
 class DFT(MatrixExpr):
     r"""
-    Returns a discrete Fourier transform matrix.
+    Returns a discrete Fourier transform matrix. The matrix is scaled
+    with :math:`\frac{1}{\sqrt{n}}` so that it is unitary.
 
     Parameters
     ==========
 
     n : integer or Symbol
         Size of the transform.
-    unitary : bool
-        If True (default), the matrix is scaled with :math:`\frac{1}{\sqrt{N}}`.
-    twiddle : Symbol or None
-        Use a symbol instead of :math:`\exp(-j2\pi/n)` as twiddle factor.
-        Default value: None
 
     Examples
     ========
@@ -32,21 +28,6 @@ class DFT(MatrixExpr):
     [sqrt(3)/3,  sqrt(3)*exp(2*I*pi/3)/3, sqrt(3)*exp(-2*I*pi/3)/3]])
     >>> DFT(n).shape
     (n, n)
-    >>> DFT(3, unitary=False).as_explicit()
-    Matrix([
-    [1,              1,              1],
-    [1, exp(-2*I*pi/3),  exp(2*I*pi/3)],
-    [1,  exp(2*I*pi/3), exp(-2*I*pi/3)]])
-
-    It is possible to use a symbolic twiddle factor
-
-    >>> from sympy.abc import omega
-    >>> DFT(4, unitary=False, twiddle=omega).as_explicit()
-    Matrix([
-    [1,        1,        1,        1],
-    [1,    omega, omega**2, omega**3],
-    [1, omega**2, omega**4, omega**6],
-    [1, omega**3, omega**6, omega**9]])
 
     References
     ==========
@@ -55,47 +36,34 @@ class DFT(MatrixExpr):
 
     """
 
-    def __new__(cls, n, unitary=True, twiddle=None):
+    def __new__(cls, n):
         n = _sympify(n)
         cls._check_dim(n)
 
         obj = super().__new__(cls, n)
-        cls._unitary = unitary
-        cls._twiddle = twiddle
         return obj
 
     n = property(lambda self: self.args[0])  # type: ignore
     shape = property(lambda self: (self.n, self.n))  # type: ignore
 
     def _entry(self, i, j, **kwargs):
-        if self._twiddle is None:
-            w = exp(-2*S.Pi*I/self.n)
-        else:
-            w = self._twiddle
-        if self._unitary:
-            return w**(i*j) / sqrt(self.n)
-        else:
-            return w**(i*j)
+        w = exp(-2*S.Pi*I/self.n)
+        return w**(i*j) / sqrt(self.n)
 
     def _eval_inverse(self):
-        return IDFT(self.n, unitary=self._unitary, twiddle=self._twiddle)
+        return IDFT(self.n)
 
 
 class IDFT(DFT):
     r"""
-    Returns an inverse discrete Fourier transform matrix.
+    Returns an inverse discrete Fourier transform matrix. The matrix is scaled
+    with :math:`\frac{1}{\sqrt{n}}` so that it is unitary.
 
     Parameters
     ==========
 
     n : integer or Symbol
         Size of the transform
-    unitary : bool
-        If True (default), the matrix is scaled with :math:`\frac{1}{\sqrt{N}}`. If
-        False, the matrix is scaled with :math:`\frac{1}{N}`.
-    twiddle : Symbol or None
-        Use a symbol instead of :math:`\exp(-j2\pi/n)` as twiddle factor.
-        Default value: None
 
     Examples
     ========
@@ -109,18 +77,12 @@ class IDFT(DFT):
     See Also
     ========
 
-    sympy.matrices.expressions.fourier.DFT
+    DFT
 
     """
     def _entry(self, i, j, **kwargs):
-        if self._twiddle is None:
-            w = exp(-2*S.Pi*I/self.n)
-        else:
-            w = self._twiddle
-        if self._unitary:
-            return w**(-i*j) / sqrt(self.n)
-        else:
-            return w**(-i*j) / self.n
+        w = exp(-2*S.Pi*I/self.n)
+        return w**(-i*j) / sqrt(self.n)
 
     def _eval_inverse(self):
-        return DFT(self.n, unitary=self._unitary, twiddle=self._twiddle)
+        return DFT(self.n)
