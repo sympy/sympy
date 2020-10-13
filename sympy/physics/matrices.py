@@ -160,26 +160,13 @@ minkowski_tensor = Matrix( (
             deprecated_since_version="1.7")
 def mdft(n):
     r"""
-    Returns an expression of a discrete Fourier transform as a matrix multiplication.
-    It is an n X n matrix.
+    Deprecated. Use DFT from sympy.matrices.expressions.fourier instead.
 
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/DFT_matrix
-
-    Examples
+    See Also
     ========
 
-    >>> from sympy.physics.matrices import mdft
-    >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
-    >>> import warnings
-    >>> warnings.simplefilter("ignore", SymPyDeprecationWarning)
-    >>> mdft(3)
-    Matrix([
-    [sqrt(3)/3,                sqrt(3)/3,                sqrt(3)/3],
-    [sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3,  sqrt(3)*exp(2*I*pi/3)/3],
-    [sqrt(3)/3,  sqrt(3)*exp(2*I*pi/3)/3, sqrt(3)*exp(-2*I*pi/3)/3]])
+    sympy.matrices.expressions.fourier.DFT
+
     """
     mat = [[None for x in range(n)] for y in range(n)]
     base = exp(-2*pi*I/n)
