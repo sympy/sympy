@@ -156,7 +156,7 @@ minkowski_tensor = Matrix( (
 ))
 
 
-@deprecated(issue=20246, useinstead="DFT(n) or DFT(n).as_explicit()",
+@deprecated(issue=20246, useinstead="DFT(n).as_mutable(), DFT(n), DFT(n).as_explicit()",
             deprecated_since_version="1.7")
 def mdft(n):
     r"""
@@ -165,7 +165,7 @@ def mdft(n):
     See Also
     ========
 
-    sympy.matrices.expressions.fourier.DFT
+    sympy.matrices.expressions.fourier
 
     """
     mat = [[None for x in range(n)] for y in range(n)]
