@@ -2371,7 +2371,7 @@ def lfsr_sequence(key, fill, n):
     References
     ==========
 
-    .. [1] [G] Solomon Golomb, Shift register sequences, Aegean Park Press,
+    .. [G] Solomon Golomb, Shift register sequences, Aegean Park Press,
        Laguna Hills, Ca, 1967
 
     """
