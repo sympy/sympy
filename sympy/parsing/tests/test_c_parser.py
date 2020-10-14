@@ -13,7 +13,7 @@ if cin:
         MulAugmentedAssignment, DivAugmentedAssignment,
         ModAugmentedAssignment, While)
     from sympy.codegen.cnodes import (PreDecrement, PostDecrement,
-        PreIncrement, PostIncrement)
+        PreIncrement, PostIncrement, Label, goto)
     from sympy.core import (Add, Mul, Mod, Pow, Rational,
         StrictLessThan, LessThan, StrictGreaterThan, GreaterThan,
         Equality, Unequality)
@@ -5223,6 +5223,113 @@ if cin:
                     Integer(1),
                     body=CodeBlock(
                         NoneToken()
+                        )
+                    )
+                )
+            )
+
+
+    def test_label_goto():
+
+        c_src1 = (
+            'void func()'+
+            '{' + '\n' +
+                'int a = 0;' + '\n' +
+                'int b;' + '\n' +
+                'label:' + '\n' +
+                ' b = a + 10;' + '\n' +
+                'goto label;' + '\n' +
+            '}'
+        )
+
+        c_src2 = (
+            'void func()'+
+            '{' + '\n' +
+                'int i = 0;' + '\n' +
+                'int j = 100;' + '\n' +
+                'label:' + '\n' +
+                ' i++;' + '\n' +
+                ' j--;' + '\n' +
+                'goto label;' + '\n' +
+            '}'
+        )
+
+        res1 = SymPyExpression(c_src1, 'c').return_expr()
+        res2 = SymPyExpression(c_src2, 'c').return_expr()
+
+        assert res1[0] == FunctionDefinition(
+            NoneToken(),
+            name=String('func'),
+            parameters=(),
+            body=CodeBlock(
+                Declaration(
+                    Variable(
+                        Symbol('a'),
+                        type=IntBaseType(String('intc')),
+                        value=Integer(0)
+                        )
+                    ),
+                Declaration(
+                    Variable(
+                        Symbol('b'),
+                        type=IntBaseType(String('intc'))
+                        )
+                    ),
+                Label(
+                    String('label'),
+                    body=CodeBlock(
+                        Assignment(
+                            Variable(
+                                Symbol('b')
+                                ),
+                            Add(
+                                Symbol('a'),
+                                Integer(10)
+                                )
+                            )
+                        )
+                    ),
+                goto(
+                    Label(
+                        String('label')
+                        )
+                    )
+                )
+            )
+
+        assert res2[0] == FunctionDefinition(
+            NoneToken(),
+            name=String('func'),
+            parameters=(),
+            body=CodeBlock(
+                Declaration(
+                    Variable(
+                        Symbol('i'),
+                        type=IntBaseType(String('intc')),
+                        value=Integer(0)
+                        )
+                    ),
+                Declaration(
+                    Variable(
+                        Symbol('j'),
+                        type=IntBaseType(String('intc')),
+                        value=Integer(100)
+                        )
+                    ),
+                Label(
+                    String('label'),
+                    body=CodeBlock(
+                        PostIncrement(
+                            Symbol('i')
+                            )
+                        )
+                    ),
+                PostDecrement(
+                    Symbol('j')
+                    ),
+                goto(
+                    Label(
+                        String('label')
                         )
                     )
                 )

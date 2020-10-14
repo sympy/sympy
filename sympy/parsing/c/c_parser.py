@@ -49,7 +49,7 @@ if cin:
         uint8, uint16, uint32, uint64, float32, float64, float80,
         aug_assign, bool_, While, CodeBlock)
     from sympy.codegen.cnodes import (PreDecrement, PostDecrement,
-        PreIncrement, PostIncrement)
+        PreIncrement, PostIncrement, Label, goto)
     from sympy.core import Add, Mod, Mul, Pow, Rel
     from sympy.logic.boolalg import And, as_Boolean, Not, Or
     from sympy import Symbol, sympify, true, false
@@ -1059,6 +1059,37 @@ if cin:
                 statement_block = CodeBlock(statements)
 
             return While(condition, statement_block)
+
+        def transform_label_stmt(self, node):
+            """Transformation function for handling label statement
+
+            Returns
+            =======
+
+            label statement : Codegen AST Node
+                contains the label statement node which has children
+                until goto statement is encountered
+
+            """
+
+            children = []
+            for child in node.get_children():
+                children.append(self.transform(child))
+
+            return Label(node.spelling, children)
+
+        def transform_goto_stmt(self, node):
+            """Transformation function for handling goto statement
+
+            Returns
+            =======
+
+            goto statement : Codegen AST Node
+                contains the goto statement node having label reference
+
+            """
+            label_ref = Label(next(node.get_children()).spelling)
+            return goto(label_ref)
 
 
 
