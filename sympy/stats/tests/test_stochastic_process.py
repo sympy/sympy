@@ -199,6 +199,28 @@ def test_DiscreteMarkovChain():
     assert recurrence == (True, True, False, True, False)
     assert periods == (1, 1, 1, 1, 1)
 
+    # test canonical form
+    # see https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    # example 11.13
+    T = Matrix([[1, 0, 0, 0, 0],
+                [S(1) / 2, 0, S(1) / 2, 0, 0],
+                [0, S(1) / 2, 0, S(1) / 2, 0],
+                [0, 0, S(1) / 2, 0, S(1) / 2],
+                [0, 0, 0, 0, S(1)]])
+    DW = DiscreteMarkovChain('DW', [0, 1, 2, 3, 4], T)
+    states, A, B, C = DW.decompose()
+    assert states == [0, 4, 1, 2, 3]
+    assert A == Matrix([[1, 0], [0, 1]])
+    assert B == Matrix([[S(1)/2, 0], [0, 0], [0, S(1)/2]])
+    assert C == Matrix([[0, S(1)/2, 0], [S(1)/2, 0, S(1)/2], [0, S(1)/2, 0]])
+    states, new_matrix = DW.canonical_form()
+    assert states == [0, 4, 1, 2, 3]
+    assert new_matrix == Matrix([[1, 0, 0, 0, 0],
+                                 [0, 1, 0, 0, 0],
+                                 [S(1)/2, 0, 0, S(1)/2, 0],
+                                 [0, 0, S(1)/2, 0, S(1)/2],
+                                 [0, S(1)/2, 0, S(1)/2, 0]])
+
     # test custom state space
     Y10 = DiscreteMarkovChain('Y', [1, 2, 3], TO2)
     tuples = Y10.communication_classes()
