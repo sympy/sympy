@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer, diagonalize_vector, DiagMatrix
 from sympy.combinatorics import Permutation
+from sympy.combinatorics.permutations import _af_invert
 from sympy.core.basic import Basic
 from sympy.core.compatibility import accumulate, default_sort_key
 from sympy.core.mul import Mul
@@ -76,7 +77,7 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
             return cls._handle_nested_permute_dims(expr, *contraction_indices)
 
         if isinstance(expr, CodegenArrayTensorProduct):
-            expr = cls._remove_redundant_permutations(expr, contraction_indices)
+            expr, contraction_indices = cls._sort_fully_contracted_args(expr, contraction_indices)
 
         obj = Basic.__new__(cls, expr, *contraction_indices)
         obj._subranks = _get_subranks(expr)
@@ -310,25 +311,21 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         )
 
     @classmethod
-    def _remove_redundant_permutations(cls, expr, contraction_indices):
-        # type: (CodegenArrayTensorProduct, List[List[int]]) -> Basic
-        args = list(expr.args)
-        subranks = expr.subranks  # type: List[int]
-        cumulative_subranks = [0] + list(accumulate(subranks))  # type: List[int]
-        for i, arg in enumerate(args):
-            if not isinstance(arg, CodegenArrayPermuteDims):
-                continue
-            permutation = arg.permutation  # type: Permutation
-            cyclic_form = permutation.cyclic_form
-            cyclic_form_shifted = [[k + cumulative_subranks[i] for k in j] for j in cyclic_form]
-            new_cyclic_form = []
-            for j, cycl in enumerate(cyclic_form_shifted):
-                if any(all(k in p for k in cycl) for p in contraction_indices):
-                    pass
-                else:
-                    new_cyclic_form.append(cyclic_form[j])
-            args[i] = CodegenArrayPermuteDims(arg.expr, Permutation(new_cyclic_form))
-        return CodegenArrayTensorProduct(*args)
+    def _sort_fully_contracted_args(cls, expr, contraction_indices):
+        # type: (CodegenArrayTensorProduct, Tuple[Tuple[int]]) -> Tuple[CodegenArrayTensorProduct, Tuple[Tuple[int]]]
+        if expr.shape is None:
+            return expr, contraction_indices
+        cumul = list(accumulate([0] + expr.subranks))
+        index_blocks = [list(range(cumul[i], cumul[i+1])) for i in range(len(expr.args))]
+        contraction_indices_flat = {j for i in contraction_indices for j in i}
+        fully_contracted = [all(j in contraction_indices_flat for j in range(cumul[i], cumul[i+1])) for i, arg in enumerate(expr.args)]
+        new_pos = sorted(range(len(expr.args)), key=lambda x: (0, default_sort_key(expr.args[x])) if fully_contracted[x] else (1,))
+        new_args = [expr.args[i] for i in new_pos]
+        new_index_blocks_flat = [j for i in new_pos for j in index_blocks[i]]
+        index_permutation_array_form = _af_invert(new_index_blocks_flat)
+        new_contraction_indices = [tuple(index_permutation_array_form[j] for j in i) for i in contraction_indices]
+        new_contraction_indices = _sort_contraction_indices(new_contraction_indices)
+        return CodegenArrayTensorProduct(*new_args), new_contraction_indices
 
     def _get_contraction_tuples(self):
         r"""
@@ -587,8 +584,9 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         expr = _sympify(expr)
         permutation = Permutation(permutation)
         if isinstance(expr, CodegenArrayPermuteDims):
-            subexpr, subperm = expr._lift_permutation()
-            permutation = subperm * permutation
+            subexpr = expr.expr
+            subperm = expr.permutation
+            permutation = permutation * subperm
             expr = subexpr
         if isinstance(expr, CodegenArrayTensorProduct):
             expr, permutation = cls._check_lift_permutation(expr, permutation)
@@ -618,13 +616,13 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
 
     @classmethod
     def _sort_components(cls, expr, permutation):
-        parray = permutation.array_form
+        parray = _af_invert(permutation.array_form)
         args = list(expr.args)
         cumul = list(accumulate([0] + expr.subranks))
         parray_components = [parray[cumul[i]:cumul[i+1]] for i in range(len(args))]
         map2 = [i for i in range(len(args)) for j in range(expr.subranks[i])]
         # Create an index, target-position-key array:
-        ps = [(i, sorted(map2[j] for j in comp)) for i, comp in enumerate(parray_components)]
+        ps = [(i, sorted(map2[j] for j in comp) + [i]) for i, comp in enumerate(parray_components)]
         # Sort the array according to the target-position-key:
         ps.sort(key=lambda x: x[1])
         # Read the inverse-permutation (i.e. image-form) of the args:
@@ -633,23 +631,8 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         args_sorted = [args[i] for i in new_pos1]
         # Apply the args-permutation to the array-form of the permutation of the axes (of `expr`):
         parray_components_sorted = [parray_components[i] for i in new_pos1]
-        new_permutation = Permutation([j for i in parray_components_sorted for j in i])
+        new_permutation = Permutation(_af_invert([j for i in parray_components_sorted for j in i]))
         return CodegenArrayTensorProduct(*args_sorted), new_permutation
-
-    def _lift_permutation(self):
-        if not isinstance(self.expr, CodegenArrayTensorProduct):
-            return self.expr, self.permutation
-        args = list(self.expr.args)
-        cumul = list(accumulate([0] + self.expr.subranks))
-        cycles = []
-        for i, arg in enumerate(self.expr.args):
-            if not isinstance(arg, CodegenArrayPermuteDims):
-                continue
-            subpermarray = [j + cumul[i] for j in arg.permutation.array_form]
-            cycles.append(subpermarray)
-            args[i] = arg.expr
-        subpermutation = Permutation(cycles)
-        return CodegenArrayTensorProduct(*args), subpermutation*self.permutation
 
     @classmethod
     def _check_lift_permutation(cls, expr, permutation):
