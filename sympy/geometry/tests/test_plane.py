@@ -166,7 +166,7 @@ def test_plane():
     # case 2&3
     assert Plane(b, normal_vector=b.args).perpendicular_plane(n, n + b) == \
         Plane(Point3D(0, 0, 1), (1, 0, 0))
-    
+
     p = Plane(a, normal_vector=(0, 0, 1))
     assert p.perpendicular_plane() == Plane(a, normal_vector=(1, 0, 0))
 
