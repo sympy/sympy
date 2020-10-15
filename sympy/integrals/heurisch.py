@@ -178,16 +178,9 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     # If there is one condition, put the generic case first. Otherwise,
     # doing so may lead to longer Piecewise formulas
     if len(pairs) == 1:
-        pairs = [(heurisch(f, x, rewrite, hints, mappings, retries,
-                              degree_offset, unnecessary_permutations,
-                              _try_heurisch),
-                              generic),
-                 (pairs[0][0], True)]
+        pairs = [(res, generic), (pairs[0][0], True)]
     else:
-        pairs.append((heurisch(f, x, rewrite, hints, mappings, retries,
-                              degree_offset, unnecessary_permutations,
-                              _try_heurisch),
-                              True))
+        pairs.append((res, True))
     return Piecewise(*pairs)
 
 class BesselTable:
