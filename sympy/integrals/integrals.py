@@ -19,7 +19,9 @@ from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
-from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
+from sympy.integrals.meijerint import (meijerint_definite,
+                                       meijerint_indefinite,
+                                       meijerint_indefinite_wrapper)
 from sympy.logic.boolalg import And, Or
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
@@ -1069,7 +1071,10 @@ class Integral(AddWithLimits):
             if meijerg is not False and h is None:
                 # rewrite using G functions
                 try:
-                    h = meijerint_indefinite(g, x)
+                    if conds == 'piecewise':
+                        h = meijerint_indefinite_wrapper(g, x)
+                    else:
+                        h = meijerint_indefinite(g, x)
                 except NotImplementedError:
                     from sympy.integrals.meijerint import _debug
                     _debug('NotImplementedError from meijerint_definite')
