@@ -27,6 +27,9 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     """
     Simplify trigonometric expressions using a groebner basis algorithm.
 
+    Explanation
+    ===========
+
     This routine takes a fraction involving trigonometric or hyperbolic
     expressions, and tries to simplify it. The primary metric is the
     total degree. Some attempts are made to choose the simplest possible
@@ -220,7 +223,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
 
     def build_ideal(x, terms):
         """
-        Build generators for our ideal. Terms is an iterable with elements of
+        Build generators for our ideal. ``Terms`` is an iterable with elements of
         the form (fn, coeff), indicating that we have a generator fn(coeff*x).
 
         If any of the terms is trigonometric, sin(x) and cos(x) are guaranteed
@@ -425,8 +428,8 @@ def trigsimp(expr, **opts):
     """
     reduces expression by using known trig identities
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     method:
     - Determine the method to use. Valid choices are 'matching' (default),
@@ -606,7 +609,7 @@ def exptrigsimp(expr):
 
 def trigsimp_old(expr, *, first=True, **opts):
     """
-    reduces expression by using known trig identities
+    Reduces expression by using known trig identities.
 
     Notes
     =====
