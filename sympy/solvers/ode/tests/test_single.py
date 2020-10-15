@@ -33,7 +33,7 @@ Functions that are for internal use:
 
 """
 from sympy import (acos, asin, atan, cos, Derivative, Dummy, diff,
-    E, Eq, exp, I, log, pi, Piecewise, Rational, S, sin, sinh, tan,
+    E, Eq, exp, I, LambertW, log, pi, Piecewise, Rational, S, sin, sinh, tan,
     sqrt, symbols, Ei, erfi)
 
 from sympy.core import Function, Symbol
@@ -316,6 +316,11 @@ def test_nth_algebraic():
     assert solns_final == [Eq(f(x), C1*exp(C2*x))]
 
     _ode_solver_test(_get_examples_ode_sol_nth_algebraic())
+
+
+@slow
+def test_slow_examples_1st_exact():
+    _ode_solver_test(_get_examples_ode_sol_1st_exact(), run_slow_test=True)
 
 
 @slow
@@ -1279,6 +1284,48 @@ def _get_examples_ode_sol_separable():
         'eq': f(x).diff(x) - exp(x + f(x)),
         'sol': [Eq(f(x), log(-1/(C1 + exp(x))))],
         'XFAIL': ['lie_group'] #It shows 'NoneType' object is not subscriptable for lie_group.
+    },
+    }
+    }
+
+
+def _get_examples_ode_sol_1st_exact():
+    # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
+    # where dp/df == dq/dx
+    return {
+            'hint': "1st_exact",
+            'func': f(x),
+            'examples':{
+    '1st_exact_01': {
+        'eq': sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x),
+        'sol': [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))],
+        'slow': True,
+    },
+
+    '1st_exact_02': {
+        'eq': (2*x*f(x) + 1)/f(x) + (f(x) - x)/f(x)**2*f(x).diff(x),
+        'sol': [Eq(f(x), exp(C1 - x**2 + LambertW(-x*exp(-C1 + x**2))))],
+        'slow': True,
+    },
+
+    '1st_exact_03': {
+        'eq': 2*x + f(x)*cos(x) + (2*f(x) + sin(x) - sin(f(x)))*f(x).diff(x),
+        'sol': [Eq(f(x)*sin(x) + cos(f(x)) + x**2 + f(x)**2, C1)],
+        'slow': True,
+    },
+
+    '1st_exact_04': {
+        'eq': cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),
+        'sol': [Eq(x*cos(f(x)) + f(x)**3/3, C1)],
+        'slow': True,
+    },
+
+    '1st_exact_05': {
+        'eq': 2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x),
+        'sol': [Eq(x**2*f(x) + f(x)**3/3, C1)],
+        # 'sol':[Eq(f(x), 2**Rational(1, 3)*(x**2/(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3) - 2**Rational(1, 3)*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)/2)), Eq(f(x), 2**Rational(1, 3)*(2*x**2/((-1 - sqrt(3)*I)*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)) + 2**Rational(1, 3)*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)/4 + 2**Rational(1, 3)*sqrt(3)*I*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)/4)),
+        # Eq(f(x), 2**Rational(1, 3)*(2*x**2/((-1 + sqrt(3)*I)*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)) + 2**Rational(1, 3)*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)/4 - 2**Rational(1, 3)*sqrt(3)*I*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)/4))],
+        'slow': True,
     },
     }
     }

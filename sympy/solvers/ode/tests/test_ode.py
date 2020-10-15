@@ -814,35 +814,6 @@ def test_old_ode_tests():
 
 
 @slow
-def test_1st_exact1():
-    # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
-    # where dp/df == dq/dx
-    eq1 = sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x)
-    eq2 = (2*x*f(x) + 1)/f(x) + (f(x) - x)/f(x)**2*f(x).diff(x)
-    eq3 = 2*x + f(x)*cos(x) + (2*f(x) + sin(x) - sin(f(x)))*f(x).diff(x)
-    eq4 = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
-    eq5 = 2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x)
-    sol1 = [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
-    sol2 = Eq(f(x), exp(C1 - x**2 + LambertW(-x*exp(-C1 + x**2))))
-    sol2b = Eq(log(f(x)) + x/f(x) + x**2, C1)
-    sol3 = Eq(f(x)*sin(x) + cos(f(x)) + x**2 + f(x)**2, C1)
-    sol4 = Eq(x*cos(f(x)) + f(x)**3/3, C1)
-    sol5 = Eq(x**2*f(x) + f(x)**3/3, C1)
-    assert dsolve(eq1, f(x), hint='1st_exact') == sol1
-    assert dsolve(eq2, f(x), hint='1st_exact') == sol2
-    assert dsolve(eq3, f(x), hint='1st_exact') == sol3
-    assert dsolve(eq4, hint='1st_exact') == sol4
-    assert dsolve(eq5, hint='1st_exact', simplify=False) == sol5
-    assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
-    # issue 5080 blocks the testing of this solution
-    # FIXME: assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq2, sol2b, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]
-
-
-@slow
 @XFAIL
 def test_1st_exact2_broken():
     """
