@@ -30,6 +30,9 @@ def test_DiscreteMarkovChain():
     assert E(X[0]) == Expectation(X[0])
     raises(TypeError, lambda: DiscreteMarkovChain(1))
     raises(NotImplementedError, lambda: X(t))
+    raises(NotImplementedError, lambda: X.communication_classes())
+    raises(NotImplementedError, lambda: X.canonical_form())
+    raises(NotImplementedError, lambda: X.decompose())
 
     nz = Symbol('n', integer=True)
     TZ = MatrixSymbol('M', nz, nz)
@@ -123,6 +126,10 @@ def test_DiscreteMarkovChain():
     raises (ValueError, lambda: Y3.fundamental_matrix())
     assert Y2.is_absorbing_chain() == True
     assert Y3.is_absorbing_chain() == False
+    assert Y2.canonical_form() == ([0, 1, 2], TO2)
+    assert Y3.canonical_form() == ([0, 1, 2], TO3)
+    assert Y2.decompose() == ([0, 1, 2], TO2[0:1, 0:1], TO2[1:3, 0:1], TO2[1:3, 1:3])
+    assert Y3.decompose() == ([0, 1, 2], TO3, Matrix(0, 3, []), Matrix(0, 0, []))
     TO4 = Matrix([[Rational(1, 5), Rational(2, 5), Rational(2, 5)], [Rational(1, 10), S.Half, Rational(2, 5)], [Rational(3, 5), Rational(3, 10), Rational(1, 10)]])
     Y4 = DiscreteMarkovChain('Y', trans_probs=TO4)
     w = ImmutableMatrix([[Rational(11, 39), Rational(16, 39), Rational(4, 13)]])
@@ -143,6 +150,10 @@ def test_DiscreteMarkovChain():
     X = DiscreteMarkovChain('X', trans_probs=Matrix([[]]))
     assert X.number_of_states == 0
     assert X.stationary_distribution() == Matrix([[]])
+    assert X.communication_classes() == []
+    assert X.canonical_form() == ([], Matrix([[]]))
+    assert X.decompose() == ([], Matrix([[]]), Matrix([[]]), Matrix([[]]))
+
     # test communication_class
     # see https://drive.google.com/drive/folders/1HbxLlwwn2b3U8Lj7eb_ASIUb5vYaNIjg?usp=sharing
     # tutorial 2.pdf
@@ -188,6 +199,28 @@ def test_DiscreteMarkovChain():
     assert recurrence == (True, True, False, True, False)
     assert periods == (1, 1, 1, 1, 1)
 
+    # test canonical form
+    # see https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    # example 11.13
+    T = Matrix([[1, 0, 0, 0, 0],
+                [S(1) / 2, 0, S(1) / 2, 0, 0],
+                [0, S(1) / 2, 0, S(1) / 2, 0],
+                [0, 0, S(1) / 2, 0, S(1) / 2],
+                [0, 0, 0, 0, S(1)]])
+    DW = DiscreteMarkovChain('DW', [0, 1, 2, 3, 4], T)
+    states, A, B, C = DW.decompose()
+    assert states == [0, 4, 1, 2, 3]
+    assert A == Matrix([[1, 0], [0, 1]])
+    assert B == Matrix([[S(1)/2, 0], [0, 0], [0, S(1)/2]])
+    assert C == Matrix([[0, S(1)/2, 0], [S(1)/2, 0, S(1)/2], [0, S(1)/2, 0]])
+    states, new_matrix = DW.canonical_form()
+    assert states == [0, 4, 1, 2, 3]
+    assert new_matrix == Matrix([[1, 0, 0, 0, 0],
+                                 [0, 1, 0, 0, 0],
+                                 [S(1)/2, 0, 0, S(1)/2, 0],
+                                 [0, 0, S(1)/2, 0, S(1)/2],
+                                 [0, S(1)/2, 0, S(1)/2, 0]])
+
     # test custom state space
     Y10 = DiscreteMarkovChain('Y', [1, 2, 3], TO2)
     tuples = Y10.communication_classes()
@@ -195,6 +228,8 @@ def test_DiscreteMarkovChain():
     assert classes == ([1], [2, 3])
     assert recurrence == (True, False)
     assert periods == (1, 1)
+    assert Y10.canonical_form() == ([1, 2, 3], TO2)
+    assert Y10.decompose() == ([1, 2, 3], TO2[0:1, 0:1], TO2[1:3, 0:1], TO2[1:3, 1:3])
 
     # testing miscellaneous queries
     T = Matrix([[S.Half, Rational(1, 4), Rational(1, 4)],
