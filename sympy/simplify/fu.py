@@ -1624,7 +1624,7 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     References
     ==========
 
-    .. [1] http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/DESTIME2006/DES_contribs/Fu/simplification.pdf
+    .. [1] https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.657.2478&rep=rep1&type=pdf
     """
     fRL1 = greedy(RL1, measure)
     fRL2 = greedy(RL2, measure)

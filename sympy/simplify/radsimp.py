@@ -995,7 +995,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
 
 def rad_rationalize(num, den):
     """
-    Rationalize ``num``/``den`` by removing square roots in the denominator;
+    Rationalize ``num/den`` by removing square roots in the denominator;
     num and den are sum of terms whose squares are positive rationals.
 
     Examples
