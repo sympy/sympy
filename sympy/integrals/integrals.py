@@ -20,12 +20,15 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
+from sympy.logic.boolalg import And, Or
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
+from sympy.core.relational import Eq, Ne
 from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
+from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -1596,3 +1599,61 @@ def line_integrate(field, curve, vars):
 
     integral = Integral(Ft, curve.limits).doit(deep=False)
     return integral
+
+
+def pole_reintegrate(f, x, antideriv,
+                     reintegrator=lambda f, x: integrate(f, x, conds="none")):
+    """
+    Takes an integrand f with integration variable x with an initially
+    computed antiderivative and checks for poles in the denominator. For each
+    of these poles, the integral is reevaluated, and the final integration
+    result is given in terms of a Piecewise.
+
+    See Also
+    ========
+
+    heurisch_wrapper
+    """
+    from sympy.solvers.solvers import solve, denoms
+
+    # We consider each denominator in the expression, and try to find
+    # cases where one or more symbolic denominator might be zero. The
+    # conditions for these cases are stored in the list slns.
+    slns = []
+    for d in denoms(antideriv):
+        try:
+            slns += solve(d, dict=True, exclude=(x,))
+        except NotImplementedError:
+            pass
+    if not slns:
+        return antideriv
+    slns = list(uniq(slns))
+    # Remove the solutions corresponding to poles in the original expression.
+    slns0 = []
+    for d in denoms(f):
+        try:
+            slns0 += solve(d, dict=True, exclude=(x,))
+        except NotImplementedError:
+            pass
+    slns = [s for s in slns if s not in slns0]
+    if not slns:
+        return antideriv
+    if len(slns) > 1:
+        eqs = []
+        for sub_dict in slns:
+            eqs.extend([Eq(key, value) for key, value in sub_dict.items()])
+        slns = solve(eqs, dict=True, exclude=(x,)) + slns
+    # For each case listed in the list slns, we reevaluate the integral.
+    pairs = []
+    for sub_dict in slns:
+        expr = reintegrator(f.subs(sub_dict), x)
+        cond = And(*[Eq(key, value) for key, value in sub_dict.items()])
+        generic = Or(*[Ne(key, value) for key, value in sub_dict.items()])
+        pairs.append((expr, cond))
+    # If there is one condition, put the generic case first. Otherwise,
+    # doing so may lead to longer Piecewise formulas
+    if len(pairs) == 1:
+        pairs = [(antideriv, generic), (pairs[0][0], True)]
+    else:
+        pairs.append((antideriv, True))
+    return Piecewise(*pairs)
