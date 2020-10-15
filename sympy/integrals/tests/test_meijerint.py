@@ -1,6 +1,7 @@
 from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh, sinc,
                    hyperexpand, exp, simplify, sqrt, pi, erf, erfc, sin, cos,
-                   exp_polar, polygamma, hyper, log, expand_func, Rational)
+                   exp_polar, polygamma, hyper, log, expand_func, Rational,
+                   Eq, Ne, nan, zoo, Piecewise)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
         meijerint_indefinite, _inflate_g, _create_lookup_table,
         meijerint_definite, meijerint_inversion)
@@ -657,11 +658,30 @@ def test_issue_6122():
 
 
 def test_issue_6252():
+    from sympy import gammasimp
+
     expr = 1/x/(a + b*x)**Rational(1, 3)
     anti = integrate(expr, x, meijerg=True)
     assert not anti.has(hyper)
     # XXX the expression is a mess, but actually upon differentiation and
     # putting in numerical values seems to work...
+
+    # Test the complete expression for now (good testcase for pole_reintegrate)
+    assert anti.func is Piecewise
+    assert len(anti.args) == 4
+    assert (zoo*log(x), Eq(a, 0) & Eq(b, 0)) in anti.args
+    assert (log(x)/a**(S(1)/3), Eq(b, 0)) in anti.args
+    assert (-3/(b**(S(1)/3)*x**(S(1)/3)), Eq(a, 0)) in anti.args
+    assert anti.args[-1][1] is S.true
+
+    # from cse:
+    x0 = a**(-S(1)/3)
+    x1 = I*pi
+    x2 = 2*x1/3
+    x3 = exp(x2)
+    x4 = b**(S(1)/3)*x0*(a/b + x)**(S(1)/3)
+    assert gammasimp(anti.args[-1][0]).factor(deep=True) == \
+        x0*x3*(x3*log(-x4*exp_polar(4*x1/3) + 1) + log(-x4*exp_polar(x2) + 1) + exp(-x2)*log(1 - x4))
 
 
 def test_issue_6348():
@@ -694,7 +714,7 @@ def test_issue_8368():
 def test_issue_10211():
     from sympy.abc import h, w
     assert integrate((1/sqrt((y-x)**2 + h**2)**3), (x,0,w), (y,0,w)) == \
-        2*sqrt(1 + w**2/h**2)/h - 2/h
+        Piecewise((nan, Eq(h, 0)), (2*sqrt(1 + w**2/h**2)/h - 2/h, True))
 
 
 def test_issue_11806():
@@ -703,13 +723,21 @@ def test_issue_11806():
     assert integrate(1/sqrt(x**2 + y**2)**3, (x, -L, L)) == \
         2*L/(y**2*sqrt(L**2 + y**2))
 
+
 def test_issue_10681():
     from sympy import RR
     from sympy.abc import R, r
     f = integrate(r**2*(R**2-r**2)**0.5, r, meijerg=True)
+
+    assert f.func is Piecewise
+    assert len(f.args) == 2
+    assert f.args[1] == (0.25*I*r**3*(r**2)**0.5, True)
+
+    assert f.args[0][1] == Ne(R, 0)
     g = (1.0/3)*R**1.0*r**3*hyper((-0.5, Rational(3, 2)), (Rational(5, 2),),
                                   r**2*exp_polar(2*I*pi)/R**2)
-    assert RR.almosteq((f/g).n(), 1.0, 1e-12)
+    assert RR.almosteq((f.args[0][0]/g).n(), 1.0, 1e-12)
+
 
 def test_issue_13536():
     from sympy import Symbol
