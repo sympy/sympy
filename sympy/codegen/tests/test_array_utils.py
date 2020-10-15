@@ -492,13 +492,11 @@ def test_recognize_diagonalized_vectors():
     assert recognize_matrix_expression(cg).doit() == A*DiagMatrix(a)*C*DiagMatrix(a)*B
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(a, I1, b, I1, (a.T*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    assert cg.split_multiple_contractions().dummy_eq(CodegenArrayContraction(CodegenArrayTensorProduct(a, I1, b, I1, (a.T*b).applyfunc(cos)), (1, 2), (3, 8), (5, 6), (7, 9)))
-    assert recognize_matrix_expression(cg).dummy_eq(MatMul(a, I1, (a.T*b).applyfunc(cos), Transpose(I1), b.T))
+    assert cg.split_multiple_contractions().dummy_eq(CodegenArrayContraction(CodegenArrayTensorProduct((a.T * b).applyfunc(cos), I1, I1, a, b), (0, 2), (1, 4), (3, 7), (5, 9)))
+    assert recognize_matrix_expression(cg).doit().dummy_eq(MatMul(a, (a.T*b).applyfunc(cos), b.T))
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(A.T, a, b, b.T, (A*X*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    assert cg.split_multiple_contractions().dummy_eq(CodegenArrayContraction(
-        CodegenArrayTensorProduct(A.T, DiagMatrix(a), b, b.T, (A*X*b).applyfunc(cos)),
-                               (1, 2), (3, 8), (5, 6, 9)))
+    assert cg.split_multiple_contractions().dummy_eq(CodegenArrayContraction(CodegenArrayTensorProduct(DiagMatrix(a), (A*X*b).applyfunc(cos), A.T, b, b.T), (0, 2), (1, 5), (3, 7, 8)))
     # assert recognize_matrix_expression(cg)
 
     # Check no overlap of lines:
