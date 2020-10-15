@@ -173,7 +173,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         cond = And(*[Eq(key, value) for key, value in sub_dict.items()])
         generic = Or(*[Ne(key, value) for key, value in sub_dict.items()])
         if expr is None:
-            expr = integrate(f.subs(sub_dict),x)
+            expr = integrate(f.subs(sub_dict), x, conds='none')
         pairs.append((expr, cond))
     # If there is one condition, put the generic case first. Otherwise,
     # doing so may lead to longer Piecewise formulas
