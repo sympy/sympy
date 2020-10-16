@@ -135,6 +135,7 @@ def test_DiscreteMarkovChain():
     w = ImmutableMatrix([[Rational(11, 39), Rational(16, 39), Rational(4, 13)]])
     assert Y4.limiting_distribution == w
     assert Y4.is_regular() == True
+    assert Y4.is_ergodic() == True
     TS1 = MatrixSymbol('T', 3, 3)
     Y5 = DiscreteMarkovChain('Y', trans_probs=TS1)
     assert Y5.limiting_distribution(w, TO4).doit() == True
@@ -153,6 +154,8 @@ def test_DiscreteMarkovChain():
     assert X.communication_classes() == []
     assert X.canonical_form() == ([], Matrix([[]]))
     assert X.decompose() == ([], Matrix([[]]), Matrix([[]]), Matrix([[]]))
+    assert X.is_regular() == False
+    assert X.is_ergodic() == False
 
     # test communication_class
     # see https://drive.google.com/drive/folders/1HbxLlwwn2b3U8Lj7eb_ASIUb5vYaNIjg?usp=sharing
@@ -220,6 +223,19 @@ def test_DiscreteMarkovChain():
                                  [S(1)/2, 0, 0, S(1)/2, 0],
                                  [0, 0, S(1)/2, 0, S(1)/2],
                                  [0, S(1)/2, 0, S(1)/2, 0]])
+
+    # test regular and ergodic
+    T = Matrix([[0, 1], [1, 0]])
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_regular() == False
+    assert X.is_ergodic() == True
+
+    # test is_absorbing_chain
+    T = Matrix([[0, 1, 0],
+                [1, 0, 0],
+                [0, 0, 1]])
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_absorbing_chain() == False
 
     # test custom state space
     Y10 = DiscreteMarkovChain('Y', [1, 2, 3], TO2)
