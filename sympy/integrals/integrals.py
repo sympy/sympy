@@ -8,7 +8,7 @@ from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
 from sympy.core.numbers import oo, pi
-from sympy.core.relational import Ne
+from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
@@ -25,7 +25,6 @@ from sympy.integrals.meijerint import (meijerint_definite,
 from sympy.logic.boolalg import And, Or
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
-from sympy.core.relational import Eq, Ne
 from sympy.series import limit
 from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
