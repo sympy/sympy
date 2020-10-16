@@ -1047,6 +1047,9 @@ def parse_matrix_expression(expr: MatrixExpr) -> Basic:
         return CodegenArrayPermuteDims(
                 parse_matrix_expression(expr.args[0]), [1, 0]
         )
+    elif isinstance(expr, Trace):
+        inner_expr = parse_matrix_expression(expr.arg)
+        return CodegenArrayContraction(inner_expr, (0, len(inner_expr.shape) - 1))
     else:
         return expr
 
