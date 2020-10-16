@@ -162,11 +162,7 @@ def mdft(n):
     r"""
     Deprecated. Use DFT from sympy.matrices.expressions.fourier instead.
 
-    See Also
-    ========
-
-    sympy.matrices.expressions.fourier
-
+    To get identical behavior to ``mdft(n)``, use ``DFT(n).as_mutable()``.
     """
     mat = [[None for x in range(n)] for y in range(n)]
     base = exp(-2*pi*I/n)
