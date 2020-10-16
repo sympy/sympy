@@ -70,7 +70,7 @@ def test_ImpliedDoLoop():
     fsrc = fcode(prog, standard=2003, source_format='free')
     (stdout, stderr), info = compile_run_strings([('main.f90', fsrc)], clean=True)
     for numstr in '-28 -27 -1 1 27 28'.split():
-        assert numstr in stdout
+        assert numstr in stdout, stdout
     assert stderr == ''
     assert info['exit_status'] == os.EX_OK
 
@@ -150,9 +150,9 @@ def test_Subroutine():
         ('b.f90', fcode(prog, standard=90))
     ], clean=True)
     ref = [1.0/i**2 for i in range(1, 4)]
-    assert str(sum(ref))[:-3] in stdout
+    assert str(sum(ref))[:-3] in stdout, stdout
     for _ in ref:
-        assert str(_)[:-3] in stdout
+        assert str(_)[:-3] in stdout, stdout
     assert stderr == ''
 
 
