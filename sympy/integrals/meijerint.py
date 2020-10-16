@@ -1618,14 +1618,33 @@ def meijerint_indefinite(f, x):
     from sympy import hyper, meijerg
 
     results = []
+
+    # Because computation of a Piecewise (handling the case where a substitution
+    # in _meijerint_indefinite_1 could introduce a division by zero) uses the
+    # top level integrate function, we can always pick the first special case
+    # computed. This bypasses problems with test_issue_6252 where
+    # the special case can't be computed when using the splitting points substitution
+    # necessary for _meijerint_indefinite_1 to produce a closed form result.
+    special_case = None
+    def merge_special_case(res):
+        if special_case:
+            return piecewise_fold(Piecewise(*(special_case.args + ((res, S.true),))))
+        return res
+
     for a in sorted(_find_splitting_points(f, x) | {S.Zero}, key=default_sort_key):
-        res = _meijerint_indefinite_1(f.subs(x, x + a), x)
+        spec, res = _meijerint_indefinite_1(f.subs(x, x + a), x)
+        if spec:
+            spec = spec.subs(x, x - a)
+            if not special_case:
+                special_case = spec
+
         if not res:
             continue
         res = res.subs(x, x - a)
         if _has(res, hyper, meijerg):
             results.append(res)
         else:
+            res = merge_special_case(res)
             return res
     if f.has(HyperbolicFunction):
         _debug('Try rewriting hyperbolics in terms of exp.')
@@ -1636,18 +1655,18 @@ def meijerint_indefinite(f, x):
                 return collect(factor_terms(rv), rv.atoms(exp))
             results.extend(rv)
     if results:
-        return next(ordered(results))
+        return merge_special_case(next(ordered(results)))
 
 
 def _meijerint_indefinite_1(f, x):
     """ Helper that does not attempt any substitution. """
-    from sympy import Integral, piecewise_fold, nan, zoo, solve
+    from sympy import Integral, piecewise_fold, nan, zoo, solve, integrate
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
 
     gs = _rewrite1(f, x)
     if gs is None:
         # Note: the code that calls us will do expand() and try again
-        return None
+        return None, None
 
     fac, po, gl, cond = gs
     _debug(' could rewrite:', gs)
@@ -1662,17 +1681,21 @@ def _meijerint_indefinite_1(f, x):
         rho = (c + 1)/b - 1
 
         # handle zero denominators in the above substitution
-        special_results = []
+        special_case = None
         for den in (a, b):
             if not den.is_Number and den.is_zero is not False:
                 zero_sol = solve(den, dict=True)
                 for sol in zero_sol:
-                    zero_res = Integral(f.subs(sol), x)
+                    zero_res = integrate(_my_unpolarify(f.subs(sol)), x)
                     zero_cond = cond
                     for vz, sz in sol.items():
                         zero_cond = And(zero_cond, Eq(vz, sz))
                     zero_cond = _my_unpolarify(zero_cond)
-                    special_results.append(Piecewise((zero_res, zero_cond)))
+                    if special_case is None:
+                        special_case = Piecewise((zero_res, zero_cond))
+                    else:
+                        special_case = Piecewise((zero_res, zero_cond),
+                                                 (special_case, S.true))
 
         # we now use t**rho*G(params, t) = G(params + rho, t)
         # [L, page 150, equation (4)]
@@ -1703,9 +1726,6 @@ def _meijerint_indefinite_1(f, x):
         # now substitute back
         # Note: we really do want the powers of x to combine.
         res += powdenest(fac_*r, polar=True)
-
-        for sr in special_results:
-            res = Piecewise(*(sr.args + ((res, S.true),)))
 
     def _clean(res):
         """This multiplies out superfluous powers of x we created, and chops off
@@ -1741,7 +1761,7 @@ def _meijerint_indefinite_1(f, x):
         res = Piecewise(*newargs)
     else:
         res = _my_unpolarify(_clean(res))
-    return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
+    return special_case, Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
 
 
 @timeit

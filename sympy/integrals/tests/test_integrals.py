@@ -1527,8 +1527,11 @@ def test_issue_15432():
 def test_issue_15124():
     omega = IndexedBase('omega')
     m, p = symbols('m p', cls=Idx)
+
     assert integrate(exp(x*I*(omega[m] + omega[p])), x, conds='none') == \
+        Piecewise((x, Eq(omega[m], -omega[p])), (
         -I*exp(I*x*omega[m])*exp(I*x*omega[p])/(omega[m] + omega[p])
+        , True))
 
 
 def test_issue_15218():
@@ -1661,9 +1664,11 @@ def test_issue_17473():
     x = Symbol('x')
     n = Symbol('n')
     assert integrate(sin(x**n), x) == \
+        Piecewise((x*sin(1), Eq(n, 0)), (
         x*x**n*gamma(S(1)/2 + 1/(2*n))*hyper((S(1)/2 + 1/(2*n),),
                      (S(3)/2, S(3)/2 + 1/(2*n)),
                      -x**(2*n)/4)/(2*n*gamma(S(3)/2 + 1/(2*n)))
+        , True))
 
 
 def test_issue_17671():

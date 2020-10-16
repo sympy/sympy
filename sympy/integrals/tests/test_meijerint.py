@@ -731,7 +731,7 @@ def test_issue_6462():
 def test_issue_5949_ensure_unpolarified_special_case_integrand():
     # Based on test_issue_15124:
     # In the handling of the special case Eq(a, -b) below we must ensure
-    # Integral(1, x) is evaluated rather than the unpolarified
+    # Integral(1, x) is evaluated rather than the polarified
     # Integral(exp(I*x*(-n*exp_polar(0) + n)), x) which currently raises:
     assert meijerint_indefinite(exp(x*I*(a + b)), x) == \
         Piecewise((x, Eq(a, -b)), (-I*exp(I*a*x)*exp(I*b*x)/(a + b), True))
