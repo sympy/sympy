@@ -18,7 +18,6 @@ from sympy.polys.domains import ZZ, QQ
 from sympy.polys.orthopolys import dup_chebyshevt
 from sympy.polys.polyerrors import (
     IsomorphismFailed,
-    CoercionFailed,
     NotAlgebraic,
     GeneratorsError,
 )
@@ -36,7 +35,7 @@ from sympy.printing.pycode import PythonCodePrinter, MpmathPrinter
 from sympy.simplify.radsimp import _split_gcd
 from sympy.simplify.simplify import _is_sum_surds
 from sympy.utilities import (
-    numbered_symbols, variations, lambdify, public, sift
+    numbered_symbols, lambdify, public, sift
 )
 
 from mpmath import pslq, mp
