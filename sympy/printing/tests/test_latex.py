@@ -186,8 +186,8 @@ def test_latex_basic():
         r"z_i \vee \left(x_i \wedge y_i\right)"
     assert latex(Implies(x, y), symbol_names={x: "x_i", y: "y_i"}) == \
         r"x_i \Rightarrow y_i"
-    assert latex(Pow(Rational(1, 3), -1, evaluate=False)) == r"\\frac{1}{\\frac{1}{3}}"
-    assert latex(Pow(Rational(1, 3), -2, evaluate=False)) == r"\\frac{1}{(\\frac{1}{3})^{2}}"
+    assert latex(Pow(Rational(1, 3), -1, evaluate=False)) == r"\frac{1}{\frac{1}{3}}"
+    assert latex(Pow(Rational(1, 3), -2, evaluate=False)) == r"\frac{1}{(\frac{1}{3})^{2}}"
 
     p = Symbol('p', positive=True)
     assert latex(exp(-p)*log(p)) == r"e^{- p} \log{\left(p \right)}"
