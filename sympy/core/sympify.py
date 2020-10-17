@@ -344,8 +344,13 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     #
     # https://github.com/sympy/sympy/issues/20124
     is_sympy = getattr(a, '__sympy__', None)
-    if is_sympy is True or (is_sympy is not None and not strict):
+    if is_sympy is True:
         return a
+    elif is_sympy is not None:
+        if not strict:
+            return a
+        else:
+            raise SympifyError(a)
 
     if isinstance(a, CantSympify):
         raise SympifyError(a)
