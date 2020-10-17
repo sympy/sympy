@@ -32,7 +32,7 @@ def _get_intermediate_simp(deffunc=lambda x: x, offfunc=lambda x: x,
     ``deffunc``     - Function to be used by default.
     ``offfunc``     - Function to be used if dotprodsimp has been turned off.
     ``onfunc``      - Function to be used if dotprodsimp has been turned on.
-    ``dotprodsimp`` - True, False or None. Will be overriden by global
+    ``dotprodsimp`` - True, False or None. Will be overridden by global
                       _dotprodsimp_state.state if that is not None.
     """
 
