@@ -3154,6 +3154,13 @@ def test_sympy__matrices__expressions__fourier__IDFT():
     from sympy import S
     assert _test_args(IDFT(S(2)))
 
+def test_sympy__matrices__expressions__vandermonde__VandermondeMatrix():
+    from sympy.matrices.expressions.vandermonde import VandermondeMatrix
+    from sympy import S
+    assert _test_args(VandermondeMatrix([S(1), S(2)]))
+    assert _test_args(VandermondeMatrix([S(1), S(2)], S(2)))
+    assert _test_args(VandermondeMatrix([S(1), S(2)], [S(1), S(2)]))
+
 from sympy.matrices.expressions import MatrixSymbol
 X = MatrixSymbol('X', 10, 10)
 

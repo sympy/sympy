@@ -18,3 +18,4 @@ Contents:
    sparsetools.rst
    immutablematrices.rst
    expressions.rst
+   namedmatrices.rst
