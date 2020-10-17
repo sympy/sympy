@@ -18,13 +18,13 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
     reduces expression by combining powers with similar bases and exponents.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
-    If deep is True then powsimp() will also simplify arguments of
-    functions. By default deep is set to False.
+    If ``deep`` is ``True`` then powsimp() will also simplify arguments of
+    functions. By default ``deep`` is set to ``False``.
 
-    If force is True then bases will be combined without checking for
+    If ``force`` is ``True`` then bases will be combined without checking for
     assumptions, e.g. sqrt(x)*sqrt(y) -> sqrt(x*y) which is not true
     if x and y are both negative.
 
@@ -490,6 +490,9 @@ def powdenest(eq, force=False, polar=False):
     r"""
     Collect exponents on powers as assumptions allow.
 
+    Explanation
+    ===========
+
     Given ``(bb**be)**e``, this can be simplified as follows:
         * if ``bb`` is positive, or
         * ``e`` is an integer, or
@@ -506,11 +509,11 @@ def powdenest(eq, force=False, polar=False):
       of the exponent can be removed from any term and the gcd of such
       integers can be joined with e
 
-    Setting ``force`` to True will make symbols that are not explicitly
+    Setting ``force`` to ``True`` will make symbols that are not explicitly
     negative behave as though they are positive, resulting in more
     denesting.
 
-    Setting ``polar`` to True will do simplifications on the Riemann surface of
+    Setting ``polar`` to ``True`` will do simplifications on the Riemann surface of
     the logarithm, also resulting in more denestings.
 
     When there are sums of logs in exp() then a product of powers may be

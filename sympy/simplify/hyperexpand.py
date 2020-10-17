@@ -514,6 +514,9 @@ class Hyper_Function(Expr):
         """
         Compute the invariant vector.
 
+        Explanation
+        ===========
+
         The invariant vector is:
             (gamma, ((s1, n1), ..., (sk, nk)), ((t1, m1), ..., (tr, mr)))
         where gamma is the number of integer a < 0,
@@ -581,6 +584,9 @@ class Hyper_Function(Expr):
         """
         Decide if ``self`` is a suitable origin.
 
+        Explanation
+        ===========
+
         A function is a suitable origin iff:
         * none of the ai equals bj + n, with n a non-negative integer
         * none of the ai is zero
@@ -628,6 +634,9 @@ class G_Function(Expr):
         """
         Compute buckets for the fours sets of parameters.
 
+        Explanation
+        ===========
+
         We guarantee that any two equal Mod objects returned are actually the
         same, and that the buckets are sorted by real part (an and bq
         descendending, bm and ap ascending).
@@ -669,6 +678,9 @@ _x = Dummy('x')
 class Formula(object):
     """
     This class represents hypergeometric formulae.
+
+    Explanation
+    ===========
 
     Its data members are:
     - z, the argument
@@ -943,6 +955,9 @@ class MeijerFormulaCollection(object):
 class Operator(object):
     """
     Base class for operators to be applied to our functions.
+
+    Explanation
+    ===========
 
     These operators are differential operators. They are by convention
     expressed in the variable D = z*d/dz (although this base class does
@@ -1437,6 +1452,9 @@ def reduce_order(func):
     """
     Given the hypergeometric function ``func``, find a sequence of operators to
     reduces order as much as possible.
+
+    Explanation
+    ===========
 
     Return (newfunc, [operators]), where applying the operators to the
     hypergeometric function newfunc yields func.
@@ -1960,9 +1978,12 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     """
     Try to find an expression for the hypergeometric function ``func``.
 
-    The result is expressed in terms of a dummy variable z0. Then it
-    is multiplied by premult. Then ops0 is applied.
-    premult must be a*z**prem for some a independent of z.
+    Explanation
+    ===========
+
+    The result is expressed in terms of a dummy variable ``z0``. Then it
+    is multiplied by ``premult``. Then ``ops0`` is applied.
+    ``premult`` must be a*z**prem for some a independent of ``z``.
     """
 
     if z.is_zero:
@@ -2062,12 +2083,15 @@ def devise_plan_meijer(fro, to, z):
     """
     Find operators to convert G-function ``fro`` into G-function ``to``.
 
-    It is assumed that fro and to have the same signatures, and that in fact
+    Explanation
+    ===========
+
+    It is assumed that ``fro`` and ``to`` have the same signatures, and that in fact
     any corresponding pair of parameters differs by integers, and a direct path
     is possible. I.e. if there are parameters a1 b1 c1  and a2 b2 c2 it is
     assumed that a1 can be shifted to a2, etc. The only thing this routine
     determines is the order of shifts to apply, nothing clever will be tried.
-    It is also assumed that fro is suitable.
+    It is also assumed that ``fro`` is suitable.
 
     Examples
     ========

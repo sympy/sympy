@@ -24,6 +24,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     """
     Collect additive terms of an expression.
 
+    Explanation
+    ===========
+
     This function collects additive terms of an expression with respect
     to a list of expression up to powers with rational exponents. By the
     term symbol here are meant arbitrary expressions, which can contain
@@ -240,8 +243,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
          - sym_expo is the symbolic exponent that sexpr is raised to
          - deriv contains the derivatives the the expression
 
-         for example, the output of x would be (x, 1, None, None)
-         the output of 2**x would be (2, 1, x, None)
+         For example, the output of x would be (x, 1, None, None)
+         the output of 2**x would be (2, 1, x, None).
         """
         rat_expo, sym_expo = S.One, None
         sexpr, deriv = expr, None
@@ -275,8 +278,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
     def parse_expression(terms, pattern):
         """Parse terms searching for a pattern.
-        terms is a list of tuples as returned by parse_terms;
-        pattern is an expression treated as a product of factors
+        Terms is a list of tuples as returned by parse_terms;
+        Pattern is an expression treated as a product of factors.
         """
         pattern = Mul.make_args(pattern)
 
@@ -742,7 +745,10 @@ def radsimp(expr, symbolic=True, max_terms=4):
     r"""
     Rationalize the denominator by removing square roots.
 
-    Note: the expression returned from radsimp must be used with caution
+    Explanation
+    ===========
+
+    The expression returned from radsimp must be used with caution
     since if the denominator contains symbols, it will be possible to make
     substitutions that violate the assumptions of the simplification process:
     that for a denominator matching a + b*sqrt(c), a != +/-b*sqrt(c). (If
@@ -804,7 +810,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     >>> radsimp(eq).subs(a, b*sqrt(c))
     nan
 
-    If symbolic=False, symbolic denominators will not be transformed (but
+    If ``symbolic=False``, symbolic denominators will not be transformed (but
     numeric denominators will still be processed):
 
     >>> radsimp(eq, symbolic=False)
@@ -988,7 +994,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
 
 def rad_rationalize(num, den):
     """
-    Rationalize num/den by removing square roots in the denominator;
+    Rationalize ``num/den`` by removing square roots in the denominator;
     num and den are sum of terms whose squares are positive rationals.
 
     Examples
@@ -1041,7 +1047,7 @@ def fraction(expr, exact=False):
        >>> fraction(x * y**k)
        (x, y**(-k))
 
-       If we know nothing about sign of some exponent and 'exact'
+       If we know nothing about sign of some exponent and ``exact``
        flag is unset, then structure this exponent's structure will
        be analyzed and pretty fraction will be returned:
 
@@ -1055,7 +1061,7 @@ def fraction(expr, exact=False):
        >>> fraction(exp(-x), exact=True)
        (exp(-x), 1)
 
-       The `exact` flag will also keep any unevaluated Muls from
+       The ``exact`` flag will also keep any unevaluated Muls from
        being evaluated:
 
        >>> u = Mul(2, x + 1, evaluate=False)
@@ -1169,9 +1175,9 @@ def split_surds(expr):
 
 def _split_gcd(*a):
     """
-    split the list of integers ``a`` into a list of integers, ``a1`` having
+    Split the list of integers ``a`` into a list of integers, ``a1`` having
     ``g = gcd(a1)``, and a list ``a2`` whose elements are not divisible by
-    ``g``.  Returns ``g, a1, a2``
+    ``g``.  Returns ``g, a1, a2``.
 
     Examples
     ========

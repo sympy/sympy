@@ -14,6 +14,9 @@ def gammasimp(expr):
     r"""
     Simplify expressions with gamma functions.
 
+    Explanation
+    ===========
+
     This function takes as input an expression containing gamma
     functions or functions that can be rewritten in terms of gamma
     functions and tries to minimize the number of those functions and
@@ -39,8 +42,8 @@ def gammasimp(expr):
 
     All transformation rules can be found (or was derived from) here:
 
-    1. http://functions.wolfram.com/GammaBetaErf/Pochhammer/17/01/02/
-    2. http://functions.wolfram.com/GammaBetaErf/Pochhammer/27/01/0005/
+    .. [1] http://functions.wolfram.com/GammaBetaErf/Pochhammer/17/01/02/
+    .. [2] http://functions.wolfram.com/GammaBetaErf/Pochhammer/27/01/0005/
 
     Examples
     ========
@@ -64,6 +67,9 @@ def gammasimp(expr):
 def _gammasimp(expr, as_comb):
     """
     Helper function for gammasimp and combsimp.
+
+    Explanation
+    ===========
 
     Simplifies expressions written in terms of gamma function. If
     as_comb is True, it tries to preserve integer arguments. See

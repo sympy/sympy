@@ -35,7 +35,7 @@ basic_optimizations = [(cse_opts.sub_pre, cse_opts.sub_post),
 
 
 def reps_toposort(r):
-    """Sort replacements `r` so (k1, v1) appears before (k2, v2)
+    """Sort replacements ``r`` so (k1, v1) appears before (k2, v2)
     if k2 is in v1's free symbols. This orders items in the
     way that cse returns its results (hence, in order to use the
     replacements in a substitution option it would make sense
@@ -196,8 +196,8 @@ class FuncArgTracker(object):
     def get_common_arg_candidates(self, argset, min_func_i=0):
         """Return a dict whose keys are function numbers. The entries of the dict are
         the number of arguments said function has in common with
-        `argset`. Entries have at least 2 items in common.  All keys have
-        value at least `min_func_i`.
+        ``argset``. Entries have at least 2 items in common.  All keys have
+        value at least ``min_func_i``.
         """
         from collections import defaultdict
         count_map = defaultdict(lambda: 0)
@@ -309,9 +309,9 @@ def match_common_args(func_class, funcs, opt_subs):
     func_class: class
         The function class (e.g. Add, Mul)
     funcs: list of functions
-        A list of function calls
+        A list of function calls.
     opt_subs: dict
-        A dictionary of substitutions which this function may update
+        A dictionary of substitutions which this function may update.
     """
 
     # Sort to ensure that whole-function subexpressions come before the items
@@ -384,7 +384,7 @@ def match_common_args(func_class, funcs, opt_subs):
 
 def opt_cse(exprs, order='canonical'):
     """Find optimization opportunities in Adds, Muls, Pows and negative
-    coefficient Muls
+    coefficient Muls.
 
     Parameters
     ==========
