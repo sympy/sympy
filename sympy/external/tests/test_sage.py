@@ -24,7 +24,7 @@ if not sage:
 
 import sympy
 
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, warns_deprecated_sympy
 
 def is_trivially_equal(lhs, rhs):
     """
@@ -189,7 +189,8 @@ def test_functions():
     check_expression("Chi(x)", "x")
     check_expression("loggamma(x)", "x")
     check_expression("Ynm(n,m,x,y)", "n, m, x, y")
-    check_expression("hyper((n,m),(m,n),x)", "n, m, x")
+    with warns_deprecated_sympy():
+        check_expression("hyper((n,m),(m,n),x)", "n, m, x")
     check_expression("uppergamma(y, x)", "x, y")
 
 def test_issue_4023():

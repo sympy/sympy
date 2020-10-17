@@ -11,10 +11,10 @@ from sympy.codegen.ast import Declaration, Variable, float32, float64, \
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.printing.fcode import fcode, FCodePrinter
+from sympy.printing.fortran import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 def test_printmethod():
@@ -804,3 +804,8 @@ def test_FunctionDefinition_print():
     # Should be changed to proper test once multi-line generation is working
     # see https://github.com/sympy/sympy/issues/15824
     raises(NotImplementedError, lambda: fcode(fd1))
+
+def test_fcode_submodule():
+    # Test the compatibility sympy.printing.fcode module imports
+    with warns_deprecated_sympy():
+        import sympy.printing.fcode # noqa:F401

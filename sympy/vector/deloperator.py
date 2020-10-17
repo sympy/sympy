@@ -17,7 +17,7 @@ class Del(Basic):
                 deprecated_since_version="1.1",
                 issue=12866,
             ).warn()
-        obj = super(Del, cls).__new__(cls)
+        obj = super().__new__(cls)
         obj._name = "delop"
         return obj
 
@@ -125,8 +125,5 @@ class Del(Basic):
     __xor__ = cross
     __xor__.__doc__ = cross.__doc__
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return self._name
-
-    __repr__ = __str__
-    _sympystr = __str__

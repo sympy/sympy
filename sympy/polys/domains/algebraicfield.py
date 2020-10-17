@@ -1,6 +1,5 @@
 """Implementation of :class:`AlgebraicField` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
@@ -129,4 +128,12 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     def from_AlgebraicField(K1, a, K0):
         """Convert AlgebraicField element 'a' to another AlgebraicField """
+        return K1.from_sympy(K0.to_sympy(a))
+
+    def from_GaussianIntegerRing(K1, a, K0):
+        """Convert a GaussianInteger element 'a' to ``dtype``. """
+        return K1.from_sympy(K0.to_sympy(a))
+
+    def from_GaussianRationalField(K1, a, K0):
+        """Convert a GaussianRational element 'a' to ``dtype``. """
         return K1.from_sympy(K0.to_sympy(a))

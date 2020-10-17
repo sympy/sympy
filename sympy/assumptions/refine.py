@@ -53,7 +53,7 @@ def refine_abs(expr, assumptions):
     Examples
     ========
 
-    >>> from sympy import Symbol, Q, refine, Abs
+    >>> from sympy import Q, Abs
     >>> from sympy.assumptions.refine import refine_abs
     >>> from sympy.abc import x
     >>> refine_abs(Abs(x), Q.real(x))
@@ -89,7 +89,7 @@ def refine_Pow(expr, assumptions):
     """
     Handler for instances of Pow.
 
-    >>> from sympy import Symbol, Q
+    >>> from sympy import Q
     >>> from sympy.assumptions.refine import refine_Pow
     >>> from sympy.abc import x,y,z
     >>> refine_Pow((-1)**x, Q.real(x))
@@ -190,7 +190,7 @@ def refine_atan2(expr, assumptions):
     Examples
     ========
 
-    >>> from sympy import Symbol, Q, refine, atan2
+    >>> from sympy import Q, atan2
     >>> from sympy.assumptions.refine import refine_atan2
     >>> from sympy.abc import x, y
     >>> refine_atan2(atan2(y,x), Q.real(y) & Q.positive(x))
@@ -334,6 +334,29 @@ def refine_sign(expr, assumptions):
     return expr
 
 
+def refine_matrixelement(expr, assumptions):
+    """
+    Handler for symmetric part
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_matrixelement
+    >>> from sympy import Q
+    >>> from sympy.matrices.expressions.matexpr import MatrixSymbol
+    >>> X = MatrixSymbol('X', 3, 3)
+    >>> refine_matrixelement(X[0, 1], Q.symmetric(X))
+    X[0, 1]
+    >>> refine_matrixelement(X[1, 0], Q.symmetric(X))
+    X[0, 1]
+    """
+    from sympy.matrices.expressions.matexpr import MatrixElement
+    matrix, i, j = expr.args
+    if ask(Q.symmetric(matrix), assumptions):
+        if (i - j).could_extract_minus_sign():
+            return expr
+        return MatrixElement(matrix, j, i)
+
 handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -346,5 +369,6 @@ handlers_dict = {
     'StrictLessThan': refine_Relational,
     're': refine_re,
     'im': refine_im,
-    'sign': refine_sign
+    'sign': refine_sign,
+    'MatrixElement': refine_matrixelement
 }  # type: Dict[str, Callable[[Expr, Boolean], Expr]]

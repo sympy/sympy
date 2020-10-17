@@ -1,20 +1,20 @@
-from sympy import Order, S, log, limit, lcm_list, Abs, im, re, Dummy
+from sympy import Order, S, log, limit, lcm_list, im, re, Dummy
 from sympy.core import Add, Mul, Pow
 from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import expand_mul
 from sympy.core.numbers import _sympifyit, oo
+from sympy.core.relational import is_le, is_lt, is_ge, is_gt
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import And
-from sympy.polys.rationaltools import together
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
 from sympy.sets.fancysets import ImageSet
-from sympy.simplify.radsimp import denom
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
+from sympy.multipledispatch import dispatch
 
 def continuous_domain(f, symbol, domain):
     """
@@ -64,7 +64,8 @@ def continuous_domain(f, symbol, domain):
 
     """
     from sympy.solvers.inequalities import solve_univariate_inequality
-    from sympy.solvers.solveset import solveset, _has_rational_power
+    from sympy.solvers.solveset import _has_rational_power
+    from sympy.calculus.singularities import singularities
 
     if domain.is_subset(S.Reals):
         constrained_interval = domain
@@ -82,28 +83,8 @@ def continuous_domain(f, symbol, domain):
             constrained_interval = Intersection(constraint,
                                                 constrained_interval)
 
-        domain = constrained_interval
 
-    try:
-        if f.has(Abs):
-            sings = solveset(1/f, symbol, domain) + \
-                solveset(denom(together(f)), symbol, domain)
-        else:
-            for atom in f.atoms(Pow):
-                predicate, denomin = _has_rational_power(atom, symbol)
-                if predicate and denomin == 2:
-                    sings = solveset(1/f, symbol, domain) +\
-                        solveset(denom(together(f)), symbol, domain)
-                    break
-            else:
-                sings = Intersection(solveset(1/f, symbol), domain) + \
-                    solveset(denom(together(f)), symbol, domain)
-
-    except NotImplementedError:
-        raise NotImplementedError("Methods for determining the continuous domains"
-                                  " of this function have not been developed.")
-
-    return domain - sings
+    return constrained_interval - singularities(f, symbol, domain)
 
 
 def function_range(f, symbol, domain):
@@ -641,7 +622,7 @@ def lcim(numbers):
 
     return result
 
-def is_convex(f, *syms, **kwargs):
+def is_convex(f, *syms, domain=S.Reals):
     """Determines the  convexity of the function passed in the argument.
 
     Parameters
@@ -706,7 +687,6 @@ def is_convex(f, *syms, **kwargs):
             "The check for the convexity of multivariate functions is not implemented yet.")
 
     f = _sympify(f)
-    domain = kwargs.get('domain', S.Reals)
     var = syms[0]
     condition = f.diff(var, 2) < 0
     if solve_univariate_inequality(condition, var, False, domain):
@@ -740,7 +720,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, sin, log, pi, pprint, stationary_points
+    >>> from sympy import Symbol, S, sin, pi, pprint, stationary_points
     >>> from sympy.sets import Interval
     >>> x = Symbol('x')
 
@@ -1222,7 +1202,7 @@ class AccumulationBounds(AtomicExpr):
     __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Expr):
             if isinstance(other, AccumBounds):
                 if other.min.is_positive or other.max.is_negative:
@@ -1281,10 +1261,8 @@ class AccumulationBounds(AtomicExpr):
 
         return NotImplemented
 
-    __truediv__ = __div__
-
     @_sympifyit('other', NotImplemented)
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         if isinstance(other, Expr):
             if other.is_extended_real:
                 if other.is_zero:
@@ -1307,8 +1285,6 @@ class AccumulationBounds(AtomicExpr):
             return Mul(other, 1 / self, evaluate=False)
         else:
             return NotImplemented
-
-    __rtruediv__ = __rdiv__
 
     @_sympifyit('other', NotImplemented)
     def __pow__(self, other):
@@ -1392,153 +1368,6 @@ class AccumulationBounds(AtomicExpr):
         else:
             return self
 
-    def __lt__(self, other):
-        """
-        Returns True if range of values attained by `self` AccumulationBounds
-        object is less than the range of values attained by `other`, where
-        other may be any value of type AccumulationBounds object or extended
-        real number value, False if `other` satisfies the same property, else
-        an unevaluated Relational
-
-        Examples
-        ========
-
-        >>> from sympy import AccumBounds, oo
-        >>> AccumBounds(1, 3) < AccumBounds(4, oo)
-        True
-        >>> AccumBounds(1, 4) < AccumBounds(3, 4)
-        AccumBounds(1, 4) < AccumBounds(3, 4)
-        >>> AccumBounds(1, oo) < -1
-        False
-
-        """
-        other = _sympify(other)
-        if isinstance(other, AccumBounds):
-            if self.max < other.min:
-                return True
-            if self.min >= other.max:
-                return False
-        elif not other.is_extended_real:
-            raise TypeError(
-                "Invalid comparison of %s %s" %
-                (type(other), other))
-        elif other.is_comparable:
-            if self.max < other:
-                return True
-            if self.min >= other:
-                return False
-        return super(AccumulationBounds, self).__lt__(other)
-
-    def __le__(self, other):
-        """
-        Returns True if range of values attained by `self` AccumulationBounds
-        object is less than or equal to the range of values attained by
-        `other`, where other may be any value of type AccumulationBounds
-        object or extended real number value, False if `other`
-        satisfies the same property, else an unevaluated Relational.
-
-        Examples
-        ========
-
-        >>> from sympy import AccumBounds, oo
-        >>> AccumBounds(1, 3) <= AccumBounds(4, oo)
-        True
-        >>> AccumBounds(1, 4) <= AccumBounds(3, 4)
-        AccumBounds(1, 4) <= AccumBounds(3, 4)
-        >>> AccumBounds(1, 3) <= 0
-        False
-
-        """
-        other = _sympify(other)
-        if isinstance(other, AccumBounds):
-            if self.max <= other.min:
-                return True
-            if self.min > other.max:
-                return False
-        elif not other.is_extended_real:
-            raise TypeError(
-                "Invalid comparison of %s %s" %
-                (type(other), other))
-        elif other.is_comparable:
-            if self.max <= other:
-                return True
-            if self.min > other:
-                return False
-        return super(AccumulationBounds, self).__le__(other)
-
-    def __gt__(self, other):
-        """
-        Returns True if range of values attained by `self` AccumulationBounds
-        object is greater than the range of values attained by `other`,
-        where other may be any value of type AccumulationBounds object or
-        extended real number value, False if `other` satisfies
-        the same property, else an unevaluated Relational.
-
-        Examples
-        ========
-
-        >>> from sympy import AccumBounds, oo
-        >>> AccumBounds(1, 3) > AccumBounds(4, oo)
-        False
-        >>> AccumBounds(1, 4) > AccumBounds(3, 4)
-        AccumBounds(1, 4) > AccumBounds(3, 4)
-        >>> AccumBounds(1, oo) > -1
-        True
-
-        """
-        other = _sympify(other)
-        if isinstance(other, AccumBounds):
-            if self.min > other.max:
-                return True
-            if self.max <= other.min:
-                return False
-        elif not other.is_extended_real:
-            raise TypeError(
-                "Invalid comparison of %s %s" %
-                (type(other), other))
-        elif other.is_comparable:
-            if self.min > other:
-                return True
-            if self.max <= other:
-                return False
-        return super(AccumulationBounds, self).__gt__(other)
-
-    def __ge__(self, other):
-        """
-        Returns True if range of values attained by `self` AccumulationBounds
-        object is less that the range of values attained by `other`, where
-        other may be any value of type AccumulationBounds object or extended
-        real number value, False if `other` satisfies the same
-        property, else an unevaluated Relational.
-
-        Examples
-        ========
-
-        >>> from sympy import AccumBounds, oo
-        >>> AccumBounds(1, 3) >= AccumBounds(4, oo)
-        False
-        >>> AccumBounds(1, 4) >= AccumBounds(3, 4)
-        AccumBounds(1, 4) >= AccumBounds(3, 4)
-        >>> AccumBounds(1, oo) >= 1
-        True
-
-        """
-        other = _sympify(other)
-        if isinstance(other, AccumBounds):
-            if self.min >= other.max:
-                return True
-            if self.max < other.min:
-                return False
-        elif not other.is_extended_real:
-            raise TypeError(
-                "Invalid comparison of %s %s" %
-                (type(other), other))
-        elif other.is_comparable:
-            if self.min >= other:
-                return True
-            if self.max < other:
-                return False
-        return super(AccumulationBounds, self).__ge__(other)
 
     def __contains__(self, other):
         """
@@ -1646,6 +1475,105 @@ class AccumulationBounds(AtomicExpr):
         if other.min <= self.min and other.max >= self.min:
             return AccumBounds(other.min, Max(self.max, other.max))
 
+
+@dispatch(AccumulationBounds, AccumulationBounds) # type: ignore # noqa:F811
+def _eval_is_le(lhs, rhs): # noqa:F811
+    if is_le(lhs.max, rhs.min):
+        return True
+    if is_gt(lhs.min, rhs.max):
+        return False
+
+
+@dispatch(AccumulationBounds, Basic) # type: ignore # noqa:F811
+def _eval_is_le(lhs, rhs): # noqa: F811
+
+    """
+    Returns True if range of values attained by `self` AccumulationBounds
+    object is greater than the range of values attained by `other`,
+    where other may be any value of type AccumulationBounds object or
+    extended real number value, False if `other` satisfies
+    the same property, else an unevaluated Relational.
+
+    Examples
+    ========
+
+    >>> from sympy import AccumBounds, oo
+    >>> AccumBounds(1, 3) > AccumBounds(4, oo)
+    False
+    >>> AccumBounds(1, 4) > AccumBounds(3, 4)
+    AccumBounds(1, 4) > AccumBounds(3, 4)
+    >>> AccumBounds(1, oo) > -1
+    True
+
+    """
+    if not rhs.is_extended_real:
+            raise TypeError(
+                "Invalid comparison of %s %s" %
+                (type(rhs), rhs))
+    elif rhs.is_comparable:
+        if is_le(lhs.max, rhs):
+            return True
+        if is_gt(lhs.min, rhs):
+            return False
+
+@dispatch(AccumulationBounds, AccumulationBounds)
+def _eval_is_ge(lhs, rhs): # noqa:F811
+    if is_ge(lhs.min, rhs.max):
+        return True
+    if is_lt(lhs.max, rhs.min):
+        return False
+
+@dispatch(AccumulationBounds, Expr)  # type:ignore
+def _eval_is_ge(lhs, rhs): # noqa: F811
+    """
+    Returns True if range of values attained by `lhs` AccumulationBounds
+    object is less that the range of values attained by `rhs`, where
+    other may be any value of type AccumulationBounds object or extended
+    real number value, False if `rhs` satisfies the same
+    property, else an unevaluated Relational.
+
+    Examples
+    ========
+
+    >>> from sympy import AccumBounds, oo
+    >>> AccumBounds(1, 3) >= AccumBounds(4, oo)
+    False
+    >>> AccumBounds(1, 4) >= AccumBounds(3, 4)
+    AccumBounds(1, 4) >= AccumBounds(3, 4)
+    >>> AccumBounds(1, oo) >= 1
+    True
+    """
+
+    if not rhs.is_extended_real:
+        raise TypeError(
+            "Invalid comparison of %s %s" %
+            (type(rhs), rhs))
+    elif rhs.is_comparable:
+        if is_ge(lhs.min, rhs):
+            return True
+        if is_lt(lhs.max, rhs):
+            return False
+
+
+@dispatch(Expr, AccumulationBounds)  # type:ignore
+def _eval_is_ge(lhs, rhs): # noqa:F811
+    if not lhs.is_extended_real:
+        raise TypeError(
+            "Invalid comparison of %s %s" %
+            (type(lhs), lhs))
+    elif lhs.is_comparable:
+        if is_le(rhs.max, lhs):
+            return True
+        if is_gt(rhs.min, lhs):
+            return False
+
+
+@dispatch(AccumulationBounds, AccumulationBounds)  # type:ignore
+def _eval_is_ge(lhs, rhs): # noqa:F811
+    if is_ge(lhs.min, rhs.max):
+        return True
+    if is_lt(lhs.max, rhs.min):
+        return False
 
 # setting an alias for AccumulationBounds
 AccumBounds = AccumulationBounds

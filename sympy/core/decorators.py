@@ -5,8 +5,6 @@ The purpose of this module is to expose decorators without any other
 dependencies, so that they can be easily imported anywhere in sympy/core.
 """
 
-from __future__ import print_function, division
-
 from functools import wraps
 from .sympify import SympifyError, sympify
 from sympy.core.compatibility import get_function_code
@@ -31,7 +29,7 @@ def deprecated(**decorator_kwargs):
                 _sympy_deprecated_func = wrapped
                 def __init__(self, *args, **kwargs):
                     _warn_deprecation(wrapped, 4)
-                    super(wrapper, self).__init__(*args, **kwargs)
+                    super().__init__(*args, **kwargs)
         else:
             @wraps(wrapped)
             def wrapper(*args, **kwargs):
@@ -43,20 +41,27 @@ def deprecated(**decorator_kwargs):
 
 
 def _sympifyit(arg, retval=None):
-    """decorator to smartly _sympify function arguments
+    """
+    decorator to smartly _sympify function arguments
 
-       @_sympifyit('other', NotImplemented)
-       def add(self, other):
-           ...
+    Explanation
+    ===========
 
-       In add, other can be thought of as already being a SymPy object.
+    @_sympifyit('other', NotImplemented)
+    def add(self, other):
+        ...
 
-       If it is not, the code is likely to catch an exception, then other will
-       be explicitly _sympified, and the whole code restarted.
+    In add, other can be thought of as already being a SymPy object.
 
-       if _sympify(arg) fails, NotImplemented will be returned
+    If it is not, the code is likely to catch an exception, then other will
+    be explicitly _sympified, and the whole code restarted.
 
-       see: __sympifyit
+    if _sympify(arg) fails, NotImplemented will be returned
+
+    See also
+    ========
+
+    __sympifyit
     """
     def deco(func):
         return __sympifyit(func, arg, retval)
@@ -98,6 +103,9 @@ def __sympifyit(func, arg, retval=None):
 def call_highest_priority(method_name):
     """A decorator for binary special methods to handle _op_priority.
 
+    Explanation
+    ===========
+
     Binary special methods in Expr and its subclasses use a special attribute
     '_op_priority' to determine whose special method will be called to
     handle the operation. In general, the object having the highest value of
@@ -134,9 +142,15 @@ def call_highest_priority(method_name):
 def sympify_method_args(cls):
     '''Decorator for a class with methods that sympify arguments.
 
+    Explanation
+    ===========
+
     The sympify_method_args decorator is to be used with the sympify_return
     decorator for automatic sympification of method arguments. This is
-    intended for the common idiom of writing a class like
+    intended for the common idiom of writing a class like :
+
+    Examples
+    ========
 
     >>> from sympy.core.basic import Basic
     >>> from sympy.core.sympify import _sympify, SympifyError
@@ -209,7 +223,7 @@ def sympify_return(*args):
     return wrapper
 
 
-class _SympifyWrapper(object):
+class _SympifyWrapper:
     '''Internal class used by sympify_return and sympify_method_args'''
 
     def __init__(self, func, args):

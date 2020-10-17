@@ -28,7 +28,7 @@ from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import Ci, Si, erf
 from sympy.functions.special.zeta_functions import zeta
 from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_TRAVIS,
-    raises, nocache_fail)
+    raises)
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
@@ -306,7 +306,7 @@ def test_F3():
 
 @XFAIL
 def test_F4():
-    assert combsimp((2**n * factorial(n) * product(2*k - 1, (k, 1, n)))) == factorial(2*n)
+    assert combsimp(2**n * factorial(n) * product(2*k - 1, (k, 1, n))) == factorial(2*n)
 
 
 @XFAIL
@@ -479,7 +479,7 @@ def test_H14():
 
 
 def test_H15():
-    assert simplify((Mul(*[x - r for r in solveset(x**3 + x**2 - 7)]))) == x**3 + x**2 - 7
+    assert simplify(Mul(*[x - r for r in solveset(x**3 + x**2 - 7)])) == x**3 + x**2 - 7
 
 
 def test_H16():
@@ -934,14 +934,14 @@ def test_M14():
     assert solveset_real(tan(x) - 1, x) == ImageSet(Lambda(n, n*pi + pi/4), S.Integers)
 
 
-@nocache_fail
 def test_M15():
     n = Dummy('n')
-    # This test fails when running with the cache off:
-    assert solveset(sin(x) - S.Half) in (Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
-                                           ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers)),
-                                           Union(ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers),
-                                           ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers)))
+    got = solveset(sin(x) - S.Half)
+    assert any(got.dummy_eq(i) for i in (
+        Union(ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers)),
+        Union(ImageSet(Lambda(n, 2*n*pi + pi*R(5, 6)), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + pi/6), S.Integers))))
 
 
 @XFAIL
@@ -1561,9 +1561,14 @@ def test_P25():
                    [ -52,  -43,   49,   44, -599,  411,  208,  208],
                    [ -49,   -8,    8,   59,  208,  208,   99, -911],
                    [  29,  -44,   52,  -23,  208,  208, -911,   99]]))
-    assert (Matrix(sorted(MF.eigenvals())) - Matrix(
-            [-1020.0490184299969, 0.0, 0.09804864072151699, 1000.0,
-             1019.9019513592784, 1020.0, 1020.0490184299969])).norm() < 1e-13
+
+    ev_1 = sorted(MF.eigenvals(multiple=True))
+    ev_2 = sorted(
+        [-1020.0490184299969, 0.0, 0.09804864072151699, 1000.0, 1000.0,
+        1019.9019513592784, 1020.0, 1020.0490184299969])
+
+    for x, y in zip(ev_1, ev_2):
+        assert abs(x - y) < 1e-12
 
 
 def test_P26():
@@ -1589,31 +1594,20 @@ def test_P27():
                 [0,  0, a, 0, 0],
                 [0,  0, 0, a, 0],
                 [0, -2, 0, 0, 2]])
-    assert M.eigenvects() == [(a, 3, [Matrix([[1],
-                                       [0],
-                                       [0],
-                                       [0],
-                                       [0]]),
-                               Matrix([[0],
-                                       [0],
-                                       [1],
-                                       [0],
-                                       [0]]),
-                               Matrix([[0],
-                                       [0],
-                                       [0],
-                                       [1],
-                                       [0]])]),
-                        (1 - I, 1, [Matrix([[           0],
-                                            [S(1)/2 + I/2],
-                                            [           0],
-                                            [           0],
-                                            [           1]])]),
-                        (1 + I, 1, [Matrix([[           0],
-                                            [S(1)/2 - I/2],
-                                            [           0],
-                                            [           0],
-                                            [           1]])])]
+
+    assert M.eigenvects() == [
+        (a, 3, [
+            Matrix([1, 0, 0, 0, 0]),
+            Matrix([0, 0, 1, 0, 0]),
+            Matrix([0, 0, 0, 1, 0])
+        ]),
+        (1 - I, 1, [
+            Matrix([0, (1 + I)/2, 0, 0, 1])
+        ]),
+        (1 + I, 1, [
+            Matrix([0, (1 - I)/2, 0, 0, 1])
+        ]),
+    ]
 
 
 @XFAIL
@@ -2123,7 +2117,6 @@ def test_T11():
     assert limit(n**x/(x*product((1 + x/k), (k, 1, n))), n, oo) == gamma(x)
 
 
-@XFAIL
 def test_T12():
     x, t = symbols('x t', real=True)
     # Does not evaluate the limit but returns an expression with erf
@@ -2343,11 +2336,7 @@ def test_V11():
             log(((tan(x/2) + 1)/(tan(x/2) + 7))**R(1, 3)))
 
 
-@XFAIL
 def test_V12():
-    # https://github.com/sympy/sympy/issues/7157
-    # Fails intermittently for some Python versions.
-    # Probably this is dependent on the hash seed.
     r1 = integrate(1/(5 + 3*cos(x) + 4*sin(x)), x)
     assert r1 == -1/(tan(x/2) + 2)
 
@@ -2939,7 +2928,7 @@ def test_Y9():
 
 
 def test_Y10():
-    assert (fourier_transform(abs(x)*exp(-3*abs(x)), x, z) ==
+    assert (fourier_transform(abs(x)*exp(-3*abs(x)), x, z).cancel() ==
             (-8*pi**2*z**2 + 18)/(16*pi**4*z**4 + 72*pi**2*z**2 + 81))
 
 
@@ -2996,10 +2985,10 @@ def test_Z3():
     r = Function('r')
     # recurrence solution is correct, Wester expects it to be simplified to
     # fibonacci(n+1), but that is quite hard
-    assert (rsolve(r(n) - (r(n - 1) + r(n - 2)), r(n),
-                   {r(1): 1, r(2): 2}).simplify()
-            == 2**(-n)*((1 + sqrt(5))**n*(sqrt(5) + 5) +
-                        (-sqrt(5) + 1)**n*(-sqrt(5) + 5))/10)
+    expected = ((S(1)/2 - sqrt(5)/2)**n*(S(1)/2 - sqrt(5)/10)
+              + (S(1)/2 + sqrt(5)/2)**n*(sqrt(5)/10 + S(1)/2))
+    sol = rsolve(r(n) - (r(n - 1) + r(n - 2)), r(n), {r(1): 1, r(2): 2})
+    assert sol == expected
 
 
 @XFAIL

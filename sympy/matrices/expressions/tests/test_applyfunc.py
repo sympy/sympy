@@ -36,8 +36,8 @@ def test_applyfunc_matrix():
 
     expr = ElementwiseApplyFunction(exp, X*Y)
     assert expr.expr == X*Y
-    assert expr.function == Lambda(x, exp(x))
-    assert expr == (X*Y).applyfunc(exp)
+    assert expr.function.dummy_eq(Lambda(x, exp(x)))
+    assert expr.dummy_eq((X*Y).applyfunc(exp))
     assert expr.func(*expr.args) == expr
 
     assert isinstance(X*expr, MatMul)
@@ -55,7 +55,7 @@ def test_applyfunc_matrix():
     M = Matrix([[x, y], [z, t]])
     expr = ElementwiseApplyFunction(sin, M)
     assert isinstance(expr, ElementwiseApplyFunction)
-    assert expr.function == Lambda(x, sin(x))
+    assert expr.function.dummy_eq(Lambda(x, sin(x)))
     assert expr.expr == M
     assert expr.doit() == M.applyfunc(sin)
     assert expr.doit() == Matrix([[sin(x), sin(y)], [sin(z), sin(t)]])

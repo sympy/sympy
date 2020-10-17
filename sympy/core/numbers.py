@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, division
-
 import numbers
 import decimal
 import fractions
@@ -18,7 +16,7 @@ from .logic import fuzzy_not
 from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS,
     int_info, gmpy)
 from sympy.core.cache import lru_cache
-
+from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
 from mpmath.libmp import bitcount
@@ -232,6 +230,9 @@ def _literal_float(f):
 def igcd(*args):
     """Computes nonnegative integer greatest common divisor.
 
+    Explanation
+    ===========
+
     The algorithm is based on the well known Euclid's algorithm. To
     improve speed, igcd() has its own caching mechanism implemented.
 
@@ -278,11 +279,12 @@ except ImportError:
 
 
 # Use Lehmer's algorithm only for very large numbers.
-# The limit could be different on Python 2.7 and 3.x.
-# If so, then this could be defined in compatibility.py.
 BIGBITS = 5000
 def igcd_lehmer(a, b):
     """Computes greatest common divisor of two integers.
+
+    Explanation
+    ===========
 
     Euclid's algorithm for the computation of the greatest
     common divisor  gcd(a, b)  of two (positive) integers
@@ -453,17 +455,20 @@ def ilcm(*args):
 def igcdex(a, b):
     """Returns x, y, g such that g = x*a + y*b = gcd(a, b).
 
-       >>> from sympy.core.numbers import igcdex
-       >>> igcdex(2, 3)
-       (-1, 1, 1)
-       >>> igcdex(10, 12)
-       (-1, 1, 2)
+    Examples
+    ========
 
-       >>> x, y, g = igcdex(100, 2004)
-       >>> x, y, g
-       (-20, 1, 4)
-       >>> x*100 + y*2004
-       4
+    >>> from sympy.core.numbers import igcdex
+    >>> igcdex(2, 3)
+    (-1, 1, 1)
+    >>> igcdex(10, 12)
+    (-1, 1, 2)
+
+    >>> x, y, g = igcdex(100, 2004)
+    >>> x, y, g
+    (-20, 1, 4)
+    >>> x*100 + y*2004
+    4
 
     """
     if (not a) and (not b):
@@ -529,8 +534,9 @@ def mod_inverse(a, m):
 
     References
     ==========
-    - https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
-    - https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
+
+    .. [1] https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
+    .. [2] https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
     """
     c = None
     try:
@@ -560,6 +566,9 @@ def mod_inverse(a, m):
 
 class Number(AtomicExpr):
     """Represents atomic numbers in SymPy.
+
+    Explanation
+    ===========
 
     Floating point numbers are represented by the Float class.
     Rational numbers (of any size) are represented by the Rational class.
@@ -647,7 +656,7 @@ class Number(AtomicExpr):
         else:
             rat = self/other
         if other.is_finite:
-            w = int(rat) if rat > 0 else int(rat) - 1
+            w = int(rat) if rat >= 0 else int(rat) - 1
             r = self - other*w
         else:
             w = 0 if not self or (sign(self) == sign(other)) else -1
@@ -760,15 +769,13 @@ class Number(AtomicExpr):
         return AtomicExpr.__mul__(self, other)
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             if other is S.NaN:
                 return S.NaN
             elif other is S.Infinity or other is S.NegativeInfinity:
                 return S.Zero
-        return AtomicExpr.__div__(self, other)
-
-    __truediv__ = __div__
+        return AtomicExpr.__truediv__(self, other)
 
     def __eq__(self, other):
         raise NotImplementedError('%s needs .__eq__() method' %
@@ -809,14 +816,14 @@ class Number(AtomicExpr):
         return _sympify(other).__le__(self)
 
     def __hash__(self):
-        return super(Number, self).__hash__()
+        return super().__hash__()
 
     def is_constant(self, *wrt, **flags):
         return True
 
-    def as_coeff_mul(self, *deps, **kwargs):
+    def as_coeff_mul(self, *deps, rational=True, **kwargs):
         # a -> c*t
-        if self.is_Rational or not kwargs.pop('rational', True):
+        if self.is_Rational or not rational:
             return self, tuple()
         elif self.is_negative:
             return S.NegativeOne, (-self,)
@@ -891,7 +898,7 @@ class Float(Number):
     It may be preferable to enter high-precision decimal numbers
     as strings:
 
-    Float('1.23456789123456789')
+    >>> Float('1.23456789123456789')
     1.23456789123456789
 
     The desired number of digits can also be specified:
@@ -1286,10 +1293,8 @@ class Float(Number):
     def _eval_is_zero(self):
         return self._mpf_ == fzero
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self._mpf_ != fzero
-
-    __bool__ = __nonzero__
 
     def __neg__(self):
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
@@ -1316,13 +1321,11 @@ class Float(Number):
         return Number.__mul__(self, other)
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Number) and other != 0 and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_div(self._mpf_, rhs, prec, rnd), prec)
-        return Number.__div__(self, other)
-
-    __truediv__ = __div__
+        return Number.__truediv__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __mod__(self, other):
@@ -1388,15 +1391,16 @@ class Float(Number):
             return 0
         return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
 
-    __long__ = __int__
-
     def __eq__(self, other):
+        from sympy.logic.boolalg import Boolean
         try:
             other = _sympify(other)
         except SympifyError:
             return NotImplemented
         if not self:
             return not other
+        if isinstance(other, Boolean):
+            return False
         if other.is_NumberSymbol:
             if other.is_irrational:
                 return False
@@ -1483,7 +1487,7 @@ class Float(Number):
         return rv
 
     def __hash__(self):
-        return super(Float, self).__hash__()
+        return super().__hash__()
 
     def epsilon_eq(self, other, epsilon="1e-15"):
         return abs(self - other) < Float(epsilon)
@@ -1673,6 +1677,9 @@ class Rational(Number):
     def limit_denominator(self, max_denominator=1000000):
         """Closest Rational to self with denominator at most max_denominator.
 
+        Examples
+        ========
+
         >>> from sympy import Rational
         >>> Rational('3.141592653589793').limit_denominator(10)
         22/7
@@ -1752,7 +1759,7 @@ class Rational(Number):
     __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
                 if self.p and other.p == S.Zero:
@@ -1764,10 +1771,10 @@ class Rational(Number):
             elif isinstance(other, Float):
                 return self*(1/other)
             else:
-                return Number.__div__(self, other)
-        return Number.__div__(self, other)
+                return Number.__truediv__(self, other)
+        return Number.__truediv__(self, other)
     @_sympifyit('other', NotImplemented)
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
                 return Rational(other.p*self.q, self.p, igcd(self.p, other.p))
@@ -1776,9 +1783,8 @@ class Rational(Number):
             elif isinstance(other, Float):
                 return other*(1/self)
             else:
-                return Number.__rdiv__(self, other)
-        return Number.__rdiv__(self, other)
-    __truediv__ = __div__
+                return Number.__rtruediv__(self, other)
+        return Number.__rtruediv__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __mod__(self, other):
@@ -1851,8 +1857,6 @@ class Rational(Number):
         if p < 0:
             return -int(-p//q)
         return int(p//q)
-
-    __long__ = __int__
 
     def floor(self):
         return Integer(self.p // self.q)
@@ -1969,7 +1973,7 @@ class Rational(Number):
         return Expr.__le__(*rv)
 
     def __hash__(self):
-        return super(Rational, self).__hash__()
+        return super().__hash__()
 
     def factors(self, limit=None, use_trial=True, use_rho=False,
                 use_pm1=False, verbose=False, visual=False):
@@ -2117,8 +2121,6 @@ class Integer(Rational):
     # Arithmetic operations are here for efficiency
     def __int__(self):
         return self.p
-
-    __long__ = __int__
 
     def floor(self):
         return Integer(self.p)
@@ -2303,7 +2305,10 @@ class Integer(Rational):
         """
         Tries to do some simplifications on self**expt
 
-        Returns None if no further simplifications can be done
+        Returns None if no further simplifications can be done.
+
+        Explanation
+        ===========
 
         When exponent is a fraction (so we have for example a square root),
         we try to find a simpler representation by factoring the argument
@@ -2333,7 +2338,7 @@ class Integer(Rational):
                 return (-self)**expt
         if isinstance(expt, Float):
             # Rational knows how to exponentiate by a Float
-            return super(Integer, self)._eval_power(expt)
+            return super()._eval_power(expt)
         if not isinstance(expt, Rational):
             return
         if expt is S.Half and self.is_negative:
@@ -2496,7 +2501,7 @@ class AlgebraicNumber(Expr):
         return obj
 
     def __hash__(self):
-        return super(AlgebraicNumber, self).__hash__()
+        return super().__hash__()
 
     def _eval_evalf(self, prec):
         return self.as_expr()._evalf(prec)
@@ -2584,7 +2589,7 @@ class Zero(IntegerConstant, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import S, Integer, zoo
+    >>> from sympy import S, Integer
     >>> Integer(0) is S.Zero
     True
     >>> 1/S.Zero
@@ -2637,10 +2642,8 @@ class Zero(IntegerConstant, metaclass=Singleton):
         # Order(0,x) -> 0
         return self
 
-    def __nonzero__(self):
+    def __bool__(self):
         return False
-
-    __bool__ = __nonzero__
 
     def as_coeff_Mul(self, rational=False):  # XXX this routine should be deleted
         """Efficiently extract the coefficient of a summation. """
@@ -2796,6 +2799,9 @@ class Half(RationalConstant, metaclass=Singleton):
 class Infinity(Number, metaclass=Singleton):
     r"""Positive infinite quantity.
 
+    Explanation
+    ===========
+
     In real analysis the symbol `\infty` denotes an unbounded
     limit: `x\to\infty` means that `x` grows without bound.
 
@@ -2891,7 +2897,7 @@ class Infinity(Number, metaclass=Singleton):
     __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             if other is S.Infinity or \
                 other is S.NegativeInfinity or \
@@ -2900,9 +2906,7 @@ class Infinity(Number, metaclass=Singleton):
             if other.is_extended_nonnegative:
                 return self
             return S.NegativeInfinity
-        return Number.__div__(self, other)
-
-    __truediv__ = __div__
+        return Number.__truediv__(self, other)
 
     def __abs__(self):
         return S.Infinity
@@ -2957,7 +2961,7 @@ class Infinity(Number, metaclass=Singleton):
         return sage.oo
 
     def __hash__(self):
-        return super(Infinity, self).__hash__()
+        return super().__hash__()
 
     def __eq__(self, other):
         return other is S.Infinity or other == float('inf')
@@ -3059,7 +3063,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
     __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
             if other is S.Infinity or \
                 other is S.NegativeInfinity or \
@@ -3068,9 +3072,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
             if other.is_extended_nonnegative:
                 return self
             return S.Infinity
-        return Number.__div__(self, other)
-
-    __truediv__ = __div__
+        return Number.__truediv__(self, other)
 
     def __abs__(self):
         return S.Infinity
@@ -3122,7 +3124,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
         return -(sage.oo)
 
     def __hash__(self):
-        return super(NegativeInfinity, self).__hash__()
+        return super().__hash__()
 
     def __eq__(self, other):
         return other is S.NegativeInfinity or other == float('-inf')
@@ -3156,6 +3158,9 @@ class NegativeInfinity(Number, metaclass=Singleton):
 class NaN(Number, metaclass=Singleton):
     """
     Not a Number.
+
+    Explanation
+    ===========
 
     This serves as a place holder for numeric values that are indeterminate.
     Most operations on NaN, produce another NaN.  Most indeterminate forms,
@@ -3237,10 +3242,8 @@ class NaN(Number, metaclass=Singleton):
         return self
 
     @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
+    def __truediv__(self, other):
         return self
-
-    __truediv__ = __div__
 
     def floor(self):
         return self
@@ -3256,7 +3259,7 @@ class NaN(Number, metaclass=Singleton):
         return sage.NaN
 
     def __hash__(self):
-        return super(NaN, self).__hash__()
+        return super().__hash__()
 
     def __eq__(self, other):
         # NaN is structurally equal to another NaN
@@ -3264,10 +3267,6 @@ class NaN(Number, metaclass=Singleton):
 
     def __ne__(self, other):
         return other is not S.NaN
-
-    def _eval_Eq(self, other):
-        # NaN is not mathematically equal to anything, even NaN
-        return S.false
 
     # Expr will _sympify and raise TypeError
     __gt__ = Expr.__gt__
@@ -3277,9 +3276,15 @@ class NaN(Number, metaclass=Singleton):
 
 nan = S.NaN
 
+@dispatch(NaN, Expr) # type:ignore
+def _eval_is_eq(a, b): # noqa:F811
+    return False
 
 class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     r"""Complex infinity.
+
+    Explanation
+    ===========
 
     In complex analysis the symbol `\tilde\infty`, called "complex
     infinity", represents a quantity with infinite magnitude, but
@@ -3291,7 +3296,7 @@ class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import zoo, oo
+    >>> from sympy import zoo
     >>> zoo + 42
     zoo
     >>> 42/zoo
@@ -3408,15 +3413,14 @@ class NumberSymbol(AtomicExpr):
         # subclass with appropriate return value
         raise NotImplementedError
 
-    def __long__(self):
-        return self.__int__()
-
     def __hash__(self):
-        return super(NumberSymbol, self).__hash__()
-
+        return super().__hash__()
 
 class Exp1(NumberSymbol, metaclass=Singleton):
     r"""The `e` constant.
+
+    Explanation
+    ===========
 
     The transcendental number `e = 2.718281828\ldots` is the base of the
     natural logarithm and of the exponential function, `e = \exp(1)`.
@@ -3492,6 +3496,9 @@ E = S.Exp1
 class Pi(NumberSymbol, metaclass=Singleton):
     r"""The `\pi` constant.
 
+    Explanation
+    ===========
+
     The transcendental number `\pi = 3.141592654\ldots` represents the ratio
     of a circle's circumference to its diameter, the area of the unit circle,
     the half-period of trigonometric functions, and many other things
@@ -3560,6 +3567,9 @@ pi = S.Pi
 class GoldenRatio(NumberSymbol, metaclass=Singleton):
     r"""The golden ratio, `\phi`.
 
+    Explanation
+    ===========
+
     `\phi = \frac{1 + \sqrt{5}}{2}` is algebraic number.  Two quantities
     are in the golden ratio if their ratio is the same as the ratio of
     their sum to the larger of the two quantities, i.e. their maximum.
@@ -3623,6 +3633,9 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
 
 class TribonacciConstant(NumberSymbol, metaclass=Singleton):
     r"""The tribonacci constant.
+
+    Explanation
+    ===========
 
     The tribonacci numbers are like the Fibonacci numbers, but instead
     of starting with two predetermined terms, the sequence starts with
@@ -3691,6 +3704,9 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
 class EulerGamma(NumberSymbol, metaclass=Singleton):
     r"""The Euler-Mascheroni constant.
 
+    Explanation
+    ===========
+
     `\gamma = 0.5772157\ldots` (also called Euler's constant) is a mathematical
     constant recurring in analysis and number theory.  It is defined as the
     limiting difference between the harmonic series and the
@@ -3750,6 +3766,9 @@ class EulerGamma(NumberSymbol, metaclass=Singleton):
 
 class Catalan(NumberSymbol, metaclass=Singleton):
     r"""Catalan's constant.
+
+    Explanation
+    ===========
 
     `K = 0.91596559\ldots` is given by the infinite series
 
@@ -3890,6 +3909,9 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
 
 I = S.ImaginaryUnit
 
+@dispatch(Tuple, Number) # type:ignore
+def _eval_is_eq(self, other): # noqa: F811
+    return False
 
 def sympify_fractions(f):
     return Rational(f.numerator, f.denominator, 1)

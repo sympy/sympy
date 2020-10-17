@@ -2,18 +2,26 @@
 # This is the module for ODE solver classes for single ODEs.
 #
 
-from typing import ClassVar, Dict, Iterable, List, Optional, Type
+import typing
+
+if typing.TYPE_CHECKING:
+    from typing import ClassVar
+from typing import Dict, Type
+
+from typing import Iterator, List, Optional
 
 from sympy.core import S
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, Function, expand
+from sympy.core.numbers import Float
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
+from sympy.core.mul import Mul
 from sympy.functions import exp, sqrt, tan, log
 from sympy.integrals import Integral
-from sympy.polys.polytools import cancel, factor, factor_list
-from sympy.simplify import simplify
+from sympy.polys.polytools import cancel, factor
+from sympy.simplify.simplify import simplify
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 
@@ -51,7 +59,7 @@ class SingleODEProblem:
     This class is used internally by dsolve. To instantiate an instance
     directly first define an ODE problem:
 
-    >>> from sympy import Eq, Function, Symbol
+    >>> from sympy import Function, Symbol
     >>> x = Symbol('x')
     >>> f = Function('f')
     >>> eq = f(x).diff(x, 2)
@@ -116,7 +124,7 @@ class SingleODEProblem:
         Cs = [next(ncs) for i in range(num)]
         return Cs
 
-    def iter_numbered_constants(self, start=1, prefix='C') -> Iterable[Symbol]:
+    def iter_numbered_constants(self, start=1, prefix='C') -> Iterator[Symbol]:
         """
         Returns an iterator of constants that do not occur
         in eq already.
@@ -148,7 +156,7 @@ class SingleODESolver:
     You can use a subclass of SingleODEProblem to solve a particular type of
     ODE. We first define a particular ODE problem:
 
-    >>> from sympy import Eq, Function, Symbol
+    >>> from sympy import Function, Symbol
     >>> x = Symbol('x')
     >>> f = Function('f')
     >>> eq = f(x).diff(x, 2)
@@ -186,10 +194,18 @@ class SingleODESolver:
     # Cache whether or not the equation has matched the method
     _matched = None  # type: Optional[bool]
 
+    # Subclasses should store in this attribute the list of order(s) of ODE
+    # that subclass can solve or leave it to None if not specific to any order
+    order = None  # type: Optional[list]
+
     def __init__(self, ode_problem):
         self.ode_problem = ode_problem
 
     def matches(self) -> bool:
+        if self.order is not None and self.ode_problem.order not in self.order:
+            self._matched = False
+            return self._matched
+
         if self._matched is None:
             self._matched = self._matches()
         return self._matched
@@ -412,6 +428,7 @@ class FirstLinear(SinglePatternODESolver):
     """
     hint = '1st_linear'
     has_integral = True
+    order = [1]
 
     def _wilds(self, f, x, order):
         P = Wild('P', exclude=[f(x)])
@@ -453,8 +470,8 @@ class AlmostLinear(SinglePatternODESolver):
     Examples
     ========
 
-    >>> from sympy import Function, Derivative, pprint, sin, cos
-    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy import Function, pprint, sin, cos
+    >>> from sympy.solvers.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -482,6 +499,7 @@ class AlmostLinear(SinglePatternODESolver):
     """
     hint = "almost_linear"
     has_integral = True
+    order = [1]
 
     def _wilds(self, f, x, order):
         P = Wild('P', exclude=[f(x).diff(x)])
@@ -595,6 +613,7 @@ class Bernoulli(SinglePatternODESolver):
     """
     hint = "Bernoulli"
     has_integral = True
+    order = [1]
 
     def _wilds(self, f, x, order):
         P = Wild('P', exclude=[f(x)])
@@ -635,7 +654,7 @@ class Factorable(SingleODESolver):
         Examples
         ========
 
-        >>> from sympy import Function, dsolve, Eq, pprint, Derivative
+        >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
         >>> eq = (f(x)**2-4)*(f(x).diff(x)+f(x))
@@ -657,7 +676,8 @@ class Factorable(SingleODESolver):
         self.eqs = []
         eq = eq.collect(f(x), func = cancel)
         eq = fraction(factor(eq))[0]
-        roots = factor_list(eq)[1]
+        factors = Mul.make_args(factor(eq))
+        roots = [fac.as_base_exp() for fac in factors if len(fac.args)!=0]
         if len(roots)>1 or roots[0][1]>1:
             for base,expo in roots:
                 if base.has(f(x)):
@@ -669,6 +689,8 @@ class Factorable(SingleODESolver):
             self.eqs = [(df - root) for root in roots]
             if len(self.eqs)==1:
                 if order>1:
+                    return False
+                if self.eqs[0].has(Float):
                     return False
                 return fraction(factor(self.eqs[0]))[0]-eq!=0
             return True
@@ -710,7 +732,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     and is valid when neither `a` nor `b` are zero and either `c` or `d` is
     zero.
 
-    >>> from sympy.abc import x, y, a, b, c, d
+    >>> from sympy.abc import x, a, b, c, d
     >>> from sympy.solvers.ode import dsolve, checkodesol
     >>> from sympy import pprint, Function
     >>> f = Function('f')
@@ -738,6 +760,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     """
     hint = "Riccati_special_minus2"
     has_integral = False
+    order = [1]
 
     def _wilds(self, f, x, order):
         a = Wild('a', exclude=[x, f(x), f(x).diff(x), 0])

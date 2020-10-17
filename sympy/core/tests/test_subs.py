@@ -850,3 +850,15 @@ def test_issue_17823():
     expr = q1.diff().diff()**2*q1 + q1.diff()*q2.diff()
     reps={q1: a, q1.diff(): a*x*y, q1.diff().diff(): z}
     assert expr.subs(reps) == a*x*y*Derivative(q2, t) + a*z**2
+
+
+def test_issue_19326():
+    x, y = [i(t) for i in map(Function, 'xy')]
+    assert (x*y).subs({x: 1 + x, y: x}) == (1 + x)*x
+
+def test_issue_19558():
+    e = (7*x*cos(x) - 12*log(x)**3)*(-log(x)**4 + 2*sin(x) + 1)**2/ \
+    (2*(x*cos(x) - 2*log(x)**3)*(3*log(x)**4 - 7*sin(x) + 3)**2)
+
+    assert e.subs(x, oo) == AccumBounds(-oo, oo)
+    assert (sin(x) + cos(x)).subs(x, oo) == AccumBounds(-2, 2)

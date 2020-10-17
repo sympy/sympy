@@ -77,7 +77,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
     Radicals with Mul bases will be combined if combine='exp'
 
-    >>> from sympy import sqrt, Mul
+    >>> from sympy import sqrt
     >>> x, y = symbols('x y')
 
     Two radicals are automatically joined through Mul:

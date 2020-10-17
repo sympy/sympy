@@ -5,7 +5,7 @@ from sympy import (
     integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
-    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper, Float
+    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper
 )
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.complexes import periodic_argument
@@ -384,6 +384,14 @@ def test_issue_8623():
 def test_issue_9569():
     assert integrate(1 / (2 - cos(x)), (x, 0, pi)) == pi/sqrt(3)
     assert integrate(1/(2 - cos(x))) == 2*sqrt(3)*(atan(sqrt(3)*tan(x/2)) + pi*floor((x/2 - pi/2)/pi))/3
+
+
+def test_issue_13733():
+    s = Symbol('s', positive=True)
+    pz = exp(-(z - y)**2/(2*s*s))/sqrt(2*pi*s*s)
+    pzgx = integrate(pz, (z, x, oo))
+    assert integrate(pzgx, (x, 0, oo)) == sqrt(2)*s*exp(-y**2/(2*s**2))/(2*sqrt(pi)) + \
+        y*erf(sqrt(2)*y/(2*s))/2 + y/2
 
 
 def test_issue_13749():
@@ -1160,8 +1168,8 @@ def test_atom_bug():
 
 def test_limit_bug():
     z = Symbol('z', zero=False)
-    assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)) == \
-        (log(z) + EulerGamma + log(pi))/z - Ci(pi**2*z)/z + log(pi)/z
+    assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)).together() == \
+        (log(z) - Ci(pi**2*z) + EulerGamma + 2*log(pi))/z
 
 
 def test_issue_4703():
@@ -1363,7 +1371,7 @@ def test_issue_8368():
 
 def test_issue_8901():
     assert integrate(sinh(1.0*x)) == 1.0*cosh(1.0*x)
-    assert Eq(integrate(tanh(1.0*x)), 1.0*x - 1.0*log(tanh(1.0*x) + 1))
+    assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
     assert integrate(tanh(x)) == x - log(tanh(x) + 1)
 
 
@@ -1401,8 +1409,8 @@ def test_issue_11876():
 
 
 def test_issue_4950():
-    assert Eq(integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x),
-        -2.4*exp(8*x) - 12.0*exp(5*x))
+    assert integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) ==\
+        -2.4*exp(8*x) - 12.0*exp(5*x)
 
 
 def test_issue_4968():
@@ -1669,15 +1677,6 @@ def test_issue_2975():
     C = Symbol('C')
     y = Symbol('y')
     assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == w/(C**(S(3)/2)*sqrt(1 + w**2/(4*C)))
-
-
-
-def test_issue_17119():
-    assert integrate(x**(0.5)*(1+x)) == Float(2/3)*x**Float(3/2)+Float(2/5)*x**Float(5/2)
-
-
-def test_issue_14431():
-    assert integrate((x-t)**(-1/2)*t, (t,0,x)) == Float(4/3)*x**Float(3/2)
 
 
 def test_issue_7827():

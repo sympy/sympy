@@ -192,11 +192,11 @@ def test_bicycle():
     PaperForkCgZ                    =  0.7
     FrameLength                     =  evalf.N(PaperWb*sin(HTA)-(rake-(PaperRadFront-PaperRadRear)*cos(HTA)))
     FrameCGNorm                     =  evalf.N((PaperFrameCgZ - PaperRadRear-(PaperFrameCgX/sin(HTA))*cos(HTA))*sin(HTA))
-    FrameCGPar                      =  evalf.N((PaperFrameCgX / sin(HTA) + (PaperFrameCgZ - PaperRadRear - PaperFrameCgX / sin(HTA) * cos(HTA)) * cos(HTA)))
-    tempa                           =  evalf.N((PaperForkCgZ - PaperRadFront))
-    tempb                           =  evalf.N((PaperWb-PaperForkCgX))
+    FrameCGPar                      =  evalf.N(PaperFrameCgX / sin(HTA) + (PaperFrameCgZ - PaperRadRear - PaperFrameCgX / sin(HTA) * cos(HTA)) * cos(HTA))
+    tempa                           =  evalf.N(PaperForkCgZ - PaperRadFront)
+    tempb                           =  evalf.N(PaperWb-PaperForkCgX)
     tempc                           =  evalf.N(sqrt(tempa**2+tempb**2))
-    PaperForkL                      =  evalf.N((PaperWb*cos(HTA)-(PaperRadFront-PaperRadRear)*sin(HTA)))
+    PaperForkL                      =  evalf.N(PaperWb*cos(HTA)-(PaperRadFront-PaperRadRear)*sin(HTA))
     ForkCGNorm                      =  evalf.N(rake+(tempc * sin(pi/2-HTA-acos(tempa/tempc))))
     ForkCGPar                       =  evalf.N(tempc * cos((pi/2-HTA)-acos(tempa/tempc))-PaperForkL)
 

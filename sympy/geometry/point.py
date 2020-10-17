@@ -17,8 +17,6 @@ False
 
 """
 
-from __future__ import division, print_function
-
 import warnings
 
 from sympy.core import S, sympify, Expr
@@ -162,9 +160,9 @@ class Point(GeometryEntity):
         # Turn any Floats into rationals and simplify
         # any expressions before we instantiate
         if evaluate:
-            coords = coords.xreplace(dict(
-                [(f, simplify(nsimplify(f, rational=True)))
-                 for f in coords.atoms(Float)]))
+            coords = coords.xreplace({
+                f: simplify(nsimplify(f, rational=True))
+                 for f in coords.atoms(Float)})
 
         # return 2D or 3D instances
         if len(coords) == 2:
@@ -224,7 +222,7 @@ class Point(GeometryEntity):
     def __contains__(self, item):
         return item in self.args
 
-    def __div__(self, divisor):
+    def __truediv__(self, divisor):
         """Divide point's coordinates by a factor."""
         divisor = sympify(divisor)
         coords = [simplify(x/divisor) for x in self.args]
@@ -856,8 +854,6 @@ class Point(GeometryEntity):
 
     n = evalf
 
-    __truediv__ = __div__
-
 class Point2D(Point):
     """A point in a 2-dimensional Euclidean space.
 
@@ -910,8 +906,8 @@ class Point2D(Point):
 
     _ambient_dimension = 2
 
-    def __new__(cls, *args, **kwargs):
-        if not kwargs.pop('_nocheck', False):
+    def __new__(cls, *args, _nocheck=False, **kwargs):
+        if not _nocheck:
             kwargs['dim'] = 2
             args = Point(*args, **kwargs)
         return GeometryEntity.__new__(cls, *args)
@@ -1121,8 +1117,8 @@ class Point3D(Point):
 
     _ambient_dimension = 3
 
-    def __new__(cls, *args, **kwargs):
-        if not kwargs.pop('_nocheck', False):
+    def __new__(cls, *args, _nocheck=False, **kwargs):
+        if not _nocheck:
             kwargs['dim'] = 3
             args = Point(*args, **kwargs)
         return GeometryEntity.__new__(cls, *args)
@@ -1155,7 +1151,7 @@ class Point3D(Point):
         Examples
         ========
 
-        >>> from sympy import Point3D, Matrix
+        >>> from sympy import Point3D
         >>> from sympy.abc import x
         >>> p1, p2 = Point3D(0, 0, 0), Point3D(1, 1, 1)
         >>> p3, p4, p5 = Point3D(2, 2, 2), Point3D(x, x, x), Point3D(1, 2, 6)

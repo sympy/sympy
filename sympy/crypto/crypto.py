@@ -12,8 +12,6 @@ and the Diffie-Hellman key exchange.
 
 """
 
-from __future__ import print_function
-
 from string import whitespace, ascii_uppercase as uppercase, printable
 from functools import reduce
 import warnings
@@ -83,10 +81,9 @@ bifid10 = printable
 
 def padded_key(key, symbols):
     """Return a string of the distinct characters of ``symbols`` with
-    those of ``key`` appearing first, omitting characters in ``key``
-    that are not in ``symbols``. A ValueError is raised if a) there are
-    duplicate characters in ``symbols`` or b) there are characters
-    in ``key`` that are  not in ``symbols``.
+    those of ``key`` appearing first. A ValueError is raised if
+    a) there are duplicate characters in ``symbols`` or
+    b) there are characters in ``key`` that are  not in ``symbols``.
 
     Examples
     ========
@@ -102,8 +99,8 @@ def padded_key(key, symbols):
     """
     syms = list(uniq(symbols))
     if len(syms) != len(symbols):
-        extra = ''.join(sorted(set(
-            [i for i in symbols if symbols.count(i) > 1])))
+        extra = ''.join(sorted({
+            i for i in symbols if symbols.count(i) > 1}))
         raise ValueError('duplicate characters in symbols: %s' % extra)
     extra = set(key) - set(syms)
     if extra:
@@ -1009,7 +1006,7 @@ def encipher_bifid(msg, key, symbols=None):
     r, c = zip(*[row_col[x] for x in msg])
     rc = r + c
     ch = {i: ch for ch, i in row_col.items()}
-    rv = ''.join((ch[i] for i in zip(rc[::2], rc[1::2])))
+    rv = ''.join(ch[i] for i in zip(rc[::2], rc[1::2]))
     return rv
 
 
@@ -1103,13 +1100,13 @@ def decipher_bifid(msg, key, symbols=None):
         long_key = list(long_key) + [x for x in A if x not in long_key]
 
     # the reverse fractionalization
-    row_col = dict(
-        [(ch, divmod(i, N)) for i, ch in enumerate(long_key)])
+    row_col = {
+        ch: divmod(i, N) for i, ch in enumerate(long_key)}
     rc = [i for c in msg for i in row_col[c]]
     n = len(msg)
     rc = zip(*(rc[:n], rc[n:]))
     ch = {i: ch for ch, i in row_col.items()}
-    rv = ''.join((ch[i] for i in rc))
+    rv = ''.join(ch[i] for i in rc)
     return rv
 
 
@@ -1487,7 +1484,7 @@ def _decipher_rsa_crt(i, d, factors):
     return result[0]
 
 
-def _rsa_key(*args, **kwargs):
+def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, multipower=None):
     r"""A private subroutine to generate RSA key
 
     Parameters
@@ -1504,12 +1501,6 @@ def _rsa_key(*args, **kwargs):
     """
     from sympy.ntheory import totient as _euler
     from sympy.ntheory import reduced_totient as _carmichael
-
-    public = kwargs.pop('public', True)
-    private = kwargs.pop('private', True)
-    totient = kwargs.pop('totient', 'Euler')
-    index = kwargs.pop('index', None)
-    multipower = kwargs.pop('multipower', None)
 
     if len(args) < 2:
         return False

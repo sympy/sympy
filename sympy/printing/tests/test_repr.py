@@ -6,6 +6,7 @@ from sympy import (symbols, sympify, Function, Integer, Matrix, Abs,
     sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol)
 from sympy.combinatorics import Cycle, Permutation
 from sympy.core.compatibility import exec_
+from sympy.core.symbol import Str
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
 from sympy.polys import ring, field, ZZ, QQ, lex, grlex, Poly
@@ -16,7 +17,7 @@ x, y = symbols('x,y')
 
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
-ENV = {}  # type: Dict[str, Any]
+ENV = {"Str": Str}  # type: Dict[str, Any]
 exec_("from sympy import *", ENV)
 
 
@@ -65,6 +66,7 @@ def test_Function():
 
     sT(sin(x), "sin(Symbol('x'))")
     sT(sin, "sin")
+
 
 def test_Geometry():
     sT(Point(0, 0), "Point2D(Integer(0), Integer(0))")
@@ -206,11 +208,13 @@ def test_Mul():
     assert srepr(3*x**3*y, order='old') == "Mul(Integer(3), Symbol('y'), Pow(Symbol('x'), Integer(3)))"
     assert srepr(sympify('(x+4)*2*x*7', evaluate=False), order='none') == "Mul(Add(Symbol('x'), Integer(4)), Integer(2), Symbol('x'), Integer(7))"
 
+
 def test_AlgebraicNumber():
     a = AlgebraicNumber(sqrt(2))
     sT(a, "AlgebraicNumber(Pow(Integer(2), Rational(1, 2)), [Integer(1), Integer(0)])")
     a = AlgebraicNumber(root(-2, 3))
     sT(a, "AlgebraicNumber(Pow(Integer(-2), Rational(1, 3)), [Integer(1), Integer(0)])")
+
 
 def test_PolyRing():
     assert srepr(ring("x", ZZ, lex)[0]) == "PolyRing((Symbol('x'),), ZZ, lex)"
@@ -232,6 +236,7 @@ def test_PolyElement():
 def test_FracElement():
     F, x, y = field("x,y", ZZ)
     assert srepr((3*x**2*y + 1)/(x - y**2)) == "FracElement(FracField((Symbol('x'), Symbol('y')), ZZ, lex), [((2, 1), 3), ((0, 0), 1)], [((1, 0), 1), ((0, 2), -1)])"
+
 
 def test_FractionField():
     assert srepr(QQ.frac_field(x)) == \
@@ -291,9 +296,9 @@ def test_matrix_expressions():
     n = symbols('n', integer=True)
     A = MatrixSymbol("A", n, n)
     B = MatrixSymbol("B", n, n)
-    sT(A, "MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True))")
-    sT(A*B, "MatMul(MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Symbol('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
-    sT(A + B, "MatAdd(MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Symbol('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
+    sT(A, "MatrixSymbol(Str('A'), Symbol('n', integer=True), Symbol('n', integer=True))")
+    sT(A*B, "MatMul(MatrixSymbol(Str('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Str('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
+    sT(A + B, "MatAdd(MatrixSymbol(Str('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Str('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
 
 
 def test_Cycle():
@@ -307,3 +312,26 @@ def test_Cycle():
 def test_Permutation():
     import_stmt = "from sympy.combinatorics import Permutation"
     sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)
+
+def test_dict():
+    from sympy import srepr
+    from sympy.abc import x, y, z
+    d = {}
+    assert srepr(d) == "{}"
+    d = {x: y}
+    assert srepr(d) == "{Symbol('x'): Symbol('y')}"
+    d = {x: y, y: z}
+    assert srepr(d) in (
+        "{Symbol('x'): Symbol('y'), Symbol('y'): Symbol('z')}",
+        "{Symbol('y'): Symbol('z'), Symbol('x'): Symbol('y')}",
+    )
+    d = {x: {y: z}}
+    assert srepr(d) == "{Symbol('x'): {Symbol('y'): Symbol('z')}}"
+
+def test_set():
+    from sympy import srepr
+    from sympy.abc import x, y
+    s = set()
+    assert srepr(s) == "set()"
+    s = {x, y}
+    assert srepr(s) in ("{Symbol('x'), Symbol('y')}", "{Symbol('y'), Symbol('x')}")

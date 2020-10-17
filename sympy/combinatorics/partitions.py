@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Basic, Dict, sympify
 from sympy.core.compatibility import as_int, default_sort_key
 from sympy.core.sympify import _sympify
@@ -235,6 +233,9 @@ class Partition(FiniteSet):
         """
         Returns the "restricted growth string" of the partition.
 
+        Explanation
+        ===========
+
         The RGS is returned as a list of indices, L, where L[i] indicates
         the block in which element i appears. For example, in a partition
         of 3 elements (a, b, c) into 2 blocks ([c], [a, b]) the RGS is
@@ -266,6 +267,9 @@ class Partition(FiniteSet):
     def from_rgs(self, rgs, elements):
         """
         Creates a set partition from a restricted growth string.
+
+        Explanation
+        ===========
 
         The indices given in rgs are assumed to be the index
         of the element as given in elements *as provided* (the
@@ -302,6 +306,9 @@ class IntegerPartition(Basic):
     """
     This class represents an integer partition.
 
+    Explanation
+    ===========
+
     In number theory and combinatorics, a partition of a positive integer,
     ``n``, also called an integer partition, is a way of writing ``n`` as a
     list of positive integers that sum to n. Two partitions that differ only
@@ -329,6 +336,9 @@ class IntegerPartition(Basic):
     def __new__(cls, partition, integer=None):
         """
         Generates a new IntegerPartition object from a list or dictionary.
+
+        Explantion
+        ==========
 
         The partition can be given as a list of positive integers or a
         dictionary of (integer, multiplicity) items. If the partition is

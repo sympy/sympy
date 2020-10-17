@@ -357,6 +357,7 @@ applied from the mid till the end of the beam.
    :context: close-figs
    :format: doctest
    :include-source: True
+
    
    >>> from sympy.physics.continuum_mechanics.beam import Beam
    >>> from sympy import symbols, plot, S
@@ -411,6 +412,7 @@ applied from the mid till the end of the beam.
             8          2           2          24           8        5 
        ───────────────────────────────────────────────────────────────
                                     E⋅I       
+
 
 
    >>> b.deflection()
@@ -493,7 +495,7 @@ Example 5
 
 A cantilever beam of length 6 meters is under downward distributed constant
 load with magnitude of 4.0 KN/m from starting point till 2 meters away
-from it. A ramp load of 1 kN/m applied from the mid till the end of
+from it. A ramp load of 1 kN/m/m applied from the mid till the end of
 the beam. A point load of 12KN is also applied in same direction 4 meters
 away from start.
 
@@ -505,7 +507,7 @@ away from start.
                              |   . | | |
                              V . | | | |
   \\\\|   4 KN/m             . | | | | |
-  \\\\|___________         . 1 KN/m  | |
+  \\\\|___________         . 1 KN/m/m| |
   \\\\|| | | | | |       . V V V V V V V
   \\\\|V V V V V V     |---------------|
   \\\\|________________________________

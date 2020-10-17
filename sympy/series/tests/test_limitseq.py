@@ -1,5 +1,5 @@
-from sympy import (symbols, Symbol, oo, Sum, harmonic, Add, S, binomial,
-    factorial, log, fibonacci, sin, cos, pi, I, sqrt, Rational)
+from sympy import (symbols, Symbol, oo, Sum, harmonic, exp, Add, S, binomial,
+    factorial, log, fibonacci, subfactorial, sin, cos, pi, I, sqrt, Rational, gamma)
 from sympy.series.limitseq import limit_seq
 from sympy.series.limitseq import difference_delta as dd
 from sympy.testing.pytest import raises, XFAIL
@@ -116,9 +116,25 @@ def test_limitseq_sum():
                   (2**x*x), x) == 4)
 
 
+def test_issue_9308():
+    assert limit_seq(subfactorial(n)/factorial(n), n) == exp(-1)
+
+
 def test_issue_10382():
     n = Symbol('n', integer=True)
     assert limit_seq(fibonacci(n+1)/fibonacci(n), n) == S.GoldenRatio
+
+
+def test_issue_11672():
+    assert limit_seq(Rational(-1, 2)**n, n) == 0
+
+
+def test_issue_16735():
+    assert limit_seq(5**n/factorial(n), n) == 0
+
+
+def test_issue_19868():
+    assert limit_seq(1/gamma(n + S.One/2), n) == 0
 
 
 @XFAIL

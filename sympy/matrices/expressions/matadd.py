@@ -1,16 +1,16 @@
-from __future__ import print_function, division
-
 from sympy.core.compatibility import reduce
-from operator import add
+import operator
 
 from sympy.core import Add, Basic, sympify
+from sympy.core.add import add
 from sympy.functions import adjoint
+from sympy.matrices.common import ShapeError
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
-from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
-    ZeroMatrix, GenericZeroMatrix)
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
 from sympy.utilities import default_sort_key, sift
 
 # XXX: MatAdd should perhaps not subclass directly from Add
@@ -33,15 +33,15 @@ class MatAdd(MatrixExpr, Add):
 
     identity = GenericZeroMatrix()
 
-    def __new__(cls, *args, evaluate=False, **kwargs):
+    def __new__(cls, *args, evaluate=False, check=False, _sympify=True):
         if not args:
             return cls.identity
 
         # This must be removed aggressively in the constructor to avoid
         # TypeErrors from GenericZeroMatrix().shape
-        args = filter(lambda i: cls.identity != i, args)
-        args = list(map(sympify, args))
-        check = kwargs.get('check', False)
+        args = list(filter(lambda i: cls.identity != i, args))
+        if _sympify:
+            args = list(map(sympify, args))
 
         obj = Basic.__new__(cls, *args)
 
@@ -86,6 +86,7 @@ class MatAdd(MatrixExpr, Add):
         add_lines = [arg._eval_derivative_matrix_lines(x) for arg in self.args]
         return [j for i in add_lines for j in i]
 
+add.register_handlerclass((Add, MatAdd), MatAdd)
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
@@ -128,7 +129,7 @@ def merge_explicit(matadd):
     """
     groups = sift(matadd.args, lambda arg: isinstance(arg, MatrixBase))
     if len(groups[True]) > 1:
-        return MatAdd(*(groups[False] + [reduce(add, groups[True])]))
+        return MatAdd(*(groups[False] + [reduce(operator.add, groups[True])]))
     else:
         return matadd
 

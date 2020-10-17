@@ -1,12 +1,12 @@
 """Options manager for :class:`~.Poly` and public API functions. """
 
-from __future__ import print_function, division
 
 __all__ = ["Options"]
 
-from typing import Dict, List, Optional, Type
+from typing import Dict, Type
+from typing import List, Optional
 
-from sympy.core import S, Basic, sympify
+from sympy.core import Basic, sympify
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 from sympy.utilities import numbered_symbols, topological_sort, public
 from sympy.utilities.iterables import has_dups
@@ -15,7 +15,7 @@ import sympy.polys
 
 import re
 
-class Option(object):
+class Option:
     """Base class for all kinds of options. """
 
     option = None  # type: Optional[str]
@@ -185,7 +185,7 @@ class Options(dict):
     def _init_dependencies_order(cls):
         """Resolve the order of options' processing. """
         if cls.__order__ is None:
-            vertices, edges = [], set([])
+            vertices, edges = [], set()
 
             for name, option in cls.__options__.items():
                 vertices.append(name)
@@ -218,7 +218,7 @@ class Options(dict):
         if attr in self.__options__:
             self[attr] = value
         else:
-            super(Options, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
 
     @property
     def args(self):
@@ -406,7 +406,7 @@ class Domain(Option, metaclass=OptionType):
     _re_realfield = re.compile(r"^(R|RR)(_(\d+))?$")
     _re_complexfield = re.compile(r"^(C|CC)(_(\d+))?$")
     _re_finitefield = re.compile(r"^(FF|GF)\((\d+)\)$")
-    _re_polynomial = re.compile(r"^(Z|ZZ|Q|QQ|R|RR|C|CC)\[(.+)\]$")
+    _re_polynomial = re.compile(r"^(Z|ZZ|Q|QQ|ZZ_I|QQ_I|R|RR|C|CC)\[(.+)\]$")
     _re_fraction = re.compile(r"^(Z|ZZ|Q|QQ)\((.+)\)$")
     _re_algebraic = re.compile(r"^(Q|QQ)\<(.+)\>$")
 
@@ -422,6 +422,12 @@ class Domain(Option, metaclass=OptionType):
 
             if domain in ['Q', 'QQ']:
                 return sympy.polys.domains.QQ
+
+            if domain == 'ZZ_I':
+                return sympy.polys.domains.ZZ_I
+
+            if domain == 'QQ_I':
+                return sympy.polys.domains.QQ_I
 
             if domain == 'EX':
                 return sympy.polys.domains.EX
@@ -464,6 +470,10 @@ class Domain(Option, metaclass=OptionType):
                     return sympy.polys.domains.QQ.poly_ring(*gens)
                 elif ground in ['R', 'RR']:
                     return sympy.polys.domains.RR.poly_ring(*gens)
+                elif ground == 'ZZ_I':
+                    return sympy.polys.domains.ZZ_I.poly_ring(*gens)
+                elif ground == 'QQ_I':
+                    return sympy.polys.domains.QQ_I.poly_ring(*gens)
                 else:
                     return sympy.polys.domains.CC.poly_ring(*gens)
 
@@ -525,7 +535,7 @@ class Gaussian(BooleanOption, metaclass=OptionType):
     @classmethod
     def postprocess(cls, options):
         if 'gaussian' in options and options['gaussian'] is True:
-            options['extension'] = set([S.ImaginaryUnit])
+            options['domain'] = sympy.polys.domains.QQ_I
             Extension.postprocess(options)
 
 
@@ -546,7 +556,7 @@ class Extension(Option, metaclass=OptionType):
             raise OptionError("'False' is an invalid argument for 'extension'")
         else:
             if not hasattr(extension, '__iter__'):
-                extension = set([extension])
+                extension = {extension}
             else:
                 if not extension:
                     extension = None

@@ -919,7 +919,7 @@ class TensorIndexType(Basic):
     dummy_name : name of the head of dummy indices
     dim : dimension, it can be a symbol or an integer or ``None``
     eps_dim : dimension of the epsilon tensor
-    metric_symmetry : integer that denotes metric symmetry or `None` for no metirc
+    metric_symmetry : integer that denotes metric symmetry or ``None`` for no metirc
     metric_name : string with the name of the metric tensor
 
     Attributes
@@ -933,15 +933,15 @@ class TensorIndexType(Basic):
     Notes
     =====
 
-    The possible values of the `metric_symmetry` parameter are:
+    The possible values of the ``metric_symmetry`` parameter are:
 
         ``1``   :   metric tensor is fully symmetric
         ``0``   :   metric tensor possesses no index symmetry
         ``-1``  :   metric tensor is fully antisymmetric
-        ``None``:   there is no metric tensor (metric equals to `None`)
+        ``None``:   there is no metric tensor (metric equals to ``None``)
 
     The metric is assumed to be symmetric by default. It can also be set
-    to a custom tensor by the `.set_metric()` method.
+    to a custom tensor by the ``.set_metric()`` method.
 
     If there is a metric the metric is used to raise and lower indices.
 
@@ -1922,13 +1922,13 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
     def __rmul__(self, other):
         return TensMul(other, self).doit()
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         other = _sympify(other)
         if isinstance(other, TensExpr):
             raise ValueError('cannot divide by a tensor')
         return TensMul(self, S.One/other).doit()
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         raise ValueError('cannot divide by a tensor')
 
     def __pow__(self, other):
@@ -1953,9 +1953,6 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
 
     def __rpow__(self, other):
         raise NotImplementedError
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     @property
     @abstractmethod
@@ -2084,8 +2081,18 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
         return recursor(self, ())
 
     @staticmethod
-    def _match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict):
+    def _contract_and_permute_with_metric(metric, array, pos, dim):
+        # TODO: add possibility of metric after (spinors)
         from .array import tensorcontraction, tensorproduct, permutedims
+
+        array = tensorcontraction(tensorproduct(metric, array), (1, 2+pos))
+        permu = list(range(dim))
+        permu[0], permu[pos] = permu[pos], permu[0]
+        return permutedims(array, permu)
+
+    @staticmethod
+    def _match_indices_with_other_tensor(array, free_ind1, free_ind2, replacement_dict):
+        from .array import permutedims
 
         index_types1 = [i.tensor_index_type for i in free_ind1]
 
@@ -2121,13 +2128,6 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
         if len(set(free_ind1) & set(free_ind2)) < len(free_ind1):
             raise ValueError("incompatible indices: %s and %s" % (free_ind1, free_ind2))
 
-        # TODO: add possibility of metric after (spinors)
-        def contract_and_permute(metric, array, pos):
-            array = tensorcontraction(tensorproduct(metric, array), (1, 2+pos))
-            permu = list(range(len(free_ind1)))
-            permu[0], permu[pos] = permu[pos], permu[0]
-            return permutedims(array, permu)
-
         # Raise indices:
         for pos in pos2up:
             index_type_pos = index_types1[pos]  # type: TensorIndexType
@@ -2135,14 +2135,14 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
                 raise ValueError("No metric provided to lower index")
             metric = replacement_dict[index_type_pos]
             metric_inverse = _TensorDataLazyEvaluator.inverse_matrix(metric)
-            array = contract_and_permute(metric_inverse, array, pos)
+            array = TensExpr._contract_and_permute_with_metric(metric_inverse, array, pos, len(free_ind1))
         # Lower indices:
         for pos in pos2down:
             index_type_pos = index_types1[pos]  # type: TensorIndexType
             if index_type_pos not in replacement_dict:
                 raise ValueError("No metric provided to lower index")
             metric = replacement_dict[index_type_pos]
-            array = contract_and_permute(metric, array, pos)
+            array = TensExpr._contract_and_permute_with_metric(metric, array, pos, len(free_ind1))
 
         if free_ind1:
             permutation = TensExpr._get_indices_permutation(free_ind2, free_ind1)
@@ -2648,8 +2648,7 @@ class Tensor(TensExpr):
 
     _index_structure = None  # type: _IndexStructure
 
-    def __new__(cls, tensor_head, indices, **kw_args):
-        is_canon_bp = kw_args.pop('is_canon_bp', False)
+    def __new__(cls, tensor_head, indices, *, is_canon_bp=False, **kw_args):
         indices = cls._parse_indices(tensor_head, indices)
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices), **kw_args)
         obj._index_structure = _IndexStructure.from_indices(*indices)
@@ -2747,10 +2746,10 @@ class Tensor(TensExpr):
         indices = im.get_indices()
         return self._set_indices(*indices, is_canon_bp=is_canon_bp)
 
-    def _set_indices(self, *indices, **kw_args):
+    def _set_indices(self, *indices, is_canon_bp=False, **kw_args):
         if len(indices) != self.ext_rank:
             raise ValueError("indices length mismatch")
-        return self.func(self.args[0], indices, is_canon_bp=kw_args.pop('is_canon_bp', False)).doit()
+        return self.func(self.args[0], indices, is_canon_bp=is_canon_bp).doit()
 
     def _get_free_indices_set(self):
         return set([i[0] for i in self._index_structure.free])
@@ -2920,10 +2919,17 @@ class Tensor(TensExpr):
             # Remove elements in `dum2` from `dum1`:
             dum1 = [pair for pair in dum1 if pair not in dum2]
         if len(dum1) > 0:
+            indices1 = self.get_indices()
             indices2 = other.get_indices()
             repl = {}
             for p1, p2 in dum1:
                 repl[indices2[p2]] = -indices2[p1]
+                for pos in (p1, p2):
+                    if indices1[pos].is_up ^ indices2[pos].is_up:
+                        metric = replacement_dict[indices1[pos].tensor_index_type]
+                        if indices1[pos].is_up:
+                            metric = _TensorDataLazyEvaluator.inverse_matrix(metric)
+                        array = self._contract_and_permute_with_metric(metric, array, pos, len(indices2))
             other = other.xreplace(repl).doit()
             array = _TensorDataLazyEvaluator.data_contract_dum([array], dum1, len(indices2))
 
@@ -3753,12 +3759,11 @@ class TensMul(TensExpr, AssocOp):
         indices = im.get_indices()
         return self._set_indices(*indices, is_canon_bp=is_canon_bp)
 
-    def _set_indices(self, *indices, **kw_args):
+    def _set_indices(self, *indices, is_canon_bp=False, **kw_args):
         if len(indices) != self.ext_rank:
             raise ValueError("indices length mismatch")
         args = list(self.args)[:]
         pos = 0
-        is_canon_bp = kw_args.pop('is_canon_bp', False)
         for i, arg in enumerate(args):
             if not isinstance(arg, TensExpr):
                 continue

@@ -638,7 +638,6 @@ def hyperfocal_distance(f, N, c):
     Example
     =======
     >>> from sympy.physics.optics import hyperfocal_distance
-    >>> from sympy.abc import f, N, c
     >>> round(hyperfocal_distance(f = 0.5, N = 8, c = 0.0033), 2)
     9.47
     """

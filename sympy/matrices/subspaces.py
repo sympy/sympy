@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 from sympy.core.compatibility import reduce
 
 from .utilities import _iszero
@@ -106,7 +104,7 @@ def _rowspace(M, simplify=False):
     return [reduced.row(i) for i in range(len(pivots))]
 
 
-def _orthogonalize(cls, *vecs, **kwargs):
+def _orthogonalize(cls, *vecs, normalize=False, rankcheck=False):
     """Apply the Gram-Schmidt orthogonalization procedure
     to vectors supplied in ``vecs``.
 
@@ -154,9 +152,6 @@ def _orthogonalize(cls, *vecs, **kwargs):
 
     .. [1] https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
     """
-
-    normalize = kwargs.get('normalize', False)
-    rankcheck = kwargs.get('rankcheck', False)
 
     def project(a, b):
         return b * (a.dot(b, hermitian=True) / b.dot(b, hermitian=True))

@@ -27,7 +27,7 @@ def _preprocess(expr, func=None, hint='_Integral'):
     function to be solved for.
 
     >>> from sympy.solvers.deutils import _preprocess
-    >>> from sympy import Derivative, Function, Integral, sin
+    >>> from sympy import Derivative, Function
     >>> from sympy.abc import x, y, z
     >>> f, g = map(Function, 'fg')
 
@@ -133,7 +133,7 @@ def ode_order(expr, func):
             order = max(order, ode_order(arg, func))
         return order
 
-def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
+def _desolve(eq, func=None, hint="default", ics=None, simplify=True, *, prep=True, **kwargs):
     """This is a helper function to dsolve and pdsolve in the ode
     and pde modules.
 
@@ -174,7 +174,6 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     classify_ode(ode.py)
     classify_pde(pde.py)
     """
-    prep = kwargs.pop('prep', True)
     if isinstance(eq, Equality):
         eq = eq.lhs - eq.rhs
 

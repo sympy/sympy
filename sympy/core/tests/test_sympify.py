@@ -6,7 +6,7 @@ from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
     CantSympify)
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
-from sympy.testing.pytest import raises, XFAIL, skip
+from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
@@ -274,6 +274,13 @@ def test_lambda_raises():
 def test_sympify_raises():
     raises(SympifyError, lambda: sympify("fx)"))
 
+    class A:
+        def __str__(self):
+            return 'x'
+
+    with warns_deprecated_sympy():
+        assert sympify(A()) == Symbol('x')
+
 
 def test__sympify():
     x = Symbol('x')
@@ -281,10 +288,15 @@ def test__sympify():
 
     # positive _sympify
     assert _sympify(x) is x
-    assert _sympify(f) is f
     assert _sympify(1) == Integer(1)
     assert _sympify(0.5) == Float("0.5")
     assert _sympify(1 + 1j) == 1.0 + I*1.0
+
+    # Function f is not Basic and can't sympify to Basic. We allow it to pass
+    # with sympify but not with _sympify.
+    # https://github.com/sympy/sympy/issues/20124
+    assert sympify(f) is f
+    raises(SympifyError, lambda: _sympify(f))
 
     class A:
         def _sympy_(self):
@@ -324,11 +336,11 @@ def test_sympifyit():
 
 
 def test_int_float():
-    class F1_1(object):
+    class F1_1:
         def __float__(self):
             return 1.1
 
-    class F1_1b(object):
+    class F1_1b:
         """
         This class is still a float, even though it also implements __int__().
         """
@@ -338,7 +350,7 @@ def test_int_float():
         def __int__(self):
             return 1
 
-    class F1_1c(object):
+    class F1_1c:
         """
         This class is still a float, because it implements _sympy_()
         """
@@ -351,11 +363,11 @@ def test_int_float():
         def _sympy_(self):
             return Float(1.1)
 
-    class I5(object):
+    class I5:
         def __int__(self):
             return 5
 
-    class I5b(object):
+    class I5b:
         """
         This class implements both __int__() and __float__(), so it will be
         treated as Float in SymPy. One could change this behavior, by using
@@ -370,7 +382,7 @@ def test_int_float():
         def __int__(self):
             return 5
 
-    class I5c(object):
+    class I5c:
         """
         This class implements both __int__() and __float__(), but also
         a _sympy_() method, so it will be Integer.
@@ -490,7 +502,8 @@ def test_kernS():
     ss = kernS(s)
     assert ss != -1 and ss.simplify() == -1
     # issue 6687
-    assert kernS('Interval(-1,-2 - 4*(-3))') == Interval(-1, 10)
+    assert (kernS('Interval(-1,-2 - 4*(-3))')
+        == Interval(-1, Add(-2, Mul(12, 1, evaluate=False), evaluate=False)))
     assert kernS('_kern') == Symbol('_kern')
     assert kernS('E**-(x)') == exp(-x)
     e = 2*(x + y)*y
@@ -504,6 +517,7 @@ def test_kernS():
     assert kernS('(1-2.*(1-y)*x)') == 1 - 2.*x*(1 - y)
     one = kernS('x - (x - 1)')
     assert one != 1 and one.expand() == 1
+    assert kernS("(2*x)/(x-1)") == 2*x/(x-1)
 
 
 def test_issue_6540_6552():

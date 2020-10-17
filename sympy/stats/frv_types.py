@@ -14,23 +14,15 @@ Hypergeometric
 Rademacher
 """
 
-from __future__ import print_function, division
-
-import random
 
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
                    Dummy, Eq, Intersection, Interval,
                    Symbol, Lambda, Piecewise, Or, Gt, Lt, Ge, Le, Contains)
 from sympy import beta as beta_fn
-from sympy.external import import_module
-from sympy.tensor.array import ArrayComprehensionMap
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
-from sympy.stats.rv import _value_check, Density, RandomSymbol
+from sympy.stats.rv import _value_check, Density, is_random
 
-numpy = import_module('numpy')
-scipy = import_module('scipy')
-pymc3 = import_module('pymc3')
 
 __all__ = ['FiniteRV',
 'DiscreteUniform',
@@ -43,11 +35,16 @@ __all__ = ['FiniteRV',
 'Rademacher'
 ]
 
-def rv(name, cls, *args):
+def rv(name, cls, *args, **kwargs):
     args = list(map(sympify, args))
     dist = cls(*args)
-    dist.check(*args)
-    return SingleFinitePSpace(name, dist).value
+    if kwargs.pop('check', True):
+        dist.check(*args)
+    pspace = SingleFinitePSpace(name, dist)
+    if any(is_random(arg) for arg in args):
+        from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
+        pspace = CompoundPSpace(name, CompoundDistribution(dist))
+    return pspace.value
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
 
@@ -69,17 +66,24 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
         for p in density.values():
             _value_check((p >= 0, p <= 1),
                         "Probability at a point must be between 0 and 1.")
-        _value_check(Eq(sum(density.values()), 1), "Total Probability must be 1.")
+        val = sum(density.values())
+        _value_check(Eq(val, 1) != S.false, "Total Probability must be 1.")
 
-def FiniteRV(name, density):
+def FiniteRV(name, density, **kwargs):
     r"""
     Create a Finite Random Variable given a dict representing the density.
 
     Parameters
     ==========
 
+    name : Symbol
+        Represents name of the random variable.
     density: A dict
         Dictionary conatining the pdf of finite distribution
+    check : bool
+        If True, it will check whether the given density
+        integrates to 1 over the given set. If False, it
+        will not perform this check. Default is False.
 
     Examples
     ========
@@ -100,7 +104,9 @@ def FiniteRV(name, density):
     RandomSymbol
 
     """
-    return rv(name, FiniteDistributionHandmade, density)
+    # have a default of False while `rv` should have a default of True
+    kwargs['check'] = kwargs.pop('check', False)
+    return rv(name, FiniteDistributionHandmade, density, **kwargs)
 
 class DiscreteUniformDistribution(SingleFiniteDistribution):
 
@@ -128,7 +134,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
     @property  # type: ignore
     @cacheit
     def dict(self):
-        return dict((k, self.p) for k in self.set)
+        return {k: self.p for k in self.set}
 
     @property
     def set(self):
@@ -139,11 +145,6 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
             return self.p
         else:
             return S.Zero
-
-    def _sample_random(self, size):
-        x = Symbol('x')
-        return ArrayComprehensionMap(lambda: self.args[random.randint(0, len(self.args)-1)], (x, 0, size)).doit()
-
 
 
 def DiscreteUniform(name, items):
@@ -214,7 +215,7 @@ class DieDistribution(SingleFiniteDistribution):
 
     def pmf(self, x):
         x = sympify(x)
-        if not (x.is_number or x.is_Symbol or isinstance(x, RandomSymbol)):
+        if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
         cond = Ge(x, 1) & Le(x, self.sides) & Contains(x, S.Integers)
@@ -270,11 +271,15 @@ class BernoulliDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return set([self.succ, self.fail])
+        return {self.succ, self.fail}
 
     def pmf(self, x):
-        return Piecewise((self.p, x == self.succ),
-                         (1 - self.p, x == self.fail),
+        if isinstance(self.succ, Symbol) and isinstance(self.fail, Symbol):
+            return Piecewise((self.p, x == self.succ),
+                             (1 - self.p, x == self.fail),
+                             (S.Zero, True))
+        return Piecewise((self.p, Eq(x, self.succ)),
+                         (1 - self.p, Eq(x, self.fail)),
                          (S.Zero, True))
 
 
@@ -396,7 +401,7 @@ class BinomialDistribution(SingleFiniteDistribution):
     def pmf(self, x):
         n, p = self.n, self.p
         x = sympify(x)
-        if not (x.is_number or x.is_Symbol or isinstance(x, RandomSymbol)):
+        if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
         cond = Ge(x, 0) & Le(x, n) & Contains(x, S.Integers)
@@ -407,8 +412,8 @@ class BinomialDistribution(SingleFiniteDistribution):
     def dict(self):
         if self.is_symbolic:
             return Density(self)
-        return dict((k*self.succ + (self.n-k)*self.fail, self.pmf(k))
-                    for k in range(0, self.n + 1))
+        return {k*self.succ + (self.n-k)*self.fail: self.pmf(k)
+                    for k in range(0, self.n + 1)}
 
 def Binomial(name, n, p, succ=1, fail=0):
     r"""
@@ -496,11 +501,6 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
         n, a, b = self.n, self.alpha, self.beta
         return binomial(n, k) * beta_fn(k + a, n - k + b) / beta_fn(a, b)
 
-    def _sample_pymc3(self, size):
-        n, a, b = int(self.n), float(self.alpha), float(self.beta)
-        with pymc3.Model():
-            pymc3.BetaBinomial('X', alpha=a, beta=b, n=n)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 def BetaBinomial(name, n, alpha, beta):
     r"""
@@ -568,16 +568,12 @@ class HypergeometricDistribution(SingleFiniteDistribution):
         N, m, n = self.N, self.m, self.n
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(self.low, self.high))
-        return set([i for i in range(max(0, n + m - N), min(n, m) + 1)])
+        return {i for i in range(max(0, n + m - N), min(n, m) + 1)}
 
     def pmf(self, k):
         N, m, n = self.N, self.m, self.n
         return S(binomial(m, k) * binomial(N - m, n - k))/binomial(N, n)
 
-    def _sample_scipy(self, size):
-        import scipy.stats # Make sure that stats is imported
-        N, m, n = int(self.N), int(self.m), int(self.n)
-        return scipy.stats.hypergeom.rvs(M=m, n=n, N=N, size=size)
 
 def Hypergeometric(name, N, m, n):
     r"""
@@ -622,7 +618,7 @@ class RademacherDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return set([-1, 1])
+        return {-1, 1}
 
     @property
     def pmf(self):

@@ -2771,8 +2771,8 @@ def wicks(e, **kw_args):
     Examples
     ========
 
-    >>> from sympy import symbols, Function, Dummy
-    >>> from sympy.physics.secondquant import wicks, F, Fd, NO
+    >>> from sympy import symbols, Dummy
+    >>> from sympy.physics.secondquant import wicks, F, Fd
     >>> p, q, r = symbols('p,q,r')
     >>> wicks(Fd(p)*F(q))
     KroneckerDelta(_i, q)*KroneckerDelta(p, q) + NO(CreateFermion(p)*AnnihilateFermion(q))

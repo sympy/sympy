@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
@@ -65,7 +63,7 @@ class Product(ExprWithIntLimits):
     ========
 
     >>> from sympy.abc import a, b, i, k, m, n, x
-    >>> from sympy import Product, factorial, oo
+    >>> from sympy import Product, oo
     >>> Product(k, (k, 1, m))
     Product(k, (k, 1, m))
     >>> Product(k, (k, 1, m)).doit()
@@ -100,7 +98,7 @@ class Product(ExprWithIntLimits):
 
     By the same formula we can compute sin(pi/2):
 
-    >>> from sympy import pi, gamma, simplify
+    >>> from sympy import combsimp, pi, gamma, simplify
     >>> P = pi * x * Product(1 - x**2/k**2, (k, 1, n))
     >>> P = P.subs(x, pi/2)
     >>> P
@@ -108,14 +106,10 @@ class Product(ExprWithIntLimits):
     >>> Pe = P.doit()
     >>> Pe
     pi**2*RisingFactorial(1 - pi/2, n)*RisingFactorial(1 + pi/2, n)/(2*factorial(n)**2)
-    >>> Pe = Pe.rewrite(gamma)
-    >>> Pe
-    pi**2*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/(2*gamma(1 - pi/2)*gamma(1 + pi/2)*gamma(n + 1)**2)
-    >>> Pe = simplify(Pe)
-    >>> Pe
-    sin(pi**2/2)*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/gamma(n + 1)**2
-    >>> limit(Pe, n, oo)
+    >>> limit(Pe, n, oo).gammasimp()
     sin(pi**2/2)
+    >>> Pe.rewrite(gamma)
+    (-1)**n*pi**2*gamma(pi/2)*gamma(n + 1 + pi/2)/(2*gamma(1 + pi/2)*gamma(-n + pi/2)*gamma(n + 1)**2)
 
     Products with the lower limit being larger than the upper one:
 
@@ -165,7 +159,7 @@ class Product(ExprWithIntLimits):
     RisingFactorial(a + 1, -a + b - 1)
     >>> P1 * P2
     RisingFactorial(b, a - b + 1)*RisingFactorial(a + 1, -a + b - 1)
-    >>> simplify(P1 * P2)
+    >>> combsimp(P1 * P2)
     1
 
     See Also
@@ -253,7 +247,7 @@ class Product(ExprWithIntLimits):
             if d:
                 reps[xab[0]] = d
         if reps:
-            undo = dict([(v, k) for k, v in reps.items()])
+            undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
             if type(did) is tuple:  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])
@@ -430,7 +424,7 @@ class Product(ExprWithIntLimits):
         Examples
         ========
 
-        >>> from sympy import Interval, S, Product, Symbol, cos, pi, exp, oo
+        >>> from sympy import Product, Symbol, cos, pi, exp, oo
         >>> n = Symbol('n', integer=True)
         >>> Product(n/(n + 1), (n, 1, oo)).is_convergent()
         False
@@ -476,7 +470,7 @@ class Product(ExprWithIntLimits):
         Examples
         ========
 
-        >>> from sympy import Product, simplify, RisingFactorial, gamma, Sum
+        >>> from sympy import gamma, Product, simplify, Sum
         >>> from sympy.abc import x, y, a, b, c, d
         >>> P = Product(x, (x, a, b))
         >>> Pr = P.reverse_order(x)
@@ -485,13 +479,13 @@ class Product(ExprWithIntLimits):
         >>> Pr = Pr.doit()
         >>> Pr
         1/RisingFactorial(b + 1, a - b - 1)
-        >>> simplify(Pr)
-        gamma(b + 1)/gamma(a)
+        >>> simplify(Pr.rewrite(gamma))
+        Piecewise((gamma(b + 1)/gamma(a), b > -1), ((-1)**(-a + b + 1)*gamma(1 - a)/gamma(-b), True))
         >>> P = P.doit()
         >>> P
         RisingFactorial(a, -a + b + 1)
-        >>> simplify(P)
-        gamma(b + 1)/gamma(a)
+        >>> simplify(P.rewrite(gamma))
+        Piecewise((gamma(b + 1)/gamma(a), a > 0), ((-1)**(-a + b + 1)*gamma(1 - a)/gamma(-b), True))
 
         While one should prefer variable names when specifying which limits
         to reverse, the index counting notation comes in handy in case there

@@ -27,6 +27,9 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     """
     Simplify trigonometric expressions using a groebner basis algorithm.
 
+    Explanation
+    ===========
+
     This routine takes a fraction involving trigonometric or hyperbolic
     expressions, and tries to simplify it. The primary metric is the
     total degree. Some attempts are made to choose the simplest possible
@@ -220,7 +223,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
 
     def build_ideal(x, terms):
         """
-        Build generators for our ideal. Terms is an iterable with elements of
+        Build generators for our ideal. ``Terms`` is an iterable with elements of
         the form (fn, coeff), indicating that we have a generator fn(coeff*x).
 
         If any of the terms is trigonometric, sin(x) and cos(x) are guaranteed
@@ -425,8 +428,8 @@ def trigsimp(expr, **opts):
     """
     reduces expression by using known trig identities
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     method:
     - Determine the method to use. Valid choices are 'matching' (default),
@@ -444,7 +447,7 @@ def trigsimp(expr, **opts):
     ========
 
     >>> from sympy import trigsimp, sin, cos, log
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e)
     2
@@ -604,9 +607,9 @@ def exptrigsimp(expr):
 
 #-------------------- the old trigsimp routines ---------------------
 
-def trigsimp_old(expr, **opts):
+def trigsimp_old(expr, *, first=True, **opts):
     """
-    reduces expression by using known trig identities
+    Reduces expression by using known trig identities.
 
     Notes
     =====
@@ -638,8 +641,8 @@ def trigsimp_old(expr, **opts):
     Examples
     ========
 
-    >>> from sympy import trigsimp, sin, cos, log, cosh, sinh, tan, cot
-    >>> from sympy.abc import x, y
+    >>> from sympy import trigsimp, sin, cos, log, cot
+    >>> from sympy.abc import x
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e, old=True)
     2
@@ -663,7 +666,6 @@ def trigsimp_old(expr, **opts):
 
     """
     old = expr
-    first = opts.pop('first', True)
     if first:
         if not expr.has(*_trigs):
             return expr
@@ -1066,7 +1068,7 @@ def __trigsimp(expr, deep=False):
 #------------------- end of old trigsimp routines --------------------
 
 
-def futrig(e, **kwargs):
+def futrig(e, *, hyper=True, **kwargs):
     """Return simplified ``e`` using Fu-like transformations.
     This is not the "Fu" algorithm. This is called by default
     from ``trigsimp``. By default, hyperbolics subexpressions
@@ -1098,11 +1100,11 @@ def futrig(e, **kwargs):
         return e
 
     old = e
-    e = bottom_up(e, lambda x: _futrig(x, **kwargs))
+    e = bottom_up(e, _futrig)
 
-    if kwargs.pop('hyper', True) and e.has(HyperbolicFunction):
+    if hyper and e.has(HyperbolicFunction):
         e, f = hyper_as_trig(e)
-        e = f(_futrig(e))
+        e = f(bottom_up(e, _futrig))
 
     if e != old and e.is_Mul and e.args[0].is_Rational:
         # redistribute leading coeff on 2-arg Add
@@ -1110,7 +1112,7 @@ def futrig(e, **kwargs):
     return e
 
 
-def _futrig(e, **kwargs):
+def _futrig(e):
     """Helper for futrig."""
     from sympy.simplify.fu import (
         TR1, TR2, TR3, TR2i, TR10, L, TR10i,

@@ -637,7 +637,7 @@ class G_Function(Expr):
 
         >>> from sympy.simplify.hyperexpand import G_Function
         >>> from sympy.abc import y
-        >>> from sympy import S, symbols
+        >>> from sympy import S
 
         >>> a, b = [1, 3, 2, S(3)/2], [1 + y, y, 2, y + 3]
         >>> G_Function(a, b, [2], [y]).compute_buckets()

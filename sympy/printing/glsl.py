@@ -1,6 +1,5 @@
 from typing import Set
 
-from sympy.codegen.ast import Assignment
 from sympy.core import Basic, S
 from sympy.core.function import _coeff_isneg, Lambda
 from sympy.printing.codeprinter import CodePrinter
@@ -132,12 +131,9 @@ class GLSLPrinter(CodePrinter):
         elif self._settings['mat_nested']:
             return 'float[%s][%s](\n%s\n)' % (A.rows,A.cols,A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')'))
 
-    _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
+    def _print_SparseMatrix(self, mat):
+        # do not allow sparse matrices to be made dense
+        return self._print_not_supported(mat)
 
     def _traverse_matrix_indices(self, mat):
         mat_transpose = self._settings['mat_transpose']
@@ -212,6 +208,7 @@ class GLSLPrinter(CodePrinter):
             return self._print_not_supported(func)
 
     def _print_Piecewise(self, expr):
+        from sympy.codegen.ast import Assignment
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.

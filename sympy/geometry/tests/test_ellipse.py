@@ -1,4 +1,4 @@
-from sympy import Eq, Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, Abs
+from sympy import Eq, Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, Abs, sec
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
@@ -332,6 +332,20 @@ def test_construction():
     e4 = Ellipse(Point(0, 0), hradius=1, eccentricity=0)
     assert e4.vradius == 1
 
+    #tests for eccentricity > 1
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity = S(3)/2))
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity=sec(5)))
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity=S.Pi-S(2)))
+
+    #tests for eccentricity = 1
+    #if vradius is not defined
+    assert Ellipse(None, 1, None, 1).length == 2
+    #if hradius is not defined
+    raises(GeometryError, lambda: Ellipse(None, None, 1, eccentricity = 1))
+
+    #tests for eccentricity < 0
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity = -3))
+    raises(GeometryError, lambda: Ellipse(Point(3, 1), hradius=3, eccentricity = -0.5))
 
 def test_ellipse_random_point():
     y1 = Symbol('y1', real=True)
@@ -477,6 +491,11 @@ def test_section_modulus_and_polar_second_moment_of_area():
     assert e.section_modulus() == (18*pi, 6*pi)
     assert e.polar_second_moment_of_area() == 120*pi
 
+    e = Ellipse(Point(0, 0), 2, 2)
+    assert e.section_modulus() == (2*pi, 2*pi)
+    assert e.section_modulus(Point(2, 2)) == (2*pi, 2*pi)
+    assert e.section_modulus((2, 2)) == (2*pi, 2*pi)
+
 
 def test_circumference():
     M = Symbol('M')
@@ -484,9 +503,6 @@ def test_circumference():
     assert Ellipse(Point(0, 0), M, m).circumference == 4 * M * elliptic_e((M ** 2 - m ** 2) / M**2)
 
     assert Ellipse(Point(0, 0), 5, 4).circumference == 20 * elliptic_e(S(9) / 25)
-
-    # degenerate ellipse
-    assert Ellipse(None, 1, None, 1).length == 2
 
     # circle
     assert Ellipse(None, 1, None, 0).circumference == 2*pi
@@ -547,3 +563,8 @@ def test_evolute():
     t2 = (3*(y - 1))**Rational(2, 3)
     E = t1 + t2 - (27)**Rational(2, 3)
     assert e.evolute() == E
+
+
+def test_svg():
+    e1 = Ellipse(Point(1, 0), 3, 2)
+    assert e1._svg(2, "#FFAAFF") == '<ellipse fill="#FFAAFF" stroke="#555555" stroke-width="4.0" opacity="0.6" cx="1.00000000000000" cy="0" rx="3.00000000000000" ry="2.00000000000000"/>'

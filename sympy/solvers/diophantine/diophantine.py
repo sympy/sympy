@@ -1,6 +1,5 @@
-from __future__ import print_function, division
-
 from sympy.core.add import Add
+from sympy.core.assumptions import check_assumptions
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import as_int, is_sequence, ordered
 from sympy.core.exprtools import factor_terms
@@ -25,7 +24,6 @@ from sympy.ntheory.residue_ntheory import sqrt_mod
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polytools import Poly, factor_list
 from sympy.simplify.simplify import signsimp
-from sympy.solvers.solvers import check_assumptions
 from sympy.solvers.solveset import solveset_real
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.utilities.misc import filldedent
@@ -160,7 +158,7 @@ class DiophantineEquationType:
     dimension
         The number of symbols being solved for
     """
-    name = None
+    name = None  # type: str
 
     def __init__(self, equation, free_symbols=None):
         self.equation = _sympify(equation).expand(force=True)
@@ -867,7 +865,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     ========
 
     >>> from sympy.solvers.diophantine.diophantine import diop_linear
-    >>> from sympy.abc import x, y, z, t
+    >>> from sympy.abc import x, y, z
     >>> diop_linear(2*x - 3*y - 5) # solves equation 2*x - 3*y - 5 == 0
     (3*t_0 - 5, 2*t_0 - 5)
 
@@ -2026,7 +2024,6 @@ def transformation_to_DN(eq):
 
     >>> from sympy.abc import x, y
     >>> from sympy.solvers.diophantine.diophantine import transformation_to_DN
-    >>> from sympy.solvers.diophantine import classify_diop
     >>> A, B = transformation_to_DN(x**2 - 3*x*y - y**2 - 2*y + 1)
     >>> A
     Matrix([
@@ -3129,7 +3126,7 @@ def diop_general_sum_of_squares(eq, limit=1):
     ========
 
     >>> from sympy.solvers.diophantine.diophantine import diop_general_sum_of_squares
-    >>> from sympy.abc import a, b, c, d, e, f
+    >>> from sympy.abc import a, b, c, d, e
     >>> diop_general_sum_of_squares(a**2 + b**2 + c**2 + d**2 + e**2 - 2345)
     {(15, 22, 22, 24, 24)}
 

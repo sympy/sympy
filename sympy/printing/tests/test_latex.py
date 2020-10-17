@@ -8,7 +8,7 @@ from sympy import (
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
     Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
-    Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, Mod,
+    Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, asinh, Mod,
     assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
@@ -16,7 +16,7 @@ from sympy import (
     meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
     elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
-    Contains, divisor_sigma, SeqPer, SeqFormula,
+    Contains, divisor_sigma, SeqPer, SeqFormula, MatrixSlice,
     SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
     AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
     stieltjes, mathieuc, mathieus, mathieucprime, mathieusprime,
@@ -26,7 +26,8 @@ from sympy.ntheory.factor_ import udivisor_sigma
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import (latex, translate, greek_letters_set,
-                                  tex_greek_dictionary, multiline_latex)
+                                  tex_greek_dictionary, multiline_latex,
+                                  latex_escape, LatexPrinter)
 from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 ImmutableSparseNDimArray,
                                 MutableSparseNDimArray,
@@ -38,6 +39,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
+from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
@@ -57,7 +59,7 @@ class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
 
 
-x, y, z, t, a, b, c = symbols('x y z t a b c')
+x, y, z, t, w, a, b, c, s, p = symbols('x y z t w a b c s p')
 k, m, n = symbols('k m n', integer=True)
 
 
@@ -84,6 +86,25 @@ def test_latex_basic():
     assert latex(3*x**2*y, mul_symbol='\\,') == r"3\,x^{2}\,y"
     assert latex(1.5*3**x, mul_symbol='\\,') == r"1.5 \cdot 3^{x}"
 
+    assert latex(Mul(0, 1, evaluate=False)) == r'0 \cdot 1'
+    assert latex(Mul(1, 0, evaluate=False)) == r'1 \cdot 0'
+    assert latex(Mul(1, 1, evaluate=False)) == r'1 \cdot 1'
+    assert latex(Mul(-1, 1, evaluate=False)) == r'\left(-1\right) 1'
+    assert latex(Mul(1, 1, 1, evaluate=False)) == r'1 \cdot 1 \cdot 1'
+    assert latex(Mul(1, 2, evaluate=False)) == r'1 \cdot 2'
+    assert latex(Mul(1, S.Half, evaluate=False)) == r'1 \frac{1}{2}'
+    assert latex(Mul(1, 1, S.Half, evaluate=False)) == \
+        r'1 \cdot 1 \frac{1}{2}'
+    assert latex(Mul(1, 1, 2, 3, x, evaluate=False)) == \
+        r'1 \cdot 1 \cdot 2 \cdot 3 x'
+    assert latex(Mul(1, -1, evaluate=False)) == r'1 \left(-1\right)'
+    assert latex(Mul(4, 3, 2, 1, 0, y, x, evaluate=False)) == \
+        r'4 \cdot 3 \cdot 2 \cdot 1 \cdot 0 y x'
+    assert latex(Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)) == \
+        r'4 \cdot 3 \cdot 2 \left(z + 1\right) 0 y x'
+    assert latex(Mul(Rational(2, 3), Rational(5, 7), evaluate=False)) == \
+        r'\frac{2}{3} \frac{5}{7}'
+
     assert latex(1/x) == r"\frac{1}{x}"
     assert latex(1/x, fold_short_frac=True) == "1 / x"
     assert latex(-S(3)/2) == r"- \frac{3}{2}"
@@ -102,6 +123,14 @@ def test_latex_basic():
     assert latex((2*sqrt(2)*x)/3) == r"\frac{2 \sqrt{2} x}{3}"
     assert latex((2*sqrt(2)*x)/3, long_frac_ratio=2) == \
         r"\frac{2 x}{3} \sqrt{2}"
+    assert latex(binomial(x, y)) == r"{\binom{x}{y}}"
+
+    x_star = Symbol('x^*')
+    f = Function('f')
+    assert latex(x_star**2) == r"\left(x^{*}\right)^{2}"
+    assert latex(x_star**2, parenthesize_super=False) == r"{x^{*}}^{2}"
+    assert latex(Derivative(f(x_star), x_star,2)) == r"\frac{d^{2}}{d \left(x^{*}\right)^{2}} f{\left(x^{*} \right)}"
+    assert latex(Derivative(f(x_star), x_star,2), parenthesize_super=False) == r"\frac{d^{2}}{d {x^{*}}^{2}} f{\left(x^{*} \right)}"
 
     assert latex(2*Integral(x, x)/3) == r"\frac{2 \int x\, dx}{3}"
     assert latex(2*Integral(x, x)/3, fold_short_frac=True) == \
@@ -371,6 +400,8 @@ def test_latex_functions():
         r"\sin^{-1} {x^{2}}"
     assert latex(acsc(x), inv_trig_style="full") == \
         r"\operatorname{arccsc}{\left(x \right)}"
+    assert latex(asinh(x), inv_trig_style="full") == \
+        r"\operatorname{arcsinh}{\left(x \right)}"
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"
@@ -1418,7 +1449,8 @@ def test_latex_Lambda():
         r"\left( x \mapsto x + 1 \right)"
     assert latex(Lambda((x, y), x + 1)) == \
         r"\left( \left( x, \  y\right) \mapsto x + 1 \right)"
-
+    assert latex(Lambda(x, x)) == \
+        r"\left( x \mapsto x \right)"
 
 def test_latex_PolyElement():
     Ruv, u, v = ring("u,v", ZZ)
@@ -1583,11 +1615,36 @@ def test_matMul():
 
 
 def test_latex_MatrixSlice():
-    from sympy.matrices.expressions import MatrixSymbol
-    assert latex(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == \
-        r'X\left[:5, 1:9:2\right]'
-    assert latex(MatrixSymbol('X', 10, 10)[5, :5:2]) == \
-        r'X\left[5, :5:2\right]'
+    n = Symbol('n', integer=True)
+    x, y, z, w, t, = symbols('x y z w t')
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', 10, 10)
+    Z = MatrixSymbol('Z', 10, 10)
+
+    assert latex(MatrixSlice(X, (None, None, None), (None, None, None))) == r'X\left[:, :\right]'
+    assert latex(X[x:x + 1, y:y + 1]) == r'X\left[x:x + 1, y:y + 1\right]'
+    assert latex(X[x:x + 1:2, y:y + 1:2]) == r'X\left[x:x + 1:2, y:y + 1:2\right]'
+    assert latex(X[:x, y:]) == r'X\left[:x, y:\right]'
+    assert latex(X[:x, y:]) == r'X\left[:x, y:\right]'
+    assert latex(X[x:, :y]) == r'X\left[x:, :y\right]'
+    assert latex(X[x:y, z:w]) == r'X\left[x:y, z:w\right]'
+    assert latex(X[x:y:t, w:t:x]) == r'X\left[x:y:t, w:t:x\right]'
+    assert latex(X[x::y, t::w]) == r'X\left[x::y, t::w\right]'
+    assert latex(X[:x:y, :t:w]) == r'X\left[:x:y, :t:w\right]'
+    assert latex(X[::x, ::y]) == r'X\left[::x, ::y\right]'
+    assert latex(MatrixSlice(X, (0, None, None), (0, None, None))) == r'X\left[:, :\right]'
+    assert latex(MatrixSlice(X, (None, n, None), (None, n, None))) == r'X\left[:, :\right]'
+    assert latex(MatrixSlice(X, (0, n, None), (0, n, None))) == r'X\left[:, :\right]'
+    assert latex(MatrixSlice(X, (0, n, 2), (0, n, 2))) == r'X\left[::2, ::2\right]'
+    assert latex(X[1:2:3, 4:5:6]) == r'X\left[1:2:3, 4:5:6\right]'
+    assert latex(X[1:3:5, 4:6:8]) == r'X\left[1:3:5, 4:6:8\right]'
+    assert latex(X[1:10:2]) == r'X\left[1:10:2, :\right]'
+    assert latex(Y[:5, 1:9:2]) == r'Y\left[:5, 1:9:2\right]'
+    assert latex(Y[:5, 1:10:2]) == r'Y\left[:5, 1::2\right]'
+    assert latex(Y[5, :5:2]) == r'Y\left[5:6, :5:2\right]'
+    assert latex(X[0:1, 0:1]) == r'X\left[:1, :1\right]'
+    assert latex(X[0:1:2, 0:1:2]) == r'X\left[:1:2, :1:2\right]'
+    assert latex((Y + Z)[2:, 2:]) == r'\left(Y + Z\right)\left[2:, 2:\right]'
 
 
 def test_latex_RandomDomain():
@@ -1830,7 +1887,7 @@ def test_ElementwiseApplyFunction():
     expr = (X.T*X).applyfunc(sin)
     assert latex(expr) == r"{\left( d \mapsto \sin{\left(d \right)} \right)}_{\circ}\left({X^{T} X}\right)"
     expr = X.applyfunc(Lambda(x, 1/x))
-    assert latex(expr) == r'{\left( d \mapsto \frac{1}{d} \right)}_{\circ}\left({X}\right)'
+    assert latex(expr) == r'{\left( x \mapsto \frac{1}{x} \right)}_{\circ}\left({X}\right)'
 
 
 def test_ZeroMatrix():
@@ -2194,6 +2251,45 @@ def test_KroneckerProduct_printing():
     assert latex(KroneckerProduct(A, B)) == r'A \otimes B'
 
 
+def test_Series_printing():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert latex(Series(tf1, tf2)) == \
+        '\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right)'
+    assert latex(Series(tf1, tf2, tf3)) == \
+        '\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right) \\left(\\frac{t x^{2} - t^{w} x + w}{t - y}\\right)'
+    assert latex(Series(-tf2, tf1)) == \
+        '\\left(\\frac{- x + y}{x + y}\\right) \\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right)'
+
+
+def test_TransferFunction_printing():
+    tf1 = TransferFunction(x - 1, x + 1, x)
+    assert latex(tf1) == r"\frac{x - 1}{x + 1}"
+    tf2 = TransferFunction(x + 1, 2 - y, x)
+    assert latex(tf2) == r"\frac{x + 1}{2 - y}"
+    tf3 = TransferFunction(y, y**2 + 2*y + 3, y)
+    assert latex(tf3) == r"\frac{y}{y^{2} + 2 y + 3}"
+
+
+def test_Parallel_printing():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    assert latex(Parallel(tf1, tf2)) == \
+        '\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right)'
+    assert latex(Parallel(-tf2, tf1)) == \
+        '\\left(\\frac{- x + y}{x + y}\\right) \\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right)'
+
+
+def test_Feedback_printing():
+    tf1 = TransferFunction(p, p + x, p)
+    tf2 = TransferFunction(-s + p, p + s, p)
+    assert latex(Feedback(tf1, tf2)) == \
+        '\\frac{\\frac{p}{p + x}}{\\left(1 \\cdot 1^{-1}\\right) \\left(\\left(\\frac{p}{p + x}\\right) \\left(\\frac{p - s}{p + s}\\right)\\right)}'
+    assert latex(Feedback(tf1*tf2, TransferFunction(1, 1, p))) == \
+        '\\frac{\\left(\\frac{p}{p + x}\\right) \\left(\\frac{p - s}{p + s}\\right)}{\\left(1 \\cdot 1^{-1}\\right) \\left(\\left(\\frac{p}{p + x}\\right) \\left(\\frac{p - s}{p + s}\\right)\\right)}'
+
+
 def test_Quaternion_latex_printing():
     q = Quaternion(x, y, z, t)
     assert latex(q) == "x + y i + z j + t k"
@@ -2215,21 +2311,6 @@ def test_WedgeProduct_printing():
     from sympy.diffgeom import WedgeProduct
     wp = WedgeProduct(R2.dx, R2.dy)
     assert latex(wp) == r"\operatorname{d}x \wedge \operatorname{d}y"
-
-
-def test_issue_14041():
-    import sympy.physics.mechanics as me
-
-    A_frame = me.ReferenceFrame('A')
-    thetad, phid = me.dynamicsymbols('theta, phi', 1)
-    L = Symbol('L')
-
-    assert latex(L*(phid + thetad)**2*A_frame.x) == \
-        r"L \left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
-    assert latex((phid + thetad)**2*A_frame.x) == \
-        r"\left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
-    assert latex((phid*thetad)**a*A_frame.x) == \
-        r"\left(\dot{\phi} \dot{\theta}\right)^{a}\mathbf{\hat{a}_x}"
 
 
 def test_issue_9216():
@@ -2455,9 +2536,11 @@ def test_MatrixSymbol_bold():
     assert latex(-A*B - A*B*C - B, mat_symbol_style='bold') == \
         r"- \mathbf{A} \mathbf{B} - \mathbf{A} \mathbf{B} \mathbf{C} - \mathbf{B}"
 
-    A = MatrixSymbol("A_k", 3, 3)
-    assert latex(A, mat_symbol_style='bold') == r"\mathbf{A_{k}}"
+    A_k = MatrixSymbol("A_k", 3, 3)
+    assert latex(A_k, mat_symbol_style='bold') == r"\mathbf{A}_{k}"
 
+    A = MatrixSymbol(r"\nabla_k", 3, 3)
+    assert latex(A, mat_symbol_style='bold') == r"\mathbf{\nabla}_{k}"
 
 def test_AppliedPermutation():
     p = Permutation(0, 1, 2)
@@ -2490,17 +2573,18 @@ def test_text_re_im():
     assert latex(re(x), gothic_re_im=False) ==  r'\operatorname{re}{\left(x\right)}'
 
 
-def test_DiffGeomMethods():
+def test_latex_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential
     from sympy.diffgeom.rn import R2
+    x,y = symbols('x y', real=True)
     m = Manifold('M', 2)
     assert latex(m) == r'\text{M}'
     p = Patch('P', m)
     assert latex(p) == r'\text{P}_{\text{M}}'
-    rect = CoordSystem('rect', p)
+    rect = CoordSystem('rect', p, [x, y])
     assert latex(rect) == r'\text{rect}^{\text{P}}_{\text{M}}'
     b = BaseScalarField(rect, 0)
-    assert latex(b) ==  r'\mathbf{rect_{0}}'
+    assert latex(b) ==  r'\mathbf{x}'
 
     g = Function('g')
     s_field = g(R2.x, R2.y)
@@ -2529,16 +2613,19 @@ def test_latex_decimal_separator():
     assert(latex([1, 2.3, 4.5], decimal_separator='comma') == r'\left[ 1; \  2{,}3; \  4{,}5\right]')
     assert(latex(FiniteSet(1, 2.3, 4.5), decimal_separator='comma') == r'\left\{1; 2{,}3; 4{,}5\right\}')
     assert(latex((1, 2.3, 4.6), decimal_separator = 'comma') == r'\left( 1; \  2{,}3; \  4{,}6\right)')
+    assert(latex((1,), decimal_separator='comma') == r'\left( 1;\right)')
 
     # period decimal_separator
     assert(latex([1, 2.3, 4.5], decimal_separator='period') == r'\left[ 1, \  2.3, \  4.5\right]' )
     assert(latex(FiniteSet(1, 2.3, 4.5), decimal_separator='period') == r'\left\{1, 2.3, 4.5\right\}')
     assert(latex((1, 2.3, 4.6), decimal_separator = 'period') == r'\left( 1, \  2.3, \  4.6\right)')
+    assert(latex((1,), decimal_separator='period') == r'\left( 1,\right)')
 
     # default decimal_separator
     assert(latex([1, 2.3, 4.5]) == r'\left[ 1, \  2.3, \  4.5\right]')
     assert(latex(FiniteSet(1, 2.3, 4.5)) == r'\left\{1, 2.3, 4.5\right\}')
     assert(latex((1, 2.3, 4.6)) == r'\left( 1, \  2.3, \  4.6\right)')
+    assert(latex((1,)) == r'\left( 1,\right)')
 
     assert(latex(Mul(3.4,5.3), decimal_separator = 'comma') ==r'18{,}02')
     assert(latex(3.4*5.3, decimal_separator = 'comma')==r'18{,}02')
@@ -2553,7 +2640,7 @@ def test_latex_decimal_separator():
     assert(latex(S(.3), decimal_separator='comma')== r'0{,}3')
 
 
-    assert(latex(5.8*10**(-7), decimal_separator='comma') ==r'5{,}8e-07')
+    assert(latex(5.8*10**(-7), decimal_separator='comma') ==r'5{,}8 \cdot 10^{-7}')
     assert(latex(S(5.7)*10**(-7), decimal_separator='comma')==r'5{,}7 \cdot 10^{-7}')
     assert(latex(S(5.7*10**(-7)), decimal_separator='comma')==r'5{,}7 \cdot 10^{-7}')
 
@@ -2565,3 +2652,53 @@ def test_latex_decimal_separator():
     raises(ValueError, lambda: latex([1,2.3,4.5], decimal_separator='non_existing_decimal_separator_in_list'))
     raises(ValueError, lambda: latex(FiniteSet(1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_set'))
     raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))
+
+def test_Str():
+    from sympy.core.symbol import Str
+    assert str(Str('x')) == 'x'
+
+def test_latex_escape():
+    assert latex_escape(r"~^\&%$#_{}") == "".join([
+        r'\textasciitilde',
+        r'\textasciicircum',
+        r'\textbackslash',
+        r'\&',
+        r'\%',
+        r'\$',
+        r'\#',
+        r'\_',
+        r'\{',
+        r'\}',
+    ])
+
+def test_emptyPrinter():
+    class MyObject:
+        def __repr__(self):
+            return "<MyObject with {...}>"
+
+    # unknown objects are monospaced
+    assert latex(MyObject()) == r"\mathtt{\text{<MyObject with \{...\}>}}"
+
+    # even if they are nested within other objects
+    assert latex((MyObject(),)) == r"\left( \mathtt{\text{<MyObject with \{...\}>}},\right)"
+
+def test_global_settings():
+    import inspect
+
+    # settings should be visible in the signature of `latex`
+    assert inspect.signature(latex).parameters['imaginary_unit'].default == 'i'
+    assert latex(I) == 'i'
+    try:
+        # but changing the defaults...
+        LatexPrinter.set_global_settings(imaginary_unit='j')
+        # ... should change the signature
+        assert inspect.signature(latex).parameters['imaginary_unit'].default == 'j'
+        assert latex(I) == 'j'
+    finally:
+        # there's no public API to undo this, but we need to make sure we do
+        # so as not to impact other tests
+        del LatexPrinter._global_settings['imaginary_unit']
+
+    # check we really did undo it
+    assert inspect.signature(latex).parameters['imaginary_unit'].default == 'i'
+    assert latex(I) == 'i'

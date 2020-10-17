@@ -38,6 +38,7 @@ Continuous Types
 .. autofunction:: Beta
 .. autofunction:: BetaNoncentral
 .. autofunction:: BetaPrime
+.. autofunction:: BoundedPareto
 .. autofunction:: Cauchy
 .. autofunction:: Chi
 .. autofunction:: ChiNoncentral
@@ -59,6 +60,7 @@ Continuous Types
 .. autofunction:: Logistic
 .. autofunction:: LogLogistic
 .. autofunction:: LogNormal
+.. autofunction:: Lomax
 .. autofunction:: Maxwell
 .. autofunction:: Moyal
 .. autofunction:: Nakagami
@@ -84,6 +86,9 @@ Continuous Types
 Joint Types
 -----------
 .. autofunction:: JointRV
+.. autofunction:: marginal_distribution
+.. autofunction:: MultivariateNormal
+.. autofunction:: MultivariateLaplace
 .. autofunction:: GeneralizedMultivariateLogGamma
 .. autofunction:: GeneralizedMultivariateLogGammaOmega
 .. autofunction:: Multinomial
@@ -95,9 +100,22 @@ Joint Types
 
 Stochastic Processes
 --------------------
-.. autofunction:: DiscreteMarkovChain
-.. autofunction:: ContinuousMarkovChain
-.. autofunction:: BernoulliProcess
+.. autoclass:: DiscreteMarkovChain
+.. autoclass:: ContinuousMarkovChain
+.. autoclass:: BernoulliProcess
+.. autoclass:: PoissonProcess
+.. autoclass:: WienerProcess
+.. autoclass:: GammaProcess
+
+Matrix Distributions
+--------------------
+.. autofunction:: MatrixGamma
+.. autofunction:: Wishart
+.. autofunction:: MatrixNormal
+
+Compound Distribution
+---------------------
+.. autoclass:: sympy.stats.compound_rv.CompoundDistribution
 
 Interface
 ^^^^^^^^^
@@ -114,14 +132,25 @@ Interface
 .. autoclass:: Variance
 .. autofunction:: covariance
 .. autoclass:: Covariance
+.. autofunction:: coskewness
+.. autofunction:: median
 .. autofunction:: std
 .. autofunction:: sample
 .. autofunction:: sample_iter
-.. autofunction:: sympy.stats.rv.sample_iter_lambdify
-.. autofunction:: sympy.stats.rv.sample_iter_subs
+.. autofunction:: factorial_moment
+.. autofunction:: kurtosis
+.. autofunction:: skewness
+.. autofunction:: correlation
 .. autofunction:: sympy.stats.rv.sampling_density
 .. autofunction:: sympy.stats.rv.sampling_P
 .. autofunction:: sympy.stats.rv.sampling_E
+.. autoclass:: Moment
+.. autofunction:: moment
+.. autoclass:: CentralMoment
+.. autofunction:: cmoment
+.. autoclass:: ExpectationMatrix
+.. autoclass:: VarianceMatrix
+.. autoclass:: CrossCovarianceMatrix
 
 Mechanics
 ^^^^^^^^^
