@@ -161,7 +161,7 @@ def _ode_solver_test(ode_examples, run_slow_test=False):
             print(result['xpass_msg'])
 
 
-def test_all_hints(runxfail=False):
+def _test_all_hints(runxfail=False):
     all_hints = list(allhints)+["default"]
     all_examples = _get_all_examples()
 
@@ -320,7 +320,7 @@ def test_nth_algebraic():
     _ode_solver_test(_get_examples_ode_sol_nth_algebraic())
 
 
-# @slow
+@slow
 def test_slow_examples_1st_exact():
     _ode_solver_test(_get_examples_ode_sol_1st_exact(), run_slow_test=True)
 
