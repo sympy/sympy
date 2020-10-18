@@ -150,6 +150,7 @@ def _ode_solver_test(ode_examples, run_slow_test=False):
             'func': ode_examples['examples'][example].get('func',ode_examples['func']),
             'example_name': example,
             'slow': ode_examples['examples'][example].get('slow', False),
+            'simplify_flag':ode_examples['examples'][example].get('simplify_flag',True),
             'checkodesol_XFAIL': ode_examples['examples'][example].get('checkodesol_XFAIL', False)
         }
         if (not run_slow_test) and temp['slow']:
@@ -160,7 +161,7 @@ def _ode_solver_test(ode_examples, run_slow_test=False):
             print(result['xpass_msg'])
 
 
-def _test_all_hints(runxfail=False):
+def test_all_hints(runxfail=False):
     all_hints = list(allhints)+["default"]
     all_examples = _get_all_examples()
 
@@ -191,6 +192,7 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
     xfail = our_hint in ode_example['XFAIL']
     func = ode_example['func']
     result = {'msg': '', 'xpass_msg': ''}
+    simplify_flag=ode_example['simplify_flag']
     checkodesol_XFAIL = ode_example['checkodesol_XFAIL']
     xpass = True
     if solver_flag:
@@ -201,7 +203,7 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
     if our_hint in classify_ode(eq, func):
         result['match_list'] = example
         try:
-            dsolve_sol = dsolve(eq, func, hint=our_hint)
+            dsolve_sol = dsolve(eq, func, simplify=simplify_flag,hint=our_hint)
 
         except Exception as e:
             dsolve_sol = []
@@ -318,7 +320,7 @@ def test_nth_algebraic():
     _ode_solver_test(_get_examples_ode_sol_nth_algebraic())
 
 
-@slow
+# @slow
 def test_slow_examples_1st_exact():
     _ode_solver_test(_get_examples_ode_sol_1st_exact(), run_slow_test=True)
 
@@ -1305,12 +1307,15 @@ def _get_examples_ode_sol_1st_exact():
     '1st_exact_02': {
         'eq': (2*x*f(x) + 1)/f(x) + (f(x) - x)/f(x)**2*f(x).diff(x),
         'sol': [Eq(f(x), exp(C1 - x**2 + LambertW(-x*exp(-C1 + x**2))))],
+        'XFAIL': ['lie_group'], #It shows dsolve raises an exception: List index out of range for lie_group
         'slow': True,
+        'checkodesol_XFAIL':True
     },
 
     '1st_exact_03': {
         'eq': 2*x + f(x)*cos(x) + (2*f(x) + sin(x) - sin(f(x)))*f(x).diff(x),
         'sol': [Eq(f(x)*sin(x) + cos(f(x)) + x**2 + f(x)**2, C1)],
+        'XFAIL': ['lie_group'], #It goes into infinite loop for lie_group.
         'slow': True,
     },
 
@@ -1323,9 +1328,8 @@ def _get_examples_ode_sol_1st_exact():
     '1st_exact_05': {
         'eq': 2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x),
         'sol': [Eq(x**2*f(x) + f(x)**3/3, C1)],
-        # 'sol':[Eq(f(x), 2**Rational(1, 3)*(x**2/(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3) - 2**Rational(1, 3)*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)/2)), Eq(f(x), 2**Rational(1, 3)*(2*x**2/((-1 - sqrt(3)*I)*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)) + 2**Rational(1, 3)*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)/4 + 2**Rational(1, 3)*sqrt(3)*I*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)/4)),
-        # Eq(f(x), 2**Rational(1, 3)*(2*x**2/((-1 + sqrt(3)*I)*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)) + 2**Rational(1, 3)*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)/4 - 2**Rational(1, 3)*sqrt(3)*I*(-3*C1 + sqrt(9*C1**2 + 4*x**6))**Rational(1, 3)/4))],
         'slow': True,
+        'simplify_flag':False
     },
     }
     }
@@ -1340,6 +1344,7 @@ def _get_all_examples():
     _get_examples_ode_sol_nth_algebraic(),
     _get_examples_ode_sol_riccati(),
     _get_examples_ode_sol_1st_linear(),
+    _get_examples_ode_sol_1st_exact(),
     _get_examples_ode_sol_almost_linear(),
     _get_examples_ode_sol_nth_order_reducible(),
     _get_examples_ode_sol_nth_linear_undetermined_coefficients(),
@@ -1356,6 +1361,7 @@ def _get_all_examples():
                 'eq': solver['examples'][example]['eq'],
                 'sol': solver['examples'][example]['sol'],
                 'XFAIL': solver['examples'][example].get('XFAIL',[]),
+                'simplify_flag':solver['examples'][example].get('simplify_flag',True),
                 'checkodesol_XFAIL': solver['examples'][example].get('checkodesol_XFAIL', False),
                 'example_name': example,
             }
