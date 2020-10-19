@@ -1328,7 +1328,7 @@ def test_prefab_sampling():
     size = 5
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         for var in variables:
-            for i in range(niter):
+            for _ in range(niter):
                 assert next(sample(var)) in var.pspace.domain.set
                 samps = next(sample(var, size=size))
                 for samp in samps:
