@@ -53,7 +53,7 @@ class SampleDiscreteScipy:
         if dist.__class__.__name__ == 'DiscreteDistributionHandmade':
             from scipy.stats import rv_discrete
             z = Dummy('z')
-            handmade_pmf = lambdify(z, dist.pdf(z), 'scipy')
+            handmade_pmf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])
             class scipy_pmf(rv_discrete):
                 def _pmf(self, x):
                     return handmade_pmf(x)
