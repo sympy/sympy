@@ -730,7 +730,7 @@ def evalf_pow(v, prec, options):
     # Evaluate terms in exponential
     if base is S.Exp1 and (exp.is_Add or exp.is_Mul):
         from sympy.core.power import Pow
-        if not exp.is_complex :
+        if not exp.is_complex:
             exp = exp.evalf()
             return Pow(base, exp), None, None, None
 
