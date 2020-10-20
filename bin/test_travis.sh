@@ -188,7 +188,7 @@ test_list = [
     'sympy/assumptions',
 
     #stats
-    sympy/stats/,
+    'sympy/stats',
 
 ]
 
@@ -233,7 +233,7 @@ doctest_list = [
     'sympy/assumptions',
 
     #stats
-    sympy/stats/,
+    'sympy/stats',
 
 ]
 
