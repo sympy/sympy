@@ -149,8 +149,8 @@ def quantity_simplify(expr):
 
 
 def check_dimensions(expr, unit_system="SI"):
-    """Return expr if there are not unitless values added to
-    dimensional quantities, else raise a ValueError."""
+    """Return expr if units in addends have the same
+    base dimensions, else raise a ValueError."""
     # the case of adding a number to a dimensional quantity
     # is ignored for the sake of SymPy core routines, so this
     # function will raise an error now if such an addend is
