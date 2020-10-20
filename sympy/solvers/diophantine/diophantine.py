@@ -47,6 +47,7 @@ class DiophantineSolutionSet(set):
 
     symbols : list
         List of free symbols in the original equation.
+
     parameters: list (optional)
         List of parameters to be used in the solution.
 
@@ -145,6 +146,7 @@ class DiophantineEquationType:
 
     equation
         The diophantine equation that is being solved.
+
     free_symbols: list (optional)
         The symbols being solved for.
 
@@ -409,6 +411,9 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     Simplify the solution procedure of diophantine equation ``eq`` by
     converting it into a product of terms which should equal zero.
 
+    Explanation
+    ===========
+
     For example, when solving, `x^2 - y^2 = 0` this is treated as
     `(x + y)(x - y) = 0` and `x + y = 0` and `x - y = 0` are solved
     independently and combined. Each term is solved by calling
@@ -423,14 +428,17 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     e.g. For an equation with two variables, `a` and `b`, the first
     element of the tuple is the solution for `a` and the second for `b`.
 
-    Usage
-    =====
+    Paramters
+    =========
 
     ``diophantine(eq, t, syms)``: Solve the diophantine
     equation ``eq``.
     ``t`` is the optional parameter to be used by ``diop_solve()``.
     ``syms`` is an optional list of symbols which determines the
     order of the elements in the returned tuple.
+
+    Examples
+    ========
 
     By default, only the base solution is returned. If ``permute`` is set to
     True then permutations of the base solution and/or permutations of the
