@@ -299,8 +299,8 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         return CodegenArrayContraction(expr.expr, *contraction_indices)
 
     @classmethod
-    def _handle_nested_permute_dims(cls, expr, *contraction_indices):  # type: (CodegenArrayPermuteDims, Tuple[int]) -> Basic
-        permutation = expr.permutation  # type: Permutation
+    def _handle_nested_permute_dims(cls, expr, *contraction_indices):
+        permutation = expr.permutation
         plist = permutation.array_form
         new_contraction_indices = [tuple(permutation(j) for j in i) for i in contraction_indices]
         new_plist = [i for i in plist if all(i not in j for j in new_contraction_indices)]
@@ -312,7 +312,6 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
 
     @classmethod
     def _sort_fully_contracted_args(cls, expr, contraction_indices):
-        # type: (CodegenArrayTensorProduct, Tuple[Tuple[int]]) -> Tuple[CodegenArrayTensorProduct, Tuple[Tuple[int]]]
         if expr.shape is None:
             return expr, contraction_indices
         cumul = list(accumulate([0] + expr.subranks))
@@ -684,9 +683,7 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
 
     @classmethod
     def _check_lift_permutation(cls, expr, permutation):
-        # type: (CodegenArrayTensorProduct, Permutation) -> (CodegenArrayTensorProduct, Permutation)
         subranks = expr.subranks
-        # permutation_af = permutation.array_form  # type: List[int]
         cumul = list(accumulate([0] + subranks))
         args = list(expr.args)
         for i, arg in enumerate(expr.args):
@@ -701,15 +698,14 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
 
     @classmethod
     def _check_permutation_mapping(cls, expr, permutation):
-        # non-checked type: (CodegenArrayTensorProduct, Permutation) -> Tuple[CodegenArrayTensorProduct, Permutation]
-        subranks = expr.subranks  # type: List[int]
+        subranks = expr.subranks
         index2arg = [i for i, arg in enumerate(expr.args) for j in range(expr.subranks[i])]
-        permuted_indices = [permutation(i) for i in range(expr.subrank())]  # type: List[int]
+        permuted_indices = [permutation(i) for i in range(expr.subrank())]
         new_args = list(expr.args)
         arg_candidate_index = index2arg[permuted_indices[0]]
         current_indices = []
         new_permutation = []
-        inserted_arg_cand_indices = set([])  # type: Set[int]
+        inserted_arg_cand_indices = set([])
         for i, idx in enumerate(permuted_indices):
             if index2arg[idx] != arg_candidate_index:
                 new_permutation.extend(current_indices)
@@ -771,14 +767,13 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
 
     @classmethod
     def _check_if_there_are_closed_cycles(cls, expr, permutation):
-        # non-enforced type: (CodegenArrayTensorProduct, Permutation) -> Tuple[CodegenArrayTensorProduct, Permutation]
         args = list(expr.args)
-        subranks = expr.subranks  # type: List[int]
-        cyclic_form = permutation.cyclic_form  # type: List[List[int]]
-        cumulative_subranks = [0] + list(accumulate(subranks))  # type: List[int]
-        cyclic_min = [min(i) for i in cyclic_form]  # type: List[int]
-        cyclic_max = [max(i) for i in cyclic_form]  # type: List[int]
-        cyclic_keep = []  # type: List[List[int]]
+        subranks = expr.subranks
+        cyclic_form = permutation.cyclic_form
+        cumulative_subranks = [0] + list(accumulate(subranks))
+        cyclic_min = [min(i) for i in cyclic_form]
+        cyclic_max = [max(i) for i in cyclic_form]
+        cyclic_keep = []
         for i, cycle in enumerate(cyclic_form):
             flag = True
             for j in range(0, len(cumulative_subranks) - 1):
