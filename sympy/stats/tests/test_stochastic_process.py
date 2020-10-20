@@ -281,7 +281,7 @@ def test_sample_stochastic_process():
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     for samps in range(10):
         assert next(sample_stochastic_process(Y)) in Y.state_space
-    Z = DiscreteMarkovChain("Z", ['1', 1, None], T)
+    Z = DiscreteMarkovChain("Z", ['1', 1, 0], T)
     for samps in range(10):
         assert next(sample_stochastic_process(Z)) in Z.state_space
 
