@@ -156,7 +156,7 @@ class SampleContinuousScipy:
         # scipy does not require map as it can handle using custom distributions
         from scipy.stats import rv_continuous
         z = Dummy('z')
-        handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
+        handmade_pdf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])
         class scipy_pdf(rv_continuous):
             def _pdf(self, x):
                 return handmade_pdf(x)
