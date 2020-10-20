@@ -1117,7 +1117,7 @@ Tone.
 Importing Docstrings into the Sphinx Documentation
 ==================================================
 
-Here is a part of the ``doc/src/modules/geometry.txt`` file that imports the
+Here is excerpts from the ``doc/src/modules/geometry`` folder that imports the
 relevant docstrings from geometry module into documentation::
 
     Utils
