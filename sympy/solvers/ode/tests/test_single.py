@@ -33,7 +33,7 @@ Functions that are for internal use:
 
 """
 from sympy import (acos, asin, atan, cos, Derivative, Dummy, diff,
-    E, Eq, exp, I, LambertW, log, pi, Piecewise, Rational, S, sin, sinh, tan,
+    E, Eq, exp, I, Integral, integrate, LambertW, log, pi, Piecewise, Rational, S, sin, sinh, tan,
     sqrt, symbols, Ei, erfi)
 
 from sympy.core import Function, Symbol
@@ -322,6 +322,9 @@ def test_nth_algebraic():
 
 @slow
 def test_slow_examples_1st_exact():
+    eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
+    sol_1 = dsolve(eq, f(x), simplify=False, hint='1st_exact_Integral')
+    assert checkodesol(eq, sol_1, order=1, solve_for_func=False)
     _ode_solver_test(_get_examples_ode_sol_1st_exact(), run_slow_test=True)
 
 
@@ -364,6 +367,7 @@ def test_separable():
 
 
 def test_factorable():
+    assert integrate(-asin(f(2*x)+pi), x) == -Integral(asin(pi + f(2*x)), x)
     _ode_solver_test(_get_examples_ode_sol_factorable())
 
 
@@ -608,6 +612,7 @@ def _get_examples_ode_sol_factorable():
     nth_linear_constant_coeff_undetermined_coefficients"""
 
     y = Dummy('y')
+    a0,a1,a2,a3,a4 = symbols('a0, a1, a2, a3, a4')
     return {
             'hint': "factorable",
             'func': f(x),
@@ -709,6 +714,19 @@ def _get_examples_ode_sol_factorable():
     'fact_16': {
         'eq': f(x).diff(x)**2 - f(x)**3,
         'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))]
+    },
+
+    # kamke ode 1.1
+    'fact_17': {
+        'eq': f(x).diff(x)-(a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(-1/2),
+        'sol': [Eq(f(x), C1 + Integral(1/sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4), x))]
+    },
+
+    # This is from issue: https://github.com/sympy/sympy/issues/9446
+    'fact_18':{
+        'eq': Eq(f(2 * x), sin(Derivative(f(x)))),
+        'sol': [Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))],
+        'checkodesol_XFAIL':True
     },
     }
     }
@@ -1329,6 +1347,13 @@ def _get_examples_ode_sol_1st_exact():
         'eq': 2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x),
         'sol': [Eq(x**2*f(x) + f(x)**3/3, C1)],
         'slow': True,
+        'simplify_flag':False
+    },
+
+    # This was from issue: https://github.com/sympy/sympy/issues/11290
+    '1st_exact_06': {
+        'eq': cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),
+        'sol': [Eq(x*cos(f(x)) + f(x)**3/3, C1)],
         'simplify_flag':False
     },
     }

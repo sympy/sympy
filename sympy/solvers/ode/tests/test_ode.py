@@ -2342,18 +2342,6 @@ def test_issue_10867():
     assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
 
 
-def test_issue_11290():
-    eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
-    sol_1 = dsolve(eq, f(x), simplify=False, hint='1st_exact_Integral')
-    sol_0 = dsolve(eq, f(x), simplify=False, hint='1st_exact')
-    assert sol_1.dummy_eq(Eq(Subs(
-        Integral(u**2 - x*sin(u) - Integral(-sin(u), x), u) +
-        Integral(cos(u), x), u, f(x)), C1))
-    assert sol_1.doit() == sol_0
-    assert checkodesol(eq, sol_0, order=1, solve_for_func=False)
-    assert checkodesol(eq, sol_1, order=1, solve_for_func=False)
-
-
 def test_issue_4838():
     # Issue #15999
     eq = f(x).diff(x) - C1*f(x)
@@ -2541,22 +2529,4 @@ def test_issue_18408():
     eq = f(x).diff(x, 3) - f(x).diff(x) - sinh(x) - exp(x)
     sol = Eq(f(x), C1 + C3*exp(-x) + x*sinh(x)/2 + (C2 + x/2)*exp(x))
     assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
-    assert checkodesol(eq, sol) == (True, 0)
-
-
-def test_issue_9446():
-    f = Function('f')
-    assert dsolve(Eq(f(2 * x), sin(Derivative(f(x)))), f(x)) == \
-    [Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))]
-
-    assert integrate(-asin(f(2*x)+pi), x) == -Integral(asin(pi + f(2*x)), x)
-
-def test_issue_20192():
-    # kamke ode 1.1
-    a0,a1,a2,a3,a4 = symbols('a0, a1, a2, a3, a4')
-
-    eq = f(x).diff(x)-(a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(-1/2)
-    sol = Eq(f(x), C1 + Integral(1/sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4), x))
-
-    assert sol == dsolve(eq,hint='factorable')
     assert checkodesol(eq, sol) == (True, 0)
