@@ -162,7 +162,7 @@ def check_dimensions(expr, unit_system="SI"):
     import operator
     from sympy.physics.units import UnitSystem
     unit_system = UnitSystem.get_unit_system(unit_system)
-    
+
     def addDict(dict1, dict2):
         """Merge dictionaries by adding values of common keys and
         removing keys with value of 0."""
