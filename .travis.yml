@@ -218,7 +218,7 @@ before_install:
         conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
 
         conda info -a;
-        conda create -q -n test-environment ${TEST_OPT_DEPENDENCY};
+        travis_wait conda create -q -n test-environment ${TEST_OPT_DEPENDENCY};
         source activate test-environment;
         export CPATH=$CONDA_PREFIX/include;
         export LIBRARY_PATH=$CONDA_PREFIX/lib;
