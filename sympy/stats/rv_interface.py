@@ -4,7 +4,7 @@ from sympy import (sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy,
 from .rv import (probability, expectation, density, where, given, pspace, cdf, PSpace,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile, is_random,
-                 sample_stochastic_process)
+                 sample_stochastic_process, iid)
 
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
@@ -483,6 +483,8 @@ def coskewness(X, Y, Z, condition=None, **kwargs):
          * std(Z, condition, **kwargs)
     return num/den
 
+def IID(sym, dist_sym, count):
+    return iid(sym, dist_sym, count)
 
 P = probability
 E = expectation

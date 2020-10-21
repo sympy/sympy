@@ -6,7 +6,7 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function,
         BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance)
-from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
+from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin, iid,
         RandomSymbol, sample_iter, PSpace, is_random, RandomIndexedSymbol, RandomMatrixSymbol)
 from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
 from sympy.external import import_module
@@ -152,6 +152,15 @@ def test_RandomSymbol_diff():
 def test_random_symbol_no_pspace():
     x = RandomSymbol(Symbol('x'))
     assert x.pspace == PSpace()
+
+def test_iid():
+    raises(TypeError, lambda: iid("I", Normal("N", 0, 1)))
+    raises(ValueError, lambda: iid("I", Normal("N", 0, 1), -1))
+    
+    I = iid("I", Normal("N", 0, 1), 5)
+    assert P(I[1] > 0) == P(I[2] > 0) == Rational(1, 2)
+    assert P(I[3] > 0, I[1] < 0) == P(I[3] > 0)
+    assert E(I[1] * I[2] * I[3]) == E(I[1]) * E(I[2]) * E(I[3])
 
 def test_overlap():
     X = Normal('x', 0, 1)

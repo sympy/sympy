@@ -19,7 +19,7 @@ from typing import Tuple as tTuple
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify, Or,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, Range)
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
@@ -339,6 +339,56 @@ class RandomMatrixSymbol(RandomSymbol, MatrixSymbol): # type: ignore
 
     symbol = property(lambda self: self.args[0])
     pspace = property(lambda self: self.args[3])
+
+class iid(Basic):
+    """
+    Class to create Independent and Identically
+    Distributed random variables.
+    """
+
+    def __new__(cls, sym, dist_sym, count):
+        sym = Symbol(sym)
+        if not isinstance(dist_sym, RandomSymbol):
+            raise TypeError('Expected RandomSymbol, not %s'%type(dist_sym))
+        count = sympify(count)
+        indices = Range(1, count + 1)
+        if not count.is_symbol:
+            _value_check((count.is_positive, count.is_integer),
+                            "Number of i.i.d's must be a positive integer.")
+            indices = FiniteSet(*indices)
+        obj = Basic.__new__(cls, sym, dist_sym, count, indices)
+        return obj
+
+    def __getitem__(self, index):
+        """
+        Get the i.i.d at a particular index
+
+        Returns
+        =======
+
+        RandomIndexedSymbol
+        """
+        if index not in self.indices:
+            raise IndexError('%s is not a valid i.i.d index'%index)
+        name = str(self.symbol)+'[%d]'%index
+        pspace = self.args[1].pspace.__class__
+        return RandomSymbol(name, pspace(name, self.distribution))
+    
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def distribution(self):
+        return density(self.args[1])
+
+    @property
+    def count(self):
+        return self.args[2]
+
+    @property
+    def indices(self):
+        return self.args[3]
 
 class ProductPSpace(PSpace):
     """
