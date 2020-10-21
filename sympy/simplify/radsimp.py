@@ -1074,7 +1074,15 @@ def fraction(expr, exact=False):
 
     numer, denom = [], []
 
-    for term in Mul.make_args(expr):
+	# we must recurse into args (tree could be constructed with evaluate=False)
+    def mul_args(e):
+        for term in Mul.make_args(e):
+            if term.is_Mul:
+                yield from mul_args(term)
+            else:
+                yield term
+
+    for term in mul_args(expr):
         if term.is_commutative and (term.is_Pow or isinstance(term, exp)):
             b, ex = term.as_base_exp()
             if ex.is_negative:
