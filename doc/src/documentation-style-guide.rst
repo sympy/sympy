@@ -289,6 +289,17 @@ web browser.
 
 Open ``_build/html/index.html``.
 
+To build the LaTeX documentation, run::
+
+   cd doc
+
+   make latex
+   cd _build/latex
+   export LATEXMKOPTS='-xelatex -silent'
+   make all
+
+This will create a pdf file ``sympy-version.pdf``.
+
 3. Make a Contribution
 ----------------------
 

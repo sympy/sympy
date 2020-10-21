@@ -114,7 +114,10 @@ def build_docs():
         make latex
 
         cd _build/latex
-        make
+        # Build with xelatex because pdflatex can not be used with fontspec.
+        # https://github.com/sympy/sympy/issues/20307
+        export LATEXMKOPTS='-xelatex -silent'
+        make all
         cp @(tarball_format['pdf-orig']) @("../../../dist/{pdf}".format(**tarball_format))
         cd ../../../
 
