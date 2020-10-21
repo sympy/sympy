@@ -579,3 +579,13 @@ def test_issue_13425():
 
 def test_issue_17421():
     assert N(acos(-I + acosh(cosh(cosh(1) + I)))) == 1.0*I
+
+
+def test_issue_20291():
+    from sympy import FiniteSet
+    a = Symbol('a')
+    b = Symbol('b')
+    A = FiniteSet(a, b)
+    assert A.evalf(subs={a: 1, b: 2}) == FiniteSet(1, 2)
+    B = FiniteSet(a-b, 1)
+    assert B.evalf(subs={a: 1, b: 2}) == FiniteSet(-1, 1)
