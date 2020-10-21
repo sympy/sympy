@@ -421,7 +421,7 @@ def test_fraction():
     assert fraction(m, exact=True) == \
             (Mul(1, 1, evaluate=False), Mul(2, 2, 1, evaluate=False))
 
-    m = Mul(-1,Mul(1,Pow(2,-1,evaluate=False),evaluate=False),evaluate=False)
+    m = Mul(-1, Mul(1, Pow(2, -1, evaluate=False), evaluate=False), evaluate=False)
     assert fraction(m) == (-1, 2)
 
 
