@@ -1074,7 +1074,7 @@ def fraction(expr, exact=False):
 
     numer, denom = [], []
 
-	# we must recurse into args (tree could be constructed with evaluate=False)
+    # we must recurse into args (tree could be constructed with evaluate=False)
     def mul_args(e):
         for term in Mul.make_args(e):
             if term.is_Mul:
