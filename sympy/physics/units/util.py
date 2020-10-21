@@ -158,8 +158,6 @@ def check_dimensions(expr, unit_system="SI"):
     # Also, when doing substitutions, multiplicative constants
     # might be introduced, so remove those now
 
-    import functools
-    import operator
     from sympy.physics.units import UnitSystem
     unit_system = UnitSystem.get_unit_system(unit_system)
 
