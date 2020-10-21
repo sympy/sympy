@@ -1,4 +1,4 @@
-from sympy import symbols, IndexedBase, Identity, cos, Inverse, tensorcontraction, permutedims, tensorproduct, Array
+from sympy import symbols, IndexedBase, Identity, cos, Inverse, tensorcontraction, permutedims, tensorproduct
 from sympy.codegen.array_utils import (CodegenArrayContraction,
                                        CodegenArrayTensorProduct, CodegenArrayDiagonal,
                                        CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
@@ -514,8 +514,8 @@ def test_nested_permutations():
     assert cg == M
 
     times = 3
-    plist1 = [list(range(6)) for i in range(times)]  # type: List[List[int]]
-    plist2 = [list(range(6)) for i in range(times)]  # type: List[List[int]]
+    plist1 = [list(range(6)) for i in range(times)]
+    plist2 = [list(range(6)) for i in range(times)]
 
     for i in range(times):
         random.shuffle(plist1[i])
@@ -557,8 +557,6 @@ def test_contraction_permutation_mix():
 
     Me = M.subs(k, 3).as_explicit()
     Ne = N.subs(k, 3).as_explicit()
-    Pe = P.subs(k, 3).as_explicit()
-    Qe = Q.subs(k, 3).as_explicit()
 
     cg1 = CodegenArrayContraction(CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), Permutation([0, 2, 1, 3])), (2, 3))
     cg2 = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 3))

@@ -826,7 +826,7 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
             new_contr_indices = [tuple(newpermutation(j) for j in i) for i in expr.contraction_indices]
             return CodegenArrayContraction(CodegenArrayPermuteDims(expr.expr, newpermutation), *new_contr_indices)
         elif isinstance(expr, CodegenArrayElementwiseAdd):
-            return CodegenArrayElementwiseAdd(*[CodegenArrayPermuteDims(arg, self.permutation) for arg in expr.args])
+            return CodegenArrayElementwiseAdd(*[CodegenArrayPermuteDims(arg, permutation) for arg in expr.args])
         return None
 
 
