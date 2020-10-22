@@ -1174,6 +1174,12 @@ def test_sympy__stats__rv__RandomSymbol():
     A = SingleContinuousPSpace(x, nd)
     assert _test_args(RandomSymbol(x, A))
 
+def test_sympy__stats__rv__iid():
+    from sympy.stats.rv import iid
+    from sympy.stats.crv_types import Normal
+    from sympy import Symbol
+    n = Symbol('n')
+    assert _test_args(iid("I", Normal("N", 0, 1), n))
 
 @SKIP("abstract Class")
 def test_sympy__stats__rv__ProductPSpace():

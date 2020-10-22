@@ -347,16 +347,14 @@ class iid(Basic):
     """
 
     def __new__(cls, sym, dist_sym, count):
-        sym = Symbol(sym)
+        sym = _symbol_converter(sym)
         if not isinstance(dist_sym, RandomSymbol):
             raise TypeError('Expected RandomSymbol, not %s'%type(dist_sym))
         count = sympify(count)
-        indices = Range(1, count + 1)
         if not count.is_symbol:
             _value_check((count.is_positive, count.is_integer),
                             "Number of i.i.d's must be a positive integer.")
-            indices = FiniteSet(*indices)
-        obj = Basic.__new__(cls, sym, dist_sym, count, indices)
+        obj = Basic.__new__(cls, sym, dist_sym, count)
         return obj
 
     def __getitem__(self, index):
@@ -388,7 +386,8 @@ class iid(Basic):
 
     @property
     def indices(self):
-        return self.args[3]
+        return FiniteSet(*Range(1, self.count + 1)) if self.count.is_symbol \
+            else Range(1, self.count + 1)
 
 class ProductPSpace(PSpace):
     """
