@@ -373,7 +373,7 @@ class iid(Basic):
         name = str(self.symbol)+'[%d]'%index
         pspace = self.args[1].pspace.__class__
         return RandomSymbol(name, pspace(name, self.distribution))
-    
+
     @property
     def symbol(self):
         return self.args[0]

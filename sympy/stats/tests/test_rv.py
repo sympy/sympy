@@ -156,7 +156,7 @@ def test_random_symbol_no_pspace():
 def test_iid():
     raises(TypeError, lambda: iid("I", Normal("N", 0, 1)))
     raises(ValueError, lambda: iid("I", Normal("N", 0, 1), -1))
-    
+
     I = iid("I", Normal("N", 0, 1), 5)
     assert P(I[1] > 0) == P(I[2] > 0) == Rational(1, 2)
     assert P(I[3] > 0, I[1] < 0) == P(I[3] > 0)
