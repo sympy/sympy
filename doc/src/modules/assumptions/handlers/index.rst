@@ -4,14 +4,13 @@ Handlers
 
 .. automodule:: sympy.assumptions.handlers
 
-Contents
-========
+Here are the handler modules in current SymPy:
 
 .. toctree::
     :maxdepth: 3
 
-    calculus.rst
     common.rst
+    calculus.rst
     matrices.rst
     ntheory.rst
     order.rst

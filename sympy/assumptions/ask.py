@@ -19,7 +19,8 @@ from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 
 class AssumptionKeys:
     """
-    This class contains all the supported keys by ``ask``. It should be accessed via the instance ``sympy.Q``.
+    This class contains all the supported keys by ``ask``. It should be
+    accessed via the instance ``sympy.Q``.
 
     """
 
@@ -1204,15 +1205,26 @@ def _extract_all_facts(expr, symbol):
 
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
-    Method for inferring properties about objects.
+    Function for inferring properties about objects.
 
-    **Syntax**
+    Explanation
+    ===========
 
-        * ask(proposition)
+    This function evaluates the *proposition* to boolean value, with
+    respect to *assumptions* and *context*. For this, multipledispatch
+    handler for the proposition predicate is first referred to. If this
+    cannot determine the result, SAT solver is used.
 
-        * ask(proposition, assumptions)
+    Parameters
+    ==========
 
-            where ``proposition`` is any boolean expression
+    proposition : any boolean expression
+        Proposition which will be evaluated to boolean value. If this is
+        not ``AppliedPredicate``, it will be wrapped by ``Q.is_true``.
+
+    context : assumption context, optional
+        Instance of ``AssumptionsContext``. By default, this is
+        ``global_assumptions``.
 
     Examples
     ========
@@ -1226,13 +1238,14 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     >>> ask(Q.prime(4*x), Q.integer(x))
     False
 
-    **Remarks**
-        Relations in assumptions are not implemented (yet), so the following
-        will not give a meaningful result.
+    Notes
+    =====
+    Relations in assumptions are not implemented (yet), so the following
+    will not give a meaningful result.
 
-        >>> ask(Q.positive(x), Q.is_true(x > 0))
+    >>> ask(Q.positive(x), Q.is_true(x > 0))
 
-        It is however a work in progress.
+    It is however a work in progress.
 
     """
     from sympy.assumptions.satask import satask
@@ -1303,36 +1316,42 @@ def ask_full_inference(proposition, assumptions, known_facts_cnf):
 
 def register_handler(key, handler):
     """
-    Register a handler in the ask system. key must be a string and handler a
-    class inheriting from AskHandler::
+    Register a new handler in the ask system. *key* must be a string and
+    *handler* a multipledispatch function constructed by
+    ``sympy.assumptions.handlers.AskHandlerClass``.
 
-        >>> from sympy.assumptions import register_handler, ask, Q
-        >>> from sympy.assumptions.handlers import AskHandler
-        >>> class MersenneHandler(AskHandler):
-        ...     # Mersenne numbers are in the form 2**n - 1, n integer
-        ...     @staticmethod
-        ...     def Integer(expr, assumptions):
-        ...         from sympy import log
-        ...         return ask(Q.integer(log(expr + 1, 2)))
-        >>> register_handler('mersenne', MersenneHandler)
-        >>> ask(Q.mersenne(7))
-        True
+    >>> from sympy import Integer, Q, register_handler, ask
+    >>> from sympy.assumptions.handlers import AskHandlerClass
+    >>> MersenneHandler = AskHandlerClass('MersenneHandler')
+    >>> @MersenneHandler.register(Integer)
+    ... def _(expr, assumptions):
+    ...     from sympy import ask, log
+    ...     return ask(Q.integer(log(expr + 1, 2)))
+    >>> register_handler('mersenne', MersenneHandler)
+    >>> ask(Q.mersenne(7))
+    True
+
+    Note that registering the hander overrides the old one. To modify
+    existing handler, use dispatching instead.
+
+    >>> from sympy import Basic, Q
+    >>> class MyType(Basic):
+    ...     pass
+    >>> a = MyType()
+    >>> @Q.prime.handler.register(MyType)
+    ... def _(expr, assumptions):
+    ...     return True
+    >>> ask(Q.prime(a))
+    True
 
     """
     if type(key) is Predicate:
         key = key.name
     Qkey = getattr(Q, key, None)
     if Qkey is not None:
-        Qkey.add_handler(handler)
+        Qkey._handler = handler
     else:
-        setattr(Q, key, Predicate(key, handlers=[handler]))
-
-
-def remove_handler(key, handler):
-    """Removes a handler from the ask system. Same syntax as register_handler"""
-    if type(key) is Predicate:
-        key = key.name
-    getattr(Q, key).remove_handler(handler)
+        setattr(Q, key, Predicate(key, handler=handler))
 
 
 def single_fact_lookup(known_facts_keys, known_facts_cnf):
@@ -1416,7 +1435,7 @@ def compute_known_facts(known_facts, known_facts_keys):
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
     ("antihermitian",     "sets.AskAntiHermitianHandler"),
-    ("finite",           "calculus.AskFiniteHandler"),
+    ("finite",            "calculus.AskFiniteHandler"),
     ("commutative",       "AskCommutativeHandler"),
     ("complex",           "sets.AskComplexHandler"),
     ("composite",         "ntheory.AskCompositeHandler"),

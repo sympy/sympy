@@ -67,7 +67,7 @@ from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         true, false, satisfiable)
 
 from .assumptions import (AppliedPredicate, Predicate, AssumptionsContext,
-        assuming, Q, ask, register_handler, remove_handler, refine)
+        global_assumptions, assuming, Q, ask, register_handler, refine)
 
 from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         degree, total_degree, degree_list, LC, LM, LT, pdiv, prem, pquo,
@@ -282,8 +282,8 @@ __all__ = [
     'bool_map', 'true', 'false', 'satisfiable',
 
     # sympy.assumptions
-    'AppliedPredicate', 'Predicate', 'AssumptionsContext', 'assuming', 'Q',
-    'ask', 'register_handler', 'remove_handler', 'refine',
+    'AppliedPredicate', 'Predicate', 'AssumptionsContext', 'global_assumptions',
+    'assuming', 'Q', 'ask', 'register_handler', 'refine',
 
     # sympy.polys
     'Poly', 'PurePoly', 'poly_from_expr', 'parallel_poly_from_expr', 'degree',

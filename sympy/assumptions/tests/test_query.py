@@ -1,21 +1,19 @@
 from sympy.abc import t, w, x, y, z, n, k, m, p, i
-from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
-        remove_handler)
-from sympy.assumptions.assume import global_assumptions
-from sympy.assumptions.ask import compute_known_facts, single_fact_lookup
-from sympy.assumptions.handlers import AskHandler
+from sympy.assumptions.ask import ask, Q, compute_known_facts, single_fact_lookup, register_handler
+from sympy.assumptions.assume import AssumptionsContext, global_assumptions
+from sympy.assumptions.handlers import AskHandlerClass
 from sympy.core.add import Add
 from sympy.core.numbers import (I, Integer, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
-from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
+from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf, conjuncts
 from sympy.matrices import Matrix, SparseMatrix
 from sympy.testing.pytest import XFAIL, slow, raises
 from sympy.assumptions.assume import assuming
@@ -2018,59 +2016,35 @@ def test_composite_assumptions():
     assert ask(Q.positive(x), Q.real(x) >> Q.positive(y)) is None
     assert ask(Q.real(x), ~(Q.real(x) >> Q.real(y))) is True
 
-def test_incompatible_resolutors():
-    class Prime2AskHandler(AskHandler):
-        @staticmethod
-        def Number(expr, assumptions):
-            return True
-    register_handler('prime', Prime2AskHandler)
-    raises(ValueError, lambda: ask(Q.prime(4)))
-    remove_handler('prime', Prime2AskHandler)
-
-    class InconclusiveHandler(AskHandler):
-        @staticmethod
-        def Number(expr, assumptions):
-            return None
-    register_handler('prime', InconclusiveHandler)
-    assert ask(Q.prime(3)) is True
-    remove_handler('prime', InconclusiveHandler)
 
 def test_key_extensibility():
     """test that you can add keys to the ask system at runtime"""
     # make sure the key is not defined
     raises(AttributeError, lambda: ask(Q.my_key(x)))
 
-    class MyAskHandler(AskHandler):
-        @staticmethod
-        def Symbol(expr, assumptions):
-            return True
+    MyAskHandler = AskHandlerClass('MyAskHandler')
+    @MyAskHandler.register(Symbol)
+    def _(expr, assumptions):
+        return True
     register_handler('my_key', MyAskHandler)
     assert ask(Q.my_key(x)) is True
     assert ask(Q.my_key(x + 1)) is None
-    remove_handler('my_key', MyAskHandler)
+
     del Q.my_key
     raises(AttributeError, lambda: ask(Q.my_key(x)))
 
 
 def test_type_extensibility():
-    """test that new types can be added to the ask system at runtime
-    We create a custom type MyType, and override ask Q.prime=True with handler
-    MyAskHandler for this type
-
-    TODO: test incompatible resolutors
-    """
+    """test that new types can be added to the ask system at runtime"""
     from sympy.core import Basic
 
     class MyType(Basic):
         pass
-
-    class MyAskHandler(AskHandler):
-        @staticmethod
-        def MyType(expr, assumptions):
-            return True
+    @Q.prime.handler.register(MyType)
+    def _(expr, assumptions):
+        return True
 
     a = MyType()
-    register_handler(Q.prime, MyAskHandler)
     assert ask(Q.prime(a)) is True
 
 
@@ -2253,21 +2227,27 @@ def test_autosimp_used_to_fail():
 
 
 def test_custom_AskHandler():
-    from sympy.assumptions import register_handler, ask, Q
-    from sympy.assumptions.handlers import AskHandler
-    from sympy.logic.boolalg import conjuncts
-    from sympy import Symbol
 
-    class MersenneHandler(AskHandler):
+    class MersenneHandlerClass(AskHandlerClass):
+        def __init__(self, name, doc=None):
+            super().__init__(name, doc)
+
+            for sig in (Integer, Symbol):
+                self.register(sig)(getattr(self, sig.__name__))
+
         @staticmethod
         def Integer(expr, assumptions):
             from sympy import log
             if ask(Q.integer(log(expr + 1, 2))):
                 return True
+
         @staticmethod
         def Symbol(expr, assumptions):
             if expr in conjuncts(assumptions):
                 return True
+
+    MersenneHandler = MersenneHandlerClass('MersenneHandler')
+
     register_handler('mersenne', MersenneHandler)
 
     n = Symbol('n', integer=True)
