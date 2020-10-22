@@ -403,8 +403,8 @@ def test_Mul_is_integer():
     assert m.is_integer
 
     # broken in 1.6 and before, see #20161
-    xq = Symbol('x', rational=True)
-    yq = Symbol('y', rational=True)
+    xq = Symbol('xq', rational=True)
+    yq = Symbol('yq', rational=True)
     assert (xq*yq).is_integer is None
     e_20161 = Mul(-1,Mul(1,Pow(2,-1,evaluate=False),evaluate=False),evaluate=False)
     assert e_20161.is_integer is not True # expand(e_20161) -> -1/2, but no need to see that in the assumption without evaluation
