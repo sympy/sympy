@@ -1,4 +1,4 @@
-from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
+from sympy import (acos, acosh, atan, cos, Derivative, diff,
     Dummy, Eq, Ne, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
     Piecewise, symbols, Poly, sec, re, im, atan2, collect, hyper)
@@ -811,50 +811,6 @@ def test_old_ode_tests():
     assert checkodesol(eq9, sol9, order=2, solve_for_func=False)[0]
     assert checkodesol(eq10, sol10, order=1, solve_for_func=False)[0]
     assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
-
-
-@slow
-@XFAIL
-def test_1st_exact2_broken():
-    """
-    This is an exact equation that fails under the exact engine. It is caught
-    by first order homogeneous albeit with a much contorted solution.  The
-    exact engine fails because of a poorly simplified integral of q(0,y)dy,
-    where q is the function multiplying f'.  The solutions should be
-    Eq(sqrt(x**2+f(x)**2)**3+y**3, C1).  The equation below is
-    equivalent, but it is so complex that checkodesol fails, and takes a long
-    time to do so.
-    """
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
-    eq = (x*sqrt(x**2 + f(x)**2) - (x**2*f(x)/(f(x) -
-          sqrt(x**2 + f(x)**2)))*f(x).diff(x))
-    sol = Eq(log(x),
-        C1 - 9*sqrt(1 + f(x)**2/x**2)*asinh(f(x)/x)/(-27*f(x)/x +
-        27*sqrt(1 + f(x)**2/x**2)) - 9*sqrt(1 + f(x)**2/x**2)*
-        log(1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2)/
-        (-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2)) +
-        9*asinh(f(x)/x)*f(x)/(x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))) +
-        9*f(x)*log(1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2)/
-        (x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))))
-    assert dsolve(eq) == sol # Slow
-    # FIXME: Checked in test_1st_exact2_broken_check below
-
-
-@slow
-def test_1st_exact2_broken_check():
-    # See test_1st_exact2_broken above
-    eq = (x*sqrt(x**2 + f(x)**2) - (x**2*f(x)/(f(x) -
-          sqrt(x**2 + f(x)**2)))*f(x).diff(x))
-    sol = Eq(log(x),
-        C1 - 9*sqrt(1 + f(x)**2/x**2)*asinh(f(x)/x)/(-27*f(x)/x +
-        27*sqrt(1 + f(x)**2/x**2)) - 9*sqrt(1 + f(x)**2/x**2)*
-        log(1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2)/
-        (-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2)) +
-        9*asinh(f(x)/x)*f(x)/(x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))) +
-        9*f(x)*log(1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2)/
-        (x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))))
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
 def test_homogeneous_order():
