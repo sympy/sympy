@@ -1262,7 +1262,11 @@ class Mul(Expr, AssocOp):
                     zero = None
         return zero
 
+    #_eval_is_integer = lambda self: _fuzzy_group(
+    #    (a.is_integer for a in self.args), quick_exit=True)
     def _eval_is_integer(self):
+        #return _fuzzy_group(
+        #    (a.is_integer for a in self.args), quick_exit=True)
         from sympy import fraction
         from sympy.core.numbers import Float
 
@@ -1270,19 +1274,35 @@ class Mul(Expr, AssocOp):
         if is_rational is False:
             return False
 
-        # use exact=True to avoid recomputing num or den
-        n, d = fraction(self, exact=True)
-        if is_rational:
-            if d is S.One:
-                return True
-        if d.is_even:
-            if d.is_prime:  # literal or symbolic 2
-                return n.is_even
-            if n.is_odd:
-                return False  # true even if d = 0
-        if n == d:
-            return fuzzy_and([not bool(self.atoms(Float)),
-            fuzzy_not(d.is_zero)])
+        numerators = []
+        denominators = []
+        for a in self.args:
+            if a.is_integer:
+                numerators.append(a)
+            elif a.is_Rational:
+                n, d = a.as_numer_denom()
+                numerators.append(n)
+                denominators.append(d)
+            elif a.is_Pow:
+                b, e = a.as_base_exp()
+                if not b.is_integer or not e.is_integer: return
+                if e.is_negative:
+                    denominators.append(b)
+                elif e.is_positive:
+                    denominators.append(b)
+            else:
+                return
+
+        if not denominators:
+            return True
+
+        odd = lambda ints: all(i.is_odd for i in ints)
+        even = lambda ints: any(i.is_even for i in ints)
+
+        if odd(numerators) and even(denominators):
+            return False
+        elif even(numerators) and denominators == [2]:
+            return True
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)
