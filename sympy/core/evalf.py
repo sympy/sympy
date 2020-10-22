@@ -1473,7 +1473,8 @@ class EvalfMixin:
             result = evalf(self, prec + 4, options)
         except NotImplementedError:
             # Fall back to the ordinary evalf
-            if subs is not None:  # issue 20291
+            from sympy.core.basic import Basic
+            if isinstance(self, Basic) and subs is not None:  # issue 20291
                 v = self.subs(subs)._eval_evalf(prec)
             else:
                 v = self._eval_evalf(prec)
