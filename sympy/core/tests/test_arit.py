@@ -378,7 +378,6 @@ def test_Mul_is_integer():
     n = Symbol('n', integer=True)
     nr = Symbol('nr', rational=False)
     nz = Symbol('nz', integer=True, zero=False)
-    nze = Symbol('nze', even=True, zero=False)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)
     i2 = Symbol('2', prime=True, even=True)
