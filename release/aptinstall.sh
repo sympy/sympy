@@ -11,5 +11,5 @@ sudo apt install\
 python3 -m venv venv_main
 . venv_main/bin/activate
 
-pip install -U pip
+pip install -U pip wheel
 pip install -r requirements.txt

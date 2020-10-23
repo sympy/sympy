@@ -24,7 +24,11 @@ venv_dir=$tmp_dir/venv
 $python -m venv $venv_dir
 . $venv_dir/bin/activate
 
-pip install -U pip
+pip install -U pip wheel
+
+# Installing tensorflow needs a lot of memory. Give at least 2GiB memory for a
+# VM or it will fail printing "Collecting tensorflow... Killed"
+
 pip install\
   mpmath\
   'matplotlib>=2.2'\
@@ -32,10 +36,9 @@ pip install\
   scipy\
   theano\
   ipython\
-  gmpy2\
   symengine\
-  cython\
   tensorflow\
+  cython\
   llvmlite\
   wurlitzer\
   autowrap\
@@ -43,6 +46,5 @@ pip install\
   'antlr4-python3-runtime==4.7.*'\
   #
 
-pip freeze
-#pip freeze > requirements.txt
-#git diff requirements.txt
+pip freeze > requirements.txt
+git diff requirements.txt
