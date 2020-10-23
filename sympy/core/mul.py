@@ -1262,11 +1262,10 @@ class Mul(Expr, AssocOp):
                     zero = None
         return zero
 
+    # without involving odd/even checks this code would suffice:
     #_eval_is_integer = lambda self: _fuzzy_group(
     #    (a.is_integer for a in self.args), quick_exit=True)
     def _eval_is_integer(self):
-        #return _fuzzy_group(
-        #    (a.is_integer for a in self.args), quick_exit=True)
         from sympy import fraction
         from sympy.core.numbers import Float
 
