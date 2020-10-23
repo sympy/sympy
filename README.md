@@ -71,6 +71,11 @@ From this directory, start Python and:
 1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 ```
 
+Symbol is the most important class in symPy library.
+Symbolic computations are done with symbols.
+SymPy variables are objects of Symbols class.Symbol() function's argument 
+is a string containing symbol which can be assigned to a variable.
+
 SymPy also comes with a console that is a simple wrapper around the
 classic python console (or IPython when available) that loads the SymPy
 namespace and executes some common commands for you.
