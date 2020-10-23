@@ -396,6 +396,8 @@ def test_Mul_is_integer():
     assert (o/i2).is_integer is False
     assert Mul(k, 1/k, evaluate=False).is_integer is None
     assert Mul(2., S.Half, evaluate=False).is_integer is None
+    assert (2*sqrt(k)).is_integer is None
+    assert (2*k**n).is_integer is None
 
     s = 2**2**2**Pow(2, 1000, evaluate=False)
     m = Mul(s, s, evaluate=False)

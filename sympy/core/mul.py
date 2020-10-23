@@ -1286,6 +1286,10 @@ class Mul(Expr, AssocOp):
                     denominators.append(b)
                 elif e.is_positive:
                     denominators.append(b)
+                elif e.is_zero:
+                    if b.is_zero: return
+                else:
+                    return
             else:
                 return
 
