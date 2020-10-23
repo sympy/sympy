@@ -1284,12 +1284,12 @@ class Mul(Expr, AssocOp):
                 if not b.is_integer or not e.is_integer: return
                 if e.is_negative:
                     denominators.append(b)
-                elif e.is_positive:
-                    denominators.append(b)
-                elif e.is_zero:
-                    if b.is_zero: return
                 else:
-                    return
+                    # for integer b and positive integer e: a = b**e would be integer
+                    assert not e.is_positive
+                    # for self being rational and e equal to zero: a = b**e would be 1
+                    assert not e.is_zero
+                    return # sign of e unknown -> self.is_integer cannot be decided
             else:
                 return
 
