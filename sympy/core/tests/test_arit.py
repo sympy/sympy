@@ -388,6 +388,8 @@ def test_Mul_is_integer():
     assert (x*k*n).is_integer is None
     assert (e/2).is_integer is True
     assert (e**2/2).is_integer is True
+    assert (2/k).is_integer is None
+    assert (2/k**2).is_integer is None
     assert ((-1)**k*n).is_integer is True
     assert (3*k*e/2).is_integer is True
     assert (2*k*e/3).is_integer is None
