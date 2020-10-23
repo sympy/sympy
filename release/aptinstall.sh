@@ -22,8 +22,9 @@ sudo apt install\
 	graphviz\
 	#
 
-python3 -m venv venv_main
-. venv_main/bin/activate
+python3 -m venv release/venv_main
+source release/venv_main/bin/activate
 
 pip install -U pip wheel
-pip install -r requirements.txt
+pip install -r release/requirements.txt
+pip install -e .
