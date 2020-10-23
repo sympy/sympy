@@ -210,7 +210,10 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
             if not (dsolve_too_slow and ON_TRAVIS):
                 dsolve_sol = dsolve(eq, func, simplify=simplify_flag,hint=our_hint)
             else:
-                dsolve_sol = expected_sol
+                if len(expected_sol)==1:
+                    dsolve_sol = expected_sol[0]
+                else:
+                    dsolve_sol = expected_sol
 
         except Exception as e:
             dsolve_sol = []
