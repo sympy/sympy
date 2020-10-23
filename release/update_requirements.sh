@@ -13,7 +13,7 @@
 
 if [ -z $1 ];
 then
-  python=python
+  python=python3
 else
   python=$1
 fi
@@ -43,5 +43,6 @@ pip install\
   'antlr4-python3-runtime==4.7.*'\
   #
 
-pip list > requirements.txt
-git diff requirements.txt
+pip freeze
+#pip freeze > requirements.txt
+#git diff requirements.txt
