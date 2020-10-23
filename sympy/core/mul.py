@@ -7,7 +7,7 @@ from .basic import Basic
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
-from .logic import fuzzy_not, _fuzzy_group, fuzzy_and
+from .logic import fuzzy_not, _fuzzy_group
 from .compatibility import reduce
 from .expr import Expr
 from .parameters import global_parameters
@@ -1266,9 +1266,6 @@ class Mul(Expr, AssocOp):
     #_eval_is_integer = lambda self: _fuzzy_group(
     #    (a.is_integer for a in self.args), quick_exit=True)
     def _eval_is_integer(self):
-        from sympy import fraction
-        from sympy.core.numbers import Float
-
         is_rational = self._eval_is_rational()
         if is_rational is False:
             return False
