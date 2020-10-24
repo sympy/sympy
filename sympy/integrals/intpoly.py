@@ -757,7 +757,7 @@ def hyperplane_parameters(poly, vertices=None):
 
     poly :
         The input 2/3-Polytope.
-    vertices : 
+    vertices :
         Vertex indices of 3-Polytope.
 
     Examples
