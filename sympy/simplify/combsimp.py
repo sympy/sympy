@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Mul
 from sympy.core.basic import preorder_traversal
 from sympy.core.function import count_ops

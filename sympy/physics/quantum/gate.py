@@ -13,8 +13,6 @@ Medium Term Todo:
   format. This should also use the matrix slots.
 """
 
-from __future__ import print_function, division
-
 from itertools import chain
 import random
 
@@ -426,7 +424,7 @@ class CGate(Gate):
         gate_name = stringPict(self.gate_name)
         first = self._print_subscript_pretty(gate_name, controls)
         gate = self._print_parens_pretty(gate)
-        final = prettyForm(*first.right((gate)))
+        final = prettyForm(*first.right(gate))
         return final
 
     def _latex(self, printer, *args):

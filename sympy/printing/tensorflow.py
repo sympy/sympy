@@ -78,7 +78,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
     )
 
     def __init__(self, settings=None):
-        super(TensorflowPrinter, self).__init__(settings)
+        super().__init__(settings)
 
         version = self._settings['tensorflow_version']
         if version is None and tensorflow:
@@ -88,7 +88,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
     def _print_Function(self, expr):
         op = self.mapping.get(type(expr), None)
         if op is None:
-            return super(TensorflowPrinter, self)._print_Basic(expr)
+            return super()._print_Basic(expr)
         children = [self._print(arg) for arg in expr.args]
         if len(children) == 1:
             return "%s(%s)" % (
@@ -146,13 +146,13 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         from sympy import Piecewise
         e, cond = expr.args[0].args
         if len(expr.args) == 1:
-            return '{0}({1}, {2}, {3})'.format(
+            return '{}({}, {}, {})'.format(
                 self._module_format(tensorflow_piecewise),
                 self._print(cond),
                 self._print(e),
                 0)
 
-        return '{0}({1}, {2}, {3})'.format(
+        return '{}({}, {}, {})'.format(
             self._module_format(tensorflow_piecewise),
             self._print(cond),
             self._print(e),
@@ -263,7 +263,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         elems = [self._print(i) for i in elems]
         return '%s("%s", %s)' % (
             self._module_format("tensorflow.linalg.einsum"),
-            "{0}->{1}{2}".format(diagonal_string, "".join(letters_free), "".join(letters_dum)),
+            "{}->{}{}".format(diagonal_string, "".join(letters_free), "".join(letters_dum)),
             ", ".join(elems)
         )
 
