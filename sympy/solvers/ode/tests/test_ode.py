@@ -1,7 +1,7 @@
-from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff,
+from sympy import (acos, acosh, atan, cos, Derivative, diff,
     Dummy, Eq, Ne, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, rootof, S, sin, sqrt, Subs, Symbol, tan, asin, sinh,
-    Piecewise, symbols, Poly, sec, re, im, atan2, collect, hyper, integrate)
+    Piecewise, symbols, Poly, sec, re, im, atan2, collect, hyper)
 
 from sympy.solvers.ode import (classify_ode,
     homogeneous_order, infinitesimals, checkinfsol,
@@ -811,79 +811,6 @@ def test_old_ode_tests():
     assert checkodesol(eq9, sol9, order=2, solve_for_func=False)[0]
     assert checkodesol(eq10, sol10, order=1, solve_for_func=False)[0]
     assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
-
-
-@slow
-def test_1st_exact1():
-    # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
-    # where dp/df == dq/dx
-    eq1 = sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x)
-    eq2 = (2*x*f(x) + 1)/f(x) + (f(x) - x)/f(x)**2*f(x).diff(x)
-    eq3 = 2*x + f(x)*cos(x) + (2*f(x) + sin(x) - sin(f(x)))*f(x).diff(x)
-    eq4 = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
-    eq5 = 2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x)
-    sol1 = [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
-    sol2 = Eq(f(x), exp(C1 - x**2 + LambertW(-x*exp(-C1 + x**2))))
-    sol2b = Eq(log(f(x)) + x/f(x) + x**2, C1)
-    sol3 = Eq(f(x)*sin(x) + cos(f(x)) + x**2 + f(x)**2, C1)
-    sol4 = Eq(x*cos(f(x)) + f(x)**3/3, C1)
-    sol5 = Eq(x**2*f(x) + f(x)**3/3, C1)
-    assert dsolve(eq1, f(x), hint='1st_exact') == sol1
-    assert dsolve(eq2, f(x), hint='1st_exact') == sol2
-    assert dsolve(eq3, f(x), hint='1st_exact') == sol3
-    assert dsolve(eq4, hint='1st_exact') == sol4
-    assert dsolve(eq5, hint='1st_exact', simplify=False) == sol5
-    assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
-    # issue 5080 blocks the testing of this solution
-    # FIXME: assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq2, sol2b, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]
-
-
-@slow
-@XFAIL
-def test_1st_exact2_broken():
-    """
-    This is an exact equation that fails under the exact engine. It is caught
-    by first order homogeneous albeit with a much contorted solution.  The
-    exact engine fails because of a poorly simplified integral of q(0,y)dy,
-    where q is the function multiplying f'.  The solutions should be
-    Eq(sqrt(x**2+f(x)**2)**3+y**3, C1).  The equation below is
-    equivalent, but it is so complex that checkodesol fails, and takes a long
-    time to do so.
-    """
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
-    eq = (x*sqrt(x**2 + f(x)**2) - (x**2*f(x)/(f(x) -
-          sqrt(x**2 + f(x)**2)))*f(x).diff(x))
-    sol = Eq(log(x),
-        C1 - 9*sqrt(1 + f(x)**2/x**2)*asinh(f(x)/x)/(-27*f(x)/x +
-        27*sqrt(1 + f(x)**2/x**2)) - 9*sqrt(1 + f(x)**2/x**2)*
-        log(1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2)/
-        (-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2)) +
-        9*asinh(f(x)/x)*f(x)/(x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))) +
-        9*f(x)*log(1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2)/
-        (x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))))
-    assert dsolve(eq) == sol # Slow
-    # FIXME: Checked in test_1st_exact2_broken_check below
-
-
-@slow
-def test_1st_exact2_broken_check():
-    # See test_1st_exact2_broken above
-    eq = (x*sqrt(x**2 + f(x)**2) - (x**2*f(x)/(f(x) -
-          sqrt(x**2 + f(x)**2)))*f(x).diff(x))
-    sol = Eq(log(x),
-        C1 - 9*sqrt(1 + f(x)**2/x**2)*asinh(f(x)/x)/(-27*f(x)/x +
-        27*sqrt(1 + f(x)**2/x**2)) - 9*sqrt(1 + f(x)**2/x**2)*
-        log(1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2)/
-        (-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2)) +
-        9*asinh(f(x)/x)*f(x)/(x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))) +
-        9*f(x)*log(1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2)/
-        (x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))))
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
 def test_homogeneous_order():
@@ -2371,18 +2298,6 @@ def test_issue_10867():
     assert checkodesol(eq, sol, order=2, solve_for_func=False) == (True, 0)
 
 
-def test_issue_11290():
-    eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
-    sol_1 = dsolve(eq, f(x), simplify=False, hint='1st_exact_Integral')
-    sol_0 = dsolve(eq, f(x), simplify=False, hint='1st_exact')
-    assert sol_1.dummy_eq(Eq(Subs(
-        Integral(u**2 - x*sin(u) - Integral(-sin(u), x), u) +
-        Integral(cos(u), x), u, f(x)), C1))
-    assert sol_1.doit() == sol_0
-    assert checkodesol(eq, sol_0, order=1, solve_for_func=False)
-    assert checkodesol(eq, sol_1, order=1, solve_for_func=False)
-
-
 def test_issue_4838():
     # Issue #15999
     eq = f(x).diff(x) - C1*f(x)
@@ -2570,22 +2485,4 @@ def test_issue_18408():
     eq = f(x).diff(x, 3) - f(x).diff(x) - sinh(x) - exp(x)
     sol = Eq(f(x), C1 + C3*exp(-x) + x*sinh(x)/2 + (C2 + x/2)*exp(x))
     assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
-    assert checkodesol(eq, sol) == (True, 0)
-
-
-def test_issue_9446():
-    f = Function('f')
-    assert dsolve(Eq(f(2 * x), sin(Derivative(f(x)))), f(x)) == \
-    [Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))]
-
-    assert integrate(-asin(f(2*x)+pi), x) == -Integral(asin(pi + f(2*x)), x)
-
-def test_issue_20192():
-    # kamke ode 1.1
-    a0,a1,a2,a3,a4 = symbols('a0, a1, a2, a3, a4')
-
-    eq = f(x).diff(x)-(a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(-1/2)
-    sol = Eq(f(x), C1 + Integral(1/sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4), x))
-
-    assert sol == dsolve(eq,hint='factorable')
     assert checkodesol(eq, sol) == (True, 0)
