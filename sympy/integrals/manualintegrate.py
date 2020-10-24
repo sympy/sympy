@@ -117,7 +117,10 @@ def contains_dont_know(rule):
     return False
 
 def manual_diff(f, symbol):
-    """Derivative of f in form expected by find_substitutions
+    """Derivative of f in form expected by find_substitutions.
+
+    Explanation
+    ===========
 
     SymPy's derivatives for some trig functions (like cot) aren't in a form
     that works well with finding substitutions; this replaces the
@@ -143,7 +146,7 @@ def manual_diff(f, symbol):
 
 def manual_subs(expr, *args):
     """
-    A wrapper for `expr.subs(*args)` with additional logic for substitution
+    A wrapper for ``expr.subs(*args)`` with additional logic for substitution
     of invertible functions.
     """
     if len(args) == 1:
@@ -298,7 +301,7 @@ def proxy_rewriter(condition, rewrite):
     return _proxy_rewriter
 
 def multiplexer(conditions):
-    """Apply the rule that matches the condition, else None"""
+    """Apply the rule that matches the condition, else None."""
     def multiplexer_rl(expr):
         for key, rule in conditions.items():
             if key(expr):
@@ -1202,13 +1205,15 @@ _cache_dummy = sympy.Dummy("z")
 def integral_steps(integrand, symbol, **options):
     """Returns the steps needed to compute an integral.
 
+    Explanation
+    ===========
+
     This function attempts to mirror what a student would do by hand as
     closely as possible.
 
     SymPy Gamma uses this to provide a step-by-step explanation of an
     integral. The code it uses to format the results of this function can be
-    found at
-    https://github.com/sympy/sympy_gamma/blob/master/app/logic/intsteps.py.
+    found at [1].
 
     Examples
     ========
@@ -1239,10 +1244,16 @@ def integral_steps(integrand, symbol, **options):
 
     Returns
     =======
+
     rule : namedtuple
         The first step; most rules have substeps that must also be
         considered. These substeps can be evaluated using ``manualintegrate``
         to obtain a result.
+
+    References
+    ==========
+
+    .. [1] https://github.com/sympy/sympy_gamma/blob/master/app/logic/intsteps.py
 
     """
     cachekey = integrand.xreplace({symbol: _cache_dummy})
@@ -1600,7 +1611,10 @@ def _manualintegrate(rule):
     return evaluator(*rule)
 
 def manualintegrate(f, var):
-    """manualintegrate(f, var)
+    """manualintegrate(f, var).
+
+    Explanation
+    ===========
 
     Compute indefinite integral of a single variable using an algorithm that
     resembles what a student would do by hand.
