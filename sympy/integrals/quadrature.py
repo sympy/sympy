@@ -455,6 +455,9 @@ def gauss_jacobi(n, alpha, beta, n_digits):
     r"""
     Computes the Gauss-Jacobi quadrature [1]_ points and weights.
 
+    Explanation
+    ===========
+
     The Gauss-Jacobi quadrature of the first kind approximates the integral:
 
     .. math::
@@ -509,7 +512,8 @@ def gauss_jacobi(n, alpha, beta, n_digits):
     See Also
     ========
 
-    gauss_legendre, gauss_laguerre, gauss_hermite, gauss_gen_laguerre, gauss_chebyshev_t, gauss_chebyshev_u, gauss_lobatto
+    gauss_legendre, gauss_laguerre, gauss_hermite, gauss_gen_laguerre,
+    gauss_chebyshev_t, gauss_chebyshev_u, gauss_lobatto
 
     References
     ==========
