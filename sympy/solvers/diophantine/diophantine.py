@@ -3685,9 +3685,9 @@ def sum_of_squares(n, k, zeros=False):
 
 def _can_do_sum_of_squares(n, k):
     """Return True if n can be written as the sum of k squares,
-    False if it can't, or 1 if k == 2 and n is prime (in which
+    False if it can't, or 1 if ``k == 2`` and ``n`` is prime (in which
     case it *can* be written as a sum of two squares). A False
-    is returned only if it can't be written as k-squares, even
+    is returned only if it can't be written as ``k``-squares, even
     if 0s are allowed.
     """
     if k < 1:
