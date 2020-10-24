@@ -2630,6 +2630,9 @@ def diop_ternary_quadratic_normal(eq, parameterize=False):
     Solves the quadratic ternary diophantine equation,
     `ax^2 + by^2 + cz^2 = 0`.
 
+    Explanation
+    ===========
+
     Here the coefficients `a`, `b`, and `c` should be non zero. Otherwise the
     equation will be a quadratic binary or univariate equation. If solvable,
     returns a tuple `(x, y, z)` that satisfies the given equation. If the
@@ -3277,6 +3280,9 @@ def partition(n, k=None, zeros=False):
     Returns a generator that can be used to generate partitions of an integer
     `n`.
 
+    Explanation
+    ===========
+
     A partition of `n` is a set of positive integers which add up to `n`. For
     example, partitions of 3 are 3, 1 + 2, 1 + 1 + 1. A partition is returned
     as a tuple. If ``k`` equals None, then all possible partitions are returned
@@ -3397,6 +3403,7 @@ def sum_of_three_squares(n):
 
     See Also
     ========
+
     sum_of_squares()
     """
     special = {1:(1, 0, 0), 2:(1, 1, 0), 3:(1, 1, 1), 10: (1, 3, 0), 34: (3, 3, 4), 58:(3, 7, 0),
@@ -3476,6 +3483,7 @@ def sum_of_four_squares(n):
 
     See Also
     ========
+
     sum_of_squares()
     """
     if n == 0:
@@ -3668,6 +3676,7 @@ def sum_of_squares(n, k, zeros=False):
 
     See Also
     ========
+
     sympy.utilities.iterables.signed_permutations
     """
     for t in power_representation(n, 2, k, zeros):
