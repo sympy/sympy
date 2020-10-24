@@ -38,6 +38,9 @@ class Integral(AddWithLimits):
     def __new__(cls, function, *symbols, **assumptions):
         """Create an unevaluated integral.
 
+        Explanation
+        ===========
+
         Arguments are an integrand followed by one or more limits.
 
         If no limits are given and there is only one free symbol in the
@@ -173,8 +176,8 @@ class Integral(AddWithLimits):
         where `F(x)` is the inverse of `f(x)` and the limits and integrand have
         been corrected so as to retain the same value after integration.
 
-        Notes
-        =====
+        Explanation
+        ===========
 
         The mappings, F(x) or f(u), must lead to a unique integral. Linear
         or rational linear expression, `2*x`, `1/x` and `sqrt(x)`, will
@@ -702,14 +705,19 @@ class Integral(AddWithLimits):
         differentiating under the integral sign [1], using the Fundamental
         Theorem of Calculus [2] when possible.
 
+        Explanation
+        ===========
+
         Whenever an Integral is encountered that is equivalent to zero or
         has an integrand that is independent of the variable of integration
         those integrals are performed. All others are returned as Integral
         instances which can be resolved with doit() (provided they are integrable).
 
-        References:
-           [1] https://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
-           [2] https://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
+        .. [2] https://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus
 
         Examples
         ========
@@ -789,6 +797,9 @@ class Integral(AddWithLimits):
                        heurisch=None, conds='piecewise'):
         """
         Calculate the anti-derivative to the function f(x).
+
+        Explanation
+        ===========
 
         The following algorithms are applied (roughly in this order):
 
@@ -1169,19 +1180,18 @@ class Integral(AddWithLimits):
         """
         Approximates a definite integral by a sum.
 
-        Arguments
-        ---------
-        n
+        Parameters
+        ==========
+
+        n :
             The number of subintervals to use, optional.
-        method
+        method :
             One of: 'left', 'right', 'midpoint', 'trapezoid'.
-        evaluate
+        evaluate : bool
             If False, returns an unevaluated Sum expression. The default
             is True, evaluate the sum.
 
         These methods of approximate integration are described in [1].
-
-        [1] https://en.wikipedia.org/wiki/Riemann_sum#Methods
 
         Examples
         ========
@@ -1261,6 +1271,11 @@ class Integral(AddWithLimits):
         ========
 
         Integral.doit : Perform the integration using any hints
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Riemann_sum#Methods
         """
 
         from sympy.concrete.summations import Sum
@@ -1327,6 +1342,10 @@ class Integral(AddWithLimits):
         """
         Compute the Cauchy Principal Value of the definite integral of a real function in the given interval
         on the real axis.
+
+        Explanation
+        ===========
+
         In mathematics, the Cauchy principal value, is a method for assigning values to certain improper
         integrals which would otherwise be undefined.
 
@@ -1348,6 +1367,7 @@ class Integral(AddWithLimits):
 
         References
         ==========
+
         .. [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
         .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
@@ -1383,6 +1403,9 @@ class Integral(AddWithLimits):
 
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)
+
+    Explanation
+    ===========
 
     Compute definite or indefinite integral of one or more variables
     using Risch-Norman algorithm and table lookup. This procedure is
