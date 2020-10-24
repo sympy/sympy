@@ -47,7 +47,6 @@ class DiophantineSolutionSet(set):
 
     symbols : list
         List of free symbols in the original equation.
-
     parameters: list (optional)
         List of parameters to be used in the solution.
 
@@ -144,22 +143,17 @@ class DiophantineEquationType:
     Parameters
     ==========
 
-    equation
+    equation :
         The diophantine equation that is being solved.
-
-    free_symbols: list (optional)
+    free_symbols : list (optional)
         The symbols being solved for.
-
-    Attributes
-    ==========
-
-    total_degree
+    total_degree :
         The maximum of the degrees of all terms in the equation
-    homogeneous
+    homogeneous :
         Does the equation contain a term of degree 0
-    homogeneous_order
+    homogeneous_order :
         Does the equation contain any coefficient that is in the symbols being solved for
-    dimension
+    dimension :
         The number of symbols being solved for
     """
     name = None
@@ -437,12 +431,12 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     ``syms`` is an optional list of symbols which determines the
     order of the elements in the returned tuple.
 
-    Examples
-    ========
-
     By default, only the base solution is returned. If ``permute`` is set to
     True then permutations of the base solution and/or permutations of the
     signs of the values will be returned when applicable.
+
+    Examples
+    ========
 
     >>> from sympy.solvers.diophantine import diophantine
     >>> from sympy.abc import a, b
@@ -674,6 +668,9 @@ def merge_solution(var, var_t, solution):
     This is used to construct the full solution from the solutions of sub
     equations.
 
+    Explanation
+    ===========
+
     For example when solving the equation `(x - y)(x^2 + y^2 - z^2) = 0`,
     solutions for each of the equations `x - y = 0` and `x^2 + y^2 - z^2` are
     found independently. Solutions for `x - y = 0` are `(x, y) = (t, t)`. But
@@ -704,6 +701,9 @@ def merge_solution(var, var_t, solution):
 def diop_solve(eq, param=symbols("t", integer=True)):
     """
     Solves the diophantine equation ``eq``.
+
+    Explanation
+    ===========
 
     Unlike ``diophantine()``, factoring of ``eq`` is not attempted. Uses
     ``classify_diop()`` to determine the type of the equation and calls
@@ -814,6 +814,9 @@ def classify_diop(eq, _dict=True):
 classify_diop.func_doc = (  # type: ignore
     '''
     Helper routine used by diop_solve() to find information about ``eq``.
+
+    Explanation
+    ===========
 
     Returns a tuple containing the type of the diophantine equation
     along with the variables (free symbols) and their coefficients.
@@ -1090,6 +1093,9 @@ def base_solution_linear(c, a, b, t=None):
     """
     Return the base solution for the linear equation, `ax + by = c`.
 
+    Explanation
+    ===========
+
     Used by ``diop_linear()`` to find the base solution of a linear
     Diophantine equation. If ``t`` is given then the parametrized solution is
     returned.
@@ -1143,6 +1149,9 @@ def base_solution_linear(c, a, b, t=None):
 def diop_univariate(eq):
     """
     Solves a univariate diophantine equations.
+
+    Explanation
+    ===========
 
     A univariate diophantine equation is an equation of the form
     `a_{0} + a_{1}x + a_{2}x^2 + .. + a_{n}x^n = 0` where `a_{1}, a_{2}, ..a_{n}` are
@@ -1431,6 +1440,9 @@ def is_solution_quad(var, coeff, u, v):
 def diop_DN(D, N, t=symbols("t", integer=True)):
     """
     Solves the equation `x^2 - Dy^2 = N`.
+
+    Explanation
+    ===========
 
     Mainly concerned with the case `D > 0, D` is not a perfect square,
     which is the same as the generalized Pell equation. The LMM
@@ -1723,6 +1735,9 @@ def cornacchia(a, b, m):
     r"""
     Solves `ax^2 + by^2 = m` where `\gcd(a, b) = 1 = gcd(a, m)` and `a, b > 0`.
 
+    Explanation
+    ===========
+
     Uses the algorithm due to Cornacchia. The method only finds primitive
     solutions, i.e. ones with `\gcd(x, y) = 1`. So this method can't be used to
     find the solutions of `x^2 + y^2 = 20` since the only solution to former is
@@ -1748,6 +1763,7 @@ def cornacchia(a, b, m):
 
     See Also
     ========
+
     sympy.utilities.iterables.signed_permutations
     """
     sols = set()
@@ -1784,6 +1800,9 @@ def cornacchia(a, b, m):
 def PQa(P_0, Q_0, D):
     r"""
     Returns useful information needed to solve the Pell equation.
+
+    Explanation
+    ===========
 
     There are six sequences of integers defined related to the continued
     fraction representation of `\\frac{P + \sqrt{D}}{Q}`, namely {`P_{i}`},
@@ -1844,6 +1863,9 @@ def PQa(P_0, Q_0, D):
 def diop_bf_DN(D, N, t=symbols("t", integer=True)):
     r"""
     Uses brute force to solve the equation, `x^2 - Dy^2 = N`.
+
+    Explanation
+    ===========
 
     Mainly concerned with the generalized Pell equation which is the case when
     `D > 0, D` is not a perfect square. For more information on the case refer
@@ -1934,6 +1956,9 @@ def equivalent(u, v, r, s, D, N):
     Returns True if two solutions `(u, v)` and `(r, s)` of `x^2 - Dy^2 = N`
     belongs to the same equivalence class and False otherwise.
 
+    Explanation
+    ===========
+
     Two solutions `(u, v)` and `(r, s)` to the above equation fall to the same
     equivalence class iff both `(ur - Dvs)` and `(us - vr)` are divisible by
     `N`. See reference [1]_. No test is performed to test whether `(u, v)` and
@@ -2015,6 +2040,9 @@ def transformation_to_DN(eq):
     This function transforms general quadratic,
     `ax^2 + bxy + cy^2 + dx + ey + f = 0`
     to more easy to deal with `X^2 - DY^2 = N` form.
+
+    Explanation
+    ===========
 
     This is used to solve the general quadratic equation by transforming it to
     the latter form. Refer [1]_ for more detailed information on the
