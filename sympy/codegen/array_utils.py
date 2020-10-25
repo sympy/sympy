@@ -788,26 +788,7 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
 
     def nest_permutation(self):
         r"""
-        Nest the permutation down the expression tree.
-
-        Examples
-        ========
-
-        >>> from sympy.codegen.array_utils import (CodegenArrayPermuteDims, CodegenArrayTensorProduct, nest_permutation)
-        >>> from sympy import MatrixSymbol
-
-        >>> M = MatrixSymbol("M", 3, 3)
-        >>> N = MatrixSymbol("N", 3, 3)
-        >>> cg = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), [1, 0, 3, 2])
-        >>> cg
-        CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N), (0 1)(2 3))
-        >>> nest_permutation(cg)
-        CodegenArrayTensorProduct(CodegenArrayPermuteDims(M, (0 1)), CodegenArrayPermuteDims(N, (0 1)))
-
-        In ``cg`` both ``M`` and ``N`` are transposed. The cyclic
-        representation of the permutation after the tensor product is
-        `(0 1)(2 3)`. After nesting it down the expression tree, the usual
-        transposition permutation `(0 1)` appears.
+        DEPRECATED.
         """
         ret = self._nest_permutation(self.expr, self.permutation)
         if ret is None:
