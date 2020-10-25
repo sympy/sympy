@@ -25,12 +25,14 @@ def build_html(rootdir):
 
 def build_latex(rootdir):
     docsdir = join(rootdir, 'doc')
-    latexdir = join(docsdir, '_build', 'latex')
-    os.environ['LATEXMKOPTS'] = '-xelatex -silent'
     run('make', 'clean', cwd=docsdir)
     run('make', 'latex', cwd=docsdir)
-    run('make', 'clean', cwd=latexdir)
-    run('make', 'all', cwd=latexdir)
+
+    latexdir = join(docsdir, '_build', 'latex')
+    env = os.environ.copy()
+    env['LATEXMKOPTS'] = '-xelatex -silent'
+    run('make', 'clean', cwd=latexdir, env=env)
+    run('make', 'all', cwd=latexdir, env=env)
 
 
 def check_version(version):
