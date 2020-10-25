@@ -1414,27 +1414,6 @@ def test_issue_12623():
     #issue-https://github.com/sympy/sympy/issues/12623
 
 
-def test_issue_5787():
-    # This test case is to show the classification of imaginary constants under
-    # nth_linear_constant_coeff_undetermined_coefficients
-    eq = Eq(diff(f(x), x), I*f(x) + S.Half - I)
-    our_hint = 'nth_linear_constant_coeff_undetermined_coefficients'
-    assert our_hint in classify_ode(eq)
-
-
-def test_nth_linear_constant_coeff_undetermined_coefficients_imaginary_exp():
-    # Equivalent to eq26 in
-    # test_nth_linear_constant_coeff_undetermined_coefficients above. This
-    # previously failed because the algorithm for undetermined coefficients
-    # didn't know to multiply exp(I*x) by sufficient x because it is linearly
-    # dependent on sin(x) and cos(x).
-    hint = 'nth_linear_constant_coeff_undetermined_coefficients'
-    eq26a = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x)
-    sol26 = Eq(f(x), C1 + x**2*(I*exp(I*x)/8 + 1) + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))
-    assert dsolve(eq26a, hint=hint) == sol26
-    assert checkodesol(eq26a, sol26) == (True, 0)
-
-
 @slow
 def test_nth_linear_constant_coeff_variation_of_parameters():
     hint = 'nth_linear_constant_coeff_variation_of_parameters'
@@ -2425,26 +2404,6 @@ def test_2nd_2F1_hypergeometric():
 
 
 def test_issue_5096():
-    eq = f(x).diff(x, x) + f(x) - x*sin(x - 2)
-    sol = Eq(f(x), C1*sin(x) + C2*cos(x) - x**2*cos(x - 2)/4 + x*sin(x - 2)/4)
-    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x, 2) + f(x) - x**4*sin(x-1)
-    sol = Eq(f(x), C1*sin(x) + C2*cos(x) - x**5*cos(x - 1)/10 + x**4*sin(x - 1)/4 + x**3*cos(x - 1)/2 - 3*x**2*sin(x - 1)/4 - 3*x*cos(x - 1)/4)
-    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x, 2) - f(x) - exp(x - 1)
-    sol = Eq(f(x), C2*exp(-x) + (C1 + x*exp(-1)/2)*exp(x))
-    got = dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
-    assert sol == got, got
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x, 2)+f(x)-(sin(x-2)+1)
-    sol = Eq(f(x), C1*sin(x) + C2*cos(x) - x*cos(x - 2)/2 + 1)
-    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
-    assert checkodesol(eq, sol) == (True, 0)
 
     eq = 2*x**2*f(x).diff(x, 2) + f(x) + sqrt(2*x)*sin(log(2*x)/2)
     sol = Eq(f(x), sqrt(x)*(C1*sin(log(x)/2) + C2*cos(log(x)/2) + sqrt(2)*log(x)*cos(log(2*x)/2)/2))
@@ -2468,21 +2427,4 @@ def test_issue_15996():
     sol = Eq(f(x), C1 + (C2 + x*(C3 - x/8) + 5*exp(2*I*x)/16)*sin(x) + (C4 + x*(C5 + I*x/8) + 5*I*exp(2*I*x)/16)*cos(x) - I*exp(I*x))
     got = dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
     assert sol == got, got
-    assert checkodesol(eq, sol) == (True, 0)
-
-
-def test_issue_18408():
-    eq = f(x).diff(x, 3) - f(x).diff(x) - sinh(x)
-    sol = Eq(f(x), C1 + C2*exp(-x) + C3*exp(x) + x*sinh(x)/2)
-    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x, 2) - 49*f(x) - sinh(3*x)
-    sol = Eq(f(x), C1*exp(-7*x) + C2*exp(7*x) - sinh(3*x)/40)
-    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x, 3) - f(x).diff(x) - sinh(x) - exp(x)
-    sol = Eq(f(x), C1 + C3*exp(-x) + x*sinh(x)/2 + (C2 + x/2)*exp(x))
-    assert sol == dsolve(eq, hint='nth_linear_constant_coeff_undetermined_coefficients')
     assert checkodesol(eq, sol) == (True, 0)

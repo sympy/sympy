@@ -333,10 +333,14 @@ def test_nth_algebraic():
 
 @slow
 def test_slow_examples_1st_exact():
+    _ode_solver_test(_get_examples_ode_sol_1st_exact(), run_slow_test=True)
+
+
+def test_1st_exact():
     eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
     sol_1 = dsolve(eq, f(x), simplify=False, hint='1st_exact_Integral')
     assert checkodesol(eq, sol_1, order=1, solve_for_func=False)
-    _ode_solver_test(_get_examples_ode_sol_1st_exact(), run_slow_test=True)
+    _ode_solver_test(_get_examples_ode_sol_1st_exact())
 
 
 @slow
@@ -355,6 +359,12 @@ def test_slow_examples_separable():
 
 
 def test_nth_linear_constant_coeff_undetermined_coefficients():
+    #issue-https://github.com/sympy/sympy/issues/5787
+    # This test case is to show the classification of imaginary constants under
+    # nth_linear_constant_coeff_undetermined_coefficients
+    eq = Eq(diff(f(x), x), I*f(x) + S.Half - I)
+    our_hint = 'nth_linear_constant_coeff_undetermined_coefficients'
+    assert our_hint in classify_ode(eq)
     _ode_solver_test(_get_examples_ode_sol_nth_linear_undetermined_coefficients())
 
 
@@ -1179,6 +1189,52 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
         'eq': f2 + f(x).diff(x) + exp(x-C1),
         'sol': [Eq(f(x), C2 + C3*exp(-x) - exp(-C1 + x)/2)],
         'slow': True,
+    },
+
+    # https://github.com/sympy/sympy/issues/18408
+    'undet_30': {
+        'eq': f(x).diff(x, 3) - f(x).diff(x) - sinh(x),
+        'sol': [Eq(f(x), C1 + C2*exp(-x) + C3*exp(x) + x*sinh(x)/2)],
+    },
+
+    'undet_31': {
+        'eq': f(x).diff(x, 2) - 49*f(x) - sinh(3*x),
+        'sol': [Eq(f(x), C1*exp(-7*x) + C2*exp(7*x) - sinh(3*x)/40)],
+    },
+
+    'undet_32': {
+        'eq': f(x).diff(x, 3) - f(x).diff(x) - sinh(x) - exp(x),
+        'sol': [Eq(f(x), C1 + C3*exp(-x) + x*sinh(x)/2 + (C2 + x/2)*exp(x))],
+    },
+
+    # https://github.com/sympy/sympy/issues/5096
+    'undet_33': {
+        'eq': f(x).diff(x, x) + f(x) - x*sin(x - 2),
+        'sol': [Eq(f(x), C1*sin(x) + C2*cos(x) - x**2*cos(x - 2)/4 + x*sin(x - 2)/4)],
+    },
+
+    'undet_34': {
+        'eq': f(x).diff(x, 2) + f(x) - x**4*sin(x-1),
+        'sol': [ Eq(f(x), C1*sin(x) + C2*cos(x) - x**5*cos(x - 1)/10 + x**4*sin(x - 1)/4 + x**3*cos(x - 1)/2 - 3*x**2*sin(x - 1)/4 - 3*x*cos(x - 1)/4)],
+    },
+
+    'undet_35': {
+        'eq': f(x).diff(x, 2) - f(x) - exp(x - 1),
+        'sol': [Eq(f(x), C2*exp(-x) + (C1 + x*exp(-1)/2)*exp(x))],
+    },
+
+    'undet_36': {
+        'eq': f(x).diff(x, 2)+f(x)-(sin(x-2)+1),
+        'sol': [Eq(f(x), C1*sin(x) + C2*cos(x) - x*cos(x - 2)/2 + 1)],
+    },
+
+    # Equivalent to example 26.
+    # This previously failed because the algorithm for undetermined coefficients
+    # didn't know to multiply exp(I*x) by sufficient x because it is linearly
+    # dependent on sin(x) and cos(x).
+    'undet_37': {
+        'eq': f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x),
+        'sol': [Eq(f(x), C1 + x**2*(I*exp(I*x)/8 + 1) + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))],
     },
     }
     }
