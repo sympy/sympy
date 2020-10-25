@@ -1008,8 +1008,13 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                     visited = visited.union(new_tree_edges)
 
             # igcd needs at least 2 arguments
-            g = igcd(len(class_), len(class_), *{val_e for val_e in non_tree_edge_values if val_e > 0})
-            periods.append(g)
+            positive_ntev = {val_e for val_e in non_tree_edge_values if val_e > 0}
+            if len(positive_ntev) == 0:
+                periods.append(len(class_))
+            elif len(positive_ntev) == 1:
+                periods.append(positive_ntev.pop())
+            else:
+                periods.append(igcd(*positive_ntev))
             # end breadth-first search
 
         # convert back to the user's state names

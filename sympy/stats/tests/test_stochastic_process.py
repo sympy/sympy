@@ -225,17 +225,52 @@ def test_DiscreteMarkovChain():
                                  [0, S(1)/2, 0, S(1)/2, 0]])
 
     # test regular and ergodic
+    # https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    T = Matrix([[0, 4, 0, 0, 0],
+                [1, 0, 3, 0, 0],
+                [0, 2, 0, 2, 0],
+                [0, 0, 3, 0, 1],
+                [0, 0, 0, 4, 0]])/4
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert not X.is_regular()
+    assert X.is_ergodic()
     T = Matrix([[0, 1], [1, 0]])
     X = DiscreteMarkovChain('X', trans_probs=T)
-    assert X.is_regular() == False
-    assert X.is_ergodic() == True
+    assert not X.is_regular()
+    assert X.is_ergodic()
+    # http://www.math.wisc.edu/~valko/courses/331/MC2.pdf
+    T = Matrix([[2, 1, 1],
+                [2, 0, 2],
+                [1, 1, 2]])/4
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_regular()
+    assert X.is_ergodic()
+    # https://docs.ufpr.br/~lucambio/CE222/1S2014/Kemeny-Snell1976.pdf
+    T = Matrix([[1, 1], [1, 1]])/2
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_regular()
+    assert X.is_ergodic()
 
     # test is_absorbing_chain
     T = Matrix([[0, 1, 0],
                 [1, 0, 0],
                 [0, 0, 1]])
     X = DiscreteMarkovChain('X', trans_probs=T)
-    assert X.is_absorbing_chain() == False
+    assert not X.is_absorbing_chain()
+    # https://en.wikipedia.org/wiki/Absorbing_Markov_chain
+    T = Matrix([[1, 1, 0, 0],
+                [0, 1, 1, 0],
+                [1, 0, 0, 1],
+                [0, 0, 0, 2]])/2
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_absorbing_chain()
+    T = Matrix([[2, 0, 0, 0, 0],
+                [1, 0, 1, 0, 0],
+                [0, 1, 0, 1, 0],
+                [0, 0, 1, 0, 1],
+                [0, 0, 0, 0, 2]])/2
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_absorbing_chain()
 
     # test custom state space
     Y10 = DiscreteMarkovChain('Y', [1, 2, 3], TO2)
