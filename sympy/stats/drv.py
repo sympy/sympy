@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
                    Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, poly,
                    series, factorial, And, lambdify)
@@ -17,9 +15,6 @@ from sympy.utilities import filldedent
 from sympy.core.sympify import _sympify
 from sympy.external import import_module
 
-scipy = import_module('scipy')
-numpy = import_module('numpy')
-pymc3 = import_module('pymc3')
 
 class DiscreteDistribution(Basic):
     def __call__(self, *args):
@@ -31,33 +26,34 @@ class SampleDiscreteScipy:
     def __new__(cls, dist, size):
         return cls._sample_scipy(dist, size)
 
-    scipy_rv_map = {
-        'GeometricDistribution': lambda dist, size: scipy.stats.geom.rvs(p=float(dist.p),
-            size=size),
-        'LogarithmicDistribution': lambda dist, size: scipy.stats.logser.rvs(p=float(dist.p),
-            size=size),
-        'NegativeBinomialDistribution': lambda dist, size: scipy.stats.nbinom.rvs(n=float(dist.r),
-            p=float(dist.p), size=size),
-        'PoissonDistribution': lambda dist, size: scipy.stats.poisson.rvs(mu=float(dist.lamda),
-            size=size),
-        'SkellamDistribution': lambda dist, size: scipy.stats.skellam.rvs(mu1=float(dist.mu1),
-            mu2=float(dist.mu2), size=size),
-        'YuleSimonDistribution': lambda dist, size: scipy.stats.yulesimon.rvs(alpha=float(dist.rho),
-            size=size),
-        'ZetaDistribution': lambda dist, size: scipy.stats.zipf.rvs(a=float(dist.s),
-            size=size)
-    }
-
     @classmethod
     def _sample_scipy(cls, dist, size):
         """Sample from SciPy."""
 
-        dist_list = cls.scipy_rv_map.keys()
+        from scipy import stats as scipy_stats
+        scipy_rv_map = {
+            'GeometricDistribution': lambda dist, size: scipy_stats.geom.rvs(p=float(dist.p),
+                size=size),
+            'LogarithmicDistribution': lambda dist, size: scipy_stats.logser.rvs(p=float(dist.p),
+                size=size),
+            'NegativeBinomialDistribution': lambda dist, size: scipy_stats.nbinom.rvs(n=float(dist.r),
+                p=float(dist.p), size=size),
+            'PoissonDistribution': lambda dist, size: scipy_stats.poisson.rvs(mu=float(dist.lamda),
+                size=size),
+            'SkellamDistribution': lambda dist, size: scipy_stats.skellam.rvs(mu1=float(dist.mu1),
+                mu2=float(dist.mu2), size=size),
+            'YuleSimonDistribution': lambda dist, size: scipy_stats.yulesimon.rvs(alpha=float(dist.rho),
+                size=size),
+            'ZetaDistribution': lambda dist, size: scipy_stats.zipf.rvs(a=float(dist.s),
+                size=size)
+        }
+
+        dist_list = scipy_rv_map.keys()
 
         if dist.__class__.__name__ == 'DiscreteDistributionHandmade':
             from scipy.stats import rv_discrete
             z = Dummy('z')
-            handmade_pmf = lambdify(z, dist.pdf(z), 'scipy')
+            handmade_pmf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])
             class scipy_pmf(rv_discrete):
                 def _pmf(self, x):
                     return handmade_pmf(x)
@@ -68,7 +64,7 @@ class SampleDiscreteScipy:
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        return cls.scipy_rv_map[dist.__class__.__name__](dist, size)
+        return scipy_rv_map[dist.__class__.__name__](dist, size)
 
 class SampleDiscreteNumpy:
     """Returns the sample from numpy of the given distribution"""
@@ -76,25 +72,26 @@ class SampleDiscreteNumpy:
     def __new__(cls, dist, size):
         return cls._sample_numpy(dist, size)
 
-    numpy_rv_map = {
-        'GeometricDistribution': lambda dist, size: numpy.random.geometric(p=float(dist.p),
-            size=size),
-        'PoissonDistribution': lambda dist, size: numpy.random.poisson(lam=float(dist.lamda),
-            size=size),
-        'ZetaDistribution': lambda dist, size: numpy.random.zipf(a=float(dist.s),
-            size=size)
-    }
-
     @classmethod
     def _sample_numpy(cls, dist, size):
         """Sample from NumPy."""
 
-        dist_list = cls.numpy_rv_map.keys()
+        import numpy
+        numpy_rv_map = {
+            'GeometricDistribution': lambda dist, size: numpy.random.geometric(p=float(dist.p),
+                size=size),
+            'PoissonDistribution': lambda dist, size: numpy.random.poisson(lam=float(dist.lamda),
+                size=size),
+            'ZetaDistribution': lambda dist, size: numpy.random.zipf(a=float(dist.s),
+                size=size)
+        }
+
+        dist_list = numpy_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
+        return numpy_rv_map[dist.__class__.__name__](dist, size)
 
 class SampleDiscretePymc:
     """Returns the sample from pymc3 of the given distribution"""
@@ -102,24 +99,25 @@ class SampleDiscretePymc:
     def __new__(cls, dist, size):
         return cls._sample_pymc3(dist, size)
 
-    pymc3_rv_map = {
-        'GeometricDistribution': lambda dist: pymc3.Geometric('X', p=float(dist.p)),
-        'PoissonDistribution': lambda dist: pymc3.Poisson('X', mu=float(dist.lamda)),
-        'NegativeBinomialDistribution': lambda dist: pymc3.NegativeBinomial('X',
-        mu=float((dist.p*dist.r)/(1-dist.p)), alpha=float(dist.r))
-    }
-
     @classmethod
     def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
 
-        dist_list = cls.pymc3_rv_map.keys()
+        import pymc3
+        pymc3_rv_map = {
+            'GeometricDistribution': lambda dist: pymc3.Geometric('X', p=float(dist.p)),
+            'PoissonDistribution': lambda dist: pymc3.Poisson('X', mu=float(dist.lamda)),
+            'NegativeBinomialDistribution': lambda dist: pymc3.NegativeBinomial('X',
+            mu=float((dist.p*dist.r)/(1-dist.p)), alpha=float(dist.r))
+        }
+
+        dist_list = pymc3_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
         with pymc3.Model():
-            cls.pymc3_rv_map[dist.__class__.__name__](dist)
+            pymc3_rv_map[dist.__class__.__name__](dist)
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 
@@ -388,7 +386,7 @@ class DiscretePSpace(PSpace):
         # XXX: Converting from set to tuple. The order matters to Lambda
         # though so we should be starting with a set...
         density = Lambda(tuple(self.symbols), self.pdf/self.probability(condition))
-        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        condition = condition.xreplace({rv: rv.symbol for rv in self.values})
         domain = ConditionalDiscreteDomain(self.domain, condition)
         return DiscretePSpace(domain, density)
 
@@ -422,7 +420,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
             return expr
 
         expr = _sympify(expr)
-        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
+        expr = expr.xreplace({rv: rv.symbol for rv in rvs})
 
         x = self.value.symbol
         try:

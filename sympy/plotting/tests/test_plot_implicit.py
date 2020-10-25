@@ -15,9 +15,7 @@ def tmp_file(dir=None, name=''):
     return NamedTemporaryFile(
     suffix='.png', dir=dir, delete=False).name
 
-def plot_and_save(expr, *args, **kwargs):
-    name = kwargs.pop('name', '')
-    dir = kwargs.pop('dir', None)
+def plot_and_save(expr, *args, name='', dir=None, **kwargs):
     p = plot_implicit(expr, *args, **kwargs)
     p.save(tmp_file(dir=dir, name=name))
     # Close the plot to avoid a warning from matplotlib

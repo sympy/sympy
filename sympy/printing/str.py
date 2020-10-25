@@ -2,13 +2,11 @@
 A Printer for generating readable representation of most sympy classes.
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
-from .printer import Printer
+from .printer import Printer, print_function
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
@@ -225,31 +223,6 @@ class StrPrinter(Printer):
     def _print_MatrixBase(self, expr):
         return expr._format_str(self)
 
-    def _print_MutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_SparseMatrix(self, expr):
-        from sympy.matrices import Matrix
-        return self._print(Matrix(expr))
-
-    def _print_ImmutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_Matrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_DenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_MutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
             + '[%s, %s]' % (self._print(expr.i), self._print(expr.j))
@@ -354,7 +327,7 @@ class StrPrinter(Printer):
         )
 
     def _print_ElementwiseApplyFunction(self, expr):
-        return "{0}.({1})".format(
+        return "{}.({})".format(
             expr.function,
             self._print(expr.expr),
         )
@@ -898,6 +871,7 @@ class StrPrinter(Printer):
     def _print_Str(self, s):
         return self._print(s.name)
 
+@print_function(StrPrinter)
 def sstr(expr, **settings):
     """Returns the expression as a string.
 
@@ -931,6 +905,7 @@ class StrReprPrinter(StrPrinter):
         return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
 
 
+@print_function(StrReprPrinter)
 def sstrrepr(expr, **settings):
     """return expr in mixed str/repr form
 

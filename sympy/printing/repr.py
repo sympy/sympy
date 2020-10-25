@@ -5,15 +5,13 @@ The most important function here is srepr that returns a string so that the
 relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy.core.function import AppliedUndef
 from sympy.core.mul import Mul
 from mpmath.libmp import repr_dps, to_str as mlib_to_str
 
-from .printer import Printer
+from .printer import Printer, print_function
 
 
 class ReprPrinter(Printer):
@@ -167,30 +165,6 @@ class ReprPrinter(Printer):
             for j in range(expr.cols):
                 l[-1].append(expr[i, j])
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
-
-    def _print_MutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_SparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_Matrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_DenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_MutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
 
     def _print_BooleanTrue(self, expr):
         return "true"
@@ -346,6 +320,7 @@ class ReprPrinter(Printer):
         ext = self._print(f.ext)
         return "ExtElem(%s, %s)" % (rep, ext)
 
+@print_function(ReprPrinter)
 def srepr(expr, **settings):
     """return expr in repr form"""
     return ReprPrinter(settings).doprint(expr)

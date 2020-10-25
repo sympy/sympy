@@ -7,7 +7,7 @@ from sympy.codegen.fnodes import bind_C
 from sympy.codegen.futils import render_as_module as f_module
 from sympy.codegen.pyutils import render_as_module as py_module
 from sympy.external import import_module
-from sympy.printing.ccode import ccode
+from sympy.printing import ccode
 from sympy.utilities._compilation import compile_link_import_strings, has_c, has_fortran
 from sympy.utilities._compilation.util import may_xfail
 from sympy.testing.pytest import skip, raises

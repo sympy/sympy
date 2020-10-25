@@ -18,8 +18,8 @@ def _base_ordering(base, degree):
     Parameters
     ==========
 
-    ``base`` - the base
-    ``degree`` - the degree of the associated permutation group
+    ``base`` : the base
+    ``degree`` : the degree of the associated permutation group
 
     Returns
     =======
@@ -71,6 +71,9 @@ def _check_cycles_alt_sym(perm):
     """
     Checks for cycles of prime length p with n/2 < p < n-2.
 
+    Explanation
+    ===========
+
     Here `n` is the degree of the permutation. This is a helper function for
     the function is_alt_sym from sympy.combinatorics.perm_groups.
 
@@ -116,6 +119,9 @@ def _distribute_gens_by_base(base, gens):
     r"""
     Distribute the group elements ``gens`` by membership in basic stabilizers.
 
+    Explanation
+    ===========
+
     Notice that for a base `(b_1, b_2, ..., b_k)`, the basic stabilizers
     are defined as `G^{(i)} = G_{b_1, ..., b_{i-1}}` for
     `i \in\{1, 2, ..., k\}`.
@@ -123,8 +129,8 @@ def _distribute_gens_by_base(base, gens):
     Parameters
     ==========
 
-    ``base`` - a sequence of points in `\{0, 1, ..., n-1\}`
-    ``gens`` - a list of elements of a permutation group of degree `n`.
+    ``base`` : a sequence of points in `\{0, 1, ..., n-1\}`
+    ``gens`` : a list of elements of a permutation group of degree `n`.
 
     Returns
     =======
@@ -179,6 +185,9 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
                              basic_orbits=None, strong_gens_distr=None):
     """
     Calculate BSGS-related structures from those present.
+
+    Explanation
+    ===========
 
     The base and strong generating set must be provided; if any of the
     transversals, basic orbits or distributed strong generators are not
@@ -243,6 +252,9 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     """
     Compute basic orbits and transversals from a base and strong generating set.
 
+    Explanation
+    ===========
+
     The generators are provided as distributed across the basic stabilizers.
     If the optional argument ``transversals_only`` is set to True, only the
     transversals are returned.
@@ -250,15 +262,17 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     Parameters
     ==========
 
-    ``base`` - the base
-    ``strong_gens_distr`` - strong generators distributed by membership in basic
-    stabilizers
-    ``transversals_only`` - a flag switching between returning only the
-    transversals/ both orbits and transversals
-    ``slp`` - if ``True``, return a list of dictionaries containing the
-              generator presentations of the elements of the transversals,
-              i.e. the list of indices of generators from `strong_gens_distr[i]`
-              such that their product is the relevant transversal element
+    ``base`` - The base.
+    ``strong_gens_distr`` - Strong generators distributed by membership in basic
+    stabilizers.
+    ``transversals_only`` - bool
+        A flag switching between returning only the
+        transversals and both orbits and transversals.
+    ``slp`` -
+        If ``True``, return a list of dictionaries containing the
+        generator presentations of the elements of the transversals,
+        i.e. the list of indices of generators from ``strong_gens_distr[i]``
+        such that their product is the relevant transversal element.
 
     Examples
     ========
@@ -375,6 +389,9 @@ def _strip(g, base, orbits, transversals):
     Attempt to decompose a permutation using a (possibly partial) BSGS
     structure.
 
+    Explanation
+    ===========
+
     This is done by treating the sequence ``base`` as an actual base, and
     the orbits ``orbits`` and transversals ``transversals`` as basic orbits and
     transversals relative to it.
@@ -422,14 +439,12 @@ def _strip(g, base, orbits, transversals):
     References
     ==========
 
-    [1] Holt, D., Eick, B., O'Brien, E.
-    "Handbook of computational group theory"
+    .. [1] Holt, D., Eick, B., O'Brien, E."Handbook of computational group theory"
 
     See Also
     ========
 
     sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims
-
     sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims_random
 
     """
@@ -452,6 +467,7 @@ def _strip_af(h, base, orbits, transversals, j, slp=[], slps={}):
     if the stripped elements is the identity, it returns False, base_len + 1
 
     j    h[base[i]] == base[i] for i <= j
+
     """
     base_len = len(base)
     for i in range(j+1, base_len):

@@ -27,6 +27,7 @@ def test_polygon():
     half = S.Half
     a, b, c = Point(0, 0), Point(2, 0), Point(3, 3)
     t = Triangle(a, b, c)
+    assert Polygon(Point(0, 0)) == Point(0, 0)
     assert Polygon(a, Point(1, 0), b, c) == t
     assert Polygon(Point(1, 0), b, c, a) == t
     assert Polygon(b, c, a, Point(1, 0)) == t
@@ -73,6 +74,7 @@ def test_polygon():
         Point(0, 2), Point(2, 2),
         Point(0, 0), Point(2, 0))
     p11 = Polygon(Point(0, 0), 1, n=3)
+    p12 = Polygon(Point(0, 0), 1, 0, n=3)
 
     r = Ray(Point(-9, 6.6), Point(-9, 5.5))
     #
@@ -122,6 +124,7 @@ def test_polygon():
     assert p6.intersection(r) == [Point(-9, Rational(-84, 13)), Point(-9, Rational(33, 5))]
     assert p10.area == 0
     assert p11 == RegularPolygon(Point(0, 0), 1, 3, 0)
+    assert p11 == p12
     assert p11.vertices[0] == Point(1, 0)
     assert p11.args[0] == Point(0, 0)
     p11.spin(pi/2)
@@ -499,6 +502,7 @@ def test_parameter_value():
     assert q.parameter_value((4, 0), t) == {t: -6 + 3*sqrt(5)} # ~= 0.708
 
     raises(ValueError, lambda: sq.parameter_value((5, 6), t))
+    raises(ValueError, lambda: sq.parameter_value(Circle(Point(0, 0), 1), t))
 
 
 def test_issue_12966():

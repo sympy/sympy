@@ -9,7 +9,6 @@ sympy.stats.crv
 sympy.stats.drv
 """
 
-from __future__ import print_function, division
 
 from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
                    Dummy)
@@ -22,14 +21,11 @@ from sympy.matrices import ImmutableMatrix, matrix2numpy, list2numpy
 from sympy.stats.crv import SingleContinuousDistribution, SingleContinuousPSpace
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
-                            ProductDomain, RandomSymbol, random_symbols, SingleDomain)
+                            ProductDomain, RandomSymbol, random_symbols, SingleDomain, _symbol_converter)
 from sympy.utilities.misc import filldedent
 from sympy.external import import_module
 
 # __all__ = ['marginal_distribution']
-scipy = import_module('scipy')
-numpy = import_module('numpy')
-pymc3 = import_module('pymc3')
 
 class JointPSpace(ProductPSpace):
     """
@@ -41,10 +37,7 @@ class JointPSpace(ProductPSpace):
             return SingleContinuousPSpace(sym, dist)
         if isinstance(dist, SingleDiscreteDistribution):
             return SingleDiscretePSpace(sym, dist)
-        if isinstance(sym, str):
-            sym = Symbol(sym)
-        if not isinstance(sym, Symbol):
-            raise TypeError("s should have been string or Symbol")
+        sym = _symbol_converter(sym)
         return Basic.__new__(cls, sym, dist)
 
     @property
@@ -152,26 +145,27 @@ class SampleJointScipy:
     def __new__(cls, dist, size):
         return cls._sample_scipy(dist, size)
 
-    scipy_rv_map = {
-        'MultivariateNormalDistribution': lambda dist, size: scipy.stats.multivariate_normal.rvs(
-            mean=matrix2numpy(dist.mu).flatten(),
-            cov=matrix2numpy(dist.sigma), size=size),
-        'MultivariateBetaDistribution': lambda dist, size: scipy.stats.dirichlet.rvs(
-            alpha=list2numpy(dist.alpha, float).flatten(), size=size),
-        'MultinomialDistribution': lambda dist, size: scipy.stats.multinomial.rvs(
-            n=int(dist.n), p=list2numpy(dist.p, float).flatten(), size=size)
-    }
-
     @classmethod
     def _sample_scipy(cls, dist, size):
         """Sample from SciPy."""
 
-        dist_list = cls.scipy_rv_map.keys()
+        from scipy import stats as scipy_stats
+        scipy_rv_map = {
+            'MultivariateNormalDistribution': lambda dist, size: scipy_stats.multivariate_normal.rvs(
+                mean=matrix2numpy(dist.mu).flatten(),
+                cov=matrix2numpy(dist.sigma), size=size),
+            'MultivariateBetaDistribution': lambda dist, size: scipy_stats.dirichlet.rvs(
+                alpha=list2numpy(dist.alpha, float).flatten(), size=size),
+            'MultinomialDistribution': lambda dist, size: scipy_stats.multinomial.rvs(
+                n=int(dist.n), p=list2numpy(dist.p, float).flatten(), size=size)
+        }
+
+        dist_list = scipy_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        return cls.scipy_rv_map[dist.__class__.__name__](dist, size)
+        return scipy_rv_map[dist.__class__.__name__](dist, size)
 
 class SampleJointNumpy:
     """Returns the sample from numpy of the given distribution"""
@@ -179,26 +173,27 @@ class SampleJointNumpy:
     def __new__(cls, dist, size):
         return cls._sample_numpy(dist, size)
 
-    numpy_rv_map = {
-        'MultivariateNormalDistribution': lambda dist, size: numpy.random.multivariate_normal(
-            mean=matrix2numpy(dist.mu, float).flatten(),
-            cov=matrix2numpy(dist.sigma, float), size=size),
-        'MultivariateBetaDistribution': lambda dist, size: numpy.random.dirichlet(
-            alpha=list2numpy(dist.alpha, float).flatten(), size=size),
-        'MultinomialDistribution': lambda dist, size: numpy.random.multinomial(
-            n=int(dist.n), pvals=list2numpy(dist.p, float).flatten(), size=size)
-    }
-
     @classmethod
     def _sample_numpy(cls, dist, size):
         """Sample from NumPy."""
 
-        dist_list = cls.numpy_rv_map.keys()
+        import numpy
+        numpy_rv_map = {
+            'MultivariateNormalDistribution': lambda dist, size: numpy.random.multivariate_normal(
+                mean=matrix2numpy(dist.mu, float).flatten(),
+                cov=matrix2numpy(dist.sigma, float), size=size),
+            'MultivariateBetaDistribution': lambda dist, size: numpy.random.dirichlet(
+                alpha=list2numpy(dist.alpha, float).flatten(), size=size),
+            'MultinomialDistribution': lambda dist, size: numpy.random.multinomial(
+                n=int(dist.n), pvals=list2numpy(dist.p, float).flatten(), size=size)
+        }
+
+        dist_list = numpy_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
+        return numpy_rv_map[dist.__class__.__name__](dist, size)
 
 class SampleJointPymc:
     """Returns the sample from pymc3 of the given distribution"""
@@ -206,28 +201,29 @@ class SampleJointPymc:
     def __new__(cls, dist, size):
         return cls._sample_pymc3(dist, size)
 
-    pymc3_rv_map = {
-        'MultivariateNormalDistribution': lambda dist:
-            pymc3.MvNormal('X', mu=matrix2numpy(dist.mu, float).flatten(),
-            cov=matrix2numpy(dist.sigma, float), shape=(1, dist.mu.shape[0])),
-        'MultivariateBetaDistribution': lambda dist:
-            pymc3.Dirichlet('X', a=list2numpy(dist.alpha, float).flatten()),
-        'MultinomialDistribution': lambda dist:
-            pymc3.Multinomial('X', n=int(dist.n),
-            p=list2numpy(dist.p, float).flatten(), shape=(1, len(dist.p)))
-    }
-
     @classmethod
     def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
 
-        dist_list = cls.pymc3_rv_map.keys()
+        import pymc3
+        pymc3_rv_map = {
+            'MultivariateNormalDistribution': lambda dist:
+                pymc3.MvNormal('X', mu=matrix2numpy(dist.mu, float).flatten(),
+                cov=matrix2numpy(dist.sigma, float), shape=(1, dist.mu.shape[0])),
+            'MultivariateBetaDistribution': lambda dist:
+                pymc3.Dirichlet('X', a=list2numpy(dist.alpha, float).flatten()),
+            'MultinomialDistribution': lambda dist:
+                pymc3.Multinomial('X', n=int(dist.n),
+                p=list2numpy(dist.p, float).flatten(), shape=(1, len(dist.p)))
+        }
+
+        dist_list = pymc3_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
         with pymc3.Model():
-            cls.pymc3_rv_map[dist.__class__.__name__](dist)
+            pymc3_rv_map[dist.__class__.__name__](dist)
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 _get_sample_class_jrv = {
@@ -342,7 +338,7 @@ class MarginalDistribution(Basic):
     @property
     def symbols(self):
         rvs = self.args[1]
-        return set([rv.pspace.symbol for rv in rvs])
+        return {rv.pspace.symbol for rv in rvs}
 
     def pdf(self, *x):
         expr, rvs = self.args[0], self.args[1]

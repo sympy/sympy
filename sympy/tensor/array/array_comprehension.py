@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import functools, itertools
 from sympy.core.sympify import sympify
 from sympy.core.expr import Expr

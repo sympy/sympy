@@ -60,8 +60,7 @@ def test_rational_parametrization():
     circle1 = ImplicitRegion((x, y), (x-2)**2 + (y+3)**2 - 4)
     assert circle1.rational_parametrization(parameters=t) == (4*t/(t**2 + 1) + 2, 4*t**2/(t**2 + 1) - 5)
     circle2 = ImplicitRegion((x, y), (x - S.Half)**2 + y**2 - (S(1)/2)**2)
-    print(circle2.regular_point())
-    print(circle2.rational_parametrization())
+
     assert circle2.rational_parametrization(parameters=t) == (t/(t**2 + 1) + S(1)/2, t**2/(t**2 + 1) - S(1)/2)
     circle3 = ImplicitRegion((x, y), Eq(x**2 + y**2, 2*x))
     assert circle3.rational_parametrization(parameters=(t,)) == (2*t/(t**2 + 1) + 1, 2*t**2/(t**2 + 1) - 1)
@@ -81,7 +80,6 @@ def test_rational_parametrization():
     assert I.rational_parametrization(t) == (t**2 - 1, t*(t**2 - 1))
 
     sphere = ImplicitRegion((x, y, z), Eq(x**2 + y**2 + z**2, 2*x))
-    print(sphere.rational_parametrization(parameters=(s, t)))
     assert sphere.rational_parametrization(parameters=(s, t)) == (2/(s**2 + t**2 + 1), 2*t/(s**2 + t**2 + 1), 2*s/(s**2 + t**2 + 1))
 
     conic = ImplicitRegion((x, y), Eq(x**2 + 4*x*y + 3*y**2 + x - y + 10, 0))

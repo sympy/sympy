@@ -104,8 +104,6 @@ See the appropriate docstrings for a detailed explanation of the output.
 #      - Idx with stepsize != 1
 #      - Idx with step determined by function call
 
-from __future__ import print_function, division
-
 from sympy import Number
 from sympy.core.assumptions import StdFactKB
 from sympy.core import Expr, Tuple, sympify, S
@@ -176,7 +174,7 @@ class Indexed(Expr):
         return obj
 
     def _hashable_content(self):
-        return super(Indexed, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
+        return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
     def name(self):
@@ -434,7 +432,7 @@ class IndexedBase(Expr, NotIterable):
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = tmp_asm_copy  # Issue #8873
 
-    def __new__(cls, label, shape=None, **kw_args):
+    def __new__(cls, label, shape=None, *, offset=S.Zero, strides=None, **kw_args):
         from sympy import MatrixBase, NDimArray
 
         assumptions, kw_args = _filter_assumptions(kw_args)
@@ -454,9 +452,6 @@ class IndexedBase(Expr, NotIterable):
         elif shape is not None:
             shape = Tuple(shape)
 
-        offset = kw_args.pop('offset', S.Zero)
-        strides = kw_args.pop('strides', None)
-
         if shape is not None:
             obj = Expr.__new__(cls, label, shape)
         else:
@@ -474,7 +469,7 @@ class IndexedBase(Expr, NotIterable):
         return self._name
 
     def _hashable_content(self):
-        return super(IndexedBase, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
+        return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
     def assumptions0(self):
@@ -767,7 +762,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
     return None
 
 
-@dispatch(Idx, Number)
+@dispatch(Idx, Number)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
 
     other_upper = rhs
@@ -780,7 +775,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
     return None
 
 
-@dispatch(Number, Idx)
+@dispatch(Number, Idx)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
 
     other_upper = lhs

@@ -126,9 +126,9 @@ class GeometryEntity(Basic):
         """Implementation of reverse add method."""
         return a.__add__(self)
 
-    def __rdiv__(self, a):
+    def __rtruediv__(self, a):
         """Implementation of reverse division method."""
-        return a.__div__(self)
+        return a.__truediv__(self)
 
     def __repr__(self):
         """String representation of a GeometryEntity that can be evaluated

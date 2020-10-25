@@ -5,6 +5,7 @@
 import sympy
 from sympy.external import import_module
 from sympy.printing.str import StrPrinter
+from sympy.physics.quantum.state import Bra, Ket
 
 from .errors import LaTeXParsingError
 
@@ -102,6 +103,8 @@ def convert_relation(rel):
         return sympy.GreaterThan(lh, rh)
     elif rel.EQUAL():
         return sympy.Eq(lh, rh)
+    elif rel.NEQ():
+        return sympy.Ne(lh, rh)
 
 
 def convert_expr(expr):
@@ -281,6 +284,10 @@ def convert_comp(comp):
         return convert_frac(comp.frac())
     elif comp.binom():
         return convert_binom(comp.binom())
+    elif comp.floor():
+        return convert_floor(comp.floor())
+    elif comp.ceil():
+        return convert_ceil(comp.ceil())
     elif comp.func():
         return convert_func(comp.func())
 
@@ -319,6 +326,12 @@ def convert_atom(atom):
     elif atom.mathit():
         text = rule2text(atom.mathit().mathit_text())
         return sympy.Symbol(text)
+    elif atom.bra():
+        val = convert_expr(atom.bra().expr())
+        return Bra(val)
+    elif atom.ket():
+        val = convert_expr(atom.ket().expr())
+        return Ket(val)
 
 
 def rule2text(ctx):
@@ -381,6 +394,14 @@ def convert_binom(binom):
     expr_n = convert_expr(binom.n)
     expr_k = convert_expr(binom.k)
     return sympy.binomial(expr_n, expr_k, evaluate=False)
+
+def convert_floor(floor):
+    val = convert_expr(floor.val)
+    return sympy.floor(val, evaluate=False)
+
+def convert_ceil(ceil):
+    val = convert_expr(ceil.val)
+    return sympy.ceiling(val, evaluate=False)
 
 def convert_func(func):
     if func.func_normal():

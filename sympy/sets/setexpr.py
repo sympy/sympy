@@ -24,7 +24,7 @@ class SetExpr(Expr):
     set = property(lambda self: self.args[0])
 
     def _latex(self, printer):
-        return r"SetExpr\left({0}\right)".format(printer._print(self.set))
+        return r"SetExpr\left({}\right)".format(printer._print(self.set))
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
@@ -67,17 +67,14 @@ class SetExpr(Expr):
         return _setexpr_apply_operation(set_pow, other, self)
 
     @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
         return _setexpr_apply_operation(set_div, self, other)
 
     @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
+    @call_highest_priority('__truediv__')
+    def __rtruediv__(self, other):
         return _setexpr_apply_operation(set_div, other, self)
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def _eval_func(self, func):
         # TODO: this could be implemented straight into `imageset`:

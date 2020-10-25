@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from sympy import symbols, sin, asin, cos, sqrt, Function
-from sympy.core.compatibility import u_decode as u
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols, Dyadic
 from sympy.physics.vector.printing import (VectorLatexPrinter, vpprint,
                                            vsprint, vsstrrepr, vlatex)
@@ -52,16 +51,16 @@ def test_vector_pretty_print():
  2
 a  n_x + b n_y + c*sin(alpha) n_z\
 """
-    uexpected = u("""\
+    uexpected = """\
  2
 a  n_x + b n_y + c⋅sin(α) n_z\
-""")
+"""
 
     assert ascii_vpretty(v) == expected
     assert unicode_vpretty(v) == uexpected
 
-    expected = u('alpha n_x + sin(omega) n_y + alpha*beta n_z')
-    uexpected = u('α n_x + sin(ω) n_y + α⋅β n_z')
+    expected = 'alpha n_x + sin(omega) n_y + alpha*beta n_z'
+    uexpected = 'α n_x + sin(ω) n_y + α⋅β n_z'
 
     assert ascii_vpretty(w) == expected
     assert unicode_vpretty(w) == uexpected
@@ -72,12 +71,12 @@ a       b + c       c
 - n_x + ----- n_y + -- n_z
 b         a         b\
 """
-    uexpected = u("""\
+    uexpected = """\
                      2
 a       b + c       c
 ─ n_x + ───── n_y + ── n_z
 b         a         b\
-""")
+"""
 
     assert ascii_vpretty(o) == expected
     assert unicode_vpretty(o) == uexpected
@@ -181,15 +180,15 @@ def test_dyadic_pretty_print():
 a  n_x|n_y + b n_y|n_y + c*sin(alpha) n_z|n_y\
 """
 
-    uexpected = u("""\
+    uexpected = """\
  2
 a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
-""")
+"""
     assert ascii_vpretty(y) == expected
     assert unicode_vpretty(y) == uexpected
 
-    expected = u('alpha n_x|n_x + sin(omega) n_y|n_z + alpha*beta n_z|n_x')
-    uexpected = u('α n_x⊗n_x + sin(ω) n_y⊗n_z + α⋅β n_z⊗n_x')
+    expected = 'alpha n_x|n_x + sin(omega) n_y|n_z + alpha*beta n_z|n_x'
+    uexpected = 'α n_x⊗n_x + sin(ω) n_y⊗n_z + α⋅β n_z⊗n_x'
     assert ascii_vpretty(x) == expected
     assert unicode_vpretty(x) == uexpected
 
@@ -197,10 +196,10 @@ a  n_x⊗n_y + b n_y⊗n_y + c⋅sin(α) n_z⊗n_y\
     assert unicode_vpretty(Dyadic([])) == '0'
 
     assert ascii_vpretty(xx) == '- n_x|n_y - n_x|n_z'
-    assert unicode_vpretty(xx) == u('- n_x⊗n_y - n_x⊗n_z')
+    assert unicode_vpretty(xx) == '- n_x⊗n_y - n_x⊗n_z'
 
     assert ascii_vpretty(xx2) == 'n_x|n_y + n_x|n_z'
-    assert unicode_vpretty(xx2) == u('n_x⊗n_y + n_x⊗n_z')
+    assert unicode_vpretty(xx2) == 'n_x⊗n_y + n_x⊗n_z'
 
 
 def test_dyadic_latex():
@@ -271,35 +270,35 @@ def test_issue_13354():
 def test_vector_derivative_printing():
     # First order
     v = omega.diff() * N.x
-    assert unicode_vpretty(v) == u('ω̇ n_x')
-    assert ascii_vpretty(v) == u("omega'(t) n_x")
+    assert unicode_vpretty(v) == 'ω̇ n_x'
+    assert ascii_vpretty(v) == "omega'(t) n_x"
 
     # Second order
     v = omega.diff().diff() * N.x
 
     assert vlatex(v) == r'\ddot{\omega}\mathbf{\hat{n}_x}'
-    assert unicode_vpretty(v) == u('ω̈ n_x')
-    assert ascii_vpretty(v) == u("omega''(t) n_x")
+    assert unicode_vpretty(v) == 'ω̈ n_x'
+    assert ascii_vpretty(v) == "omega''(t) n_x"
 
     # Third order
     v = omega.diff().diff().diff() * N.x
 
     assert vlatex(v) == r'\dddot{\omega}\mathbf{\hat{n}_x}'
-    assert unicode_vpretty(v) == u('ω⃛ n_x')
-    assert ascii_vpretty(v) == u("omega'''(t) n_x")
+    assert unicode_vpretty(v) == 'ω⃛ n_x'
+    assert ascii_vpretty(v) == "omega'''(t) n_x"
 
     # Fourth order
     v = omega.diff().diff().diff().diff() * N.x
 
     assert vlatex(v) == r'\ddddot{\omega}\mathbf{\hat{n}_x}'
-    assert unicode_vpretty(v) == u('ω⃜ n_x')
-    assert ascii_vpretty(v) == u("omega''''(t) n_x")
+    assert unicode_vpretty(v) == 'ω⃜ n_x'
+    assert ascii_vpretty(v) == "omega''''(t) n_x"
 
     # Fifth order
     v = omega.diff().diff().diff().diff().diff() * N.x
 
     assert vlatex(v) == r'\frac{d^{5}}{d t^{5}} \omega\mathbf{\hat{n}_x}'
-    assert unicode_vpretty(v) == u('  5\n d\n───(ω) n_x\n  5\ndt')
+    assert unicode_vpretty(v) == '  5\n d\n───(ω) n_x\n  5\ndt'
     assert ascii_vpretty(v) == '  5\n d\n---(omega) n_x\n  5\ndt'
 
 

@@ -505,8 +505,8 @@ def test_TensExpr():
     #raises(NotImplementedError, lambda: TensExpr.__radd__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__sub__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__rsub__(t, 'a'))
-    #raises(NotImplementedError, lambda: TensExpr.__div__(t, 'a'))
-    #raises(NotImplementedError, lambda: TensExpr.__rdiv__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensExpr.__truediv__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensExpr.__rtruediv__(t, 'a'))
     with ignore_warnings(SymPyDeprecationWarning):
         # DO NOT REMOVE THIS AFTER DEPRECATION REMOVED:
         raises(ValueError, lambda: A(a, b)**2)

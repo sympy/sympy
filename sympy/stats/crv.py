@@ -8,7 +8,6 @@ sympy.stats.rv
 sympy.stats.frv
 """
 
-from __future__ import print_function, division
 
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
@@ -24,9 +23,6 @@ from sympy.external import import_module
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain, is_random,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
 
-scipy = import_module('scipy')
-numpy = import_module('numpy')
-pymc3 = import_module('pymc3')
 
 class ContinuousDomain(RandomDomain):
     """
@@ -160,7 +156,7 @@ class SampleContinuousScipy:
         # scipy does not require map as it can handle using custom distributions
         from scipy.stats import rv_continuous
         z = Dummy('z')
-        handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
+        handmade_pdf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])
         class scipy_pdf(rv_continuous):
             def _pdf(self, x):
                 return handmade_pdf(x)
@@ -174,35 +170,36 @@ class SampleContinuousNumpy:
     def __new__(cls, dist, size):
         return cls._sample_numpy(dist, size)
 
-    numpy_rv_map = {
-        'BetaDistribution': lambda dist, size: numpy.random.beta(a=float(dist.alpha),
-            b=float(dist.beta), size=size),
-        'ChiSquaredDistribution': lambda dist, size: numpy.random.chisquare(
-            df=float(dist.k), size=size),
-        'ExponentialDistribution': lambda dist, size: numpy.random.exponential(
-            1/float(dist.rate), size=size),
-        'GammaDistribution': lambda dist, size: numpy.random.gamma(float(dist.k),
-            float(dist.theta), size=size),
-        'LogNormalDistribution': lambda dist, size: numpy.random.lognormal(
-            float(dist.mean), float(dist.std), size=size),
-        'NormalDistribution': lambda dist, size: numpy.random.normal(
-            float(dist.mean), float(dist.std), size=size),
-        'ParetoDistribution': lambda dist, size: (numpy.random.pareto(
-            a=float(dist.alpha), size=size) + 1) * float(dist.xm),
-        'UniformDistribution': lambda dist, size: numpy.random.uniform(
-            low=float(dist.left), high=float(dist.right), size=size)
-    }
-
     @classmethod
     def _sample_numpy(cls, dist, size):
         """Sample from NumPy."""
 
-        dist_list = cls.numpy_rv_map.keys()
+        import numpy
+        numpy_rv_map = {
+            'BetaDistribution': lambda dist, size: numpy.random.beta(a=float(dist.alpha),
+                b=float(dist.beta), size=size),
+            'ChiSquaredDistribution': lambda dist, size: numpy.random.chisquare(
+                df=float(dist.k), size=size),
+            'ExponentialDistribution': lambda dist, size: numpy.random.exponential(
+                1/float(dist.rate), size=size),
+            'GammaDistribution': lambda dist, size: numpy.random.gamma(float(dist.k),
+                float(dist.theta), size=size),
+            'LogNormalDistribution': lambda dist, size: numpy.random.lognormal(
+                float(dist.mean), float(dist.std), size=size),
+            'NormalDistribution': lambda dist, size: numpy.random.normal(
+                float(dist.mean), float(dist.std), size=size),
+            'ParetoDistribution': lambda dist, size: (numpy.random.pareto(
+                a=float(dist.alpha), size=size) + 1) * float(dist.xm),
+            'UniformDistribution': lambda dist, size: numpy.random.uniform(
+                low=float(dist.left), high=float(dist.right), size=size)
+        }
+
+        dist_list = numpy_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
+        return numpy_rv_map[dist.__class__.__name__](dist, size)
 
 class SampleContinuousPymc:
     """Returns the sample from pymc3 of the given distribution"""
@@ -210,40 +207,41 @@ class SampleContinuousPymc:
     def __new__(cls, dist, size):
         return cls._sample_pymc3(dist, size)
 
-    pymc3_rv_map = {
-        'BetaDistribution': lambda dist:
-            pymc3.Beta('X', alpha=float(dist.alpha), beta=float(dist.beta)),
-        'CauchyDistribution': lambda dist:
-            pymc3.Cauchy('X', alpha=float(dist.x0), beta=float(dist.gamma)),
-        'ChiSquaredDistribution': lambda dist:
-            pymc3.ChiSquared('X', nu=float(dist.k)),
-        'ExponentialDistribution': lambda dist:
-            pymc3.Exponential('X', lam=float(dist.rate)),
-        'GammaDistribution': lambda dist:
-            pymc3.Gamma('X', alpha=float(dist.k), beta=1/float(dist.theta)),
-        'LogNormalDistribution': lambda dist:
-            pymc3.Lognormal('X', mu=float(dist.mean), sigma=float(dist.std)),
-        'NormalDistribution': lambda dist:
-            pymc3.Normal('X', float(dist.mean), float(dist.std)),
-        'GaussianInverseDistribution': lambda dist:
-            pymc3.Wald('X', mu=float(dist.mean), lam=float(dist.shape)),
-        'ParetoDistribution': lambda dist:
-            pymc3.Pareto('X', alpha=float(dist.alpha), m=float(dist.xm)),
-        'UniformDistribution': lambda dist:
-            pymc3.Uniform('X', lower=float(dist.left), upper=float(dist.right))
-    }
-
     @classmethod
     def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
 
-        dist_list = cls.pymc3_rv_map.keys()
+        import pymc3
+        pymc3_rv_map = {
+            'BetaDistribution': lambda dist:
+                pymc3.Beta('X', alpha=float(dist.alpha), beta=float(dist.beta)),
+            'CauchyDistribution': lambda dist:
+                pymc3.Cauchy('X', alpha=float(dist.x0), beta=float(dist.gamma)),
+            'ChiSquaredDistribution': lambda dist:
+                pymc3.ChiSquared('X', nu=float(dist.k)),
+            'ExponentialDistribution': lambda dist:
+                pymc3.Exponential('X', lam=float(dist.rate)),
+            'GammaDistribution': lambda dist:
+                pymc3.Gamma('X', alpha=float(dist.k), beta=1/float(dist.theta)),
+            'LogNormalDistribution': lambda dist:
+                pymc3.Lognormal('X', mu=float(dist.mean), sigma=float(dist.std)),
+            'NormalDistribution': lambda dist:
+                pymc3.Normal('X', float(dist.mean), float(dist.std)),
+            'GaussianInverseDistribution': lambda dist:
+                pymc3.Wald('X', mu=float(dist.mean), lam=float(dist.shape)),
+            'ParetoDistribution': lambda dist:
+                pymc3.Pareto('X', alpha=float(dist.alpha), m=float(dist.xm)),
+            'UniformDistribution': lambda dist:
+                pymc3.Uniform('X', lower=float(dist.left), upper=float(dist.right))
+        }
+
+        dist_list = pymc3_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
         with pymc3.Model():
-            cls.pymc3_rv_map[dist.__class__.__name__](dist)
+            pymc3_rv_map[dist.__class__.__name__](dist)
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 _get_sample_class_crv = {
@@ -334,7 +332,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
-        cf = integrate(exp(I*t*x)*pdf, (x, -oo, oo))
+        cf = integrate(exp(I*t*x)*pdf, (x, self.set))
         return Lambda(t, cf)
 
     def _characteristic_function(self, t):
@@ -356,7 +354,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
-        mgf = integrate(exp(t * x) * pdf, (x, -oo, oo))
+        mgf = integrate(exp(t * x) * pdf, (x, self.set))
         return Lambda(t, mgf)
 
     def _moment_generating_function(self, t):
@@ -437,7 +435,7 @@ class ContinuousPSpace(PSpace):
         else:
             rvs = frozenset(rvs)
 
-        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
+        expr = expr.xreplace({rv: rv.symbol for rv in rvs})
 
         domain_symbols = frozenset(rv.symbol for rv in rvs)
 
@@ -558,7 +556,7 @@ class ContinuousPSpace(PSpace):
         return SingleContinuousDomain(rv.symbol, interval)
 
     def conditional_space(self, condition, normalize=True, **kwargs):
-        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        condition = condition.xreplace({rv: rv.symbol for rv in self.values})
         domain = ConditionalContinuousDomain(self.domain, condition)
         if normalize:
             # create a clone of the variable to
@@ -608,7 +606,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
             return expr
 
         expr = _sympify(expr)
-        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
+        expr = expr.xreplace({rv: rv.symbol for rv in rvs})
 
         x = self.value.symbol
         try:

@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 from sympy.sets import FiniteSet
 from sympy import (sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy,
                 piecewise_fold, solveset, Integral)
@@ -17,9 +16,13 @@ __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
 
 
 
-def moment(X, n, c=0, condition=None, **kwargs):
+def moment(X, n, c=0, condition=None, *, evaluate=True, **kwargs):
     """
-    Return the nth moment of a random expression about c i.e. E((X-c)**n)
+    Return the nth moment of a random expression about c.
+
+    .. math::
+        moment(X, c, n) = E((X-c)^{n})
+
     Default value of c is 0.
 
     Examples
@@ -35,7 +38,7 @@ def moment(X, n, c=0, condition=None, **kwargs):
     True
     """
     from sympy.stats.symbolic_probability import Moment
-    if kwargs.pop('evaluate', True):
+    if evaluate:
         return Moment(X, n, c, condition).doit()
     return Moment(X, n, c, condition).rewrite(Integral)
 
@@ -44,7 +47,8 @@ def variance(X, condition=None, **kwargs):
     """
     Variance of a random expression
 
-    Expectation of (X-E(X))**2
+    .. math::
+        variance(X) = E((X-E(X))^{2})
 
     Examples
     ========
@@ -70,10 +74,11 @@ def variance(X, condition=None, **kwargs):
 
 
 def standard_deviation(X, condition=None, **kwargs):
-    """
+    r"""
     Standard Deviation of a random expression
 
-    Square root of the Expectation of (X-E(X))**2
+    .. math::
+        std(X) = \sqrt(E((X-E(X))^{2}))
 
     Examples
     ========
@@ -138,7 +143,8 @@ def covariance(X, Y, condition=None, **kwargs):
 
     The expectation that the two variables will rise and fall together
 
-    Covariance(X,Y) = E( (X-E(X)) * (Y-E(Y)) )
+    .. math::
+        covariance(X,Y) = E((X-E(X)) (Y-E(Y)))
 
     Examples
     ========
@@ -168,14 +174,15 @@ def covariance(X, Y, condition=None, **kwargs):
 
 
 def correlation(X, Y, condition=None, **kwargs):
-    """
+    r"""
     Correlation of two random expressions, also known as correlation
     coefficient or Pearson's correlation
 
     The normalized expectation that the two variables will rise
     and fall together
 
-    Correlation(X,Y) = E( (X-E(X)) * (Y-E(Y)) / (sigma(X) * sigma(Y)) )
+    .. math::
+        correlation(X,Y) = E((X-E(X))(Y-E(Y)) / (\sigma_x  \sigma_y))
 
     Examples
     ========
@@ -198,10 +205,12 @@ def correlation(X, Y, condition=None, **kwargs):
      * std(Y, condition, **kwargs))
 
 
-def cmoment(X, n, condition=None, **kwargs):
+def cmoment(X, n, condition=None, *, evaluate=True, **kwargs):
     """
-    Return the nth central moment of a random expression about its mean
-    i.e. E((X - E(X))**n)
+    Return the nth central moment of a random expression about its mean.
+
+    .. math::
+        cmoment(X, n) = E((X - E(X))^{n})
 
     Examples
     ========
@@ -216,15 +225,17 @@ def cmoment(X, n, condition=None, **kwargs):
     True
     """
     from sympy.stats.symbolic_probability import CentralMoment
-    if kwargs.pop('evaluate', True):
+    if evaluate:
         return CentralMoment(X, n, condition).doit()
     return CentralMoment(X, n, condition).rewrite(Integral)
 
 
 def smoment(X, n, condition=None, **kwargs):
-    """
-    Return the nth Standardized moment of a random expression i.e.
-    E(((X - mu)/sigma(X))**n)
+    r"""
+    Return the nth Standardized moment of a random expression.
+
+    .. math::
+        smoment(X, n) = E(((X - \mu)/\sigma_X)^{n})
 
     Examples
     ========
@@ -244,13 +255,14 @@ def smoment(X, n, condition=None, **kwargs):
     return (1/sigma)**n*cmoment(X, n, condition, **kwargs)
 
 def skewness(X, condition=None, **kwargs):
-    """
+    r"""
     Measure of the asymmetry of the probability distribution.
 
     Positive skew indicates that most of the values lie to the right of
     the mean.
 
-    skewness(X) = E(((X - E(X))/sigma)**3)
+    .. math::
+        skewness(X) = E(((X - E(X))/\sigma_X)^{3})
 
     Parameters
     ==========
@@ -277,14 +289,15 @@ def skewness(X, condition=None, **kwargs):
     return smoment(X, 3, condition=condition, **kwargs)
 
 def kurtosis(X, condition=None, **kwargs):
-    """
+    r"""
     Characterizes the tails/outliers of a probability distribution.
 
     Kurtosis of any univariate normal distribution is 3. Kurtosis less than
     3 means that the distribution produces fewer and less extreme outliers
     than the normal distribution.
 
-    kurtosis(X) = E(((X - E(X))/sigma)**4)
+    .. math::
+        kurtosis(X) = E(((X - E(X))/\sigma_X)^{4})
 
     Parameters
     ==========
@@ -322,7 +335,8 @@ def factorial_moment(X, n, condition=None, **kwargs):
     The factorial moment is a mathematical quantity defined as the expectation
     or average of the falling factorial of a random variable.
 
-    factorial_moment(X, n) = E(X*(X - 1)*(X - 2)*...*(X - n + 1))
+    .. math::
+        factorial-moment(X, n) = E(X(X - 1)(X - 2)...(X - n + 1))
 
     Parameters
     ==========
@@ -362,7 +376,7 @@ def median(X, evaluate=True, **kwargs):
     values of `m` for which the following condition is satisfied
 
     .. math::
-        P(X\geq m)\geq 1/2 \hspace{5} \text{and} \hspace{5} P(X\leq m)\geq 1/2
+        P(X\leq m) \geq  \frac{1}{2} \text{ and} \text{ } P(X\geq m)\geq \frac{1}{2}
 
     Parameters
     ==========

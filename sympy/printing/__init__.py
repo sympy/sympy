@@ -10,13 +10,11 @@ from .python import python, print_python
 
 from .pycode import pycode
 
-from .ccode import ccode, print_ccode
+from .codeprinter import print_ccode, print_fcode
+
+from .codeprinter import ccode, fcode, cxxcode # noqa:F811
 
 from .glsl import glsl_code, print_glsl
-
-from .cxxcode import cxxcode
-
-from .fcode import fcode, print_fcode
 
 from .rcode import rcode, print_rcode
 
@@ -63,17 +61,11 @@ __all__ = [
     # sympy.printing.pycode
     'pycode',
 
-    # sympy.printing.ccode
-    'ccode', 'print_ccode',
+    # sympy.printing.codeprinter
+    'ccode', 'print_ccode', 'cxxcode', 'fcode', 'print_fcode',
 
     # sympy.printing.glsl
     'glsl_code', 'print_glsl',
-
-    # sympy.printing.cxxcode
-    'cxxcode',
-
-    # sympy.printing.fcode
-    'fcode', 'print_fcode',
 
     # sympy.printing.rcode
     'rcode', 'print_rcode',

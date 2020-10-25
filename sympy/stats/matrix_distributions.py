@@ -8,10 +8,6 @@ from sympy.stats.rv import (_value_check, RandomMatrixSymbol, NamedArgsMixin, PS
 from sympy.external import import_module
 
 
-scipy = import_module('scipy')
-numpy = import_module('numpy')
-pymc3 = import_module('pymc3')
-
 ################################################################################
 #------------------------Matrix Probability Space------------------------------#
 ################################################################################
@@ -73,25 +69,26 @@ class SampleMatrixScipy:
     def __new__(cls, dist, size):
         return cls._sample_scipy(dist, size)
 
-    scipy_rv_map = {
-        'WishartDistribution': lambda dist, size: scipy.stats.wishart.rvs(
-            df=int(dist.n), scale=matrix2numpy(dist.scale_matrix, float), size=size),
-        'MatrixNormalDistribution': lambda dist, size: scipy.stats.matrix_normal.rvs(
-            mean=matrix2numpy(dist.location_matrix, float),
-            rowcov=matrix2numpy(dist.scale_matrix_1, float),
-            colcov=matrix2numpy(dist.scale_matrix_2, float), size=size)
-    }
-
     @classmethod
     def _sample_scipy(cls, dist, size):
         """Sample from SciPy."""
 
-        dist_list = cls.scipy_rv_map.keys()
+        from scipy import stats as scipy_stats
+        scipy_rv_map = {
+            'WishartDistribution': lambda dist, size: scipy_stats.wishart.rvs(
+                df=int(dist.n), scale=matrix2numpy(dist.scale_matrix, float), size=size),
+            'MatrixNormalDistribution': lambda dist, size: scipy_stats.matrix_normal.rvs(
+                mean=matrix2numpy(dist.location_matrix, float),
+                rowcov=matrix2numpy(dist.scale_matrix_1, float),
+                colcov=matrix2numpy(dist.scale_matrix_2, float), size=size)
+        }
+
+        dist_list = scipy_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        return cls.scipy_rv_map[dist.__class__.__name__](dist, size)
+        return scipy_rv_map[dist.__class__.__name__](dist, size)
 
 
 class SampleMatrixNumpy:
@@ -101,19 +98,19 @@ class SampleMatrixNumpy:
     def __new__(cls, dist, size):
         return cls._sample_numpy(dist, size)
 
-    numpy_rv_map = {
-    }
-
     @classmethod
     def _sample_numpy(cls, dist, size):
         """Sample from NumPy."""
 
-        dist_list = cls.numpy_rv_map.keys()
+        numpy_rv_map = {
+        }
+
+        dist_list = numpy_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        return cls.numpy_rv_map[dist.__class__.__name__](dist, size)
+        return numpy_rv_map[dist.__class__.__name__](dist, size)
 
 
 class SampleMatrixPymc:
@@ -122,27 +119,28 @@ class SampleMatrixPymc:
     def __new__(cls, dist, size):
         return cls._sample_pymc3(dist, size)
 
-    pymc3_rv_map = {
-        'MatrixNormalDistribution': lambda dist: pymc3.MatrixNormal('X',
-            mu=matrix2numpy(dist.location_matrix, float),
-            rowcov=matrix2numpy(dist.scale_matrix_1, float),
-            colcov=matrix2numpy(dist.scale_matrix_2, float),
-            shape=dist.location_matrix.shape),
-        'WishartDistribution': lambda dist: pymc3.WishartBartlett('X',
-            nu=int(dist.n), S=matrix2numpy(dist.scale_matrix, float))
-    }
-
     @classmethod
     def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
 
-        dist_list = cls.pymc3_rv_map.keys()
+        import pymc3
+        pymc3_rv_map = {
+            'MatrixNormalDistribution': lambda dist: pymc3.MatrixNormal('X',
+                mu=matrix2numpy(dist.location_matrix, float),
+                rowcov=matrix2numpy(dist.scale_matrix_1, float),
+                colcov=matrix2numpy(dist.scale_matrix_2, float),
+                shape=dist.location_matrix.shape),
+            'WishartDistribution': lambda dist: pymc3.WishartBartlett('X',
+                nu=int(dist.n), S=matrix2numpy(dist.scale_matrix, float))
+        }
+
+        dist_list = pymc3_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
         with pymc3.Model():
-            cls.pymc3_rv_map[dist.__class__.__name__](dist)
+            pymc3_rv_map[dist.__class__.__name__](dist)
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 _get_sample_class_matrixrv = {

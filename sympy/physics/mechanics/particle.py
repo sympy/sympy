@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.backend import sympify
 from sympy.physics.vector import Point
 
@@ -8,7 +6,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 __all__ = ['Particle']
 
 
-class Particle(object):
+class Particle:
     """A particle.
 
     Particles have a non-zero mass and lack spatial extension; they take up no
