@@ -407,9 +407,9 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
 
         >>> cg = parse_matrix_expression(C*D*A*B)
         >>> cg
-        CodegenArrayContraction(CodegenArrayTensorProduct(C, D, A, B), (1, 2), (3, 4), (5, 6))
+        CodegenArrayContraction(CodegenArrayTensorProduct(A, D, C, B), (0, 3), (1, 6), (2, 5))
         >>> cg.sort_args_by_name()
-        CodegenArrayContraction(CodegenArrayTensorProduct(A, B, C, D), (0, 7), (1, 2), (5, 6))
+        CodegenArrayContraction(CodegenArrayTensorProduct(A, D, B, C), (0, 3), (1, 4), (2, 7))
         """
         expr = self.expr
         if not isinstance(expr, CodegenArrayTensorProduct):
@@ -452,9 +452,9 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
 
         >>> cg = parse_matrix_expression(A*B*C*D)
         >>> cg
-        CodegenArrayContraction(CodegenArrayTensorProduct(A, B, C, D), (1, 2), (3, 4), (5, 6))
+        CodegenArrayContraction(CodegenArrayTensorProduct(B, C, A, D), (0, 5), (1, 2), (3, 6))
         >>> cg._get_contraction_links()
-        {0: {1: (1, 0)}, 1: {0: (0, 1), 1: (2, 0)}, 2: {0: (1, 1), 1: (3, 0)}, 3: {0: (2, 1)}}
+        {0: {0: (2, 1), 1: (1, 0)}, 1: {0: (0, 1), 1: (3, 0)}, 2: {1: (0, 0)}, 3: {0: (1, 1)}}
 
         This dictionary is interpreted as follows: argument in position 0 (i.e.
         matrix `A`) has its second index (i.e. 1) contracted to `(1, 0)`, that
@@ -1308,7 +1308,7 @@ def parse_indexed_expression(expr, first_indices=None):
     Specify that ``k`` has to be the starting index:
 
     >>> parse_indexed_expression(expr, first_indices=[k])
-    CodegenArrayPermuteDims(CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2)), (0 1))
+    CodegenArrayContraction(CodegenArrayTensorProduct(N, M), (0, 3))
     """
 
     result, indices = _codegen_array_parse(expr)
@@ -1479,7 +1479,7 @@ def recognize_matrix_expression(expr):
     A*B
     >>> cg = parse_indexed_expression(expr, first_indices=[k])
     >>> recognize_matrix_expression(cg)
-    (A*B).T
+    B.T*A.T
 
     Transposition is detected:
 
@@ -1489,7 +1489,7 @@ def recognize_matrix_expression(expr):
     A.T*B
     >>> cg = parse_indexed_expression(expr, first_indices=[k])
     >>> recognize_matrix_expression(cg)
-    (A.T*B).T
+    B.T*A
 
     Detect the trace:
 
