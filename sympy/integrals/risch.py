@@ -678,7 +678,7 @@ class DifferentialExtension:
         """
         Parameters
         ==========
-    
+
         extension : str
             Represents a valid extension type.
 
