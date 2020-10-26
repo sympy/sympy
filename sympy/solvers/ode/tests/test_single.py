@@ -1165,6 +1165,7 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
         'slow': True,
     },
 
+    #Note: 'undet_26' is referred in 'undet_37'
     'undet_26': {
         'eq': (f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x -
         sin(x) - cos(x)),
@@ -1228,7 +1229,7 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
         'sol': [Eq(f(x), C1*sin(x) + C2*cos(x) - x*cos(x - 2)/2 + 1)],
     },
 
-    # Equivalent to example 26.
+    # Equivalent to example_name 'undet_26'.
     # This previously failed because the algorithm for undetermined coefficients
     # didn't know to multiply exp(I*x) by sufficient x because it is linearly
     # dependent on sin(x) and cos(x).
