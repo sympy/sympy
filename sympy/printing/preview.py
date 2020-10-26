@@ -120,7 +120,7 @@ def pyglet_viewer(fname, fmt):
         from pyglet.image.codecs.png import PNGImageDecoder
         img = image.load(fname, decoder=PNGImageDecoder())
     else:
-        raise valueError("pyglet preview works only for 'png' files.")
+        raise ValueError("pyglet preview works only for 'png' files.")
 
     offset = 25
 
@@ -259,7 +259,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     # pyglet is the default for png
     if viewer is None and output == "png":
         try:
-            import pyglet
+            import pyglet  # noqa: F401
         except ImportError:
             pass
         else:
