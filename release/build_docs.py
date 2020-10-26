@@ -4,6 +4,7 @@
 import os
 from os.path import dirname, join
 from os import chdir
+import shutil
 
 from helpers import run
 
@@ -11,19 +12,34 @@ from helpers import run
 ROOTDIR = dirname(dirname(__file__))
 
 
-def main(version):
-    check_version(version)
-    build_html(ROOTDIR)
-    build_latex(ROOTDIR)
+def main(version, outputdir):
+    check_version(version, outputdir)
+    os.makedirs(outputdir, exist_ok=True)
+
+    build_html(ROOTDIR, outputdir, version)
+
+    build_latex(ROOTDIR, outputdir, version)
 
 
-def build_html(rootdir):
+def build_html(rootdir, outputdir, version):
     docsdir = join(rootdir, 'doc')
     run('make', 'clean', cwd=docsdir)
     run('make', 'html', cwd=docsdir)
 
+    builddir = join(docsdir, '_build')
+    docsname = 'sympy-docs-html-%s' % (version,)
+    zipname = docsname + '.zip'
+    cwd = os.getcwd()
+    try:
+        chdir(builddir)
+        shutil.move('html', docsname)
+        run('zip', '-9lr', zipname, docsname)
+    finally:
+        chdir(cwd)
+    shutil.move(join(builddir, zipname), join(outputdir, zipname))
 
-def build_latex(rootdir):
+
+def build_latex(rootdir, outputdir, version):
     docsdir = join(rootdir, 'doc')
     run('make', 'clean', cwd=docsdir)
     run('make', 'latex', cwd=docsdir)
@@ -34,12 +50,20 @@ def build_latex(rootdir):
     run('make', 'clean', cwd=latexdir, env=env)
     run('make', 'all', cwd=latexdir, env=env)
 
+    filename = 'sympy-%s.pdf' % (version,)
+    src = join('doc', '_build', 'latex', filename)
+    dst = join(outputdir, filename)
+    shutil.copyfile(src, dst)
 
-def check_version(version):
+
+def check_version(version, outputdir):
     from sympy.release import __version__ as checked_out_version
     if version != checked_out_version:
         msg = "version %s does not match checkout %s"
         raise AssertionError(msg % (version, checked_out_version))
+    if outputdir != 'release-%s' % (version,):
+        msg = "version %s does not match outputdir %s"
+        raise AssertionError(msg % (version, outputdir))
 
 
 if __name__ == "__main__":
