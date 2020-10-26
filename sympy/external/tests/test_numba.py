@@ -25,5 +25,5 @@ def test_jit():
     Y = Matrix(symbols('y:3')).T
     f3 = lambdify((*X, *Y), X+Y)
     xs = (1,2,3,4,5,6)
-    element_comp = abs(f3(*xs) - numba.njit(f3)(*xs) < 1e-15)
+    element_comp = abs(f3(*xs) - numba.njit(f3)(*xs)) < 1e-15
     assert all(chain.from_iterable(element_comp))
