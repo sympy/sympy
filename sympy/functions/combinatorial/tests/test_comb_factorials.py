@@ -325,10 +325,15 @@ def test_factorial2():
     nf = Symbol('nf', nonnegative=False)
     nn = Symbol('nn')
     z = Symbol('z', zero=True)
-    #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
-    raises(ValueError, lambda: factorial2(oo))
-    raises(ValueError, lambda: factorial2(Rational(5, 2)))
-    raises(ValueError, lambda: factorial2(-4))
+
+    # factorial2 now accepts real valued arguments
+    assert factorial2(oo) is oo
+
+    # Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
+    # raises(ValueError, lambda: factorial2(oo))
+    # raises(ValueError, lambda: factorial2(Rational(5, 2)))
+    # raises(ValueError, lambda: factorial2(-4))
+
     assert factorial2(n).is_integer is None
     assert factorial2(tt - 1).is_integer
     assert factorial2(tte - 1).is_integer

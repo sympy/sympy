@@ -146,32 +146,32 @@ class factorial(CombinatorialFunction):
         if n.is_Number:
             if n.is_zero:
                 return S.One
-            elif n is S.Infinity:
+            if n is S.Infinity:
                 return S.Infinity
-            elif n.is_Integer:
+            if n.is_Integer:
                 if n.is_negative:
                     return S.ComplexInfinity
+
+                n = n.p
+
+                if n < 20:
+                    if not cls._small_factorials:
+                        result = 1
+                        for i in range(1, 20):
+                            result *= i
+                            cls._small_factorials.append(result)
+                    result = cls._small_factorials[n-1]
+
+                # GMPY factorial is faster, use it when available
+                elif HAS_GMPY:
+                    from sympy.core.compatibility import gmpy
+                    result = gmpy.fac(n)
+
                 else:
-                    n = n.p
+                    bits = bin(n).count('1')
+                    result = cls._recursive(n)*2**(n - bits)
 
-                    if n < 20:
-                        if not cls._small_factorials:
-                            result = 1
-                            for i in range(1, 20):
-                                result *= i
-                                cls._small_factorials.append(result)
-                        result = cls._small_factorials[n-1]
-
-                    # GMPY factorial is faster, use it when available
-                    elif HAS_GMPY:
-                        from sympy.core.compatibility import gmpy
-                        result = gmpy.fac(n)
-
-                    else:
-                        bits = bin(n).count('1')
-                        result = cls._recursive(n)*2**(n - bits)
-
-                    return Integer(result)
+                return Integer(result)
 
     def _facmod(self, n, q):
         res, N = 1, int(_sqrt(n))
@@ -426,27 +426,36 @@ class factorial2(CombinatorialFunction):
 
     @classmethod
     def eval(cls, arg):
+        from sympy import gamma, cos
         # TODO: extend this to complex numbers?
 
+        if arg.has(S.I):
+            raise ValueError('factorial2 is not defined for complex arguments.')
+
         if arg.is_Number:
-            if not arg.is_Integer:
-                raise ValueError("argument must be nonnegative integer "
-                                    "or negative odd integer")
+            if arg.is_zero:
+                return S.One
+            if arg is S.Infinity:
+                return S.Infinity
 
-            # This implementation is faster than the recursive one
-            # It also avoids "maximum recursion depth exceeded" runtime error
-            if arg.is_nonnegative:
-                if arg.is_even:
-                    k = arg / 2
-                    return 2**k * factorial(k)
-                return factorial(arg) / factorial2(arg - 1)
+            fact = (2 ** (arg / 2) * (2 / pi) ** ((1-cos(pi*arg))/4) * gamma(arg/2 + 1))
 
+            if arg.is_Float:
+                # sometimes there's still symbolic elements left
+                # this makes sure the return value is approximate for approximate inputs
+                return fact._evalf(arg._prec)
 
-            if arg.is_odd:
-                return arg*(S.NegativeOne)**((1 - arg)/2) / factorial2(-arg)
-            raise ValueError("argument must be nonnegative integer "
-                                "or negative odd integer")
+            if arg.is_Integer:
+                return fact
 
+            # arg is a Rational at this point
+            # don't return anything to keep function symbolic
+
+    def _eval_evalf(self, prec):
+        from sympy import gamma, cos
+        arg = self.args[0]
+        fact = (2 ** (arg / 2) * (2 / pi) ** ((1-cos(pi*arg))/4) * gamma(arg/2 + 1))
+        return fact._evalf(prec)
 
     def _eval_is_even(self):
         # Double factorial is even for every positive even input
