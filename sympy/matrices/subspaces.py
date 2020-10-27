@@ -1,5 +1,3 @@
-from sympy.core.compatibility import reduce
-
 from .utilities import _iszero
 
 
