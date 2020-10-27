@@ -1331,8 +1331,9 @@ def register_handler(key, handler):
     >>> ask(Q.mersenne(7))
     True
 
-    Note that registering the hander overrides the old one. To modify
-    existing handler, use dispatching instead.
+    Note that registering the new handler to existing key overrides the
+    old handler. Normally, this should not happen. In this case, use
+    dispatching instead.
 
     >>> from sympy import Basic, Q
     >>> class MyType(Basic):
