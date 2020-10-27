@@ -7,7 +7,7 @@ from sympy.core.expr import Expr
 from sympy.core.compatibility import \
     is_sequence, reduce, as_int, Iterable
 from sympy.core.numbers import Integer
-from sympy.core.sympify import _sympify
+from sympy.core.sympify import _sympify, SympifyError
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
@@ -2995,12 +2995,13 @@ class AppliedPermutation(Expr):
         if evaluate is None:
             evaluate = global_parameters.evaluate
 
-        perm = _sympify(perm)
-        x = _sympify(x)
-
-        if not isinstance(perm, Permutation):
+        try:
+            perm = _sympify(perm, [Permutation])
+        except SympifyError:
             raise ValueError("{} must be a Permutation instance."
                 .format(perm))
+
+        x = _sympify(x)
 
         if evaluate:
             if x.is_Integer:
