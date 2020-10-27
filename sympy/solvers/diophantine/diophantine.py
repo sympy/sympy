@@ -422,8 +422,8 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     e.g. For an equation with two variables, `a` and `b`, the first
     element of the tuple is the solution for `a` and the second for `b`.
 
-    Paramters
-    =========
+    Parameters
+    ==========
 
     ``diophantine(eq, t, syms)``: Solve the diophantine
     equation ``eq``.
