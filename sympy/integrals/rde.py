@@ -196,7 +196,7 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     A, B, C, h in k[t] and for any solution q in k<t> of a*Dq + b*q == c,
     r = qh in k[t] satisfies A*Dr + B*r == C.
 
-    For ``case`` == 'primitive', k<t> == k[t], so it returns (a, b, c, 1) in
+    For ``case == 'primitive'``, k<t> == k[t], so it returns (a, b, c, 1) in
     this case.
 
     This constitutes step 2 of the outline given in the rde.py docstring.
@@ -278,7 +278,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
     c1, ..., cm in Const(k) and q in k[t] of a*Dq + b*q == Sum(ci*gi, (i, 1, m))
     when parametric=True.
 
-    For parametric=False, cQ is c, a Poly; for parametric=True, ``cQ`` is Q ==
+    For ``parametric=False``, ``cQ`` is ``c``, a ``Poly``; for ``parametric=True``, ``cQ`` is Q ==
     [q1, ..., qm], a list of Polys.
 
     This constitutes step 3 of the outline given in the rde.py docstring.

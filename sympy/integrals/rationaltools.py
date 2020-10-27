@@ -28,7 +28,7 @@ def ratint(f, x, **flags):
     References
     ==========
 
-    .. [1] [Bro05] M. Bronstein, Symbolic Integration I: Transcendental
+    .. [1] M. Bronstein, Symbolic Integration I: Transcendental
        Functions, Second Edition, Springer-Verlag, 2005, pp. 35-70
 
     See Also
