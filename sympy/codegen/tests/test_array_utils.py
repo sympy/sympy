@@ -358,6 +358,10 @@ def test_parsing_of_matrix_expressions():
     rexpr = recognize_matrix_expression(res)
     assert expr.expand() == rexpr.doit()
 
+    expr = Trace(M)
+    result = CodegenArrayContraction(M, (0, 1))
+    assert parse_matrix_expression(expr) == result
+
 
 def test_special_matrices():
     a = MatrixSymbol("a", k, 1)
