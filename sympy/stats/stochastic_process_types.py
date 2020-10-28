@@ -10,7 +10,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
                    ceiling, MatrixBase, ConditionSet, ones, zeros, Identity,
-                   Rational, Lt, Gt, Ne)
+                   Rational, Lt, Gt, Ne, Sum)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -250,7 +250,8 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
 
         RandomIndexedSymbol
         """
-        if time not in self.index_set:
+        time = sympify(time)
+        if not time.is_symbol and time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         idx_obj = Indexed(self.symbol, time)
         pspace_obj = StochasticPSpace(self.symbol, self, self.distribution)
@@ -269,7 +270,8 @@ class ContinuousTimeStochasticProcess(StochasticProcess):
 
         RandomIndexedSymbol
         """
-        if time not in self.index_set:
+        time = sympify(time)
+        if not time.is_symbol and time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         func_obj = Function(self.symbol)(time)
         pspace_obj = StochasticPSpace(self.symbol, self, self.distribution)
@@ -509,6 +511,13 @@ class MarkovProcess(StochasticProcess):
         check, mat, state_index, new_given_condition = \
             self._preprocess(given_condition, evaluate)
 
+        rv = list(condition.atoms(RandomIndexedSymbol))
+        symbolic = False
+        for sym in rv:
+            if sym.key.is_symbol:
+                symbolic = True
+                break
+
         if check:
             return Probability(condition, new_given_condition)
 
@@ -526,11 +535,12 @@ class MarkovProcess(StochasticProcess):
             else:
                 gcs = (new_given_condition, )
             min_key_rv = list(new_given_condition.atoms(RandomIndexedSymbol))
-            rv = list(condition.atoms(RandomIndexedSymbol))
 
             if len(min_key_rv):
                 min_key_rv = min_key_rv[0]
                 for r in rv:
+                    if min_key_rv.key.is_symbol or r.key.is_symbol:
+                        continue
                     if min_key_rv.key > r.key:
                         return Probability(condition)
             else:
@@ -565,6 +575,41 @@ class MarkovProcess(StochasticProcess):
                             for j in range(i + upper, n):
                                 s -= self.probability(Eq(rv[0], i), Eq(rv[1], j)) * self.probability(Eq(rv[1], j), new_given_condition)
                     return s if greater else 1 - s
+
+            elif symbolic:
+                if isinstance(condition, Relational):
+
+                    curr_state = new_given_condition.rhs if isinstance(new_given_condition.lhs, RandomIndexedSymbol) \
+                            else new_given_condition.lhs
+                    next_state = condition.rhs if isinstance(condition.lhs, RandomIndexedSymbol) \
+                        else condition.lhs
+
+                    if isinstance(condition, Eq) or isinstance(condition, Ne):
+                        if isinstance(self, DiscreteMarkovChain):
+                            P = self.transition_probabilities**(rv[0].key - min_key_rv.key)
+                        else:
+                            P = exp(self.generator_matrix*(rv[0].key - min_key_rv.key))
+                        prob = P[curr_state, next_state] if isinstance(condition, Eq) else 1 - P[curr_state, next_state]
+                        return Piecewise((prob, rv[0].key > min_key_rv.key), (Probability(condition), True))
+                    else:
+                        upper = 1
+                        greater = False
+                        if isinstance(condition, Ge) or isinstance(condition, Lt):
+                            upper = 0
+                        if isinstance(condition, Gt) or isinstance(condition, Ge):
+                            greater = True
+                        k = Dummy('k')
+                        condition = Eq(condition.lhs, k) if isinstance(condition.lhs, RandomIndexedSymbol)\
+                            else Eq(condition.rhs, k)
+                        total = Sum(self.probability(condition, new_given_condition), (k, next_state + upper, self.state_space._sup))
+                        return Piecewise((total, rv[0].key > min_key_rv.key), (Probability(condition), True)) if greater\
+                            else Piecewise((1 - total, rv[0].key > min_key_rv.key), (Probability(condition), True))
+
+                elif isinstance(condition, Or):
+                    return sum([self.probability(expr, given_condition, evaluate, **kwargs)
+                            for expr in condition.args])
+                else:
+                    return Probability(condition, given_condition)
 
             rv = rv[0]
             states = condition.as_set()
@@ -805,6 +850,28 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     0.36
     >>> P(Le(Y[15], Y[10]), Eq(Y[8], 2)).round(7)
     0.6963328
+
+    Symbolic probability queries are also supported
+
+    >>> from sympy import symbols, Matrix, Rational, Eq, Gt
+    >>> from sympy.stats import P, DiscreteMarkovChain
+    >>> a,b,c,d = symbols('a b c d')
+    >>> T = Matrix([[Rational(1,10), Rational(4, 10), Rational(5, 10)], [Rational(3,10), Rational(4,10), Rational(3,10)], [Rational(7,10), Rational(2,10), Rational(1,10)]])
+    >>> Y = DiscreteMarkovChain("Y", [0,1,2], T)
+    >>> query=P(Eq(Y[a], b), Eq(Y[c], d))
+    >>> query.subs({a:10 ,b:2, c:5, d:1}).round(4)
+    0.3096
+    >>> P(Eq(Y[10], 2), Eq(Y[5], 1)).evalf().round(4)
+    0.3096
+    >>> query_gt=P(Gt(Y[a], b), Eq(Y[c], d))
+    >>> query_gt.subs({a:21 ,b:0, c:5, d:0}).evalf().round(5)
+    0.64705
+    >>> P(Gt(Y[21], 0), Eq(Y[5], 0)).round(5)
+    0.64705
+    >>> multivariate_query = P(Eq(Y[a], Y[b]), Eq(Y[c], d))
+    >>> multivariate_query.subs({a:7, b:5, c:2, d:0}).evalf().round(5)
+    
+    >>> P(Eq(Y[7], Y[5]), Eq(Y[2], 0)).round(5)
 
     There is limited support for arbitrarily sized states:
 
@@ -1203,12 +1270,59 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     Examples
     ========
 
-    >>> from sympy.stats import ContinuousMarkovChain
-    >>> from sympy import Matrix, S
+    >>> from sympy.stats import ContinuousMarkovChain, P
+    >>> from sympy import Matrix, S, Eq, Gt
     >>> G = Matrix([[-S(1), S(1)], [S(1), -S(1)]])
     >>> C = ContinuousMarkovChain('C', state_space=[0, 1], gen_mat=G)
     >>> C.limiting_distribution()
     Matrix([[1/2, 1/2]])
+    >>> C.state_space
+    FiniteSet(0, 1)
+    >>> C.generator_matrix
+    Matrix([
+    [-1,  1],
+    [ 1, -1]])
+
+    Probability queries are supported
+
+    >>> P(Eq(C(1.96), 0), Eq(C(0.78), 1)).round(5)
+    0.45279
+    >>> P(Gt(C(1.7), 0), Eq(C(0.82), 1)).round(5)
+    0.58602
+
+    Probability of expressions with multiple RandomIndexedSymbols
+    can also be calculated provided there is only 1 RandomIndexedSymbol
+    in the given condition. It is always better to use Rational instead
+    of floating point numbers for the probabilities in the
+    generator matrix to avoid errors.
+
+    >>> from sympy import Gt, Le, Rational
+    >>> G = Matrix([[-S(1), Rational(1, 10), Rational(9, 10)], [Rational(2, 5), -S(1), Rational(3, 5)], [Rational(1, 2), Rational(1, 2), -S(1)]])
+    >>> C = ContinuousMarkovChain('C', state_space=[0, 1, 2], gen_mat=G)
+    >>> P(Eq(C(3.92), C(1.75)), Eq(C(0.46), 0)).round(5)
+    0.37933
+    >>> P(Gt(C(3.92), C(1.75)), Eq(C(0.46), 0)).round(5)
+    0.34211
+    >>> P(Le(C(1.57), C(3.14)), Eq(C(1.22), 1)).round(4)
+    0.6545
+
+    Symbolic probability queries are also supported
+
+    >>> from sympy import S, symbols, Matrix, Rational, Eq, Gt
+    >>> from sympy.stats import P, ContinuousMarkovChain
+    >>> a,b,c,d = symbols('a b c d')
+    >>> G = Matrix([[-S(1), Rational(1, 10), Rational(9, 10)], [Rational(2, 5), -S(1), Rational(3, 5)], [Rational(1, 2), Rational(1, 2), -S(1)]])
+    >>> C = ContinuousMarkovChain('C', state_space=[0, 1, 2], gen_mat=G)
+    >>> query=P(Eq(C(a), b), Eq(C(c), d))
+    >>> query.subs({a:3.65 ,b:2, c:1.78, d:1}).evalf().round(10)
+    0.4002723175
+    >>> P(Eq(C(3.65), 2), Eq(C(1.78), 1)).round(10)
+    0.4002723175
+    >>> query_gt=P(Gt(C(a), b), Eq(C(c), d))
+    >>> query_gt.subs({a:43.2 ,b:0, c:3.29, d:2}).evalf().round(10)
+    0.6832579186
+    >>> P(Gt(C(43.2), 0), Eq(C(3.29), 2)).round(10)
+    0.6832579186
 
     References
     ==========

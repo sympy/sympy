@@ -234,6 +234,20 @@ def test_DiscreteMarkovChain():
     assert Float(P(Gt(Y[350], Y[100]), Eq(Y[75], 2)), 14) == Float(1 - P(Le(Y[350], Y[100]), Eq(Y[75], 2)), 14)
     assert Float(P(Lt(Y[400], Y[210]), Eq(Y[161], 0)), 14) == Float(1 - P(Ge(Y[400], Y[210]), Eq(Y[161], 0)), 14)
 
+    #test symbolic queries
+    a,b,c,d = symbols('a b c d')
+    T = Matrix([[Rational(1,10), Rational(4, 10), Rational(5, 10)], [Rational(3,10), Rational(4,10), Rational(3,10)], [Rational(7,10), Rational(2,10), Rational(1,10)]])
+    Y = DiscreteMarkovChain("Y", [0,1,2], T)
+    query=P(Eq(Y[a], b), Eq(Y[c], d))
+    assert(query.subs({a:48 ,b:2, c:23, d:1}).evalf().round(4) == P(Eq(Y[48], 2), Eq(Y[23], 1)).round(4))
+    assert(query.subs({a:191 ,b:0, c:87, d:1}).evalf().round(4) == P(Eq(Y[191], 0), Eq(Y[87], 1)).round(4))
+    query_gt=P(Gt(Y[a], b), Eq(Y[c], d))
+    query_le=P(Le(Y[a], b), Eq(Y[c], d))
+    assert((query_gt.subs({a:432 ,b:2, c:329, d:0}) + query_le.subs({a:432 ,b:2, c:329, d:0})).evalf() == 1)
+    query_ge=P(Ge(Y[a], b), Eq(Y[c], d))
+    query_lt=P(Lt(Y[a], b), Eq(Y[c], d))
+    assert((query_ge.subs({a:287 ,b:1, c:0, d:0}) + query_lt.subs({a:287 ,b:1, c:0, d:0})).evalf() == 1)
+
 def test_sample_stochastic_process():
     if not import_module('scipy'):
         skip('SciPy Not installed. Skip sampling tests')
@@ -295,6 +309,19 @@ def test_ContinuousMarkovChain():
     C3 = ContinuousMarkovChain('C', [Symbol('0'), Symbol('1'), Symbol('2')], T2)
     assert P(Eq(C3(1), 1), Eq(C3(0), 1)) == exp(-2)/2 + S.Half
     assert P(Eq(C3(1), Symbol('1')), Eq(C3(0), Symbol('1'))) == exp(-2)/2 + S.Half
+
+    #test symbolic queries
+    a,b,c,d = symbols('a b c d')
+    G = Matrix([[-S(1), Rational(1, 10), Rational(9, 10)], [Rational(2, 5), -S(1), Rational(3, 5)], [Rational(1, 2), Rational(1, 2), -S(1)]])
+    C = ContinuousMarkovChain('C', state_space=[0, 1, 2], gen_mat=G)
+    query=P(Eq(C(a), b), Eq(C(c), d))
+    assert(query.subs({a:3.65 ,b:2, c:1.78, d:1}).evalf().round(10) == P(Eq(C(3.65), 2), Eq(C(1.78), 1)).round(10))
+    query_gt=P(Gt(C(a), b), Eq(C(c), d))
+    query_le=P(Le(C(a), b), Eq(C(c), d))
+    assert((query_gt.subs({a:143.2 ,b:0, c:31.29, d:2}) + query_le.subs({a:143.2 ,b:0, c:31.29, d:2})).evalf() == 1)
+    query_ge=P(Ge(C(a), b), Eq(C(c), d))
+    query_lt=P(Lt(C(a), b), Eq(C(c), d))
+    assert((query_ge.subs({a:287.43 ,b:1, c:121.45, d:0}) + query_lt.subs({a:287.43 ,b:1, c:121.45, d:0})).evalf() == 1)
 
 def test_BernoulliProcess():
 
