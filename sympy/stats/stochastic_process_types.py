@@ -868,10 +868,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     0.64705
     >>> P(Gt(Y[21], 0), Eq(Y[5], 0)).round(5)
     0.64705
-    >>> multivariate_query = P(Eq(Y[a], Y[b]), Eq(Y[c], d))
-    >>> multivariate_query.subs({a:7, b:5, c:2, d:0}).evalf().round(5)
-
-    >>> P(Eq(Y[7], Y[5]), Eq(Y[2], 0)).round(5)
 
     There is limited support for arbitrarily sized states:
 
