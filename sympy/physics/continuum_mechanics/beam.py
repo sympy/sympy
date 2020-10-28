@@ -35,7 +35,6 @@ class Beam(object):
 
     Examples
     ========
-
     There is a beam of length 4 meters. A constant distributed load of 6 N/m
     is applied from half of the beam till the end. There are two simple supports
     below the beam, one at the starting point and another at the ending point
@@ -230,10 +229,6 @@ class Beam(object):
     def boundary_conditions(self):
         """
         Returns a dictionary of boundary conditions applied on the beam.
-
-        Explanation
-        ===========
-    
         The dictionary has three keywords namely moment, slope and deflection.
         The value of each keyword is a list of tuple, where each tuple
         contains location and value of a boundary condition in the format
@@ -241,7 +236,6 @@ class Beam(object):
 
         Examples
         ========
-    
         There is a beam of length 4 meters. The bending moment at 0 should be 4
         and at 4 it should be 0. The slope of the beam should be 1 at 0. The
         deflection should be 2 at 0.
@@ -279,17 +273,12 @@ class Beam(object):
     def join(self, beam, via="fixed"):
         """
         This method joins two beams to make a new composite beam system.
-
-        Explanation
-        ===========
-    
         Passed Beam class instance is attached to the right end of calling
         object. This method can be used to form beams having Discontinuous
         values of Elastic modulus or Second moment.
 
         Parameters
         ==========
-
         beam : Beam class object
             The Beam object which would be connected to the right of calling
             object.
@@ -300,7 +289,6 @@ class Beam(object):
 
         Examples
         ========
-
         There is a cantilever beam of length 4 meters. For first 2 meters
         its moment of inertia is `1.5*I` and `I` for the other end.
         A pointload of magnitude 4 N is applied from the top at its free end.
@@ -351,7 +339,6 @@ class Beam(object):
 
         Parameters
         ==========
-
         loc : Sympifyable
             Location of point at which support is applied.
         type : String
@@ -363,7 +350,6 @@ class Beam(object):
 
         Examples
         ========
-
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
         of magnitude 8 N is applied from the top of the beam at the starting
@@ -414,7 +400,6 @@ class Beam(object):
 
         Parameters
         ==========
-
         value : Sympifyable
             The value inserted should have the units [Force/(Distance**(n+1)]
             where n is the order of applied load.
@@ -446,7 +431,6 @@ class Beam(object):
 
         Examples
         ========
-
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
         applied in the clockwise direction at the starting point of the beam.
         A point load of magnitude 4 N is applied from the top of the beam at
@@ -495,7 +479,6 @@ class Beam(object):
 
         Parameters
         ==========
-
         value : Sympifyable
             The magnitude of an applied load.
         start : Sympifyable
@@ -515,7 +498,6 @@ class Beam(object):
 
         Examples
         ========
-
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
         applied in the clockwise direction at the starting point of the beam.
         A pointload of magnitude 4 N is applied from the top of the beam at
@@ -573,7 +555,6 @@ class Beam(object):
 
         Examples
         ========
-
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
         applied in the clockwise direction at the starting point of the beam.
         A point load of magnitude 4 N is applied from the top of the beam at
@@ -601,7 +582,6 @@ class Beam(object):
 
         Examples
         ========
-
         There is a beam of length 4 meters. A moment of magnitude 3 Nm is
         applied in the clockwise direction at the starting point of the beam.
         A pointload of magnitude 4 N is applied from the top of the beam at
@@ -625,10 +605,6 @@ class Beam(object):
     def _solve_hinge_beams(self, *reactions):
         """Method to find integration constants and reactional variables in a
         composite beam connected via hinge.
-
-        Explanation
-        ===========
-
         This method resolves the composite Beam into its sub-beams and then
         equations of shear force, bending moment, slope and deflection are
         evaluated for both of them separately. These equations are then solved
@@ -638,7 +614,6 @@ class Beam(object):
 
         Examples
         ========
-
         A combined beam, with constant fkexural rigidity E*I, is formed by joining
         a Beam of length 2*l to the right of another Beam of length l. The whole beam
         is fixed at both of its both end. A point load of magnitude P is also applied
@@ -768,7 +743,6 @@ class Beam(object):
 
         Examples
         ========
-
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
         of magnitude 8 N is applied from the top of the beam at the starting
@@ -778,9 +752,6 @@ class Beam(object):
 
         Using the sign convention of upward forces and clockwise moment
         being positive.
-
-        Examples
-        ========
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
@@ -840,7 +811,6 @@ class Beam(object):
 
         Examples
         ========
-
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
         of magnitude 8 N is applied from the top of the beam at the starting
@@ -927,7 +897,6 @@ class Beam(object):
 
         Examples
         ========
-
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
         of magnitude 8 N is applied from the top of the beam at the starting
@@ -1015,7 +984,6 @@ class Beam(object):
 
         Examples
         ========
-
         There is is 10 meter long overhanging beam. There are
         two simple supports below the beam. One at the start
         and another one at a distance of 6 meters from the start.
@@ -1057,7 +1025,6 @@ class Beam(object):
 
         Examples
         ========
-
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
         of magnitude 8 N is applied from the top of the beam at the starting
@@ -1126,7 +1093,6 @@ class Beam(object):
 
         Examples
         ========
-
         There is a beam of length 30 meters. A moment of magnitude 120 Nm is
         applied in the clockwise direction at the end of the beam. A pointload
         of magnitude 8 N is applied from the top of the beam at the starting
@@ -1288,14 +1254,12 @@ class Beam(object):
 
         Parameters
         ==========
-
         subs : dictionary
             Python dictionary containing Symbols as key and their
             corresponding values.
 
         Examples
         ========
-
         There is a beam of length 8 meters. A constant distributed load of 10 KN/m
         is applied from half of the beam till the end. There are two simple supports
         below the beam, one at the starting point and another at the ending point
@@ -1348,14 +1312,12 @@ class Beam(object):
 
         Parameters
         ==========
-
         subs : dictionary
             Python dictionary containing Symbols as key and their
             corresponding values.
 
         Examples
         ========
-
         There is a beam of length 8 meters. A constant distributed load of 10 KN/m
         is applied from half of the beam till the end. There are two simple supports
         below the beam, one at the starting point and another at the ending point
@@ -1408,14 +1370,12 @@ class Beam(object):
 
         Parameters
         ==========
-
         subs : dictionary
             Python dictionary containing Symbols as key and their
             corresponding values.
 
         Examples
         ========
-
         There is a beam of length 8 meters. A constant distributed load of 10 KN/m
         is applied from half of the beam till the end. There are two simple supports
         below the beam, one at the starting point and another at the ending point
@@ -1468,14 +1428,12 @@ class Beam(object):
 
         Parameters
         ==========
-
         subs : dictionary
             Python dictionary containing Symbols as key and their
             corresponding values.
 
         Examples
         ========
-
         There is a beam of length 8 meters. A constant distributed load of 10 KN/m
         is applied from half of the beam till the end. There are two simple supports
         below the beam, one at the starting point and another at the ending point
@@ -1840,7 +1798,6 @@ class Beam3D(Beam):
 
     Examples
     ========
-
     There is a beam of l meters long. A constant distributed load of magnitude q
     is applied along y-axis from start till the end of beam. A constant distributed
     moment of magnitude m is also applied along z-axis from start till the end of beam.
@@ -1887,7 +1844,6 @@ class Beam3D(Beam):
 
         Parameters
         ==========
-
         length : Sympifyable
             A Symbol or value representing the Beam's length.
         elastic_modulus : Sympifyable
@@ -1975,7 +1931,6 @@ class Beam3D(Beam):
 
         Examples
         ========
-
         There is a beam of length 4 meters. The slope at 0 should be 4 along
         the x-axis and 0 along others. At the other end of beam, deflection
         along all the three axes should be zero.
@@ -2024,7 +1979,6 @@ class Beam3D(Beam):
 
         Parameters
         ==========
-
         value : Sympifyable
             The magnitude of an applied load.
         dir : String
@@ -2063,7 +2017,6 @@ class Beam3D(Beam):
 
         Parameters
         ==========
-
         value : Sympifyable
             The magnitude of an applied moment.
         dir : String
@@ -2112,7 +2065,6 @@ class Beam3D(Beam):
 
         Examples
         ========
-
         There is a beam of length 30 meters. It it supported by rollers at
         of its end. A constant distributed load of magnitude 8 N is applied
         from start till its end along y-axis. Another linear load having
