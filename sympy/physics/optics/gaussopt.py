@@ -62,7 +62,8 @@ class RayTransferMatrix(MutableDenseMatrix):
     Parameters
     ==========
 
-    parameters : A, B, C and D or 2x2 matrix (Matrix(2, 2, [A, B, C, D]))
+    parameters :
+        A, B, C and D or 2x2 matrix (Matrix(2, 2, [A, B, C, D]))
 
     Examples
     ========
