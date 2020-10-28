@@ -33,7 +33,8 @@ class Beam(object):
        own sign convention and should stick to it. The results will
        automatically follow the chosen sign convention.
 
-    
+    Examples
+    ========
 
     There is a beam of length 4 meters. A constant distributed load of 6 N/m
     is applied from half of the beam till the end. There are two simple supports
@@ -232,7 +233,7 @@ class Beam(object):
 
         Explanation
         ===========
-
+    
         The dictionary has three keywords namely moment, slope and deflection.
         The value of each keyword is a list of tuple, where each tuple
         contains location and value of a boundary condition in the format
@@ -240,7 +241,7 @@ class Beam(object):
 
         Examples
         ========
-
+    
         There is a beam of length 4 meters. The bending moment at 0 should be 4
         and at 4 it should be 0. The slope of the beam should be 1 at 0. The
         deflection should be 2 at 0.
@@ -281,7 +282,7 @@ class Beam(object):
 
         Explanation
         ===========
-
+    
         Passed Beam class instance is attached to the right end of calling
         object. This method can be used to form beams having Discontinuous
         values of Elastic modulus or Second moment.
