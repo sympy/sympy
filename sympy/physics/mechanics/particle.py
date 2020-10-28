@@ -11,6 +11,9 @@ __all__ = ['Particle']
 class Particle(object):
     """A particle.
 
+    Explanation
+    ===========
+
     Particles have a non-zero mass and lack spatial extension; they take up no
     space.
 
@@ -18,6 +21,7 @@ class Particle(object):
 
     Parameters
     ==========
+
     name : str
         Name of particle
     point : Point
@@ -77,6 +81,9 @@ class Particle(object):
     def linear_momentum(self, frame):
         """Linear momentum of the particle.
 
+        Explanation
+        ===========
+
         The linear momentum L, of a particle P, with respect to frame N is
         given by
 
@@ -112,6 +119,9 @@ class Particle(object):
 
     def angular_momentum(self, point, frame):
         """Angular momentum of the particle about the point.
+
+        Explanation
+        ===========
 
         The angular momentum H, about some point O of a particle, P, is given
         by:
@@ -152,7 +162,10 @@ class Particle(object):
         return self.point.pos_from(point) ^ (self.mass * self.point.vel(frame))
 
     def kinetic_energy(self, frame):
-        """Kinetic energy of the particle
+        """Kinetic energy of the particle.
+
+        Explanation
+        ===========
 
         The kinetic energy, T, of a particle, P, is given by
 
@@ -246,6 +259,7 @@ class Particle(object):
 
         Parameters
         ==========
+
         point : sympy.physics.vector.Point
             The point to express the inertia dyadic about.
         frame : sympy.physics.vector.ReferenceFrame
@@ -253,6 +267,7 @@ class Particle(object):
 
         Returns
         =======
+
         inertia : sympy.physics.vector.Dyadic
             The inertia dyadic of the particle expressed about the provided
             point and frame.
