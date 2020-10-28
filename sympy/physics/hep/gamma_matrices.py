@@ -166,7 +166,7 @@ def simplify_gpgp(ex, sort=True):
 
 def gamma_trace(t):
     """
-    trace of a single line of gamma matrices
+    Trace of a single line of gamma matrices.
 
     Examples
     ========
@@ -221,11 +221,11 @@ def _trace_single_line(t):
     """
     Evaluate the trace of a single gamma matrix line inside a ``TensExpr``.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     If there are ``DiracSpinorIndex.auto_left`` and ``DiracSpinorIndex.auto_right``
-    indices trace over them; otherwise traces are not implied (explain)
+    indices trace over them; otherwise traces are not implied (explain).
 
 
     Examples
@@ -340,7 +340,8 @@ def kahane_simplify(expression):
     Parameters
     ==========
 
-    `expression`    the tensor expression containing the gamma matrices to simplify.
+    ``expression``:
+        The tensor expression containing the gamma matrices to simplify.
 
     Notes
     =====
@@ -368,7 +369,7 @@ def kahane_simplify(expression):
     ========
 
     When using, always remember that the original expression coefficient
-    has to be handled separately
+    has to be handled separately.
 
     >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G, LorentzIndex
     >>> from sympy.physics.hep.gamma_matrices import kahane_simplify
@@ -408,7 +409,7 @@ def kahane_simplify(expression):
     References
     ==========
 
-    [1] Algorithm for Reducing Contracted Products of gamma Matrices,
+    .. [1] Algorithm for Reducing Contracted Products of gamma Matrices,
     Joseph Kahane, Journal of Mathematical Physics, Vol. 9, No. 10, October 1968.
     """
 
