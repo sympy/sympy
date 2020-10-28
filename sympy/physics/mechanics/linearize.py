@@ -18,7 +18,8 @@ class Linearizer(object):
     coordinates and speeds.
 
     Attributes
-    ----------
+    ==========
+
     f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a : Matrix
         Matrices holding the general system form.
     q, u, r : Matrix
@@ -36,7 +37,8 @@ class Linearizer(object):
             q_i=None, q_d=None, u_i=None, u_d=None, r=None, lams=None):
         """
         Parameters
-        ----------
+        ==========
+
         f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a : array_like
             System of equations holding the general system form.
             Supply empty array or Matrix if the parameter
@@ -226,7 +228,8 @@ class Linearizer(object):
         These may be either symbolic or numeric.
 
         Parameters
-        ----------
+        ==========
+
         op_point : dict or iterable of dicts, optional
             Dictionary or iterable of dictionaries containing the operating
             point conditions. These will be substituted in to the linearized
@@ -246,7 +249,8 @@ class Linearizer(object):
             For large expressions this may be time consuming. Default is False.
 
         Potential Issues
-        ----------------
+        ================
+
             Note that the process of solving with A_and_B=True is
             computationally intensive if there are many symbolic parameters.
             For this reason, it may be more desirable to use the default
@@ -403,14 +407,16 @@ def permutation_matrix(orig_vec, per_vec):
     orig_vec into order of per_vec.
 
     Parameters
-    ----------
+    ==========
+
     orig_vec : array_like
         Symbols in original ordering.
     per_vec : array_like
         Symbols in new ordering.
 
     Returns
-    -------
+    =======
+
     p_matrix : Matrix
         Permutation matrix such that orig_vec == (p_matrix * per_vec).
     """
