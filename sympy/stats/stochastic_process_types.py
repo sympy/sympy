@@ -1008,8 +1008,13 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                     visited = visited.union(new_tree_edges)
 
             # igcd needs at least 2 arguments
-            g = igcd(len(class_), len(class_), *{val_e for val_e in non_tree_edge_values if val_e > 0})
-            periods.append(g)
+            positive_ntev = {val_e for val_e in non_tree_edge_values if val_e > 0}
+            if len(positive_ntev) == 0:
+                periods.append(len(class_))
+            elif len(positive_ntev) == 1:
+                periods.append(positive_ntev.pop())
+            else:
+                periods.append(igcd(*positive_ntev))
             # end breadth-first search
 
         # convert back to the user's state names
@@ -1049,10 +1054,18 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return self.absorbing_probabilities()
 
     def is_regular(self):
-        w = self.fixed_row_vector()
-        if w is None or isinstance(w, (Lambda)):
-            return None
-        return all((wi > 0) == True for wi in w.row(0))
+        tuples = self.communication_classes()
+        if len(tuples) == 0:
+            return S.false  # not defined for a 0x0 matrix
+        classes, _, periods = list(zip(*tuples))
+        return And(len(classes) == 1, periods[0] == 1)
+
+    def is_ergodic(self):
+        tuples = self.communication_classes()
+        if len(tuples) == 0:
+            return S.false  # not defined for a 0x0 matrix
+        classes, _, _ = list(zip(*tuples))
+        return S(len(classes) == 1)
 
     def is_absorbing_state(self, state):
         trans_probs = self.transition_probabilities
@@ -1061,9 +1074,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             return S(trans_probs[state, state]) is S.One
 
     def is_absorbing_chain(self):
-        trans_probs = self.transition_probabilities
-        return any(self.is_absorbing_state(state) == True
-                    for state in range(trans_probs.shape[0]))
+        states, A, B, C = self.decompose()
+        r = A.shape[0]
+        return And(r > 0, A == Identity(r).as_explicit())
 
     def stationary_distribution(self, condition_set=False) -> tUnion[ImmutableMatrix, ConditionSet, Lambda]:
         """
