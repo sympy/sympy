@@ -19,6 +19,9 @@ __all__ = ['KanesMethod']
 class KanesMethod(object):
     """Kane's method object.
 
+    Explanation
+    ===========
+
     This object is used to do the "book-keeping" as you go through and form
     equations of motion in the way Kane presents in:
     Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
@@ -476,6 +479,9 @@ class KanesMethod(object):
     def linearize(self, **kwargs):
         """ Linearize the equations of motion about a symbolic operating point.
 
+        Explanation
+        ===========
+
         If kwarg A_and_B is False (default), returns M, A, B, r for the
         linearized form, M*[q', u']^T = A*[q_ind, u_ind]^T + B*r.
 
@@ -507,6 +513,9 @@ class KanesMethod(object):
 
     def kanes_equations(self, bodies, loads=None):
         """ Method to form Kane's equations, Fr + Fr* = 0.
+
+        Explanation
+        ===========
 
         Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
         present (say, s auxiliary speeds, o generalized speeds, and m motion
@@ -573,6 +582,7 @@ class KanesMethod(object):
 
         Parameters
         ==========
+
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
