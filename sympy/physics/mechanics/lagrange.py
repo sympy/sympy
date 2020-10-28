@@ -14,6 +14,9 @@ __all__ = ['LagrangesMethod']
 class LagrangesMethod(object):
     """Lagrange's method object.
 
+    Explanation
+    ===========
+
     This object generates the equations of motion in a two step procedure. The
     first step involves the initialization of LagrangesMethod by supplying the
     Lagrangian and the generalized coordinates, at the bare minimum. If there
@@ -102,7 +105,7 @@ class LagrangesMethod(object):
 
     def __init__(self, Lagrangian, qs, forcelist=None, bodies=None, frame=None,
                  hol_coneqs=None, nonhol_coneqs=None):
-        """Supply the following for the initialization of LagrangesMethod
+        """Supply the following for the initialization of LagrangesMethod.
 
         Lagrangian : Sympifyable
 
@@ -229,6 +232,9 @@ class LagrangesMethod(object):
         """Returns the mass matrix, which is augmented by the Lagrange
         multipliers, if necessary.
 
+        Explanation
+        ===========
+
         If the system is described by 'n' generalized coordinates and there are
         no constraint equations then an n X n matrix is returned.
 
@@ -288,6 +294,7 @@ class LagrangesMethod(object):
 
         Parameters
         ==========
+
         q_ind, qd_ind : array_like, optional
             The independent generalized coordinates and speeds.
         q_dep, qd_dep : array_like, optional
@@ -348,6 +355,9 @@ class LagrangesMethod(object):
             **kwargs):
         """Linearize the equations of motion about a symbolic operating point.
 
+        Explanation
+        ===========
+
         If kwarg A_and_B is False (default), returns M, A, B, r for the
         linearized form, M*[q', u']^T = A*[q_ind, u_ind]^T + B*r.
 
@@ -376,10 +386,11 @@ class LagrangesMethod(object):
 
     def solve_multipliers(self, op_point=None, sol_type='dict'):
         """Solves for the values of the lagrange multipliers symbolically at
-        the specified operating point
+        the specified operating point.
 
         Parameters
         ==========
+
         op_point : dict or iterable of dicts, optional
             Point at which to solve at. The operating point is specified as
             a dictionary or iterable of dictionaries of {symbol: value}. The
@@ -424,7 +435,7 @@ class LagrangesMethod(object):
             raise ValueError("Unknown sol_type {:}.".format(sol_type))
 
     def rhs(self, inv_method=None, **kwargs):
-        """Returns equations that can be solved numerically
+        """Returns equations that can be solved numerically.
 
         Parameters
         ==========
