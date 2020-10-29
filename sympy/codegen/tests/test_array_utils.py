@@ -521,11 +521,19 @@ def test_nested_permutations():
         random.shuffle(plist1[i])
         random.shuffle(plist2[i])
 
+    plist1.append([2, 5, 4, 1, 0, 3])
+    plist2.append([3, 5, 0, 4, 1, 2])
+
     plist1.append([2, 5, 4, 0, 3, 1])
     plist2.append([3, 0, 5, 1, 2, 4])
 
     plist1.append([5, 4, 2, 0, 3, 1])
     plist2.append([4, 5, 0, 2, 3, 1])
+
+    Me = M.subs(k, 3).as_explicit()
+    Ne = N.subs(k, 3).as_explicit()
+    Pe = P.subs(k, 3).as_explicit()
+    cge = tensorproduct(Me, Ne, Pe)
 
     for permutation_array1, permutation_array2 in zip(plist1, plist2):
         p1 = Permutation(permutation_array1)
@@ -544,10 +552,6 @@ def test_nested_permutations():
         assert cg == result
 
         # Check that `permutedims` behaves the same way with explicit-component arrays:
-        Me = M.subs(k, 3).as_explicit()
-        Ne = N.subs(k, 3).as_explicit()
-        Pe = P.subs(k, 3).as_explicit()
-        cge = tensorproduct(Me, Ne, Pe)
         result1 = permutedims(permutedims(cge, p1), p2)
         result2 = permutedims(cge, p2*p1)
         assert result1 == result2

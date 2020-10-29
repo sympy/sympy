@@ -577,6 +577,41 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
     >>> cg = CodegenArrayPermuteDims(N, [1, 0])
     >>> cg.shape
     (2, 3)
+
+    Permutations of tensor products are simplified in order to achieve a
+    standard form:
+
+    >>> from sympy.codegen.array_utils import CodegenArrayTensorProduct
+    >>> M = MatrixSymbol("M", 4, 5)
+    >>> tp = CodegenArrayTensorProduct(M, N)
+    >>> tp.shape
+    (4, 5, 3, 2)
+    >>> perm1 = CodegenArrayPermuteDims(tp, [2, 3, 1, 0])
+
+    The args ``(M, N)`` have been sorted and the permutation has been
+    simplified, the expression is equivalent:
+
+    >>> perm1.expr.args
+    (N, M)
+    >>> perm1.shape
+    (3, 2, 5, 4)
+    >>> perm1.permutation
+    (2 3)
+
+    The permutation in its array form has been simplified from
+    ``[2, 3, 1, 0]`` to ``[0, 1, 3, 2]``, as the arguments of the tensor
+    product `M` and `N` have been switched:
+
+    >>> perm1.permutation.array_form
+    [0, 1, 3, 2]
+
+    We can nest a second permutation:
+
+    >>> perm2 = CodegenArrayPermuteDims(perm1, [1, 0, 2, 3])
+    >>> perm2.shape
+    (2, 3, 5, 4)
+    >>> perm2.permutation.array_form
+    [1, 0, 3, 2]
     """
     def __new__(cls, expr, permutation, nest_permutation=True):
         from sympy.combinatorics import Permutation
@@ -591,8 +626,6 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
             expr, permutation = cls._handle_nested_contraction(expr, permutation)
         if isinstance(expr, CodegenArrayTensorProduct):
             expr, permutation = cls._check_lift_permutation(expr, permutation)
-        # if nest_permutation and isinstance(expr, CodegenArrayTensorProduct):
-            # expr, permutation = cls._check_permutation_mapping(expr, permutation)
         if isinstance(expr, CodegenArrayTensorProduct):
             expr, permutation = cls._sort_components(expr, permutation)
         plist = permutation.array_form
@@ -617,22 +650,27 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
 
     @classmethod
     def _sort_components(cls, expr, permutation):
-        parray = _af_invert(permutation.array_form)
+        # Get the permutation in its image-form:
+        perm_image_form = _af_invert(permutation.array_form)
         args = list(expr.args)
+        # Starting index global position for every arg:
         cumul = list(accumulate([0] + expr.subranks))
-        parray_components = [parray[cumul[i]:cumul[i+1]] for i in range(len(args))]
-        map2 = [i for i in range(len(args)) for j in range(expr.subranks[i])]
+        # Split `perm_image_form` into a list of list corresponding to the indices
+        # of every argument:
+        perm_image_form_in_components = [perm_image_form[cumul[i]:cumul[i+1]] for i in range(len(args))]
         # Create an index, target-position-key array:
-        ps = [(i, sorted(map2[j] for j in comp) + [i]) for i, comp in enumerate(parray_components)]
+        ps = [(i, sorted(comp)) for i, comp in enumerate(perm_image_form_in_components)]
         # Sort the array according to the target-position-key:
+        # In this way, we define a canonical way to sort the arguments according
+        # to the permutation.
         ps.sort(key=lambda x: x[1])
         # Read the inverse-permutation (i.e. image-form) of the args:
-        new_pos1 = [i[0] for i in ps]
+        perm_args_image_form = [i[0] for i in ps]
         # Apply the args-permutation to the `args`:
-        args_sorted = [args[i] for i in new_pos1]
+        args_sorted = [args[i] for i in perm_args_image_form]
         # Apply the args-permutation to the array-form of the permutation of the axes (of `expr`):
-        parray_components_sorted = [parray_components[i] for i in new_pos1]
-        new_permutation = Permutation(_af_invert([j for i in parray_components_sorted for j in i]))
+        perm_image_form_sorted_args = [perm_image_form_in_components[i] for i in perm_args_image_form]
+        new_permutation = Permutation(_af_invert([j for i in perm_image_form_sorted_args for j in i]))
         return CodegenArrayTensorProduct(*args_sorted), new_permutation
 
     @classmethod
