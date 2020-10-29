@@ -103,7 +103,8 @@ the only dependency being ``pyglet``.
 
 Here is the simplest usage:
 
-    >>> from sympy import var, Plot
+    >>> from sympy import var
+    >>> from sympy.plotting.pygletplot import PygletPlot as Plot
     >>> var('x y z')
     >>> Plot(x*y**3-y*x**3)
 
