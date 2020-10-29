@@ -10,7 +10,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
                    ceiling, MatrixBase, ConditionSet, ones, zeros, Identity,
-                   Rational, Lt, Gt, Ne, BlockMatrix,Sum)
+                   Rational, Lt, Gt, Le, Ge, Ne, BlockMatrix, Sum)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -547,10 +547,22 @@ class MarkovProcess(StochasticProcess):
                 min_key_rv = None
                 return Probability(condition)
 
+            if symbolic:
+                return self.symbolic_probability(condition, new_given_condition, rv, min_key_rv)
+
             if len(rv) > 1:
-                rv = rv[:2]
+                rv[0] = condition.lhs
+                rv[1] = condition.rhs
                 if rv[0].key < rv[1].key:
                         rv[0], rv[1] = rv[1], rv[0]
+                        if isinstance(condition, Gt):
+                            condition = Lt(condition.lhs, condition.rhs)
+                        elif isinstance(condition, Lt):
+                            condition = Lt(condition.lhs, condition.rhs)
+                        elif isinstance(condition, Ge):
+                            condition = Le(condition.lhs, condition.rhs)
+                        elif isinstance(condition, Le):
+                            condition = Ge(condition.lhs, condition.rhs)
                 s = Rational(0, 1)
                 n = len(self.state_space)
 
@@ -575,41 +587,6 @@ class MarkovProcess(StochasticProcess):
                             for j in range(i + upper, n):
                                 s -= self.probability(Eq(rv[0], i), Eq(rv[1], j)) * self.probability(Eq(rv[1], j), new_given_condition)
                     return s if greater else 1 - s
-
-            elif symbolic:
-                if isinstance(condition, Relational):
-
-                    curr_state = new_given_condition.rhs if isinstance(new_given_condition.lhs, RandomIndexedSymbol) \
-                            else new_given_condition.lhs
-                    next_state = condition.rhs if isinstance(condition.lhs, RandomIndexedSymbol) \
-                        else condition.lhs
-
-                    if isinstance(condition, Eq) or isinstance(condition, Ne):
-                        if isinstance(self, DiscreteMarkovChain):
-                            P = self.transition_probabilities**(rv[0].key - min_key_rv.key)
-                        else:
-                            P = exp(self.generator_matrix*(rv[0].key - min_key_rv.key))
-                        prob = P[curr_state, next_state] if isinstance(condition, Eq) else 1 - P[curr_state, next_state]
-                        return Piecewise((prob, rv[0].key > min_key_rv.key), (Probability(condition), True))
-                    else:
-                        upper = 1
-                        greater = False
-                        if isinstance(condition, Ge) or isinstance(condition, Lt):
-                            upper = 0
-                        if isinstance(condition, Gt) or isinstance(condition, Ge):
-                            greater = True
-                        k = Dummy('k')
-                        condition = Eq(condition.lhs, k) if isinstance(condition.lhs, RandomIndexedSymbol)\
-                            else Eq(condition.rhs, k)
-                        total = Sum(self.probability(condition, new_given_condition), (k, next_state + upper, self.state_space._sup))
-                        return Piecewise((total, rv[0].key > min_key_rv.key), (Probability(condition), True)) if greater\
-                            else Piecewise((1 - total, rv[0].key > min_key_rv.key), (Probability(condition), True))
-
-                elif isinstance(condition, Or):
-                    return sum([self.probability(expr, given_condition, evaluate, **kwargs)
-                            for expr in condition.args])
-                else:
-                    return Probability(condition, given_condition)
 
             rv = rv[0]
             states = condition.as_set()
@@ -702,6 +679,37 @@ class MarkovProcess(StochasticProcess):
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(condition, given_condition))
+
+    def symbolic_probability(self, condition, new_given_condition, rv, min_key_rv):
+        #Function to calculate probability for queries with symbols
+        if isinstance(condition, Relational):
+            curr_state = new_given_condition.rhs if isinstance(new_given_condition.lhs, RandomIndexedSymbol) \
+                    else new_given_condition.lhs
+            next_state = condition.rhs if isinstance(condition.lhs, RandomIndexedSymbol) \
+                else condition.lhs
+
+            if isinstance(condition, Eq) or isinstance(condition, Ne):
+                if isinstance(self, DiscreteMarkovChain):
+                    P = self.transition_probabilities**(rv[0].key - min_key_rv.key)
+                else:
+                    P = exp(self.generator_matrix*(rv[0].key - min_key_rv.key))
+                prob = P[curr_state, next_state] if isinstance(condition, Eq) else 1 - P[curr_state, next_state]
+                return Piecewise((prob, rv[0].key > min_key_rv.key), (Probability(condition), True))
+            else:
+                upper = 1
+                greater = False
+                if isinstance(condition, Ge) or isinstance(condition, Lt):
+                    upper = 0
+                if isinstance(condition, Gt) or isinstance(condition, Ge):
+                    greater = True
+                k = Dummy('k')
+                condition = Eq(condition.lhs, k) if isinstance(condition.lhs, RandomIndexedSymbol)\
+                    else Eq(condition.rhs, k)
+                total = Sum(self.probability(condition, new_given_condition), (k, next_state + upper, self.state_space._sup))
+                return Piecewise((total, rv[0].key > min_key_rv.key), (Probability(condition), True)) if greater\
+                    else Piecewise((1 - total, rv[0].key > min_key_rv.key), (Probability(condition), True))
+        else:
+            return Probability(condition, new_given_condition)
 
     def expectation(self, expr, condition=None, evaluate=True, **kwargs):
         """
@@ -876,6 +884,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> Y = DiscreteMarkovChain("Y", trans_probs=T)
     >>> Y.state_space
     Range(0, n, 1)
+    >>> query=P(Eq(Y[a], b), Eq(Y[c], d))
+    >>> query.subs({a:10 ,b:2, c:5, d:1})
+    (T**5)[1, 2]
 
     References
     ==========
@@ -1502,7 +1513,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     >>> P(Gt(C(3.92), C(1.75)), Eq(C(0.46), 0)).round(5)
     0.34211
     >>> P(Le(C(1.57), C(3.14)), Eq(C(1.22), 1)).round(4)
-    0.6545
+    0.7143
 
     Symbolic probability queries are also supported
 

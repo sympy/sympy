@@ -264,10 +264,15 @@ def test_DiscreteMarkovChain():
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     assert P(Eq(Y[7], Y[5]), Eq(Y[2], 0)).round(5) == Float(0.44428, 5)
     assert P(Gt(Y[3], Y[1]), Eq(Y[0], 0)).round(2) == Float(0.36, 2)
-    assert P(Le(Y[5], Y[10]), Eq(Y[4], 2)).round(6) == Float(0.739072, 6)
+    assert P(Le(Y[5], Y[10]), Eq(Y[4], 2)).round(6) == Float(0.583120, 6)
     assert Float(P(Eq(Y[500], Y[240]), Eq(Y[120], 1)), 14) == Float(1 - P(Ne(Y[500], Y[240]), Eq(Y[120], 1)), 14)
     assert Float(P(Gt(Y[350], Y[100]), Eq(Y[75], 2)), 14) == Float(1 - P(Le(Y[350], Y[100]), Eq(Y[75], 2)), 14)
     assert Float(P(Lt(Y[400], Y[210]), Eq(Y[161], 0)), 14) == Float(1 - P(Ge(Y[400], Y[210]), Eq(Y[161], 0)), 14)
+    assert P(Eq(Y[5], Y[10]), Eq(Y[2], 1)) == P(Eq(Y[10], Y[5]), Eq(Y[2], 1))
+    assert P(Gt(Y[23], Y[100]), Eq(Y[19], 1)) == P(Lt(Y[100], Y[23]), Eq(Y[19], 1))
+    assert P(Ge(Y[78], Y[111]), Eq(Y[29], 1)) == P(Le(Y[111], Y[78]), Eq(Y[29], 1))
+    assert (P(Lt(Y[295], Y[201]), Eq(Y[173], 1)) + P(Gt(Y[295], Y[201]), Eq(Y[173], 0)) + P(Eq(Y[295], Y[201]), Eq(Y[173], 0))).round(10) == 1
+    assert (P(Le(Y[531], Y[367]), Eq(Y[279], 1)) + P(Ge(Y[531], Y[367]), Eq(Y[279], 0)) - P(Eq(Y[531], Y[367]), Eq(Y[279], 0))).round(10) == 1
 
     #test symbolic queries
     a,b,c,d = symbols('a b c d')
@@ -345,10 +350,23 @@ def test_ContinuousMarkovChain():
     assert P(Eq(C3(1), 1), Eq(C3(0), 1)) == exp(-2)/2 + S.Half
     assert P(Eq(C3(1), Symbol('1')), Eq(C3(0), Symbol('1'))) == exp(-2)/2 + S.Half
 
-    #test symbolic queries
-    a,b,c,d = symbols('a b c d')
+    #test probability queries
     G = Matrix([[-S(1), Rational(1, 10), Rational(9, 10)], [Rational(2, 5), -S(1), Rational(3, 5)], [Rational(1, 2), Rational(1, 2), -S(1)]])
     C = ContinuousMarkovChain('C', state_space=[0, 1, 2], gen_mat=G)
+    assert P(Eq(C(7.385), C(3.19)), Eq(C(0.862), 0)).round(5) == Float(0.35469, 5)
+    assert P(Gt(C(98.715), C(19.807)), Eq(C(11.314), 2)).round(5) == Float(0.32452, 5)
+    assert P(Le(C(5.9), C(10.112)), Eq(C(4), 1)).round(6) == Float(0.675214, 6)
+    assert Float(P(Eq(C(771.32), C(291.65)), Eq(C(290.63), 1)), 14) == Float(1 - P(Ne(C(771.32), C(291.65)), Eq(C(290.63), 1)), 14)
+    assert Float(P(Gt(C(365.36), C(100.101)), Eq(C(75.992), 2)), 14) == Float(1 - P(Le(C(365.36), C(100.101)), Eq(C(75.992), 2)), 14)
+    assert Float(P(Lt(C(400.90), C(243.79)), Eq(C(161.54), 0)), 14) == Float(1 - P(Ge(C(400.90), C(243.79)), Eq(C(161.54), 0)), 14)
+    assert P(Eq(C(5.243), C(10.912)), Eq(C(2.174), 1)) == P(Eq(C(10.912), C(5.243)), Eq(C(2.174), 1))
+    assert P(Gt(C(23.44), C(99.99)), Eq(C(19.102), 1)) == P(Lt(C(99.99), C(23.44)), Eq(C(19.102), 1))
+    assert P(Ge(C(71.87), C(111.008)), Eq(C(29.153), 1)) == P(Le(C(111.008), C(71.87)), Eq(C(29.153), 1))
+    assert (P(Lt(C(295.706), C(201.98)), Eq(C(173.767), 1)) + P(Gt(C(295.706), C(201.98)), Eq(C(173.767), 0)) + P(Eq(C(295.706), C(201.98)), Eq(C(173.767), 0))).round(10) == 1
+    assert (P(Le(C(531.12), C(367.8)), Eq(C(279.64), 1)) + P(Ge(C(531.12), C(367.8)), Eq(C(279.64), 0)) - P(Eq(C(531.12), C(367.8)), Eq(C(279.64), 0))).round(10) == 1
+
+    #test symbolic queries
+    a,b,c,d = symbols('a b c d')
     query=P(Eq(C(a), b), Eq(C(c), d))
     assert(query.subs({a:3.65 ,b:2, c:1.78, d:1}).evalf().round(10) == P(Eq(C(3.65), 2), Eq(C(1.78), 1)).round(10))
     query_gt=P(Gt(C(a), b), Eq(C(c), d))
