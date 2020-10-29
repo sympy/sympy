@@ -10,7 +10,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
                    ceiling, MatrixBase, ConditionSet, ones, zeros, Identity,
-                   Rational, Lt, Gt, Le, Ge, Ne, BlockMatrix, Sum)
+                   Rational, Lt, Gt, Le, Ne, BlockMatrix, Sum)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
