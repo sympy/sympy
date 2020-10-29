@@ -28,8 +28,12 @@ class Beam:
 
     .. note::
        While solving a beam bending problem, a user should choose its
-       own sign convention and should stick to it. The results will
-       automatically follow the chosen sign convention.
+       own right-handed sign convention and should stick to it. The results will
+       automatically follow the chosen sign convention. However the sign
+       convention must respect the rule that, on the positive side of the
+       beam axis, a force giving positive shear yields a negative moment
+       (discordant shear and moment). Such rule is in agreement with the
+       conventions most commonly used for internal forces.
 
     Examples
     ========
@@ -834,7 +838,7 @@ class Beam:
         -8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) + 120*SingularityFunction(x, 30, -1) + 2*SingularityFunction(x, 30, 0)
         """
         x = self.variable
-        return integrate(self.load, x)
+        return integrate(-self.load, x)
 
     def max_shear_force(self):
         """Returns maximum Shear force and its coordinate
@@ -1074,7 +1078,7 @@ class Beam:
             return slope
 
         C3 = Symbol('C3')
-        slope_curve = integrate(S.One/(E*I)*self.bending_moment(), x) + C3
+        slope_curve = integrate(-S.One/(E*I)*self.bending_moment(), x) + C3
 
         bc_eqs = []
         for position, value in self._boundary_conditions['slope']:
@@ -1172,7 +1176,7 @@ class Beam:
                 return deflection
             base_char = self._base_char
             C3, C4 = symbols(base_char + '3:5')    # Integration constants
-            slope_curve = integrate(self.bending_moment(), x) + C3
+            slope_curve = integrate(-self.bending_moment(), x) + C3
             deflection_curve = integrate(slope_curve, x) + C4
             bc_eqs = []
             for position, value in self._boundary_conditions['deflection']:
