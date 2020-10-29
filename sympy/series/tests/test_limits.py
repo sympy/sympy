@@ -906,3 +906,4 @@ def test_issue_7535():
     assert oo*(1/sin(oo)) == AccumBounds(-oo, oo)
     assert oo*(1/sin(-oo)) == AccumBounds(-oo, oo)
     assert -oo*(1/sin(oo)) == AccumBounds(-oo, oo)
+    
