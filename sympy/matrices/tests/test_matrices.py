@@ -2276,6 +2276,11 @@ def test_GramSchmidt():
     assert GramSchmidt([Matrix([3, 1]), Matrix([2, 2])], True) == [
         Matrix([3*sqrt(10)/10, sqrt(10)/10]),
         Matrix([-sqrt(10)/10, 3*sqrt(10)/10])]
+    # Issue #9488
+    from sympy import FiniteSet
+    L = FiniteSet(Matrix([1]))
+    print(GramSchmidt(L))
+    assert GramSchmidt(L) == [Matrix([[1]])]
 
 
 def test_casoratian():
