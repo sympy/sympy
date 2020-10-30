@@ -4,7 +4,6 @@ from sympy.core.cache import cacheit
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
-from sympy.multipledispatch import Dispatcher
 from sympy.utilities.source import get_class
 from contextlib import contextmanager
 
@@ -194,14 +193,6 @@ class Predicate(Boolean):
     is_Atom = True
 
     def __new__(cls, name, handler=None):
-        if handler is None:
-            # assign empty handler as default, which is dispatchable and
-            # always return None.
-            handler = Dispatcher(name)
-            signature = (object,)
-            func = lambda expr, assumptions: None
-            handler.register(*signature)(func)
-
         obj = Boolean.__new__(cls)
         obj.name = name
         obj._handler = handler
@@ -216,6 +207,11 @@ class Predicate(Boolean):
         imported due to circular import problem, we store the path in
         ``self._handler`` and get it in runtime by this property.
         """
+        from .handlers import CommonHandler
+        if self._handler is None:
+            name = ''.join(['Ask', self.name.capitalize(), 'Handler'])
+            _handler = CommonHandler.copy(name)
+            self._handler = _handler
         return get_class(self._handler)
 
     def _hashable_content(self):
