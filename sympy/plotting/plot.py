@@ -116,7 +116,7 @@ class Plot:
     - aspect_ratio : tuple of two floats or {'auto'}
     - autoscale : bool
     - margin : float in [0, 1]
-    - backend : {'default', 'matplotlib', 'text'} or a subclass of BaseBackend
+    - backend : {'default', 'matplotlib', 'text'}
     - size : optional tuple of two floats, (width, height); default: None
 
     The per data series options and aesthetics are:
@@ -179,13 +179,7 @@ class Plot:
         # The backend type. On every show() a new backend instance is created
         # in self._backend which is tightly coupled to the Plot instance
         # (thanks to the parent attribute of the backend).
-        if isinstance(backend, str):
-            self.backend = plot_backends[backend]
-        elif (type(backend) == type) and issubclass(backend, BaseBackend):
-            self.backend = backend
-        else:
-            raise TypeError(
-                "backend must be either a string or a subclass of BaseBackend")
+        self.backend = plot_backends[backend]
 
         is_real = \
             lambda lim: all(getattr(i, 'is_real', True) for i in lim)
@@ -1094,6 +1088,19 @@ class ContourSeries(BaseSeries):
 ##############################################################################
 
 class BaseBackend:
+    """Base class for the data objects containing stuff to be plotted.
+
+    The backend should check if it supports the data series that it's given.
+    (eg TextBackend supports only LineOver1DRange).
+    It's the backend responsibility to know how to use the class of
+    data series that it's given.
+
+    Some data series classes are grouped (using a class attribute like is_2Dline)
+    according to the api they present (based only on convention). The backend is
+    not obliged to use that api (eg. The LineOver1DRange belongs to the
+    is_2Dline group and presents the get_points method, but the
+    TextBackend does not use the get_points method).
+    """
     def __init__(self, parent):
         super().__init__()
         self.parent = parent

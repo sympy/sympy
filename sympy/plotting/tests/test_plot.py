@@ -12,7 +12,7 @@ from sympy.plotting.plot import (
     plot3d_parametric_surface)
 from sympy.plotting.plot import (
     unset_show, plot_contour, PlotGrid, DefaultBackend, MatplotlibBackend,
-    TextBackend, BaseBackend)
+    TextBackend)
 from sympy.testing.pytest import skip, raises, warns
 from sympy.utilities import lambdify as lambdify_
 
@@ -22,13 +22,6 @@ unset_show()
 
 matplotlib = import_module(
     'matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
-
-
-class DummyBackend(BaseBackend):
-    """ Used to verify if users can create their own backends.
-    """
-    def show(self):
-        pass
 
 
 def test_plot_and_save_1():
@@ -587,16 +580,6 @@ def test_issue_13516():
     p = plot(sin(x), show=False)
     assert p.backend == DefaultBackend
     assert len(p[0].get_segments()) >= 30
-
-    # verify the capability to use custom backends
-    with raises(TypeError):
-        p = plot(sin(x), backend=Plot)
-    p2 = plot(sin(x), backend=MatplotlibBackend, show=False)
-    assert p2.backend == MatplotlibBackend
-    assert len(p2[0].get_segments()) >= 30
-    p3 = plot(sin(x), backend=DummyBackend, show=False)
-    assert p3.backend == DummyBackend
-    assert len(p3[0].get_segments()) >= 30
 
 
 def test_plot_limits():
