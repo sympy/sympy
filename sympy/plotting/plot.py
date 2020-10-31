@@ -1088,19 +1088,6 @@ class ContourSeries(BaseSeries):
 ##############################################################################
 
 class BaseBackend:
-    """Base class for the data objects containing stuff to be plotted.
-
-    The backend should check if it supports the data series that it's given.
-    (eg TextBackend supports only LineOver1DRange).
-    It's the backend responsibility to know how to use the class of
-    data series that it's given.
-
-    Some data series classes are grouped (using a class attribute like is_2Dline)
-    according to the api they present (based only on convention). The backend is
-    not obliged to use that api (eg. The LineOver1DRange belongs to the
-    is_2Dline group and presents the get_points method, but the
-    TextBackend does not use the get_points method).
-    """
     def __init__(self, parent):
         super().__init__()
         self.parent = parent
