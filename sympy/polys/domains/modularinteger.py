@@ -1,8 +1,7 @@
 """Implementation of :class:`ModularInteger` class. """
 
-from __future__ import print_function, division
 
-# from typing import Any, Dict, Tuple, Type
+from typing import Any, Dict, Tuple, Type
 
 import operator
 
@@ -173,7 +172,7 @@ class ModularInteger(PicklableWithSlots, DomainElement):
     def invert(self):
         return self.__class__(self._invert(self.val))
 
-_modular_integer_cache = {}  ## type: Dict[Tuple[Any, Any, Any], Type[ModularInteger]]
+_modular_integer_cache = {}  # type: Dict[Tuple[Any, Any, Any], Type[ModularInteger]]
 
 def ModularIntegerFactory(_mod, _dom, _sym, parent):
     """Create custom class for specific integer modulus."""

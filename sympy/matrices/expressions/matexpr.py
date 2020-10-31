@@ -1,11 +1,14 @@
+from typing import Tuple as tTuple
+
 from sympy.core.logic import FuzzyBool
 
 from functools import wraps, reduce
 import collections
 
-from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr, Mul, Add
+from sympy.core import S, Symbol, Integer, Basic, Expr, Mul, Add
 from sympy.core.decorators import call_highest_priority
 from sympy.core.compatibility import SYMPY_INTS, default_sort_key
+from sympy.core.symbol import Str
 from sympy.core.sympify import SympifyError, _sympify
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -77,6 +80,19 @@ class MatrixExpr(Expr):
         return Basic.__new__(cls, *args, **kwargs)
 
     # The following is adapted from the core Expr object
+
+    @property
+    def shape(self) -> tTuple[Expr, Expr]:
+        raise NotImplementedError
+
+    @property
+    def _add_handler(self):
+        return MatAdd
+
+    @property
+    def _mul_handler(self):
+        return MatMul
+
     def __neg__(self):
         return MatMul(S.NegativeOne, self).doit()
 
@@ -198,7 +214,7 @@ class MatrixExpr(Expr):
         # `x` is a scalar:
         if self.has(x):
             # See if there are other methods using it:
-            return super(MatrixExpr, self)._eval_derivative(x)
+            return super()._eval_derivative(x)
         else:
             return ZeroMatrix(*self.shape)
 
@@ -574,7 +590,7 @@ class MatrixExpr(Expr):
 def _eval_is_eq(lhs, rhs): # noqa:F811
     return False
 
-@dispatch(MatrixExpr, MatrixExpr)
+@dispatch(MatrixExpr, MatrixExpr)  # type: ignore
 def _eval_is_eq(lhs, rhs): # noqa:F811
     if lhs.shape != rhs.shape:
         return False
@@ -763,28 +779,17 @@ class MatrixSymbol(MatrixExpr):
         cls._check_dim(n)
 
         if isinstance(name, str):
-            name = Symbol(name)
+            name = Str(name)
         obj = Basic.__new__(cls, name, n, m)
         return obj
 
-    def _hashable_content(self):
-        return (self.name, self.shape)
-
     @property
     def shape(self):
-        return self.args[1:3]
+        return self.args[1], self.args[2]
 
     @property
     def name(self):
         return self.args[0].name
-
-    def _eval_subs(self, old, new):
-        # only do substitutions in shape
-        shape = Tuple(*self.shape)._subs(old, new)
-        return MatrixSymbol(self.args[0], *shape)
-
-    def __call__(self, *args):
-        raise TypeError("%s object is not callable" % self.__class__)
 
     def _entry(self, i, j, **kwargs):
         return MatrixElement(self, i, j)
@@ -792,13 +797,6 @@ class MatrixSymbol(MatrixExpr):
     @property
     def free_symbols(self):
         return {self}
-
-    def doit(self, **hints):
-        if hints.get('deep', True):
-            return type(self)(self.args[0], self.args[1].doit(**hints),
-                    self.args[2].doit(**hints))
-        else:
-            return self
 
     def _eval_simplify(self, **kwargs):
         return self
@@ -961,14 +959,6 @@ class _LeftRightArgs:
 
     def append_second(self, other):
         self.second_pointer *= other
-
-    def __hash__(self):
-        return hash((self.first, self.second))
-
-    def __eq__(self, other):
-        if not isinstance(other, _LeftRightArgs):
-            return False
-        return (self.first == other.first) and (self.second == other.second)
 
 
 def _make_matrix(x):

@@ -16,7 +16,7 @@ env:
 dist: trusty
 
 python:
-  - 3.5
+  - 3.6
 
 jobs:
   fast_finish: true
@@ -64,23 +64,66 @@ jobs:
             - gfortran
             - python-scipy
 
+    # Full tests. Hopefully basic problems were picked up in the previous
+    # stage.
     - stage: test
-      python: 2.7
+
+      # Code coverage tests. These are slow so put them first.
+      python: 3.7
       dist: xenial
       env:
-        - TEST_PY2_IMPORT="true"
+        - TEST_SYMPY="true"
+        - SPLIT="1/4"
+        - TEST_COVERAGE="true"
     - python: 3.7
       dist: xenial
       env:
-        - TEST_DOCTESTS="true" TEST_SETUP="true" TEST_EXAMPLES="true"
+        - TEST_SYMPY="true"
+        - SPLIT="2/4"
+        - TEST_COVERAGE="true"
     - python: 3.7
       dist: xenial
       env:
-        - TEST_SYMPY="true" SPLIT="1/2"
+        - TEST_SYMPY="true"
+        - SPLIT="3/4"
+        - TEST_COVERAGE="true"
     - python: 3.7
       dist: xenial
       env:
-        - TEST_SYMPY="true" SPLIT="2/2"
+        - TEST_SYMPY="true"
+        - SPLIT="4/4"
+        - TEST_COVERAGE="true"
+
+    # PyPy tests are slow so put them first
+    - python: "pypy"
+      env:
+        - TEST_DOCTESTS="true" TEST_EXAMPLES="true"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy3
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="1/2"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy3
+    - python: "pypy"
+      env:
+        - TEST_SYMPY="true"
+        - SPLIT="2/2"
+      addons:
+        apt:
+          sources:
+            - pypy
+          packages:
+            - pypy3
 
     - python: 3.9-dev
       dist: xenial
@@ -132,66 +175,14 @@ jobs:
         - TEST_SLOW="true"
         - SPLIT="2/2"
 
-    # Code coverage tests
-    - python: 3.6
+    - python: 2.7
       dist: xenial
       env:
-        - TEST_SYMPY="true"
-        - SPLIT="1/4"
-        - TEST_COVERAGE="true"
-    - python: 3.6
-      dist: xenial
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="2/4"
-        - TEST_COVERAGE="true"
-    - python: 3.6
-      dist: xenial
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="3/4"
-        - TEST_COVERAGE="true"
-    - python: 3.6
-      dist: xenial
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="4/4"
-        - TEST_COVERAGE="true"
+        - TEST_PY2_IMPORT="true"
 
-    # PyPy randomly fails because of some PyPy bugs
-    # (Fatal RPython error: AssertionError)
-    - python: "pypy"
-      env:
-        - TEST_DOCTESTS="true" TEST_EXAMPLES="true"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy3
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="1/2"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy3
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="2/2"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy3
-
-    - stage: allowed_failures
-      python: 3.6
+    # Note: This never actually fails. The benchmark script doesn't report any
+    # failure exit code.
+    - python: 3.6
       dist: xenial
       env:
         - BENCHMARK="true"
@@ -227,7 +218,10 @@ before_install:
         conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
 
         conda info -a;
-        conda create -q -n test-environment ${TEST_OPT_DEPENDENCY};
+        # This became very slow: https://github.com/sympy/sympy/issues/20289
+        # We give it a 30 minute wait for now but hopefully this command will
+        # stop being so slow.
+        travis_wait 30 conda create -q -n test-environment ${TEST_OPT_DEPENDENCY};
         source activate test-environment;
         export CPATH=$CONDA_PREFIX/include;
         export LIBRARY_PATH=$CONDA_PREFIX/lib;
@@ -272,6 +266,7 @@ install:
         if [[ "${TEST_SETUP}" == "true" ]]; then
           # The install cycle below is to test installation on systems without
           # setuptools.
+          pip install virtualenv
           virtualenv ~/.venv-no-setuptools;
           ~/.venv-no-setuptools/bin/pip install mpmath;
           ~/.venv-no-setuptools/bin/pip uninstall -y setuptools;

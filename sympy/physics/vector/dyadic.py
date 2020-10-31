@@ -187,7 +187,7 @@ class Dyadic(Printable):
     def _pretty(self, printer):
         e = self
 
-        class Fake(object):
+        class Fake:
             baseline = 0
 
             def render(self, *args, **kwargs):

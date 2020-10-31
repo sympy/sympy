@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 import keyword as kw
 import sympy
 from .repr import ReprPrinter
@@ -14,7 +12,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
     """A printer which converts an expression into its Python interpretation."""
 
     def __init__(self, settings=None):
-        super(PythonPrinter, self).__init__(settings)
+        super().__init__(settings)
         self.symbols = []
         self.functions = []
 

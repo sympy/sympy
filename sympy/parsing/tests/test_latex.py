@@ -2,12 +2,14 @@ from sympy.testing.pytest import raises, XFAIL
 from sympy.external import import_module
 
 from sympy import (
-    Symbol, Mul, Add, Eq, Abs, sin, asin, cos, Pow,
+    Symbol, Mul, Add, Abs, sin, asin, cos, Pow,
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
     GreaterThan, Sum, Product, E, log, tan, Function, binomial, exp,
-    Unequality,
+    floor, ceiling, Unequality
 )
+from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
+from sympy.physics.quantum.state import Bra, Ket
 from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
 
@@ -89,6 +91,18 @@ GOOD_PAIRS = [
     ("0+1", Add(0, 1, evaluate=False)),
     ("1*2", Mul(1, 2, evaluate=False)),
     ("0*1", Mul(0, 1, evaluate=False)),
+    ("x = y", Eq(x, y)),
+    ("x \\neq y", Ne(x, y)),
+    ("x < y", Lt(x, y)),
+    ("x > y", Gt(x, y)),
+    ("x \\leq y", Le(x, y)),
+    ("x \\geq y", Ge(x, y)),
+    ("x \\le y", Le(x, y)),
+    ("x \\ge y", Ge(x, y)),
+    ("\\lfloor x \\rfloor", floor(x)),
+    ("\\lceil x \\rceil", ceiling(x)),
+    ("\\langle x |", Bra('x')),
+    ("| x \\rangle", Ket('x')),
     ("\\sin \\theta", sin(theta)),
     ("\\sin(\\theta)", sin(theta)),
     ("\\sin^{-1} a", asin(a)),

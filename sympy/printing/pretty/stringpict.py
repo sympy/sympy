@@ -12,12 +12,10 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
-from __future__ import print_function, division
-
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, is_combining
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-class stringPict(object):
+class stringPict:
     """An ASCII picture.
     The pictures are represented as a list of equal length strings.
     """
@@ -346,7 +344,7 @@ class stringPict(object):
         return False
 
     def __hash__(self):
-        return super(stringPict, self).__hash__()
+        return super().__hash__()
 
     def __str__(self):
         return '\n'.join(self.picture)

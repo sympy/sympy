@@ -46,7 +46,7 @@ if np and matplotlib:
 #from matplotlib import rc
 #rc('text',usetex=True)
 
-class CircuitPlot(object):
+class CircuitPlot:
     """A class for managing a circuit plot."""
 
     scale = 1.0

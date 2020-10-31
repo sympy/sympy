@@ -482,7 +482,7 @@ What will you do with the old solve?
 ------------------------------------
 
  There are still a few things ``solveset`` can't do, which the old ``solve``
- can, such as solving non linear multivariate & LambertW type equations.
+ can, such as solving nonlinear multivariate & LambertW type equations.
  Hence, it's not yet a perfect replacement for old ``solve``. The ultimate
  goal is to:
 

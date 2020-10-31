@@ -1,11 +1,9 @@
-from __future__ import print_function, division
-
 from pyglet.window import key
 from pyglet.window.mouse import LEFT, RIGHT, MIDDLE
 from sympy.plotting.pygletplot.util import get_direction_vectors, get_basis_vectors
 
 
-class PlotController(object):
+class PlotController:
 
     normal_mouse_sensitivity = 4.0
     modified_mouse_sensitivity = 1.0

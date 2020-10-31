@@ -10,7 +10,7 @@ from sympy.functions import (
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
@@ -835,3 +835,8 @@ def test_ccode_codegen_ast():
         'pwer(x);',
         'return x;',
     ])
+
+def test_ccode_submodule():
+    # Test the compatibility sympy.printing.ccode module imports
+    with warns_deprecated_sympy():
+        import sympy.printing.ccode # noqa:F401
