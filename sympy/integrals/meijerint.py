@@ -897,14 +897,14 @@ def _int0oo_1(g, x):
 
 def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
     """
-    Rewrite the integral ``fac``*``po``*``g1``*``g2`` from 0 to oo in terms of G
-    functions with argument c*``x``.
+    Rewrite the integral ``fac*po*g1*g2`` from 0 to oo in terms of G
+    functions with argument ``c*x``.
 
     Explanation
     ===========
 
     Return C, f1, f2 such that integral C f1 f2 from 0 to infinity equals
-    integral fac po g1 g2 from 0 to infinity.
+    integral fac ``po``, ``g1``, ``g2`` from 0 to infinity.
 
     Examples
     ========
@@ -1053,7 +1053,7 @@ def _check_antecedents(g1, g2, x):
             Explanation
             ===========
 
-            If `z` is 1 then arg is NaN. This raises a
+            If ``z`` is 1 then arg is NaN. This raises a
             TypeError on `NaN < pi`. Previously this gave `False` so
             this behavior has been hardcoded here but someone should
             check if this NaN is more serious! This NaN is triggered by

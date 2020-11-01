@@ -436,11 +436,11 @@ def no_cancel_b_large(b, c, n, DE):
     ===========
 
     Given a derivation D on k[t], ``n`` either an integer or +oo, and ``b``,``c``
-    in k[t] with ``b`` != 0 and either D == d/dt or
+    in k[t] with ``b != 0`` and either D == d/dt or
     deg(b) > max(0, deg(D) - 1), either raise NonElementaryIntegralException, in
-    which case the equation Dq + b*q == c has no solution of degree at
+    which case the equation ``Dq + b*q == c`` has no solution of degree at
     most n in k[t], or a solution q in k[t] of this equation with
-    deg(q) < n.
+    ``deg(q) < n``.
     """
     q = Poly(0, DE.t)
 
@@ -465,7 +465,7 @@ def no_cancel_b_small(b, c, n, DE):
     Explanation
     ===========
 
-    Given a derivation D on k[t],``n`` either an integer or +oo, and ``b``,``c``
+    Given a derivation D on k[t], ``n`` either an integer or +oo, and ``b``,``c``
     in k[t] with deg(b) < deg(D) - 1 and either D == d/dt or
     deg(D) >= 2, either raise NonElementaryIntegralException, in which case the
     equation Dq + b*q == c has no solution of degree at most n in k[t],
