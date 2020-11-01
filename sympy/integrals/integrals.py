@@ -180,17 +180,17 @@ class Integral(AddWithLimits):
         ===========
 
         The mappings, F(x) or f(u), must lead to a unique integral. Linear
-        or rational linear expression, `2*x`, `1/x` and `sqrt(x)`, will
-        always work; quadratic expressions like `x**2 - 1` are acceptable
+        or rational linear expression, ``2*x``, ``1/x` and ``sqrt(x)``, will
+        always work; quadratic expressions like ``x**2 - 1`` are acceptable
         as long as the resulting integrand does not depend on the sign of
         the solutions (see examples).
 
-        The integral will be returned unchanged if `x` is not a variable of
+        The integral will be returned unchanged if ``x`` is not a variable of
         integration.
 
-        `x` must be (or contain) only one of of the integration variables. If
-        `u` has more than one free symbol then it should be sent as a tuple
-        (`u`, `uvar`) where `uvar` identifies which variable is replacing
+        ``x`` must be (or contain) only one of of the integration variables. If
+        ``u`` has more than one free symbol then it should be sent as a tuple
+        (``u``, ``uvar``) where ``uvar`` identifies which variable is replacing
         the integration variable.
         XXX can it contain another integration variable?
 
