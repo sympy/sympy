@@ -26,6 +26,9 @@ class TWave(Expr):
     Basic properties are required at the time of creation of the object,
     but they can be changed later with respective methods provided.
 
+    Explanation
+    ===========
+
     It is represented as :math:`A \times cos(k*x - \omega \times t + \phi )`,
     where :math:`A` is the amplitude, :math:`\omega` is the angular velocity,
     :math:`k` is the wavenumber (spatial frequency), :math:`x` is a spatial variable
