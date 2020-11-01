@@ -340,7 +340,7 @@ def kahane_simplify(expression):
     Parameters
     ==========
 
-    ``expression``:
+    ``expression`` :
         The tensor expression containing the gamma matrices to simplify.
 
     Notes
