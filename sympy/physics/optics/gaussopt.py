@@ -233,9 +233,9 @@ class FlatRefraction(RayTransferMatrix):
     Parameters
     ==========
 
-    n1 : 
+    n1 :
         Refractive index of one medium.
-    n2 : 
+    n2 :
         Refractive index of other medium.
 
     See Also
