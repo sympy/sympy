@@ -266,11 +266,11 @@ class CurvedRefraction(RayTransferMatrix):
     Parameters
     ==========
 
-    R : 
+    R :
         Radius of curvature (positive for concave).
-    n1 : 
+    n1 :
         Refractive index of one medium.
-    n2 : 
+    n2 :
         Refractive index of other medium.
 
     See Also
@@ -353,7 +353,7 @@ class ThinLens(RayTransferMatrix):
     Parameters
     ==========
 
-    f : 
+    f :
         The focal distance.
 
     See Also
@@ -585,7 +585,7 @@ class BeamParameter(Expr):
         See Also
         ========
 
-        w_0 : 
+        w_0 :
             The minimal radius of beam.
 
         Examples
@@ -788,22 +788,22 @@ def gaussian_conj(s_in, z_r_in, f):
     Parameters
     ==========
 
-    s_in : 
+    s_in :
         The distance to optical element from the waist.
-    z_r_in : 
+    z_r_in :
         The rayleigh range of the incident beam.
-    f : 
+    f :
         The focal length of the optical element.
 
     Returns
     =======
 
     a tuple containing (s_out, z_r_out, m)
-    s_out : 
+    s_out :
         The distance between the new waist and the optical element.
-    z_r_out : 
+    z_r_out :
         The rayleigh range of the emergent beam.
-    m : 
+    m :
         The ration between the new and the old waists.
 
     Examples
@@ -836,22 +836,22 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     Parameters
     ==========
 
-    wavelen : 
+    wavelen :
         The wavelength of the beam.
-    waist_in and waist_out : 
+    waist_in and waist_out :
         The waists to be conjugated.
-    f : 
+    f :
         The focal distance of the element used in the conjugation.
 
     Returns
     =======
 
     a tuple containing (s_in, s_out, f)
-    s_in : 
+    s_in :
         The distance before the optical element.
-    s_out : 
+    s_out :
         The distance after the optical element.
-    f : 
+    f :
         The focal distance of the optical element.
 
     Examples
