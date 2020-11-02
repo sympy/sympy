@@ -84,6 +84,9 @@ class vectorized_lambdify(object):
 
     Returns only reals.
 
+    Explanation
+    ===========
+
     This function uses experimental_lambdify to created a lambdified
     expression ready to be used with numpy. Many of the functions in sympy
     are not implemented in numpy so in some cases we resort to python cmath or
@@ -173,6 +176,9 @@ class vectorized_lambdify(object):
 
 class lambdify(object):
     """Returns the lambdified function.
+
+    Explanation
+    ===========
 
     This function uses experimental_lambdify to create a lambdified
     expression. It uses cmath to lambdify the expression. If the function
@@ -494,6 +500,9 @@ class Lambdifier(object):
     def str2tree(self, exprstr):
         """Converts an expression string to a tree.
 
+        Explanation
+        ===========
+
         Functions are represented by ('func_name(', tree_of_arguments).
         Other expressions are (head_string, mid_tree, tail_str).
         Expressions that do not contain functions are directly returned.
@@ -561,6 +570,9 @@ class Lambdifier(object):
     def tree2str_translate(self, tree):
         """Converts a tree to string with translations.
 
+        Explanation
+        ===========
+
         Function names are translated by translate_func.
         Other strings are translated by translate_str.
         """
@@ -580,6 +592,9 @@ class Lambdifier(object):
 
     def translate_func(self, func_name, argtree):
         """Translate function names and the tree of arguments.
+
+        Explanation
+        ===========
 
         If the function name is not in the dictionaries of dict_tuple_fun then the
         function is surrounded by a float((...).evalf()).
