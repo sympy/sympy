@@ -16,7 +16,7 @@ from sympy.ntheory import sieve
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
 from sympy.testing.randtest import _randrange
 from itertools import islice
-from sympy.core.sympify import _sympify, SympifyError
+from sympy.core.sympify import _sympify
 rmul = Permutation.rmul_with_af
 _af_new = Permutation._af_new
 
@@ -5172,11 +5172,8 @@ class Coset(Basic):
     """
 
     def __new__(cls, g, H, G=None, dir="+"):
-        try:
-            g = _sympify(g, [Permutation])
-            H = _sympify(H, [PermutationGroup])
-        except SympifyError:
-            raise NotImplementedError
+        g = _sympify(g, [Permutation])
+        H = _sympify(H, [PermutationGroup])
 
         if G is not None:
             G = _sympify(G)
