@@ -1415,78 +1415,6 @@ def test_issue_12623():
 
 
 @slow
-def test_nth_linear_constant_coeff_variation_of_parameters():
-    hint = 'nth_linear_constant_coeff_variation_of_parameters'
-    g = exp(-x)
-    f2 = f(x).diff(x, 2)
-    c = 3*f(x).diff(x, 3) + 5*f2 + f(x).diff(x) - f(x) - x
-    eq1 = c - x*g
-    eq2 = c - g
-    eq3 = f(x).diff(x) - 1
-    eq4 = f2 + 3*f(x).diff(x) + 2*f(x) - 4
-    eq5 = f2 + 3*f(x).diff(x) + 2*f(x) - 12*exp(x)
-    eq6 = f2 - 2*f(x).diff(x) - 8*f(x) - 9*x*exp(x) - 10*exp(-x)
-    eq7 = f2 + 2*f(x).diff(x) + f(x) - x**2*exp(-x)
-    eq8 = f2 - 3*f(x).diff(x) + 2*f(x) - x*exp(-x)
-    eq9 = f(x).diff(x, 3) - 3*f2 + 3*f(x).diff(x) - f(x) - exp(x)
-    eq10 = f2 + 2*f(x).diff(x) + f(x) - exp(-x)/x
-    eq11 = f2 + f(x) - 1/sin(x)*1/cos(x)
-    eq12 = f(x).diff(x, 4) - 1/x
-    sol1 = Eq(f(x), C3*exp(x/3) - x + (C1 + x*(C2 - x**2/24 - 3*x/32))*exp(-x) - 1)
-    sol2 = Eq(f(x), C3*exp(x/3) - x + (C1 + x*(C2 - x/8))*exp(-x) - 1)
-    sol3 = Eq(f(x), C1 + x)
-    sol4 = Eq(f(x), 2 + C1*exp(-x) + C2*exp(-2*x))
-    sol5 = Eq(f(x), 2*exp(x) + C1*exp(-x) + C2*exp(-2*x))
-    sol6 = Eq(f(x), -x*exp(x) - 2*exp(-x) + C1*exp(-2*x) + C2*exp(4*x))
-    sol7 = Eq(f(x), (C1 + x*(C2 + x**3/12))*exp(-x))
-    sol8 = Eq(f(x), C1*exp(x) + C2*exp(2*x) + (6*x + 5)*exp(-x)/36)
-    sol9 = Eq(f(x), (C1 + x*(C2 + x*(C3 + x/6)))*exp(x))
-    sol10 = Eq(f(x), (C1 + x*(C2 + log(x)))*exp(-x))
-    sol11 = Eq(f(x), (C1 + log(sin(x) - 1)/2 - log(sin(x) + 1)/2
-        )*cos(x) + (C2 + log(cos(x) - 1)/2 - log(cos(x) + 1)/2)*sin(x))
-    sol12 = Eq(f(x), C1 + C2*x + x**3*(C3 + log(x)/6) + C4*x**2)
-    sol1s = constant_renumber(sol1)
-    sol2s = constant_renumber(sol2)
-    sol3s = constant_renumber(sol3)
-    sol4s = constant_renumber(sol4)
-    sol5s = constant_renumber(sol5)
-    sol6s = constant_renumber(sol6)
-    sol7s = constant_renumber(sol7)
-    sol8s = constant_renumber(sol8)
-    sol9s = constant_renumber(sol9)
-    sol10s = constant_renumber(sol10)
-    sol11s = constant_renumber(sol11)
-    sol12s = constant_renumber(sol12)
-    got = dsolve(eq1, hint=hint)
-    assert got in (sol1, sol1s), got
-    got = dsolve(eq2, hint=hint)
-    assert got in (sol2, sol2s), got
-    assert dsolve(eq3, hint=hint) in (sol3, sol3s)
-    assert dsolve(eq4, hint=hint) in (sol4, sol4s)
-    assert dsolve(eq5, hint=hint) in (sol5, sol5s)
-    assert dsolve(eq6, hint=hint) in (sol6, sol6s)
-    got = dsolve(eq7, hint=hint)
-    assert got in (sol7, sol7s), got
-    assert dsolve(eq8, hint=hint) in (sol8, sol8s)
-    got = dsolve(eq9, hint=hint)
-    assert got in (sol9, sol9s), got
-    assert dsolve(eq10, hint=hint) in (sol10, sol10s)
-    assert dsolve(eq11, hint=hint + '_Integral').doit() in (sol11, sol11s)
-    assert dsolve(eq12, hint=hint) in (sol12, sol12s)
-    assert checkodesol(eq1, sol1, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq2, sol2, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq4, sol4, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq5, sol5, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq6, sol6, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq7, sol7, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq8, sol8, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq9, sol9, order=3, solve_for_func=False)[0]
-    assert checkodesol(eq10, sol10, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq12, sol12, order=4, solve_for_func=False)[0]
-
-
-@slow
 def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     # solve_variation_of_parameters shouldn't attempt to simplify the
     # Wronskian if simplify=False.  If wronskian() ever gets good enough
@@ -2413,18 +2341,4 @@ def test_issue_5096():
     eq = 2*x**2*f(x).diff(x, 2) + f(x) + sin(log(2*x)/2)
     sol = Eq(f(x), C1*sqrt(x)*sin(log(x)/2) + C2*sqrt(x)*cos(log(x)/2) - 2*sin(log(2*x)/2)/5 - 4*cos(log(2*x)/2)/5)
     assert sol == dsolve(eq, hint='nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients')
-    assert checkodesol(eq, sol) == (True, 0)
-
-
-def test_issue_15996():
-    eq = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x)
-    sol = Eq(f(x), C1 + x**2 + (C2 + x*(C3 - x/8 + 3*exp(I*x)/2 + 3*exp(-I*x)/2) + 5*exp(2*I*x)/16 + 2*I*exp(I*x) - 2*I*exp(-I*x))*sin(x) + (C4 + x*(C5 + I*x/8 + 3*I*exp(I*x)/2 - 3*I*exp(-I*x)/2) + 5*I*exp(2*I*x)/16 - 2*exp(I*x) - 2*exp(-I*x))*cos(x) - I*exp(I*x))
-    got = dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
-    assert sol == got, got
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - exp(I*x)
-    sol = Eq(f(x), C1 + (C2 + x*(C3 - x/8) + 5*exp(2*I*x)/16)*sin(x) + (C4 + x*(C5 + I*x/8) + 5*I*exp(2*I*x)/16)*cos(x) - I*exp(I*x))
-    got = dsolve(eq, hint='nth_linear_constant_coeff_variation_of_parameters')
-    assert sol == got, got
     assert checkodesol(eq, sol) == (True, 0)
