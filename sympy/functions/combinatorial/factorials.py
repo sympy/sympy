@@ -237,6 +237,9 @@ class factorial(CombinatorialFunction):
         from sympy import gamma
         return gamma(n + 1)
 
+    def _eval_rewrite_as_factorial2(self, n, **kwargs):
+        return factorial2(n) * factorial2(n - 1)
+
     def _eval_rewrite_as_Product(self, n, **kwargs):
         from sympy import Product
         if n.is_nonnegative and n.is_integer:
@@ -503,10 +506,13 @@ class factorial2(CombinatorialFunction):
             if n.is_odd:
                 return ((n + 1) / 2).is_even
 
-    def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
-        from sympy import gamma, Piecewise, sqrt
-        return 2**(n/2)*gamma(n/2 + 1) * Piecewise((1, Eq(Mod(n, 2), 0)),
-                (sqrt(2/pi), Eq(Mod(n, 2), 1)))
+    def _eval_rewrite_as_cos(self, n, **kwargs):
+        from sympy import gamma, cos
+        return 2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi*n))/4) * gamma(n/2 + 1)
+
+    def _eval_rewrite_as_gamma(self, n, **kwargs):
+        from sympy import gamma, cos
+        return 2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi*n))/4) * gamma(n/2 + 1)
 
 
 ###############################################################################

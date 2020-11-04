@@ -1,5 +1,5 @@
 from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
-                   rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
+                   rf, ff, gamma, cos, polygamma, EulerGamma, O, pi, nan,
                    oo, zoo, simplify, expand_func, Product, Mul, Piecewise,
                    Mod, Eq, sqrt, Poly, Dummy, I, Rational)
 from sympy.core.expr import unchanged
@@ -301,6 +301,7 @@ def test_factorial_rewrite():
     _i = Dummy('i')
     assert factorial(k).rewrite(Product).dummy_eq(Product(_i, (_i, 1, k)))
     assert factorial(n).rewrite(Product) == factorial(n)
+    assert factorial(n).rewrite(factorial2) == factorial2(n) * factorial2(n - 1)
 
 
 def test_factorial2():
@@ -399,11 +400,8 @@ def test_factorial2():
 
 def test_factorial2_rewrite():
     n = Symbol('n', integer=True)
-    assert factorial2(n).rewrite(gamma) == \
-        2**(n/2)*Piecewise((1, Eq(Mod(n, 2), 0)), (sqrt(2)/sqrt(pi), Eq(Mod(n, 2), 1)))*gamma(n/2 + 1)
-    assert factorial2(2*n).rewrite(gamma) == 2**n*gamma(n + 1)
-    assert factorial2(2*n + 1).rewrite(gamma) == \
-        sqrt(2)*2**(n + S.Half)*gamma(n + Rational(3, 2))/sqrt(pi)
+    assert factorial2(n).rewrite(gamma) == factorial2(n).rewrite(cos) == \
+        2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi*n))/4) * gamma(n/2 + 1)
 
 
 def test_binomial():
