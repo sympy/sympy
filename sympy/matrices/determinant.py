@@ -498,6 +498,7 @@ def _per(M):
 
     Examples
     ========
+
     >>> from sympy import Matrix
     >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     >>> M.per()
@@ -505,8 +506,10 @@ def _per(M):
     >>> M = Matrix([1, 5, 7])
     >>> M.per()
     13
+
     References
     ==========
+
         .. [1] Prof. Frank Ben's notes: https://math.berkeley.edu/~bernd/ban275.pdf
         .. [2] Wikipedia article on Permanent: https://en.wikipedia.org/wiki/Permanent_(mathematics)
         .. [3] https://reference.wolfram.com/language/ref/Permanent.html
