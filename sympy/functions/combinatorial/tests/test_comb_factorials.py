@@ -1,8 +1,9 @@
 from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, zoo, simplify, expand_func, Product, Mul, Piecewise,
+                   oo, zoo, cos, simplify, expand_func, Product, Mul, Piecewise,
                    Mod, Eq, sqrt, Poly, Dummy, I, Rational)
 from sympy.core.expr import unchanged
+from sympy.core.numbers import comp
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
@@ -300,6 +301,7 @@ def test_factorial_rewrite():
     _i = Dummy('i')
     assert factorial(k).rewrite(Product).dummy_eq(Product(_i, (_i, 1, k)))
     assert factorial(n).rewrite(Product) == factorial(n)
+    assert factorial(n).rewrite(factorial2) == factorial2(n) * factorial2(n - 1)
 
 
 def test_factorial2():
@@ -309,6 +311,15 @@ def test_factorial2():
     assert factorial2(0) == 1
     assert factorial2(7) == 105
     assert factorial2(8) == 384
+    assert factorial2(15) == 2027025
+    assert factorial2(-13) == Rational(1, 10395)
+    assert factorial2(41) == 13113070457687988603440625
+
+    assert factorial2(n).func == factorial2
+    assert factorial2(2*n + 1).func == factorial2
+    assert factorial2(Rational(3, 4)).func == factorial2
+    assert comp(factorial2(S.Half).evalf(), S("0.96282778244641754792"), 1e-15)
+    assert comp(factorial2(Rational(27, 5)).evalf(), S("23.377811716549217531"), 1e-15)
 
     # The following is exhaustive
     tt = Symbol('tt', integer=True, nonnegative=True)
@@ -325,10 +336,17 @@ def test_factorial2():
     nf = Symbol('nf', nonnegative=False)
     nn = Symbol('nn')
     z = Symbol('z', zero=True)
-    #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
-    raises(ValueError, lambda: factorial2(oo))
-    raises(ValueError, lambda: factorial2(Rational(5, 2)))
-    raises(ValueError, lambda: factorial2(-4))
+
+    # factorial2 now accepts all real valued arguments
+    assert factorial2(oo) is oo
+    assert factorial2(-26) is zoo
+
+    # Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
+    # raises(ValueError, lambda: factorial2(oo))
+    # raises(ValueError, lambda: factorial2(Rational(5, 2)))
+    # raises(ValueError, lambda: factorial2(-4))
+    raises(ValueError, lambda: factorial2(1 + I))
+
     assert factorial2(n).is_integer is None
     assert factorial2(tt - 1).is_integer
     assert factorial2(tte - 1).is_integer
@@ -382,11 +400,8 @@ def test_factorial2():
 
 def test_factorial2_rewrite():
     n = Symbol('n', integer=True)
-    assert factorial2(n).rewrite(gamma) == \
-        2**(n/2)*Piecewise((1, Eq(Mod(n, 2), 0)), (sqrt(2)/sqrt(pi), Eq(Mod(n, 2), 1)))*gamma(n/2 + 1)
-    assert factorial2(2*n).rewrite(gamma) == 2**n*gamma(n + 1)
-    assert factorial2(2*n + 1).rewrite(gamma) == \
-        sqrt(2)*2**(n + S.Half)*gamma(n + Rational(3, 2))/sqrt(pi)
+    assert factorial2(n).rewrite(gamma) == factorial2(n).rewrite(cos) == \
+           2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi*n))/4) * gamma(n/2 + 1)
 
 
 def test_binomial():

@@ -237,6 +237,9 @@ class factorial(CombinatorialFunction):
         from sympy import gamma
         return gamma(n + 1)
 
+    def _eval_rewrite_as_factorial2(self, n, **kwargs):
+        return factorial2(n) * factorial2(n - 1)
+
     def _eval_rewrite_as_Product(self, n, **kwargs):
         from sympy import Product
         if n.is_nonnegative and n.is_integer:
@@ -426,26 +429,37 @@ class factorial2(CombinatorialFunction):
 
     @classmethod
     def eval(cls, arg):
+        from sympy import gamma, cos
         # TODO: extend this to complex numbers?
 
+        if arg.is_complex and not arg.is_extended_real:
+            # don't accept complex arguments
+            raise ValueError('factorial2 is not defined for complex arguments.')
+
         if arg.is_Number:
-            if not arg.is_Integer:
-                raise ValueError("argument must be nonnegative integer "
-                                    "or negative odd integer")
+            if arg.is_zero:
+                return S.One
+            if arg is S.Infinity:
+                return S.Infinity
 
-            # This implementation is faster than the recursive one
-            # It also avoids "maximum recursion depth exceeded" runtime error
-            if arg.is_nonnegative:
-                if arg.is_even:
-                    k = arg / 2
-                    return 2**k * factorial(k)
-                return factorial(arg) / factorial2(arg - 1)
+            fact = (2 ** (arg / 2) * (2 / pi) ** ((1-cos(pi*arg))/4) * gamma(arg/2 + 1))
 
+            if arg.is_Float:
+                # sometimes there's still symbolic elements left
+                # this makes sure the return value is approximate for approximate inputs
+                return fact._evalf(arg._prec)
 
-            if arg.is_odd:
-                return arg*(S.NegativeOne)**((1 - arg)/2) / factorial2(-arg)
-            raise ValueError("argument must be nonnegative integer "
-                                "or negative odd integer")
+            if arg.is_Integer:
+                return fact
+
+            # arg is a Rational at this point
+            # don't return anything to keep function symbolic
+
+    def _eval_evalf(self, prec):
+        from sympy import gamma, cos
+        arg = self.args[0]
+        fact = (2 ** (arg / 2) * (2 / pi) ** ((1-cos(pi*arg))/4) * gamma(arg/2 + 1))
+        return fact._evalf(prec)
 
 
     def _eval_is_even(self):
@@ -493,10 +507,13 @@ class factorial2(CombinatorialFunction):
             if n.is_odd:
                 return ((n + 1) / 2).is_even
 
-    def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
-        from sympy import gamma, Piecewise, sqrt
-        return 2**(n/2)*gamma(n/2 + 1) * Piecewise((1, Eq(Mod(n, 2), 0)),
-                (sqrt(2/pi), Eq(Mod(n, 2), 1)))
+    def _eval_rewrite_as_cos(self, n, **kwargs):
+        from sympy import gamma, cos
+        return 2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi*n))/4) * gamma(n/2 + 1)
+
+    def _eval_rewrite_as_gamma(self, n, **kwargs):
+        from sympy import gamma, cos
+        return 2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi*n))/4) * gamma(n/2 + 1)
 
 
 ###############################################################################
