@@ -334,7 +334,7 @@ class subfactorial(CombinatorialFunction):
 
     @classmethod
     @cacheit
-    def _eval(self, n):
+    def _eval(cls, n):
         if not n:
             return S.One
         elif n == 1:
@@ -429,7 +429,8 @@ class factorial2(CombinatorialFunction):
         from sympy import gamma, cos
         # TODO: extend this to complex numbers?
 
-        if arg.has(S.I):
+        if arg.is_complex and not arg.is_extended_real:
+            # don't accept complex arguments
             raise ValueError('factorial2 is not defined for complex arguments.')
 
         if arg.is_Number:
