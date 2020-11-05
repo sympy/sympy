@@ -176,8 +176,8 @@ class Integral(AddWithLimits):
         where `F(x)` is the inverse of `f(x)` and the limits and integrand have
         been corrected so as to retain the same value after integration.
 
-        Explanation
-        ===========
+        Notes
+        =====
 
         The mappings, F(x) or f(u), must lead to a unique integral. Linear
         or rational linear expression, ``2*x``, ``1/x` and ``sqrt(x)``, will
