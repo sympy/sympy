@@ -601,6 +601,7 @@ class Expr(Basic, EvalfMixin):
         >>> ((one - 1)**(x + 1)).is_constant() in (True, False) # could be 0 or 1
         True
         """
+        from sympy.matrices import MatrixSymbol, ZeroMatrix, ones
 
         def check_denominator_zeros(expression):
             from sympy.solvers.solvers import denoms
@@ -646,8 +647,14 @@ class Expr(Basic, EvalfMixin):
         failing_number = None
         if wrt == free:
             # try 0 (for a) and 1 (for b)
+            sym = free.pop()
             try:
-                a = expr.subs(list(zip(free, [0]*len(free))),
+                if sym is MatrixSymbol:
+                    zero = ZeroMatrix(sym.rows, sym.cols)
+                    a = expr.subs(list(zip(free, [zero] * len(free))),
+                                  simultaneous=True)
+                else:
+                    a = expr.subs(list(zip(free, [0]*len(free))),
                     simultaneous=True)
                 if a is S.NaN:
                     # evaluation may succeed when substitution fails
@@ -656,8 +663,13 @@ class Expr(Basic, EvalfMixin):
                 a = None
             if a is not None and a is not S.NaN:
                 try:
-                    b = expr.subs(list(zip(free, [1]*len(free))),
-                        simultaneous=True)
+                    if sym is MatrixSymbol:
+                        one = ones(sym.rows, sym.cols)
+                        b = expr.subs(list(zip(free, [one] * len(free))),
+                                      simultaneous=True)
+                    else:
+                        b = expr.subs(list(zip(free, [1]*len(free))),
+                            simultaneous=True)
                     if b is S.NaN:
                         # evaluation may succeed when substitution fails
                         b = expr._random(None, 1, 0, 1, 0)

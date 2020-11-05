@@ -2925,3 +2925,12 @@ def test_issue_19809():
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(f)
             assert future.result()
+
+def test_issue_19162():
+    X = Matrix(MatrixSymbol('X', 2, 2))
+    result = X.inv()
+    assert simplify(result[0, 0] - X[1, 1]/(X[0, 0]*X[1, 1] - X[1, 0]*X[0, 1])) == 0
+    assert simplify(result[0, 1] + X[0, 1]/(X[0, 0]*X[1, 1] - X[1, 0]*X[0, 1])) == 0
+    assert simplify(result[1, 0] + X[1, 0]/(X[0, 0]*X[1, 1] - X[1, 0]*X[0, 1])) == 0
+    assert simplify(result[1, 1] - X[0, 0]/(X[0, 0]*X[1, 1] - X[1, 0]*X[0, 1])) == 0
+
