@@ -1,12 +1,11 @@
 from typing import List
 
-from sympy.core import S, sympify, Dummy, Mod
+from sympy.core import S, sympify, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import reduce, HAS_GMPY
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
-from sympy.core.relational import Eq
 from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly
 
@@ -182,7 +181,7 @@ class factorial(CombinatorialFunction):
         # simultaneous exponentiation at a later stage
         pw = [1]*N
 
-        m = 2 # to initialize the if condition below
+        m = 2  # to initialize the if condition below
         for prime in sieve.primerange(2, n + 1):
             if m > 1:
                 m, y = 0, n // prime
@@ -226,14 +225,14 @@ class factorial(CombinatorialFunction):
                     if isprime and (d - 1 < n):
                         fc = self._facmod(d - 1, aq)
                         fc = pow(fc, aq - 2, aq)
-                        if d%2:
+                        if d % 2:
                             fc = -fc
                     else:
                         fc = self._facmod(n, aq)
 
                     return S(fc % q)
 
-    def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
+    def _eval_rewrite_as_gamma(self, n, **kwargs):
         from sympy import gamma
         return gamma(n + 1)
 
@@ -288,6 +287,7 @@ class factorial(CombinatorialFunction):
         ####################################################
         return self.func(arg)
 
+
 class MultiFactorial(CombinatorialFunction):
     pass
 
@@ -337,7 +337,7 @@ class subfactorial(CombinatorialFunction):
 
     @classmethod
     @cacheit
-    def _eval(self, n):
+    def _eval(cls, n):
         if not n:
             return S.One
         elif n == 1:
@@ -372,7 +372,7 @@ class subfactorial(CombinatorialFunction):
         f = S.NegativeOne**i / factorial(i)
         return factorial(arg) * summation(f, (i, 0, arg))
 
-    def _eval_rewrite_as_gamma(self, arg, piecewise=True, **kwargs):
+    def _eval_rewrite_as_gamma(self, arg, **kwargs):
         from sympy import exp, gamma, I, lowergamma
         return ((-1)**(arg + 1)*exp(-I*pi*arg)*lowergamma(arg + 1, -1) + gamma(arg + 1))*exp(-1)
 
@@ -460,7 +460,6 @@ class factorial2(CombinatorialFunction):
         arg = self.args[0]
         fact = (2 ** (arg / 2) * (2 / pi) ** ((1-cos(pi*arg))/4) * gamma(arg/2 + 1))
         return fact._evalf(prec)
-
 
     def _eval_is_even(self):
         # Double factorial is even for every positive even input
@@ -606,16 +605,17 @@ class RisingFactorial(CombinatorialFunction):
                     else:
                         if isinstance(x, Poly):
                             gens = x.gens
-                            if len(gens)!= 1:
-                                raise ValueError("rf only defined for "
-                                            "polynomials on one generator")
+                            if len(gens) != 1:
+                                raise ValueError(
+                                    "rf only defined for polynomials on one generator"
+                                )
                             else:
                                 return reduce(lambda r, i:
                                               r*(x.shift(i)),
                                               range(0, int(k)), 1)
                         else:
                             return reduce(lambda r, i: r*(x + i),
-                                        range(0, int(k)), 1)
+                                          range(0, int(k)), 1)
 
                 else:
                     if x is S.Infinity:
@@ -625,9 +625,10 @@ class RisingFactorial(CombinatorialFunction):
                     else:
                         if isinstance(x, Poly):
                             gens = x.gens
-                            if len(gens)!= 1:
-                                raise ValueError("rf only defined for "
-                                            "polynomials on one generator")
+                            if len(gens) != 1:
+                                raise ValueError(
+                                    "rf only defined for polynomials on one generator"
+                                )
                             else:
                                 return 1/reduce(lambda r, i:
                                                 r*(x.shift(-i)),
@@ -670,9 +671,9 @@ class RisingFactorial(CombinatorialFunction):
         if limitvar:
             k_lim = k.subs(limitvar, S.Infinity)
             if k_lim is S.Infinity:
-                return (gamma(x + k).rewrite('tractable', deep=True) / gamma(x))
+                return gamma(x + k).rewrite('tractable', deep=True) / gamma(x)
             elif k_lim is S.NegativeInfinity:
-                return ((-1)**k*gamma(1 - x) / gamma(-k - x + 1).rewrite('tractable', deep=True))
+                return (-1)**k*gamma(1 - x) / gamma(-k - x + 1).rewrite('tractable', deep=True)
         return self.rewrite(gamma).rewrite('tractable', deep=True)
 
     def _eval_is_integer(self):
@@ -771,9 +772,10 @@ class FallingFactorial(CombinatorialFunction):
                     else:
                         if isinstance(x, Poly):
                             gens = x.gens
-                            if len(gens)!= 1:
-                                raise ValueError("ff only defined for "
-                                            "polynomials on one generator")
+                            if len(gens) != 1:
+                                raise ValueError(
+                                    "ff only defined for polynomials on one generator"
+                                )
                             else:
                                 return reduce(lambda r, i:
                                               r*(x.shift(-i)),
@@ -789,9 +791,10 @@ class FallingFactorial(CombinatorialFunction):
                     else:
                         if isinstance(x, Poly):
                             gens = x.gens
-                            if len(gens)!= 1:
-                                raise ValueError("rf only defined for "
-                                            "polynomials on one generator")
+                            if len(gens) != 1:
+                                raise ValueError(
+                                    "rf only defined for polynomials on one generator"
+                                )
                             else:
                                 return 1/reduce(lambda r, i:
                                                 r*(x.shift(i)),
@@ -829,9 +832,9 @@ class FallingFactorial(CombinatorialFunction):
         if limitvar:
             k_lim = k.subs(limitvar, S.Infinity)
             if k_lim is S.Infinity:
-                return ((-1)**k*gamma(k - x).rewrite('tractable', deep=True) / gamma(-x))
+                return (-1)**k * gamma(k - x).rewrite('tractable', deep=True) / gamma(-x)
             elif k_lim is S.NegativeInfinity:
-                return (gamma(x + 1) / gamma(x - k + 1).rewrite('tractable', deep=True))
+                return gamma(x + 1) / gamma(x - k + 1).rewrite('tractable', deep=True)
         return self.rewrite(gamma).rewrite('tractable', deep=True)
 
     def _eval_is_integer(self):
@@ -840,8 +843,7 @@ class FallingFactorial(CombinatorialFunction):
 
     def _sage_(self):
         import sage.all as sage
-        return sage.falling_factorial(self.args[0]._sage_(),
-                                      self.args[1]._sage_())
+        return sage.falling_factorial(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 rf = RisingFactorial
@@ -935,18 +937,16 @@ class binomial(CombinatorialFunction):
         if argindex == 1:
             # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/01/
             n, k = self.args
-            return binomial(n, k)*(polygamma(0, n + 1) - \
-                polygamma(0, n - k + 1))
+            return binomial(n, k)*(polygamma(0, n + 1) - polygamma(0, n - k + 1))
         elif argindex == 2:
             # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/02/
             n, k = self.args
-            return binomial(n, k)*(polygamma(0, n - k + 1) - \
-                polygamma(0, k + 1))
+            return binomial(n, k)*(polygamma(0, n - k + 1) - polygamma(0, k + 1))
         else:
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def _eval(self, n, k):
+    def _eval(cls, n, k):
         # n.is_Number and k.is_Integer and k != 1 and n != k
 
         if k.is_Integer:
@@ -981,10 +981,10 @@ class binomial(CombinatorialFunction):
         d = n - k
         n_nonneg, n_isint = n.is_nonnegative, n.is_integer
         if k.is_zero or ((n_nonneg or n_isint is False)
-                and d.is_zero):
+                         and d.is_zero):
             return S.One
         if (k - 1).is_zero or ((n_nonneg or n_isint is False)
-                and (d - 1).is_zero):
+                               and (d - 1).is_zero):
             return n
         if k.is_integer:
             if k.is_negative or (n_nonneg and n_isint and d.is_negative):
@@ -1014,7 +1014,7 @@ class binomial(CombinatorialFunction):
                 return S.Zero
             if n < 0:
                 n = -n + k - 1
-                res = -1 if k%2 else 1
+                res = -1 if k % 2 else 1
 
             # non negative integers k and n
             if k > n:
@@ -1134,4 +1134,4 @@ class binomial(CombinatorialFunction):
             if n.is_nonnegative or k.is_negative or k.is_even:
                 return True
             elif k.is_even is False:
-                return  False
+                return False
