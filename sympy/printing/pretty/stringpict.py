@@ -12,7 +12,7 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
-from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, is_combining
+from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 class stringPict:
@@ -33,12 +33,14 @@ class stringPict:
         self.baseline = baseline
         self.binding = None
 
+    _remove_combining = dict.fromkeys(list(range(768, 880)) + list(range(8400, 8433)))
+
     @staticmethod
     def line_width(line):
         """Unicode combining symbols (modifiers) are not ever displayed as
         separate symbols and thus shouldn't be counted
         """
-        return sum(1 for sym in line if not is_combining(sym))
+        return len(line.translate(stringPict._remove_combining))
 
     @staticmethod
     def equalLengths(lines):
