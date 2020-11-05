@@ -20,6 +20,7 @@ sudo apt install\
 	libcanberra-gtk-module\
        	docbook2x\
 	graphviz\
+	gfortran\
 	#
 
 python3 -m venv release/venv_main
