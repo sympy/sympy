@@ -1,10 +1,10 @@
-from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
-                   rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
-                   oo, zoo, cos, simplify, expand_func, Product, Mul, Piecewise,
-                   Mod, Eq, sqrt, Poly, Dummy, I, Rational)
+from sympy import (
+    Dummy, EulerGamma, Float, I, Mul, O, Piecewise, Poly, Product, Rational, S,
+    Symbol, binomial, cos, expand_func, factorial, factorial2, ff, gamma, nan,
+    oo, pi, polygamma, rf, simplify, sqrt, symbols, zoo)
 from sympy.core.expr import unchanged
-from sympy.core.numbers import comp
 from sympy.core.function import ArgumentIndexError
+from sympy.core.numbers import comp
 from sympy.functions.combinatorial.factorials import subfactorial
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.testing.pytest import XFAIL, raises, slow
@@ -94,6 +94,7 @@ def test_rf_eval_apply():
     assert rf(x, y).rewrite(binomial) == rf(x, y)
 
     import random
+
     from mpmath import rf as mpmath_rf
     for i in range(100):
         x = -500 + 500 * random.random()
@@ -181,6 +182,7 @@ def test_ff_eval_apply():
     assert ff(x, y).rewrite(binomial) == ff(x, y)
 
     import random
+
     from mpmath import ff as mpmath_ff
     for i in range(100):
         x = -500 + 500 * random.random()
