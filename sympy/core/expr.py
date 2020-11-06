@@ -647,15 +647,11 @@ class Expr(Basic, EvalfMixin):
         failing_number = None
         if wrt == free:
             # try 0 (for a) and 1 (for b)
-            sym = free.pop()
             try:
-                if sym is MatrixSymbol:
-                    zero = ZeroMatrix(sym.rows, sym.cols)
-                    a = expr.subs(list(zip(free, [zero] * len(free))),
-                                  simultaneous=True)
-                else:
-                    a = expr.subs(list(zip(free, [0]*len(free))),
-                    simultaneous=True)
+                a = expr.subs([(sym, ZeroMatrix(sym.rows, sym.cols)
+                                     if isinstance(sym, MatrixSymbol) else 0)
+                                     for sym in free],
+                              simultaneous=True)
                 if a is S.NaN:
                     # evaluation may succeed when substitution fails
                     a = expr._random(None, 0, 0, 0, 0)
@@ -663,13 +659,10 @@ class Expr(Basic, EvalfMixin):
                 a = None
             if a is not None and a is not S.NaN:
                 try:
-                    if sym is MatrixSymbol:
-                        one = ones(sym.rows, sym.cols)
-                        b = expr.subs(list(zip(free, [one] * len(free))),
-                                      simultaneous=True)
-                    else:
-                        b = expr.subs(list(zip(free, [1]*len(free))),
-                            simultaneous=True)
+                    b = expr.subs([(sym, ones(sym.rows, sym.cols)
+                                     if isinstance(sym, MatrixSymbol) else 1)
+                                     for sym in free],
+                                  simultaneous=True)
                     if b is S.NaN:
                         # evaluation may succeed when substitution fails
                         b = expr._random(None, 1, 0, 1, 0)
