@@ -910,7 +910,3 @@ def test_issue_19484():
     f = Function('f')
     e = x + sign(x + f(x)**3)
     assert simplify(Abs(x + f(x)**3) * e) == x*Abs(x + f(x)**3) + x + f(x)**3
-
-def test_issue_19161():
-    polynomial = Poly('x**2').simplify()
-    assert (polynomial-x**2).simplify() == 0

@@ -2933,4 +2933,3 @@ def test_issue_19162():
     assert simplify(result[0, 1] + X[0, 1]/(X[0, 0]*X[1, 1] - X[1, 0]*X[0, 1])) == 0
     assert simplify(result[1, 0] + X[1, 0]/(X[0, 0]*X[1, 1] - X[1, 0]*X[0, 1])) == 0
     assert simplify(result[1, 1] - X[0, 0]/(X[0, 0]*X[1, 1] - X[1, 0]*X[0, 1])) == 0
-
