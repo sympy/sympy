@@ -4480,8 +4480,8 @@ def degree(f, gen=0):
          expression like func = %s, e.g. degree(func, gen = %s) instead of
          degree(func, gen = %s).
         ''' % (f, next(ordered(f.free_symbols)), gen)))
-
-    return Integer(p.degree(gen))
+    result = p.degree(gen)
+    return Integer(result) if result is int else S.NegativeInfinity
 
 
 @public
