@@ -77,6 +77,7 @@ MPMATH_TRANSLATIONS = {
     "Ci": "ci",
     "RisingFactorial": "rf",
     "FallingFactorial": "ff",
+    "factorial2": "fac2",
 }
 
 NUMPY_TRANSLATIONS = {}  # type: Dict[str, str]

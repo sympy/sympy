@@ -237,6 +237,9 @@ class factorial(CombinatorialFunction):
         from sympy import gamma
         return gamma(n + 1)
 
+    def _eval_rewrite_as_factorial2(self, n, **kwargs):
+        return factorial2(n) * factorial2(n - 1)
+
     def _eval_rewrite_as_Product(self, n, **kwargs):
         from sympy import Product
         if n.is_nonnegative and n.is_integer:
@@ -428,25 +431,23 @@ class factorial2(CombinatorialFunction):
     def eval(cls, arg):
         # TODO: extend this to complex numbers?
 
-        if arg.is_Number:
-            if not arg.is_Integer:
-                raise ValueError("argument must be nonnegative integer "
-                                    "or negative odd integer")
+        if arg.is_complex and not arg.is_extended_real:
+            raise ValueError("argument must be a real value")
 
-            # This implementation is faster than the recursive one
-            # It also avoids "maximum recursion depth exceeded" runtime error
-            if arg.is_nonnegative:
-                if arg.is_even:
-                    k = arg / 2
-                    return 2**k * factorial(k)
-                return factorial(arg) / factorial2(arg - 1)
+        if arg.is_zero:
+            return S.One
+        if arg is S.Infinity:
+            return S.Infinity
 
+        if arg.is_Integer:
+            if arg.is_even:
+                k = arg / 2
+                return 2 ** k * factorial(k)
 
-            if arg.is_odd:
-                return arg*(S.NegativeOne)**((1 - arg)/2) / factorial2(-arg)
-            raise ValueError("argument must be nonnegative integer "
-                                "or negative odd integer")
+            if arg.is_negative:
+                return arg * S.NegativeOne ** ((1 - arg)/2) / factorial2(-arg)
 
+            return factorial(arg) / factorial2(arg - 1)
 
     def _eval_is_even(self):
         # Double factorial is even for every positive even input
@@ -493,10 +494,21 @@ class factorial2(CombinatorialFunction):
             if n.is_odd:
                 return ((n + 1) / 2).is_even
 
-    def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
-        from sympy import gamma, Piecewise, sqrt
-        return 2**(n/2)*gamma(n/2 + 1) * Piecewise((1, Eq(Mod(n, 2), 0)),
-                (sqrt(2/pi), Eq(Mod(n, 2), 1)))
+    def _eval_rewrite_as_cos(self, n, **kwargs):
+        from sympy import gamma, cos
+        return 2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi*n))/4) * gamma(n/2 + 1)
+
+    def _eval_rewrite_as_gamma(self, n, piecewise=False, **kwargs):
+        from sympy import gamma, cos, Piecewise, sqrt
+
+        if piecewise:  # this seems wonky
+            return 2 ** (n / 2) * gamma(n/2 + 1) * Piecewise(
+                (1, Eq(Mod(n, 2), 0)),
+                (sqrt(2/pi), Eq(Mod(n, 2), 1)),
+                ((2 / pi) ** ((1 - cos(pi*n))/4), True)
+            )
+
+        return 2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi*n))/4) * gamma(n/2 + 1)
 
 
 ###############################################################################
