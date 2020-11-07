@@ -508,11 +508,8 @@ def _sympify(a, expected_type = None):
     symp = sympify(a, strict=True)
     if expected_type is None:
         return symp
-    if not isinstance(expected_type, list):
-        raise TypeError('Expected Type must  be list')
-    for i in expected_type:
-        if not isinstance(symp, i):
-            raise NotImplementedError
+    if not isinstance(symp, expected_type):
+        raise NotImplementedError
     return symp
 
 

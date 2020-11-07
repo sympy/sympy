@@ -5172,8 +5172,8 @@ class Coset(Basic):
     """
 
     def __new__(cls, g, H, G=None, dir="+"):
-        g = _sympify(g, [Permutation])
-        H = _sympify(H, [PermutationGroup])
+        g = _sympify(g, Permutation)
+        H = _sympify(H, PermutationGroup)
 
         if G is not None:
             G = _sympify(G)

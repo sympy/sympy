@@ -2996,7 +2996,7 @@ class AppliedPermutation(Expr):
             evaluate = global_parameters.evaluate
 
         try:
-            perm = _sympify(perm, [Permutation])
+            perm = _sympify(perm, Permutation)
         except NotImplementedError:
             raise ValueError("{} must be a Permutation instance."
                 .format(perm))
