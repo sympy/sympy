@@ -4481,7 +4481,7 @@ def degree(f, gen=0):
          degree(func, gen = %s).
         ''' % (f, next(ordered(f.free_symbols)), gen)))
     result = p.degree(gen)
-    return Integer(result) if result is int else S.NegativeInfinity
+    return Integer(result) if isinstance(result, int) else S.NegativeInfinity
 
 
 @public
