@@ -20,6 +20,9 @@ __all__ = [
 class AntiCommutator(Expr):
     """The standard anticommutator, in an unevaluated state.
 
+    Explanation
+    ===========
+
     Evaluating an anticommutator is defined [1]_ as: ``{A, B} = A*B + B*A``.
     This class returns the anticommutator in an unevaluated form.  To evaluate
     the anticommutator, use the ``.doit()`` method.
