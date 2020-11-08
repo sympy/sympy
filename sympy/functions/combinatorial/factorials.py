@@ -498,16 +498,12 @@ class factorial2(CombinatorialFunction):
         from sympy import gamma, cos
         return 2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi*n))/4) * gamma(n/2 + 1)
 
-    def _eval_rewrite_as_gamma(self, n, piecewise=False, **kwargs):
-        from sympy import gamma, cos, Piecewise, sqrt
+    def _eval_rewrite_as_factorial(self, n, **kwargs):
+        from sympy import gamma, cos
+        return 2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi*n))/4) * factorial(n/2)
 
-        if piecewise:  # this seems wonky
-            return 2 ** (n / 2) * gamma(n/2 + 1) * Piecewise(
-                (1, Eq(Mod(n, 2), 0)),
-                (sqrt(2/pi), Eq(Mod(n, 2), 1)),
-                ((2 / pi) ** ((1 - cos(pi*n))/4), True)
-            )
-
+    def _eval_rewrite_as_gamma(self, n, **kwargs):
+        from sympy import gamma, cos
         return 2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi*n))/4) * gamma(n/2 + 1)
 
 

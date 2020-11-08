@@ -401,14 +401,8 @@ def test_factorial2_rewrite():
            sqrt(2)*2**(n + S.Half)*gamma(n + Rational(3, 2))/sqrt(pi)
     assert factorial2(n).rewrite(gamma) == factorial2(n).rewrite(cos) == \
            2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi * n)) / 4) * gamma(n / 2 + 1)
-
-    assert factorial2(n).rewrite(gamma, piecewise=True) == 2 ** (n / 2) * \
-           gamma(n / 2 + 1) * \
-           Piecewise(
-               (1, Eq(Mod(n, 2), 0)),
-               (sqrt(2 / pi), Eq(Mod(n, 2), 1)),
-               ((2 / pi) ** ((1 - cos(pi * n)) / 4), True),
-           )
+    assert factorial2(n).rewrite(factorial) == \
+           2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi * n)) / 4) * factorial(n / 2)
 
 
 def test_binomial():
