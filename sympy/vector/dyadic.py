@@ -6,9 +6,8 @@ from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
 from sympy import ImmutableMatrix as Matrix
 import sympy.vector
-from sympy.core.evalf import EvalfMixin
 
-class Dyadic(BasisDependent, EvalfMixin):
+class Dyadic(BasisDependent):
     """
     Super class for all Dyadic-classes.
 
