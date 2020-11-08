@@ -38,7 +38,7 @@ tfn = defaultdict(lambda: None, {
 
 
 @sympify_method_args
-class Set(Basic):
+class Set(Basic, EvalfMixin):
     """
     The base class for any kind of set.
 
@@ -851,7 +851,7 @@ class ProductSet(Set):
         return all([bool(s) for s in self.sets])
 
 
-class Interval(Set, EvalfMixin):
+class Interval(Set):
     """
     Represents a real interval as a Set.
 
@@ -1118,7 +1118,7 @@ class Interval(Set, EvalfMixin):
             return false
 
 
-class Union(Set, LatticeOp, EvalfMixin):
+class Union(Set, LatticeOp):
     """
     Represents a union of sets as a :class:`Set`.
 
@@ -1511,7 +1511,7 @@ class Intersection(Set, LatticeOp):
         return And(*[set.as_relational(symbol) for set in self.args])
 
 
-class Complement(Set, EvalfMixin):
+class Complement(Set):
     r"""Represents the set difference or relative complement of a set with
     another set.
 
@@ -1576,6 +1576,9 @@ class Complement(Set, EvalfMixin):
         B_rel = Not(B.as_relational(symbol))
 
         return And(A_rel, B_rel)
+
+    def _eval_evalf(self, prec):
+        return self.func(*[arg._evalf(prec) for arg in self.args])
 
     @property
     def is_iterable(self):
@@ -1645,6 +1648,9 @@ class EmptySet(Set, metaclass=Singleton):
     def as_relational(self, symbol):
         return false
 
+    def _eval_evalf(self, prec):
+        return self
+
     def __len__(self):
         return 0
 
@@ -1711,12 +1717,15 @@ class UniversalSet(Set, metaclass=Singleton):
     def as_relational(self, symbol):
         return true
 
+    def _eval_evalf(self, prec):
+        return self
+
     @property
     def _boundary(self):
         return S.EmptySet
 
 
-class FiniteSet(Set, EvalfMixin):
+class FiniteSet(Set):
     """
     Represents a finite set of discrete numbers
 
