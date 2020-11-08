@@ -69,12 +69,8 @@ except ImportError:
               % min_mpmath_version)
         sys.exit(-1)
 
-PY3 = sys.version_info[0] > 2
-
-# Make sure I have the right Python version.
-if ((sys.version_info[0] == 2 and sys.version_info[1] < 7) or
-    (sys.version_info[0] == 3 and sys.version_info[1] < 5)):
-    print("SymPy requires Python 2.7 or 3.5 or newer. Python %d.%d detected"
+if sys.version_info < (3, 6):
+    print("SymPy requires Python 3.6 or newer. Python %d.%d detected"
           % sys.version_info[:2])
     sys.exit(-1)
 
@@ -130,6 +126,7 @@ modules = [
     'sympy.parsing.latex._antlr',
     'sympy.physics',
     'sympy.physics.continuum_mechanics',
+    'sympy.physics.control',
     'sympy.physics.hep',
     'sympy.physics.mechanics',
     'sympy.physics.optics',
@@ -377,6 +374,7 @@ tests = [
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
     'sympy.physics.continuum_mechanics.tests',
+    'sympy.physics.control.tests',
     'sympy.physics.hep.tests',
     'sympy.physics.mechanics.tests',
     'sympy.physics.optics.tests',
@@ -411,23 +409,16 @@ tests = [
     'sympy.vector.tests',
 ]
 
-long_description = '''SymPy is a Python library for symbolic mathematics. It aims
-to become a full-featured computer algebra system (CAS) while keeping the code
-as simple as possible in order to be comprehensible and easily extensible.
-SymPy is written entirely in Python.'''
 
 with open(os.path.join(dir_setup, 'sympy', 'release.py')) as f:
     # Defines __version__
     exec(f.read())
 
-with open(os.path.join(dir_setup, 'sympy', '__init__.py')) as f:
-    long_description = f.read().split('"""')[1]
 
 if __name__ == '__main__':
     setup(name='sympy',
           version=__version__,
           description='Computer algebra system (CAS) in Python',
-          long_description=long_description,
           author='SymPy development team',
           author_email='sympy@googlegroups.com',
           license='BSD',
@@ -443,6 +434,7 @@ if __name__ == '__main__':
                   '*.g4', 'test-examples/*.al', 'test-examples/*.py',
                   'test-examples/pydy-example-repo/*.al',
                   'test-examples/pydy-example-repo/*.py',
+                  'test-examples/README.txt',
                   ],
               'sympy.parsing.latex': ['*.txt', '*.g4'],
               'sympy.integrals.rubi.parsetools': ['header.py.txt'],
@@ -456,7 +448,7 @@ if __name__ == '__main__':
                     'antlr': antlr,
                     'sdist': sdist_sympy,
                     },
-          python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
+          python_requires='>=3.6',
           classifiers=[
             'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',
@@ -464,13 +456,11 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Mathematics',
             'Topic :: Scientific/Engineering :: Physics',
-            'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3 :: Only',
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',
             ],

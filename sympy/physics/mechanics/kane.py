@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.backend import zeros, Matrix, diff, eye
 from sympy import solve_linear_system_LU
 from sympy.utilities import default_sort_key
@@ -10,13 +8,12 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
                                                _f_list_parser)
 from sympy.physics.mechanics.linearize import Linearizer
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
 
 __all__ = ['KanesMethod']
 
 
-class KanesMethod(object):
+class KanesMethod:
     """Kane's method object.
 
     This object is used to do the "book-keeping" as you go through and form
@@ -194,8 +191,8 @@ class KanesMethod(object):
             raise ValueError('There must be an equal number of dependent '
                              'speeds and acceleration constraints.')
         if vel:
-            u_zero = dict((i, 0) for i in self.u)
-            udot_zero = dict((i, 0) for i in self._udot)
+            u_zero = {i: 0 for i in self.u}
+            udot_zero = {i: 0 for i in self._udot}
 
             # When calling kanes_equations, another class instance will be
             # created if auxiliary u's are present. In this case, the
@@ -247,9 +244,9 @@ class KanesMethod(object):
             u = self.u
             qdot = self._qdot
             # Dictionaries setting things to zero
-            u_zero = dict((i, 0) for i in u)
-            uaux_zero = dict((i, 0) for i in self._uaux)
-            qdot_zero = dict((i, 0) for i in qdot)
+            u_zero = {i: 0 for i in u}
+            uaux_zero = {i: 0 for i in self._uaux}
+            qdot_zero = {i: 0 for i in qdot}
 
             f_k = msubs(kdeqs, u_zero, qdot_zero)
             k_ku = (msubs(kdeqs, qdot_zero) - f_k).jacobian(u)
@@ -312,13 +309,13 @@ class KanesMethod(object):
         t = dynamicsymbols._t
         N = self._inertial
         # Dicts setting things to zero
-        udot_zero = dict((i, 0) for i in self._udot)
-        uaux_zero = dict((i, 0) for i in self._uaux)
+        udot_zero = {i: 0 for i in self._udot}
+        uaux_zero = {i: 0 for i in self._uaux}
         uauxdot = [diff(i, t) for i in self._uaux]
-        uauxdot_zero = dict((i, 0) for i in uauxdot)
+        uauxdot_zero = {i: 0 for i in uauxdot}
         # Dictionary of q' and q'' to u and u'
-        q_ddot_u_map = dict((k.diff(t), v.diff(t)) for (k, v) in
-                self._qdot_u_map.items())
+        q_ddot_u_map = {k.diff(t): v.diff(t) for (k, v) in
+                self._qdot_u_map.items()}
         q_ddot_u_map.update(self._qdot_u_map)
 
         # Fill up the list of partials: format is a list with num elements
@@ -421,10 +418,10 @@ class KanesMethod(object):
         else:
             f_a = Matrix()
         # Dicts to sub to zero, for splitting up expressions
-        u_zero = dict((i, 0) for i in self.u)
-        ud_zero = dict((i, 0) for i in self._udot)
-        qd_zero = dict((i, 0) for i in self._qdot)
-        qd_u_zero = dict((i, 0) for i in Matrix([self._qdot, self.u]))
+        u_zero = {i: 0 for i in self.u}
+        ud_zero = {i: 0 for i in self._udot}
+        qd_zero = {i: 0 for i in self._qdot}
+        qd_u_zero = {i: 0 for i in Matrix([self._qdot, self.u])}
         # Break the kinematic differential eqs apart into f_0 and f_1
         f_0 = msubs(self._f_k, u_zero) + self._k_kqdot*Matrix(self._qdot)
         f_1 = msubs(self._f_k, qd_zero) + self._k_ku*Matrix(self.u)
@@ -450,7 +447,7 @@ class KanesMethod(object):
         # Form dictionary to set auxiliary speeds & their derivatives to 0.
         uaux = self._uaux
         uauxdot = uaux.diff(dynamicsymbols._t)
-        uaux_zero = dict((i, 0) for i in Matrix([uaux, uauxdot]))
+        uaux_zero = {i: 0 for i in Matrix([uaux, uauxdot])}
 
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
@@ -473,7 +470,8 @@ class KanesMethod(object):
         return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
                 q_d, u_i, u_d, r)
 
-    def linearize(self, **kwargs):
+    # TODO : Remove `new_method` after 1.1 has been released.
+    def linearize(self, *, new_method=None, **kwargs):
         """ Linearize the equations of motion about a symbolic operating point.
 
         If kwarg A_and_B is False (default), returns M, A, B, r for the
@@ -497,10 +495,6 @@ class KanesMethod(object):
         you can specify beforehand, the faster this computation will run.
 
         For more documentation, please see the ``Linearizer`` class."""
-
-        # TODO : Remove this after 1.1 has been released.
-        _ = kwargs.pop('new_method', None)
-
         linearizer = self.to_linearizer()
         result = linearizer.linearize(**kwargs)
         return result + (linearizer.r,)
@@ -527,17 +521,6 @@ class KanesMethod(object):
             Must be either a non-empty iterable of tuples or None which corresponds
             to a system with no constraints.
         """
-        if (bodies is None and loads is not None) or isinstance(bodies[0], tuple):
-            # This switches the order if they use the old way.
-            bodies, loads = loads, bodies
-            SymPyDeprecationWarning(value='The API for kanes_equations() has changed such '
-                    'that the loads (forces and torques) are now the second argument '
-                    'and is optional with None being the default.',
-                    feature='The kanes_equation() argument order',
-                    useinstead='switched argument order to update your code, For example: '
-                    'kanes_equations(loads, bodies) > kanes_equations(bodies, loads).',
-                    issue=10945, deprecated_since_version="1.1").warn()
-
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')

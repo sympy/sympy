@@ -6,21 +6,19 @@
     They are supposed to work seamlessly within the SymPy framework.
 """
 
-from __future__ import print_function, division
-
 from collections import OrderedDict
 
-from sympy.core import S
 from sympy.core.basic import Basic
 from sympy.core.compatibility import as_int, MutableSet
-from sympy.core.sympify import sympify, converter
+from sympy.core.sympify import _sympify, sympify, converter, SympifyError
 from sympy.utilities.iterables import iterable
-
-
 
 class Tuple(Basic):
     """
-    Wrapper around the builtin tuple object
+    Wrapper around the builtin tuple object.
+
+    Explanation
+    ===========
 
     The Tuple is a subclass of Basic, so that it works well in the
     SymPy framework.  The wrapped tuple is available as self.args, but
@@ -34,8 +32,8 @@ class Tuple(Basic):
         can be used for speedups for very large tuples where the
         elements are known to already be sympy objects.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy import symbols
     >>> from sympy.core.containers import Tuple
@@ -49,7 +47,7 @@ class Tuple(Basic):
 
     def __new__(cls, *args, **kwargs):
         if kwargs.get('sympify', True):
-            args = ( sympify(arg) for arg in args )
+            args = (sympify(arg) for arg in args)
         obj = Basic.__new__(cls, *args)
         return obj
 
@@ -95,12 +93,12 @@ class Tuple(Basic):
 
     def __eq__(self, other):
         if isinstance(other, Basic):
-            return super(Tuple, self).__eq__(other)
+            return super().__eq__(other)
         return self.args == other
 
     def __ne__(self, other):
         if isinstance(other, Basic):
-            return super(Tuple, self).__ne__(other)
+            return super().__ne__(other)
         return self.args != other
 
     def __hash__(self):
@@ -110,10 +108,10 @@ class Tuple(Basic):
         return tuple(a._to_mpmath(prec) for a in self.args)
 
     def __lt__(self, other):
-        return sympify(self.args < other.args)
+        return _sympify(self.args < other.args)
 
     def __le__(self, other):
-        return sympify(self.args <= other.args)
+        return _sympify(self.args <= other.args)
 
     # XXX: Basic defines count() as something different, so we can't
     # redefine it here. Originally this lead to cse() test failure.
@@ -122,8 +120,7 @@ class Tuple(Basic):
         return self.args.count(value)
 
     def index(self, value, start=None, stop=None):
-        """T.index(value, [start, [stop]]) -> integer -- return first index of value.
-           Raises ValueError if the value is not present."""
+        """Searches and returns the first index of the value."""
         # XXX: One would expect:
         #
         # return self.args.index(value, start, stop)
@@ -144,34 +141,26 @@ class Tuple(Basic):
         else:
             return self.args.index(value, start, stop)
 
-    def _eval_Eq(self, other):
-        from sympy.core.function import AppliedUndef
-        from sympy.core.logic import fuzzy_and, fuzzy_bool
-        from sympy.core.relational import Eq
-
-        if other.is_Symbol or isinstance(other, AppliedUndef):
-            return None
-
-        if not isinstance(other, Tuple) or len(self) != len(other):
-            return S.false
-
-        r = fuzzy_and(fuzzy_bool(Eq(s, o)) for s, o in zip(self, other))
-        if r is True:
-            return S.true
-        elif r is False:
-            return S.false
-
 
 converter[tuple] = lambda tup: Tuple(*tup)
+
+
+
 
 
 def tuple_wrapper(method):
     """
     Decorator that converts any tuple in the function arguments into a Tuple.
 
+    Explanation
+    ===========
+
     The motivation for this is to provide simple user interfaces.  The user can
     call a function with regular tuples in the argument, and the wrapper will
     convert them to Tuples before handing them to the function.
+
+    Explanation
+    ===========
 
     >>> from sympy.core.containers import tuple_wrapper
     >>> def f(*args):
@@ -199,12 +188,19 @@ class Dict(Basic):
     """
     Wrapper around the builtin dict object
 
+    Explanation
+    ===========
+
     The Dict is a subclass of Basic, so that it works well in the
     SymPy framework.  Because it is immutable, it may be included
     in sets, but its values must all be given at instantiation and
     cannot be changed afterwards.  Otherwise it behaves identically
     to the Python dict.
 
+    Examples
+    ========
+
+    >>> from sympy import Symbol
     >>> from sympy.core.containers import Dict
 
     >>> D = Dict({1: 'one', 2: 'two'})
@@ -218,7 +214,7 @@ class Dict(Basic):
 
     >>> 1 in D
     True
-    >>> D.has('one') # searches keys and values
+    >>> D.has(Symbol('one')) # searches keys and values
     True
     >>> 'one' in D # not in the keys
     False
@@ -242,7 +238,12 @@ class Dict(Basic):
 
     def __getitem__(self, key):
         """x.__getitem__(y) <==> x[y]"""
-        return self._dict[sympify(key)]
+        try:
+            key = _sympify(key)
+        except SympifyError:
+            raise KeyError(key)
+
+        return self._dict[key]
 
     def __setitem__(self, key, value):
         raise NotImplementedError("SymPy Dicts are Immutable")
@@ -259,15 +260,16 @@ class Dict(Basic):
         return tuple(self.elements)
 
     def items(self):
-        '''D.items() -> list of D's (key, value) pairs, as 2-tuples'''
+        '''Returns a set-like object providing a view on dict's items.
+        '''
         return self._dict.items()
 
     def keys(self):
-        '''D.keys() -> list of D's keys'''
+        '''Returns the list of the dict's keys.'''
         return self._dict.keys()
 
     def values(self):
-        '''D.values() -> list of D's values'''
+        '''Returns the list of the dict's values.'''
         return self._dict.values()
 
     def __iter__(self):
@@ -279,15 +281,23 @@ class Dict(Basic):
         return self._dict.__len__()
 
     def get(self, key, default=None):
-        '''D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.'''
-        return self._dict.get(sympify(key), default)
+        '''Returns the value for key if the key is in the dictionary.'''
+        try:
+            key = _sympify(key)
+        except SympifyError:
+            return default
+        return self._dict.get(key, default)
 
     def __contains__(self, key):
         '''D.__contains__(k) -> True if D has a key k, else False'''
-        return sympify(key) in self._dict
+        try:
+            key = _sympify(key)
+        except SympifyError:
+            return False
+        return key in self._dict
 
     def __lt__(self, other):
-        return sympify(self.args < other.args)
+        return _sympify(self.args < other.args)
 
     @property
     def _sorted_args(self):
@@ -321,8 +331,7 @@ class OrderedSet(MutableSet):
         return self.map.popitem(last=last)[0]
 
     def __iter__(self):
-        for key in self.map.keys():
-            yield key
+        yield from self.map.keys()
 
     def __repr__(self):
         if not self.map:

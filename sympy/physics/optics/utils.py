@@ -13,8 +13,6 @@
 * transverse_magnification
 """
 
-from __future__ import division
-
 __all__ = ['refraction_angle',
            'deviation',
            'fresnel_coefficients',
@@ -638,7 +636,6 @@ def hyperfocal_distance(f, N, c):
     Example
     =======
     >>> from sympy.physics.optics import hyperfocal_distance
-    >>> from sympy.abc import f, N, c
     >>> round(hyperfocal_distance(f = 0.5, N = 8, c = 0.0033), 2)
     9.47
     """

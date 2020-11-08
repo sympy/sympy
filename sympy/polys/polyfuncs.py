@@ -1,6 +1,5 @@
 """High-level polynomials manipulation functions. """
 
-from __future__ import print_function, division
 
 from sympy.core import S, Basic, Add, Mul, symbols, Dummy
 from sympy.polys.polyerrors import (
@@ -93,7 +92,7 @@ def symmetrize(F, *gens, **args):
 
         if not f.is_homogeneous:
             symmetric.append(f.TC())
-            f -= f.TC()
+            f -= f.TC().as_poly(f.gens)
 
         while f:
             _height, _monom, _coeff = -1, None, None

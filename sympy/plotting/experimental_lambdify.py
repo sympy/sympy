@@ -10,7 +10,6 @@ ever support anything else than sympy expressions (no Matrices, dictionaries
 and so on).
 """
 
-from __future__ import print_function, division
 
 import re
 from sympy import Symbol, NumberSymbol, I, zoo, oo
@@ -79,7 +78,7 @@ import warnings
 #TODO debugging output
 
 
-class vectorized_lambdify(object):
+class vectorized_lambdify:
     """ Return a sufficiently smart, vectorized and lambdified function.
 
     Returns only reals.
@@ -107,71 +106,44 @@ class vectorized_lambdify(object):
     def __init__(self, args, expr):
         self.args = args
         self.expr = expr
-        self.lambda_func = experimental_lambdify(args, expr, use_np=True)
-        self.vector_func = self.lambda_func
+        self.np = import_module('numpy')
+
+        self.lambda_func_1 = experimental_lambdify(
+            args, expr, use_np=True)
+        self.vector_func_1 = self.lambda_func_1
+
+        self.lambda_func_2 = experimental_lambdify(
+            args, expr, use_python_cmath=True)
+        self.vector_func_2 = self.np.vectorize(
+            self.lambda_func_2, otypes=[self.np.complex])
+
+        self.vector_func = self.vector_func_1
         self.failure = False
 
     def __call__(self, *args):
-        np = import_module('numpy')
-        np_old_err = np.seterr(invalid='raise')
+        np = self.np
+
         try:
             temp_args = (np.array(a, dtype=np.complex) for a in args)
             results = self.vector_func(*temp_args)
             results = np.ma.masked_where(
-                                np.abs(results.imag) > 1e-7 * np.abs(results),
-                                results.real, copy=False)
-        except Exception as e:
-            #DEBUG: print 'Error', type(e), e
-            if ((isinstance(e, TypeError)
-                 and 'unhashable type: \'numpy.ndarray\'' in str(e))
-                or
-                (isinstance(e, ValueError)
-                 and ('Invalid limits given:' in str(e)
-                      or 'negative dimensions are not allowed' in str(e)  # XXX
-                      or 'sequence too large; must be smaller than 32' in str(e)))):  # XXX
-                # Almost all functions were translated to numpy, but some were
-                # left as sympy functions. They received an ndarray as an
-                # argument and failed.
-                #   sin(ndarray(...)) raises "unhashable type"
-                #   Integral(x, (x, 0, ndarray(...))) raises "Invalid limits"
-                #   other ugly exceptions that are not well understood (marked with XXX)
-                # TODO: Cleanup the ugly special cases marked with xxx above.
-                # Solution: use cmath and vectorize the final lambda.
-                self.lambda_func = experimental_lambdify(
-                    self.args, self.expr, use_python_cmath=True)
-                self.vector_func = np.vectorize(
-                    self.lambda_func, otypes=[np.complex])
-                results = self.vector_func(*args)
-                results = np.ma.masked_where(
-                                np.abs(results.imag) > 1e-7 * np.abs(results),
-                                results.real, copy=False)
-            else:
-                # Complete failure. One last try with no translations, only
-                # wrapping in complex((...).evalf()) and returning the real
-                # part.
-                if self.failure:
-                    raise e
-                else:
-                    self.failure = True
-                    self.lambda_func = experimental_lambdify(
-                        self.args, self.expr, use_evalf=True,
-                        complex_wrap_evalf=True)
-                    self.vector_func = np.vectorize(
-                        self.lambda_func, otypes=[np.complex])
-                    results = self.vector_func(*args)
-                    results = np.ma.masked_where(
-                            np.abs(results.imag) > 1e-7 * np.abs(results),
-                            results.real, copy=False)
-                    warnings.warn('The evaluation of the expression is'
-                            ' problematic. We are trying a failback method'
-                            ' that may still work. Please report this as a bug.')
-        finally:
-            np.seterr(**np_old_err)
+                np.abs(results.imag) > 1e-7 * np.abs(results),
+                results.real, copy=False)
+            return results
+        except ValueError:
+            if self.failure:
+                raise
 
-        return results
+            self.failure = True
+            self.vector_func = self.vector_func_2
+            warnings.warn(
+                'The evaluation of the expression is problematic. '
+                'We are trying a failback method that may still work. '
+                'Please report this as a bug.')
+            return self.__call__(*args)
 
 
-class lambdify(object):
+class lambdify:
     """Returns the lambdified function.
 
     This function uses experimental_lambdify to create a lambdified
@@ -183,60 +155,40 @@ class lambdify(object):
     def __init__(self, args, expr):
         self.args = args
         self.expr = expr
-        self.lambda_func = experimental_lambdify(args, expr, use_evalf=True,
-                                                 use_python_cmath=True)
+        self.lambda_func_1 = experimental_lambdify(
+            args, expr, use_python_cmath=True, use_evalf=True)
+        self.lambda_func_2 = experimental_lambdify(
+            args, expr, use_python_math=True, use_evalf=True)
+        self.lambda_func_3 = experimental_lambdify(
+            args, expr, use_evalf=True, complex_wrap_evalf=True)
+        self.lambda_func = self.lambda_func_1
         self.failure = False
 
-    def __call__(self, args, kwargs = {}):
-        if not self.lambda_func.use_python_math:
-            args = complex(args)
+    def __call__(self, args):
         try:
             #The result can be sympy.Float. Hence wrap it with complex type.
             result = complex(self.lambda_func(args))
             if abs(result.imag) > 1e-7 * abs(result):
                 return None
-            else:
-                return result.real
-        except Exception as e:
-            # The exceptions raised by sympy, cmath are not consistent and
-            # hence it is not possible to specify all the exceptions that
-            # are to be caught. Presently there are no cases for which the code
-            # reaches this block other than ZeroDivisionError and complex
-            # comparison. Also the exception is caught only once. If the
-            # exception repeats itself,
-            # then it is not caught and the corresponding error is raised.
-            # XXX: Remove catching all exceptions once the plotting module
-            # is heavily tested.
+            return result.real
+        except (ZeroDivisionError, TypeError) as e:
             if isinstance(e, ZeroDivisionError):
                 return None
-            elif isinstance(e, TypeError) and ('no ordering relation is'
-                                               ' defined for complex numbers'
-                                               in str(e) or 'unorderable '
-                                               'types' in str(e) or "not "
-                                               "supported between instances of"
-                                               in str(e)):
-                self.lambda_func = experimental_lambdify(self.args, self.expr,
-                                                         use_evalf=True,
-                                                         use_python_math=True)
-                result = self.lambda_func(args.real)
-                return result
-            else:
-                if self.failure:
-                    raise e
-                #Failure
-                #Try wrapping it with complex(..).evalf()
-                self.failure = True
-                self.lambda_func = experimental_lambdify(self.args, self.expr,
-                                                    use_evalf=True,
-                                                    complex_wrap_evalf=True)
-                result = self.lambda_func(args)
-                warnings.warn('The evaluation of the expression is'
-                        ' problematic. We are trying a failback method'
-                        ' that may still work. Please report this as a bug.')
-                if abs(result.imag) > 1e-7 * abs(result):
-                    return None
-                else:
-                    return result.real
+
+            if self.failure:
+                raise e
+
+            if self.lambda_func == self.lambda_func_1:
+                self.lambda_func = self.lambda_func_2
+                return self.__call__(args)
+
+            self.failure = True
+            self.lambda_func = self.lambda_func_3
+            warnings.warn(
+                'The evaluation of the expression is problematic. '
+                'We are trying a failback method that may still work. '
+                'Please report this as a bug.')
+            return self.__call__(args)
 
 
 def experimental_lambdify(*args, **kwargs):
@@ -244,7 +196,7 @@ def experimental_lambdify(*args, **kwargs):
     return l
 
 
-class Lambdifier(object):
+class Lambdifier:
     def __init__(self, args, expr, print_lambda=False, use_evalf=False,
                  float_wrap_evalf=False, complex_wrap_evalf=False,
                  use_np=False, use_python_math=False, use_python_cmath=False,
@@ -545,7 +497,7 @@ class Lambdifier(object):
         ========
 
         >>> from sympy.abc import x, y, z
-        >>> from sympy import Integral, sin
+        >>> from sympy import sin
         >>> from sympy.plotting.experimental_lambdify import Lambdifier
         >>> str2tree = Lambdifier([x], x).str2tree
         >>> tree2str = Lambdifier([x], x).tree2str

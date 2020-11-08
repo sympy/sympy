@@ -497,8 +497,8 @@ def test_TensExpr():
     #raises(NotImplementedError, lambda: TensExpr.__radd__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__sub__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__rsub__(t, 'a'))
-    #raises(NotImplementedError, lambda: TensExpr.__div__(t, 'a'))
-    #raises(NotImplementedError, lambda: TensExpr.__rdiv__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensExpr.__truediv__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensExpr.__rtruediv__(t, 'a'))
     with ignore_warnings(SymPyDeprecationWarning):
         # DO NOT REMOVE THIS AFTER DEPRECATION REMOVED:
         raises(ValueError, lambda: A(a, b)**2)
@@ -1909,6 +1909,13 @@ def test_tensor_replacement():
     expr = H(i, -i)
     repl = {H(i, -i): 42}
     assert expr._extract_data(repl) == ([], 42)
+
+    expr = H(i, -i)
+    repl = {
+        H(-i, -j): Array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, -1]]),
+        L: Array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, -1]]),
+    }
+    assert expr._extract_data(repl) == ([], 4)
 
     # Replace with array, raise exception if indices are not compatible:
     expr = A(i)*A(j)

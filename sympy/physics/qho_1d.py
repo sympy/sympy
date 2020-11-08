@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, pi, Rational
 from sympy.functions import hermite, sqrt, exp, factorial, Abs
 from sympy.physics.quantum.constants import hbar
@@ -23,9 +21,7 @@ def psi_n(n, x, m, omega):
     ========
 
     >>> from sympy.physics.qho_1d import psi_n
-    >>> from sympy import var
-    >>> var("x m omega")
-    (x, m, omega)
+    >>> from sympy.abc import m, x, omega
     >>> psi_n(0, x, m, omega)
     (m*omega)**(1/4)*exp(-m*omega*x**2/(2*hbar))/(hbar**(1/4)*pi**(1/4))
 
@@ -58,9 +54,7 @@ def E_n(n, omega):
     ========
 
     >>> from sympy.physics.qho_1d import E_n
-    >>> from sympy import var
-    >>> var("x omega")
-    (x, omega)
+    >>> from sympy.abc import x, omega
     >>> E_n(x, omega)
     hbar*omega*(x + 1/2)
     """

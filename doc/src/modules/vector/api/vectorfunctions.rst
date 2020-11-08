@@ -53,3 +53,9 @@ scalar_potential_difference
 ---------------------------
 
 .. autofunction:: sympy.vector.scalar_potential_difference
+
+
+vector_integrate
+----------------
+
+.. autofunction:: sympy.vector.integrals.vector_integrate

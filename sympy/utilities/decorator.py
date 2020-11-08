@@ -1,7 +1,5 @@
 """Useful utility decorators. """
 
-from __future__ import print_function, division
-
 import sys
 import types
 import inspect
@@ -95,7 +93,7 @@ def conserve_mpmath_dps(func):
     return func_wrapper
 
 
-class no_attrs_in_subclass(object):
+class no_attrs_in_subclass:
     """Don't 'inherit' certain attributes from a base class
 
     >>> from sympy.utilities.decorator import no_attrs_in_subclass
@@ -194,7 +192,7 @@ def public(obj):
 
     >>> from sympy.utilities.decorator import public
 
-    >>> __all__
+    >>> __all__ # noqa: F821
     Traceback (most recent call last):
     ...
     NameError: name '__all__' is not defined
@@ -203,7 +201,7 @@ def public(obj):
     ... def some_function():
     ...     pass
 
-    >>> __all__
+    >>> __all__ # noqa: F821
     ['some_function']
 
     """

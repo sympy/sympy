@@ -4,8 +4,6 @@ Second quantization operators and states for bosons.
 This follow the formulation of Fetter and Welecka, "Quantum Theory
 of Many-Particle Systems."
 """
-from __future__ import print_function, division
-
 from collections import defaultdict
 
 from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
@@ -1431,14 +1429,14 @@ def matrix_rep(op, basis):
     return a
 
 
-class BosonicBasis(object):
+class BosonicBasis:
     """
     Base class for a basis set of bosonic Fock states.
     """
     pass
 
 
-class VarBosonicBasis(object):
+class VarBosonicBasis:
     """
     A single state, variable particle number basis set.
 
@@ -2537,8 +2535,8 @@ def _get_ordered_dummies(mul, verbose=False):
     """
     # setup dicts to avoid repeated calculations in key()
     args = Mul.make_args(mul)
-    fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in args] )
-    fac_repr = dict([ (fac, __kprint(fac)) for fac in args] )
+    fac_dum = { fac: fac.atoms(Dummy) for fac in args }
+    fac_repr = { fac: __kprint(fac) for fac in args }
     all_dums = set().union(*fac_dum.values())
     mask = {}
     for d in all_dums:
@@ -2674,7 +2672,7 @@ def _determine_ambiguous(term, ordered, ambiguous_groups):
     return ordered
 
 
-class _SymbolFactory(object):
+class _SymbolFactory:
     def __init__(self, label):
         self._counterVar = 0
         self._label = label
@@ -2771,8 +2769,8 @@ def wicks(e, **kw_args):
     Examples
     ========
 
-    >>> from sympy import symbols, Function, Dummy
-    >>> from sympy.physics.secondquant import wicks, F, Fd, NO
+    >>> from sympy import symbols, Dummy
+    >>> from sympy.physics.secondquant import wicks, F, Fd
     >>> p, q, r = symbols('p,q,r')
     >>> wicks(Fd(p)*F(q))
     KroneckerDelta(_i, q)*KroneckerDelta(p, q) + NO(CreateFermion(p)*AnnihilateFermion(q))
@@ -2969,8 +2967,8 @@ def simplify_index_permutations(expr, permutation_operators):
         terms = set(expr.args)
 
         for P in permutation_operators:
-            new_terms = set([])
-            on_hold = set([])
+            new_terms = set()
+            on_hold = set()
             while terms:
                 term = terms.pop()
                 permuted = P.get_permuted(term)

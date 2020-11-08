@@ -3,7 +3,6 @@ import sys
 from subprocess import Popen, PIPE
 import os
 
-from sympy.core.compatibility import unichr
 from sympy.utilities.misc import translate, replace, ordinal, rawlines, strlines
 
 def test_translate():
@@ -16,7 +15,7 @@ def test_translate():
     assert translate(abc, {'ab': ''}, 'c') == ''
     assert translate(abc, {'bc': 'x'}, 'c') == 'ab'
     assert translate(abc, {'abc': 'x', 'a': 'y'}) == 'x'
-    u = unichr(4096)
+    u = chr(4096)
     assert translate(abc, 'a', 'x', u) == 'xbc'
     assert (u in translate(abc, 'a', u, u)) is True
 
@@ -117,5 +116,5 @@ def test_debug_output():
     out, err = proc.communicate()
     out = out.decode('ascii') # utf-8?
     err = err.decode('ascii')
-    expected = 'substituted: -x*(cos(x) - 1), u: 1/x, u_var: _u'
+    expected = 'substituted: -x*(1 - cos(x)), u: 1/x, u_var: _u'
     assert expected in err, err

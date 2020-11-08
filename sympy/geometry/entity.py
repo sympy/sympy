@@ -20,8 +20,6 @@ R3 are currently the only ambient spaces implemented.
 
 """
 
-from __future__ import division, print_function
-
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
@@ -128,9 +126,9 @@ class GeometryEntity(Basic):
         """Implementation of reverse add method."""
         return a.__add__(self)
 
-    def __rdiv__(self, a):
+    def __rtruediv__(self, a):
         """Implementation of reverse division method."""
-        return a.__div__(self)
+        return a.__truediv__(self)
 
     def __repr__(self):
         """String representation of a GeometryEntity that can be evaluated
@@ -219,12 +217,12 @@ class GeometryEntity(Basic):
             # will fall back to the next representation
             return None
 
-        view_box = "{0} {1} {2} {3}".format(xmin, ymin, dx, dy)
-        transform = "matrix(1,0,0,-1,0,{0})".format(ymax + ymin)
+        view_box = "{} {} {} {}".format(xmin, ymin, dx, dy)
+        transform = "matrix(1,0,0,-1,0,{})".format(ymax + ymin)
         svg_top = svg_top.format(view_box, width, height)
 
         return svg_top + (
-            '<g transform="{0}">{1}</g></svg>'
+            '<g transform="{}">{}</g></svg>'
             ).format(transform, svg)
 
     def _svg(self, scale_factor=1., fill_color="#66cc99"):

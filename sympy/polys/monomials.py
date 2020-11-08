@@ -1,6 +1,5 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
-from __future__ import print_function, division
 
 from itertools import combinations_with_replacement, product
 from textwrap import dedent
@@ -82,8 +81,6 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         >>> from sympy import symbols
         >>> from sympy.polys.monomials import itermonomials
         >>> from sympy.polys.orderings import monomial_key
-        >>> from itertools import product
-        >>> from sympy.core import Mul
         >>> from sympy.abc import x, y
 
         >>> sorted(itermonomials([x, y], [2, 4], [1, 2]), reverse=True, key=monomial_key('lex', [x, y]))
@@ -133,8 +130,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
                         powers[variable] += 1
                 if max(powers.values()) >= min_degree:
                     monomials_list_comm.append(Mul(*item))
-            for mon in set(monomials_list_comm):
-                yield mon
+            yield from set(monomials_list_comm)
         else:
             monomials_list_non_comm = []
             for item in product(variables, repeat=max_degree):
@@ -146,8 +142,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
                         powers[variable] += 1
                 if max(powers.values()) >= min_degree:
                     monomials_list_non_comm.append(Mul(*item))
-            for mon in set(monomials_list_non_comm):
-                yield mon
+            yield from set(monomials_list_non_comm)
     else:
         if any(min_degrees[i] > max_degrees[i] for i in range(n)):
             raise ValueError('min_degrees[i] must be <= max_degrees[i] for all i')
@@ -402,7 +397,7 @@ def term_div(a, b, domain):
         else:
             return None
 
-class MonomialOps(object):
+class MonomialOps:
     """Code generator of fast monomial arithmetic functions. """
 
     def __init__(self, ngens):
@@ -585,7 +580,7 @@ class Monomial(PicklableWithSlots):
 
         return self.rebuild(monomial_mul(self.exponents, exponents))
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Monomial):
             exponents = other.exponents
         elif isinstance(other, (tuple, Tuple)):
@@ -600,7 +595,7 @@ class Monomial(PicklableWithSlots):
         else:
             raise ExactQuotientFailed(self, Monomial(other))
 
-    __floordiv__ = __truediv__ = __div__
+    __floordiv__ = __truediv__
 
     def __pow__(self, other):
         n = int(other)

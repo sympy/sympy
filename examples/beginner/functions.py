@@ -21,7 +21,7 @@ def main():
 
     e = log(exp((a + b)**5))
     pprint(e)
-    print
+    print()
 
 if __name__ == "__main__":
     main()

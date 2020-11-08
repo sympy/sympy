@@ -243,7 +243,6 @@ res_z(f, g, x)
 """
 
 
-from __future__ import print_function, division
 
 from sympy import (Abs, degree, expand, eye, floor, LC, Matrix, nan, Poly, pprint)
 from sympy import (QQ, pquo, quo, prem, rem, S, sign, simplify, summation, var, zeros)
@@ -772,7 +771,7 @@ def subresultants_bezout(p, q, x):
 
         # apply Theorem 2.1 in the paper by Toca & Vega 2004
         # to get correct signs
-        SR_L.append((int((-1)**(j*(j-1)/2)) * Poly(coeff_L, x) / F).as_expr())
+        SR_L.append(int((-1)**(j*(j-1)/2)) * (Poly(coeff_L, x) / F).as_expr())
         j = j + 1
 
     return process_matrix_output(SR_L, x)
@@ -1381,7 +1380,7 @@ def euclid_amv(f, g, x):
         sigma0 = -LC(a0)
         c = (sigma0**(deg_dif_p1 - 1)) / (c**(deg_dif_p1 - 2))
         deg_dif_p1 = degree(a0, x) - d2 + 1
-        a2 = rem_z(a0, a1, x) / Abs( ((c**(deg_dif_p1 - 1)) * sigma0) )
+        a2 = rem_z(a0, a1, x) / Abs( (c**(deg_dif_p1 - 1)) * sigma0 )
         euclid_seq.append( a2 )
         d2 =  degree(a2, x)                   # actual degree of a2
 
@@ -1929,7 +1928,7 @@ def subresultants_amv(f, g, x):
         sigma0 = -LC(a0)
         c = (sigma0**(deg_dif_p1 - 1)) / (c**(deg_dif_p1 - 2))
         deg_dif_p1 = degree(a0, x) - d2 + 1
-        a2 = rem_z(a0, a1, x) / Abs( ((c**(deg_dif_p1 - 1)) * sigma0) )
+        a2 = rem_z(a0, a1, x) / Abs( (c**(deg_dif_p1 - 1)) * sigma0 )
         sigma3 =  LC(a2, x)                   # leading coeff of a2
         d2 =  degree(a2, x)                   # actual degree of a2
         p1 = d1 - d2                          # degree difference

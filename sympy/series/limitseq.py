@@ -1,7 +1,5 @@
 """Limits of sequences"""
 
-from __future__ import print_function, division
-
 from sympy.core.add import Add
 from sympy.core.function import PoleError
 from sympy.core.power import Pow
@@ -9,6 +7,8 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.numbers import fibonacci
+from sympy.functions.combinatorial.factorials import factorial, subfactorial
+from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -211,6 +211,7 @@ def limit_seq(expr, n=None, trials=5):
         return expr
 
     expr = expr.rewrite(fibonacci, S.GoldenRatio)
+    expr = expr.rewrite(factorial, subfactorial, gamma)
     n_ = Dummy("n", integer=True, positive=True)
     n1 = Dummy("n", odd=True, positive=True)
     n2 = Dummy("n", even=True, positive=True)
@@ -242,5 +243,6 @@ def limit_seq(expr, n=None, trials=5):
         # Maybe the absolute value is easier to deal with (though not if
         # it has a Sum). If it tends to 0, the limit is 0.
         elif not expr.has(Sum):
-            if _limit_seq(Abs(expr.xreplace({n: n_})), n_, trials).is_zero:
+            lim = _limit_seq(Abs(expr.xreplace({n: n_})), n_, trials)
+            if lim is not None and lim.is_zero:
                 return S.Zero

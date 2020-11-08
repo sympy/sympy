@@ -112,7 +112,7 @@ def express(expr, system, system2=None, variables=False):
                                 Vectors")
         if variables:
             # Given expr is a scalar field
-            system_set = set([])
+            system_set = set()
             expr = sympify(expr)
             # Substitute all the coordinate variables
             for x in expr.atoms(BaseScalar):
@@ -354,7 +354,7 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSys3D, Point
+    >>> from sympy.vector import CoordSys3D
     >>> from sympy.vector import scalar_potential_difference
     >>> R = CoordSys3D('R')
     >>> P = R.origin.locate_new('P', R.x*R.i + R.y*R.j + R.z*R.k)
@@ -463,7 +463,7 @@ def _path(from_object, to_object):
     return index, from_path
 
 
-def orthogonalize(*vlist, **kwargs):
+def orthogonalize(*vlist, orthonormal=False):
     """
     Takes a sequence of independent vectors and orthogonalizes them
     using the Gram - Schmidt process. Returns a list of
@@ -483,7 +483,6 @@ def orthogonalize(*vlist, **kwargs):
     ========
 
     >>> from sympy.vector.coordsysrect import CoordSys3D
-    >>> from sympy.vector.vector import Vector, BaseVector
     >>> from sympy.vector.functions import orthogonalize
     >>> C = CoordSys3D('C')
     >>> i, j, k = C.base_vectors()
@@ -498,7 +497,6 @@ def orthogonalize(*vlist, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Gram-Schmidt_process
 
     """
-    orthonormal = kwargs.get('orthonormal', False)
 
     if not all(isinstance(vec, Vector) for vec in vlist):
         raise TypeError('Each element must be of Type Vector')

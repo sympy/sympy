@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, pi, Rational
 from sympy.functions import assoc_laguerre, sqrt, exp, factorial, factorial2
 
@@ -25,9 +23,7 @@ def R_nl(n, l, nu, r):
     ========
 
     >>> from sympy.physics.sho import R_nl
-    >>> from sympy import var
-    >>> var("r nu l")
-    (r, nu, l)
+    >>> from sympy.abc import r, nu, l
     >>> R_nl(0, 0, 1, r)
     2*2**(3/4)*exp(-r**2)/pi**(1/4)
     >>> R_nl(1, 0, 1, r)

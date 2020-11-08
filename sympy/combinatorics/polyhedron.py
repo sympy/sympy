@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.combinatorics import Permutation as Perm
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.core import Basic, Tuple
@@ -14,6 +12,9 @@ class Polyhedron(Basic):
     """
     Represents the polyhedral symmetry group (PSG).
 
+    Explanation
+    ===========
+
     The PSG is one of the symmetry groups of the Platonic solids.
     There are three polyhedral groups: the tetrahedral group
     of order 12, the octahedral group of order 24, and the
@@ -25,13 +26,17 @@ class Polyhedron(Basic):
     References
     ==========
 
-    http://mathworld.wolfram.com/PolyhedralGroup.html
+    .. [1] http://mathworld.wolfram.com/PolyhedralGroup.html
+
     """
     _edges = None
 
     def __new__(cls, corners, faces=[], pgroup=[]):
         """
         The constructor of the Polyhedron group object.
+
+        Explanation
+        ===========
 
         It takes up to three parameters: the corners, faces, and
         allowed transformations.
@@ -390,8 +395,8 @@ class Polyhedron(Basic):
         if pgroup and pgroup[0].size != len(corners):
             raise ValueError("Permutation size unequal to number of corners.")
         # use the identity permutation if none are given
-        obj._pgroup = PermutationGroup((
-            pgroup or [Perm(range(len(corners)))] ))
+        obj._pgroup = PermutationGroup(
+            pgroup or [Perm(range(len(corners)))] )
         return obj
 
     @property
@@ -427,7 +432,6 @@ class Polyhedron(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation, Cycle
         >>> from sympy.combinatorics.polyhedron import tetrahedron
         >>> tetrahedron = tetrahedron.copy()
         >>> tetrahedron.array_form
@@ -600,6 +604,9 @@ def _pgroup_calcs():
     tetrahedron_faces, cube_faces, octahedron_faces, dodecahedron_faces,
     icosahedron_faces
 
+    Explanation
+    ===========
+
     (This author didn't find and didn't know of a better way to do it though
     there likely is such a way.)
 
@@ -668,7 +675,8 @@ def _pgroup_calcs():
     References
     ==========
 
-    http://dogschool.tripod.com/trianglegroup.html
+    .. [1] http://dogschool.tripod.com/trianglegroup.html
+
     """
     def _pgroup_of_double(polyh, ordered_faces, pgroup):
         n = len(ordered_faces[0])

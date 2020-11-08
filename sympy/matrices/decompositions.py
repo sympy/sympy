@@ -1,13 +1,10 @@
-from __future__ import division, print_function
-
 import copy
 
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
-from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 
 from .common import NonSquareMatrixError, NonPositiveDefiniteMatrixError
-from .utilities import _iszero
+from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot_naive
 
 
@@ -97,14 +94,14 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     rref
     """
 
-    (F, pivot_cols) = M.rref(
-        simplify=simplify, iszerofunc=iszerofunc, pivots=True)
+    F, pivot_cols = M.rref(simplify=simplify, iszerofunc=iszerofunc,
+            pivots=True)
     rank = len(pivot_cols)
 
     C = M.extract(range(M.rows), pivot_cols)
     F = F[:rank, :]
 
-    return (C, F)
+    return C, F
 
 
 def _liupc(M):
@@ -194,21 +191,13 @@ def _row_structure_symbolic_cholesky(M):
     return Lrow
 
 
-def _cholesky(M, hermitian=True, dotprodsimp=None):
+def _cholesky(M, hermitian=True):
     """Returns the Cholesky-type decomposition L of a matrix A
     such that L * L.H == A if hermitian flag is True,
     or L * L.T == A if hermitian is False.
 
     A must be a Hermitian positive-definite matrix if hermitian is True,
     or a symmetric matrix if it is False.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -268,16 +257,15 @@ def _cholesky(M, hermitian=True, dotprodsimp=None):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps = _dotprodsimp if dotprodsimp else expand_mul
     L   = MutableDenseMatrix.zeros(M.rows, M.rows)
 
     if hermitian:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = dps((1 / L[j, j])*(M[i, j] -
+                L[i, j] = ((1 / L[j, j])*(M[i, j] -
                     sum(L[i, k]*L[j, k].conjugate() for k in range(j))))
 
-            Lii2 = dps(M[i, i] -
+            Lii2 = (M[i, i] -
                 sum(L[i, k]*L[i, k].conjugate() for k in range(i)))
 
             if Lii2.is_positive is False:
@@ -289,15 +277,15 @@ def _cholesky(M, hermitian=True, dotprodsimp=None):
     else:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = dps((1 / L[j, j])*(M[i, j] -
+                L[i, j] = ((1 / L[j, j])*(M[i, j] -
                     sum(L[i, k]*L[j, k] for k in range(j))))
 
-            L[i, i] = sqrt(dps(M[i, i] -
-                sum(L[i, k]**2 for k in range(i))))
+            L[i, i] = sqrt(M[i, i] -
+                sum(L[i, k]**2 for k in range(i)))
 
     return M._new(L)
 
-def _cholesky_sparse(M, hermitian=True, dotprodsimp=None):
+def _cholesky_sparse(M, hermitian=True):
     """
     Returns the Cholesky decomposition L of a matrix A
     such that L * L.T = A
@@ -360,7 +348,7 @@ def _cholesky_sparse(M, hermitian=True, dotprodsimp=None):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps       = _dotprodsimp if dotprodsimp else expand_mul
+    dps       = _get_intermediate_simp(expand_mul, expand_mul)
     Crowstruc = M.row_structure_symbolic_cholesky()
     C         = MutableDenseMatrix.zeros(M.rows)
 
@@ -410,7 +398,7 @@ def _cholesky_sparse(M, hermitian=True, dotprodsimp=None):
     return M._new(C)
 
 
-def _LDLdecomposition(M, hermitian=True, dotprodsimp=None):
+def _LDLdecomposition(M, hermitian=True):
     """Returns the LDL Decomposition (L, D) of matrix A,
     such that L * D * L.H == A if hermitian flag is True, or
     L * D * L.T == A if hermitian is False.
@@ -418,14 +406,6 @@ def _LDLdecomposition(M, hermitian=True, dotprodsimp=None):
     Further this ensures that all the diagonal entries of L are 1.
     A must be a Hermitian positive-definite matrix if hermitian is True,
     or a symmetric matrix otherwise.
-
-    Parameters
-    ==========
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
 
     Examples
     ========
@@ -479,17 +459,16 @@ def _LDLdecomposition(M, hermitian=True, dotprodsimp=None):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps = _dotprodsimp if dotprodsimp else expand_mul
     D   = MutableDenseMatrix.zeros(M.rows, M.rows)
     L   = MutableDenseMatrix.eye(M.rows)
 
     if hermitian:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = dps((1 / D[j, j])*(M[i, j] - sum(
-                    L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j))))
+                L[i, j] = (1 / D[j, j])*(M[i, j] - sum(
+                    L[i, k]*L[j, k].conjugate()*D[k, k] for k in range(j)))
 
-            D[i, i] = dps(M[i, i] -
+            D[i, i] = (M[i, i] -
                 sum(L[i, k]*L[i, k].conjugate()*D[k, k] for k in range(i)))
 
             if D[i, i].is_positive is False:
@@ -499,14 +478,14 @@ def _LDLdecomposition(M, hermitian=True, dotprodsimp=None):
     else:
         for i in range(M.rows):
             for j in range(i):
-                L[i, j] = dps((1 / D[j, j])*(M[i, j] - sum(
-                    L[i, k]*L[j, k]*D[k, k] for k in range(j))))
+                L[i, j] = (1 / D[j, j])*(M[i, j] - sum(
+                    L[i, k]*L[j, k]*D[k, k] for k in range(j)))
 
-            D[i, i] = dps(M[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i)))
+            D[i, i] = M[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i))
 
     return M._new(L), M._new(D)
 
-def _LDLdecomposition_sparse(M, hermitian=True, dotprodsimp=None):
+def _LDLdecomposition_sparse(M, hermitian=True):
     """
     Returns the LDL Decomposition (matrices ``L`` and ``D``) of matrix
     ``A``, such that ``L * D * L.T == A``. ``A`` must be a square,
@@ -545,7 +524,7 @@ def _LDLdecomposition_sparse(M, hermitian=True, dotprodsimp=None):
     if not hermitian and not M.is_symmetric():
         raise ValueError("Matrix must be symmetric.")
 
-    dps       = _dotprodsimp if dotprodsimp else expand_mul
+    dps       = _get_intermediate_simp(expand_mul, expand_mul)
     Lrowstruc = M.row_structure_symbolic_cholesky()
     L         = MutableDenseMatrix.eye(M.rows)
     D         = MutableDenseMatrix.zeros(M.rows, M.cols)
@@ -594,8 +573,7 @@ def _LDLdecomposition_sparse(M, hermitian=True, dotprodsimp=None):
     return M._new(L), M._new(D)
 
 
-def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False,
-        dotprodsimp=None):
+def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
     """Returns (L, U, perm) where L is a lower triangular matrix with unit
     diagonal, U is an upper triangular matrix, and perm is a list of row
     swap index pairs. If A is the original matrix, then
@@ -639,11 +617,6 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False,
         See the notes section for a more information about the
         pivot searching algorithm.
 
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification
-        is used during matrix multiplications to control expression
-        blowup and thus speed up calculation.
-
     Examples
     ========
 
@@ -671,7 +644,7 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False,
     """
 
     combined, p = M.LUdecomposition_Simple(iszerofunc=iszerofunc,
-        simpfunc=simpfunc, rankcheck=rankcheck, dotprodsimp=dotprodsimp)
+        simpfunc=simpfunc, rankcheck=rankcheck)
 
     # L is lower triangular ``M.rows x M.rows``
     # U is upper triangular ``M.rows x M.cols``
@@ -702,7 +675,7 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False,
     return L, U, p
 
 def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
-        rankcheck=False, dotprodsimp=None):
+        rankcheck=False):
     r"""Compute the PLU decomposition of the matrix.
 
     Parameters
@@ -738,11 +711,6 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         It is internally used by the pivot searching algorithm.
         See the notes section for a more information about the
         pivot searching algorithm.
-
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification
-        is used during matrix multiplications to control expression
-        blowup and thus speed up calculation.
 
     Returns
     =======
@@ -973,7 +941,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         # of the same dimensions with all zero entries.
         return M.zeros(M.rows, M.cols), []
 
-    dps       = _dotprodsimp if dotprodsimp else lambda e: e
+    dps       = _get_intermediate_simp()
     lu        = M.as_mutable()
     row_swaps = []
 
@@ -1155,21 +1123,43 @@ def _LUdecompositionFF(M):
     return P, L, DD, U
 
 
-def _QRdecomposition(M, dotprodsimp=None):
-    """Return Q, R where A = Q*R, Q is orthogonal and R is upper triangular.
+def _QRdecomposition(M):
+    r"""Returns a QR decomposition.
 
-    Parameters
-    ==========
+    Explanation
+    ===========
 
-    dotprodsimp : bool, optional
-        Specifies whether intermediate term algebraic simplification is used
-        during matrix multiplications to control expression blowup and thus
-        speed up calculation.
+    A QR decomposition is a decomposition in the form $A = Q R$
+    where
+
+    - $Q$ is a column orthogonal matrix.
+    - $R$ is a upper triangular (trapezoidal) matrix.
+
+    A column orthogonal matrix satisfies
+    $\mathbb{I} = Q^H Q$ while a full orthogonal matrix satisfies
+    relation $\mathbb{I} = Q Q^H = Q^H Q$ where $I$ is an identity
+    matrix with matching dimensions.
+
+    For matrices which are not square or are rank-deficient, it is
+    sufficient to return a column orthogonal matrix because augmenting
+    them may introduce redundant computations.
+    And an another advantage of this is that you can easily inspect the
+    matrix rank by counting the number of columns of $Q$.
+
+    If you want to augment the results to return a full orthogonal
+    decomposition, you should use the following procedures.
+
+    - Augment the $Q$ matrix with columns that are orthogonal to every
+      other columns and make it square.
+    - Augument the $R$ matrix with zero rows to make it have the same
+      shape as the original matrix.
+
+    The procedure will be illustrated in the examples section.
 
     Examples
     ========
 
-    This is the example from wikipedia:
+    A full rank matrix example:
 
     >>> from sympy import Matrix
     >>> A = Matrix([[12, -51, 4], [6, 167, -68], [-4, 24, -41]])
@@ -1184,23 +1174,126 @@ def _QRdecomposition(M, dotprodsimp=None):
     [14,  21, -14],
     [ 0, 175, -70],
     [ 0,   0,  35]])
+
+    If the matrix is square and full rank, the $Q$ matrix becomes
+    orthogonal in both directions, and needs no augmentation.
+
+    >>> Q * Q.H
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+    >>> Q.H * Q
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+
     >>> A == Q*R
     True
 
-    QR factorization of an identity matrix:
+    A rank deficient matrix example:
 
-    >>> A = Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    >>> A = Matrix([[12, -51, 0], [6, 167, 0], [-4, 24, 0]])
     >>> Q, R = A.QRdecomposition()
     >>> Q
     Matrix([
-    [1, 0, 0],
-    [0, 1, 0],
-    [0, 0, 1]])
+    [ 6/7, -69/175],
+    [ 3/7, 158/175],
+    [-2/7,    6/35]])
     >>> R
+    Matrix([
+    [14,  21, 0],
+    [ 0, 175, 0]])
+
+    QRdecomposition might return a matrix Q that is rectangular.
+    In this case the orthogonality condition might be satisfied as
+    $\mathbb{I} = Q.H*Q$ but not in the reversed product
+    $\mathbb{I} = Q * Q.H$.
+
+    >>> Q.H * Q
+    Matrix([
+    [1, 0],
+    [0, 1]])
+    >>> Q * Q.H
+    Matrix([
+    [27261/30625,   348/30625, -1914/6125],
+    [  348/30625, 30589/30625,   198/6125],
+    [ -1914/6125,    198/6125,   136/1225]])
+
+    If you want to augment the results to be a full orthogonal
+    decomposition, you should augment $Q$ with an another orthogonal
+    column.
+
+    You are able to append an arbitrary standard basis that are linearly
+    independent to every other columns and you can run the Gram-Schmidt
+    process to make them augmented as orthogonal basis.
+
+    >>> Q_aug = Q.row_join(Matrix([0, 0, 1]))
+    >>> Q_aug = Q_aug.QRdecomposition()[0]
+    >>> Q_aug
+    Matrix([
+    [ 6/7, -69/175, 58/175],
+    [ 3/7, 158/175, -6/175],
+    [-2/7,    6/35,  33/35]])
+    >>> Q_aug.H * Q_aug
     Matrix([
     [1, 0, 0],
     [0, 1, 0],
     [0, 0, 1]])
+    >>> Q_aug * Q_aug.H
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+
+    Augmenting the $R$ matrix with zero row is straightforward.
+
+    >>> R_aug = R.col_join(Matrix([[0, 0, 0]]))
+    >>> R_aug
+    Matrix([
+    [14,  21, 0],
+    [ 0, 175, 0],
+    [ 0,   0, 0]])
+    >>> Q_aug * R_aug == A
+    True
+
+    A zero matrix example:
+
+    >>> from sympy import Matrix
+    >>> A = Matrix.zeros(3, 4)
+    >>> Q, R = A.QRdecomposition()
+
+    They may return matrices with zero rows and columns.
+
+    >>> Q
+    Matrix(3, 0, [])
+    >>> R
+    Matrix(0, 4, [])
+    >>> Q*R
+    Matrix([
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0]])
+
+    As the same augmentation rule described above, $Q$ can be augmented
+    with columns of an identity matrix and $R$ can be augmented with
+    rows of a zero matrix.
+
+    >>> Q_aug = Q.row_join(Matrix.eye(3))
+    >>> R_aug = R.col_join(Matrix.zeros(3, 4))
+    >>> Q_aug * Q_aug.T
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+    >>> R_aug
+    Matrix([
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0]])
+    >>> Q_aug * R_aug == A
+    True
 
     See Also
     ========
@@ -1211,8 +1304,7 @@ def _QRdecomposition(M, dotprodsimp=None):
     QRsolve
     """
 
-    dps    = _dotprodsimp if dotprodsimp else expand_mul
-    cls    = M.__class__
+    dps    = _get_intermediate_simp(expand_mul, expand_mul)
     mat    = M.as_mutable()
     n      = mat.rows
     m      = mat.cols
@@ -1246,16 +1338,6 @@ def _QRdecomposition(M, dotprodsimp=None):
             ranked.append(j)
             Q[:, j] = tmp / R[j, j]
 
-
-    if len(ranked) != 0:
-        return (cls(Q.extract(range(nOrig), ranked)),
-                cls(R.extract(ranked, range(R.cols))))
-
-    else:
-        # Trivial case handling for zero-rank matrix
-        # Force Q as matrix containing standard basis vectors
-        for i in range(Min(nOrig, m)):
-            Q[i, i] = 1
-
-        return (cls(Q.extract(range(nOrig), range(Min(nOrig, m)))),
-                cls(R.extract(range(Min(nOrig, m)), range(R.cols))))
+    Q = Q.extract(range(nOrig), ranked)
+    R = R.extract(ranked, range(R.cols))
+    return M.__class__(Q), M.__class__(R)

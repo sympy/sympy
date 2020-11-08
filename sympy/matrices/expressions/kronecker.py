@@ -1,11 +1,12 @@
 """Implementation of the Kronecker product"""
 
-from __future__ import division, print_function
 
 from sympy.core import Mul, prod, sympify
 from sympy.functions import adjoint
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, Identity
+from sympy.matrices.common import ShapeError
+from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.transpose import transpose
+from sympy.matrices.expressions.special import Identity
 from sympy.matrices.matrices import MatrixBase
 from sympy.strategies import (
     canon, condition, distribute, do_one, exhaust, flatten, typed, unpack)
@@ -103,7 +104,7 @@ class KroneckerProduct(MatrixExpr):
     """
     is_KroneckerProduct = True
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, check=True):
         args = list(map(sympify, args))
         if all(a.is_Identity for a in args):
             ret = Identity(prod(a.rows for a in args))
@@ -112,10 +113,9 @@ class KroneckerProduct(MatrixExpr):
             else:
                 return ret
 
-        check = kwargs.get('check', True)
         if check:
             validate(*args)
-        return super(KroneckerProduct, cls).__new__(cls, *args)
+        return super().__new__(cls, *args)
 
     @property
     def shape(self):
@@ -390,7 +390,7 @@ def kronecker_mat_mul(expr):
 
 
 def kronecker_mat_pow(expr):
-    if isinstance(expr.base, KroneckerProduct):
+    if isinstance(expr.base, KroneckerProduct) and all(a.is_square for a in expr.base.args):
         return KroneckerProduct(*[MatPow(a, expr.exp) for a in expr.base.args])
     else:
         return expr
@@ -414,8 +414,10 @@ def combine_kronecker(expr):
     KroneckerProduct(A*B, B*A)
     >>> combine_kronecker(KroneckerProduct(A, B)+KroneckerProduct(B.T, A.T))
     KroneckerProduct(A + B.T, B + A.T)
-    >>> combine_kronecker(KroneckerProduct(A, B)**m)
-    KroneckerProduct(A**m, B**m)
+    >>> C = MatrixSymbol('C', n, n)
+    >>> D = MatrixSymbol('D', m, m)
+    >>> combine_kronecker(KroneckerProduct(C, D)**m)
+    KroneckerProduct(C**m, D**m)
     """
     def haskron(expr):
         return isinstance(expr, MatrixExpr) and expr.has(KroneckerProduct)

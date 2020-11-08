@@ -1,7 +1,6 @@
-from __future__ import print_function, division
-
 from sympy.core import S, Basic, Dict, Symbol, Tuple, sympify
 from sympy.core.compatibility import iterable
+from sympy.core.symbol import Str
 from sympy.sets import Set, FiniteSet, EmptySet
 
 
@@ -162,7 +161,11 @@ class IdentityMorphism(Morphism):
     Morphism
     """
     def __new__(cls, domain):
-        return Basic.__new__(cls, domain, domain)
+        return Basic.__new__(cls, domain)
+
+    @property
+    def codomain(self):
+        return self.domain
 
 
 class NamedMorphism(Morphism):
@@ -194,7 +197,10 @@ class NamedMorphism(Morphism):
         if not name:
             raise ValueError("Empty morphism names not allowed.")
 
-        return Basic.__new__(cls, domain, codomain, Symbol(name))
+        if not isinstance(name, Str):
+            name = Str(name)
+
+        return Basic.__new__(cls, domain, codomain, name)
 
     @property
     def name(self):
@@ -448,7 +454,13 @@ class Category(Basic):
         if not name:
             raise ValueError("A Category cannot have an empty name.")
 
-        new_category = Basic.__new__(cls, Symbol(name), Class(objects),
+        if not isinstance(name, Str):
+            name = Str(name)
+
+        if not isinstance(objects, Class):
+            objects = Class(objects)
+
+        new_category = Basic.__new__(cls, name, objects,
                                      FiniteSet(*commutative_diagrams))
         return new_category
 
@@ -552,7 +564,7 @@ class Diagram(Basic):
     ========
 
     >>> from sympy.categories import Object, NamedMorphism, Diagram
-    >>> from sympy import FiniteSet, pprint, default_sort_key
+    >>> from sympy import pprint, default_sort_key
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")

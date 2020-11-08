@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from functools import reduce
 
 from sympy.core.basic import Basic
@@ -241,7 +239,7 @@ class Reals(Interval, metaclass=Singleton):
     Examples
     ========
 
-    >>> from sympy import S, Interval, Rational, pi, I
+    >>> from sympy import S, Rational, pi, I
     >>> 5 in S.Reals
     True
     >>> Rational(-1, 2) in S.Reals
@@ -729,10 +727,14 @@ class Range(Set):
             return S.Infinity
         return Integer(abs(dif//self.step))
 
-    def __nonzero__(self):
-        return self.start != self.stop
+    @property
+    def is_finite_set(self):
+        if self.start.is_integer and self.stop.is_integer:
+            return True
+        return self.size.is_finite
 
-    __bool__ = __nonzero__
+    def __bool__(self):
+        return self.start != self.stop
 
     def __getitem__(self, i):
         from sympy.functions.elementary.integers import ceiling
@@ -1417,7 +1419,9 @@ class Complexes(CartesianComplexRegion, metaclass=Singleton):
     is_finite_set = False
 
     # Override property from superclass since Complexes has no args
-    sets = ProductSet(S.Reals, S.Reals)
+    @property
+    def sets(self):
+        return ProductSet(S.Reals, S.Reals)
 
     def __new__(cls):
         return Set.__new__(cls)

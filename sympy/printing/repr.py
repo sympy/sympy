@@ -5,14 +5,13 @@ The most important function here is srepr that returns a string so that the
 relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy.core.function import AppliedUndef
+from sympy.core.mul import Mul
 from mpmath.libmp import repr_dps, to_str as mlib_to_str
 
-from .printer import Printer
+from .printer import Printer, print_function
 
 
 class ReprPrinter(Printer):
@@ -143,6 +142,16 @@ class ReprPrinter(Printer):
     def _print_list(self, expr):
         return "[%s]" % self.reprify(expr, ", ")
 
+    def _print_dict(self, expr):
+        sep = ", "
+        dict_kvs = ["%s: %s" % (self.doprint(key), self.doprint(value)) for key, value in expr.items()]
+        return "{%s}" % sep.join(dict_kvs)
+
+    def _print_set(self, expr):
+        if not expr:
+            return "set()"
+        return "{%s}" % self.reprify(expr, ", ")
+
     def _print_MatrixBase(self, expr):
         # special case for some empty matrices
         if (expr.rows == 0) ^ (expr.cols == 0):
@@ -157,30 +166,6 @@ class ReprPrinter(Printer):
                 l[-1].append(expr[i, j])
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
 
-    def _print_MutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_SparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_Matrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_DenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_MutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
     def _print_BooleanTrue(self, expr):
         return "true"
 
@@ -191,11 +176,11 @@ class ReprPrinter(Printer):
         return "nan"
 
     def _print_Mul(self, expr, order=None):
-        terms = expr.args
-        if self.order != 'old':
-            args = expr._new_rawargs(*terms).as_ordered_factors()
+        if self.order not in ('old', 'none'):
+            args = expr.as_ordered_factors()
         else:
-            args = terms
+            # use make_args in case expr was something like -x -> x
+            args = Mul.make_args(expr)
 
         nargs = len(args)
         args = map(self._print, args)
@@ -221,6 +206,9 @@ class ReprPrinter(Printer):
         return "Sum2(%s, (%s, %s, %s))" % (self._print(expr.f), self._print(expr.i),
                                            self._print(expr.a), self._print(expr.b))
 
+    def _print_Str(self, s):
+        return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
+
     def _print_Symbol(self, expr):
         d = expr._assumptions.generator
         # print the dummy_index like it was an assumption
@@ -233,6 +221,24 @@ class ReprPrinter(Printer):
             attr = ['%s=%s' % (k, v) for k, v in d.items()]
             return "%s(%s, %s)" % (expr.__class__.__name__,
                                    self._print(expr.name), ', '.join(attr))
+
+    def _print_CoordinateSymbol(self, expr):
+        d = expr._assumptions.generator
+
+        if d == {}:
+            return "%s(%s, %s)" % (
+                expr.__class__.__name__,
+                self._print(expr.coordinate_system),
+                self._print(expr.index)
+            )
+        else:
+            attr = ['%s=%s' % (k, v) for k, v in d.items()]
+            return "%s(%s, %s, %s)" % (
+                expr.__class__.__name__,
+                self._print(expr.coordinate_system),
+                self._print(expr.index),
+                ', '.join(attr)
+            )
 
     def _print_Predicate(self, expr):
         return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
@@ -314,7 +320,7 @@ class ReprPrinter(Printer):
         ext = self._print(f.ext)
         return "ExtElem(%s, %s)" % (rep, ext)
 
-
+@print_function(ReprPrinter)
 def srepr(expr, **settings):
     """return expr in repr form"""
     return ReprPrinter(settings).doprint(expr)

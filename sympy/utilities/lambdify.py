@@ -3,15 +3,14 @@ This module provides convenient functions to transform sympy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from __future__ import print_function, division
-
-from typing import Any, Dict
+from typing import Any, Dict, Iterable
 
 import inspect
 import keyword
 import textwrap
 import linecache
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
     NotIterable, builtins)
 from sympy.utilities.misc import filldedent
@@ -167,10 +166,21 @@ def _import(module, reload=False):
 _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'tensorflow', ), python_version=(3,))
-def lambdify(args, expr, modules=None, printer=None, use_imps=True,
+def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
              dummify=False):
-    """
-    Translates a SymPy expression into an equivalent numeric function
+    """Convert a SymPy expression into a function that allows for fast
+    numeric evaluation.
+
+    .. warning::
+       This function uses ``exec``, and thus shouldn't be used on
+       unsanitized input.
+
+    .. versionchanged:: 1.7.0
+       Passing a set for the *args* parameter is deprecated as sets are
+       unordered. Use an ordered iterable such as a list or tuple.
+
+    Explanation
+    ===========
 
     For example, to convert the SymPy expression ``sin(x) + cos(x)`` to an
     equivalent NumPy function that numerically evaluates it:
@@ -202,75 +212,285 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     ``x`` and SymPy functions ``sin`` and ``cos``, then converted it to an
     equivalent NumPy function ``f``, and called it on a NumPy array ``a``.
 
-    .. warning::
-       This function uses ``exec``, and thus shouldn't be used on unsanitized
-       input.
+    Parameters
+    ==========
 
-    Arguments
-    =========
+    args : List[Symbol]
+        A variable or a list of variables whose nesting represents the
+        nesting of the arguments that will be passed to the function.
 
-    The first argument of ``lambdify`` is a variable or list of variables in
-    the expression. Variable lists may be nested. Variables can be Symbols,
-    undefined functions, or matrix symbols. The order and nesting of the
-    variables corresponds to the order and nesting of the parameters passed to
-    the lambdified function. For instance,
+        Variables can be symbols, undefined functions, or matrix symbols.
 
-    >>> from sympy.abc import x, y, z
-    >>> f = lambdify([x, (y, z)], x + y + z)
-    >>> f(1, (2, 3))
-    6
+        >>> from sympy import Eq
+        >>> from sympy.abc import x, y, z
 
-    The second argument of ``lambdify`` is the expression, list of
-    expressions, or matrix to be evaluated. Lists may be nested. If the
-    expression is a list, the output will also be a list.
+        The list of variables should match the structure of how the
+        arguments will be passed to the function. Simply enclose the
+        parameters as they will be passed in a list.
 
-    >>> f = lambdify(x, [x, [x + 1, x + 2]])
+        To call a function like ``f(x)`` then ``[x]``
+        should be the first argument to ``lambdify``; for this
+        case a single ``x`` can also be used:
+
+        >>> f = lambdify(x, x + 1)
+        >>> f(1)
+        2
+        >>> f = lambdify([x], x + 1)
+        >>> f(1)
+        2
+
+        To call a function like ``f(x, y)`` then ``[x, y]`` will
+        be the first argument of the ``lambdify``:
+
+        >>> f = lambdify([x, y], x + y)
+        >>> f(1, 1)
+        2
+
+        To call a function with a single 3-element tuple like
+        ``f((x, y, z))`` then ``[(x, y, z)]`` will be the first
+        argument of the ``lambdify``:
+
+        >>> f = lambdify([(x, y, z)], Eq(z**2, x**2 + y**2))
+        >>> f((3, 4, 5))
+        True
+
+        If two args will be passed and the first is a scalar but
+        the second is a tuple with two arguments then the items
+        in the list should match that structure:
+
+        >>> f = lambdify([x, (y, z)], x + y + z)
+        >>> f(1, (2, 3))
+        6
+
+    expr : Expr
+        An expression, list of expressions, or matrix to be evaluated.
+
+        Lists may be nested.
+        If the expression is a list, the output will also be a list.
+
+        >>> f = lambdify(x, [x, [x + 1, x + 2]])
+        >>> f(1)
+        [1, [2, 3]]
+
+        If it is a matrix, an array will be returned (for the NumPy module).
+
+        >>> from sympy import Matrix
+        >>> f = lambdify(x, Matrix([x, x + 1]))
+        >>> f(1)
+        [[1]
+        [2]]
+
+        Note that the argument order here (variables then expression) is used
+        to emulate the Python ``lambda`` keyword. ``lambdify(x, expr)`` works
+        (roughly) like ``lambda x: expr``
+        (see :ref:`lambdify-how-it-works` below).
+
+    modules : str, optional
+        Specifies the numeric library to use.
+
+        If not specified, *modules* defaults to:
+
+        - ``["scipy", "numpy"]`` if SciPy is installed
+        - ``["numpy"]`` if only NumPy is installed
+        - ``["math", "mpmath", "sympy"]`` if neither is installed.
+
+        That is, SymPy functions are replaced as far as possible by
+        either ``scipy`` or ``numpy`` functions if available, and Python's
+        standard library ``math``, or ``mpmath`` functions otherwise.
+
+        *modules* can be one of the following types:
+
+        - The strings ``"math"``, ``"mpmath"``, ``"numpy"``, ``"numexpr"``,
+          ``"scipy"``, ``"sympy"``, or ``"tensorflow"``. This uses the
+          corresponding printer and namespace mapping for that module.
+        - A module (e.g., ``math``). This uses the global namespace of the
+          module. If the module is one of the above known modules, it will
+          also use the corresponding printer and namespace mapping
+          (i.e., ``modules=numpy`` is equivalent to ``modules="numpy"``).
+        - A dictionary that maps names of SymPy functions to arbitrary
+          functions
+          (e.g., ``{'sin': custom_sin}``).
+        - A list that contains a mix of the arguments above, with higher
+          priority given to entries appearing first
+          (e.g., to use the NumPy module but override the ``sin`` function
+          with a custom version, you can use
+          ``[{'sin': custom_sin}, 'numpy']``).
+
+    dummify : bool, optional
+        Whether or not the variables in the provided expression that are not
+        valid Python identifiers are substituted with dummy symbols.
+
+        This allows for undefined functions like ``Function('f')(t)`` to be
+        supplied as arguments. By default, the variables are only dummified
+        if they are not valid Python identifiers.
+
+        Set ``dummify=True`` to replace all arguments with dummy symbols
+        (if ``args`` is not a string) - for example, to ensure that the
+        arguments do not redefine any built-in names.
+
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.lambdify import implemented_function
+    >>> from sympy import sqrt, sin, Matrix
+    >>> from sympy import Function
+    >>> from sympy.abc import w, x, y, z
+
+    >>> f = lambdify(x, x**2)
+    >>> f(2)
+    4
+    >>> f = lambdify((x, y, z), [z, y, x])
+    >>> f(1,2,3)
+    [3, 2, 1]
+    >>> f = lambdify(x, sqrt(x))
+    >>> f(4)
+    2.0
+    >>> f = lambdify((x, y), sin(x*y)**2)
+    >>> f(0, 5)
+    0.0
+    >>> row = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
+    >>> row(1, 2)
+    Matrix([[1, 3]])
+
+    ``lambdify`` can be used to translate SymPy expressions into mpmath
+    functions. This may be preferable to using ``evalf`` (which uses mpmath on
+    the backend) in some cases.
+
+    >>> f = lambdify(x, sin(x), 'mpmath')
     >>> f(1)
-    [1, [2, 3]]
+    0.8414709848078965
 
-    If it is a matrix, an array will be returned (for the NumPy module).
+    Tuple arguments are handled and the lambdified function should
+    be called with the same type of arguments as were used to create
+    the function:
 
-    >>> from sympy import Matrix
-    >>> f = lambdify(x, Matrix([x, x + 1]))
-    >>> f(1)
-    [[1]
-     [2]]
+    >>> f = lambdify((x, (y, z)), x + y)
+    >>> f(1, (2, 4))
+    3
 
-    Note that the argument order here, variables then expression, is used to
-    emulate the Python ``lambda`` keyword. ``lambdify(x, expr)`` works
-    (roughly) like ``lambda x: expr`` (see :ref:`lambdify-how-it-works` below).
+    The ``flatten`` function can be used to always work with flattened
+    arguments:
 
-    The third argument, ``modules`` is optional. If not specified, ``modules``
-    defaults to ``["scipy", "numpy"]`` if SciPy is installed, ``["numpy"]`` if
-    only NumPy is installed, and ``["math", "mpmath", "sympy"]`` if neither is
-    installed. That is, SymPy functions are replaced as far as possible by
-    either ``scipy`` or ``numpy`` functions if available, and Python's
-    standard library ``math``, or ``mpmath`` functions otherwise.
+    >>> from sympy.utilities.iterables import flatten
+    >>> args = w, (x, (y, z))
+    >>> vals = 1, (2, (3, 4))
+    >>> f = lambdify(flatten(args), w + x + y + z)
+    >>> f(*flatten(vals))
+    10
 
-    ``modules`` can be one of the following types
+    Functions present in ``expr`` can also carry their own numerical
+    implementations, in a callable attached to the ``_imp_`` attribute. This
+    can be used with undefined functions using the ``implemented_function``
+    factory:
 
-     - the strings ``"math"``, ``"mpmath"``, ``"numpy"``, ``"numexpr"``,
-       ``"scipy"``, ``"sympy"``, or ``"tensorflow"``. This uses the
-       corresponding printer and namespace mapping for that module.
-     - a module (e.g., ``math``). This uses the global namespace of the
-       module. If the module is one of the above known modules, it will also
-       use the corresponding printer and namespace mapping (i.e.,
-       ``modules=numpy`` is equivalent to ``modules="numpy"``).
-     - a dictionary that maps names of SymPy functions to arbitrary functions
-       (e.g., ``{'sin': custom_sin}``).
-     - a list that contains a mix of the arguments above, with higher priority
-       given to entries appearing first (e.g., to use the NumPy module but
-       override the ``sin`` function with a custom version, you can use
-       ``[{'sin': custom_sin}, 'numpy']``).
+    >>> f = implemented_function(Function('f'), lambda x: x+1)
+    >>> func = lambdify(x, f(x))
+    >>> func(4)
+    5
 
-    The ``dummify`` keyword argument controls whether or not the variables in
-    the provided expression that are not valid Python identifiers are
-    substituted with dummy symbols. This allows for undefined functions like
-    ``Function('f')(t)`` to be supplied as arguments. By default, the
-    variables are only dummified if they are not valid Python identifiers. Set
-    ``dummify=True`` to replace all arguments with dummy symbols (if ``args``
-    is not a string) - for example, to ensure that the arguments do not
-    redefine any built-in names.
+    ``lambdify`` always prefers ``_imp_`` implementations to implementations
+    in other namespaces, unless the ``use_imps`` input parameter is False.
+
+    Usage with Tensorflow:
+
+    >>> import tensorflow as tf
+    >>> from sympy import Max, sin, lambdify
+    >>> from sympy.abc import x
+
+    >>> f = Max(x, sin(x))
+    >>> func = lambdify(x, f, 'tensorflow')
+
+    After tensorflow v2, eager execution is enabled by default.
+    If you want to get the compatible result across tensorflow v1 and v2
+    as same as this tutorial, run this line.
+
+    >>> tf.compat.v1.enable_eager_execution()
+
+    If you have eager execution enabled, you can get the result out
+    immediately as you can use numpy.
+
+    If you pass tensorflow objects, you may get an ``EagerTensor``
+    object instead of value.
+
+    >>> result = func(tf.constant(1.0))
+    >>> print(result)
+    tf.Tensor(1.0, shape=(), dtype=float32)
+    >>> print(result.__class__)
+    <class 'tensorflow.python.framework.ops.EagerTensor'>
+
+    You can use ``.numpy()`` to get the numpy value of the tensor.
+
+    >>> result.numpy()
+    1.0
+
+    >>> var = tf.Variable(2.0)
+    >>> result = func(var) # also works for tf.Variable and tf.Placeholder
+    >>> result.numpy()
+    2.0
+
+    And it works with any shape array.
+
+    >>> tensor = tf.constant([[1.0, 2.0], [3.0, 4.0]])
+    >>> result = func(tensor)
+    >>> result.numpy()
+    [[1. 2.]
+     [3. 4.]]
+
+    Notes
+    =====
+
+    - For functions involving large array calculations, numexpr can provide a
+      significant speedup over numpy. Please note that the available functions
+      for numexpr are more limited than numpy but can be expanded with
+      ``implemented_function`` and user defined subclasses of Function. If
+      specified, numexpr may be the only option in modules. The official list
+      of numexpr functions can be found at:
+      https://numexpr.readthedocs.io/en/latest/user_guide.html#supported-functions
+
+    - In previous versions of SymPy, ``lambdify`` replaced ``Matrix`` with
+      ``numpy.matrix`` by default. As of SymPy 1.0 ``numpy.array`` is the
+      default. To get the old default behavior you must pass in
+      ``[{'ImmutableDenseMatrix':  numpy.matrix}, 'numpy']`` to the
+      ``modules`` kwarg.
+
+      >>> from sympy import lambdify, Matrix
+      >>> from sympy.abc import x, y
+      >>> import numpy
+      >>> array2mat = [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy']
+      >>> f = lambdify((x, y), Matrix([x, y]), modules=array2mat)
+      >>> f(1, 2)
+      [[1]
+       [2]]
+
+    - In the above examples, the generated functions can accept scalar
+      values or numpy arrays as arguments.  However, in some cases
+      the generated function relies on the input being a numpy array:
+
+      >>> from sympy import Piecewise
+      >>> from sympy.testing.pytest import ignore_warnings
+      >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
+
+      >>> with ignore_warnings(RuntimeWarning):
+      ...     f(numpy.array([-1, 0, 1, 2]))
+      [-1.   0.   1.   0.5]
+
+      >>> f(0)
+      Traceback (most recent call last):
+          ...
+      ZeroDivisionError: division by zero
+
+      In such cases, the input should be wrapped in a numpy array:
+
+      >>> with ignore_warnings(RuntimeWarning):
+      ...     float(f(numpy.array([0])))
+      0.0
+
+      Or if numpy functionality is not required another module can be used:
+
+      >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "math")
+      >>> f(0)
+      0
 
     .. _lambdify-how-it-works:
 
@@ -513,171 +733,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     (say, NumPy arrays).** Remember that by default, if the ``module``
     argument is not provided, ``lambdify`` creates functions using the NumPy
     and SciPy namespaces.
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.lambdify import implemented_function
-    >>> from sympy import sqrt, sin, Matrix
-    >>> from sympy import Function
-    >>> from sympy.abc import w, x, y, z
-
-    >>> f = lambdify(x, x**2)
-    >>> f(2)
-    4
-    >>> f = lambdify((x, y, z), [z, y, x])
-    >>> f(1,2,3)
-    [3, 2, 1]
-    >>> f = lambdify(x, sqrt(x))
-    >>> f(4)
-    2.0
-    >>> f = lambdify((x, y), sin(x*y)**2)
-    >>> f(0, 5)
-    0.0
-    >>> row = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
-    >>> row(1, 2)
-    Matrix([[1, 3]])
-
-    ``lambdify`` can be used to translate SymPy expressions into mpmath
-    functions. This may be preferable to using ``evalf`` (which uses mpmath on
-    the backend) in some cases.
-
-    >>> import mpmath
-    >>> f = lambdify(x, sin(x), 'mpmath')
-    >>> f(1)
-    0.8414709848078965
-
-    Tuple arguments are handled and the lambdified function should
-    be called with the same type of arguments as were used to create
-    the function:
-
-    >>> f = lambdify((x, (y, z)), x + y)
-    >>> f(1, (2, 4))
-    3
-
-    The ``flatten`` function can be used to always work with flattened
-    arguments:
-
-    >>> from sympy.utilities.iterables import flatten
-    >>> args = w, (x, (y, z))
-    >>> vals = 1, (2, (3, 4))
-    >>> f = lambdify(flatten(args), w + x + y + z)
-    >>> f(*flatten(vals))
-    10
-
-    Functions present in ``expr`` can also carry their own numerical
-    implementations, in a callable attached to the ``_imp_`` attribute. This
-    can be used with undefined functions using the ``implemented_function``
-    factory:
-
-    >>> f = implemented_function(Function('f'), lambda x: x+1)
-    >>> func = lambdify(x, f(x))
-    >>> func(4)
-    5
-
-    ``lambdify`` always prefers ``_imp_`` implementations to implementations
-    in other namespaces, unless the ``use_imps`` input parameter is False.
-
-    Usage with Tensorflow:
-
-    >>> import tensorflow as tf
-    >>> from sympy import Max, sin, lambdify
-    >>> from sympy.abc import x
-
-    >>> f = Max(x, sin(x))
-    >>> func = lambdify(x, f, 'tensorflow')
-
-    After tensorflow v2, eager execution is enabled by default.
-    If you want to get the compatible result across tensorflow v1 and v2
-    as same as this tutorial, run this line.
-
-    >>> tf.compat.v1.enable_eager_execution()
-
-    If you have eager execution enabled, you can get the result out
-    immediately as you can use numpy.
-
-    If you pass tensorflow objects, you may get an ``EagerTensor``
-    object instead of value.
-
-    >>> result = func(tf.constant(1.0))
-    >>> print(result)
-    tf.Tensor(1.0, shape=(), dtype=float32)
-    >>> print(result.__class__)
-    <class 'tensorflow.python.framework.ops.EagerTensor'>
-
-    You can use ``.numpy()`` to get the numpy value of the tensor.
-
-    >>> result.numpy()
-    1.0
-
-    >>> var = tf.Variable(2.0)
-    >>> result = func(var) # also works for tf.Variable and tf.Placeholder
-    >>> result.numpy()
-    2.0
-
-    And it works with any shape array.
-
-    >>> tensor = tf.constant([[1.0, 2.0], [3.0, 4.0]])
-    >>> result = func(tensor)
-    >>> result.numpy()
-    [[1. 2.]
-     [3. 4.]]
-
-    Notes
-    =====
-
-    - For functions involving large array calculations, numexpr can provide a
-      significant speedup over numpy. Please note that the available functions
-      for numexpr are more limited than numpy but can be expanded with
-      ``implemented_function`` and user defined subclasses of Function. If
-      specified, numexpr may be the only option in modules. The official list
-      of numexpr functions can be found at:
-      https://numexpr.readthedocs.io/en/latest/user_guide.html#supported-functions
-
-    - In previous versions of SymPy, ``lambdify`` replaced ``Matrix`` with
-      ``numpy.matrix`` by default. As of SymPy 1.0 ``numpy.array`` is the
-      default. To get the old default behavior you must pass in
-      ``[{'ImmutableDenseMatrix':  numpy.matrix}, 'numpy']`` to the
-      ``modules`` kwarg.
-
-      >>> from sympy import lambdify, Matrix
-      >>> from sympy.abc import x, y
-      >>> import numpy
-      >>> array2mat = [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy']
-      >>> f = lambdify((x, y), Matrix([x, y]), modules=array2mat)
-      >>> f(1, 2)
-      [[1]
-       [2]]
-
-    - In the above examples, the generated functions can accept scalar
-      values or numpy arrays as arguments.  However, in some cases
-      the generated function relies on the input being a numpy array:
-
-      >>> from sympy import Piecewise
-      >>> from sympy.testing.pytest import ignore_warnings
-      >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
-
-      >>> with ignore_warnings(RuntimeWarning):
-      ...     f(numpy.array([-1, 0, 1, 2]))
-      [-1.   0.   1.   0.5]
-
-      >>> f(0)
-      Traceback (most recent call last):
-          ...
-      ZeroDivisionError: division by zero
-
-      In such cases, the input should be wrapped in a numpy array:
-
-      >>> with ignore_warnings(RuntimeWarning):
-      ...     float(f(numpy.array([0])))
-      0.0
-
-      Or if numpy functionality is not required another module can be used:
-
-      >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "math")
-      >>> f(0)
-      0
-
     """
     from sympy.core.symbol import Symbol
 
@@ -712,7 +767,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
-    namespace = {}
+    namespace = {} # type: Dict[str, Any]
     for m in namespaces[::-1]:
         buf = _get_namespace(m)
         namespace.update(buf)
@@ -726,19 +781,19 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     if printer is None:
         if _module_present('mpmath', namespaces):
-            from sympy.printing.pycode import MpmathPrinter as Printer
+            from sympy.printing.pycode import MpmathPrinter as Printer # type: ignore
         elif _module_present('scipy', namespaces):
-            from sympy.printing.pycode import SciPyPrinter as Printer
+            from sympy.printing.pycode import SciPyPrinter as Printer # type: ignore
         elif _module_present('numpy', namespaces):
-            from sympy.printing.pycode import NumPyPrinter as Printer
+            from sympy.printing.pycode import NumPyPrinter as Printer # type: ignore
         elif _module_present('numexpr', namespaces):
-            from sympy.printing.lambdarepr import NumExprPrinter as Printer
+            from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):
-            from sympy.printing.tensorflow import TensorflowPrinter as Printer
+            from sympy.printing.tensorflow import TensorflowPrinter as Printer # type: ignore
         elif _module_present('sympy', namespaces):
-            from sympy.printing.pycode import SymPyPrinter as Printer
+            from sympy.printing.pycode import SymPyPrinter as Printer # type: ignore
         else:
-            from sympy.printing.pycode import PythonCodePrinter as Printer
+            from sympy.printing.pycode import PythonCodePrinter as Printer # type: ignore
         user_functions = {}
         for m in namespaces[::-1]:
             if isinstance(m, dict):
@@ -748,12 +803,21 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                            'allow_unknown_functions': True,
                            'user_functions': user_functions})
 
+    if isinstance(args, set):
+        SymPyDeprecationWarning(
+                    feature="The list of arguments is a `set`. This leads to unpredictable results",
+                    useinstead=": Convert set into list or tuple",
+                    issue=20013,
+                    deprecated_since_version="1.6.3"
+                ).warn()
+
     # Get the names of the args, for creating a docstring
     if not iterable(args):
         args = (args,)
     names = []
+
     # Grab the callers frame, for getting the names by inspection (if needed)
-    callers_local_vars = inspect.currentframe().f_back.f_locals.items()
+    callers_local_vars = inspect.currentframe().f_back.f_locals.items() # type: ignore
     for n, var in enumerate(args):
         if hasattr(var, 'name'):
             names.append(var.name)
@@ -770,7 +834,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # Create the function definition code and execute it
     funcname = '_lambdifygenerated'
     if _module_present('tensorflow', namespaces):
-        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
+        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
     funcstr = funcprinter.doprint(funcname, args, expr)
@@ -794,19 +858,19 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
 
-    funclocals = {}
+    funclocals = {} # type: Dict[str, Any]
     global _lambdify_generated_counter
     filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
     _lambdify_generated_counter += 1
     c = compile(funcstr, filename, 'exec')
     exec_(c, namespace, funclocals)
     # mtime has to be None or else linecache.checkcache will remove it
-    linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename)
+    linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename) # type: ignore
 
     func = funclocals[funcname]
 
     # Apply the docstring
-    sig = "func({0})".format(", ".join(str(i) for i in names))
+    sig = "func({})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
     expr_str = str(expr)
     if len(expr_str) > 78:
@@ -960,7 +1024,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
     expr = lambdarepr(expr)
     return "lambda %s: (%s)" % (args, expr)
 
-class _EvaluatorPrinter(object):
+class _EvaluatorPrinter:
     def __init__(self, printer=None, dummify=False):
         self._dummify = dummify
 
@@ -1036,7 +1100,7 @@ class _EvaluatorPrinter(object):
         """
         from sympy import Dummy, Function, flatten, Derivative, ordered, Basic
         from sympy.matrices import DeferredVector
-        from sympy.core.symbol import _uniquely_named_symbol
+        from sympy.core.symbol import uniquely_named_symbol
         from sympy.core.expr import Expr
 
         # Args of type Dummy can cause name collisions with args
@@ -1056,7 +1120,8 @@ class _EvaluatorPrinter(object):
                 if dummify or not self._is_safe_ident(s):
                     dummy = Dummy()
                     if isinstance(expr, Expr):
-                        dummy = _uniquely_named_symbol(dummy.name, expr)
+                        dummy = uniquely_named_symbol(
+                            dummy.name, expr, modify=lambda s: '_' + s)
                     s = self._argrepr(dummy)
                     expr = self._subexpr(expr, {arg: dummy})
             elif dummify or isinstance(arg, (Function, Derivative)):
@@ -1237,7 +1302,6 @@ def implemented_function(symfunc, implementation):
 
     >>> from sympy.abc import x
     >>> from sympy.utilities.lambdify import lambdify, implemented_function
-    >>> from sympy import Function
     >>> f = implemented_function('f', lambda x: x+1)
     >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)

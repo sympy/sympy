@@ -3,6 +3,8 @@
 SymPy Modules Reference
 =======================
 
+.. module:: sympy
+
 Because every feature of SymPy must have a test case, when you are not sure how
 to use something, just look into the ``tests/`` directories, find that feature
 and read the tests for it, that will tell you everything you need to know.
@@ -33,7 +35,6 @@ access any SymPy module, or use the list below:
    functions/index.rst
    geometry/index.rst
    holonomic/index.rst
-   simplify/hyperexpand.rst
    solvers/inequalities.rst
    integrals/integrals.rst
    integrals/g-functions.rst
@@ -53,7 +54,7 @@ access any SymPy module, or use the list below:
    rewriting.rst
    series/index.rst
    sets.rst
-   simplify/simplify.rst
+   simplify/index.rst
    solvers/solvers.rst
    solvers/solveset.rst
    stats.rst

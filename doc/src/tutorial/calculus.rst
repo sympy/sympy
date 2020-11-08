@@ -341,14 +341,6 @@ the ``differentiate_finite`` function:
     >>> differentiate_finite(f(x)*g(x))
     -f(x - 1/2)⋅g(x - 1/2) + f(x + 1/2)⋅g(x + 1/2)
 
-If we want to expand the intermediate derivative we may pass the
-flag ``evaluate=True``:
-
-    >>> differentiate_finite(f(x)*g(x), evaluate=True)
-    (-f(x - 1/2) + f(x + 1/2))⋅g(x) + (-g(x - 1/2) + g(x + 1/2))⋅f(x)
-
-This form however does not respect the product rule.
-
 If you already have a ``Derivative`` instance, you can use the
 ``as_finite_difference`` method to generate approximations of the
 derivative to arbitrary order:

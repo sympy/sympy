@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import factorial, sqrt, exp, S, assoc_laguerre, Float
 from sympy.functions.special.spherical_harmonics import Ynm
 
@@ -21,9 +19,7 @@ def R_nl(n, l, r, Z=1):
     ========
 
     >>> from sympy.physics.hydrogen import R_nl
-    >>> from sympy import var
-    >>> var("r Z")
-    (r, Z)
+    >>> from sympy.abc import r, Z
     >>> R_nl(1, 0, r, Z)
     2*sqrt(Z**3)*exp(-Z*r)
     >>> R_nl(2, 0, r, Z)
@@ -151,10 +147,8 @@ def E_nl(n, Z=1):
     Examples
     ========
 
-    >>> from sympy import var
     >>> from sympy.physics.hydrogen import E_nl
-    >>> var("n Z")
-    (n, Z)
+    >>> from sympy.abc import n, Z
     >>> E_nl(n, Z)
     -Z**2/(2*n**2)
     >>> E_nl(1)

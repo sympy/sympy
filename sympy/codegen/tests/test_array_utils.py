@@ -1,11 +1,11 @@
-from sympy import symbols, IndexedBase, Identity, cos
+from sympy import symbols, IndexedBase, Identity, cos, Inverse
 from sympy.codegen.array_utils import (CodegenArrayContraction,
-        CodegenArrayTensorProduct, CodegenArrayDiagonal,
-        CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
-        _codegen_array_parse, _recognize_matrix_expression, _RecognizeMatOp,
-        _RecognizeMatMulLines, _unfold_recognized_expr,
-        parse_indexed_expression, recognize_matrix_expression,
-        _parse_matrix_expression)
+                                       CodegenArrayTensorProduct, CodegenArrayDiagonal,
+                                       CodegenArrayPermuteDims, CodegenArrayElementwiseAdd,
+                                       _codegen_array_parse, _recognize_matrix_expression, _RecognizeMatOp,
+                                       _RecognizeMatMulLines, _unfold_recognized_expr,
+                                       parse_indexed_expression, recognize_matrix_expression,
+                                       parse_matrix_expression)
 from sympy import MatrixSymbol, Sum
 from sympy.combinatorics import Permutation
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -36,13 +36,13 @@ def test_codegen_array_contraction_construction():
 
     expr = M*N
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2))
-    assert CodegenArrayContraction.from_MatMul(expr) == result
+    assert parse_matrix_expression(expr) == result
     elem = expr[i, j]
     assert parse_indexed_expression(elem) == result
 
     expr = M*N*M
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, M), (1, 2), (3, 4))
-    assert CodegenArrayContraction.from_MatMul(expr) == result
+    assert parse_matrix_expression(expr) == result
     elem = expr[i, j]
     result = CodegenArrayContraction(CodegenArrayTensorProduct(M, M, N), (1, 4), (2, 5))
     cg = parse_indexed_expression(elem)
@@ -82,12 +82,12 @@ def test_codegen_array_recognize_matrix_mul_lines():
 
     cg = parse_indexed_expression((M*N*P)[i,j])
     assert recognize_matrix_expression(cg) == M*N*P
-    cg = CodegenArrayContraction.from_MatMul(M*N*P)
+    cg = parse_matrix_expression(M*N*P)
     assert recognize_matrix_expression(cg) == M*N*P
 
     cg = parse_indexed_expression((M*N.T*P)[i,j])
     assert recognize_matrix_expression(cg) == M*N.T*P
-    cg = CodegenArrayContraction.from_MatMul(M*N.T*P)
+    cg = parse_matrix_expression(M*N.T*P)
     assert recognize_matrix_expression(cg) == M*N.T*P
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(M,N,P,Q), (1, 2), (5, 6))
@@ -327,13 +327,40 @@ def test_codegen_permutedims_sink():
 def test_parsing_of_matrix_expressions():
 
     expr = M*N
-    assert _parse_matrix_expression(expr) == CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2))
+    assert parse_matrix_expression(expr) == CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (1, 2))
 
     expr = Transpose(M)
-    assert _parse_matrix_expression(expr) == CodegenArrayPermuteDims(M, [1, 0])
+    assert parse_matrix_expression(expr) == CodegenArrayPermuteDims(M, [1, 0])
 
     expr = M*Transpose(N)
-    assert _parse_matrix_expression(expr) == CodegenArrayContraction(CodegenArrayTensorProduct(M, CodegenArrayPermuteDims(N, [1, 0])), (1, 2))
+    assert parse_matrix_expression(expr) == CodegenArrayContraction(CodegenArrayTensorProduct(M, CodegenArrayPermuteDims(N, [1, 0])), (1, 2))
+
+    expr = 3*M*N
+    res = parse_matrix_expression(expr)
+    rexpr = recognize_matrix_expression(res)
+    assert expr == rexpr
+
+    expr = 3*M + N*M.T*M + 4*k*N
+    res = parse_matrix_expression(expr)
+    rexpr = recognize_matrix_expression(res)
+    assert expr == rexpr
+
+    expr = Inverse(M)*N
+    rexpr = recognize_matrix_expression(parse_matrix_expression(expr))
+    assert expr == rexpr
+
+    expr = M**2
+    rexpr = recognize_matrix_expression(parse_matrix_expression(expr))
+    assert expr == rexpr
+
+    expr = M*(2*N + 3*M)
+    res = parse_matrix_expression(expr)
+    rexpr = recognize_matrix_expression(res)
+    assert expr.expand() == rexpr.doit()
+
+    expr = Trace(M)
+    result = CodegenArrayContraction(M, (0, 1))
+    assert parse_matrix_expression(expr) == result
 
 
 def test_special_matrices():
@@ -465,13 +492,13 @@ def test_recognize_diagonalized_vectors():
     assert recognize_matrix_expression(cg) == A*DiagMatrix(a)*C*DiagMatrix(a)*B
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(a, I1, b, I1, (a.T*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    assert cg.split_multiple_contractions() == CodegenArrayContraction(CodegenArrayTensorProduct(a, I1, b, I1, (a.T*b).applyfunc(cos)), (1, 2), (3, 8), (5, 6), (7, 9))
-    assert recognize_matrix_expression(cg) == MatMul(a, I1, (a.T*b).applyfunc(cos), Transpose(I1), b.T)
+    assert cg.split_multiple_contractions().dummy_eq(CodegenArrayContraction(CodegenArrayTensorProduct(a, I1, b, I1, (a.T*b).applyfunc(cos)), (1, 2), (3, 8), (5, 6), (7, 9)))
+    assert recognize_matrix_expression(cg).dummy_eq(MatMul(a, I1, (a.T*b).applyfunc(cos), Transpose(I1), b.T))
 
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(A.T, a, b, b.T, (A*X*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    assert cg.split_multiple_contractions() == CodegenArrayContraction(
+    assert cg.split_multiple_contractions().dummy_eq(CodegenArrayContraction(
         CodegenArrayTensorProduct(A.T, DiagMatrix(a), b, b.T, (A*X*b).applyfunc(cos)),
-                               (1, 2), (3, 8), (5, 6, 9))
+                               (1, 2), (3, 8), (5, 6, 9)))
     # assert recognize_matrix_expression(cg)
 
     # Check no overlap of lines:

@@ -1,5 +1,3 @@
-from __future__ import division, print_function
-
 import random
 
 from sympy.core import SympifyError, Add
@@ -8,7 +6,7 @@ from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError
@@ -45,7 +43,10 @@ class DenseMatrix(MatrixBase):
     _class_priority = 4
 
     def __eq__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return NotImplemented
         self_shape = getattr(self, 'shape', None)
         other_shape = getattr(other, 'shape', None)
         if None in (self_shape, other_shape):
@@ -172,69 +173,9 @@ class DenseMatrix(MatrixBase):
         return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_inverse(self, **kwargs):
-        """Return the matrix inverse using the method indicated (default
-        is Gauss elimination).
-
-        kwargs
-        ======
-
-        method : ('GE', 'LU', or 'ADJ')
-        iszerofunc
-        try_block_diag
-
-        Notes
-        =====
-
-        According to the ``method`` keyword, it calls the appropriate method:
-
-          GE .... inverse_GE(); default
-          LU .... inverse_LU()
-          ADJ ... inverse_ADJ()
-
-        According to the ``try_block_diag`` keyword, it will try to form block
-        diagonal matrices using the method get_diag_blocks(), invert these
-        individually, and then reconstruct the full inverse matrix.
-
-        Note, the GE and LU methods may require the matrix to be simplified
-        before it is inverted in order to properly detect zeros during
-        pivoting. In difficult cases a custom zero detection function can
-        be provided by setting the ``iszerosfunc`` argument to a function that
-        should return True if its argument is zero. The ADJ routine computes
-        the determinant and uses that to detect singular matrices in addition
-        to testing for zeros on the diagonal.
-
-        See Also
-        ========
-
-        inverse_LU
-        inverse_GE
-        inverse_ADJ
-        """
-        from sympy.matrices import diag
-
-        method = kwargs.get('method', 'GE')
-        iszerofunc = kwargs.get('iszerofunc', _iszero)
-        dotprodsimp = kwargs.get('dotprodsimp', None)
-        if kwargs.get('try_block_diag', False):
-            blocks = self.get_diag_blocks()
-            r = []
-            for block in blocks:
-                r.append(block.inv(method=method, iszerofunc=iszerofunc,
-                        dotprodsimp=dotprodsimp))
-            return diag(*r)
-
-        M = self.as_mutable()
-        if method == "GE":
-            rv = M.inverse_GE(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-        elif method == "LU":
-            rv = M.inverse_LU(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-        elif method == "ADJ":
-            rv = M.inverse_ADJ(iszerofunc=iszerofunc, dotprodsimp=dotprodsimp)
-        else:
-            # make sure to add an invertibility check (as in inverse_LU)
-            # if a new method is added.
-            raise ValueError("Inversion method unrecognized")
-        return self._new(rv)
+        return self.inv(method=kwargs.get('method', 'GE'),
+                        iszerofunc=kwargs.get('iszerofunc', _iszero),
+                        try_block_diag=kwargs.get('try_block_diag', False))
 
     def _eval_scalar_mul(self, other):
         mat = [other*a for a in self._mat]
@@ -287,7 +228,6 @@ class DenseMatrix(MatrixBase):
 
         >>> from sympy.matrices import Matrix
         >>> from sympy.abc import x
-        >>> from sympy import cos
         >>> A = Matrix([x*(x - 1), 0])
         >>> B = Matrix([x**2 - x, 0])
         >>> A == B
@@ -319,17 +259,17 @@ class DenseMatrix(MatrixBase):
                     rv = ans
         return rv
 
-    def cholesky(self, hermitian=True, dotprodsimp=None):
-        return _cholesky(self, hermitian=hermitian, dotprodsimp=dotprodsimp)
+    def cholesky(self, hermitian=True):
+        return _cholesky(self, hermitian=hermitian)
 
-    def LDLdecomposition(self, hermitian=True, dotprodsimp=None):
-        return _LDLdecomposition(self, hermitian=hermitian, dotprodsimp=dotprodsimp)
+    def LDLdecomposition(self, hermitian=True):
+        return _LDLdecomposition(self, hermitian=hermitian)
 
-    def lower_triangular_solve(self, rhs, dotprodsimp=None):
-        return _lower_triangular_solve(self, rhs, dotprodsimp=dotprodsimp)
+    def lower_triangular_solve(self, rhs):
+        return _lower_triangular_solve(self, rhs)
 
-    def upper_triangular_solve(self, rhs, dotprodsimp=None):
-        return _upper_triangular_solve(self, rhs, dotprodsimp=dotprodsimp)
+    def upper_triangular_solve(self, rhs):
+        return _upper_triangular_solve(self, rhs)
 
     cholesky.__doc__               = _cholesky.__doc__
     LDLdecomposition.__doc__       = _LDLdecomposition.__doc__
@@ -352,15 +292,16 @@ def _force_mutable(x):
 
 
 class MutableDenseMatrix(DenseMatrix, MatrixBase):
+    __hash__ = None  # type: ignore
+
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
     @classmethod
-    def _new(cls, *args, **kwargs):
-        # if the `copy` flag is set to False, the input
-        # was rows, cols, [list].  It should be used directly
-        # without creating a copy.
-        if kwargs.get('copy', True) is False:
+    def _new(cls, *args, copy=True, **kwargs):
+        if copy is False:
+            # The input was rows, cols, [list].
+            # It should be used directly without creating a copy.
             if len(args) != 3:
                 raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
             rows, cols, flat_list = args
@@ -421,33 +362,14 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
     def as_mutable(self):
         return self.copy()
 
-    def col_del(self, i):
-        """Delete the given column.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import eye
-        >>> M = eye(3)
-        >>> M.col_del(1)
-        >>> M
-        Matrix([
-        [1, 0],
-        [0, 0],
-        [0, 1]])
-
-        See Also
-        ========
-
-        col
-        row_del
-        """
-        if i < -self.cols or i >= self.cols:
-            raise IndexError("Index out of range: 'i=%s', valid -%s <= i < %s"
-                             % (i, self.cols, self.cols))
-        for j in range(self.rows - 1, -1, -1):
-            del self._mat[i + j*self.cols]
+    def _eval_col_del(self, col):
+        for j in range(self.rows-1, -1, -1):
+            del self._mat[col + j*self.cols]
         self.cols -= 1
+
+    def _eval_row_del(self, row):
+        del self._mat[row*self.cols: (row+1)*self.cols]
+        self.rows -= 1
 
     def col_op(self, j, f):
         """In-place operation on col j using two-arg functor whose args are
@@ -593,34 +515,6 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         ones
         """
         self._mat = [value]*len(self)
-
-    def row_del(self, i):
-        """Delete the given row.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import eye
-        >>> M = eye(3)
-        >>> M.row_del(1)
-        >>> M
-        Matrix([
-        [1, 0, 0],
-        [0, 0, 1]])
-
-        See Also
-        ========
-
-        row
-        col_del
-        """
-        if i < -self.rows or i >= self.rows:
-            raise IndexError("Index out of range: 'i = %s', valid -%s <= i"
-                             " < %s" % (i, self.rows, self.rows))
-        if i < 0:
-            i += self.rows
-        del self._mat[i*self.cols:(i+1)*self.cols]
-        self.rows -= 1
 
     def row_op(self, i, f):
         """In-place operation on row ``i`` using two-arg functor whose args are
@@ -1023,7 +917,7 @@ def eye(*args, **kwargs):
     return Matrix.eye(*args, **kwargs)
 
 
-def diag(*values, **kwargs):
+def diag(*values, strict=True, unpack=False, **kwargs):
     """Returns a matrix with the provided values placed on the
     diagonal. If non-square matrices are included, they will
     produce a block-diagonal matrix.
@@ -1057,12 +951,7 @@ def diag(*values, **kwargs):
     .common.MatrixCommon.diag
     .expressions.blockmatrix.BlockMatrix
     """
-    # Extract any setting so we don't duplicate keywords sent
-    # as named parameters:
-    kw = kwargs.copy()
-    strict = kw.pop('strict', True)  # lists will be converted to Matrices
-    unpack = kw.pop('unpack', False)
-    return Matrix.diag(*values, strict=strict, unpack=unpack, **kw)
+    return Matrix.diag(*values, strict=strict, unpack=unpack, **kwargs)
 
 
 def GramSchmidt(vlist, orthonormal=False):

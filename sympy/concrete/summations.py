@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.calculus.singularities import is_decreasing
 from sympy.calculus.util import AccumulationBounds
 from sympy.concrete.expr_with_limits import AddWithLimits
@@ -204,7 +202,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if d:
                 reps[xab[0]] = d
         if reps:
-            undo = dict([(v, k) for k, v in reps.items()])
+            undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
             if type(did) is tuple:  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])
@@ -421,7 +419,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sym = self.limits[0][0]
         lower_limit = self.limits[0][1]
         upper_limit = self.limits[0][2]
-        sequence_term = self.function
+        sequence_term = self.function.simplify()
 
         if len(sequence_term.free_symbols) > 1:
             raise NotImplementedError("convergence checking for more than one symbol "
@@ -457,9 +455,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ###  -------- Divergence test ----------- ###
         try:
-            lim_val = limit_seq(sequence_term, sym)
-            if lim_val is not None and lim_val.is_zero is False:
-                return S.false
+           lim_val = limit_seq(sequence_term, sym)
+           if lim_val is not None and lim_val.is_zero is False:
+               return S.false
         except NotImplementedError:
             pass
 
@@ -510,7 +508,22 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 if abs(lim_ratio) < 1:
                     return S.true
         except NotImplementedError:
-            pass
+            lim_ratio = None
+
+        ### ---------- Raabe's test -------------- ###
+        if lim_ratio == 1:  # ratio test inconclusive
+            test_val = sym*(sequence_term/
+                         sequence_term.subs(sym, sym + 1) - 1)
+            test_val = test_val.gammasimp()
+            try:
+                lim_val = limit_seq(test_val, sym)
+                if lim_val is not None and lim_val.is_number:
+                    if lim_val > 1:
+                        return S.true
+                    if lim_val < 1:
+                        return S.false
+            except NotImplementedError:
+                pass
 
         ### ----------- root test ---------------- ###
         # lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
@@ -528,7 +541,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         dict_val = sequence_term.match((-1)**(sym + p)*q)
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true
-
 
         ### ------------- integral test -------------- ###
         check_interval = None
@@ -630,7 +642,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Examples
         ========
 
-        >>> from sympy import Sum, Symbol, sin, oo
+        >>> from sympy import Sum, Symbol, oo
         >>> n = Symbol('n', integer=True)
         >>> Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent()
         False
@@ -1316,10 +1328,11 @@ def _eval_matrix_sum(expression):
 
 def _dummy_with_inherited_properties_concrete(limits):
     """
-    Return a Dummy symbol that inherits as much assumptions based on the
-    provided symbol and limits as possible.
+    Return a Dummy symbol that inherits as many assumptions as possible
+    from the provided symbol and limits.
 
-    If the symbol already has all possible assumptions, return None.
+    If the symbol already has all True assumption shared by the limits
+    then return None.
     """
     x, a, b = limits
     l = [a, b]
@@ -1342,5 +1355,3 @@ def _dummy_with_inherited_properties_concrete(limits):
     if assumptions_to_add:
         assumptions_to_keep.update(assumptions_to_add)
         return Dummy('d', **assumptions_to_keep)
-    else:
-        return None

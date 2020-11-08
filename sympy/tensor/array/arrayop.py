@@ -3,9 +3,8 @@ import itertools
 from sympy import S, Tuple, diff, Basic
 
 from sympy.core.compatibility import Iterable
-from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.tensor.array.ndim_array import NDimArray
-from sympy.tensor.array.dense_ndim_array import DenseNDimArray
+from sympy.tensor.array.dense_ndim_array import DenseNDimArray, ImmutableDenseNDimArray
 from sympy.tensor.array.sparse_ndim_array import SparseNDimArray
 
 
@@ -106,7 +105,7 @@ def tensorcontraction(array, *contraction_axes):
     array = _arrayfy(array)
 
     # Verify contraction_axes:
-    taken_dims = set([])
+    taken_dims = set()
     for axes_group in contraction_axes:
         if not isinstance(axes_group, Iterable):
             raise ValueError("collections of contraction axes expected")

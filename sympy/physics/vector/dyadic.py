@@ -3,11 +3,12 @@ from sympy.core.compatibility import unicode
 from sympy.core.evalf import EvalfMixin, prec_to_dps
 from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
                        VectorStrPrinter)
+from sympy.printing.defaults import Printable
 
 __all__ = ['Dyadic']
 
 
-class Dyadic(EvalfMixin):
+class Dyadic(Printable, EvalfMixin):
     """A Dyadic object.
 
     See:
@@ -105,11 +106,9 @@ class Dyadic(EvalfMixin):
                 ol += v[0] * v[1] * (v[2] & other)
         return ol
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         """Divides the Dyadic by a sympifyable expression. """
         return self.__mul__(1 / other)
-
-    __truediv__ = __div__
 
     def __eq__(self, other):
         """Tests for equality.
@@ -159,27 +158,26 @@ class Dyadic(EvalfMixin):
     def __neg__(self):
         return self * -1
 
-    def _latex(self, printer=None):
+    def _latex(self, printer):
         ar = self.args  # just to shorten things
         if len(ar) == 0:
             return str(0)
         ol = []  # output list, to be concatenated to a string
-        mlp = VectorLatexPrinter()
         for i, v in enumerate(ar):
             # if the coef of the dyadic is 1, we skip the 1
             if ar[i][0] == 1:
-                ol.append(' + ' + mlp.doprint(ar[i][1]) + r"\otimes " +
-                          mlp.doprint(ar[i][2]))
+                ol.append(' + ' + printer._print(ar[i][1]) + r"\otimes " +
+                          printer._print(ar[i][2]))
             # if the coef of the dyadic is -1, we skip the 1
             elif ar[i][0] == -1:
                 ol.append(' - ' +
-                          mlp.doprint(ar[i][1]) +
+                          printer._print(ar[i][1]) +
                           r"\otimes " +
-                          mlp.doprint(ar[i][2]))
+                          printer._print(ar[i][2]))
             # If the coefficient of the dyadic is not 1 or -1,
             # we might wrap it in parentheses, for readability.
             elif ar[i][0] != 0:
-                arg_str = mlp.doprint(ar[i][0])
+                arg_str = printer._print(ar[i][0])
                 if isinstance(ar[i][0], Add):
                     arg_str = '(%s)' % arg_str
                 if arg_str.startswith('-'):
@@ -187,8 +185,8 @@ class Dyadic(EvalfMixin):
                     str_start = ' - '
                 else:
                     str_start = ' + '
-                ol.append(str_start + arg_str + mlp.doprint(ar[i][1]) +
-                          r"\otimes " + mlp.doprint(ar[i][2]))
+                ol.append(str_start + arg_str + printer._print(ar[i][1]) +
+                          r"\otimes " + printer._print(ar[i][2]))
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]
@@ -196,37 +194,30 @@ class Dyadic(EvalfMixin):
             outstr = outstr[1:]
         return outstr
 
-    def _pretty(self, printer=None):
+    def _pretty(self, printer):
         e = self
 
-        class Fake(object):
+        class Fake:
             baseline = 0
 
             def render(self, *args, **kwargs):
                 ar = e.args  # just to shorten things
-                settings = printer._settings if printer else {}
-                if printer:
-                    use_unicode = printer._use_unicode
-                else:
-                    from sympy.printing.pretty.pretty_symbology import (
-                        pretty_use_unicode)
-                    use_unicode = pretty_use_unicode()
-                mpp = printer if printer else VectorPrettyPrinter(settings)
+                mpp = printer
                 if len(ar) == 0:
-                    return unicode(0)
-                bar = u"\N{CIRCLED TIMES}" if use_unicode else "|"
+                    return str(0)
+                bar = "\N{CIRCLED TIMES}" if printer._use_unicode else "|"
                 ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1
                     if ar[i][0] == 1:
-                        ol.extend([u" + ",
+                        ol.extend([" + ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
 
                     # if the coef of the dyadic is -1, we skip the 1
                     elif ar[i][0] == -1:
-                        ol.extend([u" - ",
+                        ol.extend([" - ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
@@ -239,18 +230,18 @@ class Dyadic(EvalfMixin):
                                 ar[i][0]).parens()[0]
                         else:
                             arg_str = mpp.doprint(ar[i][0])
-                        if arg_str.startswith(u"-"):
+                        if arg_str.startswith("-"):
                             arg_str = arg_str[1:]
-                            str_start = u" - "
+                            str_start = " - "
                         else:
-                            str_start = u" + "
-                        ol.extend([str_start, arg_str, u" ",
+                            str_start = " + "
+                        ol.extend([str_start, arg_str, " ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
 
-                outstr = u"".join(ol)
-                if outstr.startswith(u" + "):
+                outstr = "".join(ol)
+                if outstr.startswith(" + "):
                     outstr = outstr[3:]
                 elif outstr.startswith(" "):
                     outstr = outstr[1:]
@@ -316,23 +307,23 @@ class Dyadic(EvalfMixin):
             ol += v[0] * ((other ^ v[1]) | v[2])
         return ol
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         """Printing method. """
         ar = self.args  # just to shorten things
         if len(ar) == 0:
-            return str(0)
+            return printer._print(0)
         ol = []  # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             # if the coef of the dyadic is 1, we skip the 1
             if ar[i][0] == 1:
-                ol.append(' + (' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
+                ol.append(' + (' + printer._print(ar[i][1]) + '|' + printer._print(ar[i][2]) + ')')
             # if the coef of the dyadic is -1, we skip the 1
             elif ar[i][0] == -1:
-                ol.append(' - (' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
+                ol.append(' - (' + printer._print(ar[i][1]) + '|' + printer._print(ar[i][2]) + ')')
             # If the coefficient of the dyadic is not 1 or -1,
             # we might wrap it in parentheses, for readability.
             elif ar[i][0] != 0:
-                arg_str = VectorStrPrinter().doprint(ar[i][0])
+                arg_str = printer._print(ar[i][0])
                 if isinstance(ar[i][0], Add):
                     arg_str = "(%s)" % arg_str
                 if arg_str[0] == '-':
@@ -340,8 +331,8 @@ class Dyadic(EvalfMixin):
                     str_start = ' - '
                 else:
                     str_start = ' + '
-                ol.append(str_start + arg_str + '*(' + str(ar[i][1]) +
-                          '|' + str(ar[i][2]) + ')')
+                ol.append(str_start + arg_str + '*(' + printer._print(ar[i][1]) +
+                          '|' + printer._print(ar[i][2]) + ')')
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
             outstr = outstr[3:]
@@ -380,28 +371,6 @@ class Dyadic(EvalfMixin):
             ol += v[0] * (v[1] | (v[2] ^ other))
         return ol
 
-    # We don't define _repr_png_ here because it would add a large amount of
-    # data to any notebook containing SymPy expressions, without adding
-    # anything useful to the notebook. It can still enabled manually, e.g.,
-    # for the qtconsole, with init_printing().
-    def _repr_latex_(self):
-        """
-        IPython/Jupyter LaTeX printing
-
-        To change the behavior of this (e.g., pass in some settings to LaTeX),
-        use init_printing(). init_printing() will also enable LaTeX printing
-        for built in numeric types like ints and container types that contain
-        SymPy objects, like lists and dictionaries of expressions.
-        """
-        from sympy.printing.latex import latex
-        s = latex(self, mode='plain')
-        return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_
-
-    _sympystr = __str__
-    _sympyrepr = _sympystr
-    __repr__ = __str__
     __radd__ = __add__
     __rmul__ = __mul__
 
@@ -427,6 +396,8 @@ class Dyadic(EvalfMixin):
         ========
 
         >>> from sympy.physics.vector import ReferenceFrame, outer, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> N = ReferenceFrame('N')
         >>> q = dynamicsymbols('q')
         >>> B = N.orientnew('B', 'Axis', [q, N.z])
@@ -508,6 +479,8 @@ class Dyadic(EvalfMixin):
         ========
 
         >>> from sympy.physics.vector import ReferenceFrame, outer, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> N = ReferenceFrame('N')
         >>> q = dynamicsymbols('q')
         >>> B = N.orientnew('B', 'Axis', [q, N.z])
@@ -567,10 +540,6 @@ class Dyadic(EvalfMixin):
             new_inlist[0] = inlist[0].evalf(n=prec_to_dps(prec))
             new_args.append(tuple(new_inlist))
         return Dyadic(new_args)
-
-    def show_args(self):
-        print(self.args)
-
 
 def _check_dyadic(other):
     if not isinstance(other, Dyadic):

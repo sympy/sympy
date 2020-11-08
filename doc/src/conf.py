@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # SymPy documentation build configuration file, created by
 # sphinx-quickstart.py on Sat Mar 22 19:34:32 2008.
@@ -15,6 +14,8 @@ import sys
 import inspect
 import os
 import subprocess
+from datetime import datetime
+
 import sympy
 
 # If your extensions are in another directory, add it here.
@@ -65,7 +66,7 @@ suppress_warnings = ['ref.citation', 'ref.footnote']
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2019 SymPy Development Team'
+copyright = '{} SymPy Development Team'.format(datetime.utcnow().year)
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -227,7 +228,7 @@ graphviz_output_format = 'svg'
 commit_hash_filepath = '../commit_hash.txt'
 commit_hash = None
 if os.path.isfile(commit_hash_filepath):
-    with open(commit_hash_filepath, 'r') as f:
+    with open(commit_hash_filepath) as f:
         commit_hash = f.readline()
 
 # Get commit hash from the external file.

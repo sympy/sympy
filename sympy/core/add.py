@@ -1,14 +1,11 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
 from functools import cmp_to_key
-
 from .basic import Basic
 from .compatibility import reduce, is_sequence
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
-from .operations import AssocOp
+from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
@@ -45,7 +42,7 @@ def _unevaluated_Add(*args):
     be tested against the output of this function or as one of several
     options:
 
-    >>> opts = (Add(x, y, evaluated=False), Add(y, x, evaluated=False))
+    >>> opts = (Add(x, y, evaluate=False), Add(y, x, evaluate=False))
     >>> a = uAdd(x, y)
     >>> assert a in opts and a == uAdd(x, y)
     >>> uAdd(x + 1, x + 2)
@@ -69,12 +66,13 @@ def _unevaluated_Add(*args):
         newargs.insert(0, co)
     return Add._from_args(newargs)
 
-
 class Add(Expr, AssocOp):
 
     __slots__ = ()
 
     is_Add = True
+
+    _args_type = Expr
 
     @classmethod
     def flatten(cls, seq):
@@ -123,6 +121,8 @@ class Add(Expr, AssocOp):
 
             # O(x)
             if o.is_Order:
+                if o.expr.is_zero:
+                    continue
                 for o1 in order_factors:
                     if o1.contains(o):
                         o = None
@@ -402,8 +402,8 @@ class Add(Expr, AssocOp):
     def _eval_derivative(self, s):
         return self.func(*[a.diff(s) for a in self.args])
 
-    def _eval_nseries(self, x, n, logx):
-        terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        terms = [t.nseries(x, n=n, logx=logx, cdir=cdir) for t in self.args]
         return self.func(*terms)
 
     def _matches_simple(self, expr, repl_dict):
@@ -414,7 +414,7 @@ class Add(Expr, AssocOp):
         return
 
     def matches(self, expr, repl_dict={}, old=False):
-        return AssocOp._matches_commutative(self, expr, repl_dict, old)
+        return self._matches_commutative(expr, repl_dict, old)
 
     @staticmethod
     def _combine_inverse(lhs, rhs):
@@ -514,6 +514,10 @@ class Add(Expr, AssocOp):
 
     def _eval_is_rational_function(self, syms):
         return all(term._eval_is_rational_function(syms) for term in self.args)
+
+    def _eval_is_meromorphic(self, x, a):
+        return _fuzzy_group((arg.is_meromorphic(x, a) for arg in self.args),
+                            quick_exit=True)
 
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
@@ -635,7 +639,7 @@ class Add(Expr, AssocOp):
     def _eval_is_extended_positive(self):
         from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
-            return super(Add, self)._eval_is_extended_positive()
+            return super()._eval_is_extended_positive()
         c, a = self.as_coeff_Add()
         if not c.is_zero:
             v = _monotonic_sign(a)
@@ -719,7 +723,7 @@ class Add(Expr, AssocOp):
     def _eval_is_extended_negative(self):
         from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
-            return super(Add, self)._eval_is_extended_negative()
+            return super()._eval_is_extended_negative()
         c, a = self.as_coeff_Add()
         if not c.is_zero:
             v = _monotonic_sign(a)
@@ -877,37 +881,53 @@ class Add(Expr, AssocOp):
             im_part.append(im)
         return (self.func(*re_part), self.func(*im_part))
 
-    def _eval_as_leading_term(self, x):
-        from sympy import expand_mul, factor_terms
+    def _eval_as_leading_term(self, x, cdir=0):
+        from sympy import expand_mul, Order
 
         old = self
 
         expr = expand_mul(self)
         if not expr.is_Add:
-            return expr.as_leading_term(x)
+            return expr.as_leading_term(x, cdir=cdir)
 
         infinite = [t for t in expr.args if t.is_infinite]
 
-        expr = expr.func(*[t.as_leading_term(x) for t in expr.args]).removeO()
-        if not expr:
-            # simple leading term analysis gave us 0 but we have to send
-            # back a term, so compute the leading term (via series)
-            return old.compute_leading_term(x)
-        elif expr is S.NaN:
-            return old.func._from_args(infinite)
-        elif not expr.is_Add:
+        leading_terms = [t.as_leading_term(x, cdir=cdir) for t in expr.args]
+
+        min, new_expr = Order(0), 0
+
+        try:
+            for term in leading_terms:
+                order = Order(term, x)
+                if not min or order not in min:
+                    min = order
+                    new_expr = term
+                elif min in order:
+                    new_expr += term
+
+        except TypeError:
             return expr
+
+        new_expr=new_expr.together()
+        if new_expr.is_Add:
+            new_expr = new_expr.simplify()
+
+        if not new_expr:
+            # simple leading term analysis gave us cancelled terms but we have to send
+            # back a term, so compute the leading term (via series)
+            n0 = min.getn()
+            res = Order(1)
+            incr = S.One
+            while res.is_Order:
+                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().powsimp().trigsimp()
+                incr *= 2
+            return res.as_leading_term(x, cdir=cdir)
+
+        elif new_expr is S.NaN:
+            return old.func._from_args(infinite)
+
         else:
-            plain = expr.func(*[s for s, _ in expr.extract_leading_order(x)])
-            rv = factor_terms(plain, fraction=False)
-            rv_simplify = rv.simplify()
-            # if it simplifies to an x-free expression, return that;
-            # tests don't fail if we don't but it seems nicer to do this
-            if x not in rv_simplify.free_symbols:
-                if rv_simplify.is_zero and plain.is_zero is not True:
-                    return (expr - plain)._eval_as_leading_term(x)
-                return rv_simplify
-            return rv
+            return new_expr
 
     def _eval_adjoint(self):
         return self.func(*[t.adjoint() for t in self.args])
@@ -1103,9 +1123,10 @@ class Add(Expr, AssocOp):
 
     def __neg__(self):
         if not global_parameters.distribute:
-            return super(Add, self).__neg__()
+            return super().__neg__()
         return Add(*[-i for i in self.args])
 
+add = AssocOpDispatcher('add')
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

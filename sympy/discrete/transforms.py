@@ -2,7 +2,6 @@
 Discrete Fourier Transform, Number Theoretic Transform,
 Walsh Hadamard Transform, Mobius Transform
 """
-from __future__ import print_function, division, unicode_literals
 
 from sympy.core import S, Symbol, sympify
 from sympy.core.compatibility import as_int, iterable

@@ -320,7 +320,7 @@ def dimension(*args):
 
 assumed_size = dimension('*')
 
-def array(symbol, dim, intent=None, **kwargs):
+def array(symbol, dim, intent=None, *, attrs=(), value=None, type=None):
     """ Convenience function for creating a Variable instance for a Fortran array
 
     Parameters
@@ -354,17 +354,15 @@ def array(symbol, dim, intent=None, **kwargs):
     else:
         dim = dimension(*dim)
 
-    attrs = list(kwargs.pop('attrs', [])) + [dim]
+    attrs = list(attrs) + [dim]
     if intent is not None:
         if intent not in (intent_in, intent_out, intent_inout):
             intent = {'in': intent_in, 'out': intent_out, 'inout': intent_inout}[intent]
         attrs.append(intent)
-    value = kwargs.pop('value', None)
-    type_ = kwargs.pop('type', None)
-    if type_ is None:
+    if type is None:
         return Variable.deduced(symbol, value=value, attrs=attrs)
     else:
-        return Variable(symbol, type_, value=value, attrs=attrs)
+        return Variable(symbol, type, value=value, attrs=attrs)
 
 def _printable(arg):
     return String(arg) if isinstance(arg, str) else sympify(arg)
@@ -454,7 +452,7 @@ def size(array, dim=None, kind=None):
 
     >>> from sympy import Symbol
     >>> from sympy.printing import fcode
-    >>> from sympy.codegen.ast import FunctionDefinition, real, Return, Variable
+    >>> from sympy.codegen.ast import FunctionDefinition, real, Return
     >>> from sympy.codegen.fnodes import array, sum_, size
     >>> a = Symbol('a', real=True)
     >>> body = [Return((sum_(a**2)/size(a))**.5)]
@@ -505,8 +503,8 @@ def bind_C(name=None):
 
     >>> from sympy import Symbol
     >>> from sympy.printing import fcode
-    >>> from sympy.codegen.ast import FunctionDefinition, real, Return, Variable
-    >>> from sympy.codegen.fnodes import array, sum_, size, bind_C
+    >>> from sympy.codegen.ast import FunctionDefinition, real, Return
+    >>> from sympy.codegen.fnodes import array, sum_, bind_C
     >>> a = Symbol('a', real=True)
     >>> s = Symbol('s', integer=True)
     >>> arr = array(a, dim=[s], intent='in')
@@ -569,7 +567,7 @@ class FFunction(Function):
         if printer._settings['standard'] < self._required_standard:
             raise NotImplementedError("%s requires Fortran %d or newer" %
                                       (name, self._required_standard))
-        return '{0}({1})'.format(name, ', '.join(map(printer._print, self.args)))
+        return '{}({})'.format(name, ', '.join(map(printer._print, self.args)))
 
 
 class F95Function(FFunction):
@@ -606,7 +604,7 @@ class _literal(Float):
     _decimals = None  # type: int
 
     def _fcode(self, printer, *args, **kwargs):
-        mantissa, sgnd_ex = ('%.{0}e'.format(self._decimals) % self).split('e')
+        mantissa, sgnd_ex = ('%.{}e'.format(self._decimals) % self).split('e')
         mantissa = mantissa.strip('0').rstrip('.')
         ex_sgn, ex_num = sgnd_ex[0], sgnd_ex[1:].lstrip('0')
         ex_sgn = '' if ex_sgn == '+' else ex_sgn
