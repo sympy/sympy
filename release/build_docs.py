@@ -2,7 +2,7 @@
 
 
 import os
-from os.path import dirname, join
+from os.path import dirname, join, basename
 from os import chdir
 import shutil
 
@@ -10,19 +10,18 @@ from helpers import run
 
 
 ROOTDIR = dirname(dirname(__file__))
+DOCSDIR = join(ROOTDIR, 'doc')
 
 
 def main(version, outputdir):
     check_version(version, outputdir)
     os.makedirs(outputdir, exist_ok=True)
 
-    build_html(ROOTDIR, outputdir, version)
+    build_html(DOCSDIR, outputdir, version)
+    build_latex(DOCSDIR, outputdir, version)
 
-    build_latex(ROOTDIR, outputdir, version)
 
-
-def build_html(rootdir, outputdir, version):
-    docsdir = join(rootdir, 'doc')
+def build_html(docsdir, outputdir, version):
     run('make', 'clean', cwd=docsdir)
     run('make', 'html', cwd=docsdir)
 
@@ -39,8 +38,7 @@ def build_html(rootdir, outputdir, version):
     shutil.move(join(builddir, zipname), join(outputdir, zipname))
 
 
-def build_latex(rootdir, outputdir, version):
-    docsdir = join(rootdir, 'doc')
+def build_latex(docsdir, outputdir, version):
     run('make', 'clean', cwd=docsdir)
     run('make', 'latex', cwd=docsdir)
 
@@ -61,7 +59,7 @@ def check_version(version, outputdir):
     if version != checked_out_version:
         msg = "version %s does not match checkout %s"
         raise AssertionError(msg % (version, checked_out_version))
-    if outputdir != 'release-%s' % (version,):
+    if basename(outputdir) != 'release-%s' % (version,):
         msg = "version %s does not match outputdir %s"
         raise AssertionError(msg % (version, outputdir))
 
