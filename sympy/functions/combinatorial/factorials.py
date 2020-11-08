@@ -389,20 +389,37 @@ class subfactorial(CombinatorialFunction):
 
 
 class factorial2(CombinatorialFunction):
-    r"""The double factorial `n!!`, not to be confused with `(n!)!`
+    r"""The double factorial `n!!`, is not to be confused with `(n!)!`.
 
-    The double factorial is defined for nonnegative integers and for odd
-    negative integers as:
+    The double factorial of a positive integer n is defined as:
 
-    .. math:: n!! = \begin{cases} 1 & n = 0 \\
-                    n(n-2)(n-4) \cdots 1 & n\ \text{positive odd} \\
-                    n(n-2)(n-4) \cdots 2 & n\ \text{positive even} \\
-                    (n+2)!!/(n+2) & n\ \text{negative odd} \end{cases}
+    .. math:: n!! = \begin{cases}
+                    n (n-2) (n-4) \cdots 1 & n > 0\ \text{odd} \\
+                    n (n-2) (n-4) \cdots 2 & n > 0\ \text{even} \\
+                    1 & n = 0, -1
+                    \end{cases}
+
+    The double factorial is not well defined at negative even integers,
+    but its value at odd negative integers can be calculated using:
+
+    .. math:: (-n)!! = \frac{-1^{(n-1)/2} \times n}{n!!}
+
+    The double factorial of a odd negative integer is also given by:
+
+    .. math:: n!! = \frac{(n + 2)!!}{n + 2}
+
+    More generally, the double factorial for real valued arguments is computed by [3]_:
+
+    .. math:: n!! = 2^{n/2}
+                    \left(\frac{2}{\pi}\right)^{\frac{1}{4}(1-\cos(\pi n))}
+                    \Gamma\left(\frac{n}{2}+1\right)
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Double_factorial
+    .. [2] https://mathworld.wolfram.com/DoubleFactorial.html
+    .. [3] http://functions.wolfram.com/06.02.02.0001.01
 
     Examples
     ========
@@ -419,6 +436,10 @@ class factorial2(CombinatorialFunction):
     1
     >>> factorial2(-5)
     1/3
+    >>> factorial2(-8)
+    zoo
+    >>> factorial2(S(1)/2)
+    factorial2(1/2)
 
     See Also
     ========
@@ -433,7 +454,7 @@ class factorial2(CombinatorialFunction):
         if arg.is_complex and not arg.is_extended_real:
             raise ValueError("argument must be a real value")
 
-        if arg.is_zero:
+        if arg.is_zero or arg is S.NegativeOne:
             return S.One
         if arg is S.Infinity:
             return S.Infinity
@@ -498,7 +519,7 @@ class factorial2(CombinatorialFunction):
         return 2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi*n))/4) * gamma(n/2 + 1)
 
     def _eval_rewrite_as_factorial(self, n, **kwargs):
-        from sympy import gamma, cos
+        from sympy import cos
         return 2 ** (n / 2) * (2 / pi) ** ((1 - cos(pi*n))/4) * factorial(n/2)
 
     def _eval_rewrite_as_gamma(self, n, **kwargs):
