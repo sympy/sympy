@@ -424,7 +424,7 @@ class factorial2(CombinatorialFunction):
     Examples
     ========
 
-    >>> from sympy import factorial2, var
+    >>> from sympy import factorial2, var, S
     >>> n = var('n')
     >>> n
     n
