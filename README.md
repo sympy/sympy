@@ -6,7 +6,7 @@
 [![Zenodo Badge](https://zenodo.org/badge/18918/sympy/sympy.svg)](https://zenodo.org/badge/latestdoi/18918/sympy/sympy)
 [![codecov Badge](https://codecov.io/gh/sympy/sympy/branch/master/graph/badge.svg)](https://codecov.io/gh/sympy/sympy)
 
-A Python library for symbolic mathematics.
+![SymPy Banner](banner.svg)
 
 <https://sympy.org/>
 
