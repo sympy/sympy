@@ -1,8 +1,5 @@
 from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
-from sympy.core.compatibility import unicode
 from sympy.core.evalf import EvalfMixin, prec_to_dps
-from .printing import (VectorLatexPrinter, VectorPrettyPrinter,
-                       VectorStrPrinter)
 from sympy.printing.defaults import Printable
 
 __all__ = ['Dyadic']
