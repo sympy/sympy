@@ -95,3 +95,10 @@ def test_dyadic_subs():
 
 def test_check_dyadic():
     raises(TypeError, lambda: _check_dyadic(0))
+
+
+def test_dyadic_evalf():
+    N = ReferenceFrame('N')
+    s = symbols('s')
+    a = 5* s *(N.x | N.x)
+    assert a.evalf() == 5.0 * s * (N.x | N.x)

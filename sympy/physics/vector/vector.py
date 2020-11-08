@@ -52,6 +52,12 @@ class Vector(EvalfMixin):
             if v != Matrix([0, 0, 0]):
                 self.args.append((v, k))
 
+    @property
+    def func(self):
+        return Vector
+
+    is_number = False
+
     def __hash__(self):
         return hash(tuple(self.args))
 

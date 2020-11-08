@@ -172,8 +172,8 @@ def test_vector_simplify():
 
 
 def test_vector_evalf():
-    a, b, c = symbols('a, b, c')
-    B = A.orientnew('B', 'Axis', (pi, A.x))
-    v = a*pi*A.x + b*2*pi*B.x + c*3*pi*B.z
-    assert v._eval_evalf(3) == 3.0*a*A.x + 6.0*b*B.x + 9.0*c*B.z
-    
+    a, b = symbols('a b')
+    v = 5 * A.x
+    assert v.evalf() == 5.0 * A.x
+    v = pi * A.x + 5 * a * A.y - b * A.z
+    assert str(v.evalf(3)) == '3.14*A.x + 5.0*a*A.y - b*A.z'
