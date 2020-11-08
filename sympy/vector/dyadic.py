@@ -7,6 +7,7 @@ from sympy.core.expr import AtomicExpr
 from sympy import ImmutableMatrix as Matrix
 import sympy.vector
 
+
 class Dyadic(BasisDependent):
     """
     Super class for all Dyadic-classes.
