@@ -1,7 +1,7 @@
 from sympy import (S, Symbol, symbols, factorial, factorial2, Float, binomial,
                    rf, ff, gamma, polygamma, EulerGamma, O, pi, nan,
                    oo, zoo, simplify, expand_func, Product, Mul, Piecewise,
-                   Mod, Eq, sqrt, Poly, Dummy, I, Rational, cos)
+                   Mod, sqrt, Poly, Dummy, I, Rational, cos)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.core.numbers import comp
