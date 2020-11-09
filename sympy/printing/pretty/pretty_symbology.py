@@ -612,7 +612,7 @@ def annotated(letter):
 
 def is_combining(sym):
     """Check whether symbol is a unicode modifier. """
-    
+
     return True if ('\N{COMBINING GRAVE ACCENT}' <= sym <=
                     '\N{COMBINING LATIN SMALL LETTER X}' or
 
