@@ -21,8 +21,9 @@ class CompanionMatrix(MatrixExpr):
     x, domain='ZZ[c0,c1,c2,c3,c4]'))
     """
     def __new__(cls, poly):
-        poly = _sympify(poly)
-        if not isinstance(poly, Poly):
+        try:
+            poly = _sympify(poly, Poly)
+        except NotImplementedError:
             raise ValueError("{} must be a Poly instance.".format(poly))
         if not poly.is_monic:
             raise ValueError("{} must be a monic polynomial.".format(poly))

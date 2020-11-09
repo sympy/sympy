@@ -75,9 +75,9 @@ class PowerSet(Set):
         if evaluate is None:
             evaluate=global_parameters.evaluate
 
-        arg = _sympify(arg)
-
-        if not isinstance(arg, Set):
+        try:
+            arg = _sympify(arg, Set)
+        except NotImplementedError:
             raise ValueError('{} must be a set.'.format(arg))
 
         return super(PowerSet, cls).__new__(cls, arg)

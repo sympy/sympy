@@ -95,8 +95,9 @@ class ConditionSet(Set):
         flat = flatten([sym])
         if has_dups(flat):
             raise BadSignatureError("Duplicate symbols detected")
-        base_set = _sympify(base_set)
-        if not isinstance(base_set, Set):
+        try:
+            base_set = _sympify(base_set, Set)
+        except NotImplementedError:
             raise TypeError(
                 'base set should be a Set object, not %s' % base_set)
         condition = _sympify(condition)

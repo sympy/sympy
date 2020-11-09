@@ -59,8 +59,9 @@ class PermutationMatrix(MatrixExpr):
     def __new__(cls, perm):
         from sympy.combinatorics.permutations import Permutation
 
-        perm = _sympify(perm)
-        if not isinstance(perm, Permutation):
+        try:
+            perm = _sympify(perm, Permutation)
+        except NotImplementedError:
             raise ValueError(
                 "{} must be a SymPy Permutation instance.".format(perm))
 

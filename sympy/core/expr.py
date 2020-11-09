@@ -134,10 +134,8 @@ class Expr(Basic, EvalfMixin):
 
     def __eq__(self, other):
         try:
-            other = _sympify(other)
-            if not isinstance(other, Expr):
-                return False
-        except (SympifyError, SyntaxError):
+            other = _sympify(other, Expr)
+        except (SympifyError, SyntaxError, NotImplementedError):
             return False
         # check for pure number expr
         if  not (self.is_Number and other.is_Number) and (
