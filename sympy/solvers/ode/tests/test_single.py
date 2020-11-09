@@ -339,16 +339,34 @@ def test_nth_linear_constant_coeff_var_of_parameters():
     _ode_solver_test(_get_examples_ode_sol_nth_linear_var_of_parameters())
 
 
+
+@slow
+def test_nth_linear_constant_coeff_variation_of_parameters__integral():
+    # solve_variation_of_parameters shouldn't attempt to simplify the
+    # Wronskian if simplify=False.  If wronskian() ever gets good enough
+    # to simplify the result itself, this test might fail.
+    our_hint = 'nth_linear_constant_coeff_variation_of_parameters_Integral'
+    eq = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x)
+    sol_simp = dsolve(eq, f(x), hint=our_hint, simplify=True)
+    sol_nsimp = dsolve(eq, f(x), hint=our_hint, simplify=False)
+    assert sol_simp != sol_nsimp
+    assert checkodesol(eq, sol_simp, order=5, solve_for_func=False) == (True, 0)
+    assert checkodesol(eq, sol_simp, order=5, solve_for_func=False) == (True, 0)
+
+
 @slow
 def test_slow_examples_1st_exact():
     _ode_solver_test(_get_examples_ode_sol_1st_exact(), run_slow_test=True)
 
 
 def test_1st_exact():
+    _ode_solver_test(_get_examples_ode_sol_1st_exact())
+
+
+def test_1st_exact_integral():
     eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
     sol_1 = dsolve(eq, f(x), simplify=False, hint='1st_exact_Integral')
     assert checkodesol(eq, sol_1, order=1, solve_for_func=False)
-    _ode_solver_test(_get_examples_ode_sol_1st_exact())
 
 
 @slow
