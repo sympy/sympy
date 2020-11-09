@@ -378,12 +378,12 @@ class Beam:
         loc = sympify(loc)
         self._applied_supports.append((loc, type))
         if type == "pin" or type == "roller":
-            reaction_load = Symbol('R_'+str(loc))
+            reaction_load = Symbol('R_'+str(loc).rstrip('0'))
             self.apply_load(reaction_load, loc, -1)
             self.bc_deflection.append((loc, 0))
         else:
-            reaction_load = Symbol('R_'+str(loc))
-            reaction_moment = Symbol('M_'+str(loc))
+            reaction_load = Symbol('R_'+str(loc).rstrip('0'))
+            reaction_moment = Symbol('M_'+str(loc).rstrip('0'))
             self.apply_load(reaction_load, loc, -1)
             self.apply_load(reaction_moment, loc, -2)
             self.bc_deflection.append((loc, 0))
