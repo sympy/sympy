@@ -4,7 +4,7 @@ import concurrent.futures
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, log, oo, pi, signsimp, simplify, sin,
-    sqrt, symbols, sympify, trigsimp, tan, sstr, diff, Function, expand)
+    sqrt, symbols, sympify, trigsimp, tan, sstr, diff, Function, expand, FiniteSet)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
     _simplify)
@@ -2276,10 +2276,8 @@ def test_GramSchmidt():
     assert GramSchmidt([Matrix([3, 1]), Matrix([2, 2])], True) == [
         Matrix([3*sqrt(10)/10, sqrt(10)/10]),
         Matrix([-sqrt(10)/10, 3*sqrt(10)/10])]
-    # Issue #9488
-    from sympy import FiniteSet
+    # https://github.com/sympy/sympy/issues/9488
     L = FiniteSet(Matrix([1]))
-    print(GramSchmidt(L))
     assert GramSchmidt(L) == [Matrix([[1]])]
 
 
