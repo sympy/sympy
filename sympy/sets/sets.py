@@ -794,6 +794,12 @@ class ProductSet(Set):
                 'number of symbols must match the number of sets')
         return And(*[s.as_relational(i) for s, i in zip(self.sets, symbols)])
 
+    def _eval_evalf(self, prec):
+        try:
+            return self.func(*[arg._evalf(prec) for arg in self.args])
+        except (TypeError, ValueError, NotImplementedError):
+            raise TypeError("Not all sets are evalf-able")
+
     @property
     def _boundary(self):
         return Union(*(ProductSet(*(b + b.boundary if i != j else b.boundary
@@ -1578,7 +1584,10 @@ class Complement(Set):
         return And(A_rel, B_rel)
 
     def _eval_evalf(self, prec):
-        return self.func(*[arg._evalf(prec) for arg in self.args])
+        try:
+            return self.func(*[arg._evalf(prec) for arg in self.args])
+        except (TypeError, ValueError, NotImplementedError):
+            raise TypeError("Not all sets are evalf-able")
 
     @property
     def is_iterable(self):
@@ -1997,6 +2006,12 @@ class SymmetricDifference(Set):
 
         return Xor(A_rel, B_rel)
 
+    def _eval_evalf(self, prec):
+        try:
+            return self.func(*[arg._evalf(prec) for arg in self.args])
+        except (TypeError, ValueError, NotImplementedError):
+            raise TypeError("Not all sets are evalf-able")
+
     @property
     def is_iterable(self):
         if all(arg.is_iterable for arg in self.args):
@@ -2067,6 +2082,12 @@ class DisjointUnion(Set):
     def is_finite_set(self):
         all_finite = fuzzy_and(s.is_finite_set for s in self.sets)
         return fuzzy_or([self.is_empty, all_finite])
+
+    def _eval_evalf(self, prec):
+        try:
+            return self.func(*[arg._evalf(prec) for arg in self.args])
+        except (TypeError, ValueError, NotImplementedError):
+            raise TypeError("Not all sets are evalf-able")
 
     @property
     def is_iterable(self):
