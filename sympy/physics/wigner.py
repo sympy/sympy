@@ -11,7 +11,7 @@ Please see the description of the individual functions for further
 details and examples.
 
 References
-~~~~~~~~~~
+==========
 
 .. [Regge58] 'Symmetry Properties of Clebsch-Gordan Coefficients',
   T. Regge, Nuovo Cimento, Volume 10, pp. 544 (1958)
@@ -62,15 +62,20 @@ def _calc_factlist(nn):
     massively accelerate future calculations of the various
     coefficients.
 
-    INPUT:
+    Parameters
+    ==========
 
-    -  ``nn`` -  integer, highest factorial to be computed
+    ``nn`` : integer
+        Highest factorial to be computed.
 
-    OUTPUT:
+    Returns
+    =======
 
-    list of integers -- the list of precomputed factorials
+    list of integers :
+        The list of precomputed factorials.
 
-    EXAMPLES:
+    Examples
+    ========
 
     Calculate list of factorials::
 

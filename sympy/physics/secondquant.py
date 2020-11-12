@@ -495,7 +495,7 @@ class FermionicOperator(SqOperator):
 
         Returns
         =======
-    
+
         1  : restricted to orbits above fermi
         0  : no restriction
         -1 : restricted to orbits below fermi
