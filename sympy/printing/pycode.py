@@ -822,6 +822,9 @@ class NumPyPrinter(PythonCodePrinter):
         return "%s(%s)" % (self._module_format('numpy.mod'), ', '.join(
             map(lambda arg: self._print(arg), expr.args)))
 
+    def _print_heaviside(self, expr):
+        return "%s(%s,%s)" % (self._module_format('numpy.sinc'), self._print(expr.args[0], self._print(0)))
+
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format('numpy.real'), self._print(expr.args[0]))
 
