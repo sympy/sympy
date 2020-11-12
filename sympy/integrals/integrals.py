@@ -180,7 +180,7 @@ class Integral(AddWithLimits):
         =====
 
         The mappings, F(x) or f(u), must lead to a unique integral. Linear
-        or rational linear expression, ``2*x``, ``1/x` and ``sqrt(x)``, will
+        or rational linear expression, ``2*x``, ``1/x`` and ``sqrt(x)``, will
         always work; quadratic expressions like ``x**2 - 1`` are acceptable
         as long as the resulting integrand does not depend on the sign of
         the solutions (see examples).
@@ -1190,6 +1190,9 @@ class Integral(AddWithLimits):
         evaluate : bool
             If False, returns an unevaluated Sum expression. The default
             is True, evaluate the sum.
+
+        Notes
+        =====
 
         These methods of approximate integration are described in [1].
 
