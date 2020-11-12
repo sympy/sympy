@@ -8,11 +8,14 @@ def R_nl(n, l, r, Z=1):
     """
     Returns the Hydrogen radial wavefunction R_{nl}.
 
-    n, l
-        quantum numbers 'n' and 'l'
-    r
+    Parameters
+    ==========
+
+    n, l :
+        Quantum numbers 'n' and 'l'.
+    r :
         radial coordinate
-    Z
+    Z :
         atomic number (1 for Hydrogen, 2 for Helium, ...)
 
     Everything is in Hartree atomic units.
@@ -87,15 +90,18 @@ def Psi_nlm(n, l, m, r, phi, theta, Z=1):
     Returns the Hydrogen wave function psi_{nlm}. It's the product of
     the radial wavefunction R_{nl} and the spherical harmonic Y_{l}^{m}.
 
-    n, l, m
+    Parameters
+    ==========
+
+    n, l, m :
         quantum numbers 'n', 'l' and 'm'
-    r
+    r :
         radial coordinate
-    phi
+    phi :
         azimuthal angle
-    theta
+    theta :
         polar angle
-    Z
+    Z :
         atomic number (1 for Hydrogen, 2 for Helium, ...)
 
     Everything is in Hartree atomic units.
@@ -177,15 +183,18 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     The energy is calculated from the Dirac equation. The rest mass energy is
     *not* included.
 
-    n, l
+    Parameters
+    ==========
+
+    n, l :
         quantum numbers 'n' and 'l'
-    spin_up
+    spin_up :
         True if the electron spin is up (default), otherwise down
-    Z
+    Z :
         atomic number (1 for Hydrogen, 2 for Helium, ...)
-    c
+    c :
         speed of light in atomic units. Default value is 137.035999037,
-        taken from: http://arxiv.org/abs/1012.3627
+        taken from [1].
 
     Examples
     ========
@@ -211,6 +220,11 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     -0.0555556377366884
     >>> E_nl_dirac(3, 2, False)
     -0.0555558020932949
+
+    References
+    ==========
+
+    .. [1] http://arxiv.org/abs/1012.3627
 
     """
     n, l, Z, c = map(S, [n, l, Z, c])
