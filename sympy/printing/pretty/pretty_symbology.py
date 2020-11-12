@@ -649,7 +649,8 @@ def center_accent(string, accent):
     return firstpart + accent + secondpart
 
 
-_remove_combining = dict.fromkeys(list(range(768, 880)) + list(range(8400, 8433)))
+_remove_combining = dict.fromkeys(list(range(ord('\N{COMBINING GRAVE ACCENT}'), ord('\N{COMBINING LATIN SMALL LETTER X}')))
+                                + list(range(ord('\N{COMBINING LEFT HARPOON ABOVE}'), ord('\N{COMBINING ASTERISK ABOVE}'))))
 
 
 def line_width(line):
