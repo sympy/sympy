@@ -163,23 +163,32 @@ class SampleContinuousScipy:
         # I will remove all these comments if everything is ok.
         scipy_rv_map = {
             'BetaDistribution': lambda dist, size: st.beta.rvs(
-                a=float(dist.alpha), b=float(dist.beta), size=size),  # same parametrisation
+                a=float(dist.alpha), b=float(dist.beta), size=size),
+            # same parametrisation
+            'CauchyDistribution': lambda dist, size: st.cauchy.rvs(
+                loc=float(dist.x0), scale=float(dist.gamma), size=size),
+            # same parametrisation
             'ChiSquaredDistribution': lambda dist, size: st.chi2.rvs(
-                df=float(dist.k), size=size),  # same parametrisation
+                df=float(dist.k), size=size),
+            # same parametrisation
             'ExponentialDistribution': lambda dist, size: st.expon.rvs(
                 scale=1 / float(dist.rate), size=size),
             # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.expon.html#scipy.stats.expon
             'GammaDistribution': lambda dist, size: st.gamma.rvs(
                 a=float(dist.k), scale=float(dist.theta), size=size),
-            # assuming scale!=1/theta https://stackoverflow.com/questions/42150965/how-to-plot-gamma-distribution-with-alpha-and-beta-parameters-in-python
+            # https://stackoverflow.com/questions/42150965/how-to-plot-gamma-distribution-with-alpha-and-beta-parameters-in-python
             'LogNormalDistribution': lambda dist, size: st.lognorm.rvs(
                 scale=float(exp(dist.mean)), s=float(dist.std), size=size),
             # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html
             'NormalDistribution': lambda dist, size: st.norm.rvs(
-                loc=float(dist.mean), scale=float(dist.std), size=size),  # same parametrisation
+                loc=float(dist.mean), scale=float(dist.std), size=size),
+            # same parametrisation
             'ParetoDistribution': lambda dist, size: st.pareto.rvs(
                 b=float(dist.alpha), scale=float(dist.xm), size=size),
             # https://stackoverflow.com/questions/42260519/defining-pareto-distribution-in-python-scipy
+            'StudentTDistribution': lambda dist, size: st.t.rvs(
+                df=float(dist.nu), size=size),
+            # same parametrisation
             'UniformDistribution': lambda dist, size: st.uniform.rvs(
                 loc=float(dist.left), scale=float(dist.right - dist.left), size=size)
             # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
