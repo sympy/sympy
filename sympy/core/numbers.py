@@ -3826,6 +3826,55 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         import sage.all as sage
         return sage.catalan
 
+class Heaviside0(NumberSymbol, metaclass=Singleton):
+    r"""Value of Heaviside step function at 0.
+
+    Explanation
+    ===========
+
+    `Heaviside0` represents the value of the Heaviside step function at 
+    its discontinuity, `x=0`. The Heaviside function is 0 for negative 
+    `x` and 1 for positive `x`; the value at 0 depends on convention.
+    Typically it is given as `undefined`, `0`, `1`, or `1/2`.
+    The chosen value can be passed to S.heaviside as a secondary argument.
+
+    Here, the value of the function is given as 0. 
+
+    Heaviside0 is a singleton, and can be accessed by ``S.Heaviside0``.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> S.Heaviside0.is_irrational
+    >>> S.Heaviside0 == 0
+    True
+    >>> S.Heaviside < 0
+    False
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Heaviside_step_function#Zero_argument
+    """
+
+    is_real = True
+    is_positive = False
+    is_negative = False
+    is_irrational = None
+    is_number = True
+
+    __slots__ = ()
+
+    def __int__(self):
+        return 0
+
+    def _eval_evalf(self):
+        return 0
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.heaviside(0)
 
 class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
     r"""The imaginary unit, `i = \sqrt{-1}`.
