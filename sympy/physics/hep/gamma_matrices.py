@@ -77,7 +77,7 @@ def simplify_gamma_expression(expression):
 
 def simplify_gpgp(ex, sort=True):
     """
-    simplify products ``G(i)*p(-i)*G(j)*p(-j) -> p(i)*p(-i)``
+    simplify products ``G(i)*p(-i)*G(j)*p(-j) -> p(i)*p(-i)``.
 
     Examples
     ========
@@ -91,6 +91,7 @@ def simplify_gpgp(ex, sort=True):
     >>> qs = q(i0)*G(-i0)
     >>> simplify_gpgp(ps*qs*qs)
     GammaMatrix(-L_0)*p(L_0)*q(L_1)*q(-L_1)
+
     """
     def _simplify_gpgp(ex):
         components = ex.components
