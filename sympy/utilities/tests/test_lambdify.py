@@ -998,6 +998,14 @@ def test_issue_13642():
     f = lambdify(x, sinc(x))
     assert Abs(f(1) - sinc(1)).n() < 1e-15
 
+def test_issue_13176():
+    if not numpy:
+        skip("numpy not installed")
+    f = lambdify(x, heaviside(x))
+    res = f([-1, 0, 1])
+    assert Abs(res[0]).n() < 1e-15
+    assert Abs(res[1] - S.Heaviside0).n() < 1e-15
+    assert Abs(res[2] - 1).n() < 1e-15
 
 def test_sinc_mpmath():
     f = lambdify(x, sinc(x), "mpmath")
