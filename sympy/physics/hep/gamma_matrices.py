@@ -411,7 +411,7 @@ def kahane_simplify(expression):
 
     .. [1] Algorithm for Reducing Contracted Products of gamma Matrices,
     Joseph Kahane, Journal of Mathematical Physics, Vol. 9, No. 10, October 1968.
-    
+
     """
 
     if isinstance(expression, Mul):
