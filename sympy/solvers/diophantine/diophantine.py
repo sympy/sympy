@@ -140,7 +140,7 @@ class DiophantineEquationType:
     """
     Internal representation of a particular diophantine equation type.
 
-    Parameters
+    Attributes
     ==========
 
     equation :
@@ -422,8 +422,8 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     e.g. For an equation with two variables, `a` and `b`, the first
     element of the tuple is the solution for `a` and the second for `b`.
 
-    Parameters
-    ==========
+    Usage
+    =====
 
     ``diophantine(eq, t, syms)``: Solve the diophantine
     equation ``eq``.
