@@ -309,6 +309,9 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         >>> cg._get_contraction_tuples()
         [[(0, 1), (1, 0)]]
 
+        Notes
+        =====
+
         Here the contraction pair `(1, 2)` meaning that the 2nd and 3rd indices
         of the tensor product `A\otimes B` are contracted, has been transformed
         into `(0, 1)` and `(1, 0)`, identifying the same indices in a different
@@ -624,6 +627,9 @@ def nest_permutation(expr):
 class CodegenArrayDiagonal(_CodegenArrayAbstract):
     r"""
     Class to represent the diagonal operator.
+
+    Explanation
+    ===========
 
     In a 2-dimensional array it returns the diagonal, this looks like the
     operation:
