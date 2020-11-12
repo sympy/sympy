@@ -363,12 +363,6 @@ class BlockMatrix(MatrixExpr):
 
         NonInvertibleMatrixError
             If the matrix "A" is non-invertible
-
-        See Also
-        ========
-
-        sympy.matrices.expressions.BlockMatrix.UDLdecomposition
-        sympy.matrices.expressions.BlockMatrix.LUdecomposition
         """
         if self.blockshape == (2,2):
             [[A, B],
@@ -424,12 +418,6 @@ class BlockMatrix(MatrixExpr):
 
         NonInvertibleMatrixError
             If the matrix "D" is non-invertible
-
-        See Also
-        ========
-
-        sympy.matrices.expressions.BlockMatrix.LDUdecomposition
-        sympy.matrices.expressions.BlockMatrix.LUdecomposition
         """
         if self.blockshape == (2,2):
             [[A, B],
@@ -484,12 +472,6 @@ class BlockMatrix(MatrixExpr):
 
         NonInvertibleMatrixError
             If the matrix "A" is non-invertible
-
-        See Also
-        ========
-
-        sympy.matrices.expressions.BlockMatrix.UDLdecomposition
-        sympy.matrices.expressions.BlockMatrix.LDUdecomposition
         """
         if self.blockshape == (2,2):
             [[A, B],
