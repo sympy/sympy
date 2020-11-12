@@ -55,11 +55,11 @@ def energy(n, m, r):
     Parameters
     ==========
 
-    n :
+    ``n`` :
         The quantum number.
-    m :
+    ``m`` :
         The mass of the particle.
-    r :
+    ``r`` :
         The radius of circle.
 
     Examples
