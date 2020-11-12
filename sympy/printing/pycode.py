@@ -822,8 +822,9 @@ class NumPyPrinter(PythonCodePrinter):
         return "%s(%s)" % (self._module_format('numpy.mod'), ', '.join(
             map(lambda arg: self._print(arg), expr.args)))
 
-    def _print_heaviside(self, expr):
-        return "%s(%s,%s)" % (self._module_format('numpy.sinc'), self._print(expr.args[0], self._print(0)))
+    def _print_Heaviside(self, expr):
+        heaviside0 = 0 # Value of heaviside at x=0. Options include 0, 1/2, 1
+        return "%s(%s,%s)" % (self._module_format('numpy.heaviside'), self._print(expr.args[0], self._print(heaviside0)))
 
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format('numpy.real'), self._print(expr.args[0]))
