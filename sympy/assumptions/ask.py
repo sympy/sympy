@@ -1122,6 +1122,9 @@ class AssumptionKeys:
         """
         Real elements matrix predicate.
 
+        Explanation
+        ===========
+
         ``Q.real_elements(x)`` is true iff all the elements of ``x``
         are real numbers.
 
@@ -1140,6 +1143,9 @@ class AssumptionKeys:
     def complex_elements(self):
         """
         Complex elements matrix predicate.
+
+        Explanation
+        ===========
 
         ``Q.complex_elements(x)`` is true iff all the elements of ``x``
         are complex numbers.
@@ -1210,11 +1216,15 @@ class AssumptionKeys:
         """
         Triangular matrix predicate.
 
+        Explanation
+        ===========
+
         ``Q.triangular(X)`` is true if ``X`` is one that is either lower
         triangular or upper triangular.
 
         Examples
         ========
+
         >>> from sympy import Q, ask, MatrixSymbol
         >>> X = MatrixSymbol('X', 4, 4)
         >>> ask(Q.triangular(X), Q.upper_triangular(X))
@@ -1234,6 +1244,9 @@ class AssumptionKeys:
     def unit_triangular(self):
         """
         Unit triangular matrix predicate.
+
+        Explanation
+        ===========
 
         A unit triangular matrix is a triangular matrix with 1s
         on the diagonal.
@@ -1255,6 +1268,9 @@ Q = AssumptionKeys()
 def _extract_facts(expr, symbol, check_reversed_rel=True):
     """
     Helper for ask().
+
+    Explanation
+    ===========
 
     Extracts the facts relevant to the symbol from an assumption.
     Returns None if there is nothing to extract.
@@ -1310,6 +1326,9 @@ def _extract_all_facts(expr, symbol):
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
     Method for inferring properties about objects.
+
+    Explanation
+    ===========
 
     **Syntax**
 
@@ -1455,6 +1474,9 @@ def single_fact_lookup(known_facts_keys, known_facts_cnf):
 def compute_known_facts(known_facts, known_facts_keys):
     """Compute the various forms of knowledge compilation used by the
     assumptions system.
+
+    Explanation
+    ===========
 
     This function is typically applied to the results of the ``get_known_facts``
     and ``get_known_facts_keys`` functions defined at the bottom of
