@@ -2,7 +2,7 @@
 
 
 import os
-from os.path import dirname, join, basename
+from os.path import dirname, join, basename, normpath
 from os import chdir
 import shutil
 
@@ -14,9 +14,7 @@ DOCSDIR = join(ROOTDIR, 'doc')
 
 
 def main(version, outputdir):
-    check_version(version, outputdir)
     os.makedirs(outputdir, exist_ok=True)
-
     build_html(DOCSDIR, outputdir, version)
     build_latex(DOCSDIR, outputdir, version)
 
@@ -52,16 +50,6 @@ def build_latex(docsdir, outputdir, version):
     src = join('doc', '_build', 'latex', filename)
     dst = join(outputdir, filename)
     shutil.copyfile(src, dst)
-
-
-def check_version(version, outputdir):
-    from sympy.release import __version__ as checked_out_version
-    if version != checked_out_version:
-        msg = "version %s does not match checkout %s"
-        raise AssertionError(msg % (version, checked_out_version))
-    if basename(outputdir) != 'release-%s' % (version,):
-        msg = "version %s does not match outputdir %s"
-        raise AssertionError(msg % (version, outputdir))
 
 
 if __name__ == "__main__":
