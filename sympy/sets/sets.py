@@ -635,6 +635,9 @@ class Set(Basic, EvalfMixin):
     def _measure(self):
         raise NotImplementedError("(%s)._measure" % self)
 
+    def _eval_evalf(self, prec):
+        return self.func(*[arg._evalf(prec) for arg in self.args])
+
     @sympify_return([('other', 'Set')], NotImplemented)
     def __add__(self, other):
         return self.union(other)
@@ -793,12 +796,6 @@ class ProductSet(Set):
             raise ValueError(
                 'number of symbols must match the number of sets')
         return And(*[s.as_relational(i) for s, i in zip(self.sets, symbols)])
-
-    def _eval_evalf(self, prec):
-        try:
-            return self.func(*[arg._evalf(prec) for arg in self.args])
-        except (TypeError, ValueError, NotImplementedError):
-            raise TypeError("Not all sets are evalf-able")
 
     @property
     def _boundary(self):
@@ -1093,10 +1090,6 @@ class Interval(Set):
         return mpi(mpf(self.start._eval_evalf(prec)),
             mpf(self.end._eval_evalf(prec)))
 
-    def _eval_evalf(self, prec):
-        return Interval(self.left._evalf(prec), self.right._evalf(prec),
-            left_open=self.left_open, right_open=self.right_open)
-
     def _is_comparable(self, other):
         is_comparable = self.start.is_comparable
         is_comparable &= self.end.is_comparable
@@ -1283,15 +1276,6 @@ class Union(Set, LatticeOp):
     @property
     def is_iterable(self):
         return all(arg.is_iterable for arg in self.args)
-
-    def _eval_evalf(self, prec):
-        try:
-            return Union(*(set._eval_evalf(prec) for set in self.args))
-        except (TypeError, ValueError, NotImplementedError):
-            import sys
-            raise (TypeError("Not all sets are evalf-able"),
-                   None,
-                   sys.exc_info()[2])
 
     def __iter__(self):
         return roundrobin(*(iter(arg) for arg in self.args))
@@ -1583,12 +1567,6 @@ class Complement(Set):
 
         return And(A_rel, B_rel)
 
-    def _eval_evalf(self, prec):
-        try:
-            return self.func(*[arg._evalf(prec) for arg in self.args])
-        except (TypeError, ValueError, NotImplementedError):
-            raise TypeError("Not all sets are evalf-able")
-
     @property
     def is_iterable(self):
         if self.args[0].is_iterable:
@@ -1657,9 +1635,6 @@ class EmptySet(Set, metaclass=Singleton):
     def as_relational(self, symbol):
         return false
 
-    def _eval_evalf(self, prec):
-        return self
-
     def __len__(self):
         return 0
 
@@ -1725,9 +1700,6 @@ class UniversalSet(Set, metaclass=Singleton):
 
     def as_relational(self, symbol):
         return true
-
-    def _eval_evalf(self, prec):
-        return self
 
     @property
     def _boundary(self):
@@ -1904,9 +1876,6 @@ class FiniteSet(Set):
     def compare(self, other):
         return (hash(self) - hash(other))
 
-    def _eval_evalf(self, prec):
-        return FiniteSet(*[elem._evalf(prec) for elem in self])
-
     @property
     def _sorted_args(self):
         return self.args
@@ -2006,12 +1975,6 @@ class SymmetricDifference(Set):
 
         return Xor(A_rel, B_rel)
 
-    def _eval_evalf(self, prec):
-        try:
-            return self.func(*[arg._evalf(prec) for arg in self.args])
-        except (TypeError, ValueError, NotImplementedError):
-            raise TypeError("Not all sets are evalf-able")
-
     @property
     def is_iterable(self):
         if all(arg.is_iterable for arg in self.args):
@@ -2082,12 +2045,6 @@ class DisjointUnion(Set):
     def is_finite_set(self):
         all_finite = fuzzy_and(s.is_finite_set for s in self.sets)
         return fuzzy_or([self.is_empty, all_finite])
-
-    def _eval_evalf(self, prec):
-        try:
-            return self.func(*[arg._evalf(prec) for arg in self.args])
-        except (TypeError, ValueError, NotImplementedError):
-            raise TypeError("Not all sets are evalf-able")
 
     @property
     def is_iterable(self):
