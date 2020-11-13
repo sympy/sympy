@@ -244,7 +244,7 @@ def _cholesky(M, hermitian=True):
     ========
 
     sympy.matrices.dense.DenseMatrix.LDLdecomposition
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -335,7 +335,7 @@ def _cholesky_sparse(M, hermitian=True):
     ========
 
     sympy.matrices.sparse.SparseMatrix.LDLdecomposition
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -446,7 +446,7 @@ def _LDLdecomposition(M, hermitian=True):
     ========
 
     sympy.matrices.dense.DenseMatrix.cholesky
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -927,7 +927,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
     See Also
     ========
 
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     LUdecompositionFF
     LUsolve
     """
@@ -1072,7 +1072,7 @@ def _LUdecompositionFF(M):
     See Also
     ========
 
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     LUdecomposition_Simple
     LUsolve
 
@@ -1300,7 +1300,7 @@ def _QRdecomposition(M):
 
     sympy.matrices.dense.DenseMatrix.cholesky
     sympy.matrices.dense.DenseMatrix.LDLdecomposition
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     QRsolve
     """
 
