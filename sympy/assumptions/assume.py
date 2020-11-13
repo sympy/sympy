@@ -213,7 +213,8 @@ class Predicate(Boolean):
 
 @contextmanager
 def assuming(*assumptions):
-    """ Context manager for assumptions.
+    """
+    Context manager for assumptions.
 
     Examples
     ========
