@@ -1004,7 +1004,7 @@ def test_issue_13176():
     f = lambdify(x, heaviside(x))
     res = f([-1, 0, 1])
     assert Abs(res[0]).n() < 1e-15
-    assert Abs(res[1] - S.Heaviside0).n() < 1e-15
+    assert Abs(res[1] - 0).n() < 1e-15
     assert Abs(res[2] - 1).n() < 1e-15
 
 def test_sinc_mpmath():
