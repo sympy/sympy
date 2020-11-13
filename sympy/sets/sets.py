@@ -1090,6 +1090,10 @@ class Interval(Set):
         return mpi(mpf(self.start._eval_evalf(prec)),
             mpf(self.end._eval_evalf(prec)))
 
+    def _eval_evalf(self, prec):
+        return Interval(self.left._evalf(prec), self.right._evalf(prec),
+            left_open=self.left_open, right_open=self.right_open)
+
     def _is_comparable(self, other):
         is_comparable = self.start.is_comparable
         is_comparable &= self.end.is_comparable
