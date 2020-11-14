@@ -23,6 +23,7 @@ from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
+from sympy.core.relational import Eq
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
@@ -2925,3 +2926,8 @@ def test_issue_19809():
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(f)
             assert future.result()
+
+def test_expand_eq():
+    M = Matrix([0, Eq(x, a)])
+    assert M.expand() == M
+    
