@@ -57,9 +57,9 @@ class Beam:
     >>> b.load
     -3*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 2, 0) - 9*SingularityFunction(x, 4, -1)
     >>> b.shear_force()
-    -3*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 2, 1) - 9*SingularityFunction(x, 4, 0)
+    3*SingularityFunction(x, 0, 0) - 6*SingularityFunction(x, 2, 1) + 9*SingularityFunction(x, 4, 0)
     >>> b.bending_moment()
-    -3*SingularityFunction(x, 0, 1) + 3*SingularityFunction(x, 2, 2) - 9*SingularityFunction(x, 4, 1)
+    3*SingularityFunction(x, 0, 1) - 3*SingularityFunction(x, 2, 2) + 9*SingularityFunction(x, 4, 1)
     >>> b.slope()
     (-3*SingularityFunction(x, 0, 2)/2 + SingularityFunction(x, 2, 3) - 9*SingularityFunction(x, 4, 2)/2 + 7)/(E*I)
     >>> b.deflection()
@@ -307,9 +307,9 @@ class Beam:
         >>> b.load
         80*SingularityFunction(x, 0, -2) - 20*SingularityFunction(x, 0, -1) + 20*SingularityFunction(x, 4, -1)
         >>> b.slope()
-        (((80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))/I - 120/I)/E + 80.0/(E*I))*SingularityFunction(x, 2, 0)
-        + 0.666666666666667*(80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I)
-        - 0.666666666666667*(80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
+        (-((-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))/I + 120/I)/E + 80.0/(E*I))*SingularityFunction(x, 2, 0)
+        - 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I)
+        + 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
@@ -831,10 +831,10 @@ class Beam:
         >>> b.bc_deflection = [(10, 0), (30, 0)]
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.shear_force()
-        -8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) + 120*SingularityFunction(x, 30, -1) + 2*SingularityFunction(x, 30, 0)
+        8*SingularityFunction(x, 0, 0) - 6*SingularityFunction(x, 10, 0) - 120*SingularityFunction(x, 30, -1) - 2*SingularityFunction(x, 30, 0)
         """
         x = self.variable
-        return integrate(self.load, x)
+        return -integrate(self.load, x)
 
     def max_shear_force(self):
         """Returns maximum Shear force and its coordinate
@@ -917,7 +917,7 @@ class Beam:
         >>> b.bc_deflection = [(10, 0), (30, 0)]
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.bending_moment()
-        -8*SingularityFunction(x, 0, 1) + 6*SingularityFunction(x, 10, 1) + 120*SingularityFunction(x, 30, 0) + 2*SingularityFunction(x, 30, 1)
+        8*SingularityFunction(x, 0, 1) - 6*SingularityFunction(x, 10, 1) - 120*SingularityFunction(x, 30, 0) - 2*SingularityFunction(x, 30, 1)
         """
         x = self.variable
         return integrate(self.shear_force(), x)
@@ -1064,7 +1064,7 @@ class Beam:
             for i in range(len(args)):
                 if i != 0:
                     prev_end = args[i-1][1].args[1]
-                slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                slope_value = -S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                 if i != len(args) - 1:
                     slope += (prev_slope + slope_value)*SingularityFunction(x, prev_end, 0) - \
                         (prev_slope + slope_value)*SingularityFunction(x, args[i][1].args[1], 0)
@@ -1074,7 +1074,7 @@ class Beam:
             return slope
 
         C3 = Symbol('C3')
-        slope_curve = integrate(S.One/(E*I)*self.bending_moment(), x) + C3
+        slope_curve = -integrate(S.One/(E*I)*self.bending_moment(), x) + C3
 
         bc_eqs = []
         for position, value in self._boundary_conditions['slope']:
@@ -1131,7 +1131,7 @@ class Beam:
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    slope_value = -S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                     recent_segment_slope = prev_slope + slope_value
                     deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                     if i != len(args) - 1:
@@ -1144,7 +1144,7 @@ class Beam:
                 return deflection
             base_char = self._base_char
             constants = symbols(base_char + '3:5')
-            return S.One/(E*I)*integrate(integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
+            return S.One/(E*I)*integrate(-integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
         elif not self._boundary_conditions['deflection']:
             base_char = self._base_char
             constant = symbols(base_char + '4')
@@ -1159,7 +1159,7 @@ class Beam:
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    slope_value = -S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                     recent_segment_slope = prev_slope + slope_value
                     deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                     if i != len(args) - 1:
@@ -1172,7 +1172,7 @@ class Beam:
                 return deflection
             base_char = self._base_char
             C3, C4 = symbols(base_char + '3:5')    # Integration constants
-            slope_curve = integrate(self.bending_moment(), x) + C3
+            slope_curve = -integrate(self.bending_moment(), x) + C3
             deflection_curve = integrate(slope_curve, x) + C4
             bc_eqs = []
             for position, value in self._boundary_conditions['deflection']:
@@ -1284,9 +1284,9 @@ class Beam:
             >>> b.solve_for_reaction_loads(R1, R2)
             >>> b.plot_shear_force()
             Plot object containing:
-            [0]: cartesian line: -13750*SingularityFunction(x, 0, 0) + 5000*SingularityFunction(x, 2, 0)
-            + 10000*SingularityFunction(x, 4, 1) - 31250*SingularityFunction(x, 8, 0)
-            - 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
+            [0]: cartesian line: 13750*SingularityFunction(x, 0, 0) - 5000*SingularityFunction(x, 2, 0)
+            - 10000*SingularityFunction(x, 4, 1) + 31250*SingularityFunction(x, 8, 0)
+            + 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
         """
         shear_force = self.shear_force()
         if subs is None:
@@ -1342,9 +1342,9 @@ class Beam:
             >>> b.solve_for_reaction_loads(R1, R2)
             >>> b.plot_bending_moment()
             Plot object containing:
-            [0]: cartesian line: -13750*SingularityFunction(x, 0, 1) + 5000*SingularityFunction(x, 2, 1)
-            + 5000*SingularityFunction(x, 4, 2) - 31250*SingularityFunction(x, 8, 1)
-            - 5000*SingularityFunction(x, 8, 2) for x over (0.0, 8.0)
+            [0]: cartesian line: 13750*SingularityFunction(x, 0, 1) - 5000*SingularityFunction(x, 2, 1)
+            - 5000*SingularityFunction(x, 4, 2) + 31250*SingularityFunction(x, 8, 1)
+            + 5000*SingularityFunction(x, 8, 2) for x over (0.0, 8.0)
         """
         bending_moment = self.bending_moment()
         if subs is None:
