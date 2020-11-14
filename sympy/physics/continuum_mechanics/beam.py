@@ -29,7 +29,10 @@ class Beam:
     .. note::
        While solving a beam bending problem, a user should choose its
        own sign convention and should stick to it. The results will
-       automatically follow the chosen sign convention.
+       automatically follow the chosen sign convention. However, the
+       chosen sign convention must respect the rule that on the positive
+       axis side of the section, a force giving positive shear yields a
+       negative moment.
 
     Examples
     ========
