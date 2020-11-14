@@ -82,8 +82,8 @@ def test_Beam():
 
     # Test for shear force distribution function
     p = b1.shear_force()
-    q = -8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) \
-    + 120*SingularityFunction(x, 30, -1) + 2*SingularityFunction(x, 30, 0)
+    q = 8*SingularityFunction(x, 0, 0) - 6*SingularityFunction(x, 10, 0) \
+    - 120*SingularityFunction(x, 30, -1) - 2*SingularityFunction(x, 30, 0)
     assert p == q
 
     # Test for shear stress distribution function
@@ -458,10 +458,10 @@ def test_apply_support():
     b.apply_load(20, 4, -1)
     M_0, R_0 = symbols('M_0, R_0')
     b.solve_for_reaction_loads(R_0, M_0)
-    assert b.slope() == (80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2)
-                + 10*SingularityFunction(x, 4, 2))/(E*I)
-    assert b.deflection() == (40*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 0, 3)/3
-                + 10*SingularityFunction(x, 4, 3)/3)/(E*I)
+    assert simplify(b.slope()) == simplify((80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2)
+                + 10*SingularityFunction(x, 4, 2))/(E*I))
+    assert simplify(b.deflection()) == simplify((40*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 0, 3)/3
+                + 10*SingularityFunction(x, 4, 3)/3)/(E*I))
 
     b = Beam(30, E, I)
     b.apply_support(10, "pin")
@@ -701,8 +701,8 @@ def test_cross_section():
     b1.solve_for_reaction_loads(R1, R2)
     assert b1.load == (-10*SingularityFunction(x, 0, -1) + 82*SingularityFunction(x, 5, -1)/S(9)
                          + 90*SingularityFunction(x, 45, -2) + 8*SingularityFunction(x, 50, -1)/9)
-    assert b1.bending_moment() == (-10*SingularityFunction(x, 0, 1) + 82*SingularityFunction(x, 5, 1)/9
-                                     + 90*SingularityFunction(x, 45, 0) + 8*SingularityFunction(x, 50, 1)/9)
+    assert b1.bending_moment() == (10*SingularityFunction(x, 0, 1) - 82*SingularityFunction(x, 5, 1)/9
+                                     - 90*SingularityFunction(x, 45, 0) - 8*SingularityFunction(x, 50, 1)/9)
     q = (-5*SingularityFunction(x, 0, 2) + 41*SingularityFunction(x, 5, 2)/S(9)
            + 90*SingularityFunction(x, 45, 1) + 4*SingularityFunction(x, 50, 2)/S(9))/(pi*E*r*Abs(r)**3)
     assert b1.slope() == C3 + 4*q
