@@ -88,9 +88,9 @@ def test_Beam():
 
     # Test for shear stress distribution function
     p = b1.shear_stress()
-    q = (-8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) \
-    + 120*SingularityFunction(x, 30, -1) \
-    + 2*SingularityFunction(x, 30, 0))/A
+    q = (8*SingularityFunction(x, 0, 0) - 6*SingularityFunction(x, 10, 0) \
+    - 120*SingularityFunction(x, 30, -1) \
+    - 2*SingularityFunction(x, 30, 0))/A
     assert p==q
 
     # Test for bending moment distribution function
@@ -362,7 +362,7 @@ def test_composite_beam():
     assert b.second_moment == Piecewise((1.5*I, x <= 2), (I, x <= 4))
     assert b.slope().subs(x, 4) == 120.0/(E*I)
     assert b.slope().subs(x, 2) == 80.0/(E*I)
-    assert int(b.deflection().subs(x, 4).args[0]) == 302  # Coefficient of 1/(E*I)
+    assert int(b.deflection().subs(x, 4).args[0]) == -302  # Coefficient of 1/(E*I)
 
     l = symbols('l', positive=True)
     R1, M1, R2, R3, P = symbols('R1 M1 R2 R3 P')
@@ -732,4 +732,4 @@ def test_cross_section():
     assert b.length == 35
     assert b.slope().subs(x, 7) == 8400/(E*a*c**3)
     assert b.slope().subs(x, 25) == 52200/(E*g*h**3) + 39600/(E*a*c**3)
-    assert b.deflection().subs(x, 30) == 537000/(E*g*h**3) + 712000/(E*a*c**3)
+    assert b.deflection().subs(x, 30) == -537000/(E*g*h**3) - 712000/(E*a*c**3)
