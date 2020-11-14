@@ -1,4 +1,4 @@
-from sympy import symbols, pi, sin, cos, ImmutableMatrix as Matrix
+from sympy import symbols, pi, sin, cos, sstr, ImmutableMatrix as Matrix
 from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols, dot
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
@@ -173,7 +173,7 @@ def test_vector_simplify():
 
 def test_vector_evalf():
     a, b = symbols('a b')
-    v = 5 * A.x
-    assert v.evalf() == 5.0 * A.x
+    v = pi * A.x
+    assert sstr(v.evalf(2)) == '3.1*A.x'
     v = pi * A.x + 5 * a * A.y - b * A.z
-    assert str(v.evalf(3)) == '3.14*A.x + 5.0*a*A.y - b*A.z'
+    assert sstr(v.evalf(3)) == '3.14*A.x + 5.0*a*A.y - b*A.z'
