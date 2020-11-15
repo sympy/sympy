@@ -640,7 +640,7 @@ def test_common_prefix_suffix():
 
 
 def test_minlex():
-    assert minlex([1, 2, 0]) == (0, 1, 2)
+    assert minlex([1, 2, 0]) == [0, 1, 2]
     assert minlex((1, 2, 0)) == (0, 1, 2)
     assert minlex((1, 0, 2)) == (0, 2, 1)
     assert minlex((1, 0, 2), directed=False) == (0, 1, 2)

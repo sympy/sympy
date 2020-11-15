@@ -1302,11 +1302,11 @@ def least_rotation(x):
         sj = S[j]
         i = f[j-k-1]
         while i != -1 and sj != S[k+i+1]:
-            if sj < S[k+i+1]:
+            if default_sort_key(sj) < default_sort_key(S[k+i+1]):
                 k = j-i-1
             i = f[i]
         if sj != S[k+i+1]:
-            if sj < S[k]:
+            if default_sort_key(sj) < default_sort_key(S[k]):
                 k = j
             f[j-k] = -1
         else:
@@ -2398,20 +2398,13 @@ def generate_oriented_forest(n):
                 break
 
 
-def minlex(seq, directed=True, is_set=False, small=None):
+def minlex(seq, directed=True):
     """
-    Return a tuple representing the rotation of the sequence in which
-    the lexically smallest elements appear first, e.g. `cba ->acb`.
+    Return the rotation of the sequence in which the lexically smallest
+    elements appear first, e.g. `cba ->acb`.
 
     If ``directed`` is False then the smaller of the sequence and the
     reversed sequence is returned, e.g. `cba -> abc`.
-
-    For more efficient processing, ``is_set`` can be set to True if there
-    are no duplicates in the sequence.
-
-    If the smallest element is known at the time of calling, it can be
-    passed as ``small`` and the calculation of the smallest element will
-    be omitted.
 
     Examples
     ========
@@ -2430,50 +2423,13 @@ def minlex(seq, directed=True, is_set=False, small=None):
     '00011001011'
 
     """
-    is_str = isinstance(seq, str)
-    seq = list(seq)
-    if small is None:
-        small = min(seq, key=default_sort_key)
-    if is_set:
-        i = seq.index(small)
-        if not directed:
-            n = len(seq)
-            p = (i + 1) % n
-            m = (i - 1) % n
-            if default_sort_key(seq[p]) > default_sort_key(seq[m]):
-                seq = list(reversed(seq))
-                i = n - i - 1
-        if i:
-            seq = rotate_left(seq, i)
-        best = seq
-    else:
-        count = seq.count(small)
-        if count == 1 and directed:
-            best = rotate_left(seq, seq.index(small))
-        else:
-            # if not directed, and not a set, we can't just
-            # pass this off to minlex with is_set True since
-            # peeking at the neighbor may not be sufficient to
-            # make the decision so we continue...
-            best = seq
-            for i in range(count):
-                seq = rotate_left(seq, seq.index(small, count != 1))
-                if seq < best:
-                    best = seq
-                # it's cheaper to rotate now rather than search
-                # again for these in reversed order so we test
-                # the reverse now
-                if not directed:
-                    seq = rotate_left(seq, 1)
-                    seq = list(reversed(seq))
-                    if seq < best:
-                        best = seq
-                    seq = list(reversed(seq))
-                    seq = rotate_right(seq, 1)
-    # common return
-    if is_str:
-        return ''.join(best)
-    return tuple(best)
+
+    best = rotate_left(seq, least_rotation(seq))
+    if not directed:
+        rseq = seq[::-1]
+        rbest = rotate_left(rseq, least_rotation(rseq))
+        return min(best, rbest, key=default_sort_key)
+    return best
 
 
 def runs(seq, op=gt):
