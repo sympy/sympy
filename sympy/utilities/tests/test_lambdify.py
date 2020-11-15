@@ -26,6 +26,7 @@ from sympy.testing.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import uppergamma, lowergamma
+from sympy.functions.special.delta_functions import Heaviside
 
 import sympy
 
