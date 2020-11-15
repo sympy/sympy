@@ -183,24 +183,24 @@ def test_Beam():
     assert p == q
 
     p = b3.shear_force()
-    q = -2*SingularityFunction(x, 2, 3)/3 + 2*SingularityFunction(x, 3, 1) \
-    + 2*SingularityFunction(x, 3, 2) + 2*SingularityFunction(x, 3, 3)/3
+    q = 2*SingularityFunction(x, 2, 3)/3 - 2*SingularityFunction(x, 3, 1) \
+    - 2*SingularityFunction(x, 3, 2) - 2*SingularityFunction(x, 3, 3)/3
     assert p == q
 
     p = b3.shear_stress()
-    q = -1*SingularityFunction(x, 2, 3)/3 + 1*SingularityFunction(x, 3, 1) \
-    + 1*SingularityFunction(x, 3, 2) + 1*SingularityFunction(x, 3, 3)/3
+    q = SingularityFunction(x, 2, 3)/3 - 1*SingularityFunction(x, 3, 1) \
+    - 1*SingularityFunction(x, 3, 2) - 1*SingularityFunction(x, 3, 3)/3
     assert p == q
 
     p = b3.slope()
-    q = 2 + (-SingularityFunction(x, 2, 5)/30 + SingularityFunction(x, 3, 3)/3 \
-    + SingularityFunction(x, 3, 4)/6 + SingularityFunction(x, 3, 5)/30)/(E*I)
+    q = 2 - (SingularityFunction(x, 2, 5)/30 - SingularityFunction(x, 3, 3)/3 \
+    - SingularityFunction(x, 3, 4)/6 - SingularityFunction(x, 3, 5)/30)/(E*I)
     assert p == q
 
     p = b3.deflection()
-    q = 2*x + (-SingularityFunction(x, 2, 6)/180 \
-    + SingularityFunction(x, 3, 4)/12 + SingularityFunction(x, 3, 5)/30 \
-    + SingularityFunction(x, 3, 6)/180)/(E*I)
+    q = 2*x - (SingularityFunction(x, 2, 6)/180 \
+    - SingularityFunction(x, 3, 4)/12 - SingularityFunction(x, 3, 5)/30 \
+    - SingularityFunction(x, 3, 6)/180)/(E*I)
     assert p == q + C4
 
     b4 = Beam(4, E, I, 3)
@@ -211,12 +211,12 @@ def test_Beam():
     assert p == q
 
     p = b4.shear_force()
-    q = -3*SingularityFunction(x, 0, 1) \
-    + 3*SingularityFunction(x, 3, 1)
+    q = 3*SingularityFunction(x, 0, 1) \
+    - 3*SingularityFunction(x, 3, 1)
     assert p == q
 
     p = b4.shear_stress()
-    q = -SingularityFunction(x, 0, 1) + SingularityFunction(x, 3, 1)
+    q = SingularityFunction(x, 0, 1) - SingularityFunction(x, 3, 1)
     assert p == q
 
     p = b4.slope()
