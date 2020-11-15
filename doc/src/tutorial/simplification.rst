@@ -585,7 +585,7 @@ n`. `n!` represents the number of permutations of `n` distinct items.
 
 The `binomial coefficient
 <https://en.wikipedia.org/wiki/Binomial_coefficient>`_ function is
-``binomial``.  ``binomial(n, k)`` represents `\binom{n}{k}`, the number of
+``binomial``.  ``binomial(n, k)`` represents `\binomial{n}{k}`, the number of
 ways to choose `k` items from a set of `n` distinct items.  It is also often
 written as `nCk`, and is pronounced "`n` choose `k`".
 
