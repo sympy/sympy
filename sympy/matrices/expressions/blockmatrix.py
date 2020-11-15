@@ -366,8 +366,8 @@ class BlockMatrix(MatrixExpr):
 
         See Also
         ========
-        sympy.matrices.expressions.BlockMatrix.UDLdecomposition
-        sympy.matrices.expressions.BlockMatrix.LUdecomposition
+        sympy.matrices.expressions.blockmatrix.BlockMatrix.UDLdecomposition
+        sympy.matrices.expressions.blockmatrix.BlockMatrix.LUdecomposition
         """
         if self.blockshape == (2,2):
             [[A, B],
@@ -426,8 +426,8 @@ class BlockMatrix(MatrixExpr):
 
         See Also
         ========
-        sympy.matrices.expressions.BlockMatrix.LDUdecomposition
-        sympy.matrices.expressions.BlockMatrix.LUdecomposition
+        sympy.matrices.expressions.blockmatrix.BlockMatrix.LDUdecomposition
+        sympy.matrices.expressions.blockmatrix.BlockMatrix.LUdecomposition
         """
         if self.blockshape == (2,2):
             [[A, B],
@@ -485,8 +485,8 @@ class BlockMatrix(MatrixExpr):
 
         See Also
         ========
-        sympy.matrices.expressions.BlockMatrix.UDLdecomposition
-        sympy.matrices.expressions.BlockMatrix.LDUdecomposition
+        sympy.matrices.expressions.blockmatrix.BlockMatrix.UDLdecomposition
+        sympy.matrices.expressions.blockmatrix.BlockMatrix.LDUdecomposition
         """
         if self.blockshape == (2,2):
             [[A, B],
@@ -941,7 +941,7 @@ def reblock_2x2(expr):
 def bounds(sizes):
     """ Convert sequence of numbers into pairs of low-high pairs
 
-    >>> from sympy.matrices.expressions.blockmatrix import bounds
+    >>> from sympy.matrices.expressions.blockmatrix.BlockMatrix import bounds
     >>> bounds((1, 10, 50))
     [(0, 1), (1, 11), (11, 61)]
     """
