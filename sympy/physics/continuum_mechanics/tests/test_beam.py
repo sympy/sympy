@@ -95,8 +95,8 @@ def test_Beam():
 
     # Test for bending moment distribution function
     p = b1.bending_moment()
-    q = -8*SingularityFunction(x, 0, 1) + 6*SingularityFunction(x, 10, 1) \
-    + 120*SingularityFunction(x, 30, 0) + 2*SingularityFunction(x, 30, 1)
+    q = 8*SingularityFunction(x, 0, 1) - 6*SingularityFunction(x, 10, 1) \
+    - 120*SingularityFunction(x, 30, 0) - 2*SingularityFunction(x, 30, 1)
     assert p == q
 
     # Test for slope distribution function
