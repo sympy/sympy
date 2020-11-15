@@ -139,25 +139,25 @@ def test_Beam():
 
     # Test for shear force distribution function
     p = b2.shear_force()
-    q = w0*SingularityFunction(x, a1, 2)/2 \
-    + w2*SingularityFunction(x, c1, 0)
+    q = -w0*SingularityFunction(x, a1, 2)/2 \
+    - w2*SingularityFunction(x, c1, 0)
     assert p == q
 
     # Test for shear stress distribution function
     p = b2.shear_stress()
-    q = (w0*SingularityFunction(x, a1, 2)/2 \
-    + w2*SingularityFunction(x, c1, 0))/A
+    q = (-w0*SingularityFunction(x, a1, 2)/2 \
+    - w2*SingularityFunction(x, c1, 0))/A
     assert p == q
 
     # Test for bending moment distribution function
     p = b2.bending_moment()
-    q = w0*SingularityFunction(x, a1, 3)/6 + w2*SingularityFunction(x, c1, 1)
+    q = -w0*SingularityFunction(x, a1, 3)/6 - w2*SingularityFunction(x, c1, 1)
     assert p == q
 
     # Test for slope distribution function
     p = b2.slope()
     q = (w0*SingularityFunction(x, a1, 4)/24 + w2*SingularityFunction(x, c1, 2)/2)/(E*I) + (E*I*f - w0*SingularityFunction(e, a1, 4)/24 - w2*SingularityFunction(e, c1, 2)/2)/(E*I)
-    assert expand(p) == expand(q)
+    assert simplify(p) == simplify(q)
 
     # Test for deflection distribution function
     p = b2.deflection()
