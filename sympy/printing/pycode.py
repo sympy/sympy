@@ -824,7 +824,7 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_Heaviside(self, expr):
         heaviside0 = 0 # Value of heaviside at x=0. Options include 0, 1/2, 1
-        return "%s(%s,%s)" % (self._module_format('numpy.heaviside'), self._print(expr.args[0], self._print(heaviside0)))
+        return "%s(%s,%s)" % (self._module_format('numpy.heaviside'), self._print(expr.args[0]), self._print(heaviside0))
 
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format('numpy.real'), self._print(expr.args[0]))

@@ -1001,7 +1001,7 @@ def test_issue_13642():
 def test_issue_13176():
     if not numpy:
         skip("numpy not installed")
-    f = lambdify(x, heaviside(x))
+    f = lambdify(x, Heaviside(x))
     res = f([-1, 0, 1])
     assert Abs(res[0]).n() < 1e-15
     assert Abs(res[1] - 0).n() < 1e-15
