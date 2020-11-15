@@ -157,7 +157,7 @@ def test_Beam():
     # Test for slope distribution function
     p = b2.slope()
     q = (w0*SingularityFunction(x, a1, 4)/24 + w2*SingularityFunction(x, c1, 2)/2)/(E*I) + (E*I*f - w0*SingularityFunction(e, a1, 4)/24 - w2*SingularityFunction(e, c1, 2)/2)/(E*I)
-    assert simplify(p) == simplify(q)
+    assert expand(p) == expand(q)
 
     # Test for deflection distribution function
     p = b2.deflection()
