@@ -386,7 +386,7 @@ class Polyhedron(Basic):
         .. [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
 
         """
-        faces = [tuple(minlex(f, directed=False)) for f in faces]
+        faces = [minlex(f, directed=False) for f in faces]
         corners, faces, pgroup = args = \
             [Tuple(*a) for a in (corners, faces, pgroup)]
         obj = Basic.__new__(cls, *args)

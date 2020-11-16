@@ -2403,6 +2403,9 @@ def minlex(seq, directed=True):
     Return the rotation of the sequence in which the lexically smallest
     elements appear first, e.g. `cba ->acb`.
 
+    The sequence returned is a tuple, unless the input sequence is a string
+    in which case a string is returned.
+
     If ``directed`` is False then the smaller of the sequence and the
     reversed sequence is returned, e.g. `cba -> abc`.
 
@@ -2428,8 +2431,10 @@ def minlex(seq, directed=True):
     if not directed:
         rseq = seq[::-1]
         rbest = rotate_left(rseq, least_rotation(rseq))
-        return min(best, rbest, key=default_sort_key)
-    return best
+        best = min(best, rbest, key=default_sort_key)
+
+    # Convert to tuple, unless we started with a string.
+    return tuple(best) if not isinstance(seq, str) else best
 
 
 def runs(seq, op=gt):
