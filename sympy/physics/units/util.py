@@ -33,51 +33,55 @@ def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
     res_exponents = camat.solve_least_squares(exprmat, method=None)
     return res_exponents
 
-
-def convert_to(expr, target_units, unit_system="SI"):
+def convert_to(expr, target_units, unit_system = "SI", checkUnits = True):
     """
-    Convert ``expr`` to the same expression with all of its units and quantities
-    represented as factors of ``target_units``, whenever the dimension is compatible.
+        Convert ``expr`` to the same expression with all of its units and quantities
+        represented as factors of ``target_units``, whenever the dimension is compatible.
 
-    ``target_units`` may be a single unit/quantity, or a collection of
-    units/quantities.
+        ``target_units`` may be a single unit/quantity, or a collection of
+        units/quantities.
 
-    Examples
-    ========
+        If ``checkUnits`` is set to true the function raises an exception if dimensions
+        of the converted expression are not compatable with the dimensions of input ``expr``.
+        Such an error is an indication the ``target_units`` are not compatible with the input ``expr``.
 
-    >>> from sympy.physics.units import speed_of_light, meter, gram, second, day
-    >>> from sympy.physics.units import mile, newton, kilogram, atomic_mass_constant
-    >>> from sympy.physics.units import kilometer, centimeter
-    >>> from sympy.physics.units import gravitational_constant, hbar
-    >>> from sympy.physics.units import convert_to
-    >>> convert_to(mile, kilometer)
-    25146*kilometer/15625
-    >>> convert_to(mile, kilometer).n()
-    1.609344*kilometer
-    >>> convert_to(speed_of_light, meter/second)
-    299792458*meter/second
-    >>> convert_to(day, second)
-    86400*second
-    >>> 3*newton
-    3*newton
-    >>> convert_to(3*newton, kilogram*meter/second**2)
-    3*kilogram*meter/second**2
-    >>> convert_to(atomic_mass_constant, gram)
-    1.660539060e-24*gram
+        Examples
+        ========
 
-    Conversion to multiple units:
+        >>> from sympy.physics.units import speed_of_light, meter, gram, second, day
+        >>> from sympy.physics.units import mile, newton, kilogram, atomic_mass_constant
+        >>> from sympy.physics.units import kilometer, centimeter
+        >>> from sympy.physics.units import gravitational_constant, hbar
+        >>> from sympy.physics.units import convert_to
+        >>> convert_to(mile, kilometer)
+        25146*kilometer/15625
+        >>> convert_to(mile, kilometer).n()
+        1.609344*kilometer
+        >>> convert_to(speed_of_light, meter/second)
+        299792458*meter/second
+        >>> convert_to(day, second)
+        86400*second
+        >>> 3*newton
+        3*newton
+        >>> convert_to(3*newton, kilogram*meter/second**2)
+        3*kilogram*meter/second**2
+        >>> convert_to(atomic_mass_constant, gram)
+        1.660539060e-24*gram
 
-    >>> convert_to(speed_of_light, [meter, second])
-    299792458*meter/second
-    >>> convert_to(3*newton, [centimeter, gram, second])
-    300000*centimeter*gram/second**2
+        Conversion to multiple units:
 
-    Conversion to Planck units:
+        >>> convert_to(speed_of_light, [meter, second])
+        299792458*meter/second
+        >>> convert_to(3*newton, [centimeter, gram, second])
+        300000*centimeter*gram/second**2
 
-    >>> convert_to(atomic_mass_constant, [gravitational_constant, speed_of_light, hbar]).n()
-    7.62963085040767e-20*gravitational_constant**(-0.5)*hbar**0.5*speed_of_light**0.5
+        Conversion to Planck units:
 
-    """
+        >>> convert_to(atomic_mass_constant, [gravitational_constant, speed_of_light, hbar]).n()
+        7.62963085040767e-20*gravitational_constant**(-0.5)*hbar**0.5*speed_of_light**0.5
+
+        """
+    from sympy import Matrix
     from sympy.physics.units import UnitSystem
     unit_system = UnitSystem.get_unit_system(unit_system)
 
@@ -85,12 +89,23 @@ def convert_to(expr, target_units, unit_system="SI"):
         target_units = [target_units]
 
     if isinstance(expr, Add):
-        return Add.fromiter(convert_to(i, target_units, unit_system) for i in expr.args)
+        return Add.fromiter(convert_to(i, target_units, unit_system, checkUnits) for i in expr.args)
 
     expr = sympify(expr)
 
+    convertedExpr = _converter(expr, target_units, unit_system)
+
+    if checkUnits:
+        testMatrix = _get_conversion_matrix_for_expr(convertedExpr, [expr], unit_system)
+        if testMatrix != Matrix([[1]]):
+            raise RuntimeError("Inconsistent unit conversion.  Verify target_units are compatible with input expr.")
+    return convertedExpr
+
+def _converter(expr, target_units, unit_system):
+
+
     if not isinstance(expr, Quantity) and expr.has(Quantity):
-        expr = expr.replace(lambda x: isinstance(x, Quantity), lambda x: x.convert_to(target_units, unit_system))
+        expr = expr.replace(lambda x: isinstance(x, Quantity), lambda x: _converter(x, target_units, unit_system))
 
     def get_total_scale_factor(expr):
         if isinstance(expr, Mul):
