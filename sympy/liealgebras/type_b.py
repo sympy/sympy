@@ -1,5 +1,4 @@
-from .cartan_type import Standard_Cartan
-from sympy.core.backend import eye
+from .cartan_base import Standard_Cartan
 
 class TypeB(Standard_Cartan):
 
@@ -137,17 +136,7 @@ class TypeB(Standard_Cartan):
 
         """
 
-        n = self.n
-        m = 2* eye(n)
-        i = 1
-        while i < n-1:
-            m[i, i+1] = -1
-            m[i, i-1] = -1
-            i += 1
-        m[0, 1] = -1
-        m[n-2, n-1] = -2
-        m[n-1, n-2] = -1
-        return m
+        return super().cartan_matrix()
 
     def basis(self):
         """
