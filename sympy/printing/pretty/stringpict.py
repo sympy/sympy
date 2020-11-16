@@ -12,7 +12,7 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
-from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, is_combining
+from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, line_width
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 class stringPict:
@@ -34,19 +34,12 @@ class stringPict:
         self.binding = None
 
     @staticmethod
-    def line_width(line):
-        """Unicode combining symbols (modifiers) are not ever displayed as
-        separate symbols and thus shouldn't be counted
-        """
-        return sum(1 for sym in line if not is_combining(sym))
-
-    @staticmethod
     def equalLengths(lines):
         # empty lines
         if not lines:
             return ['']
 
-        width = max(stringPict.line_width(line) for line in lines)
+        width = max(line_width(line) for line in lines)
         return [line.center(width) for line in lines]
 
     def height(self):
@@ -55,7 +48,7 @@ class stringPict:
 
     def width(self):
         """The width of the picture in characters."""
-        return stringPict.line_width(self.picture[0])
+        return line_width(self.picture[0])
 
     @staticmethod
     def next(*args):
