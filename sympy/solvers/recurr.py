@@ -66,7 +66,7 @@ from sympy.core.compatibility import default_sort_key
 from sympy.utilities.iterables import numbered_symbols
 
 
-def rsolve_poly(coeffs, f, n, **hints):
+def rsolve_poly(coeffs, f, n, shift=0, **hints):
     r"""
     Given linear recurrence operator `\operatorname{L}` of order
     `k` with polynomial coefficients and inhomogeneous equation
@@ -188,7 +188,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         y = E = S.Zero
 
         for i in range(N + 1):
-            C.append(Symbol('C' + str(i)))
+            C.append(Symbol('C' + str(i + shift)))
             y += C[i] * n**i
 
         for i in range(r + 1):
@@ -301,7 +301,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         if not homogeneous:
             h = Add(*[(g*p).expand() for g, p in zip(G, P)])
 
-        C = [Symbol('C' + str(i)) for i in range(A)]
+        C = [Symbol('C' + str(i + shift)) for i in range(A)]
 
         g = lambda i: Add(*[c*_delta(q, i) for c, q in zip(C, Q)])
 
@@ -614,11 +614,14 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if coeff is not S.Zero:
                 poly += coeff * Z**i
 
+        constants = []
+
         for z in roots(poly, Z).keys():
             if z.is_zero:
                 continue
 
-            (C, s) = rsolve_poly([polys[i].as_expr()*z**i for i in range(r + 1)], 0, n, symbols=True)
+            (C, s) = rsolve_poly([polys[i].as_expr()*z**i for i in range(r + 1)], 0, n, len(constants), symbols=True)
+            constants.extend(s)
 
             if C is not None and C is not S.Zero:
                 symbols |= set(s)
