@@ -1,7 +1,5 @@
 """ Helpers for randomized testing """
 
-from __future__ import print_function, division
-
 from random import uniform, Random, randrange, randint
 
 from sympy.core.compatibility import is_sequence, as_int

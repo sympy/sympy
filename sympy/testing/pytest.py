@@ -1,7 +1,5 @@
 """py.test hacks to support XFAIL/XPASS"""
 
-from __future__ import print_function, division
-
 import sys
 import functools
 import os
@@ -116,7 +114,7 @@ else:
             raise TypeError(
                 'raises() expects a callable for the 2nd argument.')
 
-    class RaisesContext(object):
+    class RaisesContext:
         def __init__(self, expectedException):
             self.expectedException = expectedException
 
@@ -137,7 +135,7 @@ else:
     class Skipped(Exception):
         pass
 
-    class Failed(Exception):
+    class Failed(Exception):  # type: ignore
         pass
 
     def XFAIL(func):
@@ -184,7 +182,7 @@ else:
         return func
 
     @contextlib.contextmanager
-    def warns(warningcls, **kwargs):
+    def warns(warningcls, *, match=''):
         '''Like raises but tests that warnings are emitted.
 
         >>> from sympy.testing.pytest import warns
@@ -200,10 +198,6 @@ else:
         Failed: DID NOT WARN. No warnings of type UserWarning\
         was emitted. The list of emitted warnings is: [].
         '''
-        match = kwargs.pop('match', '')
-        if kwargs:
-            raise TypeError('Invalid keyword arguments: %s' % kwargs)
-
         # Absorbs all warnings in warnrec
         with warnings.catch_warnings(record=True) as warnrec:
             # Hide all warnings but make sure that our warning is emitted

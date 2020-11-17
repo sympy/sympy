@@ -1,6 +1,8 @@
 from sympy.testing.pytest import ignore_warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
+from sympy.matrices import Matrix, SparseMatrix, ImmutableMatrix
+
 with ignore_warnings(SymPyDeprecationWarning):
     from sympy.matrices.densetools import eye
     from sympy.matrices.densearith import add, sub, mulmatmat, mulmatscaler
@@ -52,3 +54,12 @@ def test_mulmatscaler():
 
     assert mulmatscaler(a, ZZ(4), ZZ) == [[ZZ(4), ZZ(0), ZZ(0)], [ZZ(0), ZZ(4), ZZ(0)], [ZZ(0), ZZ(0), ZZ(4)]]
     assert mulmatscaler(b, ZZ(1), ZZ) == [[ZZ(3), ZZ(7), ZZ(4)], [ZZ(2), ZZ(4), ZZ(5)], [ZZ(6), ZZ(2), ZZ(3)]]
+
+def test_eq():
+    A = Matrix([[1]])
+    B = ImmutableMatrix([[1]])
+    C = SparseMatrix([[1]])
+    assert A != object()
+    assert A != "Matrix([[1]])"
+    assert A == B
+    assert A == C

@@ -30,7 +30,7 @@ from .utilities import _iszero, _is_zero_after_expand_mul
 
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
-    _adjugate, _charpoly, _cofactor, _cofactor_matrix,
+    _adjugate, _charpoly, _cofactor, _cofactor_matrix, _per,
     _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
 
 from .reductions import _is_echelon, _echelon_form, _rank, _rref
@@ -123,6 +123,9 @@ class MatrixDeterminant(MatrixCommon):
     def det(self, method="bareiss", iszerofunc=None):
         return _det(self, method=method, iszerofunc=iszerofunc)
 
+    def per(self):
+        return _per(self)
+
     def minor(self, i, j, method="berkowitz"):
         return _minor(self, i, j, method=method)
 
@@ -140,6 +143,7 @@ class MatrixDeterminant(MatrixCommon):
     cofactor.__doc__                     = _cofactor.__doc__
     cofactor_matrix.__doc__              = _cofactor_matrix.__doc__
     det.__doc__                          = _det.__doc__
+    per.__doc__                          = _per.__doc__
     minor.__doc__                        = _minor.__doc__
     minor_submatrix.__doc__              = _minor_submatrix.__doc__
 
@@ -356,7 +360,7 @@ class MatrixSubspaces(MatrixReductions):
     rowspace.__doc__      = _rowspace.__doc__
     orthogonalize.__doc__ = _orthogonalize.__doc__
 
-    orthogonalize         = classmethod(orthogonalize)
+    orthogonalize         = classmethod(orthogonalize)  # type:ignore
 
 
 class MatrixEigen(MatrixSubspaces):
@@ -454,9 +458,9 @@ class MatrixCalculus(MatrixCommon):
         limit
         """
         # XXX this should be handled here rather than in Derivative
-        from sympy import Derivative
+        from sympy.tensor.array.array_derivatives import ArrayDerivative
         kwargs.setdefault('evaluate', True)
-        deriv = Derivative(self, *args, evaluate=True)
+        deriv = ArrayDerivative(self, *args, evaluate=True)
         if not isinstance(self, Basic):
             return deriv.as_mutable()
         else:
@@ -464,18 +468,6 @@ class MatrixCalculus(MatrixCommon):
 
     def _eval_derivative(self, arg):
         return self.applyfunc(lambda x: x.diff(arg))
-
-    def _accept_eval_derivative(self, s):
-        return s._visit_eval_derivative_array(self)
-
-    def _visit_eval_derivative_scalar(self, base):
-        # Types are (base: scalar, self: matrix)
-        return self.applyfunc(lambda x: base.diff(x))
-
-    def _visit_eval_derivative_array(self, base):
-        # Types are (base: array/matrix, self: matrix)
-        from sympy import derive_by_array
-        return derive_by_array(base, self)
 
     def integrate(self, *args, **kwargs):
         """Integrate each element of the matrix.  ``args`` will

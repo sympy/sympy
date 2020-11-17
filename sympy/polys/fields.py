@@ -1,6 +1,5 @@
 """Sparse rational function fields. """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
@@ -335,10 +334,8 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
     def __ne__(f, g):
         return not f == g
 
-    def __nonzero__(f):
+    def __bool__(f):
         return bool(f.numer)
-
-    __bool__ = __nonzero__
 
     def sort_key(self):
         return (self.denom.sort_key(), self.numer.sort_key())
@@ -553,8 +550,6 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         else:
             return f.new(f.numer*g_denom, f.denom*g_numer)
 
-    __div__ = __truediv__
-
     def __rtruediv__(f, c):
         if not f:
             raise ZeroDivisionError
@@ -569,8 +564,6 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return NotImplemented
         else:
             return f.new(f.denom*g_numer, f.numer*g_denom)
-
-    __rdiv__ = __rtruediv__
 
     def __pow__(f, n):
         """Raise ``f`` to a non-negative power ``n``. """

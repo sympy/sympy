@@ -639,7 +639,7 @@ functionality. ::
 
 If we desire, we can view the DCM between these two frames at any time. This
 can be calculated with the ``dcm`` method. This code: ``N.dcm(A)`` gives the
-dcm :math:`^{\mathbf{N}} \mathbf{C} ^{\mathbf{A}}`.
+dcm :math:`^{\mathbf{A}} \mathbf{C} ^{\mathbf{N}}`.
 
 This orients the :math:`\mathbf{A}` frame relative to the :math:`\mathbf{N}`
 frame by a simple rotation around the Y axis, by an amount x. Other, more
