@@ -1,5 +1,6 @@
 import random
 
+from sympy import symbols, Derivative
 from sympy.printing.torch import torch_code
 from sympy import (eye, MatrixSymbol, Matrix)
 from sympy.tensor.array import NDimArray
@@ -7,7 +8,10 @@ from sympy.codegen.array_utils import (
         CodegenArrayTensorProduct, CodegenArrayElementwiseAdd,
         CodegenArrayPermuteDims, CodegenArrayDiagonal, _CodegenArrayAbstract)
 from sympy.utilities.lambdify import lambdify
-
+from sympy.functions import \
+    Abs, ceiling, exp, floor, sign, sin, asin, sqrt, cos, \
+    acos, tan, atan, atan2, cosh, acosh, sinh, asinh, tanh, atanh, \
+    re, im, arg, erf, loggamma, log
 from sympy.testing.pytest import skip
 from sympy.external import import_module
 
@@ -18,6 +22,13 @@ N = MatrixSymbol("N", 3, 3)
 P = MatrixSymbol("P", 3, 3)
 Q = MatrixSymbol("Q", 3, 3)
 
+
+x, y, z, t = symbols("x y z t")
+
+if torch is not None:
+    llo = [[j for j in range(i, i+3)] for i in range(0, 9, 3)]
+    m3x3 = torch.tensor(llo)
+    m3x3sympy = Matrix(llo)
 
 def _compare_torch_matrix(variables, expr):
     f = lambdify(variables, expr, 'torch')
@@ -91,8 +102,14 @@ def test_codegen_extra():
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N), (1, 2))
     assert torch_code(cg) == 'torch.einsum("ab,bc->acb", [M, N])'
-    # TODO: no implemented for diagonal
+    # TODO: not implemented for diagonal
     #_compare_torch_matrix((M, N), cg)
 
+def test_torch_Derivative():
+    expr = Derivative(sin(x), x)
+    assert torch_code(expr) == 'torch.autograd.grad(torch.sin(x), x)[0]'
 
-test_codegen_extra()
+# test_codegen_extra()
+# test_torch_matrix()
+# test_torch_Derivative()
+

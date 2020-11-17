@@ -152,6 +152,7 @@ class TorchPrinter(AbstractPythonCodePrinter):
             # possibly by creating the possibility of unfolding the
             # CodegenArrayDiagonal object into nested ones. Same reasoning for
             # the array contraction.
+            # see tensorflow implementation in tests/tensorflow
             raise NotImplementedError("no implementation for diagonal yet")
         if len(diagonal_indices[0]) != 2:
             raise NotImplementedError("no implementation for diagonal yet")
@@ -165,7 +166,7 @@ class TorchPrinter(AbstractPythonCodePrinter):
         elems = [self._print(i) for i in elems]
         return '%s("%s", [%s])' % (
             self._module_format("torch.einsum"),
-            "{0}->{1}{2}".format(diagonal_string, "".join(letters_free), "".join(letters_dum)),
+            "{}->{}{}".format(diagonal_string, "".join(letters_free), "".join(letters_dum)),
             ", ".join(elems)
         )
 
