@@ -9,8 +9,6 @@ complete source code files.
 
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy.core import Mul, Pow, S, Rational
@@ -73,7 +71,7 @@ class JuliaCodePrinter(CodePrinter):
     # for Julia.
 
     def __init__(self, settings={}):
-        super(JuliaCodePrinter, self).__init__(settings)
+        super().__init__(settings)
         self.known_functions = dict(zip(known_fcns_src1, known_fcns_src1))
         self.known_functions.update(dict(known_fcns_src2))
         userfuncs = settings.get('user_functions', {})
@@ -89,11 +87,11 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _get_comment(self, text):
-        return "# {0}".format(text)
+        return "# {}".format(text)
 
 
     def _declare_number_const(self, name, value):
-        return "const {0} = {1}".format(name, value)
+        return "const {} = {}".format(name, value)
 
 
     def _format_code(self, lines):
@@ -196,7 +194,7 @@ class JuliaCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Pow(self, expr):
         powsymbol = '^' if all([x.is_number for x in expr.args]) else '.^'
@@ -228,7 +226,7 @@ class JuliaCodePrinter(CodePrinter):
         if self._settings["inline"]:
             return "pi"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_ImaginaryUnit(self, expr):
@@ -239,28 +237,28 @@ class JuliaCodePrinter(CodePrinter):
         if self._settings["inline"]:
             return "e"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_EulerGamma(self, expr):
         if self._settings["inline"]:
             return "eulergamma"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_Catalan(self, expr):
         if self._settings["inline"]:
             return "catalan"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_GoldenRatio(self, expr):
         if self._settings["inline"]:
             return "golden"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_Assignment(self, expr):
@@ -436,7 +434,7 @@ class JuliaCodePrinter(CodePrinter):
             # Express each (cond, expr) pair in a nested Horner form:
             #   (condition) .* (expr) + (not cond) .* (<others>)
             # Expressions that result in multiple statements won't work here.
-            ecpairs = ["({0}) ? ({1}) :".format
+            ecpairs = ["({}) ? ({}) :".format
                        (self._print(c), self._print(e))
                        for e, c in expr.args[:-1]]
             elast = " (%s)" % self._print(expr.args[-1].expr)

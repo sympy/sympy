@@ -1,6 +1,3 @@
-
-from __future__ import print_function, division
-
 from sympy import Basic, Expr
 
 from sympy.core import Add, S
@@ -353,7 +350,7 @@ class ceiling(RoundFunction):
 
         return Le(self, other, evaluate=False)
 
-@dispatch(ceiling, Basic)
+@dispatch(ceiling, Basic)  # type:ignore
 def _eval_is_eq(lhs, rhs): # noqa:F811
     return is_eq(lhs.rewrite(floor), rhs) or is_eq(lhs.rewrite(frac),rhs)
 
@@ -525,7 +522,7 @@ class frac(Function):
             if other.is_integer and other.is_positive:
                 return S.true
 
-@dispatch(frac, Basic)
+@dispatch(frac, Basic)  # type:ignore
 def _eval_is_eq(lhs, rhs): # noqa:F811
     if (lhs.rewrite(floor) == rhs) or \
         (lhs.rewrite(ceiling) == rhs):

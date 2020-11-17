@@ -96,7 +96,7 @@ class AbstractPythonCodePrinter(CodePrinter):
     )
 
     def __init__(self, settings=None):
-        super(AbstractPythonCodePrinter, self).__init__(settings)
+        super().__init__(settings)
 
         # Python standard handler
         std = self._settings['standard']
@@ -135,7 +135,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         return "{}".format(codestring)
 
     def _get_comment(self, text):
-        return "  # {0}".format(text)
+        return "  # {}".format(text)
 
     def _expand_fold_binary_op(self, op, args):
         """
@@ -241,7 +241,7 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_Mod(self, expr):
         PREC = precedence(expr)
-        return ('{0} % {1}'.format(*map(lambda x: self.parenthesize(x, PREC), expr.args)))
+        return ('{} % {}'.format(*map(lambda x: self.parenthesize(x, PREC), expr.args)))
 
     def _print_Piecewise(self, expr):
         result = []
@@ -280,7 +280,7 @@ class AbstractPythonCodePrinter(CodePrinter):
             lhs = self._print(expr.lhs)
             rhs = self._print(expr.rhs)
             return '({lhs} {op} {rhs})'.format(op=expr.rel_op, lhs=lhs, rhs=rhs)
-        return super(AbstractPythonCodePrinter, self)._print_Relational(expr)
+        return super()._print_Relational(expr)
 
     def _print_ITE(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
@@ -354,7 +354,7 @@ class AbstractPythonCodePrinter(CodePrinter):
     def _print_Print(self, prnt):
         print_args = ', '.join(map(lambda arg: self._print(arg), prnt.print_args))
         if prnt.format_string != None: # Must be '!= None', cannot be 'is not None'
-            print_args = '{0} % ({1})'.format(
+            print_args = '{} % ({})'.format(
                 self._print(prnt.format_string), print_args)
         if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
@@ -373,22 +373,6 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_NoneToken(self, arg):
         return 'None'
-
-
-class PythonCodePrinter(AbstractPythonCodePrinter):
-
-    def _print_sign(self, e):
-        return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
-            f=self._module_format('math.copysign'), e=self._print(e.args[0]))
-
-    def _print_Not(self, expr):
-        PREC = precedence(expr)
-        return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
-
-    def _print_Indexed(self, expr):
-        base = expr.args[0]
-        index = expr.args[1:]
-        return "{}[{}]".format(str(base), ", ".join([self._print(ind) for ind in index]))
 
     def _hprint_Pow(self, expr, rational=False, sqrt='math.sqrt'):
         """Printing helper function for ``Pow``
@@ -448,6 +432,22 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         exp_str = self.parenthesize(expr.exp, PREC, strict=False)
         return "{}**{}".format(base_str, exp_str)
 
+
+class PythonCodePrinter(AbstractPythonCodePrinter):
+
+    def _print_sign(self, e):
+        return '(0.0 if {e} == 0 else {f}(1, {e}))'.format(
+            f=self._module_format('math.copysign'), e=self._print(e.args[0]))
+
+    def _print_Not(self, expr):
+        PREC = precedence(expr)
+        return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
+
+    def _print_Indexed(self, expr):
+        base = expr.args[0]
+        index = expr.args[1:]
+        return "{}[{}]".format(str(base), ", ".join([self._print(ind) for ind in index]))
+
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational)
 
@@ -458,6 +458,10 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
 
     def _print_Half(self, expr):
         return self._print_Rational(expr)
+
+    def _print_frac(self, expr):
+        from sympy import Mod
+        return self._print_Mod(Mod(expr.args[0], 1))
 
     _print_lowergamma = CodePrinter._print_not_supported
     _print_uppergamma = CodePrinter._print_not_supported
@@ -506,6 +510,7 @@ _not_in_mpmath = 'log1p log2'.split()
 _in_mpmath = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_mpmath]
 _known_functions_mpmath = dict(_in_mpmath, **{
     'beta': 'beta',
+    'frac': 'frac',
     'fresnelc': 'fresnelc',
     'fresnels': 'fresnels',
     'sign': 'sign',
@@ -521,6 +526,25 @@ _known_constants_mpmath = {
     'Infinity': 'inf',
     'NegativeInfinity': 'ninf'
 }
+
+
+def _unpack_integral_limits(integral_expr):
+    """ helper function for _print_Integral that
+        - accepts an Integral expression
+        - returns a tuple of
+           - a list variables of integration
+           - a list of tuples of the upper and lower limits of integration
+    """
+    integration_vars = []
+    limits = []
+    for integration_range in integral_expr.limits:
+        if len(integration_range) == 3:
+            integration_var, lower_limit, upper_limit = integration_range
+        else:
+            raise NotImplementedError("Only definite integrals are supported")
+        integration_vars.append(integration_var)
+        limits.append((lower_limit, upper_limit))
+    return integration_vars, limits
 
 
 class MpmathPrinter(PythonCodePrinter):
@@ -558,14 +582,14 @@ class MpmathPrinter(PythonCodePrinter):
         return self._print_Rational(e)
 
     def _print_uppergamma(self, e):
-        return "{0}({1}, {2}, {3})".format(
+        return "{}({}, {}, {})".format(
             self._module_format('mpmath.gammainc'),
             self._print(e.args[0]),
             self._print(e.args[1]),
             self._module_format('mpmath.inf'))
 
     def _print_lowergamma(self, e):
-        return "{0}({1}, 0, {2})".format(
+        return "{}({}, 0, {})".format(
             self._module_format('mpmath.gammainc'),
             self._print(e.args[0]),
             self._print(e.args[1]))
@@ -575,11 +599,20 @@ class MpmathPrinter(PythonCodePrinter):
             self._module_format('mpmath.log'), self._print(e.args[0]))
 
     def _print_log1p(self, e):
-        return '{0}({1}+1)'.format(
+        return '{}({}+1)'.format(
             self._module_format('mpmath.log'), self._print(e.args[0]))
 
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational, sqrt='mpmath.sqrt')
+
+    def _print_Integral(self, e):
+        integration_vars, limits = _unpack_integral_limits(e)
+
+        return "{}(lambda {}: {}, {})".format(
+                self._module_format("mpmath.quad"),
+                ", ".join(map(self._print, integration_vars)),
+                self._print(e.args[0]),
+                ", ".join("(%s, %s)" % tuple(map(self._print, l)) for l in limits))
 
 
 for k in MpmathPrinter._kf:
@@ -640,17 +673,17 @@ class NumPyPrinter(PythonCodePrinter):
         "Matrix multiplication printer"
         if expr.as_coeff_matrices()[0] is not S.One:
             expr_list = expr.as_coeff_matrices()[1]+[(expr.as_coeff_matrices()[0])]
-            return '({0})'.format(').dot('.join(self._print(i) for i in expr_list))
-        return '({0})'.format(').dot('.join(self._print(i) for i in expr.args))
+            return '({})'.format(').dot('.join(self._print(i) for i in expr_list))
+        return '({})'.format(').dot('.join(self._print(i) for i in expr.args))
 
     def _print_MatPow(self, expr):
         "Matrix power printer"
-        return '{0}({1}, {2})'.format(self._module_format('numpy.linalg.matrix_power'),
+        return '{}({}, {})'.format(self._module_format('numpy.linalg.matrix_power'),
             self._print(expr.args[0]), self._print(expr.args[1]))
 
     def _print_Inverse(self, expr):
         "Matrix inverse printer"
-        return '{0}({1})'.format(self._module_format('numpy.linalg.inv'),
+        return '{}({})'.format(self._module_format('numpy.linalg.inv'),
             self._print(expr.args[0]))
 
     def _print_DotProduct(self, expr):
@@ -725,13 +758,13 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_Piecewise(self, expr):
         "Piecewise function printer"
-        exprs = '[{0}]'.format(','.join(self._print(arg.expr) for arg in expr.args))
-        conds = '[{0}]'.format(','.join(self._print(arg.cond) for arg in expr.args))
+        exprs = '[{}]'.format(','.join(self._print(arg.expr) for arg in expr.args))
+        conds = '[{}]'.format(','.join(self._print(arg.cond) for arg in expr.args))
         # If [default_value, True] is a (expr, cond) sequence in a Piecewise object
         #     it will behave the same as passing the 'default' kwarg to select()
         #     *as long as* it is the last element in expr.args.
         # If this is not the case, it may be triggered prematurely.
-        return '{0}({1}, {2}, default={3})'.format(
+        return '{}({}, {}, default={})'.format(
             self._module_format('numpy.select'), conds, exprs,
             self._print(S.NaN))
 
@@ -750,28 +783,28 @@ class NumPyPrinter(PythonCodePrinter):
             rhs = self._print(expr.rhs)
             return '{op}({lhs}, {rhs})'.format(op=self._module_format('numpy.'+op[expr.rel_op]),
                                                lhs=lhs, rhs=rhs)
-        return super(NumPyPrinter, self)._print_Relational(expr)
+        return super()._print_Relational(expr)
 
     def _print_And(self, expr):
         "Logical And printer"
         # We have to override LambdaPrinter because it uses Python 'and' keyword.
         # If LambdaPrinter didn't define it, we could use StrPrinter's
         # version of the function and add 'logical_and' to NUMPY_TRANSLATIONS.
-        return '{0}.reduce(({1}))'.format(self._module_format('numpy.logical_and'), ','.join(self._print(i) for i in expr.args))
+        return '{}.reduce(({}))'.format(self._module_format('numpy.logical_and'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Or(self, expr):
         "Logical Or printer"
         # We have to override LambdaPrinter because it uses Python 'or' keyword.
         # If LambdaPrinter didn't define it, we could use StrPrinter's
         # version of the function and add 'logical_or' to NUMPY_TRANSLATIONS.
-        return '{0}.reduce(({1}))'.format(self._module_format('numpy.logical_or'), ','.join(self._print(i) for i in expr.args))
+        return '{}.reduce(({}))'.format(self._module_format('numpy.logical_or'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Not(self, expr):
         "Logical Not printer"
         # We have to override LambdaPrinter because it uses Python 'not' keyword.
         # If LambdaPrinter didn't define it, we would still have to define our
         #     own because StrPrinter doesn't define it.
-        return '{0}({1})'.format(self._module_format('numpy.logical_not'), ','.join(self._print(i) for i in expr.args))
+        return '{}({})'.format(self._module_format('numpy.logical_not'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Pow(self, expr, rational=False):
         # XXX Workaround for negative integer power error
@@ -781,10 +814,10 @@ class NumPyPrinter(PythonCodePrinter):
         return self._hprint_Pow(expr, rational=rational, sqrt='numpy.sqrt')
 
     def _print_Min(self, expr):
-        return '{0}(({1}), axis=0)'.format(self._module_format('numpy.amin'), ','.join(self._print(i) for i in expr.args))
+        return '{}(({}), axis=0)'.format(self._module_format('numpy.amin'), ','.join(self._print(i) for i in expr.args))
 
     def _print_Max(self, expr):
-        return '{0}(({1}), axis=0)'.format(self._module_format('numpy.amax'), ','.join(self._print(i) for i in expr.args))
+        return '{}(({}), axis=0)'.format(self._module_format('numpy.amax'), ','.join(self._print(i) for i in expr.args))
 
     def _print_arg(self, expr):
         return "%s(%s)" % (self._module_format('numpy.angle'), self._print(expr.args[0]))
@@ -816,7 +849,7 @@ class NumPyPrinter(PythonCodePrinter):
             raise NotImplementedError("Symbolic matrix dimensions are not yet supported for identity matrices")
 
     def _print_BlockMatrix(self, expr):
-        return '{0}({1})'.format(self._module_format('numpy.block'),
+        return '{}({})'.format(self._module_format('numpy.block'),
                                  self._print(expr.args[0].tolist()))
 
     def _print_CodegenArrayTensorProduct(self, expr):
@@ -970,34 +1003,52 @@ class SciPyPrinter(NumPyPrinter):
             self._print(expr.args[1]))
 
     def _print_fresnels(self, expr):
-        return "{0}({1})[0]".format(
+        return "{}({})[0]".format(
                 self._module_format("scipy.special.fresnel"),
                 self._print(expr.args[0]))
 
     def _print_fresnelc(self, expr):
-        return "{0}({1})[1]".format(
+        return "{}({})[1]".format(
                 self._module_format("scipy.special.fresnel"),
                 self._print(expr.args[0]))
 
     def _print_airyai(self, expr):
-        return "{0}({1})[0]".format(
+        return "{}({})[0]".format(
                 self._module_format("scipy.special.airy"),
                 self._print(expr.args[0]))
 
     def _print_airyaiprime(self, expr):
-        return "{0}({1})[1]".format(
+        return "{}({})[1]".format(
                 self._module_format("scipy.special.airy"),
                 self._print(expr.args[0]))
 
     def _print_airybi(self, expr):
-        return "{0}({1})[2]".format(
+        return "{}({})[2]".format(
                 self._module_format("scipy.special.airy"),
                 self._print(expr.args[0]))
 
     def _print_airybiprime(self, expr):
-        return "{0}({1})[3]".format(
+        return "{}({})[3]".format(
                 self._module_format("scipy.special.airy"),
                 self._print(expr.args[0]))
+
+    def _print_Integral(self, e):
+        integration_vars, limits = _unpack_integral_limits(e)
+
+        if len(limits) == 1:
+            # nicer (but not necessary) to prefer quad over nquad for 1D case
+            module_str = self._module_format("scipy.integrate.quad")
+            limit_str = "%s, %s" % tuple(map(self._print, limits[0]))
+        else:
+            module_str = self._module_format("scipy.integrate.nquad")
+            limit_str = "({})".format(", ".join(
+                "(%s, %s)" % tuple(map(self._print, l)) for l in limits))
+
+        return "{}(lambda {}: {}, {})[0]".format(
+                module_str,
+                ", ".join(map(self._print, integration_vars)),
+                self._print(e.args[0]),
+                limit_str)
 
 
 for k in SciPyPrinter._kf:
@@ -1007,14 +1058,9 @@ for k in SciPyPrinter._kc:
     setattr(SciPyPrinter, '_print_%s' % k, _print_known_const)
 
 
-class SymPyPrinter(PythonCodePrinter):
+class SymPyPrinter(AbstractPythonCodePrinter):
 
     language = "Python with SymPy"
-
-    _kf = {k: 'sympy.' + v for k, v in chain(
-        _known_functions.items(),
-        _known_functions_math.items()
-    )}
 
     def _print_Function(self, expr):
         mod = expr.func.__module__ or ''

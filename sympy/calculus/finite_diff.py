@@ -422,8 +422,7 @@ as_finite_diff.__doc__ = """
 
 
 def differentiate_finite(expr, *symbols,
-                         # points=1, x0=None, wrt=None, evaluate=True, #Py2:
-                         **kwargs):
+                         points=1, x0=None, wrt=None, evaluate=False):
     r""" Differentiate expr and replace Derivatives with finite differences.
 
     Parameters
@@ -468,15 +467,8 @@ def differentiate_finite(expr, *symbols,
     g(x + dx(x)/2 + dx(x + dx(x)/2)/2)/dx(x + dx(x)/2))*f(x + dx(x)/2)/dx(x)
 
     """
-    # Key-word only arguments only available in Python 3
-    points = kwargs.pop('points', 1)
-    x0 = kwargs.pop('x0', None)
-    wrt = kwargs.pop('wrt', None)
-    evaluate = kwargs.pop('evaluate', False)
     if any(term.is_Derivative for term in list(preorder_traversal(expr))):
         evaluate = False
-    if kwargs:
-        raise ValueError("Unknown kwargs: %s" % kwargs)
 
     Dexpr = expr.diff(*symbols, evaluate=evaluate)
     if evaluate:

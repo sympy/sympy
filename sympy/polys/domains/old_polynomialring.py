@@ -1,6 +1,5 @@
 """Implementation of :class:`PolynomialRing` class. """
 
-from __future__ import print_function, division
 
 from sympy.core.compatibility import iterable
 from sympy.polys.agca.modules import FreeModulePolyRing

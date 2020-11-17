@@ -266,7 +266,7 @@ def test_FracElement___mul__():
     assert dict(f.numer) == {(1, 1, 0, 0): u + 1, (0, 0, 0, 0): 1}
     assert dict(f.denom) == {(0, 0, 1, 0): v - 1, (0, 0, 0, 1): -u*v, (0, 0, 0, 0): -1}
 
-def test_FracElement___div__():
+def test_FracElement___truediv__():
     F, x,y = field("x,y", QQ)
 
     f, g = 1/x, 1/y

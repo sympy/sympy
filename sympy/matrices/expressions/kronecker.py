@@ -104,7 +104,7 @@ class KroneckerProduct(MatrixExpr):
     """
     is_KroneckerProduct = True
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, check=True):
         args = list(map(sympify, args))
         if all(a.is_Identity for a in args):
             ret = Identity(prod(a.rows for a in args))
@@ -113,7 +113,6 @@ class KroneckerProduct(MatrixExpr):
             else:
                 return ret
 
-        check = kwargs.get('check', True)
         if check:
             validate(*args)
         return super().__new__(cls, *args)

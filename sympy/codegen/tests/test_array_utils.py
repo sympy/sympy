@@ -360,6 +360,10 @@ def test_parsing_of_matrix_expressions():
     rexpr = recognize_matrix_expression(res)
     assert expr.expand() == rexpr.doit()
 
+    expr = Trace(M)
+    result = CodegenArrayContraction(M, (0, 1))
+    assert parse_matrix_expression(expr) == result
+
 
 def test_special_matrices():
     a = MatrixSymbol("a", k, 1)
@@ -520,7 +524,7 @@ def test_recognize_diagonalized_vectors():
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(A.T, a, b, b.T, (A*X*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
     assert cg.split_multiple_contractions().dummy_eq(CodegenArrayContraction(
         CodegenArrayTensorProduct(A.T, DiagMatrix(a), b, b.T, (A*X*b).applyfunc(cos)),
-                               (1, 2), (3, 8), (5, 6, 9)))
+                                 (1, 2), (3, 8), (5, 6, 9)))
     # assert recognize_matrix_expression(cg)
 
     # Check no overlap of lines:

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import zeros, eye, Symbol, solve_linear_system
 
 N = 8

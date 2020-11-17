@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
 from sympy.codegen.cfunctions import expm1, log1p
@@ -200,6 +198,27 @@ def test_sqrt():
     assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
 
 
+def test_frac():
+    from sympy import frac
+
+    expr = frac(x)
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr) == 'x % 1'
+
+    prntr = MpmathPrinter()
+    assert prntr.doprint(expr) == 'mpmath.frac(x)'
+
+    prntr = SymPyPrinter()
+    assert prntr.doprint(expr) == 'sympy.functions.elementary.integers.frac(x)'
+
+
 class CustomPrintedObject(Expr):
     def _numpycode(self, printer):
         return 'numpy'
@@ -248,6 +267,27 @@ def test_issue_16535_16536():
     prntr = PythonCodePrinter()
     assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # lowergamma\nlowergamma(a, x)'
     assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # uppergamma\nuppergamma(a, x)'
+
+
+def test_Integral():
+    from sympy import Integral, exp
+
+    single = Integral(exp(-x), (x, 0, oo))
+    double = Integral(x**2*exp(x*y), (x, -z, z), (y, 0, z))
+    indefinite = Integral(x**2, x)
+    evaluateat = Integral(x**2, (x, 1))
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(single) == 'scipy.integrate.quad(lambda x: numpy.exp(-x), 0, numpy.PINF)[0]'
+    assert prntr.doprint(double) == 'scipy.integrate.nquad(lambda x, y: x**2*numpy.exp(x*y), ((-z, z), (0, z)))[0]'
+    raises(NotImplementedError, lambda: prntr.doprint(indefinite))
+    raises(NotImplementedError, lambda: prntr.doprint(evaluateat))
+
+    prntr = MpmathPrinter()
+    assert prntr.doprint(single) == 'mpmath.quad(lambda x: mpmath.exp(-x), (0, mpmath.inf))'
+    assert prntr.doprint(double) == 'mpmath.quad(lambda x, y: x**2*mpmath.exp(x*y), (-z, z), (0, z))'
+    raises(NotImplementedError, lambda: prntr.doprint(indefinite))
+    raises(NotImplementedError, lambda: prntr.doprint(evaluateat))
 
 
 def test_fresnel_integrals():

@@ -53,12 +53,12 @@ class Higher(Integer):
     def __rpow__(self, other):
         return 2*self.result
 
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
         return self.result
 
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
+    @call_highest_priority('__truediv__')
+    def __rtruediv__(self, other):
         return 2*self.result
 
     @call_highest_priority('__rmod__')
@@ -76,9 +76,6 @@ class Higher(Integer):
     @call_highest_priority('__floordiv__')
     def __rfloordiv__(self, other):
         return 2*self.result
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
 
 class Lower(Higher):
