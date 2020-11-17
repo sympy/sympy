@@ -563,6 +563,17 @@ def _get_examples_ode_sol_euler_undetermined_coeff():
         'eq': Eq(x**3*diff(f(x), x, x, x) - 3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), log(x)),
         'sol': [Eq(f(x), C1*x + C2*x**2 + C3*x**3 - Rational(1, 6)*log(x) - Rational(11, 36))]
     },
+
+    #Below examples were added for the issue: https://github.com/sympy/sympy/issues/5096
+    'euler_undet_06': {
+        'eq': 2*x**2*f(x).diff(x, 2) + f(x) + sqrt(2*x)*sin(log(2*x)/2),
+        'sol': [Eq(f(x), sqrt(x)*(C1*sin(log(x)/2) + C2*cos(log(x)/2) + sqrt(2)*log(x)*cos(log(2*x)/2)/2))]
+    },
+
+    'euler_undet_07': {
+        'eq': 2*x**2*f(x).diff(x, 2) + f(x) + sin(log(2*x)/2),
+        'sol': [Eq(f(x), C1*sqrt(x)*sin(log(x)/2) + C2*sqrt(x)*cos(log(x)/2) - 2*sin(log(2*x)/2)/5 - 4*cos(log(2*x)/2)/5)]
+    },
     }
     }
 
