@@ -1,5 +1,6 @@
 from sympy.printing.pycode import AbstractPythonCodePrinter
 from sympy.external import import_module
+from sympy.codegen.cfunctions import Sqrt
 import sympy
 
 torch = import_module('torch')
@@ -18,7 +19,7 @@ class TorchPrinter(AbstractPythonCodePrinter):
         sympy.floor: "torch.floor",
         sympy.log: "torch.log",
         sympy.exp: "torch.exp",
-        sympy.sqrt: "torch.sqrt",
+        Sqrt: "torch.sqrt",
         sympy.cos: "torch.cos",
         sympy.acos: "torch.acos",
         sympy.sin: "torch.sin",
