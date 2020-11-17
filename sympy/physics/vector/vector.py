@@ -23,6 +23,7 @@ class Vector(Printable, EvalfMixin):
     """
 
     simp = False
+    is_number = False
 
     def __init__(self, inlist):
         """This is the constructor for the Vector class.  You shouldn't be
@@ -55,9 +56,8 @@ class Vector(Printable, EvalfMixin):
 
     @property
     def func(self):
+        """Returns the class Vector. """
         return Vector
-
-    is_number = False
 
     def __hash__(self):
         return hash(tuple(self.args))

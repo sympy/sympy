@@ -18,6 +18,8 @@ class Dyadic(Printable, EvalfMixin):
 
     """
 
+    is_number = False
+
     def __init__(self, inlist):
         """
         Just like Vector's init, you shouldn't call this unless creating a
@@ -58,9 +60,8 @@ class Dyadic(Printable, EvalfMixin):
 
     @property
     def func(self):
+        """Returns the class Dyadic. """
         return Dyadic
-
-    is_number = False
 
     def __add__(self, other):
         """The add operator for Dyadic. """
