@@ -91,8 +91,9 @@ def test_codegen_extra():
 
     cg = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N), (1, 2))
     assert torch_code(cg) == 'torch.einsum("ab,bc->acb", [M, N])'
-    # TODO: no implemented for diagonal
+    # TODO: not implemented for diagonal
     #_compare_torch_matrix((M, N), cg)
 
 
 test_codegen_extra()
+test_torch_matrix()

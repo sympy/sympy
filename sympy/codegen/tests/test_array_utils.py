@@ -15,8 +15,6 @@ from sympy.tensor.array import permutedims, tensorproduct, tensorcontraction
 from sympy.matrices.expressions.diagonal import DiagMatrix
 
 
-
-
 A, B = symbols("A B", cls=IndexedBase)
 i, j, k, l, m, n = symbols("i j k l m n")
 
@@ -51,6 +49,7 @@ def test_codegen_array_contraction_construction():
     cg = parse_indexed_expression(elem)
     cg = cg.sort_args_by_name()
     assert cg == result
+
 
 def test_codegen_array_contraction_indices_types():
     cg = CodegenArrayContraction(CodegenArrayTensorProduct(M, N), (0, 1))
