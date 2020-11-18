@@ -4,6 +4,7 @@ Several methods to simplify expressions involving unit objects.
 
 from sympy import Add, Mul, Pow, Tuple, sympify
 from sympy.core.compatibility import reduce, Iterable, ordered
+from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension
 from sympy.physics.units.prefixes import Prefix
 from sympy.physics.units.quantities import Quantity
@@ -30,7 +31,11 @@ def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
     camat = Matrix([[dimension_system.get_dimensional_dependencies(i, mark_dimensionless=True).get(j, 0) for i in target_dims] for j in canon_dim_units])
     exprmat = Matrix([dim_dependencies.get(k, 0) for k in canon_dim_units])
 
-    res_exponents = camat.solve_least_squares(exprmat, method=None)
+    try:
+        res_exponents = camat.solve(exprmat)
+    except NonInvertibleMatrixError:
+        return None
+
     return res_exponents
 
 
