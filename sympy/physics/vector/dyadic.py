@@ -597,7 +597,7 @@ class Dyadic(Printable, EvalfMixin):
                     new_args.append(tuple(new_inlist))
                     changed |= a_xr[1]
                 else:
-                    new_args.append(tuple(new_inlist))
+                    new_args.append(inlist)
             if changed:
                 return Dyadic(new_args), True
         return self, False
