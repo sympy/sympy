@@ -6,9 +6,8 @@
 [![Zenodo Badge](https://zenodo.org/badge/18918/sympy/sympy.svg)](https://zenodo.org/badge/latestdoi/18918/sympy/sympy)
 [![codecov Badge](https://codecov.io/gh/sympy/sympy/branch/master/graph/badge.svg)](https://codecov.io/gh/sympy/sympy)
 
-![SymPy Banner](banner.svg)
+[![SymPy Banner](banner.svg)](https://sympy.org/)
 
-<https://sympy.org/>
 
 See the AUTHORS file for the list of authors.
 
