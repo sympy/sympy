@@ -1002,11 +1002,16 @@ def test_issue_13642():
 def test_issue_13176():
     if not numpy:
         skip("numpy not installed")
-    f = lambdify(x, Heaviside(x))
-    res = f([-1, 0, 1])
-    assert Abs(res[0]).n() < 1e-15
-    assert Abs(res[1] - 0).n() < 1e-15
-    assert Abs(res[2] - 1).n() < 1e-15
+    f1 = lambdify(x, Heaviside(x))
+    f2 = lambdify(x, Heaviside(x, 1))
+    res1 = f1([-1, 0, 1])
+    res2 = f2([-1, 0, 1])
+    assert Abs(res1[0]).n() < 1e-15         # First functionality: only one argument passed
+    assert Abs(res1[1] - 1/2).n() < 1e-15
+    assert Abs(res1[2] - 1).n() < 1e-15
+    assert Abs(res2[0]).n() < 1e-15         # Second functionality: two arguments passed
+    assert Abs(res2[1] - 1).n() < 1e-15
+    assert Abs(res2[2] - 1).n() < 1e-15
 
 def test_sinc_mpmath():
     f = lambdify(x, sinc(x), "mpmath")
