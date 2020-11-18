@@ -21,7 +21,19 @@ def run(cmd, cwd=None):
     return check_call(cmd, cwd=cwd)
 
 
+def green(text):
+    return "\033[32m%s\033[0m" % text
+
+
 def test_sdist(pyversion, version, outdir, wheel=False):
+
+    print(green('-' * 80))
+    if not wheel:
+        print(green('    Testing Python %s (sdist)' % pyversion))
+    else:
+        print(green('    Testing Python %s (wheel)' % pyversion))
+    print(green('-' * 80))
+
     python_exe = f'python{pyversion}'
     wheelname = f'sympy-{version}-py3-none-any.whl'
     tarname = f'sympy-{version}.tar.gz'
