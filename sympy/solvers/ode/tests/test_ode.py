@@ -12,7 +12,7 @@ from sympy.solvers.ode.ode import (_linear_coeff_match,
     _undetermined_coefficients_match, classify_sysode,
     constant_renumber, constantsimp, get_numbered_constants, solve_ics)
 
-from sympy.functions import airyai, airybi, besselj, bessely
+from sympy.functions import airyai, airybi
 
 from sympy.solvers.deutils import ode_order
 from sympy.testing.pytest import XFAIL, skip, raises, slow, ON_TRAVIS, SKIP
