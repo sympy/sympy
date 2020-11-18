@@ -719,6 +719,67 @@ class Vector(Printable, EvalfMixin):
             new_args.append([mat.evalf(n=prec_to_dps(prec)), frame])
         return Vector(new_args)
 
+    def xreplace(self, rule):
+        """
+        Replace occurrences of objects within the expression.
+
+        Parameters
+        ==========
+
+        rule : dict-like
+            Expresses a replacement rule
+
+        Returns
+        =======
+
+        xreplace : the result of the replacement
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, pi
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> A = ReferenceFrame('A')
+        >>> x, y, z = symbols('x y z')
+        >>> ((1 + x*y) * A.x).xreplace({x: pi})
+        (pi*y + 1)*A.x
+        >>> ((1 + x*y) * A.x).xreplace({x: pi, y: 2})
+        (1 + 2*pi)*A.x
+
+        Replacements occur only if an entire node in the expression tree is
+        matched:
+
+        >>> ((x*y + z) * A.x).xreplace({x*y: pi})
+        (z + pi)*A.x
+        >>> ((x*y*z) * A.x).xreplace({x*y: pi})
+        x*y*z*A.x
+
+        """
+
+        value, _ = self._xreplace(rule)
+        return value
+
+    def _xreplace(self, rule):
+        """
+        Helper for xreplace. Tracks whether a replacement actually occurred.
+        """
+        if self in rule:
+            return rule[self], True
+        elif rule:
+            changed = False
+            new_args = []
+            for mat, frame in self.args:
+                _xreplace = getattr(mat, '_xreplace', None)
+                if _xreplace is not None:
+                    mat_xr = _xreplace(rule)
+                    new_args.append([mat_xr[0], frame])
+                    changed |= mat_xr[1]
+                else:
+                    new_args.append([mat, frame])
+            if changed:
+                return Vector(new_args), True
+        return self, False
+
 
 class VectorTypeError(TypeError):
 

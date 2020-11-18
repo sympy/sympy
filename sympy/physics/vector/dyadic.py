@@ -539,6 +539,69 @@ class Dyadic(Printable, EvalfMixin):
             new_args.append(tuple(new_inlist))
         return Dyadic(new_args)
 
+    def xreplace(self, rule):
+        """
+        Replace occurrences of objects within the expression.
+
+        Parameters
+        ==========
+
+        rule : dict-like
+            Expresses a replacement rule
+
+        Returns
+        =======
+
+        xreplace : the result of the replacement
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, pi
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> x, y, z = symbols('x y z')
+        >>> ((1 + x*y) * (N.x | N.x)).xreplace({x: pi})
+        (pi*y + 1)*(N.x|N.x)
+        >>> ((1 + x*y) * (N.x | N.x)).xreplace({x: pi, y: 2})
+        (1 + 2*pi)*(N.x|N.x)
+
+        Replacements occur only if an entire node in the expression tree is
+        matched:
+
+        >>> ((x*y + z) * (N.x | N.x)).xreplace({x*y: pi})
+        (z + pi)*(N.x|N.x)
+        >>> ((x*y*z) * (N.x | N.x)).xreplace({x*y: pi})
+        x*y*z*(N.x|N.x)
+
+        """
+
+        value, _ = self._xreplace(rule)
+        return value
+
+    def _xreplace(self, rule):
+        """
+        Helper for xreplace. Tracks whether a replacement actually occurred.
+        """
+
+        if rule:
+            changed = False
+            new_args = []
+            for inlist in self.args:
+                new_inlist = list(inlist)
+                a = new_inlist[0]
+                _xreplace = getattr(a, '_xreplace', None)
+                if _xreplace is not None:
+                    a_xr = _xreplace(rule)
+                    new_inlist[0] = a_xr[0]
+                    new_args.append(tuple(new_inlist))
+                    changed |= a_xr[1]
+                else:
+                    new_args.append(tuple(new_inlist))
+            if changed:
+                return Dyadic(new_args), True
+        return self, False
+
 def _check_dyadic(other):
     if not isinstance(other, Dyadic):
         raise TypeError('A Dyadic must be supplied')

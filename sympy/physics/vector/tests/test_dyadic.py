@@ -104,3 +104,15 @@ def test_dyadic_evalf():
     s = symbols('s')
     a = 5 * s * pi* (N.x | N.x)
     assert a.evalf(2) == Float('5', 2) * Float('3.1416', 2) * s * (N.x | N.x)
+
+def test_dyadic_xreplace():
+    x, y, z = symbols('x y z')
+    N = ReferenceFrame('N')
+    v = x*y * (N.x | N.x)
+    assert v.xreplace({x : cos(x)}) == cos(x)*y * (N.x | N.x)
+    assert v.xreplace({x*y : pi}) == pi * (N.x | N.x)
+    v = (x*y)**z * (N.x | N.x)
+    assert v.xreplace({(x*y)**z : 1}) == (N.x | N.x)
+    assert v.xreplace({x:1, z:0}) == (N.x | N.x)
+    raises(TypeError, lambda: v.xreplace())
+    raises(TypeError, lambda: v.xreplace([x, y]))
