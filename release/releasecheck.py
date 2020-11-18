@@ -13,6 +13,8 @@ def main(version, outdir):
     run_stage(['release/compare_tar_against_git.py', join(outdir, 'sympy-%s.tar.gz' % (version,)), '.'])
     run_stage(['release/test_install.py', version, outdir])
     run_stage(['release/build_docs.py', version, outdir])
+    run_stage(['release/sha256.py', version, outdir])
+    run_stage(['release/authors.py', version, outdir])
 
 
 def green(text):
