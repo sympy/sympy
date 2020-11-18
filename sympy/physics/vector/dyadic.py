@@ -576,31 +576,12 @@ class Dyadic(Printable, EvalfMixin):
 
         """
 
-        value, _ = self._xreplace(rule)
-        return value
-
-    def _xreplace(self, rule):
-        """
-        Helper for xreplace. Tracks whether a replacement actually occurred.
-        """
-
-        if rule:
-            changed = False
-            new_args = []
-            for inlist in self.args:
-                new_inlist = list(inlist)
-                a = new_inlist[0]
-                _xreplace = getattr(a, '_xreplace', None)
-                if _xreplace is not None:
-                    a_xr = _xreplace(rule)
-                    new_inlist[0] = a_xr[0]
-                    new_args.append(tuple(new_inlist))
-                    changed |= a_xr[1]
-                else:
-                    new_args.append(inlist)
-            if changed:
-                return Dyadic(new_args), True
-        return self, False
+        new_args = []
+        for inlist in self.args:
+            new_inlist = list(inlist)
+            new_inlist[0] = new_inlist[0].xreplace(rule)
+            new_args.append(tuple(new_inlist))
+        return Dyadic(new_args)
 
 def _check_dyadic(other):
     if not isinstance(other, Dyadic):

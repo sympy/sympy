@@ -756,30 +756,11 @@ class Vector(Printable, EvalfMixin):
 
         """
 
-        value, _ = self._xreplace(rule)
-        return value
-
-    def _xreplace(self, rule):
-        """
-        Helper for xreplace. Tracks whether a replacement actually occurred.
-        """
-        if self in rule:
-            return rule[self], True
-        elif rule:
-            changed = False
-            new_args = []
-            for mat, frame in self.args:
-                _xreplace = getattr(mat, '_xreplace', None)
-                if _xreplace is not None:
-                    mat_xr = _xreplace(rule)
-                    new_args.append([mat_xr[0], frame])
-                    changed |= mat_xr[1]
-                else:
-                    new_args.append([mat, frame])
-            if changed:
-                return Vector(new_args), True
-        return self, False
-
+        new_args = []
+        for mat, frame in self.args:
+            mat = mat.xreplace(rule)
+            new_args.append([mat, frame])
+        return Vector(new_args)
 
 class VectorTypeError(TypeError):
 
