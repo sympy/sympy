@@ -318,12 +318,10 @@ def test_DiscreteMarkovChain():
     assert P(Le(Y[5], Y[10]), Eq(Y[4], 2)).round(6) == Float(0.583120, 6)
     assert Float(P(Eq(Y[10], Y[5]), Eq(Y[4], 1)), 14) == Float(1 - P(Ne(Y[10], Y[5]), Eq(Y[4], 1)), 14)
     assert Float(P(Gt(Y[8], Y[9]), Eq(Y[3], 2)), 14) == Float(1 - P(Le(Y[8], Y[9]), Eq(Y[3], 2)), 14)
-    assert Float(P(Lt(Y[1], Y[4]), Eq(Y[0], 0)), 14) == Float(1 - P(Ge(Y[1], Y[4]), Eq(Y[0], 0)), 14)
+    assert Float(P(Lt(Y[1], Y[4]), Eq(Y[0], 0)), 14) == Float(1 - P(Ge(Y[4], Y[1]), Eq(Y[0], 0)), 14)
     assert P(Eq(Y[5], Y[10]), Eq(Y[2], 1)) == P(Eq(Y[10], Y[5]), Eq(Y[2], 1))
     assert P(Gt(Y[1], Y[2]), Eq(Y[0], 1)) == P(Lt(Y[2], Y[1]), Eq(Y[0], 1))
     assert P(Ge(Y[7], Y[6]), Eq(Y[4], 1)) == P(Le(Y[6], Y[7]), Eq(Y[4], 1))
-    assert (P(Lt(Y[10], Y[2]), Eq(Y[1], 1)) + P(Gt(Y[10], Y[2]), Eq(Y[1], 0)) + P(Eq(Y[10], Y[2]), Eq(Y[1], 0))).round(10) == 1
-    assert (P(Le(Y[5], Y[3]), Eq(Y[2], 1)) + P(Ge(Y[5], Y[3]), Eq(Y[2], 0)) - P(Eq(Y[5], Y[3]), Eq(Y[2], 0))).round(10) == 1
 
     #test symbolic queries
     a,b,c,d = symbols('a b c d')
@@ -331,7 +329,7 @@ def test_DiscreteMarkovChain():
     Y = DiscreteMarkovChain("Y", [0,1,2], T)
     query=P(Eq(Y[a], b), Eq(Y[c], d))
     assert(query.subs({a:10 ,b:2, c:5, d:1}).evalf().round(4) == P(Eq(Y[10], 2), Eq(Y[5], 1)).round(4))
-    assert(query.subs({a:15 ,b:0, c:20, d:1}).evalf().round(4) == P(Eq(Y[15], 0), Eq(Y[20], 1)).round(4))
+    assert(query.subs({a:15 ,b:0, c:10, d:1}).evalf().round(4) == P(Eq(Y[15], 0), Eq(Y[10], 1)).round(4))
     query_gt=P(Gt(Y[a], b), Eq(Y[c], d))
     query_le=P(Le(Y[a], b), Eq(Y[c], d))
     assert((query_gt.subs({a:5 ,b:2, c:1, d:0}) + query_le.subs({a:5 ,b:2, c:1, d:0})).evalf() == 1)
@@ -413,8 +411,6 @@ def test_ContinuousMarkovChain():
     assert P(Eq(C(5.243), C(10.912)), Eq(C(2.174), 1)) == P(Eq(C(10.912), C(5.243)), Eq(C(2.174), 1))
     assert P(Gt(C(2.344), C(9.9)), Eq(C(1.102), 1)) == P(Lt(C(9.9), C(2.344)), Eq(C(1.102), 1))
     assert P(Ge(C(7.87), C(1.008)), Eq(C(0.153), 1)) == P(Le(C(1.008), C(7.87)), Eq(C(0.153), 1))
-    assert (P(Lt(C(5.706), C(1.98)), Eq(C(1.767), 1)) + P(Gt(C(5.706), C(1.98)), Eq(C(1.767), 0)) + P(Eq(C(5.706), C(1.98)), Eq(C(1.767), 0))).round(10) == 1
-    assert (P(Le(C(5.12), C(3.8)), Eq(C(2.64), 1)) + P(Ge(C(5.12), C(3.8)), Eq(C(2.64), 0)) - P(Eq(C(5.12), C(3.8)), Eq(C(2.64), 0))).round(10) == 1
 
     #test symbolic queries
     a,b,c,d = symbols('a b c d')
