@@ -59,6 +59,9 @@ def unset_show():
 class Plot:
     """The central class of the plotting module.
 
+    Explanation
+    ===========
+
     For interactive work the function ``plot`` is better suited.
 
     This class permits the plotting of sympy expressions using numerous
@@ -386,12 +389,14 @@ class PlotGrid:
         Parameters
         ==========
 
-        nrows : The number of rows that should be in the grid of the
-                required subplot
-        ncolumns : The number of columns that should be in the grid
-                   of the required subplot
+        nrows :
+            The number of rows that should be in the grid of the
+            required subplot.
+        ncolumns :
+            The number of columns that should be in the grid
+            of the required subplot.
 
-        nrows and ncolumns together define the required grid
+        nrows and ncolumns together define the required grid.
 
         Arguments
         =========
@@ -404,11 +409,11 @@ class PlotGrid:
         =================
 
         show : Boolean
-               The default value is set to ``True``. Set show to ``False`` and
-               the function will not display the subplot. The returned instance
-               of the ``PlotGrid`` class can then be used to save or display the
-               plot by calling the ``save()`` and ``show()`` methods
-               respectively.
+            The default value is set to ``True``. Set show to ``False`` and
+            the function will not display the subplot. The returned instance
+            of the ``PlotGrid`` class can then be used to save or display the
+            plot by calling the ``save()`` and ``show()`` methods
+            respectively.
         """
         self.nrows = nrows
         self.ncolumns = ncolumns
@@ -447,6 +452,9 @@ class PlotGrid:
 ### The base class for all series
 class BaseSeries:
     """Base class for the data objects containing stuff to be plotted.
+
+    Explanation
+    ===========
 
     The backend should check if it supports the data series that it's given.
     (eg TextBackend supports only LineOver1DRange).
@@ -613,6 +621,9 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         """
         Adaptively gets segments for plotting.
 
+        Explanation
+        ===========
+
         The adaptive sampling is done by recursively checking if three
         points are almost collinear. If they are not collinear, then more
         points are added between those points.
@@ -747,13 +758,17 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         """
         Adaptively gets segments for plotting.
 
+        Explanation
+        ===========
+
         The adaptive sampling is done by recursively checking if three
         points are almost collinear. If they are not collinear, then more
         points are added between those points.
 
         References
         ==========
-        [1] Adaptive polygonal approximation of parametric curves,
+
+        .. [1] Adaptive polygonal approximation of parametric curves,
             Luiz Henrique de Figueiredo.
 
         """
@@ -1443,7 +1458,7 @@ def plot(*args, show=True, **kwargs):
     Parameters
     ==========
 
-    args
+    args :
         The first argument is the expression representing the function
         of single variable to be plotted.
 
@@ -2080,8 +2095,8 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
     """
     Plots a 3D parametric surface plot.
 
-    Usage
-    =====
+    Explanation
+    ===========
 
     Single plot.
 
@@ -2262,7 +2277,7 @@ def plot_contour(*args, show=True, **kwargs):
 def check_arguments(args, expr_len, nb_of_free_symbols):
     """
     Checks the arguments and converts into tuples of the
-    form (exprs, ranges)
+    form (exprs, ranges).
 
     Examples
     ========

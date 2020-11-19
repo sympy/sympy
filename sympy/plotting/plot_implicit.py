@@ -1,4 +1,7 @@
-"""Implicit plotting module for SymPy
+"""Implicit plotting module for SymPy.
+
+Explanation
+===========
 
 The module implements a data series called ImplicitSeries which is used by
 ``Plot`` class to plot implicit plots for different backends. The module,
@@ -11,14 +14,16 @@ algorithm.
 
 See Also
 ========
+
 sympy.plotting.plot
 
 References
 ==========
-- Jeffrey Allen Tupper. Reliable Two-Dimensional Graphing Methods for
+
+.. [1] Jeffrey Allen Tupper. Reliable Two-Dimensional Graphing Methods for
 Mathematical Formulae with Two Free Variables.
 
-- Jeffrey Allen Tupper. Graphing Equations with Generalized Interval
+.. [2] Jeffrey Allen Tupper. Graphing Equations with Generalized Interval
 Arithmetic. Master's thesis. University of Toronto, 1996
 
 """
