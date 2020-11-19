@@ -265,28 +265,28 @@ def test_DiscreteMarkovChain():
     assert P(Eq(Y[7], Y[5]), Eq(Y[2], 0)).round(5) == Float(0.44428, 5)
     assert P(Gt(Y[3], Y[1]), Eq(Y[0], 0)).round(2) == Float(0.36, 2)
     assert P(Le(Y[5], Y[10]), Eq(Y[4], 2)).round(6) == Float(0.583120, 6)
-    assert Float(P(Eq(Y[500], Y[240]), Eq(Y[120], 1)), 14) == Float(1 - P(Ne(Y[500], Y[240]), Eq(Y[120], 1)), 14)
-    assert Float(P(Gt(Y[350], Y[100]), Eq(Y[75], 2)), 14) == Float(1 - P(Le(Y[350], Y[100]), Eq(Y[75], 2)), 14)
-    assert Float(P(Lt(Y[400], Y[210]), Eq(Y[161], 0)), 14) == Float(1 - P(Ge(Y[400], Y[210]), Eq(Y[161], 0)), 14)
+    assert Float(P(Eq(Y[10], Y[5]), Eq(Y[4], 1)), 14) == Float(1 - P(Ne(Y[10], Y[5]), Eq(Y[4], 1)), 14)
+    assert Float(P(Gt(Y[8], Y[9]), Eq(Y[3], 2)), 14) == Float(1 - P(Le(Y[8], Y[9]), Eq(Y[3], 2)), 14)
+    assert Float(P(Lt(Y[1], Y[4]), Eq(Y[0], 0)), 14) == Float(1 - P(Ge(Y[1], Y[4]), Eq(Y[0], 0)), 14)
     assert P(Eq(Y[5], Y[10]), Eq(Y[2], 1)) == P(Eq(Y[10], Y[5]), Eq(Y[2], 1))
-    assert P(Gt(Y[23], Y[100]), Eq(Y[19], 1)) == P(Lt(Y[100], Y[23]), Eq(Y[19], 1))
-    assert P(Ge(Y[78], Y[111]), Eq(Y[29], 1)) == P(Le(Y[111], Y[78]), Eq(Y[29], 1))
-    assert (P(Lt(Y[295], Y[201]), Eq(Y[173], 1)) + P(Gt(Y[295], Y[201]), Eq(Y[173], 0)) + P(Eq(Y[295], Y[201]), Eq(Y[173], 0))).round(10) == 1
-    assert (P(Le(Y[531], Y[367]), Eq(Y[279], 1)) + P(Ge(Y[531], Y[367]), Eq(Y[279], 0)) - P(Eq(Y[531], Y[367]), Eq(Y[279], 0))).round(10) == 1
+    assert P(Gt(Y[1], Y[2]), Eq(Y[0], 1)) == P(Lt(Y[2], Y[1]), Eq(Y[0], 1))
+    assert P(Ge(Y[7], Y[6]), Eq(Y[4], 1)) == P(Le(Y[6], Y[7]), Eq(Y[4], 1))
+    assert (P(Lt(Y[10], Y[2]), Eq(Y[1], 1)) + P(Gt(Y[10], Y[2]), Eq(Y[1], 0)) + P(Eq(Y[10], Y[2]), Eq(Y[1], 0))).round(10) == 1
+    assert (P(Le(Y[5], Y[3]), Eq(Y[2], 1)) + P(Ge(Y[5], Y[3]), Eq(Y[2], 0)) - P(Eq(Y[5], Y[3]), Eq(Y[2], 0))).round(10) == 1
 
     #test symbolic queries
     a,b,c,d = symbols('a b c d')
     T = Matrix([[Rational(1,10), Rational(4, 10), Rational(5, 10)], [Rational(3,10), Rational(4,10), Rational(3,10)], [Rational(7,10), Rational(2,10), Rational(1,10)]])
     Y = DiscreteMarkovChain("Y", [0,1,2], T)
     query=P(Eq(Y[a], b), Eq(Y[c], d))
-    assert(query.subs({a:48 ,b:2, c:23, d:1}).evalf().round(4) == P(Eq(Y[48], 2), Eq(Y[23], 1)).round(4))
-    assert(query.subs({a:191 ,b:0, c:87, d:1}).evalf().round(4) == P(Eq(Y[191], 0), Eq(Y[87], 1)).round(4))
+    assert(query.subs({a:10 ,b:2, c:5, d:1}).evalf().round(4) == P(Eq(Y[10], 2), Eq(Y[5], 1)).round(4))
+    assert(query.subs({a:15 ,b:0, c:20, d:1}).evalf().round(4) == P(Eq(Y[15], 0), Eq(Y[20], 1)).round(4))
     query_gt=P(Gt(Y[a], b), Eq(Y[c], d))
     query_le=P(Le(Y[a], b), Eq(Y[c], d))
-    assert((query_gt.subs({a:432 ,b:2, c:329, d:0}) + query_le.subs({a:432 ,b:2, c:329, d:0})).evalf() == 1)
+    assert((query_gt.subs({a:5 ,b:2, c:1, d:0}) + query_le.subs({a:5 ,b:2, c:1, d:0})).evalf() == 1)
     query_ge=P(Ge(Y[a], b), Eq(Y[c], d))
     query_lt=P(Lt(Y[a], b), Eq(Y[c], d))
-    assert((query_ge.subs({a:287 ,b:1, c:0, d:0}) + query_lt.subs({a:287 ,b:1, c:0, d:0})).evalf() == 1)
+    assert((query_ge.subs({a:4 ,b:1, c:0, d:2}) + query_lt.subs({a:4 ,b:1, c:0, d:2})).evalf() == 1)
 
 def test_sample_stochastic_process():
     if not import_module('scipy'):
@@ -356,14 +356,14 @@ def test_ContinuousMarkovChain():
     assert P(Eq(C(7.385), C(3.19)), Eq(C(0.862), 0)).round(5) == Float(0.35469, 5)
     assert P(Gt(C(98.715), C(19.807)), Eq(C(11.314), 2)).round(5) == Float(0.32452, 5)
     assert P(Le(C(5.9), C(10.112)), Eq(C(4), 1)).round(6) == Float(0.675214, 6)
-    assert Float(P(Eq(C(771.32), C(291.65)), Eq(C(290.63), 1)), 14) == Float(1 - P(Ne(C(771.32), C(291.65)), Eq(C(290.63), 1)), 14)
-    assert Float(P(Gt(C(365.36), C(100.101)), Eq(C(75.992), 2)), 14) == Float(1 - P(Le(C(365.36), C(100.101)), Eq(C(75.992), 2)), 14)
-    assert Float(P(Lt(C(400.90), C(243.79)), Eq(C(161.54), 0)), 14) == Float(1 - P(Ge(C(400.90), C(243.79)), Eq(C(161.54), 0)), 14)
+    assert Float(P(Eq(C(7.32), C(2.91)), Eq(C(2.63), 1)), 14) == Float(1 - P(Ne(C(7.32), C(2.91)), Eq(C(2.63), 1)), 14)
+    assert Float(P(Gt(C(3.36), C(1.101)), Eq(C(0.8), 2)), 14) == Float(1 - P(Le(C(3.36), C(1.101)), Eq(C(0.8), 2)), 14)
+    assert Float(P(Lt(C(4.9), C(2.79)), Eq(C(1.61), 0)), 14) == Float(1 - P(Ge(C(4.9), C(2.79)), Eq(C(1.61), 0)), 14)
     assert P(Eq(C(5.243), C(10.912)), Eq(C(2.174), 1)) == P(Eq(C(10.912), C(5.243)), Eq(C(2.174), 1))
-    assert P(Gt(C(23.44), C(99.99)), Eq(C(19.102), 1)) == P(Lt(C(99.99), C(23.44)), Eq(C(19.102), 1))
-    assert P(Ge(C(71.87), C(111.008)), Eq(C(29.153), 1)) == P(Le(C(111.008), C(71.87)), Eq(C(29.153), 1))
-    assert (P(Lt(C(295.706), C(201.98)), Eq(C(173.767), 1)) + P(Gt(C(295.706), C(201.98)), Eq(C(173.767), 0)) + P(Eq(C(295.706), C(201.98)), Eq(C(173.767), 0))).round(10) == 1
-    assert (P(Le(C(531.12), C(367.8)), Eq(C(279.64), 1)) + P(Ge(C(531.12), C(367.8)), Eq(C(279.64), 0)) - P(Eq(C(531.12), C(367.8)), Eq(C(279.64), 0))).round(10) == 1
+    assert P(Gt(C(2.344), C(9.9)), Eq(C(1.102), 1)) == P(Lt(C(9.9), C(2.344)), Eq(C(1.102), 1))
+    assert P(Ge(C(7.87), C(1.008)), Eq(C(0.153), 1)) == P(Le(C(1.008), C(7.87)), Eq(C(0.153), 1))
+    assert (P(Lt(C(5.706), C(1.98)), Eq(C(1.767), 1)) + P(Gt(C(5.706), C(1.98)), Eq(C(1.767), 0)) + P(Eq(C(5.706), C(1.98)), Eq(C(1.767), 0))).round(10) == 1
+    assert (P(Le(C(5.12), C(3.8)), Eq(C(2.64), 1)) + P(Ge(C(5.12), C(3.8)), Eq(C(2.64), 0)) - P(Eq(C(5.12), C(3.8)), Eq(C(2.64), 0))).round(10) == 1
 
     #test symbolic queries
     a,b,c,d = symbols('a b c d')
@@ -371,10 +371,10 @@ def test_ContinuousMarkovChain():
     assert(query.subs({a:3.65 ,b:2, c:1.78, d:1}).evalf().round(10) == P(Eq(C(3.65), 2), Eq(C(1.78), 1)).round(10))
     query_gt=P(Gt(C(a), b), Eq(C(c), d))
     query_le=P(Le(C(a), b), Eq(C(c), d))
-    assert((query_gt.subs({a:143.2 ,b:0, c:31.29, d:2}) + query_le.subs({a:143.2 ,b:0, c:31.29, d:2})).evalf() == 1)
+    assert((query_gt.subs({a:13.2 ,b:0, c:3.29, d:2}) + query_le.subs({a:13.2 ,b:0, c:3.29, d:2})).evalf() == 1)
     query_ge=P(Ge(C(a), b), Eq(C(c), d))
     query_lt=P(Lt(C(a), b), Eq(C(c), d))
-    assert((query_ge.subs({a:287.43 ,b:1, c:121.45, d:0}) + query_lt.subs({a:287.43 ,b:1, c:121.45, d:0})).evalf() == 1)
+    assert((query_ge.subs({a:7.43 ,b:1, c:1.45, d:0}) + query_lt.subs({a:7.43 ,b:1, c:1.45, d:0})).evalf() == 1)
 
 def test_BernoulliProcess():
 

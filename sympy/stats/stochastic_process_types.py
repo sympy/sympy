@@ -548,7 +548,7 @@ class MarkovProcess(StochasticProcess):
                 return Probability(condition)
 
             if symbolic:
-                return self.symbolic_probability(condition, new_given_condition, rv, min_key_rv)
+                return self._symbolic_probability(condition, new_given_condition, rv, min_key_rv)
 
             if len(rv) > 1:
                 rv[0] = condition.lhs
@@ -680,7 +680,7 @@ class MarkovProcess(StochasticProcess):
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(condition, given_condition))
 
-    def symbolic_probability(self, condition, new_given_condition, rv, min_key_rv):
+    def _symbolic_probability(self, condition, new_given_condition, rv, min_key_rv):
         #Function to calculate probability for queries with symbols
         if isinstance(condition, Relational):
             curr_state = new_given_condition.rhs if isinstance(new_given_condition.lhs, RandomIndexedSymbol) \
