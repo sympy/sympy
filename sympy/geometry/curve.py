@@ -370,10 +370,8 @@ class Curve(GeometrySet):
         f = Matrix(1, 3, f)
         f *= rot_axis3(angle)
         rv = self.func(f[0, :2].tolist()[0], self.limits)
-        if pt is not None:
-            pt = -pt
-            return rv.translate(*pt.args)
-        return rv
+        pt = -pt
+        return rv.translate(*pt.args)
 
     def scale(self, x=1, y=1, pt=None):
         """Override GeometryEntity.scale since Curve is not made up of Points.

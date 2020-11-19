@@ -2507,8 +2507,8 @@ class PrettyPrinter(Printer):
 
     def _print_KroneckerDelta(self, e):
         pform = self._print(e.args[0])
-        pform = prettyForm(*pform.right((prettyForm(','))))
-        pform = prettyForm(*pform.right((self._print(e.args[1]))))
+        pform = prettyForm(*pform.right(prettyForm(',')))
+        pform = prettyForm(*pform.right(self._print(e.args[1])))
         if self._use_unicode:
             a = stringPict(pretty_symbol('delta'))
         else:

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from itertools import combinations_with_replacement
 from sympy.core import symbols, Add, Dummy
 from sympy.core.numbers import Rational
@@ -57,9 +55,8 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
     ==========
 
     .. [1] M. Monagan, R. Pearce, Rational Simplification Modulo a Polynomial
-    Ideal,
-    http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.163.6984
-    (specifically, the second algorithm)
+        Ideal, http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.163.6984
+        (specifically, the second algorithm)
     """
     from sympy import solve
 

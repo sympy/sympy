@@ -5,8 +5,6 @@ Authors:
 * Matt Curry
 """
 
-from __future__ import print_function, division
-
 from sympy import Basic, Interval, oo, sympify
 from sympy.printing.pretty.stringpict import prettyForm
 

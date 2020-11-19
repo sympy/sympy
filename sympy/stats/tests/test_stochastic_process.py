@@ -135,6 +135,7 @@ def test_DiscreteMarkovChain():
     w = ImmutableMatrix([[Rational(11, 39), Rational(16, 39), Rational(4, 13)]])
     assert Y4.limiting_distribution == w
     assert Y4.is_regular() == True
+    assert Y4.is_ergodic() == True
     TS1 = MatrixSymbol('T', 3, 3)
     Y5 = DiscreteMarkovChain('Y', trans_probs=TS1)
     assert Y5.limiting_distribution(w, TO4).doit() == True
@@ -153,6 +154,8 @@ def test_DiscreteMarkovChain():
     assert X.communication_classes() == []
     assert X.canonical_form() == ([], Matrix([[]]))
     assert X.decompose() == ([], Matrix([[]]), Matrix([[]]), Matrix([[]]))
+    assert X.is_regular() == False
+    assert X.is_ergodic() == False
 
     # test communication_class
     # see https://drive.google.com/drive/folders/1HbxLlwwn2b3U8Lj7eb_ASIUb5vYaNIjg?usp=sharing
@@ -220,6 +223,54 @@ def test_DiscreteMarkovChain():
                                  [S(1)/2, 0, 0, S(1)/2, 0],
                                  [0, 0, S(1)/2, 0, S(1)/2],
                                  [0, S(1)/2, 0, S(1)/2, 0]])
+
+    # test regular and ergodic
+    # https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    T = Matrix([[0, 4, 0, 0, 0],
+                [1, 0, 3, 0, 0],
+                [0, 2, 0, 2, 0],
+                [0, 0, 3, 0, 1],
+                [0, 0, 0, 4, 0]])/4
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert not X.is_regular()
+    assert X.is_ergodic()
+    T = Matrix([[0, 1], [1, 0]])
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert not X.is_regular()
+    assert X.is_ergodic()
+    # http://www.math.wisc.edu/~valko/courses/331/MC2.pdf
+    T = Matrix([[2, 1, 1],
+                [2, 0, 2],
+                [1, 1, 2]])/4
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_regular()
+    assert X.is_ergodic()
+    # https://docs.ufpr.br/~lucambio/CE222/1S2014/Kemeny-Snell1976.pdf
+    T = Matrix([[1, 1], [1, 1]])/2
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_regular()
+    assert X.is_ergodic()
+
+    # test is_absorbing_chain
+    T = Matrix([[0, 1, 0],
+                [1, 0, 0],
+                [0, 0, 1]])
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert not X.is_absorbing_chain()
+    # https://en.wikipedia.org/wiki/Absorbing_Markov_chain
+    T = Matrix([[1, 1, 0, 0],
+                [0, 1, 1, 0],
+                [1, 0, 0, 1],
+                [0, 0, 0, 2]])/2
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_absorbing_chain()
+    T = Matrix([[2, 0, 0, 0, 0],
+                [1, 0, 1, 0, 0],
+                [0, 1, 0, 1, 0],
+                [0, 0, 1, 0, 1],
+                [0, 0, 0, 0, 2]])/2
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_absorbing_chain()
 
     # test custom state space
     Y10 = DiscreteMarkovChain('Y', [1, 2, 3], TO2)
@@ -300,7 +351,7 @@ def test_sample_stochastic_process():
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     for samps in range(10):
         assert next(sample_stochastic_process(Y)) in Y.state_space
-    Z = DiscreteMarkovChain("Z", ['1', 1, None], T)
+    Z = DiscreteMarkovChain("Z", ['1', 1, 0], T)
     for samps in range(10):
         assert next(sample_stochastic_process(Z)) in Z.state_space
 

@@ -8,7 +8,6 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
                                                _f_list_parser)
 from sympy.physics.mechanics.linearize import Linearizer
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
 
 __all__ = ['KanesMethod']
@@ -16,6 +15,9 @@ __all__ = ['KanesMethod']
 
 class KanesMethod:
     """Kane's method object.
+
+    Explanation
+    ===========
 
     This object is used to do the "book-keeping" as you go through and form
     equations of motion in the way Kane presents in:
@@ -475,6 +477,9 @@ class KanesMethod:
     def linearize(self, *, new_method=None, **kwargs):
         """ Linearize the equations of motion about a symbolic operating point.
 
+        Explanation
+        ===========
+
         If kwarg A_and_B is False (default), returns M, A, B, r for the
         linearized form, M*[q', u']^T = A*[q_ind, u_ind]^T + B*r.
 
@@ -503,6 +508,9 @@ class KanesMethod:
     def kanes_equations(self, bodies, loads=None):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 
+        Explanation
+        ===========
+
         Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
         present (say, s auxiliary speeds, o generalized speeds, and m motion
         constraints) the length of the returned vectors will be o - m + s in
@@ -522,17 +530,6 @@ class KanesMethod:
             Must be either a non-empty iterable of tuples or None which corresponds
             to a system with no constraints.
         """
-        if (bodies is None and loads is not None) or isinstance(bodies[0], tuple):
-            # This switches the order if they use the old way.
-            bodies, loads = loads, bodies
-            SymPyDeprecationWarning(value='The API for kanes_equations() has changed such '
-                    'that the loads (forces and torques) are now the second argument '
-                    'and is optional with None being the default.',
-                    feature='The kanes_equation() argument order',
-                    useinstead='switched argument order to update your code, For example: '
-                    'kanes_equations(loads, bodies) > kanes_equations(bodies, loads).',
-                    issue=10945, deprecated_since_version="1.1").warn()
-
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
@@ -568,6 +565,7 @@ class KanesMethod:
 
         Parameters
         ==========
+
         inv_method : str
             The specific sympy inverse matrix calculation method to use. For a
             list of valid methods, see
