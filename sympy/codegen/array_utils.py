@@ -625,8 +625,6 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         if isinstance(expr, CodegenArrayContraction):
             expr, permutation = cls._handle_nested_contraction(expr, permutation)
         if isinstance(expr, CodegenArrayTensorProduct):
-            expr, permutation = cls._check_lift_permutation(expr, permutation)
-        if isinstance(expr, CodegenArrayTensorProduct):
             expr, permutation = cls._sort_components(expr, permutation)
         plist = permutation.array_form
         if plist == sorted(plist):
@@ -688,20 +686,22 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         # Spread the permutation in its array form across the args in the corresponding
         # tensor-product arguments with free indices:
         permutation_array_blocks_up = []
+        image_form = _af_invert(permutation.array_form)
         counter = 0
         for i, e in enumerate(expr.subranks):
             current = []
             for j in range(cumul[i], cumul[i+1]):
                 if j in contraction_indices_flat:
                     continue
-                current.append(permutation.array_form[counter])
+                current.append(image_form[counter])
                 counter += 1
             permutation_array_blocks_up.append(current)
 
         # Get the map of axis repositioning for every argument of tensor-product:
         index_blocks = [[j for j in range(cumul[i], cumul[i+1])] for i, e in enumerate(expr.subranks)]
         index_blocks_up = expr._push_indices_up(expr.contraction_indices, index_blocks)
-        index_blocks_up_permuted = [[permutation(j) for j in i if j is not None] for i in index_blocks_up]
+        inverse_permutation = permutation**(-1)
+        index_blocks_up_permuted = [[inverse_permutation(j) for j in i if j is not None] for i in index_blocks_up]
 
         # Sorting key is a list of tuple, first element is the index of `args`, second element of
         # the tuple is the sorting key to sort `args` of the tensor product:
@@ -716,23 +716,8 @@ class CodegenArrayPermuteDims(_CodegenArrayAbstract):
         new_args = [args[i] for i in new_perm_image_form]
         new_contraction_indices = [tuple(new_index_perm_array_form[j] for j in i) for i in contraction_indices]
         new_expr = CodegenArrayContraction(CodegenArrayTensorProduct(*new_args), *new_contraction_indices)
-        new_permutation = Permutation([j for i in [permutation_array_blocks_up[k] for k in new_perm_image_form] for j in i])
+        new_permutation = Permutation(_af_invert([j for i in [permutation_array_blocks_up[k] for k in new_perm_image_form] for j in i]))
         return new_expr, new_permutation
-
-    @classmethod
-    def _check_lift_permutation(cls, expr, permutation):
-        subranks = expr.subranks
-        cumul = list(accumulate([0] + subranks))
-        args = list(expr.args)
-        for i, arg in enumerate(expr.args):
-            if not isinstance(arg, CodegenArrayPermuteDims):
-                continue
-            subpermutation = [j + cumul[i] for j in arg.permutation.array_form]
-            #
-            if any([not (cumul[i] <= permutation(j) < cumul[i+1]) for j in subpermutation]):
-                permutation = Permutation([subpermutation]) * permutation
-                args[i] = arg.expr
-        return CodegenArrayTensorProduct(*args), permutation
 
     @classmethod
     def _check_permutation_mapping(cls, expr, permutation):

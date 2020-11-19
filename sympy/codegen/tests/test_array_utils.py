@@ -586,19 +586,6 @@ def test_contraction_permutation_mix():
         (1, 5), (2, 3)
     )
     assert cg1 == cg2
-    """
-    cge1 = tensorcontraction(
-        permutedims(
-            tensorproduct(Me, Ne, Pe, Qe), Permutation([0, 2, 3, 1, 4, 5, 7, 6])
-        ),
-        (1, 2), (3, 5)
-    )
-    cge2 = tensorcontraction(
-        tensorproduct(Me, tensorcontraction(Ne, (0, 1)), Pe, permutedims(Array(Qe), (1, 0))),
-        (1, 3)
-    )
-    assert cge1 == cge2.applyfunc(lambda x: x.expand())
-    """
     assert recognize_matrix_expression(cg1) == [M*P.T*Trace(N), Q.T]
     assert recognize_matrix_expression(cg2) == [M*P.T*Trace(N), Q.T]
 
@@ -614,18 +601,6 @@ def test_contraction_permutation_mix():
         [1, 0]
     )
     assert cg1 == cg2
-    """
-    cge1 = tensorcontraction(
-        permutedims(
-            tensorproduct(Me, Ne, Pe, Qe), Permutation([1, 0, 4, 6, 2, 7, 5, 3])
-        ),
-        (0, 1), (2, 6), (3, 7)
-    )
-    cge2 = permutedims(tensorcontraction(
-        tensorproduct(Me, Pe, Qe, Ne), (0, 1), (2, 3), (4, 7)),
-        [1, 0])
-    assert cge1 == cge2
-    """
 
     cg1 = CodegenArrayContraction(
         CodegenArrayPermuteDims(
@@ -640,20 +615,6 @@ def test_contraction_permutation_mix():
         Permutation([1, 0])
     )
     assert cg1 == cg2
-    """
-    cge1 = tensorcontraction(
-        permutedims(
-            tensorproduct(Me, Ne, Pe, Qe), Permutation([1, 0, 4, 6, 7, 2, 5, 3])
-        ),
-        (0, 1), (2, 6), (3, 7)
-    )
-    cge2 = permutedims(tensorcontraction(
-        tensorproduct(tensorcontraction(Me, (0, 1)), Ne, tensorcontraction(Pe, (0, 1)), Qe),
-        (1, 2)
-    ), Permutation([1, 0]))
-    assert cge1 == cge2.applyfunc(lambda x: x.expand())
-    print(cge1, cge2)
-    """
 
 
 def test_permute_tensor_product():
@@ -670,3 +631,25 @@ def test_permute_tensor_product():
     cg1 = CodegenArrayPermuteDims(CodegenArrayTensorProduct(M, N, P, Q), Permutation([2, 3, 4, 6, 5, 7, 0, 1]))
     assert cg1.expr == CodegenArrayTensorProduct(N, P, Q, M)
     assert cg1.permutation == Permutation([0, 1, 2, 4, 3, 5, 6, 7])
+
+    cg1 = CodegenArrayContraction(
+        CodegenArrayPermuteDims(
+            CodegenArrayTensorProduct(N, Q, Q, M),
+            [2, 1, 5, 4, 0, 3, 6, 7]),
+        [1, 2, 6])
+    cg2 = CodegenArrayPermuteDims(CodegenArrayContraction(CodegenArrayTensorProduct(Q, Q, N, M), (3, 5, 6)), [0, 2, 3, 1, 4])
+    assert cg1 == cg2
+
+    cg1 = CodegenArrayContraction(
+        CodegenArrayContraction(
+            CodegenArrayContraction(
+                CodegenArrayContraction(
+                    CodegenArrayPermuteDims(
+                        CodegenArrayTensorProduct(N, Q, Q, M),
+                        [2, 1, 5, 4, 0, 3, 6, 7]),
+                    [1, 2, 6]),
+                [1, 3, 4]),
+            [1]),
+        [0])
+    cg2 = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, Q, Q), (0, 3, 5), (1, 4, 7), (2,), (6,))
+    assert cg1 == cg2
