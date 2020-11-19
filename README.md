@@ -141,16 +141,24 @@ To test pull requests, use
 ## Regenerate Experimental <span class="title-ref">LaTeX</span> Parser/Lexer
 
 The parser and lexer generated with the [ANTLR4](http://antlr4.org)
-toolchain in <span class="title-ref">sympy/parsing/latex/\_antlr</span>
-and checked into the repo. Presently, most users should not need to
-regenerate these files, but if you plan to work on this feature, you
-will need the <span class="title-ref">antlr4</span> command-line tool
-available. One way to get it is:
+toolchain in `sympy/parsing/latex/_antlr` and checked into the repo.
+Presently, most users should not need to regenerate these files, but
+if you plan to work on this feature, you will need the `antlr4`
+command-line tool (and you must ensure that it is in your `PATH`).
+One way to get it is:
 
-    $ conda install -c conda-forge antlr=4.7
+    $ conda install -c conda-forge antlr=4.7.2
 
-After making changes to
-<span class="title-ref">sympy/parsing/latex/LaTeX.g4</span>, run:
+Alternatively, follow the instructions on the ANTLR website and download
+the `antlr-4.7.2-complete.jar`. Then export the `CLASSPATH` as instructed
+and instead of creating `antlr4` as an alias, make it an executable file
+with the following contents:
+``` bash
+#!/bin/bash
+java -jar /usr/local/lib/antlr-4.7.2-complete.jar "$@"
+```
+
+After making changes to `sympy/parsing/latex/LaTeX.g4`, run:
 
     $ ./setup.py antlr
 
