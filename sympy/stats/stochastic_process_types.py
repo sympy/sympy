@@ -558,7 +558,7 @@ class MarkovProcess(StochasticProcess):
                         if isinstance(condition, Gt):
                             condition = Lt(condition.lhs, condition.rhs)
                         elif isinstance(condition, Lt):
-                            condition = Lt(condition.lhs, condition.rhs)
+                            condition = Gt(condition.lhs, condition.rhs)
                         elif isinstance(condition, Ge):
                             condition = Le(condition.lhs, condition.rhs)
                         elif isinstance(condition, Le):
