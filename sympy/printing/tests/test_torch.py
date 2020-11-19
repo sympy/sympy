@@ -1,7 +1,6 @@
 import random
-import types
 
-from sympy import symbols, Derivative
+from sympy import symbols  # , Derivative
 from sympy.printing.torch import torch_code
 from sympy import (eye, MatrixSymbol, Matrix)
 from sympy.tensor.array import NDimArray
@@ -285,7 +284,7 @@ def test_codegen_extra():
     assert (y == c).all()
 
 
-# Currently not implemented
+# Currently not working for unknown reason
 # def test_torch_Derivative():
 #     expr = Derivative(sin(x), x)
 #     assert torch_code(expr) == 'torch.autograd.grad(torch.sin(x), x)[0]'
