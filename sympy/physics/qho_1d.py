@@ -76,7 +76,7 @@ def E_n(n, omega):
 def coherent_state(n, alpha):
     """
     Returns <n|alpha> for the coherent states of 1D harmonic oscillator.
-    See https://en.wikipedia.org/wiki/Coherent_states.
+    See https://en.wikipedia.org/wiki/Coherent_states
 
     Parameters
     ==========
