@@ -56,13 +56,15 @@ class TypeE(Standard_Cartan):
         >>> c = CartanType("E6")
         >>> c.simple_root(2)
         [0, 1, -1, 0, 0, 0]
+
         """
         n = self.n
         def _dim8_weights(i,n):
             """
             Returns the roots in a basis
             that makes it easy to subset
-            e7 and e6. 
+            e7 and e6.
+
             """
             e = eye(8)
             if i == n:
@@ -96,6 +98,7 @@ class TypeE(Standard_Cartan):
         >>> c.positive_roots()
         {1: [1, -1, 0, 0], 2: [1, 0, -1, 0], 3: [1, 0, 0, -1], 4: [0, 1, -1, 0],
                 5: [0, 1, 0, -1], 6: [0, 0, 1, -1]}
+
         """
         n = self.n
         if n == 6:
@@ -250,7 +253,6 @@ class TypeE(Standard_Cartan):
         [-1,  2, -1,  0],
         [ 0, -1,  2, -1],
         [ 0,  0, -1,  2]])
-
 
         """
 

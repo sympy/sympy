@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from .cartan_base import Standard_Cartan
-from sympy.core.backend import Matrix
 
 class TypeG(Standard_Cartan):
 

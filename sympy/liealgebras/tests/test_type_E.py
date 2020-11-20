@@ -1,5 +1,4 @@
 from sympy.liealgebras.cartan_type import CartanType
-from sympy.matrices import Matrix
 
 def test_type_E():
     c = CartanType("E6")

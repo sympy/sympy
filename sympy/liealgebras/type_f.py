@@ -1,5 +1,5 @@
 from .cartan_base import Standard_Cartan
-from sympy.core.backend import Matrix, Rational
+from sympy.core.backend import Rational
 
 
 class TypeF(Standard_Cartan):
