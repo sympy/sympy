@@ -187,14 +187,14 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     ==========
 
     n, l :
-        quantum numbers 'n' and 'l'
+        Quantum numbers 'n' and 'l'
     spin_up :
         True if the electron spin is up (default), otherwise down
     Z :
-        atomic number (1 for Hydrogen, 2 for Helium, ...)
+        Atomic number (1 for Hydrogen, 2 for Helium, ...)
     c :
-        speed of light in atomic units. Default value is 137.035999037,
-        taken from [1].
+        Speed of light in atomic units. Default value is 137.035999037,
+        taken from http://arxiv.org/abs/1012.3627
 
     Examples
     ========
@@ -220,11 +220,6 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     -0.0555556377366884
     >>> E_nl_dirac(3, 2, False)
     -0.0555558020932949
-
-    References
-    ==========
-
-    .. [1] http://arxiv.org/abs/1012.3627
 
     """
     n, l, Z, c = map(S, [n, l, Z, c])
