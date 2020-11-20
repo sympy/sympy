@@ -321,6 +321,10 @@ def test_SingleODESolver():
     assert problem.order == 4
 
 
+def test_2nd_linear_bessel_equation():
+    _ode_solver_test(_get_examples_ode_sol_2nd_linear_bessel())
+
+
 def test_nth_algebraic():
     eqn = f(x) + f(x)*f(x).diff(x)
     solns = [Eq(f(x), exp(x)),
@@ -562,6 +566,17 @@ def _get_examples_ode_sol_euler_undetermined_coeff():
     'euler_undet_05': {
         'eq': Eq(x**3*diff(f(x), x, x, x) - 3*x**2*diff(f(x), x, x) + 6*x*diff(f(x), x) - 6*f(x), log(x)),
         'sol': [Eq(f(x), C1*x + C2*x**2 + C3*x**3 - Rational(1, 6)*log(x) - Rational(11, 36))]
+    },
+
+    #Below examples were added for the issue: https://github.com/sympy/sympy/issues/5096
+    'euler_undet_06': {
+        'eq': 2*x**2*f(x).diff(x, 2) + f(x) + sqrt(2*x)*sin(log(2*x)/2),
+        'sol': [Eq(f(x), sqrt(x)*(C1*sin(log(x)/2) + C2*cos(log(x)/2) + sqrt(2)*log(x)*cos(log(2*x)/2)/2))]
+    },
+
+    'euler_undet_07': {
+        'eq': 2*x**2*f(x).diff(x, 2) + f(x) + sin(log(2*x)/2),
+        'sol': [Eq(f(x), C1*sqrt(x)*sin(log(x)/2) + C2*sqrt(x)*cos(log(x)/2) - 2*sin(log(2*x)/2)/5 - 4*cos(log(2*x)/2)/5)]
     },
     }
     }
@@ -1573,6 +1588,64 @@ def _get_examples_ode_sol_nth_linear_var_of_parameters():
     }
 
 
+def _get_examples_ode_sol_2nd_linear_bessel():
+    return {
+            'hint': "2nd_linear_bessel",
+            'func': f(x),
+            'examples':{
+    '2nd_lin_bessel_01': {
+        'eq': x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - 4)*f(x),
+        'sol': [Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x))],
+    },
+
+    '2nd_lin_bessel_02': {
+        'eq': x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 +25)*f(x),
+        'sol': [Eq(f(x), C1*besselj(5*I, x) + C2*bessely(5*I, x))],
+    },
+
+    '2nd_lin_bessel_03': {
+        'eq': x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2)*f(x),
+        'sol': [Eq(f(x), C1*besselj(0, x) + C2*bessely(0, x))],
+    },
+
+    '2nd_lin_bessel_04': {
+        'eq': x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (81*x**2 -S(1)/9)*f(x),
+        'sol': [Eq(f(x), C1*besselj(S(1)/3, 9*x) + C2*bessely(S(1)/3, 9*x))],
+    },
+
+    '2nd_lin_bessel_05': {
+        'eq': x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**4 - 4)*f(x),
+        'sol': [Eq(f(x), C1*besselj(1, x**2/2) + C2*bessely(1, x**2/2))],
+    },
+
+    '2nd_lin_bessel_06': {
+        'eq': x**2*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) + (x**4 - 4)*f(x),
+        'sol': [Eq(f(x), (C1*besselj(sqrt(17)/4, x**2/2) + C2*bessely(sqrt(17)/4, x**2/2))/sqrt(x))],
+    },
+
+    '2nd_lin_bessel_07': {
+        'eq': x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - S(1)/4)*f(x),
+        'sol': [Eq(f(x), C1*besselj(S(1)/2, x) + C2*bessely(S(1)/2, x))],
+    },
+
+    '2nd_lin_bessel_08': {
+        'eq': x**2*(f(x).diff(x, 2)) - 3*x*(f(x).diff(x)) + (4*x + 4)*f(x),
+        'sol': [Eq(f(x), x**2*(C1*besselj(0, 4*sqrt(x)) + C2*bessely(0, 4*sqrt(x))))],
+    },
+
+    '2nd_lin_bessel_09': {
+        'eq': x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x),
+        'sol': [Eq(f(x), x*(C1*besselj(S(1)/2, x**2) + C2*bessely(S(1)/2, x**2)))],
+    },
+
+    '2nd_lin_bessel_10': {
+        'eq': (x-2)**2*(f(x).diff(x, 2)) - (x-2)*f(x).diff(x) + 4*(x-2)**2*f(x),
+        'sol': [Eq(f(x), (x - 2)*(C1*besselj(1, 2*x - 4) + C2*bessely(1, 2*x - 4)))],
+    },
+    }
+    }
+
+
 def _get_all_examples():
     all_solvers = [_get_examples_ode_sol_euler_homogeneous(),
     _get_examples_ode_sol_euler_undetermined_coeff(),
@@ -1588,7 +1661,8 @@ def _get_all_examples():
     _get_examples_ode_sol_nth_linear_undetermined_coefficients(),
     _get_examples_ode_sol_liouville(),
     _get_examples_ode_sol_separable(),
-    _get_examples_ode_sol_nth_linear_var_of_parameters()
+    _get_examples_ode_sol_nth_linear_var_of_parameters(),
+    _get_examples_ode_sol_2nd_linear_bessel(),
     ]
 
     all_examples = []
