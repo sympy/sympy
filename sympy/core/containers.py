@@ -15,7 +15,10 @@ from sympy.utilities.iterables import iterable
 
 class Tuple(Basic):
     """
-    Wrapper around the builtin tuple object
+    Wrapper around the builtin tuple object.
+
+    Explanation
+    ===========
 
     The Tuple is a subclass of Basic, so that it works well in the
     SymPy framework.  The wrapped tuple is available as self.args, but
@@ -29,8 +32,8 @@ class Tuple(Basic):
         can be used for speedups for very large tuples where the
         elements are known to already be sympy objects.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy import symbols
     >>> from sympy.core.containers import Tuple
@@ -149,9 +152,15 @@ def tuple_wrapper(method):
     """
     Decorator that converts any tuple in the function arguments into a Tuple.
 
+    Explanation
+    ===========
+
     The motivation for this is to provide simple user interfaces.  The user can
     call a function with regular tuples in the argument, and the wrapper will
     convert them to Tuples before handing them to the function.
+
+    Explanation
+    ===========
 
     >>> from sympy.core.containers import tuple_wrapper
     >>> def f(*args):
@@ -179,11 +188,17 @@ class Dict(Basic):
     """
     Wrapper around the builtin dict object
 
+    Explanation
+    ===========
+
     The Dict is a subclass of Basic, so that it works well in the
     SymPy framework.  Because it is immutable, it may be included
     in sets, but its values must all be given at instantiation and
     cannot be changed afterwards.  Otherwise it behaves identically
     to the Python dict.
+
+    Examples
+    ========
 
     >>> from sympy import Symbol
     >>> from sympy.core.containers import Dict

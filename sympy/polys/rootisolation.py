@@ -1,6 +1,5 @@
 """Real and complex root isolation and refinement algorithms. """
 
-from __future__ import print_function, division
 
 from sympy.polys.densearith import (
     dup_neg, dup_rshift, dup_rem)
@@ -1657,7 +1656,7 @@ def dup_isolate_all_roots(f, K, eps=None, inf=None, sup=None, fast=False):
     else:
         raise NotImplementedError( "only trivial square-free polynomials are supported")
 
-class RealInterval(object):
+class RealInterval:
     """A fully qualified representation of a real isolation interval. """
 
     def __init__(self, data, f, dom):
@@ -1787,7 +1786,7 @@ class RealInterval(object):
         return self._inner_refine()
 
 
-class ComplexInterval(object):
+class ComplexInterval:
     """A fully qualified representation of a complex isolation interval.
     The printed form is shown as (ax, bx) x (ay, by) where (ax, ay)
     and (bx, by) are the coordinates of the southwest and northeast

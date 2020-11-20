@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.add import Add
 from sympy.core.compatibility import ordered
 from sympy.core.function import expand_log
@@ -417,7 +415,7 @@ def _solve_lambert(f, symbol, gens):
     return list(ordered(soln))
 
 
-def bivariate_type(f, x, y, **kwargs):
+def bivariate_type(f, x, y, *, first=True):
     """Given an expression, f, 3 tests will be done to see what type
     of composite bivariate it might be, options for u(x, y) are::
 
@@ -458,7 +456,7 @@ def bivariate_type(f, x, y, **kwargs):
 
     u = Dummy('u', positive=True)
 
-    if kwargs.pop('first', True):
+    if first:
         p = Poly(f, x, y)
         f = p.as_expr()
         _x = Dummy()

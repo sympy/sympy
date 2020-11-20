@@ -1,9 +1,11 @@
 from functools import singledispatch
-from sympy import pi
+from sympy import pi, tan
+from sympy.simplify import trigsimp
 from sympy.core import Basic, Tuple
 from sympy.core.symbol import _symbol
 from sympy.solvers import solve
 from sympy.geometry import Point, Segment, Curve, Ellipse, Polygon
+from sympy.vector import ImplicitRegion
 
 
 class ParametricRegion(Basic):
@@ -133,14 +135,14 @@ def _(obj):
     return [ParametricRegion(obj.args)]
 
 
-@parametric_region_list.register(Curve)
+@parametric_region_list.register(Curve)  # type: ignore
 def _(obj):
     definition = obj.arbitrary_point(obj.parameter).args
     bounds = obj.limits
     return [ParametricRegion(definition, bounds)]
 
 
-@parametric_region_list.register(Ellipse)
+@parametric_region_list.register(Ellipse) # type: ignore
 def _(obj, parameter='t'):
     definition = obj.arbitrary_point(parameter).args
     t = _symbol(parameter, real=True)
@@ -148,7 +150,7 @@ def _(obj, parameter='t'):
     return [ParametricRegion(definition, bounds)]
 
 
-@parametric_region_list.register(Segment)
+@parametric_region_list.register(Segment) # type: ignore
 def _(obj, parameter='t'):
     t = _symbol(parameter, real=True)
     definition = obj.arbitrary_point(t).args
@@ -165,7 +167,22 @@ def _(obj, parameter='t'):
     return [ParametricRegion(definition_tuple, bounds)]
 
 
-@parametric_region_list.register(Polygon)
+@parametric_region_list.register(Polygon) # type: ignore
 def _(obj, parameter='t'):
     l = [parametric_region_list(side, parameter)[0] for side in obj.sides]
     return l
+
+
+@parametric_region_list.register(ImplicitRegion) # type: ignore
+def _(obj, parameters=('t', 's')):
+    definition = obj.rational_parametrization(parameters)
+    bounds = []
+
+    for i in range(len(obj.variables) - 1):
+        # Each parameter is replaced by its tangent to simplify intergation
+        parameter = _symbol(parameters[i], real=True)
+        definition = [trigsimp(elem.subs(parameter, tan(parameter))) for elem in definition]
+        bounds.append((parameter, 0, 2*pi),)
+
+    definition = Tuple(*definition)
+    return [ParametricRegion(definition, *bounds)]

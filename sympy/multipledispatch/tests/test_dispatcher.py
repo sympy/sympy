@@ -1,7 +1,8 @@
 from sympy.multipledispatch.dispatcher import (Dispatcher, MDNotImplementedError,
                                          MethodDispatcher, halt_ordering,
-                                         restart_ordering)
-from sympy.testing.pytest import raises, XFAIL, warns
+                                         restart_ordering,
+                                         ambiguity_register_error_ignore_dup)
+from sympy.testing.pytest import raises, warns
 
 
 def identity(x):
@@ -88,7 +89,6 @@ def test_on_ambiguity():
     assert ambiguities[0]
 
 
-@XFAIL
 def test_raise_error_on_non_class():
     f = Dispatcher('f')
     assert raises(TypeError, lambda: f.add((1,), inc))
@@ -165,7 +165,6 @@ def test_source():
     assert 'x - y' in f._source(1.0, 1.0)
 
 
-@XFAIL
 def test_source_raises_on_missing_function():
     f = Dispatcher('f')
 
@@ -197,13 +196,11 @@ def test_halt_method_resolution():
     assert set(f.ordering) == {(int, object), (object, int)}
 
 
-@XFAIL
 def test_no_implementations():
     f = Dispatcher('f')
     assert raises(NotImplementedError, lambda: f('hello'))
 
 
-@XFAIL
 def test_register_stacking():
     f = Dispatcher('f')
 
@@ -238,7 +235,6 @@ def test_dispatch_method():
     assert f.dispatch(int, int) is add
 
 
-@XFAIL
 def test_not_implemented():
     f = Dispatcher('f')
 
@@ -259,7 +255,6 @@ def test_not_implemented():
     assert raises(NotImplementedError, lambda: f(1, 2))
 
 
-@XFAIL
 def test_not_implemented_error():
     f = Dispatcher('f')
 
@@ -268,3 +263,22 @@ def test_not_implemented_error():
         raise MDNotImplementedError()
 
     assert raises(NotImplementedError, lambda: f(1.0))
+
+def test_ambiguity_register_error_ignore_dup():
+    f = Dispatcher('f')
+
+    class A:
+        pass
+    class B(A):
+        pass
+    class C(A):
+        pass
+
+    # suppress warning for registering ambiguous signal
+    f.add((A, B), lambda x,y: None, ambiguity_register_error_ignore_dup)
+    f.add((B, A), lambda x,y: None, ambiguity_register_error_ignore_dup)
+    f.add((A, C), lambda x,y: None, ambiguity_register_error_ignore_dup)
+    f.add((C, A), lambda x,y: None, ambiguity_register_error_ignore_dup)
+
+    # raises error if ambiguous signal is passed
+    assert raises(NotImplementedError, lambda: f(B(), C()))

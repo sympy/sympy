@@ -1,7 +1,8 @@
 from sympy import S, simplify
 from sympy.core import Basic, diff
 from sympy.matrices import Matrix
-from sympy.vector import CoordSys3D, Vector, ParametricRegion, parametric_region_list
+from sympy.vector import (CoordSys3D, Vector, ParametricRegion,
+                        parametric_region_list, ImplicitRegion)
 from sympy.vector.operators import _get_coord_sys_from_expr
 from sympy.integrals import Integral, integrate
 from sympy.utilities.iterables import topological_sort, default_sort_key
@@ -78,7 +79,7 @@ class ParametricIntegral(Basic):
             result = integrate(integrand, (parameter, lower, upper))
 
         elif parametricregion.dimensions == 2:
-            u, v = cls._bounds_case(parametricregion.limits)
+            u, v = cls._bounds_case(parametricregion.parameters, parametricregion.limits)
 
             r_u = diff(r, u)
             r_v = diff(r, v)
@@ -97,7 +98,7 @@ class ParametricIntegral(Basic):
             result = integrate(integrand, (u, lower_u, upper_u), (v, lower_v, upper_v))
 
         else:
-            variables = cls._bounds_case(parametricregion.limits)
+            variables = cls._bounds_case(parametricregion.parameters, parametricregion.limits)
             coeff = Matrix(parametricregion.definition).jacobian(variables).det()
             integrand = simplify(parametricfield*coeff)
 
@@ -110,7 +111,7 @@ class ParametricIntegral(Basic):
             return super().__new__(cls, field, parametricregion)
 
     @classmethod
-    def _bounds_case(cls, limits):
+    def _bounds_case(cls, parameters, limits):
 
         V = list(limits.keys())
         E = list()
@@ -124,9 +125,13 @@ class ParametricIntegral(Basic):
             for q in V:
                 if p == q:
                     continue
-                if lower_p.issuperset(set([q])) or upper_p.issuperset(set([q])):
+                if lower_p.issuperset({q}) or upper_p.issuperset({q}):
                     E.append((p, q))
-        return topological_sort((V, E), key=default_sort_key)
+
+        if not E:
+            return parameters
+        else:
+            return topological_sort((V, E), key=default_sort_key)
 
     @property
     def field(self):
@@ -145,14 +150,14 @@ def vector_integrate(field, *region):
     Examples
     ========
     >>> from sympy.vector import CoordSys3D, ParametricRegion, vector_integrate
-    >>> from sympy.abc import t
+    >>> from sympy.abc import x, y, t
     >>> C = CoordSys3D('C')
 
     >>> region = ParametricRegion((t, t**2), (t, 1, 5))
     >>> vector_integrate(C.x*C.i, region)
     12
 
-    Integrals over special regions can also be calculated using geometry module.
+    Integrals over some objects of geometry module can also be calculated.
 
     >>> from sympy.geometry import Point, Circle, Triangle
     >>> c = Circle(Point(0, 2), 5)
@@ -162,15 +167,34 @@ def vector_integrate(field, *region):
     >>> vector_integrate(3*C.x**2*C.y*C.i + C.j, triangle)
     -8
 
+    Integrals over some simple implicit regions can be computed. But in most cases,
+    it takes too long to compute over them. This is due to the expressions of parametric
+    representation becoming large.
+
+    >>> from sympy.vector import ImplicitRegion
+    >>> c2 = ImplicitRegion((x, y), (x - 2)**2 + (y - 1)**2 - 9)
+    >>> vector_integrate(1, c2)
+    12*pi
+
+    Integral of fields with respect to base scalars:
+
     >>> vector_integrate(12*C.y**3, (C.y, 1, 3))
     240
     >>> vector_integrate(C.x**2*C.z, C.x)
     C.x**3*C.z/3
+    >>> vector_integrate(C.x*C.i - C.y*C.k, C.x)
+    (Integral(C.x, C.x))*C.i + (Integral(-C.y, C.x))*C.k
+    >>> _.doit()
+    C.x**2/2*C.i + (-C.x*C.y)*C.k
 
     """
     if len(region) == 1:
         if isinstance(region[0], ParametricRegion):
             return ParametricIntegral(field, region[0])
+
+        if isinstance(region[0], ImplicitRegion):
+            region = parametric_region_list(region[0])[0]
+            return vector_integrate(field, region)
 
         if isinstance(region[0], GeometryEntity):
             regions_list = parametric_region_list(region[0])

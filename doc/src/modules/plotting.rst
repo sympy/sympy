@@ -279,7 +279,7 @@ line at a random point on the ellipse.
 
     In [2]: c = Circle(Point(0,0), 1)
 
-    In [3]: t = c.tangent_line(c.random_point())
+    In [3]: t = c.tangent_lines(c.random_point())
 
     In [4]: p[0] = c
 

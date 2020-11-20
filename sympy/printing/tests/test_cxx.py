@@ -3,6 +3,8 @@ from sympy.functions import beta, Ei, zeta, Max, Min, sqrt
 from sympy.printing.cxx import CXX98CodePrinter, CXX11CodePrinter, CXX17CodePrinter, cxxcode
 from sympy.codegen.cfunctions import log1p
 
+from sympy.testing.pytest import warns_deprecated_sympy
+
 x, y = symbols('x y')
 
 
@@ -54,3 +56,8 @@ def test_CXX17CodePrinter():
 
 def test_cxxcode():
     assert sorted(cxxcode(sqrt(x)*.5).split('*')) == sorted(['0.5', 'std::sqrt(x)'])
+
+def test_cxxcode_submodule():
+    # Test the compatibility sympy.printing.cxxcode module imports
+    with warns_deprecated_sympy():
+        import sympy.printing.cxxcode # noqa:F401

@@ -14,8 +14,8 @@ from sympy.vector.point import Point
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 from sympy.vector.operators import Gradient, Divergence, Curl, Laplacian, gradient, curl, divergence
-from sympy.vector.parametricregion import (ParametricRegion, parametric_region_list)
 from sympy.vector.implicitregion import ImplicitRegion
+from sympy.vector.parametricregion import (ParametricRegion, parametric_region_list)
 from sympy.vector.integrals import (ParametricIntegral, vector_integrate)
 
 __all__ = [

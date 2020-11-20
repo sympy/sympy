@@ -899,7 +899,7 @@ class Basic(Printable, metaclass=ManagedProperties):
                 # when old is a string we prefer Symbol
                 s = Symbol(s[0]), s[1]
             try:
-                s = [sympify(_, strict=not isinstance(_, str))
+                s = [sympify(_, strict=not isinstance(_, (str, type)))
                      for _ in s]
             except SympifyError:
                 # if it can't be sympified, skip it
@@ -1216,10 +1216,11 @@ class Basic(Printable, metaclass=ManagedProperties):
             return any(f.func == pattern or f == pattern
             for f in self.atoms(Function, UndefinedFunction))
 
-        pattern = _sympify(pattern)
         if isinstance(pattern, BasicMeta):
-            return any(isinstance(arg, pattern)
-            for arg in preorder_traversal(self))
+            subtrees = preorder_traversal(self)
+            return any(isinstance(arg, pattern) for arg in subtrees)
+
+        pattern = _sympify(pattern)
 
         _has_matcher = getattr(pattern, '_has_matcher', None)
         if _has_matcher is not None:
@@ -1690,21 +1691,6 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         return self.func(*args) if hints.get('evaluate', True) else self
 
-    def _accept_eval_derivative(self, s):
-        # This method needs to be overridden by array-like objects
-        return s._visit_eval_derivative_scalar(self)
-
-    def _visit_eval_derivative_scalar(self, base):
-        # Base is a scalar
-        # Types are (base: scalar, self: scalar)
-        return base._eval_derivative(self)
-
-    def _visit_eval_derivative_array(self, base):
-        # Types are (base: array/matrix, self: scalar)
-        # Base is some kind of array/matrix,
-        # it should have `.applyfunc(lambda x: x.diff(self)` implemented:
-        return base._eval_derivative_array(self)
-
     def _eval_derivative_n_times(self, s, n):
         # This is the default evaluator for derivatives (as called by `diff`
         # and `Derivative`), it will attempt a loop to derive the expression
@@ -1716,7 +1702,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         if isinstance(n, (int, Integer)):
             obj = self
             for i in range(n):
-                obj2 = obj._accept_eval_derivative(s)
+                obj2 = obj._eval_derivative(s)
                 if obj == obj2 or obj2 is None:
                     break
                 obj = obj2

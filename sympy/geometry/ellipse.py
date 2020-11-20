@@ -140,7 +140,9 @@ class Ellipse(GeometrySet):
                 "eccentricity" must not be None.'''))
 
         if eccentricity is not None:
-            if hradius is None:
+            if eccentricity.is_negative:
+                raise GeometryError("Eccentricity of ellipse/circle should lie between [0, 1)")
+            elif hradius is None:
                 hradius = vradius / sqrt(1 - eccentricity**2)
             elif vradius is None:
                 vradius = hradius * sqrt(1 - eccentricity**2)
@@ -150,6 +152,9 @@ class Ellipse(GeometrySet):
 
         if hradius == 0 or vradius == 0:
             return Segment(Point(center[0] - hradius, center[1] - vradius), Point(center[0] + hradius, center[1] + vradius))
+
+        if hradius.is_real is False or vradius.is_real is False:
+            raise GeometryError("Invalid value encountered when computing hradius / vradius.")
 
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
 

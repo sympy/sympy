@@ -2,10 +2,9 @@ from sympy.testing.pytest import raises
 from sympy import (
     Array, ImmutableDenseNDimArray, ImmutableSparseNDimArray,
     MutableDenseNDimArray, MutableSparseNDimArray, sin, cos,
-    simplify
+    simplify, Matrix
 )
 from sympy.abc import x, y
-
 
 array_types = [
     ImmutableDenseNDimArray,
@@ -42,3 +41,8 @@ def test_issue_18361():
     assert simplify(A) == Array([0])
     assert simplify(B) == Array([1, 0])
     assert simplify(C) == Array([x + 1, sin(2*x)])
+
+def test_issue_20222():
+    A = Array([[1, 2], [3, 4]])
+    B = Matrix([[1,2],[3,4]])
+    raises(TypeError, lambda: A - B)

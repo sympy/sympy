@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.backend import sympify
 from sympy.physics.vector import Point, ReferenceFrame, Dyadic
 
@@ -9,8 +7,11 @@ __all__ = ['RigidBody']
 
 
 
-class RigidBody(object):
+class RigidBody:
     """An idealized rigid body.
+
+    Explanation
+    ===========
 
     This is essentially a container which holds the various components which
     describe a rigid body: a name, mass, center of mass, reference frame, and
@@ -21,6 +22,7 @@ class RigidBody(object):
 
     Attributes
     ==========
+
     name : string
         The body's name.
     masscenter : Point
@@ -123,6 +125,9 @@ class RigidBody(object):
     def linear_momentum(self, frame):
         """ Linear momentum of the rigid body.
 
+        Explanation
+        ===========
+
         The linear momentum L, of a rigid body B, with respect to frame N is
         given by
 
@@ -162,6 +167,9 @@ class RigidBody(object):
         """Returns the angular momentum of the rigid body about a point in the
         given frame.
 
+        Explanation
+        ===========
+
         The angular momentum H of a rigid body B about some point O in a frame
         N is given by:
 
@@ -174,6 +182,7 @@ class RigidBody(object):
 
         Parameters
         ==========
+
         point : Point
             The point about which angular momentum is desired.
         frame : ReferenceFrame
@@ -207,7 +216,10 @@ class RigidBody(object):
         return I.dot(w) + r.cross(m * v)
 
     def kinetic_energy(self, frame):
-        """Kinetic energy of the rigid body
+        """Kinetic energy of the rigid body.
+
+        Explanation
+        ===========
 
         The kinetic energy, T, of a rigid body, B, is given by
 
@@ -321,11 +333,13 @@ class RigidBody(object):
 
         Parameters
         ==========
+
         point : sympy.physics.vector.Point
             The point to express the inertia dyadic about.
 
         Returns
         =======
+
         inertia : sympy.physics.vector.Dyadic
             The inertia dyadic of the rigid body expressed about the provided
             point.

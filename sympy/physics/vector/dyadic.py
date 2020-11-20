@@ -1,11 +1,11 @@
 from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
-from sympy.core.compatibility import unicode
+from sympy.core.evalf import EvalfMixin, prec_to_dps
 from sympy.printing.defaults import Printable
 
 __all__ = ['Dyadic']
 
 
-class Dyadic(Printable):
+class Dyadic(Printable, EvalfMixin):
     """A Dyadic object.
 
     See:
@@ -17,6 +17,8 @@ class Dyadic(Printable):
     the resulting matrix is equivalent to the inertia tensor.
 
     """
+
+    is_number = False
 
     def __init__(self, inlist):
         """
@@ -55,6 +57,11 @@ class Dyadic(Printable):
                 self.args.remove(self.args[i])
                 i -= 1
             i += 1
+
+    @property
+    def func(self):
+        """Returns the class Dyadic. """
+        return Dyadic
 
     def __add__(self, other):
         """The add operator for Dyadic. """
@@ -97,11 +104,9 @@ class Dyadic(Printable):
                 ol += v[0] * v[1] * (v[2] & other)
         return ol
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         """Divides the Dyadic by a sympifyable expression. """
         return self.__mul__(1 / other)
-
-    __truediv__ = __div__
 
     def __eq__(self, other):
         """Tests for equality.
@@ -190,27 +195,27 @@ class Dyadic(Printable):
     def _pretty(self, printer):
         e = self
 
-        class Fake(object):
+        class Fake:
             baseline = 0
 
             def render(self, *args, **kwargs):
                 ar = e.args  # just to shorten things
                 mpp = printer
                 if len(ar) == 0:
-                    return unicode(0)
-                bar = u"\N{CIRCLED TIMES}" if printer._use_unicode else "|"
+                    return str(0)
+                bar = "\N{CIRCLED TIMES}" if printer._use_unicode else "|"
                 ol = []  # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1
                     if ar[i][0] == 1:
-                        ol.extend([u" + ",
+                        ol.extend([" + ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
 
                     # if the coef of the dyadic is -1, we skip the 1
                     elif ar[i][0] == -1:
-                        ol.extend([u" - ",
+                        ol.extend([" - ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
@@ -223,18 +228,18 @@ class Dyadic(Printable):
                                 ar[i][0]).parens()[0]
                         else:
                             arg_str = mpp.doprint(ar[i][0])
-                        if arg_str.startswith(u"-"):
+                        if arg_str.startswith("-"):
                             arg_str = arg_str[1:]
-                            str_start = u" - "
+                            str_start = " - "
                         else:
-                            str_start = u" + "
-                        ol.extend([str_start, arg_str, u" ",
+                            str_start = " + "
+                        ol.extend([str_start, arg_str, " ",
                                   mpp.doprint(ar[i][1]),
                                   bar,
                                   mpp.doprint(ar[i][2])])
 
-                outstr = u"".join(ol)
-                if outstr.startswith(u" + "):
+                outstr = "".join(ol)
+                if outstr.startswith(" + "):
                     outstr = outstr[3:]
                 elif outstr.startswith(" "):
                     outstr = outstr[1:]
@@ -524,6 +529,15 @@ class Dyadic(Printable):
     dot = __and__
     cross = __xor__
 
+    def _eval_evalf(self, prec):
+        if not self.args:
+            return self
+        new_args = []
+        for inlist in self.args:
+            new_inlist = list(inlist)
+            new_inlist[0] = inlist[0].evalf(n=prec_to_dps(prec))
+            new_args.append(tuple(new_inlist))
+        return Dyadic(new_args)
 
 def _check_dyadic(other):
     if not isinstance(other, Dyadic):

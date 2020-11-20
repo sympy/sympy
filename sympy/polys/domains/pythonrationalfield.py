@@ -1,6 +1,5 @@
 """Implementation of :class:`PythonRationalField` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.groundtypes import PythonInteger, PythonRational, SymPyRational
 from sympy.polys.domains.rationalfield import RationalField

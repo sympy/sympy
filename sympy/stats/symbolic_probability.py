@@ -22,7 +22,7 @@ def _(x):
         return False
     return any([is_random(i) for i in atoms])
 
-@is_random.register(RandomSymbol)
+@is_random.register(RandomSymbol)  # type: ignore
 def _(x):
     return True
 

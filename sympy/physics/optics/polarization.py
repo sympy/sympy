@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-u"""
+"""
 The module implements routines to model the polarization of optical fields
 and can be used to calculate the effects of polarization optical elements on
 the fields.
@@ -87,7 +87,7 @@ from sympy.physics.quantum import TensorProduct
 
 
 def jones_vector(psi, chi):
-    u"""A Jones vector corresponding to a polarization ellipse with `psi` tilt,
+    """A Jones vector corresponding to a polarization ellipse with `psi` tilt,
     and `chi` circularity.
 
     Parameters
@@ -179,7 +179,7 @@ def jones_vector(psi, chi):
 
 
 def stokes_vector(psi, chi, p=1, I=1):
-    u"""A Stokes vector corresponding to a polarization ellipse with ``psi``
+    """A Stokes vector corresponding to a polarization ellipse with ``psi``
     tilt, and ``chi`` circularity.
 
     Parameters
@@ -298,7 +298,7 @@ def stokes_vector(psi, chi, p=1, I=1):
 
 
 def jones_2_stokes(e):
-    u"""Return the Stokes vector for a Jones vector `e`.
+    """Return the Stokes vector for a Jones vector `e`.
 
     Parameters
     ==========
@@ -345,7 +345,7 @@ def jones_2_stokes(e):
 
 
 def linear_polarizer(theta=0):
-    u"""A linear polarizer Jones matrix with transmission axis at
+    """A linear polarizer Jones matrix with transmission axis at
     an angle ``theta``.
 
     Parameters
@@ -384,7 +384,7 @@ def linear_polarizer(theta=0):
 
 
 def phase_retarder(theta=0, delta=0):
-    u"""A phase retarder Jones matrix with retardance `delta` at angle `theta`.
+    """A phase retarder Jones matrix with retardance `delta` at angle `theta`.
 
     Parameters
     ==========
@@ -430,7 +430,7 @@ def phase_retarder(theta=0, delta=0):
 
 
 def half_wave_retarder(theta):
-    u"""A half-wave retarder Jones matrix at angle `theta`.
+    """A half-wave retarder Jones matrix at angle `theta`.
 
     Parameters
     ==========
@@ -465,7 +465,7 @@ def half_wave_retarder(theta):
 
 
 def quarter_wave_retarder(theta):
-    u"""A quarter-wave retarder Jones matrix at angle `theta`.
+    """A quarter-wave retarder Jones matrix at angle `theta`.
 
     Parameters
     ==========
@@ -504,7 +504,7 @@ def quarter_wave_retarder(theta):
 
 
 def transmissive_filter(T):
-    u"""An attenuator Jones matrix with transmittance `T`.
+    """An attenuator Jones matrix with transmittance `T`.
 
     Parameters
     ==========
@@ -537,7 +537,7 @@ def transmissive_filter(T):
 
 
 def reflective_filter(R):
-    u"""A reflective filter Jones matrix with reflectance `R`.
+    """A reflective filter Jones matrix with reflectance `R`.
 
     Parameters
     ==========
@@ -569,7 +569,7 @@ def reflective_filter(R):
 
 
 def mueller_matrix(J):
-    u"""The Mueller matrix corresponding to Jones matrix `J`.
+    """The Mueller matrix corresponding to Jones matrix `J`.
 
     Parameters
     ==========

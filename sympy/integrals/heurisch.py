@@ -46,6 +46,9 @@ def components(f, x):
     non-integer powers. Fractional powers are collected with
     minimal, positive exponents.
 
+    Examples
+    ========
+
     >>> from sympy import cos, sin
     >>> from sympy.abc import x
     >>> from sympy.integrals.heurisch import components
@@ -106,6 +109,9 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                      _try_heurisch=None):
     """
     A wrapper around the heurisch integration algorithm.
+
+    Explanation
+    ===========
 
     This method takes the result from heurisch and checks for poles in the
     denominator. For each of these poles, the integral is reevaluated, and
@@ -236,6 +242,9 @@ class DiffCache:
     """
     Store for derivatives of expressions.
 
+    Explanation
+    ===========
+
     The standard form of the derivative of a Bessel function of order n
     contains two Bessel functions of orders n-1 and n+1, respectively.
     Such forms cannot be used in parallel Risch algorithm, because
@@ -283,6 +292,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     """
     Compute indefinite integral using heuristic Risch algorithm.
 
+    Explanation
+    ===========
+
     This is a heuristic approach to indefinite integration in finite
     terms using the extended heuristic (parallel) Risch algorithm, based
     on Manuel Bronstein's "Poor Man's Integrator".
@@ -329,21 +341,24 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     See Manuel Bronstein's "Poor Man's Integrator":
 
-    [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
+    References
+    ==========
+
+    .. [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
 
     For more information on the implemented algorithm refer to:
 
-    [2] K. Geddes, L. Stefanus, On the Risch-Norman Integration
+    .. [2] K. Geddes, L. Stefanus, On the Risch-Norman Integration
        Method and its Implementation in Maple, Proceedings of
        ISSAC'89, ACM Press, 212-217.
 
-    [3] J. H. Davenport, On the Parallel Risch Algorithm (I),
+    .. [3] J. H. Davenport, On the Parallel Risch Algorithm (I),
        Proceedings of EUROCAM'82, LNCS 144, Springer, 144-157.
 
-    [4] J. H. Davenport, On the Parallel Risch Algorithm (III):
+    .. [4] J. H. Davenport, On the Parallel Risch Algorithm (III):
        Use of Tangents, SIGSAM Bulletin 16 (1982), 3-6.
 
-    [5] J. H. Davenport, B. M. Trager, On the Parallel Risch
+    .. [5] J. H. Davenport, B. M. Trager, On the Parallel Risch
        Algorithm (II), ACM Transactions on Mathematical
        Software 11 (1985), 356-362.
 

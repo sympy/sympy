@@ -1,6 +1,5 @@
 """Implementation of :class:`ExpressionDomain` class. """
 
-from __future__ import print_function, division
 
 from sympy.core import sympify, SympifyError
 from sympy.polys.domains.characteristiczero import CharacteristicZero
@@ -114,19 +113,14 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         def __rtruediv__(f, g):
             return f.simplify(f.__class__(g).ex/f.ex)
 
-        __div__ = __truediv__
-        __rdiv__ = __rtruediv__
-
         def __eq__(f, g):
             return f.ex == f.__class__(g).ex
 
         def __ne__(f, g):
             return not f == g
 
-        def __nonzero__(f):
-            return f.ex != 0
-
-        __bool__ = __nonzero__
+        def __bool__(f):
+            return not f.ex.is_zero
 
         def gcd(f, g):
             from sympy.polys import gcd

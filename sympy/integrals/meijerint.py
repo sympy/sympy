@@ -312,6 +312,9 @@ def _get_coeff_exp(expr, x):
     When expr is known to be of the form c*x**b, with c and/or b possibly 1,
     return c, b.
 
+    Examples
+    ========
+
     >>> from sympy.abc import x, a, b
     >>> from sympy.integrals.meijerint import _get_coeff_exp
     >>> _get_coeff_exp(a*x**b, x)
@@ -341,6 +344,9 @@ def _get_coeff_exp(expr, x):
 def _exponents(expr, x):
     """
     Find the exponents of ``x`` (not including zero) in ``expr``.
+
+    Examples
+    ========
 
     >>> from sympy.integrals.meijerint import _exponents
     >>> from sympy.abc import x, y
@@ -379,6 +385,9 @@ def _find_splitting_points(expr, x):
     Find numbers a such that a linear substitution x -> x + a would
     (hopefully) simplify expr.
 
+    Examples
+    ========
+
     >>> from sympy.integrals.meijerint import _find_splitting_points as fsp
     >>> from sympy import sin
     >>> from sympy.abc import x
@@ -411,6 +420,9 @@ def _split_mul(f, x):
     """
     Split expression ``f`` into fac, po, g, where fac is a constant factor,
     po = x**s for some s independent of s, and g is "the rest".
+
+    Examples
+    ========
 
     >>> from sympy.integrals.meijerint import _split_mul
     >>> from sympy import sin
@@ -469,13 +481,19 @@ def _mul_args(f):
 
 def _mul_as_two_parts(f):
     """
-    Find all the ways to split f into a product of two terms.
+    Find all the ways to split ``f`` into a product of two terms.
     Return None on failure.
+
+    Explanation
+    ===========
 
     Although the order is canonical from multiset_partitions, this is
     not necessarily the best order to process the terms. For example,
     if the case of len(gs) == 2 is removed and multiset is allowed to
     sort the terms, some tests fail.
+
+    Examples
+    ========
 
     >>> from sympy.integrals.meijerint import _mul_as_two_parts
     >>> from sympy import sin, exp, ordered
@@ -527,7 +545,7 @@ def _inflate_fox_h(g, a):
     Consider the function H which is defined in the same way, but with
     integrand d/Gamma(a*s) (contour conventions as usual).
 
-    If a is rational, the function H can be written as C*G, for a constant C
+    If ``a`` is rational, the function H can be written as C*G, for a constant C
     and a G-function G.
 
     This function returns C, G.
@@ -583,8 +601,14 @@ def _condsimp(cond):
     """
     Do naive simplifications on ``cond``.
 
+    Explanation
+    ===========
+
     Note that this routine is completely ad-hoc, simplification rules being
     added as need arises rather than following any logical pattern.
+
+    Examples
+    ========
 
     >>> from sympy.integrals.meijerint import _condsimp as simp
     >>> from sympy import Or, Eq, And
@@ -846,6 +870,9 @@ def _int0oo_1(g, x):
     Evaluate $\int_0^\infty g\, dx$ using G functions,
     assuming the necessary conditions are fulfilled.
 
+    Examples
+    ========
+
     >>> from sympy.abc import a, b, c, d, x, y
     >>> from sympy import meijerg
     >>> from sympy.integrals.meijerint import _int0oo_1
@@ -870,10 +897,17 @@ def _int0oo_1(g, x):
 
 def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
     """
-    Rewrite the integral fac*po*g1*g2 from 0 to oo in terms of G functions
-    with argument c*x.
+    Rewrite the integral ``fac*po*g1*g2`` from 0 to oo in terms of G
+    functions with argument ``c*x``.
+
+    Explanation
+    ===========
+
     Return C, f1, f2 such that integral C f1 f2 from 0 to infinity equals
-    integral fac po g1 g2 from 0 to infinity.
+    integral fac ``po``, ``g1``, ``g2`` from 0 to infinity.
+
+    Examples
+    ========
 
     >>> from sympy.integrals.meijerint import _rewrite_saxena
     >>> from sympy.abc import s, t, m
@@ -1016,7 +1050,10 @@ def _check_antecedents(g1, g2, x):
         def _cond(z):
             '''Returns True if abs(arg(1-z)) < pi, avoiding arg(0).
 
-            Note: if `z` is 1 then arg is NaN. This raises a
+            Explanation
+            ===========
+
+            If ``z`` is 1 then arg is NaN. This raises a
             TypeError on `NaN < pi`. Previously this gave `False` so
             this behavior has been hardcoded here but someone should
             check if this NaN is more serious! This NaN is triggered by
@@ -1243,6 +1280,9 @@ def _int0oo(g1, g2, x):
     """
     Express integral from zero to infinity g1*g2 using a G function,
     assuming the necessary conditions are fulfilled.
+
+    Examples
+    ========
 
     >>> from sympy.integrals.meijerint import _int0oo
     >>> from sympy.abc import s, t, m
@@ -1559,8 +1599,8 @@ def _rewrite_single(f, x, recursive=True):
 
 def _rewrite1(f, x, recursive=True):
     """
-    Try to rewrite f using a (sum of) single G functions with argument a*x**b.
-    Return fac, po, g such that f = fac*po*g, fac is independent of x
+    Try to rewrite ``f`` using a (sum of) single G functions with argument a*x**b.
+    Return fac, po, g such that f = fac*po*g, fac is independent of ``x``.
     and po = x**s.
     Here g is a result from _rewrite_single.
     Return None on failure.
@@ -1573,7 +1613,7 @@ def _rewrite1(f, x, recursive=True):
 
 def _rewrite2(f, x):
     """
-    Try to rewrite f as a product of two G functions of arguments a*x**b.
+    Try to rewrite ``f`` as a product of two G functions of arguments a*x**b.
     Return fac, po, g1, g2 such that f = fac*po*g1*g2, where fac is
     independent of x and po is x**s.
     Here g1 and g2 are results of _rewrite_single.
@@ -1701,6 +1741,8 @@ def _meijerint_indefinite_1(f, x):
         expression to have an additive constant that doesn't become isolated
         with simple expansion. Such a situation was identified in issue 6369:
 
+        Examples
+        ========
 
         >>> from sympy import sqrt, cancel
         >>> from sympy.abc import x
@@ -1963,6 +2005,9 @@ def _meijerint_definite_4(f, x, only_double=False):
     """
     Try to integrate f dx from zero to infinity.
 
+    Explanation
+    ===========
+
     This function tries to apply the integration theorems found in literature,
     i.e. it tries to rewrite f as either one or a product of two G-functions.
 
@@ -2030,7 +2075,7 @@ def meijerint_inversion(f, x, t):
     r"""
     Compute the inverse laplace transform
     $\int_{c+i\infty}^{c-i\infty} f(x) e^{tx}\, dx$,
-    for real c larger than the real part of all singularities of f.
+    for real c larger than the real part of all singularities of ``f``.
 
     Note that ``t`` is always assumed real and positive.
 

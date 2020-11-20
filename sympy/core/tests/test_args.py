@@ -34,7 +34,7 @@ def test_all_classes_are_tested():
             if not file.endswith(".py"):
                 continue
 
-            with open(os.path.join(root, file), "r", encoding='utf-8') as f:
+            with open(os.path.join(root, file), encoding='utf-8') as f:
                 text = f.read()
 
             submodule = module + '.' + file[:-3]
@@ -460,6 +460,11 @@ def test_sympy__codegen__numpy_nodes__logaddexp():
 def test_sympy__codegen__numpy_nodes__logaddexp2():
     from sympy.codegen.numpy_nodes import logaddexp2
     assert _test_args(logaddexp2(x, y))
+
+
+def test_sympy__codegen__scipy_nodes__cosm1():
+    from sympy.codegen.scipy_nodes import cosm1
+    assert _test_args(cosm1(x))
 
 
 @XFAIL
@@ -3132,6 +3137,10 @@ def test_sympy__matrices__expressions__determinant__Determinant():
     from sympy.matrices.expressions import MatrixSymbol
     assert _test_args(Determinant(MatrixSymbol('A', 3, 3)))
 
+def test_sympy__matrices__expressions__determinant__Permanent():
+    from sympy.matrices.expressions.determinant import Permanent
+    from sympy.matrices.expressions import MatrixSymbol
+    assert _test_args(Permanent(MatrixSymbol('A', 3, 4)))
 
 def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     from sympy.matrices.expressions.funcmatrix import FunctionMatrix
@@ -4278,6 +4287,13 @@ def test_sympy__tensor__array__arrayop__Flatten():
     from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
     fla = Flatten(ImmutableDenseNDimArray(range(24)).reshape(2, 3, 4))
     assert _test_args(fla)
+
+
+def test_sympy__tensor__array__array_derivatives__ArrayDerivative():
+    from sympy.tensor.array.array_derivatives import ArrayDerivative
+    A = MatrixSymbol("A", 2, 2)
+    arrder = ArrayDerivative(A, A, evaluate=False)
+    assert _test_args(arrder)
 
 
 def test_sympy__tensor__functions__TensorProduct():
