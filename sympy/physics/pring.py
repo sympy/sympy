@@ -7,12 +7,14 @@ def wavefunction(n, x):
     """
     Returns the wavefunction for particle on ring.
 
-    Explanation
-    ===========
+    Parameters
+    ==========
 
-    ``n`` is the quantum number, ``x`` is the angle,
-    here ``n`` can be positive as well as negative
-    which can be used to describe the direction of motion of particle.
+    n : The quantum number.
+        Here ``n`` can be positive as well as negative
+        which can be used to describe the direction of motion of particle.
+    x :
+        The angle.
 
     Examples
     ========
@@ -55,12 +57,12 @@ def energy(n, m, r):
     Parameters
     ==========
 
-    ``n`` :
+    n :
         The quantum number.
-    ``m`` :
-        The mass of the particle.
-    ``r`` :
-        The radius of circle.
+    m :
+        Mass of the particle.
+    r :
+        Radius of circle.
 
     Examples
     ========
