@@ -171,6 +171,106 @@ def tensorcontraction(array, *contraction_axes):
     return type(array)(contracted_array, remaining_shape)
 
 
+def tensordiagonal(array, *diagonal_axes):
+    """
+    Diagonalization of an array-like object on the specified axes.
+
+    This is equivalent to multiplying the expression by Kronecker deltas
+    uniting the axes.
+
+    The diagonal indices are put at the end of the axes.
+
+    Examples
+    ========
+
+    >>> from sympy import Array, tensordiagonal
+    >>> from sympy import Matrix, eye
+    >>> tensordiagonal(eye(3), (0, 1))
+    [1, 1, 1]
+    >>> A = Array(range(18), (3, 2, 3))
+    >>> A
+    [[[0, 1, 2], [3, 4, 5]], [[6, 7, 8], [9, 10, 11]], [[12, 13, 14], [15, 16, 17]]]
+    >>> tensordiagonal(A, (0, 2))
+    [[0, 7, 14], [3, 10, 17]]
+
+    >>> from sympy.abc import a,b,c,d
+    >>> m1 = Matrix([[a, b], [c, d]])
+    >>> tensordiagonal(m1, [0, 1])
+    [a, d]
+
+    """
+    array = _arrayfy(array)
+
+    # Verify contraction_axes:
+    taken_dims = set()
+    for axes_group in diagonal_axes:
+        if not isinstance(axes_group, Iterable):
+            raise ValueError("collections of diagonal axes expected")
+
+        dim = array.shape[axes_group[0]]
+
+        for d in axes_group:
+            if d in taken_dims:
+                raise ValueError("dimension specified more than once")
+            if dim != array.shape[d]:
+                raise ValueError("cannot diagonalize between axes of different dimension")
+            taken_dims.add(d)
+
+    rank = array.rank()
+
+    cum_shape = [0]*rank
+    _cumul = 1
+    for i in range(rank):
+        cum_shape[rank - i - 1] = _cumul
+        _cumul *= int(array.shape[rank - i - 1])
+
+    # DEFINITION: by absolute position it is meant the position along the one
+    # dimensional array containing all the tensor components.
+
+    # Possible future work on this module: move computation of absolute
+    # positions to a class method.
+
+    # Determine absolute positions of the undiagonalized indices:
+    remaining_indices = [[cum_shape[i]*j for j in range(array.shape[i])]
+                         for i in range(rank) if i not in taken_dims]
+
+    # Determine absolute positions of the diagonal indices:
+    diagonal_deltas = []
+    for axes_group in diagonal_axes:
+        lidx = []
+        for js in range(array.shape[axes_group[0]]):
+            lidx.append(sum([cum_shape[ig] * js for ig in axes_group]))
+        diagonal_deltas.append(lidx)
+
+    # Compute the contracted array:
+    #
+    # 1. external for loops on all undiagonalized indices.
+    #    Undiagonalized indices are determined by the combinatorial product of
+    #    the absolute positions of the remaining indices.
+    # 2. internal loop on all diagonal indices.
+    #    It sum the values of the absolute contracted index and the absolute
+    #    undiagonalized index for the external loop.
+    diagonalized_array = []
+    diagonal_shape = [len(i) for i in diagonal_deltas]
+    nondiagonal_shape = [array.shape[i] for i in range(rank) if i not in taken_dims]
+    for icontrib in itertools.product(*remaining_indices):
+        index_base_position = sum(icontrib)
+        isum = []
+        for sum_to_index in itertools.product(*diagonal_deltas):
+            idx = array._get_tuple_index(index_base_position + sum(sum_to_index))
+            isum.append(array[idx])
+
+        isum = type(array)(isum).reshape(*diagonal_shape)
+        diagonalized_array.append(isum)
+
+    if len(remaining_indices) == 0:
+        # TODO: really necessary? Will never be shape ().
+        assert len(diagonalized_array) == 1
+        return diagonalized_array[0]
+
+    return type(array)(diagonalized_array, nondiagonal_shape + diagonal_shape)  # , remaining_shape)
+
+
 def derive_by_array(expr, dx):
     r"""
     Derivative by arrays. Supports both arrays and scalars.

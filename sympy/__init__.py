@@ -218,8 +218,8 @@ from .integrals import (integrate, Integral, line_integrate, mellin_transform,
 from .tensor import (IndexedBase, Idx, Indexed, get_contraction_structure,
         get_indices, MutableDenseNDimArray, ImmutableDenseNDimArray,
         MutableSparseNDimArray, ImmutableSparseNDimArray, NDimArray,
-        tensorproduct, tensorcontraction, derive_by_array, permutedims, Array,
-        DenseNDimArray, SparseNDimArray)
+        tensorproduct, tensorcontraction, tensordiagonal, derive_by_array,
+        permutedims, Array, DenseNDimArray, SparseNDimArray)
 
 from .parsing import parse_expr
 
