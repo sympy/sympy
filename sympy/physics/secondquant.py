@@ -1073,9 +1073,9 @@ class FermionState(FockState):
         ===========
 
         If below fermi we try to remove a hole,
-        If above fermi we try to create a particle.
+        if above fermi we try to create a particle.
 
-        If general index p we return Kronecker(p,i)*self
+        If general index p we return ``Kronecker(p,i)*self``
         where ``i`` is a new symbol with restriction above or below.
 
         Examples
@@ -1127,7 +1127,7 @@ class FermionState(FockState):
         If below fermi we try to create a hole,
         If above fermi we try to remove a particle.
 
-        If general index p we return Kronecker(p,i)*self
+        If general index p we return ``Kronecker(p,i)*self``
         where ``i`` is a new symbol with restriction above or below.
 
         Examples
@@ -1221,7 +1221,7 @@ class FermionState(FockState):
     @classmethod
     def _count_holes(cls, list):
         """
-        Returns number of identified hole states in list.
+        Returns the number of identified hole states in list.
         """
         return len([i for i in list if cls._only_below_fermi(i)])
 
