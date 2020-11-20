@@ -1,5 +1,5 @@
 from .cartan_base import Standard_Cartan
-from sympy.core.backend import eye, Rational
+from sympy.core.backend import eye, Rational, ones, sqrt
 
 
 class TypeE(Standard_Cartan):
@@ -18,10 +18,10 @@ class TypeE(Standard_Cartan):
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("E6")
         >>> c.dimension()
-        8
+        6
         """
 
-        return 8
+        return self.n
 
     def basic_root(self, i, j):
         """
@@ -55,26 +55,31 @@ class TypeE(Standard_Cartan):
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("E6")
         >>> c.simple_root(2)
-        [1, 1, 0, 0, 0, 0, 0, 0]
+        [0, 1, -1, 0, 0, 0]
         """
         n = self.n
-        if i == 1:
-            root = [-0.5]*8
-            root[0] = 0.5
-            root[7] = 0.5
-            return root
-        elif i == 2:
-            root = [0]*8
-            root[1] = 1
-            root[0] = 1
-            return root
-        else:
-            if i == 7 or i == 8 and n == 6:
-                raise ValueError("E6 only has six simple roots!")
-            if i == 8 and n == 7:
-                raise ValueError("E7 has only 7 simple roots!")
+        def _dim8_weights(i,n):
+            """
+            Returns the roots in a basis
+            that makes it easy to subset
+            e7 and e6. 
+            """
+            e = eye(8)
+            if i == n:
+                return (e.row(n-3) - e.row(n-2)).T
+            if i == n - 1:
+                return  - ones(8,1) / 2
+            if i == n - 2:
+                return (e.row(n-3) + e.row(n-2)).T
+            else:
+                return (e.row(i-1) - e.row(i)).T
 
-            return self.basic_root(i-3, i-2)
+        _root = _dim8_weights(i, n).T
+        if i != 8:
+            _root[n-1] = sqrt(sum(_root[j]**2 for j in range(n-1, 8)))            
+        return _root[:n]
+
+
 
     def positive_roots(self):
         """
@@ -249,18 +254,7 @@ class TypeE(Standard_Cartan):
 
         """
 
-        n = self.n
-        m = 2*eye(n)
-        i = 3
-        while i < n-1:
-            m[i, i+1] = -1
-            m[i, i-1] = -1
-            i += 1
-        m[0, 2] = m[2, 0] = -1
-        m[1, 3] = m[3, 1] = -1
-        m[2, 3] = -1
-        m[n-1, n-2] = -1
-        return m
+        return super().cartan_matrix()
 
 
     def basis(self):

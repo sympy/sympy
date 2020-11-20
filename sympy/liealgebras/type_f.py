@@ -58,13 +58,14 @@ class TypeF(Standard_Cartan):
         """
 
         if i < 3:
-            return self.basic_root(i-1, i)
+            return self.basic_root(i, i+1)
         if i == 3:
             root = [0]*4
-            root[3] = 1
+            root[-1] = 1
             return root
         if i == 4:
             root = [Rational(-1, 2)]*4
+            root[0]*=-1
             return root
 
     def positive_roots(self):
@@ -146,9 +147,7 @@ class TypeF(Standard_Cartan):
         [ 0,  0, -1,  2]])
         """
 
-        m = Matrix( 4, 4, [2, -1, 0, 0, -1, 2, -2, 0, 0,
-            -1, 2, -1, 0, 0, -1, 2])
-        return m
+        return super().cartan_matrix()
 
     def basis(self):
         """

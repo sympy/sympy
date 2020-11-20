@@ -97,8 +97,7 @@ class TypeG(Standard_Cartan):
 
         """
 
-        m = Matrix( 2, 2, [2, -1, -3, 2])
-        return m
+        return super().cartan_matrix()
 
     def basis(self):
         """
