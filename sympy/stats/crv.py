@@ -8,7 +8,6 @@ sympy.stats.rv
 sympy.stats.frv
 """
 
-from __future__ import print_function, division
 
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
@@ -157,7 +156,7 @@ class SampleContinuousScipy:
         # scipy does not require map as it can handle using custom distributions
         from scipy.stats import rv_continuous
         z = Dummy('z')
-        handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
+        handmade_pdf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])
         class scipy_pdf(rv_continuous):
             def _pdf(self, x):
                 return handmade_pdf(x)
@@ -333,7 +332,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
-        cf = integrate(exp(I*t*x)*pdf, (x, -oo, oo))
+        cf = integrate(exp(I*t*x)*pdf, (x, self.set))
         return Lambda(t, cf)
 
     def _characteristic_function(self, t):
@@ -355,7 +354,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
-        mgf = integrate(exp(t * x) * pdf, (x, -oo, oo))
+        mgf = integrate(exp(t * x) * pdf, (x, self.set))
         return Lambda(t, mgf)
 
     def _moment_generating_function(self, t):
@@ -436,7 +435,7 @@ class ContinuousPSpace(PSpace):
         else:
             rvs = frozenset(rvs)
 
-        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
+        expr = expr.xreplace({rv: rv.symbol for rv in rvs})
 
         domain_symbols = frozenset(rv.symbol for rv in rvs)
 
@@ -557,7 +556,7 @@ class ContinuousPSpace(PSpace):
         return SingleContinuousDomain(rv.symbol, interval)
 
     def conditional_space(self, condition, normalize=True, **kwargs):
-        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        condition = condition.xreplace({rv: rv.symbol for rv in self.values})
         domain = ConditionalContinuousDomain(self.domain, condition)
         if normalize:
             # create a clone of the variable to
@@ -607,7 +606,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
             return expr
 
         expr = _sympify(expr)
-        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
+        expr = expr.xreplace({rv: rv.symbol for rv in rvs})
 
         x = self.value.symbol
         try:

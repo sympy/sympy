@@ -1,7 +1,7 @@
 from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
-                   ImmutableMatrix, Ne, Lt, Gt, exp, Not, Rational, Lambda, erf,
+                   ImmutableMatrix, Ne, Lt, Le, Gt, Ge, exp, Not, Rational, Lambda, erf,
                    Piecewise, factorial, Interval, oo, Contains, sqrt, pi, ceiling,
-                   gamma, lowergamma, Sum, Range, Tuple, ImmutableDenseMatrix)
+                   gamma, lowergamma, Sum, Range, Tuple, ImmutableDenseMatrix, Symbol)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
                          BernoulliProcess, PoissonProcess, WienerProcess,
@@ -23,8 +23,6 @@ def test_DiscreteMarkovChain():
     # pass only the name
     X = DiscreteMarkovChain("X")
     assert isinstance(X.state_space, Range)
-    assert isinstance(X.index_of, Range)
-    assert not X._is_numeric
     assert X.index_set == S.Naturals0
     assert isinstance(X.transition_probabilities, MatrixSymbol)
     t = symbols('t', positive=True, integer=True)
@@ -32,26 +30,31 @@ def test_DiscreteMarkovChain():
     assert E(X[0]) == Expectation(X[0])
     raises(TypeError, lambda: DiscreteMarkovChain(1))
     raises(NotImplementedError, lambda: X(t))
+    raises(NotImplementedError, lambda: X.communication_classes())
+    raises(NotImplementedError, lambda: X.canonical_form())
+    raises(NotImplementedError, lambda: X.decompose())
+
+    nz = Symbol('n', integer=True)
+    TZ = MatrixSymbol('M', nz, nz)
+    SZ = Range(nz)
+    YZ = DiscreteMarkovChain('Y', SZ, TZ)
+    assert P(Eq(YZ[2], 1), Eq(YZ[1], 0)) == TZ[0, 1]
 
     raises(ValueError, lambda: sample_stochastic_process(t))
     raises(ValueError, lambda: next(sample_stochastic_process(X)))
     # pass name and state_space
     # any hashable object should be a valid state
     # states should be valid as a tuple/set/list/Tuple/Range
-    sym = symbols('a', real=True)
+    sym, rainy, cloudy, sunny = symbols('a Rainy Cloudy Sunny', real=True)
     state_spaces = [(1, 2, 3), [Str('Hello'), sym, DiscreteMarkovChain],
-                    Tuple(1, exp(sym), Str('World'), sympify=False), Range(-1, 7, 2)]
-    chains = [DiscreteMarkovChain("Y", state_spaces[0]),
-              DiscreteMarkovChain("Y", state_spaces[1]),
-              DiscreteMarkovChain("Y", state_spaces[2])]
+                    Tuple(1, exp(sym), Str('World'), sympify=False), Range(-1, 5, 2),
+                    [rainy, cloudy, sunny]]
+    chains = [DiscreteMarkovChain("Y", state_space) for state_space in state_spaces]
+
     for i, Y in enumerate(chains):
         assert isinstance(Y.transition_probabilities, MatrixSymbol)
-        assert Y.state_space == Tuple(*state_spaces[i])
+        assert Y.state_space == state_spaces[i] or Y.state_space == FiniteSet(*state_spaces[i])
         assert Y.number_of_states == 3
-        assert not Y._is_numeric  # because no transition matrix is provided
-        assert Y.index_of[state_spaces[i][0]] == 0
-        assert Y.index_of[state_spaces[i][1]] == 1
-        assert Y.index_of[state_spaces[i][2]] == 2
 
         with ignore_warnings(UserWarning):  # TODO: Restore tests once warnings are removed
             assert P(Eq(Y[2], 1), Eq(Y[0], 2), evaluate=False) == Probability(Eq(Y[2], 1), Eq(Y[0], 2))
@@ -62,7 +65,6 @@ def test_DiscreteMarkovChain():
     raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
     Y = DiscreteMarkovChain("Y", Range(1, t, 2))
     assert Y.number_of_states == ceiling((t-1)/2)
-    raises(NotImplementedError, lambda: Y.index_of)
 
     # pass name and transition_probabilities
     chains = [DiscreteMarkovChain("Y", trans_probs=Matrix([[]])),
@@ -71,8 +73,6 @@ def test_DiscreteMarkovChain():
     for Z in chains:
         assert Z.number_of_states == Z.transition_probabilities.shape[0]
         assert isinstance(Z.transition_probabilities, ImmutableDenseMatrix)
-        assert isinstance(Z.state_space, Tuple)
-        assert Z._is_numeric
 
     # pass name, state_space and transition_probabilities
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
@@ -87,7 +87,7 @@ def test_DiscreteMarkovChain():
     assert (P(Eq(YS[3], 2), Eq(YS[1], 1)) -
             (TS[0, 2]*TS[1, 0] + TS[1, 1]*TS[1, 2] + TS[1, 2]*TS[2, 2])).simplify() == 0
     assert P(Eq(YS[1], 1), Eq(YS[2], 2)) == Probability(Eq(YS[1], 1))
-    assert P(Eq(YS[3], 3), Eq(YS[1], 1)) is S.Zero
+    assert P(Eq(YS[3], 3), Eq(YS[1], 1)) == TS[0, 2]*TS[1, 0] + TS[1, 1]*TS[1, 2] + TS[1, 2]*TS[2, 2]
     TO = Matrix([[0.25, 0.75, 0],[0, 0.25, 0.75],[0.75, 0, 0.25]])
     assert P(Eq(Y[3], 2), Eq(Y[1], 1) & TransitionMatrixOf(Y, TO)).round(3) == Float(0.375, 3)
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
@@ -125,14 +125,20 @@ def test_DiscreteMarkovChain():
     assert Y3._transient2absorbing() == None
     assert Y2.is_absorbing_chain() == True
     assert Y3.is_absorbing_chain() == False
+    assert Y2.canonical_form() == ([0, 1, 2], TO2)
+    assert Y3.canonical_form() == ([0, 1, 2], TO3)
+    assert Y2.decompose() == ([0, 1, 2], TO2[0:1, 0:1], TO2[1:3, 0:1], TO2[1:3, 1:3])
+    assert Y3.decompose() == ([0, 1, 2], TO3, Matrix(0, 3, []), Matrix(0, 0, []))
     TO4 = Matrix([[Rational(1, 5), Rational(2, 5), Rational(2, 5)], [Rational(1, 10), S.Half, Rational(2, 5)], [Rational(3, 5), Rational(3, 10), Rational(1, 10)]])
     Y4 = DiscreteMarkovChain('Y', trans_probs=TO4)
     w = ImmutableMatrix([[Rational(11, 39), Rational(16, 39), Rational(4, 13)]])
     assert Y4.limiting_distribution == w
     assert Y4.is_regular() == True
+    assert Y4.is_ergodic() == True
     TS1 = MatrixSymbol('T', 3, 3)
     Y5 = DiscreteMarkovChain('Y', trans_probs=TS1)
     assert Y5.limiting_distribution(w, TO4).doit() == True
+    assert Y5.stationary_distribution(condition_set=True).subs(TS1, TO4).contains(w).doit() == S.true
     TO6 = Matrix([[S.One, 0, 0, 0, 0],[S.Half, 0, S.Half, 0, 0],[0, S.Half, 0, S.Half, 0], [0, 0, S.Half, 0, S.Half], [0, 0, 0, 0, 1]])
     Y6 = DiscreteMarkovChain('Y', trans_probs=TO6)
     assert Y6._transient2absorbing() == ImmutableMatrix([[S.Half, 0], [0, 0], [0, S.Half]])
@@ -143,7 +149,145 @@ def test_DiscreteMarkovChain():
     Y7 = DiscreteMarkovChain('Y', trans_probs=TO7)
     assert Y7._transient2absorbing() == None
     assert Y7.is_absorbing_chain() == False
-    assert Y7.fundamental_matrix() == ImmutableDenseMatrix([[Rational(86, 75), Rational(1, 25), Rational(-14, 75)], [Rational(2, 25), Rational(21, 25), Rational(2, 25)], [Rational(-14, 75), Rational(1, 25), Rational(86, 75)]])
+    assert Y7.fundamental_matrix() == ImmutableDenseMatrix([[Rational(86, 75), Rational(1, 25), Rational(-14, 75)], 
+                                                            [Rational(2, 25), Rational(21, 25), Rational(2, 25)], 
+                                                            [Rational(-14, 75), Rational(1, 25), Rational(86, 75)]])
+
+    # test for zero-sized matrix functionality
+    X = DiscreteMarkovChain('X', trans_probs=Matrix([[]]))
+    assert X.number_of_states == 0
+    assert X.stationary_distribution() == Matrix([[]])
+    assert X.communication_classes() == []
+    assert X.canonical_form() == ([], Matrix([[]]))
+    assert X.decompose() == ([], Matrix([[]]), Matrix([[]]), Matrix([[]]))
+    assert X.is_regular() == False
+    assert X.is_ergodic() == False
+
+    # test communication_class
+    # see https://drive.google.com/drive/folders/1HbxLlwwn2b3U8Lj7eb_ASIUb5vYaNIjg?usp=sharing
+    # tutorial 2.pdf
+    TO7 = Matrix([[0, 5, 5, 0, 0],
+                  [0, 0, 0, 10, 0],
+                  [5, 0, 5, 0, 0],
+                  [0, 10, 0, 0, 0],
+                  [0, 3, 0, 3, 4]])/10
+    Y7 = DiscreteMarkovChain('Y', trans_probs=TO7)
+    tuples = Y7.communication_classes()
+    classes, recurrence, periods = list(zip(*tuples))
+    assert classes == ([1, 3], [0, 2], [4])
+    assert recurrence == (True, False, False)
+    assert periods == (2, 1, 1)
+
+    TO8 = Matrix([[0, 0, 0, 10, 0, 0],
+                  [5, 0, 5, 0, 0, 0],
+                  [0, 4, 0, 0, 0, 6],
+                  [10, 0, 0, 0, 0, 0],
+                  [0, 10, 0, 0, 0, 0],
+                  [0, 0, 0, 5, 5, 0]])/10
+    Y8 = DiscreteMarkovChain('Y', trans_probs=TO8)
+    tuples = Y8.communication_classes()
+    classes, recurrence, periods = list(zip(*tuples))
+    assert classes == ([0, 3], [1, 2, 5, 4])
+    assert recurrence == (True, False)
+    assert periods == (2, 2)
+
+    TO9 = Matrix([[2, 0, 0, 3, 0, 0, 3, 2, 0, 0],
+                  [0, 10, 0, 0, 0, 0, 0, 0, 0, 0],
+                  [0, 2, 2, 0, 0, 0, 0, 0, 3, 3],
+                  [0, 0, 0, 3, 0, 0, 6, 1, 0, 0],
+                  [0, 0, 0, 0, 5, 5, 0, 0, 0, 0],
+                  [0, 0, 0, 0, 0, 10, 0, 0, 0, 0],
+                  [4, 0, 0, 5, 0, 0, 1, 0, 0, 0],
+                  [2, 0, 0, 4, 0, 0, 2, 2, 0, 0],
+                  [3, 0, 1, 0, 0, 0, 0, 0, 4, 2],
+                  [0, 0, 4, 0, 0, 0, 0, 0, 3, 3]])/10
+    Y9 = DiscreteMarkovChain('Y', trans_probs=TO9)
+    tuples = Y9.communication_classes()
+    classes, recurrence, periods = list(zip(*tuples))
+    assert classes == ([0, 3, 6, 7], [1], [2, 8, 9], [5], [4])
+    assert recurrence == (True, True, False, True, False)
+    assert periods == (1, 1, 1, 1, 1)
+
+    # test canonical form
+    # see https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    # example 11.13
+    T = Matrix([[1, 0, 0, 0, 0],
+                [S(1) / 2, 0, S(1) / 2, 0, 0],
+                [0, S(1) / 2, 0, S(1) / 2, 0],
+                [0, 0, S(1) / 2, 0, S(1) / 2],
+                [0, 0, 0, 0, S(1)]])
+    DW = DiscreteMarkovChain('DW', [0, 1, 2, 3, 4], T)
+    states, A, B, C = DW.decompose()
+    assert states == [0, 4, 1, 2, 3]
+    assert A == Matrix([[1, 0], [0, 1]])
+    assert B == Matrix([[S(1)/2, 0], [0, 0], [0, S(1)/2]])
+    assert C == Matrix([[0, S(1)/2, 0], [S(1)/2, 0, S(1)/2], [0, S(1)/2, 0]])
+    states, new_matrix = DW.canonical_form()
+    assert states == [0, 4, 1, 2, 3]
+    assert new_matrix == Matrix([[1, 0, 0, 0, 0],
+                                 [0, 1, 0, 0, 0],
+                                 [S(1)/2, 0, 0, S(1)/2, 0],
+                                 [0, 0, S(1)/2, 0, S(1)/2],
+                                 [0, S(1)/2, 0, S(1)/2, 0]])
+
+    # test regular and ergodic
+    # https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    T = Matrix([[0, 4, 0, 0, 0],
+                [1, 0, 3, 0, 0],
+                [0, 2, 0, 2, 0],
+                [0, 0, 3, 0, 1],
+                [0, 0, 0, 4, 0]])/4
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert not X.is_regular()
+    assert X.is_ergodic()
+    T = Matrix([[0, 1], [1, 0]])
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert not X.is_regular()
+    assert X.is_ergodic()
+    # http://www.math.wisc.edu/~valko/courses/331/MC2.pdf
+    T = Matrix([[2, 1, 1],
+                [2, 0, 2],
+                [1, 1, 2]])/4
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_regular()
+    assert X.is_ergodic()
+    # https://docs.ufpr.br/~lucambio/CE222/1S2014/Kemeny-Snell1976.pdf
+    T = Matrix([[1, 1], [1, 1]])/2
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_regular()
+    assert X.is_ergodic()
+
+    # test is_absorbing_chain
+    T = Matrix([[0, 1, 0],
+                [1, 0, 0],
+                [0, 0, 1]])
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert not X.is_absorbing_chain()
+    # https://en.wikipedia.org/wiki/Absorbing_Markov_chain
+    T = Matrix([[1, 1, 0, 0],
+                [0, 1, 1, 0],
+                [1, 0, 0, 1],
+                [0, 0, 0, 2]])/2
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_absorbing_chain()
+    T = Matrix([[2, 0, 0, 0, 0],
+                [1, 0, 1, 0, 0],
+                [0, 1, 0, 1, 0],
+                [0, 0, 1, 0, 1],
+                [0, 0, 0, 0, 2]])/2
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_absorbing_chain()
+
+    # test custom state space
+    Y10 = DiscreteMarkovChain('Y', [1, 2, 3], TO2)
+    tuples = Y10.communication_classes()
+    classes, recurrence, periods = list(zip(*tuples))
+    assert classes == ([1], [2, 3])
+    assert recurrence == (True, False)
+    assert periods == (1, 1)
+    assert Y10.canonical_form() == ([1, 2, 3], TO2)
+    assert Y10.decompose() == ([1, 2, 3], TO2[0:1, 0:1], TO2[1:3, 0:1], TO2[1:3, 1:3])
+
     # testing miscellaneous queries
     T = Matrix([[S.Half, Rational(1, 4), Rational(1, 4)],
                 [Rational(1, 3), 0, Rational(2, 3)],
@@ -172,6 +316,15 @@ def test_DiscreteMarkovChain():
     assert (variance(X[1], Eq(X[0], 1)) - (2*(-a/3 + c/3)**2/3 + (2*a/3 - 2*c/3)**2/3)).simplify() == 0
     raises(ValueError, lambda: E(X[1], Eq(X[2], 1)))
 
+    #testing queries with multiple RandomIndexedSymbols
+    T = Matrix([[Rational(5, 10), Rational(3, 10), Rational(2, 10)], [Rational(2, 10), Rational(7, 10), Rational(1, 10)], [Rational(3, 10), Rational(3, 10), Rational(4, 10)]])
+    Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    assert P(Eq(Y[7], Y[5]), Eq(Y[2], 0)).round(5) == Float(0.44428, 5)
+    assert P(Gt(Y[3], Y[1]), Eq(Y[0], 0)).round(2) == Float(0.36, 2)
+    assert P(Le(Y[5], Y[10]), Eq(Y[4], 2)).round(6) == Float(0.739072, 6)
+    assert Float(P(Eq(Y[500], Y[240]), Eq(Y[120], 1)), 14) == Float(1 - P(Ne(Y[500], Y[240]), Eq(Y[120], 1)), 14)
+    assert Float(P(Gt(Y[350], Y[100]), Eq(Y[75], 2)), 14) == Float(1 - P(Le(Y[350], Y[100]), Eq(Y[75], 2)), 14)
+    assert Float(P(Lt(Y[400], Y[210]), Eq(Y[161], 0)), 14) == Float(1 - P(Ge(Y[400], Y[210]), Eq(Y[161], 0)), 14)
 
 def test_sample_stochastic_process():
     if not import_module('scipy'):
@@ -185,7 +338,7 @@ def test_sample_stochastic_process():
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     for samps in range(10):
         assert next(sample_stochastic_process(Y)) in Y.state_space
-    Z = DiscreteMarkovChain("Z", ['1', 1, None], T)
+    Z = DiscreteMarkovChain("Z", ['1', 1, 0], T)
     for samps in range(10):
         assert next(sample_stochastic_process(Z)) in Z.state_space
 
@@ -230,6 +383,10 @@ def test_ContinuousMarkovChain():
     CS1 = ContinuousMarkovChain('C', [0, 1, 2], TS1)
     A = CS1.generator_matrix
     assert CS1.transition_probabilities(A)(t) == exp(t*A)
+
+    C3 = ContinuousMarkovChain('C', [Symbol('0'), Symbol('1'), Symbol('2')], T2)
+    assert P(Eq(C3(1), 1), Eq(C3(0), 1)) == exp(-2)/2 + S.Half
+    assert P(Eq(C3(1), Symbol('1')), Eq(C3(0), Symbol('1'))) == exp(-2)/2 + S.Half
 
 def test_BernoulliProcess():
 

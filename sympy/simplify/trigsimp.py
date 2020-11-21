@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
 
 from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
@@ -26,6 +24,9 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                       polynomial=False):
     """
     Simplify trigonometric expressions using a groebner basis algorithm.
+
+    Explanation
+    ===========
 
     This routine takes a fraction involving trigonometric or hyperbolic
     expressions, and tries to simplify it. The primary metric is the
@@ -220,7 +221,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
 
     def build_ideal(x, terms):
         """
-        Build generators for our ideal. Terms is an iterable with elements of
+        Build generators for our ideal. ``Terms`` is an iterable with elements of
         the form (fn, coeff), indicating that we have a generator fn(coeff*x).
 
         If any of the terms is trigonometric, sin(x) and cos(x) are guaranteed
@@ -323,7 +324,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
             x = gcd*Mul(*key)
             r = build_ideal(x, terms)
             res.extend(r)
-            newgens.extend(set(fn(v*x) for fn, v in terms))
+            newgens.extend({fn(v*x) for fn, v in terms})
 
         # Add generators for compound expressions from iterables
         for fn, args in iterables:
@@ -425,8 +426,8 @@ def trigsimp(expr, **opts):
     """
     reduces expression by using known trig identities
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     method:
     - Determine the method to use. Valid choices are 'matching' (default),
@@ -606,7 +607,7 @@ def exptrigsimp(expr):
 
 def trigsimp_old(expr, *, first=True, **opts):
     """
-    reduces expression by using known trig identities
+    Reduces expression by using known trig identities.
 
     Notes
     =====

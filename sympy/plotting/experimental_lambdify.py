@@ -10,7 +10,6 @@ ever support anything else than sympy expressions (no Matrices, dictionaries
 and so on).
 """
 
-from __future__ import print_function, division
 
 import re
 from sympy import Symbol, NumberSymbol, I, zoo, oo
@@ -79,10 +78,13 @@ import warnings
 #TODO debugging output
 
 
-class vectorized_lambdify(object):
+class vectorized_lambdify:
     """ Return a sufficiently smart, vectorized and lambdified function.
 
     Returns only reals.
+
+    Explanation
+    ===========
 
     This function uses experimental_lambdify to created a lambdified
     expression ready to be used with numpy. Many of the functions in sympy
@@ -144,8 +146,11 @@ class vectorized_lambdify(object):
             return self.__call__(*args)
 
 
-class lambdify(object):
+class lambdify:
     """Returns the lambdified function.
+
+    Explanation
+    ===========
 
     This function uses experimental_lambdify to create a lambdified
     expression. It uses cmath to lambdify the expression. If the function
@@ -197,7 +202,7 @@ def experimental_lambdify(*args, **kwargs):
     return l
 
 
-class Lambdifier(object):
+class Lambdifier:
     def __init__(self, args, expr, print_lambda=False, use_evalf=False,
                  float_wrap_evalf=False, complex_wrap_evalf=False,
                  use_np=False, use_python_math=False, use_python_cmath=False,
@@ -447,6 +452,9 @@ class Lambdifier(object):
     def str2tree(self, exprstr):
         """Converts an expression string to a tree.
 
+        Explanation
+        ===========
+
         Functions are represented by ('func_name(', tree_of_arguments).
         Other expressions are (head_string, mid_tree, tail_str).
         Expressions that do not contain functions are directly returned.
@@ -514,6 +522,9 @@ class Lambdifier(object):
     def tree2str_translate(self, tree):
         """Converts a tree to string with translations.
 
+        Explanation
+        ===========
+
         Function names are translated by translate_func.
         Other strings are translated by translate_str.
         """
@@ -533,6 +544,9 @@ class Lambdifier(object):
 
     def translate_func(self, func_name, argtree):
         """Translate function names and the tree of arguments.
+
+        Explanation
+        ===========
 
         If the function name is not in the dictionaries of dict_tuple_fun then the
         function is surrounded by a float((...).evalf()).

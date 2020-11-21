@@ -118,22 +118,22 @@ class VectorPrettyPrinter(PrettyPrinter):
                 syms.pop()
                 dot_i += 1
             else:
-                return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+                return super()._print_Derivative(deriv)
 
         if not (isinstance(type(deriv.expr), UndefinedFunction)
                 and (deriv.expr.args == (t,))):
-                return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+                return super()._print_Derivative(deriv)
         else:
             pform = self._print_Function(deriv.expr)
 
         # the following condition would happen with some sort of non-standard
         # dynamic symbol I guess, so we'll just print the SymPy way
         if len(pform.picture) > 1:
-            return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+            return super()._print_Derivative(deriv)
 
         # There are only special symbols up to fourth-order derivatives
         if dot_i >= 5:
-            return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+            return super()._print_Derivative(deriv)
 
         # Deal with special symbols
         dots = {0 : "",
@@ -165,7 +165,7 @@ class VectorPrettyPrinter(PrettyPrinter):
         # dynamic symbol, so we'll skip the (t). The rest of the code is
         # identical to the normal PrettyPrinter code
         if not (isinstance(func, UndefinedFunction) and (args == (t,))):
-            return super(VectorPrettyPrinter, self)._print_Function(e)
+            return super()._print_Function(e)
         return pform
 
 

@@ -1,6 +1,5 @@
 """Computational algebraic field theory. """
 
-from __future__ import print_function, division
 
 from sympy import (
     S, Rational, AlgebraicNumber, GoldenRatio, TribonacciConstant,

@@ -101,6 +101,9 @@ class _GrowableGrid:
     """
     Holds a growable grid of objects.
 
+    Explanation
+    ===========
+
     It is possible to append or prepend a row or a column to the grid
     using the corresponding methods.  Prepending rows or columns has
     the effect of changing the coordinates of the already existing
@@ -173,6 +176,9 @@ class _GrowableGrid:
 class DiagramGrid:
     r"""
     Constructs and holds the fitting of the diagram into a grid.
+
+    Explanation
+    ===========
 
     The mission of this class is to analyse the structure of the
     supplied diagram and to place its objects on a grid such that,
@@ -296,7 +302,7 @@ class DiagramGrid:
     References
     ==========
 
-    [FiveLemma] https://en.wikipedia.org/wiki/Five_lemma
+    .. [FiveLemma] https://en.wikipedia.org/wiki/Five_lemma
     """
     @staticmethod
     def _simplify_morphisms(morphisms):
@@ -558,10 +564,10 @@ class DiagramGrid:
     @staticmethod
     def _find_triangle_to_weld(triangles, fringe, grid):
         """
-        Finds, if possible, a triangle and an edge in the fringe to
+        Finds, if possible, a triangle and an edge in the ``fringe`` to
         which the triangle could be attached.  Returns the tuple
         containing the triangle and the index of the corresponding
-        edge in the fringe.
+        edge in the ``fringe``.
 
         This function relies on the fact that objects are unique in
         the diagram.
@@ -704,7 +710,7 @@ class DiagramGrid:
     @staticmethod
     def _grow_pseudopod(triangles, fringe, grid, skeleton, placed_objects):
         """
-        Starting from an object in the existing structure on the grid,
+        Starting from an object in the existing structure on the ``grid``,
         adds an edge to which a triangle from ``triangles`` could be
         welded.  If this method has found a way to do so, it returns
         the object it has just added.

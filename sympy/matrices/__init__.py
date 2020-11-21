@@ -28,7 +28,7 @@ from .expressions import (
     hadamard_product, HadamardProduct, HadamardPower, Determinant, det,
     diagonalize_vector, DiagMatrix, DiagonalMatrix, DiagonalOf, trace,
     DotProduct, kronecker_product, KroneckerProduct,
-    PermutationMatrix, MatrixPermute, MatrixSet)
+    PermutationMatrix, MatrixPermute, MatrixSet, Permanent, per)
 
 from .utilities import dotprodsimp
 
@@ -62,6 +62,7 @@ __all__ = [
     'det', 'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
     'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute', 'MatrixSet',
+    'Permanent', 'per',
 
     'dotprodsimp',
 ]
