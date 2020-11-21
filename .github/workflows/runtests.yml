@@ -17,11 +17,44 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test quality
-  tests:
+  doctests:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
-      - run: bin/test --force-colors
+      - run: bin/doctest --force-colors
+      - run: bin/doctest --force-colors doc
+  tests1:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: python -m pip install --upgrade pip
+      - run: pip install mpmath
+      - run: bin/test --force-colors --split=1/2
+  tests2:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: python -m pip install --upgrade pip
+      - run: pip install mpmath
+      - run: bin/test --force-colors --split=2/2
+  slow1:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: python -m pip install --upgrade pip
+      - run: pip install mpmath
+      - run: ON_TRAVIS=true bin/test --force-colors --slow --split=1/2
+  slow2:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: python -m pip install --upgrade pip
+      - run: pip install mpmath
+      - run: ON_TRAVIS=true bin/test --force-colors --slow --split=2/2
