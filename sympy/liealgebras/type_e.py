@@ -78,7 +78,7 @@ class TypeE(Standard_Cartan):
 
         _root = _dim8_weights(i, n).T
         if i != 8:
-            _root[n-1] = sqrt(sum(_root[j]**2 for j in range(n-1, 8)))            
+            _root[n-1] = sqrt(sum(_root[j]**2 for j in range(n-1, 8)))
         return _root[:n]
 
 

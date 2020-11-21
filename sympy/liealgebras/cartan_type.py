@@ -25,9 +25,9 @@ class CartanType_generator(Basic):
         if n < 0:
             raise ValueError("Lie algebra rank cannot be negative")
         if letter == "A":
-            return TypeA(n)        
+            return TypeA(n)
         if letter == "B":
-            return TypeB(n)        
+            return TypeB(n)
         if letter == "C":
             return TypeC(n)
         if letter == "D":
@@ -41,7 +41,7 @@ class CartanType_generator(Basic):
         if letter == "G":
             if n == 2:
                 return TypeG(n)
-        
+
         raise TypeError("Undefined Lie algebra")
 
 CartanType = CartanType_generator()

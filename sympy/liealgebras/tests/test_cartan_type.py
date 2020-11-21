@@ -15,7 +15,7 @@ def test_Standard_Cartan():
 
 def test_CartanType():
     c = CartanType("A4")
-    
+
     omega = c.omega_matrix()
     cocar = c.cocartan_matrix()
 
@@ -27,5 +27,3 @@ def test_CartanType():
                         ['1/3',  '1/3', '-2/3']])
 
     assert c2.fundamental_weight(0) == Matrix([['2/3', '-1/3', '-1/3']])
-
-
