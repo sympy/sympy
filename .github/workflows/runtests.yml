@@ -25,7 +25,7 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
-      - run: bin/doctest --force-colors doc
+      - run: examples/all.py -q
   tests1:
     runs-on: ubuntu-20.04
     steps:
