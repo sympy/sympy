@@ -324,18 +324,18 @@ def test_DiscreteMarkovChain():
     assert P(Ge(Y[7], Y[6]), Eq(Y[4], 1)) == P(Le(Y[6], Y[7]), Eq(Y[4], 1))
 
     #test symbolic queries
-    a,b,c,d = symbols('a b c d')
-    T = Matrix([[Rational(1,10), Rational(4, 10), Rational(5, 10)], [Rational(3,10), Rational(4,10), Rational(3,10)], [Rational(7,10), Rational(2,10), Rational(1,10)]])
-    Y = DiscreteMarkovChain("Y", [0,1,2], T)
-    query=P(Eq(Y[a], b), Eq(Y[c], d))
-    assert(query.subs({a:10 ,b:2, c:5, d:1}).evalf().round(4) == P(Eq(Y[10], 2), Eq(Y[5], 1)).round(4))
-    assert(query.subs({a:15 ,b:0, c:10, d:1}).evalf().round(4) == P(Eq(Y[15], 0), Eq(Y[10], 1)).round(4))
-    query_gt=P(Gt(Y[a], b), Eq(Y[c], d))
-    query_le=P(Le(Y[a], b), Eq(Y[c], d))
-    assert((query_gt.subs({a:5 ,b:2, c:1, d:0}) + query_le.subs({a:5 ,b:2, c:1, d:0})).evalf() == 1)
-    query_ge=P(Ge(Y[a], b), Eq(Y[c], d))
-    query_lt=P(Lt(Y[a], b), Eq(Y[c], d))
-    assert((query_ge.subs({a:4 ,b:1, c:0, d:2}) + query_lt.subs({a:4 ,b:1, c:0, d:2})).evalf() == 1)
+    a, b, c, d = symbols('a b c d')
+    T = Matrix([[Rational(1, 10), Rational(4, 10), Rational(5, 10)], [Rational(3, 10), Rational(4, 10), Rational(3, 10)], [Rational(7, 10), Rational(2, 10), Rational(1, 10)]])
+    Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    query = P(Eq(Y[a], b), Eq(Y[c], d))
+    assert query.subs({a:10, b:2, c:5, d:1}).evalf().round(4) == P(Eq(Y[10], 2), Eq(Y[5], 1)).round(4)
+    assert query.subs({a:15, b:0, c:10, d:1}).evalf().round(4) == P(Eq(Y[15], 0), Eq(Y[10], 1)).round(4)
+    query_gt = P(Gt(Y[a], b), Eq(Y[c], d))
+    query_le = P(Le(Y[a], b), Eq(Y[c], d))
+    assert query_gt.subs({a:5, b:2, c:1, d:0}).evalf() + query_le.subs({a:5, b:2, c:1, d:0}).evalf() == 1
+    query_ge = P(Ge(Y[a], b), Eq(Y[c], d))
+    query_lt = P(Lt(Y[a], b), Eq(Y[c], d))
+    assert query_ge.subs({a:4, b:1, c:0, d:2}).evalf() + query_lt.subs({a:4, b:1, c:0, d:2}).evalf() == 1
 
 def test_sample_stochastic_process():
     if not import_module('scipy'):
@@ -413,15 +413,15 @@ def test_ContinuousMarkovChain():
     assert P(Ge(C(7.87), C(1.008)), Eq(C(0.153), 1)) == P(Le(C(1.008), C(7.87)), Eq(C(0.153), 1))
 
     #test symbolic queries
-    a,b,c,d = symbols('a b c d')
-    query=P(Eq(C(a), b), Eq(C(c), d))
-    assert(query.subs({a:3.65 ,b:2, c:1.78, d:1}).evalf().round(10) == P(Eq(C(3.65), 2), Eq(C(1.78), 1)).round(10))
-    query_gt=P(Gt(C(a), b), Eq(C(c), d))
-    query_le=P(Le(C(a), b), Eq(C(c), d))
-    assert((query_gt.subs({a:13.2 ,b:0, c:3.29, d:2}) + query_le.subs({a:13.2 ,b:0, c:3.29, d:2})).evalf() == 1)
-    query_ge=P(Ge(C(a), b), Eq(C(c), d))
-    query_lt=P(Lt(C(a), b), Eq(C(c), d))
-    assert((query_ge.subs({a:7.43 ,b:1, c:1.45, d:0}) + query_lt.subs({a:7.43 ,b:1, c:1.45, d:0})).evalf() == 1)
+    a, b, c, d = symbols('a b c d')
+    query = P(Eq(C(a), b), Eq(C(c), d))
+    assert query.subs({a:3.65, b:2, c:1.78, d:1}).evalf().round(10) == P(Eq(C(3.65), 2), Eq(C(1.78), 1)).round(10)
+    query_gt = P(Gt(C(a), b), Eq(C(c), d))
+    query_le = P(Le(C(a), b), Eq(C(c), d))
+    assert query_gt.subs({a:13.2, b:0, c:3.29, d:2}).evalf() + query_le.subs({a:13.2, b:0, c:3.29, d:2}).evalf() == 1
+    query_ge = P(Ge(C(a), b), Eq(C(c), d))
+    query_lt = P(Lt(C(a), b), Eq(C(c), d))
+    assert query_ge.subs({a:7.43, b:1, c:1.45, d:0}).evalf() + query_lt.subs({a:7.43, b:1, c:1.45, d:0}).evalf() == 1
 
 def test_BernoulliProcess():
 

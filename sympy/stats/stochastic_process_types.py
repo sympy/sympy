@@ -863,16 +863,16 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     >>> from sympy import symbols, Matrix, Rational, Eq, Gt
     >>> from sympy.stats import P, DiscreteMarkovChain
-    >>> a,b,c,d = symbols('a b c d')
-    >>> T = Matrix([[Rational(1,10), Rational(4, 10), Rational(5, 10)], [Rational(3,10), Rational(4,10), Rational(3,10)], [Rational(7,10), Rational(2,10), Rational(1,10)]])
-    >>> Y = DiscreteMarkovChain("Y", [0,1,2], T)
-    >>> query=P(Eq(Y[a], b), Eq(Y[c], d))
+    >>> a, b, c, d = symbols('a b c d')
+    >>> T = Matrix([[Rational(1, 10), Rational(4, 10), Rational(5, 10)], [Rational(3, 10), Rational(4, 10), Rational(3, 10)], [Rational(7, 10), Rational(2, 10), Rational(1, 10)]])
+    >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    >>> query = P(Eq(Y[a], b), Eq(Y[c], d))
     >>> query.subs({a:10 ,b:2, c:5, d:1}).round(4)
     0.3096
     >>> P(Eq(Y[10], 2), Eq(Y[5], 1)).evalf().round(4)
     0.3096
-    >>> query_gt=P(Gt(Y[a], b), Eq(Y[c], d))
-    >>> query_gt.subs({a:21 ,b:0, c:5, d:0}).evalf().round(5)
+    >>> query_gt = P(Gt(Y[a], b), Eq(Y[c], d))
+    >>> query_gt.subs({a:21, b:0, c:5, d:0}).evalf().round(5)
     0.64705
     >>> P(Gt(Y[21], 0), Eq(Y[5], 0)).round(5)
     0.64705
@@ -884,8 +884,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> Y = DiscreteMarkovChain("Y", trans_probs=T)
     >>> Y.state_space
     Range(0, n, 1)
-    >>> query=P(Eq(Y[a], b), Eq(Y[c], d))
-    >>> query.subs({a:10 ,b:2, c:5, d:1})
+    >>> query = P(Eq(Y[a], b), Eq(Y[c], d))
+    >>> query.subs({a:10, b:2, c:5, d:1})
     (T**5)[1, 2]
 
     References
