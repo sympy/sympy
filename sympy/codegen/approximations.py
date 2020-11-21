@@ -12,7 +12,8 @@ methods).
 """
 
 class SumApprox(Optimization):
-    """ Approximates sum by neglecting small terms.
+    """
+    Approximates sum by neglecting small terms.
 
     Explanation
     ===========
