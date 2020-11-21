@@ -458,8 +458,8 @@ __all__ = [
     'IndexedBase', 'Idx', 'Indexed', 'get_contraction_structure',
     'get_indices', 'MutableDenseNDimArray', 'ImmutableDenseNDimArray',
     'MutableSparseNDimArray', 'ImmutableSparseNDimArray', 'NDimArray',
-    'tensorproduct', 'tensorcontraction', 'derive_by_array', 'permutedims',
-    'Array', 'DenseNDimArray', 'SparseNDimArray',
+    'tensorproduct', 'tensorcontraction', 'tensordiagonal', 'derive_by_array',
+    'permutedims', 'Array', 'DenseNDimArray', 'SparseNDimArray',
 
     # sympy.parsing
     'parse_expr',
