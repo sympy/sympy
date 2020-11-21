@@ -34,12 +34,6 @@ class DummyNumber:
             return a + self.number
         return NotImplemented
 
-    def __truediv__(a, b):
-        return a.__div__(b)
-
-    def __rtruediv__(a, b):
-        return a.__rdiv__(b)
-
     def __add__(self, a):
         if isinstance(a, (int, float, DummyNumber)):
             return self.number + a
@@ -65,12 +59,12 @@ class DummyNumber:
             return self.number * a
         return NotImplemented
 
-    def __rdiv__(self, a):
+    def __rtruediv__(self, a):
         if isinstance(a, (int, float)):
             return a / self.number
         return NotImplemented
 
-    def __div__(self, a):
+    def __truediv__(self, a):
         if isinstance(a, (int, float, DummyNumber)):
             return self.number / a
         return NotImplemented
@@ -189,14 +183,11 @@ class NonBasic:
     def __rmul__(self, other):
         return SpecialOp('*', other, self)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         return SpecialOp('/', self, other)
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         return SpecialOp('/', other, self)
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def __floordiv__(self, other):
         return SpecialOp('//', self, other)

@@ -32,8 +32,6 @@ from sympy.printing import srepr
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.latex import latex
 
-from sympy.core.compatibility import u_decode as u
-
 MutableDenseMatrix = Matrix
 
 
@@ -75,7 +73,7 @@ def test_anticommutator():
     ac_tall = AntiCommutator(A**2, B)
     assert str(ac) == '{A,B}'
     assert pretty(ac) == '{A,B}'
-    assert upretty(ac) == u'{A,B}'
+    assert upretty(ac) == '{A,B}'
     assert latex(ac) == r'\left\{A,B\right\}'
     sT(ac, "AntiCommutator(Operator(Symbol('A')),Operator(Symbol('B')))")
     assert str(ac_tall) == '{A**2,B}'
@@ -86,11 +84,11 @@ def test_anticommutator():
 \\    /\
 """
     ucode_str = \
-u("""\
+"""\
 ⎧ 2  ⎫\n\
 ⎨A ,B⎬\n\
 ⎩    ⎭\
-""")
+"""
     assert pretty(ac_tall) == ascii_str
     assert upretty(ac_tall) == ucode_str
     assert latex(ac_tall) == r'\left\{A^{2},B\right\}'
@@ -110,11 +108,11 @@ C       \n\
  1,2,3,4\
 """
     ucode_str = \
-u("""\
+"""\
  5,6    \n\
 C       \n\
  1,2,3,4\
-""")
+"""
     assert pretty(cg) == ascii_str
     assert upretty(cg) == ucode_str
     assert latex(cg) == r'C^{5,6}_{1,2,3,4}'
@@ -127,11 +125,11 @@ C       \n\
 \\2  4  6/\
 """
     ucode_str = \
-u("""\
+"""\
 ⎛1  3  5⎞\n\
 ⎜       ⎟\n\
 ⎝2  4  6⎠\
-""")
+"""
     assert pretty(wigner3j) == ascii_str
     assert upretty(wigner3j) == ucode_str
     assert latex(wigner3j) == \
@@ -145,11 +143,11 @@ u("""\
 \\4  5  6/\
 """
     ucode_str = \
-u("""\
+"""\
 ⎧1  2  3⎫\n\
 ⎨       ⎬\n\
 ⎩4  5  6⎭\
-""")
+"""
     assert pretty(wigner6j) == ascii_str
     assert upretty(wigner6j) == ucode_str
     assert latex(wigner6j) == \
@@ -165,13 +163,13 @@ u("""\
 \\7  8  9/\
 """
     ucode_str = \
-u("""\
+"""\
 ⎧1  2  3⎫\n\
 ⎪       ⎪\n\
 ⎨4  5  6⎬\n\
 ⎪       ⎪\n\
 ⎩7  8  9⎭\
-""")
+"""
     assert pretty(wigner9j) == ascii_str
     assert upretty(wigner9j) == ucode_str
     assert latex(wigner9j) == \
@@ -186,7 +184,7 @@ def test_commutator():
     c_tall = Commutator(A**2, B)
     assert str(c) == '[A,B]'
     assert pretty(c) == '[A,B]'
-    assert upretty(c) == u'[A,B]'
+    assert upretty(c) == '[A,B]'
     assert latex(c) == r'\left[A,B\right]'
     sT(c, "Commutator(Operator(Symbol('A')),Operator(Symbol('B')))")
     assert str(c_tall) == '[A**2,B]'
@@ -196,10 +194,10 @@ def test_commutator():
 [A ,B]\
 """
     ucode_str = \
-u("""\
+"""\
 ⎡ 2  ⎤\n\
 ⎣A ,B⎦\
-""")
+"""
     assert pretty(c_tall) == ascii_str
     assert upretty(c_tall) == ucode_str
     assert latex(c_tall) == r'\left[A^{2},B\right]'
@@ -209,7 +207,7 @@ u("""\
 def test_constants():
     assert str(hbar) == 'hbar'
     assert pretty(hbar) == 'hbar'
-    assert upretty(hbar) == u'ℏ'
+    assert upretty(hbar) == 'ℏ'
     assert latex(hbar) == r'\hbar'
     sT(hbar, "HBar()")
 
@@ -224,10 +222,10 @@ def test_dagger():
 x \
 """
     ucode_str = \
-u("""\
+"""\
  †\n\
 x \
-""")
+"""
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
     assert latex(expr) == r'x^{\dagger}'
@@ -252,7 +250,7 @@ def test_gate():
     g4 = UGate((0,), uMat)
     assert str(g1) == '1(2)'
     assert pretty(g1) == '1 \n 2'
-    assert upretty(g1) == u'1 \n 2'
+    assert upretty(g1) == '1 \n 2'
     assert latex(g1) == r'1_{2}'
     sT(g1, "IdentityGate(Integer(2))")
     assert str(g1*q) == '1(2)*|10101>'
@@ -262,10 +260,10 @@ def test_gate():
  2        \
 """
     ucode_str = \
-u("""\
+"""\
 1 ⋅❘10101⟩\n\
  2        \
-""")
+"""
     assert pretty(g1*q) == ascii_str
     assert upretty(g1*q) == ucode_str
     assert latex(g1*q) == r'1_{2} {\left|10101\right\rangle }'
@@ -277,10 +275,10 @@ C   /X \\\n\
  3,0\\ 1/\
 """
     ucode_str = \
-u("""\
+"""\
 C   ⎛X ⎞\n\
  3,0⎝ 1⎠\
-""")
+"""
     assert pretty(g2) == ascii_str
     assert upretty(g2) == ucode_str
     assert latex(g2) == r'C_{3,0}{\left(X_{1}\right)}'
@@ -292,10 +290,10 @@ CNOT   \n\
     1,0\
 """
     ucode_str = \
-u("""\
+"""\
 CNOT   \n\
     1,0\
-""")
+"""
     assert pretty(g3) == ascii_str
     assert upretty(g3) == ucode_str
     assert latex(g3) == r'CNOT_{1,0}'
@@ -306,10 +304,10 @@ U \n\
  0\
 """
     ucode_str = \
-u("""\
+"""\
 U \n\
  0\
-""")
+"""
     assert str(g4) == \
 """\
 U((0,),Matrix([\n\
@@ -329,7 +327,7 @@ def test_hilbert():
     h4 = L2(Interval(0, oo))
     assert str(h1) == 'H'
     assert pretty(h1) == 'H'
-    assert upretty(h1) == u'H'
+    assert upretty(h1) == 'H'
     assert latex(h1) == r'\mathcal{H}'
     sT(h1, "HilbertSpace()")
     assert str(h2) == 'C(2)'
@@ -339,17 +337,17 @@ def test_hilbert():
 C \
 """
     ucode_str = \
-u("""\
+"""\
  2\n\
 C \
-""")
+"""
     assert pretty(h2) == ascii_str
     assert upretty(h2) == ucode_str
     assert latex(h2) == r'\mathcal{C}^{2}'
     sT(h2, "ComplexSpace(Integer(2))")
     assert str(h3) == 'F'
     assert pretty(h3) == 'F'
-    assert upretty(h3) == u'F'
+    assert upretty(h3) == 'F'
     assert latex(h3) == r'\mathcal{F}'
     sT(h3, "FockSpace()")
     assert str(h4) == 'L2(Interval(0, oo))'
@@ -359,10 +357,10 @@ C \
 L \
 """
     ucode_str = \
-u("""\
+"""\
  2\n\
 L \
-""")
+"""
     assert pretty(h4) == ascii_str
     assert upretty(h4) == ucode_str
     assert latex(h4) == r'{\mathcal{L}^2}\left( \left[0, \infty\right) \right)'
@@ -374,10 +372,10 @@ L \
 H + C \
 """
     ucode_str = \
-u("""\
+"""\
      2\n\
 H ⊕ C \
-""")
+"""
     assert pretty(h1 + h2) == ascii_str
     assert upretty(h1 + h2) == ucode_str
     assert latex(h1 + h2)
@@ -389,10 +387,10 @@ H ⊕ C \
 H x C \
 """
     ucode_str = \
-u("""\
+"""\
      2\n\
 H ⨂ C \
-""")
+"""
     assert pretty(h1*h2) == ascii_str
     assert upretty(h1*h2) == ucode_str
     assert latex(h1*h2)
@@ -405,10 +403,10 @@ H ⨂ C \
 H  \
 """
     ucode_str = \
-u("""\
+"""\
  ⨂2\n\
 H  \
-""")
+"""
     assert pretty(h1**2) == ascii_str
     assert upretty(h1**2) == ucode_str
     assert latex(h1**2) == r'{\mathcal{H}}^{\otimes 2}'
@@ -426,24 +424,24 @@ def test_innerproduct():
     ip_tall3 = InnerProduct(Bra(x/2), Ket(x))
     assert str(ip1) == '<psi|psi>'
     assert pretty(ip1) == '<psi|psi>'
-    assert upretty(ip1) == u'⟨ψ❘ψ⟩'
+    assert upretty(ip1) == '⟨ψ❘ψ⟩'
     assert latex(
         ip1) == r'\left\langle \psi \right. {\left|\psi\right\rangle }'
     sT(ip1, "InnerProduct(Bra(Symbol('psi')),Ket(Symbol('psi')))")
     assert str(ip2) == '<psi;t|psi;t>'
     assert pretty(ip2) == '<psi;t|psi;t>'
-    assert upretty(ip2) == u'⟨ψ;t❘ψ;t⟩'
+    assert upretty(ip2) == '⟨ψ;t❘ψ;t⟩'
     assert latex(ip2) == \
         r'\left\langle \psi;t \right. {\left|\psi;t\right\rangle }'
     sT(ip2, "InnerProduct(TimeDepBra(Symbol('psi'),Symbol('t')),TimeDepKet(Symbol('psi'),Symbol('t')))")
     assert str(ip3) == "<1,1|1,1>"
     assert pretty(ip3) == '<1,1|1,1>'
-    assert upretty(ip3) == u'⟨1,1❘1,1⟩'
+    assert upretty(ip3) == '⟨1,1❘1,1⟩'
     assert latex(ip3) == r'\left\langle 1,1 \right. {\left|1,1\right\rangle }'
     sT(ip3, "InnerProduct(JzBra(Integer(1),Integer(1)),JzKet(Integer(1),Integer(1)))")
     assert str(ip4) == "<1,1,j1=1,j2=1|1,1,j1=1,j2=1>"
     assert pretty(ip4) == '<1,1,j1=1,j2=1|1,1,j1=1,j2=1>'
-    assert upretty(ip4) == u'⟨1,1,j₁=1,j₂=1❘1,1,j₁=1,j₂=1⟩'
+    assert upretty(ip4) == '⟨1,1,j₁=1,j₂=1❘1,1,j₁=1,j₂=1⟩'
     assert latex(ip4) == \
         r'\left\langle 1,1,j_{1}=1,j_{2}=1 \right. {\left|1,1,j_{1}=1,j_{2}=1\right\rangle }'
     sT(ip4, "InnerProduct(JzBraCoupled(Integer(1),Integer(1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1)))),JzKetCoupled(Integer(1),Integer(1),Tuple(Integer(1), Integer(1)),Tuple(Tuple(Integer(1), Integer(2), Integer(1)))))")
@@ -456,12 +454,12 @@ def test_innerproduct():
  \\2|2/ \
 """
     ucode_str = \
-u("""\
+"""\
  ╱ │ ╲ \n\
 ╱ x│x ╲\n\
 ╲ ─│─ ╱\n\
  ╲2│2╱ \
-""")
+"""
     assert pretty(ip_tall1) == ascii_str
     assert upretty(ip_tall1) == ucode_str
     assert latex(ip_tall1) == \
@@ -476,12 +474,12 @@ u("""\
  \\ |2/ \
 """
     ucode_str = \
-u("""\
+"""\
  ╱ │ ╲ \n\
 ╱  │x ╲\n\
 ╲ x│─ ╱\n\
  ╲ │2╱ \
-""")
+"""
     assert pretty(ip_tall2) == ascii_str
     assert upretty(ip_tall2) == ucode_str
     assert latex(ip_tall2) == \
@@ -497,12 +495,12 @@ u("""\
  \\2| / \
 """
     ucode_str = \
-u("""\
+"""\
  ╱ │ ╲ \n\
 ╱ x│  ╲\n\
 ╲ ─│x ╱\n\
  ╲2│ ╱ \
-""")
+"""
     assert pretty(ip_tall3) == ascii_str
     assert upretty(ip_tall3) == ucode_str
     assert latex(ip_tall3) == \
@@ -521,7 +519,7 @@ def test_operator():
     op = OuterProduct(Ket(), Bra())
     assert str(a) == 'A'
     assert pretty(a) == 'A'
-    assert upretty(a) == u'A'
+    assert upretty(a) == 'A'
     assert latex(a) == 'A'
     sT(a, "Operator(Symbol('A'))")
     assert str(inv) == 'A**(-1)'
@@ -531,10 +529,10 @@ def test_operator():
 A  \
 """
     ucode_str = \
-u("""\
+"""\
  -1\n\
 A  \
-""")
+"""
     assert pretty(inv) == ascii_str
     assert upretty(inv) == ucode_str
     assert latex(inv) == r'A^{-1}'
@@ -547,11 +545,11 @@ DifferentialOperator|--(f(x)),f(x)|\n\
                     \\dx           /\
 """
     ucode_str = \
-u("""\
+"""\
                     ⎛d            ⎞\n\
 DifferentialOperator⎜──(f(x)),f(x)⎟\n\
                     ⎝dx           ⎠\
-""")
+"""
     assert pretty(d) == ascii_str
     assert upretty(d) == ucode_str
     assert latex(d) == \
@@ -559,12 +557,12 @@ DifferentialOperator⎜──(f(x)),f(x)⎟\n\
     sT(d, "DifferentialOperator(Derivative(Function('f')(Symbol('x')), Tuple(Symbol('x'), Integer(1))),Function('f')(Symbol('x')))")
     assert str(b) == 'Operator(B,t,1/2)'
     assert pretty(b) == 'Operator(B,t,1/2)'
-    assert upretty(b) == u'Operator(B,t,1/2)'
+    assert upretty(b) == 'Operator(B,t,1/2)'
     assert latex(b) == r'Operator\left(B,t,\frac{1}{2}\right)'
     sT(b, "Operator(Symbol('B'),Symbol('t'),Rational(1, 2))")
     assert str(op) == '|psi><psi|'
     assert pretty(op) == '|psi><psi|'
-    assert upretty(op) == u'❘ψ⟩⟨ψ❘'
+    assert upretty(op) == '❘ψ⟩⟨ψ❘'
     assert latex(op) == r'{\left|\psi\right\rangle }{\left\langle \psi\right|}'
     sT(op, "OuterProduct(Ket(Symbol('psi')),Bra(Symbol('psi')))")
 
@@ -573,7 +571,7 @@ def test_qexpr():
     q = QExpr('q')
     assert str(q) == 'q'
     assert pretty(q) == 'q'
-    assert upretty(q) == u'q'
+    assert upretty(q) == 'q'
     assert latex(q) == r'q'
     sT(q, "QExpr(Symbol('q'))")
 
@@ -583,12 +581,12 @@ def test_qubit():
     q2 = IntQubit(8)
     assert str(q1) == '|0101>'
     assert pretty(q1) == '|0101>'
-    assert upretty(q1) == u'❘0101⟩'
+    assert upretty(q1) == '❘0101⟩'
     assert latex(q1) == r'{\left|0101\right\rangle }'
     sT(q1, "Qubit(Integer(0),Integer(1),Integer(0),Integer(1))")
     assert str(q2) == '|8>'
     assert pretty(q2) == '|8>'
-    assert upretty(q2) == u'❘8⟩'
+    assert upretty(q2) == '❘8⟩'
     assert latex(q2) == r'{\left|8\right\rangle }'
     sT(q2, "IntQubit(8)")
 
@@ -611,10 +609,10 @@ L \n\
  z\
 """
     ucode_str = \
-u("""\
+"""\
 L \n\
  z\
-""")
+"""
     assert pretty(lz) == ascii_str
     assert upretty(lz) == ucode_str
     assert latex(lz) == 'L_z'
@@ -626,10 +624,10 @@ L \n\
 J \
 """
     ucode_str = \
-u("""\
+"""\
  2\n\
 J \
-""")
+"""
     assert pretty(J2) == ascii_str
     assert upretty(J2) == ucode_str
     assert latex(J2) == r'J^2'
@@ -641,51 +639,51 @@ J \n\
  z\
 """
     ucode_str = \
-u("""\
+"""\
 J \n\
  z\
-""")
+"""
     assert pretty(Jz) == ascii_str
     assert upretty(Jz) == ucode_str
     assert latex(Jz) == 'J_z'
     sT(Jz, "JzOp(Symbol('J'))")
     assert str(ket) == '|1,0>'
     assert pretty(ket) == '|1,0>'
-    assert upretty(ket) == u'❘1,0⟩'
+    assert upretty(ket) == '❘1,0⟩'
     assert latex(ket) == r'{\left|1,0\right\rangle }'
     sT(ket, "JzKet(Integer(1),Integer(0))")
     assert str(bra) == '<1,0|'
     assert pretty(bra) == '<1,0|'
-    assert upretty(bra) == u'⟨1,0❘'
+    assert upretty(bra) == '⟨1,0❘'
     assert latex(bra) == r'{\left\langle 1,0\right|}'
     sT(bra, "JzBra(Integer(1),Integer(0))")
     assert str(cket) == '|1,0,j1=1,j2=2>'
     assert pretty(cket) == '|1,0,j1=1,j2=2>'
-    assert upretty(cket) == u'❘1,0,j₁=1,j₂=2⟩'
+    assert upretty(cket) == '❘1,0,j₁=1,j₂=2⟩'
     assert latex(cket) == r'{\left|1,0,j_{1}=1,j_{2}=2\right\rangle }'
     sT(cket, "JzKetCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(2)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))")
     assert str(cbra) == '<1,0,j1=1,j2=2|'
     assert pretty(cbra) == '<1,0,j1=1,j2=2|'
-    assert upretty(cbra) == u'⟨1,0,j₁=1,j₂=2❘'
+    assert upretty(cbra) == '⟨1,0,j₁=1,j₂=2❘'
     assert latex(cbra) == r'{\left\langle 1,0,j_{1}=1,j_{2}=2\right|}'
     sT(cbra, "JzBraCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(2)),Tuple(Tuple(Integer(1), Integer(2), Integer(1))))")
     assert str(cket_big) == '|1,0,j1=1,j2=2,j3=3,j(1,2)=3>'
     # TODO: Fix non-unicode pretty printing
     # i.e. j1,2 -> j(1,2)
     assert pretty(cket_big) == '|1,0,j1=1,j2=2,j3=3,j1,2=3>'
-    assert upretty(cket_big) == u'❘1,0,j₁=1,j₂=2,j₃=3,j₁,₂=3⟩'
+    assert upretty(cket_big) == '❘1,0,j₁=1,j₂=2,j₃=3,j₁,₂=3⟩'
     assert latex(cket_big) == \
         r'{\left|1,0,j_{1}=1,j_{2}=2,j_{3}=3,j_{1,2}=3\right\rangle }'
     sT(cket_big, "JzKetCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(2), Integer(3)),Tuple(Tuple(Integer(1), Integer(2), Integer(3)), Tuple(Integer(1), Integer(3), Integer(1))))")
     assert str(cbra_big) == '<1,0,j1=1,j2=2,j3=3,j(1,2)=3|'
-    assert pretty(cbra_big) == u'<1,0,j1=1,j2=2,j3=3,j1,2=3|'
-    assert upretty(cbra_big) == u'⟨1,0,j₁=1,j₂=2,j₃=3,j₁,₂=3❘'
+    assert pretty(cbra_big) == '<1,0,j1=1,j2=2,j3=3,j1,2=3|'
+    assert upretty(cbra_big) == '⟨1,0,j₁=1,j₂=2,j₃=3,j₁,₂=3❘'
     assert latex(cbra_big) == \
         r'{\left\langle 1,0,j_{1}=1,j_{2}=2,j_{3}=3,j_{1,2}=3\right|}'
     sT(cbra_big, "JzBraCoupled(Integer(1),Integer(0),Tuple(Integer(1), Integer(2), Integer(3)),Tuple(Tuple(Integer(1), Integer(2), Integer(3)), Tuple(Integer(1), Integer(3), Integer(1))))")
     assert str(rot) == 'R(1,2,3)'
     assert pretty(rot) == 'R (1,2,3)'
-    assert upretty(rot) == u'ℛ (1,2,3)'
+    assert upretty(rot) == 'ℛ (1,2,3)'
     assert latex(rot) == r'\mathcal{R}\left(1,2,3\right)'
     sT(rot, "Rotation(Integer(1),Integer(2),Integer(3))")
     assert str(bigd) == 'WignerD(1, 2, 3, 4, 5, 6)'
@@ -696,11 +694,11 @@ D   (4,5,6)\n\
  2,3       \
 """
     ucode_str = \
-u("""\
+"""\
  1         \n\
 D   (4,5,6)\n\
  2,3       \
-""")
+"""
     assert pretty(bigd) == ascii_str
     assert upretty(bigd) == ucode_str
     assert latex(bigd) == r'D^{1}_{2,3}\left(4,5,6\right)'
@@ -713,11 +711,11 @@ d   (4)\n\
  2,3   \
 """
     ucode_str = \
-u("""\
+"""\
  1     \n\
 d   (4)\n\
  2,3   \
-""")
+"""
     assert pretty(smalld) == ascii_str
     assert upretty(smalld) == ucode_str
     assert latex(smalld) == r'd^{1}_{2,3}\left(4\right)'
@@ -734,12 +732,12 @@ def test_state():
     tket = TimeDepKet()
     assert str(bra) == '<psi|'
     assert pretty(bra) == '<psi|'
-    assert upretty(bra) == u'⟨ψ❘'
+    assert upretty(bra) == '⟨ψ❘'
     assert latex(bra) == r'{\left\langle \psi\right|}'
     sT(bra, "Bra(Symbol('psi'))")
     assert str(ket) == '|psi>'
     assert pretty(ket) == '|psi>'
-    assert upretty(ket) == u'❘ψ⟩'
+    assert upretty(ket) == '❘ψ⟩'
     assert latex(ket) == r'{\left|\psi\right\rangle }'
     sT(ket, "Ket(Symbol('psi'))")
     assert str(bra_tall) == '<x/2|'
@@ -751,12 +749,12 @@ def test_state():
  \\2|\
 """
     ucode_str = \
-u("""\
+"""\
  ╱ │\n\
 ╱ x│\n\
 ╲ ─│\n\
  ╲2│\
-""")
+"""
     assert pretty(bra_tall) == ascii_str
     assert upretty(bra_tall) == ucode_str
     assert latex(bra_tall) == r'{\left\langle \frac{x}{2}\right|}'
@@ -770,24 +768,24 @@ u("""\
 |2/ \
 """
     ucode_str = \
-u("""\
+"""\
 │ ╲ \n\
 │x ╲\n\
 │─ ╱\n\
 │2╱ \
-""")
+"""
     assert pretty(ket_tall) == ascii_str
     assert upretty(ket_tall) == ucode_str
     assert latex(ket_tall) == r'{\left|\frac{x}{2}\right\rangle }'
     sT(ket_tall, "Ket(Mul(Rational(1, 2), Symbol('x')))")
     assert str(tbra) == '<psi;t|'
-    assert pretty(tbra) == u'<psi;t|'
-    assert upretty(tbra) == u'⟨ψ;t❘'
+    assert pretty(tbra) == '<psi;t|'
+    assert upretty(tbra) == '⟨ψ;t❘'
     assert latex(tbra) == r'{\left\langle \psi;t\right|}'
     sT(tbra, "TimeDepBra(Symbol('psi'),Symbol('t'))")
     assert str(tket) == '|psi;t>'
     assert pretty(tket) == '|psi;t>'
-    assert upretty(tket) == u'❘ψ;t⟩'
+    assert upretty(tket) == '❘ψ;t⟩'
     assert latex(tket) == r'{\left|\psi;t\right\rangle }'
     sT(tket, "TimeDepKet(Symbol('psi'),Symbol('t'))")
 
@@ -796,7 +794,7 @@ def test_tensorproduct():
     tp = TensorProduct(JzKet(1, 1), JzKet(1, 0))
     assert str(tp) == '|1,1>x|1,0>'
     assert pretty(tp) == '|1,1>x |1,0>'
-    assert upretty(tp) == u'❘1,1⟩⨂ ❘1,0⟩'
+    assert upretty(tp) == '❘1,1⟩⨂ ❘1,0⟩'
     assert latex(tp) == \
         r'{{\left|1,1\right\rangle }}\otimes {{\left|1,0\right\rangle }}'
     sT(tp, "TensorProduct(JzKet(Integer(1),Integer(1)), JzKet(Integer(1),Integer(0)))")
@@ -820,13 +818,13 @@ def test_big_expr():
 \\ z/             \\\\                    \\dx           / /         /                                 \
 """
     ucode_str = \
-u("""\
+"""\
                  ⎧                                      3        ⎫                                 \n\
                  ⎪⎛                                   †⎞         ⎪                                 \n\
     2  ⎛ †    †⎞ ⎨⎜                    ⎛d            ⎞ ⎟   †    †⎬                                 \n\
 ⎛J ⎞ ⨂ ⎝A  + B ⎠⋅⎪⎜DifferentialOperator⎜──(f(x)),f(x)⎟ ⎟ ,A  + B ⎪⋅(⟨1,0❘ + ⟨1,1❘)⋅(❘0,0⟩ + ❘1,-1⟩)\n\
 ⎝ z⎠             ⎩⎝                    ⎝dx           ⎠ ⎠         ⎭                                 \
-""")
+"""
     assert pretty(e1) == ascii_str
     assert upretty(e1) == ucode_str
     assert latex(e1) == \
@@ -840,11 +838,11 @@ u("""\
 [\\ z/       ] \\         / [    z]\
 """
     ucode_str = \
-u("""\
+"""\
 ⎡    2      ⎤ ⎧ -2  †  †⎫ ⎡ 2   ⎤\n\
 ⎢⎛J ⎞ ,A + B⎥⋅⎨E  ,D ⋅C ⎬⋅⎢J ,J ⎥\n\
 ⎣⎝ z⎠       ⎦ ⎩         ⎭ ⎣    z⎦\
-""")
+"""
     assert pretty(e2) == ascii_str
     assert upretty(e2) == ucode_str
     assert latex(e2) == \
@@ -860,12 +858,12 @@ u("""\
 \\2  4  6/                                                                                             \
 """
     ucode_str = \
-u("""\
+"""\
           ⎡ †          ⎤  ⎛   2     ⎞                                                                 \n\
 ⎛1  3  5⎞⋅⎣B  + A,C + D⎦⨂ ⎜- J  + J ⎟⋅❘1,0⟩⟨1,1❘⋅(❘1,0,j₁=1,j₂=1⟩ + ❘1,1,j₁=1,j₂=1⟩)⨂ ❘1,-1,j₁=1,j₂=1⟩\n\
 ⎜       ⎟                 ⎝        z⎠                                                                 \n\
 ⎝2  4  6⎠                                                                                             \
-""")
+"""
     assert pretty(e3) == ascii_str
     assert upretty(e3) == ucode_str
     assert latex(e3) == \
@@ -878,10 +876,10 @@ u("""\
 \\\\C  x C / + F  / x \\L  + H/\
 """
     ucode_str = \
-u("""\
+"""\
 ⎛⎛ 1    2⎞    ⨂2⎞   ⎛ 2    ⎞\n\
 ⎝⎝C  ⨂ C ⎠ ⊕ F  ⎠ ⨂ ⎝L  ⊕ H⎠\
-""")
+"""
     assert pretty(e4) == ascii_str
     assert upretty(e4) == ucode_str
     assert latex(e4) == \
@@ -891,5 +889,5 @@ u("""\
 
 def _test_sho1d():
     ad = RaisingOp('a')
-    assert pretty(ad) == u' \N{DAGGER}\na '
+    assert pretty(ad) == ' \N{DAGGER}\na '
     assert latex(ad) == 'a^{\\dagger}'

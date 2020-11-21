@@ -326,7 +326,7 @@ def dimension(*args):
 
 assumed_size = dimension('*')
 
-def array(symbol, dim, intent=None, **kwargs):
+def array(symbol, dim, intent=None, *, attrs=(), value=None, type=None):
     """ Convenience function for creating a Variable instance for a Fortran array.
 
     Parameters
@@ -361,17 +361,15 @@ def array(symbol, dim, intent=None, **kwargs):
     else:
         dim = dimension(*dim)
 
-    attrs = list(kwargs.pop('attrs', [])) + [dim]
+    attrs = list(attrs) + [dim]
     if intent is not None:
         if intent not in (intent_in, intent_out, intent_inout):
             intent = {'in': intent_in, 'out': intent_out, 'inout': intent_inout}[intent]
         attrs.append(intent)
-    value = kwargs.pop('value', None)
-    type_ = kwargs.pop('type', None)
-    if type_ is None:
+    if type is None:
         return Variable.deduced(symbol, value=value, attrs=attrs)
     else:
-        return Variable(symbol, type_, value=value, attrs=attrs)
+        return Variable(symbol, type, value=value, attrs=attrs)
 
 def _printable(arg):
     return String(arg) if isinstance(arg, str) else sympify(arg)

@@ -1,10 +1,10 @@
 """Tools for constructing domains for expressions. """
 
-from __future__ import print_function, division
 
 from sympy.core import sympify
 from sympy.core.evalf import pure_complex
 from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, EX
+from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyutils import parallel_dict_from_basic
@@ -13,7 +13,8 @@ from sympy.utilities import public
 
 def _construct_simple(coeffs, opt):
     """Handle simple domains, e.g.: ZZ, QQ, RR and algebraic domains. """
-    rationals = reals = gaussians = algebraics = False
+    rationals = floats = complexes = algebraics = False
+    float_numbers = []
 
     if opt.extension is True:
         is_algebraic = lambda coeff: coeff.is_number and coeff.is_algebraic
@@ -25,51 +26,53 @@ def _construct_simple(coeffs, opt):
             if not coeff.is_Integer:
                 rationals = True
         elif coeff.is_Float:
-            if algebraics or gaussians:
+            if algebraics:
                 # there are both reals and algebraics -> EX
                 return False
             else:
-                reals = True
+                floats = True
+                float_numbers.append(coeff)
         else:
             is_complex = pure_complex(coeff)
             if is_complex:
-                # there are both reals and algebraics -> EX
-                if reals:
-                    return False
+                complexes = True
                 x, y = is_complex
                 if x.is_Rational and y.is_Rational:
-                    gaussians = True
                     if not (x.is_Integer and y.is_Integer):
                         rationals = True
                     continue
-            if is_algebraic(coeff):
-                if not reals:
-                    algebraics = True
                 else:
+                    floats = True
+                    if x.is_Float:
+                        float_numbers.append(x)
+                    if y.is_Float:
+                        float_numbers.append(y)
+            if is_algebraic(coeff):
+                if floats:
                     # there are both algebraics and reals -> EX
                     return False
+                algebraics = True
             else:
                 # this is a composite domain, e.g. ZZ[X], EX
                 return None
 
+    # Use the maximum precision of all coefficients for the RR or CC
+    # precision
+    max_prec = max(c._prec for c in float_numbers) if float_numbers else 53
+
     if algebraics:
         domain, result = _construct_algebraic(coeffs, opt)
     else:
-        if reals:
-            # Use the maximum precision of all coefficients for the RR's
-            # precision
-            max_prec = max([c._prec for c in coeffs])
+        if floats and complexes:
+            domain = ComplexField(prec=max_prec)
+        elif floats:
             domain = RealField(prec=max_prec)
+        elif rationals or opt.field:
+            domain = QQ_I if complexes else QQ
         else:
-            if opt.field or rationals:
-                domain = QQ_I if gaussians else QQ
-            else:
-                domain = ZZ_I if gaussians else ZZ
+            domain = ZZ_I if complexes else ZZ
 
-        result = []
-
-        for coeff in coeffs:
-            result.append(domain.from_sympy(coeff))
+        result = [domain.from_sympy(coeff) for coeff in coeffs]
 
     return domain, result
 
@@ -78,7 +81,7 @@ def _construct_algebraic(coeffs, opt):
     """We know that coefficients are algebraic so construct the extension. """
     from sympy.polys.numberfields import primitive_element
 
-    result, exts = [], set([])
+    result, exts = [], set()
 
     for coeff in coeffs:
         if coeff.is_Rational:
@@ -135,7 +138,7 @@ def _construct_composite(coeffs, opt):
         if any(gen.is_number and gen.is_algebraic for gen in gens):
             return None # generators are number-like so lets better use EX
 
-        all_symbols = set([])
+        all_symbols = set()
 
         for gen in gens:
             symbols = gen.free_symbols
@@ -161,7 +164,7 @@ def _construct_composite(coeffs, opt):
                 fractions = True
                 break
 
-    coeffs = set([])
+    coeffs = set()
 
     if not fractions:
         for numer, denom in zip(numers, denoms):
@@ -176,30 +179,38 @@ def _construct_composite(coeffs, opt):
             coeffs.update(list(numer.values()))
             coeffs.update(list(denom.values()))
 
-    rationals = reals = gaussians = False
+    rationals = floats = complexes = False
+    float_numbers = []
 
     for coeff in coeffs:
         if coeff.is_Rational:
             if not coeff.is_Integer:
                 rationals = True
         elif coeff.is_Float:
-            reals = True
-            break
+            floats = True
+            float_numbers.append(coeff)
         else:
             is_complex = pure_complex(coeff)
             if is_complex is not None:
+                complexes = True
                 x, y = is_complex
                 if x.is_Rational and y.is_Rational:
                     if not (x.is_Integer and y.is_Integer):
                         rationals = True
-                    gaussians = True
                 else:
-                    pass # XXX: CC?
+                    floats = True
+                    if x.is_Float:
+                        float_numbers.append(x)
+                    if y.is_Float:
+                        float_numbers.append(y)
 
-    if reals:
-        max_prec = max([c._prec for c in coeffs])
+    max_prec = max(c._prec for c in float_numbers) if float_numbers else 53
+
+    if floats and complexes:
+        ground = ComplexField(prec=max_prec)
+    elif floats:
         ground = RealField(prec=max_prec)
-    elif gaussians:
+    elif complexes:
         if rationals:
             ground = QQ_I
         else:

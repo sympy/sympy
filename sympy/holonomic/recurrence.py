@@ -99,6 +99,9 @@ class RecurrenceOperator:
     The Recurrence Operators are defined by a list of polynomials
     in the base ring and the parent ring of the Operator.
 
+    Explanation
+    ===========
+
     Takes a list of polynomials for each power of Sn and the
     parent ring which must be an instance of RecurrenceOperatorAlgebra.
 

@@ -1,11 +1,9 @@
-from __future__ import print_function, division
-
 from sympy.core.containers import Tuple
 
 from types import FunctionType
 
 
-class TableForm(object):
+class TableForm:
     r"""
     Create a nice table representation of data.
 

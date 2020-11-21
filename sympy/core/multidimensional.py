@@ -63,7 +63,8 @@ class vectorize:
     """
     Generalizes a function taking scalars to accept multidimensional arguments.
 
-    For example
+    Examples
+    ========
 
     >>> from sympy import diff, sin, symbols, Function
     >>> from sympy.core.multidimensional import vectorize

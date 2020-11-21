@@ -1,4 +1,4 @@
-# from typing import Dict, Union, Type
+from typing import Dict, Union, Type
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .basic import S, Atom
@@ -44,12 +44,16 @@ def _canonical(cond):
 class Relational(Boolean, EvalfMixin):
     """Base class for all relation types.
 
+    Explanation
+    ===========
+
     Subclasses of Relational should generally be instantiated directly, but
     Relational can be instantiated with a valid ``rop`` value to dispatch to
     the appropriate subclass.
 
     Parameters
     ==========
+
     rop : str or None
         Indicates what subclass to instantiate.  Valid values can be found
         in the keys of Relational.ValidRelationOperator.
@@ -65,7 +69,7 @@ class Relational(Boolean, EvalfMixin):
     """
     __slots__ = ()
 
-    ValidRelationOperator = {}  ## type: Dict[Union[str, None], Type[Relational]]
+    ValidRelationOperator = {}  # type: Dict[Union[str, None], Type[Relational]]
 
     is_Relational = True
 
@@ -387,10 +391,8 @@ class Relational(Boolean, EvalfMixin):
         args = (arg.expand(**kwargs) for arg in self.args)
         return self.func(*args)
 
-    def __nonzero__(self):
+    def __bool__(self):
         raise TypeError("cannot determine truth value of Relational")
-
-    __bool__ = __nonzero__
 
     def _eval_as_set(self):
         # self is univariate and periodicity(self, x) in (0, None)
@@ -418,6 +420,9 @@ Rel = Relational
 
 class Equality(Relational):
     """An equal relation between two objects.
+
+    Explanation
+    ===========
 
     Represents that two objects are equal.  If they can be easily shown
     to be definitively equal (or unequal), this will reduce to True (or
@@ -599,6 +604,9 @@ Eq = Equality
 class Unequality(Relational):
     """An unequal relation between two objects.
 
+    Explanation
+    ===========
+
     Represents that two objects are not equal.  If they can be shown to be
     definitively equal, this will reduce to False; if definitively unequal,
     this will reduce to True.  Otherwise, the relation is maintained as an
@@ -753,8 +761,8 @@ class _Less(_Inequality):
 class GreaterThan(_Greater):
     """Class representations of inequalities.
 
-    Extended Summary
-    ================
+    Explanation
+    ===========
 
     The ``*Than`` classes represent inequal relationships, where the left-hand
     side is generally bigger or smaller than the right-hand side.  For example,
@@ -962,11 +970,11 @@ class GreaterThan(_Greater):
         (1) x > y > z
         (2) (x > y) and (y > z)
         (3) (GreaterThanObject) and (y > z)
-        (4) (GreaterThanObject.__nonzero__()) and (y > z)
+        (4) (GreaterThanObject.__bool__()) and (y > z)
         (5) TypeError
 
        Because of the "and" added at step 2, the statement gets turned into a
-       weak ternary statement, and the first object's __nonzero__ method will
+       weak ternary statement, and the first object's __bool__ method will
        raise TypeError.  Thus, creating a chained inequality is not possible.
 
            In Python, there is no way to override the ``and`` operator, or to
@@ -1071,22 +1079,22 @@ def _eval_is_eq(lhs, rhs):
     return None
 
 
-@dispatch(Tuple, Expr)
+@dispatch(Tuple, Expr) # type: ignore
 def _eval_is_eq(lhs, rhs):  # noqa:F811
     return False
 
 
-@dispatch(Tuple, AppliedUndef)
+@dispatch(Tuple, AppliedUndef) # type: ignore
 def _eval_is_eq(lhs, rhs):  # noqa:F811
     return None
 
 
-@dispatch(Tuple, Symbol)
+@dispatch(Tuple, Symbol) # type: ignore
 def _eval_is_eq(lhs, rhs):  # noqa:F811
     return None
 
 
-@dispatch(Tuple, Tuple)
+@dispatch(Tuple, Tuple) # type: ignore
 def _eval_is_eq(lhs, rhs):  # noqa:F811
     if len(lhs) != len(rhs):
         return False
@@ -1122,12 +1130,25 @@ def is_ge(lhs, rhs):
     """
     Fuzzy bool for lhs is greater than or equal to rhs.
 
-    :param lhs: the left-hand side of the expression, must be sympified, and an instance of expression
-                Throws an exception if lhs is not an instance of expression
-    :param rhs: the right-hand side of the expression, must be sympified and an instance of expression
-                Throws an exception if lhs is not an instance of expression
-    :return: True if lhs is greater than or equal to rhs, false is lhs is less than rhs, and
-            None if the comparison between lhs and rhs is indeterminate
+    Parameters
+    ==========
+
+    lhs: Expr
+        The left-hand side of the expression, must be sympified,
+        and an instance of expression. Throws an exception if
+        lhs is not an instance of expression.
+
+    rhs: Expr
+        The right-hand side of the expression, must be sympified
+        and an instance of expression. Throws an exception if
+        lhs is not an instance of expression.
+
+    Returns
+    =======
+
+    Expr : True if lhs is greater than or equal to rhs, false is
+        lhs is less than rhs, and None if the comparison between
+        lhs and rhs is indeterminate.
 
     The four comparison functions ``is_le``, ``is_lt``, ``is_ge``, and ``is_gt`` are
     each implemented in terms of ``is_ge`` in the following way:
@@ -1227,12 +1248,23 @@ def is_eq(lhs, rhs):
     """
     Fuzzy bool representing mathematical equality between lhs and rhs.
 
-    :param lhs: the left-hand side of the expression, must be sympified
-    :param rhs: the right-hand side of the expression, must be sympified
-    :return: True if lhs is equal to rhs, false is lhs is not equal to rhs, and
-            None if the comparison between lhs and rhs is indeterminate
+    Parameters
+    ==========
 
-    Notes:
+    lhs: Expr
+        The left-hand side of the expression, must be sympified.
+
+    rhs: Expr
+        The right-hand side of the expression, must be sympified.
+
+    Returns
+    =======
+
+    True if lhs is equal to rhs, false is lhs is not equal to rhs, and
+    None if the comparison between lhs and rhs is indeterminate.
+
+    Explanation
+    ===========
 
     This function is intended to give a relatively fast determination and deliberately does not attempt slow
     calculations that might help in obtaining a determination of True or False in more difficult cases.

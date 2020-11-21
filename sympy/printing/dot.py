@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
@@ -35,6 +33,7 @@ def purestr(x, with_args=False):
 
     >>> from sympy import Float, Symbol, MatrixSymbol
     >>> from sympy import Integer # noqa: F401
+    >>> from sympy.core.symbol import Str # noqa: F401
     >>> from sympy.printing.dot import purestr
 
     Applying ``purestr`` for basic symbolic object:
@@ -51,7 +50,7 @@ def purestr(x, with_args=False):
     For matrix symbol:
     >>> code = purestr(MatrixSymbol('x', 2, 2))
     >>> code
-    "MatrixSymbol(Symbol('x'), Integer(2), Integer(2))"
+    "MatrixSymbol(Str('x'), Integer(2), Integer(2))"
     >>> eval(code) == MatrixSymbol('x', 2, 2)
     True
 
@@ -59,8 +58,8 @@ def purestr(x, with_args=False):
     >>> purestr(Float(2), with_args=True)
     ("Float('2.0', precision=53)", ())
     >>> purestr(MatrixSymbol('x', 2, 2), with_args=True)
-    ("MatrixSymbol(Symbol('x'), Integer(2), Integer(2))",
-     ("Symbol('x')", 'Integer(2)', 'Integer(2)'))
+    ("MatrixSymbol(Str('x'), Integer(2), Integer(2))",
+     ("Str('x')", 'Integer(2)', 'Integer(2)'))
     """
     sargs = ()
     if not isinstance(x, Basic):

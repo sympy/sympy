@@ -9,7 +9,6 @@ http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
 
 """
 
-from __future__ import print_function, division
 
 from sympy.core import Symbol
 from sympy.core.evalf import N
@@ -21,7 +20,7 @@ from sympy.utilities import public
 x = Symbol('x')
 
 @public
-class PolyQuintic(object):
+class PolyQuintic:
     """Special functions for solvable quintics"""
     def __init__(self, poly):
         _, _, self.p, self.q, self.r, self.s = poly.all_coeffs()

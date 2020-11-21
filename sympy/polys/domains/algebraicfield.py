@@ -1,6 +1,5 @@
 """Implementation of :class:`AlgebraicField` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field

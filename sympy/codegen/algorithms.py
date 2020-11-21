@@ -86,7 +86,7 @@ def _symbol_of(arg):
     return arg
 
 
-def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tuple(), **kwargs):
+def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tuple(), *, delta=None, **kwargs):
     """ Generates an AST for a function implementing the Newton-Raphson method.
 
     Parameters
@@ -132,7 +132,6 @@ def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tu
         params = (wrt,)
     pointer_subs = {p.symbol: Symbol('(*%s)' % p.symbol.name)
                     for p in params if isinstance(p, Pointer)}
-    delta = kwargs.pop('delta', None)
     if delta is None:
         delta = Symbol('d_' + wrt.name)
         if expr.has(delta):

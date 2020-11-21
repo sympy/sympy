@@ -18,6 +18,9 @@ class Expr(Basic, EvalfMixin):
     """
     Base class for algebraic expressions.
 
+    Explanation
+    ===========
+
     Everything that requires arithmetic operations to be defined
     should subclass this class, instead of Basic (which should be
     used only for argument storage and expression manipulation, i.e.
@@ -42,6 +45,9 @@ class Expr(Basic, EvalfMixin):
     def _diff_wrt(self):
         """Return True if one can differentiate with respect to this
         object, else False.
+
+        Explanation
+        ===========
 
         Subclasses such as Symbol, Function and Derivative return True
         to enable derivatives wrt them. The implementation in Derivative
@@ -108,7 +114,7 @@ class Expr(Basic, EvalfMixin):
 
         return expr.class_key(), args, exp, coeff
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys
         h = self._mhash
@@ -162,6 +168,14 @@ class Expr(Basic, EvalfMixin):
     # This is a temporary fix, and will eventually be replaced with
     # something better and more powerful.  See issue 5510.
     _op_priority = 10.0
+
+    @property
+    def _add_handler(self):
+        return Add
+
+    @property
+    def _mul_handler(self):
+        return Mul
 
     def __pos__(self):
         return self
@@ -235,8 +249,8 @@ class Expr(Basic, EvalfMixin):
         return Pow(other, self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
         denom = Pow(other, S.NegativeOne)
         if self is S.One:
             return denom
@@ -244,16 +258,13 @@ class Expr(Basic, EvalfMixin):
             return Mul(self, denom)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
+    @call_highest_priority('__truediv__')
+    def __rtruediv__(self, other):
         denom = Pow(self, S.NegativeOne)
         if other is S.One:
             return denom
         else:
             return Mul(other, denom)
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmod__')
@@ -326,7 +337,6 @@ class Expr(Basic, EvalfMixin):
             if diff_sign != isign:
                 i -= isign
         return i
-    __long__ = __int__
 
     def __float__(self):
         # Don't bother testing if it's a number; if it's not this is going
@@ -431,6 +441,7 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
+
         sympy.core.basic.Basic.is_comparable
         """
         return all(obj.is_number for obj in self.args)
@@ -438,6 +449,9 @@ class Expr(Basic, EvalfMixin):
     def _random(self, n=None, re_min=-1, im_min=-1, re_max=1, im_max=1):
         """Return self evaluated, if possible, replacing free symbols with
         random complex values, if necessary.
+
+        Explanation
+        ===========
 
         The random complex value for each free symbol is generated
         by the random_complex_number routine giving real and imaginary
@@ -516,6 +530,9 @@ class Expr(Basic, EvalfMixin):
     def is_constant(self, *wrt, **flags):
         """Return True if self is constant, False if not, or None if
         the constancy could not be determined conclusively.
+
+        Explanation
+        ===========
 
         If an expression has no free symbols then it is a constant. If
         there are free symbols it is possible that the expression is a
@@ -686,6 +703,9 @@ class Expr(Basic, EvalfMixin):
         """Return True if self == other, False if it doesn't, or None. If
         failing_expression is True then the expression which did not simplify
         to a 0 will be returned instead of None.
+
+        Explanation
+        ===========
 
         If ``self`` is a Number (or complex number) that is not zero, then
         the result is False.
@@ -1067,6 +1087,9 @@ class Expr(Basic, EvalfMixin):
     def as_poly(self, *gens, **args):
         """Converts ``self`` to a polynomial or returns ``None``.
 
+        Explanation
+        ===========
+
         >>> from sympy import sin
         >>> from sympy.abc import x, y
 
@@ -1214,6 +1237,9 @@ class Expr(Basic, EvalfMixin):
         """
         Returns the order of the expression.
 
+        Explanation
+        ===========
+
         The order is determined either from the O(...) term. If there
         is no O(...) term, it returns None.
 
@@ -1261,6 +1287,9 @@ class Expr(Basic, EvalfMixin):
     def args_cnc(self, cset=False, warn=True, split_1=True):
         """Return [commutative factors, non-commutative factors] of self.
 
+        Explanation
+        ===========
+
         self is treated as a Mul and the ordering of the factors is maintained.
         If ``cset`` is True the commutative factors will be returned in a set.
         If there were repeated factors (as may happen with an unevaluated Mul)
@@ -1268,6 +1297,9 @@ class Expr(Basic, EvalfMixin):
         setting ``warn`` to False.
 
         Note: -1 is always separated from a Number unless split_1 is False.
+
+        Examples
+        ========
 
         >>> from sympy import symbols, oo
         >>> A, B = symbols('A B', commutative=0)
@@ -1323,19 +1355,12 @@ class Expr(Basic, EvalfMixin):
         Returns the coefficient from the term(s) containing ``x**n``. If ``n``
         is zero then all terms independent of ``x`` will be returned.
 
+        Explanation
+        ===========
+
         When ``x`` is noncommutative, the coefficient to the left (default) or
         right of ``x`` can be returned. The keyword 'right' is ignored when
         ``x`` is commutative.
-
-        See Also
-        ========
-
-        as_coefficient: separate the expression into a coefficient and factor
-        as_coeff_Add: separate the additive constant from an expression
-        as_coeff_Mul: separate the multiplicative constant from an expression
-        as_independent: separate x-dependent terms/factors from others
-        sympy.polys.polytools.Poly.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
-        sympy.polys.polytools.Poly.nth: like coeff_monomial but powers of monomial terms are used
 
         Examples
         ========
@@ -1427,6 +1452,15 @@ class Expr(Basic, EvalfMixin):
         >>> (n*m + x*m*n).coeff(m*n, right=1)
         1
 
+        See Also
+        ========
+
+        as_coefficient: separate the expression into a coefficient and factor
+        as_coeff_Add: separate the additive constant from an expression
+        as_coeff_Mul: separate the multiplicative constant from an expression
+        as_independent: separate x-dependent terms/factors from others
+        sympy.polys.polytools.Poly.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
+        sympy.polys.polytools.Poly.nth: like coeff_monomial but powers of monomial terms are used
         """
         x = sympify(x)
         if not isinstance(x, Basic):
@@ -1475,6 +1509,9 @@ class Expr(Basic, EvalfMixin):
             """ Find where list sub appears in list l. When ``first`` is True
             the first occurrence from the left is returned, else the last
             occurrence is returned. Return None if sub is not in l.
+
+            Examples
+            ========
 
             >> l = range(5)*2
             >> find(l, [2, 3])
@@ -3443,7 +3480,7 @@ class Expr(Basic, EvalfMixin):
 
     def diff(self, *symbols, **assumptions):
         assumptions.setdefault("evaluate", True)
-        return Derivative(self, *symbols, **assumptions)
+        return _derivative_dispatch(self, *symbols, **assumptions)
 
     ###########################################################################
     ###################### EXPRESSION EXPANSION METHODS #######################
@@ -4016,7 +4053,7 @@ class ExprBuilder:
 from .mul import Mul
 from .add import Add
 from .power import Pow
-from .function import Derivative, Function
+from .function import Function, _derivative_dispatch
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational
