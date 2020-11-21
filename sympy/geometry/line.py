@@ -2340,6 +2340,7 @@ class Segment2D(LinearEntity2D, Segment):
 
     length : number or sympy expression
     midpoint : Point
+    area  :  0
 
     See Also
     ========
@@ -2365,7 +2366,10 @@ class Segment2D(LinearEntity2D, Segment):
     Point2D(5/2, 2)
 
     """
-    def __new__(cls, p1, p2, **kwargs):
+    
+    area = 0
+    
+    def __new__(cls, p1, p2, area, **kwargs):
         p1 = Point(p1, dim=2)
         p2 = Point(p2, dim=2)
 
