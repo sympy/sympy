@@ -45,8 +45,7 @@ For other options (tarballs, debs, etc.), see
 ## Documentation and Usage
 
 For in-depth instructions on installation and building the
-documentation, see the [SymPy Documentation Style Guide
-<https://docs.sympy.org/dev/documentation-style-guide.html>.
+documentation, see the [SymPy Documentation Style Guide](https://docs.sympy.org/dev/documentation-style-guide.html).
 
 Everything is at:
 
