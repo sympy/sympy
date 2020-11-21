@@ -1535,12 +1535,12 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     >>> a,b,c,d = symbols('a b c d')
     >>> G = Matrix([[-S(1), Rational(1, 10), Rational(9, 10)], [Rational(2, 5), -S(1), Rational(3, 5)], [Rational(1, 2), Rational(1, 2), -S(1)]])
     >>> C = ContinuousMarkovChain('C', state_space=[0, 1, 2], gen_mat=G)
-    >>> query=P(Eq(C(a), b), Eq(C(c), d))
+    >>> query = P(Eq(C(a), b), Eq(C(c), d))
     >>> query.subs({a:3.65 ,b:2, c:1.78, d:1}).evalf().round(10)
     0.4002723175
     >>> P(Eq(C(3.65), 2), Eq(C(1.78), 1)).round(10)
     0.4002723175
-    >>> query_gt=P(Gt(C(a), b), Eq(C(c), d))
+    >>> query_gt = P(Gt(C(a), b), Eq(C(c), d))
     >>> query_gt.subs({a:43.2 ,b:0, c:3.29, d:2}).evalf().round(10)
     0.6832579186
     >>> P(Gt(C(43.2), 0), Eq(C(3.29), 2)).round(10)
