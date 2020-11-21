@@ -85,8 +85,17 @@ Series Classes
 .. autoclass:: sympy.plotting.plot_implicit::ImplicitSeries
    :members:
 
+Backends
+--------
 
+.. autoclass:: sympy.plotting.plot::BaseBackend
+   :members:
 
+.. autoclass:: sympy.plotting.plot::MatplotlibBackend
+   :members:
+
+.. autoclass:: sympy.plotting.plot::TextBackend
+   :members:
 
 Pyglet Plotting
 ---------------
