@@ -439,11 +439,17 @@ def test_genocchi():
 
 def test_motzkin():
     n = Symbol('n')
+    _k = Dummy('k')
     raises(TypeError, lambda: motzkin.find_first_n_motzkin(n))
     raises(TypeError, lambda: motzkin.find_motzkin_numbers_in_range(1, n))
     raises(TypeError, lambda: motzkin.find_motzkin_numbers_in_range(n, 10))
     raises(TypeError, lambda: motzkin.is_prime(n))
     raises(TypeError, lambda: motzkin.is_motzkin(n))
+
+    #Test rewrite rules
+    assert motzkin(n).rewrite(Sum).dummy_eq(Sum(binomial(n, 2*_k)*catalan(_k), (_k, 0, floor(n/2))))
+    assert motzkin(n).rewrite(binomial).dummy_eq(Sum(binomial(2*_k, _k)*binomial(n, 2*_k)/(_k + 1), (_k, 0, floor(n/2))))
+    assert motzkin(n).rewrite(hyper) == hyper((0.5 - 0.5*n, -0.5*n), (2,), 4)
 
     motzkins = motzkin.find_first_n_motzkin(30)
     assert motzkins == [1, 1, 2, 4, 9, 21, 51, 127, 323, 835, 2188, 5798, 15511,
