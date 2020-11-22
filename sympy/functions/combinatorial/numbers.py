@@ -10,6 +10,7 @@ the separate 'factorials' module.
 from typing import Callable, Dict
 
 from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
+from sympy.core.sympify import sympify
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import as_int, SYMPY_INTS
 from sympy.core.function import Function, expand_mul
@@ -18,7 +19,7 @@ from sympy.core.numbers import E, pi
 from sympy.core.relational import LessThan, StrictGreaterThan
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import log
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.ntheory import isprime
@@ -1400,6 +1401,181 @@ class partition(Function):
         if n.is_nonnegative and n.is_integer:
             return True
 
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                             Motzkin numbers                                #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+
+class motzkin(Function):
+    r"""
+    Motzkin numbers
+
+    Motzkin number is the number of different ways of drawing
+    non-intersecting chords between n points on a circle
+    (not necessarily touching every point by a chord).
+    The numbers satisfy the recurrence relation
+
+    .. math :: M_n = \frac{2n + 1}{n + 2} M_{n - 1} + \frac{3n - 3}{n + 2} M_{n - 2}
+
+    For non-negative integers, it can be calculated as
+
+    .. math :: M_n = \sum_0^{\left\lfloor n/2 \right\rfloor } {n \choose 2k} C_k
+
+    where `C_k` is the `k^{th}` Catalan number.
+
+    It can be generalized to complex numbers as
+
+    .. math :: M_n = {}_2 F_1\Bigg(\frac{\frac{1 - n}{2}, \frac{-1}{2}}{2} \Bigg{|} 4\Bigg)
+
+    where `{}_p F_q` is the Generalized Hypergeometric function.
+
+    * ``motzkin(n)`` gives the `n^{th}` Motzkin number.
+
+    * ``find_first_n_motzkin(n)`` gives the first
+    `n` Motzkin numbers.
+
+    * ``find_motzkin_numbers_in_range(n)`` gives
+    the all Motzkin numbers in the interval `[x, y]`.
+
+    * ``is_motzkin(n)`` returns the position of
+    `n` in the Motzkin sequence of numbers if `n`
+    is a Motzkin number, else returns False
+
+    * ``is_prime(n)`` returns True if `n` is
+    a Motzkin prime number, else returns False
+
+    Examples
+    ========
+
+    >>> from sympy import motzkin
+    >>> motzkin(23)
+    1129760415
+    >>> motzkin(12.132)
+    17673.6827206284 + 0.00229270467798908*I
+
+    >>> motzkin.find_first_n_motzkin(15)
+    [1, 1, 2, 4, 9, 21, 51, 127, 323, 835, 2188, 5798, 15511, 41835, 113634]
+    >>> motzkin.find_motzkin_numbers_in_range(50, 100000)
+    [51, 127, 323, 835, 2188, 5798, 15511, 41835]
+    >>> motzkin.is_motzkin(3192727797)
+    24
+    >>> motzkin.is_motzkin(486431896)
+    False
+    >>> motzkin.is_prime(953467954114363)
+    True
+
+    >>> from sympy import Symbol, Sum, binomial, hyper
+    >>> n = Symbol('n')
+
+    >>> motzkin(n).rewrite(Sum)
+    Sum(binomial(n, 2*_k)*catalan(_k), (_k, 0, floor(n/2)))
+
+    >>> motzkin(n).rewrite(binomial)
+    Sum(binomial(2*_k, _k)*binomial(n, 2*_k)/(_k + 1), (_k, 0, floor(n/2)))
+
+    >>> motzkin(n).rewrite(hyper)
+    hyper((0.5 - 0.5*n, -0.5*n), (2,), 4)
+
+    See Also
+    ========
+
+    bell, bernoulli, binomial, catalan, euler, fibonacci, tribonacci, harmonic, lucas,
+    genocchi, partition, sympy.functions.special.hyper.hyper
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Motzkin_number
+    .. [2] https://mathworld.wolfram.com/MotzkinNumber.html
+    .. [3] https://oeis.org/A001006
+
+    """
+
+    @classmethod
+    def eval(cls, n):
+        n = sympify(n)
+        from sympy.functions.special.hyper import hyper
+        if not n.is_symbol:
+            m = hyper((0.5*(1 - n), -0.5*n), [2], 4).evalf()
+            if n.is_Integer and n.is_nonnegative:
+                return int(m)
+            else:
+                return m
+
+    @staticmethod
+    def find_first_n_motzkin(n):
+        n = sympify(n)
+        motzkins = []
+        if n.is_symbol:
+            raise TypeError('Expected number, not %s'%(type(n)))
+        for i in range(int(n)):
+            motzkins.append(motzkin(i))
+        return motzkins
+
+    @staticmethod
+    def is_motzkin(n):
+        n = sympify(n)
+        if n.is_symbol:
+            raise TypeError('Expected number, not %s'%(type(n)))
+        if n.is_Integer and n.is_positive:
+            i = 0
+            num = motzkin(i)
+            while num <= n:
+                if num == n:
+                    return i
+                i += 1
+                num = motzkin(i)
+            return False
+        else:
+            return False
+
+    @staticmethod
+    def find_motzkin_numbers_in_range(x, y):
+        x, y = sympify([x, y])
+        if x.is_symbol:
+            raise TypeError('Expected number, not %s'%(type(x)))
+        if  y.is_symbol:
+            raise TypeError('Expected number, not %s'%(type(y)))
+        x = ceiling(x)
+        y = floor(y)
+        motzkin_in_range = []
+        i = 0
+        num = motzkin(i)
+        while num <= y:
+            if num >= x:
+                motzkin_in_range.append(num)
+            i += 1
+            num = motzkin(i)
+        return motzkin_in_range
+
+    @staticmethod
+    def is_prime(n):
+        n = sympify(n)
+        if n.is_symbol:
+            raise TypeError('Expected number, not %s'%(type(n)))
+        #There are only 4 known Motzkin prime numbers, Sequence A092832
+        if n in [2, 127, 15511, 953467954114363]:
+            return True
+        return False
+
+    def _eval_rewrite_as_Sum(self, *args, **kwargs):
+        from sympy.concrete.summations import Sum
+        n = self.args[0]
+        k = Dummy('k')
+        return Sum(binomial(n, 2*k) * catalan(k), (k, 0, floor(n/2)))
+
+    def _eval_rewrite_as_binomial(self, *args, **kwargs):
+        from sympy.concrete.summations import Sum
+        n = self.args[0]
+        k = Dummy('k')
+        return Sum(binomial(n, 2*k) * binomial(2*k, k)/(k + 1), (k, 0, floor(n/2)))
+
+    def _eval_rewrite_as_hyper(self, *args, **kwargs):
+        from sympy.functions.special.hyper import hyper
+        n = self.args[0]
+        return hyper((0.5*(1-n),-0.5*n), [2], 4)
 
 #######################################################################
 ###

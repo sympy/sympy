@@ -1937,6 +1937,10 @@ def test_sympy__functions__combinatorial__numbers__partition():
     from sympy.functions.combinatorial.numbers import partition
     assert _test_args(partition(Symbol('a', integer=True)))
 
+def test_sympy__functions__combinatorial__numbers__motzkin():
+    from sympy.core.symbol import Symbol
+    from sympy.functions.combinatorial.numbers import motzkin
+    assert _test_args(motzkin(Symbol('a')))
 
 def test_sympy__functions__elementary__complexes__Abs():
     from sympy.functions.elementary.complexes import Abs

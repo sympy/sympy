@@ -6,8 +6,8 @@ from sympy import (
     TribonacciConstant)
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
-    genocchi, partition, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
-    trigamma, polygamma, factorial, sin, cos, cot, zeta)
+    genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log,
+     digamma, trigamma, polygamma, factorial, sin, cos, cot, zeta)
 from sympy.functions.combinatorial.numbers import _nT
 
 from sympy.core.expr import unchanged
@@ -437,6 +437,29 @@ def test_genocchi():
     raises(ValueError, lambda: genocchi(Rational(5, 4)))
     raises(ValueError, lambda: genocchi(-2))
 
+def test_motzkin():
+    n = Symbol('n')
+    raises(TypeError, lambda: motzkin.find_first_n_motzkin(n))
+    raises(TypeError, lambda: motzkin.find_motzkin_numbers_in_range(1, n))
+    raises(TypeError, lambda: motzkin.find_motzkin_numbers_in_range(n, 10))
+    raises(TypeError, lambda: motzkin.is_prime(n))
+    raises(TypeError, lambda: motzkin.is_motzkin(n))
+
+    motzkins = motzkin.find_first_n_motzkin(30)
+    assert motzkins == [1, 1, 2, 4, 9, 21, 51, 127, 323, 835, 2188, 5798, 15511,
+        41835, 113634, 310572, 853467, 2356779, 6536382,
+        18199284, 50852019, 142547559, 400763223, 1129760415,
+        3192727797, 9043402501, 25669818476, 73007772802,
+        208023278209, 593742784829]
+    for i in range(2, 30):
+        assert motzkins[i] == ((2*i + 1)*motzkins[i - 1] + (3*i - 3)*motzkins[i - 2])/(i + 2)
+        assert motzkin.is_motzkin(motzkins[i]) == i
+    assert str(motzkin(12 + 3*I)) == '-14747.6404547208 + 2553.0328001417*I'
+    assert motzkin.find_motzkin_numbers_in_range(100000000000, 1000000000000) == [208023278209, 593742784829]
+    assert motzkin.is_motzkin(953467954114362) == False
+    assert motzkin.is_motzkin(9 + 4*I) == False
+    assert motzkin.is_prime(953467954114363) == True
+    assert motzkin.is_prime(953467954114361) == False
 
 @nocache_fail
 def test_partition():
