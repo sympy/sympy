@@ -174,14 +174,14 @@ class Predicate(Boolean):
     Q.prime
     >>> expr.args
     (7,)
-    
+
     To obtain the truth value of an expression containing predicates,
     use the function ``ask``:
 
     >>> from sympy import ask
     >>> ask(Q.prime(7))
     True
-    
+
     The tautological predicate ``Q.is_true`` can be used to wrap other objects:
     >>> from sympy.abc import x
     >>> Q.is_true(x > 1)
