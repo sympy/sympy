@@ -13,6 +13,7 @@ from sympy.solvers.ode.systems import (_classify_linear_system, linear_ode_to_ma
                                        _eqs2dict, _dict2graph)
 from sympy.functions import airyai, airybi
 from sympy.integrals.integrals import Integral
+from sympy.simplify.ratsimp import ratsimp
 from sympy.testing.pytest import ON_TRAVIS, raises, slow, skip, XFAIL
 
 
@@ -1419,14 +1420,14 @@ def test_higher_order_to_first_order():
 
     eqs10 = [Eq(Derivative(x(t), (t, 2)), 5*x(t) + 43*y(t)),
              Eq(Derivative(y(t), (t, 2)), x(t) + 9*y(t))]
-    sol10 = [Eq(x(t), C1*sqrt(7 - sqrt(47))*(61 + 9*sqrt(47))*exp(-t*sqrt(7 - sqrt(47)))/2 + C2*sqrt(7 -
-              sqrt(47))*(61 + 9*sqrt(47))*exp(t*sqrt(7 - sqrt(47)))*Rational(-1, 2) + C3*(61 -
-              9*sqrt(47))*sqrt(sqrt(47) + 7)*exp(-t*sqrt(sqrt(47) + 7))/2 + C4*(61 - 9*sqrt(47))*sqrt(sqrt(47) +
-              7)*exp(t*sqrt(sqrt(47) + 7))*Rational(-1, 2)),
-             Eq(y(t), C1*sqrt(7 - sqrt(47))*(sqrt(47) + 7)*exp(-t*sqrt(7 - sqrt(47)))*Rational(-1, 2) + C2*sqrt(7
-              - sqrt(47))*(sqrt(47) + 7)*exp(t*sqrt(7 - sqrt(47)))/2 + C3*(7 - sqrt(47))*sqrt(sqrt(47) +
-              7)*exp(-t*sqrt(sqrt(47) + 7))*Rational(-1, 2) + C4*(7 - sqrt(47))*sqrt(sqrt(47) +
-              7)*exp(t*sqrt(sqrt(47) + 7))/2)]
+    sol10 = [Eq(x(t), C1*(61 - 9*sqrt(47))*sqrt(sqrt(47) + 7)*exp(-t*sqrt(sqrt(47) + 7))/2 + C2*sqrt(7 -
+              sqrt(47))*(61 + 9*sqrt(47))*exp(-t*sqrt(7 - sqrt(47)))/2 + C3*(61 - 9*sqrt(47))*sqrt(sqrt(47) +
+              7)*exp(t*sqrt(sqrt(47) + 7))*Rational(-1, 2) + C4*sqrt(7 - sqrt(47))*(61 + 9*sqrt(47))*exp(t*sqrt(7
+              - sqrt(47)))*Rational(-1, 2)),
+             Eq(y(t), C1*(7 - sqrt(47))*sqrt(sqrt(47) + 7)*exp(-t*sqrt(sqrt(47) + 7))*Rational(-1, 2) + C2*sqrt(7
+              - sqrt(47))*(sqrt(47) + 7)*exp(-t*sqrt(7 - sqrt(47)))*Rational(-1, 2) + C3*(7 -
+              sqrt(47))*sqrt(sqrt(47) + 7)*exp(t*sqrt(sqrt(47) + 7))/2 + C4*sqrt(7 - sqrt(47))*(sqrt(47) +
+              7)*exp(t*sqrt(7 - sqrt(47)))/2)]
     assert dsolve(eqs10) == sol10
     assert checksysodesol(eqs10, sol10) == (True, [0, 0])
 
@@ -1807,15 +1808,16 @@ def test_linodesolve():
     ceq = canonical_odes(eq, func, t)
     (A1, A0), b = linear_ode_to_matrix(ceq[0], func, t, 1)
     A = A0
-    sol = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
-                - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 +
-                sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5, t)/2 + sqrt(5)*exp(-t/2 +
-                sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 -
-                t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2 - exp(-sqrt(5)*t/2 -
-                t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2,
-            C1*exp(-t/2 + sqrt(5)*t/2) +
-                C2*exp(-sqrt(5)*t/2 - t/2) + exp(-t/2 + sqrt(5)*t/2)*Integral(sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/5,
-                t) + exp(-sqrt(5)*t/2 - t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)]
+    sol = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2 -
+          t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 + sqrt(5)*t/2)*Integral(t*exp(-sqrt(5)*t/2 +
+          t/2)/(-5 + sqrt(5)) - sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/(-5 + sqrt(5)), t)/2 + sqrt(5)*exp(-t/2 +
+          sqrt(5)*t/2)*Integral(t*exp(-sqrt(5)*t/2 + t/2)/(-5 + sqrt(5)) - sqrt(5)*t*exp(-sqrt(5)*t/2 +
+          t/2)/(-5 + sqrt(5)), t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*Integral(-sqrt(5)*t*exp(t/2 +
+          sqrt(5)*t/2)/5, t)/2 - exp(-sqrt(5)*t/2 - t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2,
+         C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2) + exp(-t/2 +
+          sqrt(5)*t/2)*Integral(t*exp(-sqrt(5)*t/2 + t/2)/(-5 + sqrt(5)) - sqrt(5)*t*exp(-sqrt(5)*t/2 +
+          t/2)/(-5 + sqrt(5)), t) + exp(-sqrt(5)*t/2 -
+              t/2)*Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)]
     assert constant_renumber(linodesolve(A, t, b=b), variables=[t]) == sol
 
     # non-homogeneous term assumed to be 0
@@ -2172,60 +2174,22 @@ def test_dsolve():
         dsolve(eqs)
 
 
-def _higher_order_slow1():
+@slow
+def test_higher_order1_slow1():
     x, y = symbols("x y", cls=Function)
     t = symbols("t")
 
-    eq = (Eq(diff(x(t),t,t), (log(t)+t**2)*diff(x(t),t)+(log(t)+t**2)*3*diff(y(t),t)), Eq(diff(y(t),t,t), \
-    (log(t)+t**2)*2*diff(x(t),t)+(log(t)+t**2)*9*diff(y(t),t)))
-    _x1 = log(t)**2
-    _x2 = sqrt(22)
-    _x3 = sqrt(9*_x1 + t**4 + 6*t**2*log(t) - 6*t**2 - 18*log(t) + 9)
-    _x4 = 1/(-_x2*_x3*t/3 - 4*t**3/3 - 4*t*log(t) + 4*t)
-    _x5 = 1/(_x2*_x3*t/3 - 4*t**3/3 - 4*t*log(t) + 4*t)
-    _x6 = 1/(-_x4*t**3 - 3*_x4*t*log(t) + 3*_x4*t + _x5*t**3 + 3*_x5*t*log(t) - 3*_x5*t)
-    _x7 = exp(-_x2*_x3*t/3 + 5*t**3/3 + 5*t*log(t) - 5*t)
-    _x8 = exp(_x2*_x3*t/3 + 5*t**3/3 + 5*t*log(t) - 5*t)
-    _x9 = 1/(18*_x1*_x4*t**5 - 54*_x1*_x4*t**3 - 18*_x1*_x5*t**5 + 54*_x1*_x5*t**3 + 2*_x4*t**9/3 + 6*_x4*t**7*log(t) -
-             6*_x4*t**7 - 36*_x4*t**5*log(t) + 18*_x4*t**5 + 18*_x4*t**3*log(t)**3 + 54*_x4*t**3*log(t) - 18*_x4*t**3 -
-             2*_x5*t**9/3 - 6*_x5*t**7*log(t) + 6*_x5*t**7 + 36*_x5*t**5*log(t) - 18*_x5*t**5 - 18*_x5*t**3*log(t)**3 -
-             54*_x5*t**3*log(t) + 18*_x5*t**3)
-    _x10 = -12*_x1*_x5*t**2
-    _x11 = 24*_x5*t**2*log(t)
-    _x12 = 8*_x4*t**4*log(t)
-    _x13 = -24*_x4*t**2*log(t)
-    _x14 = -8*_x5*t**4*log(t)
-    _x15 = 1/(12*_x1*_x4*t**2 + _x10 + _x11 + _x12 + _x13 + _x14 + _x2*_x3*_x4*t**4/3 + _x2*_x3*_x4*t**2*log(t) -
-              _x2*_x3*_x4*t**2 - _x2*_x3*_x5*t**4/3 - _x2*_x3*_x5*t**2*log(t) + _x2*_x3*_x5*t**2 + 4*_x4*t**6/3 -
-              8*_x4*t**4 + 12*_x4*t**2 - 4*_x5*t**6/3 + 8*_x5*t**4 - 12*_x5*t**2)
-    _x16 = 1/(12*_x1*_x4*t**2 + _x10 + _x11 + _x12 + _x13 + _x14 - _x2*_x3*_x4*t**4/3 - _x2*_x3*_x4*t**2*log(t) +
-              _x2*_x3*_x4*t**2 + _x2*_x3*_x5*t**4/3 + _x2*_x3*_x5*t**2*log(t) - _x2*_x3*_x5*t**2 + 4*_x4*t**6/3 -
-              8*_x4*t**4 + 12*_x4*t**2 - 4*_x5*t**6/3 + 8*_x5*t**4 - 12*_x5*t**2)
-    _x17 = (t**3 + 3*t*log(t) - 3*t)**2
-    sol = [
-        Eq(x(t), C1 + Integral(-C2*_x15*_x8*t**3 - 3*C2*_x15*_x8*t*log(t) + 3*C2*_x15*_x8*t + C2*_x16*_x7*t**3 +
-            3*C2*_x16*_x7*t*log(t) - 3*C2*_x16*_x7*t + C3*_x17*_x7*_x9 - C3*_x17*_x8*_x9, t)),
-        Eq(y(t), C4 + Integral(-C2*_x6*_x7 + C2*_x6*_x8 - C3*_x15*_x7*t**3 - 3*C3*_x15*_x7*t*log(t) + 3*C3*_x15*_x7*t +
-            C3*_x16*_x8*t**3 + 3*C3*_x16*_x8*t*log(t) - 3*C3*_x16*_x8*t, t)),
+    eq = [
+        Eq(diff(x(t),t,t), (log(t)+t**2)*diff(x(t),t)+(log(t)+t**2)*3*diff(y(t),t)),
+        Eq(diff(y(t),t,t), (log(t)+t**2)*2*diff(x(t),t)+(log(t)+t**2)*9*diff(y(t),t))
     ]
-
-    return eq, sol
-
-
-@slow
-def test_higher_order_slow1():
-    eq, sol = _higher_order_slow1()
-
-    assert dsolve_system(eq, simplify=False, doit=False) == [sol]
-
-
-@slow
-def test_higher_order1_slow1_check():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
-
-    eq, sol = _higher_order_slow1()
-    assert checksysodesol(eq, sol) == (True, [0, 0])
+    sol, = dsolve_system(eq, simplify=False, doit=False)
+    # The solution is too long to write out explicitly and checkodesol is too
+    # slow so we test for particular values of t:
+    for e in eq:
+        res = (e.lhs - e.rhs).subs({sol[0].lhs:sol[0].rhs, sol[1].lhs:sol[1].rhs})
+        res = res.subs({d: d.doit(deep=False) for d in res.atoms(Derivative)})
+        assert ratsimp(res.subs(t, 1)) == 0
 
 
 @slow

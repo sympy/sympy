@@ -4,7 +4,7 @@ This module implements sums and products containing the Kronecker Delta function
 References
 ==========
 
-- http://mathworld.wolfram.com/KroneckerDelta.html
+.. [1] http://mathworld.wolfram.com/KroneckerDelta.html
 
 """
 from sympy.core import Add, Mul, S, Dummy
@@ -38,6 +38,9 @@ def _expand_delta(expr, index):
 def _extract_delta(expr, index):
     """
     Extract a simple KroneckerDelta from the expression.
+
+    Explanation
+    ===========
 
     Returns the tuple ``(delta, newexpr)`` where:
 
@@ -227,6 +230,9 @@ def deltaproduct(f, limit):
 def deltasummation(f, limit, no_piecewise=False):
     """
     Handle summations containing a KroneckerDelta.
+
+    Explanation
+    ===========
 
     The idea for summation is the following:
 

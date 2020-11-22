@@ -32,6 +32,9 @@ def prde_normal_denom(fa, fd, G, DE):
     """
     Parametric Risch Differential Equation - Normal part of the denominator.
 
+    Explanation
+    ===========
+
     Given a derivation D on k[t] and f, g1, ..., gm in k(t) with f weakly
     normalized with respect to t, return the tuple (a, b, G, h) such that
     a, h in k[t], b in k<t>, G = [g1, ..., gm] in k(t)^m, and for any solution
@@ -59,7 +62,10 @@ def prde_normal_denom(fa, fd, G, DE):
 def real_imag(ba, bd, gen):
     """
     Helper function, to get the real and imaginary part of a rational function
-    evaluated at sqrt(-1) without actually evaluating it at sqrt(-1)
+    evaluated at sqrt(-1) without actually evaluating it at sqrt(-1).
+
+    Explanation
+    ===========
 
     Separates the even and odd power terms by checking the degree of terms wrt
     mod 4. Returns a tuple (ba[0], ba[1], bd) where ba[0] is real part
@@ -85,7 +91,10 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
     """
     Parametric Risch Differential Equation - Special part of the denominator.
 
-    case is one of {'exp', 'tan', 'primitive'} for the hyperexponential,
+    Explanation
+    ===========
+
+    Case is one of {'exp', 'tan', 'primitive'} for the hyperexponential,
     hypertangent, and primitive cases, respectively.  For the hyperexponential
     (resp. hypertangent) case, given a derivation D on k[t] and a in k[t],
     b in k<t>, and g1, ..., gm in k(t) with Dt/t in k (resp. Dt/(t**2 + 1) in
@@ -163,6 +172,9 @@ def prde_linear_constraints(a, b, G, DE):
     """
     Parametric Risch Differential Equation - Generate linear constraints on the constants.
 
+    Explanation
+    ===========
+
     Given a derivation D on k[t], a, b, in k[t] with gcd(a, b) == 1, and
     G = [g1, ..., gm] in k(t)^m, return Q = [q1, ..., qm] in k[t]^m and a
     matrix M with entries in k(t) such that for any solution c1, ..., cm in
@@ -211,6 +223,9 @@ def poly_linear_constraints(p, d):
 def constant_system(A, u, DE):
     """
     Generate a system for the constant solutions.
+
+    Explanation
+    ===========
 
     Given a differential field (K, D) with constant field C = Const(K), a Matrix
     A, and a vector (Matrix) u with coefficients in K, returns the tuple
@@ -284,6 +299,9 @@ def prde_spde(a, b, Q, n, DE):
     """
     Special Polynomial Differential Equation algorithm: Parametric Version.
 
+    Explanation
+    ===========
+
     Given a derivation D on k[t], an integer n, and a, b, q1, ..., qm in k[t]
     with deg(a) > 0 and gcd(a, b) == 1, return (A, B, Q, R, n1), with
     Qq = [q1, ..., qm] and R = [r1, ..., rm], such that for any solution
@@ -305,6 +323,9 @@ def prde_spde(a, b, Q, n, DE):
 def prde_no_cancel_b_large(b, Q, n, DE):
     """
     Parametric Poly Risch Differential Equation - No cancellation: deg(b) large enough.
+
+    Explanation
+    ===========
 
     Given a derivation D on k[t], n in ZZ, and b, q1, ..., qm in k[t] with
     b != 0 and either D == d/dt or deg(b) > max(0, deg(D) - 1), returns
@@ -340,6 +361,9 @@ def prde_no_cancel_b_large(b, Q, n, DE):
 def prde_no_cancel_b_small(b, Q, n, DE):
     """
     Parametric Poly Risch Differential Equation - No cancellation: deg(b) small enough.
+
+    Explanation
+    ===========
 
     Given a derivation D on k[t], n in ZZ, and b, q1, ..., qm in k[t] with
     deg(b) < deg(D) - 1 and either D == d/dt or deg(D) >= 2, returns
@@ -485,6 +509,9 @@ def prde_cancel_liouvillian(b, Q, n, DE):
 def param_poly_rischDE(a, b, q, n, DE):
     """Polynomial solutions of a parametric Risch differential equation.
 
+    Explanation
+    ===========
+
     Given a derivation D in k[t], a, b in k[t] relatively prime, and q
     = [q1, ..., qm] in k[t]^m, return h = [h1, ..., hr] in k[t]^r and
     a matrix A with m + r columns and entries in Const(k) such that
@@ -620,6 +647,9 @@ def param_rischDE(fa, fd, G, DE):
     """
     Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
 
+    Explanation
+    ===========
+
     Given a derivation D in k(t), f in k(t), and G
     = [G1, ..., Gm] in k(t)^m, return h = [h1, ..., hr] in k(t)^r and
     a matrix A with m + r columns and entries in Const(k) such that
@@ -747,6 +777,9 @@ def limited_integrate_reduce(fa, fd, G, DE):
     """
     Simpler version of step 1 & 2 for the limited integration problem.
 
+    Explanation
+    ===========
+
     Given a derivation D on k(t) and f, g1, ..., gn in k(t), return
     (a, b, h, N, g, V) such that a, b, h in k[t], N is a non-negative integer,
     g in k(t), V == [v1, ..., vm] in k(t)^m, and for any solution v in k(t),
@@ -824,6 +857,9 @@ def limited_integrate(fa, fd, G, DE):
 def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     """
     Parametric logarithmic derivative heuristic.
+
+    Explanation
+    ===========
 
     Given a derivation D on k[t], f in k(t), and a hyperexponential monomial
     theta over k(t), raises either NotImplementedError, in which case the
@@ -924,6 +960,9 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
 def is_deriv_k(fa, fd, DE):
     r"""
     Checks if Df/f is the derivative of an element of k(t).
+
+    Explanation
+    ===========
 
     a in k(t) is the derivative of an element of k(t) if there exists b in k(t)
     such that a = Db.  Either returns (ans, u), such that Df/f == Du, or None,
@@ -1039,6 +1078,9 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     r"""
     Checks if Df is the logarithmic derivative of a k(t)-radical.
 
+    Explanation
+    ===========
+
     b in k(t) can be written as the logarithmic derivative of a k(t) radical if
     there exist n in ZZ and u in k(t) with n, u != 0 such that n*b == Du/u.
     Either returns (ans, u, n, const) or None, which means that Df cannot be
@@ -1089,6 +1131,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
 
     See also
     ========
+
     is_log_deriv_k_t_radical_in_field, is_deriv_k
 
     """
@@ -1151,6 +1194,9 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
 def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     """
     Checks if f can be written as the logarithmic derivative of a k(t)-radical.
+
+    Explanation
+    ===========
 
     It differs from is_log_deriv_k_t_radical(fa, fd, DE, Df=False)
     for any given fa, fd, DE in that it finds the solution in the

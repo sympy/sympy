@@ -1,8 +1,9 @@
-from sympy import I, Rational, Symbol, pi, sqrt, S
+from sympy import I, Rational, Symbol, pi, sqrt, sympify, S, Basic
 from sympy.geometry import Line, Point, Point2D, Point3D, Line3D, Plane
-from sympy.geometry.entity import rotate, scale, translate
+from sympy.geometry.entity import rotate, scale, translate, GeometryEntity
 from sympy.matrices import Matrix
 from sympy.utilities.iterables import subsets, permutations, cartes
+from sympy.utilities.misc import  Undecidable
 from sympy.testing.pytest import raises, warns
 
 
@@ -27,6 +28,8 @@ def test_point():
     assert (p3 + p4) == p4
     assert (p2 - p1) == Point(y1 - x1, y2 - x2)
     assert -p2 == Point(-y1, -y2)
+    raises(TypeError, lambda: Point(1))
+    raises(ValueError, lambda: Point([1]))
     raises(ValueError, lambda: Point(3, I))
     raises(ValueError, lambda: Point(2*I, I))
     raises(ValueError, lambda: Point(3 + I, I))
@@ -36,10 +39,13 @@ def test_point():
     assert Point.midpoint(p1, p4) == Point(half + half*x1, half + half*x2)
     assert Point.midpoint(p2, p2) == p2
     assert p2.midpoint(p2) == p2
+    assert p1.origin == Point(0, 0)
 
     assert Point.distance(p3, p4) == sqrt(2)
     assert Point.distance(p1, p1) == 0
     assert Point.distance(p3, p2) == sqrt(p2.x**2 + p2.y**2)
+    raises(TypeError, lambda: Point.distance(p1, 0))
+    raises(TypeError, lambda: Point.distance(p1, GeometryEntity()))
 
     # distance should be symmetric
     assert p1.distance(line) == line.distance(p1)
@@ -48,6 +54,7 @@ def test_point():
     assert Point.taxicab_distance(p4, p3) == 2
 
     assert Point.canberra_distance(p4, p5) == 1
+    raises(ValueError, lambda: Point.canberra_distance(p3, p3))
 
     p1_1 = Point(x1, x1)
     p1_2 = Point(y2, y2)
@@ -67,6 +74,8 @@ def test_point():
 
     assert p3.intersection(Point(0, 0)) == [p3]
     assert p3.intersection(p4) == []
+    assert p3.intersection(line) == []
+    assert Point.intersection(Point(0, 0, 0), Point(0, 0)) == [Point(0, 0, 0)]
 
     x_pos = Symbol('x', real=True, positive=True)
     p2_1 = Point(x_pos, 0)
@@ -81,6 +90,25 @@ def test_point():
         assert Point.is_concyclic(*pts) is False
     assert Point.is_concyclic(p4, p4 * 2, p4 * 3) is False
     assert Point(0, 0).is_concyclic((1, 1), (2, 2), (2, 1)) is False
+    assert Point.is_concyclic(Point(0, 0, 0, 0), Point(1, 0, 0, 0), Point(1, 1, 0, 0), Point(1, 1, 1, 0)) is False
+
+    assert p1.is_scalar_multiple(p1)
+    assert p1.is_scalar_multiple(2*p1)
+    assert not p1.is_scalar_multiple(p2)
+    assert Point.is_scalar_multiple(Point(1, 1), (-1, -1))
+    assert Point.is_scalar_multiple(Point(0, 0), (0, -1))
+    # test when is_scalar_multiple can't be determined
+    raises(Undecidable, lambda: Point.is_scalar_multiple(Point(sympify("x1%y1"), sympify("x2%y2")), Point(0, 1)))
+
+    assert Point(0, 1).orthogonal_direction == Point(1, 0)
+    assert Point(1, 0).orthogonal_direction == Point(0, 1)
+
+    assert p1.is_zero is None
+    assert p3.is_zero
+    assert p4.is_zero is False
+    assert p1.is_nonzero is None
+    assert p3.is_nonzero is False
+    assert p4.is_nonzero
 
     assert p4.scale(2, 3) == Point(2, 3)
     assert p3.scale(2, 3) == p3
@@ -103,6 +131,11 @@ def test_point():
         Point(a.n(2), b.n(2), evaluate=False)
     raises(ValueError, lambda: Point(1, 2) + 1)
 
+    # test project
+    assert Point.project((0, 1), (1, 0)) == Point(0, 0)
+    assert Point.project((1, 1), (1, 0)) == Point(1, 0)
+    raises(ValueError, lambda: Point.project(p1, Point(0, 0)))
+
     # test transformations
     p = Point(1, 0)
     assert p.rotate(pi/2) == Point(0, 1)
@@ -117,6 +150,13 @@ def test_point():
     # Check invalid input for transform
     raises(ValueError, lambda: p3.transform(p3))
     raises(ValueError, lambda: p.transform(Matrix([[1, 0], [0, 1]])))
+
+    # test __contains__
+    assert 0 in Point(0, 0, 0, 0)
+    assert 1 not in Point(0, 0, 0, 0)
+
+    # test affine_rank
+    assert Point.affine_rank() == -1
 
 
 def test_point3D():
@@ -277,6 +317,9 @@ def test_Point2D():
     assert p1.coordinates == (1, 5)
     assert p2.coordinates == (4, 2.5)
 
+    # test bounds
+    assert p1.bounds == (1, 5, 1, 5)
+
 def test_issue_9214():
     p1 = Point3D(4, -2, 6)
     p2 = Point3D(1, 2, 3)
@@ -381,6 +424,12 @@ def test_arguments():
     # never raise error if creating an origin
     assert Point(dim=3, on_morph='error')
 
+    # raise error with unmatched dimension
+    raises(ValueError, lambda: Point(1, 1, dim=3, on_morph='error'))
+    # test unknown on_morph
+    raises(ValueError, lambda: Point(1, 1, dim=3, on_morph='unknown'))
+    # test invalid expressions
+    raises(TypeError, lambda: Point(Basic(), Basic()))
 
 def test_unit():
     assert Point(1, 1).unit == Point(sqrt(2)/2, sqrt(2)/2)

@@ -188,10 +188,10 @@ def test_BlockMatrix_2x2_inverse_symbolic():
     C = ZeroMatrix(m, m)
     D = MatrixSymbol('D', m, n)
     X = BlockMatrix([[A, B], [C, D]])
-    assert block_collapse(X.inverse()) == BlockMatrix(([
+    assert block_collapse(X.inverse()) == BlockMatrix([
         [-(C - D * B.I * A).I * D * B.I, (C - D * B.I * A).I],
         [B.I + B.I * A * (C - D * B.I * A).I * D * B.I, -B.I * A * (C - D * B.I * A).I],
-    ]))
+    ])
 
     # test code path where only C is invertible
     A = MatrixSymbol('A', n, m)

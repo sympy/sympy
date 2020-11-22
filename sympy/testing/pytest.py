@@ -1,7 +1,5 @@
 """py.test hacks to support XFAIL/XPASS"""
 
-from __future__ import print_function, division
-
 import sys
 import functools
 import os
@@ -116,7 +114,7 @@ else:
             raise TypeError(
                 'raises() expects a callable for the 2nd argument.')
 
-    class RaisesContext(object):
+    class RaisesContext:
         def __init__(self, expectedException):
             self.expectedException = expectedException
 

@@ -9,7 +9,11 @@ from contextlib import contextmanager
 
 
 class AssumptionsContext(set):
-    """Set representing assumptions.
+    """
+    Set representing assumptions.
+
+    Explanation
+    ===========
 
     This is used to represent global assumptions, but you can also use this
     class to create your own local assumptions contexts. It is basically a thin
@@ -145,27 +149,12 @@ class AppliedPredicate(Boolean):
 
 class Predicate(Boolean):
     """
-    A class for logical predicate.
+    A predicate is a function that returns a boolean value.
 
     Explanation
     ===========
 
-    A predicate is a function that returns a boolean value. When applied
-    to its argument, ``AppliedPredicate`` instance is returned. Handler
-    of the predicate evaluates the applied predicate to boolean value.
-
-    Currently, only unary predicate is supported. Polyadic predicate
-    will be implemented in future.
-
-    Parameters
-    ==========
-
-    name : string
-
-    handler : multipledispatch instance
-
-    Examples
-    ========
+    Predicate consists of the name and multipledispatch handler.
 
     >>> from sympy import Q
     >>> type(Q.prime)
@@ -175,12 +164,31 @@ class Predicate(Boolean):
     >>> Q.prime.handler
     <dispatched AskPrimeHandler>
 
-    The tautological predicate ``Q.is_true`` can be used to wrap other
-    objects:
+    When applied to its argument, ``AppliedPredicate`` instance is
+    returned. This merely wrap the argument and remain unevaluated:
 
+    >>> expr = Q.prime(7)
+    >>> type(expr)
+    <class 'sympy.assumptions.assume.AppliedPredicate'>
+    >>> expr.func
+    Q.prime
+    >>> expr.args
+    (7,)
+    
+    To obtain the truth value of an expression containing predicates,
+    use the function ``ask``:
+
+    >>> from sympy import ask
+    >>> ask(Q.prime(7))
+    True
+    
+    The tautological predicate ``Q.is_true`` can be used to wrap other objects:
     >>> from sympy.abc import x
     >>> Q.is_true(x > 1)
     Q.is_true(x > 1)
+
+    Currently, only unary predicate is supported. Polyadic predicate
+    will be implemented in future.
 
     References
     ==========
@@ -238,7 +246,8 @@ class Predicate(Boolean):
 
 @contextmanager
 def assuming(*assumptions):
-    """ Context manager for assumptions
+    """
+    Context manager for assumptions.
 
     Examples
     ========
