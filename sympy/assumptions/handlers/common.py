@@ -13,11 +13,15 @@ from sympy.assumptions import Q, ask, AppliedPredicate
 from sympy.multipledispatch.dispatcher import (
     Dispatcher, MDNotImplementedError
 )
+from sympy.multipledispatch.conflict import ordering
 
 
 class AskHandlerClass(Dispatcher):
     """
-    Base class that all Ask Handlers must inherit.
+    Class for handler which evaluates the ``AppliedPredicate``.
+
+    Explanation
+    ===========
 
     This class dispatches various types, and return fuzzy boolean values
     when called.
@@ -25,7 +29,60 @@ class AskHandlerClass(Dispatcher):
     the signature is queried until some other value is returned, or no
     more registered function is left.
 
+    Parameters
+    ==========
+
+    name : str
+
+    doc : str, optional
+
+    base : tuple of AskHandlerClass, optional
+        Base dispatchers, which inherites the dispatched functions.
+
+    Examples
+    ========
+
+    Generate a base dispatcher ``MyHandler``.
+
+    >>> from sympy import Symbol, Add
+    >>> from sympy.assumptions.handlers import AskHandlerClass
+    >>> from sympy.abc import x
+    >>> MyHandler = AskHandlerClass('myhandler')
+    >>> @MyHandler.register(Symbol)
+    ... def _(expr, assumptions):
+    ...     return True
+    >>> @MyHandler.register(Add)
+    ... def _(expr, assumptions):
+    ...     return False
+    >>> MyHandler(x, assumptions=True)
+    True
+    >>> MyHandler(x+1, assumptions=True)
+    False
+    >>> print(MyHandler(2*x, assumptions=True)) # unregistred type
+    None
+
+    Generate new dispatcher ``MyHandler2``, which uses ``MyHandler`` as
+    base dispatcher
+
+    >>> MyHandler2 = AskHandlerClass('myhandler2', base=MyHandler)
+    >>> @MyHandler2.register(Add)
+    ... def _(expr, assumptions):
+    ...     return True
+    >>> MyHandler2(x, assumptions=True) # refer to base
+    True
+    >>> MyHandler2(x+1, assumptions=True)
+    True
+
     """
+
+    def __init__(self, name, doc=None, base=()):
+        super().__init__(name, doc)
+        if not type(base) is tuple:
+            base = (base,)
+        for b in reversed(base):
+            self.funcs.update(b.funcs)
+        self.ordering = ordering(self.funcs)
+        self.base = base
 
     def __call__(self, *args, **kwargs):
         # If `None` is returned, search for next function
@@ -36,9 +93,10 @@ class AskHandlerClass(Dispatcher):
             func = self._cache[types]
         except KeyError:
             func = self.dispatch(*types)
-            if not func:
-                return None
             self._cache[types] = func
+
+        if not func:
+            return None
 
         try:
             # MDNotImplementedError may be raised here...
@@ -49,6 +107,7 @@ class AskHandlerClass(Dispatcher):
             return result
 
         except MDNotImplementedError:
+            # Search for next function which does not return None
             funcs = self.dispatch_iter(*types)
             next(funcs)  # burn first
             for func in funcs:
@@ -60,54 +119,6 @@ class AskHandlerClass(Dispatcher):
                 except MDNotImplementedError:
                     pass
             return None
-
-    def copy(self, name=None, doc=None):
-        """
-        Create a new handler with new name and new document, with
-        all dispatched functions preserved.
-
-        Examples
-        ========
-
-        >>> from sympy import Symbol, Add
-        >>> from sympy.assumptions.handlers import AskHandlerClass
-        >>> from sympy.abc import x
-        >>> MyHandler = AskHandlerClass('myhandler')
-        >>> @MyHandler.register(Symbol)
-        ... def _(expr, assumptions):
-        ...     return True
-        >>> @MyHandler.register(Add)
-        ... def _(expr, assumptions):
-        ...     return False
-        >>> print(MyHandler(x, assumptions=True))
-        True
-        >>> print(MyHandler(x+1, assumptions=True))
-        False
-        >>> print(MyHandler(2*x, assumptions=True))
-        None
-
-        Generate ``MyHandler2`` from ``MyHandler``, and override the
-        registered function for ``Add``.
-
-        >>> MyHandler2 = MyHandler.copy('myhandler2')
-        >>> @MyHandler2.register(Add)
-        ... def _(expr, assumptions):
-        ...     return True
-        >>> print(MyHandler2(x, assumptions=True))
-        True
-        >>> print(MyHandler2(x+1, assumptions=True))
-        True
-        >>> print(MyHandler2(2*x, assumptions=True))
-        None
-
-        """
-        if name is None:
-            name = self.name
-        new = self.__class__(name, doc)
-        new.funcs.update(self.funcs)
-        new._cache.update(self._cache)
-        new.ordering.extend(self.ordering)
-        return new
 
     @staticmethod
     def AlwaysTrue(expr, assumptions):
@@ -121,6 +132,15 @@ class AskHandlerClass(Dispatcher):
     def AlwaysNone(expr, assumptions):
         return None
 
+    def __getstate__(self):
+        return {'name': self.name,
+                'funcs': self.funcs,
+                'base': self.base}
+
+    def __setstate__(self, d):
+        super().__setstate__(d)
+        self.base = d['base']
+
 CommonHandler = AskHandlerClass('CommonHandler')
 
 CommonHandler.register(NaN)(CommonHandler.AlwaysFalse)
@@ -128,9 +148,10 @@ CommonHandler.register(NaN)(CommonHandler.AlwaysFalse)
 
 ### AskCommutativeHandler ###
 
-AskCommutativeHandler = CommonHandler.copy(
+AskCommutativeHandler = AskHandlerClass(
     'AskCommutativeHandler',
-    doc="""Handler for key 'commutative'"""
+    doc="""Handler for key 'commutative'""",
+    base=CommonHandler
 )
 
 for sig in (NaN, Number):

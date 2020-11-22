@@ -3,7 +3,9 @@ Handlers for predicates related to set membership: integer, rational, etc.
 """
 
 from sympy.assumptions import Q, ask
-from sympy.assumptions.handlers import CommonHandler, test_closed_group
+from sympy.assumptions.handlers import (
+    AskHandlerClass, CommonHandler, test_closed_group
+)
 from sympy.core import Basic, Expr, Add, Mul, Pow
 from sympy.core.numbers import (
     pi, Integer, Pi, Exp1, GoldenRatio, TribonacciConstant, Infinity,
@@ -24,12 +26,13 @@ from sympy import I, Eq, conjugate
 
 ### AskIntegerHandler ###
 
-AskIntegerHandler = CommonHandler.copy(
+AskIntegerHandler = AskHandlerClass(
     'AskIntegerHandler',
     doc="""
     Handler for Q.integer
     Test that an expression belongs to the field of integer numbers
-    """
+    """,
+    base=CommonHandler
 )
 
 for sig in (int, Integer):
@@ -114,12 +117,13 @@ def _(expr, assumptions):
 
 ### AskRationalHandler ###
 
-AskRationalHandler = CommonHandler.copy(
+AskRationalHandler = AskHandlerClass(
     'AskRationalHandler',
     doc="""
     Handler for Q.rational
     Test that an expression belongs to the field of rational numbers
-    """
+    """,
+    base=CommonHandler
 )
 
 AskRationalHandler.register(Rational)(AskRationalHandler.AlwaysTrue)
@@ -189,11 +193,12 @@ def _(expr, assumptions):
 
 ### AskIrrationalHandler ###
 
-AskIrrationalHandler = CommonHandler.copy(
+AskIrrationalHandler = AskHandlerClass(
     'AskIrrationalHandler',
     doc="""
     Handler for Q.irrational
-    """
+    """,
+    base=CommonHandler
 )
 
 @AskIrrationalHandler.register(Expr)
@@ -214,12 +219,13 @@ def _(expr, assumptions):
 
 ### AskRealHandler ###
 
-AskRealHandler = CommonHandler.copy(
+AskRealHandler = AskHandlerClass(
     'AskRealHandler',
     doc="""
     Handler for Q.real
     Test that an expression belongs to the field of real numbers
-    """
+    """,
+    base=CommonHandler
 )
 
 for sig in (
@@ -351,13 +357,14 @@ def _(expr, assumptions):
 
 ### AskExtendedRealHandler ###
 
-AskExtendedRealHandler = AskRealHandler.copy(
+AskExtendedRealHandler = AskHandlerClass(
     'AskExtendedRealHandler',
     doc="""
     Handler for Q.extended_real
     Test that an expression belongs to the field of extended real numbers,
     that is real numbers union {Infinity, -Infinity}
-    """
+    """,
+    base=AskRealHandler
 )
 
 for sig in (Infinity, NegativeInfinity):
@@ -372,12 +379,13 @@ def _(expr, assumptions):
 
 ### AskHermitianHandler ###
 
-AskHermitianHandler = AskRealHandler.copy(
+AskHermitianHandler = AskHandlerClass(
     'AskHermitianHandler',
     doc="""
     Handler for Q.hermitian
     Test that an expression belongs to the field of Hermitian operators
-    """
+    """,
+    base=AskRealHandler
 )
 
 @AskHermitianHandler.register(Expr)
@@ -453,12 +461,13 @@ def _(mat, assumptions):
 
 ### AskComplexHandler ###
 
-AskComplexHandler = CommonHandler.copy(
+AskComplexHandler = AskHandlerClass(
     'AskComplexHandler',
     doc="""
     Handler for Q.complex
     Test that an expression belongs to the field of complex numbers
-    """
+    """,
+    base=CommonHandler
 )
 
 for sig in (
@@ -489,13 +498,14 @@ def _(expr, assumptions):
 
 ### AskImaginaryHandler ###
 
-AskImaginaryHandler = CommonHandler.copy(
+AskImaginaryHandler = AskHandlerClass(
     'AskImaginaryHandler',
     doc="""
     Handler for Q.imaginary
     Test that an expression belongs to the field of imaginary numbers,
     that is, numbers in the form x*I, where x is real
-    """
+    """,
+    base=CommonHandler
 )
 
 AskImaginaryHandler.register(ImaginaryUnit)(AskImaginaryHandler.AlwaysTrue)
@@ -638,13 +648,14 @@ def _(expr, assumptions):
 
 ### AskAntiHermitianHandler ###
 
-AskAntiHermitianHandler = AskImaginaryHandler.copy(
+AskAntiHermitianHandler = AskHandlerClass(
     'AskAntiHermitianHandler',
     doc="""
     Handler for Q.antihermitian
     Test that an expression belongs to the field of anti-Hermitian operators,
     that is, operators in the form x*I, where x is Hermitian
-    """
+    """,
+    base=AskImaginaryHandler
 )
 
 @AskAntiHermitianHandler.register(Expr)
@@ -720,9 +731,10 @@ def _(mat, assumptions):
 
 ### AskAlgebraicHandler ###
 
-AskAlgebraicHandler = CommonHandler.copy(
+AskAlgebraicHandler = AskHandlerClass(
     'AskAlgebraicHandler',
-    doc="""Handler for Q.algebraic key. """
+    doc="""Handler for Q.algebraic key. """,
+    base=CommonHandler
 )
 
 for sig in (

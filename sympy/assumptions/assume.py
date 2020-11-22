@@ -215,10 +215,14 @@ class Predicate(Boolean):
         imported due to circular import problem, we store the path in
         ``self._handler`` and get it in runtime by this property.
         """
-        from .handlers import CommonHandler
+        from .handlers import AskHandlerClass, CommonHandler
         if self._handler is None:
             name = ''.join(['Ask', self.name.capitalize(), 'Handler'])
-            _handler = CommonHandler.copy(name)
+            _handler = AskHandlerClass(
+                name,
+                doc="Handler for key %s" % self.name,
+                base=CommonHandler
+            )
             self._handler = _handler
         return get_class(self._handler)
 

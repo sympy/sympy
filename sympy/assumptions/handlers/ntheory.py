@@ -3,7 +3,7 @@ Handlers for keys related to number theory: prime, even, odd, etc.
 """
 
 from sympy.assumptions import Q, ask
-from sympy.assumptions.handlers import CommonHandler
+from sympy.assumptions.handlers import AskHandlerClass, CommonHandler
 from sympy.ntheory import isprime
 from sympy.core import (
     S, Expr, Basic, Mul, Pow, Add
@@ -16,14 +16,15 @@ from sympy.functions import Abs, re, im
 
 ### AskPrimeHandler ###
 
-AskPrimeHandler = CommonHandler.copy(
+AskPrimeHandler = AskHandlerClass(
     'AskPrimeHandler',
     doc="""
     Handler for key 'prime'
     Test that an expression represents a prime number. When the
     expression is an exact number, the result (when True) is subject to
     the limitations of isprime() which is used to return the result.
-    """
+    """,
+    base=CommonHandler
 )
 
 for sig in (Rational, Infinity, NegativeInfinity, ImaginaryUnit):
@@ -89,11 +90,12 @@ def _(expr, assumptions):
 
 ### AskCompositeHandler ###
 
-AskCompositeHandler = CommonHandler.copy(
+AskCompositeHandler = AskHandlerClass(
     'AskCompositeHandler',
     doc="""
     Handler for key 'composite'
-    """
+    """,
+    base=CommonHandler
 )
 
 @AskCompositeHandler.register(Expr)
@@ -122,11 +124,12 @@ def _(expr, assumptions):
 
 ### AskEvenHandler ###
 
-AskEvenHandler = CommonHandler.copy(
+AskEvenHandler = AskHandlerClass(
     'AskEvenHandler',
     doc="""
     Handler for key 'even'
-    """
+    """,
+    base=CommonHandler
 )
 
 for sig in (Rational, Infinity, NegativeInfinity, ImaginaryUnit):
@@ -253,12 +256,13 @@ def _(expr, assumptions):
 
 ### AskOddHandler ###
 
-AskOddHandler = CommonHandler.copy(
+AskOddHandler = AskHandlerClass(
     'AskOddHandler',
     doc="""
     Handler for key 'odd'
     Test that an expression represents an odd number
-    """
+    """,
+    base=CommonHandler
 )
 
 @AskOddHandler.register(Expr)

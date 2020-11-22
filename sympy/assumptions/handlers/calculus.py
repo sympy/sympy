@@ -13,18 +13,19 @@ from sympy.functions import (
 )
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
-from sympy.assumptions.handlers import CommonHandler
+from sympy.assumptions.handlers import AskHandlerClass, CommonHandler
 
 
 ### AskFiniteHandler ###
 
-AskFiniteHandler = CommonHandler.copy(
+AskFiniteHandler = AskHandlerClass(
     'AskFiniteHandler',
     doc="""
     Handler for key 'finite'.
 
     Test that an expression is bounded respect to all its variables.
-    """
+    """,
+    base=CommonHandler
 )
 
 for sig in (

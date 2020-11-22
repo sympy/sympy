@@ -3,7 +3,7 @@ AskHandlers related to order relations: positive, negative, etc.
 """
 
 from sympy.assumptions import Q, ask
-from sympy.assumptions.handlers import CommonHandler
+from sympy.assumptions.handlers import AskHandlerClass, CommonHandler
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
 from sympy.core import (
     Expr, Basic, Add, Mul, Pow
@@ -18,7 +18,7 @@ from sympy.matrices.expressions.matexpr import MatrixElement
 
 ### AskNegativeHandler ###
 
-AskNegativeHandler = CommonHandler.copy(
+AskNegativeHandler = AskHandlerClass(
     'AskNegativeHandler',
     doc="""
     This is called by ask() when key='negative'
@@ -34,7 +34,8 @@ AskNegativeHandler = CommonHandler.copy(
     >>> ask(Q.negative(pi**2)) # this calls AskNegativeHandler.Pow
     False
 
-    """
+    """,
+    base=CommonHandler
 )
 
 for sig in (ImaginaryUnit, Abs):
@@ -134,11 +135,12 @@ def _(expr, assumptions):
 
 ### AskNonNegativeHandler ###
 
-AskNonNegativeHandler = CommonHandler.copy(
+AskNonNegativeHandler = AskHandlerClass(
     'AskNonNegativeHandler',
     doc="""
     Handler for key 'nonnegative'
-    """
+    """,
+    base=CommonHandler
 )
 
 @AskNonNegativeHandler.register(Expr)
@@ -157,12 +159,13 @@ def _(expr, assumptions):
 
 ### AskNonZeroHandler ###
 
-AskNonZeroHandler = CommonHandler.copy(
+AskNonZeroHandler = AskHandlerClass(
     'AskNonZeroHandler',
     doc="""
     Handler for key 'nonzero'
     Test that an expression is not identically zero
-    """
+    """,
+    base=CommonHandler
 )
 
 @AskNonZeroHandler.register(Expr)
@@ -211,12 +214,13 @@ def _(expr, assumptions):
 
 ### AskZeroHandler ###
 
-AskZeroHandler = CommonHandler.copy(
+AskZeroHandler = AskHandlerClass(
     'AskZeroHandler',
     doc="""
     Handler for key 'zero'
     Test that an expression is identically zero
-    """
+    """,
+    base=CommonHandler
 )
 
 @AskZeroHandler.register(Expr)
@@ -236,11 +240,12 @@ def _(expr, assumptions):
 
 ### AskNonPositiveHandler ###
 
-AskNonPositiveHandler = CommonHandler.copy(
+AskNonPositiveHandler = AskHandlerClass(
     'AskNonPositiveHandler',
     doc="""
     Handler for key 'nonpositive'
-    """
+    """,
+    base=CommonHandler
 )
 
 @AskNonPositiveHandler.register(Expr)
@@ -259,12 +264,13 @@ def _(expr, assumptions):
 
 ### AskPositiveHandler ###
 
-AskPositiveHandler = CommonHandler.copy(
+AskPositiveHandler = AskHandlerClass(
     'AskPositiveHandler',
     doc="""
     Handler for key 'positive'
     Test that an expression is greater (strict) than zero
-    """
+    """,
+    base=CommonHandler
 )
 
 AskPositiveHandler.register(ImaginaryUnit)(AskPositiveHandler.AlwaysFalse)

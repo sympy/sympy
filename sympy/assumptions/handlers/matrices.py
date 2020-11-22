@@ -5,7 +5,9 @@ infinitesimal, bounded, etc.
 
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
-from sympy.assumptions.handlers import CommonHandler, test_closed_group
+from sympy.assumptions.handlers import (
+    AskHandlerClass, CommonHandler, test_closed_group
+)
 from sympy.matrices import (
     MatrixExpr, MatMul, MatPow, MatAdd, MatrixSymbol, ZeroMatrix, OneMatrix,
     Transpose, Inverse, MatrixSlice, Identity,
@@ -45,11 +47,12 @@ def MatMul_elements(matrix_predicate, scalar_predicate, expr, assumptions):
 
 ### AskSquareHandler ###
 
-AskSquareHandler = CommonHandler.copy(
+AskSquareHandler = AskHandlerClass(
     'AskSquareHandler',
     doc="""
     Handler for key 'square'
-    """
+    """,
+    base=CommonHandler
 )
 
 @AskSquareHandler.register(MatrixExpr)
@@ -59,11 +62,12 @@ def _(expr, assumptions):
 
 ### AskSymmetricHandler ###
 
-AskSymmetricHandler = CommonHandler.copy(
+AskSymmetricHandler = AskHandlerClass(
     'AskSymmetricHandler',
     doc="""
     Handler for key 'symmetric'
-    """
+    """,
+    base=CommonHandler
 )
 
 AskSymmetricHandler.register(Identity)(AskSymmetricHandler.AlwaysTrue)
@@ -134,11 +138,12 @@ def _(expr, assumptions):
 
 ### AskInvertibleHandler ###
 
-AskInvertibleHandler = CommonHandler.copy(
+AskInvertibleHandler = AskHandlerClass(
     'AskInvertibleHandler',
     doc="""
     Handler for key 'invertible'
-    """
+    """,
+    base=CommonHandler
 )
 
 AskInvertibleHandler.register(ZeroMatrix)(AskInvertibleHandler.AlwaysFalse)
@@ -241,11 +246,12 @@ def _(expr, assumptions):
 
 ### AskOrthogonalHandler ###
 
-AskOrthogonalHandler = CommonHandler.copy(
+AskOrthogonalHandler = AskHandlerClass(
     'AskOrthogonalHandler',
     doc="""
     Handler for key 'orthogonal'
-    """
+    """,
+    base=CommonHandler
 )
 
 AskOrthogonalHandler.register(Identity)(AskOrthogonalHandler.AlwaysTrue)
@@ -302,11 +308,12 @@ def _(expr, assumptions):
 
 ### AskUnitaryHandler ###
 
-AskUnitaryHandler = CommonHandler.copy(
+AskUnitaryHandler = AskHandlerClass(
     'AskUnitaryHandler',
     doc="""
     Handler for key 'unitary'
-    """
+    """,
+    base=CommonHandler
 )
 
 for sig in (DFT, Identity):
@@ -358,11 +365,12 @@ def _(expr, assumptions):
 
 ### AskFullRankHandler ###
 
-AskFullRankHandler = CommonHandler.copy(
+AskFullRankHandler = AskHandlerClass(
     'AskFullRankHandler',
     doc="""
     Handler for key 'fullrank'
-    """
+    """,
+    base=CommonHandler
 )
 
 AskFullRankHandler.register(Identity)(AskFullRankHandler.AlwaysTrue)
@@ -400,11 +408,12 @@ def _(expr, assumptions):
 
 ### AskPositiveDefiniteHandler ###
 
-AskPositiveDefiniteHandler = CommonHandler.copy(
+AskPositiveDefiniteHandler = AskHandlerClass(
     'AskPositiveDefiniteHandler',
     doc="""
     Handler for key 'positive_definite'
-    """
+    """,
+    base=CommonHandler
 )
 
 AskPositiveDefiniteHandler.register(Identity)(AskPositiveDefiniteHandler.AlwaysTrue)
@@ -461,11 +470,12 @@ def _(expr, assumptions):
 
 ### AskUpperTriangularHandler ###
 
-AskUpperTriangularHandler = CommonHandler.copy(
+AskUpperTriangularHandler = AskHandlerClass(
     'AskUpperTriangularHandler',
     doc="""
     Handler for key 'upper_triangular'
-    """
+    """,
+    base=CommonHandler
 )
 
 for sig in (Identity, ZeroMatrix):
@@ -524,11 +534,12 @@ def _(expr, assumptions):
 
 ### AskLowerTriangularHandler ###
 
-AskLowerTriangularHandler = CommonHandler.copy(
+AskLowerTriangularHandler = AskHandlerClass(
     'AskLowerTriangularHandler',
     doc="""
     Handler for key 'lower_triangular'
-    """
+    """,
+    base=CommonHandler
 )
 
 for sig in (Identity, ZeroMatrix):
@@ -587,11 +598,12 @@ def _(expr, assumptions):
 
 ### AskDiagonalHandler ###
 
-AskDiagonalHandler = CommonHandler.copy(
+AskDiagonalHandler = AskHandlerClass(
     'AskDiagonalHandler',
     doc="""
     Handler for key 'diagonal'
-    """
+    """,
+    base=CommonHandler
 )
 
 for sig in (Identity, ZeroMatrix, DiagonalMatrix, DiagMatrix):
@@ -659,11 +671,12 @@ def _(expr, assumptions):
 
 ### AskIntegerElementsHandler ###
 
-AskIntegerElementsHandler = CommonHandler.copy(
+AskIntegerElementsHandler = AskHandlerClass(
     'AskIntegerElementsHandler',
     doc="""
     Handler for key 'integer_elements'
-    """
+    """,
+    base=CommonHandler
 )
 
 for sig in (ZeroMatrix, OneMatrix, Identity):
@@ -697,11 +710,12 @@ def _(expr, assumptions):
 
 ### AskRealElementsHandler ###
 
-AskRealElementsHandler = CommonHandler.copy(
+AskRealElementsHandler = AskHandlerClass(
     'AskRealElementsHandler',
     doc="""
     Handler for key 'real_elements'
-    """
+    """,
+    base=CommonHandler
 )
 
 AskRealElementsHandler.register(MatMul)(partial(MatMul_elements, Q.real_elements, Q.real))
@@ -735,11 +749,12 @@ def _(expr, assumptions):
 
 ### AskComplexElementsHandler ###
 
-AskComplexElementsHandler = CommonHandler.copy(
+AskComplexElementsHandler = AskHandlerClass(
     'AskComplexElementsHandler',
     doc="""
     Handler for key 'complex_elements'
-    """
+    """,
+    base=CommonHandler
 )
 
 AskComplexElementsHandler.register(MatMul)(partial(MatMul_elements, Q.complex_elements, Q.complex))
