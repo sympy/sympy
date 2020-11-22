@@ -1451,11 +1451,11 @@ def register_handler(key, handler):
     >>> from sympy import Integer, Q, register_handler, ask
     >>> from sympy.assumptions.handlers import AskHandlerClass
     >>> MersenneHandler = AskHandlerClass('MersenneHandler')
-    >>> @MersenneHandler.register(Integer)
+    >>> register_handler('mersenne', MersenneHandler)
+    >>> @Q.mersenne.handler.register(Integer)
     ... def _(expr, assumptions):
     ...     from sympy import ask, log
     ...     return ask(Q.integer(log(expr + 1, 2)))
-    >>> register_handler('mersenne', MersenneHandler)
     >>> ask(Q.mersenne(7))
     True
 
