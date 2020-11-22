@@ -2228,27 +2228,19 @@ def test_autosimp_used_to_fail():
 
 def test_custom_AskHandler():
 
-    class MersenneHandlerClass(AskHandlerClass):
-        def __init__(self, name, doc=None):
-            super().__init__(name, doc)
-
-            for sig in (Integer, Symbol):
-                self.register(sig)(getattr(self, sig.__name__))
-
-        @staticmethod
-        def Integer(expr, assumptions):
-            from sympy import log
-            if ask(Q.integer(log(expr + 1, 2))):
-                return True
-
-        @staticmethod
-        def Symbol(expr, assumptions):
-            if expr in conjuncts(assumptions):
-                return True
-
-    MersenneHandler = MersenneHandlerClass('MersenneHandler')
-
+    MersenneHandler = AskHandlerClass('MersenneHandler')
     register_handler('mersenne', MersenneHandler)
+
+    @Q.mersenne.handler.register(Symbol)
+    def _(expr, assumptions):
+        if expr in conjuncts(assumptions):
+            True
+
+    @Q.mersenne.handler.register(Integer)
+    def _(expr, assumptions):
+        from sympy import log
+        if ask(Q.integer(log(expr+1, 2))):
+            return True
 
     n = Symbol('n', integer=True)
     assert ask(Q.mersenne(n), Q.mersenne(n))
