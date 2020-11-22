@@ -2,6 +2,7 @@
 
 
 from sympy.core import sympify
+from sympy.core.compatibility import ordered
 from sympy.core.evalf import pure_complex
 from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, EX
 from sympy.polys.domains.complexfield import ComplexField
@@ -102,7 +103,7 @@ def _construct_algebraic(coeffs, opt):
 
         result.append(coeff)
 
-    exts = list(exts)
+    exts = list(ordered(exts))
 
     g, span, H = primitive_element(exts, ex=True, polys=True)
     root = sum([ s*ext for s, ext in zip(span, exts) ])
