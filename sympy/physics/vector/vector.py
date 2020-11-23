@@ -721,18 +721,18 @@ class Vector(Printable, EvalfMixin):
 
     def xreplace(self, rule):
         """
-        Replace occurrences of objects within the expression.
+        Replace occurrences of objects within the measure numbers of the vector.
 
         Parameters
         ==========
 
         rule : dict-like
-            Expresses a replacement rule
+            Expresses a replacement rule.
 
         Returns
         =======
 
-        xreplace : the result of the replacement
+        Vector : Result of the replacement.
 
         Examples
         ========
