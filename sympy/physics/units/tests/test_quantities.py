@@ -473,7 +473,7 @@ def test_issue_14547():
     assert e.is_Add and set(e.args) == {foot, 1}
 
 def test_issue_20288():
-    # the issue was that sympy was not considering the results of 
+    # the issue was that sympy was not considering the results of
     # mathematical functions as dimensionless
     from sympy.physics.units import energy
     from sympy.core.numbers import E
