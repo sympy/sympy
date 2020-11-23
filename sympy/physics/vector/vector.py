@@ -732,7 +732,8 @@ class Vector(Printable, EvalfMixin):
         Returns
         =======
 
-        Vector : Result of the replacement.
+        Vector
+            Result of the replacement.
 
         Examples
         ========

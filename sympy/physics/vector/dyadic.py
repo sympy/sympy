@@ -552,7 +552,8 @@ class Dyadic(Printable, EvalfMixin):
         Returns
         =======
 
-        Dyadic : Result of the replacement.
+        Dyadic
+            Result of the replacement.
 
         Examples
         ========
