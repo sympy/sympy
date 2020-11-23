@@ -29,6 +29,7 @@ Financial and Infrastructure Support
   * in 2017 for 9 students (`GSoC 2017 <https://github.com/sympy/sympy/wiki/GSoC-2017-report>`_)
   * in 2018 for 7 students (`GSoC 2018 <https://github.com/sympy/sympy/wiki/GSoC-2018-report>`_)
   * in 2019 for 9 students (`GSoC 2019 <https://github.com/sympy/sympy/wiki/GSoC-2019-report>`_)
+  * in 2020 for 6 students (`GSoC 2020 <https://github.com/sympy/sympy/wiki/GSoC-2020-report>`_)
 
   Of these, we would like to thank these organizations for hosting GSoC students under their
   umbrella organizations:

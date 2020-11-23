@@ -68,10 +68,10 @@ class GLSLPrinter(CodePrinter):
         return "%s;" % codestring
 
     def _get_comment(self, text):
-        return "// {0}".format(text)
+        return "// {}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "float {0} = {1};".format(name, value)
+        return "float {} = {};".format(name, value)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -160,7 +160,7 @@ class GLSLPrinter(CodePrinter):
             return "%s[%s][%s]" % (pnt, i, j)
         else:
             # print('end _print_MatrixElement case B',nest,glsl_types)
-            return "{0}[{1}]".format(pnt, i + j*rows)
+            return "{}[{}]".format(pnt, i + j*rows)
 
     def _print_list(self, expr):
         l = ', '.join(self._print(item) for item in expr)
@@ -282,7 +282,7 @@ class GLSLPrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Add(self, expr, order=None):
         if self._settings['use_operators']:

@@ -105,7 +105,7 @@ def tensorcontraction(array, *contraction_axes):
     array = _arrayfy(array)
 
     # Verify contraction_axes:
-    taken_dims = set([])
+    taken_dims = set()
     for axes_group in contraction_axes:
         if not isinstance(axes_group, Iterable):
             raise ValueError("collections of contraction axes expected")
@@ -270,7 +270,7 @@ def permutedims(expr, perm):
     from sympy.tensor.array import SparseNDimArray
 
     if not isinstance(expr, NDimArray):
-        raise TypeError("expression has to be an N-dim array")
+        expr = ImmutableDenseNDimArray(expr)
 
     from sympy.combinatorics import Permutation
     if not isinstance(perm, Permutation):

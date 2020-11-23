@@ -44,12 +44,16 @@ def _canonical(cond):
 class Relational(Boolean, EvalfMixin):
     """Base class for all relation types.
 
+    Explanation
+    ===========
+
     Subclasses of Relational should generally be instantiated directly, but
     Relational can be instantiated with a valid ``rop`` value to dispatch to
     the appropriate subclass.
 
     Parameters
     ==========
+
     rop : str or None
         Indicates what subclass to instantiate.  Valid values can be found
         in the keys of Relational.ValidRelationOperator.
@@ -417,6 +421,9 @@ Rel = Relational
 class Equality(Relational):
     """An equal relation between two objects.
 
+    Explanation
+    ===========
+
     Represents that two objects are equal.  If they can be easily shown
     to be definitively equal (or unequal), this will reduce to True (or
     False).  Otherwise, the relation is maintained as an unevaluated
@@ -597,6 +604,9 @@ Eq = Equality
 class Unequality(Relational):
     """An unequal relation between two objects.
 
+    Explanation
+    ===========
+
     Represents that two objects are not equal.  If they can be shown to be
     definitively equal, this will reduce to False; if definitively unequal,
     this will reduce to True.  Otherwise, the relation is maintained as an
@@ -751,8 +761,8 @@ class _Less(_Inequality):
 class GreaterThan(_Greater):
     """Class representations of inequalities.
 
-    Extended Summary
-    ================
+    Explanation
+    ===========
 
     The ``*Than`` classes represent inequal relationships, where the left-hand
     side is generally bigger or smaller than the right-hand side.  For example,
@@ -1120,12 +1130,25 @@ def is_ge(lhs, rhs):
     """
     Fuzzy bool for lhs is greater than or equal to rhs.
 
-    :param lhs: the left-hand side of the expression, must be sympified, and an instance of expression
-                Throws an exception if lhs is not an instance of expression
-    :param rhs: the right-hand side of the expression, must be sympified and an instance of expression
-                Throws an exception if lhs is not an instance of expression
-    :return: True if lhs is greater than or equal to rhs, false is lhs is less than rhs, and
-            None if the comparison between lhs and rhs is indeterminate
+    Parameters
+    ==========
+
+    lhs: Expr
+        The left-hand side of the expression, must be sympified,
+        and an instance of expression. Throws an exception if
+        lhs is not an instance of expression.
+
+    rhs: Expr
+        The right-hand side of the expression, must be sympified
+        and an instance of expression. Throws an exception if
+        lhs is not an instance of expression.
+
+    Returns
+    =======
+
+    Expr : True if lhs is greater than or equal to rhs, false is
+        lhs is less than rhs, and None if the comparison between
+        lhs and rhs is indeterminate.
 
     The four comparison functions ``is_le``, ``is_lt``, ``is_ge``, and ``is_gt`` are
     each implemented in terms of ``is_ge`` in the following way:
@@ -1225,12 +1248,23 @@ def is_eq(lhs, rhs):
     """
     Fuzzy bool representing mathematical equality between lhs and rhs.
 
-    :param lhs: the left-hand side of the expression, must be sympified
-    :param rhs: the right-hand side of the expression, must be sympified
-    :return: True if lhs is equal to rhs, false is lhs is not equal to rhs, and
-            None if the comparison between lhs and rhs is indeterminate
+    Parameters
+    ==========
 
-    Notes:
+    lhs: Expr
+        The left-hand side of the expression, must be sympified.
+
+    rhs: Expr
+        The right-hand side of the expression, must be sympified.
+
+    Returns
+    =======
+
+    True if lhs is equal to rhs, false is lhs is not equal to rhs, and
+    None if the comparison between lhs and rhs is indeterminate.
+
+    Explanation
+    ===========
 
     This function is intended to give a relatively fast determination and deliberately does not attempt slow
     calculations that might help in obtaining a determination of True or False in more difficult cases.

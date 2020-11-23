@@ -441,12 +441,12 @@ def _gauss_jordan_solve(M, B, freevar=False):
         The right hand side of the equation to be solved for.  Must have
         the same number of rows as matrix A.
 
-    freevar : List
-        If the system is underdetermined (e.g. A has more columns than
-        rows), infinite solutions are possible, in terms of arbitrary
-        values of free variables. Then the index of the free variables
-        in the solutions (column Matrix) will be returned by freevar, if
-        the flag `freevar` is set to `True`.
+    freevar : boolean, optional
+        Flag, when set to `True` will return the indices of the free
+        variables in the solutions (column Matrix), for a system that is
+        undetermined (e.g. A has more columns than rows), for which
+        infinite solutions are possible, in terms of arbitrary
+        values of free variables. Default `False`.
 
     Returns
     =======
@@ -460,6 +460,13 @@ def _gauss_jordan_solve(M, B, freevar=False):
         rows), infinite solutions are possible, in terms of arbitrary
         parameters. These arbitrary parameters are returned as params
         Matrix.
+
+    free_var_index : List, optional
+        If the system is underdetermined (e.g. A has more columns than
+        rows), infinite solutions are possible, in terms of arbitrary
+        values of free variables. Then the indices of the free variables
+        in the solutions (column Matrix) are returned by free_var_index,
+        if the flag `freevar` is set to `True`.
 
     Examples
     ========
@@ -508,6 +515,25 @@ def _gauss_jordan_solve(M, B, freevar=False):
     [3, -1]])
     >>> params
     Matrix(0, 2, [])
+
+
+    >>> from sympy import Matrix
+    >>> A = Matrix([[1, 2, 1, 1], [1, 2, 2, -1], [2, 4, 0, 6]])
+    >>> B = Matrix([7, 12, 4])
+    >>> sol, params, freevars = A.gauss_jordan_solve(B, freevar=True)
+    >>> sol
+    Matrix([
+    [-2*tau0 - 3*tau1 + 2],
+    [                 tau0],
+    [           2*tau1 + 5],
+    [                 tau1]])
+    >>> params
+    Matrix([
+    [tau0],
+    [tau1]])
+    >>> freevars
+    [1, 3]
+
 
     See Also
     ========

@@ -1,19 +1,20 @@
-from __future__ import print_function, division
 import random
 
 import itertools
-from typing import Iterable, Sequence, Type, Union as tUnion
+from typing import Iterable, Sequence, Type, Union as tUnion, List as tList, Tuple as tTuple
 
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
-                   Set, And, Eq, FiniteSet, ImmutableMatrix, Integer,
+                   Set, And, Eq, FiniteSet, ImmutableMatrix, Integer, igcd,
                    Lambda, Mul, Dummy, IndexedBase, Add, Interval, oo,
                    linsolve, eye, Or, Not, Intersection, factorial, Contains,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
-                   ceiling, MatrixBase)
+                   ceiling, MatrixBase, ConditionSet, ones, zeros, Identity,
+                   Rational, Lt, Gt, Le, Ne, BlockMatrix, Sum)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import strongly_connected_components
 from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
@@ -165,10 +166,9 @@ class StochasticProcess(Basic):
         return self.args[0]
 
     @property
-    def state_space(self) -> tUnion[FiniteSet, Tuple, Range]:
-        """Since version 1.7, using `state_space` returns a
-        `Tuple` or a `Range` object for `DiscreteMarkovChain`.
-        If you want a `FiniteSet`, use `FiniteSet(*state_space)`."""
+    def state_space(self) -> tUnion[FiniteSet, Range]:
+        if not isinstance(self.args[1], (FiniteSet, Range)):
+            return FiniteSet(*self.args[1])
         return self.args[1]
 
     @property
@@ -252,7 +252,8 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
 
         RandomIndexedSymbol
         """
-        if time not in self.index_set:
+        time = sympify(time)
+        if not time.is_symbol and time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         idx_obj = Indexed(self.symbol, time)
         pspace_obj = StochasticPSpace(self.symbol, self, self.distribution)
@@ -271,7 +272,8 @@ class ContinuousTimeStochasticProcess(StochasticProcess):
 
         RandomIndexedSymbol
         """
-        if time not in self.index_set:
+        time = sympify(time)
+        if not time.is_symbol and time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         func_obj = Function(self.symbol)(time)
         pspace_obj = StochasticPSpace(self.symbol, self, self.distribution)
@@ -312,16 +314,12 @@ class StochasticStateSpaceOf(Boolean):
         if not isinstance(process, (DiscreteMarkovChain, ContinuousMarkovChain)):
             raise ValueError("Currently only DiscreteMarkovChain and ContinuousMarkovChain "
                                 "support StochasticStateSpaceOf.")
-        if isinstance(process, DiscreteMarkovChain):
-            state_space = _state_converter(state_space)
-            if isinstance(state_space, Range):
-                ss_size = (state_space.stop - state_space.start) // state_space.step
-            else:
-                ss_size = len(state_space)
-            state_index = Range(ss_size)
+        state_space = _state_converter(state_space)
+        if isinstance(state_space, Range):
+            ss_size = ceiling((state_space.stop - state_space.start) / state_space.step)
         else:
-            state_space = _set_converter(state_space)
-            state_index = state_space
+            ss_size = len(state_space)
+        state_index = Range(ss_size)
         return Basic.__new__(cls, process, state_index)
 
     process = property(lambda self: self.args[0])
@@ -332,6 +330,57 @@ class MarkovProcess(StochasticProcess):
     Contains methods that handle queries
     common to Markov processes.
     """
+
+    @property
+    def number_of_states(self) -> tUnion[Integer, Symbol]:
+        """
+        The number of states in the Markov Chain.
+        """
+        return _sympify(self.args[2].shape[0])
+
+    @property
+    def _state_index(self) -> Range:
+        """
+        Returns state index as Range.
+        """
+        return self.args[1]
+
+    @classmethod
+    def _sanity_checks(cls, state_space, trans_probs):
+        # Try to never have None as state_space or trans_probs.
+        # This helps a lot if we get it done at the start.
+        if (state_space is None) and (trans_probs is None):
+            _n = Dummy('n', integer=True, nonnegative=True)
+            v_state_space = _state_converter(Range(_n))
+            v_trans_probs = _matrix_checks(MatrixSymbol('_T', _n, _n))
+
+        elif state_space is None:
+            v_trans_probs = _matrix_checks(trans_probs)
+            v_state_space = _state_converter(Range(trans_probs.shape[0]))
+
+        elif trans_probs is None:
+            v_state_space = _state_converter(state_space)
+            if isinstance(state_space, Range):
+                _n = ceiling((state_space.stop - state_space.start) / state_space.step)
+            else:
+                _n = len(state_space)
+            v_trans_probs = MatrixSymbol('_T', _n, _n)
+
+        else:
+            v_state_space = _state_converter(state_space)
+            v_trans_probs = _matrix_checks(trans_probs)
+            # Range object doesn't want to give a symbolic size
+            # so we do it ourselves.
+            if isinstance(v_state_space, Range):
+                ss_size = ceiling((v_state_space.stop - v_state_space.start) / v_state_space.step)
+            else:
+                ss_size = len(v_state_space)
+            if ss_size != trans_probs.shape[0]:
+                raise ValueError('The size of the state space and the number of '
+                                 'rows of the transition matrix must be the same.')
+
+        return v_state_space, v_trans_probs
+
     def _extract_information(self, given_condition):
         """
         Helper function to extract information, like,
@@ -342,7 +391,7 @@ class MarkovProcess(StochasticProcess):
             state_index = self._state_index
         elif isinstance(self, ContinuousMarkovChain):
             trans_probs = self.generator_matrix
-            state_index = self.state_space
+            state_index = self._state_index
         if isinstance(given_condition, And):
             gcs = given_condition.args
             given_condition = S.true
@@ -388,9 +437,12 @@ class MarkovProcess(StochasticProcess):
 
         # `not None` is `True`. So the old test fails for symbolic sizes.
         # Need to build the statement differently.
-        if FiniteSet(*[i for i in range(trans_probs.shape[0])]).is_subset(state_index) is False:
+        sym_cond = not isinstance(self.number_of_states, (int, Integer))
+        cond1 = not sym_cond and len(state_index) != trans_probs.shape[0]
+        if cond1:
             raise ValueError("state space is not compatible with the transition probabilities.")
-        state_index = FiniteSet(*[i for i in range(trans_probs.shape[0])])
+        if not isinstance(trans_probs.shape[0], Symbol):
+            state_index = FiniteSet(*[i for i in range(trans_probs.shape[0])])
         return state_index
 
     @cacheit
@@ -423,6 +475,15 @@ class MarkovProcess(StochasticProcess):
 
         return is_insufficient, trans_probs, state_index, given_condition
 
+    def replace_with_index(self, condition):
+        if isinstance(condition, Relational):
+            lhs, rhs = condition.lhs, condition.rhs
+            if not isinstance(lhs, RandomIndexedSymbol):
+                lhs, rhs = rhs, lhs
+            condition = type(condition)(self.index_of.get(lhs, lhs),
+                                        self.index_of.get(rhs, rhs))
+        return condition
+
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
         Handles probability queries for Markov process.
@@ -452,6 +513,13 @@ class MarkovProcess(StochasticProcess):
         check, mat, state_index, new_given_condition = \
             self._preprocess(given_condition, evaluate)
 
+        rv = list(condition.atoms(RandomIndexedSymbol))
+        symbolic = False
+        for sym in rv:
+            if sym.key.is_symbol:
+                symbolic = True
+                break
+
         if check:
             return Probability(condition, new_given_condition)
 
@@ -459,22 +527,71 @@ class MarkovProcess(StochasticProcess):
             trans_probs = self.transition_probabilities(mat)
         elif isinstance(self, DiscreteMarkovChain):
             trans_probs = mat
+        condition = self.replace_with_index(condition)
+        given_condition = self.replace_with_index(given_condition)
+        new_given_condition = self.replace_with_index(new_given_condition)
 
         if isinstance(condition, Relational):
-            rv, states = (list(condition.atoms(RandomIndexedSymbol))[0], condition.as_set())
             if isinstance(new_given_condition, And):
                 gcs = new_given_condition.args
             else:
                 gcs = (new_given_condition, )
-            grvs = new_given_condition.atoms(RandomIndexedSymbol)
+            min_key_rv = list(new_given_condition.atoms(RandomIndexedSymbol))
 
-            min_key_rv = None
-            for grv in grvs:
-                if grv.key <= rv.key:
-                    min_key_rv = grv
-            if min_key_rv == None:
+            if len(min_key_rv):
+                min_key_rv = min_key_rv[0]
+                for r in rv:
+                    if min_key_rv.key.is_symbol or r.key.is_symbol:
+                        continue
+                    if min_key_rv.key > r.key:
+                        return Probability(condition)
+            else:
+                min_key_rv = None
                 return Probability(condition)
 
+            if symbolic:
+                return self._symbolic_probability(condition, new_given_condition, rv, min_key_rv)
+
+            if len(rv) > 1:
+                rv[0] = condition.lhs
+                rv[1] = condition.rhs
+                if rv[0].key < rv[1].key:
+                        rv[0], rv[1] = rv[1], rv[0]
+                        if isinstance(condition, Gt):
+                            condition = Lt(condition.lhs, condition.rhs)
+                        elif isinstance(condition, Lt):
+                            condition = Gt(condition.lhs, condition.rhs)
+                        elif isinstance(condition, Ge):
+                            condition = Le(condition.lhs, condition.rhs)
+                        elif isinstance(condition, Le):
+                            condition = Ge(condition.lhs, condition.rhs)
+                s = Rational(0, 1)
+                n = len(self.state_space)
+
+                if isinstance(condition, Eq) or isinstance(condition, Ne):
+                    for i in range(0, n):
+                        s += self.probability(Eq(rv[0], i), Eq(rv[1], i)) * self.probability(Eq(rv[1], i), new_given_condition)
+                    return s if isinstance(condition, Eq) else 1 - s
+                else:
+                    upper = 0
+                    greater = False
+                    if isinstance(condition, Ge) or isinstance(condition, Lt):
+                        upper = 1
+                    if isinstance(condition, Gt) or isinstance(condition, Ge):
+                        greater = True
+
+                    for i in range(0, n):
+                        if i <= n//2:
+                            for j in range(0, i + upper):
+                                s += self.probability(Eq(rv[0], i), Eq(rv[1], j)) * self.probability(Eq(rv[1], j), new_given_condition)
+                        else:
+                            s += self.probability(Eq(rv[0], i), new_given_condition)
+                            for j in range(i + upper, n):
+                                s -= self.probability(Eq(rv[0], i), Eq(rv[1], j)) * self.probability(Eq(rv[1], j), new_given_condition)
+                    return s if greater else 1 - s
+
+            rv = rv[0]
+            states = condition.as_set()
             prob, gstate = dict(), None
             for gc in gcs:
                 if gc.has(min_key_rv):
@@ -491,9 +608,9 @@ class MarkovProcess(StochasticProcess):
 
             if any((k not in self.index_set) for k in (rv.key, min_key_rv.key)):
                 raise IndexError("The timestamps of the process are not in it's index set.")
-            states = Intersection(states, state_index)
+            states = Intersection(states, state_index) if not isinstance(self.number_of_states, Symbol) else states
             for state in Union(states, FiniteSet(gstate)):
-                if Ge(state, mat.shape[0]) == True:
+                if not isinstance(state, (int, Integer)) or Ge(state, mat.shape[0]) is True:
                     raise IndexError("No information is available for (%s, %s) in "
                         "transition probabilities of shape, (%s, %s). "
                         "State space is zero indexed."
@@ -565,6 +682,37 @@ class MarkovProcess(StochasticProcess):
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
                                 "implemented yet."%(condition, given_condition))
 
+    def _symbolic_probability(self, condition, new_given_condition, rv, min_key_rv):
+        #Function to calculate probability for queries with symbols
+        if isinstance(condition, Relational):
+            curr_state = new_given_condition.rhs if isinstance(new_given_condition.lhs, RandomIndexedSymbol) \
+                    else new_given_condition.lhs
+            next_state = condition.rhs if isinstance(condition.lhs, RandomIndexedSymbol) \
+                else condition.lhs
+
+            if isinstance(condition, Eq) or isinstance(condition, Ne):
+                if isinstance(self, DiscreteMarkovChain):
+                    P = self.transition_probabilities**(rv[0].key - min_key_rv.key)
+                else:
+                    P = exp(self.generator_matrix*(rv[0].key - min_key_rv.key))
+                prob = P[curr_state, next_state] if isinstance(condition, Eq) else 1 - P[curr_state, next_state]
+                return Piecewise((prob, rv[0].key > min_key_rv.key), (Probability(condition), True))
+            else:
+                upper = 1
+                greater = False
+                if isinstance(condition, Ge) or isinstance(condition, Lt):
+                    upper = 0
+                if isinstance(condition, Gt) or isinstance(condition, Ge):
+                    greater = True
+                k = Dummy('k')
+                condition = Eq(condition.lhs, k) if isinstance(condition.lhs, RandomIndexedSymbol)\
+                    else Eq(condition.rhs, k)
+                total = Sum(self.probability(condition, new_given_condition), (k, next_state + upper, self.state_space._sup))
+                return Piecewise((total, rv[0].key > min_key_rv.key), (Probability(condition), True)) if greater\
+                    else Piecewise((1 - total, rv[0].key > min_key_rv.key), (Probability(condition), True))
+        else:
+            return Probability(condition, new_given_condition)
+
     def expectation(self, expr, condition=None, evaluate=True, **kwargs):
         """
         Handles expectation queries for markov process.
@@ -609,6 +757,8 @@ class MarkovProcess(StochasticProcess):
         if isinstance(expr, Expr) and isinstance(condition, Eq) \
             and len(rvs) == 1:
             # handle queries similar to E(f(X[i]), Eq(X[i-m], <some-state>))
+            condition=self.replace_with_index(condition)
+            state_index=self.replace_with_index(state_index)
             rv = list(rvs)[0]
             lhsg, rhsg = condition.lhs, condition.rhs
             if not isinstance(lhsg, RandomIndexedSymbol):
@@ -621,10 +771,7 @@ class MarkovProcess(StochasticProcess):
             mat_of = TransitionMatrixOf(self, mat) if isinstance(self, DiscreteMarkovChain) else GeneratorMatrixOf(self, mat)
             cond = condition & mat_of & \
                     StochasticStateSpaceOf(self, state_index)
-            if isinstance(self, DiscreteMarkovChain):
-                func = lambda s: self.probability(Eq(rv, s), cond) * expr.subs(rv, self.state_space[s])
-            else:
-                func = lambda s: self.probability(Eq(rv, s), cond)*expr.subs(rv, s)
+            func = lambda s: self.probability(Eq(rv, s), cond) * expr.subs(rv, self._state_index[s])
             return sum([func(s) for s in state_index])
 
         raise NotImplementedError("Mechanism for handling (%s, %s) queries hasn't been "
@@ -658,7 +805,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> YS = DiscreteMarkovChain("Y")
 
     >>> Y.state_space
-    (0, 1, 2)
+    FiniteSet(0, 1, 2)
     >>> Y.transition_probabilities
     Matrix([
     [0.5, 0.2, 0.3],
@@ -674,28 +821,63 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     than state names. For example, with the Sunny-Cloudy-Rainy
     model with string state names:
 
-    >>> Y = DiscreteMarkovChain("Y", ['Sunny', 'Cloudy', 'Rainy'], T)
+    >>> from sympy.core.symbol import Str
+    >>> Y = DiscreteMarkovChain("Y", [Str('Sunny'), Str('Cloudy'), Str('Rainy')], T)
     >>> P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2)
     0.36
 
     This gives the same answer as the ``[0, 1, 2]`` state space.
     Currently, there is no support for state names within probability
-    and expectation statements. Here is a work-around using ``index_of``:
+    and expectation statements. Here is a work-around using ``Str``:
 
-    >>> P(Eq(Y[3], Y.index_of['Rainy']), Eq(Y[1], Y.index_of['Cloudy'])).round(2)
+    >>> P(Eq(Str('Rainy'), Y[3]), Eq(Y[1], Str('Cloudy'))).round(2)
     0.36
 
     Symbol state names can also be used:
 
     >>> sunny, cloudy, rainy = symbols('Sunny, Cloudy, Rainy')
     >>> Y = DiscreteMarkovChain("Y", [sunny, cloudy, rainy], T)
-    >>> P(Eq(Y[3], Y.index_of[rainy]), Eq(Y[1], Y.index_of[cloudy])).round(2)
+    >>> P(Eq(Y[3], rainy), Eq(Y[1], cloudy)).round(2)
     0.36
 
     Expectations will be calculated as follows:
 
-    >>> E(Y[3], Eq(Y[1], Y.index_of[cloudy]))
+    >>> E(Y[3], Eq(Y[1], cloudy))
     0.38*Cloudy + 0.36*Rainy + 0.26*Sunny
+
+    Probability of expressions with multiple RandomIndexedSymbols
+    can also be calculated provided there is only 1 RandomIndexedSymbol
+    in the given condition. It is always better to use Rational instead
+    of floating point numbers for the probabilities in the
+    transition matrix to avoid errors.
+
+    >>> from sympy import Gt, Le, Rational
+    >>> T = Matrix([[Rational(5, 10), Rational(3, 10), Rational(2, 10)], [Rational(2, 10), Rational(7, 10), Rational(1, 10)], [Rational(3, 10), Rational(3, 10), Rational(4, 10)]])
+    >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    >>> P(Eq(Y[3], Y[1]), Eq(Y[0], 0)).round(3)
+    0.409
+    >>> P(Gt(Y[3], Y[1]), Eq(Y[0], 0)).round(2)
+    0.36
+    >>> P(Le(Y[15], Y[10]), Eq(Y[8], 2)).round(7)
+    0.6963328
+
+    Symbolic probability queries are also supported
+
+    >>> from sympy import symbols, Matrix, Rational, Eq, Gt
+    >>> from sympy.stats import P, DiscreteMarkovChain
+    >>> a, b, c, d = symbols('a b c d')
+    >>> T = Matrix([[Rational(1, 10), Rational(4, 10), Rational(5, 10)], [Rational(3, 10), Rational(4, 10), Rational(3, 10)], [Rational(7, 10), Rational(2, 10), Rational(1, 10)]])
+    >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    >>> query = P(Eq(Y[a], b), Eq(Y[c], d))
+    >>> query.subs({a:10 ,b:2, c:5, d:1}).round(4)
+    0.3096
+    >>> P(Eq(Y[10], 2), Eq(Y[5], 1)).evalf().round(4)
+    0.3096
+    >>> query_gt = P(Gt(Y[a], b), Eq(Y[c], d))
+    >>> query_gt.subs({a:21, b:0, c:5, d:0}).evalf().round(5)
+    0.64705
+    >>> P(Gt(Y[21], 0), Eq(Y[5], 0)).round(5)
+    0.64705
 
     There is limited support for arbitrarily sized states:
 
@@ -704,6 +886,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> Y = DiscreteMarkovChain("Y", trans_probs=T)
     >>> Y.state_space
     Range(0, n, 1)
+    >>> query = P(Eq(Y[a], b), Eq(Y[c], d))
+    >>> query.subs({a:10, b:2, c:5, d:1})
+    (T**5)[1, 2]
 
     References
     ==========
@@ -718,81 +903,15 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         sym = _symbol_converter(sym)
         _n: Expr
 
-        # Try to never have None as state_space or trans_probs.
-        # This helps a lot if we get it done at the start.
-        if (state_space is None) and (trans_probs is None):
-            _n = Dummy('n', integer=True, nonnegative=True)
-            v_state_space = _state_converter(Range(_n))
-            v_trans_probs = _matrix_checks(MatrixSymbol('_T', _n, _n))
+        state_space, trans_probs = MarkovProcess._sanity_checks(state_space, trans_probs)
 
-        elif state_space is None:
-            v_trans_probs = _matrix_checks(trans_probs)
-            v_state_space = _state_converter(Range(v_trans_probs.shape[0]))
-
-        elif trans_probs is None:
-            v_state_space = _state_converter(state_space)
-            if isinstance(state_space, Range):
-                _n = ceiling((state_space.stop - state_space.start) / state_space.step)
-            else:
-                _n = Integer(len(state_space))
-            v_trans_probs = MatrixSymbol('_T', _n, _n)
-
-        else:
-            v_state_space = _state_converter(state_space)
-            v_trans_probs = _matrix_checks(trans_probs)
-            # Range object doesn't want to give a symbolic size
-            # so we do it ourselves.
-            if isinstance(state_space, Range):
-                ss_size = ceiling((state_space.stop - state_space.start) / state_space.step)
-            else:
-                ss_size = len(state_space)
-            if ss_size != v_trans_probs.shape[0]:
-                raise ValueError('The size of the state space and the number of '
-                                 'rows of the transition matrix must be the same.')
-
-        return Basic.__new__(cls, sym, v_state_space, v_trans_probs)
-
-    @property
-    def index_of(self):
-        """Converts a state name to a state index i.e. inverts self.state_space."""
-        if isinstance(self.number_of_states, Integer):
-            indexes = {state: index for index, state in enumerate(self.state_space)}
-            # add `Symbol` values to the keys as well
-            for index, state in enumerate(self.state_space):
-                if isinstance(state, Symbol):
-                    indexes[str(state)] = index
-            return indexes
-        else:
-            if self.state_space == Range(self.number_of_states):
-                return self.state_space
-            # TODO: find an object that maps state spaces to state indexes
-            raise NotImplementedError('Cannot find the inverse mapping of %s.'
-                                      % self.state_space)
-
-    @property
-    def _state_index(self) -> Range:
-        """
-        Returns state index as Range.
-        """
-        return Range(self.number_of_states)
-
-    @property
-    def _is_numeric(self) -> bool:
-        """Checks whether the transition matrix has a numeric type and shape."""
-        trans_probs = self.transition_probabilities
-        n = self.number_of_states
-        if not isinstance(n, Integer):
-            return False
-        if isinstance(trans_probs, MatrixSymbol):
-            return False
-        return True
-
-    @property
-    def number_of_states(self) -> tUnion[Integer, Symbol]:
-        """
-        The number of states in the Markov Chain.
-        """
-        return _sympify(self.transition_probabilities.shape[0])
+        obj = Basic.__new__(cls, sym, state_space, trans_probs)
+        indices = dict()
+        if isinstance(obj.number_of_states, Integer):
+            for index, state in enumerate(obj._state_index):
+                indices[state] = index
+        obj.index_of = indices
+        return obj
 
     @property
     def transition_probabilities(self) -> tUnion[MatrixBase, MatrixSymbol]:
@@ -844,6 +963,142 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         return ImmutableMatrix(t2a)
 
+    def communication_classes(self) -> tList[tTuple[tList[Basic], Boolean, Integer]]:
+        """
+        Returns the list of communication classes that partition
+        the states of the markov chain.
+
+        A communication class is defined to be a set of states
+        such that every state in that set is reachable from
+        every other state in that set. Due to its properties
+        this forms a class in the mathematical sense.
+        Communication classes are also known as recurrence
+        classes.
+
+        Returns
+        =======
+
+        classes
+            The ``classes`` are a list of tuples. Each
+            tuple represents a single communication class
+            with its properties. The first element in the
+            tuple is the list of states in the class, the
+            second element is whether the class is recurrent
+            and the third element is the period of the
+            communication class.
+
+        Examples
+        ========
+
+        >>> from sympy.stats import DiscreteMarkovChain
+        >>> from sympy import Matrix
+        >>> T = Matrix([[0, 1, 0],
+        ...             [1, 0, 0],
+        ...             [1, 0, 0]])
+        >>> X = DiscreteMarkovChain('X', [1, 2, 3], T)
+        >>> classes = X.communication_classes()
+        >>> for states, is_recurrent, period in classes:
+        ...     states, is_recurrent, period
+        ([1, 2], True, 2)
+        ([3], False, 1)
+
+        From this we can see that states ``1`` and ``2``
+        communicate, are recurrent and have a period
+        of 2. We can also see state ``3`` is transient
+        with a period of 1.
+
+        Notes
+        =====
+
+        The algorithm used is of order ``O(n**2)`` where
+        ``n`` is the number of states in the markov chain.
+        It uses Tarjan's algorithm to find the classes
+        themselves and then it uses a breadth-first search
+        algorithm to find each class's periodicity.
+        Most of the algorithm's components approach ``O(n)``
+        as the matrix becomes more and more sparse.
+
+        References
+        ==========
+
+        .. [1] http://www.columbia.edu/~ww2040/4701Sum07/4701-06-Notes-MCII.pdf
+        .. [2] http://cecas.clemson.edu/~shierd/Shier/markov.pdf
+        .. [3] https://ujcontent.uj.ac.za/vital/access/services/Download/uj:7506/CONTENT1
+        .. [4] https://www.mathworks.com/help/econ/dtmc.classify.html
+        """
+        n = self.number_of_states
+        T = self.transition_probabilities
+
+        if isinstance(T, MatrixSymbol):
+            raise NotImplementedError("Cannot perform the operation with a symbolic matrix.")
+
+        # begin Tarjan's algorithm
+        V = Range(n)
+        # don't use state names. Rather use state
+        # indexes since we use them for matrix
+        # indexing here and later onward
+        E = [(i, j) for i in V for j in V if T[i, j] != 0]
+        classes = strongly_connected_components((V, E))
+        # end Tarjan's algorithm
+
+        recurrence = []
+        periods = []
+        for class_ in classes:
+            # begin recurrent check (similar to self._check_trans_probs())
+            submatrix = T[class_, class_]  # get the submatrix with those states
+            is_recurrent = S.true
+            rows = submatrix.tolist()
+            for row in rows:
+                if (sum(row) - 1) != 0:
+                    is_recurrent = S.false
+                    break
+            recurrence.append(is_recurrent)
+            # end recurrent check
+
+            # begin breadth-first search
+            non_tree_edge_values = set()
+            visited = {class_[0]}
+            newly_visited = {class_[0]}
+            level = {class_[0]: 0}
+            current_level = 0
+            done = False  # imitate a do-while loop
+            while not done:  # runs at most len(class_) times
+                done = len(visited) == len(class_)
+                current_level += 1
+
+                # this loop and the while loop above run a combined len(class_) number of times.
+                # so this triple nested loop runs through each of the n states once.
+                for i in newly_visited:
+
+                    # the loop below runs len(class_) number of times
+                    # complexity is around about O(n * avg(len(class_)))
+                    newly_visited = {j for j in class_ if T[i, j] != 0}
+
+                    new_tree_edges = newly_visited.difference(visited)
+                    for j in new_tree_edges:
+                        level[j] = current_level
+
+                    new_non_tree_edges = newly_visited.intersection(visited)
+                    new_non_tree_edge_values = {level[i]-level[j]+1 for j in new_non_tree_edges}
+
+                    non_tree_edge_values = non_tree_edge_values.union(new_non_tree_edge_values)
+                    visited = visited.union(new_tree_edges)
+
+            # igcd needs at least 2 arguments
+            positive_ntev = {val_e for val_e in non_tree_edge_values if val_e > 0}
+            if len(positive_ntev) == 0:
+                periods.append(len(class_))
+            elif len(positive_ntev) == 1:
+                periods.append(positive_ntev.pop())
+            else:
+                periods.append(igcd(*positive_ntev))
+            # end breadth-first search
+
+        # convert back to the user's state names
+        classes = [[self._state_index[i] for i in class_] for class_ in classes]
+
+        return sympify(list(zip(classes, recurrence, periods)))
+
     def fundamental_matrix(self):
         Q = self._transient2transient()
         if Q == None:
@@ -876,10 +1131,18 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return self.absorbing_probabilities()
 
     def is_regular(self):
-        w = self.fixed_row_vector()
-        if w is None or isinstance(w, (Lambda)):
-            return None
-        return all((wi > 0) == True for wi in w.row(0))
+        tuples = self.communication_classes()
+        if len(tuples) == 0:
+            return S.false  # not defined for a 0x0 matrix
+        classes, _, periods = list(zip(*tuples))
+        return And(len(classes) == 1, periods[0] == 1)
+
+    def is_ergodic(self):
+        tuples = self.communication_classes()
+        if len(tuples) == 0:
+            return S.false  # not defined for a 0x0 matrix
+        classes, _, _ = list(zip(*tuples))
+        return S(len(classes) == 1)
 
     def is_absorbing_state(self, state):
         trans_probs = self.transition_probabilities
@@ -888,24 +1151,101 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             return S(trans_probs[state, state]) is S.One
 
     def is_absorbing_chain(self):
+        states, A, B, C = self.decompose()
+        r = A.shape[0]
+        return And(r > 0, A == Identity(r).as_explicit())
+
+    def stationary_distribution(self, condition_set=False) -> tUnion[ImmutableMatrix, ConditionSet, Lambda]:
+        """
+        The stationary distribution is any row vector, p, that solves p = pP,
+        is row stochastic and each element in p must be nonnegative.
+        That means in matrix form: :math:`(P-I)^T p^T = 0` and
+        :math:`(1, ..., 1) p = 1`
+        where ``P`` is the one-step transition matrix.
+
+        All time-homogeneous Markov Chains with a finite state space
+        have at least one stationary distribution. In addition, if
+        a finite time-homogeneous Markov Chain is irreducible, the
+        stationary distribution is unique.
+
+        Parameters
+        ==========
+
+        condition_set : bool
+            If the chain has a symbolic size or transition matrix,
+            it will return a ``Lambda`` if ``False`` and return a
+            ``ConditionSet`` if ``True``.
+
+        Examples
+        ========
+
+        >>> from sympy.stats import DiscreteMarkovChain
+        >>> from sympy import Matrix, S
+
+        An irreducible Markov Chain
+
+        >>> T = Matrix([[S(1)/2, S(1)/2, 0],
+        ...             [S(4)/5, S(1)/5, 0],
+        ...             [1, 0, 0]])
+        >>> X = DiscreteMarkovChain('X', trans_probs=T)
+        >>> X.stationary_distribution()
+        Matrix([[8/13, 5/13, 0]])
+
+        A reducible Markov Chain
+
+        >>> T = Matrix([[S(1)/2, S(1)/2, 0],
+        ...             [S(4)/5, S(1)/5, 0],
+        ...             [0, 0, 1]])
+        >>> X = DiscreteMarkovChain('X', trans_probs=T)
+        >>> X.stationary_distribution()
+        Matrix([[8/13 - 8*tau0/13, 5/13 - 5*tau0/13, tau0]])
+
+        >>> Y = DiscreteMarkovChain('Y')
+        >>> Y.stationary_distribution()
+        Lambda((wm, _T), Eq(wm*_T, wm))
+
+        >>> Y.stationary_distribution(condition_set=True)
+        ConditionSet(wm, Eq(wm*_T, wm))
+
+        References
+        ==========
+
+        .. [1] https://www.probabilitycourse.com/chapter11/11_2_6_stationary_and_limiting_distributions.php
+        .. [2] https://galton.uchicago.edu/~yibi/teaching/stat317/2014/Lectures/Lecture4_6up.pdf
+
+        See Also
+        ========
+
+        sympy.stats.stochastic_process_types.DiscreteMarkovChain.limiting_distribution
+        """
         trans_probs = self.transition_probabilities
-        return any(self.is_absorbing_state(state) == True
-                    for state in range(trans_probs.shape[0]))
+        n = self.number_of_states
+
+        if n == 0:
+            return ImmutableMatrix(Matrix([[]]))
+
+        # symbolic matrix version
+        if isinstance(trans_probs, MatrixSymbol):
+            wm = MatrixSymbol('wm', 1, n)
+            if condition_set:
+                return ConditionSet(wm, Eq(wm * trans_probs, wm))
+            else:
+                return Lambda((wm, trans_probs), Eq(wm * trans_probs, wm))
+
+        # numeric matrix version
+        a = Matrix(trans_probs - Identity(n)).T
+        a[0, 0:n] = ones(1, n)
+        b = zeros(n, 1)
+        b[0, 0] = 1
+
+        soln = list(linsolve((a, b)))[0]
+        return ImmutableMatrix([[sol for sol in soln]])
 
     def fixed_row_vector(self):
-        trans_probs = self.transition_probabilities
-        if trans_probs == None:
-            return None
-        if isinstance(trans_probs, MatrixSymbol):
-            wm = MatrixSymbol('wm', 1, trans_probs.shape[0])
-            return Lambda((wm, trans_probs), Eq(wm*trans_probs, wm))
-        w = IndexedBase('w')
-        wi = [w[i] for i in range(trans_probs.shape[0])]
-        wm = Matrix([wi])
-        eqs = (wm*trans_probs - wm).tolist()[0]
-        eqs.append(sum(wi) - 1)
-        soln = list(linsolve(eqs, wi))[0]
-        return ImmutableMatrix([[sol for sol in soln]])
+        """
+        A wrapper for ``stationary_distribution()``.
+        """
+        return self.stationary_distribution()
 
     @property
     def limiting_distribution(self):
@@ -914,6 +1254,205 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         distribution of a discrete Markov chain.
         """
         return self.fixed_row_vector()
+
+    def decompose(self) -> tTuple[tList[Basic], ImmutableMatrix, ImmutableMatrix, ImmutableMatrix]:
+        """
+        Decomposes the transition matrix into submatrices with
+        special properties.
+
+        The transition matrix can be decomposed into 4 submatrices:
+        - A - the submatrix from recurrent states to recurrent states.
+        - B - the submatrix from transient to recurrent states.
+        - C - the submatrix from transient to transient states.
+        - O - the submatrix of zeros for recurrent to transient states.
+
+        Returns
+        =======
+
+        states, A, B, C
+            ``states`` - a list of state names with the first being
+            the recurrent states and the last being
+            the transient states in the order
+            of the row names of A and then the row names of C.
+            ``A`` - the submatrix from recurrent states to recurrent states.
+            ``B`` - the submatrix from transient to recurrent states.
+            ``C`` - the submatrix from transient to transient states.
+
+        Examples
+        ========
+
+        >>> from sympy.stats import DiscreteMarkovChain
+        >>> from sympy import Matrix, S
+
+        One can decompose this chain for example:
+
+        >>> T = Matrix([[S(1)/2, S(1)/2, 0,      0,      0],
+        ...             [S(2)/5, S(1)/5, S(2)/5, 0,      0],
+        ...             [0,      0,      1,      0,      0],
+        ...             [0,      0,      S(1)/2, S(1)/2, 0],
+        ...             [S(1)/2, 0,      0,      0, S(1)/2]])
+        >>> X = DiscreteMarkovChain('X', trans_probs=T)
+        >>> states, A, B, C = X.decompose()
+        >>> states
+        [2, 0, 1, 3, 4]
+
+        >>> A   # recurrent to recurrent
+        Matrix([[1]])
+
+        >>> B  # transient to recurrent
+        Matrix([
+        [  0],
+        [2/5],
+        [1/2],
+        [  0]])
+
+        >>> C  # transient to transient
+        Matrix([
+        [1/2, 1/2,   0,   0],
+        [2/5, 1/5,   0,   0],
+        [  0,   0, 1/2,   0],
+        [1/2,   0,   0, 1/2]])
+
+        This means that state 2 is the only absorbing state
+        (since A is a 1x1 matrix). B is a 4x1 matrix since
+        the 4 remaining transient states all merge into reccurent
+        state 2. And C is the 4x4 matrix that shows how the
+        transient states 0, 1, 3, 4 all interact.
+
+        See Also
+        ========
+
+        sympy.stats.stochastic_process_types.DiscreteMarkovChain.communication_classes
+        sympy.stats.stochastic_process_types.DiscreteMarkovChain.canonical_form
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Absorbing_Markov_chain
+        .. [2] http://people.brandeis.edu/~igusa/Math56aS08/Math56a_S08_notes015.pdf
+        """
+        trans_probs = self.transition_probabilities
+
+        classes = self.communication_classes()
+        r_states = []
+        t_states = []
+
+        for states, recurrent, period in classes:
+            if recurrent:
+                r_states += states
+            else:
+                t_states += states
+
+        states = r_states + t_states
+        indexes = [self.index_of[state] for state in states]
+
+        A = Matrix(len(r_states), len(r_states),
+                   lambda i, j: trans_probs[indexes[i], indexes[j]])
+
+        B = Matrix(len(t_states), len(r_states),
+                   lambda i, j: trans_probs[indexes[len(r_states) + i], indexes[j]])
+
+        C = Matrix(len(t_states), len(t_states),
+                   lambda i, j: trans_probs[indexes[len(r_states) + i], indexes[len(r_states) + j]])
+
+        return states, A.as_immutable(), B.as_immutable(), C.as_immutable()
+
+    def canonical_form(self) -> tTuple[tList[Basic], ImmutableMatrix]:
+        """
+        Reorders the one-step transition matrix
+        so that recurrent states appear first and transient
+        states appear last. Other representations include inserting
+        transient states first and recurrent states last.
+
+        Returns
+        =======
+
+        states, P_new
+            ``states`` is the list that describes the order of the
+            new states in the matrix
+            so that the ith element in ``states`` is the state of the
+            ith row of A.
+            ``P_new`` is the new transition matrix in canonical form.
+
+        Examples
+        ========
+
+        >>> from sympy.stats import DiscreteMarkovChain
+        >>> from sympy import Matrix, S
+
+        You can convert your chain into canonical form:
+
+        >>> T = Matrix([[S(1)/2, S(1)/2, 0,      0,      0],
+        ...             [S(2)/5, S(1)/5, S(2)/5, 0,      0],
+        ...             [0,      0,      1,      0,      0],
+        ...             [0,      0,      S(1)/2, S(1)/2, 0],
+        ...             [S(1)/2, 0,      0,      0, S(1)/2]])
+        >>> X = DiscreteMarkovChain('X', list(range(1, 6)), trans_probs=T)
+        >>> states, new_matrix = X.canonical_form()
+        >>> states
+        [3, 1, 2, 4, 5]
+
+        >>> new_matrix
+        Matrix([
+        [  1,   0,   0,   0,   0],
+        [  0, 1/2, 1/2,   0,   0],
+        [2/5, 2/5, 1/5,   0,   0],
+        [1/2,   0,   0, 1/2,   0],
+        [  0, 1/2,   0,   0, 1/2]])
+
+        The new states are [3, 1, 2, 4, 5] and you can
+        create a new chain with this and its canonical
+        form will remain the same (since it is already
+        in canonical form).
+
+        >>> X = DiscreteMarkovChain('X', states, new_matrix)
+        >>> states, new_matrix = X.canonical_form()
+        >>> states
+        [3, 1, 2, 4, 5]
+
+        >>> new_matrix
+        Matrix([
+        [  1,   0,   0,   0,   0],
+        [  0, 1/2, 1/2,   0,   0],
+        [2/5, 2/5, 1/5,   0,   0],
+        [1/2,   0,   0, 1/2,   0],
+        [  0, 1/2,   0,   0, 1/2]])
+
+        This is not limited to absorbing chains:
+
+        >>> T = Matrix([[0, 5,  5, 0,  0],
+        ...             [0, 0,  0, 10, 0],
+        ...             [5, 0,  5, 0,  0],
+        ...             [0, 10, 0, 0,  0],
+        ...             [0, 3,  0, 3,  4]])/10
+        >>> X = DiscreteMarkovChain('X', trans_probs=T)
+        >>> states, new_matrix = X.canonical_form()
+        >>> states
+        [1, 3, 0, 2, 4]
+
+        >>> new_matrix
+        Matrix([
+        [   0,    1,   0,   0,   0],
+        [   1,    0,   0,   0,   0],
+        [ 1/2,    0,   0, 1/2,   0],
+        [   0,    0, 1/2, 1/2,   0],
+        [3/10, 3/10,   0,   0, 2/5]])
+
+        See Also
+        ========
+
+        sympy.stats.stochastic_process_types.DiscreteMarkovChain.communication_classes
+        sympy.stats.stochastic_process_types.DiscreteMarkovChain.decompose
+
+        References
+        ==========
+
+        .. [1] https://onlinelibrary.wiley.com/doi/pdf/10.1002/9780470316887.app1
+        .. [2] http://www.columbia.edu/~ww2040/6711F12/lect1023big.pdf
+        """
+        states, A, B, C = self.decompose()
+        O = zeros(A.shape[0], C.shape[1])
+        return states, BlockMatrix([[A, O], [B, C]]).as_explicit()
 
     def sample(self):
         """
@@ -936,7 +1475,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             densities[state] = {states[i]: Tlist[state][i]
                         for i in range(len(states))}
         while time < S.Infinity:
-            samps.append((next(sample_iter(FiniteRV("_", densities[samps[time - 1]])))))
+            samps.append(next(sample_iter(FiniteRV("_", densities[samps[time - 1]]))))
             yield samps[time]
             time += 1
 
@@ -956,12 +1495,59 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     Examples
     ========
 
-    >>> from sympy.stats import ContinuousMarkovChain
-    >>> from sympy import Matrix, S
+    >>> from sympy.stats import ContinuousMarkovChain, P
+    >>> from sympy import Matrix, S, Eq, Gt
     >>> G = Matrix([[-S(1), S(1)], [S(1), -S(1)]])
     >>> C = ContinuousMarkovChain('C', state_space=[0, 1], gen_mat=G)
     >>> C.limiting_distribution()
     Matrix([[1/2, 1/2]])
+    >>> C.state_space
+    FiniteSet(0, 1)
+    >>> C.generator_matrix
+    Matrix([
+    [-1,  1],
+    [ 1, -1]])
+
+    Probability queries are supported
+
+    >>> P(Eq(C(1.96), 0), Eq(C(0.78), 1)).round(5)
+    0.45279
+    >>> P(Gt(C(1.7), 0), Eq(C(0.82), 1)).round(5)
+    0.58602
+
+    Probability of expressions with multiple RandomIndexedSymbols
+    can also be calculated provided there is only 1 RandomIndexedSymbol
+    in the given condition. It is always better to use Rational instead
+    of floating point numbers for the probabilities in the
+    generator matrix to avoid errors.
+
+    >>> from sympy import Gt, Le, Rational
+    >>> G = Matrix([[-S(1), Rational(1, 10), Rational(9, 10)], [Rational(2, 5), -S(1), Rational(3, 5)], [Rational(1, 2), Rational(1, 2), -S(1)]])
+    >>> C = ContinuousMarkovChain('C', state_space=[0, 1, 2], gen_mat=G)
+    >>> P(Eq(C(3.92), C(1.75)), Eq(C(0.46), 0)).round(5)
+    0.37933
+    >>> P(Gt(C(3.92), C(1.75)), Eq(C(0.46), 0)).round(5)
+    0.34211
+    >>> P(Le(C(1.57), C(3.14)), Eq(C(1.22), 1)).round(4)
+    0.7143
+
+    Symbolic probability queries are also supported
+
+    >>> from sympy import S, symbols, Matrix, Rational, Eq, Gt
+    >>> from sympy.stats import P, ContinuousMarkovChain
+    >>> a,b,c,d = symbols('a b c d')
+    >>> G = Matrix([[-S(1), Rational(1, 10), Rational(9, 10)], [Rational(2, 5), -S(1), Rational(3, 5)], [Rational(1, 2), Rational(1, 2), -S(1)]])
+    >>> C = ContinuousMarkovChain('C', state_space=[0, 1, 2], gen_mat=G)
+    >>> query = P(Eq(C(a), b), Eq(C(c), d))
+    >>> query.subs({a:3.65 ,b:2, c:1.78, d:1}).evalf().round(10)
+    0.4002723175
+    >>> P(Eq(C(3.65), 2), Eq(C(1.78), 1)).round(10)
+    0.4002723175
+    >>> query_gt = P(Gt(C(a), b), Eq(C(c), d))
+    >>> query_gt.subs({a:43.2 ,b:0, c:3.29, d:2}).evalf().round(10)
+    0.6832579186
+    >>> P(Gt(C(43.2), 0), Eq(C(3.29), 2)).round(10)
+    0.6832579186
 
     References
     ==========
@@ -971,12 +1557,16 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     """
     index_set = S.Reals
 
-    def __new__(cls, sym, state_space=S.Reals, gen_mat=None):
+    def __new__(cls, sym, state_space=None, gen_mat=None):
         sym = _symbol_converter(sym)
-        state_space = _set_converter(state_space)
-        if gen_mat != None:
-            gen_mat = _matrix_checks(gen_mat)
-        return Basic.__new__(cls, sym, state_space, gen_mat)
+        state_space, gen_mat = MarkovProcess._sanity_checks(state_space, gen_mat)
+        obj = Basic.__new__(cls, sym, state_space, gen_mat)
+        indices = dict()
+        if isinstance(obj.number_of_states, Integer):
+            for index, state in enumerate(obj.state_space):
+                indices[state] = index
+        obj.index_of = indices
+        return obj
 
     @property
     def generator_matrix(self):

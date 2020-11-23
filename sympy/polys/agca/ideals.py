@@ -1,12 +1,11 @@
 """Computations with ideals of polynomial rings."""
 
-from __future__ import print_function, division
 
 from sympy.core.compatibility import reduce
 from sympy.polys.polyerrors import CoercionFailed
 
 
-class Ideal(object):
+class Ideal:
     """
     Abstract base class for ideals.
 

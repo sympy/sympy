@@ -85,8 +85,17 @@ Series Classes
 .. autoclass:: sympy.plotting.plot_implicit::ImplicitSeries
    :members:
 
+Backends
+--------
 
+.. autoclass:: sympy.plotting.plot::BaseBackend
+   :members:
 
+.. autoclass:: sympy.plotting.plot::MatplotlibBackend
+   :members:
+
+.. autoclass:: sympy.plotting.plot::TextBackend
+   :members:
 
 Pyglet Plotting
 ---------------
@@ -279,7 +288,7 @@ line at a random point on the ellipse.
 
     In [2]: c = Circle(Point(0,0), 1)
 
-    In [3]: t = c.tangent_line(c.random_point())
+    In [3]: t = c.tangent_lines(c.random_point())
 
     In [4]: p[0] = c
 

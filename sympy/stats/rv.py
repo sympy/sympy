@@ -13,7 +13,6 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
-from __future__ import print_function, division
 
 from functools import singledispatch
 from typing import Tuple as tTuple
@@ -134,8 +133,8 @@ class ConditionalDomain(RandomDomain):
     sympy.stats.frv.ConditionalFiniteDomain
     """
     def __new__(cls, fulldomain, condition):
-        condition = condition.xreplace(dict((rs, rs.symbol)
-            for rs in random_symbols(condition)))
+        condition = condition.xreplace({rs: rs.symbol
+            for rs in random_symbols(condition)})
         return Basic.__new__(cls, fulldomain, condition)
 
     @property
@@ -216,10 +215,7 @@ class SinglePSpace(PSpace):
     attributed to a single variable/symbol.
     """
     def __new__(cls, s, distribution):
-        if isinstance(s, str):
-            s = Symbol(s)
-        if not isinstance(s, Symbol):
-            raise TypeError("s should have been string or Symbol")
+        s = _symbol_converter(s)
         return Basic.__new__(cls, s, distribution)
 
     @property
@@ -270,10 +266,7 @@ class RandomSymbol(Expr):
         if pspace is None:
             # Allow single arg, representing pspace == PSpace()
             pspace = PSpace()
-        if isinstance(symbol, str):
-            symbol = Symbol(symbol)
-        if not isinstance(symbol, Symbol):
-            raise TypeError("symbol should be of type Symbol or string")
+        symbol = _symbol_converter(symbol)
         if not isinstance(pspace, PSpace):
             raise TypeError("pspace variable should be of type PSpace")
         if cls == JointRandomSymbol and isinstance(pspace, SinglePSpace):
@@ -395,7 +388,7 @@ class IndependentProductPSpace(ProductPSpace):
     @property
     def pdf(self):
         p = Mul(*[space.pdf for space in self.spaces])
-        return p.subs(dict((rv, rv.symbol) for rv in self.values))
+        return p.subs({rv: rv.symbol for rv in self.values})
 
     @property
     def rs_space_dict(self):
@@ -490,7 +483,7 @@ class IndependentProductPSpace(ProductPSpace):
 
     def conditional_space(self, condition, normalize=True, **kwargs):
         rvs = random_symbols(condition)
-        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
+        condition = condition.xreplace({rv: rv.symbol for rv in self.values})
         if any([pspace(rv).is_Continuous for rv in rvs]):
             from sympy.stats.crv import (ConditionalContinuousDomain,
                 ContinuousPSpace)
@@ -549,8 +542,8 @@ class ProductDomain(RandomDomain):
 
     @property
     def sym_domain_dict(self):
-        return dict((symbol, domain) for domain in self.domains
-                                     for symbol in domain.symbols)
+        return {symbol: domain for domain in self.domains
+                                     for symbol in domain.symbols}
 
     @property
     def symbols(self):
@@ -775,11 +768,6 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     from sympy.stats.symbolic_probability import Expectation
     if evaluate:
         return Expectation(expr, condition).doit(**kwargs)
-    ### TODO: Remove the user warnings in the future releases
-    message = ("Since version 1.7, using `evaluate=False` returns `Expectation` "
-              "object. If you want unevaluated Integral/Sum use "
-              "`E(expr, condition, evaluate=False).rewrite(Integral)`")
-    warnings.warn(filldedent(message))
     return Expectation(expr, condition)
 
 
@@ -1430,7 +1418,7 @@ def rv_subs(expr, symbols=None):
     swapdict = {rv: rv.symbol for rv in symbols}
     return expr.subs(swapdict)
 
-class NamedArgsMixin(object):
+class NamedArgsMixin:
     _argnames = ()  # type: tTuple[str, ...]
 
     def __getattr__(self, attr):

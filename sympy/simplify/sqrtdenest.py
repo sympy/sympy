@@ -258,6 +258,9 @@ def _sqrtdenest0(expr):
 def _sqrtdenest_rec(expr):
     """Helper that denests the square root of three or more surds.
 
+    Explanation
+    ===========
+
     It returns the denested expression; if it cannot be denested it
     throws SqrtdenestStopIteration
 
@@ -379,7 +382,9 @@ def _sqrt_symbolic_denest(a, b, r):
     """Given an expression, sqrt(a + b*sqrt(b)), return the denested
     expression or None.
 
-    Algorithm:
+    Explanation
+    ===========
+
     If r = ra + rb*sqrt(rr), try replacing sqrt(rr) in ``a`` with
     (y**2 - ra)/rb, and if the result is a quadratic, ca*y**2 + cb*y + cc, and
     (cb + b)**2 - 4*ca*cc is 0, then sqrt(a + b*sqrt(r)) can be rewritten as
@@ -464,7 +469,9 @@ def sqrt_biquadratic_denest(expr, a, b, r, d2):
 
     If it cannot denest it returns None.
 
-    ALGORITHM
+    Explanation
+    ===========
+
     Search for a solution A of type SQRR of the biquadratic equation
     4*A**4 - 4*a*A**2 + b**2*r = 0                               (1)
     sqd = sqrt(a**2 - b**2*r)
@@ -530,6 +537,9 @@ def sqrt_biquadratic_denest(expr, a, b, r, d2):
 
 def _denester(nested, av0, h, max_depth_level):
     """Denests a list of expressions that contain nested square roots.
+
+    Explanation
+    ===========
 
     Algorithm based on <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
 
