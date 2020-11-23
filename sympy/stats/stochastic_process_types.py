@@ -374,7 +374,7 @@ class MarkovProcess(StochasticProcess):
             if isinstance(v_state_space, Range):
                 ss_size = ceiling((v_state_space.stop - v_state_space.start) / v_state_space.step)
             else:
-                ss_size = len(v_state_space)
+                ss_size = Integer(len(v_state_space))
             if ss_size != v_trans_probs.shape[0]:
                 raise ValueError('The size of the state space and the number of '
                                  'rows of the transition matrix must be the same.')
