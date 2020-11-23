@@ -472,6 +472,21 @@ def test_issue_14547():
     e = foot + 1
     assert e.is_Add and set(e.args) == {foot, 1}
 
+def test_issue_20288():
+    # the issue was that sympy was not considering the results of 
+    # mathematical functions as dimensionless
+    from sympy.physics.units import energy
+    from sympy.core.numbers import E
+    from sympy import sympify
+    u = Quantity('u')
+    v = Quantity('v')
+    SI.set_quantity_dimension(u, energy)
+    SI.set_quantity_dimension(v, energy)
+    u.set_global_relative_scale_factor(1, energy)
+    v.set_global_relative_scale_factor(1, energy)
+    expr = 1 + exp(u/v)
+    assert (sympify(1 + E), Dimension(1)) == SI._collect_factor_and_dimension(expr)
+
 
 def test_deprecated_quantity_methods():
     step = Quantity("step")
