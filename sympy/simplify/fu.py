@@ -1180,7 +1180,6 @@ def TRmorrie(rv):
         for a in args:
             c = args[a]
             c.sort()
-            no = []
             while c:
                 k = 0
                 cc = ci = c[0]
