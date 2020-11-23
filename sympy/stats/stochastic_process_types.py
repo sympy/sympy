@@ -360,10 +360,10 @@ class MarkovProcess(StochasticProcess):
 
         elif trans_probs is None:
             v_state_space = _state_converter(state_space)
-            if isinstance(state_space, Range):
-                _n = ceiling((state_space.stop - state_space.start) / state_space.step)
+            if isinstance(v_state_space, Range):
+                _n = ceiling((v_state_space.stop - v_state_space.start) / v_state_space.step)
             else:
-                _n = len(state_space)
+                _n = Integer(len(v_state_space))
             v_trans_probs = MatrixSymbol('_T', _n, _n)
 
         else:
