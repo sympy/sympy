@@ -34,7 +34,7 @@ Lie Algebra
 .. autoclass:: sympy.liealgebras.cartan_type.CartanType_generator
     :members:
 
-.. autoclass:: sympy.liealgebras.cartan_type.Standard_Cartan
+.. autoclass:: sympy.liealgebras.cartan_base.Standard_Cartan
     :members:
 
 .. autofunction:: sympy.liealgebras.dynkin_diagram.DynkinDiagram
