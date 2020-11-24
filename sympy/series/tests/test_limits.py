@@ -18,7 +18,6 @@ from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, y, z, k
 n = Symbol('n', integer=True, positive=True)
 
-
 def test_basic1():
     assert limit(x, x, oo) is oo
     assert limit(x, x, -oo) is -oo
@@ -77,7 +76,7 @@ def test_basic1():
     assert limit(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
     assert limit((1 + cos(x))**oo, x, 0) == Limit((cos(x) + 1)**oo, x, 0)
 
-
+    
 def test_basic2():
     assert limit(x**x, x, 0, dir="+") == 1
     assert limit((exp(x) - 1)/x, x, 0) == 1
@@ -381,11 +380,9 @@ def test_order_oo():
     assert Order(x)*oo != Order(1, x)
     assert limit(oo/(x**2 - 4), x, oo) is oo
 
-
 def test_issue_5436():
     raises(NotImplementedError, lambda: limit(exp(x*y), x, oo))
     raises(NotImplementedError, lambda: limit(exp(-x*y), x, oo))
-
 
 def test_Limit_dir():
     raises(TypeError, lambda: Limit(x, x, 0, dir=0))
@@ -895,3 +892,16 @@ def test_issue_19770():
     m = Symbol('m', nonzero=True)
     assert limit(cos(m*x), x, oo) == AccumBounds(-1, 1)
     assert limit(cos(m*x)/x, x, oo) == 0
+
+def test_issue_19823():
+    # Original issue
+    limit((-1)**n/n,n,oo)
+    # Other alternating sign tests modified from test_limitseq.py
+    assert limit((-1)**n/n**2, n, oo) == 0
+    assert limit((-2)**(n+1)/(n + 3**n), n, oo) == 0
+    assert limit((2*n + (-1)**n)/(n + 1), n, oo) == 2
+    assert limit(sin(pi*n), n, oo) == 0
+    assert limit(cos(2*pi*n), n, oo) == 1
+    assert limit((S.NegativeOne/5)**n, n, oo) == 0
+    assert limit((Rational(-1, 5))**n, n, oo) == 0
+

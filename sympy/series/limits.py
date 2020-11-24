@@ -7,7 +7,8 @@ from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
 from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.simplify import together
-from .gruntz import gruntz
+from .gruntz import gruntz, SignException
+#from sympy.series.limitseq import limitseq
 
 def limit(e, z, z0, dir="+"):
     """Computes the limit of ``e(z)`` at the point ``z0``.
@@ -59,8 +60,7 @@ def limit(e, z, z0, dir="+"):
 
      limit_seq : returns the limit of a sequence.
     """
-
-    return Limit(e, z, z0, dir).doit(deep=False)
+    return Limit(e, z, z0, dir).doit(deep=False, seq=False)
 
 
 def heuristics(e, z, z0, dir):
@@ -144,7 +144,6 @@ class Limit(Expr):
         e = sympify(e)
         z = sympify(z)
         z0 = sympify(z0)
-
         if z0 is S.Infinity:
             dir = "-"
         elif z0 is S.NegativeInfinity:
@@ -184,7 +183,8 @@ class Limit(Expr):
             taking the limit.
 
         hints : optional keyword arguments
-            To be passed to ``doit`` methods; only used if deep is True.
+            To be passed to ``doit`` methods; only used if deep is True
+            or if seq is True.
         """
         from sympy import Abs, exp, log, sign
         from sympy.calculus.util import AccumBounds
@@ -329,6 +329,31 @@ class Limit(Expr):
                 r = gruntz(e, z, z0, dir)
             if r is S.NaN or l is S.NaN:
                 raise PoleError()
+        except SignException as er:
+            sig = er.sign
+            r = None
+            # seq is True if and only if the function call originates from limitseq.py
+            # rather than limits.py. In the former case, we return r as normal.
+            if (hints.get('seq', True)):
+                return r
+            # The purpose of exception handling here is to attempt to compute limits of expressions
+            # which do not exist for non-integer values (i.e. expressions like (-1)**x). The solution
+            # is to compute the limit using limit_seq() from the limitseq module, but this is only
+            # valid if we are computing a limit to infinity and, currently, if the expression has no
+            # complex terms.
+            if (z0 is not S.Infinity):
+                raise NotImplementedError('Result depending on the sign of %s must be a limit toward oo' % sig)
+                return r
+            from sympy.core.numbers import I
+            if (e.has(I) or len(e.free_symbols) > 1):
+                raise NotImplementedError('Result depends on the sign of %s' % sig)
+                return r
+            from .limitseq import limit_seq
+            try:
+                return limit_seq(e, z)
+            except:
+                raise NotImplementedError('Result depends on the sign of %s' % sig)
+            return r
         except (PoleError, ValueError):
             if l is not None:
                 raise
