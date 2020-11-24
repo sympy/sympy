@@ -12,7 +12,6 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.series.limits import Limit
 
 
 def difference_delta(expr, n=None, step=1):
@@ -105,8 +104,9 @@ def dominant(expr, n):
 
 
 def _limit_inf(expr, n):
+    from sympy.series.limits import Limit
     try:
-        return Limit(expr, n, S.Infinity).doit(deep=False)
+        return Limit(expr, n, S.Infinity).doit(deep=False, seq=True)
     except (NotImplementedError, PoleError):
         return None
 

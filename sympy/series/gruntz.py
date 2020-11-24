@@ -127,7 +127,18 @@ from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
 
+class SignException(Exception):
+    """
+    Custom exception thrown in the rewrite() function if there exists a term
+    in the limit with a sign not equal to 1 or -1.
 
+    "sig" should be the sign of the problematic term.
+
+    See the Limit().doit function in limits.py for how this exception is dealt
+    with.
+    """
+    def __init__(self, sig):
+        self.sign = sig
 
 def compare(a, b, x):
     """Returns "<" if a<b, "=" for a == b, ">" for a>b"""
@@ -591,7 +602,7 @@ def rewrite(e, Omega, x, wsym):
     for g, _ in Omega:
         sig = sign(g.args[0], x)
         if sig != 1 and sig != -1:
-            raise NotImplementedError('Result depends on the sign of %s' % sig)
+            raise SignException(sig)
     if sig == 1:
         wsym = 1/wsym  # if g goes to oo, substitute 1/w
     # O2 is a list, which results by rewriting each item in Omega using "w"
