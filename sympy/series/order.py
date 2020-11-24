@@ -377,7 +377,7 @@ class Order(Expr):
             ratio = powsimp(ratio, deep=True, combine='exp')
             for s in common_symbols:
                 from sympy.series.limits import Limit
-                l = Limit(ratio, s, point).doit(heuristics=False)
+                l = Limit(ratio, s, point).doit(heuristics=False,seq=False)
                 if not isinstance(l, Limit):
                     l = l != 0
                 else:

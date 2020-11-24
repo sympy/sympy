@@ -8,7 +8,6 @@ from sympy.series.order import Order
 from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.simplify import together
 from .gruntz import gruntz, SignException
-#from sympy.series.limitseq import limitseq
 
 def limit(e, z, z0, dir="+"):
     """Computes the limit of ``e(z)`` at the point ``z0``.
@@ -316,7 +315,6 @@ class Limit(Expr):
                     return res
 
         l = None
-
         try:
             if str(dir) == '+-':
                 r = gruntz(e, z, z0, '+')
@@ -351,7 +349,7 @@ class Limit(Expr):
             from .limitseq import limit_seq
             try:
                 return limit_seq(e, z)
-            except:
+            except (NotImplementedError):
                 raise NotImplementedError('Result depends on the sign of %s' % sig)
             return r
         except (PoleError, ValueError):

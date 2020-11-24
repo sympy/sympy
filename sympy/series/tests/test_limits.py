@@ -904,4 +904,3 @@ def test_issue_19823():
     assert limit(cos(2*pi*n), n, oo) == 1
     assert limit((S.NegativeOne/5)**n, n, oo) == 0
     assert limit((Rational(-1, 5))**n, n, oo) == 0
-
