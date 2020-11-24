@@ -1275,6 +1275,7 @@ def _create_evalf_table():
     from sympy.functions.elementary.piecewise import Piecewise
     from sympy.functions.elementary.trigonometric import atan, cos, sin
     from sympy.integrals.integrals import Integral
+    from sympy.integrals.risch import NonElementaryIntegral
     evalf_table = {
         Symbol: evalf_symbol,
         Dummy: evalf_symbol,
@@ -1310,6 +1311,7 @@ def _create_evalf_table():
         ceiling: evalf_ceiling,
 
         Integral: evalf_integral,
+        NonElementaryIntegral: evalf_integral,
         Sum: evalf_sum,
         Product: evalf_prod,
         Piecewise: evalf_piecewise,

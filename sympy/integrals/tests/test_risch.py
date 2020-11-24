@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
     Symbol, Lambda, sin, Ne, Piecewise, factor, expand_log, cancel,
-    diff, pi, atan, Rational)
+    diff, pi, atan, Rational, Float)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -731,3 +731,7 @@ def test_DifferentialExtension_printing():
     assert str(DE) == ("DifferentialExtension({fa=Poly(t1 + t0**2, t1, domain='ZZ[t0]'), "
         "fd=Poly(1, t1, domain='ZZ'), D=[Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "
         "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]})")
+
+def test_NonElementaryIntegral_evalf():
+    I = NonElementaryIntegral(x**x, (x, 0, 1))
+    assert I.evalf(10) == Float('0.783430510712134', 10)
