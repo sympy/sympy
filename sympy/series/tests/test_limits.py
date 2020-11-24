@@ -76,7 +76,7 @@ def test_basic1():
     assert limit(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
     assert limit((1 + cos(x))**oo, x, 0) == Limit((cos(x) + 1)**oo, x, 0)
 
-    
+
 def test_basic2():
     assert limit(x**x, x, 0, dir="+") == 1
     assert limit((exp(x) - 1)/x, x, 0) == 1
