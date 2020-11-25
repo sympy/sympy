@@ -182,7 +182,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     >>> from sympy.abc import _clash1
     >>> _clash1
-    {'C': C, 'E': E, 'I': I, 'N': N, 'O': O, 'Q': Q, 'S': S}
+    {'O': O, 'Q': Q, 'N': N, 'I': I, 'E': E, 'S': S}
     >>> sympify('I & Q', _clash1)
     I & Q
 
