@@ -87,14 +87,14 @@ class Standard_Cartan(Basic):
         Explanation
         ===========
         The weights of an algebra, lambda, can be
-        written as a linear combination of the simple roots, \alpha_i.
+        written as a linear combination of the simple roots, alpha_i.
         The following theorem,
 
         a_i = 2<lambda, alpha_i> / <alpha_i, alpha_i>
 
         where a_i are the Dynkin labels.  The fundamental weights
         of the algebra are the weights, lambda, with the smallest a_i >=0.
-        Note that if lambda_i==\alpha_i, then the Dynkin labels become
+        Note that if lambda_i==alpha_i, then the Dynkin labels become
         the elements of the Cartan matrix.
 
         Sources
