@@ -796,7 +796,7 @@ class Permutation(Atom):
     of that group, the check will fail.
 
     Here is an example for n=5 and we check if the cycle
-    :math:`(1,2,3) \in G`:
+    (1,2,3) is in G:
 
     >>> from sympy import init_printing
     >>> init_printing(perm_cyclic=True, pretty_print=False)
@@ -819,8 +819,8 @@ class Permutation(Atom):
 
     The check for p2 above will fail.
 
-    Checking if :math:`p_1 \in G` works because SymPy knows
-    G is a group on 5 symbols, and :math:`p_1` is also on 5 symbols
+    Checking if p1 is in G works because SymPy knows
+    G is a group on 5 symbols, and p1 is also on 5 symbols
     (its largest element is 5).
 
     For ``a1``, the ``.list(6)`` call will extend the permutation to 5
