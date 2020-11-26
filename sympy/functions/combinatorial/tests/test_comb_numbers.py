@@ -440,18 +440,15 @@ def test_genocchi():
 def test_motzkin():
     n = Symbol('n')
     _k = Dummy('k')
-    raises(TypeError, lambda: motzkin.find_first_n_motzkin(n))
     raises(TypeError, lambda: motzkin.find_motzkin_numbers_in_range(1, n))
     raises(TypeError, lambda: motzkin.find_motzkin_numbers_in_range(n, 10))
-    raises(TypeError, lambda: motzkin.is_prime(n))
     raises(TypeError, lambda: motzkin.is_motzkin(n))
 
     #Test rewrite rules
     assert motzkin(n).rewrite(Sum).dummy_eq(Sum(binomial(n, 2*_k)*catalan(_k), (_k, 0, floor(n/2))))
     assert motzkin(n).rewrite(binomial).dummy_eq(Sum(binomial(2*_k, _k)*binomial(n, 2*_k)/(_k + 1), (_k, 0, floor(n/2))))
-    assert motzkin(n).rewrite(hyper) == hyper((0.5 - 0.5*n, -0.5*n), (2,), 4)
 
-    motzkins = motzkin.find_first_n_motzkin(30)
+    motzkins = [motzkin.motzkin(i) for i in range(30)]
     assert motzkins == [1, 1, 2, 4, 9, 21, 51, 127, 323, 835, 2188, 5798, 15511,
         41835, 113634, 310572, 853467, 2356779, 6536382,
         18199284, 50852019, 142547559, 400763223, 1129760415,
@@ -460,12 +457,8 @@ def test_motzkin():
     for i in range(2, 30):
         assert motzkins[i] == ((2*i + 1)*motzkins[i - 1] + (3*i - 3)*motzkins[i - 2])/(i + 2)
         assert motzkin.is_motzkin(motzkins[i]) == i
-    assert str(motzkin(12 + 3*I)) == '-14747.6404547208 + 2553.0328001417*I'
     assert motzkin.find_motzkin_numbers_in_range(100000000000, 1000000000000) == [208023278209, 593742784829]
     assert motzkin.is_motzkin(953467954114362) == False
-    assert motzkin.is_motzkin(9 + 4*I) == False
-    assert motzkin.is_prime(953467954114363) == True
-    assert motzkin.is_prime(953467954114361) == False
 
 @nocache_fail
 def test_partition():
