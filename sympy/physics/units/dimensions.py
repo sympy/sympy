@@ -10,8 +10,6 @@ no time dimension (but a velocity dimension instead) - in the basis - so the
 question of adding time to length has no meaning.
 """
 
-from __future__ import division
-
 from typing import Dict as tDict
 
 import collections
@@ -24,7 +22,7 @@ from sympy.core.power import Pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
-class _QuantityMapper(object):
+class _QuantityMapper:
 
     _quantity_scale_factors_global = {}  # type: tDict[Expr, Expr]
     _quantity_dimensional_equivalence_map_global = {}  # type: tDict[Expr, Expr]
@@ -207,7 +205,7 @@ class Dimension(Expr):
                 raise TypeError("cannot sum dimension and quantity")
             if isinstance(other, Dimension) and self == other:
                 return self
-            return super(Dimension, self).__add__(other)
+            return super().__add__(other)
         return self
 
     def __radd__(self, other):
@@ -239,7 +237,7 @@ class Dimension(Expr):
                 return Dimension(self.name*other.name)
             if not other.free_symbols:  # other.is_number cannot be used
                 return self
-            return super(Dimension, self).__mul__(other)
+            return super().__mul__(other)
         return self
 
     def __rmul__(self, other):
@@ -454,7 +452,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             else:
                 return get_for_name(result)
 
-        raise TypeError("Type {0} not implemented for get_dimensional_dependencies".format(type(name)))
+        raise TypeError("Type {} not implemented for get_dimensional_dependencies".format(type(name)))
 
     def get_dimensional_dependencies(self, name, mark_dimensionless=False):
         dimdep = self._get_dimensional_dependencies_for_name(name)
@@ -563,7 +561,7 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         List all canonical dimension names.
         """
-        dimset = set([])
+        dimset = set()
         for i in self.base_dims:
             dimset.update(set(self.get_dimensional_dependencies(i).keys()))
         return tuple(sorted(dimset, key=str))

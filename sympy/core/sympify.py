@@ -1,6 +1,8 @@
 """sympify -- convert objects SymPy internal format"""
 
-# from typing import Any, Callable, Dict, Type
+import typing
+if typing.TYPE_CHECKING:
+    from typing import Any, Callable, Dict, Type
 
 from inspect import getmro
 
@@ -23,7 +25,7 @@ class SympifyError(ValueError):
 
 
 # See sympify docstring.
-converter = {}  ## type: Dict[Type[Any], Callable[[Any], Basic]]
+converter = {}  # type: Dict[Type[Any], Callable[[Any], Basic]]
 
 
 class CantSympify:
@@ -342,8 +344,13 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     #
     # https://github.com/sympy/sympy/issues/20124
     is_sympy = getattr(a, '__sympy__', None)
-    if is_sympy is True or (is_sympy is not None and not strict):
+    if is_sympy is True:
         return a
+    elif is_sympy is not None:
+        if not strict:
+            return a
+        else:
+            raise SympifyError(a)
 
     if isinstance(a, CantSympify):
         raise SympifyError(a)
@@ -611,4 +618,4 @@ def kernS(s):
 
 
 # Avoid circular import
-# from .basic import Basic
+from .basic import Basic

@@ -17,7 +17,6 @@ non-implemented methods. They may also supply new implementations of the
 convenience methods, for example if there are faster algorithms available.
 """
 
-from __future__ import print_function, division
 
 from copy import copy
 
@@ -40,7 +39,7 @@ from sympy.core.basic import _aresame
 ##########################################################################
 
 
-class Module(object):
+class Module:
     """
     Abstract base class for modules.
 
@@ -156,7 +155,7 @@ class Module(object):
         raise NotImplementedError
 
 
-class ModuleElement(object):
+class ModuleElement:
     """
     Base class for module element wrappers.
 

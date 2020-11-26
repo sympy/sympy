@@ -898,7 +898,7 @@ class Float(Number):
     It may be preferable to enter high-precision decimal numbers
     as strings:
 
-    Float('1.23456789123456789')
+    >>> Float('1.23456789123456789')
     1.23456789123456789
 
     The desired number of digits can also be specified:
@@ -3276,7 +3276,7 @@ class NaN(Number, metaclass=Singleton):
 
 nan = S.NaN
 
-@dispatch(NaN, Expr)
+@dispatch(NaN, Expr) # type:ignore
 def _eval_is_eq(a, b): # noqa:F811
     return False
 
@@ -3909,7 +3909,7 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
 
 I = S.ImaginaryUnit
 
-@dispatch(Tuple, Number)
+@dispatch(Tuple, Number) # type:ignore
 def _eval_is_eq(self, other): # noqa: F811
     return False
 

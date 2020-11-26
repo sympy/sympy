@@ -4,8 +4,6 @@
 # -Implement new simpifications
 """Clebsch-Gordon Coefficients."""
 
-from __future__ import print_function, division
-
 from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
                    symbols, sympify, Wild)
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
@@ -27,7 +25,10 @@ __all__ = [
 
 
 class Wigner3j(Expr):
-    """Class for the Wigner-3j symbols
+    """Class for the Wigner-3j symbols.
+
+    Explanation
+    ===========
 
     Wigner 3j-symbols are coefficients determined by the coupling of
     two angular momenta. When created, they are expressed as symbolic
@@ -147,7 +148,10 @@ class Wigner3j(Expr):
 
 
 class CG(Wigner3j):
-    r"""Class for Clebsch-Gordan coefficient
+    r"""Class for Clebsch-Gordan coefficient.
+
+    Explanation
+    ===========
 
     Clebsch-Gordan coefficients describe the angular momentum coupling between
     two systems. The coefficients give the expansion of a coupled total angular
@@ -411,7 +415,10 @@ class Wigner9j(Expr):
 
 
 def cg_simp(e):
-    """Simplify and combine CG coefficients
+    """Simplify and combine CG coefficients.
+
+    Explanation
+    ===========
 
     This function uses various symmetry and properties of sums and
     products of Clebsch-Gordan coefficients to simplify statements
@@ -456,6 +463,9 @@ def _cg_simp_add(e):
     #TODO: Improve simplification method
     """Takes a sum of terms involving Clebsch-Gordan coefficients and
     simplifies the terms.
+
+    Explanation
+    ===========
 
     First, we create two lists, cg_part, which is all the terms involving CG
     coefficients, and other_part, which is all other terms. The cg_part list

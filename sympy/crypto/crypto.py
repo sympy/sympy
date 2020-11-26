@@ -298,8 +298,8 @@ def encipher_rot13(msg, symbols=None):
     """
     Performs the ROT13 encryption on a given plaintext ``msg``.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     ROT13 is a substitution cipher which substitutes each letter
     in the plaintext message for the letter furthest away from it
@@ -326,8 +326,8 @@ def decipher_rot13(msg, symbols=None):
     """
     Performs the ROT13 decryption on a given plaintext ``msg``.
 
-    Notes
-    =====
+    Explanation
+    ============
 
     ``decipher_rot13`` is equivalent to ``encipher_rot13`` as both
     ``decipher_shift`` with a key of 13 and ``encipher_shift`` key with a
@@ -359,6 +359,9 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
     r"""
     Performs the affine cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
+
+    Explanation
+    ===========
 
     Encryption is based on the map `x \rightarrow ax+b` (mod `N`)
     where ``N`` is the number of characters in the alphabet.
@@ -463,8 +466,8 @@ def encipher_atbash(msg, symbols=None):
     r"""
     Enciphers a given ``msg`` into its Atbash ciphertext and returns it.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     Atbash is a substitution cipher originally used to encrypt the Hebrew
     alphabet. Atbash works on the principle of mapping each alphabet to its
@@ -486,8 +489,8 @@ def decipher_atbash(msg, symbols=None):
     r"""
     Deciphers a given ``msg`` using Atbash cipher and returns it.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     ``decipher_atbash`` is functionally equivalent to ``encipher_atbash``.
     However, it has still been added as a separate function to maintain
@@ -530,8 +533,8 @@ def encipher_substitution(msg, old, new=None):
     If ``old`` is a mapping, then new is ignored and the replacements
     defined by ``old`` are used.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     This is a more general than the affine cipher in that the key can
     only be recovered by determining the mapping for each symbol.
@@ -612,8 +615,8 @@ def encipher_vigenere(msg, key, symbols=None):
     >>> decipher_vigenere(msg, key, alp)
     'BETWEENSUBTLESHADINGANDTHEABSENC'
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     The Vigenere cipher is named after Blaise de Vigenere, a sixteenth
     century diplomat and cryptographer, by a historical accident.
@@ -785,8 +788,8 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
     r"""
     Return the Hill cipher encryption of ``msg``.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     The Hill cipher [1]_, invented by Lester S. Hill in the 1920's [2]_,
     was the first polygraphic cipher in which it was practical
@@ -1156,6 +1159,9 @@ def encipher_bifid5(msg, key):
     Performs the Bifid cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
 
+    Explanation
+    ===========
+
     This is the version of the Bifid cipher that uses the `5 \times 5`
     Polybius square. The letter "J" is ignored so it must be replaced
     with something else (traditionally an "I") before encryption.
@@ -1258,6 +1264,9 @@ def encipher_bifid5(msg, key):
 def decipher_bifid5(msg, key):
     r"""
     Return the Bifid cipher decryption of ``msg``.
+
+    Explanation
+    ===========
 
     This is the version of the Bifid cipher that uses the `5 \times 5`
     Polybius square; the letter "J" is ignored unless a ``key`` of
@@ -1449,7 +1458,7 @@ def _decipher_rsa_crt(i, d, factors):
         Ciphertext
 
     d : integer
-        The exponent component
+        The exponent component.
 
     factors : list of relatively-prime integers
         The integers given must be coprime and the product must equal
@@ -1491,7 +1500,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
     ==========
 
     public, private : bool, optional
-        Flag to generate either a public key, a private key
+        Flag to generate either a public key, a private key.
 
     totient : 'Euler' or 'Carmichael'
         Different notation used for totient.
@@ -2041,6 +2050,11 @@ def decipher_rsa(i, key, factors=None):
 
     >>> decipher_rsa(new_msg, prk, factors=[p, q])
     12
+
+    See Also
+    ========
+
+    encipher_rsa
     """
     return _encipher_decipher_rsa(i, key, factors=factors)
 
@@ -2052,6 +2066,9 @@ def kid_rsa_public_key(a, b, A, B):
     r"""
     Kid RSA is a version of RSA useful to teach grade school children
     since it does not involve exponentiation.
+
+    Explanation
+    ===========
 
     Alice wants to talk to Bob. Bob generates keys as follows.
     Key generation:
@@ -2185,7 +2202,7 @@ char_morse = {v: k for k, v in morse_char.items()}
 def encode_morse(msg, sep='|', mapping=None):
     """
     Encodes a plaintext into popular Morse Code with letters
-    separated by `sep` and words by a double `sep`.
+    separated by ``sep`` and words by a double ``sep``.
 
     Examples
     ========
@@ -2231,7 +2248,7 @@ def encode_morse(msg, sep='|', mapping=None):
 
 def decode_morse(msg, sep='|', mapping=None):
     """
-    Decodes a Morse Code with letters separated by `sep`
+    Decodes a Morse Code with letters separated by ``sep``
     (default is '|') and words by `word_sep` (default is '||)
     into plaintext.
 
@@ -2523,6 +2540,9 @@ def elgamal_private_key(digit=10, seed=None):
     r"""
     Return three number tuple as private key.
 
+    Explanation
+    ===========
+
     Elgamal encryption is based on the mathmatical problem
     called the Discrete Logarithm Problem (DLP). For example,
 
@@ -2603,7 +2623,10 @@ def elgamal_public_key(key):
 
 def encipher_elgamal(i, key, seed=None):
     r"""
-    Encrypt message with public key
+    Encrypt message with public key.
+
+    Explanation
+    ===========
 
     ``i`` is a plaintext message expressed as an integer.
     ``key`` is public key (p, r, e). In order to encrypt
@@ -2660,7 +2683,7 @@ def encipher_elgamal(i, key, seed=None):
 
 def decipher_elgamal(msg, key):
     r"""
-    Decrypt message with private key
+    Decrypt message with private key.
 
     `msg = (c_{1}, c_{2})`
 
@@ -2702,6 +2725,9 @@ def decipher_elgamal(msg, key):
 def dh_private_key(digit=10, seed=None):
     r"""
     Return three integer tuple as private key.
+
+    Explanation
+    ===========
 
     Diffie-Hellman key exchange is based on the mathematical problem
     called the Discrete Logarithm Problem (see ElGamal).
@@ -2850,7 +2876,7 @@ def dh_shared_key(key, b):
 def _legendre(a, p):
     """
     Returns the legendre symbol of a and p
-    assuming that p is a prime
+    assuming that p is a prime.
 
     i.e. 1 if a is a quadratic residue mod p
         -1 if a is not a quadratic residue mod p
@@ -2894,6 +2920,9 @@ def gm_private_key(p, q, a=None):
     Check if ``p`` and ``q`` can be used as private keys for
     the Goldwasser-Micali encryption. The method works
     roughly as follows.
+
+    Explanation
+    ===========
 
     $\\cdot$ Pick two large primes $p$ and $q$.
 
@@ -2963,7 +2992,7 @@ def gm_private_key(p, q, a=None):
 
 def gm_public_key(p, q, a=None, seed=None):
     """
-    Compute public keys for p and q.
+    Compute public keys for ``p`` and ``q``.
     Note that in Goldwasser-Micali Encryption,
     public keys are randomly selected.
 
@@ -3143,6 +3172,9 @@ def bg_private_key(p, q):
     Check if p and q can be used as private keys for
     the Blum-Goldwasser cryptosystem.
 
+    Explanation
+    ===========
+
     The three necessary checks for p and q to pass
     so that they can be used as private keys:
 
@@ -3185,6 +3217,9 @@ def bg_public_key(p, q):
     """
     Calculates public keys from private keys.
 
+    Explanation
+    ===========
+
     The function first checks the validity of
     private keys passed as arguments and
     then returns their product.
@@ -3209,6 +3244,9 @@ def bg_public_key(p, q):
 def encipher_bg(i, key, seed=None):
     """
     Encrypts the message using public key and seed.
+
+    Explanation
+    ===========
 
     ALGORITHM:
         1. Encodes i as a string of L bits, m.
@@ -3271,6 +3309,9 @@ def encipher_bg(i, key, seed=None):
 def decipher_bg(message, key):
     """
     Decrypts the message using private keys.
+
+    Explanation
+    ===========
 
     ALGORITHM:
         1. Let, c be the encrypted message, y the second number received,

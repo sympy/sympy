@@ -1,10 +1,9 @@
 """Options manager for :class:`~.Poly` and public API functions. """
 
-from __future__ import print_function, division
 
 __all__ = ["Options"]
 
-# from typing import Dict, Type
+from typing import Dict, Type
 from typing import List, Optional
 
 from sympy.core import Basic, sympify
@@ -16,7 +15,7 @@ import sympy.polys
 
 import re
 
-class Option(object):
+class Option:
     """Base class for all kinds of options. """
 
     option = None  # type: Optional[str]
@@ -124,7 +123,7 @@ class Options(dict):
     """
 
     __order__ = None
-    __options__ = {}  ## type: Dict[str, Type[Option]]
+    __options__ = {}  # type: Dict[str, Type[Option]]
 
     def __init__(self, gens, args, flags=None, strict=False):
         dict.__init__(self)
@@ -186,7 +185,7 @@ class Options(dict):
     def _init_dependencies_order(cls):
         """Resolve the order of options' processing. """
         if cls.__order__ is None:
-            vertices, edges = [], set([])
+            vertices, edges = [], set()
 
             for name, option in cls.__options__.items():
                 vertices.append(name)
@@ -219,7 +218,7 @@ class Options(dict):
         if attr in self.__options__:
             self[attr] = value
         else:
-            super(Options, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
 
     @property
     def args(self):
@@ -557,7 +556,7 @@ class Extension(Option, metaclass=OptionType):
             raise OptionError("'False' is an invalid argument for 'extension'")
         else:
             if not hasattr(extension, '__iter__'):
-                extension = set([extension])
+                extension = {extension}
             else:
                 if not extension:
                     extension = None

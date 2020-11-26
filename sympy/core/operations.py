@@ -1,10 +1,10 @@
 from operator import attrgetter
-from typing import Tuple
+from typing import Tuple, Type
 from collections import defaultdict
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy.core.sympify import _sympify, sympify
+from sympy.core.sympify import _sympify as _sympify_, sympify
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered
@@ -34,23 +34,23 @@ class AssocOp(Basic):
         Arguments which are operated
 
     evaluate : bool, optional
-        Default is ``True``. If ``False``, do not evaluate the operation.
+        Evaluate the operation. If not passed, refer to ``global_parameters.evaluate``.
     """
 
     # for performance reason, we don't let is_commutative go to assumptions,
     # and keep it right here
     __slots__ = ('is_commutative',)  # type: Tuple[str, ...]
 
-    _args_type = None
+    _args_type = None  # type: Type[Basic]
 
     @cacheit
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, evaluate=None, _sympify=True):
         from sympy import Order
 
         # Allow faster processing by passing ``_sympify=False``, if all arguments
         # are already sympified.
-        if options.get('_sympify', True):
-            args = list(map(_sympify, args))
+        if _sympify:
+            args = list(map(_sympify_, args))
 
         # Disallow non-Expr args in Add/Mul
         typ = cls._args_type
@@ -68,7 +68,6 @@ class AssocOp(Basic):
                     deprecated_since_version="1.7"
                 ).warn()
 
-        evaluate = options.get('evaluate')
         if evaluate is None:
             evaluate = global_parameters.evaluate
         if not evaluate:
@@ -480,7 +479,7 @@ class LatticeOp(AssocOp):
     is_commutative = True
 
     def __new__(cls, *args, **options):
-        args = (_sympify(arg) for arg in args)
+        args = (_sympify_(arg) for arg in args)
 
         try:
             # /!\ args is a generator and _new_args_filter
@@ -612,7 +611,7 @@ class AssocOpDispatcher:
         self._dispatcher.add(tuple(reversed(classes)), typ, on_ambiguity=on_ambiguity)
 
     @cacheit
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, _sympify=True, **kwargs):
         """
         Parameters
         ==========
@@ -620,14 +619,12 @@ class AssocOpDispatcher:
         *args :
             Arguments which are operated
         """
-        if kwargs.get('_sympify', True):
-            args = tuple(map(_sympify, args))
+        if _sympify:
+            args = tuple(map(_sympify_, args))
         handlers = frozenset(map(self._handlergetter, args))
 
-        # If _sympify=True was passed, no need to sympify again so pass _sympify=False.
-        # If _sympify=False was passed, all args are already sympified so pass _sympify=False.
-        kwargs.update(_sympify=False)
-        return self.dispatch(handlers)(*args, **kwargs)
+        # no need to sympify again
+        return self.dispatch(handlers)(*args, _sympify=False, **kwargs)
 
     @cacheit
     def dispatch(self, handlers):

@@ -1,6 +1,5 @@
 """Implementation of :class:`PolynomialRing` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain

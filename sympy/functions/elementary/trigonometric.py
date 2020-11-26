@@ -1,5 +1,8 @@
+from typing import Tuple
+
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
+from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool
 from sympy.core.numbers import igcdex, Rational, pi
@@ -2008,7 +2011,7 @@ class sinc(Function):
 
 class InverseTrigonometricFunction(Function):
     """Base class for inverse trigonometric functions."""
-    _singularities = (1, -1, 0, S.ComplexInfinity)
+    _singularities = (S.One, S.NegativeOne, S.Zero, S.ComplexInfinity)  # type: Tuple[Expr, ...]
 
     @staticmethod
     def _asin_table():

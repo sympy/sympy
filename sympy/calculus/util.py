@@ -1523,7 +1523,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
     if is_lt(lhs.max, rhs.min):
         return False
 
-@dispatch(AccumulationBounds, Expr)
+@dispatch(AccumulationBounds, Expr)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa: F811
     """
     Returns True if range of values attained by `lhs` AccumulationBounds
@@ -1555,7 +1555,7 @@ def _eval_is_ge(lhs, rhs): # noqa: F811
             return False
 
 
-@dispatch(Expr, AccumulationBounds)
+@dispatch(Expr, AccumulationBounds)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if not lhs.is_extended_real:
         raise TypeError(
@@ -1568,7 +1568,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
             return False
 
 
-@dispatch(AccumulationBounds, AccumulationBounds)
+@dispatch(AccumulationBounds, AccumulationBounds)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if is_ge(lhs.min, rhs.max):
         return True

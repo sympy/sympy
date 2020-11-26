@@ -1,7 +1,5 @@
 """Fourier Series"""
 
-from __future__ import print_function, division
-
 from sympy import pi, oo, Wild
 from sympy.core.expr import Expr
 from sympy.core.add import Add
