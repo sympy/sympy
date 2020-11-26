@@ -79,8 +79,6 @@ def test_DiscreteMarkovChain():
     TS = MatrixSymbol('T', 3, 3)
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     YS = DiscreteMarkovChain("Y", ['One', 'Two', 3], TS)
-    assert YS._transient2transient() == None
-    assert YS._transient2absorbing() == None
     assert Y.joint_distribution(1, Y[2], 3) == JointDistribution(Y[1], Y[2], Y[3])
     raises(ValueError, lambda: Y.joint_distribution(Y[1].symbol, Y[2].symbol))
     assert P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2) == Float(0.36, 2)
@@ -119,10 +117,9 @@ def test_DiscreteMarkovChain():
 
     # testing properties of Markov chain
     TO2 = Matrix([[S.One, 0, 0],[Rational(1, 3), Rational(1, 3), Rational(1, 3)],[0, Rational(1, 4), Rational(3, 4)]])
-    TO3 = Matrix([[Rational(1, 4), Rational(3, 4), 0],[Rational(1, 3), Rational(1, 3), Rational(1, 3)],[0, Rational(1, 4), Rational(3, 4)]])
+    TO3 = Matrix([[Rational(1, 4), Rational(3, 4), 0],[Rational(1, 3), Rational(1, 3), Rational(1, 3)], [0, Rational(1, 4), Rational(3, 4)]])
     Y2 = DiscreteMarkovChain('Y', trans_probs=TO2)
     Y3 = DiscreteMarkovChain('Y', trans_probs=TO3)
-    assert Y3._transient2absorbing() == None
     raises (ValueError, lambda: Y3.fundamental_matrix())
     assert Y2.is_absorbing_chain() == True
     assert Y3.is_absorbing_chain() == False
@@ -142,8 +139,6 @@ def test_DiscreteMarkovChain():
     assert Y5.stationary_distribution(condition_set=True).subs(TS1, TO4).contains(w).doit() == S.true
     TO6 = Matrix([[S.One, 0, 0, 0, 0],[S.Half, 0, S.Half, 0, 0],[0, S.Half, 0, S.Half, 0], [0, 0, S.Half, 0, S.Half], [0, 0, 0, 0, 1]])
     Y6 = DiscreteMarkovChain('Y', trans_probs=TO6)
-    assert Y6._transient2absorbing() == ImmutableMatrix([[S.Half, 0], [0, 0], [0, S.Half]])
-    assert Y6._transient2transient() == ImmutableMatrix([[0, S.Half, 0], [S.Half, 0, S.Half], [0, S.Half, 0]])
     assert Y6.fundamental_matrix() == ImmutableMatrix([[Rational(3, 2), S.One, S.Half], [S.One, S(2), S.One], [S.Half, S.One, Rational(3, 2)]])
     assert Y6.absorbing_probabilities() == ImmutableMatrix([[Rational(3, 4), Rational(1, 4)], [S.Half, S.Half], [Rational(1, 4), Rational(3, 4)]])
 

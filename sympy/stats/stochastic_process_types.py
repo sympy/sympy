@@ -1055,11 +1055,11 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return sympify(list(zip(classes, recurrence, periods)))
 
     def fundamental_matrix(self):
-        Q = self._transient2transient()
+        _, _, _, Q = self.decompose()
         if Q == None:
             return None
         I = eye(Q.shape[0])
-        if (I - Q).det() == 0:
+        if Q.shape[0]*Q.shape[1] == 0 or (I - Q).det() == 0:
             raise ValueError("Fundamental matrix doesn't exists.")
         return ImmutableMatrix((I - Q).inv().tolist())
 
@@ -1070,9 +1070,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         probability of Markov chain being absorbed
         in state j starting from state i.
         """
-        R = self._transient2absorbing()
+        _, _, R, _ = self.decompose()
         N = self.fundamental_matrix()
-        if R == None or N == None:
+        if R is None or N is None:
             return None
         return N*R
 
