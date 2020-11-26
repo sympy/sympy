@@ -918,48 +918,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         """
         return self.args[2]
 
-    def _transient2transient(self):
-        """
-        Computes the one step probabilities of transient
-        states to transient states. Used in finding
-        fundamental matrix, absorbing probabilities.
-        """
-        trans_probs = self.transition_probabilities
-        if not isinstance(trans_probs, ImmutableMatrix):
-            return None
-
-        m = trans_probs.shape[0]
-        trans_states = [i for i in range(m) if trans_probs[i, i] != 1]
-        t2t = [[trans_probs[si, sj] for sj in trans_states] for si in trans_states]
-
-        return ImmutableMatrix(t2t)
-
-    def _transient2absorbing(self):
-        """
-        Computes the one step probabilities of transient
-        states to absorbing states. Used in finding
-        fundamental matrix, absorbing probabilities.
-        """
-        trans_probs = self.transition_probabilities
-        if not isinstance(trans_probs, ImmutableMatrix):
-            return None
-
-        m, trans_states, absorb_states = \
-            trans_probs.shape[0], [], []
-        for i in range(m):
-            if trans_probs[i, i] == 1:
-                absorb_states.append(i)
-            else:
-                trans_states.append(i)
-
-        if not absorb_states or not trans_states:
-            return None
-
-        t2a = [[trans_probs[si, sj] for sj in absorb_states]
-                for si in trans_states]
-
-        return ImmutableMatrix(t2a)
-
     def communication_classes(self) -> tList[tTuple[tList[Basic], Boolean, Integer]]:
         """
         Returns the list of communication classes that partition
