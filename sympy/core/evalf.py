@@ -1327,7 +1327,12 @@ def evalf(x, prec, options):
         # Fall back to ordinary evalf if possible
         if 'subs' in options:
             x = x.subs(evalf_subs(prec, options['subs']))
-        xe = x._eval_evalf(prec)
+        if hasattr(x, '_eval_evalf_options'):
+            xe = x._eval_evalf_options(prec_to_dps(prec), options)
+            if xe is None:
+                xe = x._eval_evalf(prec)
+        else:
+            xe = x._eval_evalf(prec)
         if xe is None:
             raise NotImplementedError
         as_real_imag = getattr(xe, "as_real_imag", None)
@@ -1473,7 +1478,12 @@ class EvalfMixin:
             result = evalf(self, prec + 4, options)
         except NotImplementedError:
             # Fall back to the ordinary evalf
-            v = self._eval_evalf(prec)
+            v = self._eval_evalf_options(n, options)
+            if v is None:
+                if hasattr(self, 'subs') and subs is not None:
+                    v = self.subs(subs)._eval_evalf(prec)
+                else:
+                    v = self._eval_evalf(prec)
             if v is None:
                 return self
             elif not v.is_number:
@@ -1507,6 +1517,9 @@ class EvalfMixin:
         return r
 
     def _eval_evalf(self, prec):
+        return
+
+    def _eval_evalf_options(self, n, options):
         return
 
     def _to_mpmath(self, prec, allow_ints=True):
