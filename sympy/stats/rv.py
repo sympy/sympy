@@ -1418,6 +1418,7 @@ def rv_subs(expr, symbols=None):
     swapdict = {rv: rv.symbol for rv in symbols}
     return expr.subs(swapdict)
 
+
 class NamedArgsMixin:
     _argnames = ()  # type: tTuple[str, ...]
 
@@ -1427,6 +1428,55 @@ class NamedArgsMixin:
         except ValueError:
             raise AttributeError("'%s' object has no attribute '%s'" % (
                 type(self).__name__, attr))
+
+
+class Distribution(Basic):
+
+    def sample(self, size=(), library='scipy'):
+        """ A random realization from the distribution """
+
+        module = import_module(library)
+        if library in {'scipy', 'numpy', 'pymc3'} and module is None:
+            raise ValueError("Failed to import %s" % library)
+
+        if library == 'scipy':
+            # scipy does not require map as it can handle using custom distributions.
+            # However, we will still use a map where we can.
+
+            # TODO: do this for drv.py and frv.py if necessary.
+            # TODO: add more distributions here if there are more
+            # See links below referring to sections beginning with "A common parametrization..."
+            # I will remove all these comments if everything is ok.
+
+            samps = self._do_sample_scipy(size)
+        elif library == 'numpy':
+            samps = self._do_sample_numpy(size)
+        elif library == 'pymc3':
+            import pymc3
+            with pymc3.Model():
+                if self._do_sample_pymc3():
+                    samps = pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+                else:
+                    samps = None
+        else:
+            raise NotImplementedError("Sampling from %s is not supported yet."
+                                      % str(library))
+
+        if samps is not None:
+            return samps
+        raise NotImplementedError(
+            "Sampling for %s is not currently implemented from %s"
+            % (self.__class__.__name__, library))
+
+    def _do_sample_scipy(self, size):
+        return None
+
+    def _do_sample_numpy(self, size):
+        return None
+
+    def _do_sample_pymc3(self):
+        return None
+
 
 def _value_check(condition, message):
     """

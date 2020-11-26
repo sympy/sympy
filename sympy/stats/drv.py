@@ -6,60 +6,18 @@ from sympy.polys.polyerrors import PolynomialError
 from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
                             random_symbols, PSpace, ConditionalDomain, RandomDomain,
-                            ProductDomain)
+                            ProductDomain, Distribution)
 from sympy.stats.symbolic_probability import Probability
 from sympy.sets.fancysets import Range, FiniteSet
 from sympy.sets.sets import Union
 from sympy.sets.contains import Contains
 from sympy.utilities import filldedent
 from sympy.core.sympify import _sympify
-from sympy.external import import_module
 
 
-class DiscreteDistribution(Basic):
+class DiscreteDistribution(Distribution):
     def __call__(self, *args):
         return self.pdf(*args)
-
-
-class SampleDiscreteScipy:
-    """Returns the sample from scipy of the given distribution"""
-    def __new__(cls, dist, size):
-        return cls._sample_scipy(dist, size)
-
-    @classmethod
-    def _sample_scipy(cls, dist, size):
-        """Sample from SciPy."""
-        return dist._do_sample_scipy(size)
-
-
-class SampleDiscreteNumpy:
-    """Returns the sample from numpy of the given distribution"""
-
-    def __new__(cls, dist, size):
-        return cls._sample_numpy(dist, size)
-
-    @classmethod
-    def _sample_numpy(cls, dist, size):
-        """Sample from NumPy."""
-        return dist._do_sample_numpy(size)
-
-
-class SampleDiscretePymc:
-    """Returns the sample from pymc3 of the given distribution"""
-
-    def __new__(cls, dist, size):
-        return cls._sample_pymc3(dist, size)
-
-    @classmethod
-    def _sample_pymc3(cls, dist, size):
-        """Sample from PyMC3."""
-        import pymc3
-
-        with pymc3.Model():
-            out = dist._do_sample_pymc3()
-            if out is None:
-                return None
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 
 class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
@@ -82,39 +40,6 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     @staticmethod
     def check(*args):
         pass
-
-    def sample(self, size=(), library='scipy'):
-        """ A random realization from the distribution"""
-
-        library_map = {
-            'scipy': SampleDiscreteScipy,
-            'pymc3': SampleDiscretePymc,
-            'numpy': SampleDiscreteNumpy
-        }
-
-        if library not in library_map:
-            raise NotImplementedError("Sampling from %s is not supported yet."
-                                        % str(library))
-        if not import_module(library):
-            raise ValueError("Failed to import %s" % library)
-
-        samps = library_map[library](self, size)
-
-        if samps is not None:
-            return samps
-        raise NotImplementedError(
-                "Sampling for %s is not currently implemented from %s"
-                % (self.__class__.__name__, library)
-                )
-
-    def _do_sample_scipy(self, size):
-        return None
-
-    def _do_sample_numpy(self, size):
-        return None
-
-    def _do_sample_pymc3(self):
-        return None
 
     @cacheit
     def compute_cdf(self, **kwargs):

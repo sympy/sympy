@@ -1132,6 +1132,12 @@ def test_sympy__stats__drv__DiscreteDistribution():
 def test_sympy__stats__drv__DiscreteDomain():
     pass
 
+
+@SKIP("abstract class")
+def test_sympy__stats__rv__Distribution():
+    pass
+
+
 def test_sympy__stats__rv__RandomDomain():
     from sympy.stats.rv import RandomDomain
     from sympy.sets.sets import FiniteSet

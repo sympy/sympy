@@ -19,8 +19,7 @@ from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
                             PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
-                            sumsets, rv_subs, NamedArgsMixin, Density)
-from sympy.external import import_module
+                            sumsets, rv_subs, NamedArgsMixin, Density, Distribution)
 
 
 class FiniteDensity(dict):
@@ -180,7 +179,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
         return FiniteDomain.as_boolean(self)
 
 
-class SingleFiniteDistribution(Basic, NamedArgsMixin):
+class SingleFiniteDistribution(Distribution, NamedArgsMixin):
     def __new__(cls, *args):
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
@@ -226,12 +225,6 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
             y.append(float(v))
         scipy_rv = rv_discrete(name='scipy_rv', values=(x, y))
         return scipy_rv.rvs(size=size)
-
-    def _do_sample_numpy(self, size):
-        return None
-
-    def _do_sample_pymc3(self):
-        return None
 
 
 #=============================================
@@ -360,67 +353,7 @@ class FinitePSpace(PSpace):
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-
-        library_map = {
-            'scipy': SampleFiniteScipy,
-            'pymc3': SampleFinitePymc,
-            'numpy': SampleFiniteNumpy,
-        }
-        if library not in library_map:
-            raise NotImplementedError("Sampling from %s is not supported yet."
-                                        % str(library))
-        if not import_module(library):
-            raise ValueError("Failed to import %s" % library)
-
-        samps = library_map[library](self.distribution, size)
-
-        if samps is not None:
-            return {self.value: samps}
-        raise NotImplementedError(
-                "Sampling for %s is not currently implemented from %s"
-                % (self.__class__.__name__, library)
-                )
-
-
-class SampleFiniteScipy:
-    """Returns the sample from scipy of the given distribution"""
-    def __new__(cls, dist, size):
-        return cls._sample_scipy(dist, size)
-
-    @classmethod
-    def _sample_scipy(cls, dist, size):
-        """Sample from SciPy."""
-        return dist._do_sample_scipy(size)
-
-
-class SampleFiniteNumpy:
-    """Returns the sample from numpy of the given distribution"""
-
-    def __new__(cls, dist, size):
-        return cls._sample_numpy(dist, size)
-
-    @classmethod
-    def _sample_numpy(cls, dist, size):
-        """Sample from NumPy."""
-        return dist._do_sample_numpy(size)
-
-
-class SampleFinitePymc:
-    """Returns the sample from pymc3 of the given distribution"""
-
-    def __new__(cls, dist, size):
-        return cls._sample_pymc3(dist, size)
-
-    @classmethod
-    def _sample_pymc3(cls, dist, size):
-        """Sample from PyMC3."""
-        import pymc3
-
-        with pymc3.Model():
-            out = dist._do_sample_pymc3()
-            if out is None:
-                return None
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+        return {self.value: self.distribution.sample(size, library)}
 
 
 class SingleFinitePSpace(SinglePSpace, FinitePSpace):

@@ -19,9 +19,8 @@ from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.core.sympify import _sympify
-from sympy.external import import_module
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain, is_random,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
+        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin, Distribution)
 
 
 class ContinuousDomain(RandomDomain):
@@ -140,58 +139,9 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 "Set of Conditional Domain not Implemented")
 
 
-class ContinuousDistribution(Basic):
+class ContinuousDistribution(Distribution):
     def __call__(self, *args):
         return self.pdf(*args)
-
-
-class SampleContinuousScipy:
-    """Returns the sample from scipy of the given distribution"""
-    def __new__(cls, dist, size):
-        return cls._sample_scipy(dist, size)
-
-    @classmethod
-    def _sample_scipy(cls, dist, size):
-        """Sample from SciPy."""
-        # scipy does not require map as it can handle using custom distributions.
-        # However, we will still use a map where we can.
-
-        # TODO: do this for drv.py and frv.py if necessary.
-        # TODO: add more distributions here if there are more
-        # See links below referring to sections beginning with "A common parametrization..."
-        # I will remove all these comments if everything is ok.
-
-        return dist._do_sample_scipy(size)
-
-
-class SampleContinuousNumpy:
-    """Returns the sample from numpy of the given distribution"""
-
-    def __new__(cls, dist, size):
-        return cls._sample_numpy(dist, size)
-
-    @classmethod
-    def _sample_numpy(cls, dist, size):
-        """Sample from NumPy."""
-        return dist._do_sample_numpy(size)
-
-
-class SampleContinuousPymc:
-    """Returns the sample from pymc3 of the given distribution"""
-
-    def __new__(cls, dist, size):
-        return cls._sample_pymc3(dist, size)
-
-    @classmethod
-    def _sample_pymc3(cls, dist, size):
-        """Sample from PyMC3."""
-        import pymc3
-
-        with pymc3.Model():
-            out = dist._do_sample_pymc3()
-            if out is None:
-                return None
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
 
 
 class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
@@ -219,29 +169,6 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     @staticmethod
     def check(*args):
         pass
-
-    def sample(self, size=(), library='scipy'):
-        """ A random realization from the distribution """
-
-        library_map = {
-            'scipy': SampleContinuousScipy,
-            'pymc3': SampleContinuousPymc,
-            'numpy': SampleContinuousNumpy
-        }
-
-        if library not in library_map:
-            raise NotImplementedError("Sampling from %s is not supported yet."
-                                        % str(library))
-        if not import_module(library):
-            raise ValueError("Failed to import %s" % library)
-
-        samps = library_map[library](self, size)
-
-        if samps is not None:
-            return samps
-        raise NotImplementedError(
-                "Sampling for %s is not currently implemented from %s"
-                % (self.__class__.__name__, library))
 
     def _do_sample_scipy(self, size):
         # if we don't need to make a handmade pdf, we won't
