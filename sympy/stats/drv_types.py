@@ -60,6 +60,22 @@ class DiscreteDistributionHandmade(SingleDiscreteDistribution):
         val = Sum(pdf(x), (x, set._inf, set._sup)).doit()
         _value_check(Eq(val, 1) != S.false, "The pdf is incorrect on the given set.")
 
+    def _do_sample_scipy(self, size):
+        from scipy.stats import rv_discrete
+        from sympy import lambdify
+
+        z = Dummy('z')
+        handmade_pmf = lambdify(z, self.pdf(z), ['numpy', 'scipy'])
+
+        class scipy_pmf(rv_discrete):
+            def _pmf(self, x):
+                return handmade_pmf(x)
+
+        scipy_rv = scipy_pmf(a=float(self.set._inf), b=float(self.set._sup),
+                             name='scipy_pmf')
+        return scipy_rv.rvs(size=size)
+
+
 def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
     """
     Create a Discrete Random Variable given the following:
@@ -127,6 +143,18 @@ class GeometricDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         p = self.p
         return p * exp(t) / (1 - (1 - p) * exp(t))
+
+    def _do_sample_scipy(self, size):
+        import scipy.stats
+        return scipy.stats.geom.rvs(p=float(self.p), size=size)
+
+    def _do_sample_numpy(self, size):
+        import numpy
+        return numpy.random.geometric(p=float(self.p), size=size)
+
+    def _do_sample_pymc3(self):
+        import pymc3
+        return pymc3.Geometric('X', p=float(self.p))
 
 
 def Geometric(name, p):
@@ -287,6 +315,10 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
         p = self.p
         return log(1 - p * exp(t)) / log(1 - p)
 
+    def _do_sample_scipy(self, size):
+        import scipy.stats
+        return scipy.stats.logser.rvs(p=float(self.p), size=size)
+
 
 def Logarithmic(name, p):
     r"""
@@ -367,6 +399,14 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
 
         return ((1 - p) / (1 - p * exp(t)))**r
 
+    def _do_sample_scipy(self, size):
+        import scipy.stats
+        return scipy.stats.nbinom.rvs(n=float(self.r), p=float(self.p), size=size)
+
+    def _do_sample_pymc3(self):
+        import pymc3
+        return pymc3.NegativeBinomial('X', mu=float((self.p * self.r) / (1 - self.p)),
+                                                                    alpha=float(self.r))
 
 def NegativeBinomial(name, r, p):
     r"""
@@ -439,6 +479,18 @@ class PoissonDistribution(SingleDiscreteDistribution):
 
     def _moment_generating_function(self, t):
         return exp(self.lamda * (exp(t) - 1))
+
+    def _do_sample_scipy(self, size):
+        import scipy.stats
+        return scipy.stats.poisson.rvs(mu=float(self.lamda), size=size)
+
+    def _do_sample_numpy(self, size):
+        import numpy
+        return numpy.random.poisson(lam=float(self.lamda), size=size)
+
+    def _do_sample_pymc3(self):
+        import pymc3
+        return pymc3.Poisson('X', mu=float(self.lamda))
 
 
 def Poisson(name, lamda):
@@ -520,6 +572,10 @@ class SkellamDistribution(SingleDiscreteDistribution):
     def _moment_generating_function(self, t):
         (mu1, mu2) = (self.mu1, self.mu2)
         return exp(-(mu1 + mu2) + mu1 * exp(t) + mu2 * exp(-t))
+
+    def _do_sample_scipy(self, size):
+        import scipy.stats
+        return scipy.stats.skellam.rvs(mu1=float(self.mu1), mu2=float(self.mu2), size=size)
 
 
 def Skellam(name, mu1, mu2):
@@ -604,6 +660,10 @@ class YuleSimonDistribution(SingleDiscreteDistribution):
         rho = self.rho
         return rho * hyper((1, 1), (rho + 2,), exp(t)) * exp(t) / (rho + 1)
 
+    def _do_sample_scipy(self, size):
+        import scipy.stats
+        return scipy.stats.yulesimon.rvs(alpha=float(self.rho), size=size)
+
 
 def YuleSimon(name, rho):
     r"""
@@ -673,6 +733,14 @@ class ZetaDistribution(SingleDiscreteDistribution):
 
     def _moment_generating_function(self, t):
         return polylog(self.s, exp(t)) / zeta(self.s)
+
+    def _do_sample_scipy(self, size):
+        import scipy.stats
+        return scipy.stats.zipf.rvs(a=float(self.s), size=size)
+
+    def _do_sample_numpy(self, size):
+        import numpy
+        return numpy.random.zipf(a=float(self.s), size=size)
 
 
 def Zeta(name, s):

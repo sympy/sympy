@@ -1,6 +1,6 @@
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
                    Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, poly,
-                   series, factorial, And, lambdify)
+                   series, factorial, And)
 
 from sympy.polys.polyerrors import PolynomialError
 from sympy.stats.crv import reduce_rational_inequalities_wrap
@@ -29,42 +29,8 @@ class SampleDiscreteScipy:
     @classmethod
     def _sample_scipy(cls, dist, size):
         """Sample from SciPy."""
+        return dist._do_sample_scipy(size)
 
-        from scipy import stats as scipy_stats
-        scipy_rv_map = {
-            'GeometricDistribution': lambda dist, size: scipy_stats.geom.rvs(p=float(dist.p),
-                size=size),
-            'LogarithmicDistribution': lambda dist, size: scipy_stats.logser.rvs(p=float(dist.p),
-                size=size),
-            'NegativeBinomialDistribution': lambda dist, size: scipy_stats.nbinom.rvs(n=float(dist.r),
-                p=float(dist.p), size=size),
-            'PoissonDistribution': lambda dist, size: scipy_stats.poisson.rvs(mu=float(dist.lamda),
-                size=size),
-            'SkellamDistribution': lambda dist, size: scipy_stats.skellam.rvs(mu1=float(dist.mu1),
-                mu2=float(dist.mu2), size=size),
-            'YuleSimonDistribution': lambda dist, size: scipy_stats.yulesimon.rvs(alpha=float(dist.rho),
-                size=size),
-            'ZetaDistribution': lambda dist, size: scipy_stats.zipf.rvs(a=float(dist.s),
-                size=size)
-        }
-
-        dist_list = scipy_rv_map.keys()
-
-        if dist.__class__.__name__ == 'DiscreteDistributionHandmade':
-            from scipy.stats import rv_discrete
-            z = Dummy('z')
-            handmade_pmf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])
-            class scipy_pmf(rv_discrete):
-                def _pmf(self, x):
-                    return handmade_pmf(x)
-            scipy_rv = scipy_pmf(a=float(dist.set._inf), b=float(dist.set._sup),
-                        name='scipy_pmf')
-            return scipy_rv.rvs(size=size)
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
-
-        return scipy_rv_map[dist.__class__.__name__](dist, size)
 
 class SampleDiscreteNumpy:
     """Returns the sample from numpy of the given distribution"""
@@ -75,23 +41,8 @@ class SampleDiscreteNumpy:
     @classmethod
     def _sample_numpy(cls, dist, size):
         """Sample from NumPy."""
+        return dist._do_sample_numpy(size)
 
-        import numpy
-        numpy_rv_map = {
-            'GeometricDistribution': lambda dist, size: numpy.random.geometric(p=float(dist.p),
-                size=size),
-            'PoissonDistribution': lambda dist, size: numpy.random.poisson(lam=float(dist.lamda),
-                size=size),
-            'ZetaDistribution': lambda dist, size: numpy.random.zipf(a=float(dist.s),
-                size=size)
-        }
-
-        dist_list = numpy_rv_map.keys()
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
-
-        return numpy_rv_map[dist.__class__.__name__](dist, size)
 
 class SampleDiscretePymc:
     """Returns the sample from pymc3 of the given distribution"""
@@ -102,30 +53,13 @@ class SampleDiscretePymc:
     @classmethod
     def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
-
         import pymc3
-        pymc3_rv_map = {
-            'GeometricDistribution': lambda dist: pymc3.Geometric('X', p=float(dist.p)),
-            'PoissonDistribution': lambda dist: pymc3.Poisson('X', mu=float(dist.lamda)),
-            'NegativeBinomialDistribution': lambda dist: pymc3.NegativeBinomial('X',
-            mu=float((dist.p*dist.r)/(1-dist.p)), alpha=float(dist.r))
-        }
-
-        dist_list = pymc3_rv_map.keys()
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
 
         with pymc3.Model():
-            pymc3_rv_map[dist.__class__.__name__](dist)
+            out = dist._do_sample_pymc3()
+            if out is None:
+                return None
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
-
-
-_get_sample_class_drv = {
-    'scipy': SampleDiscreteScipy,
-    'pymc3': SampleDiscretePymc,
-    'numpy': SampleDiscreteNumpy
-}
 
 
 class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
@@ -152,14 +86,19 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     def sample(self, size=(), library='scipy'):
         """ A random realization from the distribution"""
 
-        libraries = ['scipy', 'numpy', 'pymc3']
-        if library not in libraries:
+        library_map = {
+            'scipy': SampleDiscreteScipy,
+            'pymc3': SampleDiscretePymc,
+            'numpy': SampleDiscreteNumpy
+        }
+
+        if library not in library_map:
             raise NotImplementedError("Sampling from %s is not supported yet."
                                         % str(library))
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = _get_sample_class_drv[library](self, size)
+        samps = library_map[library](self, size)
 
         if samps is not None:
             return samps
@@ -168,6 +107,14 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
                 % (self.__class__.__name__, library)
                 )
 
+    def _do_sample_scipy(self, size):
+        return None
+
+    def _do_sample_numpy(self, size):
+        return None
+
+    def _do_sample_pymc3(self):
+        return None
 
     @cacheit
     def compute_cdf(self, **kwargs):

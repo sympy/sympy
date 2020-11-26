@@ -282,6 +282,10 @@ class BernoulliDistribution(SingleFiniteDistribution):
                          (1 - self.p, Eq(x, self.fail)),
                          (S.Zero, True))
 
+    def _do_sample_pymc3(self):
+        import pymc3
+        return pymc3.Bernoulli('X', p=float(self.p))
+
 
 def Bernoulli(name, p, succ=1, fail=0):
     r"""
@@ -414,6 +418,15 @@ class BinomialDistribution(SingleFiniteDistribution):
             return Density(self)
         return {k*self.succ + (self.n-k)*self.fail: self.pmf(k)
                     for k in range(0, self.n + 1)}
+
+    def _do_sample_numpy(self, size):
+        import numpy
+        return numpy.random.binomial(n=int(self.n), p=float(self.p), size=size)
+
+    def _do_sample_pymc3(self):
+        import pymc3
+        return pymc3.Binomial('X', n=int(self.n), p=float(self.p))
+
 
 def Binomial(name, n, p, succ=1, fail=0):
     r"""

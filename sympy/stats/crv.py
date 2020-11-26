@@ -153,7 +153,6 @@ class SampleContinuousScipy:
     @classmethod
     def _sample_scipy(cls, dist, size):
         """Sample from SciPy."""
-        import scipy.stats
         # scipy does not require map as it can handle using custom distributions.
         # However, we will still use a map where we can.
 
@@ -161,51 +160,9 @@ class SampleContinuousScipy:
         # TODO: add more distributions here if there are more
         # See links below referring to sections beginning with "A common parametrization..."
         # I will remove all these comments if everything is ok.
-        scipy_rv_map = {
-            'BetaDistribution': lambda dist, size: scipy.stats.beta.rvs(
-                a=float(dist.alpha), b=float(dist.beta), size=size),
-            # same parametrisation
-            'CauchyDistribution': lambda dist, size: scipy.stats.cauchy.rvs(
-                loc=float(dist.x0), scale=float(dist.gamma), size=size),
-            # same parametrisation
-            'ChiSquaredDistribution': lambda dist, size: scipy.stats.chi2.rvs(
-                df=float(dist.k), size=size),
-            # same parametrisation
-            'ExponentialDistribution': lambda dist, size: scipy.stats.expon.rvs(
-                scale=1 / float(dist.rate), size=size),
-            # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.expon.html#scipy.stats.expon
-            'GammaDistribution': lambda dist, size: scipy.stats.gamma.rvs(
-                a=float(dist.k), scale=float(dist.theta), size=size),
-            # https://stackoverflow.com/questions/42150965/how-to-plot-gamma-distribution-with-alpha-and-beta-parameters-in-python
-            'LogNormalDistribution': lambda dist, size: scipy.stats.lognorm.rvs(
-                scale=float(exp(dist.mean)), s=float(dist.std), size=size),
-            # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html
-            'NormalDistribution': lambda dist, size: scipy.stats.norm.rvs(
-                loc=float(dist.mean), scale=float(dist.std), size=size),
-            # same parametrisation
-            'ParetoDistribution': lambda dist, size: scipy.stats.pareto.rvs(
-                b=float(dist.alpha), scale=float(dist.xm), size=size),
-            # https://stackoverflow.com/questions/42260519/defining-pareto-distribution-in-python-scipy
-            'StudentTDistribution': lambda dist, size: scipy.stats.t.rvs(
-                df=float(dist.nu), size=size),
-            # same parametrisation
-            'UniformDistribution': lambda dist, size: scipy.stats.uniform.rvs(
-                loc=float(dist.left), scale=float(dist.right - dist.left), size=size)
-            # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
-        }
 
-        # if we don't need to make a handmade pdf, we won't
-        if dist.__class__.__name__ in scipy_rv_map:
-            return scipy_rv_map[dist.__class__.__name__](dist, size)
+        return dist._do_sample_scipy(size)
 
-        z = Dummy('z')
-        handmade_pdf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])
-        class scipy_pdf(scipy.stats.rv_continuous):
-            def _pdf(self, x):
-                return handmade_pdf(x)
-        scipy_rv = scipy_pdf(a=float(dist.set._inf),
-                    b=float(dist.set._sup), name='scipy_pdf')
-        return scipy_rv.rvs(size=size)
 
 class SampleContinuousNumpy:
     """Returns the sample from numpy of the given distribution"""
@@ -216,33 +173,8 @@ class SampleContinuousNumpy:
     @classmethod
     def _sample_numpy(cls, dist, size):
         """Sample from NumPy."""
+        return dist._do_sample_numpy(size)
 
-        import numpy
-        numpy_rv_map = {
-            'BetaDistribution': lambda dist, size: numpy.random.beta(a=float(dist.alpha),
-                b=float(dist.beta), size=size),
-            'ChiSquaredDistribution': lambda dist, size: numpy.random.chisquare(
-                df=float(dist.k), size=size),
-            'ExponentialDistribution': lambda dist, size: numpy.random.exponential(
-                1/float(dist.rate), size=size),
-            'GammaDistribution': lambda dist, size: numpy.random.gamma(float(dist.k),
-                float(dist.theta), size=size),
-            'LogNormalDistribution': lambda dist, size: numpy.random.lognormal(
-                float(dist.mean), float(dist.std), size=size),
-            'NormalDistribution': lambda dist, size: numpy.random.normal(
-                float(dist.mean), float(dist.std), size=size),
-            'ParetoDistribution': lambda dist, size: (numpy.random.pareto(
-                a=float(dist.alpha), size=size) + 1) * float(dist.xm),
-            'UniformDistribution': lambda dist, size: numpy.random.uniform(
-                low=float(dist.left), high=float(dist.right), size=size)
-        }
-
-        dist_list = numpy_rv_map.keys()
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
-
-        return numpy_rv_map[dist.__class__.__name__](dist, size)
 
 class SampleContinuousPymc:
     """Returns the sample from pymc3 of the given distribution"""
@@ -253,45 +185,13 @@ class SampleContinuousPymc:
     @classmethod
     def _sample_pymc3(cls, dist, size):
         """Sample from PyMC3."""
-
         import pymc3
-        pymc3_rv_map = {
-            'BetaDistribution': lambda dist:
-                pymc3.Beta('X', alpha=float(dist.alpha), beta=float(dist.beta)),
-            'CauchyDistribution': lambda dist:
-                pymc3.Cauchy('X', alpha=float(dist.x0), beta=float(dist.gamma)),
-            'ChiSquaredDistribution': lambda dist:
-                pymc3.ChiSquared('X', nu=float(dist.k)),
-            'ExponentialDistribution': lambda dist:
-                pymc3.Exponential('X', lam=float(dist.rate)),
-            'GammaDistribution': lambda dist:
-                pymc3.Gamma('X', alpha=float(dist.k), beta=1/float(dist.theta)),
-            'LogNormalDistribution': lambda dist:
-                pymc3.Lognormal('X', mu=float(dist.mean), sigma=float(dist.std)),
-            'NormalDistribution': lambda dist:
-                pymc3.Normal('X', float(dist.mean), float(dist.std)),
-            'GaussianInverseDistribution': lambda dist:
-                pymc3.Wald('X', mu=float(dist.mean), lam=float(dist.shape)),
-            'ParetoDistribution': lambda dist:
-                pymc3.Pareto('X', alpha=float(dist.alpha), m=float(dist.xm)),
-            'UniformDistribution': lambda dist:
-                pymc3.Uniform('X', lower=float(dist.left), upper=float(dist.right))
-        }
-
-        dist_list = pymc3_rv_map.keys()
-
-        if dist.__class__.__name__ not in dist_list:
-            return None
 
         with pymc3.Model():
-            pymc3_rv_map[dist.__class__.__name__](dist)
+            out = dist._do_sample_pymc3()
+            if out is None:
+                return None
             return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
-
-_get_sample_class_crv = {
-    'scipy': SampleContinuousScipy,
-    'pymc3': SampleContinuousPymc,
-    'numpy': SampleContinuousNumpy
-}
 
 
 class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
@@ -323,22 +223,46 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def sample(self, size=(), library='scipy'):
         """ A random realization from the distribution """
 
-        libraries = ['scipy', 'numpy', 'pymc3']
-        if library not in libraries:
+        library_map = {
+            'scipy': SampleContinuousScipy,
+            'pymc3': SampleContinuousPymc,
+            'numpy': SampleContinuousNumpy
+        }
+
+        if library not in library_map:
             raise NotImplementedError("Sampling from %s is not supported yet."
                                         % str(library))
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = _get_sample_class_crv[library](self, size)
+        samps = library_map[library](self, size)
 
         if samps is not None:
             return samps
         raise NotImplementedError(
                 "Sampling for %s is not currently implemented from %s"
-                % (self.__class__.__name__, library)
-                )
+                % (self.__class__.__name__, library))
 
+    def _do_sample_scipy(self, size):
+        # if we don't need to make a handmade pdf, we won't
+        import scipy.stats
+
+        z = Dummy('z')
+        handmade_pdf = lambdify(z, self.pdf(z), ['numpy', 'scipy'])
+
+        class scipy_pdf(scipy.stats.rv_continuous):
+            def _pdf(self, x):
+                return handmade_pdf(x)
+
+        scipy_rv = scipy_pdf(a=float(self.set._inf),
+                             b=float(self.set._sup), name='scipy_pdf')
+        return scipy_rv.rvs(size=size)
+
+    def _do_sample_numpy(self, size):
+        return None
+
+    def _do_sample_pymc3(self):
+        return None
 
     @cacheit
     def compute_cdf(self, **kwargs):
