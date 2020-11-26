@@ -6,7 +6,7 @@ from sympy import (
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
     GreaterThan, Sum, Product, E, log, tan, Function, binomial, exp,
-    floor, ceiling, Unequality, Integer
+    floor, ceiling, Unequality
 )
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum.state import Bra, Ket
