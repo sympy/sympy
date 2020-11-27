@@ -7,9 +7,11 @@ from collections import OrderedDict, defaultdict
 from collections.abc import Mapping
 import glob
 from contextlib import contextmanager
+from getpass import getpass
 
 import requests
 from requests_oauthlib import OAuth2
+from requests.auth import HTTPBasicAuth
 
 
 def main(version, push=None):
