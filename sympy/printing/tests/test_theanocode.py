@@ -630,4 +630,3 @@ def test_Exp1():
 
     e = theano_code_(e_b)
     np.testing.assert_allclose(float(e_b), e.eval())
-
