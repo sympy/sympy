@@ -120,7 +120,7 @@ def test_DiscreteMarkovChain():
     TO3 = Matrix([[Rational(1, 4), Rational(3, 4), 0],[Rational(1, 3), Rational(1, 3), Rational(1, 3)], [0, Rational(1, 4), Rational(3, 4)]])
     Y2 = DiscreteMarkovChain('Y', trans_probs=TO2)
     Y3 = DiscreteMarkovChain('Y', trans_probs=TO3)
-    raises (ValueError, lambda: Y3.fundamental_matrix())
+    assert Y3.fundamental_matrix() == ImmutableMatrix([[176, 81, -132], [36, 141, -52], [-44, -39, 208]])/125
     assert Y2.is_absorbing_chain() == True
     assert Y3.is_absorbing_chain() == False
     assert Y2.canonical_form() == ([0, 1, 2], TO2)

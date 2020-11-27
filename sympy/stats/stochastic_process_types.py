@@ -1067,19 +1067,20 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         """
         _, _, _, Q = self.decompose()
-        if Q is None:
-            return None
-        I = eye(Q.shape[0])
-        if (self.is_absorbing_chain()):
+
+        if Q.shape[0] > 0:  # if non-ergodic
+            I = eye(Q.shape[0])
             if (I - Q).det() == 0:
-                raise ValueError("Fundamental matrix doesn't exists.")
-            return ImmutableMatrix((I - Q).inv().tolist())
-        else:
+                raise ValueError("The fundamental matrix doesn't exist.")
+            return (I - Q).inv().as_immutable()
+        else:  # if ergodic
+            P = self.transition_probabilities
+            I = eye(P.shape[0])
             w = self.fixed_row_vector()
-            W = Matrix([list(w) for i in range(0, Q.shape[0])])
-            if (I - Q + W).det() == 0:
-                raise ValueError("Fundamental matrix doesn't exists.")
-            return ImmutableMatrix((I - Q + W).inv().tolist())
+            W = Matrix([list(w) for i in range(0, P.shape[0])])
+            if (I - P + W).det() == 0:
+                raise ValueError("The fundamental matrix doesn't exist.")
+            return (I - P + W).inv().as_immutable()
 
     def absorbing_probabilities(self):
         """
