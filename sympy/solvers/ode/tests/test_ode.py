@@ -1521,74 +1521,6 @@ def test_exact_enhancement():
     assert checkodesol(eq, sol, order=1, solve_for_func=False) == [(True, 0), (True, 0)]
 
 
-@slow
-def test_separable_reduced():
-    f = Function('f')
-    x = Symbol('x')
-    df = f(x).diff(x)
-    eq = (x / f(x))*df  + tan(x**2*f(x) / (x**2*f(x) - 1))
-    assert classify_ode(eq) == ('separable_reduced', 'lie_group',
-        'separable_reduced_Integral')
-
-    eq = x* df  + f(x)* (1 / (x**2*f(x) - 1))
-    assert classify_ode(eq) == ('separable_reduced', 'lie_group',
-        'separable_reduced_Integral')
-    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
-    assert sol.lhs ==  log(x**2*f(x))/3 + log(x**2*f(x) - Rational(3, 2))/6
-    assert sol.rhs == C1 + log(x)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-    eq = f(x).diff(x) + (f(x) / (x**4*f(x) - x))
-    assert classify_ode(eq) == ('separable_reduced', 'lie_group',
-        'separable_reduced_Integral')
-    sol = dsolve(eq, hint = 'separable_reduced')
-    # FIXME: This one hangs
-    #assert checkodesol(eq, sol, order=1, solve_for_func=False) == [(True, 0)] * 4
-    assert len(sol) == 4
-
-    eq = x*df + f(x)*(x**2*f(x))
-    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
-    assert sol == Eq(log(x**2*f(x))/2 - log(x**2*f(x) - 2)/2, C1 + log(x))
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-    eq = Eq(f(x).diff(x) + f(x)/x * (1 + (x**(S(2)/3)*f(x))**2), 0)
-    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
-    assert sol == Eq(-3*log(x**(S(2)/3)*f(x)) + 3*log(3*x**(S(4)/3)*f(x)**2 + 1)/2, C1 + log(x))
-    assert checkodesol(eq, sol, solve_for_func=False) == (True, 0)
-
-    eq = Eq(f(x).diff(x) + f(x)/x * (1 + (x*f(x))**2), 0)
-    sol = dsolve(eq, hint = 'separable_reduced')
-    assert sol == [Eq(f(x), -sqrt(2)*sqrt(1/(C1 + log(x)))/(2*x)),\
-                   Eq(f(x), sqrt(2)*sqrt(1/(C1 + log(x)))/(2*x))]
-    assert checkodesol(eq, sol) == [(True, 0)]*2
-
-    eq = Eq(f(x).diff(x) + (x**4*f(x)**2 + x**2*f(x))*f(x)/(x*(x**6*f(x)**3 + x**4*f(x)**2)), 0)
-    sol = dsolve(eq, hint = 'separable_reduced')
-    assert sol == Eq(f(x), C1 + 1/(2*x**2))
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = Eq(f(x).diff(x) + (f(x)**2)*f(x)/(x), 0)
-    sol = dsolve(eq, hint = 'separable_reduced')
-    assert sol == [Eq(f(x), -sqrt(2)*sqrt(1/(C1 + log(x)))/2),\
-                  Eq(f(x), sqrt(2)*sqrt(1/(C1 + log(x)))/2)]
-    assert checkodesol(eq, sol) == [(True, 0), (True, 0)]
-
-    eq = Eq(f(x).diff(x) + (f(x)+3)*f(x)/(x*(f(x)+2)), 0)
-    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
-    assert sol == Eq(-log(f(x) + 3)/3 - 2*log(f(x))/3, C1 + log(x))
-    assert checkodesol(eq, sol, solve_for_func=False) == (True, 0)
-
-    eq = Eq(f(x).diff(x) + (f(x)+3)*f(x)/x, 0)
-    sol = dsolve(eq, hint = 'separable_reduced')
-    assert sol == Eq(f(x), 3/(C1*x**3 - 1))
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = Eq(f(x).diff(x) + (f(x)**2+f(x))*f(x)/(x), 0)
-    sol = dsolve(eq, hint='separable_reduced', simplify=False)
-    assert sol == Eq(-log(f(x) + 1) + log(f(x)) + 1/f(x), C1 + log(x))
-    assert checkodesol(eq, sol, solve_for_func=False) == (True, 0)
-
-
 def test_homogeneous_function():
     f = Function('f')
     eq1 = tan(x + f(x))
@@ -1715,11 +1647,6 @@ def test_heuristic1():
 
 
 def test_issue_6247():
-    eq = x**2*f(x)**2 + x*Derivative(f(x), x)
-    sol = Eq(f(x), 2*C1/(C1*x**2 - 1))
-    assert dsolve(eq, hint = 'separable_reduced') == sol
-    assert checkodesol(eq, sol, order=1)[0]
-
     eq = f(x).diff(x, x) + 4*f(x)
     sol = Eq(f(x), C1*sin(2*x) + C2*cos(2*x))
     assert dsolve(eq) == sol
