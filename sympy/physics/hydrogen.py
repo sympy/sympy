@@ -11,9 +11,10 @@ def R_nl(n, l, r, Z=1):
     Parameters
     ==========
 
-    n, l :
-        Expressions representing the quantum numbers
-        'n' and 'l' which should be integers.
+    n : integer ranging from 1 to infinity.
+        Principal Quantum Number.
+    l : integer ranging from 0 to ``n-1``.
+        Angular Momentum Quantum Number.
     r :
         Radial coordinate.
     Z :
@@ -94,8 +95,12 @@ def Psi_nlm(n, l, m, r, phi, theta, Z=1):
     Parameters
     ==========
 
-    n, l, m :
-        quantum numbers 'n', 'l' and 'm'
+    n : integer ranging from 1 to infinity.
+        Principal Quantum Number.
+    l : integer ranging from 0 to ``n-1``.
+        Angular Momentum Quantum Number.
+    m : integer ranging from ``-l`` to ``l``.
+        Magnetic Quantum Number.
     r :
         radial coordinate
     phi :
@@ -153,6 +158,14 @@ def E_nl(n, Z=1):
 
     The energy doesn't depend on "l".
 
+    Parameters
+    ==========
+
+    n : integer ranging from 1 to infinity.
+        Principal Quantum Number.
+    Z :
+        Atomic number (1 for Hydrogen, 2 for Helium, ...)
+
     Examples
     ========
 
@@ -187,8 +200,10 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     Parameters
     ==========
 
-    n, l :
-        Quantum numbers 'n' and 'l'
+    n : integer ranging from 1 to infinity.
+        Principal Quantum Number.
+    l : integer ranging from 0 to ``n-1``.
+        Angular Momentum Quantum Number.
     spin_up :
         True if the electron spin is up (default), otherwise down
     Z :
