@@ -12,11 +12,12 @@ def R_nl(n, l, r, Z=1):
     ==========
 
     n, l :
-        Quantum numbers 'n' and 'l'.
+        Expressions representing the quantum numbers
+        'n' and 'l' which should be integers.
     r :
-        radial coordinate
+        Radial coordinate.
     Z :
-        atomic number (1 for Hydrogen, 2 for Helium, ...)
+        Atomic number (1 for Hydrogen, 2 for Helium, ...)
 
     Everything is in Hartree atomic units.
 
