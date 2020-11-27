@@ -396,19 +396,6 @@ class BetaDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return hyper((self.alpha,), (self.alpha + self.beta,), t)
 
-    def _do_sample_scipy(self, size):
-        # same parametrisation
-        import scipy.stats
-        return scipy.stats.beta.rvs(a=float(self.alpha), b=float(self.beta), size=size)
-
-    def _do_sample_numpy(self, size):
-        import numpy
-        return numpy.random.beta(a=float(self.alpha), b=float(self.beta), size=size)
-
-    def _do_sample_pymc3(self):
-        import pymc3
-        return pymc3.Beta('X', alpha=float(self.alpha), beta=float(self.beta))
-
 
 def Beta(name, alpha, beta):
     r"""
@@ -724,14 +711,6 @@ class CauchyDistribution(SingleContinuousDistribution):
     def _quantile(self, p):
         return self.x0 + self.gamma*tan(pi*(p - S.Half))
 
-    def _do_sample_scipy(self, size):
-        import scipy.stats
-        return scipy.stats.cauchy.rvs(loc=float(self.x0), scale=float(self.gamma), size=size)
-
-    def _do_sample_pymc3(self):
-        import pymc3
-        return pymc3.Cauchy('X', alpha=float(self.x0), beta=float(self.gamma))
-
 
 def Cauchy(name, x0, gamma):
     r"""
@@ -955,19 +934,6 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
 
     def  _moment_generating_function(self, t):
         return (1 - 2*t)**(-self.k/2)
-
-    def _do_sample_scipy(self, size):
-        # same parametrisation
-        import scipy.stats
-        return scipy.stats.chi2.rvs(df=float(self.k), size=size)
-
-    def _do_sample_numpy(self, size):
-        import numpy
-        return numpy.random.chisquare(df=float(self.k), size=size)
-
-    def _do_sample_pymc3(self):
-        import pymc3
-        return pymc3.ChiSquared('X', nu=float(self.k))
 
 
 def ChiSquared(name, k):
@@ -1317,20 +1283,6 @@ class ExponentialDistribution(SingleContinuousDistribution):
 
     def _quantile(self, p):
         return -log(1-p)/self.rate
-
-    def _do_sample_scipy(self, size):
-        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.expon.html#scipy.stats.expon
-        import scipy.stats
-        return scipy.stats.expon.rvs(scale=1 / float(self.rate), size=size)
-
-    def _do_sample_numpy(self, size):
-        import numpy
-        return numpy.random.exponential(1 / float(self.rate), size=size)
-
-
-    def _do_sample_pymc3(self):
-        import pymc3
-        return pymc3.Exponential('X', lam=float(self.rate))
 
 
 def Exponential(name, rate):
@@ -1756,19 +1708,6 @@ class GammaDistribution(SingleContinuousDistribution):
 
     def _moment_generating_function(self, t):
         return (1- self.theta*t)**(-self.k)
-
-    def _do_sample_scipy(self, size):
-        # https://stackoverflow.com/questions/42150965/how-to-plot-gamma-distribution-with-alpha-and-beta-parameters-in-python
-        import scipy.stats
-        return scipy.stats.gamma.rvs(a=float(self.k), scale=float(self.theta), size=size)
-
-    def _do_sample_numpy(self, size):
-        import numpy
-        return numpy.random.gamma(float(self.k), float(self.theta), size=size)
-
-    def _do_sample_pymc3(self):
-        import pymc3
-        return pymc3.Gamma('X', alpha=float(self.k), beta=1 / float(self.theta))
 
 
 def Gamma(name, k, theta):
@@ -2542,19 +2481,6 @@ class LogNormalDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         raise NotImplementedError('Moment generating function of the log-normal distribution is not defined.')
 
-    def _do_sample_scipy(self, size):
-        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html
-        import scipy.stats
-        return scipy.stats.lognorm.rvs(scale=float(exp(self.mean)), s=float(self.std), size=size)
-
-    def _do_sample_numpy(self, size):
-        import numpy
-        return numpy.random.lognormal(float(self.mean), float(self.std), size=size)
-
-    def _do_sample_pymc3(self):
-        import pymc3
-        return pymc3.Lognormal('X', mu=float(self.mean), sigma=float(self.std))
-
 
 def LogNormal(name, mean, std):
     r"""
@@ -2957,18 +2883,6 @@ class NormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return mean + std*sqrt(2)*erfinv(2*p - 1)
 
-    def _do_sample_scipy(self, size):
-        import scipy.stats
-        return scipy.stats.norm.rvs(loc=float(self.mean), scale=float(self.std), size=size)
-
-    def _do_sample_numpy(self, size):
-        import numpy
-        return numpy.random.normal(float(self.mean), float(self.std), size=size)
-
-    def _do_sample_pymc3(self):
-        import pymc3
-        return pymc3.Normal('X', float(self.mean), float(self.std))
-
 
 def Normal(name, mean, std):
     r"""
@@ -3098,10 +3012,6 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
         mu, s = self.mean, self.shape
         return exp((s/mu)*(1 - sqrt(1 - (2*mu**2*t)/s)))
 
-    def _do_sample_pymc3(self):
-        import pymc3
-        return pymc3.Wald('X', mu=float(self.mean), lam=float(self.shape))
-
 
 def GaussianInverse(name, mean, shape):
     r"""
@@ -3202,19 +3112,6 @@ class ParetoDistribution(SingleContinuousDistribution):
     def _characteristic_function(self, t):
         xm, alpha = self.xm, self.alpha
         return alpha * (-I * xm * t) ** alpha * uppergamma(-alpha, -I * xm * t)
-
-    def _do_sample_scipy(self, size):
-        # https://stackoverflow.com/questions/42260519/defining-pareto-distribution-in-python-scipy
-        import scipy.stats
-        return scipy.stats.pareto.rvs(b=float(self.alpha), scale=float(self.xm), size=size)
-
-    def _do_sample_numpy(self, size):
-        import numpy
-        return (numpy.random.pareto(a=float(self.alpha), size=size) + 1) * float(self.xm)
-
-    def _do_sample_pymc3(self):
-        import pymc3
-        return pymc3.Pareto('X', alpha=float(self.alpha), m=float(self.xm))
 
 
 def Pareto(name, xm, alpha):
@@ -3748,10 +3645,6 @@ class StudentTDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         raise NotImplementedError('The moment generating function for the Student-T distribution is undefined.')
 
-    def _do_sample_scipy(self, size):
-        import scipy.stats
-        return scipy.stats.t.rvs(df=float(self.nu), size=size)
-
 
 def StudentT(name, nu):
     r"""
@@ -4054,19 +3947,6 @@ class UniformDistribution(SingleContinuousDistribution):
         result = result.subs({Max(self.left, self.right): self.right,
                               Min(self.left, self.right): self.left})
         return result
-
-    def _do_sample_scipy(self, size):
-        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
-        import scipy.stats
-        return scipy.stats.uniform.rvs(loc=float(self.left), scale=float(self.right - self.left), size=size)
-
-    def _do_sample_numpy(self, size):
-        import numpy
-        return numpy.random.uniform(low=float(self.left), high=float(self.right), size=size)
-
-    def _do_sample_pymc3(self):
-        import pymc3
-        return pymc3.Uniform('X', lower=float(self.left), upper=float(self.right))
 
 
 def Uniform(name, left, right):

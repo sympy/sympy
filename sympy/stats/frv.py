@@ -214,18 +214,6 @@ class SingleFiniteDistribution(Distribution, NamedArgsMixin):
     def __contains__(self, other):
         return other in self.set
 
-    def _do_sample_scipy(self, size):
-        # scipy can handle with custom distributions
-
-        from scipy.stats import rv_discrete
-        density_ = self.dict
-        x, y = [], []
-        for k, v in density_.items():
-            x.append(int(k))
-            y.append(float(v))
-        scipy_rv = rv_discrete(name='scipy_rv', values=(x, y))
-        return scipy_rv.rvs(size=size)
-
 
 #=============================================
 #=========  Probability Space  ===============

@@ -1448,13 +1448,16 @@ class Distribution(Basic):
             # See links below referring to sections beginning with "A common parametrization..."
             # I will remove all these comments if everything is ok.
 
-            samps = self._do_sample_scipy(size)
+            from sympy.stats.sampling.sample_scipy import do_sample_scipy
+            samps = do_sample_scipy(self, size)
         elif library == 'numpy':
-            samps = self._do_sample_numpy(size)
+            from sympy.stats.sampling.sample_numpy import do_sample_numpy
+            samps = do_sample_numpy(self, size)
         elif library == 'pymc3':
+            from sympy.stats.sampling.sample_pymc3 import do_sample_pymc3
             import pymc3
             with pymc3.Model():
-                if self._do_sample_pymc3():
+                if do_sample_pymc3(self):
                     samps = pymc3.sample(size, chains=1, progressbar=False)[:]['X']
                 else:
                     samps = None
@@ -1467,15 +1470,6 @@ class Distribution(Basic):
         raise NotImplementedError(
             "Sampling for %s is not currently implemented from %s"
             % (self.__class__.__name__, library))
-
-    def _do_sample_scipy(self, size):
-        return None
-
-    def _do_sample_numpy(self, size):
-        return None
-
-    def _do_sample_pymc3(self):
-        return None
 
 
 def _value_check(condition, message):

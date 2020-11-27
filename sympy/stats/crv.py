@@ -11,8 +11,7 @@ sympy.stats.frv
 
 from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
         Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
-        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial,
-        lambdify)
+        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
 from sympy.core.function import PoleError
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
@@ -169,27 +168,6 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     @staticmethod
     def check(*args):
         pass
-
-    def _do_sample_scipy(self, size):
-        # if we don't need to make a handmade pdf, we won't
-        import scipy.stats
-
-        z = Dummy('z')
-        handmade_pdf = lambdify(z, self.pdf(z), ['numpy', 'scipy'])
-
-        class scipy_pdf(scipy.stats.rv_continuous):
-            def _pdf(self, x):
-                return handmade_pdf(x)
-
-        scipy_rv = scipy_pdf(a=float(self.set._inf),
-                             b=float(self.set._sup), name='scipy_pdf')
-        return scipy_rv.rvs(size=size)
-
-    def _do_sample_numpy(self, size):
-        return None
-
-    def _do_sample_pymc3(self):
-        return None
 
     @cacheit
     def compute_cdf(self, **kwargs):
