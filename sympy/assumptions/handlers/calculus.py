@@ -12,9 +12,13 @@ class AskFiniteHandler(CommonHandler):
     """
     Handler for key 'finite'.
 
+    Explanation
+    ===========
+
     Test that an expression is bounded respect to all its variables.
 
-    Examples of usage:
+    Examples
+    ========
 
     >>> from sympy import Q
     >>> from sympy.assumptions.handlers.calculus import AskFiniteHandler
