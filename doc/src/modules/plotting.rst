@@ -85,8 +85,17 @@ Series Classes
 .. autoclass:: sympy.plotting.plot_implicit::ImplicitSeries
    :members:
 
+Backends
+--------
 
+.. autoclass:: sympy.plotting.plot::BaseBackend
+   :members:
 
+.. autoclass:: sympy.plotting.plot::MatplotlibBackend
+   :members:
+
+.. autoclass:: sympy.plotting.plot::TextBackend
+   :members:
 
 Pyglet Plotting
 ---------------
@@ -103,7 +112,8 @@ the only dependency being ``pyglet``.
 
 Here is the simplest usage:
 
-    >>> from sympy import var, Plot
+    >>> from sympy import var
+    >>> from sympy.plotting.pygletplot import PygletPlot as Plot
     >>> var('x y z')
     >>> Plot(x*y**3-y*x**3)
 

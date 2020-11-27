@@ -3,11 +3,12 @@ from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
 from sympy import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
+from sympy.core.evalf import EvalfMixin, prec_to_dps
 
 __all__ = ['Vector']
 
 
-class Vector(Printable):
+class Vector(Printable, EvalfMixin):
     """The class used to define vectors.
 
     It along with ReferenceFrame are the building blocks of describing a
@@ -22,6 +23,7 @@ class Vector(Printable):
     """
 
     simp = False
+    is_number = False
 
     def __init__(self, inlist):
         """This is the constructor for the Vector class.  You shouldn't be
@@ -51,6 +53,11 @@ class Vector(Printable):
         for k, v in d.items():
             if v != Matrix([0, 0, 0]):
                 self.args.append((v, k))
+
+    @property
+    def func(self):
+        """Returns the class Vector. """
+        return Vector
 
     def __hash__(self):
         return hash(tuple(self.args))
@@ -703,6 +710,14 @@ class Vector(Printable):
         """
 
         return self.to_matrix(reference_frame).free_symbols
+
+    def _eval_evalf(self, prec):
+        if not self.args:
+            return self
+        new_args = []
+        for mat, frame in self.args:
+            new_args.append([mat.evalf(n=prec_to_dps(prec)), frame])
+        return Vector(new_args)
 
 
 class VectorTypeError(TypeError):

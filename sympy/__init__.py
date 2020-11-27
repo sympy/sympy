@@ -190,7 +190,7 @@ from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         Adjoint, hadamard_product, HadamardProduct, HadamardPower,
         Determinant, det, diagonalize_vector, DiagMatrix, DiagonalMatrix,
         DiagonalOf, trace, DotProduct, kronecker_product, KroneckerProduct,
-        PermutationMatrix, MatrixPermute)
+        PermutationMatrix, MatrixPermute, Permanent, per)
 
 from .geometry import (Point, Point2D, Point3D, Line, Ray, Segment, Line2D,
         Segment2D, Ray2D, Line3D, Segment3D, Ray3D, Plane, Ellipse, Circle,
@@ -218,8 +218,8 @@ from .integrals import (integrate, Integral, line_integrate, mellin_transform,
 from .tensor import (IndexedBase, Idx, Indexed, get_contraction_structure,
         get_indices, MutableDenseNDimArray, ImmutableDenseNDimArray,
         MutableSparseNDimArray, ImmutableSparseNDimArray, NDimArray,
-        tensorproduct, tensorcontraction, derive_by_array, permutedims, Array,
-        DenseNDimArray, SparseNDimArray)
+        tensorproduct, tensorcontraction, tensordiagonal, derive_by_array,
+        permutedims, Array, DenseNDimArray, SparseNDimArray)
 
 from .parsing import parse_expr
 
@@ -424,7 +424,7 @@ __all__ = [
     'HadamardPower', 'Determinant', 'det', 'diagonalize_vector', 'DiagMatrix',
     'DiagonalMatrix', 'DiagonalOf', 'trace', 'DotProduct',
     'kronecker_product', 'KroneckerProduct', 'PermutationMatrix',
-    'MatrixPermute',
+    'MatrixPermute', 'Permanent', 'per',
 
     # sympy.geometry
     'Point', 'Point2D', 'Point3D', 'Line', 'Ray', 'Segment', 'Line2D',
@@ -458,8 +458,8 @@ __all__ = [
     'IndexedBase', 'Idx', 'Indexed', 'get_contraction_structure',
     'get_indices', 'MutableDenseNDimArray', 'ImmutableDenseNDimArray',
     'MutableSparseNDimArray', 'ImmutableSparseNDimArray', 'NDimArray',
-    'tensorproduct', 'tensorcontraction', 'derive_by_array', 'permutedims',
-    'Array', 'DenseNDimArray', 'SparseNDimArray',
+    'tensorproduct', 'tensorcontraction', 'tensordiagonal', 'derive_by_array',
+    'permutedims', 'Array', 'DenseNDimArray', 'SparseNDimArray',
 
     # sympy.parsing
     'parse_expr',

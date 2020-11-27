@@ -156,6 +156,31 @@ Matrix([
 [2*x,  x - y],
 [2*z, -t + z]])
 
+Diagonal operator
+-----------------
+
+The ``tensordiagonal`` function acts in a similar manner as ``tensorcontraction``,
+but the joined indices are not summed over, for example diagonalizing
+positions `a` and `b` means
+
+`A_{i_1,\ldots,i_a,\ldots,i_b,\ldots,i_n} \implies A_{i_1,\ldots,k,\ldots,k,\ldots,i_n}
+\implies \tilde{A}_{i_1,\ldots,i_{a-1},i_{a+1},\ldots,i_{b-1},i_{b+1},\ldots,i_n,k}`
+
+where `\tilde{A}` is the array equivalent to the diagonal of `A` at positions
+`a` and `b` moved to the last index slot.
+
+Compare the difference between contraction and diagonal operators:
+
+>>> from sympy import tensordiagonal
+>>> from sympy.abc import a, b, c, d
+>>> m = Matrix([[a, b], [c, d]])
+>>> tensorcontraction(m, [0, 1])
+a + d
+>>> tensordiagonal(m, [0, 1])
+[a, d]
+
+In short, no summation occurs with ``tensordiagonal``.
+
 
 Derivatives by array
 --------------------
@@ -203,7 +228,7 @@ z*cos(y*z) + exp(x)
 from .dense_ndim_array import MutableDenseNDimArray, ImmutableDenseNDimArray, DenseNDimArray
 from .sparse_ndim_array import MutableSparseNDimArray, ImmutableSparseNDimArray, SparseNDimArray
 from .ndim_array import NDimArray
-from .arrayop import tensorproduct, tensorcontraction, derive_by_array, permutedims
+from .arrayop import tensorproduct, tensorcontraction, tensordiagonal, derive_by_array, permutedims
 from .array_comprehension import ArrayComprehension, ArrayComprehensionMap
 
 Array = ImmutableDenseNDimArray
@@ -215,9 +240,9 @@ __all__ = [
 
     'NDimArray',
 
-    'tensorproduct', 'tensorcontraction', 'derive_by_array', 'permutedims',
+    'tensorproduct', 'tensorcontraction', 'tensordiagonal', 'derive_by_array',
 
-    'ArrayComprehension', 'ArrayComprehensionMap',
+    'permutedims', 'ArrayComprehension', 'ArrayComprehensionMap',
 
     'Array',
 ]

@@ -610,16 +610,13 @@ def annotated(letter):
     else:
         return ascii_pics[letter]
 
+_remove_combining = dict.fromkeys(list(range(ord('\N{COMBINING GRAVE ACCENT}'), ord('\N{COMBINING LATIN SMALL LETTER X}')))
+                            + list(range(ord('\N{COMBINING LEFT HARPOON ABOVE}'), ord('\N{COMBINING ASTERISK ABOVE}'))))
+
 def is_combining(sym):
-    """Check whether symbol is a unicode modifier.
+    """Check whether symbol is a unicode modifier. """
 
-    See stringPict.width on usage.
-    """
-    return True if ('\N{COMBINING GRAVE ACCENT}' <= sym <=
-                    '\N{COMBINING LATIN SMALL LETTER X}' or
-
-                    '\N{COMBINING LEFT HARPOON ABOVE}' <= sym <=
-                    '\N{COMBINING ASTERISK ABOVE}') else False
+    return ord(sym) in _remove_combining
 
 
 def center_accent(string, accent):
@@ -649,3 +646,10 @@ def center_accent(string, accent):
     firstpart = string[:midpoint]
     secondpart = string[midpoint:]
     return firstpart + accent + secondpart
+
+
+def line_width(line):
+    """Unicode combining symbols (modifiers) are not ever displayed as
+    separate symbols and thus shouldn't be counted
+    """
+    return len(line.translate(_remove_combining))

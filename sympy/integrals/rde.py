@@ -41,6 +41,9 @@ def order_at(a, p, t):
     """
     Computes the order of a at p, with respect to t.
 
+    Explanation
+    ===========
+
     For a, p in k[t], the order of a at p is defined as nu_p(a) = max({n
     in Z+ such that p**n|a}), where a != 0.  If a == 0, nu_p(a) = +oo.
 
@@ -93,6 +96,9 @@ def weak_normalizer(a, d, DE, z=None):
     """
     Weak normalization.
 
+    Explanation
+    ===========
+
     Given a derivation D on k[t] and f == a/d in k(t), return q in k[t]
     such that f - Dq/q is weakly normalized with respect to t.
 
@@ -141,6 +147,9 @@ def normal_denom(fa, fd, ga, gd, DE):
     """
     Normal part of the denominator.
 
+    Explanation
+    ===========
+
     Given a derivation D on k[t] and f, g in k(t) with f weakly
     normalized with respect to t, either raise NonElementaryIntegralException,
     in which case the equation Dy + f*y == g has no solution in k(t), or the
@@ -175,6 +184,9 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     """
     Special part of the denominator.
 
+    Explanation
+    ===========
+
     case is one of {'exp', 'tan', 'primitive'} for the hyperexponential,
     hypertangent, and primitive cases, respectively.  For the
     hyperexponential (resp. hypertangent) case, given a derivation D on
@@ -184,7 +196,7 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     A, B, C, h in k[t] and for any solution q in k<t> of a*Dq + b*q == c,
     r = qh in k[t] satisfies A*Dr + B*r == C.
 
-    For case == 'primitive', k<t> == k[t], so it returns (a, b, c, 1) in
+    For ``case == 'primitive'``, k<t> == k[t], so it returns (a, b, c, 1) in
     this case.
 
     This constitutes step 2 of the outline given in the rde.py docstring.
@@ -257,13 +269,16 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
     """
     Bound on polynomial solutions.
 
-    Given a derivation D on k[t] and a, b, c in k[t] with a != 0, return
+    Explanation
+    ===========
+
+    Given a derivation D on k[t] and ``a``, ``b``, ``c`` in k[t] with ``a != 0``, return
     n in ZZ such that deg(q) <= n for any solution q in k[t] of
     a*Dq + b*q == c, when parametric=False, or deg(q) <= n for any solution
     c1, ..., cm in Const(k) and q in k[t] of a*Dq + b*q == Sum(ci*gi, (i, 1, m))
     when parametric=True.
 
-    For parametric=False, cQ is c, a Poly; for parametric=True, cQ is Q ==
+    For ``parametric=False``, ``cQ`` is ``c``, a ``Poly``; for ``parametric=True``, ``cQ`` is Q ==
     [q1, ..., qm], a list of Polys.
 
     This constitutes step 3 of the outline given in the rde.py docstring.
@@ -370,9 +385,12 @@ def spde(a, b, c, n, DE):
     """
     Rothstein's Special Polynomial Differential Equation algorithm.
 
-    Given a derivation D on k[t], an integer n and a, b, c in k[t] with
-    a != 0, either raise NonElementaryIntegralException, in which case the
-    equation a*Dq + b*q == c has no solution of degree at most n in
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], an integer n and ``a``,``b``,``c`` in k[t] with
+    ``a != 0``, either raise NonElementaryIntegralException, in which case the
+    equation a*Dq + b*q == c has no solution of degree at most ``n`` in
     k[t], or return the tuple (B, C, m, alpha, beta) such that B, C,
     alpha, beta in k[t], m in ZZ, and any solution q in k[t] of degree
     at most n of a*Dq + b*q == c must be of the form
@@ -414,12 +432,15 @@ def no_cancel_b_large(b, c, n, DE):
     """
     Poly Risch Differential Equation - No cancellation: deg(b) large enough.
 
-    Given a derivation D on k[t], n either an integer or +oo, and b, c
-    in k[t] with b != 0 and either D == d/dt or
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], ``n`` either an integer or +oo, and ``b``,``c``
+    in k[t] with ``b != 0`` and either D == d/dt or
     deg(b) > max(0, deg(D) - 1), either raise NonElementaryIntegralException, in
-    which case the equation Dq + b*q == c has no solution of degree at
+    which case the equation ``Dq + b*q == c`` has no solution of degree at
     most n in k[t], or a solution q in k[t] of this equation with
-    deg(q) < n.
+    ``deg(q) < n``.
     """
     q = Poly(0, DE.t)
 
@@ -441,7 +462,10 @@ def no_cancel_b_small(b, c, n, DE):
     """
     Poly Risch Differential Equation - No cancellation: deg(b) small enough.
 
-    Given a derivation D on k[t], n either an integer or +oo, and b, c
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], ``n`` either an integer or +oo, and ``b``,``c``
     in k[t] with deg(b) < deg(D) - 1 and either D == d/dt or
     deg(D) >= 2, either raise NonElementaryIntegralException, in which case the
     equation Dq + b*q == c has no solution of degree at most n in k[t],
@@ -484,6 +508,9 @@ def no_cancel_b_small(b, c, n, DE):
 def no_cancel_equal(b, c, n, DE):
     """
     Poly Risch Differential Equation - No cancellation: deg(b) == deg(D) - 1
+
+    Explanation
+    ===========
 
     Given a derivation D on k[t] with deg(D) >= 2, n either an integer
     or +oo, and b, c in k[t] with deg(b) == deg(D) - 1, either raise
@@ -529,8 +556,11 @@ def cancel_primitive(b, c, n, DE):
     """
     Poly Risch Differential Equation - Cancellation: Primitive case.
 
-    Given a derivation D on k[t], n either an integer or +oo, b in k, and
-    c in k[t] with Dt in k and b != 0, either raise
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], n either an integer or +oo, ``b`` in k, and
+    ``c`` in k[t] with Dt in k and ``b != 0``, either raise
     NonElementaryIntegralException, in which case the equation Dq + b*q == c
     has no solution of degree at most n in k[t], or a solution q in k[t] of
     this equation with deg(q) <= n.
@@ -576,8 +606,11 @@ def cancel_exp(b, c, n, DE):
     """
     Poly Risch Differential Equation - Cancellation: Hyperexponential case.
 
-    Given a derivation D on k[t], n either an integer or +oo, b in k, and
-    c in k[t] with Dt/t in k and b != 0, either raise
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], n either an integer or +oo, ``b`` in k, and
+    ``c`` in k[t] with Dt/t in k and ``b != 0``, either raise
     NonElementaryIntegralException, in which case the equation Dq + b*q == c
     has no solution of degree at most n in k[t], or a solution q in k[t] of
     this equation with deg(q) <= n.
@@ -632,7 +665,7 @@ def cancel_exp(b, c, n, DE):
 
 def solve_poly_rde(b, cQ, n, DE, parametric=False):
     """
-    Solve a Polynomial Risch Differential Equation with degree bound n.
+    Solve a Polynomial Risch Differential Equation with degree bound ``n``.
 
     This constitutes step 4 of the outline given in the rde.py docstring.
 
@@ -726,6 +759,9 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
 def rischDE(fa, fd, ga, gd, DE):
     """
     Solve a Risch Differential Equation: Dy + f*y == g.
+
+    Explanation
+    ===========
 
     See the outline in the docstring of rde.py for more information
     about the procedure used.  Either raise NonElementaryIntegralException, in
