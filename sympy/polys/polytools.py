@@ -593,7 +593,7 @@ class Poly(Basic):
 
         return f.per(new, gens=gens)
 
-    def replace(f, x, y=None, *_ignore):
+    def replace(f, x, y=None, **_ignore):
         # XXX this does not match Basic's signature
         """
         Replace ``x`` with ``y`` in generators list.
