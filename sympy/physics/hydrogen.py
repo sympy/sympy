@@ -11,7 +11,7 @@ def R_nl(n, l, r, Z=1):
     Parameters
     ==========
 
-    n : integer ranging from 1 to infinity.
+    n : integer with possible values as 1, 2, 3, 4,...
         Principal Quantum Number.
     l : integer ranging from 0 to ``n-1``.
         Angular Momentum Quantum Number.
@@ -95,7 +95,7 @@ def Psi_nlm(n, l, m, r, phi, theta, Z=1):
     Parameters
     ==========
 
-    n : integer ranging from 1 to infinity.
+    n : integer with possible values as 1, 2, 3, 4,...
         Principal Quantum Number.
     l : integer ranging from 0 to ``n-1``.
         Angular Momentum Quantum Number.
@@ -161,7 +161,7 @@ def E_nl(n, Z=1):
     Parameters
     ==========
 
-    n : integer ranging from 1 to infinity.
+    n : integer with possible values as 1, 2, 3, 4,...
         Principal Quantum Number.
     Z :
         Atomic number (1 for Hydrogen, 2 for Helium, ...)
@@ -200,7 +200,7 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     Parameters
     ==========
 
-    n : integer ranging from 1 to infinity.
+    n : integer with possible values as 1, 2, 3, 4,...
         Principal Quantum Number.
     l : integer ranging from 0 to ``n-1``.
         Angular Momentum Quantum Number.
