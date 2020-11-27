@@ -140,13 +140,17 @@ class DiophantineEquationType:
     """
     Internal representation of a particular diophantine equation type.
 
-    Attributes
+    Parameters
     ==========
 
     equation :
         The diophantine equation that is being solved.
     free_symbols : list (optional)
         The symbols being solved for.
+
+    Attributes
+    ==========
+
     total_degree :
         The maximum of the degrees of all terms in the equation
     homogeneous :
