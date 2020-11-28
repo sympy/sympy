@@ -1,9 +1,13 @@
-import numpy
 from functools import singledispatch
+
+from sympy.external import import_module
 from sympy.stats.crv_types import BetaDistribution, ChiSquaredDistribution, ExponentialDistribution, GammaDistribution, \
     LogNormalDistribution, NormalDistribution, ParetoDistribution, UniformDistribution
 from sympy.stats.drv_types import GeometricDistribution, PoissonDistribution, ZetaDistribution
 from sympy.stats.frv_types import BinomialDistribution
+
+
+numpy = import_module('numpy')
 
 
 @singledispatch

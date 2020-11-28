@@ -1,7 +1,7 @@
-import scipy.stats
 from functools import singledispatch
 
 from sympy import Dummy, lambdify, exp
+from sympy.external import import_module
 from sympy.stats import DiscreteDistributionHandmade
 from sympy.stats.crv import SingleContinuousDistribution
 from sympy.stats.crv_types import ChiSquaredDistribution, ExponentialDistribution, GammaDistribution, \
@@ -12,13 +12,17 @@ from sympy.stats.drv_types import GeometricDistribution, LogarithmicDistribution
 from sympy.stats.frv import SingleFiniteDistribution
 
 
+scipy = import_module("scipy")
+if scipy is not None:
+    import scipy.stats
+
+
 @singledispatch
 def do_sample_scipy(dist, size):
     return None
 
 
 # CRV
-
 
 @do_sample_scipy.register
 def _(dist: SingleContinuousDistribution, size):
@@ -149,7 +153,6 @@ def _(dist: ZetaDistribution, size):
 
 
 # FRV:
-
 
 @do_sample_scipy.register
 def _(dist: SingleFiniteDistribution, size):

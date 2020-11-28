@@ -1,11 +1,13 @@
-import pymc3
 from functools import singledispatch
-
+from sympy.external import import_module
 from sympy.stats.crv_types import BetaDistribution, CauchyDistribution, ChiSquaredDistribution, ExponentialDistribution, \
     GammaDistribution, LogNormalDistribution, NormalDistribution, ParetoDistribution, UniformDistribution, \
     GaussianInverseDistribution
 from sympy.stats.drv_types import PoissonDistribution, GeometricDistribution, NegativeBinomialDistribution
 from sympy.stats.frv_types import BinomialDistribution, BernoulliDistribution
+
+
+pymc3 = import_module('pymc3')
 
 
 @singledispatch
