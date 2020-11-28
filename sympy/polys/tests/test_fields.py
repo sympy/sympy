@@ -354,7 +354,7 @@ def test_FracField_index():
     F, x, y, z = field('x y z', QQ)
     assert F.index(x) == 0
     assert F.index(y) == 1
-    assert F.index(x.to_poly()) == 0
 
+    raises(ValueError, lambda: F.index(1))
     raises(ValueError, lambda: F.index(a))
     pass
