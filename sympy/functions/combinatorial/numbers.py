@@ -1451,7 +1451,7 @@ class motzkin(Function):
     >>> isprime(motzkin.motzkin(36))
     True
 
-    >>> from sympy import Symbol, Sum, binomial, hyper
+    >>> from sympy import Symbol, Sum, binomial
     >>> n = Symbol('n')
 
     >>> motzkin(n).rewrite(Sum)
@@ -1474,17 +1474,6 @@ class motzkin(Function):
     .. [3] https://oeis.org/A001006
 
     """
-
-    # @classmethod
-    # def eval(cls, n):
-    #     n = _sympify(n)
-    #     from sympy.functions.special.hyper import hyper
-    #     if n.is_number:
-    #         m = hyper((0.5*(1 - n), -0.5*n), [2], 4).evalf()
-    #         if n.is_Integer and n.is_nonnegative:
-    #             return int(m)
-    #         else:
-    #             return m
 
     @staticmethod
     @recurrence_memo([S.One, S.One])

@@ -6,8 +6,8 @@ from sympy import (
     TribonacciConstant)
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
-    genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, log, digamma,
-    trigamma, polygamma, factorial, sin, cos, cot, zeta)
+    genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log,
+     digamma, trigamma, polygamma, factorial, sin, cos, cot, zeta)
 from sympy.functions.combinatorial.numbers import _nT
 
 from sympy.core.expr import unchanged
