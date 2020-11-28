@@ -389,49 +389,49 @@ def test_ddm_irref():
     A = []
     Ar = []
     pivots = []
-    assert ddm_irref(A) == pivots
+    assert ddm_irref(A, QQ) == pivots
     assert A == Ar
 
     # Standard square case
     A = [[QQ(0), QQ(1)], [QQ(1), QQ(1)]]
     Ar = [[QQ(1), QQ(0)], [QQ(0), QQ(1)]]
     pivots = [0, 1]
-    assert ddm_irref(A) == pivots
+    assert ddm_irref(A, QQ) == pivots
     assert A == Ar
 
     # m < n  case
     A = [[QQ(1), QQ(2), QQ(1)], [QQ(3), QQ(4), QQ(1)]]
     Ar = [[QQ(1), QQ(0), QQ(-1)], [QQ(0), QQ(1), QQ(1)]]
     pivots = [0, 1]
-    assert ddm_irref(A) == pivots
+    assert ddm_irref(A, QQ) == pivots
     assert A == Ar
 
     # same m < n  but reversed
     A = [[QQ(3), QQ(4), QQ(1)], [QQ(1), QQ(2), QQ(1)]]
     Ar = [[QQ(1), QQ(0), QQ(-1)], [QQ(0), QQ(1), QQ(1)]]
     pivots = [0, 1]
-    assert ddm_irref(A) == pivots
+    assert ddm_irref(A, QQ) == pivots
     assert A == Ar
 
     # m > n case
     A = [[QQ(1), QQ(0)], [QQ(1), QQ(3)], [QQ(0), QQ(1)]]
     Ar = [[QQ(1), QQ(0)], [QQ(0), QQ(1)], [QQ(0), QQ(0)]]
     pivots = [0, 1]
-    assert ddm_irref(A) == pivots
+    assert ddm_irref(A, QQ) == pivots
     assert A == Ar
 
     # Example with missing pivot
     A = [[QQ(1), QQ(0), QQ(1)], [QQ(3), QQ(0), QQ(1)]]
     Ar = [[QQ(1), QQ(0), QQ(0)], [QQ(0), QQ(0), QQ(1)]]
     pivots = [0, 2]
-    assert ddm_irref(A) == pivots
+    assert ddm_irref(A, QQ) == pivots
     assert A == Ar
 
     # Example with missing pivot and no replacement
     A = [[QQ(0), QQ(1)], [QQ(0), QQ(2)], [QQ(1), QQ(0)]]
     Ar = [[QQ(1), QQ(0)], [QQ(0), QQ(1)], [QQ(0), QQ(0)]]
     pivots = [0, 1]
-    assert ddm_irref(A) == pivots
+    assert ddm_irref(A, QQ) == pivots
     assert A == Ar
 
 

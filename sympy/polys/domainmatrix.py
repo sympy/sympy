@@ -143,7 +143,7 @@ class DDM(list):
     def rref(a):
         """Reduced-row echelon form of a and list of pivots"""
         b = a.copy()
-        pivots = ddm_irref(b)
+        pivots = ddm_irref(b, a.domain)
         return b, pivots
 
     def det(a):
@@ -262,7 +262,23 @@ def ddm_imatmul(a, b, c):
             ai[j] = sum(map(mul, bi, cTj), ai[j])
 
 
-def ddm_irref(a):
+def ddm_irref(a, K):
+    """a  <--  rref(a)"""
+    return ddm_irref_score(a, ddm_pivot_scorer(K))
+
+
+def ddm_pivot_scorer(K):
+    """Return scoring function for selecting pivots over K"""
+    if K.is_FractionField:
+        def score(e):
+            n, d = e.numer, e.denom
+            return (-len(n), -len(d), n.is_ground, d.is_ground)
+    else:
+        score = bool
+    return score
+
+
+def ddm_irref_score(a, score):
     """a  <--  rref(a)"""
     # a is (m x n)
     m = len(a)
@@ -274,23 +290,22 @@ def ddm_irref(a):
     pivots = []
 
     for j in range(n):
-        # pivot
-        aij = a[i][j]
+        # nonzero pivots
+        nz_ip = [ip for ip in range(i, m) if a[ip][j]]
 
-        # zero-pivot
-        if not aij:
-            for ip in range(i+1, m):
-                aij = a[ip][j]
-                # row-swap
-                if aij:
-                    a[i], a[ip] = a[ip], a[i]
-                    break
-            else:
-                # next column
-                continue
+        # No pivots
+        if not nz_ip:
+            continue
+
+        # Find a pivot from the ground domain if possible
+        ip = max(nz_ip, key=lambda ip: score(a[ip][j]))
+
+        # Swap pivot to the current row
+        a[i], a[ip] = a[ip], a[i]
 
         # normalise row
         ai = a[i]
+        aij = ai[j]
         for l in range(j, n):
             ai[l] /= aij # ai[j] = one
 
@@ -379,7 +394,7 @@ def ddm_iinv(ainv, a, K):
 
     eye = [[K.one if i==j else K.zero for j in range(n)] for i in range(n)]
     Aaug = [row + eyerow for row, eyerow in zip(a, eye)]
-    pivots = ddm_irref(Aaug)
+    pivots = ddm_irref(Aaug, K)
     if pivots != list(range(n)):
         raise NonInvertibleMatrixError('Matrix det == 0; not invertible.')
     ainv[:] = [row[n:] for row in Aaug]
