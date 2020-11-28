@@ -126,6 +126,11 @@ class DDM(list):
         ddm_ineg(b)
         return b
 
+    def mul(a, b):
+        c = a.copy()
+        ddm_imul(c, b)
+        return c
+
     def matmul(a, b):
         """a @ b (matrix product)"""
         m, o = a.shape
@@ -138,7 +143,7 @@ class DDM(list):
     def rref(a):
         """Reduced-row echelon form of a and list of pivots"""
         b = a.copy()
-        pivots = ddm_irref(b)
+        pivots = ddm_irref(b, a.domain)
         return b, pivots
 
     def det(a):
@@ -151,14 +156,41 @@ class DDM(list):
         deta = ddm_idet(b, K)
         return deta
 
-    def inv(a):
+    def inv(a, *, method='GE'):
         """Inverse of a"""
         m, n = a.shape
         if m != n:
-            raise DDMShapeError("Determinant of non-square matrix")
+            raise DDMShapeError("Inverse of non-square matrix")
+        if method == 'GE':
+            return a._inv_ge()
+        elif method == 'LU':
+            return a._inv_lu()
+        elif method == 'charpoly':
+            return a._inv_charpoly()
+        else:
+            raise DDMError('No such method "%s"' % method)
+
+    def _inv_ge(a):
+        """Inverse using Gaussian elimination"""
         ainv = a.copy()
         K = a.domain
         ddm_iinv(ainv, a, K)
+        return ainv
+
+    def _inv_lu(a):
+        """Inverse using LU decomposition"""
+        e = a.eye(a.shape[0], a.domain)
+        return a.lu_solve(e)
+
+    def _inv_charpoly(a):
+        coeffs = a.charpoly()
+        e = a.eye(a.shape[0], a.domain)
+        an, ais, a0 = coeffs[0], coeffs[1:-1], coeffs[-1]
+        bi = a*an
+        for ai in ais[:-1]:
+            bi = a @ (e*ai + bi)
+        bi = bi + e*ais[-1]
+        ainv = bi * (-1/a0)
         return ainv
 
     def lu(a):
@@ -215,6 +247,12 @@ def ddm_ineg(a):
             ai[j] = -aij
 
 
+def ddm_imul(a, b):
+    for ai in a:
+        for j, aij in enumerate(ai):
+            ai[j] = b * aij
+
+
 def ddm_imatmul(a, b, c):
     """a += b @ c"""
     cT = list(zip(*c))
@@ -224,7 +262,23 @@ def ddm_imatmul(a, b, c):
             ai[j] = sum(map(mul, bi, cTj), ai[j])
 
 
-def ddm_irref(a):
+def ddm_irref(a, K):
+    """a  <--  rref(a)"""
+    return ddm_irref_score(a, ddm_pivot_scorer(K))
+
+
+def ddm_pivot_scorer(K):
+    """Return scoring function for selecting pivots over K"""
+    if K.is_FractionField:
+        def score(e):
+            n, d = e.numer, e.denom
+            return (-len(n), -len(d), n.is_ground, d.is_ground)
+    else:
+        score = bool
+    return score
+
+
+def ddm_irref_score(a, score):
     """a  <--  rref(a)"""
     # a is (m x n)
     m = len(a)
@@ -236,23 +290,22 @@ def ddm_irref(a):
     pivots = []
 
     for j in range(n):
-        # pivot
-        aij = a[i][j]
+        # nonzero pivots
+        nz_ip = [ip for ip in range(i, m) if a[ip][j]]
 
-        # zero-pivot
-        if not aij:
-            for ip in range(i+1, m):
-                aij = a[ip][j]
-                # row-swap
-                if aij:
-                    a[i], a[ip] = a[ip], a[i]
-                    break
-            else:
-                # next column
-                continue
+        # No pivots
+        if not nz_ip:
+            continue
+
+        # Find a pivot from the ground domain if possible
+        ip = max(nz_ip, key=lambda ip: score(a[ip][j]))
+
+        # Swap pivot to the current row
+        a[i], a[ip] = a[ip], a[i]
 
         # normalise row
         ai = a[i]
+        aij = ai[j]
         for l in range(j, n):
             ai[l] /= aij # ai[j] = one
 
@@ -341,7 +394,7 @@ def ddm_iinv(ainv, a, K):
 
     eye = [[K.one if i==j else K.zero for j in range(n)] for i in range(n)]
     Aaug = [row + eyerow for row, eyerow in zip(a, eye)]
-    pivots = ddm_irref(Aaug)
+    pivots = ddm_irref(Aaug, K)
     if pivots != list(range(n)):
         raise NonInvertibleMatrixError('Matrix det == 0; not invertible.')
     ainv[:] = [row[n:] for row in Aaug]
@@ -506,6 +559,10 @@ class DomainMatrix:
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
 
     @classmethod
+    def from_Matrix(cls, M):
+        return cls.from_list_sympy(*M.shape, M.tolist())
+
+    @classmethod
     def get_domain(cls, items_sympy, **kwargs):
         K, items_K = construct_domain(items_sympy, **kwargs)
         return K, items_K
@@ -556,9 +613,18 @@ class DomainMatrix:
 
     def __mul__(A, B):
         """A * B"""
-        if not isinstance(B, DomainMatrix):
+        if isinstance(B, DomainMatrix):
+            return A.matmul(B)
+        elif B in A.domain:
+            return A.from_ddm(A.rep * B)
+        else:
             return NotImplemented
-        return A.matmul(B)
+
+    def __rmul__(A, B):
+        if B in A.domain:
+            return A.from_ddm(A.rep * B)
+        else:
+            return NotImplemented
 
     def __pow__(A, n):
         """A ** n"""
@@ -609,13 +675,13 @@ class DomainMatrix:
         rref_ddm, pivots = self.rep.rref()
         return self.from_ddm(rref_ddm), tuple(pivots)
 
-    def inv(self):
+    def inv(self, *, method='GE'):
         if not self.domain.is_Field:
             raise ValueError('Not a field')
         m, n = self.shape
         if m != n:
             raise NonSquareMatrixError
-        inv = self.rep.inv()
+        inv = self.rep.inv(method=method)
         return self.from_ddm(inv)
 
     def det(self):
