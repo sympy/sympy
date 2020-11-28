@@ -151,6 +151,14 @@ class FracField(DefaultPrinting):
     def __hash__(self):
         return self._hash
 
+    def index(self, gen):
+        if isinstance(gen, self.dtype):
+            return self.ring.index(gen.to_poly())
+        elif isinstance(gen, self.ring.dtype) or isinstance(gen, int) or isinstance(gen, str):
+            return self.ring.index(gen)
+        else:
+            raise ValueError("expected a polynomial generator, an integer, a string or None, got %s" % gen)
+
     def __eq__(self, other):
         return isinstance(other, FracField) and \
             (self.symbols, self.ngens, self.domain, self.order) == \

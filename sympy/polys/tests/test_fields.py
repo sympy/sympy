@@ -348,3 +348,13 @@ def test_FracElement_subs():
 
 def test_FracElement_compose():
     pass
+
+def test_FracField_index():
+    a = symbols("a")
+    F, x, y, z = field('x y z', QQ)
+    assert F.index(x) == 0
+    assert F.index(y) == 1
+    assert F.index(x.to_poly()) == 0
+
+    raises(ValueError, lambda: F.index(a))
+    pass
