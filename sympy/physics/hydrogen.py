@@ -11,10 +11,12 @@ def R_nl(n, l, r, Z=1):
     Parameters
     ==========
 
-    n : integer with possible values as 1, 2, 3, 4,...
-        Principal Quantum Number.
-    l : integer ranging from 0 to ``n-1``.
-        Angular Momentum Quantum Number.
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
     r :
         Radial coordinate.
     Z :
@@ -95,12 +97,15 @@ def Psi_nlm(n, l, m, r, phi, theta, Z=1):
     Parameters
     ==========
 
-    n : integer with possible values as 1, 2, 3, 4,...
-        Principal Quantum Number.
-    l : integer ranging from 0 to ``n-1``.
-        Angular Momentum Quantum Number.
-    m : integer ranging from ``-l`` to ``l``.
-        Magnetic Quantum Number.
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
+    m : integer
+        ``m`` is the Magnetic Quantum Number with values
+        ranging from ``-l`` to ``l``.
     r :
         radial coordinate
     phi :
@@ -161,8 +166,9 @@ def E_nl(n, Z=1):
     Parameters
     ==========
 
-    n : integer with possible values as 1, 2, 3, 4,...
-        Principal Quantum Number.
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
     Z :
         Atomic number (1 for Hydrogen, 2 for Helium, ...)
 
@@ -200,10 +206,12 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     Parameters
     ==========
 
-    n : integer with possible values as 1, 2, 3, 4,...
-        Principal Quantum Number.
-    l : integer ranging from 0 to ``n-1``.
-        Angular Momentum Quantum Number.
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
     spin_up :
         True if the electron spin is up (default), otherwise down
     Z :
