@@ -155,7 +155,7 @@ class FracField(DefaultPrinting):
         if isinstance(gen, self.dtype):
             return self.ring.index(gen.to_poly())
         else:
-            raise ValueError("expected a %, got %s instead" % (self.dtype,gen,))
+            raise ValueError("expected a %s, got %s instead" % (self.dtype,gen))
 
     def __eq__(self, other):
         return isinstance(other, FracField) and \
