@@ -13,6 +13,8 @@ from sympy.core.compatibility import (
     as_int, default_sort_key, is_sequence, iterable, ordered
 )
 
+import sympy
+
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
 
@@ -1274,7 +1276,7 @@ def rotate_right(x, y):
     return x[y:] + x[:y]
 
 
-def least_rotation(x):
+def least_rotation(x, key=None):
     '''
     Returns the number of steps of left rotation required to
     obtain lexicographically minimal string/list/tuple, etc.
@@ -1295,6 +1297,7 @@ def least_rotation(x):
     .. [1] https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
 
     '''
+    if key is None: key = sympy.Id
     S = x + x      # Concatenate string to it self to avoid modular arithmetic
     f = [-1] * len(S)     # Failure function
     k = 0       # Least rotation of string found so far
@@ -1302,11 +1305,11 @@ def least_rotation(x):
         sj = S[j]
         i = f[j-k-1]
         while i != -1 and sj != S[k+i+1]:
-            if default_sort_key(sj) < default_sort_key(S[k+i+1]):
+            if key(sj) < key(S[k+i+1]):
                 k = j-i-1
             i = f[i]
         if sj != S[k+i+1]:
-            if default_sort_key(sj) < default_sort_key(S[k]):
+            if key(sj) < key(S[k]):
                 k = j
             f[j-k] = -1
         else:
@@ -2398,7 +2401,7 @@ def generate_oriented_forest(n):
                 break
 
 
-def minlex(seq, directed=True):
+def minlex(seq, directed=True, key=None):
     """
     Return the rotation of the sequence in which the lexically smallest
     elements appear first, e.g. `cba ->acb`.
@@ -2408,6 +2411,8 @@ def minlex(seq, directed=True):
 
     If ``directed`` is False then the smaller of the sequence and the
     reversed sequence is returned, e.g. `cba -> abc`.
+
+    If ``key`` is not None then it is used to extract a comparison key from each element in iterable.
 
     Examples
     ========
@@ -2425,13 +2430,19 @@ def minlex(seq, directed=True):
     >>> minlex('11010011000', directed=False)
     '00011001011'
 
+    >>> minlex(('bb', 'aaa', 'c', 'a'))
+    ('a', 'bb', 'aaa', 'c')
+    >>> minlex(('bb', 'aaa', 'c', 'a'), key=len)
+    ('c', 'a', 'bb', 'aaa')
+
     """
 
-    best = rotate_left(seq, least_rotation(seq))
+    if key is None: key = sympy.Id
+    best = rotate_left(seq, least_rotation(seq, key=key))
     if not directed:
         rseq = seq[::-1]
-        rbest = rotate_left(rseq, least_rotation(rseq))
-        best = min(best, rbest, key=default_sort_key)
+        rbest = rotate_left(rseq, least_rotation(rseq, key=key))
+        best = min(best, rbest, key=key)
 
     # Convert to tuple, unless we started with a string.
     return tuple(best) if not isinstance(seq, str) else best
