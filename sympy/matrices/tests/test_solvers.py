@@ -547,7 +547,7 @@ def test_linsolve_underdetermined_AND_gauss_jordan_solve():
                           [tau3],
                           [tau4]])
 
-    # https://github.com/sympy/sympy/issues/19885
+    # https://github.com/sympy/sympy/issues/19815
     sol_2 = A[ : , : -1 ] * sol_1 - A[ : , -1 ]
     assert sol_2 == Matrix([[0] , [0] , [0]])
 
