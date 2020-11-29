@@ -10,7 +10,15 @@ from .type_g import TypeG
 
 class CartanType_generator(Basic):
     """
-    Constructor for actually creating things
+    Constructor for initializing any of the lie algebra classes by way of passing
+    string args.
+
+    Examples
+    ========
+
+    >>> from sympy.liealgebras import CartanType # CartanType = CartanType_generator()
+    >>> CartanType("A4")
+    TypeA(A, 4)
     """
     def __call__(self, *args):
         c = args[0]

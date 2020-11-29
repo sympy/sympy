@@ -26,4 +26,4 @@ def test_CartanType():
                         ['2/3', '-1/3', '-1/3'],
                         ['1/3',  '1/3', '-2/3']])
 
-    assert c2.fundamental_weight(0) == Matrix([['2/3', '-1/3', '-1/3']])
+    assert c2.fundamental_weight(1) == Matrix([['2/3', '-1/3', '-1/3']])
