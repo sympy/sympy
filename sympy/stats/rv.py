@@ -1469,7 +1469,7 @@ class Distribution(Basic):
             return samps
         raise NotImplementedError(
             "Sampling for %s is not currently implemented from %s"
-            % (self.__class__.__name__, library))
+            % (self, library))
 
 
 def _value_check(condition, message):
