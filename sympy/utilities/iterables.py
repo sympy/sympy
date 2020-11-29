@@ -9,9 +9,8 @@ from operator import gt
 from sympy.core import Basic
 
 # this is the logical location of these functions
-from sympy.core.compatibility import (
-    as_int, default_sort_key, is_sequence, iterable, ordered
-)
+from sympy.core.compatibility import (as_int, is_sequence, iterable, ordered)
+from sympy.core.compatibility import default_sort_key  # noqa: F401
 
 import sympy
 
