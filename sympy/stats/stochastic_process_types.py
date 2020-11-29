@@ -1055,13 +1055,32 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return sympify(list(zip(classes, recurrence, periods)))
 
     def fundamental_matrix(self):
+        """
+        Each entry fundamental matrix can be interpreted as
+        the expected number of times the chains is in state j
+        if it started in state i.
+
+        References
+        ==========
+
+        .. [1] https://lips.cs.princeton.edu/the-fundamental-matrix-of-a-finite-markov-chain/
+
+        """
         _, _, _, Q = self.decompose()
-        if Q == None:
-            return None
-        I = eye(Q.shape[0])
-        if Q.shape[0]*Q.shape[1] == 0 or (I - Q).det() == 0:
-            raise ValueError("Fundamental matrix doesn't exists.")
-        return ImmutableMatrix((I - Q).inv().tolist())
+
+        if Q.shape[0] > 0:  # if non-ergodic
+            I = eye(Q.shape[0])
+            if (I - Q).det() == 0:
+                raise ValueError("The fundamental matrix doesn't exist.")
+            return (I - Q).inv().as_immutable()
+        else:  # if ergodic
+            P = self.transition_probabilities
+            I = eye(P.shape[0])
+            w = self.fixed_row_vector()
+            W = Matrix([list(w) for i in range(0, P.shape[0])])
+            if (I - P + W).det() == 0:
+                raise ValueError("The fundamental matrix doesn't exist.")
+            return (I - P + W).inv().as_immutable()
 
     def absorbing_probabilities(self):
         """
