@@ -2,6 +2,7 @@ import numbers
 import decimal
 import fractions
 import math
+from math import floor, log10
 import re as regex
 
 from .containers import Tuple
@@ -13,8 +14,7 @@ from .evalf import pure_complex
 from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
-from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS,
-    int_info, gmpy)
+from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS, int_info, gmpy)
 from sympy.core.cache import lru_cache
 from sympy.multipledispatch import dispatch
 import mpmath
@@ -26,7 +26,7 @@ from mpmath.ctx_mp import mpnumeric
 from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
-    prec_to_dps)
+    prec_to_dps, dps_to_prec)
 from sympy.utilities.misc import debug, filldedent
 from .parameters import global_parameters
 
@@ -70,7 +70,7 @@ def comp(z1, z2, tol=None):
     ``|z1| > 1`` the error is normalized by ``|z1|``:
 
     >>> abs(pi4 - 3.14)/pi4
-    0.000509791731426756
+    0.0005
     >>> comp(pi4, 3.14, .001)  # difference less than 0.1%
     True
     >>> comp(pi4, 3.14, .0005)  # difference less than 0.1%
@@ -81,9 +81,9 @@ def comp(z1, z2, tol=None):
     >>> 1/pi4
     0.3183
     >>> abs(1/pi4 - 0.3183)/(1/pi4)
-    3.07371499106316e-5
+    3.e-5
     >>> abs(1/pi4 - 0.3183)
-    9.78393554684764e-6
+    1.e-5
     >>> comp(1/pi4, 0.3183, 1e-5)
     True
 
@@ -92,7 +92,7 @@ def comp(z1, z2, tol=None):
     or ``comp(z1 - z2, tol=tol)``:
 
     >>> abs(pi4 - 3.14)
-    0.00160156249999988
+    0.002
     >>> comp(pi4 - 3.14, 0, .002)
     True
     >>> comp(pi4 - 3.14, 0, .001)
@@ -175,6 +175,7 @@ def mpf_norm(mpf, prec):
     rv = mpf_normalize(sign, MPZ(man), expt, bc, prec, rnd)
     return rv
 
+
 # TODO: we should use the warnings module
 _errdict = {"divide": False}
 
@@ -221,6 +222,56 @@ _floatpat = regex.compile(r"[-+]?((\d*\.\d+)|(\d+\.?))")
 def _literal_float(f):
     """Return True if n starts like a floating point number."""
     return bool(_floatpat.match(f))
+
+
+def _most_sig(x):
+    # return 0 if mpf precision < 1
+    if x[3] < 1:
+        return 0
+
+    x = (0,) + x[1:]
+
+    fx = mlib.to_float(x)
+    try:
+        decimal_digits = floor(log10(fx))
+    except (ValueError, OverflowError):
+        # 53 should be enough
+        decimal_digits = mlib.to_int(mlib.mpf_floor(mlib.mpf_div(
+            mlib.mpf_log(x, 53), mlib.mpf_ln10(53), 53
+        )))
+
+    # check for error
+    if fx < 10**decimal_digits:
+        decimal_digits -= 1
+
+    if decimal_digits == 0:
+        return 0
+
+    binary_prec = math.copysign(dps_to_prec(abs(decimal_digits)) - 4, decimal_digits)
+    return int(binary_prec)
+
+
+def _significants(x):
+    most_sig = _most_sig(x._as_mpf_val(x._prec))
+    return most_sig, most_sig - x._prec + 4
+
+
+def _significants_helper(f, other):
+    if mlib.to_float(f._mpf_) == 0:
+        sig_f = (0, -f._prec + 4)
+    else:
+        sig_f = _significants(f)
+
+    if other.is_Rational:
+        return max(sig_f[0], _most_sig(other._as_mpf_val(f._prec))), sig_f[1]
+
+    if mlib.to_float(other._mpf_) == 0:
+        sig_other = -other._prec + 4
+        return max(sig_f[0], sig_other), max(sig_f[1], sig_other)
+
+    sig_other = _significants(other)
+
+    return max(sig_f[0], sig_other[0]), max(sig_f[1], sig_other[1])
 
 # (a,b) -> gcd(a,b)
 
@@ -1117,7 +1168,7 @@ class Float(Number):
                     if num.is_Integer and isint:
                         dps = max(dps, len(str(num).lstrip('-')))
                     dps = max(15, dps)
-                    precision = mlib.libmpf.dps_to_prec(dps)
+                    precision = dps_to_prec(dps)
         elif precision == '' and dps is None or precision is None and dps == '':
             if not isinstance(num, str):
                 raise ValueError('The null string can only be used when '
@@ -1133,7 +1184,7 @@ class Float(Number):
                     num, dps = _decimal_to_Rational_prec(Num)
                     if num.is_Integer and isint:
                         dps = max(dps, len(str(num).lstrip('-')))
-                        precision = mlib.libmpf.dps_to_prec(dps)
+                        precision = dps_to_prec(dps)
                     ok = True
             if ok is None:
                 raise ValueError('string-float not recognized: %s' % num)
@@ -1144,7 +1195,7 @@ class Float(Number):
         # precision.
 
         if precision is None or precision == '':
-            precision = mlib.libmpf.dps_to_prec(dps)
+            precision = dps_to_prec(dps)
 
         precision = int(precision)
 
@@ -1251,7 +1302,8 @@ class Float(Number):
         return rv
 
     def _as_mpf_op(self, prec):
-        return self._mpf_, max(prec, self._prec)
+        # follow significance arithmetic for operations b/w floats
+        return self._mpf_, min(prec, self._prec)
 
     def _eval_is_finite(self):
         if self._mpf_ in (_mpf_inf, _mpf_ninf):
@@ -1302,15 +1354,31 @@ class Float(Number):
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
-            rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
+            most_sig, least_sig = _significants_helper(self, other)
+            prec = most_sig - least_sig + 7
+            mpf_result = mlib.mpf_add(self._mpf_, other._as_mpf_val(prec), prec, rnd)
+            result_most_sig = _most_sig(mpf_result)
+            if least_sig > result_most_sig:
+                return Float._new(mpf_result, 1)
+            if result_most_sig == least_sig:
+                round_factor = -math.copysign(prec_to_dps(abs(result_most_sig) + 4), result_most_sig) - 1
+                return round(Float._new(mpf_result, 10), int(round_factor))
+            return Float._new(mpf_result, result_most_sig - least_sig + 4)
         return Number.__add__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
-            rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(mlib.mpf_sub(self._mpf_, rhs, prec, rnd), prec)
+            most_sig, least_sig = _significants_helper(self, other)
+            prec = most_sig - least_sig + 7
+            mpf_result = mlib.mpf_sub(self._mpf_, other._as_mpf_val(prec), prec, rnd)
+            result_most_sig = _most_sig(mpf_result)
+            if least_sig > result_most_sig:
+                return Float._new(mpf_result, 1)
+            if result_most_sig == least_sig:
+                round_factor = -math.copysign(prec_to_dps(abs(result_most_sig) + 4), result_most_sig) - 1
+                return round(Float._new(mpf_result, 10), int(round_factor))
+            return Float._new(mpf_result, result_most_sig - least_sig + 4)
         return Number.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
@@ -1732,6 +1800,7 @@ class Rational(Number):
             else:
                 return Number.__sub__(self, other)
         return Number.__sub__(self, other)
+
     @_sympifyit('other', NotImplemented)
     def __rsub__(self, other):
         if global_parameters.evaluate:
@@ -1744,6 +1813,7 @@ class Rational(Number):
             else:
                 return Number.__rsub__(self, other)
         return Number.__rsub__(self, other)
+
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if global_parameters.evaluate:
@@ -1773,6 +1843,7 @@ class Rational(Number):
             else:
                 return Number.__truediv__(self, other)
         return Number.__truediv__(self, other)
+
     @_sympifyit('other', NotImplemented)
     def __rtruediv__(self, other):
         if global_parameters.evaluate:
