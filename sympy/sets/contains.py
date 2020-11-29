@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S
 from sympy.core.relational import Eq, Ne
 from sympy.logic.boolalg import BooleanFunction

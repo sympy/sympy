@@ -622,7 +622,7 @@ def lcim(numbers):
 
     return result
 
-def is_convex(f, *syms, **kwargs):
+def is_convex(f, *syms, domain=S.Reals):
     """Determines the  convexity of the function passed in the argument.
 
     Parameters
@@ -687,7 +687,6 @@ def is_convex(f, *syms, **kwargs):
             "The check for the convexity of multivariate functions is not implemented yet.")
 
     f = _sympify(f)
-    domain = kwargs.get('domain', S.Reals)
     var = syms[0]
     condition = f.diff(var, 2) < 0
     if solve_univariate_inequality(condition, var, False, domain):
@@ -1524,7 +1523,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
     if is_lt(lhs.max, rhs.min):
         return False
 
-@dispatch(AccumulationBounds, Expr)
+@dispatch(AccumulationBounds, Expr)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa: F811
     """
     Returns True if range of values attained by `lhs` AccumulationBounds
@@ -1556,7 +1555,7 @@ def _eval_is_ge(lhs, rhs): # noqa: F811
             return False
 
 
-@dispatch(Expr, AccumulationBounds)
+@dispatch(Expr, AccumulationBounds)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if not lhs.is_extended_real:
         raise TypeError(
@@ -1569,7 +1568,7 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
             return False
 
 
-@dispatch(AccumulationBounds, AccumulationBounds)
+@dispatch(AccumulationBounds, AccumulationBounds)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if is_ge(lhs.min, rhs.max):
         return True

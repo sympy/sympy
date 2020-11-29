@@ -14,8 +14,6 @@ the actual diagnostic code is in bin/diagnose_imports, which is run as a
 separate, pristine Python process.
 """
 
-from __future__ import print_function
-
 import subprocess
 import sys
 from os.path import abspath, dirname, join, normpath

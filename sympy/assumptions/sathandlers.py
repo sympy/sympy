@@ -17,7 +17,10 @@ from sympy.matrices.expressions import MatMul
 
 class UnevaluatedOnFree(BooleanFunction):
     """
-    Represents a Boolean function that remains unevaluated on free predicates
+    Represents a Boolean function that remains unevaluated on free predicates.
+
+    Explanation
+    ===========
 
     This is intended to be a superclass of other classes, which define the
     behavior on singly applied predicates.
@@ -92,6 +95,7 @@ class AllArgs(UnevaluatedOnFree):
 
     Example
     =======
+
     >>> from sympy.assumptions.sathandlers import AllArgs
     >>> from sympy import symbols, Q
     >>> x, y = symbols('x y')
@@ -101,6 +105,11 @@ class AllArgs(UnevaluatedOnFree):
     >>> a.rcall(x*y)
     ((Literal(Q.negative(x), False) | Literal(Q.positive(x), False)) & (Literal(Q.negative(y), False) | \
     Literal(Q.positive(y), False)))
+
+    See Also
+    ========
+
+    UnevaluatedOnFree
 
     """
 
@@ -260,7 +269,10 @@ class CustomLambda:
 
 class ClassFactRegistry(MutableMapping):
     """
-    Register handlers against classes
+    Register handlers against classes.
+
+    Explanation
+    ===========
 
     ``registry[C] = handler`` registers ``handler`` for class
     ``C``. ``registry[C]`` returns a set of handlers for class ``C``, or any

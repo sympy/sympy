@@ -26,21 +26,21 @@ from sympy.combinatorics.util import _distribute_gens_by_base, \
 
 def dummy_sgs(dummies, sym, n):
     """
-    Return the strong generators for dummy indices
+    Return the strong generators for dummy indices.
 
     Parameters
     ==========
 
-    dummies : list of dummy indices
-        `dummies[2k], dummies[2k+1]` are paired indices
+    dummies : List of dummy indices.
+        `dummies[2k], dummies[2k+1]` are paired indices.
+        In base form, the dummy indices are always in
+        consecutive positions.
     sym : symmetry under interchange of contracted dummies::
         * None  no symmetry
         * 0     commuting
         * 1     anticommuting
 
     n : number of indices
-
-    in base form the dummy indices are always in consecutive positions
 
     Examples
     ========
@@ -73,9 +73,9 @@ def dummy_sgs(dummies, sym, n):
 
 def _min_dummies(dummies, sym, indices):
     """
-    Return list of minima of the orbits of indices in group of dummies
-    see `double_coset_can_rep` for the description of `dummies` and `sym`
-    indices is the initial list of dummy indices
+    Return list of minima of the orbits of indices in group of dummies.
+    See ``double_coset_can_rep`` for the description of ``dummies`` and ``sym``.
+    ``indices`` is the initial list of dummy indices.
 
     Examples
     ========
@@ -163,7 +163,7 @@ def transversal2coset(size, base, transversal):
 
 def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     """
-    Butler-Portugal algorithm for tensor canonicalization with dummy indices
+    Butler-Portugal algorithm for tensor canonicalization with dummy indices.
 
     Parameters
     ==========
@@ -537,16 +537,19 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
 
 def canonical_free(base, gens, g, num_free):
     """
-    canonicalization of a tensor with respect to free indices
+    Canonicalization of a tensor with respect to free indices
     choosing the minimum with respect to lexicographical ordering
-    in the free indices
+    in the free indices.
+
+    Explanation
+    ===========
 
     ``base``, ``gens``  BSGS for slot permutation group
     ``g``               permutation representing the tensor
     ``num_free``        number of free indices
     The indices must be ordered with first the free indices
 
-    see explanation in double_coset_can_rep
+    See explanation in double_coset_can_rep
     The algorithm is a variation of the one given in [2].
 
     Examples
@@ -649,11 +652,13 @@ def canonicalize(g, dummies, msym, *v):
       the dummy indices must come after the free indices,
       and put in order contravariant, covariant
       [d0, -d0, d1,-d1,...]
+
     msym :  symmetry of the metric(s)
         it can be an integer or a list;
         in the first case it is the symmetry of the dummy index metric;
         in the second case it is the list of the symmetries of the
         index metric for each type
+
     v : list, (base_i, gens_i, n_i, sym_i) for tensors of type `i`
 
     base_i, gens_i : BSGS for tensors of this type.
@@ -859,7 +864,7 @@ def canonicalize(g, dummies, msym, *v):
 
 def perm_af_direct_product(gens1, gens2, signed=True):
     """
-    direct products of the generators gens1 and gens2
+    Direct products of the generators gens1 and gens2.
 
     Examples
     ========
@@ -896,18 +901,18 @@ def perm_af_direct_product(gens1, gens2, signed=True):
 
 def bsgs_direct_product(base1, gens1, base2, gens2, signed=True):
     """
-    Direct product of two BSGS
+    Direct product of two BSGS.
 
     Parameters
     ==========
 
-    base1    base of the first BSGS.
+    base1 : base of the first BSGS.
 
-    gens1    strong generating sequence of the first BSGS.
+    gens1 : strong generating sequence of the first BSGS.
 
-    base2, gens2   similarly for the second BSGS.
+    base2, gens2 : similarly for the second BSGS.
 
-    signed   flag for signed permutations.
+    signed : flag for signed permutations.
 
     Examples
     ========
@@ -937,10 +942,13 @@ def get_symmetric_group_sgs(n, antisym=False):
     """
     Return base, gens of the minimal BSGS for (anti)symmetric tensor
 
-    ``n``  rank of the tensor
+    Parameters
+    ==========
 
-    ``antisym = False`` symmetric tensor
-    ``antisym = True``  antisymmetric tensor
+    ``n``: rank of the tensor
+    ``antisym`` : bool
+        ``antisym = False`` symmetric tensor
+        ``antisym = True``  antisymmetric tensor
 
     Examples
     ========
@@ -1034,7 +1042,10 @@ def get_minimal_bsgs(base, gens):
 def tensor_gens(base, gens, list_free_indices, sym=0):
     """
     Returns size, res_base, res_gens BSGS for n tensors of the
-    same type
+    same type.
+
+    Explanation
+    ===========
 
     base, gens BSGS for tensors of this type
     list_free_indices  list of the slots occupied by fixed indices
@@ -1150,7 +1161,10 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
 
 def gens_products(*v):
     """
-    Returns size, res_base, res_gens BSGS for n tensors of different types
+    Returns size, res_base, res_gens BSGS for n tensors of different types.
+
+    Explanation
+    ===========
 
     v is a sequence of (base_i, gens_i, free_i, sym_i)
     where

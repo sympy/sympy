@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 import pyglet.gl as pgl
 from pyglet import font
 
@@ -177,7 +175,7 @@ class PlotAxesBase(PlotObject):
 class PlotAxesOrdinate(PlotAxesBase):
 
     def __init__(self, parent_axes):
-        super(PlotAxesOrdinate, self).__init__(parent_axes)
+        super().__init__(parent_axes)
 
     def draw_axis(self, axis, color):
         ticks = self._p._axis_ticks[axis]
@@ -244,7 +242,7 @@ class PlotAxesOrdinate(PlotAxesBase):
 class PlotAxesFrame(PlotAxesBase):
 
     def __init__(self, parent_axes):
-        super(PlotAxesFrame, self).__init__(parent_axes)
+        super().__init__(parent_axes)
 
     def draw_background(self, color):
         pass

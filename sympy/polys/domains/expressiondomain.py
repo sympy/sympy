@@ -1,6 +1,5 @@
 """Implementation of :class:`ExpressionDomain` class. """
 
-from __future__ import print_function, division
 
 from sympy.core import sympify, SympifyError
 from sympy.polys.domains.characteristiczero import CharacteristicZero
@@ -121,7 +120,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
             return not f == g
 
         def __bool__(f):
-            return f.ex != 0
+            return not f.ex.is_zero
 
         def gcd(f, g):
             from sympy.polys import gcd

@@ -7,7 +7,6 @@ sympy.stats.frv_types
 sympy.stats.rv
 sympy.stats.crv
 """
-from __future__ import print_function, division
 from itertools import product
 
 from sympy import (Basic, Symbol, cacheit, sympify, Mul,
@@ -196,7 +195,7 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     def dict(self):
         if self.is_symbolic:
             return Density(self)
-        return dict((k, self.pmf(k)) for k in self.set)
+        return {k: self.pmf(k) for k in self.set}
 
     def pmf(self, *args): # to be overridden by specific distribution
         raise NotImplementedError()
@@ -232,8 +231,8 @@ class FinitePSpace(PSpace):
     is_Finite = True
 
     def __new__(cls, domain, density):
-        density = dict((sympify(key), sympify(val))
-                for key, val in density.items())
+        density = {sympify(key): sympify(val)
+                for key, val in density.items()}
         public_density = Dict(density)
 
         obj = PSpace.__new__(cls, domain, public_density)
@@ -334,8 +333,8 @@ class FinitePSpace(PSpace):
     def conditional_space(self, condition):
         domain = self.where(condition)
         prob = self.probability(condition)
-        density = dict((key, val / prob)
-                for key, val in self._density.items() if domain._test(key))
+        density = {key: val / prob
+                for key, val in self._density.items() if domain._test(key)}
         return FinitePSpace(domain, density)
 
     def sample(self, size=(), library='scipy'):
@@ -472,8 +471,8 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     @property # type: ignore
     @cacheit
     def _density(self):
-        return dict((FiniteSet((self.symbol, val)), prob)
-                    for val, prob in self.distribution.dict.items())
+        return {FiniteSet((self.symbol, val)): prob
+                    for val, prob in self.distribution.dict.items()}
 
     @cacheit
     def compute_characteristic_function(self, expr):
@@ -558,8 +557,8 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
             self
         domain = self.where(condition)
         prob = self.probability(condition)
-        density = dict((key, val / prob)
-                for key, val in self._density.items() if domain._test(key))
+        density = {key: val / prob
+                for key, val in self._density.items() if domain._test(key)}
         return FinitePSpace(domain, density)
 
 

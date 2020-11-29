@@ -6,8 +6,6 @@ This module has all the classes and functions related to waves in optics.
 * TWave
 """
 
-from __future__ import print_function, division
-
 __all__ = ['TWave']
 
 from sympy import (sympify, pi, sin, cos, sqrt, Symbol, S,
@@ -25,6 +23,9 @@ class TWave(Expr):
     This is a simple transverse sine wave travelling in a one-dimensional space.
     Basic properties are required at the time of creation of the object,
     but they can be changed later with respective methods provided.
+
+    Explanation
+    ===========
 
     It is represented as :math:`A \times cos(k*x - \omega \times t + \phi )`,
     where :math:`A` is the amplitude, :math:`\omega` is the angular velocity,

@@ -4,7 +4,7 @@ from sympy import (
     Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
     factorial, Float, Function, gamma, GoldenRatio, hyper,
     hypersimp, I, Integral, integrate, KroneckerDelta, log, logcombine, Lt,
-    Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, posify, rad,
+    Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, Poly, posify, rad,
     Rational, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan,
     zoo)
@@ -561,7 +561,7 @@ def test_as_content_primitive():
     # although the _as_content_primitive methods do not alter the underlying structure,
     # the as_content_primitive function will touch up the expression and join
     # bases that would otherwise have not been joined.
-    assert ((x*(2 + 2*x)*(3*x + 3)**2)).as_content_primitive() == \
+    assert (x*(2 + 2*x)*(3*x + 3)**2).as_content_primitive() == \
         (18, x*(x + 1)**3)
     assert (2 + 2*x + 2*y*(3 + 3*y)).as_content_primitive() == \
         (2, x + 3*y*(y + 1) + 1)
@@ -571,7 +571,7 @@ def test_as_content_primitive():
         (1, (_keep_coeff(S(2), (3*x + 1)))**(2*y))
     assert (5 + 10*x + 2*y*(3 + 3*y)).as_content_primitive() == \
         (1, 10*x + 6*y*(y + 1) + 5)
-    assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive() == \
+    assert (5*(x*(1 + y)) + 2*x*(3 + 3*y)).as_content_primitive() == \
         (11, x*(y + 1))
     assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive() == \
         (121, x**2*(y + 1)**2)
@@ -910,3 +910,7 @@ def test_issue_19484():
     f = Function('f')
     e = x + sign(x + f(x)**3)
     assert simplify(Abs(x + f(x)**3) * e) == x*Abs(x + f(x)**3) + x + f(x)**3
+
+def test_issue_19161():
+    polynomial = Poly('x**2').simplify()
+    assert (polynomial-x**2).simplify() == 0

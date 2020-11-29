@@ -113,6 +113,9 @@ def _af_parity(pi):
     """
     Computes the parity of a permutation in array form.
 
+    Explanation
+    ===========
+
     The parity of a permutation reflects the parity of the
     number of inversions in the permutation, i.e., the
     number of pairs of x and y such that x > y but p[x] < p[y].
@@ -237,6 +240,9 @@ def _af_commutes_with(a, b):
 class Cycle(dict):
     """
     Wrapper around dict which provides the functionality of a disjoint cycle.
+
+    Explanation
+    ===========
 
     A cycle shows the rule to use to move subsets of elements to obtain
     a permutation. The Cycle class is more flexible than Permutation in
@@ -1365,6 +1371,9 @@ class Permutation(Atom):
     def __xor__(self, h):
         """Return the conjugate permutation ``~h*self*h` `.
 
+        Explanation
+        ===========
+
         If ``a`` and ``b`` are conjugates, ``a = h*b*~h`` and
         ``b = ~h*a*h`` and both have the same cycle structure.
 
@@ -1442,6 +1451,9 @@ class Permutation(Atom):
     def transpositions(self):
         """
         Return the permutation decomposed into a list of transpositions.
+
+        Explanation
+        ===========
 
         It is always possible to express a permutation as the product of
         transpositions, see [1]
@@ -1845,6 +1857,9 @@ class Permutation(Atom):
         """
         Computes the parity of a permutation.
 
+        Explanation
+        ===========
+
         The parity of a permutation reflects the parity of the
         number of inversions in the permutation, i.e., the
         number of pairs of x and y such that ``x > y`` but ``p[x] < p[y]``.
@@ -2089,6 +2104,9 @@ class Permutation(Atom):
         """
         Computes the number of inversions of a permutation.
 
+        Explanation
+        ===========
+
         An inversion is where i > j but p[i] < p[j].
 
         For small length of p, it iterates over all i and j
@@ -2143,7 +2161,7 @@ class Permutation(Atom):
         return inversions
 
     def commutator(self, x):
-        """Return the commutator of self and x: ``~x*~self*x*self``
+        """Return the commutator of ``self`` and ``x``: ``~x*~self*x*self``
 
         If f and g are part of a group, G, then the commutator of f and g
         is the group identity iff f and g commute, i.e. fg == gf.
@@ -2585,6 +2603,9 @@ class Permutation(Atom):
         """
         Computes the precedence distance between two permutations.
 
+        Explanation
+        ===========
+
         Suppose p and p' represent n jobs. The precedence metric
         counts the number of times a job j is preceded by job i
         in both p and p'. This metric is commutative.
@@ -2622,6 +2643,9 @@ class Permutation(Atom):
     def get_adjacency_matrix(self):
         """
         Computes the adjacency matrix of a permutation.
+
+        Explanation
+        ===========
 
         If job i is adjacent to job j in a permutation p
         then we set m[i, j] = 1 where m is the adjacency
@@ -2662,6 +2686,9 @@ class Permutation(Atom):
     def get_adjacency_distance(self, other):
         """
         Computes the adjacency distance between two permutations.
+
+        Explanation
+        ===========
 
         This metric counts the number of times a pair i,j of jobs is
         adjacent in both p and p'. If n_adj is this quantity then

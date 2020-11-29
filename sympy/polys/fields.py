@@ -1,6 +1,5 @@
 """Sparse rational function fields. """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
@@ -151,6 +150,12 @@ class FracField(DefaultPrinting):
 
     def __hash__(self):
         return self._hash
+
+    def index(self, gen):
+        if isinstance(gen, self.dtype):
+            return self.ring.index(gen.to_poly())
+        else:
+            raise ValueError("expected a %s, got %s instead" % (self.dtype,gen))
 
     def __eq__(self, other):
         return isinstance(other, FracField) and \

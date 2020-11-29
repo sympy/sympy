@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 import itertools
 
 from sympy.core import S
@@ -12,7 +10,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import SympifyError
 from sympy.printing.conventions import requires_partial
 from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditional
-from sympy.printing.printer import Printer
+from sympy.printing.printer import Printer, print_function
 from sympy.printing.str import sstr
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_variety
@@ -2509,8 +2507,8 @@ class PrettyPrinter(Printer):
 
     def _print_KroneckerDelta(self, e):
         pform = self._print(e.args[0])
-        pform = prettyForm(*pform.right((prettyForm(','))))
-        pform = prettyForm(*pform.right((self._print(e.args[1]))))
+        pform = prettyForm(*pform.right(prettyForm(',')))
+        pform = prettyForm(*pform.right(self._print(e.args[1])))
         if self._use_unicode:
             a = stringPict(pretty_symbol('delta'))
         else:
@@ -2716,6 +2714,7 @@ class PrettyPrinter(Printer):
     def _print_Str(self, s):
         return self._print(s.name)
 
+@print_function(PrettyPrinter)
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.
 

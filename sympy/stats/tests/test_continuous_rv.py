@@ -337,7 +337,7 @@ def test_sample_continuous():
 def test_ContinuousRV():
     pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))  # Normal distribution
     # X and Y should be equivalent
-    X = ContinuousRV(x, pdf)
+    X = ContinuousRV(x, pdf, check=True)
     Y = Normal('y', 0, 1)
 
     assert variance(X) == variance(Y)
@@ -346,7 +346,16 @@ def test_ContinuousRV():
     assert Z.pspace.domain.set == Interval(0, oo)
     assert E(Z) == 1
     assert P(Z > 5) == exp(-5)
-    raises(ValueError, lambda: ContinuousRV(z, exp(-z), set=Interval(0, 10)))
+    raises(ValueError, lambda: ContinuousRV(z, exp(-z), set=Interval(0, 10), check=True))
+
+    # the correct pdf for Gamma(k, theta) but the integral in `check`
+    # integrates to something equivalent to 1 and not to 1 exactly
+    _x, k, theta = symbols("x k theta", positive=True)
+    pdf = 1/(gamma(k)*theta**k)*_x**(k-1)*exp(-_x/theta)
+    X = ContinuousRV(_x, pdf, set=Interval(0, oo))
+    Y = Gamma('y', k, theta)
+    assert (E(X) - E(Y)).simplify() == 0
+    assert (variance(X) - variance(Y)).simplify() == 0
 
 
 def test_arcsin():
@@ -1047,7 +1056,7 @@ def test_pareto_numeric():
     X = Pareto('x', xm, alpha)
 
     assert E(X) == alpha*xm/S(alpha - 1)
-    assert variance(X) == xm**2*alpha / S(((alpha - 1)**2*(alpha - 2)))
+    assert variance(X) == xm**2*alpha / S((alpha - 1)**2*(alpha - 2))
     assert median(X) == FiniteSet(3*2**Rational(1, 7))
     # Skewness tests too slow. Try shortcutting function?
 
@@ -1319,7 +1328,7 @@ def test_prefab_sampling():
     size = 5
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         for var in variables:
-            for i in range(niter):
+            for _ in range(niter):
                 assert next(sample(var)) in var.pspace.domain.set
                 samps = next(sample(var, size=size))
                 for samp in samps:

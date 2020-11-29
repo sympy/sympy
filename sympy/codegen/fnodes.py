@@ -30,7 +30,7 @@ intent_inout = Attribute('intent_inout')
 allocatable = Attribute('allocatable')
 
 class Program(Token):
-    """ Represents a 'program' block in Fortran
+    """ Represents a 'program' block in Fortran.
 
     Examples
     ========
@@ -43,6 +43,7 @@ class Program(Token):
     program myprogram
         print *, 42
     end program
+
     """
     __slots__ = ('name', 'body')
     _construct_name = String
@@ -50,7 +51,7 @@ class Program(Token):
 
 
 class use_rename(Token):
-    """ Represents a renaming in a use statement in Fortran
+    """ Represents a renaming in a use statement in Fortran.
 
     Examples
     ========
@@ -63,6 +64,7 @@ class use_rename(Token):
     >>> full = use('signallib', only=['snr', ren])
     >>> print(fcode(full, source_format='free'))
     use signallib, only: snr, thingy => convolution2d
+
     """
     __slots__ = ('local', 'original')
     _construct_local = String
@@ -75,7 +77,7 @@ def _name(arg):
         return String(arg)
 
 class use(Token):
-    """ Represents a use statement in Fortran
+    """ Represents a use statement in Fortran.
 
     Examples
     ========
@@ -88,6 +90,7 @@ class use(Token):
     'use signallib, metric => snr'
     >>> fcode(use('signallib', only=['snr', 'convolution2d']), source_format='free')
     'use signallib, only: snr, convolution2d'
+
     """
     __slots__ = ('namespace', 'rename', 'only')
     defaults = {'rename': none, 'only': none}
@@ -97,7 +100,7 @@ class use(Token):
 
 
 class Module(Token):
-    """ Represents a module in Fortran
+    """ Represents a module in Fortran.
 
     Examples
     ========
@@ -122,7 +125,7 @@ class Module(Token):
 
 
 class Subroutine(Node):
-    """ Represents a subroutine in Fortran
+    """ Represents a subroutine in Fortran.
 
     Examples
     ========
@@ -139,6 +142,7 @@ class Subroutine(Node):
     real*8 :: y
     print *, x**2 + y**2, x*y
     end subroutine
+
     """
     __slots__ = ('name', 'parameters', 'body', 'attrs')
     _construct_name = String
@@ -152,7 +156,7 @@ class Subroutine(Node):
             return CodeBlock(*itr)
 
 class SubroutineCall(Token):
-    """ Represents a call to a subroutine in Fortran
+    """ Represents a call to a subroutine in Fortran.
 
     Examples
     ========
@@ -161,6 +165,7 @@ class SubroutineCall(Token):
     >>> from sympy.printing import fcode
     >>> fcode(SubroutineCall('mysub', 'x y'.split()))
     '       call mysub(x, y)'
+
     """
     __slots__ = ('name', 'subroutine_args')
     _construct_name = staticmethod(_name)
@@ -168,7 +173,7 @@ class SubroutineCall(Token):
 
 
 class Do(Token):
-    """ Represents a Do loop in in Fortran
+    """ Represents a Do loop in in Fortran.
 
     Examples
     ========
@@ -192,6 +197,7 @@ class Do(Token):
         r = r + 1d0/i
         print *, i, r
     end do
+
     """
 
     __slots__ = ('body', 'counter', 'first', 'last', 'step', 'concurrent')
@@ -205,7 +211,7 @@ class Do(Token):
 
 
 class ArrayConstructor(Token):
-    """ Represents an array constructor
+    """ Represents an array constructor.
 
     Examples
     ========
@@ -224,7 +230,7 @@ class ArrayConstructor(Token):
 
 
 class ImpliedDoLoop(Token):
-    """ Represents an implied do loop in Fortran
+    """ Represents an implied do loop in Fortran.
 
     Examples
     ========
@@ -321,7 +327,7 @@ def dimension(*args):
 assumed_size = dimension('*')
 
 def array(symbol, dim, intent=None, *, attrs=(), value=None, type=None):
-    """ Convenience function for creating a Variable instance for a Fortran array
+    """ Convenience function for creating a Variable instance for a Fortran array.
 
     Parameters
     ==========
@@ -347,6 +353,7 @@ def array(symbol, dim, intent=None, *, attrs=(), value=None, type=None):
     >>> x = array('x', [3, ':', ':'], intent='out', type=real)
     >>> print(fcode(x.as_Declaration(value=1), source_format='free', standard=2003))
     real*8, dimension(3, :, :), intent(out) :: x = 1
+
     """
     if isinstance(dim, Attribute):
         if str(dim.name) != 'dimension':
@@ -379,6 +386,7 @@ def allocated(array):
     >>> alloc = allocated('x')
     >>> fcode(alloc, source_format='free')
     'allocated(x)'
+
     """
     return FunctionCall('allocated', [_printable(array)])
 
@@ -401,6 +409,7 @@ def lbound(array, dim=None, kind=None):
     >>> lb = lbound('arr', dim=2)
     >>> fcode(lb, source_format='free')
     'lbound(arr, 2)'
+
     """
     return FunctionCall(
         'lbound',
@@ -436,6 +445,7 @@ def shape(source, kind=None):
     >>> shp = shape('x')
     >>> fcode(shp, source_format='free')
     'shape(x)'
+
     """
     return FunctionCall(
         'shape',
@@ -481,6 +491,7 @@ def reshape(source, shape, pad=None, order=None):
 
     source : Symbol or String
     shape : ArrayExpr
+
     """
     return FunctionCall(
         'reshape',
@@ -491,7 +502,7 @@ def reshape(source, shape, pad=None, order=None):
 
 
 def bind_C(name=None):
-    """ Creates an Attribute ``bind_C`` with a name
+    """ Creates an Attribute ``bind_C`` with a name.
 
     Parameters
     ==========
@@ -516,6 +527,7 @@ def bind_C(name=None):
     integer*4 :: s
     rms = sqrt(sum(a**2)/s)
     end function
+
     """
     return Attribute('bind_C', [String(name)] if name else [])
 
@@ -530,6 +542,7 @@ class GoTo(Token):
     >>> from sympy.printing import fcode
     >>> fcode(go, source_format='free')
     'go to (10, 20, 30), i'
+
     """
     __slots__ = ('labels', 'expr')
     defaults = {'expr': none}
@@ -539,6 +552,9 @@ class GoTo(Token):
 
 class FortranReturn(Token):
     """ AST node explicitly mapped to a fortran "return".
+
+    Explanation
+    ===========
 
     Because a return statement in fortran is different from C, and
     in order to aid reuse of our codegen ASTs the ordinary
@@ -553,6 +569,7 @@ class FortranReturn(Token):
     >>> from sympy.printing import fcode
     >>> fcode(FortranReturn('x'))
     '       return x'
+
     """
     __slots__ = ('return_value',)
     defaults = {'return_value': none}

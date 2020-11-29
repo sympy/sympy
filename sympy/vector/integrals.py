@@ -125,7 +125,7 @@ class ParametricIntegral(Basic):
             for q in V:
                 if p == q:
                     continue
-                if lower_p.issuperset(set([q])) or upper_p.issuperset(set([q])):
+                if lower_p.issuperset({q}) or upper_p.issuperset({q}):
                     E.append((p, q))
 
         if not E:
@@ -150,14 +150,14 @@ def vector_integrate(field, *region):
     Examples
     ========
     >>> from sympy.vector import CoordSys3D, ParametricRegion, vector_integrate
-    >>> from sympy.abc import t
+    >>> from sympy.abc import x, y, t
     >>> C = CoordSys3D('C')
 
     >>> region = ParametricRegion((t, t**2), (t, 1, 5))
     >>> vector_integrate(C.x*C.i, region)
     12
 
-    Integrals over special regions can also be calculated using geometry module.
+    Integrals over some objects of geometry module can also be calculated.
 
     >>> from sympy.geometry import Point, Circle, Triangle
     >>> c = Circle(Point(0, 2), 5)
@@ -168,17 +168,24 @@ def vector_integrate(field, *region):
     -8
 
     Integrals over some simple implicit regions can be computed. But in most cases,
-    it takes too long to compute over them.
-    >>> from sympy.abc import x, y
+    it takes too long to compute over them. This is due to the expressions of parametric
+    representation becoming large.
+
     >>> from sympy.vector import ImplicitRegion
     >>> c2 = ImplicitRegion((x, y), (x - 2)**2 + (y - 1)**2 - 9)
     >>> vector_integrate(1, c2)
     12*pi
 
+    Integral of fields with respect to base scalars:
+
     >>> vector_integrate(12*C.y**3, (C.y, 1, 3))
     240
     >>> vector_integrate(C.x**2*C.z, C.x)
     C.x**3*C.z/3
+    >>> vector_integrate(C.x*C.i - C.y*C.k, C.x)
+    (Integral(C.x, C.x))*C.i + (Integral(-C.y, C.x))*C.k
+    >>> _.doit()
+    C.x**2/2*C.i + (-C.x*C.y)*C.k
 
     """
     if len(region) == 1:

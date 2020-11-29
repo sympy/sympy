@@ -947,7 +947,7 @@ def first_in_class(C, Y=[]):
 #                    Simplifying Presentation
 #========================================================================
 
-def simplify_presentation(*args, **kwargs):
+def simplify_presentation(*args, change_gens=False):
     '''
     For an instance of `FpGroup`, return a simplified isomorphic copy of
     the group (e.g. remove redundant generators or relators). Alternatively,
@@ -959,8 +959,6 @@ def simplify_presentation(*args, **kwargs):
     `change_gens = True`.
 
     '''
-    change_gens = kwargs.get("change_gens", False)
-
     if len(args) == 1:
         if not isinstance(args[0], FpGroup):
             raise TypeError("The argument must be an instance of FpGroup")
