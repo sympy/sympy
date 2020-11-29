@@ -155,7 +155,7 @@ def _ode_solver_test(ode_examples, run_slow_test=False):
             'dsolve_too_slow':ode_examples['examples'][example].get('dsolve_too_slow',False),
             'checkodesol_too_slow':ode_examples['examples'][example].get('checkodesol_too_slow',False),
         }
-        if (not run_slow_test) and temp['slow']:
+        if ((not run_slow_test) and temp['slow']) or (run_slow_test and (not temp['slow'])):
             continue
 
         result = _test_particular_example(our_hint, temp, solver_flag=True)
