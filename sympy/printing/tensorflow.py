@@ -69,7 +69,7 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         sympy.Trace: "tensorflow.linalg.trace",
 
         # XXX May raise error for integer matrices.
-        sympy.Determinant : "tensorflow.linalg.det",
+        sympy.Determinant: "tensorflow.linalg.det",
     }
 
     _default_settings = dict(
