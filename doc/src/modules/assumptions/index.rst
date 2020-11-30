@@ -17,30 +17,42 @@ Contents
     refine.rst
     handlers/index.rst
 
-Queries are used to ask information about expressions. Main method for this
-is ask():
 
-.. autofunction:: sympy.assumptions.ask::ask
+Predicates
+==========
+
+
+.. autoclass:: sympy.assumptions.assume::Predicate
    :noindex:
+
+.. autoclass:: sympy.assumptions.assume::AppliedPredicate
+   :noindex:
+
 
 Querying
 ========
 
-ask's optional second argument should be a boolean expression involving
-assumptions about objects in expr. Valid values include:
+Queries are used to ask information about expressions. Main method for this
+is ``ask()``:
 
-    * Q.integer(x)
-    * Q.positive(x)
-    * Q.integer(x) & Q.positive(x)
+.. autofunction:: sympy.assumptions.ask::ask
+   :noindex:
+
+``ask``'s optional second argument should be a boolean expression involving
+assumptions about objects in *expr*. Valid values include:
+
+    * ``Q.integer(x)``
+    * ``Q.positive(x)``
+    * ``Q.integer(x) & Q.positive(x)``
     * etc.
 
-Q is an object holding known predicates.
+``Q`` is an object holding known predicates.
 
 See documentation for the logic module for a complete list of valid boolean
 expressions.
 
 You can also define a context so you don't have to pass that argument
-each time to function ask(). This is done by using the assuming context manager
+each time to function ``ask()``. This is done by using the assuming context manager
 from module sympy.assumptions. ::
 
      >>> from sympy import *
@@ -55,64 +67,35 @@ from module sympy.assumptions. ::
 Design
 ======
 
-Each time ask is called, the appropriate Handler for the current key is called. This is
-always a subclass of sympy.assumptions.AskHandler. Its classmethods have the names of the classes
-it supports. For example, a (simplified) AskHandler for the ask 'positive' would
-look like this::
+Each time ``ask()`` is called, the appropriate handler for the current predicate is called. This is
+always a multiple dispatch function and is an instance of ``sympy.assumptions.AskHandlerClass``.
+Class signature for its arguments is registered to the handler. For example, a handler for the key
+'positive' would look like this::
 
-    class AskPositiveHandler(CommonHandler):
+    AskPositiveHandler = AskHandlerClass('positive')
 
-        def Mul(self):
-            # return True if all argument's in self.expr.args are positive
-            ...
-
-        def Add(self):
-            for arg in self.expr.args:
-                if not ask(arg, positive, self.assumptions):
-                    break
-            else:
-                # if all argument's are positive
-                return True
+    @AskPositiveHandler.register(Mul)
+    def Mul_handler(expr, assumptions):
+        # check the arguments of expr and return True, False or None accordingly
         ...
 
-The .Mul() method is called when self.expr is an instance of Mul, the Add method
-would be called when self.expr is an instance of Add and so on.
+    @AskPositiveHandler.register(Add)
+    def Add_handler(expr, assumptions):
+        ...
+
+The function ``Mul_handler()`` is called when ``expr`` is an instance of :class:`~.Mul()`, and ``Add_handler()``
+is called when ``expr`` is an instance of :class:`~.Add()`.
 
 
 Extensibility
 =============
 
-You can define new queries or support new types by subclassing sympy.assumptions.AskHandler
- and registering that handler for a particular key by calling register_handler:
+You can define new queries by registering the predicate for a particular key with
+``generate_predicate`` function. Supporting new types for the handler is done by
+dispatching:
 
-.. autofunction:: sympy.assumptions.ask::register_handler
+.. autofunction:: sympy.assumptions.ask::generate_predicate
                   :noindex:
-
-You can undo this operation by calling remove_handler.
-
-.. autofunction:: sympy.assumptions.ask::remove_handler
-                  :noindex:
-
-You can support new types [1]_ by adding a handler to an existing key. In the
-following example, we will create a new type MyType and extend the key 'prime'
-to accept this type (and return True)
-
-.. parsed-literal::
-
-    >>> from sympy.core import Basic
-    >>> from sympy.assumptions import register_handler
-    >>> from sympy.assumptions.handlers import AskHandler
-    >>> class MyType(Basic):
-    ...     pass
-    >>> class MyAskHandler(AskHandler):
-    ...     @staticmethod
-    ...     def MyType(expr, assumptions):
-    ...         return True
-    >>> a = MyType()
-    >>> register_handler('prime', MyAskHandler)
-    >>> ask(Q.prime(a))
-    True
-
 
 Performance improvements
 ========================
@@ -130,6 +113,3 @@ Misc
 
 You can find more examples in the in the form of test under directory
 sympy/assumptions/tests/
-
-.. [1] New type must inherit from Basic, otherwise an exception will be raised.
-   This is a bug and should be fixed.

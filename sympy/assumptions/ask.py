@@ -1,7 +1,7 @@
 """Module for querying SymPy objects about assumptions."""
 
 from sympy.assumptions.assume import (global_assumptions, Predicate,
-        AppliedPredicate)
+        AppliedPredicate, AskHandlerClass)
 from sympy.core import sympify
 from sympy.core.cache import cacheit
 from sympy.core.relational import Relational
@@ -19,9 +19,14 @@ from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 
 class AssumptionKeys:
     """
-    This class contains all the supported keys by ``ask``. It should be accessed via the instance ``sympy.Q``.
+    This class contains all the supported keys by ``ask``.
+    It should be accessed via the instance ``sympy.Q``.
 
     """
+
+    # DO NOT add methods or properties other than predicate keys.
+    # SAT solver checks the properties of Q and use them to compute the
+    # fact system. Non-predicate attributes will break this.
 
     @memoize_property
     def hermitian(self):
@@ -1325,18 +1330,31 @@ def _extract_all_facts(expr, symbol):
 
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
-    Method for inferring properties about objects.
-
-    Explanation
-    ===========
+    Function for inferring properties about objects.
 
     **Syntax**
 
         * ask(proposition)
+            Evaluate the *proposition* in global assumption context.
 
         * ask(proposition, assumptions)
+            Evaluate the *proposition* with respect to *assumptions* in
+            global assumption context.
 
-            where ``proposition`` is any boolean expression
+    Parameters
+    ==========
+
+    proposition : any boolean expression
+        Proposition which will be evaluated to boolean value. If this is
+        not ``AppliedPredicate``, it will be wrapped by ``Q.is_true``.
+
+    assumptions : any boolean expression, optional
+        Local assumptions to evaluate the *proposition*.
+
+    context : AssumptionsContext, optional
+        Default assumptions to evaluate the *proposition*. By default,
+        this is ``global_assumptions``.
+
 
     Examples
     ========
@@ -1350,7 +1368,13 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     >>> ask(Q.prime(4*x), Q.integer(x))
     False
 
+    If the truth value cannot be determined, ``None`` will be returned.
+
+    >>> print(ask(Q.odd(3*x))) # cannot determine unless we know x
+    None
+
     **Remarks**
+
         Relations in assumptions are not implemented (yet), so the following
         will not give a meaningful result.
 
@@ -1425,6 +1449,51 @@ def ask_full_inference(proposition, assumptions, known_facts_cnf):
     return None
 
 
+def generate_predicate(key):
+    """
+    Generate and register a predicate to ``Q`` by *key*.
+
+    Explanation
+    ===========
+
+    This function generates an empty predicate to ``Q``, and you can
+    access it by ``Q.[key]``. You have to dispatch the types to the
+    new predicate's handler after this.
+
+    Parameters
+    ==========
+
+    key : str
+        Key for the predicate in ``Q``.
+
+    Examples
+    ========
+
+    Generating a predicate:
+
+    >>> from sympy.assumptions import Q, generate_predicate, ask
+    >>> generate_predicate('mersenne')
+    >>> Q.mersenne
+    Q.mersenne
+
+    Dispatching to generated predicate:
+
+    >>> from sympy import Integer
+    >>> @Q.mersenne.handler.register(Integer)
+    ... def _(expr, assumptions):
+    ...     from sympy import ask, log
+    ...     return ask(Q.integer(log(expr + 1, 2)))
+    >>> ask(Q.mersenne(7))
+    True
+    >>> del Q.mersenne
+
+    """
+    name = ''.join(["Ask", key.capitalize(), "Handler"])
+    handler = AskHandlerClass(name, doc="Handler for key %s" % name)
+    predicate = Predicate(key, handler)
+    setattr(Q, key, predicate)
+
+
 def register_handler(key, handler):
     """
     Register a handler in the ask system. key must be a string and handler a
@@ -1443,17 +1512,19 @@ def register_handler(key, handler):
         True
 
     """
+    # Will be deprecated
     if type(key) is Predicate:
         key = key.name
     Qkey = getattr(Q, key, None)
     if Qkey is not None:
         Qkey.add_handler(handler)
     else:
-        setattr(Q, key, Predicate(key, handlers=[handler]))
+        setattr(Q, key, Predicate(key, handler=[handler]))
 
 
 def remove_handler(key, handler):
     """Removes a handler from the ask system. Same syntax as register_handler"""
+    # Will be deprecated
     if type(key) is Predicate:
         key = key.name
     getattr(Q, key).remove_handler(handler)
@@ -1543,7 +1614,7 @@ def compute_known_facts(known_facts, known_facts_keys):
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
     ("antihermitian",     "sets.AskAntiHermitianHandler"),
-    ("finite",           "calculus.AskFiniteHandler"),
+    ("finite",            "calculus.AskFiniteHandler"),
     ("commutative",       "AskCommutativeHandler"),
     ("complex",           "sets.AskComplexHandler"),
     ("composite",         "ntheory.AskCompositeHandler"),

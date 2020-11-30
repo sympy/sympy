@@ -1,9 +1,15 @@
-from .assume import AppliedPredicate, Predicate, AssumptionsContext, assuming
-from .ask import Q, ask, register_handler, remove_handler
+from .assume import (
+    AskHandlerClass,
+    AppliedPredicate, Predicate, AssumptionsContext, assuming,
+    global_assumptions
+)
+from .ask import Q, ask, register_handler, remove_handler, generate_predicate
 from .refine import refine
 
 __all__ = [
+    'AskHandlerClass',
     'AppliedPredicate', 'Predicate', 'AssumptionsContext', 'assuming',
-    'Q', 'ask', 'register_handler', 'remove_handler',
+    'global_assumptions', 'Q', 'ask', 'register_handler', 'remove_handler',
+    'generate_predicate',
     'refine',
 ]

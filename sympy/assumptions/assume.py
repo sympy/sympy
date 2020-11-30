@@ -1,10 +1,16 @@
+"""A module which implements predicates and assumption context."""
+
+from contextlib import contextmanager
 import inspect
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
+from sympy.multipledispatch.dispatcher import (
+    Dispatcher, MDNotImplementedError
+)
+from sympy.multipledispatch.conflict import ordering
 from sympy.utilities.source import get_class
-from contextlib import contextmanager
 
 
 class AssumptionsContext(set):
@@ -21,18 +27,40 @@ class AssumptionsContext(set):
     Examples
     ========
 
+    Default assumption context is ``global_assumptions``, which is empty
+    by default.
+
     >>> from sympy import Q
-    >>> from sympy.assumptions.assume import global_assumptions
+    >>> from sympy.assumptions import global_assumptions
     >>> global_assumptions
     AssumptionsContext()
+
+    You can add default assumption.
+
     >>> from sympy.abc import x
     >>> global_assumptions.add(Q.real(x))
     >>> global_assumptions
     AssumptionsContext({Q.real(x)})
+    >>> global_assumptions.add(Q.positive(x))
+    >>> global_assumptions
+    AssumptionsContext({Q.positive(x), Q.real(x)})
+
+    And you can remove it.
+
     >>> global_assumptions.remove(Q.real(x))
     >>> global_assumptions
-    AssumptionsContext()
+    AssumptionsContext({Q.positive(x)})
+
+    ``clear()`` method removes every assumptions.
+
     >>> global_assumptions.clear()
+    >>> global_assumptions
+    AssumptionsContext()
+
+    See Also
+    ========
+
+    assuming
 
     """
 
@@ -50,26 +78,41 @@ global_assumptions = AssumptionsContext()
 
 
 class AppliedPredicate(Boolean):
-    """The class of expressions resulting from applying a Predicate.
+    """
+    The class of expressions resulting from applying ``Predicate`` to
+    the arguments. ``AppliedPredicate`` merely wraps its argument and
+    remain unevaluated. To evaluate it, use ``ask`` function.
 
     Examples
     ========
 
-    >>> from sympy import Q, Symbol
-    >>> x = Symbol('x')
-    >>> Q.integer(x)
-    Q.integer(x)
-    >>> type(Q.integer(x))
+    >>> from sympy import Q, ask
+    >>> Q.integer(1)
+    Q.integer(1)
+
+    ``func`` attribute returns the predicate, and ``args`` attribute
+    returns the argument.
+
+    >>> type(Q.integer(1))
     <class 'sympy.assumptions.assume.AppliedPredicate'>
+    >>> Q.integer(1).func
+    Q.integer
+    >>> Q.integer(1).args
+    (1,)
+
+    Applied predicate can be evaluated to boolean value.
+
+    >>> ask(Q.integer(1))
+    True
 
     """
     __slots__ = ()
 
+    is_Atom = True  # do not attempt to decompose this
+
     def __new__(cls, predicate, arg):
         arg = _sympify(arg)
         return Boolean.__new__(cls, predicate, arg)
-
-    is_Atom = True  # do not attempt to decompose this
 
     @property
     def arg(self):
@@ -124,41 +167,92 @@ class AppliedPredicate(Boolean):
 
 class Predicate(Boolean):
     """
-    A predicate is a function that returns a boolean value.
+    A predicate is a function that returns a boolean value [1].
 
-    Predicates merely wrap their argument and remain unevaluated:
+    Explanation
+    ===========
 
-        >>> from sympy import Q, ask
-        >>> type(Q.prime)
-        <class 'sympy.assumptions.assume.Predicate'>
-        >>> Q.prime.name
-        'prime'
-        >>> Q.prime(7)
-        Q.prime(7)
-        >>> _.func.name
-        'prime'
+    Predicate consists of name and multipledispatch handler.
 
-    To obtain the truth value of an expression containing predicates, use
-    the function ``ask``:
+    When a predicate is applied to arguments, ``AppliedPredicate``
+    instance is returned. This merely wraps the argument and remain
+    unevaluated. To obtain the truth value of applied predicate, use the
+    function ``ask``. It will use predicate's handler to evaluate it to
+    boolean value - ``True``, ``False`` or ``None``.
 
-        >>> ask(Q.prime(7))
-        True
+    Every predicate in SymPy can be accessed via the property of ``Q``.
+    For example, ``Q.even`` returns the predicate which checks if the
+    argument is even number.
+
+    Currently, only unary predicate is supported. Polyadic predicate
+    will be implemented in future.
+
+    Examples
+    ========
+
+    Structure of predicate:
+
+    >>> from sympy import Q
+    >>> type(Q.prime)
+    <class 'sympy.assumptions.assume.Predicate'>
+    >>> Q.prime.name
+    'prime'
+
+    Applying returns ``AppliedPredicate``:
+
+    >>> expr = Q.prime(7)
+    >>> type(expr)
+    <class 'sympy.assumptions.assume.AppliedPredicate'>
+    >>> expr.func
+    Q.prime
+    >>> expr.args
+    (7,)
+
+    Evaluating to boolean value:
+
+    >>> from sympy import ask
+    >>> ask(Q.prime(7))
+    True
 
     The tautological predicate ``Q.is_true`` can be used to wrap other objects:
+    >>> from sympy.abc import x
+    >>> Q.is_true(x > 1)
+    Q.is_true(x > 1)
 
-        >>> from sympy.abc import x
-        >>> Q.is_true(x > 1)
-        Q.is_true(x > 1)
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Predicate_(mathematical_logic)
 
     """
 
     is_Atom = True
 
-    def __new__(cls, name, handlers=None):
+    def __new__(cls, name, handler=None):
         obj = Boolean.__new__(cls)
         obj.name = name
-        obj.handlers = handlers or []
+
+        if isinstance(handler, Dispatcher):
+            # new design
+            obj._handler = handler
+            obj.handlers = []
+        else:
+            # Old design. Will be deprecated.
+            obj._handler = None
+            obj.handlers = [] if handler is None else handler[:]
+
         return obj
+
+    @property
+    def handler(self):
+        """
+        Multipledispatch handler instance of *self*.
+
+        Since the handlers in ``assumptions.handlers`` module cannot be
+        imported due to circular import problem, we store the path in
+        ``self._handler`` and get it in runtime by this property.
+        """
+        return get_class(self._handler)
 
     def _hashable_content(self):
         return (self.name,)
@@ -170,9 +264,11 @@ class Predicate(Boolean):
         return AppliedPredicate(self, expr)
 
     def add_handler(self, handler):
+        # Will be deprecated
         self.handlers.append(handler)
 
     def remove_handler(self, handler):
+        # Will be deprecated
         self.handlers.remove(handler)
 
     @cacheit
@@ -185,6 +281,13 @@ class Predicate(Boolean):
 
         This uses only direct resolution methods, not logical inference.
         """
+        if isinstance(self.handler, Dispatcher):
+            return self.handler(expr, assumptions=assumptions)
+        # deprecated design
+        return self.deprecated_eval(expr, assumptions=assumptions)
+
+    def deprecated_eval(self, expr, assumptions=True):
+        # deprecation warning will be added here
         res, _res = None, None
         mro = inspect.getmro(type(expr))
         for handler in self.handlers:
@@ -211,6 +314,131 @@ class Predicate(Boolean):
         return res
 
 
+class AskHandlerClass(Dispatcher):
+    """
+    Class for handler which evaluates the ``AppliedPredicate``.
+
+    Explanation
+    ===========
+
+    This class dispatches various types, and return fuzzy boolean values
+    when called.
+    When the dispatched function return ``None``, the next function for
+    the signature is queried until some other value is returned, or no
+    more registered function is left.
+
+    Parameters
+    ==========
+
+    name : str
+
+    doc : str, optional
+
+    base : tuple of AskHandlerClass, optional
+        Base dispatchers, which inherites the dispatched functions.
+
+    Examples
+    ========
+
+    Generate a base dispatcher ``MyHandler``.
+
+    >>> from sympy import Symbol, Add
+    >>> from sympy.assumptions import AskHandlerClass
+    >>> from sympy.abc import x
+    >>> MyHandler = AskHandlerClass('myhandler')
+    >>> @MyHandler.register(Symbol)
+    ... def _(expr, assumptions):
+    ...     return True
+    >>> @MyHandler.register(Add)
+    ... def _(expr, assumptions):
+    ...     return False
+    >>> MyHandler(x, assumptions=True)
+    True
+    >>> MyHandler(x+1, assumptions=True)
+    False
+    >>> print(MyHandler(2*x, assumptions=True)) # unregistred type
+    None
+
+    Generate new dispatcher ``MyHandler2``, which uses ``MyHandler`` as
+    base dispatcher
+
+    >>> MyHandler2 = AskHandlerClass('myhandler2', base=MyHandler)
+    >>> @MyHandler2.register(Add)
+    ... def _(expr, assumptions):
+    ...     return True
+    >>> MyHandler2(x, assumptions=True) # refer to base
+    True
+    >>> MyHandler2(x+1, assumptions=True)
+    True
+
+    """
+
+    def __init__(self, name, doc=None, base=()):
+        super().__init__(name, doc)
+        if not type(base) is tuple:
+            base = (base,)
+        for b in reversed(base):
+            self.funcs.update(b.funcs)
+        self.ordering = ordering(self.funcs)
+        self.base = base
+
+    def __call__(self, *args, **kwargs):
+        # If `None` is returned, search for next function
+        # If all signature return `None`, return `None`
+        types = tuple([type(arg) for arg in args])
+
+        try:
+            func = self._cache[types]
+        except KeyError:
+            func = self.dispatch(*types)
+            self._cache[types] = func
+
+        if not func:
+            return None
+
+        result = None
+        try:
+            # might return None
+            result = func(*args, **kwargs)
+        except MDNotImplementedError:
+            pass
+        if result is not None:
+            return result
+
+        # Search for next function which does not return None
+        funcs = self.dispatch_iter(*types)
+        next(funcs)  # burn first
+        for func in funcs:
+            try:
+                result = func(*args, **kwargs)
+                if result is not None:
+                    return result
+            except MDNotImplementedError:
+                continue
+        return None
+
+    @staticmethod
+    def AlwaysTrue(expr, assumptions):
+        return True
+
+    @staticmethod
+    def AlwaysFalse(expr, assumptions):
+        return False
+
+    @staticmethod
+    def AlwaysNone(expr, assumptions):
+        return None
+
+    def __getstate__(self):
+        return {'name': self.name,
+                'funcs': self.funcs,
+                'base': self.base}
+
+    def __setstate__(self, d):
+        super().__setstate__(d)
+        self.base = d['base']
+
+
 @contextmanager
 def assuming(*assumptions):
     """
@@ -221,10 +449,8 @@ def assuming(*assumptions):
 
     >>> from sympy.assumptions import assuming, Q, ask
     >>> from sympy.abc import x, y
-
     >>> print(ask(Q.integer(x + y)))
     None
-
     >>> with assuming(Q.integer(x), Q.integer(y)):
     ...     print(ask(Q.integer(x + y)))
     True

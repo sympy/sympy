@@ -1,6 +1,6 @@
 from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
-        remove_handler)
+        remove_handler, generate_predicate)
 from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.ask import compute_known_facts, single_fact_lookup
 from sympy.assumptions.handlers import AskHandler
@@ -8,7 +8,7 @@ from sympy.core.add import Add
 from sympy.core.numbers import (I, Integer, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -2040,6 +2040,7 @@ def test_key_extensibility():
     # make sure the key is not defined
     raises(AttributeError, lambda: ask(Q.my_key(x)))
 
+    # Old handler system
     class MyAskHandler(AskHandler):
         @staticmethod
         def Symbol(expr, assumptions):
@@ -2051,27 +2052,35 @@ def test_key_extensibility():
     del Q.my_key
     raises(AttributeError, lambda: ask(Q.my_key(x)))
 
+    # New handler system
+    generate_predicate('my_key2')
+    @Q.my_key2.handler.register(Symbol)
+    def _(expr, assumptions):
+        return True
+    assert ask(Q.my_key2(x)) is True
+    assert ask(Q.my_key2(x + 1)) is None
+    del Q.my_key2
+    raises(AttributeError, lambda: ask(Q.my_key2(x)))
+
 
 def test_type_extensibility():
     """test that new types can be added to the ask system at runtime
-    We create a custom type MyType, and override ask Q.prime=True with handler
-    MyAskHandler for this type
-
-    TODO: test incompatible resolutors
     """
     from sympy.core import Basic
 
     class MyType(Basic):
         pass
 
+    # Old handler system
     class MyAskHandler(AskHandler):
         @staticmethod
         def MyType(expr, assumptions):
             return True
-
     a = MyType()
     register_handler(Q.prime, MyAskHandler)
     assert ask(Q.prime(a)) is True
+
+    #TODO: add test for new handler system after predicates are migrated
 
 
 def test_single_fact_lookup():
@@ -2253,11 +2262,10 @@ def test_autosimp_used_to_fail():
 
 
 def test_custom_AskHandler():
-    from sympy.assumptions import register_handler, ask, Q
-    from sympy.assumptions.handlers import AskHandler
     from sympy.logic.boolalg import conjuncts
-    from sympy import Symbol
 
+
+    # Old handler system
     class MersenneHandler(AskHandler):
         @staticmethod
         def Integer(expr, assumptions):
@@ -2269,6 +2277,23 @@ def test_custom_AskHandler():
             if expr in conjuncts(assumptions):
                 return True
     register_handler('mersenne', MersenneHandler)
-
     n = Symbol('n', integer=True)
+    assert ask(Q.mersenne(7))
     assert ask(Q.mersenne(n), Q.mersenne(n))
+    del Q.mersenne
+
+
+    # New handler system
+    generate_predicate('mersenne2')
+    @Q.mersenne2.handler.register(Integer)
+    def _(expr, assumptions):
+        from sympy import log
+        if ask(Q.integer(log(expr+1, 2))):
+            return True
+    @Q.mersenne2.handler.register(Symbol)
+    def _(expr, assumptions):
+        if expr in conjuncts(assumptions):
+            return True
+    assert ask(Q.mersenne2(7))
+    assert ask(Q.mersenne2(n), Q.mersenne2(n))
+    del Q.mersenne2
