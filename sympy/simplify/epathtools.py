@@ -1,11 +1,9 @@
 """Tools for manipulation of expressions using paths. """
 
-from __future__ import print_function, division
-
 from sympy.core import Basic
 
 
-class EPath(object):
+class EPath:
     r"""
     Manipulate expressions using paths.
 

@@ -214,7 +214,7 @@ class MatrixExpr(Expr):
         # `x` is a scalar:
         if self.has(x):
             # See if there are other methods using it:
-            return super(MatrixExpr, self)._eval_derivative(x)
+            return super()._eval_derivative(x)
         else:
             return ZeroMatrix(*self.shape)
 

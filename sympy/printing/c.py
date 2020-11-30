@@ -11,8 +11,6 @@ source code files that are compilable without further modifications.
 
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict, Tuple
 
 from functools import wraps
@@ -241,7 +239,7 @@ class C89CodePrinter(CodePrinter):
                                         settings.pop('type_literal_suffixes', {}).items()))
         self.type_math_macro_suffixes = dict(chain(self.type_math_macro_suffixes.items(),
                                         settings.pop('type_math_macro_suffixes', {}).items()))
-        super(C89CodePrinter, self).__init__(settings)
+        super().__init__(settings)
         self.known_functions = dict(self._kf, **settings.get('user_functions', {}))
         self._dereference = set(settings.get('dereference', []))
         self.headers = set()
@@ -256,7 +254,7 @@ class C89CodePrinter(CodePrinter):
         return codestring if codestring.endswith(';') else codestring + ';'
 
     def _get_comment(self, text):
-        return "// {0}".format(text)
+        return "// {}".format(text)
 
     def _declare_number_const(self, name, value):
         type_ = self.type_aliases[real]
@@ -273,7 +271,7 @@ class C89CodePrinter(CodePrinter):
 
     @_as_macro_if_defined
     def _print_Mul(self, expr, **kwargs):
-        return super(C89CodePrinter, self)._print_Mul(expr, **kwargs)
+        return super()._print_Mul(expr, **kwargs)
 
     @_as_macro_if_defined
     def _print_Pow(self, expr):
@@ -333,7 +331,7 @@ class C89CodePrinter(CodePrinter):
 
     @_as_macro_if_defined
     def _print_NumberSymbol(self, expr):
-        return super(C89CodePrinter, self)._print_NumberSymbol(expr)
+        return super()._print_NumberSymbol(expr)
 
     def _print_Infinity(self, expr):
         return 'HUGE_VAL'
@@ -380,13 +378,13 @@ class C89CodePrinter(CodePrinter):
         return self._print(_piecewise)
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
+        return "{}[{}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
             strict=True), expr.j + expr.i*expr.parent.shape[1])
 
     def _print_Symbol(self, expr):
-        name = super(C89CodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
         if expr in self._settings['dereference']:
-            return '(*{0})'.format(name)
+            return '(*{})'.format(name)
         else:
             return name
 
@@ -394,7 +392,7 @@ class C89CodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_sinc(self, expr):
         from sympy.functions.elementary.trigonometric import sin

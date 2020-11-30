@@ -108,6 +108,12 @@ def test_QR():
     assert R.is_upper
     assert A == Q*R
 
+    A = Matrix([[12, 0, -51], [6, 0, 167], [-4, 0, 24]])
+    Q, R = A.QRdecomposition()
+    assert Q.T * Q == eye(Q.cols)
+    assert R.is_upper
+    assert A == Q*R
+
 def test_QR_non_square():
     # Narrow (cols < rows) matrices
     A = Matrix([[9, 0, 26], [12, 0, -7], [0, 4, 4], [0, -3, -3]])

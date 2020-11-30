@@ -24,7 +24,11 @@ from sympy.solvers.solveset import solveset
 import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):
-    r"""Represents unevaluated summation.
+    r"""
+    Represents unevaluated summation.
+
+    Explanation
+    ===========
 
     ``Sum`` represents a finite or infinite series, with the first argument
     being the general form of terms in the series, and the second argument
@@ -269,6 +273,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Differentiate wrt x as long as x is not in the free symbols of any of
         the upper or lower limits.
 
+        Explanation
+        ===========
+
         Sum(a*b*x, (x, 1, a)) can be differentiated wrt x or b but not `a`
         since the value of the sum is discontinuous in `a`. In a case
         involving a limit variable, the unevaluated derivative is returned.
@@ -344,7 +351,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         return factor_sum(result, limits=self.limits)
 
     def is_convergent(self):
-        r"""Checks for the convergence of a Sum.
+        r"""
+        Checks for the convergence of a Sum.
+
+        Explanation
+        ===========
 
         We divide the study of convergence of infinite sums and products in
         two parts.
@@ -765,8 +776,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         """
         Reverse the order of a limit in a Sum.
 
-        Usage
-        =====
+        Explanation
+        ===========
 
         ``reverse_order(self, *indices)`` reverses some limits in the expression
         ``self`` which can be either a ``Sum`` or a ``Product``. The selectors in
@@ -845,6 +856,9 @@ def summation(f, *symbols, **kwargs):
     r"""
     Compute the summation of f with respect to symbols.
 
+    Explanation
+    ===========
+
     The notation for symbols is similar to the notation used in Integral.
     summation(f, (i, a, b)) computes the sum of f with respect to i from a to b,
     i.e.,
@@ -860,6 +874,9 @@ def summation(f, *symbols, **kwargs):
 
     If it cannot compute the sum, it returns an unevaluated Sum object.
     Repeated sums can be computed by introducing additional symbols tuples::
+
+    Examples
+    ========
 
     >>> from sympy import summation, oo, symbols, log
     >>> i, n, m = symbols('i n m', integer=True)
@@ -889,13 +906,18 @@ def summation(f, *symbols, **kwargs):
 
 
 def telescopic_direct(L, R, n, limits):
-    """Returns the direct summation of the terms of a telescopic sum
+    """
+    Returns the direct summation of the terms of a telescopic sum
+
+    Explanation
+    ===========
 
     L is the term with lower index
     R is the term with higher index
     n difference between the indexes of L and R
 
-    For example:
+    Examples
+    ========
 
     >>> from sympy.concrete.summations import telescopic_direct
     >>> from sympy.abc import k, a, b
@@ -911,9 +933,10 @@ def telescopic_direct(L, R, n, limits):
 
 
 def telescopic(L, R, limits):
-    '''Tries to perform the summation using the telescopic property
+    '''
+    Tries to perform the summation using the telescopic property.
 
-    return None if not possible
+    Return None if not possible.
     '''
     (i, a, b) = limits
     if L.is_Add or R.is_Add:

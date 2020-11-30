@@ -1111,7 +1111,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
     return SymPyTestResults(runner.failures, runner.tries)
 
 
-class SymPyTests(object):
+class SymPyTests:
 
     def __init__(self, reporter, kw="", post_mortem=False,
                  seed=None, fast_threshold=None, slow_threshold=None):
@@ -1370,7 +1370,7 @@ class SymPyTests(object):
         return sorted([os.path.normcase(gi) for gi in g])
 
 
-class SymPyDocTests(object):
+class SymPyDocTests:
 
     def __init__(self, reporter, normal):
         self._count = 0
@@ -1575,7 +1575,7 @@ class SymPyDocTests(object):
             # monkey-patch pyglet s.t. it does not open a window during
             # doctesting
             import pyglet
-            class DummyWindow(object):
+            class DummyWindow:
                 def __init__(self, *args, **kwargs):
                     self.has_exit = True
                     self.width = 600
@@ -1966,7 +1966,7 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         return False
 
 
-class Reporter(object):
+class Reporter:
     """
     Parent class for all reporters.
     """
@@ -2045,7 +2045,7 @@ class PyTestReporter(Reporter):
                 stdout = process.stdout.read()
                 if PY3:
                     stdout = stdout.decode("utf-8")
-            except (OSError, IOError):
+            except OSError:
                 pass
             else:
                 # We support the following output formats from stty:

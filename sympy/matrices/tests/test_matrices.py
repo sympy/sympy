@@ -4,7 +4,7 @@ import concurrent.futures
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, Poly, Pow, PurePoly, Rational,
     S, Symbol, cos, exp, log, oo, pi, signsimp, simplify, sin,
-    sqrt, symbols, sympify, trigsimp, tan, sstr, diff, Function, expand)
+    sqrt, symbols, sympify, trigsimp, tan, sstr, diff, Function, expand, FiniteSet)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
     _simplify)
@@ -2276,6 +2276,9 @@ def test_GramSchmidt():
     assert GramSchmidt([Matrix([3, 1]), Matrix([2, 2])], True) == [
         Matrix([3*sqrt(10)/10, sqrt(10)/10]),
         Matrix([-sqrt(10)/10, 3*sqrt(10)/10])]
+    # https://github.com/sympy/sympy/issues/9488
+    L = FiniteSet(Matrix([1]))
+    assert GramSchmidt(L) == [Matrix([[1]])]
 
 
 def test_casoratian():
@@ -2870,6 +2873,10 @@ def test_gramschmidt_conjugate_dot():
     vecs = [Matrix([1, I]), Matrix([1, -I])]
     assert Matrix.orthogonalize(*vecs) == \
         [Matrix([[1], [I]]), Matrix([[1], [-I]])]
+
+    vecs = [Matrix([1, I, 0]), Matrix([I, 0, -I])]
+    assert Matrix.orthogonalize(*vecs) == \
+        [Matrix([[1], [I], [0]]), Matrix([[I/2], [S(1)/2], [-I]])]
 
     mat = Matrix([[1, I], [1, -I]])
     Q, R = mat.QRdecomposition()

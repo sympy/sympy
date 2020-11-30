@@ -120,6 +120,16 @@ git_whitelist = {
     'release/pull_and_run_rever.sh',
     'release/compare_tar_against_git.py',
     'release/update_docs.py',
+    'release/aptinstall.sh',
+    'release/build_docs.py',
+    'release/github_release.py',
+    'release/helpers.py',
+    'release/releasecheck.py',
+    'release/requirements.txt',
+    'release/update_requirements.sh',
+    'release/test_install.py',
+    'release/sha256.py',
+    'release/authors.py',
     # This is just a distribute version of setup.py. Used mainly for setup.py
     # develop, which we don't care about in the release tarball
     'setupegg.py',

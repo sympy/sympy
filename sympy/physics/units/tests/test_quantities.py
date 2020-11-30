@@ -1,7 +1,7 @@
 from sympy import (Abs, Add, Function, Number, Rational, S, Symbol,
                    diff, exp, integrate, log, sin, sqrt, symbols)
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
-                                 volume, kilometer)
+                                 volume, kilometer, joule)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
     day, foot, grams, hour, inch, kg, km, m, meter, millimeter,
     minute, quart, s, second, speed_of_light, bit,
@@ -44,6 +44,10 @@ def test_convert_to():
     # Wrong dimension to convert:
     assert q.convert_to(s) == q
     assert speed_of_light.convert_to(m) == speed_of_light
+
+    expr = joule*second
+    conv = convert_to(expr, joule)
+    assert conv == joule*second
 
 
 def test_Quantity_definition():

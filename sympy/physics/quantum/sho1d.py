@@ -1,7 +1,5 @@
 """Simple Harmonic Oscillator 1-Dimension"""
 
-from __future__ import print_function, division
-
 from sympy import sqrt, I, Symbol, Integer, S
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.operator import Operator

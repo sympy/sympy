@@ -444,8 +444,8 @@ class FirstLinear(SinglePatternODESolver):
         fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x)),x))
-            * exp(-Integral(P, x)))))
+        gensol = Eq(fx, ((C1 + Integral(Q*exp(Integral(P, x)),x))
+            * exp(-Integral(P, x))))
         return [gensol]
 
 
@@ -530,8 +530,8 @@ class AlmostLinear(SinglePatternODESolver):
     def _get_general_solution(self, *, simplify: bool = True):
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(self.ly, (((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)),x))
-                * exp(-Integral(self.bx/self.ax, x)))))
+        gensol = Eq(self.ly, ((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)),x))
+                * exp(-Integral(self.bx/self.ax, x))))
 
         return [gensol]
 
@@ -632,8 +632,8 @@ class Bernoulli(SinglePatternODESolver):
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
         if n==1:
             gensol = Eq(log(fx), (
-            (C1 + Integral((-P + Q),x)
-        )))
+            C1 + Integral((-P + Q),x)
+        ))
         else:
             gensol = Eq(fx**(1-n), (
                 (C1 - (n - 1) * Integral(Q*exp(-n*Integral(P, x))

@@ -12,7 +12,7 @@ from sympy.plotting.plot import (
     plot3d_parametric_surface)
 from sympy.plotting.plot import (
     unset_show, plot_contour, PlotGrid, DefaultBackend, MatplotlibBackend,
-    TextBackend)
+    TextBackend, BaseBackend)
 from sympy.testing.pytest import skip, raises, warns
 from sympy.utilities import lambdify as lambdify_
 
@@ -22,6 +22,28 @@ unset_show()
 
 matplotlib = import_module(
     'matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+
+
+class DummyBackendNotOk(BaseBackend):
+    """ Used to verify if users can create their own backends.
+    This backend is meant to raise NotImplementedError for methods `show`,
+    `save`, `close`.
+    """
+    pass
+
+
+class DummyBackendOk(BaseBackend):
+    """ Used to verify if users can create their own backends.
+    This backend is meant to pass all tests.
+    """
+    def show(self):
+        pass
+
+    def save(self):
+        pass
+
+    def close(self):
+        pass
 
 
 def test_plot_and_save_1():
@@ -631,3 +653,49 @@ def test_plot3d_parametric_line_limits():
     zmin, zmax = backend.ax[0].get_zlim()
     assert abs(zmin + 10) < 1e-2
     assert abs(zmax - 10) < 1e-2
+
+def test_plot_size():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+
+    p1 = plot(sin(x), backend="matplotlib", size=(8, 4))
+    s1 = p1._backend.fig.get_size_inches()
+    assert (s1[0] == 8) and (s1[1] == 4)
+    p2 = plot(sin(x), backend="matplotlib", size=(5, 10))
+    s2 = p2._backend.fig.get_size_inches()
+    assert (s2[0] == 5) and (s2[1] == 10)
+    p3 = PlotGrid(2, 1, p1, p2, size=(6, 2))
+    s3 = p3._backend.fig.get_size_inches()
+    assert (s3[0] == 6) and (s3[1] == 2)
+
+    with raises(ValueError):
+        plot(sin(x), backend="matplotlib", size=(-1, 3))
+
+def test_issue_20113():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+
+    # verify the capability to use custom backends
+    with raises(TypeError):
+        plot(sin(x), backend=Plot, show=False)
+    p2 = plot(sin(x), backend=MatplotlibBackend, show=False)
+    assert p2.backend == MatplotlibBackend
+    assert len(p2[0].get_segments()) >= 30
+    p3 = plot(sin(x), backend=DummyBackendOk, show=False)
+    assert p3.backend == DummyBackendOk
+    assert len(p3[0].get_segments()) >= 30
+
+    # test for an improper coded backend
+    p4 = plot(sin(x), backend=DummyBackendNotOk, show=False)
+    assert p4.backend == DummyBackendNotOk
+    assert len(p4[0].get_segments()) >= 30
+    with raises(NotImplementedError):
+        p4.show()
+    with raises(NotImplementedError):
+        p4.save("test/path")
+    with raises(NotImplementedError):
+        p4._backend.close()

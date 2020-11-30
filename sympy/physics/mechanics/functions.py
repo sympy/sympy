@@ -48,6 +48,9 @@ mechanics_printing.__doc__ = init_vprinting.__doc__
 def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     """Simple way to create inertia Dyadic object.
 
+    Explanation
+    ===========
+
     If you don't know what a Dyadic is, just treat this like the inertia
     tensor. Then, do the easy thing and define it in a body-fixed frame.
 
@@ -127,6 +130,9 @@ def inertia_of_point_mass(mass, pos_vec, frame):
 def linear_momentum(frame, *body):
     """Linear momentum of the system.
 
+    Explanation
+    ===========
+
     This function returns the linear momentum of a system of Particle's and/or
     RigidBody's. The linear momentum of a system is equal to the vector sum of
     the linear momentum of its constituents. Consider a system, S, comprised of
@@ -175,7 +181,10 @@ def linear_momentum(frame, *body):
 
 
 def angular_momentum(point, frame, *body):
-    """Angular momentum of a system
+    """Angular momentum of a system.
+
+    Explanation
+    ===========
 
     This function returns the angular momentum of a system of Particle's and/or
     RigidBody's. The angular momentum of such a system is equal to the vector
@@ -235,6 +244,9 @@ def angular_momentum(point, frame, *body):
 def kinetic_energy(frame, *body):
     """Kinetic energy of a multibody system.
 
+    Explanation
+    ===========
+
     This function returns the kinetic energy of a system of Particle's and/or
     RigidBody's. The kinetic energy of such a system is equal to the sum of
     the kinetic energies of its constituents. Consider a system, S, comprising
@@ -290,6 +302,9 @@ def kinetic_energy(frame, *body):
 
 def potential_energy(*body):
     """Potential energy of a multibody system.
+
+    Explanation
+    ===========
 
     This function returns the potential energy of a system of Particle's and/or
     RigidBody's. The potential energy of such a system is equal to the sum of
@@ -431,6 +446,9 @@ def center_of_mass(point, *bodies):
 def Lagrangian(frame, *body):
     """Lagrangian of a multibody system.
 
+    Explanation
+    ===========
+
     This function returns the Lagrangian of a system of Particle's and/or
     RigidBody's. The Lagrangian of such a system is equal to the difference
     between the kinetic energies and potential energies of its constituents. If
@@ -488,10 +506,13 @@ def Lagrangian(frame, *body):
 def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     """Find all dynamicsymbols in expression.
 
+    Explanation
+    ===========
+
     If the optional ``exclude`` kwarg is used, only dynamicsymbols
     not in the iterable ``exclude`` are returned.
     If we intend to apply this function on a vector, the optional
-    ''reference_frame'' is also used to inform about the corresponding frame
+    ``reference_frame`` is also used to inform about the corresponding frame
     with respect to which the dynamic symbols of the given vector is to be
     determined.
 
@@ -547,6 +568,9 @@ def msubs(expr, *sub_dicts, smart=False, **kwargs):
 
     Traverses the expression tree once, performing the subs found in sub_dicts.
     Terms inside ``Derivative`` expressions are ignored:
+
+    Examples
+    ========
 
     >>> from sympy.physics.mechanics import dynamicsymbols, msubs
     >>> x = dynamicsymbols('x')
