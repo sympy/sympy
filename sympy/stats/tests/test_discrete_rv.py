@@ -367,3 +367,12 @@ def test_sample_pymc3():
                     assert sam in X.pspace.domain.set
             raises(NotImplementedError,
                 lambda: next(sample(Skellam('S', 1, 1), library='pymc3')))
+
+def test_issue_20031():
+    # https://github.com/sympy/sympy/issues/20031
+    G = Geometric('G', p=S(1)/4)
+    dens = density(G)
+    assert dens(G)(0) == S(0)
+    assert dens(G)(-1) == S(0)
+    assert dens(0.5) == S(0)
+    assert dens(1) == S(1)/4
