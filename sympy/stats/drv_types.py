@@ -56,9 +56,12 @@ class DiscreteDistributionHandmade(SingleDiscreteDistribution):
 
     @staticmethod
     def check(pdf, set):
-        x = Dummy('x')
+        x = Dummy('x', integer=True)
         val = Sum(pdf(x), (x, set._inf, set._sup)).doit()
         _value_check(Eq(val, 1) != S.false, "The pdf is incorrect on the given set.")
+
+    # def pdf(self, *args):
+    #     return self.args[0](*args)
 
 def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
     """
@@ -83,7 +86,7 @@ def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
 
     >>> from sympy.stats import DiscreteRV, P, E
     >>> from sympy import Rational, Symbol
-    >>> x = Symbol('x')
+    >>> x = Symbol('x', integer=True)
     >>> n = 10
     >>> density = Rational(1, 10)
     >>> X = DiscreteRV(x, density, set=set(range(n)))
@@ -99,11 +102,10 @@ def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
 
     """
     set = sympify(set)
-    pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
-    pdf = Lambda(symbol, pdf)
     # have a default of False while `rv` should have a default of True
     kwargs['check'] = kwargs.pop('check', False)
-    return rv(symbol.name, DiscreteDistributionHandmade, pdf, set, **kwargs)
+    pmf = Lambda(symbol, density)
+    return rv(symbol, DiscreteDistributionHandmade, pmf, set, **kwargs)
 
 
 #-------------------------------------------------------------------------------
@@ -701,7 +703,7 @@ def Zeta(name, s):
     >>> from sympy import Symbol
 
     >>> s = 5
-    >>> z = Symbol("z")
+    >>> z = Symbol("z", integer=True)
 
     >>> X = Zeta("x", s)
 

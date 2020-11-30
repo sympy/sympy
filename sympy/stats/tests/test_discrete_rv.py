@@ -104,7 +104,7 @@ def test_negative_binomial():
 def test_skellam():
     mu1 = Symbol('mu1')
     mu2 = Symbol('mu2')
-    z = Symbol('z')
+    z = Symbol('z', integer=True)
     X = Skellam('x', mu1, mu2)
 
     assert density(X)(z) == (mu1/mu2)**(z/2) * \
@@ -372,7 +372,7 @@ def test_issue_20031():
     # https://github.com/sympy/sympy/issues/20031
     G = Geometric('G', p=S(1)/4)
     dens = density(G)
-    assert dens(G)(0) == S(0)
-    assert dens(G)(-1) == S(0)
+    assert dens(0) == S(0)
+    assert dens(-1) == S(0)
     assert dens(0.5) == S(0)
     assert dens(1) == S(1)/4

@@ -289,7 +289,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
                          (var, self.set.inf, self.set.sup), **kwargs)
 
     def __call__(self, *args):
-        return Piecewise((self.pdf(*args), self.set.as_relational(*args)), (S(0), True))
+        return Piecewise((self.pdf(*args), self.set.as_relational(*args) != False), (S(0), True))
 
 
 class DiscreteDomain(RandomDomain):
