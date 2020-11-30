@@ -798,7 +798,7 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
 
         cond1 = Ge(x, 1) & Le(x, round(self.k/self.R)-1)
         cond2 = Eq(x, round(self.k/self.R))
-        tau = Piecewise((self.R/(self.k * x), cond1), (self.R * log(self.R/self.delta) / self.k, cond2), (S.Zero, True))
+        tau = Piecewise((self.R/(self.k * x), cond1), (self.R * log(self.R/self.delta)/self.k, cond2), (S.Zero, True))
 
         return (rho + tau)/self.Z
 
