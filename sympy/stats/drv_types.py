@@ -56,12 +56,12 @@ class DiscreteDistributionHandmade(SingleDiscreteDistribution):
 
     @staticmethod
     def check(pdf, set):
-        x = Dummy('x', integer=True)
+        x = Dummy('x')
         val = Sum(pdf(x), (x, set._inf, set._sup)).doit()
         _value_check(Eq(val, 1) != S.false, "The pdf is incorrect on the given set.")
 
-    # def pdf(self, *args):
-    #     return self.args[0](*args)
+    def pdf(self, *args):
+        return self.args[0](*args)
 
 def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
     """
@@ -86,7 +86,7 @@ def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
 
     >>> from sympy.stats import DiscreteRV, P, E
     >>> from sympy import Rational, Symbol
-    >>> x = Symbol('x', integer=True)
+    >>> x = Symbol('x')
     >>> n = 10
     >>> density = Rational(1, 10)
     >>> X = DiscreteRV(x, density, set=set(range(n)))
@@ -703,7 +703,7 @@ def Zeta(name, s):
     >>> from sympy import Symbol
 
     >>> s = 5
-    >>> z = Symbol("z", integer=True)
+    >>> z = Symbol("z")
 
     >>> X = Zeta("x", s)
 

@@ -104,7 +104,7 @@ def test_negative_binomial():
 def test_skellam():
     mu1 = Symbol('mu1')
     mu2 = Symbol('mu2')
-    z = Symbol('z', integer=True)
+    z = Symbol('z')
     X = Skellam('x', mu1, mu2)
 
     assert density(X)(z) == (mu1/mu2)**(z/2) * \
