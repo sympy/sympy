@@ -634,7 +634,7 @@ class Set(Basic, EvalfMixin):
         raise NotImplementedError("(%s)._measure" % self)
 
     def _eval_evalf(self, prec):
-        return self.func(*[arg.evalf(n=prec_to_dps(prec)) for arg in self])
+        return self.func(*[arg.evalf(n=prec_to_dps(prec)) for arg in self.args])
 
     @sympify_return([('other', 'Set')], NotImplemented)
     def __add__(self, other):
