@@ -1661,9 +1661,10 @@ def test_issue_17473():
     x = Symbol('x')
     n = Symbol('n')
     assert integrate(sin(x**n), x) == \
-        x*x**n*gamma(S(1)/2 + 1/(2*n))*hyper((S(1)/2 + 1/(2*n),),
-                     (S(3)/2, S(3)/2 + 1/(2*n)),
-                     -x**(2*n)/4)/(2*n*gamma(S(3)/2 + 1/(2*n)))
+        Piecewise((x*x**n*gamma(S(1)/2 + 1/(2*n))*hyper((S(1)/2 + 1/(2*n),),
+                   (S(3)/2, S(3)/2 + 1/(2*n)),
+                   -x**(2*n)/4)/(2*n*gamma(S(3)/2 + 1/(2*n))), Ne(n, 0)),
+                  (x*sin(1), True))
 
 
 def test_issue_17671():
@@ -1676,7 +1677,9 @@ def test_issue_2975():
     w = Symbol('w')
     C = Symbol('C')
     y = Symbol('y')
-    assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == w/(C**(S(3)/2)*sqrt(1 + w**2/(4*C)))
+    assert integrate(1/(y**2+C)**(S(3)/2), (y, -w/2, w/2)) == \
+        Piecewise((w/(C**(S(3)/2)*sqrt(1 + w**2/(4*C))), (C > -oo) & (C < oo) & Ne(C, 0)),
+                  (0, True))
 
 
 def test_issue_7827():
@@ -1704,3 +1707,9 @@ def test_issue_4231():
 def test_issue_17841():
     f = diff(1/(x**2+x+I), x)
     assert integrate(f, x) == 1/(x**2 + x + I)
+
+
+def test_issue_5949():
+    assert integrate((x**(n - 1))*sqrt(1 + x**n), x) == \
+        Piecewise((2*x**n*sqrt(x**n + 1)/(3*n) + 2*sqrt(x**n + 1)/(3*n), Ne(n, 0)),
+                  (sqrt(2)*log(x), True))

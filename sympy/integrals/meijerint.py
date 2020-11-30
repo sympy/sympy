@@ -1641,6 +1641,38 @@ def _rewrite2(f, x):
                     return fac, po, g1[0], g2[0], cond
 
 
+def meijerint_indefinite_wrapper(f, x):
+    """
+    A wrapper that takes the result from meijerint_definite and checks for
+    poles in the denominator. For each of these poles, the integral is
+    reevaluated, and the final integration result is given in terms of a
+    Piecewise. The reevaluation uses the top-level `integrate` routine which
+    may call a different integration routine than meijerint_indefinite.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.meijerint import meijerint_indefinite_wrapper
+    >>> from sympy import sin
+    >>> from sympy.abc import x, n, k
+    >>> meijerint_indefinite_wrapper(sin(x**(n*k + 1)), x)
+    Piecewise((x*x**(k*n)*x**(k*n/(k*n + 1))*x**(1/(k*n + 1))*gamma(1/2 + 1/(2*(k*n + 1)))*hyper((1/2 + 1/(2*(k*n + 1)),), (3/2, 3/2 + 1/(2*(k*n + 1))), -x**2*x**(2*k*n)/4)/(2*k*n*gamma(3/2 + 1/(2*(k*n + 1))) + 2*gamma(3/2 + 1/(2*(k*n + 1)))), Ne(k, -1/n)), (x*sin(1), True))
+
+    See Also
+    ========
+
+    heurisch_wrapper
+    pole_reintegrate
+    """
+    from sympy.integrals.integrals import pole_reintegrate
+
+    res = meijerint_indefinite(f, x)
+    if not res:
+        return res
+
+    return pole_reintegrate(f, x, res)
+
+
 def meijerint_indefinite(f, x):
     """
     Compute an indefinite integral of ``f`` by rewriting it as a G function.

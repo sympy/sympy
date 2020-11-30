@@ -6689,7 +6689,7 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     if isinstance(sol2r, Expr):
         sol2r = [sol2r]
     for sol2s in sol2r:
-        sol1 = solve(Integral(1/F.subs(v(u), sol2s.rhs), u).doit() - t - C2, u)
+        sol1 = solve(Integral(1/F.subs(v(u), sol2s.rhs), u).doit(conds='none') - t - C2, u)
     sol = []
     for sols in sol1:
         sol.append(Eq(x(t), sols))
