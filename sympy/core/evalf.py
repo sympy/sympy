@@ -1328,7 +1328,7 @@ def evalf(x, prec, options):
         if 'subs' in options:
             x = x.subs(evalf_subs(prec, options['subs']))
         if hasattr(x, '_eval_evalf_options'):
-            xe = x._eval_evalf_options(prec_to_dps(prec), options)
+            xe = x._eval_evalf_options(prec, options)
             if xe is None:
                 xe = x._eval_evalf(prec)
         else:
@@ -1451,7 +1451,7 @@ class EvalfMixin:
         >>> (x + y - z).evalf(subs=values)
         1.00000000000000
         """
-        from sympy import Float, Number
+        from sympy import Number
         n = n if n is not None else 15
 
         if subs and is_sequence(subs):
@@ -1464,7 +1464,6 @@ class EvalfMixin:
             m = _mag(rv)
             rv = rv.round(1 - m)
             return rv
-
         if not evalf_table:
             _create_evalf_table()
         prec = dps_to_prec(n)
@@ -1474,14 +1473,20 @@ class EvalfMixin:
             options['subs'] = subs
         if quad is not None:
             options['quad'] = quad
+        return self._evalf_options(prec, options)
+
+    n = evalf
+
+    def _evalf_options(self, prec, options):
+        from sympy import Float
         try:
             result = evalf(self, prec + 4, options)
         except NotImplementedError:
             # Fall back to the ordinary evalf
-            v = self._eval_evalf_options(n, options)
+            v = self._eval_evalf_options(prec, options)
             if v is None:
-                if hasattr(self, 'subs') and subs is not None:
-                    v = self.subs(subs)._eval_evalf(prec)
+                if hasattr(self, 'subs') and 'subs' in options:
+                    v = self.subs(options['subs'])._eval_evalf(prec)
                 else:
                     v = self._eval_evalf(prec)
             if v is None:
@@ -1507,8 +1512,6 @@ class EvalfMixin:
         else:
             return re
 
-    n = evalf
-
     def _evalf(self, prec):
         """Helper for evalf. Does the same thing but takes binary precision"""
         r = self._eval_evalf(prec)
@@ -1519,7 +1522,7 @@ class EvalfMixin:
     def _eval_evalf(self, prec):
         return
 
-    def _eval_evalf_options(self, n, options):
+    def _eval_evalf_options(self, prec, options):
         return
 
     def _to_mpmath(self, prec, allow_ints=True):

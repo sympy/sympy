@@ -196,17 +196,8 @@ class Relational(Boolean, EvalfMixin):
         #      b, evaluate=evaluate)))(*self.args, evaluate=False)
         return Relational.__new__(ops.get(self.func), *self.args)
 
-    def _eval_evalf_options(self, n, options):
-        #from sympy.core.evalf import evalf
-        subs, quad = None, None
-        if 'subs' in options:
-            subs = options['subs']
-        if 'quad' in options:
-            quad = options['quad']
-        #return self.func(*[evalf(s, prec, options) for s in self.args])
-        return self.func(*[s.evalf(n, subs=subs, maxn=options['maxn'], chop=options['chop'],
-                            strict=options['strict'], quad=quad,
-                            verbose=options['verbose']) for s in self.args])
+    def _eval_evalf_options(self, prec, options):
+        return self.func(*[s._evalf_options(prec, options) for s in self.args])
 
     @property
     def canonical(self):
