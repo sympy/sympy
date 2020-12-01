@@ -1342,5 +1342,4 @@ def test_empty_modules():
 
     no_modules = lambdify([x, y], expr)
     empty_modules = lambdify([x, y], expr, modules=[])
-    
     assert no_modules(3, 7) == empty_modules(3, 7)
