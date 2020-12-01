@@ -140,21 +140,25 @@ Examples which raised exceptions are {exceptions}
 """
 
 
+def _get_example(solver, example):
+    return {
+            'eq': solver['examples'][example]['eq'],
+            'sol': solver['examples'][example]['sol'],
+            'XFAIL': solver['examples'][example].get('XFAIL', []),
+            'func': solver['examples'][example].get('func',solver['func']),
+            'example_name': example,
+            'slow': solver['examples'][example].get('slow', False),
+            'simplify_flag':solver['examples'][example].get('simplify_flag',True),
+            'checkodesol_XFAIL': solver['examples'][example].get('checkodesol_XFAIL', False),
+            'dsolve_too_slow':solver['examples'][example].get('dsolve_too_slow',False),
+            'checkodesol_too_slow':solver['examples'][example].get('checkodesol_too_slow',False),
+        }
+
+
 def _ode_solver_test(ode_examples, run_slow_test=False):
     our_hint = ode_examples['hint']
     for example in ode_examples['examples']:
-        temp = {
-            'eq': ode_examples['examples'][example]['eq'],
-            'sol': ode_examples['examples'][example]['sol'],
-            'XFAIL': ode_examples['examples'][example].get('XFAIL', []),
-            'func': ode_examples['examples'][example].get('func',ode_examples['func']),
-            'example_name': example,
-            'slow': ode_examples['examples'][example].get('slow', False),
-            'simplify_flag':ode_examples['examples'][example].get('simplify_flag',True),
-            'checkodesol_XFAIL': ode_examples['examples'][example].get('checkodesol_XFAIL', False),
-            'dsolve_too_slow':ode_examples['examples'][example].get('dsolve_too_slow',False),
-            'checkodesol_too_slow':ode_examples['examples'][example].get('checkodesol_too_slow',False),
-        }
+        temp = _get_example(ode_examples, example)
         if ((not run_slow_test) and temp['slow']) or (run_slow_test and (not temp['slow'])):
             continue
 
@@ -1836,17 +1840,6 @@ def _get_all_examples():
     all_examples = []
     for solver in all_solvers:
         for example in solver['examples']:
-            temp = {
-                'hint': solver['hint'],
-                'func': solver['examples'][example].get('func',solver['func']),
-                'eq': solver['examples'][example]['eq'],
-                'sol': solver['examples'][example]['sol'],
-                'XFAIL': solver['examples'][example].get('XFAIL',[]),
-                'simplify_flag':solver['examples'][example].get('simplify_flag',True),
-                'checkodesol_XFAIL': solver['examples'][example].get('checkodesol_XFAIL', False),
-                'dsolve_too_slow': solver['examples'][example].get('dsolve_too_slow', False),
-                'checkodesol_too_slow': solver['examples'][example].get('checkodesol_too_slow', False),
-                'example_name': example,
-            }
+            temp = _get_example(solver, example)
             all_examples.append(temp)
     return all_examples
