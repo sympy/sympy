@@ -2366,7 +2366,6 @@ class Segment2D(LinearEntity2D, Segment):
     Point2D(5/2, 2)
 
     """
-    
     area = 0
     
     def __new__(cls, p1, p2, area, **kwargs):
