@@ -20,6 +20,7 @@ RobustSoliton
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
                    Dummy, Eq, Intersection, Interval, log, Range,
                    Symbol, Lambda, Piecewise, Or, Gt, Lt, Ge, Le, Contains)
+from sympy.core.sympify import _sympify
 from sympy import beta as beta_fn
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
@@ -690,7 +691,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
         return d
 
     def pmf(self, x):
-        x = sympify(x)
+        x = _sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))
@@ -787,7 +788,7 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
         return not all([self.k.is_number, self.c.is_number, self.delta.is_number])
 
     def pmf(self, x):
-        x = sympify(x)
+        x = _sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
                         "'RandomSymbol' not %s" % (type(x)))

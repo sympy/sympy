@@ -385,6 +385,7 @@ def test_ideal_soliton():
     raises(ValueError, lambda : IdealSoliton('sol', -12))
     raises(ValueError, lambda : IdealSoliton('sol', 13.2))
     raises(ValueError, lambda : IdealSoliton('sol', 0))
+    raises(ValueError, lambda : density(IdealSoliton('sol', 10)).pmf('x'))
 
     k = Symbol('k', integer=True, positive=True)
     x = Symbol('x', integer=True, positive=True)
@@ -406,9 +407,10 @@ def test_ideal_soliton():
     assert exp(t)/10 + Sum(exp(t*x)/(x*x - x), (x, 2, k)).subs(k, 10).doit() == moment_generating_function(sol.subs(k, 10))(t)
 
 def test_robust_soliton():
-    raises(ValueError,lambda : RobustSoliton('robSol', -12, 0.1, 0.02))
-    raises(ValueError,lambda : RobustSoliton('robSol', 13, 1.89, 0.1))
-    raises(ValueError,lambda : RobustSoliton('robSol', 15, 0.6, -2.31))
+    raises(ValueError, lambda : RobustSoliton('robSol', -12, 0.1, 0.02))
+    raises(ValueError, lambda : RobustSoliton('robSol', 13, 1.89, 0.1))
+    raises(ValueError, lambda : RobustSoliton('robSol', 15, 0.6, -2.31))
+    raises(ValueError, lambda : density(RobustSoliton('robSol', 15, 0.6, 0.1)).pmf('x'))
 
     k = Symbol('k', integer=True, positive=True)
     delta = Symbol('delta', positive=True)
@@ -423,10 +425,10 @@ def test_robust_soliton():
     for x in k_vals:
         for y in delta_vals:
             for z in c_vals:
-                assert E(robSol.subs(k, x).subs(delta, y).subs(c, z)) == moment(robSol.subs(k, x).subs(delta, y).subs(c, z), 1)
-                assert variance(robSol.subs(k, x).subs(delta, y).subs(c, z)) == cmoment(robSol.subs(k, x).subs(delta, y).subs(c, z), 2)
-                assert skewness(robSol.subs(k, x).subs(delta, y).subs(c, z)) == smoment(robSol.subs(k, x).subs(delta, y).subs(c, z), 3)
-                assert kurtosis(robSol.subs(k, x).subs(delta, y).subs(c, z)) == smoment(robSol.subs(k, x).subs(delta, y).subs(c, z), 4)
+                assert E(robSol.subs({k: x, delta: y, c: z})) == moment(robSol.subs({k: x, delta: y, c: z}), 1)
+                assert variance(robSol.subs({k: x, delta: y, c: z})) == cmoment(robSol.subs({k: x, delta: y, c: z}), 2)
+                assert skewness(robSol.subs({k: x, delta: y, c: z})) == smoment(robSol.subs({k: x, delta: y, c: z}), 3)
+                assert kurtosis(robSol.subs({k: x, delta: y, c: z})) == smoment(robSol.subs({k: x, delta: y, c: z}), 4)
 
 def test_FiniteRV():
     F = FiniteRV('F', {1: S.Half, 2: Rational(1, 4), 3: Rational(1, 4)}, check=True)
@@ -447,7 +449,7 @@ def test_FiniteRV():
         4: Rational(-1, 2), 5: Rational(-3, 4), 6: Rational(-1, 4)}, check=True))
 
     # purposeful invalid pmf but it should not raise since check=False
-    # see test_drv_types.test_ContinuousRV for explanation
+    # see test_crv_types.test_ContinuousRV for explanation
     X = FiniteRV('X', {1: 1, 2: 2})
     assert E(X) == 5
     assert P(X <= 2) + P(X > 2) != 1
