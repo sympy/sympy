@@ -664,7 +664,7 @@ def symbols(names, *, cls=Symbol, **args):
         >>> symbols('f,g,h', function_of=t)
         (f(t), g(t), h(t))
         >>> symbols('f,g,h', function_of=(x,y))
-        (f(x,y), g(x,y), h(x,y))
+        (f(x, y), g(x, y), h(x, y))
 
     """
     result = []
