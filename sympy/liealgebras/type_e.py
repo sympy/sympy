@@ -49,6 +49,12 @@ class TypeE(Standard_Cartan):
 
         This method returns the ith simple root for E_n.
 
+        Sources
+        =======
+        - https://en.wikipedia.org/wiki/E8_(mathematics)#Simple_roots
+        - https://en.wikipedia.org/wiki/E7_(mathematics)#Root_system
+        - https://en.wikipedia.org/wiki/E6_(mathematics)#Roots_of_E6
+
         Examples
         ========
 
