@@ -1,12 +1,10 @@
-from __future__ import print_function, division
-
 from sympy.core.add import Add
 from sympy.core.compatibility import ordered
 from sympy.core.function import expand_log
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.numbers import I
 from sympy.core.symbol import Dummy
+from sympy.core.numbers import I
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polyroots import roots
@@ -60,7 +58,6 @@ def _mostfunc(lhs, func, X=None):
 
     >>> from sympy.solvers.bivariate import _mostfunc
     >>> from sympy.functions.elementary.exponential import exp
-    >>> from sympy.testing.pytest import raises
     >>> from sympy.abc import x, y
     >>> _mostfunc(exp(x) + exp(exp(x) + 2), exp)
     exp(exp(x) + 2)
@@ -180,7 +177,6 @@ def _lambert(eq, x, domain=S.Complexes):
     p, den = den.as_coeff_Mul()
     e = exp(num/den)
     t = Dummy('t')
-    # Differentiating between real and complex
     if p == 1 :
         t = e
         args = [d/(a*b)*t]
@@ -199,7 +195,6 @@ def _lambert(eq, x, domain=S.Complexes):
         args = [d/(a*b)*t for t in roots(t**p - e, t).keys()]
     if len(args) == 0:
         return S.EmptySet
-
     # calculating solutions from args
     for arg in args:
         for k in lambert_real_branches:
@@ -291,6 +286,7 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
         ``-x``. So the role of the ``t`` in the expression received by
         this function is to mark where ``+/-x`` should be inserted
         before obtaining the Lambert solutions.
+
         """
         nlhs, plhs = [
             expr.xreplace({t: sgn*symbol}) for sgn in (-1, 1)]
@@ -395,7 +391,6 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
                         soln = _lambert(lhs - rhs, symbol)
                     if soln == S.EmptySet :
                             return S.EmptySet
-
     # For the next forms,
     #
     #     collect on main exp
@@ -431,6 +426,7 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
                 else:
                     soln = _lambert(expand_log(diff), symbol)
 
+
     # For the last form:
     #
     #  3) d*p**(a*B + g) - b*B = c
@@ -465,7 +461,7 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
     return list(ordered(soln))
 
 
-def bivariate_type(f, x, y, **kwargs):
+def bivariate_type(f, x, y, *, first=True):
     """Given an expression, f, 3 tests will be done to see what type
     of composite bivariate it might be, options for u(x, y) are::
 
@@ -506,7 +502,7 @@ def bivariate_type(f, x, y, **kwargs):
 
     u = Dummy('u', positive=True)
 
-    if kwargs.pop('first', True):
+    if first:
         p = Poly(f, x, y)
         f = p.as_expr()
         _x = Dummy()
