@@ -175,8 +175,6 @@ def test_torch_relational():
         skip("Torch not installed")
 
     expr = Eq(x, y)
-    print(torch_code(expr))
-    exit()
     assert torch_code(expr) == "torch.eq(x, y)"
     _compare_torch_relational((x, y), expr)
 
