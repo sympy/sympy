@@ -449,7 +449,7 @@ def test_FiniteRV():
         4: Rational(-1, 2), 5: Rational(-3, 4), 6: Rational(-1, 4)}, check=True))
 
     # purposeful invalid pmf but it should not raise since check=False
-    # see test_crv_types.test_ContinuousRV for explanation
+    # see test_drv_types.test_ContinuousRV for explanation
     X = FiniteRV('X', {1: 1, 2: 2})
     assert E(X) == 5
     assert P(X <= 2) + P(X > 2) != 1
