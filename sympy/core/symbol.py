@@ -657,7 +657,7 @@ def symbols(names, *, cls=Symbol, **args):
         >>> type(_[0])
         <class 'sympy.core.function.UndefinedFunction'>
 
-    If several functions share the same arguments, it is convenient 
+    If several functions share the same arguments, it is convenient
     to construct them at once as in (note that cls=Function is not needed anymore)::
 
         >>> x,y,t = symbols('x,y,t')
@@ -703,11 +703,11 @@ def symbols(names, *, cls=Symbol, **args):
             names[i: i + 1] = names[i].split()
 
         seq = args.pop('seq', as_seq)
-        
+
         # check & prepare function_of
         function_of = args.pop('function_of',None)
         if function_of is not None:
-            if not isinstance(function_of,tuple): 
+            if not isinstance(function_of,tuple):
                 function_of=(function_of,)
             cls = Function  # force class to Function
 
