@@ -2,7 +2,7 @@ from sympy.printing.pycode import AbstractPythonCodePrinter
 from sympy.external import import_module
 from sympy.core.compatibility import Iterable
 from sympy.codegen.cfunctions import Sqrt
-from sympy import Mul, S
+from sympy import S
 
 import sympy
 
