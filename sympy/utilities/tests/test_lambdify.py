@@ -10,7 +10,7 @@ from sympy import (
     true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
     DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
     digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
-    fresnelc, fresnels)
+    fresnelc, fresnels, Mod)
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.scipy_nodes import cosm1
@@ -1335,3 +1335,12 @@ def test_scipy_special_math():
 
     cm1 = lambdify((x,), cosm1(x), modules='scipy')
     assert abs(cm1(1e-20) + 5e-41) < 1e-200
+
+def test_empty_modules():
+    x, y = symbols('x y')
+    expr = -Mod(x, y)
+
+    no_modules = lambdify([x, y], expr)
+    empty_modules = lambdify([x, y], expr, modules=[])
+    
+    assert no_modules(3, 7) == empty_modules(3, 7)
