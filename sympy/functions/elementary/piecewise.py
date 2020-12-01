@@ -440,7 +440,7 @@ class Piecewise(Function):
             # if any condition reduced to True, it needs to go last
             # and there should only be one of them or else the exprs
             # should agree
-            trues = [i for i in range(len(args)) if args[i][1] is S.true]
+            trues = [i for i in range(len(args)) if args[i][1] is True]
             if not trues:
                 # make the last one True since all cases were enumerated
                 e, c = args[-1]
