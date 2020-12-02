@@ -88,7 +88,11 @@ def test_sympy__assumptions__assume__AppliedPredicate():
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
     assert _test_args(Q.is_true(True))
 
+@SKIP("abstract class")
 def test_sympy__assumptions__assume__Predicate():
+    pass
+
+def test_sympy__assumptions__assume__UndefinedPredicate():
     from sympy.assumptions.assume import Predicate
     assert _test_args(Predicate("test"))
 

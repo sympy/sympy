@@ -1,7 +1,7 @@
 """Module for querying SymPy objects about assumptions."""
 
 from sympy.assumptions.assume import (global_assumptions, Predicate,
-        AppliedPredicate, AskHandlerClass)
+        AppliedPredicate)
 from sympy.core import sympify
 from sympy.core.cache import cacheit
 from sympy.core.relational import Relational
@@ -1449,51 +1449,6 @@ def ask_full_inference(proposition, assumptions, known_facts_cnf):
     return None
 
 
-def generate_predicate(key):
-    """
-    Generate and register a predicate to ``Q`` by *key*.
-
-    Explanation
-    ===========
-
-    This function generates an empty predicate to ``Q``, and you can
-    access it by ``Q.[key]``. You have to dispatch the types to the
-    new predicate's handler after this.
-
-    Parameters
-    ==========
-
-    key : str
-        Key for the predicate in ``Q``.
-
-    Examples
-    ========
-
-    Generating a predicate:
-
-    >>> from sympy.assumptions import Q, generate_predicate, ask
-    >>> generate_predicate('mersenne')
-    >>> Q.mersenne
-    Q.mersenne
-
-    Dispatching to generated predicate:
-
-    >>> from sympy import Integer
-    >>> @Q.mersenne.handler.register(Integer)
-    ... def _(expr, assumptions):
-    ...     from sympy import ask, log
-    ...     return ask(Q.integer(log(expr + 1, 2)))
-    >>> ask(Q.mersenne(7))
-    True
-    >>> del Q.mersenne
-
-    """
-    name = ''.join(["Ask", key.capitalize(), "Handler"])
-    handler = AskHandlerClass(name, doc="Handler for key %s" % name)
-    predicate = Predicate(key, handler)
-    setattr(Q, key, predicate)
-
-
 def register_handler(key, handler):
     """
     Register a handler in the ask system. key must be a string and handler a
@@ -1513,20 +1468,20 @@ def register_handler(key, handler):
 
     """
     # Will be deprecated
-    if type(key) is Predicate:
-        key = key.name
+    if isinstance(key, Predicate):
+        key = key.name.name
     Qkey = getattr(Q, key, None)
     if Qkey is not None:
         Qkey.add_handler(handler)
     else:
-        setattr(Q, key, Predicate(key, handler=[handler]))
+        setattr(Q, key, Predicate(key, handlers=[handler]))
 
 
 def remove_handler(key, handler):
     """Removes a handler from the ask system. Same syntax as register_handler"""
     # Will be deprecated
-    if type(key) is Predicate:
-        key = key.name
+    if isinstance(key, Predicate):
+        key = key.name.name
     getattr(Q, key).remove_handler(handler)
 
 

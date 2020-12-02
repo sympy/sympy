@@ -1,7 +1,7 @@
 from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
-        remove_handler, generate_predicate)
-from sympy.assumptions.assume import global_assumptions
+        remove_handler)
+from sympy.assumptions.assume import global_assumptions, Predicate
 from sympy.assumptions.ask import compute_known_facts, single_fact_lookup
 from sympy.assumptions.handlers import AskHandler
 from sympy.core.add import Add
@@ -2053,14 +2053,16 @@ def test_key_extensibility():
     raises(AttributeError, lambda: ask(Q.my_key(x)))
 
     # New handler system
-    generate_predicate('my_key2')
-    @Q.my_key2.handler.register(Symbol)
+    class MyPredicate(Predicate):
+        pass
+    Q.my_key = MyPredicate("my_key")
+    @Q.my_key.handler.register(Symbol)
     def _(expr, assumptions):
         return True
-    assert ask(Q.my_key2(x)) is True
-    assert ask(Q.my_key2(x + 1)) is None
-    del Q.my_key2
-    raises(AttributeError, lambda: ask(Q.my_key2(x)))
+    assert ask(Q.my_key(x)) is True
+    assert ask(Q.my_key(x+1)) is None
+    del Q.my_key
+    raises(AttributeError, lambda: ask(Q.my_key(x)))
 
 
 def test_type_extensibility():
@@ -2264,7 +2266,6 @@ def test_autosimp_used_to_fail():
 def test_custom_AskHandler():
     from sympy.logic.boolalg import conjuncts
 
-
     # Old handler system
     class MersenneHandler(AskHandler):
         @staticmethod
@@ -2282,18 +2283,32 @@ def test_custom_AskHandler():
     assert ask(Q.mersenne(n), Q.mersenne(n))
     del Q.mersenne
 
-
     # New handler system
-    generate_predicate('mersenne2')
-    @Q.mersenne2.handler.register(Integer)
+    class MersennePredicate(Predicate):
+        pass
+    Q.mersenne = MersennePredicate("mersenne")
+    @Q.mersenne.handler.register(Integer)
     def _(expr, assumptions):
         from sympy import log
-        if ask(Q.integer(log(expr+1, 2))):
-            return True
-    @Q.mersenne2.handler.register(Symbol)
+        if ask(Q.integer(log(expr + 1, 2))):
+                return True
+    @Q.mersenne.handler.register(Symbol)
     def _(expr, assumptions):
         if expr in conjuncts(assumptions):
-            return True
-    assert ask(Q.mersenne2(7))
-    assert ask(Q.mersenne2(n), Q.mersenne2(n))
-    del Q.mersenne2
+                return True
+    assert ask(Q.mersenne(7))
+    assert ask(Q.mersenne(n), Q.mersenne(n))
+    del Q.mersenne
+
+
+def test_Predicate_handler_is_unique():
+
+    # Undefined predicate does not have a handler
+    assert Predicate('mypredicate').handler is None
+
+    # Handler of defined predicate is unique to the class
+    class MyPredicate(Predicate):
+        pass
+    mp1 = MyPredicate('mp1')
+    mp2 = MyPredicate('mp2')
+    assert mp1.handler is mp2.handler

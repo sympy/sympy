@@ -90,12 +90,24 @@ is called when ``expr`` is an instance of :class:`~.Add()`.
 Extensibility
 =============
 
-You can define new queries by registering the predicate for a particular key with
-``generate_predicate`` function. Supporting new types for the handler is done by
-dispatching:
+You can define new queries or support new types by subclassing ``Predicate`` and registering the instance
+to ``Q``. Supporting new types for the handler is done by dispatching.
 
-.. autofunction:: sympy.assumptions.ask::generate_predicate
-                  :noindex:
+In the following example, we will create a new predicate which checks if the argument is mersenne number [1]_.
+
+.. parsed-literal::
+
+    >>> from sympy.assumptions import Predicate, Q
+    >>> class MersennePredicate(Predicate):
+    ...     """Return True if argument is (2**n)-1 pattern."""
+    >>> Q.mersenne = MersennePredicate("mersenne")
+    >>> @Q.mersenne.handler.register(Integer)
+    ... def _(expr, assumptions):
+    ...     from sympy import log
+    ...     if ask(Q.integer(log(expr + 1, 2))):
+    ...             return True
+    >>> ask(Q.mersenne(7))
+    True
 
 Performance improvements
 ========================
@@ -113,3 +125,5 @@ Misc
 
 You can find more examples in the in the form of test under directory
 sympy/assumptions/tests/
+
+.. [1] https://en.wikipedia.org/wiki/Mersenne_prime
