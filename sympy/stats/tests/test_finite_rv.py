@@ -1,6 +1,6 @@
 from sympy import (FiniteSet, S, Symbol, sqrt, nan, beta, Rational, symbols,
                    simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-                   cancel, exp, I, Piecewise, Sum, Dummy, harmonic)
+                   cancel, exp, I, Piecewise, Sum, Dummy, harmonic, Function)
 from sympy.external import import_module
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
@@ -385,7 +385,8 @@ def test_ideal_soliton():
     raises(ValueError, lambda : IdealSoliton('sol', -12))
     raises(ValueError, lambda : IdealSoliton('sol', 13.2))
     raises(ValueError, lambda : IdealSoliton('sol', 0))
-    raises(ValueError, lambda : density(IdealSoliton('sol', 10)).pmf('x'))
+    f = Function('f')
+    raises(ValueError, lambda : density(IdealSoliton('sol', 10)).pmf(f))
 
     k = Symbol('k', integer=True, positive=True)
     x = Symbol('x', integer=True, positive=True)
@@ -410,7 +411,8 @@ def test_robust_soliton():
     raises(ValueError, lambda : RobustSoliton('robSol', -12, 0.1, 0.02))
     raises(ValueError, lambda : RobustSoliton('robSol', 13, 1.89, 0.1))
     raises(ValueError, lambda : RobustSoliton('robSol', 15, 0.6, -2.31))
-    raises(ValueError, lambda : density(RobustSoliton('robSol', 15, 0.6, 0.1)).pmf('x'))
+    f = Function('f')
+    raises(ValueError, lambda : density(RobustSoliton('robSol', 15, 0.6, 0.1)).pmf(f))
 
     k = Symbol('k', integer=True, positive=True)
     delta = Symbol('delta', positive=True)
