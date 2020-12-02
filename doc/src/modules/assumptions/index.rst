@@ -67,12 +67,12 @@ from module sympy.assumptions. ::
 Design
 ======
 
-Each time ``ask()`` is called, the appropriate handler for the current predicate is called. This is
-always a multiple dispatch function and is an instance of ``sympy.assumptions.AskHandlerClass``.
+Each time ``ask()`` is called, the appropriate handler for the current predicate is called.
+The handler is always an instance of ``sympy.multipledispatch.Dispatcher``.
 Class signature for its arguments is registered to the handler. For example, a handler for the key
 'positive' would look like this::
 
-    AskPositiveHandler = AskHandlerClass('positive')
+    AskPositiveHandler = Dispatcher('positive')
 
     @AskPositiveHandler.register(Mul)
     def Mul_handler(expr, assumptions):

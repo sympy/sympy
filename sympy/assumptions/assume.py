@@ -10,7 +10,6 @@ from sympy.logic.boolalg import Boolean
 from sympy.multipledispatch.dispatcher import (
     Dispatcher, MDNotImplementedError
 )
-from sympy.multipledispatch.conflict import ordering
 from sympy.utilities.source import get_class
 
 
@@ -231,7 +230,7 @@ class Predicate(Boolean):
     def get_handler(cls):
         if cls._handler is None:
             name = ''.join(["Ask", cls.__name__.capitalize(), "Handler"])
-            handler = AskHandlerClass(name, doc="Handler for key %s" % name)
+            handler = Dispatcher(name, doc="Handler for key %s" % name)
             cls._handler = handler
         return cls._handler
 
@@ -252,7 +251,16 @@ class Predicate(Boolean):
 
         This uses only direct resolution methods, not logical inference.
         """
-        return self.handler(expr, assumptions=assumptions)
+        result = None
+        for func in self.handler.dispatch_iter(type(expr)):
+            try:
+                result = func(expr, assumptions)
+            except MDNotImplementedError:
+                continue
+            else:
+                if result is not None:
+                    return result
+        return result
 
 
 class UndefinedPredicate(Predicate):
@@ -322,131 +330,6 @@ class UndefinedPredicate(Predicate):
                         raise ValueError('incompatible resolutors')
                 break
         return res
-
-
-class AskHandlerClass(Dispatcher):
-    """
-    Class for handler which evaluates the ``AppliedPredicate``.
-
-    Explanation
-    ===========
-
-    This class dispatches various types, and return fuzzy boolean values
-    when called.
-    When the dispatched function return ``None``, the next function for
-    the signature is queried until some other value is returned, or no
-    more registered function is left.
-
-    Parameters
-    ==========
-
-    name : str
-
-    doc : str, optional
-
-    base : tuple of AskHandlerClass, optional
-        Base dispatchers, which inherites the dispatched functions.
-
-    Examples
-    ========
-
-    Generate a base dispatcher ``MyHandler``.
-
-    >>> from sympy import Symbol, Add
-    >>> from sympy.assumptions import AskHandlerClass
-    >>> from sympy.abc import x
-    >>> MyHandler = AskHandlerClass('myhandler')
-    >>> @MyHandler.register(Symbol)
-    ... def _(expr, assumptions):
-    ...     return True
-    >>> @MyHandler.register(Add)
-    ... def _(expr, assumptions):
-    ...     return False
-    >>> MyHandler(x, assumptions=True)
-    True
-    >>> MyHandler(x+1, assumptions=True)
-    False
-    >>> print(MyHandler(2*x, assumptions=True)) # unregistred type
-    None
-
-    Generate new dispatcher ``MyHandler2``, which uses ``MyHandler`` as
-    base dispatcher
-
-    >>> MyHandler2 = AskHandlerClass('myhandler2', base=MyHandler)
-    >>> @MyHandler2.register(Add)
-    ... def _(expr, assumptions):
-    ...     return True
-    >>> MyHandler2(x, assumptions=True) # refer to base
-    True
-    >>> MyHandler2(x+1, assumptions=True)
-    True
-
-    """
-
-    def __init__(self, name, doc=None, base=()):
-        super().__init__(name, doc)
-        if not type(base) is tuple:
-            base = (base,)
-        for b in reversed(base):
-            self.funcs.update(b.funcs)
-        self.ordering = ordering(self.funcs)
-        self.base = base
-
-    def __call__(self, *args, **kwargs):
-        # If `None` is returned, search for next function
-        # If all signature return `None`, return `None`
-        types = tuple([type(arg) for arg in args])
-
-        try:
-            func = self._cache[types]
-        except KeyError:
-            func = self.dispatch(*types)
-            self._cache[types] = func
-
-        if not func:
-            return None
-
-        result = None
-        try:
-            # might return None
-            result = func(*args, **kwargs)
-        except MDNotImplementedError:
-            pass
-        if result is not None:
-            return result
-
-        # Search for next function which does not return None
-        funcs = self.dispatch_iter(*types)
-        next(funcs)  # burn first
-        for func in funcs:
-            try:
-                result = func(*args, **kwargs)
-                if result is not None:
-                    return result
-            except MDNotImplementedError:
-                continue
-        return None
-
-    @staticmethod
-    def AlwaysTrue(expr, assumptions):
-        return True
-
-    @staticmethod
-    def AlwaysFalse(expr, assumptions):
-        return False
-
-    @staticmethod
-    def AlwaysNone(expr, assumptions):
-        return None
-
-    def __getstate__(self):
-        return {'name': self.name,
-                'funcs': self.funcs,
-                'base': self.base}
-
-    def __setstate__(self, d):
-        super().__setstate__(d)
-        self.base = d['base']
 
 
 @contextmanager
