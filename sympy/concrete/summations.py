@@ -1161,14 +1161,11 @@ def eval_sum_symbolic(f, limits):
             if e_exp is not None:
                 e.update(e_exp)
 
-        if e is not None:
-            p = (c1**c3).subs(e)
-            q = (c1**c2).subs(e)
-
-            r = p*(q**a - q**(b + 1))/(1 - q)
-            l = p*(b - a + 1)
-
-            return Piecewise((l, Eq(q, S.One)), (r, True))
+                p = (c1**c3).subs(e)
+                q = (c1**c2).subs(e)
+                r = p*(q**a - q**(b + 1))/(1 - q)
+                l = p*(b - a + 1)
+                return Piecewise((l, Eq(q, S.One)), (r, True))
 
         r = gosper_sum(f, (i, a, b))
 
