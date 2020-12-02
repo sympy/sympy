@@ -215,7 +215,7 @@ before_install:
         hash -r;
         conda config --set always_yes yes --set changeps1 no;
         conda update -q conda;
-        conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
+        conda config --prepend channels conda-forge --prepend channels symengine/label/dev --prepend channels pytorch;
 
         conda info -a;
         # This became very slow: https://github.com/sympy/sympy/issues/20289
