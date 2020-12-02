@@ -147,50 +147,94 @@ class ContinuousDistribution(Basic):
 
 class SampleContinuousScipy:
     """Returns the sample from scipy of the given distribution"""
-    def __new__(cls, dist, size):
-        return cls._sample_scipy(dist, size)
+    def __new__(cls, dist, size, seed=None):
+        return cls._sample_scipy(dist, size, seed=seed)
 
     @classmethod
-    def _sample_scipy(cls, dist, size):
+    def _sample_scipy(cls, dist, size, seed):
         """Sample from SciPy."""
-        # scipy does not require map as it can handle using custom distributions
-        from scipy.stats import rv_continuous
+        import scipy.stats
+        # scipy does not require map as it can handle using custom distributions.
+        # However, we will still use a map where we can.
+
+        # TODO: do this for drv.py and frv.py if necessary.
+        # TODO: add more distributions here if there are more
+        # See links below referring to sections beginning with "A common parametrization..."
+        # I will remove all these comments if everything is ok.
+        scipy_rv_map = {
+            'BetaDistribution': lambda dist, size: scipy.stats.beta.rvs(
+                a=float(dist.alpha), b=float(dist.beta), size=size, random_state=seed),
+            # same parametrisation
+            'CauchyDistribution': lambda dist, size: scipy.stats.cauchy.rvs(
+                loc=float(dist.x0), scale=float(dist.gamma), size=size, random_state=seed),
+            # same parametrisation
+            'ChiSquaredDistribution': lambda dist, size: scipy.stats.chi2.rvs(
+                df=float(dist.k), size=size, random_state=seed),
+            # same parametrisation
+            'ExponentialDistribution': lambda dist, size: scipy.stats.expon.rvs(
+                scale=1 / float(dist.rate), size=size, random_state=seed),
+            # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.expon.html#scipy.stats.expon
+            'GammaDistribution': lambda dist, size: scipy.stats.gamma.rvs(
+                a=float(dist.k), scale=float(dist.theta), size=size, random_state=seed),
+            # https://stackoverflow.com/questions/42150965/how-to-plot-gamma-distribution-with-alpha-and-beta-parameters-in-python
+            'LogNormalDistribution': lambda dist, size: scipy.stats.lognorm.rvs(
+                scale=float(exp(dist.mean)), s=float(dist.std), size=size, random_state=seed),
+            # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html
+            'NormalDistribution': lambda dist, size: scipy.stats.norm.rvs(
+                loc=float(dist.mean), scale=float(dist.std), size=size, random_state=seed),
+            # same parametrisation
+            'ParetoDistribution': lambda dist, size: scipy.stats.pareto.rvs(
+                b=float(dist.alpha), scale=float(dist.xm), size=size, random_state=seed),
+            # https://stackoverflow.com/questions/42260519/defining-pareto-distribution-in-python-scipy
+            'StudentTDistribution': lambda dist, size: scipy.stats.t.rvs(
+                df=float(dist.nu), size=size, random_state=seed),
+            # same parametrisation
+            'UniformDistribution': lambda dist, size: scipy.stats.uniform.rvs(
+                loc=float(dist.left), scale=float(dist.right - dist.left), size=size, random_state=seed)
+            # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
+        }
+
+        # if we don't need to make a handmade pdf, we won't
+        if dist.__class__.__name__ in scipy_rv_map:
+            return scipy_rv_map[dist.__class__.__name__](dist, size)
+
         z = Dummy('z')
         handmade_pdf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])
-        class scipy_pdf(rv_continuous):
+        class scipy_pdf(scipy.stats.rv_continuous):
             def _pdf(self, x):
                 return handmade_pdf(x)
         scipy_rv = scipy_pdf(a=float(dist.set._inf),
                     b=float(dist.set._sup), name='scipy_pdf')
-        return scipy_rv.rvs(size=size)
+        return scipy_rv.rvs(size=size, random_state=seed)
 
 class SampleContinuousNumpy:
     """Returns the sample from numpy of the given distribution"""
 
-    def __new__(cls, dist, size):
-        return cls._sample_numpy(dist, size)
+    def __new__(cls, dist, size, seed=None):
+        return cls._sample_numpy(dist, size, seed)
 
     @classmethod
-    def _sample_numpy(cls, dist, size):
+    def _sample_numpy(cls, dist, size, seed):
         """Sample from NumPy."""
 
         import numpy
+        rand_state = numpy.random.default_rng(seed=seed)
         numpy_rv_map = {
-            'BetaDistribution': lambda dist, size: numpy.random.beta(a=float(dist.alpha),
+            'BetaDistribution': lambda dist, size: rand_state.beta(a=float(dist.alpha),
                 b=float(dist.beta), size=size),
-            'ChiSquaredDistribution': lambda dist, size: numpy.random.chisquare(
+            'ChiSquaredDistribution': lambda dist, size: rand_state.chisquare(
                 df=float(dist.k), size=size),
-            'ExponentialDistribution': lambda dist, size: numpy.random.exponential(
+            'ExponentialDistribution': lambda dist, size: rand_state.exponential(
                 1/float(dist.rate), size=size),
-            'GammaDistribution': lambda dist, size: numpy.random.gamma(float(dist.k),
+            'GammaDistribution': lambda dist, size: rand_state.gamma(float(dist.k),
                 float(dist.theta), size=size),
-            'LogNormalDistribution': lambda dist, size: numpy.random.lognormal(
+            'LogNormalDistribution': lambda dist, size: rand_state.lognormal(
                 float(dist.mean), float(dist.std), size=size),
-            'NormalDistribution': lambda dist, size: numpy.random.normal(
+            'NormalDistribution': lambda dist, size: rand_state.normal(
                 float(dist.mean), float(dist.std), size=size),
-            'ParetoDistribution': lambda dist, size: (numpy.random.pareto(
+            'ParetoDistribution': lambda dist, size: (rand_state.pareto(
                 a=float(dist.alpha), size=size) + 1) * float(dist.xm),
-            'UniformDistribution': lambda dist, size: numpy.random.uniform(
+            'UniformDistribution': lambda dist, size: rand_state.uniform(
                 low=float(dist.left), high=float(dist.right), size=size)
         }
 
@@ -204,11 +248,11 @@ class SampleContinuousNumpy:
 class SampleContinuousPymc:
     """Returns the sample from pymc3 of the given distribution"""
 
-    def __new__(cls, dist, size):
-        return cls._sample_pymc3(dist, size)
+    def __new__(cls, dist, size, seed=None):
+        return cls._sample_pymc3(dist, size, seed)
 
     @classmethod
-    def _sample_pymc3(cls, dist, size):
+    def _sample_pymc3(cls, dist, size, seed):
         """Sample from PyMC3."""
 
         import pymc3
@@ -242,7 +286,7 @@ class SampleContinuousPymc:
 
         with pymc3.Model():
             pymc3_rv_map[dist.__class__.__name__](dist)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+            return pymc3.sample(size, chains=1, progressbar=False, random_seed=seed)[:]['X']
 
 _get_sample_class_crv = {
     'scipy': SampleContinuousScipy,
@@ -277,7 +321,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def check(*args):
         pass
 
-    def sample(self, size=(), library='scipy'):
+    def sample(self, size=(), library='scipy', seed=None):
         """ A random realization from the distribution """
 
         libraries = ['scipy', 'numpy', 'pymc3']
@@ -287,7 +331,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = _get_sample_class_crv[library](self, size)
+        samps = _get_sample_class_crv[library](self, size, seed)
 
         if samps is not None:
             return samps
@@ -592,13 +636,13 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     def domain(self):
         return SingleContinuousDomain(sympify(self.symbol), self.set)
 
-    def sample(self, size=(), library='scipy'):
+    def sample(self, size=(), library='scipy', seed=None):
         """
         Internal sample method
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        return {self.value: self.distribution.sample(size, library=library)}
+        return {self.value: self.distribution.sample(size, library=library, seed=seed)}
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         rvs = rvs or (self.value,)

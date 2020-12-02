@@ -427,9 +427,9 @@ class IndependentProductPSpace(ProductPSpace):
     def density(self):
         raise NotImplementedError("Density not available for ProductSpaces")
 
-    def sample(self, size=(), library='scipy'):
+    def sample(self, size=(), library='scipy', seed=None):
         return {k: v for space in self.spaces
-            for k, v in space.sample(size=size, library=library).items()}
+            for k, v in space.sample(size=size, library=library, seed=seed).items()}
 
 
     def probability(self, condition, **kwargs):
@@ -1018,8 +1018,8 @@ def where(condition, given_condition=None, **kwargs):
     return pspace(condition).where(condition, **kwargs)
 
 
-def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
-                                                                    **kwargs):
+def sample(expr, condition=None, size=(), library='scipy',
+           numsamples=1, seed=None, **kwargs):
     """
     A realization of the random expression
 
@@ -1041,6 +1041,13 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
         by default is 'scipy'
     numsamples : int
         Number of samples, each with size as ``size``
+    seed : int
+        An integer to be used as seed by the external library.
+        This seed will be used specifically for sampling `expr`.
+        Optional, by default None, in which case seed settings
+        related to the given library will be used.
+        No modifications to environment's global seed settings
+        are done by this argument.
 
     Examples
     ========
@@ -1091,7 +1098,7 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
                   "https://github.com/sympy/sympy/issues/19061")
     warnings.warn(filldedent(message))
     return sample_iter(expr, condition, size=size, library=library,
-                                                        numsamples=numsamples)
+                                                        numsamples=numsamples, seed=seed)
 
 
 def quantile(expr, evaluate=True, **kwargs):
@@ -1141,7 +1148,7 @@ def quantile(expr, evaluate=True, **kwargs):
         return result
 
 def sample_iter(expr, condition=None, size=(), library='scipy',
-                    numsamples=S.Infinity, **kwargs):
+                    numsamples=S.Infinity, seed=None, **kwargs):
 
     """
     Returns an iterator of realizations from the expression given a condition
@@ -1211,38 +1218,47 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
         given_fn = lambdify(rvs, condition, **kwargs)
 
     def return_generator():
+        faulty = True
+        while faulty:
+            d = ps.sample(size=(numsamples,) + ((size,) if isinstance(size, int) else size),
+                          library=library, seed=seed) # a dictionary that maps RVs to values
+            faulty = False
+            count = 0
+            while count < numsamples and not faulty:
+                args = [d[rv][count] for rv in rvs]
+
+                if condition is not None:  # Check that these values satisfy the condition
+                    gd = given_fn(*args)
+                    if gd != True and gd != False:
+                        raise ValueError(
+                            "Conditions must not contain free symbols")
+                    if not gd:  # If the values don't satisfy then try again
+                        faulty = True
+
+                count += 1
+
         count = 0
         while count < numsamples:
-            d = ps.sample(size=size, library=library)  # a dictionary that maps RVs to values
-            args = [d[rv] for rv in rvs]
-
-            if condition is not None:  # Check that these values satisfy the condition
-                gd = given_fn(*args)
-                if gd != True and gd != False:
-                    raise ValueError(
-                        "Conditions must not contain free symbols")
-                if not gd:  # If the values don't satisfy then try again
-                    continue
-
+            args = [d[rv][count] for rv in rvs]
             yield fn(*args)
             count += 1
     return return_generator()
 
-def sample_iter_lambdify(expr, condition=None, size=(), numsamples=S.Infinity,
-                                                                    **kwargs):
+def sample_iter_lambdify(expr, condition=None, size=(),
+                         numsamples=S.Infinity, seed=None, **kwargs):
 
-    return sample_iter(expr, condition=condition, size=size, numsamples=numsamples,
-                                                                        **kwargs)
+    return sample_iter(expr, condition=condition, size=size,
+                       numsamples=numsamples, seed=seed, **kwargs)
 
-def sample_iter_subs(expr, condition=None, size=(), numsamples=S.Infinity,
-                                                                    **kwargs):
+def sample_iter_subs(expr, condition=None, size=(),
+                     numsamples=S.Infinity, seed=None, **kwargs):
 
-    return sample_iter(expr, condition=condition, size=size, numsamples=numsamples,
-                                                                        **kwargs)
+    return sample_iter(expr, condition=condition, size=size,
+                       numsamples=numsamples, seed=seed, **kwargs)
 
 
 def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,
-                                                    evalf=True, **kwargs):
+               evalf=True, seed=None, **kwargs):
     """
     Sampling version of P
 
@@ -1257,9 +1273,8 @@ def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,
 
     count_true = 0
     count_false = 0
-
     samples = sample_iter(condition, given_condition, library=library,
-                          numsamples=numsamples, **kwargs)
+                          numsamples=numsamples, seed=seed, **kwargs)
 
     for sample in samples:
         if sample:
@@ -1275,7 +1290,7 @@ def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,
 
 
 def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
-               evalf=True, **kwargs):
+               evalf=True, seed=None, **kwargs):
     """
     Sampling version of E
 
@@ -1287,7 +1302,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
     sampling_density
     """
     samples = list(sample_iter(expr, given_condition, library=library,
-                          numsamples=numsamples, **kwargs))
+                          numsamples=numsamples, seed=seed, **kwargs))
     result = Add(*[samp for samp in samples]) / numsamples
 
     if evalf:
@@ -1296,7 +1311,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
         return result
 
 def sampling_density(expr, given_condition=None, library='scipy',
-                    numsamples=1, **kwargs):
+                    numsamples=1, seed=None, **kwargs):
     """
     Sampling version of density
 
@@ -1309,7 +1324,7 @@ def sampling_density(expr, given_condition=None, library='scipy',
 
     results = {}
     for result in sample_iter(expr, given_condition, library=library,
-                              numsamples=numsamples, **kwargs):
+                              numsamples=numsamples, seed=seed, **kwargs):
         results[result] = results.get(result, 0) + 1
 
     return results
