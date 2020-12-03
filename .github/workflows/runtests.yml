@@ -58,3 +58,56 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=2/2
+  optional-dependencies:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - run: release/aptinstall.sh
+      # Test external imports
+      #- run: release/venv_main/bin/python bin/test_external_imports.py
+      - run: release/venv_main/bin/python bin/test_submodule_imports.py
+      - run: release/venv_main/bin/python bin/test_executable.py
+        # - run: bin/doctest --force-colors
+      # Test modules for specific dependencies
+      # numpy
+      - run: release/venv_main/bin/python bin/test '*numpy*' sympy/core/ sympy/matrices/ sympy/physics/quantum/ sympy/utilities/tests/test_lambdify.py
+      # scipy
+      - run: release/venv_main/bin/python bin/test '*scipy*'
+      # llvmlite
+      - run: release/venv_main/bin/python bin/test '*llvm*'
+
+      # theano
+      - run: release/venv_main/bin/python bin/test '*theano*'
+
+      # gmpy
+      - run: release/venv_main/bin/python bin/test 'polys'
+
+      # autowrap
+      - run: release/venv_main/bin/python bin/test '*autowrap*'
+
+      # ipython
+      - run: release/venv_main/bin/python bin/test '*ipython*'
+
+      # antlr, lfortran, clang
+      - run: release/venv_main/bin/python bin/test 'sympy/parsing/'
+
+      # matchpy
+      - run: release/venv_main/bin/python bin/test '*rubi*'
+
+      # codegen
+      - run: release/venv_main/bin/python bin/test 'sympy/codegen/'
+      - run: release/venv_main/bin/python bin/test 'sympy/utilities/tests/test_codegen'
+      - run: release/venv_main/bin/python bin/test 'sympy/utilities/_compilation/tests/test_compilation'
+
+      # cloudpickle
+      - run: release/venv_main/bin/python bin/test 'pickling'
+
+      # pycosat
+      - run: release/venv_main/bin/python bin/test 'sympy/logic'
+      - run: release/venv_main/bin/python bin/test 'sympy/assumptions'
+
+      #stats
+      - run: release/venv_main/bin/python bin/test 'sympy/stats'
