@@ -140,29 +140,35 @@ Examples which raised exceptions are {exceptions}
 """
 
 
-def _get_example(solver, example):
-    return {
-            'eq': solver['examples'][example]['eq'],
-            'sol': solver['examples'][example]['sol'],
-            'XFAIL': solver['examples'][example].get('XFAIL', []),
-            'func': solver['examples'][example].get('func',solver['func']),
-            'example_name': example,
-            'slow': solver['examples'][example].get('slow', False),
-            'simplify_flag':solver['examples'][example].get('simplify_flag',True),
-            'checkodesol_XFAIL': solver['examples'][example].get('checkodesol_XFAIL', False),
-            'dsolve_too_slow':solver['examples'][example].get('dsolve_too_slow',False),
-            'checkodesol_too_slow':solver['examples'][example].get('checkodesol_too_slow',False),
-        }
+def _add_example_keys(func):
+    def inner():
+        solver=func()
+        examples=[]
+        for example in solver['examples']:
+            temp={
+                'eq': solver['examples'][example]['eq'],
+                'sol': solver['examples'][example]['sol'],
+                'XFAIL': solver['examples'][example].get('XFAIL', []),
+                'func': solver['examples'][example].get('func',solver['func']),
+                'example_name': example,
+                'slow': solver['examples'][example].get('slow', False),
+                'simplify_flag':solver['examples'][example].get('simplify_flag',True),
+                'checkodesol_XFAIL': solver['examples'][example].get('checkodesol_XFAIL', False),
+                'dsolve_too_slow':solver['examples'][example].get('dsolve_too_slow',False),
+                'checkodesol_too_slow':solver['examples'][example].get('checkodesol_too_slow',False),
+                'hint': solver['hint']
+            }
+            examples.append(temp)
+        return examples
+    return inner()
 
 
 def _ode_solver_test(ode_examples, run_slow_test=False):
-    our_hint = ode_examples['hint']
-    for example in ode_examples['examples']:
-        temp = _get_example(ode_examples, example)
-        if ((not run_slow_test) and temp['slow']) or (run_slow_test and (not temp['slow'])):
+    for example in ode_examples:
+        if ((not run_slow_test) and example['slow']) or (run_slow_test and (not example['slow'])):
             continue
 
-        result = _test_particular_example(our_hint, temp, solver_flag=True)
+        result = _test_particular_example(example['hint'], example, solver_flag=True)
         if result['xpass_msg'] != "":
             print(result['xpass_msg'])
 
@@ -330,16 +336,16 @@ def test_separable_reduced():
     eq = (x / f(x))*df  + tan(x**2*f(x) / (x**2*f(x) - 1))
     assert classify_ode(eq) == ('separable_reduced', 'lie_group',
         'separable_reduced_Integral')
-    _ode_solver_test(_get_examples_ode_sol_separable_reduced())
+    _ode_solver_test(_get_examples_ode_sol_separable_reduced)
 
 
 @slow
 def test_slow_examples_separable_reduced():
-    _ode_solver_test(_get_examples_ode_sol_separable_reduced(), run_slow_test=True)
+    _ode_solver_test(_get_examples_ode_sol_separable_reduced, run_slow_test=True)
 
 
 def test_2nd_2F1_hypergeometric():
-    _ode_solver_test(_get_examples_ode_sol_2nd_2F1_hypergeometric())
+    _ode_solver_test(_get_examples_ode_sol_2nd_2F1_hypergeometric)
 
 
 def test_2nd_2F1_hypergeometric_intrgral():
@@ -352,7 +358,7 @@ def test_2nd_2F1_hypergeometric_intrgral():
 
 
 def test_2nd_linear_bessel_equation():
-    _ode_solver_test(_get_examples_ode_sol_2nd_linear_bessel())
+    _ode_solver_test(_get_examples_ode_sol_2nd_linear_bessel)
 
 
 def test_nth_algebraic():
@@ -362,16 +368,16 @@ def test_nth_algebraic():
     solns_final =  _remove_redundant_solutions(eqn, solns, 2, x)
     assert solns_final == [Eq(f(x), C1*exp(C2*x))]
 
-    _ode_solver_test(_get_examples_ode_sol_nth_algebraic())
+    _ode_solver_test(_get_examples_ode_sol_nth_algebraic)
+
 
 @slow
 def test_slow_examples_nth_linear_constant_coeff_var_of_parameters():
-    _ode_solver_test(_get_examples_ode_sol_nth_linear_var_of_parameters(), run_slow_test=True)
+    _ode_solver_test(_get_examples_ode_sol_nth_linear_var_of_parameters, run_slow_test=True)
 
 
 def test_nth_linear_constant_coeff_var_of_parameters():
-    _ode_solver_test(_get_examples_ode_sol_nth_linear_var_of_parameters())
-
+    _ode_solver_test(_get_examples_ode_sol_nth_linear_var_of_parameters)
 
 
 @slow
@@ -390,11 +396,11 @@ def test_nth_linear_constant_coeff_variation_of_parameters__integral():
 
 @slow
 def test_slow_examples_1st_exact():
-    _ode_solver_test(_get_examples_ode_sol_1st_exact(), run_slow_test=True)
+    _ode_solver_test(_get_examples_ode_sol_1st_exact, run_slow_test=True)
 
 
 def test_1st_exact():
-    _ode_solver_test(_get_examples_ode_sol_1st_exact())
+    _ode_solver_test(_get_examples_ode_sol_1st_exact)
 
 
 def test_1st_exact_integral():
@@ -405,17 +411,17 @@ def test_1st_exact_integral():
 
 @slow
 def test_slow_examples_nth_order_reducible():
-    _ode_solver_test(_get_examples_ode_sol_nth_order_reducible(), run_slow_test=True)
+    _ode_solver_test(_get_examples_ode_sol_nth_order_reducible, run_slow_test=True)
 
 
 @slow
 def test_slow_examples_nth_linear_constant_coeff_undetermined_coefficients():
-    _ode_solver_test(_get_examples_ode_sol_nth_linear_undetermined_coefficients(), run_slow_test=True)
+    _ode_solver_test(_get_examples_ode_sol_nth_linear_undetermined_coefficients, run_slow_test=True)
 
 
 @slow
 def test_slow_examples_separable():
-    _ode_solver_test(_get_examples_ode_sol_separable(), run_slow_test=True)
+    _ode_solver_test(_get_examples_ode_sol_separable, run_slow_test=True)
 
 
 def test_nth_linear_constant_coeff_undetermined_coefficients():
@@ -425,7 +431,7 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     eq = Eq(diff(f(x), x), I*f(x) + S.Half - I)
     our_hint = 'nth_linear_constant_coeff_undetermined_coefficients'
     assert our_hint in classify_ode(eq)
-    _ode_solver_test(_get_examples_ode_sol_nth_linear_undetermined_coefficients())
+    _ode_solver_test(_get_examples_ode_sol_nth_linear_undetermined_coefficients)
 
 
 def test_nth_order_reducible():
@@ -440,32 +446,32 @@ def test_nth_order_reducible():
     assert F(D(f(y), y, 2) + D(f(y), y, 3) + D(f(x), x, 4)) is None
     assert F(D(f(x), x, 2) + D(f(x), x, 3)) == dict(n=2)
 
-    _ode_solver_test(_get_examples_ode_sol_nth_order_reducible())
+    _ode_solver_test(_get_examples_ode_sol_nth_order_reducible)
 
 
 def test_separable():
-    _ode_solver_test(_get_examples_ode_sol_separable())
+    _ode_solver_test(_get_examples_ode_sol_separable)
 
 
 def test_factorable():
     assert integrate(-asin(f(2*x)+pi), x) == -Integral(asin(pi + f(2*x)), x)
-    _ode_solver_test(_get_examples_ode_sol_factorable())
+    _ode_solver_test(_get_examples_ode_sol_factorable)
 
 
 def test_Riccati_special_minus2():
-    _ode_solver_test(_get_examples_ode_sol_riccati())
+    _ode_solver_test(_get_examples_ode_sol_riccati)
 
 
 def test_Bernoulli():
-    _ode_solver_test(_get_examples_ode_sol_bernoulli())
+    _ode_solver_test(_get_examples_ode_sol_bernoulli)
 
 
 def test_1st_linear():
-    _ode_solver_test(_get_examples_ode_sol_1st_linear())
+    _ode_solver_test(_get_examples_ode_sol_1st_linear)
 
 
 def test_almost_linear():
-   _ode_solver_test(_get_examples_ode_sol_almost_linear())
+   _ode_solver_test(_get_examples_ode_sol_almost_linear)
 
 
 def test_Liouville_ODE():
@@ -479,7 +485,7 @@ def test_Liouville_ODE():
     assert hint + '_Integral' not in not_Liouville1
     assert hint + '_Integral' not in not_Liouville2
 
-    _ode_solver_test(_get_examples_ode_sol_liouville())
+    _ode_solver_test(_get_examples_ode_sol_liouville)
 
 
 def test_nth_order_linear_euler_eq_homogeneous():
@@ -493,7 +499,7 @@ def test_nth_order_linear_euler_eq_homogeneous():
     eq = a*y(t) + b*t*diff(y(t), t) + c*t**2*diff(y(t), t, 2)
     assert our_hint in classify_ode(eq)
 
-    _ode_solver_test(_get_examples_ode_sol_euler_homogeneous())
+    _ode_solver_test(_get_examples_ode_sol_euler_homogeneous)
 
 
 def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
@@ -507,7 +513,7 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
     eq = a*x**2*diff(f(x), x, 2) + b*x*diff(f(x), x) + c*f(x) + d*log(x)
     assert our_hint in classify_ode(eq, f(x))
 
-    _ode_solver_test(_get_examples_ode_sol_euler_undetermined_coeff())
+    _ode_solver_test(_get_examples_ode_sol_euler_undetermined_coeff)
 
 
 def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
@@ -521,9 +527,10 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
     eq = Eq(a*x**3*diff(f(x),x,3) + b*x**2*diff(f(x),x,2) + c*x*diff(f(x),x) + d*f(x), x*log(x))
     assert our_hint in classify_ode(eq, f(x))
 
-    _ode_solver_test(_get_examples_ode_sol_euler_var_para())
+    _ode_solver_test(_get_examples_ode_sol_euler_var_para)
 
 
+@_add_example_keys
 def _get_examples_ode_sol_euler_homogeneous():
     return {
             'hint': "nth_linear_euler_eq_homogeneous",
@@ -568,6 +575,7 @@ def _get_examples_ode_sol_euler_homogeneous():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_euler_undetermined_coeff():
     return {
             'hint': "nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients",
@@ -612,6 +620,7 @@ def _get_examples_ode_sol_euler_undetermined_coeff():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_euler_var_para():
     return {
             'hint': "nth_linear_euler_eq_nonhomogeneous_variation_of_parameters",
@@ -645,6 +654,7 @@ def _get_examples_ode_sol_euler_var_para():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_bernoulli():
     # Type: Bernoulli, f'(x) + p(x)*f(x) == q(x)*f(x)**n
     return {
@@ -670,6 +680,7 @@ def _get_examples_ode_sol_bernoulli():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_riccati():
     # Type: Riccati special alpha = -2, a*dy/dx + b*y**2 + c*y/x +d/x**2
     return {
@@ -684,6 +695,7 @@ def _get_examples_ode_sol_riccati():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_1st_linear():
     # Type: first order linear form f'(x)+p(x)f(x)=q(x)
     return {
@@ -698,6 +710,7 @@ def _get_examples_ode_sol_1st_linear():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_factorable():
     """ some hints are marked as xfail for examples because they missed additional algebraic solution
     which could be found by Factorable hint. Fact_01 raise exception for
@@ -825,6 +838,7 @@ def _get_examples_ode_sol_factorable():
 
 
 
+@_add_example_keys
 def _get_examples_ode_sol_almost_linear():
     from sympy import Ei
     A = Symbol('A', positive=True)
@@ -867,6 +881,7 @@ def _get_examples_ode_sol_almost_linear():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_liouville():
     return {
             'hint': "Liouville",
@@ -906,6 +921,7 @@ def _get_examples_ode_sol_liouville():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_nth_algebraic():
     M, m, r, t = symbols('M m r t')
     phi = Function('phi')
@@ -998,6 +1014,7 @@ def _get_examples_ode_sol_nth_algebraic():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_nth_order_reducible():
     return {
             'hint': "nth_order_reducible",
@@ -1075,6 +1092,7 @@ def _get_examples_ode_sol_nth_order_reducible():
 
 
 
+@_add_example_keys
 def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
     # examples 3-27 below are from Ordinary Differential Equations,
     #                     Tenenbaum and Pollard, pg. 231
@@ -1312,6 +1330,7 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_separable():
     # test_separable1-5 are from Ordinary Differential Equations, Tenenbaum and
     # Pollard, pg. 55
@@ -1448,6 +1467,7 @@ def _get_examples_ode_sol_separable():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_1st_exact():
     # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
     # where dp/df == dq/dx
@@ -1522,6 +1542,7 @@ def _get_examples_ode_sol_1st_exact():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_nth_linear_var_of_parameters():
     g = exp(-x)
     f2 = f(x).diff(x, 2)
@@ -1618,6 +1639,7 @@ def _get_examples_ode_sol_nth_linear_var_of_parameters():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_2nd_linear_bessel():
     return {
             'hint': "2nd_linear_bessel",
@@ -1676,6 +1698,7 @@ def _get_examples_ode_sol_2nd_linear_bessel():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_2nd_2F1_hypergeometric():
     return {
             'hint': "2nd_hypergeometric",
@@ -1709,6 +1732,7 @@ def _get_examples_ode_sol_2nd_2F1_hypergeometric():
     }
 
 
+@_add_example_keys
 def _get_examples_ode_sol_separable_reduced():
     df = f(x).diff(x)
     return {
@@ -1773,8 +1797,9 @@ def _get_examples_ode_sol_separable_reduced():
 
     'separable_reduced_10': {
         'eq': Eq(f(x).diff(x) + (f(x)**2+f(x))*f(x)/(x), 0),
-        'sol': [Eq(-log(f(x) + 1) + log(f(x)) + 1/f(x), C1 + log(x))],
-        'simplify_flag': False,
+        'sol': [Eq(- log(x) - log(f(x) + 1) + log(f(x)) + 1/f(x), C1)],
+        'XFAIL': ['lie_group'],#No algorithms are implemented to solve equation -C1 + x*(_y + 1)*exp(-1/_y)/_y
+
     },
 
     # Equivalent to example_name 'separable_reduced_02'. Only difference is testing with simplify=True
@@ -1817,29 +1842,23 @@ Eq(f(x), sqrt(2)*sqrt(3*3**Rational(1,3)*(sqrt((3*exp(12*C1) + x**(-12))*exp(24*
 
 
 def _get_all_examples():
-    all_solvers = [_get_examples_ode_sol_euler_homogeneous(),
-    _get_examples_ode_sol_euler_undetermined_coeff(),
-    _get_examples_ode_sol_euler_var_para(),
-    _get_examples_ode_sol_factorable(),
-    _get_examples_ode_sol_bernoulli(),
-    _get_examples_ode_sol_nth_algebraic(),
-    _get_examples_ode_sol_riccati(),
-    _get_examples_ode_sol_1st_linear(),
-    _get_examples_ode_sol_1st_exact(),
-    _get_examples_ode_sol_almost_linear(),
-    _get_examples_ode_sol_nth_order_reducible(),
-    _get_examples_ode_sol_nth_linear_undetermined_coefficients(),
-    _get_examples_ode_sol_liouville(),
-    _get_examples_ode_sol_separable(),
-    _get_examples_ode_sol_nth_linear_var_of_parameters(),
-    _get_examples_ode_sol_2nd_linear_bessel(),
-    _get_examples_ode_sol_2nd_2F1_hypergeometric(),
-    _get_examples_ode_sol_separable_reduced(),
-    ]
+    all_examples = _get_examples_ode_sol_euler_homogeneous + \
+    _get_examples_ode_sol_euler_undetermined_coeff + \
+    _get_examples_ode_sol_euler_var_para + \
+    _get_examples_ode_sol_factorable + \
+    _get_examples_ode_sol_bernoulli + \
+    _get_examples_ode_sol_nth_algebraic + \
+    _get_examples_ode_sol_riccati + \
+    _get_examples_ode_sol_1st_linear + \
+    _get_examples_ode_sol_1st_exact + \
+    _get_examples_ode_sol_almost_linear + \
+    _get_examples_ode_sol_nth_order_reducible + \
+    _get_examples_ode_sol_nth_linear_undetermined_coefficients + \
+    _get_examples_ode_sol_liouville + \
+    _get_examples_ode_sol_separable + \
+    _get_examples_ode_sol_nth_linear_var_of_parameters + \
+    _get_examples_ode_sol_2nd_linear_bessel + \
+    _get_examples_ode_sol_2nd_2F1_hypergeometric + \
+    _get_examples_ode_sol_separable_reduced
 
-    all_examples = []
-    for solver in all_solvers:
-        for example in solver['examples']:
-            temp = _get_example(solver, example)
-            all_examples.append(temp)
     return all_examples
