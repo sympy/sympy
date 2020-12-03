@@ -1408,13 +1408,14 @@ class EvalfMixin:
     >>> from sympy.core.evalf import EvalfMixin
 
     >>> class A(EvalfMixin):
-        is_number = False
-        def func(self):
-            return A
-        def __init__(self, a):
-            self.val = a
-        def _eval_evalf_options(self, prec, options):
-            return self.value._evalf_options(prec, options)
+    ...     is_number = False
+    ...     def func(self):
+    ...         return A
+    ...     def __init__(self, a):
+    ...         self.val = a
+    ...     def _eval_evalf_options(self, prec, options):
+    ...         return self.val._evalf_options(prec, options)
+    ...
 
     >>> a = A(pi)
     >>> a.evalf(2)
