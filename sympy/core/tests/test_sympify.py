@@ -1,6 +1,6 @@
 from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
     Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
-    Pow, Or, true, false, Abs, pi, Range, Xor)
+    Pow, Or, true, false, Abs, pi, Range, Xor, Set)
 from sympy.abc import x, y
 from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
     CantSympify)
@@ -774,3 +774,4 @@ def test_sympify_expected_type():
     assert _sympify(5, Integer) == Integer(5)
     assert _sympify(1.7, Float) == Float(1.7)
     raises(TypeError, lambda: _sympify(1.7, float))
+    assert _sympify({4}, Set) == FiniteSet(4)
