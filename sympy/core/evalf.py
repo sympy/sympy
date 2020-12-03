@@ -1557,7 +1557,7 @@ class EvalfMixin:
     def _evalf(self, prec):
         """Helper for evalf. Does the same thing but takes binary precision.
 
-        .. deprecated:: 1.8
+        .. deprecated:: 1.7.1
             Use `_eval_evalf_options` instead.
         """
         r = self._eval_evalf(prec)
@@ -1566,7 +1566,7 @@ class EvalfMixin:
         return r
 
     def _eval_evalf(self, prec):
-        """.. deprecated:: 1.8
+        """.. deprecated:: 1.7.1
             Use `_eval_evalf_options` instead.
         """
         return
