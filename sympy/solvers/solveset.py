@@ -164,7 +164,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
         raise ValueError("Inverse of constant function doesn't exist")
     y = sympify(y)
     if x in y.free_symbols:
-        raise ValueError("y should be independent of x ")
+        raise ValueError("y must be independent of x ")
 
     if domain.is_subset(S.Reals):
         x1, s = _invert_real(f_x, FiniteSet(y), x)
