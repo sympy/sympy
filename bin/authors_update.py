@@ -127,7 +127,8 @@ old_lines = codecs.open(os.path.realpath(os.path.join(
         __file__, os.path.pardir, os.path.pardir, "AUTHORS")),
         "r", "utf-8").read().splitlines()
 if old_lines == lines:
-    sys.exit(green('No changes made to AUTHORS.'))
+    print(green('No changes made to AUTHORS.'))
+    sys.exit(0)
 
 # check for new additions
 new_authors = []
@@ -160,3 +161,6 @@ if new_authors:
         print('\t%s' % i)
 else:
     print(yellow("The AUTHORS file was updated."))
+
+print(red("Changes were made in the authors file"))
+sys.exit(1)
