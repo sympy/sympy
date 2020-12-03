@@ -486,6 +486,22 @@ def _sympify(a, expected_type = None):
     the expression. This excludes things (like strings) that are unwise to
     allow into such an expression.
 
+    Parameters
+    ==========
+
+    a :
+        - any object defined in SymPy
+        - standard numeric python types: int, long, float, Decimal
+        - strings (like "0.09", "2e-19" or 'sin(x)')
+        - booleans, including ``None`` (will leave ``None`` unchanged)
+        - dict, lists, sets or tuples containing any of the above
+
+    expected_type : Optional
+        To check if sympified object is of expected type or not.
+
+    Examples
+    ========
+
     >>> from sympy import Integer
     >>> Integer(1) == 1
     True
@@ -507,9 +523,10 @@ def _sympify(a, expected_type = None):
     """
     symp = sympify(a, strict=True)
     if expected_type is None:
-        return symp
+        from sympy.core.basic import Basic
+        expected_type = Basic #Any time the result is not Basic would be a bug.
     if not isinstance(symp, expected_type):
-        raise NotImplementedError
+        raise TypeError
     return symp
 
 

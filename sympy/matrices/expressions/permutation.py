@@ -61,7 +61,7 @@ class PermutationMatrix(MatrixExpr):
 
         try:
             perm = _sympify(perm, Permutation)
-        except NotImplementedError:
+        except TypeError:
             raise ValueError(
                 "{} must be a SymPy Permutation instance.".format(perm))
 

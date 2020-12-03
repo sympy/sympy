@@ -135,7 +135,7 @@ class Expr(Basic, EvalfMixin):
     def __eq__(self, other):
         try:
             other = _sympify(other, Expr)
-        except (SympifyError, SyntaxError, NotImplementedError):
+        except (SympifyError, SyntaxError, TypeError):
             return False
         # check for pure number expr
         if  not (self.is_Number and other.is_Number) and (

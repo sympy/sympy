@@ -97,7 +97,7 @@ class ConditionSet(Set):
             raise BadSignatureError("Duplicate symbols detected")
         try:
             base_set = _sympify(base_set, Set)
-        except NotImplementedError:
+        except TypeError:
             raise TypeError(
                 'base set should be a Set object, not %s' % base_set)
         condition = _sympify(condition)

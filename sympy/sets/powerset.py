@@ -77,7 +77,7 @@ class PowerSet(Set):
 
         try:
             arg = _sympify(arg, Set)
-        except NotImplementedError:
+        except TypeError:
             raise ValueError('{} must be a set.'.format(arg))
 
         return super(PowerSet, cls).__new__(cls, arg)

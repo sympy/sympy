@@ -23,7 +23,7 @@ class CompanionMatrix(MatrixExpr):
     def __new__(cls, poly):
         try:
             poly = _sympify(poly, Poly)
-        except NotImplementedError:
+        except TypeError:
             raise ValueError("{} must be a Poly instance.".format(poly))
         if not poly.is_monic:
             raise ValueError("{} must be a monic polynomial.".format(poly))
