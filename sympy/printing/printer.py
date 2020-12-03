@@ -209,8 +209,6 @@ an expression when customizing a printer. Mistakes include:
 
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict, Type
 import inspect
 from contextlib import contextmanager
@@ -233,7 +231,7 @@ def printer_context(printer, **kwargs):
         printer._context = original
 
 
-class Printer(object):
+class Printer:
     """ Generic printer
 
     Its job is to provide infrastructure for implementing new printers easily.
@@ -362,8 +360,14 @@ class _PrintFunction:
         self.__print_cls = print_cls
         update_wrapper(self, f)
 
+    def __reduce__(self):
+        # Since this is used as a decorator, it replaces the original function.
+        # The default pickling will try to pickle self.__wrapped__ and fail
+        # because the wrapped function can't be retrieved by name.
+        return self.__wrapped__.__qualname__
+
     def __repr__(self) -> str:
-        return repr(self.__wrapped__)
+        return repr(self.__wrapped__)  # type:ignore
 
     def __call__(self, *args, **kwargs):
         return self.__wrapped__(*args, **kwargs)
@@ -376,7 +380,7 @@ class _PrintFunction:
                 inspect.Parameter(k, inspect.Parameter.KEYWORD_ONLY, default=v)
                 for k, v in settings.items()
             ],
-            return_annotation=self.__wrapped__.__annotations__.get('return', inspect.Signature.empty)
+            return_annotation=self.__wrapped__.__annotations__.get('return', inspect.Signature.empty)  # type:ignore
         )
 
 

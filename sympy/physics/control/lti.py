@@ -155,7 +155,7 @@ class TransferFunction(Basic, EvalfMixin):
 
         if (((isinstance(num, Expr) and num.has(Symbol) and not num.has(exp)) or num.is_number) and
             ((isinstance(den, Expr) and den.has(Symbol) and not den.has(exp)) or den.is_number)):
-                obj = super(TransferFunction, cls).__new__(cls, num, den, var)
+                obj = super().__new__(cls, num, den, var)
                 obj._num = num
                 obj._den = den
                 obj._var = var
@@ -581,7 +581,7 @@ class Series(Basic):
         if not all(isinstance(arg, (TransferFunction, Parallel, Series)) for arg in args):
             raise TypeError("Unsupported type of argument(s) for Series.")
 
-        obj = super(Series, cls).__new__(cls, *args)
+        obj = super().__new__(cls, *args)
         obj._var = None
         for arg in args:
             if obj._var is None:
@@ -854,7 +854,7 @@ class Parallel(Basic):
         if not all(isinstance(arg, (TransferFunction, Series, Parallel)) for arg in args):
             raise TypeError("Unsupported type of argument(s) for Parallel.")
 
-        obj = super(Parallel, cls).__new__(cls, *args)
+        obj = super().__new__(cls, *args)
         obj._var = None
         for arg in args:
             if obj._var is None:
@@ -1140,7 +1140,7 @@ class Feedback(Basic):
         if not num.var == den.var:
             raise ValueError("Both numerator and denominator should be using the"
                 " same complex variable.")
-        obj = super(Feedback, cls).__new__(cls, num, den)
+        obj = super().__new__(cls, num, den)
         obj._num = num
         obj._den = den
         obj._var = num.var

@@ -54,7 +54,6 @@ Weibull
 WignerSemicircle
 """
 
-from __future__ import print_function, division
 
 
 from sympy import beta as beta_fn
@@ -127,10 +126,11 @@ __all__ = ['ContinuousRV',
 def _(x):
     return any([is_random(i) for i in x])
 
-def rv(symbol, cls, args):
+def rv(symbol, cls, args, **kwargs):
     args = list(map(sympify, args))
     dist = cls(*args)
-    dist.check(*args)
+    if kwargs.pop('check', True):
+        dist.check(*args)
     pspace = SingleContinuousPSpace(symbol, dist)
     if any(is_random(arg) for arg in args):
         from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
@@ -152,10 +152,10 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
     def check(pdf, set):
         x = Dummy('x')
         val = integrate(pdf(x), (x, set))
-        _value_check(val == S.One, "The pdf on the given set is incorrect.")
+        _value_check(Eq(val, 1) != S.false, "The pdf on the given set is incorrect.")
 
 
-def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
+def ContinuousRV(symbol, density, set=Interval(-oo, oo), **kwargs):
     """
     Create a Continuous Random Variable given the following:
 
@@ -168,6 +168,11 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
         Represents probability density function.
     set : set/Interval
         Represents the region where the pdf is valid, by default is real line.
+    check : bool
+        If True, it will check whether the given density
+        integrates to 1 over the given set. If False, it
+        will not perform this check. Default is False.
+
 
     Returns
     =======
@@ -196,7 +201,9 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
     pdf = Lambda(symbol, pdf)
-    return rv(symbol.name, ContinuousDistributionHandmade, (pdf, set))
+    # have a default of False while `rv` should have a default of True
+    kwargs['check'] = kwargs.pop('check', False)
+    return rv(symbol.name, ContinuousDistributionHandmade, (pdf, set), **kwargs)
 
 ########################################
 # Continuous Probability Distributions #
@@ -2978,7 +2985,7 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         mu, s = self.mean, self.shape
-        return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/((2*pi*x**3)))
+        return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/(2*pi*x**3))
 
     def _cdf(self, x):
         from sympy.stats import cdf

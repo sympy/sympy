@@ -10,6 +10,9 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
                    itermax=None, counter=None):
     """ Generates an AST for Newton-Raphson method (a root-finding algorithm).
 
+    Explanation
+    ===========
+
     Returns an abstract syntax tree (AST) based on ``sympy.codegen.ast`` for Netwon's
     method of root-finding.
 

@@ -2,10 +2,9 @@
 Several methods to simplify expressions involving unit objects.
 """
 
-from __future__ import division
-
 from sympy import Add, Mul, Pow, Tuple, sympify
 from sympy.core.compatibility import reduce, Iterable, ordered
+from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension
 from sympy.physics.units.prefixes import Prefix
 from sympy.physics.units.quantities import Quantity
@@ -26,13 +25,17 @@ def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
     if not canon_expr_units.issubset(set(canon_dim_units)):
         return None
 
-    seen = set([])
+    seen = set()
     canon_dim_units = [i for i in canon_dim_units if not (i in seen or seen.add(i))]
 
     camat = Matrix([[dimension_system.get_dimensional_dependencies(i, mark_dimensionless=True).get(j, 0) for i in target_dims] for j in canon_dim_units])
     exprmat = Matrix([dim_dependencies.get(k, 0) for k in canon_dim_units])
 
-    res_exponents = camat.solve_least_squares(exprmat, method=None)
+    try:
+        res_exponents = camat.solve(exprmat)
+    except NonInvertibleMatrixError:
+        return None
+
     return res_exponents
 
 
@@ -149,8 +152,8 @@ def quantity_simplify(expr):
 
 
 def check_dimensions(expr, unit_system="SI"):
-    """Return expr if there are not unitless values added to
-    dimensional quantities, else raise a ValueError."""
+    """Return expr if units in addends have the same
+    base dimensions, else raise a ValueError."""
     # the case of adding a number to a dimensional quantity
     # is ignored for the sake of SymPy core routines, so this
     # function will raise an error now if such an addend is
@@ -160,6 +163,15 @@ def check_dimensions(expr, unit_system="SI"):
 
     from sympy.physics.units import UnitSystem
     unit_system = UnitSystem.get_unit_system(unit_system)
+
+    def addDict(dict1, dict2):
+        """Merge dictionaries by adding values of common keys and
+        removing keys with value of 0."""
+        dict3 = {**dict1, **dict2}
+        for key, value in dict3.items():
+            if key in dict1 and key in dict2:
+                   dict3[key] = value + dict1[key]
+        return {key:val for key, val in dict3.items() if val != 0}
 
     adds = expr.atoms(Add)
     DIM_OF = unit_system.get_dimension_system().get_dimensional_dependencies
@@ -171,19 +183,21 @@ def check_dimensions(expr, unit_system="SI"):
                 continue
             dims = []
             skip = False
+            dimdict = {}
             for i in Mul.make_args(ai):
                 if i.has(Quantity):
                     i = Dimension(unit_system.get_dimensional_expr(i))
                 if i.has(Dimension):
-                    dims.extend(DIM_OF(i).items())
+                    dimdict = addDict(dimdict, DIM_OF(i))
                 elif i.free_symbols:
                     skip = True
                     break
+            dims.extend(dimdict.items())
             if not skip:
                 deset.add(tuple(sorted(dims)))
                 if len(deset) > 1:
                     raise ValueError(
-                        "addends have incompatible dimensions")
+                        "addends have incompatible dimensions: {}".format(deset))
 
     # clear multiplicative constants on Dimensions which may be
     # left after substitution

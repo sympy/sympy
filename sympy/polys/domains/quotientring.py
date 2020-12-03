@@ -1,6 +1,5 @@
 """Implementation of :class:`QuotientRing` class."""
 
-from __future__ import print_function, division
 
 from sympy.polys.agca.modules import FreeModuleQuotientRing
 from sympy.polys.domains.ring import Ring
@@ -13,7 +12,7 @@ from sympy.utilities import public
 # - division by non-units in integral domains?
 
 @public
-class QuotientRingElement(object):
+class QuotientRingElement:
     """
     Class representing elements of (commutative) quotient rings.
 

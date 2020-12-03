@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 try:
     from ctypes import c_float
 except ImportError:

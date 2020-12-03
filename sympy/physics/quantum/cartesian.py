@@ -6,8 +6,6 @@ TODO:
 
 """
 
-from __future__ import print_function, division
-
 from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt
 
 from sympy.physics.quantum.constants import hbar

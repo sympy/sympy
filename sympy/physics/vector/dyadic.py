@@ -1,10 +1,11 @@
 from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
+from sympy.core.evalf import EvalfMixin, prec_to_dps
 from sympy.printing.defaults import Printable
 
 __all__ = ['Dyadic']
 
 
-class Dyadic(Printable):
+class Dyadic(Printable, EvalfMixin):
     """A Dyadic object.
 
     See:
@@ -16,6 +17,8 @@ class Dyadic(Printable):
     the resulting matrix is equivalent to the inertia tensor.
 
     """
+
+    is_number = False
 
     def __init__(self, inlist):
         """
@@ -54,6 +57,11 @@ class Dyadic(Printable):
                 self.args.remove(self.args[i])
                 i -= 1
             i += 1
+
+    @property
+    def func(self):
+        """Returns the class Dyadic. """
+        return Dyadic
 
     def __add__(self, other):
         """The add operator for Dyadic. """
@@ -187,7 +195,7 @@ class Dyadic(Printable):
     def _pretty(self, printer):
         e = self
 
-        class Fake(object):
+        class Fake:
             baseline = 0
 
             def render(self, *args, **kwargs):
@@ -521,6 +529,15 @@ class Dyadic(Printable):
     dot = __and__
     cross = __xor__
 
+    def _eval_evalf(self, prec):
+        if not self.args:
+            return self
+        new_args = []
+        for inlist in self.args:
+            new_inlist = list(inlist)
+            new_inlist[0] = inlist[0].evalf(n=prec_to_dps(prec))
+            new_args.append(tuple(new_inlist))
+        return Dyadic(new_args)
 
 def _check_dyadic(other):
     if not isinstance(other, Dyadic):

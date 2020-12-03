@@ -1,7 +1,5 @@
 """Primitive circuit operations on quantum circuits."""
 
-from __future__ import print_function, division
-
 from sympy import Symbol, Tuple, Mul, sympify, default_sort_key
 from sympy.utilities import numbered_symbols
 from sympy.core.compatibility import reduce
@@ -52,6 +50,9 @@ def kmp_table(word):
 
 def find_subcircuit(circuit, subcircuit, start=0, end=0):
     """Finds the subcircuit in circuit, if it exists.
+
+    Explanation
+    ===========
 
     If the subcircuit exists, the index of the start of
     the subcircuit in circuit is returned; otherwise,
@@ -139,6 +140,9 @@ def replace_subcircuit(circuit, subcircuit, replace=None, pos=0):
     """Replaces a subcircuit with another subcircuit in circuit,
     if it exists.
 
+    Explanation
+    ===========
+
     If multiple instances of subcircuit exists, the first instance is
     replaced.  The position to being searching from (if different from
     0) may be optionally given.  If subcircuit can't be found, circuit
@@ -148,11 +152,11 @@ def replace_subcircuit(circuit, subcircuit, replace=None, pos=0):
     ==========
 
     circuit : tuple, Gate or Mul
-        A quantum circuit
+        A quantum circuit.
     subcircuit : tuple, Gate or Mul
-        The circuit to be replaced
+        The circuit to be replaced.
     replace : tuple, Gate or Mul
-        The replacement circuit
+        The replacement circuit.
     pos : int
         The location to start search and replace
         subcircuit, if it exists.  This may be used
@@ -377,6 +381,9 @@ def convert_to_real_indices(seq, qubit_map):
 def random_reduce(circuit, gate_ids, seed=None):
     """Shorten the length of a quantum circuit.
 
+    Explanation
+    ===========
+
     random_reduce looks for circuit identities in circuit, randomly chooses
     one to remove, and returns a shorter yet equivalent circuit.  If no
     identities are found, the same circuit is returned.
@@ -423,6 +430,9 @@ def random_reduce(circuit, gate_ids, seed=None):
 
 def random_insert(circuit, choices, seed=None):
     """Insert a circuit into another quantum circuit.
+
+    Explanation
+    ===========
 
     random_insert randomly chooses a location in the circuit to insert
     a randomly selected circuit from amongst the given choices.

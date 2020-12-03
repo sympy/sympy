@@ -85,8 +85,17 @@ Series Classes
 .. autoclass:: sympy.plotting.plot_implicit::ImplicitSeries
    :members:
 
+Backends
+--------
 
+.. autoclass:: sympy.plotting.plot::BaseBackend
+   :members:
 
+.. autoclass:: sympy.plotting.plot::MatplotlibBackend
+   :members:
+
+.. autoclass:: sympy.plotting.plot::TextBackend
+   :members:
 
 Pyglet Plotting
 ---------------
@@ -103,7 +112,8 @@ the only dependency being ``pyglet``.
 
 Here is the simplest usage:
 
-    >>> from sympy import var, Plot
+    >>> from sympy import var
+    >>> from sympy.plotting.pygletplot import PygletPlot as Plot
     >>> var('x y z')
     >>> Plot(x*y**3-y*x**3)
 
@@ -279,7 +289,7 @@ line at a random point on the ellipse.
 
     In [2]: c = Circle(Point(0,0), 1)
 
-    In [3]: t = c.tangent_line(c.random_point())
+    In [3]: t = c.tangent_lines(c.random_point())
 
     In [4]: p[0] = c
 

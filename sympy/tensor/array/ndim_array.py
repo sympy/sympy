@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import Basic
 from sympy import S
 from sympy.core.expr import Expr
@@ -317,7 +315,7 @@ class NDimArray(Printable):
         from sympy.tensor.array.arrayop import Flatten
 
         if not isinstance(other, NDimArray):
-            raise TypeError(str(other))
+            return NotImplemented
 
         if self.shape != other.shape:
             raise ValueError("array shape mismatch")
@@ -329,7 +327,7 @@ class NDimArray(Printable):
         from sympy.tensor.array.arrayop import Flatten
 
         if not isinstance(other, NDimArray):
-            raise TypeError(str(other))
+            return NotImplemented
 
         if self.shape != other.shape:
             raise ValueError("array shape mismatch")

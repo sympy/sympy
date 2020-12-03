@@ -1,4 +1,4 @@
-from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix
+from sympy import sin, cos, symbols, pi, Float, ImmutableMatrix as Matrix
 from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols
 from sympy.physics.vector.dyadic import _check_dyadic
 from sympy.testing.pytest import raises
@@ -95,3 +95,12 @@ def test_dyadic_subs():
 
 def test_check_dyadic():
     raises(TypeError, lambda: _check_dyadic(0))
+
+
+def test_dyadic_evalf():
+    N = ReferenceFrame('N')
+    a = pi * (N.x | N.x)
+    assert a.evalf(3) == Float('3.1416', 3) * (N.x | N.x)
+    s = symbols('s')
+    a = 5 * s * pi* (N.x | N.x)
+    assert a.evalf(2) == Float('5', 2) * Float('3.1416', 2) * s * (N.x | N.x)

@@ -2,13 +2,13 @@
 # This is the module for ODE solver classes for single ODEs.
 #
 
-#import typing
-#
-#if typing.TYPE_CHECKING:
-#    from typing import ClassVar
-#from typing import Dict, Type
+import typing
 
-from typing import Iterable, List, Optional
+if typing.TYPE_CHECKING:
+    from typing import ClassVar
+from typing import Dict, Type
+
+from typing import Iterator, List, Optional
 
 from sympy.core import S
 from sympy.core.exprtools import factor_terms
@@ -17,10 +17,11 @@ from sympy.core.function import AppliedUndef, Derivative, Function, expand
 from sympy.core.numbers import Float
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
+from sympy.core.mul import Mul
 from sympy.functions import exp, sqrt, tan, log
 from sympy.integrals import Integral
-from sympy.polys.polytools import cancel, factor, factor_list
-from sympy.simplify import simplify
+from sympy.polys.polytools import cancel, factor
+from sympy.simplify.simplify import simplify
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 
@@ -123,7 +124,7 @@ class SingleODEProblem:
         Cs = [next(ncs) for i in range(num)]
         return Cs
 
-    def iter_numbered_constants(self, start=1, prefix='C') -> Iterable[Symbol]:
+    def iter_numbered_constants(self, start=1, prefix='C') -> Iterator[Symbol]:
         """
         Returns an iterator of constants that do not occur
         in eq already.
@@ -181,11 +182,11 @@ class SingleODESolver:
 
     # Subclasses should store the hint name (the argument to dsolve) in this
     # attribute
-    hint = None  ## type: ClassVar[str]
+    hint = None  # type: ClassVar[str]
 
     # Subclasses should define this to indicate if they support an _Integral
     # hint.
-    has_integral = None  ## type: ClassVar[bool]
+    has_integral = None  # type: ClassVar[bool]
 
     # The ODE to be solved
     ode_problem = None  # type: SingleODEProblem
@@ -195,7 +196,7 @@ class SingleODESolver:
 
     # Subclasses should store in this attribute the list of order(s) of ODE
     # that subclass can solve or leave it to None if not specific to any order
-    order = None  # type: None or list
+    order = None  # type: Optional[list]
 
     def __init__(self, ode_problem):
         self.ode_problem = ode_problem
@@ -354,7 +355,7 @@ class NthAlgebraic(SingleODESolver):
     # be stored in cached results we need to ensure that we always get the
     # same class back for each particular integration variable so we store these
     # classes in a global dict:
-    _diffx_stored = {}  ## type: Dict[Symbol, Type[Function]]
+    _diffx_stored = {}  # type: Dict[Symbol, Type[Function]]
 
     @staticmethod
     def _get_diffx(var):
@@ -443,8 +444,8 @@ class FirstLinear(SinglePatternODESolver):
         fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(fx, (((C1 + Integral(Q*exp(Integral(P, x)),x))
-            * exp(-Integral(P, x)))))
+        gensol = Eq(fx, ((C1 + Integral(Q*exp(Integral(P, x)),x))
+            * exp(-Integral(P, x))))
         return [gensol]
 
 
@@ -529,8 +530,8 @@ class AlmostLinear(SinglePatternODESolver):
     def _get_general_solution(self, *, simplify: bool = True):
         x = self.ode_problem.sym
         (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(self.ly, (((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)),x))
-                * exp(-Integral(self.bx/self.ax, x)))))
+        gensol = Eq(self.ly, ((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)),x))
+                * exp(-Integral(self.bx/self.ax, x))))
 
         return [gensol]
 
@@ -631,8 +632,8 @@ class Bernoulli(SinglePatternODESolver):
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
         if n==1:
             gensol = Eq(log(fx), (
-            (C1 + Integral((-P + Q),x)
-        )))
+            C1 + Integral((-P + Q),x)
+        ))
         else:
             gensol = Eq(fx**(1-n), (
                 (C1 - (n - 1) * Integral(Q*exp(-n*Integral(P, x))
@@ -675,7 +676,8 @@ class Factorable(SingleODESolver):
         self.eqs = []
         eq = eq.collect(f(x), func = cancel)
         eq = fraction(factor(eq))[0]
-        roots = factor_list(eq)[1]
+        factors = Mul.make_args(factor(eq))
+        roots = [fac.as_base_exp() for fac in factors if len(fac.args)!=0]
         if len(roots)>1 or roots[0][1]>1:
             for base,expo in roots:
                 if base.has(f(x)):

@@ -2,8 +2,6 @@
 A Printer for generating readable representation of most sympy classes.
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
@@ -329,7 +327,7 @@ class StrPrinter(Printer):
         )
 
     def _print_ElementwiseApplyFunction(self, expr):
-        return "{0}.({1})".format(
+        return "{}.({})".format(
             expr.function,
             self._print(expr.expr),
         )

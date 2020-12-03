@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, pi, Rational
 from sympy.functions import hermite, sqrt, exp, factorial, Abs
 from sympy.physics.quantum.constants import hbar
@@ -9,15 +7,18 @@ def psi_n(n, x, m, omega):
     """
     Returns the wavefunction psi_{n} for the One-dimensional harmonic oscillator.
 
-    ``n``
+    Parameters
+    ==========
+
+    ``n`` :
         the "nodal" quantum number.  Corresponds to the number of nodes in the
-        wavefunction.  n >= 0
-    ``x``
-        x coordinate
-    ``m``
-        mass of the particle
-    ``omega``
-        angular frequency of the oscillator
+        wavefunction.  ``n >= 0``
+    ``x`` :
+        x coordinate.
+    ``m`` :
+        Mass of the particle.
+    ``omega`` :
+        Angular frequency of the oscillator.
 
     Examples
     ========
@@ -40,12 +41,18 @@ def psi_n(n, x, m, omega):
 
 def E_n(n, omega):
     """
-    Returns the Energy of the One-dimensional harmonic oscillator
+    Returns the Energy of the One-dimensional harmonic oscillator.
 
-    ``n``
-        the "nodal" quantum number
-    ``omega``
-        the harmonic oscillator angular frequency
+    Parameters
+    ==========
+
+    ``n`` :
+        The "nodal" quantum number.
+    ``omega`` :
+        The harmonic oscillator angular frequency.
+
+    Notes
+    =====
 
     The unit of the returned value matches the unit of hw, since the energy is
     calculated as:
@@ -69,10 +76,13 @@ def coherent_state(n, alpha):
     Returns <n|alpha> for the coherent states of 1D harmonic oscillator.
     See https://en.wikipedia.org/wiki/Coherent_states
 
-    ``n``
-        the "nodal" quantum number
-    ``alpha``
-        the eigen value of annihilation operator
+    Parameters
+    ==========
+
+    ``n`` :
+        The "nodal" quantum number.
+    ``alpha`` :
+        The eigen value of annihilation operator.
     """
 
     return exp(- Abs(alpha)**2/2)*(alpha**n)/sqrt(factorial(n))

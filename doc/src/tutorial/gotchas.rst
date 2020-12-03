@@ -62,7 +62,7 @@ variable it is assigned to need not have anything to do with one another.
 Here we have done the very confusing thing of assigning a Symbol with the name
 ``a`` to the variable ``b``, and a Symbol of the name ``b`` to the variable
 ``a``.  Now the Python variable named ``a`` points to the SymPy Symbol named
-``b``, and visa versa.  How confusing.  We could have also done something like
+``b``, and vice versa.  How confusing.  We could have also done something like
 
     >>> crazy = symbols('unrelated')
     >>> crazy + 1

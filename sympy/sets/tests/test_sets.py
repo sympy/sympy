@@ -688,7 +688,7 @@ def test_is_subset():
     assert FiniteSet(1).is_subset(Interval(0, 2))
     assert FiniteSet(1, 2).is_subset(Interval(0, 2, True, True)) is False
     assert (Interval(1, 2) + FiniteSet(3)).is_subset(
-        (Interval(0, 2, False, True) + FiniteSet(2, 3)))
+        Interval(0, 2, False, True) + FiniteSet(2, 3))
 
     assert Interval(3, 4).is_subset(Union(Interval(0, 1), Interval(2, 5))) is True
     assert Interval(3, 6).is_subset(Union(Interval(0, 1), Interval(2, 5))) is False
@@ -743,7 +743,7 @@ def test_is_superset():
     assert FiniteSet(1).is_superset(Interval(0, 2)) == False
     assert FiniteSet(1, 2).is_superset(Interval(0, 2, True, True)) == False
     assert (Interval(1, 2) + FiniteSet(3)).is_superset(
-        (Interval(0, 2, False, True) + FiniteSet(2, 3))) == False
+        Interval(0, 2, False, True) + FiniteSet(2, 3)) == False
 
     assert Interval(3, 4).is_superset(Union(Interval(0, 1), Interval(2, 5))) == False
 
@@ -1008,7 +1008,7 @@ def test_product_basic():
     assert (H, 3, 3) in (coin * d6 * d6).flatten()
     assert ((H, 3), 3) in coin * d6 * d6
     HH, TT = sympify(H), sympify(T)
-    assert set(coin**2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
+    assert set(coin**2) == {(HH, HH), (HH, TT), (TT, HH), (TT, TT)}
 
     assert (d4*d4).is_subset(d6*d6)
 
@@ -1581,3 +1581,23 @@ def test_DisjointUnion_len():
     assert len(DisjointUnion(FiniteSet(3, 5, 7, 9), FiniteSet(x, y, z))) == 7
     assert len(DisjointUnion(S.EmptySet, S.EmptySet, FiniteSet(x, y, z), S.EmptySet)) == 3
     raises(ValueError, lambda: len(DisjointUnion(Interval(0, 1), S.EmptySet)))
+
+def test_issue_20089():
+    B = FiniteSet(FiniteSet(1, 2), FiniteSet(1))
+    assert not 1 in B
+    assert not 1.0 in B
+    assert not Eq(1, FiniteSet(1, 2))
+    assert FiniteSet(1) in B
+    A = FiniteSet(1, 2)
+    assert A in B
+    assert B.issubset(B)
+    assert not A.issubset(B)
+    assert 1 in A
+    C = FiniteSet(FiniteSet(1, 2), FiniteSet(1), 1, 2)
+    assert A.issubset(C)
+    assert B.issubset(C)
+
+def test_issue_20379():
+    #https://github.com/sympy/sympy/issues/20379
+    x = pi - 3.14159265358979
+    assert FiniteSet(x).evalf(2) == FiniteSet(Float('3.23108914886517e-15', 2))
