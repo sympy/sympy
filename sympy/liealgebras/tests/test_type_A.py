@@ -21,6 +21,6 @@ def test_type_A():
         c.simple_root(10)
     except ValueError:
         flag = True
-    except:
+    except Exception:
         pass
     assert flag
