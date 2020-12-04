@@ -47,7 +47,9 @@ class TypeE(Standard_Cartan):
         element of Q can be written as a linear combination
         of elements of D with all coefficients non-negative.
 
-        This method returns the ith simple root for E_n.
+        This method returns the ith simple root for E_n. Simple
+        roots are chosen in the basis that allows for easy subgrouping
+        of E6 and E7 from E8 simple roots.
 
         Sources
         =======
@@ -65,26 +67,20 @@ class TypeE(Standard_Cartan):
 
         """
         n = self.n
-        def _dim8_weights(i,n):
-            """
-            Returns the roots in a basis
-            that makes it easy to subset
-            e7 and e6.
+        e = eye(8)
 
-            """
-            e = eye(8)
-            if i == n:
-                return (e.row(n-3) - e.row(n-2)).T
-            if i == n - 1:
-                return  - ones(8,1) / 2
-            if i == n - 2:
-                return (e.row(n-3) + e.row(n-2)).T
-            else:
-                return (e.row(i-1) - e.row(i)).T
+        if i == n:
+            _root =  e.row(n-3) - e.row(n-2)
+        elif i == n - 1:
+            _root = - ones(1,8) / 2
+        elif i == n - 2:
+            _root = e.row(n-3) + e.row(n-2)
+        else:
+            _root = e.row(i-1) - e.row(i)
 
-        _root = _dim8_weights(i, n).T
-        if i != 8:
+        if n != 8:
             _root[n-1] = sqrt(sum(_root[j]**2 for j in range(n-1, 8)))
+
         return _root[:n]
 
 

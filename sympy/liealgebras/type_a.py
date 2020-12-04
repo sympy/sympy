@@ -68,7 +68,9 @@ class TypeA(Standard_Cartan):
         [1, -1, 0, 0, 0]
 
         """
-        if i < 1 or i > self.n: raise ValueError("Simple root does not exist.")
+        n = self.n
+        if i < 1 or i > n:
+            raise ValueError("Simple root %s does not exist for A_%s." % (i, n))
         return self.basic_root(i-1, i)
 
 
