@@ -19,7 +19,7 @@ from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
                             PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
-                            sumsets, rv_subs, NamedArgsMixin, Density)
+                            sumsets, rv_subs, NamedArgsMixin, Density, Distribution)
 from sympy.external import import_module
 
 
@@ -181,7 +181,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     def as_boolean(self):
         return FiniteDomain.as_boolean(self)
 
-class SingleFiniteDistribution(Basic, NamedArgsMixin):
+class SingleFiniteDistribution(Distribution, NamedArgsMixin):
     def __new__(cls, *args):
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
@@ -210,8 +210,8 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     __iter__ = property(lambda self: self.dict.__iter__)
     __getitem__ = property(lambda self: self.dict.__getitem__)
 
-    def __call__(self, *args):
-        return self.pmf(*args)
+    def __call__(self, arg):
+        return Piecewise((self.pmf(arg), (arg in self.set)), (S(0), True))
 
     def __contains__(self, other):
         return other in self.set

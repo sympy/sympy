@@ -19,7 +19,7 @@ from typing import Tuple as tTuple
 
 from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify, Or,
                    Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
+                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, Piecewise)
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
@@ -156,6 +156,10 @@ class ConditionalDomain(RandomDomain):
     def as_boolean(self):
         return And(self.fulldomain.as_boolean(), self.condition)
 
+class Distribution(Basic):
+
+    def __call__(self, *args):
+        return Piecewise((self.pdf(*args), self.set.as_relational(*args) != False), (S(0), True))
 
 class PSpace(Basic):
     """
