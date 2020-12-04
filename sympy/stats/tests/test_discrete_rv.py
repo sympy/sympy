@@ -368,7 +368,7 @@ def test_sample_pymc3():
             raises(NotImplementedError,
                 lambda: next(sample(Skellam('S', 1, 1), library='pymc3')))
 
-def test_issue_20031():
+def test_issue_20031_Discrete():
     # https://github.com/sympy/sympy/issues/20031
     G = Geometric('G', p=S(1)/4)
     dens = density(G)

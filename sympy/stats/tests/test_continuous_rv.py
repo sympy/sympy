@@ -1669,3 +1669,12 @@ def test_issue_16318():
     #test compute_expectation function of the SingleContinuousDomain
     N = SingleContinuousDomain(x, Interval(0, 1))
     raises (ValueError, lambda: SingleContinuousDomain.compute_expectation(N, x+1, {x, y}))
+
+def test_issue_20031_Continuous():
+    # https://github.com/sympy/sympy/issues/20031
+    N = Normal('N', 0, 1)
+    dens = density(N)
+    assert dens(sqrt(-1)) == S(0)
+    U = Uniform('U', 0, 1)
+    dens = density(U)
+    assert dens(-1) == S(0)

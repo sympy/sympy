@@ -159,7 +159,8 @@ class ConditionalDomain(RandomDomain):
 class Distribution(Basic):
 
     def __call__(self, *args):
-        return Piecewise((self.pdf(*args), self.set.as_relational(*args) != False), (S(0), True))
+        args = [sympify(arg) for arg in args]
+        return Piecewise((self.pdf(*args), all(self.set._contains(arg) != False for arg in args)), (S(0), True))
 
 class PSpace(Basic):
     """
