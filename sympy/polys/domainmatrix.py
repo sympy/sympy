@@ -190,7 +190,7 @@ class DDM(list):
         for ai in ais[:-1]:
             bi = a @ (e*ai + bi)
         bi = bi + e*ais[-1]
-        ainv = bi * (-1/a0)
+        ainv = bi * (-a.domain.one/a0)
         return ainv
 
     def lu(a):
@@ -569,6 +569,8 @@ class DomainMatrix:
 
     def convert_to(self, K):
         Kold = self.domain
+        if K == Kold:
+            return self.from_ddm(self.rep.copy())
         new_rows = [[K.convert_from(e, Kold) for e in row] for row in self.rep]
         return DomainMatrix(new_rows, self.shape, K)
 
