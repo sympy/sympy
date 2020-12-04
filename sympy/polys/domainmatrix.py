@@ -314,9 +314,10 @@ def ddm_irref_score(a, score):
             if k == i or not ak[j]:
                 continue
             akj = ak[j]
-            ak[j] -= akj # ak[j] = zero
-            for l in range(j+1, n):
-                ak[l] -= akj * ai[l]
+            if akj:
+                ak[j] -= akj # ak[j] = zero
+                for l in range(j+1, n):
+                    ak[l] -= akj * ai[l]
 
         # next row
         pivots.append(j)
@@ -594,6 +595,10 @@ class DomainMatrix:
         from sympy.matrices.dense import MutableDenseMatrix
         rows_sympy = [[self.domain.to_sympy(e) for e in row] for row in self.rep]
         return MutableDenseMatrix(rows_sympy)
+
+    @classmethod
+    def eye(cls, n, domain):
+        return cls.from_ddm(DDM.eye(n, domain))
 
     def __repr__(self):
         rows_str = ['[%s]' % (', '.join(map(str, row))) for row in self.rep]
