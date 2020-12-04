@@ -211,6 +211,7 @@ class SingleFiniteDistribution(Distribution, NamedArgsMixin):
     __getitem__ = property(lambda self: self.dict.__getitem__)
 
     def __call__(self, arg):
+        arg = sympify(arg)
         return Piecewise((self.pmf(arg), (arg in self.set)), (S(0), True))
 
     def __contains__(self, other):
