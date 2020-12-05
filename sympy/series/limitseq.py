@@ -20,6 +20,9 @@ from sympy.series.limits import Limit
 def difference_delta(expr, n=None, step=1):
     """Difference Operator.
 
+    Explanation
+    ===========
+
     Discrete analog of differential operator. Given a sequence x[n],
     returns the sequence x[n + step] - x[n].
 
@@ -65,6 +68,9 @@ def difference_delta(expr, n=None, step=1):
 def dominant(expr, n):
     """Finds the dominant term in a sum, that is a term that dominates
     every other term.
+
+    Explanation
+    ===========
 
     If limit(a/b, n, oo) is oo then a dominates b.
     If limit(a/b, n, oo) is 0 then b dominates a.
@@ -151,13 +157,13 @@ def _limit_seq(expr, n, trials):
 
 
 def limit_seq(expr, n=None, trials=5):
-    """Finds the limit of a sequence as index n tends to infinity.
+    """Finds the limit of a sequence as index ``n`` tends to infinity.
 
     Parameters
     ==========
 
     expr : Expr
-        SymPy expression for the n-th term of the sequence
+        SymPy expression for the ``n-th`` term of the sequence
     n : Symbol, optional
         The index of the sequence, an integer that tends to positive
         infinity. If None, inferred from the expression unless it has
