@@ -446,3 +446,10 @@ def test_issue_15539():
 
 def test_issue_18606():
     assert unchanged(Order, 0)
+def test_issue_9917():
+    assert O(x*sin(x)+1,(x,oo)).expr.simplify()== x*sin(x) + 1
+    assert O((x*sin(x))**2 + 1, (x, oo)).expr.simplify() == x**2*sin(x)**2 + 1
+    assert O(((x**2)*sin(x))**2 + 1, (x, oo)).expr.simplify() == x**4*sin(x)**2 + 1
+    assert O((x**2)*sin(x) + 1, (x, oo)).expr.simplify() == x**2*sin(x) + 1
+    assert O(x*((sin(x))**2) + 1, (x, oo)).expr.simplify() == x*sin(x)**2 + 1
+    assert O((x**2)*((sin(x))**2) + 1, (x, oo)).expr.simplify() == x**2*sin(x)**2 + 1
