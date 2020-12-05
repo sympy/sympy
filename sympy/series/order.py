@@ -10,7 +10,10 @@ from sympy.utilities.iterables import uniq
 
 
 class Order(Expr):
-    r""" Represents the limiting behavior of some function
+    r""" Represents the limiting behavior of some function.
+
+    Explanation
+    ===========
 
     The order of a function characterizes the function based on the limiting
     behavior of the function as it goes to some limit. Only taking the limit

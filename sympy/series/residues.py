@@ -14,8 +14,8 @@ def residue(expr, x, x0):
     """
     Finds the residue of ``expr`` at the point x=x0.
 
-    The residue is defined as the coefficient of 1/(x-x0) in the power series
-    expansion about x=x0.
+    The residue is defined as the coefficient of ``1/(x-x0)`` in the power series
+    expansion about ``x=x0``.
 
     Examples
     ========
