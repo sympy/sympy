@@ -109,7 +109,7 @@ __all__ = [
     'coskewness', 'sample_stochastic_process',
 
     'FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin', 'Binomial',
-    'BetaBinomial', 'Hypergeometric', 'Rademacher',
+    'BetaBinomial', 'Hypergeometric', 'Rademacher', 'IdealSoliton', 'RobustSoliton',
     'FiniteDistributionHandmade',
 
     'ContinuousRV', 'Arcsin', 'Benini', 'Beta', 'BetaNoncentral', 'BetaPrime',
@@ -159,7 +159,7 @@ from .rv_interface import (P, E, H, density, where, given, sample, cdf, median,
 
 from .frv_types import (FiniteRV, DiscreteUniform, Die, Bernoulli, Coin,
         Binomial, BetaBinomial, Hypergeometric, Rademacher,
-        FiniteDistributionHandmade)
+        FiniteDistributionHandmade, IdealSoliton, RobustSoliton)
 
 from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         BetaPrime, BoundedPareto, Cauchy, Chi, ChiNoncentral, ChiSquared, Dagum, Erlang,
