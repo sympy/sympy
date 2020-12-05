@@ -20,6 +20,9 @@ def richardson(A, k, n, N):
     extrapolation with the terms A(n), A(n+1), ..., A(n+N+1).
     Choosing N ~= 2*n often gives good results.
 
+    Examples
+    ========
+
     A simple example is to calculate exp(1) using the limit definition.
     This limit converges slowly; n = 100 only produces two accurate
     digits:
@@ -73,6 +76,9 @@ def shanks(A, k, n, m=1):
 
     The Shanks transformation is useful for summing Taylor series that
     converge slowly near a pole or singularity, e.g. for log(2):
+
+    Examples
+    ========
 
         >>> from sympy.abc import k, n
         >>> from sympy import Sum, Integer
