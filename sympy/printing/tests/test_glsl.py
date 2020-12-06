@@ -400,17 +400,15 @@ def test_Matrices_1x7():
     assert gl(A) == 'float[7](1, 2, 3, 4, 5, 6, 7)'
     assert gl(A.transpose()) == 'float[7](1, 2, 3, 4, 5, 6, 7)'
 
-def test_Matrices_1x7_custom_constructor():
+def test_Matrices_1x7_base_type_int():
     gl = glsl_code
-    constructor = 'SevenNumberStruct'
     A = Matrix([1,2,3,4,5,6,7])
-    assert gl(A, array_constructor = constructor) == 'SevenNumberStruct(1, 2, 3, 4, 5, 6, 7)'
+    assert gl(A, base_type = 'int') == 'int[7](1, 2, 3, 4, 5, 6, 7)'
 
-def test_Tuple_custom_constructor():
+def test_Tuple_base_type_custom():
     gl = glsl_code
-    constructor = 'Abc'
     A = symbols('a b c')
-    assert gl(A, array_constructor = constructor, glsl_types=False) == 'Abc(a, b, c)'
+    assert gl(A, base_type = 'AbcType', glsl_types=False) == 'AbcType[3](a, b, c)'
 
 def test_Matrices_1x7_assign_to_symbols():
     gl = glsl_code
