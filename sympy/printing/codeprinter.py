@@ -83,24 +83,24 @@ class CodePrinter(StrPrinter):
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.codegen.ast import CodeBlock, Assignment
 
-        if isinstance(assign_to, str):
-            if expr.is_Matrix:
-                assign_to = MatrixSymbol(assign_to, *expr.shape)
-            else:
-                assign_to = Symbol(assign_to)
-        elif isinstance(assign_to, (list, tuple)):
-            assign_to = tuple(x if isinstance(x, Symbol) else Symbol(x) for x in assign_to)
-        elif not isinstance(assign_to, (Basic, type(None))):
-            raise TypeError("{} cannot assign to object of type {}".format(
-                    type(self).__name__, type(assign_to)))
+        def _handle_assign_to(expr, assign_to):
+            if assign_to is None:
+                return sympify(expr)
+            if isinstance(assign_to, (list, tuple)):
+                if len(expr) != len(assign_to):
+                    raise ValueError('Failed to assign an expression of length {} to {} variables'.format(len(expr), len(assign_to)))
+                return CodeBlock(*[_handle_assign_to(lhs, rhs) for lhs, rhs in zip(expr, assign_to)])
+            if isinstance(assign_to, str):
+                if expr.is_Matrix:
+                    assign_to = MatrixSymbol(assign_to, *expr.shape)
+                else:
+                    assign_to = Symbol(assign_to)
+            elif not isinstance(assign_to, Basic):
+                raise TypeError("{} cannot assign to object of type {}".format(
+                        type(self).__name__, type(assign_to)))
+            return Assignment(assign_to, expr)
 
-        if isinstance(assign_to, tuple):
-            expr = CodeBlock(*[Assignment(lhs, rhs) for lhs, rhs in zip(assign_to,expr)])
-        elif assign_to:
-            expr = Assignment(assign_to, expr)
-        else:
-            # _sympify is not enough b/c it errors on iterables
-            expr = sympify(expr)
+        expr = _handle_assign_to(expr, assign_to)
 
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
