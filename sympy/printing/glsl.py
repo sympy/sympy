@@ -44,7 +44,7 @@ class GLSLPrinter(CodePrinter):
         'mat_nested': False,
         'mat_separator': ',\n',
         'mat_transpose': False,
-        'base_type': 'float',
+        'array_type': 'float',
         'glsl_types': True,
 
         'order': None,
@@ -110,8 +110,8 @@ class GLSLPrinter(CodePrinter):
         mat_separator = self._settings['mat_separator']
         mat_transpose = self._settings['mat_transpose']
         glsl_types = self._settings['glsl_types']
-        base_type = self._settings['base_type']
-        array_constructor = Template('%s[${size}]' % base_type)
+        array_type = self._settings['array_type']
+        array_constructor = Template('%s[${size}]' % array_type)
         column_vector = (mat.rows == 1) if mat_transpose else (mat.cols == 1)
         A = mat.transpose() if mat_transpose != column_vector else mat
 
@@ -138,7 +138,7 @@ class GLSLPrinter(CodePrinter):
                     A.rows, A.cols
                 )
         elif self._settings['mat_nested']:
-            return '%s[%s][%s](\n%s\n)' % (base_type, A.rows, A.cols,
+            return '%s[%s][%s](\n%s\n)' % (array_type, A.rows, A.cols,
                 A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')')
             )
 
@@ -176,8 +176,8 @@ class GLSLPrinter(CodePrinter):
     def _print_list(self, expr):
         l = ', '.join(self._print(item) for item in expr)
         glsl_types = self._settings['glsl_types']
-        base_type = self._settings['base_type']
-        array_constructor = Template('%s[${size}]' % base_type)
+        array_type = self._settings['array_type']
+        array_constructor = Template('%s[${size}]' % array_type)
 
         if len(expr) <= 4 and glsl_types:
             return 'vec%s(%s)' % (len(expr),l)
@@ -375,8 +375,8 @@ def glsl_code(expr,assign_to=None,**settings):
         By default, this printer ignores that convention. Setting this option to
         ``True`` transposes all matrix output.
         [default=False]
-    base_type: str, optional
-        The base type for printing a GLSL array constructor.
+    array_type: str, optional
+        The GLSL array constructor type.
         [default='float']
     precision : integer, optional
         The precision for numbers such as pi [default=15].
@@ -426,9 +426,9 @@ def glsl_code(expr,assign_to=None,**settings):
        6, 7, 8, 9, 10
     ) /* a 2x5 matrix */
 
-    Any object printed by default as a GLSL float array can be printed using a
-    different array type using the ``base_type`` parameter:
-    >>> glsl_code(Matrix([1,2,3,4,5]), base_type='int')
+    The type of array constructor used to print GLSL arrays can be controlled
+    via the ``array_type`` parameter:
+    >>> glsl_code(Matrix([1,2,3,4,5]), array_type='int')
     'int[5](1, 2, 3, 4, 5)'
 
     Passing a list of strings or ``symbols`` to the ``assign_to`` parameter will yield

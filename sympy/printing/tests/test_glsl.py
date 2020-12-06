@@ -400,15 +400,15 @@ def test_Matrices_1x7():
     assert gl(A) == 'float[7](1, 2, 3, 4, 5, 6, 7)'
     assert gl(A.transpose()) == 'float[7](1, 2, 3, 4, 5, 6, 7)'
 
-def test_Matrices_1x7_base_type_int():
+def test_Matrices_1x7_array_type_int():
     gl = glsl_code
     A = Matrix([1,2,3,4,5,6,7])
-    assert gl(A, base_type = 'int') == 'int[7](1, 2, 3, 4, 5, 6, 7)'
+    assert gl(A, array_type = 'int') == 'int[7](1, 2, 3, 4, 5, 6, 7)'
 
-def test_Tuple_base_type_custom():
+def test_Tuple_array_type_custom():
     gl = glsl_code
     A = symbols('a b c')
-    assert gl(A, base_type = 'AbcType', glsl_types=False) == 'AbcType[3](a, b, c)'
+    assert gl(A, array_type = 'AbcType', glsl_types=False) == 'AbcType[3](a, b, c)'
 
 def test_Matrices_1x7_assign_to_symbols():
     gl = glsl_code
@@ -422,18 +422,6 @@ x.d = 4;
 x.e = 5;
 x.f = 6;
 x.g = 7;'''
-
-def test_assign_to_nested_symbols():
-    gl = glsl_code
-    expr = ((1,2,3), (1,2,3))
-    assign_to = (symbols('a b c'), symbols('x y z'))
-    assert gl(expr, assign_to = assign_to) == \
-    '''a = 1;
-b = 2;
-c = 3;
-x = 1;
-y = 2;
-z = 3;'''
 
 def test_1xN_vecs():
     gl = glsl_code
