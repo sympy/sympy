@@ -1,10 +1,11 @@
 from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
     factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
-    integrate, log, Mul, N, oo, pi, Pow, product, Product, Float,
+    integrate, log, Mul, N, oo, pi, Pow, product, Product, Float, Basic, FiniteSet,
     Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
-    scaled_zero, get_integer_part, as_mpmath, evalf, EvalfMixin)
+    scaled_zero, get_integer_part, as_mpmath, evalf, EvalfMixin, _evalf_options)
+from sympy.core.expr import Expr
 from mpmath import inf, ninf
 from mpmath.libmp.libmpf import from_float
 from sympy.core.expr import unchanged
@@ -639,7 +640,7 @@ def test_evalfmixin_eval_eval_evalf_options():
             self.val = a
 
         def _eval_evalf_options(self, prec,  options):
-            return self.val._evalf_options(prec, options)
+            return _evalf_options(self.val, prec, options)
 
     a = A(pi - 3.14159265358979)
     assert a.evalf(39) == Float('3.231089148865173630908775263881796980821e-15', 39)
@@ -700,7 +701,7 @@ def test_evalfmixin():
             self.val = a
 
         def _eval_evalf_options(self, prec,  options):
-            return self.val._evalf_options(prec, options)
+            return _evalf_options(self.val, prec, options)
 
         def _eval_evalf(self, prec):
             return self.val._evalf(prec)
@@ -732,10 +733,36 @@ def test_evalfmixin():
             self.val = a
 
         def _eval_evalf_options(self, prec,  options):
-            return self.val._evalf_options(prec, options)
+            return _evalf_options(self.val, prec, options)
 
     c = C(pi - 3.14159265358979)
 
     #_eval_evalf_options are preferred over _eval_evalf if both are given.
     assert a.evalf(40) == c.evalf(40)
     assert a.evalf(40) != b.evalf(40)
+
+def test_basic_subclass():
+    class A(Basic):
+        def _eval_evalf(self, prec):
+            return Float('2.0', prec)
+
+    assert FiniteSet(A()).evalf() == FiniteSet(2)
+
+    class B(Basic):
+        def _eval_evalf_options(self, prec, options):
+            return Float('2.0', prec)
+
+    assert FiniteSet(A()).evalf() == FiniteSet(2)
+
+def test_expr_subclass():
+    class A(Expr):
+        def _eval_evalf(self, prec):
+            return Float('2.0', prec)
+
+    assert FiniteSet(A()).evalf() == FiniteSet(2)
+
+    class B(Expr):
+        def _eval_evalf_options(self, prec, options):
+            return Float('2.0', prec)
+
+    assert FiniteSet(A()).evalf() == FiniteSet(2)

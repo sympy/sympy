@@ -1388,6 +1388,43 @@ def evalf(x, prec, options):
         check_target(x, r, prec)
     return r
 
+def _evalf_options(x, prec, options):
+    """Handles `evalf` and other helper functions for `.evalf`."""
+    from sympy import Float
+    try:
+        result = evalf(x, prec + 4, options)
+    except NotImplementedError:
+        # First try with '_eval_evalf_options'
+        v = x._eval_evalf_options(prec, options)
+        if v is None:
+            # If '_eval_evalf_options' is not defined in subclass fall back to `eval_evalf`
+            if hasattr(x, 'subs') and 'subs' in options:
+                # Make `_eval_evalf` work with `subs`
+                v = x.subs(options['subs'])._eval_evalf(prec)
+            else:
+                v = x._eval_evalf(prec)
+        if v is None:
+            return x
+        elif not v.is_number:
+            return v
+        try:
+            # If the result is numerical, normalize it
+            result = evalf(v, prec, options)
+        except NotImplementedError:
+            # Probably contains symbols or unknown functions
+            return v
+    re, im, re_acc, im_acc = result
+    if re:
+        p = max(min(prec, re_acc), 1)
+        re = Float._new(re, p)
+    else:
+        re = S.Zero
+    if im:
+        p = max(min(prec, im_acc), 1)
+        im = Float._new(im, p)
+        return re + im*S.ImaginaryUnit
+    else:
+        return re
 
 class EvalfMixin:
     """Mixin class adding evalf capabililty.
@@ -1405,7 +1442,7 @@ class EvalfMixin:
     ========
 
     >>> from sympy import pi
-    >>> from sympy.core.evalf import EvalfMixin
+    >>> from sympy.core.evalf import EvalfMixin, _evalf_options
 
     >>> class A(EvalfMixin):
     ...     is_number = False
@@ -1414,7 +1451,7 @@ class EvalfMixin:
     ...     def __init__(self, a):
     ...         self.val = a
     ...     def _eval_evalf_options(self, prec, options):
-    ...         return self.val._evalf_options(prec, options)
+    ...         return _evalf_options(self.val, prec, options)
     ...
 
     >>> a = A(pi)
@@ -1512,47 +1549,9 @@ class EvalfMixin:
             options['subs'] = subs
         if quad is not None:
             options['quad'] = quad
-        return self._evalf_options(prec, options)
+        return _evalf_options(self, prec, options)
 
     n = evalf
-
-    def _evalf_options(self, prec, options):
-        """Handles `evalf` and other helper functions for `.evalf`."""
-        from sympy import Float
-        try:
-            result = evalf(self, prec + 4, options)
-        except NotImplementedError:
-            # First try with '_eval_evalf_options'
-            v = self._eval_evalf_options(prec, options)
-            if v is None:
-                # If '_eval_evalf_options' is not defined in subclass fall back to `eval_evalf`
-                if hasattr(self, 'subs') and 'subs' in options:
-                    # Make `_eval_evalf` work with `subs`
-                    v = self.subs(options['subs'])._eval_evalf(prec)
-                else:
-                    v = self._eval_evalf(prec)
-            if v is None:
-                return self
-            elif not v.is_number:
-                return v
-            try:
-                # If the result is numerical, normalize it
-                result = evalf(v, prec, options)
-            except NotImplementedError:
-                # Probably contains symbols or unknown functions
-                return v
-        re, im, re_acc, im_acc = result
-        if re:
-            p = max(min(prec, re_acc), 1)
-            re = Float._new(re, p)
-        else:
-            re = S.Zero
-        if im:
-            p = max(min(prec, im_acc), 1)
-            im = Float._new(im, p)
-            return re + im*S.ImaginaryUnit
-        else:
-            return re
 
     def _evalf(self, prec):
         """Helper for evalf. Does the same thing but takes binary precision.
