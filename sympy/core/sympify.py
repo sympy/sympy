@@ -496,7 +496,7 @@ def _sympify(a, expected_type = None):
         - booleans, including ``None`` (will leave ``None`` unchanged)
         - dict, lists, sets or tuples containing any of the above
 
-    expected_type : Optional
+    expected_type : Tuple, Optional
         To check if sympified object is of expected type or not.
 
     Examples
@@ -523,8 +523,7 @@ def _sympify(a, expected_type = None):
     """
     symp = sympify(a, strict=True)
     if expected_type is None:
-        from sympy.core.basic import Basic
-        expected_type = Basic #Any time the result is not Basic would be a bug.
+        return symp
     if not isinstance(symp, expected_type):
         raise TypeError
     return symp
