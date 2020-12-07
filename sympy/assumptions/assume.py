@@ -242,6 +242,9 @@ class Predicate(Boolean):
     def name(self):
         return self.args[0]
 
+    def register(self, *types, **kwargs):
+        return lambda func: self.handler.register(*types, **kwargs)(func)
+
     def __call__(self, expr):
         return AppliedPredicate(self, expr)
 

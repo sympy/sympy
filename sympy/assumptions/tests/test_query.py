@@ -2056,7 +2056,7 @@ def test_key_extensibility():
     class MyPredicate(Predicate):
         pass
     Q.my_key = MyPredicate("my_key")
-    @Q.my_key.handler.register(Symbol)
+    @Q.my_key.register(Symbol)
     def _(expr, assumptions):
         return True
     assert ask(Q.my_key(x)) is True
@@ -2287,12 +2287,12 @@ def test_custom_AskHandler():
     class MersennePredicate(Predicate):
         pass
     Q.mersenne = MersennePredicate("mersenne")
-    @Q.mersenne.handler.register(Integer)
+    @Q.mersenne.register(Integer)
     def _(expr, assumptions):
         from sympy import log
         if ask(Q.integer(log(expr + 1, 2))):
                 return True
-    @Q.mersenne.handler.register(Symbol)
+    @Q.mersenne.register(Symbol)
     def _(expr, assumptions):
         if expr in conjuncts(assumptions):
                 return True

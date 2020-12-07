@@ -101,7 +101,7 @@ In the following example, we will create a new predicate which checks if the arg
     >>> class MersennePredicate(Predicate):
     ...     """Return True if argument is (2**n)-1 pattern."""
     >>> Q.mersenne = MersennePredicate("mersenne")
-    >>> @Q.mersenne.handler.register(Integer)
+    >>> @Q.mersenne.register(Integer)
     ... def _(expr, assumptions):
     ...     from sympy import log
     ...     if ask(Q.integer(log(expr + 1, 2))):
