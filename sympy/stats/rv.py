@@ -1042,7 +1042,7 @@ def sample(expr, condition=None, size=(), library='scipy',
     numsamples : int
         Number of samples, each with size as ``size``
     seed :
-        An object(like int, numpy.random.RandomState, numpy.random.default_rng)
+        An object (like int, numpy.random.RandomState, numpy.random.default_rng)
         to be used as seed by the given external library for sampling `expr`.
         Optional, by default None, in which case seed settings
         related to the given library will be used.
@@ -1165,7 +1165,7 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
     numsamples: integer, optional
         Length of the iterator (defaults to infinity)
     seed :
-        An object(like int, numpy.random.RandomState, numpy.random.default_rng)
+        An object (like int, numpy.random.RandomState, numpy.random.default_rng)
         to be used as seed by the given external library for sampling `expr`.
         Optional, by default None, in which case seed settings
         related to the given library will be used.
