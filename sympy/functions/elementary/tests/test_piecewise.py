@@ -8,7 +8,7 @@ from sympy.core.expr import unchanged
 from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
 from sympy.testing.pytest import raises, slow
-
+from sympy.simplify import simplify
 
 a, b, c, d, x, y = symbols('a:d, x, y')
 z = symbols('z', nonzero=True)
@@ -1360,3 +1360,10 @@ def test_issue_7370():
 
 def test_issue_16715():
     raises(NotImplementedError, lambda: Piecewise((x, x<0), (0, y>1)).as_expr_set_pairs())
+
+def test_issue_20360():
+    t, tau = symbols("t tau", real=True)
+    n = symbols("n", integer=True)
+    lam = pi * (n - S.Half)
+    eq = integrate(exp(lam * tau), (tau, 0, t)) 
+    assert simplify(eq) == (2*exp(pi*t*(2*n - 1)/2) - 2)/(pi*(2*n - 1))
