@@ -9,6 +9,7 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.core import Tuple
 from sympy import glsl_code
+import textwrap
 
 x, y, z = symbols('x,y,z')
 
@@ -23,6 +24,7 @@ def test_print_without_operators():
     assert glsl_code(x*(y+z),use_operators = False) == 'mul(x, add(y, z))'
     assert glsl_code(x*(y+z**y**0.5),use_operators = False) == 'mul(x, add(y, pow(z, sqrt(y))))'
     assert glsl_code(-x-y, use_operators=False, zero='zero()') == 'sub(zero(), add(x, y))'
+    assert glsl_code(-x-y, use_operators=False) == 'sub(0.0, add(x, y))'
 
 def test_glsl_code_sqrt():
     assert glsl_code(sqrt(x)) == "sqrt(x)"
@@ -403,25 +405,26 @@ def test_Matrices_1x7():
 def test_Matrices_1x7_array_type_int():
     gl = glsl_code
     A = Matrix([1,2,3,4,5,6,7])
-    assert gl(A, array_type = 'int') == 'int[7](1, 2, 3, 4, 5, 6, 7)'
+    assert gl(A, array_type='int') == 'int[7](1, 2, 3, 4, 5, 6, 7)'
 
 def test_Tuple_array_type_custom():
     gl = glsl_code
     A = symbols('a b c')
-    assert gl(A, array_type = 'AbcType', glsl_types=False) == 'AbcType[3](a, b, c)'
+    assert gl(A, array_type='AbcType', glsl_types=False) == 'AbcType[3](a, b, c)'
 
 def test_Matrices_1x7_assign_to_symbols():
     gl = glsl_code
     A = Matrix([1,2,3,4,5,6,7])
     assign_to = symbols('x.a x.b x.c x.d x.e x.f x.g')
-    assert gl(A, assign_to = assign_to) == \
-    '''x.a = 1;
-x.b = 2;
-x.c = 3;
-x.d = 4;
-x.e = 5;
-x.f = 6;
-x.g = 7;'''
+    assert gl(A, assign_to=assign_to) == textwrap.dedent('''\
+        x.a = 1;
+        x.b = 2;
+        x.c = 3;
+        x.d = 4;
+        x.e = 5;
+        x.f = 6;
+        x.g = 7;'''
+    )
 
 def test_1xN_vecs():
     gl = glsl_code

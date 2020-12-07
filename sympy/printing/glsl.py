@@ -5,7 +5,6 @@ from sympy.core.function import _coeff_isneg, Lambda
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from functools import reduce
-from string import Template
 
 known_functions = {
     'Abs': 'abs',
@@ -109,36 +108,46 @@ class GLSLPrinter(CodePrinter):
     def _print_MatrixBase(self, mat):
         mat_separator = self._settings['mat_separator']
         mat_transpose = self._settings['mat_transpose']
-        glsl_types = self._settings['glsl_types']
-        array_type = self._settings['array_type']
-        array_constructor = Template('%s[${size}]' % array_type)
         column_vector = (mat.rows == 1) if mat_transpose else (mat.cols == 1)
         A = mat.transpose() if mat_transpose != column_vector else mat
+
+        glsl_types = self._settings['glsl_types']
+        array_type = self._settings['array_type']
+        array_size = A.cols*A.rows
+        array_constructor = "{}[{}]".format(array_type, array_size)
 
         if A.cols == 1:
             return self._print(A[0]);
         if A.rows <= 4 and A.cols <= 4 and glsl_types:
             if A.rows == 1:
-                return 'vec%s%s' % (A.cols, A.table(self,rowstart='(',rowend=')'))
-            elif A.rows == A.cols:
-                return 'mat%s(%s)' % (
-                    A.rows, A.table(self,rowsep=', ',
-                            rowstart='',rowend=''))
-            else:
-                return 'mat%sx%s(%s)' % (A.cols, A.rows,
-                                        A.table(self,rowsep=', ',
-                                        rowstart='',rowend=''))
-        elif A.cols == 1 or A.rows == 1:
-            return array_constructor.substitute({'size': A.cols*A.rows}) +\
-                '(%s)' % A.table(self,rowsep=mat_separator,rowstart='',rowend='')
-        elif not self._settings['mat_nested']:
-            return array_constructor.substitute({'size': A.cols*A.rows}) +\
-                '(\n%s\n) /* a %sx%s matrix */' % (
-                    A.table(self,rowsep=mat_separator,rowstart='',rowend=''),
-                    A.rows, A.cols
+                return "vec{}{}".format(
+                    A.cols, A.table(self,rowstart='(',rowend=')')
                 )
+            elif A.rows == A.cols:
+                return "mat{}({})".format(
+                    A.rows, A.table(self,rowsep=', ',
+                    rowstart='',rowend='')
+                )
+            else:
+                return "mat{}x{}({})".format(
+                    A.cols, A.rows,
+                    A.table(self,rowsep=', ',
+                    rowstart='',rowend='')
+                )
+        elif A.cols == 1 or A.rows == 1:
+            return "{}({})".format(
+                array_constructor,
+                A.table(self,rowsep=mat_separator,rowstart='',rowend='')
+            )
+        elif not self._settings['mat_nested']:
+            return "{}(\n{}\n) /* a {}x{} matrix */".format(
+                array_constructor,
+                A.table(self,rowsep=mat_separator,rowstart='',rowend=''),
+                A.rows, A.cols
+            )
         elif self._settings['mat_nested']:
-            return '%s[%s][%s](\n%s\n)' % (array_type, A.rows, A.cols,
+            return "{}[{}][{}](\n{}\n)".format(
+                array_type, A.rows, A.cols,
                 A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')')
             )
 
@@ -167,22 +176,21 @@ class GLSLPrinter(CodePrinter):
             i,j = expr.i,expr.j
         pnt = self._print(expr.parent)
         if glsl_types and ((rows <= 4 and cols <=4) or nest):
-            # print('end _print_MatrixElement case A',nest,glsl_types)
-            return "%s[%s][%s]" % (pnt, i, j)
+            return "{}[{}][{}]".format(pnt, i, j)
         else:
-            # print('end _print_MatrixElement case B',nest,glsl_types)
             return "{}[{}]".format(pnt, i + j*rows)
 
     def _print_list(self, expr):
         l = ', '.join(self._print(item) for item in expr)
         glsl_types = self._settings['glsl_types']
         array_type = self._settings['array_type']
-        array_constructor = Template('%s[${size}]' % array_type)
+        array_size = len(expr)
+        array_constructor = '{}[{}]'.format(array_type, array_size)
 
-        if len(expr) <= 4 and glsl_types:
-            return 'vec%s(%s)' % (len(expr),l)
+        if array_size <= 4 and glsl_types:
+            return 'vec{}({})'.format(array_size, l)
         else:
-            return array_constructor.substitute(size=len(expr))+('(%s)' % l)
+            return '{}({})'.format(array_constructor, l)
 
     _print_tuple = _print_list
     _print_Tuple = _print_list
@@ -214,7 +222,7 @@ class GLSLPrinter(CodePrinter):
                 try:
                     return func(*[self.parenthesize(item, 0) for item in func_args])
                 except TypeError:
-                    return "%s(%s)" % (func, self.stringify(func_args, ", "))
+                    return '{}({})'.format(func, self.stringify(func_args, ", "))
         elif isinstance(func, Lambda):
             # inlined function
             return self._print(func(*func_args))
@@ -266,8 +274,10 @@ class GLSLPrinter(CodePrinter):
         for i in reversed(range(expr.rank)):
             elem += expr.indices[i]*offset
             offset *= dims[i]
-        return "%s[%s]" % (self._print(expr.base.label),
-                           self._print(elem))
+        return "{}[{}]".format(
+            self._print(expr.base.label),
+            self._print(elem)
+        )
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
@@ -280,7 +290,6 @@ class GLSLPrinter(CodePrinter):
                 e = self._print(float(expr.exp))
             except TypeError:
                 e = self._print(expr.exp)
-            # return self.known_functions['pow']+'(%s, %s)' % (self._print(expr.base),e)
             return self._print_Function_with_args('pow', (
                 self._print(expr.base),
                 e
@@ -290,7 +299,7 @@ class GLSLPrinter(CodePrinter):
         return str(float(expr))
 
     def _print_Rational(self, expr):
-        return "%s.0/%s.0" % (expr.p, expr.q)
+        return "{}.0/{}.0".format(expr.p, expr.q)
 
     def _print_Relational(self, expr):
         lhs_code = self._print(expr.lhs)
