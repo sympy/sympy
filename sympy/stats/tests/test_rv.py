@@ -12,6 +12,7 @@ from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
 from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
+from sympy.series.order import O
 
 def test_where():
     X, Y = Die('X'), Die('Y')
@@ -385,3 +386,9 @@ def test_issue_6810():
     assert P(Eq(Y, 0)) == 0
     assert P(Or(X > 2, X < 3)) == 1
     assert P(And(X > 3, X > 2)) == S(1)/2
+
+def test_issue_20286():
+    n, p = symbols('n p')
+    B = Binomial('B', n, p)
+    assert H(B) == log(2*pi*exp(1)*n*p*(1-p), 2)/2 + O(1/n)
+    
