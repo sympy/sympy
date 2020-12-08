@@ -63,9 +63,9 @@ def test_cxxcode_submodule():
         import sympy.printing.cxxcode # noqa:F401
 
 def test_cxxcode_nested_minmax():
-    assert cxxcode(sp.Max(sp.Min(sp.Symbol('x'), sp.Symbol('y')), 
+    assert cxxcode(sp.Max(sp.Min(sp.Symbol('x'), sp.Symbol('y')),
                    sp.Min(sp.Symbol('u'), sp.Symbol('v')))) \
         == 'std::max(std::min(u, v), std::min(x, y))'
-    assert cxxcode(sp.Min(sp.Max(sp.Symbol('x'), sp.Symbol('y')), 
+    assert cxxcode(sp.Min(sp.Max(sp.Symbol('x'), sp.Symbol('y')),
                    sp.Max(sp.Symbol('u'), sp.Symbol('v')))) \
         == 'std::min(std::max(u, v), std::max(x, y))'
