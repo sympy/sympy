@@ -2211,3 +2211,11 @@ def test_issue_17322():
     sol = [Eq(f(x), C1), Eq(f(x), C1*exp(-x))]
     assert set(sol) == set(dsolve(eq, hint='lie_group'))
     assert checkodesol(eq, sol) == 2*[(True, 0)]
+
+def test_issue_13060():
+    A, B = symbols("A B", cls=Function)
+    t = Symbol("t")
+    eq = [Eq(Derivative(A(t), t), A(t)*B(t)), Eq(Derivative(B(t), t), A(t)*B(t))]
+    sol = dsolve(eq)
+    assert checkodesol(eq, sol) == (True, [0, 0])
+
