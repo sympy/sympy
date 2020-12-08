@@ -752,7 +752,7 @@ def test_basic_subclass():
         def _eval_evalf_options(self, prec, options):
             return Float('2.0', prec)
 
-    assert FiniteSet(A()).evalf() == FiniteSet(2)
+    assert FiniteSet(B()).evalf() == FiniteSet(2)
 
 def test_expr_subclass():
     class A(Expr):
@@ -765,4 +765,4 @@ def test_expr_subclass():
         def _eval_evalf_options(self, prec, options):
             return Float('2.0', prec)
 
-    assert FiniteSet(A()).evalf() == FiniteSet(2)
+    assert FiniteSet(B()).evalf() == FiniteSet(2)
