@@ -1005,9 +1005,15 @@ class CoordSys3D(Basic):
         >>> a = CoordSys3D('a')
         >>> b = a.create_new('b', transformation='spherical')
         >>> b.transformation_to_parent()
-        (b.r*sin(b.theta)*cos(b.phi), b.r*sin(b.phi)*sin(b.theta), b.r*cos(b.theta))
+        Matrix([
+                [b.r*sin(b.theta)*cos(b.phi)],
+                [b.r*sin(b.phi)*sin(b.theta)],
+                [           b.r*cos(b.theta)]])
         >>> b.transformation_from_parent()
-        (sqrt(a.x**2 + a.y**2 + a.z**2), acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2)), atan2(a.y, a.x))
+        Matrix([
+                [          sqrt(a.x**2 + a.y**2 + a.z**2)],
+                [acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2))],
+                [                         atan2(a.y, a.x)]])
 
         """
         return CoordSys3D(name, parent=self, transformation=transformation,
