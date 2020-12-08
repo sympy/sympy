@@ -296,9 +296,9 @@ def test_create_new():
     c = a.create_new('c', transformation='spherical')
     assert c._parent == a
     assert c.transformation_to_parent() == \
-           (c.r*sin(c.theta)*cos(c.phi), c.r*sin(c.theta)*sin(c.phi), c.r*cos(c.theta))
+           Matrix([[c.r*sin(c.theta)*cos(c.phi)], [c.r*sin(c.theta)*sin(c.phi)], [c.r*cos(c.theta)]])
     assert c.transformation_from_parent() == \
-           (sqrt(a.x**2 + a.y**2 + a.z**2), acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2)), atan2(a.y, a.x))
+           Matrix([[sqrt(a.x**2 + a.y**2 + a.z**2)], [acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2))], [atan2(a.y, a.x)]])
 
 
 def test_evalf():
@@ -335,11 +335,11 @@ def test_transformation_equations():
     raises(AttributeError, lambda: a.y)
     raises(AttributeError, lambda: a.z)
 
-    assert a.transformation_to_parent() == (
-        r*sin(theta)*cos(phi),
-        r*sin(theta)*sin(phi),
-        r*cos(theta)
-    )
+    assert a.transformation_to_parent() == Matrix([
+        [r*sin(theta)*cos(phi)],
+        [r*sin(theta)*sin(phi)],
+        [r*cos(theta)]
+    ])
     assert a.lame_coefficients() == (1, r, r*sin(theta))
     assert a.transformation_from_parent_function()(x, y, z) == (
         sqrt(x ** 2 + y ** 2 + z ** 2),
@@ -349,17 +349,17 @@ def test_transformation_equations():
     a = CoordSys3D('a', transformation='cylindrical',
                    variable_names=["r", "theta", "z"])
     r, theta, z = a.base_scalars()
-    assert a.transformation_to_parent() == (
-        r*cos(theta),
-        r*sin(theta),
-        z
-    )
+    assert a.transformation_to_parent() == Matrix([
+        [r*cos(theta)],
+        [r*sin(theta)],
+        [z]
+    ])
     assert a.lame_coefficients() == (1, a.r, 1)
     assert a.transformation_from_parent_function()(x, y, z) == (sqrt(x**2 + y**2),
                             atan2(y, x), z)
 
     a = CoordSys3D('a', 'cartesian')
-    assert a.transformation_to_parent() == (a.x, a.y, a.z)
+    assert a.transformation_to_parent() == Matrix([[a.x], [a.y], [a.z]])
     assert a.lame_coefficients() == (1, 1, 1)
     assert a.transformation_from_parent_function()(x, y, z) == (x, y, z)
 
@@ -369,7 +369,7 @@ def test_transformation_equations():
     x, y, z = symbols('x y z')
     a = CoordSys3D('a', ((x, y, z), (x, y, z)))
     a._calculate_inv_trans_equations()
-    assert a.transformation_to_parent() == (a.x1, a.x2, a.x3)
+    assert a.transformation_to_parent() == Matrix([[a.x1], [a.x2], [a.x3]])
     assert a.lame_coefficients() == (1, 1, 1)
     assert a.transformation_from_parent_function()(x, y, z) == (x, y, z)
     r, theta, z = symbols("r theta z")
@@ -378,9 +378,9 @@ def test_transformation_equations():
     a = CoordSys3D('a', [(r, theta, z), (r*cos(theta), r*sin(theta), z)],
                    variable_names=["r", "theta", "z"])
     r, theta, z = a.base_scalars()
-    assert a.transformation_to_parent() == (
-        r*cos(theta), r*sin(theta), z
-    )
+    assert a.transformation_to_parent() == Matrix([
+        [r*cos(theta)], [r*sin(theta)], [z]
+    ])
     assert a.lame_coefficients() == (
         sqrt(sin(theta)**2 + cos(theta)**2),
         sqrt(r**2*sin(theta)**2 + r**2*cos(theta)**2),
@@ -391,7 +391,7 @@ def test_transformation_equations():
 
     # Cartesian with `lambda`
     a = CoordSys3D('a', lambda x, y, z: (x, y, z))
-    assert a.transformation_to_parent() == (a.x1, a.x2, a.x3)
+    assert a.transformation_to_parent() == Matrix([[a.x1], [a.x2], [a.x3]])
     assert a.lame_coefficients() == (1, 1, 1)
     a._calculate_inv_trans_equations()
     assert a.transformation_from_parent_function()(x, y, z) == (x, y, z)
@@ -400,9 +400,9 @@ def test_transformation_equations():
     a = CoordSys3D('a', lambda r, theta, phi: (r*sin(theta)*cos(phi), r*sin(theta)*sin(phi), r*cos(theta)),
                    variable_names=["r", "theta", "phi"])
     r, theta, phi = a.base_scalars()
-    assert a.transformation_to_parent() == (
-        r*sin(theta)*cos(phi), r*sin(phi)*sin(theta), r*cos(theta)
-    )
+    assert a.transformation_to_parent() == Matrix([
+        [r*sin(theta)*cos(phi)], [r*sin(phi)*sin(theta)], [r*cos(theta)]
+    ])
     assert a.lame_coefficients() == (
         sqrt(sin(phi)**2*sin(theta)**2 + sin(theta)**2*cos(phi)**2 + cos(theta)**2),
         sqrt(r**2*sin(phi)**2*cos(theta)**2 + r**2*sin(theta)**2 + r**2*cos(phi)**2*cos(theta)**2),
@@ -415,7 +415,7 @@ def test_transformation_equations():
         variable_names=["r", "theta", "z"]
     )
     r, theta, z = a.base_scalars()
-    assert a.transformation_to_parent() == (r*cos(theta), r*sin(theta), z)
+    assert a.transformation_to_parent() == Matrix([[r*cos(theta)], [r*sin(theta)], [z]])
     assert a.lame_coefficients() == (
         sqrt(sin(theta)**2 + cos(theta)**2),
         sqrt(r**2*sin(theta)**2 + r**2*cos(theta)**2),
@@ -460,3 +460,13 @@ def test_rotation_trans_equations():
            (-sin(q0) * c.y + cos(q0) * c.x, sin(q0) * c.x + cos(q0) * c.y, c.z)
     assert c._rotation_trans_equations(c._inverse_rotation_matrix(), c.base_scalars()) == \
            (sin(q0) * c.y + cos(q0) * c.x, -sin(q0) * c.x + cos(q0) * c.y, c.z)
+
+def test_issue_19725():
+    N = CoordSys3D('N')
+    M = N.create_new("M", transformation="cylindrical")
+    a = symbols("a")
+    O = N.orient_new_axis("O", a, N.k)
+
+    assert M.transformation_to_parent() == Matrix([[M.r*cos(M.theta)], [M.r*sin(M.theta)], [M.z]])
+    assert M.transformation_from_parent() == Matrix([[sqrt(N.x**2 + N.y**2)], [atan2(N.y, N.x)], [N.z]])
+    assert isinstance(O.transformation_to_parent(), Matrix)

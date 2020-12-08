@@ -141,7 +141,7 @@ class CoordSys3D(Basic):
             l = l._projections
             lambda_lame = CoordSys3D._get_lame_coeff('cartesian')
             lambda_inverse = lambda x, y, z: r.inv()*Matrix(
-                [x-l[0], y-l[1], z-l[2]])
+                [x-l[0], y-l[1], z-l[2]]) ###############################################################
         elif isinstance(transformation, Str):
             trname = transformation.name
             lambda_transformation = CoordSys3D._get_transformation_lambdas(trname)
@@ -471,14 +471,14 @@ class CoordSys3D(Basic):
         return self._lame_coefficients
 
     def transformation_to_parent(self):
-        return self._transformation_lambda(*self.base_scalars())
+        return tuple_to_matrix(self._transformation_lambda(*self.base_scalars()))
 
     def transformation_from_parent(self):
         if self._parent is None:
             raise ValueError("no parent coordinate system, use "
                              "`transformation_from_parent_function()`")
-        return self._transformation_from_parent_lambda(
-                            *self._parent.base_scalars())
+        return tuple_to_matrix(self._transformation_from_parent_lambda(
+                            *self._parent.base_scalars()))
 
     def transformation_from_parent_function(self):
         return self._transformation_from_parent_lambda
@@ -1029,11 +1029,7 @@ class CoordSys3D(Basic):
             return r
 
         dx, dy, dz = [translation.dot(i) for i in parent.base_vectors()]
-        t = lambda x, y, z: (
-            x + dx,
-            y + dy,
-            z + dz,
-        )
+        t = lambda x, y, z: Matrix([[x + dx], [y + dy], [z + dz]])
         return lambda x, y, z: t(*r(x, y, z))
 
 
@@ -1045,6 +1041,16 @@ def _check_strings(arg_name, arg):
         if not isinstance(s, str):
             raise TypeError(errorstr)
 
+def tuple_to_matrix(tuple):
+    if (isinstance(tuple, Matrix)):
+        pass
+    index = 0
+    M = Matrix([ [ ] ])
+    for elt in tuple:
+        temp = Matrix([ [ elt ] ])
+        M = M.row_insert(index, temp)
+        index += 1
+    return M
 
 # Delayed import to avoid cyclic import problems:
 from sympy.vector.vector import BaseVector
