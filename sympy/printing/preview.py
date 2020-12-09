@@ -4,7 +4,6 @@ import io
 import os
 from os.path import join
 import shutil
-import time
 import tempfile
 
 try:
@@ -28,92 +27,29 @@ def _check_output_no_window(*args, **kwargs):
     return check_output(*args, creationflags=creation_flag, **kwargs)
 
 
-def _start_file(fname):
-    """
-    Like :func:`os.startfile`, but does not return until the program exits.
-
-    This is necessary because we delete the temp dir as soon as this function
-    returns
-
-    Equivalent code if we depended on ``pywin32``::
-
-        import win32con
-        import win32api
-        import win32event
-        from win32com.shell import shellcon
-        from win32com.shell.shell import ShellExecuteEx
-        rc = ShellExecuteEx(
-            fMask=shellcon.SEE_MASK_NOCLOSEPROCESS,
-            nShow=win32con.SW_SHOW,
-            lpFile=fname)
-        hproc = rc['hProcess']
-        win32event.WaitForSingleObject(hproc, win32event.INFINITE)
-        win32api.CloseHandle(hproc)
-    """
-    import ctypes
-    from ctypes.wintypes import ULONG, DWORD, HANDLE, HKEY, HINSTANCE, HWND, LPCWSTR
-    from _winapi import CloseHandle, WaitForSingleObject
-
-    class SHELLEXECUTEINFOW(ctypes.Structure):
-        _fields_ = [
-            ("cbSize", DWORD),
-            ("fMask", ULONG),
-            ("hwnd", HWND),
-            ("lpVerb", LPCWSTR),
-            ("lpFile", LPCWSTR),
-            ("lpParameters", LPCWSTR),
-            ("lpDirectory", LPCWSTR),
-            ("nShow", ctypes.c_int),
-            ("hInstApp", HINSTANCE),
-            ("lpIDList", ctypes.c_void_p),
-            ("lpClass", LPCWSTR),
-            ("hkeyClass", HKEY),
-            ("dwHotKey", DWORD),
-            ("DUMMYUNIONNAME", ctypes.c_void_p),
-            ("hProcess", HANDLE)
-        ]
-
-    shell_execute_ex = ctypes.windll.shell32.ShellExecuteExW
-    shell_execute_ex.argtypes = [ctypes.POINTER(SHELLEXECUTEINFOW)]
-    shell_execute_ex.res_type = ctypes.c_bool
-
-    # https://stackoverflow.com/a/17638969/102441
-    arg = SHELLEXECUTEINFOW()
-    arg.cbSize = ctypes.sizeof(arg)
-    arg.fMask = 0x00000040  # SEE_MASK_NOCLOSEPROCESS
-    arg.hwnd = None
-    arg.lpVerb = None
-    arg.lpFile = fname
-    arg.lpParameters = ""
-    arg.lpDirectory = None
-    arg.nShow = 10  # SW_SHOWDEFAULT
-    arg.hInstApp = None
-    ok = shell_execute_ex(arg)
-    if not ok:
-        raise ctypes.WinError()
-    if arg.hProcess is None:
-        # Execution was "satisfied through a DDE conversation". We have no way
-        # of knowing when the application has finished opening, so resort to a
-        # sleep.
-        time.sleep(1)
-    else:
-        proc = int(arg.hProcess)
-        try:
-            WaitForSingleObject(proc, -1)
-        finally:
-            CloseHandle(proc)
-
-
 def system_default_viewer(fname, fmt):
+    """ Open fname with the default system viewer.
+
+    In practice, it is impossible for python to know when the system viewer is
+    done. For this reason, we ensure the passed file will not be deleted under
+    it, and this function does not attempt to block.
+    """
+    # copy to a new temporary file that will not be deleted
+    with tempfile.NamedTemporaryFile(prefix='sympy-preview-',
+                                     suffix=os.path.splitext(fname)[1],
+                                     delete=False) as temp_f:
+        with open(fname, 'rb') as f:
+            shutil.copyfileobj(f, temp_f)
+
     import platform
     if platform.system() == 'Darwin':
         import subprocess
-        subprocess.call(('open', fname))
+        subprocess.call(('open', temp_f.name))
     elif platform.system() == 'Windows':
-        _start_file(fname)
+        os.startfile(temp_f.name)
     else:
         import subprocess
-        subprocess.call(('xdg-open', fname))
+        subprocess.call(('xdg-open', temp_f.name))
 
 
 def pyglet_viewer(fname, fmt):
@@ -213,21 +149,24 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     then 'view' will look for available 'dvi' viewers on your system
     (predefined in the function, so it will try evince, first, then kdvi and
-    xdvi). If nothing is found you will need to set the viewer explicitly.
+    xdvi). If nothing is found, it will fall back to using a system file
+    association (via ``open`` and ``xdg-open``).
+
+    If this does not find the viewer you want, it can be set explicitly.
 
     >>> preview(x + y, output='dvi', viewer='superior-dvi-viewer')
 
     This will skip auto-detection and will run user specified
-    'superior-dvi-viewer'. If 'view' fails to find it on your system it will
+    'superior-dvi-viewer'. If ``view`` fails to find it on your system it will
     gracefully raise an exception.
 
-    You may also enter 'file' for the viewer argument. Doing so will cause
-    this function to return a file object in read-only mode, if 'filename'
+    You may also enter ``'file'`` for the viewer argument. Doing so will cause
+    this function to return a file object in read-only mode, if ``filename``
     is unset. However, if it was set, then 'preview' writes the genereted
     file to this filename instead.
 
-    There is also support for writing to a BytesIO like object, which needs
-    to be passed to the 'outputbuffer' argument.
+    There is also support for writing to a :class:`BytesIO` like object, which
+    needs to be passed to the ``outputbuffer`` argument.
 
     >>> from io import BytesIO
     >>> obj = BytesIO()
@@ -245,18 +184,18 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     If the value of 'output' is different from 'dvi' then command line
     options can be set ('dvioptions' argument) for the execution of the
     'dvi'+output conversion tool. These options have to be in the form of a
-    list of strings (see subprocess.Popen).
+    list of strings (see :any:`subprocess.Popen`).
 
-    Additional keyword args will be passed to the latex call, e.g., the
-    symbol_names flag.
+    Additional keyword args will be passed to the :func:`sympy.latex` call,
+    e.g., the ``symbol_names`` flag.
 
     >>> phidd = Symbol('phidd')
-    >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'})
+    >>> preview(phidd, symbol_names={phidd: r'\ddot{\varphi}'})
 
     For post-processing the generated TeX File can be written to a file by
     passing the desired filename to the 'outputTexFile' keyword
     argument. To write the TeX code to a file named
-    "sample.tex" and run the default png viewer to display the resulting
+    ``"sample.tex"`` and run the default png viewer to display the resulting
     bitmap, do
 
     >>> preview(x + y, outputTexFile="sample.tex")
@@ -276,7 +215,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     if viewer is None:
         # sorted in order from most pretty to most ugly
         # very discussable, but indeed 'gv' looks awful :)
-        # TODO add candidates for windows to list
         candidates = {
             "dvi": [ "evince", "okular", "kdvi", "xdvi" ],
             "ps": [ "evince", "okular", "gsview", "gv" ],
