@@ -390,5 +390,5 @@ def test_issue_6810():
 def test_issue_20286():
     n, p = symbols('n p')
     B = Binomial('B', n, p)
-    assert H(B) == log(2*pi*exp(1)*n*p*(1-p), 2)/2 + O(1/n)
+    assert H(B) == Sum(Piecewise((-p**_k*(1 - p)**(-_k + n)*log(p**_k*(1 - p)**(-_k + n)*binomial(n, _k))*binomial(n, _k), (_k >= 0) & (_k <= n)), (nan, True)), (_k, 0, n))
     
