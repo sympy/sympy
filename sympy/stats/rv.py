@@ -1234,7 +1234,29 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
     if condition is not None:
         given_fn = lambdify(rvs, condition, **kwargs)
 
-    def return_generator():
+    def return_generator_infinite():
+        count = 0
+        np = import_module('numpy')
+        if np:
+            rand_state = np.random.default_rng(seed=seed)
+        else:
+            rand_state = None
+        while count < numsamples:
+            d = ps.sample(size=size, library=library, seed=rand_state)  # a dictionary that maps RVs to values
+            args = [d[rv] for rv in rvs]
+
+            if condition is not None:  # Check that these values satisfy the condition
+                gd = given_fn(*args)
+                if gd != True and gd != False:
+                    raise ValueError(
+                        "Conditions must not contain free symbols")
+                if not gd:  # If the values don't satisfy then try again
+                    continue
+
+            yield fn(*args)
+            count += 1
+
+    def return_generator_finite():
         faulty = True
         while faulty:
             d = ps.sample(size=(numsamples,) + ((size,) if isinstance(size, int) else size),
@@ -1259,7 +1281,11 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
             args = [d[rv][count] for rv in rvs]
             yield fn(*args)
             count += 1
-    return return_generator()
+
+    if numsamples is S.Infinity:
+        return return_generator_infinite()
+
+    return return_generator_finite()
 
 def sample_iter_lambdify(expr, condition=None, size=(),
                          numsamples=S.Infinity, seed=None, **kwargs):

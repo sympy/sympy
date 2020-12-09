@@ -110,6 +110,12 @@ def test_sample_iter():
     assert is_iterator(iterator2)
     assert is_iterator(iterator3)
 
+    U = Normal('U', -1, 1)
+    itr_inf_1 = sample_iter(U, seed=0)
+    itr_inf_2 = sample_iter(U, seed=0)
+    for _ in range(10):
+        assert next(itr_inf_1) == next(itr_inf_2)
+
 def test_pspace():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
     x = Symbol('x')
