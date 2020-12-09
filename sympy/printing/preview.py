@@ -4,6 +4,7 @@ import io
 import os
 from os.path import join
 import shutil
+import time
 import tempfile
 
 try:
@@ -90,11 +91,17 @@ def _start_file(fname):
     ok = shell_execute_ex(arg)
     if not ok:
         raise ctypes.WinError()
-    proc = int(arg.hProcess)
-    try:
-        WaitForSingleObject(proc, -1)
-    finally:
-        CloseHandle(proc)
+    if arg.hProcess is None:
+        # Execution was "satisfied through a DDE conversation". We have no way
+        # of knowing when the application has finished opening, so resort to a
+        # sleep.
+        time.sleep(1)
+    else:
+        proc = int(arg.hProcess)
+        try:
+            WaitForSingleObject(proc, -1)
+        finally:
+            CloseHandle(proc)
 
 
 def system_default_viewer(fname, fmt):
