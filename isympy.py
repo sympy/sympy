@@ -305,7 +305,6 @@ def main():
         ipython = session == 'ipython'
     else:
         try:
-            import IPython
             ipython = True
         except ImportError:
             if not options.quiet:
