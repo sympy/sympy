@@ -1,12 +1,13 @@
 import random
 from collections import defaultdict
+from collections.abc import Iterable
 from functools import reduce
 
 from sympy.core.parameters import global_parameters
 from sympy.core.basic import Atom
 from sympy.core.expr import Expr
 from sympy.core.compatibility import \
-    is_sequence, as_int, Iterable
+    is_sequence, as_int
 from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.matrices import zeros

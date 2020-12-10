@@ -1,5 +1,6 @@
 import random
 import concurrent.futures
+from collections.abc import Hashable
 
 from sympy import (
     Abs, Add, E, Float, I, Integer, Max, Min, Poly, Pow, PurePoly, Rational,
@@ -15,7 +16,7 @@ from sympy.matrices import (
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
     MatrixSymbol, dotprodsimp)
 from sympy.matrices.utilities import _dotprodsimp_state
-from sympy.core.compatibility import iterable, Hashable
+from sympy.core.compatibility import iterable
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture
