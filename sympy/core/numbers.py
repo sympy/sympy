@@ -3,6 +3,7 @@ import decimal
 import fractions
 import math
 import re as regex
+import sys
 
 from .containers import Tuple
 from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
@@ -14,7 +15,7 @@ from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
 from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS,
-    int_info, gmpy)
+    gmpy)
 from sympy.core.cache import lru_cache
 from sympy.multipledispatch import dispatch
 import mpmath
@@ -333,7 +334,7 @@ def igcd_lehmer(a, b):
     # pair (a, b) with a pair of shorter consecutive elements
     # of the Euclidean gcd sequence until a and b
     # fit into two Python (long) int digits.
-    nbits = 2*int_info.bits_per_digit
+    nbits = 2*sys.int_info.bits_per_digit
 
     while a.bit_length() > nbits and b != 0:
         # Quotients are mostly small integers that can
