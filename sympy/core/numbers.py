@@ -258,28 +258,13 @@ def igcd(*args):
             a = gmpy.gcd(a, b) if b else a
         return as_int(a)
     for b in args_temp:
-        a = igcd2(a, b) if b else a
+        a = math.gcd(a, b)
     return a
 
-def _igcd2_python(a, b):
-    """Compute gcd of two Python integers a and b."""
-    if (a.bit_length() > BIGBITS and
-        b.bit_length() > BIGBITS):
-        return igcd_lehmer(a, b)
 
-    a, b = abs(a), abs(b)
-    while b:
-        a, b = b, a % b
-    return a
-
-try:
-    from math import gcd as igcd2
-except ImportError:
-    igcd2 = _igcd2_python
+igcd2 = math.gcd
 
 
-# Use Lehmer's algorithm only for very large numbers.
-BIGBITS = 5000
 def igcd_lehmer(a, b):
     """Computes greatest common divisor of two integers.
 
