@@ -27,7 +27,6 @@ def test_beta():
 
 def test_betainc():
     a, b, x1, x2 = symbols('a b x1 x2')
-    t = Dummy('t')
 
     assert isinstance(betainc(a, b, x1, x2), betainc)
     assert isinstance(betainc(a, b, x1, x2, True), betainc)
