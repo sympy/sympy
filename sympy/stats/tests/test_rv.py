@@ -1,4 +1,4 @@
-from sympy import (S, Symbol, Interval, exp, Or,
+from sympy import (S, Symbol, Interval, binomial, nan, exp, Or,
         symbols, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic, Indexed,
         DiracDelta, Lambda, log, pi, FallingFactorial, Rational, Matrix)
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
@@ -12,7 +12,8 @@ from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
 from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
-from sympy.series.order import O
+from sympy.core.symbol import Dummy
+from sympy.functions.elementary.piecewise import Piecewise
 
 def test_where():
     X, Y = Die('X'), Die('Y')
@@ -390,5 +391,6 @@ def test_issue_6810():
 def test_issue_20286():
     n, p = symbols('n p')
     B = Binomial('B', n, p)
+    _k = Dummy('_k', integer = True)
     assert H(B) == Sum(Piecewise((-p**_k*(1 - p)**(-_k + n)*log(p**_k*(1 - p)**(-_k + n)*binomial(n, _k))*binomial(n, _k), (_k >= 0) & (_k <= n)), (nan, True)), (_k, 0, n))
     
