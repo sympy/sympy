@@ -181,7 +181,10 @@ class SampleJointNumpy:
         """Sample from NumPy."""
 
         import numpy
-        rand_state = numpy.random.default_rng(seed=seed)
+        if seed is None or isinstance(seed, int):
+            rand_state = numpy.random.default_rng(seed=seed)
+        else:
+            rand_state = seed
         numpy_rv_map = {
             'MultivariateNormalDistribution': lambda dist, size: rand_state.multivariate_normal(
                 mean=matrix2numpy(dist.mu, float).flatten(),

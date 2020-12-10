@@ -90,7 +90,10 @@ class SampleMatrixScipy:
             return None
 
         samples = []
-        rand_state = numpy.random.default_rng(seed=seed)
+        if seed is None or isinstance(seed, int):
+            rand_state = numpy.random.default_rng(seed=seed)
+        else:
+            rand_state = seed
         for _ in range(size[0]):
             samp = scipy_rv_map[dist.__class__.__name__](dist, size[1], rand_state)
             samples.append(samp)
@@ -118,7 +121,10 @@ class SampleMatrixNumpy:
 
         samples = []
         import numpy
-        rand_state = numpy.random.default_rng(seed=seed)
+        if seed is None or isinstance(seed, int):
+            rand_state = numpy.random.default_rng(seed=seed)
+        else:
+            rand_state = seed
         for _ in range(size[0]):
             samp = numpy_rv_map[dist.__class__.__name__](dist, size[1], rand_state)
             samples.append(samp)

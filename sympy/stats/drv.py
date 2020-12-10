@@ -77,7 +77,10 @@ class SampleDiscreteNumpy:
         """Sample from NumPy."""
 
         import numpy
-        rand_state = numpy.random.default_rng(seed=seed)
+        if seed is None or isinstance(seed, int):
+            rand_state = numpy.random.default_rng(seed=seed)
+        else:
+            rand_state = seed
         numpy_rv_map = {
             'GeometricDistribution': lambda dist, size: rand_state.geometric(p=float(dist.p),
                 size=size),
