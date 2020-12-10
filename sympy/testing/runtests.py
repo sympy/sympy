@@ -37,7 +37,7 @@ import warnings
 from contextlib import contextmanager
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (exec_, PY3, unwrap)
+from sympy.core.compatibility import (PY3, unwrap)
 from sympy.external import import_module
 
 IS_WINDOWS = (os.name == 'nt')
@@ -1223,7 +1223,7 @@ class SymPyTests:
                         pass
 
                 code = compile(source, filename, "exec", flags=0, dont_inherit=True)
-                exec_(code, gl)
+                exec(code, gl)
             except (SystemExit, KeyboardInterrupt):
                 raise
             except ImportError:
