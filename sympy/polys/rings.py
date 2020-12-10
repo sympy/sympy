@@ -4,9 +4,10 @@
 from typing import Any, Dict
 
 from operator import add, mul, lt, le, gt, ge
+from functools import reduce
 from types import GeneratorType
 
-from sympy.core.compatibility import is_sequence, reduce
+from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
 from sympy.core.numbers import igcd, oo
 from sympy.core.symbol import Symbol, symbols as _symbols

@@ -215,7 +215,7 @@ def debug_decorator(func):
         # If there is a bug and the algorithm enters an infinite loop, enable the
         # following lines. It will print the names and parameters of all major functions
         # that are called, *before* they are called
-        #from sympy.core.compatibility import reduce
+        #from functools import reduce
         #print("%s%s %s%s" % (_debug_iter, reduce(lambda x, y: x + y, \
         #    map(lambda x: '-', range(1, 2 + _debug_iter))), f.__name__, args))
 

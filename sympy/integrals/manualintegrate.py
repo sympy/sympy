@@ -18,12 +18,12 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 
 from typing import Dict as tDict, Optional
-
 from collections import namedtuple, defaultdict
+from functools import reduce
 
 import sympy
 
-from sympy.core.compatibility import reduce, Mapping, iterable
+from sympy.core.compatibility import Mapping, iterable
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not

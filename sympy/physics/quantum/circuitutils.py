@@ -1,8 +1,9 @@
 """Primitive circuit operations on quantum circuits."""
 
+from functools import reduce
+
 from sympy import Symbol, Tuple, Mul, sympify, default_sort_key
 from sympy.utilities import numbered_symbols
-from sympy.core.compatibility import reduce
 from sympy.physics.quantum.gate import Gate
 
 __all__ = [

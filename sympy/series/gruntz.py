@@ -116,9 +116,11 @@ And check manually which line is wrong. Then go to the source code and
 debug this function to figure out the exact problem.
 
 """
+from functools import reduce
+
 from sympy import cacheit
 from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul
-from sympy.core.compatibility import reduce
+
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp, powdenest

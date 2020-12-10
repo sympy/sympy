@@ -1,12 +1,13 @@
 """Computational algebraic field theory. """
 
+from functools import reduce
 
 from sympy import (
     S, Rational, AlgebraicNumber, GoldenRatio, TribonacciConstant,
     Add, Mul, sympify, Dummy, expand_mul, I, pi
 )
 from sympy.functions import sqrt, cbrt
-from sympy.core.compatibility import reduce
+
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
 from sympy.functions.elementary.exponential import exp

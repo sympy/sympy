@@ -2,9 +2,10 @@
 
 
 import math
+from functools import reduce
 
 from sympy.core import S, I, pi
-from sympy.core.compatibility import ordered, reduce
+from sympy.core.compatibility import ordered
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_not
