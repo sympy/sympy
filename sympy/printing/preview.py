@@ -165,7 +165,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     is unset. However, if it was set, then 'preview' writes the genereted
     file to this filename instead.
 
-    There is also support for writing to a :class:`BytesIO` like object, which
+    There is also support for writing to a :class:`io.BytesIO` like object, which
     needs to be passed to the ``outputbuffer`` argument.
 
     >>> from io import BytesIO
@@ -184,9 +184,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     If the value of 'output' is different from 'dvi' then command line
     options can be set ('dvioptions' argument) for the execution of the
     'dvi'+output conversion tool. These options have to be in the form of a
-    list of strings (see :any:`subprocess.Popen`).
+    list of strings (see :class:`subprocess.Popen`).
 
-    Additional keyword args will be passed to the :func:`sympy.latex` call,
+    Additional keyword args will be passed to the :func:`~sympy.printing.latex.latex` call,
     e.g., the ``symbol_names`` flag.
 
     >>> phidd = Symbol('phidd')
