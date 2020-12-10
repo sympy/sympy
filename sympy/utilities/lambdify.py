@@ -5,6 +5,7 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from typing import Any, Dict, Iterable
 
+import builtins
 import inspect
 import keyword
 import textwrap
@@ -12,7 +13,7 @@ import linecache
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, builtins)
+    NotIterable)
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
