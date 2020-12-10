@@ -1,13 +1,14 @@
 import bisect
 import itertools
 from functools import reduce
+from itertools import accumulate
 from collections import defaultdict
 
 from sympy import Indexed, IndexedBase, Tuple, Sum, Add, S, Integer, diagonalize_vector, DiagMatrix
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
 from sympy.core.basic import Basic
-from sympy.core.compatibility import accumulate, default_sort_key
+from sympy.core.compatibility import default_sort_key
 from sympy.core.mul import Mul
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
