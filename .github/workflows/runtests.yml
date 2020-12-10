@@ -58,3 +58,27 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=2/2
+  optional-dependencies:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - run: release/aptinstall.sh
+      # Test external imports
+      - run: release/venv_main/bin/python bin/test_external_imports.py
+      - run: release/venv_main/bin/python bin/test_submodule_imports.py
+      - run: release/venv_main/bin/python bin/test_executable.py
+      # Test modules for specific dependencies
+      - run: release/venv_main/bin/python bin/test_optional_dependencies.py
+  sphinx:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - run: release/aptinstall.sh
+      - run: pip install -r release/requirements.txt
+      - run: bin/test_sphinx.sh
