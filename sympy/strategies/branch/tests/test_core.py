@@ -1,7 +1,6 @@
 from sympy.strategies.branch.core import (exhaust, debug, multiplex,
         condition, notempty, chain, onaction, sfilter, yieldify, do_one,
         identity)
-from sympy.core.compatibility import get_function_name
 
 def posdec(x):
     if x > 0:
@@ -42,7 +41,7 @@ def test_debug():
     log = file.getvalue()
     file.close()
 
-    assert get_function_name(posdec) in log
+    assert posdec.__name__ in log
     assert '5' in log
     assert '4' in log
 

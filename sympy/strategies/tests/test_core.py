@@ -1,7 +1,6 @@
 from sympy import S
 from sympy.strategies.core import (null_safe, exhaust, memoize, condition,
         chain, tryit, do_one, debug, switch, minimize)
-from sympy.core.compatibility import get_function_name
 
 def test_null_safe():
     def rl(expr):
@@ -64,7 +63,7 @@ def test_debug():
     log = file.getvalue()
     file.close()
 
-    assert get_function_name(posdec) in log
+    assert posdec.__name__ in log
     assert '5' in log
     assert '4' in log
 
