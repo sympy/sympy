@@ -391,6 +391,7 @@ def test_issue_6810():
 def test_issue_20286():
     n, p = symbols('n p')
     B = Binomial('B', n, p)
-    _k = Dummy('_k', integer = True)
-    assert H(B) == Sum(Piecewise((-p**_k*(1 - p)**(-_k + n)*log(p**_k*(1 - p)**(-_k + n)*binomial(n, _k))*binomial(n, _k), (_k >= 0) & (_k <= n)), (nan, True)), (_k, 0, n))
+    k = Dummy('k', integer = True)
+    eq = Sum(Piecewise((-p**k*(1 - p)**(-k + n)*log(p**k*(1 - p)**(-k + n)*binomial(n, k))*binomial(n, k), (k >= 0) & (k <= n)), (nan, True)), (k, 0, n))
+    assert eq.dummy_eq(H(B))
     
