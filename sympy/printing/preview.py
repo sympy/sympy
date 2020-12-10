@@ -165,7 +165,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     is unset. However, if it was set, then 'preview' writes the genereted
     file to this filename instead.
 
-    There is also support for writing to a :class:`io.BytesIO` like object, which
+    There is also support for writing to a ``io.BytesIO`` like object, which
     needs to be passed to the ``outputbuffer`` argument.
 
     >>> from io import BytesIO
