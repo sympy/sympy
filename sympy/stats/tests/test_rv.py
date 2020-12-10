@@ -1,11 +1,13 @@
 from sympy import (S, Symbol, Interval, exp, Or,
         symbols, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic, Indexed,
-        DiracDelta, Lambda, log, pi, FallingFactorial, Rational, Matrix)
+        DiracDelta, Lambda, log, pi, FallingFactorial, Rational, Matrix,
+        ConditionSet, Gt)
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         density, given, independent, dependent, where, pspace, GaussianUnitaryEnsemble,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function,
-        BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance)
+        BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance,
+        Uniform)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace, is_random, RandomIndexedSymbol, RandomMatrixSymbol)
 from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
@@ -115,6 +117,12 @@ def test_sample_iter():
     itr_inf_2 = sample_iter(U, seed=0)
     for _ in range(10):
         assert next(itr_inf_1) == next(itr_inf_2)
+
+    x = Symbol('x')
+    interval = ConditionSet(x, Gt(x, 0), Interval(-1, 1))
+    U = Uniform('U', -1, 1)
+    s1 = sample(U, interval.contains(U), seed=0)
+    assert interval.contains(next(s1))
 
 def test_pspace():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)

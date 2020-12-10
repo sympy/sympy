@@ -1225,12 +1225,21 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
                 sub[arg] = RandomSymbol(arg.symbol, arg.pspace)
         expr = expr.subs(sub)
 
+    def fn_subs(*args):
+        return expr.subs({rv: arg for rv, arg in zip(rvs, args)})
+
+    def given_fn_subs(*args):
+        if condition is not None:
+            return condition.subs({rv: arg for rv, arg in zip(rvs, args)})
+        return False
+
     if library == 'pymc3':
         # Currently unable to lambdify in pymc3
         # TODO : Remove 'pymc3' when lambdify accepts 'pymc3' as module
         fn = lambdify(rvs, expr, **kwargs)
     else:
         fn = lambdify(rvs, expr, modules=library, **kwargs)
+
     if condition is not None:
         given_fn = lambdify(rvs, condition, **kwargs)
 
@@ -1246,7 +1255,10 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
             args = [d[rv] for rv in rvs]
 
             if condition is not None:  # Check that these values satisfy the condition
-                gd = given_fn(*args)
+                try:
+                    gd = given_fn(*args)
+                except (NameError, TypeError):
+                    gd = given_fn_subs(*args)
                 if gd != True and gd != False:
                     raise ValueError(
                         "Conditions must not contain free symbols")
@@ -1267,7 +1279,10 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
                 args = [d[rv][count] for rv in rvs]
 
                 if condition is not None:  # Check that these values satisfy the condition
-                    gd = given_fn(*args)
+                    try:
+                        gd = given_fn(*args)
+                    except (NameError, TypeError):
+                        gd = given_fn_subs(*args)
                     if gd != True and gd != False:
                         raise ValueError(
                             "Conditions must not contain free symbols")
@@ -1279,7 +1294,10 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
         count = 0
         while count < numsamples:
             args = [d[rv][count] for rv in rvs]
-            yield fn(*args)
+            try:
+                yield fn(*args)
+            except (NameError, TypeError):
+                yield fn_subs(*args)
             count += 1
 
     if numsamples is S.Infinity:
