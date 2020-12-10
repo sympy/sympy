@@ -81,10 +81,11 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 
 import os
 import textwrap
+from io import StringIO
 
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Tuple, Equality, Function, Basic
-from sympy.core.compatibility import is_sequence, StringIO
+from sympy.core.compatibility import is_sequence
 from sympy.printing.c import c_code_printers
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.fortran import FCodePrinter

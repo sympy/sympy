@@ -4,9 +4,9 @@
 import os
 import tempfile
 import shutil
+from io import StringIO
 
 from sympy.core import symbols, Eq
-from sympy.core.compatibility import StringIO
 from sympy.utilities.autowrap import (autowrap, binary_function,
             CythonCodeWrapper, UfuncifyCodeWrapper, CodeWrapper)
 from sympy.utilities.codegen import (

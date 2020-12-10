@@ -1398,7 +1398,7 @@ class SymPyDocTests:
     def test_file(self, filename):
         clear_cache()
 
-        from sympy.core.compatibility import StringIO
+        from io import StringIO
         import sympy.interactive.printing as interactive_printing
         from sympy import pprint_use_unicode
 

@@ -56,7 +56,7 @@ def test_do_one():
     assert rule(rule(1)) == 3
 
 def test_debug():
-    from sympy.core.compatibility import StringIO
+    from io import StringIO
     file = StringIO()
     rl = debug(posdec, file)
     rl(5)
