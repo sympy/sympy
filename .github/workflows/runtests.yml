@@ -193,7 +193,7 @@ jobs:
 
   # -------------------- Check the error message under py2 --------- #
 
-  sphinx:
+  py2-import:
     needs: [doctests-latest, tests1-latest, tests2-latest]
 
     runs-on: ubuntu-20.04
