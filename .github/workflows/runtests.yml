@@ -1,3 +1,11 @@
+# ------------------------------------------------------------------ #
+#                                                                    #
+#           SymPy CI script for Github Actions                       #
+#                                                                    #
+#   Runs each time a pull request is opened, pushed or merged        #
+#                                                                    #
+# ------------------------------------------------------------------ #
+
 name: test
 on: [push, pull_request]
 jobs:
@@ -19,6 +27,8 @@ jobs:
   # -------------------- Doctests ---------------------------------- #
 
   doctests:
+    needs: code-quality
+
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -36,6 +46,8 @@ jobs:
   # -------------------- Test split 1/2 ---------------------------- #
 
   tests1:
+    needs: code-quality
+
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -52,6 +64,8 @@ jobs:
   # -------------------- Test split 2/2 ---------------------------- #
 
   tests2:
+    needs: code-quality
+
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -68,10 +82,13 @@ jobs:
   # -------------------- Slow test split 1/2 ----------------------- #
 
   slow1:
+    needs: code-quality
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=1/2
@@ -79,10 +96,13 @@ jobs:
   # -------------------- Slow test split 2/2 ----------------------- #
 
   slow2:
+    needs: code-quality
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=2/2
@@ -95,7 +115,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: 3.8
       - run: release/aptinstall.sh
       # Test external imports
       - run: release/venv_main/bin/python bin/test_external_imports.py
@@ -107,12 +127,13 @@ jobs:
   # -------------------- Build the html/latex docs ----------------- #
 
   sphinx:
+    needs: code-quality
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: 3.8
       - run: release/aptinstall.sh
       - run: pip install -r release/requirements.txt
       - run: bin/test_sphinx.sh
