@@ -71,24 +71,54 @@ jobs:
       - run: pip install mpmath
       - run: bin/test --force-colors --split=2/2
 
-  # -------------------- Doctests older Python --------------------- #
+  # -------------------- Optional dependency tests ----------------- #
 
-  doctests:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+  optional-dependencies:
+    needs: code-quality
 
     runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        python-version: [3.6, 3.7, 3.8]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.8
+      - run: release/aptinstall.sh
+      # Test external imports
+      - run: release/venv_main/bin/python bin/test_external_imports.py
+      - run: release/venv_main/bin/python bin/test_submodule_imports.py
+      - run: release/venv_main/bin/python bin/test_executable.py
+      # Test modules for specific dependencies
+      - run: release/venv_main/bin/python bin/test_optional_dependencies.py
+
+  # -------------------- Slow test split 1/2 ----------------------- #
+
+  slow1:
+    needs: [doctests-latest, tests1-latest, tests2-latest]
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
-      - run: bin/doctest --force-colors
-      - run: examples/all.py -q
+      - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=1/2
+
+  # -------------------- Slow test split 2/2 ----------------------- #
+
+  slow2:
+    needs: [doctests-latest, tests1-latest, tests2-latest]
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - run: python -m pip install --upgrade pip
+      - run: pip install mpmath
+      - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=2/2
 
   # -------------------- Test split 1/2 older Python --------------- #
 
@@ -126,54 +156,24 @@ jobs:
       - run: pip install mpmath
       - run: bin/test --force-colors --split=2/2
 
-  # -------------------- Slow test split 1/2 ----------------------- #
+  # -------------------- Doctests older Python --------------------- #
 
-  slow1:
+  doctests:
     needs: [doctests-latest, tests1-latest, tests2-latest]
 
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
-      - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=1/2
-
-  # -------------------- Slow test split 2/2 ----------------------- #
-
-  slow2:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
-
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-      - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
-      - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=2/2
-
-  # -------------------- Optional dependency tests ----------------- #
-
-  optional-dependencies:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
-
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - run: release/aptinstall.sh
-      # Test external imports
-      - run: release/venv_main/bin/python bin/test_external_imports.py
-      - run: release/venv_main/bin/python bin/test_submodule_imports.py
-      - run: release/venv_main/bin/python bin/test_executable.py
-      # Test modules for specific dependencies
-      - run: release/venv_main/bin/python bin/test_optional_dependencies.py
+      - run: bin/doctest --force-colors
+      - run: examples/all.py -q
 
   # -------------------- Build the html/latex docs ----------------- #
 
@@ -189,3 +189,18 @@ jobs:
       - run: release/aptinstall.sh
       - run: pip install -r release/requirements.txt
       - run: bin/test_sphinx.sh
+
+
+  # -------------------- Check the error message under py2 --------- #
+
+  sphinx:
+    needs: [doctests-latest, tests1-latest, tests2-latest]
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 2.7
+      - run: pip install mpmath
+      - run: bin/test_py2_import.py
