@@ -1,8 +1,8 @@
 from distutils.version import LooseVersion as V
+from collections.abc import Iterable
 
 from sympy import Mul, S
 from sympy.codegen.cfunctions import Sqrt
-from sympy.core.compatibility import Iterable
 from sympy.external import import_module
 from sympy.printing.precedence import PRECEDENCE
 from sympy.printing.pycode import AbstractPythonCodePrinter

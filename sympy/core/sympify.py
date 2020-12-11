@@ -157,9 +157,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     In order to have ``bitcount`` be recognized it can be imported into a
     namespace dictionary and passed as locals:
 
-    >>> from sympy.core.compatibility import exec_
     >>> ns = {}
-    >>> exec_('from sympy.core.evalf import bitcount', ns)
+    >>> exec('from sympy.core.evalf import bitcount', ns)
     >>> sympify(s, locals=ns)
     6
 
@@ -169,7 +168,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     >>> from sympy import Symbol
     >>> ns["O"] = Symbol("O")  # method 1
-    >>> exec_('from sympy.abc import O', ns)  # method 2
+    >>> exec('from sympy.abc import O', ns)  # method 2
     >>> ns.update(dict(O=Symbol("O")))  # method 3
     >>> sympify("O + 1", locals=ns)
     O + 1

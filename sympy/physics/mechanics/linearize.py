@@ -1,13 +1,13 @@
 __all__ = ['Linearizer']
 
 from sympy.core.backend import Matrix, eye, zeros
-from sympy.core.compatibility import Iterable
 from sympy import Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
 from sympy.physics.mechanics.functions import msubs
 
 from collections import namedtuple
+from collections.abc import Iterable
 
 class Linearizer:
     """This object holds the general model form for a dynamic system.

@@ -721,7 +721,7 @@ def capture(func):
     '2\\n-\\nx\\n'
 
     """
-    from sympy.core.compatibility import StringIO
+    from io import StringIO
     import sys
 
     stdout = sys.stdout

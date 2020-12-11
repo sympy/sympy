@@ -1,5 +1,6 @@
 """Test sparse polynomials. """
 
+from functools import reduce
 from operator import add, mul
 
 from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
@@ -11,7 +12,7 @@ from sympy.polys.polyerrors import GeneratorsError, \
 
 from sympy.testing.pytest import raises
 from sympy.core import Symbol, symbols
-from sympy.core.compatibility import reduce
+
 from sympy import sqrt, pi, oo
 
 def test_PolyRing___init__():

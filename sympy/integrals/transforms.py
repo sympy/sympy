@@ -1,7 +1,8 @@
 """ Integral Transforms """
+from functools import reduce
 
 from sympy.core import S
-from sympy.core.compatibility import reduce, iterable
+from sympy.core.compatibility import iterable
 from sympy.core.function import Function
 from sympy.core.relational import _canonical, Ge, Gt
 from sympy.core.numbers import oo
