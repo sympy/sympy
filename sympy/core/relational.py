@@ -197,8 +197,8 @@ class Relational(Boolean, EvalfMixin):
         return Relational.__new__(ops.get(self.func), *self.args)
 
     def _eval_evalf_options(self, prec, options):
-        from sympy.core.evalf import _evalf_options
-        return self.func(*[_evalf_options(s, prec, options) for s in self.args])
+        from sympy.core.evalf import evalf_options
+        return self.func(*[evalf_options(s, prec, options) for s in self.args])
 
     @property
     def canonical(self):

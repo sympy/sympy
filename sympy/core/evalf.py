@@ -1333,7 +1333,10 @@ def evalf(x, prec, options):
     except KeyError:
         # Fall back to ordinary evalf if possible
         if 'subs' in options:
-            x = x.subs(evalf_subs(prec, options['subs']))
+            try:
+                x = x.subs(evalf_subs(prec, options['subs']))
+            except AttributeError:
+                pass
         if hasattr(x, '_eval_evalf_options'):
             # `_eval_evalf_options` have higher priority than `_eval_evalf`
             xe = x._eval_evalf_options(prec, options)
@@ -1388,7 +1391,7 @@ def evalf(x, prec, options):
         check_target(x, r, prec)
     return r
 
-def _evalf_options(x, prec, options):
+def evalf_options(x, prec, options):
     """Handles `evalf` and other helper functions for `.evalf`."""
     from sympy import Float
     try:
@@ -1442,7 +1445,7 @@ class EvalfMixin:
     ========
 
     >>> from sympy import pi
-    >>> from sympy.core.evalf import EvalfMixin, _evalf_options
+    >>> from sympy.core.evalf import EvalfMixin, evalf_options
 
     >>> class A(EvalfMixin):
     ...     is_number = False
@@ -1451,7 +1454,7 @@ class EvalfMixin:
     ...     def __init__(self, a):
     ...         self.val = a
     ...     def _eval_evalf_options(self, prec, options):
-    ...         return _evalf_options(self.val, prec, options)
+    ...         return evalf_options(self.val, prec, options)
     ...
 
     >>> a = A(pi)
@@ -1549,7 +1552,7 @@ class EvalfMixin:
             options['subs'] = subs
         if quad is not None:
             options['quad'] = quad
-        return _evalf_options(self, prec, options)
+        return evalf_options(self, prec, options)
 
     n = evalf
 

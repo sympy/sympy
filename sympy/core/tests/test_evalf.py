@@ -1,10 +1,10 @@
 from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
-    factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
+    factorial, fibonacci, floor, Function, GoldenRatio, I, Integral, Matrix,
     integrate, log, Mul, N, oo, pi, Pow, product, Product, Float, Basic, FiniteSet,
     Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
-    scaled_zero, get_integer_part, as_mpmath, evalf, EvalfMixin, _evalf_options)
+    scaled_zero, get_integer_part, as_mpmath, evalf, EvalfMixin, evalf_options)
 from sympy.core.expr import Expr
 from mpmath import inf, ninf
 from mpmath.libmp.libmpf import from_float
@@ -581,116 +581,10 @@ def test_issue_13425():
 def test_issue_17421():
     assert N(acos(-I + acosh(cosh(cosh(1) + I)))) == 1.0*I
 
-def test_evalfmixin_evalf():
-    class A(EvalfMixin):
-        is_Number = False
-
-        def func(self):
-            return A
-
-        def __init__(self, a):
-            self.val = a
-
-        def _eval_evalf(self, prec):
-            return self.val._evalf(prec)
-
-    a = A(pi)
-    assert a.evalf(10) == Float('3.1415926535897932385', 10)
-
-def test_evalfmixin_eval_evalf():
-    class A(EvalfMixin):
-        is_Number = False
-
-        def func(self):
-            return A
-
-        def __init__(self, a):
-            self.val = a
-
-        def _eval_evalf(self, prec):
-            return self.val._eval_evalf(prec)
-
-    a = A(pi)
-    assert a.evalf(10) == Float('3.1415926535897932385', 10)
-
-def test_evalfmixin_eval():
-    class A(EvalfMixin):
-        is_Number = False
-
-        def func(self):
-            return A
-
-        def __init__(self, a):
-            self.val = a
-
-        def _eval_evalf(self, prec):
-            return self.val.evalf(prec)
-
-    a = A(pi)
-    assert a.evalf(10) == Float('3.1415926535897932385', 10)
-
-def test_evalfmixin_eval_eval_evalf_options():
-    class A(EvalfMixin):
-        is_Number = False
-
-        def func(self):
-            return A
-
-        def __init__(self, a):
-            self.val = a
-
-        def _eval_evalf_options(self, prec,  options):
-            return _evalf_options(self.val, prec, options)
-
-    a = A(pi - 3.14159265358979)
-    assert a.evalf(39) == Float('3.231089148865173630908775263881796980821e-15', 39)
-
-    class B(EvalfMixin):
-        is_Number = False
-
-        def func(self):
-            return A
-
-        def __init__(self, a):
-            self.val = a
-
-        def _eval_evalf_options(self, prec,  options):
-            return self.val._eval_evalf(prec)
-
-    b = B(pi - 3.14159265358979)
-
-    class C(EvalfMixin):
-        is_Number = False
-
-        def func(self):
-            return A
-
-        def __init__(self, a):
-            self.val = a
-
-        def _eval_evalf_options(self, prec,  options):
-            return self.val._evalf(prec)
-
-    c = C(pi - 3.14159265358979)
-    assert c.evalf(35) == b.evalf(35)
-    assert c.evalf(40) != a.evalf(40)
-
-    class D(EvalfMixin):
-        is_Number = False
-
-        def func(self):
-            return A
-
-        def __init__(self, a):
-            self.val = a
-
-        def _eval_evalf_options(self, prec,  options):
-            return self.val.evalf(prec)
-
-    d = D(pi - 3.14159265358979)
-    assert d.evalf(10) == Float('3.231089148865173630908775263881796980821e-15', 10)
-
 def test_evalfmixin():
+    x = Symbol('x')
+    y = Float('3.141592653589793238462643383279502884197', 10)
+
     class A(EvalfMixin):
         is_Number = False
 
@@ -701,13 +595,10 @@ def test_evalfmixin():
             self.val = a
 
         def _eval_evalf_options(self, prec,  options):
-            return _evalf_options(self.val, prec, options)
+            return evalf_options(self.val, prec, options)
 
         def _eval_evalf(self, prec):
             return self.val._evalf(prec)
-
-    a = A(pi - 3.14159265358979)
-    assert a.evalf(30) == Float('3.231089148865173630908775263881796980821e-15', 30)
 
     class B(EvalfMixin):
         is_Number = False
@@ -721,48 +612,70 @@ def test_evalfmixin():
         def _eval_evalf(self, prec):
             return self.val._evalf(prec)
 
-    b = B(pi - 3.14159265358979)
+    assert A(FiniteSet(pi * x)).evalf(10) == FiniteSet(y * x)
+    assert B(FiniteSet(pi * x)).evalf(10) == FiniteSet(y * x)
 
-    class C(EvalfMixin):
-        is_Number = False
+    assert A(FiniteSet(pi * x)).evalf(subs={pi * x : 1}) == FiniteSet(Float('1'))
+    assert B(FiniteSet(pi * x)).evalf(10, subs={pi * x :1}) == FiniteSet(y * x)
 
-        def func(self):
-            return A
+    assert A(sin(pi*x)).evalf(subs={pi * x:0}) == 0
+    assert B(sin(pi*x)).evalf(subs={pi * x:0}) == sin(pi*x)
 
-        def __init__(self, a):
-            self.val = a
+    a = A(pi - 3.14159265358979)
+    #_eval_evalf_options are preferred over _eval_evalf if both are given.
+    assert A(a).evalf(40) != B(a).evalf(40) #_eval_evalf is less precise
+
+def test_evalf_options():
+    x = Symbol('x')
+    class X:
+
+        def __init__(self):
+            self.val = pi * x
+
+        def _eval_evalf(self, prec):
+            return self.val._evalf(prec)
 
         def _eval_evalf_options(self, prec,  options):
-            return _evalf_options(self.val, prec, options)
+            return evalf_options(self.val, prec, options)
 
-    c = C(pi - 3.14159265358979)
+    class A(X, EvalfMixin, Basic):
+        def could_extract_minus_sign(self):
+            return False
 
-    #_eval_evalf_options are preferred over _eval_evalf if both are given.
-    assert a.evalf(40) == c.evalf(40)
-    assert a.evalf(40) != b.evalf(40)
+        def as_coefficient(self, value):
+            return
+        pass
 
-def test_basic_subclass():
-    class A(Basic):
-        def _eval_evalf(self, prec):
-            return Float('2.0', prec)
+    class B(X, Expr):
+        pass
 
-    assert FiniteSet(A()).evalf() == FiniteSet(2)
+    class C(Basic, X):
+        def could_extract_minus_sign(self):
+            return False
 
-    class B(Basic):
-        def _eval_evalf_options(self, prec, options):
-            return Float('2.0', prec)
+        def as_coefficient(self, value):
+            return
+        pass
 
-    assert FiniteSet(B()).evalf() == FiniteSet(2)
+    classes = [A, B, C]
 
-def test_expr_subclass():
-    class A(Expr):
-        def _eval_evalf(self, prec):
-            return Float('2.0', prec)
+    def test_in_finiteset(cls):
+        assert FiniteSet(cls()).evalf(6) == FiniteSet(Float('3.14159265358979', 6) * x)
+        assert FiniteSet(cls()).evalf(6, subs={x:1}) ==  FiniteSet(Float('3.14159265358979', 6))
 
-    assert FiniteSet(A()).evalf() == FiniteSet(2)
+    def test_in_matrix(cls):
+        if not isinstance(cls(), C):
+            assert Matrix([cls()]).evalf(6) == Matrix([[Float('3.14159265358979', 6) * x]])
+            assert Matrix([cls()]).evalf(6, subs={x:1}) ==  Matrix([[Float('3.14159265358979', 6)]])
+        else: #Matrix .evalf can't be used for Basic
+            assert Matrix([FiniteSet(cls())]).evalf(6) == Matrix([[FiniteSet(Float('3.14159265358979', 6) * x)]])
+            assert Matrix([FiniteSet(cls())]).evalf(6, subs={x:1}) == Matrix([[FiniteSet(Float('3.14159265358979', 6))]])
 
-    class B(Expr):
-        def _eval_evalf_options(self, prec, options):
-            return Float('2.0', prec)
+    def test_in_sin(cls):
+        assert sin(cls()).evalf(subs={pi*x : 0}) == 0
 
-    assert FiniteSet(B()).evalf() == FiniteSet(2)
+    tests = [test_in_finiteset, test_in_matrix, test_in_sin]
+
+    for cls in classes:
+        for test in tests:
+            test(cls)

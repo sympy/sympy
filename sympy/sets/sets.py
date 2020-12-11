@@ -8,7 +8,7 @@ from sympy.core.compatibility import iterable, ordered, reduce
 from sympy.core.containers import Tuple
 from sympy.core.decorators import (deprecated, sympify_method_args,
     sympify_return)
-from sympy.core.evalf import EvalfMixin
+from sympy.core.evalf import EvalfMixin, prec_to_dps
 from sympy.core.parameters import global_parameters
 from sympy.core.expr import Expr
 from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
@@ -1884,8 +1884,11 @@ class FiniteSet(Set, EvalfMixin):
         return (hash(self) - hash(other))
 
     def _eval_evalf_options(self, prec, options):
-        from sympy.core.evalf import _evalf_options
-        return FiniteSet(*[_evalf_options(elem, prec, options) for elem in self])
+        from sympy.core.evalf import evalf_options
+        return FiniteSet(*[evalf_options(elem, prec, options) for elem in self])
+
+    def _eval_evalf(self, prec):
+        return FiniteSet(*[elem.evalf(n=prec_to_dps(prec)) for elem in self])
 
     @property
     def _sorted_args(self):
