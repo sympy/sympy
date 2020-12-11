@@ -1298,7 +1298,7 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
         count = 0
         while count < numsamples:
             args = [d[rv][count] for rv in rvs]
-            # TODO: Replace the try-except block with only given_fn(*args)
+            # TODO: Replace the try-except block with only fn(*args)
             # once lambdify works with unevaluated SymPy objects.
             try:
                 yield fn(*args)
