@@ -1,5 +1,7 @@
 #! /usr/bin/env bash
 
+set -o errexit
+
 echo "Testing SPHINX"
 cd doc
 make html
