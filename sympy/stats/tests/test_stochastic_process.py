@@ -501,7 +501,7 @@ def test_PoissonProcess():
 
     t, d, x, y = symbols('t d x y', positive=True)
     assert isinstance(X(t), RandomIndexedSymbol)
-    assert X.distribution(X(t)) == PoissonDistribution(3*t)
+    assert X.distribution(t) == PoissonDistribution(3*t)
     raises(ValueError, lambda: PoissonProcess("X", -1))
     raises(NotImplementedError, lambda: X[t])
     raises(IndexError, lambda: X(-5))
@@ -608,7 +608,7 @@ def test_WienerProcess():
 
     t, d, x, y = symbols('t d x y', positive=True)
     assert isinstance(X(t), RandomIndexedSymbol)
-    assert X.distribution(X(t)) == NormalDistribution(0, sqrt(t))
+    assert X.distribution(t) == NormalDistribution(0, sqrt(t))
     raises(ValueError, lambda: PoissonProcess("X", -1))
     raises(NotImplementedError, lambda: X[t])
     raises(IndexError, lambda: X(-2))
@@ -643,6 +643,9 @@ def test_WienerProcess():
     Contains(d, Interval.Ropen(1, 2)) & Contains(t, Interval.Lopen(0, 1)))
     assert E(X(t) + x*E(X(3))) == 0
 
+    # test issue 20078
+    assert str((2*X(t)).simplify()) == '2*X(t)'
+
 
 def test_GammaProcess_symbolic():
     t, d, x, y, g, l = symbols('t d x y g l', positive=True)
@@ -652,7 +655,7 @@ def test_GammaProcess_symbolic():
     raises(IndexError, lambda: X(-1))
     assert isinstance(X(t), RandomIndexedSymbol)
     assert X.state_space == Interval(0, oo)
-    assert X.distribution(X(t)) == GammaDistribution(g*t, 1/l)
+    assert X.distribution(t) == GammaDistribution(g*t, 1/l)
     assert X.joint_distribution(5, X(3)) == JointDistributionHandmade(Lambda(
         (X(5), X(3)), l**(8*g)*exp(-l*X(3))*exp(-l*X(5))*X(3)**(3*g - 1)*X(5)**(5*g
         - 1)/(gamma(3*g)*gamma(5*g))))

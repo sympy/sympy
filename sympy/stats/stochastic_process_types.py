@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 import random
 
 import itertools
@@ -169,8 +170,7 @@ class StochasticProcess(Basic):
             return FiniteSet(*self.args[1])
         return self.args[1]
 
-    @property
-    def distribution(self):
+    def distribution(self, key):
         return None
 
     def __call__(self, time):
@@ -224,12 +224,17 @@ class StochasticProcess(Basic):
                 raise ValueError("Expected a RandomIndexedSymbol or "
                                 "key not  %s"%(type(arg)))
 
-        if args[0].pspace.distribution == None: # checks if there is any distribution available
+        t = Dummy('t')
+        dist = self.distribution(t)
+        if dist is None: # checks if there is any distribution available
             return JointDistribution(*args)
-
-        pdf = Lambda(tuple(args),
-                expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
-        return JointDistributionHandmade(pdf)
+        if hasattr(dist, 'pdf'):
+            density = Lambda(tuple(args),
+                    expr=Mul.fromiter(self.distribution(arg.key).pdf(arg) for arg in args))
+        elif hasattr(dist, 'pmf'):
+            density = Lambda(tuple(args),
+                    expr=Mul.fromiter(self.distribution(arg.key).pmf(arg) for arg in args))
+        return JointDistributionHandmade(density)
 
     def expectation(self, condition, given_condition):
         raise NotImplementedError("Abstract method for expectation queries.")
@@ -254,7 +259,7 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
         if not time.is_symbol and time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         idx_obj = Indexed(self.symbol, time)
-        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution)
+        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution(time))
         return RandomIndexedSymbol(idx_obj, pspace_obj)
 
 class ContinuousTimeStochasticProcess(StochasticProcess):
@@ -274,7 +279,7 @@ class ContinuousTimeStochasticProcess(StochasticProcess):
         if not time.is_symbol and time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         func_obj = Function(self.symbol)(time)
-        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution)
+        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution(time))
         return RandomIndexedSymbol(func_obj, pspace_obj)
 
 class TransitionMatrixOf(Boolean):
@@ -1449,7 +1454,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             densities[state] = {states[i]: Tlist[state][i]
                         for i in range(len(states))}
         while time < S.Infinity:
-            samps.append(next(sample_iter(FiniteRV("_", densities[samps[time - 1]]))))
+            samps.append((next(sample_iter(FiniteRV("_", densities[samps[time - 1]])))))
             yield samps[time]
             time += 1
 
@@ -1665,9 +1670,8 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     def state_space(self):
         return _set_converter([self.success, self.failure])
 
-    @property
-    def distribution(self):
-        return BernoulliDistribution(self.p)
+    def distribution(self, key):
+        return BernoulliDistribution(self.p, self.success, self.failure)
 
     def simple_rv(self, rv):
         return Bernoulli(rv.name, p=self.p,
@@ -2181,8 +2185,8 @@ class PoissonProcess(CountingProcess):
     def state_space(self):
         return S.Naturals0
 
-    def distribution(self, rv):
-        return PoissonDistribution(self.lamda*rv.key)
+    def distribution(self, key):
+        return PoissonDistribution(self.lamda*key)
 
     def density(self, x):
         return (self.lamda*x.key)**x / factorial(x) * exp(-(self.lamda*x.key))
@@ -2246,8 +2250,8 @@ class WienerProcess(CountingProcess):
     def state_space(self):
         return S.Reals
 
-    def distribution(self, rv):
-        return NormalDistribution(0, sqrt(rv.key))
+    def distribution(self, key):
+        return NormalDistribution(0, sqrt(key))
 
     def density(self, x):
         return exp(-x**2/(2*x.key)) / (sqrt(2*pi)*sqrt(x.key))
@@ -2316,8 +2320,8 @@ class GammaProcess(CountingProcess):
     def state_space(self):
         return _set_converter(Interval(0, oo))
 
-    def distribution(self, rv):
-        return GammaDistribution(self.gamma*rv.key, 1/self.lamda)
+    def distribution(self, key):
+        return GammaDistribution(self.gamma*key, 1/self.lamda)
 
     def density(self, x):
         k = self.gamma*x.key

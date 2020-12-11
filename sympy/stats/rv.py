@@ -328,6 +328,15 @@ class RandomIndexedSymbol(RandomSymbol):
             return free_syms
         return {self}
 
+    @property
+    def pspace(self):
+        from sympy.stats.stochastic_process import StochasticPSpace
+        temp_pspace = self.args[1]
+        if len(temp_pspace.args) == 0:
+            # Allow single arg
+            return PSpace()
+        return StochasticPSpace(temp_pspace.args[0], temp_pspace.args[1])
+
 class RandomMatrixSymbol(RandomSymbol, MatrixSymbol): # type: ignore
     def __new__(cls, symbol, n, m, pspace=None):
         n, m = _sympify(n), _sympify(m)
@@ -1528,7 +1537,7 @@ def _symbol_converter(sym):
     True
     """
     if isinstance(sym, str):
-            sym = Symbol(sym)
+        sym = Symbol(sym)
     if not isinstance(sym, Symbol):
         raise TypeError("%s is neither a Symbol nor a string"%(sym))
     return sym
