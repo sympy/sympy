@@ -1046,8 +1046,7 @@ def test_Rationals():
         Rational(1, 3), 3, Rational(-1, 3), -3, Rational(2, 3)]
     assert Basic() not in S.Rationals
     assert S.Half in S.Rationals
-    assert S.Rationals.contains(0.5) is not True
-    assert S.Rationals.contains(0.5) is not False
+    assert S.Rationals.contains(0.5) == Contains(0.5, S.Rationals, evaluate=False)
     assert 2 in S.Rationals
     r = symbols('r', rational=True)
     assert r in S.Rationals
