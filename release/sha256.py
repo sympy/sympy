@@ -7,10 +7,10 @@ from subprocess import check_output
 def main(version, outdir):
     outdir = Path(outdir)
     build_files = [
-        outdir / f'sympy-{version}.pdf',
         outdir / f'sympy-{version}.tar.gz',
         outdir / f'sympy-{version}-py3-none-any.whl',
         outdir / f'sympy-docs-html-{version}.zip',
+        outdir / f'sympy-docs-pdf-{version}.pdf',
     ]
     out = check_output(['shasum', '-a', '256'] + build_files)
     out = out.decode('ascii')
