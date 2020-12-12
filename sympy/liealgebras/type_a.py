@@ -1,5 +1,5 @@
 from .cartan_base import Standard_Cartan
-
+from sympy import Matrix
 
 class TypeA(Standard_Cartan):
     """
@@ -40,7 +40,7 @@ class TypeA(Standard_Cartan):
         root = [0]*(n+1)
         root[i] = 1
         root[j] = -1
-        return root
+        return Matrix([root])
 
     def simple_root(self, i):
         """
@@ -65,7 +65,7 @@ class TypeA(Standard_Cartan):
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("A4")
         >>> c.simple_root(1)
-        [1, -1, 0, 0, 0]
+        Matrix([[1, -1, 0, 0, 0]])
 
         """
         n = self.n
@@ -73,32 +73,6 @@ class TypeA(Standard_Cartan):
             raise ValueError("Simple root %s does not exist for A_%s." % (i, n))
         return self.basic_root(i-1, i)
 
-
-    def positive_roots(self):
-        """
-        This method generates all the positive roots of
-        A_n.  This is half of all of the roots of A_n;
-        by multiplying all the positive roots by -1 we
-        get the negative roots.
-
-        Examples
-        ========
-
-        >>> from sympy.liealgebras.cartan_type import CartanType
-        >>> c = CartanType("A3")
-        >>> c.positive_roots()
-        {1: [1, -1, 0, 0], 2: [1, 0, -1, 0], 3: [1, 0, 0, -1], 4: [0, 1, -1, 0],
-                5: [0, 1, 0, -1], 6: [0, 0, 1, -1]}
-        """
-
-        n = self.n
-        posroots = {}
-        k = 0
-        for i in range(0, n):
-            for j in range(i+1, n+1):
-               k += 1
-               posroots[k] = self.basic_root(i, j)
-        return posroots
 
     def highest_root(self):
         """

@@ -1,5 +1,6 @@
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.numbers import Rational
+from sympy import Matrix
 from sympy.liealgebras.cartan_type import CartanType
 
 def test_type_E():
@@ -7,12 +8,11 @@ def test_type_E():
     assert c.dimension() == 6
     assert c.roots() == 72
     assert c.basis() == 78
-    diag = " "*8 + "2\n" + " "*8 + "0\n" + " "*8 + "|\n" + " "*8 + "|\n"
+    diag = " "*8 + "6\n" + " "*8 + "0\n" + " "*8 + "|\n" + " "*8 + "|\n"
     diag += "---".join("0" for i in range(1, 6))+"\n"
-    diag += "1   " + "   ".join(str(i) for i in range(3, 7))
+    diag += "1   " + "   ".join(str(i) for i in range(2, 6))
     assert c.dynkin_diagram() == diag
-    posroots = c.positive_roots()
-    assert posroots[8] == [1, 0, 0, 0, 1, 0, 0, 0]
+
 
 def test_simpleroots():
     c = CartanType("E6")
@@ -29,3 +29,49 @@ def test_simpleroots():
     assert s[4].tolist() == [[0, 0, 0, 0, 1, 1, 0]]
     assert s[5].tolist() == [[-Rational(1,2),-Rational(1,2),-Rational(1,2),-Rational(1,2),-Rational(1,2),-Rational(1,2), sqrt(2)*Rational(1,2)]]
     assert s[-1].tolist() == [[0, 0, 0, 0, 1, -1, 0]]
+
+def test_pos_roots():
+    """The order of the roots can be finicky because E has a
+    lot of roots with the same weight level."""
+
+    c = CartanType("E6")
+    p = c.positive_roots()
+    hardcoded = [
+        Matrix([[Rational(1,2), Rational(1,2), Rational(1,2), Rational(1,2), -Rational(1,2), sqrt(3)/2]]),
+        Matrix([[Rational(1,2), Rational(1,2), Rational(1,2), -Rational(1,2), Rational(1,2), sqrt(3)/2]]),
+        Matrix([[Rational(1,2), Rational(1,2), -Rational(1,2), Rational(1,2), Rational(1,2), sqrt(3)/2]]),
+        Matrix([[Rational(1,2), Rational(1,2), -Rational(1,2), -Rational(1,2), -Rational(1,2), sqrt(3)/2]]),
+        Matrix([[Rational(1,2), -Rational(1,2), Rational(1,2), Rational(1,2), Rational(1,2), sqrt(3)/2]]),
+        Matrix([[-Rational(1,2), Rational(1,2), Rational(1,2), Rational(1,2), Rational(1,2), sqrt(3)/2]]),
+        Matrix([[1, 1, 0, 0, 0, 0]]),
+        Matrix([[Rational(1,2), -Rational(1,2), Rational(1,2), -Rational(1,2), -Rational(1,2), sqrt(3)/2]]),
+        Matrix([[-Rational(1,2), Rational(1,2), Rational(1,2), -Rational(1,2), -Rational(1,2), sqrt(3)/2]]),
+        Matrix([[Rational(1,2), -Rational(1,2), -Rational(1,2), Rational(1,2), -Rational(1,2), sqrt(3)/2]]),
+        Matrix([[1, 0, 1, 0, 0, 0]]),
+        Matrix([[-Rational(1,2), Rational(1,2), -Rational(1,2), Rational(1,2), -Rational(1,2), sqrt(3)/2]]),
+        Matrix([[Rational(1,2), -Rational(1,2), -Rational(1,2), -Rational(1,2), Rational(1,2), sqrt(3)/2]]),
+        Matrix([[0, 1, 1, 0, 0, 0]]),
+        Matrix([[1, 0, 0, 1, 0, 0]]),
+        Matrix([[1, 0, 0, 0, -1, 0]]),
+        Matrix([[0, 1, 0, 1, 0, 0]]),
+        Matrix([[-Rational(1,2), Rational(1,2), -Rational(1,2), -Rational(1,2), Rational(1,2), sqrt(3)/2]]),
+        Matrix([[-Rational(1,2), -Rational(1,2), Rational(1,2), Rational(1,2), -Rational(1,2), sqrt(3)/2]]),
+        Matrix([[1, 0, 0, 0, 1, 0]]),
+        Matrix([[-Rational(1,2), -Rational(1,2), Rational(1,2), -Rational(1,2), Rational(1,2), sqrt(3)/2]]),
+        Matrix([[0, 0, 1, 1, 0, 0]]),
+        Matrix([[0, 1, 0, 0, -1, 0]]),
+        Matrix([[1, 0, 0, -1, 0, 0]]),
+        Matrix([[0, 1, 0, 0, 1, 0]]),
+        Matrix([[0, 0, 1, 0, 1, 0]]),
+        Matrix([[1, 0, -1, 0, 0, 0]]),
+        Matrix([[0, 0, 1, 0, -1, 0]]),
+        Matrix([[-Rational(1,2), -Rational(1,2), -Rational(1,2), Rational(1,2), Rational(1,2), sqrt(3)/2]]),
+        Matrix([[0, 1, 0, -1, 0, 0]]),
+        Matrix([[0, 1, -1, 0, 0, 0]]),
+        Matrix([[0, 0, 0, 1, 1, 0]]),
+        Matrix([[0, 0, 1, -1, 0, 0]]),
+        Matrix([[1, -1, 0, 0, 0, 0]]),
+        Matrix([[0, 0, 0, 1, -1, 0]]),
+        Matrix([[-Rational(1,2), -Rational(1,2), -Rational(1,2), -Rational(1,2), -Rational(1,2), sqrt(3)/2]])]
+    for r in hardcoded:
+        assert r in p

@@ -1,5 +1,5 @@
 from .cartan_type import CartanType
-from sympy.core.backend import Basic
+from sympy.core.backend import Basic, Matrix
 
 class RootSystem(Basic):
     """Represent the root system of a simple Lie algebra
@@ -60,15 +60,10 @@ class RootSystem(Basic):
         >>> c = RootSystem("A3")
         >>> roots = c.simple_roots()
         >>> roots
-        {1: [1, -1, 0, 0], 2: [0, 1, -1, 0], 3: [0, 0, 1, -1]}
+        [Matrix([[1, -1, 0, 0]]), Matrix([[0, 1, -1, 0]]), Matrix([[0, 0, 1, -1]])]
 
         """
-        n = self.cartan_type.rank()
-        roots = {}
-        for i in range(1, n+1):
-            root = self.cartan_type.simple_root(i)
-            roots[i] = root
-        return roots
+        return self.cartan_type.simple_roots()
 
 
     def all_roots(self):
@@ -81,15 +76,9 @@ class RootSystem(Basic):
         roots are generated.
 
         """
-        alpha = self.cartan_type.positive_roots()
-        keys = list(alpha.keys())
-        k = max(keys)
-        for val in keys:
-            k += 1
-            root = alpha[val]
-            newroot = [-x for x in root]
-            alpha[k] = newroot
-        return alpha
+        return self.cartan_type.rootsystem()
+
+
 
     def root_space(self):
         """Return the span of the simple roots
@@ -126,20 +115,14 @@ class RootSystem(Basic):
         >>> c = RootSystem("A3")
         >>> newroot = c.add_simple_roots(1, 2)
         >>> newroot
-        [1, 0, -1, 0]
+        Matrix([[0, 1, 0, -1]])
 
         """
 
-        alpha = self.simple_roots()
+        alpha = self.cartan_type.simple_roots()
         if root1 > len(alpha) or root2 > len(alpha):
             raise ValueError("You've used a root that doesn't exist!")
-        a1 = alpha[root1]
-        a2 = alpha[root2]
-        newroot = []
-        length = len(a1)
-        for i in range(length):
-            newroot.append(a1[i] + a2[i])
-        return newroot
+        return alpha[root1] + alpha[root2]
 
     def add_as_roots(self, root1, root2):
         """Add two roots together if and only if their sum is also a root
@@ -155,16 +138,19 @@ class RootSystem(Basic):
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")
         >>> c.add_as_roots([1, 0, -1, 0], [0, 0, 1, -1])
-        [1, 0, 0, -1]
+        Matrix([[1, 0, 0, -1]])
         >>> c.add_as_roots([1, -1, 0, 0], [0, 0, -1, 1])
         'The sum of these two roots is not a root'
 
         """
+        if isinstance(root1, list):
+            root1 = Matrix([root1])
+        if isinstance(root2, list):
+            root2 = Matrix([root2])
+
         alpha = self.all_roots()
-        newroot = []
-        for entry in range(len(root1)):
-            newroot.append(root1[entry] + root2[entry])
-        if newroot in alpha.values():
+        newroot = root1 + root2
+        if newroot in alpha:
             return newroot
         else:
             return "The sum of these two roots is not a root"

@@ -1,10 +1,18 @@
 from sympy.core import Basic
-from sympy.matrices import zeros, Matrix
+from sympy.matrices import zeros, Matrix, eye, ones
+import warnings
 
 class Standard_Cartan(Basic):
     """
     Semi-Concrete base class for Cartan types such as A4, etc. In this module we make
-    certain choices about how to represent the algebra based on the following source:
+    certain choices about how to represent the algebra.  This class is never meant to be
+    called directly. It is exported as `CartanType` and should be called that way.
+
+    Examples
+    ========
+    >>> from sympy.liealgebras import CartanType
+    >>> CartanType("G2")
+    TypeG('G', 2)
 
     Sources
     =======
@@ -86,13 +94,14 @@ class Standard_Cartan(Basic):
         """
         Returns the i'th simple root in the orthogonal basis.
         """
-        raise NotImplementedError("Do not call this method directly from the base class.")
+        warnings.warn("Do not call this method directly from the base class.")
+
 
     def simple_roots(self):
         """
         Returns the simple roots of the algebra.
         """
-        return [Matrix(self.simple_root(i+1)).T for i in range(self.n)]
+        return [Matrix(self.simple_root(i+1)) for i in range(self.n)]
 
     def fundamental_weight(self, i):
         r"""
@@ -129,3 +138,149 @@ class Standard_Cartan(Basic):
         Returns a list of the fundamental weights in the orthogonal basis
         """
         return [self.fundamental_weight(i) for i in range(self.omega_matrix().rows)]
+
+    def rootsystem(self):
+        """Returns the root system of the group ordered from
+        highest root to lowest. The roots are found by reflecting
+        each simple root about its hyperplane, repeating this procedure
+        on each subsequent root generated until no more are found.
+        The roots are then weighed and sorted according to weight.
+
+        Note: This is a costly calculation for groups with
+        rank > 6, most notably E7 and E8
+
+        Examples
+        ========
+        >>> from sympy.liealgebras import CartanType
+        >>> CartanType("A2").rootsystem()
+        [Matrix([[1, 0, -1]]),
+        Matrix([[1, -1, 0]]),
+        Matrix([[0, 1, -1]]),
+        Matrix([[0, 0, 0]]),
+        Matrix([[0, 0, 0]]),
+        Matrix([[0, -1, 1]]),
+        Matrix([[-1, 1, 0]]),
+        Matrix([[-1, 0, 1]])]
+        """
+        s_r = self.simple_roots()
+        rank = self.rank()
+
+        orbits = set()
+        for i in s_r:
+            for r in self.orbit(i):
+                orbits.add(tuple(r))
+
+        zero_roots = [Matrix([0] * rank).T] * rank
+
+        orbits = [Matrix([[*i]]) * self.cocartan_matrix().T for i in orbits] + zero_roots
+
+        # sort roots by their weights
+        sorbits = sorted(orbits, key = lambda x: -self.root_level(x, 'alpha'))
+
+        # rotate back to the orthogonal basis for consistency
+        omega_matrix = self.omega_matrix()
+        return [x * omega_matrix for x in sorbits]
+
+    def roots(self):
+        """Returns the number of total roots in the algebra"""
+        warnings.warn("Do not call this method directly from the base class.")
+
+    def root_level(self, root, basis='orthogonal'):
+        """Returns the root level of the root. The root level is calculated
+        by rotating by the omega matrix and then summing the rotated vector.
+        The basis argument flags which basis the incoming root or weight is in.
+        This class's default basis is 'orthogonal' but when this method is called
+        in the rootsystem calculations, the weights are passed via the 'alpha'
+        basis.
+
+        Examples
+        ========
+        >>> from sympy.liealgebras import CartanType
+        >>> g2 = CartanType("G2")
+        >>> rs = g2.rootsystem()
+        >>> g2.root_level(rs[0])
+        5
+        """
+
+        try:
+            self._cached_r
+        except AttributeError:
+            inverse_cartan = self.cartan_matrix().pinv()
+            self._cached_r = inverse_cartan * ones(inverse_cartan.rows, 1)
+
+        r = self._cached_r
+
+        if basis == 'orthogonal':
+            root = root * self.omega_matrix().pinv()
+
+        return (root * r)[0]
+
+    def positive_roots(self):
+        """Returns the set of all positive roots that are
+        """
+        n_pos = self.roots() // 2
+        return self.rootsystem()[:n_pos]
+
+    def orbit(self, head, stabilizer=None):
+        """
+        Returns the orbit of the weight or root by reflecting it
+        a plane. A stabilizer may be passed to calculate the orbit using
+        the Orbit-Stabilizer theorem.
+
+        Note the stabilizer starts counting simple roots at index 0
+
+        Sources
+        =======
+        - https://en.wikipedia.org/wiki/Coadjoint_representation#Coadjoint_orbit
+        - https://en.wikipedia.org/wiki/Group_action#Orbits_and_stabilizers
+        """
+        simple_roots = self.simple_roots()
+
+        try:
+            head = head.as_immutable()
+        except Exception:
+            pass
+        master_list = [head]
+        master_hash = set([tuple(head)])
+
+        if stabilizer:
+            reflect_loop = [simple_roots[i] for i in stabilizer]
+        else:
+            reflect_loop = simple_roots
+
+        # reflecting about a hyperplane
+        reflection_matrix = lambda v: eye(len(v)) - 2 * v.T * v / v.dot(v)
+
+        # Fill up master list of reflected roots by
+        # continually operating on them until all weights in orbit are found
+
+        # Duplicating each vector as a tuple to allow
+        # for hasing them. This increases performance on
+        # the large groups (rank > 6)
+        matrix_hash = {}
+        while True:
+            ref_list = []
+            ref_list_hash = set()
+
+            for w in master_list:
+                for r in reflect_loop:
+                    r_hash = tuple(r)
+
+                    x = matrix_hash.get(r_hash)
+                    if x:
+                        r_m = x
+                    else:
+                        r_m = reflection_matrix(r)
+                        matrix_hash[r_hash] = r_m
+
+                    reflected = (r_m * w.T).T
+                    reflected_hashable = tuple(reflected)
+                    if reflected_hashable not in ref_list_hash and reflected_hashable not in master_hash:
+                        ref_list.append(reflected)
+                        ref_list_hash.add(reflected_hashable)
+            if len(ref_list) == 0:
+                break
+
+            master_list += ref_list
+            master_hash.update(ref_list_hash)
+        return master_list

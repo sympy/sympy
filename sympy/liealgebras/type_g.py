@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .cartan_base import Standard_Cartan
+from sympy import Matrix
 
 class TypeG(Standard_Cartan):
 
@@ -41,34 +42,14 @@ class TypeG(Standard_Cartan):
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("G2")
         >>> c.simple_root(1)
-        [0, 1, -1]
+        Matrix([[0, 1, -1]])
 
         """
         if i == 1:
-            return [0, 1, -1]
+            return Matrix([[0, 1, -1]])
         else:
-            return [1, -2, 1]
+            return Matrix([[1, -2, 1]])
 
-    def positive_roots(self):
-        """Generate all the positive roots of A_n
-
-        This is half of all of the roots of A_n; by multiplying all the
-        positive roots by -1 we get the negative roots.
-
-        Examples
-        ========
-
-        >>> from sympy.liealgebras.cartan_type import CartanType
-        >>> c = CartanType("A3")
-        >>> c.positive_roots()
-        {1: [1, -1, 0, 0], 2: [1, 0, -1, 0], 3: [1, 0, 0, -1], 4: [0, 1, -1, 0],
-                5: [0, 1, 0, -1], 6: [0, 0, 1, -1]}
-
-        """
-
-        roots = {1: [0, 1, -1], 2: [1, -2, 1], 3: [1, -1, 0], 4: [1, 0, 1],
-                5: [1, 1, -2], 6: [2, -1, -1]}
-        return roots
 
     def roots(self):
         """

@@ -1,4 +1,5 @@
 from .cartan_base import Standard_Cartan
+from sympy import Matrix
 
 class TypeC(Standard_Cartan):
 
@@ -29,7 +30,7 @@ class TypeC(Standard_Cartan):
         root = [0]*n
         root[i] = 1
         root[j] = -1
-        return root
+        return Matrix([root])
 
     def simple_root(self, i):
         """The ith simple root for the C series
@@ -55,7 +56,7 @@ class TypeC(Standard_Cartan):
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("C3")
         >>> c.simple_root(2)
-        [0, 1, -1]
+        Matrix([[0, 1, -1]])
 
         """
 
@@ -65,45 +66,7 @@ class TypeC(Standard_Cartan):
         else:
             root = [0]*self.n
             root[n-1] = 2
-            return root
-
-
-    def positive_roots(self):
-        """Generates all the positive roots of A_n
-
-        This is half of all of the roots of C_n; by multiplying all the
-        positive roots by -1 we get the negative roots.
-
-        Examples
-        ========
-
-        >>> from sympy.liealgebras.cartan_type import CartanType
-        >>> c = CartanType("A3")
-        >>> c.positive_roots()
-        {1: [1, -1, 0, 0], 2: [1, 0, -1, 0], 3: [1, 0, 0, -1], 4: [0, 1, -1, 0],
-                5: [0, 1, 0, -1], 6: [0, 0, 1, -1]}
-
-        """
-
-        n = self.n
-        posroots = {}
-        k = 0
-        for i in range(0, n-1):
-            for j in range(i+1, n):
-               k += 1
-               posroots[k] = self.basic_root(i, j)
-               k += 1
-               root = self.basic_root(i, j)
-               root[j] = 1
-               posroots[k] = root
-
-        for i in range(0, n):
-            k += 1
-            root = [0]*n
-            root[i] = 2
-            posroots[k] = root
-
-        return posroots
+            return Matrix([root])
 
     def roots(self):
         """
