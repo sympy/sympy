@@ -317,3 +317,9 @@ def test_issue_11407():
 
 def test_issue_14037():
     assert (sin(x**50)/x**51).series(x, n=0) == 1/x + O(1, x)
+
+
+def test_issue_20551():
+    expr = (exp(x)/x).series(x, n=None)
+    terms = [ next(expr) for i in range(3) ]
+    assert terms == [1/x, 1, x/2]
