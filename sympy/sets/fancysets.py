@@ -42,8 +42,6 @@ class Rationals(Set, metaclass=Singleton):
     def _contains(self, other):
         if not isinstance(other, Expr):
             return False
-        if other.is_Number:
-            return other.is_Rational
         return other.is_rational
 
     def __iter__(self):
