@@ -3224,23 +3224,14 @@ class Expr(Basic, EvalfMixin):
         # terms.
         n = 0
         series = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
-        if not series.is_Order:
-            newseries = series.cancel()
-            if not newseries.is_Order:
-                if series.is_Add:
-                    yield series.removeO()
-                else:
-                    yield series
-                return
-            else:
-                series = newseries
 
         while series.is_Order:
             n += 1
             series = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+
         e = series.removeO()
         yield e
-        if e.is_zero:
+        if e is S.Zero:
             return
 
         while 1:
