@@ -278,6 +278,10 @@ class MatrixExpr(Expr):
             return MatrixSlice(self, key, (0, None, 1))
         if isinstance(key, tuple) and len(key) == 2:
             i, j = key
+            if (i is Ellipsis):
+                i = slice(None, None, None)
+            if (j is Ellipsis):
+                j = slice(None, None, None)
             if isinstance(i, slice) or isinstance(j, slice):
                 from sympy.matrices.expressions.slice import MatrixSlice
                 return MatrixSlice(self, i, j)
@@ -286,6 +290,10 @@ class MatrixExpr(Expr):
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid indices (%s, %s)" % (i, j))
+        if (key is Ellipsis):
+            i = j = slice(None, None, None)
+            from sympy.matrices.expressions.slice import MatrixSlice
+            return MatrixSlice(self, i, j)
         elif isinstance(key, (SYMPY_INTS, Integer)):
             # row-wise decomposition of matrix
             rows, cols = self.shape
