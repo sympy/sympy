@@ -4,7 +4,8 @@ from sympy.multipledispatch import dispatch
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
                    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
-                   log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals, Basic, Expr)
+                   log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp,
+                   Reals, Basic, Expr, Abs)
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -1187,3 +1188,94 @@ def test_is_ge_le():
     assert is_gt(PowTest(3, 9), PowTest(3,2))
     assert is_le(PowTest(3, 2), PowTest(3,9))
     assert is_lt(PowTest(3, 2), PowTest(3,9))
+
+def test_issue_20584():
+    # TODO: cases with multiple valid results should be removed once the
+    #  relations evaluate to the most simplified values (first in valid,
+    #  if present)
+    xs = {None: x,
+          'finite': Symbol('x', finite=True),
+          'infinite': Symbol('x', infinite=True)}
+
+    cases = []
+    expr_uneval = Lt(Abs(x), oo, evaluate=False)
+    cases.append(
+        (expr_uneval, {
+            None: [expr_uneval],
+            'finite': [S.true, expr_uneval],
+            'infinite': [S.false, expr_uneval],
+        })
+    )
+    expr_uneval = Lt(oo, Abs(x), evaluate=False)
+    cases.append(
+        (expr_uneval, {
+            None: [S.false, expr_uneval],
+            'finite': [S.false, expr_uneval],
+            'infinite': [S.false, expr_uneval],
+        })
+    )
+    expr_uneval = Le(Abs(x), oo, evaluate=False)
+    cases.append(
+        (expr_uneval, {
+            None: [S.true, expr_uneval],
+            'finite': [S.true, expr_uneval],
+            'infinite': [S.true, expr_uneval],
+        })
+    )
+    expr_uneval = Le(oo, Abs(x), evaluate=False)
+    cases.append(
+        (expr_uneval, {
+            None: [expr_uneval],
+            'finite': [S.false, expr_uneval],
+            'infinite': [S.true, expr_uneval],
+        })
+    )
+    expr_uneval = Gt(Abs(x), oo, evaluate=False)
+    cases.append(
+        (expr_uneval, {
+            None: [S.false, expr_uneval],
+            'finite': [S.false, expr_uneval],
+            'infinite': [S.false, expr_uneval],
+        })
+    )
+    expr_uneval = Gt(oo, Abs(x), evaluate=False)
+    cases.append(
+        (expr_uneval, {
+            None: [expr_uneval],
+            'finite': [S.true, expr_uneval],
+            'infinite': [S.false, expr_uneval],
+        })
+    )
+    expr_uneval = Ge(Abs(x), oo, evaluate=False)
+    cases.append(
+        (expr_uneval, {
+            None: [expr_uneval],
+            'finite': [S.false, expr_uneval],
+            'infinite': [S.true, expr_uneval],
+        })
+    )
+    expr_uneval = Ge(oo, Abs(x), evaluate=False)
+    cases.append(
+        (expr_uneval, {
+            None: [S.true, expr_uneval],
+            'finite': [S.true, expr_uneval],
+            'infinite': [S.true, expr_uneval],
+        })
+    )
+    assumptions = (None, 'finite', 'infinite')
+    for rel, valid_d in cases:
+        for assumed in assumptions:
+            x_a = xs[assumed]
+            rel_eval = rel.subs({x: x_a})
+            valid = valid_d[assumed]
+            correct = False
+            for v in valid:
+                v = v.subs({x: x_a}, evaluate=False)
+                correct = rel_eval == v
+                if correct:
+                    break
+                else:
+                    # If here, then `v` was a preferred result, but the relation
+                    # after evaluation did not simplify to this point.
+                    pass
+            assert correct
