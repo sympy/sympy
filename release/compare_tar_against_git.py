@@ -49,6 +49,7 @@ git_whitelist = {
     'codecov.yml',
     'pytest.ini',
     'MANIFEST.in',
+    'banner.svg',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Pull request template
@@ -86,6 +87,8 @@ git_whitelist = {
     'bin/test_setup.py',
     'bin/test_submodule_imports.py',
     'bin/test_travis.sh',
+    'bin/test_optional_dependencies.py',
+    'bin/test_sphinx.sh',
     # The notebooks are not ready for shipping yet. They need to be cleaned
     # up, and preferably doctested.  See also
     # https://github.com/sympy/sympy/issues/6039.
