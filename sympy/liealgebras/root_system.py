@@ -97,7 +97,7 @@ class RootSystem(Basic):
         'alpha[1] + alpha[2] + alpha[3]'
 
         """
-        n = self.cartan_type.rank()
+        n = self.cartan_type.rank
         rs = " + ".join("alpha["+str(i) +"]" for i in range(1, n+1))
         return rs
 

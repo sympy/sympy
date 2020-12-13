@@ -12,12 +12,13 @@ def test_type_B():
     assert c.lie_algebra() == "so(6)"
     diag = "0---0=>=0\n1   2   3"
     assert c.dynkin_diagram() == diag
-    assert c.positive_roots() ==  [Matrix([[1, 1, 0]]),
+    assert c.positive_roots() ==  [
+        Matrix([[1, 1, 0]]),
         Matrix([[1, 0, 1]]),
-        Matrix([[1, 0, 0]]),
         Matrix([[0, 1, 1]]),
-        Matrix([[1, 0, -1]]),
+        Matrix([[1, 0, 0]]),
         Matrix([[0, 1, 0]]),
-        Matrix([[1, -1, 0]]),
+        Matrix([[1, 0, -1]]),
         Matrix([[0, 1, -1]]),
-        Matrix([[0, 0, 1]])]
+        Matrix([[0, 0, 1]]),
+        Matrix([[1, -1, 0]])]

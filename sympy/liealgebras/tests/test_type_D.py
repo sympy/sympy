@@ -16,12 +16,12 @@ def test_type_D():
     assert c.positive_roots() == [Matrix([[1, 1, 0, 0]]),
         Matrix([[1, 0, 1, 0]]),
         Matrix([[0, 1, 1, 0]]),
-        Matrix([[1, 0, 0, -1]]),
         Matrix([[1, 0, 0, 1]]),
-        Matrix([[1, 0, -1, 0]]),
-        Matrix([[0, 1, 0, -1]]),
+        Matrix([[1, 0, 0, -1]]),
         Matrix([[0, 1, 0, 1]]),
-        Matrix([[0, 0, 1, -1]]),
+        Matrix([[0, 1, 0, -1]]),
+        Matrix([[1, 0, -1, 0]]),
+        Matrix([[0, 1, -1, 0]]),
         Matrix([[0, 0, 1, 1]]),
-        Matrix([[1, -1, 0, 0]]),
-        Matrix([[0, 1, -1, 0]])]
+        Matrix([[0, 0, 1, -1]]),
+        Matrix([[1, -1, 0, 0]])]

@@ -1,6 +1,7 @@
+from sympy.matrices.dense import MutableDenseMatrix
 from sympy.core import Basic
 from sympy.matrices import zeros, Matrix, eye, ones
-import warnings
+from sympy.core.sympify import _sympify
 
 class Standard_Cartan(Basic):
     """
@@ -22,22 +23,22 @@ class Standard_Cartan(Basic):
     """
 
     def __new__(cls, series, n):
-        obj = Basic.__new__(cls, series, n)
-        obj.n = n
-        obj.series = series
-        return obj
+        n= _sympify(n)
+        return super().__new__(cls, series, n)
 
+    @property
     def rank(self):
         """
         Returns the rank of the Lie algebra
         """
-        return self.n
+        return self.args[1]
 
+    @property
     def series(self):
         """
         Returns the type of the Lie algebra
         """
-        return self.series
+        return self.args[0]
 
     def cartan_matrix(self):
         r"""
@@ -56,7 +57,7 @@ class Standard_Cartan(Basic):
         - https://mathworld.wolfram.com/CartanMatrix.html
 
         """
-        r = self.rank()
+        r = self.rank
         cartan_matrix = zeros(r,r)
         for i, sr_i in enumerate(self.simple_roots()):
             for j, sr_j in enumerate(self.simple_roots()):
@@ -94,14 +95,14 @@ class Standard_Cartan(Basic):
         """
         Returns the i'th simple root in the orthogonal basis.
         """
-        warnings.warn("Do not call this method directly from the base class.")
+        raise NotImplementedError("Do not call this method directly from the base class.")
 
 
     def simple_roots(self):
         """
         Returns the simple roots of the algebra.
         """
-        return [Matrix(self.simple_root(i+1)) for i in range(self.n)]
+        return [Matrix(self.simple_root(i+1)) for i in range(self.rank)]
 
     def fundamental_weight(self, i):
         r"""
@@ -154,16 +155,16 @@ class Standard_Cartan(Basic):
         >>> from sympy.liealgebras import CartanType
         >>> CartanType("A2").rootsystem()
         [Matrix([[1, 0, -1]]),
-        Matrix([[1, -1, 0]]),
         Matrix([[0, 1, -1]]),
+        Matrix([[1, -1, 0]]),
         Matrix([[0, 0, 0]]),
         Matrix([[0, 0, 0]]),
-        Matrix([[0, -1, 1]]),
         Matrix([[-1, 1, 0]]),
+        Matrix([[0, -1, 1]]),
         Matrix([[-1, 0, 1]])]
         """
         s_r = self.simple_roots()
-        rank = self.rank()
+        rank = self.rank
 
         orbits = set()
         for i in s_r:
@@ -175,7 +176,16 @@ class Standard_Cartan(Basic):
         orbits = [Matrix([[*i]]) * self.cocartan_matrix().T for i in orbits] + zero_roots
 
         # sort roots by their weights
-        sorbits = sorted(orbits, key = lambda x: -self.root_level(x, 'alpha'))
+        orbits_by_level = {}
+        for orb in orbits:
+            level = -self.root_level(orb, 'alpha')
+            current = orbits_by_level.get(level,[])
+            current.append(orb)
+            orbits_by_level[level] = current
+
+        sorbits = []
+        for level in sorted(orbits_by_level.keys()):
+            sorbits += sorted(orbits_by_level[level], key=lambda x: tuple(x))
 
         # rotate back to the orthogonal basis for consistency
         omega_matrix = self.omega_matrix()
@@ -183,7 +193,7 @@ class Standard_Cartan(Basic):
 
     def roots(self):
         """Returns the number of total roots in the algebra"""
-        warnings.warn("Do not call this method directly from the base class.")
+        raise NotImplementedError("Do not call this method directly from the base class.")
 
     def root_level(self, root, basis='orthogonal'):
         """Returns the root level of the root. The root level is calculated
@@ -236,10 +246,9 @@ class Standard_Cartan(Basic):
         """
         simple_roots = self.simple_roots()
 
-        try:
+        if isinstance(head, MutableDenseMatrix):
             head = head.as_immutable()
-        except Exception:
-            pass
+
         master_list = [head]
         master_hash = set([tuple(head)])
 

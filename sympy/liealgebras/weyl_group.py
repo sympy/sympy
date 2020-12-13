@@ -35,7 +35,7 @@ class WeylGroup(Basic):
         >>> c.generators()
         ['r1', 'r2', 'r3', 'r4']
         """
-        n = self.cartan_type.rank()
+        n = self.cartan_type.rank
         generators = []
         for i in range(1, n+1):
             reflection = "r"+str(i)
@@ -57,7 +57,7 @@ class WeylGroup(Basic):
         >>> c.group_order()
         192.0
         """
-        n = self.cartan_type.rank()
+        n = self.cartan_type.rank
         if self.cartan_type.series == "A":
             return fac(n+1)
 
@@ -86,7 +86,7 @@ class WeylGroup(Basic):
         a given Lie algebra.  It returns the name of the group and the elements
         it acts on, if relevant.
         """
-        n = self.cartan_type.rank()
+        n = self.cartan_type.rank
         if self.cartan_type.series == "A":
             return "S"+str(n+1) + ": the symmetric group acting on " + str(n+1) + " elements."
 
@@ -130,7 +130,7 @@ class WeylGroup(Basic):
         >>> b.element_order('r1*r4*r2')
         4
         """
-        n = self.cartan_type.rank()
+        n = self.cartan_type.rank
         if self.cartan_type.series == "A":
             a = self.matrix_form(weylelt)
             order = 1
@@ -238,7 +238,7 @@ class WeylGroup(Basic):
         """
         elts = list(weylelt)
         reflections = elts[1::3]
-        n = self.cartan_type.rank()
+        n = self.cartan_type.rank
         if self.cartan_type.series == 'A':
             matrixform = eye(n+1)
             for elt in reflections:
@@ -383,7 +383,7 @@ class WeylGroup(Basic):
         0---0===0
         1   2   3
         """
-        n = self.cartan_type.rank()
+        n = self.cartan_type.rank
         if self.cartan_type.series == "A" or self.cartan_type.series == "D" or self.cartan_type.series == "E":
             return self.cartan_type.dynkin_diagram()
 
