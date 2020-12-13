@@ -2892,6 +2892,14 @@ def test_issue_8207():
     assert d == b[0, 0]
     assert e == 0
 
+def test_ellipses():
+    m = Matrix([[1,2,3], [4,5,6], [7,8,9]])
+
+    assert m == m[...]
+    assert m[1, :] == m[1, ...]
+    assert m[:, 1] == m[..., 1]
+    assert m[:, :] == m[..., ...]
+
 def test_func():
     from sympy.simplify.simplify import nthroot
 
