@@ -651,7 +651,7 @@ class Add(Expr, AssocOp):
                     v = _monotonic_sign(self)
                     if v is not None and v != self and v.is_extended_positive:
                         return True
-        pos = nonneg = nonpos = unknown_sign = False
+        pos = nonneg = nonpos = unknown_sign = possibly_infinite = False
         saw_INF = set()
         args = [a for a in self.args if not a.is_zero]
         if not args:
@@ -663,6 +663,8 @@ class Add(Expr, AssocOp):
                 saw_INF.add(fuzzy_or((ispos, a.is_extended_nonnegative)))
                 if True in saw_INF and False in saw_INF:
                     return
+            elif infinite is None:
+                possibly_infinite = True
             if ispos:
                 pos = True
                 continue
@@ -678,7 +680,7 @@ class Add(Expr, AssocOp):
             unknown_sign = True
 
         if saw_INF:
-            if len(saw_INF) > 1:
+            if len(saw_INF) > 1 or possibly_infinite:
                 return
             return saw_INF.pop()
         elif unknown_sign:
@@ -735,7 +737,7 @@ class Add(Expr, AssocOp):
                     v = _monotonic_sign(self)
                     if v is not None and v != self and v.is_extended_negative:
                         return True
-        neg = nonpos = nonneg = unknown_sign = False
+        neg = nonpos = nonneg = unknown_sign = possibly_infinite = False
         saw_INF = set()
         args = [a for a in self.args if not a.is_zero]
         if not args:
@@ -747,6 +749,8 @@ class Add(Expr, AssocOp):
                 saw_INF.add(fuzzy_or((isneg, a.is_extended_nonpositive)))
                 if True in saw_INF and False in saw_INF:
                     return
+            elif infinite is None:
+                possibly_infinite = True
             if isneg:
                 neg = True
                 continue
@@ -762,7 +766,7 @@ class Add(Expr, AssocOp):
             unknown_sign = True
 
         if saw_INF:
-            if len(saw_INF) > 1:
+            if len(saw_INF) > 1 or possibly_infinite:
                 return
             return saw_INF.pop()
         elif unknown_sign:
