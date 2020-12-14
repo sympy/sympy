@@ -814,8 +814,6 @@ class Permutation(Atom):
     ((5)(1 2 3), True)
     ((5)(1 2 3), True)
     ((5)(1 2 3), True)
-    >>> G.contains(p2,strict=False)
-    True
 
     The check for p2 above will fail.
 
@@ -831,8 +829,12 @@ class Permutation(Atom):
 
     There is another way to do this, which is to tell the ``contains``
     method that the number of symbols the group is on doesn't need to
-    match perfectly the number of symbols for the permutation, and that
-    can be done via the ``strict`` argument to the ``contains`` method,
+    match perfectly the number of symbols for the permutation:
+
+    >>> G.contains(p2,strict=False)
+    True
+
+    This can be via the ``strict`` argument to the ``contains`` method,
     and SymPy will try to extend the permutation on its own and then
     perform the containment check.
 
