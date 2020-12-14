@@ -1571,7 +1571,10 @@ class EvalfMixin:
         """.. deprecated:: 1.7.1
             Use `_eval_evalf_options` instead.
         """
-        return
+
+        options = {'maxprec': max(prec, int(100*LG10)), 'chop': False,
+                'strict': False, 'verbose': False}
+        return self._eval_evalf_options(prec, options)
 
     def _eval_evalf_options(self, prec, options):
         """ Helper Function needed to be defined in sub-class .
