@@ -4,6 +4,7 @@ set -o errexit
 
 echo "Testing SPHINX"
 cd doc
+export SPHINXOPTS=--color
 make html
 make man
 make latex
