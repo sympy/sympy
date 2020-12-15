@@ -5,9 +5,12 @@ SymPy Modules Reference
 
 .. module:: sympy
 
-Because every feature of SymPy must have a test case, when you are not sure how
-to use something, just look into the ``tests/`` directories, find that feature
-and read the tests for it, that will tell you everything you need to know.
+This section gives the detailed documentations for each module in SymPy.
+
+Every feature of SymPy have a test case. When you are not sure how to use
+something, just look into the example section in docstrings or ``tests/``
+directories. Find the feature and read the tests for it. It will tell you
+everything you need to know.
 
 Most of the things are already documented though in this document, that is
 automatically generated using SymPy's docstrings.
@@ -29,24 +32,19 @@ access any SymPy module, or use the list below:
    core.rst
    crypto.rst
    diffgeom.rst
-   solvers/diophantine.rst
    discrete.rst
    evalf.rst
    functions/index.rst
    geometry/index.rst
    holonomic/index.rst
-   solvers/inequalities.rst
-   integrals/integrals.rst
-   integrals/g-functions.rst
+   integrals/index.rst
    interactive.rst
    liealgebras/index.rst
    logic.rst
    matrices/index.rst
    ntheory.rst
    numeric-computation.rst
-   solvers/ode.rst
    parsing.rst
-   solvers/pde.rst
    physics/index.rst
    plotting.rst
    polys/index.rst
@@ -55,8 +53,7 @@ access any SymPy module, or use the list below:
    series/index.rst
    sets.rst
    simplify/index.rst
-   solvers/solvers.rst
-   solvers/solveset.rst
+   solvers/index.rst
    stats.rst
    tensor/index.rst
    testing/index.rst
