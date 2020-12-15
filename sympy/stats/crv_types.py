@@ -97,7 +97,7 @@ __all__ = ['ContinuousRV',
 'Levy',
 'Logistic',
 'LogLogistic',
-'LogitNormal'
+'LogitNormal',
 'LogNormal',
 'Lomax',
 'Maxwell',
