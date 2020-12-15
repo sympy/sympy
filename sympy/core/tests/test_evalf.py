@@ -679,3 +679,18 @@ def test_evalf_options():
     for cls in classes:
         for test in tests:
             test(cls)
+
+def test_eval_evalf():
+    #This test function can be removed when `_eval_evalf` is removed
+    class Y:
+        def _eval_evalf(self, prec):
+            return Float('2')
+
+    class A(Y, Expr):
+        pass
+
+    class B(Y, Basic):
+        pass
+
+    assert FiniteSet(A()).evalf(2) == FiniteSet(2.0)
+    assert FiniteSet(B()).evalf(2) == FiniteSet(2.0)
