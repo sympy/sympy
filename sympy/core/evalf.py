@@ -1437,15 +1437,22 @@ class EvalfMixin:
 
     1) Inherit `EvalfMixin` to add evalf capability.
 
-    2) Override `_eval_evalf_options` and recurse using `._evalf_options` .
+    2) Override `_eval_evalf_options` and recurse using `.evalf_options` .
 
-    3) Avoid using `._evalf` and `_eval_evalf` .
+    3) Avoid using `._evalf` and `_eval_evalf` because they lack precision
+        and ignores optional parameters.
+
+    4) `_eval_evalf` calls `_eval_evalf_options` by default with default optional parameters.
+
+    5) `._evalf` and `_eval_evalf` are depricated .
 
     Examples
     ========
 
-    >>> from sympy import pi
+    >>> from sympy import pi, Basic, Float, Expr
     >>> from sympy.core.evalf import EvalfMixin, evalf_options
+
+    Inheriting EvalfMixin to a  non-Basic subclass to make `.evalf` work
 
     >>> class A(EvalfMixin):
     ...     is_number = False
@@ -1459,6 +1466,28 @@ class EvalfMixin:
 
     >>> a = A(pi)
     >>> a.evalf(2)
+    3.1
+
+    Inheriting EvalfMixin to a Basic subclass to make `.evalf` work
+
+    >>> class X(EvalfMixin, Basic):
+    ...    def _eval_evalf_options(self, prec,  options):
+    ...        return Float('2.0')
+    ...
+
+    >>> X().evalf(2)
+    2.0
+
+    Using `.evalf` with Expr subclass
+
+    >>> class Y(Expr):
+    ...     def __init__(self, a):
+    ...         self.val = a
+    ...     def _eval_evalf_options(self, prec,  options):
+    ...         return evalf_options(self.val, prec, options)
+    ...
+
+    >>> Y(pi).evalf(2)
     3.1
 
     """
@@ -1570,6 +1599,8 @@ class EvalfMixin:
     def _eval_evalf(self, prec):
         """.. deprecated:: 1.7.1
             Use `_eval_evalf_options` instead.
+            It calls `_eval_evalf_options` by default with default optional
+                parameters .
         """
 
         options = {'maxprec': max(prec, int(100*LG10)), 'chop': False,
