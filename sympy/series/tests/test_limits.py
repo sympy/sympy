@@ -184,6 +184,7 @@ def test_abs():
     assert limit(abs(sin(x)), x, 0) == 0
     assert limit(abs(cos(x)), x, 0) == 1
     assert limit(abs(sin(x + 1)), x, 0) == sin(1)
+    assert limit(abs(x)*sin(1/x),x,0,"+-") == 0
 
 
 def test_heuristic():
