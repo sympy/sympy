@@ -1481,6 +1481,9 @@ def test_sympy__stats__crv_types__LogLogisticDistribution():
     from sympy.stats.crv_types import LogLogisticDistribution
     assert _test_args(LogLogisticDistribution(1, 1))
 
+from sympy.stats.crv_types import LogitNormalDistribution
+    from sympy.stats.crv_types import LogitNormalDistribution
+    assert _test_args(LogitNormalDistribution(0, 1))
 
 def test_sympy__stats__crv_types__LogNormalDistribution():
     from sympy.stats.crv_types import LogNormalDistribution
