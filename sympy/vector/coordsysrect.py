@@ -472,14 +472,14 @@ class CoordSys3D(Basic):
         return self._lame_coefficients
 
     def transformation_to_parent(self):
-        return self._transformation_lambda(*self.base_scalars())
+        return tuple_to_matrix(self._transformation_lambda(*self.base_scalars()))
 
     def transformation_from_parent(self):
         if self._parent is None:
             raise ValueError("no parent coordinate system, use "
                              "`transformation_from_parent_function()`")
-        return self._transformation_from_parent_lambda(
-                            *self._parent.base_scalars())
+        return tuple_to_matrix(self._transformation_from_parent_lambda(
+                            *self._parent.base_scalars()))
 
     def transformation_from_parent_function(self):
         return self._transformation_from_parent_lambda
@@ -1006,9 +1006,15 @@ class CoordSys3D(Basic):
         >>> a = CoordSys3D('a')
         >>> b = a.create_new('b', transformation='spherical')
         >>> b.transformation_to_parent()
-        (b.r*sin(b.theta)*cos(b.phi), b.r*sin(b.phi)*sin(b.theta), b.r*cos(b.theta))
+        Matrix([
+                [b.r*sin(b.theta)*cos(b.phi)],
+                [b.r*sin(b.phi)*sin(b.theta)],
+                [           b.r*cos(b.theta)]])
         >>> b.transformation_from_parent()
-        (sqrt(a.x**2 + a.y**2 + a.z**2), acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2)), atan2(a.y, a.x))
+        Matrix([
+                [          sqrt(a.x**2 + a.y**2 + a.z**2)],
+                [acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2))],
+                [                         atan2(a.y, a.x)]])
 
         """
         return CoordSys3D(name, parent=self, transformation=transformation,
@@ -1045,6 +1051,17 @@ def _check_strings(arg_name, arg):
     for s in arg:
         if not isinstance(s, str):
             raise TypeError(errorstr)
+
+def tuple_to_matrix(tuple):
+    if (isinstance(tuple, Matrix)):
+        return tuple
+    index = 0
+    M = Matrix([[ ]])
+    for elt in tuple:
+        temp = Matrix([ [ elt ] ])
+        M = M.row_insert(index, temp)
+        index += 1
+    return M
 
 
 # Delayed import to avoid cyclic import problems:
