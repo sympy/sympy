@@ -5,7 +5,7 @@ from .sympify import sympify
 from .singleton import S
 from .expr import Expr, AtomicExpr
 from .cache import cacheit
-from .function import FunctionClass
+from .function import FunctionClass, Function
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import cartes, sift
@@ -657,6 +657,15 @@ def symbols(names, *, cls=Symbol, **args):
         >>> type(_[0])
         <class 'sympy.core.function.UndefinedFunction'>
 
+    If several functions share the same arguments, it is convenient
+    to construct them at once as in (note that cls=Function is not needed anymore)::
+
+        >>> x,y,t = symbols('x,y,t')
+        >>> symbols('f,g,h', function_of=t)
+        (f(t), g(t), h(t))
+        >>> symbols('f,g,h', function_of=(x,y))
+        (f(x, y), g(x, y), h(x, y))
+
     """
     result = []
 
@@ -695,12 +704,20 @@ def symbols(names, *, cls=Symbol, **args):
 
         seq = args.pop('seq', as_seq)
 
+        # check & prepare function_of
+        function_of = args.pop('function_of',None)
+        if function_of is not None:
+            if not isinstance(function_of,tuple):
+                function_of=(function_of,)
+            cls = Function  # force class to Function
+
         for name in names:
             if not name:
                 raise ValueError('missing symbol')
 
             if ':' not in name:
                 symbol = cls(literal(name), **args)
+                if function_of is not None: symbol=symbol(*function_of)
                 result.append(symbol)
                 continue
 
@@ -736,10 +753,10 @@ def symbols(names, *, cls=Symbol, **args):
                     names = split[0]
                 else:
                     names = [''.join(s) for s in cartes(*split)]
-                if literals:
-                    result.extend([cls(literal(s), **args) for s in names])
-                else:
-                    result.extend([cls(s, **args) for s in names])
+                result_tmp=[cls(literal(s) if literals else s, **args) for s in names]
+                if function_of is not None:
+                    result_tmp[:]=[f(*function_of) for f in result_tmp]
+                result.extend(result_tmp)
 
         if not seq and len(result) <= 1:
             if not result:

@@ -387,3 +387,10 @@ def test_disambiguate():
     assert disambiguate(*t7) == (y*y_1, y_1)
     assert disambiguate(Dummy('x_1'), Dummy('x_1')
         ) == (x_1, Symbol('x_1_1'))
+
+
+def test_function_of_20519():
+    from sympy.core.function import Function
+    x, y = symbols('x y')
+    assert symbols('f',function_of=x)     == symbols('f',cls=Function)(x)
+    assert symbols('f',function_of=(x,y)) == symbols('f',cls=Function)(x,y)
