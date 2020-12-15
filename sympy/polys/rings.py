@@ -163,10 +163,12 @@ def sring(exprs, *symbols, **options):
     reps, opt = _parallel_dict_from_expr(exprs, opt)
 
     if opt.domain is None:
-        # NOTE: this is inefficient because construct_domain() automatically
-        # performs conversion to the target domain. It shouldn't do this.
         coeffs = sum([ list(rep.values()) for rep in reps ], [])
-        opt.domain, _ = construct_domain(coeffs, opt=opt)
+
+        opt.domain, coeffs_dom = construct_domain(coeffs, opt=opt)
+
+        coeff_map = dict(zip(coeffs, coeffs_dom))
+        reps = [{m: coeff_map[c] for m, c in rep.items()} for rep in reps]
 
     _ring = PolyRing(opt.gens, opt.domain, opt.order)
     polys = list(map(_ring.from_dict, reps))
