@@ -2433,6 +2433,11 @@ class AlgebraicNumber(Expr):
     is_algebraic = True
     is_number = True
 
+    # Optional alias symbol is not free.
+    # Actually, alias should be a Str, but some methods
+    # expect that it be an instance of Expr.
+    free_symbols = set()
+
     def __new__(cls, expr, coeffs=None, alias=None, **args):
         """Construct a new algebraic number. """
         from sympy import Poly

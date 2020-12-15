@@ -253,8 +253,9 @@ def ddm_irref(a):
 
         # normalise row
         ai = a[i]
+        aijinv = aij**-1
         for l in range(j, n):
-            ai[l] /= aij # ai[j] = one
+            ai[l] *= aijinv # ai[j] = one
 
         # eliminate above and below to the right
         for k, ak in enumerate(a):
