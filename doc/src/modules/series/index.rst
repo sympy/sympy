@@ -7,14 +7,21 @@ Series
 The series module implements series expansions as a function and many related
 functions.
 
-Contents
-========
+Series
+======
 
 .. toctree::
     :maxdepth: 2
 
     series.rst
-    sequences.rst
     fourier.rst
     formal.rst
+
+Sequence
+========
+
+.. toctree::
+    :maxdepth: 2
+
+    sequences.rst
     limitseq.rst
