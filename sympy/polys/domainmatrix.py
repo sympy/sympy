@@ -639,6 +639,22 @@ class DomainMatrix:
         rref_ddm, pivots = self.rep.rref()
         return self.from_ddm(rref_ddm), tuple(pivots)
 
+    def nullspace(M):
+        rows, cols = M.shape
+        domain = M.domain
+        rref, pivots = M.rep.rref()
+
+        basis = []
+        for i in range(cols):
+            if i in pivots:
+                continue
+            vec = [domain.one if i == j else domain.zero for j in range(cols)]
+            for ii, jj in enumerate(pivots):
+                vec[jj] -= rref[ii][i]
+            basis.append(vec)
+
+        return basis
+
     def inv(self):
         if not self.domain.is_Field:
             raise ValueError('Not a field')
