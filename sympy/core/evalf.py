@@ -1446,11 +1446,23 @@ class EvalfMixin:
 
     5) `._evalf` and `_eval_evalf` are depricated .
 
+    6) If a class has both `_eval_evalf` and `_eval_evalf_options` defined then version 1.7
+        and below version would use `_eval_evalf` but newer versions would first try with
+        `_eval_evalf_options`. If `_eval_evalf_options` returns None(most probably function
+        not overridden) then `evalf` would revert back to `_eval_evalf`, if present, for that
+        particulat step.
+
+    Warnings
+    ========
+
+    For Sympy's older version (<=1.7) `._eval_evalf` is broken and may give AttributeError. It's
+    best to use `_eval_evalf_options`
+
     Examples
     ========
 
     >>> from sympy import pi, Basic, Float, Expr
-    >>> from sympy.core.evalf import EvalfMixin, evalf_options
+    >>> from sympy.core.evalf import EvalfMixin, evalf_options, prec_to_dps
 
     Inheriting EvalfMixin to a  non-Basic subclass to make `.evalf` work
 
@@ -1489,6 +1501,37 @@ class EvalfMixin:
 
     >>> Y(pi).evalf(2)
     3.1
+
+    For Sympy version 1.7 and below , `evalf_options` and `_eval_evalf_options` won't work.
+
+    For older versions the appropriate way to use `.evalf` is to define `_eval_evalf` and
+    make it recurse on `.evalf()`.
+
+    >>> class Z(Expr):
+    ...     def __init__(self, a):
+    ...         self.arg = a
+    ...
+    ...     def _eval_evalf(self, prec):
+    ...         return self.arg.evalf(n=prec_to_dps(prec))
+    ...
+
+    >>> Z(pi).evalf(2)
+    3.1
+
+    For a class to work with both newer and older versions of Sympy it is best to define
+    both `_eval_evalf_options` and `_eval_evalf` in class.
+    `_eval_evalf_options` would have higher priority.
+
+    >>> class B(Expr):
+    ...     def _eval_evalf(self, prec):
+    ...         return Float('1')
+    ...
+    ...     def _eval_evalf_options(self, prec,  options):
+    ...         return Float('0')
+    ...
+
+    >>> B().evalf(1)
+    0
 
     """
 
