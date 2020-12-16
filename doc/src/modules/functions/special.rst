@@ -1,5 +1,6 @@
-Special
-=======
+=================
+Special Functions
+=================
 
 DiracDelta
 ----------

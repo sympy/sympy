@@ -1,5 +1,6 @@
-Combinatorial
-=============
+=======================
+Combinatorial Functions
+=======================
 
 This module implements various combinatorial functions.
 

@@ -15,12 +15,26 @@ All functions support the methods documented below, inherited from
 
 .. _functions-contents:
 
-Contents
-========
+Elementary Functions
+====================
 
 .. toctree::
    :maxdepth: 2
 
    elementary.rst
+
+Combinatorial Functions
+=======================
+
+.. toctree::
+   :maxdepth: 2
+
    combinatorial.rst
+
+Special Functions
+=================
+
+.. toctree::
+   :maxdepth: 2
+
    special.rst

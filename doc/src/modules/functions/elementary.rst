@@ -1,12 +1,13 @@
-Elementary
-==========
+====================
+Elementary Functions
+====================
 
 This module implements elementary functions such as trigonometric, hyperbolic, and
 sqrt, as well as functions like ``Abs``, ``Max``, ``Min`` etc.
 
 
-sympy.functions.elementary.complexes
-====================================
+Complex Functions
+=================
 
 re
 --
@@ -63,14 +64,11 @@ principal_branch
    :members:
 
 
-sympy.functions.elementary.trigonometric
-========================================
+Trigonometric Functions
+=======================
 
 
 .. _trionometric functions:
-
-Trigonometric Functions
-========================
 
 sin
 ---
@@ -120,10 +118,6 @@ sinc
 .. autoclass:: sympy.functions.elementary.trigonometric.sinc
 
    :members:
-
-
-Trigonometric Inverses
-======================
 
 asin
 ----
@@ -175,15 +169,8 @@ atan2
    :members:
 
 
-sympy.functions.elementary.hyperbolic
-======================================
-
 Hyperbolic Functions
 ====================
-
-
-HyperbolicFunction
-------------------
 
 .. autoclass:: sympy.functions.elementary.hyperbolic.HyperbolicFunction
 
@@ -231,10 +218,6 @@ csch
 
    :members:
 
-
-Hyperbolic Inverses
-===================
-
 asinh
 -----
 
@@ -277,8 +260,8 @@ acsch
 
    :members:
 
-sympy.functions.elementary.integers
-===================================
+Integer Functions
+=================
 
 ceiling
 -------
@@ -307,8 +290,8 @@ frac
 
 .. autoclass:: sympy.functions.elementary.integers.frac
 
-sympy.functions.elementary.exponential
-======================================
+Exponential Functions
+=====================
 
 exp
 ---
@@ -340,8 +323,8 @@ exp_polar
    :members:
 
 
-sympy.functions.elementary.piecewise
-====================================
+Piecewise Functions
+===================
 
 ExprCondPair
 ------------
@@ -361,8 +344,8 @@ Piecewise
 .. autofunction:: sympy.functions.elementary.piecewise.piecewise_fold
 
 
-sympy.functions.elementary.miscellaneous
-========================================
+Other Functions
+===============
 
 IdentityFunction
 ----------------
