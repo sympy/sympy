@@ -55,7 +55,7 @@ from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 
 from types import GeneratorType
 from collections import defaultdict
-from sympy import sqrt, abc
+from sympy import sqrt
 
 
 class NonlinearError(ValueError):
@@ -1823,10 +1823,10 @@ def _is_lambert(f, symbol):
     Equations containing `Pow`, `log` or `exp` terms are currently
     treated as Lambert types.
     """
-    for arg in list(_term_factors(f.expand())):
-        if isinstance(arg,(Pow,exp)):
-            base, exponent = arg.as_base_exp()
-            if isinstance(arg,(Pow,Mul)) and len(list(Add.make_args(f))) == 1:
+    for arg1 in list(_term_factors(f.expand())):
+        if isinstance(arg1,(Pow,exp)):
+            base, exponent = arg1.as_base_exp()
+            if isinstance(arg1,(Pow,Mul)) and len(list(Add.make_args(f))) == 1:
                 for a in list(Mul.make_args(f)):
                     if isinstance(a,exp):
                         base, exponent = a.as_base_exp()
@@ -1859,14 +1859,14 @@ def _is_lambert(f, symbol):
 
             else:
                 return False
-        elif isinstance(arg,log):
+        elif isinstance(arg1,log):
             i, j,k = 0,0,0
-            for arg in list(_term_factors(f)):
-                if arg.atoms(log) :
+            for arg2 in list(_term_factors(f)):
+                if arg2.atoms(log) :
                     j += 1
-                    if arg.has((symbol)):
+                    if arg2.has((symbol)):
                         i += 1
-                elif arg.has(symbol):
+                elif arg2.has(symbol):
                     k += 1
 
             return (j>1 or k>0) and (i >0)
