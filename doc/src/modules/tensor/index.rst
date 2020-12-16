@@ -6,14 +6,28 @@ Tensor
 
 .. automodule:: sympy.tensor
 
-Contents
-========
+N-dimensional Arrays
+====================
 
 .. toctree::
-    :maxdepth: 3
+   :maxdepth: 3
 
-    array.rst
-    indexed.rst
-    index_methods.rst
-    tensor.rst
-    toperators.rst
+   array.rst
+
+Indexed Objects
+===============
+
+.. toctree::
+   :maxdepth: 3
+
+   indexed.rst
+   index_methods.rst
+
+Tensors
+=======
+
+.. toctree::
+   :maxdepth: 3
+
+   tensor.rst
+   toperators.rst
