@@ -5,7 +5,8 @@ from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 
-from sympy import S, sqrt, sin, Float, E, I, GoldenRatio, pi, Catalan, Rational
+from sympy import (
+    S, sqrt, sin, exp, Float, E, I, GoldenRatio, pi, Catalan, Rational)
 from sympy.abc import x, y
 
 
@@ -147,6 +148,17 @@ def test_construct_domain():
     assert construct_domain(Rational(2, 3)) == (QQ, QQ(2, 3))
 
     assert construct_domain({}) == (ZZ, {})
+
+
+def test_complex_exponential():
+    w = exp(-I*2*pi/3, evaluate=False)
+    alg = QQ.algebraic_field(w)
+    assert construct_domain([w**2, w, 1], extension=True) == (
+        alg,
+        [alg.convert(w**2),
+         alg.convert(w),
+         alg.convert(1)]
+    )
 
 
 def test_composite_option():
