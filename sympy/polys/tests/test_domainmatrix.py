@@ -8,7 +8,7 @@ from sympy.polys.domainmatrix import (
         DDM,
         DDMBadInputError, DDMDomainError, DDMShapeError,
         DomainMatrix,
-        ddm_iadd, ddm_isub, ddm_ineg, ddm_imatmul,
+        ddm_iadd, ddm_isub, ddm_ineg, ddm_imatmul, ddm_imul,
         ddm_irref, ddm_idet, ddm_iinv, ddm_ilu, ddm_ilu_split, ddm_ilu_solve,
         ddm_berk,
         )
@@ -364,6 +364,16 @@ def test_ddm_ineg():
     a = [[1, 2], [3, 4]]
     ddm_ineg(a)
     assert a == [[-1, -2], [-3, -4]]
+
+
+def test_ddm_matmul():
+    a = [[1, 2], [3, 4]]
+    ddm_imul(a, 2)
+    assert a == [[2, 4], [6, 8]]
+
+    a = [[1, 2], [3, 4]]
+    ddm_imul(a, 0)
+    assert a == [[0, 0], [0, 0]]
 
 
 def test_ddm_imatmul():
