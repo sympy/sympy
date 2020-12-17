@@ -146,6 +146,22 @@ class DDM(list):
         pivots = ddm_irref(b)
         return b, pivots
 
+    def nullspace(a):
+        rref, pivots = a.rref()
+        rows, cols = a.shape
+        domain = a.domain
+
+        basis = []
+        for i in range(cols):
+            if i in pivots:
+                continue
+            vec = [domain.one if i == j else domain.zero for j in range(cols)]
+            for ii, jj in enumerate(pivots):
+                vec[jj] -= rref[ii][i]
+            basis.append(vec)
+
+        return DDM(basis, (len(basis), cols), domain)
+
     def det(a):
         """Determinant of a"""
         m, n = a.shape
@@ -639,21 +655,8 @@ class DomainMatrix:
         rref_ddm, pivots = self.rep.rref()
         return self.from_ddm(rref_ddm), tuple(pivots)
 
-    def nullspace(M):
-        rows, cols = M.shape
-        domain = M.domain
-        rref, pivots = M.rep.rref()
-
-        basis = []
-        for i in range(cols):
-            if i in pivots:
-                continue
-            vec = [domain.one if i == j else domain.zero for j in range(cols)]
-            for ii, jj in enumerate(pivots):
-                vec[jj] -= rref[ii][i]
-            basis.append(vec)
-
-        return basis
+    def nullspace(self):
+        return self.from_ddm(self.rep.nullspace())
 
     def inv(self):
         if not self.domain.is_Field:

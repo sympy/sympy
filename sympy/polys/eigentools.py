@@ -51,6 +51,8 @@ def ddm_eigenvects_to_sympy(rational_eigenvects, Matrix, **kwargs):
     algebraic_eigenvects = []
 
     for field, eigenvalue, multiplicity, eigenvects in rational_eigenvects:
+        eigenvects = eigenvects.rep
+
         if isinstance(eigenvalue, ExtensionElement):
             ring = eigenvalue.ext
             minpoly = ring.modulus
