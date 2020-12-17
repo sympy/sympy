@@ -1039,3 +1039,11 @@ def test_DomainMatrix_charpoly():
 
     Ans = DomainMatrix([[QQ(1), QQ(2)]], (1, 2), QQ)
     raises(NonSquareMatrixError, lambda: Ans.charpoly())
+
+
+def test_DomainMatrix_eye():
+    A = DomainMatrix.eye(3, QQ)
+    f = lambda i, j: QQ(1) if i == j else QQ(0)
+    assert A.rep == DDM.eye(3, QQ)
+    assert A.shape == (3, 3)
+    assert A.domain == QQ
