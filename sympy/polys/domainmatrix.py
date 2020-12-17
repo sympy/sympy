@@ -634,6 +634,8 @@ class DomainMatrix:
             return sqrtAn * sqrtAn
 
     def rref(self):
+        if not self.domain.is_Field:
+            raise ValueError('Not a field')
         rref_ddm, pivots = self.rep.rref()
         return self.from_ddm(rref_ddm), tuple(pivots)
 
