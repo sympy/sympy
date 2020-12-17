@@ -445,15 +445,13 @@ class exp(ExpBase):
         return fuzzy_or(complex_extended_negative(self.args[0]))
 
     def _eval_is_algebraic(self):
+        if (self.exp / S.Pi / S.ImaginaryUnit).is_rational:
+            return True
         if fuzzy_not(self.exp.is_zero):
-            if (self.exp / S.Pi / S.ImaginaryUnit).is_rational:
-                return True
             if self.exp.is_algebraic:
                 return False
             elif (self.exp / S.Pi).is_rational:
                 return False
-        elif self.exp.is_zero:
-            return True
 
     def _eval_is_extended_positive(self):
         if self.args[0].is_extended_real:
