@@ -1,5 +1,6 @@
 from sympy.core.compatibility import HAS_GMPY
 from sympy.core.numbers import Rational
+from sympy.functions import sqrt
 from sympy.matrices.common import (NonInvertibleMatrixError,
     NonSquareMatrixError, ShapeError)
 from sympy.matrices.dense import Matrix
@@ -699,6 +700,42 @@ def test_DomainMatrix_from_list_sympy():
     assert A.shape == (2, 2)
     assert A.domain == ZZ
 
+    K = QQ.algebraic_field(sqrt(2))
+    ddm = DDM(
+        [[K.convert(1 + sqrt(2)), K.convert(2 + sqrt(2))],
+         [K.convert(3 + sqrt(2)), K.convert(4 + sqrt(2))]],
+        (2, 2),
+        K
+    )
+    A = DomainMatrix.from_list_sympy(
+        2, 2, [[1 + sqrt(2), 2 + sqrt(2)], [3 + sqrt(2), 4 + sqrt(2)]],
+        extension=True)
+    assert A.rep == ddm
+    assert A.shape == (2, 2)
+    assert A.domain == K
+
+
+def test_DomainMatrix_from_Matrix():
+    ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    A = DomainMatrix.from_Matrix(Matrix([[1, 2], [3, 4]]))
+    assert A.rep == ddm
+    assert A.shape == (2, 2)
+    assert A.domain == ZZ
+
+    K = QQ.algebraic_field(sqrt(2))
+    ddm = DDM(
+        [[K.convert(1 + sqrt(2)), K.convert(2 + sqrt(2))],
+         [K.convert(3 + sqrt(2)), K.convert(4 + sqrt(2))]],
+        (2, 2),
+        K
+    )
+    A = DomainMatrix.from_Matrix(
+        Matrix([[1 + sqrt(2), 2 + sqrt(2)], [3 + sqrt(2), 4 + sqrt(2)]]),
+        extension=True)
+    assert A.rep == ddm
+    assert A.shape == (2, 2)
+    assert A.domain == K
+
 
 def test_DomainMatrix_eq():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
@@ -1043,7 +1080,6 @@ def test_DomainMatrix_charpoly():
 
 def test_DomainMatrix_eye():
     A = DomainMatrix.eye(3, QQ)
-    f = lambda i, j: QQ(1) if i == j else QQ(0)
     assert A.rep == DDM.eye(3, QQ)
     assert A.shape == (3, 3)
     assert A.domain == QQ
