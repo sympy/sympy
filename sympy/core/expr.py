@@ -2597,10 +2597,16 @@ class Expr(Basic, EvalfMixin):
         See also .is_rational_function()
 
         """
+
+        from .symbol import Symbol
         if syms:
             syms = set(map(sympify, syms))
         else:
             syms = self.free_symbols
+
+        for s in syms:
+            if not isinstance(s, Symbol):
+                raise TypeError("is_polynomial expects Symbol arguments")
 
         if syms.intersection(self.free_symbols) == set():
             # constant polynomial
