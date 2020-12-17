@@ -126,6 +126,11 @@ class DDM(list):
         ddm_ineg(b)
         return b
 
+    def mul(a, b):
+        c = a.copy()
+        ddm_imul(c, b)
+        return c
+
     def matmul(a, b):
         """a @ b (matrix product)"""
         m, o = a.shape
@@ -213,6 +218,12 @@ def ddm_ineg(a):
     for ai in a:
         for j, aij in enumerate(ai):
             ai[j] = -aij
+
+
+def ddm_imul(a, b):
+    for ai in a:
+        for j, aij in enumerate(ai):
+            ai[j] = b * aij
 
 
 def ddm_imatmul(a, b, c):
@@ -494,17 +505,21 @@ class DomainMatrix:
         return cls(ddm, ddm.shape, ddm.domain)
 
     @classmethod
-    def from_list_sympy(cls, nrows, ncols, rows):
+    def from_list_sympy(cls, nrows, ncols, rows, **kwargs):
         assert len(rows) == nrows
         assert all(len(row) == ncols for row in rows)
 
         items_sympy = [_sympify(item) for row in rows for item in row]
 
-        domain, items_domain = cls.get_domain(items_sympy)
+        domain, items_domain = cls.get_domain(items_sympy, **kwargs)
 
         domain_rows = [[items_domain[ncols*r + c] for c in range(ncols)] for r in range(nrows)]
 
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
+
+    @classmethod
+    def from_Matrix(cls, M, **kwargs):
+        return cls.from_list_sympy(*M.shape, M.tolist(), **kwargs)
 
     @classmethod
     def get_domain(cls, items_sympy, **kwargs):
@@ -513,6 +528,8 @@ class DomainMatrix:
 
     def convert_to(self, K):
         Kold = self.domain
+        if K == Kold:
+            return self.from_ddm(self.rep.copy())
         new_rows = [[K.convert_from(e, Kold) for e in row] for row in self.rep]
         return DomainMatrix(new_rows, self.shape, K)
 
@@ -557,9 +574,18 @@ class DomainMatrix:
 
     def __mul__(A, B):
         """A * B"""
-        if not isinstance(B, DomainMatrix):
+        if isinstance(B, DomainMatrix):
+            return A.matmul(B)
+        elif B in A.domain:
+            return A.from_ddm(A.rep * B)
+        else:
             return NotImplemented
-        return A.matmul(B)
+
+    def __rmul__(A, B):
+        if B in A.domain:
+            return A.from_ddm(A.rep * B)
+        else:
+            return NotImplemented
 
     def __pow__(A, n):
         """A ** n"""
@@ -583,6 +609,9 @@ class DomainMatrix:
 
     def neg(A):
         return A.from_ddm(A.rep.neg())
+
+    def mul(A, b):
+        return A.from_ddm(A.rep.mul(b))
 
     def matmul(A, B):
         return A.from_ddm(A.rep.matmul(B.rep))
@@ -644,6 +673,10 @@ class DomainMatrix:
         if m != n:
             raise NonSquareMatrixError("not square")
         return self.rep.charpoly()
+
+    @classmethod
+    def eye(cls, n, domain):
+        return cls.from_ddm(DDM.eye(n, domain))
 
     def __eq__(A, B):
         """A == B"""
