@@ -11,7 +11,6 @@ Integrals
    :maxdepth: 2
 
    integrals.rst
-   g-functions.rst
 
 G-functions
 ===========
