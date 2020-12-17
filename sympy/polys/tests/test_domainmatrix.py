@@ -823,6 +823,16 @@ def test_DomainMatrix_mul():
     raises(DDMDomainError, lambda: Az.matmul(Aq))
     raises(DDMDomainError, lambda: Aq.matmul(Az))
 
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    AA = DomainMatrix([[ZZ(2), ZZ(4)], [ZZ(6), ZZ(8)]], (2, 2), ZZ)
+    x = ZZ(2)
+    assert A * x == x * A == A.mul(x) == AA
+
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    AA = DomainMatrix([[ZZ(0), ZZ(0)], [ZZ(0), ZZ(0)]], (2, 2), ZZ)
+    x = ZZ(0)
+    assert A * x == x * A == A.mul(x) == AA
+
 
 def test_DomainMatrix_pow():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
