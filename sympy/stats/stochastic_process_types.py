@@ -20,7 +20,7 @@ from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter, _value_check, pspace, given,
-                           dependent, is_random, sample_iter)
+                           dependent, is_random, sample_iter, Distribution)
 from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution, FiniteRV
@@ -170,8 +170,18 @@ class StochasticProcess(Basic):
             return FiniteSet(*self.args[1])
         return self.args[1]
 
-    def distribution(self, key):
-        return None
+    def _deprecation_warn_distribution(self):
+        SymPyDeprecationWarning(
+            feature="Calling distribution with RandomIndexedSymbol",
+            useinstead="distribution with just Symbol as argument",
+            issue=20078,
+            deprecated_since_version="1.7.1"
+        ).warn()
+
+    def distribution(self, key=None):
+        if key is None:
+            self._deprecation_warn_distribution()
+        return Distribution()
 
     def __call__(self, time):
         """
@@ -226,7 +236,7 @@ class StochasticProcess(Basic):
 
         t = Dummy('t')
         dist = self.distribution(t)
-        if dist is None: # checks if there is any distribution available
+        if type(dist) is Distribution: # checks if there is any distribution available
             return JointDistribution(*args)
         if hasattr(dist, 'pdf'):
             density = Lambda(tuple(args),
