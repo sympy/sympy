@@ -18,7 +18,7 @@ This is the central page for all of SymPy's documentation.
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    install.rst
    tutorial/index.rst
