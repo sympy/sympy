@@ -163,7 +163,7 @@ def FlorySchulz(name, p):
     >>> X = FlorySchulz("x", p)
 
     >>> density(X)(z)
-    (4/5)**(z - 1)*z/25)
+    (4/5)**(z - 1)*z/25
 
     >>> E(X)
     9
