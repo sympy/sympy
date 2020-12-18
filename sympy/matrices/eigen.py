@@ -153,7 +153,7 @@ def _eigenvals(
 
     It's not always possible to return radical solutions for
     eigenvalues for matrices larger than $4, 4$ shape due to
-    Abel–Ruffini theorem.
+    Abel-Ruffini theorem.
 
     If there is no radical solution is found for the eigenvalue,
     it may return eigenvalues in the form of
