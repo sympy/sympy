@@ -14,6 +14,7 @@ from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
         Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial,
         lambdify)
 from sympy.core.function import PoleError
+from sympy.calculus.util import continuous_domain
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
@@ -692,7 +693,9 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
             raise ValueError("Can not solve %s for %s"%(expr, self.value))
         fx = self.compute_density(self.value)
         fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
-        return Lambda(y, fy)
+        c_domain = continuous_domain(fy, y, S.Reals)
+        pdf = Lambda(y, fy)
+        return Distribution(pdf, c_domain)
 
     def compute_quantile(self, expr, **kwargs):
 

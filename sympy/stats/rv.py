@@ -158,6 +158,17 @@ class ConditionalDomain(RandomDomain):
 
 class Distribution(Basic):
 
+    def __new__(cls, *args):
+        args = list(map(sympify, args))
+        return Basic.__new__(cls, *args)
+
+    def pdf(self, *args):
+        return self.args[0](*args)
+
+    @property
+    def set(self):
+        return self.args[1]
+
     def __call__(self, *args):
         args = [sympify(arg) for arg in args]
         return Piecewise((self.pdf(*args), all(self.set._contains(arg) != False for arg in args)), (S(0), True))
