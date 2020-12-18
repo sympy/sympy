@@ -20,8 +20,9 @@ from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import ImmutableMatrix, matrix2numpy, list2numpy
 from sympy.stats.crv import SingleContinuousDistribution, SingleContinuousPSpace
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
-from sympy.stats.rv import (ProductPSpace, NamedArgsMixin,
-                            ProductDomain, RandomSymbol, random_symbols, SingleDomain, _symbol_converter)
+from sympy.stats.rv import (ProductPSpace, NamedArgsMixin, Distribution,
+                            ProductDomain, RandomSymbol, random_symbols,
+                            SingleDomain, _symbol_converter)
 from sympy.utilities.misc import filldedent
 from sympy.external import import_module
 
@@ -232,7 +233,7 @@ _get_sample_class_jrv = {
     'numpy': SampleJointNumpy
 }
 
-class JointDistribution(Basic, NamedArgsMixin):
+class JointDistribution(Distribution, NamedArgsMixin):
     """
     Represented by the random variables part of the joint distribution.
     Contains methods for PDF, CDF, sampling, marginal densities, etc.
@@ -306,7 +307,7 @@ class JointRandomSymbol(RandomSymbol):
 
 
 
-class MarginalDistribution(Basic):
+class MarginalDistribution(Distribution):
     """
     Represents the marginal distribution of a joint probability space.
 
