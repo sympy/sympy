@@ -11,7 +11,7 @@ from sympy.core.numbers import Float
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots, CRootOf, EX
-from sympy.polys.eigentools import dom_eigenvects, ddm_eigenvects_to_sympy
+from sympy.polys.eigentools import dom_eigenvects, dom_eigenvects_to_sympy
 from sympy.polys.domainmatrix import DomainMatrix
 from sympy.simplify import nsimplify, simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -82,8 +82,7 @@ def _eigenvects_mpmath(M):
 def _eigenvals(
     M, error_when_incomplete=True, *, simplify=False, multiple=False,
     rational=False, **flags):
-    r"""Return eigenvalues using the Berkowitz algorithm to compute
-    the characteristic polynomial.
+    r"""Compute eigenvalues of the matrix.
 
     Parameters
     ==========
@@ -151,6 +150,14 @@ def _eigenvals(
 
     Eigenvalues of a matrix $A$ can be computed by solving a matrix
     equation $\det(A - \lambda I) = 0$
+
+    It's not always possible to return radical solutions for
+    eigenvalues for matrices larger than $4, 4$ shape due to
+    Abel–Ruffini theorem.
+
+    If there is no radical solution is found for the eigenvalue,
+    it may return eigenvalues in the form of
+    :class:`sympy.polys.rootoftools.ComplexRootOf`.
     """
     if not M:
         if multiple:
@@ -268,13 +275,14 @@ def _eigenspace(M, eigenval, iszerofunc=_iszero, simplify=False):
     return ret
 
 
-def _eigenvects_DDM(M, Matrix):
+def _eigenvects_DOM(M, **kwargs):
     DOM = DomainMatrix.from_Matrix(M, field=True, extension=True)
     if DOM.domain != EX:
-        eigenvects = dom_eigenvects(DOM)
-        eigenvects = ddm_eigenvects_to_sympy(eigenvects, Matrix)
-
+        rational, algebraic = dom_eigenvects(DOM)
+        eigenvects = dom_eigenvects_to_sympy(
+            rational, algebraic, M.__class__, **kwargs)
         eigenvects = sorted(eigenvects, key=lambda x: default_sort_key(x[0]))
+
         return eigenvects
     return None
 
@@ -299,7 +307,7 @@ def _eigenvects_sympy(M, iszerofunc, simplify=True, **flags):
 
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False, **flags):
-    """Return list of triples (eigenval, multiplicity, eigenspace).
+    """Compute eigenvectors of the matrix.
 
     Parameters
     ==========
@@ -334,6 +342,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
 
     Returns
     =======
+
     ret : [(eigenval, multiplicity, eigenspace), ...]
         A ragged list containing tuples of data obtained by ``eigenvals``
         and ``nullspace``.
@@ -387,7 +396,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
             return _eigenvects_mpmath(M)
         M = M.applyfunc(lambda x: nsimplify(x, rational=True))
 
-    ret = _eigenvects_DDM(M, M.__class__)
+    ret = _eigenvects_DOM(M)
     if ret is None:
         ret = _eigenvects_sympy(M, iszerofunc, simplify=simplify, **flags)
 
