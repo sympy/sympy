@@ -1595,6 +1595,9 @@ def test_sympy__stats__drv_types__NegativeBinomialDistribution():
     from sympy.stats.drv_types import NegativeBinomialDistribution
     assert _test_args(NegativeBinomialDistribution(.5, .5))
 
+def test_sympy_stats_drv_types_FlorySchulzDistribution():
+    from sympy.stats.drv_types import FlorySchulzDistribution
+    assert _test_args(FlorySchulzDistribution(.5))
 
 def test_sympy__stats__drv_types__PoissonDistribution():
     from sympy.stats.drv_types import PoissonDistribution
