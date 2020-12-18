@@ -11,8 +11,8 @@ from sympy.core.numbers import Float
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots, CRootOf, EX
-from sympy.polys.eigentools import dom_eigenvects, dom_eigenvects_to_sympy
-from sympy.polys.domainmatrix import DomainMatrix
+from sympy.polys.domainmatrix import (
+    DomainMatrix, dom_eigenvects, dom_eigenvects_to_sympy)
 from sympy.simplify import nsimplify, simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
