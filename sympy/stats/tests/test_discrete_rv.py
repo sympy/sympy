@@ -40,6 +40,7 @@ def test_Poisson():
         assert isinstance(E(2*x, evaluate=False), Expectation)
     # issue 8248
     assert x.pspace.compute_expectation(1) == 1
+
 def test_FlorySchulz():
     p = S.One / 5
     x = FlorySchulz('x' , p)
