@@ -404,22 +404,27 @@ def test_issue_17247_expression_blowup_13():
         [1 - x, x + 1,     0, x + 1],
         [    0, 1 - x, x + 1, 1 - x],
         [    0,     0,     1 - x, 0]])
-    with dotprodsimp(True):
-        ev = M.eigenvects()
-        assert ev[0][:2] == (0, 2)
-        assert ev[0][2][0] == Matrix([[0],[-1],[0],[1]])
-        assert ev[1][:2] == (x - sqrt(2)*(x - 1) + 1, 1)
-        assert (ev[1][2][0] - Matrix([
-            [-(-17*x**4 + 12*sqrt(2)*x**4 - 4*sqrt(2)*x**3 + 6*x**3 - 6*x - 4*sqrt(2)*x + 12*sqrt(2) + 17)/(-7*x**4 + 5*sqrt(2)*x**4 - 6*sqrt(2)*x**3 + 8*x**3 - 2*x**2 + 8*x + 6*sqrt(2)*x - 5*sqrt(2) - 7)],
-            [                      (-7*x**3 + 5*sqrt(2)*x**3 - x**2 + sqrt(2)*x**2 - sqrt(2)*x - x - 5*sqrt(2) - 7)/(-3*x**3 + 2*sqrt(2)*x**3 - 2*sqrt(2)*x**2 + 3*x**2 + 2*sqrt(2)*x + 3*x - 3 - 2*sqrt(2))],
-            [                                                                                           -(-3*x**2 + 2*sqrt(2)*x**2 + 2*x - 3 - 2*sqrt(2))/(-x**2 + sqrt(2)*x**2 - 2*sqrt(2)*x + 1 + sqrt(2))],
-            [                                                                                                                                                                                              1]])).expand() == Matrix([[0],[0],[0],[0]])
-        assert ev[2][:2] == (x + sqrt(2)*(x - 1) + 1, 1)
-        assert (ev[2][2][0] - Matrix([
-            [-(12*sqrt(2)*x**4 + 17*x**4 - 6*x**3 - 4*sqrt(2)*x**3 - 4*sqrt(2)*x + 6*x - 17 + 12*sqrt(2))/(7*x**4 + 5*sqrt(2)*x**4 - 6*sqrt(2)*x**3 - 8*x**3 + 2*x**2 - 8*x + 6*sqrt(2)*x - 5*sqrt(2) + 7)],
-            [                      (7*x**3 + 5*sqrt(2)*x**3 + x**2 + sqrt(2)*x**2 - sqrt(2)*x + x - 5*sqrt(2) + 7)/(2*sqrt(2)*x**3 + 3*x**3 - 3*x**2 - 2*sqrt(2)*x**2 - 3*x + 2*sqrt(2)*x - 2*sqrt(2) + 3)],
-            [                                                                                           -(2*sqrt(2)*x**2 + 3*x**2 - 2*x - 2*sqrt(2) + 3)/(x**2 + sqrt(2)*x**2 - 2*sqrt(2)*x - 1 + sqrt(2))],
-            [                                                                                                                                                                                            1]])).expand() == Matrix([[0],[0],[0],[0]])
+
+    ev = M.eigenvects()
+    assert ev[0] == (0, 2, [Matrix([0, -1, 0, 1])])
+    assert ev[1][0] == x - sqrt(2)*(x - 1) + 1
+    assert ev[1][1] == 1
+    assert ev[1][2][0].expand(deep=False, numer=True) == Matrix([
+        [(-x + sqrt(2)*(x - 1) - 1)/(x - 1)],
+        [-4*x/(x**2 - 2*x + 1) + (x + 1)*(x - sqrt(2)*(x - 1) + 1)/(x**2 - 2*x + 1)],
+        [(-x + sqrt(2)*(x - 1) - 1)/(x - 1)],
+        [1]
+    ])
+
+    assert ev[2][0] == x + sqrt(2)*(x - 1) + 1
+    assert ev[2][1] == 1
+    assert ev[2][2][0].expand(deep=False, numer=True) == Matrix([
+        [(-x - sqrt(2)*(x - 1) - 1)/(x - 1)],
+        [-4*x/(x**2 - 2*x + 1) + (x + 1)*(x + sqrt(2)*(x - 1) + 1)/(x**2 - 2*x + 1)],
+        [(-x - sqrt(2)*(x - 1) - 1)/(x - 1)],
+        [1]
+    ])
+
 
 def test_issue_17247_expression_blowup_14():
     M = Matrix(8, 8, ([1+x, 1-x]*4 + [1-x, 1+x]*4)*4)
@@ -2591,19 +2596,19 @@ def test_pinv():
 def test_pinv_rank_deficient_when_diagonalization_fails():
     # Test the four properties of the pseudoinverse for matrices when
     # diagonalization of A.H*A fails.
-    As = [Matrix([
-        [61, 89, 55, 20, 71, 0],
-        [62, 96, 85, 85, 16, 0],
-        [69, 56, 17,  4, 54, 0],
-        [10, 54, 91, 41, 71, 0],
-        [ 7, 30, 10, 48, 90, 0],
-        [0,0,0,0,0,0]])]
+    As = [
+        Matrix([
+            [61, 89, 55, 20, 71, 0],
+            [62, 96, 85, 85, 16, 0],
+            [69, 56, 17,  4, 54, 0],
+            [10, 54, 91, 41, 71, 0],
+            [ 7, 30, 10, 48, 90, 0],
+            [0, 0, 0, 0, 0, 0]])
+    ]
     for A in As:
         A_pinv = A.pinv(method="ED")
         AAp = A * A_pinv
         ApA = A_pinv * A
-        assert simplify(AAp * A) == A
-        assert simplify(ApA * A_pinv) == A_pinv
         assert AAp.H == AAp
         assert ApA.H == ApA
 
