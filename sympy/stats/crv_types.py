@@ -2456,25 +2456,23 @@ def LogLogistic(name, alpha, beta):
 
 class LogitNormalDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 's')
-    set = Interval(0, 1)
+    set = Interval.open(0, 1)
 
     @staticmethod
     def check(mu, s):
-        _value_check(s**2 > 0, "Scale parameter s must be positive.")
+        _value_check((s ** 2).is_real is not False and s ** 2 > 0, "Squared scale parameter s must be positive.")
+        _value_check(mu.is_real is not False, "Location parameter must be real")
 
-    def logit(self, x):
+    def _logit(self, x):
         return log(x / (1 - x))
 
     def pdf(self, x):
         mu, s = self.mu, self.s
-        return exp(-(self.logit(x) - mu)**2/(2*s**2))*(S.One/sqrt(2*pi*(s**2)))*(1/(x*(1 - x)))
+        return exp(-(self._logit(x) - mu)**2/(2*s**2))*(S.One/sqrt(2*pi*(s**2)))*(1/(x*(1 - x)))
 
     def _cdf(self, x):
         mu, s = self.mu, self.s
-        return (S.One/2)*(1 + erf((self.logit(x) - mu)/(sqrt(2*s**2))))
-
-    def _moment_generating_function(self, t):
-        print("No analytical solution")
+        return (S.One/2)*(1 + erf((self._logit(x) - mu)/(sqrt(2*s**2))))
 
 
 def LogitNormal(name, mu, s):
