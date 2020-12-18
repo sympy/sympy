@@ -10,6 +10,9 @@ def approximants(l, X=Symbol('x'), simplify=False):
     series when possible, since the last approximant returned by the generator
     will be the generating function (if any).
 
+    Explanation
+    ===========
+
     The input list can contain more complex expressions than integer or rational
     numbers; symbols may also be involved in the computation. An example below
     show how to compute the generating function of the whole Pascal triangle.
@@ -47,6 +50,7 @@ def approximants(l, X=Symbol('x'), simplify=False):
 
     See Also
     ========
+
     See function sympy.concrete.guess.guess_generating_function_rational and
     function mpmath.pade
 
