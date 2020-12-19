@@ -245,6 +245,10 @@ class MonogenicFiniteExtension(Domain):
         self.generator = self.convert(gen)
         self.basis = tuple(self.convert(gen**i) for i in range(self.rank))
 
+    def new(self, arg):
+        rep = self.ring.convert(arg)
+        return ExtElem(rep % self.mod, self)
+
     def __eq__(self, other):
         if not isinstance(other, FiniteExtension):
             return False
