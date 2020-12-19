@@ -1,4 +1,4 @@
-from sympy.core.compatibility import reduce
+from functools import reduce
 import operator
 
 from sympy.core import Add, Basic, sympify

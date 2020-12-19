@@ -3,10 +3,11 @@ from sympy import S
 from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import SYMPY_INTS, Iterable
+from sympy.core.compatibility import SYMPY_INTS
 from sympy.printing.defaults import Printable
 
 import itertools
+from collections.abc import Iterable
 
 
 class NDimArray(Printable):

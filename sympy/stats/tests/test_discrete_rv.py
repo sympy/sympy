@@ -24,6 +24,7 @@ def test_PoissonDistribution():
     l = 3
     p = PoissonDistribution(l)
     assert abs(p.cdf(10).evalf() - 1) < .001
+    assert abs(p.cdf(10.4).evalf() - 1) < .001
     assert p.expectation(x, x) == l
     assert p.expectation(x**2, x) - p.expectation(x, x)**2 == l
 
@@ -47,6 +48,9 @@ def test_GeometricDistribution():
     assert d.expectation(x, x) == 1/p
     assert d.expectation(x**2, x) - d.expectation(x, x)**2 == (1-p)/p**2
     assert abs(d.cdf(20000).evalf() - 1) < .001
+    assert abs(d.cdf(20000.8).evalf() - 1) < .001
+    G = Geometric('G', p=S(1)/4)
+    assert cdf(G)(S(7)/2) == P(G <= S(7)/2)
 
     X = Geometric('X', Rational(1, 5))
     Y = Geometric('Y', Rational(3, 10))

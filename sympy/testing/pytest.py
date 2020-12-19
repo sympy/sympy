@@ -6,7 +6,6 @@ import os
 import contextlib
 import warnings
 
-from sympy.core.compatibility import get_function_name
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
@@ -145,10 +144,10 @@ else:
             except Exception as e:
                 message = str(e)
                 if message != "Timeout":
-                    raise XFail(get_function_name(func))
+                    raise XFail(func.__name__)
                 else:
                     raise Skipped("Timeout")
-            raise XPass(get_function_name(func))
+            raise XPass(func.__name__)
 
         wrapper = functools.update_wrapper(wrapper, func)
         return wrapper

@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     import sys
     import inspect
-    from sympy.core.compatibility import builtins
+    import builtins
 
     import optparse
 

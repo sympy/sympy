@@ -1,6 +1,5 @@
 import tempfile
 import sympy as sp
-from sympy.core.compatibility import exec_
 from sympy.codegen.ast import Assignment
 from sympy.codegen.algorithms import newtons_method, newtons_method_function
 from sympy.codegen.fnodes import bind_C
@@ -75,7 +74,7 @@ def test_newtons_method_function__pycode():
     func = newtons_method_function(expr, x)
     py_mod = py_module(func)
     namespace = {}
-    exec_(py_mod, namespace, namespace)
+    exec(py_mod, namespace, namespace)
     res = eval('newton(0.5)', namespace)
     assert abs(res - 0.865474033102) < 1e-12
 

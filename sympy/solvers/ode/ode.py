@@ -6686,7 +6686,7 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     F = r1[f].subs(x(t), u).subs(y(t), v(u))
     G = r2[g].subs(x(t), u).subs(y(t), v(u))
     sol2r = dsolve(Eq(diff(v(u), u), G/F))
-    if isinstance(sol2r, Expr):
+    if isinstance(sol2r, Equality):
         sol2r = [sol2r]
     for sol2s in sol2r:
         sol1 = solve(Integral(1/F.subs(v(u), sol2s.rhs), u).doit() - t - C2, u)
