@@ -200,6 +200,9 @@ class Limit(Expr):
             z = z.doit(**hints)
             z0 = z0.doit(**hints)
 
+        if hasattr(e, 'simplify'):
+            e = e.simplify()
+
         if e == z:
             return z0
 
