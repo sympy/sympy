@@ -2289,6 +2289,10 @@ class LogCauchyDistribution(SingleContinuousDistribution):
 
     set = Interval(0, oo)
 
+    @property
+    def set(self):
+        return Interval(self.x0, self.b)
+
     @staticmethod
     def check(x0, gamma):
         _value_check(gamma > 0, "Scale parameter Gamma must be positive.")
@@ -2325,8 +2329,8 @@ def LogCauchy(name, x0, gamma):
     RandomSymbol
     Examples
     ========
-    >>> from sympy.stats import density, cdf, LogCauchy
-    >>> from sympy import Symbol
+    >>> from sympy.stats import  LogCauchy, density, cdf
+    >>> from sympy import Symbol, S
 
     >>> x0 = 2
     >>> gamma = S.One / 5
