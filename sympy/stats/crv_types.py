@@ -28,6 +28,7 @@ Gompertz
 Kumaraswamy
 Laplace
 Levy
+LogCauchy
 Logistic
 LogLogistic
 LogNormal
@@ -94,6 +95,7 @@ __all__ = ['ContinuousRV',
 'Kumaraswamy',
 'Laplace',
 'Levy',
+'LogCauchy',
 'Logistic',
 'LogLogistic',
 'LogNormal',
@@ -2278,6 +2280,72 @@ def Levy(name, mu, c):
 
     return rv(name, LevyDistribution, (mu, c))
 
+#-------------------------------------------------------------------------------
+# Log-Cauchy distribution --------------------------------------------------------
+
+
+class LogCauchyDistribution(SingleContinuousDistribution):
+    _argnames = ('x0', 'gamma')
+
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(x0, gamma):
+        _value_check(gamma > 0, "Scale parameter Gamma must be positive.")
+        _value_check(x0.is_real, "Location parameter must be real.")
+
+    def pdf(self, x):
+        x0, gamma = self.x0, self.gamma
+        return 1/(x*pi)*(gamma/((log(x) - x0)**2 + gamma**2))
+
+    def _cdf(self, x):
+        x0, gamma = self.x0, self.gamma
+        return (1/pi)*atan((log(x) - x0)/gamma) + S.Half
+
+    def _characteristic_function(self, t):
+        raise NotImplementedError("The characteristic function for the "
+                                  "Log-Cauchy distribution does not exist.")
+
+    def _moment_generating_function(self, t):
+        raise NotImplementedError("The moment generating function for the "
+                                  "Log-Cauchy distribution does not exist.")
+
+def LogCauchy(name, x0, gamma):
+    r"""
+   Create a continuous random variable with a Log-Cauchy distribution.
+    The density of the Log-Cauchy distribution is given by
+    .. math::
+        f(x) := \frac{1}{\pi x} \frac{\gamma}{(log(x)-\x0^2) + \gamma^2}
+    Parameters
+    ==========
+    x0 : Real number, the location
+    gamma : Real number, `\gamma > 0`, a scale
+    Returns
+    =======
+    RandomSymbol
+    Examples
+    ========
+    >>> from sympy.stats import density, cdf, LogCauchy
+    >>> from sympy import Symbol
+
+    >>> x0 = 2
+    >>> gamma = S.One / 5
+    >>> z = Symbol("z")
+
+    >>> X = LogCauchy("x", x0, gamma)
+
+    >>> density(X)(z)
+    1/(5*pi*z*((log(z) - 2)**2 + 1/25))
+
+    >>> cdf(X)(z)
+    atan(5*log(z) - 10)/pi + 1/2
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Log-Cauchy_distribution
+    """
+
+    return rv(name, LogCauchyDistribution, (x0, gamma))
 #-------------------------------------------------------------------------------
 # Logistic distribution --------------------------------------------------------
 

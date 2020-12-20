@@ -1,7 +1,7 @@
 from sympy import E as e
 from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
-                   gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
+                   gamma, beta, Piecewise, Integral, sin, cos, tan, atan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re, Lambda, asin,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
                    factorial, binomial, erfi, besselj, besselk)
@@ -14,7 +14,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          ContinuousRV, sample, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
-                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
+                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, LogCauchy, Logistic,
                          LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
@@ -841,6 +841,16 @@ def test_levy():
 
     mu = Symbol("mu", real=True)
     raises(ValueError, lambda: Levy('x',mu,c))
+
+def test_logcauchy():
+    x0 = 2
+    gamma = S.One /5
+
+    X = LogCauchy("x", x0, gamma)
+    #Tests density_funtion
+    assert density(X)(2) - 1/(10*pi*(1/25 + (-2 + log(2))**2)) < 0.001
+    assert cdf(X)(2) - (-atan(10 - 5*log(2))/pi + 1/2) < 0.001
+
 
 def test_logistic():
     mu = Symbol("mu", real=True)
