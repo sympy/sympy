@@ -210,13 +210,6 @@ class MonogenicFiniteExtension(Domain):
     >>> FiniteExtension(Poly(t**2 - x**3 - x + 1, t, field=True))
     ZZ(x)[t]/(t**2 - x**3 - x + 1)
 
-    Notes
-    =====
-
-    ``FiniteExtension`` is not a subclass of :class:`~.Domain`. Consequently,
-    a ``FiniteExtension`` can't currently be used as ``domain`` for the
-    :class:`~.Poly` class.
-
     """
     is_FiniteExtension = True
 
@@ -228,7 +221,7 @@ class MonogenicFiniteExtension(Domain):
 
         mod, rem = mod.div(mod.LC())
         if not rem.is_zero:
-            raise ValueError("modulus could not be made monic")
+            raise ValueError("modulus could not be made monic") # pragma: no cover
 
         self.rank = mod.degree()
         self.modulus = mod

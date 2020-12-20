@@ -284,7 +284,7 @@ class Domain:
             if K1.is_FiniteExtension:
                 # Unifying two extensions.
                 # Try to ensure that K0.unify(K1) == K1.unify(K0)
-                if list(ordered([K0.modulus, K1.modulus]))[0] == K0.modulus:
+                if list(ordered([K0.modulus, K1.modulus]))[1] == K0.modulus:
                     K0, K1 = K1, K0
                 return K1.set_domain(K0)
             else:
@@ -457,7 +457,7 @@ class Domain:
         """Drop generators from this domain. """
         if self.is_Simple:
             return self
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def is_zero(self, a):
         """Returns True if ``a`` is zero. """

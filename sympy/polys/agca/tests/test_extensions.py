@@ -1,8 +1,10 @@
+from sympy.polys import QQ
 from sympy.polys.polytools import Poly
 from sympy.polys.polyerrors import NotInvertible
 from sympy.polys.agca.extensions import FiniteExtension
 from sympy.testing.pytest import raises
 from sympy.abc import x, t
+
 
 def test_FiniteExtension():
     # Gaussian integers
@@ -10,6 +12,11 @@ def test_FiniteExtension():
     assert A.rank == 2
     assert str(A) == 'ZZ[x]/(x**2 + 1)'
     i = A.generator
+    assert i.parent() is A
+
+    assert i*i == A(-1)
+    raises(TypeError, lambda: i*())
+
     assert A.basis == (A.one, i)
     assert A(1) == A.one
     assert i**2 == A(-1)
@@ -46,3 +53,27 @@ def test_FiniteExtension():
     c = 1/(x**3 - x**2 + x - 1)
     assert ((y + x)*(y - x)).inverse() == K(c)
     assert (y + x)*(y - x)*c == K(1)  # explicit inverse of y + x
+
+    # Test mod
+    K = FiniteExtension(Poly(x**3 + 1))
+    xf = K(x)
+    assert (xf**2 - 1) % (xf - 1) == K.zero
+
+    assert K.from_sympy(x) == xf
+    assert K.to_sympy(xf) == x
+
+    KZ = FiniteExtension(Poly(x**2 + 1, x, domain='ZZ'))
+    KQ = FiniteExtension(Poly(x**2 + 1, x, domain='QQ'))
+    assert KZ.set_domain(QQ) == KQ
+
+    # Test exquo
+    K = FiniteExtension(Poly(x**4 + 1))
+    xf = K(x)
+    assert K.exquo(xf**2 - 1, xf - 1) == xf + 1
+
+    # Test from_MonogenicFiniteExtension
+    K1 = FiniteExtension(Poly(x**2 + 1))
+    K2 = QQ[x]
+    x1, x2 = K1(x), K2(x)
+    assert K1.convert(x2) == x1
+    assert K2.convert(x1) == x2

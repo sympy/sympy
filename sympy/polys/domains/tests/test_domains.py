@@ -15,6 +15,8 @@ from sympy.polys.domains.realfield import RealField
 from sympy.polys.rings import ring
 from sympy.polys.fields import field
 
+from sympy.polys.agca.extensions import FiniteExtension
+
 from sympy.polys.polyerrors import (
     UnificationFailed,
     GeneratorsError,
@@ -284,6 +286,57 @@ def test_Domain_unify_algebraic():
     assert sqrt5.unify(sqrt7.frac_field(x, y)) == sqrt57.frac_field(x, y)
     assert sqrt5.frac_field(x, y).unify(sqrt7) == sqrt57.frac_field(x, y)
 
+def test_Domain_unify_FiniteExtension():
+    KxZZ = FiniteExtension(Poly(x**2 - 2, x, domain=ZZ))
+    KxQQ = FiniteExtension(Poly(x**2 - 2, x, domain=QQ))
+    KxZZy = FiniteExtension(Poly(x**2 - 2, x, domain=ZZ[y]))
+    KxQQy = FiniteExtension(Poly(x**2 - 2, x, domain=QQ[y]))
+
+    assert KxZZ.unify(KxZZ) == KxZZ
+    assert KxQQ.unify(KxQQ) == KxQQ
+    assert KxZZy.unify(KxZZy) == KxZZy
+    assert KxQQy.unify(KxQQy) == KxQQy
+
+    assert KxZZ.unify(ZZ) == KxZZ
+    assert KxZZ.unify(QQ) == KxQQ
+    assert KxQQ.unify(ZZ) == KxQQ
+    assert KxQQ.unify(QQ) == KxQQ
+
+    assert KxZZ.unify(ZZ[y]) == KxZZy
+    assert KxZZ.unify(QQ[y]) == KxQQy
+    assert KxQQ.unify(ZZ[y]) == KxQQy
+    assert KxQQ.unify(QQ[y]) == KxQQy
+
+    assert KxZZy.unify(ZZ) == KxZZy
+    assert KxZZy.unify(QQ) == KxQQy
+    assert KxQQy.unify(ZZ) == KxQQy
+    assert KxQQy.unify(QQ) == KxQQy
+
+    assert KxZZy.unify(ZZ[y]) == KxZZy
+    assert KxZZy.unify(QQ[y]) == KxQQy
+    assert KxQQy.unify(ZZ[y]) == KxQQy
+    assert KxQQy.unify(QQ[y]) == KxQQy
+
+    K = FiniteExtension(Poly(x**2 - 2, x, domain=ZZ[y]))
+    assert K.unify(ZZ) == K
+    assert K.unify(ZZ[x]) == K
+    assert K.unify(ZZ[y]) == K
+    assert K.unify(ZZ[x, y]) == K
+
+    Kz = FiniteExtension(Poly(x**2 - 2, x, domain=ZZ[y, z]))
+    assert K.unify(ZZ[z]) == Kz
+    assert K.unify(ZZ[x, z]) == Kz
+    assert K.unify(ZZ[y, z]) == Kz
+    assert K.unify(ZZ[x, y, z]) == Kz
+
+    Kx = FiniteExtension(Poly(x**2 - 2, x, domain=ZZ))
+    Ky = FiniteExtension(Poly(y**2 - 2, y, domain=ZZ))
+    Kxy = FiniteExtension(Poly(y**2 - 2, y, domain=Kx))
+    assert Kx.unify(Kx) == Kx
+    assert Ky.unify(Ky) == Ky
+    assert Kx.unify(Ky) == Kxy
+    assert Ky.unify(Kx) == Kxy
+
 def test_Domain_unify_with_symbols():
     raises(UnificationFailed, lambda: ZZ[x, y].unify_with_symbols(ZZ, (y, z)))
     raises(UnificationFailed, lambda: ZZ.unify_with_symbols(ZZ[x, y], (y, z)))
@@ -508,6 +561,23 @@ def test_Domain_convert():
     assert ZZ.convert(x - x, R.to_domain()) == 0
 
 
+def test_GlobalPolynomialRing_convert():
+    K1 = QQ.old_poly_ring(x)
+    K2 = QQ[x]
+    assert K1.convert(x) == K1.convert(K2.convert(x), K2)
+    assert K2.convert(x) == K2.convert(K1.convert(x), K1)
+
+    K1 = QQ.old_poly_ring(x, y)
+    K2 = QQ[x]
+    assert K1.convert(x) == K1.convert(K2.convert(x), K2)
+    #assert K2.convert(x) == K2.convert(K1.convert(x), K1)
+
+    K1 = ZZ.old_poly_ring(x, y)
+    K2 = QQ[x]
+    assert K1.convert(x) == K1.convert(K2.convert(x), K2)
+    #assert K2.convert(x) == K2.convert(K1.convert(x), K1)
+
+
 def test_PolynomialRing__init():
     R, = ring("", ZZ)
     assert ZZ.poly_ring() == R.to_domain()
@@ -523,6 +593,22 @@ def test_inject():
     assert ZZ[x].inject(y, z) == ZZ[x, y, z]
     assert ZZ.frac_field(x).inject(y, z) == ZZ.frac_field(x, y, z)
     raises(GeneratorsError, lambda: ZZ[x].inject(x))
+
+
+def test_drop():
+    assert ZZ.drop(x) == ZZ
+    assert ZZ[x].drop(x) == ZZ
+    assert ZZ[x, y].drop(x) == ZZ[y]
+    assert ZZ.frac_field(x).drop(x) == ZZ
+    assert ZZ.frac_field(x, y).drop(x) == ZZ.frac_field(y)
+    assert ZZ[x][y].drop(y) == ZZ[x]
+    assert ZZ[x][y].drop(x) == ZZ[y]
+    assert ZZ.frac_field(x)[y].drop(x) == ZZ[y]
+    assert ZZ.frac_field(x)[y].drop(y) == ZZ.frac_field(x)
+    Ky = FiniteExtension(Poly(x**2-1, x, domain=ZZ[y]))
+    K = FiniteExtension(Poly(x**2-1, x, domain=ZZ))
+    assert Ky.drop(y) == K
+    raises(GeneratorsError, lambda: Ky.drop(x))
 
 
 def test_Domain_map():

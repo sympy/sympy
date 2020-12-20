@@ -124,6 +124,14 @@ class PolynomialRing(Ring, CompositeDomain):
         else:
             return None
 
+    def from_GlobalPolynomialRing(K1, a, K0):
+        """Convert from old poly ring to ``dtype``. """
+        if K1.symbols == K0.gens:
+            ad = a.to_dict()
+            if K1.domain != K0.domain:
+                ad = {m: K1.domain.convert(c) for m, c in ad.items()}
+            return K1(ad)
+
     def get_field(self):
         """Returns a field associated with `self`. """
         return self.ring.to_field().to_domain()
