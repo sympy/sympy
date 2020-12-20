@@ -84,7 +84,7 @@ class Standard_Cartan(Basic):
 
     def omega_matrix(self):
         """
-        Returns the omega matrix, which rows are built from
+        Returns the omega matrix whose rows are built from
         the fundamental weights of the algebra in the orthogonal
         basis.
         """
@@ -98,7 +98,7 @@ class Standard_Cartan(Basic):
         raise NotImplementedError("Do not call this method directly from the base class.")
 
 
-    def simple_roots(self):
+    def simple_roots(self) -> list:
         """
         Returns the simple roots of the algebra.
         """
@@ -171,7 +171,7 @@ class Standard_Cartan(Basic):
             for r in self.orbit(i):
                 orbits.add(tuple(r))
 
-        zero_roots = [Matrix([0] * rank).T] * rank
+        zero_roots = [zeros(1, rank)] * rank
 
         orbits = [Matrix([[*i]]) * self.cocartan_matrix().T for i in orbits] + zero_roots
 

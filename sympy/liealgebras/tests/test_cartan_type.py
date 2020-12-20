@@ -1,3 +1,4 @@
+from sympy.core.numbers import Rational
 from sympy.liealgebras.cartan_type import CartanType
 from sympy.liealgebras.cartan_base import Standard_Cartan
 from sympy import eye, Matrix
@@ -23,7 +24,7 @@ def test_CartanType():
 
     c2 = CartanType("A2")
     assert c2.omega_matrix() == Matrix([
-                        ['2/3', '-1/3', '-1/3'],
-                        ['1/3',  '1/3', '-2/3']])
+                        [Rational(2,3), Rational(-1,3), Rational(-1,3)],
+                        [Rational(1,3),  Rational(1,3), Rational(-2,3)]])
 
-    assert c2.fundamental_weight(1) == Matrix([['2/3', '-1/3', '-1/3']])
+    assert c2.fundamental_weight(1) == Matrix([[Rational(2,3), Rational(-1,3), Rational(-1,3)]])
