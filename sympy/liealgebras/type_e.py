@@ -79,7 +79,10 @@ class TypeE(Standard_Cartan):
             root = e.row(i-1) - e.row(i)
         root = root.tolist()[0]
         if n != 8:
-            root[n-1] = sqrt(9-n) / 2
+            # in order to simplify the sum, we just use a static
+            # calculation and check whether this simple root has a
+            # nonzero index in the last index.
+            root[n-1] = sqrt(9-n) / 2 * int(root[n-1] != 0)
 
         return Matrix([root[:n]])
 
