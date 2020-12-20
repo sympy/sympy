@@ -1916,12 +1916,13 @@ class PrettyPrinter(Printer):
         _zZ = xobj('/', 1)
         rootsign = xobj('\\', 1) + _zZ
         # Make exponent number to put above it
+        #print(dir(expt))
         if isinstance(expt, Rational):
             exp = str(expt.q)
             if exp == '2':
                 exp = ''
         else:
-            exp = str(expt.args[0])
+            exp = str(expt.args[0]) if hasattr(expt, 'arg') else str(expt)
         exp = exp.ljust(2)
         if len(exp) > 2:
             rootsign = ' '*(len(exp) - 2) + rootsign
@@ -1954,7 +1955,7 @@ class PrettyPrinter(Printer):
             if e is S.NegativeOne:
                 return prettyForm("1")/self._print(b)
             n, d = fraction(e)
-            if n is S.One and d.is_Atom and not e.is_Integer and self._settings['root_notation']:
+            if n is S.One and d.is_Atom and not e.is_Integer and e.is_Rational and self._settings['root_notation']:
                 return self._print_nth_root(b, e)
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(Pow(b, -e, evaluate=False))

@@ -5942,7 +5942,11 @@ def test_PrettyPoly():
 
 def test_issue_6285():
     assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
-    assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
+    assert pretty(Pow(x, (1/pi))) == \
+    ' 1\n'\
+    ' ─\n'\
+    ' π\n'\
+    'x'
 
 
 def test_issue_6359():
@@ -7250,3 +7254,9 @@ def test_diffgeom():
     assert pretty(rect) == "rect"
     b = BaseScalarField(rect, 0)
     assert pretty(b) == "x"
+
+def test_issue_17616():
+    assert pretty(pi**(1/E)) == \
+   '  ⎛ -1⎞\n'\
+   '  ⎝ℯ  ⎠\n'\
+   ' π'
