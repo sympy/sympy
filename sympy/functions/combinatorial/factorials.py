@@ -518,7 +518,7 @@ class RisingFactorial(CombinatorialFunction):
     or visit http://mathworld.wolfram.com/RisingFactorial.html page.
 
     It can be extended to real values of `x` and `k` as follows:
-    
+
     * If `x \gt 0`, it is defined as -
     .. math:: rf(x, k) = \frac{\Gamma(x + k)}{\Gamma(x)}
 
@@ -690,7 +690,7 @@ class FallingFactorial(CombinatorialFunction):
     or visit http://mathworld.wolfram.com/FallingFactorial.html page.
 
     It can be extended to real values of `x` and `k` as follows:
-    
+
     * If `x \ge 0`, it is defined as -
     .. math:: ff(x, k) = \frac{\Gamma(x + 1)}{\Gamma(x - k + 1)}
 
