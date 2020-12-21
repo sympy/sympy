@@ -215,6 +215,8 @@ def tensordiagonal(array, *diagonal_axes):
     True
 
     """
+    if any([len(i) <= 1 for i in diagonal_axes]):
+        raise ValueError("need at least two axes to diagonalize")
     array, remaining_indices, remaining_shape, diagonal_deltas = _util_contraction_diagonal(array, *diagonal_axes)
 
     # Compute the diagonalized array:

@@ -278,6 +278,8 @@ def test_codegen_array_shape():
     raises(ValueError, lambda: CodegenArrayContraction(expr, (1, 2)))
     # Also diagonal needs the same dimensions:
     raises(ValueError, lambda: CodegenArrayDiagonal(expr, (1, 2)))
+    # Diagonal requires at least to axes to compute the diagonal:
+    raises(ValueError, lambda: CodegenArrayDiagonal(expr, (1,)))
 
 
 def test_codegen_array_parse_out_of_bounds():
@@ -379,21 +381,21 @@ def test_special_matrices():
 
 def test_push_indices_up_and_down():
 
-    indices = list(range(10))
+    indices = list(range(12))
 
-    contraction_indices = [(0, 6), (2, 8)]
-    assert CodegenArrayContraction._push_indices_down(contraction_indices, indices) == (1, 3, 4, 5, 7, 9, 10, 11, 12, 13)
-    assert CodegenArrayContraction._push_indices_up(contraction_indices, indices) == (None, 0, None, 1, 2, 3, None, 4, None, 5)
+    contr_diag_indices = [(0, 6), (2, 8)]
+    assert CodegenArrayContraction._push_indices_down(contr_diag_indices, indices) == (1, 3, 4, 5, 7, 9, 10, 11, 12, 13, 14, 15)
+    assert CodegenArrayContraction._push_indices_up(contr_diag_indices, indices) == (None, 0, None, 1, 2, 3, None, 4, None, 5, 6, 7)
 
-    assert CodegenArrayDiagonal._push_indices_down(contraction_indices, indices) == (0, 1, 2, 3, 4, 5, 7, 9, 10, 11)
-    assert CodegenArrayDiagonal._push_indices_up(contraction_indices, indices) == (0, 1, 2, 3, 4, 5, None, 6, None, 7)
+    assert CodegenArrayDiagonal._push_indices_down(contr_diag_indices, indices, 10) == (1, 3, 4, 5, 7, 9, (0, 6), (2, 8), None, None, None, None)
+    assert CodegenArrayDiagonal._push_indices_up(contr_diag_indices, indices, 10) == (6, 0, 7, 1, 2, 3, 6, 4, 7, 5, None, None)
 
-    contraction_indices = [(1, 2), (7, 8)]
-    assert CodegenArrayContraction._push_indices_down(contraction_indices, indices) == (0, 3, 4, 5, 6, 9, 10, 11, 12, 13)
-    assert CodegenArrayContraction._push_indices_up(contraction_indices, indices) == (0, None, None, 1, 2, 3, 4, None, None, 5)
+    contr_diag_indices = [(1, 2), (7, 8)]
+    assert CodegenArrayContraction._push_indices_down(contr_diag_indices, indices) == (0, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15)
+    assert CodegenArrayContraction._push_indices_up(contr_diag_indices, indices) == (0, None, None, 1, 2, 3, 4, None, None, 5, 6, 7)
 
-    assert CodegenArrayContraction._push_indices_down(contraction_indices, indices) == (0, 3, 4, 5, 6, 9, 10, 11, 12, 13)
-    assert CodegenArrayDiagonal._push_indices_up(contraction_indices, indices) == (0, 1, None, 2, 3, 4, 5, 6, None, 7)
+    assert CodegenArrayDiagonal._push_indices_down(contr_diag_indices, indices, 10) == (0, 3, 4, 5, 6, 9, (1, 2), (7, 8), None, None, None, None)
+    assert CodegenArrayDiagonal._push_indices_up(contr_diag_indices, indices, 10) == (0, 6, 6, 1, 2, 3, 4, 7, 7, 5, None, None)
 
 
 def test_recognize_diagonalized_vectors():
@@ -450,8 +452,7 @@ def test_recognize_diagonalized_vectors():
     assert cg.transform_to_product() == CodegenArrayContraction(CodegenArrayTensorProduct(DiagMatrix(x), I), (0, 2))
     assert recognize_matrix_expression(cg).doit() == DiagMatrix(x)
 
-    cg = CodegenArrayDiagonal(x, (1,))
-    assert cg == x
+    raises(ValueError, lambda: CodegenArrayDiagonal(x, (1,)))
 
     # Ignore identity matrices with contractions:
 
@@ -657,3 +658,37 @@ def test_permute_tensor_product():
         [0])
     cg2 = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, Q, Q), (0, 3, 5), (1, 4, 7), (2,), (6,))
     assert cg1 == cg2
+
+
+def test_normalize_diagonal_permutedims():
+    tp = CodegenArrayTensorProduct(M, Q, N, P)
+    expr = CodegenArrayDiagonal(
+        CodegenArrayPermuteDims(tp, [0, 1, 2, 4, 7, 6, 3, 5]), (2, 4, 5), (6, 7),
+        (0, 3))
+    result = CodegenArrayDiagonal(tp, (2, 6, 7), (3, 5), (0, 4))
+    assert expr == result
+
+    tp = CodegenArrayTensorProduct(M, N, P, Q)
+    expr = CodegenArrayDiagonal(CodegenArrayPermuteDims(tp, [0, 5, 2, 4, 1, 6, 3, 7]), (1, 2, 6), (3, 4))
+    result = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, P, N, Q), (3, 4, 5), (1, 2))
+    assert expr == result
+
+
+def test_normalize_diagonal_contraction():
+    tp = CodegenArrayTensorProduct(M, N, P, Q)
+    expr = CodegenArrayContraction(CodegenArrayDiagonal(tp, (1, 3, 4)), (0, 3))
+    result = CodegenArrayDiagonal(CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P, Q), (0, 6)), (0, 2, 3))
+    assert expr == result
+
+    expr = CodegenArrayContraction(CodegenArrayDiagonal(tp, (0, 1, 2, 3, 7)), (1, 2, 3))
+    result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P, Q), (0, 1, 2, 3, 5, 6, 7))
+    assert expr == result
+
+    expr = CodegenArrayContraction(CodegenArrayDiagonal(tp, (0, 2, 6, 7)), (1, 2, 3))
+    result = CodegenArrayDiagonal(CodegenArrayContraction(tp, (3, 4, 5)), (0, 2, 3, 4))
+    assert expr == result
+
+    td = CodegenArrayDiagonal(CodegenArrayTensorProduct(M, N, P, Q), (0, 3))
+    expr = CodegenArrayContraction(td, (2, 1), (0, 4, 6, 5, 3))
+    result = CodegenArrayContraction(CodegenArrayTensorProduct(M, N, P, Q), (0, 1, 3, 5, 6, 7), (2, 4))
+    assert expr == result
