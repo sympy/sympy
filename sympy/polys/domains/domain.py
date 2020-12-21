@@ -229,7 +229,7 @@ class Domain:
         return None
 
     def from_MonogenicFiniteExtension(K1, a, K0):
-        """Convert a ``EX`` object to ``dtype``. """
+        """Convert an ``ExtensionElement`` to ``dtype``. """
         return K1.convert_from(a.rep, K0.ring)
 
     def from_ExpressionDomain(K1, a, K0):
