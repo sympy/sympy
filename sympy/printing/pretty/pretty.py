@@ -1902,7 +1902,7 @@ class PrettyPrinter(Printer):
             return prettyForm.__mul__(*a)/prettyForm.__mul__(*b)
 
     # A helper function for _print_Pow to print x**(1/n)
-    def _print_nth_root(self, base, expt):
+    def _print_nth_root(self, base, expt, den_p):
         bpretty = self._print(base)
 
         # In very simple cases, use a single-char root sign
@@ -1922,7 +1922,9 @@ class PrettyPrinter(Printer):
             if exp == '2':
                 exp = ''
         else:
-            exp = str(expt.args[0]) if hasattr(expt, 'arg') else str(expt)
+            if den_p.height() > 1 or den_p.width() > 1:
+                return self._print(base)**self._print(expt)
+            exp = str(den_p)
         exp = exp.ljust(2)
         if len(exp) > 2:
             rootsign = ' '*(len(exp) - 2) + rootsign
@@ -1955,8 +1957,9 @@ class PrettyPrinter(Printer):
             if e is S.NegativeOne:
                 return prettyForm("1")/self._print(b)
             n, d = fraction(e)
-            if n is S.One and d.is_Atom and not e.is_Integer and e.is_Rational and self._settings['root_notation']:
-                return self._print_nth_root(b, e)
+            if n is S.One and d.is_Atom and not e.is_Integer and not e.is_irrational and self._settings['root_notation']:
+                den_p = self._print(d)
+                return self._print_nth_root(b, e, den_p)
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(Pow(b, -e, evaluate=False))
 

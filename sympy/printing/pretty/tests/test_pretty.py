@@ -5943,10 +5943,10 @@ def test_PrettyPoly():
 def test_issue_6285():
     assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
     assert pretty(Pow(x, (1/pi))) == \
-    ' 1\n'\
-    ' ─\n'\
-    ' π\n'\
-    'x'
+    ' 1 \n'\
+    ' --\n'\
+    ' pi\n'\
+    'x  '
 
 
 def test_issue_6359():
@@ -7256,7 +7256,47 @@ def test_diffgeom():
     assert pretty(b) == "x"
 
 def test_issue_17616():
-    assert pretty(pi**(1/E)) == \
-   '  ⎛ -1⎞\n'\
-   '  ⎝ℯ  ⎠\n'\
-   ' π'
+    assert pretty(pi**(1/exp(1))) == \
+   '  / -1\\\n'\
+   '  \e  /\n'\
+   'pi     '
+
+    assert upretty(pi**(1/exp(1))) == \
+   ' ⎛ -1⎞\n'\
+   ' ⎝ℯ  ⎠\n'\
+   'π     '
+
+    assert pretty(pi**(1/pi)) == \
+    '  1 \n'\
+    '  --\n'\
+    '  pi\n'\
+    'pi  '
+
+    assert upretty(pi**(1/pi)) == \
+    ' 1\n'\
+    ' ─\n'\
+    ' π\n'\
+    'π '
+
+    assert pretty(pi**(1/EulerGamma)) == \
+    '      1     \n'\
+    '  ----------\n'\
+    '  EulerGamma\n'\
+    'pi          '
+
+    assert upretty(pi**(1/EulerGamma)) == \
+    'γ ___\n'\
+    '╲╱ π '
+
+    z = Symbol("x_17")
+    assert upretty(7**(1/z)) == \
+    '  1 \n'\
+    ' ───\n'\
+    ' x₁₇\n'\
+    '7   '
+
+    assert pretty(7**(1/z)) == \
+    '  1  \n'\
+    ' ----\n'\
+    ' x_17\n'\
+    '7    '
