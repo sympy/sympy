@@ -234,17 +234,12 @@ class StochasticProcess(Basic):
                 raise ValueError("Expected a RandomIndexedSymbol or "
                                 "key not  %s"%(type(arg)))
 
-        t = Dummy('t')
-        dist = self.distribution(t)
-        if type(dist) is Distribution: # checks if there is any distribution available
-            return JointDistribution(*args)
-        if hasattr(dist, 'pdf'):
+        proc = args[0].pspace.process
+        if hasattr(proc, 'density'):
             density = Lambda(tuple(args),
-                    expr=Mul.fromiter(self.distribution(arg.key).pdf(arg) for arg in args))
-        elif hasattr(dist, 'pmf'):
-            density = Lambda(tuple(args),
-                    expr=Mul.fromiter(self.distribution(arg.key).pmf(arg) for arg in args))
-        return JointDistributionHandmade(density)
+                    expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
+            return JointDistributionHandmade(density)
+        return JointDistribution(*args)
 
     def expectation(self, condition, given_condition):
         raise NotImplementedError("Abstract method for expectation queries.")
