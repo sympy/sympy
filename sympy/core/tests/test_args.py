@@ -1830,6 +1830,21 @@ def test_sympy__stats__matrix_distributions__MatrixNormalDistribution():
     assert _test_args(MatrixNormalDistribution(L, S1, S2))
 
 
+def test_sympy__utilities__matchpy_connector__WildDot():
+    from sympy.utilities.matchpy_connector import WildDot
+    assert _test_args(WildDot("w_"))
+
+
+def test_sympy__utilities__matchpy_connector__WildPlus():
+    from sympy.utilities.matchpy_connector import WildPlus
+    assert _test_args(WildPlus("w__"))
+
+
+def test_sympy__utilities__matchpy_connector__WildStar():
+    from sympy.utilities.matchpy_connector import WildStar
+    assert _test_args(WildStar("w___"))
+
+
 def test_sympy__core__symbol__Str():
     from sympy.core.symbol import Str
     assert _test_args(Str('t'))
