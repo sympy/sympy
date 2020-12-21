@@ -30,9 +30,11 @@ class Beam:
        While solving a beam bending problem, a user should choose its
        own sign convention and should stick to it. The results will
        automatically follow the chosen sign convention. However, the
-       chosen sign convention must respect the rule that on the positive
-       axis side of the section, a force giving positive shear yields a
-       negative moment.
+       chosen sign convention must respect the rule that, on the positive
+       side of beam's axis (in respect to current section), a loading force
+       giving positive shear yields a negative moment, as below (the
+       curved arrow shows the positive moment and rotation):
+       image:: allowed-sign-conventions.png
 
     Examples
     ========
