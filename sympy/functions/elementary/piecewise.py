@@ -332,8 +332,9 @@ class Piecewise(Function):
     def _eval_derivative(self, x):
         return self.func(*[(diff(e, x), c) for e, c in self.args])
 
-    def _eval_evalf(self, prec):
-        return self.func(*[(e._evalf(prec), c) for e, c in self.args])
+    def _eval_evalf_options(self, prec, options):
+        from sympy.core.evalf import evalf_options
+        return self.func(*[(evalf_options(e, prec, options), c) for e, c in self.args])
 
     def piecewise_integrate(self, x, **kwargs):
         """Return the Piecewise with each expression being

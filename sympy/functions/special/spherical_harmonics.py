@@ -209,6 +209,10 @@ class Ynm(Function):
         return (re, im)
 
     def _eval_evalf(self, prec):
+        ''' `_eval_evalf_options` is not required here because `evalf` is
+        not being used here
+        '''
+
         # Note: works without this function by just calling
         #       mpmath for Legendre polynomials. But using
         #       the dedicated function directly is cleaner.

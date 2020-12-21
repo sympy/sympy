@@ -104,3 +104,4 @@ def test_dyadic_evalf():
     s = symbols('s')
     a = 5 * s * pi* (N.x | N.x)
     assert a.evalf(2) == Float('5', 2) * Float('3.1416', 2) * s * (N.x | N.x)
+    assert a.evalf(3, subs={s:1}) == Float('15.708', 3) * (N.x | N.x)

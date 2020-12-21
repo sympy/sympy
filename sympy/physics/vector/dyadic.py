@@ -1,5 +1,5 @@
 from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
-from sympy.core.evalf import EvalfMixin, prec_to_dps
+from sympy.core.evalf import EvalfMixin, evalf_options
 from sympy.printing.defaults import Printable
 
 __all__ = ['Dyadic']
@@ -529,13 +529,13 @@ class Dyadic(Printable, EvalfMixin):
     dot = __and__
     cross = __xor__
 
-    def _eval_evalf(self, prec):
+    def _eval_evalf_options(self, prec, options):
         if not self.args:
             return self
         new_args = []
         for inlist in self.args:
             new_inlist = list(inlist)
-            new_inlist[0] = inlist[0].evalf(n=prec_to_dps(prec))
+            new_inlist[0] = evalf_options(inlist[0], prec, options)
             new_args.append(tuple(new_inlist))
         return Dyadic(new_args)
 
