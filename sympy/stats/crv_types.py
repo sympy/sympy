@@ -2318,17 +2318,25 @@ def LogCauchy(name, x0, gamma):
     r"""
    Create a continuous random variable with a Log-Cauchy distribution.
     The density of the Log-Cauchy distribution is given by
+
     .. math::
         f(x) := \frac{1}{\pi x} \frac{\gamma}{(log(x)-\x0^2) + \gamma^2}
+
     Parameters
     ==========
+
     x0 : Real number, the location
+
     gamma : Real number, `\gamma > 0`, a scale
+
     Returns
     =======
+
     RandomSymbol
+
     Examples
     ========
+
     >>> from sympy.stats import  LogCauchy, density, cdf
     >>> from sympy import Symbol, S
 
@@ -2346,6 +2354,7 @@ def LogCauchy(name, x0, gamma):
 
     References
     ==========
+
     .. [1] https://en.wikipedia.org/wiki/Log-Cauchy_distribution
     """
 
