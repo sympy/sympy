@@ -259,6 +259,10 @@ class MonogenicFiniteExtension(Domain):
         rep = self.ring.convert(f, base)
         return ExtElem(rep % self.mod, self)
 
+    def convert_from(self, f, base):
+        rep = self.ring.convert(f, base)
+        return ExtElem(rep % self.mod, self)
+
     def to_sympy(self, f):
         return self.ring.to_sympy(f.rep)
 
