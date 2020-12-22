@@ -616,8 +616,11 @@ def pspace(expr):
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
     from sympy.stats.compound_rv import CompoundPSpace
+    from sympy.stats.mixture_rv import MixturePSpace
     for rv in rvs:
         if isinstance(rv.pspace, CompoundPSpace):
+            return rv.pspace
+        if isinstance(rv.pspace, MixturePSpace):
             return rv.pspace
     # Otherwise make a product space
     return IndependentProductPSpace(*[rv.pspace for rv in rvs])

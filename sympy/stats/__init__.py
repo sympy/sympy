@@ -144,6 +144,8 @@ __all__ = [
 
     'MatrixGamma', 'Wishart', 'MatrixNormal',
 
+    'Mixture', 'MixtureDistribution',
+
     'Probability', 'Expectation', 'Variance', 'Covariance', 'Moment',
     'CentralMoment',
 
@@ -192,6 +194,8 @@ from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         JointEigenDistribution, level_spacing_distribution)
 
 from .matrix_distributions import MatrixGamma, Wishart, MatrixNormal
+
+from .mixture_rv import Mixture, MixtureDistribution
 
 from .symbolic_probability import (Probability, Expectation, Variance,
         Covariance, Moment, CentralMoment)
