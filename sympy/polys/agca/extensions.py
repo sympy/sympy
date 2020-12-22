@@ -25,11 +25,8 @@ class ExtensionElement(DomainElement, DefaultPrinting):
         self.rep = rep
         self.ext = ext
 
-    def parent(self):
-        return self.ext
-
-    def is_ground(self):
-        return self.rep.is_ground
+    def parent(f):
+        return f.ext
 
     def __bool__(f):
         return bool(f.rep)
@@ -80,60 +77,89 @@ class ExtensionElement(DomainElement, DefaultPrinting):
         else:
             return NotImplemented
 
-    def __mod__(f, g):
-        rep = f._get_rep(g)
-        if rep is not None:
-            if not rep.is_ground:
-                msg = "mod is only defined over the ground domain"
-                raise NotImplementedError(msg)
-            return ExtElem(f.rep % rep, f.ext)
-        else:
-            return NotImplemented
-
     __rmul__ = __mul__
+
+    def _divcheck(f):
+        """Raise if division is not implemented for this divisor"""
+        if not f:
+            raise NotInvertible('Zero divisor')
+        elif f.ext.is_Field:
+            return True
+        elif f.rep.is_ground and f.ext.domain.is_unit(f.rep.rep[0]):
+            return True
+        else:
+            # Some cases like (2*x + 2)/2 over ZZ will fail here. It is
+            # unclear how to implement division in general if the ground
+            # domain is not a field so for now it was decided to restrict the
+            # implementation to division by invertible constants.
+            msg = (f"Can not invert {f} in {f.ext}. "
+                    "Only division by invertible constants is implemented.")
+            raise NotImplementedError(msg)
 
     def inverse(f):
         """Multiplicative inverse.
 
         Raises
         ======
+
         NotInvertible
             If the element is a zero divisor.
 
         """
-        if not f.ext.domain.is_Field:
-            raise NotImplementedError("base field expected")
-        return ExtElem(f.rep.invert(f.ext.mod), f.ext)
+        f._divcheck()
 
-    def _invrep(f, g):
-        rep = f._get_rep(g)
-        if rep is not None:
-            return rep.invert(f.ext.mod)
+        if f.ext.is_Field:
+            invrep = f.rep.invert(f.ext.mod)
         else:
-            return None
+            R = f.ext.ring
+            invrep = R.exquo(R.one, f.rep)
+
+        return ExtElem(invrep, f.ext)
 
     def __truediv__(f, g):
-        if not f.ext.domain.is_Field:
+        rep = f._get_rep(g)
+        if rep is None:
             return NotImplemented
-        try:
-            rep = f._invrep(g)
-        except NotInvertible:
-            raise ZeroDivisionError
+        g = ExtElem(rep, f.ext)
 
-        if rep is not None:
-            return f*ExtElem(rep, f.ext)
-        else:
-            return NotImplemented
+        try:
+            ginv = g.inverse()
+        except NotInvertible:
+            raise ZeroDivisionError(f"{f} / {g}")
+
+        return f * ginv
 
     __floordiv__ = __truediv__
 
     def __rtruediv__(f, g):
         try:
-            return f.ext.convert(g)/f
+            g = f.ext.convert(g)
         except CoercionFailed:
             return NotImplemented
+        return g / f
 
     __rfloordiv__ = __rtruediv__
+
+    def __mod__(f, g):
+        rep = f._get_rep(g)
+        if rep is None:
+            return NotImplemented
+        g = ExtElem(rep, f.ext)
+
+        try:
+            g._divcheck()
+        except NotInvertible:
+            raise ZeroDivisionError(f"{f} % {g}")
+
+        # Division where defined is always exact so there is no remainder
+        return f.ext.zero
+
+    def __rmod__(f, g):
+        try:
+            g = f.ext.convert(g)
+        except CoercionFailed:
+            return NotImplemented
+        return g % f
 
     def __pow__(f, n):
         if not isinstance(n, int):
@@ -243,6 +269,9 @@ class MonogenicFiniteExtension(Domain):
         self.symbol = self.ring.symbols[0]
         self.generator = self.convert(gen)
         self.basis = tuple(self.convert(gen**i) for i in range(self.rank))
+
+        # XXX: It might be necessary to check mod.is_irreducible here
+        self.is_Field = self.domain.is_Field
 
     def new(self, arg):
         rep = self.ring.convert(arg)

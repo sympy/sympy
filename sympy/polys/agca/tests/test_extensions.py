@@ -23,7 +23,8 @@ def test_FiniteExtension():
     assert i**2 != -1  # no coercion
     assert (2 + i)*(1 - i) == 3 - i
     assert (1 + i)**8 == A(16)
-    raises(NotImplementedError, lambda: A(1).inverse())
+    assert A(1).inverse() == A(1)
+    raises(NotImplementedError, lambda: A(2).inverse())
 
     # Finite field of order 27
     F = FiniteExtension(Poly(x**3 - x + 1, x, modulus=3))
