@@ -9,3 +9,4 @@
 
    intro.rst
    finite_diff_derivatives.rst
+   classification.rst

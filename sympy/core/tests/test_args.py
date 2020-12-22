@@ -52,6 +52,9 @@ def test_all_classes_are_tested():
                 cls = getattr(mod, name)
                 if hasattr(cls, '_sympy_deprecated_func'):
                     cls = cls._sympy_deprecated_func
+                if not isinstance(cls, type):
+                    # check instance of singleton class with same name
+                    cls = type(cls)
                 return issubclass(cls, Basic)
 
             names = list(filter(is_Basic, names))
