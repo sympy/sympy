@@ -246,7 +246,7 @@ Example 2
 ---------
 
 There is a beam of length 30 meters. A moment of magnitude 120 Nm is
-applied in the clockwise direction at the end of the beam. A point load
+applied in the counter-clockwise direction at the end of the beam. A point load
 of magnitude 8 N is applied from the top of the beam at the starting
 point. There are two simple supports below the beam. One at the end
 and another one at a distance of 10 meters from the start. The
