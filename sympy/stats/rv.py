@@ -162,8 +162,9 @@ class Distribution(Basic):
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
 
-    def pdf(self, *args):
-        return self.args[0](*args)
+    @property
+    def pdf(self):
+        return self.args[0]
 
     @property
     def set(self):
