@@ -28,6 +28,9 @@ class ExtensionElement(DomainElement, DefaultPrinting):
     def parent(self):
         return self.ext
 
+    def is_ground(self):
+        return self.rep.is_ground
+
     def __bool__(f):
         return bool(f.rep)
 
@@ -80,7 +83,10 @@ class ExtensionElement(DomainElement, DefaultPrinting):
     def __mod__(f, g):
         rep = f._get_rep(g)
         if rep is not None:
-            return ExtElem((f.rep % rep) % f.ext.mod, f.ext)
+            if not rep.is_ground:
+                msg = "mod is only defined over the ground domain"
+                raise NotImplementedError(msg)
+            return ExtElem(f.rep % rep, f.ext)
         else:
             return NotImplemented
 

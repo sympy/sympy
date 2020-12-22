@@ -57,7 +57,9 @@ def test_FiniteExtension():
     # Test mod
     K = FiniteExtension(Poly(x**3 + 1))
     xf = K(x)
-    assert (xf**2 - 1) % (xf - 1) == K.zero
+    assert (xf**2 - 1) % 1 == K.zero
+    raises(ZeroDivisionError, lambda: (xf**2 - 1) % 0)
+    raises(NotImplementedError, lambda: (xf**2 - 1) % (xf - 1))
 
     assert K.from_sympy(x) == xf
     assert K.to_sympy(xf) == x
