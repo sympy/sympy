@@ -2285,26 +2285,22 @@ def Levy(name, mu, c):
 
 
 class LogCauchyDistribution(SingleContinuousDistribution):
-    _argnames = ('x0', 'gamma')
+    _argnames = ('mu', 'sigma')
 
-    set = Interval(0, oo)
-
-    @property
-    def set(self):
-        return Interval(self.x0, self.b)
+    set = Interval.open(0, oo)
 
     @staticmethod
-    def check(x0, gamma):
-        _value_check(gamma > 0, "Scale parameter Gamma must be positive.")
-        _value_check(x0.is_real, "Location parameter must be real.")
+    def check(mu, sigma):
+        _value_check(sigma > 0, "Scale parameter Gamma must be positive.")
+        _value_check(mu.is_real, "Location parameter must be real.")
 
     def pdf(self, x):
-        x0, gamma = self.x0, self.gamma
-        return 1/(x*pi)*(gamma/((log(x) - x0)**2 + gamma**2))
+        mu, sigma = self.mu, self.sigma
+        return 1/(x*pi)*(sigma/((log(x) - mu)**2 + sigma**2))
 
     def _cdf(self, x):
-        x0, gamma = self.x0, self.gamma
-        return (1/pi)*atan((log(x) - x0)/gamma) + S.Half
+        mu, sigma = self.mu, self.sigma
+        return (1/pi)*atan((log(x) - mu)/sigma) + S.Half
 
     def _characteristic_function(self, t):
         raise NotImplementedError("The characteristic function for the "
@@ -2314,20 +2310,20 @@ class LogCauchyDistribution(SingleContinuousDistribution):
         raise NotImplementedError("The moment generating function for the "
                                   "Log-Cauchy distribution does not exist.")
 
-def LogCauchy(name, x0, gamma):
+def LogCauchy(name, mu, sigma):
     r"""
-   Create a continuous random variable with a Log-Cauchy distribution.
+    Create a continuous random variable with a Log-Cauchy distribution.
     The density of the Log-Cauchy distribution is given by
 
     .. math::
-        f(x) := \frac{1}{\pi x} \frac{\gamma}{(log(x)-\x0^2) + \gamma^2}
+        f(x) := \frac{1}{\pi x} \frac{\sigma}{(log(x)-\mu^2) + \sigma^2}
 
     Parameters
     ==========
 
-    x0 : Real number, the location
+    mu : Real number, the location
 
-    gamma : Real number, `\gamma > 0`, a scale
+    sigma : Real number, `\sigma > 0`, a scale
 
     Returns
     =======
@@ -2340,11 +2336,11 @@ def LogCauchy(name, x0, gamma):
     >>> from sympy.stats import  LogCauchy, density, cdf
     >>> from sympy import Symbol, S
 
-    >>> x0 = 2
-    >>> gamma = S.One / 5
+    >>> mu = 2
+    >>> sigma = S.One / 5
     >>> z = Symbol("z")
 
-    >>> X = LogCauchy("x", x0, gamma)
+    >>> X = LogCauchy("x", mu, sigma)
 
     >>> density(X)(z)
     1/(5*pi*z*((log(z) - 2)**2 + 1/25))
@@ -2358,7 +2354,9 @@ def LogCauchy(name, x0, gamma):
     .. [1] https://en.wikipedia.org/wiki/Log-Cauchy_distribution
     """
 
-    return rv(name, LogCauchyDistribution, (x0, gamma))
+    return rv(name, LogCauchyDistribution, (mu, sigma))
+
+
 #-------------------------------------------------------------------------------
 # Logistic distribution --------------------------------------------------------
 

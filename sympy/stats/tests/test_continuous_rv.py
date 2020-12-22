@@ -843,13 +843,13 @@ def test_levy():
     raises(ValueError, lambda: Levy('x',mu,c))
 
 def test_logcauchy():
-    x0 = Symbol("s" , positive=True)
-    gamma = Symbol("gamma" , positive=True)
+    mu = Symbol("mu" , positive=True)
+    sigma = Symbol("sigma" , positive=True)
 
-    X = LogCauchy("x", x0, gamma)
+    X = LogCauchy("x", mu, sigma)
 
-    assert density(X)(x) == gamma/(x*pi*(gamma**2 + (-x0 + log(x))**2))
-    assert cdf(X)(x) == atan((log(x) - x0)/gamma)/pi + S.Half
+    assert density(X)(x) == sigma/(x*pi*(sigma**2 + (-mu + log(x))**2))
+    assert cdf(X)(x) == atan((log(x) - mu)/sigma)/pi + S.Half
 
 
 def test_logistic():
