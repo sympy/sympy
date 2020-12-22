@@ -1957,7 +1957,8 @@ class PrettyPrinter(Printer):
             if e is S.NegativeOne:
                 return prettyForm("1")/self._print(b)
             n, d = fraction(e)
-            if n is S.One and d.is_Atom and not e.is_Integer and not e.is_irrational and self._settings['root_notation']:
+            if n is S.One and d.is_Atom and not e.is_Integer and (e.is_Rational or d.is_Symbol)\
+                    and self._settings['root_notation']:
                 den_p = self._print(d)
                 return self._print_nth_root(b, e, den_p)
             if e.is_Rational and e < 0:

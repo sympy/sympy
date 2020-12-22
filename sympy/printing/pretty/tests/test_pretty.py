@@ -7285,8 +7285,10 @@ def test_issue_17616():
     'pi          '
 
     assert upretty(pi**(1/EulerGamma)) == \
-    'γ ___\n'\
-    '╲╱ π '
+    ' 1\n'\
+    ' ─\n'\
+    ' γ\n'\
+    'π '
 
     z = Symbol("x_17")
     assert upretty(7**(1/z)) == \
