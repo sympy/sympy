@@ -67,6 +67,13 @@ class PolynomialRing(Ring, CompositeDomain):
             (self.dtype.ring, self.domain, self.symbols) == \
             (other.dtype.ring, other.domain, other.symbols)
 
+    def is_unit(self, a):
+        """Returns ``True`` if ``a`` is a unit of ``self``"""
+        if not a.is_ground:
+            return False
+        K = self.domain
+        return K.is_unit(K.convert_from(a, self))
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         return a.as_expr()
