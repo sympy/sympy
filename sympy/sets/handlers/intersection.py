@@ -1,5 +1,5 @@
 from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
-                   EmptySet, FiniteSet, Union, ComplexRegion)
+                   EmptySet, FiniteSet, Union, ComplexRegion, Max, Min)
 from sympy.multipledispatch import dispatch
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
@@ -384,9 +384,31 @@ def intersection_sets(a, b): # noqa:F811
         if l.is_real or l in infty or r.is_real or r in infty:
             return b
 
-    # We can't intersect [0,3] with [x,6] -- we don't know if x>0 or x<0
     if not a._is_comparable(b):
-        return None
+        if a.left_open == b.left_open and a.right_open == b.right_open:
+            return Interval(Max(a.start, b.start), Min(a.end, b.end), a.left_open, a.right_open)
+        elif a.left_open != b.left_open and a.right_open == b.right_open:
+            if a.start > b.start:
+                return Interval(a.start, Min(a.end, b.end), a.left_open, a.right_open)
+            else:
+                return Interval(b.start, Min(a.end, b.end), b.left_open, b.right_open)
+        elif a.left_open == b.left_open and a.right_open != b.right_open:
+            if a.end > b.end:
+                return Interval(Max(a.start, b.start), b.end, a.left_open, b.right_open)
+            else:
+                return Interval(Max(a.start, b.start), a.end, a.left_open, a.right_open)
+        else:
+            start = Max(a.start, b.start)
+            end = Min(a.end, b.end)
+            if a.start > b.start:
+                left = a.left_open
+            else:
+                left = b.left_open
+            if a.end > b.end:
+                right = b.right_open
+            else:
+                right = a.right_open
+            return Interval(start, end, left, right)
 
     empty = False
 
