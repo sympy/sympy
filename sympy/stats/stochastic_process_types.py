@@ -183,6 +183,9 @@ class StochasticProcess(Basic):
             self._deprecation_warn_distribution()
         return Distribution()
 
+    def density(self, x):
+        return None
+
     def __call__(self, time):
         """
         Overridden in ContinuousTimeStochasticProcess.
@@ -234,12 +237,12 @@ class StochasticProcess(Basic):
                 raise ValueError("Expected a RandomIndexedSymbol or "
                                 "key not  %s"%(type(arg)))
 
-        proc = args[0].pspace.process
-        if hasattr(proc, 'density'):
-            density = Lambda(tuple(args),
-                    expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
-            return JointDistributionHandmade(density)
-        return JointDistribution(*args)
+        density = self.density(args[0])
+        if density is None:
+            return JointDistribution(*args)
+        density = Lambda(tuple(args),
+                expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
+        return JointDistributionHandmade(density)
 
     def expectation(self, condition, given_condition):
         raise NotImplementedError("Abstract method for expectation queries.")
