@@ -520,9 +520,11 @@ class RisingFactorial(CombinatorialFunction):
     It can be extended to real values of `x` and `k` as follows:
 
     * If `x \gt 0`, it is defined as -
+
     .. math:: rf(x, k) = \frac{\Gamma(x + k)}{\Gamma(x)}
 
     * If `x \le 0`, it is defined as -
+
     .. math:: rf(x, k) = (-1)^k \frac{\Gamma(1 - x)}{\Gamma(-x - y - 1)}
 
     When `x` is a Poly instance of degree >= 1 with a single variable,
@@ -692,9 +694,11 @@ class FallingFactorial(CombinatorialFunction):
     It can be extended to real values of `x` and `k` as follows:
 
     * If `x \ge 0`, it is defined as -
+
     .. math:: ff(x, k) = \frac{\Gamma(x + 1)}{\Gamma(x - k + 1)}
 
     * If `x \lt 0`, it is defined as -
+
     .. math:: ff(x, k) = (-1)^k \frac{\Gamma(k - x)}{\Gamma(-x)}
 
     When `x` is a Poly instance of degree >= 1 with single variable,
