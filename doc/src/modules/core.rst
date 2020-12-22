@@ -59,17 +59,17 @@ expr
 .. module:: sympy.core.expr
 
 Expr
-^^^^
+----
 .. autoclass:: Expr
    :members:
 
 UnevaluatedExpr
-^^^^^^^^^^^^^^^
+---------------
 .. autoclass:: UnevaluatedExpr
    :members:
 
 AtomicExpr
-^^^^^^^^^^
+----------
 .. autoclass:: AtomicExpr
    :members:
 
