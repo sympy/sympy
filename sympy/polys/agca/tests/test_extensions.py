@@ -1,9 +1,9 @@
-from sympy.polys import QQ
+from sympy.polys import QQ, ZZ
 from sympy.polys.polytools import Poly
 from sympy.polys.polyerrors import NotInvertible
 from sympy.polys.agca.extensions import FiniteExtension
 from sympy.testing.pytest import raises
-from sympy.abc import x, t
+from sympy.abc import x, y, t
 
 
 def test_FiniteExtension():
@@ -55,25 +55,60 @@ def test_FiniteExtension():
     assert ((y + x)*(y - x)).inverse() == K(c)
     assert (y + x)*(y - x)*c == K(1)  # explicit inverse of y + x
 
+
+def test_FiniteExtension_eq_hash():
+    # Test eq and hash
+    p1 = Poly(x**2 - 2, x, domain=ZZ)
+    p2 = Poly(x**2 - 2, x, domain=QQ)
+    K1 = FiniteExtension(p1)
+    K2 = FiniteExtension(p2)
+    assert K1 == FiniteExtension(Poly(x**2 - 2))
+    assert K2 != FiniteExtension(Poly(x**2 - 2))
+    assert len({K1, K2, FiniteExtension(p1)}) == 2
+
+
+def test_FiniteExtension_mod():
     # Test mod
-    K = FiniteExtension(Poly(x**3 + 1))
+    K = FiniteExtension(Poly(x**3 + 1, x, domain=QQ))
     xf = K(x)
     assert (xf**2 - 1) % 1 == K.zero
+    assert 1 % (xf**2 - 1) == K.zero
+    assert (xf**2 - 1) / (xf - 1) == xf + 1
+    assert (xf**2 - 1) // (xf - 1) == xf + 1
+    assert (xf**2 - 1) % (xf - 1) == K.zero
     raises(ZeroDivisionError, lambda: (xf**2 - 1) % 0)
+    raises(TypeError, lambda: xf % [])
+    raises(TypeError, lambda: [] % xf)
+
+    # Test mod over ring
+    K = FiniteExtension(Poly(x**3 + 1, x, domain=ZZ))
+    xf = K(x)
+    assert (xf**2 - 1) % 1 == K.zero
     raises(NotImplementedError, lambda: (xf**2 - 1) % (xf - 1))
 
+
+def test_FiniteExtension_from_sympy():
+    # Test to_sympy/from_sympy
+    K = FiniteExtension(Poly(x**3 + 1, x, domain=ZZ))
+    xf = K(x)
     assert K.from_sympy(x) == xf
     assert K.to_sympy(xf) == x
 
+
+def test_FiniteExtension_set_domain():
     KZ = FiniteExtension(Poly(x**2 + 1, x, domain='ZZ'))
     KQ = FiniteExtension(Poly(x**2 + 1, x, domain='QQ'))
     assert KZ.set_domain(QQ) == KQ
 
+
+def test_FiniteExtension_exquo():
     # Test exquo
     K = FiniteExtension(Poly(x**4 + 1))
     xf = K(x)
     assert K.exquo(xf**2 - 1, xf - 1) == xf + 1
 
+
+def test_FiniteExtension_convert():
     # Test from_MonogenicFiniteExtension
     K1 = FiniteExtension(Poly(x**2 + 1))
     K2 = QQ[x]
@@ -83,3 +118,49 @@ def test_FiniteExtension():
 
     K = FiniteExtension(Poly(x**2 - 1, domain=QQ))
     assert K.convert_from(QQ(1, 2), QQ) == K.one/2
+
+
+def test_FiniteExtension_division_ring():
+    # Test division in FiniteExtension over a ring
+    KQ = FiniteExtension(Poly(x**2 - 1, x, domain=QQ))
+    KZ = FiniteExtension(Poly(x**2 - 1, x, domain=ZZ))
+    KQt = FiniteExtension(Poly(x**2 - 1, x, domain=QQ[t]))
+    KQtf = FiniteExtension(Poly(x**2 - 1, x, domain=QQ.frac_field(t)))
+    assert KQ.is_Field is True
+    assert KZ.is_Field is False
+    assert KQt.is_Field is False
+    assert KQtf.is_Field is True
+    for K in KQ, KZ, KQt, KQtf:
+        xK = K.convert(x)
+        assert xK / K.one == xK
+        assert xK // K.one == xK
+        assert xK % K.one == K.zero
+        raises(ZeroDivisionError, lambda: xK / K.zero)
+        raises(ZeroDivisionError, lambda: xK // K.zero)
+        raises(ZeroDivisionError, lambda: xK % K.zero)
+        if K.is_Field:
+            assert xK / xK == K.one
+            assert xK // xK == K.one
+            assert xK % xK == K.zero
+        else:
+            raises(NotImplementedError, lambda: xK / xK)
+            raises(NotImplementedError, lambda: xK // xK)
+            raises(NotImplementedError, lambda: xK % xK)
+
+
+def test_FiniteExtension_Poly():
+    K = FiniteExtension(Poly(x**2 - 2))
+    p = Poly(x, y, domain=K)
+    assert p.domain == K
+    assert p.as_expr() == x
+    assert (p**2).as_expr() == 2
+
+    K = FiniteExtension(Poly(x**2 - 2, x, domain=QQ))
+    K2 = FiniteExtension(Poly(t**2 - 2, t, domain=K))
+    assert str(K2) == 'QQ[x]/(x**2 - 2)[t]/(t**2 - 2)'
+
+    eK = K2.convert(x + t)
+    assert K2.to_sympy(eK) == x + t
+    assert K2.to_sympy(eK ** 2) == 4 + 2*x*t
+    p = Poly(x + t, y, domain=K2)
+    assert p**2 == Poly(4 + 2*x*t, y, domain=K2)
