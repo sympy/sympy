@@ -537,17 +537,19 @@ def MatrixStudentT(symbol, nu,location_matrix, scale_matrix_1, scale_matrix_2):
     RandomSymbol
     Examples
     ========
-    >>> from sympy.stats import density, MatrixGamma
-    >>> from sympy import MatrixSymbol, symbols
-    >>> a, b = symbols('a b', positive=True)
-    >>> M = MatrixGamma('M', a, b, [[2, 1], [1, 2]])
-    >>> X = MatrixSymbol('X', 2, 2)
-    >>> density(M)(X).doit()
-    3**(-a)*b**(-2*a)*exp(Trace(Matrix([
-    [-2/3,  1/3],
-    [ 1/3, -2/3]])*X)/b)*Determinant(X)**(a - 3/2)/(sqrt(pi)*gamma(a)*gamma(a - 1/2))
-    >>> density(M)([[1, 0], [0, 1]]).doit()
-    3**(-a)*b**(-2*a)*exp(-4/(3*b))/(sqrt(pi)*gamma(a)*gamma(a - 1/2))
+
+    >>> from sympy import MatrixSymbol,symbols
+    >>> from sympy.stats import density, MatrixStudentT
+    >>> v = symbols('v',positive=True)
+    >>> M = MatrixStudentT('M', v, [[1, 2]], [[1, 0], [0, 1]], [1])
+    >>> X = MatrixSymbol('X', 1, 2)
+    >>> density(M)(X)
+    pi**(-1.0)*gamma(v/2 + 1)*Determinant((Matrix([[-1, -2]]) + X)*(Matrix([
+    [-1],
+    [-2]]) + X.T) + Matrix([[1]]))**(-v/2 - 1)*Determinant(Matrix([[1]]))**(-1.0)*Determinant(Matrix([
+    [1, 0],
+    [0, 1]]))**(-0.5)/gamma(v/2)
+
     References
     ==========
     .. [1] https://en.wikipedia.org/wiki/Matrix_t-distribution
