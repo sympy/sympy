@@ -42,6 +42,7 @@ QuadraticU
 RaisedCosine
 Rayleigh
 Reciprocal
+Rician
 ShiftedGompertz
 StudentT
 Trapezoidal
@@ -61,7 +62,7 @@ from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
                    Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I, asin,
-                   hyper, uppergamma, sinh, Ne, expint, Rational, integrate)
+                   hyper, uppergamma, sinh, Ne, expint, Rational, integrate, marcumq)
 from sympy.matrices import MatrixBase, MatrixExpr
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
 from sympy.stats.rv import _value_check, is_random
@@ -109,6 +110,7 @@ __all__ = ['ContinuousRV',
 'RaisedCosine',
 'Rayleigh',
 'Reciprocal',
+'Rician',
 'StudentT',
 'ShiftedGompertz',
 'Trapezoidal',
@@ -3550,6 +3552,65 @@ def Reciprocal(name, a, b):
     """
     return rv(name, ReciprocalDistribution, (a, b))
 
+#-------------------------------------------------------------------------------
+# Rician distribution --------------------------------------------------------
+
+class RicianDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'beta')
+
+    @property
+    def set(self):
+        return Interval(0, oo)
+
+    @staticmethod
+    def check(alpha, beta):
+        _value_check(alpha > 0, "Shape parameter alpha must be positive.")
+        _value_check(beta > 0, "Shape parameter beta must be positive.")
+
+    def cdf(self, x):
+        alpha, beta = self.alpha, self.beta
+        return marcumq(1, alpha/beta, x/beta)
+
+    def pdf(self, x):
+        alpha, beta = self.alpha, self.beta
+        return exp(-(x**2 + alpha**2)/(2*beta**2)) * x * besseli(0, (x*alpha)/(beta**2))
+
+def Rician(name, alpha, beta):
+    r"""Creates a continuous random variable with a Rician distribution.
+
+
+    Parameters
+    ==========
+
+    alpha : Real number, :math:`0 < alpha`
+    beta : Real number, :math:`0 < beta`
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Rician, density, cdf
+    >>> from sympy import symbols
+    >>> alpha, beta, x = symbols('alpha, beta, x', positive=True)
+    >>> R = Rician('R', alpha, beta)
+
+    >>> density(R)(x)
+    x*exp((-alpha**2 - x**2)/(2*beta**2))*besseli(0, alpha*x/beta**2)
+    >>> cdf(R)(x)
+    marcumq(1, alpha/beta, x/beta)
+
+    Reference
+    =========
+
+    .. [1] https://en.wikipedia.org/wiki/Rice_distribution
+    .. [1] https://reference.wolfram.com/language/ref/RiceDistribution.html
+
+    """
+    return rv(name, RicianDistribution, (alpha, beta))
 
 #-------------------------------------------------------------------------------
 # Shifted Gompertz distribution ------------------------------------------------

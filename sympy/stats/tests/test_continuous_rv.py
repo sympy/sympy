@@ -4,7 +4,7 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re, Lambda, asin,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
-                   factorial, binomial, erfi, besselj, besselk)
+                   factorial, binomial, erfi, besselj, besselk, marcumq)
 from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
@@ -16,7 +16,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
                          LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
-                         Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
+                         Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, Rician, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile,
                          Lomax, BoundedPareto)
@@ -1135,6 +1135,14 @@ def test_reciprocal():
     a = symbols('a', positive=True)
     b = symbols('b', positive=True)
     raises(ValueError, lambda: Reciprocal('x', a + b, a))
+
+def test_rician():
+    alpha = Symbol("alpha", real=True)
+    beta = Symbol("beta", real=True)
+
+    X = Rician('x', alpha, beta)
+    assert cdf(X)(x) == marcumq(1, alpha/beta, x/beta)
+    assert density(R)(x) == x*exp((-alpha**2 - x**2)/(2*beta**2))*besseli(0, alpha*x/beta**2)
 
 def test_shiftedgompertz():
     b = Symbol("b", positive=True)

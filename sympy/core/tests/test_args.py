@@ -1536,6 +1536,10 @@ def test_sympy__stats__crv_types__ReciprocalDistribution():
     from sympy.stats.crv_types import ReciprocalDistribution
     assert _test_args(ReciprocalDistribution(5, 30))
 
+def test_sympy__stats__crv_types__RicianDistribution():
+    from sympy.stats.crv_types import RicianDistribution
+    assert _test_args(RicianDistribution(4, 6))
+
 def test_sympy__stats__crv_types__ShiftedGompertzDistribution():
     from sympy.stats.crv_types import ShiftedGompertzDistribution
     assert _test_args(ShiftedGompertzDistribution(1, 1))
