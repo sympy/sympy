@@ -125,6 +125,9 @@ class _WildAbstract(Wildcard, Symbol):
     def __copy__(self) -> '_WildAbstract':
         return type(self)(variable_name=self.variable_name, optional=self.optional)
 
+    def __repr__(self):
+        return str(self)
+
 
 @doctest_depends_on(modules=('matchpy',))
 class WildDot(_WildAbstract):

@@ -6,6 +6,7 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
     AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
 from sympy.core import Expr, Mul
+from sympy.external import import_module
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.units import second, joule
 from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
@@ -714,6 +715,26 @@ def test_wild_str():
     assert str(1/w + 1) == '1 + 1/x_'
     assert str(w**2 + 1) == 'x_**2 + 1'
     assert str(1/(1 - w)) == '1/(1 - x_)'
+
+
+def test_wild_matchpy():
+    from sympy.utilities.matchpy_connector import WildDot, WildPlus, WildStar
+
+    matchpy = import_module("matchpy")
+
+    if matchpy is None:
+        return
+
+    wd = WildDot('w')
+    wp = WildPlus('w')
+    ws = WildStar('w')
+
+    assert str(wd) == 'w_'
+    assert str(wp) == 'w__'
+    assert str(ws) == 'w___'
+
+    assert str(wp/ws + 2**wd) == '2**w_ + w__/w___'
+    assert str(sin(wd)*cos(wp)*sqrt(ws)) == 'sqrt(w___)*sin(w_)*cos(w__)'
 
 
 def test_zeta():
