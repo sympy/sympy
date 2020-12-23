@@ -10,11 +10,8 @@ complete source code files.
 
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
-from sympy.codegen.ast import Assignment
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.mul import _keep_coeff
 from sympy.printing.codeprinter import CodePrinter
@@ -92,7 +89,7 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def __init__(self, settings={}):
-        super(OctaveCodePrinter, self).__init__(settings)
+        super().__init__(settings)
         self.known_functions = dict(zip(known_fcns_src1, known_fcns_src1))
         self.known_functions.update(dict(known_fcns_src2))
         userfuncs = settings.get('user_functions', {})
@@ -108,11 +105,11 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _get_comment(self, text):
-        return "% {0}".format(text)
+        return "% {}".format(text)
 
 
     def _declare_number_const(self, name, value):
-        return "{0} = {1};".format(name, value)
+        return "{} = {};".format(name, value)
 
 
     def _format_code(self, lines):
@@ -215,7 +212,7 @@ class OctaveCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Pow(self, expr):
         powsymbol = '^' if all([x.is_number for x in expr.args]) else '.^'
@@ -266,6 +263,7 @@ class OctaveCodePrinter(CodePrinter):
 
 
     def _print_Assignment(self, expr):
+        from sympy.codegen.ast import Assignment
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.tensor.indexed import IndexedBase
         # Copied from codeprinter, but remove special MatrixSymbol treatment
@@ -349,20 +347,6 @@ class OctaveCodePrinter(CodePrinter):
         AIJ = Matrix([[k[2] for k in L]])
         return "sparse(%s, %s, %s, %s, %s)" % (self._print(I), self._print(J),
                                             self._print(AIJ), A.rows, A.cols)
-
-
-    # FIXME: Str/CodePrinter could define each of these to call the _print
-    # method from higher up the class hierarchy (see _print_NumberSymbol).
-    # Then subclasses like us would not need to repeat all this.
-    _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
-    _print_MutableSparseMatrix = \
-        _print_ImmutableSparseMatrix = \
-        _print_SparseMatrix
 
 
     def _print_MatrixElement(self, expr):

@@ -24,7 +24,11 @@ from sympy.solvers.solveset import solveset
 import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):
-    r"""Represents unevaluated summation.
+    r"""
+    Represents unevaluated summation.
+
+    Explanation
+    ===========
 
     ``Sum`` represents a finite or infinite series, with the first argument
     being the general form of terms in the series, and the second argument
@@ -269,6 +273,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Differentiate wrt x as long as x is not in the free symbols of any of
         the upper or lower limits.
 
+        Explanation
+        ===========
+
         Sum(a*b*x, (x, 1, a)) can be differentiated wrt x or b but not `a`
         since the value of the sum is discontinuous in `a`. In a case
         involving a limit variable, the unevaluated derivative is returned.
@@ -344,7 +351,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         return factor_sum(result, limits=self.limits)
 
     def is_convergent(self):
-        r"""Checks for the convergence of a Sum.
+        r"""
+        Checks for the convergence of a Sum.
+
+        Explanation
+        ===========
 
         We divide the study of convergence of infinite sums and products in
         two parts.
@@ -419,7 +430,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sym = self.limits[0][0]
         lower_limit = self.limits[0][1]
         upper_limit = self.limits[0][2]
-        sequence_term = self.function
+        sequence_term = self.function.simplify()
 
         if len(sequence_term.free_symbols) > 1:
             raise NotImplementedError("convergence checking for more than one symbol "
@@ -455,9 +466,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ###  -------- Divergence test ----------- ###
         try:
-            lim_val = limit_seq(sequence_term, sym)
-            if lim_val is not None and lim_val.is_zero is False:
-                return S.false
+           lim_val = limit_seq(sequence_term, sym)
+           if lim_val is not None and lim_val.is_zero is False:
+               return S.false
         except NotImplementedError:
             pass
 
@@ -508,7 +519,22 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 if abs(lim_ratio) < 1:
                     return S.true
         except NotImplementedError:
-            pass
+            lim_ratio = None
+
+        ### ---------- Raabe's test -------------- ###
+        if lim_ratio == 1:  # ratio test inconclusive
+            test_val = sym*(sequence_term/
+                         sequence_term.subs(sym, sym + 1) - 1)
+            test_val = test_val.gammasimp()
+            try:
+                lim_val = limit_seq(test_val, sym)
+                if lim_val is not None and lim_val.is_number:
+                    if lim_val > 1:
+                        return S.true
+                    if lim_val < 1:
+                        return S.false
+            except NotImplementedError:
+                pass
 
         ### ----------- root test ---------------- ###
         # lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
@@ -526,7 +552,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         dict_val = sequence_term.match((-1)**(sym + p)*q)
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true
-
 
         ### ------------- integral test -------------- ###
         check_interval = None
@@ -751,8 +776,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         """
         Reverse the order of a limit in a Sum.
 
-        Usage
-        =====
+        Explanation
+        ===========
 
         ``reverse_order(self, *indices)`` reverses some limits in the expression
         ``self`` which can be either a ``Sum`` or a ``Product``. The selectors in
@@ -831,6 +856,9 @@ def summation(f, *symbols, **kwargs):
     r"""
     Compute the summation of f with respect to symbols.
 
+    Explanation
+    ===========
+
     The notation for symbols is similar to the notation used in Integral.
     summation(f, (i, a, b)) computes the sum of f with respect to i from a to b,
     i.e.,
@@ -846,6 +874,9 @@ def summation(f, *symbols, **kwargs):
 
     If it cannot compute the sum, it returns an unevaluated Sum object.
     Repeated sums can be computed by introducing additional symbols tuples::
+
+    Examples
+    ========
 
     >>> from sympy import summation, oo, symbols, log
     >>> i, n, m = symbols('i n m', integer=True)
@@ -875,13 +906,18 @@ def summation(f, *symbols, **kwargs):
 
 
 def telescopic_direct(L, R, n, limits):
-    """Returns the direct summation of the terms of a telescopic sum
+    """
+    Returns the direct summation of the terms of a telescopic sum
+
+    Explanation
+    ===========
 
     L is the term with lower index
     R is the term with higher index
     n difference between the indexes of L and R
 
-    For example:
+    Examples
+    ========
 
     >>> from sympy.concrete.summations import telescopic_direct
     >>> from sympy.abc import k, a, b
@@ -897,9 +933,10 @@ def telescopic_direct(L, R, n, limits):
 
 
 def telescopic(L, R, limits):
-    '''Tries to perform the summation using the telescopic property
+    '''
+    Tries to perform the summation using the telescopic property.
 
-    return None if not possible
+    Return None if not possible.
     '''
     (i, a, b) = limits
     if L.is_Add or R.is_Add:

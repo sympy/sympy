@@ -1,13 +1,13 @@
 """Sparse polynomial rings. """
 
-from __future__ import print_function, division
 
 from typing import Any, Dict
 
 from operator import add, mul, lt, le, gt, ge
+from functools import reduce
 from types import GeneratorType
 
-from sympy.core.compatibility import is_sequence, reduce
+from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
 from sympy.core.numbers import igcd, oo
 from sympy.core.symbol import Symbol, symbols as _symbols
@@ -164,10 +164,12 @@ def sring(exprs, *symbols, **options):
     reps, opt = _parallel_dict_from_expr(exprs, opt)
 
     if opt.domain is None:
-        # NOTE: this is inefficient because construct_domain() automatically
-        # performs conversion to the target domain. It shouldn't do this.
         coeffs = sum([ list(rep.values()) for rep in reps ], [])
-        opt.domain, _ = construct_domain(coeffs, opt=opt)
+
+        opt.domain, coeffs_dom = construct_domain(coeffs, opt=opt)
+
+        coeff_map = dict(zip(coeffs, coeffs_dom))
+        reps = [{m: coeff_map[c] for m, c in rep.items()} for rep in reps]
 
     _ring = PolyRing(opt.gens, opt.domain, opt.order)
     polys = list(map(_ring.from_dict, reps))
@@ -790,17 +792,17 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         zm = ring.zero_monom
         sexpvs = []
         for expv, coeff in self.terms():
-            positive = ring.domain.is_positive(coeff)
-            sign = " + " if positive else " - "
+            negative = ring.domain.is_negative(coeff)
+            sign = " - " if negative else " + "
             sexpvs.append(sign)
             if expv == zm:
                 scoeff = printer._print(coeff)
-                if scoeff.startswith("-"):
+                if negative and scoeff.startswith("-"):
                     scoeff = scoeff[1:]
             else:
-                if not positive:
+                if negative:
                     coeff = -coeff
-                if coeff != 1:
+                if coeff != self.ring.one:
                     scoeff = printer.parenthesize(coeff, prec_mul, strict=True)
                 else:
                     scoeff = ''
@@ -1349,8 +1351,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def __rtruediv__(p1, p2):
         return NotImplemented
 
-    __floordiv__ = __div__ = __truediv__
-    __rfloordiv__ = __rdiv__ = __rtruediv__
+    __floordiv__ = __truediv__
+    __rfloordiv__ = __rtruediv__
 
     # TODO: use // (__floordiv__) for exquo()?
 

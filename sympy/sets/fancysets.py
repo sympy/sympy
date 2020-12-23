@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from functools import reduce
 
 from sympy.core.basic import Basic
@@ -44,8 +42,6 @@ class Rationals(Set, metaclass=Singleton):
     def _contains(self, other):
         if not isinstance(other, Expr):
             return False
-        if other.is_Number:
-            return other.is_Rational
         return other.is_rational
 
     def __iter__(self):
@@ -735,10 +731,8 @@ class Range(Set):
             return True
         return self.size.is_finite
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.start != self.stop
-
-    __bool__ = __nonzero__
 
     def __getitem__(self, i):
         from sympy.functions.elementary.integers import ceiling
@@ -1423,7 +1417,9 @@ class Complexes(CartesianComplexRegion, metaclass=Singleton):
     is_finite_set = False
 
     # Override property from superclass since Complexes has no args
-    sets = ProductSet(S.Reals, S.Reals)
+    @property
+    def sets(self):
+        return ProductSet(S.Reals, S.Reals)
 
     def __new__(cls):
         return Set.__new__(cls)

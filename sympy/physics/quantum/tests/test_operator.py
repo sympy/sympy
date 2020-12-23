@@ -94,6 +94,8 @@ def test_identity():
 
     assert I * O == O
     assert O * I == O
+    assert I * Dagger(O) == Dagger(O)
+    assert Dagger(O) * I == Dagger(O)
     assert isinstance(I * I, IdentityOperator)
     assert isinstance(3 * I, Mul)
     assert isinstance(I * x, Mul)

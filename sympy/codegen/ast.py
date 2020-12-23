@@ -59,6 +59,7 @@ AST Type Tree
 
 Predefined types
 ----------------
+
 A number of ``Type`` instances are provided in the ``sympy.codegen.ast`` module
 for convenience. Perhaps the two most common ones for code-generation (of numeric
 codes) are ``float32`` and ``float64`` (known as single and double precision respectively).
@@ -77,6 +78,7 @@ The other ``Type`` instances defined are:
 
 Using the nodes
 ---------------
+
 It is possible to construct simple algorithms using the AST nodes. Let's construct a loop applying
 Newton's method::
 
@@ -109,7 +111,7 @@ Newton's method::
 
 If we want to generate Fortran code for the same while loop we simple call ``fcode``::
 
-    >>> from sympy.printing.fcode import fcode
+    >>> from sympy.printing import fcode
     >>> print(fcode(whl, standard=2003, source_format='free'))
     do while (abs(delta) > tol)
        delta = (val**3 - cos(val))/(-3*val**2 - sin(val))
@@ -125,14 +127,14 @@ There is a function constructing a loop (or a complete function) like this in
 from typing import Any, Dict, List
 
 from collections import defaultdict
+
+from sympy import Lt, Le, Ge, Gt
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer, oo
-from sympy.core.relational import Lt, Le, Ge, Gt
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.utilities.iterables import iterable
-
 
 
 def _mk_Tuple(args):
@@ -157,6 +159,9 @@ def _mk_Tuple(args):
 
 class Token(Basic):
     """ Base class for the AST types.
+
+    Explanation
+    ===========
 
     Defining fields are set in ``__slots__``. Attributes (defined in __slots__)
     are only allowed to contain instances of Basic (unless atomic, see
@@ -276,12 +281,11 @@ class Token(Basic):
         else:
             return _print(v)
 
-    def _sympyrepr(self, printer, *args, **kwargs):
+    def _sympyrepr(self, printer, *args, joiner=', ', **kwargs):
         from sympy.printing.printer import printer_context
         exclude = kwargs.get('exclude', ())
         values = [getattr(self, k) for k in self.__slots__]
         indent_level = printer._context.get('indent_level', 0)
-        joiner = kwargs.pop('joiner', ', ')
 
         arg_reprs = []
 
@@ -537,6 +541,9 @@ def aug_assign(lhs, op, rhs):
     """
     Create 'lhs op= rhs'.
 
+    Explanation
+    ===========
+
     Represents augmented variable assignment for code generation. This is a
     convenience function. You can also use the AugmentedAssignment classes
     directly, like AddAugmentedAssignment(x, y).
@@ -575,7 +582,10 @@ def aug_assign(lhs, op, rhs):
 
 class CodeBlock(Basic):
     """
-    Represents a block of code
+    Represents a block of code.
+
+    Explanation
+    ===========
 
     For now only assignments are supported. This restriction will be lifted in
     the future.
@@ -647,6 +657,9 @@ class CodeBlock(Basic):
         """
         Return a CodeBlock with topologically sorted assignments so that
         variables are assigned before they are used.
+
+        Examples
+        ========
 
         The existing order of assignments is preserved as much as possible.
 
@@ -727,7 +740,10 @@ class CodeBlock(Basic):
     def cse(self, symbols=None, optimizations=None, postprocess=None,
         order='canonical'):
         """
-        Return a new code block with common subexpressions eliminated
+        Return a new code block with common subexpressions eliminated.
+
+        Explanation
+        ===========
 
         See the docstring of :func:`sympy.simplify.cse_main.cse` for more
         information.
@@ -930,6 +946,9 @@ class Node(Token):
 class Type(Token):
     """ Represents a type.
 
+    Explanation
+    ===========
+
     The naming is a super-set of NumPy naming. Type has a classmethod
     ``from_expr`` which offer type deduction. It also has a method
     ``cast_check`` which casts the argument to its type, possibly raising an
@@ -968,7 +987,7 @@ class Type(Token):
       ...
     ValueError: Casting gives a significantly different value.
     >>> boost_mp50 = Type('boost::multiprecision::cpp_dec_float_50')
-    >>> from sympy.printing.cxxcode import cxxcode
+    >>> from sympy.printing import cxxcode
     >>> from sympy.codegen.ast import Declaration, Variable
     >>> cxxcode(Declaration(Variable('x', type=boost_mp50)))
     'boost::multiprecision::cpp_dec_float_50 x'
@@ -1238,6 +1257,9 @@ class FloatType(FloatBaseType):
     def decimal_dig(self):
         """ Number of digits needed to store & load without loss.
 
+        Explanation
+        ===========
+
         Number of decimal digits needed to guarantee that two consecutive conversions
         (float -> text -> float) to be idempotent. This is useful when one do not want
         to loose precision due to rounding errors when storing a floating point value
@@ -1319,6 +1341,7 @@ class Attribute(Token):
 
     Parameters
     ==========
+
     name : str
     parameters : Tuple
 
@@ -1355,7 +1378,7 @@ pointer_const = Attribute('pointer_const')
 
 
 class Variable(Node):
-    """ Represents a variable
+    """ Represents a variable.
 
     Parameters
     ==========
@@ -1460,6 +1483,9 @@ class Variable(Node):
     def as_Declaration(self, **kwargs):
         """ Convenience method for creating a Declaration instance.
 
+        Explanation
+        ===========
+
         If the variable of the Declaration need to wrap a modified
         variable keyword arguments may be passed (overriding e.g.
         the ``value`` of the Variable instance).
@@ -1497,9 +1523,6 @@ class Variable(Node):
     __le__ = lambda self, other: self._relation(other, Le)
     __ge__ = lambda self, other: self._relation(other, Ge)
     __gt__ = lambda self, other: self._relation(other, Gt)
-
-
-
 
 class Pointer(Variable):
     """ Represents a pointer. See ``Variable``.
@@ -1712,7 +1735,7 @@ class FunctionPrototype(Node):
 
     >>> from sympy import symbols
     >>> from sympy.codegen.ast import real, FunctionPrototype
-    >>> from sympy.printing.ccode import ccode
+    >>> from sympy.printing import ccode
     >>> x, y = symbols('x y', real=True)
     >>> fp = FunctionPrototype(real, 'foo', [x, y])
     >>> ccode(fp)
@@ -1760,7 +1783,7 @@ class FunctionDefinition(FunctionPrototype):
 
     >>> from sympy import symbols
     >>> from sympy.codegen.ast import real, FunctionPrototype
-    >>> from sympy.printing.ccode import ccode
+    >>> from sympy.printing import ccode
     >>> x, y = symbols('x y', real=True)
     >>> fp = FunctionPrototype(real, 'foo', [x, y])
     >>> ccode(fp)

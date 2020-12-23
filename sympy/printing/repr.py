@@ -5,15 +5,13 @@ The most important function here is srepr that returns a string so that the
 relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy.core.function import AppliedUndef
 from sympy.core.mul import Mul
 from mpmath.libmp import repr_dps, to_str as mlib_to_str
 
-from .printer import Printer
+from .printer import Printer, print_function
 
 
 class ReprPrinter(Printer):
@@ -168,30 +166,6 @@ class ReprPrinter(Printer):
                 l[-1].append(expr[i, j])
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
 
-    def _print_MutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_SparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableSparseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_Matrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_DenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_MutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
-    def _print_ImmutableDenseMatrix(self, expr):
-        return self._print_MatrixBase(expr)
-
     def _print_BooleanTrue(self, expr):
         return "true"
 
@@ -232,6 +206,9 @@ class ReprPrinter(Printer):
         return "Sum2(%s, (%s, %s, %s))" % (self._print(expr.f), self._print(expr.i),
                                            self._print(expr.a), self._print(expr.b))
 
+    def _print_Str(self, s):
+        return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
+
     def _print_Symbol(self, expr):
         d = expr._assumptions.generator
         # print the dummy_index like it was an assumption
@@ -244,6 +221,24 @@ class ReprPrinter(Printer):
             attr = ['%s=%s' % (k, v) for k, v in d.items()]
             return "%s(%s, %s)" % (expr.__class__.__name__,
                                    self._print(expr.name), ', '.join(attr))
+
+    def _print_CoordinateSymbol(self, expr):
+        d = expr._assumptions.generator
+
+        if d == {}:
+            return "%s(%s, %s)" % (
+                expr.__class__.__name__,
+                self._print(expr.coordinate_system),
+                self._print(expr.index)
+            )
+        else:
+            attr = ['%s=%s' % (k, v) for k, v in d.items()]
+            return "%s(%s, %s, %s)" % (
+                expr.__class__.__name__,
+                self._print(expr.coordinate_system),
+                self._print(expr.index),
+                ', '.join(attr)
+            )
 
     def _print_Predicate(self, expr):
         return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
@@ -325,31 +320,7 @@ class ReprPrinter(Printer):
         ext = self._print(f.ext)
         return "ExtElem(%s, %s)" % (rep, ext)
 
-    def _print_Manifold(self, manifold):
-        class_name = manifold.func.__name__
-        name = self._print(manifold.name)
-        dim = self._print(manifold.dim)
-        return "%s(%s, %s)" % (class_name, name, dim)
-
-    def _print_Patch(self, patch):
-        class_name = patch.func.__name__
-        name = self._print(patch.name)
-        manifold = self._print(patch.manifold)
-        return "%s(%s, %s)" % (class_name, name, manifold)
-
-    def _print_CoordSystem(self, coords):
-        class_name = coords.func.__name__
-        name = self._print(coords.name)
-        patch = self._print(coords.patch)
-        names = self._print(coords._names)
-        return "%s(%s, %s, %s)" % (class_name, name, patch, names)
-
-    def _print_BaseScalarField(self, bsf):
-        class_name = bsf.func.__name__
-        coords = self._print(bsf._coord_sys)
-        idx = self._print(bsf._index)
-        return "%s(%s, %s)" % (class_name, coords, idx)
-
+@print_function(ReprPrinter)
 def srepr(expr, **settings):
     """return expr in repr form"""
     return ReprPrinter(settings).doprint(expr)

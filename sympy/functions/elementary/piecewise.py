@@ -318,7 +318,7 @@ class Piecewise(Function):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         for e, c in self.args:
             if c == True or c.subs(x, 0) == True:
                 return e.as_leading_term(x)
@@ -437,19 +437,6 @@ class Piecewise(Function):
             args = [(e, args[e]) for e in uniq(exprinorder)]
             # add in the last arg
             args.append((expr, True))
-            # if any condition reduced to True, it needs to go last
-            # and there should only be one of them or else the exprs
-            # should agree
-            trues = [i for i in range(len(args)) if args[i][1] is S.true]
-            if not trues:
-                # make the last one True since all cases were enumerated
-                e, c = args[-1]
-                args[-1] = (e, S.true)
-            else:
-                assert len({e for e, c in [args[i] for i in trues]}) == 1
-                args.append(args.pop(trues.pop()))
-                while trues:
-                    args.pop(trues.pop())
             return Piecewise(*args)
 
     def _eval_integral(self, x, _first=True, **kwargs):
@@ -787,7 +774,7 @@ class Piecewise(Function):
 
         return list(uniq(int_expr))
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
         return self.func(*args)
 
@@ -1238,9 +1225,10 @@ def piecewise_simplify(expr, **kwargs):
             if eqs and not other:
                 eqs = list(ordered(eqs))
                 for e in eqs:
-                    # these blessed lhs objects behave like Symbols
-                    # and the rhs are simple replacements for the "symbols"
-                    if _blessed(e):
+                    # allow 2 args to collapse into 1 for any e
+                    # otherwise limit simplification to only simple-arg
+                    # Eq instances
+                    if len(args) == 2 or _blessed(e):
                         _prevexpr = _prevexpr.subs(*e.args)
                         _expr = _expr.subs(*e.args)
             # Did it evaluate to the same?

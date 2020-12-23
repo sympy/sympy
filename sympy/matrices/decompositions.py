@@ -244,7 +244,7 @@ def _cholesky(M, hermitian=True):
     ========
 
     sympy.matrices.dense.DenseMatrix.LDLdecomposition
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -335,7 +335,7 @@ def _cholesky_sparse(M, hermitian=True):
     ========
 
     sympy.matrices.sparse.SparseMatrix.LDLdecomposition
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -446,7 +446,7 @@ def _LDLdecomposition(M, hermitian=True):
     ========
 
     sympy.matrices.dense.DenseMatrix.cholesky
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -927,7 +927,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
     See Also
     ========
 
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     LUdecompositionFF
     LUsolve
     """
@@ -1072,7 +1072,7 @@ def _LUdecompositionFF(M):
     See Also
     ========
 
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     LUdecomposition_Simple
     LUsolve
 
@@ -1121,6 +1121,45 @@ def _LUdecompositionFF(M):
     DD[n - 1, n - 1] = oldpivot
 
     return P, L, DD, U
+
+
+def _QRdecomposition_optional(M, normalize=True):
+    def dot(u, v):
+        return u.dot(v, hermitian=True)
+
+    dps = _get_intermediate_simp(expand_mul, expand_mul)
+
+    A = M.as_mutable()
+    ranked = list()
+
+    Q = A
+    R = A.zeros(A.cols)
+
+    for j in range(A.cols):
+        for i in range(j):
+            if Q[:, i].is_zero_matrix:
+                continue
+
+            R[i, j] = dot(Q[:, i], Q[:, j]) / dot(Q[:, i], Q[:, i])
+            R[i, j] = dps(R[i, j])
+            Q[:, j] -= Q[:, i] * R[i, j]
+
+        Q[:, j] = dps(Q[:, j])
+        if Q[:, j].is_zero_matrix is False:
+            ranked.append(j)
+            R[j, j] = M.one
+
+    Q = Q.extract(range(Q.rows), ranked)
+    R = R.extract(ranked, range(R.cols))
+
+    if normalize:
+        # Normalization
+        for i in range(Q.cols):
+            norm = Q[:, i].norm()
+            Q[:, i] /= norm
+            R[i, :] *= norm
+
+    return M.__class__(Q), M.__class__(R)
 
 
 def _QRdecomposition(M):
@@ -1300,44 +1339,7 @@ def _QRdecomposition(M):
 
     sympy.matrices.dense.DenseMatrix.cholesky
     sympy.matrices.dense.DenseMatrix.LDLdecomposition
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     QRsolve
     """
-
-    dps    = _get_intermediate_simp(expand_mul, expand_mul)
-    mat    = M.as_mutable()
-    n      = mat.rows
-    m      = mat.cols
-    ranked = list()
-
-    # Pad with additional rows to make wide matrices square
-    # nOrig keeps track of original size so zeros can be trimmed from Q
-    if n < m:
-        nOrig = n
-        n     = m
-        mat   = mat.col_join(mat.zeros(n - nOrig, m))
-    else:
-        nOrig = n
-
-    Q, R = mat.zeros(n, m), mat.zeros(m)
-
-    for j in range(m):  # for each column vector
-        tmp = mat[:, j]  # take original v
-
-        for i in range(j):
-            # subtract the project of mat on new vector
-            R[i, j]  = dps(Q[:, i].dot(mat[:, j], hermitian=True))
-            tmp     -= Q[:, i] * R[i, j]
-
-        tmp = dps(tmp)
-
-        # normalize it
-        R[j, j] = tmp.norm()
-
-        if not R[j, j].is_zero:
-            ranked.append(j)
-            Q[:, j] = tmp / R[j, j]
-
-    Q = Q.extract(range(nOrig), ranked)
-    R = R.extract(ranked, range(R.cols))
-    return M.__class__(Q), M.__class__(R)
+    return _QRdecomposition_optional(M, normalize=True)

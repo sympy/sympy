@@ -9,6 +9,9 @@ def AbelianGroup(*cyclic_orders):
     """
     Returns the direct product of cyclic groups with the given orders.
 
+    Explanation
+    ===========
+
     According to the structure theorem for finite abelian groups ([1]),
     every finite abelian group can be written as the direct product of
     finitely many cyclic groups.
@@ -54,6 +57,9 @@ def AlternatingGroup(n):
     """
     Generates the alternating group on ``n`` elements as a permutation group.
 
+    Explanation
+    ===========
+
     For ``n > 2``, the generators taken are ``(0 1 2), (0 1 2 ... n-1)`` for
     ``n`` odd
     and ``(0 1 2), (1 2 ... n-1)`` for ``n`` even (See [1], p.31, ex.6.9.).
@@ -81,7 +87,7 @@ def AlternatingGroup(n):
     References
     ==========
 
-    [1] Armstrong, M. "Groups and Symmetry"
+    .. [1] Armstrong, M. "Groups and Symmetry"
 
     """
     # small cases are special
@@ -125,6 +131,9 @@ def CyclicGroup(n):
     """
     Generates the cyclic group of order ``n`` as a permutation group.
 
+    Explanation
+    ===========
+
     The generator taken is the ``n``-cycle ``(0 1 2 ... n-1)``
     (in cycle notation). After the group is generated, some of its basic
     properties are set.
@@ -166,6 +175,9 @@ def DihedralGroup(n):
     r"""
     Generates the dihedral group `D_n` as a permutation group.
 
+    Explanation
+    ===========
+
     The dihedral group `D_n` is the group of symmetries of the regular
     ``n``-gon. The generators taken are the ``n``-cycle ``a = (0 1 2 ... n-1)``
     (a rotation of the ``n``-gon) and ``b = (0 n-1)(1 n-2)...``
@@ -196,7 +208,7 @@ def DihedralGroup(n):
     References
     ==========
 
-    [1] https://en.wikipedia.org/wiki/Dihedral_group
+    .. [1] https://en.wikipedia.org/wiki/Dihedral_group
 
     """
     # small cases are special
@@ -229,6 +241,9 @@ def DihedralGroup(n):
 def SymmetricGroup(n):
     """
     Generates the symmetric group on ``n`` elements as a permutation group.
+
+    Explanation
+    ===========
 
     The generators taken are the ``n``-cycle
     ``(0 1 2 ... n-1)`` and the transposition ``(0 1)`` (in cycle notation).

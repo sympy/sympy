@@ -11,7 +11,7 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
-from sympy.core.compatibility import exec_, HAS_GMPY
+from sympy.core.compatibility import HAS_GMPY
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 
@@ -288,10 +288,15 @@ def test__sympify():
 
     # positive _sympify
     assert _sympify(x) is x
-    assert _sympify(f) is f
     assert _sympify(1) == Integer(1)
     assert _sympify(0.5) == Float("0.5")
     assert _sympify(1 + 1j) == 1.0 + I*1.0
+
+    # Function f is not Basic and can't sympify to Basic. We allow it to pass
+    # with sympify but not with _sympify.
+    # https://github.com/sympy/sympy/issues/20124
+    assert sympify(f) is f
+    raises(SympifyError, lambda: _sympify(f))
 
     class A:
         def _sympy_(self):
@@ -512,6 +517,7 @@ def test_kernS():
     assert kernS('(1-2.*(1-y)*x)') == 1 - 2.*x*(1 - y)
     one = kernS('x - (x - 1)')
     assert one != 1 and one.expand() == 1
+    assert kernS("(2*x)/(x-1)") == 2*x/(x-1)
 
 
 def test_issue_6540_6552():
@@ -526,7 +532,7 @@ def test_issue_6046():
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
     assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'
     locals = {}
-    exec_("from sympy.abc import Q, C", locals)
+    exec("from sympy.abc import Q, C", locals)
     assert str(S('C&Q', locals)) == 'C & Q'
 
 

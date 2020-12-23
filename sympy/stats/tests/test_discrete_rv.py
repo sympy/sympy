@@ -15,6 +15,7 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
 from sympy.stats.rv import sample
 from sympy.testing.pytest import slow, nocache_fail, raises, skip, ignore_warnings
 from sympy.external import import_module
+from sympy.stats.symbolic_probability import Expectation
 
 x = Symbol('x')
 
@@ -23,6 +24,7 @@ def test_PoissonDistribution():
     l = 3
     p = PoissonDistribution(l)
     assert abs(p.cdf(10).evalf() - 1) < .001
+    assert abs(p.cdf(10.4).evalf() - 1) < .001
     assert p.expectation(x, x) == l
     assert p.expectation(x**2, x) - p.expectation(x, x)**2 == l
 
@@ -33,8 +35,9 @@ def test_Poisson():
     assert E(x) == l
     assert variance(x) == l
     assert density(x) == PoissonDistribution(l)
-    assert isinstance(E(x, evaluate=False), Sum)
-    assert isinstance(E(2*x, evaluate=False), Sum)
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert isinstance(E(x, evaluate=False), Expectation)
+        assert isinstance(E(2*x, evaluate=False), Expectation)
     # issue 8248
     assert x.pspace.compute_expectation(1) == 1
 
@@ -45,6 +48,9 @@ def test_GeometricDistribution():
     assert d.expectation(x, x) == 1/p
     assert d.expectation(x**2, x) - d.expectation(x, x)**2 == (1-p)/p**2
     assert abs(d.cdf(20000).evalf() - 1) < .001
+    assert abs(d.cdf(20000.8).evalf() - 1) < .001
+    G = Geometric('G', p=S(1)/4)
+    assert cdf(G)(S(7)/2) == P(G <= S(7)/2)
 
     X = Geometric('X', Rational(1, 5))
     Y = Geometric('Y', Rational(3, 10))
@@ -82,7 +88,8 @@ def test_Logarithmic():
     assert E(x) == -p / ((1 - p) * log(1 - p))
     assert variance(x) == -1/log(2)**2 + 2/log(2)
     assert E(2*x**2 + 3*x + 4) == 4 + 7 / log(2)
-    assert isinstance(E(x, evaluate=False), Sum)
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert isinstance(E(x, evaluate=False), Expectation)
 
 
 @nocache_fail
@@ -94,7 +101,8 @@ def test_negative_binomial():
     # This hangs when run with the cache disabled:
     assert variance(x) == p*r / (1-p)**2
     assert E(x**5 + 2*x + 3) == Rational(9207, 4)
-    assert isinstance(E(x, evaluate=False), Sum)
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert isinstance(E(x, evaluate=False), Expectation)
 
 
 def test_skellam():
@@ -121,7 +129,8 @@ def test_yule_simon():
     x = YuleSimon('x', rho)
     assert simplify(E(x)) == rho / (rho - 1)
     assert simplify(variance(x)) == rho**2 / ((rho - 1)**2 * (rho - 2))
-    assert isinstance(E(x, evaluate=False), Sum)
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert isinstance(E(x, evaluate=False), Expectation)
     # To test the cdf function
     assert cdf(x)(x) == Piecewise((-beta(floor(x), 4)*floor(x) + 1, x >= 1), (0, True))
 
@@ -140,7 +149,7 @@ def test_sample_discrete():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy not installed. Abort tests')
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert next(sample(X)) in X.pspace.domain.set
         samps = next(sample(X, size=2)) # This takes long time if ran without scipy
         for samp in samps:
@@ -173,11 +182,17 @@ def test_DiscreteRV():
     p = S(1)/2
     x = Symbol('x', integer=True, positive=True)
     pdf = p*(1 - p)**(x - 1) # pdf of Geometric Distribution
-    D = DiscreteRV(x, pdf, set=S.Naturals)
+    D = DiscreteRV(x, pdf, set=S.Naturals, check=True)
     assert E(D) == E(Geometric('G', S(1)/2)) == 2
     assert P(D > 3) == S(1)/8
     assert D.pspace.domain.set == S.Naturals
-    raises(ValueError, lambda: DiscreteRV(x, x, FiniteSet(*range(4))))
+    raises(ValueError, lambda: DiscreteRV(x, x, FiniteSet(*range(4)), check=True))
+
+    # purposeful invalid pmf but it should not raise since check=False
+    # see test_drv_types.test_ContinuousRV for explanation
+    X = DiscreteRV(x, 1/x, S.Naturals)
+    assert P(X < 2) == 1
+    assert E(X) == oo
 
 def test_precomputed_characteristic_functions():
     import mpmath
@@ -272,7 +287,8 @@ def test_product_spaces():
     #assert str(P(X1 + X2 < 3, evaluate=False)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """\
     #    + """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, -oo, -1))"""
     n = Dummy('n')
-    assert P(X1 + X2 < 3, evaluate=False).dummy_eq(Sum(Piecewise((2**(-n)/4,
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert P(X1 + X2 < 3, evaluate=False).rewrite(Sum).dummy_eq(Sum(Piecewise((2**(-n)/4,
          n + 2 >= 1), (0, True)), (n, -oo, -1))/3)
     #assert str(P(X1 + X2 > 3)) == """Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, """ +\
     #    """(-X2 + n + 3 >= 1) & (-X2 + n + 3 < oo)), (0, True)), (X2, 1, oo), (n, 1, oo))"""
@@ -295,7 +311,7 @@ def test_sample_numpy():
     if not numpy:
         skip('Numpy is not installed. Abort tests for _sample_numpy.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_numpy:
                 samps = next(sample(X, size=size, library='numpy'))
                 for sam in samps:
@@ -325,7 +341,7 @@ def test_sample_scipy():
     if not scipy:
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             z_sample = list(sample(Zeta("G", 7), size=size, numsamples=numsamples))
             assert len(z_sample) == numsamples
             for X in distribs_scipy:
@@ -348,7 +364,7 @@ def test_sample_pymc3():
     if not pymc3:
         skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_pymc3:
                 samps = next(sample(X, size=size, library='pymc3'))
                 for sam in samps:

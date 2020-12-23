@@ -1,11 +1,17 @@
 """Implementation of mathematical domains. """
 
-__all__ = ['Domain', 'FiniteField', 'IntegerRing', 'RationalField',
-           'RealField', 'ComplexField', 'PythonFiniteField',
-           'GMPYFiniteField', 'PythonIntegerRing',
-           'GMPYIntegerRing', 'PythonRational',
-           'GMPYRationalField', 'AlgebraicField', 'PolynomialRing',
-           'FractionField', 'ExpressionDomain', 'PythonRational']
+__all__ = [
+    'Domain', 'FiniteField', 'IntegerRing', 'RationalField', 'RealField',
+    'ComplexField', 'PythonFiniteField', 'GMPYFiniteField',
+    'PythonIntegerRing', 'GMPYIntegerRing', 'PythonRational',
+    'GMPYRationalField', 'AlgebraicField', 'PolynomialRing', 'FractionField',
+    'ExpressionDomain', 'PythonRational',
+
+    'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy', 'QQ_python', 'QQ_gmpy',
+    'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX',
+]
+
+from typing import Tuple, Type
 
 from .domain import Domain
 from .finitefield import FiniteField
@@ -45,17 +51,13 @@ _GROUND_TYPES_MAP = {
 }
 
 try:
-    FF, ZZ, QQ = _GROUND_TYPES_MAP[GROUND_TYPES]
+    FF, ZZ, QQ = _GROUND_TYPES_MAP[GROUND_TYPES]  # type: Tuple[Type[FiniteField], Domain, Domain]
 except KeyError:
     raise ValueError("invalid ground types: %s" % GROUND_TYPES)
+
+# Needs to be after ZZ and QQ are defined:
+from .gaussiandomains import ZZ_I, QQ_I
 
 GF = FF
 
 EX = ExpressionDomain()
-
-__all__.extend([
-    "FF_python", "FF_gmpy",
-    "ZZ_python", "ZZ_gmpy",
-    "QQ_python", "QQ_gmpy",
-    "GF", "FF", "ZZ", "QQ", "RR", "CC", "EX",
-])

@@ -26,7 +26,8 @@ from sympy.ntheory.factor_ import udivisor_sigma
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import (latex, translate, greek_letters_set,
-                                  tex_greek_dictionary, multiline_latex)
+                                  tex_greek_dictionary, multiline_latex,
+                                  latex_escape, LatexPrinter)
 from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 ImmutableSparseNDimArray,
                                 MutableSparseNDimArray,
@@ -38,6 +39,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
+from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
@@ -57,7 +59,7 @@ class lowergamma(sym.lowergamma):
     pass   # testing notation inheritance by a subclass with same name
 
 
-x, y, z, t, a, b, c = symbols('x y z t a b c')
+x, y, z, t, w, a, b, c, s, p = symbols('x y z t w a b c s p')
 k, m, n = symbols('k m n', integer=True)
 
 
@@ -308,7 +310,7 @@ def test_latex_symbols():
     assert latex(TAU) == r"\tau"
     assert latex(taU) == r"\tau"
     # Check that all capitalized greek letters are handled explicitly
-    capitalized_letters = set(l.capitalize() for l in greek_letters_set)
+    capitalized_letters = {l.capitalize() for l in greek_letters_set}
     assert len(capitalized_letters - set(tex_greek_dictionary.keys())) == 0
     assert latex(Gamma + lmbda) == r"\Gamma + \lambda"
     assert latex(Gamma * lmbda) == r"\Gamma \lambda"
@@ -2249,6 +2251,45 @@ def test_KroneckerProduct_printing():
     assert latex(KroneckerProduct(A, B)) == r'A \otimes B'
 
 
+def test_Series_printing():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tf3 = TransferFunction(t*x**2 - t**w*x + w, t - y, y)
+    assert latex(Series(tf1, tf2)) == \
+        '\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right)'
+    assert latex(Series(tf1, tf2, tf3)) == \
+        '\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right) \\left(\\frac{t x^{2} - t^{w} x + w}{t - y}\\right)'
+    assert latex(Series(-tf2, tf1)) == \
+        '\\left(\\frac{- x + y}{x + y}\\right) \\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right)'
+
+
+def test_TransferFunction_printing():
+    tf1 = TransferFunction(x - 1, x + 1, x)
+    assert latex(tf1) == r"\frac{x - 1}{x + 1}"
+    tf2 = TransferFunction(x + 1, 2 - y, x)
+    assert latex(tf2) == r"\frac{x + 1}{2 - y}"
+    tf3 = TransferFunction(y, y**2 + 2*y + 3, y)
+    assert latex(tf3) == r"\frac{y}{y^{2} + 2 y + 3}"
+
+
+def test_Parallel_printing():
+    tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    assert latex(Parallel(tf1, tf2)) == \
+        '\\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right) \\left(\\frac{x - y}{x + y}\\right)'
+    assert latex(Parallel(-tf2, tf1)) == \
+        '\\left(\\frac{- x + y}{x + y}\\right) \\left(\\frac{x y^{2} - z}{- t^{3} + y^{3}}\\right)'
+
+
+def test_Feedback_printing():
+    tf1 = TransferFunction(p, p + x, p)
+    tf2 = TransferFunction(-s + p, p + s, p)
+    assert latex(Feedback(tf1, tf2)) == \
+        '\\frac{\\frac{p}{p + x}}{\\left(1 \\cdot 1^{-1}\\right) \\left(\\left(\\frac{p}{p + x}\\right) \\left(\\frac{p - s}{p + s}\\right)\\right)}'
+    assert latex(Feedback(tf1*tf2, TransferFunction(1, 1, p))) == \
+        '\\frac{\\left(\\frac{p}{p + x}\\right) \\left(\\frac{p - s}{p + s}\\right)}{\\left(1 \\cdot 1^{-1}\\right) \\left(\\left(\\frac{p}{p + x}\\right) \\left(\\frac{p - s}{p + s}\\right)\\right)}'
+
+
 def test_Quaternion_latex_printing():
     q = Quaternion(x, y, z, t)
     assert latex(q) == "x + y i + z j + t k"
@@ -2270,21 +2311,6 @@ def test_WedgeProduct_printing():
     from sympy.diffgeom import WedgeProduct
     wp = WedgeProduct(R2.dx, R2.dy)
     assert latex(wp) == r"\operatorname{d}x \wedge \operatorname{d}y"
-
-
-def test_issue_14041():
-    import sympy.physics.mechanics as me
-
-    A_frame = me.ReferenceFrame('A')
-    thetad, phid = me.dynamicsymbols('theta, phi', 1)
-    L = Symbol('L')
-
-    assert latex(L*(phid + thetad)**2*A_frame.x) == \
-        r"L \left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
-    assert latex((phid + thetad)**2*A_frame.x) == \
-        r"\left(\dot{\phi} + \dot{\theta}\right)^{2}\mathbf{\hat{a}_x}"
-    assert latex((phid*thetad)**a*A_frame.x) == \
-        r"\left(\dot{\phi} \dot{\theta}\right)^{a}\mathbf{\hat{a}_x}"
 
 
 def test_issue_9216():
@@ -2550,14 +2576,15 @@ def test_text_re_im():
 def test_latex_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential
     from sympy.diffgeom.rn import R2
+    x,y = symbols('x y', real=True)
     m = Manifold('M', 2)
     assert latex(m) == r'\text{M}'
     p = Patch('P', m)
     assert latex(p) == r'\text{P}_{\text{M}}'
-    rect = CoordSystem('rect', p)
+    rect = CoordSystem('rect', p, [x, y])
     assert latex(rect) == r'\text{rect}^{\text{P}}_{\text{M}}'
     b = BaseScalarField(rect, 0)
-    assert latex(b) ==  r'\mathbf{rect_{0}}'
+    assert latex(b) ==  r'\mathbf{x}'
 
     g = Function('g')
     s_field = g(R2.x, R2.y)
@@ -2613,7 +2640,7 @@ def test_latex_decimal_separator():
     assert(latex(S(.3), decimal_separator='comma')== r'0{,}3')
 
 
-    assert(latex(5.8*10**(-7), decimal_separator='comma') ==r'5{,}8e-07')
+    assert(latex(5.8*10**(-7), decimal_separator='comma') ==r'5{,}8 \cdot 10^{-7}')
     assert(latex(S(5.7)*10**(-7), decimal_separator='comma')==r'5{,}7 \cdot 10^{-7}')
     assert(latex(S(5.7*10**(-7)), decimal_separator='comma')==r'5{,}7 \cdot 10^{-7}')
 
@@ -2625,3 +2652,58 @@ def test_latex_decimal_separator():
     raises(ValueError, lambda: latex([1,2.3,4.5], decimal_separator='non_existing_decimal_separator_in_list'))
     raises(ValueError, lambda: latex(FiniteSet(1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_set'))
     raises(ValueError, lambda: latex((1,2.3,4.5), decimal_separator='non_existing_decimal_separator_in_tuple'))
+
+def test_Str():
+    from sympy.core.symbol import Str
+    assert str(Str('x')) == 'x'
+
+def test_latex_escape():
+    assert latex_escape(r"~^\&%$#_{}") == "".join([
+        r'\textasciitilde',
+        r'\textasciicircum',
+        r'\textbackslash',
+        r'\&',
+        r'\%',
+        r'\$',
+        r'\#',
+        r'\_',
+        r'\{',
+        r'\}',
+    ])
+
+def test_emptyPrinter():
+    class MyObject:
+        def __repr__(self):
+            return "<MyObject with {...}>"
+
+    # unknown objects are monospaced
+    assert latex(MyObject()) == r"\mathtt{\text{<MyObject with \{...\}>}}"
+
+    # even if they are nested within other objects
+    assert latex((MyObject(),)) == r"\left( \mathtt{\text{<MyObject with \{...\}>}},\right)"
+
+def test_global_settings():
+    import inspect
+
+    # settings should be visible in the signature of `latex`
+    assert inspect.signature(latex).parameters['imaginary_unit'].default == 'i'
+    assert latex(I) == 'i'
+    try:
+        # but changing the defaults...
+        LatexPrinter.set_global_settings(imaginary_unit='j')
+        # ... should change the signature
+        assert inspect.signature(latex).parameters['imaginary_unit'].default == 'j'
+        assert latex(I) == 'j'
+    finally:
+        # there's no public API to undo this, but we need to make sure we do
+        # so as not to impact other tests
+        del LatexPrinter._global_settings['imaginary_unit']
+
+    # check we really did undo it
+    assert inspect.signature(latex).parameters['imaginary_unit'].default == 'i'
+    assert latex(I) == 'i'
+
+def test_pickleable():
+    # this tests that the _PrintFunction instance is pickleable
+    import pickle
+    assert pickle.loads(pickle.dumps(latex)) is latex

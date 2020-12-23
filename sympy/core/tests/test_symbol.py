@@ -1,10 +1,16 @@
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
     StrictLessThan, pi, I, Rational, sympify, symbols, Dummy)
-from sympy.core.symbol import uniquely_named_symbol, _symbol
+from sympy.core.symbol import uniquely_named_symbol, _symbol, Str
 
 from sympy.testing.pytest import raises
 from sympy.core.symbol import disambiguate
 
+def test_Str():
+    a1 = Str('a')
+    a2 = Str('a')
+    b = Str('b')
+    assert a1 == a2 != b
+    raises(TypeError, lambda: Str())
 
 def test_Symbol():
     a = Symbol("a")

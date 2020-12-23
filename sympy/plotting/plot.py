@@ -22,14 +22,13 @@ if you care at all about performance. A new backend instance is initialized
 every time you call ``show()`` and the old one is left to the garbage collector.
 """
 
-from __future__ import print_function, division
 
 import warnings
+from collections.abc import Callable
 
 from sympy import sympify, Expr, Tuple, Dummy, Symbol
 from sympy.external import import_module
 from sympy.core.function import arity
-from sympy.core.compatibility import Callable
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
 
@@ -57,8 +56,11 @@ def unset_show():
 ##############################################################################
 
 
-class Plot(object):
+class Plot:
     """The central class of the plotting module.
+
+    Explanation
+    ===========
 
     For interactive work the function ``plot`` is better suited.
 
@@ -117,7 +119,8 @@ class Plot(object):
     - aspect_ratio : tuple of two floats or {'auto'}
     - autoscale : bool
     - margin : float in [0, 1]
-    - backend : {'default', 'matplotlib', 'text'}
+    - backend : {'default', 'matplotlib', 'text'} or a subclass of BaseBackend
+    - size : optional tuple of two floats, (width, height); default: None
 
     The per data series options and aesthetics are:
     There are none in the base series. See below for options for subclasses.
@@ -149,8 +152,8 @@ class Plot(object):
         xlim=None, ylim=None, axis_center='auto', axis=True,
         xscale='linear', yscale='linear', legend=False, autoscale=True,
         margin=0, annotations=None, markers=None, rectangles=None,
-        fill=None, backend='default', **kwargs):
-        super(Plot, self).__init__()
+        fill=None, backend='default', size=None, **kwargs):
+        super().__init__()
 
         # Options for the graph as a whole.
         # The possible values for each option are described in the docstring of
@@ -179,31 +182,36 @@ class Plot(object):
         # The backend type. On every show() a new backend instance is created
         # in self._backend which is tightly coupled to the Plot instance
         # (thanks to the parent attribute of the backend).
-        self.backend = plot_backends[backend]
+        if isinstance(backend, str):
+            self.backend = plot_backends[backend]
+        elif (type(backend) == type) and issubclass(backend, BaseBackend):
+            self.backend = backend
+        else:
+            raise TypeError(
+                "backend must be either a string or a subclass of BaseBackend")
 
         is_real = \
             lambda lim: all(getattr(i, 'is_real', True) for i in lim)
         is_finite = \
             lambda lim: all(getattr(i, 'is_finite', True) for i in lim)
 
+        # reduce code repetition
+        def check_and_set(t_name, t):
+            if t:
+                if not is_real(t):
+                    raise ValueError(
+                    "All numbers from {}={} must be real".format(t_name, t))
+                if not is_finite(t):
+                    raise ValueError(
+                    "All numbers from {}={} must be finite".format(t_name, t))
+                setattr(self, t_name, (float(t[0]), float(t[1])))
+
         self.xlim = None
+        check_and_set("xlim", xlim)
         self.ylim = None
-        if xlim:
-            if not is_real(xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be real".format(xlim))
-            if not is_finite(xlim):
-                raise ValueError(
-                "All numbers from xlim={} must be finite".format(xlim))
-            self.xlim = (float(xlim[0]), float(xlim[1]))
-        if ylim:
-            if not is_real(ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be real".format(ylim))
-            if not is_finite(ylim):
-                raise ValueError(
-                "All numbers from ylim={} must be finite".format(ylim))
-            self.ylim = (float(ylim[0]), float(ylim[1]))
+        check_and_set("ylim", ylim)
+        self.size = None
+        check_and_set("size", size)
 
 
     def show(self):
@@ -306,7 +314,7 @@ class Plot(object):
             raise TypeError('Expecting Plot or sequence of BaseSeries')
 
 
-class PlotGrid(object):
+class PlotGrid:
     """This class helps to plot subplots from already created sympy plots
     in a single figure.
 
@@ -382,17 +390,19 @@ class PlotGrid(object):
         [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
 
     """
-    def __init__(self, nrows, ncolumns, *args, **kwargs):
+    def __init__(self, nrows, ncolumns, *args, show=True, size=None, **kwargs):
         """
         Parameters
         ==========
 
-        nrows : The number of rows that should be in the grid of the
-                required subplot
-        ncolumns : The number of columns that should be in the grid
-                   of the required subplot
+        nrows :
+            The number of rows that should be in the grid of the
+            required subplot.
+        ncolumns :
+            The number of columns that should be in the grid
+            of the required subplot.
 
-        nrows and ncolumns together define the required grid
+        nrows and ncolumns together define the required grid.
 
         Arguments
         =========
@@ -405,11 +415,15 @@ class PlotGrid(object):
         =================
 
         show : Boolean
-               The default value is set to ``True``. Set show to ``False`` and
-               the function will not display the subplot. The returned instance
-               of the ``PlotGrid`` class can then be used to save or display the
-               plot by calling the ``save()`` and ``show()`` methods
-               respectively.
+            The default value is set to ``True``. Set show to ``False`` and
+            the function will not display the subplot. The returned instance
+            of the ``PlotGrid`` class can then be used to save or display the
+            plot by calling the ``save()`` and ``show()`` methods
+            respectively.
+        size : (float, float), optional
+            A tuple in the form (width, height) in inches to specify the size of
+            the overall figure. The default value is set to ``None``, meaning
+            the size will be set by the default backend.
         """
         self.nrows = nrows
         self.ncolumns = ncolumns
@@ -418,7 +432,7 @@ class PlotGrid(object):
         for arg in args:
             self._series.append(arg._series)
         self.backend = DefaultBackend
-        show = kwargs.pop('show', True)
+        self.size = size
         if show:
             self.show()
 
@@ -447,8 +461,11 @@ class PlotGrid(object):
 #TODO more general way to calculate aesthetics (see get_color_array)
 
 ### The base class for all series
-class BaseSeries(object):
+class BaseSeries:
     """Base class for the data objects containing stuff to be plotted.
+
+    Explanation
+    ===========
 
     The backend should check if it supports the data series that it's given.
     (eg TextBackend supports only LineOver1DRange).
@@ -504,7 +521,7 @@ class BaseSeries(object):
     # used for calculation aesthetics
 
     def __init__(self):
-        super(BaseSeries, self).__init__()
+        super().__init__()
 
     @property
     def is_3D(self):
@@ -537,7 +554,7 @@ class Line2DBaseSeries(BaseSeries):
     _dim = 2
 
     def __init__(self):
-        super(Line2DBaseSeries, self).__init__()
+        super().__init__()
         self.label = None
         self.steps = False
         self.only_integers = False
@@ -579,7 +596,7 @@ class List2DSeries(Line2DBaseSeries):
 
     def __init__(self, list_x, list_y):
         np = import_module('numpy')
-        super(List2DSeries, self).__init__()
+        super().__init__()
         self.list_x = np.array(list_x)
         self.list_y = np.array(list_y)
         self.label = 'list'
@@ -595,7 +612,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
     """Representation for a line consisting of a SymPy expression over a range."""
 
     def __init__(self, expr, var_start_end, **kwargs):
-        super(LineOver1DRangeSeries, self).__init__()
+        super().__init__()
         self.expr = sympify(expr)
         self.label = kwargs.get('label', None) or str(self.expr)
         self.var = sympify(var_start_end[0])
@@ -615,6 +632,9 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         """
         Adaptively gets segments for plotting.
 
+        Explanation
+        ===========
+
         The adaptive sampling is done by recursively checking if three
         points are almost collinear. If they are not collinear, then more
         points are added between those points.
@@ -628,7 +648,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         """
 
         if self.only_integers or not self.adaptive:
-            return super(LineOver1DRangeSeries, self).get_segments()
+            return super().get_segments()
         else:
             f = lambdify([self.var], self.expr)
             list_segments = []
@@ -715,7 +735,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
     is_parametric = True
 
     def __init__(self, expr_x, expr_y, var_start_end, **kwargs):
-        super(Parametric2DLineSeries, self).__init__()
+        super().__init__()
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.label = kwargs.get('label', None) or \
@@ -749,18 +769,22 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         """
         Adaptively gets segments for plotting.
 
+        Explanation
+        ===========
+
         The adaptive sampling is done by recursively checking if three
         points are almost collinear. If they are not collinear, then more
         points are added between those points.
 
         References
         ==========
-        [1] Adaptive polygonal approximation of parametric curves,
+
+        .. [1] Adaptive polygonal approximation of parametric curves,
             Luiz Henrique de Figueiredo.
 
         """
         if not self.adaptive:
-            return super(Parametric2DLineSeries, self).get_segments()
+            return super().get_segments()
 
         f_x = lambdify([self.var], self.expr_x)
         f_y = lambdify([self.var], self.expr_y)
@@ -839,7 +863,7 @@ class Line3DBaseSeries(Line2DBaseSeries):
     _dim = 3
 
     def __init__(self):
-        super(Line3DBaseSeries, self).__init__()
+        super().__init__()
 
 
 class Parametric3DLineSeries(Line3DBaseSeries):
@@ -847,7 +871,7 @@ class Parametric3DLineSeries(Line3DBaseSeries):
     expressions and a range."""
 
     def __init__(self, expr_x, expr_y, expr_z, var_start_end, **kwargs):
-        super(Parametric3DLineSeries, self).__init__()
+        super().__init__()
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.expr_z = sympify(expr_z)
@@ -900,7 +924,7 @@ class SurfaceBaseSeries(BaseSeries):
     is_3Dsurface = True
 
     def __init__(self):
-        super(SurfaceBaseSeries, self).__init__()
+        super().__init__()
         self.surface_color = None
 
     def get_color_array(self):
@@ -930,7 +954,7 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
     """Representation for a 3D surface consisting of a sympy expression and 2D
     range."""
     def __init__(self, expr, var_start_end_x, var_start_end_y, **kwargs):
-        super(SurfaceOver2DRangeSeries, self).__init__()
+        super().__init__()
         self.expr = sympify(expr)
         self.var_x = sympify(var_start_end_x[0])
         self.start_x = float(var_start_end_x[1])
@@ -977,7 +1001,7 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
     def __init__(
         self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v,
             **kwargs):
-        super(ParametricSurfaceSeries, self).__init__()
+        super().__init__()
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.expr_z = sympify(expr_z)
@@ -1045,7 +1069,7 @@ class ContourSeries(BaseSeries):
     is_contour = True
 
     def __init__(self, expr, var_start_end_x, var_start_end_y):
-        super(ContourSeries, self).__init__()
+        super().__init__()
         self.nb_of_points_x = 50
         self.nb_of_points_y = 50
         self.expr = sympify(expr)
@@ -1084,17 +1108,83 @@ class ContourSeries(BaseSeries):
 # Backends
 ##############################################################################
 
-class BaseBackend(object):
+class BaseBackend:
+    """Base class for all backends. A backend represents the plotting library,
+    which implements the necessary functionalities in order to use SymPy
+    plotting functions.
+
+    How the plotting module works:
+
+    1. Whenever a plotting function is called, the provided expressions are
+        processed and a list of instances of the `BaseSeries` class is created,
+        containing the necessary information to plot the expressions (eg the
+        expression, ranges, series name, ...). Eventually, these objects will
+        generate the numerical data to be plotted.
+    2. A Plot object is instantiated, which stores the list of series and the
+        main attributes of the plot (eg axis labels, title, ...).
+    3. When the "show" command is executed, a new backend is instantiated,
+        which loops through each series object to generate and plot the
+        numerical data. The backend is also going to set the axis labels, title,
+        ..., according to the values stored in the Plot instance.
+
+    The backend should check if it supports the data series that it's given
+    (eg TextBackend supports only LineOver1DRange).
+
+    It's the backend responsibility to know how to use the class of data series
+    that it's given. Note that the current implementation of the `*Series`
+    classes is "matplotlib-centric": the numerical data returned by the
+    `get_points` and `get_meshes` methods is meant to be used directly by
+    Matplotlib. Therefore, the new backend will have to pre-process the
+    numerical data to make it compatible with the chosen plotting library.
+    Keep in mind that future SymPy versions may improve the `*Series` classes in
+    order to return numerical data "non-matplotlib-centric", hence if you code
+    a new backend you have the responsibility to check if its working on each
+    SymPy release.
+
+    Please, explore the `MatplotlibBackend` source code to understand how a
+    backend should be coded.
+
+    Methods
+    =======
+
+    In order to be used by SymPy plotting functions, a backend must implement
+    the following methods:
+
+    * `show(self)`: used to loop over the data series, generate the numerical
+        data, plot it and set the axis labels, title, ...
+    * save(self, path): used to save the current plot to the specified file
+        path.
+    * close(self): used to close the current plot backend (note: some plotting
+        library doesn't support this functionality. In that case, just raise a
+        warning).
+
+    See also
+    ========
+
+    MatplotlibBackend
+    """
     def __init__(self, parent):
-        super(BaseBackend, self).__init__()
+        super().__init__()
         self.parent = parent
+
+    def show(self):
+        raise NotImplementedError
+
+    def save(self, path):
+        raise NotImplementedError
+
+    def close(self):
+        raise NotImplementedError
 
 
 # Don't have to check for the success of importing matplotlib in each case;
 # we will only be using this backend if we can successfully import matploblib
 class MatplotlibBackend(BaseBackend):
+    """ This class implements the functionalities to use Matplotlib with SymPy
+    plotting functions.
+    """
     def __init__(self, parent):
-        super(MatplotlibBackend, self).__init__(parent)
+        super().__init__(parent)
         self.matplotlib = import_module('matplotlib',
             import_kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
             min_module_version='1.1.0', catch=(RuntimeError,))
@@ -1113,7 +1203,7 @@ class MatplotlibBackend(BaseBackend):
             series_list = self.parent._series
 
         self.ax = []
-        self.fig = self.plt.figure()
+        self.fig = self.plt.figure(figsize=parent.size)
 
         for i, series in enumerate(series_list):
             are_3D = [s.is_3D for s in series]
@@ -1343,7 +1433,7 @@ class MatplotlibBackend(BaseBackend):
 
 class TextBackend(BaseBackend):
     def __init__(self, parent):
-        super(TextBackend, self).__init__(parent)
+        super().__init__(parent)
 
     def show(self):
         if not _show:
@@ -1439,13 +1529,13 @@ def _matplotlib_list(interval_list):
 # TODO: Add more plotting options for 3d plots.
 # TODO: Adaptive sampling for 3D plots.
 
-def plot(*args, **kwargs):
+def plot(*args, show=True, **kwargs):
     """Plots a function of a single variable as a curve.
 
     Parameters
     ==========
 
-    args
+    args :
         The first argument is the expression representing the function
         of single variable to be plotted.
 
@@ -1559,6 +1649,11 @@ def plot(*args, **kwargs):
         If the ``adaptive`` flag is set to ``True``, this will be
         ignored.
 
+    size : (float, float), optional
+        A tuple in the form (width, height) in inches to specify the size of
+        the overall figure. The default value is set to ``None``, meaning
+        the size will be set by the default backend.
+
     Examples
     ========
 
@@ -1636,7 +1731,6 @@ def plot(*args, **kwargs):
     x = free.pop() if free else Symbol('x')
     kwargs.setdefault('xlabel', x.name)
     kwargs.setdefault('ylabel', 'f(%s)' % x.name)
-    show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 1)
     series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
@@ -1647,7 +1741,7 @@ def plot(*args, **kwargs):
     return plots
 
 
-def plot_parametric(*args, **kwargs):
+def plot_parametric(*args, show=True, **kwargs):
     """
     Plots a 2D parametric curve.
 
@@ -1732,6 +1826,11 @@ def plot_parametric(*args, **kwargs):
 
     ylim : (float, float), optional
         Denotes the y-axis limits, ``(min, max)```.
+
+    size : (float, float), optional
+        A tuple in the form (width, height) in inches to specify the size of
+        the overall figure. The default value is set to ``None``, meaning
+        the size will be set by the default backend.
 
     Examples
     ========
@@ -1826,7 +1925,6 @@ def plot_parametric(*args, **kwargs):
     Plot, Parametric2DLineSeries
     """
     args = list(map(sympify, args))
-    show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 2, 1)
     series = [Parametric2DLineSeries(*arg, **kwargs) for arg in plot_expr]
@@ -1836,7 +1934,7 @@ def plot_parametric(*args, **kwargs):
     return plots
 
 
-def plot3d_parametric_line(*args, **kwargs):
+def plot3d_parametric_line(*args, show=True, **kwargs):
     """
     Plots a 3D parametric line plot.
 
@@ -1895,6 +1993,11 @@ def plot3d_parametric_line(*args, **kwargs):
 
     ``title`` : str. Title of the plot.
 
+    ``size`` : (float, float), optional
+        A tuple in the form (width, height) in inches to specify the size of
+        the overall figure. The default value is set to ``None``, meaning
+        the size will be set by the default backend.
+
     Examples
     ========
 
@@ -1940,7 +2043,6 @@ def plot3d_parametric_line(*args, **kwargs):
 
     """
     args = list(map(sympify, args))
-    show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 3, 1)
     series = [Parametric3DLineSeries(*arg, **kwargs) for arg in plot_expr]
@@ -1950,7 +2052,7 @@ def plot3d_parametric_line(*args, **kwargs):
     return plots
 
 
-def plot3d(*args, **kwargs):
+def plot3d(*args, show=True, **kwargs):
     """
     Plots a 3D surface plot.
 
@@ -2012,6 +2114,10 @@ def plot3d(*args, **kwargs):
     Arguments for ``Plot`` class:
 
     ``title`` : str. Title of the plot.
+    ``size`` : (float, float), optional
+    A tuple in the form (width, height) in inches to specify the size of the
+    overall figure. The default value is set to ``None``, meaning the size will
+    be set by the default backend.
 
     Examples
     ========
@@ -2072,7 +2178,6 @@ def plot3d(*args, **kwargs):
     """
 
     args = list(map(sympify, args))
-    show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 2)
     series = [SurfaceOver2DRangeSeries(*arg, **kwargs) for arg in plot_expr]
@@ -2082,12 +2187,12 @@ def plot3d(*args, **kwargs):
     return plots
 
 
-def plot3d_parametric_surface(*args, **kwargs):
+def plot3d_parametric_surface(*args, show=True, **kwargs):
     """
     Plots a 3D parametric surface plot.
 
-    Usage
-    =====
+    Explanation
+    ===========
 
     Single plot.
 
@@ -2143,6 +2248,10 @@ def plot3d_parametric_surface(*args, **kwargs):
     Arguments for ``Plot`` class:
 
     ``title`` : str. Title of the plot.
+    ``size`` : (float, float), optional
+    A tuple in the form (width, height) in inches to specify the size of the
+    overall figure. The default value is set to ``None``, meaning the size will
+    be set by the default backend.
 
     Examples
     ========
@@ -2177,7 +2286,6 @@ def plot3d_parametric_surface(*args, **kwargs):
     """
 
     args = list(map(sympify, args))
-    show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 3, 2)
     series = [ParametricSurfaceSeries(*arg, **kwargs) for arg in plot_expr]
@@ -2186,7 +2294,7 @@ def plot3d_parametric_surface(*args, **kwargs):
         plots.show()
     return plots
 
-def plot_contour(*args, **kwargs):
+def plot_contour(*args, show=True, **kwargs):
     """
     Draws contour plot of a function
 
@@ -2248,6 +2356,10 @@ def plot_contour(*args, **kwargs):
     Arguments for ``Plot`` class:
 
     ``title`` : str. Title of the plot.
+    ``size`` : (float, float), optional
+        A tuple in the form (width, height) in inches to specify the size of
+        the overall figure. The default value is set to ``None``, meaning
+        the size will be set by the default backend.
 
     See Also
     ========
@@ -2257,7 +2369,6 @@ def plot_contour(*args, **kwargs):
     """
 
     args = list(map(sympify, args))
-    show = kwargs.pop('show', True)
     plot_expr = check_arguments(args, 1, 2)
     series = [ContourSeries(*arg) for arg in plot_expr]
     plot_contours = Plot(*series, **kwargs)
@@ -2270,7 +2381,7 @@ def plot_contour(*args, **kwargs):
 def check_arguments(args, expr_len, nb_of_free_symbols):
     """
     Checks the arguments and converts into tuples of the
-    form (exprs, ranges)
+    form (exprs, ranges).
 
     Examples
     ========

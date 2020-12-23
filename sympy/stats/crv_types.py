@@ -30,6 +30,7 @@ Laplace
 Levy
 Logistic
 LogLogistic
+LogitNormal
 LogNormal
 Lomax
 Maxwell
@@ -54,7 +55,6 @@ Weibull
 WignerSemicircle
 """
 
-from __future__ import print_function, division
 
 
 from sympy import beta as beta_fn
@@ -65,8 +65,6 @@ from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    hyper, uppergamma, sinh, Ne, expint, Rational, integrate)
 from sympy.matrices import MatrixBase, MatrixExpr
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
-from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
-from sympy.stats.joint_rv_types import multivariate_rv
 from sympy.stats.rv import _value_check, is_random
 
 oo = S.Infinity
@@ -99,6 +97,7 @@ __all__ = ['ContinuousRV',
 'Levy',
 'Logistic',
 'LogLogistic',
+'LogitNormal',
 'LogNormal',
 'Lomax',
 'Maxwell',
@@ -129,13 +128,15 @@ __all__ = ['ContinuousRV',
 def _(x):
     return any([is_random(i) for i in x])
 
-def rv(symbol, cls, args):
+def rv(symbol, cls, args, **kwargs):
     args = list(map(sympify, args))
     dist = cls(*args)
-    dist.check(*args)
+    if kwargs.pop('check', True):
+        dist.check(*args)
     pspace = SingleContinuousPSpace(symbol, dist)
     if any(is_random(arg) for arg in args):
-        pspace = JointPSpace(symbol, CompoundDistribution(dist))
+        from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
+        pspace = CompoundPSpace(symbol, CompoundDistribution(dist))
     return pspace.value
 
 
@@ -153,10 +154,10 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
     def check(pdf, set):
         x = Dummy('x')
         val = integrate(pdf(x), (x, set))
-        _value_check(val == S.One, "The pdf on the given set is incorrect.")
+        _value_check(Eq(val, 1) != S.false, "The pdf on the given set is incorrect.")
 
 
-def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
+def ContinuousRV(symbol, density, set=Interval(-oo, oo), **kwargs):
     """
     Create a Continuous Random Variable given the following:
 
@@ -169,6 +170,11 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
         Represents probability density function.
     set : set/Interval
         Represents the region where the pdf is valid, by default is real line.
+    check : bool
+        If True, it will check whether the given density
+        integrates to 1 over the given set. If False, it
+        will not perform this check. Default is False.
+
 
     Returns
     =======
@@ -197,7 +203,9 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
     pdf = Lambda(symbol, pdf)
-    return rv(symbol.name, ContinuousDistributionHandmade, (pdf, set))
+    # have a default of False while `rv` should have a default of True
+    kwargs['check'] = kwargs.pop('check', False)
+    return rv(symbol.name, ContinuousDistributionHandmade, (pdf, set), **kwargs)
 
 ########################################
 # Continuous Probability Distributions #
@@ -2190,9 +2198,8 @@ def Laplace(name, mu, b):
 
     if isinstance(mu, (list, MatrixBase)) and\
         isinstance(b, (list, MatrixBase)):
-        from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution
-        return multivariate_rv(
-            MultivariateLaplaceDistribution, name, mu, b)
+        from sympy.stats.joint_rv_types import MultivariateLaplace
+        return MultivariateLaplace(name, mu, b)
 
     return rv(name, LaplaceDistribution, (mu, b))
 
@@ -2443,6 +2450,91 @@ def LogLogistic(name, alpha, beta):
     """
 
     return rv(name, LogLogisticDistribution, (alpha, beta))
+
+#-------------------------------------------------------------------------------
+#Logit-Normal distribution------------------------------------------------------
+
+class LogitNormalDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 's')
+    set = Interval.open(0, 1)
+
+    @staticmethod
+    def check(mu, s):
+        _value_check((s ** 2).is_real is not False and s ** 2 > 0, "Squared scale parameter s must be positive.")
+        _value_check(mu.is_real is not False, "Location parameter must be real")
+
+    def _logit(self, x):
+        return log(x / (1 - x))
+
+    def pdf(self, x):
+        mu, s = self.mu, self.s
+        return exp(-(self._logit(x) - mu)**2/(2*s**2))*(S.One/sqrt(2*pi*(s**2)))*(1/(x*(1 - x)))
+
+    def _cdf(self, x):
+        mu, s = self.mu, self.s
+        return (S.One/2)*(1 + erf((self._logit(x) - mu)/(sqrt(2*s**2))))
+
+
+def LogitNormal(name, mu, s):
+    r"""
+    Create a continuous random variable with a Logit-Normal distribution.
+
+    The density of the logistic distribution is given by
+
+    .. math::
+        f(x) := \frac{1}{s \sqrt{2 \pi}} \frac{1}{x(1 - x)} e^{- \frac{(logit(x)  - \mu)^2}{s^2}}
+        where logit(x) = \log(\frac{x}{1 - x})
+    Parameters
+    ==========
+
+    mu : Real number, the location (mean)
+    s : Real number, `s > 0` a scale
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import LogitNormal, density, cdf
+    >>> from sympy import Symbol,pprint
+
+    >>> mu = Symbol("mu", real=True)
+    >>> s = Symbol("s", positive=True)
+    >>> z = Symbol("z")
+    >>> X = LogitNormal("x",mu,s)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+                              2
+            /         /  z  \\
+           -|-mu + log|-----||
+            \         \1 - z//
+           ---------------------
+                       2
+      ___           2*s
+    \/ 2 *e
+    ----------------------------
+            ____
+        2*\/ pi *s*z*(1 - z)
+
+    >>> density(X)(z)
+    sqrt(2)*exp(-(-mu + log(z/(1 - z)))**2/(2*s**2))/(2*sqrt(pi)*s*z*(1 - z))
+
+    >>> cdf(X)(z)
+    erf(sqrt(2)*(-mu + log(z/(1 - z)))/(2*s))/2 + 1/2
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Logit-normal_distribution
+
+    """
+
+    return rv(name, LogitNormalDistribution, (mu, s))
 
 #-------------------------------------------------------------------------------
 # Log Normal distribution ------------------------------------------------------
@@ -2896,7 +2988,7 @@ def Normal(name, mean, std):
     Examples
     ========
 
-    >>> from sympy.stats import Normal, density, E, std, cdf, skewness, quantile
+    >>> from sympy.stats import Normal, density, E, std, cdf, skewness, quantile, marginal_distribution
     >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu")
@@ -2935,7 +3027,6 @@ def Normal(name, mean, std):
     2
 
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
-    >>> from sympy.stats.joint_rv import marginal_distribution
     >>> pprint(density(m)(y, z), use_unicode=False)
            /1   y\ /2*y   z\   /    z\ /  y   2*z    \
            |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
@@ -2958,9 +3049,8 @@ def Normal(name, mean, std):
 
     if isinstance(mean, (list, MatrixBase, MatrixExpr)) and\
         isinstance(std, (list, MatrixBase, MatrixExpr)):
-        from sympy.stats.joint_rv_types import MultivariateNormalDistribution
-        return multivariate_rv(
-            MultivariateNormalDistribution, name, mean, std)
+        from sympy.stats.joint_rv_types import MultivariateNormal
+        return MultivariateNormal(name, mean, std)
     return rv(name, NormalDistribution, (mean, std))
 
 
@@ -2982,7 +3072,7 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         mu, s = self.mean, self.shape
-        return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/((2*pi*x**3)))
+        return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/(2*pi*x**3))
 
     def _cdf(self, x):
         from sympy.stats import cdf

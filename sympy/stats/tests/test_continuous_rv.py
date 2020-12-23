@@ -15,7 +15,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
-                         LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
+                         LogLogistic, LogitNormal, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile,
@@ -24,7 +24,8 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
 from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, MultivariateNormalDistribution
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
-from sympy.stats.joint_rv import JointPSpace
+from sympy.stats.compound_rv import CompoundPSpace
+from sympy.stats.symbolic_probability import Probability
 from sympy.testing.pytest import raises, XFAIL, slow, skip, ignore_warnings
 from sympy.testing.randtest import verify_numerically as tn
 
@@ -327,7 +328,7 @@ def test_sample_continuous():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert next(sample(Z)) in Z.pspace.domain.set
     sym, val = list(Z.pspace.sample().items())[0]
     assert sym == Z and val in Interval(0, oo)
@@ -336,7 +337,7 @@ def test_sample_continuous():
 def test_ContinuousRV():
     pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))  # Normal distribution
     # X and Y should be equivalent
-    X = ContinuousRV(x, pdf)
+    X = ContinuousRV(x, pdf, check=True)
     Y = Normal('y', 0, 1)
 
     assert variance(X) == variance(Y)
@@ -345,7 +346,16 @@ def test_ContinuousRV():
     assert Z.pspace.domain.set == Interval(0, oo)
     assert E(Z) == 1
     assert P(Z > 5) == exp(-5)
-    raises(ValueError, lambda: ContinuousRV(z, exp(-z), set=Interval(0, 10)))
+    raises(ValueError, lambda: ContinuousRV(z, exp(-z), set=Interval(0, 10), check=True))
+
+    # the correct pdf for Gamma(k, theta) but the integral in `check`
+    # integrates to something equivalent to 1 and not to 1 exactly
+    _x, k, theta = symbols("x k theta", positive=True)
+    pdf = 1/(gamma(k)*theta**k)*_x**(k-1)*exp(-_x/theta)
+    X = ContinuousRV(_x, pdf, set=Interval(0, oo))
+    Y = Gamma('y', k, theta)
+    assert (E(X) - E(Y)).simplify() == 0
+    assert (variance(X) - variance(Y)).simplify() == 0
 
 
 def test_arcsin():
@@ -643,12 +653,12 @@ def test_exponential():
     _z = Dummy('_z')
     b = SingleContinuousPSpace(x, ExponentialDistribution(2))
 
-    expected1 = Integral(2*exp(-2*_z), (_z, 3, oo))
-    assert b.probability(x > 3, evaluate=False).dummy_eq(expected1) is True
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        expected1 = Integral(2*exp(-2*_z), (_z, 3, oo))
+        assert b.probability(x > 3, evaluate=False).rewrite(Integral).dummy_eq(expected1)
 
-    expected2 = Integral(2*exp(-2*_z), (_z, 0, 4))
-    assert b.probability(x < 4, evaluate=False).dummy_eq(expected2) is True
-
+        expected2 = Integral(2*exp(-2*_z), (_z, 0, 4))
+        assert b.probability(x < 4, evaluate=False).rewrite(Integral).dummy_eq(expected2)
     Y = Exponential('y', 2*rate)
     assert coskewness(X, X, X) == skewness(X)
     assert coskewness(X, Y + rate*X, Y + 2*rate*X) == \
@@ -758,7 +768,7 @@ def test_sampling_gamma_inverse():
     if not scipy:
         skip('Scipy not installed. Abort tests for sampling of gamma inverse.')
     X = GammaInverse("x", 1, 1)
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert next(sample(X)) in X.pspace.domain.set
 
 def test_gompertz():
@@ -873,6 +883,15 @@ def test_loglogistic():
     X = LogLogistic('x', 1, 2)
     assert median(X) == FiniteSet(1)
 
+def test_logitnormal():
+    mu = Symbol('mu', real=True)
+    s = Symbol('s', positive=True)
+    X = LogitNormal('x', mu, s)
+    x = Symbol('x')
+
+    assert density(X)(x) == sqrt(2)*exp(-(-mu + log(x/(1 - x)))**2/(2*s**2))/(2*sqrt(pi)*s*x*(1 - x))
+    assert cdf(X)(x) == erf(sqrt(2)*(-mu + log(x/(1 - x)))/(2*s))/2 + S(1)/2
+
 def test_lognormal():
     mean = Symbol('mu', real=True)
     std = Symbol('sigma', positive=True)
@@ -885,13 +904,13 @@ def test_lognormal():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         for i in range(3):
             X = LogNormal('x', i, 1)
             assert next(sample(X)) in X.pspace.domain.set
 
     size = 5
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         samps = next(sample(X, size=size))
         for samp in samps:
             assert samp in X.pspace.domain.set
@@ -1014,7 +1033,7 @@ def test_sampling_gaussian_inverse():
     if not scipy:
         skip('Scipy not installed. Abort tests for sampling of Gaussian inverse.')
     X = GaussianInverse("x", 1, 1)
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         assert next(sample(X, library='scipy')) in X.pspace.domain.set
 
 def test_pareto():
@@ -1046,7 +1065,7 @@ def test_pareto_numeric():
     X = Pareto('x', xm, alpha)
 
     assert E(X) == alpha*xm/S(alpha - 1)
-    assert variance(X) == xm**2*alpha / S(((alpha - 1)**2*(alpha - 2)))
+    assert variance(X) == xm**2*alpha / S((alpha - 1)**2*(alpha - 2))
     assert median(X) == FiniteSet(3*2**Rational(1, 7))
     # Skewness tests too slow. Try shortcutting function?
 
@@ -1316,9 +1335,9 @@ def test_prefab_sampling():
     variables = [N, L, E, P, W, U, B, G]
     niter = 10
     size = 5
-    with ignore_warnings(UserWarning):
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         for var in variables:
-            for i in range(niter):
+            for _ in range(niter):
                 assert next(sample(var)) in var.pspace.domain.set
                 samps = next(sample(var, size=size))
                 for samp in samps:
@@ -1342,21 +1361,21 @@ def test_input_value_assertions():
 
 def test_unevaluated():
     X = Normal('x', 0, 1)
-    assert str(E(X, evaluate=False)) == ("Integral(sqrt(2)*x*exp(-x**2/2)/"
-    "(2*sqrt(pi)), (x, -oo, oo))")
+    k = Dummy('k')
+    expr1 = Integral(sqrt(2)*k*exp(-k**2/2)/(2*sqrt(pi)), (k, -oo, oo))
+    expr2 = Integral(sqrt(2)*exp(-k**2/2)/(2*sqrt(pi)), (k, 0, oo))
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert E(X, evaluate=False).rewrite(Integral).dummy_eq(expr1)
+        assert E(X + 1, evaluate=False).rewrite(Integral).dummy_eq(expr1 + 1)
+        assert P(X > 0, evaluate=False).rewrite(Integral).dummy_eq(expr2)
 
-    assert str(E(X + 1, evaluate=False)) == ("Integral(sqrt(2)*x*exp(-x**2/2)/"
-    "(2*sqrt(pi)), (x, -oo, oo)) + 1")
-
-    assert str(P(X > 0, evaluate=False)) == ("Integral(sqrt(2)*exp(-_z**2/2)/"
-    "(2*sqrt(pi)), (_z, 0, oo))")
-
-    assert P(X > 0, X**2 < 1, evaluate=False) == S.Half
+    assert P(X > 0, X**2 < 1) == S.Half
 
 
 def test_probability_unevaluated():
     T = Normal('T', 30, 3)
-    assert type(P(T > 33, evaluate=False)) == Integral
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert type(P(T > 33, evaluate=False)) == Probability
 
 
 def test_density_unevaluated():
@@ -1395,11 +1414,10 @@ def test_random_parameters():
     mu = Normal('mu', 2, 3)
     meas = Normal('T', mu, 1)
     assert density(meas, evaluate=False)(z)
-    assert isinstance(pspace(meas), JointPSpace)
+    assert isinstance(pspace(meas), CompoundPSpace)
     X = Normal('x', [1, 2], [[1, 0], [0, 1]])
     assert isinstance(pspace(X).distribution, MultivariateNormalDistribution)
-    #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
-    #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)
+    assert density(meas)(z).simplify() == sqrt(5)*exp(-z**2/20 + z/5 - S(1)/5)/(10*sqrt(pi))
 
 
 def test_random_parameters_given():
@@ -1584,7 +1602,7 @@ def test_sample_numpy():
     if not numpy:
         skip('Numpy is not installed. Abort tests for _sample_numpy.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_numpy:
                 samps = next(sample(X, size=size, library='numpy'))
                 for sam in samps:
@@ -1617,7 +1635,7 @@ def test_sample_scipy():
     if not scipy:
         skip('Scipy is not installed. Abort tests for _sample_scipy.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             g_sample = list(sample(Gamma("G", 2, 7), size=size, numsamples=numsamples))
             assert len(g_sample) == numsamples
             for X in distribs_scipy:
@@ -1647,7 +1665,7 @@ def test_sample_pymc3():
     if not pymc3:
         skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
     else:
-        with ignore_warnings(UserWarning):
+        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
             for X in distribs_pymc3:
                 samps = next(sample(X, size=size, library='pymc3'))
                 for sam in samps:

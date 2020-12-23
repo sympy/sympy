@@ -1,6 +1,5 @@
 from typing import Set
 
-from sympy.codegen.ast import Assignment
 from sympy.core import Basic, S
 from sympy.core.function import _coeff_isneg, Lambda
 from sympy.printing.codeprinter import CodePrinter
@@ -69,10 +68,10 @@ class GLSLPrinter(CodePrinter):
         return "%s;" % codestring
 
     def _get_comment(self, text):
-        return "// {0}".format(text)
+        return "// {}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "float {0} = {1};".format(name, value)
+        return "float {} = {};".format(name, value)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -132,12 +131,9 @@ class GLSLPrinter(CodePrinter):
         elif self._settings['mat_nested']:
             return 'float[%s][%s](\n%s\n)' % (A.rows,A.cols,A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')'))
 
-    _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
+    def _print_SparseMatrix(self, mat):
+        # do not allow sparse matrices to be made dense
+        return self._print_not_supported(mat)
 
     def _traverse_matrix_indices(self, mat):
         mat_transpose = self._settings['mat_transpose']
@@ -164,7 +160,7 @@ class GLSLPrinter(CodePrinter):
             return "%s[%s][%s]" % (pnt, i, j)
         else:
             # print('end _print_MatrixElement case B',nest,glsl_types)
-            return "{0}[{1}]".format(pnt, i + j*rows)
+            return "{}[{}]".format(pnt, i + j*rows)
 
     def _print_list(self, expr):
         l = ', '.join(self._print(item) for item in expr)
@@ -212,6 +208,7 @@ class GLSLPrinter(CodePrinter):
             return self._print_not_supported(func)
 
     def _print_Piecewise(self, expr):
+        from sympy.codegen.ast import Assignment
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
@@ -285,7 +282,7 @@ class GLSLPrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Add(self, expr, order=None):
         if self._settings['use_operators']:

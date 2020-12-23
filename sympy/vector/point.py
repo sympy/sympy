@@ -1,8 +1,8 @@
 from sympy.core.basic import Basic
+from sympy.core.symbol import Str
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.functions import _path
-from sympy import Symbol
 from sympy.core.cache import cacheit
 
 
@@ -25,9 +25,9 @@ class Point(Basic):
                     parent_point))
         # Super class construction
         if parent_point is None:
-            obj = super().__new__(cls, Symbol(name), position)
+            obj = super().__new__(cls, Str(name), position)
         else:
-            obj = super().__new__(cls, Symbol(name), position, parent_point)
+            obj = super().__new__(cls, Str(name), position, parent_point)
         # Decide the object parameters
         obj._name = name
         obj._pos = position
@@ -147,8 +147,5 @@ class Point(Basic):
         # Express it in the given coordinate system
         return tuple(pos_vect.to_matrix(coordinate_system))
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return self._name
-
-    __repr__ = __str__
-    _sympystr = __str__

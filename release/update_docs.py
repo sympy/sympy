@@ -46,21 +46,14 @@ def update_docs(sympy_doc_git, doc_html_zip, version, push):
     # We started with a clean tree so restore it on error
     with git_rollback_on_error(sympy_doc_git, branch='gh-pages') as run:
 
-        # Update releases.txt file
-        update_releases_txt(sympy_doc_git, version)
-        run('git', 'diff') # Show change to releases.txt
-        run('git', 'add', 'releases.txt')
-        run('git', 'commit', '-m', 'Add sympy %s to releases.txt' % version)
-
         # Delete docs for the last version
         run('git', 'rm', '-rf', 'latest')
 
         # Extract new docs in replacement
-        extract_docs(sympy_doc_git, doc_html_zip, version)
+        extract_docs(sympy_doc_git, doc_html_zip)
 
         # Commit new docs
         run('git', 'add', 'latest')
-        run('git', 'add', version)
         run('git', 'commit', '-m', 'Add sympy %s docs' % version)
 
         # Update indexes
@@ -105,26 +98,7 @@ def git_rollback_on_error(gitroot_path, branch='master'):
         run('git', 'reset', '--hard', sha_start)
         raise e from None
 
-
-def update_releases_txt(sympy_doc_git, version):
-    """Add line to the releases.txt file"""
-
-    print()
-    print("Updating releases.txt")
-    print()
-
-    releases_txt_path = join(sympy_doc_git, 'releases.txt')
-
-    with open(releases_txt_path) as fin:
-        lines = fin.readlines()
-
-    lines += ["{0}:SymPy {0}\n".format(version)]
-
-    with open(releases_txt_path, "w") as fout:
-        fout.writelines(lines)
-
-
-def extract_docs(sympy_doc_git, doc_html_zip, version):
+def extract_docs(sympy_doc_git, doc_html_zip):
 
     subdirname = splitext(basename(doc_html_zip))[0]
 
@@ -140,14 +114,6 @@ def extract_docs(sympy_doc_git, doc_html_zip, version):
         srcpath = join(tempdir, subdirname)
         dstpath = join(sympy_doc_git, 'latest')
         copytree(srcpath, dstpath)
-
-        print()
-        print('Copying to sympy_doc/%s' % version)
-        print()
-        srcpath = join(tempdir, subdirname)
-        dstpath = join(sympy_doc_git, version)
-        copytree(srcpath, dstpath)
-
 
 if __name__ == "__main__":
     main(*sys.argv[1:])

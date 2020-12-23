@@ -1,4 +1,3 @@
-from typing import Any
 import mpmath as mp
 
 from sympy.core.add import Add
@@ -11,11 +10,13 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
 from sympy.core.sympify import sympify
+from sympy.core.sympify import _sympify
 from sympy.functions import exp, factorial, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import cancel
 from sympy.printing import sstr
+from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
@@ -29,7 +30,7 @@ from .utilities import _iszero, _is_zero_after_expand_mul
 
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
-    _adjugate, _charpoly, _cofactor, _cofactor_matrix,
+    _adjugate, _charpoly, _cofactor, _cofactor_matrix, _per,
     _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
 
 from .reductions import _is_echelon, _echelon_form, _rank, _rref
@@ -122,6 +123,9 @@ class MatrixDeterminant(MatrixCommon):
     def det(self, method="bareiss", iszerofunc=None):
         return _det(self, method=method, iszerofunc=iszerofunc)
 
+    def per(self):
+        return _per(self)
+
     def minor(self, i, j, method="berkowitz"):
         return _minor(self, i, j, method=method)
 
@@ -139,6 +143,7 @@ class MatrixDeterminant(MatrixCommon):
     cofactor.__doc__                     = _cofactor.__doc__
     cofactor_matrix.__doc__              = _cofactor_matrix.__doc__
     det.__doc__                          = _det.__doc__
+    per.__doc__                          = _per.__doc__
     minor.__doc__                        = _minor.__doc__
     minor_submatrix.__doc__              = _minor_submatrix.__doc__
 
@@ -355,7 +360,7 @@ class MatrixSubspaces(MatrixReductions):
     rowspace.__doc__      = _rowspace.__doc__
     orthogonalize.__doc__ = _orthogonalize.__doc__
 
-    orthogonalize         = classmethod(orthogonalize)
+    orthogonalize         = classmethod(orthogonalize)  # type:ignore
 
 
 class MatrixEigen(MatrixSubspaces):
@@ -453,9 +458,9 @@ class MatrixCalculus(MatrixCommon):
         limit
         """
         # XXX this should be handled here rather than in Derivative
-        from sympy import Derivative
+        from sympy.tensor.array.array_derivatives import ArrayDerivative
         kwargs.setdefault('evaluate', True)
-        deriv = Derivative(self, *args, evaluate=True)
+        deriv = ArrayDerivative(self, *args, evaluate=True)
         if not isinstance(self, Basic):
             return deriv.as_mutable()
         else:
@@ -463,18 +468,6 @@ class MatrixCalculus(MatrixCommon):
 
     def _eval_derivative(self, arg):
         return self.applyfunc(lambda x: x.diff(arg))
-
-    def _accept_eval_derivative(self, s):
-        return s._visit_eval_derivative_array(self)
-
-    def _visit_eval_derivative_scalar(self, base):
-        # Types are (base: scalar, self: matrix)
-        return self.applyfunc(lambda x: base.diff(x))
-
-    def _visit_eval_derivative_array(self, base):
-        # Types are (base: array/matrix, self: matrix)
-        from sympy import derive_by_array
-        return derive_by_array(base, self)
 
     def integrate(self, *args, **kwargs):
         """Integrate each element of the matrix.  ``args`` will
@@ -752,7 +745,8 @@ class MatrixDeprecated(MatrixCommon):
 class MatrixBase(MatrixDeprecated,
                  MatrixCalculus,
                  MatrixEigen,
-                 MatrixCommon):
+                 MatrixCommon,
+                 Printable):
     """Base class for matrix objects."""
     # Added just for numpy compatibility
     __array_priority__ = 11
@@ -762,27 +756,6 @@ class MatrixBase(MatrixDeprecated,
     _sympify = staticmethod(sympify)
     zero = S.Zero
     one = S.One
-
-    # Defined here the same as on Basic.
-
-    # We don't define _repr_png_ here because it would add a large amount of
-    # data to any notebook containing SymPy expressions, without adding
-    # anything useful to the notebook. It can still enabled manually, e.g.,
-    # for the qtconsole, with init_printing().
-    def _repr_latex_(self):
-        """
-        IPython/Jupyter LaTeX printing
-
-        To change the behavior of this (e.g., pass in some settings to LaTeX),
-        use init_printing(). init_printing() will also enable LaTeX printing
-        for built in numeric types like ints and container types that contain
-        SymPy objects, like lists and dictionaries of expressions.
-        """
-        from sympy.printing.latex import latex
-        s = latex(self, mode='plain')
-        return "$\\displaystyle %s$" % s
-
-    _repr_latex_orig = _repr_latex_  # type: Any
 
     def __array__(self, dtype=object):
         from .dense import matrix2numpy
@@ -794,15 +767,6 @@ class MatrixBase(MatrixDeprecated,
         Implemented mainly so bool(Matrix()) == False.
         """
         return self.rows * self.cols
-
-    def __mathml__(self):
-        mml = ""
-        for i in range(self.rows):
-            mml += "<matrixrow>"
-            for j in range(self.cols):
-                mml += self[i, j].__mathml__()
-            mml += "</matrixrow>"
-        return "<matrix>" + mml + "</matrix>"
 
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
@@ -837,9 +801,6 @@ class MatrixBase(MatrixDeprecated,
             jordan_cell_power(j, num)
         return self._new(P.multiply(diag(*jordan_cells))
                 .multiply(P.inv()))
-
-    def __repr__(self):
-        return sstr(self)
 
     def __str__(self):
         if self.rows == 0 or self.cols == 0:
@@ -1538,17 +1499,19 @@ class MatrixBase(MatrixDeprecated,
         """
         from sympy import diff
 
+        f, x = _sympify(f), _sympify(x)
         if not self.is_square:
-            raise NonSquareMatrixError(
-                "Valid only for square matrices")
+            raise NonSquareMatrixError
         if not x.is_symbol:
-            raise ValueError("The parameter for f should be a symbol")
+            raise ValueError("{} must be a symbol.".format(x))
         if x not in f.free_symbols:
-            raise ValueError("x should be a parameter in Function")
+            raise ValueError(
+                "{} must be a parameter of {}.".format(x, f))
         if x in self.free_symbols:
-            raise ValueError("x should be a parameter in Matrix")
-        eigen = self.eigenvals()
+            raise ValueError(
+                "{} must not be a parameter of {}.".format(x, self))
 
+        eigen = self.eigenvals()
         max_mul = max(eigen.values())
         derivative = {}
         dd = f
@@ -1563,9 +1526,11 @@ class MatrixBase(MatrixDeprecated,
         for i in eigen:
             mul = eigen[i]
             f_val[row] = f.subs(x, i)
-            if not f.subs(x, i).free_symbols and not f.subs(x, i).is_complex:
-                raise ValueError("Cannot Evaluate the function is not"
-                                 " analytic at some eigen value")
+            if f_val[row].is_number and not f_val[row].is_complex:
+                raise ValueError(
+                    "Cannot evaluate the function because the "
+                    "function {} is not analytic at the given "
+                    "eigenvalue {}".format(f, f_val[row]))
             val = 1
             for a in range(n):
                 r[row, a] = val
@@ -1577,9 +1542,11 @@ class MatrixBase(MatrixDeprecated,
                     row = row + 1
                     mul -= 1
                     d_i = derivative[deri].subs(x, i)
-                    if not d_i.free_symbols and not d_i.is_complex:
-                        raise ValueError("Cannot Evaluate the function is not"
-                                 " analytic at some eigen value")
+                    if d_i.is_number and not d_i.is_complex:
+                        raise ValueError(
+                            "Cannot evaluate the function because the "
+                            "derivative {} is not analytic at the given "
+                            "eigenvalue {}".format(derivative[deri], d_i))
                     f_val[row] = d_i
                     for a in range(n):
                         if a - deri + 1 <= 0:
@@ -1630,7 +1597,7 @@ class MatrixBase(MatrixDeprecated,
         from sympy import re
         eJ = diag(*blocks)
         # n = self.rows
-        ret = P.multiply(eJ, dotprodsimp=True).multiply(P.inv(), dotprodsimp=True)
+        ret = P.multiply(eJ, dotprodsimp=None).multiply(P.inv(), dotprodsimp=None)
         if all(value.is_real for value in self.values()):
             return type(self)(re(ret))
         else:
@@ -2105,61 +2072,6 @@ class MatrixBase(MatrixDeprecated,
                 row[j] = getattr(elem, align)(maxlen[j])
             res[i] = rowstart + colsep.join(row) + rowend
         return rowsep.join(res)
-
-    def vech(self, diagonal=True, check_symmetry=True):
-        """Return the unique elements of a symmetric Matrix as a one column matrix
-        by stacking the elements in the lower triangle.
-
-        Arguments:
-        diagonal -- include the diagonal cells of ``self`` or not
-        check_symmetry -- checks symmetry of ``self`` but not completely reliably
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> m=Matrix([[1, 2], [2, 3]])
-        >>> m
-        Matrix([
-        [1, 2],
-        [2, 3]])
-        >>> m.vech()
-        Matrix([
-        [1],
-        [2],
-        [3]])
-        >>> m.vech(diagonal=False)
-        Matrix([[2]])
-
-        See Also
-        ========
-
-        vec
-        """
-        from sympy.matrices import zeros
-
-        c = self.cols
-        if c != self.rows:
-            raise NonSquareMatrixError("Matrix must be square")
-        if check_symmetry:
-            self.simplify()
-            if self != self.transpose():
-                raise ValueError(
-                    "Matrix appears to be asymmetric; consider check_symmetry=False")
-        count = 0
-        if diagonal:
-            v = zeros(c * (c + 1) // 2, 1)
-            for j in range(c):
-                for i in range(j, c):
-                    v[count] = self[i, j]
-                    count += 1
-        else:
-            v = zeros(c * (c - 1) // 2, 1)
-            for j in range(c):
-                for i in range(j + 1, c):
-                    v[count] = self[i, j]
-                    count += 1
-        return v
 
     def rank_decomposition(self, iszerofunc=_iszero, simplify=False):
         return _rank_decomposition(self, iszerofunc=iszerofunc,

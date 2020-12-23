@@ -47,6 +47,7 @@ fi
 
 if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     python bin/test_external_imports.py
+    python bin/test_submodule_imports.py
     python bin/test_executable.py
 fi
 
@@ -186,6 +187,9 @@ test_list = [
     'sympy/logic',
     'sympy/assumptions',
 
+    #stats
+    'sympy/stats',
+
 ]
 
 blacklist = [
@@ -227,6 +231,9 @@ doctest_list = [
     # pycosat
     'sympy/logic',
     'sympy/assumptions',
+
+    #stats
+    'sympy/stats',
 
 ]
 

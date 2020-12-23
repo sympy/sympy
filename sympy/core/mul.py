@@ -1,14 +1,13 @@
 from collections import defaultdict
-from functools import cmp_to_key
+from functools import cmp_to_key, reduce
 import operator
 
 from .sympify import sympify
 from .basic import Basic
 from .singleton import S
-from .operations import AssocOp
+from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
-from .logic import fuzzy_not, _fuzzy_group, fuzzy_and
-from .compatibility import reduce
+from .logic import fuzzy_not, _fuzzy_group
 from .expr import Expr
 from .parameters import global_parameters
 
@@ -91,6 +90,8 @@ class Mul(Expr, AssocOp):
     __slots__ = ()
 
     is_Mul = True
+
+    _args_type = Expr
 
     def __neg__(self):
         c, args = self.as_coeff_mul()
@@ -712,6 +713,9 @@ class Mul(Expr, AssocOp):
         - if you want the coefficient when self is treated as an Add
           then use self.as_coeff_add()[0]
 
+        Examples
+        ========
+
         >>> from sympy.abc import x, y
         >>> (3*x*y).as_two_terms()
         (3, x*y)
@@ -754,12 +758,11 @@ class Mul(Expr, AssocOp):
         return d
 
     @cacheit
-    def as_coeff_mul(self, *deps, **kwargs):
+    def as_coeff_mul(self, *deps, rational=True, **kwargs):
         if deps:
             from sympy.utilities.iterables import sift
             l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
             return self._new_rawargs(*l2), tuple(l1)
-        rational = kwargs.pop('rational', True)
         args = self.args
         if args[0].is_Number:
             if not rational or args[0].is_Rational:
@@ -1258,27 +1261,47 @@ class Mul(Expr, AssocOp):
                     zero = None
         return zero
 
+    # without involving odd/even checks this code would suffice:
+    #_eval_is_integer = lambda self: _fuzzy_group(
+    #    (a.is_integer for a in self.args), quick_exit=True)
     def _eval_is_integer(self):
-        from sympy import fraction
-        from sympy.core.numbers import Float
-
         is_rational = self._eval_is_rational()
         if is_rational is False:
             return False
 
-        # use exact=True to avoid recomputing num or den
-        n, d = fraction(self, exact=True)
-        if is_rational:
-            if d is S.One:
-                return True
-        if d.is_even:
-            if d.is_prime:  # literal or symbolic 2
-                return n.is_even
-            if n.is_odd:
-                return False  # true even if d = 0
-        if n == d:
-            return fuzzy_and([not bool(self.atoms(Float)),
-            fuzzy_not(d.is_zero)])
+        numerators = []
+        denominators = []
+        for a in self.args:
+            if a.is_integer:
+                numerators.append(a)
+            elif a.is_Rational:
+                n, d = a.as_numer_denom()
+                numerators.append(n)
+                denominators.append(d)
+            elif a.is_Pow:
+                b, e = a.as_base_exp()
+                if not b.is_integer or not e.is_integer: return
+                if e.is_negative:
+                    denominators.append(b)
+                else:
+                    # for integer b and positive integer e: a = b**e would be integer
+                    assert not e.is_positive
+                    # for self being rational and e equal to zero: a = b**e would be 1
+                    assert not e.is_zero
+                    return # sign of e unknown -> self.is_integer cannot be decided
+            else:
+                return
+
+        if not denominators:
+            return True
+
+        odd = lambda ints: all(i.is_odd for i in ints)
+        even = lambda ints: any(i.is_even for i in ints)
+
+        if odd(numerators) and even(denominators):
+            return False
+        elif even(numerators) and denominators == [2]:
+            return True
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)
@@ -1399,6 +1422,9 @@ class Mul(Expr, AssocOp):
     def _eval_is_extended_positive(self):
         """Return True if self is positive, False if not, and None if it
         cannot be determined.
+
+        Explanation
+        ===========
 
         This algorithm is non-recursive and works by keeping track of the
         sign which changes when a negative or nonpositive is encountered.
@@ -1763,8 +1789,8 @@ class Mul(Expr, AssocOp):
             margs = [Pow(new, cdid)] + margs
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
-    def _eval_nseries(self, x, n, logx):
-        from sympy import Integer, Mul, Order, ceiling, powsimp
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy import degree, Mul, Order, ceiling, powsimp, PolynomialError
         from itertools import product
 
         def coeff_exp(term, x):
@@ -1773,7 +1799,10 @@ class Mul(Expr, AssocOp):
                 if factor.has(x):
                     base, exp = factor.as_base_exp()
                     if base != x:
-                        return term.leadterm(x)
+                        try:
+                            return term.leadterm(x)
+                        except ValueError:
+                            return term, S.Zero
                 else:
                     coeff *= factor
             return coeff, exp
@@ -1783,16 +1812,24 @@ class Mul(Expr, AssocOp):
         try:
             for t in self.args:
                 coeff, exp = t.leadterm(x)
-                if isinstance(coeff, Integer) or isinstance(coeff, Rational):
+                if not coeff.has(x):
                     ords.append((t, exp))
                 else:
                     raise ValueError
 
             n0 = sum(t[1] for t in ords)
-            facs = [t.series(x, 0, ceiling(n-n0+m)).removeO() for t, m in ords]
+            facs = []
+            for t, m in ords:
+                n1 = ceiling(n - n0 + m)
+                s = t.nseries(x, n=n1, logx=logx, cdir=cdir)
+                ns = s.getn()
+                if ns is not None:
+                    if ns < n1:  # less than expected
+                        n -= n1 - ns    # reduce n
+                facs.append(s.removeO())
 
         except (ValueError, NotImplementedError, TypeError, AttributeError):
-            facs = [t.nseries(x, n=n, logx=logx) for t in self.args]
+            facs = [t.nseries(x, n=n, logx=logx, cdir=cdir) for t in self.args]
             res = powsimp(self.func(*facs).expand(), combine='exp', deep=True)
             if res.has(Order):
                 res += Order(x**n, x)
@@ -1808,11 +1845,23 @@ class Mul(Expr, AssocOp):
             if power < n:
                 res += Mul(*coeffs)*(x**power)
 
-        res += Order(x**n, x)
+        if self.is_polynomial(x):
+            try:
+                if degree(self, x) != degree(res, x):
+                    res += Order(x**n, x)
+            except PolynomialError:
+                pass
+            else:
+                return res
+
+        for i in (1, 2, 3):
+            if (res - self).subs(x, i) is not S.Zero:
+                res += Order(x**n, x)
+                break
         return res
 
-    def _eval_as_leading_term(self, x):
-        return self.func(*[t.as_leading_term(x) for t in self.args])
+    def _eval_as_leading_term(self, x, cdir=0):
+        return self.func(*[t.as_leading_term(x, cdir=cdir) for t in self.args])
 
     def _eval_conjugate(self):
         return self.func(*[t.conjugate() for t in self.args])
@@ -1876,6 +1925,7 @@ class Mul(Expr, AssocOp):
     def _sorted_args(self):
         return tuple(self.as_ordered_factors())
 
+mul = AssocOpDispatcher('mul')
 
 def prod(a, start=1):
     """Return product of elements of a. Start with int 1 so if only

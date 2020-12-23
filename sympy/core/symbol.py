@@ -1,6 +1,6 @@
 from sympy.core.assumptions import StdFactKB, _assume_defined
 from sympy.core.compatibility import is_sequence, ordered
-from .basic import Basic
+from .basic import Basic, Atom
 from .sympify import sympify
 from .singleton import S
 from .expr import Expr, AtomicExpr
@@ -15,6 +15,33 @@ import string
 import re as _re
 import random
 
+class Str(Atom):
+    """
+    Represents string in SymPy.
+
+    Explanation
+    ===========
+
+    Previously, ``Symbol`` was used where string is needed in ``args`` of SymPy
+    objects, e.g. denoting the name of the instance. However, since ``Symbol``
+    represents mathematical scalar, this class should be used instead.
+
+    """
+    __slots__ = ('name',)
+
+    def __new__(cls, name, **kwargs):
+        if not isinstance(name, str):
+            raise TypeError("name should be a string, not %s" % repr(type(name)))
+        obj = Expr.__new__(cls, **kwargs)
+        obj.name = name
+        return obj
+
+    def __getnewargs__(self):
+        return (self.name,)
+
+    def _hashable_content(self):
+        return (self.name,)
+
 
 def _filter_assumptions(kwargs):
     """Split the given dict into assumptions and non-assumptions.
@@ -26,7 +53,6 @@ def _filter_assumptions(kwargs):
         binary=True))
     Symbol._sanitize(assumptions)
     return assumptions, nonassumptions
-
 
 def _symbol(s, matching_symbol=None, **assumptions):
     """Return s if s is a Symbol, else if s is a string, return either
@@ -104,11 +130,13 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
     ==========
 
         xname : a string or a Symbol (when symbol xname <- str(xname))
+
         compare : a single arg function that takes a symbol and returns
             a string to be compared with xname (the default is the str
             function which indicates how the name will look when it
             is printed, e.g. this includes underscores that appear on
             Dummy symbols)
+
         modify : a single arg function that changes its string argument
             in some way (the default is to append numbers)
 
@@ -141,9 +169,9 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
         return _symbol(x, default, **assumptions)
     if not is_sequence(exprs):
         exprs = [exprs]
-    names = set().union((
+    names = set().union(
         [i.name for e in exprs for i in e.atoms(Symbol)] +
-        [i.func.name for e in exprs for i in e.atoms(AppliedUndef)]))
+        [i.func.name for e in exprs for i in e.atoms(AppliedUndef)])
     if modify is None:
         modify = numbered_string_incr
     while any(x == compare(s) for s in names):
@@ -156,7 +184,10 @@ class Symbol(AtomicExpr, Boolean):
     Assumptions:
        commutative = True
 
-    You can override the default assumptions in the constructor:
+    You can override the default assumptions in the constructor.
+
+    Examples
+    ========
 
     >>> from sympy import symbols
     >>> A,B = symbols('A,B', commutative = False)
@@ -320,6 +351,9 @@ class Symbol(AtomicExpr, Boolean):
 class Dummy(Symbol):
     """Dummy symbols are each unique, even if they have the same name:
 
+    Examples
+    ========
+
     >>> from sympy import Dummy
     >>> Dummy("x") == Dummy("x")
     False
@@ -392,8 +426,10 @@ class Wild(Symbol):
 
     name : str
         Name of the Wild instance.
+
     exclude : iterable, optional
         Instances in ``exclude`` will not be matched.
+
     properties : iterable of functions, optional
         Functions, each taking an expressions as input
         and returns a ``bool``. All functions in ``properties``
@@ -506,7 +542,7 @@ class Wild(Symbol):
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
-def symbols(names, **args):
+def symbols(names, *, cls=Symbol, **args):
     r"""
     Transform strings into instances of :class:`Symbol` class.
 
@@ -657,7 +693,6 @@ def symbols(names, **args):
         for i in range(len(names) - 1, -1, -1):
             names[i: i + 1] = names[i].split()
 
-        cls = args.pop('cls', Symbol)
         seq = args.pop('seq', as_seq)
 
         for name in names:
@@ -722,6 +757,9 @@ def symbols(names, **args):
 def var(names, **args):
     """
     Create symbols and inject them into the global namespace.
+
+    Explanation
+    ===========
 
     This calls :func:`symbols` with the same arguments and puts the results
     into the *global* namespace. It's recommended not to use :func:`var` in

@@ -5,6 +5,7 @@ from sympy.matrices import eye, Matrix
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL
 from sympy.matrices.matrices import NonSquareMatrixError, MatrixError
+from sympy.matrices.expressions.fourier import DFT
 from sympy.simplify.simplify import simplify
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.testing.pytest import slow
@@ -103,13 +104,11 @@ def test_eigen():
     assert max(i.q for i in M._eigenvects[0][2][0]) > 1
     M._eigenvects = M.eigenvects(simplify=True)
     assert max(i.q for i in M._eigenvects[0][2][0]) == 1
+
     M = Matrix([[Rational(1, 4), 1], [1, 1]])
-    assert M.eigenvects(simplify=True) == [
+    assert M.eigenvects() == [
         (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-sqrt(73)/8 - Rational(3, 8)], [1]])]),
         (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[Rational(-3, 8) + sqrt(73)/8], [1]])])]
-    assert M.eigenvects(simplify=False) == [
-        (Rational(5, 8) - sqrt(73)/8, 1, [Matrix([[-1/(-Rational(3, 8) + sqrt(73)/8)], [1]])]),
-        (Rational(5, 8) + sqrt(73)/8, 1, [Matrix([[8/(3 + sqrt(73))], [1]])])]
 
     # issue 10719
     assert Matrix([]).eigenvals() == {}
@@ -117,24 +116,38 @@ def test_eigen():
     assert Matrix([]).eigenvects() == []
 
     # issue 15119
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 2], [0, 4], [0, 0]]).eigenvals())
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 0], [3, 4], [5, 6]]).eigenvals())
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals())
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals())
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals(error_when_incomplete = False))
-    raises(NonSquareMatrixError, lambda : Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals(error_when_incomplete = False))
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 2], [0, 4], [0, 0]]).eigenvals())
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 0], [3, 4], [5, 6]]).eigenvals())
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals())
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals())
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 2, 3], [0, 5, 6]]).eigenvals(
+               error_when_incomplete = False))
+    raises(NonSquareMatrixError,
+           lambda: Matrix([[1, 0, 0], [4, 5, 0]]).eigenvals(
+               error_when_incomplete = False))
 
-    # issue 15125
-    from sympy.core.function import count_ops
-    q = Symbol("q", positive = True)
-    m = Matrix([[-2, exp(-q), 1], [exp(q), -2, 1], [1, 1, -2]])
-    assert count_ops(m.eigenvals(simplify=False)) > count_ops(m.eigenvals(simplify=True))
-    assert count_ops(m.eigenvals(simplify=lambda x: x)) > count_ops(m.eigenvals(simplify=True))
-
+    m = Matrix([[1, 2], [3, 4]])
     assert isinstance(m.eigenvals(simplify=True, multiple=False), dict)
     assert isinstance(m.eigenvals(simplify=True, multiple=True), list)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=False), dict)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=True), list)
+
+
+@slow
+def test_eigen_slow():
+    # issue 15125
+    from sympy.core.function import count_ops
+    q = Symbol("q", positive = True)
+    m = Matrix([[-2, exp(-q), 1], [exp(q), -2, 1], [1, 1, -2]])
+    assert count_ops(m.eigenvals(simplify=False)) > \
+        count_ops(m.eigenvals(simplify=True))
+    assert count_ops(m.eigenvals(simplify=lambda x: x)) > \
+        count_ops(m.eigenvals(simplify=True))
 
 
 def test_float_eigenvals():
@@ -199,14 +212,16 @@ def test_eigenvals():
                 [1, 1, 1]])
     assert M.eigenvals() == {2*S.One: 1, -S.One: 1, S.Zero: 1}
 
-    # if we cannot factor the char poly, we raise an error
     m = Matrix([
         [3,  0,  0, 0, -3],
         [0, -3, -3, 0,  3],
         [0,  3,  0, 3,  0],
         [0,  0,  3, 0,  3],
         [3,  0,  0, 3,  0]])
-    raises(MatrixError, lambda: m.eigenvals())
+
+    # XXX Used dry-run test because arbitrary symbol that appears in
+    # CRootOf may not be unique.
+    assert m.eigenvals()
 
 
 def test_eigenvects():
@@ -438,7 +453,7 @@ def test_jordan_form():
     assert Matrix(1, 1, [1]).jordan_form() == (Matrix([1]), Matrix([1]))
     assert Matrix(1, 1, [1]).jordan_form(calc_transform=False) == Matrix([1])
 
-    # make sure if we cannot factor the characteristic polynomial, we raise an error
+    # If we have eigenvalues in CRootOf form, raise errors
     m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
     raises(MatrixError, lambda: m.jordan_form())
 
@@ -528,6 +543,7 @@ def test_definite():
     assert m.is_negative_semidefinite == False
     assert m.is_indefinite == False
 
+    # Hermetian matrices
     m = Matrix([[1, 2*I], [-I, 4]])
     assert m.is_positive_definite == True
     assert m.is_positive_semidefinite == True
@@ -572,3 +588,96 @@ def test_definite():
     assert m.is_positive_definite == True
     assert m.is_positive_semidefinite == True
     assert m.is_indefinite == False
+
+    # test for issue 19547: https://github.com/sympy/sympy/issues/19547
+    m = Matrix([
+        [0, 0, 0],
+        [0, 1, 2],
+        [0, 2, 1]
+    ])
+    assert not m.is_positive_definite
+    assert not m.is_positive_semidefinite
+
+
+def test_positive_semidefinite_cholesky():
+    from sympy.matrices.eigen import _is_positive_semidefinite_cholesky
+
+    m = Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+    assert _is_positive_semidefinite_cholesky(m) == True
+    m = Matrix([[0, 0, 0], [0, 5, -10*I], [0, 10*I, 5]])
+    assert _is_positive_semidefinite_cholesky(m) == False
+    m = Matrix([[1, 0, 0], [0, 0, 0], [0, 0, -1]])
+    assert _is_positive_semidefinite_cholesky(m) == False
+    m = Matrix([[0, 1], [1, 0]])
+    assert _is_positive_semidefinite_cholesky(m) == False
+
+    # https://www.value-at-risk.net/cholesky-factorization/
+    m = Matrix([[4, -2, -6], [-2, 10, 9], [-6, 9, 14]])
+    assert _is_positive_semidefinite_cholesky(m) == True
+    m = Matrix([[9, -3, 3], [-3, 2, 1], [3, 1, 6]])
+    assert _is_positive_semidefinite_cholesky(m) == True
+    m = Matrix([[4, -2, 2], [-2, 1, -1], [2, -1, 5]])
+    assert _is_positive_semidefinite_cholesky(m) == True
+    m = Matrix([[1, 2, -1], [2, 5, 1], [-1, 1, 9]])
+    assert _is_positive_semidefinite_cholesky(m) == False
+
+
+def test_issue_20582():
+    A = Matrix([
+        [5, -5, -3, 2, -7],
+        [-2, -5, 0, 2, 1],
+        [-2, -7, -5, -2, -6],
+        [7, 10, 3, 9, -2],
+        [4, -10, 3, -8, -4]
+    ])
+    # XXX Used dry-run test because arbitrary symbol that appears in
+    # CRootOf may not be unique.
+    assert A.eigenvects()
+
+
+def test_issue_20275():
+    # XXX We use complex expansions because complex exponentials are not
+    # recognized by polys.domains
+    A = DFT(3).as_explicit().expand(complex=True)
+    eigenvects = A.eigenvects()
+    assert eigenvects[0] == (
+        -1, 1,
+        [Matrix([[1 - sqrt(3)], [1], [1]])]
+    )
+    assert eigenvects[1] == (
+        1, 1,
+        [Matrix([[1 + sqrt(3)], [1], [1]])]
+    )
+    assert eigenvects[2] == (
+        -I, 1,
+        [Matrix([[0], [-1], [1]])]
+    )
+
+    A = DFT(4).as_explicit().expand(complex=True)
+    eigenvects = A.eigenvects()
+    assert eigenvects[0] == (
+        -1, 1,
+        [Matrix([[-1], [1], [1], [1]])]
+    )
+    assert eigenvects[1] == (
+        1, 2,
+        [Matrix([[1], [0], [1], [0]]), Matrix([[2], [1], [0], [1]])]
+    )
+    assert eigenvects[2] == (
+        -I, 1,
+        [Matrix([[0], [-1], [0], [1]])]
+    )
+
+    # XXX We skip test for some parts of eigenvectors which are very
+    # complicated and fragile under expression tree changes
+    A = DFT(5).as_explicit().expand(complex=True)
+    eigenvects = A.eigenvects()
+    assert eigenvects[0] == (
+        -1, 1,
+        [Matrix([[1 - sqrt(5)], [1], [1], [1], [1]])]
+    )
+    assert eigenvects[1] == (
+        1, 2,
+        [Matrix([[S(1)/2 + sqrt(5)/2], [0], [1], [1], [0]]),
+         Matrix([[S(1)/2 + sqrt(5)/2], [1], [0], [0], [1]])]
+    )

@@ -1,11 +1,12 @@
 from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
         Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
-        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor
+        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor, Poly,
+        FiniteSet
 )
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
-from sympy.testing.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy.testing.randtest import verify_numerically
 
 
@@ -373,12 +374,10 @@ def test_Mul_doesnt_expand_exp():
     assert (x**(-log(5)/log(3))*x)/(x*x**( - log(5)/log(3))) == sympify(1)
 
 def test_Mul_is_integer():
-
     k = Symbol('k', integer=True)
     n = Symbol('n', integer=True)
     nr = Symbol('nr', rational=False)
     nz = Symbol('nz', integer=True, zero=False)
-    nze = Symbol('nze', even=True, zero=False)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)
     i2 = Symbol('2', prime=True, even=True)
@@ -387,18 +386,31 @@ def test_Mul_is_integer():
     assert (nz/3).is_integer is None
     assert (nr/3).is_integer is False
     assert (x*k*n).is_integer is None
+    assert (e/2).is_integer is True
+    assert (e**2/2).is_integer is True
+    assert (2/k).is_integer is None
+    assert (2/k**2).is_integer is None
+    assert ((-1)**k*n).is_integer is True
+    assert (3*k*e/2).is_integer is True
+    assert (2*k*e/3).is_integer is None
     assert (e/o).is_integer is None
     assert (o/e).is_integer is False
     assert (o/i2).is_integer is False
-    assert Mul(o, 1/o, evaluate=False).is_integer is True
     assert Mul(k, 1/k, evaluate=False).is_integer is None
-    assert Mul(nze, 1/nze, evaluate=False).is_integer is True
-    assert Mul(2., S.Half, evaluate=False).is_integer is False
+    assert Mul(2., S.Half, evaluate=False).is_integer is None
+    assert (2*sqrt(k)).is_integer is None
+    assert (2*k**n).is_integer is None
 
     s = 2**2**2**Pow(2, 1000, evaluate=False)
     m = Mul(s, s, evaluate=False)
     assert m.is_integer
 
+    # broken in 1.6 and before, see #20161
+    xq = Symbol('xq', rational=True)
+    yq = Symbol('yq', rational=True)
+    assert (xq*yq).is_integer is None
+    e_20161 = Mul(-1,Mul(1,Pow(2,-1,evaluate=False),evaluate=False),evaluate=False)
+    assert e_20161.is_integer is not True # expand(e_20161) -> -1/2, but no need to see that in the assumption without evaluation
 
 def test_Add_Mul_is_integer():
     x = Symbol('x')
@@ -1547,11 +1559,9 @@ def test_issue_3531():
     # https://github.com/sympy/sympy/issues/3531
     # https://github.com/sympy/sympy/pull/18116
     class MightyNumeric(tuple):
-        def __rdiv__(self, other):
-            return "something"
-
         def __rtruediv__(self, other):
             return "something"
+
     assert sympify(1)/MightyNumeric((1, 2)) == "something"
 
 
@@ -1592,6 +1602,7 @@ def test_suppressed_evaluation():
     assert c.func is Pow
     assert c.args == (3, 2)
 
+
 def test_AssocOp_doit():
     a = Add(x,x, evaluate=False)
     b = Mul(y,y, evaluate=False)
@@ -1605,6 +1616,15 @@ def test_AssocOp_doit():
     assert d.doit(deep=False).args == (a, 2*S.One)
     assert d.doit().func == Mul
     assert d.doit().args == (4*S.One, Pow(x,2))
+
+
+def test_Add_Mul_Expr_args():
+    nonexpr = [Basic(), Poly(x, x), FiniteSet(x)]
+    for typ in [Add, Mul]:
+        for obj in nonexpr:
+            with warns_deprecated_sympy():
+                typ(obj, 1)
+
 
 def test_Add_as_coeff_mul():
     # issue 5524.  These should all be (1, self)
