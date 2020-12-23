@@ -521,7 +521,9 @@ class MatrixStudentTDistribution(MatrixDistribution):
 def MatrixStudentT(symbol, nu,location_matrix, scale_matrix_1, scale_matrix_2):
     """
     Creates a random variable with Matrix Gamma Distribution.
+
     The density of the said distribution can be found at [1].
+
     Parameters
     ==========
     nu: Positive Real number
@@ -532,9 +534,12 @@ def MatrixStudentT(symbol, nu,location_matrix, scale_matrix_1, scale_matrix_2):
         Scale Matrix of shape ``p x p``
     scale_matrix_2: Positive definite real square matrix
         Scale Matrix of shape ``n x n``
+
     Returns
     =======
+
     RandomSymbol
+
     Examples
     ========
 
