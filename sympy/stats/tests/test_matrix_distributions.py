@@ -1,4 +1,4 @@
-from sympy import exp, S, sqrt, pi, symbols, Product, gamma, Dummy, multigamma, eye
+from sympy import exp, S, sqrt, pi, symbols, Product, gamma, Dummy
 from sympy.matrices import Determinant, Matrix, Trace, MatrixSymbol, MatrixSet
 from sympy.stats import density, sample
 from sympy.stats.matrix_distributions import (MatrixGammaDistribution,
