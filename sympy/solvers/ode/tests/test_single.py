@@ -1907,10 +1907,10 @@ def _get_examples_ode_sol_lie_group():
         'sol': [Eq(f(x), log(C1/(2*x + 1) + 2))],
     },
 
-    # 'lie_group_10': {
-    #     'eq': x**2*(f(x).diff(x)) - f(x) + x**2*exp(x - (1/x)),
-    #     'sol': [Eq(f(x), -(C1 + exp(x))*exp(-1/x))],
-    # },
+    'lie_group_10': {
+        'eq': x**2*(f(x).diff(x)) - f(x) + x**2*exp(x - (1/x)),
+        'sol': [Eq(f(x), -((C1 + exp(x))*exp(-1/x)))],
+    },
 
     'lie_group_11': {
         'eq': x**2*f(x)**2 + x*Derivative(f(x), x),
