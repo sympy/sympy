@@ -66,7 +66,7 @@ class Equation(Basic):
     >>> from sympy import solve
     >>> a, b, c = var('a b c')
     >>> Equation(a,b/c)
-    Equation(a,b/c)
+    Equation(a, b/c)
     >>> str(Equation(a,b/c))
     'a=b/c'
     >>> t=Eqn(a,b/c)
@@ -83,13 +83,13 @@ class Equation(Basic):
 
     Utility operations
     >>> t.reversed()
-    Equation(b/c,a)
+    Equation(b/c, a)
     >>> t.lhs
     a
     >>> t.rhs
     b/c
     >>> t.as_Boolean()
-    Equality(a, b/c)
+    Eq(a, b/c)
 
     Integration can only be performed on one side at a time.
     >>> q=Eqn(a*c,b/c)
@@ -112,7 +112,7 @@ class Equation(Basic):
     Then just the non-zero symbolic side is passed to ``solve()``.
     >>> t2 = t-t.rhs
     >>> str(t2)
-    'a-b/c=0'
+    'a - b/c=0'
     >>> solve(t2.lhs,c)
     [b/a]
     """
