@@ -34,7 +34,8 @@ class Beam:
        side of beam's axis (in respect to current section), a loading force
        giving positive shear yields a negative moment, as below (the
        curved arrow shows the positive moment and rotation):
-       image:: allowed-sign-conventions.png
+
+    .. image:: allowed-sign-conventions.png
 
     Examples
     ========
