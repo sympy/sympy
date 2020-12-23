@@ -1829,6 +1829,14 @@ def test_sympy__stats__matrix_distributions__MatrixNormalDistribution():
     S2 = MatrixSymbol('S2', 2, 2)
     assert _test_args(MatrixNormalDistribution(L, S1, S2))
 
+def test_sympy__stats__matrix_distributions__MatrixStudentTDistribution():
+    from sympy.stats.matrix_distributions import MatrixStudentTDistribution
+    from sympy import MatrixSymbol
+    v = symbols('v', positive=True)
+    Omega = MatrixSymbol('Omega', 3, 3)
+    Sigma = MatrixSymbol('Sigma', 1, 1)
+    Location = MatrixSymbol('Location', 1, 3)
+    assert _test_args(MatrixStudentTDistribution(v, Location, Omega, Sigma))
 
 def test_sympy__core__symbol__Str():
     from sympy.core.symbol import Str

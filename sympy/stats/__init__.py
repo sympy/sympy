@@ -142,7 +142,7 @@ __all__ = [
     'joint_eigen_distribution', 'JointEigenDistribution',
     'level_spacing_distribution',
 
-    'MatrixGamma', 'Wishart', 'MatrixNormal',
+    'MatrixGamma', 'Wishart', 'MatrixNormal', 'MatrixStudentT',
 
     'Probability', 'Expectation', 'Variance', 'Covariance', 'Moment',
     'CentralMoment',
@@ -191,7 +191,7 @@ from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         GaussianSymplecticEnsemble, joint_eigen_distribution,
         JointEigenDistribution, level_spacing_distribution)
 
-from .matrix_distributions import MatrixGamma, Wishart, MatrixNormal
+from .matrix_distributions import MatrixGamma, Wishart, MatrixNormal, MatrixStudentT
 
 from .symbolic_probability import (Probability, Expectation, Variance,
         Covariance, Moment, CentralMoment)

@@ -464,3 +464,99 @@ def MatrixNormal(symbol, location_matrix, scale_matrix_1, scale_matrix_2):
         scale_matrix_2 = ImmutableMatrix(scale_matrix_2)
     args = (location_matrix, scale_matrix_1, scale_matrix_2)
     return rv(symbol, MatrixNormalDistribution, args)
+
+#-------------------------------------------------------------------------------
+# Matrix Student's T distribution ---------------------------------------------------
+
+class MatrixStudentTDistribution(MatrixDistribution):
+
+    _argnames = ('nu', 'location_matrix', 'scale_matrix_1', 'scale_matrix_2')
+
+    @staticmethod
+    def check(nu, location_matrix, scale_matrix_1, scale_matrix_2):
+        if not isinstance(scale_matrix_1, MatrixSymbol):
+            _value_check(scale_matrix_1.is_positive_definite, "The shape "
+                                                              "matrix must be positive definite.")
+        if not isinstance(scale_matrix_2, MatrixSymbol):
+            _value_check(scale_matrix_2.is_positive_definite, "The shape "
+                                                              "matrix must be positive definite.")
+        _value_check(scale_matrix_1.is_square, "Scale matrix 1 should be "
+                                               "be square matrix")
+        _value_check(scale_matrix_2.is_square, "Scale matrix 2 should be "
+                                               "be square matrix")
+        n = location_matrix.shape[0]
+        p = location_matrix.shape[1]
+        _value_check(scale_matrix_1.shape[0] == p, "Scale matrix 1 should be"
+                                                   " of shape %s x %s" % (str(p), str(p)))
+        _value_check(scale_matrix_2.shape[0] == n, "Scale matrix 2 should be"
+                                                   " of shape %s x %s" % (str(n), str(n)))
+        _value_check(nu.is_positive, "Degrees of freedom must be positive")
+
+    @property
+    def set(self):
+        n, p = self.location_matrix.shape
+        return MatrixSet(n, p, S.Reals)
+
+    @property
+    def dimension(self):
+        return self.location_matrix.shape
+
+    def pdf(self, x):
+        from sympy import eye
+        nu, M, Omega, Sigma = self.nu, self.location_matrix, self.scale_matrix_1, self.scale_matrix_2
+        n, p = M.shape
+        if isinstance(x, list):
+            x = ImmutableMatrix(x)
+        if not isinstance(x, (MatrixBase, MatrixSymbol)):
+            raise ValueError("%s should be an isinstance of Matrix "
+                             "or MatrixSymbol" % str(x))
+
+        K = multigamma((nu + n + p - 1)/2, p) * Determinant(Omega)**(-n/2) * Determinant(Sigma)**(-p/2) \
+            / ((pi)**(n*p/2) * multigamma((nu + p - 1)/2, p))
+        return K * (Determinant(eye(n) + Inverse(Sigma)*(x - M)*Inverse(Omega)*Transpose(x - M))) \
+               **(-(nu + n + p -1)/2)
+
+
+
+def MatrixStudentT(symbol, nu,location_matrix, scale_matrix_1, scale_matrix_2):
+    """
+    Creates a random variable with Matrix Gamma Distribution.
+    The density of the said distribution can be found at [1].
+    Parameters
+    ==========
+    nu: Positive Real number
+        degrees of freedom
+    location_matrix: Positive definite real square matrix
+        Location Matrix of shape ``n x p``
+    scale_matrix_1: Positive definite real square matrix
+        Scale Matrix of shape ``p x p``
+    scale_matrix_2: Positive definite real square matrix
+        Scale Matrix of shape ``n x n``
+    Returns
+    =======
+    RandomSymbol
+    Examples
+    ========
+    >>> from sympy.stats import density, MatrixGamma
+    >>> from sympy import MatrixSymbol, symbols
+    >>> a, b = symbols('a b', positive=True)
+    >>> M = MatrixGamma('M', a, b, [[2, 1], [1, 2]])
+    >>> X = MatrixSymbol('X', 2, 2)
+    >>> density(M)(X).doit()
+    3**(-a)*b**(-2*a)*exp(Trace(Matrix([
+    [-2/3,  1/3],
+    [ 1/3, -2/3]])*X)/b)*Determinant(X)**(a - 3/2)/(sqrt(pi)*gamma(a)*gamma(a - 1/2))
+    >>> density(M)([[1, 0], [0, 1]]).doit()
+    3**(-a)*b**(-2*a)*exp(-4/(3*b))/(sqrt(pi)*gamma(a)*gamma(a - 1/2))
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Matrix_t-distribution
+    """
+    if isinstance(location_matrix, list):
+        location_matrix = ImmutableMatrix(location_matrix)
+    if isinstance(scale_matrix_1, list):
+        scale_matrix_1 = ImmutableMatrix(scale_matrix_1)
+    if isinstance(scale_matrix_2, list):
+        scale_matrix_2 = ImmutableMatrix(scale_matrix_2)
+    args = (nu, location_matrix, scale_matrix_1, scale_matrix_2)
+    return rv(symbol, MatrixStudentTDistribution, args)
