@@ -450,10 +450,10 @@ class Function(Application, Expr):
     @cacheit
     def __new__(cls, *args, **options):
         # Handle calls like Function('f')
-        if (hasattr(args[0],'applyfunc')): # simple override for Equation class.
-            return(args[0].applyfunc(cls,*args[1:],**options))
         if cls is Function:
             return UndefinedFunction(*args, **options)
+        if (hasattr(args[0],'applyfunc')): # simple override for Equation class.
+            return(args[0].applyfunc(cls,*args[1:],**options))
 
         n = len(args)
         if n not in cls.nargs:
