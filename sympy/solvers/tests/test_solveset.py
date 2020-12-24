@@ -2474,6 +2474,16 @@ def test_issue_17276():
      FiniteSet((5**(S(1)/5), 25*5**(S(3)/10)))
 
 
+def test_issue_10426():
+    x=Dummy('x')
+    a=Symbol('a')
+    n=Dummy('n')
+    assert (solveset(sin(x + a) - sin(x), a)).dummy_eq(Dummy('x')) == (Union(
+        ImageSet(Lambda(n, 2*n*pi), S.Integers),
+        Intersection(S.Complexes, ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))),
+        S.Integers)))).dummy_eq(Dummy('x,n'))
+
+
 @XFAIL
 def test_substitution_with_infeasible_solution():
     a00, a01, a10, a11, l0, l1, l2, l3, m0, m1, m2, m3, m4, m5, m6, m7, c00, c01, c10, c11, p00, p01, p10, p11 = symbols(
