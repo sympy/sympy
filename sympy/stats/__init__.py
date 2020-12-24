@@ -166,9 +166,9 @@ from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         ExGaussian, Exponential, ExponentialPower, FDistribution, FisherZ,
         Frechet, Gamma, GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace,
         Levy, Logistic, LogLogistic, LogNormal, Lomax, Maxwell, Moyal, Nakagami, Normal,
-        GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, Rician, StudentT,
+        GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, StudentT,
         PowerFunction, ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
-        VonMises, Wald, Weibull, WignerSemicircle, ContinuousDistributionHandmade)
+        VonMises, Wald, Weibull, WignerSemicircle, ContinuousDistributionHandmade, Rician)
 
 from .drv_types import (Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
         Skellam, YuleSimon, Zeta, DiscreteRV, DiscreteDistributionHandmade)
