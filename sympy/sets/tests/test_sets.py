@@ -457,7 +457,7 @@ def test_intersect1():
     assert Union(Interval(0, 5), FiniteSet('ham')).intersect(FiniteSet(2, 3, 4, 5, 6)) == \
         Intersection(FiniteSet(2, 3, 4, 5, 6), Union(FiniteSet('ham'), Interval(0, 5)))
     assert Intersection(FiniteSet(1, 2, 3), Interval(2, x), Interval(3, y)) == \
-        Intersection(FiniteSet(3), Interval(2, x), Interval(3, y), evaluate=False)
+        Intersection(FiniteSet(3), Interval(3, Min(x, y)), evaluate=False)
     assert Intersection(FiniteSet(1, 2), Interval(0, 3), Interval(x, y)) == \
         Intersection({1, 2}, Interval(x, y), evaluate=False)
     assert Intersection(FiniteSet(1, 2, 4), Interval(0, 3), Interval(x, y)) == \

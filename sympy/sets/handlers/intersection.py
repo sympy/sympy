@@ -5,6 +5,7 @@ from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
     ImageSet, Rationals)
 from sympy.sets.sets import UniversalSet, imageset, ProductSet
+from sympy.core.relational import is_gt
 
 
 @dispatch(ConditionSet, ConditionSet)  # type: ignore # noqa:F811
@@ -388,23 +389,23 @@ def intersection_sets(a, b): # noqa:F811
         if a.left_open == b.left_open and a.right_open == b.right_open:
             return Interval(Max(a.start, b.start), Min(a.end, b.end), a.left_open, a.right_open)
         elif a.left_open != b.left_open and a.right_open == b.right_open:
-            if a.start > b.start:
+            if is_gt(a.start, b.start):
                 return Interval(a.start, Min(a.end, b.end), a.left_open, a.right_open)
             else:
                 return Interval(b.start, Min(a.end, b.end), b.left_open, b.right_open)
         elif a.left_open == b.left_open and a.right_open != b.right_open:
-            if a.end > b.end:
+            if is_gt(a.end, b.end):
                 return Interval(Max(a.start, b.start), b.end, a.left_open, b.right_open)
             else:
                 return Interval(Max(a.start, b.start), a.end, a.left_open, a.right_open)
         else:
             start = Max(a.start, b.start)
             end = Min(a.end, b.end)
-            if a.start > b.start:
+            if is_gt(a.start, b.start):
                 left = a.left_open
             else:
                 left = b.left_open
-            if a.end > b.end:
+            if is_gt(a.end, b.end):
                 right = b.right_open
             else:
                 right = a.right_open
