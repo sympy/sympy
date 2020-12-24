@@ -23,7 +23,7 @@ from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
 from sympy.external import import_module
 
 
-class FiniteDensity(dict):
+class FiniteDensity(Dict):
     """
     A domain with Finite Density.
     """
@@ -46,6 +46,10 @@ class FiniteDensity(dict):
         """
         Return item as dictionary.
         """
+        return dict(self)
+
+    @property
+    def pmf(self):
         return dict(self)
 
 class FiniteDomain(RandomDomain):
@@ -212,7 +216,7 @@ class SingleFiniteDistribution(Distribution, NamedArgsMixin):
 
     def __call__(self, arg):
         arg = sympify(arg)
-        return Piecewise((self.pmf(arg), (arg in self.set)), (S(0), True))
+        return self.pmf(arg)
 
     def __contains__(self, other):
         return other in self.set
@@ -253,16 +257,17 @@ class FinitePSpace(PSpace):
 
     def compute_density(self, expr):
         expr = rv_subs(expr, self.values)
-        d = FiniteDensity()
+        d = dict()
         for elem in self.domain:
             val = expr.xreplace(dict(elem))
             prob = self.prob_of(elem)
             d[val] = d.get(val, S.Zero) + prob
-        return d
+        dist = Distribution(FiniteDensity(d), FiniteSet(*d.keys()))
+        return dist
 
     @cacheit
     def compute_cdf(self, expr):
-        d = self.compute_density(expr)
+        d = self.compute_density(expr).pmf
         cum_prob = S.Zero
         cdf = []
         for key in sorted(d):
@@ -287,14 +292,14 @@ class FinitePSpace(PSpace):
         d = self.compute_density(expr)
         t = Dummy('t', real=True)
 
-        return Lambda(t, sum(exp(I*k*t)*v for k,v in d.items()))
+        return Lambda(t, sum(exp(I*k*t)*v for k,v in d.pmf.items()))
 
     @cacheit
     def compute_moment_generating_function(self, expr):
         d = self.compute_density(expr)
         t = Dummy('t', real=True)
 
-        return Lambda(t, sum(exp(k*t)*v for k,v in d.items()))
+        return Lambda(t, sum(exp(k*t)*v for k,v in d.pmf.items()))
 
     def compute_expectation(self, expr, rvs=None, **kwargs):
         rvs = rvs or self.values

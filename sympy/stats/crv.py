@@ -491,11 +491,12 @@ class ContinuousPSpace(PSpace):
             # Marginalize all other random symbols out of the density
             randomsymbols = tuple(set(self.values) - frozenset([expr]))
             symbols = tuple(rs.symbol for rs in randomsymbols)
-            pdf = self.domain.compute_expectation(self.pdf, symbols, **kwargs)
-            return Lambda(expr.symbol, pdf)
+            pdf = Lambda(expr.symbol, self.domain.compute_expectation(self.pdf, symbols, **kwargs))
+            return Distribution(pdf, continuous_domain(pdf, expr.symbol, S.Reals))
 
         z = Dummy('z', real=True)
-        return Lambda(z, self.compute_expectation(DiracDelta(expr - z), **kwargs))
+        pdf = Lambda(z, self.compute_expectation(DiracDelta(expr - z), **kwargs))
+        return Distribution(pdf, continuous_domain(pdf, z, S.Reals))
 
     @cacheit
     def compute_cdf(self, expr, **kwargs):

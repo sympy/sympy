@@ -166,13 +166,16 @@ class Distribution(Basic):
     def pdf(self):
         return self.args[0]
 
+    pmf = pdf
+
     @property
     def set(self):
         return self.args[1]
 
     def __call__(self, *args):
         args = [sympify(arg) for arg in args]
-        return Piecewise((self.pdf(*args), all(self.set._contains(arg) != False for arg in args)), (S(0), True))
+        return Piecewise((self.pdf(*args), all((self.set._contains(arg) != False) for arg in args)),
+                         (S(0), True))
 
 class PSpace(Basic):
     """
@@ -678,7 +681,7 @@ def given(expr, condition=None, **kwargs):
     >>> from sympy.stats import given, density, Die
     >>> X = Die('X', 6)
     >>> Y = given(X, X > 3)
-    >>> density(Y).dict
+    >>> density(Y).pmf
     {4: 1/3, 5: 1/3, 6: 1/3}
 
     Following convention, if the condition is a random symbol then that symbol
@@ -903,9 +906,9 @@ def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs):
     >>> D = Die('D', 6)
     >>> X = Normal(x, 0, 1)
 
-    >>> density(D).dict
+    >>> density(D).pmf
     {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
-    >>> density(2*D).dict
+    >>> density(2*D).pmf
     {2: 1/6, 4: 1/6, 6: 1/6, 8: 1/6, 10: 1/6, 12: 1/6}
     >>> density(X)(x)
     sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))

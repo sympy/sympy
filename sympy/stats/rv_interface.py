@@ -1,6 +1,7 @@
 from sympy.sets import FiniteSet
 from sympy import (sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy,
                 piecewise_fold, solveset, Integral)
+from sympy.core.containers import Dict
 from .rv import (probability, expectation, density, where, given, pspace, cdf, PSpace,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile, is_random,
@@ -131,11 +132,11 @@ def entropy(expr, condition=None, **kwargs):
     .. [2] https://www.crmarsh.com/static/pdf/Charles_Marsh_Continuous_Entropy.pdf
     .. [3] http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
     """
-    pdf = density(expr, condition, **kwargs)
+    dens = density(expr, condition, **kwargs)
     base = kwargs.get('b', exp(1))
-    if isinstance(pdf, dict):
-            return sum([-prob*log(prob, base) for prob in pdf.values()])
-    return expectation(-log(pdf(expr), base))
+    if isinstance(dens.pdf, Dict):
+        return sum([-prob*log(prob, base) for prob in dens.pdf.values()])
+    return expectation(-log(dens(expr), base))
 
 def covariance(X, Y, condition=None, **kwargs):
     """
