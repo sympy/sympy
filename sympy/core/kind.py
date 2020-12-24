@@ -19,6 +19,10 @@ the type of itself.
 
 This module defines basic kinds for core objects. Other kinds such as
 ``ArrayKind`` or ``MatrixKind`` can be found in corresponding modules.
+
+.. notes::
+       This approach is experimental, and can be replaced or deleted in the future.
+       See https://github.com/sympy/sympy/pull/20549.
 """
 
 
@@ -59,6 +63,7 @@ class Kind(object, metaclass=KindMeta):
 
     ``Kind`` behaves in singleton-like fashion. Same signature will
     return the same object.
+
     """
     def __new__(cls, *args):
         if args in cls._inst:
