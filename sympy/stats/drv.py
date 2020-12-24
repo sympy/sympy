@@ -1,6 +1,6 @@
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
                    Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, poly,
-                   series, factorial, And, lambdify)
+                   series, factorial, And, lambdify, floor)
 
 from sympy.polys.polyerrors import PolynomialError
 from sympy.stats.crv import reduce_rational_inequalities_wrap
@@ -174,12 +174,13 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
         Returns a Lambda
         """
-        x, z = symbols('x, z', integer=True, cls=Dummy)
+        x = symbols('x', integer=True, cls=Dummy)
+        z = symbols('z', real=True, cls=Dummy)
         left_bound = self.set.inf
 
         # CDF is integral of PDF from left bound to z
         pdf = self.pdf(x)
-        cdf = summation(pdf, (x, left_bound, z), **kwargs)
+        cdf = summation(pdf, (x, left_bound, floor(z)), **kwargs)
         # CDF Ensure that CDF left of left_bound is zero
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)

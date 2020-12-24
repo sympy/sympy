@@ -6,6 +6,7 @@ from .singleton import S
 from .expr import Expr, AtomicExpr
 from .cache import cacheit
 from .function import FunctionClass
+from .kind import NumberKind, UndefinedKind
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import cartes, sift
@@ -204,6 +205,12 @@ class Symbol(AtomicExpr, Boolean):
 
     is_Symbol = True
     is_symbol = True
+
+    @property
+    def kind(self):
+        if self.is_commutative:
+            return NumberKind
+        return UndefinedKind
 
     @property
     def _diff_wrt(self):

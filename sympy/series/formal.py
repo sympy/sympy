@@ -33,6 +33,9 @@ def rational_algorithm(f, x, k, order=4, full=False):
     formula of coefficients of Formal Power Series
     of a function.
 
+    Explanation
+    ===========
+
     Applicable when f(x) or some derivative of f(x)
     is a rational function in x.
 
@@ -44,6 +47,14 @@ def rational_algorithm(f, x, k, order=4, full=False):
     Looks for derivative of a function up to 4'th order (by default).
     This can be overridden using order option.
 
+    Parameters
+    ==========
+
+    x : Symbol
+    order : int, optional
+        Order of the derivative of ``f``, Default is 4.
+    full : bool
+
     Returns
     =======
 
@@ -51,6 +62,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     ind : Expr
         Independent terms.
     order : int
+    full : bool
 
     Examples
     ========
@@ -154,7 +166,8 @@ def rational_algorithm(f, x, k, order=4, full=False):
 
 
 def rational_independent(terms, x):
-    """Returns a list of all the rationally independent terms.
+    """
+    Returns a list of all the rationally independent terms.
 
     Examples
     ========
@@ -187,7 +200,11 @@ def rational_independent(terms, x):
 
 
 def simpleDE(f, x, g, order=4):
-    r"""Generates simple DE.
+    r"""
+    Generates simple DE.
+
+    Explanation
+    ===========
 
     DE is of the form
 
@@ -229,6 +246,9 @@ def simpleDE(f, x, g, order=4):
 
 def exp_re(DE, r, k):
     """Converts a DE with constant coefficients (explike) into a RE.
+
+    Explanation
+    ===========
 
     Performs the substitution:
 
@@ -275,7 +295,11 @@ def exp_re(DE, r, k):
 
 
 def hyper_re(DE, r, k):
-    """Converts a DE into a RE.
+    """
+    Converts a DE into a RE.
+
+    Explanation
+    ===========
 
     Performs the substitution:
 
@@ -393,7 +417,11 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
 
 
 def _rsolve_hypergeometric(f, x, P, Q, k, m):
-    """Recursive wrapper to rsolve_hypergeometric.
+    """
+    Recursive wrapper to rsolve_hypergeometric.
+
+    Explanation
+    ===========
 
     Returns a Tuple of (formula, series independent terms,
     maximum power of x in independent terms) if successful
@@ -460,7 +488,11 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
 
 
 def rsolve_hypergeometric(f, x, P, Q, k, m):
-    """Solves RE of hypergeometric type.
+    """
+    Solves RE of hypergeometric type.
+
+    Explanation
+    ===========
 
     Attempts to solve RE of the form
 
@@ -653,7 +685,11 @@ def _transform_DE_RE(DE, g, k, order, syms):
 
 
 def solve_de(f, x, DE, order, g, k):
-    """Solves the DE.
+    """
+    Solves the DE.
+
+    Explanation
+    ===========
 
     Tries to solve DE by either converting into a RE containing two terms or
     converting into a DE having constant coefficients.
@@ -705,7 +741,11 @@ def solve_de(f, x, DE, order, g, k):
 
 
 def hyper_algorithm(f, x, k, order=4):
-    """Hypergeometric algorithm for computing Formal Power Series.
+    """
+    Hypergeometric algorithm for computing Formal Power Series.
+
+    Explanation
+    ===========
 
     Steps:
         * Generates DE
@@ -848,7 +888,11 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
 
 def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
                 full=False):
-    """Computes the formula for Formal Power Series of a function.
+    """
+    Computes the formula for Formal Power Series of a function.
+
+    Explanation
+    ===========
 
     Tries to compute the formula by applying the following techniques
     (in order):
@@ -928,7 +972,11 @@ class Coeff(Function):
 
 
 class FormalPowerSeries(SeriesBase):
-    """Represents Formal Power Series of a function.
+    """
+    Represents Formal Power Series of a function.
+
+    Explanation
+    ===========
 
     No computation is performed. This class should only to be used to represent
     a series. No checks are performed.
@@ -1014,7 +1062,11 @@ class FormalPowerSeries(SeriesBase):
         return pow_x
 
     def polynomial(self, n=6):
-        """Truncated series as polynomial.
+        """
+        Truncated series as polynomial.
+
+        Explanation
+        ===========
 
         Returns series expansion of ``f`` upto order ``O(x**n)``
         as a polynomial(without ``O`` term).
@@ -1035,7 +1087,11 @@ class FormalPowerSeries(SeriesBase):
         return Add(*terms)
 
     def truncate(self, n=6):
-        """Truncated series.
+        """
+        Truncated series.
+
+        Explanation
+        ===========
 
         Returns truncated series expansion of f upto
         order ``O(x**n)``.
@@ -1113,7 +1169,8 @@ class FormalPowerSeries(SeriesBase):
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
     def integrate(self, x=None, **kwargs):
-        """Integrate Formal Power Series.
+        """
+        Integrate Formal Power Series.
 
         Examples
         ========
@@ -1157,7 +1214,8 @@ class FormalPowerSeries(SeriesBase):
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
     def product(self, other, x=None, n=6):
-        """Multiplies two Formal Power Series, using discrete convolution and
+        """
+        Multiplies two Formal Power Series, using discrete convolution and
         return the truncated terms upto specified order.
 
         Parameters
@@ -1243,9 +1301,12 @@ class FormalPowerSeries(SeriesBase):
     def compose(self, other, x=None, n=6):
         r"""
         Returns the truncated terms of the formal power series of the composed function,
-        up to specified `n`.
+        up to specified ``n``.
 
-        If `f` and `g` are two formal power series of two different functions,
+        Explanation
+        ===========
+
+        If ``f`` and ``g`` are two formal power series of two different functions,
         then the coefficient sequence ``ak`` of the composed formal power series `fp`
         will be as follows.
 
@@ -1316,10 +1377,13 @@ class FormalPowerSeries(SeriesBase):
     def inverse(self, x=None, n=6):
         r"""
         Returns the truncated terms of the inverse of the formal power series,
-        up to specified `n`.
+        up to specified ``n``.
 
-        If `f` and `g` are two formal power series of two different functions,
-        then the coefficient sequence ``ak`` of the composed formal power series `fp`
+        Explanation
+        ===========
+
+        If ``f`` and ``g`` are two formal power series of two different functions,
+        then the coefficient sequence ``ak`` of the composed formal power series ``fp``
         will be as follows.
 
         .. math::
@@ -1491,6 +1555,9 @@ class FiniteFormalPowerSeries(FormalPowerSeries):
 class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
     """Represents the product of two formal power series of two functions.
 
+    Explanation
+    ===========
+
     No computation is performed. Terms are calculated using a term by term logic,
     instead of a point by point logic.
 
@@ -1523,7 +1590,7 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
 
     def _eval_terms(self, n):
         """
-        Returns the first `n` terms of the product formal power series.
+        Returns the first ``n`` terms of the product formal power series.
         Term by term logic is implemented here.
 
         Examples
@@ -1556,7 +1623,11 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
 
 
 class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
-    """Represents the composed formal power series of two functions.
+    """
+    Represents the composed formal power series of two functions.
+
+    Explanation
+    ===========
 
     No computation is performed. Terms are calculated using a term by term logic,
     instead of a point by point logic.
@@ -1586,6 +1657,9 @@ class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
         """
         Returns the first `n` terms of the composed formal power series.
         Term by term logic is implemented here.
+
+        Explanation
+        ===========
 
         The coefficient sequence of the :obj:`FormalPowerSeriesCompose` object is the generic sequence.
         It is multiplied by ``bell_seq`` to get a sequence, whose terms are added up to get
@@ -1626,7 +1700,11 @@ class FormalPowerSeriesCompose(FiniteFormalPowerSeries):
 
 
 class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
-    """Represents the Inverse of a formal power series.
+    """
+    Represents the Inverse of a formal power series.
+
+    Explanation
+    ===========
 
     No computation is performed. Terms are calculated using a term by term logic,
     instead of a point by point logic.
@@ -1669,8 +1747,11 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
 
     def _eval_terms(self, n):
         """
-        Returns the first `n` terms of the composed formal power series.
+        Returns the first ``n`` terms of the composed formal power series.
         Term by term logic is implemented here.
+
+        Explanation
+        ===========
 
         The coefficient sequence of the `FormalPowerSeriesInverse` object is the generic sequence.
         It is multiplied by ``bell_seq`` to get a sequence, whose terms are added up to get
@@ -1710,7 +1791,11 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
 
 
 def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
-    """Generates Formal Power Series of f.
+    """
+    Generates Formal Power Series of ``f``.
+
+    Explanation
+    ===========
 
     Returns the formal series expansion of ``f`` around ``x = x0``
     with respect to ``x`` in the form of a ``FormalPowerSeries`` object.

@@ -437,19 +437,6 @@ class Piecewise(Function):
             args = [(e, args[e]) for e in uniq(exprinorder)]
             # add in the last arg
             args.append((expr, True))
-            # if any condition reduced to True, it needs to go last
-            # and there should only be one of them or else the exprs
-            # should agree
-            trues = [i for i in range(len(args)) if args[i][1] is S.true]
-            if not trues:
-                # make the last one True since all cases were enumerated
-                e, c = args[-1]
-                args[-1] = (e, S.true)
-            else:
-                assert len({e for e, c in [args[i] for i in trues]}) == 1
-                args.append(args.pop(trues.pop()))
-                while trues:
-                    args.pop(trues.pop())
             return Piecewise(*args)
 
     def _eval_integral(self, x, _first=True, **kwargs):

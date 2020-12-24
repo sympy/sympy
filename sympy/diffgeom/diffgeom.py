@@ -1,5 +1,6 @@
 from typing import Any, Set
 
+from functools import reduce
 from itertools import permutations
 
 from sympy.combinatorics import Permutation
@@ -8,7 +9,7 @@ from sympy.core import (
     Pow, Mul, Add, Atom, Lambda, S, Tuple, Dict
 )
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import reduce
+
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify

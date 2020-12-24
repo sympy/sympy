@@ -154,6 +154,12 @@ class Tr(Expr):
 
             return Expr.__new__(cls, expr, indices)
 
+    @property
+    def kind(self):
+        expr = self.args[0]
+        expr_kind = expr.kind
+        return expr_kind.element_kind
+
     def doit(self, **kwargs):
         """ Perform the trace operation.
 

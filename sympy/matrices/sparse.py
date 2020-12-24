@@ -1,7 +1,9 @@
 from collections import defaultdict
+from collections.abc import Callable
+from functools import reduce
 
 from sympy.core import SympifyError, Add
-from sympy.core.compatibility import Callable, as_int, is_sequence, reduce
+from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.singleton import S

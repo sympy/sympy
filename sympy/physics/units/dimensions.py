@@ -13,10 +13,10 @@ question of adding time to length has no meaning.
 from typing import Dict as tDict
 
 import collections
+from functools import reduce
 
 from sympy import (Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
     default_sort_key)
-from sympy.core.compatibility import reduce
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning

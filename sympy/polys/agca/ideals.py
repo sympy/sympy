@@ -1,7 +1,7 @@
 """Computations with ideals of polynomial rings."""
 
+from functools import reduce
 
-from sympy.core.compatibility import reduce
 from sympy.polys.polyerrors import CoercionFailed
 
 

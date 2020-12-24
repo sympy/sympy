@@ -6,7 +6,7 @@ from sympy.utilities.misc import func_name
 
 class Contains(BooleanFunction):
     """
-    Asserts that x is an element of the set S
+    Asserts that x is an element of the set S.
 
     Examples
     ========

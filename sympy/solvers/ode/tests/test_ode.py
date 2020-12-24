@@ -15,7 +15,7 @@ from sympy.solvers.ode.ode import (_linear_coeff_match,
 from sympy.functions import airyai, airybi
 
 from sympy.solvers.deutils import ode_order
-from sympy.testing.pytest import XFAIL, skip, raises, slow, ON_TRAVIS, SKIP
+from sympy.testing.pytest import XFAIL, skip, raises, slow, ON_TRAVIS
 
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
@@ -1521,74 +1521,6 @@ def test_exact_enhancement():
     assert checkodesol(eq, sol, order=1, solve_for_func=False) == [(True, 0), (True, 0)]
 
 
-@slow
-def test_separable_reduced():
-    f = Function('f')
-    x = Symbol('x')
-    df = f(x).diff(x)
-    eq = (x / f(x))*df  + tan(x**2*f(x) / (x**2*f(x) - 1))
-    assert classify_ode(eq) == ('separable_reduced', 'lie_group',
-        'separable_reduced_Integral')
-
-    eq = x* df  + f(x)* (1 / (x**2*f(x) - 1))
-    assert classify_ode(eq) == ('separable_reduced', 'lie_group',
-        'separable_reduced_Integral')
-    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
-    assert sol.lhs ==  log(x**2*f(x))/3 + log(x**2*f(x) - Rational(3, 2))/6
-    assert sol.rhs == C1 + log(x)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-    eq = f(x).diff(x) + (f(x) / (x**4*f(x) - x))
-    assert classify_ode(eq) == ('separable_reduced', 'lie_group',
-        'separable_reduced_Integral')
-    sol = dsolve(eq, hint = 'separable_reduced')
-    # FIXME: This one hangs
-    #assert checkodesol(eq, sol, order=1, solve_for_func=False) == [(True, 0)] * 4
-    assert len(sol) == 4
-
-    eq = x*df + f(x)*(x**2*f(x))
-    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
-    assert sol == Eq(log(x**2*f(x))/2 - log(x**2*f(x) - 2)/2, C1 + log(x))
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
-
-    eq = Eq(f(x).diff(x) + f(x)/x * (1 + (x**(S(2)/3)*f(x))**2), 0)
-    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
-    assert sol == Eq(-3*log(x**(S(2)/3)*f(x)) + 3*log(3*x**(S(4)/3)*f(x)**2 + 1)/2, C1 + log(x))
-    assert checkodesol(eq, sol, solve_for_func=False) == (True, 0)
-
-    eq = Eq(f(x).diff(x) + f(x)/x * (1 + (x*f(x))**2), 0)
-    sol = dsolve(eq, hint = 'separable_reduced')
-    assert sol == [Eq(f(x), -sqrt(2)*sqrt(1/(C1 + log(x)))/(2*x)),\
-                   Eq(f(x), sqrt(2)*sqrt(1/(C1 + log(x)))/(2*x))]
-    assert checkodesol(eq, sol) == [(True, 0)]*2
-
-    eq = Eq(f(x).diff(x) + (x**4*f(x)**2 + x**2*f(x))*f(x)/(x*(x**6*f(x)**3 + x**4*f(x)**2)), 0)
-    sol = dsolve(eq, hint = 'separable_reduced')
-    assert sol == Eq(f(x), C1 + 1/(2*x**2))
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = Eq(f(x).diff(x) + (f(x)**2)*f(x)/(x), 0)
-    sol = dsolve(eq, hint = 'separable_reduced')
-    assert sol == [Eq(f(x), -sqrt(2)*sqrt(1/(C1 + log(x)))/2),\
-                  Eq(f(x), sqrt(2)*sqrt(1/(C1 + log(x)))/2)]
-    assert checkodesol(eq, sol) == [(True, 0), (True, 0)]
-
-    eq = Eq(f(x).diff(x) + (f(x)+3)*f(x)/(x*(f(x)+2)), 0)
-    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
-    assert sol == Eq(-log(f(x) + 3)/3 - 2*log(f(x))/3, C1 + log(x))
-    assert checkodesol(eq, sol, solve_for_func=False) == (True, 0)
-
-    eq = Eq(f(x).diff(x) + (f(x)+3)*f(x)/x, 0)
-    sol = dsolve(eq, hint = 'separable_reduced')
-    assert sol == Eq(f(x), 3/(C1*x**3 - 1))
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = Eq(f(x).diff(x) + (f(x)**2+f(x))*f(x)/(x), 0)
-    sol = dsolve(eq, hint='separable_reduced', simplify=False)
-    assert sol == Eq(-log(f(x) + 1) + log(f(x)) + 1/f(x), C1 + log(x))
-    assert checkodesol(eq, sol, solve_for_func=False) == (True, 0)
-
-
 def test_homogeneous_function():
     f = Function('f')
     eq1 = tan(x + f(x))
@@ -1715,11 +1647,6 @@ def test_heuristic1():
 
 
 def test_issue_6247():
-    eq = x**2*f(x)**2 + x*Derivative(f(x), x)
-    sol = Eq(f(x), 2*C1/(C1*x**2 - 1))
-    assert dsolve(eq, hint = 'separable_reduced') == sol
-    assert checkodesol(eq, sol, order=1)[0]
-
     eq = f(x).diff(x, x) + 4*f(x)
     sol = Eq(f(x), C1*sin(2*x) + C2*cos(2*x))
     assert dsolve(eq) == sol
@@ -1846,113 +1773,6 @@ def test_series():
     assert dsolve(eq, hint='1st_power_series', ics={f(2): 2}, n=3) == sol
     # FIXME: The solution here should be O((x-2)**3) so is incorrect
     #assert checkodesol(eq, sol, order=1)[0]
-
-
-
-@XFAIL
-@SKIP
-def test_lie_group_issue17322_1():
-    eq=x*f(x).diff(x)*(f(x)+4) + (f(x)**2) -2*f(x)-2*x
-    sol = dsolve(eq, f(x))  # Hangs
-    assert checkodesol(eq, sol) == (True, 0)
-
-@XFAIL
-@SKIP
-def test_lie_group_issue17322_2():
-    eq=x*f(x).diff(x)*(f(x)+4) + (f(x)**2) -2*f(x)-2*x
-    sol = dsolve(eq)  # Hangs
-    assert checkodesol(eq, sol) == (True, 0)
-
-@XFAIL
-@SKIP
-def test_lie_group_issue17322_3():
-    eq=Eq(x**7*Derivative(f(x), x) + 5*x**3*f(x)**2 - (2*x**2 + 2)*f(x)**3, 0)
-    sol = dsolve(eq)  # Hangs
-    assert checkodesol(eq, sol) == (True, 0)
-
-
-@XFAIL
-def test_lie_group_issue17322_4():
-    eq=f(x).diff(x) - (f(x) - x*log(x))**2/x**2 + log(x)
-    sol = dsolve(eq)  # NotImplementedError
-    assert checkodesol(eq, sol) == (True, 0)
-
-
-@slow
-def test_lie_group():
-    C1 = Symbol("C1")
-    x = Symbol("x") # assuming x is real generates an error!
-    a, b, c = symbols("a b c")
-    eq = f(x).diff(x)**2
-    sol = dsolve(eq, f(x), hint='lie_group')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = Eq(f(x).diff(x), x**2*f(x))
-    sol = dsolve(eq, f(x), hint='lie_group')
-    assert sol == Eq(f(x), C1*exp(x**3)**Rational(1, 3))
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x) + a*f(x) - c*exp(b*x)
-    sol = dsolve(eq, f(x), hint='lie_group')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = f(x).diff(x) + 2*x*f(x) - x*exp(-x**2)
-    sol = dsolve(eq, f(x), hint='lie_group')
-    actual_sol = Eq(f(x), (C1 + x**2/2)*exp(-x**2))
-    errstr = str(eq)+' : '+str(sol)+' == '+str(actual_sol)
-    assert sol == actual_sol, errstr
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = (1 + 2*x)*(f(x).diff(x)) + 2 - 4*exp(-f(x))
-    sol = dsolve(eq, f(x), hint='lie_group')
-    assert sol == Eq(f(x), log(C1/(2*x + 1) + 2))
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = x**2*(f(x).diff(x)) - f(x) + x**2*exp(x - (1/x))
-    sol = dsolve(eq, f(x), hint='lie_group')
-    assert checkodesol(eq, sol)[0]
-
-    eq = x**2*f(x)**2 + x*Derivative(f(x), x)
-    sol = dsolve(eq, f(x), hint='lie_group')
-    assert sol == Eq(f(x), 2/(C1 + x**2))
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq=diff(f(x),x) + 2*x*f(x) - x*exp(-x**2)
-    sol = Eq(f(x), exp(-x**2)*(C1 + x**2/2))
-    assert sol == dsolve(eq, hint='lie_group')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = diff(f(x),x) + f(x)*cos(x) - exp(2*x)
-    sol = Eq(f(x), exp(-sin(x))*(C1 + Integral(exp(2*x)*exp(sin(x)), x)))
-    assert sol == dsolve(eq, hint='lie_group')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = diff(f(x),x) + f(x)*cos(x) - sin(2*x)/2
-    sol = Eq(f(x), C1*exp(-sin(x)) + sin(x) - 1)
-    assert sol == dsolve(eq, hint='lie_group')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = x*diff(f(x),x) + f(x) - x*sin(x)
-    sol = Eq(f(x), (C1 - x*cos(x) + sin(x))/x)
-    assert sol == dsolve(eq, hint='lie_group')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = x*diff(f(x),x) - f(x) - x/log(x)
-    sol = Eq(f(x), x*(C1 + log(log(x))))
-    assert sol == dsolve(eq, hint='lie_group')
-    assert checkodesol(eq, sol) == (True, 0)
-
-    eq = (f(x).diff(x)-f(x)) * (f(x).diff(x)+f(x))
-    sol = [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
-    assert set(sol) == set(dsolve(eq, hint='lie_group'))
-    assert checkodesol(eq, sol[0]) == (True, 0)
-    assert checkodesol(eq, sol[1]) == (True, 0)
-
-    eq = f(x).diff(x) * (f(x).diff(x) - f(x))
-    sol = [Eq(f(x), C1*exp(x)), Eq(f(x), C1)]
-    assert set(sol) == set(dsolve(eq, hint='lie_group'))
-    assert checkodesol(eq, sol[0]) == (True, 0)
-    assert checkodesol(eq, sol[1]) == (True, 0)
 
 
 @XFAIL
@@ -2211,3 +2031,10 @@ def test_issue_17322():
     sol = [Eq(f(x), C1), Eq(f(x), C1*exp(-x))]
     assert set(sol) == set(dsolve(eq, hint='lie_group'))
     assert checkodesol(eq, sol) == 2*[(True, 0)]
+
+def test_issue_13060():
+    A, B = symbols("A B", cls=Function)
+    t = Symbol("t")
+    eq = [Eq(Derivative(A(t), t), A(t)*B(t)), Eq(Derivative(B(t), t), A(t)*B(t))]
+    sol = dsolve(eq)
+    assert checkodesol(eq, sol) == (True, [0, 0])
