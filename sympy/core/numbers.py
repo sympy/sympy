@@ -17,6 +17,7 @@ from .logic import fuzzy_not
 from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS,
     gmpy)
 from sympy.core.cache import lru_cache
+from .kind import NumberKind
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
@@ -586,6 +587,8 @@ class Number(AtomicExpr):
 
     # Used to make max(x._prec, y._prec) return x._prec when only x is a float
     _prec = -1
+
+    kind = NumberKind
 
     def __new__(cls, *obj):
         if len(obj) == 1:
@@ -2433,6 +2436,14 @@ class AlgebraicNumber(Expr):
     is_algebraic = True
     is_number = True
 
+
+    kind = NumberKind
+
+    # Optional alias symbol is not free.
+    # Actually, alias should be a Str, but some methods
+    # expect that it be an instance of Expr.
+    free_symbols = set()
+
     def __new__(cls, expr, coeffs=None, alias=None, **args):
         """Construct a new algebraic number. """
         from sympy import Poly
@@ -3305,6 +3316,8 @@ class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     is_complex = False
     is_extended_real = False
 
+    kind = NumberKind
+
     __slots__ = ()
 
     def __new__(cls):
@@ -3357,6 +3370,8 @@ class NumberSymbol(AtomicExpr):
     __slots__ = ()
 
     is_NumberSymbol = True
+
+    kind = NumberKind
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
@@ -3842,6 +3857,8 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
     is_number = True
     is_algebraic = True
     is_transcendental = False
+
+    kind = NumberKind
 
     __slots__ = ()
 

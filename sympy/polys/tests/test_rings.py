@@ -172,7 +172,7 @@ def test_sring():
 
     r = sqrt(2) - sqrt(3)
     R, a = sring(r, extension=True)
-    assert R.domain == QQ.algebraic_field(r)
+    assert R.domain == QQ.algebraic_field(sqrt(2) + sqrt(3))
     assert R.gens == ()
     assert a == R.domain.from_sympy(r)
 

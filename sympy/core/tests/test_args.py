@@ -52,6 +52,9 @@ def test_all_classes_are_tested():
                 cls = getattr(mod, name)
                 if hasattr(cls, '_sympy_deprecated_func'):
                     cls = cls._sympy_deprecated_func
+                if not isinstance(cls, type):
+                    # check instance of singleton class with same name
+                    cls = type(cls)
                 return issubclass(cls, Basic)
 
             names = list(filter(is_Basic, names))
@@ -1485,6 +1488,9 @@ def test_sympy__stats__crv_types__LogLogisticDistribution():
     from sympy.stats.crv_types import LogLogisticDistribution
     assert _test_args(LogLogisticDistribution(1, 1))
 
+def test_sympy__stats__crv_types__LogitNormalDistribution():
+    from sympy.stats.crv_types import LogitNormalDistribution
+    assert _test_args(LogitNormalDistribution(0, 1))
 
 def test_sympy__stats__crv_types__LogNormalDistribution():
     from sympy.stats.crv_types import LogNormalDistribution
@@ -1832,6 +1838,21 @@ def test_sympy__stats__matrix_distributions__MatrixNormalDistribution():
     S1 = MatrixSymbol('S1', 1, 1)
     S2 = MatrixSymbol('S2', 2, 2)
     assert _test_args(MatrixNormalDistribution(L, S1, S2))
+
+
+def test_sympy__utilities__matchpy_connector__WildDot():
+    from sympy.utilities.matchpy_connector import WildDot
+    assert _test_args(WildDot("w_"))
+
+
+def test_sympy__utilities__matchpy_connector__WildPlus():
+    from sympy.utilities.matchpy_connector import WildPlus
+    assert _test_args(WildPlus("w__"))
+
+
+def test_sympy__utilities__matchpy_connector__WildStar():
+    from sympy.utilities.matchpy_connector import WildStar
+    assert _test_args(WildStar("w___"))
 
 
 def test_sympy__core__symbol__Str():

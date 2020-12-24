@@ -14,8 +14,8 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          ContinuousRV, sample, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
-                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, LogCauchy, Logistic,
-                         LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
+                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
+                           LogLogistic, LogitNormal, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile,
@@ -892,6 +892,15 @@ def test_loglogistic():
     assert E(X) == pi*a/(b*sin(pi/b))
     X = LogLogistic('x', 1, 2)
     assert median(X) == FiniteSet(1)
+
+def test_logitnormal():
+    mu = Symbol('mu', real=True)
+    s = Symbol('s', positive=True)
+    X = LogitNormal('x', mu, s)
+    x = Symbol('x')
+
+    assert density(X)(x) == sqrt(2)*exp(-(-mu + log(x/(1 - x)))**2/(2*s**2))/(2*sqrt(pi)*s*x*(1 - x))
+    assert cdf(X)(x) == erf(sqrt(2)*(-mu + log(x/(1 - x)))/(2*s))/2 + S(1)/2
 
 def test_lognormal():
     mean = Symbol('mu', real=True)
