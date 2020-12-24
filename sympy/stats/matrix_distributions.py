@@ -503,13 +503,13 @@ class MatrixStudentTDistribution(MatrixDistribution):
 
     def pdf(self, x):
         from sympy import eye
-        nu, M, Omega, Sigma = self.nu, self.location_matrix, self.scale_matrix_1, self.scale_matrix_2
-        n, p = M.shape
         if isinstance(x, list):
             x = ImmutableMatrix(x)
         if not isinstance(x, (MatrixBase, MatrixSymbol)):
             raise ValueError("%s should be an isinstance of Matrix "
                              "or MatrixSymbol" % str(x))
+        nu, M, Omega, Sigma = self.nu, self.location_matrix, self.scale_matrix_1, self.scale_matrix_2
+        n, p = M.shape
 
         K = multigamma((nu + n + p - 1)/2, p) * Determinant(Omega)**(-n/2) * Determinant(Sigma)**(-p/2) \
             / ((pi)**(n*p/2) * multigamma((nu + p - 1)/2, p))
