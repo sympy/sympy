@@ -103,7 +103,7 @@ class Add(Expr, AssocOp):
 
     ``Add()`` also serves as a template for other classes.
 
-    >>> from sympy import symbols, MatrixSymbol
+    >>> from sympy import MatrixSymbol
     >>> A,B = MatrixSymbol('A', 2,2), MatrixSymbol('B', 2,2)
     >>> expr = Add(x,y).subs({x:A, y:B})
     >>> expr

@@ -120,7 +120,7 @@ class Mul(Expr, AssocOp):
 
     ``Mul()`` also serves as a template for other classes.
 
-    >>> from sympy import symbols, MatrixSymbol
+    >>> from sympy import MatrixSymbol
     >>> A = MatrixSymbol('A', 2,2)
     >>> expr = Mul(x,y).subs({y:A})
     >>> expr
