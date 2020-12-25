@@ -59,12 +59,12 @@ def test_7672():
     # deepcopy interferes with original Issue #7672
     x, xx = sp.symbols("x"), sp.symbols("x", real=True)
     assert x != xx
-    xxx = deepcopy(xx)
+    xxx = deepcopy(xx)  # noqa
     assert x == xx
 
     # clone does not
     y, yy = sp.symbols("y"), sp.symbols("y", real=True)
     assert y != yy
     # deepcopy broken (should not be equal)
-    yyy = clone(yy)
+    yyy = clone(yy)  # noqa
     assert y != yy
