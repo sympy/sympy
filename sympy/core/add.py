@@ -70,6 +70,48 @@ def _unevaluated_Add(*args):
 
 
 class Add(Expr, AssocOp):
+    """
+    Addition operation for algebraic group.
+
+    This class mainly deals with the addition in the field of complex numbers.
+    Any abstract algebraic group can be dealt as well, but it is encouraged to
+    define specific class such as ``MatAdd`` or ``VectorAdd`` for other groups.
+    This class also serves as base class for these classes.
+
+    Another use of ``Add()`` is to behave as template for abstract addition so
+    that its arguments can be substituted to return different class. Refer to
+    examples section for this.
+
+    Since addition is group operation, every class should have the same kind.
+
+    Examples
+    ========
+
+    >>> from sympy import Add
+    >>> from sympy.abc import x, y
+    >>> Add(x, 1)
+    x + 1
+    >>> Add(x, x)
+    2*x
+
+    If ``evaluate=False`` is passed, result is not evaluated.
+
+    >>> Add(1, 2, evaluate=False)
+    1 + 2
+    >>> Add(x, x, evaluate=False)
+    x + x
+
+    ``Add()`` also serves as a template for other classes.
+
+    >>> from sympy import symbols, MatrixSymbol
+    >>> A,B = MatrixSymbol('A', 2,2), MatrixSymbol('B', 2,2)
+    >>> expr = Add(x,y).subs({x:A, y:B})
+    >>> expr
+    A + B
+    >>> expr.func
+    <class 'sympy.matrices.expressions.matadd.MatAdd'>
+
+    """
 
     __slots__ = ()
 
