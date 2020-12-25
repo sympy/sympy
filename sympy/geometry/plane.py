@@ -13,7 +13,7 @@ from sympy.core.compatibility import is_sequence
 from sympy.functions.elementary.trigonometric import cos, sin, acos, asin, sqrt
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
-from sympy.solvers import solve, linsolve
+from sympy.solvers import linsolve, solveset
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent, func_name, Undecidable
 
@@ -401,8 +401,10 @@ class Plane(GeometryEntity):
                 a = Point3D(o.arbitrary_point(t))
                 p1, n = self.p1, Point3D(self.normal_vector)
 
-                # TODO: Replace solve with solveset, when this line is tested
-                c = solve((a - p1).dot(n), t)
+                _solset = solveset((a - p1).dot(n), t)
+                c = []
+                for _i in _solset:
+                    c.append(_i)
                 if not c:
                     return []
                 else:
