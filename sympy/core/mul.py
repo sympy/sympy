@@ -10,7 +10,7 @@ from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
 from .expr import Expr
 from .parameters import global_parameters
-
+from .kind import KindDispatcher
 
 
 # internal marker to indicate:
@@ -92,6 +92,12 @@ class Mul(Expr, AssocOp):
     is_Mul = True
 
     _args_type = Expr
+    _kind_dispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
+
+    @property
+    def kind(self):
+        arg_kinds = (a.kind for a in self.args)
+        return self._kind_dispatcher(*arg_kinds)
 
     def __neg__(self):
         c, args = self.as_coeff_mul()
@@ -1926,6 +1932,7 @@ class Mul(Expr, AssocOp):
         return tuple(self.as_ordered_factors())
 
 mul = AssocOpDispatcher('mul')
+
 
 def prod(a, start=1):
     """Return product of elements of a. Start with int 1 so if only

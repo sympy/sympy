@@ -6,6 +6,7 @@ from sympy.core.compatibility import (
     Callable, NotIterable, as_int, is_sequence)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
+from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
@@ -782,6 +783,23 @@ class MatrixKind(Kind):
     def __repr__(self):
         return "MatrixKind(%s)" % self.element_kind
 
+
+@Mul._kind_dispatcher.register(MatrixKind, type(NumberKind))
+def _(k1, k2):
+    """Return MatrixKind. Its element kind is selected by recursive dispatching."""
+    # Deal with Mul._kind_dispatcher's commutativity
+    if isinstance(k1, MatrixKind):
+        mk = k1
+    else:
+        mk = k2
+    elemk = Mul._kind_dispatcher(mk.element_kind, NumberKind)
+    return MatrixKind(elemk)
+
+@Mul._kind_dispatcher.register(MatrixKind, MatrixKind)
+def _(k1, k2):
+    """Return MatrixKind. Its element kind is selected by recursive dispatching."""
+    elemk = Mul._kind_dispatcher(k1.element_kind, k2.element_kind)
+    return MatrixKind(elemk)
 
 class MatrixBase(MatrixDeprecated,
                  MatrixCalculus,

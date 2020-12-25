@@ -206,6 +206,44 @@ class KindDispatcher:
     This class is designed for associative operator, where the number of arguments
     is undefined. If the operator has fixed arity, multipledispatch will be enough.
 
+    Examples
+    ========
+
+    Multiplication between numbers return number.
+
+    >>> from sympy import Mul
+    >>> from sympy.core import NumberKind
+    >>> Mul._kind_dispatcher(NumberKind, NumberKind)
+    NumberKind
+
+    Multiplication between number and unknown-kind object returns unknown kind.
+
+    >>> from sympy.core import UndefinedKind
+    >>> Mul._kind_dispatcher(NumberKind, UndefinedKind)
+    UndefinedKind
+
+    Any number and order of kinds is allowed.
+
+    >>> Mul._kind_dispatcher(UndefinedKind, NumberKind)
+    UndefinedKind
+    >>> Mul._kind_dispatcher(NumberKind, UndefinedKind, NumberKind)
+    UndefinedKind
+
+    Since matrix forms a vector space over scalar field, multiplication
+    between matrix with numeric element and number returns matrix with
+    numeric element.
+
+    >>> from sympy.matrices import MatrixKind
+    >>> Mul._kind_dispatcher(MatrixKind(NumberKind), NumberKind)
+    MatrixKind(NumberKind)
+
+    If a matrix with number element and another matrix with unknown-kind
+    element are multiplied, we know that the result is matrix but the
+    kind of its elements is unknown.
+
+    >>> Mul._kind_dispatcher(MatrixKind(NumberKind), MatrixKind(UndefinedKind))
+    MatrixKind(UndefinedKind)
+
     Parameters
     ==========
 
@@ -314,17 +352,20 @@ class KindDispatcher:
             key = self._dispatcher.funcs[sigs]
             typ_sigs[key].append(sigs)
 
-        for typ, sigs in typ_sigs.items():
+        for func, sigs in typ_sigs.items():
 
             sigs_str = ', '.join('<%s>' % str_signature(sig) for sig in sigs)
 
-            if isinstance(typ, RaiseNotImplementedError):
+            if isinstance(func, RaiseNotImplementedError):
                 amb_sigs.append(sigs_str)
                 continue
 
             s = 'Inputs: %s\n' % sigs_str
             s += '-' * len(s) + '\n'
-            s += typ.__name__
+            if func.__doc__:
+                s += func.__doc__.strip()
+            else:
+                s += func.__name__
             docs.append(s)
 
         if amb_sigs:
