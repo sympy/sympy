@@ -165,6 +165,13 @@ class Equation(Basic):
         """
         return Equation(self.rhs, self.lhs, check=False)
 
+    @property
+    def swap(self):
+        """
+        Synonym for reversed()
+        """
+        self.reversed()
+
     def _applyfunc(self, func, *args, **kwargs):
         # Assume if the expression has an attribute of name `func` that
         # should override any general function Because there are name

@@ -452,7 +452,8 @@ class Function(Application, Expr):
         # Handle calls like Function('f')
         if cls is Function:
             return UndefinedFunction(*args, **options)
-        if (hasattr(args[0],'applyfunc')): # simple override for Equation class.
+        from sympy.core.equation import Equation
+        if isinstance(args[0],Equation): # simple override for Equation class.
             return(args[0].applyfunc(cls,*args[1:],**options))
 
         n = len(args)
