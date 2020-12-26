@@ -201,7 +201,6 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
     eq = ode_example['eq']
     expected_sol = ode_example['sol']
     example = ode_example['example_name']
-    print(example,our_hint)
     xfail = our_hint in ode_example['XFAIL']
     func = ode_example['func']
     result = {'msg': '', 'xpass_msg': ''}
@@ -2243,9 +2242,9 @@ def _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous():
         'eq': f(x).diff(x, 6) - 6*f(x).diff(x, 5) + 5*f(x).diff(x, 4) + 10*f(x).diff(x) - 50 * f(x),
         'sol': [Eq(f(x),
         C5*exp(5*x)
-        + C6*exp(x*r17)
-        + exp(re(r18)*x) * (C1*sin(im(r18)*x) + C2*cos(im(r18)*x))
-        + exp(re(r20)*x) * (C3*sin(im(r20)*x) + C4*cos(im(r20)*x)))],
+        + C6*exp(x*r16)
+        + exp(re(r17)*x) * (C1*sin(im(r17)*x) + C2*cos(im(r17)*x))
+        + exp(re(r19)*x) * (C3*sin(im(r19)*x) + C4*cos(im(r19)*x)))],
         'checkodesol_XFAIL':True, #It Hangs
     },
 
