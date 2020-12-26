@@ -124,11 +124,16 @@ class Equation(Basic):
         rhs = _sympify(rhs)
         if not isinstance(lhs,Expr) or not isinstance(rhs,Expr):
             raise TypeError('lhs and rhs must be valid sympy expressions.')
-        if check:
-            tst=(lhs-rhs).evalf()
+        if check and lhs.is_number and rhs.is_number:
+            tst=(lhs-rhs)
+            if tst.is_number:
+                print('Lhs & rhs are numbers. Checking statement validity.'
+                      'Please be patient. This can be slow for complex '
+                      'expressions...')
+                tst=tst.simplify().evalf()
             if tst != 0 and tst.is_number:
                 from warnings import warn
-                warnstr = '\nDid your really mean to define unequal '
+                warnstr = '\nDid you really mean to define unequal '
                 warnstr += 'numbers '
                 warnstr += str(lhs) + ' and ' + str(rhs)
                 warnstr += ' as equal?\n'
