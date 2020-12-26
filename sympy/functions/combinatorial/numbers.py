@@ -2072,7 +2072,7 @@ class motzkin(Function):
 
     >>> from sympy import motzkin
 
-    >>> motzkin.is_motzkin(4)
+    >>> motzkin.is_motzkin(5)
     False
     >>> motzkin.find_motzkin_numbers_in_range(2,300)
     [2, 4, 9, 21, 51, 127]
