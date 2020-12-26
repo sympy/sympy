@@ -177,11 +177,16 @@ class Add(Expr, AssocOp):
                 c, s = o.as_coeff_Mul()
 
             # check for unevaluated Pow, e.g. 2**3 or 2**(-1/2)
+            # and add it to the sequence if and only if, the unevaluated Pow actually can be evaluated
             elif o.is_Pow:
                 b, e = o.as_base_exp()
                 if b.is_Number and (e.is_Integer or
                                    (e.is_Rational and e.is_negative)):
-                    seq.append(b**e)
+                    p = b**e
+                    if not p.is_Pow:
+                        seq.append(p)
+                    else:
+                       extra.append(p)
                     continue
                 c, s = S.One, o
 

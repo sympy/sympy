@@ -1,5 +1,5 @@
 from sympy.core import (
-    Basic, Rational, Symbol, S, Float, Integer, Mul, Number, Pow,
+    Basic, Rational, Symbol, S, Float, Integer, Add, Mul, Number, Pow,
     Expr, I, nan, pi, symbols, oo, zoo, N)
 from sympy.core.tests.test_evalf import NS
 from sympy.core.function import expand_multinomial
@@ -234,7 +234,7 @@ def test_power_rewrite_exp():
     assert expr.rewrite(exp) == exp((6 + 7*I)*log(5))
     assert expr.rewrite(exp).expand() == 15625*exp(7*I*log(5))
 
-    assert Pow(123, 789, evaluate=False).rewrite(exp) == 123**789
+    assert Pow(123, 89, evaluate=False).rewrite(exp) == 123**89
     assert (1**I).rewrite(exp) == 1**I
     assert (0**I).rewrite(exp) == 0**I
 
@@ -582,3 +582,22 @@ def test_power_dispatcher():
     assert power(a, b) == NewPow(a, b)
     assert power(b, a) == NewPow(b, a)
     assert power(b, b) == NewPow(b, b)
+
+def test_mul_add_unevaluated():
+    m = Mul(Pow(200, 200, evaluate=False), 2)
+    assert m.args[1] == Pow(200, 200, evaluate=False)
+    a = Add(Pow(200, 200, evaluate=False), 2)
+    assert a.args[1] == Pow(200, 200, evaluate=False)
+
+def test_pow_large_comparison():
+    #Same Base
+    assert Pow(200, 300) > Pow(200, 100)
+    assert Pow(200, 300) < Pow(200, 500)
+    #Same exponent
+    assert Pow(200, 300) > Pow(100, 300)
+    assert Pow(500, 300) < Pow(600, 300)
+    #Both Exponent and Base different but greater than other
+    assert Pow(200, 500) > Pow(100, 400)
+    assert Pow(500, 300) < Pow(800, 600)
+    #Nested Pow
+    assert Pow(100, Pow(100,100)) < Pow(100, Pow(100,101))

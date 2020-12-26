@@ -12,7 +12,7 @@ from .compatibility import as_int, HAS_GMPY, gmpy
 from .parameters import global_parameters
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.multipledispatch import Dispatcher
+from sympy.multipledispatch import Dispatcher, dispatch
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 
@@ -289,6 +289,10 @@ class Pow(Expr):
                 issue=19445,
                 deprecated_since_version="1.7"
             ).warn()
+
+        if e.is_Number and (not e is S.NaN) and e >= S(100):
+            if b.is_Number and (not b is S.NaN) and b >= S(100):
+                evaluate = False
 
         if evaluate:
             if b is S.Zero and e is S.NegativeInfinity:
@@ -1740,6 +1744,14 @@ class Pow(Expr):
 
 power = Dispatcher('power')
 power.add((object, object), Pow)
+
+@dispatch(Pow, Pow)
+def _eval_is_ge(a, b):
+    from sympy.core.relational import is_ge
+    if is_ge(a.base, S.One) and is_ge(b.base, S.One):
+        base_greater = is_ge(a.base, b.base)
+        exp_greater = is_ge(a.exp, b.exp)
+        return fuzzy_and([base_greater, exp_greater])
 
 from .add import Add
 from .numbers import Integer
