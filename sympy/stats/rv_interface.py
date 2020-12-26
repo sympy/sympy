@@ -489,7 +489,7 @@ def self_information(p):
     It represents the degree of surprise associated with a certain outcome.
     Mathematically it is defined as
 
-    .. math:: 
+    .. math::
         selfinformation(p)=-\log_2 (p)
 
     Parameters
