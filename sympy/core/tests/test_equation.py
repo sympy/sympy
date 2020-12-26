@@ -100,6 +100,6 @@ def test_helper_functions():
     assert factor(tsteqn4) == tsteqn
     # Check matrix exponentiation is not overridden.
     tsteqn5 = Eqn(a, Matrix([[1, 1], [1, 1]]))
-    matr = Matrix([[0.5 + exp(2)/2, -0.5 + exp(2)/2], [-0.5 + exp(2)/2, 0.5 +
-                                                       exp(2)/2]])
-    assert (exp(tsteqn5) == Eqn(exp(a), matr))
+    result5 = 'Eqn(exp(a), Matrix([\n[0.5 + exp(2) / 2, -0.5 + exp(2) / 2],\n['
+    result5 +='-0.5 + exp(2) / 2, 0.5 + exp(2) / 2]]))'
+    assert (exp(tsteqn5) == result5Eqn))
