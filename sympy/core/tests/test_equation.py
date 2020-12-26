@@ -72,6 +72,13 @@ def test_helper_functions():
     assert integrate(tsteqn, c, side='lhs') == integrate(tsteqn.lhs, c)
     assert (tsteqn.integ(c)).lhs == Integral(a * c, c)
     assert tsteqn.integ(c).rhs.simplify() == integrate(tsteqn.rhs, c)
+
+    def adsq(expr):
+        # Arbitrary python function
+        return expr + expr ** 2
+
+    assert (adsq(tsteqn) == Eqn(a ** 2 * c ** 2 + a * c, b ** 2 / c ** 2 +
+                                b / c))
     tsteqn = Eqn((a - 1) * (a + 1) * (a + 3), (a + 3) * (2 * b + c) ** 2)
     tsteqn2 = Eqn(a ** 3 + 3 * a ** 2 - a - 3,
                   4 * a * b ** 2 + 4 * a * b * c + a * c ** 2 + 12 * b ** 2 +
