@@ -12,7 +12,7 @@ __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
         'skewness', 'kurtosis', 'covariance', 'dependent', 'entropy', 'median',
         'independent', 'random_symbols', 'correlation', 'factorial_moment',
         'moment', 'cmoment', 'sampling_density', 'moment_generating_function',
-        'smoment', 'quantile', 'sample_stochastic_process']
+        'smoment', 'quantile', 'sample_stochastic_process', 'self_information']
 
 
 
@@ -483,6 +483,41 @@ def coskewness(X, Y, Z, condition=None, **kwargs):
          * std(Z, condition, **kwargs)
     return num/den
 
+def self_information(p):
+    """
+    Calculates the self-information of a particular outcome of an event.
+    It represents the degree of surprise associated with a certain outcome.
+    Mathematically it is defined as
+
+    .. math:: 
+        selfinformation(p)=-\log_2 (p)
+
+    Parameters
+    ==========
+
+    p : Probability of an event
+
+    Examples
+    ========
+    >>> from sympy.stats import self_information, P, Die
+    >>> from sympy import Eq
+    >>> X, Y = Die('X', 6), Die('Y', 6)
+    >>> self_information(P(X>3))
+    1
+    >>> self_information(P(Eq(X,4)))
+    1 + log(3)/log(2)
+
+    Returns
+    =======
+
+    self-information : The self-information of the probability of an event
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Information_content
+    """
+    return -log(p, 2)
 
 P = probability
 E = expectation

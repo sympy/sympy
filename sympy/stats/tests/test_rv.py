@@ -5,7 +5,7 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         density, given, independent, dependent, where, pspace, GaussianUnitaryEnsemble,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
         DiscreteUniform, Poisson, characteristic_function, moment_generating_function,
-        BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance)
+        BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance, self_information)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace, is_random, RandomIndexedSymbol, RandomMatrixSymbol)
 from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
@@ -394,3 +394,8 @@ def test_issue_20286():
     k = Dummy('k', integer = True)
     eq = Sum(Piecewise((-p**k*(1 - p)**(-k + n)*log(p**k*(1 - p)**(-k + n)*binomial(n, k))*binomial(n, k), (k >= 0) & (k <= n)), (nan, True)), (k, 0, n))
     assert eq.dummy_eq(H(B))
+
+def test_self_information():
+    X, Y = Die('X', 6), Die('Y', 6)
+    assert self_information(P(X>3)) == 1
+    assert self_information(P(Eq(X,4))) == 1 + log(3)/log(2)
