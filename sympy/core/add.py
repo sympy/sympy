@@ -630,7 +630,6 @@ class Add(Expr, AssocOp):
                     return True
                 elif im == 1:
                     return False
-            return True
         if b.is_zero is False:
             return False
 
