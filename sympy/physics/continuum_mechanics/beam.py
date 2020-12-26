@@ -2310,12 +2310,12 @@ class Beam3D(Beam):
             >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
             >>> b.plot_shear_force()
             PlotGrid object containing:
-		    Plot[0]:Plot object containing:
-		    [0]: cartesian line: 0 for x over (0.0, 20.0)
-		    Plot[1]:Plot object containing:
-		    [0]: cartesian line: -6*x**2 for x over (0.0, 20.0)
-		    Plot[2]:Plot object containing:
-		    [0]: cartesian line: -15*x for x over (0.0, 20.0)
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: 0 for x over (0.0, 20.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: -6*x**2 for x over (0.0, 20.0)
+            Plot[2]:Plot object containing:
+            [0]: cartesian line: -15*x for x over (0.0, 20.0)
 
 
         """
