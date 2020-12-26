@@ -2094,7 +2094,7 @@ class motzkin(Function):
     def is_motzkin(n):
         try:
             n = as_int(n)
-        except TypeError:
+        except ValueError:
             return False
         if n > 0:
              if n == 1 or n == 2:
@@ -2143,7 +2143,7 @@ class motzkin(Function):
     def find_first_n_motzkins(n):
         try:
             n = as_int(n)
-        except:
+        except ValueError:
             raise ValueError('The provided number must be a positive integer')
         if n < 0:
             raise ValueError('The provided number must be a positive integer')
@@ -2173,7 +2173,7 @@ class motzkin(Function):
     def eval(cls, n):
         try:
             n = as_int(n)
-        except:
+        except ValueError:
             raise ValueError('The provided number must be a positive integer')
         if n < 0:
             raise ValueError('The provided number must be a positive integer')
