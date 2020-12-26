@@ -2104,7 +2104,7 @@ class motzkin(Function):
              tn = 2
              i = 3
              while tn < n:
-                 a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i+2)
+                 a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
                  i += 1
                  tn1 = tn
                  tn = a
@@ -2129,7 +2129,7 @@ class motzkin(Function):
             while tn <= y:
                 if tn >= x:
                     motzkins.append(tn)
-                a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i+2)
+                a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
                 i += 1
                 tn1 = tn
                 tn = int(a)
@@ -2157,7 +2157,7 @@ class motzkin(Function):
         i = 3
         while i <= n:
             motzkins.append(tn)
-            a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i+2)
+            a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
             i += 1
             tn1 = tn
             tn = int(a)
