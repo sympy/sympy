@@ -2074,13 +2074,11 @@ class motzkin(Function):
 
     >>> is_motzkin(4)
     False
-    >>> find_motzkin_in_range(2,300)
+    >>> motzkin.find_motzkin_numbers_in_range(2,300)
     [2, 4, 9, 21, 51, 127]
-    >>> find_motzkin_in_range(2,900)
+    >>> motzkin.find_motzkin_numbers_in_range(2,900)
     [2, 4, 9, 21, 51, 127, 323, 835]
-    >>> find_motzkin_in_range(2,1000)
-    [2, 4, 9, 21, 51, 127, 323, 835]
-    >>> find_first_n_motzkins(10)
+    >>> motzkin.find_first_n_motzkins(10)
     [1, 1, 2, 4, 9, 21, 51, 127, 323, 835]
 
 
@@ -2096,22 +2094,22 @@ class motzkin(Function):
     def is_motzkin(n):
         try:
             n = as_int(n)
-        except:
+        except TypeError:
             return False
         if n > 0:
-             if n==1 or n==2:
+             if n == 1 or n == 2:
                 return True
 
              tn1 = 1
              tn = 2
              i = 3
-             while tn<n:
-                 a = ((2*i + 1) * tn + (3*i - 3)* tn1) / (i+2)
-                 i+= 1
+             while tn < n:
+                 a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i+2)
+                 i += 1
                  tn1 = tn
                  tn = a
 
-             if tn==n:
+             if tn == n:
                  return True
              else:
                  return False
@@ -2121,18 +2119,18 @@ class motzkin(Function):
 
     @staticmethod
     def find_motzkin_numbers_in_range(x, y):
-        if 0 <=x <= y:
+        if 0 <= x <= y:
             motzkins = list()
-            if x<= 1 <= y:
+            if x <= 1 <= y:
                 motzkins.append(1)
             tn1 = 1
             tn = 2
             i = 3
-            while tn<=y:
-                if tn>=x:
+            while tn <= y:
+                if tn >= x:
                     motzkins.append(tn)
-                a = ((2*i + 1) * tn + (3*i - 3)* tn1) / (i+2)
-                i+= 1
+                a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i+2)
+                i += 1
                 tn1 = tn
                 tn = int(a)
 
@@ -2150,17 +2148,17 @@ class motzkin(Function):
         if n < 0:
             raise ValueError('The provided number must be a positive integer')
         motzkins = list()
-        if n>=0:
+        if n >= 0:
             motzkins.append(1)
-        if n>=1:
+        if n >= 1:
             motzkins.append(1)
         tn1 = 1
         tn = 2
         i = 3
-        while i<=n:
+        while i <= n:
             motzkins.append(tn)
-            a = ((2*i + 1) * tn + (3*i - 3)* tn1) / (i+2)
-            i+= 1
+            a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i+2)
+            i += 1
             tn1 = tn
             tn = int(a)
 
