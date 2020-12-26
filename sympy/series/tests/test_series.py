@@ -197,6 +197,13 @@ def test_issue_8805():
     assert series(1, n=8) == 1
 
 
+def test_issue_9173():
+    var('p_0 p_1 p_2 p_3 b_0 b_1 b_2')
+    Q = (p_0 + (p_1 + (p_2 + p_3/y)/y)/y)/(1 + ((p_3/(b_0*y) + (b_0*p_2 - b_1*p_3)/b_0**2)/y + (b_0**2*p_1 - b_0*b_1*p_2 - p_3*(b_0*b_2 - b_1**2))/b_0**3)/y)
+    series = b_2*y**2 + b_1*y + b_0 + O(y**3)
+    assert Q.series(y, n=3) == series
+
+    
 def test_issue_9549():
     y = (x**2 + x + 1) / (x**3 + x**2)
     assert series(y, x, oo) == x**(-5) - 1/x**4 + x**(-3) + 1/x + O(x**(-6), (x, oo))
@@ -323,3 +330,6 @@ def test_issue_20551():
     expr = (exp(x)/x).series(x, n=None)
     terms = [ next(expr) for i in range(3) ]
     assert terms == [1/x, 1, x/2]
+    
+
+
