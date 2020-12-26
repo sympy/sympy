@@ -1916,7 +1916,6 @@ class PrettyPrinter(Printer):
         _zZ = xobj('/', 1)
         rootsign = xobj('\\', 1) + _zZ
         # Make exponent number to put above it
-        #print(dir(expt))
         if isinstance(expt, Rational):
             exp = str(expt.q)
             if exp == '2':
