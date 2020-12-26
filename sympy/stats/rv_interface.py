@@ -501,7 +501,7 @@ def self_information(p):
     ========
     >>> from sympy.stats import self_information, P, Die
     >>> from sympy import Eq
-    >>> X, Y = Die('X', 6), Die('Y', 6)
+    >>> X = Die('X', 6)
     >>> self_information(P(X>3))
     1
     >>> self_information(P(Eq(X,4)))

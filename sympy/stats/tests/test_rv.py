@@ -396,6 +396,6 @@ def test_issue_20286():
     assert eq.dummy_eq(H(B))
 
 def test_self_information():
-    X, Y = Die('X', 6), Die('Y', 6)
+    X = Die('X', 6)
     assert self_information(P(X>3)) == 1
     assert self_information(P(Eq(X,4))) == 1 + log(3)/log(2)
