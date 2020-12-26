@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Module defining unit prefixe class and some constants.
 
@@ -74,8 +72,9 @@ class Prefix(Expr):
     __repr__ = __str__
 
     def __mul__(self, other):
-        if not hasattr(other, "scale_factor"):
-            return super(Prefix, self).__mul__(other)
+        from sympy.physics.units import Quantity
+        if not isinstance(other, (Quantity, Prefix)):
+            return super().__mul__(other)
 
         fact = self.scale_factor * other.scale_factor
 
@@ -90,9 +89,9 @@ class Prefix(Expr):
 
         return self.scale_factor * other
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if not hasattr(other, "scale_factor"):
-            return super(Prefix, self).__div__(other)
+            return super().__truediv__(other)
 
         fact = self.scale_factor / other.scale_factor
 
@@ -106,16 +105,12 @@ class Prefix(Expr):
 
         return self.scale_factor / other
 
-    __truediv__ = __div__
-
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         if other == 1:
             for p in PREFIXES:
                 if PREFIXES[p].scale_factor == 1 / self.scale_factor:
                     return PREFIXES[p]
         return other / self.scale_factor
-
-    __rtruediv__ = __rdiv__
 
 
 def prefix_unit(unit, prefixes):
@@ -127,14 +122,14 @@ def prefix_unit(unit, prefixes):
 
         >>> from sympy.physics.units.prefixes import (PREFIXES,
         ...                                                 prefix_unit)
-        >>> from sympy.physics.units.systems import MKS
         >>> from sympy.physics.units import m
         >>> pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
-        >>> prefix_unit(m, pref)  #doctest: +SKIP
-        [cm, dm, mm]
+        >>> prefix_unit(m, pref)  # doctest: +SKIP
+        [millimeter, centimeter, decimeter]
     """
 
     from sympy.physics.units.quantities import Quantity
+    from sympy.physics.units import UnitSystem
 
     prefixed_units = []
 
@@ -143,8 +138,8 @@ def prefix_unit(unit, prefixes):
                 "%s%s" % (prefix.name, unit.name),
                 abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
            )
-        quantity.set_dimension(unit.dimension)
-        quantity.set_scale_factor(unit.scale_factor*prefix)
+        UnitSystem._quantity_dimensional_equivalence_map_global[quantity] = unit
+        UnitSystem._quantity_scale_factors_global[quantity] = (prefix.scale_factor, unit)
         prefixed_units.append(quantity)
 
     return prefixed_units

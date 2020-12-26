@@ -18,7 +18,7 @@ from sympy.integrals.rubi.utility_function import (EllipticE, EllipticF, Int, Ar
 from sympy import pi
 from sympy import S, hyper, I, simplify, exp_polar, symbols, exp, Ei,erf, erfi, li, Integral, polylog, hyper as HypergeometricPFQ
 from sympy import EulerGamma, expint, Chi, Shi, Ci, Si, E
-from sympy.utilities.pytest import SKIP
+from sympy.testing.pytest import SKIP
 
 a, b, c, d, e, f, m, n, x, u , k, p, r, s, t, i, j= symbols('a b c d e f m n x u k p r s t i j')
 A, B, C, D, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B C D a b c d e f g h y z m n p q u v w F', )

@@ -1,8 +1,8 @@
 .. _tensor_module:
 
-=============
-Tensor Module
-=============
+======
+Tensor
+======
 
 .. automodule:: sympy.tensor
 
@@ -16,3 +16,4 @@ Contents
     indexed.rst
     index_methods.rst
     tensor.rst
+    toperators.rst

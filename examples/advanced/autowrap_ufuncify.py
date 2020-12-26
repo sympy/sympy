@@ -30,7 +30,6 @@ if not plt:
 
 import mpmath
 from sympy.utilities.autowrap import ufuncify
-from sympy.utilities.lambdify import implemented_function
 from sympy import symbols, legendre, pprint
 
 

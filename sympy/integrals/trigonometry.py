@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, division
-
-from sympy.core.compatibility import range
 from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
 from sympy.functions import binomial, sin, cos, Piecewise
 
@@ -31,25 +26,32 @@ _u = Dummy('u')
 
 
 def trigintegrate(f, x, conds='piecewise'):
-    """Integrate f = Mul(trig) over x
+    """
+    Integrate f = Mul(trig) over x.
 
-       >>> from sympy import Symbol, sin, cos, tan, sec, csc, cot
-       >>> from sympy.integrals.trigonometry import trigintegrate
-       >>> from sympy.abc import x
+    Examples
+    ========
 
-       >>> trigintegrate(sin(x)*cos(x), x)
-       sin(x)**2/2
+    >>> from sympy import sin, cos, tan, sec
+    >>> from sympy.integrals.trigonometry import trigintegrate
+    >>> from sympy.abc import x
 
-       >>> trigintegrate(sin(x)**2, x)
-       x/2 - sin(x)*cos(x)/2
+    >>> trigintegrate(sin(x)*cos(x), x)
+    sin(x)**2/2
 
-       >>> trigintegrate(tan(x)*sec(x), x)
-       1/cos(x)
+    >>> trigintegrate(sin(x)**2, x)
+    x/2 - sin(x)*cos(x)/2
 
-       >>> trigintegrate(sin(x)*tan(x), x)
-       -log(sin(x) - 1)/2 + log(sin(x) + 1)/2 - sin(x)
+    >>> trigintegrate(tan(x)*sec(x), x)
+    1/cos(x)
 
-       http://en.wikibooks.org/wiki/Calculus/Integration_techniques
+    >>> trigintegrate(sin(x)*tan(x), x)
+    -log(sin(x) - 1)/2 + log(sin(x) + 1)/2 - sin(x)
+
+    References
+    ==========
+
+    .. [1] http://en.wikibooks.org/wiki/Calculus/Integration_techniques
 
     See Also
     ========
@@ -67,9 +69,9 @@ def trigintegrate(f, x, conds='piecewise'):
         return
 
     n, m = M[n], M[m]
-    if n is S.Zero and m is S.Zero:
+    if n.is_zero and m.is_zero:
         return x
-    zz = x if n is S.Zero else S.Zero
+    zz = x if n.is_zero else S.Zero
 
     a = M[a]
 
@@ -227,7 +229,7 @@ def trigintegrate(f, x, conds='piecewise'):
     else:
         if m == n:
             ##Substitute sin(2x)/2 for sin(x)cos(x) and then Integrate.
-            res = integrate((Rational(1, 2)*sin(2*x))**m, x)
+            res = integrate((sin(2*x)*S.Half)**m, x)
         elif (m == -n):
             if n < 0:
                 # Same as the scheme described above.

@@ -1,18 +1,11 @@
-# -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division, print_function)
-
 from collections import namedtuple
-from contextlib import contextmanager
-from distutils.errors import CompileError
 from hashlib import sha256
-import glob
-import io
 import os
 import shutil
 import sys
-import tempfile
+import fnmatch
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 
 def may_xfail(func):
@@ -23,22 +16,6 @@ def may_xfail(func):
         return XFAIL(func)
     else:
         return func
-
-
-if sys.version_info[0] == 2:
-    class FileNotFoundError(IOError):
-        pass
-
-    class TemporaryDirectory(object):
-        def __init__(self):
-            self.path = tempfile.mkdtemp()
-        def __enter__(self):
-            return self.path
-        def __exit__(self, exc, value, tb):
-            shutil.rmtree(self.path)
-else:
-    FileNotFoundError = FileNotFoundError
-    TemporaryDirectory = tempfile.TemporaryDirectory
 
 
 class CompilerNotFoundError(FileNotFoundError):
@@ -122,7 +99,7 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
         raise FileNotFoundError("Source: `{}` does not exist".format(src))
 
     # We accept both (re)naming destination file _or_
-    # passing a (possible non-existant) destination directory
+    # passing a (possible non-existent) destination directory
     if dest_is_dir:
         if not dst[-1] == '/':
             dst = dst+'/'
@@ -145,11 +122,12 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
             raise FileNotFoundError("You must create directory first.")
 
     if only_update:
-        if not missing_or_other_newer(dst, src):
+        # This function is not defined:
+        # XXX: This branch is clearly not tested!
+        if not missing_or_other_newer(dst, src): # noqa
             return
 
     if os.path.islink(dst):
-        _cwd = os.path.dirname(dst)
         dst = os.path.abspath(os.path.realpath(dst), cwd=cwd)
 
     shutil.copy(src, dst)
@@ -167,6 +145,7 @@ def glob_at_depth(filename_glob, cwd=None):
     globbed = []
     for root, dirs, filenames in os.walk(cwd):
         for fn in filenames:
+            # This is not tested:
             if fnmatch.fnmatch(fn, filename_glob):
                 globbed.append(os.path.join(root, fn))
     return globbed
@@ -210,7 +189,7 @@ def pyx_is_cplus(path):
 
     Returns True if such a file is present in the file, else False.
     """
-    for line in open(path, 'rt'):
+    for line in open(path):
         if line.startswith('#') and '=' in line:
             splitted = line.split('=')
             if len(splitted) != 2:

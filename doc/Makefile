@@ -44,7 +44,7 @@ clean:
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
 
-html: SPHINXOPTS += -W
+html: SPHINXOPTS += -W --keep-going
 html: _build/logo/sympy-notailtext-favicon.ico
 	mkdir -p src/.static
 	mkdir -p _build/html
@@ -82,11 +82,10 @@ htmlhelp:
 latex: $(PDFFILES)
 	mkdir -p _build/latex _build/doctrees
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTSlatex) _build/latex
-	sed -i'' -e "s/pdflatex/xelatex/g" _build/latex/Makefile
-	sed -i'' -e "s/latexmk/latexmk -xelatex/g" _build/latex/Makefile
 	@echo
 	@echo "Build finished; the LaTeX files are in _build/latex."
-	@echo "Run \`make all' in that directory to run these through xelatex."
+	@echo "Set the environment variable LATEXMKOPTS='-xelatex -silent'"
+	@echo "And run \`make all' in that directory to run these through xelatex."
 
 .svg.pdf:
 	inkscape --file=$< --export-area-drawing --without-gui --export-pdf=$@

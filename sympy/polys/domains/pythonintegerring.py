@@ -1,6 +1,5 @@
-"""Implementaton of :class:`PythonIntegerRing` class. """
+"""Implementation of :class:`PythonIntegerRing` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.groundtypes import (
     PythonInteger, SymPyInteger, python_sqrt,

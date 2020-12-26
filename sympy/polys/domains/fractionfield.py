@@ -1,6 +1,5 @@
 """Implementation of :class:`FractionField` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.field import Field
@@ -50,6 +49,13 @@ class FractionField(Field, CompositeDomain):
     def order(self):
         return self.field.order
 
+    @property
+    def is_Exact(self):
+        return self.domain.is_Exact
+
+    def get_exact(self):
+        return FractionField(self.domain.get_exact(), self.symbols)
+
     def __str__(self):
         return str(self.domain) + '(' + ','.join(map(str, self.symbols)) + ')'
 
@@ -84,6 +90,14 @@ class FractionField(Field, CompositeDomain):
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
+        return K1(K1.domain.convert(a, K0))
+
+    def from_GaussianRationalField(K1, a, K0):
+        """Convert a `GaussianRational` object to `dtype`. """
+        return K1(K1.domain.convert(a, K0))
+
+    def from_GaussianIntegerRing(K1, a, K0):
+        """Convert a `GaussianInteger` object to `dtype`. """
         return K1(K1.domain.convert(a, K0))
 
     def from_RealField(K1, a, K0):

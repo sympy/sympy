@@ -1,12 +1,9 @@
-from __future__ import print_function, division
-
 from sympy.calculus.singularities import is_decreasing
 from sympy.calculus.util import AccumulationBounds
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.concrete.gosper import gosper_sum
 from sympy.core.add import Add
-from sympy.core.compatibility import range
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
@@ -27,7 +24,11 @@ from sympy.solvers.solveset import solveset
 import itertools
 
 class Sum(AddWithLimits, ExprWithIntLimits):
-    r"""Represents unevaluated summation.
+    r"""
+    Represents unevaluated summation.
+
+    Explanation
+    ===========
 
     ``Sum`` represents a finite or infinite series, with the first argument
     being the general form of terms in the series, and the second argument
@@ -143,7 +144,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     ========
 
     summation
-    Product, product
+    Product, sympy.concrete.products.product
 
     References
     ==========
@@ -155,7 +156,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     .. [3] https://en.wikipedia.org/wiki/Empty_sum
     """
 
-    __slots__ = ['is_commutative']
+    __slots__ = ('is_commutative',)
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
@@ -171,7 +172,24 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         # cancel out. This only answers whether the summand is zero; if
         # not then None is returned since we don't analyze whether all
         # terms cancel out.
-        if self.function.is_zero:
+        if self.function.is_zero or self.has_empty_sequence:
+            return True
+
+    def _eval_is_extended_real(self):
+        if self.has_empty_sequence:
+            return True
+        return self.function.is_extended_real
+
+    def _eval_is_positive(self):
+        if self.has_finite_limits and self.has_reversed_limits is False:
+            return self.function.is_positive
+
+    def _eval_is_negative(self):
+        if self.has_finite_limits and self.has_reversed_limits is False:
+            return self.function.is_negative
+
+    def _eval_is_finite(self):
+        if self.has_finite_limits and self.function.is_finite:
             return True
 
     def doit(self, **hints):
@@ -180,13 +198,38 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         else:
             f = self.function
 
+        # first make sure any definite limits have summation
+        # variables with matching assumptions
+        reps = {}
+        for xab in self.limits:
+            d = _dummy_with_inherited_properties_concrete(xab)
+            if d:
+                reps[xab[0]] = d
+        if reps:
+            undo = {v: k for k, v in reps.items()}
+            did = self.xreplace(reps).doit(**hints)
+            if type(did) is tuple:  # when separate=True
+                did = tuple([i.xreplace(undo) for i in did])
+            elif did is not None:
+                did = did.xreplace(undo)
+            else:
+                did = self
+            return did
+
+
         if self.function.is_Matrix:
-            return self.expand().doit()
+            expanded = self.expand()
+            if self != expanded:
+                return expanded.doit()
+            return _eval_matrix_sum(self)
 
         for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
-            if dif.is_integer and (dif < 0) == True:
+            if dif == -1:
+                # Any summation over an empty set is zero
+                return S.Zero
+            if dif.is_integer and dif.is_negative:
                 a, b = b + 1, a - 1
                 f = -f
 
@@ -219,7 +262,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         i, a, b = limits
         w, y, z = Wild('w', exclude=[i]), Wild('y', exclude=[i]), Wild('z', exclude=[i])
         result = f.match((w * i + y) ** (-z))
-        if result is not None and b == S.Infinity:
+        if result is not None and b is S.Infinity:
             coeff = 1 / result[w] ** result[z]
             s = result[z]
             q = result[y] / result[w] + a
@@ -229,6 +272,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         """
         Differentiate wrt x as long as x is not in the free symbols of any of
         the upper or lower limits.
+
+        Explanation
+        ===========
 
         Sum(a*b*x, (x, 1, a)) can be differentiated wrt x or b but not `a`
         since the value of the sum is discontinuous in `a`. In a case
@@ -250,15 +296,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if limits:  # f is the argument to a Sum
             f = self.func(f, *limits)
 
-        if len(limit) == 3:
-            _, a, b = limit
-            if x in a.free_symbols or x in b.free_symbols:
-                return None
-            df = Derivative(f, x, evaluate=True)
-            rv = self.func(df, limit)
-            return rv
-        else:
-            return NotImplementedError('Lower and upper bound expected.')
+        _, a, b = limit
+        if x in a.free_symbols or x in b.free_symbols:
+            return None
+        df = Derivative(f, x, evaluate=True)
+        rv = self.func(df, limit)
+        return rv
 
     def _eval_difference_delta(self, n, step):
         k, _, upper = self.args[-1]
@@ -271,7 +314,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
-    def _eval_simplify(self, ratio=1.7, measure=None, rational=False, inverse=False):
+    def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import factor_sum, sum_combine
         from sympy.core.function import expand
         from sympy.core.mul import Mul
@@ -307,11 +350,12 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return factor_sum(result, limits=self.limits)
 
-    def _eval_summation(self, f, x):
-        return None
-
     def is_convergent(self):
-        r"""Checks for the convergence of a Sum.
+        r"""
+        Checks for the convergence of a Sum.
+
+        Explanation
+        ===========
 
         We divide the study of convergence of infinite sums and products in
         two parts.
@@ -378,7 +422,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ========
 
         Sum.is_absolutely_convergent()
-        Product.is_convergent()
+        sympy.concrete.products.Product.is_convergent()
         """
         from sympy import Interval, Integral, log, symbols, simplify
         p, q, r = symbols('p q r', cls=Wild)
@@ -386,7 +430,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sym = self.limits[0][0]
         lower_limit = self.limits[0][1]
         upper_limit = self.limits[0][2]
-        sequence_term = self.function
+        sequence_term = self.function.simplify()
 
         if len(sequence_term.free_symbols) > 1:
             raise NotImplementedError("convergence checking for more than one symbol "
@@ -422,9 +466,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ###  -------- Divergence test ----------- ###
         try:
-            lim_val = limit_seq(sequence_term, sym)
-            if lim_val is not None and lim_val.is_zero is False:
-                return S.false
+           lim_val = limit_seq(sequence_term, sym)
+           if lim_val is not None and lim_val.is_zero is False:
+               return S.false
         except NotImplementedError:
             pass
 
@@ -438,18 +482,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         order = O(sequence_term, (sym, S.Infinity))
 
         ### --------- p-series test (1/n**p) ---------- ###
-        p1_series_test = order.expr.match(sym**p)
-        if p1_series_test is not None:
-            if p1_series_test[p] < -1:
+        p_series_test = order.expr.match(sym**p)
+        if p_series_test is not None:
+            if p_series_test[p] < -1:
                 return S.true
-            if p1_series_test[p] >= -1:
-                return S.false
-
-        p2_series_test = order.expr.match((1/sym)**p)
-        if p2_series_test is not None:
-            if p2_series_test[p] > 1:
-                return S.true
-            if p2_series_test[p] <= 1:
+            if p_series_test[p] >= -1:
                 return S.false
 
         ### ------------- comparison test ------------- ###
@@ -482,7 +519,22 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 if abs(lim_ratio) < 1:
                     return S.true
         except NotImplementedError:
-            pass
+            lim_ratio = None
+
+        ### ---------- Raabe's test -------------- ###
+        if lim_ratio == 1:  # ratio test inconclusive
+            test_val = sym*(sequence_term/
+                         sequence_term.subs(sym, sym + 1) - 1)
+            test_val = test_val.gammasimp()
+            try:
+                lim_val = limit_seq(test_val, sym)
+                if lim_val is not None and lim_val.is_number:
+                    if lim_val > 1:
+                        return S.true
+                    if lim_val < 1:
+                        return S.false
+            except NotImplementedError:
+                pass
 
         ### ----------- root test ---------------- ###
         # lim = Limit(abs(sequence_term)**(1/sym), sym, S.Infinity)
@@ -500,7 +552,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         dict_val = sequence_term.match((-1)**(sym + p)*q)
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true
-
 
         ### ------------- integral test -------------- ###
         check_interval = None
@@ -602,7 +653,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Examples
         ========
 
-        >>> from sympy import Sum, Symbol, sin, oo
+        >>> from sympy import Sum, Symbol, oo
         >>> n = Symbol('n', integer=True)
         >>> Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent()
         False
@@ -725,8 +776,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         """
         Reverse the order of a limit in a Sum.
 
-        Usage
-        =====
+        Explanation
+        ===========
 
         ``reverse_order(self, *indices)`` reverses some limits in the expression
         ``self`` which can be either a ``Sum`` or a ``Product``. The selectors in
@@ -773,7 +824,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         See Also
         ========
 
-        index, reorder_limit, reorder
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.index, reorder_limit,
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.reorder
 
         References
         ==========
@@ -804,6 +856,9 @@ def summation(f, *symbols, **kwargs):
     r"""
     Compute the summation of f with respect to symbols.
 
+    Explanation
+    ===========
+
     The notation for symbols is similar to the notation used in Integral.
     summation(f, (i, a, b)) computes the sum of f with respect to i from a to b,
     i.e.,
@@ -819,6 +874,9 @@ def summation(f, *symbols, **kwargs):
 
     If it cannot compute the sum, it returns an unevaluated Sum object.
     Repeated sums can be computed by introducing additional symbols tuples::
+
+    Examples
+    ========
 
     >>> from sympy import summation, oo, symbols, log
     >>> i, n, m = symbols('i n m', integer=True)
@@ -841,20 +899,25 @@ def summation(f, *symbols, **kwargs):
     ========
 
     Sum
-    Product, product
+    Product, sympy.concrete.products.product
 
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)
 
 
 def telescopic_direct(L, R, n, limits):
-    """Returns the direct summation of the terms of a telescopic sum
+    """
+    Returns the direct summation of the terms of a telescopic sum
+
+    Explanation
+    ===========
 
     L is the term with lower index
     R is the term with higher index
     n difference between the indexes of L and R
 
-    For example:
+    Examples
+    ========
 
     >>> from sympy.concrete.summations import telescopic_direct
     >>> from sympy.abc import k, a, b
@@ -870,9 +933,10 @@ def telescopic_direct(L, R, n, limits):
 
 
 def telescopic(L, R, limits):
-    '''Tries to perform the summation using the telescopic property
+    '''
+    Tries to perform the summation using the telescopic property.
 
-    return None if not possible
+    Return None if not possible.
     '''
     (i, a, b) = limits
     if L.is_Add or R.is_Add:
@@ -917,7 +981,7 @@ def eval_sum(f, limits):
     from sympy.functions import KroneckerDelta
 
     (i, a, b) = limits
-    if f is S.Zero:
+    if f.is_zero:
         return S.Zero
     if i not in f.free_symbols:
         return f*(b - a + 1)
@@ -936,8 +1000,13 @@ def eval_sum(f, limits):
                 newargs.append((newexpr, arg.cond))
             return f.func(*newargs)
 
-    if f.has(KroneckerDelta) and _has_simple_delta(f, limits[0]):
-        return deltasummation(f, limits)
+    if f.has(KroneckerDelta):
+        f = f.replace(
+            lambda x: isinstance(x, Sum),
+            lambda x: x.factor()
+        )
+        if _has_simple_delta(f, limits[0]):
+            return deltasummation(f, limits)
 
     dif = b - a
     definite = dif.is_Integer
@@ -958,10 +1027,62 @@ def eval_sum(f, limits):
 
 
 def eval_sum_direct(expr, limits):
+    """
+    Evaluate expression directly, but perform some simple checks first
+    to possibly result in a smaller expression and faster execution.
+    """
     from sympy.core import Add
     (i, a, b) = limits
 
     dif = b - a
+    # Linearity
+    if expr.is_Mul:
+        # Try factor out everything not including i
+        without_i, with_i = expr.as_independent(i)
+        if without_i != 1:
+            s = eval_sum_direct(with_i, (i, a, b))
+            if s:
+                r = without_i*s
+                if r is not S.NaN:
+                    return r
+        else:
+            # Try term by term
+            L, R = expr.as_two_terms()
+
+            if not L.has(i):
+                sR = eval_sum_direct(R, (i, a, b))
+                if sR:
+                    return L*sR
+
+            if not R.has(i):
+                sL = eval_sum_direct(L, (i, a, b))
+                if sL:
+                    return sL*R
+        try:
+            expr = apart(expr, i)  # see if it becomes an Add
+        except PolynomialError:
+            pass
+
+    if expr.is_Add:
+        # Try factor out everything not including i
+        without_i, with_i = expr.as_independent(i)
+        if without_i != 0:
+            s = eval_sum_direct(with_i, (i, a, b))
+            if s:
+                r = without_i*(dif + 1) + s
+                if r is not S.NaN:
+                    return r
+        else:
+            # Try term by term
+            L, R = expr.as_two_terms()
+            lsum = eval_sum_direct(L, (i, a, b))
+            rsum = eval_sum_direct(R, (i, a, b))
+
+            if None not in (lsum, rsum):
+                r = lsum + rsum
+                if r is not S.NaN:
+                    return r
+
     return Add(*[expr.subs(i, a + j) for j in range(dif + 1)])
 
 
@@ -975,18 +1096,27 @@ def eval_sum_symbolic(f, limits):
 
     # Linearity
     if f.is_Mul:
-        L, R = f.as_two_terms()
+        # Try factor out everything not including i
+        without_i, with_i = f.as_independent(i)
+        if without_i != 1:
+            s = eval_sum_symbolic(with_i, (i, a, b))
+            if s:
+                r = without_i*s
+                if r is not S.NaN:
+                    return r
+        else:
+            # Try term by term
+            L, R = f.as_two_terms()
 
-        if not L.has(i):
-            sR = eval_sum_symbolic(R, (i, a, b))
-            if sR:
-                return L*sR
+            if not L.has(i):
+                sR = eval_sum_symbolic(R, (i, a, b))
+                if sR:
+                    return L*sR
 
-        if not R.has(i):
-            sL = eval_sum_symbolic(L, (i, a, b))
-            if sL:
-                return R*sL
-
+            if not R.has(i):
+                sL = eval_sum_symbolic(L, (i, a, b))
+                if sL:
+                    return sL*R
         try:
             f = apart(f, i)  # see if it becomes an Add
         except PolynomialError:
@@ -999,13 +1129,24 @@ def eval_sum_symbolic(f, limits):
         if lrsum:
             return lrsum
 
-        lsum = eval_sum_symbolic(L, (i, a, b))
-        rsum = eval_sum_symbolic(R, (i, a, b))
+        # Try factor out everything not including i
+        without_i, with_i = f.as_independent(i)
+        if without_i != 0:
+            s = eval_sum_symbolic(with_i, (i, a, b))
+            if s:
+                r = without_i*(b - a + 1) + s
+                if r is not S.NaN:
+                    return r
+        else:
+            # Try term by term
+            lsum = eval_sum_symbolic(L, (i, a, b))
+            rsum = eval_sum_symbolic(R, (i, a, b))
 
-        if None not in (lsum, rsum):
-            r = lsum + rsum
-            if not r is S.NaN:
-                return r
+            if None not in (lsum, rsum):
+                r = lsum + rsum
+                if r is not S.NaN:
+                    return r
+
 
     # Polynomial terms with Faulhaber's formula
     n = Wild('n')
@@ -1097,7 +1238,7 @@ def _eval_sum_hyper(f, i, a):
 
     if f.subs(i, 0) == 0:
         if simplify(f.subs(i, Dummy('i', integer=True, positive=True))) == 0:
-            return S(0), True
+            return S.Zero, True
         return _eval_sum_hyper(f.subs(i, i + 1), i, 0)
 
     hs = hypersimp(f, i)
@@ -1151,7 +1292,7 @@ def eval_sum_hyper(f, i_a_b):
     old_sum = Sum(f, (i, a, b))
 
     if b != S.Infinity:
-        if a == S.NegativeInfinity:
+        if a is S.NegativeInfinity:
             res = _eval_sum_hyper(f.subs(i, -i), i, -b)
             if res is not None:
                 return Piecewise(res, (old_sum, True))
@@ -1166,7 +1307,7 @@ def eval_sum_hyper(f, i_a_b):
                 return None
             return Piecewise((res1 - res2, cond), (old_sum, True))
 
-    if a == S.NegativeInfinity:
+    if a is S.NegativeInfinity:
         res1 = _eval_sum_hyper(f.subs(i, -i), i, 1)
         res2 = _eval_sum_hyper(f, i, 0)
         if res1 is None or res2 is None:
@@ -1191,3 +1332,49 @@ def eval_sum_hyper(f, i_a_b):
                     return S.NegativeInfinity
             return None
         return Piecewise(res, (old_sum, True))
+
+
+def _eval_matrix_sum(expression):
+    f = expression.function
+    for n, limit in enumerate(expression.limits):
+        i, a, b = limit
+        dif = b - a
+        if dif.is_Integer:
+            if (dif < 0) == True:
+                a, b = b + 1, a - 1
+                f = -f
+
+            newf = eval_sum_direct(f, (i, a, b))
+            if newf is not None:
+                return newf.doit()
+
+
+def _dummy_with_inherited_properties_concrete(limits):
+    """
+    Return a Dummy symbol that inherits as many assumptions as possible
+    from the provided symbol and limits.
+
+    If the symbol already has all True assumption shared by the limits
+    then return None.
+    """
+    x, a, b = limits
+    l = [a, b]
+
+    assumptions_to_consider = ['extended_nonnegative', 'nonnegative',
+                               'extended_nonpositive', 'nonpositive',
+                               'extended_positive', 'positive',
+                               'extended_negative', 'negative',
+                               'integer', 'rational', 'finite',
+                               'zero', 'real', 'extended_real']
+
+    assumptions_to_keep = {}
+    assumptions_to_add = {}
+    for assum in assumptions_to_consider:
+        assum_true = x._assumptions.get(assum, None)
+        if assum_true:
+            assumptions_to_keep[assum] = True
+        elif all([getattr(i, 'is_' + assum) for i in l]):
+            assumptions_to_add[assum] = True
+    if assumptions_to_add:
+        assumptions_to_keep.update(assumptions_to_add)
+        return Dummy('d', **assumptions_to_keep)

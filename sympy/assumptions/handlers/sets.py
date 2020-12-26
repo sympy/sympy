@@ -1,19 +1,19 @@
 """
 Handlers for predicates related to set membership: integer, rational, etc.
 """
-from __future__ import print_function, division
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy.core.numbers import pi
+from sympy.core.logic import fuzzy_bool
 from sympy.functions.elementary.exponential import exp, log
-from sympy import I
+from sympy import I, Eq, conjugate, MatrixBase
 
 
 class AskIntegerHandler(CommonHandler):
     """
-    Handler for Q.integer
-    Test that an expression belongs to the field of integer numbers
+    Handler for Q.integer.
+    Test that an expression belongs to the field of integer numbers.
     """
 
     @staticmethod
@@ -67,8 +67,8 @@ class AskIntegerHandler(CommonHandler):
                         return
                 else:
                     return
-        else:
-            return _output
+
+        return _output
 
     Pow = Add
 
@@ -96,8 +96,8 @@ class AskIntegerHandler(CommonHandler):
 
 class AskRationalHandler(CommonHandler):
     """
-    Handler for Q.rational
-    Test that an expression belongs to the field of rational numbers
+    Handler for Q.rational.
+    Test that an expression belongs to the field of rational numbers.
     """
 
 
@@ -183,8 +183,8 @@ class AskIrrationalHandler(CommonHandler):
 
 class AskRealHandler(CommonHandler):
     """
-    Handler for Q.real
-    Test that an expression belongs to the field of real numbers
+    Handler for Q.real.
+    Test that an expression belongs to the field of real numbers.
     """
 
     @staticmethod
@@ -316,9 +316,9 @@ class AskRealHandler(CommonHandler):
 
 class AskExtendedRealHandler(AskRealHandler):
     """
-    Handler for Q.extended_real
+    Handler for Q.extended_real.
     Test that an expression belongs to the field of extended real numbers,
-    that is real numbers union {Infinity, -Infinity}
+    that is real numbers union {Infinity, -Infinity}.
     """
 
     @staticmethod
@@ -332,9 +332,15 @@ class AskExtendedRealHandler(AskRealHandler):
 
 class AskHermitianHandler(AskRealHandler):
     """
-    Handler for Q.hermitian
-    Test that an expression belongs to the field of Hermitian operators
+    Handler for Q.hermitian.
+    Test that an expression belongs to the field of Hermitian operators.
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        if isinstance(expr, MatrixBase):
+            return None
+        return AskRealHandler.Expr(expr, assumptions)
 
     @staticmethod
     def Add(expr, assumptions):
@@ -350,6 +356,7 @@ class AskHermitianHandler(AskRealHandler):
     def Mul(expr, assumptions):
         """
         As long as there is at most only one noncommutative term:
+
         Hermitian*Hermitian         -> Hermitian
         Hermitian*Antihermitian     -> !Hermitian
         Antihermitian*Antihermitian -> Hermitian
@@ -388,11 +395,23 @@ class AskHermitianHandler(AskRealHandler):
 
     cos, exp = [sin]*2
 
+    @staticmethod
+    def MatrixBase(mat, assumptions):
+        rows, cols = mat.shape
+        ret_val = True
+        for i in range(rows):
+            for j in range(i, cols):
+                cond = fuzzy_bool(Eq(mat[i, j], conjugate(mat[j, i])))
+                if cond == None:
+                    ret_val = None
+                if cond == False:
+                    return False
+        return ret_val
 
 class AskComplexHandler(CommonHandler):
     """
-    Handler for Q.complex
-    Test that an expression belongs to the field of complex numbers
+    Handler for Q.complex.
+    Test that an expression belongs to the field of complex numbers.
     """
 
     @staticmethod
@@ -419,9 +438,9 @@ class AskComplexHandler(CommonHandler):
 
 class AskImaginaryHandler(CommonHandler):
     """
-    Handler for Q.imaginary
+    Handler for Q.imaginary.
     Test that an expression belongs to the field of imaginary numbers,
-    that is, numbers in the form x*I, where x is real
+    that is, numbers in the form x*I, where x is real.
     """
 
     @staticmethod
@@ -567,10 +586,16 @@ class AskImaginaryHandler(CommonHandler):
 
 class AskAntiHermitianHandler(AskImaginaryHandler):
     """
-    Handler for Q.antihermitian
+    Handler for Q.antihermitian.
     Test that an expression belongs to the field of anti-Hermitian operators,
-    that is, operators in the form x*I, where x is Hermitian
+    that is, operators in the form x*I, where x is Hermitian.
     """
+
+    @staticmethod
+    def Expr(expr, assumptions):
+        if isinstance(expr, MatrixBase):
+            return None
+        return AskImaginaryHandler.Expr(expr, assumptions)
 
     @staticmethod
     def Add(expr, assumptions):
@@ -586,6 +611,7 @@ class AskAntiHermitianHandler(AskImaginaryHandler):
     def Mul(expr, assumptions):
         """
         As long as there is at most only one noncommutative term:
+
         Hermitian*Hermitian         -> !Antihermitian
         Hermitian*Antihermitian     -> Antihermitian
         Antihermitian*Antihermitian -> !Antihermitian
@@ -623,6 +649,19 @@ class AskAntiHermitianHandler(AskImaginaryHandler):
                 return False
             elif ask(Q.odd(expr.exp), assumptions):
                 return True
+
+    @staticmethod
+    def MatrixBase(mat, assumptions):
+        rows, cols = mat.shape
+        ret_val = True
+        for i in range(rows):
+            for j in range(i, cols):
+                cond = fuzzy_bool(Eq(mat[i, j], -conjugate(mat[j, i])))
+                if cond == None:
+                    ret_val = None
+                if cond == False:
+                    return False
+        return ret_val
 
 
 class AskAlgebraicHandler(CommonHandler):

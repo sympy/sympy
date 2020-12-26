@@ -1,8 +1,9 @@
-from sympy import Integer, S, symbols, Mul
-from sympy.core.operations import LatticeOp
-from sympy.utilities.pytest import raises
+from sympy import Integer, S, Symbol, symbols, Expr
+from sympy.core.operations import AssocOp, LatticeOp
+from sympy.testing.pytest import raises
 from sympy.core.sympify import SympifyError
-from sympy.core.add import Add
+from sympy.core.add import Add, add
+from sympy.core.mul import Mul, mul
 
 # create the simplest possible Lattice class
 
@@ -46,3 +47,61 @@ def test_issue_14025():
     assert Mul(a, b, c).has(c*b) == False
     assert Mul(a, b, c).has(b*c) == True
     assert Mul(a, b, c, d).has(b*c*d) == True
+
+
+def test_AssocOp_flatten():
+    a, b, c, d = symbols('a,b,c,d')
+
+    class MyAssoc(AssocOp):
+        identity = S.One
+
+    assert MyAssoc(a, MyAssoc(b, c)).args == \
+        MyAssoc(MyAssoc(a, b), c).args == \
+        MyAssoc(MyAssoc(a, b, c)).args == \
+        MyAssoc(a, b, c).args == \
+            (a, b, c)
+    u = MyAssoc(b, c)
+    v = MyAssoc(u, d, evaluate=False)
+    assert v.args == (u, d)
+    # like Add, any unevaluated outer call will flatten inner args
+    assert MyAssoc(a, v).args == (a, b, c, d)
+
+
+def test_add_dispatcher():
+
+    class NewBase(Expr):
+        @property
+        def _add_handler(self):
+            return NewAdd
+    class NewAdd(NewBase, Add):
+        pass
+    add.register_handlerclass((Add, NewAdd), NewAdd)
+
+    a, b = Symbol('a'), NewBase()
+
+    # Add called as fallback
+    assert add(1, 2) == Add(1, 2)
+    assert add(a, a) == Add(a, a)
+
+    # selection by registered priority
+    assert add(a,b,a) == NewAdd(2*a, b)
+
+
+def test_mul_dispatcher():
+
+    class NewBase(Expr):
+        @property
+        def _mul_handler(self):
+            return NewMul
+    class NewMul(NewBase, Mul):
+        pass
+    mul.register_handlerclass((Mul, NewMul), NewMul)
+
+    a, b = Symbol('a'), NewBase()
+
+    # Mul called as fallback
+    assert mul(1, 2) == Mul(1, 2)
+    assert mul(a, a) == Mul(a, a)
+
+    # selection by registered priority
+    assert mul(a,b,a) == NewMul(a**2, b)

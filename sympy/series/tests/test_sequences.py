@@ -1,15 +1,16 @@
 from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer,
                    SeqFormula, sequence, SeqAdd, SeqMul, Indexed, Idx, sqrt,
-                   fibonacci, tribonacci)
-from sympy.series.sequences import SeqExpr, SeqExprOp
-from sympy.utilities.pytest import raises, slow
+                   fibonacci, tribonacci, sin, cos, exp, Rational, Symbol,
+                   Function)
+from sympy.series.sequences import SeqExpr, SeqExprOp, RecursiveSeq
+from sympy.testing.pytest import raises, slow
 
 x, y, z = symbols('x y z')
 n, m = symbols('n m')
 
 
 def test_EmptySequence():
-    assert isinstance(S.EmptySequence, EmptySequence)
+    assert S.EmptySequence is EmptySequence
 
     assert S.EmptySequence.interval is S.EmptySet
     assert S.EmptySequence.length is S.Zero
@@ -75,6 +76,16 @@ def test_SeqFormula():
     raises(ValueError, lambda: SeqFormula(n**2, (n, -oo, oo)))
     raises(ValueError, lambda: SeqFormula(m*n**2, (0, oo)))
 
+    seq = SeqFormula(x*(y**2 + z), (z, 1, 100))
+    assert seq.expand() == SeqFormula(x*y**2 + x*z, (z, 1, 100))
+    seq = SeqFormula(sin(x*(y**2 + z)),(z, 1, 100))
+    assert seq.expand(trig=True) == SeqFormula(sin(x*y**2)*cos(x*z) + sin(x*z)*cos(x*y**2), (z, 1, 100))
+    assert seq.expand() == SeqFormula(sin(x*y**2 + x*z), (z, 1, 100))
+    assert seq.expand(trig=False) == SeqFormula(sin(x*y**2 + x*z), (z, 1, 100))
+    seq = SeqFormula(exp(x*(y**2 + z)), (z, 1, 100))
+    assert seq.expand() == SeqFormula(exp(x*y**2)*exp(x*z), (z, 1, 100))
+    assert seq.expand(power_exp=False) == SeqFormula(exp(x*y**2 + x*z), (z, 1, 100))
+    assert seq.expand(mul=False, power_exp=False) == SeqFormula(exp(x*(y**2 + z)), (z, 1, 100))
 
 def test_sequence():
     form = SeqFormula(n**2, (n, 0, 5))
@@ -275,8 +286,14 @@ def test_find_linear_recurrence():
     assert sequence((2,3,4,5,6,79),(n, 0, 5)).find_linear_recurrence(6,gfvar=x) \
     == ([], None)
     assert sequence((2,3,4,5,8,30),(n, 0, 5)).find_linear_recurrence(6,gfvar=x) \
-    == ([S(19)/2, -20, S(27)/2], (-31*x**2 + 32*x - 4)/(27*x**3 - 40*x**2 + 19*x -2))
+    == ([Rational(19, 2), -20, Rational(27, 2)], (-31*x**2 + 32*x - 4)/(27*x**3 - 40*x**2 + 19*x -2))
     assert sequence(fibonacci(n)).find_linear_recurrence(30,gfvar=x) \
     == ([1, 1], -x/(x**2 + x - 1))
     assert sequence(tribonacci(n)).find_linear_recurrence(30,gfvar=x) \
     ==  ([1, 1, 1], -x/(x**3 + x**2 + x - 1))
+
+def test_RecursiveSeq():
+    y = Function('y')
+    n = Symbol('n')
+    fib = RecursiveSeq(y(n - 1) + y(n - 2), y(n), n, [0, 1])
+    assert fib.coeff(3) == 2

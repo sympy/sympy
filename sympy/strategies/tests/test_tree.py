@@ -1,6 +1,5 @@
 from sympy.strategies.tree import treeapply, greedy, allresults, brute
-from sympy.core.compatibility import reduce
-from functools import partial
+from functools import partial, reduce
 
 def test_treeapply():
     tree = ([3, 3], [4, 1], 2)
@@ -58,7 +57,7 @@ def test_allresults():
     inc = lambda x: x+1
     dec = lambda x: x-1
     double = lambda x: x*2
-    square = lambda x: x**2
+    # square = lambda x: x**2
 
     assert set(allresults(inc)(3)) == {inc(3)}
     assert set(allresults([inc, dec])(3)) == {2, 4}

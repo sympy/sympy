@@ -1,8 +1,8 @@
 .. _codegen_prose:
 
-================================================
-Structural Details of Code Generation with SymPy
-================================================
+===============
+Code Generation
+===============
 
 Several submodules in SymPy allow one to generate directly compilable and
 executable code in a variety of different programming languages from SymPy
@@ -164,8 +164,8 @@ An example of Mathematica code printer::
 
     >>> expr = summation(expr, (n, -1, 1))
     >>> mathematica_code(expr)
-    T*x[-T]*Sin[(T + t)/T]/(T + t) + T*x[T]*Sin[(-T + t)/T]/(-T + t) + T*x[0]*Sin[
-    t/T]/t
+    T*(x[-T]*Sin[(T + t)/T]/(T + t) + x[T]*Sin[(-T + t)/T]/(-T + t) + x[0]*Sin[t/T
+    ]/t)
 
 We can go through a common expression in different languages we support and see
 how it works::
@@ -548,6 +548,9 @@ Classes and functions for rewriting expressions (sympy.codegen.rewriting)
 .. automodule:: sympy.codegen.rewriting
    :members:
 
+.. automodule:: sympy.codegen.matrix_nodes
+   :members:
+
 Tools for simplifying expressions using approximations (sympy.codegen.approximations)
 -------------------------------------------------------------------------------------
 
@@ -611,4 +614,11 @@ Fortran utilities (sympy.codegen.futils)
 ----------------------------------------
 
 .. automodule:: sympy.codegen.futils
+   :members:
+
+
+Array utilities (sympy.codegen.array_utils)
+-------------------------------------------
+
+.. automodule:: sympy.codegen.array_utils
    :members:

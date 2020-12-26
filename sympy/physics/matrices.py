@@ -1,14 +1,11 @@
 """Known matrices related to physics"""
 
-from __future__ import print_function, division
-
 from sympy import Matrix, I, pi, sqrt
 from sympy.functions import exp
-from sympy.core.compatibility import range
 
 
 def msigma(i):
-    r"""Returns a Pauli matrix `\sigma_i` with `i=1,2,3`
+    r"""Returns a Pauli matrix `\sigma_i` with ``i=1,2,3``.
 
     References
     ==========
@@ -77,6 +74,9 @@ def pat_matrix(m, dx, dy, dz):
 def mgamma(mu, lower=False):
     r"""Returns a Dirac gamma matrix `\gamma^\mu` in the standard
     (Dirac) representation.
+
+    Explanation
+    ===========
 
     If you want `\gamma_\mu`, use ``gamma(mu, True)``.
 
@@ -171,8 +171,8 @@ def mdft(n):
     >>> mdft(3)
     Matrix([
     [sqrt(3)/3,                sqrt(3)/3,                sqrt(3)/3],
-    [sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3, sqrt(3)*exp(-4*I*pi/3)/3],
-    [sqrt(3)/3, sqrt(3)*exp(-4*I*pi/3)/3, sqrt(3)*exp(-8*I*pi/3)/3]])
+    [sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3,  sqrt(3)*exp(2*I*pi/3)/3],
+    [sqrt(3)/3,  sqrt(3)*exp(2*I*pi/3)/3, sqrt(3)*exp(-2*I*pi/3)/3]])
     """
     mat = [[None for x in range(n)] for y in range(n)]
     base = exp(-2*pi*I/n)

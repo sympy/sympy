@@ -2,10 +2,9 @@
 Convolution (using **FFT**, **NTT**, **FWHT**), Subset Convolution,
 Covering Product, Intersecting Product
 """
-from __future__ import print_function, division
 
 from sympy.core import S, sympify
-from sympy.core.compatibility import range, as_int, iterable
+from sympy.core.compatibility import as_int, iterable
 from sympy.core.function import expand_mul
 from sympy.discrete.transforms import (
     fft, ifft, ntt, intt, fwht, ifwht,
@@ -297,7 +296,7 @@ def convolution_subset(a, b):
     Examples
     ========
 
-    >>> from sympy import symbols, S, I
+    >>> from sympy import symbols, S
     >>> from sympy.discrete.convolutions import convolution_subset
     >>> u, v, x, y, z = symbols('u v x y z')
 

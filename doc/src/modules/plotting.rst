@@ -1,5 +1,6 @@
-Plotting Module
-===============
+========
+Plotting
+========
 
 .. module:: sympy.plotting.plot
 
@@ -27,7 +28,7 @@ argument.
 Plot Class
 ----------
 
-.. autoclass:: sympy.plotting.plot.Plot
+.. autoclass:: sympy.plotting.plot::Plot
    :members:
 
 Plotting Function Reference
@@ -43,46 +44,61 @@ Plotting Function Reference
 
 .. autofunction:: plot3d_parametric_surface
 
-.. autofunction:: sympy.plotting.plot_implicit.plot_implicit
+.. autofunction:: sympy.plotting.plot_implicit::plot_implicit
+
+PlotGrid Class
+--------------
+
+.. autoclass:: sympy.plotting.plot::PlotGrid
+   :members:
 
 Series Classes
 --------------
 
-.. autoclass:: sympy.plotting.plot.BaseSeries
+.. autoclass:: sympy.plotting.plot::BaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.Line2DBaseSeries
+.. autoclass:: sympy.plotting.plot::Line2DBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.LineOver1DRangeSeries
+.. autoclass:: sympy.plotting.plot::LineOver1DRangeSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.Parametric2DLineSeries
+.. autoclass:: sympy.plotting.plot::Parametric2DLineSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.Line3DBaseSeries
+.. autoclass:: sympy.plotting.plot::Line3DBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.Parametric3DLineSeries
+.. autoclass:: sympy.plotting.plot::Parametric3DLineSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.SurfaceBaseSeries
+.. autoclass:: sympy.plotting.plot::SurfaceBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.SurfaceOver2DRangeSeries
+.. autoclass:: sympy.plotting.plot::SurfaceOver2DRangeSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot.ParametricSurfaceSeries
+.. autoclass:: sympy.plotting.plot::ParametricSurfaceSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot_implicit.ImplicitSeries
+.. autoclass:: sympy.plotting.plot_implicit::ImplicitSeries
    :members:
 
+Backends
+--------
 
+.. autoclass:: sympy.plotting.plot::BaseBackend
+   :members:
 
+.. autoclass:: sympy.plotting.plot::MatplotlibBackend
+   :members:
 
-Pyglet Plotting Module
-======================
+.. autoclass:: sympy.plotting.plot::TextBackend
+   :members:
+
+Pyglet Plotting
+---------------
 
 .. module:: sympy.plotting.pygletplot
 
@@ -96,7 +112,8 @@ the only dependency being ``pyglet``.
 
 Here is the simplest usage:
 
-    >>> from sympy import var, Plot
+    >>> from sympy import var
+    >>> from sympy.plotting.pygletplot import PygletPlot as Plot
     >>> var('x y z')
     >>> Plot(x*y**3-y*x**3)
 
@@ -264,27 +281,21 @@ Plotting Geometric Entities
 ---------------------------
 
 The plotting module is capable of plotting some 2D geometric entities like
-line, circle and ellipse. The following example plots a circle and a tangent
-line at a random point on the ellipse.
+line, circle and ellipse. The following example plots a circle centred at
+origin and of radius 2 units.
 ::
 
-    In [1]: p = Plot(axes='label_axes=True')
+    >>> from sympy import *
+    >>> x,y = symbols('x y')
+    >>> plot_implicit(Eq(x**2+y**2, 4))
 
-    In [2]: c = Circle(Point(0,0), 1)
-
-    In [3]: t = c.tangent_line(c.random_point())
-
-    In [4]: p[0] = c
-
-    In [5]: p[1] = t
+Similarly, ``plot_implicit()`` may be used to plot any 2-D geometric structure from
+its implicit equation.
 
 Plotting polygons (Polygon, RegularPolygon, Triangle) are not supported
-directly. However a polygon can be plotted through a loop as follows.
-::
+directly.
 
-    In [6]: p = Plot(axes='label_axes=True')
+Plotting with ASCII art
+-----------------------
 
-    In [7]: t = RegularPolygon(Point(0,0), 1, 5)
-
-    In [8]: for i in range(len(t.sides)):
-       ....:    p[i] = t.sides[i]
+.. autofunction:: sympy.plotting.textplot::textplot

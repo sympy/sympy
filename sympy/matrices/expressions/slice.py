@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.matrices.expressions.matexpr  import MatrixExpr
 from sympy import Tuple, Basic
 from sympy.functions.elementary.integers import floor
@@ -76,9 +74,10 @@ class MatrixSlice(MatrixExpr):
         cols = cols if self.colslice[2] == 1 else floor(cols/self.colslice[2])
         return rows, cols
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, **kwargs):
         return self.parent._entry(i*self.rowslice[2] + self.rowslice[0],
-                                  j*self.colslice[2] + self.colslice[0])
+                                  j*self.colslice[2] + self.colslice[0],
+                                  **kwargs)
 
     @property
     def on_diag(self):
@@ -107,7 +106,7 @@ def mat_slice_of_slice(parent, rowslice, colslice):
     >>> X[:, 1:5][5:8, :]
     X[5:8, 1:5]
     >>> X[1:9:2, 2:6][1:3, 2]
-    X[3:7:2, 4]
+    X[3:7:2, 4:5]
     """
     row = slice_of_slice(parent.rowslice, rowslice)
     col = slice_of_slice(parent.colslice, colslice)

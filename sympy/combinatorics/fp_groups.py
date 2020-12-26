@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 """Finitely Presented Groups and its algorithms. """
 
-from __future__ import print_function, division
+from sympy import S
 from sympy.combinatorics.free_groups import (FreeGroup, FreeGroupElement,
                                                 free_group)
 from sympy.combinatorics.rewritingsystem import RewritingSystem
@@ -11,6 +10,8 @@ from sympy.combinatorics.coset_table import (CosetTable,
 from sympy.combinatorics import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
+from sympy.utilities.magic import pollute
+from sympy import symbols
 
 from itertools import product
 
@@ -126,7 +127,7 @@ class FpGroup(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.fp_groups import (FpGroup, FpSubgroup)
+        >>> from sympy.combinatorics.fp_groups import FpGroup
         >>> from sympy.combinatorics.free_groups import free_group
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
@@ -360,7 +361,6 @@ class FpGroup(DefaultPrinting):
             C = self.coset_enumeration(H, strategy)
             return len(C.table)
 
-
     def __str__(self):
         if self.free_group.rank > 30:
             str_form = "<fp group with %s generators>" % self.free_group.rank
@@ -383,8 +383,7 @@ class FpGroup(DefaultPrinting):
         '''
         from sympy.combinatorics import Permutation, PermutationGroup
         from sympy.combinatorics.homomorphisms import homomorphism
-        from sympy import S
-        if self.order() == S.Infinity:
+        if self.order() is S.Infinity:
             raise NotImplementedError("Permutation presentation of infinite "
                                                   "groups is not implemented")
         if self._perm_isomorphism:
@@ -513,6 +512,43 @@ class FpGroup(DefaultPrinting):
         P, T = self._to_perm_group()
         return T.invert(P._elements)
 
+    @property
+    def is_cyclic(self):
+        """
+        Return ``True`` if group is Cyclic.
+
+        """
+        if len(self.generators) <= 1:
+            return True
+        try:
+            P, T = self._to_perm_group()
+        except NotImplementedError:
+            raise NotImplementedError("Check for infinite Cyclic group "
+                                      "is not implemented")
+        return P.is_cyclic
+
+    def abelian_invariants(self):
+        """
+        Return Abelian Invariants of a group.
+        """
+        try:
+            P, T = self._to_perm_group()
+        except NotImplementedError:
+            raise NotImplementedError("abelian invariants is not implemented"
+                                      "for infinite group")
+        return P.abelian_invariants()
+
+    def composition_series(self):
+        """
+        Return subnormal series of maximum length for a group.
+        """
+        try:
+            P, T = self._to_perm_group()
+        except NotImplementedError:
+            raise NotImplementedError("composition series is not implemented"
+                                      "for infinite group")
+        return P.composition_series()
+
 
 class FpSubgroup(DefaultPrinting):
     '''
@@ -523,9 +559,9 @@ class FpSubgroup(DefaultPrinting):
 
     '''
     def __init__(self, G, gens, normal=False):
-        super(FpSubgroup,self).__init__()
+        super().__init__()
         self.parent = G
-        self.generators = list(set([g for g in gens if g != G.identity]))
+        self.generators = list({g for g in gens if g != G.identity})
         self._min_words = None #for use in __contains__
         self.C = None
         self.normal = normal
@@ -731,10 +767,10 @@ def low_index_subgroups(G, N, Y=[]):
     len_short_rel = 5
     # elements of R2 only checked at the last step for complete
     # coset tables
-    R2 = set([rel for rel in R if len(rel) > len_short_rel])
+    R2 = {rel for rel in R if len(rel) > len_short_rel}
     # elements of R1 are used in inner parts of the process to prune
     # branches of the search tree,
-    R1 = set([rel.identity_cyclic_reduction() for rel in set(R) - R2])
+    R1 = {rel.identity_cyclic_reduction() for rel in set(R) - R2}
     R1_c_list = C.conjugates(R1)
     S = []
     descendant_subgroups(S, C, R1_c_list, C.A[0], R2, N, Y)
@@ -760,7 +796,7 @@ def descendant_subgroups(S, C, R1_c_list, x, R2, N, Y):
                 undefined_coset, undefined_gen = alpha, x
                 break
         # for filling up the undefine entry we try all possible values
-        # of β ∈ Ω or β = n where β^(undefined_gen^-1) is undefined
+        # of beta in Omega or beta = n where beta^(undefined_gen^-1) is undefined
         reach = C.omega + [C.n]
         for beta in reach:
             if beta < N:
@@ -836,70 +872,70 @@ def first_in_class(C, Y=[]):
 
     # TODO:: Sims points out in [Sim94] that performance can be improved by
     # remembering some of the information computed by ``first_in_class``. If
-    # the ``continue α`` statement is executed at line 14, then the same thing
-    # will happen for that value of α in any descendant of the table C, and so
-    # the values the values of α for which this occurs could profitably be
+    # the ``continue alpha`` statement is executed at line 14, then the same thing
+    # will happen for that value of alpha in any descendant of the table C, and so
+    # the values the values of alpha for which this occurs could profitably be
     # stored and passed through to the descendants of C. Of course this would
     # make the code more complicated.
 
     # The code below is taken directly from the function on page 208 of [Sim94]
-    # ν[α]
+    # nu[alpha]
 
     """
     n = C.n
-    # lamda is the largest numbered point in Ω_c_α which is currently defined
+    # lamda is the largest numbered point in Omega_c_alpha which is currently defined
     lamda = -1
-    # for α ∈ Ω_c, ν[α] is the point in Ω_c_α corresponding to α
+    # for alpha in Omega_c, nu[alpha] is the point in Omega_c_alpha corresponding to alpha
     nu = [None]*n
-    # for α ∈ Ω_c_α, μ[α] is the point in Ω_c corresponding to α
+    # for alpha in Omega_c_alpha, mu[alpha] is the point in Omega_c corresponding to alpha
     mu = [None]*n
-    # mutually ν and μ are the mutually-inverse equivalence maps between
-    # Ω_c_α and Ω_c
+    # mutually nu and mu are the mutually-inverse equivalence maps between
+    # Omega_c_alpha and Omega_c
     next_alpha = False
-    # For each 0≠α ∈ [0 .. nc-1], we start by constructing the equivalent
-    # standardized coset table C_α corresponding to H_α
+    # For each 0!=alpha in [0 .. nc-1], we start by constructing the equivalent
+    # standardized coset table C_alpha corresponding to H_alpha
     for alpha in range(1, n):
-        # reset ν to "None" after previous value of α
+        # reset nu to "None" after previous value of alpha
         for beta in range(lamda+1):
             nu[mu[beta]] = None
         # we only want to reject our current table in favour of a preceding
-        # table in the ordering in which 1 is replaced by α, if the subgroup
-        # G_α corresponding to this preceding table definitely contains the
+        # table in the ordering in which 1 is replaced by alpha, if the subgroup
+        # G_alpha corresponding to this preceding table definitely contains the
         # given subgroup
         for w in Y:
             # TODO: this should support input of a list of general words
             # not just the words which are in "A" (i.e gen and gen^-1)
             if C.table[alpha][C.A_dict[w]] != alpha:
-                # continue with α
+                # continue with alpha
                 next_alpha = True
                 break
         if next_alpha:
             next_alpha = False
             continue
-        # try α as the new point 0 in Ω_C_α
+        # try alpha as the new point 0 in Omega_C_alpha
         mu[0] = alpha
         nu[alpha] = 0
-        # compare corresponding entries in C and C_α
+        # compare corresponding entries in C and C_alpha
         lamda = 0
         for beta in range(n):
             for x in C.A:
                 gamma = C.table[beta][C.A_dict[x]]
                 delta = C.table[mu[beta]][C.A_dict[x]]
                 # if either of the entries is undefined,
-                # we move with next α
+                # we move with next alpha
                 if gamma is None or delta is None:
-                    # continue with α
+                    # continue with alpha
                     next_alpha = True
                     break
                 if nu[delta] is None:
-                    # delta becomes the next point in Ω_C_α
+                    # delta becomes the next point in Omega_C_alpha
                     lamda += 1
                     nu[delta] = lamda
                     mu[lamda] = delta
                 if nu[delta] < gamma:
                     return False
                 if nu[delta] > gamma:
-                    # continue with α
+                    # continue with alpha
                     next_alpha = True
                     break
             if next_alpha:
@@ -911,7 +947,7 @@ def first_in_class(C, Y=[]):
 #                    Simplifying Presentation
 #========================================================================
 
-def simplify_presentation(*args, **kwargs):
+def simplify_presentation(*args, change_gens=False):
     '''
     For an instance of `FpGroup`, return a simplified isomorphic copy of
     the group (e.g. remove redundant generators or relators). Alternatively,
@@ -923,8 +959,6 @@ def simplify_presentation(*args, **kwargs):
     `change_gens = True`.
 
     '''
-    change_gens = kwargs.get("change_gens", False)
-
     if len(args) == 1:
         if not isinstance(args[0], FpGroup):
             raise TypeError("The argument must be an instance of FpGroup")
@@ -933,9 +967,11 @@ def simplify_presentation(*args, **kwargs):
                                               change_gens=change_gens)
         if gens:
             return FpGroup(gens[0].group, rels)
-        return FpGroup([])
+        return FpGroup(FreeGroup([]), [])
     elif len(args) == 2:
         gens, rels = args[0][:], args[1][:]
+        if not gens:
+            return gens, rels
         identity = gens[0].group.identity
     else:
         if len(args) == 0:
@@ -1144,7 +1180,7 @@ def define_schreier_generators(C, homomorphism=False):
 def reidemeister_relators(C):
     R = C.fp_group.relators
     rels = [rewrite(C, coset, word) for word in R for coset in range(C.n)]
-    order_1_gens = set([i for i in rels if len(i) == 1])
+    order_1_gens = {i for i in rels if len(i) == 1}
 
     # remove all the order 1 generators from relators
     rels = list(filter(lambda rel: rel not in order_1_gens, rels))
@@ -1180,13 +1216,13 @@ def rewrite(C, alpha, w):
     ==========
 
     C: CosetTable
-    α: A live coset
+    alpha: A live coset
     w: A word in `A*`
 
     Returns
     =======
 
-    ρ(τ(α), w)
+    rho(tau(alpha), w)
 
     Examples
     ========

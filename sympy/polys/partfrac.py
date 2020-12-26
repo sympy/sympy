@@ -1,10 +1,8 @@
 """Algorithms for partial fraction decomposition of rational functions. """
 
-from __future__ import print_function, division
 
 from sympy.core import S, Add, sympify, Function, Lambda, Dummy
 from sympy.core.basic import preorder_traversal
-from sympy.core.compatibility import range
 from sympy.polys import Poly, RootSum, cancel, factor
 from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polyoptions import allowed_flags, set_defaults
@@ -173,7 +171,7 @@ def apart_undetermined_coeffs(P, Q):
         q = q.set_domain(dom)
         F += h*q
 
-    system, result = [], S(0)
+    system, result = [], S.Zero
 
     for (k,), coeff in F.terms():
         system.append(coeff - P.nth(k))
@@ -429,7 +427,7 @@ def assemble_partfrac_list(partial_list):
     This example is taken from Bronstein's original paper:
 
     >>> from sympy.polys.partfrac import apart_list, assemble_partfrac_list
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
 
     >>> f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
     >>> pfd = apart_list(f)
@@ -488,7 +486,7 @@ def assemble_partfrac_list(partial_list):
             ad, de = df.variables, df.expr
             # Hack to make dummies equal because Lambda created new Dummies
             de = de.subs(ad[0], an[0])
-            func = Lambda(an, nu/de**ex)
+            func = Lambda(tuple(an), nu/de**ex)
             pfd += RootSum(r, func, auto=False, quadratic=False)
         else:
             # Assemble in case the roots are given explicitly by a list of algebraic numbers

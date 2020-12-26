@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
 
 from sympy.core.function import expand_log, count_ops
@@ -18,13 +16,13 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
     reduces expression by combining powers with similar bases and exponents.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
-    If deep is True then powsimp() will also simplify arguments of
-    functions. By default deep is set to False.
+    If ``deep`` is ``True`` then powsimp() will also simplify arguments of
+    functions. By default ``deep`` is set to ``False``.
 
-    If force is True then bases will be combined without checking for
+    If ``force`` is ``True`` then bases will be combined without checking for
     assumptions, e.g. sqrt(x)*sqrt(y) -> sqrt(x*y) which is not true
     if x and y are both negative.
 
@@ -77,7 +75,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
     Radicals with Mul bases will be combined if combine='exp'
 
-    >>> from sympy import sqrt, Mul
+    >>> from sympy import sqrt
     >>> x, y = symbols('x y')
 
     Two radicals are automatically joined through Mul:
@@ -201,10 +199,14 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         # check for base and negated base pairs
         be = list(c_powers.items())
         _n = S.NegativeOne
-        for i, (b, e) in enumerate(be):
-            if ((-b).is_Symbol or b.is_Add) and -b in c_powers:
-                if (b.is_positive in (0, 1) or e.is_integer):
-                    c_powers[-b] += c_powers.pop(b)
+        for b, e in be:
+            if (b.is_Symbol or b.is_Add) and -b in c_powers and b in c_powers:
+                if (b.is_positive is not None or e.is_integer):
+                    if e.is_integer or b.is_negative:
+                        c_powers[-b] += c_powers.pop(b)
+                    else:  # (-b).is_positive so use its e
+                        e = c_powers.pop(-b)
+                        c_powers[b] += e
                     if _n in c_powers:
                         c_powers[_n] += e
                     else:
@@ -282,7 +284,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 common_b[b] = e
             if b[1] != 1 and b[0].is_Mul:
                 bases.append(b)
-        c_powers = [(b, e) for b, e in common_b.items() if e]
         bases.sort(key=default_sort_key)  # this makes tie-breaking canonical
         bases.sort(key=measure, reverse=True)  # handle longest first
         for base in bases:
@@ -487,6 +488,9 @@ def powdenest(eq, force=False, polar=False):
     r"""
     Collect exponents on powers as assumptions allow.
 
+    Explanation
+    ===========
+
     Given ``(bb**be)**e``, this can be simplified as follows:
         * if ``bb`` is positive, or
         * ``e`` is an integer, or
@@ -503,11 +507,11 @@ def powdenest(eq, force=False, polar=False):
       of the exponent can be removed from any term and the gcd of such
       integers can be joined with e
 
-    Setting ``force`` to True will make symbols that are not explicitly
+    Setting ``force`` to ``True`` will make symbols that are not explicitly
     negative behave as though they are positive, resulting in more
     denesting.
 
-    Setting ``polar`` to True will do simplifications on the Riemann surface of
+    Setting ``polar`` to ``True`` will do simplifications on the Riemann surface of
     the logarithm, also resulting in more denestings.
 
     When there are sums of logs in exp() then a product of powers may be

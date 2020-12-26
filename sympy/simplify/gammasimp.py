@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Function, S, Mul, Pow, Add
 from sympy.core.compatibility import ordered, default_sort_key
 from sympy.core.function import count_ops, expand_func
@@ -13,6 +11,9 @@ from sympy.utilities.iterables import sift, uniq
 def gammasimp(expr):
     r"""
     Simplify expressions with gamma functions.
+
+    Explanation
+    ===========
 
     This function takes as input an expression containing gamma
     functions or functions that can be rewritten in terms of gamma
@@ -39,14 +40,14 @@ def gammasimp(expr):
 
     All transformation rules can be found (or was derived from) here:
 
-    1. http://functions.wolfram.com/GammaBetaErf/Pochhammer/17/01/02/
-    2. http://functions.wolfram.com/GammaBetaErf/Pochhammer/27/01/0005/
+    .. [1] http://functions.wolfram.com/GammaBetaErf/Pochhammer/17/01/02/
+    .. [2] http://functions.wolfram.com/GammaBetaErf/Pochhammer/27/01/0005/
 
     Examples
     ========
 
     >>> from sympy.simplify import gammasimp
-    >>> from sympy import gamma, factorial, Symbol
+    >>> from sympy import gamma, Symbol
     >>> from sympy.abc import x
     >>> n = Symbol('n', integer = True)
 
@@ -64,6 +65,9 @@ def gammasimp(expr):
 def _gammasimp(expr, as_comb):
     """
     Helper function for gammasimp and combsimp.
+
+    Explanation
+    ===========
 
     Simplifies expressions written in terms of gamma function. If
     as_comb is True, it tries to preserve integer arguments. See
@@ -278,7 +282,7 @@ def _gammasimp(expr, as_comb):
                     elif n < 0:
                         for k in range(-n):
                             do.append(2*y - 1 - k)
-                    ng.append(y + S(1)/2)
+                    ng.append(y + S.Half)
                     no.append(2**(2*y - 1))
                     do.append(sqrt(S.Pi))
 
@@ -362,7 +366,7 @@ def _gammasimp(expr, as_comb):
 
                         # (2)
                         numer.append((2*S.Pi)**(S(n - 1)/2)*
-                                     n**(S(1)/2 - con))
+                                     n**(S.Half - con))
                         # (3)
                         new.append(con)
 
@@ -417,7 +421,7 @@ def _gammasimp(expr, as_comb):
                 if expr in inv:
                     return inv[expr]
                 return (expr.free_symbols, expr.atoms(Function).union(
-                        set(e.exp for e in expr.atoms(Pow))))
+                        {e.exp for e in expr.atoms(Pow)}))
 
             def update_ST(expr):
                 inv[expr] = compute_ST(expr)

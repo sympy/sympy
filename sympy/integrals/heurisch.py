@@ -1,11 +1,12 @@
-from __future__ import print_function, division
+from typing import Dict, List
 
 from itertools import permutations
+from functools import reduce
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
-from sympy.core.symbol import Wild, Dummy, symbols
+from sympy.core.symbol import Wild, Dummy
 from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.relational import Eq, Ne
@@ -16,8 +17,11 @@ from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
 from sympy.functions import sqrt, erf, erfi, li, Ei
 from sympy.functions import besselj, bessely, besseli, besselk
 from sympy.functions import hankel1, hankel2, jn, yn
+from sympy.functions.elementary.complexes import Abs, re, im, sign, arg
 from sympy.functions.elementary.exponential import LambertW
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 
 from sympy.simplify.radsimp import collect
 
@@ -32,7 +36,8 @@ from sympy.polys.rings import PolyRing
 from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
-from sympy.core.compatibility import reduce, ordered
+from sympy.core.compatibility import ordered
+from sympy.integrals.integrals import integrate
 
 
 def components(f, x):
@@ -42,8 +47,11 @@ def components(f, x):
     non-integer powers. Fractional powers are collected with
     minimal, positive exponents.
 
+    Examples
+    ========
+
     >>> from sympy import cos, sin
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> from sympy.integrals.heurisch import components
 
     >>> components(sin(x)*cos(x)**2, x)
@@ -79,7 +87,7 @@ def components(f, x):
     return result
 
 # name -> [] of symbols
-_symbols_cache = {}
+_symbols_cache = {}  # type: Dict[str, List[Dummy]]
 
 
 # NB @cacheit is not convenient here
@@ -98,9 +106,13 @@ def _symbols(name, n):
 
 
 def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
-                     degree_offset=0, unnecessary_permutations=None):
+                     degree_offset=0, unnecessary_permutations=None,
+                     _try_heurisch=None):
     """
     A wrapper around the heurisch integration algorithm.
+
+    Explanation
+    ===========
 
     This method takes the result from heurisch and checks for poles in the
     denominator. For each of these poles, the integral is reevaluated, and
@@ -129,7 +141,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         return f*x
 
     res = heurisch(f, x, rewrite, hints, mappings, retries, degree_offset,
-                   unnecessary_permutations)
+                   unnecessary_permutations, _try_heurisch)
     if not isinstance(res, Basic):
         return res
     # We consider each denominator in the expression, and try to find
@@ -163,24 +175,29 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     pairs = []
     for sub_dict in slns:
         expr = heurisch(f.subs(sub_dict), x, rewrite, hints, mappings, retries,
-                        degree_offset, unnecessary_permutations)
+                        degree_offset, unnecessary_permutations,
+                        _try_heurisch)
         cond = And(*[Eq(key, value) for key, value in sub_dict.items()])
         generic = Or(*[Ne(key, value) for key, value in sub_dict.items()])
+        if expr is None:
+            expr = integrate(f.subs(sub_dict),x)
         pairs.append((expr, cond))
     # If there is one condition, put the generic case first. Otherwise,
     # doing so may lead to longer Piecewise formulas
     if len(pairs) == 1:
         pairs = [(heurisch(f, x, rewrite, hints, mappings, retries,
-                              degree_offset, unnecessary_permutations),
+                              degree_offset, unnecessary_permutations,
+                              _try_heurisch),
                               generic),
                  (pairs[0][0], True)]
     else:
         pairs.append((heurisch(f, x, rewrite, hints, mappings, retries,
-                              degree_offset, unnecessary_permutations),
+                              degree_offset, unnecessary_permutations,
+                              _try_heurisch),
                               True))
     return Piecewise(*pairs)
 
-class BesselTable(object):
+class BesselTable:
     """
     Derivatives of Bessel functions of orders n and n-1
     in terms of each other.
@@ -222,9 +239,12 @@ class BesselTable(object):
 
 _bessel_table = None
 
-class DiffCache(object):
+class DiffCache:
     """
     Store for derivatives of expressions.
+
+    Explanation
+    ===========
 
     The standard form of the derivative of a Bessel function of order n
     contains two Bessel functions of orders n-1 and n+1, respectively.
@@ -268,9 +288,13 @@ class DiffCache(object):
         return cache[f]
 
 def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
-             degree_offset=0, unnecessary_permutations=None):
+             degree_offset=0, unnecessary_permutations=None,
+             _try_heurisch=None):
     """
     Compute indefinite integral using heuristic Risch algorithm.
+
+    Explanation
+    ===========
 
     This is a heuristic approach to indefinite integration in finite
     terms using the extended heuristic (parallel) Risch algorithm, based
@@ -318,21 +342,24 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     See Manuel Bronstein's "Poor Man's Integrator":
 
-    [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
+    References
+    ==========
+
+    .. [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
 
     For more information on the implemented algorithm refer to:
 
-    [2] K. Geddes, L. Stefanus, On the Risch-Norman Integration
+    .. [2] K. Geddes, L. Stefanus, On the Risch-Norman Integration
        Method and its Implementation in Maple, Proceedings of
        ISSAC'89, ACM Press, 212-217.
 
-    [3] J. H. Davenport, On the Parallel Risch Algorithm (I),
+    .. [3] J. H. Davenport, On the Parallel Risch Algorithm (I),
        Proceedings of EUROCAM'82, LNCS 144, Springer, 144-157.
 
-    [4] J. H. Davenport, On the Parallel Risch Algorithm (III):
+    .. [4] J. H. Davenport, On the Parallel Risch Algorithm (III):
        Use of Tangents, SIGSAM Bulletin 16 (1982), 3-6.
 
-    [5] J. H. Davenport, B. M. Trager, On the Parallel Risch
+    .. [5] J. H. Davenport, B. M. Trager, On the Parallel Risch
        Algorithm (II), ACM Transactions on Mathematical
        Software 11 (1985), 356-362.
 
@@ -341,9 +368,17 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
-    components
+    sympy.integrals.heurisch.components
     """
     f = sympify(f)
+
+    # There are some functions that Heurisch cannot currently handle,
+    # so do not even try.
+    # Set _try_heurisch=True to skip this check
+    if _try_heurisch is not True:
+        if f.has(Abs, re, im, sign, Heaviside, DiracDelta, floor, ceiling, arg):
+            return
+
     if x not in f.free_symbols:
         return f*x
 
@@ -429,8 +464,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                             if M[a].is_positive:
                                 terms.add(acosh(sqrt(M[a]/M[b])*x))
                             elif M[a].is_negative:
-                                terms.add((-M[b]/2*sqrt(-M[a])*
-                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2 - M[b]))))
+                                terms.add(-M[b]/2*sqrt(-M[a])*
+                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2 - M[b])))
 
         else:
             terms |= set(hints)
@@ -488,8 +523,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             if _derivation(p) is not S.Zero:
                 c, q = p.as_poly(y).primitive()
                 return _deflation(c)*gcd(q, q.diff(y)).as_expr()
-        else:
-            return p
+
+        return p
 
     def _splitter(p):
         for y in V:
@@ -512,8 +547,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 q_split = _splitter(cancel(q / s))
 
                 return (c_split[0]*q_split[0]*s, c_split[1]*q_split[1])
-        else:
-            return (S.One, p)
+
+        return (S.One, p)
 
     special = {}
 
@@ -564,9 +599,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     A, B = _exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
-        monoms = itermonomials(V, A + B - 1 + degree_offset)
+        monoms = tuple(ordered(itermonomials(V, A + B - 1 + degree_offset)))
     else:
-        monoms = itermonomials(V, A + B + degree_offset)
+        monoms = tuple(ordered(itermonomials(V, A + B + degree_offset)))
 
     poly_coeffs = _symbols('A', len(monoms))
 
@@ -637,12 +672,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         C = _symbols('C', len(atans))
 
         # Note: the ordering matters here
-        for poly, b in reversed(list(ordered(zip(irreducibles, B)))):
+        for poly, b in reversed(list(zip(ordered(irreducibles), B))):
             if poly.has(*V):
                 poly_coeffs.append(b)
                 log_part.append(b * log(poly))
 
-        for poly, c in reversed(list(ordered(zip(atans, C)))):
+        for poly, c in reversed(list(zip(ordered(atans), C))):
             if poly.has(*V):
                 poly_coeffs.append(c)
                 atan_part.append(c * poly)
@@ -661,7 +696,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         # sqrt(y) and similar expressions can appear, leading to non-trivial
         # domains.
         syms = set(poly_coeffs) | set(V)
-        non_syms = set([])
+        non_syms = set()
 
         def find_non_syms(expr):
             if expr.is_Integer or expr.is_Rational:

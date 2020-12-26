@@ -9,47 +9,88 @@ Die
 Bernoulli
 Coin
 Binomial
+BetaBinomial
 Hypergeometric
 Rademacher
+IdealSoliton
+RobustSoliton
 """
 
-from __future__ import print_function, division
 
 from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
-        Dict, Basic, KroneckerDelta, Dummy)
-from sympy.concrete.summations import Sum
-from sympy.core.compatibility import as_int, range
-from sympy.core.logic import fuzzy_not, fuzzy_and
-from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
+                   Dummy, Eq, Intersection, Interval, log, Range,
+                   Symbol, Lambda, Piecewise, Or, Gt, Lt, Ge, Le, Contains)
+from sympy import beta as beta_fn
+from sympy.stats.frv import (SingleFiniteDistribution,
+                             SingleFinitePSpace)
+from sympy.stats.rv import _value_check, Density, is_random
 
-__all__ = ['FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin',
-        'Binomial', 'Hypergeometric']
 
-def rv(name, cls, *args):
-    density = cls(*args)
-    return SingleFinitePSpace(name, density).value
+__all__ = ['FiniteRV',
+'DiscreteUniform',
+'Die',
+'Bernoulli',
+'Coin',
+'Binomial',
+'BetaBinomial',
+'Hypergeometric',
+'Rademacher',
+'IdealSoliton',
+'RobustSoliton',
+]
+
+def rv(name, cls, *args, **kwargs):
+    args = list(map(sympify, args))
+    dist = cls(*args)
+    if kwargs.pop('check', True):
+        dist.check(*args)
+    pspace = SingleFinitePSpace(name, dist)
+    if any(is_random(arg) for arg in args):
+        from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
+        pspace = CompoundPSpace(name, CompoundDistribution(dist))
+    return pspace.value
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
+
     @property
     def dict(self):
         return self.args[0]
 
-    def __new__(cls, density):
-        density = Dict(density)
-        for k in density.values():
-            k_sym = sympify(k)
-            if fuzzy_not(fuzzy_and((k_sym.is_nonnegative, (k_sym - 1).is_nonpositive))):
-                raise ValueError("Probability at a point must be between 0 and 1.")
-        sum_sym = sum(density.values())
-        if sum_sym != 1:
-            raise ValueError("Total Probability must be equal to 1.")
-        return Basic.__new__(cls, density)
+    def pmf(self, x):
+        x = Symbol('x')
+        return Lambda(x, Piecewise(*(
+            [(v, Eq(k, x)) for k, v in self.dict.items()] + [(S.Zero, True)])))
 
-def FiniteRV(name, density):
-    """
+    @property
+    def set(self):
+        return set(self.dict.keys())
+
+    @staticmethod
+    def check(density):
+        for p in density.values():
+            _value_check((p >= 0, p <= 1),
+                        "Probability at a point must be between 0 and 1.")
+        val = sum(density.values())
+        _value_check(Eq(val, 1) != S.false, "Total Probability must be 1.")
+
+def FiniteRV(name, density, **kwargs):
+    r"""
     Create a Finite Random Variable given a dict representing the density.
 
-    Returns a RandomSymbol.
+    Parameters
+    ==========
+
+    name : Symbol
+        Represents name of the random variable.
+    density: A dict
+        Dictionary conatining the pdf of finite distribution
+    check : bool
+        If True, it will check whether the given density
+        integrates to 1 over the given set. If False, it
+        will not perform this check. Default is False.
+
+    Examples
+    ========
 
     >>> from sympy.stats import FiniteRV, P, E
 
@@ -60,24 +101,50 @@ def FiniteRV(name, density):
     2.00000000000000
     >>> P(X >= 2)
     0.700000000000000
+
+    Returns
+    =======
+
+    RandomSymbol
+
     """
-    return rv(name, FiniteDistributionHandmade, density)
+    # have a default of False while `rv` should have a default of True
+    kwargs['check'] = kwargs.pop('check', False)
+    return rv(name, FiniteDistributionHandmade, density, **kwargs)
 
 class DiscreteUniformDistribution(SingleFiniteDistribution):
+
+    @staticmethod
+    def check(*args):
+        # not using _value_check since there is a
+        # suggestion for the user
+        if len(set(args)) != len(args):
+            from sympy.utilities.iterables import multiset
+            from sympy.utilities.misc import filldedent
+            weights = multiset(args)
+            n = Integer(len(args))
+            for k in weights:
+                weights[k] /= n
+            raise ValueError(filldedent("""
+                Repeated args detected but set expected. For a
+                distribution having different weights for each
+                item use the following:""") + (
+                '\nS("FiniteRV(%s, %s)")' % ("'X'", weights)))
+
     @property
     def p(self):
         return Rational(1, len(self.args))
 
-    @property
+    @property  # type: ignore
     @cacheit
     def dict(self):
-        return dict((k, self.p) for k in self.set)
+        return {k: self.p for k in self.set}
 
     @property
     def set(self):
-        return self.args
+        return set(self.args)
 
-    def pdf(self, x):
+    def pmf(self, x):
         if x in self.args:
             return self.p
         else:
@@ -85,11 +152,15 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
 
 
 def DiscreteUniform(name, items):
-    """
+    r"""
     Create a Finite Random Variable representing a uniform distribution over
     the input set.
 
-    Returns a RandomSymbol.
+    Parameters
+    ==========
+
+    items: list/tuple
+        Items over which Uniform distribution is to be made
 
     Examples
     ========
@@ -105,6 +176,11 @@ def DiscreteUniform(name, items):
     >>> density(Y).dict
     {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
 
+    Returns
+    =======
+
+    RandomSymbol
+
     References
     ==========
 
@@ -118,46 +194,52 @@ def DiscreteUniform(name, items):
 class DieDistribution(SingleFiniteDistribution):
     _argnames = ('sides',)
 
-    def __new__(cls, sides):
-        sides_sym = sympify(sides)
-        if fuzzy_not(fuzzy_and((sides_sym.is_integer, sides_sym.is_positive))):
-            raise ValueError("'sides' must be a positive integer.")
-        else:
-            return super(DieDistribution, cls).__new__(cls, sides)
+    @staticmethod
+    def check(sides):
+        _value_check((sides.is_positive, sides.is_integer),
+                    "number of sides must be a positive integer.")
 
     @property
-    @cacheit
-    def dict(self):
-        as_int(self.sides) # Check that self.sides can be converted to an integer
-        return super(DieDistribution, self).dict
+    def is_symbolic(self):
+        return not self.sides.is_number
+
+    @property
+    def high(self):
+        return self.sides
+
+    @property
+    def low(self):
+        return S.One
 
     @property
     def set(self):
-        return list(map(Integer, list(range(1, self.sides + 1))))
+        if self.is_symbolic:
+            return Intersection(S.Naturals0, Interval(0, self.sides))
+        return set(map(Integer, list(range(1, self.sides + 1))))
 
-    def pdf(self, x):
+    def pmf(self, x):
         x = sympify(x)
-        if x.is_number:
-            if x.is_Integer and x >= 1 and x <= self.sides:
-                return Rational(1, self.sides)
-            return S.Zero
-        if x.is_Symbol:
-            i = Dummy('i', integer=True, positive=True)
-            return Sum(KroneckerDelta(x, i)/self.sides, (i, 1, self.sides))
-        raise ValueError("'x' expected as an argument of type 'number' or 'symbol', "
-                        "not %s" % (type(x)))
-
+        if not (x.is_number or x.is_Symbol or is_random(x)):
+            raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
+                        "'RandomSymbol' not %s" % (type(x)))
+        cond = Ge(x, 1) & Le(x, self.sides) & Contains(x, S.Integers)
+        return Piecewise((S.One/self.sides, cond), (S.Zero, True))
 
 def Die(name, sides=6):
-    """
+    r"""
     Create a Finite Random Variable representing a fair die.
 
-    Returns a RandomSymbol.
+    Parameters
+    ==========
+
+    sides: Integer
+        Represents the number of sides of the Die, by default is 6
 
     Examples
     ========
 
     >>> from sympy.stats import Die, density
+    >>> from sympy import Symbol
 
     >>> D6 = Die('D6', 6) # Six sided Die
     >>> density(D6).dict
@@ -166,6 +248,18 @@ def Die(name, sides=6):
     >>> D4 = Die('D4', 4) # Four sided Die
     >>> density(D4).dict
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
+
+    >>> n = Symbol('n', positive=True, integer=True)
+    >>> Dn = Die('Dn', n) # n sided Die
+    >>> density(Dn).dict
+    Density(DieDistribution(n))
+    >>> density(Dn).dict.subs(n, 4).doit()
+    {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
+
+    Returns
+    =======
+
+    RandomSymbol
     """
 
     return rv(name, DieDistribution, sides)
@@ -174,26 +268,38 @@ def Die(name, sides=6):
 class BernoulliDistribution(SingleFiniteDistribution):
     _argnames = ('p', 'succ', 'fail')
 
-    def __new__(cls, *args):
-        p = args[BernoulliDistribution._argnames.index('p')]
-        p_sym = sympify(p)
-
-        if fuzzy_not(fuzzy_and((p_sym.is_nonnegative, (p_sym - 1).is_nonpositive))):
-            raise ValueError("p = %s is not in range [0, 1]." % str(p))
-        else:
-            return super(BernoulliDistribution, cls).__new__(cls, *args)
+    @staticmethod
+    def check(p, succ, fail):
+        _value_check((p >= 0, p <= 1),
+                    "p should be in range [0, 1].")
 
     @property
-    @cacheit
-    def dict(self):
-        return {self.succ: self.p, self.fail: 1 - self.p}
+    def set(self):
+        return {self.succ, self.fail}
+
+    def pmf(self, x):
+        if isinstance(self.succ, Symbol) and isinstance(self.fail, Symbol):
+            return Piecewise((self.p, x == self.succ),
+                             (1 - self.p, x == self.fail),
+                             (S.Zero, True))
+        return Piecewise((self.p, Eq(x, self.succ)),
+                         (1 - self.p, Eq(x, self.fail)),
+                         (S.Zero, True))
 
 
 def Bernoulli(name, p, succ=1, fail=0):
-    """
+    r"""
     Create a Finite Random Variable representing a Bernoulli process.
 
-    Returns a RandomSymbol
+    Parameters
+    ==========
+
+    p : Rational number between 0 and 1
+       Represents probability of success
+    succ : Integer/symbol/string
+       Represents event of success
+    fail : Integer/symbol/string
+       Represents event of failure
 
     Examples
     ========
@@ -209,6 +315,11 @@ def Bernoulli(name, p, succ=1, fail=0):
     >>> density(X).dict
     {Heads: 1/2, Tails: 1/2}
 
+    Returns
+    =======
+
+    RandomSymbol
+
     References
     ==========
 
@@ -221,12 +332,14 @@ def Bernoulli(name, p, succ=1, fail=0):
 
 
 def Coin(name, p=S.Half):
-    """
+    r"""
     Create a Finite Random Variable representing a Coin toss.
 
-    Probability p is the chance of gettings "Heads." Half by default
+    Parameters
+    ==========
 
-    Returns a RandomSymbol.
+    p : Rational Numeber between 0 and 1
+      Represents probability of getting "Heads", by default is Half
 
     Examples
     ========
@@ -241,6 +354,11 @@ def Coin(name, p=S.Half):
     >>> C2 = Coin('C2', Rational(3, 5)) # An unfair coin
     >>> density(C2).dict
     {H: 3/5, T: 2/5}
+
+    Returns
+    =======
+
+    RandomSymbol
 
     See Also
     ========
@@ -259,43 +377,86 @@ def Coin(name, p=S.Half):
 class BinomialDistribution(SingleFiniteDistribution):
     _argnames = ('n', 'p', 'succ', 'fail')
 
-    def __new__(cls, *args):
-        n = args[BinomialDistribution._argnames.index('n')]
-        p = args[BinomialDistribution._argnames.index('p')]
-        n_sym = sympify(n)
-        p_sym = sympify(p)
-
-        if fuzzy_not(fuzzy_and((n_sym.is_integer, n_sym.is_nonnegative))):
-            raise ValueError("'n' must be positive integer. n = %s." % str(n))
-        elif fuzzy_not(fuzzy_and((p_sym.is_nonnegative, (p_sym - 1).is_nonpositive))):
-            raise ValueError("'p' must be: 0 <= p <= 1 . p = %s" % str(p))
-        else:
-            return super(BinomialDistribution, cls).__new__(cls, *args)
+    @staticmethod
+    def check(n, p, succ, fail):
+        _value_check((n.is_integer, n.is_nonnegative),
+                    "'n' must be nonnegative integer.")
+        _value_check((p <= 1, p >= 0),
+                    "p should be in range [0, 1].")
 
     @property
+    def high(self):
+        return self.n
+
+    @property
+    def low(self):
+        return S.Zero
+
+    @property
+    def is_symbolic(self):
+        return not self.n.is_number
+
+    @property
+    def set(self):
+        if self.is_symbolic:
+            return Intersection(S.Naturals0, Interval(0, self.n))
+        return set(self.dict.keys())
+
+    def pmf(self, x):
+        n, p = self.n, self.p
+        x = sympify(x)
+        if not (x.is_number or x.is_Symbol or is_random(x)):
+            raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
+                        "'RandomSymbol' not %s" % (type(x)))
+        cond = Ge(x, 0) & Le(x, n) & Contains(x, S.Integers)
+        return Piecewise((binomial(n, x) * p**x * (1 - p)**(n - x), cond), (S.Zero, True))
+
+    @property  # type: ignore
     @cacheit
     def dict(self):
-        n, p, succ, fail = self.n, self.p, self.succ, self.fail
-        n = as_int(n)
-        return dict((k*succ + (n - k)*fail,
-                binomial(n, k) * p**k * (1 - p)**(n - k)) for k in range(0, n + 1))
-
+        if self.is_symbolic:
+            return Density(self)
+        return {k*self.succ + (self.n-k)*self.fail: self.pmf(k)
+                    for k in range(0, self.n + 1)}
 
 def Binomial(name, n, p, succ=1, fail=0):
-    """
+    r"""
     Create a Finite Random Variable representing a binomial distribution.
 
-    Returns a RandomSymbol.
+    Parameters
+    ==========
+
+    n : Positive Integer
+      Represents number of trials
+    p : Rational Number between 0 and 1
+      Represents probability of success
+    succ : Integer/symbol/string
+      Represents event of success, by default is 1
+    fail : Integer/symbol/string
+      Represents event of failure, by default is 0
 
     Examples
     ========
 
     >>> from sympy.stats import Binomial, density
-    >>> from sympy import S
+    >>> from sympy import S, Symbol
 
     >>> X = Binomial('X', 4, S.Half) # Four "coin flips"
     >>> density(X).dict
     {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
+
+    >>> n = Symbol('n', positive=True, integer=True)
+    >>> p = Symbol('p', positive=True)
+    >>> X = Binomial('X', n, S.Half) # n "coin flips"
+    >>> density(X).dict
+    Density(BinomialDistribution(n, 1/2, 1, 0))
+    >>> density(X).dict.subs(n, 4).doit()
+    {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -307,37 +468,145 @@ def Binomial(name, n, p, succ=1, fail=0):
 
     return rv(name, BinomialDistribution, n, p, succ, fail)
 
+#-------------------------------------------------------------------------------
+# Beta-binomial distribution ----------------------------------------------------------
+
+class BetaBinomialDistribution(SingleFiniteDistribution):
+    _argnames = ('n', 'alpha', 'beta')
+
+    @staticmethod
+    def check(n, alpha, beta):
+        _value_check((n.is_integer, n.is_nonnegative),
+        "'n' must be nonnegative integer. n = %s." % str(n))
+        _value_check((alpha > 0),
+        "'alpha' must be: alpha > 0 . alpha = %s" % str(alpha))
+        _value_check((beta > 0),
+        "'beta' must be: beta > 0 . beta = %s" % str(beta))
+
+    @property
+    def high(self):
+        return self.n
+
+    @property
+    def low(self):
+        return S.Zero
+
+    @property
+    def is_symbolic(self):
+        return not self.n.is_number
+
+    @property
+    def set(self):
+        if self.is_symbolic:
+            return Intersection(S.Naturals0, Interval(0, self.n))
+        return set(map(Integer, list(range(0, self.n + 1))))
+
+    def pmf(self, k):
+        n, a, b = self.n, self.alpha, self.beta
+        return binomial(n, k) * beta_fn(k + a, n - k + b) / beta_fn(a, b)
+
+
+def BetaBinomial(name, n, alpha, beta):
+    r"""
+    Create a Finite Random Variable representing a Beta-binomial distribution.
+
+    Parameters
+    ==========
+
+    n : Positive Integer
+      Represents number of trials
+    alpha : Real positive number
+    beta : Real positive number
+
+    Examples
+    ========
+
+    >>> from sympy.stats import BetaBinomial, density
+
+    >>> X = BetaBinomial('X', 2, 1, 1)
+    >>> density(X).dict
+    {0: 1/3, 1: 2*beta(2, 2), 2: 1/3}
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Beta-binomial_distribution
+    .. [2] http://mathworld.wolfram.com/BetaBinomialDistribution.html
+
+    """
+
+    return rv(name, BetaBinomialDistribution, n, alpha, beta)
+
 
 class HypergeometricDistribution(SingleFiniteDistribution):
     _argnames = ('N', 'm', 'n')
 
+    @staticmethod
+    def check(n, N, m):
+        _value_check((N.is_integer, N.is_nonnegative),
+                     "'N' must be nonnegative integer. N = %s." % str(n))
+        _value_check((n.is_integer, n.is_nonnegative),
+                     "'n' must be nonnegative integer. n = %s." % str(n))
+        _value_check((m.is_integer, m.is_nonnegative),
+                     "'m' must be nonnegative integer. m = %s." % str(n))
+
     @property
-    @cacheit
-    def dict(self):
+    def is_symbolic(self):
+        return any(not x.is_number for x in (self.N, self.m, self.n))
+
+    @property
+    def high(self):
+        return Piecewise((self.n, Lt(self.n, self.m) != False), (self.m, True))
+
+    @property
+    def low(self):
+        return Piecewise((0, Gt(0, self.n + self.m - self.N) != False), (self.n + self.m - self.N, True))
+
+    @property
+    def set(self):
         N, m, n = self.N, self.m, self.n
-        N, m, n = list(map(sympify, (N, m, n)))
-        density = dict((sympify(k),
-                        Rational(binomial(m, k) * binomial(N - m, n - k),
-                                 binomial(N, n)))
-                        for k in range(max(0, n + m - N), min(m, n) + 1))
-        return density
+        if self.is_symbolic:
+            return Intersection(S.Naturals0, Interval(self.low, self.high))
+        return {i for i in range(max(0, n + m - N), min(n, m) + 1)}
+
+    def pmf(self, k):
+        N, m, n = self.N, self.m, self.n
+        return S(binomial(m, k) * binomial(N - m, n - k))/binomial(N, n)
 
 
 def Hypergeometric(name, N, m, n):
-    """
+    r"""
     Create a Finite Random Variable representing a hypergeometric distribution.
 
-    Returns a RandomSymbol.
+    Parameters
+    ==========
+
+    N : Positive Integer
+      Represents finite population of size N.
+    m : Positive Integer
+      Represents number of trials with required feature.
+    n : Positive Integer
+      Represents numbers of draws.
+
 
     Examples
     ========
 
     >>> from sympy.stats import Hypergeometric, density
-    >>> from sympy import S
 
     >>> X = Hypergeometric('X', 10, 5, 3) # 10 marbles, 5 white (success), 3 draws
     >>> density(X).dict
     {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
+
+    Returns
+    =======
+
+    RandomSymbol
 
     References
     ==========
@@ -350,17 +619,19 @@ def Hypergeometric(name, N, m, n):
 
 
 class RademacherDistribution(SingleFiniteDistribution):
-    @property
-    @cacheit
-    def dict(self):
-        return {-1: S.Half, 1: S.Half}
 
+    @property
+    def set(self):
+        return {-1, 1}
+
+    @property
+    def pmf(self):
+        k = Dummy('k')
+        return Lambda(k, Piecewise((S.Half, Or(Eq(k, -1), Eq(k, 1))), (S.Zero, True)))
 
 def Rademacher(name):
-    """
+    r"""
     Create a Finite Random Variable representing a Rademacher distribution.
-
-    Return a RandomSymbol.
 
     Examples
     ========
@@ -370,6 +641,11 @@ def Rademacher(name):
     >>> X = Rademacher('X')
     >>> density(X).dict
     {-1: 1/2, 1: 1/2}
+
+    Returns
+    =======
+
+    RandomSymbol
 
     See Also
     ========
@@ -383,3 +659,200 @@ def Rademacher(name):
 
     """
     return rv(name, RademacherDistribution)
+
+class IdealSolitonDistribution(SingleFiniteDistribution):
+    _argnames = ('k',)
+
+    @staticmethod
+    def check(k):
+         _value_check(k.is_integer and k.is_positive,
+                    "'k' must be a positive integer.")
+
+    @property
+    def low(self):
+        return S.One
+
+    @property
+    def high(self):
+        return self.k
+
+    @property
+    def set(self):
+        return set(list(Range(1, self.k+1)))
+
+    @property
+    @cacheit
+    def dict(self):
+        if self.k.is_Symbol:
+            return Density(self)
+        d = {1: Rational(1, self.k)}
+        d.update(dict((i, Rational(1, i*(i - 1))) for i in range(2, self.k + 1)))
+        return d
+
+    def pmf(self, x):
+        x = sympify(x)
+        if not (x.is_number or x.is_Symbol or is_random(x)):
+            raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
+                        "'RandomSymbol' not %s" % (type(x)))
+        cond1 = Eq(x, 1) & x.is_integer
+        cond2 = Ge(x, 1) & Le(x, self.k) & x.is_integer
+        return Piecewise((1/self.k, cond1), (1/(x*(x - 1)), cond2), (S.Zero, True))
+
+def IdealSoliton(name, k):
+    r"""
+    Create a Finite Random Variable of Ideal Soliton Distribution
+
+    Parameters
+    ==========
+
+    k : Positive Integer
+        Represents the number of input symbols in an LT (Luby Transform) code.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import IdealSoliton, density, P, E
+    >>> sol = IdealSoliton('sol', 5)
+    >>> density(sol).dict
+    {1: 1/5, 2: 1/2, 3: 1/6, 4: 1/12, 5: 1/20}
+    >>> density(sol).set
+    {1, 2, 3, 4, 5}
+
+    >>> from sympy import Symbol
+    >>> k = Symbol('k', positive=True, integer=True)
+    >>> sol = IdealSoliton('sol', k)
+    >>> density(sol).dict
+    Density(IdealSolitonDistribution(k))
+    >>> density(sol).dict.subs(k, 10).doit()
+    {1: 1/10, 2: 1/2, 3: 1/6, 4: 1/12, 5: 1/20, 6: 1/30, 7: 1/42, 8: 1/56, 9: 1/72, 10: 1/90}
+
+    >>> E(sol.subs(k, 10))
+    7381/2520
+
+    >>> P(sol.subs(k, 4) > 2)
+    1/4
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Soliton_distribution#Ideal_distribution
+    .. [2] http://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
+
+    """
+    return rv(name, IdealSolitonDistribution, k)
+
+class RobustSolitonDistribution(SingleFiniteDistribution):
+    _argnames= ('k', 'delta', 'c')
+
+    @staticmethod
+    def check(k, delta, c):
+        _value_check(k.is_integer and k.is_positive,
+                    "'k' must be a positive integer")
+        _value_check(Gt(delta, 0) and Le(delta, 1),
+                    "'delta' must be a real number in the interval (0,1)")
+        _value_check(c.is_positive,
+                    "'c' must be a positive real number.")
+
+    @property
+    def R(self):
+        return self.c * log(self.k/self.delta) * self.k**0.5
+
+    @property
+    def Z(self):
+        z = 0
+        for i in Range(1, round(self.k/self.R)):
+            z += (1/i)
+        z += log(self.R/self.delta)
+        return 1 + z * self.R/self.k
+
+    @property
+    def low(self):
+        return S.One
+
+    @property
+    def high(self):
+        return self.k
+
+    @property
+    def set(self):
+        return set(list(Range(1, self.k+1)))
+
+    @property
+    def is_symbolic(self):
+        return not all([self.k.is_number, self.c.is_number, self.delta.is_number])
+
+    def pmf(self, x):
+        x = sympify(x)
+        if not (x.is_number or x.is_Symbol or is_random(x)):
+            raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
+                        "'RandomSymbol' not %s" % (type(x)))
+
+        cond1 = Eq(x, 1) & x.is_integer
+        cond2 = Ge(x, 1) & Le(x, self.k) & x.is_integer
+        rho = Piecewise((Rational(1, self.k), cond1), (Rational(1, x*(x-1)), cond2), (S.Zero, True))
+
+        cond1 = Ge(x, 1) & Le(x, round(self.k/self.R)-1)
+        cond2 = Eq(x, round(self.k/self.R))
+        tau = Piecewise((self.R/(self.k * x), cond1), (self.R * log(self.R/self.delta)/self.k, cond2), (S.Zero, True))
+
+        return (rho + tau)/self.Z
+
+def RobustSoliton(name, k, delta, c):
+    r'''
+    Create a Finite Random Variable of Robust Soliton Distribution
+
+    Parameters
+    ==========
+
+    k : Positive Integer
+        Represents the number of input symbols in an LT (Luby Transform) code.
+    delta : Positive Rational Number
+            Represents the failure probability. Must be in the interval (0,1).
+    c : Positive Rational Number
+        Constant of proportionality. Values close to 1 are recommended
+
+    Examples
+    ========
+
+    >>> from sympy.stats import RobustSoliton, density, P, E
+    >>> robSol = RobustSoliton('robSol', 5, 0.5, 0.01)
+    >>> density(robSol).dict
+    {1: 0.204253668152708, 2: 0.490631107897393, 3: 0.165210624506162, 4: 0.0834387731899302, 5: 0.0505633404760675}
+    >>> density(robSol).set
+    {1, 2, 3, 4, 5}
+
+    >>> from sympy import Symbol
+    >>> k = Symbol('k', positive=True, integer=True)
+    >>> c = Symbol('c', positive=True)
+    >>> robSol = RobustSoliton('robSol', k, 0.5, c)
+    >>> density(robSol).dict
+    Density(RobustSolitonDistribution(k, 0.5, c))
+    >>> density(robSol).dict.subs(k, 10).subs(c, 0.03).doit()
+    {1: 0.116641095387194, 2: 0.467045731687165, 3: 0.159984123349381, 4: 0.0821431680681869, 5: 0.0505765646770100,
+    6: 0.0345781523420719, 7: 0.0253132820710503, 8: 0.0194459129233227, 9: 0.0154831166726115, 10: 0.0126733075238887}
+
+    >>> E(robSol.subs(k, 10).subs(c, 0.05))
+    2.91358846104106
+
+    >>> P(robSol.subs(k, 4).subs(c, 0.1) > 2)
+    0.243650614389834
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Soliton_distribution#Robust_distribution
+    .. [2] http://www.inference.org.uk/mackay/itprnn/ps/588.596.pdf
+    .. [3] http://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
+
+    '''
+    return rv(name, RobustSolitonDistribution, k, delta, c)

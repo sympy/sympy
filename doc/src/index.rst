@@ -23,10 +23,10 @@ Contents:
    install.rst
    tutorial/index.rst
    gotchas.rst
-   guide.rst
    modules/index.rst
    special_topics/index.rst
    wiki.rst
    outreach.rst
    aboutus.rst
    citing.rst
+   documentation-style-guide.rst

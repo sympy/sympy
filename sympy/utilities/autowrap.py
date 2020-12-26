@@ -65,8 +65,6 @@ When is this module NOT the best approach?
 
 """
 
-from __future__ import print_function, division
-
 import sys
 import os
 import shutil
@@ -76,7 +74,7 @@ from string import Template
 from warnings import warn
 
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import range, iterable
+from sympy.core.compatibility import iterable
 from sympy.core.function import Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
@@ -96,7 +94,7 @@ class CodeWrapError(Exception):
     pass
 
 
-class CodeWrapper(object):
+class CodeWrapper:
     """Base Class for code wrappers"""
     _filename = "wrapped_code"
     _module_basename = "wrapper_module"
@@ -133,7 +131,8 @@ class CodeWrapper(object):
             routines, self.filename, True, self.include_header,
             self.include_empty)
 
-    def wrap_code(self, routine, helpers=[]):
+    def wrap_code(self, routine, helpers=None):
+        helpers = helpers or []
         if self.filepath:
             workdir = os.path.abspath(self.filepath)
         else:
@@ -299,7 +298,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
 
         self._need_numpy = False
 
-        super(CythonCodeWrapper, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def command(self):
@@ -377,16 +376,16 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             local_decs = []
             for arg, val in py_inf.items():
                 proto = self._prototype_arg(arg)
-                mat, ind = val
-                local_decs.append("    cdef {0} = {1}.shape[{2}]".format(proto, mat, ind))
-            local_decs.extend(["    cdef {0}".format(self._declare_arg(a)) for a in py_loc])
+                mat, ind = [self._string_var(v) for v in val]
+                local_decs.append("    cdef {} = {}.shape[{}]".format(proto, mat, ind))
+            local_decs.extend(["    cdef {}".format(self._declare_arg(a)) for a in py_loc])
             declarations = "\n".join(local_decs)
             if declarations:
                 declarations = declarations + "\n"
 
             # Function Body
             args_c = ", ".join([self._call_arg(a) for a in routine.arguments])
-            rets = ", ".join([str(r.name) for r in py_rets])
+            rets = ", ".join([self._string_var(r.name) for r in py_rets])
             if routine.results:
                 body = '    return %s(%s)' % (routine.name, args_c)
                 if rets:
@@ -444,14 +443,14 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             self._need_numpy = True
             ndim = len(arg.dimensions)
             mtype = np_types[t]
-            return mat_dec.format(mtype=mtype, ndim=ndim, name=arg.name)
+            return mat_dec.format(mtype=mtype, ndim=ndim, name=self._string_var(arg.name))
         else:
-            return "%s %s" % (t, str(arg.name))
+            return "%s %s" % (t, self._string_var(arg.name))
 
     def _declare_arg(self, arg):
         proto = self._prototype_arg(arg)
         if arg.dimensions:
-            shape = '(' + ','.join(str(i[1] + 1) for i in arg.dimensions) + ')'
+            shape = '(' + ','.join(self._string_var(i[1] + 1) for i in arg.dimensions) + ')'
             return proto + " = np.empty({shape})".format(shape=shape)
         else:
             return proto + " = 0"
@@ -459,11 +458,15 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     def _call_arg(self, arg):
         if arg.dimensions:
             t = arg.get_datatype('c')
-            return "<{0}*> {1}.data".format(t, arg.name)
+            return "<{}*> {}.data".format(t, self._string_var(arg.name))
         elif isinstance(arg, ResultBase):
-            return "&{0}".format(arg.name)
+            return "&{}".format(self._string_var(arg.name))
         else:
-            return str(arg.name)
+            return self._string_var(arg.name)
+
+    def _string_var(self, var):
+        printer = self.generator.printer.doprint
+        return printer(var)
 
 
 class F2PyCodeWrapper(CodeWrapper):
@@ -481,7 +484,7 @@ class F2PyCodeWrapper(CodeWrapper):
                 warn(msg.format(k))
             kwargs.pop(k, None)
 
-        super(F2PyCodeWrapper, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def command(self):
@@ -521,7 +524,7 @@ def _validate_backend_language(backend, language):
     if not langs:
         raise ValueError("Unrecognized backend: " + backend)
     if language.upper() not in langs:
-        raise ValueError(("Backend {0} and language {1} are "
+        raise ValueError(("Backend {} and language {} are "
                           "incompatible").format(backend, language))
 
 
@@ -796,7 +799,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
                 warn(msg.format(k))
             kwargs.pop(k, None)
 
-        super(UfuncifyCodeWrapper, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def command(self):
@@ -888,7 +891,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
         function_creation = []
         ufunc_init = []
         module = self.module_name
-        include_file = "\"{0}.h\"".format(prefix)
+        include_file = "\"{}.h\"".format(prefix)
         top = _ufunc_top.substitute(include_file=include_file, module=module)
 
         name = funcname
@@ -930,7 +933,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
         docstring = '"Created in SymPy with Ufuncify"'
 
         # Function Creation
-        function_creation.append("PyObject *ufunc{0};".format(r_index))
+        function_creation.append("PyObject *ufunc{};".format(r_index))
 
         # Ufunc initialization
         init_form = _ufunc_init_form.substitute(module=module,

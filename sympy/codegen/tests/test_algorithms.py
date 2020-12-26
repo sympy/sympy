@@ -1,19 +1,15 @@
-from __future__ import (absolute_import, print_function)
-
-import sys
-
+import tempfile
 import sympy as sp
-from sympy.core.compatibility import exec_
 from sympy.codegen.ast import Assignment
 from sympy.codegen.algorithms import newtons_method, newtons_method_function
 from sympy.codegen.fnodes import bind_C
 from sympy.codegen.futils import render_as_module as f_module
 from sympy.codegen.pyutils import render_as_module as py_module
 from sympy.external import import_module
-from sympy.printing.ccode import ccode
+from sympy.printing import ccode
 from sympy.utilities._compilation import compile_link_import_strings, has_c, has_fortran
-from sympy.utilities._compilation.util import TemporaryDirectory, may_xfail
-from sympy.utilities.pytest import skip, USE_PYTEST, raises
+from sympy.utilities._compilation.util import may_xfail
+from sympy.testing.pytest import skip, raises
 
 cython = import_module('cython')
 wurlitzer = import_module('wurlitzer')
@@ -37,11 +33,12 @@ def test_newtons_method_function__ccode():
         skip("No C compiler found.")
 
     compile_kw = dict(std='c99')
-    with TemporaryDirectory() as folder:
+    with tempfile.TemporaryDirectory() as folder:
         mod, info = compile_link_import_strings([
             ('newton.c', ('#include <math.h>\n'
                           '#include <stdio.h>\n') + ccode(func)),
-            ('_newton.pyx', ("cdef extern double newton(double)\n"
+            ('_newton.pyx', ("#cython: language_level={}\n".format("3") +
+                             "cdef extern double newton(double)\n"
                              "def py_newton(x):\n"
                              "    return newton(x)\n"))
         ], build_dir=folder, compile_kwargs=compile_kw)
@@ -60,10 +57,11 @@ def test_newtons_method_function__fcode():
         skip("No Fortran compiler found.")
 
     f_mod = f_module([func], 'mod_newton')
-    with TemporaryDirectory() as folder:
+    with tempfile.TemporaryDirectory() as folder:
         mod, info = compile_link_import_strings([
             ('newton.f90', f_mod),
-            ('_newton.pyx', ("cdef extern double newton(double*)\n"
+            ('_newton.pyx', ("#cython: language_level={}\n".format("3") +
+                             "cdef extern double newton(double*)\n"
                              "def py_newton(double x):\n"
                              "    return newton(&x)\n"))
         ], build_dir=folder)
@@ -76,7 +74,7 @@ def test_newtons_method_function__pycode():
     func = newtons_method_function(expr, x)
     py_mod = py_module(func)
     namespace = {}
-    exec_(py_mod, namespace, namespace)
+    exec(py_mod, namespace, namespace)
     res = eval('newton(0.5)', namespace)
     assert abs(res - 0.865474033102) < 1e-12
 
@@ -96,11 +94,12 @@ def test_newtons_method_function__ccode_parameters():
         skip("cython not installed.")
 
     compile_kw = dict(std='c99')
-    with TemporaryDirectory() as folder:
+    with tempfile.TemporaryDirectory() as folder:
         mod, info = compile_link_import_strings([
             ('newton_par.c', ('#include <math.h>\n'
                           '#include <stdio.h>\n') + ccode(func)),
-            ('_newton_par.pyx', ("cdef extern double newton(double, double, double, double)\n"
+            ('_newton_par.pyx', ("#cython: language_level={}\n".format("3") +
+                                 "cdef extern double newton(double, double, double, double)\n"
                              "def py_newton(x, A=1, k=1, p=1):\n"
                              "    return newton(x, A, k, p)\n"))
         ], compile_kwargs=compile_kw, build_dir=folder)

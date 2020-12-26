@@ -1,14 +1,22 @@
-from __future__ import print_function, division
-
-from sympy.core.numbers import nan, Integer
-from sympy.core.compatibility import integer_types
+from sympy.core.numbers import nan
 from .function import Function
+from .kind import NumberKind
 
 
 class Mod(Function):
     """Represents a modulo operation on symbolic expressions.
 
-    Receives two arguments, dividend p and divisor q.
+    Parameters
+    ==========
+
+    p : Expr
+        Dividend.
+
+    q : Expr
+        Divisor.
+
+    Notes
+    =====
 
     The convention used is the same as Python's: the remainder always has the
     same sign as the divisor.
@@ -24,6 +32,8 @@ class Mod(Function):
 
     """
 
+    kind = NumberKind
+
     @classmethod
     def eval(cls, p, q):
         from sympy.core.add import Add
@@ -37,11 +47,11 @@ class Mod(Function):
             to be less than or equal q.
             """
 
-            if q == S.Zero:
+            if q.is_zero:
                 raise ZeroDivisionError("Modulo by zero")
-            if p.is_infinite or q.is_infinite or p is nan or q is nan:
+            if p.is_finite is False or q.is_finite is False or p is nan or q is nan:
                 return nan
-            if p == S.Zero or p == q or p == -q or (p.is_integer and q == 1):
+            if p is S.Zero or p == q or p == -q or (p.is_integer and q == 1):
                 return S.Zero
 
             if q.is_Number:
@@ -60,12 +70,14 @@ class Mod(Function):
 
             # by ratio
             r = p/q
+            if r.is_integer:
+                return S.Zero
             try:
                 d = int(r)
             except TypeError:
                 pass
             else:
-                if isinstance(d, integer_types):
+                if isinstance(d, int):
                     rv = p - d*q
                     if (rv*q < 0) == True:
                         rv += q
@@ -221,3 +233,7 @@ class Mod(Function):
     def _eval_is_nonpositive(self):
         if self.args[1].is_negative:
             return True
+
+    def _eval_rewrite_as_floor(self, a, b, **kwargs):
+        from sympy.functions.elementary.integers import floor
+        return a - b*floor(a/b)

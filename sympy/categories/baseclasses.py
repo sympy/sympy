@@ -1,13 +1,15 @@
-from __future__ import print_function, division
-
 from sympy.core import S, Basic, Dict, Symbol, Tuple, sympify
 from sympy.core.compatibility import iterable
+from sympy.core.symbol import Str
 from sympy.sets import Set, FiniteSet, EmptySet
 
 
 class Class(Set):
     r"""
     The base class for any kind of class in the set-theoretic sense.
+
+    Explanation
+    ===========
 
     In axiomatic set theories, everything is a class.  A class which
     can be a member of another class is a set.  A class which is not a
@@ -25,7 +27,10 @@ class Object(Symbol):
     """
     The base class for any kind of object in an abstract category.
 
-    While technically any instance of :class:`Basic` will do, this
+    Explanation
+    ===========
+
+    While technically any instance of :class:`~.Basic` will do, this
     class is the recommended way to create abstract objects in
     abstract categories.
     """
@@ -34,6 +39,9 @@ class Object(Symbol):
 class Morphism(Basic):
     """
     The base class for any morphism in an abstract category.
+
+    Explanation
+    ===========
 
     In abstract categories, a morphism is an arrow between two
     category objects.  The object where the arrow starts is called the
@@ -139,6 +147,9 @@ class IdentityMorphism(Morphism):
     """
     Represents an identity morphism.
 
+    Explanation
+    ===========
+
     An identity morphism is a morphism with equal domain and codomain,
     which acts as an identity with respect to composition.
 
@@ -162,12 +173,19 @@ class IdentityMorphism(Morphism):
     Morphism
     """
     def __new__(cls, domain):
-        return Basic.__new__(cls, domain, domain)
+        return Basic.__new__(cls, domain)
+
+    @property
+    def codomain(self):
+        return self.domain
 
 
 class NamedMorphism(Morphism):
     """
     Represents a morphism which has a name.
+
+    Explanation
+    ===========
 
     Names are used to distinguish between morphisms which have the
     same domain and codomain: two named morphisms are equal if they
@@ -194,7 +212,10 @@ class NamedMorphism(Morphism):
         if not name:
             raise ValueError("Empty morphism names not allowed.")
 
-        return Basic.__new__(cls, domain, codomain, Symbol(name))
+        if not isinstance(name, Str):
+            name = Str(name)
+
+        return Basic.__new__(cls, domain, codomain, name)
 
     @property
     def name(self):
@@ -218,6 +239,9 @@ class NamedMorphism(Morphism):
 class CompositeMorphism(Morphism):
     r"""
     Represents a morphism which is a composition of other morphisms.
+
+    Explanation
+    ===========
 
     Two composite morphisms are equal if the morphisms they were
     obtained from (components) are the same and were listed in the
@@ -248,6 +272,9 @@ class CompositeMorphism(Morphism):
     def _add_morphism(t, morphism):
         """
         Intelligently adds ``morphism`` to tuple ``t``.
+
+        Explanation
+        ===========
 
         If ``morphism`` is a composite morphism, its components are
         added to the tuple.  If ``morphism`` is an identity, nothing
@@ -371,6 +398,9 @@ class CompositeMorphism(Morphism):
         """
         Forgets the composite structure of this morphism.
 
+        Explanation
+        ===========
+
         If ``new_name`` is not empty, returns a :class:`NamedMorphism`
         with the supplied name, otherwise returns a :class:`Morphism`.
         In both cases the domain of the new morphism is the domain of
@@ -396,6 +426,9 @@ class CompositeMorphism(Morphism):
 class Category(Basic):
     r"""
     An (abstract) category.
+
+    Explanation
+    ===========
 
     A category [JoyOfCats] is a quadruple `\mbox{K} = (O, \hom, id,
     \circ)` consisting of
@@ -442,13 +475,20 @@ class Category(Basic):
 
     See Also
     ========
+
     Diagram
     """
-    def __new__(cls, name, objects=EmptySet(), commutative_diagrams=EmptySet()):
+    def __new__(cls, name, objects=EmptySet, commutative_diagrams=EmptySet):
         if not name:
             raise ValueError("A Category cannot have an empty name.")
 
-        new_category = Basic.__new__(cls, Symbol(name), Class(objects),
+        if not isinstance(name, Str):
+            name = Str(name)
+
+        if not isinstance(objects, Class):
+            objects = Class(objects)
+
+        new_category = Basic.__new__(cls, name, objects,
                                      FiniteSet(*commutative_diagrams))
         return new_category
 
@@ -482,7 +522,7 @@ class Category(Basic):
         >>> B = Object("B")
         >>> K = Category("K", FiniteSet(A, B))
         >>> K.objects
-        Class({Object("A"), Object("B")})
+        Class(FiniteSet(Object("A"), Object("B")))
 
         """
         return self.args[1]
@@ -490,8 +530,11 @@ class Category(Basic):
     @property
     def commutative_diagrams(self):
         """
-        Returns the :class:`FiniteSet` of diagrams which are known to
+        Returns the :class:`~.FiniteSet` of diagrams which are known to
         be commutative in this category.
+
+        Examples
+        ========
 
         >>> from sympy.categories import Object, NamedMorphism, Diagram, Category
         >>> from sympy import FiniteSet
@@ -521,6 +564,9 @@ class Diagram(Basic):
     r"""
     Represents a diagram in a certain category.
 
+    Explanation
+    ===========
+
     Informally, a diagram is a collection of objects of a category and
     certain morphisms between them.  A diagram is still a monoid with
     respect to morphism composition; i.e., identity morphisms, as well
@@ -538,7 +584,7 @@ class Diagram(Basic):
     includes a collection of morphisms which are the premises and
     another collection of conclusions.  ``premises`` and
     ``conclusions`` associate morphisms belonging to the corresponding
-    categories with the :class:`FiniteSet`'s of their properties.
+    categories with the :class:`~.FiniteSet`'s of their properties.
 
     The set of properties of a composite morphism is the intersection
     of the sets of properties of its components.  The domain and
@@ -552,7 +598,7 @@ class Diagram(Basic):
     ========
 
     >>> from sympy.categories import Object, NamedMorphism, Diagram
-    >>> from sympy import FiniteSet, pprint, default_sort_key
+    >>> from sympy import pprint, default_sort_key
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")
@@ -563,14 +609,15 @@ class Diagram(Basic):
     >>> pprint(premises_keys, use_unicode=False)
     [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
     >>> pprint(d.premises, use_unicode=False)
-    {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
-    EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
+    {g*f:A-->C: EmptySet, id:A-->A: EmptySet, id:B-->B: EmptySet, id:C-->C: EmptyS
+    et, f:A-->B: EmptySet, g:B-->C: EmptySet}
     >>> d = Diagram([f, g], {g * f: "unique"})
     >>> pprint(d.conclusions)
     {g*f:A-->C: {unique}}
 
     References
     ==========
+
     [Pare1970] B. Pareigis: Categories and functors.  Academic Press,
     1970.
     """
@@ -615,7 +662,7 @@ class Diagram(Basic):
                 return
 
             if add_identities:
-                empty = EmptySet()
+                empty = EmptySet
 
                 id_dom = IdentityMorphism(morphism.domain)
                 id_cod = IdentityMorphism(morphism.codomain)
@@ -635,7 +682,7 @@ class Diagram(Basic):
             if isinstance(morphism, CompositeMorphism) and recurse_composites:
                 # This is a composite morphism, add its components as
                 # well.
-                empty = EmptySet()
+                empty = EmptySet
                 for component in morphism.components:
                     Diagram._add_morphism_closure(morphisms, component, empty,
                                                   add_identities)
@@ -643,6 +690,9 @@ class Diagram(Basic):
     def __new__(cls, *args):
         """
         Construct a new instance of Diagram.
+
+        Explanation
+        ===========
 
         If no arguments are supplied, an empty diagram is created.
 
@@ -677,7 +727,7 @@ class Diagram(Basic):
         True
         >>> d = Diagram([f, g], {g * f: "unique"})
         >>> d.conclusions[g * f]
-        {unique}
+        FiniteSet(unique)
 
         """
         premises = {}
@@ -685,7 +735,7 @@ class Diagram(Basic):
 
         # Here we will keep track of the objects which appear in the
         # premises.
-        objects = EmptySet()
+        objects = EmptySet
 
         if len(args) >= 1:
             # We've got some premises in the arguments.
@@ -694,7 +744,7 @@ class Diagram(Basic):
             if isinstance(premises_arg, list):
                 # The user has supplied a list of morphisms, none of
                 # which have any attributes.
-                empty = EmptySet()
+                empty = EmptySet
 
                 for morphism in premises_arg:
                     objects |= FiniteSet(morphism.domain, morphism.codomain)
@@ -714,7 +764,7 @@ class Diagram(Basic):
             if isinstance(conclusions_arg, list):
                 # The user has supplied a list of morphisms, none of
                 # which have any attributes.
-                empty = EmptySet()
+                empty = EmptySet
 
                 for morphism in conclusions_arg:
                     # Check that no new objects appear in conclusions.
@@ -759,7 +809,7 @@ class Diagram(Basic):
         >>> id_B = IdentityMorphism(B)
         >>> d = Diagram([f])
         >>> print(pretty(d.premises, use_unicode=False))
-        {id:A-->A: EmptySet(), id:B-->B: EmptySet(), f:A-->B: EmptySet()}
+        {id:A-->A: EmptySet, id:B-->B: EmptySet, f:A-->B: EmptySet}
 
         """
         return self.args[0]
@@ -795,7 +845,7 @@ class Diagram(Basic):
     @property
     def objects(self):
         """
-        Returns the :class:`FiniteSet` of objects that appear in this
+        Returns the :class:`~.FiniteSet` of objects that appear in this
         diagram.
 
         Examples
@@ -809,15 +859,15 @@ class Diagram(Basic):
         >>> g = NamedMorphism(B, C, "g")
         >>> d = Diagram([f, g])
         >>> d.objects
-        {Object("A"), Object("B"), Object("C")}
+        FiniteSet(Object("A"), Object("B"), Object("C"))
 
         """
         return self.args[2]
 
     def hom(self, A, B):
         """
-        Returns a 2-tuple of sets of morphisms between objects A and
-        B: one set of morphisms listed as premises, and the other set
+        Returns a 2-tuple of sets of morphisms between objects ``A`` and
+        ``B``: one set of morphisms listed as premises, and the other set
         of morphisms listed as conclusions.
 
         Examples
@@ -838,8 +888,8 @@ class Diagram(Basic):
         ========
         Object, Morphism
         """
-        premises = EmptySet()
-        conclusions = EmptySet()
+        premises = EmptySet
+        conclusions = EmptySet
 
         for morphism in self.premises.keys():
             if (morphism.domain == A) and (morphism.codomain == B):

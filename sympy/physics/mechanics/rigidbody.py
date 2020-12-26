@@ -1,14 +1,17 @@
-# -*- encoding: utf-8 -*-
-from __future__ import print_function, division
-
 from sympy.core.backend import sympify
 from sympy.physics.vector import Point, ReferenceFrame, Dyadic
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 __all__ = ['RigidBody']
 
 
-class RigidBody(object):
+
+class RigidBody:
     """An idealized rigid body.
+
+    Explanation
+    ===========
 
     This is essentially a container which holds the various components which
     describe a rigid body: a name, mass, center of mass, reference frame, and
@@ -19,6 +22,7 @@ class RigidBody(object):
 
     Attributes
     ==========
+
     name : string
         The body's name.
     masscenter : Point
@@ -61,7 +65,8 @@ class RigidBody(object):
     def __str__(self):
         return self._name
 
-    __repr__ = __str__
+    def __repr__(self):
+        return self.__str__()
 
     @property
     def frame(self):
@@ -120,6 +125,9 @@ class RigidBody(object):
     def linear_momentum(self, frame):
         """ Linear momentum of the rigid body.
 
+        Explanation
+        ===========
+
         The linear momentum L, of a rigid body B, with respect to frame N is
         given by
 
@@ -139,6 +147,8 @@ class RigidBody(object):
 
         >>> from sympy.physics.mechanics import Point, ReferenceFrame, outer
         >>> from sympy.physics.mechanics import RigidBody, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> M, v = dynamicsymbols('M v')
         >>> N = ReferenceFrame('N')
         >>> P = Point('P')
@@ -157,10 +167,13 @@ class RigidBody(object):
         """Returns the angular momentum of the rigid body about a point in the
         given frame.
 
+        Explanation
+        ===========
+
         The angular momentum H of a rigid body B about some point O in a frame
         N is given by:
 
-            H = I·w + r×Mv
+            H = I . w + r x Mv
 
         where I is the central inertia dyadic of B, w is the angular velocity
         of body B in the frame, N, r is the position vector from point O to the
@@ -169,6 +182,7 @@ class RigidBody(object):
 
         Parameters
         ==========
+
         point : Point
             The point about which angular momentum is desired.
         frame : ReferenceFrame
@@ -179,6 +193,8 @@ class RigidBody(object):
 
         >>> from sympy.physics.mechanics import Point, ReferenceFrame, outer
         >>> from sympy.physics.mechanics import RigidBody, dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> M, v, r, omega = dynamicsymbols('M v r omega')
         >>> N = ReferenceFrame('N')
         >>> b = ReferenceFrame('b')
@@ -200,7 +216,10 @@ class RigidBody(object):
         return I.dot(w) + r.cross(m * v)
 
     def kinetic_energy(self, frame):
-        """Kinetic energy of the rigid body
+        """Kinetic energy of the rigid body.
+
+        Explanation
+        ===========
 
         The kinetic energy, T, of a rigid body, B, is given by
 
@@ -282,7 +301,7 @@ class RigidBody(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Particle, Point, outer
+        >>> from sympy.physics.mechanics import Point, outer
         >>> from sympy.physics.mechanics import RigidBody, ReferenceFrame
         >>> from sympy import symbols
         >>> b = ReferenceFrame('b')
@@ -296,3 +315,39 @@ class RigidBody(object):
         """
 
         self._pe = sympify(scalar)
+
+    def set_potential_energy(self, scalar):
+        SymPyDeprecationWarning(
+                feature="Method sympy.physics.mechanics." +
+                    "RigidBody.set_potential_energy(self, scalar)",
+                useinstead="property sympy.physics.mechanics." +
+                    "RigidBody.potential_energy",
+                deprecated_since_version="1.5", issue=9800).warn()
+        self.potential_energy = scalar
+
+    # XXX: To be consistent with the parallel_axis method in Particle this
+    # should have a frame argument...
+    def parallel_axis(self, point):
+        """Returns the inertia dyadic of the body with respect to another
+        point.
+
+        Parameters
+        ==========
+
+        point : sympy.physics.vector.Point
+            The point to express the inertia dyadic about.
+
+        Returns
+        =======
+
+        inertia : sympy.physics.vector.Dyadic
+            The inertia dyadic of the rigid body expressed about the provided
+            point.
+
+        """
+        # circular import issue
+        from sympy.physics.mechanics.functions import inertia
+        a, b, c = self.masscenter.pos_from(point).to_matrix(self.frame)
+        I = self.mass * inertia(self.frame, b**2 + c**2, c**2 + a**2, a**2 +
+                                b**2, -a * b, -b * c, -a * c)
+        return self.central_inertia + I

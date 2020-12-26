@@ -3,10 +3,8 @@ Provides functionality for multidimensional usage of scalar-functions.
 
 Read the vectorize docstring for more details.
 """
-from __future__ import print_function, division
 
 from sympy.core.decorators import wraps
-from sympy.core.compatibility import range
 
 
 def apply_on_element(f, args, kwargs, n):
@@ -65,7 +63,8 @@ class vectorize:
     """
     Generalizes a function taking scalars to accept multidimensional arguments.
 
-    For example
+    Examples
+    ========
 
     >>> from sympy import diff, sin, symbols, Function
     >>> from sympy.core.multidimensional import vectorize

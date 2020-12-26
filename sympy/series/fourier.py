@@ -1,8 +1,6 @@
 """Fourier Series"""
 
-from __future__ import print_function, division
-
-from sympy import pi, oo, Wild, Basic
+from sympy import pi, oo, Wild
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.compatibility import is_sequence
@@ -14,7 +12,7 @@ from sympy.functions.elementary.trigonometric import sin, cos, sinc
 from sympy.series.series_class import SeriesBase
 from sympy.series.sequences import SeqFormula
 from sympy.sets.sets import Interval
-from sympy.simplify.fu import TR8, TR2, TR1, TR10, sincos_to_sum
+from sympy.simplify.fu import TR2, TR1, TR10, sincos_to_sum
 
 
 def fourier_cos_seq(func, limits, n):
@@ -42,13 +40,15 @@ def _process_limits(func, limits):
     Limits should be of the form (x, start, stop).
     x should be a symbol. Both start and stop should be bounded.
 
+    Explanation
+    ===========
+
     * If x is not given, x is determined from func.
     * If limits is None. Limit of the form (x, -pi, pi) is returned.
 
     Examples
     ========
 
-    >>> from sympy import pi
     >>> from sympy.series.fourier import _process_limits as pari
     >>> from sympy.abc import x
     >>> pari(x**2, (x, -2, 2))
@@ -123,6 +123,9 @@ def finite_check(f, x, L):
 class FourierSeries(SeriesBase):
     r"""Represents Fourier sine/cosine series.
 
+    Explanation
+    ===========
+
     This class only represents a fourier series.
     No computation is performed.
 
@@ -191,16 +194,18 @@ class FourierSeries(SeriesBase):
         """
         Return the first n nonzero terms of the series.
 
-        If n is None return an iterator.
+        If ``n`` is None return an iterator.
 
         Parameters
         ==========
+
         n : int or None
             Amount of non-zero terms in approximation or None.
 
         Returns
         =======
-        Expr or iterator
+
+        Expr or iterator :
             Approximation of function expanded into Fourier series.
 
         Examples
@@ -234,6 +239,9 @@ class FourierSeries(SeriesBase):
         Return :math:`\sigma`-approximation of Fourier series with respect
         to order n.
 
+        Explanation
+        ===========
+
         Sigma approximation adjusts a Fourier summation to eliminate the Gibbs
         phenomenon which would otherwise occur at discontinuities.
         A sigma-approximated summation for a Fourier series of a T-periodical
@@ -253,12 +261,14 @@ class FourierSeries(SeriesBase):
 
         Parameters
         ==========
+
         n : int
             Highest order of the terms taken into account in approximation.
 
         Returns
         =======
-        Expr
+
+        Expr :
             Sigma approximation of function expanded into Fourier series.
 
         Examples
@@ -295,7 +305,11 @@ class FourierSeries(SeriesBase):
         return Add(*terms)
 
     def shift(self, s):
-        """Shift the function by a term independent of x.
+        """
+        Shift the function by a term independent of x.
+
+        Explanation
+        ===========
 
         f(x) -> f(x) + s
 
@@ -322,7 +336,11 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (a0, self.an, self.bn))
 
     def shiftx(self, s):
-        """Shift x by a term independent of x.
+        """
+        Shift x by a term independent of x.
+
+        Explanation
+        ===========
 
         f(x) -> f(x + s)
 
@@ -350,7 +368,11 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (self.a0, an, bn))
 
     def scale(self, s):
-        """Scale the function by a term independent of x.
+        """
+        Scale the function by a term independent of x.
+
+        Explanation
+        ===========
 
         f(x) -> s * f(x)
 
@@ -379,7 +401,11 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (a0, an, bn))
 
     def scalex(self, s):
-        """Scale x by a term independent of x.
+        """
+        Scale x by a term independent of x.
+
+        Explanation
+        ===========
 
         f(x) -> f(s*x)
 
@@ -406,7 +432,7 @@ class FourierSeries(SeriesBase):
 
         return self.func(sfunc, self.args[1], (self.a0, an, bn))
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         for t in self:
             if t is not S.Zero:
                 return t
@@ -450,6 +476,7 @@ class FiniteFourierSeries(FourierSeries):
 
     Parameters
     ==========
+
     f : Expr
         Expression for finding fourier_series
 
@@ -468,6 +495,7 @@ class FiniteFourierSeries(FourierSeries):
 
     Methods
     =======
+
     This class is an extension of FourierSeries class.
     Please refer to sympy.series.fourier.FourierSeries for
     further information.
@@ -480,7 +508,11 @@ class FiniteFourierSeries(FourierSeries):
     """
 
     def __new__(cls, f, limits, exprs):
-        if not (type(exprs) == tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
+        f = sympify(f)
+        limits = sympify(limits)
+        exprs = sympify(exprs)
+
+        if not (type(exprs) == Tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
             # Converts the expression to fourier form
             c, e = exprs.as_coeff_add()
             rexpr = c + Add(*[TR10(i) for i in e])
@@ -506,11 +538,9 @@ class FiniteFourierSeries(FourierSeries):
                 else:
                     a0 += p
 
-            exprs = (a0, an, bn)
+            exprs = Tuple(a0, an, bn)
 
-        args = map(sympify, (f, limits, exprs))
-
-        return Expr.__new__(cls, *args)
+        return Expr.__new__(cls, f, limits, exprs)
 
     @property
     def interval(self):
@@ -581,33 +611,143 @@ class FiniteFourierSeries(FourierSeries):
 
 
 def fourier_series(f, limits=None, finite=True):
-    """Computes Fourier sine/cosine series expansion.
+    r"""Computes the Fourier trigonometric series expansion.
 
-    Returns a :class:`FourierSeries` object.
+    Explanation
+    ===========
+
+    Fourier trigonometric series of $f(x)$ over the interval $(a, b)$
+    is defined as:
+
+    .. math::
+        \frac{a_0}{2} + \sum_{n=1}^{\infty}
+        (a_n \cos(\frac{2n \pi x}{L}) + b_n \sin(\frac{2n \pi x}{L}))
+
+    where the coefficients are:
+
+    .. math::
+        L = b - a
+
+    .. math::
+        a_0 = \frac{2}{L} \int_{a}^{b}{f(x) dx}
+
+    .. math::
+        a_n = \frac{2}{L} \int_{a}^{b}{f(x) \cos(\frac{2n \pi x}{L}) dx}
+
+    .. math::
+        b_n = \frac{2}{L} \int_{a}^{b}{f(x) \sin(\frac{2n \pi x}{L}) dx}
+
+    The condition whether the function $f(x)$ given should be periodic
+    or not is more than necessary, because it is sufficient to consider
+    the series to be converging to $f(x)$ only in the given interval,
+    not throughout the whole real line.
+
+    This also brings a lot of ease for the computation because
+    you don't have to make $f(x)$ artificially periodic by
+    wrapping it with piecewise, modulo operations,
+    but you can shape the function to look like the desired periodic
+    function only in the interval $(a, b)$, and the computed series will
+    automatically become the series of the periodic version of $f(x)$.
+
+    This property is illustrated in the examples section below.
+
+    Parameters
+    ==========
+
+    limits : (sym, start, end), optional
+        *sym* denotes the symbol the series is computed with respect to.
+
+        *start* and *end* denotes the start and the end of the interval
+        where the fourier series converges to the given function.
+
+        Default range is specified as $-\pi$ and $\pi$.
+
+    Returns
+    =======
+
+    FourierSeries
+        A symbolic object representing the Fourier trigonometric series.
 
     Examples
     ========
 
-    >>> from sympy import fourier_series, pi, cos
-    >>> from sympy.abc import x
+    Computing the Fourier series of $f(x) = x^2$:
 
-    >>> s = fourier_series(x**2, (x, -pi, pi))
-    >>> s.truncate(n=3)
+    >>> from sympy import fourier_series, pi
+    >>> from sympy.abc import x
+    >>> f = x**2
+    >>> s = fourier_series(f, (x, -pi, pi))
+    >>> s1 = s.truncate(n=3)
+    >>> s1
     -4*cos(x) + cos(2*x) + pi**2/3
 
-    Shifting
+    Shifting of the Fourier series:
 
     >>> s.shift(1).truncate()
     -4*cos(x) + cos(2*x) + 1 + pi**2/3
     >>> s.shiftx(1).truncate()
     -4*cos(x + 1) + cos(2*x + 2) + pi**2/3
 
-    Scaling
+    Scaling of the Fourier series:
 
     >>> s.scale(2).truncate()
     -8*cos(x) + 2*cos(2*x) + 2*pi**2/3
     >>> s.scalex(2).truncate()
     -4*cos(2*x) + cos(4*x) + pi**2/3
+
+    Computing the Fourier series of $f(x) = x$:
+
+    This illustrates how truncating to the higher order gives better
+    convergence.
+
+    .. plot::
+        :context: reset
+        :format: doctest
+        :include-source: True
+
+        >>> from sympy import fourier_series, pi, plot
+        >>> from sympy.abc import x
+        >>> f = x
+        >>> s = fourier_series(f, (x, -pi, pi))
+        >>> s1 = s.truncate(n = 3)
+        >>> s2 = s.truncate(n = 5)
+        >>> s3 = s.truncate(n = 7)
+        >>> p = plot(f, s1, s2, s3, (x, -pi, pi), show=False, legend=True)
+
+        >>> p[0].line_color = (0, 0, 0)
+        >>> p[0].label = 'x'
+        >>> p[1].line_color = (0.7, 0.7, 0.7)
+        >>> p[1].label = 'n=3'
+        >>> p[2].line_color = (0.5, 0.5, 0.5)
+        >>> p[2].label = 'n=5'
+        >>> p[3].line_color = (0.3, 0.3, 0.3)
+        >>> p[3].label = 'n=7'
+
+        >>> p.show()
+
+    This illustrates how the series converges to different sawtooth
+    waves if the different ranges are specified.
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> s1 = fourier_series(x, (x, -1, 1)).truncate(10)
+        >>> s2 = fourier_series(x, (x, -pi, pi)).truncate(10)
+        >>> s3 = fourier_series(x, (x, 0, 1)).truncate(10)
+        >>> p = plot(x, s1, s2, s3, (x, -5, 5), show=False, legend=True)
+
+        >>> p[0].line_color = (0, 0, 0)
+        >>> p[0].label = 'x'
+        >>> p[1].line_color = (0.7, 0.7, 0.7)
+        >>> p[1].label = '[-1, 1]'
+        >>> p[2].line_color = (0.5, 0.5, 0.5)
+        >>> p[2].label = '[-pi, pi]'
+        >>> p[3].line_color = (0.3, 0.3, 0.3)
+        >>> p[3].label = '[0, 1]'
+
+        >>> p.show()
 
     Notes
     =====
@@ -632,7 +772,7 @@ def fourier_series(f, limits=None, finite=True):
     References
     ==========
 
-    .. [1] mathworld.wolfram.com/FourierSeries.html
+    .. [1] https://mathworld.wolfram.com/FourierSeries.html
     """
     f = sympify(f)
 
@@ -649,16 +789,18 @@ def fourier_series(f, limits=None, finite=True):
             return FiniteFourierSeries(f, limits, res_f)
 
     n = Dummy('n')
-    neg_f = f.subs(x, -x)
-    if f == neg_f:
-        a0, an = fourier_cos_seq(f, limits, n)
-        bn = SeqFormula(0, (1, oo))
-    elif f == -neg_f:
-        a0 = S.Zero
-        an = SeqFormula(0, (1, oo))
-        bn = fourier_sin_seq(f, limits, n)
-    else:
-        a0, an = fourier_cos_seq(f, limits, n)
-        bn = fourier_sin_seq(f, limits, n)
-
+    center = (limits[1] + limits[2]) / 2
+    if center.is_zero:
+        neg_f = f.subs(x, -x)
+        if f == neg_f:
+            a0, an = fourier_cos_seq(f, limits, n)
+            bn = SeqFormula(0, (1, oo))
+            return FourierSeries(f, limits, (a0, an, bn))
+        elif f == -neg_f:
+            a0 = S.Zero
+            an = SeqFormula(0, (1, oo))
+            bn = fourier_sin_seq(f, limits, n)
+            return FourierSeries(f, limits, (a0, an, bn))
+    a0, an = fourier_cos_seq(f, limits, n)
+    bn = fourier_sin_seq(f, limits, n)
     return FourierSeries(f, limits, (a0, an, bn))

@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import inspect
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
@@ -9,7 +8,11 @@ from contextlib import contextmanager
 
 
 class AssumptionsContext(set):
-    """Set representing assumptions.
+    """
+    Set representing assumptions.
+
+    Explanation
+    ===========
 
     This is used to represent global assumptions, but you can also use this
     class to create your own local assumptions contexts. It is basically a thin
@@ -18,7 +21,7 @@ class AssumptionsContext(set):
     Examples
     ========
 
-    >>> from sympy import AppliedPredicate, Q
+    >>> from sympy import Q
     >>> from sympy.assumptions.assume import global_assumptions
     >>> global_assumptions
     AssumptionsContext()
@@ -36,12 +39,12 @@ class AssumptionsContext(set):
     def add(self, *assumptions):
         """Add an assumption."""
         for a in assumptions:
-            super(AssumptionsContext, self).add(a)
+            super().add(a)
 
     def _sympystr(self, printer):
         if not self:
             return "%s()" % self.__class__.__name__
-        return "%s(%s)" % (self.__class__.__name__, printer._print_set(self))
+        return "{}({})".format(self.__class__.__name__, printer._print_set(self))
 
 global_assumptions = AssumptionsContext()
 
@@ -60,7 +63,7 @@ class AppliedPredicate(Boolean):
     <class 'sympy.assumptions.assume.AppliedPredicate'>
 
     """
-    __slots__ = []
+    __slots__ = ()
 
     def __new__(cls, predicate, arg):
         arg = _sympify(arg)
@@ -104,7 +107,7 @@ class AppliedPredicate(Boolean):
         return False
 
     def __hash__(self):
-        return super(AppliedPredicate, self).__hash__()
+        return super().__hash__()
 
     def _eval_ask(self, assumptions):
         return self.func.eval(self.arg, assumptions)
@@ -120,7 +123,8 @@ class AppliedPredicate(Boolean):
 
 
 class Predicate(Boolean):
-    """A predicate is a function that returns a boolean value.
+    """
+    A predicate is a function that returns a boolean value.
 
     Predicates merely wrap their argument and remain unevaluated:
 
@@ -209,7 +213,8 @@ class Predicate(Boolean):
 
 @contextmanager
 def assuming(*assumptions):
-    """ Context manager for assumptions
+    """
+    Context manager for assumptions.
 
     Examples
     ========

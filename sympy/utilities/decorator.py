@@ -1,16 +1,12 @@
 """Useful utility decorators. """
 
-from __future__ import print_function, division
-
 import sys
 import types
 import inspect
 
-from functools import update_wrapper
-
 from sympy.core.decorators import wraps
-from sympy.core.compatibility import class_types, get_function_globals, get_function_name, iterable
-from sympy.utilities.runtests import DependencyError, SymPyDocTests, PyTestReporter
+from sympy.core.compatibility import iterable
+from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
@@ -41,14 +37,14 @@ def threaded_factory(func, use_add):
 
 
 def threaded(func):
-    """Apply ``func`` to sub--elements of an object, including :class:`Add`.
+    """Apply ``func`` to sub--elements of an object, including :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
     function to all elements of composite objects, e.g. matrices, lists, tuples
     and other iterable containers, or just expressions.
 
     This version of :func:`threaded` decorator allows threading over
-    elements of :class:`Add` class. If this behavior is not desirable
+    elements of :class:`~.Add` class. If this behavior is not desirable
     use :func:`xthreaded` decorator.
 
     Functions using this decorator must have the following signature::
@@ -61,14 +57,14 @@ def threaded(func):
 
 
 def xthreaded(func):
-    """Apply ``func`` to sub--elements of an object, excluding :class:`Add`.
+    """Apply ``func`` to sub--elements of an object, excluding :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
     function to all elements of composite objects, e.g. matrices, lists, tuples
     and other iterable containers, or just expressions.
 
     This version of :func:`threaded` decorator disallows threading over
-    elements of :class:`Add` class. If this behavior is not desirable
+    elements of :class:`~.Add` class. If this behavior is not desirable
     use :func:`threaded` decorator.
 
     Functions using this decorator must have the following signature::
@@ -97,7 +93,7 @@ def conserve_mpmath_dps(func):
     return func_wrapper
 
 
-class no_attrs_in_subclass(object):
+class no_attrs_in_subclass:
     """Don't 'inherit' certain attributes from a base class
 
     >>> from sympy.utilities.decorator import no_attrs_in_subclass
@@ -196,7 +192,7 @@ def public(obj):
 
     >>> from sympy.utilities.decorator import public
 
-    >>> __all__
+    >>> __all__ # noqa: F821
     Traceback (most recent call last):
     ...
     NameError: name '__all__' is not defined
@@ -205,14 +201,14 @@ def public(obj):
     ... def some_function():
     ...     pass
 
-    >>> __all__
+    >>> __all__ # noqa: F821
     ['some_function']
 
     """
     if isinstance(obj, types.FunctionType):
-        ns = get_function_globals(obj)
-        name = get_function_name(obj)
-    elif isinstance(obj, (type(type), class_types)):
+        ns = obj.__globals__
+        name = obj.__name__
+    elif isinstance(obj, (type(type), type)):
         ns = sys.modules[obj.__module__].__dict__
         name = obj.__name__
     else:
@@ -226,13 +222,19 @@ def public(obj):
     return obj
 
 
-def memoize_property(storage):
-    """Create a property, where the lookup is stored in ``storage``"""
-    def decorator(method):
-        name = method.__name__
-        def wrapper(self):
-            if name not in storage:
-                storage[name] = method(self)
-            return storage[name]
-        return property(update_wrapper(wrapper, method))
-    return decorator
+def memoize_property(propfunc):
+    """Property decorator that caches the value of potentially expensive
+    `propfunc` after the first evaluation. The cached value is stored in
+    the corresponding property name with an attached underscore."""
+    attrname = '_' + propfunc.__name__
+    sentinel = object()
+
+    @wraps(propfunc)
+    def accessor(self):
+        val = getattr(self, attrname, sentinel)
+        if val is sentinel:
+            val = propfunc(self)
+            setattr(self, attrname, val)
+        return val
+
+    return property(accessor)

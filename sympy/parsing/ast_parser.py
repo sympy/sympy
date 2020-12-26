@@ -9,8 +9,7 @@ returns
 
 Integer(1)/Integer(2)
 
-We use the Python ast module for that, which is in python2.6 and later. It is
-well documented at docs.python.org.
+We use the ast module for this. It is well documented at docs.python.org.
 
 Some tips to understand how this works: use dump() to get a nice
 representation of any node. Then write a string of what you want to get,
@@ -20,10 +19,7 @@ to bother with lineno and col_offset, just call fix_missing_locations()
 before returning the node.
 """
 
-from __future__ import print_function, division
-
 from sympy.core.basic import Basic
-from sympy.core.compatibility import exec_
 from sympy.core.sympify import SympifyError
 
 from ast import parse, NodeTransformer, Call, Name, Load, \
@@ -38,11 +34,11 @@ class Transform(NodeTransformer):
 
     def visit_Num(self, node):
         if isinstance(node.n, int):
-            return fix_missing_locations(Call(Name('Integer', Load()),
-                    [node], [], None, None))
+            return fix_missing_locations(Call(func=Name('Integer', Load()),
+                    args=[node], keywords=[]))
         elif isinstance(node.n, float):
-            return fix_missing_locations(Call(Name('Float', Load()),
-                [node], [], None, None))
+            return fix_missing_locations(Call(func=Name('Float', Load()),
+                    args=[node], keywords=[]))
         return node
 
     def visit_Name(self, node):
@@ -55,14 +51,14 @@ class Transform(NodeTransformer):
                 return node
         elif node.id in ['True', 'False']:
             return node
-        return fix_missing_locations(Call(Name('Symbol', Load()),
-                [Str(node.id)], [], None, None))
+        return fix_missing_locations(Call(func=Name('Symbol', Load()),
+                args=[Str(node.id)], keywords=[]))
 
     def visit_Lambda(self, node):
         args = [self.visit(arg) for arg in node.args.args]
         body = self.visit(node.body)
-        n = Call(Name('Lambda', Load()),
-            [Tuple(args, Load()), body], [], None, None)
+        n = Call(func=Name('Lambda', Load()),
+            args=[Tuple(args, Load()), body], keywords=[])
         return fix_missing_locations(n)
 
 def parse_expr(s, local_dict):
@@ -73,7 +69,7 @@ def parse_expr(s, local_dict):
     automatically creates Symbols.
     """
     global_dict = {}
-    exec_('from sympy import *', global_dict)
+    exec('from sympy import *', global_dict)
     try:
         a = parse(s.strip(), mode="eval")
     except SyntaxError:

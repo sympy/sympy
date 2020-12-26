@@ -1,10 +1,9 @@
-
 from sympy import TableForm, S
 from sympy.printing.latex import latex
 from sympy.abc import x
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from textwrap import dedent
 
@@ -101,7 +100,7 @@ def test_TableForm():
 
 
 def test_TableForm_latex():
-    s = latex(TableForm([[0, x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]],
+    s = latex(TableForm([[0, x**3], ["c", S.One/4], [sqrt(x), sin(x**2)]],
             wipe_zeros=True, headings=("automatic", "automatic")))
     assert s == (
         '\\begin{tabular}{r l l}\n'
@@ -112,7 +111,7 @@ def test_TableForm_latex():
         '3 & $\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
         '\\end{tabular}'
     )
-    s = latex(TableForm([[0, x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]],
+    s = latex(TableForm([[0, x**3], ["c", S.One/4], [sqrt(x), sin(x**2)]],
             wipe_zeros=True, headings=("automatic", "automatic"), alignments='l'))
     assert s == (
         '\\begin{tabular}{r l l}\n'
@@ -123,7 +122,7 @@ def test_TableForm_latex():
         '3 & $\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
         '\\end{tabular}'
     )
-    s = latex(TableForm([[0, x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]],
+    s = latex(TableForm([[0, x**3], ["c", S.One/4], [sqrt(x), sin(x**2)]],
             wipe_zeros=True, headings=("automatic", "automatic"), alignments='l'*3))
     assert s == (
         '\\begin{tabular}{l l l}\n'
@@ -134,7 +133,7 @@ def test_TableForm_latex():
         '3 & $\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
         '\\end{tabular}'
     )
-    s = latex(TableForm([["a", x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]],
+    s = latex(TableForm([["a", x**3], ["c", S.One/4], [sqrt(x), sin(x**2)]],
             headings=("automatic", "automatic")))
     assert s == (
         '\\begin{tabular}{r l l}\n'
@@ -145,7 +144,7 @@ def test_TableForm_latex():
         '3 & $\\sqrt{x}$ & $\\sin{\\left(x^{2} \\right)}$ \\\\\n'
         '\\end{tabular}'
     )
-    s = latex(TableForm([["a", x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]],
+    s = latex(TableForm([["a", x**3], ["c", S.One/4], [sqrt(x), sin(x**2)]],
             formats=['(%s)', None], headings=("automatic", "automatic")))
     assert s == (
         '\\begin{tabular}{r l l}\n'
@@ -172,7 +171,7 @@ def test_TableForm_latex():
         '2 & (-3) & 4 \\\\\n'
         '\\end{tabular}'
     )
-    s = latex(TableForm([["a", x**3], ["c", S(1)/4], [sqrt(x), sin(x**2)]]))
+    s = latex(TableForm([["a", x**3], ["c", S.One/4], [sqrt(x), sin(x**2)]]))
     assert s == (
         '\\begin{tabular}{l l}\n'
         '$a$ & $x^{3}$ \\\\\n'

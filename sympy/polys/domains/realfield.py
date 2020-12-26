@@ -1,6 +1,5 @@
 """Implementation of :class:`RealField` class. """
 
-from __future__ import print_function, division
 
 from sympy.core.numbers import Float
 from sympy.polys.domains.field import Field
@@ -44,7 +43,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         return self._context.tolerance
 
     def __init__(self, prec=_default_precision, dps=None, tol=None):
-        context = MPContext(prec, dps, tol)
+        context = MPContext(prec, dps, tol, True)
         context._parent = self
         self._context = context
 

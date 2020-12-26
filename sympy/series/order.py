@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, sympify, Expr, Rational, Dummy
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
@@ -10,7 +8,10 @@ from sympy.utilities.iterables import uniq
 
 
 class Order(Expr):
-    r""" Represents the limiting behavior of some function
+    r""" Represents the limiting behavior of some function.
+
+    Explanation
+    ===========
 
     The order of a function characterizes the function based on the limiting
     behavior of the function as it goes to some limit. Only taking the limit
@@ -123,7 +124,7 @@ class Order(Expr):
 
     is_Order = True
 
-    __slots__ = []
+    __slots__ = ()
 
     @cacheit
     def __new__(cls, expr, *args, **kwargs):
@@ -188,8 +189,8 @@ class Order(Expr):
                 s = {k: -1/Dummy() for k in variables}
                 rs = {-1/v: -1/k for k, v in s.items()}
             elif point[0] is not S.Zero:
-                s = dict((k, Dummy() + point[0]) for k in variables)
-                rs = dict((v - point[0], k - point[0]) for k, v in s.items())
+                s = {k: Dummy() + point[0] for k in variables}
+                rs = {v - point[0]: k - point[0] for k, v in s.items()}
             else:
                 s = ()
                 rs = ()
@@ -197,8 +198,7 @@ class Order(Expr):
             expr = expr.subs(s)
 
             if expr.is_Add:
-                from sympy import expand_multinomial
-                expr = expand_multinomial(expr)
+                expr = expr.factor()
 
             if s:
                 args = tuple([r[0] for r in rs.items()])
@@ -213,54 +213,54 @@ class Order(Expr):
                 # expand()'ed expr (handled in "if expr.is_Add" branch below).
                 expr = expr.expand()
 
-            if expr.is_Add:
-                lst = expr.extract_leading_order(args)
-                expr = Add(*[f.expr for (e, f) in lst])
+            old_expr = None
+            while old_expr != expr:
+                old_expr = expr
+                if expr.is_Add:
+                    lst = expr.extract_leading_order(args)
+                    expr = Add(*[f.expr for (e, f) in lst])
 
-            elif expr:
-                expr = expr.as_leading_term(*args)
-                expr = expr.as_independent(*args, as_Add=False)[1]
+                elif expr:
+                    expr = expr.as_leading_term(*args)
+                    expr = expr.as_independent(*args, as_Add=False)[1]
 
-                expr = expand_power_base(expr)
-                expr = expand_log(expr)
+                    expr = expand_power_base(expr)
+                    expr = expand_log(expr)
 
-                if len(args) == 1:
-                    # The definition of O(f(x)) symbol explicitly stated that
-                    # the argument of f(x) is irrelevant.  That's why we can
-                    # combine some power exponents (only "on top" of the
-                    # expression tree for f(x)), e.g.:
-                    # x**p * (-x)**q -> x**(p+q) for real p, q.
-                    x = args[0]
-                    margs = list(Mul.make_args(
-                        expr.as_independent(x, as_Add=False)[1]))
+                    if len(args) == 1:
+                        # The definition of O(f(x)) symbol explicitly stated that
+                        # the argument of f(x) is irrelevant.  That's why we can
+                        # combine some power exponents (only "on top" of the
+                        # expression tree for f(x)), e.g.:
+                        # x**p * (-x)**q -> x**(p+q) for real p, q.
+                        x = args[0]
+                        margs = list(Mul.make_args(
+                            expr.as_independent(x, as_Add=False)[1]))
 
-                    for i, t in enumerate(margs):
-                        if t.is_Pow:
-                            b, q = t.args
-                            if b in (x, -x) and q.is_real and not q.has(x):
-                                margs[i] = x**q
-                            elif b.is_Pow and not b.exp.has(x):
-                                b, r = b.args
-                                if b in (x, -x) and r.is_real:
-                                    margs[i] = x**(r*q)
-                            elif b.is_Mul and b.args[0] is S.NegativeOne:
-                                b = -b
-                                if b.is_Pow and not b.exp.has(x):
+                        for i, t in enumerate(margs):
+                            if t.is_Pow:
+                                b, q = t.args
+                                if b in (x, -x) and q.is_real and not q.has(x):
+                                    margs[i] = x**q
+                                elif b.is_Pow and not b.exp.has(x):
                                     b, r = b.args
                                     if b in (x, -x) and r.is_real:
                                         margs[i] = x**(r*q)
+                                elif b.is_Mul and b.args[0] is S.NegativeOne:
+                                    b = -b
+                                    if b.is_Pow and not b.exp.has(x):
+                                        b, r = b.args
+                                        if b in (x, -x) and r.is_real:
+                                            margs[i] = x**(r*q)
 
-                    expr = Mul(*margs)
+                        expr = Mul(*margs)
 
             expr = expr.subs(rs)
-
-        if expr is S.Zero:
-            return expr
 
         if expr.is_Order:
             expr = expr.expr
 
-        if not expr.has(*variables):
+        if not expr.has(*variables) and not expr.is_zero:
             expr = S.One
 
         # create Order instance:
@@ -271,7 +271,7 @@ class Order(Expr):
         obj = Expr.__new__(cls, *args)
         return obj
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         return self
 
     @property
@@ -336,7 +336,7 @@ class Order(Expr):
         (e.g. when self and expr have different symbols).
         """
         from sympy import powsimp
-        if expr is S.Zero:
+        if expr.is_zero:
             return True
         if expr is S.NaN:
             return False
@@ -350,7 +350,7 @@ class Order(Expr):
                 return all([x in self.args[1:] for x in expr.args[1:]])
             if expr.expr.is_Add:
                 return all([self.contains(x) for x in expr.expr.args])
-            if self.expr.is_Add and point == S.Zero:
+            if self.expr.is_Add and point.is_zero:
                 return any([self.func(x, *self.args[1:]).contains(expr)
                             for x in self.expr.args])
             if self.variables and expr.variables:
@@ -368,7 +368,7 @@ class Order(Expr):
                     other = expr.expr.as_independent(symbol, as_Add=False)[1]
                     if (other.is_Pow and other.base == symbol and
                         self.expr.base == symbol):
-                            if point == S.Zero:
+                            if point.is_zero:
                                 rv = (self.expr.exp - other.exp).is_nonpositive
                             if point.is_infinite:
                                 rv = (self.expr.exp - other.exp).is_nonnegative
@@ -397,7 +397,7 @@ class Order(Expr):
             other = expr.as_independent(symbol, as_Add=False)[1]
             if (other.is_Pow and other.base == symbol and
                 self.expr.base == symbol):
-                    if point == S.Zero:
+                    if point.is_zero:
                         rv = (self.expr.exp - other.exp).is_nonpositive
                     if point.is_infinite:
                         rv = (self.expr.exp - other.exp).is_nonnegative
@@ -469,5 +469,8 @@ class Order(Expr):
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
         return Rational(0)._sage_()
+
+    def __neg__(self):
+        return self
 
 O = Order

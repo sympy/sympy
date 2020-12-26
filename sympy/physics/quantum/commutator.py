@@ -1,8 +1,6 @@
 """The commutator: [A,B] = A*B - B*A."""
 
-from __future__ import print_function, division
-
-from sympy import S, Expr, Mul, Add
+from sympy import S, Expr, Mul, Add, Pow
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.dagger import Dagger
@@ -20,6 +18,9 @@ __all__ = [
 
 class Commutator(Expr):
     """The standard commutator, in an unevaluated state.
+
+    Explanation
+    ===========
 
     Evaluating a commutator is defined [1]_ as: ``[A, B] = A*B - B*A``. This
     class returns the commutator in an unevaluated form. To evaluate the
@@ -117,6 +118,22 @@ class Commutator(Expr):
         if a.compare(b) == 1:
             return S.NegativeOne*cls(b, a)
 
+    def _expand_pow(self, A, B, sign):
+        exp = A.exp
+        if not exp.is_integer or not exp.is_constant() or abs(exp) <= 1:
+            # nothing to do
+            return self
+        base = A.base
+        if exp.is_negative:
+            base = A.base**-1
+            exp = -exp
+        comm = Commutator(base, B).expand(commutator=True)
+
+        result = base**(exp - 1) * comm
+        for i in range(1, exp):
+            result += base**(exp - 1 - i) * comm * base**i
+        return sign*result.expand()
+
     def _eval_expand_commutator(self, **hints):
         A = self.args[0]
         B = self.args[1]
@@ -167,6 +184,12 @@ class Commutator(Expr):
             first = Mul(comm1, c)
             second = Mul(b, comm2)
             return Add(first, second)
+        elif isinstance(A, Pow):
+            # [A**n, C] -> A**(n - 1)*[A, C] + A**(n - 2)*[A, C]*A + ... + [A, C]*A**(n-1)
+            return self._expand_pow(A, B, 1)
+        elif isinstance(B, Pow):
+            # [A, C**n] -> C**(n - 1)*[C, A] + C**(n - 2)*[C, A]*C + ... + [C, A]*C**(n-1)
+            return self._expand_pow(B, A, -1)
 
         # No changes, so return self
         return self
@@ -197,12 +220,13 @@ class Commutator(Expr):
         )
 
     def _sympystr(self, printer, *args):
-        return "[%s,%s]" % (self.args[0], self.args[1])
+        return "[%s,%s]" % (
+            printer._print(self.args[0]), printer._print(self.args[1]))
 
     def _pretty(self, printer, *args):
         pform = printer._print(self.args[0], *args)
-        pform = prettyForm(*pform.right((prettyForm(u','))))
-        pform = prettyForm(*pform.right((printer._print(self.args[1], *args))))
+        pform = prettyForm(*pform.right(prettyForm(',')))
+        pform = prettyForm(*pform.right(printer._print(self.args[1], *args)))
         pform = prettyForm(*pform.parens(left='[', right=']'))
         return pform
 

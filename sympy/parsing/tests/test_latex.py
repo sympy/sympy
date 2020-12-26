@@ -1,24 +1,15 @@
-import os
-import glob
-import tempfile
-import shutil
-import difflib
-
-from sympy.parsing.latex._build_latex_antlr import (
-    build_parser,
-    check_antlr_version,
-    dir_latex_antlr
-)
-
-from sympy.utilities.pytest import raises, skip, XFAIL
+from sympy.testing.pytest import raises, XFAIL
 from sympy.external import import_module
 
 from sympy import (
-    Symbol, Mul, Add, Eq, Abs, sin, asin, cos, Pow,
+    Symbol, Mul, Add, Abs, sin, asin, cos, Pow,
     csc, sec, Limit, oo, Derivative, Integral, factorial,
     sqrt, root, StrictLessThan, LessThan, StrictGreaterThan,
-    GreaterThan, Sum, Product, E, log, tan, Function
+    GreaterThan, Sum, Product, E, log, tan, Function, binomial, exp,
+    floor, ceiling, Unequality
 )
+from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
+from sympy.physics.quantum.state import Bra, Ket
 from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
 
@@ -43,6 +34,10 @@ def _Pow(a, b):
     return Pow(a, b, evaluate=False)
 
 
+def _Sqrt(a):
+    return sqrt(a, evaluate=False)
+
+
 def _Abs(a):
     return Abs(a, evaluate=False)
 
@@ -51,8 +46,26 @@ def _factorial(a):
     return factorial(a, evaluate=False)
 
 
+def _exp(a):
+    return exp(a, evaluate=False)
+
+
 def _log(a, b):
     return log(a, b, evaluate=False)
+
+
+def _binomial(n, k):
+    return binomial(n, k, evaluate=False)
+
+
+def test_import():
+    from sympy.parsing.latex._build_latex_antlr import (
+        build_parser,
+        check_antlr_version,
+        dir_latex_antlr
+    )
+    # XXX: It would be better to come up with a test for these...
+    del build_parser, check_antlr_version, dir_latex_antlr
 
 
 # These LaTeX strings should parse to the corresponding SymPy expression
@@ -72,6 +85,28 @@ GOOD_PAIRS = [
     ("a + b", a + b),
     ("a + b - a", _Add(a+b, -a)),
     ("a^2 + b^2 = c^2", Eq(a**2 + b**2, c**2)),
+    ("(x + y) z", _Mul(_Add(x, y), z)),
+    ("\\left(x + y\\right) z", _Mul(_Add(x, y), z)),
+    ("\\left( x + y\\right ) z", _Mul(_Add(x, y), z)),
+    ("\\left(  x + y\\right ) z", _Mul(_Add(x, y), z)),
+    ("\\left[x + y\\right] z", _Mul(_Add(x, y), z)),
+    ("\\left\\{x + y\\right\\} z", _Mul(_Add(x, y), z)),
+    ("1+1", _Add(1, 1)),
+    ("0+1", _Add(0, 1)),
+    ("1*2", _Mul(1, 2)),
+    ("0*1", _Mul(0, 1)),
+    ("x = y", Eq(x, y)),
+    ("x \\neq y", Ne(x, y)),
+    ("x < y", Lt(x, y)),
+    ("x > y", Gt(x, y)),
+    ("x \\leq y", Le(x, y)),
+    ("x \\geq y", Ge(x, y)),
+    ("x \\le y", Le(x, y)),
+    ("x \\ge y", Ge(x, y)),
+    ("\\lfloor x \\rfloor", floor(x)),
+    ("\\lceil x \\rceil", ceiling(x)),
+    ("\\langle x |", Bra('x')),
+    ("| x \\rangle", Ket('x')),
     ("\\sin \\theta", sin(theta)),
     ("\\sin(\\theta)", sin(theta)),
     ("\\sin^{-1} a", asin(a)),
@@ -90,8 +125,7 @@ GOOD_PAIRS = [
     ("\\lim_{x \\to 3^{+}} a", Limit(a, x, 3, dir='+')),
     ("\\lim_{x \\to 3^{-}} a", Limit(a, x, 3, dir='-')),
     ("\\infty", oo),
-    ("\\lim_{x \\to \\infty} \\frac{1}{x}",
-     Limit(_Mul(1, _Pow(x, -1)), x, oo)),
+    ("\\lim_{x \\to \\infty} \\frac{1}{x}", Limit(_Pow(x, -1), x, oo)),
     ("\\frac{d}{dx} x", Derivative(x, x)),
     ("\\frac{d}{dt} x", Derivative(x, t)),
     ("f(x)", f(x)),
@@ -99,6 +133,7 @@ GOOD_PAIRS = [
     ("f(x, y, z)", f(x, y, z)),
     ("\\frac{d f(x)}{dx}", Derivative(f(x), x)),
     ("\\frac{d\\theta(x)}{dx}", Derivative(Function('theta')(x), x)),
+    ("x \\neq y", Unequality(x, y)),
     ("|x|", _Abs(x)),
     ("||x||", _Abs(Abs(x))),
     ("|x||y|", _Abs(x)*_Abs(y)),
@@ -147,6 +182,7 @@ GOOD_PAIRS = [
     ("\\sqrt[3]{\\sin x}", root(sin(x), 3)),
     ("\\sqrt[y]{\\sin x}", root(sin(x), y)),
     ("\\sqrt[\\theta]{\\sin x}", root(sin(x), theta)),
+    ("\\sqrt{\\frac{12}{6}}", _Sqrt(_Mul(12, _Pow(6, -1)))),
     ("x < y", StrictLessThan(x, y)),
     ("x \\leq y", LessThan(x, y)),
     ("x > y", StrictGreaterThan(x, y)),
@@ -166,6 +202,8 @@ GOOD_PAIRS = [
     ("\\prod_{a = b}^c x", Product(x, (a, b, c))),
     ("\\prod^{c}_{a = b} x", Product(x, (a, b, c))),
     ("\\prod^c_{a = b} x", Product(x, (a, b, c))),
+    ("\\exp x", _exp(x)),
+    ("\\exp(x)", _exp(x)),
     ("\\ln x", _log(x, E)),
     ("\\ln xy", _log(x*y, E)),
     ("\\log x", _log(x, 10)),
@@ -176,7 +214,24 @@ GOOD_PAIRS = [
     ("\\log_{a^2} x", _log(x, _Pow(a, 2))),
     ("[x]", x),
     ("[a + b]", _Add(a, b)),
-    ("\\frac{d}{dx} [ \\tan x ]", Derivative(tan(x), x))
+    ("\\frac{d}{dx} [ \\tan x ]", Derivative(tan(x), x)),
+    ("\\binom{n}{k}", _binomial(n, k)),
+    ("\\tbinom{n}{k}", _binomial(n, k)),
+    ("\\dbinom{n}{k}", _binomial(n, k)),
+    ("\\binom{n}{0}", _binomial(n, 0)),
+    ("a \\, b", _Mul(a, b)),
+    ("a \\thinspace b", _Mul(a, b)),
+    ("a \\: b", _Mul(a, b)),
+    ("a \\medspace b", _Mul(a, b)),
+    ("a \\; b", _Mul(a, b)),
+    ("a \\thickspace b", _Mul(a, b)),
+    ("a \\quad b", _Mul(a, b)),
+    ("a \\qquad b", _Mul(a, b)),
+    ("a \\! b", _Mul(a, b)),
+    ("a \\negthinspace b", _Mul(a, b)),
+    ("a \\negmedspace b", _Mul(a, b)),
+    ("a \\negthickspace b", _Mul(a, b)),
+    ("\\int x \\, dx", Integral(x, x)),
 ]
 
 def test_parseable():

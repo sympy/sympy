@@ -84,12 +84,12 @@ def divergence(vect, frame):
 
     _check_vector(vect)
     if vect == 0:
-        return S(0)
+        return S.Zero
     vect = express(vect, frame, variables=True)
     vectx = vect.dot(frame.x)
     vecty = vect.dot(frame.y)
     vectz = vect.dot(frame.z)
-    out = S(0)
+    out = S.Zero
     out += diff(vectx, frame[0])
     out += diff(vecty, frame[1])
     out += diff(vectz, frame[2])
@@ -194,7 +194,7 @@ def is_solenoidal(field):
     if field == Vector(0):
         return True
     frame = list(field.separate())[0]
-    return divergence(field, frame).simplify() == S(0)
+    return divergence(field, frame).simplify() is S.Zero
 
 
 def scalar_potential(field, frame):
@@ -231,9 +231,9 @@ def scalar_potential(field, frame):
     if not is_conservative(field):
         raise ValueError("Field is not conservative")
     if field == Vector(0):
-        return S(0)
+        return S.Zero
     #Express the field exntirely in frame
-    #Subsitute coordinate variables also
+    #Substitute coordinate variables also
     _check_frame(frame)
     field = express(field, frame, variables=True)
     #Make a list of dimensions of the frame

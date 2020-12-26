@@ -1,9 +1,9 @@
 """Inference in propositional logic"""
-from __future__ import print_function, division
 
 from sympy.logic.boolalg import And, Not, conjuncts, to_cnf
 from sympy.core.compatibility import ordered
 from sympy.core.sympify import sympify
+from sympy.external.importtools import import_module
 
 
 def literal_symbol(literal):
@@ -35,7 +35,7 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm="dpll2", all_models=False):
+def satisfiable(expr, algorithm=None, all_models=False):
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
@@ -77,13 +77,26 @@ def satisfiable(expr, algorithm="dpll2", all_models=False):
     UNSAT
 
     """
-    expr = to_cnf(expr)
+    if algorithm is None or algorithm == "pycosat":
+        pycosat = import_module('pycosat')
+        if pycosat is not None:
+            algorithm = "pycosat"
+        else:
+            if algorithm == "pycosat":
+                raise ImportError("pycosat module is not present")
+            # Silently fall back to dpll2 if pycosat
+            # is not installed
+            algorithm = "dpll2"
+
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
         return dpll_satisfiable(expr)
     elif algorithm == "dpll2":
         from sympy.logic.algorithms.dpll2 import dpll_satisfiable
         return dpll_satisfiable(expr, all_models)
+    elif algorithm == "pycosat":
+        from sympy.logic.algorithms.pycosat_wrapper import pycosat_satisfiable
+        return pycosat_satisfiable(expr, all_models)
     raise NotImplementedError
 
 
@@ -131,7 +144,7 @@ def pl_true(expr, model={}, deep=False):
     Examples
     ========
 
-    >>> from sympy.abc import A, B, C
+    >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import pl_true
     >>> pl_true( A & B, {A: True, B: True})
     True
@@ -148,6 +161,7 @@ def pl_true(expr, model={}, deep=False):
     >>> pl_true(A & B & (~A | ~B), {A: True})
     >>> pl_true(A & B & (~A | ~B), {A: True}, deep=True)
     False
+
     """
 
     from sympy.core.symbol import Symbol
@@ -166,12 +180,12 @@ def pl_true(expr, model={}, deep=False):
     expr = sympify(expr)
     if not _validate(expr):
         raise ValueError("%s is not a valid boolean expression" % expr)
-    model = dict((k, v) for k, v in model.items() if v in boolean)
+    model = {k: v for k, v in model.items() if v in boolean}
     result = expr.subs(model)
     if result in boolean:
         return bool(result)
     if deep:
-        model = dict((k, True) for k in result.atoms())
+        model = {k: True for k in result.atoms()}
         if pl_true(result, model):
             if valid(result):
                 return True
@@ -211,7 +225,7 @@ def entails(expr, formula_set={}):
     return not satisfiable(And(*formula_set))
 
 
-class KB(object):
+class KB:
     """Base class for all knowledge bases"""
     def __init__(self, sentence=None):
         self.clauses_ = set()
@@ -254,6 +268,7 @@ class PropKB(KB):
         >>> l.tell(y)
         >>> l.clauses
         [y, x | y]
+
         """
         for c in conjuncts(to_cnf(sentence)):
             self.clauses_.add(c)
@@ -272,6 +287,7 @@ class PropKB(KB):
         True
         >>> l.ask(y)
         False
+
         """
         return entails(query, self.clauses_)
 
@@ -294,6 +310,7 @@ class PropKB(KB):
         >>> l.retract(x | y)
         >>> l.clauses
         []
+
         """
         for c in conjuncts(to_cnf(sentence)):
             self.clauses_.discard(c)

@@ -2,7 +2,6 @@
 This module contains query handlers responsible for calculus queries:
 infinitesimal, bounded, etc.
 """
-from __future__ import print_function, division
 
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
@@ -20,7 +19,7 @@ def _Factorization(predicate, expr, assumptions):
 
 class AskSquareHandler(CommonHandler):
     """
-    Handler for key 'square'
+    Handler for key 'square'.
     """
 
     @staticmethod
@@ -30,7 +29,7 @@ class AskSquareHandler(CommonHandler):
 
 class AskSymmetricHandler(CommonHandler):
     """
-    Handler for key 'symmetric'
+    Handler for key 'symmetric'.
     """
 
     @staticmethod
@@ -79,6 +78,8 @@ class AskSymmetricHandler(CommonHandler):
     def ZeroMatrix(expr, assumptions):
         return ask(Q.square(expr), assumptions)
 
+    OneMatrix = ZeroMatrix
+
     @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.symmetric(expr.arg), assumptions)
@@ -101,7 +102,7 @@ class AskSymmetricHandler(CommonHandler):
 
 class AskInvertibleHandler(CommonHandler):
     """
-    Handler for key 'invertible'
+    Handler for key 'invertible'.
     """
 
     @staticmethod
@@ -140,6 +141,10 @@ class AskInvertibleHandler(CommonHandler):
     ZeroMatrix = staticmethod(CommonHandler.AlwaysFalse)
 
     @staticmethod
+    def OneMatrix(expr, assumptions):
+        return expr.shape[0] == 1 and expr.shape[1] == 1
+
+    @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.invertible(expr.arg), assumptions)
 
@@ -150,9 +155,56 @@ class AskInvertibleHandler(CommonHandler):
         else:
             return ask(Q.invertible(expr.parent), assumptions)
 
+    @staticmethod
+    def MatrixBase(expr, assumptions):
+        if not expr.is_square:
+            return False
+        return expr.rank() == expr.rows
+
+    @staticmethod
+    def MatrixExpr(expr, assumptions):
+        if not expr.is_square:
+            return False
+        return None
+
+    @staticmethod
+    def BlockMatrix(expr, assumptions):
+        from sympy.matrices.expressions.blockmatrix import reblock_2x2
+        if not expr.is_square:
+            return False
+        if expr.blockshape == (1, 1):
+            return ask(Q.invertible(expr.blocks[0, 0]), assumptions)
+        expr = reblock_2x2(expr)
+        if expr.blockshape == (2, 2):
+            [[A, B], [C, D]] = expr.blocks.tolist()
+            if ask(Q.invertible(A), assumptions) == True:
+                invertible = ask(Q.invertible(D - C * A.I * B), assumptions)
+                if invertible is not None:
+                    return invertible
+            if ask(Q.invertible(B), assumptions) == True:
+                invertible = ask(Q.invertible(C - D * B.I * A), assumptions)
+                if invertible is not None:
+                    return invertible
+            if ask(Q.invertible(C), assumptions) == True:
+                invertible = ask(Q.invertible(B - A * C.I * D), assumptions)
+                if invertible is not None:
+                    return invertible
+            if ask(Q.invertible(D), assumptions) == True:
+                invertible = ask(Q.invertible(A - B * D.I * C), assumptions)
+                if invertible is not None:
+                    return invertible
+        return None
+
+    @staticmethod
+    def BlockDiagMatrix(expr, assumptions):
+        if expr.rowblocksizes != expr.colblocksizes:
+            return None
+        return fuzzy_and([ask(Q.invertible(a), assumptions) for a in expr.diag])
+
+
 class AskOrthogonalHandler(CommonHandler):
     """
-    Handler for key 'orthogonal'
+    Handler for key 'orthogonal'.
     """
     predicate = Q.orthogonal
 
@@ -210,7 +262,7 @@ class AskOrthogonalHandler(CommonHandler):
 
 class AskUnitaryHandler(CommonHandler):
     """
-    Handler for key 'unitary'
+    Handler for key 'unitary'.
     """
     predicate = Q.unitary
 
@@ -266,7 +318,7 @@ class AskUnitaryHandler(CommonHandler):
 
 class AskFullRankHandler(CommonHandler):
     """
-    Handler for key 'fullrank'
+    Handler for key 'fullrank'.
     """
 
     @staticmethod
@@ -288,6 +340,10 @@ class AskFullRankHandler(CommonHandler):
     ZeroMatrix = staticmethod(CommonHandler.AlwaysFalse)
 
     @staticmethod
+    def OneMatrix(expr, assumptions):
+        return expr.shape[0] == 1 and expr.shape[1] == 1
+
+    @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.fullrank(expr.arg), assumptions)
 
@@ -300,7 +356,7 @@ class AskFullRankHandler(CommonHandler):
 
 class AskPositiveDefiniteHandler(CommonHandler):
     """
-    Handler for key 'positive_definite'
+    Handler for key 'positive_definite'.
     """
 
     @staticmethod
@@ -339,6 +395,10 @@ class AskPositiveDefiniteHandler(CommonHandler):
     ZeroMatrix = staticmethod(CommonHandler.AlwaysFalse)
 
     @staticmethod
+    def OneMatrix(expr, assumptions):
+        return expr.shape[0] == 1 and expr.shape[1] == 1
+
+    @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.positive_definite(expr.arg), assumptions)
 
@@ -353,7 +413,7 @@ class AskPositiveDefiniteHandler(CommonHandler):
 
 class AskUpperTriangularHandler(CommonHandler):
     """
-    Handler for key 'upper_triangular'
+    Handler for key 'upper_triangular'.
     """
 
     @staticmethod
@@ -388,6 +448,10 @@ class AskUpperTriangularHandler(CommonHandler):
     Identity, ZeroMatrix = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
     @staticmethod
+    def OneMatrix(expr, assumptions):
+        return expr.shape[0] == 1 and expr.shape[1] == 1
+
+    @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.lower_triangular(expr.arg), assumptions)
 
@@ -406,7 +470,7 @@ class AskUpperTriangularHandler(CommonHandler):
 
 class AskLowerTriangularHandler(CommonHandler):
     """
-    Handler for key 'lower_triangular'
+    Handler for key 'lower_triangular'.
     """
 
     @staticmethod
@@ -441,6 +505,10 @@ class AskLowerTriangularHandler(CommonHandler):
     Identity, ZeroMatrix = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
     @staticmethod
+    def OneMatrix(expr, assumptions):
+        return expr.shape[0] == 1 and expr.shape[1] == 1
+
+    @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.upper_triangular(expr.arg), assumptions)
 
@@ -459,7 +527,7 @@ class AskLowerTriangularHandler(CommonHandler):
 
 class AskDiagonalHandler(CommonHandler):
     """
-    Handler for key 'diagonal'
+    Handler for key 'diagonal'.
     """
 
     @staticmethod
@@ -499,7 +567,13 @@ class AskDiagonalHandler(CommonHandler):
         if Q.diagonal(expr) in conjuncts(assumptions):
             return True
 
-    Identity, ZeroMatrix = [staticmethod(CommonHandler.AlwaysTrue)]*2
+    @staticmethod
+    def ZeroMatrix(expr, assumptions):
+        return True
+
+    @staticmethod
+    def OneMatrix(expr, assumptions):
+        return expr.shape[0] == 1 and expr.shape[1] == 1
 
     @staticmethod
     def Transpose(expr, assumptions):
@@ -522,15 +596,23 @@ class AskDiagonalHandler(CommonHandler):
     def DiagonalMatrix(expr, assumptions):
         return True
 
+    @staticmethod
+    def DiagMatrix(expr, assumptions):
+        return True
+
+    @staticmethod
+    def Identity(expr, assumptions):
+        return True
+
     Factorization = staticmethod(partial(_Factorization, Q.diagonal))
 
 
 def BM_elements(predicate, expr, assumptions):
-    """ Block Matrix elements """
+    """ Block Matrix elements. """
     return all(ask(predicate(b), assumptions) for b in expr.blocks)
 
 def MS_elements(predicate, expr, assumptions):
-    """ Matrix Slice elements """
+    """ Matrix Slice elements. """
     return ask(predicate(expr.parent), assumptions)
 
 def MatMul_elements(matrix_predicate, scalar_predicate, expr, assumptions):
@@ -558,7 +640,7 @@ class AskIntegerElementsHandler(CommonHandler):
 
     HadamardProduct, Determinant, Trace, Transpose = [MatAdd]*4
 
-    ZeroMatrix, Identity = [staticmethod(CommonHandler.AlwaysTrue)]*2
+    ZeroMatrix, OneMatrix, Identity = [staticmethod(CommonHandler.AlwaysTrue)]*3
 
     MatMul = staticmethod(partial(MatMul_elements, Q.integer_elements,
                                                    Q.integer))

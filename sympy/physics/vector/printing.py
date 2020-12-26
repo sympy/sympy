@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
-
 from sympy import Derivative
 from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.core.symbol import Symbol
 from sympy.interactive.printing import init_printing
-from sympy.printing.conventions import split_super_sub
-from sympy.printing.latex import LatexPrinter, translate
+from sympy.printing.latex import LatexPrinter
 from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.pretty_symbology import center_accent
 from sympy.printing.str import StrPrinter
+from sympy.printing.precedence import PRECEDENCE
 
 __all__ = ['vprint', 'vsstrrepr', 'vsprint', 'vpprint', 'vlatex',
            'init_vprinting']
@@ -55,70 +53,18 @@ class VectorLatexPrinter(LatexPrinter):
             not isinstance(type(expr), UndefinedFunction):
             return getattr(self, '_print_' + func)(expr, exp)
         elif isinstance(type(expr), UndefinedFunction) and (expr.args == (t,)):
-
-            name, supers, subs = split_super_sub(func)
-            name = translate(name)
-            supers = [translate(sup) for sup in supers]
-            subs = [translate(sub) for sub in subs]
-
-            if len(supers) != 0:
-                supers = r"^{%s}" % "".join(supers)
+            # treat this function like a symbol
+            expr = Symbol(func)
+            if exp is not None:
+                # copied from LatexPrinter._helper_print_standard_power, which
+                # we can't call because we only have exp as a string.
+                base = self.parenthesize(expr, PRECEDENCE['Pow'])
+                base = self.parenthesize_super(base)
+                return r"%s^{%s}" % (base, exp)
             else:
-                supers = r""
-
-            if len(subs) != 0:
-                subs = r"_{%s}" % "".join(subs)
-            else:
-                subs = r""
-
-            if exp:
-                supers += r"^{%s}" % self._print(exp)
-
-            return r"%s" % (name + supers + subs)
+                return super()._print(expr)
         else:
-            args = [str(self._print(arg)) for arg in expr.args]
-            # How inverse trig functions should be displayed, formats are:
-            # abbreviated: asin, full: arcsin, power: sin^-1
-            inv_trig_style = self._settings['inv_trig_style']
-            # If we are dealing with a power-style inverse trig function
-            inv_trig_power_case = False
-            # If it is applicable to fold the argument brackets
-            can_fold_brackets = self._settings['fold_func_brackets'] and \
-                len(args) == 1 and \
-                not self._needs_function_brackets(expr.args[0])
-
-            inv_trig_table = ["asin", "acos", "atan", "acot"]
-
-            # If the function is an inverse trig function, handle the style
-            if func in inv_trig_table:
-                if inv_trig_style == "abbreviated":
-                    pass
-                elif inv_trig_style == "full":
-                    func = "arc" + func[1:]
-                elif inv_trig_style == "power":
-                    func = func[1:]
-                    inv_trig_power_case = True
-
-                    # Can never fold brackets if we're raised to a power
-                    if exp is not None:
-                        can_fold_brackets = False
-
-            if inv_trig_power_case:
-                name = r"\operatorname{%s}^{-1}" % func
-            elif exp is not None:
-                name = r"\operatorname{%s}^{%s}" % (func, exp)
-            else:
-                name = r"\operatorname{%s}" % func
-
-            if can_fold_brackets:
-                name += r"%s"
-            else:
-                name += r"\left(%s\right)"
-
-            if inv_trig_power_case and exp is not None:
-                name += r"^{%s}" % exp
-
-            return name % ",".join(args)
+            return super()._print_Function(expr, exp)
 
     def _print_Derivative(self, der_expr):
         from sympy.physics.vector.functions import dynamicsymbols
@@ -135,7 +81,7 @@ class VectorLatexPrinter(LatexPrinter):
         test1 = not all([True for i in red if i.free_symbols == {t}])
         test2 = not all([(t == i) for i in syms])
         if test1 or test2:
-            return LatexPrinter().doprint(der_expr)
+            return super()._print_Derivative(der_expr)
 
         # done checking
         dots = len(syms)
@@ -151,8 +97,8 @@ class VectorLatexPrinter(LatexPrinter):
         elif dots == 4:
             base = r"\ddddot{%s}" % base
         else: # Fallback to standard printing
-            return LatexPrinter().doprint(der_expr)
-        if len(base_split) is not 1:
+            return super()._print_Derivative(der_expr)
+        if len(base_split) != 1:
             base += '_' + base_split[1]
         return base
 
@@ -172,29 +118,29 @@ class VectorPrettyPrinter(PrettyPrinter):
                 syms.pop()
                 dot_i += 1
             else:
-                return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+                return super()._print_Derivative(deriv)
 
         if not (isinstance(type(deriv.expr), UndefinedFunction)
                 and (deriv.expr.args == (t,))):
-                return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+                return super()._print_Derivative(deriv)
         else:
             pform = self._print_Function(deriv.expr)
 
         # the following condition would happen with some sort of non-standard
         # dynamic symbol I guess, so we'll just print the SymPy way
         if len(pform.picture) > 1:
-            return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+            return super()._print_Derivative(deriv)
 
         # There are only special symbols up to fourth-order derivatives
         if dot_i >= 5:
-            return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+            return super()._print_Derivative(deriv)
 
         # Deal with special symbols
-        dots = {0 : u"",
-                1 : u"\N{COMBINING DOT ABOVE}",
-                2 : u"\N{COMBINING DIAERESIS}",
-                3 : u"\N{COMBINING THREE DOTS ABOVE}",
-                4 : u"\N{COMBINING FOUR DOTS ABOVE}"}
+        dots = {0 : "",
+                1 : "\N{COMBINING DOT ABOVE}",
+                2 : "\N{COMBINING DIAERESIS}",
+                3 : "\N{COMBINING THREE DOTS ABOVE}",
+                4 : "\N{COMBINING FOUR DOTS ABOVE}"}
 
         d = pform.__dict__
         #if unicode is false then calculate number of apostrophes needed and add to output
@@ -205,7 +151,6 @@ class VectorPrettyPrinter(PrettyPrinter):
             d['picture'][0] += apostrophes + "(t)"
         else:
             d['picture'] = [center_accent(d['picture'][0], dots[dot_i])]
-        d['unicode'] =  center_accent(d['unicode'], dots[dot_i])
         return pform
 
     def _print_Function(self, e):
@@ -220,7 +165,7 @@ class VectorPrettyPrinter(PrettyPrinter):
         # dynamic symbol, so we'll skip the (t). The rest of the code is
         # identical to the normal PrettyPrinter code
         if not (isinstance(func, UndefinedFunction) and (args == (t,))):
-            return super(VectorPrettyPrinter, self)._print_Function(e)
+            return super()._print_Function(e)
         return pform
 
 
@@ -229,7 +174,7 @@ def vprint(expr, **settings):
     sympy.physics vector package.
 
     Extends SymPy's StrPrinter, takes the same setting accepted by SymPy's
-    `sstr()`, and is equivalent to `print(sstr(foo))`.
+    :func:`~.sstr`, and is equivalent to ``print(sstr(foo))``.
 
     Parameters
     ==========
@@ -253,7 +198,7 @@ def vprint(expr, **settings):
 
     outstr = vsprint(expr, **settings)
 
-    from sympy.core.compatibility import builtins
+    import builtins
     if (outstr != 'None'):
         builtins._ = outstr
         print(outstr)
@@ -313,7 +258,7 @@ def vpprint(expr, **settings):
 
     Mainly used for expressions not inside a vector; the output of running
     scripts and generating equations of motion. Takes the same options as
-    SymPy's pretty_print(); see that function for more information.
+    SymPy's :func:`~.pretty_print`; see that function for more information.
 
     Parameters
     ==========
@@ -346,7 +291,7 @@ def vlatex(expr, **settings):
     objects.
 
     For latex representation of Vectors, Dyadics, and dynamicsymbols. Takes the
-    same options as SymPy's latex(); see that function for more information;
+    same options as SymPy's :func:`~.latex`; see that function for more information;
 
     Parameters
     ==========
@@ -388,7 +333,7 @@ def init_vprinting(**kwargs):
     displaying as ``Derivative(f(t),t)``, it will display ``f'``. This is
     only actually needed for when derivatives are present and are not in a
     physics.vector.Vector or physics.vector.Dyadic object. This function is a
-    light wrapper to `sympy.interactive.init_printing`. Any keyword
+    light wrapper to :func:`~.init_printing`. Any keyword
     arguments for it are valid here.
 
     {0}
@@ -397,7 +342,6 @@ def init_vprinting(**kwargs):
     ========
 
     >>> from sympy import Function, symbols
-    >>> from sympy.physics.vector import init_vprinting
     >>> t, x = symbols('t, x')
     >>> omega = Function('omega')
     >>> omega(x).diff()
@@ -407,6 +351,7 @@ def init_vprinting(**kwargs):
 
     Now use the string printer:
 
+    >>> from sympy.physics.vector import init_vprinting
     >>> init_vprinting(pretty_print=False)
     >>> omega(x).diff()
     Derivative(omega(x), x)
@@ -419,5 +364,5 @@ def init_vprinting(**kwargs):
     kwargs['latex_printer'] = vlatex
     init_printing(**kwargs)
 
-params = init_printing.__doc__.split('Examples\n    ========')[0]
-init_vprinting.__doc__ = init_vprinting.__doc__.format(params)
+params = init_printing.__doc__.split('Examples\n    ========')[0]  # type: ignore
+init_vprinting.__doc__ = init_vprinting.__doc__.format(params)  # type: ignore

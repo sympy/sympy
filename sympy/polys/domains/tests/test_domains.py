@@ -1,9 +1,15 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import S, sqrt, sin, oo, Poly, Float
+from sympy import I, S, sqrt, sin, oo, Poly, Float, Rational, pi
 from sympy.abc import x, y, z
 
-from sympy.polys.domains import ZZ, QQ, RR, CC, FF, GF, EX
+from sympy.core.compatibility import HAS_GMPY
+
+from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, ZZ_gmpy,
+    ZZ_python, QQ_gmpy, QQ_python)
+from sympy.polys.domains.algebraicfield import AlgebraicField
+from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
+from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.realfield import RealField
 
 from sympy.polys.rings import ring
@@ -15,8 +21,9 @@ from sympy.polys.polyerrors import (
     CoercionFailed,
     NotInvertible,
     DomainError)
+from sympy.polys.polyutils import illegal
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 ALG = QQ.algebraic_field(sqrt(2), sqrt(3))
 
@@ -55,6 +62,36 @@ def test_Domain_unify():
     assert unify(QQ, ZZ[x]) == QQ[x]
     assert unify(QQ, ZZ.frac_field(x)) == QQ.frac_field(x)
     assert unify(QQ, EX) == EX
+
+    assert unify(ZZ_I, F3) == ZZ_I
+    assert unify(ZZ_I, ZZ) == ZZ_I
+    assert unify(ZZ_I, ZZ_I) == ZZ_I
+    assert unify(ZZ_I, QQ) == QQ_I
+    assert unify(ZZ_I, ALG) == QQ.algebraic_field(I, sqrt(2), sqrt(3))
+    assert unify(ZZ_I, RR) == CC
+    assert unify(ZZ_I, CC) == CC
+    assert unify(ZZ_I, ZZ[x]) == ZZ_I[x]
+    assert unify(ZZ_I, ZZ_I[x]) == ZZ_I[x]
+    assert unify(ZZ_I, ZZ.frac_field(x)) == ZZ_I.frac_field(x)
+    assert unify(ZZ_I, ZZ_I.frac_field(x)) == ZZ_I.frac_field(x)
+    assert unify(ZZ_I, EX) == EX
+
+    assert unify(QQ_I, F3) == QQ_I
+    assert unify(QQ_I, ZZ) == QQ_I
+    assert unify(QQ_I, ZZ_I) == QQ_I
+    assert unify(QQ_I, QQ) == QQ_I
+    assert unify(QQ_I, ALG) == QQ.algebraic_field(I, sqrt(2), sqrt(3))
+    assert unify(QQ_I, RR) == CC
+    assert unify(QQ_I, CC) == CC
+    assert unify(QQ_I, ZZ[x]) == QQ_I[x]
+    assert unify(QQ_I, ZZ_I[x]) == QQ_I[x]
+    assert unify(QQ_I, QQ[x]) == QQ_I[x]
+    assert unify(QQ_I, QQ_I[x]) == QQ_I[x]
+    assert unify(QQ_I, ZZ.frac_field(x)) == QQ_I.frac_field(x)
+    assert unify(QQ_I, ZZ_I.frac_field(x)) == QQ_I.frac_field(x)
+    assert unify(QQ_I, QQ.frac_field(x)) == QQ_I.frac_field(x)
+    assert unify(QQ_I, QQ_I.frac_field(x)) == QQ_I.frac_field(x)
+    assert unify(QQ_I, EX) == EX
 
     assert unify(RR, F3) == RR
     assert unify(RR, ZZ) == RR
@@ -282,25 +319,25 @@ def test_Domain__contains__():
     assert (17 in QQ[x, y]) is True
     assert (17 in RR[x, y]) is True
 
-    assert (-S(1)/7 in EX) is True
-    assert (-S(1)/7 in ZZ) is False
-    assert (-S(1)/7 in QQ) is True
-    assert (-S(1)/7 in RR) is True
-    assert (-S(1)/7 in CC) is True
-    assert (-S(1)/7 in ALG) is True
-    assert (-S(1)/7 in ZZ[x, y]) is False
-    assert (-S(1)/7 in QQ[x, y]) is True
-    assert (-S(1)/7 in RR[x, y]) is True
+    assert (Rational(-1, 7) in EX) is True
+    assert (Rational(-1, 7) in ZZ) is False
+    assert (Rational(-1, 7) in QQ) is True
+    assert (Rational(-1, 7) in RR) is True
+    assert (Rational(-1, 7) in CC) is True
+    assert (Rational(-1, 7) in ALG) is True
+    assert (Rational(-1, 7) in ZZ[x, y]) is False
+    assert (Rational(-1, 7) in QQ[x, y]) is True
+    assert (Rational(-1, 7) in RR[x, y]) is True
 
-    assert (S(3)/5 in EX) is True
-    assert (S(3)/5 in ZZ) is False
-    assert (S(3)/5 in QQ) is True
-    assert (S(3)/5 in RR) is True
-    assert (S(3)/5 in CC) is True
-    assert (S(3)/5 in ALG) is True
-    assert (S(3)/5 in ZZ[x, y]) is False
-    assert (S(3)/5 in QQ[x, y]) is True
-    assert (S(3)/5 in RR[x, y]) is True
+    assert (Rational(3, 5) in EX) is True
+    assert (Rational(3, 5) in ZZ) is False
+    assert (Rational(3, 5) in QQ) is True
+    assert (Rational(3, 5) in RR) is True
+    assert (Rational(3, 5) in CC) is True
+    assert (Rational(3, 5) in ALG) is True
+    assert (Rational(3, 5) in ZZ[x, y]) is False
+    assert (Rational(3, 5) in QQ[x, y]) is True
+    assert (Rational(3, 5) in RR[x, y]) is True
 
     assert (3.0 in EX) is True
     assert (3.0 in ZZ) is True
@@ -322,25 +359,15 @@ def test_Domain__contains__():
     assert (3.14 in QQ[x, y]) is True
     assert (3.14 in RR[x, y]) is True
 
-    assert (oo in EX) is True
-    assert (oo in ZZ) is False
-    assert (oo in QQ) is False
-    assert (oo in RR) is True
-    assert (oo in CC) is True
     assert (oo in ALG) is False
     assert (oo in ZZ[x, y]) is False
     assert (oo in QQ[x, y]) is False
-    assert (oo in RR[x, y]) is True
 
-    assert (-oo in EX) is True
     assert (-oo in ZZ) is False
     assert (-oo in QQ) is False
-    assert (-oo in RR) is True
-    assert (-oo in CC) is True
     assert (-oo in ALG) is False
     assert (-oo in ZZ[x, y]) is False
     assert (-oo in QQ[x, y]) is False
-    assert (-oo in RR[x, y]) is True
 
     assert (sqrt(7) in EX) is True
     assert (sqrt(7) in ZZ) is False
@@ -398,7 +425,7 @@ def test_Domain__contains__():
     assert (x**2 + y**2 in QQ[x, y]) is True
     assert (x**2 + y**2 in RR[x, y]) is True
 
-    assert (S(3)/2*x/(y + 1) - z in QQ[x, y, z]) is False
+    assert (Rational(3, 2)*x/(y + 1) - z in QQ[x, y, z]) is False
 
 
 def test_Domain_get_ring():
@@ -583,14 +610,22 @@ def test___eq__():
 
 
 def test_RealField_from_sympy():
-    assert RR.convert(S(0)) == RR.dtype(0)
+    assert RR.convert(S.Zero) == RR.dtype(0)
     assert RR.convert(S(0.0)) == RR.dtype(0.0)
-    assert RR.convert(S(1)) == RR.dtype(1)
+    assert RR.convert(S.One) == RR.dtype(1)
     assert RR.convert(S(1.0)) == RR.dtype(1.0)
     assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
-    assert RR.convert(oo) == RR("+inf")
-    assert RR.convert(-oo) == RR("-inf")
-    raises(CoercionFailed, lambda: RR.convert(x))
+
+
+def test_not_in_any_domain():
+    check = illegal + [x] + [
+        float(i) for i in illegal if i != S.ComplexInfinity]
+    for dom in (ZZ, QQ, RR, CC, EX):
+        for i in check:
+            if i == x and dom == EX:
+                continue
+            assert i not in dom, (i, dom)
+            raises(CoercionFailed, lambda: dom.convert(i))
 
 
 def test_ModularInteger():
@@ -768,6 +803,7 @@ def test_RR_Float():
     assert RR2(f1)-1 > 1e-50
     assert RR2(f2)-1 > 1e-50 # RR's precision is equal to f2's
 
+
 def test_CC_double():
     assert CC(3.14).real > 1e-50
     assert CC(1e-13).real > 1e-50
@@ -782,3 +818,128 @@ def test_CC_double():
     assert CC(1e-15j).imag > 1e-50
     assert CC(1e-20j).imag > 1e-50
     assert CC(1e-40j).imag > 1e-50
+
+
+def test_gaussian_domains():
+    I = S.ImaginaryUnit
+    a, b, c, d = [ZZ_I.convert(x) for x in (5, 2 + I, 3 - I, 5 - 5)]
+    ZZ_I.gcd(a, b) == b
+    ZZ_I.gcd(a, c) == b
+    ZZ_I.lcm(a, b) == a
+    ZZ_I.lcm(a, c) == d
+    assert ZZ_I(3, 4) != QQ_I(3, 4)  # XXX is this right or should QQ->ZZ if possible?
+    assert ZZ_I(3, 0) != 3           # and should this go to Integer?
+    assert QQ_I(S(3)/4, 0) != S(3)/4 # and this to Rational?
+    assert ZZ_I(0, 0).quadrant() == 0
+    assert ZZ_I(-1, 0).quadrant() == 2
+    for G in (QQ_I, ZZ_I):
+
+        q = G(3, 4)
+        assert str(q) == '3 + 4*I'
+        assert q.parent() == G
+        assert q._get_xy(pi) == (None, None)
+        assert q._get_xy(2) == (2, 0)
+        assert q._get_xy(2*I) == (0, 2)
+
+        assert hash(q) == hash((3, 4))
+        assert G(1, 2) == G(1, 2)
+        assert G(1, 2) != G(1, 3)
+        assert G(3, 0) == G(3)
+
+        assert q + q == G(6, 8)
+        assert q - q == G(0, 0)
+        assert 3 - q  == -q + 3 == G(0, -4)
+        assert 3 + q == q + 3 == G(6, 4)
+        assert q * q == G(-7, 24)
+        assert 3 * q == q * 3 == G(9, 12)
+        assert q ** 0 == G(1, 0)
+        assert q ** 1 == q
+        assert q ** 2 == q * q == G(-7, 24)
+        assert q ** 3 == q * q * q == G(-117, 44)
+        assert 1 / q == q ** -1 == QQ_I(S(3)/25, - S(4)/25)
+        assert q / 1 == QQ_I(3, 4)
+        assert q / 2 == QQ_I(S(3)/2, 2)
+        assert q/3 == QQ_I(1, S(4)/3)
+        assert 3/q == QQ_I(S(9)/25, -S(12)/25)
+        i, r = divmod(q, 2)
+        assert 2*i + r == q
+        i, r = divmod(2, q)
+        assert q*i + r == G(2, 0)
+
+        raises(ZeroDivisionError, lambda: q % 0)
+        raises(ZeroDivisionError, lambda: q / 0)
+        raises(ZeroDivisionError, lambda: q // 0)
+        raises(ZeroDivisionError, lambda: divmod(q, 0))
+        raises(ZeroDivisionError, lambda: divmod(q, 0))
+        raises(TypeError, lambda: q + x)
+        raises(TypeError, lambda: q - x)
+        raises(TypeError, lambda: x + q)
+        raises(TypeError, lambda: x - q)
+        raises(TypeError, lambda: q * x)
+        raises(TypeError, lambda: x * q)
+        raises(TypeError, lambda: q / x)
+        raises(TypeError, lambda: x / q)
+        raises(TypeError, lambda: q // x)
+        raises(TypeError, lambda: x // q)
+
+        assert G.from_sympy(S(2)) == G(2, 0)
+        assert G.to_sympy(G(2, 0)) == S(2)
+        raises(CoercionFailed, lambda: G.from_sympy(pi))
+
+        PR = G.inject(x)
+        assert isinstance(PR, PolynomialRing)
+        assert PR.domain == G
+        assert len(PR.gens) == 1 and PR.gens[0].as_expr() == x
+
+        if G is QQ_I:
+            AF = G.as_AlgebraicField()
+            assert isinstance(AF, AlgebraicField)
+            assert AF.domain == QQ
+            assert AF.ext.args[0] == I
+
+        for qi in [G(-1, 0), G(1, 0), G(0, -1), G(0, 1)]:
+            assert G.is_negative(qi) is False
+            assert G.is_positive(qi) is False
+            assert G.is_nonnegative(qi) is False
+            assert G.is_nonpositive(qi) is False
+
+        domains = [ZZ_python(), QQ_python(), AlgebraicField(QQ, I)]
+        if HAS_GMPY:
+            domains += [ZZ_gmpy(), QQ_gmpy()]
+
+        for K in domains:
+            assert G.convert(K(2)) == G(2, 0)
+            assert G.convert(K(2), K) == G(2, 0)
+
+        for K in ZZ_I, QQ_I:
+            assert G.convert(K(1, 1)) == G(1, 1)
+            assert G.convert(K(1, 1), K) == G(1, 1)
+
+        if G == ZZ_I:
+            assert repr(q) == 'ZZ_I(3, 4)'
+            assert q//3 == G(1, 1)
+            assert 12//q == G(1, -2)
+            assert 12 % q == G(1, 2)
+            assert q % 2 == G(-1, 0)
+            assert i == G(0, 0)
+            assert r == G(2, 0)
+            assert G.get_ring() == G
+            assert G.get_field() == QQ_I
+        else:
+            assert repr(q) == 'QQ_I(3, 4)'
+            assert G.get_ring() == ZZ_I
+            assert G.get_field() == G
+            assert q//3 == G(1, S(4)/3)
+            assert 12//q == G(S(36)/25, -S(48)/25)
+            assert 12 % q == G(0, 0)
+            assert q % 2 == G(0, 0)
+            assert i == G(S(6)/25, -S(8)/25), (G,i)
+            assert r == G(0, 0)
+            q2 = G(S(3)/2, S(5)/3)
+            assert G.numer(q2) == ZZ_I(9, 10)
+            assert G.denom(q2) == ZZ_I(6)
+
+
+def test_issue_18278():
+    assert str(RR(2).parent()) == 'RR'
+    assert str(CC(2).parent()) == 'CC'

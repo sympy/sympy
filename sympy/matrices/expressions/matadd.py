@@ -1,20 +1,19 @@
-from __future__ import print_function, division
-
-from sympy.core.compatibility import reduce
-from operator import add
+from functools import reduce
+import operator
 
 from sympy.core import Add, Basic, sympify
+from sympy.core.add import add
 from sympy.functions import adjoint
+from sympy.matrices.common import ShapeError
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
-from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
-    ZeroMatrix, GenericZeroMatrix)
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
 from sympy.utilities import default_sort_key, sift
-from sympy.core.operations import AssocOp
 
-
+# XXX: MatAdd should perhaps not subclass directly from Add
 class MatAdd(MatrixExpr, Add):
     """A Sum of Matrix Expressions
 
@@ -32,29 +31,38 @@ class MatAdd(MatrixExpr, Add):
     """
     is_MatAdd = True
 
-    def __new__(cls, *args, **kwargs):
+    identity = GenericZeroMatrix()
+
+    def __new__(cls, *args, evaluate=False, check=False, _sympify=True):
         if not args:
-            return GenericZeroMatrix()
+            return cls.identity
 
         # This must be removed aggressively in the constructor to avoid
         # TypeErrors from GenericZeroMatrix().shape
-        args = filter(lambda i: GenericZeroMatrix() != i, args)
-        args = list(map(sympify, args))
-        check = kwargs.get('check', False)
+        args = list(filter(lambda i: cls.identity != i, args))
+        if _sympify:
+            args = list(map(sympify, args))
 
         obj = Basic.__new__(cls, *args)
+
         if check:
             if all(not isinstance(i, MatrixExpr) for i in args):
                 return Add.fromiter(args)
             validate(*args)
+
+        if evaluate:
+            if all(not isinstance(i, MatrixExpr) for i in args):
+                return Add(*args, evaluate=True)
+            obj = canonicalize(obj)
+
         return obj
 
     @property
     def shape(self):
         return self.args[0].shape
 
-    def _entry(self, i, j, expand=None):
-        return Add(*[arg._entry(i, j) for arg in self.args])
+    def _entry(self, i, j, **kwargs):
+        return Add(*[arg._entry(i, j, **kwargs) for arg in self.args])
 
     def _eval_transpose(self):
         return MatAdd(*[transpose(arg) for arg in self.args]).doit()
@@ -78,6 +86,7 @@ class MatAdd(MatrixExpr, Add):
         add_lines = [arg._eval_derivative_matrix_lines(x) for arg in self.args]
         return [j for i in add_lines for j in i]
 
+add.register_handlerclass((Add, MatAdd), MatAdd)
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):
@@ -120,7 +129,7 @@ def merge_explicit(matadd):
     """
     groups = sift(matadd.args, lambda arg: isinstance(arg, MatrixBase))
     if len(groups[True]) > 1:
-        return MatAdd(*(groups[False] + [reduce(add, groups[True])]))
+        return MatAdd(*(groups[False] + [reduce(operator.add, groups[True])]))
     else:
         return matadd
 

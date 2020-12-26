@@ -13,8 +13,6 @@
 * transverse_magnification
 """
 
-from __future__ import division
-
 __all__ = ['refraction_angle',
            'deviation',
            'fresnel_coefficients',
@@ -28,33 +26,46 @@ __all__ = ['refraction_angle',
            ]
 
 from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit, atan2, asin,\
-cos, sin, tan, I, cancel
+cos, sin, tan, I, cancel, pi, Float
 from sympy.core.compatibility import is_sequence
-from sympy.geometry.line import Ray3D, Point3D
+from sympy.geometry.line import Ray3D
 from sympy.geometry.util import intersection
 from sympy.geometry.plane import Plane
 from .medium import Medium
 
 
+def refractive_index_of_medium(medium):
+    """
+    Helper function that returns refractive index, given a medium
+    """
+    if isinstance(medium, Medium):
+        n = medium.refractive_index
+    else:
+        n = sympify(medium)
+    return n
+
+
 def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     """
     This function calculates transmitted vector after refraction at planar
-    surface. `medium1` and `medium2` can be `Medium` or any sympifiable object.
+    surface. ``medium1`` and ``medium2`` can be ``Medium`` or any sympifiable object.
+    If ``incident`` is a number then treated as angle of incidence (in radians)
+    in which case refraction angle is returned.
 
-    If `incident` is an object of `Ray3D`, `normal` also has to be an instance
+    If ``incident`` is an object of `Ray3D`, `normal` also has to be an instance
     of `Ray3D` in order to get the output as a `Ray3D`. Please note that if
     plane of separation is not provided and normal is an instance of `Ray3D`,
-    normal will be assumed to be intersecting incident ray at the plane of
+    ``normal`` will be assumed to be intersecting incident ray at the plane of
     separation. This will not be the case when `normal` is a `Matrix` or
     any other sequence.
-    If `incident` is an instance of `Ray3D` and `plane` has not been provided
-    and `normal` is not `Ray3D`, output will be a `Matrix`.
+    If ``incident`` is an instance of `Ray3D` and `plane` has not been provided
+    and ``normal`` is not `Ray3D`, output will be a `Matrix`.
 
     Parameters
     ==========
 
-    incident : Matrix, Ray3D, or sequence
-        Incident vector
+    incident : Matrix, Ray3D, sequence or a number
+        Incident vector or angle of incidence
     medium1 : sympy.physics.optics.medium.Medium or sympifiable
         Medium 1 or its refractive index
     medium2 : sympy.physics.optics.medium.Medium or sympifiable
@@ -64,13 +75,18 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     plane : Plane
         Plane of separation of the two media.
 
+    Returns
+    =======
+
+    Returns an angle of refraction or a refracted ray depending on inputs.
+
     Examples
     ========
 
     >>> from sympy.physics.optics import refraction_angle
     >>> from sympy.geometry import Point3D, Ray3D, Plane
     >>> from sympy.matrices import Matrix
-    >>> from sympy import symbols
+    >>> from sympy import symbols, pi
     >>> n = Matrix([0, 0, 1])
     >>> P = Plane(Point3D(0, 0, 0), normal_vector=[0, 0, 1])
     >>> r1 = Ray3D(Point3D(-1, -1, 1), Point3D(0, 0, 0))
@@ -92,8 +108,39 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     [-sqrt(3)*sqrt(-2*n1**2/(3*n2**2) + 1)]])
     >>> refraction_angle(r1, n1, n2, plane=P)
     Ray3D(Point3D(0, 0, 0), Point3D(n1/n2, n1/n2, -sqrt(3)*sqrt(-2*n1**2/(3*n2**2) + 1)))
-
+    >>> round(refraction_angle(pi/6, 1.2, 1.5), 5)
+    0.41152
     """
+
+    n1 = refractive_index_of_medium(medium1)
+    n2 = refractive_index_of_medium(medium2)
+
+    # check if an incidence angle was supplied instead of a ray
+    try:
+        angle_of_incidence = float(incident)
+    except TypeError:
+        angle_of_incidence = None
+
+    try:
+        critical_angle_ = critical_angle(medium1, medium2)
+    except (ValueError, TypeError):
+        critical_angle_ = None
+
+    if angle_of_incidence is not None:
+        if normal is not None or plane is not None:
+            raise ValueError('Normal/plane not allowed if incident is an angle')
+
+        if not 0.0 <= angle_of_incidence < pi*0.5:
+            raise ValueError('Angle of incidence not in range [0:pi/2)')
+
+        if critical_angle_ and angle_of_incidence > critical_angle_:
+            raise ValueError('Ray undergoes total internal reflection')
+        return asin(n1*sin(angle_of_incidence)/n2)
+
+    if angle_of_incidence and not 0 <= angle_of_incidence < pi*0.5:
+        raise ValueError
+
+    # Treat the incident as ray below
     # A flag to check whether to return Ray3D or not
     return_ray = False
 
@@ -143,18 +190,6 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         else:
             _normal = normal
 
-    n1, n2 = None, None
-
-    if isinstance(medium1, Medium):
-        n1 = medium1.refractive_index
-    else:
-        n1 = sympify(medium1)
-
-    if isinstance(medium2, Medium):
-        n2 = medium2.refractive_index
-    else:
-        n2 = sympify(medium2)
-
     eta = n1/n2  # Relative index of refraction
     # Calculating magnitude of the vectors
     mag_incident = sqrt(sum([i**2 for i in _incident]))
@@ -199,6 +234,9 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     medium2 : Medium or sympifiable
         Medium 2 or its refractive index
 
+    Returns
+    =======
+
     Returns a list with four real Fresnel coefficients:
     [reflection p (TM), reflection s (TE),
     transmission p (TM), transmission s (TE)]
@@ -220,18 +258,13 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/Fresnel_equations
+    .. [1] https://en.wikipedia.org/wiki/Fresnel_equations
     """
+    if not 0 <= 2*angle_of_incidence < pi:
+        raise ValueError('Angle of incidence not in range [0:pi/2)')
 
-    if isinstance(medium1, Medium):
-        n1 = medium1.refractive_index
-    else:
-        n1 = sympify(medium1)
-
-    if isinstance(medium2, Medium):
-        n2 = medium2.refractive_index
-    else:
-        n2 = sympify(medium2)
+    n1 = refractive_index_of_medium(medium1)
+    n2 = refractive_index_of_medium(medium2)
 
     angle_of_refraction = asin(n1*sin(angle_of_incidence)/n2)
     try:
@@ -272,8 +305,8 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
     Parameters
     ==========
 
-    incident : Matrix, Ray3D, or sequence
-        Incident vector
+    incident : Matrix, Ray3D, sequence or float
+        Incident vector or angle of incidence
     medium1 : sympy.physics.optics.medium.Medium or sympifiable
         Medium 1 or its refractive index
     medium2 : sympy.physics.optics.medium.Medium or sympifiable
@@ -282,6 +315,8 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
         Normal vector
     plane : Plane
         Plane of separation of the two media.
+
+    Returns angular deviation between incident and refracted rays
 
     Examples
     ========
@@ -298,13 +333,22 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
     0
     >>> deviation(r1, n1, n2, plane=P)
     -acos(-sqrt(-2*n1**2/(3*n2**2) + 1)) + acos(-sqrt(3)/3)
-
+    >>> round(deviation(0.1, 1.2, 1.5), 5)
+    -0.02005
     """
     refracted = refraction_angle(incident,
                                  medium1,
                                  medium2,
                                  normal=normal,
                                  plane=plane)
+    try:
+        angle_of_incidence = Float(incident)
+    except TypeError:
+        angle_of_incidence = None
+
+    if angle_of_incidence is not None:
+        return float(refracted) - angle_of_incidence
+
     if refracted != 0:
         if isinstance(refracted, Ray3D):
             refracted = Matrix(refracted.direction_ratio)
@@ -366,17 +410,9 @@ def brewster_angle(medium1, medium2):
     0.926093295503462
 
     """
-    n1, n2 = None, None
 
-    if isinstance(medium1, Medium):
-        n1 = medium1.refractive_index
-    else:
-        n1 = sympify(medium1)
-
-    if isinstance(medium2, Medium):
-        n2 = medium2.refractive_index
-    else:
-        n2 = sympify(medium2)
+    n1 = refractive_index_of_medium(medium1)
+    n2 = refractive_index_of_medium(medium2)
 
     return atan2(n2, n1)
 
@@ -389,9 +425,9 @@ def critical_angle(medium1, medium2):
     ==========
 
     medium 1 : Medium or sympifiable
-        Refractive index of Medium 1
+        Refractive index of Medium 1.
     medium 2 : Medium or sympifiable
-        Refractive index of Medium 1
+        Refractive index of Medium 1.
 
     Examples
     ========
@@ -401,17 +437,9 @@ def critical_angle(medium1, medium2):
     0.850908514477849
 
     """
-    n1, n2 = None, None
 
-    if isinstance(medium1, Medium):
-        n1 = medium1.refractive_index
-    else:
-        n1 = sympify(medium1)
-
-    if isinstance(medium2, Medium):
-        n2 = medium2.refractive_index
-    else:
-        n2 = sympify(medium2)
+    n1 = refractive_index_of_medium(medium1)
+    n2 = refractive_index_of_medium(medium2)
 
     if n2 > n1:
         raise ValueError('Total internal reflection impossible for n1 < n2')
@@ -497,34 +525,34 @@ def mirror_formula(focal_length=None, u=None, v=None):
     focal_length = sympify(focal_length)
     u = sympify(u)
     v = sympify(v)
-    if u == oo:
+    if u is oo:
         _u = Symbol('u')
-    if v == oo:
+    if v is oo:
         _v = Symbol('v')
-    if focal_length == oo:
+    if focal_length is oo:
         _f = Symbol('f')
     if focal_length is None:
-        if u == oo and v == oo:
+        if u is oo and v is oo:
             return Limit(Limit(_v*_u/(_v + _u), _u, oo), _v, oo).doit()
-        if u == oo:
+        if u is oo:
             return Limit(v*_u/(v + _u), _u, oo).doit()
-        if v == oo:
+        if v is oo:
             return Limit(_v*u/(_v + u), _v, oo).doit()
         return v*u/(v + u)
     if u is None:
-        if v == oo and focal_length == oo:
+        if v is oo and focal_length is oo:
             return Limit(Limit(_v*_f/(_v - _f), _v, oo), _f, oo).doit()
-        if v == oo:
+        if v is oo:
             return Limit(_v*focal_length/(_v - focal_length), _v, oo).doit()
-        if focal_length == oo:
+        if focal_length is oo:
             return Limit(v*_f/(v - _f), _f, oo).doit()
         return v*focal_length/(v - focal_length)
     if v is None:
-        if u == oo and focal_length == oo:
+        if u is oo and focal_length is oo:
             return Limit(Limit(_u*_f/(_u - _f), _u, oo), _f, oo).doit()
-        if u == oo:
+        if u is oo:
             return Limit(_u*focal_length/(_u - focal_length), _u, oo).doit()
-        if focal_length == oo:
+        if focal_length is oo:
             return Limit(u*_f/(u - _f), _f, oo).doit()
         return u*focal_length/(u - focal_length)
 
@@ -566,34 +594,34 @@ def lens_formula(focal_length=None, u=None, v=None):
     focal_length = sympify(focal_length)
     u = sympify(u)
     v = sympify(v)
-    if u == oo:
+    if u is oo:
         _u = Symbol('u')
-    if v == oo:
+    if v is oo:
         _v = Symbol('v')
-    if focal_length == oo:
+    if focal_length is oo:
         _f = Symbol('f')
     if focal_length is None:
-        if u == oo and v == oo:
+        if u is oo and v is oo:
             return Limit(Limit(_v*_u/(_u - _v), _u, oo), _v, oo).doit()
-        if u == oo:
+        if u is oo:
             return Limit(v*_u/(_u - v), _u, oo).doit()
-        if v == oo:
+        if v is oo:
             return Limit(_v*u/(u - _v), _v, oo).doit()
         return v*u/(u - v)
     if u is None:
-        if v == oo and focal_length == oo:
+        if v is oo and focal_length is oo:
             return Limit(Limit(_v*_f/(_f - _v), _v, oo), _f, oo).doit()
-        if v == oo:
+        if v is oo:
             return Limit(_v*focal_length/(focal_length - _v), _v, oo).doit()
-        if focal_length == oo:
+        if focal_length is oo:
             return Limit(v*_f/(_f - v), _f, oo).doit()
         return v*focal_length/(focal_length - v)
     if v is None:
-        if u == oo and focal_length == oo:
+        if u is oo and focal_length is oo:
             return Limit(Limit(_u*_f/(_u + _f), _u, oo), _f, oo).doit()
-        if u == oo:
+        if u is oo:
             return Limit(_u*focal_length/(_u + focal_length), _u, oo).doit()
-        if focal_length == oo:
+        if focal_length is oo:
             return Limit(u*_f/(u + _f), _f, oo).doit()
         return u*focal_length/(u + focal_length)
 
@@ -602,19 +630,20 @@ def hyperfocal_distance(f, N, c):
 
     Parameters
     ==========
+
     f: sympifiable
-    Focal length of a given lens
+        Focal length of a given lens.
 
     N: sympifiable
-    F-number of a given lens
+        F-number of a given lens.
 
     c: sympifiable
-    Circle of Confusion (CoC) of a given image format
+        Circle of Confusion (CoC) of a given image format.
 
     Example
     =======
+
     >>> from sympy.physics.optics import hyperfocal_distance
-    >>> from sympy.abc import f, N, c
     >>> round(hyperfocal_distance(f = 0.5, N = 8, c = 0.0033), 2)
     9.47
     """
@@ -633,14 +662,16 @@ def transverse_magnification(si, so):
 
     Parameters
     ==========
+
     so: sympifiable
-    Lens-object distance
+        Lens-object distance.
 
     si: sympifiable
-    Lens-image distance
+        Lens-image distance.
 
     Example
     =======
+
     >>> from sympy.physics.optics import transverse_magnification
     >>> transverse_magnification(30, 15)
     -2

@@ -17,16 +17,16 @@ non-implemented methods. They may also supply new implementations of the
 convenience methods, for example if there are faster algorithms available.
 """
 
-from __future__ import print_function, division
 
 from copy import copy
+from functools import reduce
 
-from sympy.core.compatibility import iterable, reduce, range
+from sympy.core.compatibility import iterable
 from sympy.polys.agca.ideals import Ideal
 from sympy.polys.domains.field import Field
 from sympy.polys.orderings import ProductOrder, monomial_key
 from sympy.polys.polyerrors import CoercionFailed
-
+from sympy.core.basic import _aresame
 
 # TODO
 # - module saturation
@@ -40,7 +40,7 @@ from sympy.polys.polyerrors import CoercionFailed
 ##########################################################################
 
 
-class Module(object):
+class Module:
     """
     Abstract base class for modules.
 
@@ -88,12 +88,10 @@ class Module(object):
         """Generate a quotient module."""
         raise NotImplementedError
 
-    def __div__(self, e):
+    def __truediv__(self, e):
         if not isinstance(e, Module):
             e = self.submodule(*e)
         return self.quotient_module(e)
-
-    __truediv__ = __div__
 
     def contains(self, elem):
         """Return True if ``elem`` is an element of this module."""
@@ -158,7 +156,7 @@ class Module(object):
         raise NotImplementedError
 
 
-class ModuleElement(object):
+class ModuleElement:
     """
     Base class for module element wrappers.
 
@@ -234,15 +232,13 @@ class ModuleElement(object):
 
     __rmul__ = __mul__
 
-    def __div__(self, o):
+    def __truediv__(self, o):
         if not isinstance(o, self.module.ring.dtype):
             try:
                 o = self.module.ring.convert(o)
             except CoercionFailed:
                 return NotImplemented
         return self.__class__(self.module, self.div(self.data, o))
-
-    __truediv__ = __div__
 
     def __eq__(self, om):
         if not isinstance(om, self.__class__) or om.module != self.module:
@@ -357,7 +353,7 @@ class FreeModule(Module):
             if len(tpl) != self.rank:
                 raise CoercionFailed
             return FreeModuleElement(self, tpl)
-        elif elem is 0:
+        elif _aresame(elem, 0):
             return FreeModuleElement(self, (self.ring.convert(0),)*self.rank)
         else:
             raise CoercionFailed

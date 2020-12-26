@@ -2,7 +2,7 @@
 
 from sympy import (S, Integer, sin, cos, sqrt, symbols, pi,
     Eq, Integral, exp, Mul)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 from sympy.polys.polyutils import (
     _nsort,
@@ -14,10 +14,7 @@ from sympy.polys.polyutils import (
     dict_from_expr,
 )
 
-from sympy.polys.polyerrors import (
-    GeneratorsNeeded,
-    PolynomialError,
-)
+from sympy.polys.polyerrors import PolynomialError
 
 from sympy.polys.domains import ZZ
 
@@ -48,6 +45,9 @@ def test__nsort():
     assert len(_nsort(r, separated=True)[0]) == 0
     b, c, a = exp(-1000), exp(-999), exp(-1001)
     assert _nsort((b, c, a)) == [a, b, c]
+    # issue 12560
+    a = cos(1)**2 + sin(1)**2 - 1
+    assert _nsort([a]) == [a]
 
 
 def test__sort_gens():

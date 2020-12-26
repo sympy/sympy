@@ -8,8 +8,7 @@ ode_order
 _desolve
 
 """
-from __future__ import print_function, division
-
+from sympy.core import Pow
 from sympy.core.function import Derivative, AppliedUndef
 from sympy.core.relational import Equality
 from sympy.core.symbol import Wild
@@ -26,9 +25,13 @@ def _preprocess(expr, func=None, hint='_Integral'):
     function to be solved for.
 
     >>> from sympy.solvers.deutils import _preprocess
-    >>> from sympy import Derivative, Function, Integral, sin
+    >>> from sympy import Derivative, Function
     >>> from sympy.abc import x, y, z
     >>> f, g = map(Function, 'fg')
+
+    If f(x)**p == 0 and p>0 then we can solve for f(x)=0
+    >>> _preprocess((f(x).diff(x)-4)**5, f(x))
+    (Derivative(f(x), x) - 4, f(x))
 
     Apply doit to derivatives that contain more than the function
     of interest:
@@ -68,7 +71,10 @@ def _preprocess(expr, func=None, hint='_Integral'):
     A ValueError was raised.
 
     """
-
+    if isinstance(expr, Pow):
+        # if f(x)**p=0 then f(x)=0 (p>0)
+        if (expr.exp).is_positive:
+            expr = expr.base
     derivs = expr.atoms(Derivative)
     if not func:
         funcs = set().union(*[d.atoms(AppliedUndef) for d in derivs])
@@ -125,7 +131,7 @@ def ode_order(expr, func):
             order = max(order, ode_order(arg, func))
         return order
 
-def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
+def _desolve(eq, func=None, hint="default", ics=None, simplify=True, *, prep=True, **kwargs):
     """This is a helper function to dsolve and pdsolve in the ode
     and pde modules.
 
@@ -166,7 +172,6 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     classify_ode(ode.py)
     classify_pde(pde.py)
     """
-    prep = kwargs.pop('prep', True)
     if isinstance(eq, Equality):
         eq = eq.lhs - eq.rhs
 
@@ -221,16 +226,17 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
                            {'default': hint,
                             hint: kwargs['match'],
                             'order': kwargs['order']})
-    if hints['order'] == 0:
-        raise ValueError(
-            str(eq) + " is not a differential equation in " + str(func))
-
     if not hints['default']:
         # classify_ode will set hints['default'] to None if no hints match.
         if hint not in allhints and hint != 'default':
             raise ValueError("Hint not recognized: " + hint)
         elif hint not in hints['ordered_hints'] and hint != 'default':
             raise ValueError(string + str(eq) + " does not match hint " + hint)
+        # If dsolve can't solve the purely algebraic equation then dsolve will raise
+        # ValueError
+        elif hints['order'] == 0:
+            raise ValueError(
+                str(eq) + " is not a solvable differential equation in " + str(func))
         else:
             raise NotImplementedError(dummy + "solve" + ": Cannot solve " + str(eq))
     if hint == 'default':
@@ -239,8 +245,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
                       match=hints[hints['default']], xi=xi, eta=eta, n=terms, type=type)
     elif hint in ('all', 'all_Integral', 'best'):
         retdict = {}
-        failedhints = {}
-        gethints = set(hints) - set(['order', 'default', 'ordered_hints'])
+        gethints = set(hints) - {'order', 'default', 'ordered_hints'}
         if hint == 'all_Integral':
             for i in hints:
                 if i.endswith('_Integral'):

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import factorial, sqrt, exp, S, assoc_laguerre, Float
 from sympy.functions.special.spherical_harmonics import Ynm
 
@@ -8,12 +6,19 @@ def R_nl(n, l, r, Z=1):
     """
     Returns the Hydrogen radial wavefunction R_{nl}.
 
-    n, l
-        quantum numbers 'n' and 'l'
-    r
-        radial coordinate
-    Z
-        atomic number (1 for Hydrogen, 2 for Helium, ...)
+    Parameters
+    ==========
+
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
+    r :
+        Radial coordinate.
+    Z :
+        Atomic number (1 for Hydrogen, 2 for Helium, ...)
 
     Everything is in Hartree atomic units.
 
@@ -21,9 +26,7 @@ def R_nl(n, l, r, Z=1):
     ========
 
     >>> from sympy.physics.hydrogen import R_nl
-    >>> from sympy import var
-    >>> var("r Z")
-    (r, Z)
+    >>> from sympy.abc import r, Z
     >>> R_nl(1, 0, r, Z)
     2*sqrt(Z**3)*exp(-Z*r)
     >>> R_nl(2, 0, r, Z)
@@ -70,7 +73,7 @@ def R_nl(n, l, r, Z=1):
 
     """
     # sympify arguments
-    n, l, r, Z = S(n), S(l), S(r), S(Z)
+    n, l, r, Z = map(S, [n, l, r, Z])
     # radial quantum number
     n_r = n - l - 1
     # rescaled "r"
@@ -83,20 +86,31 @@ def R_nl(n, l, r, Z=1):
     # C =  S(2)/n**2 * sqrt(1/a**3 * factorial(n_r) / (factorial(n+l)))
     return C * r0**l * assoc_laguerre(n_r, 2*l + 1, r0).expand() * exp(-r0/2)
 
+
 def Psi_nlm(n, l, m, r, phi, theta, Z=1):
     """
     Returns the Hydrogen wave function psi_{nlm}. It's the product of
     the radial wavefunction R_{nl} and the spherical harmonic Y_{l}^{m}.
 
-    n, l, m
-        quantum numbers 'n', 'l' and 'm'
-    r
+    Parameters
+    ==========
+
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
+    m : integer
+        ``m`` is the Magnetic Quantum Number with values
+        ranging from ``-l`` to ``l``.
+    r :
         radial coordinate
-    phi
+    phi :
         azimuthal angle
-    theta
+    theta :
         polar angle
-    Z
+    Z :
         atomic number (1 for Hydrogen, 2 for Helium, ...)
 
     Everything is in Hartree atomic units.
@@ -129,17 +143,16 @@ def Psi_nlm(n, l, m, r, phi, theta, Z=1):
     """
 
     # sympify arguments
-    n, l, m, r, phi, theta, Z = S(n), S(l), S(m), S(r), S(phi), S(theta), S(Z)
+    n, l, m, r, phi, theta, Z = map(S, [n, l, m, r, phi, theta, Z])
     # check if values for n,l,m make physically sense
-    if n.is_integer and n<1:
+    if n.is_integer and n < 1:
         raise ValueError("'n' must be positive integer")
     if l.is_integer and not (n > l):
         raise ValueError("'n' must be greater than 'l'")
-    if m.is_integer and not (abs(m)<=l):
+    if m.is_integer and not (abs(m) <= l):
         raise ValueError("|'m'| must be less or equal 'l'")
     # return the hydrogen wave function
-    return R_nl(n, l, r, Z)*Ynm(l,m,theta,phi).expand(func=True)
-
+    return R_nl(n, l, r, Z)*Ynm(l, m, theta, phi).expand(func=True)
 
 
 def E_nl(n, Z=1):
@@ -148,13 +161,20 @@ def E_nl(n, Z=1):
 
     The energy doesn't depend on "l".
 
+    Parameters
+    ==========
+
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    Z :
+        Atomic number (1 for Hydrogen, 2 for Helium, ...)
+
     Examples
     ========
 
-    >>> from sympy import var
     >>> from sympy.physics.hydrogen import E_nl
-    >>> var("n Z")
-    (n, Z)
+    >>> from sympy.abc import n, Z
     >>> E_nl(n, Z)
     -Z**2/(2*n**2)
     >>> E_nl(1)
@@ -181,15 +201,22 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     The energy is calculated from the Dirac equation. The rest mass energy is
     *not* included.
 
-    n, l
-        quantum numbers 'n' and 'l'
-    spin_up
+    Parameters
+    ==========
+
+    n : integer
+        Principal Quantum Number which is
+        an integer with possible values as 1, 2, 3, 4,...
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
+    spin_up :
         True if the electron spin is up (default), otherwise down
-    Z
-        atomic number (1 for Hydrogen, 2 for Helium, ...)
-    c
-        speed of light in atomic units. Default value is 137.035999037,
-        taken from: http://arxiv.org/abs/1012.3627
+    Z :
+        Atomic number (1 for Hydrogen, 2 for Helium, ...)
+    c :
+        Speed of light in atomic units. Default value is 137.035999037,
+        taken from http://arxiv.org/abs/1012.3627
 
     Examples
     ========
@@ -217,6 +244,7 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     -0.0555558020932949
 
     """
+    n, l, Z, c = map(S, [n, l, Z, c])
     if not (l >= 0):
         raise ValueError("'l' must be positive or zero")
     if not (n > l):
@@ -228,6 +256,5 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
         skappa = -l - 1
     else:
         skappa = -l
-    c = S(c)
     beta = sqrt(skappa**2 - Z**2/c**2)
     return c**2/sqrt(1 + Z**2/(n + skappa + beta)**2/c**2) - c**2

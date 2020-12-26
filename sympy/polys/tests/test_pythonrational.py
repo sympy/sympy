@@ -1,7 +1,7 @@
 """Tests for PythonRational type. """
 
 from sympy.polys.domains import PythonRational as QQ
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_PythonRational__init__():
     assert QQ(0).p == 0
@@ -98,7 +98,7 @@ def test_PythonRational__mul__():
     assert 2 * QQ(1, 2) == QQ(1)
     assert QQ(1, 2) * 2 == QQ(1)
 
-def test_PythonRational__div__():
+def test_PythonRational__truediv__():
     assert QQ(-1, 2) / QQ( 1, 2) == QQ(-1)
     assert QQ( 1, 2) / QQ(-1, 2) == QQ(-1)
 

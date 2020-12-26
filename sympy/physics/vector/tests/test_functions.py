@@ -5,7 +5,7 @@ from sympy.physics.vector.functions import (cross, dot, express,
                                             kinematic_equations, outer,
                                             partial_velocity,
                                             get_motion_params, dynamicsymbols)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -108,15 +108,15 @@ def test_operator_match():
     assert v & d == dot(v, d)
     assert d & zerov == dot(d, zerov)
     assert zerov & d == dot(zerov, d)
-    raises(TypeError, lambda: dot(d, S(0)))
-    raises(TypeError, lambda: dot(S(0), d))
+    raises(TypeError, lambda: dot(d, S.Zero))
+    raises(TypeError, lambda: dot(S.Zero, d))
     raises(TypeError, lambda: dot(d, 0))
     raises(TypeError, lambda: dot(0, d))
     assert v & v == dot(v, v)
     assert v & zerov == dot(v, zerov)
     assert zerov & v == dot(zerov, v)
-    raises(TypeError, lambda: dot(v, S(0)))
-    raises(TypeError, lambda: dot(S(0), v))
+    raises(TypeError, lambda: dot(v, S.Zero))
+    raises(TypeError, lambda: dot(S.Zero, v))
     raises(TypeError, lambda: dot(v, 0))
     raises(TypeError, lambda: dot(0, v))
 
@@ -129,15 +129,15 @@ def test_operator_match():
     assert d ^ zerov == cross(d, zerov)
     assert zerov ^ d == cross(zerov, d)
     assert zerov ^ d == cross(zerov, d)
-    raises(TypeError, lambda: cross(d, S(0)))
-    raises(TypeError, lambda: cross(S(0), d))
+    raises(TypeError, lambda: cross(d, S.Zero))
+    raises(TypeError, lambda: cross(S.Zero, d))
     raises(TypeError, lambda: cross(d, 0))
     raises(TypeError, lambda: cross(0, d))
     assert v ^ v == cross(v, v)
     assert v ^ zerov == cross(v, zerov)
     assert zerov ^ v == cross(zerov, v)
-    raises(TypeError, lambda: cross(v, S(0)))
-    raises(TypeError, lambda: cross(S(0), v))
+    raises(TypeError, lambda: cross(v, S.Zero))
+    raises(TypeError, lambda: cross(S.Zero, v))
     raises(TypeError, lambda: cross(v, 0))
     raises(TypeError, lambda: cross(0, v))
 
@@ -150,22 +150,22 @@ def test_operator_match():
     raises(TypeError, lambda: outer(d, zerov))
     raises(TypeError, lambda: outer(zerov, d))
     raises(TypeError, lambda: outer(zerov, d))
-    raises(TypeError, lambda: outer(d, S(0)))
-    raises(TypeError, lambda: outer(S(0), d))
+    raises(TypeError, lambda: outer(d, S.Zero))
+    raises(TypeError, lambda: outer(S.Zero, d))
     raises(TypeError, lambda: outer(d, 0))
     raises(TypeError, lambda: outer(0, d))
     assert v | v == outer(v, v)
     assert v | zerov == outer(v, zerov)
     assert zerov | v == outer(zerov, v)
-    raises(TypeError, lambda: outer(v, S(0)))
-    raises(TypeError, lambda: outer(S(0), v))
+    raises(TypeError, lambda: outer(v, S.Zero))
+    raises(TypeError, lambda: outer(S.Zero, v))
     raises(TypeError, lambda: outer(v, 0))
     raises(TypeError, lambda: outer(0, v))
 
 
 def test_express():
     assert express(Vector(0), N) == Vector(0)
-    assert express(S(0), N) == S(0)
+    assert express(S.Zero, N) is S.Zero
     assert express(A.x, C) == cos(q3)*C.x + sin(q3)*C.z
     assert express(A.y, C) == sin(q2)*sin(q3)*C.x + cos(q2)*C.y - \
         sin(q2)*cos(q3)*C.z
@@ -372,6 +372,8 @@ def test_time_derivative():
            (-q1*qd + q2d)*A.y + q3d*A.z
     assert time_derivative(d, C) == - qd*(A.y|A.x) + \
            sin(q)*q4d*(A.z|A.x) - qd*(A.x|A.y) + sin(q)*q4d*(A.x|A.z)
+    raises(ValueError, lambda: time_derivative(B.x, C, order=0.5))
+    raises(ValueError, lambda: time_derivative(B.x, C, order=-1))
 
 
 def test_get_motion_methods():
@@ -435,11 +437,23 @@ def test_kin_eqs():
     q0, q1, q2, q3 = dynamicsymbols('q0 q1 q2 q3')
     q0d, q1d, q2d, q3d = dynamicsymbols('q0 q1 q2 q3', 1)
     u1, u2, u3 = dynamicsymbols('u1 u2 u3')
+    ke = kinematic_equations([u1,u2,u3], [q1,q2,q3], 'body', 313)
+    assert ke == kinematic_equations([u1,u2,u3], [q1,q2,q3], 'body', '313')
     kds = kinematic_equations([u1, u2, u3], [q0, q1, q2, q3], 'quaternion')
     assert kds == [-0.5 * q0 * u1 - 0.5 * q2 * u3 + 0.5 * q3 * u2 + q1d,
             -0.5 * q0 * u2 + 0.5 * q1 * u3 - 0.5 * q3 * u1 + q2d,
             -0.5 * q0 * u3 - 0.5 * q1 * u2 + 0.5 * q2 * u1 + q3d,
             0.5 * q1 * u1 + 0.5 * q2 * u2 + 0.5 * q3 * u3 + q0d]
+    raises(ValueError, lambda: kinematic_equations([u1, u2, u3], [q0, q1, q2], 'quaternion'))
+    raises(ValueError, lambda: kinematic_equations([u1, u2, u3], [q0, q1, q2, q3], 'quaternion', '123'))
+    raises(ValueError, lambda: kinematic_equations([u1, u2, u3], [q0, q1, q2, q3], 'foo'))
+    raises(TypeError, lambda: kinematic_equations(u1, [q0, q1, q2, q3], 'quaternion'))
+    raises(TypeError, lambda: kinematic_equations([u1], [q0, q1, q2, q3], 'quaternion'))
+    raises(TypeError, lambda: kinematic_equations([u1, u2, u3], q0, 'quaternion'))
+    raises(ValueError, lambda: kinematic_equations([u1, u2, u3], [q0, q1, q2, q3], 'body'))
+    raises(ValueError, lambda: kinematic_equations([u1, u2, u3], [q0, q1, q2, q3], 'space'))
+    raises(ValueError, lambda: kinematic_equations([u1, u2, u3], [q0, q1, q2], 'body', '222'))
+    assert kinematic_equations([0, 0, 0], [q0, q1, q2], 'space') == [S.Zero, S.Zero, S.Zero]
 
 
 def test_partial_velocity():
@@ -471,3 +485,19 @@ def test_partial_velocity():
     B = ReferenceFrame('B')
     v = u4 * A.x + u5 * B.y
     assert partial_velocity((v, ), (u4, u5), A) == [[A.x, B.y]]
+
+    raises(TypeError, lambda: partial_velocity(Dmc.vel(N), u_list, N))
+    raises(TypeError, lambda: partial_velocity(vel_list, u1, N))
+
+def test_dynamicsymbols():
+    #Tests to check the assumptions applied to dynamicsymbols
+    f1 = dynamicsymbols('f1')
+    f2 = dynamicsymbols('f2', real=True)
+    f3 = dynamicsymbols('f3', positive=True)
+    f4, f5 = dynamicsymbols('f4,f5', commutative=False)
+    f6 = dynamicsymbols('f6', integer=True)
+    assert f1.is_real is None
+    assert f2.is_real
+    assert f3.is_positive
+    assert f4*f5 != f5*f4
+    assert f6.is_integer

@@ -1,16 +1,16 @@
-import re
 import os
 import inspect
 from sympy.integrals.rubi.parsetools.parse import (parse_full_form, downvalues_rules, temporary_variable_replacement,
     permanent_variable_replacement)
 
+
 def generate_rules_from_downvalues():
-    '''
+    """
     This function generate rules and saves in file. For more details,
-    see `sympy/integrals/rubi/parsetools/rubi_parsing_guide.md` in `parsetools`.
-    '''
+    see `https://github.com/sympy/sympy/wiki/Rubi-parsing-guide`
+    """
     cons_dict = {}
-    cons_index =0
+    cons_index = 0
     index = 0
     cons = ''
     input = ["Integrand_simplification.txt", "Linear_products.txt", "Quadratic_products.txt", "Binomial_products.txt",
@@ -18,16 +18,16 @@ def generate_rules_from_downvalues():
         "Sine.txt", "Tangent.txt", "Secant.txt", "Miscellaneous_trig.txt", "Inverse_trig.txt", "Hyperbolic.txt",
         "Inverse_hyperbolic.txt", "Special_functions.txt", "Miscellaneous_integration.txt"]
 
-    output =['integrand_simplification.py', 'linear_products.py', 'quadratic_products.py', 'binomial_products.py', 'trinomial_products.py',
+    output = ['integrand_simplification.py', 'linear_products.py', 'quadratic_products.py', 'binomial_products.py', 'trinomial_products.py',
         'miscellaneous_algebraic.py' ,'piecewise_linear.py', 'exponential.py', 'logarithms.py', 'sine.py', 'tangent.py', 'secant.py', 'miscellaneous_trig.py',
         'inverse_trig.py', 'hyperbolic.py', 'inverse_hyperbolic.py', 'special_functions.py', 'miscellaneous_integration.py']
 
     for k in range(0, 18):
         module_name = output[k][0:-3]
         path_header = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        header = open(os.path.join(path_header, "header.py.txt"), "r").read()
+        header = open(os.path.join(path_header, "header.py.txt")).read()
         header = header.format(module_name)
-        with open(input[k], 'r') as myfile:
+        with open(input[k]) as myfile:
             fullform =myfile.read().replace('\n', '')
         for i in temporary_variable_replacement:
             fullform = fullform.replace(i, temporary_variable_replacement[i])

@@ -1,8 +1,6 @@
-from __future__ import print_function
-
 from sympy.matrices.dense import MutableDenseMatrix
-from sympy.polys.polytools import Poly
 
+from sympy.polys.polytools import Poly
 from sympy.polys.domains import EX
 
 
@@ -44,10 +42,10 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
     # we don't want to sympify the elements of PolyMatrix
     _sympify = staticmethod(lambda x: x)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, ring=EX, **kwargs):
+        # kwargs are consumed by __new__, so need to be allowed here.
         # if any non-Poly element is given as input then
         # 'ring' defaults 'EX'
-        ring = kwargs.get('ring', EX)
         if all(isinstance(p, Poly) for p in self._mat) and self._mat:
             domain = tuple([p.domain[p.gens] for p in self._mat])
             ring = domain[0]
@@ -56,9 +54,9 @@ class MutablePolyDenseMatrix(MutableDenseMatrix):
         self.ring = ring
 
     def _eval_matrix_mul(self, other):
-        self_rows, self_cols = self.rows, self.cols
+        self_cols = self.cols
         other_rows, other_cols = other.rows, other.cols
-        other_len = other_rows * other_cols
+        other_len = other_rows*other_cols
         new_mat_rows = self.rows
         new_mat_cols = other.cols
 

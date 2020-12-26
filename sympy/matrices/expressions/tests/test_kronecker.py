@@ -1,11 +1,11 @@
 from sympy import I, symbols, Matrix, eye, Mod, floor
-from sympy.matrices import ShapeError, MatrixSymbol, Identity
+from sympy.matrices import MatrixSymbol, Identity
 from sympy.matrices.expressions import det, trace
 
 from sympy.matrices.expressions.kronecker import (KroneckerProduct,
                                                   kronecker_product,
                                                   combine_kronecker)
-from sympy.core.trace import Tr
+
 
 mat1 = Matrix([[1, 2 * I], [1 + I, 3]])
 mat2 = Matrix([[2 * I, 3], [4 * I, 2]])
@@ -127,6 +127,8 @@ def test_KroneckerProduct_combine_pow():
                              ** 2) == x * KroneckerProduct(X**2, Y**2)
     assert combine_kronecker(
         x * (KroneckerProduct(X, Y)**2) * KroneckerProduct(A, B)) == x * KroneckerProduct(X**2 * A, Y**2 * B)
+    # cannot simplify because of non-square arguments to kronecker product:
+    assert combine_kronecker(KroneckerProduct(A, B.T) ** m) == KroneckerProduct(A, B.T) ** m
 
 
 def test_KroneckerProduct_expand():

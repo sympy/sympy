@@ -1,7 +1,6 @@
 from sympy.solvers.decompogen import decompogen, compogen
-from sympy import sin, cos, sqrt, Abs
-from sympy import symbols
-from sympy.utilities.pytest import XFAIL, raises
+from sympy import sin, cos, sqrt, Abs, exp, symbols
+from sympy.testing.pytest import XFAIL, raises
 
 x, y = symbols('x y')
 

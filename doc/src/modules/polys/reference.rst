@@ -4,6 +4,8 @@
 Polynomials Manipulation Module Reference
 =========================================
 
+.. automodule:: sympy.polys
+
 Basic polynomial manipulation functions
 =======================================
 
@@ -31,8 +33,6 @@ Basic polynomial manipulation functions
 .. autofunction:: subresultants
 .. autofunction:: resultant
 .. autofunction:: discriminant
-.. autofunction:: sympy.polys.dispersion.dispersion
-.. autofunction:: sympy.polys.dispersion.dispersionset
 .. autofunction:: terms_gcd
 .. autofunction:: cofactors
 .. autofunction:: gcd
@@ -121,6 +121,7 @@ Orderings of monomials
 
 .. currentmodule:: sympy.polys.orderings
 
+.. autoclass:: MonomialOrder
 .. autoclass:: LexOrder
 .. autoclass:: GradedLexOrder
 .. autoclass:: ReversedGradedLexOrder
@@ -134,6 +135,8 @@ Formal manipulation of roots of polynomials
 .. autoclass:: RootOf
    :members:
 .. autoclass:: ComplexRootOf
+   :members:
+   :private-members:
 .. autoclass:: RootSum
 
 Symbolic root-finding algorithms
@@ -166,6 +169,7 @@ Orthogonal polynomials
 .. autofunction:: jacobi_poly
 .. autofunction:: legendre_poly
 .. autofunction:: laguerre_poly
+.. autofunction:: spherical_bessel_fn
 
 Manipulation of rational functions
 ==================================

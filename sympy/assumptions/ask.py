@@ -1,42 +1,35 @@
 """Module for querying SymPy objects about assumptions."""
-from __future__ import print_function, division
 
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 from sympy.core import sympify
 from sympy.core.cache import cacheit
-from sympy.core.decorators import deprecated
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
-    BooleanFunction, BooleanAtom)
+                                 BooleanFunction, BooleanAtom)
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
+from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 
 
-# Deprecated predicates should be added to this list
-deprecated_predicates = [
-    'bounded',
-    'infinity',
-    'infinitesimal'
-]
-
-# Memoization storage for predicates
-predicate_storage = {}
-predicate_memo = memoize_property(predicate_storage)
 # Memoization is necessary for the properties of AssumptionKeys to
 # ensure that only one object of Predicate objects are created.
 # This is because assumption handlers are registered on those objects.
 
 
-class AssumptionKeys(object):
+class AssumptionKeys:
     """
-    This class contains all the supported keys by ``ask``.
+    This class contains all the supported keys by ``ask``. It should be accessed via the instance ``sympy.Q``.
+
     """
 
-    @predicate_memo
+    @memoize_property
     def hermitian(self):
         """
         Hermitian predicate.
+
+        Explanation
+        ===========
 
         ``ask(Q.hermitian(x))`` is true iff ``x`` belongs to the set of
         Hermitian operators.
@@ -50,10 +43,13 @@ class AssumptionKeys(object):
         # TODO: Add examples
         return Predicate('hermitian')
 
-    @predicate_memo
+    @memoize_property
     def antihermitian(self):
         """
         Antihermitian predicate.
+
+        Explanation
+        ===========
 
         ``Q.antihermitian(x)`` is true iff ``x`` belongs to the field of
         antihermitian operators, i.e., operators in the form ``x*I``, where
@@ -68,10 +64,13 @@ class AssumptionKeys(object):
         # TODO: Add examples
         return Predicate('antihermitian')
 
-    @predicate_memo
+    @memoize_property
     def real(self):
         r"""
         Real number predicate.
+
+        Explanation
+        ===========
 
         ``Q.real(x)`` is true iff ``x`` is a real number, i.e., it is in the
         interval `(-\infty, \infty)`.  Note that, in particular the infinities
@@ -125,10 +124,13 @@ class AssumptionKeys(object):
         """
         return Predicate('real')
 
-    @predicate_memo
+    @memoize_property
     def extended_real(self):
         r"""
         Extended real predicate.
+
+        Explanation
+        ===========
 
         ``Q.extended_real(x)`` is true iff ``x`` is a real number or
         `\{-\infty, \infty\}`.
@@ -149,10 +151,13 @@ class AssumptionKeys(object):
         """
         return Predicate('extended_real')
 
-    @predicate_memo
+    @memoize_property
     def imaginary(self):
         """
         Imaginary number predicate.
+
+        Explanation
+        ===========
 
         ``Q.imaginary(x)`` is true iff ``x`` can be written as a real
         number multiplied by the imaginary unit ``I``. Please note that ``0``
@@ -177,10 +182,13 @@ class AssumptionKeys(object):
         """
         return Predicate('imaginary')
 
-    @predicate_memo
+    @memoize_property
     def complex(self):
         """
         Complex number predicate.
+
+        Explanation
+        ===========
 
         ``Q.complex(x)`` is true iff ``x`` belongs to the set of complex
         numbers. Note that every complex number is finite.
@@ -205,10 +213,13 @@ class AssumptionKeys(object):
         """
         return Predicate('complex')
 
-    @predicate_memo
+    @memoize_property
     def algebraic(self):
         r"""
         Algebraic number predicate.
+
+        Explanation
+        ===========
 
         ``Q.algebraic(x)`` is true iff ``x`` belongs to the set of
         algebraic numbers. ``x`` is algebraic if there is some polynomial
@@ -232,10 +243,13 @@ class AssumptionKeys(object):
         """
         return Predicate('algebraic')
 
-    @predicate_memo
+    @memoize_property
     def transcendental(self):
         """
         Transcedental number predicate.
+
+        Explanation
+        ===========
 
         ``Q.transcendental(x)`` is true iff ``x`` belongs to the set of
         transcendental numbers. A transcendental number is a real
@@ -245,10 +259,13 @@ class AssumptionKeys(object):
         # TODO: Add examples
         return Predicate('transcendental')
 
-    @predicate_memo
+    @memoize_property
     def integer(self):
         """
         Integer predicate.
+
+        Explanation
+        ===========
 
         ``Q.integer(x)`` is true iff ``x`` belongs to the set of integer numbers.
 
@@ -269,10 +286,13 @@ class AssumptionKeys(object):
         """
         return Predicate('integer')
 
-    @predicate_memo
+    @memoize_property
     def rational(self):
         """
         Rational number predicate.
+
+        Explanation
+        ===========
 
         ``Q.rational(x)`` is true iff ``x`` belongs to the set of
         rational numbers.
@@ -296,10 +316,13 @@ class AssumptionKeys(object):
         """
         return Predicate('rational')
 
-    @predicate_memo
+    @memoize_property
     def irrational(self):
         """
         Irrational number predicate.
+
+        Explanation
+        ===========
 
         ``Q.irrational(x)`` is true iff ``x``  is any real number that
         cannot be expressed as a ratio of integers.
@@ -325,10 +348,13 @@ class AssumptionKeys(object):
         """
         return Predicate('irrational')
 
-    @predicate_memo
+    @memoize_property
     def finite(self):
         """
         Finite predicate.
+
+        Explanation
+        ===========
 
         ``Q.finite(x)`` is true if ``x`` is neither an infinity
         nor a ``NaN``. In other words, ``ask(Q.finite(x))`` is true for all ``x``
@@ -356,15 +382,8 @@ class AssumptionKeys(object):
         """
         return Predicate('finite')
 
-    @predicate_memo
-    @deprecated(useinstead="finite", issue=9425, deprecated_since_version="1.0")
-    def bounded(self):
-        """
-        See documentation of ``Q.finite``.
-        """
-        return Predicate('finite')
 
-    @predicate_memo
+    @memoize_property
     def infinite(self):
         """
         Infinite number predicate.
@@ -376,26 +395,14 @@ class AssumptionKeys(object):
         # TODO: Add examples
         return Predicate('infinite')
 
-    @predicate_memo
-    @deprecated(useinstead="infinite", issue=9426, deprecated_since_version="1.0")
-    def infinity(self):
-        """
-        See documentation of ``Q.infinite``.
-        """
-        return Predicate('infinite')
 
-    @predicate_memo
-    @deprecated(useinstead="zero", issue=9675, deprecated_since_version="1.0")
-    def infinitesimal(self):
-        """
-        See documentation of ``Q.zero``.
-        """
-        return Predicate('zero')
-
-    @predicate_memo
+    @memoize_property
     def positive(self):
         r"""
         Positive real number predicate.
+
+        Explanation
+        ===========
 
         ``Q.positive(x)`` is true iff ``x`` is real and `x > 0`, that is if ``x``
         is in the interval `(0, \infty)`.  In particular, infinity is not
@@ -430,10 +437,13 @@ class AssumptionKeys(object):
         """
         return Predicate('positive')
 
-    @predicate_memo
+    @memoize_property
     def negative(self):
         r"""
         Negative number predicate.
+
+        Explanation
+        ===========
 
         ``Q.negative(x)`` is true iff ``x`` is a real number and :math:`x < 0`, that is,
         it is in the interval :math:`(-\infty, 0)`.  Note in particular that negative
@@ -468,10 +478,13 @@ class AssumptionKeys(object):
         """
         return Predicate('negative')
 
-    @predicate_memo
+    @memoize_property
     def zero(self):
         """
         Zero number predicate.
+
+        Explanation
+        ===========
 
         ``ask(Q.zero(x))`` is true iff the value of ``x`` is zero.
 
@@ -494,10 +507,13 @@ class AssumptionKeys(object):
         """
         return Predicate('zero')
 
-    @predicate_memo
+    @memoize_property
     def nonzero(self):
         """
         Nonzero real number predicate.
+
+        Explanation
+        ===========
 
         ``ask(Q.nonzero(x))`` is true iff ``x`` is real and ``x`` is not zero.  Note in
         particular that ``Q.nonzero(x)`` is false if ``x`` is not real.  Use
@@ -528,16 +544,19 @@ class AssumptionKeys(object):
         False
         >>> ask(~Q.zero(I))
         True
-        >>> ask(Q.nonzero(oo))  #doctest: +SKIP
+        >>> ask(Q.nonzero(oo))
         False
 
         """
         return Predicate('nonzero')
 
-    @predicate_memo
+    @memoize_property
     def nonpositive(self):
         """
         Nonpositive real number predicate.
+
+        Explanation
+        ===========
 
         ``ask(Q.nonpositive(x))`` is true iff ``x`` belongs to the set of
         negative numbers including zero.
@@ -553,6 +572,7 @@ class AssumptionKeys(object):
         ========
 
         >>> from sympy import Q, ask, I
+
         >>> ask(Q.nonpositive(-1))
         True
         >>> ask(Q.nonpositive(0))
@@ -567,10 +587,13 @@ class AssumptionKeys(object):
         """
         return Predicate('nonpositive')
 
-    @predicate_memo
+    @memoize_property
     def nonnegative(self):
         """
         Nonnegative real number predicate.
+
+        Explanation
+        ===========
 
         ``ask(Q.nonnegative(x))`` is true iff ``x`` belongs to the set of
         positive numbers including zero.
@@ -600,10 +623,13 @@ class AssumptionKeys(object):
         """
         return Predicate('nonnegative')
 
-    @predicate_memo
+    @memoize_property
     def even(self):
         """
         Even number predicate.
+
+        Explanation
+        ===========
 
         ``ask(Q.even(x))`` is true iff ``x`` belongs to the set of even
         integers.
@@ -624,10 +650,13 @@ class AssumptionKeys(object):
         """
         return Predicate('even')
 
-    @predicate_memo
+    @memoize_property
     def odd(self):
         """
         Odd number predicate.
+
+        Explanation
+        ===========
 
         ``ask(Q.odd(x))`` is true iff ``x`` belongs to the set of odd numbers.
 
@@ -647,10 +676,13 @@ class AssumptionKeys(object):
         """
         return Predicate('odd')
 
-    @predicate_memo
+    @memoize_property
     def prime(self):
         """
         Prime number predicate.
+
+        Explanation
+        ===========
 
         ``ask(Q.prime(x))`` is true iff ``x`` is a natural number greater
         than 1 that has no positive divisors other than ``1`` and the
@@ -674,10 +706,13 @@ class AssumptionKeys(object):
         """
         return Predicate('prime')
 
-    @predicate_memo
+    @memoize_property
     def composite(self):
         """
         Composite number predicate.
+
+        Explanation
+        ===========
 
         ``ask(Q.composite(x))`` is true iff ``x`` is a positive integer and has
         at least one positive divisor other than ``1`` and the number itself.
@@ -698,10 +733,13 @@ class AssumptionKeys(object):
         """
         return Predicate('composite')
 
-    @predicate_memo
+    @memoize_property
     def commutative(self):
         """
         Commutative predicate.
+
+        Explanation
+        ===========
 
         ``ask(Q.commutative(x))`` is true iff ``x`` commutes with any other
         object with respect to multiplication operation.
@@ -710,10 +748,13 @@ class AssumptionKeys(object):
         # TODO: Add examples
         return Predicate('commutative')
 
-    @predicate_memo
+    @memoize_property
     def is_true(self):
         """
         Generic predicate.
+
+        Explanation
+        ===========
 
         ``ask(Q.is_true(x))`` is true iff ``x`` is true. This only makes
         sense if ``x`` is a predicate.
@@ -729,10 +770,13 @@ class AssumptionKeys(object):
         """
         return Predicate('is_true')
 
-    @predicate_memo
+    @memoize_property
     def symmetric(self):
         """
         Symmetric matrix predicate.
+
+        Explanation
+        ===========
 
         ``Q.symmetric(x)`` is true iff ``x`` is a square matrix and is equal to
         its transpose. Every square diagonal matrix is a symmetric matrix.
@@ -762,10 +806,13 @@ class AssumptionKeys(object):
         # actual matrices and add more examples in the docstring.
         return Predicate('symmetric')
 
-    @predicate_memo
+    @memoize_property
     def invertible(self):
         """
         Invertible matrix predicate.
+
+        Explanation
+        ===========
 
         ``Q.invertible(x)`` is true iff ``x`` is an invertible matrix.
         A square matrix is called invertible only if its determinant is 0.
@@ -792,10 +839,13 @@ class AssumptionKeys(object):
         """
         return Predicate('invertible')
 
-    @predicate_memo
+    @memoize_property
     def orthogonal(self):
         """
         Orthogonal matrix predicate.
+
+        Explanation
+        ===========
 
         ``Q.orthogonal(x)`` is true iff ``x`` is an orthogonal matrix.
         A square matrix ``M`` is an orthogonal matrix if it satisfies
@@ -827,10 +877,13 @@ class AssumptionKeys(object):
         """
         return Predicate('orthogonal')
 
-    @predicate_memo
+    @memoize_property
     def unitary(self):
         """
         Unitary matrix predicate.
+
+        Explanation
+        ===========
 
         ``Q.unitary(x)`` is true iff ``x`` is a unitary matrix.
         Unitary matrix is an analogue to orthogonal matrix. A square
@@ -859,10 +912,13 @@ class AssumptionKeys(object):
         """
         return Predicate('unitary')
 
-    @predicate_memo
+    @memoize_property
     def positive_definite(self):
         r"""
         Positive definite matrix predicate.
+
+        Explanation
+        ===========
 
         If ``M`` is a :math:``n \times n`` symmetric real matrix, it is said
         to be positive definite if :math:`Z^TMZ` is positive for
@@ -891,10 +947,13 @@ class AssumptionKeys(object):
         """
         return Predicate('positive_definite')
 
-    @predicate_memo
+    @memoize_property
     def upper_triangular(self):
         """
         Upper triangular matrix predicate.
+
+        Explanation
+        ===========
 
         A matrix ``M`` is called upper triangular matrix if :math:`M_{ij}=0`
         for :math:`i<j`.
@@ -916,10 +975,13 @@ class AssumptionKeys(object):
         """
         return Predicate('upper_triangular')
 
-    @predicate_memo
+    @memoize_property
     def lower_triangular(self):
         """
         Lower triangular matrix predicate.
+
+        Explanation
+        ===========
 
         A matrix ``M`` is called lower triangular matrix if :math:`a_{ij}=0`
         for :math:`i>j`.
@@ -940,10 +1002,13 @@ class AssumptionKeys(object):
         """
         return Predicate('lower_triangular')
 
-    @predicate_memo
+    @memoize_property
     def diagonal(self):
         """
         Diagonal matrix predicate.
+
+        Explanation
+        ===========
 
         ``Q.diagonal(x)`` is true iff ``x`` is a diagonal matrix. A diagonal
         matrix is a matrix in which the entries outside the main diagonal
@@ -968,10 +1033,13 @@ class AssumptionKeys(object):
         """
         return Predicate('diagonal')
 
-    @predicate_memo
+    @memoize_property
     def fullrank(self):
         """
         Fullrank matrix predicate.
+
+        Explanation
+        ===========
 
         ``Q.fullrank(x)`` is true iff ``x`` is a full rank matrix.
         A matrix is full rank if all rows and columns of the matrix
@@ -993,10 +1061,13 @@ class AssumptionKeys(object):
         """
         return Predicate('fullrank')
 
-    @predicate_memo
+    @memoize_property
     def square(self):
         """
         Square matrix predicate.
+
+        Explanation
+        ===========
 
         ``Q.square(x)`` is true iff ``x`` is a square matrix. A square matrix
         is a matrix with the same number of rows and columns.
@@ -1024,10 +1095,13 @@ class AssumptionKeys(object):
         """
         return Predicate('square')
 
-    @predicate_memo
+    @memoize_property
     def integer_elements(self):
         """
         Integer elements matrix predicate.
+
+        Explanation
+        ===========
 
         ``Q.integer_elements(x)`` is true iff all the elements of ``x``
         are integers.
@@ -1043,10 +1117,13 @@ class AssumptionKeys(object):
         """
         return Predicate('integer_elements')
 
-    @predicate_memo
+    @memoize_property
     def real_elements(self):
         """
         Real elements matrix predicate.
+
+        Explanation
+        ===========
 
         ``Q.real_elements(x)`` is true iff all the elements of ``x``
         are real numbers.
@@ -1062,10 +1139,13 @@ class AssumptionKeys(object):
         """
         return Predicate('real_elements')
 
-    @predicate_memo
+    @memoize_property
     def complex_elements(self):
         """
         Complex elements matrix predicate.
+
+        Explanation
+        ===========
 
         ``Q.complex_elements(x)`` is true iff all the elements of ``x``
         are complex numbers.
@@ -1083,7 +1163,7 @@ class AssumptionKeys(object):
         """
         return Predicate('complex_elements')
 
-    @predicate_memo
+    @memoize_property
     def singular(self):
         """
         Singular matrix predicate.
@@ -1108,7 +1188,7 @@ class AssumptionKeys(object):
         """
         return Predicate('singular')
 
-    @predicate_memo
+    @memoize_property
     def normal(self):
         """
         Normal matrix predicate.
@@ -1131,16 +1211,20 @@ class AssumptionKeys(object):
         """
         return Predicate('normal')
 
-    @predicate_memo
+    @memoize_property
     def triangular(self):
         """
         Triangular matrix predicate.
+
+        Explanation
+        ===========
 
         ``Q.triangular(X)`` is true if ``X`` is one that is either lower
         triangular or upper triangular.
 
         Examples
         ========
+
         >>> from sympy import Q, ask, MatrixSymbol
         >>> X = MatrixSymbol('X', 4, 4)
         >>> ask(Q.triangular(X), Q.upper_triangular(X))
@@ -1156,10 +1240,13 @@ class AssumptionKeys(object):
         """
         return Predicate('triangular')
 
-    @predicate_memo
+    @memoize_property
     def unit_triangular(self):
         """
         Unit triangular matrix predicate.
+
+        Explanation
+        ===========
 
         A unit triangular matrix is a triangular matrix with 1s
         on the diagonal.
@@ -1181,6 +1268,9 @@ Q = AssumptionKeys()
 def _extract_facts(expr, symbol, check_reversed_rel=True):
     """
     Helper for ask().
+
+    Explanation
+    ===========
 
     Extracts the facts relevant to the symbol from an assumption.
     Returns None if there is nothing to extract.
@@ -1211,9 +1301,34 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
         return expr.func(*args)
 
 
+def _extract_all_facts(expr, symbol):
+    facts = set()
+    if isinstance(symbol, Relational):
+        symbols = (symbol, symbol.reversed)
+    else:
+        symbols = (symbol,)
+    for clause in expr.clauses:
+        args = []
+        for literal in clause:
+            if isinstance(literal.lit, AppliedPredicate):
+                if literal.lit.arg in symbols:
+                    # Add literal if it has 'symbol' in it
+                    args.append(Literal(literal.lit.func, literal.is_Not))
+                else:
+                    # If any of the literals doesn't have 'symbol' don't add the whole clause.
+                    break
+        else:
+            if args:
+                facts.add(frozenset(args))
+    return CNF(facts)
+
+
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
     Method for inferring properties about objects.
+
+    Explanation
+    ===========
 
     **Syntax**
 
@@ -1239,7 +1354,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         Relations in assumptions are not implemented (yet), so the following
         will not give a meaningful result.
 
-        >>> ask(Q.positive(x), Q.is_true(x > 0)) # doctest: +SKIP
+        >>> ask(Q.positive(x), Q.is_true(x > 0))
 
         It is however a work in progress.
 
@@ -1257,54 +1372,44 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     else:
         key, expr = Q.is_true, sympify(proposition)
 
-    assumptions = And(assumptions, And(*context))
-    assumptions = to_cnf(assumptions)
+    assump = CNF.from_prop(assumptions)
+    assump.extend(context)
 
-    local_facts = _extract_facts(assumptions, expr)
+    local_facts = _extract_all_facts(assump, expr)
 
-    known_facts_cnf = get_known_facts_cnf()
+    known_facts_cnf = get_all_known_facts()
     known_facts_dict = get_known_facts_dict()
 
-    if local_facts and satisfiable(And(local_facts, known_facts_cnf)) is False:
+    enc_cnf = EncodedCNF()
+    enc_cnf.from_cnf(CNF(known_facts_cnf))
+    enc_cnf.add_from_cnf(local_facts)
+
+    if local_facts.clauses and satisfiable(enc_cnf) is False:
         raise ValueError("inconsistent assumptions %s" % assumptions)
+
+    if local_facts.clauses:
+
+        if len(local_facts.clauses) == 1:
+            cl, = local_facts.clauses
+            f, = cl if len(cl)==1 else [None]
+            if f and f.is_Not and f.arg in known_facts_dict.get(key, []):
+                return False
+
+        for clause in local_facts.clauses:
+            if len(clause) == 1:
+                f, = clause
+                fdict = known_facts_dict.get(f.arg, None) if not f.is_Not else None
+                if fdict and key in fdict:
+                    return True
+                if fdict and Not(key) in known_facts_dict[f.arg]:
+                    return False
 
     # direct resolution method, no logic
     res = key(expr)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
-
-    if local_facts is None:
-        return satask(proposition, assumptions=assumptions, context=context)
-
-
-    # See if there's a straight-forward conclusion we can make for the inference
-    if local_facts.is_Atom:
-        if key in known_facts_dict[local_facts]:
-            return True
-        if Not(key) in known_facts_dict[local_facts]:
-            return False
-    elif (isinstance(local_facts, And) and
-            all(k in known_facts_dict for k in local_facts.args)):
-        for assum in local_facts.args:
-            if assum.is_Atom:
-                if key in known_facts_dict[assum]:
-                    return True
-                if Not(key) in known_facts_dict[assum]:
-                    return False
-            elif isinstance(assum, Not) and assum.args[0].is_Atom:
-                if key in known_facts_dict[assum]:
-                    return False
-                if Not(key) in known_facts_dict[assum]:
-                    return True
-    elif (isinstance(key, Predicate) and
-            isinstance(local_facts, Not) and local_facts.args[0].is_Atom):
-        if local_facts.args[0] in known_facts_dict[key]:
-            return False
-
-    # Failing all else, we do a full logical inference
-    res = ask_full_inference(key, local_facts, known_facts_cnf)
-    if res is None:
-        return satask(proposition, assumptions=assumptions, context=context)
+    # using satask (still costly)
+    res = satask(proposition, assumptions=assumptions, context=context)
     return res
 
 
@@ -1370,6 +1475,9 @@ def compute_known_facts(known_facts, known_facts_keys):
     """Compute the various forms of knowledge compilation used by the
     assumptions system.
 
+    Explanation
+    ===========
+
     This function is typically applied to the results of the ``get_known_facts``
     and ``get_known_facts_keys`` functions defined at the bottom of
     this file.
@@ -1386,8 +1494,16 @@ def compute_known_facts(known_facts, known_facts_keys):
     """
 
     from sympy.core.cache import cacheit
-    from sympy.logic.boolalg import And, Not, Or
+    from sympy.logic.boolalg import And
+    from sympy.assumptions.cnf import Literal
     from sympy.assumptions.ask import Q
+
+    # -{ Known facts as a set }-
+    @cacheit
+    def get_all_known_facts():
+        return {
+            %s
+        }
 
     # -{ Known facts in Conjunctive Normal Form }-
     @cacheit
@@ -1407,17 +1523,20 @@ def compute_known_facts(known_facts, known_facts_keys):
     LINE = ",\n        "
     HANG = ' '*8
     cnf = to_cnf(known_facts)
+    cnf_ = CNF.to_CNF(known_facts)
     c = LINE.join([str(a) for a in cnf.args])
+
+    p = LINE.join(sorted(['frozenset((' + ', '.join(str(lit) for lit in sorted(clause, key=str)) +'))' for clause in cnf_.clauses]))
     mapping = single_fact_lookup(known_facts_keys, cnf)
     items = sorted(mapping.items(), key=str)
     keys = [str(i[0]) for i in items]
     values = ['set(%s)' % sorted(i[1], key=str) for i in items]
     m = LINE.join(['\n'.join(
-        wrap("%s: %s" % (k, v),
+        wrap("{}: {}".format(k, v),
             subsequent_indent=HANG,
             break_long_words=False))
         for k, v in zip(keys, values)]) + ','
-    return fact_string % (c, m)
+    return fact_string % (p, c, m)
 
 # handlers tells us what ask handler we should use
 # for a particular key
@@ -1469,8 +1588,7 @@ def get_known_facts_keys():
     return [
         getattr(Q, attr)
         for attr in Q.__class__.__dict__
-        if not (attr.startswith('__') or
-                attr in deprecated_predicates)]
+        if not attr.startswith('__')]
 
 @cacheit
 def get_known_facts():
@@ -1481,16 +1599,18 @@ def get_known_facts():
         Equivalent(Q.extended_real, Q.real | Q.infinite),
         Equivalent(Q.even | Q.odd, Q.integer),
         Implies(Q.even, ~Q.odd),
-        Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
+        Implies(Q.prime, Q.integer & Q.positive & ~Q.composite),
         Implies(Q.integer, Q.rational),
         Implies(Q.rational, Q.algebraic),
         Implies(Q.algebraic, Q.complex),
-        Equivalent(Q.transcendental | Q.algebraic, Q.complex),
+        Implies(Q.algebraic, Q.finite),
+        Equivalent(Q.transcendental | Q.algebraic, Q.complex & Q.finite),
         Implies(Q.transcendental, ~Q.algebraic),
+        Implies(Q.transcendental, Q.finite),
         Implies(Q.imaginary, Q.complex & ~Q.real),
         Implies(Q.imaginary, Q.antihermitian),
         Implies(Q.antihermitian, ~Q.hermitian),
-        Equivalent(Q.irrational | Q.rational, Q.real),
+        Equivalent(Q.irrational | Q.rational, Q.real & Q.finite),
         Implies(Q.irrational, ~Q.rational),
         Implies(Q.zero, Q.even),
 
@@ -1527,4 +1647,4 @@ def get_known_facts():
     )
 
 from sympy.assumptions.ask_generated import (
-    get_known_facts_dict, get_known_facts_cnf)
+    get_known_facts_dict, get_all_known_facts)

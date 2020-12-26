@@ -1,6 +1,7 @@
+from collections.abc import Iterable
+
 from sympy import Expr, S, Mul, sympify
-from sympy.core.compatibility import Iterable
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 
 
 class TensorProduct(Expr):
@@ -15,7 +16,7 @@ class TensorProduct(Expr):
         from sympy.strategies import flatten
 
         args = [sympify(arg) for arg in args]
-        evaluate = kwargs.get("evaluate", global_evaluate[0])
+        evaluate = kwargs.get("evaluate", global_parameters.evaluate)
 
         if not evaluate:
             obj = Expr.__new__(cls, *args)

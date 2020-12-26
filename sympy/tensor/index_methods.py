@@ -10,9 +10,8 @@
     refactoring.
 """
 
-from __future__ import print_function, division
+from functools import reduce
 
-from sympy.core.compatibility import reduce
 from sympy.core.function import Function
 from sympy.functions import exp, Piecewise
 from sympy.tensor.indexed import Idx, Indexed
@@ -212,7 +211,7 @@ def get_indices(expr):
 
     >>> from sympy.tensor.index_methods import get_indices
     >>> from sympy import symbols
-    >>> from sympy.tensor import IndexedBase, Idx
+    >>> from sympy.tensor import IndexedBase
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, a, z = symbols('i j a z', integer=True)
 
@@ -318,7 +317,7 @@ def get_contraction_structure(expr):
        dicts for the non-trivial deeper contractions, omitting dicts with None
        as the one and only key.
 
-    .. Note:: The presence of expressions among the dictinary keys indicates
+    .. Note:: The presence of expressions among the dictionary keys indicates
        multiple levels of index contractions.  A nested dict displays nested
        contractions and may itself contain dicts from a deeper level.  In
        practical calculations the summation in the deepest nested level must be
@@ -329,7 +328,7 @@ def get_contraction_structure(expr):
     ========
 
     >>> from sympy.tensor.index_methods import get_contraction_structure
-    >>> from sympy import symbols, default_sort_key
+    >>> from sympy import default_sort_key
     >>> from sympy.tensor import IndexedBase, Idx
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, k, l = map(Idx, ['i', 'j', 'k', 'l'])

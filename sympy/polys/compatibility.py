@@ -1,6 +1,5 @@
 """Compatibility interface between dense and sparse polys. """
 
-from __future__ import print_function, division
 
 from sympy.polys.densearith import dup_add_term
 from sympy.polys.densearith import dmp_add_term
@@ -174,6 +173,10 @@ from sympy.polys.factortools import dmp_zz_diophantine
 from sympy.polys.factortools import dmp_zz_wang_hensel_lifting
 from sympy.polys.factortools import dmp_zz_wang
 from sympy.polys.factortools import dmp_zz_factor
+from sympy.polys.factortools import dup_qq_i_factor
+from sympy.polys.factortools import dup_zz_i_factor
+from sympy.polys.factortools import dmp_qq_i_factor
+from sympy.polys.factortools import dmp_zz_i_factor
 from sympy.polys.factortools import dup_ext_factor
 from sympy.polys.factortools import dmp_ext_factor
 from sympy.polys.factortools import dup_gf_factor
@@ -222,7 +225,7 @@ from sympy.polys.galoistools import (
 from sympy.utilities import public
 
 @public
-class IPolys(object):
+class IPolys:
     symbols = None
     ngens = None
     domain = None
@@ -811,6 +814,20 @@ class IPolys(object):
         coeff, factors = dmp_zz_factor(self.to_dense(f), self.ngens-1, self.domain)
         return (coeff, [ (self.from_dense(g), k) for g, k in factors ])
 
+    def dup_qq_i_factor(self, f):
+        coeff, factors = dup_qq_i_factor(self.to_dense(f), self.domain)
+        return (coeff, [ (self.from_dense(g), k) for g, k in factors ])
+    def dmp_qq_i_factor(self, f):
+        coeff, factors = dmp_qq_i_factor(self.to_dense(f), self.ngens-1, self.domain)
+        return (coeff, [ (self.from_dense(g), k) for g, k in factors ])
+
+    def dup_zz_i_factor(self, f):
+        coeff, factors = dup_zz_i_factor(self.to_dense(f), self.domain)
+        return (coeff, [ (self.from_dense(g), k) for g, k in factors ])
+    def dmp_zz_i_factor(self, f):
+        coeff, factors = dmp_zz_i_factor(self.to_dense(f), self.ngens-1, self.domain)
+        return (coeff, [ (self.from_dense(g), k) for g, k in factors ])
+
     def dup_ext_factor(self, f):
         coeff, factors = dup_ext_factor(self.to_dense(f), self.domain)
         return (coeff, [ (self.from_dense(g), k) for g, k in factors ])
@@ -1072,7 +1089,7 @@ class IPolys(object):
     def gf_sqf_part(self, f):
         return self.from_gf_dense(gf_sqf_part(self.to_gf_dense(f), self.domain.mod, self.domain.dom))
     def gf_sqf_list(self, f, all=False):
-        coeff, factors = gf_sqf_part(self.to_gf_dense(f), self.domain.mod, self.domain.dom, all=all)
+        coeff, factors = gf_sqf_part(self.to_gf_dense(f), self.domain.mod, self.domain.dom)
         return coeff, [ (self.from_gf_dense(g), k) for g, k in factors ]
 
     def gf_Qmatrix(self, f):

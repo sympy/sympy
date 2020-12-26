@@ -1,5 +1,6 @@
+=====
 Stats
-===========
+=====
 
 .. automodule:: sympy.stats
 
@@ -7,63 +8,114 @@ Random Variable Types
 ^^^^^^^^^^^^^^^^^^^^^
 
 Finite Types
----------------
+------------
 .. autofunction:: DiscreteUniform
 .. autofunction:: Die
 .. autofunction:: Bernoulli
 .. autofunction:: Coin
 .. autofunction:: Binomial
+.. autofunction:: BetaBinomial
 .. autofunction:: Hypergeometric
 .. autofunction:: FiniteRV
 .. autofunction:: Rademacher
 
 Discrete Types
------------------
+--------------
 .. autofunction:: Geometric
+.. autofunction:: Hermite
 .. autofunction:: Poisson
 .. autofunction:: Logarithmic
 .. autofunction:: NegativeBinomial
+.. autofunction:: Skellam
 .. autofunction:: YuleSimon
 .. autofunction:: Zeta
 
 Continuous Types
--------------------
+----------------
 
 .. autofunction:: Arcsin
 .. autofunction:: Benini
 .. autofunction:: Beta
+.. autofunction:: BetaNoncentral
 .. autofunction:: BetaPrime
+.. autofunction:: BoundedPareto
 .. autofunction:: Cauchy
 .. autofunction:: Chi
 .. autofunction:: ChiNoncentral
 .. autofunction:: ChiSquared
 .. autofunction:: Dagum
 .. autofunction:: Erlang
+.. autofunction:: ExGaussian
 .. autofunction:: Exponential
 .. autofunction:: FDistribution
 .. autofunction:: FisherZ
 .. autofunction:: Frechet
 .. autofunction:: Gamma
 .. autofunction:: GammaInverse
+.. autofunction:: Gompertz
+.. autofunction:: Gumbel
 .. autofunction:: Kumaraswamy
 .. autofunction:: Laplace
+.. autofunction:: Levy
 .. autofunction:: Logistic
+.. autofunction:: LogLogistic
 .. autofunction:: LogNormal
+.. autofunction:: Lomax
 .. autofunction:: Maxwell
+.. autofunction:: Moyal
 .. autofunction:: Nakagami
 .. autofunction:: Normal
 .. autofunction:: Pareto
+.. autofunction:: PowerFunction
 .. autofunction:: QuadraticU
 .. autofunction:: RaisedCosine
 .. autofunction:: Rayleigh
+.. autofunction:: Reciprocal
 .. autofunction:: StudentT
+.. autofunction:: ShiftedGompertz
+.. autofunction:: Trapezoidal
 .. autofunction:: Triangular
 .. autofunction:: Uniform
 .. autofunction:: UniformSum
 .. autofunction:: VonMises
+.. autofunction:: Wald
 .. autofunction:: Weibull
 .. autofunction:: WignerSemicircle
 .. autofunction:: ContinuousRV
+
+Joint Types
+-----------
+.. autofunction:: JointRV
+.. autofunction:: marginal_distribution
+.. autofunction:: MultivariateNormal
+.. autofunction:: MultivariateLaplace
+.. autofunction:: GeneralizedMultivariateLogGamma
+.. autofunction:: GeneralizedMultivariateLogGammaOmega
+.. autofunction:: Multinomial
+.. autofunction:: MultivariateBeta
+.. autofunction:: MultivariateEwens
+.. autofunction:: MultivariateT
+.. autofunction:: NegativeMultinomial
+.. autofunction:: NormalGamma
+
+Stochastic Processes
+--------------------
+.. autoclass:: DiscreteMarkovChain
+.. autoclass:: ContinuousMarkovChain
+.. autoclass:: BernoulliProcess
+.. autoclass:: PoissonProcess
+.. autoclass:: WienerProcess
+.. autoclass:: GammaProcess
+
+Matrix Distributions
+--------------------
+.. autofunction:: MatrixGamma
+.. autofunction:: Wishart
+.. autofunction:: MatrixNormal
+
+Compound Distribution
+---------------------
+.. autoclass:: sympy.stats.compound_rv.CompoundDistribution
 
 Interface
 ^^^^^^^^^
@@ -73,15 +125,32 @@ Interface
 .. autofunction:: E
 .. autoclass:: Expectation
 .. autofunction:: density
+.. autofunction:: entropy
 .. autofunction:: given
 .. autofunction:: where
 .. autofunction:: variance
 .. autoclass:: Variance
 .. autofunction:: covariance
 .. autoclass:: Covariance
+.. autofunction:: coskewness
+.. autofunction:: median
 .. autofunction:: std
 .. autofunction:: sample
 .. autofunction:: sample_iter
+.. autofunction:: factorial_moment
+.. autofunction:: kurtosis
+.. autofunction:: skewness
+.. autofunction:: correlation
+.. autofunction:: sympy.stats.rv.sampling_density
+.. autofunction:: sympy.stats.rv.sampling_P
+.. autofunction:: sympy.stats.rv.sampling_E
+.. autoclass:: Moment
+.. autofunction:: moment
+.. autoclass:: CentralMoment
+.. autofunction:: cmoment
+.. autoclass:: ExpectationMatrix
+.. autoclass:: VarianceMatrix
+.. autoclass:: CrossCovarianceMatrix
 
 Mechanics
 ^^^^^^^^^

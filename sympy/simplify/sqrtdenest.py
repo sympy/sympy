@@ -1,10 +1,7 @@
-from __future__ import print_function, division
-
-from sympy.core import S, sympify, Mul, Add, Expr
-from sympy.core.compatibility import range
-from sympy.core.function import expand_mul, count_ops, _mexpand
+from sympy.core import Add, Expr, Mul, S, sympify
+from sympy.core.function import _mexpand, count_ops, expand_mul
 from sympy.core.symbol import Dummy
-from sympy.functions import sqrt, sign, root
+from sympy.functions import root, sign, sqrt
 from sympy.polys import Poly, PolynomialError
 from sympy.utilities import default_sort_key
 
@@ -33,7 +30,8 @@ def sqrt_depth(p):
     >>> sqrt_depth(1 + sqrt(2)*sqrt(1 + sqrt(3)))
     2
     """
-
+    if p is S.ImaginaryUnit:
+        return 1
     if p.is_Atom:
         return 0
     elif p.is_Add or p.is_Mul:
@@ -156,7 +154,8 @@ def _sqrt_match(p):
         res = (p, S.Zero, S.Zero)
     elif p.is_Add:
         pargs = sorted(p.args, key=default_sort_key)
-        if all((x**2).is_Rational for x in pargs):
+        sqargs = [x**2 for x in pargs]
+        if all(sq.is_Rational and sq.is_positive for sq in sqargs):
             r, b, a = split_surds(p)
             res = a, b, r
             return list(res)
@@ -258,6 +257,9 @@ def _sqrtdenest0(expr):
 
 def _sqrtdenest_rec(expr):
     """Helper that denests the square root of three or more surds.
+
+    Explanation
+    ===========
 
     It returns the denested expression; if it cannot be denested it
     throws SqrtdenestStopIteration
@@ -380,7 +382,9 @@ def _sqrt_symbolic_denest(a, b, r):
     """Given an expression, sqrt(a + b*sqrt(b)), return the denested
     expression or None.
 
-    Algorithm:
+    Explanation
+    ===========
+
     If r = ra + rb*sqrt(rr), try replacing sqrt(rr) in ``a`` with
     (y**2 - ra)/rb, and if the result is a quadratic, ca*y**2 + cb*y + cc, and
     (cb + b)**2 - 4*ca*cc is 0, then sqrt(a + b*sqrt(r)) can be rewritten as
@@ -438,20 +442,23 @@ def _sqrt_symbolic_denest(a, b, r):
 
 
 def _sqrt_numeric_denest(a, b, r, d2):
-    """Helper that denest expr = a + b*sqrt(r), with d2 = a**2 - b**2*r > 0
-    or returns None if not denested.
+    r"""Helper that denest
+    $\sqrt{a + b \sqrt{r}}, d^2 = a^2 - b^2 r > 0$
+
+    If it cannot be denested, it returns ``None``.
     """
-    from sympy.simplify.simplify import radsimp
-    depthr = sqrt_depth(r)
     d = sqrt(d2)
-    vad = a + d
-    # sqrt_depth(res) <= sqrt_depth(vad) + 1
-    # sqrt_depth(expr) = depthr + 2
-    # there is denesting if sqrt_depth(vad)+1 < depthr + 2
-    # if vad**2 is Number there is a fourth root
-    if sqrt_depth(vad) < depthr + 1 or (vad**2).is_Rational:
-        vad1 = radsimp(1/vad)
-        return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
+    s = a + d
+    # sqrt_depth(res) <= sqrt_depth(s) + 1
+    # sqrt_depth(expr) = sqrt_depth(r) + 2
+    # there is denesting if sqrt_depth(s) + 1 < sqrt_depth(r) + 2
+    # if s**2 is Number there is a fourth root
+    if sqrt_depth(s) < sqrt_depth(r) + 1 or (s**2).is_Rational:
+        s1, s2 = sign(s), sign(b)
+        if s1 == s2 == -1:
+            s1 = s2 = 1
+        res = (s1 * sqrt(a + d) + s2 * sqrt(a - d)) * sqrt(2) / 2
+        return res.expand()
 
 
 def sqrt_biquadratic_denest(expr, a, b, r, d2):
@@ -462,7 +469,9 @@ def sqrt_biquadratic_denest(expr, a, b, r, d2):
 
     If it cannot denest it returns None.
 
-    ALGORITHM
+    Explanation
+    ===========
+
     Search for a solution A of type SQRR of the biquadratic equation
     4*A**4 - 4*a*A**2 + b**2*r = 0                               (1)
     sqd = sqrt(a**2 - b**2*r)
@@ -528,6 +537,9 @@ def sqrt_biquadratic_denest(expr, a, b, r, d2):
 
 def _denester(nested, av0, h, max_depth_level):
     """Denests a list of expressions that contain nested square roots.
+
+    Explanation
+    ===========
 
     Algorithm based on <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
 

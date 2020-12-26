@@ -1,14 +1,15 @@
 from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
     S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
     Function, Add)
-from sympy.utilities.pytest import raises
+from sympy.core.expr import unchanged
+from sympy.testing.pytest import raises
 from sympy.abc import w, x, y, z
 
 
 def test_caching_bug():
     #needs to be a first test, so that all caches are clean
     #cache it
-    e = O(w)
+    O(w)
     #and test that this won't raise an exception
     O(w**(-1/x/log(3)*log(5)), w)
 
@@ -33,7 +34,7 @@ def test_simple_1():
     assert Order(exp(1/x)).expr == exp(1/x)
     assert Order(x*exp(1/x)).expr == x*exp(1/x)
     assert Order(x**(o/3)).expr == x**(o/3)
-    assert Order(x**(5*o/3)).expr == x**(5*o/3)
+    assert Order(x**(o*Rational(5, 3))).expr == x**(o*Rational(5, 3))
     assert Order(x**2 + x + y, x) == O(1, x)
     assert Order(x**2 + x + y, y) == O(1, y)
     raises(ValueError, lambda: Order(exp(x), x, x))
@@ -85,15 +86,15 @@ def test_simple_7():
 
 def test_simple_8():
     assert O(sqrt(-x)) == O(sqrt(x))
-    assert O(x**2*sqrt(x)) == O(x**(S(5)/2))
-    assert O(x**3*sqrt(-(-x)**3)) == O(x**(S(9)/2))
-    assert O(x**(S(3)/2)*sqrt((-x)**3)) == O(x**3)
+    assert O(x**2*sqrt(x)) == O(x**Rational(5, 2))
+    assert O(x**3*sqrt(-(-x)**3)) == O(x**Rational(9, 2))
+    assert O(x**Rational(3, 2)*sqrt((-x)**3)) == O(x**3)
     assert O(x*(-2*x)**(I/2)) == O(x*(-x)**(I/2))
 
 
 def test_as_expr_variables():
     assert Order(x).as_expr_variables(None) == (x, ((x, 0),))
-    assert Order(x).as_expr_variables((((x, 0),))) == (x, ((x, 0),))
+    assert Order(x).as_expr_variables(((x, 0),)) == (x, ((x, 0),))
     assert Order(y).as_expr_variables(((x, 0),)) == (y, ((x, 0), (y, 0)))
     assert Order(y).as_expr_variables(((x, 0), (y, 0))) == (y, ((x, 0), (y, 0)))
 
@@ -226,10 +227,10 @@ def test_leading_order():
 
 
 def test_leading_order2():
-    assert set((2 + pi + x**2).extract_leading_order(x)) == set(((pi, O(1, x)),
-            (S(2), O(1, x))))
-    assert set((2*x + pi*x + x**2).extract_leading_order(x)) == set(((2*x, O(x)),
-            (x*pi, O(x))))
+    assert set((2 + pi + x**2).extract_leading_order(x)) == {(pi, O(1, x)),
+            (S(2), O(1, x))}
+    assert set((2*x + pi*x + x**2).extract_leading_order(x)) == {(2*x, O(x)),
+            (x*pi, O(x))}
 
 
 def test_order_leadterm():
@@ -243,7 +244,7 @@ def test_order_symbols():
 
 
 def test_nan():
-    assert O(nan) == nan
+    assert O(nan) is nan
     assert not O(x).contains(nan)
 
 
@@ -375,6 +376,8 @@ def test_order_at_infinity():
     assert Order(exp(x), (x, oo)).expr == Order(2*exp(x), (x, oo)).expr == exp(x)
     assert Order(y**x, (x, oo)).expr == Order(2*y**x, (x, oo)).expr == exp(log(y)*x)
 
+    # issue 19545
+    assert Order(1/x - 3/(3*x + 2), (x, oo)).expr == x**(-2)
 
 def test_mixing_order_at_zero_and_infinity():
     assert (Order(x, (x, 0)) + Order(x, (x, oo))).is_Add
@@ -415,6 +418,11 @@ def test_issue_9192():
     assert O(1)*O(1) == O(1)
     assert O(1)**O(1) == O(1)
 
+
+def test_issue_9910():
+    assert O(x*log(x) + sin(x), (x, oo)) == O(x*log(x), (x, oo))
+
+
 def test_performance_of_adding_order():
     l = list(x**i for i in range(1000))
     l.append(O(x**1001))
@@ -435,3 +443,6 @@ def test_issue_15539():
     assert O(1/x**4 + exp(x), (x, -oo)) == O(1/x**4, (x, -oo))
     assert O(1/x**4 + exp(-x), (x, -oo)) == O(exp(-x), (x, -oo))
     assert O(1/x, (x, oo)).subs(x, -x) == O(-1/x, (x, -oo))
+
+def test_issue_18606():
+    assert unchanged(Order, 0)

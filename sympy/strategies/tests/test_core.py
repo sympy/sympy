@@ -1,6 +1,6 @@
+from sympy import S
 from sympy.strategies.core import (null_safe, exhaust, memoize, condition,
         chain, tryit, do_one, debug, switch, minimize)
-from sympy.core.compatibility import get_function_name
 
 def test_null_safe():
     def rl(expr):
@@ -41,8 +41,8 @@ def test_chain():
 def test_tryit():
     def rl(expr):
         assert False
-    safe_rl = tryit(rl)
-    assert safe_rl(1) == 1
+    safe_rl = tryit(rl, AssertionError)
+    assert safe_rl(S(1)) == 1
 
 def test_do_one():
     rl = do_one(posdec, posdec)
@@ -56,14 +56,14 @@ def test_do_one():
     assert rule(rule(1)) == 3
 
 def test_debug():
-    from sympy.core.compatibility import StringIO
+    from io import StringIO
     file = StringIO()
     rl = debug(posdec, file)
     rl(5)
     log = file.getvalue()
     file.close()
 
-    assert get_function_name(posdec) in log
+    assert posdec.__name__ in log
     assert '5' in log
     assert '4' in log
 

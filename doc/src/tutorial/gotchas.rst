@@ -62,7 +62,7 @@ variable it is assigned to need not have anything to do with one another.
 Here we have done the very confusing thing of assigning a Symbol with the name
 ``a`` to the variable ``b``, and a Symbol of the name ``b`` to the variable
 ``a``.  Now the Python variable named ``a`` points to the SymPy Symbol named
-``b``, and visa versa.  How confusing.  We could have also done something like
+``b``, and vice versa.  How confusing.  We could have also done something like
 
     >>> crazy = symbols('unrelated')
     >>> crazy + 1
@@ -179,7 +179,7 @@ enough to recognize this basic algebraic fact?
 Recall from above that ``==`` represents *exact* structural equality testing.
 "Exact" here means that two expressions will compare equal with ``==`` only if
 they are exactly equal structurally.  Here, `(x + 1)^2` and `x^2 + 2x + 1` are
-not the same symbolically. One is the power of an addition of two terms, and
+not the same structurally. One is the power of an addition of two terms, and
 the other is the addition of three terms.
 
 It turns out that when using SymPy as a library, having ``==`` test for exact
@@ -222,12 +222,12 @@ You may have noticed that we have been using ``**`` for exponentiation instead
 of the standard ``^``.  That's because SymPy follows Python's conventions.  In
 Python, ``^`` represents logical exclusive or.  SymPy follows this convention:
 
-     >>> True ^ False
-     True
-     >>> True ^ True
-     False
-     >>> x^y
-     Xor(x, y)
+    >>> True ^ False
+    True
+    >>> True ^ True
+    False
+    >>> Xor(x, y)
+    x ^ y
 
 Finally, a small technical discussion on how SymPy works is in order.  When
 you type something like ``x + 1``, the SymPy Symbol ``x`` is added to the

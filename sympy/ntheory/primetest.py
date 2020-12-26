@@ -3,9 +3,7 @@ Primality testing
 
 """
 
-from __future__ import print_function, division
-
-from sympy.core.compatibility import range, as_int
+from sympy.core.compatibility import as_int
 
 from mpmath.libmp import bitcount as _bitlength
 
@@ -63,6 +61,15 @@ def is_square(n, prep=True):
     If n is suspected of *not* being a square then this is a
     quick method of confirming that it is not.
 
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_square
+    >>> is_square(25)
+    True
+    >>> is_square(2)
+    False
+
     References
     ==========
 
@@ -82,9 +89,8 @@ def is_square(n, prep=True):
     if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
         m = n % 63
         if not ((m*0x3d491df7) & (m*0xc824a9f9) & 0x10f14008):
-            from sympy.ntheory import perfect_power
-            if perfect_power(n, [2]):
-                return True
+            from sympy.core.power import integer_nthroot
+            return integer_nthroot(n, 2)[1]
     return False
 
 
@@ -456,12 +462,10 @@ def is_extra_strong_lucas_prp(n):
 
     if U == 0 and (V == 2 or V == n - 2):
         return True
-    if V == 0:
-        return True
     for r in range(1, s):
-        V = (V*V - 2) % n
         if V == 0:
             return True
+        V = (V*V - 2) % n
     return False
 
 
@@ -635,3 +639,26 @@ def isprime(n):
     # Add a random M-R base
     #import random
     #return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)
+
+
+def is_gaussian_prime(num):
+    r"""Test if num is a Gaussian prime number.
+
+    References
+    ==========
+
+    .. [1] https://oeis.org/wiki/Gaussian_primes
+    """
+
+    from sympy import sympify
+    num = sympify(num)
+    a, b = num.as_real_imag()
+    a = as_int(a)
+    b = as_int(b)
+    if a == 0:
+        b = abs(b)
+        return isprime(b) and b % 4 == 3
+    elif b == 0:
+        a = abs(a)
+        return isprime(a) and a % 4 == 3
+    return isprime(a**2 + b**2)

@@ -1,10 +1,7 @@
 """Tools for setting up interactive sessions. """
 
-from __future__ import print_function, division
-
 from distutils.version import LooseVersion as V
 
-from sympy.external import import_module
 from sympy.interactive.printing import init_printing
 
 preexec_source = """\
@@ -93,12 +90,13 @@ def int_to_Integer(s):
     http://docs.python.org/library/tokenize.html.
 
     Only integer literals are converted.  Float literals are left alone.
+
     Examples
     ========
 
     >>> from __future__ import division
+    >>> from sympy import Integer # noqa: F401
     >>> from sympy.interactive.session import int_to_Integer
-    >>> from sympy import Integer
     >>> s = '1.2 + 1/2 - 0x12 + a1'
     >>> int_to_Integer(s)
     '1.2 +Integer (1 )/Integer (2 )-Integer (0x12 )+a1 '
@@ -111,7 +109,7 @@ def int_to_Integer(s):
     1/2
     """
     from tokenize import generate_tokens, untokenize, NUMBER, NAME, OP
-    from sympy.core.compatibility import StringIO
+    from io import StringIO
 
     def _is_int(num):
         """
@@ -162,7 +160,7 @@ def enable_automatic_int_sympification(shell):
 
 
 def enable_automatic_symbols(shell):
-    """Allow IPython to automatially create symbols (``isympy -a``). """
+    """Allow IPython to automatically create symbols (``isympy -a``). """
     # XXX: This should perhaps use tokenize, like int_to_Integer() above.
     # This would avoid re-executing the code, which can lead to subtle
     # issues.  For example:
@@ -290,7 +288,7 @@ def init_python_session():
 
                     try:
                         readline.read_history_file(history)
-                    except IOError:
+                    except OSError:
                         pass
 
                     atexit.register(readline.write_history_file, history)

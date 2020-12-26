@@ -4,8 +4,8 @@ Test that
 
 from sympy import *
 
-Doesn't import anything other than SymPy, it's hard dependencies (mpmath), and
-hard optional dependencies (gmpy2, fastcache). Importing unnecessary libraries
+doesn't import anything other than SymPy, it's hard dependencies (mpmath), and
+hard optional dependencies (gmpy2). Importing unnecessary libraries
 can accidentally add hard dependencies to SymPy in the worst case, or at best
 slow down the SymPy import time when they are installed.
 
@@ -25,13 +25,17 @@ hard_dependencies = ['mpmath']
 # These libraries are optional, but are always imported at SymPy import time
 # when they are installed. External libraries should only be added to this
 # list if they are required for core SymPy functionality.
-hard_optional_dependencies = ['gmpy', 'gmpy2', 'fastcache']
+hard_optional_dependencies = ['gmpy', 'gmpy2', 'pycosat']
 
 import sys
 import os
 
-stdlib = {p for p in sys.path if p.startswith(sys.prefix) and
-    'site-packages' not in p}
+def is_stdlib(p):
+    return ((p.startswith(sys.prefix)
+            or p.startswith(sys.base_prefix))
+            and 'site-packages' not in p)
+
+stdlib = {p for p in sys.path if is_stdlib(p)}
 
 existing_modules = list(sys.modules.keys())
 

@@ -5,8 +5,16 @@ set -e
 # Echo each command
 set -x
 
+if [[ "${TEST_FLAKE8}" == "true" ]]; then
+    flake8 sympy;
+fi
+
 if [[ "${TEST_SETUP}" == "true" ]]; then
     python bin/test_setup.py
+fi
+
+if [[ "${TEST_PY2_IMPORT}" == "true" ]]; then
+    python bin/test_py2_import.py
 fi
 
 if [[ "${TEST_SPHINX}" == "true" ]]; then
@@ -16,8 +24,13 @@ if [[ "${TEST_SPHINX}" == "true" ]]; then
     make man
     make latex
     cd _build/latex
-    export LATEXOPTIONS="-interaction=nonstopmode"
-    make all
+    export LATEXMKOPTS="-halt-on-error -xelatex -silent"
+    make all || {
+        echo "An error had occured during the LaTeX build";
+        tail -n 1000 *.log;
+        sleep 1; # A guard against travis running tail concurrently.
+        exit -1;
+    }
 fi
 
 if [[ "${TEST_SAGE}" == "true" ]]; then
@@ -34,6 +47,7 @@ fi
 
 if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     python bin/test_external_imports.py
+    python bin/test_submodule_imports.py
     python bin/test_executable.py
 fi
 
@@ -58,7 +72,7 @@ else:
     coverage.process_startup()
 ''')
 EOF
-    export COVERAGE_PROCESS_START=$TRAVIS_BUILD_DIR/.coveragerc
+    export COVERAGE_PROCESS_START=$TRAVIS_BUILD_DIR/coveragerc_travis
 fi
 
 if [[ "${TEST_ASCII}" == "true" ]]; then
@@ -102,10 +116,29 @@ if not sympy.test(split='${SPLIT}', slow=True, verbose=True):
 EOF
 fi
 
-# lambdify with tensorflow and numexpr is tested here
 
-# TODO: Generate these tests automatically
-if [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
+# Test tensorflow 1 support (which is a separate conda environment)
+if [[ "${TEST_TENSORFLOW_1}" == "true" ]]; then
+    cat << EOF | python
+print('Testing optional dependencies')
+
+import sympy
+test_list = [
+    "tensorflow",
+]
+
+doctest_list = [
+    "tensorflow",
+]
+
+if not (sympy.test(*test_list) and sympy.doctest(*doctest_list)):
+    raise Exception('Tests failed')
+EOF
+
+    # lambdify with tensorflow and numexpr is tested here
+
+    # TODO: Generate these tests automatically
+elif [[ -n "${TEST_OPT_DEPENDENCY}" ]]; then
     cat << EOF | python
 print('Testing optional dependencies')
 
@@ -113,10 +146,9 @@ import sympy
 test_list = [
     # numpy
     '*numpy*',
-    'sympy/core/tests/test_numbers.py',
+    'sympy/core/',
     'sympy/matrices/',
     'sympy/physics/quantum/',
-    'sympy/core/tests/test_sympify.py',
     'sympy/utilities/tests/test_lambdify.py',
 
     # scipy
@@ -137,9 +169,8 @@ test_list = [
     # ipython
     '*ipython*',
 
-    # antlr
-    'sympy/parsing/tests/test_autolev',
-    'sympy/parsing/tests/test_latex',
+    # antlr, lfortran, clang
+    'sympy/parsing/',
 
     # matchpy
     '*rubi*',
@@ -151,6 +182,14 @@ test_list = [
 
     # cloudpickle
     'pickling',
+
+    # pycosat
+    'sympy/logic',
+    'sympy/assumptions',
+
+    #stats
+    'sympy/stats',
+
 ]
 
 blacklist = [
@@ -180,15 +219,22 @@ doctest_list = [
     # ipython
     '*ipython*',
 
-    # antlr
-    'sympy/parsing/autolev',
-    'sympy/parsing/latex',
+    # antlr, lfortran, clang
+    'sympy/parsing/',
 
     # matchpy
     '*rubi*',
 
     # codegen
     'sympy/codegen/',
+
+    # pycosat
+    'sympy/logic',
+    'sympy/assumptions',
+
+    #stats
+    'sympy/stats',
+
 ]
 
 if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):
@@ -241,4 +287,9 @@ EOF
 fi
 if [[ "${TEST_COVERAGE}" == "true" ]]; then
     unset COVERAGE_PROCESS_START
+fi
+
+if [[ "${TEST_EXAMPLES}" == "true" ]]; then
+    # No need to change directory if executed after the rst doctest
+    examples/all.py -q
 fi

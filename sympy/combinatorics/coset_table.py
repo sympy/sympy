@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function, division
-
 from sympy.combinatorics.free_groups import free_group
 from sympy.printing.defaults import DefaultPrinting
 
@@ -17,7 +14,7 @@ class CosetTable(DefaultPrinting):
     #               represented using a list of lists
     # alpha: Mathematically a coset (precisely, a live coset)
     #       represented by an integer between i with 1 <= i <= n
-    #       α ∈ c
+    #       alpha in c
     # x: Mathematically an element of "A" (set of generators and
     #   their inverses), represented using "FpGroupElement"
     # fp_grp: Finitely Presented Group with < X|R > as presentation.
@@ -61,7 +58,7 @@ class CosetTable(DefaultPrinting):
         self.fp_group = fp_grp
         self.subgroup = subgroup
         self.coset_table_limit = max_cosets
-        # "p" is setup independent of Ω and n
+        # "p" is setup independent of Omega and n
         self.p = [0]
         # a list of the form `[gen_1, gen_1^{-1}, ... , gen_k, gen_k^{-1}]`
         self.A = list(chain.from_iterable((gen, gen**-1) \
@@ -78,8 +75,8 @@ class CosetTable(DefaultPrinting):
             else:
                 self.A_dict_inv[x] = self.A_dict[x] - 1
         # used in the coset-table based method of coset enumeration. Each of
-        # the element is called a "deduction" which is the form (α, x) whenever
-        # a value is assigned to α^x during a definition or "deduction process"
+        # the element is called a "deduction" which is the form (alpha, x) whenever
+        # a value is assigned to alpha^x during a definition or "deduction process"
         self.deduction_stack = []
         # Attributes for modified methods.
         H = self.subgroup
@@ -210,10 +207,10 @@ class CosetTable(DefaultPrinting):
         scan, scan_check, scan_and_fill, scan_and_fill_c
 
         """
-        # α is an integer representing a "coset"
+        # alpha is an integer representing a "coset"
         # since scanning can be in two cases
-        # 1. for α=0 and w in Y (i.e generating set of H)
-        # 2. α in Ω (set of live cosets), w in R (relators)
+        # 1. for alpha=0 and w in Y (i.e generating set of H)
+        # 2. alpha in Omega (set of live cosets), w in R (relators)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
         table = self.table
@@ -244,7 +241,7 @@ class CosetTable(DefaultPrinting):
             self.deduction_stack.append((f, word[i]))
         # otherwise scan is incomplete and yields no information
 
-    # α, β coincide, i.e. α, β represent the pair of cosets where
+    # alpha, beta coincide, i.e. alpha, beta represent the pair of cosets where
     # coincidence occurs
     def coincidence_c(self, alpha, beta):
         """
@@ -326,10 +323,10 @@ class CosetTable(DefaultPrinting):
         Performed when the default argument modified=True
 
         """
-        # α is an integer representing a "coset"
+        # alpha is an integer representing a "coset"
         # since scanning can be in two cases
-        # 1. for α=0 and w in Y (i.e generating set of H)
-        # 2. α in Ω (set of live cosets), w in R (relators)
+        # 1. for alpha=0 and w in Y (i.e generating set of H)
+        # 2. alpha in Omega (set of live cosets), w in R (relators)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
         table = self.table
@@ -395,10 +392,10 @@ class CosetTable(DefaultPrinting):
         scan, scan_c, scan_and_fill, scan_and_fill_c
 
         """
-        # α is an integer representing a "coset"
+        # alpha is an integer representing a "coset"
         # since scanning can be in two cases
-        # 1. for α=0 and w in Y (i.e generating set of H)
-        # 2. α in Ω (set of live cosets), w in R (relators)
+        # 1. for alpha=0 and w in Y (i.e generating set of H)
+        # 2. alpha in Omega (set of live cosets), w in R (relators)
         A_dict = self.A_dict
         A_dict_inv = self.A_dict_inv
         table = self.table
@@ -535,7 +532,7 @@ class CosetTable(DefaultPrinting):
                 rho = p[mu]
         return lamda
 
-    # α, β coincide, i.e. α, β represent the pair of cosets
+    # alpha, beta coincide, i.e. alpha, beta represent the pair of cosets
     # where coincidence occurs
     def coincidence(self, alpha, beta, w=None, modified=False):
         r"""
@@ -629,7 +626,7 @@ class CosetTable(DefaultPrinting):
         i = 0
         b = alpha
         j = r - 1
-        # loop until it has filled the α row in the table.
+        # loop until it has filled the alpha row in the table.
         while True:
             # do the forward scanning
             while i <= j and table[f][A_dict[word[i]]] is not None:
@@ -815,7 +812,7 @@ class CosetTable(DefaultPrinting):
         for alpha in self.omega:
             gamma += 1
             if gamma != alpha:
-                # replace α by γ in coset table
+                # replace alpha by gamma in coset table
                 for x in A:
                     beta = table[alpha][A_dict[x]]
                     table[gamma][A_dict[x]] = beta
@@ -837,7 +834,7 @@ class CosetTable(DefaultPrinting):
             R_set = R_set.union(conjugate)
         R_c_list = []
         for x in self.A:
-            r = set([word for word in R_set if word[0] == x])
+            r = {word for word in R_set if word[0] == x}
             R_c_list.append(r)
             R_set.difference_update(r)
         return R_c_list
@@ -920,7 +917,7 @@ class CosetTable(DefaultPrinting):
         ==========
 
         'k', 'lamda' -- the two class representatives to be merged.
-        q -- queue of length l of elements to be deleted from Ω *.
+        q -- queue of length l of elements to be deleted from `\Omega` *.
         w -- Word in (YUY^-1)
 
         See Also
@@ -949,7 +946,7 @@ class CosetTable(DefaultPrinting):
         Parameters
         ==========
 
-        A coincident pair \alpha,\beta \in \Omega, w \in (Y∪Y^–1)
+        A coincident pair `\alpha, \beta \in \Omega, w \in Y \cup Y^{-1}`
 
         See Also
         ========
@@ -1148,7 +1145,7 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
                         _scan_and_fill(alpha, w, C._grp.identity)
                     else:
                         _scan_and_fill(alpha, w)
-                    # if α was eliminated during the scan then break
+                    # if alpha was eliminated during the scan then break
                     if p[alpha] < alpha:
                         break
                 if p[alpha] == alpha:
@@ -1167,14 +1164,14 @@ def modified_coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
     r"""
     Introduce a new set of symbols y \in Y that correspond to the
     generators of the subgroup. Store the elements of Y as a
-    word P[\alpha, x] and compute the coset table simlar to that of
+    word P[\alpha, x] and compute the coset table similar to that of
     the regular coset enumeration methods.
 
     Examples
     ========
 
     >>> from sympy.combinatorics.free_groups import free_group
-    >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
+    >>> from sympy.combinatorics.fp_groups import FpGroup
     >>> from sympy.combinatorics.coset_table import modified_coset_enumeration_r
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
@@ -1233,7 +1230,7 @@ def coset_enumeration_c(fp_grp, Y, max_cosets=None, draft=None,
     # a list of subsets of R_c whose words start with "x".
     R_c_list = []
     for x in C.A:
-        r = set([word for word in R_set if word[0] == x])
+        r = {word for word in R_set if word[0] == x}
         R_c_list.append(r)
         R_set.difference_update(r)
     for w in Y:

@@ -196,11 +196,11 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⎮ sin⎝x ⎠ dx
     ⌡
     >>> integ.doit()
-                    ⎛√2⋅x⎞
-    3⋅√2⋅√π⋅fresnels⎜────⎟⋅Γ(3/4)
-                    ⎝ √π ⎠
-    ─────────────────────────────
-               8⋅Γ(7/4)
+             ⎛√2⋅x⎞
+    3⋅√2⋅√π⋅S⎜────⎟⋅Γ(3/4)
+             ⎝ √π ⎠
+    ──────────────────────
+           8⋅Γ(7/4)
 
     >>> integ = Integral(x**y*exp(-x), (x, 0, oo))
     >>> integ
@@ -322,6 +322,8 @@ The ``O`` notation supports arbitrary limit points (other than 0):
     -5 + ──────── + ──────── + ──────── + ──────── + x + O⎝(x - 6) ; x → 6⎠
             2          6          24        120
 
+.. _calculus-finite-differences:
+
 Finite differences
 ==================
 
@@ -338,14 +340,6 @@ the ``differentiate_finite`` function:
     >>> f, g = symbols('f g', cls=Function)
     >>> differentiate_finite(f(x)*g(x))
     -f(x - 1/2)⋅g(x - 1/2) + f(x + 1/2)⋅g(x + 1/2)
-
-If we want to expand the intermediate derivative we may pass the
-flag ``evaluate=True``:
-
-    >>> differentiate_finite(f(x)*g(x), evaluate=True)
-    (-f(x - 1/2) + f(x + 1/2))⋅g(x) + (-g(x - 1/2) + g(x + 1/2))⋅f(x)
-
-This form however does not respect the product rule.
 
 If you already have a ``Derivative`` instance, you can use the
 ``as_finite_difference`` method to generate approximations of the
