@@ -1,5 +1,5 @@
 from sympy import var, integrate, simplify, expand, factor, log, Integral, \
-    diff, FiniteSet
+    diff, FiniteSet, Matrix, exp
 from ..relational import Equality
 from ..equation import Equation, Eqn
 from pytest import raises, warns
@@ -98,3 +98,9 @@ def test_helper_functions():
     assert simplify(tsteqn3) == tsteqn4
     assert tsteqn4.factor() == tsteqn
     assert factor(tsteqn4) == tsteqn
+    # Check matrix exponentiation is not overridden.
+    tsteqn5 = Eqn(a, Matrix([[1, 1], [1, 1]]))
+    assert (exp(tsteqn5) == Eqn(exp(a), Matrix([[1/2 + exp(2)/2, -1/2 +
+                                                 exp(2)/2], [-1/2 + exp(2)/2,
+                                                             1/2 +
+                                                             exp(2)/2]])))
