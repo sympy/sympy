@@ -29,6 +29,7 @@ in [SageMath](https://www.sagemath.org/) and
 from .expr import Expr
 from .basic import Basic
 from .sympify import _sympify
+import inspect
 
 
 class Equation(Basic):
@@ -172,40 +173,58 @@ class Equation(Basic):
         """
         self.reversed()
 
+    def _namespace_key_search(self, key):
+        # This function searches the current namespace and those above
+        # it for a particular key in `globals`. If it finds nothing
+        # it returns `None`. It does not search within objects at each
+        # level. The idea is to pick up user defined global functions
+        # created interactively.
+        frame = inspect.currentframe()
+        not_found = True
+        while (not_found):
+            try:
+                obj = frame.f_globals[key]
+                not_found = False
+            except KeyError:
+                obj = None
+                frame = frame.f_back
+                if frame == None:
+                    not_found = False
+        return obj
+
+    def _applytoexpr(self, expr, func, *args, **kwargs):
+        # Applies a function to an expression checking whether there
+        # is a specialized version associated with the particular type of
+        # expression. Errors will be raised if the function cannot be
+        # applied to an expression.
+        funcname = getattr(func, '__name__')
+        if hasattr(expr, funcname):
+            return getattr(expr, funcname)(*args, **kwargs)
+        else:
+            # search the local namespace for the function
+            # and those above if necessary.
+            obj = self._namespace_key_search(funcname)
+            return obj(expr, *args, **kwargs)
+
     def _applyfunc(self, func, *args, **kwargs):
-        # Assume if the expression has an attribute of name `func` that
-        # should override any general function Because there are name
-        # conflicts (e.g. `transpose` and `Matrix.transpose`) if either rhs
-        # or lhs has the attribute we will try to apply it to both. This
-        # will raise an error if both sides do not support the operation.
+        # Logic function to allow using a keyword to determine
+        # which side to apply an operation/function to.
 
         side = kwargs.pop('Eqn_apply_side', None)
-        if (side == 'both'):
-            if hasattr(self.lhs, str(func)) or hasattr(self.rhs, str(func)):
-                return Equation(getattr(self.lhs, str(func))(*args, **kwargs),
-                                getattr(self.rhs, str(func))(*args, **kwargs),
-                                check=False)
-            else:
-                return Equation(func(self.lhs, *args, **kwargs),
-                                func(self.rhs, *args, **kwargs), check=False)
-        elif (side == 'lhs'):
-            if hasattr(self.lhs, str(func)):
-                return Equation(getattr(self.lhs, str(func))(*args, **kwargs),
-                                self.rhs, check=False)
-            else:
-                return Equation(func(self.lhs, *args, **kwargs), self.rhs,
-                                check=False)
-        elif (side == 'rhs'):
-            if hasattr(self.rhs, str(func)):
-                return Equation(self.lhs, getattr(self.rhs,
-                                                  str(func))(*args, **kwargs),
-                                check=False)
-            else:
-                return Equation(self.lhs, func(self.rhs, *args, **kwargs),
-                                check=False)
+        if side == 'both':
+            lhs = self._applytoexpr(self.lhs, func, *args, **kwargs)
+            rhs = self._applytoexpr(self.rhs, func, *args, **kwargs)
+        elif side == 'rhs':
+            lhs = self.lhs
+            rhs = self._applytoexpr(self.rhs, func, *args, **kwargs)
+        elif side == 'lhs':
+            rhs = self.rhs
+            lhs = self._applytoexpr(self.lhs, func, *args, **kwargs)
         else:
-            raise ValueError('keyword `Eqn_apply_side` must be one of '
-                             '"both", "lhs" or "rhs".')
+            raise ValueError(
+                'keyword `Eqn_apply_side` must be one of "both", "lhs" or '
+                '"rhs".')
+        return Equation(lhs, rhs, check=False)
 
     def applyfunc(self, func, *args, **kwargs):
         """
