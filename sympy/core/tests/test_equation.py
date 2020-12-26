@@ -102,4 +102,4 @@ def test_helper_functions():
     tsteqn5 = Eqn(a, Matrix([[1, 1], [1, 1]]))
     matr = Matrix([[1/2 + exp(2)/2, -1/2 + exp(2)/2], [-1/2 + exp(2)/2, 1/2 +
                                                        exp(2)/2]])
-    assert (exp(tsteqn5) == Eqn(exp(a), matr)
+    assert (exp(tsteqn5) == Eqn(exp(a), matr))
