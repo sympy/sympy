@@ -2045,11 +2045,14 @@ def nT(n, k=None):
         tot += 1
     return tot
 
+
 #-----------------------------------------------------------------------------#
 #                                                                             #
 #                          Motzkin numbers                                    #
 #                                                                             #
 #-----------------------------------------------------------------------------#
+
+
 class motzkin(Function):
     """
     The nth Motzkin number is the number
@@ -2059,29 +2062,36 @@ class motzkin(Function):
     after Theodore Motzkin and have diverse applications
     in geometry, combinatorics and number theory.
 
-    Motzkin numbers satisfy this recurrence relation
-    M(n) = ( (2n+1) / (n+2) )*M(n-1)  +  ( (3n-3) / (n+2) )*M(n-2)
+    Motzkin numbers are the integer sequence defined by the
+    initial terms `M_0 = 1`, `M_1 = 1` and the two-term recurrencerelation
+    `M_n = \frac{2*n + 1}{n + 2} * M_{n-1} + \frac{3n - 3}{n + 2} * M_{n-2}`.
 
 
     Examples
     ========
 
-    >>> from sympy.functions import motzkin
-    >>> motzkin.find_first_n_motzkin(10)
-        [1, 1, 2, 4, 9, 21, 51, 127, 323, 835]
+    >>> from sympy import motzkin
 
-    >>> motzkin.find_motzkin_numbers_in_range(100,1000)
-        [127, 323, 835]
+    >>> is_motzkin(4)
+    False
+    >>> find_motzkin_in_range(2,300)
+    [2, 4, 9, 21, 51, 127]
+    >>> find_motzkin_in_range(2,900)
+    [2, 4, 9, 21, 51, 127, 323, 835]
+    >>> find_motzkin_in_range(2,1000)
+    [2, 4, 9, 21, 51, 127, 323, 835]
+    >>> find_first_n_motzkins(10)
+    [1, 1, 2, 4, 9, 21, 51, 127, 323, 835]
 
-    >>> motzkin.is_motzkin(100)
-        False
 
-    >>> motzkin.is_motzkin(51)
-        True
+    References
+    ==========
 
-    >>> motzkin.eval(10)
-        835
+    .. [1] https://en.wikipedia.org/wiki/Motzkin_number
+    .. [2] https://mathworld.wolfram.com/MotzkinNumber.html
+
     """
+
     @staticmethod
     def is_motzkin(n):
         try:
@@ -2089,75 +2099,72 @@ class motzkin(Function):
         except:
             return False
         if n > 0:
-             if n == 1:
+             if n==1 or n==2:
+                return True
+
+             tn1 = 1
+             tn = 2
+             i = 3
+             while tn<n:
+                 a = ((2*i + 1) * tn + (3*i - 3)* tn1) / (i+2)
+                 i+= 1
+                 tn1 = tn
+                 tn = a
+
+             if tn==n:
                  return True
-             m_0 = 1
-             m_1 = 1
-             i = 2
-             while(1):
-                 next_num = ((2*i + 1)*m_1 + (3*i - 3)*m_0) // (i + 2)
-                 if next_num == n:
-                     return True
-                 if next_num > n:
-                     return False
-                 m_0 = m_1
-                 m_1 = next_num
-                 i = i + 1
+             else:
+                 return False
 
         else:
             return False
 
     @staticmethod
     def find_motzkin_numbers_in_range(x, y):
-        if  x <= y:
-            motzkin = list()
-            m_0 = 1
-            m_1 = 1
-            if x <= m_0 :
-                motzkin.append(m_0)
-                motzkin.append(m_1)
-            i = 2
-            while(1):
-                next_num = ((2*i + 1)*m_1 + (3*i - 3)*m_0) // (i + 2)
-                m_0 = m_1
-                m_1 = next_num
-                i = i + 1
-                if next_num < x:
-                    continue
-                if next_num <= y:
-                    motzkin.append(next_num)
-                else:
-                    return motzkin
+        if 0 <=x <= y:
+            motzkins = list()
+            if x<= 1 <= y:
+                motzkins.append(1)
+            tn1 = 1
+            tn = 2
+            i = 3
+            while tn<=y:
+                if tn>=x:
+                    motzkins.append(tn)
+                a = ((2*i + 1) * tn + (3*i - 3)* tn1) / (i+2)
+                i+= 1
+                tn1 = tn
+                tn = int(a)
+
+            return motzkins
 
         else:
             raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
 
     @staticmethod
-    def find_first_n_motzkin(n):
+    def find_first_n_motzkins(n):
         try:
             n = as_int(n)
         except:
             raise ValueError('The provided number must be a positive integer')
         if n < 0:
             raise ValueError('The provided number must be a positive integer')
-        n = n - 1
-        i = 0
-        motzkin = list()
-        m_0 = 1
-        m_1 = 1
-        if i <= n:
-            motzkin.append(m_0)
-            i = i + 1
-        if i <= n:
-            motzkin.append(m_1)
-            i = i + 1
-        while(i <= n):
-            next_num = ((2*i + 1)*m_1 + (3*i - 3)*m_0) // (i + 2)
-            m_0 = m_1
-            m_1 = next_num
-            motzkin.append(next_num)
-            i = i + 1
-        return motzkin
+        motzkins = list()
+        if n>=0:
+            motzkins.append(1)
+        if n>=1:
+            motzkins.append(1)
+        tn1 = 1
+        tn = 2
+        i = 3
+        while i<=n:
+            motzkins.append(tn)
+            a = ((2*i + 1) * tn + (3*i - 3)* tn1) / (i+2)
+            i+= 1
+            tn1 = tn
+            tn = int(a)
+
+        return motzkins
 
     @staticmethod
     @recurrence_memo([S.One, S.One])

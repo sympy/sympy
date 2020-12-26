@@ -52,8 +52,8 @@ __all__ = [
     'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'RisingFactorial',
     'FallingFactorial', 'subfactorial',
 
-    'carmichael', 'fibonacci', 'lucas', 'tribonacci', 'harmonic', 'bernoulli',
-    'bell', 'euler', 'catalan', 'genocchi', 'partition',
+    'carmichael', 'fibonacci', 'lucas', 'motzkin', 'tribonacci', 'harmonic',
+    'bernoulli', 'bell', 'euler', 'catalan', 'genocchi', 'partition',
 
     'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root', 'cbrt',
 
