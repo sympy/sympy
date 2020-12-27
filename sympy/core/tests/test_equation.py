@@ -1,7 +1,7 @@
 from sympy import var, integrate, simplify, expand, factor, log, Integral, \
     diff, FiniteSet, Matrix, exp
-from ..relational import Equality
-from ..equation import Equation, Eqn
+from sympy import Equality
+from sympy import Equation, Eqn
 from pytest import raises, warns
 
 
