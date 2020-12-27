@@ -1972,6 +1972,10 @@ def test_sympy__functions__combinatorial__numbers__euler():
     assert _test_args(euler(x))
 
 
+def test_sympy__functions__combinatorial__numbers__schroder():
+    from sympy.functions.combinatorial.numbers import schroder
+    assert _test_args(schroder(5))
+
 def test_sympy__functions__combinatorial__numbers__carmichael():
     from sympy.functions.combinatorial.numbers import carmichael
     assert _test_args(carmichael(x))

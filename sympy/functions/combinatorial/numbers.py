@@ -2084,7 +2084,7 @@ class motzkin(Function):
 
     References
     ==========
-
+    
     .. [1] https://en.wikipedia.org/wiki/Motzkin_number
     .. [2] https://mathworld.wolfram.com/MotzkinNumber.html
 
@@ -2178,3 +2178,142 @@ class motzkin(Function):
         if n < 0:
             raise ValueError('The provided number must be a positive integer')
         return Integer(cls._motzkin(n - 1))
+
+
+#-----------------------------------------------------------------------------#
+#                                                                             #
+#                          Schroder numbers                                   #
+#                                                                             #
+#-----------------------------------------------------------------------------#
+
+
+class schroder(Function):
+    """
+    the Schroder number S_n, also called a large Schroder
+    number or big Schroder number, describes the number of lattice paths from
+    the southwest corner (0,0) of an n cross n grid to the northeast
+    corner(n,n) using only single steps north, (0,1); northeast,
+    (1,1); or east, (1,0) that
+    do not rise above the SW - NE diagonal.
+
+    Then the Schroder numbers are the diagonal entries, i.e. S_n=T(n,n) where
+    T(n,k) is the entry in row n and column k. The recurrence relation given
+    by this arrangement is
+    T(n,k)=T(n,k-1)+T(n-1,k-1)+T(n-1,k)
+
+    Examples
+    ========
+
+
+    >>> from sympy import schroder
+
+    >>> schroder.is_schroder(5)
+    False
+    >>> schroder.find_schroder_numbers_in_range(5,300)
+    [6, 22, 90]
+    >>> schroder.find_schroder_numbers_in_range(50,9000)
+    [90, 394, 1806, 8558]
+    >>> schroder.find_first_n_schroders(10)
+    [1, 2, 6, 22, 90, 394, 1806, 8558, 41586, 206098]
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Schr%C3%B6der_number
+    .. [2] https://mathworld.wolfram.com/SchroederNumber.html
+
+    """
+
+    @staticmethod
+    def is_schroder(n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            return False
+        if n > 0:
+             if n == 1 or n == 2:
+                return True
+             dp = {}
+             i = 0
+             j = 0
+             while True:
+                j=0
+                while j <= i:
+                    if j == 0:
+                        dp[str(i)+'-'+str(j)] = 1
+                    elif i == j:
+                        dp[str(i)+'-'+str(j)] = dp[str(i)+'-'+str(j-1)] + \
+                            dp[str(i-1)+'-'+str(j-1)]
+                        if dp[str(i)+'-'+str(j)] == n:
+                            return True
+                        elif dp[str(i)+'-'+str(j)] > n:
+                            return False
+
+                    else:
+                        dp[str(i)+'-'+str(j)] = dp[str(i-1)+'-'+str(j)] + \
+                            dp[str(i-1)+'-'+str(j-1)] + dp[str(i)+'-'+str(j-1)]
+                    j +=1
+                i +=1
+
+        else:
+            return False
+
+    @staticmethod
+    def find_schroder_numbers_in_range(x, y):
+        if 0 <= x <= y:
+             dp = {}
+             i = 0
+             j = 0
+             schroders = []
+             if x <= 1:
+                 schroders.append(1)
+             while True:
+                j=0
+                while j <= i:
+                    if j == 0:
+                        dp[str(i) + '-' + str(j)] = 1
+                    elif i == j:
+                        dp[str(i) + '-'+str(j)] = dp[str(i) + '-' + str(j-1)] \
+                            + dp[str(i-1) + '-' + str(j-1)]
+                        if x <= dp[str(i) + '-' + str(j)] <= y:
+                            schroders.append(dp[str(i) + '-' + str(j)])
+                        elif dp[str(i) + '-' + str(j)] > y:
+                            return schroders
+                    else:
+                        dp[str(i) + '-' + str(j)] = dp[str(i-1) + '-' + str(j)] +\
+                            dp[str(i-1) + '-' + str(j-1)] + dp[str(i) + '-' + str(j-1)]
+                    j +=1
+                i +=1
+
+        else:
+            raise ValueError('The provided range is not valid. This condition \
+                             should satisfy x <= y')
+
+    @staticmethod
+    def find_first_n_schroders(n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            raise ValueError('The provided number must be a positive integer')
+        if n <= 0:
+            raise ValueError('The provided number must be a positive integer')
+        dp = {}
+        i = 0
+        j = 0
+        schroders = []
+        schroders.append(1)
+        while i < n:
+            j=0
+            while j <= i:
+                if j == 0:
+                    dp[str(i) + '-' + str(j)] = 1
+                elif i == j:
+                    dp[str(i) + '-' + str(j)] = dp[str(i) + '-' + str(j-1)] + \
+                        dp[str(i-1) + '-' + str(j-1)]
+                    schroders.append(dp[str(i) + '-' + str(j)])
+                else:
+                    dp[str(i) + '-' + str(j)] = dp[str(i-1) + '-' + str(j)] + \
+                        dp[str(i-1) + '-' + str(j-1)] + dp[str(i) + '-' + str(j-1)]
+                j +=1
+            i +=1
+        return schroders
