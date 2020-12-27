@@ -335,7 +335,7 @@ class RandomIndexedSymbol(RandomSymbol):
         if len(temp_pspace.args) == 0:
             # Allow single arg
             return PSpace()
-        return StochasticPSpace(temp_pspace.args[0], temp_pspace.args[1])
+        return StochasticPSpace(temp_pspace.args[0], temp_pspace.args[1], temp_pspace.args[2])
 
 class RandomMatrixSymbol(RandomSymbol, MatrixSymbol): # type: ignore
     def __new__(cls, symbol, n, m, pspace=None):
@@ -628,8 +628,9 @@ def pspace(expr):
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
     from sympy.stats.compound_rv import CompoundPSpace
+    from sympy.stats.stochastic_process import StochasticPSpace
     for rv in rvs:
-        if isinstance(rv.pspace, CompoundPSpace):
+        if isinstance(rv.pspace, (CompoundPSpace, StochasticPSpace)):
             return rv.pspace
     # Otherwise make a product space
     return IndependentProductPSpace(*[rv.pspace for rv in rvs])

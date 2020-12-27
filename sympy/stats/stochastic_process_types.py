@@ -287,7 +287,7 @@ class ContinuousTimeStochasticProcess(StochasticProcess):
         if not time.is_symbol and time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         func_obj = Function(self.symbol)(time)
-        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution(time))
+        pspace_obj = StochasticPSpace(self.symbol, self, distribution=self.distribution(key=time))
         return RandomIndexedSymbol(func_obj, pspace_obj)
 
 class TransitionMatrixOf(Boolean):
