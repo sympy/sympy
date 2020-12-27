@@ -2293,8 +2293,8 @@ class LogCauchyDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(mu, sigma):
-        _value_check(sigma > 0, "Scale parameter Gamma must be positive.")
-        _value_check(mu.is_real, "Location parameter must be real.")
+        _value_check((sigma > 0) != False, "Scale parameter Gamma must be positive.")
+        _value_check(mu.is_real != False, "Location parameter must be real.")
 
     def pdf(self, x):
         mu, sigma = self.mu, self.sigma
