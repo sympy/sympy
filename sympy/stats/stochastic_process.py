@@ -17,11 +17,13 @@ class StochasticPSpace(ProductPSpace):
     parameter should not be passed.
     """
 
-    def __new__(cls, sym, process, distribution=Distribution()):
+    def __new__(cls, sym, process, distribution=None):
         sym = _symbol_converter(sym)
         from sympy.stats.stochastic_process_types import StochasticProcess
         if not isinstance(process, StochasticProcess):
             raise TypeError("`process` must be an instance of StochasticProcess.")
+        if distribution is None:
+            distribution = Distribution()
         return Basic.__new__(cls, sym, process, distribution)
 
     @property

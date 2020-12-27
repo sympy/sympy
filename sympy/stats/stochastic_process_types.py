@@ -238,7 +238,7 @@ class StochasticProcess(Basic):
                 raise ValueError("Expected a RandomIndexedSymbol or "
                                 "key not  %s"%(type(arg)))
 
-        if args[0].pspace.distribution != Distribution():
+        if args[0].pspace.distribution == Distribution():
             return JointDistribution(*args)
         density = Lambda(tuple(args),
                          expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
@@ -2196,7 +2196,7 @@ class PoissonProcess(CountingProcess):
     def state_space(self):
         return S.Naturals0
 
-    def distribution(self, key):
+    def distribution(self, key=None):
         if isinstance(key, RandomIndexedSymbol):
             self._deprecation_warn_distribution()
             return PoissonDistribution(self.lamda*key.key)
@@ -2264,7 +2264,7 @@ class WienerProcess(CountingProcess):
     def state_space(self):
         return S.Reals
 
-    def distribution(self, key):
+    def distribution(self, key=None):
         if isinstance(key, RandomIndexedSymbol):
             self._deprecation_warn_distribution()
             return NormalDistribution(0, sqrt(key.key))
@@ -2337,7 +2337,7 @@ class GammaProcess(CountingProcess):
     def state_space(self):
         return _set_converter(Interval(0, oo))
 
-    def distribution(self, key):
+    def distribution(self, key=None):
         if isinstance(key, RandomIndexedSymbol):
             self._deprecation_warn_distribution()
             return GammaDistribution(self.gamma*key.key, 1/self.lamda)
