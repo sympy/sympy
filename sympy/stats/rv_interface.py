@@ -495,7 +495,7 @@ def self_information(condition, base = 2, **kwargs):
     Parameters
     ==========
 
-    condition : Expression containing RandomSymbols 
+    condition : Expression containing RandomSymbols
     base : Base with respect to which the self-information is calculated
 
     Examples
