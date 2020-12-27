@@ -82,7 +82,9 @@ class Equation(Basic):
     'a=b/c'
 
     Utility operations
-    >>> t.reversed()
+    >>> t.reversed
+    Equation(b/c, a)
+    >>> t.swap
     Equation(b/c, a)
     >>> t.lhs
     a
@@ -173,9 +175,9 @@ class Equation(Basic):
     @property
     def swap(self):
         """
-        Synonym for reversed()
+        Synonym for `.reversed`
         """
-        self.reversed()
+        return self.reversed
 
     def _applytoexpr(self, expr, func, *args, **kwargs):
         # Applies a function to an expression checking whether there
