@@ -1,7 +1,7 @@
 import itertools
 from collections.abc import Iterable
 
-from sympy import S, Tuple, diff, Basic
+from sympy import S, Tuple, diff, Basic, sympify
 
 from sympy.tensor.array.ndim_array import NDimArray
 from sympy.tensor.array.dense_ndim_array import DenseNDimArray, ImmutableDenseNDimArray
@@ -268,6 +268,9 @@ def derive_by_array(expr, dx):
     from sympy.matrices import MatrixBase
     from sympy.tensor.array import SparseNDimArray
     array_types = (Iterable, MatrixBase, NDimArray)
+
+    expr = sympify(expr)
+    dx = sympify(dx)
 
     if isinstance(dx, array_types):
         dx = ImmutableDenseNDimArray(dx)
