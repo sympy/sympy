@@ -135,8 +135,11 @@ def test_diff_nth_derivative():
         Eq(y, 0) & Eq(Max(0, -y + n), 0)),
         (2*factorial(n)/(factorial(y)*factorial(-y + n)), Eq(y, 0) & Eq(Max(0,
         -y + n), 1)), (0, True)), (y, 0, n)))
-    # TODO: assert diff(x**2, (x, n)) == x**(2-n)*ff(2, n)
-    exprm = x*sin(x)
+
+    #Check the nth derivative of x**2
+    assert diff(x**2, (x, n)) == Derivative(x*x, (x, n))
+
+    exprm = x*sin(x)            
     mul_diff = diff(exprm, (x, n))
     assert isinstance(mul_diff, Sum)
     for i in range(5):
