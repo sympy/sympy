@@ -1907,6 +1907,10 @@ class FiniteSet(Set, EvalfMixin):
     def _eval_evalf(self, prec):
         return FiniteSet(*[elem.evalf(n=prec_to_dps(prec)) for elem in self])
 
+    def _eval_simplify(self, **kwargs):
+        from sympy.simplify import simplify
+        return FiniteSet(*[simplify(elem, **kwargs) for elem in self])
+
     @property
     def _sorted_args(self):
         return self.args
