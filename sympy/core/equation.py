@@ -178,25 +178,6 @@ class Equation(Basic):
         """
         self.reversed()
 
-    def _namespace_key_search(self, key):
-        # This function searches the current namespace and those above
-        # it for a particular key in `globals`. If it finds nothing
-        # it returns `None`. It does not search within objects at each
-        # level. The idea is to pick up user defined global functions
-        # created interactively.
-        frame = inspect.currentframe()
-        not_found = True
-        while (not_found):
-            try:
-                obj = frame.f_globals[key]
-                not_found = False
-            except KeyError:
-                obj = None
-                frame = frame.f_back
-                if frame == None:
-                    not_found = False
-        return obj
-
     def _applytoexpr(self, expr, func, *args, **kwargs):
         # Applies a function to an expression checking whether there
         # is a specialized version associated with the particular type of
@@ -206,10 +187,7 @@ class Equation(Basic):
         if hasattr(expr, funcname):
             return getattr(expr, funcname)(*args, **kwargs)
         else:
-            # search the local namespace for the function
-            # and those above if necessary.
-            obj = self._namespace_key_search(funcname)
-            return obj(expr, *args, **kwargs)
+            return func(expr, *args, **kwargs)
 
     def _applyfunc(self, func, *args, **kwargs):
         # Logic function to allow using a keyword to determine
