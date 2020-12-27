@@ -483,29 +483,32 @@ def coskewness(X, Y, Z, condition=None, **kwargs):
          * std(Z, condition, **kwargs)
     return num/den
 
-def self_information(p):
+def self_information(condition, base = 2, **kwargs):
     """
     Calculates the self-information of a particular outcome of an event.
     It represents the degree of surprise associated with a certain outcome.
     Mathematically it is defined as
 
     .. math::
-        selfinformation(p)=-\log_2 (p)
+        selfinformation(p, b)=-\log_b (p)
 
     Parameters
     ==========
 
-    p : Probability of an event
+    condition : Expression containing RandomSymbols 
+    base : Base with respect to which the self-information is calculated
 
     Examples
     ========
-    >>> from sympy.stats import self_information, P, Die
+    >>> from sympy.stats import self_information, Die
     >>> from sympy import Eq
     >>> X = Die('X', 6)
-    >>> self_information(P(X>3))
+    >>> self_information(X>3)
     1
-    >>> self_information(P(Eq(X,4)))
+    >>> self_information(Eq(X,4))
     1 + log(3)/log(2)
+    >>> self_information(X<2, 10)
+    log(6)/log(10)
 
     Returns
     =======
@@ -517,7 +520,8 @@ def self_information(p):
 
     .. [1] https://en.wikipedia.org/wiki/Information_content
     """
-    return -log(p, 2)
+    p = P(condition)
+    return -log(p, base)
 
 P = probability
 E = expectation

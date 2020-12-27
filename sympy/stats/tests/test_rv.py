@@ -397,5 +397,6 @@ def test_issue_20286():
 
 def test_self_information():
     X = Die('X', 6)
-    assert self_information(P(X>3)) == 1
-    assert self_information(P(Eq(X,4))) == 1 + log(3)/log(2)
+    assert self_information(X>3) == 1
+    assert self_information(Eq(X,4)) == 1 + log(3)/log(2)
+    assert self_information(X<2, 10) == log(6)/log(10)
