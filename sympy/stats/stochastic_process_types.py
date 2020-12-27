@@ -20,7 +20,8 @@ from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter, _value_check, pspace, given,
-                           dependent, is_random, sample_iter, Distribution)
+                           dependent, is_random, sample_iter, Distribution,
+                           Density)
 from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution, FiniteRV
@@ -184,7 +185,7 @@ class StochasticProcess(Basic):
         return Distribution()
 
     def density(self, x):
-        return None
+        return Density()
 
     def __call__(self, time):
         """
@@ -237,11 +238,10 @@ class StochasticProcess(Basic):
                 raise ValueError("Expected a RandomIndexedSymbol or "
                                 "key not  %s"%(type(arg)))
 
-        density = self.density(args[0])
-        if density is None:
+        if args[0].pspace.distribution != Distribution():
             return JointDistribution(*args)
         density = Lambda(tuple(args),
-                expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
+                         expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
         return JointDistributionHandmade(density)
 
     def expectation(self, condition, given_condition):

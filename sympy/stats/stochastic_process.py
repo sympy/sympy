@@ -1,6 +1,6 @@
 from sympy import Basic
 from sympy.stats.joint_rv import ProductPSpace
-from sympy.stats.rv import ProductDomain, _symbol_converter
+from sympy.stats.rv import ProductDomain, _symbol_converter, Distribution
 
 
 class StochasticPSpace(ProductPSpace):
@@ -17,7 +17,7 @@ class StochasticPSpace(ProductPSpace):
     parameter should not be passed.
     """
 
-    def __new__(cls, sym, process, distribution=None):
+    def __new__(cls, sym, process, distribution=Distribution()):
         sym = _symbol_converter(sym)
         from sympy.stats.stochastic_process_types import StochasticProcess
         if not isinstance(process, StochasticProcess):
