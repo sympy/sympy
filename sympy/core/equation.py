@@ -29,7 +29,6 @@ in [SageMath](https://www.sagemath.org/) and
 from .expr import Expr
 from .basic import Basic
 from .sympify import _sympify
-import inspect
 
 
 class Equation(Basic):
