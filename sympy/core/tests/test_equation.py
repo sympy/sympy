@@ -2,7 +2,7 @@ from sympy import var, integrate, simplify, expand, factor, log, Integral, \
     diff, FiniteSet, Matrix, exp
 from sympy import Equality
 from sympy import Equation, Eqn
-from pytest import raises, warns
+from sympy.testing.pytest import raises, warns
 
 
 def test_define_equation():
