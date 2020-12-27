@@ -42,11 +42,13 @@ def test_Poisson():
     assert x.pspace.compute_expectation(1) == 1
 
 def test_FlorySchulz():
-    p = S.One / 5
-    x = FlorySchulz('x' , p)
-    assert E(x) == 9
-    assert variance(x) == 40
-    assert density(x)(2) - 8/125 < 0.001
+    a = Symbol("a")
+    z = Symbol("z")
+    x = FlorySchulz('x' , a)
+    assert E(x) == (2 - a)/a
+    assert simplify(variance(x)) == simplify(2*(1 - a)/a**2)
+    assert(density(x)(z)) == a**2*z*(1 - a)**(z - 1)
+
 
 @slow
 def test_GeometricDistribution():

@@ -112,39 +112,40 @@ def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
 # Flory-Schulz distribution ------------------------------------------------------------
 
 class FlorySchulzDistribution(SingleDiscreteDistribution):
-    _argnames = ('p',)
+    _argnames = ('a',)
     set = S.Naturals
 
     @staticmethod
-    def check(p):
-        _value_check((0 < p, p < 1), "a must be between 0 and 1")
+    def check(a):
+        _value_check((0 < a, a < 1), "a must be between 0 and 1")
 
     def pdf(self, k):
-        p = self.p
-        return (p**2 * k * (1 - p)**(k - 1))
+        a = self.a
+        return (a**2 * k * (1 - a)**(k - 1))
 
     def _characteristic_function(self, t):
-        p = self.p
-        return p**2 * exp(I*t) / ((1 + (p - 1) * exp(I*t))**2)
+        a = self.a
+        return a**2*exp(I*t)/((1 + (a - 1)*exp(I*t))**2)
 
     def _moment_generating_function(self, t):
-        p = self.p
-        return p**2 * exp(t) / ((1 + (p- 1) * exp(t))**2)
+        a = self.a
+        return a**2*exp(t)/((1 + (a - 1)*exp(t))**2)
 
 
-def FlorySchulz(name, p):
+def FlorySchulz(name, a):
     r"""
     Create a discrete random variable with a FlorySchulz distribution.
 
     The density of the FlorySchulz distribution is given by
 
     .. math::
-        f(k) := (p^2) k (1 - p)^{k-1}
+        f(k) := (a^2) k (1 - a)^{k-1}
 
     Parameters
     ==========
 
-    p: A probability between 0 and 1
+    a
+        A real number between 0 and 1
 
     Returns
     =======
@@ -157,10 +158,10 @@ def FlorySchulz(name, p):
     >>> from sympy.stats import density, E, variance, FlorySchulz
     >>> from sympy import Symbol, S
 
-    >>> p = S.One / 5
+    >>> a = S.One / 5
     >>> z = Symbol("z")
 
-    >>> X = FlorySchulz("x", p)
+    >>> X = FlorySchulz("x", a)
 
     >>> density(X)(z)
     (4/5)**(z - 1)*z/25
@@ -175,9 +176,8 @@ def FlorySchulz(name, p):
     ==========
 
     https://en.wikipedia.org/wiki/Flory%E2%80%93Schulz_distribution
-
     """
-    return rv(name, FlorySchulzDistribution, p)
+    return rv(name, FlorySchulzDistribution, a)
 
 
 #-------------------------------------------------------------------------------
