@@ -292,19 +292,6 @@ class Equation(Basic):
         return self.__pow__(other)
 
     #####
-    # Output helper functions
-    #####
-    # def __repr__(self):
-    #     return str(self.lhs) + '=' + str(self.rhs)
-    #
-    # def _latex(self, obj, **kwargs):
-    #     from sympy.printing import latex
-    #     return latex(self.lhs, **kwargs) + '=' + latex(self.rhs, **kwargs)
-    #
-    # def __str__(self):
-    #     return self.__repr__()
-
-    #####
     # Operation helper functions
     #####
     def expand(self, *args, **kwargs):
