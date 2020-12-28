@@ -218,13 +218,19 @@ class PrettyPrinter(Printer):
 
         return pform
 
-    def _print_Relational(self, e):
+    def _helper_print_relations(self, lhs, rel_op, rhs):
         op = prettyForm(' ' + xsym(e.rel_op) + ' ')
 
-        l = self._print(e.lhs)
-        r = self._print(e.rhs)
+        l = self._print(lhs)
+        r = self._print(rhs)
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
+
+    def _print_Relational(self, e):
+        return self._helper_print_relations(e.lhs, e.rel_op, e.rhs)
+
+    def _print_Equation(self, e):
+        return self._helper_print_relations(e.lhs, '=', e.rhs)
 
     def _print_Not(self, e):
         from sympy import Equivalent, Implies

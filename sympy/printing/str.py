@@ -703,6 +703,10 @@ class StrPrinter(Printer):
                            self._relationals.get(expr.rel_op) or expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
 
+    def _print_Equation(self, expr):
+        return '%s %s %s' % (self._print(expr.lhs), self._print('='),
+                             self._print(expr.rhs))
+
     def _print_ComplexRootOf(self, expr):
         return "CRootOf(%s, %d)" % (self._print_Add(expr.expr,  order='lex'),
                                     expr.index)
