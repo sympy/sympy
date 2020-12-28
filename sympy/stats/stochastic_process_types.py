@@ -287,7 +287,7 @@ class ContinuousTimeStochasticProcess(StochasticProcess):
         if not time.is_symbol and time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         func_obj = Function(self.symbol)(time)
-        pspace_obj = StochasticPSpace(self.symbol, self, distribution=self.distribution(key=time))
+        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution(time))
         return RandomIndexedSymbol(func_obj, pspace_obj)
 
 class TransitionMatrixOf(Boolean):
@@ -2196,7 +2196,7 @@ class PoissonProcess(CountingProcess):
     def state_space(self):
         return S.Naturals0
 
-    def distribution(self, key=None):
+    def distribution(self, key):
         if isinstance(key, RandomIndexedSymbol):
             self._deprecation_warn_distribution()
             return PoissonDistribution(self.lamda*key.key)
@@ -2264,7 +2264,7 @@ class WienerProcess(CountingProcess):
     def state_space(self):
         return S.Reals
 
-    def distribution(self, key=None):
+    def distribution(self, key):
         if isinstance(key, RandomIndexedSymbol):
             self._deprecation_warn_distribution()
             return NormalDistribution(0, sqrt(key.key))
@@ -2337,7 +2337,7 @@ class GammaProcess(CountingProcess):
     def state_space(self):
         return _set_converter(Interval(0, oo))
 
-    def distribution(self, key=None):
+    def distribution(self, key):
         if isinstance(key, RandomIndexedSymbol):
             self._deprecation_warn_distribution()
             return GammaDistribution(self.gamma*key.key, 1/self.lamda)

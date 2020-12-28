@@ -330,12 +330,7 @@ class RandomIndexedSymbol(RandomSymbol):
 
     @property
     def pspace(self):
-        from sympy.stats.stochastic_process import StochasticPSpace
-        temp_pspace = self.args[1]
-        if len(temp_pspace.args) == 0:
-            # Allow single arg
-            return PSpace()
-        return StochasticPSpace(temp_pspace.args[0], temp_pspace.args[1], temp_pspace.args[2])
+        return self.args[1]
 
 class RandomMatrixSymbol(RandomSymbol, MatrixSymbol): # type: ignore
     def __new__(cls, symbol, n, m, pspace=None):
