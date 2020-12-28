@@ -219,7 +219,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _helper_print_relations(self, lhs, rel_op, rhs):
-        op = prettyForm(' ' + xsym(e.rel_op) + ' ')
+        op = prettyForm(' ' + xsym(rel_op) + ' ')
 
         l = self._print(lhs)
         r = self._print(rhs)
