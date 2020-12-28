@@ -66,26 +66,24 @@ class Equation(Basic):
     >>> from sympy import solve
     >>> a, b, c = var('a b c')
     >>> Equation(a,b/c)
-    Equation(a, b/c)
-    >>> str(Equation(a,b/c))
-    'a=b/c'
+    a = b/c
     >>> t=Eqn(a,b/c)
-    >>> str(t)
-    'a=b/c'
-    >>> str(t*c)
-    'a*c=b'
-    >>> str(c*t)
-    'a*c=b'
-    >>> str(exp(t))
-    'exp(a)=exp(b/c)'
-    >>> str(exp(log(t)))
-    'a=b/c'
+    >>> t
+    a = b/c
+    >>> t*c
+    a*c = b
+    >>> c*t
+    a*c = b
+    >>> exp(t)
+    exp(a) = exp(b/c)
+    >>> exp(log(t))
+    a = b/c
 
     Utility operations
     >>> t.reversed
-    Equation(b/c, a)
+    b/c = a
     >>> t.swap
-    Equation(b/c, a)
+    b/c = a
     >>> t.lhs
     a
     >>> t.rhs
@@ -101,20 +99,20 @@ class Equation(Basic):
     a*b*c
 
     Make a pretty statement of integration from an equation
-    >>> str(Eqn(Integral(q.lhs,b),integrate(q,b,side='rhs')))
-    'Integral(a*c, b)=b**2/(2*c)'
+    >>> Eqn(Integral(q.lhs,b),integrate(q,b,side='rhs'))
+    Integral(a*c, b) = b**2/(2*c)
 
     This is duplicated by the convenience function self.integ
-    >>> str(q.integ(b))
-    'Integral(a*c, b)=b**2/(2*c)'
+    >>> q.integ(b)
+    Integral(a*c, b) = b**2/(2*c)
 
     SymPy's solvers do not understand these equations. They expect an
     expression that the solver assumes = 0. Thus to use the solver the
     equation must be rearranged so that all non-zero symbols are on one side.
     Then just the non-zero symbolic side is passed to ``solve()``.
     >>> t2 = t-t.rhs
-    >>> str(t2)
-    'a - b/c=0'
+    >>> t2
+    a - b/c = 0
     >>> solve(t2.lhs,c)
     [b/a]
     """
