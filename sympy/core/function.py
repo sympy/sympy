@@ -2277,11 +2277,9 @@ class Subs(Expr):
                 undone2 = []
                 D = Dummy()
                 arg = e.args[0]
-                arg = repr(arg)
                 for vi, pi in undone:
                     if D not in e.xreplace({vi: D}).free_symbols:
-                        vrbl = repr(vi)
-                        if arg.find(vrbl)!=-1:
+                        if arg.has(vi) == True:
                             e = e.subs(vi, pi)
                     else:
                         undone2.append((vi, pi))
