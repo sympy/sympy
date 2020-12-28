@@ -11,6 +11,9 @@ def gosper_normal(f, g, n, polys=True):
     r"""
     Compute the Gosper's normal form of ``f`` and ``g``.
 
+    Explanation
+    ===========
+
     Given relatively prime univariate polynomials ``f`` and ``g``,
     rewrite their quotient to a normal form defined as follows:
 
@@ -82,6 +85,9 @@ def gosper_normal(f, g, n, polys=True):
 def gosper_term(f, n):
     r"""
     Compute Gosper's hypergeometric term for ``f``.
+
+    Explanation
+    ===========
 
     Suppose ``f`` is a hypergeometric term such that:
 
@@ -158,6 +164,9 @@ def gosper_term(f, n):
 def gosper_sum(f, k):
     r"""
     Gosper's hypergeometric summation algorithm.
+
+    Explanation
+    ===========
 
     Given a hypergeometric term ``f`` such that:
 

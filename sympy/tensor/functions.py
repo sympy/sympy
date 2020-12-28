@@ -1,5 +1,6 @@
+from collections.abc import Iterable
+
 from sympy import Expr, S, Mul, sympify
-from sympy.core.compatibility import Iterable
 from sympy.core.parameters import global_parameters
 
 

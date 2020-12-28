@@ -19,6 +19,9 @@ __all__ = [
 class Commutator(Expr):
     """The standard commutator, in an unevaluated state.
 
+    Explanation
+    ===========
+
     Evaluating a commutator is defined [1]_ as: ``[A, B] = A*B - B*A``. This
     class returns the commutator in an unevaluated form. To evaluate the
     commutator, use the ``.doit()`` method.

@@ -9,6 +9,9 @@ def refine(expr, assumptions=True):
     """
     Simplify an expression using assumptions.
 
+    Explanation
+    ===========
+
     Gives the form of expr that would be obtained if symbols
     in it were replaced by explicit numerical expressions satisfying
     the assumptions.
@@ -88,6 +91,9 @@ def refine_abs(expr, assumptions):
 def refine_Pow(expr, assumptions):
     """
     Handler for instances of Pow.
+
+    Examples
+    ========
 
     >>> from sympy import Q
     >>> from sympy.assumptions.refine import refine_Pow
@@ -185,7 +191,7 @@ def refine_Pow(expr, assumptions):
 
 def refine_atan2(expr, assumptions):
     """
-    Handler for the atan2 function
+    Handler for the atan2 function.
 
     Examples
     ========
@@ -231,7 +237,10 @@ def refine_atan2(expr, assumptions):
 
 def refine_Relational(expr, assumptions):
     """
-    Handler for Relational
+    Handler for Relational.
+
+    Examples
+    ========
 
     >>> from sympy.assumptions.refine import refine_Relational
     >>> from sympy.assumptions.ask import Q
@@ -245,6 +254,9 @@ def refine_Relational(expr, assumptions):
 def refine_re(expr, assumptions):
     """
     Handler for real part.
+
+    Examples
+    ========
 
     >>> from sympy.assumptions.refine import refine_re
     >>> from sympy import Q, re
@@ -265,6 +277,9 @@ def refine_re(expr, assumptions):
 def refine_im(expr, assumptions):
     """
     Handler for imaginary part.
+
+    Explanation
+    ===========
 
     >>> from sympy.assumptions.refine import refine_im
     >>> from sympy import Q, im
@@ -295,7 +310,7 @@ def _refine_reim(expr, assumptions):
 
 def refine_sign(expr, assumptions):
     """
-    Handler for sign
+    Handler for sign.
 
     Examples
     ========
@@ -336,7 +351,7 @@ def refine_sign(expr, assumptions):
 
 def refine_matrixelement(expr, assumptions):
     """
-    Handler for symmetric part
+    Handler for symmetric part.
 
     Examples
     ========

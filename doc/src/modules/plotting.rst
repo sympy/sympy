@@ -85,8 +85,17 @@ Series Classes
 .. autoclass:: sympy.plotting.plot_implicit::ImplicitSeries
    :members:
 
+Backends
+--------
 
+.. autoclass:: sympy.plotting.plot::BaseBackend
+   :members:
 
+.. autoclass:: sympy.plotting.plot::MatplotlibBackend
+   :members:
+
+.. autoclass:: sympy.plotting.plot::TextBackend
+   :members:
 
 Pyglet Plotting
 ---------------
@@ -103,7 +112,8 @@ the only dependency being ``pyglet``.
 
 Here is the simplest usage:
 
-    >>> from sympy import var, Plot
+    >>> from sympy import var
+    >>> from sympy.plotting.pygletplot import PygletPlot as Plot
     >>> var('x y z')
     >>> Plot(x*y**3-y*x**3)
 
@@ -271,30 +281,19 @@ Plotting Geometric Entities
 ---------------------------
 
 The plotting module is capable of plotting some 2D geometric entities like
-line, circle and ellipse. The following example plots a circle and a tangent
-line at a random point on the ellipse.
+line, circle and ellipse. The following example plots a circle centred at
+origin and of radius 2 units.
 ::
 
-    In [1]: p = Plot(axes='label_axes=True')
+    >>> from sympy import *
+    >>> x,y = symbols('x y')
+    >>> plot_implicit(Eq(x**2+y**2, 4))
 
-    In [2]: c = Circle(Point(0,0), 1)
-
-    In [3]: t = c.tangent_lines(c.random_point())
-
-    In [4]: p[0] = c
-
-    In [5]: p[1] = t
+Similarly, ``plot_implicit()`` may be used to plot any 2-D geometric structure from
+its implicit equation.
 
 Plotting polygons (Polygon, RegularPolygon, Triangle) are not supported
-directly. However a polygon can be plotted through a loop as follows.
-::
-
-    In [6]: p = Plot(axes='label_axes=True')
-
-    In [7]: t = RegularPolygon(Point(0,0), 1, 5)
-
-    In [8]: for i in range(len(t.sides)):
-       ....:    p[i] = t.sides[i]
+directly.
 
 Plotting with ASCII art
 -----------------------

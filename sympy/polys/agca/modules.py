@@ -19,8 +19,9 @@ convenience methods, for example if there are faster algorithms available.
 
 
 from copy import copy
+from functools import reduce
 
-from sympy.core.compatibility import iterable, reduce
+from sympy.core.compatibility import iterable
 from sympy.polys.agca.ideals import Ideal
 from sympy.polys.domains.field import Field
 from sympy.polys.orderings import ProductOrder, monomial_key

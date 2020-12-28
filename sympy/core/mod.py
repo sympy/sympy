@@ -1,5 +1,6 @@
 from sympy.core.numbers import nan
 from .function import Function
+from .kind import NumberKind
 
 
 class Mod(Function):
@@ -30,6 +31,8 @@ class Mod(Function):
     1
 
     """
+
+    kind = NumberKind
 
     @classmethod
     def eval(cls, p, q):

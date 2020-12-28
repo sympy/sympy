@@ -22,7 +22,6 @@ from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.sho1d import RaisingOp
 
 from sympy import Derivative, Function, Interval, Matrix, Pow, S, symbols, Symbol, oo
-from sympy.core.compatibility import exec_
 from sympy.testing.pytest import XFAIL
 
 # Imports used in srepr strings
@@ -36,15 +35,15 @@ MutableDenseMatrix = Matrix
 
 
 ENV = {}  # type: Dict[str, Any]
-exec_('from sympy import *', ENV)
-exec_('from sympy.physics.quantum import *', ENV)
-exec_('from sympy.physics.quantum.cg import *', ENV)
-exec_('from sympy.physics.quantum.spin import *', ENV)
-exec_('from sympy.physics.quantum.hilbert import *', ENV)
-exec_('from sympy.physics.quantum.qubit import *', ENV)
-exec_('from sympy.physics.quantum.qexpr import *', ENV)
-exec_('from sympy.physics.quantum.gate import *', ENV)
-exec_('from sympy.physics.quantum.constants import *', ENV)
+exec('from sympy import *', ENV)
+exec('from sympy.physics.quantum import *', ENV)
+exec('from sympy.physics.quantum.cg import *', ENV)
+exec('from sympy.physics.quantum.spin import *', ENV)
+exec('from sympy.physics.quantum.hilbert import *', ENV)
+exec('from sympy.physics.quantum.qubit import *', ENV)
+exec('from sympy.physics.quantum.qexpr import *', ENV)
+exec('from sympy.physics.quantum.gate import *', ENV)
+exec('from sympy.physics.quantum.constants import *', ENV)
 
 
 def sT(expr, string):
