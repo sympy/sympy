@@ -2,6 +2,7 @@ from sympy import var, integrate, simplify, expand, factor, log, Integral, \
     diff, FiniteSet, Matrix, exp
 from sympy import Equality
 from sympy import Equation, Eqn
+from sympy import latex
 from sympy.testing.pytest import raises, warns
 
 
@@ -52,9 +53,8 @@ def test_binary_op():
 def test_outputs():
     a, b, c = var('a b c')
     tsteqn = Eqn(a, b / c)
-    assert tsteqn.__repr__() == 'a=b/c'
-    assert tsteqn.__str__() == 'a=b/c'
-    assert tsteqn._latex(tsteqn) == 'a=\\frac{b}{c}'
+    assert str(tsteqn) == 'a = b/c'
+    assert latex(tsteqn) == 'a = \\frac{b}{c}'
 
 
 def test_helper_functions():
