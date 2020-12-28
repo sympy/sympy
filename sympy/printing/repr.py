@@ -241,10 +241,12 @@ class ReprPrinter(Printer):
             )
 
     def _print_Predicate(self, expr):
-        return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        return "Q.%s" % expr.name
 
     def _print_AppliedPredicate(self, expr):
-        return "%s(%s, %s)" % (expr.__class__.__name__, expr.func, expr.arg)
+        # will be changed to just expr.args when args overriding is removed
+        args = expr._args
+        return "%s(%s)" % (expr.__class__.__name__, self.reprify(args, ", "))
 
     def _print_str(self, expr):
         return repr(expr)
