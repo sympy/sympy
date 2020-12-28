@@ -1,7 +1,6 @@
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
-from sympy.core.evalf import evalf_options
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
     AppliedUndef)
 from sympy.core.logic import fuzzy_not, fuzzy_or
@@ -1041,9 +1040,9 @@ class polar_lift(Function):
             else:
                 return Mul(*positive)*exp_polar(0)
 
-    def _eval_evalf_options(self, prec, options):
+    def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """
-        return evalf_options(self.args[0], prec, options)
+        return self.args[0]._eval_evalf(prec)
 
     def _eval_Abs(self):
         return Abs(self.args[0], evaluate=True)
@@ -1140,15 +1139,15 @@ class periodic_argument(Function):
             if not n.has(ceiling):
                 return unbranched - n
 
-    def _eval_evalf_options(self, prec, options):
+    def _eval_evalf(self, prec):
         z, period = self.args
         if period == oo:
             unbranched = periodic_argument._getunbranched(z)
             if unbranched is None:
                 return self
-            return evalf_options(unbranched, prec, options)
-        ub = evalf_options(periodic_argument(z, oo), prec, options)
-        return evalf_options((ub - ceiling(ub/period - S.Half)*period), prec, options)
+            return unbranched._eval_evalf(prec)
+        ub = periodic_argument(z, oo)._eval_evalf(prec)
+        return (ub - ceiling(ub/period - S.Half)*period)._eval_evalf(prec)
 
 
 def unbranched_argument(arg):
@@ -1269,13 +1268,13 @@ class principal_branch(Function):
                 and m == ():
             return exp_polar(arg*I)*abs(c)
 
-    def _eval_evalf_options(self, prec, options):
+    def _eval_evalf(self, prec):
         from sympy import exp, pi, I
         z, period = self.args
-        p = evalf_options(periodic_argument(z, period), prec, options)
+        p = periodic_argument(z, period)._eval_evalf(prec)
         if abs(p) > pi or p == -pi:
             return self  # Cannot evalf for this argument.
-        return evalf_options((abs(z)*exp(I*p)), prec, options)
+        return (abs(z)*exp(I*p))._eval_evalf(prec)
 
 
 def _polarify(eq, lift, pause=False):

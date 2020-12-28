@@ -167,10 +167,9 @@ class exp_polar(ExpBase):
         from sympy.functions.elementary.complexes import re
         return exp(re(self.args[0]))
 
-    def _eval_evalf_options(self, prec, options):
+    def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """
         from sympy import im, pi, re
-        from sympy.core.evalf import evalf_options
         i = im(self.args[0])
         try:
             bad = (i <= -pi or i > pi)
@@ -178,7 +177,7 @@ class exp_polar(ExpBase):
             bad = True
         if bad:
             return self  # cannot evalf for this argument
-        res = evalf_options(exp(self.args[0]), prec, options)
+        res = exp(self.args[0])._eval_evalf(prec)
         if i > 0 and im(res) < 0:
             # i ~ pi, but exp(I*i) evaluated to argument slightly bigger than pi
             return re(res)

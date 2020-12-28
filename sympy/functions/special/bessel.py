@@ -622,10 +622,9 @@ class SphericalBesselBase(BesselBase):
             return self._expand(**hints)
         return self
 
-    def _eval_evalf_options(self, prec, options):
-        from sympy.core.evalf import evalf_options
+    def _eval_evalf(self, prec):
         if self.order.is_Integer:
-            return evalf_options(self._rewrite(), prec, options)
+            return self._rewrite()._eval_evalf(prec)
 
     def fdiff(self, argindex=2):
         if argindex != 2:
@@ -1528,9 +1527,6 @@ class airyaiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        ''' `_eval_evalf_options` is not required here because `evalf` is
-        not being used here
-        '''
         from mpmath import mp, workprec
         from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
@@ -1697,10 +1693,6 @@ class airybiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        ''' `_eval_evalf_options` is not required here because `evalf` is
-        not being used here
-        '''
-
         from mpmath import mp, workprec
         from sympy import Expr
         z = self.args[0]._to_mpmath(prec)

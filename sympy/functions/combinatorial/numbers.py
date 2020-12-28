@@ -904,11 +904,10 @@ class harmonic(Function):
         from sympy import polygamma
         return self.rewrite(polygamma).rewrite("tractable", deep=True)
 
-    def _eval_evalf_options(self, prec, options):
-        from sympy.core.evalf import evalf_options
+    def _eval_evalf(self, prec):
         from sympy import polygamma
         if all(i.is_number for i in self.args):
-            return evalf_options(self.rewrite(polygamma), prec, options)
+            return self.rewrite(polygamma)._eval_evalf(prec)
 
 
 #----------------------------------------------------------------------------#
@@ -1044,10 +1043,6 @@ class euler(Function):
             return Sum(binomial(n, k)*euler(k)/2**k*(x - S.Half)**(n - k), (k, 0, n))
 
     def _eval_evalf(self, prec):
-        '''Don't need `_eval_evalf_options` here because we don't need
-        options and we are not using `evalf` here.
-        '''
-
         m, x = (self.args[0], None) if len(self.args) == 1 else self.args
 
         if x is None and m.is_Integer and m.is_nonnegative:
@@ -1205,11 +1200,10 @@ class catalan(Function):
         if self.args[0].is_integer and (self.args[0] - 3).is_positive:
             return True
 
-    def _eval_evalf_options(self, prec, options):
+    def _eval_evalf(self, prec):
         from sympy import gamma
-        from sympy.core.evalf import evalf_options
         if self.args[0].is_number:
-            return evalf_options(self.rewrite(gamma), prec, options)
+            return self.rewrite(gamma)._eval_evalf(prec)
 
 
 

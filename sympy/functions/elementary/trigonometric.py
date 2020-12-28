@@ -3438,8 +3438,7 @@ class atan2(InverseTrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_evalf_options(self, prec, options):
-        from sympy.core.evalf import evalf_options
+    def _eval_evalf(self, prec):
         y, x = self.args
         if x.is_extended_real and y.is_extended_real:
-            return evalf_options(super(), prec, options)
+            return super()._eval_evalf(prec)

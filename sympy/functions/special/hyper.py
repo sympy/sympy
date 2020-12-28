@@ -656,7 +656,7 @@ class meijerg(TupleParametersBase):
         from sympy import hyperexpand
         return hyperexpand(self)
 
-    def _eval_evalf_options(self, prec, options):
+    def _eval_evalf(self, prec):
         # The default code is insufficient for polar arguments.
         # mpmath provides an optional argument "r", which evaluates
         # G(z**(1/r)). I am not sure what its intended use is, but we hijack it
@@ -664,11 +664,10 @@ class meijerg(TupleParametersBase):
         # less than (say) n*pi, we put r=1/n, compute z' = root(z, n)
         # (carefully so as not to loose the branch information), and evaluate
         # G(z'**(1/r)) = G(z'**n) = G(z).
-        from sympy.core.evalf import evalf_options
         from sympy.functions import exp_polar, ceiling
         from sympy import Expr
         import mpmath
-        znum = evalf_options(self.argument, prec, options)
+        znum = self.argument._eval_evalf(prec)
         if znum.has(exp_polar):
             znum, branch = znum.as_coeff_mul(exp_polar)
             if len(branch) != 1:
