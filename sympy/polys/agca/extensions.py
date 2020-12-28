@@ -199,6 +199,14 @@ class ExtensionElement(DomainElement, DefaultPrinting):
 
     __repr__ = __str__
 
+    @property
+    def is_ground(f):
+        return f.rep.is_ground
+
+    def to_ground(f):
+        [c] = f.rep.to_list()
+        return c
+
 ExtElem = ExtensionElement
 
 
@@ -251,9 +259,11 @@ class MonogenicFiniteExtension(Domain):
         if not (isinstance(mod, Poly) and mod.is_univariate):
             raise TypeError("modulus must be a univariate Poly")
 
-        mod, rem = mod.div(mod.LC())
-        if not rem.is_zero:
-            raise ValueError("modulus could not be made monic") # pragma: no cover
+        # Using auto=True (default) potentially changes the ground domain to a
+        # field whereas auto=False raises if division is not exact.  We'll let
+        # the caller decide whether or not they want to put the ground domain
+        # over a field. In most uses mod is already monic.
+        mod = mod.monic(auto=False)
 
         self.rank = mod.degree()
         self.modulus = mod
@@ -314,8 +324,21 @@ class MonogenicFiniteExtension(Domain):
         K = self.domain.drop(*symbols)
         return self.set_domain(K)
 
+    def quo(self, f, g):
+        rep = self.domain.exquo(f.rep, g.rep)
+        return ExtElem(rep % self.mod, self)
+
     def exquo(self, f, g):
         rep = self.domain.exquo(f.rep, g.rep)
         return ExtElem(rep % self.mod, self)
+
+    def is_negative(self, a):
+        return False
+
+    def is_unit(self, a):
+        if self.is_Field:
+            return bool(a)
+        elif a.is_ground:
+            return self.domain.is_unit(a.to_ground())
 
 FiniteExtension = MonogenicFiniteExtension

@@ -138,6 +138,8 @@ class PolynomialRing(Ring, CompositeDomain):
             if K1.domain != K0.domain:
                 ad = {m: K1.domain.convert(c) for m, c in ad.items()}
             return K1(ad)
+        elif a.is_ground and K0.domain == K1:
+            return K1.convert_from(a.to_list()[0], K0.domain)
 
     def get_field(self):
         """Returns a field associated with `self`. """
