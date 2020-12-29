@@ -1903,6 +1903,9 @@ class PrettyPrinter(Printer):
 
     # A helper function for _print_Pow to print x**(1/n)
     def _print_nth_root(self, base, expt, den_p):
+        # den_p is the prettyForm of denominator of the exponent (n in this case)
+        # it is needed as using args will not work for 1/E and also to check
+        # whether a symbol is simple (single character) or not
         bpretty = self._print(base)
 
         # In very simple cases, use a single-char root sign
@@ -1956,7 +1959,7 @@ class PrettyPrinter(Printer):
             if e is S.NegativeOne:
                 return prettyForm("1")/self._print(b)
             n, d = fraction(e)
-            if n is S.One and d.is_Atom and not e.is_Integer and (e.is_Rational or d.is_Symbol)\
+            if n is S.One and d.is_Atom and not e.is_Integer and (e.is_Rational or d.is_Symbol) \
                     and self._settings['root_notation']:
                 den_p = self._print(d)
                 return self._print_nth_root(b, e, den_p)
