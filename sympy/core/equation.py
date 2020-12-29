@@ -63,8 +63,9 @@ class Equation(Basic):
     Examples
     ========
     >>> from sympy import var, Equation, Eqn, exp, log, integrate, Integral
+    >>> from sympy import simplify, collect, expand, factor, diff
     >>> from sympy import solve
-    >>> a, b, c = var('a b c')
+    >>> a, b, c, x = var('a b c x')
     >>> Equation(a,b/c)
     a = b/c
     >>> t=Eqn(a,b/c)
@@ -79,6 +80,79 @@ class Equation(Basic):
     >>> exp(log(t))
     a = b/c
 
+    Simplification and Expansion
+    >>> f = Eqn(x**2 - 1, c)
+    >>> f
+    x**2 - 1 = c
+    >>> f/(x+1)
+    (x**2 - 1)/(x + 1) = c/(x + 1)
+    >>> (f/(x+1)).simplify()
+    x - 1 = c/(x + 1)
+    >>> simplify(f/(x+1))
+    x - 1 = c/(x + 1)
+    >>> (f/(x+1)).expand()
+    x**2/(x + 1) - 1/(x + 1) = c/(x + 1)
+    >>> expand(f/(x+1))
+    x**2/(x + 1) - 1/(x + 1) = c/(x + 1)
+    >>> factor(f)
+    (x - 1)*(x + 1) = c
+    >>> f.factor()
+    (x - 1)*(x + 1) = c
+    >>> f2 = f+a*x**2+b*x +c
+    >>> f2
+    a*x**2 + b*x + c + x**2 - 1 = a*x**2 + b*x + 2*c
+    >>> collect(f2,x)
+    b*x + c + x**2*(a + 1) - 1 = a*x**2 + b*x + 2*c
+
+    Apply user defined python function
+    >>> def addsquare(expr):
+    ...     return expr+expr**2
+    ...
+    >>> t.applyfunc(addsquare)
+    a**2 + a = b**2/c**2 + b/c
+    >>> addsquare(t)
+    a**2 + a = b**2/c**2 + b/c
+
+    Rearranging an equation (simple example made complicated as illustration)
+    >>> p, V, n, R, T = var('p V n R T')
+    >>> eq1=Eqn(p*V,n*R*T)
+    >>> eq1
+    V*p = R*T*n
+    >>> eq2 =eq1/V
+    >>> eq2
+    p = R*T*n/V
+    >>> eq3 = eq2/R/T
+    >>> eq3
+    p/(R*T) = n/V
+    >>> eq4 = eq3*R/p
+    >>> eq4
+    1/T = R*n/(V*p)
+    >>> 1/eq4
+    T = V*p/(R*n)
+    >>> eq5 = 1/eq4 - T
+    >>> eq5
+    0 = -T + V*p/(R*n)
+
+    Substitution (#'s and units)
+    >>> L, atm, mol, K = var('L atm mol K', positive=True, real=True) # units
+    >>> eq2.subs({R:0.08206*L*atm/mol/K,T:273*K,n:1.00*mol,V:24.0*L})
+    p = 0.9334325*atm
+    >>> eq2.subs({R:0.08206*L*atm/mol/K,T:273*K,n:1.00*mol,V:24.0*L}).evalf(4)
+    p = 0.9334*atm
+
+    Combining equations (Math with equations: lhs with lhs and rhs with rhs)
+    >>> q = Eqn(a*c, b/c**2)
+    >>> q
+    a*c = b/c**2
+    >>> t
+    a = b/c
+    >>> q+t
+    a*c + a = b/c + b/c**2
+    >>> q/t
+    c = 1/c
+    >>> t**q
+    a**(a*c) = (b/c)**(b/c**2)
+
     Utility operations
     >>> t.reversed
     b/c = a
@@ -90,6 +164,35 @@ class Equation(Basic):
     b/c
     >>> t.as_Boolean()
     Eq(a, b/c)
+
+    Differentiation
+    Differentiation is applied to both sides if the wrt variable appears on
+    both sides.
+    >>> q=Eqn(a*c, b/c**2)
+    >>> q
+    a*c = b/c**2
+    >>> diff(q,b)
+    Derivative(a*c, b) = c**(-2)
+    >>> diff(q,c)
+    a = -2*b/c**3
+    >>> diff(log(q),b)
+    Derivative(log(a*c), b) = 1/b
+    >>> diff(q,c,2)
+    Derivative(a, c) = 6*b/c**4
+
+    If you specify multiple differentiation all at once the assumption
+    is order of differentiation matters and the lhs will not be
+    evaluated.
+    >>> diff(q,c,b)
+    Derivative(a*c, b, c) = -2/c**3
+
+    To overcome this specify the order of operations.
+    >>> diff(diff(q,c),b)
+    Derivative(a, b) = -2/c**3
+
+    But the reverse order returns an unevaulated lhs (a may depend on b).
+    >>> diff(diff(q,b),c)
+    Derivative(a*c, b, c) = -2/c**3
 
     Integration can only be performed on one side at a time.
     >>> q=Eqn(a*c,b/c)
