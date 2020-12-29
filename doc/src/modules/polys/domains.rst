@@ -163,11 +163,24 @@ of coefficients::
   >>> p.rep.rep
   [[1, 1], [1, 0], [1, 1]]
 
-This list of lists (of lists of...) of coefficients representation is known as
-"dense multivariate polynomial" (DMP) representation. With a large number of
-generators (variables) this representation becomes inefficient and it is
-better to use a "sparse" representation. Instead of a list of lists we can
-use a dict mapping nonzero monomial terms to their coefficients::
+This list of lists of (lists of...) coefficients representation is known as
+"dense multivariate polynomial" (DMP) representation. Instead of a list of
+lists we can use a dict mapping nonzero monomial terms to their coefficients.
+This is known as the "sparse polynomial" representation. We can see what this
+would look like using the :py:meth:`~.Poly.as_dict` method::
+
+  >>> Poly(7*x**20 + 8*x + 9).rep.rep
+  [7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 9]
+  >>> Poly(7*x**20 + 8*x + 9).as_dict()
+  {(0,): 9, (1,): 8, (20,): 7}
+
+The keys of this dict are the indices of the powers of ``x`` and the values of
+the coefficients so e.g. ``7*x**20`` becomes ``(20,): 7`` in the dict. The key
+is a tuple so that in the multivariate case something like ``4*x**2*y**3`` can
+be represented as ``(2, 3): 4``. The sparse representation can be more
+efficient as it avoids the need to store and manipulate the zero coefficients.
+With a large number of generators (variables) the dense representation becomes
+particularly inefficient and it is better to use the sparse representation::
 
   >>> from sympy import prod
   >>> gens = symbols('x:10')
@@ -191,8 +204,9 @@ polynomial.
 
 SymPy's polynomial module has implementations of polynomial expressions based
 on both the dense and sparse representations. There are also other
-implementations of different special classes of expressions. The rest of this
-page discusses what those representations are and how to use them.
+implementations of different special classes of expressions that can be used
+as the coefficients of those polynomials. The rest of this page discusses what
+those representations are and how to use them.
 
 .. _tree: https://en.wikipedia.org/wiki/Tree_(data_structure)
 .. _Richardon's theorem: https://en.wikipedia.org/wiki/Richardson%27s_theorem
@@ -256,8 +270,8 @@ division::
 
 In general code that is expected to work with elements of an arbitrary domain
 should not use the division operators ``/``, ``//`` and ``%``. Only the operators
-``+``, ``-``, ``*`` and ``**`` (with non-negative exponents) should be assumed
-to work with arbitrary domain elements. All other operations should be
+``+``, ``-``, ``*`` and ``**`` (with nonnegative integer exponent) should be
+assumed to work with arbitrary domain elements. All other operations should be
 accessed as functions from the :py:class:`~.Domain` object::
 
   >>> ZZ.quo(ZZ(5), ZZ(3))  # 5 // 3
@@ -335,7 +349,7 @@ created with the :py:func:`~sympy.core.sympify.sympify` function.::
 It is important when working with the domains not to mix sympy expressions
 with domain elements even though it will sometimes work in simple cases. Each
 domain object has the methods :py:meth:`~.Domain.to_sympy` and
-:py:meth:`~.Domain.from_sympy` for converting back and forther between sympy
+:py:meth:`~.Domain.from_sympy` for converting back and forth between sympy
 expressions and domain elements::
 
   >>> z_sympy = sympify(2)
@@ -362,6 +376,9 @@ conversion will fail if the expression can not be represented in the domain::
   Traceback (most recent call last):
   ...
   sympy.polys.polyerrors.CoercionFailed: expected an integer, got sqrt(2)
+
+We have already seen that in some cases we can use the domain object itself as
+a constructor e.g. ``QQ(2)``. This will generally work provided the 
 
 It is important not to mix domain elements with other Python types such as
 ``int``, ``float``, as well as standard sympy :py:class:`~.Basic` expressions.
@@ -518,19 +535,9 @@ We can also construct multivariate polynomial rings::
   >>> xk**2*yk + xk + yk
   x**2*y + x + y
 
-The :py:meth:`~.Domain.unify` method understands how to combine different
-polynomial ring domains and how to unify the base domain::
-
-  >>> ZZ[x].unify(ZZ[y])
-  ZZ[x,y]
-  >>> ZZ[x,y].unify(ZZ[y])
-  ZZ[x,y]
-  >>> ZZ[x].unify(QQ)
-  QQ[x]
-
 It is also possible to construct nested polynomial rings (although it is less
 efficient). The ring ``K[x][y]`` is formally equivalent to ``K[x,y]`` although
-the implementations in sympy are different::
+their implementations in sympy are different::
 
   >>> K = ZZ[x][y]
   >>> p = K(x**2 + x*y + y**2)
@@ -540,9 +547,14 @@ the implementations in sympy are different::
   {(0,): x**2, (1,): x, (2,): 1}
 
 Here the coefficients like ``x**2`` are instances of :py:class:`~.PolyElement`
-as well so this is a ``dict`` where the values are also dicts. The
-multivariate ring domain ``ZZ[x,y]`` has a more efficient representation as a
-single flattened ``dict``::
+as well so this is a ``dict`` where the values are also dicts. The full
+representation is more like::
+
+  >>> {k: dict(v) for k, v in p.items()}
+  {(0,): {(2,): 1}, (1,): {(1,): 1}, (2,): {(0,): 1}}
+
+The multivariate ring domain ``ZZ[x,y]`` has a more efficient representation
+as a single flattened ``dict``::
 
   >>> K = ZZ[x,y]
   >>> p = K(x**2 + x*y + y**2)
@@ -807,8 +819,8 @@ independent then the domain will be ``EX``::
   >>> construct_domain([sin(x), cos(x)])[0]
   EX
 
-Unify and converting between domains
-====================================
+Converting elements between different domains
+=============================================
 
 It is often useful to combine calculations performed over different domains.
 However just as it is important to avoid mixing domain elements with normal
@@ -824,6 +836,44 @@ is used to convert elements from one domain into elements of another domain::
   False
   >>> QQ.of_type(num_qq)
   True
+
+The :py:meth:`~.Domain.convert` method can be called without specifying the
+source domain as the second ergument e.g.::
+
+  >>> QQ.convert(ZZ(2))
+  2
+
+This works because :py:meth:`~.Domain.convert` can check the type of ``ZZ(2)``
+and can try to work out what domain (``ZZ``) it is an element of. Certain
+domains like ``ZZ`` and ``QQ`` are treated as special cases to make this work.
+Elements of more complicated domains are instances of subclasses of
+:py:class:`~.DomainElement` which has a :py:meth:`~.DomainElement.parent`
+method that can identify the domain that the element belongs to. For example
+in the polynomial ring ``ZZ[x]`` we have::
+
+  >>> from sympy import ZZ, Symbol
+  >>> x = Symbol('x')
+  >>> K = ZZ[x]
+  >>> K
+  ZZ[x]
+  >>> p = K(x) + K.one
+  >>> p
+  x + 1
+  >>> type(p)
+  <class 'sympy.polys.rings.PolyElement'>
+  >>> p.parent()
+  ZZ[x]
+  >>> p.parent() == K
+  True
+
+It is more efficient though to call :py:meth:`~.Domain.convert_from` with the
+source domain specified as the second argument::
+
+  >>> QQ.convert_from(ZZ(2), ZZ)
+  2
+
+Unifying domains
+================
 
 When looking to combine elements from two different domains and we want to
 perform mixed calculations with them we need to
@@ -860,37 +910,26 @@ of the other and we see that ``K1.unify(K2) == K2`` so it is not actually
 necessary to convert ``y2``. In general though ``K1.unify(K2)`` can give a new
 domain that is not equal to either ``K1`` or ``K2``.
 
-The :py:meth:`~.Domain.convert` method can be called without specifying the
-source domain as the second ergument e.g.::
+The :py:meth:`~.Domain.unify` method understands how to combine different
+polynomial ring domains and how to unify the base domain::
 
-  >>> QQ.convert(ZZ(2))
-  2
+  >>> ZZ[x].unify(ZZ[y])
+  ZZ[x,y]
+  >>> ZZ[x,y].unify(ZZ[y])
+  ZZ[x,y]
+  >>> ZZ[x].unify(QQ)
+  QQ[x]
 
-This works because :py:meth:`~.Domain.convert` can check the type of ``ZZ(2)``
-and can try to work out what domain (``ZZ``) it is an element of. Certain
-domains like ``ZZ`` and ``QQ`` are treated as special cases to make this work.
-Elements of more complicated domains are instances of subclasses of
-:py:class:`~.DomainElement` which has a :py:meth:`~.DomainElement.parent`
-method that can identify the domain that the element belongs to. For example
-in the polynomial ring ``ZZ[x]`` we have::
+It is also possible to unify algebraic fields and rational function fields as
+well::
 
-  >>> from sympy import ZZ, Symbol
-  >>> x = Symbol('x')
-  >>> K = ZZ[x]
-  >>> K
-  ZZ[x]
-  >>> p = K(x) + K.one
-  >>> p
-  x + 1
-  >>> type(p)
-  <class 'sympy.polys.rings.PolyElement'>
-  >>> p.parent()
-  ZZ[x]
-  >>> p.parent() == K
-  True
-
-It is more efficient though to call :py:meth:`~.Domain.convert_from` with the
-source domain specified as the second argument::
-
-  >>> QQ.convert_from(ZZ(2), ZZ)
-  2
+  >>> K1 = QQ.algebraic_field(sqrt(2))[x]
+  >>> K2 = QQ.algebraic_field(sqrt(3))[y]
+  >>> K1
+  QQ<sqrt(2)>[x]
+  >>> K2
+  QQ<sqrt(3)>[y]
+  >>> K1.unify(K2)
+  QQ<sqrt(2) + sqrt(3)>[x,y]
+  >>> QQ.frac_field(x).unify(ZZ[y])
+  ZZ(x,y)
