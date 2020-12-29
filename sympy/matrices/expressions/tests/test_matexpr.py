@@ -496,6 +496,10 @@ def test_MatrixSet():
     raises(ValueError, lambda: MatrixSet(2.4, -1, S.Reals))
     raises(TypeError, lambda: MatrixSet(2, 2, (1, 2, 3)))
 
+def test_issue_19162():
+    X = Matrix(MatrixSymbol('X', 1, 1))
+    assert X.inv() == Matrix([[1/X[0, 0]]])
+
 def test_matrixsymbol_solving():
     A = MatrixSymbol('A', 2, 2)
     B = MatrixSymbol('B', 2, 2)
