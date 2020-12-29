@@ -147,13 +147,43 @@ are equal. Zero-testing is particularly easy: the polynomial is zero if and
 only if all coefficients are zero (of course we need to have easy zero-testing
 for the coefficients themselves).
 
+We can make functions that operate on the DUP representation much more
+efficiently than functions that operate on the tree representation. Many
+operations with standard sympy expressions are in fact computed by converting
+to a polynomial representation and then performing the calculation. An example
+is the :py:func:`~.factor` function::
+
+  >>> from sympy import factor
+  >>> e = 2*x**3 + 10*x**2 + 16*x + 8
+  >>> e
+  2*x**3 + 10*x**2 + 16*x + 8
+  >>> factor(e)
+  2*(x + 1)*(x + 2)**2
+
+Internally :py:func:`~.factor` will convert the expression from the tree
+representation into the DUP representation and then use the function
+:py:func:`~.dup_factor_list`::
+
+  >>> from sympy import ZZ
+  >>> from sympy.polys.factortools import dup_factor_list
+  >>> p = [ZZ(2), ZZ(10), ZZ(16), ZZ(8)]
+  >>> p
+  [2, 10, 16, 8]
+  >>> dup_factor_list(p, ZZ)
+  (2, [([1, 1], 1), ([1, 2], 2)])
+
+There are many more examples of functions with ``dup_*`` names for operating
+on the DUP representation that are documented in :ref:`polys-internals`. There
+are also functions with the ``dmp_*`` prefix for operating on multivariate
+polynomials.
+
 A multivariate polynomial (a polynomial in multiple variables) can be
-represented as a polynomial with coefficients that are polynomials. For
-example ``x**2*y + x**2 + x*y + y + 1`` can be represented as polynomial in
-``x`` where the coefficients are themselves polynomials in ``y`` i.e.: ``(y +
-1)*x**2 + (y)*x + (y+1)``. Since we can represent a polynomial with a list of
-coefficients a multivariate polynomial can be represented with a list of lists
-of coefficients::
+represented as a polynomial with coefficients that are themselves polynomials.
+For example ``x**2*y + x**2 + x*y + y + 1`` can be represented as polynomial
+in ``x`` where the coefficients are themselves polynomials in ``y`` i.e.: ``(y
++ 1)*x**2 + (y)*x + (y+1)``. Since we can represent a polynomial with a list
+of coefficients a multivariate polynomial can be represented with a list of
+lists of coefficients::
 
   >>> from sympy import symbols
   >>> x, y = symbols('x, y')
@@ -164,20 +194,20 @@ of coefficients::
   [[1, 1], [1, 0], [1, 1]]
 
 This list of lists of (lists of...) coefficients representation is known as
-"dense multivariate polynomial" (DMP) representation. Instead of a list of
-lists we can use a dict mapping nonzero monomial terms to their coefficients.
-This is known as the "sparse polynomial" representation. We can see what this
-would look like using the :py:meth:`~.Poly.as_dict` method::
+the "dense multivariate polynomial" (DMP) representation. Instead of lists we
+can use a dict mapping nonzero monomial terms to their coefficients. This is
+known as the "sparse polynomial" representation. We can see what this would
+look like using the :py:meth:`~.Poly.as_dict` method::
 
   >>> Poly(7*x**20 + 8*x + 9).rep.rep
   [7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 9]
   >>> Poly(7*x**20 + 8*x + 9).as_dict()
   {(0,): 9, (1,): 8, (20,): 7}
 
-The keys of this dict are the indices of the powers of ``x`` and the values of
-the coefficients so e.g. ``7*x**20`` becomes ``(20,): 7`` in the dict. The key
-is a tuple so that in the multivariate case something like ``4*x**2*y**3`` can
-be represented as ``(2, 3): 4``. The sparse representation can be more
+The keys of this dict are the exponents of the powers of ``x`` and the values
+are the coefficients so e.g. ``7*x**20`` becomes ``(20,): 7`` in the dict. The
+key is a tuple so that in the multivariate case something like ``4*x**2*y**3``
+can be represented as ``(2, 3): 4``. The sparse representation can be more
 efficient as it avoids the need to store and manipulate the zero coefficients.
 With a large number of generators (variables) the dense representation becomes
 particularly inefficient and it is better to use the sparse representation::
