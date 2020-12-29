@@ -889,7 +889,7 @@ def test_sympy__sets__sets__Intersection():
     x = Symbol('x')
     y = Symbol('y')
     S = Intersection(Interval(0, x), Interval(y, 1))
-    assert isinstance(S, Intersection)
+    assert isinstance(S, Interval)
     assert _test_args(S)
 
 

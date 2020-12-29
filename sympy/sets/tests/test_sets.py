@@ -822,7 +822,7 @@ def test_contains():
     assert Union(Interval(1, 2), Interval(3, 4)).contains(x) == \
         Or(And(S.One <= x, x <= 2), And(S(3) <= x, x <= 4))
     assert Intersection(Interval(1, x), Interval(2, 3)).contains(y) == \
-        And(y <= 3, y <= x, S.One <= y, S(2) <= y)
+        And(S(2) <= y, y<= Min(3,x))
 
     assert (S.Complexes).contains(S.ComplexInfinity) == S.false
 
