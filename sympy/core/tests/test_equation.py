@@ -1,5 +1,5 @@
 from sympy import var, integrate, simplify, expand, factor, log, Integral, \
-    diff, FiniteSet, Matrix, exp
+    diff, FiniteSet, Matrix, exp, collect
 from sympy import Equality
 from sympy import Equation, Eqn
 from sympy import latex
@@ -94,8 +94,7 @@ def test_helper_functions():
     assert tsteqn.expand() == tsteqn2
     assert expand(tsteqn) == tsteqn2
     assert tsteqn2.collect(b) == tsteqn3
-    # collect(Eqn,...) not working yet
-    #assert collect(tsteqn2,b) == tsteqn3
+    assert collect(tsteqn2,b) == tsteqn3
     assert tsteqn3.simplify() == tsteqn4
     assert simplify(tsteqn3) == tsteqn4
     assert tsteqn4.factor() == tsteqn
