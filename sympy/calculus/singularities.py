@@ -15,10 +15,12 @@ the following function types in the given ``Interval``:
 
 """
 
-from sympy import S, Symbol
+from sympy import S, Symbol, Heaviside, Piecewise
 from sympy.core.sympify import sympify
 from sympy.solvers.solveset import solveset
 from sympy.utilities.misc import filldedent
+from sympy.sets.sets import FiniteSet
+from sympy.core.numbers import Number
 
 
 def singularities(expression, symbol, domain=None):
@@ -89,6 +91,16 @@ def singularities(expression, symbol, domain=None):
     if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes
     try:
+        if isinstance(expression, Heaviside):
+            return solveset(expression.args[0])
+        if isinstance(expression, Piecewise):
+            res = FiniteSet()
+            for i in range(len(expression.args)):
+                if expression.args[i][1]!=True:
+                    for i in expression.args[i][1].args:
+                        if isinstance(i, Number):
+                            res+=FiniteSet(i)
+            return res
         sings = S.EmptySet
         for i in expression.rewrite([sec, csc, cot, tan], cos).atoms(Pow):
             if i.exp.is_infinite:

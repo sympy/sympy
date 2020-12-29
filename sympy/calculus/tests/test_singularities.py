@@ -1,4 +1,4 @@
-from sympy import Symbol, exp, log, oo, S, I, sqrt, Rational
+from sympy import Symbol, exp, log, oo, S, I, sqrt, Rational, Heaviside, Piecewise
 from sympy.calculus.singularities import (
     singularities,
     is_increasing,
@@ -26,7 +26,10 @@ def test_singularities():
     assert singularities(1/(x**2 + 1), x) == S.EmptySet
     assert singularities(exp(1/x), x, S.Reals) == FiniteSet(0)
     assert singularities(exp(1/x), x, Interval(1, 2)) == S.EmptySet
-    assert singularities(log((x - 2)**2), x, Interval(1, 3)) == FiniteSet(2)
+    assert singularities(Heaviside(1/2 - x), x) == FiniteSet(0.5)
+    assert singularities(Piecewise((0, x < 1/2), (1, True)),x) == FiniteSet(1/2)
+    assert singularities(Piecewise((0, x < 1/2), (1, True)),x) == FiniteSet(1/2)
+    assert singularities(Piecewise((x**2, x < 1/2), (1, x>1/2), (log(x), x>3)),x) == FiniteSet(0.5, 3)
     raises(NotImplementedError, lambda: singularities(x**-oo, x))
 
 
