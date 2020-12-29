@@ -28,10 +28,11 @@ in [SageMath](https://www.sagemath.org/) and
 
 from .expr import Expr
 from .basic import Basic
+from .evalf import EvalfMixin
 from .sympify import _sympify
 
 
-class Equation(Basic):
+class Equation(Basic, EvalfMixin):
     """
     This class defines an equation with a left-hand-side (lhs) and a right-
     hand-side (rhs) connected by the "=" operator (e.g. $p*V = n*R*T$).
@@ -422,9 +423,13 @@ class Equation(Basic):
     def collect(self, *args, **kwargs):
         return self._eval_collect(*args, **kwargs)
 
-    def evalf(self, *args, **kwargs):
+    def _eval_evalf(self, *args, **kwargs):
         return Equation(self.lhs.evalf(*args, **kwargs),
                         self.rhs.evalf(*args, **kwargs), check=False)
+
+    def evalf(self, *args, **kwargs):
+        return self._eval_evalf(*args, **kwargs)
+    n = evalf
 
     def _eval_derivative(self, *args, **kwargs):
         # TODO Find why diff and Derivative do not appear to pass through
