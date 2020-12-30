@@ -572,15 +572,15 @@ imaginary parts. See the `mpmath docs`_ for more about how floating point
 numbers are represented::
 
   >>> from sympy import RR, CC
-  >>> x = RR(3)
-  >>> x
+  >>> xr = RR(3)
+  >>> xr
   3.0
-  >>> x._mpf_
+  >>> xr._mpf_
   (0, 3, 0, 2)
-  >>> z = CC(3+1j)
-  >>> z
+  >>> zc = CC(3+1j)
+  >>> zc
   (3.0 + 1.0j)
-  >>> z._mpc_
+  >>> zc._mpc_
   ((0, 3, 0, 2), (0, 1, 0, 1))
 
 The use of approximate floating point arithmetic in these domains comes with
@@ -629,6 +629,95 @@ restore it in the doctest here::
 .. _complex numbers: https://en.wikipedia.org/wiki/Complex_number
 .. _mpmath docs: https://mpmath.org/doc/current/technical.html#representation-of-numbers
 .. _double precision: https://en.wikipedia.org/wiki/Double-precision_floating-point_format
+
+Algebraic number fields
+=======================
+
+An `algebraic extension`_ of the rationals `\mathbb{Q}` is known as an
+`algebraic number field`_ and these are implemented in sympy. The natural
+syntax for these would be something like ``QQ(sqrt(2))`` however ``QQ()`` is
+already overloaded as the constructor for elements of ``QQ``. These domains
+are instead created as e.g. ``QQ.algebraic_field(sqrt(2))``. The resulting
+field will be an instance of :py:class:`~.AlgebraicField`.
+
+The printing support for these is less developed but we can use
+:py:meth:`~.Domain.to_sympy` to take advantage of the corresponding
+:py:class:`~.Basic` printing support::
+
+  >>> K = QQ.algebraic_field(sqrt(2))
+  >>> K
+  QQ<sqrt(2)>
+  >>> b = K.one + K.from_sympy(sqrt(2))
+  >>> b
+  ANP([1, 1], [1, 0, -2], QQ)
+  >>> K.to_sympy(b)
+  1 + sqrt(2)
+  >>> b ** 2
+  ANP([2, 3], [1, 0, -2], QQ)
+  >>> K.to_sympy(b**2)
+  2*sqrt(2) + 3
+
+The raw printed display immediately shows the internal representation of the
+elements as :py:class:`~.ANP` instances. The field
+`\mathbb{Q}(\sqrt{2})` consists of numbers of the form
+`a+b\sqrt{2}` where `a` and `b` are rational numbers. Consequently every
+number in this field can be represented as a pair ``(a, b)`` of elements of
+``QQ``. The domain element stores these two in a list and also stores a list
+representation of the *minimal polynomial* for the extension element
+`\sqrt{2}`. There is a sympy function :py:func:`~.minpoly` that can compute
+the minimal polynomial of any algebraic expression over the rationals::
+
+  >>> from sympy import minpoly, Symbol
+  >>> x = Symbol('x')
+  >>> minpoly(sqrt(2), x)
+  x**2 - 2
+
+In the dense polynomial representation as a list of coefficients this
+polynomial is represented as ``[1, 0, -2]`` as seen in the :py:class:`~.ANP`
+display for the elements of ``QQ<sqrt(2)>`` above.
+
+It is also possible to create an algebraic number field with multiple
+generators such as `\mathbb{Q}(\sqrt{2},\sqrt{3})`::
+
+  >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
+  >>> K
+  QQ<sqrt(2) + sqrt(3)>
+  >>> sqrt2 = K.from_sympy(sqrt(2))
+  >>> sqrt3 = K.from_sympy(sqrt(3))
+  >>> p = (K.one + sqrt2) * (K.one + sqrt3)
+  >>> p
+  ANP([1/2, 1, -3/2], [1, 0, -10, 0, 1], QQ)
+  >>> K.to_sympy(p)
+  1 + sqrt(2) + sqrt(3) + sqrt(6)
+  >>> K.to_sympy(p**2)
+  4*sqrt(6) + 6*sqrt(3) + 8*sqrt(2) + 12
+
+Here the algebraic extension `\mathbb{Q}(\sqrt{2},\sqrt{3})` is converted to
+the (isomorphic) `\mathbb{Q}(\sqrt{2}+\sqrt{3})` with a single generator
+`\sqrt{2}+\sqrt{3}`. It is always possible to find a single generator like
+this due to the `primitive element theorem`_. There is a sympy function
+:py:func:`~.primitive_element` that can compute the minimal polynomial for a
+primitive element of an extension::
+
+  >>> from sympy import primitive_element, minpoly
+  >>> e = primitive_element([sqrt(2), sqrt(3)], x)
+  >>> e[0]
+  x**4 - 10*x**2 + 1
+  >>> e[0].subs(x, sqrt(2) + sqrt(3)).expand()
+  0
+
+The minimal polynomial ``x**4 - 10*x**2 + 1`` has the dense list representation
+``[1, 0, -10, 0, 1]`` as seen in the :py:class:`~.ANP` output above. What the
+primitive element theorem means is that all algebraic number fields can be
+represented as an extension of the rationals by a single generator with some
+minimal polynomial. Calculations over the algebraic number field only need to
+take advantage of the minimal polynomial and that makes it possible to compute
+all arithmetic operations and also to carry out higher level operations like
+factorisation of polynomials.
+
+.. _algebraic extension: https://en.wikipedia.org/wiki/Algebraic_extension
+.. _algebraic number field: https://en.wikipedia.org/wiki/Algebraic_number_field
+.. _primitive element theorem: https://en.wikipedia.org/wiki/Primitive_element_theorem
 
 Polynomial ring domains
 =======================
@@ -766,92 +855,6 @@ as a single flattened ``dict``::
 The difference in efficiency between these representations grows as the number
 of generators increases i.e. ``ZZ[x,y,z,t,...]`` vs ``ZZ[x][y][z][t]...``.
 
-Algebraic number fields
-=======================
-
-A polynomial ring such as ``ZZ[x]`` is an example of a transcendental
-extension but algebraic extensions are also possible. An algebraic extension
-of ``QQ`` is known as an *algebraic number field* and these are implemented in
-sympy. The natural syntax for these would be something like ``QQ(sqrt(2))``
-however ``QQ()`` is already overloaded as the constructor for elements of
-``QQ``. These domains are instead created as e.g.
-``QQ.algebraic_field(sqrt(2))``. The resulting field will be an instance of
-:py:class:`~.AlgebraicField`.
-
-The printing support for these is less developed but we can use
-:py:meth:`~.Domain.to_sympy` to take advantage of the corresponding
-:py:class:`~.Basic` printing support::
-
-  >>> K = QQ.algebraic_field(sqrt(2))
-  >>> K
-  QQ<sqrt(2)>
-  >>> b = K.one + K.from_sympy(sqrt(2))
-  >>> b
-  ANP([1, 1], [1, 0, -2], QQ)
-  >>> K.to_sympy(b)
-  1 + sqrt(2)
-  >>> b ** 2
-  ANP([2, 3], [1, 0, -2], QQ)
-  >>> K.to_sympy(b**2)
-  2*sqrt(2) + 3
-
-The raw printed display immediately shows the internal representation of the
-elements as :py:class:`~.ANP` instances. The field
-`\mathbb{Q}(\sqrt{2})` consists of numbers of the form
-`a+b\sqrt{2}` where `a` and `b` are rational numbers. Consequently every
-number in this field can be represented as a pair ``(a, b)`` of elements of
-``QQ``. The domain element stores these two in a list and also stores a list
-representation of the *minimal polynomial* for the extension element
-`\sqrt{2}`. There is a sympy function :py:func:`~.minpoly` that can compute
-the minimal polynomial of any algebraic expression over the rationals::
-
-  >>> from sympy import minpoly
-  >>> minpoly(sqrt(2), x)
-  x**2 - 2
-
-In the dense polynomial representation as a list of coefficients this
-polynomial is represented as ``[1, 0, -2]`` as seen in the :py:class:`~.ANP`
-display for the elements of ``QQ<sqrt(2)>`` above.
-
-It is also possible to create an algebraic number field with multiple
-generators such as `\mathbb{Q}(\sqrt{2},\sqrt{3})`::
-
-  >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
-  >>> K
-  QQ<sqrt(2) + sqrt(3)>
-  >>> sqrt2 = K.from_sympy(sqrt(2))
-  >>> sqrt3 = K.from_sympy(sqrt(3))
-  >>> p = (K.one + sqrt2) * (K.one + sqrt3)
-  >>> p
-  ANP([1/2, 1, -3/2], [1, 0, -10, 0, 1], QQ)
-  >>> K.to_sympy(p)
-  1 + sqrt(2) + sqrt(3) + sqrt(6)
-  >>> K.to_sympy(p**2)
-  4*sqrt(6) + 6*sqrt(3) + 8*sqrt(2) + 12
-
-Here the algebraic extension `\mathbb{Q}(\sqrt{2},\sqrt{3})` is converted to
-the (isomorphic) `\mathbb{Q}(\sqrt{2}+\sqrt{3})` with a single generator
-`\sqrt{2}+\sqrt{3}`. It is always possible to find a single generator like
-this due to the *primitive element theorem*. There is a sympy function
-:py:func:`~.primitive_element` that can compute the minimal polynomial for a
-primitive element of an extension::
-
-  >>> from sympy import primitive_element, minpoly
-  >>> e = primitive_element([sqrt(2), sqrt(3)], x)
-  >>> e[0]
-  x**4 - 10*x**2 + 1
-  >>> e[0].subs(x, sqrt(2) + sqrt(3)).expand()
-  0
-
-The minimal polynomial ``x**4 - 10*x**2 + 1`` has the dense list representation
-``[1, 0, -10, 0, 1]`` as seen in the :py:class:`~.ANP` output above. What the
-primitive element theorem means is that all algebraic number fields can be
-represented as an extension of the rationals by a single generator with some
-minimal polynomial. Calculations over the algebraic number field only need to
-take advantage of the minimal polynomial and that makes it possible to compute
-all arithmetic operations and also to carry out higher level operations like
-factorisation of polynomials.
-
 Rational function fields
 ========================
 
@@ -917,6 +920,36 @@ field::
 Computing this cancellation can be slow which makes rational function fields
 potentially slower than polynomial rings or algebraic fields.
 
+Expression domain
+=================
+
+The final domain to consider is the "expression domain" which is known as
+``EX``. Expressions that can not be represented using the other domains can be
+always represented using the expression domain. Elements of ``EX`` are in fact
+just wrappers around a ``Basic`` instance::
+
+  >>> from sympy import EX
+  >>> p = EX.from_sympy(1 + x)
+  >>> p
+  EX(x + 1)
+  >>> type(p)
+  <class 'sympy.polys.domains.expressiondomain.ExpressionDomain.Expression'>
+  >>> p.ex
+  x + 1
+  >>> type(p.ex)
+  <class 'sympy.core.add.Add'>
+
+For other domains the domain representation of expressions is usually more
+efficient than the tree representation used by :py:class:`~.Basic`. In ``EX``
+the internal representation is :py:class:`~.Basic` so it is clearly not more
+efficient. The purpose of the ``EX`` domain is to be able to wrap up arbitrary
+expressions in an interace that is consistent with the other domains. The
+``EX`` domain is used as a fallback when an appropriate domain can not be
+found. Although this does not offer any particular efficiency it does allow
+the algorithms that are implemented to work over arbitrary domains to be
+usable when working with expressions that do not have an appropriate domain
+representation.
+
 Choosing a domain
 =================
 
@@ -970,9 +1003,7 @@ domain will be ``QQ`` rather than ``ZZ``. If any symbol is found in the
 inputs then a :py:class:`~.PolynomialRing` will be created. A multivariate
 polynomial ring such as ``QQ[x,y]`` can also be created if there are multiple
 symbols in the inputs. If any symbols appear in the denominators then a
-:py:class:`~.RationalField` like ``QQ(x)`` will be created instead (and the
-ground domain ``ZZ`` will be promoted to the field ``QQ`` even if all
-coeficients are integers).
+:py:class:`~.RationalField` like ``QQ(x)`` will be created instead.
 
 Some of the domains above are fields and others are (non-field) rings. In some
 contexts it is necessary to have a field domain so that division is possible
@@ -1075,8 +1106,8 @@ source domain specified as the second argument::
 Unifying domains
 ================
 
-When looking to combine elements from two different domains and we want to
-perform mixed calculations with them we need to
+When we want to combine elements from two different domains and perform mixed
+calculations with them we need to
 
 #. Choose a new domain that can represent all elements of both.
 #. Convert all elements to the new domain.
