@@ -1,4 +1,4 @@
-from sympy import var, integrate, simplify, expand, factor, log, Integral, \
+from sympy import var, integrate, simplify, expand, factor, log, \
     diff, FiniteSet, Matrix, exp, collect
 from sympy import Equality
 from sympy import Equation, Eqn
