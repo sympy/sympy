@@ -30,6 +30,7 @@ from .expr import Expr
 from .basic import Basic
 from .evalf import EvalfMixin
 from .sympify import _sympify
+import functools
 
 
 class Equation(Basic, EvalfMixin):
@@ -105,7 +106,16 @@ class Equation(Basic, EvalfMixin):
     >>> collect(f2,x)
     b*x + c + x**2*(a + 1) - 1 = a*x**2 + b*x + 2*c
 
-    Apply user defined python function
+    Apply operation to only one side
+    >>> poly = Eqn(a*x**2 + b*x + c*x**2, a*x**3 + b*x**3 + c*x)
+    >>> poly.applyrhs(factor,x)
+    a*x**2 + b*x + c*x**2 = x*(c + x**2*(a + b))
+    >>> poly.applylhs(factor)
+    x*(a*x + b + c*x) = a*x**3 + b*x**3 + c*x
+    >>> poly.applylhs(collect,x)
+    b*x + x**2*(a + c) = a*x**3 + b*x**3 + c*x
+
+    ``.apply...`` also works with user defined python functions
     >>> def addsquare(expr):
     ...     return expr+expr**2
     ...
@@ -119,6 +129,20 @@ class Equation(Basic, EvalfMixin):
     a**2 + a = b/c
     >>> addsquare(t)
     a**2 + a = b**2/c**2 + b/c
+
+    Inaddition to ``.apply...`` there is also the less general ``.do``,
+    ``.dolhs``, ``.dorhs``, which only works for operations defined on the
+    ``Expr`` class (e.g.``.collect(), .factor(), .expand()``, etc...).
+    >>> poly.dolhs.collect(x)
+    b*x + x**2*(a + c) = a*x**3 + b*x**3 + c*x
+    >>> poly.dorhs.collect(x)
+    a*x**2 + b*x + c*x**2 = c*x + x**3*(a + b)
+    >>> poly.do.collect(x)
+    b*x + x**2*(a + c) = c*x + x**3*(a + b)
+    >>> poly.dorhs.factor()
+    a*x**2 + b*x + c*x**2 = x*(a*x**2 + b*x**2 + c)
+
+    ``poly.do.exp()`` or other sympy math functions will raise an error.
 
     Rearranging an equation (simple example made complicated as illustration)
     >>> p, V, n, R, T = var('p V n R T')
@@ -337,6 +361,31 @@ class Equation(Basic, EvalfMixin):
         The operation is applied to only the rhs.
         """
         return self.apply(func, *args, **kwargs, side='rhs')
+
+    class _Sides:
+        def __init__(self,eqn, side='both'):
+            self.eqn = eqn
+            self.side = side
+
+        def __getattr__(self, name):
+            func = None
+            try:
+                func = getattr(self.eqn.rhs, name)
+            except AttributeError:
+                func = getattr(self.eqn.lhs, name)
+            return functools.partial(self.eqn.apply, func, side=self.side)
+
+    @property
+    def do(self):
+        return self._Sides(self,side='both')
+
+    @property
+    def dolhs(self):
+        return self._Sides(self,side='lhs')
+
+    @property
+    def dorhs(self):
+        return self._Sides(self,side='rhs')
 
     #####
     # Overrides of binary math operations
