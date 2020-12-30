@@ -129,12 +129,12 @@ def test_grunts_eval_special_slow_sometimes_fail():
     assert gruntz(exp(gamma(x - exp(-x))*exp(1/x)) - exp(gamma(x)), x, oo) is oo
 
 
+def test_gruntz_Ei():
+    assert gruntz((Ei(x - exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x, x, oo) == -1
+
+
 @XFAIL
 def test_gruntz_eval_special_fail():
-    # TODO exponential integral Ei
-    assert gruntz(
-        (Ei(x - exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x, x, oo) == -1
-
     # TODO zeta function series
     assert gruntz(
         exp((log(2) + 1)*x) * (zeta(x + exp(-x)) - zeta(x)), x, oo) == -log(2)
