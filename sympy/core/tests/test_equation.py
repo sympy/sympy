@@ -42,7 +42,7 @@ def test_binary_op():
     assert c % tsteqn == Equation(c % a, c % (b / c))
     assert tsteqn ** c == Equation(a ** c, (b / c) ** c)
     assert c ** tsteqn == Equation(c ** a, c ** (b / c))
-    assert tsteqn + tsteqn == Equation(2 * a, 2*b / c)
+    assert tsteqn + tsteqn == Equation(2 * a, 2 * b / c)
     assert tsteqn * tsteqn == Equation(a ** 2, b ** 2 / c ** 2)
     assert tsteqn - tsteqn == Equation(0, 0)
     assert tsteqn / tsteqn == Equation(1, 1)
@@ -62,10 +62,6 @@ def test_helper_functions():
     tsteqn = Eqn(a, b / c)
     raises(ValueError, lambda: integrate(tsteqn, c))
     raises(AttributeError, lambda: integrate(tsteqn, c, side='right'))
-    raises(ValueError, lambda: tsteqn._applyfunc(log))
-    assert tsteqn.applyfunc(log) == Equation(log(a), log(b / c))
-    assert tsteqn.applylhs(log) == Equation(log(a), b / c)
-    assert tsteqn.applyrhs(log) == Equation(a, log(b / c))
     assert tsteqn.evalf(4, {b: 2.0, c: 4}) == Eqn(a, 0.5000)
     assert diff(tsteqn, c) == Equation(diff(a, c, evaluate=False), -b / c ** 2)
     tsteqn = Eqn(a * c, b / c)
@@ -87,14 +83,14 @@ def test_helper_functions():
                   12 * b * c + 3 * c ** 2)
     tsteqn3 = Eqn(a ** 3 + 3 * a ** 2 - a - 3,
                   a * c ** 2 + b ** 2 * (4 * a + 12) + b * (
-                          4 * a * c + 12 * c) + 3 * c ** 2)
+                      4 * a * c + 12 * c) + 3 * c ** 2)
     tsteqn4 = Eqn(a ** 3 + 3 * a ** 2 - a - 3,
                   a * c ** 2 + 4 * b ** 2 * (a + 3) + 4 * b * c * (
-                          a + 3) + 3 * c ** 2)
+                      a + 3) + 3 * c ** 2)
     assert tsteqn.expand() == tsteqn2
     assert expand(tsteqn) == tsteqn2
     assert tsteqn2.collect(b) == tsteqn3
-    assert collect(tsteqn2,b) == tsteqn3
+    assert collect(tsteqn2, b) == tsteqn3
     assert tsteqn3.simplify() == tsteqn4
     assert simplify(tsteqn3) == tsteqn4
     assert tsteqn4.factor() == tsteqn
@@ -103,3 +99,25 @@ def test_helper_functions():
     tsteqn5 = Eqn(a, Matrix([[1, 1], [1, 1]]))
     assert (exp(tsteqn5).lhs == exp(a))
     assert (exp(tsteqn5).rhs == exp(Matrix([[1, 1], [1, 1]])))
+
+
+def test_apply_syntax():
+    a, b, c, x = var('a b c x')
+    tsteqn = Eqn(a, b / c)
+    assert tsteqn.apply(log) == Equation(log(a), log(b / c))
+    assert tsteqn.applylhs(log) == Equation(log(a), b / c)
+    assert tsteqn.applyrhs(log) == Equation(a, log(b / c))
+    poly = Eqn(a * x ** 2 + b * x + c * x ** 2, a * x ** 3 + b * x ** 3 + c
+               * x)
+    assert poly.applyrhs(collect, x) == Eqn(poly.lhs, poly.rhs.collect(x))
+
+
+def test_do_syntax():
+    a, b, c, x = var('a b c x')
+    tsteqn = Eqn(a, b / c)
+    raises(AttributeError, lambda: tsteqn.do.log())
+    poly = Eqn(a * x ** 2 + b * x + c * x ** 2, a * x ** 3 + b * x ** 3 + c
+               * x)
+    assert poly.dorhs.collect(x) == Eqn(poly.lhs, poly.rhs.collect(x))
+    assert poly.dolhs.collect(x) == Eqn(poly.lhs.collect(x), poly.rhs)
+    assert poly.do.collect(x) == Eqn(poly.lhs.collect(x), poly.rhs.collect(x))

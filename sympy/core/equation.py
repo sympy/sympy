@@ -30,6 +30,7 @@ from .expr import Expr
 from .basic import Basic
 from .evalf import EvalfMixin
 from .sympify import _sympify
+import functools
 
 
 class Equation(Basic, EvalfMixin):
@@ -105,14 +106,43 @@ class Equation(Basic, EvalfMixin):
     >>> collect(f2,x)
     b*x + c + x**2*(a + 1) - 1 = a*x**2 + b*x + 2*c
 
-    Apply user defined python function
+    Apply operation to only one side
+    >>> poly = Eqn(a*x**2 + b*x + c*x**2, a*x**3 + b*x**3 + c*x)
+    >>> poly.applyrhs(factor,x)
+    a*x**2 + b*x + c*x**2 = x*(c + x**2*(a + b))
+    >>> poly.applylhs(factor)
+    x*(a*x + b + c*x) = a*x**3 + b*x**3 + c*x
+    >>> poly.applylhs(collect,x)
+    b*x + x**2*(a + c) = a*x**3 + b*x**3 + c*x
+
+    ``.apply...`` also works with user defined python functions
     >>> def addsquare(expr):
     ...     return expr+expr**2
     ...
-    >>> t.applyfunc(addsquare)
+    >>> t.apply(addsquare)
     a**2 + a = b**2/c**2 + b/c
+    >>> t.applyrhs(addsquare)
+    a = b**2/c**2 + b/c
+    >>> t.apply(addsquare, side = 'rhs')
+    a = b**2/c**2 + b/c
+    >>> t.applylhs(addsquare)
+    a**2 + a = b/c
     >>> addsquare(t)
     a**2 + a = b**2/c**2 + b/c
+
+    Inaddition to ``.apply...`` there is also the less general ``.do``,
+    ``.dolhs``, ``.dorhs``, which only works for operations defined on the
+    ``Expr`` class (e.g.``.collect(), .factor(), .expand()``, etc...).
+    >>> poly.dolhs.collect(x)
+    b*x + x**2*(a + c) = a*x**3 + b*x**3 + c*x
+    >>> poly.dorhs.collect(x)
+    a*x**2 + b*x + c*x**2 = c*x + x**3*(a + b)
+    >>> poly.do.collect(x)
+    b*x + x**2*(a + c) = c*x + x**3*(a + b)
+    >>> poly.dorhs.factor()
+    a*x**2 + b*x + c*x**2 = x*(a*x**2 + b*x**2 + c)
+
+    ``poly.do.exp()`` or other sympy math functions will raise an error.
 
     Rearranging an equation (simple example made complicated as illustration)
     >>> p, V, n, R, T = var('p V n R T')
@@ -292,33 +322,29 @@ class Equation(Basic, EvalfMixin):
         else:
             return func(expr, *args, **kwargs)
 
-    def _applyfunc(self, func, *args, **kwargs):
-        # Logic function to allow using a keyword to determine
-        # which side to apply an operation/function to.
-
-        side = kwargs.pop('Eqn_apply_side', None)
-        if side == 'both':
-            lhs = self._applytoexpr(self.lhs, func, *args, **kwargs)
-            rhs = self._applytoexpr(self.rhs, func, *args, **kwargs)
-        elif side == 'rhs':
-            lhs = self.lhs
-            rhs = self._applytoexpr(self.rhs, func, *args, **kwargs)
-        elif side == 'lhs':
-            rhs = self.rhs
-            lhs = self._applytoexpr(self.lhs, func, *args, **kwargs)
-        else:
-            raise ValueError(
-                'keyword `Eqn_apply_side` must be one of "both", "lhs" or '
-                '"rhs".')
-        return Equation(lhs, rhs, check=False)
-
-    def applyfunc(self, func, *args, **kwargs):
+    def apply(self, func, *args, side='both', **kwargs):
         """
-        If either side of the equation has a defined subfunction (attribute) of
-        name ``func``, that will be applied instead of the global function.
-        The operation is applied to both sides.
+        Apply an operation/function/method to the equation returning the
+        resulting equation.
+
+        Parameters
+        ==========
+
+        func: object
+            object to apply usually a function
+
+        side: 'both', 'lhs', 'rhs', optional
+            Specifies which side of the equation the operation will be applied
+            to. Default is 'both'.
+
          """
-        return self._applyfunc(func, *args, **kwargs, Eqn_apply_side='both')
+        lhs = self.lhs
+        rhs = self.rhs
+        if side in ('both', 'lhs'):
+            lhs = self._applytoexpr(self.lhs, func, *args, **kwargs)
+        if side in ('both', 'rhs'):
+            rhs = self._applytoexpr(self.rhs, func, *args, **kwargs)
+        return Equation(lhs, rhs, check=False)
 
     def applylhs(self, func, *args, **kwargs):
         """
@@ -326,7 +352,7 @@ class Equation(Basic, EvalfMixin):
         name ``func``, that will be applied instead of the global function.
         The operation is applied to only the lhs.
         """
-        return self._applyfunc(func, *args, **kwargs, Eqn_apply_side='lhs')
+        return self.apply(func, *args, **kwargs, side='lhs')
 
     def applyrhs(self, func, *args, **kwargs):
         """
@@ -334,7 +360,32 @@ class Equation(Basic, EvalfMixin):
         name ``func``, that will be applied instead of the global function.
         The operation is applied to only the rhs.
         """
-        return self._applyfunc(func, *args, **kwargs, Eqn_apply_side='rhs')
+        return self.apply(func, *args, **kwargs, side='rhs')
+
+    class _Sides:
+        def __init__(self,eqn, side='both'):
+            self.eqn = eqn
+            self.side = side
+
+        def __getattr__(self, name):
+            func = None
+            try:
+                func = getattr(self.eqn.rhs, name)
+            except AttributeError:
+                func = getattr(self.eqn.lhs, name)
+            return functools.partial(self.eqn.apply, func, side=self.side)
+
+    @property
+    def do(self):
+        return self._Sides(self,side='both')
+
+    @property
+    def dolhs(self):
+        return self._Sides(self,side='lhs')
+
+    @property
+    def dorhs(self):
+        return self._Sides(self,side='rhs')
 
     #####
     # Overrides of binary math operations

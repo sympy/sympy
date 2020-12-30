@@ -457,7 +457,7 @@ class Function(Application, Expr):
         from sympy.core.equation import Equation
         if (n > 0) and isinstance(args[0],Equation):
             # simple override for Equation class.
-            return args[0].applyfunc(cls, *args[1:], **options)
+            return args[0].apply(cls, *args[1:], **options)
 
         if n not in cls.nargs:
             # XXX: exception message must be in exactly this format to
