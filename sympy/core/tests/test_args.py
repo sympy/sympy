@@ -1018,6 +1018,10 @@ nd = NormalDistribution(0, 1)
 from sympy.stats.frv_types import DieDistribution
 die = DieDistribution(6)
 
+@SKIP("abstract class")
+def test_sympy__stats__rv__Distribution():
+    pass
+
 
 def test_sympy__stats__crv__ContinuousDomain():
     from sympy.stats.crv import ContinuousDomain

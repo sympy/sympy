@@ -14,6 +14,7 @@ from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
         Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial,
         lambdify)
 from sympy.core.function import PoleError
+from sympy.calculus.util import continuous_domain
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.polys.polyerrors import PolynomialError
 from sympy.solvers.solveset import solveset
@@ -21,7 +22,7 @@ from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.core.sympify import _sympify
 from sympy.external import import_module
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain, is_random,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
+        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin, Distribution)
 
 
 class ContinuousDomain(RandomDomain):
@@ -140,9 +141,8 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 "Set of Conditional Domain not Implemented")
 
 
-class ContinuousDistribution(Basic):
-    def __call__(self, *args):
-        return self.pdf(*args)
+class ContinuousDistribution(Distribution):
+    pass
 
 
 class SampleContinuousScipy:
@@ -491,11 +491,12 @@ class ContinuousPSpace(PSpace):
             # Marginalize all other random symbols out of the density
             randomsymbols = tuple(set(self.values) - frozenset([expr]))
             symbols = tuple(rs.symbol for rs in randomsymbols)
-            pdf = self.domain.compute_expectation(self.pdf, symbols, **kwargs)
-            return Lambda(expr.symbol, pdf)
+            pdf = Lambda(expr.symbol, self.domain.compute_expectation(self.pdf, symbols, **kwargs))
+            return Distribution(pdf, continuous_domain(pdf, expr.symbol, S.Reals))
 
         z = Dummy('z', real=True)
-        return Lambda(z, self.compute_expectation(DiracDelta(expr - z), **kwargs))
+        pdf = Lambda(z, self.compute_expectation(DiracDelta(expr - z), **kwargs))
+        return Distribution(pdf, continuous_domain(pdf, z, S.Reals))
 
     @cacheit
     def compute_cdf(self, expr, **kwargs):
@@ -693,7 +694,9 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
             raise ValueError("Can not solve %s for %s"%(expr, self.value))
         fx = self.compute_density(self.value)
         fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
-        return Lambda(y, fy)
+        c_domain = continuous_domain(fy, y, S.Reals)
+        pdf = Lambda(y, fy)
+        return Distribution(pdf, c_domain)
 
     def compute_quantile(self, expr, **kwargs):
 

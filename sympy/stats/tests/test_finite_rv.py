@@ -566,3 +566,9 @@ def test_sample_pymc3():
                     assert sam in X.pspace.domain.set
             raises(NotImplementedError,
                 lambda: next(sample(Die("D"), library='pymc3')))
+
+def test_issue_20031_Finite():
+    # https://github.com/sympy/sympy/issues/20031
+    B = Bernoulli('B', 0.2)
+    dens = density(B)
+    assert dens(0.5) == S(0)

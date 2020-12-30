@@ -4,7 +4,7 @@ from sympy.matrices import (ImmutableMatrix, Inverse, Trace, Determinant,
                             MatrixSymbol, MatrixBase, Transpose, MatrixSet,
                             matrix2numpy)
 from sympy.stats.rv import (_value_check, RandomMatrixSymbol, NamedArgsMixin, PSpace,
-                            _symbol_converter, MatrixDomain)
+                            _symbol_converter, MatrixDomain, Distribution)
 from sympy.external import import_module
 
 
@@ -153,7 +153,7 @@ _get_sample_class_matrixrv = {
 #-------------------------Matrix Distribution----------------------------------#
 ################################################################################
 
-class MatrixDistribution(Basic, NamedArgsMixin):
+class MatrixDistribution(Distribution, NamedArgsMixin):
     """
     Abstract class for Matrix Distribution
     """

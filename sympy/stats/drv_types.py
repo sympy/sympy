@@ -60,6 +60,9 @@ class DiscreteDistributionHandmade(SingleDiscreteDistribution):
         val = Sum(pdf(x), (x, set._inf, set._sup)).doit()
         _value_check(Eq(val, 1) != S.false, "The pdf is incorrect on the given set.")
 
+    def pdf(self, *args):
+        return self.args[0](*args)
+
 def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
     """
     Create a Discrete Random Variable given the following:
@@ -99,11 +102,10 @@ def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
 
     """
     set = sympify(set)
-    pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
-    pdf = Lambda(symbol, pdf)
     # have a default of False while `rv` should have a default of True
     kwargs['check'] = kwargs.pop('check', False)
-    return rv(symbol.name, DiscreteDistributionHandmade, pdf, set, **kwargs)
+    pmf = Lambda(symbol, density)
+    return rv(symbol, DiscreteDistributionHandmade, pmf, set, **kwargs)
 
 
 #-------------------------------------------------------------------------------
