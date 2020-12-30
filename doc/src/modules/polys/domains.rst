@@ -855,6 +855,50 @@ as a single flattened ``dict``::
 The difference in efficiency between these representations grows as the number
 of generators increases i.e. ``ZZ[x,y,z,t,...]`` vs ``ZZ[x][y][z][t]...``.
 
+Old (dense) polynomial rings
+============================
+
+In the last section we saw that the domain representation of a polynomial ring
+like ``ZZ[x]`` uses a sparse representation of a polynomial as a dict mapping
+monomial exponents to coefficients. There is also an older version of
+``ZZ[x]`` that uses the dense DMP representation. We can create these two
+versions of ``ZZ[x]`` using ``ZZ.poly_ring(x)`` and ``ZZ.old_poly_ring(z)``
+where the syntax ``ZZ[x]`` is equivalent to ``ZZ.poly_ring(x)``::
+
+  >>> K1 = ZZ.poly_ring(x)
+  >>> K2 = ZZ.old_poly_ring(x)
+  >>> K1
+  ZZ[x]
+  >>> K2
+  ZZ[x]
+  >>> K1 == ZZ[x]
+  True
+  >>> K2 == ZZ[x]
+  False
+  >>> p1 = K1.from_sympy(x**2 + 1)
+  >>> p2 = K2.from_sympy(x**2 + 1)
+  >>> p1
+  x**2 + 1
+  >>> p2
+  x**2 + 1
+  >>> type(K1)
+  <class 'sympy.polys.domains.polynomialring.PolynomialRing'>
+  >>> type(p1)
+  <class 'sympy.polys.rings.PolyElement'>
+  >>> type(K2)
+  <class 'sympy.polys.domains.old_polynomialring.GlobalPolynomialRing'>
+  >>> type(p2)
+  <class 'sympy.polys.polyclasses.DMP'>
+
+The internal representation of the old polynomial ring domain is the
+:py:class:`~.DMP` representation as a list (of lists of) coefficients::
+
+  >>> repr(p2)
+  'DMP([1, 0, 1], ZZ, ZZ[x])'
+
+The most notable use of the :py:class:`~.DMP` representation of polynomials is
+as the internal representation used by :py:class:`~.Poly`.
+
 Rational function fields
 ========================
 
@@ -919,6 +963,20 @@ field::
 
 Computing this cancellation can be slow which makes rational function fields
 potentially slower than polynomial rings or algebraic fields.
+
+Just like in the case of polynomial rings there is both a new (sparse) and old
+(dense) version of fraction fields::
+
+  >>> K1 = QQ.frac_field(x)
+  >>> K2 = QQ.old_frac_field(x)
+  >>> K1
+  QQ(x)
+  >>> K2
+  QQ(x)
+  >>> type(K1)
+  <class 'sympy.polys.domains.fractionfield.FractionField'>
+  >>> type(K2)
+  <class 'sympy.polys.domains.old_fractionfield.FractionField'>
 
 Expression domain
 =================
