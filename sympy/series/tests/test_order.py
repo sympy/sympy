@@ -422,6 +422,7 @@ def test_issue_9192():
 def test_issue_9910():
     assert O(x*log(x) + sin(x), (x, oo)) == O(x*log(x), (x, oo))
 
+
 def test_issue_9917():
     assert O(x*sin(x) + 1, (x, oo)).expr.cancel() == x*sin(x) + 1
     assert O((x*sin(x))**2 + 1, (x, oo)).expr.cancel() == x**2*sin(x)**2 + 1
