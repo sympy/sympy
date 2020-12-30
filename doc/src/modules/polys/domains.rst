@@ -545,10 +545,90 @@ constructed with ``FF(p)``::
 
 Finite fields of order `p^n` where `n \ne 1` are not implemented. It is
 possible to use e.g. ``FF(6)`` or ``FF(9)`` but the resulting domain is *not*
-a field. It would be good to have a proper implementation of prime-power order
-finite fields but this is not yet available in SymPy (contributions welcome!).
+a field. it is just the integers modulo ``6`` or ``9`` and therefore has zero
+divisors and non-invertible elements::
+
+  >>> K = FF(6)
+  >>> K(3) * K(2)
+  0 mod 6
+
+It would be good to have a proper implementation of prime-power order finite
+fields but this is not yet available in SymPy (contributions welcome!).
 
 .. _Finite fields: https://en.wikipedia.org/wiki/Finite_field
+
+Real and complex fields
+=======================
+
+The fields ``RR`` and ``CC`` are intended mathematically to correspond to the
+`reals`_ or the `complex numbers`_, `\mathbb{R}` and `\mathbb{C}`
+respectively. The implementation of these uses floating point arithmetic. In
+practice this means that these are the domains that are used to represent
+expressions containing floats. Elements of ``RR`` are instances of the class
+``RealElement`` and have an ``mpf`` tuple which is used to represent a float
+in ``mpmath``. Elements of ``CC`` are instances of ``ComplexElement`` and have
+an ``mpc`` tuple which is a pair of ``mpf`` tuples representing the real and
+imaginary parts. See the `mpmath docs`_ for more about how floating point
+numbers are represented::
+
+  >>> from sympy import RR, CC
+  >>> x = RR(3)
+  >>> x
+  3.0
+  >>> x._mpf_
+  (0, 3, 0, 2)
+  >>> z = CC(3+1j)
+  >>> z
+  (3.0 + 1.0j)
+  >>> z._mpc_
+  ((0, 3, 0, 2), (0, 1, 0, 1))
+
+The use of approximate floating point arithmetic in these domains comes with
+all of the usual pitfalls. Many algorithms in the ``polys`` module are
+fundamentally designed for exact arithmetic making the use of these domains
+potentially problematic::
+
+  >>> RR('0.1') + RR('0.2') == RR('0.3')
+  False
+
+Since these are implemented using ``mpmath`` which is a multiprecision library
+it is possible to create different domains with different working precisions.
+The default domains ``RR`` and ``CC`` use 53 binary digits of precision much
+like standard `double precision`_ floating point which corresponds
+to approximately 15 decimal digits::
+
+  >>> from sympy.polys.domains.realfield import RealField
+  >>> RR.precision
+  53
+  >>> RR.dps
+  15
+  >>> RR(1) / RR(3)
+  0.333333333333333
+  >>> RR100 = RealField(100)
+  >>> RR100.precision
+  100
+  >>> RR100.dps
+  29
+  >>> RR100(1) / RR100(3)
+  0.33333333333333333333333333333
+
+There is however a bug in the implementation of this so that actually a global
+precision setting is used by all ``RealElement``. This means that just
+creating ``RR100`` above has altered the global precision and we will need to
+restore it in the doctest here::
+
+  >>> RR(1) / RR(3)  # wrong result!
+  0.33333333333333333333333333333
+  >>> dummy = RealField(53)  # hack to restore precision
+  >>> RR(1) / RR(3)  # restored
+  0.333333333333333
+
+(Obviously that should be fixed!)
+
+.. _reals: https://en.wikipedia.org/wiki/Real_number
+.. _complex numbers: https://en.wikipedia.org/wiki/Complex_number
+.. _mpmath docs: https://mpmath.org/doc/current/technical.html#representation-of-numbers
+.. _double precision: https://en.wikipedia.org/wiki/Double-precision_floating-point_format
 
 Polynomial ring domains
 =======================
