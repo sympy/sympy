@@ -25,6 +25,7 @@ def test_convert_equation():
     tsteqn = Eqn(a, b / c)
     assert tsteqn.as_Boolean() == Equality(a, b / c)
     assert tsteqn.reversed == Equation(b / c, a)
+    assert tsteqn.swap == Equation(b / c, a)
 
 
 def test_binary_op():
@@ -68,8 +69,6 @@ def test_helper_functions():
     assert diff(tsteqn, c) == Equation(a, -b / c ** 2)
     assert integrate(tsteqn, c, side='rhs') == integrate(tsteqn.rhs, c)
     assert integrate(tsteqn, c, side='lhs') == integrate(tsteqn.lhs, c)
-    assert (tsteqn.integ(c)).lhs == Integral(a * c, c)
-    assert tsteqn.integ(c).rhs.simplify() == integrate(tsteqn.rhs, c)
 
     def adsq(expr):
         # Arbitrary python function

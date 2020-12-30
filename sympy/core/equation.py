@@ -236,10 +236,6 @@ class Equation(Basic, EvalfMixin):
     >>> Eqn(Integral(q.lhs,b),integrate(q,b,side='rhs'))
     Integral(a*c, b) = b**2/(2*c)
 
-    This is duplicated by the convenience function self.integ
-    >>> q.integ(b)
-    Integral(a*c, b) = b**2/(2*c)
-
     SymPy's solvers do not understand these equations. They expect an
     expression that the solver assumes = 0. Thus to use the solver the
     equation must be rearranged so that all non-zero symbols are on one side.
@@ -495,16 +491,6 @@ class Equation(Basic, EvalfMixin):
                     eval_lhs = True
         return Equation(self.lhs.diff(*args, **kwargs, evaluate=eval_lhs),
                         self.rhs.diff(*args, **kwargs), check=False)
-
-    def integ(self, *args, **kwargs):
-        """
-        This function is a convenience function that returns a new equation
-        consisting of an unevaluated integral of the lhs as the new lhs and
-        the result of integrating the rhs as the new rhs.
-        """
-        from sympy.integrals.integrals import Integral
-        return Equation(Integral(self.lhs, *args, **kwargs),
-                        self.rhs.integrate(*args, **kwargs), check=False)
 
     def _eval_Integral(self, *args, **kwargs):
         side = kwargs.pop('side', None)  # Could not seem to pass values for
