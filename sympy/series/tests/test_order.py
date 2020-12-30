@@ -422,6 +422,10 @@ def test_issue_9192():
 def test_issue_9910():
     assert O(x*log(x) + sin(x), (x, oo)) == O(x*log(x), (x, oo))
 
+def test_issue_9917():
+    assert O(x*sin(x) + 1, (x, oo)).expr.cancel() == x*sin(x) + 1
+    assert O((x*sin(x))**2 + 1, (x, oo)).expr.cancel() == x**2*sin(x)**2 + 1
+
 
 def test_performance_of_adding_order():
     l = list(x**i for i in range(1000))
@@ -446,10 +450,3 @@ def test_issue_15539():
 
 def test_issue_18606():
     assert unchanged(Order, 0)
-def test_issue_9917():
-    assert O(x*sin(x)+1,(x,oo)).expr.simplify()== x*sin(x) + 1
-    assert O((x*sin(x))**2 + 1, (x, oo)).expr.simplify() == x**2*sin(x)**2 + 1
-    assert O(((x**2)*sin(x))**2 + 1, (x, oo)).expr.simplify() == x**4*sin(x)**2 + 1
-    assert O((x**2)*sin(x) + 1, (x, oo)).expr.simplify() == x**2*sin(x) + 1
-    assert O(x*((sin(x))**2) + 1, (x, oo)).expr.simplify() == x*sin(x)**2 + 1
-    assert O((x**2)*((sin(x))**2) + 1, (x, oo)).expr.simplify() == x**2*sin(x)**2 + 1
