@@ -162,7 +162,7 @@ is the :py:func:`~.factor` function::
 
 Internally :py:func:`~.factor` will convert the expression from the tree
 representation into the DUP representation and then use the function
-:py:func:`~.dup_factor_list`::
+``dup_factor_list``::
 
   >>> from sympy import ZZ
   >>> from sympy.polys.factortools import dup_factor_list
@@ -408,11 +408,16 @@ conversion will fail if the expression can not be represented in the domain::
   sympy.polys.polyerrors.CoercionFailed: expected an integer, got sqrt(2)
 
 We have already seen that in some cases we can use the domain object itself as
-a constructor e.g. ``QQ(2)``. This will generally work provided the 
+a constructor e.g. ``QQ(2)``. This will generally work provided the arguments
+given are valid for the ``dtype`` of the domain. Although it is convenient to
+use this in interactive sessions and in demonstrations it is generally better
+to use the :py:meth:`~.Domain.from_sympy` method for constructing domain elements
+from sympy expressions (or from objects that can be sympified to sympy
+expressions).
 
 It is important not to mix domain elements with other Python types such as
 ``int``, ``float``, as well as standard sympy :py:class:`~.Basic` expressions.
-When working in a domain care should be taken as some Python operations will
+When working in a domain, care should be taken as some Python operations will
 do this implicitly. for example the ``sum`` function will use the regular
 ``int`` value of zero so that ``sum([a, b])`` is effectively evaluated as ``(0
 + a) + b`` where ``0`` is of type ``int``.
@@ -459,6 +464,91 @@ elements rather than standard sympy expressions::
       # Convert the result back to Basic
       result_sympy = ZZ.to_sympy(result_dom)
       return result_sympy
+
+Gaussian integers and Gaussian rationals
+========================================
+
+The two example domains that we have seen so far are ``ZZ`` and ``QQ``
+representing the integers and the rationals respectively. There are other
+simple domains such as ``ZZ_I`` and ``QQ_I`` representing the
+`Gaussian integers`_ and `Gaussian rationals`_. The Gaussian integers are
+numbers of the form `a\sqrt{-1} + b` where `a` and `b` are integers. The
+Gaussian rationals are defined similarly except that `a` and `b` can be
+rationals. We can use the Gaussian domains like::
+
+  >>> from sympy import ZZ_I, QQ_I, I
+  >>> z = ZZ_I.from_sympy(1 + 2*I)
+  >>> z
+  (1 + 2*I)
+  >>> z**2
+  (-3 + 4*I)
+
+Note the constrast with the way this calculation works in the tree
+representation where :py:func:`~.expand` is needed to get the reduced form::
+
+  >>> from sympy import expand, I
+  >>> z = 1 + 2*I
+  >>> z**2
+  (1 + 2*I)**2
+  >>> expand(z**2)
+  -3 + 4*I
+
+The ``ZZ_I`` and ``QQ_I`` domains are implemented by the classes
+``GaussianIntegerRing`` and ``GaussianRationalField`` and their elements by
+``GaussianInteger`` and ``GaussianRational`` respectively. The internal
+representation for an element of ``ZZ_I`` or ``QQ_I`` is simply as a pair
+``(a, b)`` of elements of ``ZZ`` or ``QQ`` respectively. The domain ``ZZ_I``
+is a ring with similar properties to ``ZZ`` whereas ``QQ_I`` is a field
+much like ``QQ``::
+
+  >>> ZZ.is_Field
+  False
+  >>> QQ.is_Field
+  True
+  >>> ZZ_I.is_Field
+  False
+  >>> QQ_I.is_Field
+  True
+
+Since ``QQ_I`` is a field division by nonzero elements is always possible
+whereas in ``ZZ_I`` we have the important concept of the greatest common
+divisor (GCD)::
+
+  >>> e1 = QQ_I.from_sympy(1+I)
+  >>> e2 = QQ_I.from_sympy(2-I/2)
+  >>> e1/e2
+  (6/17 + 10/17*I)
+  >>> ZZ_I.gcd(ZZ_I(5), ZZ_I.from_sympy(1+2*I))
+  (1 + 2*I)
+
+.. _Gaussian integers: https://en.wikipedia.org/wiki/Gaussian_integer
+.. _Gaussian rationals: https://en.wikipedia.org/wiki/Gaussian_rational
+
+Finite fields
+=============
+
+So far we have seen the domains ``ZZ``, ``QQ``, ``ZZ_I``, and ``QQ_I``. There
+are also domains representing the `Finite fields`_ although the implementation
+of these is incomplete. A finite field of *prime* order can be constructed
+with ``FF`` or ``GF``. A domain for the finite field or prime order `p` can be
+constructed with ``FF(p)``::
+
+  >>> from sympy import FF
+  >>> K = FF(5)
+  >>> two = K(2)
+  >>> two
+  2 mod 5
+  >>> two ** 2
+  4 mod 5
+  >>> two ** 3
+  3 mod 5
+
+Finite fields of order `p^n` where `n \ne 1` are not implemented. It is
+possible to use e.g. ``FF(6)`` or ``FF(9)`` but the resulting domain is *not*
+a field. It would be good to have a proper implementation of prime-power order
+finite fields but this is not yet available in SymPy (contributions welcome!).
+
+.. _Finite fields: https://en.wikipedia.org/wiki/Finite_field
 
 Polynomial ring domains
 =======================
@@ -510,7 +600,7 @@ that ordinary sympy (:py:class:`~.Basic`) expressions are represented. The
 
 Here the expression is a tree where the top node is an :py:class:`~.Add` and
 its children nodes are :py:class:`~.Pow` etc. This tree representation makes
-is possible to represent equivalent expressions in different ways e.g.::
+it possible to represent equivalent expressions in different ways e.g.::
 
   >>> x = symbols('x')
   >>> p_basic = x*(x + 1) + x
