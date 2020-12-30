@@ -46,13 +46,13 @@ class MatrixPSpace(PSpace):
                     "multiple matrix distributions.")
         return self.distribution.pdf(expr)
 
-    def sample(self, size=(), library='scipy'):
+    def sample(self, size=(), library='scipy', seed=None):
         """
         Internal sample method
 
         Returns dictionary mapping RandomMatrixSymbol to realization value.
         """
-        return {self.value: self.distribution.sample(size, library=library)}
+        return {self.value: self.distribution.sample(size, library=library, seed=seed)}
 
 
 def rv(symbol, cls, args):
@@ -66,21 +66,22 @@ def rv(symbol, cls, args):
 
 class SampleMatrixScipy:
     """Returns the sample from scipy of the given distribution"""
-    def __new__(cls, dist, size):
-        return cls._sample_scipy(dist, size)
+    def __new__(cls, dist, size, seed=None):
+        return cls._sample_scipy(dist, size, seed)
 
     @classmethod
-    def _sample_scipy(cls, dist, size):
+    def _sample_scipy(cls, dist, size, seed):
         """Sample from SciPy."""
 
         from scipy import stats as scipy_stats
+        import numpy
         scipy_rv_map = {
-            'WishartDistribution': lambda dist, size: scipy_stats.wishart.rvs(
+            'WishartDistribution': lambda dist, size, rand_state: scipy_stats.wishart.rvs(
                 df=int(dist.n), scale=matrix2numpy(dist.scale_matrix, float), size=size),
-            'MatrixNormalDistribution': lambda dist, size: scipy_stats.matrix_normal.rvs(
+            'MatrixNormalDistribution': lambda dist, size, rand_state: scipy_stats.matrix_normal.rvs(
                 mean=matrix2numpy(dist.location_matrix, float),
                 rowcov=matrix2numpy(dist.scale_matrix_1, float),
-                colcov=matrix2numpy(dist.scale_matrix_2, float), size=size)
+                colcov=matrix2numpy(dist.scale_matrix_2, float), size=size, random_state=rand_state)
         }
 
         dist_list = scipy_rv_map.keys()
@@ -88,18 +89,26 @@ class SampleMatrixScipy:
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        return scipy_rv_map[dist.__class__.__name__](dist, size)
+        samples = []
+        if seed is None or isinstance(seed, int):
+            rand_state = numpy.random.default_rng(seed=seed)
+        else:
+            rand_state = seed
+        for _ in range(size[0]):
+            samp = scipy_rv_map[dist.__class__.__name__](dist, size[1], rand_state)
+            samples.append(samp)
+        return samples
 
 
 class SampleMatrixNumpy:
     """Returns the sample from numpy of the given distribution"""
 
     ### TODO: Add tests after adding matrix distributions in numpy_rv_map
-    def __new__(cls, dist, size):
-        return cls._sample_numpy(dist, size)
+    def __new__(cls, dist, size, seed=None):
+        return cls._sample_numpy(dist, size, seed)
 
     @classmethod
-    def _sample_numpy(cls, dist, size):
+    def _sample_numpy(cls, dist, size, seed):
         """Sample from NumPy."""
 
         numpy_rv_map = {
@@ -110,17 +119,26 @@ class SampleMatrixNumpy:
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        return numpy_rv_map[dist.__class__.__name__](dist, size)
+        samples = []
+        import numpy
+        if seed is None or isinstance(seed, int):
+            rand_state = numpy.random.default_rng(seed=seed)
+        else:
+            rand_state = seed
+        for _ in range(size[0]):
+            samp = numpy_rv_map[dist.__class__.__name__](dist, size[1], rand_state)
+            samples.append(samp)
+        return samples
 
 
 class SampleMatrixPymc:
     """Returns the sample from pymc3 of the given distribution"""
 
-    def __new__(cls, dist, size):
-        return cls._sample_pymc3(dist, size)
+    def __new__(cls, dist, size, seed=None):
+        return cls._sample_pymc3(dist, size, seed)
 
     @classmethod
-    def _sample_pymc3(cls, dist, size):
+    def _sample_pymc3(cls, dist, size, seed):
         """Sample from PyMC3."""
 
         import pymc3
@@ -170,7 +188,7 @@ class MatrixDistribution(Basic, NamedArgsMixin):
             expr = ImmutableMatrix(expr)
         return self.pdf(expr)
 
-    def sample(self, size=(), library='scipy'):
+    def sample(self, size=(), library='scipy', seed=None):
         """
         Internal sample method
 
@@ -184,7 +202,7 @@ class MatrixDistribution(Basic, NamedArgsMixin):
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = _get_sample_class_matrixrv[library](self, size)
+        samps = _get_sample_class_matrixrv[library](self, size, seed)
 
         if samps is not None:
             return samps
