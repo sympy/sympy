@@ -1,12 +1,12 @@
 from collections import defaultdict
 from functools import cmp_to_key, reduce
-from operator import attrgetter
 from .basic import Basic
 from .compatibility import is_sequence
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
-from .operations import AssocOp, AssocOpDispatcher
+from .sympify import _sympify
+from .operations import AssocOp
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
@@ -339,8 +339,7 @@ class Add(Expr, AssocOp):
 
     @property
     def kind(self):
-        k = attrgetter('kind')
-        kinds = map(k, self.args)
+        kinds = [a.kind for a in self.args]
         kinds = frozenset(kinds)
         if len(kinds) != 1:
             # Since addition is group operator, kind must be same.
@@ -1184,7 +1183,23 @@ class Add(Expr, AssocOp):
             return super().__neg__()
         return Add(*[-i for i in self.args])
 
-add = AssocOpDispatcher('add')
+
+def add(*args, evaluate=False, **kwargs):
+    kwargs.update(evaluate=evaluate, _sympify=False)
+
+    args = [_sympify(a) for a in args]
+    kinds = [a.kind for a in args]
+    kinds = frozenset(kinds)
+    if len(kinds) != 1:
+        # Since addition is group operator, kind must be same.
+        # We know that this is unexpected signature, so return this.
+        selected_kind = UndefinedKind
+    else:
+        selected_kind, = kinds
+
+    func = selected_kind.add
+    return func(*args, **kwargs)
+
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

@@ -100,6 +100,22 @@ class UndefinedKind(Kind):
     def __repr__(self):
         return "UndefinedKind"
 
+    @property
+    def add(self):
+        from .add import Add
+        return Add
+
+    @property
+    def mul(self):
+        from .mul import Mul
+        return Mul
+
+    @property
+    def pow(self):
+        from .pow import Pow
+        return Pow
+
+
 UndefinedKind = UndefinedKind()
 
 
@@ -158,6 +174,21 @@ class NumberKind(Kind):
 
     def __repr__(self):
         return "NumberKind"
+
+    @property
+    def add(self):
+        from .add import Add
+        return Add
+
+    @property
+    def mul(self):
+        from .mul import Mul
+        return Mul
+
+    @property
+    def pow(self):
+        from .pow import Pow
+        return Pow
 
 NumberKind = NumberKind()
 

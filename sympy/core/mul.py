@@ -2,10 +2,10 @@ from collections import defaultdict
 from functools import cmp_to_key, reduce
 import operator
 
-from .sympify import sympify
+from .sympify import sympify, _sympify
 from .basic import Basic
 from .singleton import S
-from .operations import AssocOp, AssocOpDispatcher
+from .operations import AssocOp
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
 from .expr import Expr
@@ -1973,7 +1973,15 @@ class Mul(Expr, AssocOp):
     def _sorted_args(self):
         return tuple(self.as_ordered_factors())
 
-mul = AssocOpDispatcher('mul')
+
+def mul(*args, evaluate=False, **kwargs):
+    kwargs.update(evaluate=evaluate, _sympify=False)
+
+    args = [_sympify(a) for a in args]
+    kinds = [a.kind for a in args]
+    selected_kind = Mul._kind_dispatcher(*kinds)
+    func = selected_kind.mul
+    return func(*args, **kwargs)
 
 
 def prod(a, start=1):

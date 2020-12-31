@@ -266,6 +266,8 @@ class Pow(Expr):
 
     __slots__ = ('is_commutative',)
 
+    _kind_dispatcher = Dispatcher("Pow_kind_dispatcher")
+
     @cacheit
     def __new__(cls, b, e, evaluate=None):
         if evaluate is None:
@@ -1738,8 +1740,15 @@ class Pow(Expr):
             new_e = e.subs(n, n + step)
             return (b**(new_e - e) - 1) * self
 
-power = Dispatcher('power')
-power.add((object, object), Pow)
+
+def pow(b, e, evaluate=False, **kwargs):
+    kwargs.update(evaluate=evaluate)
+
+    b, e = _sympify(b), _sympify(e)
+    selected_kind = Pow._kind_dispatcher(b.kind, e.kind)
+    func = selected_kind.pow
+    return func(b, e, **kwargs)
+
 
 from .add import Add
 from .numbers import Integer
