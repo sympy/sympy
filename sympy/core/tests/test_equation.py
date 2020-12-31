@@ -10,7 +10,7 @@ def test_define_equation():
     a, b, c = var('a b c')
     raises(TypeError, lambda: Eqn(FiniteSet(a), FiniteSet(b, c)))
     with warns(UserWarning):
-        assert Eqn(1, 0) == Equation(1, 0, check=False)
+        assert Eqn(1, 0, check=True) == Equation(1, 0, check=False)
     # No warning with `check=False`.
     assert Eqn(1, 0, check=False) == Equation(1, 0, check=False)
     tsteqn = Eqn(a, b / c)

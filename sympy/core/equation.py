@@ -58,9 +58,11 @@ class Equation(Basic, EvalfMixin):
     lhs: sympy expression, ``class Expr``.
     rhs: sympy expression, ``class Expr``.
     kwargs: key word arguments from this list
-        - ``check=True/False`` use ``False`` to minimize computationally
-           expensive calls to ``simplify`` when ``Equation`` is called
-           programmatically.
+        - ``check=True/False``. Defaults to ``False`` to minimize
+            computationally expensive calls to ``simplify`` when
+            ``Equation`` is called programmatically. ``check=True``
+            produces a warning if the lhs and rhs evaluate to numbers and
+            are not equal.
 
     Examples
     ========
@@ -248,7 +250,7 @@ class Equation(Basic, EvalfMixin):
     """
 
     def __new__(cls, lhs, rhs, **kwargs):
-        check = kwargs.pop('check', True)
+        check = kwargs.pop('check', False)
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         if not isinstance(lhs,Expr) or not isinstance(rhs,Expr):
@@ -256,19 +258,13 @@ class Equation(Basic, EvalfMixin):
         if check and lhs.is_number and rhs.is_number:
             tst=(lhs-rhs)
             if tst.is_number:
-                print('Lhs & rhs are numbers. Checking statement validity.'
-                      'Please be patient. This can be slow for complex '
-                      'expressions...')
                 tst=tst.simplify().evalf()
             if tst != 0 and tst.is_number:
                 from warnings import warn
                 warnstr = '\nDid you really mean to define unequal '
                 warnstr += 'numbers '
                 warnstr += str(lhs) + ' and ' + str(rhs)
-                warnstr += ' as equal?\n'
-                warnstr += 'To suppress this warning include `check=False`'
-                warnstr += ' in the equation definition: '
-                warnstr += '`Eqn(lhs,rhs, check=False)`.'
+                warnstr += ' as equal?'
                 warn(warnstr)
         return super().__new__(cls, lhs, rhs)
 
