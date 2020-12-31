@@ -3,7 +3,7 @@ from sympy import symbols, integrate, simplify, expand, factor, log, \
 from sympy import Equality
 from sympy import Equation, Eqn
 from sympy import latex
-from sympy.testing.pytest import raises, warns
+from sympy.testing.pytest import raises
 
 
 def test_define_equation():
