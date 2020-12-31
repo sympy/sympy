@@ -118,8 +118,8 @@ class Equation(Basic, EvalfMixin):
     b*x + x**2*(a + c) = a*x**3 + b*x**3 + c*x
 
     ``.apply...`` also works with user defined python functions
-    >>> def addsquare(expr):
-    ...     return expr+expr**2
+    >>> def addsquare(eqn):
+    ...     return eqn+eqn**2
     ...
     >>> t.apply(addsquare)
     a**2 + a = b**2/c**2 + b/c
@@ -237,6 +237,10 @@ class Equation(Basic, EvalfMixin):
     Make a pretty statement of integration from an equation
     >>> Eqn(Integral(q.lhs,b),integrate(q,b,side='rhs'))
     Integral(a*c, b) = b**2/(2*c)
+
+    Integration of each side with respect to different variables
+    >>> q.dorhs.integrate(b).dolhs.integrate(a)
+    a**2*c/2 = b**2/(2*c)
 
     SymPy's solvers do not understand these equations. They expect an
     expression that the solver assumes = 0. Thus to use the solver the
