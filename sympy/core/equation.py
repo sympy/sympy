@@ -309,10 +309,10 @@ class Equation(Basic, EvalfMixin):
         # expression. Errors will be raised if the function cannot be
         # applied to an expression.
         funcname = getattr(func, '__name__')
-        if hasattr(expr, funcname):
-            return getattr(expr, funcname)(*args, **kwargs)
-        else:
-            return func(expr, *args, **kwargs)
+        localfunc = getattr(expr, funcname, None)
+        if localfunc is not None:
+            return localfunc(*args, **kwargs)
+        return func(expr, *args, **kwargs)
 
     def apply(self, func, *args, side='both', **kwargs):
         """
