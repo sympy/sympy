@@ -395,7 +395,7 @@ class Equation(Basic, EvalfMixin):
             return Equation(opfunc_ab(a.lhs, b.lhs), opfunc_ab(a.rhs, b.rhs),
                             check=False)
         else:
-            raise TypeError('One of a or b should be an equation')
+            return NotImplemented
 
     def __add__(self, other):
         return self._binary_op(self, other, lambda a, b: a + b)
@@ -472,6 +472,7 @@ class Equation(Basic, EvalfMixin):
 
     def evalf(self, *args, **kwargs):
         return self._eval_evalf(*args, **kwargs)
+
     n = evalf
 
     def _eval_derivative(self, *args, **kwargs):
