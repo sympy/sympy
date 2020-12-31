@@ -162,12 +162,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     """
     _eval_collect = getattr(expr, '_eval_collect', None)
     if _eval_collect is not None:
-        funcval = func
-        evalval = evaluate
-        exactval = exact
-        distval= distribute_order_term
-        return _eval_collect(syms, func=funcval, evaluate=evalval,
-                             exact=exactval, distribute_order_term=distval)
+        return _eval_collect(syms, func, evaluate,
+                             exact, distribute_order_term)
 
     from sympy.core.assumptions import assumptions
     from sympy.utilities.iterables import sift
