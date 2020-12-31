@@ -8,11 +8,10 @@ from sympy.testing.pytest import raises, warns
 
 def test_define_equation():
     a, b, c = var('a b c')
-    raises(TypeError, lambda: Eqn(FiniteSet(a), FiniteSet(b, c)))
-    with warns(UserWarning):
-        assert Eqn(1, 0, check=True) == Equation(1, 0, check=False)
-    # No warning with `check=False`.
-    assert Eqn(1, 0, check=False) == Equation(1, 0, check=False)
+    raises(TypeError, lambda: Equation(FiniteSet(a), FiniteSet(b, c)))
+    raises(ValueError, lambda: Equation(1, 0, check=True))
+    # No warning with the default `check=False`.
+    assert Eqn(1, 0) == Equation(1, 0)
     tsteqn = Eqn(a, b / c)
     assert tsteqn == Equation(a, b / c)
     assert tsteqn.lhs == Equation(a, b / c).args[0]

@@ -255,17 +255,11 @@ class Equation(Basic, EvalfMixin):
         rhs = _sympify(rhs)
         if not isinstance(lhs,Expr) or not isinstance(rhs,Expr):
             raise TypeError('lhs and rhs must be valid sympy expressions.')
-        if check and lhs.is_number and rhs.is_number:
+        if check:
             tst=(lhs-rhs)
-            if tst.is_number:
-                tst=tst.simplify().evalf()
+            tst=tst.simplify().evalf()
             if tst != 0 and tst.is_number:
-                from warnings import warn
-                warnstr = '\nDid you really mean to define unequal '
-                warnstr += 'numbers '
-                warnstr += str(lhs) + ' and ' + str(rhs)
-                warnstr += ' as equal?'
-                warn(warnstr)
+                raise ValueError('`lhs-rhs` evaluates to a non-zero number.')
         return super().__new__(cls, lhs, rhs)
 
     @property
