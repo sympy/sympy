@@ -122,7 +122,7 @@ __all__ = [
     'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
     'Weibull', 'WignerSemicircle', 'ContinuousDistributionHandmade',
 
-    'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
+    'FlorySchulz', 'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
     'YuleSimon', 'Zeta', 'DiscreteRV', 'DiscreteDistributionHandmade',
 
     'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
@@ -170,7 +170,7 @@ from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
         PowerFunction, ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
         VonMises, Wald, Weibull, WignerSemicircle, ContinuousDistributionHandmade)
 
-from .drv_types import (Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
+from .drv_types import (FlorySchulz, Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
         Skellam, YuleSimon, Zeta, DiscreteRV, DiscreteDistributionHandmade)
 
 from .joint_rv_types import (JointRV, Dirichlet,

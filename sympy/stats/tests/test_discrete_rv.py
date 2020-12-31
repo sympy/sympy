@@ -9,7 +9,7 @@ from sympy.stats import (P, E, variance, density, characteristic_function,
                          where, moment_generating_function, skewness, cdf,
                          kurtosis, coskewness)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
-                                   Poisson, Geometric, Hermite, Logarithmic,
+                                   FlorySchulz, Poisson, Geometric, Hermite, Logarithmic,
                                     NegativeBinomial, Skellam, YuleSimon, Zeta,
                                     DiscreteRV)
 from sympy.stats.rv import sample
@@ -40,6 +40,15 @@ def test_Poisson():
         assert isinstance(E(2*x, evaluate=False), Expectation)
     # issue 8248
     assert x.pspace.compute_expectation(1) == 1
+
+def test_FlorySchulz():
+    a = Symbol("a")
+    z = Symbol("z")
+    x = FlorySchulz('x' , a)
+    assert E(x) == (2 - a)/a
+    assert (variance(x) - 2*(1 - a)/a**2).simplify() == S(0)
+    assert density(x)(z) == a**2*z*(1 - a)**(z - 1)
+
 
 @slow
 def test_GeometricDistribution():
