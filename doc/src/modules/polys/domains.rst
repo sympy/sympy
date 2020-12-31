@@ -545,7 +545,7 @@ constructed with ``FF(p)``::
 
 Finite fields of order `p^n` where `n \ne 1` are not implemented. It is
 possible to use e.g. ``FF(6)`` or ``FF(9)`` but the resulting domain is *not*
-a field. it is just the integers modulo ``6`` or ``9`` and therefore has zero
+a field. It is just the integers modulo ``6`` or ``9`` and therefore has zero
 divisors and non-invertible elements::
 
   >>> K = FF(6)
@@ -888,13 +888,14 @@ where the syntax ``ZZ[x]`` is equivalent to ``ZZ.poly_ring(x)``::
   <class 'sympy.polys.polyclasses.DMP'>
 
 The internal representation of the old polynomial ring domain is the
-:py:class:`~.DMP` representation as a list (of lists of) coefficients::
+:py:class:`~.DMP` representation as a list of (lists of) coefficients::
 
   >>> repr(p2)
   'DMP([1, 0, 1], ZZ, ZZ[x])'
 
 The most notable use of the :py:class:`~.DMP` representation of polynomials is
-as the internal representation used by :py:class:`~.Poly`.
+as the internal representation used by :py:class:`~.Poly` (this is discussed
+later in this page of the docs).
 
 PolyRing vs PolynomialRing
 ==========================
