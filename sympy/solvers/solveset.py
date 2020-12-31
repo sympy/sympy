@@ -1846,7 +1846,6 @@ def _is_lambert(f, symbol):
                 if len(list(Add.make_args(f))) <= 2:
                     j=0
                     for args in list(Add.make_args(f)):
-                        from sympy import symbols
                         x = Symbol('x')
                         if (isinstance(args,Mul) and args.atoms(exp(x))) and (args.atoms(symbol) or args.atoms(Dummy)):
                             if len(list(Add.make_args(f))) == 1:
