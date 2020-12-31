@@ -1287,3 +1287,75 @@ well::
   QQ<sqrt(2) + sqrt(3)>[x,y]
   >>> QQ.frac_field(x).unify(ZZ[y])
   ZZ(x,y)
+
+Poly
+====
+
+We are now in a position to understand how the :py:class:`~.Poly` class works
+internally. This is the public interface of :py:class:`~.Poly`::
+
+  >>> from sympy import Poly, symbols, ZZ
+  >>> x, y, z, t = symbols('x, y, z, t')
+  >>> p = Poly(x**2 + 1, x, domain=ZZ)
+  >>> p
+  Poly(x**2 + 1, x, domain='ZZ')
+  >>> p.gens
+  (x,)
+  >>> p.domain
+  ZZ
+  >>> p.all_coeffs()
+  [1, 0, 1]
+  >>> p.as_expr()
+  x**2 + 1
+
+This is the internal implementation of :py:class:`~.Poly`::
+
+  >>> d = p.rep  # internal representation of Poly
+  >>> d
+  DMP([1, 0, 1], ZZ, None)
+  >>> d.rep      # internal representation of DMP
+  [1, 0, 1]
+  >>> type(d.rep)
+  <class 'list'>
+  >>> type(d.rep[0])
+  <class 'int'>
+  >>> d.dom
+  ZZ
+
+The internal representation of a :py:class:`~.Poly` instance is an instance of
+:py:class:`~.DMP` which is the class used for domain elements in the old
+polynomial ring domain e.g. ``ZZ.old_poly_ring(z)``. This represents the
+polynomial as a list of coefficients which are themselves elements of a domain
+and keeps a reference to their domain (``ZZ`` in this example).
+
+If the domain is not specified for the :py:class:`~.Poly` constructor then it
+is inferred using :py:func:`~.construct_domain`. Arguments like ``field=True``
+are passed along to :py:func:`~.construct_domain`::
+
+  >>> from sympy import sqrt
+  >>> Poly(x**2 + 1, x)
+  Poly(x**2 + 1, x, domain='ZZ')
+  >>> Poly(x**2 + 1, x, field=True)
+  Poly(x**2 + 1, x, domain='QQ')
+  >>> Poly(x**2/2 + 1, x)
+  Poly(1/2*x**2 + 1, x, domain='QQ')
+  >>> Poly(x**2 + sqrt(2), x)
+  Poly(x**2 + sqrt(2), x, domain='EX')
+  >>> Poly(x**2 + sqrt(2), x, extension=True)
+  Poly(x**2 + sqrt(2), x, domain='QQ<sqrt(2)>')
+
+It is also possible to use the extension argument to specify generators of an
+extension even if no extension is required to represent the coefficients
+although this does not work when using :py:func:`~.construct_domain` directly.
+A list of extension elements will be passed to :py:func:`~.primitive_element`
+to create an appropriate :py:class:`~.AlgebraicField` domain::
+
+  >>> from sympy import construct_domain
+  >>> Poly(x**2 + 1, x)
+  Poly(x**2 + 1, x, domain='ZZ')
+  >>> Poly(x**2 + 1, x, extension=sqrt(2))
+  Poly(x**2 + 1, x, domain='QQ<sqrt(2)>')
+  >>> Poly(x**2 + 1, x, extension=[sqrt(2), sqrt(3)])
+  Poly(x**2 + 1, x, domain='QQ<sqrt(2) + sqrt(3)>')
+  >>> construct_domain([1, 0, 1], extension=sqrt(2))[0]
+  ZZ
