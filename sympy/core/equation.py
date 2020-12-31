@@ -361,10 +361,10 @@ class Equation(Basic, EvalfMixin):
 
         def __getattr__(self, name):
             func = None
-            try:
-                func = getattr(self.eqn.rhs, name)
-            except AttributeError:
-                func = getattr(self.eqn.lhs, name)
+            if self.side in ('rhs', 'both'):
+                func = getattr(self.eqn.rhs, name, None)
+            else:
+                func = getattr(self.eqn.lhs, name, None)
             return functools.partial(self.eqn.apply, func, side=self.side)
 
     @property
