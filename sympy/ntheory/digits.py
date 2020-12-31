@@ -111,15 +111,20 @@ def count_digits(n, b=10):
 
 def is_palindromic(n, b=10):
     """return True if ``n`` is the same when read from left to right
-    or right to left in the given base, ``b``.
+    or right to left in the given base, ``b``.(b must be greater than 1)
 
     Examples
     ========
 
     >>> from sympy.ntheory import is_palindromic
 
-    >>> all(is_palindromic(i) for i in (-11, 1, 22, 121))
+    >>> all(is_palindromic(i) for i in (11, 1, 22, 121))
     True
+
+    Note:negative integers can't be palindromic by definition
+
+    >>> is_palindromic(-121)
+    False
 
     The second argument allows you to test numbers in other
     bases. For example, 88 is palindromic in base-10 but not
