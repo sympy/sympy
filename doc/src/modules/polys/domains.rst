@@ -722,12 +722,9 @@ factorisation of polynomials.
 Polynomial ring domains
 =======================
 
-So far we have seen the domains ``ZZ`` and ``QQ`` which are the simplest
-possible examples (and the most commonly used). The complicated domain system
-was not created just to represent simple examples such as this. A more
-interesting example that was introduced in the last section is that of a
-polynomial ring like ``ZZ[x]`` which is the domain of polynomials in the
-generator ``x`` with coefficients over ``ZZ``::
+There are also domains implemented to represent a polynomial ring like
+``ZZ[x]`` which is the domain of polynomials in the generator ``x`` with
+coefficients over ``ZZ``::
 
   >>> from sympy import ZZ, symbols
   >>> x = symbols('x')
@@ -1107,6 +1104,9 @@ independent then the domain will be ``EX``::
 
   >>> construct_domain([sin(x), cos(x)])[0]
   EX
+
+Here ``sin(x)`` and ``cos(x)`` are not algebraically independent since
+``sin(x)**2 + cos(x)**2 = 1``.
 
 Converting elements between different domains
 =============================================
