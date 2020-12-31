@@ -140,4 +140,11 @@ def is_palindromic(n, b=10):
     ('0o171', True)
 
     """
-    return _palindromic(digits(n, b), 1)
+    #Get the list of its digits
+    digit_list=digits(n,b)  #b must be an integer > 1 else value error will be raised
+
+    #Check if the first element of the list is -ve then it isn't a palindrome
+    if(digit_list[0]<0):
+        return False
+    else:
+        return _palindromic(digit_list, 1)
