@@ -859,7 +859,7 @@ In the last section we saw that the domain representation of a polynomial ring
 like ``ZZ[x]`` uses a sparse representation of a polynomial as a dict mapping
 monomial exponents to coefficients. There is also an older version of
 ``ZZ[x]`` that uses the dense DMP representation. We can create these two
-versions of ``ZZ[x]`` using ``ZZ.poly_ring(x)`` and ``ZZ.old_poly_ring(z)``
+versions of ``ZZ[x]`` using ``ZZ.poly_ring(x)`` and ``ZZ.old_poly_ring(x)``
 where the syntax ``ZZ[x]`` is equivalent to ``ZZ.poly_ring(x)``::
 
   >>> K1 = ZZ.poly_ring(x)
@@ -895,6 +895,59 @@ The internal representation of the old polynomial ring domain is the
 
 The most notable use of the :py:class:`~.DMP` representation of polynomials is
 as the internal representation used by :py:class:`~.Poly`.
+
+PolyRing vs PolynomialRing
+==========================
+
+You might just want to perform calculations in some particular polynomial ring
+without being concerned with implementing something that works for arbitrary
+domains. In that case you can construct the ring more directly with the
+``ring`` function::
+
+  >>> from sympy import ring
+  >>> K, xr, yr = ring([x, y], ZZ)
+  >>> K
+  Polynomial ring in x, y over ZZ with lex order
+  >>> xr**2 - yr**2
+  x**2 - y**2
+  >>> (xr**2 - yr**2) // (xr - yr)
+  x + y
+
+The object ``K`` here represents the ring but is not a **polys domain** (it is
+not an instance of a subclass of :py:class:`~.Domain`). In this way the
+implementation of polynomial rings that is used in the domain system can be
+used independently of the domain system.
+
+The purpose of the domain system is to provide a unified interface for working
+with and converting between different class of expression. To make the
+``ring`` implementation usable in that context the ``PolynomialRing`` class is
+a wrapper around the ``PolyRing`` class that provides the interface expected
+in the domain system. That makes this implementation of polynomial rings
+usable as part of the broader codebase that is designed to work with
+expressions from different domains. The domain for polynomial rings is a
+distinct object from the ring returned by ``ring`` although both have
+the same elements::
+
+  >>> K, xr, yr = ring([x, y], ZZ)
+  >>> K
+  Polynomial ring in x, y over ZZ with lex order
+  >>> K2 = ZZ[x,y]
+  >>> K2
+  ZZ[x,y]
+  >>> K2.ring
+  Polynomial ring in x, y over ZZ with lex order
+  >>> K2.ring == K
+  True
+  >>> K(x+y)
+  x + y
+  >>> K2(x+y)
+  x + y
+  >>> type(K(x+y))
+  <class 'sympy.polys.rings.PolyElement'>
+  >>> type(K2(x+y))
+  <class 'sympy.polys.rings.PolyElement'>
+  >>> K(x+y) == K2(x+y)
+  True
 
 Rational function fields
 ========================
@@ -974,6 +1027,17 @@ Just like in the case of polynomial rings there is both a new (sparse) and old
   <class 'sympy.polys.domains.fractionfield.FractionField'>
   >>> type(K2)
   <class 'sympy.polys.domains.old_fractionfield.FractionField'>
+
+Also just like in the case of polynomials rings the implementation of rational
+function fields can be used independently of the domain system::
+
+  >>> from sympy import field
+  >>> K, xf, yf = field([x, y], ZZ)
+  >>> xf / (1 - yf)
+  -x/(y - 1)
+
+Here ``K`` is an instance of ``FracField`` rather than
+``RationalField`` for the domain ``ZZ(x,y)``.
 
 Expression domain
 =================
