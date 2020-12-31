@@ -460,12 +460,9 @@ class Equation(Basic, EvalfMixin):
     def collect(self, *args, **kwargs):
         return self._eval_collect(*args, **kwargs)
 
-    def _eval_evalf(self, *args, **kwargs):
+    def evalf(self, *args, **kwargs):
         return Equation(self.lhs.evalf(*args, **kwargs),
                         self.rhs.evalf(*args, **kwargs), check=False)
-
-    def evalf(self, *args, **kwargs):
-        return self._eval_evalf(*args, **kwargs)
 
     n = evalf
 
