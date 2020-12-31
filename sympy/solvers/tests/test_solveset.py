@@ -41,7 +41,7 @@ from sympy.solvers.solveset import (
     solveset, solve_decomposition, substitution, nonlinsolve, solvify,
     _is_finite_with_finite_vars, _transolve, _is_exponential,
     _solve_exponential, _is_logarithmic,
-    _solve_logarithm, _term_factors, _is_modular, NonlinearError)
+    _solve_logarithm, _term_factors, _is_modular, _is_lambert, NonlinearError)
 
 from sympy.abc import (a, b, c, d, e, f, g, h, i, j, k, l, m, n, q, r,
     t, w, x, y, z)
@@ -1515,7 +1515,7 @@ def test_nonlinsolve_using_substitution():
 
     system = [z**2*x**2 - z**2*y**2/exp(x)]
     syms = [y, x, z]
-    soln = FiniteSet((y, x, 0), (y, 2*LambertW(-y/2), z), (y, 2*LambertW(y/2), z), (x*exp(x/2), x, z), (-x*exp(x/2), x, z))
+    soln = FiniteSet((y, x, 0), (y, 2*LambertW(-y/2), z), (y, 2*LambertW(y/2), z))
     assert nonlinsolve(system,syms) == soln
 
 
@@ -2272,6 +2272,19 @@ def test_solve_lambert():
 
     assert solveset_real(5*x - 1 + 3*exp(2 - 7*x), x) == \
         FiniteSet(Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7)
+
+
+def test_is_lambert():
+    a, b, c = symbols('a,b,c')
+    assert _is_lambert(x**2,x) is False
+    assert _is_lambert(a**x**2+b*x+c,x) is True
+    assert _is_lambert(E**2,x) is False
+    assert _is_lambert(x*E**2,x) is False
+    assert _is_lambert(3*log(x) - x*log(3),x) is True
+    assert _is_lambert(log(log(x - 3)) + log(x-3),x) is True
+    assert _is_lambert(5*x - 1 + 3*exp(2 - 7*x),x) is True
+    assert _is_lambert((a/x + exp(x/2)).diff(x, 2),x) is True
+    assert _is_lambert((x**2 - 2*x + 1).subs(x, log(x) + 3*x), x) is True
 
 
 def test_solve_bivariate():

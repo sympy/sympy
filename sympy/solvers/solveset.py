@@ -1823,25 +1823,38 @@ def _is_lambert(f, symbol):
     Equations containing `Pow`, `log` or `exp` terms are currently
     treated as Lambert types.
     """
-    for arg1 in list(_term_factors(f.expand())):
-        if isinstance(arg1,(Pow,exp)):
+    if any(isinstance(arg1, (HyperbolicFunction,TrigonometricFunction)) for arg1 in _term_factors(f.expand())):
+        j = 0
+        for arg0 in _term_factors(f.expand()):
+            if arg0.has(HyperbolicFunction,TrigonometricFunction,Dummy,Symbol):
+                if isinstance(arg0,(Dummy,Symbol,Pow)):
+                    j += 1
+                else:
+                    return False
+        return j> 0
+
+    elif any(isinstance(arg1, (Pow, exp)) for arg1 in _term_factors(f.expand())):
+        for arg1 in _term_factors(f.expand()):
             base, exponent = arg1.as_base_exp()
             if isinstance(arg1,(Pow,Mul)) and len(list(Add.make_args(f))) == 1:
                 for a in list(Mul.make_args(f)):
                     if isinstance(a,exp):
                         base, exponent = a.as_base_exp()
-            if not exponent.has(symbol,Dummy) and len(list(Add.make_args(f))) > 1:
+            if (not exponent.has(symbol,Dummy) and len(list(Add.make_args(f))) > 1) or (base.has(Dummy)):
                 continue
             if exponent.has(symbol,Dummy, TrigonometricFunction, HyperbolicFunction): # exponent is variable
                 if len(list(Add.make_args(f))) <= 2:
                     j=0
                     for args in list(Add.make_args(f)):
                         from sympy import symbols
-                        x= symbols('x')
-                        if isinstance(args,Mul) and args.atoms(exp(x)) and (args.atoms(symbol) or args.atoms(Dummy)):
-                            for ar in list(Mul.make_args(args)):
-                                return ar.is_real
-                        elif len(list(args.atoms(symbol,Dummy))) == 1 :
+                        x = Symbol('x')
+                        if (isinstance(args,Mul) and args.atoms(exp(x))) and (args.atoms(symbol) or args.atoms(Dummy)):
+                            if len(list(Add.make_args(f))) == 1:
+                                return True
+                            else:
+                                for ar in list(Mul.make_args(args)):
+                                    return ar.is_real
+                        elif len(list(args.atoms(symbol,Dummy))) == 1:
                             if list(args.atoms(symbol))[0].has(symbol,Dummy):
                                 j+=1
                         else:
@@ -1850,26 +1863,27 @@ def _is_lambert(f, symbol):
                 elif len(list(Add.make_args(f))) > 2:
                     j=0
                     for args in list(Add.make_args(f)):
-                        if len(list(args.atoms(symbol))) == 1 :
+                        if len(list(args.atoms(symbol))) == 1:
                             if list(args.atoms(symbol))[0].has(symbol): # to check it has more than 2 variables
                                 j+=1
                         else:
                             return True
                     return j>1
-
             else:
                 return False
-        elif isinstance(arg1,log):
-            i, j,k = 0,0,0
-            for arg2 in list(_term_factors(f)):
-                if arg2.atoms(log) :
-                    j += 1
-                    if arg2.has((symbol)):
-                        i += 1
-                elif arg2.has(symbol):
-                    k += 1
 
-            return (j>1 or k>0) and (i >0)
+    if any(isinstance(arg1, (log)) for arg1 in _term_factors(f.expand())):
+        i, j, k = 0,0,0 # to check it has more than 2 variables
+        for arg2 in list(_term_factors(f)):
+            if arg2.atoms(log) :
+                j += 1
+                if arg2.has((symbol)):
+                    i += 1
+            elif arg2.has(symbol):
+                k += 1
+
+        return (j>1 or k>0) and (i >0)
+
 
 def _compute_lambert_solutions(lhs, rhs, symbol,domain=S.Complexes):
     """
