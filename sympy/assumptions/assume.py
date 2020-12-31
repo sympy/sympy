@@ -14,7 +14,8 @@ from sympy.utilities.source import get_class
 
 class AssumptionsContext(set):
     """
-    Set representing assumptions. Defaultly applies to ``ask()``.
+    Set containing default assumptions which are applied to the ``ask()``
+    function.
 
     Explanation
     ===========
@@ -81,7 +82,7 @@ class AppliedPredicate(Boolean):
     """
     The class of expressions resulting from applying ``Predicate`` to
     the arguments. ``AppliedPredicate`` merely wraps its argument and
-    remain unevaluated. To evaluate it, use the ``ask`` function.
+    remain unevaluated. To evaluate it, use the ``ask()`` function.
 
     Examples
     ========
@@ -150,11 +151,17 @@ class AppliedPredicate(Boolean):
 
     @property
     def function(self):
+        """
+        Return the predicate.
+        """
         # Will be changed to self.args[0] after args overridding is removed
         return self._args[0]
 
     @property
     def arguments(self):
+        """
+        Return the arguments which are applied to the predicate.
+        """
         # Will be changed to self.args[1:] after args overridding is removed
         return self._args[1:]
 
