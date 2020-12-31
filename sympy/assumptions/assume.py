@@ -26,15 +26,14 @@ class AssumptionsContext(set):
     Examples
     ========
 
-    Default assumption context is ``global_assumptions``, which is empty
-    by default.
+    The default assumption context is ``global_assumptions``, which is initially empty:
 
     >>> from sympy import ask, Q
     >>> from sympy.assumptions import global_assumptions
     >>> global_assumptions
     AssumptionsContext()
 
-    You can add default assumption.
+    You can add default assumptions:
 
     >>> from sympy.abc import x
     >>> global_assumptions.add(Q.real(x))
@@ -43,13 +42,13 @@ class AssumptionsContext(set):
     >>> ask(Q.real(x))
     True
 
-    And you can remove it.
+    And remove them:
 
     >>> global_assumptions.remove(Q.real(x))
     >>> print(ask(Q.real(x)))
     None
 
-    ``clear()`` method removes every assumptions.
+    The ``clear()`` method removes every assumption:
 
     >>> global_assumptions.add(Q.positive(x))
     >>> global_assumptions
@@ -82,7 +81,7 @@ class AppliedPredicate(Boolean):
     """
     The class of expressions resulting from applying ``Predicate`` to
     the arguments. ``AppliedPredicate`` merely wraps its argument and
-    remain unevaluated. To evaluate it, use ``ask`` function.
+    remain unevaluated. To evaluate it, use the ``ask`` function.
 
     Examples
     ========
@@ -91,7 +90,7 @@ class AppliedPredicate(Boolean):
     >>> Q.integer(1)
     Q.integer(1)
 
-    ``function`` attribute returns the predicate, and ``arguments``
+    The ``function`` attribute returns the predicate, and the ``arguments``
     attribute returns the tuple of arguments.
 
     >>> type(Q.integer(1))
@@ -101,7 +100,7 @@ class AppliedPredicate(Boolean):
     >>> Q.integer(1).arguments
     (1,)
 
-    Applied predicate can be evaluated to boolean value.
+    Applied predicates can be evaluated to a boolean value with ``ask``:
 
     >>> ask(Q.integer(1))
     True
@@ -113,7 +112,7 @@ class AppliedPredicate(Boolean):
 
     def __new__(cls, predicate, *args):
         if not isinstance(predicate, Predicate):
-            raise TypeError("%s is not Predicate." % predicate)
+            raise TypeError("%s is not a Predicate." % predicate)
         args = map(_sympify, args)
         return super().__new__(cls, predicate, *args)
 
@@ -137,7 +136,7 @@ class AppliedPredicate(Boolean):
         if len(args) == 2:
             # backwards compatibility
             return args[1]
-        raise TypeError("'arg' property is allowed only for unary predicate.")
+        raise TypeError("'arg' property is allowed only for unary predicates.")
 
     @property
     def args(self):
@@ -182,7 +181,7 @@ class PredicateMeta(ManagedProperties):
     """
     def __new__(cls, clsname, bases, dct):
         if "handler" not in dct:
-            name = ''.join(["Ask", clsname.capitalize(), "Handler"])
+            name = f"Ask{clsname.capitalize()}Handler"
             handler = Dispatcher(name, doc="Handler for key %s" % name)
             dct["handler"] = handler
         return super().__new__(cls, clsname, bases, dct)
@@ -289,7 +288,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         if self.handler is None:
             # condition for UndefinedPredicate
             raise TypeError("%s cannot be dispatched." % type(self))
-        return lambda func: self.handler.register(*types, **kwargs)(func)
+        return self.handler.register(*types, **kwargs)
 
     def __call__(self, *args):
         return AppliedPredicate(self, *args)
