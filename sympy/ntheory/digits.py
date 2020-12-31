@@ -153,3 +153,4 @@ def is_palindromic(n, b=10):
         return False
     else:
         return _palindromic(digit_list, 1)
+    
