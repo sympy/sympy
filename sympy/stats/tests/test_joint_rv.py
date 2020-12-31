@@ -304,3 +304,22 @@ def test_sample_pymc3():
                     assert tuple(sam.flatten()) in X.pspace.distribution.set
             N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
             raises(NotImplementedError, lambda: next(sample(N_c, library='pymc3')))
+
+def test_sample_seed():
+    x1, x2 = (Indexed('x', i) for i in (1, 2))
+    pdf = exp(-x1**2/2 + x1 - x2**2/2 - S.Half)/(2*pi)
+    X = JointRV('x', pdf)
+
+    libraries = ['scipy', 'numpy', 'pymc3']
+    for lib in libraries:
+        try:
+            imported_lib = import_module(lib)
+            if imported_lib:
+                s0, s1, s2 = [], [], []
+                s0 = list(sample(X, numsamples=10, library=lib, seed=0))
+                s1 = list(sample(X, numsamples=10, library=lib, seed=0))
+                s2 = list(sample(X, numsamples=10, library=lib, seed=1))
+                assert s0 == s1
+                assert s1 != s2
+        except NotImplementedError:
+            continue

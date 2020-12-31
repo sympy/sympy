@@ -218,7 +218,10 @@ class SampleContinuousNumpy:
         """Sample from NumPy."""
 
         import numpy
-        rand_state = numpy.random.default_rng(seed=seed)
+        if seed is None or isinstance(seed, int):
+            rand_state = numpy.random.default_rng(seed=seed)
+        else:
+            rand_state = seed
         numpy_rv_map = {
             'BetaDistribution': lambda dist, size: rand_state.beta(a=float(dist.alpha),
                 b=float(dist.beta), size=size),
@@ -331,7 +334,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = _get_sample_class_crv[library](self, size)
+        samps = _get_sample_class_crv[library](self, size, seed)
 
         if samps is not None:
             return samps

@@ -155,6 +155,20 @@ def test_sample_discrete():
         for samp in samps:
             assert samp in X.pspace.domain.set
 
+    libraries = ['scipy', 'numpy', 'pymc3']
+    for lib in libraries:
+        try:
+            imported_lib = import_module(lib)
+            if imported_lib:
+                s0, s1, s2 = [], [], []
+                s0 = list(sample(X, numsamples=10, library=lib, seed=0))
+                s1 = list(sample(X, numsamples=10, library=lib, seed=0))
+                s2 = list(sample(X, numsamples=10, library=lib, seed=1))
+                assert s0 == s1
+                assert s1 != s2
+        except NotImplementedError:
+            continue
+
 def test_discrete_probability():
     X = Geometric('X', Rational(1, 5))
     Y = Poisson('Y', 4)

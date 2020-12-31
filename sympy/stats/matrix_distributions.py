@@ -95,7 +95,7 @@ class SampleMatrixScipy:
         else:
             rand_state = seed
         for _ in range(size[0]):
-            samp = scipy_rv_map[dist.__class__.__name__](dist, size[1], rand_state)
+            samp = scipy_rv_map[dist.__class__.__name__](dist, size[1] if len(size) > 1 else 1, rand_state)
             samples.append(samp)
         return samples
 
