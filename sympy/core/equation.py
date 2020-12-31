@@ -354,7 +354,7 @@ class Equation(Basic, EvalfMixin):
         """
         return self.apply(func, *args, **kwargs, side='rhs')
 
-    class _Sides:
+    class _sides:
         def __init__(self,eqn, side='both'):
             self.eqn = eqn
             self.side = side
@@ -369,15 +369,15 @@ class Equation(Basic, EvalfMixin):
 
     @property
     def do(self):
-        return self._Sides(self,side='both')
+        return self._sides(self, side='both')
 
     @property
     def dolhs(self):
-        return self._Sides(self,side='lhs')
+        return self._sides(self, side='lhs')
 
     @property
     def dorhs(self):
-        return self._Sides(self,side='rhs')
+        return self._sides(self, side='rhs')
 
     #####
     # Overrides of binary math operations
