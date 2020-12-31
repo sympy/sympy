@@ -915,19 +915,20 @@ domains. In that case you can construct the ring more directly with the
   x + y
 
 The object ``K`` here represents the ring but is not a **polys domain** (it is
-not an instance of a subclass of :py:class:`~.Domain`). In this way the
-implementation of polynomial rings that is used in the domain system can be
-used independently of the domain system.
+not an instance of a subclass of :py:class:`~.Domain` so it can not be used
+with :py:class:`~.Poly`). In this way the implementation of polynomial rings
+that is used in the domain system can be used independently of the domain
+system.
 
 The purpose of the domain system is to provide a unified interface for working
-with and converting between different class of expression. To make the
-``ring`` implementation usable in that context the ``PolynomialRing`` class is
-a wrapper around the ``PolyRing`` class that provides the interface expected
-in the domain system. That makes this implementation of polynomial rings
-usable as part of the broader codebase that is designed to work with
+with and converting between different representations of expressions. To make
+the ``ring`` implementation usable in that context the ``PolynomialRing``
+class is a wrapper around the ``PolyRing`` class that provides the interface
+expected in the domain system. That makes this implementation of polynomial
+rings usable as part of the broader codebase that is designed to work with
 expressions from different domains. The domain for polynomial rings is a
-distinct object from the ring returned by ``ring`` although both have
-the same elements::
+distinct object from the ring returned by ``ring`` although both have the same
+elements::
 
   >>> K, xr, yr = ring([x, y], ZZ)
   >>> K
@@ -1288,8 +1289,8 @@ well::
   >>> QQ.frac_field(x).unify(ZZ[y])
   ZZ(x,y)
 
-Poly
-====
+Internals of a Poly
+===================
 
 We are now in a position to understand how the :py:class:`~.Poly` class works
 internally. This is the public interface of :py:class:`~.Poly`::
@@ -1328,6 +1329,9 @@ polynomial ring domain e.g. ``ZZ.old_poly_ring(z)``. This represents the
 polynomial as a list of coefficients which are themselves elements of a domain
 and keeps a reference to their domain (``ZZ`` in this example).
 
+Choosing a domain for a Poly
+============================
+
 If the domain is not specified for the :py:class:`~.Poly` constructor then it
 is inferred using :py:func:`~.construct_domain`. Arguments like ``field=True``
 are passed along to :py:func:`~.construct_domain`::
@@ -1359,3 +1363,145 @@ to create an appropriate :py:class:`~.AlgebraicField` domain::
   Poly(x**2 + 1, x, domain='QQ<sqrt(2) + sqrt(3)>')
   >>> construct_domain([1, 0, 1], extension=sqrt(2))[0]
   ZZ
+
+(Perhaps :py:func:`~.construct_domain` should do the same as
+:py:class:`~.Poly` here...)
+
+Choosing generators
+===================
+
+If there are symbols other than the generators then a polynomial ring or
+rational function field domain will be created. The domain used for the
+coefficients in this case is the sparse ("new") polynomial ring::
+
+  >>> p = Poly(x**2*y + z, x)
+  >>> p
+  Poly(y*x**2 + z, x, domain='ZZ[y,z]')
+  >>> p.gens
+  (x,)
+  >>> p.domain
+  ZZ[y,z]
+  >>> p.domain == ZZ[y,z]
+  True
+  >>> p.domain == ZZ.poly_ring(y, z)
+  True
+  >>> p.domain == ZZ.old_poly_ring(y, z)
+  False
+  >>> p.rep.rep
+  [y, 0, z]
+  >>> p.rep.rep[0]
+  y
+  >>> type(p.rep.rep[0])
+  <class 'sympy.polys.rings.PolyElement'>
+  >>> dict(p.rep.rep[0])
+  {(1, 0): 1}
+
+What we have here is a strange hybrid of dense and sparse implementations. The
+:py:class:`~.Poly` instance considers itself to be an univariate polynomial in
+the generator ``x`` but with coefficients from the domain ``ZZ[y,z]``. The
+internal representation of the :py:class:`~.Poly` is a list of coefficients in
+the "dense univariate polynomial" (DUP) format. However each coefficient is
+implemented as a sparse polynomial in ``y`` and ``z``.
+
+If we make ``x``, ``y`` and ``z`` all be generators for the :py:class:`~.Poly`
+then we get a fully dense DMP list of lists of lists representation::
+
+  >>> p = Poly(x**2*y + z, x, y, z)
+  >>> p
+  Poly(x**2*y + z, x, y, z, domain='ZZ')
+  >>> p.rep
+  DMP([[[1], []], [[]], [[1, 0]]], ZZ, None)
+  >>> p.rep.rep
+  [[[1], []], [[]], [[1, 0]]]
+  >>> p.rep.rep[0][0][0]
+  1
+  >>> type(p.rep.rep[0][0][0])
+  <class 'int'>
+
+On the other hand we can make a :py:class:`~.Poly` with a fully sparse
+representation by choosing a generator that is not in the expression at all::
+
+  >>> p = Poly(x**2*y + z, t)
+  >>> p
+  Poly(x**2*y + z, t, domain='ZZ[x,y,z]')
+  >>> p.rep
+  DMP([x**2*y + z], ZZ[x,y,z], None)
+  >>> p.rep.rep[0]
+  x**2*y + z
+  >>> type(p.rep.rep[0])
+  <class 'sympy.polys.rings.PolyElement'>
+  >>> dict(p.rep.rep[0])
+  {(0, 0, 1): 1, (2, 1, 0): 1}
+
+If no generators are provided to the :py:class:`~.Poly` constructor then it
+will attempt to choose generators so that the expression is polynomial in
+those. In the common case that the expression is a polynomial expression in
+some symbols then those symbols will be taken as generators. However other
+non-symbol expressions can also be taken as generators::
+
+  >>> Poly(x**2*y + z)
+  Poly(x**2*y + z, x, y, z, domain='ZZ')
+  >>> from sympy import pi, exp
+  >>> Poly(exp(x) + exp(2*x) + 1)
+  Poly((exp(x))**2 + (exp(x)) + 1, exp(x), domain='ZZ')
+  >>> Poly(pi*x)
+  Poly(x*pi, x, pi, domain='ZZ')
+  >>> Poly(pi*x, x)
+  Poly(pi*x, x, domain='ZZ[pi]')
+
+Algebraically dependent generators
+==================================
+
+Taking ``exp(x)`` or ``pi`` as generators for a :py:class:`~.Poly` or for its
+polynomial ring domain is mathematically valid because these objects are
+transcendental and so the ring extension containing them is isomorphic to a
+polynomial ring. Since ``x`` and ``exp(x)`` are algebraically independent it
+is also valid to use both as generators for the same :py:class:`~.Poly`.
+However some other combinations of generators are invalid such as ``x`` and
+``sqrt(x)`` or ``sin(x)`` and ``cos(x)``. These examples are invalid  because
+the generators are not algebraically independent (e.g. ``sqrt(x)**2 = x`` and
+``sin(x)**2 + cos(x)**2 = 1``). The implementation is not able to detect these
+algebraic relationships though::
+
+  >>> from sympy import sin, cos, sqrt
+  >>> Poly(x*exp(x))      # fine
+  Poly(x*(exp(x)), x, exp(x), domain='ZZ')
+  >>> Poly(sin(x)+cos(x)) # not fine
+  Poly((cos(x)) + (sin(x)), cos(x), sin(x), domain='ZZ')
+  >>> Poly(x + sqrt(x))   # not fine
+  Poly(x + (sqrt(x)), x, sqrt(x), domain='ZZ')
+
+Calculations with a :py:class:`~.Poly` such as this are unreliable because
+zero-testing will not work properly in this implementation::
+
+  >>> p1 = Poly(x, x, sqrt(x))
+  >>> p2 = Poly(sqrt(x), x, sqrt(x))
+  >>> p1
+  Poly(x, x, sqrt(x), domain='ZZ')
+  >>> p2
+  Poly((sqrt(x)), x, sqrt(x), domain='ZZ')
+  >>> p3 = p1 - p2**2
+  >>> p3                  # should be zero...
+  Poly(x - (sqrt(x))**2, x, sqrt(x), domain='ZZ')
+  >>> p3.as_expr()
+  0
+
+This aspect of :py:class:`~.Poly` could be improved by:
+
+#. Expanding the domain system with new domains that can represent more
+   classes of algebraic extension.
+#. Improving the detection of algebraic dependencies in
+   :py:func:`~.construct_domain`.
+#. Improving the automatic selection of generators.
+
+Examples of the above are that it would be useful to have a domain that can
+represent more general algebraic extensions (:py:class:`~.AlgebraicField` is
+only for extensions of ``QQ``). Improving the detection of algebraic
+dependencies is harder but at least common cases like ``sin(x)`` and
+``cos(x)`` could be handled. When choosing generators it should be possible to
+recognise that ``sqrt(x)`` can be the only generator for ``x + sqrt(x)``::
+
+  >>> Poly(x + sqrt(x))            # this could be improved!
+  Poly(x + (sqrt(x)), x, sqrt(x), domain='ZZ')
+  >>> Poly(x + sqrt(x), sqrt(x))   # this could be improved!
+  Poly((sqrt(x)) + x, sqrt(x), domain='ZZ[x]')
