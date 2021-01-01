@@ -10,7 +10,7 @@ from .operations import AssocOp
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
-from .kind import UndefinedKind
+from .kind import UndefinedKind, KindDispatcher
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -118,6 +118,7 @@ class Add(Expr, AssocOp):
     is_Add = True
 
     _args_type = Expr
+    _kind_dispatcher = KindDispatcher("Add_kind_dispatcher", commutative=True)
 
     @classmethod
     def flatten(cls, seq):
@@ -339,15 +340,8 @@ class Add(Expr, AssocOp):
 
     @property
     def kind(self):
-        kinds = [a.kind for a in self.args]
-        kinds = frozenset(kinds)
-        if len(kinds) != 1:
-            # Since addition is group operator, kind must be same.
-            # We know that this is unexpected signature, so return this.
-            result = UndefinedKind
-        else:
-            result, = kinds
-        return result
+        arg_kinds = (a.kind for a in self.args)
+        return self._kind_dispatcher(*arg_kinds)
 
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.
@@ -1189,14 +1183,7 @@ def add(*args, evaluate=False, **kwargs):
 
     args = [_sympify(a) for a in args]
     kinds = [a.kind for a in args]
-    kinds = frozenset(kinds)
-    if len(kinds) != 1:
-        # Since addition is group operator, kind must be same.
-        # We know that this is unexpected signature, so return this.
-        selected_kind = UndefinedKind
-    else:
-        selected_kind, = kinds
-
+    selected_kind = Add._kind_dispatcher(*kinds)
     func = selected_kind.add
     return func(*args, **kwargs)
 

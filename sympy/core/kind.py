@@ -112,7 +112,7 @@ class UndefinedKind(Kind):
 
     @property
     def pow(self):
-        from .pow import Pow
+        from .power import Pow
         return Pow
 
 
@@ -187,7 +187,7 @@ class NumberKind(Kind):
 
     @property
     def pow(self):
-        from .pow import Pow
+        from .power import Pow
         return Pow
 
 NumberKind = NumberKind()

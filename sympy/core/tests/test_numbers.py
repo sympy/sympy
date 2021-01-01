@@ -1049,7 +1049,7 @@ def test_isqrt():
     assert isqrt(10**100 - tiny) == 10**50 - 1
 
     # Check that using an inaccurate math.sqrt doesn't affect the results.
-    from sympy.core import power
+    import sympy.core.power as power
     old_sqrt = power._sqrt
     power._sqrt = lambda x: 2.999999999
     try:

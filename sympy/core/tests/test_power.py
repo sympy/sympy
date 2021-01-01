@@ -268,7 +268,7 @@ def test_zero():
 
     #Test issue 19572
     assert 0 ** -oo is zoo
-    assert power(0, -oo) is zoo
+    assert power(0, -oo, evaluate=True) is zoo
 
 def test_pow_as_base_exp():
     x = Symbol('x')
@@ -558,27 +558,3 @@ def test_issue_18762():
     e, p = symbols('e p')
     g0 = sqrt(1 + e**2 - 2*e*cos(p))
     assert len(g0.series(e, 1, 3).args) == 4
-
-def test_power_dispatcher():
-
-    class NewBase(Expr):
-        pass
-    class NewPow(NewBase, Pow):
-        pass
-    a, b = Symbol('a'), NewBase()
-
-    @power.register(Expr, NewBase)
-    @power.register(NewBase, Expr)
-    @power.register(NewBase, NewBase)
-    def _(a, b):
-        return NewPow(a, b)
-
-    # Pow called as fallback
-    assert power(2, 3) == 8*S.One
-    assert power(a, 2) == Pow(a, 2)
-    assert power(a, a) == Pow(a, a)
-
-    # NewPow called by dispatch
-    assert power(a, b) == NewPow(a, b)
-    assert power(b, a) == NewPow(b, a)
-    assert power(b, b) == NewPow(b, b)
