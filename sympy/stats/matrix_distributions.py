@@ -526,7 +526,7 @@ def MatrixStudentT(symbol, nu, location_matrix, scale_matrix_1, scale_matrix_2):
 
     Parameters
     ==========
- 
+
     nu: Positive Real number
         degrees of freedom
     location_matrix: Positive definite real square matrix
@@ -558,8 +558,9 @@ def MatrixStudentT(symbol, nu, location_matrix, scale_matrix_1, scale_matrix_2):
 
     References
     ==========
-    
+
     .. [1] https://en.wikipedia.org/wiki/Matrix_t-distribution
+
     """
     if isinstance(location_matrix, list):
         location_matrix = ImmutableMatrix(location_matrix)
