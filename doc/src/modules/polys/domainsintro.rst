@@ -83,7 +83,7 @@ Tree representation
 
 The most general representation is as a `tree`_ and this is the representation
 used for most ordinary SymPy expressions which are instances of
-:py:class:`~.Expr` or more generally of :py:class:`~.Basic`. We can see this
+:py:class:`~.Expr` (a subclass of :py:class`~.Basic`). We can see this
 representation using the :py:func:`~.srepr` function::
 
   >>> from sympy import Symbol, srepr
@@ -105,7 +105,7 @@ leaf nodes are atomic expression types like :py:class:`~.Integer` and
 :py:class:`~.Symbol`. See :ref:`tutorial-manipulation` for more about this
 representation.
 
-The tree representation is core to the architecture of :py:class:`~.Basic` in
+The tree representation is core to the architecture of :py:class:`~.Expr` in
 SymPy. It is a highly flexible representation that can represent a very wide
 range of possible expressions. It can also represent equivalent expressions in
 different ways e.g.::
@@ -386,7 +386,7 @@ Domain elements vs sympy expressions
 ====================================
 
 Note that domain elements are not of the same type as ordinary sympy
-expressions which are subclasses of :py:class:`~.Basic` such as
+expressions which are subclasses of :py:class:`~.Expr` such as
 :py:class:`~sympy.core.numbers.Integer`. Ordinary sympy expressions are
 created with the :py:func:`~sympy.core.sympify.sympify` function.::
 
@@ -396,8 +396,8 @@ created with the :py:func:`~sympy.core.sympify.sympify` function.::
   2
   >>> type(z1_sympy)
   <class 'sympy.core.numbers.Integer'>
-  >>> from sympy import Basic
-  >>> isinstance(z1_sympy, Basic)
+  >>> from sympy import Expr
+  >>> isinstance(z1_sympy, Expr)
   True
 
 It is important when working with the domains not to mix sympy expressions
@@ -440,7 +440,7 @@ from sympy expressions (or from objects that can be sympified to sympy
 expressions).
 
 It is important not to mix domain elements with other Python types such as
-``int``, ``float``, as well as standard sympy :py:class:`~.Basic` expressions.
+``int``, ``float``, as well as standard sympy :py:class:`~.Expr` expressions.
 When working in a domain, care should be taken as some Python operations will
 do this implicitly. for example the ``sum`` function will use the regular
 ``int`` value of zero so that ``sum([a, b])`` is effectively evaluated as ``(0
@@ -463,12 +463,12 @@ allows to provide an alternative object as the "zero"::
 
 A standard pattern then for performing calculations in a domain is:
 
-#. Start with sympy :py:class:`~.Basic` instances representing expressions.
+#. Start with sympy :py:class:`~.Expr` instances representing expressions.
 #. Choose an appropriate domain that can represent the expressions.
 #. Convert all expressions to domain elements using
    :py:meth:`~.Domain.from_sympy`.
 #. Perform the calculation with the domain elements.
-#. Convert back to :py:class:`~.Basic` with :py:meth:`~.Domain.to_sympy`.
+#. Convert back to :py:class:`~.Expr` with :py:meth:`~.Domain.to_sympy`.
 
 Here is an implementation of the ``sum`` function that illustrates these
 steps and sums some integers but performs the calculation using the domain
@@ -485,7 +485,7 @@ elements rather than standard sympy expressions::
       for e_dom in expressions_dom:
           result_dom += e_dom
 
-      # Convert the result back to Basic
+      # Convert the result back to Expr
       result_sympy = ZZ.to_sympy(result_dom)
       return result_sympy
 
@@ -556,7 +556,7 @@ So far we have seen the domains :ref:`ZZ`, :ref:`QQ`, :ref:`ZZ_I`, and
 :ref:`QQ_I`. There are also domains representing the `Finite fields`_ although
 the implementation of these is incomplete. A finite field :ref:`GF(p)` of
 *prime* order can be constructed with ``FF`` or ``GF``. A domain for the
-finite field or prime order `p` can be constructed with :ref:`GF(p)`::
+finite field of prime order `p` can be constructed with :ref:`GF(p)`::
 
   >>> from sympy import GF
   >>> K = GF(5)
@@ -567,6 +567,13 @@ finite field or prime order `p` can be constructed with :ref:`GF(p)`::
   4 mod 5
   >>> two ** 3
   3 mod 5
+
+There is also ``FF`` as an alias for ``GF`` (standing for "finite field" and
+"Galois field" respectively). These are equivalent and both ``FF(n)`` and
+``GF(n)`` will create a domain which is an instance of
+:py:class:`~.FiniteField`. The associated domain elements will be instances of
+:py:class:`~.PythonFiniteField` or :py:class:`~.GMPYFiniteField` depending on
+whether or not ``gmpy`` is installed.
 
 Finite fields of order `p^n` where `n \ne 1` are not implemented. It is
 possible to use e.g. ``GF(6)`` or ``GF(9)`` but the resulting domain is *not*
@@ -663,13 +670,14 @@ An `algebraic extension`_ of the rationals `\mathbb{Q}` is known as an
 The natural syntax for these would be something like ``QQ(sqrt(2))`` however
 ``QQ()`` is already overloaded as the constructor for elements of :ref:`QQ`.
 These domains are instead created using the
-:py:meth:`~.Domain.algebraic_field` e.g.  ``QQ.algebraic_field(sqrt(2))``. The
-resulting domain will be an instance of :py:class:`~.AlgebraicField` with
-elements that are instances of :py:class:`~.ANP`.
+:py:meth:`~.Domain.algebraic_field` method e.g.
+``QQ.algebraic_field(sqrt(2))``. The resulting domain will be an instance of
+:py:class:`~.AlgebraicField` with elements that are instances of
+:py:class:`~.ANP`.
 
 The printing support for these is less developed but we can use
 :py:meth:`~.Domain.to_sympy` to take advantage of the corresponding
-:py:class:`~.Basic` printing support::
+:py:class:`~.Expr` printing support::
 
   >>> K = QQ.algebraic_field(sqrt(2))
   >>> K
@@ -685,14 +693,14 @@ The printing support for these is less developed but we can use
   2*sqrt(2) + 3
 
 The raw printed display immediately shows the internal representation of the
-elements as :py:class:`~.ANP` instances. The field
-`\mathbb{Q}(\sqrt{2})` consists of numbers of the form
-`a+b\sqrt{2}` where `a` and `b` are rational numbers. Consequently every
-number in this field can be represented as a pair ``(a, b)`` of elements of
-:ref:`QQ`. The domain element stores these two in a list and also stores a list
-representation of the *minimal polynomial* for the extension element
-`\sqrt{2}`. There is a sympy function :py:func:`~.minpoly` that can compute
-the minimal polynomial of any algebraic expression over the rationals::
+elements as :py:class:`~.ANP` instances. The field `\mathbb{Q}(\sqrt{2})`
+consists of numbers of the form `a\sqrt{2}+b` where `a` and `b` are rational
+numbers. Consequently every number in this field can be represented as a pair
+``(a, b)`` of elements of :ref:`QQ`. The domain element stores these two in a
+list and also stores a list representation of the *minimal polynomial* for the
+extension element `\sqrt{2}`. There is a sympy function :py:func:`~.minpoly`
+that can compute the minimal polynomial of any algebraic expression over the
+rationals::
 
   >>> from sympy import minpoly, Symbol
   >>> x = Symbol('x')
@@ -780,15 +788,15 @@ ring::
   x + 1
 
 The internal representation of elements of ``K[x]`` is different from the way
-that ordinary sympy (:py:class:`~.Basic`) expressions are represented. The
-:py:class:`~.Basic` representation of any expression is as a tree e.g.::
+that ordinary sympy (:py:class:`~.Expr`) expressions are represented. The
+:py:class:`~.Expr` representation of any expression is as a tree e.g.::
 
   >>> from sympy import srepr
   >>> K = ZZ[x]
-  >>> p_basic = x**2 + 2*x + 1
-  >>> p_basic
+  >>> p_expr = x**2 + 2*x + 1
+  >>> p_expr
   x**2 + 2*x + 1
-  >>> srepr(p_basic)
+  >>> srepr(p_expr)
   "Add(Pow(Symbol('x'), Integer(2)), Mul(Integer(2), Symbol('x')), Integer(1))"
 
 Here the expression is a tree where the top node is an :py:class:`~.Add` and
@@ -796,10 +804,10 @@ its children nodes are :py:class:`~.Pow` etc. This tree representation makes
 it possible to represent equivalent expressions in different ways e.g.::
 
   >>> x = symbols('x')
-  >>> p_basic = x*(x + 1) + x
-  >>> p_basic
+  >>> p_expr = x*(x + 1) + x
+  >>> p_expr
   x*(x + 1) + x
-  >>> p_basic.expand()
+  >>> p_expr.expand()
   x**2 + 2*x
 
 By contrast the domain ``ZZ[x]`` represents only polynomials and does so by
@@ -825,8 +833,8 @@ expanded::
   >>> x = symbols('x')
   >>> K = ZZ[x]
   >>> x_dom = K(x)
-  >>> p_basic = x * (x + 1) + x
-  >>> p_basic
+  >>> p_expr = x * (x + 1) + x
+  >>> p_expr
   x*(x + 1) + x
   >>> p_dom = x_dom * (x_dom + K.one) + x_dom
   >>> p_dom
@@ -1078,7 +1086,7 @@ Expression domain
 The final domain to consider is the "expression domain" which is known as
 :ref:`EX`. Expressions that can not be represented using the other domains can
 be always represented using the expression domain. An element of :ref:`EX` is
-actually just a wrapper around a :py:class:`~.Basic` instance::
+actually just a wrapper around a :py:class:`~.Expr` instance::
 
   >>> from sympy import EX
   >>> p = EX.from_sympy(1 + x)
@@ -1092,8 +1100,8 @@ actually just a wrapper around a :py:class:`~.Basic` instance::
   <class 'sympy.core.add.Add'>
 
 For other domains the domain representation of expressions is usually more
-efficient than the tree representation used by :py:class:`~.Basic`. In
-:ref:`EX` the internal representation is :py:class:`~.Basic` so it is clearly
+efficient than the tree representation used by :py:class:`~.Expr`. In
+:ref:`EX` the internal representation is :py:class:`~.Expr` so it is clearly
 not more efficient. The purpose of the :ref:`EX` domain is to be able to wrap
 up arbitrary expressions in an interace that is consistent with the other
 domains. The :ref:`EX` domain is used as a fallback when an appropriate domain
@@ -1114,7 +1122,7 @@ expressions and will choose a domain and convert all of the expressions to
 that domain::
 
   >>> from sympy import construct_domain, Integer
-  >>> elements_sympy = [Integer(3), Integer(2)]  # elements as Basic instances
+  >>> elements_sympy = [Integer(3), Integer(2)]  # elements as Expr instances
   >>> elements_sympy
   [3, 2]
   >>> K, elements_K = construct_domain(elements_sympy)
@@ -1130,8 +1138,8 @@ that domain::
 In this example we see that the two integers ``3`` and ``2`` can be
 represented in the domain :ref:`ZZ`. The expressions have been converted to
 elements of that domain which in this case means the ``int`` type rather than
-instances of :py:class:`~.Basic`. It is not necessary to explicitly create
-:py:class:`~.Basic` instances when the inputs can be sympified so e.g.
+instances of :py:class:`~.Expr`. It is not necessary to explicitly create
+:py:class:`~.Expr` instances when the inputs can be sympified so e.g.
 ``construct_domain([3, 2])`` would give the same output as above.
 
 Given more complicated inputs :py:func:`~.construct_domain` will choose more
