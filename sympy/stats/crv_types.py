@@ -3564,8 +3564,8 @@ class RicianDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(alpha, beta):
-        _value_check(alpha > 0, "Shape parameter alpha must be positive.")
-        _value_check(beta > 0, "Shape parameter beta must be positive.")
+        _value_check(alpha >= 0, "Shape parameter alpha must be positive.")
+        _value_check(beta >= 0, "Shape parameter beta must be positive.")
 
     def cdf(self, x):
         alpha, beta = self.alpha, self.beta
@@ -3573,7 +3573,7 @@ class RicianDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         alpha, beta = self.alpha, self.beta
-        return exp(-(x**2 + alpha**2)/(2*beta**2)) * x * besseli(0, (x*alpha)/(beta**2))
+        return x*exp((-alpha**2 - x**2)/(2*beta**2))*besseli(0, alpha*x/beta**2)/beta**2
 
 def Rician(name, alpha, beta):
     r"""Creates a continuous random variable with a Rician distribution.
@@ -3603,8 +3603,8 @@ def Rician(name, alpha, beta):
     >>> cdf(R)(x)
     marcumq(1, alpha/beta, x/beta)
 
-    Reference
-    =========
+    References
+    ==========
 
     .. [1] https://en.wikipedia.org/wiki/Rice_distribution
     .. [1] https://reference.wolfram.com/language/ref/RiceDistribution.html

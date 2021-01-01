@@ -1142,7 +1142,7 @@ def test_rician():
 
     X = Rician('x', alpha, beta)
     assert cdf(X)(x) == marcumq(1, alpha/beta, x/beta)
-    assert density(X)(x) == x*exp((-alpha**2 - x**2)/(2*beta**2))*besseli(0, alpha*x/beta**2)
+    assert density(X)(x) == x*exp((-alpha**2 - x**2)/(2*beta**2))*besseli(0, alpha*x/beta**2)/beta**2
 
 def test_shiftedgompertz():
     b = Symbol("b", positive=True)
