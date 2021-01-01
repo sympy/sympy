@@ -917,7 +917,7 @@ def test_latex_union():
 
 def test_latex_intersection():
     assert latex(Intersection(Interval(0, 1), Interval(x, y))) == \
-        r"\left[0, 1\right] \cap \left[x, y\right]"
+        r"\left[\max\left(0, x\right), \min\left(1, y\right)\right]"
 
 
 def test_latex_symmetric_difference():
