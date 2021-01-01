@@ -53,13 +53,13 @@ implementation of those coefficients::
   >>> type(p.rep.rep[0])
   <class 'sympy.polys.domains.pythonrational.PythonRational'>
 
-Here the domain is ``QQ`` which represents the implementation of the rational
-numbers in the domain system. The :py:class:`~.Poly` instance itself has a
-``domain`` attribute ``QQ`` and then a list of ``PythonRational`` coefficients
-where ``PythonRational`` is the class that implements the elements of the
-``QQ`` domain. The list of coefficients ``[1, 1/2, 0]`` gives a standardised
-low-level representation of the polynomial expression ``(1)*x**2 + (1/2)*x +
-(0)``.
+Here the domain is :ref:`QQ` which represents the implementation of the
+rational numbers in the domain system. The :py:class:`~.Poly` instance itself
+has a ``domain`` attribute :ref:`QQ` and then a list of
+:py:class:`~.PythonRational` coefficients where :py:class:`~.PythonRational`
+is the class that implements the elements of the :ref:`QQ` domain. The list of
+coefficients ``[1, 1/2, 0]`` gives a standardised low-level representation of
+the polynomial expression ``(1)*x**2 + (1/2)*x + (0)``.
 
 This page looks at the different domains that are defined in SymPy, how they
 are implemented and how they can be used. It introduces how to use the domains
@@ -245,7 +245,7 @@ those representations are and how to use them.
 Basic usage of domains
 ======================
 
-Several domains are predefined and ready to be used such as ``ZZ`` and ``QQ``
+Several domains are predefined and ready to be used such as :ref:`ZZ` and :ref:`QQ`
 which represent the ring of integers `\mathbb{Z}` and the field of rationals
 `\mathbb{Q}`. The :py:class:`~.Domain` object is used to construct elements
 which can then be used in ordinary arithmetic operations.::
@@ -265,8 +265,8 @@ The basic operations ``+``, ``-``, and ``*`` for addition, subtraction and
 multiplication will work for the elements of any domain and will produce new
 domain elements. Division with ``/`` (Python's "true division" operator) is not
 possible for all domains and should not be used with domain elements unless
-the domain is known to be a field. For example dividing two elements of ``ZZ``
-gives a ``float`` which is not an element of ``ZZ``::
+the domain is known to be a field. For example dividing two elements of :ref:`ZZ`
+gives a ``float`` which is not an element of :ref:`ZZ`::
 
   >>> z1 / z1
   1.0
@@ -277,14 +277,14 @@ gives a ``float`` which is not an element of ``ZZ``::
 
 Most domains representing non-field rings allow floor and modulo division
 (remainder) with Python's floor division ``//`` and modulo division ``%``
-operators. For example with ``ZZ``::
+operators. For example with :ref:`ZZ`::
 
   >>> z1 // z1
   1
   >>> z1 % z1
   0
 
-The ``QQ`` domain represents the field of rational numbers and does allow
+The :ref:`QQ` domain represents the field of rational numbers and does allow
 division::
 
   >>> from sympy import QQ
@@ -329,9 +329,9 @@ This is the analogue of ``a / b`` but where the division is expected to be exact
 
 The exact methods and attributes of the domain elements are not guaranteed in
 general beyond the basic arithmetic operations. It should not be presumed that
-e.g. ``ZZ`` will always be of type ``int``. If ``gmpy`` or ``gmpy2`` is
-installed then the ``mpz`` or ``mpq`` types are used instead for ``ZZ`` and
-``QQ``::
+e.g. :ref:`ZZ` will always be of type ``int``. If ``gmpy`` or ``gmpy2`` is
+installed then the ``mpz`` or ``mpq`` types are used instead for :ref:`ZZ` and
+:ref:`QQ`::
 
   >>> from sympy import ZZ, QQ
   >>> ZZ(2)  # doctest: +SKIP
@@ -343,7 +343,7 @@ The ``mpz`` type is faster than Python's standard ``int`` type for operations
 with large integers although for smaller integers the difference is not so
 significant. The ``mpq`` type representing rational numbers is implemented in
 C rather than Python and is many times faster than the pure Python
-implementation of ``QQ`` that is used when gmpy is not installed.
+implementation of :ref:`QQ` that is used when gmpy is not installed.
 
 In general the Python type used for the elements of a domain can be checked
 from the ``dtype`` attribute of the domain. The :py:meth:`~.Domain.of_type`
@@ -469,7 +469,7 @@ elements rather than standard sympy expressions::
 Gaussian integers and Gaussian rationals
 ========================================
 
-The two example domains that we have seen so far are ``ZZ`` and ``QQ``
+The two example domains that we have seen so far are :ref:`ZZ` and :ref:`QQ`
 representing the integers and the rationals respectively. There are other
 simple domains such as ``ZZ_I`` and ``QQ_I`` representing the
 `Gaussian integers`_ and `Gaussian rationals`_. The Gaussian integers are
@@ -498,9 +498,9 @@ The ``ZZ_I`` and ``QQ_I`` domains are implemented by the classes
 ``GaussianIntegerRing`` and ``GaussianRationalField`` and their elements by
 ``GaussianInteger`` and ``GaussianRational`` respectively. The internal
 representation for an element of ``ZZ_I`` or ``QQ_I`` is simply as a pair
-``(a, b)`` of elements of ``ZZ`` or ``QQ`` respectively. The domain ``ZZ_I``
-is a ring with similar properties to ``ZZ`` whereas ``QQ_I`` is a field
-much like ``QQ``::
+``(a, b)`` of elements of :ref:`ZZ` or :ref:`QQ` respectively. The domain ``ZZ_I``
+is a ring with similar properties to :ref:`ZZ` whereas ``QQ_I`` is a field
+much like :ref:`QQ`::
 
   >>> ZZ.is_Field
   False
@@ -528,7 +528,7 @@ divisor (GCD)::
 Finite fields
 =============
 
-So far we have seen the domains ``ZZ``, ``QQ``, ``ZZ_I``, and ``QQ_I``. There
+So far we have seen the domains :ref:`ZZ`, :ref:`QQ`, ``ZZ_I``, and ``QQ_I``. There
 are also domains representing the `Finite fields`_ although the implementation
 of these is incomplete. A finite field of *prime* order can be constructed
 with ``FF`` or ``GF``. A domain for the finite field or prime order `p` can be
@@ -637,7 +637,7 @@ Algebraic number fields
 An `algebraic extension`_ of the rationals `\mathbb{Q}` is known as an
 `algebraic number field`_ and these are implemented in sympy. The natural
 syntax for these would be something like ``QQ(sqrt(2))`` however ``QQ()`` is
-already overloaded as the constructor for elements of ``QQ``. These domains
+already overloaded as the constructor for elements of :ref:`QQ`. These domains
 are instead created as e.g. ``QQ.algebraic_field(sqrt(2))``. The resulting
 field will be an instance of :py:class:`~.AlgebraicField`.
 
@@ -663,7 +663,7 @@ elements as :py:class:`~.ANP` instances. The field
 `\mathbb{Q}(\sqrt{2})` consists of numbers of the form
 `a+b\sqrt{2}` where `a` and `b` are rational numbers. Consequently every
 number in this field can be represented as a pair ``(a, b)`` of elements of
-``QQ``. The domain element stores these two in a list and also stores a list
+:ref:`QQ`. The domain element stores these two in a list and also stores a list
 representation of the *minimal polynomial* for the extension element
 `\sqrt{2}`. There is a sympy function :py:func:`~.minpoly` that can compute
 the minimal polynomial of any algebraic expression over the rationals::
@@ -725,7 +725,7 @@ Polynomial ring domains
 
 There are also domains implemented to represent a polynomial ring like
 ``ZZ[x]`` which is the domain of polynomials in the generator ``x`` with
-coefficients over ``ZZ``::
+coefficients over :ref:`ZZ`::
 
   >>> from sympy import ZZ, symbols
   >>> x = symbols('x')
@@ -1098,7 +1098,7 @@ that domain::
   <class 'int'>
 
 In this example we see that the two integers ``3`` and ``2`` can be
-represented in the domain ``ZZ``. The expressions have been converted to
+represented in the domain :ref:`ZZ`. The expressions have been converted to
 elements of that domain which in this case means the ``int`` type rather than
 instances of :py:class:`~.Basic`. It is not necessary to explicitly create
 :py:class:`~.Basic` instances when the inputs can be sympified so e.g.
@@ -1121,7 +1121,7 @@ complicated domains::
   ZZ[x,y]
 
 If any noninteger rational numbers are found in the inputs then the ground
-domain will be ``QQ`` rather than ``ZZ``. If any symbol is found in the
+domain will be :ref:`QQ` rather than :ref:`ZZ`. If any symbol is found in the
 inputs then a :py:class:`~.PolynomialRing` will be created. A multivariate
 polynomial ring such as ``QQ[x,y]`` can also be created if there are multiple
 symbols in the inputs. If any symbols appear in the denominators then a
@@ -1200,8 +1200,8 @@ source domain as the second ergument e.g.::
   2
 
 This works because :py:meth:`~.Domain.convert` can check the type of ``ZZ(2)``
-and can try to work out what domain (``ZZ``) it is an element of. Certain
-domains like ``ZZ`` and ``QQ`` are treated as special cases to make this work.
+and can try to work out what domain (:ref:`ZZ`) it is an element of. Certain
+domains like :ref:`ZZ` and :ref:`QQ` are treated as special cases to make this work.
 Elements of more complicated domains are instances of subclasses of
 :py:class:`~.DomainElement` which has a :py:meth:`~.DomainElement.parent`
 method that can identify the domain that the element belongs to. For example
@@ -1257,8 +1257,8 @@ represent the elements of both domains. For this there is the
   7/2
 
 The :py:meth:`~.Domain.unify` method will find a domain that encompasses both
-domains so in this example ``ZZ.unify(QQ)`` gives ``QQ`` because every element
-of ``ZZ`` can be represented as an element of ``QQ``. This means that all
+domains so in this example ``ZZ.unify(QQ)`` gives :ref:`QQ` because every element
+of :ref:`ZZ` can be represented as an element of :ref:`QQ`. This means that all
 inputs (``x1`` and ``y2``) can be converted to the elements of the common
 domain ``K3`` (as ``x3`` and ``y3``). Once in the common domain we can safely
 use arithmetic operations like ``+``. In this example one domain is a superset
@@ -1328,7 +1328,7 @@ The internal representation of a :py:class:`~.Poly` instance is an instance of
 :py:class:`~.DMP` which is the class used for domain elements in the old
 polynomial ring domain e.g. ``ZZ.old_poly_ring(z)``. This represents the
 polynomial as a list of coefficients which are themselves elements of a domain
-and keeps a reference to their domain (``ZZ`` in this example).
+and keeps a reference to their domain (:ref:`ZZ` in this example).
 
 Choosing a domain for a Poly
 ============================
@@ -1497,7 +1497,7 @@ This aspect of :py:class:`~.Poly` could be improved by:
 
 Examples of the above are that it would be useful to have a domain that can
 represent more general algebraic extensions (:py:class:`~.AlgebraicField` is
-only for extensions of ``QQ``). Improving the detection of algebraic
+only for extensions of :ref:`QQ`). Improving the detection of algebraic
 dependencies is harder but at least common cases like ``sin(x)`` and
 ``cos(x)`` could be handled. When choosing generators it should be possible to
 recognise that ``sqrt(x)`` can be the only generator for ``x + sqrt(x)``::

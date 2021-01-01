@@ -86,6 +86,8 @@ QQ
 .. autoclass:: PythonRationalField
 .. autoclass:: GMPYRationalField
 
+.. autoclass:: PythonRational
+
 .. _RR:
 
 RR
