@@ -19,7 +19,7 @@ from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
-from sympy.core.kind import Kind, NumberKind
+from sympy.core.kind import Kind, NumberKind, _NumberKind
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
@@ -799,20 +799,23 @@ class MatrixKind(Kind):
         return MatPow
 
 
-@Mul._kind_dispatcher.register(MatrixKind, type(NumberKind))
-def _(k1, k2):
-    """Return MatrixKind. Its element kind is selected by recursive dispatching."""
+@Mul._kind_dispatcher.register(MatrixKind, _NumberKind)
+def mat_num_mul(k1, k2):
+    """Return MatrixKind. The element kind is selected by recursive dispatching."""
     # Deal with Mul._kind_dispatcher's commutativity
-    if isinstance(k1, MatrixKind):
-        mk = k1
-    else:
-        mk = k2
-    elemk = Mul._kind_dispatcher(mk.element_kind, NumberKind)
+    elemk = Mul._kind_dispatcher(k1.element_kind, NumberKind)
+    return MatrixKind(elemk)
+
+@Mul._kind_dispatcher.register(_NumberKind, MatrixKind)
+def num_mat_mul(k1, k2):
+    """Return MatrixKind. The element kind is selected by recursive dispatching."""
+    # Deal with Mul._kind_dispatcher's commutativity
+    elemk = Mul._kind_dispatcher(k2.element_kind, NumberKind)
     return MatrixKind(elemk)
 
 @Mul._kind_dispatcher.register(MatrixKind, MatrixKind)
-def _(k1, k2):
-    """Return MatrixKind. Its element kind is selected by recursive dispatching."""
+def mat_mat_mul(k1, k2):
+    """Return MatrixKind. The element kind is selected by recursive dispatching."""
     elemk = Mul._kind_dispatcher(k1.element_kind, k2.element_kind)
     return MatrixKind(elemk)
 
