@@ -3599,7 +3599,7 @@ def Rician(name, alpha, beta):
     >>> R = Rician('R', alpha, beta)
 
     >>> density(R)(x)
-    x*exp((-alpha**2 - x**2)/(2*beta**2))*besseli(0, alpha*x/beta**2)
+    x*exp((-alpha**2 - x**2)/(2*beta**2))*besseli(0, alpha*x/beta**2)/beta**2
     >>> cdf(R)(x)
     marcumq(1, alpha/beta, x/beta)
 
