@@ -19,12 +19,12 @@ def refine(expr, assumptions=True):
     Examples
     ========
 
-        >>> from sympy import refine, sqrt, Q
-        >>> from sympy.abc import x
-        >>> refine(sqrt(x**2), Q.real(x))
-        Abs(x)
-        >>> refine(sqrt(x**2), Q.positive(x))
-        x
+    >>> from sympy import refine, sqrt, Q
+    >>> from sympy.abc import x
+    >>> refine(sqrt(x**2), Q.real(x))
+    Abs(x)
+    >>> refine(sqrt(x**2), Q.positive(x))
+    x
 
     """
     if not isinstance(expr, Basic):
