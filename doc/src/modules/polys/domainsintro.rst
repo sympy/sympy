@@ -1,15 +1,16 @@
-.. _polys-domains:
+.. _polys-domainsintro:
 
-======================================================
-Understanding and using the Domains of the poly module
-======================================================
+==========================================
+Introducing the Domains of the poly module
+==========================================
 
 This page introduces the idea of the "domains" that are used in SymPy's
 ``polys`` module. The emphasis is on introducing how to use the domains
 directly and on understanding how they are used internally as part of the
 :py:class:`~.Poly` class. This is a relatively advanced topic so for a more
 introductory understanding of the :py:class:`~.Poly` class and the ``polys``
-module it is recommended to read :ref:`polys-basics` instead.
+module it is recommended to read :ref:`polys-basics` instead. The reference
+documentation for the domain classes is in :ref:`polys-domainsref`.
 
 What are the domains?
 =====================

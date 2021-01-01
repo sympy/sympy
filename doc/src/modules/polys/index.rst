@@ -24,7 +24,8 @@ Contents
     wester.rst
     reference.rst
     agca.rst
-    domains.rst
+    domainsintro.rst
+    domainsref.rst
     internals.rst
     ringseries.rst
     literature.rst
