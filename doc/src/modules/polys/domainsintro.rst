@@ -5,12 +5,14 @@ Introducing the Domains of the poly module
 ==========================================
 
 This page introduces the idea of the "domains" that are used in SymPy's
-``polys`` module. The emphasis is on introducing how to use the domains
+:mod:`sympy.polys` module. The emphasis is on introducing how to use the domains
 directly and on understanding how they are used internally as part of the
 :py:class:`~.Poly` class. This is a relatively advanced topic so for a more
-introductory understanding of the :py:class:`~.Poly` class and the ``polys``
+introductory understanding of the :py:class:`~.Poly` class and the :mod:`sympy.polys`
 module it is recommended to read :ref:`polys-basics` instead. The reference
-documentation for the domain classes is in :ref:`polys-domainsref`.
+documentation for the domain classes is in :ref:`polys-domainsref`. Internal
+functions that make use of the domains are documented in
+:ref:`polys-internals`.
 
 What are the domains?
 =====================
@@ -38,8 +40,8 @@ reference to the mathematical concept of an `integral domain`_.
 Internally the domains correspond to different computational implementations
 and representations of the expressions that the polynomials correspond to.
 The :py:class:`~.Poly` object itself has an internal representation as a
-``list`` of coefficients and a ``domain`` attribute representing the
-implementation of those coefficients::
+``list`` of coefficients and a :py:attr:`~.Poly.domain` attribute
+representing the implementation of those coefficients::
 
   >>> p = Poly(x**2 + x/2)
   >>> p
@@ -55,7 +57,7 @@ implementation of those coefficients::
 
 Here the domain is :ref:`QQ` which represents the implementation of the
 rational numbers in the domain system. The :py:class:`~.Poly` instance itself
-has a ``domain`` attribute :ref:`QQ` and then a list of
+has a :py:attr:`.Poly.domain` attribute :ref:`QQ` and then a list of
 :py:class:`~.PythonRational` coefficients where :py:class:`~.PythonRational`
 is the class that implements the elements of the :ref:`QQ` domain. The list of
 coefficients ``[1, 1/2, 0]`` gives a standardised low-level representation of
@@ -65,7 +67,7 @@ This page looks at the different domains that are defined in SymPy, how they
 are implemented and how they can be used. It introduces how to use the domains
 and domain elements directly and explains how they are used internally as part
 of :py:class:`~.Poly` objects. This information is more relevant for
-development in SymPy than it is for users of the ``polys`` module.
+development in SymPy than it is for users of the :mod:`sympy.polys` module.
 
 Representing expressions symbolically
 =====================================
@@ -76,9 +78,13 @@ suitable implementations for different classes of expressions. This section
 considers the basic approaches to the symbolic representation of mathematical
 expressions: "tree", "dense polynomial"  and "sparse polynomial".
 
+Tree representation
+*******************
+
 The most general representation is as a `tree`_ and this is the representation
-used for most ordinary SymPy expressions. We can see this representation using
-the :py:func:`~.srepr` function::
+used for most ordinary SymPy expressions which are instances of
+:py:class:`~.Expr` or more generally of :py:class:`~.Basic`. We can see this
+representation using the :py:func:`~.srepr` function::
 
   >>> from sympy import Symbol, srepr
   >>> x = Symbol('x')
@@ -90,13 +96,14 @@ the :py:func:`~.srepr` function::
 
 Here the expression ``e`` is represented as an :py:class:`~.Add` node which
 has two children ``1`` and ``1/(x**2 + 2)``. The child ``1`` is represented as
-``Integer(1)`` and the other child is represented as a :py:class:`~.Pow` with
+an :py:class:`~.Integer` and the other child is represented as a :py:class:`~.Pow` with
 base ``x**2 + 2`` and exponent ``1``. Then ``x**2 + 2`` is represented as an
 :py:class:`~.Add` with children ``x**2`` and ``2`` and so on. In this way the
 expression is represented as a tree where the internal nodes are operations
 like :py:class:`~.Add`, :py:class:`~.Mul`, :py:class:`~.Pow` and so on and the
-leaf nodes are atomic expressions like ``Integer(1)`` or ``Symbol('x')``. See
-:ref:`tutorial-manipulation` for more about this representation.
+leaf nodes are atomic expression types like :py:class:`~.Integer` and
+:py:class:`~.Symbol`. See :ref:`tutorial-manipulation` for more about this
+representation.
 
 The tree representation is core to the architecture of :py:class:`~.Basic` in
 SymPy. It is a highly flexible representation that can represent a very wide
@@ -124,6 +131,14 @@ which is in fact very important for many computational algorithms. The most
 important task is being able to tell when an expression is equal to zero which
 is undecidable in general (`Richardon's theorem`_) but is decidable in many
 important special cases.
+
+.. _tree: https://en.wikipedia.org/wiki/Tree_(data_structure)
+.. _Richardon's theorem: https://en.wikipedia.org/wiki/Richardson%27s_theorem
+
+.. _dup-representation:
+
+DUP representation
+******************
 
 Restricting the set of allowed expressions to special cases allows for much
 more efficient symbolic representations. As we already saw :py:class:`~.Poly`
@@ -178,6 +193,11 @@ on the DUP representation that are documented in :ref:`polys-internals`. There
 are also functions with the ``dmp_*`` prefix for operating on multivariate
 polynomials.
 
+.. _dmp-representation:
+
+DMP representation
+******************
+
 A multivariate polynomial (a polynomial in multiple variables) can be
 represented as a polynomial with coefficients that are themselves polynomials.
 For example ``x**2*y + x**2 + x*y + y + 1`` can be represented as polynomial
@@ -195,10 +215,16 @@ lists of coefficients::
   [[1, 1], [1, 0], [1, 1]]
 
 This list of lists of (lists of...) coefficients representation is known as
-the "dense multivariate polynomial" (DMP) representation. Instead of lists we
-can use a dict mapping nonzero monomial terms to their coefficients. This is
-known as the "sparse polynomial" representation. We can see what this would
-look like using the :py:meth:`~.Poly.as_dict` method::
+the "dense multivariate polynomial" (DMP) representation.
+
+.. _sparse-poly-representation:
+
+Sparse polynomial representation
+********************************
+
+Instead of lists we can use a dict mapping nonzero monomial terms to their
+coefficients. This is known as the "sparse polynomial" representation. We can
+see what this would look like using the :py:meth:`~.Poly.as_dict` method::
 
   >>> Poly(7*x**20 + 8*x + 9).rep.rep
   [7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 9]
@@ -227,9 +253,9 @@ particularly inefficient and it is better to use the sparse representation::
 
 The dict representation shown in the last output maps from the monomial which
 is represented as a tuple of powers (``(1, 1, 1, ...)`` i.e. ``x0**1 * x1**1,
-...``) to the coefficient ``1``. Compared to the DMP representation we have a
-much more flattened data structure: it is a ``dict`` with only one key and
-value. Algorithms for working with sparse representations would likely be
+...``) to the coefficient ``1``. Compared to the :ref:`dmp-representation` we
+have a much more flattened data structure: it is a ``dict`` with only one key
+and value. Algorithms for working with sparse representations would likely be
 much more efficient than dense algorithms for this particular example
 polynomial.
 
@@ -238,9 +264,6 @@ on both the dense and sparse representations. There are also other
 implementations of different special classes of expressions that can be used
 as the coefficients of those polynomials. The rest of this page discusses what
 those representations are and how to use them.
-
-.. _tree: https://en.wikipedia.org/wiki/Tree_(data_structure)
-.. _Richardon's theorem: https://en.wikipedia.org/wiki/Richardson%27s_theorem
 
 Basic usage of domains
 ======================
@@ -346,7 +369,7 @@ C rather than Python and is many times faster than the pure Python
 implementation of :ref:`QQ` that is used when gmpy is not installed.
 
 In general the Python type used for the elements of a domain can be checked
-from the ``dtype`` attribute of the domain. The :py:meth:`~.Domain.of_type`
+from the `dtype` attribute of the domain. The :py:meth:`~.Domain.of_type`
 method can be used to check if an object is an instance of ``dtype``.::
 
   >>> z = ZZ(2)
@@ -471,7 +494,7 @@ Gaussian integers and Gaussian rationals
 
 The two example domains that we have seen so far are :ref:`ZZ` and :ref:`QQ`
 representing the integers and the rationals respectively. There are other
-simple domains such as ``ZZ_I`` and ``QQ_I`` representing the
+simple domains such as :ref:`ZZ_I` and :ref:`QQ_I` representing the
 `Gaussian integers`_ and `Gaussian rationals`_. The Gaussian integers are
 numbers of the form `a\sqrt{-1} + b` where `a` and `b` are integers. The
 Gaussian rationals are defined similarly except that `a` and `b` can be
@@ -494,13 +517,14 @@ representation where :py:func:`~.expand` is needed to get the reduced form::
   >>> expand(z**2)
   -3 + 4*I
 
-The ``ZZ_I`` and ``QQ_I`` domains are implemented by the classes
-``GaussianIntegerRing`` and ``GaussianRationalField`` and their elements by
-``GaussianInteger`` and ``GaussianRational`` respectively. The internal
-representation for an element of ``ZZ_I`` or ``QQ_I`` is simply as a pair
-``(a, b)`` of elements of :ref:`ZZ` or :ref:`QQ` respectively. The domain ``ZZ_I``
-is a ring with similar properties to :ref:`ZZ` whereas ``QQ_I`` is a field
-much like :ref:`QQ`::
+The :ref:`ZZ_I` and :ref:`QQ_I` domains are implemented by the classes
+:py:class:`~.GaussianIntegerRing` and :py:class:`~.GaussianRationalField` and
+their elements by :py:class:`~.GaussianInteger` and
+:py:class:`~.GaussianRational` respectively. The internal representation for
+an element of :ref:`ZZ_I` or :ref:`QQ_I` is simply as a pair ``(a, b)`` of
+elements of :ref:`ZZ` or :ref:`QQ` respectively. The domain :ref:`ZZ_I` is a
+ring with similar properties to :ref:`ZZ` whereas :ref:`QQ_I` is a field much
+like :ref:`QQ`::
 
   >>> ZZ.is_Field
   False
@@ -511,8 +535,8 @@ much like :ref:`QQ`::
   >>> QQ_I.is_Field
   True
 
-Since ``QQ_I`` is a field division by nonzero elements is always possible
-whereas in ``ZZ_I`` we have the important concept of the greatest common
+Since :ref:`QQ_I` is a field division by nonzero elements is always possible
+whereas in :ref:`ZZ_I` we have the important concept of the greatest common
 divisor (GCD)::
 
   >>> e1 = QQ_I.from_sympy(1+I)
@@ -528,14 +552,14 @@ divisor (GCD)::
 Finite fields
 =============
 
-So far we have seen the domains :ref:`ZZ`, :ref:`QQ`, ``ZZ_I``, and ``QQ_I``. There
-are also domains representing the `Finite fields`_ although the implementation
-of these is incomplete. A finite field of *prime* order can be constructed
-with ``FF`` or ``GF``. A domain for the finite field or prime order `p` can be
-constructed with ``FF(p)``::
+So far we have seen the domains :ref:`ZZ`, :ref:`QQ`, :ref:`ZZ_I`, and
+:ref:`QQ_I`. There are also domains representing the `Finite fields`_ although
+the implementation of these is incomplete. A finite field :ref:`GF(p)` of
+*prime* order can be constructed with ``FF`` or ``GF``. A domain for the
+finite field or prime order `p` can be constructed with :ref:`GF(p)`::
 
-  >>> from sympy import FF
-  >>> K = FF(5)
+  >>> from sympy import GF
+  >>> K = GF(5)
   >>> two = K(2)
   >>> two
   2 mod 5
@@ -545,11 +569,11 @@ constructed with ``FF(p)``::
   3 mod 5
 
 Finite fields of order `p^n` where `n \ne 1` are not implemented. It is
-possible to use e.g. ``FF(6)`` or ``FF(9)`` but the resulting domain is *not*
+possible to use e.g. ``GF(6)`` or ``GF(9)`` but the resulting domain is *not*
 a field. It is just the integers modulo ``6`` or ``9`` and therefore has zero
 divisors and non-invertible elements::
 
-  >>> K = FF(6)
+  >>> K = GF(6)
   >>> K(3) * K(2)
   0 mod 6
 
@@ -561,16 +585,16 @@ fields but this is not yet available in SymPy (contributions welcome!).
 Real and complex fields
 =======================
 
-The fields ``RR`` and ``CC`` are intended mathematically to correspond to the
-`reals`_ or the `complex numbers`_, `\mathbb{R}` and `\mathbb{C}`
+The fields :ref:`RR` and :ref:`CC` are intended mathematically to correspond
+to the `reals`_ or the `complex numbers`_, `\mathbb{R}` and `\mathbb{C}`
 respectively. The implementation of these uses floating point arithmetic. In
 practice this means that these are the domains that are used to represent
-expressions containing floats. Elements of ``RR`` are instances of the class
-``RealElement`` and have an ``mpf`` tuple which is used to represent a float
-in ``mpmath``. Elements of ``CC`` are instances of ``ComplexElement`` and have
-an ``mpc`` tuple which is a pair of ``mpf`` tuples representing the real and
-imaginary parts. See the `mpmath docs`_ for more about how floating point
-numbers are represented::
+expressions containing floats. Elements of :ref:`RR` are instances of the
+class :py:class:`~.RealElement` and have an ``mpf`` tuple which is used to
+represent a float in ``mpmath``. Elements of :ref:`CC` are instances of
+:py:class:`~.ComplexElement` and have an ``mpc`` tuple which is a pair of
+``mpf`` tuples representing the real and imaginary parts. See the
+`mpmath docs`_ for more about how floating point numbers are represented::
 
   >>> from sympy import RR, CC
   >>> xr = RR(3)
@@ -585,7 +609,7 @@ numbers are represented::
   ((0, 3, 0, 2), (0, 1, 0, 1))
 
 The use of approximate floating point arithmetic in these domains comes with
-all of the usual pitfalls. Many algorithms in the ``polys`` module are
+all of the usual pitfalls. Many algorithms in the :mod:`sympy.polys` module are
 fundamentally designed for exact arithmetic making the use of these domains
 potentially problematic::
 
@@ -594,9 +618,9 @@ potentially problematic::
 
 Since these are implemented using ``mpmath`` which is a multiprecision library
 it is possible to create different domains with different working precisions.
-The default domains ``RR`` and ``CC`` use 53 binary digits of precision much
-like standard `double precision`_ floating point which corresponds
-to approximately 15 decimal digits::
+The default domains :ref:`RR` and :ref:`CC` use 53 binary digits of precision
+much like standard `double precision`_ floating point which corresponds to
+approximately 15 decimal digits::
 
   >>> from sympy.polys.domains.realfield import RealField
   >>> RR.precision
@@ -614,9 +638,9 @@ to approximately 15 decimal digits::
   0.33333333333333333333333333333
 
 There is however a bug in the implementation of this so that actually a global
-precision setting is used by all ``RealElement``. This means that just
-creating ``RR100`` above has altered the global precision and we will need to
-restore it in the doctest here::
+precision setting is used by all :py:class:`~.RealElement`. This means that
+just creating ``RR100`` above has altered the global precision and we will
+need to restore it in the doctest here::
 
   >>> RR(1) / RR(3)  # wrong result!
   0.33333333333333333333333333333
@@ -635,11 +659,13 @@ Algebraic number fields
 =======================
 
 An `algebraic extension`_ of the rationals `\mathbb{Q}` is known as an
-`algebraic number field`_ and these are implemented in sympy. The natural
-syntax for these would be something like ``QQ(sqrt(2))`` however ``QQ()`` is
-already overloaded as the constructor for elements of :ref:`QQ`. These domains
-are instead created as e.g. ``QQ.algebraic_field(sqrt(2))``. The resulting
-field will be an instance of :py:class:`~.AlgebraicField`.
+`algebraic number field`_ and these are implemented in sympy as :ref:`QQ(a)`.
+The natural syntax for these would be something like ``QQ(sqrt(2))`` however
+``QQ()`` is already overloaded as the constructor for elements of :ref:`QQ`.
+These domains are instead created using the
+:py:meth:`~.Domain.algebraic_field` e.g.  ``QQ.algebraic_field(sqrt(2))``. The
+resulting domain will be an instance of :py:class:`~.AlgebraicField` with
+elements that are instances of :py:class:`~.ANP`.
 
 The printing support for these is less developed but we can use
 :py:meth:`~.Domain.to_sympy` to take advantage of the corresponding
@@ -724,8 +750,8 @@ Polynomial ring domains
 =======================
 
 There are also domains implemented to represent a polynomial ring like
-``ZZ[x]`` which is the domain of polynomials in the generator ``x`` with
-coefficients over :ref:`ZZ`::
+:ref:`K[x]` which is the domain of polynomials in the generator ``x`` with
+coefficients over another domain ``K``::
 
   >>> from sympy import ZZ, symbols
   >>> x = symbols('x')
@@ -857,11 +883,12 @@ Old (dense) polynomial rings
 ============================
 
 In the last section we saw that the domain representation of a polynomial ring
-like ``ZZ[x]`` uses a sparse representation of a polynomial as a dict mapping
-monomial exponents to coefficients. There is also an older version of
-``ZZ[x]`` that uses the dense DMP representation. We can create these two
-versions of ``ZZ[x]`` using ``ZZ.poly_ring(x)`` and ``ZZ.old_poly_ring(x)``
-where the syntax ``ZZ[x]`` is equivalent to ``ZZ.poly_ring(x)``::
+like :ref:`K[x]` uses a sparse representation of a polynomial as a dict
+mapping monomial exponents to coefficients. There is also an older version of
+:ref:`K[x]` that uses the dense :ref:`dmp-representation`. We can create these
+two versions of :ref:`K[x]` using :py:meth:`~.Domain.poly_ring` and
+:py:meth:`~.Domain.old_poly_ring` where the syntax ``K[x]`` is equivalent to
+``K.poly_ring(x)``::
 
   >>> K1 = ZZ.poly_ring(x)
   >>> K2 = ZZ.old_poly_ring(x)
@@ -904,7 +931,7 @@ PolyRing vs PolynomialRing
 You might just want to perform calculations in some particular polynomial ring
 without being concerned with implementing something that works for arbitrary
 domains. In that case you can construct the ring more directly with the
-``ring`` function::
+:py:func:`~.ring` function::
 
   >>> from sympy import ring
   >>> K, xr, yr = ring([x, y], ZZ)
@@ -915,21 +942,21 @@ domains. In that case you can construct the ring more directly with the
   >>> (xr**2 - yr**2) // (xr - yr)
   x + y
 
-The object ``K`` here represents the ring but is not a **polys domain** (it is
-not an instance of a subclass of :py:class:`~.Domain` so it can not be used
-with :py:class:`~.Poly`). In this way the implementation of polynomial rings
-that is used in the domain system can be used independently of the domain
-system.
+The object ``K`` here represents the ring and is an instance of
+:py:class:`~.PolyRing` but is not a **polys domain** (it is not an instance of
+a subclass of :py:class:`~.Domain` so it can not be used with
+:py:class:`~.Poly`). In this way the implementation of polynomial rings that
+is used in the domain system can be used independently of the domain system.
 
 The purpose of the domain system is to provide a unified interface for working
 with and converting between different representations of expressions. To make
-the ``ring`` implementation usable in that context the ``PolynomialRing``
-class is a wrapper around the ``PolyRing`` class that provides the interface
-expected in the domain system. That makes this implementation of polynomial
-rings usable as part of the broader codebase that is designed to work with
-expressions from different domains. The domain for polynomial rings is a
-distinct object from the ring returned by ``ring`` although both have the same
-elements::
+the :py:class:`~.PolyRing` implementation usable in that context the
+:py:class:`~.PolynomialRing` class is a wrapper around the
+:py:class:`~.PolyRing` class that provides the interface expected in the
+domain system. That makes this implementation of polynomial rings usable as
+part of the broader codebase that is designed to work with expressions from
+different domains. The domain for polynomial rings is a distinct object from
+the ring returned by :py:func:`~.ring` although both have the same elements::
 
   >>> K, xr, yr = ring([x, y], ZZ)
   >>> K
@@ -978,15 +1005,18 @@ possible to convert any domain to a field that contains that domain with the
   >>> QQ.frac_field(x)
   QQ(x)
 
-This introduces a new kind of domain ``QQ(x)``. It is not possible to
-construct the domain ``QQ(x)`` with the same syntax so the easiest ways to
-create it are using either ``QQ.frac_field(x)`` or ``QQ[x].get_field()`` where
-the :py:meth:`~.Domain.frac_field` method is the more direct approach.
+This introduces a new kind of domain :ref:`K(x)` representing a rational
+function field in the generator ``x`` over another domain ``K``. It is not
+possible to construct the domain ``QQ(x)`` with the ``()`` syntax so the
+easiest ways to create it are using the domain methods
+:py:meth:`~.Domain.frac_field` (``QQ.frac_field(x)``) or
+:py:meth:`~.Domain.get_field` (``QQ[x].get_field()``). The
+:py:meth:`~.Domain.frac_field` method is the more direct approach.
 
-The rational function field ``QQ(x)`` is an instance of
+The rational function field :ref:`K(x)` is an instance of
 :py:class:`~.RationalField`. This domain represents functions of the form
 `p(x) / q(x)` for polynomials `p` and `q`. The domain elements are
-represented as a pair of polynomials in ``QQ[x]``::
+represented as a pair of polynomials in :ref:`K[x]`::
 
   >>> K = QQ.frac_field(x)
   >>> xk = K(x)
@@ -1039,16 +1069,16 @@ function fields can be used independently of the domain system::
   >>> xf / (1 - yf)
   -x/(y - 1)
 
-Here ``K`` is an instance of ``FracField`` rather than
-``RationalField`` for the domain ``ZZ(x,y)``.
+Here ``K`` is an instance of :py:class:`~.FracField` rather than
+:py:class:`~.RationalField` as it would be for the domain ``ZZ(x,y)``.
 
 Expression domain
 =================
 
 The final domain to consider is the "expression domain" which is known as
-``EX``. Expressions that can not be represented using the other domains can be
-always represented using the expression domain. Elements of ``EX`` are in fact
-just wrappers around a ``Basic`` instance::
+:ref:`EX`. Expressions that can not be represented using the other domains can
+be always represented using the expression domain. An element of :ref:`EX` is
+actually just a wrapper around a :py:class:`~.Basic` instance::
 
   >>> from sympy import EX
   >>> p = EX.from_sympy(1 + x)
@@ -1062,15 +1092,15 @@ just wrappers around a ``Basic`` instance::
   <class 'sympy.core.add.Add'>
 
 For other domains the domain representation of expressions is usually more
-efficient than the tree representation used by :py:class:`~.Basic`. In ``EX``
-the internal representation is :py:class:`~.Basic` so it is clearly not more
-efficient. The purpose of the ``EX`` domain is to be able to wrap up arbitrary
-expressions in an interace that is consistent with the other domains. The
-``EX`` domain is used as a fallback when an appropriate domain can not be
-found. Although this does not offer any particular efficiency it does allow
-the algorithms that are implemented to work over arbitrary domains to be
-usable when working with expressions that do not have an appropriate domain
-representation.
+efficient than the tree representation used by :py:class:`~.Basic`. In
+:ref:`EX` the internal representation is :py:class:`~.Basic` so it is clearly
+not more efficient. The purpose of the :ref:`EX` domain is to be able to wrap
+up arbitrary expressions in an interace that is consistent with the other
+domains. The :ref:`EX` domain is used as a fallback when an appropriate domain
+can not be found. Although this does not offer any particular efficiency it
+does allow the algorithms that are implemented to work over arbitrary domains
+to be usable when working with expressions that do not have an appropriate
+domain representation.
 
 Choosing a domain
 =================
@@ -1145,7 +1175,7 @@ be represented in a non-field ring::
   ZZ(x,y)
 
 By default :py:func:`~.construct_domain` will not construct an algebraic
-extension field and will instead use the ``EX`` domain
+extension field and will instead use the :ref:`EX` domain
 (:py:class:`~.ExpressionDomain`). The keyword argument ``extension=True`` can
 be used to construct an :py:class:`~.AlgebraicField` if the inputs are
 irrational but algebraic::
@@ -1167,7 +1197,7 @@ constructed treating those transcendentals as generators::
   ZZ[y,sin(x)]
 
 However if there is a possibility that the inputs are not algebraically
-independent then the domain will be ``EX``::
+independent then the domain will be :ref:`EX`::
 
   >>> construct_domain([sin(x), cos(x)])[0]
   EX
@@ -1326,7 +1356,7 @@ This is the internal implementation of :py:class:`~.Poly`::
 
 The internal representation of a :py:class:`~.Poly` instance is an instance of
 :py:class:`~.DMP` which is the class used for domain elements in the old
-polynomial ring domain e.g. ``ZZ.old_poly_ring(z)``. This represents the
+polynomial ring domain :py:meth:`~.Domain.old_poly_ring`. This represents the
 polynomial as a list of coefficients which are themselves elements of a domain
 and keeps a reference to their domain (:ref:`ZZ` in this example).
 

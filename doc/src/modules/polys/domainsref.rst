@@ -52,9 +52,9 @@ Abstract Domains
 .. autoclass:: sympy.polys.domains.compositedomain.CompositeDomain
    :members:
 
-.. _GF(n):
+.. _GF(p):
 
-GF(n)
+GF(p)
 =====
 
 .. autoclass:: FiniteField
@@ -88,6 +88,30 @@ QQ
 
 .. autoclass:: PythonRational
 
+.. _ZZ_I:
+
+ZZ_I
+====
+
+.. autoclass:: sympy.polys.domains.gaussiandomains.GaussianIntegerRing
+.. autoclass:: sympy.polys.domains.gaussiandomains.GaussianInteger
+
+.. _QQ_I:
+
+QQ_I
+====
+
+.. autoclass:: sympy.polys.domains.gaussiandomains.GaussianRationalField
+.. autoclass:: sympy.polys.domains.gaussiandomains.GaussianRational
+
+.. _QQ(a):
+
+QQ<a>
+=====
+
+.. autoclass:: AlgebraicField
+   :members:
+
 .. _RR:
 
 RR
@@ -96,23 +120,38 @@ RR
 .. autoclass:: RealField
    :members:
 
-QQ<a>
-=====
+.. autoclass:: sympy.polys.domains.mpelements.RealElement
 
-.. autoclass:: AlgebraicField
+.. _CC:
+
+CC
+==
+
+.. autoclass:: ComplexField
    :members:
 
-Composite domains
-=================
+.. autoclass:: sympy.polys.domains.mpelements.ComplexElement
+
+.. _K[x]:
+
+K[x]
+====
 
 .. autoclass:: PolynomialRing
    :members:
 
+.. _K(x):
+
+K(x)
+====
+
 .. autoclass:: FractionField
    :members:
 
-Expression domain
-=================
+.. _EX:
+
+EX
+==
 
 .. autoclass:: ExpressionDomain
    :members:
@@ -133,6 +172,24 @@ Sparse polynomials are represented as dictionaries.
    :members:
 
 .. autoclass:: PolyElement
+   :members:
+
+Sparse rational functions
+=========================
+
+.. currentmodule:: sympy.polys.fields
+
+Sparse polynomials are represented as dictionaries.
+
+.. autofunction:: field
+.. autofunction:: xfield
+.. autofunction:: vfield
+.. autofunction:: sfield
+
+.. autoclass:: FracField
+   :members:
+
+.. autoclass:: FracElement
    :members:
 
 Dense polynomials
