@@ -25,8 +25,8 @@ a :py:class:`~.Poly`::
   >>> Poly(x**2 + x/2)
   Poly(x**2 + 1/2*x, x, domain='QQ')
 
-We see here that one :py:class:`~.Poly` has domain ``ZZ`` representing the
-integers and the other has domain ``QQ`` representing the rationals. These
+We see here that one :py:class:`~.Poly` has domain :ref:`ZZ` representing the
+integers and the other has domain :ref:`QQ` representing the rationals. These
 indicate the "domain" from which the coefficients of the polynomial are drawn.
 
 From a high-level the domains represent formal concepts such as the set of

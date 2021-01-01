@@ -32,7 +32,7 @@ are created automatically depending on the libraries available. As such e.g.
 available.
 
 Abstract Domains
-****************
+================
 
 .. autoclass:: sympy.polys.domains.domain.Domain
    :members:
@@ -52,47 +52,71 @@ Abstract Domains
 .. autoclass:: sympy.polys.domains.compositedomain.CompositeDomain
    :members:
 
-Concrete Domains
-****************
+.. _GF(n):
+
+GF(n)
+=====
 
 .. autoclass:: FiniteField
    :members:
 
+.. autoclass:: PythonFiniteField
+
+.. autoclass:: GMPYFiniteField
+
+.. _ZZ:
+
+ZZ
+==
+
 .. autoclass:: IntegerRing
    :members:
 
-.. autoclass:: PolynomialRing
-   :members:
+.. autoclass:: PythonIntegerRing
+.. autoclass:: GMPYIntegerRing
+
+.. _QQ:
+
+QQ
+==
 
 .. autoclass:: RationalField
    :members:
 
+.. autoclass:: PythonRationalField
+.. autoclass:: GMPYRationalField
+
+.. _RR:
+
+RR
+==
+
+.. autoclass:: RealField
+   :members:
+
+QQ<a>
+=====
+
 .. autoclass:: AlgebraicField
+   :members:
+
+Composite domains
+=================
+
+.. autoclass:: PolynomialRing
    :members:
 
 .. autoclass:: FractionField
    :members:
 
-.. autoclass:: RealField
-   :members:
+Expression domain
+=================
 
 .. autoclass:: ExpressionDomain
    :members:
 
-Implementation Domains
-**********************
-
-.. autoclass:: PythonFiniteField
-.. autoclass:: GMPYFiniteField
-
-.. autoclass:: PythonIntegerRing
-.. autoclass:: GMPYIntegerRing
-
-.. autoclass:: PythonRationalField
-.. autoclass:: GMPYRationalField
-
 Sparse polynomials
-******************
+==================
 
 .. currentmodule:: sympy.polys.rings
 
@@ -110,7 +134,7 @@ Sparse polynomials are represented as dictionaries.
    :members:
 
 Dense polynomials
-*****************
+=================
 
 .. currentmodule:: sympy.polys.polyclasses
 
