@@ -7209,52 +7209,6 @@ def test_is_combining():
         [False, True, False, False]
 
 
-def test_issue_17857():
-    assert pretty(Range(-oo, oo)) == '{..., -1, 0, 1, ...}'
-    assert pretty(Range(oo, -oo, -1)) == '{..., 1, 0, -1, ...}'
-
-def test_issue_18272():
-    x = Symbol('x')
-    n = Symbol('n')
-
-    assert upretty(ConditionSet(x, Eq(-x + exp(x), 0), S.Complexes)) == \
-    '⎧            ⎛      x    ⎞⎫\n'\
-    '⎨x | x ∊ ℂ ∧ ⎝-x + ℯ  = 0⎠⎬\n'\
-    '⎩                         ⎭'
-    assert upretty(ConditionSet(x, Contains(n/2, Interval(0, oo)), FiniteSet(-n/2, n/2))) == \
-    '⎧        ⎧-n   n⎫   ⎛n         ⎞⎫\n'\
-    '⎨x | x ∊ ⎨───, ─⎬ ∧ ⎜─ ∈ [0, ∞)⎟⎬\n'\
-    '⎩        ⎩ 2   2⎭   ⎝2         ⎠⎭'
-    assert upretty(ConditionSet(x, Eq(Piecewise((1, x >= 3), (x/2 - 1/2, x >= 2), (1/2, x >= 1),
-                (x/2, True)) - 1/2, 0), Interval(0, 3))) == \
-    '⎧                 ⎛⎛⎧   1     for x ≥ 3⎞          ⎞⎫\n'\
-    '⎪                 ⎜⎜⎪                  ⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪x                 ⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪─ - 0.5  for x ≥ 2⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪2                 ⎟          ⎟⎪\n'\
-    '⎨x | x ∊ [0, 3] ∧ ⎜⎜⎨                  ⎟ - 0.5 = 0⎟⎬\n'\
-    '⎪                 ⎜⎜⎪  0.5    for x ≥ 1⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪                  ⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪   x              ⎟          ⎟⎪\n'\
-    '⎪                 ⎜⎜⎪   ─     otherwise⎟          ⎟⎪\n'\
-    '⎩                 ⎝⎝⎩   2              ⎠          ⎠⎭'
-
-def test_Str():
-    from sympy.core.symbol import Str
-    assert pretty(Str('x')) == 'x'
-
-def test_diffgeom():
-    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
-    x,y = symbols('x y', real=True)
-    m = Manifold('M', 2)
-    assert pretty(m) == 'M'
-    p = Patch('P', m)
-    assert pretty(p) == "P"
-    rect = CoordSystem('rect', p, [x, y])
-    assert pretty(rect) == "rect"
-    b = BaseScalarField(rect, 0)
-    assert pretty(b) == "x"
-
 def test_issue_17616():
     assert pretty(pi**(1/exp(1))) == \
    '  / -1\\\n'\
@@ -7302,3 +7256,50 @@ def test_issue_17616():
     ' ----\n'\
     ' x_17\n'\
     '7    '
+
+
+def test_issue_17857():
+    assert pretty(Range(-oo, oo)) == '{..., -1, 0, 1, ...}'
+    assert pretty(Range(oo, -oo, -1)) == '{..., 1, 0, -1, ...}'
+
+def test_issue_18272():
+    x = Symbol('x')
+    n = Symbol('n')
+
+    assert upretty(ConditionSet(x, Eq(-x + exp(x), 0), S.Complexes)) == \
+    '⎧            ⎛      x    ⎞⎫\n'\
+    '⎨x | x ∊ ℂ ∧ ⎝-x + ℯ  = 0⎠⎬\n'\
+    '⎩                         ⎭'
+    assert upretty(ConditionSet(x, Contains(n/2, Interval(0, oo)), FiniteSet(-n/2, n/2))) == \
+    '⎧        ⎧-n   n⎫   ⎛n         ⎞⎫\n'\
+    '⎨x | x ∊ ⎨───, ─⎬ ∧ ⎜─ ∈ [0, ∞)⎟⎬\n'\
+    '⎩        ⎩ 2   2⎭   ⎝2         ⎠⎭'
+    assert upretty(ConditionSet(x, Eq(Piecewise((1, x >= 3), (x/2 - 1/2, x >= 2), (1/2, x >= 1),
+                (x/2, True)) - 1/2, 0), Interval(0, 3))) == \
+    '⎧                 ⎛⎛⎧   1     for x ≥ 3⎞          ⎞⎫\n'\
+    '⎪                 ⎜⎜⎪                  ⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪x                 ⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪─ - 0.5  for x ≥ 2⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪2                 ⎟          ⎟⎪\n'\
+    '⎨x | x ∊ [0, 3] ∧ ⎜⎜⎨                  ⎟ - 0.5 = 0⎟⎬\n'\
+    '⎪                 ⎜⎜⎪  0.5    for x ≥ 1⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪                  ⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪   x              ⎟          ⎟⎪\n'\
+    '⎪                 ⎜⎜⎪   ─     otherwise⎟          ⎟⎪\n'\
+    '⎩                 ⎝⎝⎩   2              ⎠          ⎠⎭'
+
+def test_Str():
+    from sympy.core.symbol import Str
+    assert pretty(Str('x')) == 'x'
+
+def test_diffgeom():
+    from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
+    x,y = symbols('x y', real=True)
+    m = Manifold('M', 2)
+    assert pretty(m) == 'M'
+    p = Patch('P', m)
+    assert pretty(p) == "P"
+    rect = CoordSystem('rect', p, [x, y])
+    assert pretty(rect) == "rect"
+    b = BaseScalarField(rect, 0)
+    assert pretty(b) == "x"

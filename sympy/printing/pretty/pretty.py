@@ -1902,15 +1902,12 @@ class PrettyPrinter(Printer):
             return prettyForm.__mul__(*a)/prettyForm.__mul__(*b)
 
     # A helper function for _print_Pow to print x**(1/n)
-    def _print_nth_root(self, base, expt, den_p):
-        # den_p is the prettyForm of denominator of the exponent (n in this case)
-        # it is needed as using args will not work for 1/E and also to check
-        # whether a symbol is simple (single character) or not
+    def _print_nth_root(self, base, root):
         bpretty = self._print(base)
 
         # In very simple cases, use a single-char root sign
         if (self._settings['use_unicode_sqrt_char'] and self._use_unicode
-            and expt is S.Half and bpretty.height() == 1
+            and root == 2 and bpretty.height() == 1
             and (bpretty.width() == 1
                  or (base.is_Integer and base.is_nonnegative))):
             return prettyForm(*bpretty.left('\N{SQUARE ROOT}'))
@@ -1918,16 +1915,13 @@ class PrettyPrinter(Printer):
         # Construct root sign, start with the \/ shape
         _zZ = xobj('/', 1)
         rootsign = xobj('\\', 1) + _zZ
-        # Make exponent number to put above it
-        if isinstance(expt, Rational):
-            exp = str(expt.q)
-            if exp == '2':
-                exp = ''
-        else:
-            if den_p.height() > 1 or den_p.width() > 1:
-                return self._print(base)**self._print(expt)
-            exp = str(den_p)
-        exp = exp.ljust(2)
+        # Constructing the number to put on root
+        rpretty = self._print(root)
+        # If n is not an integer or simple symbol, print without root sign
+        if not root.is_Integer and (rpretty.height() > 1 or rpretty.width() > 1):
+            return self._print(base)**self._print(1/root)
+        # If power is half, no number should appear on top of root sign
+        exp = '' if root == 2 else str(rpretty).ljust(2)
         if len(exp) > 2:
             rootsign = ' '*(len(exp) - 2) + rootsign
         # Stack the exponent
@@ -1961,8 +1955,7 @@ class PrettyPrinter(Printer):
             n, d = fraction(e)
             if n is S.One and d.is_Atom and not e.is_Integer and (e.is_Rational or d.is_Symbol) \
                     and self._settings['root_notation']:
-                den_p = self._print(d)
-                return self._print_nth_root(b, e, den_p)
+                return self._print_nth_root(b, d)
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(Pow(b, -e, evaluate=False))
 
