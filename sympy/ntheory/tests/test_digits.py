@@ -28,7 +28,7 @@ def test_count_digits():
 
 
 def test_is_palindromic():
-    assert is_palindromic(-11)
+    assert not is_palindromic(-11)
     assert is_palindromic(11)
     assert is_palindromic(0o121, 8)
     assert not is_palindromic(123)
