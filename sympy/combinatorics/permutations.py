@@ -58,7 +58,7 @@ def _af_rmuln(*permutations):
     Examples
     ========
 
-    >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
+    >>> from sympy.combinatorics.permutations import _af_rmuln, Permutation
 
     >>> a, b, c = [1, 0, 2], [0, 2, 1], [2, 0, 1]
     >>> _af_rmuln(a, b, c)
