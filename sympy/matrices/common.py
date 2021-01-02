@@ -4,16 +4,16 @@ when creating more advanced matrices (e.g., matrices over rings,
 etc.).
 """
 
-from sympy.core.logic import FuzzyBool
-
 from collections import defaultdict
+from collections.abc import Iterable
 from inspect import isfunction
+from functools import reduce
 
+from sympy.core.logic import FuzzyBool
 from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
-from sympy.core.compatibility import (
-    Iterable, as_int, is_sequence, reduce)
+from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.decorators import call_highest_priority
 from sympy.core.logic import fuzzy_and
 from sympy.core.singleton import S
@@ -1286,11 +1286,11 @@ class MatrixProperties(MatrixRequired):
 
     def _has_positive_diagonals(self):
         diagonal_entries = (self[i, i] for i in range(self.rows))
-        return fuzzy_and((x.is_positive for x in diagonal_entries))
+        return fuzzy_and(x.is_positive for x in diagonal_entries)
 
     def _has_nonnegative_diagonals(self):
         diagonal_entries = (self[i, i] for i in range(self.rows))
-        return fuzzy_and((x.is_nonnegative for x in diagonal_entries))
+        return fuzzy_and(x.is_nonnegative for x in diagonal_entries)
 
     def atoms(self, *types):
         """Returns the atoms that form the current object.
@@ -1518,7 +1518,7 @@ class MatrixProperties(MatrixRequired):
                     summation += Abs(self[i, j])
             return (Abs(self[i, i]) - summation).is_nonnegative
 
-        return fuzzy_and((test_row(i) for i in range(rows)))
+        return fuzzy_and(test_row(i) for i in range(rows))
 
     @property
     def is_strongly_diagonally_dominant(self):
@@ -1568,7 +1568,7 @@ class MatrixProperties(MatrixRequired):
                     summation += Abs(self[i, j])
             return (Abs(self[i, i]) - summation).is_positive
 
-        return fuzzy_and((test_row(i) for i in range(rows)))
+        return fuzzy_and(test_row(i) for i in range(rows))
 
     @property
     def is_hermitian(self):

@@ -18,6 +18,7 @@ from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
+from sympy.core.kind import Kind, NumberKind
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
@@ -30,7 +31,7 @@ from .utilities import _iszero, _is_zero_after_expand_mul
 
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
-    _adjugate, _charpoly, _cofactor, _cofactor_matrix,
+    _adjugate, _charpoly, _cofactor, _cofactor_matrix, _per,
     _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
 
 from .reductions import _is_echelon, _echelon_form, _rank, _rref
@@ -123,6 +124,9 @@ class MatrixDeterminant(MatrixCommon):
     def det(self, method="bareiss", iszerofunc=None):
         return _det(self, method=method, iszerofunc=iszerofunc)
 
+    def per(self):
+        return _per(self)
+
     def minor(self, i, j, method="berkowitz"):
         return _minor(self, i, j, method=method)
 
@@ -140,6 +144,7 @@ class MatrixDeterminant(MatrixCommon):
     cofactor.__doc__                     = _cofactor.__doc__
     cofactor_matrix.__doc__              = _cofactor_matrix.__doc__
     det.__doc__                          = _det.__doc__
+    per.__doc__                          = _per.__doc__
     minor.__doc__                        = _minor.__doc__
     minor_submatrix.__doc__              = _minor_submatrix.__doc__
 
@@ -738,6 +743,46 @@ class MatrixDeprecated(MatrixCommon):
         return self.permute_rows(perm, direction='forward')
 
 
+class MatrixKind(Kind):
+    """
+    Kind for all matrices in SymPy.
+
+    Basic class for this kind is ``MatrixBase`` and ``MatrixExpr``,
+    but any expression representing the matrix can have this.
+
+    Parameters
+    ==========
+
+    element_kind : Kind
+        Kind of the element. Default is ``NumberKind``, which means that
+        the matrix contains only numbers.
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol, Integral
+    >>> from sympy.abc import x
+    >>> A = MatrixSymbol('A', 2,2)
+    >>> A.kind
+    MatrixKind(NumberKind)
+    >>> Integral(A,x).kind
+    MatrixKind(NumberKind)
+
+    See Also
+    ========
+
+    sympy.tensor.ArrayKind : Kind for N-dimensional arrays.
+
+    """
+    def __new__(cls, element_kind=NumberKind):
+        obj = super().__new__(cls, element_kind)
+        obj.element_kind = element_kind
+        return obj
+
+    def __repr__(self):
+        return "MatrixKind(%s)" % self.element_kind
+
+
 class MatrixBase(MatrixDeprecated,
                  MatrixCalculus,
                  MatrixEigen,
@@ -752,6 +797,8 @@ class MatrixBase(MatrixDeprecated,
     _sympify = staticmethod(sympify)
     zero = S.Zero
     one = S.One
+
+    kind = MatrixKind()
 
     def __array__(self, dtype=object):
         from .dense import matrix2numpy

@@ -1,12 +1,13 @@
 import random
+from functools import reduce
 
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence, reduce
+from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError
@@ -43,7 +44,10 @@ class DenseMatrix(MatrixBase):
     _class_priority = 4
 
     def __eq__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return NotImplemented
         self_shape = getattr(self, 'shape', None)
         other_shape = getattr(other, 'shape', None)
         if None in (self_shape, other_shape):

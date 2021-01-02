@@ -85,7 +85,8 @@ class StrPrinter(Printer):
         return self.stringify(expr.args, " ^ ", PRECEDENCE["BitwiseXor"])
 
     def _print_AppliedPredicate(self, expr):
-        return '%s(%s)' % (self._print(expr.func), self._print(expr.arg))
+        return '%s(%s)' % (
+            self._print(expr.function), self.stringify(expr.arguments, ", "))
 
     def _print_Basic(self, expr):
         l = [self._print(o) for o in expr.args]
@@ -327,7 +328,7 @@ class StrPrinter(Printer):
         )
 
     def _print_ElementwiseApplyFunction(self, expr):
-        return "{0}.({1})".format(
+        return "{}.({})".format(
             expr.function,
             self._print(expr.expr),
         )
@@ -804,6 +805,15 @@ class StrPrinter(Printer):
 
     def _print_WildFunction(self, expr):
         return expr.name + '_'
+
+    def _print_WildDot(self, expr):
+        return expr.name + '_'
+
+    def _print_WildPlus(self, expr):
+        return expr.name + '__'
+
+    def _print_WildStar(self, expr):
+        return expr.name + '___'
 
     def _print_Zero(self, expr):
         if self._settings.get("sympy_integers", False):

@@ -67,7 +67,9 @@ def test_ellipse_geom():
     assert Circle(Point(0, 0), Point(1, 1), Point(2, 2)) == Segment2D(Point2D(0, 0), Point2D(2, 2))
 
     raises(ValueError, lambda: Ellipse(None, None, None, 1))
+    raises(ValueError, lambda: Ellipse())
     raises(GeometryError, lambda: Circle(Point(0, 0)))
+    raises(GeometryError, lambda: Circle(Symbol('x')*Symbol('y')))
 
     # Basic Stuff
     assert Ellipse(None, 1, 1).center == Point(0, 0)
@@ -75,6 +77,9 @@ def test_ellipse_geom():
     assert e1 != e2
     assert e1 != l1
     assert p4 in e1
+    assert e1 in e1
+    assert e2 in e2
+    assert 1 not in e2
     assert p2 not in e2
     assert e1.area == pi
     assert e2.area == pi/2
@@ -113,6 +118,7 @@ def test_ellipse_geom():
     assert e1.encloses(RegularPolygon(p2, 5, 3)) is False
 
     assert e2.arbitrary_point() in e2
+    raises(ValueError, lambda: Ellipse(Point(x, y), 1, 1).arbitrary_point(parameter='x'))
 
     # Foci
     f1, f2 = Point(sqrt(12), 0), Point(-sqrt(12), 0)
@@ -236,6 +242,7 @@ def test_ellipse_geom():
         Point(Rational(-1, 2), 0), Point(S.Half, 0)]
     raises(TypeError, lambda: intersection(e2, Line((0, 0, 0), (0, 0, 1))))
     raises(TypeError, lambda: intersection(e2, Rational(12)))
+    raises(TypeError, lambda: Ellipse.intersection(e2, 1))
     # some special case intersections
     csmall = Circle(p1, 3)
     cbig = Circle(p1, 5)
@@ -355,6 +362,9 @@ def test_ellipse_random_point():
         r = e3.random_point()
         # substitution should give zero*y1**2
         assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)).equals(0)
+    # test for the case with seed
+    r = e3.random_point(seed=1)
+    assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)).equals(0)
 
 
 def test_repr():
@@ -404,6 +414,7 @@ def test_reflect():
     assert e.area == -e.reflect(Line((1, 0), slope=0)).area
     assert e.area == -e.reflect(Line((1, 0), slope=oo)).area
     raises(NotImplementedError, lambda: e.reflect(Line((1, 0), slope=m)))
+    assert Circle((0, 1), 1).reflect(Line((0, 0), (1, 1))) == Circle(Point2D(1, 0), -1)
 
 
 def test_is_tangent():
@@ -428,6 +439,7 @@ def test_is_tangent():
     assert e1.is_tangent(Segment((12, 12), (3, 0))) is False
     assert e1.is_tangent(Segment((-3, 0), (3, 0))) is False
     assert e1.is_tangent(Segment((-3, 5), (3, 5))) is True
+    assert e1.is_tangent(Line((10, 0), (10, 10))) is False
     assert e1.is_tangent(Line((0, 0), (1, 1))) is False
     assert e1.is_tangent(Line((-3, 0), (-2.99, -0.001))) is False
     assert e1.is_tangent(Line((-3, 0), (-3, 1))) is True

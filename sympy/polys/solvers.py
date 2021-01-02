@@ -367,9 +367,14 @@ def _solve_lin_sys_component(eqs_coeffs, eqs_rhs, ring):
     else:
         sols = {}
         g = ring.gens
-        echelon = echelon.rep
+        # Extract ground domain coefficients and convert to the ring:
+        if hasattr(ring, 'ring'):
+            convert = ring.ring.ground_new
+        else:
+            convert = ring.ground_new
+        echelon = [[convert(eij) for eij in ei] for ei in echelon.rep]
         for i, p in enumerate(pivots):
-            v = echelon[i][-1] - sum(echelon[i][j]*g[j] for j in range(p+1, len(g)))
+            v = echelon[i][-1] - sum(echelon[i][j]*g[j] for j in range(p+1, len(g)) if echelon[i][j])
             sols[keys[p]] = v
 
     return sols

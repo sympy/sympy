@@ -30,6 +30,11 @@ class QuotientRingElement:
         from sympy import sstr
         return sstr(self.data) + " + " + str(self.ring.base_ideal)
 
+    __repr__ = __str__
+
+    def __bool__(self):
+        return not self.ring.is_zero(self)
+
     def __add__(self, om):
         if not isinstance(om, self.__class__) or om.ring != self.ring:
             try:
@@ -71,7 +76,9 @@ class QuotientRingElement:
         return self.ring.revert(o)*self
 
     def __pow__(self, oth):
-        return self.ring(self.data**oth)
+        if oth < 0:
+            return self.ring.revert(self) ** -oth
+        return self.ring(self.data ** oth)
 
     def __eq__(self, om):
         if not isinstance(om, self.__class__) or om.ring != self.ring:

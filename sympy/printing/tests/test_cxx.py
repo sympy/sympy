@@ -5,7 +5,7 @@ from sympy.codegen.cfunctions import log1p
 
 from sympy.testing.pytest import warns_deprecated_sympy
 
-x, y = symbols('x y')
+x, y, u, v = symbols('x y u v')
 
 
 def test_CXX98CodePrinter():
@@ -61,3 +61,9 @@ def test_cxxcode_submodule():
     # Test the compatibility sympy.printing.cxxcode module imports
     with warns_deprecated_sympy():
         import sympy.printing.cxxcode # noqa:F401
+
+def test_cxxcode_nested_minmax():
+    assert cxxcode(Max(Min(x, y), Min(u, v))) \
+        == 'std::max(std::min(u, v), std::min(x, y))'
+    assert cxxcode(Min(Max(x, y), Max(u, v))) \
+        == 'std::min(std::max(u, v), std::max(x, y))'

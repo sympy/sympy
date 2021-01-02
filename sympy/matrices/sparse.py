@@ -1,10 +1,13 @@
 from collections import defaultdict
+from collections.abc import Callable
+from functools import reduce
 
 from sympy.core import SympifyError, Add
-from sympy.core.compatibility import Callable, as_int, is_sequence, reduce
+from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
+from sympy.core.sympify import _sympify
 from sympy.functions import Abs
 from sympy.utilities.iterables import uniq
 
@@ -239,6 +242,10 @@ class SparseMatrix(MatrixBase):
             return rows, cols, smat
 
     def __eq__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return NotImplemented
         self_shape = getattr(self, 'shape', None)
         other_shape = getattr(other, 'shape', None)
         if None in (self_shape, other_shape):

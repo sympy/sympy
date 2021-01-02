@@ -19,7 +19,7 @@ def _Factorization(predicate, expr, assumptions):
 
 class AskSquareHandler(CommonHandler):
     """
-    Handler for key 'square'
+    Handler for key 'square'.
     """
 
     @staticmethod
@@ -29,7 +29,7 @@ class AskSquareHandler(CommonHandler):
 
 class AskSymmetricHandler(CommonHandler):
     """
-    Handler for key 'symmetric'
+    Handler for key 'symmetric'.
     """
 
     @staticmethod
@@ -102,7 +102,7 @@ class AskSymmetricHandler(CommonHandler):
 
 class AskInvertibleHandler(CommonHandler):
     """
-    Handler for key 'invertible'
+    Handler for key 'invertible'.
     """
 
     @staticmethod
@@ -204,7 +204,7 @@ class AskInvertibleHandler(CommonHandler):
 
 class AskOrthogonalHandler(CommonHandler):
     """
-    Handler for key 'orthogonal'
+    Handler for key 'orthogonal'.
     """
     predicate = Q.orthogonal
 
@@ -262,7 +262,7 @@ class AskOrthogonalHandler(CommonHandler):
 
 class AskUnitaryHandler(CommonHandler):
     """
-    Handler for key 'unitary'
+    Handler for key 'unitary'.
     """
     predicate = Q.unitary
 
@@ -318,7 +318,7 @@ class AskUnitaryHandler(CommonHandler):
 
 class AskFullRankHandler(CommonHandler):
     """
-    Handler for key 'fullrank'
+    Handler for key 'fullrank'.
     """
 
     @staticmethod
@@ -356,7 +356,7 @@ class AskFullRankHandler(CommonHandler):
 
 class AskPositiveDefiniteHandler(CommonHandler):
     """
-    Handler for key 'positive_definite'
+    Handler for key 'positive_definite'.
     """
 
     @staticmethod
@@ -413,7 +413,7 @@ class AskPositiveDefiniteHandler(CommonHandler):
 
 class AskUpperTriangularHandler(CommonHandler):
     """
-    Handler for key 'upper_triangular'
+    Handler for key 'upper_triangular'.
     """
 
     @staticmethod
@@ -470,7 +470,7 @@ class AskUpperTriangularHandler(CommonHandler):
 
 class AskLowerTriangularHandler(CommonHandler):
     """
-    Handler for key 'lower_triangular'
+    Handler for key 'lower_triangular'.
     """
 
     @staticmethod
@@ -527,7 +527,7 @@ class AskLowerTriangularHandler(CommonHandler):
 
 class AskDiagonalHandler(CommonHandler):
     """
-    Handler for key 'diagonal'
+    Handler for key 'diagonal'.
     """
 
     @staticmethod
@@ -608,11 +608,11 @@ class AskDiagonalHandler(CommonHandler):
 
 
 def BM_elements(predicate, expr, assumptions):
-    """ Block Matrix elements """
+    """ Block Matrix elements. """
     return all(ask(predicate(b), assumptions) for b in expr.blocks)
 
 def MS_elements(predicate, expr, assumptions):
-    """ Matrix Slice elements """
+    """ Matrix Slice elements. """
     return ask(predicate(expr.parent), assumptions)
 
 def MatMul_elements(matrix_predicate, scalar_predicate, expr, assumptions):

@@ -153,11 +153,54 @@ class SampleContinuousScipy:
     @classmethod
     def _sample_scipy(cls, dist, size):
         """Sample from SciPy."""
-        # scipy does not require map as it can handle using custom distributions
-        from scipy.stats import rv_continuous
+        import scipy.stats
+        # scipy does not require map as it can handle using custom distributions.
+        # However, we will still use a map where we can.
+
+        # TODO: do this for drv.py and frv.py if necessary.
+        # TODO: add more distributions here if there are more
+        # See links below referring to sections beginning with "A common parametrization..."
+        # I will remove all these comments if everything is ok.
+        scipy_rv_map = {
+            'BetaDistribution': lambda dist, size: scipy.stats.beta.rvs(
+                a=float(dist.alpha), b=float(dist.beta), size=size),
+            # same parametrisation
+            'CauchyDistribution': lambda dist, size: scipy.stats.cauchy.rvs(
+                loc=float(dist.x0), scale=float(dist.gamma), size=size),
+            # same parametrisation
+            'ChiSquaredDistribution': lambda dist, size: scipy.stats.chi2.rvs(
+                df=float(dist.k), size=size),
+            # same parametrisation
+            'ExponentialDistribution': lambda dist, size: scipy.stats.expon.rvs(
+                scale=1 / float(dist.rate), size=size),
+            # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.expon.html#scipy.stats.expon
+            'GammaDistribution': lambda dist, size: scipy.stats.gamma.rvs(
+                a=float(dist.k), scale=float(dist.theta), size=size),
+            # https://stackoverflow.com/questions/42150965/how-to-plot-gamma-distribution-with-alpha-and-beta-parameters-in-python
+            'LogNormalDistribution': lambda dist, size: scipy.stats.lognorm.rvs(
+                scale=float(exp(dist.mean)), s=float(dist.std), size=size),
+            # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html
+            'NormalDistribution': lambda dist, size: scipy.stats.norm.rvs(
+                loc=float(dist.mean), scale=float(dist.std), size=size),
+            # same parametrisation
+            'ParetoDistribution': lambda dist, size: scipy.stats.pareto.rvs(
+                b=float(dist.alpha), scale=float(dist.xm), size=size),
+            # https://stackoverflow.com/questions/42260519/defining-pareto-distribution-in-python-scipy
+            'StudentTDistribution': lambda dist, size: scipy.stats.t.rvs(
+                df=float(dist.nu), size=size),
+            # same parametrisation
+            'UniformDistribution': lambda dist, size: scipy.stats.uniform.rvs(
+                loc=float(dist.left), scale=float(dist.right - dist.left), size=size)
+            # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
+        }
+
+        # if we don't need to make a handmade pdf, we won't
+        if dist.__class__.__name__ in scipy_rv_map:
+            return scipy_rv_map[dist.__class__.__name__](dist, size)
+
         z = Dummy('z')
-        handmade_pdf = lambdify(z, dist.pdf(z), 'scipy')
-        class scipy_pdf(rv_continuous):
+        handmade_pdf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])
+        class scipy_pdf(scipy.stats.rv_continuous):
             def _pdf(self, x):
                 return handmade_pdf(x)
         scipy_rv = scipy_pdf(a=float(dist.set._inf),

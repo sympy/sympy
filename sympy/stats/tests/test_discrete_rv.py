@@ -9,7 +9,7 @@ from sympy.stats import (P, E, variance, density, characteristic_function,
                          where, moment_generating_function, skewness, cdf,
                          kurtosis, coskewness)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
-                                   Poisson, Geometric, Hermite, Logarithmic,
+                                   FlorySchulz, Poisson, Geometric, Hermite, Logarithmic,
                                     NegativeBinomial, Skellam, YuleSimon, Zeta,
                                     DiscreteRV)
 from sympy.stats.rv import sample
@@ -24,6 +24,7 @@ def test_PoissonDistribution():
     l = 3
     p = PoissonDistribution(l)
     assert abs(p.cdf(10).evalf() - 1) < .001
+    assert abs(p.cdf(10.4).evalf() - 1) < .001
     assert p.expectation(x, x) == l
     assert p.expectation(x**2, x) - p.expectation(x, x)**2 == l
 
@@ -40,6 +41,15 @@ def test_Poisson():
     # issue 8248
     assert x.pspace.compute_expectation(1) == 1
 
+def test_FlorySchulz():
+    a = Symbol("a")
+    z = Symbol("z")
+    x = FlorySchulz('x' , a)
+    assert E(x) == (2 - a)/a
+    assert (variance(x) - 2*(1 - a)/a**2).simplify() == S(0)
+    assert density(x)(z) == a**2*z*(1 - a)**(z - 1)
+
+
 @slow
 def test_GeometricDistribution():
     p = S.One / 5
@@ -47,6 +57,9 @@ def test_GeometricDistribution():
     assert d.expectation(x, x) == 1/p
     assert d.expectation(x**2, x) - d.expectation(x, x)**2 == (1-p)/p**2
     assert abs(d.cdf(20000).evalf() - 1) < .001
+    assert abs(d.cdf(20000.8).evalf() - 1) < .001
+    G = Geometric('G', p=S(1)/4)
+    assert cdf(G)(S(7)/2) == P(G <= S(7)/2)
 
     X = Geometric('X', Rational(1, 5))
     Y = Geometric('Y', Rational(3, 10))

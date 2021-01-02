@@ -1,13 +1,11 @@
 """Known matrices related to physics"""
 
-from __future__ import print_function, division
-
 from sympy import Matrix, I, pi, sqrt
 from sympy.functions import exp
 
 
 def msigma(i):
-    r"""Returns a Pauli matrix `\sigma_i` with `i=1,2,3`
+    r"""Returns a Pauli matrix `\sigma_i` with ``i=1,2,3``.
 
     References
     ==========
@@ -76,6 +74,9 @@ def pat_matrix(m, dx, dy, dz):
 def mgamma(mu, lower=False):
     r"""Returns a Dirac gamma matrix `\gamma^\mu` in the standard
     (Dirac) representation.
+
+    Explanation
+    ===========
 
     If you want `\gamma_\mu`, use ``gamma(mu, True)``.
 

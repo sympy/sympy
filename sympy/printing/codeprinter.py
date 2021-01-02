@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from typing import Any, Dict, Set, Tuple
 
 from functools import wraps
@@ -14,7 +12,7 @@ from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 
 
-class requires(object):
+class requires:
     """ Decorator for registering requirements on print methods. """
     def __init__(self, **kwargs):
         self._req = kwargs
@@ -65,7 +63,7 @@ class CodePrinter(StrPrinter):
 
     def __init__(self, settings=None):
 
-        super(CodePrinter, self).__init__(settings=settings)
+        super().__init__(settings=settings)
         if not hasattr(self, 'reserved_words'):
             self.reserved_words = set()
 
@@ -78,27 +76,31 @@ class CodePrinter(StrPrinter):
         expr : Expression
             The expression to be printed.
 
-        assign_to : Symbol, MatrixSymbol, or string (optional)
-            If provided, the printed code will set the expression to a
-            variable with name ``assign_to``.
+        assign_to : Symbol, string, MatrixSymbol, list of strings or Symbols (optional)
+            If provided, the printed code will set the expression to a variable or multiple variables
+            with the name or names given in ``assign_to``.
         """
-        from sympy.codegen.ast import Assignment
         from sympy.matrices.expressions.matexpr import MatrixSymbol
+        from sympy.codegen.ast import CodeBlock, Assignment
 
-        if isinstance(assign_to, str):
-            if expr.is_Matrix:
-                assign_to = MatrixSymbol(assign_to, *expr.shape)
-            else:
-                assign_to = Symbol(assign_to)
-        elif not isinstance(assign_to, (Basic, type(None))):
-            raise TypeError("{0} cannot assign to object of type {1}".format(
-                    type(self).__name__, type(assign_to)))
+        def _handle_assign_to(expr, assign_to):
+            if assign_to is None:
+                return sympify(expr)
+            if isinstance(assign_to, (list, tuple)):
+                if len(expr) != len(assign_to):
+                    raise ValueError('Failed to assign an expression of length {} to {} variables'.format(len(expr), len(assign_to)))
+                return CodeBlock(*[_handle_assign_to(lhs, rhs) for lhs, rhs in zip(expr, assign_to)])
+            if isinstance(assign_to, str):
+                if expr.is_Matrix:
+                    assign_to = MatrixSymbol(assign_to, *expr.shape)
+                else:
+                    assign_to = Symbol(assign_to)
+            elif not isinstance(assign_to, Basic):
+                raise TypeError("{} cannot assign to object of type {}".format(
+                        type(self).__name__, type(assign_to)))
+            return Assignment(assign_to, expr)
 
-        if assign_to:
-            expr = Assignment(assign_to, expr)
-        else:
-            # _sympify is not enough b/c it errors on iterables
-            expr = sympify(expr)
+        expr = _handle_assign_to(expr, assign_to)
 
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
@@ -112,7 +114,7 @@ class CodePrinter(StrPrinter):
             frontlines = []
             if self._not_supported:
                 frontlines.append(self._get_comment(
-                        "Not supported in {0}:".format(self.language)))
+                        "Not supported in {}:".format(self.language)))
                 for expr in sorted(self._not_supported, key=str):
                     frontlines.append(self._get_comment(type(expr).__name__))
             for name, value in sorted(self._number_symbols, key=str):
@@ -122,7 +124,7 @@ class CodePrinter(StrPrinter):
             result = "\n".join(lines)
         else:
             lines = self._format_code(lines)
-            num_syms = set([(k, self._print(v)) for k, v in self._number_symbols])
+            num_syms = {(k, self._print(v)) for k, v in self._number_symbols}
             result = (num_syms, self._not_supported, "\n".join(lines))
         self._not_supported = set()
         self._number_symbols = set()
@@ -339,7 +341,7 @@ class CodePrinter(StrPrinter):
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
-        return self._get_statement("{0} {1} {2}".format(
+        return self._get_statement("{} {} {}".format(
             *map(lambda arg: self._print(arg),
                  [lhs_code, expr.op, rhs_code])))
 
@@ -358,7 +360,7 @@ class CodePrinter(StrPrinter):
 
     def _print_Symbol(self, expr):
 
-        name = super(CodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
 
         if name in self.reserved_words:
             if self._settings['error_on_reserved']:

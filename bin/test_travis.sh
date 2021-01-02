@@ -187,6 +187,9 @@ test_list = [
     'sympy/logic',
     'sympy/assumptions',
 
+    #stats
+    'sympy/stats',
+
 ]
 
 blacklist = [
@@ -228,6 +231,9 @@ doctest_list = [
     # pycosat
     'sympy/logic',
     'sympy/assumptions',
+
+    #stats
+    'sympy/stats',
 
 ]
 

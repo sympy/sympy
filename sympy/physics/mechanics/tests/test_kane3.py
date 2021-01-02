@@ -1,7 +1,7 @@
 from sympy import evalf, symbols, pi, sin, cos, sqrt, acos, Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols, inertia,
                                      KanesMethod, RigidBody, Point, dot, msubs)
-from sympy.testing.pytest import slow, ON_TRAVIS, skip, warns_deprecated_sympy
+from sympy.testing.pytest import slow, ON_TRAVIS, skip
 
 
 @slow
@@ -171,8 +171,7 @@ def test_bicycle():
             u_ind=[u2, u3, u5],
             u_dependent=[u1, u4, u6], velocity_constraints=conlist_speed,
             kd_eqs=kd)
-    with warns_deprecated_sympy():
-        (fr, frstar) = KM.kanes_equations(FL, BL)
+    (fr, frstar) = KM.kanes_equations(BL, FL)
 
     # This is the start of entering in the numerical values from the benchmark
     # paper to validate the eigen values of the linearized equations from this

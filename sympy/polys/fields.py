@@ -2,10 +2,11 @@
 
 
 from typing import Any, Dict
+from functools import reduce
 
 from operator import add, mul, lt, le, gt, ge
 
-from sympy.core.compatibility import is_sequence, reduce
+from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod
 from sympy.core.numbers import Exp1
@@ -150,6 +151,12 @@ class FracField(DefaultPrinting):
 
     def __hash__(self):
         return self._hash
+
+    def index(self, gen):
+        if isinstance(gen, self.dtype):
+            return self.ring.index(gen.to_poly())
+        else:
+            raise ValueError("expected a %s, got %s instead" % (self.dtype,gen))
 
     def __eq__(self, other):
         return isinstance(other, FracField) and \

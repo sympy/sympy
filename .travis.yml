@@ -218,7 +218,10 @@ before_install:
         conda config --prepend channels conda-forge --prepend channels symengine/label/dev;
 
         conda info -a;
-        conda create -q -n test-environment ${TEST_OPT_DEPENDENCY};
+        # This became very slow: https://github.com/sympy/sympy/issues/20289
+        # We give it a 30 minute wait for now but hopefully this command will
+        # stop being so slow.
+        travis_wait 30 conda create -q -n test-environment ${TEST_OPT_DEPENDENCY};
         source activate test-environment;
         export CPATH=$CONDA_PREFIX/include;
         export LIBRARY_PATH=$CONDA_PREFIX/lib;

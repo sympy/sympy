@@ -6,6 +6,7 @@ from .singleton import S
 from .expr import Expr, AtomicExpr
 from .cache import cacheit
 from .function import FunctionClass
+from .kind import NumberKind, UndefinedKind
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import cartes, sift
@@ -169,9 +170,9 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
         return _symbol(x, default, **assumptions)
     if not is_sequence(exprs):
         exprs = [exprs]
-    names = set().union((
+    names = set().union(
         [i.name for e in exprs for i in e.atoms(Symbol)] +
-        [i.func.name for e in exprs for i in e.atoms(AppliedUndef)]))
+        [i.func.name for e in exprs for i in e.atoms(AppliedUndef)])
     if modify is None:
         modify = numbered_string_incr
     while any(x == compare(s) for s in names):
@@ -204,6 +205,12 @@ class Symbol(AtomicExpr, Boolean):
 
     is_Symbol = True
     is_symbol = True
+
+    @property
+    def kind(self):
+        if self.is_commutative:
+            return NumberKind
+        return UndefinedKind
 
     @property
     def _diff_wrt(self):

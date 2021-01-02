@@ -79,8 +79,6 @@ def test_DiscreteMarkovChain():
     TS = MatrixSymbol('T', 3, 3)
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     YS = DiscreteMarkovChain("Y", ['One', 'Two', 3], TS)
-    assert YS._transient2transient() == None
-    assert YS._transient2absorbing() == None
     assert Y.joint_distribution(1, Y[2], 3) == JointDistribution(Y[1], Y[2], Y[3])
     raises(ValueError, lambda: Y.joint_distribution(Y[1].symbol, Y[2].symbol))
     assert P(Eq(Y[3], 2), Eq(Y[1], 1)).round(2) == Float(0.36, 2)
@@ -119,11 +117,10 @@ def test_DiscreteMarkovChain():
 
     # testing properties of Markov chain
     TO2 = Matrix([[S.One, 0, 0],[Rational(1, 3), Rational(1, 3), Rational(1, 3)],[0, Rational(1, 4), Rational(3, 4)]])
-    TO3 = Matrix([[Rational(1, 4), Rational(3, 4), 0],[Rational(1, 3), Rational(1, 3), Rational(1, 3)],[0, Rational(1, 4), Rational(3, 4)]])
+    TO3 = Matrix([[Rational(1, 4), Rational(3, 4), 0],[Rational(1, 3), Rational(1, 3), Rational(1, 3)], [0, Rational(1, 4), Rational(3, 4)]])
     Y2 = DiscreteMarkovChain('Y', trans_probs=TO2)
     Y3 = DiscreteMarkovChain('Y', trans_probs=TO3)
-    assert Y3._transient2absorbing() == None
-    raises (ValueError, lambda: Y3.fundamental_matrix())
+    assert Y3.fundamental_matrix() == ImmutableMatrix([[176, 81, -132], [36, 141, -52], [-44, -39, 208]])/125
     assert Y2.is_absorbing_chain() == True
     assert Y3.is_absorbing_chain() == False
     assert Y2.canonical_form() == ([0, 1, 2], TO2)
@@ -135,16 +132,21 @@ def test_DiscreteMarkovChain():
     w = ImmutableMatrix([[Rational(11, 39), Rational(16, 39), Rational(4, 13)]])
     assert Y4.limiting_distribution == w
     assert Y4.is_regular() == True
+    assert Y4.is_ergodic() == True
     TS1 = MatrixSymbol('T', 3, 3)
     Y5 = DiscreteMarkovChain('Y', trans_probs=TS1)
     assert Y5.limiting_distribution(w, TO4).doit() == True
     assert Y5.stationary_distribution(condition_set=True).subs(TS1, TO4).contains(w).doit() == S.true
     TO6 = Matrix([[S.One, 0, 0, 0, 0],[S.Half, 0, S.Half, 0, 0],[0, S.Half, 0, S.Half, 0], [0, 0, S.Half, 0, S.Half], [0, 0, 0, 0, 1]])
     Y6 = DiscreteMarkovChain('Y', trans_probs=TO6)
-    assert Y6._transient2absorbing() == ImmutableMatrix([[S.Half, 0], [0, 0], [0, S.Half]])
-    assert Y6._transient2transient() == ImmutableMatrix([[0, S.Half, 0], [S.Half, 0, S.Half], [0, S.Half, 0]])
     assert Y6.fundamental_matrix() == ImmutableMatrix([[Rational(3, 2), S.One, S.Half], [S.One, S(2), S.One], [S.Half, S.One, Rational(3, 2)]])
     assert Y6.absorbing_probabilities() == ImmutableMatrix([[Rational(3, 4), Rational(1, 4)], [S.Half, S.Half], [Rational(1, 4), Rational(3, 4)]])
+    TO7 = Matrix([[Rational(1, 2), Rational(1, 4), Rational(1, 4)], [Rational(1, 2), 0, Rational(1, 2)], [Rational(1, 4), Rational(1, 4), Rational(1, 2)]])
+    Y7 = DiscreteMarkovChain('Y', trans_probs=TO7)
+    assert Y7.is_absorbing_chain() == False
+    assert Y7.fundamental_matrix() == ImmutableDenseMatrix([[Rational(86, 75), Rational(1, 25), Rational(-14, 75)],
+                                                            [Rational(2, 25), Rational(21, 25), Rational(2, 25)],
+                                                            [Rational(-14, 75), Rational(1, 25), Rational(86, 75)]])
 
     # test for zero-sized matrix functionality
     X = DiscreteMarkovChain('X', trans_probs=Matrix([[]]))
@@ -153,6 +155,8 @@ def test_DiscreteMarkovChain():
     assert X.communication_classes() == []
     assert X.canonical_form() == ([], Matrix([[]]))
     assert X.decompose() == ([], Matrix([[]]), Matrix([[]]), Matrix([[]]))
+    assert X.is_regular() == False
+    assert X.is_ergodic() == False
 
     # test communication_class
     # see https://drive.google.com/drive/folders/1HbxLlwwn2b3U8Lj7eb_ASIUb5vYaNIjg?usp=sharing
@@ -221,6 +225,54 @@ def test_DiscreteMarkovChain():
                                  [0, 0, S(1)/2, 0, S(1)/2],
                                  [0, S(1)/2, 0, S(1)/2, 0]])
 
+    # test regular and ergodic
+    # https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    T = Matrix([[0, 4, 0, 0, 0],
+                [1, 0, 3, 0, 0],
+                [0, 2, 0, 2, 0],
+                [0, 0, 3, 0, 1],
+                [0, 0, 0, 4, 0]])/4
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert not X.is_regular()
+    assert X.is_ergodic()
+    T = Matrix([[0, 1], [1, 0]])
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert not X.is_regular()
+    assert X.is_ergodic()
+    # http://www.math.wisc.edu/~valko/courses/331/MC2.pdf
+    T = Matrix([[2, 1, 1],
+                [2, 0, 2],
+                [1, 1, 2]])/4
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_regular()
+    assert X.is_ergodic()
+    # https://docs.ufpr.br/~lucambio/CE222/1S2014/Kemeny-Snell1976.pdf
+    T = Matrix([[1, 1], [1, 1]])/2
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_regular()
+    assert X.is_ergodic()
+
+    # test is_absorbing_chain
+    T = Matrix([[0, 1, 0],
+                [1, 0, 0],
+                [0, 0, 1]])
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert not X.is_absorbing_chain()
+    # https://en.wikipedia.org/wiki/Absorbing_Markov_chain
+    T = Matrix([[1, 1, 0, 0],
+                [0, 1, 1, 0],
+                [1, 0, 0, 1],
+                [0, 0, 0, 2]])/2
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_absorbing_chain()
+    T = Matrix([[2, 0, 0, 0, 0],
+                [1, 0, 1, 0, 0],
+                [0, 1, 0, 1, 0],
+                [0, 0, 1, 0, 1],
+                [0, 0, 0, 0, 2]])/2
+    X = DiscreteMarkovChain('X', trans_probs=T)
+    assert X.is_absorbing_chain()
+
     # test custom state space
     Y10 = DiscreteMarkovChain('Y', [1, 2, 3], TO2)
     tuples = Y10.communication_classes()
@@ -264,10 +316,27 @@ def test_DiscreteMarkovChain():
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     assert P(Eq(Y[7], Y[5]), Eq(Y[2], 0)).round(5) == Float(0.44428, 5)
     assert P(Gt(Y[3], Y[1]), Eq(Y[0], 0)).round(2) == Float(0.36, 2)
-    assert P(Le(Y[5], Y[10]), Eq(Y[4], 2)).round(6) == Float(0.739072, 6)
-    assert Float(P(Eq(Y[500], Y[240]), Eq(Y[120], 1)), 14) == Float(1 - P(Ne(Y[500], Y[240]), Eq(Y[120], 1)), 14)
-    assert Float(P(Gt(Y[350], Y[100]), Eq(Y[75], 2)), 14) == Float(1 - P(Le(Y[350], Y[100]), Eq(Y[75], 2)), 14)
-    assert Float(P(Lt(Y[400], Y[210]), Eq(Y[161], 0)), 14) == Float(1 - P(Ge(Y[400], Y[210]), Eq(Y[161], 0)), 14)
+    assert P(Le(Y[5], Y[10]), Eq(Y[4], 2)).round(6) == Float(0.583120, 6)
+    assert Float(P(Eq(Y[10], Y[5]), Eq(Y[4], 1)), 14) == Float(1 - P(Ne(Y[10], Y[5]), Eq(Y[4], 1)), 14)
+    assert Float(P(Gt(Y[8], Y[9]), Eq(Y[3], 2)), 14) == Float(1 - P(Le(Y[8], Y[9]), Eq(Y[3], 2)), 14)
+    assert Float(P(Lt(Y[1], Y[4]), Eq(Y[0], 0)), 14) == Float(1 - P(Ge(Y[1], Y[4]), Eq(Y[0], 0)), 14)
+    assert P(Eq(Y[5], Y[10]), Eq(Y[2], 1)) == P(Eq(Y[10], Y[5]), Eq(Y[2], 1))
+    assert P(Gt(Y[1], Y[2]), Eq(Y[0], 1)) == P(Lt(Y[2], Y[1]), Eq(Y[0], 1))
+    assert P(Ge(Y[7], Y[6]), Eq(Y[4], 1)) == P(Le(Y[6], Y[7]), Eq(Y[4], 1))
+
+    #test symbolic queries
+    a, b, c, d = symbols('a b c d')
+    T = Matrix([[Rational(1, 10), Rational(4, 10), Rational(5, 10)], [Rational(3, 10), Rational(4, 10), Rational(3, 10)], [Rational(7, 10), Rational(2, 10), Rational(1, 10)]])
+    Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
+    query = P(Eq(Y[a], b), Eq(Y[c], d))
+    assert query.subs({a:10, b:2, c:5, d:1}).evalf().round(4) == P(Eq(Y[10], 2), Eq(Y[5], 1)).round(4)
+    assert query.subs({a:15, b:0, c:10, d:1}).evalf().round(4) == P(Eq(Y[15], 0), Eq(Y[10], 1)).round(4)
+    query_gt = P(Gt(Y[a], b), Eq(Y[c], d))
+    query_le = P(Le(Y[a], b), Eq(Y[c], d))
+    assert query_gt.subs({a:5, b:2, c:1, d:0}).evalf() + query_le.subs({a:5, b:2, c:1, d:0}).evalf() == 1
+    query_ge = P(Ge(Y[a], b), Eq(Y[c], d))
+    query_lt = P(Lt(Y[a], b), Eq(Y[c], d))
+    assert query_ge.subs({a:4, b:1, c:0, d:2}).evalf() + query_lt.subs({a:4, b:1, c:0, d:2}).evalf() == 1
 
 def test_sample_stochastic_process():
     if not import_module('scipy'):
@@ -281,7 +350,7 @@ def test_sample_stochastic_process():
     Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     for samps in range(10):
         assert next(sample_stochastic_process(Y)) in Y.state_space
-    Z = DiscreteMarkovChain("Z", ['1', 1, None], T)
+    Z = DiscreteMarkovChain("Z", ['1', 1, 0], T)
     for samps in range(10):
         assert next(sample_stochastic_process(Z)) in Z.state_space
 
@@ -330,6 +399,30 @@ def test_ContinuousMarkovChain():
     C3 = ContinuousMarkovChain('C', [Symbol('0'), Symbol('1'), Symbol('2')], T2)
     assert P(Eq(C3(1), 1), Eq(C3(0), 1)) == exp(-2)/2 + S.Half
     assert P(Eq(C3(1), Symbol('1')), Eq(C3(0), Symbol('1'))) == exp(-2)/2 + S.Half
+
+    #test probability queries
+    G = Matrix([[-S(1), Rational(1, 10), Rational(9, 10)], [Rational(2, 5), -S(1), Rational(3, 5)], [Rational(1, 2), Rational(1, 2), -S(1)]])
+    C = ContinuousMarkovChain('C', state_space=[0, 1, 2], gen_mat=G)
+    assert P(Eq(C(7.385), C(3.19)), Eq(C(0.862), 0)).round(5) == Float(0.35469, 5)
+    assert P(Gt(C(98.715), C(19.807)), Eq(C(11.314), 2)).round(5) == Float(0.32452, 5)
+    assert P(Le(C(5.9), C(10.112)), Eq(C(4), 1)).round(6) == Float(0.675214, 6)
+    assert Float(P(Eq(C(7.32), C(2.91)), Eq(C(2.63), 1)), 14) == Float(1 - P(Ne(C(7.32), C(2.91)), Eq(C(2.63), 1)), 14)
+    assert Float(P(Gt(C(3.36), C(1.101)), Eq(C(0.8), 2)), 14) == Float(1 - P(Le(C(3.36), C(1.101)), Eq(C(0.8), 2)), 14)
+    assert Float(P(Lt(C(4.9), C(2.79)), Eq(C(1.61), 0)), 14) == Float(1 - P(Ge(C(4.9), C(2.79)), Eq(C(1.61), 0)), 14)
+    assert P(Eq(C(5.243), C(10.912)), Eq(C(2.174), 1)) == P(Eq(C(10.912), C(5.243)), Eq(C(2.174), 1))
+    assert P(Gt(C(2.344), C(9.9)), Eq(C(1.102), 1)) == P(Lt(C(9.9), C(2.344)), Eq(C(1.102), 1))
+    assert P(Ge(C(7.87), C(1.008)), Eq(C(0.153), 1)) == P(Le(C(1.008), C(7.87)), Eq(C(0.153), 1))
+
+    #test symbolic queries
+    a, b, c, d = symbols('a b c d')
+    query = P(Eq(C(a), b), Eq(C(c), d))
+    assert query.subs({a:3.65, b:2, c:1.78, d:1}).evalf().round(10) == P(Eq(C(3.65), 2), Eq(C(1.78), 1)).round(10)
+    query_gt = P(Gt(C(a), b), Eq(C(c), d))
+    query_le = P(Le(C(a), b), Eq(C(c), d))
+    assert query_gt.subs({a:13.2, b:0, c:3.29, d:2}).evalf() + query_le.subs({a:13.2, b:0, c:3.29, d:2}).evalf() == 1
+    query_ge = P(Ge(C(a), b), Eq(C(c), d))
+    query_lt = P(Lt(C(a), b), Eq(C(c), d))
+    assert query_ge.subs({a:7.43, b:1, c:1.45, d:0}).evalf() + query_lt.subs({a:7.43, b:1, c:1.45, d:0}).evalf() == 1
 
 def test_BernoulliProcess():
 

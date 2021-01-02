@@ -31,9 +31,9 @@ def check_antlr_version():
               .decode('utf-8').split("\n")[0])
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
-        debug("The antlr4 command line tool is not installed, "
-              "or not on your PATH\n"
-              "> Please install it via your preferred package manager")
+        debug("The 'antlr4' command line tool is not installed, "
+              "or not on your PATH.\n"
+              "> Please refer to the README.md file for more information.")
         return False
 
 
@@ -60,23 +60,26 @@ def build_parser(output_dir=dir_latex_antlr):
     debug("Running code generation...\n\t$ {}".format(" ".join(args)))
     subprocess.check_output(args, cwd=output_dir)
 
-    debug("Applying headers and renaming...")
+    debug("Applying headers, removing unnecessary files and renaming...")
     # Handle case insensitive file systems. If the files are already
     # generated, they will be written to latex* but LaTeX*.* won't match them.
     for path in (glob.glob(os.path.join(output_dir, "LaTeX*.*")) +
         glob.glob(os.path.join(output_dir, "latex*.*"))):
-        offset = 0
-        new_path = os.path.join(output_dir,
-                                os.path.basename(path).lower())
+
+        # Remove files ending in .interp or .tokens as they are not needed.
+        if not path.endswith(".py"):
+            os.unlink(path)
+            continue
+
+        new_path = os.path.join(output_dir, os.path.basename(path).lower())
         with open(path, 'r') as f:
             lines = [line.rstrip() + '\n' for line in f.readlines()]
 
         os.unlink(path)
 
         with open(new_path, "w") as out_file:
-            if path.endswith(".py"):
-                offset = 2
-                out_file.write(header)
+            offset = 2
+            out_file.write(header)
             out_file.writelines(lines[offset:])
 
         debug("\t{}".format(new_path))

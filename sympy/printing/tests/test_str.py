@@ -4,8 +4,10 @@ from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
     symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
     subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice)
+    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice,
+    Q)
 from sympy.core import Expr, Mul
+from sympy.external import import_module
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
 from sympy.physics.units import second, joule
 from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
@@ -609,13 +611,13 @@ def test_set():
     assert sstr(set()) == 'set()'
     assert sstr(frozenset()) == 'frozenset()'
 
-    assert sstr(set([1])) == '{1}'
+    assert sstr({1}) == '{1}'
     assert sstr(frozenset([1])) == 'frozenset({1})'
-    assert sstr(set([1, 2, 3])) == '{1, 2, 3}'
+    assert sstr({1, 2, 3}) == '{1, 2, 3}'
     assert sstr(frozenset([1, 2, 3])) == 'frozenset({1, 2, 3})'
 
     assert sstr(
-        set([1, x, x**2, x**3, x**4])) == '{1, x, x**2, x**3, x**4}'
+        {1, x, x**2, x**3, x**4}) == '{1, x, x**2, x**3, x**4}'
     assert sstr(
         frozenset([1, x, x**2, x**3, x**4])) == 'frozenset({1, x, x**2, x**3, x**4})'
 
@@ -714,6 +716,26 @@ def test_wild_str():
     assert str(1/w + 1) == '1 + 1/x_'
     assert str(w**2 + 1) == 'x_**2 + 1'
     assert str(1/(1 - w)) == '1/(1 - x_)'
+
+
+def test_wild_matchpy():
+    from sympy.utilities.matchpy_connector import WildDot, WildPlus, WildStar
+
+    matchpy = import_module("matchpy")
+
+    if matchpy is None:
+        return
+
+    wd = WildDot('w')
+    wp = WildPlus('w')
+    ws = WildStar('w')
+
+    assert str(wd) == 'w_'
+    assert str(wp) == 'w__'
+    assert str(ws) == 'w___'
+
+    assert str(wp/ws + 2**wd) == '2**w_ + w__/w___'
+    assert str(sin(wd)*cos(wp)*sqrt(ws)) == 'sqrt(w___)*sin(w_)*cos(w__)'
 
 
 def test_zeta():
@@ -1000,3 +1022,9 @@ def test_NDimArray():
     assert sstr(NDimArray(1.0), full_prec=False) == '1.0'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=True) == '[1.00000000000000, 2.00000000000000]'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=False) == '[1.0, 2.0]'
+
+def test_Predicate():
+    assert sstr(Q.even) == 'Q.even'
+
+def test_AppliedPredicate():
+    assert sstr(Q.even(x)) == 'Q.even(x)'

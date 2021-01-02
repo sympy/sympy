@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 from .pycode import (
     PythonCodePrinter,
     MpmathPrinter,  # MpmathPrinter is imported for backward compatibility
@@ -176,7 +175,7 @@ class NumExprPrinter(LambdaPrinter):
     blacklisted
 
     def doprint(self, expr):
-        lstr = super(NumExprPrinter, self).doprint(expr)
+        lstr = super().doprint(expr)
         return "evaluate('%s', truediv=True)" % lstr
 
 

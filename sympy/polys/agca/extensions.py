@@ -22,6 +22,9 @@ class ExtensionElement(DefaultPrinting):
         self.rep = rep
         self.ext = ext
 
+    def __bool__(f):
+        return bool(f.rep)
+
     def __neg__(f):
         return ExtElem(-f.rep, f.ext)
 
@@ -228,6 +231,9 @@ class MonogenicFiniteExtension:
     def convert(self, f):
         rep = self.ring.convert(f)
         return ExtElem(rep % self.mod, self)
+
+    def to_sympy(self, f):
+        return self.ring.to_sympy(f.rep)
 
     __call__ = convert
 

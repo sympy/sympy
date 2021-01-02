@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
@@ -94,7 +92,7 @@ class QExpr(Expr):
     is_commutative = False
 
     # The separator used in printing the label.
-    _label_separator = u''
+    _label_separator = ''
 
     @property
     def free_symbols(self):
@@ -226,8 +224,8 @@ class QExpr(Expr):
     def _print_sequence_pretty(self, seq, sep, printer, *args):
         pform = printer._print(seq[0], *args)
         for item in seq[1:]:
-            pform = prettyForm(*pform.right((sep)))
-            pform = prettyForm(*pform.right((printer._print(item, *args))))
+            pform = prettyForm(*pform.right(sep))
+            pform = prettyForm(*pform.right(printer._print(item, *args)))
         return pform
 
     # Utilities for printing: these operate prettyForm objects

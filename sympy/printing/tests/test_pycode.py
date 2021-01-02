@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
 from sympy.codegen.cfunctions import expm1, log1p
