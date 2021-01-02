@@ -16,6 +16,7 @@ from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.misc import filldedent
 
+from .common import MatrixError
 from .decompositions import _cholesky, _LDLdecomposition
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
 
@@ -1206,6 +1207,38 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
         value = prng.randint(min, max)
         m[i, j] = m[j, i] = value
     return m
+
+def sqrtm(M):
+    """
+    Returns the square root of a diagonalizable matrix.
+    Square root of a matrix A is defined as a matrix B such that
+    A = B^2
+
+
+    Examples
+    ========
+
+    >>> from sympy.matrices import Matrix, sqrtm
+    >>> M = Matrix([[33, 24], [48, 57]])
+    >>> sqrtm(M).doit()
+    Matrix([
+    [5.0, 2.0],
+    [4.0, 7.0]])
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Square_root_of_a_matrix
+
+    """
+
+    from .eigen import _is_diagonalizable
+    if not _is_diagonalizable(M):
+        raise MatrixError("Matrix is not diagonalizable")
+
+    (P, D) = M.diagonalize()
+    D = D ** 0.5
+    return P * D * P.inv()
 
 
 def wronskian(functions, var, method='bareiss'):

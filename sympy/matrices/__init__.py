@@ -7,7 +7,7 @@ from .common import ShapeError, NonSquareMatrixError
 from .dense import (
     GramSchmidt, casoratian, diag, eye, hessian, jordan_cell,
     list2numpy, matrix2numpy, matrix_multiply_elementwise, ones,
-    randMatrix, rot_axis1, rot_axis2, rot_axis3, symarray, wronskian,
+    randMatrix, rot_axis1, rot_axis2, rot_axis3, sqrtm, symarray, wronskian,
     zeros)
 from .dense import MutableDenseMatrix
 from .matrices import DeferredVector, MatrixBase, MatrixKind
@@ -37,7 +37,7 @@ __all__ = [
 
     'GramSchmidt', 'casoratian', 'diag', 'eye', 'hessian', 'jordan_cell',
     'list2numpy', 'matrix2numpy', 'matrix_multiply_elementwise', 'ones',
-    'randMatrix', 'rot_axis1', 'rot_axis2', 'rot_axis3', 'symarray',
+    'randMatrix', 'rot_axis1', 'rot_axis2', 'rot_axis3', 'sqrtm', 'symarray',
     'wronskian', 'zeros',
 
     'MutableDenseMatrix',

@@ -13,7 +13,7 @@ from sympy.matrices import (
     GramSchmidt, ImmutableMatrix, ImmutableSparseMatrix, Matrix,
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
-    rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
+    rot_axis3, sqrtm, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
     MatrixSymbol, dotprodsimp)
 from sympy.matrices.utilities import _dotprodsimp_state
 from sympy.core.compatibility import iterable
@@ -970,6 +970,14 @@ def test_jacobian_hessian():
         [     0, 6*y**2, 2*x],
         [6*y**2,    2*x, 2*y],
         [   2*x,    2*y,   0]])
+
+def test_sqrtm():
+    M = Matrix([[33, 24], [48, 57]])
+    assert sqrtm(M).doit() == Matrix([[5.0, 2.0], [4.0, 7.0]])
+    M = Matrix([[-183, 240, -48], [-122, 169, -33], [222, -240, 52]])
+    assert sqrtm(M).doit() == Matrix([[-21, 30, -6], [-10, 17, -3], [54, -60, 14]])
+    M = Matrix([[9]])
+    assert sqrtm(M).doit() == Matrix([[3]])
 
 
 def test_wronskian():
