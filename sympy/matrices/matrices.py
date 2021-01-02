@@ -175,8 +175,24 @@ class MatrixReductions(MatrixDeterminant):
     rref.__doc__         = _rref.__doc__
 
     def _normalize_op_args(self, op, col, k, col1, col2, error_str="col"):
+
         """Validate the arguments for a row/column operation.  ``error_str``
-        can be one of "row" or "col" depending on the arguments being parsed."""
+        can be one of "row" or "col" depending on the arguments being parsed.
+
+        Valid operations should be of the following 3 types:
+        * "n->kn" (column n goes to k*n)
+        * "n<->m" (swap column n and column m)
+        * "n->n+km" (column n goes to column n + k*column m)
+
+        For scalar multiplication, the scalar and the row to be multiplied
+        must be provided. Also, the scalar multiplied by must not be zero as
+        0*n = 0 nullifies the determinant of a matrix.
+
+        For row/column swaps, the values of n and m kwargs must be provided.
+
+        For operations of type n->n+km, n, k and m kwargs must be provided.
+        """
+
         if op not in ["n->kn", "n<->m", "n->n+km"]:
             raise ValueError("Unknown {} operation '{}'. Valid col operations "
                              "are 'n->kn', 'n<->m', 'n->n+km'".format(error_str, op))
@@ -190,6 +206,8 @@ class MatrixReductions(MatrixDeterminant):
             if col is None or k is None:
                 raise ValueError("For a {0} operation 'n->kn' you must provide the "
                                  "kwargs `{0}` and `k`".format(error_str))
+            if k == 0:
+                raise ValueError("For a {0} operation, k value must not be 0".format(error_str))
             if not 0 <= col < self_cols:
                 raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
 
@@ -230,6 +248,7 @@ class MatrixReductions(MatrixDeterminant):
         return op, col, k, col1, col2
 
     def _eval_col_op_multiply_col_by_const(self, col, k):
+        #evaluates elementary operation - scalar multiplication of column
         def entry(i, j):
             if j == col:
                 return k * self[i, j]
@@ -237,6 +256,7 @@ class MatrixReductions(MatrixDeterminant):
         return self._new(self.rows, self.cols, entry)
 
     def _eval_col_op_swap(self, col1, col2):
+        #evaluates elementary operation - column swap
         def entry(i, j):
             if j == col1:
                 return self[i, col2]
@@ -246,6 +266,8 @@ class MatrixReductions(MatrixDeterminant):
         return self._new(self.rows, self.cols, entry)
 
     def _eval_col_op_add_multiple_to_other_col(self, col, k, col2):
+        #evaluates elementary operation - addition of scalar multiple of one
+        #column to another
         def entry(i, j):
             if j == col:
                 return self[i, j] + k * self[i, col2]
@@ -253,6 +275,7 @@ class MatrixReductions(MatrixDeterminant):
         return self._new(self.rows, self.cols, entry)
 
     def _eval_row_op_swap(self, row1, row2):
+        #evaluates elementary operation - row swap
         def entry(i, j):
             if i == row1:
                 return self[row2, j]
@@ -262,6 +285,7 @@ class MatrixReductions(MatrixDeterminant):
         return self._new(self.rows, self.cols, entry)
 
     def _eval_row_op_multiply_row_by_const(self, row, k):
+        #evaluates elementary operation - scalar multiplication of rows
         def entry(i, j):
             if i == row:
                 return k * self[i, j]
@@ -269,6 +293,8 @@ class MatrixReductions(MatrixDeterminant):
         return self._new(self.rows, self.cols, entry)
 
     def _eval_row_op_add_multiple_to_other_row(self, row, k, row2):
+        #evaluates elementary operation - addition of scalar multiple of one
+        #row to another
         def entry(i, j):
             if i == row:
                 return self[i, j] + k * self[row2, j]
