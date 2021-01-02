@@ -14,7 +14,176 @@ from sympy.utilities import default_sort_key, public
 
 @public
 class Domain:
-    """Represents an abstract domain. """
+    """Superclass for all domains in the polys domains system.
+
+    See :ref:`polys-domainsintro` for an introductory explanation of the
+    domains system.
+
+    The :py:class:`~.Domain` class is an abstract base class for all of the
+    concrete domain types. There are many different :py:class:`~.Domain`
+    subclasses each of which has an associated ``dtype`` which is a class
+    representing the elements of the domain. The coefficients of a
+    :py:class:`~.Poly` are elements of a domain which must be a subclass of
+    :py:class:`~.Domain`.
+
+    Examples
+    ========
+
+    The most common example domains are the integers :ref:`ZZ` and the
+    rationals :ref:`QQ`::
+
+        >>> from sympy import Poly, symbols, Domain
+        >>> x, y = symbols('x, y')
+        >>> p = Poly(x**2 + y)
+        >>> p
+        Poly(x**2 + y, x, y, domain='ZZ')
+        >>> p.domain
+        ZZ
+        >>> isinstance(p.domain, Domain)
+        True
+        >>> Poly(x**2 + y/2)
+        Poly(x**2 + 1/2*y, x, y, domain='QQ')
+
+    The domains can be used directly in which case the domain object e.g.
+    (:ref:`ZZ` or :ref:`QQ`) can be used as a constructor for elements of
+    ``dtype``::
+
+        >>> from sympy import ZZ, QQ
+        >>> ZZ(2)
+        2
+        >>> ZZ.dtype
+        <class 'int'>
+        >>> type(ZZ(2))
+        <class 'int'>
+        >>> QQ(1, 2)
+        1/2
+        >>> type(QQ(1, 2))
+        <class 'sympy.polys.domains.pythonrational.PythonRational'>
+
+    The corresponding domain elements can be used with the arithmetic
+    operations ``+,-,*,**`` and depending on the domain some combination of
+    ``/,//,%`` might be usable. For example in :ref:`ZZ` both ``//`` (floor
+    division) and ``%`` (modulo division) can be used but ``/`` (true
+    division) can not. Since :ref:`QQ` is a :py:class:`~.Field` its elements
+    can also be used with ``/``. Some domains have a :py:meth:`~.Domain.gcd`
+    method::
+
+        >>> ZZ(2) + ZZ(3)
+        5
+        >>> ZZ(5) // ZZ(2)
+        2
+        >>> ZZ(5) % ZZ(2)
+        1
+        >>> QQ(1, 2) / QQ(2, 3)
+        3/4
+        >>> QQ(1, 2) % QQ(2, 3)
+        0
+        >>> ZZ.gcd(ZZ(4), ZZ(2))
+        2
+        >>> QQ.gcd(QQ(2,7), QQ(5,3))
+        1/21
+        >>> ZZ.is_Field
+        False
+        >>> QQ.is_Field
+        True
+
+    There are also many other domains including:
+
+        1. :ref:`GF(p)` for finite fields of prime order.
+        2. :ref:`RR` for real (floating point) numbers.
+        3. :ref:`CC` for complex (floating point) numbers.
+        4. :ref:`QQ(a)` for algebraic number fields.
+        5. :ref:`K[x]` for polynomial rings.
+        6. :ref:`K(x)` for rational function fields.
+        7. :ref:`EX` for arbitrary expressions.
+
+    Each domain is represented by a domain object and also an implementation
+    class (``dtype``) for the elements of the domain. For example the
+    :ref:`K[x]` domains are represented by a domain object which is an
+    instance of :py:class:`~.PolynomialRing` and the elements are always
+    instances of :py:class:`~.PolyElement`. The implementation class
+    represents particular types of mathematical expressions in a way that is
+    more efficient than a normal SymPy expression which is of type
+    :py:class:`~.Expr`. The domain methods :py:meth:`~.Domain.from_sympy` and
+    :py:meth:`~.Domain.to_sympy` are used to convert from :py:class:`~.Expr`
+    to a domain element and vice versa::
+
+        >>> from sympy import Symbol, ZZ, Expr
+        >>> x = Symbol('x')
+        >>> K = ZZ[x]           # polynomial ring domain
+        >>> K
+        ZZ[x]
+        >>> type(K)             # class of the domain
+        <class 'sympy.polys.domains.polynomialring.PolynomialRing'>
+        >>> K.dtype             # class of the elements
+        <class 'sympy.polys.rings.PolyElement'>
+        >>> p_expr = x**2 + 1   # Expr
+        >>> p_expr
+        x**2 + 1
+        >>> type(p_expr)
+        <class 'sympy.core.add.Add'>
+        >>> isinstance(p_expr, Expr)
+        True
+        >>> p_domain = K.from_sympy(p_expr)
+        >>> p_domain            # domain element
+        x**2 + 1
+        >>> type(p_domain)
+        <class 'sympy.polys.rings.PolyElement'>
+        >>> K.to_sympy(p_domain) == p_expr
+        True
+
+    The :py:meth:`~.Domain.convert_from` method is used to convert domain
+    elements from one domain to another::
+
+        >>> from sympy import ZZ, QQ
+        >>> ez = ZZ(2)
+        >>> eq = QQ.convert_from(ez, ZZ)
+        >>> type(ez)
+        <class 'int'>
+        >>> type(eq)
+        <class 'sympy.polys.domains.pythonrational.PythonRational'>
+
+    Elements from different domains should not be mixed in arithmetic or other
+    operations: they should be converted to a common domain first.  The domain
+    method :py:meth:`~.Domain.unify` is used to find a domain that can
+    represent all the elements of two given domains::
+
+        >>> from sympy import ZZ, QQ, symbols
+        >>> x, y = symbols('x, y')
+        >>> ZZ.unify(QQ)
+        QQ
+        >>> ZZ[x].unify(QQ)
+        QQ[x]
+        >>> ZZ[x].unify(QQ[y])
+        QQ[x,y]
+
+    If a domain is a :py:class:`~.Ring` then is might have an associated
+    :py:class:`~.Field` and vice versa. The :py:meth:`~.Domain.get_field` and
+    :py:meth:`~.Domain.get_ring` methods will find or create the associated
+    domain::
+
+        >>> from sympy import ZZ, QQ, Symbol
+        >>> x = Symbol('x')
+        >>> ZZ.has_assoc_Field
+        True
+        >>> ZZ.get_field()
+        QQ
+        >>> QQ.has_assoc_Ring
+        True
+        >>> QQ.get_ring()
+        ZZ
+        >>> K = QQ[x]
+        >>> K
+        QQ[x]
+        >>> K.get_field()
+        QQ(x)
+
+    See also
+    ========
+
+    DomainElement: abstract base class for domain elements
+
+    """
 
     dtype = None  # type: Optional[Type]
     zero = None  # type: Optional[Any]
