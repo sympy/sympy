@@ -94,7 +94,8 @@ The corresponding `field of fractions`_ is the domain of the rationals
 
 When using the domain directly :ref:`ZZ` can be used as a constructor to
 create instances which then support the operations ``+,-,*,**,//,%`` (true
-division ``/`` should not be used with :ref:`ZZ`)::
+division ``/`` should not be used with :ref:`ZZ` - see the
+:py:meth:`~.Domain.exquo` domain method)::
 
   >>> x = ZZ(5)
   >>> y = ZZ(2)

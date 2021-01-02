@@ -478,11 +478,124 @@ class Domain:
         return True
 
     def to_sympy(self, a):
-        """Convert ``a`` to a SymPy object. """
+        """Convert domain element *a* to a SymPy expression (Expr).
+
+        Explanation
+        ===========
+
+        Convert a :py:class:`~.Domain` element *a* to :py:class:`~.Expr`. Most
+        public SymPy functions work with objects of type :py:class:`~.Expr`.
+        The elements of a :py:class:`~.Domain` have a different internal
+        representation. It is not possible to mix domain elements with
+        :py:class:`~.Expr` so each domain has :py:meth:`~.Domain.to_sympy` and
+        :py:meth:`~.Domain.from_sympy` methods to convert its domain elements
+        to and from :py:class:`~.Expr`.
+
+        Parameters
+        ==========
+
+        a: domain element
+            An element of this :py:class:`~.Domain`.
+
+        Returns
+        =======
+
+        expr: Expr
+            A normal sympy expression of type :py:class:`~.Expr`.
+
+        Examples
+        ========
+
+        Construct an element of the :ref:`QQ` domain and then convert it to
+        :py:class:`~.Expr`::
+
+            >>> from sympy import QQ, Expr
+            >>> q_domain = QQ(2)
+            >>> q_domain
+            2
+            >>> q_expr = QQ.to_sympy(q_domain)
+            >>> q_expr
+            2
+
+        Although the printed forms look similar these objects are not of the
+        same type::
+
+            >>> isinstance(q_domain, Expr)
+            False
+            >>> isinstance(q_expr, Expr)
+            True
+
+        Construct an element of :ref:`K[x]` and convert to
+        :py:class:`~.Expr`::
+
+            >>> from sympy import Symbol
+            >>> x = Symbol('x')
+            >>> K = QQ[x]
+            >>> x_domain = K.gens[0]  # generator x as a domain element
+            >>> p_domain = x_domain**2/3 + 1
+            >>> p_domain
+            1/3*x**2 + 1
+            >>> p_expr = K.to_sympy(p_domain)
+            >>> p_expr
+            x**2/3 + 1
+
+        The :py:meth:`~.Domain.from_sympy` method is used for the opposite
+        conversion from a normal SymPy expression to a domain element::
+
+            >>> p_domain == p_expr
+            False
+            >>> K.from_sympy(p_expr) == p_domain
+            True
+            >>> K.to_sympy(p_domain) == p_expr
+            True
+            >>> K.from_sympy(K.to_sympy(p_domain)) == p_domain
+            True
+            >>> K.to_sympy(K.from_sympy(p_expr)) == p_expr
+            True
+
+        The :py:meth:`~.Domain.from_sympy` method makes it easier to construct
+        domain elements interactively::
+
+            >>> from sympy import Symbol
+            >>> x = Symbol('x')
+            >>> K = QQ[x]
+            >>> K.from_sympy(x**2/3 + 1)
+            1/3*x**2 + 1
+
+        See also
+        ========
+
+        from_sympy
+        convert_from
+        """
         raise NotImplementedError
 
     def from_sympy(self, a):
-        """Convert a SymPy object to ``dtype``. """
+        """Convert a SymPy expression to an element of this domain.
+
+        Explanation
+        ===========
+
+        See :py:meth:`~.Domain.to_sympy` for explanation and examples.
+
+        Parameters
+        ==========
+
+        expr: Expr
+            A normal sympy expression of type :py:class:`~.Expr`.
+
+        Returns
+        =======
+
+        a: domain element
+            An element of this :py:class:`~.Domain`.
+
+        See also
+        ========
+
+        to_sympy
+        convert_from
+        """
         raise NotImplementedError
 
     def from_FF_python(K1, a, K0):

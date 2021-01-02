@@ -369,9 +369,9 @@ C rather than Python and is many times faster than the pure Python
 implementation of :ref:`QQ` that is used when gmpy is not installed.
 
 In general the Python type used for the elements of a domain can be checked
-from the py:attr:`~.Domain.dtype` attribute of the domain. The
+from the :py:attr:`~.Domain.dtype` attribute of the domain. The
 :py:meth:`~.Domain.of_type` method can be used to check if an object is an
-instance of :py:attr:`.Domain.dtype`.::
+instance of :py:attr:`~.Domain.dtype`.::
 
   >>> z = ZZ(2)
   >>> type(z)
@@ -434,7 +434,7 @@ conversion will fail if the expression can not be represented in the domain::
 
 We have already seen that in some cases we can use the domain object itself as
 a constructor e.g. ``QQ(2)``. This will generally work provided the arguments
-given are valid for the :py:attr:`.Domain.dtype` of the domain. Although it is
+given are valid for the :py:attr:`~.Domain.dtype` of the domain. Although it is
 convenient to use this in interactive sessions and in demonstrations it is
 generally better to use the :py:meth:`~.Domain.from_sympy` method for
 constructing domain elements from sympy expressions (or from objects that can
@@ -449,9 +449,10 @@ do this implicitly. for example the ``sum`` function will use the regular
 
 Every domain is at least a ring if not a field and as such is guaranteed to
 have two elements in particular corresponding to `1` and `0`.  The domain
-object provides domain elements for these as the attributes ``one`` and
-``zero``. These are useful for something like Python's ``sum`` function which
-allows to provide an alternative object as the "zero"::
+object provides domain elements for these as the attributes
+:py:attr:`~.Domain.one` and :py:attr:`~.Domain.zero`. These are useful for
+something like Python's ``sum`` function which allows to provide an
+alternative object as the "zero"::
 
   >>> ZZ.one
   1
