@@ -179,7 +179,8 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
         Returns a Lambda
         """
-        x, z = symbols('x, z', integer=True, cls=Dummy)
+        x = symbols('x', integer=True, cls=Dummy)
+        z = symbols('z', real=True, cls=Dummy)
         left_bound = self.set.inf
 
         # CDF is integral of PDF from left bound to z
