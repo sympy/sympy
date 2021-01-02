@@ -267,8 +267,12 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     TypeError: <class 'sympy.assumptions.assume.UndefinedPredicate'> cannot be dispatched.
 
     The tautological predicate ``Q.is_true`` can be used to wrap other objects:
-    >>> Q.is_true(x > 1)
-    Q.is_true(x > 1)
+
+    >>> from sympy.logic import Or
+    >>> Q.is_true(Or(Q.positive(x), Q.negative(x)))
+    Q.is_true(Q.positive(x) | Q.negative(x))
+    >>> ask(_, Q.zero(x))
+    False
 
     References
     ==========

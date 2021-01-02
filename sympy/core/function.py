@@ -454,6 +454,11 @@ class Function(Application, Expr):
             return UndefinedFunction(*args, **options)
 
         n = len(args)
+
+        from sympy.relation import AppliedBinaryRelation
+        if n > 0 and isinstance(args[0], AppliedBinaryRelation):
+            return args[0].apply_func(cls, *args[1:], **options)
+
         if n not in cls.nargs:
             # XXX: exception message must be in exactly this format to
             # make it work with NumPy's functions like vectorize(). See,
@@ -3242,7 +3247,7 @@ def count_ops(expr, visual=False):
                 a = args.pop()
 
                 if a.args:
-                    o = Symbol(a.func.__name__.upper())
+                    o = Symbol(type(a).__name__.upper())
                     if a.is_Boolean:
                         ops.append(o*(len(a.args)-1))
                     else:
