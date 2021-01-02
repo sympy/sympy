@@ -55,9 +55,12 @@ def roots_quadratic(f):
     dom = f.get_domain()
 
     def _sqrt(d):
-        # remove squares from square root since both will be represented
-        # in the results; a similar thing is happening in roots() but
-        # must be duplicated here because not all quadratics are binomials
+        """
+        removes even powered variabes from the extression so that they aren't
+        represented twice in the results.
+        As roots() removes even powers for binomials, this duplication does
+        this for all binomial/non-binomial quadratics
+        """
         co = []
         other = []
         for di in Mul.make_args(d):
