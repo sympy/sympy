@@ -527,7 +527,7 @@ class RisingFactorial(CombinatorialFunction):
 
     .. math:: rf(x, k) = (-1)^k \frac{\Gamma(1 - x)}{\Gamma(-x - y - 1)}
 
-    When `x` is a Poly instance of degree >= 1 with a single variable,
+    When `x` is a Poly instance of degree `\ge 1` with a single variable,
     `rf(x,k) = x(y) \cdot x(y+1) \cdots x(y+k-1)`, where `y` is the
     variable of `x`. This is as described in Peter Paule, "Greatest
     Factorial Factorization and Symbolic Summation", Journal of
@@ -701,7 +701,7 @@ class FallingFactorial(CombinatorialFunction):
 
     .. math:: ff(x, k) = (-1)^k \frac{\Gamma(k - x)}{\Gamma(-x)}
 
-    When `x` is a Poly instance of degree >= 1 with single variable,
+    When `x` is a Poly instance of degree `\ge 1` with single variable,
     `ff(x,k) = x(y) \cdot x(y-1) \cdots x(y-k+1)`, where `y` is the
     variable of `x`. This is as described in Peter Paule, "Greatest
     Factorial Factorization and Symbolic Summation", Journal of
