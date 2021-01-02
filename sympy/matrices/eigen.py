@@ -170,6 +170,7 @@ def _eigenvals(
         return {}
 
     if not M.is_square:
+        #non square matrices do not have eigenvalues
         raise NonSquareMatrixError("{} must be a square matrix.".format(M))
 
     if M.is_upper or M.is_lower:
@@ -193,6 +194,8 @@ def _eigenvals(
 
 def _eigenvals_list(
     M, error_when_incomplete=True, simplify=False, **flags):
+    """returns simplified eigenvalue for Matrix argument including repeating
+    eigenvalues"""
     iblocks = M.connected_components()
     all_eigs = []
     for b in iblocks:
@@ -228,6 +231,10 @@ def _eigenvals_list(
 
 def _eigenvals_dict(
     M, error_when_incomplete=True, simplify=False, **flags):
+
+    """returns dictionary of eigenvalues and their multiplicity as key-value
+    pairs."""
+
     iblocks = M.connected_components()
     all_eigs = {}
     for b in iblocks:
@@ -266,7 +273,9 @@ def _eigenvals_dict(
 
 
 def _eigenspace(M, eigenval, iszerofunc=_iszero, simplify=False):
-    """Get a basis for the eigenspace for a particular eigenvalue"""
+    """Get a basis for the eigenspace for a particular eigenvalue.
+    Repeating eigenvalues have basis of dimension equal to their multiplicity"""
+
     m   = M - M.eye(M.rows) * eigenval
     ret = m.nullspace(iszerofunc=iszerofunc)
 
@@ -380,6 +389,11 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     [2/3],
     [1/3],
     [  1]])])]
+
+    Here, Eigenvalues are -1, 0, and 2 with multiplicity 1, 1, and 1
+    respectively. The associated eigenvector(s) are returned as a list of
+    matrices. The multiplicity of the eigenvalues is the length of list of
+    eigenvectors.
 
     See Also
     ========
