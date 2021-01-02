@@ -534,11 +534,20 @@ class Permutation(Atom):
     -----------------------
 
     In disjoint cycle notation, only the elements that have shifted are
-    indicated. In the above case, the 2 and 1 switched places. This can
-    be entered in two ways:
+    indicated.
 
-    >>> Permutation(1, 2) == Permutation([[1, 2]]) == p
-    True
+    For example, [1, 3, 2, 0] can be represented as (0, 1, 3)(2).
+    This can be understood from the 2 line format of the given permutation.
+    In the 2-line form,
+    [0    1    2   3]
+    [1    3    2   0]
+
+    The element in the 0th position is 1, so 0 -> 1. The element in the 1st
+    position is three, so 1 -> 3. And the element in the third position is again
+    0, so 3 -> 0. Thus, 0 -> 1 -> 3 -> 0, and 2 -> 2. Thus, this can be represented
+    as 2 cycles: (0, 1, 3)(2).
+    In common notation, singular cycles are not explicitly written as they can be
+    inferred implicitly.
 
     Only the relative ordering of elements in a cycle matter:
 
@@ -559,25 +568,27 @@ class Permutation(Atom):
     >>> _ == Permutation([[1, 2]])*Permutation([[1, 3]])*Permutation([[2, 3]])
     True
 
-        Caution: when the cycles have common elements
-        between them then the order in which the
-        permutations are applied matters. The
-        convention is that the permutations are
-        applied from *right to left*. In the following, the
-        transposition of elements 2 and 3 is followed
-        by the transposition of elements 1 and 2:
+        Caution: when the cycles have common elements between them then the order
+        in which the permutations are applied matters. This module applies
+        the permutations from *left to right*.
 
         >>> Permutation(1, 2)(2, 3) == Permutation([(1, 2), (2, 3)])
         True
         >>> Permutation(1, 2)(2, 3).list()
         [0, 3, 1, 2]
 
+        In the above case, (1,2) is computed before (2,3).
+        As 0 -> 0, 0 -> 0, element in position 0 is 0.
+        As 1 -> 2, 2 -> 3, element in position 1 is 3.
+        As 2 -> 1, 1 -> 1, element in position 2 is 1.
+        As 3 -> 3, 3 -> 2, element in position 3 is 2.
+
         If the first and second elements had been
         swapped first, followed by the swapping of the second
         and third, the result would have been [0, 2, 3, 1].
-        If, for some reason, you want to apply the cycles
-        in the order they are entered, you can simply reverse
-        the order of cycles:
+        If, you want to apply the cycles in the conventional
+        right to left order, call the function with arguments in reverse order
+        as demonstrated below:
 
         >>> Permutation([(1, 2), (2, 3)][::-1]).list()
         [0, 2, 3, 1]
