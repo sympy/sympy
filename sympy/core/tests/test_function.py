@@ -1366,6 +1366,16 @@ def test_Derivative_free_symbols():
     assert diff(f(x), (x, n)).free_symbols == {n, x}
 
 
+def test_issue_20683():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    y = Derivative(z, x).subs(x,0)
+    assert y.doit() == 0
+    y = Derivative(8, x).subs(x,0)
+    assert y.doit() == 0
+
+
 def test_issue_10503():
     f = exp(x**3)*cos(x**6)
     assert f.series(x, 0, 14) == 1 + x**3 + x**6/2 + x**9/6 - 11*x**12/24 + O(x**14)
