@@ -389,7 +389,7 @@ def JointEigenDistribution(mat):
     ==========
 
     mat: Matrix
-        The matrix under consideration
+        The matrix under consideration.
 
     Returns
     =======

@@ -131,7 +131,7 @@ _get_sample_class_drv = {
 
 
 class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
-    """ Discrete distribution of a single variable
+    """ Discrete distribution of a single variable.
 
     Serves as superclass for PoissonDistribution etc....
 
@@ -173,9 +173,9 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_cdf(self, **kwargs):
-        """ Compute the CDF from the PDF
+        """ Compute the CDF from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, z = symbols('x, z', integer=True, cls=Dummy)
         left_bound = self.set.inf
@@ -200,9 +200,9 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_characteristic_function(self, **kwargs):
-        """ Compute the characteristic function from the PDF
+        """ Compute the characteristic function from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
@@ -240,9 +240,9 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_quantile(self, **kwargs):
-        """ Compute the Quantile from the PDF
+        """ Compute the Quantile from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x = Dummy('x', integer=True)
         p = Dummy('p', real=True)
@@ -410,7 +410,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
 
     def sample(self, size=(), library='scipy'):
         """
-        Internal sample method
+        Internal sample method.
 
         Returns dictionary mapping RandomSymbol to realization value.
         """

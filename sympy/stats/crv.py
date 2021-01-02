@@ -78,7 +78,7 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
 class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
     """
     A domain with continuous support that has been further restricted by a
-    condition such as x > 3
+    condition such as x > 3.
     """
 
     def compute_expectation(self, expr, variables=None, **kwargs):
@@ -253,14 +253,17 @@ _get_sample_class_crv = {
 
 
 class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
-    """ Continuous distribution of a single variable
+    """ Continuous distribution of a single variable.
+
+    Explanation
+    ===========
 
     Serves as superclass for Normal/Exponential/UniformDistribution etc....
 
     Represented by parameters for each of the specific classes.  E.g
     NormalDistribution is represented by a mean and standard deviation.
 
-    Provides methods for pdf, cdf, and sampling
+    Provides methods for pdf, cdf, and sampling.
 
     See Also
     ========
@@ -300,9 +303,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_cdf(self, **kwargs):
-        """ Compute the CDF from the PDF
+        """ Compute the CDF from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, z = symbols('x, z', real=True, cls=Dummy)
         left_bound = self.set.start
@@ -327,9 +330,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_characteristic_function(self, **kwargs):
-        """ Compute the characteristic function from the PDF
+        """ Compute the characteristic function from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
@@ -349,9 +352,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_moment_generating_function(self, **kwargs):
-        """ Compute the moment generating function from the PDF
+        """ Compute the moment generating function from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
@@ -391,7 +394,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_quantile(self, **kwargs):
-        """ Compute the Quantile from the PDF
+        """ Compute the Quantile from the PDF.
 
         Returns a Lambda
         """
@@ -595,7 +598,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
     def sample(self, size=(), library='scipy'):
         """
-        Internal sample method
+        Internal sample method.
 
         Returns dictionary mapping RandomSymbol to realization value.
         """

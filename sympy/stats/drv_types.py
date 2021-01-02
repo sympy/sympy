@@ -127,6 +127,9 @@ def Geometric(name, p):
     r"""
     Create a discrete random variable with a Geometric distribution.
 
+    Explanation
+    ===========
+
     The density of the Geometric distribution is given by
 
     .. math::
@@ -209,6 +212,9 @@ def Hermite(name, a1, a2):
     r"""
     Create a discrete random variable with a Hermite distribution.
 
+    Explanation
+    ===========
+
     The density of the Hermite distribution is given by
 
     .. math::
@@ -285,6 +291,9 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
 def Logarithmic(name, p):
     r"""
     Create a discrete random variable with a Logarithmic distribution.
+
+    Explanation
+    ===========
 
     The density of the Logarithmic distribution is given by
 
@@ -366,6 +375,9 @@ def NegativeBinomial(name, r, p):
     r"""
     Create a discrete random variable with a Negative Binomial distribution.
 
+    Explanation
+    ===========
+
     The density of the Negative Binomial distribution is given by
 
     .. math::
@@ -438,6 +450,9 @@ class PoissonDistribution(SingleDiscreteDistribution):
 def Poisson(name, lamda):
     r"""
     Create a discrete random variable with a Poisson distribution.
+
+    Explanation
+    ===========
 
     The density of the Poisson distribution is given by
 
@@ -519,6 +534,9 @@ class SkellamDistribution(SingleDiscreteDistribution):
 def Skellam(name, mu1, mu2):
     r"""
     Create a discrete random variable with a Skellam distribution.
+
+    Explanation
+    ===========
 
     The Skellam is the distribution of the difference N1 - N2
     of two statistically independent random variables N1 and N2
@@ -603,6 +621,9 @@ def YuleSimon(name, rho):
     r"""
     Create a discrete random variable with a Yule-Simon distribution.
 
+    Explanation
+    ===========
+
     The density of the Yule-Simon distribution is given by
 
     .. math::
@@ -672,6 +693,9 @@ class ZetaDistribution(SingleDiscreteDistribution):
 def Zeta(name, s):
     r"""
     Create a discrete random variable with a Zeta distribution.
+
+    Explanation
+    ===========
 
     The density of the Zeta distribution is given by
 
