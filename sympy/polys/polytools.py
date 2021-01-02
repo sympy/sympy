@@ -91,8 +91,10 @@ class Poly(Basic):
     """
     Generic class for representing and operating on polynomial expressions.
 
+    See :ref:`polys-docs` for general documentation.
+
     Poly is a subclass of Basic rather than Expr but instances can be
-    converted to Expr with the ``as_expr`` method.
+    converted to Expr with the :py:meth:`~.Poly.as_expr` method.
 
     Examples
     ========
@@ -384,7 +386,25 @@ class Poly(Basic):
 
     @property
     def domain(self):
-        """Get the ground domain of ``self``. """
+        """Get the ground domain of a :py:class:`~.Poly`
+
+        Returns
+        =======
+
+        :py:class:`~.Domain`:
+            Ground domain of the :py:class:`~.Poly`.
+
+        Examples
+        ========
+
+            >>> from sympy import Poly, Symbol
+            >>> x = Symbol('x')
+            >>> p = Poly(x**2 + x)
+            >>> p
+            Poly(x**2 + x, x, domain='ZZ')
+            >>> p.domain
+            ZZ
+        """
         return self.get_domain()
 
     @property

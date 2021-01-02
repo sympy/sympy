@@ -12,7 +12,11 @@ from sympy.utilities import public
 
 @public
 class GMPYIntegerRing(IntegerRing):
-    """Integer ring based on GMPY's ``mpz`` type. """
+    """Integer ring based on GMPY's ``mpz`` type.
+
+    This will be the implementation of :ref:`ZZ` if ``gmpy`` or ``gmpy2`` is
+    installed. Elements will be of type ``gmpy.mpz``.
+    """
 
     dtype = GMPYInteger
     zero = dtype(0)

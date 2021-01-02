@@ -6,6 +6,9 @@ Polynomials Manipulation Module Reference
 
 .. automodule:: sympy.polys
 
+See :ref:`polys-docs` for an index of documentation for the polys module and
+:ref:`polys-basics` for an introductory explanation.
+
 Basic polynomial manipulation functions
 =======================================
 

@@ -69,6 +69,54 @@ GF(p)
 ZZ
 ==
 
+The :ref:`ZZ` domain represents the `integers`_ `\mathbb{Z}` as a
+:py:class:`~.Domain` in the domain system (see :ref:`polys-domainsintro`).
+
+By default a :py:class:`~.Poly` created from an expression with integer
+coefficients will have the domain :ref:`ZZ`::
+
+  >>> from sympy import Poly, Symbol
+  >>> x = Symbol('x')
+  >>> p = Poly(x**2 + 1)
+  >>> p
+  Poly(x**2 + 1, x, domain='ZZ')
+  >>> p.domain
+  ZZ
+
+The corresponding `field of fractions`_ is the domain of the rationals
+:ref:`QQ`. Conversely :ref:`ZZ` is the `ring of integers`_ of :ref:`QQ`::
+
+  >>> from sympy import ZZ, QQ
+  >>> ZZ.get_field()
+  QQ
+  >>> QQ.get_ring()
+  ZZ
+
+When using the domain directly :ref:`ZZ` can be used as a constructor to
+create instances which then support the operations ``+,-,*,**,//,%`` (true
+division ``/`` should not be used with :ref:`ZZ`)::
+
+  >>> x = ZZ(5)
+  >>> y = ZZ(2)
+  >>> x // y  # floor division
+  2
+  >>> x % y   # modulo division (remainder)
+  1
+
+The :py:meth:`~.Domain.gcd` method can be used to compute the `gcd`_ of any
+two elements::
+
+  >>> ZZ.gcd(ZZ(10), ZZ(2))
+  2
+
+There are two implementations of :ref:`ZZ` in SymPy. If ``gmpy`` or ``gmpy2``
+is installed then :ref:`ZZ` will be implemented by :py:class:`GMPYIntegerRing`
+and the elements will be instances of the ``gmpy.mpz`` type. Otherwise if
+``gmpy`` and ``gmpy2`` are not installed then :ref:`ZZ` will be implemented by
+:py:class:`PythonIntegerRing` which uses Python's standard builtin ``int``
+type. With larger integers ``gmpy`` can be more efficient so it is preferred
+when available.
+
 .. autoclass:: IntegerRing
    :members:
 
@@ -79,6 +127,47 @@ ZZ
 
 QQ
 ==
+
+The :ref:`QQ` domain represents the `rationals`_ `\mathbb{Q}` as a
+:py:class:`~.Domain` in the domain system (see :ref:`polys-domainsintro`).
+
+By default a :py:class:`~.Poly` created from an expression with rational
+coefficients will have the domain :ref:`QQ`::
+
+  >>> from sympy import Poly, Symbol
+  >>> x = Symbol('x')
+  >>> p = Poly(x**2 + x/2)
+  >>> p
+  Poly(x**2 + 1/2*x, x, domain='QQ')
+  >>> p.domain
+  QQ
+
+The corresponding `ring of integers`_ is the :py:class:`~.Domain` of the
+integers :ref:`ZZ`. Conversely :ref:`QQ` is the `field of fractions`_ of
+:ref:`ZZ`::
+
+  >>> from sympy import ZZ, QQ
+  >>> QQ.get_ring()
+  ZZ
+  >>> ZZ.get_field()
+  QQ
+
+When using the domain directly :ref:`QQ` can be used as a constructor to
+create instances which then support the operations ``+,-,*,**,/`` (true
+division ``/`` is always possible for nonzero divisors in :ref:`QQ`)::
+
+  >>> x = QQ(5)
+  >>> y = QQ(2)
+  >>> x / y  # true division
+  5/2
+
+There are two implementations of :ref:`QQ` in SymPy. If ``gmpy`` or ``gmpy2``
+is installed then :ref:`QQ` will be implemented by
+:py:class:`GMPYRationalField` and the elements will be instances of the
+``gmpy.mpq`` type. Otherwise if ``gmpy`` and ``gmpy2`` are not installed then
+:ref:`QQ` will be implemented by :py:class:`PythonRationalField` which is a
+pure Python class as part of sympy. The ``gmpy`` implementation is
+preferred because it is significantly faster.
 
 .. autoclass:: RationalField
    :members:
@@ -205,3 +294,10 @@ Dense polynomials
 
 .. autoclass:: ANP
    :members:
+
+
+.. _integers: https://en.wikipedia.org/wiki/Integer
+.. _rationals: https://en.wikipedia.org/wiki/Rational_number
+.. _gcd: https://en.wikipedia.org/wiki/Greatest_common_divisor
+.. _field of fractions: https://en.wikipedia.org/wiki/Field_of_fractions
+.. _ring of integers: https://en.wikipedia.org/wiki/Ring_of_integers
