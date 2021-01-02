@@ -1419,7 +1419,7 @@ def ExponentialPower(name, mu, alpha, beta):
         A location.
     alpha : Real number,``alpha > 0``
         A  scale.
-    beta : Real number, ``beta > 0`` 
+    beta : Real number, ``beta > 0``
         A shape.
 
     Returns
