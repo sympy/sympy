@@ -170,8 +170,12 @@ class DenseMatrix(MatrixBase):
         return classof(self, other)._new(self.rows, other.cols, new_mat, copy=False)
 
     def _eval_matrix_mul_elementwise(self, other):
-        mat = [a*b for a,b in zip(self._mat, other._mat)]
-        return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
+        #returns matrix with element-wise multiplication of elements
+        if self.shape!=other.shape:
+            raise ShapeError("Shapes of 2 matrices do not match")
+        else:
+            mat = [a*b for a,b in zip(self._mat, other._mat)]
+            return classof(self, other)._new(self.rows, self.cols, mat, copy=False)
 
     def _eval_inverse(self, **kwargs):
         return self.inv(method=kwargs.get('method', 'GE'),

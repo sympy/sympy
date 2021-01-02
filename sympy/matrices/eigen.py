@@ -703,6 +703,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     """
 
     if not M.is_square:
+        #only square matrices are diagonalizable.
         raise NonSquareMatrixError()
 
     is_diagonalizable, eigenvecs = _is_diagonalizable_with_eigen(M,
