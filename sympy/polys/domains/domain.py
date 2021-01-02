@@ -185,14 +185,130 @@ class Domain:
 
     """
 
-    dtype = None  # type: Optional[Type]
-    zero = None  # type: Optional[Any]
-    one = None  # type: Optional[Any]
+    #: The type (class) of the elements of this :py:class:`~.Domain`:
+    #:
+    #: >>> from sympy import ZZ, QQ, Symbol
+    #: >>> ZZ.dtype
+    #: <class 'int'>
+    #: >>> z = ZZ(2)
+    #: >>> z
+    #: 2
+    #: >>> type(z)
+    #: <class 'int'>
+    #: >>> type(z) == ZZ.dtype
+    #: True
+    #:
+    #: Every domain has an associated **dtype** ("datatype") which is the
+    #: class of the associated domain elements.
+    #:
+    #: See also
+    #: ========
+    #:
+    #: of_type
+    #:
+    dtype = None        # type: Optional[Type]
 
+    #: The zero element of the :py:class:`~.Domain`:
+    #:
+    #: >>> from sympy import QQ
+    #: >>> QQ.zero
+    #: 0
+    #: >>> QQ.of_type(QQ.zero)
+    #: True
+    #:
+    #: See also
+    #: ========
+    #:
+    #: of_type
+    #: one
+    #:
+    zero = None         # type: Optional[Any]
+
+    #: The one element of the :py:class:`~.Domain`:
+    #:
+    #: >>> from sympy import QQ
+    #: >>> QQ.one
+    #: 1
+    #: >>> QQ.of_type(QQ.one)
+    #: True
+    #:
+    #: See also
+    #: ========
+    #:
+    #: of_type
+    #: zero
+    #:
+    one = None          # type: Optional[Any]
+
+    #: Boolean flag indicating if the domain is a :py:class:`~.Ring`.
+    #:
+    #: >>> from sympy import ZZ
+    #: >>> ZZ.is_Ring
+    #: True
+    #:
+    #: Basically every :py:class:`~.Domain` represents a ring so this flag is
+    #: not that useful.
+    #:
+    #: See also
+    #: ========
+    #:
+    #: is_PID
+    #: is_Field
+    #: get_ring
+    #: has_assoc_Ring
+    #:
     is_Ring = False
+
+    #: Boolean flag indicating if the domain is a :py:class:`~.Field`.
+    #:
+    #: >>> from sympy import ZZ, QQ
+    #: >>> ZZ.is_Field
+    #: False
+    #: >>> QQ.is_Field
+    #: True
+    #:
+    #: See also
+    #: ========
+    #:
+    #: is_PID
+    #: is_Ring
+    #: get_field
+    #: has_assoc_Field
+    #:
     is_Field = False
 
+    #: Boolean flag indicating if the domain has an associated
+    #: :py:class:`~.Ring`.
+    #:
+    #: >>> from sympy import QQ
+    #: >>> QQ.has_assoc_Ring
+    #: True
+    #: >>> QQ.get_ring()
+    #: ZZ
+    #:
+    #: See also
+    #: ========
+    #:
+    #: is_Field
+    #: get_ring
+    #:
     has_assoc_Ring = False
+
+    #: Boolean flag indicating if the domain has an associated
+    #: :py:class:`~.Field`.
+    #:
+    #: >>> from sympy import ZZ
+    #: >>> ZZ.has_assoc_Field
+    #: True
+    #: >>> ZZ.get_field()
+    #: QQ
+    #:
+    #: See also
+    #: ========
+    #:
+    #: is_Field
+    #: get_field
+    #:
     has_assoc_Field = False
 
     is_FiniteField = is_FF = False
@@ -212,6 +328,23 @@ class Domain:
 
     is_Simple = False
     is_Composite = False
+
+    #: Boolean flag indicating if the domain is a `principal ideal domain`_.
+    #:
+    #: >>> from sympy import ZZ
+    #: >>> ZZ.has_assoc_Field
+    #: True
+    #: >>> ZZ.get_field()
+    #: QQ
+    #:
+    #: .. _principal ideal domain: https://en.wikipedia.org/wiki/Principal_ideal_domain
+    #:
+    #: See also
+    #: ========
+    #:
+    #: is_Field
+    #: get_field
+    #:
     is_PID = False
 
     has_CharacteristicZero = False
@@ -246,6 +379,7 @@ class Domain:
 
     @property
     def tp(self):
+        """Alias for :py:attr:`~.Domain.dtype`"""
         return self.dtype
 
     def __call__(self, *args):
@@ -655,19 +789,202 @@ class Domain:
         return a ** b
 
     def exquo(self, a, b):
-        """Exact quotient of ``a`` and ``b``, implies something. """
+        """Exact quotient of *a* and *b*. Analogue of ``a / b``.
+
+        Explanation
+        ===========
+
+        This is essentially the same as ``a / b`` except that an error will be
+        raised if the division is inexact (if there is any remainder) and the
+        result will always be a domain element. When working in a
+        :py:class:`~.Domain` that is not a :py:class:`~.Field` (e.g. :ref:`ZZ`
+        or :ref:`K[x]`) ``exquo`` should be used instead of ``/``.
+
+        The key invariant is that if ``q = K.exquo(a, b)`` (and ``exquo`` does
+        not raise an exception) then ``a == b*q``.
+
+        Examples
+        ========
+
+        We can use ``K.exquo`` instead of ``/`` for exact division::
+
+           >>> from sympy import ZZ
+           >>> ZZ.exquo(ZZ(4), ZZ(2))
+           2
+           >>> ZZ.exquo(ZZ(5), ZZ(2))
+           Traceback (most recent call last):
+               ...
+           sympy.polys.polyerrors.ExactQuotientFailed: 2 does not divide 5 in ZZ
+
+        Over a :py:class:`~.Field` such as :ref:`QQ`, division (with nonzero
+        divisor) is always exact so in that case ``/`` can be used instead of
+        :py:meth:`~.Domain.exquo`::
+
+           >>> from sympy import QQ
+           >>> QQ.exquo(QQ(5), QQ(2))
+           5/2
+           >>> QQ(5) / QQ(2)
+           5/2
+
+        Parameters
+        ==========
+
+        a: domain element
+            The dividend
+        b: domain element
+            The divisor
+
+        Returns
+        =======
+
+        q: domain element
+            The exact quotient
+
+        Raises
+        ======
+
+        ExactQuotientFailed: if exact division is not possible.
+        ZeroDivisionError: when the divisor is zero.
+
+        See also
+        ========
+
+        quo: Analogue of ``a // b``
+        rem: Analogue of ``a % b``
+        div: Analogue of ``divmod(a, b)``
+
+        Notes
+        =====
+
+        Since the default :py:attr:`~.Domain.dtype` for :ref:`ZZ` is ``int``
+        (or ``mpz``) division as ``a / b`` should not be used as it would give
+        a ``float``::
+
+            >>> ZZ(4) / ZZ(2)
+            2.0
+            >>> ZZ(5) / ZZ(2)
+            2.5
+
+        Using ``/`` with :ref:`ZZ` will lead to incorrect results so
+        :py:meth:`~.Domain.div` should be used instead.
+
+        """
         raise NotImplementedError
 
     def quo(self, a, b):
-        """Quotient of ``a`` and ``b``, implies something.  """
+        """Quotient of *a* and *b*. Analogue of ``a // b``.
+
+        ``K.quo(a, b)`` is equivalent to ``K.div(a, b)[0]``. See
+        :py:meth:`~.Domain.div` for more explanation.
+
+        See also
+        ========
+
+        rem: Analogue of ``a % b``
+        div: Analogue of ``divmod(a, b)``
+        exquo: Analogue of ``a / b``
+        """
         raise NotImplementedError
 
     def rem(self, a, b):
-        """Remainder of ``a`` and ``b``, implies ``__mod__``.  """
+        """Modulo division of *a* and *b*. Analogue of ``a % b``.
+
+        ``K.rem(a, b)`` is equivalent to ``K.div(a, b)[1]``. See
+        :py:meth:`~.Domain.div` for more explanation.
+
+        See also
+        ========
+
+        quo: Analogue of ``a // b``
+        div: Analogue of ``divmod(a, b)``
+        exquo: Analogue of ``a / b``
+        """
         raise NotImplementedError
 
     def div(self, a, b):
-        """Division of ``a`` and ``b``, implies something. """
+        """Quotient and remainder for *a* and *b*. Analogue of ``divmod(a, b)``
+
+        Explanation
+        ===========
+
+        This is essentially the same as ``divmod(a, b)`` except that is more
+        consistent when working over some :py:class:`~.Field` domains such as
+        :ref:`QQ`. When working over an arbitrary :py:class:`~.Domain` the
+        :py:meth:`~.Domain.div` method should be used instead of ``divmod``.
+
+        The key invariant is that if ``q, r = K.div(a, b)`` then
+        ``a == b*q + r``.
+
+        The result of ``K.div(a, b)`` is the same as the tuple
+        ``(K.quo(a, b), K.rem(a, b))`` except that if both quotient and
+        remainder are needed then it is more efficient to use
+        :py:meth:`~.Domain.div`.
+
+        Examples
+        ========
+
+        We can use ``K.div`` instead of ``divmod`` for floor division and
+        remainder::
+
+           >>> from sympy import ZZ, QQ
+           >>> ZZ.div(ZZ(5), ZZ(2))
+           (2, 1)
+
+        If ``K`` is a :py:class:`~.Field` then the division is always exact
+        with a remainder of :py:attr:`~.Domain.zero`::
+
+           >>> QQ.div(QQ(5), QQ(2))
+           (5/2, 0)
+
+        Parameters
+        ==========
+
+        a: domain element
+            The dividend
+        b: domain element
+            The divisor
+
+        Returns
+        =======
+
+        (q, r): tuple of domain elements
+            The quotient and remainder
+
+        Raises
+        ======
+
+        ZeroDivisionError: when the divisor is zero.
+
+        See also
+        ========
+
+        quo: Analogue of ``a // b``
+        rem: Analogue of ``a % b``
+        exquo: Analogue of ``a / b``
+
+        Notes
+        =====
+
+        If ``gmpy`` is installed then the ``gmpy.mpq`` type will be used as
+        the :py:attr:`~.Domain.dtype` for :ref:`QQ`. The ``gmpy.mpq`` type
+        defines ``divmod`` in a way that is undesirable so
+        :py:meth:`~.Domain.div` should be used instead of ``divmod``::
+
+            >>> a = QQ(1)
+            >>> b = QQ(3, 2)
+            >>> a               # doctest: +SKIP
+            mpq(1,1)
+            >>> b               # doctest: +SKIP
+            mpq(3,2)
+            >>> divmod(a, b)    # doctest: +SKIP
+            (mpz(0), mpq(1,1))
+            >>> QQ.div(a, b)    # doctest: +SKIP
+            (mpq(2,3), mpq(0,1))
+
+        Using ``//`` or ``%`` with :ref:`QQ` will lead to incorrect results so
+        :py:meth:`~.Domain.div` should be used instead.
+
+        """
         raise NotImplementedError
 
     def invert(self, a, b):

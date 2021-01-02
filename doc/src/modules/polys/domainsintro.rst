@@ -369,8 +369,9 @@ C rather than Python and is many times faster than the pure Python
 implementation of :ref:`QQ` that is used when gmpy is not installed.
 
 In general the Python type used for the elements of a domain can be checked
-from the `dtype` attribute of the domain. The :py:meth:`~.Domain.of_type`
-method can be used to check if an object is an instance of ``dtype``.::
+from the py:attr:`~.Domain.dtype` attribute of the domain. The
+:py:meth:`~.Domain.of_type` method can be used to check if an object is an
+instance of :py:attr:`.Domain.dtype`.::
 
   >>> z = ZZ(2)
   >>> type(z)
@@ -433,11 +434,11 @@ conversion will fail if the expression can not be represented in the domain::
 
 We have already seen that in some cases we can use the domain object itself as
 a constructor e.g. ``QQ(2)``. This will generally work provided the arguments
-given are valid for the ``dtype`` of the domain. Although it is convenient to
-use this in interactive sessions and in demonstrations it is generally better
-to use the :py:meth:`~.Domain.from_sympy` method for constructing domain elements
-from sympy expressions (or from objects that can be sympified to sympy
-expressions).
+given are valid for the :py:attr:`.Domain.dtype` of the domain. Although it is
+convenient to use this in interactive sessions and in demonstrations it is
+generally better to use the :py:meth:`~.Domain.from_sympy` method for
+constructing domain elements from sympy expressions (or from objects that can
+be sympified to sympy expressions).
 
 It is important not to mix domain elements with other Python types such as
 ``int``, ``float``, as well as standard sympy :py:class:`~.Expr` expressions.
