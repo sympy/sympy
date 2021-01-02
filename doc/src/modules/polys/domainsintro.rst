@@ -348,7 +348,7 @@ This is the analogue of ``a / b`` but where the division is expected to be exact
   >>> ZZ.exquo(ZZ(5), ZZ(3))
   Traceback (most recent call last):
   ...
-  sympy.polys.polyerrors.ExactQuotientFailed: 3 does not divide 5 in ZZ
+  ExactQuotientFailed: 3 does not divide 5 in ZZ
 
 The exact methods and attributes of the domain elements are not guaranteed in
 general beyond the basic arithmetic operations. It should not be presumed that
@@ -430,7 +430,7 @@ conversion will fail if the expression can not be represented in the domain::
   >>> ZZ.from_sympy(e)
   Traceback (most recent call last):
   ...
-  sympy.polys.polyerrors.CoercionFailed: expected an integer, got sqrt(2)
+  CoercionFailed: expected an integer, got sqrt(2)
 
 We have already seen that in some cases we can use the domain object itself as
 a constructor e.g. ``QQ(2)``. This will generally work provided the arguments

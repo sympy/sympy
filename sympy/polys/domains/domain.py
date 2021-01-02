@@ -927,7 +927,7 @@ class Domain:
            >>> ZZ.exquo(ZZ(5), ZZ(2))
            Traceback (most recent call last):
                ...
-           sympy.polys.polyerrors.ExactQuotientFailed: 2 does not divide 5 in ZZ
+           ExactQuotientFailed: 2 does not divide 5 in ZZ
 
         Over a :py:class:`~.Field` such as :ref:`QQ`, division (with nonzero
         divisor) is always exact so in that case ``/`` can be used instead of

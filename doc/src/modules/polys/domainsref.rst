@@ -12,6 +12,7 @@ what the domain system is and how it is used it is recommended to read
 :py:class:`~.Domain` class and its subclasses (the specific domains such as
 ``ZZ``) as well as the classes that represent the domain elements.
 
+
 Domains
 =======
 
@@ -30,6 +31,7 @@ using the python built-in integers, or using gmpy. Note that various aliases
 are created automatically depending on the libraries available. As such e.g.
 ``ZZ`` always refers to the most efficient implementation of the integer ring
 available.
+
 
 Abstract Domains
 ================
@@ -52,6 +54,7 @@ Abstract Domains
 .. autoclass:: sympy.polys.domains.compositedomain.CompositeDomain
    :members:
 
+
 .. _GF(p):
 
 GF(p)
@@ -65,6 +68,7 @@ GF(p)
 .. autoclass:: GMPYFiniteField
 
 .. _ZZ:
+
 
 ZZ
 ==
@@ -126,6 +130,7 @@ when available.
 
 .. _QQ:
 
+
 QQ
 ==
 
@@ -178,7 +183,20 @@ preferred because it is significantly faster.
 
 .. autoclass:: PythonRational
 
+
+Gaussian domains
+================
+
+The Gaussian domains :ref:`ZZ_I` and :ref:`QQ_I` share common superclasses
+:py:class:`~.GaussianElement` for the domain elements and
+:py:class:`~.GaussianDomain` for the domains themselves.
+
+.. autoclass:: sympy.polys.domains.gaussiandomains.GaussianDomain
+.. autoclass:: sympy.polys.domains.gaussiandomains.GaussianElement
+
+
 .. _ZZ_I:
+
 
 ZZ_I
 ====
@@ -188,6 +206,7 @@ ZZ_I
 
 .. _QQ_I:
 
+
 QQ_I
 ====
 
@@ -196,6 +215,7 @@ QQ_I
 
 .. _QQ(a):
 
+
 QQ<a>
 =====
 
@@ -203,6 +223,7 @@ QQ<a>
    :members:
 
 .. _RR:
+
 
 RR
 ==
@@ -214,6 +235,7 @@ RR
 
 .. _CC:
 
+
 CC
 ==
 
@@ -224,6 +246,7 @@ CC
 
 .. _K[x]:
 
+
 K[x]
 ====
 
@@ -231,6 +254,7 @@ K[x]
    :members:
 
 .. _K(x):
+
 
 K(x)
 ====
@@ -240,11 +264,13 @@ K(x)
 
 .. _EX:
 
+
 EX
 ==
 
 .. autoclass:: ExpressionDomain
    :members:
+
 
 Sparse polynomials
 ==================
@@ -264,6 +290,7 @@ Sparse polynomials are represented as dictionaries.
 .. autoclass:: PolyElement
    :members:
 
+
 Sparse rational functions
 =========================
 
@@ -281,6 +308,7 @@ Sparse polynomials are represented as dictionaries.
 
 .. autoclass:: FracElement
    :members:
+
 
 Dense polynomials
 =================
