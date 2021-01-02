@@ -81,10 +81,10 @@ expressions: "tree", "dense polynomial"  and "sparse polynomial".
 Tree representation
 *******************
 
-The most general representation is as a `tree`_ and this is the representation
-used for most ordinary SymPy expressions which are instances of
-:py:class:`~.Expr` (a subclass of :py:class`~.Basic`). We can see this
-representation using the :py:func:`~.srepr` function::
+The most general representation of symbolic expressions is as a `tree`_ and
+this is the representation used for most ordinary SymPy expressions which are
+instances of :py:class:`~.Expr` (a subclass of :py:class:`~.Basic`). We can see
+this representation using the :py:func:`~.srepr` function::
 
   >>> from sympy import Symbol, srepr
   >>> x = Symbol('x')

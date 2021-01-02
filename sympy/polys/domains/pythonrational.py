@@ -15,10 +15,13 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
     """
     Rational number type based on Python integers.
 
-    This was originally needed for compatibility with older Python
-    versions which don't support Fraction. It should probably be removed now
-    and replaced by the stdlib Fraction implementation. If ``gmpy`` is
-    installed then ``gmpy.mpq`` is much faster than
+    This is the domain element ``dtype`` for the :py:class:`~.Domain`
+    :ref:`QQ` representing rational numbers if ``gmpy`` is not installed.
+
+    This was originally needed for compatibility with older Python versions
+    which don't support Fraction. It should probably be removed now and
+    replaced by the stdlib Fraction implementation. If ``gmpy`` is installed
+    then ``gmpy.mpq`` is used which is much faster than
     :py:class:`PythonRational`. Otherwise this implementation is slower than
     ``Fraction`` so it should be just be removed.
 
