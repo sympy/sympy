@@ -5,7 +5,7 @@ from .core import do_one, exhaust, switch
 from .traverse import top_down
 
 def subs(d, **kwargs):
-    """ Full simultaneous exact substitution
+    """ Full simultaneous exact substitution.
 
     Examples
     ========
@@ -23,7 +23,10 @@ def subs(d, **kwargs):
         return lambda x: x
 
 def canon(*rules, **kwargs):
-    """ Strategy for canonicalization
+    """ Strategy for canonicalization.
+
+    Explanation
+    ===========
 
     Apply each rule in a bottom_up fashion through the tree.
     Do each one in turn.
@@ -36,6 +39,9 @@ def typed(ruletypes):
 
     inputs:
         ruletypes -- a dict mapping {Type: rule}
+
+    Examples
+    ========
 
     >>> from sympy.strategies import rm_id, typed
     >>> from sympy import Add, Mul
