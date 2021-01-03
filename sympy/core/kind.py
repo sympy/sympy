@@ -291,7 +291,6 @@ class KindDispatcher:
                 self._dispatcher.add(tuple(reversed(types)), func, **kwargs)
         return _
 
-    @cacheit
     def __call__(self, *args, **kwargs):
         if self.commutative:
             kinds = frozenset(args)
@@ -302,7 +301,10 @@ class KindDispatcher:
                 if prev is not a:
                     kinds.append(a)
                     prev = a
+        return self.dispatch_kinds(self, kinds, **kwargs)
 
+    @cacheit
+    def dispatch_kinds(self, kinds, **kwargs)
         # Quick exit for the case where all kinds are same
         if len(kinds) == 1:
             result, = kinds
