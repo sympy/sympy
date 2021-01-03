@@ -320,10 +320,17 @@ class KindDispatcher:
                 result = kind
             else:
                 prev_kind = result
-                try:
-                    result = self._dispatcher(prev_kind, kind)
-                except NotImplementedError:
+
+                t1, t2 = type(prev_kind), type(kind)
+                func = self._dispatcher.dispatch(t1, t2)
+                if func is None and self.commutative:
+                    # try reversed order
+                    func = self._dispatcher.dispatch(t2, t1)
+                if func is None:
+                    # unregistered kind relation
                     result = UndefinedKind
+                else:
+                    result = func(prev_kind, kind)
                 if not isinstance(result, Kind):
                     raise RuntimeError(
                         "Dispatcher for {!r} and {!r} must return a Kind, but got {!r}".format(

@@ -784,23 +784,22 @@ class MatrixKind(Kind):
         return "MatrixKind(%s)" % self.element_kind
 
 
-@Mul._kind_dispatcher.register(MatrixKind, _NumberKind)
-def mat_num_mul(k1, k2):
-    """Return MatrixKind. The element kind is selected by recursive dispatching."""
-    # Deal with Mul._kind_dispatcher's commutativity
-    elemk = Mul._kind_dispatcher(k1.element_kind, NumberKind)
-    return MatrixKind(elemk)
-
 @Mul._kind_dispatcher.register(_NumberKind, MatrixKind)
 def num_mat_mul(k1, k2):
-    """Return MatrixKind. The element kind is selected by recursive dispatching."""
+    """
+    Return MatrixKind. The element kind is selected by recursive dispatching.
+    Do not need to dispatch in reversed order because KindDispatcher
+    searches for this automatically.
+    """
     # Deal with Mul._kind_dispatcher's commutativity
     elemk = Mul._kind_dispatcher(NumberKind, k2.element_kind)
     return MatrixKind(elemk)
 
 @Mul._kind_dispatcher.register(MatrixKind, MatrixKind)
 def mat_mat_mul(k1, k2):
-    """Return MatrixKind. The element kind is selected by recursive dispatching."""
+    """
+    Return MatrixKind. The element kind is selected by recursive dispatching.
+    """
     elemk = Mul._kind_dispatcher(k1.element_kind, k2.element_kind)
     return MatrixKind(elemk)
 
