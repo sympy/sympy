@@ -35,13 +35,31 @@ class FiniteField(Field, SimpleDomain):
         GF(2)
 
     It is possible to factorise a polynomial over :ref:`GF(p)` using the
-    modulus argument to :py:func:`~.factor`::
+    modulus argument to :py:func:`~.factor` or by specifying the domain
+    explicitly. The domain can also be given as a string::
 
-        >>> from sympy import factor
+        >>> from sympy import factor, GF
         >>> factor(x**2 + 1)
         x**2 + 1
         >>> factor(x**2 + 1, modulus=2)
         (x + 1)**2
+        >>> factor(x**2 + 1, domain=GF(2))
+        (x + 1)**2
+        >>> factor(x**2 + 1, domain='GF(2)')
+        (x + 1)**2
+
+    It is also possible to use :ref:`GF(p)` with the :py:func:`~.cancel`
+    and :py:func:`~.gcd` functions::
+
+        >>> from sympy import cancel, gcd
+        >>> cancel((x**2 + 1)/(x + 1))
+        (x**2 + 1)/(x + 1)
+        >>> cancel((x**2 + 1)/(x + 1), domain=GF(2))
+        x + 1
+        >>> gcd(x**2 + 1, x + 1)
+        1
+        >>> gcd(x**2 + 1, x + 1, domain=GF(2))
+        x + 1
 
     When using the domain directly :ref:`GF(p)` can be used as a constructor
     to create instances which then support the operations ``+,-,*,**,/``
@@ -58,6 +76,8 @@ class FiniteField(Field, SimpleDomain):
         2 mod 5
         >>> x * y
         1 mod 5
+        >>> x / y
+        4 mod 5
 
     Notes
     =====

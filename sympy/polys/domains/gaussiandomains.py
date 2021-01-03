@@ -500,11 +500,22 @@ class GaussianRationalField(GaussianDomain, Field):
     The :ref:`QQ_I` domain can be used to factorise polynomials that are
     reducible over the Gaussian rationals::
 
-        >>> from sympy import factor
+        >>> from sympy import factor, QQ_I
         >>> factor(x**2/4 + 1)
         (x**2 + 4)/4
         >>> factor(x**2/4 + 1, domain='QQ_I')
         (x - 2*I)*(x + 2*I)/4
+        >>> factor(x**2/4 + 1, domain=QQ_I)
+        (x - 2*I)*(x + 2*I)/4
+
+    It is also possible to specify the :ref:`QQ_I` domain explicitly with
+    polys functions like :py:func:`~.apart`::
+
+        >>> from sympy import apart
+        >>> apart(1/(1 + x**2))
+        1/(x**2 + 1)
+        >>> apart(1/(1 + x**2), domain=QQ_I)
+        I/(2*(x + I)) - I/(2*(x - I))
 
     The corresponding `ring of integers`_ is the domain of the Gaussian
     integers :ref:`ZZ_I`. Conversely :ref:`QQ_I` is the `field of fractions`_
