@@ -54,10 +54,10 @@ class Variable(object):
         return "Variable(%s)" % str(self.arg)
 
 class CondVariable(object):
-    """ A wild token that matches conditionally
+    """ A wild token that matches conditionally.
 
-    arg   - a wild token
-    valid - an additional constraining function on a match
+    arg   - a wild token.
+    valid - an additional constraining function on a match.
     """
     def __init__(self, arg, valid):
         self.arg = arg
@@ -75,13 +75,13 @@ class CondVariable(object):
         return "CondVariable(%s)" % str(self.arg)
 
 def unify(x, y, s=None, **fns):
-    """ Unify two expressions
+    """ Unify two expressions.
 
     Parameters
     ==========
 
-        x, y - expression trees containing leaves, Compounds and Variables
-        s    - a mapping of variables to subtrees
+        x, y - expression trees containing leaves, Compounds and Variables.
+        s    - a mapping of variables to subtrees.
 
     Returns
     =======
@@ -173,9 +173,12 @@ def unpack(x):
 
 def allcombinations(A, B, ordered):
     """
-    Restructure A and B to have the same number of elements
+    Restructure A and B to have the same number of elements.
 
-    ordered must be either 'commutative' or 'associative'
+    Parameters
+    ==========
+
+    ordered must be either 'commutative' or 'associative'.
 
     A and B can be rearranged so that the larger of the two lists is
     reorganized into smaller sublists.
@@ -215,7 +218,7 @@ def allcombinations(A, B, ordered):
             yield partition(A, part), tuple((b,) for b in B)
 
 def partition(it, part):
-    """ Partition a tuple/list into pieces defined by indices
+    """ Partition a tuple/list into pieces defined by indices.
 
     Examples
     ========
@@ -227,7 +230,7 @@ def partition(it, part):
     return type(it)([index(it, ind) for ind in part])
 
 def index(it, ind):
-    """ Fancy indexing into an indexable iterable (tuple, list)
+    """ Fancy indexing into an indexable iterable (tuple, list).
 
     Examples
     ========
