@@ -231,8 +231,6 @@ from .calculus import (euler_equations, singularities, is_increasing,
 
 from .algebras import Quaternion
 
-from .relation import rearrange, eqnsimp, solveeqn
-
 from .printing import (pager_print, pretty, pretty_print, pprint,
         pprint_use_unicode, pprint_try_use_unicode, latex, print_latex,
         multiline_latex, mathml, print_mathml, python, print_python, pycode,
@@ -475,9 +473,6 @@ __all__ = [
 
     # sympy.algebras
     'Quaternion',
-
-    # sympy.relation
-    'rearrange', 'eqnsimp', 'solveeqn',
 
     # sympy.printing
     'pager_print', 'pretty', 'pretty_print', 'pprint', 'pprint_use_unicode',

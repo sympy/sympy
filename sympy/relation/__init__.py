@@ -20,10 +20,3 @@ from .binrel import BinaryRelation, AppliedBinaryRelation
 from .equality import Equal
 from .inequality import GreaterThan, GreaterEq, LessThan, LessEq
 from .eqntools import rearrange, eqnsimp, solveeqn
-
-from sympy.assumptions import Q
-Q.eq = Equal()
-Q.gt = GreaterThan()
-Q.ge = GreaterEq()
-Q.lt = LessThan()
-Q.le = LessEq()

@@ -1267,6 +1267,31 @@ class AssumptionKeys:
         """
         return Predicate('unit_triangular')
 
+    @property
+    def eq(self):
+        from sympy.relation import Equal
+        return Equal()
+
+    @property
+    def gt(self):
+        from sympy.relation import GreaterThan
+        return GreaterThan()
+
+    @property
+    def ge(self):
+        from sympy.relation import GreaterEq
+        return GreaterEq()
+
+    @property
+    def lt(self):
+        from sympy.relation import LessThan
+        return LessThan()
+
+    @property
+    def le(self):
+        from sympy.relation import LessEq
+        return LessEq()
+
 
 Q = AssumptionKeys()
 
