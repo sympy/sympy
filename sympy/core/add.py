@@ -143,8 +143,8 @@ class Add(Expr, AssocOp):
     See Also
     ========
 
-    sympy.matrices.expressions.matadd.MatAdd
-    sympy.vector.vector.VectorAdd
+    MatAdd
+    VectorAdd
 
     """
 
