@@ -79,7 +79,7 @@ def _af_rmuln(*permutations):
 
     rmul, _af_rmul
     """
-    if len(permutations)==0:
+    if len(permutations) == 0:
         raise ValueError("List must not be empty")
     else:
         result, perms = permutations[0], permutations[1:]
