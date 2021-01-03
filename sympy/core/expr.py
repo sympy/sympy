@@ -857,6 +857,7 @@ class Expr(Basic, EvalfMixin):
             return False
 
     def _eval_is_extended_positive_negative(self, positive):
+        from sympy.core.numbers import pure_complex
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
@@ -878,8 +879,15 @@ class Expr(Basic, EvalfMixin):
             if n2 is S.NaN:
                 return None
 
-            r, i = self.evalf(2).as_real_imag()
-            if not i.is_Number or not r.is_Number:
+            f = self.evalf(2)
+            if f.is_Float:
+                match = f, S.Zero
+            else:
+                match = pure_complex(f)
+            if match is None:
+                return False
+            r, i = match
+            if not (i.is_Number and r.is_Number):
                 return False
             if r._prec != 1 and i._prec != 1:
                 return bool(not i and ((r > 0) if positive else (r < 0)))
