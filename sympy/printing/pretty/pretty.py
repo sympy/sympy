@@ -2714,6 +2714,22 @@ class PrettyPrinter(Printer):
     def _print_Str(self, s):
         return self._print(s.name)
 
+    def _print_AppliedBinaryRelation(self, expr):
+        rel, args = expr.function, expr.arguments
+        lhs, rhs = args
+
+        if hasattr(rel, 'str_name'):
+            name = rel.str_name
+        elif hasattr(rel, 'name'):
+            name = rel.name
+        else:
+            name = type(rel).__name__
+        op = prettyForm(name)
+        l = self._print(lhs)
+        r = self._print(rhs)
+        pform = prettyForm(*stringPict.next(l, ' ', op, ' ', r))
+        return pform
+
 @print_function(PrettyPrinter)
 def pretty(expr, **settings):
     """Returns a string containing the prettified form of expr.

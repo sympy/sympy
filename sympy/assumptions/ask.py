@@ -1267,6 +1267,11 @@ class AssumptionKeys:
         """
         return Predicate('unit_triangular')
 
+    @property
+    def eq(self):
+        from sympy.relation import Equal
+        return Equal()
+
 
 Q = AssumptionKeys()
 
