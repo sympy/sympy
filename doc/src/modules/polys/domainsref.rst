@@ -272,6 +272,12 @@ EX
    :members:
 
 
+Quotient ring
+=============
+
+.. autoclass:: sympy.polys.domains.quotientring.QuotientRing
+
+
 Sparse polynomials
 ==================
 
