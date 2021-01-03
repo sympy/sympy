@@ -339,7 +339,6 @@ def _invert_complex(f, g_ys, symbol):
                                imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
     if isinstance(f, exp):
-        x = Symbol('x')
         from sympy.abc import k,n
         if isinstance(g_ys,list) and not isinstance(g_ys, FiniteSet) \
                         and not isinstance(g_ys,ImageSet):
