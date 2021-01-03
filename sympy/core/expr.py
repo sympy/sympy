@@ -2906,7 +2906,7 @@ class Expr(Basic, EvalfMixin):
             If "x0" is an infinity object
 
         """
-        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling
+        from sympy import collect, Dummy, Order, Rational, Symbol, ceiling, ratsimp
         if x is None:
             syms = self.free_symbols
             if not syms:
@@ -3004,7 +3004,7 @@ class Expr(Basic, EvalfMixin):
                     o = S.Zero
 
             try:
-                return collect(s1, x) + o
+                return ratsimp(collect(s1, x) + o)
             except NotImplementedError:
                 return s1 + o
 
