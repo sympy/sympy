@@ -795,7 +795,7 @@ def mat_num_mul(k1, k2):
 def num_mat_mul(k1, k2):
     """Return MatrixKind. The element kind is selected by recursive dispatching."""
     # Deal with Mul._kind_dispatcher's commutativity
-    elemk = Mul._kind_dispatcher(k2.element_kind, NumberKind)
+    elemk = Mul._kind_dispatcher(NumberKind, k2.element_kind)
     return MatrixKind(elemk)
 
 @Mul._kind_dispatcher.register(MatrixKind, MatrixKind)
