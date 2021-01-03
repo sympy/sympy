@@ -111,7 +111,7 @@ class Mul(Expr, AssocOp):
     4. Term sorting
         ``Mul(y, x, 2)`` -> ``Mul(2, x, y)``
 
-    Since multiplication can be vector space operation, arguments may\
+    Since multiplication can be vector space operation, arguments may
     have the different :obj:`sympy.core.kind.Kind()`. Kind of the
     resulting object is automatically inferred.
 

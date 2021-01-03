@@ -99,7 +99,10 @@ class Add(Expr, AssocOp):
     element is passed, that element is returned.
 
     Note that ``Add(*args)`` is more efficient than ``sum(args)`` because
-    the algoritm is linear in the number of terms.
+    it flattens the arguments. ``sum(a, b, c, ...)`` recursively adds the
+    arguments as ``a + (b + (c + ...))``, which has quadratic complexity.
+    On the other hand, ``Add(a, b, c, d)`` does not assume nested
+    structure, making the complexity linear.
 
     Since addition is group operation, every argument should have the
     same :obj:`sympy.core.kind.Kind()`.
