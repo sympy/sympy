@@ -13,7 +13,7 @@ from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
 from sympy.testing.pytest import XFAIL, slow
 
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i
+from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k, n
 
 
 def test_issue_7263():
@@ -914,3 +914,16 @@ def test_issue_19484():
 def test_issue_19161():
     polynomial = Poly('x**2').simplify()
     assert (polynomial-x**2).simplify() == 0
+
+def test_issue_11004():
+    N=Symbol('N')
+    half = Float('0.5', 4)
+    def f(n):
+        return sqrt(2*pi*n)*(n/E)**n
+    def m(n, k):
+        return  f(n)/ (f(n/k)**k)
+    def p(n,k):
+        return m(n, k)/(k**n)
+    q = (p(n, 2)/p(n, 3)).simplify()
+    z = log(p(n, k)/p(n, k+1)).expand(force=True)
+    assert simplify(z.subs(n,N).n(4)) == half*k*log(k) - half*k*log(k + 1) + half*log(N) - half*log(k + 1) + Float(0.9189224, 4)
