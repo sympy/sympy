@@ -1823,32 +1823,32 @@ def _is_lambert(f, symbol):
     Equations containing `Pow`, `log` or `exp` terms are currently
     treated as Lambert types.
     """
-    if any(isinstance(arg1, (HyperbolicFunction,TrigonometricFunction)) for arg1 in _term_factors(f.expand())):
+    expanded_terms_factors = list(_term_factors(f.expand()))
+
+    if any(isinstance(arg1, (HyperbolicFunction,TrigonometricFunction)) for arg1 in expanded_terms_factors):
         j = 0
-        for arg0 in _term_factors(f.expand()):
-            if arg0.has(HyperbolicFunction,TrigonometricFunction,Dummy,Symbol):
-                if isinstance(arg0,(Dummy,Symbol,Pow)):
+        for arg0 in expanded_terms_factors:
+            if arg0.has(HyperbolicFunction,TrigonometricFunction,Dummy,Symbol) and isinstance(arg0,(Dummy,Symbol,Pow)):
                     j += 1
-                else:
-                    return False
         return j> 0
 
-    elif any(isinstance(arg1, (Pow, exp)) for arg1 in _term_factors(f.expand())):
-        for arg1 in _term_factors(f.expand()):
+    elif any(isinstance(arg1, (Pow, exp)) for arg1 in expanded_terms_factors):
+        for arg1 in expanded_terms_factors:
             base, exponent = arg1.as_base_exp()
-            if isinstance(arg1,(Pow,Mul)) and len(list(Add.make_args(f))) == 1:
+            add_args = list(Add.make_args(f))
+            if isinstance(arg1,(Pow,Mul)) and len(add_args) == 1:
                 for a in list(Mul.make_args(f)):
                     if isinstance(a,exp):
                         base, exponent = a.as_base_exp()
-            if (not exponent.has(symbol,Dummy) and len(list(Add.make_args(f))) > 1) or (base.has(Dummy)):
+            if (not exponent.has(symbol,Dummy) and len(add_args) > 1) or (base.has(Dummy)):
                 continue
             if exponent.has(symbol,Dummy, TrigonometricFunction, HyperbolicFunction): # exponent is variable
-                if len(list(Add.make_args(f))) <= 2:
+                if len(add_args) <= 2:
                     j=0
-                    for args in list(Add.make_args(f)):
+                    for args in add_args:
                         x = Symbol('x')
                         if (isinstance(args,Mul) and args.atoms(exp(x))) and (args.atoms(symbol) or args.atoms(Dummy)):
-                            if len(list(Add.make_args(f))) == 1:
+                            if len(add_args) == 1:
                                 return True
                             else:
                                 for ar in list(Mul.make_args(args)):
@@ -1859,9 +1859,9 @@ def _is_lambert(f, symbol):
                         else:
                             return True
                     return j>1
-                elif len(list(Add.make_args(f))) > 2:
+                elif len(add_args) > 2:
                     j=0
-                    for args in list(Add.make_args(f)):
+                    for args in add_args:
                         if len(list(args.atoms(symbol))) == 1:
                             if list(args.atoms(symbol))[0].has(symbol): # to check it has more than 2 variables
                                 j+=1
@@ -1871,7 +1871,7 @@ def _is_lambert(f, symbol):
             else:
                 return False
 
-    if any(isinstance(arg1, (log)) for arg1 in _term_factors(f.expand())):
+    if any(isinstance(arg1, (log)) for arg1 in expanded_terms_factors):
         i, j, k = 0,0,0 # to check it has more than 2 variables
         for arg2 in list(_term_factors(f)):
             if arg2.atoms(log) :
