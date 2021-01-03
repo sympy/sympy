@@ -301,7 +301,7 @@ class KindDispatcher:
                 if prev is not a:
                     kinds.append(a)
                     prev = a
-        return self.dispatch_kinds(self, kinds, **kwargs)
+        return self.dispatch_kinds(kinds, **kwargs)
 
     @cacheit
     def dispatch_kinds(self, kinds, **kwargs):
