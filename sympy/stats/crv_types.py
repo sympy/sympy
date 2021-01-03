@@ -867,8 +867,10 @@ def ChiNoncentral(name, k, l):
     Parameters
     ==========
 
-    k : A positive Integer, ``k > 0``, the number of degrees of freedom
-    lambda : Real number, `\lambda > 0`, Shift parameter
+    k : A positive Integer, ``k > 0``
+        The number of degrees of freedom.
+    lambda : Real number, `\lambda > 0`
+        Shift parameter.
 
     Returns
     =======
@@ -1582,8 +1584,10 @@ def FisherZ(name, d1, d2):
     Parameters
     ==========
 
-    d1 : ``d_1 > 0``, degree of freedom
-    d2 : ``d_2 > 0``, degree of freedom
+    d1 : ``d_1 > 0``
+        Degree of freedom.
+    d2 : ``d_2 > 0``
+        Degree of freedom.
 
     Returns
     =======
