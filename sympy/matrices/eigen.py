@@ -120,9 +120,11 @@ def _eigenvals(
     =======
 
     eigs : list or dict
-        key: Eigenvalues of a matrix. value:  multipilicity of the eigenvalue.
-        The return format would be specified by
-        the key ``multiple``.
+        The return format is either:
+        * A dictionary ``{k1: v1, k2: v2, ...}`` where ``k1, k2, ...`` are the
+        eigenvalues and ``v1, v2, ...`` are their respective multiplicities.
+        * A list ``[v1, v2, ...]`` where ``v1, v2, ...`` are potentially
+        duplicate list of eigenvalues of the matrix.
 
     Raises
     ======
@@ -164,6 +166,7 @@ def _eigenvals(
     it may return eigenvalues in the form of
     :class:`sympy.polys.rootoftools.ComplexRootOf`.
     """
+
     if not M:
         if multiple:
             return []
@@ -231,10 +234,8 @@ def _eigenvals_list(
 
 def _eigenvals_dict(
     M, error_when_incomplete=True, simplify=False, **flags):
-
     """returns dictionary of eigenvalues and their multiplicity as key-value
     pairs."""
-
     iblocks = M.connected_components()
     all_eigs = {}
     for b in iblocks:

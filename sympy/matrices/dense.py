@@ -171,7 +171,7 @@ class DenseMatrix(MatrixBase):
 
     def _eval_matrix_mul_elementwise(self, other):
         #returns matrix with element-wise multiplication of elements
-        if self.shape!=other.shape:
+        if self.shape != other.shape:
             raise ShapeError("Shapes of 2 matrices do not match")
         else:
             mat = [a*b for a,b in zip(self._mat, other._mat)]
