@@ -55,9 +55,15 @@ class BinaryRelation(Predicate):
     >>> ask(R(1, 2))
     False
 
-    Although we didn't dispatch the types other than ``Number``, ``R``
-    returns ``False`` with minimum cost if two arguments have same tree
-    structure because R is antireflexive relation [1].
+    Although we didn't dispatch the types other than ``Number``, we can
+    get expected result from other types because the binary relation
+    simplifies the arguments before evaluation.
+
+    >>> ask(R(sin(x)**2 + cos(x)**2, 0))
+    True
+
+    Also, ``R`` returns ``False`` with minimum cost if two arguments
+    have same tree structure because R is antireflexive relation [1].
 
     >>> ask(R(x, x))
     False
@@ -150,8 +156,8 @@ class AppliedBinaryRelation(AppliedPredicate):
 
     @property
     def reversed(self):
-        """Return the relationship with sides reversed.
-
+        """
+        Return the relationship with sides reversed.
         """
         revfunc = self.function.reversed
         if revfunc is None:
@@ -162,9 +168,12 @@ class AppliedBinaryRelation(AppliedPredicate):
 
     @property
     def reversedsign(self):
-        """Return the relationship with signs reversed.
-
         """
+        Return the relationship with signs reversed.
+        """
+        revfunc = self.function.reversed
+        if revfunc is None:
+            return self
         a, b = self.arguments
         if not (isinstance(a, BooleanAtom) or isinstance(b, BooleanAtom)):
             return self.function.reversed(-self.lhs, -self.rhs)
@@ -173,11 +182,11 @@ class AppliedBinaryRelation(AppliedPredicate):
 
     @property
     def canonical(self):
-        """Return a canonical form of the relational by putting a
+        """
+        Return a canonical form of the relational by putting a
         number on the rhs, canonically removing a sign or else
         ordering the args canonically. No other simplification is
         attempted.
-
         """
         args = self.arguments
         r = self
