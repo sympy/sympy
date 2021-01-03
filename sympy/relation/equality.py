@@ -12,6 +12,7 @@ class Equal(BinaryRelation):
     """
 
     is_reflexive = True
+    is_symmetric = True
 
     name = 'eq'
     str_name = latex_name = "="
