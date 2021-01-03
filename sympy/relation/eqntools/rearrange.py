@@ -7,6 +7,7 @@ from sympy.multipledispatch import dispatch
 from sympy.relation.binrel import BinaryRelation
 from sympy.relation.equality import Equal
 from sympy.relation.inequality import InEqual
+from sympy.relation.relop import relop_add, relop_mul
 
 
 def rearrange(eqn, assumptions=True):
@@ -86,7 +87,8 @@ def _rearrange_equation(rel, lhs, rhs, assumptions=True): # noqa:F811
     is_neg = ask(Q.negative(commonterm), assumptions)
 
     if (is_pos or is_neg):
-        eqn /= commonterm
+        term = commonterm**-1
+        eqn = relop_mul(eqn, term, assumptions=assumptions)
     return eqn
 
 

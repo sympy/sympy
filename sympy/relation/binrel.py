@@ -90,25 +90,6 @@ class BinaryRelation(Predicate):
     def reversed(self):
         return None
 
-    def eval(self, args, assumptions=True):
-        lhs, rhs = args
-
-        # quick exit for structurally same arguments
-        ret = self._compare_reflexive(lhs, rhs)
-        if ret is not None:
-            return ret
-
-        r = self(lhs, rhs).simplify()
-        lhs, rhs = r.lhs, r.rhs
-
-        # attempt quick exit again with simplified arguments
-        ret = self._compare_reflexive(lhs, rhs)
-        if ret is not None:
-            return ret
-
-        # use dispatching
-        return super().eval((lhs, rhs), assumptions)
-
     def _compare_reflexive(self, lhs, rhs):
         # quick exit for structurally same arguments
         # do not check != here because it cannot catch the
@@ -450,7 +431,6 @@ class AppliedBinaryRelation(AppliedPredicate):
         from .eqntools import rearrange
         return rearrange(self, assumptions)
 
-
     def solve(self, symbol=None, domain=S.Complexes):
         """
         Solve the equation with respect to given symbol and domain.
@@ -499,7 +479,21 @@ class AppliedBinaryRelation(AppliedPredicate):
         return self
 
     def _eval_ask(self, assumptions):
-        return self.function.eval(self.arguments, assumptions)
+        # quick exit for structurally same arguments
+        ret = self.function._compare_reflexive(self.lhs, self.rhs)
+        if ret is not None:
+            return ret
+
+        lhs, rhs = self.lhs.refine(assumptions), self.rhs.refine(assumptions)
+        r = self.function(lhs, rhs).simplify()
+
+        # attempt quick exit again with simplified arguments
+        ret = r.function._compare_reflexive(r.lhs, r.rhs)
+        if ret is not None:
+            return ret
+
+        # use multipledispatch handler
+        return r.function.eval(r.arguments, assumptions)
 
     # override operations
 

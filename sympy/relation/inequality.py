@@ -101,19 +101,19 @@ class LessEq(LessThan):
 @relop_add.register(GreaterThan, GreaterThan)
 @relop_add.register(GreaterThan, Equal)
 @relop_add.register(Equal, GreaterThan)
-def gt_add(rel1, rel2):
+def gt_add(rel1, rel2, assumptions=True):
     lhs = rel1.lhs + rel2.lhs
     rhs = rel1.rhs + rel2.rhs
     return Q.gt(lhs, rhs)
 
 @relop_add.register(GreaterThan, Expr)
-def gt_expr_add(arg1, arg2):
+def gt_expr_add(arg1, arg2, assumptions=True):
     lhs = arg1.lhs + arg2
     rhs = arg1.rhs + arg2
     return Q.gt(lhs, rhs)
 
 @relop_add.register(Expr, GreaterThan)
-def expr_gt_add(arg1, arg2):
+def expr_gt_add(arg1, arg2, assumptions=True):
     lhs = arg1 + arg2.lhs
     rhs = arg1 + arg2.rhs
     return Q.gt(lhs, rhs)
@@ -121,19 +121,19 @@ def expr_gt_add(arg1, arg2):
 @relop_add.register(GreaterEq, GreaterEq)
 @relop_add.register(GreaterEq, Equal)
 @relop_add.register(Equal, GreaterEq)
-def ge_add(rel1, rel2):
+def ge_add(rel1, rel2, assumptions=True):
     lhs = rel1.lhs + rel2.lhs
     rhs = rel1.rhs + rel2.rhs
     return Q.ge(lhs, rhs)
 
 @relop_add.register(GreaterEq, Expr)
-def ge_expr_add(arg1, arg2):
+def ge_expr_add(arg1, arg2, assumptions=True):
     lhs = arg1.lhs + arg2
     rhs = arg1.rhs + arg2
     return Q.ge(lhs, rhs)
 
 @relop_add.register(Expr, GreaterEq)
-def expr_ge_add(arg1, arg2):
+def expr_ge_add(arg1, arg2, assumptions=True):
     lhs = arg1 + arg2.lhs
     rhs = arg1 + arg2.rhs
     return Q.ge(lhs, rhs)
@@ -141,19 +141,19 @@ def expr_ge_add(arg1, arg2):
 @relop_add.register(LessThan, LessThan)
 @relop_add.register(LessThan, Equal)
 @relop_add.register(Equal, LessThan)
-def lt_add(rel1, rel2):
+def lt_add(rel1, rel2, assumptions=True):
     lhs = rel1.lhs + rel2.lhs
     rhs = rel1.rhs + rel2.rhs
     return Q.lt(lhs, rhs)
 
 @relop_add.register(LessThan, Expr)
-def lt_expr_add(arg1, arg2):
+def lt_expr_add(arg1, arg2, assumptions=True):
     lhs = arg1.lhs + arg2
     rhs = arg1.rhs + arg2
     return Q.lt(lhs, rhs)
 
 @relop_add.register(Expr, LessThan)
-def expr_lt_add(arg1, arg2):
+def expr_lt_add(arg1, arg2, assumptions=True):
     lhs = arg1 + arg2.lhs
     rhs = arg1 + arg2.rhs
     return Q.lt(lhs, rhs)
@@ -161,39 +161,39 @@ def expr_lt_add(arg1, arg2):
 @relop_add.register(LessEq, LessEq)
 @relop_add.register(LessEq, Equal)
 @relop_add.register(Equal, LessEq)
-def le_add(rel1, rel2):
+def le_add(rel1, rel2, assumptions=True):
     lhs = rel1.lhs + rel2.lhs
     rhs = rel1.rhs + rel2.rhs
     return Q.le(lhs, rhs)
 
 @relop_add.register(LessEq, Expr)
-def le_expr_add(arg1, arg2):
+def le_expr_add(arg1, arg2, assumptions=True):
     lhs = arg1.lhs + arg2
     rhs = arg1.rhs + arg2
     return Q.le(lhs, rhs)
 
 @relop_add.register(Expr, LessEq)
-def expr_le_add(arg1, arg2):
+def expr_le_add(arg1, arg2, assumptions=True):
     lhs = arg1 + arg2.lhs
     rhs = arg1 + arg2.rhs
     return Q.le(lhs, rhs)
 
 @relop_add.register(GreaterThan, LessThan)
 @relop_add.register(LessThan, GreaterThan)
-def add_undetermined(rel1, rel2):
+def add_undetermined(rel1, rel2, assumptions=True):
     raise TypeError("Result of (%s) + (%s) cannot be determined." % (rel1, rel2))
 
 @relop_mul.register(InEqual, Expr)
 @relop_mul.register(Expr, InEqual)
-def ineq_expr_mul(arg1, arg2):
+def ineq_expr_mul(arg1, arg2, assumptions=True):
     if isinstance(arg1, AppliedBinaryRelation):
         ineq, expr = arg1, arg2
     else:
         expr, ineq = arg1, arg2
 
-    is_pos = ask(Q.positive(expr))
-    is_neg = ask(Q.negative(expr))
-    is_zero = ask(Q.zero(expr))
+    is_pos = ask(Q.positive(expr), assumptions)
+    is_neg = ask(Q.negative(expr), assumptions)
+    is_zero = ask(Q.zero(expr), assumptions)
 
     if not any([is_neg, is_pos, is_zero]):
         # Maybe need conditional equation here

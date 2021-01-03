@@ -42,56 +42,56 @@ class Equal(BinaryRelation):
 
 
 @relop_add.register(Equal, Equal)
-def eq_add(rel1, rel2):
+def eq_add(rel1, rel2, assumptions=True):
     lhs = rel1.lhs + rel2.lhs
     rhs = rel1.rhs + rel2.rhs
     return Q.eq(lhs, rhs)
 
 @relop_add.register(Equal, Expr)
-def eq_expr_add(arg1, arg2):
+def eq_expr_add(arg1, arg2, assumptions=True):
     if isinstance(arg1, AppliedBinaryRelation):
         lhs = arg1.lhs + arg2
         rhs = arg1.rhs + arg2
     return Q.eq(lhs, rhs)
 
 @relop_add.register(Expr, Equal)
-def expr_eq_add(arg1, arg2):
+def expr_eq_add(arg1, arg2, assumptions=True):
     lhs = arg1 + arg2.lhs
     rhs = arg1 + arg2.rhs
     return Q.eq(lhs, rhs)
 
 @relop_mul.register(Equal, Equal)
-def eq_mul(rel1, rel2):
+def eq_mul(rel1, rel2, assumptions=True):
     lhs = rel1.lhs*rel2.lhs
     rhs = rel1.rhs*rel2.rhs
     return Q.eq(lhs, rhs)
 
 @relop_mul.register(Equal, Expr)
-def eq_expr_mul(arg1, arg2):
+def eq_expr_mul(arg1, arg2, assumptions=True):
     lhs = arg1.lhs*arg2
     rhs = arg1.rhs*arg2
     return Q.eq(lhs, rhs)
 
 @relop_mul.register(Expr, Equal)
-def expr_eq_mul(arg1, arg2):
+def expr_eq_mul(arg1, arg2, assumptions=True):
     lhs = arg1*arg2.lhs
     rhs = arg1*arg2.rhs
     return Q.eq(lhs, rhs)
 
 @relop_pow.register(Equal, Equal)
-def eq_pow(rel1, rel2):
+def eq_pow(rel1, rel2, assumptions=True):
     lhs = rel1.lhs**rel2.lhs
     rhs = rel1.rhs**rel2.rhs
     return Q.eq(lhs, rhs)
 
 @relop_pow.register(Equal, Expr)
-def eq_expr_pow(arg1, arg2):
+def eq_expr_pow(arg1, arg2, assumptions=True):
     lhs = arg1.lhs**arg2
     rhs = arg1.rhs**arg2
     return Q.eq(lhs, rhs)
 
 @relop_pow.register(Expr, Equal)
-def eq_expr_pow(arg1, arg2):
+def eq_expr_pow(arg1, arg2, assumptions=True):
     lhs = arg1**arg2.lhs
     rhs = arg1**arg2.rhs
     return Q.eq(lhs, rhs)
