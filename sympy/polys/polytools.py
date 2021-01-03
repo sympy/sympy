@@ -1473,7 +1473,7 @@ class Poly(Basic):
             try:
                 return f.mul_ground(g)
             except CoercionFailed:
-                f = div(f,1,domain="QQ")[0]
+                f = div(f, 1, domain = "QQ")[0]
                 return f.mul_ground(g)
 
         _, per, F, G = f._unify(g)
