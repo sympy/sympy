@@ -11,7 +11,73 @@ from sympy.polys.domains.groundtypes import SymPyInteger
 
 @public
 class FiniteField(Field, SimpleDomain):
-    """General class for finite fields. """
+    """Finite field of prime order :ref:`GF(p)`
+
+    A :ref:`GF(p)` domain represents a `finite field`_ `\mathbb{F}_p` of prime
+    order as :py:class:`~.Domain` in the domain system (see
+    :ref:`polys-domainsintro`).
+
+    A :py:class:`~.Poly` created from an expression with integer
+    coefficients will have the domain :ref:`ZZ`. Howeer if the ``modulus=p``
+    option is given the the domain will be a finite field instead::
+
+        >>> from sympy import Poly, Symbol
+        >>> x = Symbol('x')
+        >>> p = Poly(x**2 + 1)
+        >>> p
+        Poly(x**2 + 1, x, domain='ZZ')
+        >>> p.domain
+        ZZ
+        >>> p2 = Poly(x**2 + 1, modulus=2)
+        >>> p2
+        Poly(x**2 + 1, x, modulus=2)
+        >>> p2.domain
+        GF(2)
+
+    It is possible to factorise a polynomial over :ref:`GF(p)` using the
+    modulus argument to :py:func:`~.factor`::
+
+        >>> from sympy import factor
+        >>> factor(x**2 + 1)
+        x**2 + 1
+        >>> factor(x**2 + 1, modulus=2)
+        (x + 1)**2
+
+    When using the domain directly :ref:`GF(p)` can be used as a constructor
+    to create instances which then support the operations ``+,-,*,**,/``
+
+        >>> from sympy import GF
+        >>> K = GF(5)
+        >>> K
+        GF(5)
+        >>> x = K(3)
+        >>> y = K(2)
+        >>> x
+        3 mod 5
+        >>> y
+        2 mod 5
+        >>> x * y
+        1 mod 5
+
+    Notes
+    =====
+
+    It is also possible to create a :ref:`GF(p)` domain of **non-prime**
+    order but the resulting ring is **not** a field: it is just the ring of
+    the integers modulo ``n``::
+
+        >>> K = GF(9)
+        >>> z = K(3)
+        >>> z
+        3 mod 9
+        >>> z**2
+        0 mod 9
+
+    It would be good to have a proper implementation of prime power fields
+    (``GF(p**n)``) but these are not yet implemented in SymPY.
+
+    .. _finite field: https://en.wikipedia.org/wiki/Finite_field
+    """
 
     rep = 'FF'
 

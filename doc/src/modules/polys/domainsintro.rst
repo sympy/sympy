@@ -595,7 +595,7 @@ Real and complex fields
 =======================
 
 The fields :ref:`RR` and :ref:`CC` are intended mathematically to correspond
-to the `reals`_ or the `complex numbers`_, `\mathbb{R}` and `\mathbb{C}`
+to the `reals`_ and the `complex numbers`_, `\mathbb{R}` and `\mathbb{C}`
 respectively. The implementation of these uses floating point arithmetic. In
 practice this means that these are the domains that are used to represent
 expressions containing floats. Elements of :ref:`RR` are instances of the
