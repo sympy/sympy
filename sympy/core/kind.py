@@ -192,19 +192,18 @@ class KindDispatcher:
     Dispatcher to select a kind from multiple kinds by binary dispatching.
 
     .. notes::
-       This approach is experimental, and can be replaced or deleted in the future.
+       This approach is experimental, and can be replaced or deleted in
+       the future.
 
     Explanation
     ===========
 
-    SymPy object's kind vaguely represents the algebraic structure where the
-    object belongs to. Therefore, with given operation, we can always find a
-    dominating kind among the different kinds. This class selects the kind by
-    recursive binary dispatching. If the result cannot be determined, ``UndefinedKind``
+    SymPy object's :obj:`sympy.core.kind.Kind()` vaguely represents the
+    algebraic structure where the object belongs to. Therefore, with
+    given operation, we can always find a dominating kind among the
+    different kinds. This class selects the kind by recursive binary
+    dispatching. If the result cannot be determined, ``UndefinedKind``
     is returned.
-
-    This class is designed for associative operator, where the number of arguments
-    is undefined. If the operator has fixed arity, multipledispatch will be enough.
 
     Examples
     ========
