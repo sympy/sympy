@@ -1574,7 +1574,7 @@ class TensorType(Basic):
 
         s : name or string of names.
 
-        comm : commutation group 
+        comm : Commutation group.
 
         see ``_TensorManager.set_comm``
         """
