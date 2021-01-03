@@ -7,7 +7,7 @@ from sympy.multipledispatch import dispatch
 from sympy.relation.binrel import BinaryRelation
 from sympy.relation.equality import Equal
 from sympy.relation.inequality import InEqual
-from sympy.relation.relop import relop_add, relop_mul
+from sympy.relation.relop import relop_mul
 
 
 def rearrange(eqn, assumptions=True):

@@ -1,14 +1,8 @@
 """
 Module for mathematical equality.
 """
-from sympy.assumptions import ask, Q
-from sympy.core import Add, Equality, Expr, S
-from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_xor, fuzzy_not
-from sympy.core.relational import _n2
-from sympy.functions import arg
-from sympy.logic.boolalg import Boolean, BooleanAtom
-from sympy.simplify.simplify import clear_coefficients
-from sympy.utilities.iterables import sift
+from sympy.assumptions import Q
+from sympy.core import Equality, Expr
 from .binrel import BinaryRelation, AppliedBinaryRelation
 from .relop import relop_add, relop_mul, relop_pow
 
@@ -91,7 +85,7 @@ def eq_expr_pow(arg1, arg2, assumptions=True):
     return Q.eq(lhs, rhs)
 
 @relop_pow.register(Expr, Equal)
-def eq_expr_pow(arg1, arg2, assumptions=True):
+def expr_eq_pow(arg1, arg2, assumptions=True):
     lhs = arg1**arg2.lhs
     rhs = arg1**arg2.rhs
     return Q.eq(lhs, rhs)

@@ -1,8 +1,4 @@
-from itertools import combinations
-
-from sympy import (ask, cos, exp, FiniteSet, Float, Function, I, log, oo,
-    pi, Q, Rational, S, sin, sqrt, symbols)
-from sympy.simplify import trigsimp
+from sympy import Q, symbols
 from sympy.printing import sstr, pretty, latex
 
 x,y,z = symbols('x y z')
