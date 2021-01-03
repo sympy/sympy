@@ -4161,6 +4161,19 @@ def test_sympy__polys__rootoftools__RootOf():
     pass
 
 
+@SKIP('abstract class')
+def test_sympy__relation__binrel__BinaryRelation():
+    pass
+
+
+def test_sympy__relation__binrel__AppliedBinaryRelation():
+    assert _test_args(Q.eq(1, 2))
+
+
+def test_sympy__relation__equality__Equal():
+    assert _test_args(Q.eq)
+
+
 def test_sympy__polys__rootoftools__ComplexRootOf():
     from sympy.polys.rootoftools import ComplexRootOf
     assert _test_args(ComplexRootOf(x**3 + x + 1, 0))
