@@ -147,7 +147,6 @@ class Add(Expr, AssocOp):
     ========
 
     MatAdd
-    VectorAdd
 
     """
 

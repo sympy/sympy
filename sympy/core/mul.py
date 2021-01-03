@@ -147,7 +147,6 @@ class Mul(Expr, AssocOp):
     ========
 
     MatMul
-    VectorMul
 
     """
     __slots__ = ()
