@@ -1,4 +1,5 @@
 from sympy.assumptions.ask import Q
+from sympy.assumptions.refine import refine
 from sympy.core.numbers import oo
 from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
@@ -1191,3 +1192,6 @@ def test_bool_monomial():
     x, y = symbols('x,y')
     assert bool_monomial(1, [x, y]) == y
     assert bool_monomial([1, 1], [x, y]) == And(x, y)
+
+def test_refine():
+    assert refine(Or(Q.eq(x, 1), Q.eq(x, -1)), Q.positive(x)) == Q.eq(x, 1)

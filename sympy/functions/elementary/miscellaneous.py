@@ -147,6 +147,11 @@ def sqrt(arg, evaluate=None):
     .. [1] https://en.wikipedia.org/wiki/Square_root
     .. [2] https://en.wikipedia.org/wiki/Principal_value
     """
+
+    from sympy.relation.binrel import AppliedBinaryRelation
+    if isinstance(arg, AppliedBinaryRelation):
+        return arg.apply_func(sqrt, evaluate=evaluate)
+
     # arg = sympify(arg) is handled by Pow
     return Pow(arg, S.Half, evaluate=evaluate)
 
@@ -205,6 +210,11 @@ def cbrt(arg, evaluate=None):
     * https://en.wikipedia.org/wiki/Principal_value
 
     """
+
+    from sympy.relation.binrel import AppliedBinaryRelation
+    if isinstance(arg, AppliedBinaryRelation):
+        return arg.apply_func(cbrt, evaluate=evaluate)
+
     return Pow(arg, Rational(1, 3), evaluate=evaluate)
 
 
@@ -302,6 +312,11 @@ def root(arg, n, k=0, evaluate=None):
     * http://mathworld.wolfram.com/CubeRoot.html
 
     """
+
+    from sympy.relation.binrel import AppliedBinaryRelation
+    if isinstance(arg, AppliedBinaryRelation):
+        return arg.apply_func(root, n, k=0, evaluate=evaluate)
+
     n = sympify(n)
     if k:
         return Mul(Pow(arg, S.One/n, evaluate=evaluate), S.NegativeOne**(2*k/n), evaluate=evaluate)
@@ -353,6 +368,11 @@ def real_root(arg, n=None, evaluate=None):
     sympy.core.power.integer_nthroot
     root, sqrt
     """
+
+    from sympy.relation.binrel import AppliedBinaryRelation
+    if isinstance(arg, AppliedBinaryRelation):
+        return arg.apply_func(real_root, n=n, evaluate=evaluate)
+
     from sympy.functions.elementary.complexes import Abs, im, sign
     from sympy.functions.elementary.piecewise import Piecewise
     if n is not None:
