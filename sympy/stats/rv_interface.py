@@ -95,7 +95,7 @@ def standard_deviation(X, condition=None, **kwargs):
     return sqrt(variance(X, condition, **kwargs))
 std = standard_deviation
 
-def entropy(expr, condition=None, **kwargs):
+def entropy(expr, condition=None, base=exp(1), **kwargs):
     """
     Calculuates entropy of a probability distribution
 
@@ -104,7 +104,7 @@ def entropy(expr, condition=None, **kwargs):
 
     expression : the random expression whose entropy is to be calculated
     condition : optional, to specify conditions on random expression
-    b: base of the logarithm, optional
+    base: base of the logarithm, optional
        By default, it is taken as Euler's number
 
     Returns
@@ -132,7 +132,6 @@ def entropy(expr, condition=None, **kwargs):
     .. [3] http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
     """
     pdf = density(expr, condition, **kwargs)
-    base = kwargs.get('b', exp(1))
     if isinstance(pdf, dict):
             return sum([-prob*log(prob, base) for prob in pdf.values()])
     return expectation(-log(pdf(expr), base))
