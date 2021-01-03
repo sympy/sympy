@@ -541,13 +541,20 @@ class MatrixExpr(Expr):
                         d[indices].append(scalar*remove_matelement(elem, *indices))
                         scalar = 1
                 return [(MatrixElement(Add.fromiter(v), *k), k) for k, v in d.items()]
-            elif isinstance(expr, KroneckerDelta):
+            elif (isinstance(expr, KroneckerDelta)and all(a in index_ranges for a in expr.args)):
                 i1, i2 = expr.args
-                if dimensions is not None:
-                    identity = Identity(dimensions[0])
-                else:
-                    identity = S.One
-                return [(MatrixElement(identity, i1, i2, strict=False), (i1, i2))]
+                shape = dimensions
+                if shape is None:
+                    r11, r12 = index_ranges[i1]
+                    r21, r22 = index_ranges[i2]
+                    if r11 != 0 or r21 != 0:
+                        raise ValueError(f"index ranges should start from zero: {index_ranges}")
+                    shape = (r12+1, r22+1)
+
+                if shape[0] != shape[1]:
+                    raise ValueError(f"upper index ranges should be equal: {index_ranges}")
+                identity = Identity(shape[0])
+                return [(MatrixElement(identity, i1, i2), (i1, i2))]
             elif isinstance(expr, MatrixElement):
                 matrix_symbol, i1, i2 = expr.args
                 if i1 in index_ranges:
@@ -700,7 +707,7 @@ class MatrixElement(Expr):
     is_symbol = True
     is_commutative = True
 
-    def __new__(cls, name, n, m, strict=True):
+    def __new__(cls, name, n, m):
         n, m = map(_sympify, (n, m))
         from sympy import MatrixBase
         if isinstance(name, (MatrixBase,)):
@@ -708,8 +715,8 @@ class MatrixElement(Expr):
                 return name[n, m]
         if isinstance(name, str):
             name = Symbol(name)
-        name = _sympify(name)
-        if strict:
+        else:
+            name = _sympify(name)
             if not isinstance(name, MatrixExpr):
                 raise TypeError("First argument of MatrixElement should be a matrix")
         obj = Expr.__new__(cls, name, n, m)
