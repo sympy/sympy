@@ -1234,7 +1234,7 @@ class FCodeGen(CodeGen):
 
         See also
         ========
-        
+
         https://en.wikipedia.org/wiki/Function_prototype
 
         """
