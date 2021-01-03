@@ -107,7 +107,7 @@ class Add(Expr, AssocOp):
     Examples
     ========
 
-    >>> from sympy import Add
+    >>> from sympy import Add, I
     >>> from sympy.abc import x, y
     >>> Add(x, 1)
     x + 1
