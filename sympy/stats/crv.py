@@ -78,7 +78,7 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
 class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
     """
     A domain with continuous support that has been further restricted by a
-    condition such as x > 3.
+    condition such as $x > 3$.
     """
 
     def compute_expectation(self, expr, variables=None, **kwargs):
@@ -396,7 +396,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def compute_quantile(self, **kwargs):
         """ Compute the Quantile from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, p = symbols('x, p', real=True, cls=Dummy)
         left_bound = self.set.start
@@ -580,7 +580,7 @@ class ContinuousPSpace(PSpace):
 
 class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     """
-    A continuous probability space over a single univariate variable
+    A continuous probability space over a single univariate variable.
 
     These consist of a Symbol and a SingleContinuousDistribution
 
