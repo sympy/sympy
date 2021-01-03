@@ -558,7 +558,7 @@ class GaussianRationalField(GaussianDomain, Field):
 
         >>> z1 / z2
         (42/17 + -2/17*I)
-        >>> ZZ_I.exquo(z1, z2)
+        >>> QQ_I.exquo(z1, z2)
         (42/17 + -2/17*I)
         >>> z1 == (z1/z2)*z2
         True
@@ -571,6 +571,8 @@ class GaussianRationalField(GaussianDomain, Field):
         (42/17 + -2/17*I)
         >>> z1 % z2
         (0 + 0*I)
+        >>> QQ_I.div(z1, z2)
+        ((42/17 + -2/17*I), (0 + 0*I))
         >>> (z1//z2)*z2 + z1%z2 == z1
         True
 
