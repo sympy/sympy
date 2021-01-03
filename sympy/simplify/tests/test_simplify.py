@@ -924,6 +924,5 @@ def test_issue_11004():
         return  f(n)/ (f(n/k)**k)
     def p(n,k):
         return m(n, k)/(k**n)
-    q = (p(n, 2)/p(n, 3)).simplify()
     z = log(p(n, k)/p(n, k+1)).expand(force=True)
     assert simplify(z.subs(n,N).n(4)) == half*k*log(k) - half*k*log(k + 1) + half*log(N) - half*log(k + 1) + Float(0.9189224, 4)
