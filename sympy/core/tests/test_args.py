@@ -8,7 +8,7 @@ import os
 import re
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
-                   Eq, log, Function, Rational)
+                   Eq, log, Function, Rational, Q)
 
 from sympy.testing.pytest import XFAIL, SKIP
 
