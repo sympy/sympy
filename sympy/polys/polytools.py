@@ -1470,7 +1470,11 @@ class Poly(Basic):
         g = sympify(g)
 
         if not g.is_Poly:
-            return f.mul_ground(g)
+            try:
+                return f.mul_ground(g)
+            except CoercionFailed:
+                f = div(f,1,domain="QQ")[0]
+                return f.mul_ground(g)
 
         _, per, F, G = f._unify(g)
 
