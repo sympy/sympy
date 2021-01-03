@@ -182,6 +182,7 @@ class Domain:
     ========
 
     DomainElement: abstract base class for domain elements
+    construct_domain: construct a minimal domain for some expressions
 
     """
 
