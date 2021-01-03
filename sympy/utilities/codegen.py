@@ -116,6 +116,9 @@ __all__ = [
 class Routine:
     """Generic description of evaluation routine for set of expressions.
 
+    Explanation
+    ===========
+
     A CodeGen class can translate instances of this class into code in a
     particular language.  The routine specification covers all the features
     present in these languages.  The CodeGen part must raise an exception
@@ -458,6 +461,9 @@ class InOutArgument(Argument, ResultBase):
 class Result(Variable, ResultBase):
     """An expression for a return value.
 
+    Explanation
+    ===========
+
     The name result is used to avoid conflicts with the reserved word
     "return" in the python language.  It is also shorter than ReturnValue.
 
@@ -574,6 +580,9 @@ class CodeGen:
 
     def routine(self, name, expr, argument_sequence=None, global_vars=None):
         """Creates an Routine object that is appropriate for this language.
+
+        Explanation
+        ===========
 
         This implementation is appropriate for at least C/Fortran.  Subclasses
         can override this if necessary.
@@ -751,6 +760,9 @@ class CodeGen:
     def write(self, routines, prefix, to_files=False, header=True, empty=True):
         """Writes all the source code files for the given routines.
 
+        Explanation
+        ===========
+
         The generated source is returned as a list of (filename, contents)
         tuples, or is written to files (see below).  Each filename consists
         of the given prefix, appended with an appropriate extension.
@@ -793,6 +805,9 @@ class CodeGen:
 
     def dump_code(self, routines, f, prefix, header=True, empty=True):
         """Write the code by calling language specific methods.
+
+        Explanation
+        ===========
 
         The generated file contains all the definitions of the routines in
         low-level code and refers to the header file if appropriate.
@@ -901,7 +916,10 @@ class CCodeGen(CodeGen):
         If the routine has multiple result objects, an CodeGenError is
         raised.
 
-        See: https://en.wikipedia.org/wiki/Function_prototype
+        See also
+        ========
+
+        https://en.wikipedia.org/wiki/Function_prototype
 
         """
         if len(routine.results) > 1:
@@ -1092,7 +1110,10 @@ class C99CodeGen(CCodeGen):
     standard = 'C99'
 
 class FCodeGen(CodeGen):
-    """Generator for Fortran 95 code
+    """Generator for Fortran 95 code.
+
+    Explanation
+    ===========
 
     The .write() method inherited from CodeGen will output a code file and
     an interface file, <prefix>.f90 and <prefix>.h respectively.
@@ -1204,11 +1225,17 @@ class FCodeGen(CodeGen):
     def get_interface(self, routine):
         """Returns a string for the function interface.
 
+        Explanation
+        ===========
+
         The routine should have a single result object, which can be None.
         If the routine has multiple result objects, a CodeGenError is
         raised.
 
-        See: https://en.wikipedia.org/wiki/Function_prototype
+        See also
+        ========
+        
+        https://en.wikipedia.org/wiki/Function_prototype
 
         """
         prototype = [ "interface\n" ]
@@ -1509,6 +1536,9 @@ class JuliaCodeGen(CodeGen):
 
 class OctaveCodeGen(CodeGen):
     """Generator for Octave code.
+
+    Explanation
+    ===========
 
     The .write() method inherited from CodeGen will output a code file
     <prefix>.m.
@@ -1868,7 +1898,10 @@ class RustCodeGen(CodeGen):
         If the routine has multiple result objects, an CodeGenError is
         raised.
 
-        See: https://en.wikipedia.org/wiki/Function_prototype
+        See also
+        ========
+
+        https://en.wikipedia.org/wiki/Function_prototype
 
         """
         results = [i.get_datatype('Rust') for i in routine.results]

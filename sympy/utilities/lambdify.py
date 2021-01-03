@@ -106,6 +106,9 @@ def _import(module, reload=False):
     """
     Creates a global translation dictionary for module.
 
+    Explanation
+    ===========
+
     The argument module has to be one of the following strings: "math",
     "mpmath", "numpy", "sympy", "tensorflow".
     These dictionaries map names of python functions to their equivalent in
@@ -1204,7 +1207,10 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
         return ['[{}] = [{}]'.format(', '.join(flatten(lvalues)), indexed)]
 
 def _imp_namespace(expr, namespace=None):
-    """ Return namespace dict with function implementations
+    """ Return namespace dict with function implementations.
+
+    Explanation
+    ===========
 
     We need to search for functions in anything that can be thrown at
     us - that is - anything that could be passed as ``expr``.  Examples
@@ -1212,7 +1218,8 @@ def _imp_namespace(expr, namespace=None):
     contain sympy expressions.
 
     Parameters
-    ----------
+    ==========
+
     expr : object
        Something passed to lambdify, that will generate valid code from
        ``str(expr)``.
@@ -1220,7 +1227,8 @@ def _imp_namespace(expr, namespace=None):
        Namespace to fill.  None results in new empty dict
 
     Returns
-    -------
+    =======
+
     namespace : dict
        dict with keys of implemented function names within ``expr`` and
        corresponding values being the numerical implementation of
@@ -1284,7 +1292,8 @@ def implemented_function(symfunc, implementation):
     class.
 
     Parameters
-    ----------
+    ==========
+
     symfunc : ``str`` or ``UndefinedFunction`` instance
        If ``str``, then create new ``UndefinedFunction`` with this as
        name.  If ``symfunc`` is an Undefined function, create a new function
@@ -1293,7 +1302,8 @@ def implemented_function(symfunc, implementation):
        numerical implementation to be called by ``evalf()`` or ``lambdify``
 
     Returns
-    -------
+    =======
+
     afunc : sympy.FunctionClass instance
        function with attached implementation
 

@@ -39,6 +39,9 @@ def threaded_factory(func, use_add):
 def threaded(func):
     """Apply ``func`` to sub--elements of an object, including :class:`~.Add`.
 
+    Explanation
+    ===========
+
     This decorator is intended to make it uniformly possible to apply a
     function to all elements of composite objects, e.g. matrices, lists, tuples
     and other iterable containers, or just expressions.
@@ -58,6 +61,9 @@ def threaded(func):
 
 def xthreaded(func):
     """Apply ``func`` to sub--elements of an object, excluding :class:`~.Add`.
+
+    Explanation
+    ===========
 
     This decorator is intended to make it uniformly possible to apply a
     function to all elements of composite objects, e.g. matrices, lists, tuples
@@ -176,6 +182,9 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None, python_vers
 def public(obj):
     """
     Append ``obj``'s name to global ``__all__`` variable (call site).
+
+    Explanation
+    ===========
 
     By using this decorator on functions or classes you achieve the same goal
     as by filling ``__all__`` variables manually, you just don't have to repeat

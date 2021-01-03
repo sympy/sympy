@@ -18,7 +18,7 @@ from sympy.utilities.enumerative import (
 
 
 def is_palindromic(s, i=0, j=None):
-    """return True if the sequence is the same from left to right as it
+    """Returns True if the sequence is the same from left to right as it
     is from right to left in the whole sequence (default) or in the
     Python slice ``s[i: j]``; else False.
 
@@ -262,6 +262,9 @@ def iproduct(*iterables):
     '''
     Cartesian product of iterables.
 
+    Explanation
+    ===========
+
     Generator of the cartesian product of iterables. This is analogous to
     itertools.product except that it works with infinite iterables and will
     yield any item from the infinite product eventually.
@@ -325,6 +328,9 @@ def multiset(seq):
 def postorder_traversal(node, keys=None):
     """
     Do a postorder traversal of a tree.
+
+    Explanation
+    ===========
 
     This generator recursively yields nodes that it has visited in a postorder
     fashion. That is, it descends through the tree depth-first to yield all of
@@ -592,6 +598,9 @@ def variations(seq, n, repetition=False):
 def subsets(seq, k=None, repetition=False):
     r"""Generates all `k`-subsets (combinations) from an `n`-element set, ``seq``.
 
+    Explanation
+    ===========
+
     A `k`-subset of an `n`-element set is any subset of length exactly `k`. The
     number of `k`-subsets of an `n`-element set is given by ``binomial(n, k)``,
     whereas there are `2^n` subsets all together. If `k` is ``None`` then all
@@ -641,21 +650,22 @@ def subsets(seq, k=None, repetition=False):
 
 def filter_symbols(iterator, exclude):
     """
-    Only yield elements from `iterator` that do not occur in `exclude`.
+    Only yield elements from ``iterator`` that do not occur in ``exclude``.
 
     Parameters
     ==========
 
     iterator : iterable
-    iterator to take elements from
+        Iterator to take elements from.
 
     exclude : iterable
-    elements to exclude
+        Elements to exclude.
 
     Returns
     =======
 
     iterator : iterator
+
     filtered iterator
     """
     exclude = set(exclude)
@@ -707,6 +717,9 @@ def capture(func):
 
     ``func`` should be a function without arguments that produces output with
     print statements.
+
+    Examples
+    ========
 
     >>> from sympy.utilities.iterables import capture
     >>> from sympy import pprint
@@ -2252,6 +2265,9 @@ def generate_involutions(n):
     """
     Generates involutions.
 
+    Explanation
+    ===========
+
     An involution is a permutation that when multiplied
     by itself equals the identity permutation. In this
     implementation the involutions are generated using
@@ -2371,6 +2387,9 @@ def generate_oriented_forest(n):
     """
     This algorithm generates oriented forests.
 
+    Explanation
+    ===========
+
     An oriented graph is a directed graph having no symmetric pair of directed
     edges. A forest is an acyclic graph, i.e., it has no cycles. A forest can
     also be described as a disjoint union of trees, which are graphs in which
@@ -2417,6 +2436,9 @@ def minlex(seq, directed=True, is_set=False, small=None):
     """
     Return a tuple representing the rotation of the sequence in which
     the lexically smallest elements appear first, e.g. `cba ->acb`.
+
+    Explanation
+    ===========
 
     If ``directed`` is False then the smaller of the sequence and the
     reversed sequence is returned, e.g. `cba -> abc`.

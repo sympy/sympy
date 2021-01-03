@@ -22,12 +22,16 @@ def filldedent(s, w=70):
     Strips leading and trailing empty lines from a copy of `s`, then dedents,
     fills and returns it.
 
+    Explanation
+    ===========
+
     Empty line stripping serves to deal with docstrings like this one that
     start with a newline after the initial triple quote, inserting an empty
     line at the beginning of the string.
 
     See Also
     ========
+
     strlines, rawlines
     """
     return '\n' + fill(dedent(str(s)).strip('\n'), width=w)
