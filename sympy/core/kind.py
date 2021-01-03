@@ -304,7 +304,7 @@ class KindDispatcher:
         return self.dispatch_kinds(self, kinds, **kwargs)
 
     @cacheit
-    def dispatch_kinds(self, kinds, **kwargs)
+    def dispatch_kinds(self, kinds, **kwargs):
         # Quick exit for the case where all kinds are same
         if len(kinds) == 1:
             result, = kinds
