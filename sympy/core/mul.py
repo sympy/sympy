@@ -87,19 +87,33 @@ def _unevaluated_Mul(*args):
 
 class Mul(Expr, AssocOp):
     """
-    Multiplication operation for algebraic group.
+    Expression representing multiplication operation for algebraic field.
 
-    This class mainly deals with the multiplication in the field of complex numbers.
-    Any abstract algebraic field can be dealt as well, but it is encouraged to
-    define specific class such as ``MatMul`` or ``VectorMul`` for other fields.
-    This class also serves as base class for these classes.
+    Every argument of ``Mul()`` must be ``Expr``. Infix operator ``*``
+    on most scalar objects in SymPy calls this class.
 
-    Another use of ``Mul()`` is to behave as template for abstract multiplication so
-    that its arguments can be substituted to return different class. Refer to
-    examples section for this.
+    Another use of ``Mul()`` is to represent the structure of abstract
+    multiplication so that its arguments can be substituted to return
+    different class. Refer to examples section for this.
 
-    Since multiplication can be vector space operation, arguments may have the different
-    kind. Kind of the resulting object is automatically inferred.
+    ``Mul()`` evaluates the argument unless ``evaluate=False`` is passed.
+    The evaluation logic includes:
+
+    1. Flattening
+        ``Mul(x, Mul(y, z))`` -> ``Mul(x, y, z)``
+
+    2. Identity removing
+        ``Mul(x, 1, y)`` -> ``Mul(x, y)``
+
+    3. Exponent collecting by ``.as_base_exp()``
+        ``Mul(x, x**2)`` -> ``Pow(x, 3)``
+
+    4. Term sorting
+        ``Mul(y, x, 2)`` -> ``Mul(2, x, y)``
+
+    Since multiplication can be vector space operation, arguments may\
+    have the different :obj:`sympy.core.kind.Kind()`. Kind of the
+    resulting object is automatically inferred.
 
     Examples
     ========
@@ -118,15 +132,22 @@ class Mul(Expr, AssocOp):
     >>> Mul(x, x, evaluate=False)
     x*x
 
-    ``Mul()`` also serves as a template for other classes.
+    ``Mul()`` also represents the general structure of multiplication
+    operation.
 
     >>> from sympy import MatrixSymbol
     >>> A = MatrixSymbol('A', 2,2)
     >>> expr = Mul(x,y).subs({y:A})
     >>> expr
     x*A
-    >>> expr.func
+    >>> type(expr)
     <class 'sympy.matrices.expressions.matmul.MatMul'>
+
+    See Also
+    ========
+
+    MatMul
+    VectorMul
 
     """
     __slots__ = ()

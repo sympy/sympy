@@ -72,12 +72,9 @@ def _unevaluated_Add(*args):
 class Add(Expr, AssocOp):
     """
     Expression representing addition operation for algebraic group.
-    Infix operator ``+`` on most ``Expr`` objects, except the one between
-    numbers, call this class.
 
-    This class mainly deals with the addition over the field of complex
-    numbers. ``Add(*args)`` is more efficient than ``sum(args)`` because
-    the algoritm is linear in the number of terms.
+    Every argument of ``Add()`` must be ``Expr``. Infix operator ``+``
+    on most scalar objects in SymPy calls this class.
 
     Another use of ``Add()`` is to represent the structure of abstract
     addition so that its arguments can be substituted to return different
@@ -101,8 +98,11 @@ class Add(Expr, AssocOp):
     If no argument is passed, identity element 0 is returned. If single
     element is passed, that element is returned.
 
+    Note that ``Add(*args)`` is more efficient than ``sum(args)`` because
+    the algoritm is linear in the number of terms.
+
     Since addition is group operation, every argument should have the
-    same kind.
+    same :obj:`sympy.core.kind.Kind()`.
 
     Examples
     ========
@@ -130,7 +130,7 @@ class Add(Expr, AssocOp):
     >>> expr = Add(x,y).subs({x:A, y:B})
     >>> expr
     A + B
-    >>> expr.func
+    >>> type(expr)
     <class 'sympy.matrices.expressions.matadd.MatAdd'>
 
     Note that the printers don't display in args order.
