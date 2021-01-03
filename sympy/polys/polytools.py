@@ -1470,11 +1470,7 @@ class Poly(Basic):
         g = sympify(g)
 
         if not g.is_Poly:
-            try:
-                return f.mul_ground(g)
-            except CoercionFailed:
-                f = div(f, 1, domain = "QQ")[0]
-                return f.mul_ground(g)
+            return f.mul_ground(g)
 
         _, per, F, G = f._unify(g)
 
@@ -7182,7 +7178,7 @@ def poly(expr, *gens, **args):
                     factor = Mul(*factors)
 
                     if factor.is_Number:
-                        product = product.mul(factor)
+                        product *= factor
                     else:
                         product = product.mul(Poly._from_expr(factor, opt))
 
