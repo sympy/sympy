@@ -339,10 +339,22 @@ def _invert_complex(f, g_ys, symbol):
                                imageset(Lambda(n, f.inverse()(n)), g_ys), symbol)
 
     if isinstance(f, exp):
-        if isinstance(g_ys, FiniteSet):
+        x = Symbol('x')
+        from sympy.abc import k,n
+        if isinstance(g_ys,list) and not isinstance(g_ys, FiniteSet) \
+                        and not isinstance(g_ys,ImageSet):
+            exp_invs = Union(*[imageset(Lambda(((k, n),), I*(2*k*pi) +
+                                log(Abs(g_ys[0]))), S.Integers**2)])
+
+            return _invert_complex(f.args[0], exp_invs,symbol)
+
+        elif isinstance(g_ys, FiniteSet):
+            fg = [ I*(2*n*pi + arg(g_y)) + log(Abs(g_y)) for g_y in g_ys if g_y != 0]
             exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
-                                               log(Abs(g_y))), S.Integers)
-                               for g_y in g_ys if g_y != 0])
+                                            log(Abs(g_y))), S.Integers)
+                            for g_y in g_ys if g_y != 0])
+            if (exp_invs.has(log) and f.has(exp)) and (not g_ys.has(Dummy)):
+                return _invert_complex(f.args[0], fg , symbol)
             return _invert_complex(f.args[0], exp_invs, symbol)
 
     return (f, g_ys)

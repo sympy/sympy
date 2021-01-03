@@ -1072,7 +1072,8 @@ def test_solveset():
 
     assert solveset(x - 1 >= 0, x, S.Reals) == Interval(1, oo)
     assert solveset(exp(x) - 1 >= 0, x, S.Reals) == Interval(0, oo)
-
+    
+    assert dumeq(solveset(exp(exp(x))-5, x), imageset(Lambda(((k, n),), 2*k*I*pi + log(Abs(2*n*I*pi + log(5)))), ProductSet(S.Integers, S.Integers)))
     assert dumeq(solveset(exp(x) - 1, x), imageset(Lambda(n, 2*I*pi*n), S.Integers))
     assert dumeq(solveset(Eq(exp(x), 1), x), imageset(Lambda(n, 2*I*pi*n),
                                                   S.Integers))
