@@ -189,13 +189,16 @@ class Boolean(Basic):
         return refine(self, assumptions)
 
     def _eval_refine(self, assumptions):
+        from sympy.assumptions import ask
+
         if not self.args:
             return self
         args = [a.refine(assumptions) for a in self.args]
-        ret = self.func(*args)
-        if ret in (True, False):
-            return ret
-        return ret
+        expr = self.func(*args)
+        boolval = ask(expr, assumptions)
+        if boolval in (True, False):
+            return boolval
+        return expr
 
 
 class BooleanAtom(Boolean):
