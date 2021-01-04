@@ -342,7 +342,7 @@ class KindDispatcher:
     @property
     def __doc__(self):
         docs = [
-            "Associative kind dispatcher : %s" % self.name,
+            "Kind dispatcher : %s" % self.name,
             "Note that support for this is experimental. See the docs for :class:`KindDispatcher` for details"
         ]
 
