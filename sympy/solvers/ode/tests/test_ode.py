@@ -2211,11 +2211,3 @@ def test_issue_17322():
     sol = [Eq(f(x), C1), Eq(f(x), C1*exp(-x))]
     assert set(sol) == set(dsolve(eq, hint='lie_group'))
     assert checkodesol(eq, sol) == 2*[(True, 0)]
-
-
-def test_issue_4414():
-    from sympy import besselj, bessely
-    eq = f(x).diff(x, x)+2/x*f(x).diff(x)+f(x)
-    sol = Eq(f(x),(C1*besselj('1/2', x) + C2*bessely('1/2', x))/sqrt(x))
-    assert dsolve(eq) == sol
-    assert checkodesol(eq, sol) == (True, 0)
