@@ -179,6 +179,7 @@ def get_known_facts_dict():
         Q.composite: set([Q.composite]),
         Q.diagonal: set([Q.diagonal, Q.lower_triangular, Q.normal, Q.square,
         Q.symmetric, Q.triangular, Q.upper_triangular]),
+        Q.eq: set([Q.eq]),
         Q.even: set([Q.algebraic, Q.complex, Q.even, Q.extended_real,
         Q.finite, Q.hermitian, Q.integer, Q.rational, Q.real]),
         Q.extended_real: set([Q.extended_real]),
