@@ -5,8 +5,8 @@ Reference docs for the Poly Domains
 ===================================
 
 This page lists the reference documentation for the domains in the polys
-module. For a general introduction to the polts module it is recommended to
-read :ref:`polys-basics` instead. For an introductoray explanation of the
+module. For a general introduction to the polys module it is recommended to
+read :ref:`polys-basics` instead. For an introductory explanation of the
 what the domain system is and how it is used it is recommended to read
 :ref:`polys-domainsintro`. This page lists the reference docs for the
 :py:class:`~.Domain` class and its subclasses (the specific domains such as

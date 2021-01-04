@@ -17,7 +17,7 @@ functions that make use of the domains are documented in
 What are the domains?
 =====================
 
-For most users the domains are only really noticable in the printed output of
+For most users the domains are only really noticeable in the printed output of
 a :py:class:`~.Poly`::
 
   >>> from sympy import Symbol, Poly
@@ -509,7 +509,7 @@ rationals. We can use the Gaussian domains like::
   >>> z**2
   (-3 + 4*I)
 
-Note the constrast with the way this calculation works in the tree
+Note the contrast with the way this calculation works in the tree
 representation where :py:func:`~.expand` is needed to get the reduced form::
 
   >>> from sympy import expand, I
@@ -1105,7 +1105,7 @@ For other domains the domain representation of expressions is usually more
 efficient than the tree representation used by :py:class:`~.Expr`. In
 :ref:`EX` the internal representation is :py:class:`~.Expr` so it is clearly
 not more efficient. The purpose of the :ref:`EX` domain is to be able to wrap
-up arbitrary expressions in an interace that is consistent with the other
+up arbitrary expressions in an interface that is consistent with the other
 domains. The :ref:`EX` domain is used as a fallback when an appropriate domain
 can not be found. Although this does not offer any particular efficiency it
 does allow the algorithms that are implemented to work over arbitrary domains
@@ -1234,7 +1234,7 @@ is used to convert elements from one domain into elements of another domain::
   True
 
 The :py:meth:`~.Domain.convert` method can be called without specifying the
-source domain as the second ergument e.g.::
+source domain as the second argument e.g.::
 
   >>> QQ.convert(ZZ(2))
   2
