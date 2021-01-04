@@ -1714,6 +1714,12 @@ def _get_examples_ode_sol_2nd_linear_bessel():
         'eq': (x-2)**2*(f(x).diff(x, 2)) - (x-2)*f(x).diff(x) + 4*(x-2)**2*f(x),
         'sol': [Eq(f(x), (x - 2)*(C1*besselj(1, 2*x - 4) + C2*bessely(1, 2*x - 4)))],
     },
+
+    # https://github.com/sympy/sympy/issues/4414
+    '2nd_lin_bessel_11': {
+        'eq': f(x).diff(x, x) + 2/x*f(x).diff(x) + f(x),
+        'sol': [Eq(f(x), (C1*besselj(S(1)/2, x) + C2*bessely(S(1)/2, x))/sqrt(x))],
+    },
     }
     }
 
