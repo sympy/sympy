@@ -1122,6 +1122,39 @@ def _LUdecompositionFF(M):
 
     return P, L, DD, U
 
+def Singular_Value_Decomposition(A):
+    from sympy import sqrt
+
+    AH = A.H
+    m, n = A.shape
+    if m >= n:
+        V, S = (AH * A).diagonalize()
+
+        ranked = []
+        for i, x in enumerate(S.diagonal()):
+            if not x.is_zero:
+                ranked.append(i)
+
+        V = V[:, ranked]
+        S = Matrix.diag([sqrt(S[i, i]) for i in range(S.rows) if i in ranked])
+
+        V, _ = V.QRdecomposition()
+        U = A * V * S.inv()
+    else:
+        U, S = (A * AH).diagonalize()
+
+        ranked = []
+        for i, x in enumerate(S.diagonal()):
+            if not x.is_zero:
+                ranked.append(i)
+
+        U = U[:, ranked]
+        S = Matrix.diag([sqrt(S[i, i]) for i in range(S.rows) if i in ranked])
+
+        U, _ = U.QRdecomposition()
+        V = AH * U * S.inv()
+
+    return U, S, V
 
 def _QRdecomposition_optional(M, normalize=True):
     def dot(u, v):
