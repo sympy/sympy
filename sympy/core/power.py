@@ -521,7 +521,7 @@ class Pow(Expr):
         if self.base == self.exp:
             if self.base.is_extended_nonnegative:
                 return True
-        elif self.base.is_positive:
+        if self.base.is_positive:
             if self.exp.is_real:
                 return True
         elif self.base.is_extended_negative:
