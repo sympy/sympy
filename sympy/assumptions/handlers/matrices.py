@@ -1,6 +1,6 @@
 """
 This module contains query handlers responsible for Matrices queries:
-Square,Symmetric, Invertible etc.
+Square, Symmetric, Invertible etc.
 """
 
 from sympy.logic.boolalg import conjuncts
