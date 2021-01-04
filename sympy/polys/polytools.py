@@ -3667,9 +3667,16 @@ class Poly(Basic):
             roots = list(map(sympify,
                 sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
         except NoConvergence:
-            raise NoConvergence(
-                'convergence to root failed; try n < %s or maxsteps > %s' % (
-                n, maxsteps))
+            try:
+                # If roots did not converge try again with more extra precision.
+                roots = mpmath.polyroots(coeffs, maxsteps=maxsteps,
+                    cleanup=cleanup, error=False, extraprec=f.degree()*15)
+                roots = list(map(sympify,
+                    sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
+            except NoConvergence:
+                raise NoConvergence(
+                    'convergence to root failed; try n < %s or maxsteps > %s' % (
+                    n, maxsteps))
         finally:
             mpmath.mp.dps = dps
 
