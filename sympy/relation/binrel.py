@@ -7,6 +7,8 @@ from sympy.core.compatibility import ordered
 from sympy.logic.boolalg import BooleanAtom
 from sympy.simplify import simplify
 
+from .sideproxy import SideProxy
+
 
 class BinaryRelation(Predicate):
     """
@@ -106,7 +108,12 @@ class AppliedBinaryRelation(AppliedPredicate):
     to the arguments.
 
     This class wraps its argument and remain unevaluated. To evaluate it
-    to boolean value, use :obj:`~.ask()` function.
+    to boolean value, use :obj:`~.ask()` or :obj:`~.refine()` function.
+
+    Symbolic manipulation of relation is supported. You can apply method,
+    function, or attribute to each side (or both sides) of the relation
+    via ``applylhs``, ``applyrhs``, or ``apply`` property. See the
+    docstring for example.
 
     Examples
     ========
@@ -127,18 +134,42 @@ class AppliedBinaryRelation(AppliedPredicate):
     >>> eqn2.simplify()
     x*y = x*z
 
-    ``ask()`` evaluates the relation to boolean value. If the truth
-    value cannot be determined, it returns ``None``.
+    ``ask()`` evaluates the relation to boolean value, with taking
+    assumptions into account. If the truth value cannot be determined,
+    it returns ``None``.
 
     >>> from sympy import ask, Abs
     >>> eqn3 = Q.eq(Abs(x), x)
-    >>> print(ask(eqn2))
+    >>> print(ask(eqn3))
     None
     >>> ask(eqn3, Q.positive(x))
     True
     >>> ask(eqn3, Q.negative(x))
     False
 
+    ``refine()`` evaluates the relation to boolean value, with taking
+    assumptions into account. If the truth value cannot be determined,
+    it returns simplified relation.
+
+    >>> from sympy import refine
+    >>> refine(eqn3)
+    Abs(x) = x
+    >>> refine(eqn3, Q.positive(x))
+    True
+    >>> refine(eqn3, Q.negative(x))
+    False
+
+    You can manipulate the arguments of relation with ``applylhs``,
+    ``applyrhs``, or ``apply`` property.
+
+    >>> from sympy import gamma, trigsimp
+    >>> eqn4 = Q.eq(sin(x)**2 + cos(x)**2, gamma(x)/gamma(x-2))
+    >>> eqn4.apply.simplify()  # Apply simplify method on both side
+    1 = (x - 2)*(x - 1)
+    >>> eqn4.applyrhs.simplify()  # Apply simplify method on right hand side
+    sin(x)**2 + cos(x)**2 = (x - 2)*(x - 1)
+    >>> eqn4.applylhs(trigsimp)  # Apply trigsimp function on left hand side
+    1 = gamma(x)/gamma(x - 2)
     """
 
     # will be deleted after _op_priority is removed from SymPy
@@ -153,6 +184,21 @@ class AppliedBinaryRelation(AppliedPredicate):
     def rhs(self):
         """The right-hand side of the relation."""
         return self.arguments[1]
+
+    @property
+    def apply(self):
+        """Proxy object to apply operation on both sides."""
+        return SideProxy(self, "both")
+
+    @property
+    def applylhs(self):
+        """Proxy object to apply operation on left hand sides."""
+        return SideProxy(self, "lhs")
+
+    @property
+    def applyrhs(self):
+        """Proxy object to apply operation on right hand sides."""
+        return SideProxy(self, "rhs")
 
     @property
     def reversed(self):
@@ -248,18 +294,6 @@ class AppliedBinaryRelation(AppliedPredicate):
         Simplify *self* without evaluating to boolean value. Assumption
         is not taken into consideration.
 
-        Parameters
-        ==========
-
-        equation : bool, optional
-            If ``True``, simplify both sides and canonical result.
-            If ``False``, each side is simplified but not canonicalized.
-            You can decide which side to be simplified by *side* argument.
-
-        side : "all", "lhs" or "rhs", optional
-            Specify which side the rewriting will be done. Only valid
-            when *equation* is ``True``. Default is "all".
-
         Examples
         ========
 
@@ -268,10 +302,6 @@ class AppliedBinaryRelation(AppliedPredicate):
         >>> eqn = Q.eq(sin(x)**2 + cos(x)**2, gamma(x)/gamma(x-2))
         >>> eqn.simplify()
         x**2 - 3*x = -1
-        >>> eqn.simplify(equation=False)
-        1 = (x - 2)*(x - 1)
-        >>> eqn.simplify(equation=False, side='lhs')
-        1 = gamma(x)/gamma(x - 2)
         """
         kwargs.update(equation=equation,
                       side=side)
@@ -279,17 +309,5 @@ class AppliedBinaryRelation(AppliedPredicate):
 
     def _eval_simplify(self, **kwargs):
         from .reltools import eqnsimp
-
-        equation = kwargs.get('equation', True)
-        side = kwargs.get('side', 'all')
-
         lhs, rhs = self.arguments
-
-        if equation:
-            return eqnsimp(self.function, lhs, rhs, **kwargs)
-
-        if side in ("all", "lhs"):
-            lhs = self.lhs.simplify(**kwargs)
-        if side in ("all", "rhs"):
-            rhs = self.rhs.simplify(**kwargs)
-        return self.function(lhs, rhs)
+        return eqnsimp(self.function, lhs, rhs, **kwargs)
