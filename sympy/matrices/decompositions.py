@@ -1122,6 +1122,60 @@ def _LUdecompositionFF(M):
     return P, L, DD, U
 
 def Singular_Value_Decomposition(A):
+    r"""Returns a Condensed Singular Value decomposition.
+
+    Explanation
+    ===========
+
+    A Singular Value decomposition is a decomposition in the form $A = U \Sigma V$
+    where
+
+    - $U, V$ are column orthogonal matrix.
+    - $\Sigma$ is a diagonal matrix, where the main diagonal contains singular
+      values of matrix A.
+
+    A column orthogonal matrix satisfies
+    $\mathbb{I} = U^H U$ while a full orthogonal matrix satisfies
+    relation $\mathbb{I} = U U^H = U^H U$ where $\mathbb{I}$ is an identity
+    matrix with matching dimensions.
+
+    For matrices which are not square or are rank-deficient, it is
+    sufficient to return a column orthogonal matrix because augmenting
+    them may introduce redundant computations.
+    In condensed Singular Value Decomposition we only return column orthognal
+    matrices because of this reason
+
+    If you want to augment the results to return a full orthogonal
+    decomposition, you should use the following procedures.
+
+    - Augment the $U , V$ matrices with columns that are orthogonal to every
+      other columns and make it square.
+    - Augument the $\Sigma$ matrix with zero rows to make it have the same
+      shape as the original matrix.
+
+    The procedure will be illustrated in the examples section.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> A = Matrix([[1, 2],[2,1]])
+    >>> U, S, V = A.SVD()
+    >>> U
+    Matrix([
+    [ sqrt(2)/2, sqrt(2)/2],
+    [-sqrt(2)/2, sqrt(2)/2]])
+    >>> S
+    Matrix([
+    [1, 0],
+    [0, 3]])
+    >>> V
+    Matrix([
+    [-sqrt(2)/2, sqrt(2)/2],
+    [ sqrt(2)/2, sqrt(2)/2]])
+
+    """
+
     from sympy import Matrix
     AH = A.H
     m, n = A.shape
@@ -1136,7 +1190,7 @@ def Singular_Value_Decomposition(A):
         V = V[:, ranked]
         S = Matrix.diag([sqrt(S[i, i]) for i in range(S.rows) if i in ranked])
 
-        V, _ = V.QRdecomposition()
+        # V, _ = V.QRdecomposition()
         U = A * V * S.inv()
     else:
         U, S = (A * AH).diagonalize()
