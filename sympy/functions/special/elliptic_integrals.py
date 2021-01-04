@@ -57,7 +57,7 @@ class elliptic_k(Function):
     @classmethod
     def eval(cls, m):
         if m.is_zero:
-            return pi/2
+            return pi*S.Half
         elif m is S.Half:
             return 8*pi**Rational(3, 2)/gamma(Rational(-1, 4))**2
         elif m is S.One:
@@ -67,9 +67,6 @@ class elliptic_k(Function):
         elif m in (S.Infinity, S.NegativeInfinity, I*S.Infinity,
                    I*S.NegativeInfinity, S.ComplexInfinity):
             return S.Zero
-
-        if m.is_zero:
-            return pi*S.Half
 
     def fdiff(self, argindex=1):
         m = self.args[0]

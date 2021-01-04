@@ -5,8 +5,8 @@ from sympy.assumptions.assume import (global_assumptions, Predicate,
 from sympy.core import sympify
 from sympy.core.cache import cacheit
 from sympy.core.relational import Relational
-from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent,
-                                 BooleanFunction, BooleanAtom)
+from sympy.core.kind import BooleanKind
+from sympy.logic.boolalg import (to_cnf, And, Not, Or, Implies, Equivalent)
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
 from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
@@ -19,9 +19,14 @@ from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 
 class AssumptionKeys:
     """
-    This class contains all the supported keys by ``ask``. It should be accessed via the instance ``sympy.Q``.
+    This class contains all the supported keys by ``ask``.
+    It should be accessed via the instance ``sympy.Q``.
 
     """
+
+    # DO NOT add methods or properties other than predicate keys.
+    # SAT solver checks the properties of Q and use them to compute the
+    # fact system. Non-predicate attributes will break this.
 
     @memoize_property
     def hermitian(self):
@@ -1301,12 +1306,12 @@ def _extract_facts(expr, symbol, check_reversed_rel=True):
         return expr.func(*args)
 
 
-def _extract_all_facts(expr, symbol):
+def _extract_all_facts(expr, symbols):
     facts = set()
-    if isinstance(symbol, Relational):
-        symbols = (symbol, symbol.reversed)
-    else:
-        symbols = (symbol,)
+    if len(symbols) == 1 and isinstance(symbols[0], Relational):
+        rel = symbols[0]
+        symbols = (rel, rel.reversed)
+
     for clause in expr.clauses:
         args = []
         for literal in clause:
@@ -1325,18 +1330,31 @@ def _extract_all_facts(expr, symbol):
 
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
-    Method for inferring properties about objects.
-
-    Explanation
-    ===========
+    Function to evaluate the proposition with assumptions.
 
     **Syntax**
 
         * ask(proposition)
+            Evaluate the *proposition* in global assumption context.
 
         * ask(proposition, assumptions)
+            Evaluate the *proposition* with respect to *assumptions* in
+            global assumption context.
 
-            where ``proposition`` is any boolean expression
+    Parameters
+    ==========
+
+    proposition : any boolean expression
+        Proposition which will be evaluated to boolean value. If this is
+        not ``AppliedPredicate``, it will be wrapped by ``Q.is_true``.
+
+    assumptions : any boolean expression, optional
+        Local assumptions to evaluate the *proposition*.
+
+    context : AssumptionsContext, optional
+        Default assumptions to evaluate the *proposition*. By default,
+        this is ``sympy.assumptions.global_assumptions`` variable.
+
 
     Examples
     ========
@@ -1350,7 +1368,13 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     >>> ask(Q.prime(4*x), Q.integer(x))
     False
 
+    If the truth value cannot be determined, ``None`` will be returned.
+
+    >>> print(ask(Q.odd(3*x))) # cannot determine unless we know x
+    None
+
     **Remarks**
+
         Relations in assumptions are not implemented (yet), so the following
         will not give a meaningful result.
 
@@ -1361,21 +1385,24 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     """
     from sympy.assumptions.satask import satask
 
-    if not isinstance(proposition, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
+    proposition = sympify(proposition)
+    assumptions = sympify(assumptions)
+
+    if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
         raise TypeError("proposition must be a valid logical expression")
 
-    if not isinstance(assumptions, (BooleanFunction, AppliedPredicate, bool, BooleanAtom)):
+    if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
 
     if isinstance(proposition, AppliedPredicate):
-        key, expr = proposition.func, sympify(proposition.arg)
+        key, args = proposition.function, proposition.arguments
     else:
-        key, expr = Q.is_true, sympify(proposition)
+        key, args = Q.is_true, (proposition,)
 
     assump = CNF.from_prop(assumptions)
     assump.extend(context)
 
-    local_facts = _extract_all_facts(assump, expr)
+    local_facts = _extract_all_facts(assump, args)
 
     known_facts_cnf = get_all_known_facts()
     known_facts_dict = get_known_facts_dict()
@@ -1405,7 +1432,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
                     return False
 
     # direct resolution method, no logic
-    res = key(expr)._eval_ask(assumptions)
+    res = key(*args)._eval_ask(assumptions)
     if res is not None:
         return bool(res)
     # using satask (still costly)
@@ -1443,8 +1470,9 @@ def register_handler(key, handler):
         True
 
     """
-    if type(key) is Predicate:
-        key = key.name
+    # Will be deprecated
+    if isinstance(key, Predicate):
+        key = key.name.name
     Qkey = getattr(Q, key, None)
     if Qkey is not None:
         Qkey.add_handler(handler)
@@ -1454,8 +1482,9 @@ def register_handler(key, handler):
 
 def remove_handler(key, handler):
     """Removes a handler from the ask system. Same syntax as register_handler"""
-    if type(key) is Predicate:
-        key = key.name
+    # Will be deprecated
+    if isinstance(key, Predicate):
+        key = key.name.name
     getattr(Q, key).remove_handler(handler)
 
 
@@ -1543,7 +1572,7 @@ def compute_known_facts(known_facts, known_facts_keys):
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
     ("antihermitian",     "sets.AskAntiHermitianHandler"),
-    ("finite",           "calculus.AskFiniteHandler"),
+    ("finite",            "calculus.AskFiniteHandler"),
     ("commutative",       "AskCommutativeHandler"),
     ("complex",           "sets.AskComplexHandler"),
     ("composite",         "ntheory.AskCompositeHandler"),

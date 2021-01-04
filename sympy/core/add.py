@@ -1,5 +1,6 @@
 from collections import defaultdict
 from functools import cmp_to_key, reduce
+from operator import attrgetter
 from .basic import Basic
 from .compatibility import is_sequence
 from .parameters import global_parameters
@@ -9,6 +10,7 @@ from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
+from .kind import UndefinedKind
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -65,6 +67,7 @@ def _unevaluated_Add(*args):
     if co:
         newargs.insert(0, co)
     return Add._from_args(newargs)
+
 
 class Add(Expr, AssocOp):
 
@@ -296,6 +299,19 @@ class Add(Expr, AssocOp):
     def class_key(cls):
         """Nice order of classes"""
         return 3, 1, cls.__name__
+
+    @property
+    def kind(self):
+        k = attrgetter('kind')
+        kinds = map(k, self.args)
+        kinds = frozenset(kinds)
+        if len(kinds) != 1:
+            # Since addition is group operator, kind must be same.
+            # We know that this is unexpected signature, so return this.
+            result = UndefinedKind
+        else:
+            result, = kinds
+        return result
 
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.
@@ -593,7 +609,7 @@ class Add(Expr, AssocOp):
         nz = []
         z = 0
         im_or_z = False
-        im = False
+        im = 0
         for a in self.args:
             if a.is_extended_real:
                 if a.is_zero:
@@ -603,7 +619,7 @@ class Add(Expr, AssocOp):
                 else:
                     return
             elif a.is_imaginary:
-                im = True
+                im += 1
             elif (S.ImaginaryUnit*a).is_extended_real:
                 im_or_z = True
             else:
@@ -614,10 +630,11 @@ class Add(Expr, AssocOp):
             return None
         b = self.func(*nz)
         if b.is_zero:
-            if not im_or_z and not im:
-                return True
-            if im and not im_or_z:
-                return False
+            if not im_or_z:
+                if im == 0:
+                    return True
+                elif im == 1:
+                    return False
         if b.is_zero is False:
             return False
 
