@@ -278,7 +278,7 @@ class AppliedBinaryRelation(AppliedPredicate):
         return simplify(self, **kwargs)
 
     def _eval_simplify(self, **kwargs):
-        from .eqntools import eqnsimp
+        from .reltools import eqnsimp
 
         equation = kwargs.get('equation', True)
         side = kwargs.get('side', 'all')

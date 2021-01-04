@@ -15,4 +15,4 @@ __all__ = ['BinaryRelation', 'AppliedBinaryRelation',
 
 from .binrel import BinaryRelation, AppliedBinaryRelation
 from .equality import Equal
-from .eqntools import eqnsimp
+from .reltools import eqnsimp

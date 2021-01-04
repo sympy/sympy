@@ -145,7 +145,7 @@ modules = [
     'sympy.printing',
     'sympy.printing.pretty',
     'sympy.relation',
-    'sympy.relation.eqntools',
+    'sympy.relation.reltools',
     'sympy.relation.handlers',
     'sympy.sandbox',
     'sympy.series',
