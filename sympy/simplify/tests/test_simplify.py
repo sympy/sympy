@@ -13,7 +13,7 @@ from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
 from sympy.testing.pytest import XFAIL, slow
 
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k, n, N
+from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k, N
 
 
 def test_issue_7263():
