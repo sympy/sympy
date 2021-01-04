@@ -91,6 +91,35 @@ def test_LUdecomp():
     )
     raises(ValueError, lambda : M.LUdecomposition_Simple(rankcheck=True))
 
+def test_SVD():
+    A = Matrix([[1, 2], [2, 1]])
+    U, S, V = A.SVD()
+    assert U * S * V.T == A
+    assert U.T * U == eye(U.cols)
+    assert V.T * V == eye(V.cols)
+
+    B = Matrix([[1, 2]])
+    U, S, V = B.SVD()
+
+    assert U * S * V.T == B
+    assert U.T * U == eye(U.cols)
+    assert V.T * V == eye(V.cols)
+
+    C = Matrix([
+        [1, 0, 0, 0, 2],
+        [0, 0, 3, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 2, 0, 0, 0],
+    ])
+
+    U, S, V = C.SVD()
+
+    assert U * S * V.T == C
+    assert U.T * U == eye(U.cols)
+    assert V.T * V == eye(V.cols)
+
+
+
 def test_QR():
     A = Matrix([[1, 2], [2, 3]])
     Q, S = A.QRdecomposition()

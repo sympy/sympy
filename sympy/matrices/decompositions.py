@@ -2,7 +2,6 @@ import copy
 
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
-
 from .common import NonSquareMatrixError, NonPositiveDefiniteMatrixError
 from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot_naive
@@ -1123,8 +1122,7 @@ def _LUdecompositionFF(M):
     return P, L, DD, U
 
 def Singular_Value_Decomposition(A):
-    from sympy import sqrt
-
+    from sympy import Matrix
     AH = A.H
     m, n = A.shape
     if m >= n:
