@@ -49,9 +49,9 @@ class RationalField(Field, CharacteristicZero, SimpleDomain):
         Examples
         ========
 
-            >>> from sympy import QQ, sqrt
-            >>> QQ.algebraic_field(sqrt(2))
-            QQ<sqrt(2)>
+        >>> from sympy import QQ, sqrt
+        >>> QQ.algebraic_field(sqrt(2))
+        QQ<sqrt(2)>
         """
         from sympy.polys.domains import AlgebraicField
         return AlgebraicField(self, *extension)

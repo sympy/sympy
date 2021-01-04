@@ -18,85 +18,85 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     A :py:class:`~.Poly` created from an expression involving `algebraic
     numbers`_ will treat the algebraic numbers as generators if the generators
-    argument is not specified::
+    argument is not specified.
 
-        >>> from sympy import Poly, Symbol, sqrt
-        >>> x = Symbol('x')
-        >>> Poly(x**2 + sqrt(2))
-        Poly(x**2 + (sqrt(2)), x, sqrt(2), domain='ZZ')
+    >>> from sympy import Poly, Symbol, sqrt
+    >>> x = Symbol('x')
+    >>> Poly(x**2 + sqrt(2))
+    Poly(x**2 + (sqrt(2)), x, sqrt(2), domain='ZZ')
 
     That is a multivariate polynomial with ``sqrt(2)`` treated as one of the
     generators (variables). If the generators are explicitly specified then
     ``sqrt(2)`` will be considered to be a coefficient but by default the
     :ref:`EX` domain is used. To make a :py:class:`~.Poly` with a :ref:`QQ(a)`
-    domain the argument ``extension=True`` can be given::
+    domain the argument ``extension=True`` can be given.
 
-        >>> Poly(x**2 + sqrt(2), x)
-        Poly(x**2 + sqrt(2), x, domain='EX')
-        >>> Poly(x**2 + sqrt(2), x, extension=True)
-        Poly(x**2 + sqrt(2), x, domain='QQ<sqrt(2)>')
+    >>> Poly(x**2 + sqrt(2), x)
+    Poly(x**2 + sqrt(2), x, domain='EX')
+    >>> Poly(x**2 + sqrt(2), x, extension=True)
+    Poly(x**2 + sqrt(2), x, domain='QQ<sqrt(2)>')
 
     A generator of the algebraic field extension can also be specified
     explicitly which is particularly useful if the coefficients are all
     rational but an extension field is needed (e.g. to factor the
-    polynomial)::
+    polynomial).
 
-        >>> Poly(x**2 + 1)
-        Poly(x**2 + 1, x, domain='ZZ')
-        >>> Poly(x**2 + 1, extension=sqrt(2))
-        Poly(x**2 + 1, x, domain='QQ<sqrt(2)>')
+    >>> Poly(x**2 + 1)
+    Poly(x**2 + 1, x, domain='ZZ')
+    >>> Poly(x**2 + 1, extension=sqrt(2))
+    Poly(x**2 + 1, x, domain='QQ<sqrt(2)>')
 
     It is possible to factorise a polynomial over a :ref:`QQ(a)` domain using
     the ``extension`` argument to :py:func:`~.factor` or by specifying the domain
-    explicitly::
+    explicitly.
 
-        >>> from sympy import factor, QQ
-        >>> factor(x**2 - 2)
-        x**2 - 2
-        >>> factor(x**2 - 2, extension=sqrt(2))
-        (x - sqrt(2))*(x + sqrt(2))
-        >>> factor(x**2 - 2, domain='QQ<sqrt(2)>')
-        (x - sqrt(2))*(x + sqrt(2))
-        >>> factor(x**2 - 2, domain=QQ.algebraic_field(sqrt(2)))
-        (x - sqrt(2))*(x + sqrt(2))
+    >>> from sympy import factor, QQ
+    >>> factor(x**2 - 2)
+    x**2 - 2
+    >>> factor(x**2 - 2, extension=sqrt(2))
+    (x - sqrt(2))*(x + sqrt(2))
+    >>> factor(x**2 - 2, domain='QQ<sqrt(2)>')
+    (x - sqrt(2))*(x + sqrt(2))
+    >>> factor(x**2 - 2, domain=QQ.algebraic_field(sqrt(2)))
+    (x - sqrt(2))*(x + sqrt(2))
 
     The ``extension=True`` argument can be used but will only create an
     extension that contains the coefficients which is usually not enough to
-    factorise the polynomial::
+    factorise the polynomial.
 
-        >>> p = x**3 + sqrt(2)*x**2 - 2*x - 2*sqrt(2)
-        >>> factor(p)                         # treats sqrt(2) as a symbol
-        (x + sqrt(2))*(x**2 - 2)
-        >>> factor(p, extension=True)
-        (x - sqrt(2))*(x + sqrt(2))**2
-        >>> factor(x**2 - 2, extension=True)  # all rational coefficients
-        x**2 - 2
+    >>> p = x**3 + sqrt(2)*x**2 - 2*x - 2*sqrt(2)
+    >>> factor(p)                         # treats sqrt(2) as a symbol
+    (x + sqrt(2))*(x**2 - 2)
+    >>> factor(p, extension=True)
+    (x - sqrt(2))*(x + sqrt(2))**2
+    >>> factor(x**2 - 2, extension=True)  # all rational coefficients
+    x**2 - 2
 
     It is also possible to use :ref:`QQ(a)` with the :py:func:`~.cancel`
-    and :py:func:`~.gcd` functions::
+    and :py:func:`~.gcd` functions.
 
-        >>> from sympy import cancel, gcd
-        >>> cancel((x**2 - 2)/(x - sqrt(2)))
-        (x**2 - 2)/(x - sqrt(2))
-        >>> cancel((x**2 - 2)/(x - sqrt(2)), extension=sqrt(2))
-        x + sqrt(2)
-        >>> gcd(x**2 - 2, x - sqrt(2))
-        1
-        >>> gcd(x**2 - 2, x - sqrt(2), extension=sqrt(2))
-        x - sqrt(2)
+    >>> from sympy import cancel, gcd
+    >>> cancel((x**2 - 2)/(x - sqrt(2)))
+    (x**2 - 2)/(x - sqrt(2))
+    >>> cancel((x**2 - 2)/(x - sqrt(2)), extension=sqrt(2))
+    x + sqrt(2)
+    >>> gcd(x**2 - 2, x - sqrt(2))
+    1
+    >>> gcd(x**2 - 2, x - sqrt(2), extension=sqrt(2))
+    x - sqrt(2)
 
     When using the domain directly :ref:`QQ(a)` can be used as a constructor
     to create instances which then support the operations ``+,-,*,**,/``. The
     :py:meth:`~.Domain.algebraic_field` method is used to construct a
     particular :ref:`QQ(a)` domain. The :py:meth:`~.Domain.from_sympy` method
-    can be used to create domain elements from normal sympy expressions::
+    can be used to create domain elements from normal sympy expressions.
 
-        >>> K = QQ.algebraic_field(sqrt(2))
-        >>> K
-        QQ<sqrt(2)>
-        >>> xk = K.from_sympy(3 + 4*sqrt(2))
-        >>> xk
-        ANP([4, 3], [1, 0, -2], QQ)
+    >>> K = QQ.algebraic_field(sqrt(2))
+    >>> K
+    QQ<sqrt(2)>
+    >>> xk = K.from_sympy(3 + 4*sqrt(2))
+    >>> xk
+    ANP([4, 3], [1, 0, -2], QQ)
 
     Elements of :ref:`QQ(a)` are instances of :py:class:`~.ANP` which have
     limited printing support. The raw display shows the internal
@@ -106,77 +106,77 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     The minimal polynomial for the generator ``(x**2 - 2)`` is also shown in
     the :ref:`dup-representation` as the list ``[1, 0, -2]``. We can use
     :py:meth:`~.Domain.to_sympy` to get a better printed form for the
-    elements and to see the results of operations::
+    elements and to see the results of operations.
 
-        >>> xk = K.from_sympy(3 + 4*sqrt(2))
-        >>> yk = K.from_sympy(2 + 3*sqrt(2))
-        >>> xk * yk
-        ANP([17, 30], [1, 0, -2], QQ)
-        >>> K.to_sympy(xk * yk)
-        17*sqrt(2) + 30
-        >>> K.to_sympy(xk + yk)
-        5 + 7*sqrt(2)
-        >>> K.to_sympy(xk ** 2)
-        24*sqrt(2) + 41
-        >>> K.to_sympy(xk / yk)
-        sqrt(2)/14 + 9/7
+    >>> xk = K.from_sympy(3 + 4*sqrt(2))
+    >>> yk = K.from_sympy(2 + 3*sqrt(2))
+    >>> xk * yk
+    ANP([17, 30], [1, 0, -2], QQ)
+    >>> K.to_sympy(xk * yk)
+    17*sqrt(2) + 30
+    >>> K.to_sympy(xk + yk)
+    5 + 7*sqrt(2)
+    >>> K.to_sympy(xk ** 2)
+    24*sqrt(2) + 41
+    >>> K.to_sympy(xk / yk)
+    sqrt(2)/14 + 9/7
 
     Any expression representing an algebraic number can be used to generate
     a :ref:`QQ(a)` domain provided its `minimal polynomial`_ can be computed.
-    The function :py:func:`~.minpoly` function is used for this::
+    The function :py:func:`~.minpoly` function is used for this.
 
-        >>> from sympy import exp, I, pi, minpoly
-        >>> g = exp(2*I*pi/3)
-        >>> g
-        exp(2*I*pi/3)
-        >>> g.is_algebraic
-        True
-        >>> minpoly(g, x)
-        x**2 + x + 1
-        >>> factor(x**3 - 1, extension=g)
-        (x - 1)*(x - exp(2*I*pi/3))*(x + 1 + exp(2*I*pi/3))
+    >>> from sympy import exp, I, pi, minpoly
+    >>> g = exp(2*I*pi/3)
+    >>> g
+    exp(2*I*pi/3)
+    >>> g.is_algebraic
+    True
+    >>> minpoly(g, x)
+    x**2 + x + 1
+    >>> factor(x**3 - 1, extension=g)
+    (x - 1)*(x - exp(2*I*pi/3))*(x + 1 + exp(2*I*pi/3))
 
     It is also possible to make an algebraic field from multiple extension
-    elements::
+    elements.
 
-        >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
-        >>> K
-        QQ<sqrt(2) + sqrt(3)>
-        >>> p = x**4 - 5*x**2 + 6
-        >>> factor(p)
-        (x**2 - 3)*(x**2 - 2)
-        >>> factor(p, domain=K)
-        (x - sqrt(2))*(x + sqrt(2))*(x - sqrt(3))*(x + sqrt(3))
-        >>> factor(p, extension=[sqrt(2), sqrt(3)])
-        (x - sqrt(2))*(x + sqrt(2))*(x - sqrt(3))*(x + sqrt(3))
+    >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
+    >>> K
+    QQ<sqrt(2) + sqrt(3)>
+    >>> p = x**4 - 5*x**2 + 6
+    >>> factor(p)
+    (x**2 - 3)*(x**2 - 2)
+    >>> factor(p, domain=K)
+    (x - sqrt(2))*(x + sqrt(2))*(x - sqrt(3))*(x + sqrt(3))
+    >>> factor(p, extension=[sqrt(2), sqrt(3)])
+    (x - sqrt(2))*(x + sqrt(2))*(x - sqrt(3))*(x + sqrt(3))
 
     Multiple extension elements are always combined together to make a single
     `primitive element`_. In the case of ``[sqrt(2), sqrt(3)]`` the primitive
     element chosen is ``sqrt(2) + sqrt(3)`` which is why the domain displays
     as ``QQ<sqrt(2) + sqrt(3)>``. The minimal polynomial for the primitive
-    element is computed using the :py:func:`~.primitive_element` function::
+    element is computed using the :py:func:`~.primitive_element` function.
 
-        >>> from sympy import primitive_element
-        >>> primitive_element([sqrt(2), sqrt(3)], x)
-        (x**4 - 10*x**2 + 1, [1, 1])
-        >>> minpoly(sqrt(2) + sqrt(3), x)
-        x**4 - 10*x**2 + 1
+    >>> from sympy import primitive_element
+    >>> primitive_element([sqrt(2), sqrt(3)], x)
+    (x**4 - 10*x**2 + 1, [1, 1])
+    >>> minpoly(sqrt(2) + sqrt(3), x)
+    x**4 - 10*x**2 + 1
 
     The extension elements that generate the domain can be accessed from the
     domain using the :py:attr:`~.ext` and :py:attr:`~.orig_ext` attributes as
     instances of :py:class:`~.AlgebraicNumber`. The minimal polynomial for
     the primitive element as a :py:class:`~.DMP` instance is available as
-    :py:attr:`~.mod`::
+    :py:attr:`~.mod`.
 
-        >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
-        >>> K
-        QQ<sqrt(2) + sqrt(3)>
-        >>> K.ext
-        sqrt(2) + sqrt(3)
-        >>> K.orig_ext
-        (sqrt(2), sqrt(3))
-        >>> K.mod
-        DMP([1, 0, -10, 0, 1], QQ, None)
+    >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
+    >>> K
+    QQ<sqrt(2) + sqrt(3)>
+    >>> K.ext
+    sqrt(2) + sqrt(3)
+    >>> K.orig_ext
+    (sqrt(2), sqrt(3))
+    >>> K.mod
+    DMP([1, 0, -10, 0, 1], QQ, None)
 
     Notes
     =====
@@ -216,26 +216,26 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
         #: Original elements given to generate the extension.
         #:
-        #:     >>> from sympy import QQ, sqrt
-        #:     >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
-        #:     >>> K.orig_ext
-        #:     (sqrt(2), sqrt(3))
+        #: >>> from sympy import QQ, sqrt
+        #: >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
+        #: >>> K.orig_ext
+        #: (sqrt(2), sqrt(3))
         self.orig_ext = orig_ext
 
         #: Primitive element used for the extension.
         #:
-        #:     >>> from sympy import QQ, sqrt
-        #:     >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
-        #:     >>> K.ext
-        #:     sqrt(2) + sqrt(3)
+        #: >>> from sympy import QQ, sqrt
+        #: >>> K = QQ.algebraic_field(sqrt(2), sqrt(3))
+        #: >>> K.ext
+        #: sqrt(2) + sqrt(3)
         self.ext = to_number_field(ext)
 
         #: Minimal polynomial for the primitive element of the extension.
         #:
-        #:     >>> from sympy import QQ, sqrt
-        #:     >>> K = QQ.algebraic_field(sqrt(2))
-        #:     >>> K.mod
-        #:     DMP([1, 0, -2], QQ, None)
+        #: >>> from sympy import QQ, sqrt
+        #: >>> K = QQ.algebraic_field(sqrt(2))
+        #: >>> K.mod
+        #: DMP([1, 0, -2], QQ, None)
         self.mod = self.ext.minpoly.rep
 
         self.domain = self.dom = dom

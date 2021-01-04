@@ -30,35 +30,35 @@ class Domain:
     ========
 
     The most common example domains are the integers :ref:`ZZ` and the
-    rationals :ref:`QQ`::
+    rationals :ref:`QQ`.
 
-        >>> from sympy import Poly, symbols, Domain
-        >>> x, y = symbols('x, y')
-        >>> p = Poly(x**2 + y)
-        >>> p
-        Poly(x**2 + y, x, y, domain='ZZ')
-        >>> p.domain
-        ZZ
-        >>> isinstance(p.domain, Domain)
-        True
-        >>> Poly(x**2 + y/2)
-        Poly(x**2 + 1/2*y, x, y, domain='QQ')
+    >>> from sympy import Poly, symbols, Domain
+    >>> x, y = symbols('x, y')
+    >>> p = Poly(x**2 + y)
+    >>> p
+    Poly(x**2 + y, x, y, domain='ZZ')
+    >>> p.domain
+    ZZ
+    >>> isinstance(p.domain, Domain)
+    True
+    >>> Poly(x**2 + y/2)
+    Poly(x**2 + 1/2*y, x, y, domain='QQ')
 
     The domains can be used directly in which case the domain object e.g.
     (:ref:`ZZ` or :ref:`QQ`) can be used as a constructor for elements of
-    ``dtype``::
+    ``dtype``.
 
-        >>> from sympy import ZZ, QQ
-        >>> ZZ(2)
-        2
-        >>> ZZ.dtype
-        <class 'int'>
-        >>> type(ZZ(2))
-        <class 'int'>
-        >>> QQ(1, 2)
-        1/2
-        >>> type(QQ(1, 2))
-        <class 'sympy.polys.domains.pythonrational.PythonRational'>
+    >>> from sympy import ZZ, QQ
+    >>> ZZ(2)
+    2
+    >>> ZZ.dtype
+    <class 'int'>
+    >>> type(ZZ(2))
+    <class 'int'>
+    >>> QQ(1, 2)
+    1/2
+    >>> type(QQ(1, 2))
+    <class 'sympy.polys.domains.pythonrational.PythonRational'>
 
     The corresponding domain elements can be used with the arithmetic
     operations ``+,-,*,**`` and depending on the domain some combination of
@@ -66,26 +66,26 @@ class Domain:
     division) and ``%`` (modulo division) can be used but ``/`` (true
     division) can not. Since :ref:`QQ` is a :py:class:`~.Field` its elements
     can also be used with ``/``. Some domains have a :py:meth:`~.Domain.gcd`
-    method::
+    method.
 
-        >>> ZZ(2) + ZZ(3)
-        5
-        >>> ZZ(5) // ZZ(2)
-        2
-        >>> ZZ(5) % ZZ(2)
-        1
-        >>> QQ(1, 2) / QQ(2, 3)
-        3/4
-        >>> QQ(1, 2) % QQ(2, 3)
-        0
-        >>> ZZ.gcd(ZZ(4), ZZ(2))
-        2
-        >>> QQ.gcd(QQ(2,7), QQ(5,3))
-        1/21
-        >>> ZZ.is_Field
-        False
-        >>> QQ.is_Field
-        True
+    >>> ZZ(2) + ZZ(3)
+    5
+    >>> ZZ(5) // ZZ(2)
+    2
+    >>> ZZ(5) % ZZ(2)
+    1
+    >>> QQ(1, 2) / QQ(2, 3)
+    3/4
+    >>> QQ(1, 2) % QQ(2, 3)
+    0
+    >>> ZZ.gcd(ZZ(4), ZZ(2))
+    2
+    >>> QQ.gcd(QQ(2,7), QQ(5,3))
+    1/21
+    >>> ZZ.is_Field
+    False
+    >>> QQ.is_Field
+    True
 
     There are also many other domains including:
 
@@ -106,77 +106,77 @@ class Domain:
     more efficient than a normal SymPy expression which is of type
     :py:class:`~.Expr`. The domain methods :py:meth:`~.Domain.from_sympy` and
     :py:meth:`~.Domain.to_sympy` are used to convert from :py:class:`~.Expr`
-    to a domain element and vice versa::
+    to a domain element and vice versa.
 
-        >>> from sympy import Symbol, ZZ, Expr
-        >>> x = Symbol('x')
-        >>> K = ZZ[x]           # polynomial ring domain
-        >>> K
-        ZZ[x]
-        >>> type(K)             # class of the domain
-        <class 'sympy.polys.domains.polynomialring.PolynomialRing'>
-        >>> K.dtype             # class of the elements
-        <class 'sympy.polys.rings.PolyElement'>
-        >>> p_expr = x**2 + 1   # Expr
-        >>> p_expr
-        x**2 + 1
-        >>> type(p_expr)
-        <class 'sympy.core.add.Add'>
-        >>> isinstance(p_expr, Expr)
-        True
-        >>> p_domain = K.from_sympy(p_expr)
-        >>> p_domain            # domain element
-        x**2 + 1
-        >>> type(p_domain)
-        <class 'sympy.polys.rings.PolyElement'>
-        >>> K.to_sympy(p_domain) == p_expr
-        True
+    >>> from sympy import Symbol, ZZ, Expr
+    >>> x = Symbol('x')
+    >>> K = ZZ[x]           # polynomial ring domain
+    >>> K
+    ZZ[x]
+    >>> type(K)             # class of the domain
+    <class 'sympy.polys.domains.polynomialring.PolynomialRing'>
+    >>> K.dtype             # class of the elements
+    <class 'sympy.polys.rings.PolyElement'>
+    >>> p_expr = x**2 + 1   # Expr
+    >>> p_expr
+    x**2 + 1
+    >>> type(p_expr)
+    <class 'sympy.core.add.Add'>
+    >>> isinstance(p_expr, Expr)
+    True
+    >>> p_domain = K.from_sympy(p_expr)
+    >>> p_domain            # domain element
+    x**2 + 1
+    >>> type(p_domain)
+    <class 'sympy.polys.rings.PolyElement'>
+    >>> K.to_sympy(p_domain) == p_expr
+    True
 
     The :py:meth:`~.Domain.convert_from` method is used to convert domain
-    elements from one domain to another::
+    elements from one domain to another.
 
-        >>> from sympy import ZZ, QQ
-        >>> ez = ZZ(2)
-        >>> eq = QQ.convert_from(ez, ZZ)
-        >>> type(ez)
-        <class 'int'>
-        >>> type(eq)
-        <class 'sympy.polys.domains.pythonrational.PythonRational'>
+    >>> from sympy import ZZ, QQ
+    >>> ez = ZZ(2)
+    >>> eq = QQ.convert_from(ez, ZZ)
+    >>> type(ez)
+    <class 'int'>
+    >>> type(eq)
+    <class 'sympy.polys.domains.pythonrational.PythonRational'>
 
     Elements from different domains should not be mixed in arithmetic or other
     operations: they should be converted to a common domain first.  The domain
     method :py:meth:`~.Domain.unify` is used to find a domain that can
-    represent all the elements of two given domains::
+    represent all the elements of two given domains.
 
-        >>> from sympy import ZZ, QQ, symbols
-        >>> x, y = symbols('x, y')
-        >>> ZZ.unify(QQ)
-        QQ
-        >>> ZZ[x].unify(QQ)
-        QQ[x]
-        >>> ZZ[x].unify(QQ[y])
-        QQ[x,y]
+    >>> from sympy import ZZ, QQ, symbols
+    >>> x, y = symbols('x, y')
+    >>> ZZ.unify(QQ)
+    QQ
+    >>> ZZ[x].unify(QQ)
+    QQ[x]
+    >>> ZZ[x].unify(QQ[y])
+    QQ[x,y]
 
     If a domain is a :py:class:`~.Ring` then is might have an associated
     :py:class:`~.Field` and vice versa. The :py:meth:`~.Domain.get_field` and
     :py:meth:`~.Domain.get_ring` methods will find or create the associated
-    domain::
+    domain.
 
-        >>> from sympy import ZZ, QQ, Symbol
-        >>> x = Symbol('x')
-        >>> ZZ.has_assoc_Field
-        True
-        >>> ZZ.get_field()
-        QQ
-        >>> QQ.has_assoc_Ring
-        True
-        >>> QQ.get_ring()
-        ZZ
-        >>> K = QQ[x]
-        >>> K
-        QQ[x]
-        >>> K.get_field()
-        QQ(x)
+    >>> from sympy import ZZ, QQ, Symbol
+    >>> x = Symbol('x')
+    >>> ZZ.has_assoc_Field
+    True
+    >>> ZZ.get_field()
+    QQ
+    >>> QQ.has_assoc_Ring
+    True
+    >>> QQ.get_ring()
+    ZZ
+    >>> K = QQ[x]
+    >>> K
+    QQ[x]
+    >>> K.get_field()
+    QQ(x)
 
     See also
     ========
@@ -508,60 +508,60 @@ class Domain:
         ========
 
         Construct an element of the :ref:`QQ` domain and then convert it to
-        :py:class:`~.Expr`::
+        :py:class:`~.Expr`.
 
-            >>> from sympy import QQ, Expr
-            >>> q_domain = QQ(2)
-            >>> q_domain
-            2
-            >>> q_expr = QQ.to_sympy(q_domain)
-            >>> q_expr
-            2
+        >>> from sympy import QQ, Expr
+        >>> q_domain = QQ(2)
+        >>> q_domain
+        2
+        >>> q_expr = QQ.to_sympy(q_domain)
+        >>> q_expr
+        2
 
         Although the printed forms look similar these objects are not of the
-        same type::
+        same type.
 
-            >>> isinstance(q_domain, Expr)
-            False
-            >>> isinstance(q_expr, Expr)
-            True
+        >>> isinstance(q_domain, Expr)
+        False
+        >>> isinstance(q_expr, Expr)
+        True
 
         Construct an element of :ref:`K[x]` and convert to
-        :py:class:`~.Expr`::
+        :py:class:`~.Expr`.
 
-            >>> from sympy import Symbol
-            >>> x = Symbol('x')
-            >>> K = QQ[x]
-            >>> x_domain = K.gens[0]  # generator x as a domain element
-            >>> p_domain = x_domain**2/3 + 1
-            >>> p_domain
-            1/3*x**2 + 1
-            >>> p_expr = K.to_sympy(p_domain)
-            >>> p_expr
-            x**2/3 + 1
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> K = QQ[x]
+        >>> x_domain = K.gens[0]  # generator x as a domain element
+        >>> p_domain = x_domain**2/3 + 1
+        >>> p_domain
+        1/3*x**2 + 1
+        >>> p_expr = K.to_sympy(p_domain)
+        >>> p_expr
+        x**2/3 + 1
 
         The :py:meth:`~.Domain.from_sympy` method is used for the opposite
-        conversion from a normal SymPy expression to a domain element::
+        conversion from a normal SymPy expression to a domain element.
 
-            >>> p_domain == p_expr
-            False
-            >>> K.from_sympy(p_expr) == p_domain
-            True
-            >>> K.to_sympy(p_domain) == p_expr
-            True
-            >>> K.from_sympy(K.to_sympy(p_domain)) == p_domain
-            True
-            >>> K.to_sympy(K.from_sympy(p_expr)) == p_expr
-            True
+        >>> p_domain == p_expr
+        False
+        >>> K.from_sympy(p_expr) == p_domain
+        True
+        >>> K.to_sympy(p_domain) == p_expr
+        True
+        >>> K.from_sympy(K.to_sympy(p_domain)) == p_domain
+        True
+        >>> K.to_sympy(K.from_sympy(p_expr)) == p_expr
+        True
 
         The :py:meth:`~.Domain.from_sympy` method makes it easier to construct
-        domain elements interactively::
+        domain elements interactively.
 
-            >>> from sympy import Symbol
-            >>> x = Symbol('x')
-            >>> K = QQ[x]
-            >>> K.from_sympy(x**2/3 + 1)
-            1/3*x**2 + 1
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> K = QQ[x]
+        >>> K.from_sympy(x**2/3 + 1)
+        1/3*x**2 + 1
 
         See also
         ========
@@ -920,25 +920,25 @@ class Domain:
         Examples
         ========
 
-        We can use ``K.exquo`` instead of ``/`` for exact division::
+        We can use ``K.exquo`` instead of ``/`` for exact division.
 
-           >>> from sympy import ZZ
-           >>> ZZ.exquo(ZZ(4), ZZ(2))
-           2
-           >>> ZZ.exquo(ZZ(5), ZZ(2))
-           Traceback (most recent call last):
-               ...
-           ExactQuotientFailed: 2 does not divide 5 in ZZ
+        >>> from sympy import ZZ
+        >>> ZZ.exquo(ZZ(4), ZZ(2))
+        2
+        >>> ZZ.exquo(ZZ(5), ZZ(2))
+        Traceback (most recent call last):
+            ...
+        ExactQuotientFailed: 2 does not divide 5 in ZZ
 
         Over a :py:class:`~.Field` such as :ref:`QQ`, division (with nonzero
         divisor) is always exact so in that case ``/`` can be used instead of
-        :py:meth:`~.Domain.exquo`::
+        :py:meth:`~.Domain.exquo`.
 
-           >>> from sympy import QQ
-           >>> QQ.exquo(QQ(5), QQ(2))
-           5/2
-           >>> QQ(5) / QQ(2)
-           5/2
+        >>> from sympy import QQ
+        >>> QQ.exquo(QQ(5), QQ(2))
+        5/2
+        >>> QQ(5) / QQ(2)
+        5/2
 
         Parameters
         ==========
@@ -972,12 +972,12 @@ class Domain:
 
         Since the default :py:attr:`~.Domain.dtype` for :ref:`ZZ` is ``int``
         (or ``mpz``) division as ``a / b`` should not be used as it would give
-        a ``float``::
+        a ``float``.
 
-            >>> ZZ(4) / ZZ(2)
-            2.0
-            >>> ZZ(5) / ZZ(2)
-            2.5
+        >>> ZZ(4) / ZZ(2)
+        2.0
+        >>> ZZ(5) / ZZ(2)
+        2.5
 
         Using ``/`` with :ref:`ZZ` will lead to incorrect results so
         :py:meth:`~.Domain.div` should be used instead.
@@ -1038,17 +1038,17 @@ class Domain:
         ========
 
         We can use ``K.div`` instead of ``divmod`` for floor division and
-        remainder::
+        remainder.
 
-           >>> from sympy import ZZ, QQ
-           >>> ZZ.div(ZZ(5), ZZ(2))
-           (2, 1)
+        >>> from sympy import ZZ, QQ
+        >>> ZZ.div(ZZ(5), ZZ(2))
+        (2, 1)
 
         If ``K`` is a :py:class:`~.Field` then the division is always exact
-        with a remainder of :py:attr:`~.Domain.zero`::
+        with a remainder of :py:attr:`~.Domain.zero`.
 
-           >>> QQ.div(QQ(5), QQ(2))
-           (5/2, 0)
+        >>> QQ.div(QQ(5), QQ(2))
+        (5/2, 0)
 
         Parameters
         ==========
@@ -1082,18 +1082,18 @@ class Domain:
         If ``gmpy`` is installed then the ``gmpy.mpq`` type will be used as
         the :py:attr:`~.Domain.dtype` for :ref:`QQ`. The ``gmpy.mpq`` type
         defines ``divmod`` in a way that is undesirable so
-        :py:meth:`~.Domain.div` should be used instead of ``divmod``::
+        :py:meth:`~.Domain.div` should be used instead of ``divmod``.
 
-            >>> a = QQ(1)
-            >>> b = QQ(3, 2)
-            >>> a               # doctest: +SKIP
-            mpq(1,1)
-            >>> b               # doctest: +SKIP
-            mpq(3,2)
-            >>> divmod(a, b)    # doctest: +SKIP
-            (mpz(0), mpq(1,1))
-            >>> QQ.div(a, b)    # doctest: +SKIP
-            (mpq(2,3), mpq(0,1))
+        >>> a = QQ(1)
+        >>> b = QQ(3, 2)
+        >>> a               # doctest: +SKIP
+        mpq(1,1)
+        >>> b               # doctest: +SKIP
+        mpq(3,2)
+        >>> divmod(a, b)    # doctest: +SKIP
+        (mpz(0), mpq(1,1))
+        >>> QQ.div(a, b)    # doctest: +SKIP
+        (mpq(2,3), mpq(0,1))
 
         Using ``//`` or ``%`` with :ref:`QQ` will lead to incorrect results so
         :py:meth:`~.Domain.div` should be used instead.

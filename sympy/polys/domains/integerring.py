@@ -47,9 +47,9 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         Examples
         ========
 
-            >>> from sympy import ZZ
-            >>> ZZ.get_field()
-            QQ
+        >>> from sympy import ZZ
+        >>> ZZ.get_field()
+        QQ
         """
         from sympy.polys.domains import QQ
         return QQ
@@ -73,9 +73,9 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         Examples
         ========
 
-            >>> from sympy import ZZ, sqrt
-            >>> ZZ.algebraic_field(sqrt(2))
-            QQ<sqrt(2)>
+        >>> from sympy import ZZ, sqrt
+        >>> ZZ.algebraic_field(sqrt(2))
+        QQ<sqrt(2)>
         """
         return self.get_field().algebraic_field(*extension)
 
@@ -105,11 +105,11 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         Examples
         ========
 
-            >>> from sympy import ZZ
-            >>> ZZ.log(ZZ(8), ZZ(2))
-            3
-            >>> ZZ.log(ZZ(9), ZZ(2))
-            3
+        >>> from sympy import ZZ
+        >>> ZZ.log(ZZ(8), ZZ(2))
+        3
+        >>> ZZ.log(ZZ(9), ZZ(2))
+        3
 
         Notes
         =====

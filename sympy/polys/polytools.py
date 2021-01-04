@@ -397,13 +397,13 @@ class Poly(Basic):
         Examples
         ========
 
-            >>> from sympy import Poly, Symbol
-            >>> x = Symbol('x')
-            >>> p = Poly(x**2 + x)
-            >>> p
-            Poly(x**2 + x, x, domain='ZZ')
-            >>> p.domain
-            ZZ
+        >>> from sympy import Poly, Symbol
+        >>> x = Symbol('x')
+        >>> p = Poly(x**2 + x)
+        >>> p
+        Poly(x**2 + x, x, domain='ZZ')
+        >>> p.domain
+        ZZ
         """
         return self.get_domain()
 

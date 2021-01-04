@@ -316,92 +316,92 @@ class GaussianIntegerRing(GaussianDomain, Ring):
 
     By default a :py:class:`~.Poly` created from an expression with
     coefficients that are combinations of integers and ``I`` (`\sqrt{-1}`)
-    will have the domain :ref:`ZZ_I`::
+    will have the domain :ref:`ZZ_I`.
 
-        >>> from sympy import Poly, Symbol, I
-        >>> x = Symbol('x')
-        >>> p = Poly(x**2 + I)
-        >>> p
-        Poly(x**2 + I, x, domain='ZZ_I')
-        >>> p.domain
-        ZZ_I
+    >>> from sympy import Poly, Symbol, I
+    >>> x = Symbol('x')
+    >>> p = Poly(x**2 + I)
+    >>> p
+    Poly(x**2 + I, x, domain='ZZ_I')
+    >>> p.domain
+    ZZ_I
 
     The :ref:`ZZ_I` domain can be used to factorise polynomials that are
-    reducible over the Gaussian integers::
+    reducible over the Gaussian integers.
 
-        >>> from sympy import factor
-        >>> factor(x**2 + 1)
-        x**2 + 1
-        >>> factor(x**2 + 1, domain='ZZ_I')
-        (x - I)*(x + I)
+    >>> from sympy import factor
+    >>> factor(x**2 + 1)
+    x**2 + 1
+    >>> factor(x**2 + 1, domain='ZZ_I')
+    (x - I)*(x + I)
 
     The corresponding `field of fractions`_ is the domain of the Gaussian
     rationals :ref:`QQ_I`. Conversely :ref:`ZZ_I` is the `ring of integers`_
-    of :ref:`QQ_I`::
+    of :ref:`QQ_I`.
 
-        >>> from sympy import ZZ_I, QQ_I
-        >>> ZZ_I.get_field()
-        QQ_I
-        >>> QQ_I.get_ring()
-        ZZ_I
+    >>> from sympy import ZZ_I, QQ_I
+    >>> ZZ_I.get_field()
+    QQ_I
+    >>> QQ_I.get_ring()
+    ZZ_I
 
-    When using the domain directly :ref:`ZZ_I` can be used as a constructor::
+    When using the domain directly :ref:`ZZ_I` can be used as a constructor.
 
-        >>> ZZ_I(3, 4)
-        (3 + 4*I)
-        >>> ZZ_I(5)
-        (5 + 0*I)
+    >>> ZZ_I(3, 4)
+    (3 + 4*I)
+    >>> ZZ_I(5)
+    (5 + 0*I)
 
     The domain elements of :ref:`ZZ_I` are instances of
     :py:class:`~.GaussianInteger` which support the rings operations
-    ``+,-,*,**``::
+    ``+,-,*,**``.
 
-        >>> z1 = ZZ_I(5, 1)
-        >>> z2 = ZZ_I(2, 3)
-        >>> z1
-        (5 + 1*I)
-        >>> z2
-        (2 + 3*I)
-        >>> z1 + z2
-        (7 + 4*I)
-        >>> z1 * z2
-        (7 + 17*I)
-        >>> z1 ** 2
-        (24 + 10*I)
+    >>> z1 = ZZ_I(5, 1)
+    >>> z2 = ZZ_I(2, 3)
+    >>> z1
+    (5 + 1*I)
+    >>> z2
+    (2 + 3*I)
+    >>> z1 + z2
+    (7 + 4*I)
+    >>> z1 * z2
+    (7 + 17*I)
+    >>> z1 ** 2
+    (24 + 10*I)
 
     Both floor (``//``) and modulo (``%``) division work with
-    :py:class:`~.GaussianInteger` (see the :py:meth:`~.Domain.div` method)::
+    :py:class:`~.GaussianInteger` (see the :py:meth:`~.Domain.div` method).
 
-        >>> z3, z4 = ZZ_I(5), ZZ_I(1, 3)
-        >>> z3 // z4  # floor division
-        (1 + -1*I)
-        >>> z3 % z4   # modulo division (remainder)
-        (1 + -2*I)
-        >>> (z3//z4)*z4 + z3%z4 == z3
-        True
+    >>> z3, z4 = ZZ_I(5), ZZ_I(1, 3)
+    >>> z3 // z4  # floor division
+    (1 + -1*I)
+    >>> z3 % z4   # modulo division (remainder)
+    (1 + -2*I)
+    >>> (z3//z4)*z4 + z3%z4 == z3
+    True
 
     True division (``/``) in :ref:`ZZ_I` gives an element of :ref:`QQ_I`. The
     :py:meth:`~.Domain.exquo` method can be used to divide in :ref:`ZZ_I` when
-    exact division is possible::
+    exact division is possible.
 
-        >>> z1 / z2
-        (1 + -1*I)
-        >>> ZZ_I.exquo(z1, z2)
-        (1 + -1*I)
-        >>> z3 / z4
-        (1/2 + -3/2*I)
-        >>> ZZ_I.exquo(z3, z4)
-        Traceback (most recent call last):
-            ...
-        ExactQuotientFailed: (1 + 3*I) does not divide (5 + 0*I) in ZZ_I
+    >>> z1 / z2
+    (1 + -1*I)
+    >>> ZZ_I.exquo(z1, z2)
+    (1 + -1*I)
+    >>> z3 / z4
+    (1/2 + -3/2*I)
+    >>> ZZ_I.exquo(z3, z4)
+    Traceback (most recent call last):
+        ...
+    ExactQuotientFailed: (1 + 3*I) does not divide (5 + 0*I) in ZZ_I
 
     The :py:meth:`~.Domain.gcd` method can be used to compute the `gcd`_ of any
-    two elements::
+    two elements.
 
-        >>> ZZ_I.gcd(ZZ_I(10), ZZ_I(2))
-        (2 + 0*I)
-        >>> ZZ_I.gcd(ZZ_I(5), ZZ_I(2, 1))
-        (2 + 1*I)
+    >>> ZZ_I.gcd(ZZ_I(10), ZZ_I(2))
+    (2 + 0*I)
+    >>> ZZ_I.gcd(ZZ_I(5), ZZ_I(2, 1))
+    (2 + 1*I)
 
     .. _Gaussian integers: https://en.wikipedia.org/wiki/Gaussian_integer
     .. _gcd: https://en.wikipedia.org/wiki/Greatest_common_divisor
@@ -470,111 +470,111 @@ class GaussianRationalField(GaussianDomain, Field):
 
     By default a :py:class:`~.Poly` created from an expression with
     coefficients that are combinations of rationals and ``I`` (`\sqrt{-1}`)
-    will have the domain :ref:`QQ_I`::
+    will have the domain :ref:`QQ_I`.
 
-        >>> from sympy import Poly, Symbol, I
-        >>> x = Symbol('x')
-        >>> p = Poly(x**2 + I/2)
-        >>> p
-        Poly(x**2 + I/2, x, domain='QQ_I')
-        >>> p.domain
-        QQ_I
+    >>> from sympy import Poly, Symbol, I
+    >>> x = Symbol('x')
+    >>> p = Poly(x**2 + I/2)
+    >>> p
+    Poly(x**2 + I/2, x, domain='QQ_I')
+    >>> p.domain
+    QQ_I
 
     The polys option ``gaussian=True`` can be used to specify that the domain
     should be :ref:`QQ_I` even if the coefficients do not contain ``I`` or are
-    all integers::
+    all integers.
 
-        >>> Poly(x**2)
-        Poly(x**2, x, domain='ZZ')
-        >>> Poly(x**2 + I)
-        Poly(x**2 + I, x, domain='ZZ_I')
-        >>> Poly(x**2/2)
-        Poly(1/2*x**2, x, domain='QQ')
-        >>> Poly(x**2, gaussian=True)
-        Poly(x**2, x, domain='QQ_I')
-        >>> Poly(x**2 + I, gaussian=True)
-        Poly(x**2 + I, x, domain='QQ_I')
-        >>> Poly(x**2/2, gaussian=True)
-        Poly(1/2*x**2, x, domain='QQ_I')
+    >>> Poly(x**2)
+    Poly(x**2, x, domain='ZZ')
+    >>> Poly(x**2 + I)
+    Poly(x**2 + I, x, domain='ZZ_I')
+    >>> Poly(x**2/2)
+    Poly(1/2*x**2, x, domain='QQ')
+    >>> Poly(x**2, gaussian=True)
+    Poly(x**2, x, domain='QQ_I')
+    >>> Poly(x**2 + I, gaussian=True)
+    Poly(x**2 + I, x, domain='QQ_I')
+    >>> Poly(x**2/2, gaussian=True)
+    Poly(1/2*x**2, x, domain='QQ_I')
 
     The :ref:`QQ_I` domain can be used to factorise polynomials that are
-    reducible over the Gaussian rationals::
+    reducible over the Gaussian rationals.
 
-        >>> from sympy import factor, QQ_I
-        >>> factor(x**2/4 + 1)
-        (x**2 + 4)/4
-        >>> factor(x**2/4 + 1, domain='QQ_I')
-        (x - 2*I)*(x + 2*I)/4
-        >>> factor(x**2/4 + 1, domain=QQ_I)
-        (x - 2*I)*(x + 2*I)/4
+    >>> from sympy import factor, QQ_I
+    >>> factor(x**2/4 + 1)
+    (x**2 + 4)/4
+    >>> factor(x**2/4 + 1, domain='QQ_I')
+    (x - 2*I)*(x + 2*I)/4
+    >>> factor(x**2/4 + 1, domain=QQ_I)
+    (x - 2*I)*(x + 2*I)/4
 
     It is also possible to specify the :ref:`QQ_I` domain explicitly with
-    polys functions like :py:func:`~.apart`::
+    polys functions like :py:func:`~.apart`.
 
-        >>> from sympy import apart
-        >>> apart(1/(1 + x**2))
-        1/(x**2 + 1)
-        >>> apart(1/(1 + x**2), domain=QQ_I)
-        I/(2*(x + I)) - I/(2*(x - I))
+    >>> from sympy import apart
+    >>> apart(1/(1 + x**2))
+    1/(x**2 + 1)
+    >>> apart(1/(1 + x**2), domain=QQ_I)
+    I/(2*(x + I)) - I/(2*(x - I))
 
     The corresponding `ring of integers`_ is the domain of the Gaussian
     integers :ref:`ZZ_I`. Conversely :ref:`QQ_I` is the `field of fractions`_
-    of :ref:`ZZ_I`::
+    of :ref:`ZZ_I`.
 
-        >>> from sympy import ZZ_I, QQ_I, QQ
-        >>> ZZ_I.get_field()
-        QQ_I
-        >>> QQ_I.get_ring()
-        ZZ_I
+    >>> from sympy import ZZ_I, QQ_I, QQ
+    >>> ZZ_I.get_field()
+    QQ_I
+    >>> QQ_I.get_ring()
+    ZZ_I
 
-    When using the domain directly :ref:`QQ_I` can be used as a constructor::
+    When using the domain directly :ref:`QQ_I` can be used as a constructor.
 
-        >>> QQ_I(3, 4)
-        (3 + 4*I)
-        >>> QQ_I(5)
-        (5 + 0*I)
-        >>> QQ_I(QQ(2, 3), QQ(4, 5))
-        (2/3 + 4/5*I)
+    >>> QQ_I(3, 4)
+    (3 + 4*I)
+    >>> QQ_I(5)
+    (5 + 0*I)
+    >>> QQ_I(QQ(2, 3), QQ(4, 5))
+    (2/3 + 4/5*I)
 
     The domain elements of :ref:`QQ_I` are instances of
     :py:class:`~.GaussianRational` which support the field operations
-    ``+,-,*,**,/``::
+    ``+,-,*,**,/``.
 
-        >>> z1 = QQ_I(5, 1)
-        >>> z2 = QQ_I(2, QQ(1, 2))
-        >>> z1
-        (5 + 1*I)
-        >>> z2
-        (2 + 1/2*I)
-        >>> z1 + z2
-        (7 + 3/2*I)
-        >>> z1 * z2
-        (19/2 + 9/2*I)
-        >>> z2 ** 2
-        (15/4 + 2*I)
+    >>> z1 = QQ_I(5, 1)
+    >>> z2 = QQ_I(2, QQ(1, 2))
+    >>> z1
+    (5 + 1*I)
+    >>> z2
+    (2 + 1/2*I)
+    >>> z1 + z2
+    (7 + 3/2*I)
+    >>> z1 * z2
+    (19/2 + 9/2*I)
+    >>> z2 ** 2
+    (15/4 + 2*I)
 
     True division (``/``) in :ref:`QQ_I` gives an element of :ref:`QQ_I` and
-    is always exact::
+    is always exact.
 
-        >>> z1 / z2
-        (42/17 + -2/17*I)
-        >>> QQ_I.exquo(z1, z2)
-        (42/17 + -2/17*I)
-        >>> z1 == (z1/z2)*z2
-        True
+    >>> z1 / z2
+    (42/17 + -2/17*I)
+    >>> QQ_I.exquo(z1, z2)
+    (42/17 + -2/17*I)
+    >>> z1 == (z1/z2)*z2
+    True
 
     Both floor (``//``) and modulo (``%``) division can be used with
     :py:class:`~.GaussianRational` (see :py:meth:`~.Domain.div`)
-    but division is always exact so there is no remainder::
+    but division is always exact so there is no remainder.
 
-        >>> z1 // z2
-        (42/17 + -2/17*I)
-        >>> z1 % z2
-        (0 + 0*I)
-        >>> QQ_I.div(z1, z2)
-        ((42/17 + -2/17*I), (0 + 0*I))
-        >>> (z1//z2)*z2 + z1%z2 == z1
-        True
+    >>> z1 // z2
+    (42/17 + -2/17*I)
+    >>> z1 % z2
+    (0 + 0*I)
+    >>> QQ_I.div(z1, z2)
+    ((42/17 + -2/17*I), (0 + 0*I))
+    >>> (z1//z2)*z2 + z1%z2 == z1
+    True
 
     .. _Gaussian rationals: https://en.wikipedia.org/wiki/Gaussian_rational
     """
