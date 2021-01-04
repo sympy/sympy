@@ -196,15 +196,15 @@ class Mul(Expr, AssocOp):
                 seq = [a, b]
             assert not a is S.One
             if not a.is_zero and a.is_Rational:
-                r, b = b.as_coeff_Mul()
+                r, b = a, b
                 if b.is_Add:
                     if r is not S.One:  # 2-arg hack
                         # leave the Mul as a Mul?
-                        ar = a*r
+                        ar = r
                         if ar is S.One:
                             arb = b
                         else:
-                            arb = cls(a*r, b, evaluate=False)
+                            arb = cls(r, b, evaluate=False)
                         rv = [arb], [], None
                     elif global_parameters.distribute and b.is_commutative:
                         r, b = b.as_coeff_Add()
