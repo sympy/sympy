@@ -876,10 +876,10 @@ class Expr(Basic, EvalfMixin):
                 return None
             if getattr(n2, '_prec', 1) == 1:  # no significance
                 return None
-            if n2 is S.NaN:
-                return None
 
             f = self.evalf(2)
+            if f is None or f is S.NaN:
+                return None
             if f.is_Float:
                 match = f, S.Zero
             else:
