@@ -13,7 +13,7 @@ from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
 from sympy.testing.pytest import XFAIL, slow
 
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k, n
+from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k, n, N
 
 
 def test_issue_7263():
@@ -916,13 +916,5 @@ def test_issue_19161():
     assert (polynomial-x**2).simplify() == 0
 
 def test_issue_11004():
-    N=Symbol('N')
-    half = Float('0.5', 4)
-    def f(n):
-        return sqrt(2*pi*n)*(n/E)**n
-    def m(n, k):
-        return  f(n)/ (f(n/k)**k)
-    def p(n,k):
-        return m(n, k)/(k**n)
-    z = log(p(n, k)/p(n, k+1)).expand(force=True)
-    assert simplify(z.subs(n,N).n(4)) == half*k*log(k) - half*k*log(k + 1) + half*log(N) - half*log(k + 1) + Float(0.9189224, 4)
+    z=k*N*log(N)/(k + 1) - k*N*log(k + 1)/(k + 1) - k*N/(k + 1) + k*log(k)/2 - k*log(k + 1)/2 - N*log(N) + N*log(k + 1) + N + N*log(N)/(k + 1) - N*log(k + 1)/(k + 1) - N/(k + 1) + log(N)/2 - log(k + 1)/2 + log(2)/2 + log(pi)/2
+    assert simplify(z) == k*log(k)/2 - k*log(k + 1)/2 + log(N)/2 - log(k + 1)/2  + log(2)/2 + log(pi)/2
