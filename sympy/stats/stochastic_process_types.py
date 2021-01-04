@@ -174,7 +174,7 @@ class StochasticProcess(Basic):
     def _deprecation_warn_distribution(self):
         SymPyDeprecationWarning(
             feature="Calling distribution with RandomIndexedSymbol",
-            useinstead="distribution with just Symbol as argument",
+            useinstead="distribution with just timestamp as argument",
             issue=20078,
             deprecated_since_version="1.7.1"
         ).warn()
