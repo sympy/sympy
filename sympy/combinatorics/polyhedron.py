@@ -3,7 +3,7 @@ from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.core import Basic, Tuple
 from sympy.core.compatibility import as_int
 from sympy.sets import FiniteSet
-from sympy.utilities.iterables import (minlex, unflatten, flatten)
+from sympy.utilities.iterables import (minlex, unflatten, flatten, default_sort_key)
 
 rmul = Perm.rmul
 
@@ -11,6 +11,9 @@ rmul = Perm.rmul
 class Polyhedron(Basic):
     """
     Represents the polyhedral symmetry group (PSG).
+
+    Explanation
+    ===========
 
     The PSG is one of the symmetry groups of the Platonic solids.
     There are three polyhedral groups: the tetrahedral group
@@ -23,13 +26,17 @@ class Polyhedron(Basic):
     References
     ==========
 
-    http://mathworld.wolfram.com/PolyhedralGroup.html
+    .. [1] http://mathworld.wolfram.com/PolyhedralGroup.html
+
     """
     _edges = None
 
     def __new__(cls, corners, faces=[], pgroup=[]):
         """
         The constructor of the Polyhedron group object.
+
+        Explanation
+        ===========
 
         It takes up to three parameters: the corners, faces, and
         allowed transformations.
@@ -379,7 +386,7 @@ class Polyhedron(Basic):
         .. [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
 
         """
-        faces = [minlex(f, directed=False, is_set=True) for f in faces]
+        faces = [minlex(f, directed=False, key=default_sort_key) for f in faces]
         corners, faces, pgroup = args = \
             [Tuple(*a) for a in (corners, faces, pgroup)]
         obj = Basic.__new__(cls, *args)
@@ -597,6 +604,9 @@ def _pgroup_calcs():
     tetrahedron_faces, cube_faces, octahedron_faces, dodecahedron_faces,
     icosahedron_faces
 
+    Explanation
+    ===========
+
     (This author didn't find and didn't know of a better way to do it though
     there likely is such a way.)
 
@@ -665,7 +675,8 @@ def _pgroup_calcs():
     References
     ==========
 
-    http://dogschool.tripod.com/trianglegroup.html
+    .. [1] http://dogschool.tripod.com/trianglegroup.html
+
     """
     def _pgroup_of_double(polyh, ordered_faces, pgroup):
         n = len(ordered_faces[0])
@@ -686,7 +697,7 @@ def _pgroup_calcs():
             reorder = unflatten([c[j] for j in flat_faces], n)
             # make them canonical
             reorder = [tuple(map(as_int,
-                       minlex(f, directed=False, is_set=True)))
+                       minlex(f, directed=False)))
                        for f in reorder]
             # map face to vertex: the resulting list of vertices are the
             # permutation that we seek for the double

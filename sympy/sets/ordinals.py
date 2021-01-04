@@ -55,7 +55,8 @@ class Ordinal(Basic):
     """
     Represents ordinals in Cantor normal form.
 
-    Internally, this class is just a list of instances of OmegaPower
+    Internally, this class is just a list of instances of OmegaPower.
+
     Examples
     ========
     >>> from sympy.sets import Ordinal, OmegaPower
@@ -76,7 +77,7 @@ class Ordinal(Basic):
     .. [1] https://en.wikipedia.org/wiki/Ordinal_arithmetic
     """
     def __new__(cls, *terms):
-        obj = super(Ordinal, cls).__new__(cls, *terms)
+        obj = super().__new__(cls, *terms)
         powers = [i.exp for i in obj.args]
         if not all(powers[i] >= powers[i+1] for i in range(len(powers) - 1)):
             raise ValueError("powers must be in decreasing order")

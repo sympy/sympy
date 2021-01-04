@@ -184,7 +184,7 @@ common superclass of :class:`~.Integral` and :class:`~.Sum`.
 
 TODO and Bugs
 -------------
-There are still lots of functions that SymPy does not know how to integrate. For bugs related to this module, see https://github.com/sympy/sympy/issues?q=label%3AIntegration
+There are still lots of functions that SymPy does not know how to integrate. For bugs related to this module, see https://github.com/sympy/sympy/issues?q=is%3Aissue+is%3Aopen+label%3Aintegrals
 
 Numeric Integrals
 =================

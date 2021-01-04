@@ -126,10 +126,16 @@ class exp_polar(ExpBase):
     r"""
     Represent a 'polar number' (see g-function Sphinx documentation).
 
+    Explanation
+    ===========
+
     ``exp_polar`` represents the function
     `Exp: \mathbb{C} \rightarrow \mathcal{S}`, sending the complex number
     `z = a + bi` to the polar number `r = exp(a), \theta = b`. It is one of
     the main functions to construct polar numbers.
+
+    Examples
+    ========
 
     >>> from sympy import exp_polar, pi, I, exp
 
@@ -194,6 +200,24 @@ class exp_polar(ExpBase):
 class exp(ExpBase):
     """
     The exponential function, :math:`e^x`.
+
+    Examples
+    ========
+
+    >>> from sympy.functions import exp
+    >>> from sympy.abc import x
+    >>> from sympy import I, pi
+    >>> exp(x)
+    exp(x)
+    >>> exp(x).diff(x)
+    exp(x)
+    >>> exp(I*pi)
+    -1
+
+    Parameters
+    ==========
+
+    arg : Expr
 
     See Also
     ========
@@ -421,15 +445,13 @@ class exp(ExpBase):
         return fuzzy_or(complex_extended_negative(self.args[0]))
 
     def _eval_is_algebraic(self):
-        s = self.func(*self.args)
-        if s.func == self.func:
-            if fuzzy_not(self.exp.is_zero):
-                if self.exp.is_algebraic:
-                    return False
-                elif (self.exp/S.Pi).is_rational:
-                    return False
-        else:
-            return s.is_algebraic
+        if (self.exp / S.Pi / S.ImaginaryUnit).is_rational:
+            return True
+        if fuzzy_not(self.exp.is_zero):
+            if self.exp.is_algebraic:
+                return False
+            elif (self.exp / S.Pi).is_rational:
+                return False
 
     def _eval_is_extended_positive(self):
         if self.args[0].is_extended_real:
@@ -555,6 +577,9 @@ def match_real_imag(expr):
 class log(Function):
     r"""
     The natural logarithm function `\ln(x)` or `\log(x)`.
+
+    Explanation
+    ===========
 
     Logarithms are taken with the natural base, `e`. To get
     a logarithm of a different base ``b``, use ``log(x, b)``,
@@ -1018,6 +1043,9 @@ class LambertW(Function):
     r"""
     The Lambert W function `W(z)` is defined as the inverse
     function of `w \exp(w)` [1]_.
+
+    Explanation
+    ===========
 
     In other words, the value of `W(z)` is such that `z = W(z) \exp(W(z))`
     for any complex number `z`.  The Lambert W function is a multivalued

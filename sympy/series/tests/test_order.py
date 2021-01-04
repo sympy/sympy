@@ -94,7 +94,7 @@ def test_simple_8():
 
 def test_as_expr_variables():
     assert Order(x).as_expr_variables(None) == (x, ((x, 0),))
-    assert Order(x).as_expr_variables((((x, 0),))) == (x, ((x, 0),))
+    assert Order(x).as_expr_variables(((x, 0),)) == (x, ((x, 0),))
     assert Order(y).as_expr_variables(((x, 0),)) == (y, ((x, 0), (y, 0)))
     assert Order(y).as_expr_variables(((x, 0), (y, 0))) == (y, ((x, 0), (y, 0)))
 
@@ -227,10 +227,10 @@ def test_leading_order():
 
 
 def test_leading_order2():
-    assert set((2 + pi + x**2).extract_leading_order(x)) == set(((pi, O(1, x)),
-            (S(2), O(1, x))))
-    assert set((2*x + pi*x + x**2).extract_leading_order(x)) == set(((2*x, O(x)),
-            (x*pi, O(x))))
+    assert set((2 + pi + x**2).extract_leading_order(x)) == {(pi, O(1, x)),
+            (S(2), O(1, x))}
+    assert set((2*x + pi*x + x**2).extract_leading_order(x)) == {(2*x, O(x)),
+            (x*pi, O(x))}
 
 
 def test_order_leadterm():
@@ -417,6 +417,11 @@ def test_issue_9351():
 def test_issue_9192():
     assert O(1)*O(1) == O(1)
     assert O(1)**O(1) == O(1)
+
+
+def test_issue_9910():
+    assert O(x*log(x) + sin(x), (x, oo)) == O(x*log(x), (x, oo))
+
 
 def test_performance_of_adding_order():
     l = list(x**i for i in range(1000))

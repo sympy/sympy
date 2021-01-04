@@ -34,7 +34,7 @@ def test_all_classes_are_tested():
             if not file.endswith(".py"):
                 continue
 
-            with open(os.path.join(root, file), "r", encoding='utf-8') as f:
+            with open(os.path.join(root, file), encoding='utf-8') as f:
                 text = f.read()
 
             submodule = module + '.' + file[:-3]
@@ -52,6 +52,9 @@ def test_all_classes_are_tested():
                 cls = getattr(mod, name)
                 if hasattr(cls, '_sympy_deprecated_func'):
                     cls = cls._sympy_deprecated_func
+                if not isinstance(cls, type):
+                    # check instance of singleton class with same name
+                    cls = type(cls)
                 return issubclass(cls, Basic)
 
             names = list(filter(is_Basic, names))
@@ -88,7 +91,11 @@ def test_sympy__assumptions__assume__AppliedPredicate():
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
     assert _test_args(Q.is_true(True))
 
+@SKIP("abstract class")
 def test_sympy__assumptions__assume__Predicate():
+    pass
+
+def test_sympy__assumptions__assume__UndefinedPredicate():
     from sympy.assumptions.assume import Predicate
     assert _test_args(Predicate("test"))
 
@@ -460,6 +467,11 @@ def test_sympy__codegen__numpy_nodes__logaddexp():
 def test_sympy__codegen__numpy_nodes__logaddexp2():
     from sympy.codegen.numpy_nodes import logaddexp2
     assert _test_args(logaddexp2(x, y))
+
+
+def test_sympy__codegen__scipy_nodes__cosm1():
+    from sympy.codegen.scipy_nodes import cosm1
+    assert _test_args(cosm1(x))
 
 
 @XFAIL
@@ -1266,6 +1278,13 @@ def test_sympy__stats__frv_types__RademacherDistribution():
     from sympy.stats.frv_types import RademacherDistribution
     assert _test_args(RademacherDistribution())
 
+def test_sympy__stats__frv_types__IdealSolitonDistribution():
+    from sympy.stats.frv_types import IdealSolitonDistribution
+    assert _test_args(IdealSolitonDistribution(10))
+
+def test_sympy__stats__frv_types__RobustSolitonDistribution():
+    from sympy.stats.frv_types import RobustSolitonDistribution
+    assert _test_args(RobustSolitonDistribution(1000, 0.5, 0.1))
 
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
@@ -1461,6 +1480,10 @@ def test_sympy__stats__crv_types__LevyDistribution():
     from sympy.stats.crv_types import LevyDistribution
     assert _test_args(LevyDistribution(0, 1))
 
+def test_sympy__stats__crv_types__LogCauchyDistribution():
+    from sympy.stats.crv_types import LogCauchyDistribution
+    assert _test_args(LogCauchyDistribution(0, 1))
+
 def test_sympy__stats__crv_types__LogisticDistribution():
     from sympy.stats.crv_types import LogisticDistribution
     assert _test_args(LogisticDistribution(0, 1))
@@ -1469,6 +1492,9 @@ def test_sympy__stats__crv_types__LogLogisticDistribution():
     from sympy.stats.crv_types import LogLogisticDistribution
     assert _test_args(LogLogisticDistribution(1, 1))
 
+def test_sympy__stats__crv_types__LogitNormalDistribution():
+    from sympy.stats.crv_types import LogitNormalDistribution
+    assert _test_args(LogitNormalDistribution(0, 1))
 
 def test_sympy__stats__crv_types__LogNormalDistribution():
     from sympy.stats.crv_types import LogNormalDistribution
@@ -1583,6 +1609,9 @@ def test_sympy__stats__drv_types__NegativeBinomialDistribution():
     from sympy.stats.drv_types import NegativeBinomialDistribution
     assert _test_args(NegativeBinomialDistribution(.5, .5))
 
+def test_sympy__stats__drv_types__FlorySchulzDistribution():
+    from sympy.stats.drv_types import FlorySchulzDistribution
+    assert _test_args(FlorySchulzDistribution(.5))
 
 def test_sympy__stats__drv_types__PoissonDistribution():
     from sympy.stats.drv_types import PoissonDistribution
@@ -1816,6 +1845,21 @@ def test_sympy__stats__matrix_distributions__MatrixNormalDistribution():
     S1 = MatrixSymbol('S1', 1, 1)
     S2 = MatrixSymbol('S2', 2, 2)
     assert _test_args(MatrixNormalDistribution(L, S1, S2))
+
+
+def test_sympy__utilities__matchpy_connector__WildDot():
+    from sympy.utilities.matchpy_connector import WildDot
+    assert _test_args(WildDot("w_"))
+
+
+def test_sympy__utilities__matchpy_connector__WildPlus():
+    from sympy.utilities.matchpy_connector import WildPlus
+    assert _test_args(WildPlus("w__"))
+
+
+def test_sympy__utilities__matchpy_connector__WildStar():
+    from sympy.utilities.matchpy_connector import WildStar
+    assert _test_args(WildStar("w___"))
 
 
 def test_sympy__core__symbol__Str():
@@ -3132,6 +3176,10 @@ def test_sympy__matrices__expressions__determinant__Determinant():
     from sympy.matrices.expressions import MatrixSymbol
     assert _test_args(Determinant(MatrixSymbol('A', 3, 3)))
 
+def test_sympy__matrices__expressions__determinant__Permanent():
+    from sympy.matrices.expressions.determinant import Permanent
+    from sympy.matrices.expressions import MatrixSymbol
+    assert _test_args(Permanent(MatrixSymbol('A', 3, 4)))
 
 def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     from sympy.matrices.expressions.funcmatrix import FunctionMatrix
@@ -4278,6 +4326,13 @@ def test_sympy__tensor__array__arrayop__Flatten():
     from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
     fla = Flatten(ImmutableDenseNDimArray(range(24)).reshape(2, 3, 4))
     assert _test_args(fla)
+
+
+def test_sympy__tensor__array__array_derivatives__ArrayDerivative():
+    from sympy.tensor.array.array_derivatives import ArrayDerivative
+    A = MatrixSymbol("A", 2, 2)
+    arrder = ArrayDerivative(A, A, evaluate=False)
+    assert _test_args(arrder)
 
 
 def test_sympy__tensor__functions__TensorProduct():

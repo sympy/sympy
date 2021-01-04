@@ -116,7 +116,7 @@ def stripquotes(s):
     s = s.replace("'", '')
     return s
 
-class Qasm(object):
+class Qasm:
     """Class to form objects from Qasm lines
 
     >>> from sympy.physics.quantum.qasm import Qasm

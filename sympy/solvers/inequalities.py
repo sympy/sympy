@@ -1,7 +1,5 @@
 """Tools for solving inequalities and systems of inequalities. """
 
-from __future__ import print_function, division
-
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
@@ -511,7 +509,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
             inf, sup = domain.inf, domain.sup
             if sup - inf is S.Infinity:
-                domain = Interval(0, period, False, True)
+                domain = Interval(0, period, False, True).intersect(_domain)
+                _domain = domain
 
         if rv is None:
             n, d = e.as_numer_denom()
@@ -640,7 +639,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             sol_sets = [S.EmptySet]
 
             start = domain.inf
-            if valid(start) and start.is_finite:
+            if start in domain and valid(start) and start.is_finite:
                 sol_sets.append(FiniteSet(start))
 
             for x in reals:
@@ -663,7 +662,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 start = end
 
             end = domain.sup
-            if valid(end) and end.is_finite:
+            if end in domain and valid(end) and end.is_finite:
                 sol_sets.append(FiniteSet(end))
 
             if valid(_pt(start, end)):

@@ -1,5 +1,4 @@
 """Tools for arithmetic error propagation."""
-from __future__ import print_function, division
 
 from itertools import repeat, combinations
 

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core._print_helpers import Printable
 
 # alias for compatibility

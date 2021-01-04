@@ -126,9 +126,9 @@ class GeometryEntity(Basic):
         """Implementation of reverse add method."""
         return a.__add__(self)
 
-    def __rdiv__(self, a):
+    def __rtruediv__(self, a):
         """Implementation of reverse division method."""
-        return a.__div__(self)
+        return a.__truediv__(self)
 
     def __repr__(self):
         """String representation of a GeometryEntity that can be evaluated
@@ -169,6 +169,9 @@ class GeometryEntity(Basic):
         except (NotImplementedError, TypeError):
             # if we have no SVG representation, return None so IPython
             # will fall back to the next representation
+            return None
+
+        if any([not x.is_number or not x.is_finite for x in bounds]):
             return None
 
         svg_top = '''<svg xmlns="http://www.w3.org/2000/svg"

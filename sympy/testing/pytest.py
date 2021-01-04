@@ -1,14 +1,11 @@
 """py.test hacks to support XFAIL/XPASS"""
 
-from __future__ import print_function, division
-
 import sys
 import functools
 import os
 import contextlib
 import warnings
 
-from sympy.core.compatibility import get_function_name
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
@@ -34,6 +31,15 @@ else:
     # Not using pytest so define the things that would have been imported from
     # there.
 
+    # _pytest._code.code.ExceptionInfo
+    class ExceptionInfo:
+        def __init__(self, value):
+            self.value = value
+
+        def __repr__(self):
+            return "<ExceptionInfo {!r}>".format(self.value)
+
+
     def raises(expectedException, code=None):
         """
         Tests that ``code`` raises the exception ``expectedException``.
@@ -54,6 +60,7 @@ else:
         >>> from sympy.testing.pytest import raises
 
         >>> raises(ZeroDivisionError, lambda: 1/0)
+        <ExceptionInfo ZeroDivisionError(...)>
         >>> raises(ZeroDivisionError, lambda: 1/2)
         Traceback (most recent call last):
         ...
@@ -92,8 +99,8 @@ else:
         elif callable(code):
             try:
                 code()
-            except expectedException:
-                return
+            except expectedException as e:
+                return ExceptionInfo(e)
             raise Failed("DID NOT RAISE")
         elif isinstance(code, str):
             raise TypeError(
@@ -106,7 +113,7 @@ else:
             raise TypeError(
                 'raises() expects a callable for the 2nd argument.')
 
-    class RaisesContext(object):
+    class RaisesContext:
         def __init__(self, expectedException):
             self.expectedException = expectedException
 
@@ -127,7 +134,7 @@ else:
     class Skipped(Exception):
         pass
 
-    class Failed(Exception):
+    class Failed(Exception):  # type: ignore
         pass
 
     def XFAIL(func):
@@ -137,10 +144,10 @@ else:
             except Exception as e:
                 message = str(e)
                 if message != "Timeout":
-                    raise XFail(get_function_name(func))
+                    raise XFail(func.__name__)
                 else:
                     raise Skipped("Timeout")
-            raise XPass(get_function_name(func))
+            raise XPass(func.__name__)
 
         wrapper = functools.update_wrapper(wrapper, func)
         return wrapper
@@ -174,7 +181,7 @@ else:
         return func
 
     @contextlib.contextmanager
-    def warns(warningcls, **kwargs):
+    def warns(warningcls, *, match=''):
         '''Like raises but tests that warnings are emitted.
 
         >>> from sympy.testing.pytest import warns
@@ -190,10 +197,6 @@ else:
         Failed: DID NOT WARN. No warnings of type UserWarning\
         was emitted. The list of emitted warnings is: [].
         '''
-        match = kwargs.pop('match', '')
-        if kwargs:
-            raise TypeError('Invalid keyword arguments: %s' % kwargs)
-
         # Absorbs all warnings in warnrec
         with warnings.catch_warnings(record=True) as warnrec:
             # Hide all warnings but make sure that our warning is emitted

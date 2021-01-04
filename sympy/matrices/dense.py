@@ -1,12 +1,13 @@
 import random
+from functools import reduce
 
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence, reduce
+from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import \
     a2idx, classof, ShapeError
@@ -43,7 +44,10 @@ class DenseMatrix(MatrixBase):
     _class_priority = 4
 
     def __eq__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return NotImplemented
         self_shape = getattr(self, 'shape', None)
         other_shape = getattr(other, 'shape', None)
         if None in (self_shape, other_shape):
@@ -289,17 +293,16 @@ def _force_mutable(x):
 
 
 class MutableDenseMatrix(DenseMatrix, MatrixBase):
-    __hash__ = None
+    __hash__ = None  # type: ignore
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
 
     @classmethod
-    def _new(cls, *args, **kwargs):
-        # if the `copy` flag is set to False, the input
-        # was rows, cols, [list].  It should be used directly
-        # without creating a copy.
-        if kwargs.get('copy', True) is False:
+    def _new(cls, *args, copy=True, **kwargs):
+        if copy is False:
+            # The input was rows, cols, [list].
+            # It should be used directly without creating a copy.
             if len(args) != 3:
                 raise TypeError("'copy=False' requires a matrix be initialized as rows,cols,[list]")
             rows, cols, flat_list = args
@@ -915,7 +918,7 @@ def eye(*args, **kwargs):
     return Matrix.eye(*args, **kwargs)
 
 
-def diag(*values, **kwargs):
+def diag(*values, strict=True, unpack=False, **kwargs):
     """Returns a matrix with the provided values placed on the
     diagonal. If non-square matrices are included, they will
     produce a block-diagonal matrix.
@@ -949,12 +952,7 @@ def diag(*values, **kwargs):
     .common.MatrixCommon.diag
     .expressions.blockmatrix.BlockMatrix
     """
-    # Extract any setting so we don't duplicate keywords sent
-    # as named parameters:
-    kw = kwargs.copy()
-    strict = kw.pop('strict', True)  # lists will be converted to Matrices
-    unpack = kw.pop('unpack', False)
-    return Matrix.diag(*values, strict=strict, unpack=unpack, **kw)
+    return Matrix.diag(*values, strict=strict, unpack=unpack, **kwargs)
 
 
 def GramSchmidt(vlist, orthonormal=False):

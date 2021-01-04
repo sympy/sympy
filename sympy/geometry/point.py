@@ -222,7 +222,7 @@ class Point(GeometryEntity):
     def __contains__(self, item):
         return item in self.args
 
-    def __div__(self, divisor):
+    def __truediv__(self, divisor):
         """Divide point's coordinates by a factor."""
         divisor = sympify(divisor)
         coords = [simplify(x/divisor) for x in self.args]
@@ -854,8 +854,6 @@ class Point(GeometryEntity):
 
     n = evalf
 
-    __truediv__ = __div__
-
 class Point2D(Point):
     """A point in a 2-dimensional Euclidean space.
 
@@ -908,8 +906,8 @@ class Point2D(Point):
 
     _ambient_dimension = 2
 
-    def __new__(cls, *args, **kwargs):
-        if not kwargs.pop('_nocheck', False):
+    def __new__(cls, *args, _nocheck=False, **kwargs):
+        if not _nocheck:
             kwargs['dim'] = 2
             args = Point(*args, **kwargs)
         return GeometryEntity.__new__(cls, *args)
@@ -1119,8 +1117,8 @@ class Point3D(Point):
 
     _ambient_dimension = 3
 
-    def __new__(cls, *args, **kwargs):
-        if not kwargs.pop('_nocheck', False):
+    def __new__(cls, *args, _nocheck=False, **kwargs):
+        if not _nocheck:
             kwargs['dim'] = 3
             args = Point(*args, **kwargs)
         return GeometryEntity.__new__(cls, *args)

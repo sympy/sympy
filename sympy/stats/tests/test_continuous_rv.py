@@ -1,7 +1,7 @@
 from sympy import E as e
 from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
-                   gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
+                   gamma, beta, Piecewise, Integral, sin, cos, tan, atan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re, Lambda, asin,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
                    factorial, binomial, erfi, besselj, besselk)
@@ -14,8 +14,8 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          ContinuousRV, sample, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
-                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
-                         LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
+                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic, LogCauchy,
+                         LogLogistic, LogitNormal, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile,
@@ -337,7 +337,7 @@ def test_sample_continuous():
 def test_ContinuousRV():
     pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))  # Normal distribution
     # X and Y should be equivalent
-    X = ContinuousRV(x, pdf)
+    X = ContinuousRV(x, pdf, check=True)
     Y = Normal('y', 0, 1)
 
     assert variance(X) == variance(Y)
@@ -346,7 +346,16 @@ def test_ContinuousRV():
     assert Z.pspace.domain.set == Interval(0, oo)
     assert E(Z) == 1
     assert P(Z > 5) == exp(-5)
-    raises(ValueError, lambda: ContinuousRV(z, exp(-z), set=Interval(0, 10)))
+    raises(ValueError, lambda: ContinuousRV(z, exp(-z), set=Interval(0, 10), check=True))
+
+    # the correct pdf for Gamma(k, theta) but the integral in `check`
+    # integrates to something equivalent to 1 and not to 1 exactly
+    _x, k, theta = symbols("x k theta", positive=True)
+    pdf = 1/(gamma(k)*theta**k)*_x**(k-1)*exp(-_x/theta)
+    X = ContinuousRV(_x, pdf, set=Interval(0, oo))
+    Y = Gamma('y', k, theta)
+    assert (E(X) - E(Y)).simplify() == 0
+    assert (variance(X) - variance(Y)).simplify() == 0
 
 
 def test_arcsin():
@@ -833,6 +842,16 @@ def test_levy():
     mu = Symbol("mu", real=True)
     raises(ValueError, lambda: Levy('x',mu,c))
 
+def test_logcauchy():
+    mu = Symbol("mu" , positive=True)
+    sigma = Symbol("sigma" , positive=True)
+
+    X = LogCauchy("x", mu, sigma)
+
+    assert density(X)(x) == sigma/(x*pi*(sigma**2 + (-mu + log(x))**2))
+    assert cdf(X)(x) == atan((log(x) - mu)/sigma)/pi + S.Half
+
+
 def test_logistic():
     mu = Symbol("mu", real=True)
     s = Symbol("s", positive=True)
@@ -873,6 +892,15 @@ def test_loglogistic():
     assert E(X) == pi*a/(b*sin(pi/b))
     X = LogLogistic('x', 1, 2)
     assert median(X) == FiniteSet(1)
+
+def test_logitnormal():
+    mu = Symbol('mu', real=True)
+    s = Symbol('s', positive=True)
+    X = LogitNormal('x', mu, s)
+    x = Symbol('x')
+
+    assert density(X)(x) == sqrt(2)*exp(-(-mu + log(x/(1 - x)))**2/(2*s**2))/(2*sqrt(pi)*s*x*(1 - x))
+    assert cdf(X)(x) == erf(sqrt(2)*(-mu + log(x/(1 - x)))/(2*s))/2 + S(1)/2
 
 def test_lognormal():
     mean = Symbol('mu', real=True)
@@ -1047,7 +1075,7 @@ def test_pareto_numeric():
     X = Pareto('x', xm, alpha)
 
     assert E(X) == alpha*xm/S(alpha - 1)
-    assert variance(X) == xm**2*alpha / S(((alpha - 1)**2*(alpha - 2)))
+    assert variance(X) == xm**2*alpha / S((alpha - 1)**2*(alpha - 2))
     assert median(X) == FiniteSet(3*2**Rational(1, 7))
     # Skewness tests too slow. Try shortcutting function?
 
@@ -1319,7 +1347,7 @@ def test_prefab_sampling():
     size = 5
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
         for var in variables:
-            for i in range(niter):
+            for _ in range(niter):
                 assert next(sample(var)) in var.pspace.domain.set
                 samps = next(sample(var, size=size))
                 for samp in samps:

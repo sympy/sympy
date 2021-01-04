@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S, pi, Rational
 from sympy.functions import assoc_laguerre, sqrt, exp, factorial, factorial2
 
@@ -9,17 +7,20 @@ def R_nl(n, l, nu, r):
     Returns the radial wavefunction R_{nl} for a 3d isotropic harmonic
     oscillator.
 
-    ``n``
-        the "nodal" quantum number.  Corresponds to the number of nodes in
-        the wavefunction.  n >= 0
-    ``l``
-        the quantum number for orbital angular momentum
-    ``nu``
+    Parameters
+    ==========
+
+    ``n`` :
+        The "nodal" quantum number.  Corresponds to the number of nodes in
+        the wavefunction.  ``n >= 0``
+    ``l`` :
+        The quantum number for orbital angular momentum.
+    ``nu`` :
         mass-scaled frequency: nu = m*omega/(2*hbar) where `m` is the mass
         and `omega` the frequency of the oscillator.
-        (in atomic units nu == omega/2)
-    ``r``
-        Radial coordinate
+        (in atomic units ``nu == omega/2``)
+    ``r`` :
+        Radial coordinate.
 
     Examples
     ========
@@ -62,14 +63,20 @@ def R_nl(n, l, nu, r):
 
 def E_nl(n, l, hw):
     """
-    Returns the Energy of an isotropic harmonic oscillator
+    Returns the Energy of an isotropic harmonic oscillator.
 
-    ``n``
-        the "nodal" quantum number
-    ``l``
-        the orbital angular momentum
-    ``hw``
-        the harmonic oscillator parameter.
+    Parameters
+    ==========
+
+    ``n`` :
+        The "nodal" quantum number.
+    ``l`` :
+        The orbital angular momentum.
+    ``hw`` :
+        The harmonic oscillator parameter.
+
+    Notes
+    =====
 
     The unit of the returned value matches the unit of hw, since the energy is
     calculated as:

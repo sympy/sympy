@@ -797,8 +797,7 @@ def test_straight_line():
 
 def test_sort_variable():
     vsort = Derivative._sort_variable_count
-    def vsort0(*v, **kw):
-        reverse = kw.get('reverse', False)
+    def vsort0(*v, reverse=False):
         return [i[0] for i in vsort([(i, 0) for i in (
             reversed(v) if reverse else v)])]
 
@@ -1365,6 +1364,16 @@ def test_Derivative_free_symbols():
     f = Function('f')
     n = Symbol('n', integer=True, positive=True)
     assert diff(f(x), (x, n)).free_symbols == {n, x}
+
+
+def test_issue_20683():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    y = Derivative(z, x).subs(x,0)
+    assert y.doit() == 0
+    y = Derivative(8, x).subs(x,0)
+    assert y.doit() == 0
 
 
 def test_issue_10503():

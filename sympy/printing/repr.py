@@ -5,15 +5,13 @@ The most important function here is srepr that returns a string so that the
 relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy.core.function import AppliedUndef
 from sympy.core.mul import Mul
 from mpmath.libmp import repr_dps, to_str as mlib_to_str
 
-from .printer import Printer
+from .printer import Printer, print_function
 
 
 class ReprPrinter(Printer):
@@ -243,10 +241,12 @@ class ReprPrinter(Printer):
             )
 
     def _print_Predicate(self, expr):
-        return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        return "Q.%s" % expr.name
 
     def _print_AppliedPredicate(self, expr):
-        return "%s(%s, %s)" % (expr.__class__.__name__, expr.func, expr.arg)
+        # will be changed to just expr.args when args overriding is removed
+        args = expr._args
+        return "%s(%s)" % (expr.__class__.__name__, self.reprify(args, ", "))
 
     def _print_str(self, expr):
         return repr(expr)
@@ -322,6 +322,7 @@ class ReprPrinter(Printer):
         ext = self._print(f.ext)
         return "ExtElem(%s, %s)" % (rep, ext)
 
+@print_function(ReprPrinter)
 def srepr(expr, **settings):
     """return expr in repr form"""
     return ReprPrinter(settings).doprint(expr)

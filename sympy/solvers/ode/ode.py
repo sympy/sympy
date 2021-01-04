@@ -229,8 +229,6 @@ code is tested extensively in ``test_ode.py``, so if anything is broken, one
 of those tests will surely fail.
 
 """
-from __future__ import print_function, division
-
 from collections import defaultdict
 from itertools import islice
 
@@ -580,7 +578,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         # changed to show the systems that haven't
         # been solved.
         try:
-            sol = dsolve_system(eq, funcs=func, ics=ics)
+            sol = dsolve_system(eq, funcs=func, ics=ics, doit=True)
             return sol[0] if len(sol) == 1 else sol
         except NotImplementedError:
             pass
@@ -833,7 +831,7 @@ def solve_ics(sols, funcs, constants, ics):
 
     return solved_constants[0]
 
-def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
+def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta=None, n=None, **kwargs):
     r"""
     Returns a tuple of possible :py:meth:`~sympy.solvers.ode.dsolve`
     classifications for an ODE.
@@ -961,8 +959,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     """
     ics = sympify(ics)
 
-    prep = kwargs.pop('prep', True)
-
     if func and len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only "
         "work with functions of one variable, not %s" % func)
@@ -980,9 +976,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     x = func.args[0]
     f = func.func
     y = Dummy('y')
-    xi = kwargs.get('xi')
-    eta = kwargs.get('eta')
-    terms = kwargs.get('n')
+    terms = n
 
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
@@ -4929,7 +4923,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
         else:
             return False
 
-    def _get_trial_set(expr, x, exprs=set([])):
+    def _get_trial_set(expr, x, exprs=set()):
         r"""
         Returns a set of trial terms for undetermined coefficients.
 
@@ -4965,7 +4959,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
         else:
             term = _remove_coefficient(expr, x)
             tmpset = exprs.union({term})
-            oldset = set([])
+            oldset = set()
             while tmpset != oldset:
                 # If you get stuck in this loop, then _test_term is probably
                 # broken
@@ -4992,7 +4986,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
         # then they will need to be multiplied by sufficient x to make them so.
         # This function DOES NOT do that (it doesn't even look at the
         # homogeneous equation).
-        temp_set = set([])
+        temp_set = set()
         for i in Add.make_args(expr):
             act = _get_trial_set(i,x)
             if eq_homogeneous is not S.Zero:
@@ -5895,7 +5889,7 @@ def lie_heuristic_bivariate(match, comp=False):
                     etared = etaeq.subs(soldict)
                     # Scaling is done by substituting one for the parameters
                     # This can be any number except zero.
-                    dict_ = dict((sym, 1) for sym in symset)
+                    dict_ = {sym: 1 for sym in symset}
                     inf = {eta: etared.subs(dict_).subs(y, func),
                         xi: xired.subs(dict_).subs(y, func)}
                     return [inf]
@@ -5958,7 +5952,7 @@ def lie_heuristic_chi(match, comp=False):
                         soldict = soldict[0]
                     if any(soldict.values()):
                         chieq = chieq.subs(soldict)
-                        dict_ = dict((sym, 1) for sym in solsyms)
+                        dict_ = {sym: 1 for sym in solsyms}
                         chieq = chieq.subs(dict_)
                         # After finding chi, the main aim is to find out
                         # eta, xi by the equation eta = xi*h + chi
@@ -6692,7 +6686,7 @@ def _nonlinear_2eq_order1_type3(x, y, t, eq):
     F = r1[f].subs(x(t), u).subs(y(t), v(u))
     G = r2[g].subs(x(t), u).subs(y(t), v(u))
     sol2r = dsolve(Eq(diff(v(u), u), G/F))
-    if isinstance(sol2r, Expr):
+    if isinstance(sol2r, Equality):
         sol2r = [sol2r]
     for sol2s in sol2r:
         sol1 = solve(Integral(1/F.subs(v(u), sol2s.rhs), u).doit() - t - C2, u)

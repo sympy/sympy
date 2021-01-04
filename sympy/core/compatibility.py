@@ -4,7 +4,7 @@ we support. Also some functions that are needed SymPy-wide and are located
 here for easy import.
 """
 
-# from typing import Tuple, Type
+from typing import Tuple, Type
 
 import operator
 from collections import defaultdict
@@ -57,106 +57,34 @@ __all__ = [
 ]
 
 import sys
-PY3 = sys.version_info[0] > 2
+PY3 = True
 
-if PY3:
-    int_info = sys.int_info
+int_info = sys.int_info
 
-    # String / unicode compatibility
-    unicode = str
+# String / unicode compatibility
+unicode = str
 
-    def u_decode(x):
-        return x
+def u_decode(x):
+    return x
 
-    # Moved definitions
-    get_function_code = operator.attrgetter("__code__")
-    get_function_globals = operator.attrgetter("__globals__")
-    get_function_name = operator.attrgetter("__name__")
+# Moved definitions
+get_function_code = operator.attrgetter("__code__")
+get_function_globals = operator.attrgetter("__globals__")
+get_function_name = operator.attrgetter("__name__")
 
-    import builtins
-    from functools import reduce
-    from io import StringIO
-    cStringIO = StringIO
+import builtins
+from functools import reduce
+from io import StringIO
+cStringIO = StringIO
 
-    exec_ = getattr(builtins, "exec")
+exec_ = getattr(builtins, "exec")
 
-    from collections.abc import (Mapping, Callable, MutableMapping,
-        MutableSet, Iterable, Hashable)
+from collections.abc import (Mapping, Callable, MutableMapping,
+    MutableSet, Iterable, Hashable)
 
-    from inspect import unwrap
-    from itertools import accumulate
-else:
-    int_info = sys.long_info
+from inspect import unwrap
+from itertools import accumulate
 
-    # String / unicode compatibility
-    unicode = unicode
-
-    def u_decode(x):
-        return x.decode('utf-8')
-
-    # Moved definitions
-    get_function_code = operator.attrgetter("func_code")
-    get_function_globals = operator.attrgetter("func_globals")
-    get_function_name = operator.attrgetter("func_name")
-
-    import __builtin__ as builtins
-    reduce = reduce
-    from StringIO import StringIO
-    from cStringIO import StringIO as cStringIO
-
-    def exec_(_code_, _globs_=None, _locs_=None):
-        """Execute code in a namespace."""
-        if _globs_ is None:
-            frame = sys._getframe(1)
-            _globs_ = frame.f_globals
-            if _locs_ is None:
-                _locs_ = frame.f_locals
-            del frame
-        elif _locs_ is None:
-            _locs_ = _globs_
-        exec("exec _code_ in _globs_, _locs_")
-
-    from collections import (Mapping, Callable, MutableMapping,
-        MutableSet, Iterable, Hashable)
-
-    def unwrap(func, stop=None):
-        """Get the object wrapped by *func*.
-
-       Follows the chain of :attr:`__wrapped__` attributes returning the last
-       object in the chain.
-
-       *stop* is an optional callback accepting an object in the wrapper chain
-       as its sole argument that allows the unwrapping to be terminated early if
-       the callback returns a true value. If the callback never returns a true
-       value, the last object in the chain is returned as usual. For example,
-       :func:`signature` uses this to stop unwrapping if any object in the
-       chain has a ``__signature__`` attribute defined.
-
-       :exc:`ValueError` is raised if a cycle is encountered.
-
-        """
-        if stop is None:
-            def _is_wrapper(f):
-                return hasattr(f, '__wrapped__')
-        else:
-            def _is_wrapper(f):
-                return hasattr(f, '__wrapped__') and not stop(f)
-        f = func  # remember the original func for error reporting
-        memo = {id(f)} # Memoise by id to tolerate non-hashable objects
-        while _is_wrapper(func):
-            func = func.__wrapped__
-            id_func = id(func)
-            if id_func in memo:
-                raise ValueError('wrapper loop when unwrapping {!r}'.format(f))
-            memo.add(id_func)
-        return func
-
-    def accumulate(iterable, func=operator.add):
-        state = iterable[0]
-        yield state
-        for i in iterable[1:]:
-            state = func(state, i)
-            yield state
 
 
 def with_metaclass(meta, *bases):
@@ -728,7 +656,7 @@ if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
     GROUND_TYPES = 'python'
 
 # SYMPY_INTS is a tuple containing the base types for valid integer types.
-SYMPY_INTS = (int, )  ## type: Tuple[Type, ...]
+SYMPY_INTS = (int, )  # type: Tuple[Type, ...]
 
 if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)

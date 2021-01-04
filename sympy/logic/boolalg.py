@@ -8,11 +8,13 @@ from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, as_int
+from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
 from sympy.core.sympify import converter, _sympify, sympify
+from sympy.core.kind import BooleanKind
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
@@ -58,19 +60,22 @@ def as_Boolean(e):
     raise TypeError('expecting bool or Boolean, not `%s`.' % e)
 
 
+@sympify_method_args
 class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
 
     __slots__ = ()
 
+    kind = BooleanKind
+
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __and__(self, other):
-        """Overloading for & operator"""
         return And(self, other)
 
     __rand__ = __and__
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __or__(self, other):
-        """Overloading for |"""
         return Or(self, other)
 
     __ror__ = __or__
@@ -79,17 +84,18 @@ class Boolean(Basic):
         """Overloading for ~"""
         return Not(self)
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __rshift__(self, other):
-        """Overloading for >>"""
         return Implies(self, other)
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __lshift__(self, other):
-        """Overloading for <<"""
         return Implies(other, self)
 
     __rrshift__ = __lshift__
     __rlshift__ = __rshift__
 
+    @sympify_return([('other', 'Boolean')], NotImplemented)
     def __xor__(self, other):
         return Xor(self, other)
 
@@ -203,9 +209,7 @@ class BooleanAtom(Boolean):
     __rmul__ = _noop
     __pow__ = _noop
     __rpow__ = _noop
-    __rdiv__ = _noop
     __truediv__ = _noop
-    __div__ = _noop
     __rtruediv__ = _noop
     __mod__ = _noop
     __rmod__ = _noop
@@ -318,10 +322,8 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanFalse
 
     """
-    def __nonzero__(self):
+    def __bool__(self):
         return True
-
-    __bool__ = __nonzero__
 
     def __hash__(self):
         return hash(True)
@@ -388,10 +390,8 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanTrue
 
     """
-    def __nonzero__(self):
+    def __bool__(self):
         return False
-
-    __bool__ = __nonzero__
 
     def __hash__(self):
         return hash(False)
@@ -1051,9 +1051,8 @@ class Xor(BooleanFunction):
     x
 
     """
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, remove_true=True, **kwargs):
         argset = set()
-        remove_true = kwargs.pop('remove_true', True)
         obj = super().__new__(cls, *args, **kwargs)
         for arg in obj._args:
             if isinstance(arg, Number) or arg in (True, False):

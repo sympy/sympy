@@ -1,5 +1,4 @@
-from __future__ import unicode_literals
-from sympy import (S, Symbol, Interval, exp, Or,
+from sympy import (S, Symbol, Interval, binomial, nan, exp, Or,
         symbols, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic, Indexed,
         DiracDelta, Lambda, log, pi, FallingFactorial, Rational, Matrix)
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
@@ -13,6 +12,8 @@ from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
 from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
+from sympy.core.symbol import Dummy
+from sympy.functions.elementary.piecewise import Piecewise
 
 def test_where():
     X, Y = Die('X'), Die('Y')
@@ -40,9 +41,9 @@ def test_where():
 def test_random_symbols():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
 
-    assert set(random_symbols(2*X + 1)) == set((X,))
-    assert set(random_symbols(2*X + Y)) == set((X, Y))
-    assert set(random_symbols(2*X + Y.symbol)) == set((X,))
+    assert set(random_symbols(2*X + 1)) == {X}
+    assert set(random_symbols(2*X + Y)) == {X, Y}
+    assert set(random_symbols(2*X + Y.symbol)) == {X}
     assert set(random_symbols(2)) == set()
 
 
@@ -386,3 +387,10 @@ def test_issue_6810():
     assert P(Eq(Y, 0)) == 0
     assert P(Or(X > 2, X < 3)) == 1
     assert P(And(X > 3, X > 2)) == S(1)/2
+
+def test_issue_20286():
+    n, p = symbols('n p')
+    B = Binomial('B', n, p)
+    k = Dummy('k', integer = True)
+    eq = Sum(Piecewise((-p**k*(1 - p)**(-k + n)*log(p**k*(1 - p)**(-k + n)*binomial(n, k))*binomial(n, k), (k >= 0) & (k <= n)), (nan, True)), (k, 0, n))
+    assert eq.dummy_eq(H(B))

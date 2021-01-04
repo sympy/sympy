@@ -1,15 +1,20 @@
+"""
+This module defines base class for handlers and some core handlers:
+``Q.commutative`` and ``Q.is_true``.
+"""
+
+from sympy.assumptions import Q, ask
 from sympy.core.logic import _fuzzy_group
 from sympy.logic.boolalg import conjuncts
-from sympy.assumptions import Q, ask
 
 
 class AskHandler:
-    """Base class that all Ask Handlers must inherit"""
+    """Base class that all Ask Handlers must inherit."""
     pass
 
 
 class CommonHandler(AskHandler):
-    """Defines some useful methods common to most Handlers """
+    """Defines some useful methods common to most Handlers. """
 
     @staticmethod
     def AlwaysTrue(expr, assumptions):
@@ -124,7 +129,7 @@ class TautologicalHandler(AskHandler):
 def test_closed_group(expr, assumptions, key):
     """
     Test for membership in a group with respect
-    to the current operation
+    to the current operation.
     """
     return _fuzzy_group(
         (ask(key(a), assumptions) for a in expr.args), quick_exit=True)

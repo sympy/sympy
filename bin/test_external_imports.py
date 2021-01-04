@@ -30,8 +30,12 @@ hard_optional_dependencies = ['gmpy', 'gmpy2', 'pycosat']
 import sys
 import os
 
-stdlib = {p for p in sys.path if p.startswith(sys.prefix) and
-    'site-packages' not in p}
+def is_stdlib(p):
+    return ((p.startswith(sys.prefix)
+            or p.startswith(sys.base_prefix))
+            and 'site-packages' not in p)
+
+stdlib = {p for p in sys.path if is_stdlib(p)}
 
 existing_modules = list(sys.modules.keys())
 

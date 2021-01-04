@@ -1,11 +1,10 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
+from functools import reduce
 
 from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
     Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand)
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import reduce, iterable, SYMPY_INTS
+from sympy.core.compatibility import iterable, SYMPY_INTS
 from sympy.core.function import count_ops, _mexpand
 from sympy.core.numbers import I, Integer
 from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
@@ -26,6 +25,9 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                       polynomial=False):
     """
     Simplify trigonometric expressions using a groebner basis algorithm.
+
+    Explanation
+    ===========
 
     This routine takes a fraction involving trigonometric or hyperbolic
     expressions, and tries to simplify it. The primary metric is the
@@ -220,7 +222,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
 
     def build_ideal(x, terms):
         """
-        Build generators for our ideal. Terms is an iterable with elements of
+        Build generators for our ideal. ``Terms`` is an iterable with elements of
         the form (fn, coeff), indicating that we have a generator fn(coeff*x).
 
         If any of the terms is trigonometric, sin(x) and cos(x) are guaranteed
@@ -323,7 +325,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
             x = gcd*Mul(*key)
             r = build_ideal(x, terms)
             res.extend(r)
-            newgens.extend(set(fn(v*x) for fn, v in terms))
+            newgens.extend({fn(v*x) for fn, v in terms})
 
         # Add generators for compound expressions from iterables
         for fn, args in iterables:
@@ -425,8 +427,8 @@ def trigsimp(expr, **opts):
     """
     reduces expression by using known trig identities
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     method:
     - Determine the method to use. Valid choices are 'matching' (default),
@@ -604,9 +606,9 @@ def exptrigsimp(expr):
 
 #-------------------- the old trigsimp routines ---------------------
 
-def trigsimp_old(expr, **opts):
+def trigsimp_old(expr, *, first=True, **opts):
     """
-    reduces expression by using known trig identities
+    Reduces expression by using known trig identities.
 
     Notes
     =====
@@ -663,7 +665,6 @@ def trigsimp_old(expr, **opts):
 
     """
     old = expr
-    first = opts.pop('first', True)
     if first:
         if not expr.has(*_trigs):
             return expr
@@ -1066,7 +1067,7 @@ def __trigsimp(expr, deep=False):
 #------------------- end of old trigsimp routines --------------------
 
 
-def futrig(e, **kwargs):
+def futrig(e, *, hyper=True, **kwargs):
     """Return simplified ``e`` using Fu-like transformations.
     This is not the "Fu" algorithm. This is called by default
     from ``trigsimp``. By default, hyperbolics subexpressions
@@ -1100,7 +1101,7 @@ def futrig(e, **kwargs):
     old = e
     e = bottom_up(e, _futrig)
 
-    if kwargs.pop('hyper', True) and e.has(HyperbolicFunction):
+    if hyper and e.has(HyperbolicFunction):
         e, f = hyper_as_trig(e)
         e = f(bottom_up(e, _futrig))
 

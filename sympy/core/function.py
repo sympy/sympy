@@ -30,7 +30,7 @@ There are three types of functions implemented in SymPy:
 
 """
 
-from typing import Any, Dict as tDict, Optional, Set as tSet
+from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union
 
 from .add import Add
 from .assumptions import ManagedProperties
@@ -47,7 +47,7 @@ from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.parameters import global_parameters
-from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not
+from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not, FuzzyBool
 from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import has_dups, sift
@@ -116,6 +116,9 @@ class BadArgumentsError(TypeError):
 # Python 2/3 version that does not raise a Deprecation warning
 def arity(cls):
     """Return the arity of the function if it is known, else None.
+
+    Explanation
+    ===========
 
     When default values are specified for some arguments, they are
     optional and the arity is reported as a tuple of possible values.
@@ -255,6 +258,9 @@ class Application(Basic, metaclass=FunctionClass):
     """
     Base class for applied functions.
 
+    Explanation
+    ===========
+
     Instances of Application represent the result of applying an application of
     any type to any object.
     """
@@ -310,6 +316,9 @@ class Application(Basic, metaclass=FunctionClass):
     def eval(cls, *args):
         """
         Returns a canonical form of cls applied to arguments args.
+
+        Explanation
+        ===========
 
         The eval() method is called when the class cls is about to be
         instantiated and it should return either some simplified instance
@@ -475,6 +484,9 @@ class Function(Application, Expr):
         """
         Decide if the function should automatically evalf().
 
+        Explanation
+        ===========
+
         By default (in this implementation), this happens if (and only if) the
         ARG is a floating point number.
         This function is used by __new__.
@@ -614,7 +626,7 @@ class Function(Application, Expr):
 
         return fuzzy_not(type(self).is_singular(arg.subs(x, a)))
 
-    _singularities = None  # indeterminate
+    _singularities = None  # type: Union[FuzzyBool, tTuple[Expr, ...]]
 
     @classmethod
     def is_singular(cls, a):
@@ -768,14 +780,14 @@ class Function(Application, Expr):
         A = self.args[ix]
         if A._diff_wrt:
             if len(self.args) == 1 or not A.is_Symbol:
-                return Derivative(self, A)
+                return _derivative_dispatch(self, A)
             for i, v in enumerate(self.args):
                 if i != ix and A in v.free_symbols:
                     # it can't be in any other argument's free symbols
                     # issue 8510
                     break
             else:
-                    return Derivative(self, A)
+                    return _derivative_dispatch(self, A)
 
         # See issue 4624 and issue 4719, 5600 and 8510
         D = Dummy('xi_%i' % argindex, dummy_index=hash(A))
@@ -1400,13 +1412,7 @@ class Derivative(Expr):
                             zero = True
                             break
             if zero:
-                if isinstance(expr, (MatrixCommon, NDimArray)):
-                    return expr.zeros(*expr.shape)
-                elif isinstance(expr, MatrixExpr):
-                    from sympy import ZeroMatrix
-                    return ZeroMatrix(*expr.shape)
-                elif expr.is_scalar:
-                    return S.Zero
+                return cls._get_zero_with_shape_like(expr)
 
             # make the order of symbols canonical
             #TODO: check if assumption of discontinuous derivatives exist
@@ -1416,7 +1422,7 @@ class Derivative(Expr):
         if isinstance(expr, Derivative):
             variable_count = list(expr.variable_count) + variable_count
             expr = expr.expr
-            return Derivative(expr, *variable_count, **kwargs)
+            return _derivative_dispatch(expr, *variable_count, **kwargs)
 
         # we return here if evaluate is False or if there is no
         # _eval_derivative method
@@ -1459,11 +1465,7 @@ class Derivative(Expr):
                     # _eval_derivative defined
                     expr *= old_v.diff(old_v)
 
-            # Evaluate the derivative `n` times.  If
-            # `_eval_derivative_n_times` is not overridden by the current
-            # object, the default in `Basic` will call a loop over
-            # `_eval_derivative`:
-            obj = expr._eval_derivative_n_times(v, count)
+            obj = cls._dispatch_eval_derivative_n_times(expr, v, count)
             if obj is not None and obj.is_zero:
                 return obj
 
@@ -1734,7 +1736,7 @@ class Derivative(Expr):
             old_vars = Counter(dict(reversed(old.variable_count)))
             self_vars = Counter(dict(reversed(self.variable_count)))
             if _subset(old_vars, self_vars):
-                return Derivative(new, *(self_vars - old_vars).items()).canonical
+                return _derivative_dispatch(new, *(self_vars - old_vars).items()).canonical
 
         args = list(self.args)
         newargs = list(x._subs(old, new) for x in args)
@@ -1742,7 +1744,7 @@ class Derivative(Expr):
             # complete replacement of self.expr
             # we already checked that the new is valid so we know
             # it won't be a problem should it appear in variables
-            return Derivative(*newargs)
+            return _derivative_dispatch(*newargs)
 
         if newargs[0] != args[0]:
             # case (1) can't change expr by introducing something that is in
@@ -1797,7 +1799,7 @@ class Derivative(Expr):
                 return Subs(Derivative(newe, *vc), *zip(*subs))
 
         # everything was ok
-        return Derivative(*newargs)
+        return _derivative_dispatch(*newargs)
 
     def _eval_lseries(self, x, logx, cdir=0):
         dx = self.variables
@@ -1832,6 +1834,7 @@ class Derivative(Expr):
 
         Parameters
         ==========
+
         points : sequence or coefficient, optional
             If sequence: discrete values (length >= order+1) of the
             independent variable used for generating the finite
@@ -1839,9 +1842,11 @@ class Derivative(Expr):
             If it is a coefficient, it will be used as the step-size
             for generating an equidistant sequence of length order+1
             centered around ``x0``. Default: 1 (step-size 1)
+
         x0 : number or Symbol, optional
             the value of the independent variable (``wrt``) at which the
             derivative is to be approximated. Default: same as ``wrt``.
+
         wrt : Symbol, optional
             "with respect to" the variable for which the (partial)
             derivative is to be approximated for. If not provided it
@@ -1850,6 +1855,7 @@ class Derivative(Expr):
 
         Examples
         ========
+
         >>> from sympy import symbols, Function, exp, sqrt, Symbol
         >>> x, h = symbols('x h')
         >>> f = Function('f')
@@ -1911,6 +1917,29 @@ class Derivative(Expr):
         """
         from ..calculus.finite_diff import _as_finite_diff
         return _as_finite_diff(self, points, x0, wrt)
+
+    @classmethod
+    def _get_zero_with_shape_like(cls, expr):
+        return S.Zero
+
+    @classmethod
+    def _dispatch_eval_derivative_n_times(cls, expr, v, count):
+        # Evaluate the derivative `n` times.  If
+        # `_eval_derivative_n_times` is not overridden by the current
+        # object, the default in `Basic` will call a loop over
+        # `_eval_derivative`:
+        return expr._eval_derivative_n_times(v, count)
+
+
+def _derivative_dispatch(expr, *variables, **kwargs):
+    from sympy.matrices.common import MatrixCommon
+    from sympy import MatrixExpr
+    from sympy import NDimArray
+    array_types = (MatrixCommon, MatrixExpr, NDimArray, list, tuple, Tuple)
+    if isinstance(expr, array_types) or any(isinstance(i[0], array_types) if isinstance(i, (tuple, list, Tuple)) else isinstance(i, array_types) for i in variables):
+        from sympy.tensor.array.array_derivatives import ArrayDerivative
+        return ArrayDerivative(expr, *variables, **kwargs)
+    return Derivative(expr, *variables, **kwargs)
 
 
 class Lambda(Expr):
@@ -2071,9 +2100,24 @@ class Subs(Expr):
     """
     Represents unevaluated substitutions of an expression.
 
-    ``Subs(expr, x, x0)`` receives 3 arguments: an expression, a variable or
-    list of distinct variables and a point or list of evaluation points
-    corresponding to those variables.
+    ``Subs(expr, x, x0)`` represents the expression resulting
+    from substituting x with x0 in expr.
+
+    Parameters
+    ==========
+
+    expr : Expr
+        An expression.
+
+    x : tuple, variable
+        A variable or list of distinct variables.
+
+    x0 : tuple or list of tuples
+        A point or list of evaluation points
+        corresponding to those variables.
+
+    Notes
+    =====
 
     ``Subs`` objects are generally useful to represent unevaluated derivatives
     calculated at a point.
@@ -2232,9 +2276,11 @@ class Subs(Expr):
                 # do Subs that aren't related to differentiation
                 undone2 = []
                 D = Dummy()
+                arg = e.args[0]
                 for vi, pi in undone:
                     if D not in e.xreplace({vi: D}).free_symbols:
-                        e = e.subs(vi, pi)
+                        if arg.has(vi):
+                            e = e.subs(vi, pi)
                     else:
                         undone2.append((vi, pi))
                 undone = undone2
@@ -2384,6 +2430,9 @@ def diff(f, *symbols, **kwargs):
     """
     Differentiate f with respect to symbols.
 
+    Explanation
+    ===========
+
     This is just a wrapper to unify .diff() and the Derivative class; its
     interface is similar to that of integrate().  You can use the same
     shortcuts for multiple variables as with Derivative.  For example,
@@ -2444,13 +2493,16 @@ def diff(f, *symbols, **kwargs):
     if hasattr(f, 'diff'):
         return f.diff(*symbols, **kwargs)
     kwargs.setdefault('evaluate', True)
-    return Derivative(f, *symbols, **kwargs)
+    return _derivative_dispatch(f, *symbols, **kwargs)
 
 
 def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
         mul=True, log=True, multinomial=True, basic=True, **hints):
     r"""
     Expand an expression using methods given as hints.
+
+    Explanation
+    ===========
 
     Hints evaluated unless explicitly set to False are:  ``basic``, ``log``,
     ``multinomial``, ``mul``, ``power_base``, and ``power_exp`` The following
@@ -2734,14 +2786,13 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     ...         args = sympify(args)
     ...         return Expr.__new__(cls, *args)
     ...
-    ...     def _eval_expand_double(self, **hints):
+    ...     def _eval_expand_double(self, *, force=False, **hints):
     ...         '''
     ...         Doubles the args of MyClass.
     ...
     ...         If there more than four args, doubling is not performed,
     ...         unless force=True is also used (False by default).
     ...         '''
-    ...         force = hints.pop('force', False)
     ...         if not force and len(self.args) > 4:
     ...             return self
     ...         return self.func(*(self.args + self.args))
@@ -2927,8 +2978,6 @@ def expand_power_base(expr, deep=True, force=False):
     """
     Wrapper around expand that only uses the power_base hint.
 
-    See the expand docstring for more information.
-
     A wrapper to expand(power_base=True) which separates a power with a base
     that is a Mul into a product of powers, without performing any other
     expansions, provided that assumptions about the power's base and exponent
@@ -2982,6 +3031,11 @@ def expand_power_base(expr, deep=True, force=False):
     >>> ((2*y)**(1+z)).expand()
     2*2**z*y*y**z
 
+    See Also
+    ========
+
+    expand
+
     """
     return sympify(expr).expand(deep=deep, log=False, mul=False,
         power_exp=False, power_base=True, multinomial=False,
@@ -3010,15 +3064,19 @@ def count_ops(expr, visual=False):
     """
     Return a representation (integer or expression) of the operations in expr.
 
-    If ``visual`` is ``False`` (default) then the sum of the coefficients of the
-    visual expression will be returned.
+    Parameters
+    ==========
 
-    If ``visual`` is ``True`` then the number of each type of operation is shown
-    with the core class types (or their virtual equivalent) multiplied by the
-    number of times they occur.
+    expr : Expr
+        If expr is an iterable, the sum of the op counts of the
+        items will be returned.
 
-    If expr is an iterable, the sum of the op counts of the
-    items will be returned.
+    visual : bool, optional
+        If ``False`` (default) then the sum of the coefficients of the
+        visual expression will be returned.
+        If ``True`` then the number of each type of operation is shown
+        with the core class types (or their virtual equivalent) multiplied by the
+        number of times they occur.
 
     Examples
     ========

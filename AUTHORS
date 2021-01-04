@@ -4,7 +4,7 @@ those who explicitly didn't want to be mentioned. People with a * next
 to their names are not found in the metadata of the git history. This
 file is generated automatically by running `./bin/authors_update.py`.
 
-There are a total of 978 authors.
+There are a total of 1002 authors.
 
 Ondřej Čertík <ondrej@certik.cz>
 Fabian Pedregosa <fabian@fseoane.net>
@@ -827,6 +827,7 @@ Abhinav Anand <abhinav.anand2807@gmail.com>
 Qingsha Shi <googol.sqs@gmail.com>
 Juan Barbosa <js.barbosa10@uniandes.edu.co>
 Prionti Nasir <pdn3628@rit.edu>
+Bradley Dowling <34559056+btdow@users.noreply.github.com>
 Bharat Raghunathan <bharatraghunthan9767@gmail.com>
 arooshiverma <av22@iitbbs.ac.in>
 Christoph Gohle <ctg@mpq.mpg.de>
@@ -845,7 +846,6 @@ Denys Rybalka <rybalka.denis@gmail.com>
 Mark Dickinson <dickinsm@gmail.com>
 Rimi <rimibis@umich.edu>
 rimibis <33387803+rimibis@users.noreply.github.com>
-Bradley Dowling <34559056+btdow@users.noreply.github.com>
 Steven Lee <stevenlee123@protonmail.com>
 Gilles Schintgen <gschintgen@hambier.lu>
 Abhi58 <abhijithbharadwaj58@gmail.com>
@@ -926,7 +926,7 @@ Seth Troisi <sethtroisi@google.com>
 Bhaskar Gupta <guptabhanu1999@gmail.com>
 Smit Gajjar <smitgajjar.gs@gmail.com>
 rbl <rlee@grove.co>
-ILLIA PCHALINTSAU <ilya.pchelintsev@outlook.com>
+Ilya Pchelintsev <ilya.pchelintsev@outlook.com>
 Omar Wagih <o.wagih.ow@gmail.com>
 prshnt19 <prashant.rawat216@gmail.com>
 Johan Guzman <jguzm022@ucr.edu>
@@ -967,6 +967,7 @@ Wes Galbraith <galbwe92@gmail.com>
 KaustubhDamania <kaustubh.damania@gmail.com>
 w495 <w495@yandex-team.ru>
 Akhil Rajput <akh1lrjput@gmail.com>
+Markus Mohrhard <markus.mohrhard@googlemail.com>
 Benjamin Wolba <mail@benjaminwolba.com>
 mcpl-sympy <59268464+mcpl-sympy@users.noreply.github.com>
 彭于斌 <1931127624@qq.com>
@@ -983,4 +984,27 @@ Elias Basler <e.e.basler@protonmail.com>
 Brandon David <brandon.david@zoho.com>
 Abhay_Dhiman <abhaysdhimans@gmail.com>
 Tasha Kim <jae_young_kim@brown.edu>
-Ayush-Malik <ayushmalik779@gmail.com>
+Ayush Malik <ayushmalik779@gmail.com>
+Devesh Sawant <devesh47cool@gmail.com>
+Wolfgang Stöcher <wolfgang@stoecher.com>
+Sudeep Sidhu <sudeepmanilsidhu@gmail.com>
+foice <foice.news@gmail.com>
+Ben Payne <ben.is.located@gmail.com>
+Muskan Kumar <31043527+muskanvk@users.noreply.github.com>
+noam simcha finkelstein <noam.finkelstein@protonmail.com>
+Garrett Folbe <gmfolbe@yahoo.com>
+Islam Mansour <is3mansour@gmail.com>
+Sayandip Halder <sayandiph4@gmail.com>
+Shubham Agrawal <shubham.ag6845@gmail.com>
+numbermaniac <5206120+numbermaniac@users.noreply.github.com>
+Sakirul Alam <binarysakir@gmail.com>
+Mohammed Bilal <r.mohammedbilal@gmail.com>
+Chris du Plessis <christopherjonduplessis@gmail.com>
+Coder-RG <rgoel1999@gmail.com>
+Ansh Mishra <anshmishra471@gmail.com>
+Alex Malins <github@alexmalins.com>
+Lorenzo Contento <lorenzo.contento@gmail.com>
+Naveen Sai <naveensaisreenivas@gmail.com>
+Shital Mule <shitalmule04@gmail.com>
+Amanda Dsouza <meezamanda@yahoo.com>
+Nijso Beishuizen <nijso@koolmees.numerically-related.com>

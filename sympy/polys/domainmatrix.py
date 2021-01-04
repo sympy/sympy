@@ -1,11 +1,16 @@
-from __future__ import print_function
-
 from operator import mul
 
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
+
 from sympy.matrices.common import (NonInvertibleMatrixError,
     NonSquareMatrixError, ShapeError)
+from sympy.polys import Poly
+from sympy.polys.agca.extensions import FiniteExtension
 from sympy.polys.constructor import construct_domain
+from sympy.polys.factortools import dup_factor_list
+from sympy.polys.polyroots import roots
+from sympy.polys.rootoftools import CRootOf
 
 
 class DDMError(Exception):
@@ -128,6 +133,11 @@ class DDM(list):
         ddm_ineg(b)
         return b
 
+    def mul(a, b):
+        c = a.copy()
+        ddm_imul(c, b)
+        return c
+
     def matmul(a, b):
         """a @ b (matrix product)"""
         m, o = a.shape
@@ -142,6 +152,22 @@ class DDM(list):
         b = a.copy()
         pivots = ddm_irref(b)
         return b, pivots
+
+    def nullspace(a):
+        rref, pivots = a.rref()
+        rows, cols = a.shape
+        domain = a.domain
+
+        basis = []
+        for i in range(cols):
+            if i in pivots:
+                continue
+            vec = [domain.one if i == j else domain.zero for j in range(cols)]
+            for ii, jj in enumerate(pivots):
+                vec[jj] -= rref[ii][i]
+            basis.append(vec)
+
+        return DDM(basis, (len(basis), cols), domain)
 
     def det(a):
         """Determinant of a"""
@@ -217,6 +243,12 @@ def ddm_ineg(a):
             ai[j] = -aij
 
 
+def ddm_imul(a, b):
+    for ai in a:
+        for j, aij in enumerate(ai):
+            ai[j] = b * aij
+
+
 def ddm_imatmul(a, b, c):
     """a += b @ c"""
     cT = list(zip(*c))
@@ -255,8 +287,9 @@ def ddm_irref(a):
 
         # normalise row
         ai = a[i]
+        aijinv = aij**-1
         for l in range(j, n):
-            ai[l] /= aij # ai[j] = one
+            ai[l] *= aijinv # ai[j] = one
 
         # eliminate above and below to the right
         for k, ak in enumerate(a):
@@ -495,17 +528,21 @@ class DomainMatrix:
         return cls(ddm, ddm.shape, ddm.domain)
 
     @classmethod
-    def from_list_sympy(cls, nrows, ncols, rows):
+    def from_list_sympy(cls, nrows, ncols, rows, **kwargs):
         assert len(rows) == nrows
         assert all(len(row) == ncols for row in rows)
 
         items_sympy = [_sympify(item) for row in rows for item in row]
 
-        domain, items_domain = cls.get_domain(items_sympy)
+        domain, items_domain = cls.get_domain(items_sympy, **kwargs)
 
         domain_rows = [[items_domain[ncols*r + c] for c in range(ncols)] for r in range(nrows)]
 
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
+
+    @classmethod
+    def from_Matrix(cls, M, **kwargs):
+        return cls.from_list_sympy(*M.shape, M.tolist(), **kwargs)
 
     @classmethod
     def get_domain(cls, items_sympy, **kwargs):
@@ -514,6 +551,8 @@ class DomainMatrix:
 
     def convert_to(self, K):
         Kold = self.domain
+        if K == Kold:
+            return self.from_ddm(self.rep.copy())
         new_rows = [[K.convert_from(e, Kold) for e in row] for row in self.rep]
         return DomainMatrix(new_rows, self.shape, K)
 
@@ -558,9 +597,18 @@ class DomainMatrix:
 
     def __mul__(A, B):
         """A * B"""
-        if not isinstance(B, DomainMatrix):
+        if isinstance(B, DomainMatrix):
+            return A.matmul(B)
+        elif B in A.domain:
+            return A.from_ddm(A.rep * B)
+        else:
             return NotImplemented
-        return A.matmul(B)
+
+    def __rmul__(A, B):
+        if B in A.domain:
+            return A.from_ddm(A.rep * B)
+        else:
+            return NotImplemented
 
     def __pow__(A, n):
         """A ** n"""
@@ -584,6 +632,9 @@ class DomainMatrix:
 
     def neg(A):
         return A.from_ddm(A.rep.neg())
+
+    def mul(A, b):
+        return A.from_ddm(A.rep.mul(b))
 
     def matmul(A, B):
         return A.from_ddm(A.rep.matmul(B.rep))
@@ -610,6 +661,9 @@ class DomainMatrix:
             raise ValueError('Not a field')
         rref_ddm, pivots = self.rep.rref()
         return self.from_ddm(rref_ddm), tuple(pivots)
+
+    def nullspace(self):
+        return self.from_ddm(self.rep.nullspace())
 
     def inv(self):
         if not self.domain.is_Field:
@@ -646,8 +700,88 @@ class DomainMatrix:
             raise NonSquareMatrixError("not square")
         return self.rep.charpoly()
 
+    @classmethod
+    def eye(cls, n, domain):
+        return cls.from_ddm(DDM.eye(n, domain))
+
     def __eq__(A, B):
         """A == B"""
         if not isinstance(B, DomainMatrix):
             return NotImplemented
         return A.rep == B.rep
+
+
+def dom_eigenvects(A, l=Dummy('lambda')):
+    charpoly = A.charpoly()
+    rows, cols = A.shape
+    domain = A.domain
+    _, factors = dup_factor_list(charpoly, domain)
+
+    rational_eigenvects = []
+    algebraic_eigenvects = []
+    for base, exp in factors:
+        if len(base) == 2:
+            field = domain
+            eigenval = -base[1] / base[0]
+
+            EE_items = [
+                [eigenval if i == j else field.zero for j in range(cols)]
+                for i in range(rows)]
+            EE = DomainMatrix(EE_items, (rows, cols), field)
+
+            basis = (A - EE).nullspace()
+            rational_eigenvects.append((field, eigenval, exp, basis))
+        else:
+            minpoly = Poly.from_list(base, l, domain=domain)
+            field = FiniteExtension(minpoly)
+            eigenval = field(l)
+
+            AA_items = [
+                [Poly.from_list([item], l, domain=domain).rep for item in row]
+                for row in A.rep]
+            AA_items = [[field(item) for item in row] for row in AA_items]
+            AA = DomainMatrix(AA_items, (rows, cols), field)
+            EE_items = [
+                [eigenval if i == j else field.zero for j in range(cols)]
+                for i in range(rows)]
+            EE = DomainMatrix(EE_items, (rows, cols), field)
+
+            basis = (AA - EE).nullspace()
+            algebraic_eigenvects.append((field, minpoly, exp, basis))
+
+    return rational_eigenvects, algebraic_eigenvects
+
+
+def dom_eigenvects_to_sympy(
+    rational_eigenvects, algebraic_eigenvects,
+    Matrix, **kwargs
+):
+    result = []
+
+    for field, eigenvalue, multiplicity, eigenvects in rational_eigenvects:
+        eigenvects = eigenvects.rep
+        eigenvalue = field.to_sympy(eigenvalue)
+        new_eigenvects = [
+            Matrix([field.to_sympy(x) for x in vect])
+            for vect in eigenvects]
+        result.append((eigenvalue, multiplicity, new_eigenvects))
+
+    for field, minpoly, multiplicity, eigenvects in algebraic_eigenvects:
+        eigenvects = eigenvects.rep
+        l = minpoly.gens[0]
+
+        eigenvects = [[field.to_sympy(x) for x in vect] for vect in eigenvects]
+
+        degree = minpoly.degree()
+        minpoly = minpoly.as_expr()
+        eigenvals = roots(minpoly, l, **kwargs)
+        if len(eigenvals) != degree:
+            eigenvals = [CRootOf(minpoly, l, idx) for idx in range(degree)]
+
+        for eigenvalue in eigenvals:
+            new_eigenvects = [
+                Matrix([x.subs(l, eigenvalue) for x in vect])
+                for vect in eigenvects]
+            result.append((eigenvalue, multiplicity, new_eigenvects))
+
+    return result
