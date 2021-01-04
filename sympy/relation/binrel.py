@@ -7,8 +7,6 @@ from sympy.core.compatibility import ordered
 from sympy.logic.boolalg import BooleanAtom
 from sympy.simplify import simplify
 
-from .sideproxy import SideProxy
-
 
 class BinaryRelation(Predicate):
     """
@@ -311,3 +309,5 @@ class AppliedBinaryRelation(AppliedPredicate):
         from .reltools import eqnsimp
         lhs, rhs = self.arguments
         return eqnsimp(self.function, lhs, rhs, **kwargs)
+
+from .reltools.sideproxy import SideProxy
