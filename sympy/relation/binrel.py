@@ -160,7 +160,7 @@ class AppliedBinaryRelation(AppliedPredicate):
     False
 
     You can manipulate the arguments of relation with ``applylhs``,
-    ``applyrhs``, or ``apply`` property.
+    ``applyrhs``, or ``apply`` properties.
 
     >>> from sympy import gamma, trigsimp
     >>> eqn4 = Q.eq(sin(x)**2 + cos(x)**2, gamma(x)/gamma(x-2))
