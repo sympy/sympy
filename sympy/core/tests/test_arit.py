@@ -1104,6 +1104,15 @@ def test_Pow_is_real():
     assert (1/(i-1)).is_real is None
     assert (1/(i-1)).is_extended_real is None
 
+    # test issue 20715
+    from sympy.core.parameters import evaluate
+    x = S(-1)
+    with evaluate(False):
+        assert x.is_negative is True
+
+    f = Pow(x, -1)
+    with evaluate(False):
+        assert f.is_imaginary is False
 
 def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)
@@ -2307,3 +2316,8 @@ def test__neg__():
 
 def test_issue_18507():
     assert Mul(zoo, zoo, 0) is nan
+
+
+def test_issue_17130():
+    e = Add(b, -b, I, -I, evaluate=False)
+    assert e.is_zero is None # ideally this would be True

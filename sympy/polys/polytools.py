@@ -2582,10 +2582,10 @@ class Poly(Basic):
         >>> Poly(1 + x, x).revert(1)
         Poly(1, x, domain='ZZ')
 
-        >>> Poly(x**2 - 1, x).revert(1)
+        >>> Poly(x**2 - 2, x).revert(2)
         Traceback (most recent call last):
         ...
-        NotReversible: only unity is reversible in a ring
+        NotReversible: only units are reversible in a ring
 
         >>> Poly(1/x, x).revert(1)
         Traceback (most recent call last):

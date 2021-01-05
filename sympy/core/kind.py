@@ -223,19 +223,18 @@ class KindDispatcher:
     Dispatcher to select a kind from multiple kinds by binary dispatching.
 
     .. notes::
-       This approach is experimental, and can be replaced or deleted in the future.
+       This approach is experimental, and can be replaced or deleted in
+       the future.
 
     Explanation
     ===========
 
-    SymPy object's kind vaguely represents the algebraic structure where the
-    object belongs to. Therefore, with given operation, we can always find a
-    dominating kind among the different kinds. This class selects the kind by
-    recursive binary dispatching. If the result cannot be determined, ``UndefinedKind``
+    SymPy object's :obj:`sympy.core.kind.Kind()` vaguely represents the
+    algebraic structure where the object belongs to. Therefore, with
+    given operation, we can always find a dominating kind among the
+    different kinds. This class selects the kind by recursive binary
+    dispatching. If the result cannot be determined, ``UndefinedKind``
     is returned.
-
-    This class is designed for associative operator, where the number of arguments
-    is undefined. If the operator has fixed arity, multipledispatch will be enough.
 
     Examples
     ========
@@ -323,7 +322,6 @@ class KindDispatcher:
                 self._dispatcher.add(tuple(reversed(types)), func, **kwargs)
         return _
 
-    @cacheit
     def __call__(self, *args, **kwargs):
         if self.commutative:
             kinds = frozenset(args)
@@ -334,7 +332,10 @@ class KindDispatcher:
                 if prev is not a:
                     kinds.append(a)
                     prev = a
+        return self.dispatch_kinds(kinds, **kwargs)
 
+    @cacheit
+    def dispatch_kinds(self, kinds, **kwargs):
         # Quick exit for the case where all kinds are same
         if len(kinds) == 1:
             result, = kinds
@@ -350,10 +351,17 @@ class KindDispatcher:
                 result = kind
             else:
                 prev_kind = result
-                try:
-                    result = self._dispatcher(prev_kind, kind)
-                except NotImplementedError:
+
+                t1, t2 = type(prev_kind), type(kind)
+                func = self._dispatcher.dispatch(t1, t2)
+                if func is None and self.commutative:
+                    # try reversed order
+                    func = self._dispatcher.dispatch(t2, t1)
+                if func is None:
+                    # unregistered kind relation
                     result = UndefinedKind
+                else:
+                    result = func(prev_kind, kind)
                 if not isinstance(result, Kind):
                     raise RuntimeError(
                         "Dispatcher for {!r} and {!r} must return a Kind, but got {!r}".format(
@@ -365,7 +373,7 @@ class KindDispatcher:
     @property
     def __doc__(self):
         docs = [
-            "Associative kind dispatcher : %s" % self.name,
+            "Kind dispatcher : %s" % self.name,
             "Note that support for this is experimental. See the docs for :class:`KindDispatcher` for details"
         ]
 

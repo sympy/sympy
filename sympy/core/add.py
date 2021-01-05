@@ -71,28 +71,53 @@ def _unevaluated_Add(*args):
 
 class Add(Expr, AssocOp):
     """
-    Addition operation for algebraic group.
+    Expression representing addition operation for algebraic group.
 
-    This class mainly deals with the addition in the field of complex numbers.
-    Any abstract algebraic group can be dealt as well, but it is encouraged to
-    define specific class such as ``MatAdd`` or ``VectorAdd`` for other groups.
-    This class also serves as base class for these classes.
+    Every argument of ``Add()`` must be ``Expr``. Infix operator ``+``
+    on most scalar objects in SymPy calls this class.
 
-    Another use of ``Add()`` is to behave as template for abstract addition so
-    that its arguments can be substituted to return different class. Refer to
-    examples section for this.
+    Another use of ``Add()`` is to represent the structure of abstract
+    addition so that its arguments can be substituted to return different
+    class. Refer to examples section for this.
 
-    Since addition is group operation, every class should have the same kind.
+    ``Add()`` evaluates the argument unless ``evaluate=False`` is passed.
+    The evaluation logic includes:
+
+    1. Flattening
+        ``Add(x, Add(y, z))`` -> ``Add(x, y, z)``
+
+    2. Identity removing
+        ``Add(x, 0, y)`` -> ``Add(x, y)``
+
+    3. Coefficient collecting by ``.as_coeff_Mul()``
+        ``Add(x, 2*x)`` -> ``Mul(3, x)``
+
+    4. Term sorting
+        ``Add(y, x, 2)`` -> ``Add(2, x, y)``
+
+    If no argument is passed, identity element 0 is returned. If single
+    element is passed, that element is returned.
+
+    Note that ``Add(*args)`` is more efficient than ``sum(args)`` because
+    it flattens the arguments. ``sum(a, b, c, ...)`` recursively adds the
+    arguments as ``a + (b + (c + ...))``, which has quadratic complexity.
+    On the other hand, ``Add(a, b, c, d)`` does not assume nested
+    structure, making the complexity linear.
+
+    Since addition is group operation, every argument should have the
+    same :obj:`sympy.core.kind.Kind()`.
 
     Examples
     ========
 
-    >>> from sympy import Add
+    >>> from sympy import Add, I
     >>> from sympy.abc import x, y
     >>> Add(x, 1)
     x + 1
     >>> Add(x, x)
     2*x
+    >>> 2*x**2 + 3*x + I*y + 2*y + 2*x/5 + 1.0*y + 1
+    2*x**2 + 17*x/5 + 3.0*y + I*y + 1
 
     If ``evaluate=False`` is passed, result is not evaluated.
 
@@ -101,15 +126,27 @@ class Add(Expr, AssocOp):
     >>> Add(x, x, evaluate=False)
     x + x
 
-    ``Add()`` also serves as a template for other classes.
+    ``Add()`` also represents the general structure of addition operation.
 
     >>> from sympy import MatrixSymbol
     >>> A,B = MatrixSymbol('A', 2,2), MatrixSymbol('B', 2,2)
     >>> expr = Add(x,y).subs({x:A, y:B})
     >>> expr
     A + B
-    >>> expr.func
+    >>> type(expr)
     <class 'sympy.matrices.expressions.matadd.MatAdd'>
+
+    Note that the printers don't display in args order.
+
+    >>> Add(x, 1)
+    x + 1
+    >>> Add(x, 1).args
+    (1, x)
+
+    See Also
+    ========
+
+    MatAdd
 
     """
 
@@ -639,7 +676,7 @@ class Add(Expr, AssocOp):
         nz = []
         z = 0
         im_or_z = False
-        im = False
+        im = 0
         for a in self.args:
             if a.is_extended_real:
                 if a.is_zero:
@@ -649,7 +686,7 @@ class Add(Expr, AssocOp):
                 else:
                     return
             elif a.is_imaginary:
-                im = True
+                im += 1
             elif (S.ImaginaryUnit*a).is_extended_real:
                 im_or_z = True
             else:
@@ -660,10 +697,11 @@ class Add(Expr, AssocOp):
             return None
         b = self.func(*nz)
         if b.is_zero:
-            if not im_or_z and not im:
-                return True
-            if im and not im_or_z:
-                return False
+            if not im_or_z:
+                if im == 0:
+                    return True
+                elif im == 1:
+                    return False
         if b.is_zero is False:
             return False
 

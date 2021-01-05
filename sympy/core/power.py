@@ -711,9 +711,6 @@ class Pow(Expr):
             if isodd is not None:
                 return isodd
 
-        if self.exp.is_negative:
-            return (1/self).is_imaginary
-
     def _eval_is_odd(self):
         if self.exp.is_integer:
             if self.exp.is_positive:

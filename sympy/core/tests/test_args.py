@@ -91,7 +91,11 @@ def test_sympy__assumptions__assume__AppliedPredicate():
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
     assert _test_args(Q.is_true(True))
 
+@SKIP("abstract class")
 def test_sympy__assumptions__assume__Predicate():
+    pass
+
+def test_sympy__assumptions__assume__UndefinedPredicate():
     from sympy.assumptions.assume import Predicate
     assert _test_args(Predicate("test"))
 
@@ -1476,6 +1480,10 @@ def test_sympy__stats__crv_types__LevyDistribution():
     from sympy.stats.crv_types import LevyDistribution
     assert _test_args(LevyDistribution(0, 1))
 
+def test_sympy__stats__crv_types__LogCauchyDistribution():
+    from sympy.stats.crv_types import LogCauchyDistribution
+    assert _test_args(LogCauchyDistribution(0, 1))
+
 def test_sympy__stats__crv_types__LogisticDistribution():
     from sympy.stats.crv_types import LogisticDistribution
     assert _test_args(LogisticDistribution(0, 1))
@@ -1601,6 +1609,9 @@ def test_sympy__stats__drv_types__NegativeBinomialDistribution():
     from sympy.stats.drv_types import NegativeBinomialDistribution
     assert _test_args(NegativeBinomialDistribution(.5, .5))
 
+def test_sympy__stats__drv_types__FlorySchulzDistribution():
+    from sympy.stats.drv_types import FlorySchulzDistribution
+    assert _test_args(FlorySchulzDistribution(.5))
 
 def test_sympy__stats__drv_types__PoissonDistribution():
     from sympy.stats.drv_types import PoissonDistribution
