@@ -97,6 +97,8 @@ class MatrixExpr(Expr):
         return MatMul
 
     def __neg__(self):
+        if isinstance(self, MatAdd):
+            return MatAdd(*[MatMul(S.NegativeOne, mat).doit() for mat in self.args])
         return MatMul(S.NegativeOne, self).doit()
 
     def __abs__(self):
