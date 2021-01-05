@@ -1,9 +1,8 @@
-from __future__ import print_function, division
-
 from functools import wraps
 
 from sympy import S, pi, I, Rational, Wild, cacheit, sympify
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.power import Pow
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
@@ -67,6 +66,19 @@ class BesselBase(Function):
         z = self.argument
         if z.is_extended_negative is False:
             return self.__class__(self.order.conjugate(), z.conjugate())
+
+    def _eval_is_meromorphic(self, x, a):
+        nu, z = self.order, self.argument
+
+        if nu.has(x):
+            return False
+        if not z._eval_is_meromorphic(x, a):
+            return None
+        z0 = z.subs(x, a)
+        if nu.is_integer:
+            if isinstance(self, (besselj, besseli, hn1, hn2, jn, yn)) or not nu.is_zero:
+                return fuzzy_not(z0.is_infinite)
+        return fuzzy_not(fuzzy_or([z0.is_zero, z0.is_infinite]))
 
     def _eval_expand_func(self, **hints):
         nu, z, f = self.order, self.argument, self.__class__
@@ -448,7 +460,7 @@ class besselk(BesselBase):
                 return S.ComplexInfinity
             elif re(nu).is_zero:
                 return S.NaN
-        if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
+        if z in (S.Infinity, I*S.Infinity, I*S.NegativeInfinity):
             return S.Zero
 
         if nu.is_integer:
@@ -662,7 +674,6 @@ class jn(SphericalBesselBase):
     ========
 
     >>> from sympy import Symbol, jn, sin, cos, expand_func, besselj, bessely
-    >>> from sympy import simplify
     >>> z = Symbol("z")
     >>> nu = Symbol("nu", integer=True)
     >>> print(expand_func(jn(0, z)))
@@ -985,6 +996,16 @@ def jn_zeros(n, k, method="sympy", dps=15):
     ========
 
     jn, yn, besselj, besselk, bessely
+
+    Parameters
+    ==========
+
+    n : integer
+        order of Bessel function
+
+    k : integer
+        number of zeros to return
+
 
     """
     from math import pi
@@ -1744,7 +1765,7 @@ class marcumq(Function):
     ========
 
     >>> from sympy import marcumq
-    >>> from sympy.abc import m, a, b, x
+    >>> from sympy.abc import m, a, b
     >>> marcumq(m, a, b)
     marcumq(m, a, b)
 

@@ -1,7 +1,5 @@
 """Miscellaneous stuff that doesn't really fit anywhere else."""
 
-from __future__ import print_function, division
-
 from typing import List
 
 import sys
@@ -9,7 +7,8 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from sympy.core.compatibility import get_function_name, as_int
+from sympy.core.compatibility import as_int
+from sympy.core.decorators import deprecated
 
 
 class Undecidable(ValueError):
@@ -216,20 +215,20 @@ def debug_decorator(func):
         # If there is a bug and the algorithm enters an infinite loop, enable the
         # following lines. It will print the names and parameters of all major functions
         # that are called, *before* they are called
-        #from sympy.core.compatibility import reduce
+        #from functools import reduce
         #print("%s%s %s%s" % (_debug_iter, reduce(lambda x, y: x + y, \
-        #    map(lambda x: '-', range(1, 2 + _debug_iter))), get_function_name(f), args))
+        #    map(lambda x: '-', range(1, 2 + _debug_iter))), f.__name__, args))
 
         r = f(*args, **kw)
 
         _debug_iter -= 1
-        s = "%s%s = %s\n" % (get_function_name(f), args, r)
+        s = "%s%s = %s\n" % (f.__name__, args, r)
         if _debug_tmp != []:
             s += tree(_debug_tmp)
         _debug_tmp = oldtmp
         _debug_tmp.append(s)
         if _debug_iter == 0:
-            print((_debug_tmp[0]))
+            print(_debug_tmp[0])
             _debug_tmp = []
         return r
 
@@ -248,6 +247,10 @@ def debug(*args):
         print(*args, file=sys.stderr)
 
 
+@deprecated(
+    useinstead="the builtin ``shutil.which`` function",
+    issue=19634,
+    deprecated_since_version="1.7")
 def find_executable(executable, path=None):
     """Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to
@@ -299,10 +302,6 @@ def func_name(x, short=False):
     'StrictLessThan'
     >>> func_name(x < 1, short=True)
     'Lt'
-
-    See Also
-    ========
-    sympy.core.compatibility get_function_name
     """
     alias = {
     'GreaterThan': 'Ge',

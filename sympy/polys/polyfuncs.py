@@ -1,6 +1,5 @@
 """High-level polynomials manipulation functions. """
 
-from __future__ import print_function, division
 
 from sympy.core import S, Basic, Add, Mul, symbols, Dummy
 from sympy.polys.polyerrors import (

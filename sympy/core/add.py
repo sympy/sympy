@@ -1,17 +1,16 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
-from functools import cmp_to_key
-
+from functools import cmp_to_key, reduce
+from operator import attrgetter
 from .basic import Basic
-from .compatibility import reduce, is_sequence
+from .compatibility import is_sequence
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
-from .operations import AssocOp
+from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
+from .kind import UndefinedKind
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -45,7 +44,7 @@ def _unevaluated_Add(*args):
     be tested against the output of this function or as one of several
     options:
 
-    >>> opts = (Add(x, y, evaluated=False), Add(y, x, evaluated=False))
+    >>> opts = (Add(x, y, evaluate=False), Add(y, x, evaluate=False))
     >>> a = uAdd(x, y)
     >>> assert a in opts and a == uAdd(x, y)
     >>> uAdd(x + 1, x + 2)
@@ -75,6 +74,8 @@ class Add(Expr, AssocOp):
     __slots__ = ()
 
     is_Add = True
+
+    _args_type = Expr
 
     @classmethod
     def flatten(cls, seq):
@@ -294,6 +295,19 @@ class Add(Expr, AssocOp):
         """Nice order of classes"""
         return 3, 1, cls.__name__
 
+    @property
+    def kind(self):
+        k = attrgetter('kind')
+        kinds = map(k, self.args)
+        kinds = frozenset(kinds)
+        if len(kinds) != 1:
+            # Since addition is group operator, kind must be same.
+            # We know that this is unexpected signature, so return this.
+            result = UndefinedKind
+        else:
+            result, = kinds
+        return result
+
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.
         Since the dictionary is a defaultdict, inquiries about terms which
@@ -404,8 +418,8 @@ class Add(Expr, AssocOp):
     def _eval_derivative(self, s):
         return self.func(*[a.diff(s) for a in self.args])
 
-    def _eval_nseries(self, x, n, logx):
-        terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        terms = [t.nseries(x, n=n, logx=logx, cdir=cdir) for t in self.args]
         return self.func(*terms)
 
     def _matches_simple(self, expr, repl_dict):
@@ -416,7 +430,7 @@ class Add(Expr, AssocOp):
         return
 
     def matches(self, expr, repl_dict={}, old=False):
-        return AssocOp._matches_commutative(self, expr, repl_dict, old)
+        return self._matches_commutative(expr, repl_dict, old)
 
     @staticmethod
     def _combine_inverse(lhs, rhs):
@@ -517,6 +531,10 @@ class Add(Expr, AssocOp):
     def _eval_is_rational_function(self, syms):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
+    def _eval_is_meromorphic(self, x, a):
+        return _fuzzy_group((arg.is_meromorphic(x, a) for arg in self.args),
+                            quick_exit=True)
+
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
@@ -586,7 +604,7 @@ class Add(Expr, AssocOp):
         nz = []
         z = 0
         im_or_z = False
-        im = False
+        im = 0
         for a in self.args:
             if a.is_extended_real:
                 if a.is_zero:
@@ -596,7 +614,7 @@ class Add(Expr, AssocOp):
                 else:
                     return
             elif a.is_imaginary:
-                im = True
+                im += 1
             elif (S.ImaginaryUnit*a).is_extended_real:
                 im_or_z = True
             else:
@@ -607,10 +625,11 @@ class Add(Expr, AssocOp):
             return None
         b = self.func(*nz)
         if b.is_zero:
-            if not im_or_z and not im:
-                return True
-            if im and not im_or_z:
-                return False
+            if not im_or_z:
+                if im == 0:
+                    return True
+                elif im == 1:
+                    return False
         if b.is_zero is False:
             return False
 
@@ -637,7 +656,7 @@ class Add(Expr, AssocOp):
     def _eval_is_extended_positive(self):
         from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
-            return super(Add, self)._eval_is_extended_positive()
+            return super()._eval_is_extended_positive()
         c, a = self.as_coeff_Add()
         if not c.is_zero:
             v = _monotonic_sign(a)
@@ -721,7 +740,7 @@ class Add(Expr, AssocOp):
     def _eval_is_extended_negative(self):
         from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
-            return super(Add, self)._eval_is_extended_negative()
+            return super()._eval_is_extended_negative()
         c, a = self.as_coeff_Add()
         if not c.is_zero:
             v = _monotonic_sign(a)
@@ -879,18 +898,18 @@ class Add(Expr, AssocOp):
             im_part.append(im)
         return (self.func(*re_part), self.func(*im_part))
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import expand_mul, Order
 
         old = self
 
         expr = expand_mul(self)
         if not expr.is_Add:
-            return expr.as_leading_term(x)
+            return expr.as_leading_term(x, cdir=cdir)
 
         infinite = [t for t in expr.args if t.is_infinite]
 
-        leading_terms = [t.as_leading_term(x) for t in expr.args]
+        leading_terms = [t.as_leading_term(x, cdir=cdir) for t in expr.args]
 
         min, new_expr = Order(0), 0
 
@@ -900,7 +919,7 @@ class Add(Expr, AssocOp):
                 if not min or order not in min:
                     min = order
                     new_expr = term
-                elif order == min:
+                elif min in order:
                     new_expr += term
 
         except TypeError:
@@ -913,7 +932,13 @@ class Add(Expr, AssocOp):
         if not new_expr:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
-            return old.compute_leading_term(x)
+            n0 = min.getn()
+            res = Order(1)
+            incr = S.One
+            while res.is_Order:
+                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().powsimp().trigsimp()
+                incr *= 2
+            return res.as_leading_term(x, cdir=cdir)
 
         elif new_expr is S.NaN:
             return old.func._from_args(infinite)
@@ -1115,9 +1140,10 @@ class Add(Expr, AssocOp):
 
     def __neg__(self):
         if not global_parameters.distribute:
-            return super(Add, self).__neg__()
+            return super().__neg__()
         return Add(*[-i for i in self.args])
 
+add = AssocOpDispatcher('add')
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

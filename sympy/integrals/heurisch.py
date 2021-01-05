@@ -1,8 +1,7 @@
-from __future__ import print_function, division
-
 from typing import Dict, List
 
 from itertools import permutations
+from functools import reduce
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -37,7 +36,7 @@ from sympy.polys.rings import PolyRing
 from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
-from sympy.core.compatibility import reduce, ordered
+from sympy.core.compatibility import ordered
 from sympy.integrals.integrals import integrate
 
 
@@ -48,8 +47,11 @@ def components(f, x):
     non-integer powers. Fractional powers are collected with
     minimal, positive exponents.
 
+    Examples
+    ========
+
     >>> from sympy import cos, sin
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> from sympy.integrals.heurisch import components
 
     >>> components(sin(x)*cos(x)**2, x)
@@ -108,6 +110,9 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                      _try_heurisch=None):
     """
     A wrapper around the heurisch integration algorithm.
+
+    Explanation
+    ===========
 
     This method takes the result from heurisch and checks for poles in the
     denominator. For each of these poles, the integral is reevaluated, and
@@ -192,7 +197,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                               True))
     return Piecewise(*pairs)
 
-class BesselTable(object):
+class BesselTable:
     """
     Derivatives of Bessel functions of orders n and n-1
     in terms of each other.
@@ -234,9 +239,12 @@ class BesselTable(object):
 
 _bessel_table = None
 
-class DiffCache(object):
+class DiffCache:
     """
     Store for derivatives of expressions.
+
+    Explanation
+    ===========
 
     The standard form of the derivative of a Bessel function of order n
     contains two Bessel functions of orders n-1 and n+1, respectively.
@@ -285,6 +293,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     """
     Compute indefinite integral using heuristic Risch algorithm.
 
+    Explanation
+    ===========
+
     This is a heuristic approach to indefinite integration in finite
     terms using the extended heuristic (parallel) Risch algorithm, based
     on Manuel Bronstein's "Poor Man's Integrator".
@@ -331,21 +342,24 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     See Manuel Bronstein's "Poor Man's Integrator":
 
-    [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
+    References
+    ==========
+
+    .. [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
 
     For more information on the implemented algorithm refer to:
 
-    [2] K. Geddes, L. Stefanus, On the Risch-Norman Integration
+    .. [2] K. Geddes, L. Stefanus, On the Risch-Norman Integration
        Method and its Implementation in Maple, Proceedings of
        ISSAC'89, ACM Press, 212-217.
 
-    [3] J. H. Davenport, On the Parallel Risch Algorithm (I),
+    .. [3] J. H. Davenport, On the Parallel Risch Algorithm (I),
        Proceedings of EUROCAM'82, LNCS 144, Springer, 144-157.
 
-    [4] J. H. Davenport, On the Parallel Risch Algorithm (III):
+    .. [4] J. H. Davenport, On the Parallel Risch Algorithm (III):
        Use of Tangents, SIGSAM Bulletin 16 (1982), 3-6.
 
-    [5] J. H. Davenport, B. M. Trager, On the Parallel Risch
+    .. [5] J. H. Davenport, B. M. Trager, On the Parallel Risch
        Algorithm (II), ACM Transactions on Mathematical
        Software 11 (1985), 356-362.
 
@@ -450,8 +464,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                             if M[a].is_positive:
                                 terms.add(acosh(sqrt(M[a]/M[b])*x))
                             elif M[a].is_negative:
-                                terms.add((-M[b]/2*sqrt(-M[a])*
-                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2 - M[b]))))
+                                terms.add(-M[b]/2*sqrt(-M[a])*
+                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2 - M[b])))
 
         else:
             terms |= set(hints)
@@ -585,9 +599,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     A, B = _exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
-        monoms = tuple(itermonomials(V, A + B - 1 + degree_offset))
+        monoms = tuple(ordered(itermonomials(V, A + B - 1 + degree_offset)))
     else:
-        monoms = tuple(itermonomials(V, A + B + degree_offset))
+        monoms = tuple(ordered(itermonomials(V, A + B + degree_offset)))
 
     poly_coeffs = _symbols('A', len(monoms))
 
@@ -658,12 +672,12 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         C = _symbols('C', len(atans))
 
         # Note: the ordering matters here
-        for poly, b in reversed(list(ordered(zip(irreducibles, B)))):
+        for poly, b in reversed(list(zip(ordered(irreducibles), B))):
             if poly.has(*V):
                 poly_coeffs.append(b)
                 log_part.append(b * log(poly))
 
-        for poly, c in reversed(list(ordered(zip(atans, C)))):
+        for poly, c in reversed(list(zip(ordered(atans), C))):
             if poly.has(*V):
                 poly_coeffs.append(c)
                 atan_part.append(c * poly)
@@ -682,7 +696,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         # sqrt(y) and similar expressions can appear, leading to non-trivial
         # domains.
         syms = set(poly_coeffs) | set(V)
-        non_syms = set([])
+        non_syms = set()
 
         def find_non_syms(expr):
             if expr.is_Integer or expr.is_Rational:

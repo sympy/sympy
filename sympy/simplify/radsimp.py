@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
@@ -24,6 +22,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     """
     Collect additive terms of an expression.
 
+    Explanation
+    ===========
+
     This function collects additive terms of an expression with respect
     to a list of expression up to powers with rational exponents. By the
     term symbol here are meant arbitrary expressions, which can contain
@@ -46,7 +47,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     ========
 
     >>> from sympy import S, collect, expand, factor, Wild
-    >>> from sympy.abc import a, b, c, x, y, z
+    >>> from sympy.abc import a, b, c, x, y
 
     This function can collect symbolic coefficients in polynomials or
     rational expressions. It will manage to find all integer or rational
@@ -159,8 +160,27 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
     collect_const, collect_sqrt, rcollect
     """
+    from sympy.core.assumptions import assumptions
+    from sympy.utilities.iterables import sift
+    from sympy.core.symbol import Dummy, Wild
     expr = sympify(expr)
-    syms = list(syms) if iterable(syms) else [syms]
+    syms = [sympify(i) for i in (syms if iterable(syms) else [syms])]
+    # replace syms[i] if it is not x, -x or has Wild symbols
+    cond = lambda x: x.is_Symbol or (-x).is_Symbol or bool(
+        x.atoms(Wild))
+    _, nonsyms = sift(syms, cond, binary=True)
+    if nonsyms:
+        reps = dict(zip(nonsyms, [Dummy(**assumptions(i)) for i in nonsyms]))
+        syms = [reps.get(s, s) for s in syms]
+        rv = collect(expr.subs(reps), syms,
+            func=func, evaluate=evaluate, exact=exact,
+            distribute_order_term=distribute_order_term)
+        urep = {v: k for k, v in reps.items()}
+        if not isinstance(rv, dict):
+            return rv.xreplace(urep)
+        else:
+            return {urep.get(k, k).xreplace(urep): v.xreplace(urep)
+                    for k, v in rv.items()}
 
     if evaluate is None:
         evaluate = global_parameters.evaluate
@@ -221,8 +241,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
          - sym_expo is the symbolic exponent that sexpr is raised to
          - deriv contains the derivatives the the expression
 
-         for example, the output of x would be (x, 1, None, None)
-         the output of 2**x would be (2, 1, x, None)
+         For example, the output of x would be (x, 1, None, None)
+         the output of 2**x would be (2, 1, x, None).
         """
         rat_expo, sym_expo = S.One, None
         sexpr, deriv = expr, None
@@ -256,8 +276,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
     def parse_expression(terms, pattern):
         """Parse terms searching for a pattern.
-        terms is a list of tuples as returned by parse_terms;
-        pattern is an expression treated as a product of factors
+        Terms is a list of tuples as returned by parse_terms;
+        Pattern is an expression treated as a product of factors.
         """
         pattern = Mul.make_args(pattern)
 
@@ -414,8 +434,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
             collected[key] = val + order_term
 
     if func is not None:
-        collected = dict(
-            [(key, func(val)) for key, val in collected.items()])
+        collected = {
+            key: func(val) for key, val in collected.items()}
 
     if evaluate:
         return Add(*[key*val for key, val in collected.items()])
@@ -583,7 +603,7 @@ def collect_abs(expr):
             lambda x: _abs(x))
 
 
-def collect_const(expr, *vars, **kwargs):
+def collect_const(expr, *vars, Numbers=True):
     """A non-greedy collection of terms with similar number coefficients in
     an Add expr. If ``vars`` is given then only those constants will be
     targeted. Although any Number can also be targeted, if this is not
@@ -601,8 +621,8 @@ def collect_const(expr, *vars, **kwargs):
         Specifies the constants to target for collection. Can be multiple in
         number.
 
-    kwargs : ``Numbers`` is the only possible argument to pass.
-        Numbers (default=True) specifies to target all instance of
+    Numbers : bool
+        Specifies to target all instance of
         :class:`sympy.core.numbers.Number` class. If ``Numbers=False``, then
         no Float or Rational will be collected.
 
@@ -616,7 +636,7 @@ def collect_const(expr, *vars, **kwargs):
     ========
 
     >>> from sympy import sqrt
-    >>> from sympy.abc import a, s, x, y, z
+    >>> from sympy.abc import s, x, y, z
     >>> from sympy.simplify.radsimp import collect_const
     >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
     sqrt(3)*(sqrt(2) + 2)
@@ -649,7 +669,6 @@ def collect_const(expr, *vars, **kwargs):
         return expr
 
     recurse = False
-    Numbers = kwargs.get('Numbers', True)
 
     if not vars:
         recurse = True
@@ -724,7 +743,10 @@ def radsimp(expr, symbolic=True, max_terms=4):
     r"""
     Rationalize the denominator by removing square roots.
 
-    Note: the expression returned from radsimp must be used with caution
+    Explanation
+    ===========
+
+    The expression returned from radsimp must be used with caution
     since if the denominator contains symbols, it will be possible to make
     substitutions that violate the assumptions of the simplification process:
     that for a denominator matching a + b*sqrt(c), a != +/-b*sqrt(c). (If
@@ -739,7 +761,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     Examples
     ========
 
-    >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
+    >>> from sympy import radsimp, sqrt, Symbol, pprint
     >>> from sympy import factor_terms, fraction, signsimp
     >>> from sympy.simplify.radsimp import collect_sqrt
     >>> from sympy.abc import a, b, c
@@ -786,7 +808,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     >>> radsimp(eq).subs(a, b*sqrt(c))
     nan
 
-    If symbolic=False, symbolic denominators will not be transformed (but
+    If ``symbolic=False``, symbolic denominators will not be transformed (but
     numeric denominators will still be processed):
 
     >>> radsimp(eq, symbolic=False)
@@ -970,7 +992,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
 
 def rad_rationalize(num, den):
     """
-    Rationalize num/den by removing square roots in the denominator;
+    Rationalize ``num/den`` by removing square roots in the denominator;
     num and den are sum of terms whose squares are positive rationals.
 
     Examples
@@ -1023,7 +1045,7 @@ def fraction(expr, exact=False):
        >>> fraction(x * y**k)
        (x, y**(-k))
 
-       If we know nothing about sign of some exponent and 'exact'
+       If we know nothing about sign of some exponent and ``exact``
        flag is unset, then structure this exponent's structure will
        be analyzed and pretty fraction will be returned:
 
@@ -1037,7 +1059,7 @@ def fraction(expr, exact=False):
        >>> fraction(exp(-x), exact=True)
        (exp(-x), 1)
 
-       The `exact` flag will also keep any unevaluated Muls from
+       The ``exact`` flag will also keep any unevaluated Muls from
        being evaluated:
 
        >>> u = Mul(2, x + 1, evaluate=False)
@@ -1067,20 +1089,18 @@ def fraction(expr, exact=False):
                 numer.append(term)
             elif not exact and ex.is_Mul:
                 n, d = term.as_numer_denom()
-                numer.append(n)
+                if n != 1:
+                    numer.append(n)
                 denom.append(d)
             else:
                 numer.append(term)
-        elif term.is_Rational:
-            n, d = term.as_numer_denom()
-            numer.append(n)
-            denom.append(d)
+        elif term.is_Rational and not term.is_Integer:
+            if term.p != 1:
+                numer.append(term.p)
+            denom.append(term.q)
         else:
             numer.append(term)
-    if exact:
-        return Mul(*numer, evaluate=False), Mul(*denom, evaluate=False)
-    else:
-        return Mul(*numer), Mul(*denom)
+    return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
 
 
 def numer(expr):
@@ -1153,9 +1173,9 @@ def split_surds(expr):
 
 def _split_gcd(*a):
     """
-    split the list of integers ``a`` into a list of integers, ``a1`` having
+    Split the list of integers ``a`` into a list of integers, ``a1`` having
     ``g = gcd(a1)``, and a list ``a2`` whose elements are not divisible by
-    ``g``.  Returns ``g, a1, a2``
+    ``g``.  Returns ``g, a1, a2``.
 
     Examples
     ========

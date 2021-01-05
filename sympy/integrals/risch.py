@@ -23,7 +23,6 @@ which case it will just return a Poly in t, or in k(t), in which case it
 will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
-from __future__ import print_function, division
 
 from sympy import real_roots, default_sort_key
 from sympy.abc import z
@@ -34,7 +33,7 @@ from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
-from sympy.core.compatibility import reduce, ordered
+from sympy.core.compatibility import ordered
 from sympy.integrals.heurisch import _symbols
 
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
@@ -48,11 +47,15 @@ from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, Do
 from sympy.utilities.iterables import numbered_symbols
 
 from types import GeneratorType
+from functools import reduce
 
 
 def integer_powers(exprs):
     """
     Rewrites a list of expressions as integer multiples of each other.
+
+    Explanation
+    ===========
 
     For example, if you have [x, x/2, x**2 + 1, 2*x/3], then you can rewrite
     this as [(x/6) * 6, (x/6) * 3, (x**2 + 1) * 1, (x/6) * 4]. This is useful
@@ -114,9 +117,12 @@ def integer_powers(exprs):
     return sorted(iter(newterms.items()), key=lambda item: item[0].sort_key())
 
 
-class DifferentialExtension(object):
+class DifferentialExtension:
     """
     A container for all the information relating to a differential extension.
+
+    Explanation
+    ===========
 
     The attributes of this object are (see also the docstring of __init__):
 
@@ -163,7 +169,10 @@ class DifferentialExtension(object):
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
         """
-        Tries to build a transcendental extension tower from f with respect to x.
+        Tries to build a transcendental extension tower from ``f`` with respect to ``x``.
+
+        Explanation
+        ===========
 
         If it is successful, creates a DifferentialExtension object with, among
         others, the attributes fa, fd, D, T, Tfuncs, and backsubs such that
@@ -443,6 +452,9 @@ class DifferentialExtension(object):
         """
         Try to build an exponential extension.
 
+        Returns
+        =======
+
         Returns True if there was a new extension, False if there was no new
         extension but it was able to rewrite the given exponentials in terms
         of the existing extension, and None if the entire extension building
@@ -509,8 +521,8 @@ class DifferentialExtension(object):
 
                     if const or len(ans) > 1:
                         rad = Mul(*[term**(power/n) for term, power in ans])
-                        self.newf = self.newf.xreplace(dict((exp(p*exparg),
-                            exp(const*p)*rad) for exparg, p in others))
+                        self.newf = self.newf.xreplace({exp(p*exparg):
+                            exp(const*p)*rad for exparg, p in others})
                         self.newf = self.newf.xreplace(dict(list(zip(reversed(self.T),
                             reversed([f(self.x) for f in self.Tfuncs])))))
                         restart = True
@@ -539,7 +551,7 @@ class DifferentialExtension(object):
                     i = Symbol('i')
                 self.Tfuncs += [Lambda(i, exp(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace(
-                        dict((exp(exparg), self.t**p) for exparg, p in others))
+                        {exp(exparg): self.t**p for exparg, p in others})
                 new_extension = True
 
         if restart:
@@ -549,6 +561,9 @@ class DifferentialExtension(object):
     def _log_part(self, logs):
         """
         Try to build a logarithmic extension.
+
+        Returns
+        =======
 
         Returns True if there was a new extension and False if there was no new
         extension but it was able to rewrite the given logarithms in terms
@@ -601,6 +616,9 @@ class DifferentialExtension(object):
     def _important_attrs(self):
         """
         Returns some of the more important attributes of self.
+
+        Explanation
+        ===========
 
         Used for testing and debugging purposes.
 
@@ -659,12 +677,17 @@ class DifferentialExtension(object):
 
     def indices(self, extension):
         """
-        Args:
-            extension (str): represents a valid extension type.
+        Parameters
+        ==========
 
-        Returns:
-            list: A list of indices of 'exts' where extension of
-                  type 'extension' is present.
+        extension : str
+            Represents a valid extension type.
+
+        Returns
+        =======
+
+        list: A list of indices of 'exts' where extension of
+            type 'extension' is present.
 
         Examples
         ========
@@ -685,6 +708,9 @@ class DifferentialExtension(object):
         """
         Increment the level of self.
 
+        Explanation
+        ===========
+
         This makes the working differential extension larger.  self.level is
         given relative to the end of the list (-1, -2, etc.), so we don't need
         do worry about it when building the extension.
@@ -702,6 +728,9 @@ class DifferentialExtension(object):
     def decrement_level(self):
         """
         Decrease the level of self.
+
+        Explanation
+        ===========
 
         This makes the working differential extension smaller.  self.level is
         given relative to the end of the list (-1, -2, etc.), so we don't need
@@ -726,7 +755,7 @@ def update_sets(seq, atoms, func):
     return list(s)
 
 
-class DecrementLevel(object):
+class DecrementLevel:
     """
     A context manager for decrementing the level of a DifferentialExtension.
     """
@@ -760,8 +789,11 @@ def gcdex_diophantine(a, b, c):
     """
     Extended Euclidean Algorithm, Diophantine version.
 
-    Given a, b in K[x] and c in (a, b), the ideal generated by a and b,
-    return (s, t) such that s*a + t*b == c and either s == 0 or s.degree()
+    Explanation
+    ===========
+
+    Given ``a``, ``b`` in K[x] and ``c`` in (a, b), the ideal generated by ``a`` and
+    ``b``, return (s, t) such that s*a + t*b == c and either s == 0 or s.degree()
     < b.degree().
     """
     # Extended Euclidean Algorithm (Diophantine Version) pg. 13
@@ -776,16 +808,18 @@ def gcdex_diophantine(a, b, c):
     return (s, t)
 
 
-def frac_in(f, t, **kwargs):
+def frac_in(f, t, *, cancel=False, **kwargs):
     """
     Returns the tuple (fa, fd), where fa and fd are Polys in t.
 
+    Explanation
+    ===========
+
     This is a common idiom in the Risch Algorithm functions, so we abstract
-    it out here.  f should be a basic expression, a Poly, or a tuple (fa, fd),
+    it out here. ``f`` should be a basic expression, a Poly, or a tuple (fa, fd),
     where fa and fd are either basic expressions or Polys, and f == fa/fd.
     **kwargs are applied to Poly.
     """
-    cancel = kwargs.pop('cancel', False)
     if type(f) is tuple:
         fa, fd = f
         f = fa.as_expr()/fd.as_expr()
@@ -800,9 +834,9 @@ def frac_in(f, t, **kwargs):
 
 def as_poly_1t(p, t, z):
     """
-    (Hackish) way to convert an element p of K[t, 1/t] to K[t, z].
+    (Hackish) way to convert an element ``p`` of K[t, 1/t] to K[t, z].
 
-    In other words, z == 1/t will be a dummy variable that Poly can handle
+    In other words, ``z == 1/t`` will be a dummy variable that Poly can handle
     better.
 
     See issue 5131.
@@ -856,6 +890,9 @@ def derivation(p, DE, coefficientD=False, basic=False):
     """
     Computes Dp.
 
+    Explanation
+    ===========
+
     Given the derivation D with D = d/dx and p is a polynomial in t over
     K(x), return Dp.
 
@@ -865,7 +902,7 @@ def derivation(p, DE, coefficientD=False, basic=False):
     T[-1], so coefficientD computes the derivative just with respect to T[:-1],
     with T[-1] treated as a constant.
 
-    If basic=True, the returns a Basic expression.  Elements of D can still be
+    If ``basic=True``, the returns a Basic expression.  Elements of D can still be
     instances of Poly.
     """
     if basic:
@@ -925,7 +962,10 @@ def splitfactor(p, DE, coefficientD=False, z=None):
     """
     Splitting factorization.
 
-    Given a derivation D on k[t] and p in k[t], return (p_n, p_s) in
+    Explanation
+    ===========
+
+    Given a derivation D on k[t] and ``p`` in k[t], return (p_n, p_s) in
     k[t] x k[t] such that p = p_n*p_s, p_s is special, and each square
     factor of p_n is normal.
 
@@ -963,12 +1003,15 @@ def splitfactor(p, DE, coefficientD=False, z=None):
 
 def splitfactor_sqf(p, DE, coefficientD=False, z=None, basic=False):
     """
-    Splitting Square-free Factorization
+    Splitting Square-free Factorization.
 
-    Given a derivation D on k[t] and p in k[t], returns (N1, ..., Nm)
+    Explanation
+    ===========
+
+    Given a derivation D on k[t] and ``p`` in k[t], returns (N1, ..., Nm)
     and (S1, ..., Sm) in k[t]^m such that p =
     (N1*N2**2*...*Nm**m)*(S1*S2**2*...*Sm**m) is a splitting
-    factorization of p and the Ni and Si are square-free and coprime.
+    factorization of ``p`` and the Ni and Si are square-free and coprime.
     """
     # TODO: This algorithm appears to be faster in every case
     # TODO: Verify this and splitfactor() for multiple extensions
@@ -999,6 +1042,9 @@ def splitfactor_sqf(p, DE, coefficientD=False, z=None, basic=False):
 def canonical_representation(a, d, DE):
     """
     Canonical Representation.
+
+    Explanation
+    ===========
 
     Given a derivation D on k[t] and f = a/d in k(t), return (f_p, f_s,
     f_n) in k[t] x k(t) x k(t) such that f = f_p + f_s + f_n is the
@@ -1079,6 +1125,9 @@ def polynomial_reduce(p, DE):
     """
     Polynomial Reduction.
 
+    Explanation
+    ===========
+
     Given a derivation D on k(t) and p in k[t] where t is a nonlinear
     monomial over k, return q, r in k[t] such that p = Dq  + r, and
     deg(r) < deg_t(Dt).
@@ -1096,12 +1145,15 @@ def polynomial_reduce(p, DE):
 
 def laurent_series(a, d, F, n, DE):
     """
-    Contribution of F to the full partial fraction decomposition of A/D
+    Contribution of ``F`` to the full partial fraction decomposition of A/D.
 
-    Given a field K of characteristic 0 and A,D,F in K[x] with D monic,
-    nonzero, coprime with A, and F the factor of multiplicity n in the square-
+    Explanation
+    ===========
+
+    Given a field K of characteristic 0 and ``A``,``D``,``F`` in K[x] with D monic,
+    nonzero, coprime with A, and ``F`` the factor of multiplicity n in the square-
     free factorization of D, return the principal parts of the Laurent series of
-    A/D at all the zeros of F.
+    A/D at all the zeros of ``F``.
     """
     if F.degree()==0:
         return 0
@@ -1215,7 +1267,10 @@ def residue_reduce(a, d, DE, z=None, invert=True):
     """
     Lazard-Rioboo-Rothstein-Trager resultant reduction.
 
-    Given a derivation D on k(t) and f in k(t) simple, return g
+    Explanation
+    ===========
+
+    Given a derivation ``D`` on k(t) and f in k(t) simple, return g
     elementary over k(t) and a Boolean b in {True, False} such that f -
     Dg in k[t] if b == True or f + h and f + h - Dg do not have an
     elementary integral over k(t) for any h in k<t> (reduced) if b ==
@@ -1304,8 +1359,8 @@ def residue_reduce_to_basic(H, DE, z):
     i = Dummy('i')
     s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
 
-    return sum((RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_expr()).subs(
-        {z: i}).subs(s))) for a in H))
+    return sum(RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_expr()).subs(
+        {z: i}).subs(s))) for a in H)
 
 
 def residue_reduce_derivation(H, DE, z):
@@ -1317,15 +1372,18 @@ def residue_reduce_derivation(H, DE, z):
     """
     # TODO: verify that this is correct for multiple extensions
     i = Dummy('i')
-    return S(sum((RootSum(a[0].as_poly(z), Lambda(i, i*derivation(a[1],
-        DE).as_expr().subs(z, i)/a[1].as_expr().subs(z, i))) for a in H)))
+    return S(sum(RootSum(a[0].as_poly(z), Lambda(i, i*derivation(a[1],
+        DE).as_expr().subs(z, i)/a[1].as_expr().subs(z, i))) for a in H))
 
 
 def integrate_primitive_polynomial(p, DE):
     """
     Integration of primitive polynomials.
 
-    Given a primitive monomial t over k, and p in k[t], return q in k[t],
+    Explanation
+    ===========
+
+    Given a primitive monomial t over k, and ``p`` in k[t], return q in k[t],
     r in k, and a bool b in {True, False} such that r = p - Dq is in k if b is
     True, or r = p - Dq does not have an elementary integral over k(t) if b is
     False.
@@ -1368,6 +1426,9 @@ def integrate_primitive_polynomial(p, DE):
 def integrate_primitive(a, d, DE, z=None):
     """
     Integration of primitive functions.
+
+    Explanation
+    ===========
 
     Given a primitive monomial t over k and f in k(t), return g elementary over
     k(t), i in k(t), and b in {True, False} such that i = f - Dg is in k if b
@@ -1415,7 +1476,10 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     """
     Integration of hyperexponential polynomials.
 
-    Given a hyperexponential monomial t over k and p in k[t, 1/t], return q in
+    Explanation
+    ===========
+
+    Given a hyperexponential monomial t over k and ``p`` in k[t, 1/t], return q in
     k[t, 1/t] and a bool b in {True, False} such that p - Dq in k if b is True,
     or p - Dq does not have an elementary integral over k(t) if b is False.
     """
@@ -1463,6 +1527,9 @@ def integrate_hyperexponential_polynomial(p, DE, z):
 def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     """
     Integration of hyperexponential functions.
+
+    Explanation
+    ===========
 
     Given a hyperexponential monomial t over k and f in k(t), return g
     elementary over k(t), i in k(t), and a bool b in {True, False} such that
@@ -1526,6 +1593,9 @@ def integrate_hypertangent_polynomial(p, DE):
     """
     Integration of hypertangent polynomials.
 
+    Explanation
+    ===========
+
     Given a differential field k such that sqrt(-1) is not in k, a
     hypertangent monomial t over k, and p in k[t], return q in k[t] and
     c in k such that p - Dq - c*D(t**2 + 1)/(t**1 + 1) is in k and p -
@@ -1541,6 +1611,9 @@ def integrate_hypertangent_polynomial(p, DE):
 def integrate_nonlinear_no_specials(a, d, DE, z=None):
     """
     Integration of nonlinear monomials with no specials.
+
+    Explanation
+    ===========
 
     Given a nonlinear monomial t over k such that Sirr ({p in k[t] | p is
     special, monic, and irreducible}) is empty, and f in k(t), returns g
@@ -1585,6 +1658,9 @@ def integrate_nonlinear_no_specials(a, d, DE, z=None):
 class NonElementaryIntegral(Integral):
     """
     Represents a nonelementary Integral.
+
+    Explanation
+    ===========
 
     If the result of integrate() is an instance of this class, it is
     guaranteed to be nonelementary.  Note that integrate() by default will try
@@ -1635,6 +1711,9 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     r"""
     The Risch Integration Algorithm.
 
+    Explanation
+    ===========
+
     Only transcendental functions are supported.  Currently, only exponentials
     and logarithms are supported, but support for trigonometric functions is
     forthcoming.
@@ -1652,7 +1731,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     that the outer extension is exponential when possible, because more of the
     exponential case has been implemented.
 
-    If separate_integral is True, the result is returned as a tuple (ans, i),
+    If ``separate_integral`` is ``True``, the result is returned as a tuple (ans, i),
     where the integral is ans + i, ans is elementary, and i is either a
     NonElementaryIntegral or 0.  This useful if you want to try further
     integrating the NonElementaryIntegral part using other algorithms to

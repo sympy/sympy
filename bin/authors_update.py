@@ -90,10 +90,16 @@ try:
     # this will fail if the .mailmap is not right
     assert 'Sergey B Kirpichev' == author_name(git_people.pop(226)
         ), 'Sergey B Kirpichev was not found at line 226.'
-    assert 'azure-pipelines[bot]' == \
-        author_name(git_people.pop(751)), 'azure-pipelines[bot] was not found at line 751'
-    assert 'whitesource-bolt-for-github[bot]' == \
-        author_name(git_people.pop(792)), 'whitesource-bolt-for-github[bot] not found at line 792'
+
+    index = git_people.index(
+        "azure-pipelines[bot] " +
+        "<azure-pipelines[bot]@users.noreply.github.com>")
+    git_people.pop(index)
+    index = git_people.index(
+        "whitesource-bolt-for-github[bot] " +
+        "<whitesource-bolt-for-github[bot]@users.noreply.github.com>")
+    git_people.pop(index)
+
 except AssertionError as msg:
     print(red(msg))
     sys.exit(1)
@@ -121,7 +127,8 @@ old_lines = codecs.open(os.path.realpath(os.path.join(
         __file__, os.path.pardir, os.path.pardir, "AUTHORS")),
         "r", "utf-8").read().splitlines()
 if old_lines == lines:
-    sys.exit(green('No changes made to AUTHORS.'))
+    print(green('No changes made to AUTHORS.'))
+    sys.exit(0)
 
 # check for new additions
 new_authors = []
@@ -154,3 +161,6 @@ if new_authors:
         print('\t%s' % i)
 else:
     print(yellow("The AUTHORS file was updated."))
+
+print(red("Changes were made in the authors file"))
+sys.exit(1)

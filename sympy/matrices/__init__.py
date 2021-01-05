@@ -10,7 +10,7 @@ from .dense import (
     randMatrix, rot_axis1, rot_axis2, rot_axis3, symarray, wronskian,
     zeros)
 from .dense import MutableDenseMatrix
-from .matrices import DeferredVector, MatrixBase
+from .matrices import DeferredVector, MatrixBase, MatrixKind
 
 Matrix = MutableMatrix = MutableDenseMatrix
 
@@ -28,7 +28,9 @@ from .expressions import (
     hadamard_product, HadamardProduct, HadamardPower, Determinant, det,
     diagonalize_vector, DiagMatrix, DiagonalMatrix, DiagonalOf, trace,
     DotProduct, kronecker_product, KroneckerProduct,
-    PermutationMatrix, MatrixPermute)
+    PermutationMatrix, MatrixPermute, MatrixSet, Permanent, per)
+
+from .utilities import dotprodsimp
 
 __all__ = [
     'ShapeError', 'NonSquareMatrixError',
@@ -40,7 +42,7 @@ __all__ = [
 
     'MutableDenseMatrix',
 
-    'DeferredVector', 'MatrixBase',
+    'DeferredVector', 'MatrixBase', 'MatrixKind',
 
     'Matrix', 'MutableMatrix',
 
@@ -59,5 +61,8 @@ __all__ = [
     'hadamard_product', 'HadamardProduct', 'HadamardPower', 'Determinant',
     'det', 'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
-    'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute',
+    'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute', 'MatrixSet',
+    'Permanent', 'per',
+
+    'dotprodsimp',
 ]

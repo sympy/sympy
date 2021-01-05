@@ -1,13 +1,13 @@
-from __future__ import division, print_function
-
 from types import FunctionType
 
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
-from sympy.core.symbol import _uniquely_named_symbol
+from sympy.core.symbol import uniquely_named_symbol
 from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
+from sympy import sympify
+from sympy.functions.combinatorial.numbers import nC
 
 from .common import MatrixError, NonSquareMatrixError
 from .utilities import (
@@ -234,8 +234,8 @@ def _berkowitz_toeplitz_matrix(M):
     # compute -R * A**n * C.
     diags = [C]
     for i in range(M.rows - 2):
-        diags.append(A.multiply(diags[i], dotprodsimp=True))
-    diags = [(-R).multiply(d, dotprodsimp=True)[0, 0] for d in diags]
+        diags.append(A.multiply(diags[i], dotprodsimp=None))
+    diags = [(-R).multiply(d, dotprodsimp=None)[0, 0] for d in diags]
     diags = [M.one, -a] + diags
 
     def entry(i,j):
@@ -291,7 +291,7 @@ def _berkowitz_vector(M):
 
     submat, toeplitz = _berkowitz_toeplitz_matrix(M)
 
-    return toeplitz.multiply(_berkowitz_vector(submat), dotprodsimp=True)
+    return toeplitz.multiply(_berkowitz_vector(submat), dotprodsimp=None)
 
 
 def _adjugate(M, method="berkowitz"):
@@ -403,14 +403,14 @@ def _charpoly(M, x='lambda', simplify=_simplify):
         raise NonSquareMatrixError()
     if M.is_lower or M.is_upper:
         diagonal_elements = M.diagonal()
-        x = _uniquely_named_symbol(x, diagonal_elements)
+        x = uniquely_named_symbol(x, diagonal_elements, modify=lambda s: '_' + s)
         m = 1
         for i in diagonal_elements:
             m = m * (x - simplify(i))
         return PurePoly(m, x)
 
     berk_vector = _berkowitz_vector(M)
-    x = _uniquely_named_symbol(x, berk_vector)
+    x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
 
     return PurePoly([simplify(a) for a in berk_vector], x)
 
@@ -481,6 +481,62 @@ def _cofactor_matrix(M, method="berkowitz"):
     return M._new(M.rows, M.cols,
             lambda i, j: M.cofactor(i, j, method))
 
+def _per(M):
+    """Returns the permanent of a matrix. Unlike determinant,
+    permanent is defined for both square and non-square matrices.
+
+    For an m x n matrix, with m less than or equal to n,
+    it is given as the sum over the permutations s of size
+    less than or equal to m on [1, 2, . . . n] of the product
+    from i = 1 to m of M[i, s[i]]. Taking the transpose will
+    not affect the value of the permanent.
+
+    In the case of a square matrix, this is the same as the permutation
+    definition of the determinant, but it does not take the sign of the
+    permutation into account. Computing the permanent with this definition
+    is quite inefficient, so here the Ryser formula is used.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    >>> M.per()
+    450
+    >>> M = Matrix([1, 5, 7])
+    >>> M.per()
+    13
+
+    References
+    ==========
+
+    .. [1] Prof. Frank Ben's notes: https://math.berkeley.edu/~bernd/ban275.pdf
+    .. [2] Wikipedia article on Permanent: https://en.wikipedia.org/wiki/Permanent_(mathematics)
+    .. [3] https://reference.wolfram.com/language/ref/Permanent.html
+    .. [4] Permanent of a rectangular matrix : https://arxiv.org/pdf/0904.3251.pdf
+    """
+    import itertools
+
+    m, n = M.shape
+    if m > n:
+        M = M.T
+        m, n = n, m
+    s = list(range(n))
+
+    subsets = []
+    for i in range(1, m + 1):
+        subsets += list(map(list, itertools.combinations(s, i)))
+
+    perm = 0
+    for subset in subsets:
+        prod = 1
+        sub_len = len(subset)
+        for i in range(m):
+             prod *= sum([M[i, j] for j in subset])
+        perm += prod * (-1)**sub_len * nC(n - sub_len, m - sub_len)
+    perm *= (-1)**m
+    perm = sympify(perm)
+    return perm.simplify()
 
 # This functions is a candidate for caching if it gets implemented for matrices.
 def _det(M, method="bareiss", iszerofunc=None):
@@ -544,10 +600,15 @@ def _det(M, method="bareiss", iszerofunc=None):
     Examples
     ========
 
-    >>> from sympy import Matrix, MatrixSymbol, eye, det
+    >>> from sympy import Matrix, eye, det
+    >>> I3 = eye(3)
+    >>> det(I3)
+    1
     >>> M = Matrix([[1, 2], [3, 4]])
-    >>> M.det()
+    >>> det(M)
     -2
+    >>> det(M) == M.det()
+    True
     """
 
     # sanitize `method`

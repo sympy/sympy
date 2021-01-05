@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -39,6 +37,9 @@ class Integral(AddWithLimits):
 
     def __new__(cls, function, *symbols, **assumptions):
         """Create an unevaluated integral.
+
+        Explanation
+        ===========
 
         Arguments are an integrand followed by one or more limits.
 
@@ -179,25 +180,25 @@ class Integral(AddWithLimits):
         =====
 
         The mappings, F(x) or f(u), must lead to a unique integral. Linear
-        or rational linear expression, `2*x`, `1/x` and `sqrt(x)`, will
-        always work; quadratic expressions like `x**2 - 1` are acceptable
+        or rational linear expression, ``2*x``, ``1/x`` and ``sqrt(x)``, will
+        always work; quadratic expressions like ``x**2 - 1`` are acceptable
         as long as the resulting integrand does not depend on the sign of
         the solutions (see examples).
 
-        The integral will be returned unchanged if `x` is not a variable of
+        The integral will be returned unchanged if ``x`` is not a variable of
         integration.
 
-        `x` must be (or contain) only one of of the integration variables. If
-        `u` has more than one free symbol then it should be sent as a tuple
-        (`u`, `uvar`) where `uvar` identifies which variable is replacing
+        ``x`` must be (or contain) only one of of the integration variables. If
+        ``u`` has more than one free symbol then it should be sent as a tuple
+        (``u``, ``uvar``) where ``uvar`` identifies which variable is replacing
         the integration variable.
         XXX can it contain another integration variable?
 
         Examples
         ========
 
-        >>> from sympy.abc import a, b, c, d, x, u, y
-        >>> from sympy import Integral, S, cos, sqrt
+        >>> from sympy.abc import a, x, u
+        >>> from sympy import Integral, cos, sqrt
 
         >>> i = Integral(x*cos(x**2 - 1), (x, 0, 1))
 
@@ -320,8 +321,8 @@ class Integral(AddWithLimits):
                 raise ValueError('no solution for solve(F(x) - f(u), u)')
             F = [fi.subs(xvar, d) for fi in soln]
 
-        newfuncs = set([(self.function.subs(xvar, fi)*fi.diff(d)
-                        ).subs(d, uvar) for fi in f])
+        newfuncs = {(self.function.subs(xvar, fi)*fi.diff(d)
+                        ).subs(d, uvar) for fi in f}
         if len(newfuncs) > 1:
             raise ValueError(filldedent('''
             The mapping between F(x) and f(u) did not give
@@ -378,7 +379,7 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import Integral, Piecewise, S
+        >>> from sympy import Piecewise, S
         >>> from sympy.abc import x, t
         >>> p = x**2 + Piecewise((0, x/t < 0), (1, True))
         >>> p.integrate((t, S(4)/5, 1), (x, -1, 1))
@@ -480,7 +481,7 @@ class Integral(AddWithLimits):
             if d:
                 reps[x] = d
         if reps:
-            undo = dict([(v, k) for k, v in reps.items()])
+            undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
             if type(did) is tuple:  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])
@@ -704,14 +705,19 @@ class Integral(AddWithLimits):
         differentiating under the integral sign [1], using the Fundamental
         Theorem of Calculus [2] when possible.
 
+        Explanation
+        ===========
+
         Whenever an Integral is encountered that is equivalent to zero or
         has an integrand that is independent of the variable of integration
         those integrals are performed. All others are returned as Integral
         instances which can be resolved with doit() (provided they are integrable).
 
-        References:
-           [1] https://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
-           [2] https://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
+        .. [2] https://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus
 
         Examples
         ========
@@ -791,6 +797,9 @@ class Integral(AddWithLimits):
                        heurisch=None, conds='piecewise'):
         """
         Calculate the anti-derivative to the function f(x).
+
+        Explanation
+        ===========
 
         The following algorithms are applied (roughly in this order):
 
@@ -1129,7 +1138,7 @@ class Integral(AddWithLimits):
 
         return Add(*parts)
 
-    def _eval_lseries(self, x, logx):
+    def _eval_lseries(self, x, logx, cdir=0):
         expr = self.as_dummy()
         symb = x
         for l in expr.limits:
@@ -1139,7 +1148,7 @@ class Integral(AddWithLimits):
         for term in expr.function.lseries(symb, logx):
             yield integrate(term, *expr.limits)
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         expr = self.as_dummy()
         symb = x
         for l in expr.limits:
@@ -1151,7 +1160,7 @@ class Integral(AddWithLimits):
         order = [o.subs(symb, x) for o in order]
         return integrate(terms, *expr.limits) + Add(*order)*x
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         series_gen = self.args[0].lseries(x)
         for leading_term in series_gen:
             if leading_term != 0:
@@ -1171,19 +1180,21 @@ class Integral(AddWithLimits):
         """
         Approximates a definite integral by a sum.
 
-        Arguments
-        ---------
-        n
+        Parameters
+        ==========
+
+        n :
             The number of subintervals to use, optional.
-        method
+        method :
             One of: 'left', 'right', 'midpoint', 'trapezoid'.
-        evaluate
+        evaluate : bool
             If False, returns an unevaluated Sum expression. The default
             is True, evaluate the sum.
 
-        These methods of approximate integration are described in [1].
+        Notes
+        =====
 
-        [1] https://en.wikipedia.org/wiki/Riemann_sum#Methods
+        These methods of approximate integration are described in [1].
 
         Examples
         ========
@@ -1263,6 +1274,11 @@ class Integral(AddWithLimits):
         ========
 
         Integral.doit : Perform the integration using any hints
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Riemann_sum#Methods
         """
 
         from sympy.concrete.summations import Sum
@@ -1329,16 +1345,19 @@ class Integral(AddWithLimits):
         """
         Compute the Cauchy Principal Value of the definite integral of a real function in the given interval
         on the real axis.
+
+        Explanation
+        ===========
+
         In mathematics, the Cauchy principal value, is a method for assigning values to certain improper
         integrals which would otherwise be undefined.
 
         Examples
         ========
 
-        >>> from sympy import Dummy, symbols, integrate, limit, oo
+        >>> from sympy import oo
         >>> from sympy.integrals.integrals import Integral
-        >>> from sympy.calculus.singularities import singularities
-        >>> x = symbols('x')
+        >>> from sympy.abc import x
         >>> Integral(x+1, (x, -oo, oo)).principal_value()
         oo
         >>> f = 1 / (x**3)
@@ -1351,6 +1370,7 @@ class Integral(AddWithLimits):
 
         References
         ==========
+
         .. [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
         .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
@@ -1384,8 +1404,11 @@ class Integral(AddWithLimits):
 
 
 
-def integrate(*args, **kwargs):
+def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs):
     """integrate(f, var, ...)
+
+    Explanation
+    ===========
 
     Compute definite or indefinite integral of one or more variables
     using Risch-Norman algorithm and table lookup. This procedure is
@@ -1535,11 +1558,11 @@ def integrate(*args, **kwargs):
     """
     doit_flags = {
         'deep': False,
-        'meijerg': kwargs.pop('meijerg', None),
-        'conds': kwargs.pop('conds', 'piecewise'),
-        'risch': kwargs.pop('risch', None),
-        'heurisch': kwargs.pop('heurisch', None),
-        'manual': kwargs.pop('manual', None)
+        'meijerg': meijerg,
+        'conds': conds,
+        'risch': risch,
+        'heurisch': heurisch,
+        'manual': manual
         }
     integral = Integral(*args, **kwargs)
 

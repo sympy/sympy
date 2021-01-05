@@ -1,37 +1,28 @@
 """Symbolic primitives + unicode/ASCII abstraction for pretty.py"""
 
-from __future__ import print_function, division
-
 import sys
 import warnings
 from string import ascii_lowercase, ascii_uppercase
+import unicodedata
 
 unicode_warnings = ''
 
-from sympy.core.compatibility import unicode
+def U(name):
+    """
+    Get a unicode character by name or, None if not found.
 
-# first, setup unicodedate environment
-try:
-    import unicodedata
-
-    def U(name):
-        """unicode character by name or None if not found"""
-        try:
-            u = unicodedata.lookup(name)
-        except KeyError:
-            u = None
-
-            global unicode_warnings
-            unicode_warnings += 'No \'%s\' in unicodedata\n' % name
-
-        return u
-
-except ImportError:
-    unicode_warnings += 'No unicodedata available\n'
-    U = lambda name: None
+    This exists because older versions of python use older unicode databases.
+    """
+    try:
+        return unicodedata.lookup(name)
+    except KeyError:
+        global unicode_warnings
+        unicode_warnings += 'No \'%s\' in unicodedata\n' % name
+        return None
 
 from sympy.printing.conventions import split_super_sub
 from sympy.core.alphabets import greeks
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # prefix conventions when constructing tables
 # L   - LATIN     i
@@ -54,15 +45,6 @@ def pretty_use_unicode(flag=None):
     if flag is None:
         return _use_unicode
 
-    # we know that some letters are not supported in Python 2.X so
-    # ignore those warnings. Remove this when 2.X support is dropped.
-    if unicode_warnings:
-        known = ['LATIN SUBSCRIPT SMALL LETTER %s' % i for i in 'HKLMNPST']
-        unicode_warnings = '\n'.join([
-            l for l in unicode_warnings.splitlines() if not any(
-            i in l for i in known)])
-    # ------------ end of 2.X warning filtering
-
     if flag and unicode_warnings:
         # print warnings (if any) on first unicode usage
         warnings.warn(unicode_warnings)
@@ -76,41 +58,40 @@ def pretty_use_unicode(flag=None):
 def pretty_try_use_unicode():
     """See if unicode output is available and leverage it if possible"""
 
-    try:
-        symbols = []
+    encoding = getattr(sys.stdout, 'encoding', None)
 
-        # see, if we can represent greek alphabet
-        symbols.extend(greek_unicode.values())
+    # this happens when e.g. stdout is redirected through a pipe, or is
+    # e.g. a cStringIO.StringO
+    if encoding is None:
+        return  # sys.stdout has no encoding
 
-        # and atoms
-        symbols += atoms_table.values()
+    symbols = []
 
-        for s in symbols:
-            if s is None:
-                return  # common symbols not present!
+    # see if we can represent greek alphabet
+    symbols += greek_unicode.values()
 
-            encoding = getattr(sys.stdout, 'encoding', None)
+    # and atoms
+    symbols += atoms_table.values()
 
-            # this happens when e.g. stdout is redirected through a pipe, or is
-            # e.g. a cStringIO.StringO
-            if encoding is None:
-                return  # sys.stdout has no encoding
+    for s in symbols:
+        if s is None:
+            return  # common symbols not present!
 
-            # try to encode
+        try:
             s.encode(encoding)
+        except UnicodeEncodeError:
+            return
 
-    except UnicodeEncodeError:
-        pass
-    else:
-        pretty_use_unicode(True)
+    # all the characters were present and encodable
+    pretty_use_unicode(True)
 
 
 def xstr(*args):
-    """call str or unicode depending on current mode"""
-    if _use_unicode:
-        return unicode(*args)
-    else:
-        return str(*args)
+    SymPyDeprecationWarning(
+        feature="``xstr`` function",
+        useinstead="``str``",
+        deprecated_since_version="1.7").warn()
+    return str(*args)
 
 # GREEK
 g = lambda l: U('GREEK SMALL LETTER %s' % l.upper())
@@ -121,19 +102,19 @@ greek_letters = list(greeks) # make a copy
 greek_letters[greek_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_unicode = dict((L, g(L)) for L in greek_letters)
+greek_unicode = {L: g(L) for L in greek_letters}
 greek_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_letters)
 
 # aliases
 greek_unicode['lambda'] = greek_unicode['lamda']
 greek_unicode['Lambda'] = greek_unicode['Lamda']
-greek_unicode['varsigma'] = u'\N{GREEK SMALL LETTER FINAL SIGMA}'
+greek_unicode['varsigma'] = '\N{GREEK SMALL LETTER FINAL SIGMA}'
 
 # BOLD
 b = lambda l: U('MATHEMATICAL BOLD SMALL %s' % l.upper())
 B = lambda l: U('MATHEMATICAL BOLD CAPITAL %s' % l.upper())
 
-bold_unicode = dict((l, b(l)) for l in ascii_lowercase)
+bold_unicode = {l: b(l) for l in ascii_lowercase}
 bold_unicode.update((L, B(L)) for L in ascii_uppercase)
 
 # GREEK BOLD
@@ -145,11 +126,11 @@ greek_bold_letters = list(greeks) # make a copy, not strictly required here
 greek_bold_letters[greek_bold_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
-greek_bold_unicode = dict((L, g(L)) for L in greek_bold_letters)
+greek_bold_unicode = {L: g(L) for L in greek_bold_letters}
 greek_bold_unicode.update((L[0].upper() + L[1:], G(L)) for L in greek_bold_letters)
 greek_bold_unicode['lambda'] = greek_unicode['lamda']
 greek_bold_unicode['Lambda'] = greek_unicode['Lamda']
-greek_bold_unicode['varsigma'] = u'\N{MATHEMATICAL BOLD SMALL FINAL SIGMA}'
+greek_bold_unicode['varsigma'] = '\N{MATHEMATICAL BOLD SMALL FINAL SIGMA}'
 
 digit_2txt = {
     '0':    'ZERO',
@@ -216,21 +197,21 @@ for s in '+-=()':
 # TODO: Make brackets adjust to height of contents
 modifier_dict = {
     # Accents
-    'mathring': lambda s: center_accent(s, u'\N{COMBINING RING ABOVE}'),
-    'ddddot': lambda s: center_accent(s, u'\N{COMBINING FOUR DOTS ABOVE}'),
-    'dddot': lambda s: center_accent(s, u'\N{COMBINING THREE DOTS ABOVE}'),
-    'ddot': lambda s: center_accent(s, u'\N{COMBINING DIAERESIS}'),
-    'dot': lambda s: center_accent(s, u'\N{COMBINING DOT ABOVE}'),
-    'check': lambda s: center_accent(s, u'\N{COMBINING CARON}'),
-    'breve': lambda s: center_accent(s, u'\N{COMBINING BREVE}'),
-    'acute': lambda s: center_accent(s, u'\N{COMBINING ACUTE ACCENT}'),
-    'grave': lambda s: center_accent(s, u'\N{COMBINING GRAVE ACCENT}'),
-    'tilde': lambda s: center_accent(s, u'\N{COMBINING TILDE}'),
-    'hat': lambda s: center_accent(s, u'\N{COMBINING CIRCUMFLEX ACCENT}'),
-    'bar': lambda s: center_accent(s, u'\N{COMBINING OVERLINE}'),
-    'vec': lambda s: center_accent(s, u'\N{COMBINING RIGHT ARROW ABOVE}'),
-    'prime': lambda s: s+u'\N{PRIME}',
-    'prm': lambda s: s+u'\N{PRIME}',
+    'mathring': lambda s: center_accent(s, '\N{COMBINING RING ABOVE}'),
+    'ddddot': lambda s: center_accent(s, '\N{COMBINING FOUR DOTS ABOVE}'),
+    'dddot': lambda s: center_accent(s, '\N{COMBINING THREE DOTS ABOVE}'),
+    'ddot': lambda s: center_accent(s, '\N{COMBINING DIAERESIS}'),
+    'dot': lambda s: center_accent(s, '\N{COMBINING DOT ABOVE}'),
+    'check': lambda s: center_accent(s, '\N{COMBINING CARON}'),
+    'breve': lambda s: center_accent(s, '\N{COMBINING BREVE}'),
+    'acute': lambda s: center_accent(s, '\N{COMBINING ACUTE ACCENT}'),
+    'grave': lambda s: center_accent(s, '\N{COMBINING GRAVE ACCENT}'),
+    'tilde': lambda s: center_accent(s, '\N{COMBINING TILDE}'),
+    'hat': lambda s: center_accent(s, '\N{COMBINING CIRCUMFLEX ACCENT}'),
+    'bar': lambda s: center_accent(s, '\N{COMBINING OVERLINE}'),
+    'vec': lambda s: center_accent(s, '\N{COMBINING RIGHT ARROW ABOVE}'),
+    'prime': lambda s: s+'\N{PRIME}',
+    'prm': lambda s: s+'\N{PRIME}',
     # # Faces -- these are here for some compatibility with latex printing
     # 'bold': lambda s: s,
     # 'bm': lambda s: s,
@@ -238,10 +219,10 @@ modifier_dict = {
     # 'scr': lambda s: s,
     # 'frak': lambda s: s,
     # Brackets
-    'norm': lambda s: u'\N{DOUBLE VERTICAL LINE}'+s+u'\N{DOUBLE VERTICAL LINE}',
-    'avg': lambda s: u'\N{MATHEMATICAL LEFT ANGLE BRACKET}'+s+u'\N{MATHEMATICAL RIGHT ANGLE BRACKET}',
-    'abs': lambda s: u'\N{VERTICAL LINE}'+s+u'\N{VERTICAL LINE}',
-    'mag': lambda s: u'\N{VERTICAL LINE}'+s+u'\N{VERTICAL LINE}',
+    'norm': lambda s: '\N{DOUBLE VERTICAL LINE}'+s+'\N{DOUBLE VERTICAL LINE}',
+    'avg': lambda s: '\N{MATHEMATICAL LEFT ANGLE BRACKET}'+s+'\N{MATHEMATICAL RIGHT ANGLE BRACKET}',
+    'abs': lambda s: '\N{VERTICAL LINE}'+s+'\N{VERTICAL LINE}',
+    'mag': lambda s: '\N{VERTICAL LINE}'+s+'\N{VERTICAL LINE}',
 }
 
 # VERTICAL OBJECTS
@@ -596,12 +577,12 @@ def annotated(letter):
     information.
     """
     ucode_pics = {
-        'F': (2, 0, 2, 0, u'\N{BOX DRAWINGS LIGHT DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
-                          u'\N{BOX DRAWINGS LIGHT VERTICAL AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
-                          u'\N{BOX DRAWINGS LIGHT UP}'),
-        'G': (3, 0, 3, 1, u'\N{BOX DRAWINGS LIGHT ARC DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC DOWN AND LEFT}\n'
-                          u'\N{BOX DRAWINGS LIGHT VERTICAL}\N{BOX DRAWINGS LIGHT RIGHT}\N{BOX DRAWINGS LIGHT DOWN AND LEFT}\n'
-                          u'\N{BOX DRAWINGS LIGHT ARC UP AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC UP AND LEFT}')
+        'F': (2, 0, 2, 0, '\N{BOX DRAWINGS LIGHT DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
+                          '\N{BOX DRAWINGS LIGHT VERTICAL AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\n'
+                          '\N{BOX DRAWINGS LIGHT UP}'),
+        'G': (3, 0, 3, 1, '\N{BOX DRAWINGS LIGHT ARC DOWN AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC DOWN AND LEFT}\n'
+                          '\N{BOX DRAWINGS LIGHT VERTICAL}\N{BOX DRAWINGS LIGHT RIGHT}\N{BOX DRAWINGS LIGHT DOWN AND LEFT}\n'
+                          '\N{BOX DRAWINGS LIGHT ARC UP AND RIGHT}\N{BOX DRAWINGS LIGHT HORIZONTAL}\N{BOX DRAWINGS LIGHT ARC UP AND LEFT}')
     }
     ascii_pics = {
         'F': (3, 0, 3, 0, ' _\n|_\n|\n'),
@@ -613,16 +594,13 @@ def annotated(letter):
     else:
         return ascii_pics[letter]
 
+_remove_combining = dict.fromkeys(list(range(ord('\N{COMBINING GRAVE ACCENT}'), ord('\N{COMBINING LATIN SMALL LETTER X}')))
+                            + list(range(ord('\N{COMBINING LEFT HARPOON ABOVE}'), ord('\N{COMBINING ASTERISK ABOVE}'))))
+
 def is_combining(sym):
-    """Check whether symbol is a unicode modifier.
+    """Check whether symbol is a unicode modifier. """
 
-    See stringPict.width on usage.
-    """
-    return True if (u'\N{COMBINING GRAVE ACCENT}' <= sym <=
-                    u'\N{COMBINING LATIN SMALL LETTER X}' or
-
-                    u'\N{COMBINING LEFT HARPOON ABOVE}' <= sym <=
-                    u'\N{COMBINING ASTERISK ABOVE}') else False
+    return ord(sym) in _remove_combining
 
 
 def center_accent(string, accent):
@@ -652,3 +630,10 @@ def center_accent(string, accent):
     firstpart = string[:midpoint]
     secondpart = string[midpoint:]
     return firstpart + accent + secondpart
+
+
+def line_width(line):
+    """Unicode combining symbols (modifiers) are not ever displayed as
+    separate symbols and thus shouldn't be counted
+    """
+    return len(line.translate(_remove_combining))

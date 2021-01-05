@@ -1,5 +1,6 @@
+from io import StringIO
+
 from sympy.core import S, symbols, Eq, pi, Catalan, EulerGamma, Function
-from sympy.core.compatibility import StringIO
 from sympy import Piecewise
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol

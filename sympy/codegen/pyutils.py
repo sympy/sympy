@@ -4,16 +4,16 @@ from sympy.printing.pycode import PythonCodePrinter
 
 
 def render_as_module(content, standard='python3'):
-    """Renders python code as a module (with the required imports)
+    """Renders python code as a module (with the required imports).
 
     Parameters
     ==========
 
-    standard
+    standard :
         See the parameter ``standard`` in
         :meth:`sympy.printing.pycode.pycode`
     """
-    # XXX Remove the keyword 'standard' after dropping python 2 support.
+
     printer = PythonCodePrinter({'standard':standard})
     pystr = printer.doprint(content)
     if printer._settings['fully_qualified_modules']:

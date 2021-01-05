@@ -142,8 +142,8 @@ def test_differentiate_finite():
     res2 = differentiate_finite(f(x) + x**3 + 42, x, points=[x-1, x+1])
     ref2 = (f(x + 1) + (x + 1)**3 - f(x - 1) - (x - 1)**3)/2
     assert (res2 - ref2).simplify() == 0
-    raises(ValueError, lambda: differentiate_finite(f(x)*g(x), x,
-                                                    pints=[x-1, x+1]))
+    raises(TypeError, lambda: differentiate_finite(f(x)*g(x), x,
+                                                   pints=[x-1, x+1]))
 
     res3 = differentiate_finite(f(x)*g(x).diff(x), x)
     ref3 = (-g(x) + g(x + 1))*f(x + S.Half) - (g(x) - g(x - 1))*f(x - S.Half)

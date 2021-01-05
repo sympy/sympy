@@ -1,11 +1,11 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
-from __future__ import print_function, division
 
 import math
+from functools import reduce
 
 from sympy.core import S, I, pi
-from sympy.core.compatibility import ordered, reduce
+from sympy.core.compatibility import ordered
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_not
@@ -18,6 +18,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
 from sympy.functions.elementary.miscellaneous import root
 from sympy.ntheory import divisors, isprime, nextprime
+from sympy.polys.domains import EX
 from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,
     DomainError)
 from sympy.polys.polyquinticconst import PolyQuintic
@@ -265,7 +266,7 @@ def roots_quartic(f):
     Examples
     ========
 
-        >>> from sympy import Poly, symbols, I
+        >>> from sympy import Poly
         >>> from sympy.polys.polyroots import roots_quartic
 
         >>> r = roots_quartic(Poly('x**4-6*x**3+17*x**2-26*x+20'))
@@ -625,6 +626,8 @@ def roots_quintic(f):
                 break
         if r2:
             break
+    else:
+        return []  # fall back to normal solve
 
     # Now, we have r's so we can get roots
     x1 = (r1 + r2 + r3 + r4)/5
@@ -784,7 +787,16 @@ def preprocess_roots(poly):
 
 
 @public
-def roots(f, *gens, **flags):
+def roots(f, *gens,
+        auto=True,
+        cubics=True,
+        trig=False,
+        quartics=True,
+        quintics=False,
+        multiple=False,
+        filter=None,
+        predicate=None,
+        **flags):
     """
     Computes symbolic roots of a univariate polynomial.
 
@@ -847,15 +859,6 @@ def roots(f, *gens, **flags):
     from sympy.polys.polytools import to_rational_coeffs
     flags = dict(flags)
 
-    auto = flags.pop('auto', True)
-    cubics = flags.pop('cubics', True)
-    trig = flags.pop('trig', False)
-    quartics = flags.pop('quartics', True)
-    quintics = flags.pop('quintics', False)
-    multiple = flags.pop('multiple', False)
-    filter = flags.pop('filter', None)
-    predicate = flags.pop('predicate', None)
-
     if isinstance(f, list):
         if gens:
             raise ValueError('redundant generators given')
@@ -870,7 +873,11 @@ def roots(f, *gens, **flags):
         f = Poly(poly, x, field=True)
     else:
         try:
-            f = Poly(f, *gens, **flags)
+            F = Poly(f, *gens, **flags)
+            if not isinstance(f, Poly) and not F.gen.is_Symbol:
+                raise PolynomialError("generator must be a Symbol")
+            else:
+                f = F
             if f.length == 2 and f.degree() != 1:
                 # check for foo**n factors in the constant
                 n = f.degree()
@@ -964,6 +971,10 @@ def roots(f, *gens, **flags):
 
         return result
 
+    # Convert the generators to symbols
+    dumgens = symbols('x:%d' % len(f.gens), cls=Dummy)
+    f = f.per(f.rep, dumgens)
+
     (k,), f = f.terms_gcd()
 
     if not k:
@@ -975,6 +986,10 @@ def roots(f, *gens, **flags):
 
     if auto and f.get_domain().is_Ring:
         f = f.to_field()
+
+    # Use EX instead of ZZ_I or QQ_I
+    if f.get_domain().is_QQ_I:
+        f = f.per(f.rep.convert(EX))
 
     rescale_x = None
     translate_x = None
@@ -1073,7 +1088,7 @@ def roots(f, *gens, **flags):
         return zeros
 
 
-def root_factors(f, *gens, **args):
+def root_factors(f, *gens, filter=None, **args):
     """
     Returns all factors of a univariate polynomial.
 
@@ -1088,7 +1103,6 @@ def root_factors(f, *gens, **args):
 
     """
     args = dict(args)
-    filter = args.pop('filter', None)
 
     F = Poly(f, *gens, **args)
 

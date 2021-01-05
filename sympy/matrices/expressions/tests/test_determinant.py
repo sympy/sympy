@@ -4,7 +4,7 @@ from sympy.matrices.expressions import (
     Identity, MatrixExpr, MatrixSymbol, Determinant,
     det, ZeroMatrix, Transpose
 )
-from sympy.matrices.expressions.matexpr import OneMatrix
+from sympy.matrices.expressions.special import OneMatrix
 from sympy.testing.pytest import raises
 from sympy import refine, Q
 
@@ -38,3 +38,11 @@ def test_eval_determinant():
 def test_refine():
     assert refine(det(A), Q.orthogonal(A)) == 1
     assert refine(det(A), Q.singular(A)) == 0
+
+
+def test_commutative():
+    det_a = Determinant(A)
+    det_b = Determinant(B)
+    assert det_a.is_commutative
+    assert det_b.is_commutative
+    assert det_a * det_b == det_b * det_a

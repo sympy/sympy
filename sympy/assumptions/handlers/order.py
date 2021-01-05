@@ -1,7 +1,6 @@
 """
 AskHandlers related to order relations: positive, negative, etc.
 """
-from __future__ import print_function, division
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
@@ -10,7 +9,7 @@ from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
 
 class AskNegativeHandler(CommonHandler):
     """
-    This is called by ask() when key='negative'
+    This is called by ask() when key='negative'.
 
     Test that an expression is less (strict) than zero.
 
@@ -138,8 +137,8 @@ class AskNonNegativeHandler(CommonHandler):
 
 class AskNonZeroHandler(CommonHandler):
     """
-    Handler for key 'zero'
-    Test that an expression is not identically zero
+    Handler for key 'zero'.
+    Test that an expression is not identically zero.
     """
 
     @staticmethod
@@ -218,8 +217,8 @@ class AskNonPositiveHandler(CommonHandler):
 
 class AskPositiveHandler(CommonHandler):
     """
-    Handler for key 'positive'
-    Test that an expression is greater (strict) than zero
+    Handler for key 'positive'.
+    Test that an expression is greater (strict) than zero.
     """
 
     @staticmethod

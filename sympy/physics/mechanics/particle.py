@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core.backend import sympify
 from sympy.physics.vector import Point
 
@@ -8,8 +6,11 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 __all__ = ['Particle']
 
 
-class Particle(object):
+class Particle:
     """A particle.
+
+    Explanation
+    ===========
 
     Particles have a non-zero mass and lack spatial extension; they take up no
     space.
@@ -18,6 +19,7 @@ class Particle(object):
 
     Parameters
     ==========
+
     name : str
         Name of particle
     point : Point
@@ -77,6 +79,9 @@ class Particle(object):
     def linear_momentum(self, frame):
         """Linear momentum of the particle.
 
+        Explanation
+        ===========
+
         The linear momentum L, of a particle P, with respect to frame N is
         given by
 
@@ -96,6 +101,8 @@ class Particle(object):
 
         >>> from sympy.physics.mechanics import Particle, Point, ReferenceFrame
         >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> m, v = dynamicsymbols('m v')
         >>> N = ReferenceFrame('N')
         >>> P = Point('P')
@@ -110,6 +117,9 @@ class Particle(object):
 
     def angular_momentum(self, point, frame):
         """Angular momentum of the particle about the point.
+
+        Explanation
+        ===========
 
         The angular momentum H, about some point O of a particle, P, is given
         by:
@@ -134,6 +144,8 @@ class Particle(object):
 
         >>> from sympy.physics.mechanics import Particle, Point, ReferenceFrame
         >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> from sympy.physics.vector import init_vprinting
+        >>> init_vprinting(pretty_print=False)
         >>> m, v, r = dynamicsymbols('m v r')
         >>> N = ReferenceFrame('N')
         >>> O = Point('O')
@@ -148,7 +160,10 @@ class Particle(object):
         return self.point.pos_from(point) ^ (self.mass * self.point.vel(frame))
 
     def kinetic_energy(self, frame):
-        """Kinetic energy of the particle
+        """Kinetic energy of the particle.
+
+        Explanation
+        ===========
 
         The kinetic energy, T, of a particle, P, is given by
 
@@ -242,6 +257,7 @@ class Particle(object):
 
         Parameters
         ==========
+
         point : sympy.physics.vector.Point
             The point to express the inertia dyadic about.
         frame : sympy.physics.vector.ReferenceFrame
@@ -249,6 +265,7 @@ class Particle(object):
 
         Returns
         =======
+
         inertia : sympy.physics.vector.Dyadic
             The inertia dyadic of the particle expressed about the provided
             point and frame.

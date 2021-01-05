@@ -2,8 +2,6 @@
 A MathML printer.
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy import sympify, S, Mul
@@ -13,10 +11,10 @@ from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import \
     precedence_traditional, PRECEDENCE, PRECEDENCE_TRADITIONAL
 from sympy.printing.pretty.pretty_symbology import greek_unicode
-from sympy.printing.printer import Printer
+from sympy.printing.printer import Printer, print_function
 
 import mpmath.libmp as mlib
-from mpmath.libmp import prec_to_dps
+from mpmath.libmp import prec_to_dps, repr_dps, to_str as mlib_to_str
 
 
 class MathMLPrinterBase(Printer):
@@ -54,7 +52,7 @@ class MathMLPrinterBase(Printer):
         class RawText(Text):
             def writexml(self, writer, indent='', addindent='', newl=''):
                 if self.data:
-                    writer.write(u'{}{}{}'.format(indent, self.data, newl))
+                    writer.write('{}{}{}'.format(indent, self.data, newl))
 
         def createRawTextNode(data):
             r = RawText()
@@ -334,7 +332,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
         """We use unicode #x3c6 for Greek letter phi as defined here
         http://www.w3.org/2003/entities/2007doc/isogrk1.html"""
         x = self.dom.createElement('cn')
-        x.appendChild(self.dom.createTextNode(u"\N{GREEK SMALL LETTER PHI}"))
+        x.appendChild(self.dom.createTextNode("\N{GREEK SMALL LETTER PHI}"))
         return x
 
     def _print_Exp1(self, e):
@@ -483,6 +481,12 @@ class MathMLContentPrinter(MathMLPrinterBase):
     def _print_Number(self, e):
         x = self.dom.createElement(self.mathml_tag(e))
         x.appendChild(self.dom.createTextNode(str(e)))
+        return x
+
+    def _print_Float(self, e):
+        x = self.dom.createElement(self.mathml_tag(e))
+        repr_e = mlib_to_str(e._mpf_, repr_dps(e._prec))
+        x.appendChild(self.dom.createTextNode(repr_e))
         return x
 
     def _print_Derivative(self, e):
@@ -1098,8 +1102,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
 
     def _print_AccumulationBounds(self, i):
         brac = self.dom.createElement('mfenced')
-        brac.setAttribute('close', u'\u27e9')
-        brac.setAttribute('open', u'\u27e8')
+        brac.setAttribute('close', '\u27e9')
+        brac.setAttribute('open', '\u27e8')
         brac.appendChild(self._print(i.min))
         brac.appendChild(self._print(i.max))
         return brac
@@ -1452,7 +1456,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return mi
 
     def _print_Range(self, s):
-        dots = u"\u2026"
+        dots = "\u2026"
         brac = self.dom.createElement('mfenced')
         brac.setAttribute('close', '}')
         brac.setAttribute('open', '{')
@@ -1657,8 +1661,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         power = expr.args[2]
         sup = self.dom.createElement('msup')
         brac = self.dom.createElement('mfenced')
-        brac.setAttribute('close', u'\u27e9')
-        brac.setAttribute('open', u'\u27e8')
+        brac.setAttribute('close', '\u27e9')
+        brac.setAttribute('open', '\u27e8')
         brac.appendChild(self._print(shift))
         sup.appendChild(brac)
         sup.appendChild(self._print(power))
@@ -1847,8 +1851,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_floor(self, e):
         mrow = self.dom.createElement('mrow')
         x = self.dom.createElement('mfenced')
-        x.setAttribute('close', u'\u230B')
-        x.setAttribute('open', u'\u230A')
+        x.setAttribute('close', '\u230B')
+        x.setAttribute('open', '\u230A')
         x.appendChild(self._print(e.args[0]))
         mrow.appendChild(x)
         return mrow
@@ -1856,8 +1860,8 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_ceiling(self, e):
         mrow = self.dom.createElement('mrow')
         x = self.dom.createElement('mfenced')
-        x.setAttribute('close', u'\u2309')
-        x.setAttribute('open', u'\u2308')
+        x.setAttribute('close', '\u2309')
+        x.setAttribute('open', '\u2308')
         x.appendChild(self._print(e.args[0]))
         mrow.appendChild(x)
         return mrow
@@ -2069,6 +2073,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return x
 
 
+@print_function(MathMLPrinterBase)
 def mathml(expr, printer='content', **settings):
     """Returns the MathML representation of expr. If printer is presentation
     then prints Presentation MathML else prints content MathML.

@@ -1,11 +1,10 @@
 """Implementation of :class:`Domain` class. """
 
-from __future__ import print_function, division
 
 from typing import Any, Optional, Type
 
 from sympy.core import Basic, sympify
-from sympy.core.compatibility import HAS_GMPY, is_sequence
+from sympy.core.compatibility import HAS_GMPY, is_sequence, ordered
 from sympy.core.decorators import deprecated
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
@@ -14,7 +13,7 @@ from sympy.polys.polyutils import _unify_gens, _not_a_coeff
 from sympy.utilities import default_sort_key, public
 
 @public
-class Domain(object):
+class Domain:
     """Represents an abstract domain. """
 
     dtype = None  # type: Optional[Type]
@@ -30,12 +29,15 @@ class Domain(object):
     is_FiniteField = is_FF = False
     is_IntegerRing = is_ZZ = False
     is_RationalField = is_QQ = False
+    is_GaussianRing = is_ZZ_I = False
+    is_GaussianField = is_QQ_I = False
     is_RealField = is_RR = False
     is_ComplexField = is_CC = False
     is_AlgebraicField = is_Algebraic = False
     is_PolynomialRing = is_Poly = False
     is_FractionField = is_Frac = False
     is_SymbolicDomain = is_EX = False
+    is_FiniteExtension = False
 
     is_Exact = True
     is_Numerical = False
@@ -150,8 +152,7 @@ class Domain(object):
         else: # TODO: remove this branch
             if not is_sequence(element):
                 try:
-                    element = sympify(element)
-
+                    element = sympify(element, strict=True)
                     if isinstance(element, Basic):
                         return self.from_sympy(element)
                 except (TypeError, ValueError):
@@ -227,6 +228,10 @@ class Domain(object):
         """Convert a rational function to ``dtype``. """
         return None
 
+    def from_MonogenicFiniteExtension(K1, a, K0):
+        """Convert an ``ExtensionElement`` to ``dtype``. """
+        return K1.convert_from(a.rep, K0.ring)
+
     def from_ExpressionDomain(K1, a, K0):
         """Convert a ``EX`` object to ``dtype``. """
         return K1.from_sympy(a.ex)
@@ -273,6 +278,21 @@ class Domain(object):
         if K1.is_EX:
             return K1
 
+        if K0.is_FiniteExtension or K1.is_FiniteExtension:
+            if K1.is_FiniteExtension:
+                K0, K1 = K1, K0
+            if K1.is_FiniteExtension:
+                # Unifying two extensions.
+                # Try to ensure that K0.unify(K1) == K1.unify(K0)
+                if list(ordered([K0.modulus, K1.modulus]))[1] == K0.modulus:
+                    K0, K1 = K1, K0
+                return K1.set_domain(K0)
+            else:
+                # Drop the generator from other and unify with the base domain
+                K1 = K1.drop(K0.symbol)
+                K1 = K0.domain.unify(K1)
+                return K0.set_domain(K1)
+
         if K0.is_Composite or K1.is_Composite:
             K0_ground = K0.dom if K0.is_Composite else K0
             K1_ground = K1.dom if K1.is_Composite else K1
@@ -305,24 +325,49 @@ class Domain(object):
             tol = max(K0.tolerance, K1.tolerance)
             return cls(prec=prec, tol=tol)
 
-        if K0.is_ComplexField and K1.is_ComplexField:
-            return mkinexact(K0.__class__, K0, K1)
-        if K0.is_ComplexField and K1.is_RealField:
-            return mkinexact(K0.__class__, K0, K1)
-        if K0.is_RealField and K1.is_ComplexField:
-            return mkinexact(K1.__class__, K1, K0)
-        if K0.is_RealField and K1.is_RealField:
-            return mkinexact(K0.__class__, K0, K1)
-        if K0.is_ComplexField or K0.is_RealField:
+        if K1.is_ComplexField:
+            K0, K1 = K1, K0
+        if K0.is_ComplexField:
+            if K1.is_ComplexField or K1.is_RealField:
+                return mkinexact(K0.__class__, K0, K1)
+            else:
+                return K0
+
+        if K1.is_RealField:
+            K0, K1 = K1, K0
+        if K0.is_RealField:
+            if K1.is_RealField:
+                return mkinexact(K0.__class__, K0, K1)
+            elif K1.is_GaussianRing or K1.is_GaussianField:
+                from sympy.polys.domains.complexfield import ComplexField
+                return ComplexField(prec=K0.precision, tol=K0.tolerance)
+            else:
+                return K0
+
+        if K1.is_AlgebraicField:
+            K0, K1 = K1, K0
+        if K0.is_AlgebraicField:
+            if K1.is_GaussianRing:
+                K1 = K1.get_field()
+            if K1.is_GaussianField:
+                K1 = K1.as_AlgebraicField()
+            if K1.is_AlgebraicField:
+                return K0.__class__(K0.dom.unify(K1.dom), *_unify_gens(K0.orig_ext, K1.orig_ext))
+            else:
+                return K0
+
+        if K0.is_GaussianField:
             return K0
-        if K1.is_ComplexField or K1.is_RealField:
+        if K1.is_GaussianField:
             return K1
 
-        if K0.is_AlgebraicField and K1.is_AlgebraicField:
-            return K0.__class__(K0.dom.unify(K1.dom), *_unify_gens(K0.orig_ext, K1.orig_ext))
-        elif K0.is_AlgebraicField:
+        if K0.is_GaussianRing:
+            if K1.is_RationalField:
+                K0 = K0.get_field()
             return K0
-        elif K1.is_AlgebraicField:
+        if K1.is_GaussianRing:
+            if K0.is_RationalField:
+                K1 = K1.get_field()
             return K1
 
         if K0.is_RationalField:
@@ -380,15 +425,15 @@ class Domain(object):
         else:
             return self.poly_ring(symbols)
 
-    def poly_ring(self, *symbols, **kwargs):
+    def poly_ring(self, *symbols, order=lex):
         """Returns a polynomial ring, i.e. `K[X]`. """
         from sympy.polys.domains.polynomialring import PolynomialRing
-        return PolynomialRing(self, symbols, kwargs.get("order", lex))
+        return PolynomialRing(self, symbols, order)
 
-    def frac_field(self, *symbols, **kwargs):
+    def frac_field(self, *symbols, order=lex):
         """Returns a fraction field, i.e. `K(X)`. """
         from sympy.polys.domains.fractionfield import FractionField
-        return FractionField(self, symbols, kwargs.get("order", lex))
+        return FractionField(self, symbols, order)
 
     def old_poly_ring(self, *symbols, **kwargs):
         """Returns a polynomial ring, i.e. `K[X]`. """
@@ -407,6 +452,12 @@ class Domain(object):
     def inject(self, *symbols):
         """Inject generators into this domain. """
         raise NotImplementedError
+
+    def drop(self, *symbols):
+        """Drop generators from this domain. """
+        if self.is_Simple:
+            return self
+        raise NotImplementedError  # pragma: no cover
 
     def is_zero(self, a):
         """Returns True if ``a`` is zero. """

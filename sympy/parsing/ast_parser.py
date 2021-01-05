@@ -9,8 +9,7 @@ returns
 
 Integer(1)/Integer(2)
 
-We use the Python ast module for that, which is in python2.6 and later. It is
-well documented at docs.python.org.
+We use the ast module for this. It is well documented at docs.python.org.
 
 Some tips to understand how this works: use dump() to get a nice
 representation of any node. Then write a string of what you want to get,
@@ -20,10 +19,7 @@ to bother with lineno and col_offset, just call fix_missing_locations()
 before returning the node.
 """
 
-from __future__ import print_function, division
-
 from sympy.core.basic import Basic
-from sympy.core.compatibility import exec_
 from sympy.core.sympify import SympifyError
 
 from ast import parse, NodeTransformer, Call, Name, Load, \
@@ -73,7 +69,7 @@ def parse_expr(s, local_dict):
     automatically creates Symbols.
     """
     global_dict = {}
-    exec_('from sympy import *', global_dict)
+    exec('from sympy import *', global_dict)
     try:
         a = parse(s.strip(), mode="eval")
     except SyntaxError:

@@ -1,12 +1,14 @@
+from collections.abc import Callable
+
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
-from sympy.core.compatibility import Callable
 from sympy.core.cache import cacheit
 from sympy.core import S, Dummy, Lambda
+from sympy.core.symbol import Str
 from sympy import symbols, MatrixBase, ImmutableDenseMatrix
 from sympy.solvers import solve
 from sympy.vector.scalar import BaseScalar
-from sympy import eye, trigsimp, ImmutableMatrix as Matrix, Symbol, sin, cos,\
+from sympy import eye, trigsimp, ImmutableMatrix as Matrix, sin, cos,\
     sqrt, diff, Tuple, acos, atan2, simplify
 import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
@@ -87,12 +89,12 @@ class CoordSys3D(Basic):
                 transformation = Lambda((x1, x2, x3),
                                         transformation(x1, x2, x3))
             elif isinstance(transformation, str):
-                transformation = Symbol(transformation)
-            elif isinstance(transformation, (Symbol, Lambda)):
+                transformation = Str(transformation)
+            elif isinstance(transformation, (Str, Lambda)):
                 pass
             else:
                 raise TypeError("transformation: "
-                                "wrong type {0}".format(type(transformation)))
+                                "wrong type {}".format(type(transformation)))
 
         # If orientation information has been provided, store
         # the rotation matrix accordingly
@@ -141,7 +143,7 @@ class CoordSys3D(Basic):
             lambda_lame = CoordSys3D._get_lame_coeff('cartesian')
             lambda_inverse = lambda x, y, z: r.inv()*Matrix(
                 [x-l[0], y-l[1], z-l[2]])
-        elif isinstance(transformation, Symbol):
+        elif isinstance(transformation, Str):
             trname = transformation.name
             lambda_transformation = CoordSys3D._get_transformation_lambdas(trname)
             if parent is not None:
@@ -165,7 +167,7 @@ class CoordSys3D(Basic):
         if variable_names is None:
             if isinstance(transformation, Lambda):
                 variable_names = ["x1", "x2", "x3"]
-            elif isinstance(transformation, Symbol):
+            elif isinstance(transformation, Str):
                 if transformation.name == 'spherical':
                     variable_names = ["r", "theta", "phi"]
                 elif transformation.name == 'cylindrical':
@@ -187,11 +189,11 @@ class CoordSys3D(Basic):
         # positioned/oriented wrt different parents, even though
         # they may actually be 'coincident' wrt the root system.
         if parent is not None:
-            obj = super(CoordSys3D, cls).__new__(
-                cls, Symbol(name), transformation, parent)
+            obj = super().__new__(
+                cls, Str(name), transformation, parent)
         else:
-            obj = super(CoordSys3D, cls).__new__(
-                cls, Symbol(name), transformation)
+            obj = super().__new__(
+                cls, Str(name), transformation)
         obj._name = name
         # Initialize the base vectors
 
@@ -252,11 +254,8 @@ class CoordSys3D(Basic):
         # Return the instance
         return obj
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return self._name
-
-    __repr__ = __str__
-    _sympystr = __str__
 
     def __iter__(self):
         return iter(self.base_vectors())
