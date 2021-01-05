@@ -3,6 +3,7 @@
 
 from .sympify import sympify, SympifyError
 from .cache import cacheit
+from .assumptions import assumptions, check_assumptions, failing_assumptions, common_assumptions
 from .basic import Basic, Atom, preorder_traversal
 from .singleton import S
 from .expr import Expr, AtomicExpr, UnevaluatedExpr
@@ -27,6 +28,7 @@ from .evalf import PrecisionExhausted, N
 from .containers import Tuple, Dict
 from .exprtools import gcd_terms, factor_terms, factor_nc
 from .parameters import evaluate
+from .kind import UndefinedKind, NumberKind, BooleanKind
 
 # expose singletons
 Catalan = S.Catalan
@@ -38,6 +40,9 @@ __all__ = [
     'sympify', 'SympifyError',
 
     'cacheit',
+
+    'assumptions', 'check_assumptions', 'failing_assumptions',
+    'common_assumptions',
 
     'Basic', 'Atom', 'preorder_traversal',
 
@@ -84,4 +89,6 @@ __all__ = [
     'EulerGamma',
     'GoldenRatio',
     'TribonacciConstant',
+
+    'UndefinedKind', 'NumberKind', 'BooleanKind',
 ]

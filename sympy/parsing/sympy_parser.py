@@ -1,7 +1,5 @@
 """Transform a string with Python-like source code into SymPy expression. """
 
-from __future__ import print_function, division
-
 from tokenize import (generate_tokens, untokenize, TokenError,
     NUMBER, STRING, NAME, OP, ENDMARKER, ERRORTOKEN, NEWLINE)
 
@@ -9,8 +7,9 @@ from keyword import iskeyword
 
 import ast
 import unicodedata
+from io import StringIO
 
-from sympy.core.compatibility import exec_, StringIO, iterable
+from sympy.core.compatibility import iterable
 from sympy.core.basic import Basic
 from sympy.core import Symbol
 from sympy.core.function import arity
@@ -79,7 +78,7 @@ def _add_factorial_tokens(name, result):
     return result
 
 
-class AppliedFunction(object):
+class AppliedFunction:
     """
     A group of tokens representing a function and its arguments.
 
@@ -982,7 +981,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     if global_dict is None:
         global_dict = {}
-        exec_('from sympy import *', global_dict)
+        exec('from sympy import *', global_dict)
     elif not isinstance(global_dict, dict):
         raise TypeError('expecting global_dict to be a dict')
 
@@ -1058,7 +1057,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 right = ast.Call(
                     func=ast.Name(id='Mul', ctx=ast.Load()),
                     args=[ast.UnaryOp(op=ast.USub(), operand=ast.Num(1)), right],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
                 )
@@ -1069,7 +1068,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     left = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
                     args=[left, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
                 )
@@ -1077,7 +1076,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     right = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
                     args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
                 )
@@ -1085,7 +1084,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
                 args=[left, right],
-                keywords=[ast.keyword(arg='evaluate', value=ast.Name(id='False', ctx=ast.Load()))],
+                keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
                 starargs=None,
                 kwargs=None
             )

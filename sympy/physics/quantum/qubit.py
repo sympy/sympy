@@ -6,7 +6,6 @@ Todo:
 * Update tests.
 """
 
-from __future__ import print_function, division
 
 import math
 
@@ -287,7 +286,7 @@ class IntQubitState(QubitState):
         if len(args) == 1 and isinstance(args[0], QubitState):
             return QubitState._eval_args(args)
         # otherwise, args should be integer
-        elif not all((isinstance(a, (int, Integer)) for a in args)):
+        elif not all(isinstance(a, (int, Integer)) for a in args):
             raise ValueError('values must be integers, got (%s)' % (tuple(type(a) for a in args),))
         # use nqubits if specified
         if nqubits is not None:
@@ -446,7 +445,6 @@ def matrix_to_qubit(matrix):
     Represent a state and then go back to its qubit form:
 
         >>> from sympy.physics.quantum.qubit import matrix_to_qubit, Qubit
-        >>> from sympy.physics.quantum.gate import Z
         >>> from sympy.physics.quantum.represent import represent
         >>> q = Qubit('01')
         >>> matrix_to_qubit(represent(q))
@@ -556,7 +554,7 @@ def measure_all(qubit, format='sympy', normalize=True):
     ========
 
         >>> from sympy.physics.quantum.qubit import Qubit, measure_all
-        >>> from sympy.physics.quantum.gate import H, X, Y, Z
+        >>> from sympy.physics.quantum.gate import H
         >>> from sympy.physics.quantum.qapply import qapply
 
         >>> c = H(0)*H(1)*Qubit('00')
@@ -614,7 +612,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
     ========
 
         >>> from sympy.physics.quantum.qubit import Qubit, measure_partial
-        >>> from sympy.physics.quantum.gate import H, X, Y, Z
+        >>> from sympy.physics.quantum.gate import H
         >>> from sympy.physics.quantum.qapply import qapply
 
         >>> c = H(0)*H(1)*Qubit('00')

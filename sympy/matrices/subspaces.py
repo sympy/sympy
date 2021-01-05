@@ -1,7 +1,3 @@
-from __future__ import division, print_function
-
-from sympy.core.compatibility import reduce
-
 from .utilities import _iszero
 
 
@@ -106,7 +102,7 @@ def _rowspace(M, simplify=False):
     return [reduced.row(i) for i in range(len(pivots))]
 
 
-def _orthogonalize(cls, *vecs, **kwargs):
+def _orthogonalize(cls, *vecs, normalize=False, rankcheck=False):
     """Apply the Gram-Schmidt orthogonalization procedure
     to vectors supplied in ``vecs``.
 
@@ -154,42 +150,25 @@ def _orthogonalize(cls, *vecs, **kwargs):
 
     .. [1] https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
     """
+    from .decompositions import _QRdecomposition_optional
 
-    normalize = kwargs.get('normalize', False)
-    rankcheck = kwargs.get('rankcheck', False)
+    if not vecs:
+        return []
 
-    def project(a, b):
-        return b * (a.dot(b, hermitian=True) / b.dot(b, hermitian=True))
+    all_row_vecs = (vecs[0].rows == 1)
 
-    def perp_to_subspace(vec, basis):
-        """projects vec onto the subspace given
-        by the orthogonal basis ``basis``"""
+    vecs = [x.vec() for x in vecs]
+    M = cls.hstack(*vecs)
+    Q, R = _QRdecomposition_optional(M, normalize=normalize)
 
-        components = [project(vec, b) for b in basis]
+    if rankcheck and Q.cols < len(vecs):
+        raise ValueError("GramSchmidt: vector set not linearly independent")
 
-        if len(basis) == 0:
-            return vec
-
-        return vec - reduce(lambda a, b: a + b, components)
-
-    ret  = []
-    vecs = list(vecs) # make sure we start with a non-zero vector
-
-    while len(vecs) > 0 and vecs[0].is_zero_matrix:
-        if rankcheck is False:
-            del vecs[0]
+    ret = []
+    for i in range(Q.cols):
+        if all_row_vecs:
+            col = cls(Q[:, i].T)
         else:
-            raise ValueError("GramSchmidt: vector set not linearly independent")
-
-    for vec in vecs:
-        perp = perp_to_subspace(vec, ret)
-
-        if not perp.is_zero_matrix:
-            ret.append(cls(perp))
-        elif rankcheck is True:
-            raise ValueError("GramSchmidt: vector set not linearly independent")
-
-    if normalize:
-        ret = [vec / vec.norm() for vec in ret]
-
+            col = cls(Q[:, i])
+        ret.append(col)
     return ret

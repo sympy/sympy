@@ -103,17 +103,17 @@ See the appropriate docstrings for a detailed explanation of the output.
 #      - Idx with range smaller than dimension of Indexed
 #      - Idx with stepsize != 1
 #      - Idx with step determined by function call
+from collections.abc import Iterable
 
-from __future__ import print_function, division
-
+from sympy import Number
 from sympy.core.assumptions import StdFactKB
 from sympy.core import Expr, Tuple, sympify, S
 from sympy.core.symbol import _filter_assumptions, Symbol
-from sympy.core.compatibility import (is_sequence, NotIterable,
-                                      Iterable)
+from sympy.core.compatibility import (is_sequence, NotIterable)
 from sympy.core.logic import fuzzy_bool, fuzzy_not
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.multipledispatch import dispatch
 
 
 class IndexException(Exception):
@@ -174,7 +174,7 @@ class Indexed(Expr):
         return obj
 
     def _hashable_content(self):
-        return super(Indexed, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
+        return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
     def name(self):
@@ -432,7 +432,7 @@ class IndexedBase(Expr, NotIterable):
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = tmp_asm_copy  # Issue #8873
 
-    def __new__(cls, label, shape=None, **kw_args):
+    def __new__(cls, label, shape=None, *, offset=S.Zero, strides=None, **kw_args):
         from sympy import MatrixBase, NDimArray
 
         assumptions, kw_args = _filter_assumptions(kw_args)
@@ -452,9 +452,6 @@ class IndexedBase(Expr, NotIterable):
         elif shape is not None:
             shape = Tuple(shape)
 
-        offset = kw_args.pop('offset', S.Zero)
-        strides = kw_args.pop('strides', None)
-
         if shape is not None:
             obj = Expr.__new__(cls, label, shape)
         else:
@@ -472,7 +469,7 @@ class IndexedBase(Expr, NotIterable):
         return self._name
 
     def _hashable_content(self):
-        return super(IndexedBase, self)._hashable_content() + tuple(sorted(self.assumptions0.items()))
+        return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
     def assumptions0(self):
@@ -496,7 +493,7 @@ class IndexedBase(Expr, NotIterable):
         Examples
         ========
 
-        >>> from sympy import IndexedBase, Idx, Symbol
+        >>> from sympy import IndexedBase, Idx
         >>> from sympy.abc import x, y
         >>> IndexedBase('A', shape=(x, y)).shape
         (x, y)
@@ -601,7 +598,7 @@ class Idx(Expr):
     Examples
     ========
 
-    >>> from sympy import IndexedBase, Idx, symbols, oo
+    >>> from sympy import Idx, symbols, oo
     >>> n, i, L, U = symbols('n i L U', integer=True)
 
     If a string is given for the label an integer ``Symbol`` is created and the
@@ -751,58 +748,41 @@ class Idx(Expr):
     def free_symbols(self):
         return {self}
 
-    def __le__(self, other):
-        if isinstance(other, Idx):
-            other_upper = other if other.upper is None else other.upper
-            other_lower = other if other.lower is None else other.lower
-        else:
-            other_upper = other
-            other_lower = other
 
-        if self.upper is not None and (self.upper <= other_lower) == True:
-            return True
-        if self.lower is not None and (self.lower > other_upper) == True:
-            return False
-        return super(Idx, self).__le__(other)
+@dispatch(Idx, Idx)
+def _eval_is_ge(lhs, rhs): # noqa:F811
 
-    def __ge__(self, other):
-        if isinstance(other, Idx):
-            other_upper = other if other.upper is None else other.upper
-            other_lower = other if other.lower is None else other.lower
-        else:
-            other_upper = other
-            other_lower = other
+    other_upper = rhs if rhs.upper is None else rhs.upper
+    other_lower = rhs if rhs.lower is None else rhs.lower
 
-        if self.lower is not None and (self.lower >= other_upper) == True:
-            return True
-        if self.upper is not None and (self.upper < other_lower) == True:
-            return False
-        return super(Idx, self).__ge__(other)
+    if lhs.lower is not None and (lhs.lower >= other_upper) == True:
+        return True
+    if lhs.upper is not None and (lhs.upper < other_lower) == True:
+        return False
+    return None
 
-    def __lt__(self, other):
-        if isinstance(other, Idx):
-            other_upper = other if other.upper is None else other.upper
-            other_lower = other if other.lower is None else other.lower
-        else:
-            other_upper = other
-            other_lower = other
 
-        if self.upper is not None and (self.upper < other_lower) == True:
-            return True
-        if self.lower is not None and (self.lower >= other_upper) == True:
-            return False
-        return super(Idx, self).__lt__(other)
+@dispatch(Idx, Number)  # type:ignore
+def _eval_is_ge(lhs, rhs): # noqa:F811
 
-    def __gt__(self, other):
-        if isinstance(other, Idx):
-            other_upper = other if other.upper is None else other.upper
-            other_lower = other if other.lower is None else other.lower
-        else:
-            other_upper = other
-            other_lower = other
+    other_upper = rhs
+    other_lower = rhs
 
-        if self.lower is not None and (self.lower > other_upper) == True:
-            return True
-        if self.upper is not None and (self.upper <= other_lower) == True:
-            return False
-        return super(Idx, self).__gt__(other)
+    if lhs.lower is not None and (lhs.lower >= other_upper) == True:
+        return True
+    if lhs.upper is not None and (lhs.upper < other_lower) == True:
+        return False
+    return None
+
+
+@dispatch(Number, Idx)  # type:ignore
+def _eval_is_ge(lhs, rhs): # noqa:F811
+
+    other_upper = lhs
+    other_lower = lhs
+
+    if rhs.upper is not None and (rhs.upper <= other_lower) == True:
+        return True
+    if rhs.lower is not None and (rhs.lower > other_upper) == True:
+        return False
+    return None

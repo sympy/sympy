@@ -2,7 +2,7 @@ from typing import Dict, Any
 
 from sympy.multipledispatch import dispatch
 from sympy.multipledispatch.conflict import AmbiguityWarning
-from sympy.testing.pytest import raises, XFAIL, warns
+from sympy.testing.pytest import raises, warns
 from functools import partial
 
 test_namespace = dict()  # type: Dict[str, Any]
@@ -11,7 +11,6 @@ orig_dispatch = dispatch
 dispatch = partial(dispatch, namespace=test_namespace)
 
 
-@XFAIL
 def test_singledispatch():
     @dispatch(int)
     def f(x): # noqa:F811
@@ -45,8 +44,8 @@ def test_multipledispatch():
     assert f(1.0, 2.0) == -1.0
 
 
-class A(object): pass
-class B(object): pass
+class A: pass
+class B: pass
 class C(A): pass
 class D(C): pass
 class E(C): pass
@@ -66,7 +65,6 @@ def test_inheritance():
     assert f(C()) == 'a'
 
 
-@XFAIL
 def test_inheritance_and_multiple_dispatch():
     @dispatch(A, A)
     def f(x, y): # noqa:F811
@@ -177,7 +175,7 @@ def test_dispatch_on_dispatch():
 
 
 def test_methods():
-    class Foo(object):
+    class Foo:
         @dispatch(float)
         def f(self, x): # noqa:F811
             return x - 1
@@ -198,7 +196,7 @@ def test_methods():
 
 
 def test_methods_multiple_dispatch():
-    class Foo(object):
+    class Foo:
         @dispatch(A, A)
         def f(x, y): # noqa:F811
             return 1

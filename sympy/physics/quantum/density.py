@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from itertools import product
 
 from sympy import Tuple, Add, Mul, Matrix, log, expand, S
@@ -32,13 +30,13 @@ class Density(HermitianOperator):
     >>> from sympy.physics.quantum.density import Density
     >>> d = Density([Ket(0), 0.5], [Ket(1),0.5])
     >>> d
-    'Density'((|0>, 0.5),(|1>, 0.5))
+    Density((|0>, 0.5),(|1>, 0.5))
 
     """
     @classmethod
     def _eval_args(cls, args):
         # call this to qsympify the args
-        args = super(Density, cls)._eval_args(args)
+        args = super()._eval_args(args)
 
         for arg in args:
             # Check if arg is a tuple
@@ -137,7 +135,7 @@ class Density(HermitianOperator):
         >>> A = Operator('A')
         >>> d = Density([Ket(0), 0.5], [Ket(1),0.5])
         >>> d.apply_op(A)
-        'Density'((A*|0>, 0.5),(A*|1>, 0.5))
+        Density((A*|0>, 0.5),(A*|1>, 0.5))
 
         """
         new_args = [(op*state, prob) for (state, prob) in self.args]
@@ -194,7 +192,7 @@ class Density(HermitianOperator):
         return represent(self.doit(), **options)
 
     def _print_operator_name_latex(self, printer, *args):
-        return printer._print(r'\rho', *args)
+        return r'\rho'
 
     def _print_operator_name_pretty(self, printer, *args):
         return prettyForm('\N{GREEK SMALL LETTER RHO}')
@@ -228,10 +226,8 @@ def entropy(density):
     ========
 
     >>> from sympy.physics.quantum.density import Density, entropy
-    >>> from sympy.physics.quantum.represent import represent
-    >>> from sympy.physics.quantum.matrixutils import scipy_sparse_matrix
-    >>> from sympy.physics.quantum.spin import JzKet, Jz
-    >>> from sympy import S, log
+    >>> from sympy.physics.quantum.spin import JzKet
+    >>> from sympy import S
     >>> up = JzKet(S(1)/2,S(1)/2)
     >>> down = JzKet(S(1)/2,-S(1)/2)
     >>> d = Density((up,S(1)/2),(down,S(1)/2))
@@ -275,7 +271,7 @@ def fidelity(state1, state2):
     >>> from sympy import S, sqrt
     >>> from sympy.physics.quantum.dagger import Dagger
     >>> from sympy.physics.quantum.spin import JzKet
-    >>> from sympy.physics.quantum.density import Density, fidelity
+    >>> from sympy.physics.quantum.density import fidelity
     >>> from sympy.physics.quantum.represent import represent
     >>>
     >>> up = JzKet(S(1)/2,S(1)/2)

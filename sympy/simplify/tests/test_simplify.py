@@ -4,7 +4,7 @@ from sympy import (
     Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
     factorial, Float, Function, gamma, GoldenRatio, hyper,
     hypersimp, I, Integral, integrate, KroneckerDelta, log, logcombine, Lt,
-    Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, posify, rad,
+    Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, Poly, posify, rad,
     Rational, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan,
     zoo)
@@ -561,7 +561,7 @@ def test_as_content_primitive():
     # although the _as_content_primitive methods do not alter the underlying structure,
     # the as_content_primitive function will touch up the expression and join
     # bases that would otherwise have not been joined.
-    assert ((x*(2 + 2*x)*(3*x + 3)**2)).as_content_primitive() == \
+    assert (x*(2 + 2*x)*(3*x + 3)**2).as_content_primitive() == \
         (18, x*(x + 1)**3)
     assert (2 + 2*x + 2*y*(3 + 3*y)).as_content_primitive() == \
         (2, x + 3*y*(y + 1) + 1)
@@ -571,7 +571,7 @@ def test_as_content_primitive():
         (1, (_keep_coeff(S(2), (3*x + 1)))**(2*y))
     assert (5 + 10*x + 2*y*(3 + 3*y)).as_content_primitive() == \
         (1, 10*x + 6*y*(y + 1) + 5)
-    assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive() == \
+    assert (5*(x*(1 + y)) + 2*x*(3 + 3*y)).as_content_primitive() == \
         (11, x*(y + 1))
     assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive() == \
         (121, x**2*(y + 1)**2)
@@ -732,6 +732,19 @@ def test_issue_9324_simplify():
     M = MatrixSymbol('M', 10, 10)
     e = M[0, 0] + M[5, 4] + 1304
     assert simplify(e) == e
+
+
+def test_issue_9817_simplify():
+    # simplify on trace of substituted explicit quadratic form of matrix
+    # expressions (a scalar) should return without errors (AttributeError)
+    # See issue #9817 and #9190 for the original bug more discussion on this
+    from sympy.matrices.expressions import Identity, trace
+    v = MatrixSymbol('v', 3, 1)
+    A = MatrixSymbol('A', 3, 3)
+    x = Matrix([i + 1 for i in range(3)])
+    X = Identity(3)
+    quadratic = v.T * A * v
+    assert simplify((trace(quadratic.as_explicit())).xreplace({v:x, A:X})) == 14
 
 
 def test_issue_13474():
@@ -897,3 +910,20 @@ def test_issue_17292():
     assert simplify(abs(x)/abs(x**2)) == 1/abs(x)
     # this is bigger than the issue: check that deep processing works
     assert simplify(5*abs((x**2 - 1)/(x - 1))) == 5*Abs(x + 1)
+
+def test_issue_19484():
+    assert simplify(sign(x) * Abs(x)) == x
+
+    e = x + sign(x + x**3)
+    assert simplify(Abs(x + x**3)*e) == x**3 + x*Abs(x**3 + x) + x
+
+    e = x**2 + sign(x**3 + 1)
+    assert simplify(Abs(x**3 + 1) * e) == x**3 + x**2*Abs(x**3 + 1) + 1
+
+    f = Function('f')
+    e = x + sign(x + f(x)**3)
+    assert simplify(Abs(x + f(x)**3) * e) == x*Abs(x + f(x)**3) + x + f(x)**3
+
+def test_issue_19161():
+    polynomial = Poly('x**2').simplify()
+    assert (polynomial-x**2).simplify() == 0

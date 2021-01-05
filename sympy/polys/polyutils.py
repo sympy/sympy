@@ -1,6 +1,5 @@
 """Useful utilities for higher level polynomial classes. """
 
-from __future__ import print_function, division
 
 from sympy.core import (S, Add, Mul, Pow, Eq, Expr,
     expand_mul, expand_multinomial)
@@ -40,7 +39,7 @@ def _nsort(roots, separated=False):
     # get the real part of the evaluated real and imaginary parts of each root
     key = [[i.n(2).as_real_imag()[0] for i in r.as_real_imag()] for r in roots]
     # make sure the parts were computed with precision
-    if any(i._prec == 1 for k in key for i in k):
+    if len(roots) > 1 and any(i._prec == 1 for k in key for i in k):
         raise NotImplementedError("could not compute root with precision")
     # insert a key to indicate if the root has an imaginary part
     key = [(1 if i else 0, r, i) for r, i in key]
@@ -238,12 +237,12 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             return factor.is_algebraic
     elif opt.greedy is not False:
         def _is_coeff(factor):
-            return False
+            return factor is S.ImaginaryUnit
     else:
         def _is_coeff(factor):
             return factor.is_number
 
-    gens, reprs = set([]), []
+    gens, reprs = set(), []
 
     for expr in exprs:
         terms = []
@@ -421,7 +420,7 @@ def _dict_reorder(rep, gens, new_gens):
     return map(tuple, new_monoms), coeffs
 
 
-class PicklableWithSlots(object):
+class PicklableWithSlots:
     """
     Mixin class that allows to pickle objects with ``__slots__``.
 
@@ -440,7 +439,7 @@ class PicklableWithSlots(object):
 
     To make :mod:`pickle` happy in doctest we have to use these hacks::
 
-        >>> from sympy.core.compatibility import builtins
+        >>> import builtins
         >>> builtins.Some = Some
         >>> from sympy.polys import polyutils
         >>> polyutils.Some = Some

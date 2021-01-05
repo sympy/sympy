@@ -13,8 +13,8 @@ See the webpage for more information and documentation:
 
 
 import sys
-if sys.version_info < (3, 5):
-    raise ImportError("Python version 3.5 or above is required for SymPy.")
+if sys.version_info < (3, 6):
+    raise ImportError("Python version 3.6 or above is required for SymPy.")
 del sys
 
 
@@ -95,7 +95,7 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         GMPYFiniteField, PythonIntegerRing, GMPYIntegerRing, PythonRational,
         GMPYRationalField, AlgebraicField, PolynomialRing, FractionField,
         ExpressionDomain, FF_python, FF_gmpy, ZZ_python, ZZ_gmpy, QQ_python,
-        QQ_gmpy, GF, FF, ZZ, QQ, RR, CC, EX, construct_domain,
+        QQ_gmpy, GF, FF, ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX, construct_domain,
         swinnerton_dyer_poly, cyclotomic_poly, symmetric_poly, random_poly,
         interpolating_poly, jacobi_poly, chebyshevt_poly, chebyshevu_poly,
         hermite_poly, legendre_poly, laguerre_poly, apart, apart_list,
@@ -160,7 +160,7 @@ from .simplify import (simplify, hypersimp, hypersimilar, logcombine,
         ratsimp, ratsimpmodprime)
 
 from .sets import (Set, Interval, Union, EmptySet, FiniteSet, ProductSet,
-        Intersection, imageset, Complement, SymmetricDifference, ImageSet,
+        Intersection, DisjointUnion, imageset, Complement, SymmetricDifference, ImageSet,
         Range, ComplexRegion, Reals, Contains, ConditionSet, Ordinal,
         OmegaPower, ord0, PowerSet, Naturals, Naturals0, UniversalSet,
         Integers, Rationals)
@@ -190,7 +190,7 @@ from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         Adjoint, hadamard_product, HadamardProduct, HadamardPower,
         Determinant, det, diagonalize_vector, DiagMatrix, DiagonalMatrix,
         DiagonalOf, trace, DotProduct, kronecker_product, KroneckerProduct,
-        PermutationMatrix, MatrixPermute)
+        PermutationMatrix, MatrixPermute, Permanent, per)
 
 from .geometry import (Point, Point2D, Point3D, Line, Ray, Segment, Line2D,
         Segment2D, Ray2D, Line3D, Segment3D, Ray3D, Plane, Ellipse, Circle,
@@ -218,8 +218,8 @@ from .integrals import (integrate, Integral, line_integrate, mellin_transform,
 from .tensor import (IndexedBase, Idx, Indexed, get_contraction_structure,
         get_indices, MutableDenseNDimArray, ImmutableDenseNDimArray,
         MutableSparseNDimArray, ImmutableSparseNDimArray, NDimArray,
-        tensorproduct, tensorcontraction, derive_by_array, permutedims, Array,
-        DenseNDimArray, SparseNDimArray)
+        tensorproduct, tensorcontraction, tensordiagonal, derive_by_array,
+        permutedims, Array, DenseNDimArray, SparseNDimArray)
 
 from .parsing import parse_expr
 
@@ -314,7 +314,7 @@ __all__ = [
     'GMPYIntegerRing', 'PythonRational', 'GMPYRationalField',
     'AlgebraicField', 'PolynomialRing', 'FractionField', 'ExpressionDomain',
     'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy', 'QQ_python', 'QQ_gmpy',
-    'GF', 'FF', 'ZZ', 'QQ', 'RR', 'CC', 'EX', 'construct_domain',
+    'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX', 'construct_domain',
     'swinnerton_dyer_poly', 'cyclotomic_poly', 'symmetric_poly',
     'random_poly', 'interpolating_poly', 'jacobi_poly', 'chebyshevt_poly',
     'chebyshevu_poly', 'hermite_poly', 'legendre_poly', 'laguerre_poly',
@@ -390,7 +390,7 @@ __all__ = [
 
     # sympy.sets
     'Set', 'Interval', 'Union', 'EmptySet', 'FiniteSet', 'ProductSet',
-    'Intersection', 'imageset', 'Complement', 'SymmetricDifference',
+    'Intersection', 'imageset', 'DisjointUnion', 'Complement', 'SymmetricDifference',
     'ImageSet', 'Range', 'ComplexRegion', 'Reals', 'Contains', 'ConditionSet',
     'Ordinal', 'OmegaPower', 'ord0', 'PowerSet', 'Reals', 'Naturals',
     'Naturals0', 'UniversalSet', 'Integers', 'Rationals',
@@ -424,7 +424,7 @@ __all__ = [
     'HadamardPower', 'Determinant', 'det', 'diagonalize_vector', 'DiagMatrix',
     'DiagonalMatrix', 'DiagonalOf', 'trace', 'DotProduct',
     'kronecker_product', 'KroneckerProduct', 'PermutationMatrix',
-    'MatrixPermute',
+    'MatrixPermute', 'Permanent', 'per',
 
     # sympy.geometry
     'Point', 'Point2D', 'Point3D', 'Line', 'Ray', 'Segment', 'Line2D',
@@ -458,8 +458,8 @@ __all__ = [
     'IndexedBase', 'Idx', 'Indexed', 'get_contraction_structure',
     'get_indices', 'MutableDenseNDimArray', 'ImmutableDenseNDimArray',
     'MutableSparseNDimArray', 'ImmutableSparseNDimArray', 'NDimArray',
-    'tensorproduct', 'tensorcontraction', 'derive_by_array', 'permutedims',
-    'Array', 'DenseNDimArray', 'SparseNDimArray',
+    'tensorproduct', 'tensorcontraction', 'tensordiagonal', 'derive_by_array',
+    'permutedims', 'Array', 'DenseNDimArray', 'SparseNDimArray',
 
     # sympy.parsing
     'parse_expr',
@@ -496,3 +496,41 @@ __all__ = [
     # sympy.deprecated:
     'C', 'ClassRegistry', 'class_registry',
 ]
+
+
+#===========================================================================#
+#                                                                           #
+# XXX: The names below were importable before sympy 1.6 using               #
+#                                                                           #
+#          from sympy import *                                              #
+#                                                                           #
+# This happened implicitly because there was no __all__ defined in this     #
+# __init__.py file. Not every package is imported. The list matches what    #
+# would have been imported before. It is possible that these packages will  #
+# not be imported by a star-import from sympy in future.                    #
+#                                                                           #
+#===========================================================================#
+
+
+__all__.extend([
+    'algebras',
+    'assumptions',
+    'calculus',
+    'concrete',
+    'deprecated',
+    'discrete',
+    'external',
+    'functions',
+    'geometry',
+    'interactive',
+    'multipledispatch',
+    'ntheory',
+    'parsing',
+    'plotting',
+    'polys',
+    'printing',
+    'release',
+    'strategies',
+    'tensor',
+    'utilities',
+])

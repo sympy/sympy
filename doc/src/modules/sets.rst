@@ -27,14 +27,6 @@ FiniteSet
 .. autoclass:: FiniteSet
    :members:
 
-ConditionSet
-^^^^^^^^^^^^
-.. module:: sympy.sets.conditionset
-    :noindex:
-
-.. autoclass:: ConditionSet
-    :members:
-
 Compound Sets
 -------------
 
@@ -174,4 +166,5 @@ Condition Sets
 ConditionSet
 ^^^^^^^^^^^^
 
-.. autofunction:: ConditionSet
+.. autoclass:: ConditionSet
+    :members:

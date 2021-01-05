@@ -1,17 +1,16 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
-from functools import cmp_to_key
-
+from functools import cmp_to_key, reduce
+from operator import attrgetter
 from .basic import Basic
-from .compatibility import reduce, is_sequence
+from .compatibility import is_sequence
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
-from .operations import AssocOp
+from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
+from .kind import UndefinedKind
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -45,7 +44,7 @@ def _unevaluated_Add(*args):
     be tested against the output of this function or as one of several
     options:
 
-    >>> opts = (Add(x, y, evaluated=False), Add(y, x, evaluated=False))
+    >>> opts = (Add(x, y, evaluate=False), Add(y, x, evaluate=False))
     >>> a = uAdd(x, y)
     >>> assert a in opts and a == uAdd(x, y)
     >>> uAdd(x + 1, x + 2)
@@ -71,10 +70,91 @@ def _unevaluated_Add(*args):
 
 
 class Add(Expr, AssocOp):
+    """
+    Expression representing addition operation for algebraic group.
+
+    Every argument of ``Add()`` must be ``Expr``. Infix operator ``+``
+    on most scalar objects in SymPy calls this class.
+
+    Another use of ``Add()`` is to represent the structure of abstract
+    addition so that its arguments can be substituted to return different
+    class. Refer to examples section for this.
+
+    ``Add()`` evaluates the argument unless ``evaluate=False`` is passed.
+    The evaluation logic includes:
+
+    1. Flattening
+        ``Add(x, Add(y, z))`` -> ``Add(x, y, z)``
+
+    2. Identity removing
+        ``Add(x, 0, y)`` -> ``Add(x, y)``
+
+    3. Coefficient collecting by ``.as_coeff_Mul()``
+        ``Add(x, 2*x)`` -> ``Mul(3, x)``
+
+    4. Term sorting
+        ``Add(y, x, 2)`` -> ``Add(2, x, y)``
+
+    If no argument is passed, identity element 0 is returned. If single
+    element is passed, that element is returned.
+
+    Note that ``Add(*args)`` is more efficient than ``sum(args)`` because
+    it flattens the arguments. ``sum(a, b, c, ...)`` recursively adds the
+    arguments as ``a + (b + (c + ...))``, which has quadratic complexity.
+    On the other hand, ``Add(a, b, c, d)`` does not assume nested
+    structure, making the complexity linear.
+
+    Since addition is group operation, every argument should have the
+    same :obj:`sympy.core.kind.Kind()`.
+
+    Examples
+    ========
+
+    >>> from sympy import Add, I
+    >>> from sympy.abc import x, y
+    >>> Add(x, 1)
+    x + 1
+    >>> Add(x, x)
+    2*x
+    >>> 2*x**2 + 3*x + I*y + 2*y + 2*x/5 + 1.0*y + 1
+    2*x**2 + 17*x/5 + 3.0*y + I*y + 1
+
+    If ``evaluate=False`` is passed, result is not evaluated.
+
+    >>> Add(1, 2, evaluate=False)
+    1 + 2
+    >>> Add(x, x, evaluate=False)
+    x + x
+
+    ``Add()`` also represents the general structure of addition operation.
+
+    >>> from sympy import MatrixSymbol
+    >>> A,B = MatrixSymbol('A', 2,2), MatrixSymbol('B', 2,2)
+    >>> expr = Add(x,y).subs({x:A, y:B})
+    >>> expr
+    A + B
+    >>> type(expr)
+    <class 'sympy.matrices.expressions.matadd.MatAdd'>
+
+    Note that the printers don't display in args order.
+
+    >>> Add(x, 1)
+    x + 1
+    >>> Add(x, 1).args
+    (1, x)
+
+    See Also
+    ========
+
+    MatAdd
+
+    """
 
     __slots__ = ()
 
     is_Add = True
+
+    _args_type = Expr
 
     @classmethod
     def flatten(cls, seq):
@@ -294,6 +374,19 @@ class Add(Expr, AssocOp):
         """Nice order of classes"""
         return 3, 1, cls.__name__
 
+    @property
+    def kind(self):
+        k = attrgetter('kind')
+        kinds = map(k, self.args)
+        kinds = frozenset(kinds)
+        if len(kinds) != 1:
+            # Since addition is group operator, kind must be same.
+            # We know that this is unexpected signature, so return this.
+            result = UndefinedKind
+        else:
+            result, = kinds
+        return result
+
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.
         Since the dictionary is a defaultdict, inquiries about terms which
@@ -404,8 +497,8 @@ class Add(Expr, AssocOp):
     def _eval_derivative(self, s):
         return self.func(*[a.diff(s) for a in self.args])
 
-    def _eval_nseries(self, x, n, logx):
-        terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        terms = [t.nseries(x, n=n, logx=logx, cdir=cdir) for t in self.args]
         return self.func(*terms)
 
     def _matches_simple(self, expr, repl_dict):
@@ -416,7 +509,7 @@ class Add(Expr, AssocOp):
         return
 
     def matches(self, expr, repl_dict={}, old=False):
-        return AssocOp._matches_commutative(self, expr, repl_dict, old)
+        return self._matches_commutative(expr, repl_dict, old)
 
     @staticmethod
     def _combine_inverse(lhs, rhs):
@@ -517,6 +610,10 @@ class Add(Expr, AssocOp):
     def _eval_is_rational_function(self, syms):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
+    def _eval_is_meromorphic(self, x, a):
+        return _fuzzy_group((arg.is_meromorphic(x, a) for arg in self.args),
+                            quick_exit=True)
+
     def _eval_is_algebraic_expr(self, syms):
         return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
@@ -586,7 +683,7 @@ class Add(Expr, AssocOp):
         nz = []
         z = 0
         im_or_z = False
-        im = False
+        im = 0
         for a in self.args:
             if a.is_extended_real:
                 if a.is_zero:
@@ -596,7 +693,7 @@ class Add(Expr, AssocOp):
                 else:
                     return
             elif a.is_imaginary:
-                im = True
+                im += 1
             elif (S.ImaginaryUnit*a).is_extended_real:
                 im_or_z = True
             else:
@@ -607,10 +704,11 @@ class Add(Expr, AssocOp):
             return None
         b = self.func(*nz)
         if b.is_zero:
-            if not im_or_z and not im:
-                return True
-            if im and not im_or_z:
-                return False
+            if not im_or_z:
+                if im == 0:
+                    return True
+                elif im == 1:
+                    return False
         if b.is_zero is False:
             return False
 
@@ -637,7 +735,7 @@ class Add(Expr, AssocOp):
     def _eval_is_extended_positive(self):
         from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
-            return super(Add, self)._eval_is_extended_positive()
+            return super()._eval_is_extended_positive()
         c, a = self.as_coeff_Add()
         if not c.is_zero:
             v = _monotonic_sign(a)
@@ -721,7 +819,7 @@ class Add(Expr, AssocOp):
     def _eval_is_extended_negative(self):
         from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
-            return super(Add, self)._eval_is_extended_negative()
+            return super()._eval_is_extended_negative()
         c, a = self.as_coeff_Add()
         if not c.is_zero:
             v = _monotonic_sign(a)
@@ -879,18 +977,18 @@ class Add(Expr, AssocOp):
             im_part.append(im)
         return (self.func(*re_part), self.func(*im_part))
 
-    def _eval_as_leading_term(self, x):
+    def _eval_as_leading_term(self, x, cdir=0):
         from sympy import expand_mul, Order
 
         old = self
 
         expr = expand_mul(self)
         if not expr.is_Add:
-            return expr.as_leading_term(x)
+            return expr.as_leading_term(x, cdir=cdir)
 
         infinite = [t for t in expr.args if t.is_infinite]
 
-        leading_terms = [t.as_leading_term(x) for t in expr.args]
+        leading_terms = [t.as_leading_term(x, cdir=cdir) for t in expr.args]
 
         min, new_expr = Order(0), 0
 
@@ -900,7 +998,7 @@ class Add(Expr, AssocOp):
                 if not min or order not in min:
                     min = order
                     new_expr = term
-                elif order == min:
+                elif min in order:
                     new_expr += term
 
         except TypeError:
@@ -913,7 +1011,13 @@ class Add(Expr, AssocOp):
         if not new_expr:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
-            return old.compute_leading_term(x)
+            n0 = min.getn()
+            res = Order(1)
+            incr = S.One
+            while res.is_Order:
+                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().powsimp().trigsimp()
+                incr *= 2
+            return res.as_leading_term(x, cdir=cdir)
 
         elif new_expr is S.NaN:
             return old.func._from_args(infinite)
@@ -1115,9 +1219,10 @@ class Add(Expr, AssocOp):
 
     def __neg__(self):
         if not global_parameters.distribute:
-            return super(Add, self).__neg__()
+            return super().__neg__()
         return Add(*[-i for i in self.args])
 
+add = AssocOpDispatcher('add')
 
 from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

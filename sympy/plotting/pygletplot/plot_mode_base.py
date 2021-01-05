@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 import pyglet.gl as pgl
 from sympy.core import S
 from sympy.core.compatibility import is_sequence
@@ -131,7 +129,7 @@ class PlotModeBase(PlotMode):
         raise NotImplementedError()
 
     ## Base member functions
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, bounds_callback=None, **kwargs):
         self.verts = []
         self.cverts = []
         self.bounds = [[S.Infinity, S.NegativeInfinity, 0],
@@ -163,7 +161,7 @@ class PlotModeBase(PlotMode):
         self.use_lambda_eval = self.options.pop('use_sympy_eval', None) is None
         self.style = self.options.pop('style', '')
         self.color = self.options.pop('color', 'rainbow')
-        self.bounds_callback = kwargs.pop('bounds_callback', None)
+        self.bounds_callback = bounds_callback
 
         self._on_calculate()
 
@@ -347,8 +345,8 @@ class PlotModeBase(PlotMode):
             self._on_change_color(v)
             self._color = v
         except Exception as e:
-            raise RuntimeError(("Color change failed. "
-                                "Reason: %s" % (str(e))))
+            raise RuntimeError("Color change failed. "
+                                "Reason: %s" % (str(e)))
 
     style = property(_get_style, _set_style)
     color = property(_get_color, _set_color)
@@ -375,6 +373,6 @@ class PlotModeBase(PlotMode):
              ('color', str(self.color)),
              ('style', str(self.style))]
 
-        o = "'%s'" % (("; ".join("%s=%s" % (k, v)
-                                for k, v in d if v != 'None')))
+        o = "'%s'" % ("; ".join("%s=%s" % (k, v)
+                                for k, v in d if v != 'None'))
         return ", ".join([f, i, o])

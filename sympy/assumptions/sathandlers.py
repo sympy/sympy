@@ -1,12 +1,10 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
+from collections.abc import MutableMapping
 
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
 from sympy.assumptions.cnf import AND, OR, to_NNF
 from sympy.core import (Add, Mul, Pow, Integer, Number, NumberSymbol,)
-from sympy.core.compatibility import MutableMapping
 from sympy.core.numbers import ImaginaryUnit
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
@@ -19,7 +17,10 @@ from sympy.matrices.expressions import MatMul
 
 class UnevaluatedOnFree(BooleanFunction):
     """
-    Represents a Boolean function that remains unevaluated on free predicates
+    Represents a Boolean function that remains unevaluated on free predicates.
+
+    Explanation
+    ===========
 
     This is intended to be a superclass of other classes, which define the
     behavior on singly applied predicates.
@@ -94,6 +95,7 @@ class AllArgs(UnevaluatedOnFree):
 
     Example
     =======
+
     >>> from sympy.assumptions.sathandlers import AllArgs
     >>> from sympy import symbols, Q
     >>> x, y = symbols('x y')
@@ -103,6 +105,11 @@ class AllArgs(UnevaluatedOnFree):
     >>> a.rcall(x*y)
     ((Literal(Q.negative(x), False) | Literal(Q.positive(x), False)) & (Literal(Q.negative(y), False) | \
     Literal(Q.positive(y), False)))
+
+    See Also
+    ========
+
+    UnevaluatedOnFree
 
     """
 
@@ -247,7 +254,7 @@ class CheckIsPrime(UnevaluatedOnFree):
         res = Equivalent(arg, isprime(expr))
         return to_NNF(res)
 
-class CustomLambda(object):
+class CustomLambda:
     """
     Interface to lambda with rcall
 
@@ -262,7 +269,10 @@ class CustomLambda(object):
 
 class ClassFactRegistry(MutableMapping):
     """
-    Register handlers against classes
+    Register handlers against classes.
+
+    Explanation
+    ===========
 
     ``registry[C] = handler`` registers ``handler`` for class
     ``C``. ``registry[C]`` returns a set of handlers for class ``C``, or any
@@ -271,7 +281,7 @@ class ClassFactRegistry(MutableMapping):
     def __init__(self, d=None):
         d = d or {}
         self.d = defaultdict(frozenset, d)
-        super(ClassFactRegistry, self).__init__()
+        super().__init__()
 
     def __setitem__(self, key, item):
         self.d[key] = frozenset(item)

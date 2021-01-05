@@ -1,14 +1,14 @@
 from sympy.abc import t, w, x, y, z, n, k, m, p, i
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
         remove_handler)
-from sympy.assumptions.assume import global_assumptions
+from sympy.assumptions.assume import global_assumptions, Predicate
 from sympy.assumptions.ask import compute_known_facts, single_fact_lookup
 from sympy.assumptions.handlers import AskHandler
 from sympy.core.add import Add
 from sympy.core.numbers import (I, Integer, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -1930,8 +1930,8 @@ def test_algebraic():
     assert ask(Q.algebraic(I*sqrt(3))) is True
     assert ask(Q.algebraic(sqrt(1 + I*sqrt(3)))) is True
 
-    assert ask(Q.algebraic((1 + I*sqrt(3)**Rational(17, 31)))) is True
-    assert ask(Q.algebraic((1 + I*sqrt(3)**(17/pi)))) is False
+    assert ask(Q.algebraic(1 + I*sqrt(3)**Rational(17, 31))) is True
+    assert ask(Q.algebraic(1 + I*sqrt(3)**(17/pi))) is False
 
     for f in [exp, sin, tan, asin, atan, cos]:
         assert ask(Q.algebraic(f(7))) is False
@@ -2040,38 +2040,53 @@ def test_key_extensibility():
     # make sure the key is not defined
     raises(AttributeError, lambda: ask(Q.my_key(x)))
 
+    # Old handler system
     class MyAskHandler(AskHandler):
         @staticmethod
         def Symbol(expr, assumptions):
             return True
-    register_handler('my_key', MyAskHandler)
-    assert ask(Q.my_key(x)) is True
-    assert ask(Q.my_key(x + 1)) is None
-    remove_handler('my_key', MyAskHandler)
-    del Q.my_key
+    try:
+        register_handler('my_key', MyAskHandler)
+        assert ask(Q.my_key(x)) is True
+        assert ask(Q.my_key(x + 1)) is None
+    finally:
+        remove_handler('my_key', MyAskHandler)
+        del Q.my_key
+    raises(AttributeError, lambda: ask(Q.my_key(x)))
+
+    # New handler system
+    class MyPredicate(Predicate):
+        pass
+    try:
+        Q.my_key = MyPredicate()
+        @Q.my_key.register(Symbol)
+        def _(expr, assumptions):
+            return True
+        assert ask(Q.my_key(x)) is True
+        assert ask(Q.my_key(x+1)) is None
+    finally:
+        del Q.my_key
     raises(AttributeError, lambda: ask(Q.my_key(x)))
 
 
 def test_type_extensibility():
     """test that new types can be added to the ask system at runtime
-    We create a custom type MyType, and override ask Q.prime=True with handler
-    MyAskHandler for this type
-
-    TODO: test incompatible resolutors
     """
     from sympy.core import Basic
 
     class MyType(Basic):
         pass
 
+    # Old handler system
     class MyAskHandler(AskHandler):
         @staticmethod
         def MyType(expr, assumptions):
             return True
-
     a = MyType()
     register_handler(Q.prime, MyAskHandler)
     assert ask(Q.prime(a)) is True
+
+    #TODO: add test for new handler system after predicates are migrated
 
 
 def test_single_fact_lookup():
@@ -2101,7 +2116,7 @@ def test_known_facts_consistent():
     from sympy.assumptions.ask import get_known_facts, get_known_facts_keys
     from os.path import abspath, dirname, join
     filename = join(dirname(dirname(abspath(__file__))), 'ask_generated.py')
-    with open(filename, 'r') as f:
+    with open(filename) as f:
         assert f.read() == \
             compute_known_facts(get_known_facts(), get_known_facts_keys())
 
@@ -2253,11 +2268,9 @@ def test_autosimp_used_to_fail():
 
 
 def test_custom_AskHandler():
-    from sympy.assumptions import register_handler, ask, Q
-    from sympy.assumptions.handlers import AskHandler
     from sympy.logic.boolalg import conjuncts
-    from sympy import Symbol
 
+    # Old handler system
     class MersenneHandler(AskHandler):
         @staticmethod
         def Integer(expr, assumptions):
@@ -2268,7 +2281,69 @@ def test_custom_AskHandler():
         def Symbol(expr, assumptions):
             if expr in conjuncts(assumptions):
                 return True
-    register_handler('mersenne', MersenneHandler)
+    try:
+        register_handler('mersenne', MersenneHandler)
+        n = Symbol('n', integer=True)
+        assert ask(Q.mersenne(7))
+        assert ask(Q.mersenne(n), Q.mersenne(n))
+    finally:
+        del Q.mersenne
 
-    n = Symbol('n', integer=True)
-    assert ask(Q.mersenne(n), Q.mersenne(n))
+    # New handler system
+    class MersennePredicate(Predicate):
+        pass
+    try:
+        Q.mersenne = MersennePredicate()
+        @Q.mersenne.register(Integer)
+        def _(expr, assumptions):
+            from sympy import log
+            if ask(Q.integer(log(expr + 1, 2))):
+                return True
+        @Q.mersenne.register(Symbol)
+        def _(expr, assumptions):
+            if expr in conjuncts(assumptions):
+                return True
+        assert ask(Q.mersenne(7))
+        assert ask(Q.mersenne(n), Q.mersenne(n))
+    finally:
+        del Q.mersenne
+
+
+def test_polyadic_predicate():
+
+    class SexyPredicate(Predicate):
+        pass
+    try:
+        Q.sexyprime = SexyPredicate()
+
+        @Q.sexyprime.register(Integer, Integer)
+        def _(int1, int2, assumptions):
+            args = sorted([int1, int2])
+            if not all(ask(Q.prime(a), assumptions) for a in args):
+                return False
+            return args[1] - args[0] == 6
+
+        @Q.sexyprime.register(Integer, Integer, Integer)
+        def _(int1, int2, int3, assumptions):
+            args = sorted([int1, int2, int3])
+            if not all(ask(Q.prime(a), assumptions) for a in args):
+                return False
+            return args[2] - args[1] == 6 and args[1] - args[0] == 6
+
+        assert ask(Q.sexyprime(5, 11))
+        assert ask(Q.sexyprime(7, 13, 19))
+    finally:
+        del Q.sexyprime
+
+
+def test_Predicate_handler_is_unique():
+
+    # Undefined predicate does not have a handler
+    assert Predicate('mypredicate').handler is None
+
+    # Handler of defined predicate is unique to the class
+    class MyPredicate(Predicate):
+        pass
+    mp1 = MyPredicate('mp1')
+    mp2 = MyPredicate('mp2')
+    assert mp1.handler is mp2.handler

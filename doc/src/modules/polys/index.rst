@@ -27,3 +27,4 @@ Contents
     internals.rst
     ringseries.rst
     literature.rst
+    solvers.rst

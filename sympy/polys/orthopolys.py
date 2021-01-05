@@ -1,6 +1,5 @@
 """Efficient functions for generating orthogonal polynomials. """
 
-from __future__ import print_function, division
 
 from sympy import Dummy
 from sympy.polys.constructor import construct_domain

@@ -2,7 +2,6 @@
 Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
-from __future__ import print_function, division
 
 from typing import Tuple
 
@@ -63,6 +62,9 @@ representing a floating-point number: [1, -1][sign]*man*2**exp where
 sign is 0 or 1 and bc should correspond to the number of bits used to
 represent the mantissa (man) in binary notation, e.g.
 
+Explanation
+===========
+
 >>> from sympy.core.evalf import bitcount
 >>> sign, man, exp, bc = 0, 5, 1, 3
 >>> n = [1, -1][sign]*man*2**exp
@@ -83,7 +85,10 @@ if the corresponding complex part is None.
 def fastlog(x):
     """Fast approximation of log2(x) for an mpf value tuple x.
 
-    Notes: Calculated as exponent + width of mantissa. This is an
+    Explanation
+    ===========
+
+    Calculated as exponent + width of mantissa. This is an
     approximation for two reasons: 1) it gives the ceil(log2(abs(x)))
     value and 2) it is too high by 1 in the case that x is an exact
     power of 2. Although this is easy to remedy by testing to see if
@@ -117,6 +122,9 @@ def pure_complex(v, or_real=False):
     """Return a and b if v matches a + I*b where b is not zero and
     a and b are Numbers, else None. If `or_real` is True then 0 will
     be returned for `b` if `v` is a real number.
+
+    Examples
+    ========
 
     >>> from sympy.core.evalf import pure_complex
     >>> from sympy import sqrt, I, S
@@ -430,7 +438,7 @@ def add_terms(terms, prec, target_prec):
     Helper for evalf_add. Adds a list of (mpfval, accuracy) terms.
 
     Returns
-    -------
+    =======
 
     - None, None if there are no non-zero terms;
     - terms[0] if there is only 1 term;
@@ -1061,7 +1069,10 @@ def evalf_integral(expr, prec, options):
 
 def check_convergence(numer, denom, n):
     """
-    Returns (h, g, p) where
+    Returns
+    =======
+
+    (h, g, p) where
     -- h is:
         > 0 for convergence of rate 1/factorial(n)**h
         < 0 for divergence of rate factorial(n)**(-h)
@@ -1365,48 +1376,63 @@ def evalf(x, prec, options):
     return r
 
 
-class EvalfMixin(object):
+class EvalfMixin:
     """Mixin class adding evalf capabililty."""
 
     __slots__ = ()  # type: Tuple[str, ...]
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """
-        Evaluate the given formula to an accuracy of n digits.
-        Optional keyword arguments:
+        Evaluate the given formula to an accuracy of *n* digits.
 
-            subs=<dict>
-                Substitute numerical values for symbols, e.g.
-                subs={x:3, y:1+pi}. The substitutions must be given as a
-                dictionary.
+        Parameters
+        ==========
 
-            maxn=<integer>
-                Allow a maximum temporary working precision of maxn digits
-                (default=100)
+        subs : dict, optional
+            Substitute numerical values for symbols, e.g.
+            ``subs={x:3, y:1+pi}``. The substitutions must be given as a
+            dictionary.
 
-            chop=<bool>
-                Replace tiny real or imaginary parts in subresults
-                by exact zeros (default=False)
+        maxn : int, optional
+            Allow a maximum temporary working precision of maxn digits.
 
-            strict=<bool>
-                Raise PrecisionExhausted if any subresult fails to evaluate
-                to full accuracy, given the available maxprec
-                (default=False)
+        chop : bool or number, optional
+            Specifies how to replace tiny real or imaginary parts in
+            subresults by exact zeros.
 
-            quad=<str>
-                Choose algorithm for numerical quadrature. By default,
-                tanh-sinh quadrature is used. For oscillatory
-                integrals on an infinite interval, try quad='osc'.
+            When ``True`` the chop value defaults to standard precision.
 
-            verbose=<bool>
-                Print debug information (default=False)
+            Otherwise the chop value is used to determine the
+            magnitude of "small" for purposes of chopping.
+
+            >>> from sympy import N
+            >>> x = 1e-4
+            >>> N(x, chop=True)
+            0.000100000000000000
+            >>> N(x, chop=1e-5)
+            0.000100000000000000
+            >>> N(x, chop=1e-4)
+            0
+
+        strict : bool, optional
+            Raise ``PrecisionExhausted`` if any subresult fails to
+            evaluate to full accuracy, given the available maxprec.
+
+        quad : str, optional
+            Choose algorithm for numerical quadrature. By default,
+            tanh-sinh quadrature is used. For oscillatory
+            integrals on an infinite interval, try ``quad='osc'``.
+
+        verbose : bool, optional
+            Print debug information.
 
         Notes
         =====
 
-        When Floats are naively substituted into an expression, precision errors
-        may adversely affect the result. For example, adding 1e16 (a Float) to 1
-        will truncate to 1e16; if 1e16 is then subtracted, the result will be 0.
+        When Floats are naively substituted into an expression,
+        precision errors may adversely affect the result. For example,
+        adding 1e16 (a Float) to 1 will truncate to 1e16; if 1e16 is
+        then subtracted, the result will be 0.
         That is exactly what happens in the following:
 
         >>> from sympy.abc import x, y, z
@@ -1414,8 +1440,8 @@ class EvalfMixin(object):
         >>> (x + y - z).subs(values)
         0
 
-        Using the subs argument for evalf is the accurate way to evaluate such an
-        expression:
+        Using the subs argument for evalf is the accurate way to
+        evaluate such an expression:
 
         >>> (x + y - z).evalf(subs=values)
         1.00000000000000
@@ -1526,6 +1552,9 @@ class EvalfMixin(object):
 def N(x, n=15, **options):
     r"""
     Calls x.evalf(n, \*\*options).
+
+    Explanations
+    ============
 
     Both .n() and N() are equivalent to .evalf(); use the one that you like better.
     See also the docstring of .evalf() for information on the options.

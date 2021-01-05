@@ -1,15 +1,15 @@
-from __future__ import division, print_function
-
 from collections import defaultdict
+from collections.abc import Callable
+from functools import reduce
 
 from sympy.core import SympifyError, Add
-from sympy.core.compatibility import Callable, as_int, is_sequence, reduce
+from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
+from sympy.core.sympify import _sympify
 from sympy.functions import Abs
 from sympy.utilities.iterables import uniq
-from sympy.utilities.misc import filldedent
 
 from .common import a2idx
 from .dense import Matrix
@@ -111,113 +111,141 @@ class SparseMatrix(MatrixBase):
     ImmutableSparseMatrix
     """
 
-    def __new__(cls, *args, **kwargs):
-        self = object.__new__(cls)
-        if len(args) == 1 and isinstance(args[0], SparseMatrix):
-            self.rows = args[0].rows
-            self.cols = args[0].cols
-            self._smat = dict(args[0]._smat)
-            return self
+    @classmethod
+    def _handle_creation_inputs(cls, *args, **kwargs):
+        if len(args) == 1 and isinstance(args[0], MatrixBase):
+            rows = args[0].rows
+            cols = args[0].cols
+            smat = args[0].todok()
+            return rows, cols, smat
 
-        self._smat = {}
-
+        smat = {}
         # autosizing
         if len(args) == 2 and args[0] is None:
-            args = (None,) + args
+            args = [None, None, args[1]]
+
         if len(args) == 3:
             r, c = args[:2]
             if r is c is None:
-                self.rows = self.cols = None
+                rows = cols = None
             elif None in (r, c):
                 raise ValueError(
                     'Pass rows=None and no cols for autosizing.')
             else:
-                self.rows, self.cols = map(as_int, args[:2])
+                rows, cols = as_int(args[0]), as_int(args[1])
 
             if isinstance(args[2], Callable):
                 op = args[2]
-                for i in range(self.rows):
-                    for j in range(self.cols):
-                        value = self._sympify(
-                            op(self._sympify(i), self._sympify(j)))
-                        if value:
-                            self._smat[i, j] = value
+
+                if None in (rows, cols):
+                    raise ValueError(
+                        "{} and {} must be integers for this "
+                        "specification.".format(rows, cols))
+
+                row_indices = [cls._sympify(i) for i in range(rows)]
+                col_indices = [cls._sympify(j) for j in range(cols)]
+
+                for i in row_indices:
+                    for j in col_indices:
+                        value = cls._sympify(op(i, j))
+                        if value != cls.zero:
+                            smat[i, j] = value
+
+                return rows, cols, smat
+
             elif isinstance(args[2], (dict, Dict)):
                 def update(i, j, v):
                     # update self._smat and make sure there are
                     # no collisions
                     if v:
-                        if (i, j) in self._smat and v != self._smat[i, j]:
-                            raise ValueError('collision at %s' % ((i, j),))
-                        self._smat[i, j] = v
+                        if (i, j) in smat and v != smat[i, j]:
+                            raise ValueError(
+                                "There is a collision at {} for {} and {}."
+                                .format((i, j), v, smat[i, j])
+                            )
+                        smat[i, j] = v
+
                 # manual copy, copy.deepcopy() doesn't work
-                for key, v in args[2].items():
-                    r, c = key
-                    if isinstance(v, SparseMatrix):
-                        for (i, j), vij in v._smat.items():
-                            update(r + i, c + j, vij)
+                for (r, c), v in args[2].items():
+                    if isinstance(v, MatrixBase):
+                        for (i, j), vv in v.todok().items():
+                            update(r + i, c + j, vv)
+                    elif isinstance(v, (list, tuple)):
+                        _, _, smat = cls._handle_creation_inputs(v, **kwargs)
+                        for i, j in smat:
+                            update(r + i, c + j, smat[i, j])
                     else:
-                        if isinstance(v, (Matrix, list, tuple)):
-                            v = SparseMatrix(v)
-                            for i, j in v._smat:
-                                update(r + i, c + j, v[i, j])
-                        else:
-                            v = self._sympify(v)
-                            update(r, c, self._sympify(v))
+                        v = cls._sympify(v)
+                        update(r, c, cls._sympify(v))
+
             elif is_sequence(args[2]):
                 flat = not any(is_sequence(i) for i in args[2])
                 if not flat:
-                    s = SparseMatrix(args[2])
-                    self._smat = s._smat
+                    _, _, smat = \
+                        cls._handle_creation_inputs(args[2], **kwargs)
                 else:
-                    if len(args[2]) != self.rows*self.cols:
-                        raise ValueError(
-                            'Flat list length (%s) != rows*columns (%s)' %
-                            (len(args[2]), self.rows*self.cols))
                     flat_list = args[2]
-                    for i in range(self.rows):
-                        for j in range(self.cols):
-                            value = self._sympify(flat_list[i*self.cols + j])
-                            if value:
-                                self._smat[i, j] = value
-            if self.rows is None:  # autosizing
-                k = self._smat.keys()
-                self.rows = max([i[0] for i in k]) + 1 if k else 0
-                self.cols = max([i[1] for i in k]) + 1 if k else 0
+                    if len(flat_list) != rows * cols:
+                        raise ValueError(
+                            "The length of the flat list ({}) does not "
+                            "match the specified size ({} * {})."
+                            .format(len(flat_list), rows, cols)
+                        )
+
+                    for i in range(rows):
+                        for j in range(cols):
+                            value = flat_list[i*cols + j]
+                            value = cls._sympify(value)
+                            if value != cls.zero:
+                                smat[i, j] = value
+
+            if rows is None:  # autosizing
+                keys = smat.keys()
+                rows = max([r for r, _ in keys]) + 1 if keys else 0
+                cols = max([c for _, c in keys]) + 1 if keys else 0
+
             else:
-                for i, j in self._smat.keys():
-                    if i and i >= self.rows or j and j >= self.cols:
-                        r, c = self.shape
-                        raise ValueError(filldedent('''
-                            The location %s is out of designated
-                            range: %s''' % ((i, j), (r - 1, c - 1))))
+                for i, j in smat.keys():
+                    if i and i >= rows or j and j >= cols:
+                        raise ValueError(
+                            "The location {} is out of the designated range"
+                            "[{}, {}]x[{}, {}]"
+                            .format((i, j), 0, rows - 1, 0, cols - 1)
+                        )
+
+            return rows, cols, smat
+
+        elif len(args) == 1 and isinstance(args[0], (list, tuple)):
+            # list of values or lists
+            v = args[0]
+            c = 0
+            for i, row in enumerate(v):
+                if not isinstance(row, (list, tuple)):
+                    row = [row]
+                for j, vv in enumerate(row):
+                    if vv != cls.zero:
+                        smat[i, j] = cls._sympify(vv)
+                c = max(c, len(row))
+            rows = len(v) if c else 0
+            cols = c
+            return rows, cols, smat
+
         else:
-            if (len(args) == 1 and isinstance(args[0], (list, tuple))):
-                # list of values or lists
-                v = args[0]
-                c = 0
-                for i, row in enumerate(v):
-                    if not isinstance(row, (list, tuple)):
-                        row = [row]
-                    for j, vij in enumerate(row):
-                        if vij:
-                            self._smat[i, j] = self._sympify(vij)
-                    c = max(c, len(row))
-                self.rows = len(v) if c else 0
-                self.cols = c
-            else:
-                # handle full matrix forms with _handle_creation_inputs
-                r, c, _list = Matrix._handle_creation_inputs(*args)
-                self.rows = r
-                self.cols = c
-                for i in range(self.rows):
-                    for j in range(self.cols):
-                        value = _list[self.cols*i + j]
-                        if value:
-                            self._smat[i, j] = value
-        return self
+            # handle full matrix forms with _handle_creation_inputs
+            rows, cols, mat = super()._handle_creation_inputs(*args)
+            for i in range(rows):
+                for j in range(cols):
+                    value = mat[cols*i + j]
+                    if value != cls.zero:
+                        smat[i, j] = value
+
+            return rows, cols, smat
 
     def __eq__(self, other):
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return NotImplemented
         self_shape = getattr(self, 'shape', None)
         other_shape = getattr(other, 'shape', None)
         if None in (self_shape, other_shape):
@@ -300,7 +328,7 @@ class SparseMatrix(MatrixBase):
 
     def _eval_col_insert(self, icol, other):
         if not isinstance(other, SparseMatrix):
-            other = SparseMatrix(other)
+            other = MutableSparseMatrix(other)
         new_smat = {}
         # make room for the new rows
         for key, val in self._smat.items():
@@ -407,7 +435,7 @@ class SparseMatrix(MatrixBase):
 
     def _eval_row_insert(self, irow, other):
         if not isinstance(other, SparseMatrix):
-            other = SparseMatrix(other)
+            other = MutableSparseMatrix(other)
         new_smat = {}
         # make room for the new rows
         for key, val in self._smat.items():
@@ -426,6 +454,9 @@ class SparseMatrix(MatrixBase):
 
     def _eval_scalar_rmul(self, other):
         return self.applyfunc(lambda x: other*x)
+
+    def _eval_todok(self):
+        return self._smat.copy()
 
     def _eval_transpose(self):
         """Returns the transposed SparseMatrix of this SparseMatrix.
@@ -677,9 +708,17 @@ class SparseMatrix(MatrixBase):
 
 
 class MutableSparseMatrix(SparseMatrix, MatrixBase):
+    def __new__(cls, *args, **kwargs):
+        return cls._new(*args, **kwargs)
+
     @classmethod
     def _new(cls, *args, **kwargs):
-        return cls(*args)
+        obj = super().__new__(cls)
+        rows, cols, smat = cls._handle_creation_inputs(*args, **kwargs)
+        obj.rows = rows
+        obj.cols = cols
+        obj._smat = smat
+        return obj
 
     def __setitem__(self, key, value):
         """Assign value to position designated by key.
@@ -743,32 +782,9 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
 
     __hash__ = None  # type: ignore
 
-    def col_del(self, k):
-        """Delete the given column of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> M = SparseMatrix([[0, 0], [0, 1]])
-        >>> M
-        Matrix([
-        [0, 0],
-        [0, 1]])
-        >>> M.col_del(0)
-        >>> M
-        Matrix([
-        [0],
-        [1]])
-
-        See Also
-        ========
-
-        row_del
-        """
+    def _eval_col_del(self, k):
         newD = {}
-        k = a2idx(k, self.cols)
-        for (i, j) in self._smat:
+        for i, j in self._smat:
             if j == k:
                 pass
             elif j > k:
@@ -777,6 +793,18 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                 newD[i, j] = self._smat[i, j]
         self._smat = newD
         self.cols -= 1
+
+    def _eval_row_del(self, k):
+        newD = {}
+        for i, j in self._smat:
+            if i == k:
+                pass
+            elif i > k:
+                newD[i - 1, j] = self._smat[i, j]
+            else:
+                newD[i, j] = self._smat[i, j]
+        self._smat = newD
+        self.rows -= 1
 
     def col_join(self, other):
         """Returns B augmented beneath A (row-wise joining)::
@@ -956,39 +984,6 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
             v = self._sympify(value)
             self._smat = {(i, j): v
                 for i in range(self.rows) for j in range(self.cols)}
-
-    def row_del(self, k):
-        """Delete the given row of the matrix.
-
-        Examples
-        ========
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> M = SparseMatrix([[0, 0], [0, 1]])
-        >>> M
-        Matrix([
-        [0, 0],
-        [0, 1]])
-        >>> M.row_del(0)
-        >>> M
-        Matrix([[0, 1]])
-
-        See Also
-        ========
-
-        col_del
-        """
-        newD = {}
-        k = a2idx(k, self.rows)
-        for (i, j) in self._smat:
-            if i == k:
-                pass
-            elif i > k:
-                newD[i - 1, j] = self._smat[i, j]
-            else:
-                newD[i, j] = self._smat[i, j]
-        self._smat = newD
-        self.rows -= 1
 
     def row_join(self, other):
         """Returns B appended after A (column-wise augmenting)::

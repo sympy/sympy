@@ -1,7 +1,5 @@
 """ Elliptic Integrals. """
 
-from __future__ import print_function, division
-
 from sympy.core import S, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.complexes import sign
@@ -34,7 +32,7 @@ class elliptic_k(Function):
     Examples
     ========
 
-    >>> from sympy import elliptic_k, I, pi
+    >>> from sympy import elliptic_k, I
     >>> from sympy.abc import m
     >>> elliptic_k(0)
     pi/2
@@ -59,7 +57,7 @@ class elliptic_k(Function):
     @classmethod
     def eval(cls, m):
         if m.is_zero:
-            return pi/2
+            return pi*S.Half
         elif m is S.Half:
             return 8*pi**Rational(3, 2)/gamma(Rational(-1, 4))**2
         elif m is S.One:
@@ -70,9 +68,6 @@ class elliptic_k(Function):
                    I*S.NegativeInfinity, S.ComplexInfinity):
             return S.Zero
 
-        if m.is_zero:
-            return pi*S.Half
-
     def fdiff(self, argindex=1):
         m = self.args[0]
         return (elliptic_e(m) - (1 - m)*elliptic_k(m))/(2*m*(1 - m))
@@ -82,7 +77,7 @@ class elliptic_k(Function):
         if (m.is_real and (m - 1).is_positive) is False:
             return self.func(m.conjugate())
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         from sympy.simplify import hyperexpand
         return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
 
@@ -130,7 +125,7 @@ class elliptic_f(Function):
     Examples
     ========
 
-    >>> from sympy import elliptic_f, I, O
+    >>> from sympy import elliptic_f, I
     >>> from sympy.abc import z, m
     >>> elliptic_f(z, m).series(z)
     z + z**5*(3*m**2/40 - m/30) + m*z**3/6 + O(z**6)
@@ -219,7 +214,7 @@ class elliptic_e(Function):
     Examples
     ========
 
-    >>> from sympy import elliptic_e, I, pi, O
+    >>> from sympy import elliptic_e, I
     >>> from sympy.abc import z, m
     >>> elliptic_e(z, m).series(z)
     z + z**5*(-m**2/40 + m/30) - m*z**3/6 + O(z**6)
@@ -291,11 +286,11 @@ class elliptic_e(Function):
             if (m.is_real and (m - 1).is_positive) is False:
                 return self.func(m.conjugate())
 
-    def _eval_nseries(self, x, n, logx):
+    def _eval_nseries(self, x, n, logx, cdir=0):
         from sympy.simplify import hyperexpand
         if len(self.args) == 1:
             return hyperexpand(self.rewrite(hyper)._eval_nseries(x, n=n, logx=logx))
-        return super(elliptic_e, self)._eval_nseries(x, n=n, logx=logx)
+        return super()._eval_nseries(x, n=n, logx=logx)
 
     def _eval_rewrite_as_hyper(self, *args, **kwargs):
         if len(args) == 1:
@@ -340,7 +335,7 @@ class elliptic_pi(Function):
     Examples
     ========
 
-    >>> from sympy import elliptic_pi, I, pi, O, S
+    >>> from sympy import elliptic_pi, I
     >>> from sympy.abc import z, n, m
     >>> elliptic_pi(n, z, m).series(z, n=4)
     z + z**3*(m/6 + n/3) + O(z**4)

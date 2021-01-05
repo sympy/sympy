@@ -1,6 +1,5 @@
 from typing import Set
 
-from sympy.codegen.ast import Assignment
 from sympy.core import Basic, S
 from sympy.core.function import _coeff_isneg, Lambda
 from sympy.printing.codeprinter import CodePrinter
@@ -40,9 +39,11 @@ class GLSLPrinter(CodePrinter):
 
     _default_settings = {
         'use_operators': True,
+        'zero': 0,
         'mat_nested': False,
         'mat_separator': ',\n',
         'mat_transpose': False,
+        'array_type': 'float',
         'glsl_types': True,
 
         'order': None,
@@ -69,10 +70,10 @@ class GLSLPrinter(CodePrinter):
         return "%s;" % codestring
 
     def _get_comment(self, text):
-        return "// {0}".format(text)
+        return "// {}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "float {0} = {1};".format(name, value)
+        return "float {} = {};".format(name, value)
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -107,37 +108,52 @@ class GLSLPrinter(CodePrinter):
     def _print_MatrixBase(self, mat):
         mat_separator = self._settings['mat_separator']
         mat_transpose = self._settings['mat_transpose']
-        glsl_types = self._settings['glsl_types']
         column_vector = (mat.rows == 1) if mat_transpose else (mat.cols == 1)
         A = mat.transpose() if mat_transpose != column_vector else mat
+
+        glsl_types = self._settings['glsl_types']
+        array_type = self._settings['array_type']
+        array_size = A.cols*A.rows
+        array_constructor = "{}[{}]".format(array_type, array_size)
 
         if A.cols == 1:
             return self._print(A[0]);
         if A.rows <= 4 and A.cols <= 4 and glsl_types:
             if A.rows == 1:
-                return 'vec%s%s' % (A.cols, A.table(self,rowstart='(',rowend=')'))
+                return "vec{}{}".format(
+                    A.cols, A.table(self,rowstart='(',rowend=')')
+                )
             elif A.rows == A.cols:
-                return 'mat%s(%s)' %   (A.rows, A.table(self,rowsep=', ',
-                                        rowstart='',rowend=''))
+                return "mat{}({})".format(
+                    A.rows, A.table(self,rowsep=', ',
+                    rowstart='',rowend='')
+                )
             else:
-                return 'mat%sx%s(%s)' % (A.cols, A.rows,
-                                        A.table(self,rowsep=', ',
-                                        rowstart='',rowend=''))
+                return "mat{}x{}({})".format(
+                    A.cols, A.rows,
+                    A.table(self,rowsep=', ',
+                    rowstart='',rowend='')
+                )
         elif A.cols == 1 or A.rows == 1:
-            return 'float[%s](%s)' % (A.cols*A.rows, A.table(self,rowsep=mat_separator,rowstart='',rowend=''))
+            return "{}({})".format(
+                array_constructor,
+                A.table(self,rowsep=mat_separator,rowstart='',rowend='')
+            )
         elif not self._settings['mat_nested']:
-            return 'float[%s](\n%s\n) /* a %sx%s matrix */' % (A.cols*A.rows,
-                            A.table(self,rowsep=mat_separator,rowstart='',rowend=''),
-                            A.rows,A.cols)
+            return "{}(\n{}\n) /* a {}x{} matrix */".format(
+                array_constructor,
+                A.table(self,rowsep=mat_separator,rowstart='',rowend=''),
+                A.rows, A.cols
+            )
         elif self._settings['mat_nested']:
-            return 'float[%s][%s](\n%s\n)' % (A.rows,A.cols,A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')'))
+            return "{}[{}][{}](\n{}\n)".format(
+                array_type, A.rows, A.cols,
+                A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')')
+            )
 
-    _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
+    def _print_SparseMatrix(self, mat):
+        # do not allow sparse matrices to be made dense
+        return self._print_not_supported(mat)
 
     def _traverse_matrix_indices(self, mat):
         mat_transpose = self._settings['mat_transpose']
@@ -160,19 +176,21 @@ class GLSLPrinter(CodePrinter):
             i,j = expr.i,expr.j
         pnt = self._print(expr.parent)
         if glsl_types and ((rows <= 4 and cols <=4) or nest):
-            # print('end _print_MatrixElement case A',nest,glsl_types)
-            return "%s[%s][%s]" % (pnt, i, j)
+            return "{}[{}][{}]".format(pnt, i, j)
         else:
-            # print('end _print_MatrixElement case B',nest,glsl_types)
-            return "{0}[{1}]".format(pnt, i + j*rows)
+            return "{}[{}]".format(pnt, i + j*rows)
 
     def _print_list(self, expr):
         l = ', '.join(self._print(item) for item in expr)
         glsl_types = self._settings['glsl_types']
-        if len(expr) <= 4 and glsl_types:
-            return 'vec%s(%s)' % (len(expr),l)
+        array_type = self._settings['array_type']
+        array_size = len(expr)
+        array_constructor = '{}[{}]'.format(array_type, array_size)
+
+        if array_size <= 4 and glsl_types:
+            return 'vec{}({})'.format(array_size, l)
         else:
-            return 'float[%s](%s)' % (len(expr),l)
+            return '{}({})'.format(array_constructor, l)
 
     _print_tuple = _print_list
     _print_Tuple = _print_list
@@ -204,7 +222,7 @@ class GLSLPrinter(CodePrinter):
                 try:
                     return func(*[self.parenthesize(item, 0) for item in func_args])
                 except TypeError:
-                    return "%s(%s)" % (func, self.stringify(func_args, ", "))
+                    return '{}({})'.format(func, self.stringify(func_args, ", "))
         elif isinstance(func, Lambda):
             # inlined function
             return self._print(func(*func_args))
@@ -212,6 +230,7 @@ class GLSLPrinter(CodePrinter):
             return self._print_not_supported(func)
 
     def _print_Piecewise(self, expr):
+        from sympy.codegen.ast import Assignment
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
@@ -255,8 +274,10 @@ class GLSLPrinter(CodePrinter):
         for i in reversed(range(expr.rank)):
             elem += expr.indices[i]*offset
             offset *= dims[i]
-        return "%s[%s]" % (self._print(expr.base.label),
-                           self._print(elem))
+        return "{}[{}]".format(
+            self._print(expr.base.label),
+            self._print(elem)
+        )
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
@@ -269,7 +290,6 @@ class GLSLPrinter(CodePrinter):
                 e = self._print(float(expr.exp))
             except TypeError:
                 e = self._print(expr.exp)
-            # return self.known_functions['pow']+'(%s, %s)' % (self._print(expr.base),e)
             return self._print_Function_with_args('pow', (
                 self._print(expr.base),
                 e
@@ -279,13 +299,13 @@ class GLSLPrinter(CodePrinter):
         return str(float(expr))
 
     def _print_Rational(self, expr):
-        return "%s.0/%s.0" % (expr.p, expr.q)
+        return "{}.0/{}.0".format(expr.p, expr.q)
 
     def _print_Relational(self, expr):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Add(self, expr, order=None):
         if self._settings['use_operators']:
@@ -299,7 +319,11 @@ class GLSLPrinter(CodePrinter):
             return self._print_Function_with_args('add', (a, b))
             # return self.known_functions['add']+'(%s, %s)' % (a,b)
         neg, pos = partition(lambda arg: _coeff_isneg(arg), terms)
-        s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t),pos))
+        if pos:
+            s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t),pos))
+        else:
+            s = pos = self._print(self._settings['zero'])
+
         if neg:
             # sum the absolute values of the negative terms
             neg = reduce(lambda a,b: add(a,b), map(lambda n: self._print(-n),neg))
@@ -328,10 +352,15 @@ def glsl_code(expr,assign_to=None,**settings):
     expr : Expr
         A sympy expression to be converted.
     assign_to : optional
-        When given, the argument is used as the name of the variable to which
-        the expression is assigned. Can be a string, ``Symbol``,
-        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
-        line-wrapping, or for expressions that generate multi-line statements.
+        When given, the argument is used for naming the variable or variables
+        to which the expression is assigned. Can be a string, ``Symbol``,
+        ``MatrixSymbol`` or ``Indexed`` type object. In cases where ``expr``
+        would be printed as an array, a list of string or ``Symbol`` objects
+        can also be passed.
+
+        This is helpful in case of line-wrapping, or for expressions that
+        generate multi-line statements.  It can also be used to spread an array-like
+        expression into multiple assignments.
     use_operators: bool, optional
         If set to False, then *,/,+,- operators will be replaced with functions
         mul, add, and sub, which must be implemented by the user, e.g. for
@@ -355,6 +384,9 @@ def glsl_code(expr,assign_to=None,**settings):
         By default, this printer ignores that convention. Setting this option to
         ``True`` transposes all matrix output.
         [default=False]
+    array_type: str, optional
+        The GLSL array constructor type.
+        [default='float']
     precision : integer, optional
         The precision for numbers such as pi [default=15].
     user_functions : dict, optional
@@ -402,6 +434,30 @@ def glsl_code(expr,assign_to=None,**settings):
        1, 2, 3, 4,  5,
        6, 7, 8, 9, 10
     ) /* a 2x5 matrix */
+
+    The type of array constructor used to print GLSL arrays can be controlled
+    via the ``array_type`` parameter:
+    >>> glsl_code(Matrix([1,2,3,4,5]), array_type='int')
+    'int[5](1, 2, 3, 4, 5)'
+
+    Passing a list of strings or ``symbols`` to the ``assign_to`` parameter will yield
+    a multi-line assignment for each item in an array-like expression:
+    >>> x_struct_members = symbols('x.a x.b x.c x.d')
+    >>> print(glsl_code(Matrix([1,2,3,4]), assign_to=x_struct_members))
+    x.a = 1;
+    x.b = 2;
+    x.c = 3;
+    x.d = 4;
+
+    This could be useful in cases where it's desirable to modify members of a
+    GLSL ``Struct``.  It could also be used to spread items from an array-like
+    expression into various miscellaneous assignments:
+    >>> misc_assignments = ('x[0]', 'x[1]', 'float y', 'float z')
+    >>> print(glsl_code(Matrix([1,2,3,4]), assign_to=misc_assignments))
+    x[0] = 1;
+    x[1] = 2;
+    float y = 3;
+    float z = 4;
 
     Passing ``mat_nested = True`` instead prints out nested float arrays, which are
     supported in GLSL 4.3 and above.

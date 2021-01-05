@@ -1,22 +1,21 @@
-from __future__ import print_function, division
-
 import random
 from collections import defaultdict
+from collections.abc import Iterable
+from functools import reduce
 
 from sympy.core.parameters import global_parameters
 from sympy.core.basic import Atom
 from sympy.core.expr import Expr
 from sympy.core.compatibility import \
-    is_sequence, reduce, as_int, Iterable
+    is_sequence, as_int
 from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
-from sympy.logic.boolalg import as_Boolean
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
 from mpmath.libmp.libintmath import ifac
-
+from sympy.multipledispatch import dispatch
 
 def _af_rmul(a, b):
     """
@@ -115,6 +114,9 @@ def _af_rmuln(*abc):
 def _af_parity(pi):
     """
     Computes the parity of a permutation in array form.
+
+    Explanation
+    ===========
 
     The parity of a permutation reflects the parity of the
     number of inversions in the permutation, i.e., the
@@ -241,6 +243,9 @@ class Cycle(dict):
     """
     Wrapper around dict which provides the functionality of a disjoint cycle.
 
+    Explanation
+    ===========
+
     A cycle shows the rule to use to move subsets of elements to obtain
     a permutation. The Cycle class is more flexible than Permutation in
     that 1) all elements need not be present in order to investigate how
@@ -315,8 +320,7 @@ class Cycle(dict):
         return as_int(arg)
 
     def __iter__(self):
-        for i in self.list():
-            yield i
+        yield from self.list()
 
     def __call__(self, *other):
         """Return product of cycles processed from R to L.
@@ -325,7 +329,6 @@ class Cycle(dict):
         ========
 
         >>> from sympy.combinatorics.permutations import Cycle as C
-        >>> from sympy.combinatorics.permutations import Permutation as Perm
         >>> C(1, 2)(2, 3)
         (1 3 2)
 
@@ -358,7 +361,6 @@ class Cycle(dict):
         ========
 
         >>> from sympy.combinatorics.permutations import Cycle
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Cycle(2, 3)(4, 5)
         >>> p.list()
         [0, 1, 3, 2, 5, 4]
@@ -611,7 +613,7 @@ class Permutation(Atom):
     trigger an error. For this reason, it is better to start the cycle
     with the singleton:
 
-    The following fails because there is is no element 3:
+    The following fails because there is no element 3:
 
     >>> Permutation(1, 2)(3)
     Traceback (most recent call last):
@@ -788,6 +790,56 @@ class Permutation(Atom):
     >>> Permutation.from_sequence('SymPy')
     Permutation([1, 3, 2, 0, 4])
 
+    Checking if a Permutation is contained in a Group
+    =================================================
+
+    Generally if you have a group of permutations G on n symbols, and
+    you're checking if a permutation on less than n symbols is part
+    of that group, the check will fail.
+
+    Here is an example for n=5 and we check if the cycle
+    (1,2,3) is in G:
+
+    >>> from sympy import init_printing
+    >>> init_printing(perm_cyclic=True, pretty_print=False)
+    >>> from sympy.combinatorics import Cycle, Permutation
+    >>> from sympy.combinatorics.perm_groups import PermutationGroup
+    >>> G = PermutationGroup(Cycle(2, 3)(4, 5), Cycle(1, 2, 3, 4, 5))
+    >>> p1 = Permutation(Cycle(2, 5, 3))
+    >>> p2 = Permutation(Cycle(1, 2, 3))
+    >>> a1 = Permutation(Cycle(1, 2, 3).list(6))
+    >>> a2 = Permutation(Cycle(1, 2, 3)(5))
+    >>> a3 = Permutation(Cycle(1, 2, 3),size=6)
+    >>> for p in [p1,p2,a1,a2,a3]: p, G.contains(p)
+    ((2 5 3), True)
+    ((1 2 3), False)
+    ((5)(1 2 3), True)
+    ((5)(1 2 3), True)
+    ((5)(1 2 3), True)
+
+    The check for p2 above will fail.
+
+    Checking if p1 is in G works because SymPy knows
+    G is a group on 5 symbols, and p1 is also on 5 symbols
+    (its largest element is 5).
+
+    For ``a1``, the ``.list(6)`` call will extend the permutation to 5
+    symbols, so the test will work as well. In the case of ``a2`` the
+    permutation is being extended to 5 symbols by using a singleton,
+    and in the case of ``a3`` it's extended through the constructor
+    argument ``size=6``.
+
+    There is another way to do this, which is to tell the ``contains``
+    method that the number of symbols the group is on doesn't need to
+    match perfectly the number of symbols for the permutation:
+
+    >>> G.contains(p2,strict=False)
+    True
+
+    This can be via the ``strict`` argument to the ``contains`` method,
+    and SymPy will try to extend the permutation on its own and then
+    perform the containment check.
+
     See Also
     ========
 
@@ -828,7 +880,7 @@ class Permutation(Atom):
     _size = None
     _rank = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, size=None, **kwargs):
         """
         Constructor for the Permutation object from a list or a
         list of lists in which all elements of the permutation may
@@ -875,7 +927,6 @@ class Permutation(Atom):
         >>> _.array_form
         [0, 4, 3, 5, 1, 2, 6, 7, 8, 9]
         """
-        size = kwargs.pop('size', None)
         if size is not None:
             size = int(size)
 
@@ -955,16 +1006,6 @@ class Permutation(Atom):
 
         return cls._af_new(aform)
 
-    def _eval_Eq(self, other):
-        other = _sympify(other)
-        if not isinstance(other, Permutation):
-            return None
-
-        if self._size != other._size:
-            return None
-
-        return as_Boolean(self._array_form == other._array_form)
-
     @classmethod
     def _af_new(cls, perm):
         """A method to produce a Permutation object from a list;
@@ -986,7 +1027,7 @@ class Permutation(Atom):
         Permutation([2, 1, 3, 0])
 
         """
-        p = super(Permutation, cls).__new__(cls)
+        p = super().__new__(cls)
         p._array_form = perm
         p._size = len(perm)
         return p
@@ -1094,7 +1135,7 @@ class Permutation(Atom):
                     unchecked[j] = False
                 if len(cycle) > 1:
                     cyclic_form.append(cycle)
-                    assert cycle == list(minlex(cycle, is_set=True))
+                    assert cycle == list(minlex(cycle))
         cyclic_form.sort()
         self._cyclic_form = cyclic_form[:]
         return cyclic_form
@@ -1198,7 +1239,7 @@ class Permutation(Atom):
         Examples
         ========
 
-        >>> from sympy.combinatorics.permutations import _af_rmul, Permutation
+        >>> from sympy.combinatorics.permutations import Permutation
 
         >>> a, b = [1, 0, 2], [0, 2, 1]
         >>> a = Permutation(a); b = Permutation(b)
@@ -1307,6 +1348,9 @@ class Permutation(Atom):
         (1 3 2)
 
         """
+        from sympy.combinatorics.perm_groups import PermutationGroup, Coset
+        if isinstance(other, PermutationGroup):
+            return Coset(self, other, dir='-')
         a = self.array_form
         # __rmul__ makes sure the other is a Permutation
         b = other.array_form
@@ -1378,6 +1422,9 @@ class Permutation(Atom):
 
     def __xor__(self, h):
         """Return the conjugate permutation ``~h*self*h` `.
+
+        Explanation
+        ===========
 
         If ``a`` and ``b`` are conjugates, ``a = h*b*~h`` and
         ``b = ~h*a*h`` and both have the same cycle structure.
@@ -1456,6 +1503,9 @@ class Permutation(Atom):
     def transpositions(self):
         """
         Return the permutation decomposed into a list of transpositions.
+
+        Explanation
+        ===========
 
         It is always possible to express a permutation as the product of
         transpositions, see [1]
@@ -1547,8 +1597,7 @@ class Permutation(Atom):
         >>> list(Permutation(range(3)))
         [0, 1, 2]
         """
-        for i in self.array_form:
-            yield i
+        yield from self.array_form
 
     def __repr__(self):
         from sympy.printing.repr import srepr
@@ -1860,6 +1909,9 @@ class Permutation(Atom):
         """
         Computes the parity of a permutation.
 
+        Explanation
+        ===========
+
         The parity of a permutation reflects the parity of the
         number of inversions in the permutation, i.e., the
         number of pairs of x and y such that ``x > y`` but ``p[x] < p[y]``.
@@ -2104,6 +2156,9 @@ class Permutation(Atom):
         """
         Computes the number of inversions of a permutation.
 
+        Explanation
+        ===========
+
         An inversion is where i > j but p[i] < p[j].
 
         For small length of p, it iterates over all i and j
@@ -2158,7 +2213,7 @@ class Permutation(Atom):
         return inversions
 
     def commutator(self, x):
-        """Return the commutator of self and x: ``~x*~self*x*self``
+        """Return the commutator of ``self`` and ``x``: ``~x*~self*x*self``
 
         If f and g are part of a group, G, then the commutator of f and g
         is the group identity iff f and g commute, i.e. fg == gf.
@@ -2600,6 +2655,9 @@ class Permutation(Atom):
         """
         Computes the precedence distance between two permutations.
 
+        Explanation
+        ===========
+
         Suppose p and p' represent n jobs. The precedence metric
         counts the number of times a job j is preceded by job i
         in both p and p'. This metric is commutative.
@@ -2637,6 +2695,9 @@ class Permutation(Atom):
     def get_adjacency_matrix(self):
         """
         Computes the adjacency matrix of a permutation.
+
+        Explanation
+        ===========
 
         If job i is adjacent to job j in a permutation p
         then we set m[i, j] = 1 where m is the adjacency
@@ -2677,6 +2738,9 @@ class Permutation(Atom):
     def get_adjacency_distance(self, other):
         """
         Computes the adjacency distance between two permutations.
+
+        Explanation
+        ===========
 
         This metric counts the number of times a pair i,j of jobs is
         adjacent in both p and p'. If n_adj is this quantity then
@@ -3021,5 +3085,12 @@ class AppliedPermutation(Expr):
             if x.is_Integer:
                 return perm.apply(x)
 
-        obj = super(AppliedPermutation, cls).__new__(cls, perm, x)
+        obj = super().__new__(cls, perm, x)
         return obj
+
+
+@dispatch(Permutation, Permutation)
+def _eval_is_eq(lhs, rhs):
+    if lhs._size != rhs._size:
+        return None
+    return lhs._array_form == rhs._array_form

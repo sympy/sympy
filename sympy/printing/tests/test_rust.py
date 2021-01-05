@@ -7,7 +7,7 @@ from sympy.logic import ITE
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
-from sympy.matrices import MatrixSymbol
+from sympy.matrices import MatrixSymbol, SparseMatrix, Matrix
 
 from sympy import rust_code
 
@@ -350,3 +350,14 @@ def test_user_functions():
     assert rust_code(ceiling(x), user_functions=custom_functions) == "x.ceil()"
     assert rust_code(Abs(x), user_functions=custom_functions) == "fabs(x)"
     assert rust_code(Abs(n), user_functions=custom_functions) == "abs(n)"
+
+
+def test_matrix():
+    assert rust_code(Matrix([1, 2, 3])) == '[1, 2, 3]'
+    with raises(ValueError):
+        rust_code(Matrix([[1, 2, 3]]))
+
+
+def test_sparse_matrix():
+    # gh-15791
+    assert 'Not supported in Rust' in rust_code(SparseMatrix([[1, 2, 3]]))

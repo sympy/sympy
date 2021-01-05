@@ -11,6 +11,7 @@ from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_binomial, preprocess_roots, roots)
 
 from sympy.polys.orthopolys import legendre_poly
+from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polyutils import _nsort
 
 from sympy.utilities.iterables import cartes
@@ -49,8 +50,8 @@ def test_roots_quadratic():
 
     f = x**2 + (2*a*e + 2*c*e)/(a - c)*x + (d - b + a*e**2 - c*e**2)/(a - c)
     assert roots_quadratic(Poly(f, x)) == \
-        [-e*(a + c)/(a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2))/(a - c),
-         -e*(a + c)/(a - c) + sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2))/(a - c)]
+        [-e*(a + c)/(a - c) - sqrt(a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c),
+         -e*(a + c)/(a - c) + sqrt(a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)]
 
     # check for simplification
     f = Poly(y*x**2 - 2*x - 2*y, x)
@@ -692,3 +693,8 @@ def test_nroots2():
 
 def test_roots_composite():
     assert len(roots(Poly(y**3 + y**2*sqrt(x) + y + x, y, composite=True))) == 3
+
+
+def test_issue_19113():
+    eq = cos(x)**3 - cos(x) + 1
+    raises(PolynomialError, lambda: roots(eq))

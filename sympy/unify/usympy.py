@@ -3,8 +3,6 @@
 See sympy.unify for module level docstring
 See sympy.unify.core for algorithmic docstring """
 
-from __future__ import print_function, division
-
 from sympy.core import Basic, Add, Mul, Pow
 from sympy.core.operations import AssocOp, LatticeOp
 from sympy.matrices import MatAdd, MatMul, MatrixExpr
@@ -79,7 +77,7 @@ def unify(x, y, s=None, variables=(), **kwargs):
     ========
 
     >>> from sympy.unify.usympy import unify
-    >>> from sympy import Basic, cos
+    >>> from sympy import Basic
     >>> from sympy.abc import x, y, z, p, q
 
     >>> next(unify(Basic(1, 2), Basic(1, x), variables=[x]))
@@ -116,11 +114,11 @@ def unify(x, y, s=None, variables=(), **kwargs):
     """
     decons = lambda x: deconstruct(x, variables)
     s = s or {}
-    s = dict((decons(k), decons(v)) for k, v in s.items())
+    s = {decons(k): decons(v) for k, v in s.items()}
 
     ds = core.unify(decons(x), decons(y), s,
                                      is_associative=is_associative,
                                      is_commutative=is_commutative,
                                      **kwargs)
     for d in ds:
-        yield dict((construct(k), construct(v)) for k, v in d.items())
+        yield {construct(k): construct(v) for k, v in d.items()}

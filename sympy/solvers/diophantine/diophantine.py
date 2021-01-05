@@ -1,6 +1,5 @@
-from __future__ import print_function, division
-
 from sympy.core.add import Add
+from sympy.core.assumptions import check_assumptions
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import as_int, is_sequence, ordered
 from sympy.core.exprtools import factor_terms
@@ -25,7 +24,6 @@ from sympy.ntheory.residue_ntheory import sqrt_mod
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polytools import Poly, factor_list
 from sympy.simplify.simplify import signsimp
-from sympy.solvers.solvers import check_assumptions
 from sympy.solvers.solveset import solveset_real
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.utilities.misc import filldedent
@@ -112,7 +110,7 @@ class DiophantineSolutionSet(set):
     def add(self, solution):
         if len(solution) != len(self.symbols):
             raise ValueError("Solution should have a length of %s, not %s" % (len(self.symbols), len(solution)))
-        super(DiophantineSolutionSet, self).add(Tuple(*solution))
+        super().add(Tuple(*solution))
 
     def update(self, *solutions):
         for solution in solutions:
@@ -141,24 +139,24 @@ class DiophantineEquationType:
     Parameters
     ==========
 
-    equation:
+    equation :
         The diophantine equation that is being solved.
-    free_symbols: list (optional)
+    free_symbols : list (optional)
         The symbols being solved for.
 
     Attributes
     ==========
 
-    total_degree
+    total_degree :
         The maximum of the degrees of all terms in the equation
-    homogeneous
+    homogeneous :
         Does the equation contain a term of degree 0
-    homogeneous_order
-        Does the equation contain a term of degree 1
-    dimension
+    homogeneous_order :
+        Does the equation contain any coefficient that is in the symbols being solved for
+    dimension :
         The number of symbols being solved for
     """
-    name = None
+    name = None  # type: str
 
     def __init__(self, equation, free_symbols=None):
         self.equation = _sympify(equation).expand(force=True)
@@ -1219,7 +1217,7 @@ all_diop_classes = [
     GeneralSumOfEvenPowers,
 ]
 
-diop_known = set([diop_class.name for diop_class in all_diop_classes])
+diop_known = {diop_class.name for diop_class in all_diop_classes}
 
 
 def _is_int(i):
@@ -1276,6 +1274,9 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     Simplify the solution procedure of diophantine equation ``eq`` by
     converting it into a product of terms which should equal zero.
 
+    Explanation
+    ===========
+
     For example, when solving, `x^2 - y^2 = 0` this is treated as
     `(x + y)(x - y) = 0` and `x + y = 0` and `x - y = 0` are solved
     independently and combined. Each term is solved by calling
@@ -1302,6 +1303,9 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     By default, only the base solution is returned. If ``permute`` is set to
     True then permutations of the base solution and/or permutations of the
     signs of the values will be returned when applicable.
+
+    Examples
+    ========
 
     >>> from sympy.solvers.diophantine import diophantine
     >>> from sympy.abc import a, b
@@ -1473,7 +1477,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
             return diophantine(eq/fl[0], param=param, syms=syms, permute=permute)
         terms = fl[1]
 
-    sols = set([])
+    sols = set()
 
     for term in terms:
 
@@ -1507,7 +1511,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     # if there is no solution, return trivial solution
     if not sols and eq.subs(zip(var, null)).is_zero:
         sols.add(null)
-    final_soln = set([])
+    final_soln = set()
     for sol in sols:
         if all(_is_int(s) for s in sol):
             if do_permute_signs:
@@ -1532,6 +1536,9 @@ def merge_solution(var, var_t, solution):
     """
     This is used to construct the full solution from the solutions of sub
     equations.
+
+    Explanation
+    ===========
 
     For example when solving the equation `(x - y)(x^2 + y^2 - z^2) = 0`,
     solutions for each of the equations `x - y = 0` and `x^2 + y^2 - z^2` are
@@ -1569,6 +1576,9 @@ def _diop_solve(eq, params=None):
 def diop_solve(eq, param=symbols("t", integer=True)):
     """
     Solves the diophantine equation ``eq``.
+
+    Explanation
+    ===========
 
     Unlike ``diophantine()``, factoring of ``eq`` is not attempted. Uses
     ``classify_diop()`` to determine the type of the equation and calls
@@ -1680,6 +1690,9 @@ classify_diop.func_doc = (  # type: ignore
     '''
     Helper routine used by diop_solve() to find information about ``eq``.
 
+    Explanation
+    ===========
+
     Returns a tuple containing the type of the diophantine equation
     along with the variables (free symbols) and their coefficients.
     Variables are returned as a list and coefficients are returned
@@ -1740,7 +1753,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     ========
 
     >>> from sympy.solvers.diophantine.diophantine import diop_linear
-    >>> from sympy.abc import x, y, z, t
+    >>> from sympy.abc import x, y, z
     >>> diop_linear(2*x - 3*y - 5) # solves equation 2*x - 3*y - 5 == 0
     (3*t_0 - 5, 2*t_0 - 5)
 
@@ -1776,6 +1789,9 @@ def diop_linear(eq, param=symbols("t", integer=True)):
 def base_solution_linear(c, a, b, t=None):
     """
     Return the base solution for the linear equation, `ax + by = c`.
+
+    Explanation
+    ===========
 
     Used by ``diop_linear()`` to find the base solution of a linear
     Diophantine equation. If ``t`` is given then the parametrized solution is
@@ -1831,6 +1847,9 @@ def diop_univariate(eq):
     """
     Solves a univariate diophantine equations.
 
+    Explanation
+    ===========
+
     A univariate diophantine equation is an equation of the form
     `a_{0} + a_{1}x + a_{2}x^2 + .. + a_{n}x^n = 0` where `a_{1}, a_{2}, ..a_{n}` are
     integer constants and `x` is an integer variable.
@@ -1858,7 +1877,8 @@ def diop_univariate(eq):
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type == Univariate.name:
-        return set(Univariate(eq).solve())
+        return {(int(i),) for i in solveset_real(
+            eq, var[0]).intersect(S.Integers)}
 
 
 def divisible(a, b):
@@ -1937,6 +1957,9 @@ def is_solution_quad(var, coeff, u, v):
 def diop_DN(D, N, t=symbols("t", integer=True)):
     """
     Solves the equation `x^2 - Dy^2 = N`.
+
+    Explanation
+    ===========
 
     Mainly concerned with the case `D > 0, D` is not a perfect square,
     which is the same as the generalized Pell equation. The LMM
@@ -2229,6 +2252,9 @@ def cornacchia(a, b, m):
     r"""
     Solves `ax^2 + by^2 = m` where `\gcd(a, b) = 1 = gcd(a, m)` and `a, b > 0`.
 
+    Explanation
+    ===========
+
     Uses the algorithm due to Cornacchia. The method only finds primitive
     solutions, i.e. ones with `\gcd(x, y) = 1`. So this method can't be used to
     find the solutions of `x^2 + y^2 = 20` since the only solution to former is
@@ -2254,6 +2280,7 @@ def cornacchia(a, b, m):
 
     See Also
     ========
+
     sympy.utilities.iterables.signed_permutations
     """
     sols = set()
@@ -2290,6 +2317,9 @@ def cornacchia(a, b, m):
 def PQa(P_0, Q_0, D):
     r"""
     Returns useful information needed to solve the Pell equation.
+
+    Explanation
+    ===========
 
     There are six sequences of integers defined related to the continued
     fraction representation of `\\frac{P + \sqrt{D}}{Q}`, namely {`P_{i}`},
@@ -2350,6 +2380,9 @@ def PQa(P_0, Q_0, D):
 def diop_bf_DN(D, N, t=symbols("t", integer=True)):
     r"""
     Uses brute force to solve the equation, `x^2 - Dy^2 = N`.
+
+    Explanation
+    ===========
 
     Mainly concerned with the generalized Pell equation which is the case when
     `D > 0, D` is not a perfect square. For more information on the case refer
@@ -2440,6 +2473,9 @@ def equivalent(u, v, r, s, D, N):
     Returns True if two solutions `(u, v)` and `(r, s)` of `x^2 - Dy^2 = N`
     belongs to the same equivalence class and False otherwise.
 
+    Explanation
+    ===========
+
     Two solutions `(u, v)` and `(r, s)` to the above equation fall to the same
     equivalence class iff both `(ur - Dvs)` and `(us - vr)` are divisible by
     `N`. See reference [1]_. No test is performed to test whether `(u, v)` and
@@ -2522,6 +2558,9 @@ def transformation_to_DN(eq):
     `ax^2 + bxy + cy^2 + dx + ey + f = 0`
     to more easy to deal with `X^2 - DY^2 = N` form.
 
+    Explanation
+    ===========
+
     This is used to solve the general quadratic equation by transforming it to
     the latter form. Refer [1]_ for more detailed information on the
     transformation. This function returns a tuple (A, B) where A is a 2 X 2
@@ -2540,7 +2579,6 @@ def transformation_to_DN(eq):
 
     >>> from sympy.abc import x, y
     >>> from sympy.solvers.diophantine.diophantine import transformation_to_DN
-    >>> from sympy.solvers.diophantine import classify_diop
     >>> A, B = transformation_to_DN(x**2 - 3*x*y - y**2 - 2*y + 1)
     >>> A
     Matrix([
@@ -3006,6 +3044,9 @@ def diop_ternary_quadratic_normal(eq, parameterize=False):
     Solves the quadratic ternary diophantine equation,
     `ax^2 + by^2 + cz^2 = 0`.
 
+    Explanation
+    ===========
+
     Here the coefficients `a`, `b`, and `c` should be non zero. Otherwise the
     equation will be a quadratic binary or univariate equation. If solvable,
     returns a tuple `(x, y, z)` that satisfies the given equation. If the
@@ -3451,7 +3492,7 @@ def diop_general_sum_of_squares(eq, limit=1):
     ========
 
     >>> from sympy.solvers.diophantine.diophantine import diop_general_sum_of_squares
-    >>> from sympy.abc import a, b, c, d, e, f
+    >>> from sympy.abc import a, b, c, d, e
     >>> diop_general_sum_of_squares(a**2 + b**2 + c**2 + d**2 + e**2 - 2345)
     {(15, 22, 22, 24, 24)}
 
@@ -3510,6 +3551,9 @@ def partition(n, k=None, zeros=False):
     """
     Returns a generator that can be used to generate partitions of an integer
     `n`.
+
+    Explanation
+    ===========
 
     A partition of `n` is a set of positive integers which add up to `n`. For
     example, partitions of 3 are 3, 1 + 2, 1 + 1 + 1. A partition is returned
@@ -3631,6 +3675,7 @@ def sum_of_three_squares(n):
 
     See Also
     ========
+
     sum_of_squares()
     """
     special = {1:(1, 0, 0), 2:(1, 1, 0), 3:(1, 1, 1), 10: (1, 3, 0), 34: (3, 3, 4), 58:(3, 7, 0),
@@ -3710,6 +3755,7 @@ def sum_of_four_squares(n):
 
     See Also
     ========
+
     sum_of_squares()
     """
     if n == 0:
@@ -3852,12 +3898,10 @@ def pow_rep_recursive(n_i, k, n_remaining, terms, p):
         yield tuple(terms)
     else:
         if n_i >= 1 and k > 0:
-            for t in pow_rep_recursive(n_i - 1, k, n_remaining, terms, p):
-                yield t
+            yield from pow_rep_recursive(n_i - 1, k, n_remaining, terms, p)
             residual = n_remaining - pow(n_i, p)
             if residual >= 0:
-                for t in pow_rep_recursive(n_i, k - 1, residual, terms + [n_i], p):
-                    yield t
+                yield from pow_rep_recursive(n_i, k - 1, residual, terms + [n_i], p)
 
 
 def sum_of_squares(n, k, zeros=False):
@@ -3902,17 +3946,17 @@ def sum_of_squares(n, k, zeros=False):
 
     See Also
     ========
+
     sympy.utilities.iterables.signed_permutations
     """
-    for t in power_representation(n, 2, k, zeros):
-        yield t
+    yield from power_representation(n, 2, k, zeros)
 
 
 def _can_do_sum_of_squares(n, k):
     """Return True if n can be written as the sum of k squares,
-    False if it can't, or 1 if k == 2 and n is prime (in which
+    False if it can't, or 1 if ``k == 2`` and ``n`` is prime (in which
     case it *can* be written as a sum of two squares). A False
-    is returned only if it can't be written as k-squares, even
+    is returned only if it can't be written as ``k``-squares, even
     if 0s are allowed.
     """
     if k < 1:

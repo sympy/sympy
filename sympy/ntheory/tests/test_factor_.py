@@ -8,7 +8,7 @@ from sympy.ntheory import (totient,
     trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
-    antidivisors, antidivisor_count, core, digits, udivisors, udivisor_sigma,
+    antidivisors, antidivisor_count, core, udivisors, udivisor_sigma,
     udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
     is_deficient, is_amicable, dra, drm)
@@ -68,9 +68,9 @@ def test_trailing_bitcount():
     assert trailing(7) == 0
     assert trailing(-7) == 0
     for i in range(100):
-        assert trailing((1 << i)) == i
+        assert trailing(1 << i) == i
         assert trailing((1 << i) * 31337) == i
-    assert trailing((1 << 1000001)) == 1000001
+    assert trailing(1 << 1000001) == 1000001
     assert trailing((1 << 273956)*7**37) == 273956
     # issue 12709
     big = small_trailing[-1]*2
@@ -165,7 +165,8 @@ def test_factorint():
     assert factorint(5951757) == {3: 1, 7: 1, 29: 2, 337: 1}
     assert factorint(64015937) == {7993: 1, 8009: 1}
     assert factorint(2**(2**6) + 1) == {274177: 1, 67280421310721: 1}
-
+    #issue 19683
+    assert factorint(10**38 - 1) == {3: 2, 11: 1, 909090909090909091: 1, 1111111111111111111: 1}
     #issue 17676
     assert factorint(28300421052393658575) == {3: 1, 5: 2, 11: 2, 43: 1, 2063: 2, 4127: 1, 4129: 1}
     assert factorint(2063**2 * 4127**1 * 4129**1) == {2063: 2, 4127: 1, 4129: 1}
@@ -576,19 +577,6 @@ def test_core():
     assert core(10**27, 22) == 10**5
     assert core(537824) == 14
     assert core(1, 6) == 1
-
-
-def test_digits():
-    assert all([digits(n, 2)[1:] == [int(d) for d in format(n, 'b')]
-                for n in range(20)])
-    assert all([digits(n, 8)[1:] == [int(d) for d in format(n, 'o')]
-                for n in range(20)])
-    assert all([digits(n, 16)[1:] == [int(d, 16) for d in format(n, 'x')]
-                for n in range(20)])
-    assert digits(2345, 34) == [34, 2, 0, 33]
-    assert digits(384753, 71) == [71, 1, 5, 23, 4]
-    assert digits(93409) == [10, 9, 3, 4, 0, 9]
-    assert digits(-92838, 11) == [-11, 6, 3, 8, 2, 9]
 
 
 def test_primenu():

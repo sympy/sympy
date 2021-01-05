@@ -1,11 +1,8 @@
-from __future__ import (absolute_import, division, print_function)
-
 from collections import namedtuple
 from hashlib import sha256
 import os
 import shutil
 import sys
-import tempfile
 import fnmatch
 
 from sympy.testing.pytest import XFAIL
@@ -19,22 +16,6 @@ def may_xfail(func):
         return XFAIL(func)
     else:
         return func
-
-
-if sys.version_info[0] == 2:
-    class FileNotFoundError(IOError):
-        pass
-
-    class TemporaryDirectory(object):
-        def __init__(self):
-            self.path = tempfile.mkdtemp()
-        def __enter__(self):
-            return self.path
-        def __exit__(self, exc, value, tb):
-            shutil.rmtree(self.path)
-else:
-    FileNotFoundError = FileNotFoundError
-    TemporaryDirectory = tempfile.TemporaryDirectory
 
 
 class CompilerNotFoundError(FileNotFoundError):
@@ -208,7 +189,7 @@ def pyx_is_cplus(path):
 
     Returns True if such a file is present in the file, else False.
     """
-    for line in open(path, 'rt'):
+    for line in open(path):
         if line.startswith('#') and '=' in line:
             splitted = line.split('=')
             if len(splitted) != 2:

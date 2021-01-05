@@ -9,13 +9,11 @@ complete source code files.
 
 """
 
-from __future__ import print_function, division
-
 from typing import Any, Dict
 
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.mul import _keep_coeff
-from sympy.printing.codeprinter import CodePrinter, Assignment
+from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
 
@@ -73,7 +71,7 @@ class JuliaCodePrinter(CodePrinter):
     # for Julia.
 
     def __init__(self, settings={}):
-        super(JuliaCodePrinter, self).__init__(settings)
+        super().__init__(settings)
         self.known_functions = dict(zip(known_fcns_src1, known_fcns_src1))
         self.known_functions.update(dict(known_fcns_src2))
         userfuncs = settings.get('user_functions', {})
@@ -89,11 +87,11 @@ class JuliaCodePrinter(CodePrinter):
 
 
     def _get_comment(self, text):
-        return "# {0}".format(text)
+        return "# {}".format(text)
 
 
     def _declare_number_const(self, name, value):
-        return "const {0} = {1}".format(name, value)
+        return "const {} = {}".format(name, value)
 
 
     def _format_code(self, lines):
@@ -196,7 +194,7 @@ class JuliaCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Pow(self, expr):
         powsymbol = '^' if all([x.is_number for x in expr.args]) else '.^'
@@ -228,7 +226,7 @@ class JuliaCodePrinter(CodePrinter):
         if self._settings["inline"]:
             return "pi"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_ImaginaryUnit(self, expr):
@@ -239,31 +237,32 @@ class JuliaCodePrinter(CodePrinter):
         if self._settings["inline"]:
             return "e"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_EulerGamma(self, expr):
         if self._settings["inline"]:
             return "eulergamma"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_Catalan(self, expr):
         if self._settings["inline"]:
             return "catalan"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_GoldenRatio(self, expr):
         if self._settings["inline"]:
             return "golden"
         else:
-            return super(JuliaCodePrinter, self)._print_NumberSymbol(expr)
+            return super()._print_NumberSymbol(expr)
 
 
     def _print_Assignment(self, expr):
+        from sympy.codegen.ast import Assignment
         from sympy.functions.elementary.piecewise import Piecewise
         from sympy.tensor.indexed import IndexedBase
         # Copied from codeprinter, but remove special MatrixSymbol treatment
@@ -357,20 +356,6 @@ class JuliaCodePrinter(CodePrinter):
                                             self._print(AIJ), A.rows, A.cols)
 
 
-    # FIXME: Str/CodePrinter could define each of these to call the _print
-    # method from higher up the class hierarchy (see _print_NumberSymbol).
-    # Then subclasses like us would not need to repeat all this.
-    _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
-    _print_MutableSparseMatrix = \
-        _print_ImmutableSparseMatrix = \
-        _print_SparseMatrix
-
-
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
             + '[%s,%s]' % (expr.i + 1, expr.j + 1)
@@ -449,7 +434,7 @@ class JuliaCodePrinter(CodePrinter):
             # Express each (cond, expr) pair in a nested Horner form:
             #   (condition) .* (expr) + (not cond) .* (<others>)
             # Expressions that result in multiple statements won't work here.
-            ecpairs = ["({0}) ? ({1}) :".format
+            ecpairs = ["({}) ? ({}) :".format
                        (self._print(c), self._print(e))
                        for e, c in expr.args[:-1]]
             elast = " (%s)" % self._print(expr.args[-1].expr)
@@ -547,7 +532,7 @@ def julia_code(expr, assign_to=None, **settings):
     >>> julia_code(sin(x).series(x).removeO())
     'x.^5/120 - x.^3/6 + x'
 
-    >>> from sympy import Rational, ceiling, Abs
+    >>> from sympy import Rational, ceiling
     >>> x, y, tau = symbols("x, y, tau")
     >>> julia_code((2*tau)**Rational(7, 2))
     '8*sqrt(2)*tau.^(7/2)'
@@ -628,7 +613,7 @@ def julia_code(expr, assign_to=None, **settings):
     ``contract=False`` will just print the assignment expression that should be
     looped over:
 
-    >>> from sympy import Eq, IndexedBase, Idx, ccode
+    >>> from sympy import Eq, IndexedBase, Idx
     >>> len_y = 5
     >>> y = IndexedBase('y', shape=(len_y,))
     >>> t = IndexedBase('t', shape=(len_y,))
