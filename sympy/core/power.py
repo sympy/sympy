@@ -13,7 +13,6 @@ from .parameters import global_parameters
 from .kind import KindDispatcher
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.multipledispatch import Dispatcher
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 

@@ -10,7 +10,7 @@ from .operations import AssocOp
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
-from .kind import UndefinedKind, KindDispatcher
+from .kind import KindDispatcher
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
