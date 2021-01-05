@@ -475,14 +475,14 @@ class MatrixStudentTDistribution(MatrixDistribution):
     @staticmethod
     def check(nu, location_matrix, scale_matrix_1, scale_matrix_2):
         if not isinstance(scale_matrix_1, MatrixSymbol):
-            _value_check(scale_matrix_1.is_positive_definite, "The shape "
+            _value_check(scale_matrix_1.is_positive_definite != False, "The shape "
                                                               "matrix must be positive definite.")
         if not isinstance(scale_matrix_2, MatrixSymbol):
-            _value_check(scale_matrix_2.is_positive_definite, "The shape "
+            _value_check(scale_matrix_2.is_positive_definite != False, "The shape "
                                                               "matrix must be positive definite.")
-        _value_check(scale_matrix_1.is_square, "Scale matrix 1 should be "
+        _value_check(scale_matrix_1.is_square != False, "Scale matrix 1 should be "
                                                "be square matrix")
-        _value_check(scale_matrix_2.is_square, "Scale matrix 2 should be "
+        _value_check(scale_matrix_2.is_square != False, "Scale matrix 2 should be "
                                                "be square matrix")
         n = location_matrix.shape[0]
         p = location_matrix.shape[1]
