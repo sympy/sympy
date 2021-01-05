@@ -20,7 +20,6 @@ from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 from math import sqrt as _sqrt
 
 
-
 def isqrt(n):
     """Return the largest integer less than or equal to sqrt(n)."""
     if n < 0:
@@ -267,7 +266,12 @@ class Pow(Expr):
 
     __slots__ = ('is_commutative',)
 
-    _kind_dispatcher = KindDispatcher("Pow_kind_dispatcher", commutative=False)
+    kind_dispatcher = KindDispatcher("Pow_kind_dispatcher", commutative=False)
+
+    @property
+    def kind(self):
+        arg_kinds = (a.kind for a in self.args)
+        return self.kind_dispatcher(*arg_kinds)
 
     @cacheit
     def __new__(cls, b, e, evaluate=None):
@@ -1743,7 +1747,7 @@ def power(b, e, evaluate=False, **kwargs):
     kwargs.update(evaluate=evaluate)
 
     b, e = _sympify(b), _sympify(e)
-    selected_kind = Pow._kind_dispatcher(b.kind, e.kind)
+    selected_kind = Pow.kind_dispatcher(b.kind, e.kind)
     func = selected_kind.pow
     return func(b, e, **kwargs)
 

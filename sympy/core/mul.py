@@ -154,12 +154,12 @@ class Mul(Expr, AssocOp):
     is_Mul = True
 
     _args_type = Expr
-    _kind_dispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
+    kind_dispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
 
     @property
     def kind(self):
         arg_kinds = (a.kind for a in self.args)
-        return self._kind_dispatcher(*arg_kinds)
+        return self.kind_dispatcher(*arg_kinds)
 
     def __neg__(self):
         c, args = self.as_coeff_mul()
@@ -1999,7 +1999,7 @@ def mul(*args, evaluate=False, **kwargs):
 
     args = [_sympify(a) for a in args]
     kinds = [a.kind for a in args]
-    selected_kind = Mul._kind_dispatcher(*kinds)
+    selected_kind = Mul.kind_dispatcher(*kinds)
     func = selected_kind.mul
     return func(*args, **kwargs)
 

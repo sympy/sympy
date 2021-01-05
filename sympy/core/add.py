@@ -155,7 +155,7 @@ class Add(Expr, AssocOp):
     is_Add = True
 
     _args_type = Expr
-    _kind_dispatcher = KindDispatcher("Add_kind_dispatcher", commutative=True)
+    kind_dispatcher = KindDispatcher("Add_kind_dispatcher", commutative=True)
 
     @classmethod
     def flatten(cls, seq):
@@ -378,7 +378,7 @@ class Add(Expr, AssocOp):
     @property
     def kind(self):
         arg_kinds = (a.kind for a in self.args)
-        return self._kind_dispatcher(*arg_kinds)
+        return self.kind_dispatcher(*arg_kinds)
 
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.
@@ -1221,7 +1221,7 @@ def add(*args, evaluate=False, **kwargs):
 
     args = [_sympify(a) for a in args]
     kinds = [a.kind for a in args]
-    selected_kind = Add._kind_dispatcher(*kinds)
+    selected_kind = Add.kind_dispatcher(*kinds)
     func = selected_kind.add
     return func(*args, **kwargs)
 
