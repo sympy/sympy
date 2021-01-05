@@ -960,7 +960,7 @@ def test_MatrixSymbol_printing():
     B = MatrixSymbol("B", 3, 3)
 
     assert str(A - A*B - B) == "A - A*B - B"
-    assert str(A*B - (A+B)) == "-(A + B) + A*B"
+    assert str(A*B - (A+B)) == "-A + A*B - B"
     assert str(A**(-1)) == "A**(-1)"
     assert str(A**3) == "A**3"
 
