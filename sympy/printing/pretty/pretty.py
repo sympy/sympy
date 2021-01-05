@@ -1917,8 +1917,8 @@ class PrettyPrinter(Printer):
         rootsign = xobj('\\', 1) + _zZ
         # Constructing the number to put on root
         rpretty = self._print(root)
-        # If n is not an integer or simple symbol, print without root sign
-        if not root.is_Integer and (rpretty.height() > 1 or rpretty.width() > 1):
+        # roots look bad if they are not a single line
+        if rpretty.height() != 1:
             return self._print(base)**self._print(1/root)
         # If power is half, no number should appear on top of root sign
         exp = '' if root == 2 else str(rpretty).ljust(2)

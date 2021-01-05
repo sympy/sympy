@@ -7246,16 +7246,12 @@ def test_issue_17616():
 
     z = Symbol("x_17")
     assert upretty(7**(1/z)) == \
-    '  1 \n'\
-    ' ───\n'\
-    ' x₁₇\n'\
-    '7   '
+    'x₁₇___\n'\
+    ' ╲╱ 7 '
 
     assert pretty(7**(1/z)) == \
-    '  1  \n'\
-    ' ----\n'\
-    ' x_17\n'\
-    '7    '
+    'x_17___\n'\
+    '  \\/ 7 '
 
 
 def test_issue_17857():
