@@ -1,6 +1,6 @@
 from sympy import (symbols, gamma, expand_func, beta, betainc,
         hyper, diff, conjugate, Integral, Dummy, I,
-        regularized_betainc)
+        betainc_regularized)
 from sympy.functions.special.gamma_functions import polygamma
 from sympy.core.function import ArgumentIndexError
 from sympy.testing.pytest import raises
@@ -39,14 +39,14 @@ def test_betainc():
     assert betainc(a, b, 0, 1).rewrite(Integral).dummy_eq(beta(a, b).rewrite(Integral))
     assert betainc(1, 2, 0, x2).rewrite(hyper) == x2*hyper((1, -1), (2,), x2)
 
-def test_regularized_betainc():
+def test_betainc_regularized():
     a, b, x1, x2 = symbols('a b x1 x2')
 
-    assert isinstance(regularized_betainc(a, b, x1, x2), regularized_betainc)
-    assert isinstance(regularized_betainc(a, b, 0, x1), regularized_betainc)
+    assert isinstance(betainc_regularized(a, b, x1, x2), betainc_regularized)
+    assert isinstance(betainc_regularized(a, b, 0, x1), betainc_regularized)
 
-    assert regularized_betainc(3, 5, 0, -1).is_real == True
-    assert conjugate(regularized_betainc(3*I, 1, 2 + I, 1 + 2*I)) == regularized_betainc(-3*I, 1, 2 - I, 1 - 2*I)
+    assert betainc_regularized(3, 5, 0, -1).is_real == True
+    assert conjugate(betainc_regularized(3*I, 1, 2 + I, 1 + 2*I)) == betainc_regularized(-3*I, 1, 2 - I, 1 - 2*I)
 
-    assert regularized_betainc(a, b, 0, 1).rewrite(Integral) == 1
-    assert regularized_betainc(1, 2, x1, x2).rewrite(hyper) == 2*x2*hyper((1, -1), (2,), x2) - 2*x1*hyper((1, -1), (2,), x1)
+    assert betainc_regularized(a, b, 0, 1).rewrite(Integral) == 1
+    assert betainc_regularized(1, 2, x1, x2).rewrite(hyper) == 2*x2*hyper((1, -1), (2,), x2) - 2*x1*hyper((1, -1), (2,), x1)

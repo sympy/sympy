@@ -109,7 +109,7 @@ class beta(Function):
 
     @classmethod
     def eval(cls, x, y=None):
-        if y == None:
+        if y is None:
             return beta(x, x)
         if y is S.One:
             return 1/x
@@ -233,7 +233,7 @@ class betainc(Function):
 #################### REGULARIZED INCOMPLETE BETA FUNCTION #####################
 ###############################################################################
 
-class regularized_betainc(Function):
+class betainc_regularized(Function):
     r"""
     The Generalized Regularized Incomplete Beta function is given by
 
@@ -251,41 +251,41 @@ class regularized_betainc(Function):
     Examples
     ========
 
-    >>> from sympy import regularized_betainc, symbols, conjugate
+    >>> from sympy import betainc_regularized, symbols, conjugate
     >>> a, b, x, x1, x2 = symbols('a b x x1 x2')
 
     The Generalized Regularized Incomplete Beta
     function is given by:
 
-    >>> regularized_betainc(a, b, x1, x2)
-    regularized_betainc(a, b, x1, x2, 1)
+    >>> betainc_regularized(a, b, x1, x2)
+    betainc_regularized(a, b, x1, x2, 1)
 
     The Regularized Incomplete Beta function
     can be obtained as follows:
 
-    >>> regularized_betainc(a, b, 0, x)
-    regularized_betainc(a, b, 0, x, 1)
+    >>> betainc_regularized(a, b, 0, x)
+    betainc_regularized(a, b, 0, x, 1)
 
     The Regularized Incomplete Beta function
     obeys the mirror symmetry:
 
-    >>> conjugate(regularized_betainc(a, b, x1, x2))
-    regularized_betainc(conjugate(a), conjugate(b), conjugate(x1), conjugate(x2), 1)
+    >>> conjugate(betainc_regularized(a, b, x1, x2))
+    betainc_regularized(conjugate(a), conjugate(b), conjugate(x1), conjugate(x2), 1)
 
     We can numerically evaluate the Regularized Incomplete Beta
     function to arbitrary precision on the whole complex plane:
 
-    >>> from sympy import regularized_betainc, pi, E
-    >>> regularized_betainc(1, 2, 0, 0.25).evalf(10)
+    >>> from sympy import betainc_regularized, pi, E
+    >>> betainc_regularized(1, 2, 0, 0.25).evalf(10)
     0.4375000000
-    >>> regularized_betainc(pi, E, 0, 1).evalf(5)
+    >>> betainc_regularized(pi, E, 0, 1).evalf(5)
     1.00000
 
     The Generalized Regularized Incomplete Beta function can be
     expressed in terms of the Generalized Hypergeometric function.
 
     >>> from sympy import hyper
-    >>> regularized_betainc(a, b, x1, x2).rewrite(hyper)
+    >>> betainc_regularized(a, b, x1, x2).rewrite(hyper)
     (-x1**a*hyper((a, 1 - b), (a + 1,), x1) + x2**a*hyper((a, 1 - b), (a + 1,), x2))/(a*beta(a, b))
 
     See Also

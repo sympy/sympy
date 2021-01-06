@@ -2499,9 +2499,9 @@ def test_sympy__functions__special__beta_functions__betainc():
     from sympy.functions.special.beta_functions import betainc
     assert _test_args(betainc(a, b, x, y))
 
-def test_sympy__functions__special__beta_functions__regularized_betainc():
-    from sympy.functions.special.beta_functions import regularized_betainc
-    assert _test_args(regularized_betainc(a, b, x, y))
+def test_sympy__functions__special__beta_functions__betainc_regularized():
+    from sympy.functions.special.beta_functions import betainc_regularized
+    assert _test_args(betainc_regularized(a, b, x, y))
 
 
 def test_sympy__functions__special__mathieu_functions__MathieuBase():
