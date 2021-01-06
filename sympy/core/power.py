@@ -1746,9 +1746,7 @@ UndefinedKind.pow = Pow
 NumberKind.pow = Pow
 
 
-def power(b, e, evaluate=False, **kwargs):
-    kwargs.update(evaluate=evaluate)
-
+def power(b, e, **kwargs):
     b, e = _sympify(b), _sympify(e)
     selected_kind = Pow.kind_dispatcher(b.kind, e.kind)
     func = selected_kind.pow

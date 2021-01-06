@@ -1998,11 +1998,11 @@ UndefinedKind.mul = Mul
 NumberKind.mul = Mul
 
 
-def mul(args, evaluate=False, **kwargs):
+def mul(args, **kwargs):
     if not args:
         return S.One
 
-    kwargs.update(evaluate=evaluate, _sympify=False)
+    kwargs.update(_sympify=False)
 
     args = [_sympify(a) for a in args]
     kinds = [a.kind for a in args]

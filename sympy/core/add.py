@@ -1220,11 +1220,11 @@ UndefinedKind.add = Add
 NumberKind.add = Add
 
 
-def add(args, evaluate=False, **kwargs):
+def add(args, **kwargs):
     if not args:
         return S.Zero
 
-    kwargs.update(evaluate=evaluate, _sympify=False)
+    kwargs.update(_sympify=False)
 
     args = [_sympify(a) for a in args]
     kinds = [a.kind for a in args]
