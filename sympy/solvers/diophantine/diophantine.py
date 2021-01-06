@@ -254,7 +254,7 @@ class Linear(DiophantineEquationType):
     ========
 
     >>> from sympy.solvers.diophantine.diophantine import Linear
-    >>> from sympy.abc import x, y, z, t
+    >>> from sympy.abc import x, y, z
     >>> l1 = Linear(2*x - 3*y - 5)
     >>> l1.matches() # is this equation linear
     True
@@ -453,7 +453,7 @@ class BinaryQuadratic(DiophantineEquationType):
     Examples
     ========
 
-    >>> from sympy.abc import x, y, t
+    >>> from sympy.abc import x, y
     >>> from sympy.solvers.diophantine.diophantine import BinaryQuadratic
     >>> b1 = BinaryQuadratic(x**3 + y**2 + 1)
     >>> b1.matches()
@@ -978,7 +978,7 @@ class GeneralSumOfSquares(DiophantineEquationType):
     ========
 
     >>> from sympy.solvers.diophantine.diophantine import GeneralSumOfSquares
-    >>> from sympy.abc import a, b, c, d, e, f
+    >>> from sympy.abc import a, b, c, d, e
     >>> GeneralSumOfSquares(a**2 + b**2 + c**2 + d**2 + e**2 - 2345).solve()
     {(15, 22, 22, 24, 24)}
 
@@ -1042,7 +1042,7 @@ class GeneralPythagorean(DiophantineEquationType):
     ========
 
     >>> from sympy.solvers.diophantine.diophantine import GeneralPythagorean
-    >>> from sympy.abc import a, b, c, d, e, x, y, z, t, u
+    >>> from sympy.abc import a, b, c, d, e, x, y, z, t
     >>> GeneralPythagorean(a**2 + b**2 + c**2 - d**2).solve()
     {(t_0**2 + t_1**2 - t_2**2, 2*t_0*t_2, 2*t_1*t_2, t_0**2 + t_1**2 + t_2**2)}
     >>> GeneralPythagorean(9*a**2 - 4*b**2 + 16*c**2 + 25*d**2 + e**2).solve(parameters=[x, y, z, t])
