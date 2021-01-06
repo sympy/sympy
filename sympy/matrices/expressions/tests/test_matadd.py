@@ -9,20 +9,20 @@ X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 2)
 
 def test_evaluate():
-    assert MatAdd(X, X, evaluate=True) == add(X, X, evaluate=True) == MatAdd(X, X).doit()
+    assert MatAdd(X, X, evaluate=True) == add([X, X], evaluate=True) == MatAdd(X, X).doit()
 
 def test_sort_key():
-    assert MatAdd(Y, X).doit().args == add(Y, X).doit().args == (X, Y)
+    assert MatAdd(Y, X).doit().args == add([Y, X]).doit().args == (X, Y)
 
 
 def test_matadd_sympify():
     assert isinstance(MatAdd(eye(1), eye(1)).args[0], Basic)
-    assert isinstance(add(eye(1), eye(1)).args[0], Basic)
+    assert isinstance(add([eye(1), eye(1)]).args[0], Basic)
 
 
 def test_matadd_of_matrices():
     assert MatAdd(eye(2), 4*eye(2), eye(2)).doit() == ImmutableMatrix(6*eye(2))
-    assert add(eye(2), 4*eye(2), eye(2)).doit() == ImmutableMatrix(6*eye(2))
+    assert add([eye(2), 4*eye(2), eye(2)]).doit() == ImmutableMatrix(6*eye(2))
 
 
 def test_doit_args():
@@ -31,7 +31,7 @@ def test_doit_args():
     assert MatAdd(A, MatPow(B, 2)).doit() == A + B**2
     assert MatAdd(A, MatMul(A, B)).doit() == A + A*B
     assert (MatAdd(A, X, MatMul(A, B), Y, MatAdd(2*A, B)).doit() ==
-    add(A, X, MatMul(A, B), Y, add(2*A, B)).doit() ==
+    add([A, X, MatMul(A, B), Y, add([2*A, B])]).doit() ==
     MatAdd(3*A + A*B + B, X, Y))
 
 

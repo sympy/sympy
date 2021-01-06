@@ -1994,7 +1994,10 @@ class Mul(Expr, AssocOp):
         return tuple(self.as_ordered_factors())
 
 
-def mul(*args, evaluate=False, **kwargs):
+def mul(args, evaluate=False, **kwargs):
+    if not args:
+        return S.One
+
     kwargs.update(evaluate=evaluate, _sympify=False)
 
     args = [_sympify(a) for a in args]

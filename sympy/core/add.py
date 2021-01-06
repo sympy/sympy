@@ -1216,7 +1216,10 @@ class Add(Expr, AssocOp):
         return Add(*[-i for i in self.args])
 
 
-def add(*args, evaluate=False, **kwargs):
+def add(args, evaluate=False, **kwargs):
+    if not args:
+        return S.Zero
+
     kwargs.update(evaluate=evaluate, _sympify=False)
 
     args = [_sympify(a) for a in args]
