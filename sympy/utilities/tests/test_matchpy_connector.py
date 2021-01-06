@@ -1,5 +1,3 @@
-from matchpy import ReplacementRule
-
 from sympy import symbols, cos, sin
 from sympy.external import import_module
 from sympy.utilities.matchpy_connector import WildDot, WildPlus, WildStar
@@ -52,7 +50,7 @@ def test_matchpy_optional():
         return
 
     from matchpy import Pattern, Substitution
-    from matchpy import ManyToOneReplacer
+    from matchpy import ManyToOneReplacer, ReplacementRule
 
     p = WildDot("p", optional=1)
     q = WildDot("q", optional=0)
