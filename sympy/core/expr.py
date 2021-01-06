@@ -880,6 +880,8 @@ class Expr(Basic, EvalfMixin):
             f = self.evalf(2)
             if f is None or f is S.NaN:
                 return None
+            if f in (S.Infinity, S.NegativeInfinity):
+                return bool((f > 0) if positive else (f < 0))
             if f.is_Float:
                 match = f, S.Zero
             else:
