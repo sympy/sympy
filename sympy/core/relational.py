@@ -1233,9 +1233,6 @@ def is_ge(lhs, rhs):
                 rv = diff.is_extended_nonnegative
                 if rv is not None:
                     return rv
-                rv = diff.evalf(2).is_extended_nonnegative
-                if rv is not None:
-                    return rv
 
 
 def is_neq(lhs, rhs):
