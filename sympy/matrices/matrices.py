@@ -783,21 +783,6 @@ class MatrixKind(Kind):
     def __repr__(self):
         return "MatrixKind(%s)" % self.element_kind
 
-    @property
-    def add(self):
-        from .expressions.matadd import MatAdd
-        return MatAdd
-
-    @property
-    def mul(self):
-        from .expressions.matmul import MatMul
-        return MatMul
-
-    @property
-    def pow(self):
-        from .expressions.matpow import MatPow
-        return MatPow
-
 
 @Mul.kind_dispatcher.register(_NumberKind, MatrixKind)
 def num_mat_mul(k1, k2):

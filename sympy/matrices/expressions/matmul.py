@@ -4,7 +4,7 @@ from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
 from sympy.matrices.common import ShapeError, NonInvertibleMatrixError
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrices import MatrixBase, MatrixKind
 
 from .inverse import Inverse
 from .matexpr import MatrixExpr
@@ -205,6 +205,9 @@ class MatMul(MatrixExpr, Mul):
                 lines.append(i)
 
         return lines
+
+
+MatrixKind.mul = MatMul
 
 
 def validate(*matrices):

@@ -1,4 +1,5 @@
 from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.matrices import MatrixKind
 from .matexpr import MatrixExpr
 from .special import Identity
 from sympy.core import S, Pow
@@ -138,3 +139,6 @@ class MatPow(MatrixExpr, Pow):
 
     def _eval_inverse(self):
         return MatPow(self.base, -self.exp)
+
+
+MatrixKind.pow = MatPow

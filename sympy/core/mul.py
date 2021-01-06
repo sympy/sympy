@@ -10,7 +10,7 @@ from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
 from .expr import Expr
 from .parameters import global_parameters
-from .kind import KindDispatcher
+from .kind import KindDispatcher, UndefinedKind, NumberKind
 
 
 # internal marker to indicate:
@@ -1992,6 +1992,10 @@ class Mul(Expr, AssocOp):
     @property
     def _sorted_args(self):
         return tuple(self.as_ordered_factors())
+
+
+UndefinedKind.mul = Mul
+NumberKind.mul = Mul
 
 
 def mul(args, evaluate=False, **kwargs):

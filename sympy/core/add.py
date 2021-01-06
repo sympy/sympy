@@ -10,7 +10,7 @@ from .operations import AssocOp
 from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
-from .kind import KindDispatcher
+from .kind import KindDispatcher, UndefinedKind, NumberKind
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -1214,6 +1214,10 @@ class Add(Expr, AssocOp):
         if not global_parameters.distribute:
             return super().__neg__()
         return Add(*[-i for i in self.args])
+
+
+UndefinedKind.add = Add
+NumberKind.add = Add
 
 
 def add(args, evaluate=False, **kwargs):
