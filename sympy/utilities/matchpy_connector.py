@@ -103,7 +103,8 @@ class _WildAbstract(Wildcard, Symbol):
     def __init__(self, variable_name=None, optional=None, **assumptions):
         min_length = self.min_length
         fixed_size = self.fixed_size
-        optional = _sympify(optional)
+        if optional is not None:
+            optional = _sympify(optional)
         Wildcard.__init__(self, min_length, fixed_size, str(variable_name), optional)
 
     def __new__(cls, variable_name=None, optional=None, **assumptions):
