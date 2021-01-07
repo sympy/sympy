@@ -1751,12 +1751,9 @@ def _eval_is_ge(a, b):
             return is_ge(a.exp, b.exp)
         base_greater = is_ge(a.base, b.base)
         exp_greater = is_ge(a.exp, b.exp)
-        rv = base_greater
-        if base_greater != exp_greater:
-            try:
-                rv = is_ge(log(log(a.base)) + log(a.exp), log(log(b.base)) + log(b.exp))
-            except:
-                rv = None
+        rv = fuzzy_and([base_greater, exp_greater])
+        if base_greater != exp_greater and rv is not None:
+            rv = is_ge(log(log(a.base)) + log(a.exp), log(log(b.base)) + log(b.exp))
         return rv
 
 from .add import Add
