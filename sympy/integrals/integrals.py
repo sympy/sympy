@@ -397,8 +397,8 @@ class Integral(AddWithLimits):
         if not hints.get('integrals', True):
             return self
 
+        # fixes issue 20693
         from sympy import Function, Pow, symbols
-        args = Add.make_args(self)
         if isinstance(self.args[1][0], Function):
             if isinstance(self.args[0], Pow):
                 t = symbols('t')
