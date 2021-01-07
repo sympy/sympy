@@ -317,11 +317,7 @@ class Mul(Expr, AssocOp):
                         # the exponent is an integer
                         if e.is_Rational:
                             if e.is_Integer:
-                                c = Pow(b, e)
-                                if c.is_Number:
-                                    coeff *= c
-                                else:
-                                    c_part.append(c)
+                                c_part.append(Pow(b, e))
                                 continue
                             elif e.is_negative:    # also a sign of an unevaluated power
                                 seq.append(Pow(b, e))

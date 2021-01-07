@@ -1745,10 +1745,19 @@ power.add((object, object), Pow)
 @dispatch(Pow, Pow)
 def _eval_is_ge(a, b):
     from sympy.core.relational import is_ge
+    from sympy.functions.elementary.exponential import log
     if is_ge(a.base, S.One) and is_ge(b.base, S.One):
+        if a.base == b.base:
+            return is_ge(a.exp, b.exp)
         base_greater = is_ge(a.base, b.base)
         exp_greater = is_ge(a.exp, b.exp)
-        return fuzzy_and([base_greater, exp_greater])
+        rv = base_greater
+        if base_greater != exp_greater:
+            try:
+                rv = is_ge(log(log(a.base)) + log(a.exp), log(log(b.base)) + log(b.exp))
+            except:
+                rv = None 
+        return rv
 
 from .add import Add
 from .numbers import Integer
