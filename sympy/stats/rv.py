@@ -1514,7 +1514,7 @@ class NamedArgsMixin:
 
 class Distribution(Basic):
 
-    def sample(self, size=(), library='scipy'):
+    def sample(self, size=(), library='scipy', seed=None):
         """ A random realization from the distribution """
 
         module = import_module(library)
@@ -1531,16 +1531,21 @@ class Distribution(Basic):
             # I will remove all these comments if everything is ok.
 
             from sympy.stats.sampling.sample_scipy import do_sample_scipy
-            samps = do_sample_scipy(self, size)
+            samps = do_sample_scipy(self, size, seed)
         elif library == 'numpy':
             from sympy.stats.sampling.sample_numpy import do_sample_numpy
-            samps = do_sample_numpy(self, size)
+            import numpy
+            if seed is None or isinstance(seed, int):
+                rand_state = numpy.random.default_rng(seed=seed)
+            else:
+                rand_state = seed
+            samps = do_sample_numpy(self, size, rand_state)
         elif library == 'pymc3':
             from sympy.stats.sampling.sample_pymc3 import do_sample_pymc3
             import pymc3
             with pymc3.Model():
                 if do_sample_pymc3(self):
-                    samps = pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+                    samps = pymc3.sample(size, chains=1, progressbar=False, random_seed=seed)[:]['X']
                 else:
                     samps = None
         else:

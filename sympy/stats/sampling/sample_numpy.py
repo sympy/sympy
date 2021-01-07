@@ -11,71 +11,71 @@ numpy = import_module('numpy')
 
 
 @singledispatch
-def do_sample_numpy(dist, size):
+def do_sample_numpy(dist, size, rand_state):
     return None
 
 
 # CRV:
 
 @do_sample_numpy.register
-def _(dist: BetaDistribution, size):
-    return numpy.random.beta(a=float(dist.alpha), b=float(dist.beta), size=size)
+def _(dist: BetaDistribution, size, rand_state):
+    return rand_state.beta(a=float(dist.alpha), b=float(dist.beta), size=size)
 
 
 @do_sample_numpy.register
-def _(dist: ChiSquaredDistribution, size):
-    return numpy.random.chisquare(df=float(dist.k), size=size)
+def _(dist: ChiSquaredDistribution, size, rand_state):
+    return rand_state.chisquare(df=float(dist.k), size=size)
 
 
 @do_sample_numpy.register
-def _(dist: ExponentialDistribution, size):
-    return numpy.random.exponential(1 / float(dist.rate), size=size)
+def _(dist: ExponentialDistribution, size, rand_state):
+    return rand_state.exponential(1 / float(dist.rate), size=size)
 
 
 @do_sample_numpy.register
-def _(dist: GammaDistribution, size):
-    return numpy.random.gamma(float(dist.k), float(dist.theta), size=size)
+def _(dist: GammaDistribution, size, rand_state):
+    return rand_state.gamma(float(dist.k), float(dist.theta), size=size)
 
 
 @do_sample_numpy.register
-def _(dist: LogNormalDistribution, size):
-    return numpy.random.lognormal(float(dist.mean), float(dist.std), size=size)
+def _(dist: LogNormalDistribution, size, rand_state):
+    return rand_state.lognormal(float(dist.mean), float(dist.std), size=size)
 
 
 @do_sample_numpy.register
-def _(dist: NormalDistribution, size):
-    return numpy.random.normal(float(dist.mean), float(dist.std), size=size)
+def _(dist: NormalDistribution, size, rand_state):
+    return rand_state.normal(float(dist.mean), float(dist.std), size=size)
 
 
 @do_sample_numpy.register
-def _(dist: ParetoDistribution, size):
+def _(dist: ParetoDistribution, size, rand_state):
     return (numpy.random.pareto(a=float(dist.alpha), size=size) + 1) * float(dist.xm)
 
 
 @do_sample_numpy.register
-def _(dist: UniformDistribution, size):
-    return numpy.random.uniform(low=float(dist.left), high=float(dist.right), size=size)
+def _(dist: UniformDistribution, size, rand_state):
+    return rand_state.uniform(low=float(dist.left), high=float(dist.right), size=size)
 
 
 # DRV:
 
 @do_sample_numpy.register
-def _(dist: GeometricDistribution, size):
-    return numpy.random.geometric(p=float(dist.p), size=size)
+def _(dist: GeometricDistribution, size, rand_state):
+    return rand_state.geometric(p=float(dist.p), size=size)
 
 
 @do_sample_numpy.register
-def _(dist: PoissonDistribution, size):
-    return numpy.random.poisson(lam=float(dist.lamda), size=size)
+def _(dist: PoissonDistribution, size, rand_state):
+    return rand_state.poisson(lam=float(dist.lamda), size=size)
 
 
 @do_sample_numpy.register
-def _(dist: ZetaDistribution, size):
-    return numpy.random.zipf(a=float(dist.s), size=size)
+def _(dist: ZetaDistribution, size, rand_state):
+    return rand_state.zipf(a=float(dist.s), size=size)
 
 
 # FRV:
 
 @do_sample_numpy.register
-def _(dist: BinomialDistribution, size):
-    return numpy.random.binomial(n=int(dist.n), p=float(dist.p), size=size)
+def _(dist: BinomialDistribution, size, rand_state):
+    return rand_state.binomial(n=int(dist.n), p=float(dist.p), size=size)
