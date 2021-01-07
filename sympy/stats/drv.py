@@ -1,6 +1,6 @@
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
                    Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, poly,
-                   series, factorial, And, lambdify, floor)
+                   series, factorial, And, floor)
 
 from sympy.polys.polyerrors import PolynomialError
 from sympy.stats.crv import reduce_rational_inequalities_wrap
