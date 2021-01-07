@@ -1158,8 +1158,9 @@ def Singular_Value_Decomposition(A):
     Examples
     ========
 
+    we take a full rank matrix first:
+
     >>> from sympy import Matrix
-    we take a full rank matrix first
     >>> A = Matrix([[1, 2],[2,1]])
     >>> U, S, V = A.SVD()
     >>> U
@@ -1226,6 +1227,7 @@ def Singular_Value_Decomposition(A):
     You are able to append an arbitrary standard basis that are linearly
     independent to every other columns and you can run the Gram-Schmidt
     process to make them augmented as orthogonal basis.
+
     >>> V_aug = V.row_join(Matrix([[0,0,0,0,1],
     ... [0,0,0,1,0]]).H)
     >>> V_aug = V_aug.QRdecomposition()[0]
@@ -1252,6 +1254,7 @@ def Singular_Value_Decomposition(A):
     [0, 0, 0, 0, 1]])
 
     Similarly we augment U
+
     >>> U_aug = U.row_join(Matrix([0,0,1,0]))
     >>> U_aug = U_aug.QRdecomposition()[0]
     >>> U_aug
@@ -1275,6 +1278,7 @@ def Singular_Value_Decomposition(A):
     [0, 0, 0, 1]])
 
     We add 2 zero columns and one row to S
+
     >>> S_aug = S.col_join(Matrix([[0,0,0]]))
     >>> S_aug = S_aug.row_join(Matrix([[0,0,0,0],
     ... [0,0,0,0]]).H)
@@ -1292,7 +1296,6 @@ def Singular_Value_Decomposition(A):
 
     """
 
-    from sympy import Matrix
     AH = A.H
     m, n = A.shape
     if m >= n:
@@ -1304,7 +1307,13 @@ def Singular_Value_Decomposition(A):
                 ranked.append(i)
 
         V = V[:, ranked]
-        S = Matrix.diag([sqrt(S[i, i]) for i in range(S.rows) if i in ranked])
+
+        Singular_vals = [sqrt(S[i, i]) for i in range(S.rows) if i in ranked]
+
+        S = S.zeros(len(Singular_vals))
+
+        for i in range(len(Singular_vals)):
+            S[i, i] = Singular_vals[i]
 
         V, _ = V.QRdecomposition()
         U = A * V * S.inv()
@@ -1317,7 +1326,12 @@ def Singular_Value_Decomposition(A):
                 ranked.append(i)
 
         U = U[:, ranked]
-        S = Matrix.diag([sqrt(S[i, i]) for i in range(S.rows) if i in ranked])
+        Singular_vals = [sqrt(S[i, i]) for i in range(S.rows) if i in ranked]
+
+        S = S.zeros(len(Singular_vals))
+
+        for i in range(len(Singular_vals)):
+            S[i, i] = Singular_vals[i]
 
         U, _ = U.QRdecomposition()
         V = AH * U * S.inv()
