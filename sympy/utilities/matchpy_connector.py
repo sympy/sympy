@@ -2,6 +2,7 @@
 The objects in this module allow the usage of the MatchPy pattern matching
 library on SymPy expressions.
 """
+from sympy.core.sympify import _sympify
 from sympy.external import import_module
 from sympy.functions import (log, sin, cos, tan, cot, csc, sec, erf, gamma, uppergamma)
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
@@ -102,6 +103,8 @@ class _WildAbstract(Wildcard, Symbol):
     def __init__(self, variable_name=None, optional=None, **assumptions):
         min_length = self.min_length
         fixed_size = self.fixed_size
+        if optional is not None:
+            optional = _sympify(optional)
         Wildcard.__init__(self, min_length, fixed_size, str(variable_name), optional)
 
     def __new__(cls, variable_name=None, optional=None, **assumptions):

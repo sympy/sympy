@@ -67,6 +67,13 @@ class PolynomialRing(Ring, CompositeDomain):
             (self.dtype.ring, self.domain, self.symbols) == \
             (other.dtype.ring, other.domain, other.symbols)
 
+    def is_unit(self, a):
+        """Returns ``True`` if ``a`` is a unit of ``self``"""
+        if not a.is_ground:
+            return False
+        K = self.domain
+        return K.is_unit(K.convert_from(a, self))
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         return a.as_expr()
@@ -123,6 +130,16 @@ class PolynomialRing(Ring, CompositeDomain):
             return K1.from_PolynomialRing(q, K0.field.ring.to_domain())
         else:
             return None
+
+    def from_GlobalPolynomialRing(K1, a, K0):
+        """Convert from old poly ring to ``dtype``. """
+        if K1.symbols == K0.gens:
+            ad = a.to_dict()
+            if K1.domain != K0.domain:
+                ad = {m: K1.domain.convert(c) for m, c in ad.items()}
+            return K1(ad)
+        elif a.is_ground and K0.domain == K1:
+            return K1.convert_from(a.to_list()[0], K0.domain)
 
     def get_field(self):
         """Returns a field associated with `self`. """
