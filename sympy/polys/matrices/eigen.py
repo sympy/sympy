@@ -1,3 +1,8 @@
+"""
+
+Routines for computing eigenvectors with DomainMatrix.
+
+"""
 from sympy.core.symbol import Dummy
 
 from ..agca.extensions import FiniteExtension

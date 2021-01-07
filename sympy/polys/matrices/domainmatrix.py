@@ -1,3 +1,14 @@
+"""
+
+Module for the DomainMatrix class.
+
+A DomainMatrix represents a matrix with elements that are in a particular
+Domain. Each DomainMatrix internally wraps a DDM which is used for the
+lower-level operations. The idea is that the DomainMatrix class provides the
+convenience routines for converting between Expr and the poly domains as well
+as unifying matrices with different domains.
+
+"""
 from sympy.core.sympify import _sympify
 
 from ..constructor import construct_domain

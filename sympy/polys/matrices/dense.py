@@ -1,3 +1,39 @@
+"""
+
+Module for the ddm_* routines for operating on a matrix in list of lists
+matrix representation.
+
+These routines are used internally by the DDM class which also provides a
+friendlier interface for them. The idea here is to implement core matrix
+routines in a way that can be applied to any simple list representation
+without the need to use any particular matrix class. For example we can
+compute the RREF of a matrix like:
+
+    >>> from sympy.polys.matrices.dense import ddm_irref
+    >>> M = [[1, 2, 3], [4, 5, 6]]
+    >>> pivots = ddm_irref(M)
+    >>> M
+    [[1.0, 0.0, -1.0], [0, 1.0, 2.0]]
+
+These are lower-level routines that work mostly in place.The routines at this
+level should not need to know what the domain of the elements is but should
+ideally document what operations they will use and what functions they need to
+be provided with.
+
+The next-level up is the DDM class which uses these routines but wraps them up
+with an interface that handles copying etc and keeps track of the Domain of
+the elements of the matrix:
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.matrices.ddm import DDM
+    >>> M = DDM([[QQ(1), QQ(2), QQ(3)], [QQ(4), QQ(5), QQ(6)]], (2, 3), QQ)
+    >>> M
+    [[1, 2, 3], [4, 5, 6]]
+    >>> Mrref, pivots = M.rref()
+    >>> Mrref
+    [[1, 0, -1], [0, 1, 2]]
+
+"""
 from operator import mul
 
 from .exceptions import (
