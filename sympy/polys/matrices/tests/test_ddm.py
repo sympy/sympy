@@ -337,5 +337,3 @@ def test_DDM_charpoly():
 
     A = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
     raises(DDMShapeError, lambda: A.charpoly())
-
-
