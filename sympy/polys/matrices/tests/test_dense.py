@@ -337,5 +337,3 @@ def test_ddm_charpoly():
 
     A = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
     raises(DDMShapeError, lambda: ddm_berk(A, ZZ))
-
-
