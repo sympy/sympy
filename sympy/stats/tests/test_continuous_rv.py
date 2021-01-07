@@ -333,6 +333,20 @@ def test_sample_continuous():
     sym, val = list(Z.pspace.sample().items())[0]
     assert sym == Z and val in Interval(0, oo)
 
+    libraries = ['scipy', 'numpy', 'pymc3']
+    for lib in libraries:
+        try:
+            imported_lib = import_module(lib)
+            if imported_lib:
+                s0, s1, s2 = [], [], []
+                s0 = list(sample(Z, numsamples=10, library=lib, seed=0))
+                s1 = list(sample(Z, numsamples=10, library=lib, seed=0))
+                s2 = list(sample(Z, numsamples=10, library=lib, seed=1))
+                assert s0 == s1
+                assert s1 != s2
+        except NotImplementedError:
+            continue
+
 
 def test_ContinuousRV():
     pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))  # Normal distribution
