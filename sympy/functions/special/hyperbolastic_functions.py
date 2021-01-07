@@ -6,7 +6,7 @@ from sympy.core.sympify import sympify
 from sympy.core.function import Function, ArgumentIndexError
 
 class h1(Function):
-    r""" 
+    r"""
     The hyperbolastic rate equation of type I, denoted H1, is given by:
 
         dP(x)/dx = P(x)/M*(M-P(x))(delta + theta/(1+x**2)**(1/2))
@@ -54,12 +54,12 @@ class h1(Function):
         return M/(1 + alpha*exp(-delta*x - theta*asinh(x))).simplify()
 
 class h2(Function):
-    r""" 
+    r"""
     The hyperbolastic rate equation of type II, denoted H2, is given by:
 
     dP(x)/dx = alpha*delta*gamma*P(x)**2*x**(gamma - 1)/M*tanh(M - P(x)/alpha*p(x))
 
-    with initial condition P(t0) = P0 and γ > 0, where tanh stands for hyperbolic
+    with initial condition P(t0) = P0 and gamma > 0, where tanh stands for hyperbolic
     tangent function, M is the carrying capacity, and beta and gamma are parameters.
     As in the H1 model, parameter beta has to be positive for increasing growth
     curves with an asymptote at M and is negative only for decay profiles.
@@ -70,7 +70,7 @@ class h2(Function):
     Examples
     ========
 
-    >>> from sympy import diff, h2, symbols
+    >>> from sympy import h2, symbols
     >>> a ,b, c, x, y, z = symbols('M delta gamma x0 P0 x')
 
     >>> h2(a, b, c, x, y, z)
@@ -78,9 +78,6 @@ class h2(Function):
 
     >>> h2(a, 0, c, x, y, z)
     M*P0/(P0 + (M - P0)*log(1 + sqrt(2))**2)
-
-    >>> diff(h2(a, a, a, a, y, z), z)
-    M**3*P0*(M - P0)*exp(-M**2*x)*asinh(exp(-M**3))/(sqrt(1 + exp(-2*M**2*x))*(P0 + (M - P0)*asinh(exp(-M**3))*asinh(exp(-M**2*x)))**2)
 
     References
     ==========
@@ -159,4 +156,3 @@ class h3(Function):
 
                 alpha = (M - P0)*exp(delta*t0**gama + asinh(theta*t0))
                 return M - alpha*exp(-delta*t**gama-asinh(theta*t)).simplify()
-    
