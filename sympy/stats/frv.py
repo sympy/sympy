@@ -335,13 +335,12 @@ class FinitePSpace(PSpace):
                 for key, val in self._density.items() if domain._test(key)}
         return FinitePSpace(domain, density)
 
-    def sample(self, size=(), library='scipy'):
+    def sample(self, size=(), library='scipy', seed=None):
         """
         Internal sample method
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        return {self.value: self.distribution.sample(size, library)}
 
 
 class SingleFinitePSpace(SinglePSpace, FinitePSpace):

@@ -59,17 +59,17 @@ expr
 .. module:: sympy.core.expr
 
 Expr
-----
+^^^^
 .. autoclass:: Expr
    :members:
 
 UnevaluatedExpr
----------------
+^^^^^^^^^^^^^^^
 .. autoclass:: UnevaluatedExpr
    :members:
 
 AtomicExpr
-----------
+^^^^^^^^^^
 .. autoclass:: AtomicExpr
    :members:
 
@@ -549,3 +549,22 @@ ordered
 ^^^^^^^
 
 .. autofunction:: sympy.core.compatibility.ordered
+
+kind
+----
+.. module:: sympy.core.kind
+
+Kind
+^^^^
+.. autoclass:: Kind
+   :members:
+
+NumberKind
+^^^^^^^^^^
+.. autoclass:: NumberKind
+   :members:
+
+BooleanKind
+^^^^^^^^^^^
+.. autoclass:: BooleanKind
+   :members:

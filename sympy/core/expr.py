@@ -1,4 +1,6 @@
 from typing import Tuple as tTuple
+from collections.abc import Iterable
+from functools import reduce
 
 from .sympify import sympify, _sympify, SympifyError
 from .basic import Basic, Atom
@@ -6,7 +8,7 @@ from .singleton import S
 from .evalf import EvalfMixin, pure_complex
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
-from .compatibility import reduce, as_int, default_sort_key, Iterable
+from .compatibility import as_int, default_sort_key
 from sympy.utilities.misc import func_name
 from mpmath.libmp import mpf_log, prec_to_dps
 
@@ -855,6 +857,7 @@ class Expr(Basic, EvalfMixin):
             return False
 
     def _eval_is_extended_positive_negative(self, positive):
+        from sympy.core.numbers import pure_complex
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
@@ -876,8 +879,15 @@ class Expr(Basic, EvalfMixin):
             if n2 is S.NaN:
                 return None
 
-            r, i = self.evalf(2).as_real_imag()
-            if not i.is_Number or not r.is_Number:
+            f = self.evalf(2)
+            if f.is_Float:
+                match = f, S.Zero
+            else:
+                match = pure_complex(f)
+            if match is None:
+                return False
+            r, i = match
+            if not (i.is_Number and r.is_Number):
                 return False
             if r._prec != 1 and i._prec != 1:
                 return bool(not i and ((r > 0) if positive else (r < 0)))
@@ -3222,23 +3232,14 @@ class Expr(Basic, EvalfMixin):
         # terms.
         n = 0
         series = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
-        if not series.is_Order:
-            newseries = series.cancel()
-            if not newseries.is_Order:
-                if series.is_Add:
-                    yield series.removeO()
-                else:
-                    yield series
-                return
-            else:
-                series = newseries
 
         while series.is_Order:
             n += 1
             series = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+
         e = series.removeO()
         yield e
-        if e.is_zero:
+        if e is S.Zero:
             return
 
         while 1:

@@ -46,9 +46,10 @@ def build_latex(docsdir, outputdir, version):
     run('make', 'clean', cwd=latexdir, env=env)
     run('make', 'all', cwd=latexdir, env=env)
 
-    filename = 'sympy-%s.pdf' % (version,)
-    src = join('doc', '_build', 'latex', filename)
-    dst = join(outputdir, filename)
+    srcfilename = 'sympy-%s.pdf' % (version,)
+    dstfilename = 'sympy-docs-pdf-%s.pdf' % (version,)
+    src = join('doc', '_build', 'latex', srcfilename)
+    dst = join(outputdir, dstfilename)
     shutil.copyfile(src, dst)
 
 

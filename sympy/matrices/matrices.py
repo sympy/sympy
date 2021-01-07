@@ -6,6 +6,7 @@ from sympy.core.compatibility import (
     Callable, NotIterable, as_int, is_sequence)
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
+from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
@@ -18,6 +19,7 @@ from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
+from sympy.core.kind import Kind, NumberKind, _NumberKind
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
@@ -742,6 +744,65 @@ class MatrixDeprecated(MatrixCommon):
         return self.permute_rows(perm, direction='forward')
 
 
+class MatrixKind(Kind):
+    """
+    Kind for all matrices in SymPy.
+
+    Basic class for this kind is ``MatrixBase`` and ``MatrixExpr``,
+    but any expression representing the matrix can have this.
+
+    Parameters
+    ==========
+
+    element_kind : Kind
+        Kind of the element. Default is ``NumberKind``, which means that
+        the matrix contains only numbers.
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol, Integral
+    >>> from sympy.abc import x
+    >>> A = MatrixSymbol('A', 2,2)
+    >>> A.kind
+    MatrixKind(NumberKind)
+    >>> Integral(A,x).kind
+    MatrixKind(NumberKind)
+
+    See Also
+    ========
+
+    sympy.tensor.ArrayKind : Kind for N-dimensional arrays.
+
+    """
+    def __new__(cls, element_kind=NumberKind):
+        obj = super().__new__(cls, element_kind)
+        obj.element_kind = element_kind
+        return obj
+
+    def __repr__(self):
+        return "MatrixKind(%s)" % self.element_kind
+
+
+@Mul._kind_dispatcher.register(_NumberKind, MatrixKind)
+def num_mat_mul(k1, k2):
+    """
+    Return MatrixKind. The element kind is selected by recursive dispatching.
+    Do not need to dispatch in reversed order because KindDispatcher
+    searches for this automatically.
+    """
+    # Deal with Mul._kind_dispatcher's commutativity
+    elemk = Mul._kind_dispatcher(NumberKind, k2.element_kind)
+    return MatrixKind(elemk)
+
+@Mul._kind_dispatcher.register(MatrixKind, MatrixKind)
+def mat_mat_mul(k1, k2):
+    """
+    Return MatrixKind. The element kind is selected by recursive dispatching.
+    """
+    elemk = Mul._kind_dispatcher(k1.element_kind, k2.element_kind)
+    return MatrixKind(elemk)
+
 class MatrixBase(MatrixDeprecated,
                  MatrixCalculus,
                  MatrixEigen,
@@ -756,6 +817,8 @@ class MatrixBase(MatrixDeprecated,
     _sympify = staticmethod(sympify)
     zero = S.Zero
     one = S.One
+
+    kind = MatrixKind()
 
     def __array__(self, dtype=object):
         from .dense import matrix2numpy

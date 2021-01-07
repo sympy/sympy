@@ -30,6 +30,7 @@ lowered when the tensor is put in canonical form.
 """
 
 from typing import Any, Dict as tDict, List, Set
+from functools import reduce
 
 from abc import abstractmethod, ABCMeta
 from collections import defaultdict
@@ -41,7 +42,7 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.assumptions import ManagedProperties
-from sympy.core.compatibility import reduce, SYMPY_INTS
+from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.containers import Tuple, Dict
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols

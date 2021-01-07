@@ -2276,9 +2276,11 @@ class Subs(Expr):
                 # do Subs that aren't related to differentiation
                 undone2 = []
                 D = Dummy()
+                arg = e.args[0]
                 for vi, pi in undone:
                     if D not in e.xreplace({vi: D}).free_symbols:
-                        e = e.subs(vi, pi)
+                        if arg.has(vi):
+                            e = e.subs(vi, pi)
                     else:
                         undone2.append((vi, pi))
                 undone = undone2

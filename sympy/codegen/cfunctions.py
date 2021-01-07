@@ -22,12 +22,16 @@ class expm1(Function):
     """
     Represents the exponential function minus one.
 
+    Explanation
+    ===========
+
     The benefit of using ``expm1(x)`` over ``exp(x) - 1``
     is that the latter is prone to cancellation under finite precision
     arithmetic when x is close to zero.
 
     Examples
     ========
+
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import expm1
     >>> '%.0e' % expm1(1e-99).evalf()
@@ -82,6 +86,9 @@ def _log1p(x):
 class log1p(Function):
     """
     Represents the natural logarithm of a number plus one.
+
+    Explanation
+    ===========
 
     The benefit of using ``log1p(x)`` over ``log(x + 1)``
     is that the latter is prone to cancellation under finite precision
@@ -162,6 +169,9 @@ class exp2(Function):
     """
     Represents the exponential function with base two.
 
+    Explanation
+    ===========
+
     The benefit of using ``exp2(x)`` over ``2**x``
     is that the latter is not as efficient under finite precision
     arithmetic.
@@ -214,6 +224,9 @@ def _log2(x):
 class log2(Function):
     """
     Represents the logarithm function with base two.
+
+    Explanation
+    ===========
 
     The benefit of using ``log2(x)`` over ``log(x)/log(2)``
     is that the latter is not as efficient under finite precision
@@ -275,6 +288,9 @@ def _fma(x, y, z):
 class fma(Function):
     """
     Represents "fused multiply add".
+
+    Explanation
+    ===========
 
     The benefit of using ``fma(x, y, z)`` over ``x*y + z``
     is that, under finite precision arithmetic, the former is
@@ -374,6 +390,9 @@ class Sqrt(Function):  # 'sqrt' already defined in sympy.functions.elementary.mi
     """
     Represents the square root function.
 
+    Explanation
+    ===========
+
     The reason why one would use ``Sqrt(x)`` over ``sqrt(x)``
     is that the latter is internally represented as ``Pow(x, S.Half)`` which
     may not be what one wants when doing code-generation.
@@ -420,6 +439,9 @@ def _Cbrt(x):
 class Cbrt(Function):  # 'cbrt' already defined in sympy.functions.elementary.miscellaneous
     """
     Represents the cube root function.
+
+    Explanation
+    ===========
 
     The reason why one would use ``Cbrt(x)`` over ``cbrt(x)``
     is that the latter is internally represented as ``Pow(x, Rational(1, 3))`` which
@@ -468,6 +490,9 @@ def _hypot(x, y):
 class hypot(Function):
     """
     Represents the hypotenuse function.
+
+    Explanation
+    ===========
 
     The hypotenuse function is provided by e.g. the math library
     in the C99 standard, hence one may want to represent the function

@@ -3,10 +3,49 @@ from sympy import S
 from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import SYMPY_INTS, Iterable
+from sympy.core.kind import Kind, NumberKind
+from sympy.core.compatibility import SYMPY_INTS
 from sympy.printing.defaults import Printable
 
 import itertools
+from collections.abc import Iterable
+
+
+class ArrayKind(Kind):
+    """
+    Kind for N-dimensional array in SymPy.
+
+    This kind represents the multidimensional array that algebraic
+    operations are defined. Basic class for this kind is ``NDimArray``,
+    but any expression representing the array can have this.
+
+    Parameters
+    ==========
+
+    element_kind : Kind
+        Kind of the element. Default is ``NumberKind``, which means that
+        the array contains only numbers.
+
+    Examples
+    ========
+
+    >>> from sympy import NDimArray
+    >>> NDimArray([1,2,3]).kind
+    ArrayKind(NumberKind)
+
+    See Also
+    ========
+
+    sympy.matrices.MatrixKind : Kind for matrices.
+
+    """
+    def __new__(cls, element_kind=NumberKind):
+        obj = super().__new__(cls, element_kind)
+        obj.element_kind = element_kind
+        return obj
+
+    def __repr__(self):
+        return "ArrayKind(%s)" % self.element_kind
 
 
 class NDimArray(Printable):
@@ -68,6 +107,10 @@ class NDimArray(Printable):
     def __new__(cls, iterable, shape=None, **kwargs):
         from sympy.tensor.array import ImmutableDenseNDimArray
         return ImmutableDenseNDimArray(iterable, shape, **kwargs)
+
+    @property
+    def kind(self):
+        return ArrayKind()
 
     def _parse_index(self, index):
         if isinstance(index, (SYMPY_INTS, Integer)):

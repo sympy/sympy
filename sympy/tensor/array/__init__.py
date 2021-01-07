@@ -227,7 +227,7 @@ z*cos(y*z) + exp(x)
 
 from .dense_ndim_array import MutableDenseNDimArray, ImmutableDenseNDimArray, DenseNDimArray
 from .sparse_ndim_array import MutableSparseNDimArray, ImmutableSparseNDimArray, SparseNDimArray
-from .ndim_array import NDimArray
+from .ndim_array import NDimArray, ArrayKind
 from .arrayop import tensorproduct, tensorcontraction, tensordiagonal, derive_by_array, permutedims
 from .array_comprehension import ArrayComprehension, ArrayComprehensionMap
 
@@ -238,7 +238,7 @@ __all__ = [
 
     'MutableSparseNDimArray', 'ImmutableSparseNDimArray', 'SparseNDimArray',
 
-    'NDimArray',
+    'NDimArray', 'ArrayKind',
 
     'tensorproduct', 'tensorcontraction', 'tensordiagonal', 'derive_by_array',
 

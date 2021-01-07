@@ -1,8 +1,9 @@
 import itertools
+from collections.abc import Iterable
 
 from sympy import S, Tuple, diff, Basic
+from sympy.core.sympify import _sympify
 
-from sympy.core.compatibility import Iterable
 from sympy.tensor.array.ndim_array import NDimArray
 from sympy.tensor.array.dense_ndim_array import DenseNDimArray, ImmutableDenseNDimArray
 from sympy.tensor.array.sparse_ndim_array import SparseNDimArray
@@ -215,6 +216,8 @@ def tensordiagonal(array, *diagonal_axes):
     True
 
     """
+    if any([len(i) <= 1 for i in diagonal_axes]):
+        raise ValueError("need at least two axes to diagonalize")
     array, remaining_indices, remaining_shape, diagonal_deltas = _util_contraction_diagonal(array, *diagonal_axes)
 
     # Compute the diagonalized array:
@@ -291,9 +294,11 @@ def derive_by_array(expr, dx):
         else:
             return expr.diff(dx)
     else:
+        expr = _sympify(expr)
         if isinstance(dx, array_types):
             return ImmutableDenseNDimArray([expr.diff(i) for i in Flatten(dx)], dx.shape)
         else:
+            dx = _sympify(dx)
             return diff(expr, dx)
 
 

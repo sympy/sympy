@@ -3455,3 +3455,8 @@ def test_deserialized_poly_equals_original():
         "Deserialized polynomial not equal to original.")
     assert poly.gens == deserialized.gens, (
         "Deserialized polynomial has different generators than original.")
+
+
+def test_issue_20389():
+    result = degree(x * (x + 1) - x ** 2 - x, x)
+    assert result == -oo

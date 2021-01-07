@@ -4,7 +4,7 @@ from sympy import (
     Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
     factorial, Float, Function, gamma, GoldenRatio, hyper,
     hypersimp, I, Integral, integrate, KroneckerDelta, log, logcombine, Lt,
-    Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, posify, rad,
+    Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, Poly, posify, rad,
     Rational, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan,
     zoo)
@@ -734,6 +734,19 @@ def test_issue_9324_simplify():
     assert simplify(e) == e
 
 
+def test_issue_9817_simplify():
+    # simplify on trace of substituted explicit quadratic form of matrix
+    # expressions (a scalar) should return without errors (AttributeError)
+    # See issue #9817 and #9190 for the original bug more discussion on this
+    from sympy.matrices.expressions import Identity, trace
+    v = MatrixSymbol('v', 3, 1)
+    A = MatrixSymbol('A', 3, 3)
+    x = Matrix([i + 1 for i in range(3)])
+    X = Identity(3)
+    quadratic = v.T * A * v
+    assert simplify((trace(quadratic.as_explicit())).xreplace({v:x, A:X})) == 14
+
+
 def test_issue_13474():
     x = Symbol('x')
     assert simplify(x + csch(sinc(1))) == x + csch(sinc(1))
@@ -910,3 +923,7 @@ def test_issue_19484():
     f = Function('f')
     e = x + sign(x + f(x)**3)
     assert simplify(Abs(x + f(x)**3) * e) == x*Abs(x + f(x)**3) + x + f(x)**3
+
+def test_issue_19161():
+    polynomial = Poly('x**2').simplify()
+    assert (polynomial-x**2).simplify() == 0

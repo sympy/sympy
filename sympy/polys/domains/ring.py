@@ -46,10 +46,10 @@ class Ring(Domain):
 
     def revert(self, a):
         """Returns ``a**(-1)`` if possible. """
-        if self.is_one(a):
+        if self.is_one(a) or self.is_one(-a):
             return a
         else:
-            raise NotReversible('only unity is reversible in a ring')
+            raise NotReversible('only units are reversible in a ring')
 
     def is_unit(self, a):
         try:

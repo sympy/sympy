@@ -1,5 +1,5 @@
 from collections import defaultdict
-from functools import cmp_to_key
+from functools import cmp_to_key, reduce
 import operator
 
 from .sympify import sympify
@@ -8,10 +8,9 @@ from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
-from .compatibility import reduce
 from .expr import Expr
 from .parameters import global_parameters
-
+from .kind import KindDispatcher
 
 
 # internal marker to indicate:
@@ -87,12 +86,80 @@ def _unevaluated_Mul(*args):
 
 
 class Mul(Expr, AssocOp):
+    """
+    Expression representing multiplication operation for algebraic field.
 
+    Every argument of ``Mul()`` must be ``Expr``. Infix operator ``*``
+    on most scalar objects in SymPy calls this class.
+
+    Another use of ``Mul()`` is to represent the structure of abstract
+    multiplication so that its arguments can be substituted to return
+    different class. Refer to examples section for this.
+
+    ``Mul()`` evaluates the argument unless ``evaluate=False`` is passed.
+    The evaluation logic includes:
+
+    1. Flattening
+        ``Mul(x, Mul(y, z))`` -> ``Mul(x, y, z)``
+
+    2. Identity removing
+        ``Mul(x, 1, y)`` -> ``Mul(x, y)``
+
+    3. Exponent collecting by ``.as_base_exp()``
+        ``Mul(x, x**2)`` -> ``Pow(x, 3)``
+
+    4. Term sorting
+        ``Mul(y, x, 2)`` -> ``Mul(2, x, y)``
+
+    Since multiplication can be vector space operation, arguments may
+    have the different :obj:`sympy.core.kind.Kind()`. Kind of the
+    resulting object is automatically inferred.
+
+    Examples
+    ========
+
+    >>> from sympy import Mul
+    >>> from sympy.abc import x, y
+    >>> Mul(x, 1)
+    x
+    >>> Mul(x, x)
+    x**2
+
+    If ``evaluate=False`` is passed, result is not evaluated.
+
+    >>> Mul(1, 2, evaluate=False)
+    1*2
+    >>> Mul(x, x, evaluate=False)
+    x*x
+
+    ``Mul()`` also represents the general structure of multiplication
+    operation.
+
+    >>> from sympy import MatrixSymbol
+    >>> A = MatrixSymbol('A', 2,2)
+    >>> expr = Mul(x,y).subs({y:A})
+    >>> expr
+    x*A
+    >>> type(expr)
+    <class 'sympy.matrices.expressions.matmul.MatMul'>
+
+    See Also
+    ========
+
+    MatMul
+
+    """
     __slots__ = ()
 
     is_Mul = True
 
     _args_type = Expr
+    _kind_dispatcher = KindDispatcher("Mul_kind_dispatcher", commutative=True)
+
+    @property
+    def kind(self):
+        arg_kinds = (a.kind for a in self.args)
+        return self._kind_dispatcher(*arg_kinds)
 
     def __neg__(self):
         c, args = self.as_coeff_mul()
@@ -1927,6 +1994,7 @@ class Mul(Expr, AssocOp):
         return tuple(self.as_ordered_factors())
 
 mul = AssocOpDispatcher('mul')
+
 
 def prod(a, start=1):
     """Return product of elements of a. Start with int 1 so if only

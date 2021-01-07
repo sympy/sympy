@@ -28,8 +28,10 @@ Gompertz
 Kumaraswamy
 Laplace
 Levy
+LogCauchy
 Logistic
 LogLogistic
+LogitNormal
 LogNormal
 Lomax
 Maxwell
@@ -94,8 +96,10 @@ __all__ = ['ContinuousRV',
 'Kumaraswamy',
 'Laplace',
 'Levy',
+'LogCauchy',
 'Logistic',
 'LogLogistic',
+'LogitNormal',
 'LogNormal',
 'Lomax',
 'Maxwell',
@@ -2284,6 +2288,83 @@ def Levy(name, mu, c):
     return rv(name, LevyDistribution, (mu, c))
 
 #-------------------------------------------------------------------------------
+# Log-Cauchy distribution --------------------------------------------------------
+
+
+class LogCauchyDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 'sigma')
+
+    set = Interval.open(0, oo)
+
+    @staticmethod
+    def check(mu, sigma):
+        _value_check((sigma > 0) != False, "Scale parameter Gamma must be positive.")
+        _value_check(mu.is_real != False, "Location parameter must be real.")
+
+    def pdf(self, x):
+        mu, sigma = self.mu, self.sigma
+        return 1/(x*pi)*(sigma/((log(x) - mu)**2 + sigma**2))
+
+    def _cdf(self, x):
+        mu, sigma = self.mu, self.sigma
+        return (1/pi)*atan((log(x) - mu)/sigma) + S.Half
+
+    def _characteristic_function(self, t):
+        raise NotImplementedError("The characteristic function for the "
+                                  "Log-Cauchy distribution does not exist.")
+
+    def _moment_generating_function(self, t):
+        raise NotImplementedError("The moment generating function for the "
+                                  "Log-Cauchy distribution does not exist.")
+
+def LogCauchy(name, mu, sigma):
+    r"""
+    Create a continuous random variable with a Log-Cauchy distribution.
+    The density of the Log-Cauchy distribution is given by
+
+    .. math::
+        f(x) := \frac{1}{\pi x} \frac{\sigma}{(log(x)-\mu^2) + \sigma^2}
+
+    Parameters
+    ==========
+
+    mu : Real number, the location
+
+    sigma : Real number, `\sigma > 0`, a scale
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import  LogCauchy, density, cdf
+    >>> from sympy import Symbol, S
+
+    >>> mu = 2
+    >>> sigma = S.One / 5
+    >>> z = Symbol("z")
+
+    >>> X = LogCauchy("x", mu, sigma)
+
+    >>> density(X)(z)
+    1/(5*pi*z*((log(z) - 2)**2 + 1/25))
+
+    >>> cdf(X)(z)
+    atan(5*log(z) - 10)/pi + 1/2
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Log-Cauchy_distribution
+    """
+
+    return rv(name, LogCauchyDistribution, (mu, sigma))
+
+
+#-------------------------------------------------------------------------------
 # Logistic distribution --------------------------------------------------------
 
 
@@ -2453,6 +2534,91 @@ def LogLogistic(name, alpha, beta):
     """
 
     return rv(name, LogLogisticDistribution, (alpha, beta))
+
+#-------------------------------------------------------------------------------
+#Logit-Normal distribution------------------------------------------------------
+
+class LogitNormalDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 's')
+    set = Interval.open(0, 1)
+
+    @staticmethod
+    def check(mu, s):
+        _value_check((s ** 2).is_real is not False and s ** 2 > 0, "Squared scale parameter s must be positive.")
+        _value_check(mu.is_real is not False, "Location parameter must be real")
+
+    def _logit(self, x):
+        return log(x / (1 - x))
+
+    def pdf(self, x):
+        mu, s = self.mu, self.s
+        return exp(-(self._logit(x) - mu)**2/(2*s**2))*(S.One/sqrt(2*pi*(s**2)))*(1/(x*(1 - x)))
+
+    def _cdf(self, x):
+        mu, s = self.mu, self.s
+        return (S.One/2)*(1 + erf((self._logit(x) - mu)/(sqrt(2*s**2))))
+
+
+def LogitNormal(name, mu, s):
+    r"""
+    Create a continuous random variable with a Logit-Normal distribution.
+
+    The density of the logistic distribution is given by
+
+    .. math::
+        f(x) := \frac{1}{s \sqrt{2 \pi}} \frac{1}{x(1 - x)} e^{- \frac{(logit(x)  - \mu)^2}{s^2}}
+        where logit(x) = \log(\frac{x}{1 - x})
+    Parameters
+    ==========
+
+    mu : Real number, the location (mean)
+    s : Real number, `s > 0` a scale
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import LogitNormal, density, cdf
+    >>> from sympy import Symbol,pprint
+
+    >>> mu = Symbol("mu", real=True)
+    >>> s = Symbol("s", positive=True)
+    >>> z = Symbol("z")
+    >>> X = LogitNormal("x",mu,s)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+                              2
+            /         /  z  \\
+           -|-mu + log|-----||
+            \         \1 - z//
+           ---------------------
+                       2
+      ___           2*s
+    \/ 2 *e
+    ----------------------------
+            ____
+        2*\/ pi *s*z*(1 - z)
+
+    >>> density(X)(z)
+    sqrt(2)*exp(-(-mu + log(z/(1 - z)))**2/(2*s**2))/(2*sqrt(pi)*s*z*(1 - z))
+
+    >>> cdf(X)(z)
+    erf(sqrt(2)*(-mu + log(z/(1 - z)))/(2*s))/2 + 1/2
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Logit-normal_distribution
+
+    """
+
+    return rv(name, LogitNormalDistribution, (mu, s))
 
 #-------------------------------------------------------------------------------
 # Log Normal distribution ------------------------------------------------------

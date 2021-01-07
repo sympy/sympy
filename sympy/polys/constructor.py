@@ -2,6 +2,7 @@
 
 
 from sympy.core import sympify
+from sympy.core.compatibility import ordered
 from sympy.core.evalf import pure_complex
 from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, EX
 from sympy.polys.domains.complexfield import ComplexField
@@ -81,41 +82,52 @@ def _construct_algebraic(coeffs, opt):
     """We know that coefficients are algebraic so construct the extension. """
     from sympy.polys.numberfields import primitive_element
 
-    result, exts = [], set()
+    exts = set()
 
-    for coeff in coeffs:
-        if coeff.is_Rational:
-            coeff = (None, 0, QQ.from_sympy(coeff))
-        else:
-            a = coeff.as_coeff_add()[0]
-            coeff -= a
+    def build_trees(args):
+        trees = []
+        for a in args:
+            if a.is_Rational:
+                tree = ('Q', QQ.from_sympy(a))
+            elif a.is_Add:
+                tree = ('+', build_trees(a.args))
+            elif a.is_Mul:
+                tree = ('*', build_trees(a.args))
+            else:
+                tree = ('e', a)
+                exts.add(a)
+            trees.append(tree)
+        return trees
 
-            b = coeff.as_coeff_mul()[0]
-            coeff /= b
-
-            exts.add(coeff)
-
-            a = QQ.from_sympy(a)
-            b = QQ.from_sympy(b)
-
-            coeff = (coeff, b, a)
-
-        result.append(coeff)
-
-    exts = list(exts)
+    trees = build_trees(coeffs)
+    exts = list(ordered(exts))
 
     g, span, H = primitive_element(exts, ex=True, polys=True)
     root = sum([ s*ext for s, ext in zip(span, exts) ])
 
     domain, g = QQ.algebraic_field((g, root)), g.rep.rep
 
-    for i, (coeff, a, b) in enumerate(result):
-        if coeff is not None:
-            coeff = a*domain.dtype.from_list(H[exts.index(coeff)], g, QQ) + b
-        else:
-            coeff = domain.dtype.from_list([b], g, QQ)
+    exts_dom = [domain.dtype.from_list(h, g, QQ) for h in H]
+    exts_map = dict(zip(exts, exts_dom))
 
-        result[i] = coeff
+    def convert_tree(tree):
+        op, args = tree
+        if op == 'Q':
+            return domain.dtype.from_list([args], g, QQ)
+        elif op == '+':
+            return sum((convert_tree(a) for a in args), domain.zero)
+        elif op == '*':
+            # return prod(convert(a) for a in args)
+            t = convert_tree(args[0])
+            for a in args[1:]:
+                t *= convert_tree(a)
+            return t
+        elif op == 'e':
+            return exts_map[args]
+        else:
+            raise RuntimeError
+
+    result = [convert_tree(tree) for tree in trees]
 
     return domain, result
 

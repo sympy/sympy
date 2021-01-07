@@ -52,6 +52,9 @@ def test_all_classes_are_tested():
                 cls = getattr(mod, name)
                 if hasattr(cls, '_sympy_deprecated_func'):
                     cls = cls._sympy_deprecated_func
+                if not isinstance(cls, type):
+                    # check instance of singleton class with same name
+                    cls = type(cls)
                 return issubclass(cls, Basic)
 
             names = list(filter(is_Basic, names))
@@ -88,7 +91,11 @@ def test_sympy__assumptions__assume__AppliedPredicate():
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
     assert _test_args(Q.is_true(True))
 
+@SKIP("abstract class")
 def test_sympy__assumptions__assume__Predicate():
+    pass
+
+def test_sympy__assumptions__assume__UndefinedPredicate():
     from sympy.assumptions.assume import Predicate
     assert _test_args(Predicate("test"))
 
@@ -1277,6 +1284,13 @@ def test_sympy__stats__frv_types__RademacherDistribution():
     from sympy.stats.frv_types import RademacherDistribution
     assert _test_args(RademacherDistribution())
 
+def test_sympy__stats__frv_types__IdealSolitonDistribution():
+    from sympy.stats.frv_types import IdealSolitonDistribution
+    assert _test_args(IdealSolitonDistribution(10))
+
+def test_sympy__stats__frv_types__RobustSolitonDistribution():
+    from sympy.stats.frv_types import RobustSolitonDistribution
+    assert _test_args(RobustSolitonDistribution(1000, 0.5, 0.1))
 
 def test_sympy__stats__frv__FiniteDomain():
     from sympy.stats.frv import FiniteDomain
@@ -1472,6 +1486,10 @@ def test_sympy__stats__crv_types__LevyDistribution():
     from sympy.stats.crv_types import LevyDistribution
     assert _test_args(LevyDistribution(0, 1))
 
+def test_sympy__stats__crv_types__LogCauchyDistribution():
+    from sympy.stats.crv_types import LogCauchyDistribution
+    assert _test_args(LogCauchyDistribution(0, 1))
+
 def test_sympy__stats__crv_types__LogisticDistribution():
     from sympy.stats.crv_types import LogisticDistribution
     assert _test_args(LogisticDistribution(0, 1))
@@ -1480,6 +1498,9 @@ def test_sympy__stats__crv_types__LogLogisticDistribution():
     from sympy.stats.crv_types import LogLogisticDistribution
     assert _test_args(LogLogisticDistribution(1, 1))
 
+def test_sympy__stats__crv_types__LogitNormalDistribution():
+    from sympy.stats.crv_types import LogitNormalDistribution
+    assert _test_args(LogitNormalDistribution(0, 1))
 
 def test_sympy__stats__crv_types__LogNormalDistribution():
     from sympy.stats.crv_types import LogNormalDistribution
@@ -1594,6 +1615,9 @@ def test_sympy__stats__drv_types__NegativeBinomialDistribution():
     from sympy.stats.drv_types import NegativeBinomialDistribution
     assert _test_args(NegativeBinomialDistribution(.5, .5))
 
+def test_sympy__stats__drv_types__FlorySchulzDistribution():
+    from sympy.stats.drv_types import FlorySchulzDistribution
+    assert _test_args(FlorySchulzDistribution(.5))
 
 def test_sympy__stats__drv_types__PoissonDistribution():
     from sympy.stats.drv_types import PoissonDistribution
@@ -1827,6 +1851,21 @@ def test_sympy__stats__matrix_distributions__MatrixNormalDistribution():
     S1 = MatrixSymbol('S1', 1, 1)
     S2 = MatrixSymbol('S2', 2, 2)
     assert _test_args(MatrixNormalDistribution(L, S1, S2))
+
+
+def test_sympy__utilities__matchpy_connector__WildDot():
+    from sympy.utilities.matchpy_connector import WildDot
+    assert _test_args(WildDot("w_"))
+
+
+def test_sympy__utilities__matchpy_connector__WildPlus():
+    from sympy.utilities.matchpy_connector import WildPlus
+    assert _test_args(WildPlus("w__"))
+
+
+def test_sympy__utilities__matchpy_connector__WildStar():
+    from sympy.utilities.matchpy_connector import WildStar
+    assert _test_args(WildStar("w___"))
 
 
 def test_sympy__core__symbol__Str():
