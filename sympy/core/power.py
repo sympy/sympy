@@ -1756,7 +1756,7 @@ def _eval_is_ge(a, b):
             try:
                 rv = is_ge(log(log(a.base)) + log(a.exp), log(log(b.base)) + log(b.exp))
             except:
-                rv = None 
+                rv = None
         return rv
 
 from .add import Add
