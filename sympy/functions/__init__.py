@@ -32,6 +32,7 @@ from sympy.functions.special.zeta_functions import (dirichlet_eta, zeta,
 from sympy.functions.special.tensor_functions import (Eijk, LeviCivita,
         KroneckerDelta)
 from sympy.functions.special.singularity_functions import SingularityFunction
+from sympy.functions.special.hyperbolastic_functions import h1, h2, h3
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.bsplines import bspline_basis, bspline_basis_set, interpolating_spline
 from sympy.functions.special.bessel import (besselj, bessely, besseli, besselk,
@@ -79,6 +80,8 @@ __all__ = [
 
     'gamma', 'lowergamma', 'uppergamma', 'polygamma', 'loggamma', 'digamma',
     'trigamma', 'multigamma',
+
+    'h1', 'h2' ,'h3',
 
     'dirichlet_eta', 'zeta', 'lerchphi', 'polylog', 'stieltjes',
 

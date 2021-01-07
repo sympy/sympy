@@ -2345,6 +2345,20 @@ def test_sympy__functions__special__bessel__marcumq():
     assert _test_args(marcumq(x, y, z))
 
 
+def test_sympy__functions__special__hyperbolastic_functions__h1():
+    from sympy.functions.special.hyperbolastic_functions import h1
+    assert _test_args(h1(a, b, c, x, y, z))
+
+
+def test_sympy__functions__special__hyperbolastic_functions__h2():
+    from sympy.functions.special.hyperbolastic_functions import h2
+    assert _test_args(h2(a, b, c, x, y, z))
+
+def test_sympy__functions__special__hyperbolastic_functions__h3():
+    from sympy.functions.special.hyperbolastic_functions import h3
+    assert _test_args(h3(a, b, c, x, y, z, 1))
+
+
 def test_sympy__functions__special__elliptic_integrals__elliptic_k():
     from sympy.functions.special.elliptic_integrals import elliptic_k as K
     assert _test_args(K(x))
