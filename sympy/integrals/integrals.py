@@ -397,6 +397,13 @@ class Integral(AddWithLimits):
         if not hints.get('integrals', True):
             return self
 
+        from sympy import Function, Pow, symbols
+        args = Add.make_args(self)
+        if isinstance(self.args[1][0], Function):
+            if isinstance(self.args[0], Pow):
+                t = symbols('t')
+                return self.subs(self.args[1][0], t).doit(**hints).subs(t, self.args[1][0])
+
         deep = hints.get('deep', True)
         meijerg = hints.get('meijerg', None)
         conds = hints.get('conds', 'piecewise')

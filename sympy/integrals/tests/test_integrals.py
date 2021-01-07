@@ -1704,3 +1704,12 @@ def test_issue_4231():
 def test_issue_17841():
     f = diff(1/(x**2+x+I), x)
     assert integrate(f, x) == 1/(x**2 + x + I)
+
+
+def test_issue_20693():
+    assert integrate(f(x)**-1, f(x)) == log(f(x))
+    assert Integral(f(x)**-1, f(x)).doit() == log(f(x))
+    assert integrate(f(x)**-2, f(x)) == (-1)*f(x)**(-1)
+    assert Integral(f(x)**-2, f(x)).doit() == (-1)*f(x)**(-1)
+    assert integrate(f(x)**-3, f(x)) == (-S(1)/2)*f(x)**(-2)
+    assert Integral(f(x)**-3, f(x)).doit() == (-S(1)/2)*f(x)**(-2)
