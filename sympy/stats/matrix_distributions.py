@@ -490,7 +490,7 @@ class MatrixStudentTDistribution(MatrixDistribution):
                                                    " of shape %s x %s" % (str(p), str(p)))
         _value_check(scale_matrix_2.shape[0] == n, "Scale matrix 2 should be"
                                                    " of shape %s x %s" % (str(n), str(n)))
-        _value_check(nu.is_positive, "Degrees of freedom must be positive")
+        _value_check(nu.is_positive != False, "Degrees of freedom must be positive")
 
     @property
     def set(self):
