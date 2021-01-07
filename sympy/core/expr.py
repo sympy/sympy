@@ -3675,11 +3675,6 @@ class Expr(Basic, EvalfMixin):
         from sympy.polys import factor
         return factor(self, *gens, **args)
 
-    def refine(self, assumption=True):
-        """See the refine function in sympy.assumptions"""
-        from sympy.assumptions import refine
-        return refine(self, assumption)
-
     def cancel(self, *gens, **args):
         """See the cancel function in sympy.polys"""
         from sympy.polys import cancel

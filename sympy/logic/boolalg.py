@@ -179,15 +179,6 @@ class Boolean(Basic):
                            if i.is_Boolean or i.is_Symbol
                            or isinstance(i, (Eq, Ne))])
 
-    def refine(self, assumptions=True):
-        """
-        Simplify *self* with assumptions. If the truth value can be
-        determined, return boolean result. If not, return the simplified
-        result.
-        """
-        from sympy.assumptions import refine
-        return refine(self, assumptions)
-
     def _eval_refine(self, assumptions):
         from sympy.assumptions import ask
 
