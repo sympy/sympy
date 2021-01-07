@@ -5,7 +5,6 @@ Module to implement general binary relations.
 from sympy.assumptions import AppliedPredicate, Predicate
 from sympy.core.compatibility import ordered
 from sympy.logic.boolalg import BooleanAtom
-from sympy.simplify import simplify
 
 
 class BinaryRelation(Predicate):
@@ -287,27 +286,9 @@ class AppliedBinaryRelation(AppliedPredicate):
         # use multipledispatch handler
         return r.function.eval(r.arguments, assumptions)
 
-    def simplify(self, equation=True, side="all", **kwargs):
-        """
-        Simplify *self* without evaluating to boolean value. Assumption
-        is not taken into consideration.
-
-        Examples
-        ========
-
-        >>> from sympy import cos, gamma, sin, Q
-        >>> from sympy.abc import x
-        >>> eqn = Q.eq(sin(x)**2 + cos(x)**2, gamma(x)/gamma(x-2))
-        >>> eqn.simplify()
-        x**2 - 3*x = -1
-        """
-        kwargs.update(equation=equation,
-                      side=side)
-        return simplify(self, **kwargs)
-
     def _eval_simplify(self, **kwargs):
-        from .reltools import eqnsimp
         lhs, rhs = self.arguments
         return eqnsimp(self.function, lhs, rhs, **kwargs)
 
+from .reltools.simplify import eqnsimp
 from .reltools.sideproxy import SideProxy
