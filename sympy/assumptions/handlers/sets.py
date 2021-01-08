@@ -33,12 +33,14 @@ def _IntegerPredicate_number(expr, assumptions):
         except TypeError:
             return False
 
-for cls in (int, Integer):
-    IntegerPredicate.register(cls)(lambda expr, assumptions: True)
+@IntegerPredicate.register_many(int, Integer)
+def _(expr, assumptions):
+    return True
 
-for cls in (Exp1, GoldenRatio, ImaginaryUnit, Infinity, NaN, NegativeInfinity,
-            Pi, Rational, TribonacciConstant):
-    IntegerPredicate.register(cls)(lambda expr, assumptions: False)
+@IntegerPredicate.register_many(Exp1, GoldenRatio, ImaginaryUnit, Infinity, NaN,
+    NegativeInfinity, Pi, Rational, TribonacciConstant)
+def _(expr, assumptions):
+    return False
 
 @IntegerPredicate.register(Expr)
 def _(expr, assumptions):
@@ -94,15 +96,18 @@ def _(expr, assumptions):
 
 # RationalPredicate
 
-for cls in (Rational,):
-    RationalPredicate.register(cls)(lambda expr, assumptions: True)
+@RationalPredicate.register(Rational)
+def _(expr, assumptions):
+    return True
 
-for cls in (Float,):
-    RationalPredicate.register(cls)(lambda expr, assumptions: None)
+@RationalPredicate.register(Float)
+def _(expr, assumptions):
+    return None
 
-for cls in (Exp1, GoldenRatio, ImaginaryUnit, Infinity, NaN, NegativeInfinity,
-            Pi, TribonacciConstant):
-    RationalPredicate.register(cls)(lambda expr, assumptions: False)
+@RationalPredicate.register_many(Exp1, GoldenRatio, ImaginaryUnit, Infinity,
+    NaN, NegativeInfinity, Pi, TribonacciConstant)
+def _(expr, assumptions):
+    return False
 
 @RationalPredicate.register(Expr)
 def _(expr, assumptions):
@@ -154,8 +159,9 @@ def _(expr, assumptions):
 
 # IrrationalPredicate
 
-for cls in (NaN,):
-    IrrationalPredicate.register(cls)(lambda expr, assumptions: False)
+@IrrationalPredicate.register(NaN)
+def _(expr, assumptions):
+    return False
 
 @IrrationalPredicate.register(Expr)
 def _(expr, assumptions):
@@ -184,12 +190,14 @@ def _RealPredicate_number(expr, assumptions):
     # allow None to be returned if we couldn't show for sure
     # that i was 0
 
-for cls in (Abs, Exp1, Float, GoldenRatio, im, Pi, Rational, re,
-            TribonacciConstant):
-    RealPredicate.register(cls)(lambda expr, assumptions: True)
+@RealPredicate.register_many(Abs, Exp1, Float, GoldenRatio, im, Pi, Rational,
+    re, TribonacciConstant)
+def _(expr, assumptions):
+    return True
 
-for cls in (ImaginaryUnit, Infinity, NaN, NegativeInfinity):
-    RealPredicate.register(cls)(lambda expr, assumptions: False)
+@RealPredicate.register_many(ImaginaryUnit, Infinity, NaN, NegativeInfinity)
+def _(expr, assumptions):
+    return False
 
 @RealPredicate.register(Expr)
 def _(expr, assumptions):
@@ -310,11 +318,13 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return ask(Q.real(expr), assumptions)
 
-for cls in (Infinity, NegativeInfinity):
-    ExtendedRealPredicate.register(cls)(lambda expr, assumptions: True)
+@ExtendedRealPredicate.register_many(Infinity, NegativeInfinity)
+def _(expr, assumptions):
+    return True
 
-for cls in (NaN,):
-    ExtendedRealPredicate.register(cls)(lambda expr, assumptions: False)
+@ExtendedRealPredicate.register(NaN)
+def _(expr, assumptions):
+    return False
 
 @ExtendedRealPredicate.register_many(Add, Mul, Pow)
 def _(expr, assumptions):
@@ -323,8 +333,9 @@ def _(expr, assumptions):
 
 # HermitianPredicate
 
-for cls in (NaN,):
-    HermitianPredicate.register(cls)(lambda expr, assumptions: False)
+@HermitianPredicate.register(NaN)
+def _(expr, assumptions):
+    return False
 
 @HermitianPredicate.register(object)
 def _(expr, assumptions):
@@ -399,12 +410,14 @@ def _(mat, assumptions):
 
 # ComplexPredicate
 
-for cls in (Abs, cos, exp, im, ImaginaryUnit, log, Number, NumberSymbol, re,
-            sin):
-    ComplexPredicate.register(cls)(lambda expr, assumptions: True)
+@ComplexPredicate.register_many(Abs, cos, exp, im, ImaginaryUnit, log, Number,
+    NumberSymbol, re, sin)
+def _(expr, assumptions):
+    return True
 
-for cls in (Infinity, NaN, NegativeInfinity):
-    ComplexPredicate.register(cls)(lambda expr, assumptions: False)
+@ComplexPredicate.register_many(Infinity, NaN, NegativeInfinity)
+def _(expr, assumptions):
+    return False
 
 @ComplexPredicate.register(Expr)
 def _(expr, assumptions):
@@ -430,11 +443,13 @@ def _Imaginary_number(expr, assumptions):
     # allow None to be returned if we couldn't show for sure
     # that r was 0
 
-for cls in (ImaginaryUnit,):
-    ImaginaryPredicate.register(cls)(lambda expr, assumptions: True)
+@ImaginaryPredicate.register(ImaginaryUnit)
+def _(expr, assumptions):
+    return True
 
-for cls in (NaN,):
-    ImaginaryPredicate.register(cls)(lambda expr, assumptions: False)
+@ImaginaryPredicate.register(NaN)
+def _(expr, assumptions):
+    return False
 
 @ImaginaryPredicate.register(Expr)
 def _(expr, assumptions):
@@ -566,8 +581,9 @@ def _(expr, assumptions):
 
 # AntihermitianPredicate
 
-for cls in (NaN,):
-    AntihermitianPredicate.register(cls)(lambda expr, assumptions: False)
+@AntihermitianPredicate.register(NaN)
+def _(expr, assumptions):
+    return False
 
 @AntihermitianPredicate.register(object)
 def _(expr, assumptions):
@@ -644,12 +660,15 @@ def _(mat, assumptions):
 
 # AlgebraicPredicate
 
-for cls in (AlgebraicNumber, Float, GoldenRatio, ImaginaryUnit,
-            TribonacciConstant):
-    AlgebraicPredicate.register(cls)(lambda expr, assumptions: True)
+@AlgebraicPredicate.register_many(AlgebraicNumber, Float, GoldenRatio,
+    ImaginaryUnit, TribonacciConstant)
+def _(expr, assumptions):
+    return True
 
-for cls in (ComplexInfinity, Exp1, Infinity, NaN, NegativeInfinity, Pi):
-    AlgebraicPredicate.register(cls)(lambda expr, assumptions: False)
+@AlgebraicPredicate.register_many(ComplexInfinity, Exp1, Infinity, NaN,
+    NegativeInfinity, Pi)
+def _(expr, assumptions):
+    return False
 
 @AlgebraicPredicate.register_many(Add, Mul)
 def _(expr, assumptions):
