@@ -1058,6 +1058,10 @@ def test_sympy__stats__crv__SingleContinuousPSpace():
     assert _test_args(SingleContinuousPSpace(x, nd))
 
 @SKIP("abstract class")
+def test_sympy__stats__rv__Distribution():
+    pass
+
+@SKIP("abstract class")
 def test_sympy__stats__crv__SingleContinuousDistribution():
     pass
 

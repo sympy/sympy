@@ -328,6 +328,10 @@ class RandomIndexedSymbol(RandomSymbol):
             return free_syms
         return {self}
 
+    @property
+    def pspace(self):
+        return self.args[1]
+
 class RandomMatrixSymbol(RandomSymbol, MatrixSymbol): # type: ignore
     def __new__(cls, symbol, n, m, pspace=None):
         n, m = _sympify(n), _sympify(m)
@@ -339,6 +343,9 @@ class RandomMatrixSymbol(RandomSymbol, MatrixSymbol): # type: ignore
 
     symbol = property(lambda self: self.args[0])
     pspace = property(lambda self: self.args[3])
+
+class Distribution(Basic):
+    pass
 
 class ProductPSpace(PSpace):
     """
@@ -616,8 +623,9 @@ def pspace(expr):
     if all(rv.pspace == rvs[0].pspace for rv in rvs):
         return rvs[0].pspace
     from sympy.stats.compound_rv import CompoundPSpace
+    from sympy.stats.stochastic_process import StochasticPSpace
     for rv in rvs:
-        if isinstance(rv.pspace, CompoundPSpace):
+        if isinstance(rv.pspace, (CompoundPSpace, StochasticPSpace)):
             return rv.pspace
     # Otherwise make a product space
     return IndependentProductPSpace(*[rv.pspace for rv in rvs])
@@ -1659,7 +1667,7 @@ def _symbol_converter(sym):
     True
     """
     if isinstance(sym, str):
-            sym = Symbol(sym)
+        sym = Symbol(sym)
     if not isinstance(sym, Symbol):
         raise TypeError("%s is neither a Symbol nor a string"%(sym))
     return sym
