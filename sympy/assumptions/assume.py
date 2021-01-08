@@ -9,6 +9,7 @@ from sympy.logic.boolalg import Boolean
 from sympy.multipledispatch.dispatcher import (
     Dispatcher, MDNotImplementedError
 )
+from sympy.utilities.iterables import is_sequence
 from sympy.utilities.source import get_class
 
 
@@ -291,11 +292,27 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         # May be overridden
         return type(self).__name__
 
-    def register(self, *types, **kwargs):
-        if self.handler is None:
-            # condition for UndefinedPredicate
-            raise TypeError("%s cannot be dispatched." % type(self))
-        return self.handler.register(*types, **kwargs)
+    @classmethod
+    def register(cls, *types, **kwargs):
+        """
+        Register the signature to the handler.
+        """
+        if cls.handler is None:
+            raise TypeError("%s cannot be dispatched." % type(cls))
+        return cls.handler.register(*types, **kwargs)
+
+    @classmethod
+    def register_many(cls, *types, **kwargs):
+        """
+        Register multiple signatures to same handler.
+        """
+        def _(func):
+            for t in types:
+                if is_sequence(t):
+                    cls.register(*t, **kwargs)(func)
+                else:
+                    cls.register(t, **kwargs)(func)
+        return _
 
     def __call__(self, *args):
         return AppliedPredicate(self, *args)
@@ -342,6 +359,8 @@ class UndefinedPredicate(Predicate):
 
     """
 
+    handler = None
+
     def __new__(cls, name, handlers=None):
         # "handlers" parameter supports old design
         if not isinstance(name, Str):
@@ -353,10 +372,6 @@ class UndefinedPredicate(Predicate):
     @property
     def name(self):
         return self.args[0]
-
-    @property
-    def handler(self):
-        return None
 
     def _hashable_content(self):
         return (self.name,)

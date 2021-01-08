@@ -234,8 +234,7 @@ Expressions<symbolic-expressions>` below), numeric evaluation (:func:`~.N` is
 equivalent to :ref:`evalf()<evalf-label>` ), the `big O
 <https://en.wikipedia.org/wiki/Big_O_notation>`_ order symbol (as in
 :math:`O(n\log{n})`), and the assumptions object that holds a list of
-supported ask keys (such as :obj:`Q.real
-<sympy.assumptions.ask.AssumptionKeys.real>`), respectively. You can use the
+supported ask keys (such as ``Q.real``), respectively. You can use the
 mnemonic ``OSINEQ`` to remember what Symbols are defined by default in SymPy.
 Or better yet, always use lowercase letters for Symbol names. Python will not
 prevent you from overriding default SymPy names or functions, so be careful.
