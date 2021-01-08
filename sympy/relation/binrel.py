@@ -367,7 +367,7 @@ class AppliedBinaryRelation(AppliedPredicate):
         return self.function.as_Relational(*self.arguments)
 
     def _eval_simplify(self, **kwargs):
-        from .eqntools import eqnsimp
+        from .reltools import eqnsimp
         lhs, rhs = self.arguments
         return eqnsimp(self.function, lhs, rhs, **kwargs)
 
@@ -387,7 +387,7 @@ class AppliedBinaryRelation(AppliedPredicate):
         >>> Q.gt(x*y, x*z).rearrange(Q.negative(x))
         y < z
         """
-        from .eqntools import rearrange
+        from .reltools import rearrange
         return rearrange(self, assumptions)
 
     def solve(self, symbol=None, domain=S.Complexes):
@@ -406,7 +406,7 @@ class AppliedBinaryRelation(AppliedPredicate):
         x = 1
 
         """
-        from .eqntools import solveeqn
+        from .reltools import solveeqn
         return solveeqn(self, symbol, domain)
 
     def _eval_refine(self, assumptions):
