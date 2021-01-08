@@ -8,9 +8,9 @@ from sympy.core.function import Function, ArgumentIndexError
 class h1(Function):
     r"""
     The hyperbolastic rate equation of type I, denoted H1, is given by:
-        
+
     .. math::
-    \frac{dP(x)}{dx} = \frac{P(x)*(\M-P(x))*(\delta+\frac{\theta}{(1+x^2)^0.5})}{M}    
+    \frac{dP(x)}{dx} = \frac{P(x)*(\M-P(x))*(\delta+\frac{\theta}{(1+x^2)^0.5})}{M}
 
     where x is any real number and P(x) is the population size at x.
     The parameter M represents carrying capacity, and parameters delta
@@ -57,6 +57,7 @@ class h1(Function):
 class h2(Function):
     r"""
     The hyperbolastic rate equation of type II, denoted H2, is given by:
+
     .. math::
     \frac{dP(x)}{dx} = frac{\delta*\alpha*\gamma*P(x)^2*x^(\gamma-1)*tanh(\frac{M-P(x)}{\alpha*P(x)})}{M}
 
@@ -110,7 +111,8 @@ class h2(Function):
 class h3(Function):
     r"""
     The hyperbolastic rate equation of type III, denoted H3, is given by:
-    .. math::
+
+        .. math::
     \frac{dP(t)}{dt} = (M-P(t))*(\delta*\gamma*t^(\gamma-1)+\frac{theta}{(1+(\theta*t)^2)^0.5})
 
     with initial condition P(t0) = P0 where M is the carrying capacity t is the
