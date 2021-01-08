@@ -1,17 +1,11 @@
 """
 Module to implement general binary relations.
 """
-from functools import partial
 
-from sympy.assumptions import ask, AppliedPredicate, Predicate, refine
+from sympy.assumptions import ask, AppliedPredicate, Predicate
 from sympy.core import S
 from sympy.core.compatibility import ordered
 from sympy.core.sympify import _sympify
-from sympy.logic.boolalg import BooleanAtom
-from sympy.simplify import simplify
-
-from sympy.assumptions import AppliedPredicate, Predicate
-from sympy.core.compatibility import ordered
 from sympy.logic.boolalg import BooleanAtom
 
 
@@ -367,7 +361,6 @@ class AppliedBinaryRelation(AppliedPredicate):
         return self.function.as_Relational(*self.arguments)
 
     def _eval_simplify(self, **kwargs):
-        from .reltools import eqnsimp
         lhs, rhs = self.arguments
         return eqnsimp(self.function, lhs, rhs, **kwargs)
 
