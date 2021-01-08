@@ -1,6 +1,6 @@
 from sympy import Basic
 from sympy.stats.joint_rv import ProductPSpace
-from sympy.stats.rv import ProductDomain, _symbol_converter
+from sympy.stats.rv import ProductDomain, _symbol_converter, Distribution
 
 
 class StochasticPSpace(ProductPSpace):
@@ -22,6 +22,8 @@ class StochasticPSpace(ProductPSpace):
         from sympy.stats.stochastic_process_types import StochasticProcess
         if not isinstance(process, StochasticProcess):
             raise TypeError("`process` must be an instance of StochasticProcess.")
+        if distribution is None:
+            distribution = Distribution()
         return Basic.__new__(cls, sym, process, distribution)
 
     @property

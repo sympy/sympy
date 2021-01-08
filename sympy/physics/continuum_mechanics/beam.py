@@ -29,7 +29,13 @@ class Beam:
     .. note::
        While solving a beam bending problem, a user should choose its
        own sign convention and should stick to it. The results will
-       automatically follow the chosen sign convention.
+       automatically follow the chosen sign convention. However, the
+       chosen sign convention must respect the rule that, on the positive
+       side of beam's axis (in respect to current section), a loading force
+       giving positive shear yields a negative moment, as below (the
+       curved arrow shows the positive moment and rotation):
+
+    .. image:: allowed-sign-conventions.png
 
     Examples
     ========
@@ -57,9 +63,9 @@ class Beam:
     >>> b.load
     -3*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 2, 0) - 9*SingularityFunction(x, 4, -1)
     >>> b.shear_force()
-    -3*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 2, 1) - 9*SingularityFunction(x, 4, 0)
+    3*SingularityFunction(x, 0, 0) - 6*SingularityFunction(x, 2, 1) + 9*SingularityFunction(x, 4, 0)
     >>> b.bending_moment()
-    -3*SingularityFunction(x, 0, 1) + 3*SingularityFunction(x, 2, 2) - 9*SingularityFunction(x, 4, 1)
+    3*SingularityFunction(x, 0, 1) - 3*SingularityFunction(x, 2, 2) + 9*SingularityFunction(x, 4, 1)
     >>> b.slope()
     (-3*SingularityFunction(x, 0, 2)/2 + SingularityFunction(x, 2, 3) - 9*SingularityFunction(x, 4, 2)/2 + 7)/(E*I)
     >>> b.deflection()
@@ -307,9 +313,9 @@ class Beam:
         >>> b.load
         80*SingularityFunction(x, 0, -2) - 20*SingularityFunction(x, 0, -1) + 20*SingularityFunction(x, 4, -1)
         >>> b.slope()
-        (((80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))/I - 120/I)/E + 80.0/(E*I))*SingularityFunction(x, 2, 0)
-        + 0.666666666666667*(80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I)
-        - 0.666666666666667*(80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2) + 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
+        (-((-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))/I + 120/I)/E + 80.0/(E*I))*SingularityFunction(x, 2, 0)
+        - 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I)
+        + 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
@@ -831,10 +837,10 @@ class Beam:
         >>> b.bc_deflection = [(10, 0), (30, 0)]
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.shear_force()
-        -8*SingularityFunction(x, 0, 0) + 6*SingularityFunction(x, 10, 0) + 120*SingularityFunction(x, 30, -1) + 2*SingularityFunction(x, 30, 0)
+        8*SingularityFunction(x, 0, 0) - 6*SingularityFunction(x, 10, 0) - 120*SingularityFunction(x, 30, -1) - 2*SingularityFunction(x, 30, 0)
         """
         x = self.variable
-        return integrate(self.load, x)
+        return -integrate(self.load, x)
 
     def max_shear_force(self):
         """Returns maximum Shear force and its coordinate
@@ -917,7 +923,7 @@ class Beam:
         >>> b.bc_deflection = [(10, 0), (30, 0)]
         >>> b.solve_for_reaction_loads(R1, R2)
         >>> b.bending_moment()
-        -8*SingularityFunction(x, 0, 1) + 6*SingularityFunction(x, 10, 1) + 120*SingularityFunction(x, 30, 0) + 2*SingularityFunction(x, 30, 1)
+        8*SingularityFunction(x, 0, 1) - 6*SingularityFunction(x, 10, 1) - 120*SingularityFunction(x, 30, 0) - 2*SingularityFunction(x, 30, 1)
         """
         x = self.variable
         return integrate(self.shear_force(), x)
@@ -1064,7 +1070,7 @@ class Beam:
             for i in range(len(args)):
                 if i != 0:
                     prev_end = args[i-1][1].args[1]
-                slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                slope_value = -S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                 if i != len(args) - 1:
                     slope += (prev_slope + slope_value)*SingularityFunction(x, prev_end, 0) - \
                         (prev_slope + slope_value)*SingularityFunction(x, args[i][1].args[1], 0)
@@ -1074,7 +1080,7 @@ class Beam:
             return slope
 
         C3 = Symbol('C3')
-        slope_curve = integrate(S.One/(E*I)*self.bending_moment(), x) + C3
+        slope_curve = -integrate(S.One/(E*I)*self.bending_moment(), x) + C3
 
         bc_eqs = []
         for position, value in self._boundary_conditions['slope']:
@@ -1131,7 +1137,7 @@ class Beam:
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    slope_value = -S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                     recent_segment_slope = prev_slope + slope_value
                     deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                     if i != len(args) - 1:
@@ -1144,7 +1150,7 @@ class Beam:
                 return deflection
             base_char = self._base_char
             constants = symbols(base_char + '3:5')
-            return S.One/(E*I)*integrate(integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
+            return S.One/(E*I)*integrate(-integrate(self.bending_moment(), x), x) + constants[0]*x + constants[1]
         elif not self._boundary_conditions['deflection']:
             base_char = self._base_char
             constant = symbols(base_char + '4')
@@ -1159,7 +1165,7 @@ class Beam:
                 for i in range(len(args)):
                     if i != 0:
                         prev_end = args[i-1][1].args[1]
-                    slope_value = S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
+                    slope_value = -S.One/E*integrate(self.bending_moment()/args[i][0], (x, prev_end, x))
                     recent_segment_slope = prev_slope + slope_value
                     deflection_value = integrate(recent_segment_slope, (x, prev_end, x))
                     if i != len(args) - 1:
@@ -1172,7 +1178,7 @@ class Beam:
                 return deflection
             base_char = self._base_char
             C3, C4 = symbols(base_char + '3:5')    # Integration constants
-            slope_curve = integrate(self.bending_moment(), x) + C3
+            slope_curve = -integrate(self.bending_moment(), x) + C3
             deflection_curve = integrate(slope_curve, x) + C4
             bc_eqs = []
             for position, value in self._boundary_conditions['deflection']:
@@ -1284,9 +1290,9 @@ class Beam:
             >>> b.solve_for_reaction_loads(R1, R2)
             >>> b.plot_shear_force()
             Plot object containing:
-            [0]: cartesian line: -13750*SingularityFunction(x, 0, 0) + 5000*SingularityFunction(x, 2, 0)
-            + 10000*SingularityFunction(x, 4, 1) - 31250*SingularityFunction(x, 8, 0)
-            - 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
+            [0]: cartesian line: 13750*SingularityFunction(x, 0, 0) - 5000*SingularityFunction(x, 2, 0)
+            - 10000*SingularityFunction(x, 4, 1) + 31250*SingularityFunction(x, 8, 0)
+            + 10000*SingularityFunction(x, 8, 1) for x over (0.0, 8.0)
         """
         shear_force = self.shear_force()
         if subs is None:
@@ -1342,9 +1348,9 @@ class Beam:
             >>> b.solve_for_reaction_loads(R1, R2)
             >>> b.plot_bending_moment()
             Plot object containing:
-            [0]: cartesian line: -13750*SingularityFunction(x, 0, 1) + 5000*SingularityFunction(x, 2, 1)
-            + 5000*SingularityFunction(x, 4, 2) - 31250*SingularityFunction(x, 8, 1)
-            - 5000*SingularityFunction(x, 8, 2) for x over (0.0, 8.0)
+            [0]: cartesian line: 13750*SingularityFunction(x, 0, 1) - 5000*SingularityFunction(x, 2, 1)
+            - 5000*SingularityFunction(x, 4, 2) + 31250*SingularityFunction(x, 8, 1)
+            + 5000*SingularityFunction(x, 8, 2) for x over (0.0, 8.0)
         """
         bending_moment = self.bending_moment()
         if subs is None:
@@ -2233,3 +2239,103 @@ class Beam3D(Beam):
         the three axes.
         """
         return self._deflection
+
+    def _plot_shear_force(self, dir, subs=None):
+
+        shear_force = self.shear_force()
+
+        if dir == 'x':
+            dir_num = 0
+            color = 'r'
+
+        elif dir == 'y':
+            dir_num = 1
+            color = 'g'
+
+        elif dir == 'z':
+            dir_num = 2
+            color = 'b'
+
+        if subs is None:
+            subs = {}
+
+        for sym in shear_force[dir_num].atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+
+        return plot(shear_force[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Shear Force along %c direction'%dir,
+                xlabel=r'$\mathrm{%c}$'%dir, ylabel=r'$\mathrm{V[%c]}$'%dir, line_color=color)
+
+    def plot_shear_force(self, dir="all", subs=None):
+
+        """
+
+        Returns a plot for Shear force along all three directions
+        present in the Beam object.
+
+        Parameters
+        ==========
+        dir : string (default : "all")
+            Direction along which shear force plot is required.
+            If no direction is specified, all plots are displayed.
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It it supported by rollers
+        at of its end. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, E, G, I, A, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.plot_shear_force()
+            PlotGrid object containing:
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: 0 for x over (0.0, 20.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: -6*x**2 for x over (0.0, 20.0)
+            Plot[2]:Plot object containing:
+            [0]: cartesian line: -15*x for x over (0.0, 20.0)
+
+
+        """
+        Px = self._plot_shear_force('x')
+        Py = self._plot_shear_force('y')
+        Pz = self._plot_shear_force('z')
+        # For shear force along x direction
+        if dir == "x":
+            return Px.show()
+        # For shear force along y direction
+        elif dir == "y":
+            return Py.show()
+        # For shear force along z direction
+        elif dir == "z":
+            return Pz.show()
+        # For shear force along all direction
+        else:
+            return PlotGrid(3, 1, Px, Py, Pz)
