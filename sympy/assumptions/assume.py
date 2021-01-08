@@ -308,10 +308,9 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         """
         def _(func):
             for t in types:
-                if is_sequence(t):
-                    cls.register(*t, **kwargs)(func)
-                else:
-                    cls.register(t, **kwargs)(func)
+                if not is_sequence(t):
+                    t = (t,)  # for convenience, allow passing `type` to mean `(type,)`
+                cls.register(*t, **kwargs)(func)
         return _
 
     def __call__(self, *args):
