@@ -894,7 +894,6 @@ class StrPrinter(Printer):
 
         return "%s %s %s" % (self._print(lhs), name, self._print(rhs))
 
-
 @print_function(StrPrinter)
 def sstr(expr, **settings):
     """Returns the expression as a string.

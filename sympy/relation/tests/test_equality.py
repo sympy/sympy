@@ -3,6 +3,8 @@ from itertools import combinations
 from sympy import (ask, cos, exp, FiniteSet, Float, Function, I, log, oo,
     pi, Q, Rational, S, sin, sqrt, symbols)
 from sympy.simplify import trigsimp
+from sympy import (ask, cos, FiniteSet, Float, I, log, oo,
+    pi, Q, Rational, sin, symbols)
 from sympy.printing import sstr, pretty, latex
 
 x,y,z = symbols('x y z')
@@ -147,8 +149,7 @@ def test_issue_10927():
     assert ask(Q.eq(x, oo)) is None
     assert ask(Q.eq(x, -oo)) is None
 
-# XXX : Migrate test_binary_symbols from test_relational after
-# Equal.binary_symbols is implemented
+# XXX : Migrate test_binary_symbols from test_relational
 
 def test_reversedsign():
     assert Q.eq(x,y).reversedsign == Q.eq(-x, -y)

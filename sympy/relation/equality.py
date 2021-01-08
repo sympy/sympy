@@ -5,6 +5,8 @@ from sympy.assumptions import Q
 from sympy.core import Equality, Expr
 from .binrel import BinaryRelation, AppliedBinaryRelation
 from .relop import relop_add, relop_mul, relop_pow
+from sympy.core import Equality
+from .binrel import BinaryRelation
 
 
 class Equal(BinaryRelation):
@@ -13,6 +15,7 @@ class Equal(BinaryRelation):
     """
 
     is_reflexive = True
+    is_symmetric = True
 
     name = 'eq'
     str_name = latex_name = "="

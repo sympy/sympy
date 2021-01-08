@@ -10,6 +10,10 @@ from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import BooleanAtom
 from sympy.simplify import simplify
 
+from sympy.assumptions import AppliedPredicate, Predicate
+from sympy.core.compatibility import ordered
+from sympy.logic.boolalg import BooleanAtom
+
 
 class BinaryRelation(Predicate):
     """
@@ -75,7 +79,6 @@ class BinaryRelation(Predicate):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Reflexive_relation
-
     """
 
     is_reflexive = None
@@ -135,52 +138,39 @@ class AppliedBinaryRelation(AppliedPredicate):
         Simplify and canonicalize the relation. Takes assumptions into
         account. Always evaluates to ``True``/``False``/``None``.
 
-    Also, this class supports following symbolic manipulation of the
-    arguments:
+    Symbolic manipulation of relation is supported. You can apply
+    method, function, or attribute to each side (or both sides) of the
+    relation via ``applylhs``, ``applyrhs``, or ``apply`` property.
 
-    1. Algebraic operation :
-        If two relations are operated, each sides are operated and
-        suitable relation instance is returned. If relation and expression
-        are operated, expression is operated on both sides and suitable
-        relation instance is returned.
-        You can find dispatched operators in ``relation/relop.py``.
-
-    2. Method and attribute :
-        If the method or attribute is undefined for ``AppliedBinaryRelation``,
-        it is automatically applied to its arguments and return new
-        relation.
-
-    3. Function :
-        Many functions in SymPy can apply itself to both sides of the
-        applied relation and return a new one. For general cases, you
-        can use ``.apply_func()`` method.
+    Also, algebraic operation between relations is supported. For example,
+    you can add two equations to add their sides and return another equation.
 
     Examples
     ========
 
     >>> from sympy import cos, sin, Q
     >>> from sympy.abc import x, y, z
-    >>> eq1 = Q.eq(sin(x)**2 + cos(x)**2, 1)
-    >>> eq1
+    >>> eqn1 = Q.eq(sin(x)**2 + cos(x)**2, 1)
+    >>> eqn1
     sin(x)**2 + cos(x)**2 = 1
 
     ``.simplify()`` simplifies the relation, but does not evaluate it
     even if the relation is identical. Also, it does not take assumption
     into account.
 
-    >>> eq1.simplify()
+    >>> eqn1.simplify()
     0 = 0
-    >>> eq2 = Q.eq(x*y, x*z)
-    >>> eq2.simplify()
+    >>> eqn2 = Q.eq(x*y, x*z)
+    >>> eqn2.simplify()
     x*y = x*z
 
     ``.rearrange()`` simplifies the relation by removing the common parts,
     with assumptions taken into account. It does not evaluate the relation
     to boolean, and does not make it canonical.
 
-    >>> eq2.rearrange()
+    >>> eqn2.rearrange()
     x*y = x*z
-    >>> eq2.rearrange(Q.nonzero(x))
+    >>> eqn2.rearrange(Q.nonzero(x))
     y = z
 
     ``.solve()`` solves the relation with respect to given symbol.
@@ -188,26 +178,42 @@ class AppliedBinaryRelation(AppliedPredicate):
     >>> Q.eq(x**2, 1).solve(x)
     x = -1 | x = 1
 
-    ``refine()`` evaluates the relation to boolean value if the truth
-    value can be determined. If not, it returns the simplified relation.
+    ``ask()`` evaluates the relation to boolean value, with taking
+    assumptions into account. If the truth value cannot be determined,
+    it returns ``None``.
 
-    >>> from sympy import Abs, refine
-    >>> eq3 = Q.eq(Abs(x), x)
-    >>> refine(eq3)
-    x = Abs(x)
-    >>> refine(eq3, Q.positive(x))
-    True
-
-    ``ask()`` evaluates the relation to boolean value. If the truth
-    value cannot be determined, it returns ``None``.
-
-    >>> from sympy import ask
-    >>> print(ask(eq3))
+    >>> from sympy import ask, Abs
+    >>> eqn3 = Q.eq(Abs(x), x)
+    >>> print(ask(eqn3))
     None
-    >>> ask(eq3, Q.positive(x))
+    >>> ask(eqn3, Q.positive(x))
     True
-    >>> ask(eq3, Q.negative(x))
+    >>> ask(eqn3, Q.negative(x))
     False
+
+    ``refine()`` evaluates the relation to boolean value, with taking
+    assumptions into account. If the truth value cannot be determined,
+    it returns simplified relation.
+
+    >>> from sympy import refine
+    >>> refine(eqn3)
+    Abs(x) = x
+    >>> refine(eqn3, Q.positive(x))
+    True
+    >>> refine(eqn3, Q.negative(x))
+    False
+
+    You can manipulate the arguments of relation with ``applylhs``,
+    ``applyrhs``, or ``apply`` properties.
+
+    >>> from sympy import gamma, trigsimp
+    >>> eqn4 = Q.eq(sin(x)**2 + cos(x)**2, gamma(x)/gamma(x-2))
+    >>> eqn4.apply.simplify()  # Apply simplify method on both side
+    1 = (x - 2)*(x - 1)
+    >>> eqn4.applyrhs.simplify()  # Apply simplify method on right hand side
+    sin(x)**2 + cos(x)**2 = (x - 2)*(x - 1)
+    >>> eqn4.applylhs(trigsimp)  # Apply trigsimp function on left hand side
+    1 = gamma(x)/gamma(x - 2)
 
     Binary relation can be operated with another relation or expression.
 
@@ -216,24 +222,6 @@ class AppliedBinaryRelation(AppliedPredicate):
     x + 1 > 5
     >>> -1*_
     -x - 1 < -5
-
-    SymPy functions can take relations as argument. It can also be done
-    by ``.apply_func()`` method.
-
-    >>> from sympy import I, exp
-    >>> eq4 = Q.eq(I*x, I*x)
-    >>> eq5 = exp(eq4)
-    >>> eq5
-    exp(I*x) = exp(I*x)
-    >>> eq4.apply_func(exp)
-    exp(I*x) = exp(I*x)
-
-    Methods and attributes are automatically applied to the arguments.
-    It can also be done by ``.apply_attr()`` and ``apply_method()``
-    methods.
-
-    >>> eq5.rewrite(cos, side='rhs')
-    exp(I*x) = I*sin(x) + cos(x)
 
     """
 
@@ -249,6 +237,21 @@ class AppliedBinaryRelation(AppliedPredicate):
     def rhs(self):
         """The right-hand side of the relation."""
         return self.arguments[1]
+
+    @property
+    def apply(self):
+        """Proxy object to apply operation on both sides."""
+        return SideProxy(self, "both")
+
+    @property
+    def applylhs(self):
+        """Proxy object to apply operation on left hand sides."""
+        return SideProxy(self, "lhs")
+
+    @property
+    def applyrhs(self):
+        """Proxy object to apply operation on right hand sides."""
+        return SideProxy(self, "rhs")
 
     @property
     def reversed(self):
@@ -293,6 +296,9 @@ class AppliedBinaryRelation(AppliedPredicate):
         >>> _.reversedsign
         -x > -1
         """
+        revfunc = self.function.reversed
+        if revfunc is None:
+            return self
         a, b = self.arguments
         if not (isinstance(a, BooleanAtom) or isinstance(b, BooleanAtom)):
             return self.function.reversed(-self.lhs, -self.rhs)
@@ -360,57 +366,10 @@ class AppliedBinaryRelation(AppliedPredicate):
     def as_Relational(self):
         return self.function.as_Relational(*self.arguments)
 
-    def simplify(self, equation=True, side="all", **kwargs):
-        """
-        Simplify *self* without evaluating to boolean value. Assumption
-        is not taken into consideration.
-
-        Parameters
-        ==========
-
-        equation : bool, optional
-            If ``True``, simplify both sides and canonical result.
-            If ``False``, each side is simplified but not canonicalized.
-            You can decide which side to be simplified by *side* argument.
-
-        side : "all", "lhs" or "rhs", optional
-            Specify which side the rewriting will be done. Only valid
-            when *equation* is ``True``. Default is "all".
-
-        Examples
-        ========
-
-        >>> from sympy import cos, gamma, sin, Q
-        >>> from sympy.abc import x
-        >>> eqn = Q.eq(sin(x)**2 + cos(x)**2, gamma(x)/gamma(x-2))
-        >>> eqn.simplify()
-        x**2 - 3*x = -1
-        >>> eqn.simplify(equation=False)
-        1 = (x - 2)*(x - 1)
-        >>> eqn.simplify(equation=False, side='lhs')
-        1 = gamma(x)/gamma(x - 2)
-
-        """
-        kwargs.update(equation=equation,
-                      side=side)
-        return simplify(self, **kwargs)
-
     def _eval_simplify(self, **kwargs):
         from .eqntools import eqnsimp
-
-        equation = kwargs.get('equation', True)
-        side = kwargs.get('side', 'all')
-
         lhs, rhs = self.arguments
-
-        if equation:
-            return eqnsimp(self.function, lhs, rhs, **kwargs)
-
-        if side in ("all", "lhs"):
-            lhs = self.lhs.simplify(**kwargs)
-        if side in ("all", "rhs"):
-            rhs = self.rhs.simplify(**kwargs)
-        return self.function(lhs, rhs)
+        return eqnsimp(self.function, lhs, rhs, **kwargs)
 
     def rearrange(self, assumptions=True):
         """
@@ -449,25 +408,6 @@ class AppliedBinaryRelation(AppliedPredicate):
         """
         from .eqntools import solveeqn
         return solveeqn(self, symbol, domain)
-
-    def refine(self, assumptions=True):
-        """
-        Simplify and canonicalize *self* with assumptions taken into
-        account. If the truth value can be determined, return boolean
-        result. If not, return the simplified relation.
-
-        Examples
-        ========
-
-        >>> from sympy import Abs, Q
-        >>> from sympy.abc import x
-        >>> eqn = Q.eq(Abs(x), x)
-        >>> eqn.refine()
-        x = Abs(x)
-        >>> eqn.refine(Q.positive(x))
-        True
-        """
-        return refine(self, assumptions)
 
     def _eval_refine(self, assumptions):
         self = self.simplify()
@@ -543,105 +483,7 @@ class AppliedBinaryRelation(AppliedPredicate):
         other = _sympify(other)
         return relop_mul(other, self**-1)
 
-    def apply_func(self, func, *args, side="all", **kwargs):
-        """
-        Apply the function on the arguments and build applied relation
-        with the result.
-
-        Parameters
-        ==========
-
-        func : any function or class
-
-        side : "all", "lhs" or "rhs", optional
-            Specify which side the function will be applied. Default is
-            "all".
-
-        """
-        lhs, rhs = self.arguments
-        if side in ("all", "lhs"):
-            lhs = func(self.lhs, *args, **kwargs)
-        if side in ("all", "rhs"):
-            rhs = func(self.rhs, *args, **kwargs)
-        return self.function(lhs, rhs)
-
-    def apply_attr(self, attrname, side="all"):
-        """
-        Get the attribute on the arguments and build applied relation
-        with the result.
-
-        Parameters
-        ==========
-
-        attrname : str
-            Name of the attribute
-
-        side : "all", "lhs" or "rhs", optional
-            Specify which side the method will be applied. Default is
-            "all".
-        """
-        lhs, rhs = self.arguments
-        if side in ("all", "lhs"):
-            lhs = getattr(self.lhs, attrname)
-        if side in ("all", "rhs"):
-            rhs = getattr(self.rhs, attrname)
-        return self.function(lhs, rhs)
-
-    def apply_method(self, methodname, *args, side="all", **kwargs):
-        """
-        Apply the method on the arguments and build applied relation
-        with the result.
-
-        Parameters
-        ==========
-
-        methodname : str
-            Name of the method
-
-        side : "all", "lhs" or "rhs", optional
-            Specify which side the method will be applied. Default is
-            "all".
-        """
-        lhs, rhs = self.arguments
-        if side in ("all", "lhs"):
-            lhs = getattr(self.lhs, methodname)(*args, **kwargs)
-        if side in ("all", "rhs"):
-            rhs = getattr(self.rhs, methodname)(*args, **kwargs)
-        return self.function(lhs, rhs)
-
-    def __getattr__(self, attrname):
-        try:
-            return self.__getattribute__(attrname)
-        except AttributeError:
-            lhs_attr = getattr(self.lhs, attrname)
-            rhs_attr = getattr(self.rhs, attrname)
-            if not (callable(lhs_attr) and callable(rhs_attr)):
-                return partial(self.apply_attr, attrname)
-            elif (callable(lhs_attr) and callable(rhs_attr)):
-                return partial(self.apply_method, attrname)
-            else:
-                raise TypeError("Inconsistent methods are called on each side.")
-
-    # override Basic methods
-
-    def rewrite(self, *args, side="all", **kwargs):
-        """
-        Apply ``rewrite`` method on the arguments and build applied
-        predicate with the result.
-
-        Parameters
-        ==========
-
-        side : "all", "lhs" or "rhs", optional
-            Specify which side the rewriting will be done. Default is
-            "all".
-        """
-        lhs, rhs = self.arguments
-        if side in ("all", "lhs"):
-            lhs = self.lhs.rewrite(*args, **kwargs)
-        if side in ("all", "rhs"):
-            rhs = self.rhs.rewrite(*args, **kwargs)
-        return self.function(lhs, rhs)
-
 
 from .relop import relop_add, relop_mul, relop_pow
+from .reltools.simplify import eqnsimp
+from .reltools.sideproxy import SideProxy

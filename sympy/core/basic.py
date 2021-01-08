@@ -1237,6 +1237,11 @@ class Basic(Printable, metaclass=ManagedProperties):
         """Helper for .has()"""
         return lambda other: self == other
 
+    def refine(self, assumption=True):
+        """See the refine function in sympy.assumptions"""
+        from sympy.assumptions import refine
+        return refine(self, assumption)
+
     def replace(self, query, value, map=False, simultaneous=True, exact=None):
         """
         Replace matching subexpressions of ``self`` with ``value``.
