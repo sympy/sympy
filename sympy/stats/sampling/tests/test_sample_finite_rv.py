@@ -83,7 +83,6 @@ def test_sample_seed():
         try:
             imported_lib = import_module(lib)
             if imported_lib:
-                s0, s1, s2 = [], [], []
                 s0 = list(sample(F, numsamples=10, library=lib, seed=0))
                 s1 = list(sample(F, numsamples=10, library=lib, seed=0))
                 s2 = list(sample(F, numsamples=10, library=lib, seed=1))

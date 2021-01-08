@@ -344,8 +344,6 @@ class RandomMatrixSymbol(RandomSymbol, MatrixSymbol): # type: ignore
     symbol = property(lambda self: self.args[0])
     pspace = property(lambda self: self.args[3])
 
-class Distribution(Basic):
-    pass
 
 class ProductPSpace(PSpace):
     """

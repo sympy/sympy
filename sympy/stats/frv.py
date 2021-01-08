@@ -341,7 +341,7 @@ class FinitePSpace(PSpace):
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        return {self.value: self.distribution.sample(size, library)}
+        return {self.value: self.distribution.sample(size, library, seed)}
 
 
 class SingleFinitePSpace(SinglePSpace, FinitePSpace):
