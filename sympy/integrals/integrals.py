@@ -398,10 +398,9 @@ class Integral(AddWithLimits):
             return self
 
         # fixes issue 20693
-        from sympy import Function, Pow, symbols
+        from sympy import Function, Symbol
         if isinstance(self.args[1][0], Function):
-            if isinstance(self.args[0], Pow):
-                t = symbols('t')
+                t = Symbol('t')
                 return self.subs(self.args[1][0], t).doit(**hints).subs(t, self.args[1][0])
 
         deep = hints.get('deep', True)
