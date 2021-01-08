@@ -21,7 +21,7 @@ from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.core.sympify import _sympify
 from sympy.external import import_module
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain, is_random,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin)
+        ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin, Distribution)
 
 
 class ContinuousDomain(RandomDomain):
@@ -140,7 +140,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 "Set of Conditional Domain not Implemented")
 
 
-class ContinuousDistribution(Basic):
+class ContinuousDistribution(Distribution):
     def __call__(self, *args):
         return self.pdf(*args)
 

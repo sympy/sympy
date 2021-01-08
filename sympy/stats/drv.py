@@ -6,7 +6,7 @@ from sympy.polys.polyerrors import PolynomialError
 from sympy.stats.crv import reduce_rational_inequalities_wrap
 from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
                             random_symbols, PSpace, ConditionalDomain, RandomDomain,
-                            ProductDomain)
+                            ProductDomain, Distribution)
 from sympy.stats.symbolic_probability import Probability
 from sympy.sets.fancysets import Range, FiniteSet
 from sympy.sets.sets import Union
@@ -16,7 +16,7 @@ from sympy.core.sympify import _sympify
 from sympy.external import import_module
 
 
-class DiscreteDistribution(Basic):
+class DiscreteDistribution(Distribution):
     def __call__(self, *args):
         return self.pdf(*args)
 
