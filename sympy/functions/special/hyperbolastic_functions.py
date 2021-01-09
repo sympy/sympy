@@ -10,7 +10,7 @@ class h1(Function):
     The hyperbolastic rate equation of type I, denoted H1, is given by:
 
     .. math::
-    \frac{dP(x)}{dx} = \frac{P(x)*(\M-P(x))*(\delta+\frac{\theta}{(1+x^2)^0.5})}{M}
+        \frac{\mathrm{d}P(x)}{\mathrm{d}x} = \frac{P(x)(M-P(x))\left(\delta+\frac{\theta}{\sqrt{1+x^2}}\right)}{M}
 
     where x is any real number and P(x) is the population size at x.
     The parameter M represents carrying capacity, and parameters delta
@@ -59,7 +59,7 @@ class h2(Function):
     The hyperbolastic rate equation of type II, denoted H2, is given by:
 
     .. math::
-    \frac{dP(x)}{dx} = frac{\delta*\alpha*\gamma*P(x)^2*x^(\gamma-1)*tanh(\frac{M-P(x)}{\alpha*P(x)})}{M}
+       \frac{\mathrm{d}P(x)}{\mathrm{d}x} = \frac{\delta\alpha\gamma P(x)^2 x^{\gamma-1}\tanh\left(\frac{M-P(x)}{\alpha P(x)}\right)}{M}
 
     with initial condition P(t0) = P0 and gamma > 0, where tanh stands for hyperbolic
     tangent function, M is the carrying capacity, and beta and gamma are parameters.
@@ -113,7 +113,7 @@ class h3(Function):
     The hyperbolastic rate equation of type III, denoted H3, is given by:
 
         .. math::
-    \frac{dP(t)}{dt} = (M-P(t))*(\delta*\gamma*t^(\gamma-1)+\frac{theta}{(1+(\theta*t)^2)^0.5})
+       \frac{\mathrm{d}P(t)}{\mathrm{d}t} = (M-P(t))\left(\delta\gamma t^{\gamma-1}+\frac{\theta}{\sqrt{1+(\theta t)^2}}\right)
 
     with initial condition P(t0) = P0 where M is the carrying capacity t is the
     time and delta, gamma and theta are parameters. We refer to above model as

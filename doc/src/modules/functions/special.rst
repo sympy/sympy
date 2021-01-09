@@ -131,6 +131,14 @@ Hypergeometric Functions
 .. autoclass:: sympy.functions.special.hyper.appellf1
    :members:
 
+Hyperbolastic Functions
+-----------------------
+.. module:: sympy.functions.elliptic_integrals
+
+.. autoclass:: h1
+.. autoclass:: h2
+.. autoclass:: h3
+
 Elliptic integrals
 ------------------
 .. module:: sympy.functions.special.elliptic_integrals
