@@ -2,7 +2,6 @@ from itertools import combinations
 
 from sympy import (ask, cos, exp, FiniteSet, Float, Function, I, log, oo,
     pi, Q, Rational, S, sin, sqrt, symbols)
-from sympy.simplify import trigsimp
 from sympy.printing import sstr, pretty, latex
 
 x,y,z = symbols('x y z')
@@ -55,40 +54,38 @@ def test_truediv():
     assert 3/eq1 == Q.eq(3/x, 3)
     assert eq1/eq2 == Q.eq(x/y, S.One/2)
 
-def test_diff():
-    eq = Q.eq(sin(x)*cos(y), (sin(x+y) + sin(x-y))/2)
-    assert eq.diff(x) == Q.eq(
+def test_apply():
+    # diff
+    eq1 = Q.eq(sin(x)*cos(y), (sin(x+y) + sin(x-y))/2)
+    assert eq1.apply.diff(x) == Q.eq(
         (sin(x)*cos(y)).diff(x),
         ((sin(x+y) + sin(x-y))/2).diff(x)
     )
-    assert eq.diff(y, y) == Q.eq(
+    assert eq1.apply.diff(y, y) == Q.eq(
         (sin(x)*cos(y)).diff(y, 2),
         ((sin(x+y) + sin(x-y))/2).diff(y, 2)
     )
 
-def test_integrate():
-    eq = Q.eq(sin(x)*cos(y), (sin(x+y) + sin(x-y))/2)
-    assert eq.integrate(x) == Q.eq(
+    # integrate
+    eq2 = Q.eq(sin(x)*cos(y), (sin(x+y) + sin(x-y))/2)
+    assert eq2.apply.integrate(x) == Q.eq(
         (sin(x)*cos(y)).integrate(x),
         ((sin(x+y) + sin(x-y))/2).integrate(x)
     )
-    assert eq.integrate((y, 0, 1)) == Q.eq(
+    assert eq2.apply.integrate((y, 0, 1)) == Q.eq(
         (sin(x)*cos(y)).integrate((y, 0, 1)),
         ((sin(x+y) + sin(x-y))/2).integrate((y, 0, 1))
     )
 
-def test_func():
-    eq = Q.eq(x,y)
-    assert sin(eq) == Q.eq(sin(x), sin(y))
-    assert cos(eq) == Q.eq(cos(x), cos(y))
+    # func
+    eq3 = Q.eq(x,y)
+    assert eq3.apply(sin) == Q.eq(sin(x), sin(y))
+    assert eq3.apply(cos) == Q.eq(cos(x), cos(y))
+    assert eq3.apply(sqrt) == Q.eq(sqrt(x), sqrt(y))
 
-def test_sqrt():
-    eq = Q.eq(x,y)
-    assert sqrt(eq) == Q.eq(sqrt(x), sqrt(y))
-
-def test_rewrite():
-    eq = Q.eq(y, exp(x*I))
-    assert eq.rewrite(cos) == Q.eq(y, I*sin(x)+cos(x))
+    # rewrite
+    eq4 = Q.eq(y, exp(x*I))
+    assert eq4.apply.rewrite(cos) == Q.eq(y, I*sin(x)+cos(x))
 
 def test_simplify():
     eq = Q.eq(y, (x+x**2)/(x*sin(y)**2+x*cos(y)**2))
@@ -104,6 +101,7 @@ def test_simplify():
     assert Q.eq(x*(y + 1) - x*y - x + 1, x).simplify() == Q.eq(x, 1)
 
 def test_doit():
+    # test that doit does not evaluate the relation
     assert Q.eq(x, 0).doit() == Q.eq(x, 0)
     assert Q.eq(1, 1).doit() == Q.eq(1, 1)
 
@@ -177,18 +175,6 @@ def test_set_equality_canonical():
     a, b, c = symbols('a b c')
     A = Q.eq(FiniteSet(a, b, c), FiniteSet(1, 2, 3))
     assert A.canonical == A.reversed
-
-def test_trigsimp():
-    # issue 16736
-    s, c = sin(2*x), cos(2*x)
-    eq = Q.eq(s, c)
-    assert trigsimp(eq) == eq  # no rearrangement of sides
-    # simplification of sides might result in
-    # an unevaluated Eq
-    changed = trigsimp(Q.eq(s + c, sqrt(2)))
-    assert ask(changed.subs(x, pi/8)) is True
-    # or an evaluated one
-    assert ask(trigsimp(Q.eq(cos(x)**2 + sin(x)**2, 1))) is True
 
 def test_multivariate_linear_function_simplification():
     assert Q.eq(2*x + y, 2*x + y - 3).simplify() == Q.eq(0, 3)

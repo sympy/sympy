@@ -19,7 +19,7 @@ def test_rearrange_eq():
 
 def test_rearrange_ineq():
     assert Q.gt(-2*x, -2*y).rearrange() == Q.lt(x,y)
-    assert Q.gt(2**(-x), 2**(-y)).rearrnage() == Q.lt(x,y)
+    assert Q.gt(2**(-x), 2**(-y)).rearrange() == Q.lt(x,y)
 
     assert Q.gt(p*x, p*y).rearrange() == Q.gt(x,y)
     assert Q.gt(n*x, n*y).rearrange() == Q.lt(x,y)
