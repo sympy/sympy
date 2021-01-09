@@ -16,6 +16,7 @@ Contents
     assume.rst
     refine.rst
     handlers/index.rst
+    predicates.rst
 
 
 Predicates
