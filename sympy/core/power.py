@@ -1746,7 +1746,27 @@ UndefinedKind.pow = Pow
 NumberKind.pow = Pow
 
 
-def power(b, e, **kwargs):
+def power(b, e, evaluate=True, **kwargs):
+    """
+    Return the power, ``b**e``.
+
+    It is intended that user use ``**`` to evaluate the power,
+    and this function with ``evaluate=False`` to get non-evaluated result.
+
+    Examples
+    ========
+
+    >>> from sympy.core.power import power
+    >>> from sympy.abc import x
+    >>> power(x, 2)
+    x**2
+    >>> power(1, 2)
+    1
+    >>> power(1, 2, evaluate=False)
+    1**2
+    """
+    kwargs.update(evaluate=evaluate)
+
     b, e = _sympify(b), _sympify(e)
     selected_kind = Pow.kind_dispatcher(b.kind, e.kind)
     func = selected_kind.pow

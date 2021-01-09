@@ -100,16 +100,16 @@ class Mul(Expr, AssocOp):
     The evaluation logic includes:
 
     1. Flattening
-        ``Mul(x, Mul(y, z))`` -> ``Mul(x, y, z)``
+        ``Mul(x, Mul(y, z)) -> Mul(x, y, z)``
 
     2. Identity removing
-        ``Mul(x, 1, y)`` -> ``Mul(x, y)``
+        ``Mul(x, 1, y) -> Mul(x, y)``
 
     3. Exponent collecting by ``.as_base_exp()``
-        ``Mul(x, x**2)`` -> ``Pow(x, 3)``
+        ``Mul(x, x**2) -> Pow(x, 3)``
 
     4. Term sorting
-        ``Mul(y, x, 2)`` -> ``Mul(2, x, y)``
+        ``Mul(y, x, 2) -> Mul(2, x, y)``
 
     Since multiplication can be vector space operation, arguments may
     have the different :obj:`sympy.core.kind.Kind()`. Kind of the
@@ -1998,11 +1998,34 @@ UndefinedKind.mul = Mul
 NumberKind.mul = Mul
 
 
-def mul(args, **kwargs):
-    if not args:
-        return S.One
+def mul(args, start=1, evaluate=True, **kwargs):
+    """
+    Return the product of an iterable of objects. When the iterable is empty,
+    return the start value.
 
-    kwargs.update(_sympify=False)
+    It is intended that user use ``*`` to evaluate the multiplication,
+    and this function with ``evaluate=False`` to get non-evaluated result.
+
+    Examples
+    ========
+
+    >>> from sympy import MatrixSymbol
+    >>> from sympy.core.mul import mul
+    >>> from sympy.abc import x
+    >>> A = MatrixSymbol('A', 2,2)
+    >>> mul([x, x])
+    x**2
+    >>> mul([x, x], evaluate=False)
+    x*x
+    >>> mul([A, A])
+    A**2
+    >>> mul([A, A], evaluate=False)
+    A*A
+    """
+    if not args:
+        return _sympify(start)
+
+    kwargs.update(_sympify=False, evaluate=evaluate)
 
     args = [_sympify(a) for a in args]
     kinds = [a.kind for a in args]
