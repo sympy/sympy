@@ -520,10 +520,13 @@ class Piecewise(Function):
             # condition
             if b is S.Infinity:
                 cond = True
-            elif self.args[abei[i][-1]].cond.subs(x, b) == False:
-                cond = (x < b)
             else:
-                cond = (x <= b)
+                if self.args[abei[i][-1]].cond.args and self.args[abei[i][-1]].cond.args[0].subs(x, b).is_infinite:
+                    cond = (x < b)
+                elif self.args[abei[i][-1]].cond.subs(x, b) == False:
+                    cond = (x < b)
+                else:
+                    cond = (x <= b)
             args.append((sum, cond))
         return Piecewise(*args)
 
