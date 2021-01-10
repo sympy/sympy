@@ -1,4 +1,6 @@
 from typing import Tuple as tTuple
+from collections.abc import Iterable
+from functools import reduce
 
 from .sympify import sympify, _sympify, SympifyError
 from .basic import Basic, Atom
@@ -6,7 +8,7 @@ from .singleton import S
 from .evalf import EvalfMixin, pure_complex
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
-from .compatibility import reduce, as_int, default_sort_key, Iterable
+from .compatibility import as_int, default_sort_key
 from sympy.utilities.misc import func_name
 from mpmath.libmp import mpf_log, prec_to_dps
 
@@ -1103,7 +1105,7 @@ class Expr(Basic, EvalfMixin):
         None
 
         """
-        from sympy.polys import Poly, PolynomialError
+        from sympy.polys import Poly, PolynomialError, GeneratorsNeeded
 
         try:
             poly = Poly(self, *gens, **args)
@@ -1112,7 +1114,9 @@ class Expr(Basic, EvalfMixin):
                 return None
             else:
                 return poly
-        except PolynomialError:
+        except (PolynomialError, GeneratorsNeeded):
+            # PolynomialError is caught for e.g. exp(x).as_poly(x)
+            # GeneratorsNeeded is caught for e.g. S(2).as_poly()
             return None
 
     def as_ordered_terms(self, order=None, data=False):
@@ -3222,23 +3226,14 @@ class Expr(Basic, EvalfMixin):
         # terms.
         n = 0
         series = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
-        if not series.is_Order:
-            newseries = series.cancel()
-            if not newseries.is_Order:
-                if series.is_Add:
-                    yield series.removeO()
-                else:
-                    yield series
-                return
-            else:
-                series = newseries
 
         while series.is_Order:
             n += 1
             series = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+
         e = series.removeO()
         yield e
-        if e.is_zero:
+        if e is S.Zero:
             return
 
         while 1:

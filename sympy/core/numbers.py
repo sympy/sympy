@@ -3,6 +3,7 @@ import decimal
 import fractions
 import math
 import re as regex
+import sys
 
 from .containers import Tuple
 from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
@@ -14,7 +15,7 @@ from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
 from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS,
-    int_info, gmpy)
+    gmpy)
 from sympy.core.cache import lru_cache
 from sympy.multipledispatch import dispatch
 import mpmath
@@ -258,28 +259,13 @@ def igcd(*args):
             a = gmpy.gcd(a, b) if b else a
         return as_int(a)
     for b in args_temp:
-        a = igcd2(a, b) if b else a
+        a = math.gcd(a, b)
     return a
 
-def _igcd2_python(a, b):
-    """Compute gcd of two Python integers a and b."""
-    if (a.bit_length() > BIGBITS and
-        b.bit_length() > BIGBITS):
-        return igcd_lehmer(a, b)
 
-    a, b = abs(a), abs(b)
-    while b:
-        a, b = b, a % b
-    return a
-
-try:
-    from math import gcd as igcd2
-except ImportError:
-    igcd2 = _igcd2_python
+igcd2 = math.gcd
 
 
-# Use Lehmer's algorithm only for very large numbers.
-BIGBITS = 5000
 def igcd_lehmer(a, b):
     """Computes greatest common divisor of two integers.
 
@@ -333,7 +319,7 @@ def igcd_lehmer(a, b):
     # pair (a, b) with a pair of shorter consecutive elements
     # of the Euclidean gcd sequence until a and b
     # fit into two Python (long) int digits.
-    nbits = 2*int_info.bits_per_digit
+    nbits = 2*sys.int_info.bits_per_digit
 
     while a.bit_length() > nbits and b != 0:
         # Quotients are mostly small integers that can
@@ -2446,6 +2432,11 @@ class AlgebraicNumber(Expr):
     is_AlgebraicNumber = True
     is_algebraic = True
     is_number = True
+
+    # Optional alias symbol is not free.
+    # Actually, alias should be a Str, but some methods
+    # expect that it be an instance of Expr.
+    free_symbols = set()
 
     def __new__(cls, expr, coeffs=None, alias=None, **args):
         """Construct a new algebraic number. """

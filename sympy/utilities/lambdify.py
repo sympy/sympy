@@ -5,14 +5,15 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from typing import Any, Dict, Iterable
 
+import builtins
 import inspect
 import keyword
 import textwrap
 import linecache
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.core.compatibility import (exec_, is_sequence, iterable,
-    NotIterable, builtins)
+from sympy.core.compatibility import (is_sequence, iterable,
+    NotIterable)
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -138,7 +139,7 @@ def _import(module, reload=False):
                 continue
         else:
             try:
-                exec_(import_command, {}, namespace)
+                exec(import_command, {}, namespace)
                 continue
             except ImportError:
                 pass
@@ -846,13 +847,13 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
             if k not in namespace:
                 ln = "from %s import %s" % (mod, k)
                 try:
-                    exec_(ln, {}, namespace)
+                    exec(ln, {}, namespace)
                 except ImportError:
                     # Tensorflow 2.0 has issues with importing a specific
                     # function from its submodule.
                     # https://github.com/tensorflow/tensorflow/issues/33022
                     ln = "%s = %s.%s" % (k, mod, k)
-                    exec_(ln, {}, namespace)
+                    exec(ln, {}, namespace)
                 imp_mod_lines.append(ln)
 
     # Provide lambda expression with builtins, and compatible implementation of range
@@ -863,7 +864,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
     _lambdify_generated_counter += 1
     c = compile(funcstr, filename, 'exec')
-    exec_(c, namespace, funclocals)
+    exec(c, namespace, funclocals)
     # mtime has to be None or else linecache.checkcache will remove it
     linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename) # type: ignore
 

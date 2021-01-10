@@ -1,11 +1,12 @@
 """Base class for all the objects in SymPy"""
 from collections import defaultdict
+from collections.abc import Mapping
 from itertools import chain, zip_longest
 
 from .assumptions import BasicMeta, ManagedProperties
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import iterable, ordered, Mapping
+from .compatibility import iterable, ordered
 from .singleton import S
 from ._print_helpers import Printable
 

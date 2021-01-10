@@ -1,5 +1,5 @@
 from collections import defaultdict
-from functools import cmp_to_key
+from functools import cmp_to_key, reduce
 import operator
 
 from .sympify import sympify
@@ -8,7 +8,6 @@ from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .logic import fuzzy_not, _fuzzy_group
-from .compatibility import reduce
 from .expr import Expr
 from .parameters import global_parameters
 

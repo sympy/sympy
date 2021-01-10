@@ -1130,6 +1130,9 @@ def test_as_poly_as_expr():
     p = Poly(f, x, y)
 
     assert p.as_poly() == p
+    # https://github.com/sympy/sympy/issues/20610
+    assert S(2).as_poly() is None
+    assert sqrt(2).as_poly(extension=True) is None
 
     raises(AttributeError, lambda: Tuple(x, x).as_poly(x))
     raises(AttributeError, lambda: Tuple(x ** 2, x, y).as_poly(x))
