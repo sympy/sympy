@@ -30,10 +30,8 @@ class IntegerPredicate(Predicate):
     name = 'integer'
     handler = Dispatcher(
         "IntegerHandler",
-        doc="""
-        Handler for Q.integer.
-        Test that an expression belongs to the field of integer numbers.
-        """
+        doc=("Handler for Q.integer.\n\n"
+        "Test that an expression belongs to the field of integer numbers.")
     )
 
 
@@ -67,10 +65,8 @@ class RationalPredicate(Predicate):
     name = 'rational'
     handler = Dispatcher(
         "RationalHandler",
-        doc="""
-        Handler for Q.rational.
-        Test that an expression belongs to the field of rational numbers.
-        """
+        doc=("Handler for Q.rational.\n\n"
+        "Test that an expression belongs to the field of rational numbers.")
     )
 
 
@@ -106,10 +102,8 @@ class IrrationalPredicate(Predicate):
     name = 'irrational'
     handler = Dispatcher(
         "IrrationalHandler",
-        doc="""
-        Handler for Q.irrational.
-        Test that an expression is irrational numbers.
-        """
+        doc=("Handler for Q.irrational.\n\n"
+        "Test that an expression is irrational numbers.")
     )
 
 
@@ -174,10 +168,8 @@ class RealPredicate(Predicate):
     name = 'real'
     handler = Dispatcher(
         "RealHandler",
-        doc="""
-        Handler for Q.real.
-        Test that an expression belongs to the field of real numbers.
-        """
+        doc=("Handler for Q.real.\n\n"
+        "Test that an expression belongs to the field of real numbers.")
     )
 
 
@@ -209,11 +201,9 @@ class ExtendedRealPredicate(Predicate):
     name = 'extended_real'
     handler = Dispatcher(
         "ExtendedRealHandler",
-        doc="""
-        Handler for Q.extended_real.
-        Test that an expression belongs to the field of extended real
-        numbers, that is real numbers union {Infinity, -Infinity}.
-        """
+        doc=("Handler for Q.extended_real.\n\n"
+        "Test that an expression belongs to the field of extended real\n"
+        "numbers, that is real numbers union {Infinity, -Infinity}.")
     )
 
 
@@ -237,10 +227,8 @@ class HermitianPredicate(Predicate):
     name = 'hermitian'
     handler = Dispatcher(
         "HermitianHandler",
-        doc="""
-        Handler for Q.hermitian.
-        Test that an expression belongs to the field of Hermitian operators.
-        """
+        doc=("Handler for Q.hermitian.\n\n"
+        "Test that an expression belongs to the field of Hermitian operators.")
     )
 
 
@@ -275,10 +263,8 @@ class ComplexPredicate(Predicate):
     name = 'complex'
     handler = Dispatcher(
         "ComplexHandler",
-        doc="""
-        Handler for Q.complex.
-        Test that an expression belongs to the field of complex numbers.
-        """
+        doc=("Handler for Q.complex.\n\n"
+        "Test that an expression belongs to the field of complex numbers.")
     )
 
 
@@ -313,11 +299,9 @@ class ImaginaryPredicate(Predicate):
     name = 'imaginary'
     handler = Dispatcher(
         "ImaginaryHandler",
-        doc="""
-        Handler for Q.imaginary.
-        Test that an expression belongs to the field of imaginary numbers,
-        that is, numbers in the form x*I, where x is real.
-        """
+        doc=("Handler for Q.imaginary.\n\n"
+        "Test that an expression belongs to the field of imaginary numbers,\n"
+        "that is, numbers in the form x*I, where x is real.")
     )
 
 
@@ -342,11 +326,9 @@ class AntihermitianPredicate(Predicate):
     name = 'antihermitian'
     handler = Dispatcher(
         "AntiHermitianHandler",
-        doc="""
-        Handler for Q.antihermitian.
-        Test that an expression belongs to the field of anti-Hermitian
-        operators, that is, operators in the form x*I, where x is Hermitian.
-        """
+        doc=("Handler for Q.antihermitian.\n\n"
+        "Test that an expression belongs to the field of anti-Hermitian\n"
+        "operators, that is, operators in the form x*I, where x is Hermitian.")
     )
 
 
@@ -380,7 +362,7 @@ class AlgebraicPredicate(Predicate):
     name = 'algebraic'
     AlgebraicHandler = Dispatcher(
         "AlgebraicHandler",
-        doc="""Handler for Q.algebraic key. """
+        doc="""Handler for Q.algebraic key."""
     )
 
 
@@ -400,5 +382,5 @@ class TranscendentalPredicate(Predicate):
     name = 'transcendental'
     handler = Dispatcher(
         "Transcendental",
-        doc="""Handler for Q.transcendental key. """
+        doc="""Handler for Q.transcendental key."""
     )
