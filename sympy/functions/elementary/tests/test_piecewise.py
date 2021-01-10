@@ -2,7 +2,7 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, ITE,
     Integral, integrate, Interval, KroneckerDelta, lambdify, log, Max, Min,
     oo, Or, pi, Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Sum, Tuple, zoo, Float,
+    cos, sin, tan, exp, Abs, Ne, Not, Symbol, S, sqrt, Sum, Tuple, zoo, Float,
     DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains)
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
@@ -1007,6 +1007,8 @@ def test_issue_10122():
     assert solve(abs(x) + abs(x - 1) - 1 > 0, x
         ) == Or(And(-oo < x, x < S.Zero), And(S.One < x, x < oo))
 
+def test_issue_20755():
+    assert Piecewise((x, tan(x) >= 0)).integrate() == Piecewise((S.NaN, x <= 0), (x**2/2, x < pi/2), (S.NaN, True))
 
 def test_issue_4313():
     u = Piecewise((0, x <= 0), (1, x >= a), (x/a, True))
