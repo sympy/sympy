@@ -109,6 +109,7 @@ def test_solve_args():
     # no symbol to solve for
     assert solve(42) == solve(42, x) == []
     assert solve([1, 2]) == []
+    assert solve([sqrt(2)],[x]) == []
     # duplicate symbols removed
     assert solve((x - 3, y + 2), x, y, x) == {x: 3, y: -2}
     # unordered symbols
