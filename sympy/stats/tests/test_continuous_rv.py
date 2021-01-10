@@ -1558,7 +1558,7 @@ def test_issue_13324():
     assert E(X, X > S.Half) == Rational(3, 4)
     assert E(X, X > 0) == S.Half
 
-def issue_20755():
+def test_issue_20755():
     U = Uniform('U', -1, 1)
     assert E(Abs(csc(U))) == S.NaN
 
