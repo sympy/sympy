@@ -247,6 +247,9 @@ def derive_by_array(expr, dx):
     r"""
     Derivative by arrays. Supports both arrays and scalars.
 
+    Explanation
+    ===========
+
     Given the array `A_{i_1, \ldots, i_N}` and the array `X_{j_1, \ldots, j_M}`
     this function will return a new array `B` defined by
 

@@ -9,7 +9,11 @@ from sympy.core.numbers import Integer
 
 class ArrayComprehension(Basic):
     """
-    Generate a list comprehension
+    Generate a list comprehension.
+
+    Explanation
+    ===========
+
     If there is a symbolic dimension, for example, say [i for i in range(1, N)] where
     N is a Symbol, then the expression will not be expanded to an array. Otherwise,
     calling the doit() function will launch the expansion.
@@ -44,7 +48,7 @@ class ArrayComprehension(Basic):
 
     @property
     def function(self):
-        """The function applied across limits
+        """The function applied across limits.
 
         Examples
         ========
@@ -61,7 +65,7 @@ class ArrayComprehension(Basic):
     @property
     def limits(self):
         """
-        The list of limits that will be applied while expanding the array
+        The list of limits that will be applied while expanding the array.
 
         Examples
         ========
@@ -78,7 +82,7 @@ class ArrayComprehension(Basic):
     @property
     def free_symbols(self):
         """
-        The set of the free_symbols in the array
+        The set of the free_symbols in the array.
         Variables appeared in the bounds are supposed to be excluded
         from the free symbol set.
 
@@ -104,7 +108,7 @@ class ArrayComprehension(Basic):
 
     @property
     def variables(self):
-        """The tuples of the variables in the limits
+        """The tuples of the variables in the limits.
 
         Examples
         ========
@@ -120,7 +124,7 @@ class ArrayComprehension(Basic):
 
     @property
     def bound_symbols(self):
-        """The list of dummy variables
+        """The list of dummy variables.
 
         Note
         ====
@@ -133,7 +137,7 @@ class ArrayComprehension(Basic):
     @property
     def shape(self):
         """
-        The shape of the expanded array, which may have symbols
+        The shape of the expanded array, which may have symbols.
 
         Note
         ====
@@ -160,7 +164,7 @@ class ArrayComprehension(Basic):
     def is_shape_numeric(self):
         """
         Test if the array is shape-numeric which means there is no symbolic
-        dimension
+        dimension.
 
         Examples
         ========
@@ -181,7 +185,7 @@ class ArrayComprehension(Basic):
         return True
 
     def rank(self):
-        """The rank of the expanded array
+        """The rank of the expanded array.
 
         Examples
         ========
@@ -268,7 +272,7 @@ class ArrayComprehension(Basic):
         return temp
 
     def tolist(self):
-        """Transform the expanded array to a list
+        """Transform the expanded array to a list.
 
         Raises
         ======
@@ -291,7 +295,7 @@ class ArrayComprehension(Basic):
         raise ValueError("A symbolic array cannot be expanded to a list")
 
     def tomatrix(self):
-        """Transform the expanded array to a matrix
+        """Transform the expanded array to a matrix.
 
         Raises
         ======
