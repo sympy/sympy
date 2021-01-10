@@ -1,7 +1,7 @@
 from sympy import E as e
 from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
-                   gamma, beta, Piecewise, Integral, sin, cos, tan, atan, sinh, cosh,
+                   gamma, beta, Piecewise, Integral, sin, cos, tan, csc, atan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re, Lambda, asin,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
                    factorial, binomial, erfi, besselj, besselk)
@@ -1557,6 +1557,10 @@ def test_issue_13324():
     X = Uniform('X', 0, 1)
     assert E(X, X > S.Half) == Rational(3, 4)
     assert E(X, X > 0) == S.Half
+
+def issue_20755():
+    U = Uniform('U', -1, 1)
+    assert E(Abs(csc(U))) == S.NaN
 
 def test_FiniteSet_prob():
     E = Exponential('E', 3)
