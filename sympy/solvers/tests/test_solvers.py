@@ -22,7 +22,6 @@ from sympy.testing.randtest import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 
-
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
@@ -2290,3 +2289,9 @@ def test_issue_19509():
         -d + a + sqrt(-b + c),
         d + a - sqrt(-b - c),
         d + a + sqrt(-b - c)]
+
+
+def test_issue_6819():
+    x = symbols('x')
+    a, b, c, d = symbols('a b c d', positive=True)
+    assert solve(a*b**x - c*d**x, x) == [log(c/a)/log(b/d)]
