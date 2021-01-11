@@ -188,7 +188,7 @@ class PredicateMeta(ManagedProperties):
             handler = Dispatcher(name, doc="Handler for key %s" % name)
             dct["handler"] = handler
 
-        dct["_orig_doc"] = dct["__doc__"]
+        dct["_orig_doc"] = dct.get("__doc__", "")
 
         return super().__new__(cls, clsname, bases, dct)
 
@@ -220,7 +220,10 @@ class PredicateMeta(ManagedProperties):
                 else:
                     other.append(str_signature(sig))
             if other:
-                docs.append('    Other signatures:\n        * ' + '\n        * '.join(other))
+                othersig = "    Other signatures:"
+                for line in other:
+                    othersig += "\n        * %s" % line
+                docs.append(othersig)
 
             doc += '\n\n'.join(docs)
 
