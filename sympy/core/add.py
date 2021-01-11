@@ -1220,6 +1220,13 @@ UndefinedKind.add = Add
 NumberKind.add = Add
 
 
+def _add(args, start=0, evaluate=False, **kwargs):
+    # Function for sympy internal use. Intended to replace postprocessors.
+    # Introduced to avoid potential backwards incompatibility in the future.
+    # Note that this may be deleted if subclasses are removed.
+    return add(args, start=start, evaluate=evalute, **kwargs)
+
+
 def add(args, start=0, evaluate=True, **kwargs):
     """
     Return the sum of an iterable of objects. When the iterable is empty,

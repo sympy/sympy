@@ -1998,6 +1998,13 @@ UndefinedKind.mul = Mul
 NumberKind.mul = Mul
 
 
+def _mul(args, start=1, evaluate=False, **kwargs):
+    # Function for sympy internal use. Intended to replace postprocessors.
+    # Introduced to avoid potential backwards incompatibility in the future.
+    # Note that this may be deleted if subclasses are removed.
+    return mul(args, start=start, evaluate=evalute, **kwargs)
+
+
 def mul(args, start=1, evaluate=True, **kwargs):
     """
     Return the product of an iterable of objects. When the iterable is empty,

@@ -1746,6 +1746,13 @@ UndefinedKind.pow = Pow
 NumberKind.pow = Pow
 
 
+def _power(b, e, evaluate=False, **kwargs):
+    # Function for sympy internal use. Intended to replace postprocessors.
+    # Introduced to avoid potential backwards incompatibility in the future.
+    # Note that this may be deleted if subclasses are removed.
+    return power(b, e, evaluate=evalute, **kwargs)
+
+
 def power(b, e, evaluate=True, **kwargs):
     """
     Return the power, ``b**e``.
