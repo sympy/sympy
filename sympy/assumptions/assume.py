@@ -181,13 +181,8 @@ class AppliedPredicate(Boolean):
 
 
 class PredicateMeta(ManagedProperties):
-    """
-    Metaclass for ``Predicate``
-
-    If class attribute ``handler`` is not defined, assigns empty Dispatcher
-    to it.
-    """
     def __new__(cls, clsname, bases, dct):
+        # If handler is not defined, assign empty dispatcher.
         if "handler" not in dct:
             name = f"Ask{clsname.capitalize()}Handler"
             handler = Dispatcher(name, doc="Handler for key %s" % name)
