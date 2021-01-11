@@ -133,7 +133,7 @@ Hypergeometric Functions
 
 Hyperbolastic Functions
 -----------------------
-.. module:: sympy.functions.elliptic_integrals
+.. module:: sympy.functions.special.hyperbolastic_functions
 
 .. autoclass:: h1
 .. autoclass:: h2

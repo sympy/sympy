@@ -112,7 +112,7 @@ class h3(Function):
     r"""
     The hyperbolastic rate equation of type III, denoted H3, is given by:
 
-        .. math::
+    .. math::
        \frac{\mathrm{d}P(t)}{\mathrm{d}t} = (M-P(t))\left(\delta\gamma t^{\gamma-1}+\frac{\theta}{\sqrt{1+(\theta t)^2}}\right)
 
     with initial condition P(t0) = P0 where M is the carrying capacity t is the
