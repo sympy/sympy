@@ -358,6 +358,7 @@ class AlgebraicPredicate(Predicate):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Algebraic_number
+
     """
     name = 'algebraic'
     AlgebraicHandler = Dispatcher(

@@ -192,6 +192,14 @@ class PredicateMeta(ManagedProperties):
             name = f"Ask{clsname.capitalize()}Handler"
             handler = Dispatcher(name, doc="Handler for key %s" % name)
             dct["handler"] = handler
+
+        handler = dct["handler"]
+        if handler is not None:
+            dct["__doc__"] += "Handler\n"
+            dct["__doc__"] += "    =======\n\n"
+            for line in handler.__doc__.splitlines():
+                dct["__doc__"] += "    %s\n" % line
+
         return super().__new__(cls, clsname, bases, dct)
 
 
