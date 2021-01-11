@@ -1224,7 +1224,7 @@ def _add(args, start=0, evaluate=False, **kwargs):
     # Function for sympy internal use. Intended to replace postprocessors.
     # Introduced to avoid potential backwards incompatibility in the future.
     # Note that this may be deleted if subclasses are removed.
-    return add(args, start=start, evaluate=evalute, **kwargs)
+    return add(args, start=start, evaluate=evaluate, **kwargs)
 
 
 def add(args, start=0, evaluate=True, **kwargs):

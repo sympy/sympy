@@ -1750,7 +1750,7 @@ def _power(b, e, evaluate=False, **kwargs):
     # Function for sympy internal use. Intended to replace postprocessors.
     # Introduced to avoid potential backwards incompatibility in the future.
     # Note that this may be deleted if subclasses are removed.
-    return power(b, e, evaluate=evalute, **kwargs)
+    return power(b, e, evaluate=evaluate, **kwargs)
 
 
 def power(b, e, evaluate=True, **kwargs):

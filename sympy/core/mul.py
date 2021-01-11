@@ -2002,7 +2002,7 @@ def _mul(args, start=1, evaluate=False, **kwargs):
     # Function for sympy internal use. Intended to replace postprocessors.
     # Introduced to avoid potential backwards incompatibility in the future.
     # Note that this may be deleted if subclasses are removed.
-    return mul(args, start=start, evaluate=evalute, **kwargs)
+    return mul(args, start=start, evaluate=evaluate, **kwargs)
 
 
 def mul(args, start=1, evaluate=True, **kwargs):
