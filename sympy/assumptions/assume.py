@@ -196,7 +196,7 @@ class PredicateMeta(ManagedProperties):
     def __doc__(cls):
         handler = cls.handler
         doc = cls._orig_doc
-        if handler is not None:
+        if cls is not Predicate and handler is not None:
             doc += "Handler\n"
             doc += "    =======\n\n"
 

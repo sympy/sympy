@@ -6,12 +6,6 @@
 Predicates
 ==========
 
-.. autoclass:: sympy.assumptions.assume::Predicate
-   :noindex:
-
-.. autoclass:: sympy.assumptions.assume::AppliedPredicate
-   :noindex:
-
 Sets
 ====
 
