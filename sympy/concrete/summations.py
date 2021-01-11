@@ -1183,6 +1183,8 @@ def eval_sum_symbolic(f, limits):
             e_exp = e.pop(wexp).expand().match(c2*i + c3)
             if e_exp is not None:
                 e.update(e_exp)
+            else:
+                e = None
 
         if e is not None:
             p = (c1**c3).subs(e)
