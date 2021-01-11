@@ -356,7 +356,7 @@ class Application(Basic, metaclass=FunctionClass):
             return new(*[i._subs(old, new) for i in self.args])
 
 
-class from sympy.core.sympify import sympifyFunction(Application, Expr):
+class Function(Application, Expr):
     """
     Base class for applied mathematical functions.
 
