@@ -193,14 +193,20 @@ class PredicateMeta(ManagedProperties):
             handler = Dispatcher(name, doc="Handler for key %s" % name)
             dct["handler"] = handler
 
-        handler = dct["handler"]
-        if handler is not None:
-            dct["__doc__"] += "Handler\n"
-            dct["__doc__"] += "    =======\n\n"
-            for line in handler.__doc__.splitlines():
-                dct["__doc__"] += "    %s\n" % line
+        dct["_orig_doc"] = dct["__doc__"]
 
         return super().__new__(cls, clsname, bases, dct)
+
+    @property
+    def __doc__(cls):
+        handler = cls.handler
+        doc = cls._orig_doc
+        if handler is not None:
+            doc += "Handler\n"
+            doc += "    =======\n\n"
+            for line in handler.__doc__.splitlines():
+                doc += "    %s\n" % line
+        return doc
 
 
 class Predicate(Boolean, metaclass=PredicateMeta):
