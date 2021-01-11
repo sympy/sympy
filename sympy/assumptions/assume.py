@@ -7,7 +7,7 @@ from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean
 from sympy.multipledispatch.dispatcher import (
-    Dispatcher, MDNotImplementedError
+    Dispatcher, MDNotImplementedError, str_signature
 )
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.source import get_class
@@ -199,8 +199,31 @@ class PredicateMeta(ManagedProperties):
         if handler is not None:
             doc += "Handler\n"
             doc += "    =======\n\n"
-            for line in handler.__doc__.splitlines():
-                doc += "    %s\n" % line
+
+            # Append the handler's doc without breaking sphinx documentation.
+            docs = ["    Multiply dispatched method: %s" % handler.name]
+            if handler.doc:
+                for line in handler.doc.splitlines():
+                    if not line:
+                        continue
+                    docs.append("    %s" % line)
+            other = []
+            for sig in handler.ordering[::-1]:
+                func = handler.funcs[sig]
+                if func.__doc__:
+                    s = '    Inputs: <%s>' % str_signature(sig)
+                    lines = []
+                    for line in func.__doc__.splitlines():
+                        lines.append("    %s" % line)
+                    s += "\n".join(lines)
+                    docs.append(s)
+                else:
+                    other.append(str_signature(sig))
+            if other:
+                docs.append('    Other signatures:\n        * ' + '\n        * '.join(other))
+
+            doc += '\n\n'.join(docs)
+
         return doc
 
 

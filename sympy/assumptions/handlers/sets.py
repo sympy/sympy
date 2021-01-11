@@ -49,9 +49,9 @@ def _(expr, assumptions):
 @IntegerPredicate.register_many(Add, Pow)
 def _(expr, assumptions):
     """
-    Integer + Integer       -> Integer
-    Integer + !Integer      -> !Integer
-    !Integer + !Integer -> ?
+    * Integer + Integer       -> Integer
+    * Integer + !Integer      -> !Integer
+    * !Integer + !Integer -> ?
     """
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
@@ -60,10 +60,10 @@ def _(expr, assumptions):
 @IntegerPredicate.register(Mul)
 def _(expr, assumptions):
     """
-    Integer*Integer      -> Integer
-    Integer*Irrational   -> !Integer
-    Odd/Even             -> !Integer
-    Integer*Rational     -> ?
+    * Integer*Integer      -> Integer
+    * Integer*Irrational   -> !Integer
+    * Odd/Even             -> !Integer
+    * Integer*Rational     -> ?
     """
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
@@ -116,9 +116,9 @@ def _(expr, assumptions):
 @RationalPredicate.register_many(Add, Mul)
 def _(expr, assumptions):
     """
-    Rational + Rational     -> Rational
-    Rational + !Rational    -> !Rational
-    !Rational + !Rational   -> ?
+    * Rational + Rational     -> Rational
+    * Rational + !Rational    -> !Rational
+    * !Rational + !Rational   -> ?
     """
     if expr.is_number:
         if expr.as_real_imag()[1]:
@@ -128,9 +128,9 @@ def _(expr, assumptions):
 @RationalPredicate.register(Pow)
 def _(expr, assumptions):
     """
-    Rational ** Integer      -> Rational
-    Irrational ** Rational   -> Irrational
-    Rational ** Irrational   -> ?
+    * Rational ** Integer      -> Rational
+    * Irrational ** Rational   -> Irrational
+    * Rational ** Irrational   -> ?
     """
     if ask(Q.integer(expr.exp), assumptions):
         return ask(Q.rational(expr.base), assumptions)
@@ -206,8 +206,8 @@ def _(expr, assumptions):
 @RealPredicate.register(Add)
 def _(expr, assumptions):
     """
-    Real + Real              -> Real
-    Real + (Complex & !Real) -> !Real
+    * Real + Real              -> Real
+    * Real + (Complex & !Real) -> !Real
     """
     if expr.is_number:
         return _RealPredicate_number(expr, assumptions)
@@ -216,9 +216,9 @@ def _(expr, assumptions):
 @RealPredicate.register(Mul)
 def _(expr, assumptions):
     """
-    Real*Real               -> Real
-    Real*Imaginary          -> !Real
-    Imaginary*Imaginary     -> Real
+    * Real*Real               -> Real
+    * Real*Imaginary          -> !Real
+    * Imaginary*Imaginary     -> Real
     """
     if expr.is_number:
         return _RealPredicate_number(expr, assumptions)
@@ -236,19 +236,19 @@ def _(expr, assumptions):
 @RealPredicate.register(Pow)
 def _(expr, assumptions):
     """
-    Real**Integer              -> Real
-    Positive**Real             -> Real
-    Real**(Integer/Even)       -> Real if base is nonnegative
-    Real**(Integer/Odd)        -> Real
-    Imaginary**(Integer/Even)  -> Real
-    Imaginary**(Integer/Odd)   -> not Real
-    Imaginary**Real            -> ? since Real could be 0 (giving real)
-                                  or 1 (giving imaginary)
-    b**Imaginary               -> Real if log(b) is imaginary and b != 0
-                                  and exponent != integer multiple of
-                                  I*pi/log(b)
-    Real**Real                 -> ? e.g. sqrt(-1) is imaginary and
-                                  sqrt(2) is not
+    * Real**Integer              -> Real
+    * Positive**Real             -> Real
+    * Real**(Integer/Even)       -> Real if base is nonnegative
+    * Real**(Integer/Odd)        -> Real
+    * Imaginary**(Integer/Even)  -> Real
+    * Imaginary**(Integer/Odd)   -> not Real
+    * Imaginary**Real            -> ? since Real could be 0 (giving real)
+                                    or 1 (giving imaginary)
+    * b**Imaginary               -> Real if log(b) is imaginary and b != 0
+                                    and exponent != integer multiple of
+                                    I*pi/log(b)
+    * Real**Real                 -> ? e.g. sqrt(-1) is imaginary and
+                                    sqrt(2) is not
     """
     if expr.is_number:
         return _RealPredicate_number(expr, assumptions)
@@ -346,8 +346,8 @@ def _(expr, assumptions):
 @HermitianPredicate.register(Add)
 def _(expr, assumptions):
     """
-    Hermitian + Hermitian  -> Hermitian
-    Hermitian + !Hermitian -> !Hermitian
+    * Hermitian + Hermitian  -> Hermitian
+    * Hermitian + !Hermitian -> !Hermitian
     """
     if expr.is_number:
         return None
@@ -358,9 +358,9 @@ def _(expr, assumptions):
     """
     As long as there is at most only one noncommutative term:
 
-    Hermitian*Hermitian         -> Hermitian
-    Hermitian*Antihermitian     -> !Hermitian
-    Antihermitian*Antihermitian -> Hermitian
+    * Hermitian*Hermitian         -> Hermitian
+    * Hermitian*Antihermitian     -> !Hermitian
+    * Antihermitian*Antihermitian -> Hermitian
     """
     if expr.is_number:
         return None
@@ -381,7 +381,7 @@ def _(expr, assumptions):
 @HermitianPredicate.register(Pow)
 def _(expr, assumptions):
     """
-    Hermitian**Integer -> Hermitian
+    * Hermitian**Integer -> Hermitian
     """
     if expr.is_number:
         return None
@@ -458,9 +458,9 @@ def _(expr, assumptions):
 @ImaginaryPredicate.register(Add)
 def _(expr, assumptions):
     """
-    Imaginary + Imaginary -> Imaginary
-    Imaginary + Complex   -> ?
-    Imaginary + Real      -> !Imaginary
+    * Imaginary + Imaginary -> Imaginary
+    * Imaginary + Complex   -> ?
+    * Imaginary + Real      -> !Imaginary
     """
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
@@ -483,8 +483,8 @@ def _(expr, assumptions):
 @ImaginaryPredicate.register(Mul)
 def _(expr, assumptions):
     """
-    Real*Imaginary      -> Imaginary
-    Imaginary*Imaginary -> Real
+    * Real*Imaginary      -> Imaginary
+    * Imaginary*Imaginary -> Real
     """
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
@@ -503,15 +503,15 @@ def _(expr, assumptions):
 @ImaginaryPredicate.register(Pow)
 def _(expr, assumptions):
     """
-    Imaginary**Odd        -> Imaginary
-    Imaginary**Even       -> Real
-    b**Imaginary          -> !Imaginary if exponent is an integer
-                             multiple of I*pi/log(b)
-    Imaginary**Real       -> ?
-    Positive**Real        -> Real
-    Negative**Integer     -> Real
-    Negative**(Integer/2) -> Imaginary
-    Negative**Real        -> not Imaginary if exponent is not Rational
+    * Imaginary**Odd        -> Imaginary
+    * Imaginary**Even       -> Real
+    * b**Imaginary          -> !Imaginary if exponent is an integer
+                               multiple of I*pi/log(b)
+    * Imaginary**Real       -> ?
+    * Positive**Real        -> Real
+    * Negative**Integer     -> Real
+    * Negative**(Integer/2) -> Imaginary
+    * Negative**Real        -> not Imaginary if exponent is not Rational
     """
     if expr.is_number:
         return _Imaginary_number(expr, assumptions)
@@ -594,8 +594,8 @@ def _(expr, assumptions):
 @AntihermitianPredicate.register(Add)
 def _(expr, assumptions):
     """
-    Antihermitian + Antihermitian  -> Antihermitian
-    Antihermitian + !Antihermitian -> !Antihermitian
+    * Antihermitian + Antihermitian  -> Antihermitian
+    * Antihermitian + !Antihermitian -> !Antihermitian
     """
     if expr.is_number:
         return None
@@ -606,9 +606,9 @@ def _(expr, assumptions):
     """
     As long as there is at most only one noncommutative term:
 
-    Hermitian*Hermitian         -> !Antihermitian
-    Hermitian*Antihermitian     -> Antihermitian
-    Antihermitian*Antihermitian -> !Antihermitian
+    * Hermitian*Hermitian         -> !Antihermitian
+    * Hermitian*Antihermitian     -> Antihermitian
+    * Antihermitian*Antihermitian -> !Antihermitian
     """
     if expr.is_number:
         return None
@@ -629,9 +629,9 @@ def _(expr, assumptions):
 @AntihermitianPredicate.register(Pow)
 def _(expr, assumptions):
     """
-    Hermitian**Integer  -> !Antihermitian
-    Antihermitian**Even -> !Antihermitian
-    Antihermitian**Odd  -> Antihermitian
+    * Hermitian**Integer  -> !Antihermitian
+    * Antihermitian**Even -> !Antihermitian
+    * Antihermitian**Odd  -> Antihermitian
     """
     if expr.is_number:
         return None
