@@ -11,7 +11,6 @@ Contents
     :maxdepth: 3
 
     common.rst
-    calculus.rst
     matrices.rst
     ntheory.rst
     order.rst
