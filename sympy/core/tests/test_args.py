@@ -15,6 +15,10 @@ from sympy.testing.pytest import XFAIL, SKIP
 a, b, c, x, y, z = symbols('a,b,c,x,y,z')
 
 
+whitelist = [
+     "sympy.assumptions.predicates",    # tested by test_predicates()
+]
+
 def test_all_classes_are_tested():
     this = os.path.split(__file__)[0]
     path = os.path.join(this, os.pardir, os.pardir)
@@ -27,6 +31,9 @@ def test_all_classes_are_tested():
 
     for root, dirs, files in os.walk(sympy_path):
         module = root.replace(prefix, "").replace(os.sep, ".")
+
+        if module in whitelist:
+            continue
 
         for file in files:
             if file.startswith(("_", "test_", "bench_")):
@@ -94,6 +101,12 @@ def test_sympy__assumptions__assume__AppliedPredicate():
 @SKIP("abstract class")
 def test_sympy__assumptions__assume__Predicate():
     pass
+
+def test_predicates():
+    from sympy.assumptions.ask import get_known_facts_keys
+    predicates = get_known_facts_keys()
+    for p in predicates:
+        assert _test_args(p)
 
 def test_sympy__assumptions__assume__UndefinedPredicate():
     from sympy.assumptions.assume import Predicate

@@ -15,4 +15,3 @@ Contents
     matrices.rst
     ntheory.rst
     order.rst
-    sets.rst

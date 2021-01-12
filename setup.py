@@ -80,6 +80,7 @@ modules = [
     'sympy.algebras',
     'sympy.assumptions',
     'sympy.assumptions.handlers',
+    'sympy.assumptions.predicates',
     'sympy.benchmarks',
     'sympy.calculus',
     'sympy.categories',
