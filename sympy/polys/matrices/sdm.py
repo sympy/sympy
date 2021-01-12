@@ -147,6 +147,9 @@ class SDM(dict):
     def lu_solve(A, b):
         return A.from_ddm(A.to_ddm().lu_solve(b.to_ddm()))
 
+    def nullspace(A):
+        return A.to_ddm().nullspace()
+
     def charpoly(A):
         return A.to_ddm().charpoly()
 
@@ -163,9 +166,9 @@ def binop_dict(A, B, fab, fa, fb):
             if elem:
                 Ci[j] = elem
         for j in Anzi - Bnzi:
-            Ci[j] = fa(Anzi[j])
+            Ci[j] = fa(Ai[j])
         for j in Bnzi - Anzi:
-            Ci[j] = fb(Bnzi[j])
+            Ci[j] = fb(Bi[j])
         if Ci:
             C[i] = Ci
     return C

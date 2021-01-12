@@ -31,6 +31,9 @@ class ExtensionElement(DomainElement, DefaultPrinting):
     def __bool__(f):
         return bool(f.rep)
 
+    def __pos__(f):
+        return f
+
     def __neg__(f):
         return ExtElem(-f.rep, f.ext)
 
