@@ -8,6 +8,7 @@ from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import iterable, ordered
 from .singleton import S
+from .kind import UndefinedKind
 from ._print_helpers import Printable
 
 from inspect import getmro
@@ -106,6 +107,8 @@ class Basic(Printable, metaclass=ManagedProperties):
     is_Point = False
     is_MatAdd = False
     is_MatMul = False
+
+    kind = UndefinedKind
 
     def __new__(cls, *args):
         obj = object.__new__(cls)

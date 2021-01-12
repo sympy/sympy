@@ -127,14 +127,14 @@ class JointPSpace(ProductPSpace):
     def compute_density(self, expr):
         raise NotImplementedError()
 
-    def sample(self, size=(), library='scipy'):
+    def sample(self, size=(), library='scipy', seed=None):
         """
         Internal sample method
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
         return {RandomSymbol(self.symbol, self): self.distribution.sample(size,
-                    library=library)}
+                    library=library, seed=seed)}
 
     def probability(self, condition):
         raise NotImplementedError()
@@ -142,22 +142,22 @@ class JointPSpace(ProductPSpace):
 
 class SampleJointScipy:
     """Returns the sample from scipy of the given distribution"""
-    def __new__(cls, dist, size):
-        return cls._sample_scipy(dist, size)
+    def __new__(cls, dist, size, seed=None):
+        return cls._sample_scipy(dist, size, seed)
 
     @classmethod
-    def _sample_scipy(cls, dist, size):
+    def _sample_scipy(cls, dist, size, seed):
         """Sample from SciPy."""
 
         from scipy import stats as scipy_stats
         scipy_rv_map = {
             'MultivariateNormalDistribution': lambda dist, size: scipy_stats.multivariate_normal.rvs(
                 mean=matrix2numpy(dist.mu).flatten(),
-                cov=matrix2numpy(dist.sigma), size=size),
+                cov=matrix2numpy(dist.sigma), size=size, random_state=seed),
             'MultivariateBetaDistribution': lambda dist, size: scipy_stats.dirichlet.rvs(
-                alpha=list2numpy(dist.alpha, float).flatten(), size=size),
+                alpha=list2numpy(dist.alpha, float).flatten(), size=size, random_state=seed),
             'MultinomialDistribution': lambda dist, size: scipy_stats.multinomial.rvs(
-                n=int(dist.n), p=list2numpy(dist.p, float).flatten(), size=size)
+                n=int(dist.n), p=list2numpy(dist.p, float).flatten(), size=size, random_state=seed)
         }
 
         dist_list = scipy_rv_map.keys()
@@ -165,26 +165,33 @@ class SampleJointScipy:
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        return scipy_rv_map[dist.__class__.__name__](dist, size)
+        samples = scipy_rv_map[dist.__class__.__name__](dist, size)
+        if samples.shape[0:len(size)] != size:
+            samples = samples.reshape((size[0],) + samples.shape)
+        return samples
 
 class SampleJointNumpy:
     """Returns the sample from numpy of the given distribution"""
 
-    def __new__(cls, dist, size):
-        return cls._sample_numpy(dist, size)
+    def __new__(cls, dist, size, seed=None):
+        return cls._sample_numpy(dist, size, seed)
 
     @classmethod
-    def _sample_numpy(cls, dist, size):
+    def _sample_numpy(cls, dist, size, seed):
         """Sample from NumPy."""
 
         import numpy
+        if seed is None or isinstance(seed, int):
+            rand_state = numpy.random.default_rng(seed=seed)
+        else:
+            rand_state = seed
         numpy_rv_map = {
-            'MultivariateNormalDistribution': lambda dist, size: numpy.random.multivariate_normal(
+            'MultivariateNormalDistribution': lambda dist, size: rand_state.multivariate_normal(
                 mean=matrix2numpy(dist.mu, float).flatten(),
                 cov=matrix2numpy(dist.sigma, float), size=size),
-            'MultivariateBetaDistribution': lambda dist, size: numpy.random.dirichlet(
+            'MultivariateBetaDistribution': lambda dist, size: rand_state.dirichlet(
                 alpha=list2numpy(dist.alpha, float).flatten(), size=size),
-            'MultinomialDistribution': lambda dist, size: numpy.random.multinomial(
+            'MultinomialDistribution': lambda dist, size: rand_state.multinomial(
                 n=int(dist.n), pvals=list2numpy(dist.p, float).flatten(), size=size)
         }
 
@@ -193,16 +200,19 @@ class SampleJointNumpy:
         if dist.__class__.__name__ not in dist_list:
             return None
 
-        return numpy_rv_map[dist.__class__.__name__](dist, size)
+        samples = numpy_rv_map[dist.__class__.__name__](dist, size)
+        if samples.shape[0:len(size)] != size:
+            samples = samples.reshape((size[0],) + samples.shape)
+        return samples
 
 class SampleJointPymc:
     """Returns the sample from pymc3 of the given distribution"""
 
-    def __new__(cls, dist, size):
-        return cls._sample_pymc3(dist, size)
+    def __new__(cls, dist, size, seed=None):
+        return cls._sample_pymc3(dist, size, seed)
 
     @classmethod
-    def _sample_pymc3(cls, dist, size):
+    def _sample_pymc3(cls, dist, size, seed):
         """Sample from PyMC3."""
 
         import pymc3
@@ -224,7 +234,11 @@ class SampleJointPymc:
 
         with pymc3.Model():
             pymc3_rv_map[dist.__class__.__name__](dist)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+            samples = pymc3.sample(size, chains=1, progressbar=False, random_seed=seed)[:]['X']
+            if samples.shape[0:len(size)] != size:
+                samples = samples.reshape((size[0],) + samples.shape)
+            return samples
+
 
 _get_sample_class_jrv = {
     'scipy': SampleJointScipy,
@@ -270,7 +284,7 @@ class JointDistribution(Basic, NamedArgsMixin):
                     other[rvs[i]]))
         return density
 
-    def sample(self, size=(), library='scipy'):
+    def sample(self, size=(), library='scipy', seed=None):
         """ A random realization from the distribution """
 
         libraries = ['scipy', 'numpy', 'pymc3']
@@ -280,7 +294,7 @@ class JointDistribution(Basic, NamedArgsMixin):
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = _get_sample_class_jrv[library](self, size)
+        samps = _get_sample_class_jrv[library](self, size, seed=seed)
 
         if samps is not None:
             return samps

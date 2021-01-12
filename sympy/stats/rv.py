@@ -427,9 +427,9 @@ class IndependentProductPSpace(ProductPSpace):
     def density(self):
         raise NotImplementedError("Density not available for ProductSpaces")
 
-    def sample(self, size=(), library='scipy'):
+    def sample(self, size=(), library='scipy', seed=None):
         return {k: v for space in self.spaces
-            for k, v in space.sample(size=size, library=library).items()}
+            for k, v in space.sample(size=size, library=library, seed=seed).items()}
 
 
     def probability(self, condition, **kwargs):
@@ -1018,8 +1018,8 @@ def where(condition, given_condition=None, **kwargs):
     return pspace(condition).where(condition, **kwargs)
 
 
-def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
-                                                                    **kwargs):
+def sample(expr, condition=None, size=(), library='scipy',
+           numsamples=1, seed=None, **kwargs):
     """
     A realization of the random expression
 
@@ -1041,6 +1041,18 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
         by default is 'scipy'
     numsamples : int
         Number of samples, each with size as ``size``
+    seed :
+        An object to be used as seed by the given external library for sampling `expr`.
+        Following is the list of possible types of object for the supported libraries,
+
+        - 'scipy': int, numpy.random.RandomState, numpy.random.Generator
+        - 'numpy': int, numpy.random.RandomState, numpy.random.Generator
+        - 'pymc3': int
+
+        Optional, by default None, in which case seed settings
+        related to the given library will be used.
+        No modifications to environment's global seed settings
+        are done by this argument.
 
     Examples
     ========
@@ -1091,7 +1103,7 @@ def sample(expr, condition=None, size=(), library='scipy', numsamples=1,
                   "https://github.com/sympy/sympy/issues/19061")
     warnings.warn(filldedent(message))
     return sample_iter(expr, condition, size=size, library=library,
-                                                        numsamples=numsamples)
+                                                        numsamples=numsamples, seed=seed)
 
 
 def quantile(expr, evaluate=True, **kwargs):
@@ -1141,7 +1153,7 @@ def quantile(expr, evaluate=True, **kwargs):
         return result
 
 def sample_iter(expr, condition=None, size=(), library='scipy',
-                    numsamples=S.Infinity, **kwargs):
+                    numsamples=S.Infinity, seed=None, **kwargs):
 
     """
     Returns an iterator of realizations from the expression given a condition
@@ -1157,6 +1169,18 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
         Represents size of each sample in numsamples
     numsamples: integer, optional
         Length of the iterator (defaults to infinity)
+    seed :
+        An object to be used as seed by the given external library for sampling `expr`.
+        Following is the list of possible types of object for the supported libraries,
+
+        - 'scipy': int, numpy.random.RandomState, numpy.random.Generator
+        - 'numpy': int, numpy.random.RandomState, numpy.random.Generator
+        - 'pymc3': int
+
+        Optional, by default None, in which case seed settings
+        related to the given library will be used.
+        No modifications to environment's global seed settings
+        are done by this argument.
 
     Examples
     ========
@@ -1201,23 +1225,42 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
                 sub[arg] = RandomSymbol(arg.symbol, arg.pspace)
         expr = expr.subs(sub)
 
+    def fn_subs(*args):
+        return expr.subs({rv: arg for rv, arg in zip(rvs, args)})
+
+    def given_fn_subs(*args):
+        if condition is not None:
+            return condition.subs({rv: arg for rv, arg in zip(rvs, args)})
+        return False
+
     if library == 'pymc3':
         # Currently unable to lambdify in pymc3
         # TODO : Remove 'pymc3' when lambdify accepts 'pymc3' as module
         fn = lambdify(rvs, expr, **kwargs)
     else:
         fn = lambdify(rvs, expr, modules=library, **kwargs)
+
     if condition is not None:
         given_fn = lambdify(rvs, condition, **kwargs)
 
-    def return_generator():
+    def return_generator_infinite():
         count = 0
+        np = import_module('numpy')
+        if np:
+            rand_state = np.random.default_rng(seed=seed)
+        else:
+            rand_state = None
         while count < numsamples:
-            d = ps.sample(size=size, library=library)  # a dictionary that maps RVs to values
+            d = ps.sample(size=size, library=library, seed=rand_state)  # a dictionary that maps RVs to values
             args = [d[rv] for rv in rvs]
 
             if condition is not None:  # Check that these values satisfy the condition
-                gd = given_fn(*args)
+                # TODO: Replace the try-except block with only given_fn(*args)
+                # once lambdify works with unevaluated SymPy objects.
+                try:
+                    gd = given_fn(*args)
+                except (NameError, TypeError):
+                    gd = given_fn_subs(*args)
                 if gd != True and gd != False:
                     raise ValueError(
                         "Conditions must not contain free symbols")
@@ -1226,23 +1269,63 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
 
             yield fn(*args)
             count += 1
-    return return_generator()
 
-def sample_iter_lambdify(expr, condition=None, size=(), numsamples=S.Infinity,
-                                                                    **kwargs):
+    def return_generator_finite():
+        faulty = True
+        while faulty:
+            d = ps.sample(size=(numsamples,) + ((size,) if isinstance(size, int) else size),
+                          library=library, seed=seed) # a dictionary that maps RVs to values
+            faulty = False
+            count = 0
+            while count < numsamples and not faulty:
+                args = [d[rv][count] for rv in rvs]
 
-    return sample_iter(expr, condition=condition, size=size, numsamples=numsamples,
-                                                                        **kwargs)
+                if condition is not None:  # Check that these values satisfy the condition
+                    # TODO: Replace the try-except block with only given_fn(*args)
+                    # once lambdify works with unevaluated SymPy objects.
+                    try:
+                        gd = given_fn(*args)
+                    except (NameError, TypeError):
+                        gd = given_fn_subs(*args)
+                    if gd != True and gd != False:
+                        raise ValueError(
+                            "Conditions must not contain free symbols")
+                    if not gd:  # If the values don't satisfy then try again
+                        faulty = True
 
-def sample_iter_subs(expr, condition=None, size=(), numsamples=S.Infinity,
-                                                                    **kwargs):
+                count += 1
 
-    return sample_iter(expr, condition=condition, size=size, numsamples=numsamples,
-                                                                        **kwargs)
+        count = 0
+        while count < numsamples:
+            args = [d[rv][count] for rv in rvs]
+            # TODO: Replace the try-except block with only fn(*args)
+            # once lambdify works with unevaluated SymPy objects.
+            try:
+                yield fn(*args)
+            except (NameError, TypeError):
+                yield fn_subs(*args)
+            count += 1
+
+    if numsamples is S.Infinity:
+        return return_generator_infinite()
+
+    return return_generator_finite()
+
+def sample_iter_lambdify(expr, condition=None, size=(),
+                         numsamples=S.Infinity, seed=None, **kwargs):
+
+    return sample_iter(expr, condition=condition, size=size,
+                       numsamples=numsamples, seed=seed, **kwargs)
+
+def sample_iter_subs(expr, condition=None, size=(),
+                     numsamples=S.Infinity, seed=None, **kwargs):
+
+    return sample_iter(expr, condition=condition, size=size,
+                       numsamples=numsamples, seed=seed, **kwargs)
 
 
 def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,
-                                                    evalf=True, **kwargs):
+               evalf=True, seed=None, **kwargs):
     """
     Sampling version of P
 
@@ -1257,9 +1340,8 @@ def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,
 
     count_true = 0
     count_false = 0
-
     samples = sample_iter(condition, given_condition, library=library,
-                          numsamples=numsamples, **kwargs)
+                          numsamples=numsamples, seed=seed, **kwargs)
 
     for sample in samples:
         if sample:
@@ -1275,7 +1357,7 @@ def sampling_P(condition, given_condition=None, library='scipy', numsamples=1,
 
 
 def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
-               evalf=True, **kwargs):
+               evalf=True, seed=None, **kwargs):
     """
     Sampling version of E
 
@@ -1287,7 +1369,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
     sampling_density
     """
     samples = list(sample_iter(expr, given_condition, library=library,
-                          numsamples=numsamples, **kwargs))
+                          numsamples=numsamples, seed=seed, **kwargs))
     result = Add(*[samp for samp in samples]) / numsamples
 
     if evalf:
@@ -1296,7 +1378,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
         return result
 
 def sampling_density(expr, given_condition=None, library='scipy',
-                    numsamples=1, **kwargs):
+                    numsamples=1, seed=None, **kwargs):
     """
     Sampling version of density
 
@@ -1309,7 +1391,7 @@ def sampling_density(expr, given_condition=None, library='scipy',
 
     results = {}
     for result in sample_iter(expr, given_condition, library=library,
-                              numsamples=numsamples, **kwargs):
+                              numsamples=numsamples, seed=seed, **kwargs):
         results[result] = results.get(result, 0) + 1
 
     return results

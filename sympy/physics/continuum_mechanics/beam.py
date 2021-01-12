@@ -2233,3 +2233,103 @@ class Beam3D(Beam):
         the three axes.
         """
         return self._deflection
+
+    def _plot_shear_force(self, dir, subs=None):
+
+        shear_force = self.shear_force()
+
+        if dir == 'x':
+            dir_num = 0
+            color = 'r'
+
+        elif dir == 'y':
+            dir_num = 1
+            color = 'g'
+
+        elif dir == 'z':
+            dir_num = 2
+            color = 'b'
+
+        if subs is None:
+            subs = {}
+
+        for sym in shear_force[dir_num].atoms(Symbol):
+            if sym == self.variable:
+                continue
+            if sym not in subs:
+                raise ValueError('Value of %s was not passed.' %sym)
+        if self.length in subs:
+            length = subs[self.length]
+        else:
+            length = self.length
+
+        return plot(shear_force[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Shear Force along %c direction'%dir,
+                xlabel=r'$\mathrm{%c}$'%dir, ylabel=r'$\mathrm{V[%c]}$'%dir, line_color=color)
+
+    def plot_shear_force(self, dir="all", subs=None):
+
+        """
+
+        Returns a plot for Shear force along all three directions
+        present in the Beam object.
+
+        Parameters
+        ==========
+        dir : string (default : "all")
+            Direction along which shear force plot is required.
+            If no direction is specified, all plots are displayed.
+        subs : dictionary
+            Python dictionary containing Symbols as key and their
+            corresponding values.
+
+        Examples
+        ========
+        There is a beam of length 20 meters. It it supported by rollers
+        at of its end. A linear load having slope equal to 12 is applied
+        along y-axis. A constant distributed load of magnitude 15 N is
+        applied from start till its end along z-axis.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+            >>> from sympy import symbols
+            >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+            >>> b = Beam3D(20, E, G, I, A, x)
+            >>> b.apply_load(15, start=0, order=0, dir="z")
+            >>> b.apply_load(12*x, start=0, order=0, dir="y")
+            >>> b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+            >>> R1, R2, R3, R4 = symbols('R1, R2, R3, R4')
+            >>> b.apply_load(R1, start=0, order=-1, dir="z")
+            >>> b.apply_load(R2, start=20, order=-1, dir="z")
+            >>> b.apply_load(R3, start=0, order=-1, dir="y")
+            >>> b.apply_load(R4, start=20, order=-1, dir="y")
+            >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
+            >>> b.plot_shear_force()
+            PlotGrid object containing:
+            Plot[0]:Plot object containing:
+            [0]: cartesian line: 0 for x over (0.0, 20.0)
+            Plot[1]:Plot object containing:
+            [0]: cartesian line: -6*x**2 for x over (0.0, 20.0)
+            Plot[2]:Plot object containing:
+            [0]: cartesian line: -15*x for x over (0.0, 20.0)
+
+
+        """
+        Px = self._plot_shear_force('x')
+        Py = self._plot_shear_force('y')
+        Pz = self._plot_shear_force('z')
+        # For shear force along x direction
+        if dir == "x":
+            return Px.show()
+        # For shear force along y direction
+        elif dir == "y":
+            return Py.show()
+        # For shear force along z direction
+        elif dir == "z":
+            return Pz.show()
+        # For shear force along all direction
+        else:
+            return PlotGrid(3, 1, Px, Py, Pz)

@@ -80,6 +80,9 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         if isinstance(expr, CodegenArrayTensorProduct):
             expr, contraction_indices = cls._sort_fully_contracted_args(expr, contraction_indices)
 
+        if isinstance(expr, CodegenArrayDiagonal):
+            return cls._handle_nested_diagonal(expr, *contraction_indices)
+
         obj = Basic.__new__(cls, expr, *contraction_indices)
         obj._subranks = _get_subranks(expr)
         obj._mapping = _get_mapping_from_subranks(obj._subranks)
@@ -309,6 +312,30 @@ class CodegenArrayContraction(_CodegenArrayAbstract):
         return CodegenArrayPermuteDims(
             CodegenArrayContraction(expr.expr, *new_contraction_indices),
             Permutation(new_plist)
+        )
+
+    @classmethod
+    def _handle_nested_diagonal(cls, expr: 'CodegenArrayDiagonal', *contraction_indices):
+        diagonal_indices = list(expr.diagonal_indices)
+        down_contraction_indices = expr._push_indices_down(expr.diagonal_indices, contraction_indices, get_rank(expr.expr))
+        # Flatten diagonally contracted indices:
+        down_contraction_indices = [[k for j in i for k in (j if isinstance(j, (tuple, Tuple)) else [j])] for i in down_contraction_indices]
+        new_contraction_indices = []
+        for contr_indgrp in down_contraction_indices:
+            ind = contr_indgrp[:]
+            for j, diag_indgrp in enumerate(diagonal_indices):
+                if diag_indgrp is None:
+                    continue
+                if any(i in diag_indgrp for i in contr_indgrp):
+                    ind.extend(diag_indgrp)
+                    diagonal_indices[j] = None
+            new_contraction_indices.append(sorted(set(ind)))
+
+        new_diagonal_indices_down = [i for i in diagonal_indices if i is not None]
+        new_diagonal_indices = CodegenArrayContraction._push_indices_up(new_contraction_indices, new_diagonal_indices_down)
+        return CodegenArrayDiagonal(
+            CodegenArrayContraction(expr.expr, *new_contraction_indices),
+            *new_diagonal_indices
         )
 
     @classmethod
@@ -875,18 +902,19 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
         diagonal_indices = [Tuple(*sorted(i)) for i in diagonal_indices]
         if isinstance(expr, CodegenArrayDiagonal):
             return cls._flatten(expr, *diagonal_indices)
+        if isinstance(expr, CodegenArrayPermuteDims):
+            return cls._handle_nested_permutedims_in_diag(expr, *diagonal_indices)
         shape = expr.shape
         if shape is not None:
-            diagonal_indices = [i for i in diagonal_indices if len(i) > 1]
             cls._validate(expr, *diagonal_indices)
-            #diagonal_indices = cls._remove_trivial_dimensions(shape, *diagonal_indices)
             # Get new shape:
-            shp1 = tuple(shp for i,shp in enumerate(shape) if not any(i in j for j in diagonal_indices))
-            shp2 = tuple(shape[i[0]] for i in diagonal_indices)
-            shape = shp1 + shp2
+            positions, shape = cls._get_positions_shape(shape, diagonal_indices)
+        else:
+            positions = None
         if len(diagonal_indices) == 0:
             return expr
         obj = Basic.__new__(cls, expr, *diagonal_indices)
+        obj._positions = positions
         obj._subranks = _get_subranks(expr)
         obj._shape = shape
         return obj
@@ -899,6 +927,8 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
         for i in diagonal_indices:
             if len({shape[j] for j in i}) != 1:
                 raise ValueError("diagonalizing indices of different dimensions")
+            if len(i) <= 1:
+                raise ValueError("need at least two axes to diagonalize")
 
     @staticmethod
     def _remove_trivial_dimensions(shape, *diagonal_indices):
@@ -935,17 +965,49 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
         return CodegenArrayDiagonal(expr.expr, *diagonal_indices)
 
     @classmethod
-    def _push_indices_down(cls, diagonal_indices, indices):
-        flattened_contraction_indices = [j for i in diagonal_indices for j in i[1:]]
-        flattened_contraction_indices.sort()
-        transform = _build_push_indices_down_func_transformation(flattened_contraction_indices)
+    def _handle_nested_permutedims_in_diag(cls, expr: CodegenArrayPermuteDims, *diagonal_indices):
+        back_diagonal_indices = [[expr.permutation(j) for j in i] for i in diagonal_indices]
+        nondiag = [i for i in range(get_rank(expr)) if not any(i in j for j in diagonal_indices)]
+        back_nondiag = [expr.permutation(i) for i in nondiag]
+        remap = {e: i for i, e in enumerate(sorted(back_nondiag))}
+        new_permutation1 = [remap[i] for i in back_nondiag]
+        shift = len(new_permutation1)
+        diag_block_perm = [i + shift for i in range(len(back_diagonal_indices))]
+        new_permutation = new_permutation1 + diag_block_perm
+        return CodegenArrayPermuteDims(
+            CodegenArrayDiagonal(
+                expr.expr,
+                *back_diagonal_indices
+            ),
+            new_permutation
+        )
+
+    def _push_indices_down_nonstatic(self, indices):
+        transform = lambda x: self._positions[x] if x < len(self._positions) else None
+        return _apply_recursively_over_nested_lists(transform, indices)
+
+    def _push_indices_up_nonstatic(self, indices):
+
+        def transform(x):
+            for i, e in enumerate(self._positions):
+                if (isinstance(e, int) and x == e) or (isinstance(e, tuple) and x in e):
+                    return i
         return _apply_recursively_over_nested_lists(transform, indices)
 
     @classmethod
-    def _push_indices_up(cls, diagonal_indices, indices):
-        flattened_contraction_indices = [j for i in diagonal_indices for j in i[1:]]
-        flattened_contraction_indices.sort()
-        transform = _build_push_indices_up_func_transformation(flattened_contraction_indices)
+    def _push_indices_down(cls, diagonal_indices, indices, rank):
+        positions, shape = cls._get_positions_shape(range(rank), diagonal_indices)
+        transform = lambda x: positions[x] if x < len(positions) else None
+        return _apply_recursively_over_nested_lists(transform, indices)
+
+    @classmethod
+    def _push_indices_up(cls, diagonal_indices, indices, rank):
+        positions, shape = cls._get_positions_shape(range(rank), diagonal_indices)
+
+        def transform(x):
+            for i, e in enumerate(positions):
+                if (isinstance(e, int) and x == e) or (isinstance(e, tuple) and x in e):
+                    return i
         return _apply_recursively_over_nested_lists(transform, indices)
 
     def transform_to_product(self):
@@ -1036,6 +1098,16 @@ class CodegenArrayDiagonal(_CodegenArrayAbstract):
             ),
             *new_diagonal_indices
         )
+
+    @classmethod
+    def _get_positions_shape(cls, shape, diagonal_indices):
+        data1 = tuple((i, shp) for i, shp in enumerate(shape) if not any(i in j for j in diagonal_indices))
+        pos1, shp1 = zip(*data1) if data1 else ((), ())
+        data2 = tuple((i, shape[i[0]]) for i in diagonal_indices)
+        pos2, shp2 = zip(*data2) if data2 else ((), ())
+        positions = pos1 + pos2
+        shape = shp1 + shp2
+        return positions, shape
 
 
 def get_rank(expr):

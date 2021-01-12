@@ -10,8 +10,8 @@ Contents
 .. toctree::
     :maxdepth: 3
 
-    calculus.rst
     common.rst
+    calculus.rst
     matrices.rst
     ntheory.rst
     order.rst

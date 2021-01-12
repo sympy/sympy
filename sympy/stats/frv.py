@@ -337,7 +337,7 @@ class FinitePSpace(PSpace):
                 for key, val in self._density.items() if domain._test(key)}
         return FinitePSpace(domain, density)
 
-    def sample(self, size=(), library='scipy'):
+    def sample(self, size=(), library='scipy', seed=None):
         """
         Internal sample method
 
@@ -351,7 +351,7 @@ class FinitePSpace(PSpace):
         if not import_module(library):
             raise ValueError("Failed to import %s" % library)
 
-        samps = _get_sample_class_frv[library](self.distribution, size)
+        samps = _get_sample_class_frv[library](self.distribution, size, seed)
 
         if samps is not None:
             return {self.value: samps}
@@ -363,11 +363,11 @@ class FinitePSpace(PSpace):
 
 class SampleFiniteScipy:
     """Returns the sample from scipy of the given distribution"""
-    def __new__(cls, dist, size):
-        return cls._sample_scipy(dist, size)
+    def __new__(cls, dist, size, seed=None):
+        return cls._sample_scipy(dist, size, seed)
 
     @classmethod
-    def _sample_scipy(cls, dist, size):
+    def _sample_scipy(cls, dist, size, seed):
         """Sample from SciPy."""
         # scipy can handle with custom distributions
 
@@ -378,22 +378,26 @@ class SampleFiniteScipy:
             x.append(int(k))
             y.append(float(v))
         scipy_rv = rv_discrete(name='scipy_rv', values=(x, y))
-        return scipy_rv.rvs(size=size)
+        return scipy_rv.rvs(size=size, random_state=seed)
 
 
 class SampleFiniteNumpy:
     """Returns the sample from numpy of the given distribution"""
 
-    def __new__(cls, dist, size):
-        return cls._sample_numpy(dist, size)
+    def __new__(cls, dist, size, seed=None):
+        return cls._sample_numpy(dist, size, seed)
 
     @classmethod
-    def _sample_numpy(cls, dist, size):
+    def _sample_numpy(cls, dist, size, seed):
         """Sample from NumPy."""
 
         import numpy
+        if seed is None or isinstance(seed, int):
+            rand_state = numpy.random.default_rng(seed=seed)
+        else:
+            rand_state = seed
         numpy_rv_map = {
-            'BinomialDistribution': lambda dist, size: numpy.random.binomial(n=int(dist.n),
+            'BinomialDistribution': lambda dist, size: rand_state.binomial(n=int(dist.n),
                 p=float(dist.p), size=size)
         }
 
@@ -408,11 +412,11 @@ class SampleFiniteNumpy:
 class SampleFinitePymc:
     """Returns the sample from pymc3 of the given distribution"""
 
-    def __new__(cls, dist, size):
-        return cls._sample_pymc3(dist, size)
+    def __new__(cls, dist, size, seed=None):
+        return cls._sample_pymc3(dist, size, seed)
 
     @classmethod
-    def _sample_pymc3(cls, dist, size):
+    def _sample_pymc3(cls, dist, size, seed):
         """Sample from PyMC3."""
 
         import pymc3
@@ -429,7 +433,7 @@ class SampleFinitePymc:
 
         with pymc3.Model():
             pymc3_rv_map[dist.__class__.__name__](dist)
-            return pymc3.sample(size, chains=1, progressbar=False)[:]['X']
+            return pymc3.sample(size, chains=1, progressbar=False, random_seed=seed)[:]['X']
 
 _get_sample_class_frv = {
     'scipy': SampleFiniteScipy,
