@@ -60,8 +60,11 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
-        from sympy.polys.numberfields import AlgebraicNumber
-        return AlgebraicNumber(self.ext, a).as_expr()
+        # Precompute a converter to be reused:
+        if not hasattr(self, '_converter'):
+            self._converter = _make_converter(self)
+
+        return self._converter(a)
 
     def from_sympy(self, a):
         """Convert SymPy's expression to ``dtype``. """
@@ -137,3 +140,44 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     def from_GaussianRationalField(K1, a, K0):
         """Convert a GaussianRational element 'a' to ``dtype``. """
         return K1.from_sympy(K0.to_sympy(a))
+
+
+def _make_converter(K):
+    """Construct the converter to convert back to Expr"""
+    # Precompute the effect of converting to sympy and expanding expressions
+    # like (sqrt(2) + sqrt(3))**2. Asking Expr to do the expansion on every
+    # conversion from K to Expr is slow. Here we compute the expansions for
+    # each power of the generator and collect together the resulting algebraic
+    # terms and the rational coefficients into a matrix.
+    from sympy import Add, S
+
+    gen = K.ext.as_expr()
+    todom = K.dom.from_sympy
+
+    # We'll let Expr compute the expansions. We won't make any presumptions
+    # about what this results in except that it is QQ-linear in some terms
+    # that we will call algebraics. The final result will be expressed in
+    # terms of those.
+    powers = [S.One, gen]
+    for n in range(2, K.mod.degree()):
+        powers.append((gen * powers[-1]).expand())
+
+    # Collect the rational coefficients and algebraic Expr that can
+    # map the ANP coefficients into an expanded sympy expression
+    terms = [dict(t.as_coeff_Mul()[::-1] for t in Add.make_args(p)) for p in powers]
+    algebraics = set().union(*terms)
+    matrix = [[todom(t.get(a, S.Zero)) for t in terms] for a in algebraics]
+
+    # Create a function to do the conversion efficiently:
+
+    def converter(a):
+        """Convert a to Expr using converter"""
+        from sympy import Add, Mul
+        ai = a.rep[::-1]
+        tosympy = K.dom.to_sympy
+        coeffs_dom = [sum(mij*aj for mij, aj in zip(mi, ai)) for mi in matrix]
+        coeffs_sympy = [tosympy(c) for c in coeffs_dom]
+        res = Add(*(Mul(c, a) for c, a in zip(coeffs_sympy, algebraics)))
+        return res
+
+    return converter

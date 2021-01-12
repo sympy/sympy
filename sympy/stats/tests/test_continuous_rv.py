@@ -1,7 +1,7 @@
 from sympy import E as e
 from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
                    EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
-                   gamma, beta, Piecewise, Integral, sin, cos, tan, sinh, cosh,
+                   gamma, beta, Piecewise, Integral, sin, cos, tan, atan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re, Lambda, asin,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
                    factorial, binomial, erfi, besselj, besselk)
@@ -14,8 +14,8 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          ContinuousRV, sample, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
-                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic,
-                         LogLogistic, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
+                         GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic, LogCauchy,
+                         LogLogistic, LogitNormal, LogNormal, Maxwell, Moyal, Nakagami, Normal, GaussianInverse,
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile,
@@ -332,6 +332,20 @@ def test_sample_continuous():
         assert next(sample(Z)) in Z.pspace.domain.set
     sym, val = list(Z.pspace.sample().items())[0]
     assert sym == Z and val in Interval(0, oo)
+
+    libraries = ['scipy', 'numpy', 'pymc3']
+    for lib in libraries:
+        try:
+            imported_lib = import_module(lib)
+            if imported_lib:
+                s0, s1, s2 = [], [], []
+                s0 = list(sample(Z, numsamples=10, library=lib, seed=0))
+                s1 = list(sample(Z, numsamples=10, library=lib, seed=0))
+                s2 = list(sample(Z, numsamples=10, library=lib, seed=1))
+                assert s0 == s1
+                assert s1 != s2
+        except NotImplementedError:
+            continue
 
 
 def test_ContinuousRV():
@@ -842,6 +856,16 @@ def test_levy():
     mu = Symbol("mu", real=True)
     raises(ValueError, lambda: Levy('x',mu,c))
 
+def test_logcauchy():
+    mu = Symbol("mu" , positive=True)
+    sigma = Symbol("sigma" , positive=True)
+
+    X = LogCauchy("x", mu, sigma)
+
+    assert density(X)(x) == sigma/(x*pi*(sigma**2 + (-mu + log(x))**2))
+    assert cdf(X)(x) == atan((log(x) - mu)/sigma)/pi + S.Half
+
+
 def test_logistic():
     mu = Symbol("mu", real=True)
     s = Symbol("s", positive=True)
@@ -882,6 +906,15 @@ def test_loglogistic():
     assert E(X) == pi*a/(b*sin(pi/b))
     X = LogLogistic('x', 1, 2)
     assert median(X) == FiniteSet(1)
+
+def test_logitnormal():
+    mu = Symbol('mu', real=True)
+    s = Symbol('s', positive=True)
+    X = LogitNormal('x', mu, s)
+    x = Symbol('x')
+
+    assert density(X)(x) == sqrt(2)*exp(-(-mu + log(x/(1 - x)))**2/(2*s**2))/(2*sqrt(pi)*s*x*(1 - x))
+    assert cdf(X)(x) == erf(sqrt(2)*(-mu + log(x/(1 - x)))/(2*s))/2 + S(1)/2
 
 def test_lognormal():
     mean = Symbol('mu', real=True)

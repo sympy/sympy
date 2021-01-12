@@ -19,6 +19,8 @@ def test_executable(path):
                     raise OSError(exn_msg)
     else:
         for file in os.listdir(path):
+            if file in ('.git', 'venv_main'):
+                continue
             test_executable(os.path.join(path, file))
 
 test_executable(base_dir)

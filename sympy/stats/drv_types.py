@@ -2,6 +2,7 @@
 
 Contains
 ========
+FlorySchulz
 Geometric
 Hermite
 Logarithmic
@@ -21,7 +22,8 @@ from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import _value_check, is_random
 
 
-__all__ = ['Geometric',
+__all__ = ['FlorySchulz',
+'Geometric',
 'Hermite',
 'Logarithmic',
 'NegativeBinomial',
@@ -104,6 +106,78 @@ def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
     # have a default of False while `rv` should have a default of True
     kwargs['check'] = kwargs.pop('check', False)
     return rv(symbol.name, DiscreteDistributionHandmade, pdf, set, **kwargs)
+
+
+#-------------------------------------------------------------------------------
+# Flory-Schulz distribution ------------------------------------------------------------
+
+class FlorySchulzDistribution(SingleDiscreteDistribution):
+    _argnames = ('a',)
+    set = S.Naturals
+
+    @staticmethod
+    def check(a):
+        _value_check((0 < a, a < 1), "a must be between 0 and 1")
+
+    def pdf(self, k):
+        a = self.a
+        return (a**2 * k * (1 - a)**(k - 1))
+
+    def _characteristic_function(self, t):
+        a = self.a
+        return a**2*exp(I*t)/((1 + (a - 1)*exp(I*t))**2)
+
+    def _moment_generating_function(self, t):
+        a = self.a
+        return a**2*exp(t)/((1 + (a - 1)*exp(t))**2)
+
+
+def FlorySchulz(name, a):
+    r"""
+    Create a discrete random variable with a FlorySchulz distribution.
+
+    The density of the FlorySchulz distribution is given by
+
+    .. math::
+        f(k) := (a^2) k (1 - a)^{k-1}
+
+    Parameters
+    ==========
+
+    a
+        A real number between 0 and 1
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density, E, variance, FlorySchulz
+    >>> from sympy import Symbol, S
+
+    >>> a = S.One / 5
+    >>> z = Symbol("z")
+
+    >>> X = FlorySchulz("x", a)
+
+    >>> density(X)(z)
+    (4/5)**(z - 1)*z/25
+
+    >>> E(X)
+    9
+
+    >>> variance(X)
+    40
+
+    References
+    ==========
+
+    https://en.wikipedia.org/wiki/Flory%E2%80%93Schulz_distribution
+    """
+    return rv(name, FlorySchulzDistribution, a)
 
 
 #-------------------------------------------------------------------------------

@@ -40,6 +40,9 @@ class Set(Basic):
     """
     The base class for any kind of set.
 
+    Explanation
+    ===========
+
     This is not meant to be used directly as a container of items. It does not
     behave like the builtin ``set``; see :class:`FiniteSet` for that.
 
@@ -85,7 +88,7 @@ class Set(Basic):
 
     def union(self, other):
         """
-        Returns the union of 'self' and 'other'.
+        Returns the union of ``self`` and ``other``.
 
         Examples
         ========
@@ -114,6 +117,9 @@ class Set(Basic):
         """
         Returns the intersection of 'self' and 'other'.
 
+        Examples
+        ========
+
         >>> from sympy import Interval
 
         >>> Interval(1, 3).intersect(Interval(1, 2))
@@ -136,7 +142,7 @@ class Set(Basic):
 
     def is_disjoint(self, other):
         """
-        Returns True if 'self' and 'other' are disjoint
+        Returns True if ``self`` and ``other`` are disjoint.
 
         Examples
         ========
@@ -217,7 +223,7 @@ class Set(Basic):
 
     def symmetric_difference(self, other):
         """
-        Returns symmetric difference of `self` and `other`.
+        Returns symmetric difference of ``self`` and ``other``.
 
         Examples
         ========
@@ -245,7 +251,7 @@ class Set(Basic):
     @property
     def inf(self):
         """
-        The infimum of 'self'
+        The infimum of ``self``.
 
         Examples
         ========
@@ -266,7 +272,7 @@ class Set(Basic):
     @property
     def sup(self):
         """
-        The supremum of 'self'
+        The supremum of ``self``.
 
         Examples
         ========
@@ -342,7 +348,7 @@ class Set(Basic):
 
     def is_subset(self, other):
         """
-        Returns True if 'self' is a subset of 'other'.
+        Returns True if ``self`` is a subset of ``other``.
 
         Examples
         ========
@@ -406,7 +412,7 @@ class Set(Basic):
 
     def is_proper_subset(self, other):
         """
-        Returns True if 'self' is a proper subset of 'other'.
+        Returns True if ``self`` is a proper subset of ``other``.
 
         Examples
         ========
@@ -425,7 +431,7 @@ class Set(Basic):
 
     def is_superset(self, other):
         """
-        Returns True if 'self' is a superset of 'other'.
+        Returns True if ``self`` is a superset of ``other``.
 
         Examples
         ========
@@ -451,7 +457,7 @@ class Set(Basic):
 
     def is_proper_superset(self, other):
         """
-        Returns True if 'self' is a proper superset of 'other'.
+        Returns True if ``self`` is a proper superset of ``other``.
 
         Examples
         ========
@@ -474,7 +480,7 @@ class Set(Basic):
 
     def powerset(self):
         """
-        Find the Power set of 'self'.
+        Find the Power set of ``self``.
 
         Examples
         ========
@@ -510,7 +516,7 @@ class Set(Basic):
     @property
     def measure(self):
         """
-        The (Lebesgue) measure of 'self'
+        The (Lebesgue) measure of ``self``.
 
         Examples
         ========
@@ -527,7 +533,10 @@ class Set(Basic):
     @property
     def boundary(self):
         """
-        The boundary or frontier of a set
+        The boundary or frontier of a set.
+
+        Explanation
+        ===========
 
         A point x is on the boundary of a set S if
 
@@ -559,6 +568,9 @@ class Set(Basic):
         """
         Property method to check whether a set is open.
 
+        Explanation
+        ===========
+
         A set is open if and only if it has an empty intersection with its
         boundary. In particular, a subset A of the reals is open if and only
         if each one of its points is contained in an open interval that is a
@@ -578,6 +590,9 @@ class Set(Basic):
     def is_closed(self):
         """
         A property method to check whether a set is closed.
+
+        Explanation
+        ===========
 
         A set is closed if its complement is an open set. The closedness of a
         subset of the reals is determined with respect to R and its standard
@@ -678,6 +693,9 @@ class ProductSet(Set):
     """
     Represents a Cartesian Product of Sets.
 
+    Explanation
+    ===========
+
     Returns a Cartesian product given several sets as either an iterable
     or individual arguments.
 
@@ -761,7 +779,7 @@ class ProductSet(Set):
 
     def _contains(self, element):
         """
-        'in' operator for ProductSets
+        'in' operator for ProductSets.
 
         Examples
         ========
@@ -935,7 +953,7 @@ class Interval(Set, EvalfMixin):
     @property
     def start(self):
         """
-        The left end point of 'self'.
+        The left end point of ``self``.
 
         This property takes the same value as the 'inf' property.
 
@@ -988,7 +1006,7 @@ class Interval(Set, EvalfMixin):
     @property
     def left_open(self):
         """
-        True if 'self' is left-open.
+        True if ``self`` is left-open.
 
         Examples
         ========
@@ -1005,7 +1023,7 @@ class Interval(Set, EvalfMixin):
     @property
     def right_open(self):
         """
-        True if 'self' is right-open.
+        True if ``self`` is right-open.
 
         Examples
         ========
@@ -1665,7 +1683,7 @@ class EmptySet(Set, metaclass=Singleton):
 class UniversalSet(Set, metaclass=Singleton):
     """
     Represents the set of all things.
-    The universal set is available as a singleton as S.UniversalSet
+    The universal set is available as a singleton as S.UniversalSet.
 
     Examples
     ========
@@ -1715,7 +1733,7 @@ class UniversalSet(Set, metaclass=Singleton):
 
 class FiniteSet(Set, EvalfMixin):
     """
-    Represents a finite set of discrete numbers
+    Represents a finite set of discrete numbers.
 
     Examples
     ========
@@ -1829,6 +1847,9 @@ class FiniteSet(Set, EvalfMixin):
         """
         Tests whether an element, other, is in the set.
 
+        Explanation
+        ===========
+
         The actual test is for mathematical equality (as opposed to
         syntactical equality). In the worst case all elements of the
         set must be checked.
@@ -1885,6 +1906,10 @@ class FiniteSet(Set, EvalfMixin):
 
     def _eval_evalf(self, prec):
         return FiniteSet(*[elem.evalf(n=prec_to_dps(prec)) for elem in self])
+
+    def _eval_simplify(self, **kwargs):
+        from sympy.simplify import simplify
+        return FiniteSet(*[simplify(elem, **kwargs) for elem in self])
 
     @property
     def _sorted_args(self):
@@ -2158,6 +2183,9 @@ def imageset(*args):
     r"""
     Return an image of the set under transformation ``f``.
 
+    Explanation
+    ===========
+
     If this function can't compute the image, it returns an
     unevaluated ImageSet object.
 
@@ -2301,7 +2329,10 @@ def is_function_invertible_in_set(func, setv):
 
 def simplify_union(args):
     """
-    Simplify a :class:`Union` using known rules
+    Simplify a :class:`Union` using known rules.
+
+    Explanation
+    ===========
 
     We first start with global rules like 'Merge all FiniteSets'
 
@@ -2354,7 +2385,10 @@ def simplify_union(args):
 
 def simplify_intersection(args):
     """
-    Simplify an intersection using known rules
+    Simplify an intersection using known rules.
+
+    Explanation
+    ===========
 
     We first start with global rules like
     'if any empty sets return empty set' and 'distribute any unions'

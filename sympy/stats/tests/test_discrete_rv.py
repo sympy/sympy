@@ -9,7 +9,7 @@ from sympy.stats import (P, E, variance, density, characteristic_function,
                          where, moment_generating_function, skewness, cdf,
                          kurtosis, coskewness)
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
-                                   Poisson, Geometric, Hermite, Logarithmic,
+                                   FlorySchulz, Poisson, Geometric, Hermite, Logarithmic,
                                     NegativeBinomial, Skellam, YuleSimon, Zeta,
                                     DiscreteRV)
 from sympy.stats.rv import sample
@@ -40,6 +40,15 @@ def test_Poisson():
         assert isinstance(E(2*x, evaluate=False), Expectation)
     # issue 8248
     assert x.pspace.compute_expectation(1) == 1
+
+def test_FlorySchulz():
+    a = Symbol("a")
+    z = Symbol("z")
+    x = FlorySchulz('x' , a)
+    assert E(x) == (2 - a)/a
+    assert (variance(x) - 2*(1 - a)/a**2).simplify() == S(0)
+    assert density(x)(z) == a**2*z*(1 - a)**(z - 1)
+
 
 @slow
 def test_GeometricDistribution():
@@ -154,6 +163,20 @@ def test_sample_discrete():
         samps = next(sample(X, size=2)) # This takes long time if ran without scipy
         for samp in samps:
             assert samp in X.pspace.domain.set
+
+    libraries = ['scipy', 'numpy', 'pymc3']
+    for lib in libraries:
+        try:
+            imported_lib = import_module(lib)
+            if imported_lib:
+                s0, s1, s2 = [], [], []
+                s0 = list(sample(X, numsamples=10, library=lib, seed=0))
+                s1 = list(sample(X, numsamples=10, library=lib, seed=0))
+                s2 = list(sample(X, numsamples=10, library=lib, seed=1))
+                assert s0 == s1
+                assert s1 != s2
+        except NotImplementedError:
+            continue
 
 def test_discrete_probability():
     X = Geometric('X', Rational(1, 5))

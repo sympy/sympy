@@ -5,7 +5,7 @@ from itertools import combinations_with_replacement, product
 from textwrap import dedent
 
 from sympy.core import Mul, S, Tuple, sympify
-from sympy.core.compatibility import exec_, iterable
+from sympy.core.compatibility import iterable
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.utilities import public
@@ -405,7 +405,7 @@ class MonomialOps:
 
     def _build(self, code, name):
         ns = {}
-        exec_(code, ns)
+        exec(code, ns)
         return ns[name]
 
     def _vars(self, name):

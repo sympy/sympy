@@ -103,13 +103,13 @@ See the appropriate docstrings for a detailed explanation of the output.
 #      - Idx with range smaller than dimension of Indexed
 #      - Idx with stepsize != 1
 #      - Idx with step determined by function call
+from collections.abc import Iterable
 
 from sympy import Number
 from sympy.core.assumptions import StdFactKB
 from sympy.core import Expr, Tuple, sympify, S
 from sympy.core.symbol import _filter_assumptions, Symbol
-from sympy.core.compatibility import (is_sequence, NotIterable,
-                                      Iterable)
+from sympy.core.compatibility import (is_sequence, NotIterable)
 from sympy.core.logic import fuzzy_bool, fuzzy_not
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta

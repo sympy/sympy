@@ -314,6 +314,10 @@ def linodesolve_type(A, t, b=None):
 
 
 def _first_order_type5_6_subs(A, t, b=None):
+    from sympy.solvers.solveset import _is_lambert
+    from sympy.sets.conditionset import ConditionSet
+    from sympy import symbols
+    x = symbols('x')
     match = {}
 
     factor_terms = _factor_matrix(A, t)
@@ -322,8 +326,11 @@ def _first_order_type5_6_subs(A, t, b=None):
     if factor_terms is not None:
         t_ = Symbol("{}_".format(t))
         F_t = integrate(factor_terms[0], t)
-        inverse = solveset(Eq(t_, F_t), t)
 
+        if _is_lambert(F_t,x):
+            inverse = ConditionSet(t_, Eq(F_t,0),S.Complexes)
+        else:
+            inverse = solveset(Eq(t_, F_t), t)
         # Note: A simple way to check if a function is invertible
         # or not.
         if isinstance(inverse, FiniteSet) and not inverse.has(Piecewise)\
