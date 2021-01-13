@@ -62,7 +62,7 @@ def dom_eigenvects_to_sympy(
     result = []
 
     for field, eigenvalue, multiplicity, eigenvects in rational_eigenvects:
-        eigenvects = eigenvects.rep
+        eigenvects = eigenvects.rep.to_ddm()
         eigenvalue = field.to_sympy(eigenvalue)
         new_eigenvects = [
             Matrix([field.to_sympy(x) for x in vect])

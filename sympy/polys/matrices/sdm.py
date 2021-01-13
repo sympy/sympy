@@ -171,6 +171,12 @@ def binop_dict(A, B, fab, fa, fb):
             Ci[j] = fb(Bi[j])
         if Ci:
             C[i] = Ci
+    for i in Anz - Bnz:
+        Ai = A[i]
+        C[i] = {j: fa(Aij) for j, Aij in Ai.items()}
+    for i in Bnz - Anz:
+        Bi = B[i]
+        C[i] = {j: fb(Bij) for j, Bij in Bi.items()}
     return C
 
 
