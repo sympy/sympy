@@ -1372,12 +1372,16 @@ def test_issue_5901():
     assert solve([f(x) - 3*f(x).diff(x)], f(x)) == \
         {f(x): 3*D}
     assert solve([f(x) - 3*f(x).diff(x), f(x)**2 - y + 4], f(x), y) == \
-        [{f(x): 3*D, y: 9*D**2 + 4}]
-    assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
-                h(a), g(a), set=True) == \
-        ([g(a)], {
-        (-sqrt(h(a)**2*f(a)**2 + G)/f(a),),
-        (sqrt(h(a)**2*f(a)**2+ G)/f(a),)})
+        [(3*D, 9*D**2 + 4)]
+    eq = -f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a)
+    syms = [g(a), h(a)]
+    syms_found, sols_found = solve(eq, h(a), g(a), set=True)
+    assert syms_found == syms
+    # For these expressions dummy_eq doesn't work so we extract the dummy
+    X1 = list(sols_found)[0][0]
+    sols = { (X1, +sqrt(X1**2*f(a)**2 - G)/f(a)),
+             (X1, -sqrt(X1**2*f(a)**2 - G)/f(a)) }
+    assert sols == sols_found
     args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
     assert set(solve(*args)) == \
         {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))}
