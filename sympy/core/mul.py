@@ -937,9 +937,9 @@ class Mul(Expr, AssocOp):
         if d.is_Mul:
             n, d = [i._eval_expand_mul(**hints) if i.is_Mul else i
                 for i in (n, d)]
-            expr = n/d
-            if not expr.is_Mul:
-                return expr
+        expr = n/d
+        if not expr.is_Mul:
+            return expr
 
         plain, sums, rewrite = [], [], False
         for factor in expr.args:
