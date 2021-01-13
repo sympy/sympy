@@ -201,6 +201,7 @@ def test_basic_properties_2d():
     assert Segment(p1, Point(-x1, x1)).length == sqrt(2 * (x1 ** 2))
 
     assert l1.slope == 1
+    assert l1.area  == 0
     assert l3.slope is oo
     assert l4.slope == 0
     assert Line(p1, Point(0, 1)).slope is oo
@@ -271,8 +272,10 @@ def test_basic_properties_3d():
     assert p1 not in l3
 
     assert l1.direction_ratio == [1, 1, 1]
+    assert l1.area==0
 
     assert s1.midpoint == Point3D(S.Half, S.Half, S.Half)
+    
     # Test zdirection
     assert Ray3D(p1, Point3D(0, 0, -1)).zdirection is S.NegativeInfinity
 

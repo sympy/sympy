@@ -244,7 +244,9 @@ def test_point3D():
 
     # Test length property returns correctly
     assert p.length == 0
+    assert p.area   == 0
     assert p1_1.length == 0
+    assert p1_1.area == 0
     assert p1_2.length == 0
 
     # Test are_colinear type error
