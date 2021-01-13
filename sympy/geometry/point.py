@@ -61,6 +61,7 @@ class Point(GeometryEntity):
     ==========
 
     length
+    area
     origin: A `Point` representing the origin of the
         appropriately-dimensioned space.
 
@@ -662,6 +663,19 @@ class Point(GeometryEntity):
         >>> from sympy import Point
         >>> p = Point(0, 1)
         >>> p.length
+        0
+        """
+        return S.Zero
+    @property
+    def area(self):
+        """
+        A point in n dimensional Euclidean space has zero area
+
+        Examples
+        =========
+        >>> from sympy import Point
+        >>> p=Point(0,1)
+        >>> p.area
         0
         """
         return S.Zero

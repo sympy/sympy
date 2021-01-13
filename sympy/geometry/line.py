@@ -51,9 +51,11 @@ class LinearEntity(GeometrySet):
     ambient_dimension
     direction
     length
+    area
     p1
     p2
     points
+
 
     Notes
     =====
@@ -671,6 +673,19 @@ class LinearEntity(GeometrySet):
         oo
         """
         return S.Infinity
+    @property
+    def area(self):
+        """
+        A line in n dimensional Euclidean space has zero area.
+
+        Examples
+        =========
+        >>> from sympy import Line,Point
+        >>> l=Line(Point(0,1),(1,0))
+        >>> l.area
+        0
+        """
+        return S.Zero
 
     @property
     def p1(self):
