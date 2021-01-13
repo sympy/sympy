@@ -3,7 +3,7 @@ from sympy.functions.elementary.hyperbolic import asinh, tanh
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.sympify import sympify
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import Function
 
 class h1(Function):
     r"""
@@ -14,14 +14,14 @@ class h1(Function):
 
     where x is any real number and P(x) is the population size at x.
     The parameter M represents carrying capacity, and parameters delta
-    and theta  jointly represent growth rate. The parameter theta gives the
+    and theta jointly represent growth rate. The parameter theta gives the
     distance from a symmetric sigmoidal curve.
 
     Examples
     ========
 
     >>> from sympy import diff, symbols, h1
-    >>> a ,b, c, x, y, z = symbols('M delta theta x0 P0 x')
+    >>> a, b, c, x, y, z = symbols('M delta theta x0 P0 x')
 
     >>> h1(a, b, c, x, y, z)
     M*P0/(P0 + (M - P0)*exp(-delta*x + delta*x0 - theta*asinh(x) - theta*asinh(x0)))
@@ -42,15 +42,15 @@ class h1(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 6:
-            M, delta, theta, x0, P0 , x= self.args
+            M, delta, theta, x0, P0, x= self.args
             p_x = h1(M, delta, theta, x0, P0 , x)
             print(p_x)
             return (p_x/M*(M - p_x)*(delta + theta/(sqrt(1 + x**2)))).simplify()
         else:
-            raise ArgumentIndexError(self, argindex)
+            raise NotImplementedError(self, argindex)
 
     @classmethod
-    def eval(cls ,M, delta, theta, x0, P0 , x):
+    def eval(cls, M, delta, theta, x0, P0, x):
         alpha = (M - P0)/P0*exp(delta*x0 - theta*asinh(x0))
         return M/(1 + alpha*exp(-delta*x - theta*asinh(x))).simplify()
 
@@ -73,7 +73,7 @@ class h2(Function):
     ========
 
     >>> from sympy import h2, symbols
-    >>> a ,b, c, x, y, z = symbols('M delta gamma x0 P0 x')
+    >>> a, b, c, x, y, z = symbols('M delta gamma x0 P0 x')
 
     >>> h2(a, b, c, x, y, z)
     M*P0/(P0 + (M - P0)*asinh(exp(-delta*gamma*x))*asinh(exp(-delta*gamma*x0)))
@@ -92,20 +92,20 @@ class h2(Function):
     def fdiff(self, argindex=1):
         if argindex == 6:
             M, delta, gama, x0, P0 , x= self.args
-            p_x = h2(M, delta, gama, x0, P0 , x)
+            p_x = h2(M, delta, gama, x0, P0, x)
             alpha = (M - P0)/P0*asinh(exp(-delta*x0*gama))
             return (p_x**2*x**(gama-1)*gama*delta*alpha)/M*tanh((M - p_x) \
                                                     /alpha*p_x).simplify()
         else:
-            raise ArgumentIndexError(self, argindex)
+            raise NotImplementedError(self, argindex)
 
     @classmethod
-    def eval(cls ,M, delta, gama, x0, P0 , x):
-            if sympify(gama).is_real and gama <= 0 :
-                return ValueError("gamma must be greater than 0")
-            else:
-                alpha = (M - P0)/P0*asinh(exp(-delta*x0*gama))
-                return M/(1 + alpha*asinh(exp(-delta*x*gama))).simplify()
+    def eval(cls, M, delta, gama, x0, P0, x):
+        if sympify(gama).is_real and gama <= 0 :
+            return ValueError("gamma must be greater than 0")
+        else:
+            alpha = (M - P0)/P0*asinh(exp(-delta*x0*gama))
+            return M/(1 + alpha*asinh(exp(-delta*x*gama))).simplify()
 
 
 class h3(Function):
@@ -123,7 +123,7 @@ class h3(Function):
     ========
 
     >>> from sympy import diff, h3, symbols
-    >>> a ,b, c, d, x, y, z = symbols('M delta gamma theta t0 P0 t')
+    >>> a, b, c, d, x, y, z = symbols('M delta gamma theta t0 P0 t')
 
     >>> h3(a, b, c, d, x, y, z)
     M - (M - P0)*exp(-delta*t**gamma - asinh(t*theta))*exp(delta*t0**gamma + asinh(t0*theta))
@@ -144,18 +144,18 @@ class h3(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 6:
-            M, delta, gama, theta, t0, P0 , t= self.args
+            M, delta, gama, theta, t0, P0, t= self.args
             p_t = h3(M, delta, gama, theta, t0, P0 , t)
             return (M - p_t)*(delta*gama*t**(gama-1) + theta/sqrt(1 + \
                                                     theta**2*t**2)).simplify()
         else:
-            raise ArgumentIndexError(self, argindex)
+            raise NotImplementedError(self, argindex)
 
     @classmethod
-    def eval(cls ,M, delta, gama, theta, t0, P0 , t):
-            if sympify(t).is_real and t <= 0 :
-                return ValueError("t must be greater than 0")
-            else:
+    def eval(cls, M, delta, gama, theta, t0, P0, t):
+        if sympify(t).is_real and t <= 0 :
+            return ValueError("t must be greater than 0")
+        else:
 
-                alpha = (M - P0)*exp(delta*t0**gama + asinh(theta*t0))
-                return M - alpha*exp(-delta*t**gama-asinh(theta*t)).simplify()
+            alpha = (M - P0)*exp(delta*t0**gama + asinh(theta*t0))
+            return M - alpha*exp(-delta*t**gama-asinh(theta*t)).simplify()
