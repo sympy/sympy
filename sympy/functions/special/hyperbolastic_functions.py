@@ -91,21 +91,21 @@ class h2(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 6:
-            M, delta, gama, x0, P0 , x= self.args
-            p_x = h2(M, delta, gama, x0, P0, x)
-            alpha = (M - P0)/P0*asinh(exp(-delta*x0*gama))
-            return (p_x**2*x**(gama-1)*gama*delta*alpha)/M*tanh((M - p_x) \
+            M, delta, gamma, x0, P0 , x= self.args
+            p_x = h2(M, delta, gamma, x0, P0, x)
+            alpha = (M - P0)/P0*asinh(exp(-delta*x0*gamma))
+            return (p_x**2*x**(gamma-1)*gamma*delta*alpha)/M*tanh((M - p_x) \
                                                     /alpha*p_x).simplify()
         else:
             raise NotImplementedError(self, argindex)
 
     @classmethod
-    def eval(cls, M, delta, gama, x0, P0, x):
-        if sympify(gama).is_real and gama <= 0 :
+    def eval(cls, M, delta, gamma, x0, P0, x):
+        if sympify(gamma).is_real and gamma <= 0 :
             return ValueError("gamma must be greater than 0")
         else:
-            alpha = (M - P0)/P0*asinh(exp(-delta*x0*gama))
-            return M/(1 + alpha*asinh(exp(-delta*x*gama))).simplify()
+            alpha = (M - P0)/P0*asinh(exp(-delta*x0*gamma))
+            return M/(1 + alpha*asinh(exp(-delta*x*gamma))).simplify()
 
 
 class h3(Function):
@@ -144,18 +144,18 @@ class h3(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 6:
-            M, delta, gama, theta, t0, P0, t= self.args
-            p_t = h3(M, delta, gama, theta, t0, P0 , t)
-            return (M - p_t)*(delta*gama*t**(gama-1) + theta/sqrt(1 + \
+            M, delta, gamma, theta, t0, P0, t= self.args
+            p_t = h3(M, delta, gamma, theta, t0, P0 , t)
+            return (M - p_t)*(delta*gamma*t**(gamma-1) + theta/sqrt(1 + \
                                                     theta**2*t**2)).simplify()
         else:
             raise NotImplementedError(self, argindex)
 
     @classmethod
-    def eval(cls, M, delta, gama, theta, t0, P0, t):
+    def eval(cls, M, delta, gamma, theta, t0, P0, t):
         if sympify(t).is_real and t <= 0 :
             return ValueError("t must be greater than 0")
         else:
 
-            alpha = (M - P0)*exp(delta*t0**gama + asinh(theta*t0))
-            return M - alpha*exp(-delta*t**gama-asinh(theta*t)).simplify()
+            alpha = (M - P0)*exp(delta*t0**gamma + asinh(theta*t0))
+            return M - alpha*exp(-delta*t**gamma-asinh(theta*t)).simplify()
