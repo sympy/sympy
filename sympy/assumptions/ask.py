@@ -85,50 +85,14 @@ class AssumptionKeys:
 
     @memoize_property
     def finite(self):
-        """
-        Finite predicate.
-
-        Explanation
-        ===========
-
-        ``Q.finite(x)`` is true if ``x`` is neither an infinity
-        nor a ``NaN``. In other words, ``ask(Q.finite(x))`` is true for all ``x``
-        having a bounded absolute value.
-
-        Examples
-        ========
-
-        >>> from sympy import Q, ask, Symbol, S, oo, I
-        >>> x = Symbol('x')
-        >>> ask(Q.finite(S.NaN))
-        False
-        >>> ask(Q.finite(oo))
-        False
-        >>> ask(Q.finite(1))
-        True
-        >>> ask(Q.finite(2 + 3*I))
-        True
-
-        References
-        ==========
-
-        .. [1] https://en.wikipedia.org/wiki/Finite
-
-        """
-        return Predicate('finite')
+        from .handlers.calculus import FinitePredicate
+        return FinitePredicate()
 
 
     @memoize_property
     def infinite(self):
-        """
-        Infinite number predicate.
-
-        ``Q.infinite(x)`` is true iff the absolute value of ``x`` is
-        infinity.
-
-        """
-        # TODO: Add examples
-        return Predicate('infinite')
+        from .predicates.calculus import InfinitePredicate
+        return InfinitePredicate()
 
 
     @memoize_property
@@ -1301,7 +1265,6 @@ def compute_known_facts(known_facts, known_facts_keys):
 # for a particular key
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
-    ("finite",            "calculus.AskFiniteHandler"),
     ("commutative",       "AskCommutativeHandler"),
     ("composite",         "ntheory.AskCompositeHandler"),
     ("even",              "ntheory.AskEvenHandler"),

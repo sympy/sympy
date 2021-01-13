@@ -8,7 +8,7 @@ Assumptions
 
 
 Predicate
-==========
+=========
 
 .. autoclass:: sympy.assumptions.assume::Predicate
    :noindex:
