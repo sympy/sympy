@@ -7212,7 +7212,7 @@ def test_is_combining():
 def test_issue_17616():
     assert pretty(pi**(1/exp(1))) == \
    '  / -1\\\n'\
-   '  \e  /\n'\
+   '  \\e  /\n'\
    'pi     '
 
     assert upretty(pi**(1/exp(1))) == \

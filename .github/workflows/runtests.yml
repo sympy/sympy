@@ -24,6 +24,8 @@ jobs:
       - run: pip install mpmath flake8
       - run: bin/test quality
       - run: flake8 sympy
+        # compileall is used to detect invalid escapes like '\e'
+      - run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
 
   # -------------------- Doctests latest Python -------------------- #
 
