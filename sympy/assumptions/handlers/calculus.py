@@ -5,6 +5,7 @@ infinitesimal, finite, etc.
 
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Mul, Pow, Symbol
+from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.core.numbers import (Exp1, GoldenRatio, ImaginaryUnit, Infinity, NaN,
     NegativeInfinity, Number, Pi, TribonacciConstant)
 from sympy.functions import cos, exp, log, sign, sin
@@ -193,9 +194,15 @@ def _(expr, assumptions):
         return False
     return None
 
-@FinitePredicate.register_many(exp, log)
+@FinitePredicate.register(exp)
 def _(expr, assumptions):
     return ask(Q.finite(expr.args[0]), assumptions)
+
+@FinitePredicate.register(log)
+def _(expr, assumptions):
+    arg_zero = ask(Q.zero(expr.args[0]), assumptions)
+    arg_bounded = ask(Q.finite(expr.args[0]), assumptions)
+    return fuzzy_and([fuzzy_not(arg_zero), arg_bounded])
 
 @FinitePredicate.register_many(cos, sin, Number, Pi, Exp1, GoldenRatio,
     TribonacciConstant, ImaginaryUnit, sign)
