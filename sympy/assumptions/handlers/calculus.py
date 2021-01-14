@@ -199,6 +199,8 @@ def _(expr, assumptions):
 
 @FinitePredicate.register(log)
 def _(expr, assumptions):
+    # After complex -> finite fact is registered to new assumption system,
+    # querying Q.infinite may be removed.
     if ask(Q.infinite(expr.args[0]), assumptions):
         return False
     return ask(Q.nonzero(expr.args[0]), assumptions)
