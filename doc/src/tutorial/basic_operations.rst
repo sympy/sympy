@@ -116,7 +116,15 @@ For example
     x**2 + 3*x - 1/2
     >>> expr.subs(x, 2)
     19/2
-
+    
+Adding two different strings using sympify
+ 
+    >>> str_expr1 = "x**2"
+    >>> str_expr2 = "x**3"
+    >>> expr = sympify(str_expr1) + sympify(str_expr2)
+    >>> expr
+    x**2+x**3
+    
 .. warning:: ``sympify`` uses ``eval``.  Don't use it on unsanitized input.
 
 ``evalf``
