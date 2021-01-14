@@ -1046,7 +1046,10 @@ def test_bounded():
 
     # exponential functions
     assert ask(Q.finite(log(x))) is None
-    assert ask(Q.finite(log(x)), Q.finite(x)) is True
+    assert ask(Q.finite(log(x)), Q.finite(x)) is None
+    assert ask(Q.finite(log(x)), Q.nonzero(x)) is True
+    assert ask(Q.finite(log(x)), Q.infinite(x)) is False
+    assert ask(Q.finite(log(x)), Q.zero(x)) is False
     assert ask(Q.finite(exp(x))) is None
     assert ask(Q.finite(exp(x)), Q.finite(x)) is True
     assert ask(Q.finite(exp(2))) is True

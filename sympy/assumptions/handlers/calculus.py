@@ -193,9 +193,17 @@ def _(expr, assumptions):
         return False
     return None
 
-@FinitePredicate.register_many(exp, log)
+@FinitePredicate.register(exp)
 def _(expr, assumptions):
     return ask(Q.finite(expr.args[0]), assumptions)
+
+@FinitePredicate.register(log)
+def _(expr, assumptions):
+    # After complex -> finite fact is registered to new assumption system,
+    # querying Q.infinite may be removed.
+    if ask(Q.infinite(expr.args[0]), assumptions):
+        return False
+    return ask(Q.nonzero(expr.args[0]), assumptions)
 
 @FinitePredicate.register_many(cos, sin, Number, Pi, Exp1, GoldenRatio,
     TribonacciConstant, ImaginaryUnit, sign)
