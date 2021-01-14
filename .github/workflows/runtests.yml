@@ -87,6 +87,8 @@ jobs:
         with:
           python-version: 3.8
       - run: release/aptinstall.sh
+      - run: sudo apt-get install libmpfr-dev libmpc-dev
+      - run: release/venv_main/bin/python -m pip install gmpy2
       # Test external imports
       - run: release/venv_main/bin/python bin/test_external_imports.py
       - run: release/venv_main/bin/python bin/test_submodule_imports.py
