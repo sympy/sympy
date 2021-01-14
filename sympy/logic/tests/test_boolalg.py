@@ -1,4 +1,5 @@
 from sympy.assumptions.ask import Q
+from sympy.assumptions.refine import refine
 from sympy.core.numbers import oo
 from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
@@ -1191,3 +1192,40 @@ def test_bool_monomial():
     x, y = symbols('x,y')
     assert bool_monomial(1, [x, y]) == y
     assert bool_monomial([1, 1], [x, y]) == And(x, y)
+
+
+def test_refine():
+    # relational
+    assert not refine(x < 0, ~Q.is_true(x < 0))
+    assert refine(x < 0, Q.is_true(x < 0))
+    assert refine(x < 0, Q.is_true(0 > x)) == True
+    assert refine(x < 0, Q.is_true(y < 0)) == (x < 0)
+    assert not refine(x <= 0, ~Q.is_true(x <= 0))
+    assert refine(x <= 0,  Q.is_true(x <= 0))
+    assert refine(x <= 0,  Q.is_true(0 >= x)) == True
+    assert refine(x <= 0,  Q.is_true(y <= 0)) == (x <= 0)
+    assert not refine(x > 0, ~Q.is_true(x > 0))
+    assert refine(x > 0,  Q.is_true(x > 0))
+    assert refine(x > 0,  Q.is_true(0 < x)) == True
+    assert refine(x > 0,  Q.is_true(y > 0)) == (x > 0)
+    assert not refine(x >= 0, ~Q.is_true(x >= 0))
+    assert refine(x >= 0,  Q.is_true(x >= 0))
+    assert refine(x >= 0,  Q.is_true(0 <= x)) == True
+    assert refine(x >= 0,  Q.is_true(y >= 0)) == (x >= 0)
+    assert not refine(Eq(x, 0), ~Q.is_true(Eq(x, 0)))
+    assert refine(Eq(x, 0),  Q.is_true(Eq(x, 0)))
+    assert refine(Eq(x, 0),  Q.is_true(Eq(0, x))) == True
+    assert refine(Eq(x, 0),  Q.is_true(Eq(y, 0))) == Eq(x, 0)
+    assert not refine(Ne(x, 0), ~Q.is_true(Ne(x, 0)))
+    assert refine(Ne(x, 0), Q.is_true(Ne(0, x))) == True
+    assert refine(Ne(x, 0),  Q.is_true(Ne(x, 0)))
+    assert refine(Ne(x, 0),  Q.is_true(Ne(y, 0))) == (Ne(x, 0))
+
+    # boolean functions
+    assert refine(And(x > 0, y > 0), Q.is_true(x > 0)) == (y > 0)
+    assert refine(And(x > 0, y > 0), Q.is_true(x > 0) & Q.is_true(y > 0)) == True
+
+    # predicates
+    assert refine(Q.positive(x), Q.positive(x)) == True
+    assert refine(Q.positive(x), Q.negative(x)) == False
+    assert refine(Q.positive(x), Q.real(x)) == Q.positive(x)

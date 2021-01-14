@@ -1035,6 +1035,11 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             Evaluate the *proposition* with respect to *assumptions* in
             global assumption context.
 
+    This function evaluates the proposition to ``True`` or ``False`` if
+    the truth value can be determined. If not, it returns ``None``.
+    It should be discerned from :func:`~.refine()` which does not reduce
+    the expression to ``None``.
+
     Parameters
     ==========
 
@@ -1048,7 +1053,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     context : AssumptionsContext, optional
         Default assumptions to evaluate the *proposition*. By default,
         this is ``sympy.assumptions.global_assumptions`` variable.
-
 
     Examples
     ========
@@ -1076,6 +1080,12 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
         It is however a work in progress.
 
+    See Also
+    ========
+
+    sympy.assumptions.refine.refine : Simplification using assumptions.
+        Proposition is not reduced to ``None`` if the truth value cannot
+        be determined.
     """
     from sympy.assumptions.satask import satask
 

@@ -1674,6 +1674,11 @@ class Basic(Printable, metaclass=ManagedProperties):
         from sympy.simplify import simplify
         return simplify(self, **kwargs)
 
+    def refine(self, assumption=True):
+        """See the refine function in sympy.assumptions"""
+        from sympy.assumptions import refine
+        return refine(self, assumption)
+
     def _eval_rewrite(self, pattern, rule, **hints):
         if self.is_Atom:
             if hasattr(self, rule):
