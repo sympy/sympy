@@ -807,13 +807,13 @@ class StrPrinter(Printer):
         return expr.name + '_'
 
     def _print_WildDot(self, expr):
-        return expr.name + '_'
+        return expr.name
 
     def _print_WildPlus(self, expr):
-        return expr.name + '__'
+        return expr.name
 
     def _print_WildStar(self, expr):
-        return expr.name + '___'
+        return expr.name
 
     def _print_Zero(self, expr):
         if self._settings.get("sympy_integers", False):
