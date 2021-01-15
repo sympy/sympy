@@ -289,13 +289,16 @@ ability to copy and paste that function or to create a function
 with a different argument: ``Function('f')`` is callable, but
 ``Function('f')(x)`` is not:
 
-    >>> f = f(x)
-    >>> f
-    f(x)
-    >>> f(x)
+    >>> f1 = Function('f1')
+    >>> f2 = Function('f2')('x')
+    >>> f1(1)
+    f1(1)
+    >>> f2(1)
     Traceback (most recent call last):
     ...
-    TypeError: 'f' object is not callable
+    TypeError: 'f2' object is not callable
+    >>> f2.subs(x, 1)
+    f2(1)
 
 .. _symbolic-expressions:
 
