@@ -135,7 +135,7 @@ from .ntheory import (nextprime, prevprime, prime, primepi, primerange,
         compositepi, isprime, divisors, proper_divisors, factorint,
         multiplicity, perfect_power, pollard_pm1, pollard_rho, primefactors,
         totient, trailing, divisor_count, proper_divisor_count, divisor_sigma,
-        factorrat, reduced_totient, primenu, primeomega,
+        factorrat, reduced_totient, primenu, primeomega, first_n_primes,
         mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
         is_deficient, is_amicable, abundance, npartitions, is_primitive_root,
         is_quad_residue, legendre_symbol, jacobi_symbol, n_order, sqrt_mod,
@@ -370,7 +370,7 @@ __all__ = [
     'binomial_coefficients_list', 'multinomial_coefficients',
     'continued_fraction_periodic', 'continued_fraction_iterator',
     'continued_fraction_reduce', 'continued_fraction_convergents',
-    'continued_fraction', 'egyptian_fraction',
+    'continued_fraction', 'egyptian_fraction', 'first_n_primes',
 
     # sympy.concrete
     'product', 'Product', 'summation', 'Sum',
