@@ -2,27 +2,10 @@ language: python
 os:
   - linux
 
-stages:
-  - quality
-  - baseline
-  - test
-  - allowed_failures
-
-env:
-  jobs:
-    - TEST_SYMPY="true" SPLIT="1/2"
-    - TEST_SYMPY="true" SPLIT="2/2"
-    - TEST_DOCTESTS="true" TEST_SETUP="true" TEST_EXAMPLES="true"
-dist: trusty
-
-python:
-  - 3.6
-
 jobs:
   fast_finish: true
   include:
-    - stage: quality
-      python: 3.8
+    - python: 3.8
       dist: xenial
       script: bin/test quality
       env:
@@ -32,8 +15,7 @@ jobs:
       env:
         - TEST_FLAKE8="true"
 
-    - stage: baseline
-      python: 3.8
+    - python: 3.8
       dist: xenial
       env:
         - TEST_DOCTESTS="true" TEST_SETUP="true" TEST_EXAMPLES="true"
@@ -63,10 +45,6 @@ jobs:
             - liblapack-dev
             - gfortran
             - python-scipy
-
-    # Full tests. Hopefully basic problems were picked up in the previous
-    # stage.
-    - stage: test
 
     # PyPy tests are slow so put them first
     - python: "pypy"
@@ -98,19 +76,6 @@ jobs:
             - pypy
           packages:
             - pypy3
-
-    - python: 3.9-dev
-      dist: xenial
-      env:
-        - SPLIT="1/2" TEST_SYMPY="true"
-    - python: 3.9-dev
-      dist: xenial
-      env:
-        - SPLIT="2/2" TEST_SYMPY="true"
-    - python: 3.9-dev
-      dist: xenial
-      env:
-        - TEST_DOCTESTS="true" TEST_SETUP="true" TEST_EXAMPLES="true"
 
     # Tensorflow 1 support
     - python: 3.6
@@ -159,10 +124,6 @@ jobs:
     - python: 3.6
       dist: xenial
       env:
-        - BENCHMARK="true"
-
-  allow_failures:
-    - env:
         - BENCHMARK="true"
 
 before_install:
