@@ -18,6 +18,7 @@ from sympy.tensor import IndexedBase
 from sympy.testing.pytest import skip
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
+from sympy.parsing.latex import parse_latex
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
@@ -165,6 +166,11 @@ def test_pycode_reserved_words():
     raises(ValueError, lambda: pycode(s1 + s2, error_on_reserved=True))
     py_str = pycode(s1 + s2)
     assert py_str in ('else_ + if_', 'if_ + else_')
+
+def test_issue_20762():
+    # Make sure pycode removes curly braces from subscripted variables
+    expr = parse_latex(r'a_b \cdot b')
+    assert pycode(expr) == 'a_b*b'
 
 
 def test_sqrt():
