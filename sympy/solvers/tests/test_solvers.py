@@ -1740,9 +1740,10 @@ def test_lambert_bivariate():
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
     # check collection
+    ax = a**(3*x + 5)
     x1 = log(3*LambertW(Rational(1, 3))/a**5)/(3*log(a))
     x2 = log((-3**(Rational(1, 3)) + 3**(Rational(5, 6))*I)*(a**(-5))**(Rational(1, 3))*LambertW(Rational(1, 3))**(Rational(1, 3))/2)/log(a)
-    x3 = log((-3**(Rational(1, 3)) - 3**(Rational(5, 6))*I)*(a**(-5))**(Rational(1, 3))*LambertW(Rational(1, 3))**(Rational(1, 3))/2)/log(a)
+    # x3 = log((-3**(Rational(1, 3)) - 3**(Rational(5, 6))*I)*(a**(-5))**(Rational(1, 3))*LambertW(Rational(1, 3))**(Rational(1, 3))/2)/log(a)
     ans = solve(3*log(ax) + ax, x)
     assert len(ans) == 3 and ans[0] == x1 and ans[1] == x2
     #coverage
