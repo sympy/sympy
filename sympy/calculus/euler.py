@@ -89,12 +89,11 @@ def euler_equations(L, funcs=(), vars=()):
         if not vars == f.args:
             raise ValueError("Variables %s don't match args: %s" % (vars, f))
 
-    order = max([len(d.variables) for d in L.atoms(Derivative)
-                if d.expr in funcs] + [0])
-
     eqns = []
     for f in funcs:
         eq = diff(L, f)
+        order = max([len(d.variables) for d in L.atoms(Derivative)
+                        if d.expr == f] + [0])
         for i in range(1, order + 1):
             for p in combinations_with_replacement(vars, i):
                 eq = eq + S.NegativeOne**i*diff(L, diff(f, *p), *p)
