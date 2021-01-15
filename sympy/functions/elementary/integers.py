@@ -132,11 +132,17 @@ class floor(RoundFunction):
             return arg.approximation_interval(Integer)[0]
 
     def _eval_nseries(self, x, n, logx, cdir=0):
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+        if arg0.is_infinite:
+            from sympy.calculus.util import AccumBounds
+            from sympy.series.order import Order
+            s = arg._eval_nseries(x, n, logx, cdir)
+            o = Order(1, (x, 0)) if n <= 1 else AccumBounds(-1, 0)
+            return s + o
         r = self.subs(x, 0)
-        args = self.args[0]
-        args0 = args.subs(x, 0)
-        if args0 == r:
-            direction = (args - args0).leadterm(x)[0]
+        if arg0 == r:
+            direction = (arg - arg0).leadterm(x)[0]
             if direction.is_positive:
                 return r
             else:
@@ -268,11 +274,17 @@ class ceiling(RoundFunction):
             return arg.approximation_interval(Integer)[1]
 
     def _eval_nseries(self, x, n, logx, cdir=0):
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+        if arg0.is_infinite:
+            from sympy.calculus.util import AccumBounds
+            from sympy.series.order import Order
+            s = arg._eval_nseries(x, n, logx, cdir)
+            o = Order(1, (x, 0)) if n <= 1 else AccumBounds(0, 1)
+            return s + o
         r = self.subs(x, 0)
-        args = self.args[0]
-        args0 = args.subs(x, 0)
-        if args0 == r:
-            direction = (args - args0).leadterm(x)[0]
+        if arg0 == r:
+            direction = (arg - arg0).leadterm(x)[0]
             if direction.is_positive:
                 return r + 1
             else:
