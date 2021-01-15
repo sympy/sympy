@@ -142,7 +142,7 @@ class Sieve:
         while len(self._list) < i:
             self.extend(int(self._list[-1] * 1.5))
 
-    def primerange(self, a, b):
+    def primerange(self, a, b = None):
         """Generate all prime numbers in the range [a, b).
 
         Examples
@@ -156,8 +156,12 @@ class Sieve:
 
         # wrapping ceiling in as_int will raise an error if there was a problem
         # determining whether the expression was exactly an integer or not
-        a = max(2, as_int(ceiling(a)))
-        b = as_int(ceiling(b))
+        if b == None:
+            b = as_int(ceiling(a))
+            a = 2
+        else:
+            a = max(2, as_int(ceiling(a)))
+            b = as_int(ceiling(b))
         if a >= b:
             return
         self.extend(b)
