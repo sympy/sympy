@@ -176,13 +176,10 @@ def _lambert(eq, x, domain=S.Complexes):
 
     xusolns = solve(X1 - u, x)
 
-    try:
-        if consistent_dom:
-            domain = S.Reals
-        else:
-            domain = S.Complexes
-    except UnboundLocalError:
-        pass
+    if consistent_dom:
+        domain = S.Reals
+    else:
+        domain = S.Complexes
 
     # There are infinitely many branches for LambertW
     # but only branches for k = -1 and 0 might be real. The k = 0
