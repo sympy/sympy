@@ -5,9 +5,9 @@ from sympy import (
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant)
+    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant, FiniteSet)
 
-from sympy.core.function import nfloat
+from sympy.core.function import nfloat, Lambda
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.bivariate import _filtered_gens, _solve_lambert, _lambert
@@ -99,6 +99,7 @@ def test_solve_args():
     # equation container, issue 5113
     ans = {x: -3, y: 1}
     eqs = (x + 5*y - 2, -3*x + 6*y - 15)
+    integer = Symbol('integer',integer=True)
     assert all(solve(container(eqs), x, y) == ans for container in
         (tuple, list, set, frozenset))
     assert solve(Tuple(*eqs), x, y) == ans
@@ -151,7 +152,8 @@ def test_solve_args():
     assert solve([y, exp(x) + x]) == {x: -LambertW(1), y: 0}
     #     both fail
     assert solve(
-        (exp(x) - x, exp(y) - y)) == {x: -LambertW(-1), y: -LambertW(-1)}
+        (exp(x) - x, exp(y) - y)) == {x: Lambda(integer, -LambertW(-1, integer)), \
+            y: Lambda(integer, -LambertW(-1, integer))}
     # --  when symbols given
     solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
     # symbol is a number
@@ -1674,6 +1676,8 @@ def test_issue_14607():
 
 def test_lambert_multivariate():
     from sympy.abc import x, y
+    from sympy.solvers.solveset import solveset
+
     assert _filtered_gens(Poly(x + 1/x + exp(x) + y), x) == {x, exp(x)}
     assert _lambert(x, x) == []
     assert solve((x**2 - 2*x + 1).subs(x, log(x) + 3*x)) == [LambertW(3*S.Exp1)/3]
@@ -1682,6 +1686,7 @@ def test_lambert_multivariate():
     assert solve((x**2 - 2*x - 2).subs(x, log(x) + 3*x)) == \
           [LambertW(3*exp(1 - sqrt(3)))/3, LambertW(3*exp(1 + sqrt(3)))/3]
     eq = (x*exp(x) - 3).subs(x, x*exp(x))
+    assert solveset(eq,x,S.Reals) == FiniteSet(LambertW(3*exp(-LambertW(3))))
     assert solve(eq) == [LambertW(3*exp(-LambertW(3)))]
     # coverage test
     raises(NotImplementedError, lambda: solve(x - sin(x)*log(y - x), x))
@@ -1701,15 +1706,16 @@ def test_other_lambert():
 @slow
 def test_lambert_bivariate():
     # tests passing current implementation
+    integer = Symbol('integer',integer=True)
     assert solve((x**2 + x)*exp(x**2 + x) - 1) == [
         Rational(-1, 2) + sqrt(1 + 4*LambertW(1))/2,
         Rational(-1, 2) - sqrt(1 + 4*LambertW(1))/2]
     assert solve((x**2 + x)*exp((x**2 + x)*2) - 1) == [
         Rational(-1, 2) + sqrt(1 + 2*LambertW(2))/2,
         Rational(-1, 2) - sqrt(1 + 2*LambertW(2))/2]
-    assert solve(a/x + exp(x/2), x) == [2*LambertW(-a/2)]
+    assert solve(a/x + exp(x/2), x) == [2*LambertW(-a/2, integer)]
     assert solve((a/x + exp(x/2)).diff(x), x) == \
-            [4*LambertW(-sqrt(2)*sqrt(a)/4), 4*LambertW(sqrt(2)*sqrt(a)/4)]
+            [4*LambertW(-sqrt(2)*sqrt(a)/4, integer), 4*LambertW(sqrt(2)*sqrt(a)/4, integer)]
     assert solve((1/x + exp(x/2)).diff(x), x) == \
         [4*LambertW(-sqrt(2)/4),
         4*LambertW(sqrt(2)/4),  # nsimplifies as 2*2**(141/299)*3**(206/299)*5**(205/299)*7**(37/299)/21
@@ -1719,62 +1725,61 @@ def test_lambert_bivariate():
     assert solve(-x**2 + 2**x, x) == [2, 4, -2*LambertW(log(2)/2)/log(2)]
     assert solve(x**2 - 2**x, x) == [2, 4, -2*LambertW(log(2)/2)/log(2)]
     ans = solve(3*x + 5 + 2**(-5*x + 3), x)
-    assert len(ans) == 1 and ans[0].expand() == \
-        Rational(-5, 3) + LambertW(-10240*root(2, 3)*log(2)/3)/(5*log(2))
-    assert solve(5*x - 1 + 3*exp(2 - 7*x), x) == \
-        [Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7]
+    assert len(ans) == 3 and ans[-1].expand() == \
+        Rational(-5, 3) + LambertW(-10240*root(2, 3)*log(2)/3,integer)/(5*log(2))
+
+    s1 = LambertW(-21*exp(Rational(3, 5))/5, integer)/7 + Rational(1, 5)
+    s2 = LambertW(21*(-4*sqrt(5) + 4 - sqrt(2)*sqrt(-5 + sqrt(5)) + sqrt(2)*sqrt(-5 - sqrt(5)) + sqrt(10)*sqrt(-5 + sqrt(5)) + sqrt(10)*sqrt(-5 - sqrt(5)))*exp(Rational(3,5))/80, integer)/7 + Rational(1,5)
+    s3 = LambertW(21*(4 + 4*sqrt(5) - sqrt(10)*sqrt(-5 - sqrt(5)) - sqrt(2)*sqrt(-5 - sqrt(5)) - sqrt(2)*sqrt(-5 + sqrt(5)) + sqrt(10)*sqrt(-5 + sqrt(5)))*exp(Rational(3,5))/80, integer)/7 + Rational(1,5)
+    s4 = LambertW(21*(-2*sqrt(5) + 2 - sqrt(10)*sqrt(-5 + sqrt(5)) - sqrt(2)*sqrt(-5 + sqrt(5)))*exp(Rational(3,5))/40, integer)/7 + Rational(1,5)
+    s5 = LambertW(21*(1 + sqrt(5) + sqrt(2)*sqrt(-5 + sqrt(5)))*exp(Rational(3, 5))/20, integer)/7 + Rational(1,5)
+    ans = solve(5*x - 1 + 3*exp(2 - 7*x), x)
+    # assert ans == [s5, s4, s3, s2, s1]
+    assert len(ans) == 5 and ans[-1] == s1
+
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
     # check collection
     ax = a**(3*x + 5)
-    ans = solve(3*log(ax) + b*log(ax) + ax, x)
     x0 = 1/log(a)
     x1 = sqrt(3)*I
     x2 = b + 3
     x3 = x2*LambertW(1/x2)/a**5
     x4 = x3**Rational(1, 3)/2
-    assert ans == [
-        x0*log(x4*(x1 - 1)),
-        x0*log(-x4*(x1 + 1)),
-        x0*log(x3)/3]
-    x1 = LambertW(Rational(1, 3))
-    x2 = a**(-5)
-    x3 = 3**Rational(1, 3)
-    x4 = 3**Rational(5, 6)*I
-    x5 = x1**Rational(1, 3)*x2**Rational(1, 3)/2
+
+    x1 = log(3*LambertW(Rational(1, 3))/a**5)/(3*log(a))
+    x2 = log((-3**(Rational(1, 3)) + 3**(Rational(5, 6))*I)*(a**(-5))**(Rational(1, 3))*LambertW(Rational(1, 3))**(Rational(1, 3))/2)/log(a)
+    x3 = log((-3**(Rational(1, 3)) - 3**(Rational(5, 6))*I)*(a**(-5))**(Rational(1, 3))*LambertW(Rational(1, 3))**(Rational(1, 3))/2)/log(a)
     ans = solve(3*log(ax) + ax, x)
-    assert ans == [
-        x0*log(3*x1*x2)/3,
-        x0*log(x5*(-x3 + x4)),
-        x0*log(-x5*(x3 + x4))]
-    # coverage
+    assert len(ans) == 3 and ans[0] == x1 and ans[1] == x2
+    #coverage
     p = symbols('p', positive=True)
     eq = 4*2**(2*p + 3) - 2*p - 3
-    assert _solve_lambert(eq, p, _filtered_gens(Poly(eq), p)) == [
-        Rational(-3, 2) - LambertW(-4*log(2))/(2*log(2))]
-    assert set(solve(3**cos(x) - cos(x)**3)) == {
-        acos(3), acos(-3*LambertW(-log(3)/3)/log(3))}
+    assert _solve_lambert(eq, p, _filtered_gens(Poly(eq), p)) == [Rational(-3, 2) - LambertW(-4*log(2), integer)/(2*log(2))]
+    assert set(solve(3**cos(x) - cos(x)**3)) == {acos(3), acos(-3*LambertW(-log(3)/3)/log(3))}
     # should give only one solution after using `uniq`
-    assert solve(2*log(x) - 2*log(z) + log(z + log(x) + log(z)), x) == [
-        exp(-z + LambertW(2*z**4*exp(2*z))/2)/z]
+    assert solve(2*log(x) - 2*log(z) + log(z + log(x) + log(z)), x) == \
+        [exp(-z + LambertW(2*z**4*exp(2*z), integer)/2)/z]
     # cases when p != S.One
     # issue 4271
+    s1 = 6*LambertW((-a)**(Rational(1, 3))/3, integer)
+    s2 = 6*LambertW((-a)**(Rational(1, 3))*(-1 + sqrt(3)*I)/6, integer)
+    s3 = 6*LambertW(-(-a)**(Rational(1, 3))*(1 + sqrt(3)*I)/6, integer)
+
     ans = solve((a/x + exp(x/2)).diff(x, 2), x)
-    x0 = (-a)**Rational(1, 3)
-    x1 = sqrt(3)*I
-    x2 = x0/6
-    assert ans == [
-        6*LambertW(x0/3),
-        6*LambertW(x2*(x1 - 1)),
-        6*LambertW(-x2*(x1 + 1))]
-    assert solve((1/x + exp(x/2)).diff(x, 2), x) == \
-                [6*LambertW(Rational(-1, 3)), 6*LambertW(Rational(1, 6) - sqrt(3)*I/6), \
-                6*LambertW(Rational(1, 6) + sqrt(3)*I/6), 6*LambertW(Rational(-1, 3), -1)]
+    assert ans == [s1, s2, s3]
+
+    s1 = 6*LambertW(Rational(-1, 3))
+    s2 = 6*LambertW(Rational(-1, 3), -1)
+    s3 = 6*LambertW(Rational(1, 6) - sqrt(3)*I/6, integer)
+    s4 = 6*LambertW(Rational(1, 6) + sqrt(3)*I/6, integer)
+    assert solve((1/x + exp(x/2)).diff(x, 2), x) == [s1, s2, s3, s4]
+
     assert solve(x**2 - y**2/exp(x), x, y, dict=True) == \
-                [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}]
+        [{x: 2*LambertW(-y/2, integer)}, {x: 2*LambertW(y/2, integer)}]
     # this is slow but not exceedingly slow
     assert solve((x**3)**(x/2) + pi/2, x) == [
-        exp(LambertW(-2*log(2)/3 + 2*log(pi)/3 + I*pi*Rational(2, 3)))]
+        exp(LambertW(-2*log(2)/3 + 2*log(pi)/3 + I*pi*Rational(2, 3), integer))]
 
 
 def test_rewrite_trig():
@@ -2222,9 +2227,10 @@ def test_issue_12024():
 
 
 def test_issue_17452():
+    integer = Symbol('integer',integer=True)
     assert solve((7**x)**x + pi, x) == [-sqrt(log(pi) + I*pi)/sqrt(log(7)),
                                         sqrt(log(pi) + I*pi)/sqrt(log(7))]
-    assert solve(x**(x/11) + pi/11, x) == [exp(LambertW(-11*log(11) + 11*log(pi) + 11*I*pi))]
+    assert solve(x**(x/11) + pi/11, x) == [exp(LambertW(-11*log(11) + 11*log(pi) + 11*I*pi, integer))]
 
 
 def test_issue_17799():

@@ -327,10 +327,7 @@ def _first_order_type5_6_subs(A, t, b=None):
         t_ = Symbol("{}_".format(t))
         F_t = integrate(factor_terms[0], t)
 
-        if _is_lambert(F_t,x):
-            inverse = ConditionSet(t_, Eq(F_t,0),S.Complexes)
-        else:
-            inverse = solveset(Eq(t_, F_t), t)
+        inverse = solveset(Eq(t_, F_t), t)
         # Note: A simple way to check if a function is invertible
         # or not.
         if isinstance(inverse, FiniteSet) and not inverse.has(Piecewise)\

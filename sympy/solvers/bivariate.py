@@ -1,20 +1,23 @@
 from sympy.core.add import Add
 from sympy.core.compatibility import ordered
-from sympy.core.function import expand_log
+from sympy.core.function import expand_log, Lambda
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
-from sympy.core.numbers import I
+from sympy.core.numbers import I,E
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly, factor
 from sympy.core.function import _mexpand
+from sympy.sets import ImageSet,EmptySet
 from sympy.simplify.simplify import separatevars
 from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import powsimp
 from sympy.solvers.solvers import solve, _invert
 from sympy.utilities.iterables import uniq
+from sympy import re
+from sympy.core import Symbol
 
 
 
@@ -118,6 +121,16 @@ def _linab(arg, symbol):
         x = -x
     return a, b, x
 
+jp = 0
+lioo = []
+def consistent_domain(dom):
+    # to maintain the consistency
+    global jp
+    global lioo
+    jp = -1
+    lioo.insert(jp,dom)
+    jp -= 1
+    return lioo[-1]
 
 def _lambert(eq, x, domain=S.Complexes):
     """
@@ -126,6 +139,8 @@ def _lambert(eq, x, domain=S.Complexes):
     where X = g(x) and x = g^-1(X), return the Lambert solution,
         ``x = g^-1(-c/b + (a/d)*W(d/(a*b)*exp(c*d/a/b)*exp(-f/a)))``.
     """
+    global lambertReal
+    lambertReal = None
     eq = _mexpand(expand_log(eq))
     mainlog = _mostfunc(eq, log, x)
     if not mainlog:
@@ -152,7 +167,23 @@ def _lambert(eq, x, domain=S.Complexes):
 
     # invert the generator X1 so we have x(u)
     u = Dummy('rhs')
+
+    if domain.is_subset(S.Reals):
+        dom = 1
+        consistent_dom = consistent_domain(dom)
+    else:
+        dom = 0
+        consistent_dom = consistent_domain(dom)
+
     xusolns = solve(X1 - u, x)
+
+    try:
+        if consistent_dom:
+            domain = S.Reals
+        else:
+            domain = S.Complexes
+    except UnboundLocalError:
+        pass
 
     # There are infinitely many branches for LambertW
     # but only branches for k = -1 and 0 might be real. The k = 0
@@ -177,12 +208,12 @@ def _lambert(eq, x, domain=S.Complexes):
     p, den = den.as_coeff_Mul()
     e = exp(num/den)
     t = Dummy('t')
+    real = None
 
     if p == 1:
         t = e
         args = [d/(a*b)*t]
-    elif domain.is_subset(S.Reals):
-        # print(l090)
+    elif domain.is_real:
         ind_ls = [d/(a*b)*t for t in roots(t**p - e, t).keys()]
         args = []
         j = -1
@@ -191,6 +222,7 @@ def _lambert(eq, x, domain=S.Complexes):
             if not isinstance(i,int):
                 if not i.has(I):
                     args.append(ind_ls[j])
+                    real = True
             elif isinstance(i,int):
                 args.append(ind_ls[j])
     else:
@@ -198,16 +230,89 @@ def _lambert(eq, x, domain=S.Complexes):
     if len(args) == 0:
         return S.EmptySet
     # calculating solutions from args
-    for arg in args:
-        for k in lambert_real_branches:
-            w = LambertW(arg, k)
-            if k and not w.is_real:
-                continue
-            rhs = -c/b + (a/d)*w
 
-            for xu in xusolns:
-                sol.append(xu.subs(u, rhs))
-    return sol
+    for arg in args:
+        if not len(list(eq.atoms(Symbol,Dummy))) >1:
+            if not domain.is_subset(S.Reals) and (re(arg) < -1/E or arg.has(I)) and (not LambertW(arg).is_real) and (not real):
+                integer = Symbol('integer',integer=True)
+                rhs = -c/b + (a/d)*LambertW(arg,integer)
+                for xu in xusolns:
+                    sol.append(xu.subs(u, rhs))
+            else:
+                if -1/E <= re(arg) < 0 and LambertW(arg).is_real:
+                    for k in lambert_real_branches:
+                        w = LambertW(arg, k)
+                        rhs = -c/b + (a/d)*w
+                        if w.is_real:
+                            lambertReal = True
+                        for xu in xusolns:
+                            sol.append(xu.subs(u, rhs))
+                elif re(arg) >= 0 and LambertW(arg).is_real:
+                    w = LambertW(arg)
+                    rhs = -c/b + (a/d)*w
+                    if w.is_real:
+                        lambertReal = True
+                    for xu in xusolns:
+                        sol.append(xu.subs(u, rhs))
+                elif re(arg) < -1/E:
+                    return S.EmptySet
+
+        elif (arg.has(Symbol)) and not arg.has(Dummy):
+            if (list(arg.atoms(Symbol))[0]).is_negative and (list(arg.atoms(Symbol))[0]).is_real and domain.is_subset(S.Reals):
+                for k in lambert_real_branches:
+                    w = LambertW(arg, k)
+                    rhs = -c/b + (a/d)*w
+                    if rhs.has(I) or w.has(I):
+                        continue
+                    for xu in xusolns:
+                        sol.append(xu.subs(u, rhs))
+
+            if (list(arg.atoms(Symbol))[0]).is_positive and (list(arg.atoms(Symbol))[0]).is_real and domain.is_subset(S.Reals):
+                w = LambertW(arg)
+                rhs = -c/b + (a/d)*w
+                if rhs.has(I) or w.has(I):
+                    continue
+
+                for xu in xusolns:
+                    sol.append(xu.subs(u, rhs))
+
+            if (list(arg.atoms(Symbol))[0]).is_negative and (list(arg.atoms(Symbol))[0]).is_real and not domain.is_subset(S.Reals):
+                integer = Symbol('integer',integer=True)
+                rhs = -c/b + (a/d)*LambertW(arg,integer)
+
+                for xu in xusolns:
+                    sol.append(xu.subs(u, rhs))
+
+            elif domain.is_subset(S.Reals):
+                for k in lambert_real_branches:
+                    w = LambertW(arg, k)
+                    rhs = -c/b + (a/d)*w
+                    if rhs.has(I) or w.has(I):
+                        continue
+                    for xu in xusolns:
+                        sol.append(xu.subs(u, rhs))
+
+            elif domain.is_subset(S.Complexes):
+                integer = Symbol('integer',integer=True)
+                rhs = -c/b + (a/d)*LambertW(arg,integer)
+                for xu in xusolns:
+                    sol.append(xu.subs(u, rhs))
+
+        else:
+            if not domain.is_subset(S.Reals) and (not LambertW(arg).is_real) and (not real):
+                integer = Symbol('integer',integer=True)
+                rhs = Lambda(integer, -c/b + (a/d)*LambertW(arg,integer))
+                for xu in xusolns:
+                    sol.append(xu.subs(u, rhs))
+            else:
+                w = LambertW(arg)
+                rhs = -c/b + (a/d)*w
+                if w.is_real:
+                    lambertReal = True
+                for xu in xusolns:
+                    sol.append(xu.subs(u, rhs))
+
+    return list(set(sol))
 
 
 def _lambert_real(eq, x):
@@ -370,6 +475,8 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
             if lhs.is_Mul and rhs != 0:
                 if domain.is_subset(S.Reals):
                     soln = _lambert_real(log(lhs) - log(rhs), symbol)
+                    if soln is S.EmptySet:
+                        return S.EmptySet
                 else:
                     soln = _lambert(log(lhs) - log(rhs), symbol)
             elif lhs.is_Add:
@@ -389,6 +496,9 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
                     #it's ready to go
                     if domain.is_subset(S.Reals):
                         soln = _lambert_real(lhs - rhs, symbol)
+                        if soln is S.EmptySet:
+                            return S.EmptySet
+
                     else:
                         soln = _lambert(lhs - rhs, symbol)
                     if soln == S.EmptySet :
@@ -411,6 +521,8 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
             if lhs.is_Mul and rhs != 0:
                 if domain.is_subset(S.Reals):
                     soln = _lambert_real(expand_log(log(lhs) - log(rhs)), symbol)
+                    if soln is S.EmptySet:
+                        return S.EmptySet
                 else:
                     soln = _lambert(expand_log(log(lhs) - log(rhs)), symbol)
             elif lhs.is_Add:
@@ -425,6 +537,8 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
                 diff = log(mainterm) - log(rhs)
                 if domain.is_subset(S.Reals):
                     soln = _lambert_real(expand_log(diff), symbol)
+                    if soln is S.EmptySet:
+                        return S.EmptySet
                 else:
                     soln = _lambert(expand_log(diff), symbol)
 
@@ -443,6 +557,8 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
                 # b*B = 0
                 if domain.is_subset(S.Reals):
                     soln = _lambert_real(expand_log(log(lhs) - log(rhs)), symbol)
+                    if soln is S.EmptySet:
+                        return S.EmptySet
                 else:
                     soln = _lambert(expand_log(log(lhs) - log(rhs)), symbol)
             elif lhs.is_Add:
@@ -453,6 +569,8 @@ def _solve_lambert(f, symbol, gens, domain=S.Complexes):
                 diff = log(mainterm) - log(rhs)
                 if domain.is_subset(S.Reals):
                     soln = _lambert_real(expand_log(diff), symbol)
+                    if soln is S.EmptySet:
+                        return S.EmptySet
                 else:
                     soln = _lambert(expand_log(diff), symbol)
 

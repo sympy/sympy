@@ -900,7 +900,8 @@ def test_1st_homogeneous_coeff_ode_check2():
 def test_1st_homogeneous_coeff_ode_check3():
     eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x), x)
     # This solution is correct:
-    sol3 = Eq(f(x), -exp(C1)*LambertW(-x*exp(1 - C1)))
+    sol3 = Eq(f(x), -exp(C1)*LambertW(-x*exp(1 - C1), C2))
+    # here C2 is in the form of LambertW(a,n) where n belongs to integers
     assert dsolve(eq3) == sol3
     # FIXME: Checked in test_1st_homogeneous_coeff_ode_check3_check below
 
