@@ -398,10 +398,10 @@ class Integral(AddWithLimits):
             return self
 
         # fixes issue 20693
-        from sympy import Function, Symbol
+        from sympy import Symbol, Function
         if isinstance(self.args[1][0], Function):
-                t = Symbol('t')
-                return self.subs(self.args[1][0], t).doit(**hints).subs(t, self.args[1][0])
+            t = Symbol('t')
+            return self.replace(self.args[1][0], t).doit(**hints).subs(t, self.args[1][0])
 
         deep = hints.get('deep', True)
         meijerg = hints.get('meijerg', None)

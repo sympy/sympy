@@ -1715,3 +1715,8 @@ def test_issue_20693():
     assert Integral(f(x)**-3, f(x)).doit() == (-S(1)/2)*f(x)**(-2)
     assert integrate(sin(f(x)), f(x)) == -cos(f(x))
     assert Integral(sin(f(x)), f(x)).doit() == -cos(f(x))
+    assert integrate(x*f(x)**-3, f(x),f(x)) == (1/S(2))*x*(f(x)**-1)
+    assert Integral(x*f(x)**-3, f(x),f(x)).doit() == (1/S(2))*x*(f(x)**-1)
+    assert integrate(f(x)**-3, f(x),f(x)) == (1/S(2))*(f(x)**-1)
+    assert Integral(f(x)**-3, f(x),f(x)).doit() == (1/S(2))*(f(x)**-1)
+    assert Integral(f(x)**-3,f(x),x).doit() == (-1/S(2))*x*(f(x)**-2)
