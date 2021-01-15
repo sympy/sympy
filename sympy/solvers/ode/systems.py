@@ -314,10 +314,6 @@ def linodesolve_type(A, t, b=None):
 
 
 def _first_order_type5_6_subs(A, t, b=None):
-    from sympy.solvers.solveset import _is_lambert
-    from sympy.sets.conditionset import ConditionSet
-    from sympy import symbols
-    x = symbols('x')
     match = {}
 
     factor_terms = _factor_matrix(A, t)

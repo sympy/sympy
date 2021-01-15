@@ -10,7 +10,6 @@ from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly, factor
 from sympy.core.function import _mexpand
-from sympy.sets import ImageSet,EmptySet
 from sympy.simplify.simplify import separatevars
 from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import powsimp

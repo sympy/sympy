@@ -1178,7 +1178,7 @@ def _solveset(f, symbol, domain, _check=False):
                                         if (not i.has(I) and not i.has(integer)) and domain.is_subset(S.Reals):
                                             if f.has(log(x)) and i == S(0):
                                                 continue
-                                            ap = args.append(indls[j])
+                                            args.append(indls[j])
                                     if isinstance(i,int) and i.is_real and domain.is_subset(S.Reals):
                                         args.append(indls[j])
                                     if i.has(Dummy):
@@ -2426,7 +2426,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     # clears up the global variables
     f = sympify(f)
     symbol = sympify(symbol)
-    jp = 0
+    del jp
     lioo.clear()
 
     if f is S.true:

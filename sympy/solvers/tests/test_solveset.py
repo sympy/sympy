@@ -2283,7 +2283,7 @@ def test_solve_lambert():
 
     p = symbols('p', positive=True)
     eq = 3*log(p**(3*x + 5)) + p**(3*x + 5)
-    assert solveset(eq, x) == FiniteSet(-S(5)/3 - LambertW(S(1)/3)/(3*log(p)))   # lambda error
+    assert solveset(eq, x) == FiniteSet(-S(5)/3 - LambertW(S(1)/3)/(3*log(p)))
     assert solveset_real(eq, x) == Intersection(FiniteSet(Rational(-5, 3) - LambertW(Rational(1, 3))/(3*log(p))), Interval(0, oo))
 
     assert solveset_real((a/x + exp(x/2)).diff(x), x) == \

@@ -1732,7 +1732,7 @@ def test_lambert_bivariate():
     s2 = LambertW(21*(-4*sqrt(5) + 4 - sqrt(2)*sqrt(-5 + sqrt(5)) + sqrt(2)*sqrt(-5 - sqrt(5)) + sqrt(10)*sqrt(-5 + sqrt(5)) + sqrt(10)*sqrt(-5 - sqrt(5)))*exp(Rational(3,5))/80, integer)/7 + Rational(1,5)
     s3 = LambertW(21*(4 + 4*sqrt(5) - sqrt(10)*sqrt(-5 - sqrt(5)) - sqrt(2)*sqrt(-5 - sqrt(5)) - sqrt(2)*sqrt(-5 + sqrt(5)) + sqrt(10)*sqrt(-5 + sqrt(5)))*exp(Rational(3,5))/80, integer)/7 + Rational(1,5)
     s4 = LambertW(21*(-2*sqrt(5) + 2 - sqrt(10)*sqrt(-5 + sqrt(5)) - sqrt(2)*sqrt(-5 + sqrt(5)))*exp(Rational(3,5))/40, integer)/7 + Rational(1,5)
-    s5 = LambertW(21*(1 + sqrt(5) + sqrt(2)*sqrt(-5 + sqrt(5)))*exp(Rational(3, 5))/20, integer)/7 + Rational(1,5)
+    # s5 = LambertW(21*(1 + sqrt(5) + ssqrt(2)*sqrt(-5 + sqrt(5)))*exp(Rational(3, 5))/20, integer)/7 + Rational(1,5)
     ans = solve(5*x - 1 + 3*exp(2 - 7*x), x)
     # assert ans == [s5, s4, s3, s2, s1]
     assert len(ans) == 5 and ans[-1] == s1
@@ -1740,13 +1740,6 @@ def test_lambert_bivariate():
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
     # check collection
-    ax = a**(3*x + 5)
-    x0 = 1/log(a)
-    x1 = sqrt(3)*I
-    x2 = b + 3
-    x3 = x2*LambertW(1/x2)/a**5
-    x4 = x3**Rational(1, 3)/2
-
     x1 = log(3*LambertW(Rational(1, 3))/a**5)/(3*log(a))
     x2 = log((-3**(Rational(1, 3)) + 3**(Rational(5, 6))*I)*(a**(-5))**(Rational(1, 3))*LambertW(Rational(1, 3))**(Rational(1, 3))/2)/log(a)
     x3 = log((-3**(Rational(1, 3)) - 3**(Rational(5, 6))*I)*(a**(-5))**(Rational(1, 3))*LambertW(Rational(1, 3))**(Rational(1, 3))/2)/log(a)
