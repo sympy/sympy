@@ -1962,7 +1962,7 @@ def _compute_lambert_solutions(lhs, rhs, symbol,domain=S.Complexes):
         pass
 
 
-def helper_to_solve_as_lambert(soln, symbol, domain,flag=None):
+def helper_to_solve_as_lambert(soln, diff, symbol, domain,flag=None):
 
     if soln and not domain.is_subset(S.Reals):
         integer = Symbol('integer',integer=True)
@@ -2017,8 +2017,8 @@ def helper_to_solve_as_lambert(soln, symbol, domain,flag=None):
                 result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
 
             if flag:
-                if soln is EmptySet and (_is_lambert(lhs - rhs,symbol) and (domain.is_subset(S.Reals))):
-                        result = S.EmptySet
+                if soln is EmptySet and (_is_lambert(diff,symbol) and (domain.is_subset(S.Reals))):
+                    result = S.EmptySet
                 elif (not arg2.is_real and not bivariate.lambertReal) and not domain.is_subset(S.Reals):
                     result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
                 elif (arg2.is_real or bivariate.lambertReal) and not arg.has(Lambda):
@@ -2038,9 +2038,10 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
     """
     result = ConditionSet(symbol, Eq(lhs - rhs, 0), domain)
     soln = _compute_lambert_solutions(lhs, rhs, symbol, domain)
+    diff = lhs - rhs
     if soln:
-        result = helper_to_solve_as_lambert(soln, symbol, domain)
-    if soln is EmptySet and (_is_lambert(lhs - rhs,symbol) and (domain.is_subset(S.Reals))):
+        result = helper_to_solve_as_lambert(soln, diff, symbol, domain)
+    if soln is EmptySet and (_is_lambert(diff,symbol) and (domain.is_subset(S.Reals))):
         result = S.EmptySet
     elif soln is None:
      # try with positive `symbol`
@@ -2049,7 +2050,7 @@ def _solve_as_lambert(lhs, rhs, symbol, domain):
         soln = _compute_lambert_solutions(pos_lhs, rhs, u,domain)
         if soln:
             flag = True
-            result = helper_to_solve_as_lambert(soln, symbol, domain, flag)
+            result = helper_to_solve_as_lambert(soln, diff, symbol, domain, flag)
 
     return result
 
