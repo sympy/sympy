@@ -5,7 +5,7 @@ from sympy.external import import_module
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
                          Hypergeometric, Rademacher, IdealSoliton, RobustSoliton, P, E, variance,
-                         covariance, skewness, sample, density, where, FiniteRV, pspace, cdf,
+                         covariance, skewness, density, where, FiniteRV, pspace, cdf,
                          correlation, moment, cmoment, smoment, characteristic_function,
                          moment_generating_function, quantile,  kurtosis, median, coskewness)
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
@@ -146,11 +146,6 @@ def test_given():
     X = Die('X', 6)
     assert density(X, X > 5) == {S(6): S.One}
     assert where(X > 2, X > 5).as_boolean() == Eq(X.symbol, 6)
-    scipy = import_module('scipy')
-    if not scipy:
-        skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(X, X > 5)) == 6
 
 
 def test_domains():

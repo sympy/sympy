@@ -1,7 +1,7 @@
 from sympy import S, Symbol
 from sympy.external import import_module
 from sympy.stats import Geometric, Poisson, Zeta, sample, Skellam, DiscreteRV, Logarithmic, NegativeBinomial, YuleSimon
-from sympy.testing.pytest import skip, ignore_warnings, raises
+from sympy.testing.pytest import skip, ignore_warnings, raises, slow
 
 
 def test_sample_numpy():
@@ -77,3 +77,29 @@ def test_sample_pymc3():
                     assert sam in X.pspace.domain.set
             raises(NotImplementedError,
                    lambda: next(sample(Skellam('S', 1, 1), library='pymc3')))
+
+@slow
+def test_sample_discrete():
+    X = Geometric('X', S.Half)
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy not installed. Abort tests')
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert next(sample(X)) in X.pspace.domain.set
+        samps = next(sample(X, size=2)) # This takes long time if ran without scipy
+        for samp in samps:
+            assert samp in X.pspace.domain.set
+
+    libraries = ['scipy', 'numpy', 'pymc3']
+    for lib in libraries:
+        try:
+            imported_lib = import_module(lib)
+            if imported_lib:
+                s0, s1, s2 = [], [], []
+                s0 = list(sample(X, numsamples=10, library=lib, seed=0))
+                s1 = list(sample(X, numsamples=10, library=lib, seed=0))
+                s2 = list(sample(X, numsamples=10, library=lib, seed=1))
+                assert s0 == s1
+                assert s1 != s2
+        except NotImplementedError:
+            continue

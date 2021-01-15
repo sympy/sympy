@@ -4,6 +4,13 @@ from sympy.stats import Binomial, sample, Die, FiniteRV, DiscreteUniform, Bernou
     Rademacher
 from sympy.testing.pytest import skip, ignore_warnings, raises
 
+def test_given_sample():
+    X = Die('X', 6)
+    scipy = import_module('scipy')
+    if not scipy:
+        skip('Scipy is not installed. Abort tests')
+    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
+        assert next(sample(X, X > 5)) == 6
 
 def test_sample_numpy():
     distribs_numpy = [

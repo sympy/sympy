@@ -12,7 +12,6 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    FlorySchulz, Poisson, Geometric, Hermite, Logarithmic,
                                     NegativeBinomial, Skellam, YuleSimon, Zeta,
                                     DiscreteRV)
-from sympy.stats.rv import sample
 from sympy.testing.pytest import slow, nocache_fail, raises, skip, ignore_warnings
 from sympy.external import import_module
 from sympy.stats.symbolic_probability import Expectation
@@ -151,32 +150,6 @@ def test_zeta():
     assert simplify(variance(x)) == (
         zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
 
-
-@slow
-def test_sample_discrete():
-    X = Geometric('X', S.Half)
-    scipy = import_module('scipy')
-    if not scipy:
-        skip('Scipy not installed. Abort tests')
-    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(X)) in X.pspace.domain.set
-        samps = next(sample(X, size=2)) # This takes long time if ran without scipy
-        for samp in samps:
-            assert samp in X.pspace.domain.set
-
-    libraries = ['scipy', 'numpy', 'pymc3']
-    for lib in libraries:
-        try:
-            imported_lib = import_module(lib)
-            if imported_lib:
-                s0, s1, s2 = [], [], []
-                s0 = list(sample(X, numsamples=10, library=lib, seed=0))
-                s1 = list(sample(X, numsamples=10, library=lib, seed=0))
-                s2 = list(sample(X, numsamples=10, library=lib, seed=1))
-                assert s0 == s1
-                assert s1 != s2
-        except NotImplementedError:
-            continue
 
 def test_discrete_probability():
     X = Geometric('X', Rational(1, 5))

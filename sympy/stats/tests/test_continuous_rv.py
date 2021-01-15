@@ -11,7 +11,7 @@ from sympy.functions.special.hyper import meijerg
 from sympy.sets.sets import Intersection, FiniteSet
 from sympy.stats import (P, E, where, density, variance, covariance, skewness, kurtosis, median,
                          given, pspace, cdf, characteristic_function, moment_generating_function,
-                         ContinuousRV, sample, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
+                         ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral, BetaPrime,
                          Cauchy, Chi, ChiSquared, ChiNoncentral, Dagum, Erlang, ExGaussian,
                          Exponential, ExponentialPower, FDistribution, FisherZ, Frechet, Gamma,
                          GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic, LogCauchy,
@@ -319,33 +319,6 @@ def test_moment_generating_function():
     mgf = moment_generating_function(WignerSemicircle('x', 1))(t)
     assert mgf.diff(t).subs(t, 1) == -2*besseli(1, 1) + besseli(2, 1) +\
         besseli(0, 1)
-
-
-def test_sample_continuous():
-    Z = ContinuousRV(z, exp(-z), set=Interval(0, oo))
-    assert density(Z)(-1) == 0
-
-    scipy = import_module('scipy')
-    if not scipy:
-        skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(Z)) in Z.pspace.domain.set
-    sym, val = list(Z.pspace.sample().items())[0]
-    assert sym == Z and val in Interval(0, oo)
-
-    libraries = ['scipy', 'numpy', 'pymc3']
-    for lib in libraries:
-        try:
-            imported_lib = import_module(lib)
-            if imported_lib:
-                s0, s1, s2 = [], [], []
-                s0 = list(sample(Z, numsamples=10, library=lib, seed=0))
-                s1 = list(sample(Z, numsamples=10, library=lib, seed=0))
-                s2 = list(sample(Z, numsamples=10, library=lib, seed=1))
-                assert s0 == s1
-                assert s1 != s2
-        except NotImplementedError:
-            continue
 
 
 def test_ContinuousRV():
@@ -777,14 +750,6 @@ def test_gamma_inverse():
             * besselk(a, 2*sqrt(b)*sqrt(-I*x))/gamma(a)
     raises(NotImplementedError, lambda: moment_generating_function(X))
 
-def test_sampling_gamma_inverse():
-    scipy = import_module('scipy')
-    if not scipy:
-        skip('Scipy not installed. Abort tests for sampling of gamma inverse.')
-    X = GammaInverse("x", 1, 1)
-    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(X)) in X.pspace.domain.set
-
 def test_gompertz():
     b = Symbol("b", positive=True)
     eta = Symbol("eta", positive=True)
@@ -924,20 +889,6 @@ def test_lognormal():
     #assert E(X) == exp(mean+std**2/2)
     #assert variance(X) == (exp(std**2)-1) * exp(2*mean + std**2)
 
-    # Right now, only density function and sampling works
-    scipy = import_module('scipy')
-    if not scipy:
-        skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        for i in range(3):
-            X = LogNormal('x', i, 1)
-            assert next(sample(X)) in X.pspace.domain.set
-
-    size = 5
-    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        samps = next(sample(X, size=size))
-        for samp in samps:
-            assert samp in X.pspace.domain.set
     # The sympy integrator can't do this too well
     #assert E(X) ==
     raises(NotImplementedError, lambda: moment_generating_function(X))
@@ -1051,14 +1002,6 @@ def test_gaussian_inverse():
     a = symbols('a', positive=True)
     b = symbols('b', nonpositive=True)
     raises(ValueError, lambda: GaussianInverse('x', a, b))
-
-def test_sampling_gaussian_inverse():
-    scipy = import_module('scipy')
-    if not scipy:
-        skip('Scipy not installed. Abort tests for sampling of Gaussian inverse.')
-    X = GaussianInverse("x", 1, 1)
-    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(X, library='scipy')) in X.pspace.domain.set
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True)
@@ -1342,30 +1285,6 @@ def test_wignersemicircle():
     assert characteristic_function(X)(x) == \
            Piecewise((2*besselj(1, R*x)/(R*x), Ne(x, 0)), (1, True))
 
-
-def test_prefab_sampling():
-    scipy = import_module('scipy')
-    if not scipy:
-        skip('Scipy is not installed. Abort tests')
-    N = Normal('X', 0, 1)
-    L = LogNormal('L', 0, 1)
-    E = Exponential('Ex', 1)
-    P = Pareto('P', 1, 3)
-    W = Weibull('W', 1, 1)
-    U = Uniform('U', 0, 1)
-    B = Beta('B', 2, 5)
-    G = Gamma('G', 1, 3)
-
-    variables = [N, L, E, P, W, U, B, G]
-    niter = 10
-    size = 5
-    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        for var in variables:
-            for _ in range(niter):
-                assert next(sample(var)) in var.pspace.domain.set
-                samps = next(sample(var, size=size))
-                for samp in samps:
-                    assert samp in var.pspace.domain.set
 
 def test_input_value_assertions():
     a, b = symbols('a b')
