@@ -5,7 +5,6 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    besseli, floor, expand_func, Rational, I, re, Lambda, asin,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
                    factorial, binomial, erfi, besselj, besselk)
-from sympy.external import import_module
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
 from sympy.sets.sets import Intersection, FiniteSet
@@ -26,7 +25,7 @@ from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, Multivar
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
 from sympy.stats.compound_rv import CompoundPSpace
 from sympy.stats.symbolic_probability import Probability
-from sympy.testing.pytest import raises, XFAIL, slow, skip, ignore_warnings
+from sympy.testing.pytest import raises, XFAIL, slow, ignore_warnings
 from sympy.testing.randtest import verify_numerically as tn
 
 oo = S.Infinity

@@ -12,8 +12,7 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    FlorySchulz, Poisson, Geometric, Hermite, Logarithmic,
                                     NegativeBinomial, Skellam, YuleSimon, Zeta,
                                     DiscreteRV)
-from sympy.testing.pytest import slow, nocache_fail, raises, skip, ignore_warnings
-from sympy.external import import_module
+from sympy.testing.pytest import slow, nocache_fail, raises, ignore_warnings
 from sympy.stats.symbolic_probability import Expectation
 
 x = Symbol('x')
