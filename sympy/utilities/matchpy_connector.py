@@ -169,6 +169,7 @@ def _get_srepr(expr):
     return s
 
 
+@doctest_depends_on(modules=('matchpy',))
 class Replacer:
     """
     Replacer object to perform multiple pattern matching and subexpression
