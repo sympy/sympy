@@ -215,6 +215,11 @@ def test_solve_polynomial1():
 def test_solve_polynomial2():
     assert solve(4, x) == []
 
+def test_issue_17452():
+    integer = Symbol('integer',integer=True)
+    assert solve((7**x)**x + pi, x) == [-sqrt(log(pi) + I*pi)/sqrt(log(7)),
+                                        sqrt(log(pi) + I*pi)/sqrt(log(7))]
+    assert solve(x**(x/11) + pi/11, x) == [exp(LambertW(-11*log(11) + 11*log(pi) + 11*I*pi, integer))]
 
 def test_solve_polynomial_cv_1a():
     """
@@ -2218,13 +2223,6 @@ def test_issue_12024():
     x, y = symbols('x y')
     assert solve(Piecewise((0.0, x < 0.1), (x, x >= 0.1)) - y) == \
         [{y: Piecewise((0.0, x < 0.1), (x, True))}]
-
-
-def test_issue_17452():
-    integer = Symbol('integer',integer=True)
-    assert solve((7**x)**x + pi, x) == [-sqrt(log(pi) + I*pi)/sqrt(log(7)),
-                                        sqrt(log(pi) + I*pi)/sqrt(log(7))]
-    assert solve(x**(x/11) + pi/11, x) == [exp(LambertW(-11*log(11) + 11*log(pi) + 11*I*pi, integer))]
 
 
 def test_issue_17799():

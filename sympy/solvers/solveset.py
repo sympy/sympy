@@ -1133,7 +1133,7 @@ def _solveset(f, symbol, domain, _check=False):
                     if (result.has(exp)) or (f.has(sqrt(x))) or\
                         f.has(Abs):
                         return result
-                    elif not domain.is_subset(S.Integers) and \
+                    elif not domain.is_subset(S.Integers) and domain.is_subset(S.Reals) and \
                         ((result.has(cos) and not result.has(sin)) or \
                             (result.has(sin) and not result.has(cos))) :
                         f = _solve(f, x)
