@@ -46,37 +46,6 @@ jobs:
             - gfortran
             - python-scipy
 
-    # PyPy tests are slow so put them first
-    - python: "pypy"
-      env:
-        - TEST_DOCTESTS="true" TEST_EXAMPLES="true"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy3
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="1/2"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy3
-    - python: "pypy"
-      env:
-        - TEST_SYMPY="true"
-        - SPLIT="2/2"
-      addons:
-        apt:
-          sources:
-            - pypy
-          packages:
-            - pypy3
-
     # Tensorflow 1 support
     - python: 3.6
       env:
