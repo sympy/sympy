@@ -270,7 +270,7 @@ trick for getting tab completion in the regular Python console.
     See also `What is the best way to create symbols?
     <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
-.. _symbols:
+.. _calling-functions:
 
 Functions
 ---------
