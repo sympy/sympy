@@ -994,7 +994,6 @@ def _solveset(f, symbol, domain, _check=False):
     from sympy.simplify.simplify import signsimp
     from sympy.logic.boolalg import BooleanTrue
     from sympy.functions.elementary.complexes import re
-   
 
 
     if isinstance(f, BooleanTrue):
@@ -1063,9 +1062,6 @@ def _solveset(f, symbol, domain, _check=False):
         result = _solve_modular(f, symbol, domain)
     else:
         lhs, rhs_s = inverter(f, 0, symbol)
-        print("this is lhs")
-        print(lhs)
-        # print("This is inside the functionn")
         if lhs == symbol:
             # do some very minimal simplification since
             # repeated inversion may have left the result
@@ -1074,15 +1070,11 @@ def _solveset(f, symbol, domain, _check=False):
             # rather than in the inverter since here it
             # is only done once whereas there it would
             # be repeated for each step of the inversion
-            print("this is rhs_s")
-            print(rhs_s)
             if isinstance(rhs_s, FiniteSet):
                 rhs_s = FiniteSet(*[Mul(*
                     signsimp(i).as_content_primitive())
                     for i in rhs_s])
             result = rhs_s
-            print("this is just below the result=rhs_s liine.")
-            print(result)
 
         elif isinstance(rhs_s, FiniteSet):
             for equation in [lhs - rhs for rhs in rhs_s]:
@@ -1192,7 +1184,7 @@ def _solveset(f, symbol, domain, _check=False):
                 result = result[_] + result[_+1]
             if len(result) == 1:
                 return result[0]
-                 
+
     return result
 
 
@@ -2289,7 +2281,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
             return domain
         elif b is S.false:
             return S.EmptySet
-        else:   
+        else:
             raise NotImplementedError(filldedent('''
                 relationship between value and 0 is unknown: %s''' % b))
 
