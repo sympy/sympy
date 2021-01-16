@@ -291,6 +291,10 @@ with a different argument: ``Function('f')`` is callable, but
 
     >>> f1 = Function('f1')
     >>> f2 = Function('f2')('x')
+    >>> f1
+    f1
+    >>> f2
+    f2(x)
     >>> f1(1)
     f1(1)
     >>> f2(1)
