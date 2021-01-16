@@ -142,8 +142,9 @@ class Sieve:
         while len(self._list) < i:
             self.extend(int(self._list[-1] * 1.5))
 
-    def primerange(self, a, b = None):
-        """Generate all prime numbers in the range [a, b).
+    def primerange(self, a, b=None):
+        """Generate all prime numbers in the range [a, b) when both a and b are
+           provided and generates all prime numbers till a when only a is provided.
 
         Examples
         ========
@@ -151,12 +152,15 @@ class Sieve:
         >>> from sympy import sieve
         >>> print([i for i in sieve.primerange(7, 18)])
         [7, 11, 13, 17]
+
+        >>> print([i for i in sieve.primerange(18)])
+        [2, 3, 5, 7, 11, 13, 17]
         """
         from sympy.functions.elementary.integers import ceiling
 
         # wrapping ceiling in as_int will raise an error if there was a problem
         # determining whether the expression was exactly an integer or not
-        if b == None:
+        if b is None:
             b = as_int(ceiling(a))
             a = 2
         else:
