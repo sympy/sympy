@@ -123,7 +123,7 @@ Adding two different strings using sympify
     >>> str_expr2 = "x**3"
     >>> expr = sympify(str_expr1) + sympify(str_expr2)
     >>> expr
-    x**2+x**3
+    x**2 + x**3
     
 .. warning:: ``sympify`` uses ``eval``.  Don't use it on unsanitized input.
 
