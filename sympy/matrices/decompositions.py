@@ -577,8 +577,8 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
     """Returns (L, U, perm) where L is a lower triangular matrix with unit
     diagonal, U is an upper triangular matrix, and perm is a list of row
     swap index pairs. If A is the original matrix, then
-    A = (L*U).permuteBkwd(perm), and the row permutation matrix P such
-    that P*A = L*U can be computed by P=eye(A.row).permuteFwd(perm).
+    ``A = (L*U).permuteBkwd(perm)``, and the row permutation matrix P such
+    that $P A = L U$ can be computed by ``P = eye(A.rows).permuteFwd(perm)``.
 
     See documentation for LUCombined for details about the keyword argument
     rankcheck, iszerofunc, and simpfunc.
