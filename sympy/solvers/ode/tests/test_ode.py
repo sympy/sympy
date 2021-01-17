@@ -860,9 +860,9 @@ def test_1st_homogeneous_coeff_ode():
 
     sol1 = Eq(log(x), C1 - log(f(x)*sin(f(x)/x)/x))
     sol2 = Eq(log(x), log(C1) + log(cos(f(x)/x) - 1)/2 - log(cos(f(x)/x) + 1)/2)
-    sol3 = Eq(f(x), -exp(C1)*LambertW(-x*exp(-C1 + 1)))
+    sol3 = Eq(f(x), -exp(C1)*LambertW(-x*exp(-C1 + 1), C2))
     sol4 = Eq(log(f(x)), C1 - 2*exp(x/f(x)))
-    sol5 = Eq(f(x), exp(2*C1 + LambertW(-2*x**4*exp(-4*C1))/2)/x)
+    sol5 = Eq(log(x), C1 - x**2/(2*f(x)**2) - log(sqrt(f(x)/x)))
     sol6 = Eq(log(x), C1 + exp(-f(x)/x)*sin(f(x)/x)/2 + exp(-f(x)/x)*cos(f(x)/x)/2)
     sol7 = Eq(log(f(x)), C1 - 2*sqrt(-x/f(x) + 1))
     sol8 = Eq(log(x), C1 - log(sqrt(1 + f(x)**2/x**2)) + atan(f(x)/x))

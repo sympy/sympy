@@ -1692,7 +1692,7 @@ def test_lambert_multivariate():
           [LambertW(3*exp(1 - sqrt(3)))/3, LambertW(3*exp(1 + sqrt(3)))/3]
     eq = (x*exp(x) - 3).subs(x, x*exp(x))
     assert solveset(eq,x,S.Reals) == FiniteSet(LambertW(3*exp(-LambertW(3))))
-    assert solve(eq) == [LambertW(3*exp(-LambertW(3)))]
+    assert solve(eq,domain=S.Reals) == [LambertW(3*exp(-LambertW(3)))]
     # coverage test
     raises(NotImplementedError, lambda: solve(x - sin(x)*log(y - x), x))
     ans = [3, -3*LambertW(-log(3)/3)/log(3)]  # 3 and 2.478...

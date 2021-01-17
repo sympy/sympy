@@ -120,16 +120,6 @@ def _linab(arg, symbol):
         x = -x
     return a, b, x
 
-jp = 0
-lioo = []
-def consistent_domain(dom):
-    # to maintain the consistency
-    global jp
-    global lioo
-    jp = -1
-    lioo.insert(jp,dom)
-    jp -= 1
-    return lioo[-1]
 
 def _lambert(eq, x, domain=S.Complexes):
     """
@@ -138,8 +128,6 @@ def _lambert(eq, x, domain=S.Complexes):
     where X = g(x) and x = g^-1(X), return the Lambert solution,
         ``x = g^-1(-c/b + (a/d)*W(d/(a*b)*exp(c*d/a/b)*exp(-f/a)))``.
     """
-    global lambertReal
-    lambertReal = None
     eq = _mexpand(expand_log(eq))
     mainlog = _mostfunc(eq, log, x)
     if not mainlog:
@@ -167,19 +155,7 @@ def _lambert(eq, x, domain=S.Complexes):
     # invert the generator X1 so we have x(u)
     u = Dummy('rhs')
 
-    if domain.is_subset(S.Reals):
-        dom = 1
-        consistent_dom = consistent_domain(dom)
-    else:
-        dom = 0
-        consistent_dom = consistent_domain(dom)
-
-    xusolns = solve(X1 - u, x)
-
-    if consistent_dom:
-        domain = S.Reals
-    else:
-        domain = S.Complexes
+    xusolns = solve(X1 - u, x, domain=domain)
 
     # There are infinitely many branches for LambertW
     # but only branches for k = -1 and 0 might be real. The k = 0
@@ -239,15 +215,11 @@ def _lambert(eq, x, domain=S.Complexes):
                     for k in lambert_real_branches:
                         w = LambertW(arg, k)
                         rhs = -c/b + (a/d)*w
-                        if w.is_real:
-                            lambertReal = True
                         for xu in xusolns:
                             sol.append(xu.subs(u, rhs))
                 elif re(arg) >= 0 and LambertW(arg).is_real:
                     w = LambertW(arg)
                     rhs = -c/b + (a/d)*w
-                    if w.is_real:
-                        lambertReal = True
                     for xu in xusolns:
                         sol.append(xu.subs(u, rhs))
                 elif re(arg) < -1/E:
@@ -303,8 +275,6 @@ def _lambert(eq, x, domain=S.Complexes):
             else:
                 w = LambertW(arg)
                 rhs = -c/b + (a/d)*w
-                if w.is_real:
-                    lambertReal = True
                 for xu in xusolns:
                     sol.append(xu.subs(u, rhs))
 

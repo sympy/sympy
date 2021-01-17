@@ -1519,11 +1519,17 @@ def test_nonlinsolve_using_substitution():
     soln = (-s_x, y)
     assert nonlinsolve(system, [x, y]) == FiniteSet(soln)
 
-    system = [z**2*x**2 - z**2*y**2/exp(x)]
-    syms = [y, x, z]
-    soln = FiniteSet((y, x, 0), (x*sqrt(exp(x)), x, z), (-x*sqrt(exp(x)), x, z), (sqrt(x**2*exp(x)), x, z), (-sqrt(x**2*exp(x)), x, z))
-    assert nonlinsolve(system,syms) == soln
 
+# def test_nonlinsolve_using_substitution1():
+    # n = Dummy('n')
+    # system = [z**2*x**2 - z**2*y**2/exp(x)]
+    # syms = [y, x, z]
+    # lam1 = Lambda(n, 2*LambertW(-y/2, n)
+    # soln1 = (ImageSet(lam1, S.Integers), y, z)
+    # lam2 = Lambda(n, 2*LambertW(y/2, n))
+    # soln2 = (ImageSet(lam2, S.Integers), y, z)
+
+    # assert dumeq(nonlinsolve(system,syms) , { (x, y, 0), soln1, soln2})
 
 def test_nonlinsolve_complex():
     n = Dummy('n')

@@ -376,7 +376,7 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
-def solve(f, *symbols, **flags):
+def solve(f, *symbols, domain=S.Complexes, **flags):
     r"""
     Algebraically solves equations and systems of equations.
 
@@ -549,7 +549,7 @@ def solve(f, *symbols, **flags):
             >>> solve(x**2 - y**2, x, y, dict=True)
             [{x: -y}, {x: y}]
             >>> solve(x**2 - y**2/exp(x), x, y, dict=True)
-            [{x: 2*LambertW(-y/2, integer)}, {x: 2*LambertW(y/2, integer)}]
+            [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}]
             >>> solve(x**2 - y**2/exp(x), y, x)
             [(-x*sqrt(exp(x)), x), (x*sqrt(exp(x)), x)]
 
@@ -1092,9 +1092,9 @@ def solve(f, *symbols, **flags):
     # try to get a solution
     ###########################################################################
     if bare_f:
-        solution = _solve(f[0], *symbols, **flags)
+        solution = _solve(f[0], *symbols, domain=domain, **flags)
     else:
-        solution = _solve_system(f, symbols, **flags)
+        solution = _solve_system(f, symbols,domain=domain, **flags)
 
     #
     # postprocessing
@@ -1278,7 +1278,7 @@ def solve(f, *symbols, **flags):
     return k, {tuple([s[ki] for ki in k]) for s in solution}
 
 
-def _solve(f, *symbols, **flags):
+def _solve(f, *symbols, domain=S.Complexes, **flags):
     """
     Return a checked solution for *f* in terms of one or more of the
     symbols. A list should be returned except for the case when a linear
@@ -1350,7 +1350,7 @@ def _solve(f, *symbols, **flags):
             return result
         for s in failed:
             try:
-                soln = _solve(f, s, **flags)
+                soln = _solve(f, s, domain=domain,**flags)
                 for sol in soln:
                     if got_s and any([ss in sol.free_symbols for ss in got_s]):
                         # sol depends on previously solved symbols: discard it
@@ -1380,7 +1380,7 @@ def _solve(f, *symbols, **flags):
             if m in {S.NegativeInfinity, S.ComplexInfinity, S.Infinity}:
                 result = set()
                 break
-            soln = _solve(m, symbol, **flags)
+            soln = _solve(m, symbol, domain=domain, **flags)
             result.update(set(soln))
         result = list(result)
         if check:
@@ -1402,7 +1402,7 @@ def _solve(f, *symbols, **flags):
             if expr.is_zero:
                 raise NotImplementedError(
                     'solve cannot represent interval solutions')
-            candidates = _solve(expr, symbol, **flags)
+            candidates = _solve(expr, symbol, domain=domain,**flags)
             # the explicit condition for this expr is the current cond
             # and none of the previous conditions
             args = [~c for _, c in f.args[:i]] + [cond]
@@ -1483,7 +1483,7 @@ def _solve(f, *symbols, **flags):
         except GeneratorsNeeded:
             simplified_f = simplify(f_num)
             if simplified_f != f_num:
-                return _solve(simplified_f, symbol, **flags)
+                return _solve(simplified_f, symbol,domain=domain, **flags)
             raise ValueError('expression appears to be a constant')
 
         gens = [g for g in poly.gens if g.has(symbol)]
@@ -1547,7 +1547,7 @@ def _solve(f, *symbols, **flags):
                         # don't check the rewritten form --check
                         # solutions in the un-rewritten form below
                         flags['check'] = False
-                        result = _solve(newf, symbol, **flags)
+                        result = _solve(newf, symbol, domain=domain, **flags)
                         flags['check'] = check
 
                 # just a simple case - see if replacement of single function
@@ -1564,8 +1564,8 @@ def _solve(f, *symbols, **flags):
 
                     # if no Functions left, we can proceed with usual solve
                     if not ftry.has(symbol):
-                        cv_sols = _solve(ftry, t, **flags)
-                        cv_inv = _solve(t - f1, symbol, **flags)[0]
+                        cv_sols = _solve(ftry, t, domain=domain, **flags)
+                        cv_inv = _solve(t - f1, symbol, domain=domain,**flags)[0]
                         sols = list()
                         for sol in cv_sols:
                             sols.append(cv_inv.subs(t, sol))
@@ -1578,7 +1578,7 @@ def _solve(f, *symbols, **flags):
                 # e.g. case where gens are exp(x), exp(-x)
                 u = bases.pop()
                 t = Dummy('t')
-                inv = _solve(u - t, symbol, **flags)
+                inv = _solve(u - t, symbol,domain=domain, **flags)
                 if isinstance(u, (Pow, exp)):
                     # this will be resolved by factor in _tsolve but we might
                     # as well try a simple expansion here to get things in
@@ -1598,7 +1598,7 @@ def _solve(f, *symbols, **flags):
                         lambda w: w.is_Pow or isinstance(w, exp),
                         _expand).subs(u, t)
                     if not ftry.has(symbol):
-                        soln = _solve(ftry, t, **flags)
+                        soln = _solve(ftry, t, domain=domain, **flags)
                         sols = list()
                         for sol in soln:
                             for i in inv:
@@ -1652,7 +1652,7 @@ def _solve(f, *symbols, **flags):
                     if u != symbol:
                         try:
                             t = Dummy('t')
-                            iv = _solve(u - t, symbol, **flags)
+                            iv = _solve(u - t, symbol, domain=domain, **flags)
                             soln = list(ordered({i.subs(t, s) for i in iv for s in soln}))
                         except NotImplementedError:
                             # perhaps _tsolve can handle f_num
@@ -1684,12 +1684,12 @@ def _solve(f, *symbols, **flags):
                 eq, cov = u
                 if cov:
                     isym, ieq = cov
-                    inv = _solve(ieq, symbol, **flags)[0]
-                    rv = {inv.subs(isym, xi) for xi in _solve(eq, isym, **flags)}
+                    inv = _solve(ieq, symbol,domain=domain, **flags)[0]
+                    rv = {inv.subs(isym, xi) for xi in _solve(eq, isym, domain=domain, **flags)}
                 else:
                     try:
-                        rv = set(_solve(eq, symbol, **flags))
-                    except NotImplementedError:
+                        rv = set(_solve(eq, symbol,domain=domain, **flags))
+                    except (NotImplementedError):
                         rv = None
                 if rv is not None:
                     result = list(ordered(rv))
@@ -1703,7 +1703,7 @@ def _solve(f, *symbols, **flags):
     if result is False:
         flags.pop('tsolve', None)  # allow tsolve to be used on next pass
         try:
-            soln = _tsolve(f_num, symbol, **flags)
+            soln = _tsolve(f_num, symbol, domain=domain, **flags)
             if soln is not None:
                 result = soln
         except PolynomialError:
@@ -1733,7 +1733,7 @@ def _solve(f, *symbols, **flags):
     return result
 
 
-def _solve_system(exprs, symbols, **flags):
+def _solve_system(exprs, symbols, domain=S.Complexes, **flags):
     if not exprs:
         return []
 
@@ -1933,7 +1933,7 @@ def _solve_system(exprs, symbols, **flags):
                     break  # skip as it's independent of desired symbols
                 for s in ok_syms:
                     try:
-                        soln = _solve(eq2, s, **flags)
+                        soln = _solve(eq2, s,domain=domain, **flags)
                     except NotImplementedError:
                         continue
                     # put each solution in r and append the now-expanded
@@ -2507,7 +2507,7 @@ multi_inverses = {
 }
 
 
-def _tsolve(eq, sym, **flags):
+def _tsolve(eq, sym, domain=S.Complexes, **flags):
     """
     Helper for ``_solve`` that solves a transcendental equation with respect
     to the given symbol. Various equations containing powers and logarithms,
@@ -2552,21 +2552,21 @@ def _tsolve(eq, sym, **flags):
             # to try get powers in standard form for better factoring
             f = factor(powdenest(lhs - rhs))
             if f.is_Mul:
-                return _solve(f, sym, **flags)
+                return _solve(f, sym, domain=domain, **flags)
             if rhs:
                 f = logcombine(lhs, force=flags.get('force', True))
                 if f.count(log) != lhs.count(log):
                     if isinstance(f, log):
-                        return _solve(f.args[0] - exp(rhs), sym, **flags)
-                    return _tsolve(f - rhs, sym, **flags)
+                        return _solve(f.args[0] - exp(rhs), sym,domain=domain, **flags)
+                    return _tsolve(f - rhs, sym, domain=domain, **flags)
 
         elif lhs.is_Pow:
             if lhs.exp.is_Integer:
                 if lhs - rhs != eq:
-                    return _solve(lhs - rhs, sym, **flags)
+                    return _solve(lhs - rhs, sym, domain=domain, **flags)
 
             if sym not in lhs.exp.free_symbols:
-                return _solve(lhs.base - rhs**(1/lhs.exp), sym, **flags)
+                return _solve(lhs.base - rhs**(1/lhs.exp), sym, domain=domain, **flags)
 
             # _tsolve calls this with Dummy before passing the actual number in.
             if any(t.is_Dummy for t in rhs.free_symbols):
@@ -2576,22 +2576,22 @@ def _tsolve(eq, sym, **flags):
             if not rhs:
                 # f(x)**g(x) only has solutions where f(x) == 0 and g(x) != 0 at
                 # the same place
-                sol_base = _solve(lhs.base, sym, **flags)
+                sol_base = _solve(lhs.base, sym,domain=domain, **flags)
                 return [s for s in sol_base if lhs.exp.subs(sym, s) != 0]
 
             # a ** g(x) == b
             if not lhs.base.has(sym):
                 if lhs.base == 0:
-                    return _solve(lhs.exp, sym, **flags) if rhs != 0 else []
+                    return _solve(lhs.exp, sym, domain=domain, **flags) if rhs != 0 else []
 
                 # Gets most solutions...
                 if lhs.base == rhs.as_base_exp()[0]:
                     # handles case when bases are equal
-                    sol = _solve(lhs.exp - rhs.as_base_exp()[1], sym, **flags)
+                    sol = _solve(lhs.exp - rhs.as_base_exp()[1], sym, domain=domain, **flags)
                 else:
                     # handles cases when bases are not equal and exp
                     # may or may not be equal
-                    sol = _solve(exp(log(lhs.base)*lhs.exp)-exp(log(rhs)), sym, **flags)
+                    sol = _solve(exp(log(lhs.base)*lhs.exp)-exp(log(rhs)), sym, domain=domain, **flags)
 
                 # Check for duplicate solutions
                 def equal(expr1, expr2):
@@ -2611,7 +2611,7 @@ def _tsolve(eq, sym, **flags):
                 n, d = fraction(e_rat)
                 if expand(lhs.base**n - rhs**d) == 0:
                     sol = [s for s in sol if not equal(lhs.exp.subs(sym, s), e_rat)]
-                    sol.extend(_solve(lhs.exp - e_rat, sym, **flags))
+                    sol.extend(_solve(lhs.exp - e_rat, sym, domain=domain, **flags))
 
                 return list(ordered(set(sol)))
 
@@ -2621,7 +2621,7 @@ def _tsolve(eq, sym, **flags):
                 logform = lhs.exp*log(lhs.base) - log(rhs)
                 if logform != lhs - rhs:
                     try:
-                        sol.extend(_solve(logform, sym, **flags))
+                        sol.extend(_solve(logform, sym, domain=domain, **flags))
                     except NotImplementedError:
                         pass
 
@@ -2629,9 +2629,9 @@ def _tsolve(eq, sym, **flags):
                 check = []
                 if rhs == 1:
                     # f(x) ** g(x) = 1 -- g(x)=0 or f(x)=+-1
-                    check.extend(_solve(lhs.exp, sym, **flags))
-                    check.extend(_solve(lhs.base - 1, sym, **flags))
-                    check.extend(_solve(lhs.base + 1, sym, **flags))
+                    check.extend(_solve(lhs.exp, sym, domain=domain, **flags))
+                    check.extend(_solve(lhs.base - 1, sym, domain=domain, **flags))
+                    check.extend(_solve(lhs.base + 1, sym, domain=domain, **flags))
                 elif rhs.is_Rational:
                     for d in (i for i in divisors(abs(rhs.p)) if i != 1):
                         e, t = integer_log(rhs.p, d)
@@ -2640,17 +2640,17 @@ def _tsolve(eq, sym, **flags):
                         for s in divisors(abs(rhs.q)):
                             if s**e== rhs.q:
                                 r = Rational(d, s)
-                                check.extend(_solve(lhs.base - r, sym, **flags))
-                                check.extend(_solve(lhs.base + r, sym, **flags))
-                                check.extend(_solve(lhs.exp - e, sym, **flags))
+                                check.extend(_solve(lhs.base - r, sym, domain=domain, **flags))
+                                check.extend(_solve(lhs.base + r, sym, domain=domain, **flags))
+                                check.extend(_solve(lhs.exp - e, sym, domain=domain, **flags))
                 elif rhs.is_irrational:
                     b_l, e_l = lhs.base.as_base_exp()
                     n, d = (e_l*lhs.exp).as_numer_denom()
                     b, e = sqrtdenest(rhs).as_base_exp()
-                    check = [sqrtdenest(i) for i in (_solve(lhs.base - b, sym, **flags))]
-                    check.extend([sqrtdenest(i) for i in (_solve(lhs.exp - e, sym, **flags))])
+                    check = [sqrtdenest(i) for i in (_solve(lhs.base - b, sym, domain=domain, **flags))]
+                    check.extend([sqrtdenest(i) for i in (_solve(lhs.exp - e, sym, domain=domain, **flags))])
                     if e_l*d != 1:
-                        check.extend(_solve(b_l**n - rhs**(e_l*d), sym, **flags))
+                        check.extend(_solve(b_l**n - rhs**(e_l*d), sym, domain=domain, **flags))
                 for s in check:
                     ok = checksol(eq, sym, s)
                     if ok is None:
@@ -2664,14 +2664,14 @@ def _tsolve(eq, sym, **flags):
                 # sin(x) = 1/3 -> x - asin(1/3) & x - (pi - asin(1/3))
                 soln = []
                 for i in multi_inverses[lhs.func](rhs):
-                    soln.extend(_solve(lhs.args[0] - i, sym, **flags))
+                    soln.extend(_solve(lhs.args[0] - i, sym, domain=domain, **flags))
                 return list(ordered(soln))
             elif lhs.func == LambertW:
-                return _solve(lhs.args[0] - rhs*exp(rhs), sym, **flags)
+                return _solve(lhs.args[0] - rhs*exp(rhs), sym, domain=domain, **flags)
 
         rewrite = lhs.rewrite(exp)
         if rewrite != lhs:
-            return _solve(rewrite - rhs, sym, **flags)
+            return _solve(rewrite - rhs, sym, domain=domain,**flags)
     except NotImplementedError:
         pass
 
@@ -2698,7 +2698,7 @@ def _tsolve(eq, sym, **flags):
                 poly = lhs.as_poly()
                 g = _filtered_gens(poly, sym)
                 _eq = lhs - rhs
-                sols = _solve_lambert(_eq, sym, g)
+                sols = _solve_lambert(_eq, sym, g,domain=domain)
                 # use a simplified form if it satisfies eq
                 # and has fewer operations
                 for n, s in enumerate(sols):
@@ -2719,9 +2719,9 @@ def _tsolve(eq, sym, **flags):
                             raise NotImplementedError
                         g, p, u = gpu
                         flags['bivariate'] = False
-                        inversion = _tsolve(g - u, sym, **flags)
+                        inversion = _tsolve(g - u, sym,domain=domain, **flags)
                         if inversion:
-                            sol = _solve(p, u, **flags)
+                            sol = _solve(p, u, domain=domain, **flags)
                             return list(ordered({i.subs(u, s)
                                 for i in inversion for s in sol}))
                     except NotImplementedError:
@@ -2741,7 +2741,7 @@ def _tsolve(eq, sym, **flags):
             u = sym
         if pos.has(u):
             try:
-                soln = _solve(pos, u, **flags)
+                soln = _solve(pos, u, domain=domain, **flags)
                 return list(ordered([s.subs(reps) for s in soln]))
             except NotImplementedError:
                 pass
@@ -3146,7 +3146,7 @@ def _invert(eq, *symbols, **kwargs):
     return rhs, lhs
 
 
-def unrad(eq, *syms, **flags):
+def unrad(eq, *syms, domain=S.Complexes, **flags):
     """
     Remove radicals with symbolic arguments and return (eq, cov),
     None, or raise an error.
@@ -3220,7 +3220,7 @@ def unrad(eq, *syms, **flags):
             # XXX - uncovered
             oldp, olde = cov
             if Poly(e, p).degree(p) in (1, 2):
-                cov[:] = [p, olde.subs(oldp, _solve(e, p, **uflags)[0])]
+                cov[:] = [p, olde.subs(oldp, _solve(e, p, domain=domain, **uflags)[0])]
             else:
                 raise NotImplementedError
         else:
@@ -3385,7 +3385,7 @@ def unrad(eq, *syms, **flags):
                 x = syms
             x = list(x)[0]
             try:
-                inv = _solve(covsym**lcm - b, x, **uflags)
+                inv = _solve(covsym**lcm - b, x, domain=domain, **uflags)
                 if not inv:
                     raise NotImplementedError
                 eq = poly.as_expr().subs(b, covsym**lcm).subs(x, inv[0])
@@ -3418,7 +3418,7 @@ def unrad(eq, *syms, **flags):
                     c = covsym**lcm1 - t1
                     for x in syms:
                         try:
-                            sol = _solve(c, x, **uflags)
+                            sol = _solve(c, x, domain=domain, **uflags)
                             if not sol:
                                 raise NotImplementedError
                             neweq = r0.subs(x, sol[0]) + covsym*r1/_rads1 + \
@@ -3429,7 +3429,7 @@ def unrad(eq, *syms, **flags):
                                 if newcov:
                                     newp, newc = newcov
                                     _cov(newp, c.subs(covsym,
-                                        _solve(newc, covsym, **uflags)[0]))
+                                        _solve(newc, covsym, domain=domain, **uflags)[0]))
                                 else:
                                     _cov(covsym, c)
                             else:

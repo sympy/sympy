@@ -56,7 +56,6 @@ from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 from types import GeneratorType
 from collections import defaultdict
 from sympy import sqrt
-from sympy.solvers import bivariate
 
 
 class NonlinearError(ValueError):
@@ -1877,7 +1876,7 @@ def _solve_as_bivariate(lhs, rhs, symbol, domain):
                 result = [_solveset(g - us, symbol, domain) for us in usol]
     return result
 
-nonLin = None
+
 def _is_lambert(f, symbol):
     r"""
     Return True if the equation is of Lambert type, else False.
@@ -1885,8 +1884,6 @@ def _is_lambert(f, symbol):
     treated as Lambert types.
     """
     expanded_terms_factors = list(_term_factors(f.expand()))
-    if nonLin:
-        return False
 
     if any(isinstance(arg1, (HyperbolicFunction,TrigonometricFunction)) for arg1 in expanded_terms_factors):
         j = 0
@@ -2017,17 +2014,21 @@ def helper_to_solve_as_lambert(soln, diff, symbol, domain,flag=None):
                 result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
 
             if flag:
+                if arg.atoms(LambertW) == set():
+                    realLambert = None
+                else:
+                    realLambert = (arg.atoms(LambertW)).pop().is_real
+
                 if soln is EmptySet and (_is_lambert(diff,symbol) and (domain.is_subset(S.Reals))):
                     result = S.EmptySet
-                elif (not arg2.is_real and not bivariate.lambertReal) and not domain.is_subset(S.Reals):
+                elif (not arg2.is_real and not realLambert) and not domain.is_subset(S.Reals) :
                     result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
-                elif (arg2.is_real or bivariate.lambertReal) and not arg.has(Lambda):
+                elif (arg2.is_real or realLambert) and not arg.has(Lambda):
                     result = FiniteSet(*soln)
-                elif (arg2.is_real or bivariate.lambertReal) and arg2.has(Lambda):
+                elif (arg2.is_real or realLambert) and arg2.has(Lambda):
                     result = Union(*[ImageSet(args,S.Integers) for args in soln if args!=0 ])
 
     return result
-
 
 
 def _solve_as_lambert(lhs, rhs, symbol, domain):
@@ -2385,12 +2386,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
     Interval.open(0, oo)
 
     """
-    from sympy.solvers.bivariate import jp,lioo
-    # clears up the global variables
     f = sympify(f)
     symbol = sympify(symbol)
-    del jp
-    lioo.clear()
 
     if f is S.true:
         return domain
@@ -3538,7 +3535,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         return result, total_solvest_call, total_conditionst
     # end def _solve_using_know_values()
 
-    new_result_real, solve_call1, cnd_call1 = _solve_using_known_values(
+    new_result_real1, solve_call1, cnd_call1 = _solve_using_known_values(
         old_result, solveset_real)
     new_result_complex, solve_call2, cnd_call2 = _solve_using_known_values(
         old_result, solveset_complex)
@@ -3552,9 +3549,23 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     if total_conditionset == total_solveset_call and total_solveset_call != -1:
         return _return_conditionset(eqs_in_better_order, all_symbols)
 
-    # overall result
-    result = new_result_real + new_result_complex
+    isLambert = False
+    new_result_real = []
+    for i in new_result_real1:
+        for value in i.values():
+            if not isinstance(value,int):
+                if value.has(LambertW):
+                    isLambert = True
+                    continue
+                else:
+                    new_result_real.append(i)
 
+    if not isLambert:
+        new_result_real = new_result_real1
+
+    # overall result
+
+    result = new_result_real + new_result_complex
     result_all_variables = []
     result_infinite = []
     for res in result:
@@ -3579,7 +3590,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         # eg : [{x: -1, y : 1}, {x : -y , y: y}] then
         # return [{x : -y, y : y}]
         result_all_variables = result_infinite
-    if intersections or complements:
+    if (intersections or complements) and not isLambert:
         result_all_variables = add_intersection_complement(
             result_all_variables, intersections, complements)
 
@@ -3820,9 +3831,6 @@ def nonlinsolve(system, *symbols):
 
     """
     from sympy.polys.polytools import is_zero_dimensional
-    # for checking form nonlinear
-    global nonLin
-    nonLin = None
 
     if not system:
         return S.EmptySet
