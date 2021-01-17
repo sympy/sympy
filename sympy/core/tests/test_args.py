@@ -8,7 +8,7 @@ import os
 import re
 
 from sympy import (Basic, S, symbols, sqrt, sin, oo, Interval, exp, Lambda, pi,
-                   Eq, log, Function, Rational)
+                   Eq, log, Function, Rational, Symbol)
 
 from sympy.testing.pytest import XFAIL, SKIP
 
@@ -1918,7 +1918,9 @@ def test_sympy__functions__combinatorial__factorials__FallingFactorial():
 
 def test_sympy__functions__combinatorial__factorials__MultiFactorial():
     from sympy.functions.combinatorial.factorials import MultiFactorial
-    assert _test_args(MultiFactorial(x))
+    a = Symbol("a", integer = True, positive = True)
+    b = Symbol("b", integer = True, positive = True)
+    assert _test_args(MultiFactorial(a, b))
 
 
 def test_sympy__functions__combinatorial__factorials__RisingFactorial():
