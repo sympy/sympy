@@ -2702,3 +2702,8 @@ def test_global_settings():
     # check we really did undo it
     assert inspect.signature(latex).parameters['imaginary_unit'].default == 'i'
     assert latex(I) == 'i'
+
+def test_pickleable():
+    # this tests that the _PrintFunction instance is pickleable
+    import pickle
+    assert pickle.loads(pickle.dumps(latex)) is latex

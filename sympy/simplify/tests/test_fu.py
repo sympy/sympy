@@ -352,6 +352,9 @@ def test_TRmorrie():
     # issue 17063
     eq = cos(x)/cos(x/2)
     assert TRmorrie(eq) == eq
+    # issue #20430
+    eq = cos(x/2)*sin(x/2)*cos(x)**3
+    assert TRmorrie(eq) == sin(2*x)*cos(x)**2/4
 
 
 def test_TRpower():

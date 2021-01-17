@@ -1,7 +1,8 @@
+from functools import reduce
+
 from sympy.core.backend import (sympify, diff, sin, cos, Matrix, symbols,
                                 Function, S, Symbol)
 from sympy import integrate, trigsimp
-from sympy.core.compatibility import reduce
 from .vector import Vector, _check_vector
 from .frame import CoordinateSym, _check_frame
 from .dyadic import Dyadic

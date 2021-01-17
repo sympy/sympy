@@ -805,6 +805,15 @@ class StrPrinter(Printer):
     def _print_WildFunction(self, expr):
         return expr.name + '_'
 
+    def _print_WildDot(self, expr):
+        return expr.name + '_'
+
+    def _print_WildPlus(self, expr):
+        return expr.name + '__'
+
+    def _print_WildStar(self, expr):
+        return expr.name + '___'
+
     def _print_Zero(self, expr):
         if self._settings.get("sympy_integers", False):
             return "S(0)"

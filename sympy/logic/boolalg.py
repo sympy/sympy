@@ -14,6 +14,7 @@ from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
 from sympy.core.sympify import converter, _sympify, sympify
+from sympy.core.kind import BooleanKind
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
@@ -64,6 +65,8 @@ class Boolean(Basic):
     """A boolean object is an object for which logic operations make sense."""
 
     __slots__ = ()
+
+    kind = BooleanKind
 
     @sympify_return([('other', 'Boolean')], NotImplemented)
     def __and__(self, other):

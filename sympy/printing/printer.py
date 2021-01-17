@@ -360,6 +360,12 @@ class _PrintFunction:
         self.__print_cls = print_cls
         update_wrapper(self, f)
 
+    def __reduce__(self):
+        # Since this is used as a decorator, it replaces the original function.
+        # The default pickling will try to pickle self.__wrapped__ and fail
+        # because the wrapped function can't be retrieved by name.
+        return self.__wrapped__.__qualname__
+
     def __repr__(self) -> str:
         return repr(self.__wrapped__)  # type:ignore
 

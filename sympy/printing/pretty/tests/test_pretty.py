@@ -4708,7 +4708,7 @@ def test_pretty_prec():
 
 def test_pprint():
     import sys
-    from sympy.core.compatibility import StringIO
+    from io import StringIO
     fd = StringIO()
     sso = sys.stdout
     sys.stdout = fd

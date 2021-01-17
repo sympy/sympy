@@ -439,7 +439,7 @@ class ReferenceFrame:
 
         It is import to know what form of the direction cosine matrix is
         returned. If ``B.dcm(A)`` is called, it means the "direction cosine
-        matrix of B relative to A". This is the matrix :math:`{}^A\mathbf{R}^B`
+        matrix of B relative to A". This is the matrix :math:`^{\mathbf{A}} \mathbf{R} ^{\mathbf{B}}`
         shown in the following relationship:
 
         .. math::

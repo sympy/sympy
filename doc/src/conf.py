@@ -173,6 +173,10 @@ latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
 latex_elements = {
     'babel':     '',
     'fontenc': r'''
+% Define version of \LaTeX that is usable in math mode
+\let\OldLaTeX\LaTeX
+\renewcommand{\LaTeX}{\text{\OldLaTeX}}
+
 \usepackage{bm}
 \usepackage{amssymb}
 \usepackage{fontspec}
@@ -186,8 +190,6 @@ latex_elements = {
     'inputenc':  '',
     'utf8extra': '',
     'preamble':  r'''
-% redefine \LaTeX to be usable in math mode
-\expandafter\def\expandafter\LaTeX\expandafter{\expandafter\text\expandafter{\LaTeX}}
 '''
 }
 

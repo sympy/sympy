@@ -30,6 +30,7 @@ lowered when the tensor is put in canonical form.
 """
 
 from typing import Any, Dict as tDict, List, Set
+from functools import reduce
 
 from abc import abstractmethod, ABCMeta
 from collections import defaultdict
@@ -41,7 +42,7 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.assumptions import ManagedProperties
-from sympy.core.compatibility import reduce, SYMPY_INTS
+from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.containers import Tuple, Dict
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
@@ -1757,6 +1758,9 @@ class TensorHead(Basic):
         same way as in matrix multiplication. For matrix behavior, define two
         auto-matrix indices, for vector behavior define just one.
 
+        Indices can also be strings, in which case the attribute
+        ``index_types`` is used to convert them to proper ``TensorIndex``.
+
         Examples
         ========
 
@@ -1769,7 +1773,22 @@ class TensorHead(Basic):
         A(a, -b)
 
         """
-        tensor = Tensor(self, indices, **kw_args)
+
+        updated_indices = []
+        for idx, typ in zip(indices, self.index_types):
+            if isinstance(idx, str):
+                idx = idx.strip().replace(" ", "")
+                if idx.startswith('-'):
+                    updated_indices.append(TensorIndex(idx[1:], typ,
+                                           is_up=False))
+                else:
+                    updated_indices.append(TensorIndex(idx, typ))
+            else:
+                updated_indices.append(idx)
+
+        updated_indices += indices[len(updated_indices):]
+
+        tensor = Tensor(self, updated_indices, **kw_args)
         return tensor.doit()
 
     # Everything below this line is deprecated

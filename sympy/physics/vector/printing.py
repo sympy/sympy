@@ -198,7 +198,7 @@ def vprint(expr, **settings):
 
     outstr = vsprint(expr, **settings)
 
-    from sympy.core.compatibility import builtins
+    import builtins
     if (outstr != 'None'):
         builtins._ = outstr
         print(outstr)

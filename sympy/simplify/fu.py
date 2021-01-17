@@ -1180,7 +1180,6 @@ def TRmorrie(rv):
         for a in args:
             c = args[a]
             c.sort()
-            no = []
             while c:
                 k = 0
                 cc = ci = c[0]
@@ -1206,8 +1205,8 @@ def TRmorrie(rv):
                             c.remove(cc)
                     new.append(newarg**take)
                 else:
-                    no.append(c.pop(0))
-            c[:] = no
+                    b = cos(c.pop(0)*a)
+                    other.append(b**coss[b])
 
         if new:
             rv = Mul(*(new + other + [

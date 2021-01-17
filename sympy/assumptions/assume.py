@@ -8,7 +8,11 @@ from contextlib import contextmanager
 
 
 class AssumptionsContext(set):
-    """Set representing assumptions.
+    """
+    Set representing assumptions.
+
+    Explanation
+    ===========
 
     This is used to represent global assumptions, but you can also use this
     class to create your own local assumptions contexts. It is basically a thin
@@ -119,7 +123,8 @@ class AppliedPredicate(Boolean):
 
 
 class Predicate(Boolean):
-    """A predicate is a function that returns a boolean value.
+    """
+    A predicate is a function that returns a boolean value.
 
     Predicates merely wrap their argument and remain unevaluated:
 
@@ -208,7 +213,8 @@ class Predicate(Boolean):
 
 @contextmanager
 def assuming(*assumptions):
-    """ Context manager for assumptions
+    """
+    Context manager for assumptions.
 
     Examples
     ========

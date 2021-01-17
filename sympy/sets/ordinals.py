@@ -55,7 +55,8 @@ class Ordinal(Basic):
     """
     Represents ordinals in Cantor normal form.
 
-    Internally, this class is just a list of instances of OmegaPower
+    Internally, this class is just a list of instances of OmegaPower.
+
     Examples
     ========
     >>> from sympy.sets import Ordinal, OmegaPower

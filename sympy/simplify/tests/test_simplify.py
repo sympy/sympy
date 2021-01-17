@@ -4,7 +4,7 @@ from sympy import (
     Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
     factorial, Float, Function, gamma, GoldenRatio, hyper,
     hypersimp, I, Integral, integrate, KroneckerDelta, log, logcombine, Lt,
-    Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, posify, rad,
+    Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, Poly, posify, rad,
     Rational, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan,
     zoo)
@@ -910,3 +910,7 @@ def test_issue_19484():
     f = Function('f')
     e = x + sign(x + f(x)**3)
     assert simplify(Abs(x + f(x)**3) * e) == x*Abs(x + f(x)**3) + x + f(x)**3
+
+def test_issue_19161():
+    polynomial = Poly('x**2').simplify()
+    assert (polynomial-x**2).simplify() == 0

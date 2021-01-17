@@ -236,6 +236,275 @@ class BlockMatrix(MatrixExpr):
         """
         return self._eval_transpose()
 
+    def schur(self, mat = 'A', generalized = False):
+        """Return the Schur Complement of the 2x2 BlockMatrix
+
+        Parameters
+        ==========
+
+        mat : String, optional
+            The matrix with respect to which the
+            Schur Complement is calculated. 'A' is
+            used by default
+
+        generalized : bool, optional
+            If True, returns the generalized Schur
+            Component which uses Moore-Penrose Inverse
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, MatrixSymbol, BlockMatrix
+        >>> m, n = symbols('m n')
+        >>> A = MatrixSymbol('A', n, n)
+        >>> B = MatrixSymbol('B', n, m)
+        >>> C = MatrixSymbol('C', m, n)
+        >>> D = MatrixSymbol('D', m, m)
+        >>> X = BlockMatrix([[A, B], [C, D]])
+
+        The default Schur Complement is evaluated with "A"
+
+        >>> X.schur()
+        -C*A**(-1)*B + D
+        >>> X.schur('D')
+        A - B*D**(-1)*C
+
+        Schur complement with non-invertible matrices is not
+        defined. Instead, the generalized Schur complement can
+        be calculated which uses the Moore-Penrose Inverse. To
+        achieve this, `generalized` must be set to `True`
+
+        >>> X.schur('B', generalized=True)
+        C - D*(B.T*B)**(-1)*B.T*A
+        >>> X.schur('C', generalized=True)
+        -A*(C.T*C)**(-1)*C.T*D + B
+
+        Returns
+        =======
+
+        M : Matrix
+            The Schur Complement Matrix
+
+        Raises
+        ======
+
+        ShapeError
+            If the block matrix is not a 2x2 matrix
+
+        NonInvertibleMatrixError
+            If given matrix is non-invertible
+
+        References
+        ==========
+
+        .. [1] Wikipedia Article on Schur Component : https://en.wikipedia.org/wiki/Schur_complement
+
+        See Also
+        ========
+
+        sympy.matrices.matrices.MatrixBase.pinv
+        """
+
+        if self.blockshape == (2, 2):
+            [[A, B],
+             [C, D]] = self.blocks.tolist()
+            d={'A' : A, 'B' : B, 'C' : C, 'D' : D}
+            try:
+                inv = (d[mat].T*d[mat]).inv()*d[mat].T if generalized else d[mat].inv()
+                if mat == 'A':
+                    return D - C * inv * B
+                elif mat == 'B':
+                    return C - D * inv * A
+                elif mat == 'C':
+                    return B - A * inv * D
+                elif mat == 'D':
+                    return A - B * inv * C
+                #For matrices where no sub-matrix is square
+                return self
+            except NonInvertibleMatrixError:
+                raise NonInvertibleMatrixError('The given matrix is not invertible. Please set generalized=True \
+            to compute the generalized Schur Complement which uses Moore-Penrose Inverse')
+        else:
+            raise ShapeError('Schur Complement can only be calculated for 2x2 block matrices')
+
+    def LDUdecomposition(self):
+        """Returns the Block LDU decomposition of
+        a 2x2 Block Matrix
+
+        Returns
+        =======
+
+        (L, D, U) : Matrices
+            L : Lower Diagonal Matrix
+            D : Diagonal Matrix
+            U : Upper Diagonal Matrix
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, MatrixSymbol, BlockMatrix, block_collapse
+        >>> m, n = symbols('m n')
+        >>> A = MatrixSymbol('A', n, n)
+        >>> B = MatrixSymbol('B', n, m)
+        >>> C = MatrixSymbol('C', m, n)
+        >>> D = MatrixSymbol('D', m, m)
+        >>> X = BlockMatrix([[A, B], [C, D]])
+        >>> L, D, U = X.LDUdecomposition()
+        >>> block_collapse(L*D*U)
+        Matrix([
+        [A, B],
+        [C, D]])
+
+        Raises
+        ======
+
+        ShapeError
+            If the block matrix is not a 2x2 matrix
+
+        NonInvertibleMatrixError
+            If the matrix "A" is non-invertible
+
+        See Also
+        ========
+        sympy.matrices.expressions.blockmatrix.BlockMatrix.UDLdecomposition
+        sympy.matrices.expressions.blockmatrix.BlockMatrix.LUdecomposition
+        """
+        if self.blockshape == (2,2):
+            [[A, B],
+             [C, D]] = self.blocks.tolist()
+            try:
+                AI = A.I
+            except NonInvertibleMatrixError:
+                raise NonInvertibleMatrixError('Block LDU decomposition cannot be calculated when\
+                    "A" is singular')
+            Ip = Identity(B.shape[0])
+            Iq = Identity(B.shape[1])
+            Z = ZeroMatrix(*B.shape)
+            L = BlockMatrix([[Ip, Z], [C*AI, Iq]])
+            D = BlockDiagMatrix(A, self.schur())
+            U = BlockMatrix([[Ip, AI*B],[Z.T, Iq]])
+            return L, D, U
+        else:
+            raise ShapeError("Block LDU decomposition is supported only for 2x2 block matrices")
+
+    def UDLdecomposition(self):
+        """Returns the Block UDL decomposition of
+        a 2x2 Block Matrix
+
+        Returns
+        =======
+
+        (U, D, L) : Matrices
+            U : Upper Diagonal Matrix
+            D : Diagonal Matrix
+            L : Lower Diagonal Matrix
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, MatrixSymbol, BlockMatrix, block_collapse
+        >>> m, n = symbols('m n')
+        >>> A = MatrixSymbol('A', n, n)
+        >>> B = MatrixSymbol('B', n, m)
+        >>> C = MatrixSymbol('C', m, n)
+        >>> D = MatrixSymbol('D', m, m)
+        >>> X = BlockMatrix([[A, B], [C, D]])
+        >>> U, D, L = X.UDLdecomposition()
+        >>> block_collapse(U*D*L)
+        Matrix([
+        [A, B],
+        [C, D]])
+
+        Raises
+        ======
+
+        ShapeError
+            If the block matrix is not a 2x2 matrix
+
+        NonInvertibleMatrixError
+            If the matrix "D" is non-invertible
+
+        See Also
+        ========
+        sympy.matrices.expressions.blockmatrix.BlockMatrix.LDUdecomposition
+        sympy.matrices.expressions.blockmatrix.BlockMatrix.LUdecomposition
+        """
+        if self.blockshape == (2,2):
+            [[A, B],
+             [C, D]] = self.blocks.tolist()
+            try:
+                DI = D.I
+            except NonInvertibleMatrixError:
+                raise NonInvertibleMatrixError('Block UDL decomposition cannot be calculated when\
+                    "D" is singular')
+            Ip = Identity(A.shape[0])
+            Iq = Identity(B.shape[1])
+            Z = ZeroMatrix(*B.shape)
+            U = BlockMatrix([[Ip, B*DI], [Z.T, Iq]])
+            D = BlockDiagMatrix(self.schur('D'), D)
+            L = BlockMatrix([[Ip, Z],[DI*C, Iq]])
+            return U, D, L
+        else:
+            raise ShapeError("Block UDL decomposition is supported only for 2x2 block matrices")
+
+    def LUdecomposition(self):
+        """Returns the Block LU decomposition of
+        a 2x2 Block Matrix
+
+        Returns
+        =======
+
+        (L, U) : Matrices
+            L : Lower Diagonal Matrix
+            U : Upper Diagonal Matrix
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, MatrixSymbol, BlockMatrix, block_collapse
+        >>> m, n = symbols('m n')
+        >>> A = MatrixSymbol('A', n, n)
+        >>> B = MatrixSymbol('B', n, m)
+        >>> C = MatrixSymbol('C', m, n)
+        >>> D = MatrixSymbol('D', m, m)
+        >>> X = BlockMatrix([[A, B], [C, D]])
+        >>> L, U = X.LUdecomposition()
+        >>> block_collapse(L*U)
+        Matrix([
+        [A, B],
+        [C, D]])
+
+        Raises
+        ======
+
+        ShapeError
+            If the block matrix is not a 2x2 matrix
+
+        NonInvertibleMatrixError
+            If the matrix "A" is non-invertible
+
+        See Also
+        ========
+        sympy.matrices.expressions.blockmatrix.BlockMatrix.UDLdecomposition
+        sympy.matrices.expressions.blockmatrix.BlockMatrix.LDUdecomposition
+        """
+        if self.blockshape == (2,2):
+            [[A, B],
+             [C, D]] = self.blocks.tolist()
+            try:
+                A = A**0.5
+                AI = A.I
+            except NonInvertibleMatrixError:
+                raise NonInvertibleMatrixError('Block LU decomposition cannot be calculated when\
+                    "A" is singular')
+            Z = ZeroMatrix(*B.shape)
+            Q = self.schur()**0.5
+            L = BlockMatrix([[A, Z], [C*AI, Q]])
+            U = BlockMatrix([[A, AI*B],[Z.T, Q]])
+            return L, U
+        else:
+            raise ShapeError("Block LU decomposition is supported only for 2x2 block matrices")
+
     def _entry(self, i, j, **kwargs):
         # Find row entry
         orig_i, orig_j = i, j
@@ -565,22 +834,19 @@ def blockinverse_2x2(expr):
          [C, D]] = expr.arg.blocks.tolist()
 
         formula = _choose_2x2_inversion_formula(A, B, C, D)
-
+        if formula != None:
+            MI = expr.arg.schur(formula).I
         if formula == 'A':
             AI = A.I
-            MI = (D - C * AI * B).I
             return BlockMatrix([[AI + AI * B * MI * C * AI, -AI * B * MI], [-MI * C * AI, MI]])
         if formula == 'B':
             BI = B.I
-            MI = (C - D * BI * A).I
             return BlockMatrix([[-MI * D * BI, MI], [BI + BI * A * MI * D * BI, -BI * A * MI]])
         if formula == 'C':
             CI = C.I
-            MI = (B - A * CI * D).I
             return BlockMatrix([[-CI * D * MI, CI + CI * D * MI * A * CI], [MI, -MI * A * CI]])
         if formula == 'D':
             DI = D.I
-            MI = (A - B * DI * C).I
             return BlockMatrix([[MI, -MI * B * DI], [-DI * C * MI, DI + DI * C * MI * B * DI]])
 
     return expr

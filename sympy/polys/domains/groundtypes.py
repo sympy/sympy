@@ -1,7 +1,7 @@
 """Ground types for various mathematical domains in SymPy. """
 
-
-from sympy.core.compatibility import builtins, HAS_GMPY
+import builtins
+from sympy.core.compatibility import HAS_GMPY
 
 PythonInteger = builtins.int
 PythonReal = builtins.float

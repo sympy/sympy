@@ -64,14 +64,20 @@ class Optimization:
 class ReplaceOptim(Optimization):
     """ Rewriting optimization calling replace on expressions.
 
+    Explanation
+    ===========
+
     The instance can be used as a function on expressions for which
     it will apply the ``replace`` method (see
     :meth:`sympy.core.basic.Basic.replace`).
 
     Parameters
     ==========
-    query : first argument passed to replace
-    value : second argument passed to replace
+
+    query :
+        First argument passed to replace.
+    value :
+        Second argument passed to replace.
 
     Examples
     ========
@@ -214,6 +220,9 @@ log1p_opt = ReplaceOptim(
 
 def create_expand_pow_optimization(limit):
     """ Creates an instance of :class:`ReplaceOptim` for expanding ``Pow``.
+
+    Explanation
+    ===========
 
     The requirements for expansions are that the base needs to be a symbol
     and the exponent needs to be an Integer (and be less than or equal to

@@ -768,11 +768,6 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     from sympy.stats.symbolic_probability import Expectation
     if evaluate:
         return Expectation(expr, condition).doit(**kwargs)
-    ### TODO: Remove the user warnings in the future releases
-    message = ("Since version 1.7, using `evaluate=False` returns `Expectation` "
-              "object. If you want unevaluated Integral/Sum use "
-              "`E(expr, condition, evaluate=False).rewrite(Integral)`")
-    warnings.warn(filldedent(message))
     return Expectation(expr, condition)
 
 

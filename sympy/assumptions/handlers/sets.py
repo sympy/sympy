@@ -12,8 +12,8 @@ from sympy import I, Eq, conjugate, MatrixBase
 
 class AskIntegerHandler(CommonHandler):
     """
-    Handler for Q.integer
-    Test that an expression belongs to the field of integer numbers
+    Handler for Q.integer.
+    Test that an expression belongs to the field of integer numbers.
     """
 
     @staticmethod
@@ -96,8 +96,8 @@ class AskIntegerHandler(CommonHandler):
 
 class AskRationalHandler(CommonHandler):
     """
-    Handler for Q.rational
-    Test that an expression belongs to the field of rational numbers
+    Handler for Q.rational.
+    Test that an expression belongs to the field of rational numbers.
     """
 
 
@@ -183,8 +183,8 @@ class AskIrrationalHandler(CommonHandler):
 
 class AskRealHandler(CommonHandler):
     """
-    Handler for Q.real
-    Test that an expression belongs to the field of real numbers
+    Handler for Q.real.
+    Test that an expression belongs to the field of real numbers.
     """
 
     @staticmethod
@@ -316,9 +316,9 @@ class AskRealHandler(CommonHandler):
 
 class AskExtendedRealHandler(AskRealHandler):
     """
-    Handler for Q.extended_real
+    Handler for Q.extended_real.
     Test that an expression belongs to the field of extended real numbers,
-    that is real numbers union {Infinity, -Infinity}
+    that is real numbers union {Infinity, -Infinity}.
     """
 
     @staticmethod
@@ -332,8 +332,8 @@ class AskExtendedRealHandler(AskRealHandler):
 
 class AskHermitianHandler(AskRealHandler):
     """
-    Handler for Q.hermitian
-    Test that an expression belongs to the field of Hermitian operators
+    Handler for Q.hermitian.
+    Test that an expression belongs to the field of Hermitian operators.
     """
 
     @staticmethod
@@ -356,6 +356,7 @@ class AskHermitianHandler(AskRealHandler):
     def Mul(expr, assumptions):
         """
         As long as there is at most only one noncommutative term:
+
         Hermitian*Hermitian         -> Hermitian
         Hermitian*Antihermitian     -> !Hermitian
         Antihermitian*Antihermitian -> Hermitian
@@ -409,8 +410,8 @@ class AskHermitianHandler(AskRealHandler):
 
 class AskComplexHandler(CommonHandler):
     """
-    Handler for Q.complex
-    Test that an expression belongs to the field of complex numbers
+    Handler for Q.complex.
+    Test that an expression belongs to the field of complex numbers.
     """
 
     @staticmethod
@@ -437,9 +438,9 @@ class AskComplexHandler(CommonHandler):
 
 class AskImaginaryHandler(CommonHandler):
     """
-    Handler for Q.imaginary
+    Handler for Q.imaginary.
     Test that an expression belongs to the field of imaginary numbers,
-    that is, numbers in the form x*I, where x is real
+    that is, numbers in the form x*I, where x is real.
     """
 
     @staticmethod
@@ -585,9 +586,9 @@ class AskImaginaryHandler(CommonHandler):
 
 class AskAntiHermitianHandler(AskImaginaryHandler):
     """
-    Handler for Q.antihermitian
+    Handler for Q.antihermitian.
     Test that an expression belongs to the field of anti-Hermitian operators,
-    that is, operators in the form x*I, where x is Hermitian
+    that is, operators in the form x*I, where x is Hermitian.
     """
 
     @staticmethod
@@ -610,6 +611,7 @@ class AskAntiHermitianHandler(AskImaginaryHandler):
     def Mul(expr, assumptions):
         """
         As long as there is at most only one noncommutative term:
+
         Hermitian*Hermitian         -> !Antihermitian
         Hermitian*Antihermitian     -> Antihermitian
         Antihermitian*Antihermitian -> !Antihermitian

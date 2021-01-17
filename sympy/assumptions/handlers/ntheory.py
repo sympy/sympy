@@ -10,7 +10,11 @@ from sympy.core import S, Float
 
 class AskPrimeHandler(CommonHandler):
     """
-    Handler for key 'prime'
+    Handler for key 'prime'.
+
+    Explanation
+    ===========
+
     Test that an expression represents a prime number. When the
     expression is an exact number, the result (when True) is subject to
     the limitations of isprime() which is used to return the result.
@@ -229,8 +233,8 @@ class AskEvenHandler(CommonHandler):
 
 class AskOddHandler(CommonHandler):
     """
-    Handler for key 'odd'
-    Test that an expression represents an odd number
+    Handler for key 'odd'.
+    Test that an expression represents an odd number.
     """
 
     @staticmethod
