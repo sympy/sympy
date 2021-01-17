@@ -1354,6 +1354,10 @@ def test_issue_19379():
     assert Sum(factorial(n)/factorial(n + 2), (n, 1, oo)).is_convergent() is S.true
 
 
+def test_issue_20777():
+    assert Sum(exp(x*sin(n/m)), (n, 1, m)).doit() == Sum(exp(x*sin(n/m)), (n, 1, m))
+
+
 def test__dummy_with_inherited_properties_concrete():
     x = Symbol('x')
 
