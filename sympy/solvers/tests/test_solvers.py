@@ -459,6 +459,7 @@ def test_linear_systemLU():
 @slow
 def test_solve_transcendental():
     from sympy.abc import a, b
+    integer = Symbol('integer',integer=True)
 
     assert solve(exp(x) - 3, x) == [log(3)]
     assert set(solve((a*x + b)*(exp(x) - 3), x)) == {-b/a, log(3)}
@@ -483,7 +484,9 @@ def test_solve_transcendental():
     assert solve(3**(2 - x), x) == []
     assert solve(x + 2**x, x) == [-LambertW(log(2))/log(2)]
     assert solve(2*x + 5 + log(3*x - 2), x) == \
-        [Rational(2, 3) + LambertW(2*exp(Rational(-19, 3))/3)/2]
+        [Rational(2, 3) + LambertW(2*exp(Rational(-19, 3))/3)/2,
+        LambertW((-1 - sqrt(3)*I)*exp(Rational(-19, 3))/3, integer)/2 + Rational(2, 3),
+        LambertW((-1 + sqrt(3)*I)*exp(Rational(-19, 3))/3, integer)/2 + Rational(2, 3)]
     assert solve(3*x + log(4*x), x) == [LambertW(Rational(3, 4))/3]
     assert set(solve((2*x + 8)*(8 + exp(x)), x)) == {S(-4), log(8) + pi*I}
     eq = 2*exp(3*x + 4) - 3
@@ -494,16 +497,14 @@ def test_solve_transcendental():
 
     eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
     result = solve(eq, x)
-    ans = [(log(2401) + 5*LambertW((-1 + sqrt(5) + sqrt(2)*I*sqrt(sqrt(5) + \
-        5))*log(7**(7*3**Rational(1, 5)/20))* -1))/(-3*log(7)), \
-        (log(2401) + 5*LambertW((1 + sqrt(5) - sqrt(2)*I*sqrt(5 - \
-        sqrt(5)))*log(7**(7*3**Rational(1, 5)/20))))/(-3*log(7)), \
-        (log(2401) + 5*LambertW((1 + sqrt(5) + sqrt(2)*I*sqrt(5 - \
-        sqrt(5)))*log(7**(7*3**Rational(1, 5)/20))))/(-3*log(7)), \
-        (log(2401) + 5*LambertW((-sqrt(5) + 1 + sqrt(2)*I*sqrt(sqrt(5) + \
-        5))*log(7**(7*3**Rational(1, 5)/20))))/(-3*log(7)), \
-        (log(2401) + 5*LambertW(-log(7**(7*3**Rational(1, 5)/5))))/(-3*log(7))]
-    assert result == ans
+
+    ans = [-(5*LambertW(-(-1 + sqrt(5) + sqrt(2)*I*sqrt(sqrt(5) + 5))*log(7**(7*3**(Rational(1, 5))/20)), integer) + log(2401))/(3*log(7)),
+    -(5*LambertW((1 + sqrt(5) - sqrt(2)*I*sqrt(5 - sqrt(5)))*log(7**(7*3**(Rational(1, 5))/20)), integer) + log(2401))/(3*log(7)),
+     -(5*LambertW((1 + sqrt(5) + sqrt(2)*I*sqrt(5 - sqrt(5)))*log(7**(7*3**(Rational(1, 5))/20)), integer) + log(2401))/(3*log(7)),
+     -(5*LambertW((-sqrt(5) + 1 + sqrt(2)*I*sqrt(sqrt(5) + 5))*log(7**(7*3**(Rational(1, 5))/20)), integer) + log(2401))/(3*log(7)),
+      -(5*LambertW(-log(7**(7*3**(Rational(1, 5))/5)), integer) + log(2401))/(3*log(7))]
+    # can substitute any integer e.g. here is 11
+    assert len(ans) == 5 and all((eq).subs(x, a.subs(integer,11)).n(chop=True) == 0 for a in ans)
     # it works if expanded, too
     assert solve(eq.expand(), x) == result
 
