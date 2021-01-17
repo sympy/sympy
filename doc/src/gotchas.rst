@@ -269,6 +269,40 @@ trick for getting tab completion in the regular Python console.
     See also `What is the best way to create symbols?
     <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
+.. _calling-functions:
+
+Functions
+---------
+
+A function like ``f(x)`` can be created by defining the Function
+and the variable:
+
+    >>> from sympy import Function
+    >>> f = Function('f')
+    >>> x = Symbol('x')
+    >>> f(x)
+    f(x)
+
+If you assign ``f(x)`` to a Python variable `f` you will lose your
+ability to copy and paste that function or to create a function
+with a different argument: ``Function('f')`` is callable, but
+``Function('f')(x)`` is not:
+
+    >>> f1 = Function('f1')
+    >>> f2 = Function('f2')('x')
+    >>> f1
+    f1
+    >>> f2
+    f2(x)
+    >>> f1(1)
+    f1(1)
+    >>> f2(1)
+    Traceback (most recent call last):
+    ...
+    TypeError: 'f2' object is not callable
+    >>> f2.subs(x, 1)
+    f2(1)
+
 .. _symbolic-expressions:
 
 Symbolic Expressions
