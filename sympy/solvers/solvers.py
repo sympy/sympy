@@ -549,7 +549,7 @@ def solve(f, *symbols, domain=S.Complexes, **flags):
             >>> solve(x**2 - y**2, x, y, dict=True)
             [{x: -y}, {x: y}]
             >>> solve(x**2 - y**2/exp(x), x, y, dict=True)
-            [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}]
+            [{x: 2*LambertW(-y/2, integer)}, {x: 2*LambertW(y/2, integer)}]
             >>> solve(x**2 - y**2/exp(x), y, x)
             [(-x*sqrt(exp(x)), x), (x*sqrt(exp(x)), x)]
 
