@@ -226,7 +226,8 @@ class Standard_Cartan(Basic):
         return (root * r)[0]
 
     def positive_roots(self):
-        """Returns the set of all positive roots that are
+        """Returns the set of all positive roots that are greater
+        than zero in weight from the rootsystem.
         """
         n_pos = self.roots() // 2
         return self.rootsystem()[:n_pos]
