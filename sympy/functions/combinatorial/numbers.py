@@ -2063,7 +2063,7 @@ class motzkin(Function):
     in geometry, combinatorics and number theory.
 
     Motzkin numbers are the integer sequence defined by the
-    initial terms `M_0 = 1`, `M_1 = 1` and the two-term recurrencerelation
+    initial terms `M_0 = 1`, `M_1 = 1` and the two-term recurrence relation
     `M_n = \frac{2*n + 1}{n + 2} * M_{n-1} + \frac{3n - 3}{n + 2} * M_{n-2}`.
 
 
