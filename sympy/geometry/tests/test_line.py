@@ -91,6 +91,7 @@ def test_arbitrary_point():
     assert Segment3D(Point3D(0, 0, 0), Point3D(1, 1, 1)).midpoint == \
            Point3D(S.Half, S.Half, S.Half)
     assert Segment3D(Point3D(x1, x1, x1), Point3D(y1, y1, y1)).length == sqrt(3) * sqrt((x1 - y1) ** 2)
+    assert Segment3D(Point3D(x1, x1, x1), Point3D(y1, y1, y1)).area == 0
     assert Segment3D((1, 1, 1), (2, 3, 4)).arbitrary_point() == \
            Point3D(t + 1, 2 * t + 1, 3 * t + 1)
     raises(ValueError, (lambda: Line((x, 1), (2, 3)).arbitrary_point(x)))
@@ -199,6 +200,7 @@ def test_basic_properties_2d():
     assert Ray(Point(x1, x1), Point(x1, 1 + x1)) != Ray(p1, Point(-1, 5))
     assert Segment(p1, p2).midpoint == Point(S.Half, S.Half)
     assert Segment(p1, Point(-x1, x1)).length == sqrt(2 * (x1 ** 2))
+    assert Segment(p1, Point(-x1, x1)).area == 0
 
     assert l1.slope == 1
     assert l3.slope is oo
@@ -672,6 +674,13 @@ def test_length():
     assert Line(Point(0, 0), Point(1, 1)).length is oo
     assert s2.length == sqrt(3) * sqrt((x1 - y1) ** 2)
     assert Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1)).length is oo
+
+
+def test_area():
+    s2 = Segment3D(Point3D(x1, x1, x1), Point3D(y1, y1, y1))
+    assert Line(Point(0, 0), Point(1, 1)).area == 0
+    assert s2.area == 0
+    assert Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1)).area == 0
 
 
 def test_projection():

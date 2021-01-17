@@ -652,6 +652,21 @@ class Point(GeometryEntity):
         return True
 
     @property
+    def area(self):
+        """
+        The area of a point , which is zero.
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> p = Point(0, 1)
+        >>> p.area
+        0
+        """
+        return S.Zero
+
+    @property
     def length(self):
         """
         Treating a Point as a Line, this returns 0 for the length of a Point.

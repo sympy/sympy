@@ -54,6 +54,7 @@ class LinearEntity(GeometrySet):
     p1
     p2
     points
+    area
 
     Notes
     =====
@@ -671,6 +672,21 @@ class LinearEntity(GeometrySet):
         oo
         """
         return S.Infinity
+
+    @property
+    def area(self):
+        """
+        The area of the line, which is zero.
+
+        Examples
+        ========
+        >>> from sympy import Point, Line
+        >>> p1, p2 = Point(0, 0), Point(3, 5)
+        >>> l1 = Line(p1, p2)
+        >>> l1.area
+        0
+        """
+        return S.Zero
 
     @property
     def p1(self):
