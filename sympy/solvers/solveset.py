@@ -3884,8 +3884,6 @@ def nonlinsolve(system, *symbols):
     else:
         # If all the equations are not polynomial.
         # Use `substitution` method for the system
-        nonLin = True
         result = substitution(
             polys_expr + nonpolys, symbols, exclude=denominators)
-        nonLin = None
         return result
