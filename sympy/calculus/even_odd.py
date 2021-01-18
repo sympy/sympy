@@ -22,7 +22,7 @@ _odd_univariate_functions = (
     sin, csc, tan, cot,
     asin, acsc, atan, acot,
     sinh, csch, tanh, coth,
-    asinh, acsch, atanh, acoth
+    asinh, acsch, atanh, acoth,
     erf, fresnels, fresnelc
 )
 
