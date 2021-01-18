@@ -12,9 +12,14 @@ def refine(expr, assumptions=True):
     Explanation
     ===========
 
-    Gives the form of expr that would be obtained if symbols
-    in it were replaced by explicit numerical expressions satisfying
-    the assumptions.
+    Unlike :func:`~.simplify()` which performs structural simplification
+    without any assumption, this function transforms the expression into
+    the form which is only valid under certain assumptions. Note that
+    ``simplify()`` is generally not done in refining process.
+
+    Refining boolean expression involves reducing it to ``True`` or
+    ``False``. Unlike :func:~.`ask()`, the expression will not be reduced
+    if the truth value cannot be determined.
 
     Examples
     ========
@@ -26,6 +31,16 @@ def refine(expr, assumptions=True):
     >>> refine(sqrt(x**2), Q.positive(x))
     x
 
+    >>> refine(Q.real(x), Q.positive(x))
+    True
+    >>> refine(Q.positive(x), Q.real(x))
+    Q.positive(x)
+
+    See Also
+    ========
+
+    sympy.simplify.simplify.simplify : Structural simplification without assumptions.
+    sympy.assumptions.ask.ask : Query for boolean expressions using assumptions.
     """
     if not isinstance(expr, Basic):
         return expr
@@ -235,22 +250,6 @@ def refine_atan2(expr, assumptions):
         return expr
 
 
-def refine_Relational(expr, assumptions):
-    """
-    Handler for Relational.
-
-    Examples
-    ========
-
-    >>> from sympy.assumptions.refine import refine_Relational
-    >>> from sympy.assumptions.ask import Q
-    >>> from sympy.abc import x
-    >>> refine_Relational(x<0, ~Q.is_true(x<0))
-    False
-    """
-    return ask(Q.is_true(expr), assumptions)
-
-
 def refine_re(expr, assumptions):
     """
     Handler for real part.
@@ -376,12 +375,6 @@ handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
     'atan2': refine_atan2,
-    'Equality': refine_Relational,
-    'Unequality': refine_Relational,
-    'GreaterThan': refine_Relational,
-    'LessThan': refine_Relational,
-    'StrictGreaterThan': refine_Relational,
-    'StrictLessThan': refine_Relational,
     're': refine_re,
     'im': refine_im,
     'sign': refine_sign,

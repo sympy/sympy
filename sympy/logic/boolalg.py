@@ -179,6 +179,10 @@ class Boolean(Basic):
                            if i.is_Boolean or i.is_Symbol
                            or isinstance(i, (Eq, Ne))])
 
+    def _eval_refine(self, assumptions):
+        from sympy.assumptions import ask
+        return ask(self, assumptions)
+
 
 class BooleanAtom(Boolean):
     """
