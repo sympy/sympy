@@ -12,7 +12,7 @@ from sympy.matrices import Determinant, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
 
 from ..predicates.order import (NegativePredicate, NonNegativePredicate,
-    NonZeroPredicate, PositivePredicate)
+    NonZeroPredicate, ZeroPredicate, PositivePredicate)
 
 
 # NegativePredicate
@@ -174,21 +174,25 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return ask(Q.nonzero(expr.args[0]), assumptions)
 
-class AskZeroHandler(CommonHandler):
 
-    @staticmethod
-    def Expr(expr, assumptions):
-        return expr.is_zero
+# ZeroPredicate
 
-    @staticmethod
-    def Basic(expr, assumptions):
-        return fuzzy_and([fuzzy_not(ask(Q.nonzero(expr), assumptions)),
-            ask(Q.real(expr), assumptions)])
+@ZeroPredicate.register(Expr)
+def _(expr, assumptions):
+    return expr.is_zero
 
-    @staticmethod
-    def Mul(expr, assumptions):
-        # TODO: This should be deducible from the nonzero handler
-        return fuzzy_or(ask(Q.zero(arg), assumptions) for arg in expr.args)
+@ZeroPredicate.register(Basic)
+def _(expr, assumptions):
+    return fuzzy_and([fuzzy_not(ask(Q.nonzero(expr), assumptions)),
+        ask(Q.real(expr), assumptions)])
+
+@ZeroPredicate.register(Mul)
+def _(expr, assumptions):
+    # TODO: This should be deducible from the nonzero handler
+    return fuzzy_or(ask(Q.zero(arg), assumptions) for arg in expr.args)
+
+
+# NonPositivePredicate
 
 class AskNonPositiveHandler(CommonHandler):
 

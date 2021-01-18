@@ -105,32 +105,8 @@ class AssumptionKeys:
 
     @memoize_property
     def zero(self):
-        """
-        Zero number predicate.
-
-        Explanation
-        ===========
-
-        ``ask(Q.zero(x))`` is true iff the value of ``x`` is zero.
-
-        Examples
-        ========
-
-        >>> from sympy import ask, Q, oo, symbols
-        >>> x, y = symbols('x, y')
-        >>> ask(Q.zero(0))
-        True
-        >>> ask(Q.zero(1/oo))
-        True
-        >>> ask(Q.zero(0*oo))
-        False
-        >>> ask(Q.zero(1))
-        False
-        >>> ask(Q.zero(x*y), Q.zero(x) | Q.zero(y))
-        True
-
-        """
-        return Predicate('zero')
+        from .handlers.order import ZeroPredicate
+        return ZeroPredicate()
 
     @memoize_property
     def nonzero(self):
@@ -1136,7 +1112,6 @@ _handlers = [
     ("composite",         "ntheory.AskCompositeHandler"),
     ("even",              "ntheory.AskEvenHandler"),
     ("nonpositive",       "order.AskNonPositiveHandler"),
-    ("zero",              "order.AskZeroHandler"),
     ("prime",             "ntheory.AskPrimeHandler"),
     ("odd",               "ntheory.AskOddHandler"),
     ("is_true",           "common.TautologicalHandler"),

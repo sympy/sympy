@@ -136,6 +136,39 @@ class NonZeroPredicate(Predicate):
     )
 
 
+class ZeroPredicate(Predicate):
+    """
+    Zero number predicate.
+
+    Explanation
+    ===========
+
+    ``ask(Q.zero(x))`` is true iff the value of ``x`` is zero.
+
+    Examples
+    ========
+
+    >>> from sympy import ask, Q, oo, symbols
+    >>> x, y = symbols('x, y')
+    >>> ask(Q.zero(0))
+    True
+    >>> ask(Q.zero(1/oo))
+    True
+    >>> ask(Q.zero(0*oo))
+    False
+    >>> ask(Q.zero(1))
+    False
+    >>> ask(Q.zero(x*y), Q.zero(x) | Q.zero(y))
+    True
+
+    """
+    name = 'zero'
+    handler = Dispatcher(
+        "ZeroHandler",
+        doc="Handler for key 'zero'."
+    )
+
+
 class PositivePredicate(Predicate):
     r"""
     Positive real number predicate.
