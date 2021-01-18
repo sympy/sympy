@@ -39,7 +39,7 @@ def test_is_even_odd_wolfram():
     # XXX It's not possible to decide even function for the pattern
     # if not simplified
     assert is_even_function(sin(x + S.Pi/4) + cos(x + S.Pi/4), x) is None
-    assert is_even_function(expand_trig(sin(x + S.Pi/4) + cos(x + S.Pi/4)), x) is None
+    assert is_even_function(expand_trig(sin(x + S.Pi/4) + cos(x + S.Pi/4)), x) is True
 
     # XXX May return False instead of None
     assert is_even_function(fresnelc(x) + 1, x) is None

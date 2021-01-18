@@ -226,10 +226,10 @@ def is_odd_function(expr, *symbols):
         count_even = 0
         count_odd = 0
         for arg in expr.args:
-            if is_odd_function(arg, *symbols):
+            if is_even_function(arg, *symbols):
                 count_even += 1
                 continue
-            if is_even_function(arg, *symbols):
+            if is_odd_function(arg, *symbols):
                 count_odd += 1
                 continue
             return None
