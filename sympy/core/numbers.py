@@ -3527,7 +3527,9 @@ class Exp1New(Exp1, metaclass=Singleton):
                 return S.Zero
         elif isinstance(arg, log):
             return arg.args[0]
-        elif arg.is_Mul:
+
+        # don't autoexpand Pow or Mul (see the issue 3351):
+        elif not arg.is_Add:
             Ioo = I*oo
             if arg in [Ioo, -Ioo]:
                 return nan
@@ -3577,16 +3579,21 @@ class Exp1New(Exp1, metaclass=Singleton):
         elif arg.is_Add:
             out = []
             add = []
+            argchanged = False
             for a in arg.args:
                 if a is S.One:
                     add.append(a)
                     continue
                 newa = self**a
-                if newa.is_Pow and newa.base is self:
-                    add.append(a)
+                if isinstance(newa, Pow) and newa.base is self:
+                    if newa.exp != a:
+                        add.append(newa.exp)
+                        argchanged = True
+                    else:
+                        add.append(a)
                 else:
                     out.append(newa)
-            if out:
+            if out or argchanged:
                 return Mul(*out)*Pow(self, Add(*add), evaluate=False)
         elif arg.is_Matrix:
             return arg.exp()
