@@ -515,6 +515,11 @@ def test_issue_12966():
         Point(0, 0), Point(0, 5), Point(0, 10), Point(5, 10),
         Point(5, 5), Point(10, 5), Point(10, 0), Point(5, 0)]
 
+def test_issue_20460():
+    t1=Triangle(Point(0,0),Point(0,0),Point(0,0))
+    t2=Triangle(Point(1,0),Point(1,0),Point(0,0))
+    assert t1.area == 0
+    assert t2.area == 0
 
 def test_second_moment_of_area():
     x, y = symbols('x, y')
