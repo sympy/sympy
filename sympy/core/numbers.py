@@ -3543,6 +3543,12 @@ class Exp1New(Exp1, metaclass=Singleton):
                         return -I
                     elif (coeff + S.Half).is_odd:
                         return I
+                elif coeff.is_Rational:
+                    ncoeff = coeff % 2 # restrict to [0, 2pi)
+                    if ncoeff > 1: # restrict to (-pi, pi]
+                        ncoeff -= 2
+                    if ncoeff != coeff:
+                        return S.Exp1New**(ncoeff*S.Pi*S.ImaginaryUnit)
 
             # Warning: code in risch.py will be very sensitive to changes
             # in this (see DifferentialExtension).
