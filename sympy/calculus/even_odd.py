@@ -4,19 +4,25 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.functions.elementary.hyperbolic import (
-    sinh, cosh, tanh, csch, sech, coth)
+    sinh, cosh, tanh, csch, sech, coth,
+    asinh, atanh, acsch, acoth)
 from sympy.functions.elementary.trigonometric import (
-    cos, sec, sin, csc, tan, cot)
+    sinc,
+    cos, sec, sin, csc, tan, cot, asin, atan, acsc, acot)
 from sympy.functions.special.error_functions import erf, fresnelc, fresnels
 from sympy.functions import Abs, sign
 
 
 _even_univariate_functions = (
-    Abs, cos, sec, cosh, sech
+    Abs, cos, sec, cosh, sech, sinc
 )
 
 _odd_univariate_functions = (
-    sign, sin, csc, tan, cot, sinh, csch, tanh, coth,
+    sign,
+    sin, csc, tan, cot,
+    asin, acsc, atan, acot,
+    sinh, csch, tanh, coth,
+    asinh, acsch, atanh, acoth
     erf, fresnels, fresnelc
 )
 
