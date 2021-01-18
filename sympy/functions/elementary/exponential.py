@@ -669,6 +669,8 @@ class log(Function):
             elif arg.is_Rational and arg.p == 1:
                 return -cls(arg.q)
 
+        if arg.is_Pow and arg.base is S.Exp1New and arg.exp.is_extended_real:
+            return arg.exp
         I = S.ImaginaryUnit
         if isinstance(arg, exp) and arg.args[0].is_extended_real:
             return arg.args[0]
@@ -695,6 +697,8 @@ class log(Function):
             elif arg is S.ComplexInfinity:
                 return S.ComplexInfinity
             elif arg is S.Exp1:
+                return S.One
+            elif arg is S.Exp1New:
                 return S.One
 
         if arg.is_zero:
