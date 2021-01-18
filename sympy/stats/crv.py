@@ -420,6 +420,8 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         if evaluate:
             try:
                 p = poly(expr, var)
+                if p.is_zero:
+                    return S.Zero
                 t = Dummy('t', real=True)
                 mgf = self._moment_generating_function(t)
                 if mgf is None:
