@@ -1,122 +1,113 @@
 """
-AskHandlers related to order relations: positive, negative, etc.
+Handlers related to order relations: positive, negative, etc.
 """
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
+from sympy.core import Add, Basic, Expr, Mul, Pow
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
+from sympy.core.numbers import ImaginaryUnit
+from sympy.functions import Abs, exp
+
+from ..predicates.order import (NegativePredicate, )
 
 
-class AskNegativeHandler(CommonHandler):
-    """
-    This is called by ask() when key='negative'.
+# NegativePredicate
 
-    Test that an expression is less (strict) than zero.
-
-    Examples
-    ========
-
-    >>> from sympy import ask, Q, pi
-    >>> ask(Q.negative(pi+1)) # this calls AskNegativeHandler.Add
-    False
-    >>> ask(Q.negative(pi**2)) # this calls AskNegativeHandler.Pow
-    False
-
-    """
-
-    @staticmethod
-    def Expr(expr, assumptions):
-        return expr.is_negative
-
-    @staticmethod
-    def _number(expr, assumptions):
-        r, i = expr.as_real_imag()
-        # If the imaginary part can symbolically be shown to be zero then
-        # we just evaluate the real part; otherwise we evaluate the imaginary
-        # part to see if it actually evaluates to zero and if it does then
-        # we make the comparison between the real part and zero.
-        if not i:
+def _NegativePredicate_number(expr, assumptions):
+    r, i = expr.as_real_imag()
+    # If the imaginary part can symbolically be shown to be zero then
+    # we just evaluate the real part; otherwise we evaluate the imaginary
+    # part to see if it actually evaluates to zero and if it does then
+    # we make the comparison between the real part and zero.
+    if not i:
+        r = r.evalf(2)
+        if r._prec != 1:
+            return r < 0
+    else:
+        i = i.evalf(2)
+        if i._prec != 1:
+            if i != 0:
+                return False
             r = r.evalf(2)
             if r._prec != 1:
                 return r < 0
-        else:
-            i = i.evalf(2)
-            if i._prec != 1:
-                if i != 0:
-                    return False
-                r = r.evalf(2)
-                if r._prec != 1:
-                    return r < 0
 
-    @staticmethod
-    def Basic(expr, assumptions):
-        if expr.is_number:
-            return AskNegativeHandler._number(expr, assumptions)
+@NegativePredicate.register(Basic)
+def _(expr, assumptions):
+    if expr.is_number:
+        return _NegativePredicate_number(expr, assumptions)
 
-    @staticmethod
-    def Add(expr, assumptions):
-        """
-        Positive + Positive -> Positive,
-        Negative + Negative -> Negative
-        """
-        if expr.is_number:
-            return AskNegativeHandler._number(expr, assumptions)
+@NegativePredicate.register(Expr)
+def _(expr, assumptions):
+    return expr.is_negative
 
-        r = ask(Q.real(expr), assumptions)
-        if r is not True:
-            return r
+@NegativePredicate.register(Add)
+def _(expr, assumptions):
+    """
+    Positive + Positive -> Positive,
+    Negative + Negative -> Negative
+    """
+    if expr.is_number:
+        return _NegativePredicate_number(expr, assumptions)
 
-        nonpos = 0
-        for arg in expr.args:
-            if ask(Q.negative(arg), assumptions) is not True:
-                if ask(Q.positive(arg), assumptions) is False:
-                    nonpos += 1
-                else:
-                    break
-        else:
-            if nonpos < len(expr.args):
-                return True
+    r = ask(Q.real(expr), assumptions)
+    if r is not True:
+        return r
 
-    @staticmethod
-    def Mul(expr, assumptions):
-        if expr.is_number:
-            return AskNegativeHandler._number(expr, assumptions)
-        result = None
-        for arg in expr.args:
-            if result is None:
-                result = False
-            if ask(Q.negative(arg), assumptions):
-                result = not result
-            elif ask(Q.positive(arg), assumptions):
-                pass
+    nonpos = 0
+    for arg in expr.args:
+        if ask(Q.negative(arg), assumptions) is not True:
+            if ask(Q.positive(arg), assumptions) is False:
+                nonpos += 1
             else:
-                return
-        return result
+                break
+    else:
+        if nonpos < len(expr.args):
+            return True
 
-    @staticmethod
-    def Pow(expr, assumptions):
-        """
-        Real ** Even -> NonNegative
-        Real ** Odd  -> same_as_base
-        NonNegative ** Positive -> NonNegative
-        """
-        if expr.is_number:
-            return AskNegativeHandler._number(expr, assumptions)
-        if ask(Q.real(expr.base), assumptions):
-            if ask(Q.positive(expr.base), assumptions):
-                if ask(Q.real(expr.exp), assumptions):
-                    return False
-            if ask(Q.even(expr.exp), assumptions):
+@NegativePredicate.register(Mul)
+def _(expr, assumptions):
+    if expr.is_number:
+        return _NegativePredicate_number(expr, assumptions)
+    result = None
+    for arg in expr.args:
+        if result is None:
+            result = False
+        if ask(Q.negative(arg), assumptions):
+            result = not result
+        elif ask(Q.positive(arg), assumptions):
+            pass
+        else:
+            return
+    return result
+
+@NegativePredicate.register(Pow)
+def _(expr, assumptions):
+    """
+    Real ** Even -> NonNegative
+    Real ** Odd  -> same_as_base
+    NonNegative ** Positive -> NonNegative
+    """
+    if expr.is_number:
+        return _NegativePredicate_number(expr, assumptions)
+    if ask(Q.real(expr.base), assumptions):
+        if ask(Q.positive(expr.base), assumptions):
+            if ask(Q.real(expr.exp), assumptions):
                 return False
-            if ask(Q.odd(expr.exp), assumptions):
-                return ask(Q.negative(expr.base), assumptions)
-
-    ImaginaryUnit, Abs = [staticmethod(CommonHandler.AlwaysFalse)]*2
-
-    @staticmethod
-    def exp(expr, assumptions):
-        if ask(Q.real(expr.args[0]), assumptions):
+        if ask(Q.even(expr.exp), assumptions):
             return False
+        if ask(Q.odd(expr.exp), assumptions):
+            return ask(Q.negative(expr.base), assumptions)
+
+@NegativePredicate.register_many(Abs, ImaginaryUnit)
+def _(expr, assumptions):
+    return False
+
+@NegativePredicate.register(exp)
+def _(expr, assumptions):
+    if ask(Q.real(expr.args[0]), assumptions):
+        return False
 
 
 class AskNonNegativeHandler(CommonHandler):
@@ -128,7 +119,7 @@ class AskNonNegativeHandler(CommonHandler):
     @staticmethod
     def Basic(expr, assumptions):
         if expr.is_number:
-            notnegative = fuzzy_not(AskNegativeHandler._number(expr, assumptions))
+            notnegative = fuzzy_not(_NegativePredicate_number(expr, assumptions))
             if notnegative:
                 return ask(Q.real(expr), assumptions)
             else:
