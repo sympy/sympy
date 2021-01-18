@@ -206,6 +206,9 @@ def is_odd_function(expr, *symbols):
 
     .. [#] https://en.wikipedia.org/wiki/Even_and_odd_functions
     """
+    expr = _sympify(expr)
+    symbols = [_sympify(x) for x in symbols]
+
     if expr in symbols:
         return True
 
