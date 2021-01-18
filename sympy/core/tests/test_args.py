@@ -689,6 +689,11 @@ def test_sympy__core__numbers__Exp1():
     assert _test_args(Exp1())
 
 
+def test_sympy__core__numbers__Exp1New():
+    from sympy.core.numbers import Exp1New
+    assert _test_args(Exp1New())
+
+
 def test_sympy__core__numbers__Float():
     from sympy.core.numbers import Float
     assert _test_args(Float(1.23))

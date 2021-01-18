@@ -3,8 +3,8 @@ from sympy import (
     LambertW, sqrt, Rational, expand_log, S, sign,
     adjoint, conjugate, transpose, O, refine,
     sin, cos, sinh, cosh, tanh, exp_polar, re, simplify,
-    AccumBounds, MatrixSymbol, Pow, gcd, Sum, Product)
-from sympy.functions.elementary.exponential import match_real_imag
+    AccumBounds, MatrixSymbol, Pow, gcd, Sum, Product, _E_new)
+from sympy.functions.elementary.exponential import match_real_imag, _exp_new
 from sympy.abc import x, y, z
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -24,10 +24,18 @@ def test_exp_values():
     assert exp(-1 + x).as_base_exp() == (S.Exp1, x - 1)
     assert exp(1 + x).as_base_exp() == (S.Exp1, x + 1)
 
+    assert _exp_new(0) == 1
+    assert _exp_new(1) == _E_new
+
     assert exp(pi*I/2) == I
     assert exp(pi*I) == -1
     assert exp(pi*I*Rational(3, 2)) == -I
     assert exp(2*pi*I) == 1
+
+    assert _exp_new(pi*I/2) == I
+    assert _exp_new(pi*I) == -1
+    assert _exp_new(pi*I*Rational(3, 2)) == -I
+    assert _exp_new(2*pi*I) == 1
 
     assert refine(exp(pi*I*2*k)) == 1
     assert refine(exp(pi*I*2*(k + S.Half))) == -1
@@ -38,7 +46,13 @@ def test_exp_values():
     assert exp(2*log(x)) == x**2
     assert exp(pi*log(x)) == x**pi
 
+    assert _exp_new(log(x)) == x
+    assert _exp_new(2*log(x)) == x**2
+    assert _exp_new(pi*log(x)) == x**pi
+
     assert exp(17*log(x) + E*log(y)) == x**17 * y**E
+
+    assert _exp_new(17*log(x) + _E_new*log(y)) == x**17 * y**_E_new
 
     assert exp(x*log(x)) != x**x
     assert exp(sin(x)*log(x)) != x
@@ -58,8 +72,18 @@ def test_exp_period():
     assert exp(I*pi*Rational(37, 8)) - exp(I*pi*Rational(-11, 8)) == 0
     assert exp(I*pi*Rational(-5, 3)) / exp(I*pi*Rational(11, 5)) * exp(I*pi*Rational(148, 15)) == 1
 
+    assert _exp_new(I*pi*Rational(9, 4)) == _exp_new(I*pi/4)
+    assert _exp_new(I*pi*Rational(46, 18)) == _exp_new(I*pi*Rational(5, 9))
+    assert _exp_new(I*pi*Rational(25, 7)) == _exp_new(I*pi*Rational(-3, 7))
+    assert _exp_new(I*pi*Rational(-19, 3)) == _exp_new(-I*pi/3)
+    assert _exp_new(I*pi*Rational(37, 8)) - _exp_new(I*pi*Rational(-11, 8)) == 0
+    assert _exp_new(I*pi*Rational(-5, 3)) / _exp_new(I*pi*Rational(11, 5)) * _exp_new(I*pi*Rational(148, 15)) == 1
+
     assert exp(2 - I*pi*Rational(17, 5)) == exp(2 + I*pi*Rational(3, 5))
     assert exp(log(3) + I*pi*Rational(29, 9)) == 3 * exp(I*pi*Rational(-7, 9))
+
+    assert _exp_new(2 - I*pi*Rational(17, 5)) == _exp_new(2 + I*pi*Rational(3, 5))
+    assert _exp_new(log(3) + I*pi*Rational(29, 9)) == 3 * _exp_new(I*pi*Rational(-7, 9))
 
     n = Symbol('n', integer=True)
     e = Symbol('e', even=True)
@@ -67,6 +91,11 @@ def test_exp_period():
     assert exp((e + 1)*I*pi) == -1
     assert exp((1 + 4*n)*I*pi/2) == I
     assert exp((-1 + 4*n)*I*pi/2) == -I
+
+    assert _exp_new(e*I*pi) == 1
+    assert _exp_new((e + 1)*I*pi) == -1
+    assert _exp_new((1 + 4*n)*I*pi/2) == I
+    assert _exp_new((-1 + 4*n)*I*pi/2) == -I
 
 
 def test_exp_log():
@@ -76,9 +105,14 @@ def test_exp_log():
     assert log(x).inverse() == exp
     assert exp(x).inverse() == log
 
+    assert log(_exp_new(x)) == x
+    assert _exp_new(log(x)) == x
+
     y = Symbol("y", polar=True)
     assert log(exp_polar(z)) == z
     assert exp(log(y)) == y
+
+    assert _exp_new(log(y)) == y
 
 
 def test_exp_expand():
@@ -87,12 +121,20 @@ def test_exp_expand():
     assert exp(x + y) != exp(x)*exp(y)
     assert exp(x + y).expand() == exp(x)*exp(y)
 
+    assert _exp_new(x + y) != _exp_new(x)*_exp_new(y)
+    assert _exp_new(x + y).expand() == _exp_new(x)*_exp_new(y)
+
 
 def test_exp__as_base_exp():
     assert exp(x).as_base_exp() == (E, x)
     assert exp(2*x).as_base_exp() == (E, 2*x)
     assert exp(x*y).as_base_exp() == (E, x*y)
     assert exp(-x).as_base_exp() == (E, -x)
+
+    assert _exp_new(x).as_base_exp() == (_E_new, x)
+    assert _exp_new(2*x).as_base_exp() == (_E_new, 2*x)
+    assert _exp_new(x*y).as_base_exp() == (_E_new, x*y)
+    assert _exp_new(-x).as_base_exp() == (_E_new, -x)
 
     # Pow( *expr.as_base_exp() ) == expr    invariant should hold
     assert E**x == exp(x)
@@ -158,6 +200,18 @@ def test_exp_rewrite():
     assert exp(log(x)*log(y)).rewrite(Pow) in [x**log(y), y**log(x)]
     assert exp(log(log(x))*y).rewrite(Pow) == log(x)**y
 
+    assert _exp_new(x).rewrite(sin) == sinh(x) + cosh(x)
+    assert _exp_new(x*I).rewrite(cos) == cos(x) + I*sin(x)
+    assert _exp_new(1).rewrite(cos) == sinh(1) + cosh(1)
+    assert _exp_new(1).rewrite(sin) == sinh(1) + cosh(1)
+    assert _exp_new(1).rewrite(sin) == sinh(1) + cosh(1)
+    assert _exp_new(x).rewrite(tanh) == (1 + tanh(x/2))/(1 - tanh(x/2))
+    assert _exp_new(pi*I/4).rewrite(sqrt) == sqrt(2)/2 + sqrt(2)*I/2
+    assert _exp_new(pi*I/3).rewrite(sqrt) == S.Half + sqrt(3)*I/2
+    assert _exp_new(x*log(y)).rewrite(Pow) == y**x
+    assert _exp_new(log(x)*log(y)).rewrite(Pow) in [x**log(y), y**log(x)]
+    assert _exp_new(log(log(x))*y).rewrite(Pow) == log(x)**y
+
     n = Symbol('n', integer=True)
 
     assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == Rational(4, 5) + I*Rational(2, 5)
@@ -165,11 +219,21 @@ def test_exp_rewrite():
     assert (Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit().cancel()
             == 4/(3 - sqrt(3)*I))
 
+    assert Sum((_exp_new(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == Rational(4, 5) + I*Rational(2, 5)
+    assert Sum((_exp_new(pi*I/4)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(1 - sqrt(2)*(1 + I)/4)
+    assert (Sum((_exp_new(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit().cancel()
+            == 4/(3 - sqrt(3)*I))
+
 
 def test_exp_leading_term():
     assert exp(x).as_leading_term(x) == 1
     assert exp(2 + x).as_leading_term(x) == exp(2)
     assert exp((2*x + 3) / (x+1)).as_leading_term(x) == exp(3)
+
+    assert _exp_new(x).as_leading_term(x) == 1
+    assert _exp_new(2 + x).as_leading_term(x) == _exp_new(2)
+    assert _exp_new((2*x + 3) / (x+1)).as_leading_term(x) == _exp_new(3)
+
     # The following tests are commented, since now SymPy returns the
     # original function when the leading term in the series expansion does
     # not exist.
@@ -184,6 +248,11 @@ def test_exp_taylor_term():
     assert exp(x).taylor_term(3, x) == x**3/6
     assert exp(x).taylor_term(4, x) == x**4/24
     assert exp(x).taylor_term(-1, x) is S.Zero
+
+    assert _exp_new(x).taylor_term(1, x) == x
+    assert _exp_new(x).taylor_term(3, x) == x**3/6
+    assert _exp_new(x).taylor_term(4, x) == x**4/24
+    assert _exp_new(x).taylor_term(-1, x) is S.Zero
 
 
 def test_exp_MatrixSymbol():

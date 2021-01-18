@@ -553,6 +553,11 @@ class exp(ExpBase):
                 return Pow(logs[0].args[0], arg.coeff(logs[0]))
 
 
+def _exp_new(e):
+    from sympy import _E_new
+    return _E_new**e
+
+
 def match_real_imag(expr):
     """
     Try to match expr with a + b*I for real a and b.

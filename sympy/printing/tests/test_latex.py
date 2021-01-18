@@ -343,6 +343,9 @@ def test_latex_functions():
     assert latex(exp(x)) == "e^{x}"
     assert latex(exp(1) + exp(2)) == "e + e^{2}"
 
+    assert latex(S.Exp1New**x) == "e^{x}"
+    assert latex(S.Exp1New + S.Exp1New**2) == "e + e^{2}"
+
     f = Function('f')
     assert latex(f(x)) == r'f{\left(x \right)}'
     assert latex(f) == r'f'

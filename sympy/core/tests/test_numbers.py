@@ -858,10 +858,12 @@ def test_Infinity_inequations():
     assert oo > pi
     assert not (oo < pi)
     assert exp(-3) < oo
+    assert S.Exp1New**(-3) < oo
 
     assert _inf > pi
     assert not (_inf < pi)
     assert exp(-3) < _inf
+    assert S.Exp1New**(-3) < _inf
 
     raises(TypeError, lambda: oo < I)
     raises(TypeError, lambda: oo <= I)

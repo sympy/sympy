@@ -3494,22 +3494,16 @@ class Exp1(NumberSymbol, metaclass=Singleton):
 E = S.Exp1
 
 
-class Exp1New(NumberSymbol, metaclass=Singleton):
-    r"""The `e` constant.
-
-    The transcendental number `e = 2.718281828\ldots` is the base of the
-    natural logarithm and of the exponential function, `e = \exp(1)`.
-    Sometimes called Euler's number or Napier's constant.
-
-    Exp1 is a singleton, and can be imported as ``E``.
+class Exp1New(Exp1, metaclass=Singleton):
+    r"""The `e` constant that is not converted into an exponential object.
 
     Examples
     ========
 
-    >>> from sympy.core.numbers import Exp1New
-    >>> Exp1New is exp(1)
+    >>> from sympy import S, log
+    >>> S.Exp1New == S.Exp1New**1
     True
-    >>> log(Exp1New)
+    >>> log(S.Exp1New)
     1
 
     References
@@ -3519,23 +3513,9 @@ class Exp1New(NumberSymbol, metaclass=Singleton):
 
     """
 
-    is_real = True
-    is_positive = True
-    is_number = True
-    is_transcendental = True
-
-    def __abs__(self):
-        return self
-
-    def __int__(self):
-        return 2
-
-    def _as_mpf_val(self, prec):
-        return mpmath.e(prec)._mpf_
-
-    def approximation_interval(self, number_cls):
-        if issubclass(number_cls, Integer):
-            return Integer(2), Integer(3)
+    @staticmethod
+    def __abs__():
+        return S.Exp1New
 
     def _eval_power(self, arg):
         from ..functions.elementary.exponential import log
@@ -3604,14 +3584,7 @@ class Exp1New(NumberSymbol, metaclass=Singleton):
                 return Mul(*out)*Pow(self, Add(*add), evaluate=False)
         elif arg.is_Matrix:
             return arg.exp()
-
-    def _eval_rewrite_as_sin(self):
-        from ..functions import sin
-        return sin(I + pi/2) - I*sin(I)
-
-    def _eval_rewrite_as_cos(self):
-        from ..functions import cos
-        return cos(I) + I*cos(I + pi/2)
+_E_new = Exp1New()
 
 
 class Pi(NumberSymbol, metaclass=Singleton):

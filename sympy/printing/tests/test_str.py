@@ -100,6 +100,7 @@ def test_EulerGamma():
 
 def test_Exp():
     assert str(E) == "E"
+    assert str(S.Exp1New) == "E"
 
 
 def test_factorial():
