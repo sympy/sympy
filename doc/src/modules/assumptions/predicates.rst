@@ -6,6 +6,52 @@
 Predicates
 ==========
 
+Calculus
+========
+
+Finite
+------
+
+.. autoclass:: sympy.assumptions.predicates.calculus.FinitePredicate
+
+Infinite
+--------
+
+.. autoclass:: sympy.assumptions.predicates.calculus.InfinitePredicate
+
+Order
+=====
+
+Positive
+--------
+
+... autoclass:: sympy.assumptions.predicates.order.PositivePredicate
+
+Negative
+--------
+
+.. autoclass:: sympy.assumptions.predicates.order.NegativePredicate
+
+Zero
+----
+
+.. autoclass:: sympy.assumptions.predicates.order.ZeroPredicate
+
+Nonzero
+-------
+
+.. autoclass:: sympy.assumptions.predicates.order.NonZeroPredicate
+
+Nonpositive
+-----------
+
+.. autoclass:: sympy.assumptions.predicates.order.NonPositivePredicate
+
+Nonnegative
+-----------
+
+.. autoclass:: sympy.assumptions.predicates.order.NonNegativePredicate
+
 Sets
 ====
 
@@ -63,16 +109,3 @@ Transcendental
 --------------
 
 .. autoclass:: sympy.assumptions.predicates.sets.TranscendentalPredicate
-
-Calculus
-========
-
-Finite
-------
-
-.. autoclass:: sympy.assumptions.predicates.calculus.FinitePredicate
-
-Infinite
---------
-
-.. autoclass:: sympy.assumptions.predicates.calculus.InfinitePredicate

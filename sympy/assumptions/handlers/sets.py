@@ -1,5 +1,5 @@
 """
-Predicates for predicates related to set membership: integer, rational, etc.
+Handlers for predicates related to set membership: integer, rational, etc.
 """
 
 from sympy.assumptions import Q, ask
