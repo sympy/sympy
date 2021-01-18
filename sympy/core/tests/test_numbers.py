@@ -9,6 +9,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import (igcd, ilcm, igcdex, seterr,
     igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
+from sympy.core.parameters import _exp_is_pow
 from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
@@ -858,12 +859,14 @@ def test_Infinity_inequations():
     assert oo > pi
     assert not (oo < pi)
     assert exp(-3) < oo
-    assert S.Exp1New**(-3) < oo
+    with _exp_is_pow(True):
+        assert exp(-3) < oo
 
     assert _inf > pi
     assert not (_inf < pi)
     assert exp(-3) < _inf
-    assert S.Exp1New**(-3) < _inf
+    with _exp_is_pow(True):
+        assert exp(-3) < _inf
 
     raises(TypeError, lambda: oo < I)
     raises(TypeError, lambda: oo <= I)

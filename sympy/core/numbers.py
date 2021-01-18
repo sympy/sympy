@@ -3476,48 +3476,12 @@ class Exp1(NumberSymbol, metaclass=Singleton):
 
     def _eval_power(self, expt):
         from sympy import exp
-        return exp(expt)
+        if global_parameters.exp_is_pow:
+            return self._eval_power_exp_is_pow(expt)
+        else:
+            return exp(expt)
 
-    def _eval_rewrite_as_sin(self, **kwargs):
-        from sympy import sin
-        I = S.ImaginaryUnit
-        return sin(I + S.Pi/2) - I*sin(I)
-
-    def _eval_rewrite_as_cos(self, **kwargs):
-        from sympy import cos
-        I = S.ImaginaryUnit
-        return cos(I) + I*cos(I + S.Pi/2)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.e
-E = S.Exp1
-
-
-class Exp1New(Exp1, metaclass=Singleton):
-    r"""The `e` constant that is not converted into an exponential object.
-
-    Examples
-    ========
-
-    >>> from sympy import S, log
-    >>> S.Exp1New == S.Exp1New**1
-    True
-    >>> log(S.Exp1New)
-    1
-
-    References
-    ==========
-
-    * https://en.wikipedia.org/wiki/E_%28mathematical_constant%29
-
-    """
-
-    @staticmethod
-    def __abs__():
-        return S.Exp1New
-
-    def _eval_power(self, arg):
+    def _eval_power_exp_is_pow(self, arg):
         from ..functions.elementary.exponential import log
         from . import Add, Mul, Pow
         if arg.is_Number:
@@ -3527,7 +3491,9 @@ class Exp1New(Exp1, metaclass=Singleton):
                 return S.Zero
         elif isinstance(arg, log):
             return arg.args[0]
-        elif arg.is_Mul:
+
+        # don't autoexpand Pow or Mul (see the issue 3351):
+        elif not arg.is_Add:
             Ioo = I*oo
             if arg in [Ioo, -Ioo]:
                 return nan
@@ -3548,7 +3514,7 @@ class Exp1New(Exp1, metaclass=Singleton):
                     if ncoeff > 1: # restrict to (-pi, pi]
                         ncoeff -= 2
                     if ncoeff != coeff:
-                        return S.Exp1New**(ncoeff*S.Pi*S.ImaginaryUnit)
+                        return S.Exp1**(ncoeff*S.Pi*S.ImaginaryUnit)
 
             # Warning: code in risch.py will be very sensitive to changes
             # in this (see DifferentialExtension).
@@ -3577,20 +3543,39 @@ class Exp1New(Exp1, metaclass=Singleton):
         elif arg.is_Add:
             out = []
             add = []
+            argchanged = False
             for a in arg.args:
                 if a is S.One:
                     add.append(a)
                     continue
                 newa = self**a
-                if newa.is_Pow and newa.base is self:
-                    add.append(a)
+                if isinstance(newa, Pow) and newa.base is self:
+                    if newa.exp != a:
+                        add.append(newa.exp)
+                        argchanged = True
+                    else:
+                        add.append(a)
                 else:
                     out.append(newa)
-            if out:
+            if out or argchanged:
                 return Mul(*out)*Pow(self, Add(*add), evaluate=False)
         elif arg.is_Matrix:
             return arg.exp()
-_E_new = Exp1New()
+
+    def _eval_rewrite_as_sin(self, **kwargs):
+        from sympy import sin
+        I = S.ImaginaryUnit
+        return sin(I + S.Pi/2) - I*sin(I)
+
+    def _eval_rewrite_as_cos(self, **kwargs):
+        from sympy import cos
+        I = S.ImaginaryUnit
+        return cos(I) + I*cos(I + S.Pi/2)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.e
+E = S.Exp1
 
 
 class Pi(NumberSymbol, metaclass=Singleton):

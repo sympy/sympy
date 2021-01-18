@@ -6,6 +6,7 @@ from sympy.core.function import (Function, ArgumentIndexError, _coeff_isneg,
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational
+from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
@@ -260,6 +261,8 @@ class exp(ExpBase):
         from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
         from sympy import im, logcombine, re
+        if global_parameters.exp_is_pow:
+            return Pow(S.Exp1, arg)
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -553,11 +556,6 @@ class exp(ExpBase):
                 return Pow(logs[0].args[0], arg.coeff(logs[0]))
 
 
-def _exp_new(e):
-    from sympy import _E_new
-    return _E_new**e
-
-
 def match_real_imag(expr):
     """
     Try to match expr with a + b*I for real a and b.
@@ -674,7 +672,7 @@ class log(Function):
             elif arg.is_Rational and arg.p == 1:
                 return -cls(arg.q)
 
-        if arg.is_Pow and arg.base is S.Exp1New and arg.exp.is_extended_real:
+        if arg.is_Pow and arg.base is S.Exp1 and arg.exp.is_extended_real:
             return arg.exp
         I = S.ImaginaryUnit
         if isinstance(arg, exp) and arg.args[0].is_extended_real:
@@ -702,8 +700,6 @@ class log(Function):
             elif arg is S.ComplexInfinity:
                 return S.ComplexInfinity
             elif arg is S.Exp1:
-                return S.One
-            elif arg is S.Exp1New:
                 return S.One
 
         if arg.is_zero:

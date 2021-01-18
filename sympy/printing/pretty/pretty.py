@@ -1469,7 +1469,7 @@ class PrettyPrinter(Printer):
         base = prettyForm(pretty_atom('Exp1', 'e'))
         return base ** self._print(e.args[0])
 
-    def _print_Exp1New(self, e):
+    def _print_Exp1(self, e):
         return prettyForm(pretty_atom('Exp1', 'e'))
 
     def _print_Function(self, e, sort=False, func_name=None):

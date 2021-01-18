@@ -14,6 +14,7 @@ from sympy import (
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
 from sympy.core.expr import UnevaluatedExpr
+from sympy.core.parameters import _exp_is_pow
 from sympy.core.trace import Tr
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
@@ -1329,9 +1330,10 @@ e  + 2*x\
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
-    expr = (2 * x + S.Exp1New**x)
-    assert pretty(expr) in [ascii_str_1, ascii_str_2]
-    assert upretty(expr) in [ucode_str_1, ucode_str_3]
+    with _exp_is_pow(True):
+        expr = (2 * x + exp(x))
+        assert pretty(expr) in [ascii_str_1, ascii_str_2]
+        assert upretty(expr) in [ucode_str_1, ucode_str_3]
 
     expr = Abs(x)
     ascii_str = \

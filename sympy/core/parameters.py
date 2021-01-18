@@ -65,7 +65,7 @@ class _global_parameters(local):
             clear_cache()
         return super().__setattr__(name, value)
 
-global_parameters = _global_parameters(evaluate=True, distribute=True)
+global_parameters = _global_parameters(evaluate=True, distribute=True, exp_is_pow=False)
 
 @contextmanager
 def evaluate(x):
@@ -132,3 +132,14 @@ def distribute(x):
         yield
     finally:
         global_parameters.distribute = old
+
+
+@contextmanager
+def _exp_is_pow(x):
+    old = global_parameters.exp_is_pow
+
+    try:
+        global_parameters.exp_is_pow = x
+        yield
+    finally:
+        global_parameters.exp_is_pow = old

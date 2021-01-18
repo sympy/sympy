@@ -146,9 +146,6 @@ class StrPrinter(Printer):
     def _print_Exp1(self, expr):
         return 'E'
 
-    def _print_Exp1New(self, expr):
-        return 'E'
-
     def _print_ExprCondPair(self, expr):
         return '(%s, %s)' % (self._print(expr.expr), self._print(expr.cond))
 
