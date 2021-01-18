@@ -42,6 +42,11 @@ Nonzero
 
 .. autoclass:: sympy.assumptions.predicates.order.NonZeroPredicate
 
+Nonpositive
+-----------
+
+.. autoclass:: sympy.assumptions.predicates.order.NonPositivePredicate
+
 Nonnegative
 -----------
 

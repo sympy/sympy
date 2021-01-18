@@ -3,7 +3,6 @@ Handlers related to order relations: positive, negative, etc.
 """
 
 from sympy.assumptions import Q, ask
-from sympy.assumptions.handlers import CommonHandler
 from sympy.core import Add, Basic, Expr, Mul, Pow
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
 from sympy.core.numbers import ImaginaryUnit, NaN
@@ -12,7 +11,7 @@ from sympy.matrices import Determinant, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
 
 from ..predicates.order import (NegativePredicate, NonNegativePredicate,
-    NonZeroPredicate, ZeroPredicate, PositivePredicate)
+    NonZeroPredicate, ZeroPredicate, NonPositivePredicate, PositivePredicate)
 
 
 # NegativePredicate
@@ -194,20 +193,18 @@ def _(expr, assumptions):
 
 # NonPositivePredicate
 
-class AskNonPositiveHandler(CommonHandler):
+@NonPositivePredicate.register(Expr)
+def _(expr, assumptions):
+    return expr.is_nonpositive
 
-    @staticmethod
-    def Expr(expr, assumptions):
-        return expr.is_nonpositive
-
-    @staticmethod
-    def Basic(expr, assumptions):
-        if expr.is_number:
-            notpositive = fuzzy_not(_PositivePredicate_number(expr, assumptions))
-            if notpositive:
-                return ask(Q.real(expr), assumptions)
-            else:
-                return notpositive
+@NonPositivePredicate.register(Basic)
+def _(expr, assumptions):
+    if expr.is_number:
+        notpositive = fuzzy_not(_PositivePredicate_number(expr, assumptions))
+        if notpositive:
+            return ask(Q.real(expr), assumptions)
+        else:
+            return notpositive
 
 
 # PositivePredicate
