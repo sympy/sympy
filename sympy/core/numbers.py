@@ -3494,6 +3494,126 @@ class Exp1(NumberSymbol, metaclass=Singleton):
 E = S.Exp1
 
 
+class Exp1New(NumberSymbol, metaclass=Singleton):
+    r"""The `e` constant.
+
+    The transcendental number `e = 2.718281828\ldots` is the base of the
+    natural logarithm and of the exponential function, `e = \exp(1)`.
+    Sometimes called Euler's number or Napier's constant.
+
+    Exp1 is a singleton, and can be imported as ``E``.
+
+    Examples
+    ========
+
+    >>> from sympy.core.numbers import Exp1New
+    >>> Exp1New is exp(1)
+    True
+    >>> log(Exp1New)
+    1
+
+    References
+    ==========
+
+    * https://en.wikipedia.org/wiki/E_%28mathematical_constant%29
+
+    """
+
+    is_real = True
+    is_positive = True
+    is_number = True
+    is_transcendental = True
+
+    def __abs__(self):
+        return self
+
+    def __int__(self):
+        return 2
+
+    def _as_mpf_val(self, prec):
+        return mpmath.e(prec)._mpf_
+
+    def approximation_interval(self, number_cls):
+        if issubclass(number_cls, Integer):
+            return Integer(2), Integer(3)
+
+    def _eval_power(self, arg):
+        from ..functions.elementary.exponential import log
+        from . import Add, Mul, Pow
+        if arg.is_Number:
+            if arg is oo:
+                return oo
+            elif arg == -oo:
+                return S.Zero
+        elif isinstance(arg, log):
+            return arg.args[0]
+        elif arg.is_Mul:
+            Ioo = I*oo
+            if arg in [Ioo, -Ioo]:
+                return nan
+
+            coeff = arg.coeff(pi*I)
+            if coeff:
+                if (2*coeff).is_integer:
+                    if coeff.is_even:
+                        return S.One
+                    elif coeff.is_odd:
+                        return S.NegativeOne
+                    elif (coeff + S.Half).is_even:
+                        return -I
+                    elif (coeff + S.Half).is_odd:
+                        return I
+
+            # Warning: code in risch.py will be very sensitive to changes
+            # in this (see DifferentialExtension).
+
+            # look for a single log factor
+
+            coeff, terms = arg.as_coeff_Mul()
+
+            # but it can't be multiplied by oo
+            if coeff in (oo, -oo):
+                return
+
+            coeffs, log_term = [coeff], None
+            for term in Mul.make_args(terms):
+                if isinstance(term, log):
+                    if log_term is None:
+                        log_term = term.args[0]
+                    else:
+                        return
+                elif term.is_comparable:
+                    coeffs.append(term)
+                else:
+                    return
+
+            return log_term**Mul(*coeffs) if log_term else None
+        elif arg.is_Add:
+            out = []
+            add = []
+            for a in arg.args:
+                if a is S.One:
+                    add.append(a)
+                    continue
+                newa = self**a
+                if newa.is_Pow and newa.base is self:
+                    add.append(a)
+                else:
+                    out.append(newa)
+            if out:
+                return Mul(*out)*Pow(self, Add(*add), evaluate=False)
+        elif arg.is_Matrix:
+            return arg.exp()
+
+    def _eval_rewrite_as_sin(self):
+        from ..functions import sin
+        return sin(I + pi/2) - I*sin(I)
+
+    def _eval_rewrite_as_cos(self):
+        from ..functions import cos
+        return cos(I) + I*cos(I + pi/2)
+
+
 class Pi(NumberSymbol, metaclass=Singleton):
     r"""The `\pi` constant.
 
